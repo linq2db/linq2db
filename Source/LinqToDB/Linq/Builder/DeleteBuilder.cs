@@ -86,11 +86,15 @@ namespace LinqToDB.Linq.Builder
 
 				deleteStatement.Output = new SqlOutputClause();
 
-				var deletedTable = SqlTable.Deleted(methodCall.Method.GetGenericArguments()[0]);
+				var deletedTable = builder.DataContext.SqlProviderFlags.OutputDeleteUseSpecialTable ? SqlTable.Deleted(methodCall.Method.GetGenericArguments()[0]) : deleteStatement.GetDeleteTable();
+
+				if (deletedTable == null)
+					throw new InvalidOperationException("Cannot find target table for DELETE statement");
 
 				outputContext = new TableBuilder.TableContext(builder, new SelectQuery(), deletedTable);
 
-				deleteStatement.Output.DeletedTable = deletedTable;
+				if (builder.DataContext.SqlProviderFlags.OutputDeleteUseSpecialTable)
+					deleteStatement.Output.DeletedTable = deletedTable;
 
 				if (deleteType == DeleteContext.DeleteType.DeleteOutputInto)
 				{
@@ -176,7 +180,7 @@ namespace LinqToDB.Linq.Builder
 				var deleteStatement = (SqlDeleteStatement)Statement!;
 				var outputQuery = Sequence[0].SelectQuery;
 
-				deleteStatement.Output!.OutputQuery = outputQuery;
+				deleteStatement.Output!.OutputColumns = outputQuery.Select.Columns.Select(c => c.Expression).ToList();
 
 				QueryRunner.SetRunQuery(query, mapper);
 			}

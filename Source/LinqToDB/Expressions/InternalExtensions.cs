@@ -697,7 +697,7 @@ namespace LinqToDB.Expressions
 						newExpr = Expression.Constant(EvaluateExpression(unary));
 						break;
 					}
-					case MemberExpression { Expression: { NodeType: ExpressionType.Constant }} me:
+					case MemberExpression { Expression.NodeType: ExpressionType.Constant } me:
 					{
 						newExpr = Expression.Constant(EvaluateExpression(me));
 						break;

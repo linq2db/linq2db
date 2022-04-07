@@ -34,10 +34,10 @@ namespace LinqToDB.Data
 				_executionScope = _dataConnection.DataProvider.ExecuteScope(_dataConnection);
 			}
 
-			readonly IDisposable?   _executionScope;
-			readonly DataConnection _dataConnection;
-			readonly DateTime       _startedOn = DateTime.UtcNow;
-			readonly Stopwatch      _stopwatch = Stopwatch.StartNew();
+			readonly IExecutionScope? _executionScope;
+			readonly DataConnection   _dataConnection;
+			readonly DateTime         _startedOn = DateTime.UtcNow;
+			readonly Stopwatch        _stopwatch = Stopwatch.StartNew();
 
 			bool        _isAsync;
 			Expression? _mapperExpression;
@@ -87,7 +87,7 @@ namespace LinqToDB.Data
 				for (var index = 0; index < _executionQuery!.PreparedQuery.Commands.Length; index++)
 				{
 					var queryCommand = _executionQuery.PreparedQuery.Commands[index];
-					sqlProvider.PrintParameters(sb, _executionQuery.CommandsParameters[index]);
+					sqlProvider.PrintParameters(_dataConnection, sb, _executionQuery.CommandsParameters[index]);
 
 					sb.AppendLine(queryCommand.Command);
 
@@ -143,11 +143,15 @@ namespace LinqToDB.Data
 #if !NATIVE_ASYNC
 			public override Task DisposeAsync()
 #else
-			public override ValueTask DisposeAsync()
+			public override async ValueTask DisposeAsync()
 #endif
 			{
 				if (_executionScope != null)
+#if !NATIVE_ASYNC
 					_executionScope.Dispose();
+#else
+					await _executionScope.DisposeAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
+#endif
 
 				if (_dataConnection.TraceSwitchConnection.TraceInfo)
 				{
@@ -162,7 +166,11 @@ namespace LinqToDB.Data
 					});
 				}
 
+#if !NATIVE_ASYNC
 				return base.DisposeAsync();
+#else
+				await base.DisposeAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
+#endif
 			}
 
 			public class CommandWithParameters
@@ -290,17 +298,17 @@ namespace LinqToDB.Data
 
 				try
 				{
-				for (var index = 0; index < pq.Commands.Length; index++)
-				{
-					var command = pq.Commands[index];
-					if (command.SqlParameters.Length == 0)
-						continue;
-
-					var parms = new DbParameter[command.SqlParameters.Length];
-
-					for (var i = 0; i < command.SqlParameters.Length; i++)
+					for (var index = 0; index < pq.Commands.Length; index++)
 					{
-						var sqlp = command.SqlParameters[i];
+						var command = pq.Commands[index];
+						if (command.SqlParameters.Length == 0)
+							continue;
+
+						var parms = new DbParameter[command.SqlParameters.Length];
+
+						for (var i = 0; i < command.SqlParameters.Length; i++)
+						{
+							var sqlp = command.SqlParameters[i];
 
 							if (dbCommand == null)
 							{
@@ -310,10 +318,10 @@ namespace LinqToDB.Data
 							}
 
 							parms[i] = CreateParameter(dataConnection, dbCommand, sqlp, sqlp.GetParameterValue(parameterValues), forGetSqlText);
-					}
+						}
 
-					result[index] = parms;
-				}
+						result[index] = parms;
+					}
 				}
 				finally
 				{
@@ -358,7 +366,7 @@ namespace LinqToDB.Data
 				InitFirstCommand(_dataConnection, _executionQuery!);
 			}
 
-			#region ExecuteNonQuery
+#region ExecuteNonQuery
 
 			static int ExecuteNonQueryImpl(DataConnection dataConnection, ExecutionPreparedQuery executionQuery)
 			{
@@ -412,9 +420,9 @@ namespace LinqToDB.Data
 				return ExecuteNonQueryImpl(dataConnection, executionQuery);
 			}
 
-			#endregion
+#endregion
 
-			#region ExecuteScalar
+#region ExecuteScalar
 
 			static object? ExecuteScalarImpl(DataConnection dataConnection, ExecutionPreparedQuery executionQuery)
 			{
@@ -472,7 +480,7 @@ namespace LinqToDB.Data
 				return ExecuteScalarImpl(_dataConnection, _executionQuery!);
 			}
 
-			#endregion
+#endregion
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			static void InitFirstCommand(DataConnection dataConnection, ExecutionPreparedQuery executionQuery)
@@ -505,7 +513,7 @@ namespace LinqToDB.Data
 				dataConnection.CommitCommandInit();
 			}
 
-			#region ExecuteReader
+#region ExecuteReader
 
 			public static DataReaderWrapper ExecuteReader(DataConnection dataConnection, IQueryContext context, IReadOnlyParameterValues? parameterValues)
 			{
@@ -525,7 +533,7 @@ namespace LinqToDB.Data
 				return _dataReader = _dataConnection.ExecuteReader();
 			}
 
-			#endregion
+#endregion
 
 			class DataReaderAsync : IDataReaderAsync
 			{

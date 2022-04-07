@@ -11,9 +11,6 @@ namespace Tests
 			switch (context)
 			{
 				case "SQLite.Default"   : context = "Default";        break;
-				case "SqlServer"        : context = "SqlServer.2008"; break;
-				case "SqlServer.2005.1" : context = "SqlServer.2005"; break;
-				case "SqlServer.2008.1" : context = "SqlServer.2008"; break;
 			}
 
 			return context;

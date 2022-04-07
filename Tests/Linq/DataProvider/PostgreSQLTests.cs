@@ -208,7 +208,7 @@ namespace Tests.DataProvider
 				var value = data.Func(typeName, this, conn);
 				if (data.Result is NpgsqlPoint)
 				{
-					Assert.IsTrue(object.Equals(value, data.Result));
+					Assert.IsTrue(Equals(value, data.Result));
 				}
 				else
 				{
@@ -503,8 +503,9 @@ namespace Tests.DataProvider
 			[MapValue("B")] BB
 		}
 
+		// works with v9 too, but requires npgsql < 6
 		[Test]
-		public void TestEnum1([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		public void TestEnum1([IncludeDataSources(TestProvName.AllPostgreSQL10Plus)] string context)
 		{
 			using (var conn = GetDataConnection(context))
 			{
@@ -928,14 +929,9 @@ namespace Tests.DataProvider
 		[Test]
 		public void BulkCopyTest([Values] BulkTestMode mode, [IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			var providerName      = GetProviderName(context, out var _);
-			var macaddr8Supported = providerName == TestProvName.PostgreSQL10
-				|| providerName == TestProvName.PostgreSQL11
-				|| providerName == TestProvName.PostgreSQL12
-				|| providerName == TestProvName.PostgreSQL13
-				|| providerName == TestProvName.PostgreSQL14;
-			var lineSupported     = !context.Contains(ProviderName.PostgreSQL92) && !context.Contains(ProviderName.PostgreSQL93);
-			var jsonbSupported    = !context.Contains(ProviderName.PostgreSQL92) && !context.Contains(ProviderName.PostgreSQL93);
+			var macaddr8Supported = context.IsAnyOf(TestProvName.AllPostgreSQL10Plus);
+			var lineSupported     = context.IsAnyOf(TestProvName.AllPostgreSQL95Plus);
+			var jsonbSupported    = context.IsAnyOf(TestProvName.AllPostgreSQL95Plus);
 			var testData = new[]
 			{
 				// test null values
@@ -1083,14 +1079,9 @@ namespace Tests.DataProvider
 		[Test]
 		public async Task BulkCopyTestAsync([Values]BulkTestMode mode, [IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			var providerName      = GetProviderName(context, out var _);
-			var macaddr8Supported = providerName == TestProvName.PostgreSQL10
-				|| providerName == TestProvName.PostgreSQL11
-				|| providerName == TestProvName.PostgreSQL12
-				|| providerName == TestProvName.PostgreSQL13
-				|| providerName == TestProvName.PostgreSQL14;
-			var lineSupported     = !context.Contains(ProviderName.PostgreSQL92) && !context.Contains(ProviderName.PostgreSQL93);
-			var jsonbSupported    = !context.Contains(ProviderName.PostgreSQL92) && !context.Contains(ProviderName.PostgreSQL93);
+			var macaddr8Supported = context.IsAnyOf(TestProvName.AllPostgreSQL10Plus);
+			var lineSupported     = context.IsAnyOf(TestProvName.AllPostgreSQL95Plus);
+			var jsonbSupported    = context.IsAnyOf(TestProvName.AllPostgreSQL95Plus);
 			var testData = new[]
 			{
 				// test null values
@@ -1945,15 +1936,7 @@ namespace Tests.DataProvider
 				Assert.AreEqual(new NpgsqlRange<DateTime>(new DateTime(2000, 2, 3), true, new DateTime(2000, 3, 4), false), record.DateRangeInclusive);
 				Assert.AreEqual(new NpgsqlRange<DateTime>(new DateTime(2000, 2, 4), true, new DateTime(2000, 3, 3), false), record.DateRangeExclusive);
 				Assert.AreEqual(range3, record.TSRange);
-
-#if NETCOREAPP3_1 || NET5_0 || NET6_0
-				// npgsql 6+
 				Assert.AreEqual(range4, record.TSTZRange);
-#else
-				// pre-v6 returned data with Local kind
-				range4 = new NpgsqlRange<DateTime>(range4.LowerBound.ToLocalTime(), range4.UpperBound.ToLocalTime());
-				Assert.AreEqual(range4, record.TSTZRange);
-#endif
 			}
 		}
 
@@ -1983,12 +1966,6 @@ namespace Tests.DataProvider
 				var records = table.OrderBy(_ => _.Id).ToArray();
 
 				Assert.AreEqual(100, records.Length);
-
-#if !NETCOREAPP3_1 && !NET5_0 && !NET6_0
-				// pre-v6 returned data with Local kind
-				foreach (var item in items)
-					item.TSTZRange = new NpgsqlRange<DateTime>(item.TSTZRange.LowerBound.ToLocalTime(), true, item.TSTZRange.UpperBound.ToLocalTime(), true);
-#endif
 
 				AreEqual(
 					items.Select(t => new
@@ -2033,12 +2010,6 @@ namespace Tests.DataProvider
 				var records = await table.OrderBy(_ => _.Id).ToArrayAsync();
 
 				Assert.AreEqual(100, records.Length);
-
-#if !NETCOREAPP3_1 && !NET5_0 && !NET6_0
-				// pre-v6 returned data with Local kind
-				foreach (var item in items)
-					item.TSTZRange = new NpgsqlRange<DateTime>(item.TSTZRange.LowerBound.ToLocalTime(), true, item.TSTZRange.UpperBound.ToLocalTime(), true);
-#endif
 
 				AreEqual(
 					items.Select(t => new

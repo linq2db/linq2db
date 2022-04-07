@@ -40,6 +40,9 @@ namespace LinqToDB.DataProvider.Oracle
 			SqlProviderFlags.DefaultMultiQueryIsolationLevel   = IsolationLevel.ReadCommitted;
 			SqlProviderFlags.IsNamingQueryBlockSupported       = true;
 
+			SqlProviderFlags.RowConstructorSupport = RowFeature.Equality | RowFeature.CompareToSelect | RowFeature.In |
+			                                         RowFeature.Update   | RowFeature.Overlaps;
+
 			if (version >= OracleVersion.v12)
 			{
 				SqlProviderFlags.IsApplyJoinSupported          = true;
@@ -124,7 +127,7 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			command = base.InitCommand(dataConnection, command, commandType, commandText, parameters, withParameters);
 
-			var rawCommand = TryGetProviderCommand(command, dataConnection.MappingSchema);
+			var rawCommand = TryGetProviderCommand(dataConnection, command);
 
 			if (rawCommand != null)
 			{
@@ -273,7 +276,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 			if (type != null)
 			{
-				var param = TryGetProviderParameter(parameter, dataConnection.MappingSchema);
+				var param = TryGetProviderParameter(dataConnection, parameter);
 				if (param != null)
 				{
 					Adapter.SetDbType(param, type.Value);

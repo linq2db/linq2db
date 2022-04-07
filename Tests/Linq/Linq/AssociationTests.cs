@@ -495,7 +495,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MultipleUse([IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllPostgreSQL93Plus, TestProvName.AllOracle12)] string context)
+		public void MultipleUse([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllPostgreSQL93Plus, TestProvName.AllOracle12)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -1254,6 +1254,15 @@ namespace Tests.Linq
 		}
 
 		#endregion
+
+		[ActiveIssue(2966)]
+		[Test(Description = "association over set query")]
+		public void Issue2966([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			db.Patient.Concat(db.Patient).Select(r => new { r.Diagnosis, r.Person.FirstName }).ToArray();
+		}
 	}
 
 	public static class AssociationExtension

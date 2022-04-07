@@ -45,7 +45,8 @@ namespace LinqToDB.SqlQuery
 			List<ISqlExpression[]>? uniqueKeys,
 			SelectQuery?            parentSelect,
 			bool                    parameterDependent,
-			string?                 queryName)
+			string?                 queryName,
+			bool                    doNotSetAliases)
 		{
 			Select               = select;
 			From                 = from;
@@ -57,6 +58,7 @@ namespace LinqToDB.SqlQuery
 			ParentSelect         = parentSelect;
 			IsParameterDependent = parameterDependent;
 			QueryName            = queryName;
+			DoNotSetAliases      = doNotSetAliases;
 
 			if (uniqueKeys != null)
 				UniqueKeys.AddRange(uniqueKeys);
@@ -79,38 +81,38 @@ namespace LinqToDB.SqlQuery
 		public SqlWhereClause   Having  { get; internal set; } = null!;
 		public SqlOrderByClause OrderBy { get; internal set; } = null!;
 
-		private List<object>?   _properties;
-		public  List<object>    Properties => _properties ??= new List<object>();
+		private List<object>? _properties;
+		public  List<object>   Properties => _properties ??= new ();
 
-		public SelectQuery?     ParentSelect         { get; set; }
-		public bool             IsSimple => !Select.HasModifier && Where.IsEmpty && GroupBy.IsEmpty && Having.IsEmpty && OrderBy.IsEmpty && !HasSetOperators;
-		public bool             IsParameterDependent { get; set; }
+		public SelectQuery?   ParentSelect         { get; set; }
+		public bool           IsSimple      => IsSimpleOrSet && !HasSetOperators;
+		public bool           IsSimpleOrSet => !Select.HasModifier && Where.IsEmpty && GroupBy.IsEmpty && Having.IsEmpty && OrderBy.IsEmpty;
+		public bool           IsParameterDependent { get; set; }
 
 		/// <summary>
 		/// Gets or sets flag when sub-query can be removed during optimization.
 		/// </summary>
-		public bool                     DoNotRemove        { get; set; }
+		public bool               DoNotRemove         { get; set; }
 		public string?                  QueryName          { get; set; }
 		public List<SqlQueryExtension>? SqlQueryExtensions { get; set; }
+		public bool            DoNotSetAliases      { get; set; }
 
-		private List<ISqlExpression[]>? _uniqueKeys;
+		List<ISqlExpression[]>? _uniqueKeys;
 
 		/// <summary>
 		/// Contains list of columns that build unique key for this sub-query.
 		/// Used in JoinOptimizer for safely removing sub-query from resulting SQL.
 		/// </summary>
-		public  List<ISqlExpression[]>  UniqueKeys   => _uniqueKeys ??= new List<ISqlExpression[]>();
-
+		public  List<ISqlExpression[]> UniqueKeys    => _uniqueKeys ??= new ();
 		public  bool                    HasUniqueKeys => _uniqueKeys != null && _uniqueKeys.Count > 0;
-
 
 		#endregion
 
 		#region Union
 
 		private List<SqlSetOperator>? _setOperators;
-		public  List<SqlSetOperator>   SetOperators    => _setOperators ??= new List<SqlSetOperator>();
-		public  bool                   HasSetOperators => _setOperators != null && _setOperators.Count > 0;
+		public  List<SqlSetOperator>   SetOperators => _setOperators ??= new List<SqlSetOperator>();
+		public  bool            HasSetOperators    => _setOperators != null && _setOperators.Count > 0;
 
 		public void AddUnion(SelectQuery union, bool isAll)
 		{
@@ -260,7 +262,7 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-		List<ISqlExpression>?    _keys;
+		List<ISqlExpression>? _keys;
 
 		public IList<ISqlExpression> GetKeys(bool allIfEmpty)
 		{

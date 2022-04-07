@@ -1,6 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Data;
+using System.Collections.Generic;
+using System.Data.Common;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -14,7 +15,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	using SqlProvider;
 	using Extensions;
 	using Mapping;
-	using System.Data.Common;
 
 	public class PostgreSQLSqlBuilder : BasicSqlBuilder
 	{
@@ -244,7 +244,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 					var sb = new StringBuilder();
 					sb.Append("nextval(");
-					ValueToSqlConverter.Convert(sb, BuildTableName(new StringBuilder(), server, database, schema, name, table.TableOptions).ToString());
+					MappingSchema.ConvertToSqlValue(sb, null, BuildTableName(new StringBuilder(), server, database, schema, name, table.TableOptions).ToString());
 					sb.Append(')');
 					return new SqlExpression(sb.ToString(), Precedence.Primary);
 				}
@@ -303,16 +303,30 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return base.BuildTableName(sb, null, database, schema, table, tableOptions);
 		}
 
-		protected override string? GetProviderTypeName(DbParameter parameter)
+		protected override string? GetProviderTypeName(IDataContext dataContext, DbParameter parameter)
 		{
 			if (DataProvider is PostgreSQLDataProvider provider)
 			{
-				var param = provider.TryGetProviderParameter(parameter, MappingSchema);
+				var param = provider.TryGetProviderParameter(dataContext, parameter);
 				if (param != null)
-					return provider.Adapter.GetDbType(param).ToString();
+				{
+					try
+					{
+						// fast Enum detection path
+						if (param.DbType == DbType.Object && param.Value?.GetType().IsEnum == true)
+							return "Enum";
+
+						return provider.Adapter.GetDbType(param).ToString();
+					}
+					catch (NotSupportedException)
+					{
+						// Hadling Npgsql mapping exception
+						// Exception is thrown when using PostgreSQL Enums
+					}
+				}
 			}
 
-			return base.GetProviderTypeName(parameter);
+			return base.GetProviderTypeName(dataContext, parameter);
 		}
 
 		protected override void BuildTruncateTableStatement(SqlTruncateTableStatement truncateTable)
@@ -343,35 +357,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		protected override void BuildMergeStatement(SqlMergeStatement merge)
 		{
 			throw new LinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
-		}
-
-		protected override void BuildReturningSubclause(SqlStatement statement)
-		{
-			var output = statement.GetOutputClause();
-			if (output != null)
-			{
-				StringBuilder
-					.AppendLine("RETURNING");
-
-				++Indent;
-
-				bool first = true;
-				foreach (var oi in output.OutputItems)
-				{
-					if (!first)
-						StringBuilder.AppendLine(Comma);
-					first = false;
-
-					AppendIndent();
-
-					BuildExpression(oi.Expression!);
-				}
-
-				StringBuilder
-					.AppendLine();
-
-				--Indent;
-			}
 		}
 
 		public override string? GetTableSchemaName(SqlTable table)
@@ -432,7 +417,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return $"SELECT nextval('{ConvertInline(sequenceName, ConvertType.SequenceName)}') FROM generate_series(1, {count.ToString(CultureInfo.InvariantCulture)})";
 		}
 
-
+		
 		protected override bool IsSqlValuesTableValueTypeRequired(SqlValuesTable source,
 			IReadOnlyList<ISqlExpression[]> rows, int row, int column)
 		{

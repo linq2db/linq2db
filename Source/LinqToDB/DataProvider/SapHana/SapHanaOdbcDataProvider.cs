@@ -106,7 +106,7 @@ namespace LinqToDB.DataProvider.SapHana
 			base.SetParameter(dataConnection, parameter, name, dataType, value);
 		}
 
-		public override IDisposable ExecuteScope(DataConnection dataConnection) => new InvariantCultureRegion(base.ExecuteScope(dataConnection));
+		public override IExecutionScope ExecuteScope(DataConnection dataConnection) => new InvariantCultureRegion(null);
 
 		protected override void SetParameterType(DataConnection dataConnection, DbParameter parameter, DbDataType dataType)
 		{

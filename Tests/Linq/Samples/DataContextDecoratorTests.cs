@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
+using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading.Tasks;
 
 using LinqToDB;
+using LinqToDB.Data;
+using LinqToDB.Interceptors;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.SqlProvider;
@@ -13,11 +16,6 @@ using NUnit.Framework;
 
 namespace Tests.Samples
 {
-	using System.Data.Common;
-	using System.Threading.Tasks;
-	using LinqToDB.Data;
-	using LinqToDB.Interceptors;
-
 	/// <summary>
 	/// This sample demonstrates how can we use <see cref="IDataContext"/> decoration
 	/// to deal with different <see cref="MappingSchema"/> objects in one <see cref="DbConnection"/>.
@@ -95,9 +93,7 @@ namespace Tests.Samples
 
 			public void AddInterceptor(IInterceptor interceptor) => _context.AddInterceptor(interceptor);
 
-			public IEnumerable<TInterceptor> GetInterceptors<TInterceptor>()
-				where TInterceptor : IInterceptor
-				=> _context.GetInterceptors<TInterceptor>();
+			public IUnwrapDataObjectInterceptor? UnwrapDataObjectInterceptor { get; }
 		}
 
 		public class Entity

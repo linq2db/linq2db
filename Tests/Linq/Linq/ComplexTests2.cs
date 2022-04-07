@@ -462,7 +462,7 @@ namespace Tests.Linq
 
 					void Validate(bool insertOrReplace)
 					{
-						if (insertOrReplace && context.Contains("Oracle") && context.Contains("Native"))
+						if (insertOrReplace && context.IsAnyOf(TestProvName.AllOracleNative))
 							Assert.AreEqual(-1, cnt);
 						else
 							Assert.AreEqual(1, cnt);
@@ -519,7 +519,7 @@ namespace Tests.Linq
 
 					void Validate(bool insertOrReplace)
 					{
-						if (insertOrReplace && context.Contains("Oracle") && context.Contains("Native"))
+						if (insertOrReplace && context.IsAnyOf(TestProvName.AllOracleNative))
 							Assert.AreEqual(-1, cnt);
 						else
 							Assert.AreEqual(1, cnt);

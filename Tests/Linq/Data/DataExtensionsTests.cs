@@ -331,7 +331,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void CacheTest([IncludeDataSources(TestProvName.Northwind)] string context)
+		public void CacheTest([IncludeDataSources(TestProvName.AllNorthwind)] string context)
 		{
 			using (var dc= GetDataConnection(context))
 			{

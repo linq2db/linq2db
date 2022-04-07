@@ -236,5 +236,13 @@ namespace LinqToDB.DataProvider.SQLite
 			if (table.SqlQueryExtensions is not null)
 				BuildTableExtensions(StringBuilder, table, alias, " ", " ", null);
 		}
+
+		protected override void BuildUpdateTableName(SelectQuery selectQuery, SqlUpdateClause updateClause)
+		{
+			base.BuildUpdateTableName(selectQuery, updateClause);
+
+			if (updateClause.Table != null)
+				BuildTableExtensions(updateClause.Table, "");
+		}
 	}
 }

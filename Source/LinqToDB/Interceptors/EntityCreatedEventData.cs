@@ -1,7 +1,7 @@
 ﻿namespace LinqToDB.Interceptors
 {
 	/// <summary>
-	/// Event arguments for <see cref="IDataContextInterceptor.EntityCreated(EntityCreatedEventData, object)"/> event.
+	/// Event arguments for <see cref="IEntityServiceInterceptor.EntityCreated(EntityCreatedEventData, object)"/> event.
 	/// </summary>
 	public readonly struct EntityCreatedEventData
 	{

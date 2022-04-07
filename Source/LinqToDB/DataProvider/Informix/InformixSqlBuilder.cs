@@ -117,6 +117,7 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			switch (type.Type.DataType)
 			{
+				case DataType.Guid       : StringBuilder.Append("VARCHAR(36)");               return;
 				case DataType.VarBinary  : StringBuilder.Append("BYTE");                      return;
 				case DataType.Boolean    : StringBuilder.Append("BOOLEAN");                   return;
 				case DataType.DateTime   : StringBuilder.Append("datetime year to second");   return;
@@ -251,11 +252,11 @@ namespace LinqToDB.DataProvider.Informix
 			return sb.Append(table);
 		}
 
-		protected override string? GetProviderTypeName(DbParameter parameter)
+		protected override string? GetProviderTypeName(IDataContext dataContext, DbParameter parameter)
 		{
 			if (DataProvider is InformixDataProvider provider)
 			{
-				var param = provider.TryGetProviderParameter(parameter, MappingSchema);
+				var param = provider.TryGetProviderParameter(dataContext, parameter);
 				if (param != null)
 					if (provider.Adapter.GetIfxType != null)
 						return provider.Adapter.GetIfxType(param).ToString();
@@ -263,7 +264,7 @@ namespace LinqToDB.DataProvider.Informix
 						return provider.Adapter.GetDB2Type!(param).ToString();
 			}
 
-			return base.GetProviderTypeName(parameter);
+			return base.GetProviderTypeName(dataContext, parameter);
 		}
 
 		protected override void BuildTypedExpression(SqlDataType dataType, ISqlExpression value)
@@ -308,6 +309,19 @@ namespace LinqToDB.DataProvider.Informix
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
 		{
 			BuildDropTableStatementIfExists(dropTable);
+		}
+
+		protected override void BuildSqlRow(SqlRow expr, bool buildTableName, bool checkParentheses, bool throwExceptionIfTableNotFound)
+		{
+			// Informix needs ROW(1,2) syntax instead of BasicSqlBuilder default (1,2)
+			StringBuilder.Append("ROW (");
+			foreach (var value in expr.Values)
+			{
+				BuildExpression(value, buildTableName, checkParentheses, throwExceptionIfTableNotFound);
+				StringBuilder.Append(InlineComma);
+			}
+			StringBuilder.Length -= InlineComma.Length; // Note that SqlRow are never empty
+			StringBuilder.Append(')');
 		}
 
 		protected override ISqlExpression WrapBooleanExpression(ISqlExpression expr)

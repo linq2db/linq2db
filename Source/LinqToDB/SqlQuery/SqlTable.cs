@@ -144,8 +144,8 @@ namespace LinqToDB.SqlQuery
 			foreach (var field in table.Fields)
 				Add(new SqlField(field));
 
-			SqlTableType       = table.SqlTableType;
-			TableArguments     = table.TableArguments;
+			SqlTableType   = table.SqlTableType;
+			TableArguments = table.TableArguments;
 			SqlQueryExtensions = table.SqlQueryExtensions;
 		}
 
@@ -159,11 +159,12 @@ namespace LinqToDB.SqlQuery
 			Name               = table.Name;
 			PhysicalName       = table.PhysicalName;
 			SequenceAttributes = table.SequenceAttributes;
+			TableOptions       = table.TableOptions;
 
 			AddRange(fields);
 
-			SqlTableType       = table.SqlTableType;
-			TableArguments     = tableArguments;
+			SqlTableType   = table.SqlTableType;
+			TableArguments = tableArguments;
 			SqlQueryExtensions = table.SqlQueryExtensions;
 		}
 
@@ -205,7 +206,7 @@ namespace LinqToDB.SqlQuery
 		readonly List<SqlField>              _orderedFields = new();
 		readonly Dictionary<string,SqlField> _fieldsLookup  = new();
 
-		public IReadOnlyList<SqlField>  Fields             => _orderedFields;
+		public           IReadOnlyList<SqlField>         Fields => _orderedFields;
 		public List<SqlQueryExtension>? SqlQueryExtensions { get; set; }
 
 		// identity fields cached, as it is most used fields filter

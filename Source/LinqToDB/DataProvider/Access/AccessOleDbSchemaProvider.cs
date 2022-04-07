@@ -40,7 +40,7 @@ namespace LinqToDB.DataProvider.Access
 		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection,
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
-			var connection = _provider.TryGetProviderConnection(dataConnection.Connection, dataConnection.MappingSchema);
+			var connection = _provider.TryGetProviderConnection(dataConnection, dataConnection.Connection);
 			if (connection == null)
 				return Array<ForeignKeyInfo>.Empty;
 
@@ -50,15 +50,15 @@ namespace LinqToDB.DataProvider.Access
 			var data = _provider.Adapter.GetOleDbSchemaTable(connection, OleDbProviderAdapter.OleDbSchemaGuid.Foreign_Keys, null);
 
 			var q = from fk in data.AsEnumerable()
-					select new ForeignKeyInfo
-					{
-						Name         = fk.Field<string>("FK_NAME")!,
-						ThisColumn   = fk.Field<string>("FK_COLUMN_NAME")!,
-						OtherColumn  = fk.Field<string>("PK_COLUMN_NAME")!,
-						ThisTableID  = fk.Field<string>("FK_TABLE_CATALOG") + "." + fk.Field<string>("FK_TABLE_SCHEMA") + "." + fk.Field<string>("FK_TABLE_NAME"),
-						OtherTableID = fk.Field<string>("PK_TABLE_CATALOG") + "." + fk.Field<string>("PK_TABLE_SCHEMA") + "." + fk.Field<string>("PK_TABLE_NAME"),
-						Ordinal      = ConvertTo<int>.From(fk.Field<long>("ORDINAL")),
-					};
+				select new ForeignKeyInfo
+				{
+					Name         = fk.Field<string>("FK_NAME")!,
+					ThisColumn   = fk.Field<string>("FK_COLUMN_NAME")!,
+					OtherColumn  = fk.Field<string>("PK_COLUMN_NAME")!,
+					ThisTableID  = fk.Field<string>("FK_TABLE_CATALOG") + "." + fk.Field<string>("FK_TABLE_SCHEMA") + "." + fk.Field<string>("FK_TABLE_NAME"),
+					OtherTableID = fk.Field<string>("PK_TABLE_CATALOG") + "." + fk.Field<string>("PK_TABLE_SCHEMA") + "." + fk.Field<string>("PK_TABLE_NAME"),
+					Ordinal      = ConvertTo<int>.From(fk.Field<long>("ORDINAL")),
+				};
 
 			return q.ToList();
 		}

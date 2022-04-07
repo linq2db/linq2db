@@ -5,6 +5,7 @@ using System.Data.Common;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
+
 using JetBrains.Annotations;
 
 namespace LinqToDB
@@ -12,11 +13,10 @@ namespace LinqToDB
 #if !NATIVE_ASYNC
 	using Async;
 #endif
+	using Configuration;
 	using Data;
 	using DataProvider;
 	using Linq;
-	using LinqToDB.Configuration;
-	using LinqToDB.Interceptors;
 	using Mapping;
 	using SqlProvider;
 
@@ -24,7 +24,7 @@ namespace LinqToDB
 	/// Implements abstraction over non-persistent database connection that could be released after query or transaction execution.
 	/// </summary>
 	[PublicAPI]
-	public class DataContext : IDataContext
+	public partial class DataContext : IDataContext
 	{
 		private          LinqToDbConnectionOptions        _prebuiltOptions;
 		private readonly LinqToDbConnectionOptionsBuilder _optionsBuilder = new ();
@@ -47,12 +47,11 @@ namespace LinqToDB
 		/// <see cref="DataConnection.DefaultConfiguration"/> for more details.
 		/// </param>
 		public DataContext(string? configurationString)
-			: this(
-				  new LinqToDbConnectionOptionsBuilder()
-				  .UseConfigurationString(
-					  configurationString ?? DataConnection.DefaultConfiguration
+			: this(new LinqToDbConnectionOptionsBuilder()
+				.UseConfigurationString(
+					configurationString ?? DataConnection.DefaultConfiguration
 						?? throw new ArgumentNullException($"Neither {nameof(configurationString)} nor {nameof(DataConnection)}.{DataConnection.DefaultConfiguration} specified"))
-				  .Build())
+				.Build())
 		{
 		}
 
@@ -62,12 +61,11 @@ namespace LinqToDB
 		/// <param name="dataProvider">Database provider implementation.</param>
 		/// <param name="connectionString">Database connection string.</param>
 		public DataContext(IDataProvider dataProvider, string connectionString)
-			: this(
-				  new LinqToDbConnectionOptionsBuilder()
-				  .UseConnectionString(
-					  dataProvider     ?? throw new ArgumentNullException(nameof(dataProvider)),
-					  connectionString ?? throw new ArgumentNullException(nameof(connectionString)))
-				  .Build())
+			: this(new LinqToDbConnectionOptionsBuilder()
+				.UseConnectionString(
+					dataProvider     ?? throw new ArgumentNullException(nameof(dataProvider)),
+					connectionString ?? throw new ArgumentNullException(nameof(connectionString)))
+				.Build())
 		{
 		}
 
@@ -77,12 +75,11 @@ namespace LinqToDB
 		/// <param name="providerName">Name of database provider to use with this connection. <see cref="ProviderName"/> class for list of providers.</param>
 		/// <param name="connectionString">Database connection string to use for connection with database.</param>
 		public DataContext( string providerName, string connectionString)
-			: this(
-				  new LinqToDbConnectionOptionsBuilder()
-				  .UseConnectionString(
-					  providerName     ?? throw new ArgumentNullException(nameof(providerName)),
-					  connectionString ?? throw new ArgumentNullException(nameof(connectionString)))
-				  .Build())
+			: this(new LinqToDbConnectionOptionsBuilder()
+				.UseConnectionString(
+					providerName     ?? throw new ArgumentNullException(nameof(providerName)),
+					connectionString ?? throw new ArgumentNullException(nameof(connectionString)))
+				.Build())
 		{
 		}
 
@@ -98,7 +95,6 @@ namespace LinqToDB
 			if (options.OnTrace       != null) _optionsBuilder.WithTracing     (options.OnTrace);
 			if (options.TraceLevel    != null) _optionsBuilder.WithTraceLevel  (options.TraceLevel.Value);
 			if (options.WriteTrace    != null) _optionsBuilder.WriteTraceWith  (options.WriteTrace);
-
 
 			var dataProvider = options.DataProvider;
 			if (dataProvider == null)
@@ -128,7 +124,7 @@ namespace LinqToDB
 			// interceptors magic
 			// as we need to aggregate interceptors, we don't pass them as-is from options to builder but manage separately
 			if (options.Interceptors != null)
-		{
+			{
 				foreach (var interceptor in options.Interceptors)
 					AddInterceptor(interceptor);
 			}
@@ -477,41 +473,36 @@ namespace LinqToDB
 
 		void IDataContext.Close()
 		{
-			if (_contextInterceptors != null)
-				_contextInterceptors.Apply((interceptor, arg) => interceptor.OnClosing(arg), new DataContextEventData(this));
-
+			_dataContextInterceptor?.OnClosing(new (this));
 
 			if (_dataConnection != null)
 			{
-				if (_dataConnection.QueryHints.    Count > 0) (_queryHints     ??= new List<string>()).AddRange(_dataConnection.QueryHints);
-				if (_dataConnection.NextQueryHints.Count > 0) (_nextQueryHints ??= new List<string>()).AddRange(_dataConnection.NextQueryHints);
+				if (_dataConnection.QueryHints.    Count > 0) (_queryHints     ??= new ()).AddRange(_dataConnection.QueryHints);
+				if (_dataConnection.NextQueryHints.Count > 0) (_nextQueryHints ??= new ()).AddRange(_dataConnection.NextQueryHints);
 
 				_dataConnection.Dispose();
 				_dataConnection = null;
 			}
 
-			if (_contextInterceptors != null)
-				_contextInterceptors.Apply((interceptor, arg) => interceptor.OnClosed(arg), new DataContextEventData(this));
+			_dataContextInterceptor?.OnClosed(new (this));
 		}
 
 		async Task IDataContext.CloseAsync()
 		{
-			if (_contextInterceptors != null)
-				await _contextInterceptors.Apply((interceptor, arg) => interceptor.OnClosingAsync(arg), new DataContextEventData(this))
-					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			if (_dataContextInterceptor != null)
+				await _dataContextInterceptor.OnClosingAsync(new (this)).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			if (_dataConnection != null)
 			{
-				if (_dataConnection.QueryHints.    Count > 0) (_queryHints     ??= new List<string>()).AddRange(_dataConnection.QueryHints);
-				if (_dataConnection.NextQueryHints.Count > 0) (_nextQueryHints ??= new List<string>()).AddRange(_dataConnection.NextQueryHints);
+				if (_dataConnection.QueryHints.    Count > 0) (_queryHints     ??= new ()).AddRange(_dataConnection.QueryHints);
+				if (_dataConnection.NextQueryHints.Count > 0) (_nextQueryHints ??= new ()).AddRange(_dataConnection.NextQueryHints);
 
 				await _dataConnection.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 				_dataConnection = null;
 			}
 
-			if (_contextInterceptors != null)
-				await _contextInterceptors.Apply((interceptor, arg) => interceptor.OnClosedAsync(arg), new DataContextEventData(this))
-					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			if (_dataContextInterceptor != null)
+				await _dataContextInterceptor.OnClosedAsync(new (this)).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
 		/// <summary>
@@ -654,162 +645,5 @@ namespace LinqToDB
 			public int          RowsCount        { get => _queryRunner!.RowsCount;        set => _queryRunner!.RowsCount        = value; }
 			public int          QueryNumber      { get => _queryRunner!.QueryNumber;      set => _queryRunner!.QueryNumber      = value; }
 		}
-
-#region Interceptors
-		private  AggregatedInterceptor<ICommandInterceptor>?     _commandInterceptors;
-		private  AggregatedInterceptor<IConnectionInterceptor>?  _connectionInterceptors;
-		private  AggregatedInterceptor<IDataContextInterceptor>? _contextInterceptors;
-
-		/// <inheritdoc cref="IDataContext.AddInterceptor(IInterceptor)"/>
-		public void AddInterceptor(IInterceptor interceptor)
-		{
-			if (interceptor is AggregatedInterceptor<ICommandInterceptor> aggregatedCommandInterceptor)
-			{
-				if (_commandInterceptors != null)
-					// this actually shouldn't be possible
-					throw new InvalidOperationException($"{nameof(AggregatedInterceptor<ICommandInterceptor>)}<{nameof(ICommandInterceptor)}> already exists");
-				_commandInterceptors = aggregatedCommandInterceptor.Clone();
-
-				_optionsBuilder.WithInterceptor(_commandInterceptors);
-				_prebuiltOptions = _optionsBuilder.Build();
-			}
-
-			if (interceptor is AggregatedInterceptor<IConnectionInterceptor> aggregatedConnectionInterceptor)
-			{
-				if (_connectionInterceptors != null)
-					// this actually shouldn't be possible
-					throw new InvalidOperationException($"{nameof(AggregatedInterceptor<IConnectionInterceptor>)}<{nameof(IConnectionInterceptor)}> already exists");
-				_connectionInterceptors = aggregatedConnectionInterceptor.Clone();
-
-				_optionsBuilder.WithInterceptor(_connectionInterceptors);
-				_prebuiltOptions = _optionsBuilder.Build();
-			}
-
-			if (interceptor is AggregatedInterceptor<IDataContextInterceptor> aggregatedContextInterceptor)
-			{
-				if (_contextInterceptors != null)
-					// this actually shouldn't be possible
-					throw new InvalidOperationException($"{nameof(AggregatedInterceptor<IDataContextInterceptor>)}<{nameof(IDataContextInterceptor)}> already exists");
-				_contextInterceptors = aggregatedContextInterceptor.Clone();
-
-				_optionsBuilder.WithInterceptor(_contextInterceptors);
-				_prebuiltOptions = _optionsBuilder.Build();
-			}
-
-			if (interceptor is ICommandInterceptor commandInterceptor)
-			{
-				if (_commandInterceptors == null)
-				{
-					_commandInterceptors = new AggregatedInterceptor<ICommandInterceptor>();
-					if (_dataConnection != null)
-						_dataConnection.AddInterceptor(_commandInterceptors);
-
-					_optionsBuilder.WithInterceptor(_commandInterceptors);
-					_prebuiltOptions = _optionsBuilder.Build();
-				}
-
-				_commandInterceptors.Add(commandInterceptor);
-			}
-
-			if (interceptor is IConnectionInterceptor connectionInterceptor)
-			{
-				if (_connectionInterceptors == null)
-				{
-					_connectionInterceptors = new AggregatedInterceptor<IConnectionInterceptor>();
-					if (_dataConnection != null)
-						_dataConnection.AddInterceptor(_connectionInterceptors);
-
-					_optionsBuilder.WithInterceptor(_connectionInterceptors);
-					_prebuiltOptions = _optionsBuilder.Build();
-				}
-
-				_connectionInterceptors.Add(connectionInterceptor);
-			}
-
-			if (interceptor is IDataContextInterceptor contextInterceptor)
-			{
-				if (_contextInterceptors == null)
-				{
-					_contextInterceptors = new AggregatedInterceptor<IDataContextInterceptor>();
-					if (_dataConnection != null)
-						_dataConnection.AddInterceptor(_contextInterceptors);
-
-					_optionsBuilder.WithInterceptor(_contextInterceptors);
-					_prebuiltOptions = _optionsBuilder.Build();
-				}
-
-				_contextInterceptors.Add(contextInterceptor);
-			}
-		}
-
-		IEnumerable<TInterceptor> IDataContext.GetInterceptors<TInterceptor>()
-		{
-			if (_commandInterceptors == null && _connectionInterceptors == null && _contextInterceptors == null)
-				yield break;
-
-			var type = typeof(TInterceptor);
-
-			if (type == typeof(ICommandInterceptor))
-			{
-				if (_commandInterceptors != null)
-				{
-					foreach (var interceptor in _commandInterceptors.GetInterceptors())
-						yield return (TInterceptor)interceptor;
-
-				}
-
-				yield break;
-			}
-
-			if (type == typeof(IConnectionInterceptor))
-			{
-				if (_connectionInterceptors != null)
-				{
-					foreach (var interceptor in _connectionInterceptors.GetInterceptors())
-						yield return (TInterceptor)interceptor;
-
-				}
-
-				yield break;
-			}
-
-			if (type == typeof(IDataContextInterceptor))
-			{
-				if (_contextInterceptors != null)
-				{
-					foreach (var interceptor in _contextInterceptors.GetInterceptors())
-						yield return (TInterceptor)interceptor;
-
-				}
-
-				yield break;
-			}
-
-			if (type == typeof(IInterceptor))
-			{
-				if (_commandInterceptors != null)
-				{
-					foreach (var interceptor in _commandInterceptors.GetInterceptors())
-						yield return (TInterceptor)interceptor;
-				}
-
-				if (_connectionInterceptors != null)
-				{
-					foreach (var interceptor in _connectionInterceptors.GetInterceptors())
-						yield return (TInterceptor)interceptor;
-
-				}
-
-				if (_contextInterceptors != null)
-				{
-					foreach (var interceptor in _contextInterceptors.GetInterceptors())
-						yield return (TInterceptor)interceptor;
-
-				}
-
-				yield break;
-			}
-		}
-		#endregion
 	}
 }

@@ -33,6 +33,9 @@ namespace LinqToDB.DataProvider.DB2
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 			SqlProviderFlags.IsUpdateFromSupported             = false;
 
+			SqlProviderFlags.RowConstructorSupport = RowFeature.Equality | RowFeature.Comparisons | RowFeature.Update |
+			                                         RowFeature.UpdateLiteral | RowFeature.Overlaps | RowFeature.Between;
+
 			SetCharFieldToType<char>("CHAR", DataTools.GetCharExpression);
 			SetCharField            ("CHAR", (r, i) => r.GetString(i).TrimEnd(' '));
 
@@ -175,7 +178,7 @@ namespace LinqToDB.DataProvider.DB2
 
 			if (type != null)
 			{
-				var param = TryGetProviderParameter(parameter, dataConnection.MappingSchema);
+				var param = TryGetProviderParameter(dataConnection, parameter);
 				if (param != null)
 				{
 					Adapter.SetDbType(param, type.Value);

@@ -300,7 +300,7 @@ namespace LinqToDB.Linq.Builder
 								{
 									foreach (var arg in ce.Arguments.Skip(1))
 										if (!context.builder._skippedExpressions.Contains(arg))
-										context.builder._skippedExpressions.Add(arg);
+											context.builder._skippedExpressions.Add(arg);
 
 									if (context.builder.IsSubQuery(context.context, ce))
 									{
@@ -377,11 +377,14 @@ namespace LinqToDB.Linq.Builder
 							{
 								var mi      = (MemberInitExpression)expr;
 								var newPart = (NewExpression)context.builder.BuildExpression(context.context, mi.NewExpression, context.enforceServerSide);
+
 								List<MemberBinding>? bindings = null;
+
 								for (var i = 0; i < mi.Bindings.Count; i++)
 								{
 									var binding    = mi.Bindings[i];
 									var newBinding = binding;
+
 									if (binding is MemberAssignment assignment)
 									{
 										var argument = context.builder.ConvertAssignmentArgument(context.context,
@@ -396,8 +399,7 @@ namespace LinqToDB.Linq.Builder
 
 									if (newBinding != binding)
 									{
-										if (bindings == null)
-											bindings = mi.Bindings.Take(i).ToList();
+										bindings ??= mi.Bindings.Take(i).ToList();
 									}
 
 									bindings?.Add(newBinding);
@@ -563,14 +565,14 @@ namespace LinqToDB.Linq.Builder
 			public Expression?          Expression;
 		}
 
-		Dictionary<IBuildContext,List<SubQueryContextInfo>>? _buildContextCache;
+		Dictionary<(IBuildContext,MethodCallExpression),List<SubQueryContextInfo>>? _buildContextCache;
 
 		SubQueryContextInfo GetSubQueryContext(IBuildContext context, MethodCallExpression expr)
 		{
-			if (_buildContextCache == null || !_buildContextCache.TryGetValue(context, out var sbi))
+			if (_buildContextCache == null || !_buildContextCache.TryGetValue((context, expr), out var sbi))
 			{
 				_buildContextCache ??= new ();
-				_buildContextCache[context] = sbi = new List<SubQueryContextInfo>();
+				_buildContextCache[(context, expr)] = sbi = new List<SubQueryContextInfo>();
 			}
 
 			foreach (var item in sbi)

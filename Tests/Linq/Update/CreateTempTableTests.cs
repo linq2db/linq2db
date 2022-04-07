@@ -269,7 +269,6 @@ namespace Tests.xUpdate
 			tempTable.Dispose();
 		}
 
-#if !NETFRAMEWORK
 		[Test]
 		public async Task CreateTable_NoDisposeErrorAsync([DataSources(false)] string context)
 		{
@@ -281,7 +280,6 @@ namespace Tests.xUpdate
 			await table2.DropAsync();
 			await tempTable.DisposeAsync();
 		}
-#endif
 
 		[Table]
 		public class TableWithPrimaryKey

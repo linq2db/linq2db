@@ -716,7 +716,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestXml([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestXml([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var conn = GetDataConnection(context))
 			{
@@ -750,7 +750,7 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<TestEnum> ("SELECT 'A'"), Is.EqualTo(TestEnum.AA));
 				Assert.That(conn.Execute<TestEnum?>("SELECT 'A'"), Is.EqualTo(TestEnum.AA));
 
-				var sql = context == ProviderName.SqlServer2008 ? "SELECT 'C'" : "SELECT 'B'";
+				var sql = context.IsAnyOf(TestProvName.AllSqlServer2008) ? "SELECT 'C'" : "SELECT 'B'";
 
 				Assert.That(conn.Execute<TestEnum> (sql), Is.EqualTo(TestEnum.BB));
 				Assert.That(conn.Execute<TestEnum?>(sql), Is.EqualTo(TestEnum.BB));
@@ -764,7 +764,7 @@ namespace Tests.DataProvider
 			{
 				Assert.That(conn.Execute<string>("SELECT @p", new { p = TestEnum.AA }), Is.EqualTo("A"));
 				Assert.That(conn.Execute<string>("SELECT @p", new { p = (TestEnum?)TestEnum.BB }),
-					Is.EqualTo(context == ProviderName.SqlServer2008 ? "C" : "B"));
+					Is.EqualTo(context.IsAnyOf(TestProvName.AllSqlServer2008) ? "C" : "B"));
 
 				Assert.That(conn.Execute<string>("SELECT @p", new { p = ConvertTo<string>.From((TestEnum?)TestEnum.AA) }), Is.EqualTo("A"));
 				Assert.That(conn.Execute<string>("SELECT @p", new { p = ConvertTo<string>.From(TestEnum.AA) }), Is.EqualTo("A"));
@@ -1607,7 +1607,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestIssue1144([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestIssue1144([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = (DataConnection)GetDataContext(context))
 			{
@@ -1718,7 +1718,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void Issue1921Test([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		public void Issue1921Test([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = (DataConnection)GetDataContext(context))
 			{
@@ -1745,7 +1745,7 @@ namespace Tests.DataProvider
 
 		[Test]
 		[ActiveIssue(449)]
-		public void Issue449Test([IncludeDataSources(false, TestProvName.Northwind)] string context)
+		public void Issue449Test([IncludeDataSources(false, TestProvName.AllNorthwind)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -1850,7 +1850,7 @@ AS
 		}
 
 		[Test]
-		public void TestDescriptions([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestDescriptions([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -1885,7 +1885,7 @@ AS
 		}
 
 		[Test]
-		public void TestRetrieveIdentity([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context, [Values] bool useIdentity)
+		public void TestRetrieveIdentity([IncludeDataSources(false, TestProvName.AllSqlServer)] string context, [Values] bool useIdentity)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -1943,7 +1943,7 @@ AS
 		}
 
 		[Test]
-		public void TestTableFunctionAndTableExpression([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context, [Values] bool useIdentity)
+		public void TestTableFunctionAndTableExpression([IncludeDataSources(false, TestProvName.AllSqlServer)] string context, [Values] bool useIdentity)
 		{
 			using (var db = new TestDataConnection(context))
 			{

@@ -19,7 +19,7 @@ namespace Tests.Linq
 		public class IdlProvidersAttribute : IncludeDataSourcesAttribute
 		{
 			public IdlProvidersAttribute()
-				: base(TestProvName.AllMySql, TestProvName.AllSQLite, TestProvName.AllSqlServer2005Plus,
+				: base(TestProvName.AllMySql, TestProvName.AllSQLite, TestProvName.AllSqlServer,
 					TestProvName.AllAccess)
 			{
 			}

@@ -306,9 +306,6 @@ namespace Tests.UserTests
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllSapHana,
 				ProviderName.SqlCe,
-#if NETFRAMEWORK // old sqlite
-				ProviderName.SQLiteMS,
-#endif
 				TestProvName.AllSqlServer,
 				TestProvName.AllSybase
 			})]
@@ -692,7 +689,7 @@ namespace Tests.UserTests
 				if (c.Value == null)
 					return Expression.Default(e.Type);
 
-				if (c.Type.IsValueType && object.Equals(c.Value, Activator.CreateInstance(c.Type)))
+				if (c.Type.IsValueType && Equals(c.Value, Activator.CreateInstance(c.Type)))
 					return Expression.Default(e.Type);
 			}
 

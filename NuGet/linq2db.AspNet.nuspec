@@ -8,6 +8,7 @@
 		<tags>
 			linq linq2db LinqToDB aspnetcore ORM database DB SQL SqlServer Access SqlCe SqlServerCe MySql Firebird SQLite Sybase Oracle ODP PostgreSQL DB2 Informix SapHana
 		</tags>
+		<readme>README.md</readme>
 		<dependencies>
 			<group targetFramework=".NETFramework4.5" >
 				<dependency id="linq2db"                                   version="3.0.0"  />
@@ -16,13 +17,15 @@
 			</group>
 			<group targetFramework=".NETStandard2.0">
 				<dependency id="linq2db"                                   version="3.0.0"  />
-				<dependency id="Microsoft.Extensions.DependencyInjection"  version="3.1.20" />
-				<dependency id="Microsoft.Extensions.Logging.Abstractions" version="5.0.0"  />
+				<dependency id="Microsoft.Extensions.DependencyInjection"  version="3.1.23" />
+				<dependency id="Microsoft.Extensions.Logging.Abstractions" version="6.0.1"  />
 			</group>
 		</dependencies>
 	</metadata>
 
 	<files>
+		<file src="..\Nuget\README.AspNet.md"                                               target="README.md"           />
+
 		<file src="..\Source\LinqToDB.AspNet\bin\Release\net45\linq2db.AspNet.pdb"          target="lib\net45\"          />
 		<file src="..\Source\LinqToDB.AspNet\bin\Release\net45\linq2db.AspNet.xml"          target="lib\net45\"          />
 		<file src="..\Source\LinqToDB.AspNet\bin\Release\net45\linq2db.AspNet.dll"          target="lib\net45\"          />

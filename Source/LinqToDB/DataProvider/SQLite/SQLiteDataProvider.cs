@@ -41,8 +41,14 @@ namespace LinqToDB.DataProvider.SQLite
 			SqlProviderFlags.IsDistinctOrderBySupported        = true;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
 			SqlProviderFlags.IsDistinctSetOperationsSupported  = true;
-			SqlProviderFlags.IsUpdateFromSupported             = false;
+			SqlProviderFlags.IsUpdateFromSupported             = Adapter.SupportsUpdateFrom;
 			SqlProviderFlags.DefaultMultiQueryIsolationLevel   = IsolationLevel.Serializable;
+
+			if (Adapter.SupportsRowValue)
+			{
+				SqlProviderFlags.RowConstructorSupport = RowFeature.Equality        | RowFeature.Comparisons |
+				                                         RowFeature.CompareToSelect | RowFeature.Between     | RowFeature.Update;
+			}
 
 			_sqlOptimizer = new SQLiteSqlOptimizer(SqlProviderFlags);
 
@@ -170,13 +176,7 @@ namespace LinqToDB.DataProvider.SQLite
 			return typeName;
 		}
 
-		public override IDisposable? ExecuteScope(DataConnection dataConnection)
-		{
-			if (Adapter.DisposeCommandOnError)
-				return new DisposeCommandOnExceptionRegion(dataConnection);
-
-			return base.ExecuteScope(dataConnection);
-		}
+		public override IExecutionScope? ExecuteScope(DataConnection dataConnection) => Adapter.DisposeCommandOnError ? new DisposeCommandOnExceptionRegion(dataConnection) : null;
 
 		public override TableOptions SupportedTableOptions =>
 			TableOptions.IsTemporary               |

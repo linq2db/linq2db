@@ -395,6 +395,10 @@ namespace LinqToDB.SqlQuery
 					VisitX((SqlValuesTable)element);
 					break;
 
+				case QueryElementType.SqlRow:
+					VisitX((SqlRow)element);
+					break;
+
 				case QueryElementType.MergeOperationClause:
 					VisitX((SqlMergeOperationClause)element);
 					break;
@@ -411,7 +415,7 @@ namespace LinqToDB.SqlQuery
 					throw new InvalidOperationException($"Visit visitor not implemented for element {element.ElementType}");
 			}
 
-			if (element is IQueryExtendible { SqlQueryExtensions: { Count: > 0 } } qe)
+			if (element is IQueryExtendible { SqlQueryExtensions.Count: > 0 } qe)
 			{
 				foreach (var ext in qe.SqlQueryExtensions)
 				foreach (var arg in ext.Arguments)
@@ -598,24 +602,27 @@ namespace LinqToDB.SqlQuery
 
 		void VisitX(SqlOutputClause outputClause)
 		{
-			if (outputClause == null)
-				return;
-
-			Visit(outputClause.SourceTable);
 			Visit(outputClause.DeletedTable);
 			Visit(outputClause.InsertedTable);
 			Visit(outputClause.OutputTable);
-			if (outputClause.OutputQuery != null)
-				Visit(outputClause.OutputQuery);
 
 			if (outputClause.HasOutputItems)
 				foreach (var item in outputClause.OutputItems)
+					Visit(item);
+
+			if (outputClause.OutputColumns != null)
+				foreach (var item in outputClause.OutputColumns)
 					Visit(item);
 		}
 
 		void VisitX(SqlExpression element)
 		{
 			foreach (var v in element.Parameters) Visit(v);
+		}
+
+		void VisitX(SqlRow element)
+		{
+			foreach (var v in element.Values) Visit(v);
 		}
 
 		void VisitX(SqlObjectExpression element)

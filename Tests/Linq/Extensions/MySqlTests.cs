@@ -242,7 +242,7 @@ namespace Tests.Extensions
 			_ = q.ToList();
 
 			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {MySqlHints.Query.NoSemiJoin}(@qq FIRSTMATCH, LOOSESCAN)"));
-			Assert.That(LastQuery, Contains.Substring("\tSELECT /*+ QB_NAME(qq) */"));
+			Assert.That(LastQuery, Contains.Substring("\tSELECT /*+ QB_NAME(qq) */").Using(StringComparison.Ordinal));
 		}
 	}
 }

@@ -149,10 +149,10 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.OutputClause:
 					{
 						return
-							Find(((SqlOutputClause)element).SourceTable)   ??
 							Find(((SqlOutputClause)element).DeletedTable)  ??
 							Find(((SqlOutputClause)element).InsertedTable) ??
 							Find(((SqlOutputClause)element).OutputTable)   ??
+							Find(((SqlOutputClause)element).OutputColumns) ??
 							(((SqlOutputClause)element).HasOutputItems ? Find(((SqlOutputClause)element).OutputItems) : null);
 					}
 
@@ -217,7 +217,7 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.SetExpression:
 					{
 						return
-							Find(((SqlSetExpression)element).Column    ) ??
+							Find(((SqlSetExpression)element).Column) ??
 							Find(((SqlSetExpression)element).Expression);
 					}
 
@@ -380,6 +380,11 @@ namespace LinqToDB.SqlQuery
 						return
 							Find(((SqlValuesTable)element).Fields                  ) ??
 							Find(((SqlValuesTable)element).Rows?.SelectMany(static r => r));
+					}
+
+				case QueryElementType.SqlRow:
+					{
+						return Find(((SqlRow)element).Values);
 					}
 
 				case QueryElementType.SqlField:

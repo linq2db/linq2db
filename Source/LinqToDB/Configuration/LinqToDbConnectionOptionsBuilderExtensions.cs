@@ -374,7 +374,6 @@
 			return builder.UseConnectionString(ProviderName.SapHana, connectionString);
 		}
 
-#if NETFRAMEWORK || NETCOREAPP
 		/// <summary>
 		/// Configure connection to use native SAP HANA provider and connection string.
 		/// </summary>
@@ -387,7 +386,6 @@
 				SapHanaTools.GetDataProvider(ProviderName.SapHanaNative),
 				connectionString);
 		}
-#endif
 
 		/// <summary>
 		/// Configure connection to use SAP HANA ODBC provider and connection string.

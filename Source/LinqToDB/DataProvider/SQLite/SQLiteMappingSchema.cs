@@ -26,7 +26,7 @@ namespace LinqToDB.DataProvider.SQLite
 		{
 			SetConvertExpression<string,TimeSpan>(s => DateTime.Parse(s, null, DateTimeStyles.NoCurrentDateDefault).TimeOfDay);
 
-			SetValueToSqlConverter(typeof(Guid),     (sb,dt,v) => ConvertGuidToSql    (sb, (Guid)    v));
+			SetValueToSqlConverter(typeof(Guid),     (sb,dt,v) => ConvertBinaryToSql  (sb, ((Guid)  v).ToByteArray()));
 			SetValueToSqlConverter(typeof(DateTime), (sb,dt,v) => ConvertDateTimeToSql(sb, (DateTime)v));
 			SetValueToSqlConverter(typeof(string),   (sb,dt,v) => ConvertStringToSql  (sb, v.ToString()!));
 			SetValueToSqlConverter(typeof(char),     (sb,dt,v) => ConvertCharToSql    (sb, (char)v));
@@ -43,25 +43,6 @@ namespace LinqToDB.DataProvider.SQLite
 			stringBuilder.AppendByteArrayAsHexViaLookup32(value);
 
 			stringBuilder.Append('\'');
-		}
-
-		static void ConvertGuidToSql(StringBuilder stringBuilder, Guid value)
-		{
-			var s = value.ToString("N");
-
-			stringBuilder
-				.Append("Cast(x'")
-				.Append(s.Substring( 6,  2))
-				.Append(s.Substring( 4,  2))
-				.Append(s.Substring( 2,  2))
-				.Append(s.Substring( 0,  2))
-				.Append(s.Substring(10,  2))
-				.Append(s.Substring( 8,  2))
-				.Append(s.Substring(14,  2))
-				.Append(s.Substring(12,  2))
-				.Append(s.Substring(16, 16))
-				.Append("' as blob)")
-				;
 		}
 
 		static void ConvertDateTimeToSql(StringBuilder stringBuilder, DateTime value)

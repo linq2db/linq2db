@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Linq;
 using System.Text;
 
@@ -9,7 +10,6 @@ namespace LinqToDB.DataProvider.SqlServer
 	using Mapping;
 	using SqlQuery;
 	using SqlProvider;
-	using System.Data.Common;
 
 	abstract class SqlServerSqlBuilder : BasicSqlBuilder
 	{
@@ -46,11 +46,12 @@ namespace LinqToDB.DataProvider.SqlServer
 					AppendOutputTableVariable(insertClause.Into)
 						.Append(" TABLE (");
 					Convert(StringBuilder, identityField.PhysicalName, ConvertType.NameToQueryField);
-					StringBuilder.Append(' ');
+					StringBuilder
+						.Append(' ');
 					BuildCreateTableFieldType(identityField);
 					StringBuilder
-						.AppendLine(")")
-						.AppendLine();
+							.AppendLine(")")
+							.AppendLine();
 				}
 			}
 
@@ -77,85 +78,13 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 			else
 			{
-				var output = statement.GetOutputClause();
-				BuildOutputSubclause(output);
-			}
-		}
-
-		protected override void BuildOutputSubclause(SqlOutputClause? output)
-		{
-			if (output != null && output.HasOutputItems)
-			{
-				AppendIndent()
-					.AppendLine("OUTPUT");
-
-				if (output.InsertedTable != null)
-					output.InsertedTable.PhysicalName = "INSERTED";
-
-				if (output.DeletedTable != null)
-					output.DeletedTable.PhysicalName = "DELETED";
-
-				++Indent;
-
-				bool first = true;
-				foreach (var oi in output.OutputItems)
-				{
-					if (!first)
-						StringBuilder.AppendLine(Comma);
-					first = false;
-
-					AppendIndent();
-
-					BuildExpression(oi.Expression!);
+				BuildOutputSubclause(statement.GetOutputClause());
+				}
 				}
 
-				if (output.OutputItems.Count > 0)
-				{
-					StringBuilder
-						.AppendLine();
-				}
-
-				--Indent;
-
-				if (output.OutputQuery != null)
-				{
-					BuildColumns(output.OutputQuery);
-				}
-
-				if (output.OutputTable != null)
-				{
-					AppendIndent()
-						.Append("INTO ")
-						.Append(GetTablePhysicalName(output.OutputTable))
-						.AppendLine();
-
-					AppendIndent()
-						.AppendLine(OpenParens);
-
-					++Indent;
-
-					var firstColumn = true;
-					foreach (var oi in output.OutputItems)
-					{
-						if (!firstColumn)
-							StringBuilder.AppendLine(Comma);
-						firstColumn = false;
-
-						AppendIndent();
-
-						BuildExpression(oi.Column, false, true);
-					}
-
-					StringBuilder
-						.AppendLine();
-
-					--Indent;
-
-					AppendIndent()
-						.AppendLine(")");
-				}
-			}
-		}
+		protected override string OutputKeyword       => "OUTPUT";
+		protected override string DeletedOutputTable  => "DELETED";
+		protected override string InsertedOutputTable => "INSERTED";
 
 		protected override void BuildGetIdentity(SqlInsertClause insertClause)
 		{
@@ -180,14 +109,6 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 		}
 
-		protected override void BuildUpdateClause(SqlStatement statement, SelectQuery selectQuery, SqlUpdateClause updateClause)
-		{
-			base.BuildUpdateClause(statement, selectQuery, updateClause);
-
-			var output = statement.GetOutputClause();
-			BuildOutputSubclause(output);
-		}
-
 		protected override void BuildDeleteClause(SqlDeleteStatement deleteStatement)
 		{
 			var table = deleteStatement.Table != null ?
@@ -202,14 +123,23 @@ namespace LinqToDB.DataProvider.SqlServer
 			StringBuilder.Append(' ');
 			Convert(StringBuilder, GetTableAlias(table)!, ConvertType.NameToQueryTableAlias);
 			StringBuilder.AppendLine();
-
-			BuildOutputSubclause(deleteStatement);
+			BuildOutputSubclause(deleteStatement.GetOutputClause());
 		}
 
-		protected virtual void BuildOutputSubclause(SqlDeleteStatement deleteStatement)
+		protected override void BuildOutputSubclause(SqlOutputClause? output)
 		{
-			var output = deleteStatement.GetOutputClause();
-			BuildOutputSubclause(output);
+			if (BuildStep == Step.Output)
+			{
+				return;
+		}
+
+			base.BuildOutputSubclause(output);
+		}
+
+		protected override void BuildUpdateClause(SqlStatement statement, SelectQuery selectQuery, SqlUpdateClause updateClause)
+		{
+			base.BuildUpdateClause(statement, selectQuery, updateClause);
+			BuildOutputSubclause(statement.GetOutputClause());
 		}
 
 		protected override void BuildUpdateTableName(SelectQuery selectQuery, SqlUpdateClause updateClause)
@@ -430,40 +360,40 @@ namespace LinqToDB.DataProvider.SqlServer
 			base.BuildDataTypeFromDataType(type, forCreateTable);
 		}
 
-		protected override string? GetTypeName(DbParameter parameter)
+		protected override string? GetTypeName(IDataContext dataContext, DbParameter parameter)
 		{
 			if (DataProvider is SqlServerDataProvider provider)
 			{
-				var param = provider.TryGetProviderParameter(parameter, MappingSchema);
+				var param = provider.TryGetProviderParameter(dataContext, parameter);
 				if (param != null)
 					return provider.Adapter.GetTypeName(param);
 			}
 
-			return base.GetTypeName(parameter);
+			return base.GetTypeName(dataContext, parameter);
 		}
 
-		protected override string? GetUdtTypeName(DbParameter parameter)
+		protected override string? GetUdtTypeName(IDataContext dataContext, DbParameter parameter)
 		{
 			if (DataProvider is SqlServerDataProvider provider)
 			{
-				var param = provider.TryGetProviderParameter(parameter, MappingSchema);
+				var param = provider.TryGetProviderParameter(dataContext, parameter);
 				if (param != null)
 					return provider.Adapter.GetUdtTypeName(param);
 			}
 
-			return base.GetUdtTypeName(parameter);
+			return base.GetUdtTypeName(dataContext, parameter);
 		}
 
-		protected override string? GetProviderTypeName(DbParameter parameter)
+		protected override string? GetProviderTypeName(IDataContext dataContext, DbParameter parameter)
 		{
 			if (DataProvider is SqlServerDataProvider provider)
 			{
-				var param = provider.TryGetProviderParameter(parameter, MappingSchema);
+				var param = provider.TryGetProviderParameter(dataContext, parameter);
 				if (param != null)
 					return provider.Adapter.GetDbType(param).ToString();
 			}
 
-			return base.GetProviderTypeName(parameter);
+			return base.GetProviderTypeName(dataContext, parameter);
 		}
 
 		protected override void BuildTruncateTable(SqlTruncateTableStatement truncateTable)

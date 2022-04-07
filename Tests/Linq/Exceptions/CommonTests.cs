@@ -30,7 +30,7 @@ namespace Tests.Exceptions
 							if (e.ElementType == QueryElementType.SetExpression)
 							{
 								var se = (SqlSetExpression)e;
-								return ((SqlField)se.Column).Name == "ParentID";
+								return ((SqlField)se.Column!).Name == "ParentID";
 							}
 
 							return false;

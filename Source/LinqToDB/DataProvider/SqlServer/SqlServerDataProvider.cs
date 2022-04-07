@@ -42,9 +42,9 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		public SqlServerDataProvider(string name, SqlServerVersion version, SqlServerProvider provider)
 			: base(
-				name,
-				MappingSchemaInstance.Get(version),
-				SqlServerProviderAdapter.GetInstance(provider))
+				  name,
+				  MappingSchemaInstance.Get(version),
+				  SqlServerProviderAdapter.GetInstance(provider))
 		{
 			Version  = version;
 			Provider = provider;
@@ -55,8 +55,12 @@ namespace LinqToDB.DataProvider.SqlServer
 			SqlProviderFlags.IsCountDistinctSupported          = true;
 			SqlProviderFlags.IsUpdateFromSupported             = true;
 			SqlProviderFlags.AcceptsOuterExpressionInAggregate = false;
+			SqlProviderFlags.OutputDeleteUseSpecialTable       = true;
+			SqlProviderFlags.OutputInsertUseSpecialTable       = true;
+			SqlProviderFlags.OutputUpdateUseSpecialTables      = true;
 			SqlProviderFlags.IsApplyJoinSupported              = true;
 			SqlProviderFlags.TakeHintsSupported                = TakeHints.Percent | TakeHints.WithTies;
+			// TODO: move both options to SQL2005 level
 			SqlProviderFlags.IsCommonTableExpressionsSupported = version >= SqlServerVersion.v2008;
 
 			SetCharField("char" , (r, i) => r.GetString(i).TrimEnd(' '));
@@ -201,7 +205,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
 		{
-			var param = TryGetProviderParameter(parameter, MappingSchema);
+			var param = TryGetProviderParameter(dataConnection, parameter);
 
 			switch (dataType.DataType)
 			{
@@ -336,7 +340,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			if (type != null)
 			{
-				var param = TryGetProviderParameter(parameter, dataConnection.MappingSchema);
+				var param = TryGetProviderParameter(dataConnection, parameter);
 				if (param != null)
 				{
 					Adapter.SetDbType(param, type.Value);

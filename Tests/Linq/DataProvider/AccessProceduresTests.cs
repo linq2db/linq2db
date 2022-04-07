@@ -16,7 +16,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void Test_SelectProcedureSchema([IncludeDataSources(TestProvName.AllAccess)] string context)
 		{
-			var isODBC = context == ProviderName.AccessOdbc;
+			var isODBC = context.IsAnyOf(ProviderName.AccessOdbc);
 			using (var db = GetDataConnection(context))
 			{
 				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
@@ -47,7 +47,7 @@ namespace Tests.DataProvider
 				Assert.AreEqual("int?", proc.Parameters[0].ParameterType);
 				Assert.IsNull(proc.Parameters[0].ProviderSpecificType);
 				Assert.AreEqual("@id", proc.Parameters[0].SchemaName);
-				Assert.AreEqual(context == ProviderName.Access ? "Long" : "INTEGER", proc.Parameters[0].SchemaType);
+				Assert.AreEqual(context.IsAnyOf(ProviderName.Access) ? "Long" : "INTEGER", proc.Parameters[0].SchemaType);
 				Assert.IsNull(proc.Parameters[0].Size);
 				Assert.AreEqual(typeof(int), proc.Parameters[0].SystemType);
 
@@ -182,7 +182,7 @@ namespace Tests.DataProvider
 
 				Assert.AreEqual(1, db.Person.Where(_ => _.ID == id).Count());
 
-				var cnt = Person_Delete(db, id, context == ProviderName.AccessOdbc);
+				var cnt = Person_Delete(db, id, context.IsAnyOf(ProviderName.AccessOdbc));
 
 				Assert.AreEqual(0, db.Person.Where(_ => _.ID == id).Count());
 				Assert.AreEqual(1, cnt);
@@ -205,7 +205,7 @@ namespace Tests.DataProvider
 
 				Assert.AreEqual(1, db.Person.Where(_ => _.ID == id).Count());
 
-				var cnt = Person_Update(db, id, "new first", "new middle", "new last", 'U', context == ProviderName.AccessOdbc);
+				var cnt = Person_Update(db, id, "new first", "new middle", "new last", 'U', context.IsAnyOf(ProviderName.AccessOdbc));
 
 				Assert.AreEqual(1, cnt);
 
@@ -227,7 +227,7 @@ namespace Tests.DataProvider
 			{
 				var maxId = db.Person.OrderByDescending(_ => _.ID).Select(_ => _.ID).FirstOrDefault();
 
-				var cnt = Person_Insert(db, "new first", "new middle", "new last", 'U', context == ProviderName.AccessOdbc);
+				var cnt = Person_Insert(db, "new first", "new middle", "new last", 'U', context.IsAnyOf(ProviderName.AccessOdbc));
 
 				Assert.AreEqual(1, cnt);
 
@@ -248,7 +248,7 @@ namespace Tests.DataProvider
 			{
 				Assert.AreEqual(0, db.GetTable<Issue792Tests.AllTypes>().Where(_ => _.char20DataType == "issue792").Count());
 
-				var cnt = ThisProcedureNotVisibleFromODBC(db, context == ProviderName.AccessOdbc);
+				var cnt = ThisProcedureNotVisibleFromODBC(db, context.IsAnyOf(ProviderName.AccessOdbc));
 
 				Assert.AreEqual(1, cnt);
 
@@ -264,7 +264,7 @@ namespace Tests.DataProvider
 			{
 				Assert.AreEqual(0, db.GetTable<Issue792Tests.AllTypes>().Where(_ => _.char20DataType == "issue792").Count());
 
-				var cnt = AddIssue792Record(db, 100500, context == ProviderName.AccessOdbc);
+				var cnt = AddIssue792Record(db, 100500, context.IsAnyOf(ProviderName.AccessOdbc));
 
 				Assert.AreEqual(1, cnt);
 
@@ -278,7 +278,7 @@ namespace Tests.DataProvider
 			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
-				var res = Scalar_DataReader(db, context == ProviderName.AccessOdbc);
+				var res = Scalar_DataReader(db, context.IsAnyOf(ProviderName.AccessOdbc));
 
 				Assert.AreEqual(1      , res.Count);
 				Assert.AreEqual(12345  , res[0].intField);
@@ -292,7 +292,7 @@ namespace Tests.DataProvider
 			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
-				var res = Person_SelectAll(db, context == ProviderName.AccessOdbc);
+				var res = Person_SelectAll(db, context.IsAnyOf(ProviderName.AccessOdbc));
 
 				AreEqual(db.Person.OrderBy(_ => _.ID), res.OrderBy( _ => _.ID));
 			}
@@ -305,7 +305,7 @@ namespace Tests.DataProvider
 			using (db.BeginTransaction())
 			{
 				var id = db.Person.Select(_ => _.ID).Max();
-				var res = Person_SelectByKey(db, id, context == ProviderName.AccessOdbc);
+				var res = Person_SelectByKey(db, id, context.IsAnyOf(ProviderName.AccessOdbc));
 
 				AreEqual(db.Person.Where(_ => _.ID == id), res);
 			}
@@ -320,7 +320,7 @@ namespace Tests.DataProvider
 				var firstName = "Jürgen";
 				var lastName  = "König";
 				var query     = db.Person.Where(_ => _.FirstName == firstName && _.LastName == lastName);
-				var res       = Person_SelectByName(db, firstName, lastName, context == ProviderName.AccessOdbc);
+				var res       = Person_SelectByName(db, firstName, lastName, context.IsAnyOf(ProviderName.AccessOdbc));
 
 				Assert.AreEqual(1, query.Count());
 				AreEqual(query, res);
@@ -336,7 +336,7 @@ namespace Tests.DataProvider
 				var firstName = "e";
 				var lastName  = "o";
 				var query     = db.Person.Where(_ => _.FirstName.Contains(firstName) && _.LastName.Contains(lastName));
-				var res       = Person_SelectListByName(db, $"%{firstName}%", $"%{lastName}%", context == ProviderName.AccessOdbc);
+				var res       = Person_SelectListByName(db, $"%{firstName}%", $"%{lastName}%", context.IsAnyOf(ProviderName.AccessOdbc));
 
 				Assert.AreEqual(2, query.Count());
 				AreEqual(query.OrderBy(_ => _.ID), res.OrderBy(_ => _.ID));
@@ -349,7 +349,7 @@ namespace Tests.DataProvider
 			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
-				var res = Patient_SelectAll(db, context == ProviderName.AccessOdbc);
+				var res = Patient_SelectAll(db, context.IsAnyOf(ProviderName.AccessOdbc));
 
 				AreEqual(
 					db.Patient.Select(p => new PatientResult()
@@ -385,7 +385,7 @@ namespace Tests.DataProvider
 										Gender     = p.Person.Gender,
 										Diagnosis  = p.Diagnosis
 									});
-				var res = Patient_SelectByName(db, firstName, lastName, context == ProviderName.AccessOdbc);
+				var res = Patient_SelectByName(db, firstName, lastName, context.IsAnyOf(ProviderName.AccessOdbc));
 
 				Assert.AreEqual(1, query.Count());
 				AreEqual(

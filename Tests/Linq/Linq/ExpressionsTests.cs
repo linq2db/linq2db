@@ -13,6 +13,7 @@ using NUnit.Framework;
 namespace Tests.Linq
 {
 	using LinqToDB.Common;
+	using LinqToDB.Data;
 	using Model;
 
 	[TestFixture]
@@ -241,7 +242,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MethodExpression8([DataSources(ProviderName.SQLiteMS)] string context)
+		public void MethodExpression8([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -818,7 +819,7 @@ namespace Tests.Linq
 
 		#region issue 2688
 		[Test]
-		public void NullableNullValueTest1([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public void NullableNullValueTest1([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -827,7 +828,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NullableNullValueTest2([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public void NullableNullValueTest2([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -836,7 +837,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NullableNullValueTest3([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public void NullableNullValueTest3([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -845,7 +846,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NullableNullValueTest4([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public void NullableNullValueTest4([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -854,7 +855,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NullableNullValueTest5([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public void NullableNullValueTest5([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1004,10 +1005,50 @@ namespace Tests.Linq
 		}
 		#endregion
 
+		#region issue 3472
+		[Table]
+		public class Issue3472TableDC
+		{
+			[Column] public int Id { get; set; }
+
+			[ExpressionMethod(nameof(PersonsCountExpr), IsColumn = true)]
+			public int PersonsCount { get; set; }
+
+			private static Expression<Func<Issue3472TableDC, DataConnection, int>> PersonsCountExpr() => (r, db) => db.GetTable<Person>().Where(p => p.ID == r.Id).Count();
+		}
+
+		[Table]
+		public class Issue3472TableDCTX
+		{
+			[Column] public int Id { get; set; }
+
+			[ExpressionMethod(nameof(PersonsCountExpr), IsColumn = true)]
+			public int PersonsCount { get; set; }
+
+			private static Expression<Func<Issue3472TableDCTX, DataContext, int>> PersonsCountExpr() => (r, db) => db.GetTable<Person>().Where(p => p.ID == r.Id).Count();
+		}
+
+		[Test]
+		public void Issue3472Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			if (db is DataConnection)
+			{
+				using var tb = db.CreateLocalTable(new[] { new Issue3472TableDC() { Id = 1 } });
+				tb.ToArray();
+			}
+			else
+			{
+				using var tb = db.CreateLocalTable(new[] { new Issue3472TableDCTX() { Id = 1 } });
+				tb.ToArray();
+			}
+		}
+		#endregion
+
 		#region Null check generated
 
 		[Test]
-		public void TestNullCheckInExpressionLeft([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestNullCheckInExpressionLeft([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1016,7 +1057,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNullCheckInExpressionRight([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestNullCheckInExpressionRight([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1025,7 +1066,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNullCheckInExpressionUsingFieldLeft([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestNullCheckInExpressionUsingFieldLeft([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1034,7 +1075,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNullCheckInExpressionUsingFieldRight([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestNullCheckInExpressionUsingFieldRight([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1066,6 +1107,47 @@ namespace Tests.Linq
 
 		#endregion
 
+		#region Regression: query comparison
+		[Test(Description = "Tests regression introduced in 3.5.2")]
+		public void ComparisonTest1([DataSources(ProviderName.SqlCe)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var left  = GetQuery(db, null);
+				var right = GetQuery(db, 2);
+
+				Assert.False(
+					db.Person.Where(_ =>
+					left.Where(rec => !right.Select(r2 => r2.PersonID).Contains(rec.PersonID)).Select(_ => Sql.Ext.Count(_.PersonID, Sql.AggregateModifier.None).ToValue()).Single() == 0
+					&&
+					right.Where(rec => !left.Select(r2 => r2.PersonID).Contains(rec.PersonID)).Select(_ => Sql.Ext.Count(_.PersonID, Sql.AggregateModifier.None).ToValue()).Single() == 0)
+					.Any());
+			}
+		}
+
+		[Test(Description = "Tests regression introduced in 3.5.2")]
+		public void ComparisonTest2([DataSources(TestProvName.AllAccess)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var left  = GetQuery(db, null);
+				var right = GetQuery(db, 2);
+
+				Assert.False(
+					db.Person.Where(_ =>
+					left.Where(rec => !right.Select(r2 => r2.PersonID).Contains(rec.PersonID)).Count() == 0
+					&&
+					right.Where(rec => !left.Select(r2 => r2.PersonID).Contains(rec.PersonID)).Count() == 0)
+					.Any());
+			}
+		}
+
+		private static IQueryable<Patient> GetQuery(ITestDataContext db, int? personId)
+		{
+			return db.Patient.Where(_ => _.PersonID == personId);
+		}
+
+		#endregion
 	}
 
 	static class ExpressionTestExtensions

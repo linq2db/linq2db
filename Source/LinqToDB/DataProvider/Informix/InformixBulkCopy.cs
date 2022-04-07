@@ -1,16 +1,15 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Data.Common;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.Informix
 {
-	using System;
-	using System.Data;
-	using System.Data.Common;
-	using System.Linq;
-	using System.Threading;
-	using System.Threading.Tasks;
+	using Common;
 	using Data;
-	using LinqToDB.Common;
-	using LinqToDB.SqlProvider;
+	using SqlProvider;
 
 	class InformixBulkCopy : BasicBulkCopy
 	{
@@ -30,7 +29,7 @@ namespace LinqToDB.DataProvider.Informix
 			if ((_provider.Adapter.InformixBulkCopy != null || _provider.Adapter.DB2BulkCopy != null)
 				&& table.TryGetDataConnection(out var dataConnection) && dataConnection.Transaction == null)
 			{
-				var connection = _provider.TryGetProviderConnection(dataConnection.Connection, table.DataContext.MappingSchema);
+				var connection = _provider.TryGetProviderConnection(dataConnection, dataConnection.Connection);
 
 				if (connection != null)
 				{
@@ -66,7 +65,7 @@ namespace LinqToDB.DataProvider.Informix
 			if ((_provider.Adapter.InformixBulkCopy != null || _provider.Adapter.DB2BulkCopy != null)
 				&& table.TryGetDataConnection(out var dataConnection) && dataConnection.Transaction == null)
 			{
-				var connection = _provider.TryGetProviderConnection(dataConnection.Connection, table.DataContext.MappingSchema);
+				var connection = _provider.TryGetProviderConnection(dataConnection, dataConnection.Connection);
 
 				if (connection != null)
 				{
@@ -104,7 +103,7 @@ namespace LinqToDB.DataProvider.Informix
 			if ((_provider.Adapter.InformixBulkCopy != null || _provider.Adapter.DB2BulkCopy != null)
 				&& table.TryGetDataConnection(out var dataConnection) && dataConnection.Transaction == null)
 			{
-				var connection = _provider.TryGetProviderConnection(dataConnection.Connection, table.DataContext.MappingSchema);
+				var connection = _provider.TryGetProviderConnection(dataConnection, dataConnection.Connection);
 
 				if (connection != null)
 				{
@@ -205,23 +204,27 @@ namespace LinqToDB.DataProvider.Informix
 		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(
 			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
-			using (new InvariantCultureRegion(null))
+			using ((IDisposable)new InvariantCultureRegion(null))
 				return base.MultipleRowsCopy(table, options, source);
 		}
 
-		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
+		protected override async Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
 			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			using (new InvariantCultureRegion(null))
-				return base.MultipleRowsCopyAsync(table, options, source, cancellationToken);
+#if NATIVE_ASYNC
+			await using (new InvariantCultureRegion(null))
+#else
+			using ((IDisposable)new InvariantCultureRegion(null))
+#endif
+				return await base.MultipleRowsCopyAsync(table, options, source, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 		}
 
 #if NATIVE_ASYNC
-		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
+		protected override async Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
 			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			using (new InvariantCultureRegion(null))
-				return base.MultipleRowsCopyAsync(table, options, source, cancellationToken);
+			await using (new InvariantCultureRegion(null))
+				return await base.MultipleRowsCopyAsync(table, options, source, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 		}
 #endif
 	}

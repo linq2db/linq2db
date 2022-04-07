@@ -244,6 +244,25 @@ namespace LinqToDB.DataProvider.Oracle
 				throwExceptionIfTableNotFound);
 		}
 
+		protected override void BuildExprExprPredicate(SqlPredicate.ExprExpr expr)
+		{
+			BuildExpression(GetPrecedence(expr), expr.Expr1);
+
+			BuildExprExprPredicateOperator(expr);
+
+			var exprPrecedence = GetPrecedence(expr);
+
+			if (expr.Expr2.ElementType == QueryElementType.SqlRow && expr.Operator != SqlPredicate.Operator.Overlaps)
+			{
+				// Oracle needs brackets around the right-hand side to disambiguate the syntax, e.g.:
+				// (1, 2) = ( (3, 4) )
+
+				exprPrecedence = int.MaxValue;
+			}
+
+			BuildExpression(exprPrecedence, expr.Expr2);
+		}
+
 		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr)
 		{
 			StringBuilder.Append("DECODE(");
@@ -372,7 +391,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 						.AppendLine("\tBEGIN")
 						.Append("\t\tEXECUTE IMMEDIATE 'DROP SEQUENCE ");
-
+					
 					AppendSchemaPrefix(StringBuilder, dropTable.Table!.Schema);
 					Convert(StringBuilder, MakeIdentitySequenceName(dropTable.Table.PhysicalName!), ConvertType.SequenceName);
 
@@ -515,16 +534,16 @@ END;",
 			}
 		}
 
-		protected override string? GetProviderTypeName(DbParameter parameter)
+		protected override string? GetProviderTypeName(IDataContext dataContext, DbParameter parameter)
 		{
 			if (DataProvider is OracleDataProvider provider)
 			{
-				var param = provider.TryGetProviderParameter(parameter, MappingSchema);
+				var param = provider.TryGetProviderParameter(dataContext, parameter);
 				if (param != null)
 					return provider.Adapter.GetDbType(param).ToString();
 			}
 
-			return base.GetProviderTypeName(parameter);
+			return base.GetProviderTypeName(dataContext, parameter);
 		}
 
 		protected override void BuildCreateTableCommand(SqlTable table)
@@ -621,7 +640,7 @@ END;",
 		protected void BuildMultiInsertClause(SqlMultiInsertStatement statement)
 		{
 			StringBuilder.AppendLine(statement.InsertType == MultiInsertType.First ? "INSERT FIRST" : "INSERT ALL");
-
+			
 			Indent++;
 
 			if (statement.InsertType == MultiInsertType.Unconditional)
@@ -637,7 +656,7 @@ END;",
 					{
 						int length = StringBuilder.Append("WHEN ").Length;
 						BuildSearchCondition(insert.When, wrapCondition: true);
-						// If `when` condition is optimized to always `true`,
+						// If `when` condition is optimized to always `true`, 
 						// then BuildSearchCondition doesn't write anything.
 						if (StringBuilder.Length == length)
 							StringBuilder.Append("1 = 1");
@@ -647,7 +666,7 @@ END;",
 					{
 						StringBuilder.AppendLine("ELSE");
 					}
-
+		
 					BuildInsertClause(statement, insert.Insert, "INTO ", appendTableName: true, addAlias: false);
 				}
 			}
@@ -655,7 +674,7 @@ END;",
 			Indent--;
 		}
 
-		#endregion
+		#endregion 
 
 		protected StringBuilder? HintBuilder;
 

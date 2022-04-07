@@ -328,7 +328,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void DeleteTakeOrdered([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public void DeleteTakeOrdered([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -361,7 +361,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void DeleteSkipTake([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public void DeleteSkipTake([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

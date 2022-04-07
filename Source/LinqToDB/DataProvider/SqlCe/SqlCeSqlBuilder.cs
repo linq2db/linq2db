@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Data;
+using System.Data.Common;
 using System.Text;
 
 namespace LinqToDB.DataProvider.SqlCe
@@ -7,7 +7,6 @@ namespace LinqToDB.DataProvider.SqlCe
 	using SqlQuery;
 	using SqlProvider;
 	using Mapping;
-	using System.Data.Common;
 
 	class SqlCeSqlBuilder : BasicSqlBuilder
 	{
@@ -74,6 +73,7 @@ namespace LinqToDB.DataProvider.SqlCe
 		{
 			switch (type.Type.DataType)
 			{
+				case DataType.Guid          : StringBuilder.Append("UNIQUEIDENTIFIER");                                                             return;
 				case DataType.Char          : base.BuildDataTypeFromDataType(new SqlDataType(DataType.NChar,    type.Type.Length), forCreateTable); return;
 				case DataType.VarChar       : base.BuildDataTypeFromDataType(new SqlDataType(DataType.NVarChar, type.Type.Length), forCreateTable); return;
 				case DataType.SmallMoney    : StringBuilder.Append("Decimal(10, 4)");                                                               return;
@@ -143,16 +143,16 @@ namespace LinqToDB.DataProvider.SqlCe
 			return sb.Append(table);
 		}
 
-		protected override string? GetProviderTypeName(DbParameter parameter)
+		protected override string? GetProviderTypeName(IDataContext dataContext, DbParameter parameter)
 		{
 			if (DataProvider is SqlCeDataProvider provider)
 			{
-				var param = provider.TryGetProviderParameter(parameter, MappingSchema);
+				var param = provider.TryGetProviderParameter(dataContext, parameter);
 				if (param != null)
 					return provider.Adapter.GetDbType(param).ToString();
 			}
 
-			return base.GetProviderTypeName(parameter);
+			return base.GetProviderTypeName(dataContext, parameter);
 		}
 
 		protected override void BuildMergeStatement(SqlMergeStatement merge)

@@ -1,22 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
+using System.Data.Common;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.DB2
 {
-	using System.Data.Common;
-	using System.Threading;
-	using System.Threading.Tasks;
 	using Data;
-	using LinqToDB.Common;
+	using Common;
+
 	using DB2BulkCopyOptions = DB2ProviderAdapter.DB2BulkCopyOptions;
 
 	class DB2BulkCopy : BasicBulkCopy
 	{
 		/// <remarks>
 		/// Settings based on https://www.ibm.com/docs/en/i/7.3?topic=reference-sql-limits
-		/// We subtract 1 here to be safe since some ADO providers use parameter for command itself. 
+		/// We subtract 1 here to be safe since some ADO providers use parameter for command itself.
 		/// </remarks>
 		protected override int             MaxParameters => 1999;
 		/// <remarks>
@@ -38,7 +38,8 @@ namespace LinqToDB.DataProvider.DB2
 		{
 			if (table.TryGetDataConnection(out var dataConnection))
 			{
-				var connection = _provider.TryGetProviderConnection(dataConnection.Connection, table.DataContext.MappingSchema);
+				var connection = _provider.TryGetProviderConnection(dataConnection, dataConnection.Connection);
+
 				if (connection != null)
 					return ProviderSpecificCopyImpl(
 						table,
@@ -57,7 +58,7 @@ namespace LinqToDB.DataProvider.DB2
 		{
 			if (table.TryGetDataConnection(out var dataConnection))
 			{
-				var connection = _provider.TryGetProviderConnection(dataConnection.Connection, table.DataContext.MappingSchema);
+				var connection = _provider.TryGetProviderConnection(dataConnection, dataConnection.Connection);
 				if (connection != null)
 					// call the synchronous provider-specific implementation
 					return Task.FromResult(ProviderSpecificCopyImpl(
@@ -78,7 +79,8 @@ namespace LinqToDB.DataProvider.DB2
 		{
 			if (table.TryGetDataConnection(out var dataConnection))
 			{
-				var connection = _provider.TryGetProviderConnection(dataConnection.Connection, table.DataContext.MappingSchema);
+				var connection = _provider.TryGetProviderConnection(dataConnection, dataConnection.Connection);
+
 				if (connection != null)
 				{
 					var enumerator = source.GetAsyncEnumerator(cancellationToken);

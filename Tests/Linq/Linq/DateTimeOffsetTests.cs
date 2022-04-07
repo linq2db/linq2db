@@ -72,7 +72,7 @@ namespace Tests.Linq
 				.ToArray();
 
 			public static Transaction[] GetDbDataForContext(string context) =>
-				context.StartsWith("SqlServer")
+				context.IsAnyOf(TestProvName.AllSqlServer)
 					? AllData
 					: LocalTzData;
 
@@ -81,7 +81,7 @@ namespace Tests.Linq
 				.ToArray();
 
 			public static Transaction[] GetTestDataForContext(string context) =>
-				context.StartsWith("SqlServer")
+				context.IsAnyOf(TestProvName.AllSqlServer)
 					? AllData
 					: LocalTzDataInUtc;
 		}

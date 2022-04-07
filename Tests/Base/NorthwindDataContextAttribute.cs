@@ -8,10 +8,10 @@ namespace Tests
 		public NorthwindDataContextAttribute(bool excludeSqlite, bool excludeSqliteMs = false)
 			: base(
 				excludeSqlite ?
-					new[] { TestProvName.Northwind } :
+					new[] { TestProvName.AllNorthwind } :
 				excludeSqliteMs ?
-					new[] { TestProvName.Northwind, TestProvName.NorthwindSQLite } :
-					new[] { TestProvName.Northwind, TestProvName.NorthwindSQLite, TestProvName.NorthwindSQLiteMS })
+					new[] { TestProvName.AllNorthwind, TestProvName.NorthwindSQLite } :
+					new[] { TestProvName.AllNorthwind, TestProvName.AllSQLiteNorthwind })
 		{
 		}
 

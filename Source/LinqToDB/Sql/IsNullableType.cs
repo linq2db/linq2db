@@ -42,6 +42,7 @@ namespace LinqToDB
 			/// Expression could return NULL if last parameter of expression could contain NULL.
 			/// </summary>
 			SameAsLastParameter,
+			IfAllParametersNullable,
 		}
 	}
 }

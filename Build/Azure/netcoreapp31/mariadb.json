@@ -2,7 +2,8 @@
 	"CORE31.Azure": {
 		"Providers": [
 			// MariaDB latest
-			"MariaDB"
+			"MariaDB",
+			"MariaDBConnector"
 		]
 	}
 }

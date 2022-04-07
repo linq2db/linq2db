@@ -108,6 +108,7 @@ namespace LinqToDB.DataProvider.Firebird
 				case DataType.DateTime2     :
 				case DataType.SmallDateTime :
 				case DataType.DateTime      : StringBuilder.Append("TimeStamp");                          break;
+				case DataType.VarChar       :
 				case DataType.NVarChar      :
 					StringBuilder.Append("VarChar");
 
@@ -306,16 +307,16 @@ namespace LinqToDB.DataProvider.Firebird
 			return sb.Append(table);
 		}
 
-		protected override string? GetProviderTypeName(DbParameter parameter)
+		protected override string? GetProviderTypeName(IDataContext dataContext, DbParameter parameter)
 		{
 			if (DataProvider is FirebirdDataProvider provider)
 			{
-				var param = provider.TryGetProviderParameter(parameter, MappingSchema);
+				var param = provider.TryGetProviderParameter(dataContext, parameter);
 				if (param != null)
 					return provider.Adapter.GetDbType(param).ToString();
 			}
 
-			return base.GetProviderTypeName(parameter);
+			return base.GetProviderTypeName(dataContext, parameter);
 		}
 
 		protected override void BuildDeleteQuery(SqlDeleteStatement deleteStatement)

@@ -13,7 +13,7 @@ obj/
 _ReSharper*/
 TestResults/
 linq2db.sln.docstates
-Tests/**/UserDataProviders*.*
+Tests/UserDataProviders.json
 /BuiltNuGet
 linq2db.sln.ide/graph
 linq2db.sln.ide/

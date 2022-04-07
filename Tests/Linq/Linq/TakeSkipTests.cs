@@ -5,12 +5,13 @@ using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.Linq;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests.Linq
 {
-	using LinqToDB.Linq;
 	using Model;
 
 	[TestFixture]
@@ -466,7 +467,7 @@ namespace Tests.Linq
 			TestProvName.AllSQLite,
 			TestProvName.AllSybase,
 			TestProvName.AllAccess)]
-			string context, 
+			string context,
 			[Values] bool withParameters)
 		{
 			using (new ParameterizeTakeSkip(withParameters))
@@ -526,7 +527,7 @@ namespace Tests.Linq
 			TestProvName.AllSybase,
 			TestProvName.AllSQLite,
 			TestProvName.AllAccess)]
-			string context, 
+			string context,
 			[Values] bool withParameters)
 		{
 			using (new ParameterizeTakeSkip(withParameters))
@@ -546,7 +547,7 @@ namespace Tests.Linq
 			TestProvName.AllSybase,
 			TestProvName.AllSQLite,
 			TestProvName.AllAccess)]
-			string context, 
+			string context,
 			[Values] bool withParameters)
 		{
 			using (new ParameterizeTakeSkip(withParameters))
@@ -695,7 +696,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TakeWithPercent([IncludeDataSources(true, TestProvName.AllAccess, TestProvName.AllSqlServer2005Plus)] string context, [Values] bool withParameters)
+		public void TakeWithPercent([IncludeDataSources(true, TestProvName.AllAccess, TestProvName.AllSqlServer)] string context, [Values] bool withParameters)
 		{
 			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
@@ -712,7 +713,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TakeWithPercent1([IncludeDataSources(TestProvName.AllAccess, TestProvName.AllSqlServer2005Plus)] string context, [Values] bool withParameters)
+		public void TakeWithPercent1([IncludeDataSources(TestProvName.AllAccess, TestProvName.AllSqlServer)] string context, [Values] bool withParameters)
 		{
 			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
@@ -728,7 +729,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TakeWithTies([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context, [Values] bool withParameters)
+		public void TakeWithTies([IncludeDataSources(TestProvName.AllSqlServer)] string context, [Values] bool withParameters)
 		{
 			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
@@ -746,7 +747,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TakeWithTies2([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context, [Values] bool withParameters)
+		public void TakeWithTies2([IncludeDataSources(TestProvName.AllSqlServer)] string context, [Values] bool withParameters)
 		{
 			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
@@ -763,7 +764,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SkipTakeWithTies([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public void SkipTakeWithTies([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1239,7 +1240,7 @@ namespace Tests.Linq
 
 					if (i == 2)
 						Assert.That(missCount, Is.EqualTo(Query<TakeSkipClass>.CacheMissCount));
-					
+
 				}
 			}
 		}

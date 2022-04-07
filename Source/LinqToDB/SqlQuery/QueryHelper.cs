@@ -1431,6 +1431,9 @@ namespace LinqToDB.SqlQuery
 			return false;
 		}
 
+		// TODO: IsAggregationOrWindowFunction use needs review - maybe we should call ContainsAggregationOrWindowFunction there
+		public static bool ContainsAggregationOrWindowFunction(IQueryElement expr) => null != expr.Find(IsAggregationOrWindowFunction);
+
 		/// <summary>
 		/// Collects unique keys from different sources.
 		/// </summary>
@@ -1727,11 +1730,9 @@ namespace LinqToDB.SqlQuery
 			return new DbDataType(expr.SystemType!);
 		}
 
-		public static bool HasOuterReferences(SelectQuery root, ISqlExpression expr)
+		public static bool HasOuterReferences(ISet<ISqlTableSource> sources, ISqlExpression expr)
 		{
-			var sources = new HashSet<ISqlTableSource>(EnumerateAccessibleSources(root));
-
-			var outerElementFound = null != expr.Find(e =>
+			var outerElementFound = null != expr.Find(sources, static (sources, e) =>
 			{
 				if (e.ElementType == QueryElementType.Column)
 				{
@@ -1751,5 +1752,63 @@ namespace LinqToDB.SqlQuery
 
 			return outerElementFound;
 		}
+
+		public static SqlTable? GetUpdateTable(this SqlUpdateStatement updateStatement)
+		{
+			var tableToUpdate = updateStatement.Update.Table;
+
+			if (tableToUpdate == null)
+			{
+				tableToUpdate = EnumerateAccessibleSources(updateStatement.SelectQuery)
+					.OfType<SqlTable>()
+					.FirstOrDefault();
+			}
+
+			return tableToUpdate;
+		}
+
+		public static SqlTable? GetDeleteTable(this SqlDeleteStatement deleteStatement)
+		{
+			var tableToDelete = deleteStatement.Table;
+
+			if (tableToDelete == null)
+			{
+				tableToDelete = EnumerateAccessibleSources(deleteStatement.SelectQuery)
+					.OfType<SqlTable>()
+					.FirstOrDefault();
+			}
+
+			return tableToDelete;
+		}
+
+		private static void RemoveNotUnusedColumnsInternal(SelectQuery selectQuery, SelectQuery parentQuery)
+		{
+			for (int i = 0; i < selectQuery.From.Tables.Count; i++)
+			{
+				var table = selectQuery.From.Tables[i];
+				if (table.Source is SelectQuery sc)
+				{
+					for (int c = 0; c < sc.Select.Columns.Count; )
+					{
+						var column = sc.Select.Columns[c];
+
+						if (IsDependsOn(selectQuery, column, new HashSet<IQueryElement> { table }))
+							c++;
+						else
+						{
+							sc.Select.Columns.RemoveAt(c);
+						}
+					}
+
+					RemoveNotUnusedColumnsInternal(sc, parentQuery);
+				}
+			}
+		}
+
+		public static void RemoveNotUnusedColumns(this SelectQuery selectQuery)
+		{
+			RemoveNotUnusedColumnsInternal(selectQuery, selectQuery);
+		}
+
 	}
 }

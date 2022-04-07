@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq.Expressions;
 
 using JetBrains.Annotations;
@@ -10,7 +9,7 @@ namespace LinqToDB
 	using System.Data.Common;
 	using System.Threading.Tasks;
 	using Linq;
-	using LinqToDB.Interceptors;
+	using Interceptors;
 	using Mapping;
 	using SqlProvider;
 
@@ -121,12 +120,6 @@ namespace LinqToDB
 		/// <param name="interceptor">Interceptor.</param>
 		void AddInterceptor(IInterceptor interceptor);
 
-		/// <summary>
-		/// Returns interceptors of specific type, registered in current context.
-		/// </summary>
-		/// <typeparam name="TInterceptor">Type of interceptor.</typeparam>
-		/// <returns></returns>
-		IEnumerable<TInterceptor> GetInterceptors<TInterceptor>()
-			where TInterceptor : IInterceptor;
+		IUnwrapDataObjectInterceptor? UnwrapDataObjectInterceptor { get; }
 	}
 }
