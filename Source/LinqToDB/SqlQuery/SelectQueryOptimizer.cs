@@ -1187,7 +1187,7 @@ namespace LinqToDB.SqlQuery
 				{
 					map.Add(c, c.Expression);
 					if (c.RawAlias != null)
-						aliasesMap.Add(c.Expression, c.RawAlias);
+						aliasesMap[c.Expression] = c.RawAlias;
 				}			
 			}
 
