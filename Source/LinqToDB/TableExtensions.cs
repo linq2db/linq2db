@@ -1,13 +1,13 @@
-﻿
+﻿using System;
+using System.Diagnostics.CodeAnalysis;
+
 using JetBrains.Annotations;
 
 namespace LinqToDB
 {
-	using System;
-	using System.Diagnostics.CodeAnalysis;
+	using Data;
+	using DataProvider;
 	using Expressions;
-	using LinqToDB.Data;
-	using LinqToDB.DataProvider;
 
 	/// <summary>
 	/// Contains extension methods for LINQ queries.

@@ -1234,6 +1234,12 @@ namespace LinqToDB.Mapping
 			if (IsFluentMappingSupported)
 				return new (this);
 
+			if (this == Default)
+			{
+				Tools.ClearAllCache();
+				return new (this);
+			}
+
 			throw new LinqToDBException("Mapping Schema does not support fluent mapping.");
 		}
 
