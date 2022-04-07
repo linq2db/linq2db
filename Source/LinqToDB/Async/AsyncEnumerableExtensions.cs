@@ -6,10 +6,9 @@ using System.Threading.Tasks;
 namespace LinqToDB.Async
 {
 	/// <summary>
-	/// This API supports the LinqToDB infrastructure and is not intended to be used  directly from your code.
-	/// This API may change or be removed in future releases.
+	/// Contains extension methods for <see cref="IAsyncEnumerable{T}"/> interface.
 	/// </summary>
-	internal static class AsyncExtensions
+	public static class AsyncEnumerableExtensions
 	{
 		/// <summary>
 		///     Asynchronously creates a <see cref="List{T}" /> from <see cref="IAsyncEnumerable{T}" />
@@ -28,7 +27,7 @@ namespace LinqToDB.Async
 		///     The task result contains a <see cref="List{T}" /> that contains elements from the input sequence.
 		/// </returns>
 		public static async Task<List<T>> ToListAsync<T>(
-			this IAsyncEnumerable<T> source, 
+			this IAsyncEnumerable<T> source,
 			CancellationToken        cancellationToken = default)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));

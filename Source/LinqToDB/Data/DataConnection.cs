@@ -1421,8 +1421,8 @@ namespace LinqToDB.Data
 				? result.Value
 				: _command!.ExecuteReader(commandBehavior);
 
-			if (_commandInterceptors != null)
-				_commandInterceptors.Apply((interceptor, arg1, arg2, arg3, arg4) => interceptor.AfterExecuteReader(arg1, arg2, arg3, arg4), new CommandEventData(this), _command!, commandBehavior, rd);
+			if (_commandInterceptor != null)
+				_commandInterceptor.AfterExecuteReader(new (this), _command!, commandBehavior, rd);
 
 			var wrapper = new DataReaderWrapper(this, rd, _command!);
 

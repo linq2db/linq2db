@@ -9,6 +9,7 @@ namespace LinqToDB.Data
 {
 	using Async;
 	using Common;
+	using LinqToDB.Interceptors;
 	using RetryPolicy;
 
 	public partial class DataConnection
@@ -60,7 +61,7 @@ namespace LinqToDB.Data
 
 					return new DataConnectionTransaction(dataConnection);
 				}, cancellationToken)
-				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				.ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 			return dataConnectionTransaction;
 		}
@@ -99,7 +100,7 @@ namespace LinqToDB.Data
 
 					return new DataConnectionTransaction(dataConnection);
 				}, cancellationToken)
-				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				.ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 			return dataConnectionTransaction;
 		}
@@ -189,7 +190,7 @@ namespace LinqToDB.Data
 				}
 						return _;
 					}, cancellationToken)
-					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					.ConfigureAwait(Configuration.ContinueOnCapturedContext);
 			}
 		}
 
@@ -222,7 +223,7 @@ namespace LinqToDB.Data
 				}
 						return _;
 					}, cancellationToken)
-					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					.ConfigureAwait(Configuration.ContinueOnCapturedContext);
 			}
 		}
 
@@ -302,7 +303,7 @@ namespace LinqToDB.Data
 
 			try
 			{
-				var actionResult = await action(dataConnection, context, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				var actionResult = await action(dataConnection, context, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 				if (dataConnection.TraceSwitchConnection.TraceInfo)
 				{
@@ -515,8 +516,8 @@ namespace LinqToDB.Data
 				? result.Value
 				: await CurrentCommand!.ExecuteReaderAsync(commandBehavior, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
-			if (_commandInterceptors != null)
-				_commandInterceptors.Apply((interceptor, arg1, arg2, arg3, arg4) => interceptor.AfterExecuteReader(arg1, arg2, arg3, arg4), new CommandEventData(this), _command!, commandBehavior, dr);
+			if (_commandInterceptor != null)
+				_commandInterceptor.AfterExecuteReader(new (this), _command!, commandBehavior, dr);
 
 			var wrapper = new DataReaderWrapper(this, dr, CurrentCommand);
 			_command    = null;
