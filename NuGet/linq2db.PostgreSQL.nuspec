@@ -25,10 +25,6 @@
 				<dependency id="linq2db" version="3.0.0"  />
 				<dependency id="Npgsql"  version="6.0.3"  />
 			</group>
-			<group targetFramework=".NETCoreApp2.1">
-				<dependency id="linq2db" version="3.0.0"  />
-				<dependency id="Npgsql"  version="5.0.12" />
-			</group>
 		</dependencies>
 		<contentFiles>
 			<files include="**\*" buildAction="None" />
@@ -38,7 +34,7 @@
 		<file src="..\Nuget\README.T4.md"                                                target="README.md"                                                                                          />
 
 		<file src="..\Source\LinqToDB\bin\Release\net46\linq2db.dll"                     target="tools"                                                                                              />
-		<file src="..\Tests\Tests.T4\bin\Azure\net472\Humanizer.dll"                     target="tools"                                                                                              />
+		<file src="..\Tests\Linq\bin\Azure\net472\Humanizer.dll"                         target="tools"                                                                                              />
 		<file src="..\Tests\Linq\bin\Azure\net472\Npgsql.dll"                            target="tools"                                                                                              />
 		<file src="..\Tests\Linq\bin\Azure\net472\System.Threading.Tasks.Extensions.dll" target="tools"                                                                                              />
 		<file src="..\Tests\Linq\bin\Azure\net472\Microsoft.Bcl.AsyncInterfaces.dll"     target="tools"                                                                                              />

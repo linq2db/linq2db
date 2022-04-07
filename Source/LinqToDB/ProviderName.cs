@@ -56,11 +56,6 @@ namespace LinqToDB
 		/// </summary>
 		public const string SqlServer     = "SqlServer";
 		/// <summary>
-		/// Microsoft SQL Server 2000 provider.
-		/// Used as configuration name for SQL Server 2000 mapping schema <see cref="DataProvider.SqlServer.SqlServer2000MappingSchema"/>.
-		/// </summary>
-		public const string SqlServer2000 = "SqlServer.2000";
-		/// <summary>
 		/// Microsoft SQL Server 2005 provider.
 		/// Used as configuration name for SQL Server 2005 mapping schema <see cref="DataProvider.SqlServer.SqlServer2005MappingSchema"/>.
 		/// </summary>
@@ -90,6 +85,11 @@ namespace LinqToDB
 		/// </summary>
 		public const string SqlServer2017 = "SqlServer.2017";
 		/// <summary>
+		/// Microsoft SQL Server 2019 provider.
+		/// Used as configuration name for SQL Server 2019 mapping schema <see cref="DataProvider.SqlServer.SqlServer2019MappingSchema"/>.
+		/// </summary>
+		public const string SqlServer2019 = "SqlServer.2019";
+		/// <summary>
 		/// MySql provider.
 		/// Used as configuration name for MySql mapping schema <see cref="DataProvider.MySql.MySqlMappingSchema"/>.
 		/// </summary>
@@ -103,7 +103,7 @@ namespace LinqToDB
 		/// MySqlConnector provider.
 		/// Used as configuration name for MySql mapping schema <see cref="DataProvider.MySql.MySqlMappingSchema"/>.
 		/// </summary>
-		public const string MySqlConnector= "MySqlConnector";
+		public const string MySqlConnector = "MySqlConnector";
 		/// <summary>
 		/// Oracle ODP.NET autodetected provider (native or managed).
 		/// Used as configuration name for Oracle base mapping schema <see cref="DataProvider.Oracle.OracleMappingSchema"/>.
@@ -169,13 +169,11 @@ namespace LinqToDB
 		/// Used as configuration name for SAP HANA mapping schema <see cref="DataProvider.SapHana.SapHanaMappingSchema"/>.
 		/// </summary>
 		public const string SapHana       = "SapHana";
-#if NETFRAMEWORK || NETCOREAPP
 		/// <summary>
 		/// SAP HANA provider.
 		/// Used as configuration name for SAP HANA mapping schema <see cref="DataProvider.SapHana.SapHanaMappingSchema.NativeMappingSchema"/>.
 		/// </summary>
 		public const string SapHanaNative = "SapHana.Native";
-#endif
 		/// <summary>
 		/// SAP HANA ODBC provider.
 		/// Used as configuration name for SAP HANA mapping schema <see cref="DataProvider.SapHana.SapHanaMappingSchema.OdbcMappingSchema"/>.

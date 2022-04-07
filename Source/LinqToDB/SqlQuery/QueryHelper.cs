@@ -520,15 +520,23 @@ namespace LinqToDB.SqlQuery
 
 		public static bool IsEqualTables(SqlTable? table1, SqlTable? table2)
 		{
+			if (table1 == null || table2 == null)
+				return false;
+
 			var result =
-				table1                 != null
-				&& table2              != null
-				&& table1.ObjectType   == table2.ObjectType
-				&& table1.Database     == table2.Database
-				&& table1.Server       == table2.Server
-				&& table1.Schema       == table2.Schema
-				&& table1.Name         == table2.Name
-				&& table1.PhysicalName == table2.PhysicalName;
+				table1.ObjectType   == table2.ObjectType &&
+				table1.Database     == table2.Database   &&
+				table1.Server       == table2.Server     &&
+				table1.Schema       == table2.Schema     &&
+				table1.Name         == table2.Name       &&
+				table1.PhysicalName == table2.PhysicalName;
+
+			if (result)
+			{
+				result =
+					(table1.SqlQueryExtensions == null || table1.SqlQueryExtensions.Count == 0) &&
+					(table2.SqlQueryExtensions == null || table2.SqlQueryExtensions.Count == 0);
+			}
 
 			return result;
 		}
@@ -1772,5 +1780,35 @@ namespace LinqToDB.SqlQuery
 
 			return tableToDelete;
 		}
+
+		private static void RemoveNotUnusedColumnsInternal(SelectQuery selectQuery, SelectQuery parentQuery)
+		{
+			for (int i = 0; i < selectQuery.From.Tables.Count; i++)
+			{
+				var table = selectQuery.From.Tables[i];
+				if (table.Source is SelectQuery sc)
+				{
+					for (int c = 0; c < sc.Select.Columns.Count; )
+					{
+						var column = sc.Select.Columns[c];
+
+						if (IsDependsOn(selectQuery, column, new HashSet<IQueryElement> { table }))
+							c++;
+						else
+						{
+							sc.Select.Columns.RemoveAt(c);
+						}
+					}
+
+					RemoveNotUnusedColumnsInternal(sc, parentQuery);
+				}
+			}
+		}
+
+		public static void RemoveNotUnusedColumns(this SelectQuery selectQuery)
+		{
+			RemoveNotUnusedColumnsInternal(selectQuery, selectQuery);
+		}
+
 	}
 }

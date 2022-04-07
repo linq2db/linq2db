@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Data;
+using System.Data.Common;
+using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider.DB2
 {
-	using System.Linq.Expressions;
 	using LinqToDB.Common;
 	using LinqToDB.Expressions;
 	using LinqToDB.Mapping;
@@ -16,8 +17,8 @@ namespace LinqToDB.DataProvider.DB2
 		public const string CoreClientNamespace  = "IBM.Data.DB2.Core";
 
 #if NETFRAMEWORK
-		public const string  AssemblyName        = "IBM.Data.DB2";
-		public const string  ClientNamespace     = "IBM.Data.DB2";
+		public const string AssemblyName         = "IBM.Data.DB2";
+		public const string ClientNamespace      = "IBM.Data.DB2";
 		public const string? AssemblyNameOld     = null;
 		public const string? ClientNamespaceOld  = null;
 #else
@@ -29,7 +30,7 @@ namespace LinqToDB.DataProvider.DB2
 		public const string  ClientNamespaceOld  = "IBM.Data.DB2.Core";
 #endif
 
-		private static readonly object _syncRoot = new object();
+		private static readonly object _syncRoot = new ();
 		private static DB2ProviderAdapter? _instance;
 
 		private DB2ProviderAdapter(
@@ -62,8 +63,8 @@ namespace LinqToDB.DataProvider.DB2
 
 			MappingSchema mappingSchema,
 
-			Action<IDbDataParameter, DB2Type> dbTypeSetter,
-			Func  <IDbDataParameter, DB2Type> dbTypeGetter,
+			Action<DbParameter, DB2Type> dbTypeSetter,
+			Func  <DbParameter, DB2Type> dbTypeGetter,
 
 			Func<string, DB2Connection> connectionCreator,
 			Func<object, bool>          isDB2BinaryNull,
@@ -158,8 +159,8 @@ namespace LinqToDB.DataProvider.DB2
 
 		public string ProviderTypesNamespace => TypesNamespace;
 
-		public Action<IDbDataParameter, DB2Type> SetDbType { get; }
-		public Func  <IDbDataParameter, DB2Type> GetDbType { get; }
+		public Action<DbParameter, DB2Type> SetDbType { get; }
+		public Func  <DbParameter, DB2Type> GetDbType { get; }
 
 		public Func<string, DB2Connection> CreateConnection { get; }
 
@@ -170,14 +171,14 @@ namespace LinqToDB.DataProvider.DB2
 		public class BulkCopyAdapter
 		{
 			internal BulkCopyAdapter(
-				Func<IDbConnection, DB2BulkCopyOptions, DB2BulkCopy> bulkCopyCreator,
+				Func<DbConnection, DB2BulkCopyOptions, DB2BulkCopy> bulkCopyCreator,
 				Func<int, string, DB2BulkCopyColumnMapping> bulkCopyColumnMappingCreator)
 			{
 				Create = bulkCopyCreator;
 				CreateColumnMapping = bulkCopyColumnMappingCreator;
 			}
 
-			public Func<IDbConnection, DB2BulkCopyOptions, DB2BulkCopy> Create              { get; }
+			public Func<DbConnection, DB2BulkCopyOptions, DB2BulkCopy> Create              { get; }
 			public Func<int, string, DB2BulkCopyColumnMapping>          CreateColumnMapping { get; }
 		}
 
@@ -260,12 +261,12 @@ namespace LinqToDB.DataProvider.DB2
 						var isDB2BinaryNull  = db2BinaryBuilder.BuildGetter<object>();
 
 						var dbTypeBuilder = typeMapper.Type<DB2Parameter>().Member(p => p.DB2Type);
-						var typeSetter    = dbTypeBuilder.BuildSetter<IDbDataParameter>();
-						var typeGetter    = dbTypeBuilder.BuildGetter<IDbDataParameter>();
+						var typeSetter    = dbTypeBuilder.BuildSetter<DbParameter>();
+						var typeGetter    = dbTypeBuilder.BuildGetter<DbParameter>();
 
 
 						var bulkCopy = new BulkCopyAdapter(
-							typeMapper.BuildWrappedFactory((IDbConnection connection, DB2BulkCopyOptions options) => new DB2BulkCopy((DB2Connection)connection, options)),
+							typeMapper.BuildWrappedFactory((DbConnection connection, DB2BulkCopyOptions options) => new DB2BulkCopy((DB2Connection)(object)connection, options)),
 							typeMapper.BuildWrappedFactory((int source, string destination) => new DB2BulkCopyColumnMapping(source, destination)));
 
 
@@ -489,8 +490,9 @@ namespace LinqToDB.DataProvider.DB2
 			public DB2BulkCopy(DB2Connection connection, DB2BulkCopyOptions options) => throw new NotImplementedException();
 
 			public void Dispose      ()                       => ((Action<DB2BulkCopy>)CompiledWrappers[0])(this);
+#pragma warning disable RS0030 // API mapping must preserve type
 			public void WriteToServer(IDataReader dataReader) => ((Action<DB2BulkCopy, IDataReader>)CompiledWrappers[1])(this, dataReader);
-
+#pragma warning restore RS0030 //  API mapping must preserve type
 			public int NotifyAfter
 			{
 				get => ((Func  <DB2BulkCopy, int>)CompiledWrappers[2])(this);

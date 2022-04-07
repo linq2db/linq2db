@@ -1721,9 +1721,7 @@ namespace Tests.Linq
 		{
 			GetProviderName(context, out var isLinqService);
 
-			// mapping fails and fallbacks to slow-mapper
-			using (new CustomCommandProcessor(null))
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, suppressSequentialAccess: true))
 			{
 				using (new Cleaner(db))
 				{

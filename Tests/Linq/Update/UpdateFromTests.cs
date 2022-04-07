@@ -179,7 +179,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void UpdateTestJoinSkip(
 			[IncludeDataSources(
-				TestProvName.AllSqlServer2005Plus,
+				TestProvName.AllSqlServer,
 				TestProvName.AllPostgreSQL)]
 			string context)
 		{
@@ -231,7 +231,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void UpdateTestJoinSkipTake(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllSqlServer2005Minus, TestProvName.AllMySql, ProviderName.SqlCe, TestProvName.AllSybase)]
+			[DataSources(TestProvName.AllAccess, TestProvName.AllSqlServer2005, TestProvName.AllMySql, ProviderName.SqlCe, TestProvName.AllSybase)]
 			string context)
 		{
 			var data = GenerateData();
@@ -281,7 +281,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void UpdateTestJoinTake(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllSqlServer2005Minus, TestProvName.AllMySql, ProviderName.SqlCe)]
+			[DataSources(TestProvName.AllAccess, TestProvName.AllSqlServer2005, TestProvName.AllMySql, ProviderName.SqlCe)]
 			string context)
 		{
 			var data = GenerateData();

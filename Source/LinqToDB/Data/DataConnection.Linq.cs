@@ -1,11 +1,12 @@
 ﻿using System;
-using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using LinqToDB.Interceptors;
 
 namespace LinqToDB.Data
 {
+	using System.Data.Common;
 	using DataProvider;
 	using Linq;
 	using SqlProvider;
@@ -53,12 +54,12 @@ namespace LinqToDB.Data
 
 		bool             IDataContext.CloseAfterUse    { get; set; }
 
-		Expression IDataContext.GetReaderExpression(IDataReader reader, int idx, Expression readerExpression, Type toType)
+		Expression IDataContext.GetReaderExpression(DbDataReader reader, int idx, Expression readerExpression, Type toType)
 		{
 			return DataProvider.GetReaderExpression(reader, idx, readerExpression, toType);
 		}
 
-		bool? IDataContext.IsDBNullAllowed(IDataReader reader, int idx)
+		bool? IDataContext.IsDBNullAllowed(DbDataReader reader, int idx)
 		{
 			return DataProvider.IsDBNullAllowed(reader, idx);
 		}
@@ -68,25 +69,22 @@ namespace LinqToDB.Data
 			CheckAndThrowOnDisposed();
 
 			if (forNestedQuery && _connection != null && IsMarsEnabled)
-				return new DataConnection(DataProvider, _connection)
+				return new DataConnection(DataProvider, _connection.Connection)
 				{
-					MappingSchema               = MappingSchema,
-					TransactionAsync            = TransactionAsync,
-					IsMarsEnabled               = IsMarsEnabled,
-					ConnectionString            = ConnectionString,
-					OnEntityCreated             = OnEntityCreated,
-					RetryPolicy                 = RetryPolicy,
-					CommandTimeout              = CommandTimeout,
-					InlineParameters            = InlineParameters,
-					ThrowOnDisposed             = ThrowOnDisposed,
-					_queryHints                 = _queryHints?.Count > 0 ? _queryHints.ToList() : null,
-					OnTraceConnection           = OnTraceConnection,
-					OnClosed                    = OnClosed,
-					OnClosing                   = OnClosing,
-					OnBeforeConnectionOpen      = OnBeforeConnectionOpen,
-					OnConnectionOpened          = OnConnectionOpened,
-					OnBeforeConnectionOpenAsync = OnBeforeConnectionOpenAsync,
-					OnConnectionOpenedAsync     = OnConnectionOpenedAsync,
+					MappingSchema             = MappingSchema,
+					TransactionAsync          = TransactionAsync,
+					IsMarsEnabled             = IsMarsEnabled,
+					ConnectionString          = ConnectionString,
+					RetryPolicy               = RetryPolicy,
+					CommandTimeout            = CommandTimeout,
+					InlineParameters          = InlineParameters,
+					ThrowOnDisposed           = ThrowOnDisposed,
+					_queryHints               = _queryHints?.Count > 0 ? _queryHints.ToList() : null,
+					OnTraceConnection         = OnTraceConnection,
+					_commandInterceptor       = _commandInterceptor      .CloneAggregated(),
+					_connectionInterceptor    = _connectionInterceptor   .CloneAggregated(),
+					_dataContextInterceptor   = _dataContextInterceptor  .CloneAggregated(),
+					_entityServiceInterceptor = _entityServiceInterceptor.CloneAggregated(),
 				};
 
 			return (DataConnection)Clone();

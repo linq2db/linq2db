@@ -67,7 +67,7 @@ namespace Tests.Linq
 		[Test]
 		public void Issue60Test([IncludeDataSources(TestProvName.AllSqlServer, ProviderName.SqlCe)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var sp       = db.DataProvider.GetSchemaProvider();
 				var dbSchema = sp.GetSchema(db);
@@ -535,7 +535,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue88([DataSources(ProviderName.SQLiteMS)] string context)
+		public void Issue88([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -690,6 +690,54 @@ namespace Tests.Linq
 			return isNull ? (short?)null : 1234;
 		}
 
-	}
+		[Test]
+		public void Issue2823Guid([IncludeDataSources(false, TestProvName.AllFirebird)] string context, [Values] bool inlineParameters)
+		{
+			using(var db    = (DataConnection)GetDataContext(context))
+			using(var table = db.CreateLocalTable<TableWithGuid>())
+			{
+				Assert.True(db.LastQuery!.Contains("\"Default\"  CHAR(16) CHARACTER SET OCTETS"));
+				Assert.True(db.LastQuery!.Contains("\"Binary\"   CHAR(16) CHARACTER SET OCTETS"));
+				Assert.True(db.LastQuery!.Contains("\"String\"   CHAR(38)"));
+				Assert.True(db.LastQuery!.Contains("\"DefaultN\" CHAR(16) CHARACTER SET OCTETS"));
+				Assert.True(db.LastQuery!.Contains("\"BinaryN\"  CHAR(16) CHARACTER SET OCTETS"));
+				Assert.True(db.LastQuery!.Contains("\"StringN\"  CHAR(38)"));
 
+				db.InlineParameters = inlineParameters;
+
+				table.Insert(() => new TableWithGuid {
+					Default  = TestData.Guid1, Binary  = TestData.Guid2, String  = TestData.Guid3,
+					DefaultN = TestData.Guid4, BinaryN = TestData.Guid5, StringN = TestData.Guid6,
+				});
+				
+				var data = table.ToArray();
+				Assert.AreEqual(1, data.Length);
+				Assert.AreEqual(TestData.Guid1, data[0].Default);
+				Assert.AreEqual(TestData.Guid2, data[0].Binary);
+				Assert.AreEqual(TestData.Guid3, data[0].String);
+				Assert.AreEqual(TestData.Guid4, data[0].DefaultN);
+				Assert.AreEqual(TestData.Guid5, data[0].BinaryN);
+				Assert.AreEqual(TestData.Guid6, data[0].StringN);
+
+				Assert.AreEqual(1, table.Where(x => x.Default  == TestData.Guid1).Count());
+				Assert.AreEqual(1, table.Where(x => x.Binary   == TestData.Guid2).Count());
+				Assert.AreEqual(1, table.Where(x => x.String   == TestData.Guid3).Count());
+				Assert.AreEqual(1, table.Where(x => x.DefaultN == TestData.Guid4).Count());
+				Assert.AreEqual(1, table.Where(x => x.BinaryN  == TestData.Guid5).Count());
+				Assert.AreEqual(1, table.Where(x => x.StringN  == TestData.Guid6).Count());
+			}
+		}
+
+		[Table]
+		class TableWithGuid
+		{
+			[Column                           ] public Guid Default   { get; set; }
+			[Column(DataType = DataType.Guid) ] public Guid Binary    { get; set; }
+			[Column(DataType = DataType.Char) ] public Guid String    { get; set; }
+
+			[Column                           ] public Guid? DefaultN { get; set; }
+			[Column(DataType = DataType.Guid) ] public Guid? BinaryN  { get; set; }
+			[Column(DataType = DataType.NChar)] public Guid? StringN  { get; set; }
+		}
+	}
 }

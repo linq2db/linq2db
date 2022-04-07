@@ -47,7 +47,7 @@ namespace LinqToDB.SqlQuery
 
 			SelectQuery = (SelectQuery)SelectQuery.Walk(options, context, func);
 
-			return null;
+			return base.Walk(options, context, func);
 		}
 
 		public override ISqlTableSource? GetTableSource(ISqlTableSource table)

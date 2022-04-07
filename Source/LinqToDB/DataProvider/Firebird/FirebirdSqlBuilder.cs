@@ -14,33 +14,22 @@ namespace LinqToDB.DataProvider.Firebird
 	using Mapping;
 	using SqlQuery;
 	using SqlProvider;
+	using System.Data.Common;
 
 	public partial class FirebirdSqlBuilder : BasicSqlBuilder
 	{
-		private readonly FirebirdDataProvider? _provider;
-
-		public FirebirdSqlBuilder(
-			FirebirdDataProvider? provider,
-			MappingSchema         mappingSchema,
-			ISqlOptimizer         sqlOptimizer,
-			SqlProviderFlags      sqlProviderFlags)
-			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
+		public FirebirdSqlBuilder(IDataProvider provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
-			_provider = provider;
 		}
 
-		// remote context
-		public FirebirdSqlBuilder(
-			MappingSchema    mappingSchema,
-			ISqlOptimizer    sqlOptimizer,
-			SqlProviderFlags sqlProviderFlags)
-			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
+		FirebirdSqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
 		{
 		}
 
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
-			return new FirebirdSqlBuilder(_provider, MappingSchema, SqlOptimizer, SqlProviderFlags);
+			return new FirebirdSqlBuilder(this);
 		}
 
 		protected override void BuildSelectClause(SelectQuery selectQuery)
@@ -131,13 +120,23 @@ namespace LinqToDB.DataProvider.Firebird
 					else
 						StringBuilder.Append($"({type.Type.Length})");
 
+					// type for UUID, e.g. see https://firebirdsql.org/refdocs/langrefupd25-intfunc-gen_uuid.html
 					StringBuilder.Append(" CHARACTER SET UNICODE_FSS");
 					                                                                                      break;
+
+				case DataType.Guid          : StringBuilder.Append("CHAR(16) CHARACTER SET OCTETS");      break;
+				case DataType.NChar         :
+				case DataType.Char          :
+					if (type.Type.SystemType == typeof(Guid) || type.Type.SystemType == typeof(Guid?))
+						StringBuilder.Append("CHAR(38)");
+					else
+						base.BuildDataTypeFromDataType(type, forCreateTable);
+					break;
+
 				case DataType.VarBinary     : StringBuilder.Append("BLOB");                               break;
 				// BOOLEAN type available since FB 3.0, but FirebirdDataProvider.SetParameter converts boolean to '1'/'0'
 				// so for now we will use type, compatible with SetParameter by default
 				case DataType.Boolean       : StringBuilder.Append("CHAR");                               break;
-				case DataType.Guid          : StringBuilder.Append("CHAR(16) CHARACTER SET OCTETS");      break;
 				default: base.BuildDataTypeFromDataType(type, forCreateTable);                            break;
 			}
 		}
@@ -308,16 +307,16 @@ namespace LinqToDB.DataProvider.Firebird
 			return sb.Append(table);
 		}
 
-		protected override string? GetProviderTypeName(IDbDataParameter parameter)
+		protected override string? GetProviderTypeName(IDataContext dataContext, DbParameter parameter)
 		{
-			if (_provider != null)
+			if (DataProvider is FirebirdDataProvider provider)
 			{
-				var param = _provider.TryGetProviderParameter(parameter, MappingSchema);
+				var param = provider.TryGetProviderParameter(dataContext, parameter);
 				if (param != null)
-					return _provider.Adapter.GetDbType(param).ToString();
+					return provider.Adapter.GetDbType(param).ToString();
 			}
 
-			return base.GetProviderTypeName(parameter);
+			return base.GetProviderTypeName(dataContext, parameter);
 		}
 
 		protected override void BuildDeleteQuery(SqlDeleteStatement deleteStatement)

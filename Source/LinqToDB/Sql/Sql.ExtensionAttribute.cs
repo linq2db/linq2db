@@ -16,8 +16,8 @@ namespace LinqToDB
 	using Common;
 	using Expressions;
 	using Extensions;
-	using SqlQuery;
 	using Mapping;
+	using SqlQuery;
 
 	[AttributeUsage(AttributeTargets.Parameter)]
 	[MeansImplicitUse]
@@ -35,7 +35,7 @@ namespace LinqToDB
 		}
 	}
 
-	public static class ExtensionlBuilderExtensions
+	public static class ExtensionBuilderExtensions
 	{
 		public static Sql.SqlExtensionParam AddParameter(this Sql.ISqExtensionBuilder builder, string name, string value)
 		{

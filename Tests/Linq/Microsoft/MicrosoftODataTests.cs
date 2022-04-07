@@ -1,5 +1,4 @@
-﻿#if !NETCOREAPP2_1
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -92,7 +91,7 @@ namespace Tests.OData.Microsoft
 
 		[Test]
 		public void SelectViaOData(
-			[IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context,
+			[IncludeDataSources(TestProvName.AllSqlServer)] string context,
 			[ValueSource(nameof(ODataQueriesTestCases))] ODataQueries testCase)
 		{
 			var modelBuilder = new ODataModelBuilder();
@@ -306,4 +305,3 @@ namespace Tests.OData.Microsoft
 
 	}
 }
-#endif

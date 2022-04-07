@@ -1195,7 +1195,7 @@ namespace Tests.Linq
 			ProviderName.DB2 // joins (SQL0345N  The fullselect of the recursive common table expression "cte" must be the UNION of two or more fullselects and cannot include column functions, GROUP BY clause, HAVING clause, ORDER BY clause, or an explicit join including an ON clause.)
 			)] string context)
 		{
-			if (context.Contains(ProviderName.SQLite))
+			if (context.IsAnyOf(TestProvName.AllSQLite))
 			{
 				using var dc = (TestDataConnection)GetDataContext(context.Replace(".LinqService", string.Empty));
 				if (TestUtils.GetSqliteVersion(dc) < new Version(3, 34))

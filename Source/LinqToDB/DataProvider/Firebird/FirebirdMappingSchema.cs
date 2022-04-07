@@ -29,10 +29,10 @@ namespace LinqToDB.DataProvider.Firebird
 			// firebird string literals can contain only limited set of characters, so we should encode them
 			SetValueToSqlConverter(typeof(string)  , (sb, dt, v) => ConvertStringToSql(sb, (string)v));
 			SetValueToSqlConverter(typeof(char)    , (sb, dt, v) => ConvertCharToSql  (sb, (char)v));
-			SetValueToSqlConverter(typeof(Guid)    , (sb, dt, v) => ConvertGuidToSql  (sb, (Guid)v));
 			SetValueToSqlConverter(typeof(byte[])  , (sb, dt, v) => ConvertBinaryToSql(sb, (byte[])v));
 			SetValueToSqlConverter(typeof(Binary)  , (sb, dt, v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
 			SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => BuildDateTime(sb, dt, (DateTime)v));
+			SetValueToSqlConverter(typeof(Guid)    , (sb, dt, v) => ConvertGuidToSql(sb, dt, (Guid)v));
 
 			SetDataType(typeof(BigInteger), new SqlDataType(DataType.Int128, typeof(BigInteger), "INT128"));
 			SetValueToSqlConverter(typeof(BigInteger), (sb, dt, v) => sb.Append(((BigInteger)v).ToString(CultureInfo.InvariantCulture)));
@@ -81,24 +81,30 @@ namespace LinqToDB.DataProvider.Firebird
 			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, value, dbType);
 		}
 
+		static void ConvertGuidToSql(StringBuilder sb, SqlDataType dataType, Guid value)
+		{
+			if (dataType.Type.DataType is DataType.Char or DataType.NChar or DataType.VarChar or DataType.NVarChar)
+				sb.Append('\'').Append(value.ToString()).Append('\'');
+			else
+			{
+				var bytes = value.ToByteArray();
+				if (BitConverter.IsLittleEndian)
+				{
+					Array.Reverse(bytes, 0, 4);
+					Array.Reverse(bytes, 4, 2);
+					Array.Reverse(bytes, 6, 2);
+				}
+				sb.Append("X'");
+				sb.AppendByteArrayAsHexViaLookup32(bytes);
+				sb.Append('\'');
+			}
+		}
+
 		static void ConvertBinaryToSql(StringBuilder stringBuilder, byte[] value)
 		{
 			stringBuilder.Append("X'");
 
 			stringBuilder.AppendByteArrayAsHexViaLookup32(value);
-
-			stringBuilder.Append('\'');
-		}
-
-		static void ConvertGuidToSql(StringBuilder stringBuilder, Guid value)
-		{
-			stringBuilder.Append("X'");
-
-			var bytes = value.ToByteArray();
-
-			(bytes[3], bytes[2], bytes[1], bytes[0], bytes[5], bytes[4], bytes[7], bytes[6]) = (bytes[0], bytes[1], bytes[2], bytes[3], bytes[4],bytes[5], bytes[6], bytes[7]);
-
-			stringBuilder.AppendByteArrayAsHexViaLookup32(bytes);
 
 			stringBuilder.Append('\'');
 		}

@@ -3,9 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using FluentAssertions;
-#if NET472
-using System.Windows.Forms;
-#endif
 
 using LinqToDB;
 using LinqToDB.Data;
@@ -223,7 +220,7 @@ namespace Tests.Linq
 		// https://connect.microsoft.com/SQLServer/feedback/details/3139577/performace-regression-for-compatibility-level-2014-for-specific-query
 		[Test]
 		public void MultipleSelect11([IncludeDataSources(
-			ProviderName.SqlServer2008, ProviderName.SqlServer2012, TestProvName.AllSapHana)]
+			TestProvName.AllSqlServer2008, TestProvName.AllSqlServer2012, TestProvName.AllSapHana)]
 			string context)
 		{
 			var dt = DateTime.Now;
@@ -383,7 +380,7 @@ namespace Tests.Linq
 			}
 		}
 
-		static readonly MyMapSchema _myMapSchema = new MyMapSchema();
+		static readonly MyMapSchema _myMapSchema = new ();
 
 		[Test]
 		public void Coalesce3([DataSources(false)] string context)
@@ -461,20 +458,28 @@ namespace Tests.Linq
 					from p in db.Parent select new { Max = GetList(p.ParentID).Max() });
 		}
 
-#if NET472
+		public class ListViewItem
+		{
+			public ListViewItem(string[] items)
+			{
+			}
+
+			public bool    Checked    { get; set; }
+			public int     ImageIndex { get; set; }
+			public object? Tag        { get; set; }
+		}
 		[Test]
 		public void ConstractClass([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				db.Parent.Select(f =>
-					new ListViewItem(new[] { "", f.ParentID.ToString(), f.Value1.ToString() })
+					new ListViewItem(new[] { "", f.ParentID.ToString()!, f.Value1.ToString()! })
 					{
 						Checked    = true,
 						ImageIndex = 0,
 						Tag        = f.ParentID
 					}).ToList();
 		}
-#endif
 
 		static string ConvertString(string s, int? i, bool b, int n)
 		{
@@ -601,7 +606,7 @@ namespace Tests.Linq
 		[Test]
 		public void SelectField()
 		{
-			using (var db = new TestDataConnection())
+			using (var db = new DataConnection())
 			{
 				var q =
 					from p in db.GetTable<TestParent>()
@@ -948,10 +953,10 @@ namespace Tests.Linq
 				string context)
 		{
 			var sql = "select PersonID, FirstName, MiddleName, LastName, Gender from Person where PersonID = 3";
-			if (context.Contains("Oracle"))
+			if (context.IsAnyOf(TestProvName.AllOracle))
 				sql = "select \"PersonID\", \"FirstName\", \"MiddleName\", \"LastName\", \"Gender\" from \"Person\" where \"PersonID\" = 3";
 
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var person = db.Query<ComplexPerson>(sql).FirstOrDefault()!;
 
@@ -1020,15 +1025,15 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(new []
 			{
-				new MainEntityObject{Id = 1, MainValue = "MainValue 1"}, 
-				new MainEntityObject{Id = 2, MainValue = "MainValue 2"}, 
+				new MainEntityObject{Id = 1, MainValue = "MainValue 1"},
+				new MainEntityObject{Id = 2, MainValue = "MainValue 2"},
 			}))
 			using (db.CreateLocalTable(new []
 			{
 				new ChildEntityObject{Id = 1, Value = "Value 1"}
 			}))
 			{
-				var query = 
+				var query =
 					from m in db.GetTable<MainEntityObject>()
 					from c in db.GetTable<ChildEntityObject>().LeftJoin(c => c.Id == m.Id)
 					select new DtoResult
@@ -1054,7 +1059,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void TestConditionalProjectionOptimization(
-			[IncludeDataSources(false, TestProvName.AllSQLite)] string context, 
+			[IncludeDataSources(false, TestProvName.AllSQLite)] string context,
 			[Values(true, false)] bool includeChild,
 			[Values(1, 2)] int iteration)
 		{
@@ -1070,16 +1075,16 @@ namespace Tests.Linq
 
 			void CheckResult()
 			{
-				if (includeChild)
-				{
-					result.Child.Should().NotBeNull();
-				}
-				else
-				{
-					result.Child.Should().BeNull();
+			if (includeChild)
+			{
+				result.Child.Should().NotBeNull();
+			}
+			else
+			{
+				result.Child.Should().BeNull();
 
-					((DataConnection)db).LastQuery.Should().NotContain("ChildID");
-				}
+				((DataConnection)db).LastQuery.Should().NotContain("ChildID");
+			}
 			}
 
 			CheckResult();
@@ -1103,8 +1108,8 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(new []
 			{
-				new MainEntityObject{Id = 1, MainValue = "MainValue 1"}, 
-				new MainEntityObject{Id = 2, MainValue = "MainValue 2"}, 
+				new MainEntityObject{Id = 1, MainValue = "MainValue 1"},
+				new MainEntityObject{Id = 2, MainValue = "MainValue 2"},
 			}))
 			using (db.CreateLocalTable(new []
 			{
@@ -1153,18 +1158,18 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(new []
 			{
-				new MainEntityObject{Id = 1, MainValue = "MainValue 1"}, 
-				new MainEntityObject{Id = 2, MainValue = "MainValue 2"}, 
+				new MainEntityObject{Id = 1, MainValue = "MainValue 1"},
+				new MainEntityObject{Id = 2, MainValue = "MainValue 2"},
 			}))
 			using (db.CreateLocalTable(new []
 			{
 				new ChildEntityObject{Id = 1, Value = "Value 1"}
 			}))
 			{
-				var query = 
+				var query =
 					(from m in db.GetTable<MainEntityObject>()
 					from c in db.GetTable<ChildEntityObject>().LeftJoin(c => c.Id == m.Id)
-					select new 
+					select new
 					{
 						c.Id,
 						Value = (c != null) ? c.Value : (m.MainValue != null ? m.MainValue : "")
@@ -1334,8 +1339,7 @@ namespace Tests.Linq
 		public void Select_TernaryNullableValue([DataSources] string context, [Values(null, 0, 1)] int? value)
 		{
 			// mapping fails and fallbacks to slow-mapper
-			using (new CustomCommandProcessor(null))
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, suppressSequentialAccess: true))
 			{
 				var result = db.Select(() => Sql.AsSql(value) == null ? (int?)null : Sql.AsSql(value!.Value));
 
@@ -1350,8 +1354,7 @@ namespace Tests.Linq
 		public void Select_TernaryNullableValueReversed([DataSources] string context, [Values(null, 0, 1)] int? value)
 		{
 			// mapping fails and fallbacks to slow-mapper
-			using (new CustomCommandProcessor(null))
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, suppressSequentialAccess: true))
 			{
 				var result = db.Select(() => Sql.AsSql(value) != null ? Sql.AsSql(value!.Value) : (int?)null);
 
@@ -1366,8 +1369,7 @@ namespace Tests.Linq
 		public void Select_TernaryNullableValue_Nested([DataSources] string context, [Values(null, 0, 1)] int? value)
 		{
 			// mapping fails and fallbacks to slow-mapper
-			using (new CustomCommandProcessor(null))
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, suppressSequentialAccess: true))
 			{
 				var result = db.Select(() => Sql.AsSql(value) == null ? (int?)null : (Sql.AsSql(value!.Value) < 2 ? Sql.AsSql(value.Value) : 2 + Sql.AsSql(value.Value)));
 
@@ -1382,8 +1384,7 @@ namespace Tests.Linq
 		public void Select_TernaryNullableValueReversed_Nested([DataSources] string context, [Values(null, 0, 1)] int? value)
 		{
 			// mapping fails and fallbacks to slow-mapper
-			using (new CustomCommandProcessor(null))
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, suppressSequentialAccess: true))
 			{
 				var result = db.Select(() => Sql.AsSql(value) != null ? (Sql.AsSql(value!.Value) < 2 ? Sql.AsSql(value.Value) : Sql.AsSql(value.Value) + 4) : (int?)null);
 
@@ -1518,7 +1519,7 @@ namespace Tests.Linq
 				 	.OrderBy(_ => _.Parent.ParentID);
 
 
-				var expectedQuery = 
+				var expectedQuery =
 					from p in Parent
 					from c1 in Child.Where(c => c.ParentID == p.ParentID).Take(1).DefaultIfEmpty()
 					let children = Child.Where(c => c.ChildID > 2).Select(c => new { c.ChildID, c.ParentID })
@@ -1555,7 +1556,7 @@ namespace Tests.Linq
 				}
 			}
 		}
-		
+
 		[Test]
 		public void ToStringTest([DataSources] string context)
 		{
@@ -1571,7 +1572,7 @@ namespace Tests.Linq
 				id = 2;
 
 				var sql2 = query.ToString();
-				
+
 				Assert.That(sql1, Is.Not.EqualTo(sql2));
 			}
 		}
@@ -1659,14 +1660,14 @@ namespace Tests.Linq
 
 
 		[Table("test_mapping_column_2_prop")]
-		public partial class TestMappingColumn1PropInfo 
+		public partial class TestMappingColumn1PropInfo
 		{
 			[Column("id"),          PrimaryKey] public long Id         { get; set; } // bigint
 			[Column("test_number"), NotNull   ] public long TestNumber { get; set; } // bigint
 		}
 
 		[Table("test_mapping_column_2_prop")]
-		public partial class TestMappingColumn2PropInfo 
+		public partial class TestMappingColumn2PropInfo
 		{
 			[Column("test_number"), NotNull   ] public long TestNumber { get; set; } // bigint
 
@@ -1753,8 +1754,7 @@ namespace Tests.Linq
 			// Microsoft.Data.SqlClient
 			// SqlCe
 			using (new OptimizeForSequentialAccess(true))
-			using (new CustomCommandProcessor(new SequentialAccessCommandProcessor()))
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, interceptor: SequentialAccessCommandInterceptor.Instance, suppressSequentialAccess: true))
 			{
 				var q = db.Person
 					.Select(p => new
@@ -1776,8 +1776,8 @@ namespace Tests.Linq
 		{
 			// fields read out-of-order, multiple times and with different types
 			using (new OptimizeForSequentialAccess(true))
-			using (new CustomCommandProcessor(new SequentialAccessCommandProcessor()))
-			using (var db = GetDataContext(context))
+			// suppressSequentialAccess: true to avoid interceptor added twice
+			using (var db = GetDataContext(context, interceptor: SequentialAccessCommandInterceptor.Instance, suppressSequentialAccess: true))
 			{
 				Assert.AreEqual(typeof(InheritanceParentBase), InheritanceParent[0].GetType());
 				Assert.AreEqual(typeof(InheritanceParent1)   , InheritanceParent[1].GetType());

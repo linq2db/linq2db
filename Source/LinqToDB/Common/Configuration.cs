@@ -1,15 +1,15 @@
 ﻿using System;
+using System.Data;
+using System.Linq.Expressions;
+using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
 namespace LinqToDB.Common
 {
-	using System.Data;
-	using System.Linq.Expressions;
-	using System.Threading.Tasks;
 	using Data;
 	using Data.RetryPolicy;
-	using LinqToDB.Linq;
+	using Linq;
 
 	/// <summary>
 	/// Contains LINQ expression compilation options.
@@ -71,7 +71,7 @@ namespace LinqToDB.Common
 		/// Default value: <c>false</c>.
 		/// </summary>
 		public static bool OptimizeForSequentialAccess;
-		
+
 		/// <summary>
 		/// Determines the length after which logging of binary data in SQL will be truncated.
 		/// This is to avoid Out-Of-Memory exceptions when getting SqlText from <see cref="TraceInfo"/>
@@ -136,16 +136,6 @@ namespace LinqToDB.Common
 			public static bool IgnoreEmptyUpdate;
 
 			/// <summary>
-			/// Controls behavior of linq2db when multiple queries required to load requested data:
-			/// - if <c>true</c> - multiple queries allowed;
-			/// - if <c>false</c> - <see cref="LinqException"/> will be thrown.
-			/// This option required, if you want to select related collections, e.g. using <see cref="LinqExtensions.LoadWith{TEntity,TProperty}(System.Linq.IQueryable{TEntity},System.Linq.Expressions.Expression{System.Func{TEntity,TProperty}})"/> method.
-			/// Default value: <c>false</c>.
-			/// </summary>
-			[Obsolete("AllowMultipleQuery flag has no effect and will be removed in future.")]
-			public static bool AllowMultipleQuery;
-
-			/// <summary>
 			/// Enables generation of test class for each LINQ query, executed while this option is enabled.
 			/// This option could be useful for issue reporting, when you need to provide reproducible case.
 			/// Test file will be placed to <c>linq2db</c> subfolder of temp folder and exact file path will be logged
@@ -163,7 +153,7 @@ namespace LinqToDB.Common
 			public static bool TraceMapperExpression;
 
 			/// <summary>
-			/// Controls behavior, when LINQ query chain contains multiple <see cref="System.Linq.Queryable.OrderBy{TSource, TKey}(System.Linq.IQueryable{TSource}, System.Linq.Expressions.Expression{Func{TSource, TKey}})"/> or <see cref="System.Linq.Queryable.OrderByDescending{TSource, TKey}(System.Linq.IQueryable{TSource}, System.Linq.Expressions.Expression{Func{TSource, TKey}})"/> calls:
+			/// Controls behavior, when LINQ query chain contains multiple <see cref="System.Linq.Queryable.OrderBy{TSource, TKey}(System.Linq.IQueryable{TSource}, Expression{Func{TSource, TKey}})"/> or <see cref="System.Linq.Queryable.OrderByDescending{TSource, TKey}(System.Linq.IQueryable{TSource}, Expression{Func{TSource, TKey}})"/> calls:
 			/// - if <c>true</c> - non-first OrderBy* call will be treated as ThenBy* call;
 			/// - if <c>false</c> - OrderBy* call will discard sort specifications, added by previous OrderBy* and ThenBy* calls.
 			/// Default value: <c>false</c>.
@@ -328,7 +318,7 @@ namespace LinqToDB.Common
 			public static bool UseDefaultPolicy
 			{
 				get => Factory == DefaultRetryPolicyFactory.GetRetryPolicy;
-				set => Factory = value ? DefaultRetryPolicyFactory.GetRetryPolicy : (Func<DataConnection,IRetryPolicy?>?)null;
+				set => Factory = value ? DefaultRetryPolicyFactory.GetRetryPolicy : null;
 			}
 
 			/// <summary>

@@ -110,34 +110,6 @@ namespace LinqToDB
 			return value ?? default;
 		}
 
-		[Expression("{0} BETWEEN {1} AND {2}", PreferServerSide = true, IsPredicate = true)]
-		public static bool Between<T>(this T value, T low, T high)
-			where T : IComparable
-		{
-			return value != null && value.CompareTo(low) >= 0 && value.CompareTo(high) <= 0;
-		}
-
-		[Expression("{0} BETWEEN {1} AND {2}", PreferServerSide = true, IsPredicate = true)]
-		public static bool Between<T>(this T? value, T? low, T? high)
-			where T : struct, IComparable
-		{
-			return value != null && value.Value.CompareTo(low) >= 0 && value.Value.CompareTo(high) <= 0;
-		}
-
-		[Expression("{0} NOT BETWEEN {1} AND {2}", PreferServerSide = true, IsPredicate = true)]
-		public static bool NotBetween<T>(this T value, T low, T high)
-			where T : IComparable
-		{
-			return value != null && (value.CompareTo(low) < 0 || value.CompareTo(high) > 0);
-		}
-
-		[Expression("{0} NOT BETWEEN {1} AND {2}", PreferServerSide = true, IsPredicate = true)]
-		public static bool NotBetween<T>(this T? value, T? low, T? high)
-			where T : struct, IComparable
-		{
-			return value != null && (value.Value.CompareTo(low) < 0 || value.Value.CompareTo(high) > 0);
-		}
-
 		[Extension(typeof(IsDistinctBuilder), ServerSideOnly = false, PreferServerSide = false)]
 		public static bool IsDistinctFrom<T>(this T value, T other) => !EqualityComparer<T>.Default.Equals(value, other);
 
@@ -373,7 +345,6 @@ namespace LinqToDB
 		[Property(PN.SapHana,       "TimeStamp",      ServerSideOnly=true)]
 		[Property(                  "DateTime",       ServerSideOnly=true)] public static DateTime       DateTime                          { get { return DateTime.Now; } }
 
-		[Property(PN.SqlServer2000, "DateTime",       ServerSideOnly=true)]
 		[Property(PN.SqlServer2005, "DateTime",       ServerSideOnly=true)]
 		[Property(PN.PostgreSQL,    "TimeStamp",      ServerSideOnly=true)]
 		[Property(PN.Firebird,      "TimeStamp",      ServerSideOnly=true)]
@@ -390,7 +361,6 @@ namespace LinqToDB
 		[Property(PN.SapHana,       "SecondDate",     ServerSideOnly=true)]
 		[Property(                  "SmallDateTime",  ServerSideOnly=true)] public static DateTime       SmallDateTime                     { get { return DateTime.Now; } }
 
-		[Property(PN.SqlServer2000, "Datetime",       ServerSideOnly=true)]
 		[Property(PN.SqlServer2005, "Datetime",       ServerSideOnly=true)]
 		[Property(PN.SqlCe,         "Datetime",       ServerSideOnly=true)]
 		[Property(                  "Date",           ServerSideOnly=true)] public static DateTime       Date                              { get { return DateTime.Now; } }
@@ -399,8 +369,10 @@ namespace LinqToDB
 
 		[Property(PN.PostgreSQL,    "TimeStamp",      ServerSideOnly=true)]
 		[Property(PN.Firebird,      "TimeStamp",      ServerSideOnly=true)]
+		[Property(PN.SqlServer2019, "DateTimeOffset", ServerSideOnly=true)]
 		[Property(PN.SqlServer2017, "DateTimeOffset", ServerSideOnly=true)]
 		[Property(PN.SqlServer2016, "DateTimeOffset", ServerSideOnly=true)]
+		[Property(PN.SqlServer2014, "DateTimeOffset", ServerSideOnly=true)]
 		[Property(PN.SqlServer2012, "DateTimeOffset", ServerSideOnly=true)]
 		[Property(PN.SqlServer2008, "DateTimeOffset", ServerSideOnly=true)]
 		[Property(PN.SapHana,       "TimeStamp",      ServerSideOnly=true)]
@@ -756,6 +728,7 @@ namespace LinqToDB
 		[Extension(PN.Informix,      typeof(IsNullOrWhiteSpaceInformixBuilder),      IsPredicate = true)]
 		[Extension(PN.SqlServer,     typeof(IsNullOrWhiteSpaceSqlServerBuilder),     IsPredicate = true)]
 		[Extension(PN.SqlServer2017, typeof(IsNullOrWhiteSpaceSqlServer2017Builder), IsPredicate = true)]
+		[Extension(PN.SqlServer2019, typeof(IsNullOrWhiteSpaceSqlServer2017Builder), IsPredicate = true)]
 		[Extension(PN.Access,        typeof(IsNullOrWhiteSpaceAccessBuilder),        IsPredicate = true)]
 		[Extension(PN.Sybase,        typeof(IsNullOrWhiteSpaceSybaseBuilder),        IsPredicate = true)]
 		[Extension(PN.MySql,         typeof(IsNullOrWhiteSpaceMySqlBuilder),         IsPredicate = true)]
@@ -1438,7 +1411,6 @@ namespace LinqToDB
 		/// Returns last identity value (current value) for specific table.
 		/// </summary>
 		[Function  (PN.SqlServer    , "IDENT_CURRENT", ServerSideOnly = true)]
-		[Expression(PN.SqlServer2000, "NULL"         , ServerSideOnly = true)]
 		[Expression(                  "NULL"         , ServerSideOnly = true)]
 		internal static object? CurrentIdentity(string tableName) => throw new LinqException($"'{nameof(CurrentIdentity)}' is server side only property.");
 
@@ -1446,7 +1418,6 @@ namespace LinqToDB
 		/// Returns identity step for specific table.
 		/// </summary>
 		[Function  (PN.SqlServer    , "IDENT_INCR", ServerSideOnly = true)]
-		[Expression(PN.SqlServer2000, "NULL"      , ServerSideOnly = true)]
 		[Expression(                  "NULL"      , ServerSideOnly = true)]
 		internal static object? IdentityStep(string tableName) => throw new LinqException($"'{nameof(IdentityStep)}' is server side only property.");
 		#endregion

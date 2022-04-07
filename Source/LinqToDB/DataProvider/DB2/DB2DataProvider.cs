@@ -6,15 +6,19 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.DB2
 {
+	using System.Data.Common;
 	using Common;
 	using Data;
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
 
-	public class DB2DataProvider : DynamicDataProviderBase<DB2ProviderAdapter>
+	class DB2LUWDataProvider : DB2DataProvider { public DB2LUWDataProvider() : base(ProviderName.DB2LUW, DB2Version.LUW) {} }
+	class DB2zOSDataProvider : DB2DataProvider { public DB2zOSDataProvider() : base(ProviderName.DB2zOS, DB2Version.zOS) {} }
+
+	public abstract class DB2DataProvider : DynamicDataProviderBase<DB2ProviderAdapter>
 	{
-		public DB2DataProvider(string name, DB2Version version)
+		protected DB2DataProvider(string name, DB2Version version)
 			: base(
 				name,
 				GetMappingSchema(version, DB2ProviderAdapter.GetInstance().MappingSchema),
@@ -28,6 +32,9 @@ namespace LinqToDB.DataProvider.DB2
 			SqlProviderFlags.IsDistinctOrderBySupported        = false;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 			SqlProviderFlags.IsUpdateFromSupported             = false;
+
+			SqlProviderFlags.RowConstructorSupport = RowFeature.Equality | RowFeature.Comparisons | RowFeature.Update |
+			                                         RowFeature.UpdateLiteral | RowFeature.Overlaps | RowFeature.Between;
 
 			SetCharFieldToType<char>("CHAR", DataTools.GetCharExpression);
 			SetCharField            ("CHAR", (r, i) => r.GetString(i).TrimEnd(' '));
@@ -96,13 +103,7 @@ namespace LinqToDB.DataProvider.DB2
 			return _sqlOptimizer;
 		}
 
-		public override void InitCommand(DataConnection dataConnection, CommandType commandType, string commandText, DataParameter[]? parameters, bool withParameters)
-		{
-			dataConnection.DisposeCommand();
-			base.InitCommand(dataConnection, commandType, commandText, parameters, withParameters);
-		}
-
-		public override void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object? value)
+		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
 		{
 			if (value is sbyte sb)
 			{
@@ -164,11 +165,10 @@ namespace LinqToDB.DataProvider.DB2
 					}
 			}
 
-			// TODO: why we add @ explicitly for DB2, SQLite and Sybase providers???
-			base.SetParameter(dataConnection, parameter, "@" + name, dataType, value);
+			base.SetParameter(dataConnection, parameter, name, dataType, value);
 		}
 
-		protected override void SetParameterType(DataConnection dataConnection, IDbDataParameter parameter, DbDataType dataType)
+		protected override void SetParameterType(DataConnection dataConnection, DbParameter parameter, DbDataType dataType)
 		{
 			DB2ProviderAdapter.DB2Type? type = null;
 			switch (dataType.DataType)
@@ -178,7 +178,7 @@ namespace LinqToDB.DataProvider.DB2
 
 			if (type != null)
 			{
-				var param = TryGetProviderParameter(parameter, dataConnection.MappingSchema);
+				var param = TryGetProviderParameter(dataConnection, parameter);
 				if (param != null)
 				{
 					Adapter.SetDbType(param, type.Value);

@@ -2,10 +2,12 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
+using System.Runtime.CompilerServices;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -15,7 +17,6 @@ namespace LinqToDB.Linq.Builder
 	using Common;
 	using Reflection;
 	using SqlQuery;
-	using System.Runtime.CompilerServices;
 	using LinqToDB.Common.Internal;
 
 	partial class ExpressionBuilder
@@ -191,11 +192,13 @@ namespace LinqToDB.Linq.Builder
 
 										var condition = Expression.Condition(
 											Expression.Equal(varTempVar,
-												new DefaultValueExpression(context.builder.MappingSchema, ma.Expression.Type)), expression,
+												new DefaultValueExpression(context.builder.MappingSchema,
+													ma.Expression.Type)), expression,
 											Expression.MakeMemberAccess(varTempVar, ma.Member));
+
 										expression = condition;
 									}
-									else if (!context.alias.IsNullOrEmpty() && (ctx.SelectQuery.Select.Columns.Count - prevCount) == 1)
+									else if (!string.IsNullOrEmpty(context.alias) && (ctx.SelectQuery.Select.Columns.Count - prevCount) == 1)
 									{
 										ctx.SelectQuery.Select.Columns[ctx.SelectQuery.Select.Columns.Count - 1].Alias = context.alias;
 									}
@@ -216,6 +219,7 @@ namespace LinqToDB.Linq.Builder
 											var info = context.builder.GetSubQueryContext(context.context, ce);
 											if (context.alias != null)
 												info.Context.SetAlias(context.alias);
+
 											var par  = Expression.Parameter(ex.Type);
 											var bex  = info.Context.BuildExpression(ma.Replace(ex, par), 0, context.enforceServerSide);
 
@@ -337,7 +341,7 @@ namespace LinqToDB.Linq.Builder
 
 
 								if (context.builder.IsServerSideOnly(expr) || context.builder.PreferServerSide(expr, context.enforceServerSide) || ce.Method.IsSqlPropertyMethodEx())
-										return new TransformInfo(context.builder.BuildSql(context.context, expr, context.alias));
+									return new TransformInfo(context.builder.BuildSql(context.context, expr, context.alias));
 
 								break;
 							}
@@ -383,7 +387,8 @@ namespace LinqToDB.Linq.Builder
 
 									if (binding is MemberAssignment assignment)
 									{
-										var argument = context.builder.ConvertAssignmentArgument(context.context, assignment.Expression,
+										var argument = context.builder.ConvertAssignmentArgument(context.context,
+											assignment.Expression,
 											assignment.Member, context.enforceServerSide, assignment.Member.Name);
 
 										if (argument != assignment.Expression)
@@ -418,9 +423,12 @@ namespace LinqToDB.Linq.Builder
 								break;
 
 							default                        :
+							{
 								if (!context.enforceServerSide && context.builder.CanBeCompiled(expr))
 									break;
-								return new TransformInfo(context.builder.BuildSql(context.context, expr, context.alias));
+								return new TransformInfo(context.builder.BuildSql(context.context, expr,
+									context.alias));
+							}
 						}
 					}
 
@@ -588,8 +596,8 @@ namespace LinqToDB.Linq.Builder
 			if (info.Expression == null)
 				info.Expression = info.Context.BuildExpression(null, 0, enforceServerSide);
 
-			if (!alias.IsNullOrEmpty())
-				info.Context.SetAlias(alias);
+			if (!string.IsNullOrEmpty(alias))
+				info.Context.SetAlias(alias!);
 			return info.Expression;
 		}
 
@@ -723,6 +731,9 @@ namespace LinqToDB.Linq.Builder
 
 		bool PreferServerSide(Expression expr, bool enforceServerSide)
 		{
+			if (expr.Type == typeof(Sql.SqlID))
+				return true;
+
 			switch (expr.NodeType)
 			{
 				case ExpressionType.MemberAccess:
@@ -820,14 +831,14 @@ namespace LinqToDB.Linq.Builder
 			return variable;
 		}
 
-		public Expression<Func<IQueryRunner,IDataContext,IDataReader,Expression,object?[]?,object?[]?,T>> BuildMapper<T>(Expression expr)
+		public Expression<Func<IQueryRunner,IDataContext, DbDataReader, Expression,object?[]?,object?[]?,T>> BuildMapper<T>(Expression expr)
 		{
 			var type = typeof(T);
 
 			if (expr.Type != type)
 				expr = Expression.Convert(expr, type);
 
-			var mapper = Expression.Lambda<Func<IQueryRunner,IDataContext,IDataReader,Expression,object?[]?,object?[]?,T>>(
+			var mapper = Expression.Lambda<Func<IQueryRunner,IDataContext,DbDataReader,Expression,object?[]?,object?[]?,T>>(
 				BuildBlock(expr), new[]
 				{
 					QueryRunnerParam,

@@ -95,7 +95,7 @@ namespace LinqToDB.Mapping
 
 			// always generate "unique" configuration name, if name not provided to avoid duplicate names
 			// e.g. see https://github.com/linq2db/linq2db/issues/3251
-			if (configuration.IsNullOrEmpty())
+			if (string.IsNullOrEmpty(configuration))
 				configuration = "auto_" + Interlocked.Increment(ref _configurationCounter);
 
 			var schemaInfo = new MappingSchemaInfo(configuration);
@@ -186,7 +186,7 @@ namespace LinqToDB.Mapping
 			foreach (var info in Schemas)
 			{
 				var o = info.GetDefaultValue(type);
-				if (o.IsSome)
+				if (o.HasValue)
 					return o.Value;
 			}
 
@@ -238,7 +238,7 @@ namespace LinqToDB.Mapping
 			foreach (var info in Schemas)
 			{
 				var o = info.GetCanBeNull(type);
-				if (o.IsSome)
+				if (o.HasValue)
 					return o.Value;
 			}
 
@@ -904,18 +904,18 @@ namespace LinqToDB.Mapping
 		{
 			if (Schemas.Length > 0)
 			{
-				var list = new List   <IMetadataReader>(Schemas.Length);
-				var hash = new HashSet<IMetadataReader>();
+			var list = new List   <IMetadataReader>(Schemas.Length);
+			var hash = new HashSet<IMetadataReader>();
 
-				for (var i = 0; i < Schemas.Length; i++)
-				{
-					var s = Schemas[i];
-					if (s.MetadataReader != null && hash.Add(s.MetadataReader))
-						list.Add(s.MetadataReader);
-				}
-
-				_metadataReaders = list.ToArray();
+			for (var i = 0; i < Schemas.Length; i++)
+			{
+				var s = Schemas[i];
+				if (s.MetadataReader != null && hash.Add(s.MetadataReader))
+					list.Add(s.MetadataReader);
 			}
+
+			_metadataReaders = list.ToArray();
+		}
 			else
 				_metadataReaders = Array<IMetadataReader>.Empty;
 		}
@@ -1249,8 +1249,8 @@ namespace LinqToDB.Mapping
 					var list = new List<string>();
 
 					foreach (var s in Schemas)
-						if (!s.Configuration.IsNullOrEmpty() && hash.Add(s.Configuration))
-							list.Add(s.Configuration);
+						if (!string.IsNullOrEmpty(s.Configuration) && hash.Add(s.Configuration!))
+							list.Add(s.Configuration!);
 
 					_configurationList = list.ToArray();
 				}
@@ -1345,7 +1345,7 @@ namespace LinqToDB.Mapping
 			foreach (var info in Schemas)
 			{
 				var o = info.GetScalarType(type);
-				if (o.IsSome)
+				if (o.HasValue)
 					return o.Value;
 			}
 
@@ -1448,7 +1448,7 @@ namespace LinqToDB.Mapping
 			foreach (var info in Schemas)
 			{
 				var o = info.GetDataType(type);
-				if (o.IsSome)
+				if (o.HasValue)
 					return o.Value;
 			}
 

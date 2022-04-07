@@ -1,7 +1,0 @@
-﻿{
-	"NET50.Azure": {
-		"Providers": [
-			"DB2"
-		]
-	}
-}

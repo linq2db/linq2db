@@ -1,5 +1,4 @@
 variables:
-  - template: templates/test-vars.yml
   - template: templates/build-vars.yml
   - name: artifact_nugets
     value: nugets
@@ -12,13 +11,13 @@ variables:
 
 # build on commits to important branches: 'release', 'master'
 trigger:
-  - master
-  - release
+  - dev.v4
+  - release4
 # don't trigger pr builds by default, users should trigger them manually using /azp bot commands to avoid situations
 # when we have multiple test runs waiting for free job, when nobody needs them
 # we only want to trigger it for pr to release branch
 pr:
-  - release
+  - release4
 
 stages:
 
@@ -31,19 +30,21 @@ stages:
   - template: templates/build-job.yml
     parameters:
       for_nuget: true
-      for_tests: false
-##############
-#  NUGET JOB #
+      for_tests: eq(variables['System.PullRequest.TargetBranch'], variables['release_branch'])
+
+#############
+# NUGET JOB #
 ##############
   - template: templates/nuget-job.yml
     parameters:
       publish: true
+
 #############
 # TEST JOBS #
 #############
   - template: templates/test-matrix.yml
     parameters:
-      enabled: and(eq(variables['System.PullRequest.TargetBranch'], 'release'), succeeded())
+      enabled: and(eq(variables['System.PullRequest.TargetBranch'], variables['release_branch']), succeeded())
       experimental: false
       with_baselines: true
-      mac_enabled: and(eq(variables['System.PullRequest.TargetBranch'], 'release'), succeeded()) # enable macos testing only for release
+      mac_enabled: and(eq(variables['System.PullRequest.TargetBranch'], variables['release_branch']), succeeded()) # enable macos testing only for release

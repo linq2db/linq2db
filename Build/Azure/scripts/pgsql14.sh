@@ -1,4 +1,5 @@
 #!/bin/bash
+
 docker run -d --name pgsql --net host -e POSTGRES_PASSWORD=Password12! -p 5432:5432 -v /var/run/postgresql:/var/run/postgresql postgres:14
 
 retries=0

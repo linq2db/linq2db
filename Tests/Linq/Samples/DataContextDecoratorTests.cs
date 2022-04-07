@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
+using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading.Tasks;
 
 using LinqToDB;
+using LinqToDB.Data;
+using LinqToDB.Interceptors;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.SqlProvider;
@@ -13,11 +16,9 @@ using NUnit.Framework;
 
 namespace Tests.Samples
 {
-	using System.Threading.Tasks;
-	using Model;
 	/// <summary>
 	/// This sample demonstrates how can we use <see cref="IDataContext"/> decoration
-	/// to deal with different <see cref="MappingSchema"/> objects in one <see cref="IDbConnection"/>
+	/// to deal with different <see cref="MappingSchema"/> objects in one <see cref="DbConnection"/>.
 	/// </summary>
 	[TestFixture]
 	public class DataContextDecoratorTests
@@ -50,12 +51,6 @@ namespace Tests.Samples
 				set => _context.InlineParameters = value;
 			}
 
-			event EventHandler? IDataContext.OnClosing
-			{
-				add { }
-				remove { }
-			}
-
 			public IDataContext Clone(bool forNestedQuery)
 			{
 				return _context.Clone(forNestedQuery);
@@ -86,17 +81,19 @@ namespace Tests.Samples
 				return _context.GetQueryRunner(query, queryNumber, expression, parameters, preambles);
 			}
 
-			public Expression GetReaderExpression(IDataReader reader, int idx, Expression readerExpression, Type toType)
+			public Expression GetReaderExpression(DbDataReader reader, int idx, Expression readerExpression, Type toType)
 			{
 				return _context.GetReaderExpression(reader, idx, readerExpression, toType);
 			}
 
-			public bool? IsDBNullAllowed(IDataReader reader, int idx)
+			public bool? IsDBNullAllowed(DbDataReader reader, int idx)
 			{
 				return _context.IsDBNullAllowed(reader, idx);
 			}
 
-			public Action<EntityCreatedEventArgs>? OnEntityCreated { get; set; }
+			public void AddInterceptor(IInterceptor interceptor) => _context.AddInterceptor(interceptor);
+
+			public IUnwrapDataObjectInterceptor? UnwrapDataObjectInterceptor { get; }
 		}
 
 		public class Entity
@@ -108,7 +105,7 @@ namespace Tests.Samples
 //		[Test]
 		public void Sample()
 		{
-			using (var db = new TestDataConnection())
+			using (var db = new DataConnection())
 			{
 				var ms = new MappingSchema();
 				var b  = ms.GetFluentMappingBuilder();

@@ -1,8 +1,8 @@
 ﻿#if NETFRAMEWORK
 using System;
+using System.Data.Common;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -11,9 +11,11 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.ServiceModel
 {
+	using Common;
+	using DataProvider;
 	using Expressions;
 	using Extensions;
-	using LinqToDB.Common;
+	using Interceptors;
 	using Mapping;
 	using SqlProvider;
 
@@ -28,7 +30,7 @@ namespace LinqToDB.ServiceModel
 			public MappingSchema   MappingSchema   = null!;
 		}
 
-		static readonly ConcurrentDictionary<string,ConfigurationInfo> _configurations = new ();
+		static readonly ConcurrentDictionary<string,ConfigurationInfo> _configurations = new();
 
 		class RemoteMappingSchema : MappingSchema
 		{
@@ -49,7 +51,6 @@ namespace LinqToDB.ServiceModel
 				try
 				{
 					var info = client.GetInfo(Configuration);
-
 					var type = Type.GetType(info.MappingSchemaType)!;
 					var ms   = new RemoteMappingSchema(ContextIDPrefix, (MappingSchema)Activator.CreateInstance(type));
 
@@ -87,7 +88,7 @@ namespace LinqToDB.ServiceModel
 		}
 
 		private  MappingSchema? _serializationMappingSchema;
-		internal MappingSchema  SerializationMappingSchema => _serializationMappingSchema ??= new SerializationMappingSchema(MappingSchema);
+		internal MappingSchema   SerializationMappingSchema => _serializationMappingSchema ??= new SerializationMappingSchema(MappingSchema);
 
 		public  bool InlineParameters { get; set; }
 		public  bool CloseAfterUse    { get; set; }
@@ -138,7 +139,7 @@ namespace LinqToDB.ServiceModel
 
 		Type IDataContext.DataReaderType => typeof(ServiceModelDataReader);
 
-		Expression IDataContext.GetReaderExpression(IDataReader reader, int idx, Expression readerExpression, Type toType)
+		Expression IDataContext.GetReaderExpression(DbDataReader reader, int idx, Expression readerExpression, Type toType)
 		{
 			var dataType   = reader.GetFieldType(idx);
 			var methodInfo = GetReaderMethodInfo(dataType);
@@ -155,26 +156,26 @@ namespace LinqToDB.ServiceModel
 		{
 			switch (type.ToNullableUnderlying().GetTypeCodeEx())
 			{
-				case TypeCode.Boolean  : return MemberHelper.MethodOf<IDataReader>(r => r.GetBoolean (0));
-				case TypeCode.Byte     : return MemberHelper.MethodOf<IDataReader>(r => r.GetByte    (0));
-				case TypeCode.Char     : return MemberHelper.MethodOf<IDataReader>(r => r.GetChar    (0));
-				case TypeCode.Int16    : return MemberHelper.MethodOf<IDataReader>(r => r.GetInt16   (0));
-				case TypeCode.Int32    : return MemberHelper.MethodOf<IDataReader>(r => r.GetInt32   (0));
-				case TypeCode.Int64    : return MemberHelper.MethodOf<IDataReader>(r => r.GetInt64   (0));
-				case TypeCode.Single   : return MemberHelper.MethodOf<IDataReader>(r => r.GetFloat   (0));
-				case TypeCode.Double   : return MemberHelper.MethodOf<IDataReader>(r => r.GetDouble  (0));
-				case TypeCode.String   : return MemberHelper.MethodOf<IDataReader>(r => r.GetString  (0));
-				case TypeCode.Decimal  : return MemberHelper.MethodOf<IDataReader>(r => r.GetDecimal (0));
-				case TypeCode.DateTime : return MemberHelper.MethodOf<IDataReader>(r => r.GetDateTime(0));
+				case TypeCode.Boolean  : return MemberHelper.MethodOf<DbDataReader>(r => r.GetBoolean (0));
+				case TypeCode.Byte     : return MemberHelper.MethodOf<DbDataReader>(r => r.GetByte    (0));
+				case TypeCode.Char     : return MemberHelper.MethodOf<DbDataReader>(r => r.GetChar    (0));
+				case TypeCode.Int16    : return MemberHelper.MethodOf<DbDataReader>(r => r.GetInt16   (0));
+				case TypeCode.Int32    : return MemberHelper.MethodOf<DbDataReader>(r => r.GetInt32   (0));
+				case TypeCode.Int64    : return MemberHelper.MethodOf<DbDataReader>(r => r.GetInt64   (0));
+				case TypeCode.Single   : return MemberHelper.MethodOf<DbDataReader>(r => r.GetFloat   (0));
+				case TypeCode.Double   : return MemberHelper.MethodOf<DbDataReader>(r => r.GetDouble  (0));
+				case TypeCode.String   : return MemberHelper.MethodOf<DbDataReader>(r => r.GetString  (0));
+				case TypeCode.Decimal  : return MemberHelper.MethodOf<DbDataReader>(r => r.GetDecimal (0));
+				case TypeCode.DateTime : return MemberHelper.MethodOf<DbDataReader>(r => r.GetDateTime(0));
 			}
 
 			if (type == typeof(Guid))
-				return MemberHelper.MethodOf<IDataReader>(r => r.GetGuid(0));
+				return MemberHelper.MethodOf<DbDataReader>(r => r.GetGuid(0));
 
-			return MemberHelper.MethodOf<IDataReader>(dr => dr.GetValue(0));
+			return MemberHelper.MethodOf<DbDataReader>(dr => dr.GetValue(0));
 		}
 
-		bool? IDataContext.IsDBNullAllowed(IDataReader reader, int idx)
+		bool? IDataContext.IsDBNullAllowed(DbDataReader reader, int idx)
 		{
 			return null;
 		}
@@ -200,12 +201,14 @@ namespace LinqToDB.ServiceModel
 										Expression.New(
 											type.GetConstructor(new[]
 											{
+												typeof(IDataProvider),
 												typeof(MappingSchema),
 												typeof(ISqlOptimizer),
 												typeof(SqlProviderFlags)
-											}),
+											}) ?? throw new InvalidOperationException($"Constructor for type '{type.Name}' not found."),
 											new Expression[]
 											{
+												Expression.Constant(null, typeof(IDataProvider)),
 												Expression.Constant(((IDataContext)this).MappingSchema),
 												Expression.Constant(GetSqlOptimizer()),
 												Expression.Constant(((IDataContext)this).SqlProviderFlags)
@@ -234,15 +237,12 @@ namespace LinqToDB.ServiceModel
 							if (!_sqlOptimizers.TryGetValue(key, out _getSqlOptimizer))
 								_sqlOptimizers.Add(key, _getSqlOptimizer =
 									Expression.Lambda<Func<ISqlOptimizer>>(
-										Expression.New(
-											type.GetConstructor(new[]
-											{
-												typeof(SqlProviderFlags)
-											}),
-											new Expression[]
-											{
-												Expression.Constant(((IDataContext)this).SqlProviderFlags)
-											})).CompileExpression());
+											Expression.New(
+												type.GetConstructor(new[] {typeof(SqlProviderFlags)}) ??
+												throw new InvalidOperationException(
+													$"Constructor for type '{type.Name}' not found."),
+												Expression.Constant(((IDataContext)this).SqlProviderFlags)))
+										.CompileExpression());
 				}
 
 				return _getSqlOptimizer;
@@ -312,13 +312,13 @@ namespace LinqToDB.ServiceModel
 		{
 			ThrowOnDisposed();
 
-			return Clone();
+			var ctx = (RemoteDataContextBase)Clone();
+
+			ctx._dataContextInterceptor   = _dataContextInterceptor   is AggregatedDataContextInterceptor   dc ? (AggregatedDataContextInterceptor)  dc.Clone() : _dataContextInterceptor;
+			ctx._entityServiceInterceptor = _entityServiceInterceptor is AggregatedEntityServiceInterceptor es ? (AggregatedEntityServiceInterceptor)es.Clone() : _entityServiceInterceptor;
+
+			return ctx;
 		}
-
-		public event EventHandler? OnClosing;
-
-		/// <inheritdoc/>
-		public Action<EntityCreatedEventArgs>? OnEntityCreated { get; set; }
 
 		protected bool Disposed { get; private set; }
 
@@ -330,36 +330,35 @@ namespace LinqToDB.ServiceModel
 
 		void IDataContext.Close()
 		{
-			Close();
+			_dataContextInterceptor?.OnClosing(new (this));
+			_dataContextInterceptor?.OnClosed (new (this));
 		}
 
-		Task IDataContext.CloseAsync()
+		async Task IDataContext.CloseAsync()
 		{
-			Close();
-			return TaskEx.CompletedTask;
+			if (_dataContextInterceptor != null)
+			{
+				await _dataContextInterceptor.OnClosingAsync(new (this)).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				await _dataContextInterceptor.OnClosedAsync (new (this)).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			}
 		}
 
-		void Close()
-		{
-			OnClosing?.Invoke(this, EventArgs.Empty);
-		}
-
-		public void Dispose()
+		public virtual void Dispose()
 		{
 			Disposed = true;
 
-			Close();
+			((IDataContext)this).Close();
 		}
 
 #if !NATIVE_ASYNC
-		public Task DisposeAsync()
+		public virtual Task DisposeAsync()
 		{
 			Disposed = true;
 
 			return ((IDataContext)this).CloseAsync();
 		}
 #else
-		public ValueTask DisposeAsync()
+		public virtual ValueTask DisposeAsync()
 		{
 			Disposed = true;
 

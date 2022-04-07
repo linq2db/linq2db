@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
+using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -8,13 +8,16 @@ namespace LinqToDB.DataProvider.Informix
 {
 	using Common;
 	using Data;
-	using LinqToDB.Linq.Internal;
+	using Linq.Internal;
 	using Mapping;
 	using SqlProvider;
 
-	public class InformixDataProvider : DynamicDataProviderBase<InformixProviderAdapter>
+	class InformixDataProviderInformix : InformixDataProvider { public InformixDataProviderInformix() : base(ProviderName.Informix)    {} }
+	class InformixDataProviderDB2      : InformixDataProvider { public InformixDataProviderDB2()      : base(ProviderName.InformixDB2) {} }
+
+	public abstract class InformixDataProvider : DynamicDataProviderBase<InformixProviderAdapter>
 	{
-		public InformixDataProvider(string providerName)
+		protected InformixDataProvider(string providerName)
 			: base(
 				providerName,
 				GetMappingSchema(providerName, InformixProviderAdapter.GetInstance(providerName).MappingSchema),
@@ -30,19 +33,20 @@ namespace LinqToDB.DataProvider.Informix
 			SqlProviderFlags.IsDistinctOrderBySupported        = false;
 			SqlProviderFlags.IsUpdateFromSupported             = false;
 			SqlProviderFlags.IsGroupByColumnRequred            = true;
+			SqlProviderFlags.RowConstructorSupport             = RowFeature.Equality | RowFeature.In;
 
 			SetCharField("CHAR",  (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("NCHAR", (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharFieldToType<char>("CHAR",  DataTools.GetCharExpression);
 			SetCharFieldToType<char>("NCHAR", DataTools.GetCharExpression);
 
-			SetProviderField<IDataReader,float,  float  >((r,i) => GetFloat  (r, i));
-			SetProviderField<IDataReader,double, double >((r,i) => GetDouble (r, i));
-			SetProviderField<IDataReader,decimal,decimal>((r,i) => GetDecimal(r, i));
+			SetProviderField<DbDataReader, float,  float  >((r,i) => GetFloat  (r, i));
+			SetProviderField<DbDataReader, double, double >((r,i) => GetDouble (r, i));
+			SetProviderField<DbDataReader, decimal,decimal>((r,i) => GetDecimal(r, i));
 
-			SetField<IDataReader, float  >((r, i) => GetFloat  (r, i));
-			SetField<IDataReader, double >((r, i) => GetDouble (r, i));
-			SetField<IDataReader, decimal>((r, i) => GetDecimal(r, i));
+			SetField<DbDataReader, float  >((r, i) => GetFloat  (r, i));
+			SetField<DbDataReader, double >((r, i) => GetDouble (r, i));
+			SetField<DbDataReader, decimal>((r, i) => GetDecimal(r, i));
 
 			_sqlOptimizer = new InformixSqlOptimizer(SqlProviderFlags);
 
@@ -56,30 +60,27 @@ namespace LinqToDB.DataProvider.Informix
 		}
 
 		[ColumnReader(1)]
-		static float GetFloat(IDataReader dr, int idx)
+		static float GetFloat(DbDataReader dr, int idx)
 		{
-			using (new InvariantCultureRegion())
+			using (new InvariantCultureRegion(null))
 				return dr.GetFloat(idx);
 		}
 
 		[ColumnReader(1)]
-		static double GetDouble(IDataReader dr, int idx)
+		static double GetDouble(DbDataReader dr, int idx)
 		{
-			using (new InvariantCultureRegion())
+			using (new InvariantCultureRegion(null))
 				return dr.GetDouble(idx);
 		}
 
 		[ColumnReader(1)]
-		static decimal GetDecimal(IDataReader dr, int idx)
+		static decimal GetDecimal(DbDataReader dr, int idx)
 		{
-			using (new InvariantCultureRegion())
+			using (new InvariantCultureRegion(null))
 				return dr.GetDecimal(idx);
 		}
 
-		public override IDisposable ExecuteScope(DataConnection dataConnection)
-		{
-			return new InvariantCultureRegion();
-		}
+		public override IExecutionScope ExecuteScope(DataConnection dataConnection) => new InvariantCultureRegion(null);
 
 		public override TableOptions SupportedTableOptions =>
 			TableOptions.IsTemporary               |
@@ -105,7 +106,7 @@ namespace LinqToDB.DataProvider.Informix
 			return new InformixSchemaProvider(this);
 		}
 
-		public override void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object? value)
+		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
 		{
 			if (value is TimeSpan ts)
 			{
@@ -141,7 +142,7 @@ namespace LinqToDB.DataProvider.Informix
 			base.SetParameter(dataConnection, parameter, name, dataType, value);
 		}
 
-		protected override void SetParameterType(DataConnection dataConnection, IDbDataParameter parameter, DbDataType dataType)
+		protected override void SetParameterType(DataConnection dataConnection, DbParameter parameter, DbDataType dataType)
 		{
 			if (parameter is BulkCopyReader.Parameter)
 				return;
@@ -160,7 +161,7 @@ namespace LinqToDB.DataProvider.Informix
 
 			if (idsType != null && db2Type != null)
 			{
-				var param = TryGetProviderParameter(parameter, dataConnection.MappingSchema);
+				var param = TryGetProviderParameter(dataConnection, parameter);
 				if (param != null)
 				{
 					if (Adapter.SetIfxType != null)

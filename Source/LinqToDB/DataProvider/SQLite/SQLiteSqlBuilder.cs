@@ -10,12 +10,18 @@ namespace LinqToDB.DataProvider.SQLite
 
 	public class SQLiteSqlBuilder : BasicSqlBuilder
 	{
-		public SQLiteSqlBuilder(
-			MappingSchema    mappingSchema,
-			ISqlOptimizer    sqlOptimizer,
-			SqlProviderFlags sqlProviderFlags)
-			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
+		public SQLiteSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
+		}
+
+		SQLiteSqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
+		{
+		}
+
+		protected override ISqlBuilder CreateSqlBuilder()
+		{
+			return new SQLiteSqlBuilder(this);
 		}
 
 		protected override bool SupportsColumnAliasesInSource => false;
@@ -41,11 +47,6 @@ namespace LinqToDB.DataProvider.SQLite
 			{
 				StringBuilder.AppendLine("SELECT last_insert_rowid()");
 			}
-		}
-
-		protected override ISqlBuilder CreateSqlBuilder()
-		{
-			return new SQLiteSqlBuilder(MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}
 
 		protected override string LimitFormat(SelectQuery selectQuery)
@@ -121,10 +122,10 @@ namespace LinqToDB.DataProvider.SQLite
 			}
 			else
 			{
-				AppendIndent();
-				StringBuilder.Append("CONSTRAINT ").Append(pkName).Append(" PRIMARY KEY (");
-			StringBuilder.Append(string.Join(InlineComma, fieldNames));
-				StringBuilder.Append(')');
+				AppendIndent()
+					.Append("CONSTRAINT ").Append(pkName).Append(" PRIMARY KEY (")
+					.Append(string.Join(InlineComma, fieldNames))
+					.Append(')');
 			}
 		}
 
@@ -132,7 +133,10 @@ namespace LinqToDB.DataProvider.SQLite
 		{
 			if (database != null && database.Length == 0) database = null;
 
-			if (database != null)
+			// either "temp", "main" or attached db name supported
+			if (tableOptions.IsTemporaryOptionSet())
+				sb.Append("temp.");
+			else if (database != null)
 				sb.Append(database).Append('.');
 
 			return sb.Append(table);
@@ -225,6 +229,20 @@ namespace LinqToDB.DataProvider.SQLite
 			}
 
 			aliasBuilt = false;
+		}
+
+		protected override void BuildTableExtensions(SqlTable table, string alias)
+		{
+			if (table.SqlQueryExtensions is not null)
+				BuildTableExtensions(StringBuilder, table, alias, " ", " ", null);
+		}
+
+		protected override void BuildUpdateTableName(SelectQuery selectQuery, SqlUpdateClause updateClause)
+		{
+			base.BuildUpdateTableName(selectQuery, updateClause);
+
+			if (updateClause.Table != null)
+				BuildTableExtensions(updateClause.Table, "");
 		}
 	}
 }

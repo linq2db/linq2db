@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using FluentAssertions;
 using LinqToDB;
@@ -8,8 +10,7 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
-	using System;
-	using System.Linq.Expressions;
+	using LinqToDB.Data;
 	using Model;
 
 
@@ -639,7 +640,7 @@ namespace Tests.Linq
 		[Test]
 		public void Concat90()
 		{
-			using(var context = new TestDataConnection())
+			using(var context = new DataConnection())
 			{
 				var join1 =
 					from t1 in context.GetTable<TestEntity1>()
@@ -1176,7 +1177,6 @@ namespace Tests.Linq
 
 			[ExpressionMethod(nameof(FullNameExpr), IsColumn = true)]
 			public string FullName { get; set; } = null!;
-
 
 			private static Expression<Func<Issue3323Table, string>> FullNameExpr() => entity => entity.FistName + " " + entity.LastName;
 		}

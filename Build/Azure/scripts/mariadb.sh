@@ -18,3 +18,4 @@ until docker exec mariadb mysql --protocol TCP -uroot -proot -e "show databases;
 done
 
 docker exec mariadb mysql -e 'CREATE DATABASE testdata DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;' -uroot -proot
+docker exec mariadb mysql -e 'CREATE DATABASE testdataconnector DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;' -uroot -proot

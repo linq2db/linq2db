@@ -273,12 +273,9 @@ namespace Tests.SchemaProvider
 			[IncludeDataSources(TestProvName.AllPostgreSQL)] string context,
 			[ValueSource(nameof(ProcedureTestCases))] ProcedureTestCase testCase)
 		{
-			var macaddr8Supported =  context.Contains(TestProvName.PostgreSQL10)
-				|| context.Contains(TestProvName.PostgreSQL11)
-				|| context.Contains(TestProvName.PostgreSQL12)
-				|| context.Contains(TestProvName.PostgreSQL13)
-				|| context.Contains(TestProvName.PostgreSQL14);
-			var jsonbSupported    = !context.Contains(ProviderName.PostgreSQL92) && !context.Contains(ProviderName.PostgreSQL93);
+			var macaddr8Supported = context.IsAnyOf(TestProvName.AllPostgreSQL10Plus);
+			var jsonbSupported    = context.IsAnyOf(TestProvName.AllPostgreSQL95Plus);
+
 			using (var db = (DataConnection)GetDataContext(context))
 			{
 				var expectedProc = testCase.Schema;
@@ -439,7 +436,7 @@ namespace Tests.SchemaProvider
 		[Test]
 		public void DescriptionTest([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
 
@@ -454,7 +451,7 @@ namespace Tests.SchemaProvider
 		[Test]
 		public void TestMaterializedViewSchema([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.IO;
 using System.Reflection;
 
@@ -51,42 +52,12 @@ namespace LinqToDB.DataProvider.Oracle
 	public static partial class OracleTools
 	{
 #if NETFRAMEWORK
-		private static readonly Lazy<IDataProvider> _oracleNativeDataProvider11 = new (() =>
-		{
-			var provider = new OracleDataProvider(ProviderName.OracleNative, OracleVersion.v11);
-
-			DataConnection.AddDataProvider(provider);
-
-			return provider;
-		}, true);
-
-		private static readonly Lazy<IDataProvider> _oracleNativeDataProvider12 = new (() =>
-		{
-			var provider = new OracleDataProvider(ProviderName.OracleNative, OracleVersion.v12);
-
-			DataConnection.AddDataProvider(provider);
-
-			return provider;
-		}, true);
+		static readonly Lazy<IDataProvider> _oracleNativeDataProvider11 = DataConnection.CreateDataProvider<OracleDataProviderNative11>();
+		static readonly Lazy<IDataProvider> _oracleNativeDataProvider12 = DataConnection.CreateDataProvider<OracleDataProviderNative12>();
 #endif
 
-		private static readonly Lazy<IDataProvider> _oracleManagedDataProvider11 = new (() =>
-		{
-			var provider = new OracleDataProvider(ProviderName.OracleManaged, OracleVersion.v11);
-
-			DataConnection.AddDataProvider(provider);
-
-			return provider;
-		}, true);
-
-		private static readonly Lazy<IDataProvider> _oracleManagedDataProvider12 = new (() =>
-		{
-			var provider = new OracleDataProvider(ProviderName.OracleManaged, OracleVersion.v12);
-
-			DataConnection.AddDataProvider(provider);
-
-			return provider;
-		}, true);
+		static readonly Lazy<IDataProvider> _oracleManagedDataProvider11 = DataConnection.CreateDataProvider<OracleDataProviderManaged11>();
+		static readonly Lazy<IDataProvider> _oracleManagedDataProvider12 = DataConnection.CreateDataProvider<OracleDataProviderManaged12>();
 
 		public static bool AutoDetectProvider { get; set; } = true;
 
@@ -143,11 +114,11 @@ namespace LinqToDB.DataProvider.Oracle
 
 		private static OracleVersion DetectProviderVersion(IConnectionStringSettings css, string connectionString, bool managed)
 		{
-
-			OracleProviderAdapter providerAdapter;
 			try
 			{
 				var cs = string.IsNullOrWhiteSpace(connectionString) ? css.ConnectionString : connectionString;
+
+				OracleProviderAdapter providerAdapter;
 
 #if NETFRAMEWORK
 				if (!managed)
@@ -248,7 +219,7 @@ namespace LinqToDB.DataProvider.Oracle
 			{
 				ProviderName.OracleNative  => GetVersionedDataProvider(version.Value, false),
 				ProviderName.OracleManaged => GetVersionedDataProvider(version.Value, true),
-				_						   => 
+				_						   =>
 					DetectedProviderName == ProviderName.OracleNative
 					? GetVersionedDataProvider(version.Value, false)
 					: GetVersionedDataProvider(version.Value, true),
@@ -271,77 +242,36 @@ namespace LinqToDB.DataProvider.Oracle
 
 		public static void ResolveOracle(Assembly assembly) => new AssemblyResolver(assembly, assembly.FullName!);
 
-#region CreateDataConnection
+		#region CreateDataConnection
 
 		public static DataConnection CreateDataConnection(string connectionString, string? providerName = null)
 		{
 			return new DataConnection(GetDataProvider(providerName), connectionString);
 		}
 
-		public static DataConnection CreateDataConnection(IDbConnection connection, string? providerName = null)
+		public static DataConnection CreateDataConnection(DbConnection connection, string? providerName = null)
 		{
 			return new DataConnection(GetDataProvider(providerName), connection);
 		}
 
-		public static DataConnection CreateDataConnection(IDbTransaction transaction, string? providerName = null)
+		public static DataConnection CreateDataConnection(DbTransaction transaction, string? providerName = null)
 		{
 			return new DataConnection(GetDataProvider(providerName), transaction);
 		}
 
-#endregion
+		#endregion
 
-#region BulkCopy
+		#region BulkCopy
 
 		public  static BulkCopyType  DefaultBulkCopyType { get; set; } = BulkCopyType.MultipleRows;
 
-		[Obsolete("Please use the BulkCopy extension methods within DataConnectionExtensions")]
-		public static BulkCopyRowsCopied MultipleRowsCopy<T>(
-			this DataConnection          dataConnection,
-			IEnumerable<T>               source,
-			int                          maxBatchSize       = 1000,
-			Action<BulkCopyRowsCopied>?  rowsCopiedCallback = null)
-			where T : class
-		{
-			return dataConnection.BulkCopy(
-				new BulkCopyOptions
-				{
-					BulkCopyType       = BulkCopyType.MultipleRows,
-					MaxBatchSize       = maxBatchSize,
-					RowsCopiedCallback = rowsCopiedCallback,
-				}, source);
-		}
-
-		[Obsolete("Please use the BulkCopy extension methods within DataConnectionExtensions")]
-		public static BulkCopyRowsCopied ProviderSpecificBulkCopy<T>(
-			DataConnection               dataConnection,
-			IEnumerable<T>               source,
-			int?                         maxBatchSize       = null,
-			int?                         bulkCopyTimeout    = null,
-			int                          notifyAfter        = 0,
-			Action<BulkCopyRowsCopied>?  rowsCopiedCallback = null)
-			where T : class
-		{
-			return dataConnection.BulkCopy(
-				new BulkCopyOptions
-				{
-					BulkCopyType       = BulkCopyType.ProviderSpecific,
-					MaxBatchSize       = maxBatchSize,
-					BulkCopyTimeout    = bulkCopyTimeout,
-					NotifyAfter        = notifyAfter,
-					RowsCopiedCallback = rowsCopiedCallback,
-				}, source);
-		}
-
-		#endregion
+#endregion
 
 		/// <summary>
 		/// Specifies type of multi-row INSERT operation to generate for <see cref="BulkCopyType.RowByRow"/> bulk copy mode.
 		/// Default value: <see cref="AlternativeBulkCopy.InsertAll"/>.
 		/// </summary>
 		public static AlternativeBulkCopy UseAlternativeBulkCopy = AlternativeBulkCopy.InsertAll;
-
-		[Obsolete("This field is not used by linq2db. Configure reader expressions on DataProvider directly")]
-		public static Func<IDataReader,int,decimal> DataReaderGetDecimal = (dr, i) => dr.GetDecimal(i);
 
 		/// <summary>
 		/// Gets or sets flag to tell LinqToDB to quote identifiers, if they contain lowercase letters.

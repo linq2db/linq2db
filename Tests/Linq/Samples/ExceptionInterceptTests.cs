@@ -2,14 +2,10 @@
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using LinqToDB.Data;
 using LinqToDB.Data.RetryPolicy;
 using LinqToDB.Mapping;
 using NUnit.Framework;
-
-#if NET472
 using System.Data.SQLite;
-#endif
 
 namespace Tests.Samples
 {
@@ -91,20 +87,18 @@ namespace Tests.Samples
 			public int ID { get; set; }
 		}
 
-#if NET472
 		[Test]
 		public void StandardExceptionExecuteReader([IncludeDataSources(TestProvName.AllSQLiteClassic)]
 			string context)
 		{
 			Assert.Throws<SQLiteException>(() =>
 			{
-				using (var db = new DataConnection(context))
+				using (var db = GetDataConnection(context))
 				{
 					db.GetTable<TestTable>().ToList();
 				}
 			});
 		}
-#endif
 
 		[Test]
 		public void InterceptedExceptionExecuteReader([DataSources(false)] string context)
@@ -115,7 +109,7 @@ namespace Tests.Samples
 
 			Assert.Throws<DivideByZeroException>(() =>
 			{
-				using (var db = new DataConnection(context))
+				using (var db = GetDataConnection(context))
 				{
 					db.RetryPolicy = ret;
 					db.GetTable<TestTable>().ToList();

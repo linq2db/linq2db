@@ -420,7 +420,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void InsertFromCrossJoinedSourceQuery2Workaround([MergeDataContextSource(false)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				PrepareData(db);
 
@@ -454,7 +454,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void InsertFromCrossJoinedSourceQuery2([MergeDataContextSource(false)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				PrepareData(db);
 
@@ -512,7 +512,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void InsertFromCrossJoinedSourceQuery([MergeDataContextSource(false)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				// prepare test data
@@ -609,7 +609,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void InsertFromSelectManySourceQuery([MergeDataContextSource(false)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				// prepare test data
@@ -1581,15 +1581,15 @@ namespace Tests.xUpdate
 
 				AssertRowCount(1, rows, context);
 
-				if (context != ProviderName.Sybase)
+				if (!context.IsAnyOf(ProviderName.Sybase))
 					Assert.AreEqual(5, result.Count);
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
 				AssertRow(InitialTargetData[2], result[2], null, 203);
 				AssertRow(InitialTargetData[3], result[3], null, null);
-				if (context != ProviderName.Sybase)
-				AssertRow(InitialSourceData[3], result[4], null, 216);
+				if (!context.IsAnyOf(ProviderName.Sybase))
+					AssertRow(InitialSourceData[3], result[4], null, 216);
 			}
 		}
 		#endregion
@@ -1664,7 +1664,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void CrossJoinedSourceWithSingleFieldSelection([MergeDataContextSource(false)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				// prepare test data
@@ -1730,7 +1730,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void SortedMergeResultsIssue([MergeDataContextSource(false)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				// prepare test data

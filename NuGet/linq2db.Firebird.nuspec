@@ -21,10 +21,6 @@
 				<dependency id="linq2db" version="3.0.0"                          />
 				<dependency id="FirebirdSql.Data.FirebirdClient" version="7.10.1" />
 			</group>
-			<group targetFramework=".NETFramework4.7.2">
-				<dependency id="linq2db" version="3.0.0"                          />
-				<dependency id="FirebirdSql.Data.FirebirdClient" version="8.5.4"  />
-			</group>
 			<group targetFramework=".NETStandard2.0">
 				<dependency id="linq2db" version="3.0.0"                          />
 				<dependency id="FirebirdSql.Data.FirebirdClient" version="8.5.4"  />
@@ -38,7 +34,7 @@
 		<file src="..\Nuget\README.T4.md"                                              target="README.md"                                                                                          />
 
 		<file src="..\Source\LinqToDB\bin\Release\net46\linq2db.dll"                   target="tools"                                                                                              />
-		<file src="..\Tests\Tests.T4\bin\Azure\net472\Humanizer.dll"                   target="tools"                                                                                              />
+		<file src="..\Tests\Linq\bin\Azure\net472\Humanizer.dll"                       target="tools"                                                                                              />
 		<file src="..\Tests\Linq\bin\Azure\net472\FirebirdSql.Data.FirebirdClient.dll" target="tools"                                                                                              />
 		<file src="..\Tests\Linq\bin\Azure\net472\Microsoft.Bcl.AsyncInterfaces.dll"   target="tools"                                                                                              />
 

@@ -11,11 +11,12 @@ namespace LinqToDB.DataProvider.Access
 
 	abstract class AccessSqlBuilderBase : BasicSqlBuilder
 	{
-		protected AccessSqlBuilderBase(
-			MappingSchema       mappingSchema,
-			ISqlOptimizer       sqlOptimizer,
-			SqlProviderFlags    sqlProviderFlags)
-			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
+		protected AccessSqlBuilderBase(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
+		{
+		}
+
+		protected AccessSqlBuilderBase(BasicSqlBuilder parentBuilder) : base(parentBuilder)
 		{
 		}
 
@@ -58,6 +59,7 @@ namespace LinqToDB.DataProvider.Access
 		protected override void BuildSql()
 		{
 			var selectQuery = Statement.SelectQuery;
+
 			if (selectQuery != null)
 			{
 				if (selectQuery.From.Tables.Count == 0 && selectQuery.Select.Columns.Count == 1)
@@ -322,6 +324,36 @@ namespace LinqToDB.DataProvider.Access
 		{
 			// comments not supported by Access
 			return sb;
+		}
+
+		protected override void BuildQueryExtensions(SqlStatement statement)
+		{
+			if (statement.SqlQueryExtensions is not null)
+				BuildQueryExtensions(StringBuilder, statement.SqlQueryExtensions, null, " ", null);
+
+			if (statement.SelectQuery?.SqlQueryExtensions is not null)
+			{
+				var len = StringBuilder.Length;
+
+				AppendIndent();
+
+				var prefix = Environment.NewLine;
+
+				if (StringBuilder.Length > len)
+				{
+					var buffer = new char[StringBuilder.Length - len];
+
+					StringBuilder.CopyTo(len, buffer, 0, StringBuilder.Length - len);
+
+					prefix += new string(buffer);
+				}
+
+				BuildQueryExtensions(StringBuilder, statement.SelectQuery!.SqlQueryExtensions, null, prefix, Environment.NewLine);
+			}
+		}
+
+		protected override void StartStatementQueryExtensions(SelectQuery? selectQuery)
+		{
 		}
 	}
 }

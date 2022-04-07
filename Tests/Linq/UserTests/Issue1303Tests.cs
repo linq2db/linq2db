@@ -21,13 +21,13 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestBinary([DataSources(ProviderName.SqlServer2000)] string context, [Values] bool inlineParameters)
+		public void TestBinary([DataSources] string context, [Values] bool inlineParameters)
 		{
 			using (var db  = GetDataContext(context))
 			using (var tbl = db.CreateLocalTable<Issue1303>())
 			{
 				// Informix: apply inlining to insert to test binary parameters
-				if (context.StartsWith("Informix"))
+				if (context.IsAnyOf(TestProvName.AllInformix))
 					db.InlineParameters = inlineParameters;
 
 				tbl.Insert(() => new Issue1303()
@@ -46,7 +46,7 @@ namespace Tests.UserTests
 				Assert.True(new byte[] { 4, 5 }   .SequenceEqual(byId.Binary!.ToArray()));
 
 				// Informix: doesn't support blobs in conditions
-				if (!context.StartsWith("Informix"))
+				if (!context.IsAnyOf(TestProvName.AllInformix))
 				{
 					var byArray  = tbl.Where(_ => _.Array  == new byte[] { 1, 2, 3 })         .Single();
 					var byBinary = tbl.Where(_ => _.Binary == new Binary(new byte[] { 4, 5 })).Single();

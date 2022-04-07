@@ -222,7 +222,7 @@ namespace LinqToDB
 			if (source is IQueryProviderAsync queryAsync)
 				return queryAsync.ExecuteAsync<int>(expr, token);
 
-			return TaskEx.Run(() => source.Provider.Execute<int>(expr), token);
+			return Task.Run(() => source.Provider.Execute<int>(expr), token);
 		}
 
 		/// <summary>
@@ -303,7 +303,7 @@ namespace LinqToDB
 			if (currentSource is IQueryProviderAsync queryAsync)
 				return queryAsync.ExecuteAsync<int>(expr, token);
 
-			return TaskEx.Run(() => currentSource.Provider.Execute<int>(expr), token);
+			return Task.Run(() => currentSource.Provider.Execute<int>(expr), token);
 		}
 	}
 }

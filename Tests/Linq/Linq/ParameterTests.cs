@@ -121,7 +121,6 @@ namespace Tests.Linq
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllInformix,
 				ProviderName.DB2,
-				ProviderName.SQLiteMS,
 				TestProvName.AllSapHana)]
 			string context)
 		{
@@ -176,7 +175,7 @@ namespace Tests.Linq
 		[Test]
 		public void ExposeSqlDecimalParameter([DataSources(false, ProviderName.DB2, TestProvName.AllInformix)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var p   = 123.456m;
 				var sql = db.GetTable<AllTypes>().Where(t => t.DecimalDataType == p).ToString();
@@ -191,7 +190,7 @@ namespace Tests.Linq
 		[Test]
 		public void ExposeSqlBinaryParameter([DataSources(false, ProviderName.DB2)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var p   = new byte[] { 0, 1, 2 };
 				var sql = db.GetTable<AllTypes>().Where(t => t.BinaryDataType == p).ToString();
@@ -209,7 +208,7 @@ namespace Tests.Linq
 			{
 				var dt = TestData.DateTime;
 
-				if (context.Contains("Informix"))
+				if (context.IsAnyOf(TestProvName.AllInformix))
 					dt = new DateTime(dt.Year, dt.Month, dt.Day, dt.Hour, dt.Minute, dt.Second);
 
 				var _ = db.Types.Where(t => t.DateTimeValue == Sql.ToSql(dt)).ToList();

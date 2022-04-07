@@ -1,30 +1,36 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.Runtime.CompilerServices;
+using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
-	using System;
-	using System.Runtime.CompilerServices;
 	using Common;
 	using Data;
 	using Mapping;
 	using SqlProvider;
 
+	class PostgreSQLDataProvider92 : PostgreSQLDataProvider { public PostgreSQLDataProvider92() : base(ProviderName.PostgreSQL92, PostgreSQLVersion.v92) {} }
+	class PostgreSQLDataProvider93 : PostgreSQLDataProvider { public PostgreSQLDataProvider93() : base(ProviderName.PostgreSQL93, PostgreSQLVersion.v93) {} }
+
+	public class PostgreSQLDataProvider95 : PostgreSQLDataProvider { public PostgreSQLDataProvider95() : base(ProviderName.PostgreSQL95, PostgreSQLVersion.v95) {} }
+
 	public class PostgreSQLDataProvider : DynamicDataProviderBase<NpgsqlProviderAdapter>
 	{
-		public PostgreSQLDataProvider(PostgreSQLVersion version = PostgreSQLVersion.v92)
+		protected PostgreSQLDataProvider(PostgreSQLVersion version)
 			: this(GetProviderName(version), version)
 		{
 		}
 
-		public PostgreSQLDataProvider(string name, PostgreSQLVersion version = PostgreSQLVersion.v92)
+		protected PostgreSQLDataProvider(string name, PostgreSQLVersion version)
 			: base(
-				  name,
-				  GetMappingSchema(version, NpgsqlProviderAdapter.GetInstance().MappingSchema),
-				  NpgsqlProviderAdapter.GetInstance())
+				name,
+				GetMappingSchema(version, NpgsqlProviderAdapter.GetInstance().MappingSchema),
+				NpgsqlProviderAdapter.GetInstance())
 		{
 			Version = version;
 
@@ -35,6 +41,11 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			SqlProviderFlags.IsDistinctOrderBySupported        = false;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
 			SqlProviderFlags.IsAllSetOperationsSupported       = true;
+
+			SqlProviderFlags.RowConstructorSupport = RowFeature.Equality        | RowFeature.Comparisons |
+			                                         RowFeature.CompareToSelect | RowFeature.In | RowFeature.IsNull |
+			                                         RowFeature.Update          | RowFeature.UpdateLiteral |
+			                                         RowFeature.Overlaps        | RowFeature.Between;
 
 			SetCharFieldToType<char>("bpchar"   , DataTools.GetCharExpression);
 			SetCharFieldToType<char>("character", DataTools.GetCharExpression);
@@ -203,12 +214,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return new PostgreSQLSchemaProvider(this);
 		}
 
-#if !NETFRAMEWORK
-		public override bool? IsDBNullAllowed(IDataReader reader, int idx)
-		{
-			return true;
-		}
-#endif
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal object? NormalizeTimeStamp(object? value, DbDataType dataType)
 		{
@@ -235,7 +240,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		}
 
 
-		public override void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object? value)
+		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
 		{
 			if (value is IDictionary && dataType.DataType == DataType.Undefined)
 				dataType = dataType.WithDataType(DataType.Dictionary);
@@ -245,7 +250,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			base.SetParameter(dataConnection, parameter, name, dataType, value);
 		}
 
-		protected override void SetParameterType(DataConnection dataConnection, IDbDataParameter parameter, DbDataType dataType)
+		protected override void SetParameterType(DataConnection dataConnection, DbParameter parameter, DbDataType dataType)
 		{
 			// didn't tried to detect and cleanup unnecessary type mappings, as npgsql develops rapidly and
 			// it doesn't pay efforts to track changes for each version in this area
@@ -287,7 +292,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 			if (type != null)
 			{
-				var param = TryGetProviderParameter(parameter, dataConnection.MappingSchema);
+				var param = TryGetProviderParameter(dataConnection, parameter);
 				if (param != null)
 				{
 					Adapter.SetDbType(param, type.Value);

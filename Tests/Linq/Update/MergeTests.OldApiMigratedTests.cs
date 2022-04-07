@@ -16,7 +16,7 @@ namespace Tests.xUpdate
 	{
 		// ASE: just fails
 		[Test]
-		public void Merge([MergeDataContextSource(ProviderName.Sybase, ProviderName.SybaseManaged)] string context)
+		public void Merge([MergeDataContextSource(TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -49,7 +49,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void MergeWithDelete([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				db.GetTable<LinqDataTypes2>()
@@ -66,7 +66,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void MergeWithDeletePredicate1([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				db.GetTable<LinqDataTypes2>()
@@ -83,7 +83,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void MergeWithDeletePredicate3([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				db.Insert(new Person()
@@ -117,7 +117,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void MergeWithDeletePredicate4([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				db.Insert(new Person()
@@ -153,7 +153,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void MergeWithDeletePredicate5([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				db.GetTable<Child>()
@@ -186,12 +186,12 @@ namespace Tests.xUpdate
 		[Test]
 		public void MergeChar1([MergeDataContextSource(
 			false,
-			ProviderName.DB2, ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix)]
+			ProviderName.DB2, TestProvName.AllSybase, TestProvName.AllInformix)]
 			string context)
 		{
 			ResetAllTypesIdentity(context);
 
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				var id = ConvertTo<int>.From(db.GetTable<AllType>().InsertWithIdentity(() => new AllType
@@ -219,7 +219,7 @@ namespace Tests.xUpdate
 			ProviderName.DB2, ProviderName.Sybase, TestProvName.AllInformix)]
 			string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				db.GetTable<AllType>()
@@ -252,7 +252,7 @@ namespace Tests.xUpdate
 		{
 			ResetAllTypesIdentity(context);
 
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				var lastId = db.GetTable<AllType>().Select(_ => _.ID).Max();

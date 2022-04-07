@@ -100,8 +100,8 @@ namespace LinqToDB.SqlQuery
 
 				case QueryElementType.IsTruePredicate:
 					{
-						return 
-							Find(((SqlPredicate.IsTrue)element).Expr1) ?? 
+						return
+							Find(((SqlPredicate.IsTrue)element).Expr1) ??
 							Find(((SqlPredicate.IsTrue)element).TrueValue) ??
 							Find(((SqlPredicate.IsTrue)element).FalseValue);
 					}
@@ -217,7 +217,7 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.SetExpression:
 					{
 						return
-							Find(((SqlSetExpression)element).Column    ) ??
+							Find(((SqlSetExpression)element).Column) ??
 							Find(((SqlSetExpression)element).Expression);
 					}
 
@@ -377,9 +377,14 @@ namespace LinqToDB.SqlQuery
 
 				case QueryElementType.SqlValuesTable:
 					{
-						return 
+						return
 							Find(((SqlValuesTable)element).Fields                  ) ??
 							Find(((SqlValuesTable)element).Rows?.SelectMany(static r => r));
+					}
+
+				case QueryElementType.SqlRow:
+					{
+						return Find(((SqlRow)element).Values);
 					}
 
 				case QueryElementType.SqlField:

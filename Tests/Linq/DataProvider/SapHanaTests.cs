@@ -68,7 +68,7 @@ namespace Tests.DataProvider
 		{
 			var param1Name = context.Contains("Odbc") ? "?" : ":p";
 			var param2Name = context.Contains("Odbc") ? "?" : ":p2";
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<string>($"SELECT {param1Name} from dummy", new { p = 1 }), Is.EqualTo("1"));
 				Assert.That(conn.Execute<string>($"SELECT {param1Name} from dummy", new { p = "1" }), Is.EqualTo("1"));
@@ -82,7 +82,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestDataTypes([IncludeDataSources(CurrentProvider)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(TestType<long?>   (conn, "bigintDataType", DataType.Int64), Is.EqualTo(123456789123456789));
 				Assert.That(TestType<short?>  (conn, "smallintDataType", DataType.Int16), Is.EqualTo(12345));
@@ -140,7 +140,7 @@ namespace Tests.DataProvider
 		public void TestDate([IncludeDataSources(CurrentProvider)] string context)
 		{
 			var paramName = context.Contains("Odbc") ? "?" : ":p";
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				var dateTime = new DateTime(2012, 12, 12);
 
@@ -155,7 +155,7 @@ namespace Tests.DataProvider
 		public void TestDateTime([IncludeDataSources(CurrentProvider)] string context)
 		{
 			var paramName = context.Contains("Odbc") ? "?" : ":p";
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				var dateTime = new DateTime(2012, 12, 12, 12, 12, 12);
 
@@ -172,7 +172,7 @@ namespace Tests.DataProvider
 		public void TestChar([IncludeDataSources(CurrentProvider)] string context)
 		{
 			var paramName = context.Contains("Odbc") ? "?" : ":p";
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<char>("SELECT Cast('1' as char) from dummy"), Is.EqualTo('1'));
 				Assert.That(conn.Execute<char?>("SELECT Cast('1' as char) from dummy"), Is.EqualTo('1'));
@@ -204,7 +204,7 @@ namespace Tests.DataProvider
 		public void TestString([IncludeDataSources(CurrentProvider)] string context)
 		{
 			var paramName = context.Contains("Odbc") ? "?" : ":p";
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<string>("SELECT Cast('12345' as char(20)) from dummy"), Is.EqualTo("12345"));
 				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as char(20)) from dummy"), Is.Null);
@@ -225,7 +225,7 @@ namespace Tests.DataProvider
 		public void TestBinaryFromDb([IncludeDataSources(CurrentProvider)] string context)
 		{
 			var arr = new byte[] {97, 98, 99, 100, 101, 102, 103, 104};
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<byte[]>("SELECT \"binaryDataType\" from \"AllTypes\" WHERE ID=2"), Is.EqualTo(arr));
 				Assert.That(conn.Execute<byte[]>("SELECT \"varbinaryDataType\" from \"AllTypes\" WHERE ID=2"), Is.EqualTo(arr));
@@ -238,7 +238,7 @@ namespace Tests.DataProvider
 		{
 			var arr1 = new byte[] { 46, 127, 0, 5 };
 
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<byte[]>("SELECT :p from dummy", DataParameter.Binary("p", arr1)), Is.EqualTo(arr1));
 				Assert.That(conn.Execute<byte[]>("SELECT :p from dummy", DataParameter.VarBinary("p", arr1)), Is.EqualTo(arr1));
@@ -257,7 +257,7 @@ namespace Tests.DataProvider
 		public void TestXml([IncludeDataSources(CurrentProvider)] string context)
 		{
 			var paramName = context.Contains("Odbc") ? "?" : ":p";
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<string>("SELECT '<xml/>' from dummy"), Is.EqualTo("<xml/>"));
 				Assert.That(conn.Execute<XDocument>("SELECT '<xml/>' from dummy").ToString(), Is.EqualTo("<xml />"));
@@ -283,7 +283,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestEnum1([IncludeDataSources(CurrentProvider)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<TestEnum>("SELECT 'A' from dummy"), Is.EqualTo(TestEnum.AA));
 				Assert.That(conn.Execute<TestEnum?>("SELECT 'A' from dummy"), Is.EqualTo(TestEnum.AA));
@@ -296,7 +296,7 @@ namespace Tests.DataProvider
 		public void TestEnum2([IncludeDataSources(CurrentProvider)] string context)
 		{
 			var paramName = context.Contains("Odbc") ? "?" : ":p";
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<string>($"SELECT {paramName} from dummy", new { p = TestEnum.AA }), Is.EqualTo("A"));
 				Assert.That(conn.Execute<string>($"SELECT {paramName} from dummy", new { p = (TestEnum?)TestEnum.BB }), Is.EqualTo("B"));
@@ -372,7 +372,7 @@ namespace Tests.DataProvider
 
 		void BulkCopyTest(string context, BulkCopyType bulkCopyType)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				conn.BeginTransaction();
 
@@ -413,7 +413,7 @@ namespace Tests.DataProvider
 
 		async Task BulkCopyTestAsync(string context, BulkCopyType bulkCopyType)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				conn.BeginTransaction();
 
@@ -479,7 +479,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void BulkCopyProviderSpecificUpperCaseColumns([IncludeDataSources(CurrentProvider)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				try
 				{
@@ -509,7 +509,7 @@ namespace Tests.DataProvider
 		[Test]
 		public async Task BulkCopyProviderSpecificUpperCaseColumnsAsync([IncludeDataSources(CurrentProvider)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				try
 				{
@@ -539,7 +539,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void BulkCopyProviderSpecificLowerCaseColumns([IncludeDataSources(CurrentProvider)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				try
 				{
@@ -569,7 +569,7 @@ namespace Tests.DataProvider
 		[Test]
 		public async Task BulkCopyProviderSpecificLowerCaseColumnsAsync([IncludeDataSources(CurrentProvider)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				try
 				{
@@ -600,7 +600,7 @@ namespace Tests.DataProvider
 		{
 			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
 			{
-				using (var db = new DataConnection(context))
+				using (var db = GetDataConnection(context))
 				{
 					try
 					{
@@ -630,7 +630,7 @@ namespace Tests.DataProvider
 		{
 			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
 			{
-				using (var db = new DataConnection(context))
+				using (var db = GetDataConnection(context))
 				{
 					try
 					{
@@ -734,7 +734,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void ByDefaultLoadCurrentSchemaOnly([IncludeDataSources(CurrentProvider)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var currentSchema = TestUtils.GetSchemaName(db);
 				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);

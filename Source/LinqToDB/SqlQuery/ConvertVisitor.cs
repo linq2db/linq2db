@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using LinqToDB.ServiceModel;
 
 namespace LinqToDB.SqlQuery
 {
@@ -533,11 +534,11 @@ namespace LinqToDB.SqlQuery
 					case QueryElementType.SetExpression:
 					{
 						var s = (SqlSetExpression)element;
-						var c = (ISqlExpression?)ConvertInternal(s.Column    );
-						var e = (ISqlExpression?)ConvertInternal(s.Expression);
+						var e = (ISqlExpression?) ConvertInternal(s.Expression);
 
+						var c = (ISqlExpression?)ConvertInternal(s.Column);
 						if (c != null && !ReferenceEquals(s.Column, c) || e != null && !ReferenceEquals(s.Expression, e))
-							newElement = new SqlSetExpression(c ?? s.Column, e ?? s.Expression!);
+							newElement = new SqlSetExpression(c ?? s.Column, e ?? s.Expression);
 
 						break;
 					}
@@ -913,7 +914,6 @@ namespace LinqToDB.SqlQuery
 					case QueryElementType.SqlQuery:
 					{
 						var q = (SelectQuery)element;
-
 						var fc = (SqlFromClause?)   ConvertInternal(q.From   ) ?? q.From;
 						var sc = (SqlSelectClause?) ConvertInternal(q.Select ) ?? q.Select;
 						var wc = (SqlWhereClause?)  ConvertInternal(q.Where  ) ?? q.Where;
@@ -923,6 +923,7 @@ namespace LinqToDB.SqlQuery
 						var us = q.HasSetOperators ?Convert(q.SetOperators)     : q.SetOperators;
 
 						List<ISqlExpression[]>? uk = null;
+
 						if (q.HasUniqueKeys)
 							uk = ConvertListArray(q.UniqueKeys, null) ?? q.UniqueKeys;
 
@@ -996,6 +997,7 @@ namespace LinqToDB.SqlQuery
 							nq.Init(sc, fc, wc, gc, hc, oc, us, uk,
 								q.ParentSelect,
 								q.IsParameterDependent,
+								q.QueryName,
 								q.DoNotSetAliases);
 
 							// update visited in case if columns were cloned
@@ -1005,6 +1007,7 @@ namespace LinqToDB.SqlQuery
 
 							newElement = nq;
 						}
+
 						break;
 					}
 
@@ -1249,8 +1252,8 @@ namespace LinqToDB.SqlQuery
 
 					case QueryElementType.SqlRawSqlTable:
 					{
-						var table = (SqlRawSqlTable)element;
-						var targs = table.Parameters == null || table.Parameters.Length == 0 ?
+						var table   = (SqlRawSqlTable)element;
+						var targs   = table.Parameters == null || table.Parameters.Length == 0 ?
 								null : Convert(table.Parameters);
 
 						if (targs != null && !ReferenceEquals(table.Parameters, targs))
@@ -1357,6 +1360,18 @@ namespace LinqToDB.SqlQuery
 						break;
 					}
 
+					case QueryElementType.SqlRow:
+					{
+						var row    = (SqlRow)element;
+						var values = Convert(row.Values);
+
+						if (values != null && !ReferenceEquals(row.Values, values))
+						{
+							newElement = new SqlRow(values);
+						}
+						break;
+					}
+
 					case QueryElementType.SqlField:
 					case QueryElementType.SqlParameter:
 					case QueryElementType.SqlValue:
@@ -1367,6 +1382,26 @@ namespace LinqToDB.SqlQuery
 
 					default:
 						throw new InvalidOperationException($"Convert visitor not implemented for element {element.ElementType}");
+				}
+
+				if (element != newElement && element is IQueryExtendible { SqlQueryExtensions.Count: > 0 } qe && newElement is IQueryExtendible ne)
+				{
+					ne.SqlQueryExtensions = new(qe.SqlQueryExtensions.Count);
+
+					foreach (var item in qe.SqlQueryExtensions)
+					{
+						var ext = new SqlQueryExtension
+						{
+							Configuration = item.Configuration,
+							Scope         = item.Scope,
+							BuilderType   = item.BuilderType,
+						};
+
+						foreach (var arg in item.Arguments)
+							ext.Arguments.Add(arg.Key, (ISqlExpression)ConvertInternal(arg.Value));
+
+						ne.SqlQueryExtensions.Add(ext);
+					}
 				}
 			}
 			Pop();

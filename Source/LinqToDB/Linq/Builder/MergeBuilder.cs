@@ -101,7 +101,6 @@ namespace LinqToDB.Linq.Builder
 			return mergeContext;
 		}
 
-
 		class MergeOutputContext : SelectContext
 		{
 			public MergeOutputContext(IBuildContext? parent, LambdaExpression lambda, MergeContext mergeContext, IBuildContext emptyTable, IBuildContext deletedTable, IBuildContext insertedTable)
@@ -124,13 +123,6 @@ namespace LinqToDB.Linq.Builder
 
 				QueryRunner.SetRunQuery(query, mapper);
 			}
-		}
-
-
-		protected override SequenceConvertInfo? Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-		{
-			return null;
 		}
 
 		private static SelectQuery RemoveContextFromQuery(TableBuilder.TableContext tableContext, SelectQuery query)

@@ -68,17 +68,11 @@ namespace LinqToDB.Linq.Builder
 				if (!deletePredicate.IsNullValue())
 				{
 					var deleteCondition = (LambdaExpression)deletePredicate.Unwrap();
-	
+
 					operation.WhereDelete = BuildSearchCondition(builder, statement, mergeContext.TargetContext, mergeContext.SourceContext, deleteCondition);;
 				}
 
 				return mergeContext;
-			}
-
-			protected override SequenceConvertInfo? Convert(
-				ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-			{
-				return null;
 			}
 		}
 	}

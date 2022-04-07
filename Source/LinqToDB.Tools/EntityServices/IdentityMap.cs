@@ -8,16 +8,18 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.Tools.EntityServices
 {
+	using Interceptors;
+
 	[PublicAPI]
-	public class IdentityMap : IDisposable
+	public class IdentityMap : EntityServiceInterceptor, IDisposable
 	{
 		public IdentityMap(IDataContext dataContext)
 		{
 			_dataContext = dataContext ?? throw new ArgumentNullException(nameof(dataContext));
-			_dataContext.OnEntityCreated += OnEntityCreated;
+			_dataContext.AddInterceptor(this);
 		}
 
-		readonly IDataContext                          _dataContext;
+		IDataContext?                                  _dataContext;
 		readonly ConcurrentDictionary<Type,IEntityMap> _entityMapDic = new ();
 
 		IEntityMap GetOrAddEntityMap(Type entityType)
@@ -25,11 +27,6 @@ namespace LinqToDB.Tools.EntityServices
 			return _entityMapDic.GetOrAdd(
 				entityType,
 				key => (IEntityMap)Activator.CreateInstance(typeof(EntityMap<>).MakeGenericType(key), _dataContext)!);
-		}
-
-		void OnEntityCreated(EntityCreatedEventArgs args)
-		{
-			GetOrAddEntityMap(args.Entity.GetType()).MapEntity(args);
 		}
 
 		public IEnumerable GetEntities(Type entityType)
@@ -58,12 +55,27 @@ namespace LinqToDB.Tools.EntityServices
 		public T? GetEntity<T>(object key)
 			where T : class, new()
 		{
-			return GetEntityMap<T>().GetEntity(_dataContext, key);
+			if (_dataContext != null)
+				return GetEntityMap<T>().GetEntity(_dataContext, key);
+
+			throw new ObjectDisposedException(nameof(IdentityMap));
 		}
 
 		public void Dispose()
 		{
-			_dataContext.OnEntityCreated -= OnEntityCreated;
+			_dataContext = null;
+		}
+
+		public override object EntityCreated(EntityCreatedEventData eventData, object entity)
+		{
+			if (_dataContext != null)
+			{
+				var args = new EntityCreatedEventArgs(_dataContext, entity);
+				GetOrAddEntityMap(entity.GetType()).MapEntity(args);
+				return args.Entity;
+			}
+
+			return entity;
 		}
 	}
 }

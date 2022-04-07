@@ -15,7 +15,7 @@ namespace Tests.Data
 	using Model;
 
 	[TestFixture]
-	public class TraceTests
+	public class TraceTests : TestBase
 	{
 		private TraceLevel                           OriginalTraceLevel { get; set; }
 		private Action<TraceInfo>                    OriginalOnTrace    { get; set; } = null!;
@@ -61,10 +61,10 @@ namespace Tests.Data
 		[Test]
 		public void TraceInfoStepsAreReportedForLinqQuery([NorthwindDataContext] string context)
 		{
-			var events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
+			var events   = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
 			var counters = GetEnumValues((TraceInfoStep s) => 0);
 
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				db.OnTraceConnection = e =>
 				{
@@ -94,10 +94,10 @@ namespace Tests.Data
 		[Test]
 		public void TraceInfoStepsAreReportedForDataReader([NorthwindDataContext] string context)
 		{
-			var events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
+			var events   = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
 			var counters = GetEnumValues((TraceInfoStep s) => 0);
 
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var sql = db.GetTable<Northwind.Category>().SqlText;
 				db.OnTraceConnection = e =>
@@ -131,10 +131,10 @@ namespace Tests.Data
 		[Test]
 		public async Task TraceInfoStepsAreReportedForDataReaderAsync([NorthwindDataContext] string context)
 		{
-			var events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
+			var events   = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
 			var counters = GetEnumValues((TraceInfoStep s) => 0);
 
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var sql = db.GetTable<Northwind.Category>().SqlText;
 				db.OnTraceConnection = e =>

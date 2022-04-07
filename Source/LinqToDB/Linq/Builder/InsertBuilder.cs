@@ -244,12 +244,6 @@ namespace LinqToDB.Linq.Builder
 			return new InsertContext(buildInfo.Parent, sequence, insertType, outputExpression);
 		}
 
-		protected override SequenceConvertInfo? Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-		{
-			return null;
-		}
-
 		#endregion
 
 		#region InsertContext
@@ -435,12 +429,6 @@ namespace LinqToDB.Linq.Builder
 
 				return sequence;
 			}
-
-			protected override SequenceConvertInfo? Convert(
-				ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-			{
-				return null;
-			}
 		}
 
 		#endregion
@@ -494,15 +482,11 @@ namespace LinqToDB.Linq.Builder
 						sequence,
 						insertStatement.Insert.Items);
 
+				// why we even do it?
+				// TODO: remove in v4?
 				insertStatement.Insert.Items.RemoveDuplicatesFromTail((s1, s2) => s1.Column.Equals(s2.Column));
 
 				return sequence;
-			}
-
-			protected override SequenceConvertInfo? Convert(
-				ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-			{
-				return null;
 			}
 		}
 

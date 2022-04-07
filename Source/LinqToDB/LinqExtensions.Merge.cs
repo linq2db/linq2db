@@ -1084,7 +1084,7 @@ namespace LinqToDB
 			if (currentQuery is IQueryProviderAsync query)
 				return query.ExecuteAsync<int>(expr, token);
 
-			return TaskEx.Run(() => currentQuery.Provider.Execute<int>(expr), token);
+			return Task.Run(() => currentQuery.Provider.Execute<int>(expr), token);
 		}
 
 		#endregion
@@ -1116,7 +1116,7 @@ namespace LinqToDB
 			if (currentQuery is IQueryProviderAsync query)
 				return query.ExecuteAsync<int>(expr, token);
 
-			return TaskEx.Run(() => currentQuery.Provider.Execute<int>(expr), token);
+			return Task.Run(() => currentQuery.Provider.Execute<int>(expr), token);
 		}
 		#endregion
 	}

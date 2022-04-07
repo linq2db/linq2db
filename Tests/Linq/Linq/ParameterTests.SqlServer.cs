@@ -6,11 +6,7 @@ using LinqToDB.Data;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
-#if NET472
-using Tests.FSharp.Models;
-#else
 using Tests.Model;
-#endif
 
 namespace Tests.Linq
 {
@@ -167,7 +163,7 @@ namespace Tests.Linq
 		[Test]
 		public void SqlServerNVarChar4000ParameterSize([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var p = "abc";
 				var sql = db.GetTable<Person>().Where(t => t.FirstName == p).ToString();
@@ -181,7 +177,7 @@ namespace Tests.Linq
 		[Test]
 		public void SqlServerVarChar8000ParameterSize([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var p = "abc";
 				var sql = db.GetTable<AllTypes>().Where(t => t.VarcharDataType == p).ToString();
@@ -195,7 +191,7 @@ namespace Tests.Linq
 		[Test]
 		public void SqlServerVarBinary8000ParameterSize([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var p = new byte[] { 1 };
 				var sql = db.GetTable<AllTypes>().Where(t => t.VarBinaryDataType == p).ToString();
@@ -209,7 +205,7 @@ namespace Tests.Linq
 		[Test]
 		public void SqlServerNVarCharKnownParameterSize([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var p = "abc";
 				var sql = db.GetTable<AllTypesWithLength>().Where(t => t.NVarcharDataType == p).ToString();
@@ -223,7 +219,7 @@ namespace Tests.Linq
 		[Test]
 		public void SqlServerVarCharKnownParameterSize([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var p = "abc";
 				var sql = db.GetTable<AllTypesWithLength>().Where(t => t.VarcharDataType == p).ToString();
@@ -237,7 +233,7 @@ namespace Tests.Linq
 		[Test]
 		public void SqlServerVarBinaryKnownParameterSize([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var p = new byte[] { 1 };
 				var sql = db.GetTable<AllTypesWithLength>().Where(t => t.VarBinaryDataType == p).ToString();
@@ -251,7 +247,7 @@ namespace Tests.Linq
 		[Test]
 		public void SqlServerNVarCharKnownOverflowParameterSize([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var p = "abcdeabcdeabcdeabcde1";
 				var sql = db.GetTable<AllTypesWithLength>().Where(t => t.NVarcharDataType == p).ToString();
@@ -265,7 +261,7 @@ namespace Tests.Linq
 		[Test]
 		public void SqlServerVarCharKnownOverflowParameterSize([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var p = "abcdeabcdeabcdeabcde1";
 				var sql = db.GetTable<AllTypesWithLength>().Where(t => t.VarcharDataType == p).ToString();
@@ -279,7 +275,7 @@ namespace Tests.Linq
 		[Test]
 		public void SqlServerVarBinaryKnownOverflowParameterSize([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var p = new byte[] { 1, 2 };
 				var sql = db.GetTable<AllTypesWithLength>().Where(t => t.VarBinaryDataType == p).ToString();
@@ -293,7 +289,7 @@ namespace Tests.Linq
 		[Test]
 		public void SqlServerCustomNVarChar4000ParameterSize([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = new DataConnection(context, new MappingSchema()))
+			using (var db = GetDataConnection(context, new MappingSchema()))
 			{
 				SetupCustomTypes(db.MappingSchema);
 				var p = new NVarChar() { Value = "abc" };
@@ -308,7 +304,7 @@ namespace Tests.Linq
 		[Test]
 		public void SqlServerCustomVarChar8000ParameterSize([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = new DataConnection(context, new MappingSchema()))
+			using (var db = GetDataConnection(context, new MappingSchema()))
 			{
 				SetupCustomTypes(db.MappingSchema);
 				var p = new VarChar() { Value = "abc" };
@@ -323,7 +319,7 @@ namespace Tests.Linq
 		[Test]
 		public void SqlServerCustomVarBinary8000ParameterSize([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = new DataConnection(context, new MappingSchema()))
+			using (var db = GetDataConnection(context, new MappingSchema()))
 			{
 				SetupCustomTypes(db.MappingSchema);
 				var p = new VarBinary() { Value = new byte[] { 1 } };
@@ -338,7 +334,7 @@ namespace Tests.Linq
 		[Test]
 		public void SqlServerCustomNVarCharKnownParameterSize([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = new DataConnection(context, new MappingSchema()))
+			using (var db = GetDataConnection(context, new MappingSchema()))
 			{
 				SetupCustomTypes(db.MappingSchema);
 				var p = new NVarChar() { Value = "abc" };
@@ -353,7 +349,7 @@ namespace Tests.Linq
 		[Test]
 		public void SqlServerCustomVarCharKnownParameterSize([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = new DataConnection(context, new MappingSchema()))
+			using (var db = GetDataConnection(context, new MappingSchema()))
 			{
 				SetupCustomTypes(db.MappingSchema);
 				var p = new VarChar() { Value = "abc" };
@@ -368,7 +364,7 @@ namespace Tests.Linq
 		[Test]
 		public void SqlServerCustomVarBinaryKnownParameterSize([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = new DataConnection(context, new MappingSchema()))
+			using (var db = GetDataConnection(context, new MappingSchema()))
 			{
 				SetupCustomTypes(db.MappingSchema);
 				var p = new VarBinary() { Value = new byte[] { 1 } };
@@ -383,7 +379,7 @@ namespace Tests.Linq
 		[Test]
 		public void SqlServerCustomNVarCharKnownOverflowParameterSize([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = new DataConnection(context, new MappingSchema()))
+			using (var db = GetDataConnection(context, new MappingSchema()))
 			{
 				SetupCustomTypes(db.MappingSchema);
 				var p = new NVarChar() { Value = "abcdeabcdeabcdeabcde1" };
@@ -398,7 +394,7 @@ namespace Tests.Linq
 		[Test]
 		public void SqlServerCustomVarCharKnownOverflowParameterSize([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = new DataConnection(context, new MappingSchema()))
+			using (var db = GetDataConnection(context, new MappingSchema()))
 			{
 				SetupCustomTypes(db.MappingSchema);
 				var p = new VarChar() { Value = "abcdeabcdeabcdeabcde1" };
@@ -413,7 +409,7 @@ namespace Tests.Linq
 		[Test]
 		public void SqlServerCustomVarBinaryKnownOverflowParameterSize([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = new DataConnection(context, new MappingSchema()))
+			using (var db = GetDataConnection(context, new MappingSchema()))
 			{
 				SetupCustomTypes(db.MappingSchema);
 				var p = new VarBinary() { Value = new byte[] { 1, 2 } };
@@ -426,9 +422,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlServerCustomNVarCharMaxOverflowParameterSize([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public void SqlServerCustomNVarCharMaxOverflowParameterSize([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = new DataConnection(context, new MappingSchema()))
+			using (var db = GetDataConnection(context, new MappingSchema()))
 			{
 				SetupCustomTypes(db.MappingSchema);
 				using (var table = db.CreateLocalTable<AllTypesCustomMaxLength>())
@@ -452,9 +448,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlServerCustomVarCharMaxOverflowParameterSize([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public void SqlServerCustomVarCharMaxOverflowParameterSize([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = new DataConnection(context, new MappingSchema()))
+			using (var db = GetDataConnection(context, new MappingSchema()))
 			{
 				SetupCustomTypes(db.MappingSchema);
 				using (var table = db.CreateLocalTable<AllTypesCustomMaxLength>())
@@ -478,9 +474,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlServerCustomVarBinaryMaxOverflowParameterSize([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public void SqlServerCustomVarBinaryMaxOverflowParameterSize([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = new DataConnection(context, new MappingSchema()))
+			using (var db = GetDataConnection(context, new MappingSchema()))
 			{
 				SetupCustomTypes(db.MappingSchema);
 				using (var table = db.CreateLocalTable<AllTypesCustomMaxLength>())
@@ -509,7 +505,7 @@ namespace Tests.Linq
 		[Test]
 		public void SqlServerCustomNVarChar4000ParameterSizeAsDataParameter([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = new DataConnection(context, new MappingSchema()))
+			using (var db = GetDataConnection(context, new MappingSchema()))
 			{
 				SetupCustomTypes(db.MappingSchema, true);
 				var p = new NVarChar() { Value = "abc" };
@@ -524,7 +520,7 @@ namespace Tests.Linq
 		[Test]
 		public void SqlServerCustomVarChar8000ParameterSizeAsDataParameter([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = new DataConnection(context, new MappingSchema()))
+			using (var db = GetDataConnection(context, new MappingSchema()))
 			{
 				SetupCustomTypes(db.MappingSchema, true);
 				var p = new VarChar() { Value = "abc" };
@@ -539,7 +535,7 @@ namespace Tests.Linq
 		[Test]
 		public void SqlServerCustomVarBinary8000ParameterSizeAsDataParameter([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = new DataConnection(context, new MappingSchema()))
+			using (var db = GetDataConnection(context, new MappingSchema()))
 			{
 				SetupCustomTypes(db.MappingSchema, true);
 				var p = new VarBinary() { Value = new byte[] { 1 } };
@@ -554,7 +550,7 @@ namespace Tests.Linq
 		[Test]
 		public void SqlServerCustomNVarCharKnownParameterSizeAsDataParameter([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = new DataConnection(context, new MappingSchema()))
+			using (var db = GetDataConnection(context, new MappingSchema()))
 			{
 				SetupCustomTypes(db.MappingSchema, true);
 				var p = new NVarChar() { Value = "abc" };
@@ -569,7 +565,7 @@ namespace Tests.Linq
 		[Test]
 		public void SqlServerCustomVarCharKnownParameterSizeAsDataParameter([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = new DataConnection(context, new MappingSchema()))
+			using (var db = GetDataConnection(context, new MappingSchema()))
 			{
 				SetupCustomTypes(db.MappingSchema, true);
 				var p = new VarChar() { Value = "abc" };
@@ -584,7 +580,7 @@ namespace Tests.Linq
 		[Test]
 		public void SqlServerCustomVarBinaryKnownParameterSizeAsDataParameter([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = new DataConnection(context, new MappingSchema()))
+			using (var db = GetDataConnection(context, new MappingSchema()))
 			{
 				SetupCustomTypes(db.MappingSchema, true);
 				var p = new VarBinary() { Value = new byte[] { 1 } };
@@ -599,7 +595,7 @@ namespace Tests.Linq
 		[Test]
 		public void SqlServerCustomNVarCharKnownOverflowParameterSizeAsDataParameter([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = new DataConnection(context, new MappingSchema()))
+			using (var db = GetDataConnection(context, new MappingSchema()))
 			{
 				SetupCustomTypes(db.MappingSchema, true);
 				var p = new NVarChar() { Value = "abcdeabcdeabcdeabcde1" };
@@ -614,7 +610,7 @@ namespace Tests.Linq
 		[Test]
 		public void SqlServerCustomVarCharKnownOverflowParameterSizeAsDataParameter([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = new DataConnection(context, new MappingSchema()))
+			using (var db = GetDataConnection(context, new MappingSchema()))
 			{
 				SetupCustomTypes(db.MappingSchema, true);
 				var p = new VarChar() { Value = "abcdeabcdeabcdeabcde1" };
@@ -629,7 +625,7 @@ namespace Tests.Linq
 		[Test]
 		public void SqlServerCustomVarBinaryKnownOverflowParameterSizeAsDataParameter([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = new DataConnection(context, new MappingSchema()))
+			using (var db = GetDataConnection(context, new MappingSchema()))
 			{
 				SetupCustomTypes(db.MappingSchema, true);
 				var p = new VarBinary() { Value = new byte[] { 1, 2 } };
@@ -642,9 +638,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlServerCustomNVarCharMaxOverflowParameterSizeAsDataParameter([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public void SqlServerCustomNVarCharMaxOverflowParameterSizeAsDataParameter([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = new DataConnection(context, new MappingSchema()))
+			using (var db = GetDataConnection(context, new MappingSchema()))
 			{
 				SetupCustomTypes(db.MappingSchema, true);
 				using (var table = db.CreateLocalTable<AllTypesCustomMaxLength>())
@@ -668,9 +664,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlServerCustomVarCharMaxOverflowParameterSizeAsDataParameter([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public void SqlServerCustomVarCharMaxOverflowParameterSizeAsDataParameter([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = new DataConnection(context, new MappingSchema()))
+			using (var db = GetDataConnection(context, new MappingSchema()))
 			{
 				SetupCustomTypes(db.MappingSchema, true);
 				using (var table = db.CreateLocalTable<AllTypesCustomMaxLength>())
@@ -694,9 +690,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlServerCustomVarBinaryMaxOverflowParameterSizeAsDataParameter([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public void SqlServerCustomVarBinaryMaxOverflowParameterSizeAsDataParameter([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = new DataConnection(context, new MappingSchema()))
+			using (var db = GetDataConnection(context, new MappingSchema()))
 			{
 				SetupCustomTypes(db.MappingSchema, true);
 				using (var table = db.CreateLocalTable<AllTypesCustomMaxLength>())

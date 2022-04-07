@@ -5,6 +5,7 @@ using NUnit.Framework;
 
 namespace Tests.UserTests
 {
+	using LinqToDB.Data;
 	using Model;
 
 	[TestFixture]
@@ -25,7 +26,7 @@ namespace Tests.UserTests
 		[Test]
 		public void HasIsNull()
 		{
-			using (var db = new TestDataConnection())
+			using (var db = new DataConnection())
 			{
 				var qry =
 					from p in db.GetTable<TestIssue358Class>()
@@ -42,7 +43,7 @@ namespace Tests.UserTests
 		[Test]
 		public void ContainsDoesNotHaveIsNull()
 		{
-			using (var db = new TestDataConnection())
+			using (var db = new DataConnection())
 			{
 				var filter = new[] {TestIssue358Enum.Value2};
 
@@ -61,7 +62,7 @@ namespace Tests.UserTests
 		[Test]
 		public void NoIsNull()
 		{
-			using (var db = new TestDataConnection())
+			using (var db = new DataConnection())
 			{
 				var qry =
 					from p in db.GetTable<TestIssue358Class>()
@@ -78,7 +79,7 @@ namespace Tests.UserTests
 		[Test]
 		public void ContainsNoIsNull()
 		{
-			using (var db = new TestDataConnection())
+			using (var db = new DataConnection())
 			{
 				var filter = new[] {TestIssue358Enum.Value2};
 

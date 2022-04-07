@@ -66,7 +66,7 @@ namespace LinqToDB.ServiceModel
 		{
 		}
 
-#region ILinqService Members
+		#region ILinqService Members
 
 		[WebMethod]
 		public virtual LinqServiceInfo GetInfo(string? configuration)
@@ -162,14 +162,14 @@ namespace LinqToDB.ServiceModel
 					Statement  = query.Statement
 				}, SqlParameterValues.Empty);
 
-				var reader = DataReaderWrapCache.TryUnwrapDataReader(db.MappingSchema, rd);
+				var reader = ((IDataContext)db).UnwrapDataObjectInterceptor?.UnwrapDataReader(db, rd.DataReader!) ?? rd.DataReader!;
 
 				var ret = new LinqServiceResult
 				{
 					QueryID    = Guid.NewGuid(),
-					FieldCount = rd.FieldCount,
-					FieldNames = new string[rd.FieldCount],
-					FieldTypes = new Type  [rd.FieldCount],
+					FieldCount = rd.DataReader!.FieldCount,
+					FieldNames = new string[rd.DataReader!.FieldCount],
+					FieldTypes = new Type  [rd.DataReader!.FieldCount],
 					Data       = new List<string[]>(),
 				};
 
@@ -186,7 +186,7 @@ namespace LinqToDB.ServiceModel
 
 				for (var i = 0; i < ret.FieldCount; i++)
 				{
-					var name = rd.GetName(i);
+					var name = rd.DataReader!.GetName(i);
 					var idx  = 0;
 
 					if (names.Contains(name))
@@ -227,21 +227,21 @@ namespace LinqToDB.ServiceModel
 					ret.FieldTypes[i] = fieldType;
 				}
 
-				var columnReaders = new ConvertFromDataReaderExpression.ColumnReader[rd.FieldCount];
+				var columnReaders = new ConvertFromDataReaderExpression.ColumnReader[rd.DataReader!.FieldCount];
 
 				for (var i = 0; i < ret.FieldCount; i++)
 					columnReaders[i] = new ConvertFromDataReaderExpression.ColumnReader(db, db.MappingSchema,
 						ret.FieldTypes[i], i, QueryHelper.GetValueConverter(selectExpressions[i]), true);
 
-				while (rd.Read())
+				while (rd.DataReader!.Read())
 				{
-					var data = new string  [rd.FieldCount];
+					var data = new string  [rd.DataReader!.FieldCount];
 
 					ret.RowCount++;
 
 					for (var i = 0; i < ret.FieldCount; i++)
 					{
-						if (!rd.IsDBNull(i))
+						if (!rd.DataReader!.IsDBNull(i))
 						{
 							var value = columnReaders[i].GetValue(reader);
 
@@ -299,7 +299,7 @@ namespace LinqToDB.ServiceModel
 			}
 		}
 
-#endregion
+		#endregion
 	}
 }
 #endif

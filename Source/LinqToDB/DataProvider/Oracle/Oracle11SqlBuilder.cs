@@ -9,35 +9,31 @@ namespace LinqToDB.DataProvider.Oracle
 	using SqlProvider;
 	using System.Text;
 	using Mapping;
+	using System.Data.Common;
 
 	partial class Oracle11SqlBuilder : BasicSqlBuilder
 	{
-		protected OracleDataProvider? Provider { get; }
-
-		public Oracle11SqlBuilder(
-			OracleDataProvider? provider,
-			MappingSchema       mappingSchema,
-			ISqlOptimizer       sqlOptimizer,
-			SqlProviderFlags    sqlProviderFlags)
-			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
+		public Oracle11SqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
-			Provider = provider;
 		}
 
-		// remote context
-		public Oracle11SqlBuilder(
-			MappingSchema    mappingSchema,
-			ISqlOptimizer    sqlOptimizer,
-			SqlProviderFlags sqlProviderFlags)
-			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
+		protected Oracle11SqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
 		{
+		}
+
+		protected override ISqlBuilder CreateSqlBuilder()
+		{
+			return new Oracle11SqlBuilder(this) { HintBuilder = HintBuilder };
 		}
 
 		protected override void BuildSelectClause(SelectQuery selectQuery)
 		{
 			if (selectQuery.From.Tables.Count == 0)
 			{
-				AppendIndent().Append("SELECT").AppendLine();
+				AppendIndent().Append("SELECT");
+				StartStatementQueryExtensions(selectQuery);
+				StringBuilder.AppendLine();
 				BuildColumns(selectQuery);
 				AppendIndent().Append("FROM SYS.DUAL").AppendLine();
 			}
@@ -86,11 +82,6 @@ namespace LinqToDB.DataProvider.Oracle
 				selectQuery.OrderBy.IsEmpty && selectQuery.Having.IsEmpty;
 		}
 
-		protected override ISqlBuilder CreateSqlBuilder()
-		{
-			return new Oracle11SqlBuilder(Provider, MappingSchema, SqlOptimizer, SqlProviderFlags);
-		}
-
 		protected override void BuildSetOperation(SetOperation operation, StringBuilder sb)
 		{
 			switch (operation)
@@ -98,6 +89,7 @@ namespace LinqToDB.DataProvider.Oracle
 				case SetOperation.Except    : sb.Append("MINUS");     return;
 				case SetOperation.ExceptAll : sb.Append("MINUS ALL"); return;
 			}
+
 			base.BuildSetOperation(operation, sb);
 		}
 
@@ -252,6 +244,25 @@ namespace LinqToDB.DataProvider.Oracle
 				throwExceptionIfTableNotFound);
 		}
 
+		protected override void BuildExprExprPredicate(SqlPredicate.ExprExpr expr)
+		{
+			BuildExpression(GetPrecedence(expr), expr.Expr1);
+
+			BuildExprExprPredicateOperator(expr);
+
+			var exprPrecedence = GetPrecedence(expr);
+
+			if (expr.Expr2.ElementType == QueryElementType.SqlRow && expr.Operator != SqlPredicate.Operator.Overlaps)
+			{
+				// Oracle needs brackets around the right-hand side to disambiguate the syntax, e.g.:
+				// (1, 2) = ( (3, 4) )
+
+				exprPrecedence = int.MaxValue;
+			}
+
+			BuildExpression(exprPrecedence, expr.Expr2);
+		}
+
 		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr)
 		{
 			StringBuilder.Append("DECODE(");
@@ -380,7 +391,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 						.AppendLine("\tBEGIN")
 						.Append("\t\tEXECUTE IMMEDIATE 'DROP SEQUENCE ");
-
+					
 					AppendSchemaPrefix(StringBuilder, dropTable.Table!.Schema);
 					Convert(StringBuilder, MakeIdentitySequenceName(dropTable.Table.PhysicalName!), ConvertType.SequenceName);
 
@@ -514,7 +525,7 @@ END;",
 			return sb;
 		}
 
-		private void AppendSchemaPrefix(StringBuilder sb, string? schema)
+		void AppendSchemaPrefix(StringBuilder sb, string? schema)
 		{
 			if (schema != null)
 			{
@@ -523,16 +534,16 @@ END;",
 			}
 		}
 
-		protected override string? GetProviderTypeName(IDbDataParameter parameter)
+		protected override string? GetProviderTypeName(IDataContext dataContext, DbParameter parameter)
 		{
-			if (Provider != null)
+			if (DataProvider is OracleDataProvider provider)
 			{
-				var param = Provider.TryGetProviderParameter(parameter, MappingSchema);
+				var param = provider.TryGetProviderParameter(dataContext, parameter);
 				if (param != null)
-					return Provider.Adapter.GetDbType(param).ToString();
+					return provider.Adapter.GetDbType(param).ToString();
 			}
 
-			return base.GetProviderTypeName(parameter);
+			return base.GetProviderTypeName(dataContext, parameter);
 		}
 
 		protected override void BuildCreateTableCommand(SqlTable table)
@@ -629,7 +640,7 @@ END;",
 		protected void BuildMultiInsertClause(SqlMultiInsertStatement statement)
 		{
 			StringBuilder.AppendLine(statement.InsertType == MultiInsertType.First ? "INSERT FIRST" : "INSERT ALL");
-
+			
 			Indent++;
 
 			if (statement.InsertType == MultiInsertType.Unconditional)
@@ -645,7 +656,7 @@ END;",
 					{
 						int length = StringBuilder.Append("WHEN ").Length;
 						BuildSearchCondition(insert.When, wrapCondition: true);
-						// If `when` condition is optimized to always `true`,
+						// If `when` condition is optimized to always `true`, 
 						// then BuildSearchCondition doesn't write anything.
 						if (StringBuilder.Length == length)
 							StringBuilder.Append("1 = 1");
@@ -655,7 +666,7 @@ END;",
 					{
 						StringBuilder.AppendLine("ELSE");
 					}
-
+		
 					BuildInsertClause(statement, insert.Insert, "INTO ", appendTableName: true, addAlias: false);
 				}
 			}
@@ -663,6 +674,65 @@ END;",
 			Indent--;
 		}
 
-		#endregion
+		#endregion 
+
+		protected StringBuilder? HintBuilder;
+
+		int  _hintPosition;
+		bool _isTopLevelBuilder;
+
+		protected override void StartStatementQueryExtensions(SelectQuery? selectQuery)
+		{
+			if (HintBuilder == null)
+			{
+				HintBuilder        = new();
+				_isTopLevelBuilder = true;
+				_hintPosition      = StringBuilder.Length;
+
+				if (Statement is SqlInsertStatement)
+					_hintPosition -= " INTO ".Length;
+
+				if (selectQuery?.QueryName is {} queryName)
+					HintBuilder
+						.Append("QB_NAME(")
+						.Append(queryName)
+						.Append(')')
+						;
+			}
+			else if (selectQuery?.QueryName is {} queryName)
+			{
+				StringBuilder
+					.Append(" /*+ QB_NAME(")
+					.Append(queryName)
+					.Append(") */")
+					;
+			}
+		}
+
+		protected override void FinalizeBuildQuery(SqlStatement statement)
+		{
+			base.FinalizeBuildQuery(statement);
+
+			if (statement.SqlQueryExtensions is not null && HintBuilder is not null)
+			{
+				if (HintBuilder.Length > 0 && HintBuilder[HintBuilder.Length - 1] != ' ')
+					HintBuilder.Append(' ');
+				BuildQueryExtensions(HintBuilder, statement.SqlQueryExtensions, null, " ", null);
+			}
+
+			if (_isTopLevelBuilder && HintBuilder!.Length > 0)
+			{
+				HintBuilder.Insert(0, " /*+ ");
+				HintBuilder.Append(" */");
+
+				StringBuilder.Insert(_hintPosition, HintBuilder);
+			}
+		}
+
+		protected override void BuildTableExtensions(SqlTable table, string alias)
+		{
+			if (HintBuilder is not null && table.SqlQueryExtensions is not null)
+				BuildTableExtensions(HintBuilder, table, alias, null, " ", null);
+		}
 	}
 }

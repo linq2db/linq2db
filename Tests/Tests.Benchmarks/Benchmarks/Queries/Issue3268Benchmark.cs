@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Data;
+using System.Data.Common;
 using System.Linq;
-using System.Threading.Tasks;
+
 using BenchmarkDotNet.Attributes;
-using LinqToDB.Benchmarks.Mappings;
+
 using LinqToDB.Benchmarks.TestProvider;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
-using LinqToDB.Linq;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.Benchmarks.Queries
@@ -16,7 +16,7 @@ namespace LinqToDB.Benchmarks.Queries
 	{
 		private const int      _iterations = 2;
 		private DataConnection _db     = null!;
-		private IDbConnection  _cn     = null!;
+		private DbConnection   _cn     = null!;
 		private Func<DataConnection, int, int> _compiled         = null!;
 		private Func<DataConnection, int, int> _compiledNullable = null!;
 

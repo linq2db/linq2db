@@ -13,12 +13,17 @@ namespace LinqToDB.DataProvider.Oracle
 	using Mapping;
 	using SqlProvider;
 
+	class OracleDataProviderNative11  : OracleDataProvider { public OracleDataProviderNative11()  : base(ProviderName.OracleNative,  OracleVersion.v11) {} }
+	class OracleDataProviderNative12  : OracleDataProvider { public OracleDataProviderNative12()  : base(ProviderName.OracleNative,  OracleVersion.v12) {} }
+	class OracleDataProviderManaged11 : OracleDataProvider { public OracleDataProviderManaged11() : base(ProviderName.OracleManaged, OracleVersion.v11) {} }
+	class OracleDataProviderManaged12 : OracleDataProvider { public OracleDataProviderManaged12() : base(ProviderName.OracleManaged, OracleVersion.v12) {} }
+
 	public class OracleDataProvider : DynamicDataProviderBase<OracleProviderAdapter>
 	{
-		public OracleDataProvider(string name) : this(name, OracleVersion.v12)
-		{ }
+		protected internal OracleDataProvider(string name) : this(name, OracleVersion.v12)
+		{}
 
-		public OracleDataProvider(string name, OracleVersion version)
+		protected internal OracleDataProvider(string name, OracleVersion version)
 			: base(
 				name,
 				GetMappingSchema(name, OracleProviderAdapter.GetInstance(name).MappingSchema),
@@ -33,6 +38,10 @@ namespace LinqToDB.DataProvider.Oracle
 			SqlProviderFlags.IsDistinctOrderBySupported        = false;
 			SqlProviderFlags.IsUpdateFromSupported             = false;
 			SqlProviderFlags.DefaultMultiQueryIsolationLevel   = IsolationLevel.ReadCommitted;
+			SqlProviderFlags.IsNamingQueryBlockSupported       = true;
+
+			SqlProviderFlags.RowConstructorSupport = RowFeature.Equality | RowFeature.CompareToSelect | RowFeature.In |
+			                                         RowFeature.Update   | RowFeature.Overlaps;
 
 			if (version >= OracleVersion.v12)
 			{
@@ -114,29 +123,24 @@ namespace LinqToDB.DataProvider.Oracle
 
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider() => new OracleSchemaProvider(this);
 
-		public override void InitCommand(DataConnection dataConnection, CommandType commandType, string commandText, DataParameter[]? parameters, bool withParameters)
+		public override DbCommand InitCommand(DataConnection dataConnection, DbCommand command, CommandType commandType, string commandText, DataParameter[]? parameters, bool withParameters)
 		{
-			dataConnection.DisposeCommand();
+			command = base.InitCommand(dataConnection, command, commandType, commandText, parameters, withParameters);
 
-			var command = TryGetProviderCommand(dataConnection.Command, dataConnection.MappingSchema);
+			var rawCommand = TryGetProviderCommand(dataConnection, command);
 
-			if (command != null)
+			if (rawCommand != null)
 			{
 				// binding disabled for native provider without parameters to reduce changes to fail when SQL contains
 				// parameter-like token.
 				// This is mostly issue with triggers creation, because they can have record tokens like :NEW
 				// incorectly identified by native provider as parameter
 				var bind = Name != ProviderName.OracleNative || parameters?.Length > 0 || withParameters;
-				Adapter.SetBindByName(command, bind);
-			}
+				Adapter.SetBindByName(rawCommand, bind);
 
-			base.InitCommand(dataConnection, commandType, commandText, parameters, withParameters);
-
-			if (command != null)
-			{
 				// https://docs.oracle.com/cd/B19306_01/win.102/b14307/featData.htm
 				// For LONG data type fetching initialization
-				Adapter.SetInitialLONGFetchSize(command, -1);
+				Adapter.SetInitialLONGFetchSize(rawCommand, -1);
 
 				if (parameters != null)
 					foreach (var parameter in parameters)
@@ -145,25 +149,31 @@ namespace LinqToDB.DataProvider.Oracle
 							&& parameter.Value is object[] value
 							&& value.Length != 0)
 						{
-							Adapter.SetArrayBindCount(command, value.Length);
+							Adapter.SetArrayBindCount(rawCommand, value.Length);
 							break;
 						}
 					}
 			}
+
+			return command;
 		}
 
-		public override void DisposeCommand(DataConnection dataConnection)
+		public override void ClearCommandParameters(DbCommand command)
 		{
-			foreach (DbParameter? param in dataConnection.Command.Parameters)
+			// both native and managed providers implement IDisposable for parameters
+			if (command.Parameters.Count > 0)
 			{
-				if (param is IDisposable disposable)
-					disposable.Dispose();
-			}
+				foreach (DbParameter? param in command.Parameters)
+				{
+					if (param is IDisposable disposable)
+						disposable.Dispose();
+				}
 
-			base.DisposeCommand(dataConnection);
+				command.Parameters.Clear();
+			}
 		}
 
-		public override void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object? value)
+		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
 		{
 			switch (dataType.DataType)
 			{
@@ -238,7 +248,7 @@ namespace LinqToDB.DataProvider.Oracle
 			return base.ConvertParameterType(type, dataType);
 		}
 
-		protected override void SetParameterType(DataConnection dataConnection, IDbDataParameter parameter, DbDataType dataType)
+		protected override void SetParameterType(DataConnection dataConnection, DbParameter parameter, DbDataType dataType)
 		{
 			if (parameter is BulkCopyReader.Parameter)
 				return;
@@ -266,7 +276,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 			if (type != null)
 			{
-				var param = TryGetProviderParameter(parameter, dataConnection.MappingSchema);
+				var param = TryGetProviderParameter(dataConnection, parameter);
 				if (param != null)
 				{
 					Adapter.SetDbType(param, type.Value);

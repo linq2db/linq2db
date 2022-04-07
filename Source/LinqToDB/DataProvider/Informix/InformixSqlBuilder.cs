@@ -10,28 +10,22 @@ namespace LinqToDB.DataProvider.Informix
 	using SqlProvider;
 	using System.Globalization;
 	using Mapping;
+	using System.Data.Common;
 
 	partial class InformixSqlBuilder : BasicSqlBuilder
 	{
-		private readonly InformixDataProvider? _provider;
-
-		public InformixSqlBuilder(
-			InformixDataProvider? provider,
-			MappingSchema         mappingSchema,
-			ISqlOptimizer         sqlOptimizer,
-			SqlProviderFlags      sqlProviderFlags)
-			: this(mappingSchema, sqlOptimizer, sqlProviderFlags)
+		public InformixSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
-			_provider = provider;
 		}
 
-		// remote context
-		public InformixSqlBuilder(
-			MappingSchema    mappingSchema,
-			ISqlOptimizer    sqlOptimizer,
-			SqlProviderFlags sqlProviderFlags)
-			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
+		InformixSqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
 		{
+		}
+
+		protected override ISqlBuilder CreateSqlBuilder()
+		{
+			return new InformixSqlBuilder(this);
 		}
 
 		protected override bool SupportsNullInColumn => false;
@@ -64,11 +58,6 @@ namespace LinqToDB.DataProvider.Informix
 		protected override void BuildTruncateTable(SqlTruncateTableStatement truncateTable)
 		{
 			StringBuilder.Append("TRUNCATE TABLE ");
-		}
-
-		protected override ISqlBuilder CreateSqlBuilder()
-		{
-			return new InformixSqlBuilder(_provider, MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}
 
 		protected override void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, OptimizationContext optimizationContext, int indent, bool skipAlias)
@@ -263,19 +252,19 @@ namespace LinqToDB.DataProvider.Informix
 			return sb.Append(table);
 		}
 
-		protected override string? GetProviderTypeName(IDbDataParameter parameter)
+		protected override string? GetProviderTypeName(IDataContext dataContext, DbParameter parameter)
 		{
-			if (_provider != null)
+			if (DataProvider is InformixDataProvider provider)
 			{
-				var param = _provider.TryGetProviderParameter(parameter, MappingSchema);
+				var param = provider.TryGetProviderParameter(dataContext, parameter);
 				if (param != null)
-					if (_provider.Adapter.GetIfxType != null)
-						return _provider.Adapter.GetIfxType(param).ToString();
+					if (provider.Adapter.GetIfxType != null)
+						return provider.Adapter.GetIfxType(param).ToString();
 					else
-						return _provider.Adapter.GetDB2Type!(param).ToString();
+						return provider.Adapter.GetDB2Type!(param).ToString();
 			}
 
-			return base.GetProviderTypeName(parameter);
+			return base.GetProviderTypeName(dataContext, parameter);
 		}
 
 		protected override void BuildTypedExpression(SqlDataType dataType, ISqlExpression value)
@@ -320,6 +309,19 @@ namespace LinqToDB.DataProvider.Informix
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
 		{
 			BuildDropTableStatementIfExists(dropTable);
+		}
+
+		protected override void BuildSqlRow(SqlRow expr, bool buildTableName, bool checkParentheses, bool throwExceptionIfTableNotFound)
+		{
+			// Informix needs ROW(1,2) syntax instead of BasicSqlBuilder default (1,2)
+			StringBuilder.Append("ROW (");
+			foreach (var value in expr.Values)
+			{
+				BuildExpression(value, buildTableName, checkParentheses, throwExceptionIfTableNotFound);
+				StringBuilder.Append(InlineComma);
+			}
+			StringBuilder.Length -= InlineComma.Length; // Note that SqlRow are never empty
+			StringBuilder.Append(')');
 		}
 
 		protected override ISqlExpression WrapBooleanExpression(ISqlExpression expr)

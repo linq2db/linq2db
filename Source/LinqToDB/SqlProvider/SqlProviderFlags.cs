@@ -1,5 +1,4 @@
-﻿using System;
-using System.Data;
+﻿using System.Data;
 using System.Linq;
 
 namespace LinqToDB.SqlProvider
@@ -12,22 +11,25 @@ namespace LinqToDB.SqlProvider
 		public bool        IsSybaseBuggyGroupBy              { get; set; }
 
 		public bool        IsParameterOrderDependent          { get; set; }
+
 		public bool        AcceptsTakeAsParameter             { get; set; }
 		public bool        AcceptsTakeAsParameterIfSkip       { get; set; }
 		public bool        IsTakeSupported                    { get; set; }
 		public bool        IsSkipSupported                    { get; set; }
 		public bool        IsSkipSupportedIfTake              { get; set; }
+		public TakeHints?  TakeHintsSupported              { get; set; }
 		public bool        IsSubQueryTakeSupported            { get; set; }
+
 		public bool        IsSubQueryColumnSupported          { get; set; }
 		public bool        IsSubQueryOrderBySupported         { get; set; }
 		public bool        IsCountSubQuerySupported           { get; set; }
+
 		public bool        IsIdentityParameterRequired        { get; set; }
 		public bool        IsApplyJoinSupported               { get; set; }
 		public bool        IsInsertOrUpdateSupported          { get; set; }
 		public bool        CanCombineParameters               { get; set; }
 		public int         MaxInListValuesCount               { get; set; }
 		public bool        IsUpdateSetTableAliasSupported     { get; set; }
-		public TakeHints?  TakeHintsSupported                 { get; set; }
 
 		/// <summary>
 		/// If <c>true</c>, removed record fields in OUTPUT clause of DELETE statement should be referenced using
@@ -130,6 +132,14 @@ namespace LinqToDB.SqlProvider
 		/// </summary>
 		public bool IsUpdateFromSupported                 { get; set; }
 
+		/// <summary>
+		/// Provider supports Naming Query Blocks
+		/// <code>
+		/// QB_NAME(qb)
+		/// </code>
+		/// </summary>
+		public bool IsNamingQueryBlockSupported       { get; set; }
+
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
 		{
 			return AcceptsTakeAsParameter || AcceptsTakeAsParameterIfSkip && selectQuery.Select.SkipValue != null;
@@ -153,6 +163,11 @@ namespace LinqToDB.SqlProvider
 		/// Default is <see cref="IsolationLevel.RepeatableRead"/>
 		/// </summary>
 		public IsolationLevel DefaultMultiQueryIsolationLevel { get; set; } = IsolationLevel.RepeatableRead;
+
+		/// <summary>
+		/// Provider support Row Constructor `(1, 2, 3)` in various positions (flags)
+		/// </summary>
+		public RowFeature RowConstructorSupport { get; set; }
 
 		/// <summary>
 		/// Flags for use by external providers.
@@ -195,6 +210,8 @@ namespace LinqToDB.SqlProvider
 				^ IsUpdateFromSupported                        .GetHashCode()
 				^ DefaultMultiQueryIsolationLevel              .GetHashCode()
 				^ AcceptsOuterExpressionInAggregate            .GetHashCode()
+				^ IsNamingQueryBlockSupported                  .GetHashCode()
+				^ RowConstructorSupport                        .GetHashCode()
 				^ OutputDeleteUseSpecialTable                  .GetHashCode()
 				^ OutputInsertUseSpecialTable                  .GetHashCode()
 				^ OutputUpdateUseSpecialTables                 .GetHashCode()
@@ -234,6 +251,8 @@ namespace LinqToDB.SqlProvider
 				&& IsUpdateFromSupported                == other.IsUpdateFromSupported
 				&& DefaultMultiQueryIsolationLevel      == other.DefaultMultiQueryIsolationLevel
 				&& AcceptsOuterExpressionInAggregate    == other.AcceptsOuterExpressionInAggregate
+				&& IsNamingQueryBlockSupported          == other.IsNamingQueryBlockSupported
+				&& RowConstructorSupport                == other.RowConstructorSupport
 				&& OutputDeleteUseSpecialTable          == other.OutputDeleteUseSpecialTable
 				&& OutputInsertUseSpecialTable          == other.OutputInsertUseSpecialTable
 				&& OutputUpdateUseSpecialTables         == other.OutputUpdateUseSpecialTables

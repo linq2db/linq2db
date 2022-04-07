@@ -7,20 +7,14 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.Firebird
 {
+	using System.Data.Common;
 	using Data;
 	using LinqToDB.Configuration;
 
 	[PublicAPI]
 	public static class FirebirdTools
 	{
-		private static readonly Lazy<IDataProvider> _firebirdDataProvider = new Lazy<IDataProvider>(() =>
-		{
-			var provider = new FirebirdDataProvider();
-
-			DataConnection.AddDataProvider(provider);
-
-			return provider;
-		}, true);
+		static readonly Lazy<IDataProvider> _firebirdDataProvider = DataConnection.CreateDataProvider<FirebirdDataProvider>();
 
 		internal static IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)
 		{
@@ -58,12 +52,12 @@ namespace LinqToDB.DataProvider.Firebird
 			return new DataConnection(_firebirdDataProvider.Value, connectionString);
 		}
 
-		public static DataConnection CreateDataConnection(IDbConnection connection)
+		public static DataConnection CreateDataConnection(DbConnection connection)
 		{
 			return new DataConnection(_firebirdDataProvider.Value, connection);
 		}
 
-		public static DataConnection CreateDataConnection(IDbTransaction transaction)
+		public static DataConnection CreateDataConnection(DbTransaction transaction)
 		{
 			return new DataConnection(_firebirdDataProvider.Value, transaction);
 		}
@@ -73,23 +67,6 @@ namespace LinqToDB.DataProvider.Firebird
 		#region BulkCopy
 
 		public  static BulkCopyType  DefaultBulkCopyType { get; set; } = BulkCopyType.MultipleRows;
-
-		[Obsolete("Please use the BulkCopy extension methods within DataConnectionExtensions")]
-		public static BulkCopyRowsCopied MultipleRowsCopy<T>(
-			DataConnection              dataConnection,
-			IEnumerable<T>              source,
-			int                         maxBatchSize       = 1000,
-			Action<BulkCopyRowsCopied>? rowsCopiedCallback = null)
-			where T : class
-		{
-			return dataConnection.BulkCopy(
-				new BulkCopyOptions
-				{
-					BulkCopyType       = BulkCopyType.MultipleRows,
-					MaxBatchSize       = maxBatchSize,
-					RowsCopiedCallback = rowsCopiedCallback,
-				}, source);
-		}
 
 		#endregion
 

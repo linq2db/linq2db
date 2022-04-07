@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
@@ -89,6 +90,8 @@ namespace LinqToDB.Linq.Builder
 			new MultiInsertBuilder         (),
 			new TagQueryBuilder            (),
 			new EnumerableBuilder          (),
+			new QueryExtensionBuilder      (),
+			new QueryNameBuilder           (),
 		};
 
 		public static void AddBuilder(ISequenceBuilder builder)
@@ -107,15 +110,17 @@ namespace LinqToDB.Linq.Builder
 		readonly ExpressionTreeOptimizationContext _optimizationContext;
 		readonly ParametersContext                 _parametersContext;
 
-		public ExpressionTreeOptimizationContext OptimizationContext => _optimizationContext;
-		public ParametersContext                 ParametersContext   => _parametersContext;
+		public ExpressionTreeOptimizationContext   OptimizationContext => _optimizationContext;
+		public ParametersContext                   ParametersContext   => _parametersContext;
 
-		public readonly List<ParameterExpression>  BlockVariables       = new ();
-		public readonly List<Expression>           BlockExpressions     = new ();
+		public readonly List<ParameterExpression>  BlockVariables   = new ();
+		public readonly List<Expression>           BlockExpressions = new ();
 		public          bool                       IsBlockDisable;
 		public          int                        VarIndex;
 
-		public          SqlComment?                Tag;
+		public SqlComment?                      Tag;
+		public List<SqlQueryExtension>?         SqlQueryExtensions;
+		public List<TableBuilder.TableContext>? TablesInScope;
 
 		public ExpressionBuilder(
 			Query                             query,
@@ -137,7 +142,7 @@ namespace LinqToDB.Linq.Builder
 			_parametersContext   = parametersContext;
 			Expression           = ConvertExpressionTree(expression);
 			_optimizationContext.ClearVisitedCache();
-			
+
 			DataReaderLocal      = BuildVariable(DataReaderParam, "ldr");
 		}
 
@@ -153,10 +158,22 @@ namespace LinqToDB.Linq.Builder
 
 		public static readonly ParameterExpression QueryRunnerParam = Expression.Parameter(typeof(IQueryRunner), "qr");
 		public static readonly ParameterExpression DataContextParam = Expression.Parameter(typeof(IDataContext), "dctx");
-		public static readonly ParameterExpression DataReaderParam  = Expression.Parameter(typeof(IDataReader),  "rd");
+		public static readonly ParameterExpression DataReaderParam  = Expression.Parameter(typeof(DbDataReader), "rd");
 		public        readonly ParameterExpression DataReaderLocal;
 		public static readonly ParameterExpression ParametersParam  = Expression.Parameter(typeof(object[]),     "ps");
 		public static readonly ParameterExpression ExpressionParam  = Expression.Parameter(typeof(Expression),   "expr");
+
+		static bool _isDataContextParamInitialized;
+
+		public static ParameterExpression GetDataContextParam()
+		{
+			if (!_isDataContextParamInitialized)
+			{
+				_isDataContextParamInitialized = true;
+			}
+
+			return DataContextParam;
+		}
 
 		public MappingSchema MappingSchema => DataContext.MappingSchema;
 

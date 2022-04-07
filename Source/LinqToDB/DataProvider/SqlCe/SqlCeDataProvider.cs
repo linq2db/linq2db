@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Data.SqlTypes;
 using System.Threading;
 using System.Threading.Tasks;
@@ -62,7 +64,7 @@ namespace LinqToDB.DataProvider.SqlCe
 			return new SqlCeSchemaProvider();
 		}
 
-		public override void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object? value)
+		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
 		{
 			switch (dataType.DataType)
 			{
@@ -79,7 +81,7 @@ namespace LinqToDB.DataProvider.SqlCe
 			base.SetParameter(dataConnection, parameter, name, dataType, value);
 		}
 
-		protected override void SetParameterType(DataConnection dataConnection, IDbDataParameter parameter, DbDataType dataType)
+		protected override void SetParameterType(DataConnection dataConnection, DbParameter parameter, DbDataType dataType)
 		{
 			SqlDbType? type = null;
 
@@ -97,7 +99,7 @@ namespace LinqToDB.DataProvider.SqlCe
 
 			if (type != null)
 			{
-				var param = TryGetProviderParameter(parameter, dataConnection.MappingSchema);
+				var param = TryGetProviderParameter(dataConnection, parameter);
 				if (param != null)
 				{
 					Adapter.SetDbType(param, type.Value);
@@ -112,7 +114,7 @@ namespace LinqToDB.DataProvider.SqlCe
 				case DataType.UInt32     : parameter.DbType = DbType.Int64;             return;
 				case DataType.UInt64     : parameter.DbType = DbType.Decimal;           return;
 				case DataType.VarNumeric : parameter.DbType = DbType.Decimal;           return;
-				case DataType.Char       : 
+				case DataType.Char       :
 				case DataType.NChar      : parameter.DbType = DbType.String;            return;
 				case DataType.Date       :
 				case DataType.DateTime2  : parameter.DbType = DbType.DateTime;          return;
@@ -130,7 +132,7 @@ namespace LinqToDB.DataProvider.SqlCe
 
 #endregion
 
-		public override bool? IsDBNullAllowed(IDataReader reader, int idx)
+		public override bool? IsDBNullAllowed(DbDataReader reader, int idx)
 		{
 			return true;
 		}

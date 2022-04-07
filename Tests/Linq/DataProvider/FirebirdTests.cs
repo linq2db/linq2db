@@ -34,7 +34,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestParameters([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<string>("SELECT Cast(@p as int) FROM \"Dual\"",      new { p =  1  }), Is.EqualTo("1"));
 				Assert.That(conn.Execute<string>("SELECT Cast(@p as char(1)) FROM \"Dual\"",  new { p = "1" }), Is.EqualTo("1"));
@@ -48,7 +48,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestDataTypes([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(TestType<long?>    (conn, "\"bigintDataType\"",    DataType.Int64),    Is.EqualTo(1000000L));
 				Assert.That(TestType<short?>   (conn, "\"smallintDataType\"",  DataType.Int16),    Is.EqualTo(25555));
@@ -150,7 +150,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestNumerics([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				TestSimple<sbyte>  (conn, 1,    DataType.SByte);
 				TestSimple<short>  (conn, 1,    DataType.Int16);
@@ -201,7 +201,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestDateTime([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				var dateTime = new DateTime(2012, 12, 12, 12, 12, 12);
 
@@ -217,7 +217,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestChar([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<char> ("SELECT Cast('1' as char) FROM \"Dual\""),        Is.EqualTo('1'));
 				Assert.That(conn.Execute<char?>("SELECT Cast('1' as char) FROM \"Dual\""),        Is.EqualTo('1'));
@@ -250,7 +250,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestString([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<string>("SELECT Cast('12345' as char(5)) FROM \"Dual\""),     Is.EqualTo("12345"));
 				Assert.That(conn.Execute<string>("SELECT Cast('12345' as char(20)) FROM \"Dual\""),    Is.EqualTo("12345"));
@@ -280,7 +280,7 @@ namespace Tests.DataProvider
 			var arr1 = new byte[] { 50, 51         };
 			var arr2 = new byte[] { 49, 50, 51, 52 };
 
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<byte[]>("SELECT Cast('23' as blob) FROM \"Dual\""),   Is.EqualTo(           arr1));
 				Assert.That(conn.Execute<Binary>("SELECT Cast('1234' as blob) FROM \"Dual\""), Is.EqualTo(new Binary(arr2)));
@@ -305,7 +305,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestGuid([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(
 					conn.Execute<Guid>("SELECT Cast('6F9619FF-8B86-D011-B42D-00C04FC964FF' as char(38)) FROM \"Dual\""),
@@ -343,7 +343,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestXml([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<string>     ("SELECT Cast('<xml/>' as varchar(100)) FROM \"Dual\""),            Is.EqualTo("<xml/>"));
 				Assert.That(conn.Execute<XDocument>  ("SELECT Cast('<xml/>' as varchar(100)) FROM \"Dual\"").ToString(), Is.EqualTo("<xml />"));
@@ -369,7 +369,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestEnum1([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<TestEnum> ("SELECT Cast('A' as char) FROM \"Dual\""), Is.EqualTo(TestEnum.AA));
 				Assert.That(conn.Execute<TestEnum?>("SELECT Cast('A' as char) FROM \"Dual\""), Is.EqualTo(TestEnum.AA));
@@ -381,7 +381,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestEnum2([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<string>("SELECT Cast(@p as char) FROM \"Dual\"", new { p = TestEnum.AA }),            Is.EqualTo("A"));
 				Assert.That(conn.Execute<string>("SELECT Cast(@p as char) FROM \"Dual\"", new { p = (TestEnum?)TestEnum.BB }), Is.EqualTo("B"));
@@ -466,7 +466,7 @@ namespace Tests.DataProvider
 		{
 			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
 			{
-				using (var db = new DataConnection(context))
+				using (var db = GetDataConnection(context))
 				{
 					try
 					{
@@ -497,7 +497,7 @@ namespace Tests.DataProvider
 		{
 			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
 			{
-				using (var db = new DataConnection(context))
+				using (var db = GetDataConnection(context))
 				{
 					try
 					{
@@ -663,18 +663,18 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestProcedureNonLatinParameters1([IncludeDataSources(false, TestProvName.AllFirebird)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				int? id = null;
 				try
 				{
 					var id1 = db.PersonInsert("Имя", "Фамилия", "Отчество", 'M', out id).ToList();
 					Assert.AreEqual(1, id1.Count);
-					Assert.IsNotNull(id1[0].PersonID);
+					Assert.IsNotNull(id1[0].PERSONID);
 
 					// TODO: see TestProcedureNonLatinParameters2
 					// output parameter value is not set
-					id = id1[0].PersonID;
+					id = id1[0].PERSONID;
 
 					var record = db.Person.Single(p => p.ID == id);
 
@@ -683,7 +683,7 @@ namespace Tests.DataProvider
 					Assert.AreEqual("Отчество", record.MiddleName);
 					Assert.AreEqual(Gender.Male, record.Gender);
 					Assert.IsNotNull(id);
-					Assert.AreEqual(id, id1[0].PersonID);
+					Assert.AreEqual(id, id1[0].PERSONID);
 				}
 				finally
 				{
@@ -697,14 +697,14 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestProcedureNonLatinParameters2([IncludeDataSources(false, TestProvName.AllFirebird)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				int? id = null;
 				try
 				{
 					var id1 = db.PersonInsert("Имя", "Фамилия", "Отчество", 'M', out id).ToList();
 					Assert.AreEqual(1, id1.Count);
-					Assert.IsNotNull(id1[0].PersonID);
+					Assert.IsNotNull(id1[0].PERSONID);
 
 					var record = db.Person.Single(p => p.ID == id);
 
@@ -713,7 +713,7 @@ namespace Tests.DataProvider
 					Assert.AreEqual("Отчество", record.MiddleName);
 					Assert.AreEqual(Gender.Male, record.Gender);
 					Assert.IsNotNull(id);
-					Assert.AreEqual(id, id1[0].PersonID);
+					Assert.AreEqual(id, id1[0].PERSONID);
 				}
 				finally
 				{
@@ -762,7 +762,7 @@ namespace Tests.DataProvider
 		{
 			Query.ClearCaches();
 			using (new FirebirdQuoteMode(quoteMode))
-			using (var db      = new TestDataConnection(context))
+			using (var db      = GetDataConnection(context))
 			using (var cards   = db.CreateLocalTable<Card>())
 			using (var clients = db.CreateLocalTable<Client>())
 			{
@@ -1047,19 +1047,39 @@ namespace Tests.DataProvider
 	{
 		public partial class PersonInsertResult
 		{
-			public int? PersonID { get; set; }
+			public int? PERSONID { get; set; }
 		}
 
 		public static IEnumerable<PersonInsertResult> PersonInsert(this DataConnection dataConnection, string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER, out int? PERSONID)
 		{
-			var ret = dataConnection.QueryProc<PersonInsertResult>("\"Person_Insert\"",
-				new DataParameter("FIRSTNAME" , FIRSTNAME , DataType.NVarChar),
-				new DataParameter("LASTNAME"  , LASTNAME  , DataType.NVarChar),
-				new DataParameter("MIDDLENAME", MIDDLENAME, DataType.NVarChar),
-				new DataParameter("GENDER"    , GENDER    , DataType.NChar),
-				new DataParameter("PERSONID"  , null      , DataType.Int32) { Direction = ParameterDirection.Output, Size = 4 }).ToList();
+			var parameters = new []
+			{
+				new DataParameter("FIRSTNAME", FIRSTNAME, DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("LASTNAME", LASTNAME, DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("MIDDLENAME", MIDDLENAME, DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("GENDER",   GENDER, DataType.NChar)
+				{
+					Size = 1
+				},
+				new DataParameter("PERSONID", null, DataType.Int32)
+				{
+					Direction = ParameterDirection.Output,
+					Size      = 4
+				}
+			};
 
-			PERSONID = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["PERSONID"]).Value);
+			var ret = dataConnection.QueryProc<PersonInsertResult>("\"Person_Insert\"", parameters).ToList();
+
+			PERSONID = Converter.ChangeTypeTo<int?>(parameters[4].Value);
 
 			return ret;
 		}

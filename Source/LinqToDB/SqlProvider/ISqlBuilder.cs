@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Text;
 
 namespace LinqToDB.SqlProvider
@@ -23,12 +25,21 @@ namespace LinqToDB.SqlProvider
 		StringBuilder    Convert              (StringBuilder sb, string value, ConvertType convertType);
 		ISqlExpression?  GetIdentityExpression(SqlTable table);
 
-		StringBuilder    PrintParameters      (StringBuilder sb, IEnumerable<IDbDataParameter>? parameters);
+		StringBuilder    PrintParameters      (IDataContext dataContext, StringBuilder sb, IEnumerable<DbParameter>? parameters);
 		string           ApplyQueryHints      (string sqlText, IReadOnlyCollection<string> queryHints);
 
 		string           GetReserveSequenceValuesSql(int count, string sequenceName);
 		string           GetMaxValueSql       (EntityDescriptor entity, ColumnDescriptor column);
+		void             BuildExpression      (StringBuilder sb, ISqlExpression expr, bool buildTableName);
 
-		string Name { get; }
+		string                                 Name             { get; }
+		MappingSchema                          MappingSchema    { get; }
+		StringBuilder                          StringBuilder    { get; }
+		SqlProviderFlags                       SqlProviderFlags { get; }
+		public Dictionary<string,TableIDInfo>? TableIDs         { get; }
+		string?                                TablePath        { get; }
+		string?                                QueryName        { get; }
+
+		string? BuildSqlID(Sql.SqlID id);
 	}
 }

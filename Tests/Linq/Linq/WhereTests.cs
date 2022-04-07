@@ -1192,7 +1192,7 @@ namespace Tests.Linq
 						where pp.Value != 0 && pp.Value != 7
 						select pp.Value;
 
-				if (context.StartsWith("DB2"))
+				if (context.IsAnyOf(ProviderName.DB2))
 					q = q.AsQueryable().Select(t => Math.Round(t, 2));
 
 				AreEqual(
@@ -1501,7 +1501,7 @@ namespace Tests.Linq
 				AreEqualLocal(local, table, t => !(t.NullableBoolValue != true) && t.Id > 0);
 				AreEqualLocal(local, table, t => t.NullableBoolValue == true && t.Id > 0);
 
-				if (!context.StartsWith(ProviderName.Access))
+				if (!context.IsAnyOf(TestProvName.AllAccess))
 				{
 					AreEqualLocal(local, table, t => t.NullableBoolValue == null && t.Id > 0);
 					AreEqualLocal(local, table, t => t.NullableBoolValue != null && t.Id > 0);
@@ -1664,7 +1664,7 @@ namespace Tests.Linq
 		[Test]
 		public void ExistsSqlTest1([DataSources(false)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				db.Parent.Where(p => db.Child.Select(c => c.ParentID).Contains(p.ParentID)).Delete();
@@ -1676,7 +1676,7 @@ namespace Tests.Linq
 		[Test]
 		public void ExistsSqlTest2([DataSources(false)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				db.Parent.Where(p => p.Children.Any()).Delete();
@@ -1693,7 +1693,7 @@ namespace Tests.Linq
 		[Test]
 		public void OptionalObjectInCondition([DataSources(false)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				var p  = new Parameter() { Id = 1};
