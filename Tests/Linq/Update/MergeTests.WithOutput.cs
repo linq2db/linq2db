@@ -1,8 +1,12 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
+
 using FluentAssertions;
+
 using LinqToDB;
 using LinqToDB.Async;
+
 using NUnit.Framework;
 
 namespace Tests.xUpdate
@@ -38,7 +42,36 @@ namespace Tests.xUpdate
 				record.inserted.Field1.Should().Be(10);
 			}
 		}
-		
+
+		[Test]
+		public void MergeWithOutputWithoutAction([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird3Plus)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var outputRows = table
+					.Merge()
+					.Using(GetSource1(db).Where(_ => _.Id == 5))
+					.OnTargetKey()
+					.InsertWhenNotMatched()
+					.MergeWithOutput((a, deleted, inserted) => new { deleted, inserted});
+
+				var result = outputRows.ToArray();
+
+				result.Should().HaveCount(1);
+
+				var record = result[0];
+
+				record.deleted.Id.Should().Be(0);
+
+				record.inserted.Id.Should().Be(5);
+				record.inserted.Field1.Should().Be(10);
+			}
+		}
+
 		[Test]
 		public async Task MergeWithOutputFullAsync([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
@@ -68,7 +101,36 @@ namespace Tests.xUpdate
 				record.inserted.Field1.Should().Be(10);
 			}
 		}
-		
+
+		[Test]
+		public async Task MergeWithOutputWithoutActionAsync([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird3Plus)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var outputRows = table
+					.Merge()
+					.Using(GetSource1(db).Where(_ => _.Id == 5))
+					.OnTargetKey()
+					.InsertWhenNotMatched()
+					.MergeWithOutputAsync((a, deleted, inserted) => new {deleted, inserted});
+
+				var result = await outputRows.ToArrayAsync();
+
+				result.Should().HaveCount(1);
+
+				var record = result[0];
+
+				record.deleted.Id.Should().Be(0);
+
+				record.inserted.Id.Should().Be(5);
+				record.inserted.Field1.Should().Be(10);
+			}
+		}
+
 		[Test]
 		public void MergeWithOutputProjected([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
@@ -97,6 +159,31 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[Test]
+		public void MergeWithOutputProjectedWithoutAction([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird3Plus)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var outputRows = table
+					.Merge()
+					.Using(GetSource1(db).Where(_ => _.Id == 5))
+					.OnTargetKey()
+					.InsertWhenNotMatched()
+					.MergeWithOutput((a, deleted, inserted) => new {inserted.Id});
+
+				var result = outputRows.ToArray();
+
+				result.Should().HaveCount(1);
+
+				var record = result[0];
+
+				record.Id.Should().Be(5);
+			}
+		}
 
 		class InsertTempTable
 		{
@@ -106,7 +193,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void MergeWithOutputInto([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void MergeWithOutputInto([IncludeDataSources(false, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

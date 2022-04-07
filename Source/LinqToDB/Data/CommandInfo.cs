@@ -681,7 +681,7 @@ namespace LinqToDB.Data
 			return ReadEnumerator<T>(rd, null, false).ToList();
 		}
 
-		T ReadSingle<T>(IDataReader rd)
+		T? ReadSingle<T>(IDataReader rd)
 		{
 			return ReadEnumerator<T>(rd, null, false).FirstOrDefault();
 		}

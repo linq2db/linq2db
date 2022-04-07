@@ -83,8 +83,7 @@ namespace LinqToDB.Linq
 			if (_queryableAccessorDic.TryGetValue(expr, out var e))
 				return _queryableAccessorList.IndexOf(e);
 
-			e = new QueryableAccessor { Accessor = qe.CompileExpression() };
-			e.Queryable = e.Accessor(expr);
+			e = new QueryableAccessor(qe.CompileExpression(), expr);
 
 			_queryableAccessorDic. Add(expr, e);
 			_queryableAccessorList.Add(e);
@@ -117,9 +116,18 @@ namespace LinqToDB.Linq
 			}
 		}
 
-		internal Expression GetIQueryable(int n, Expression expr)
+		internal Expression GetIQueryable(int n, Expression expr, bool force)
 		{
-			return _queryableAccessorList[n].Accessor(expr).Expression;
+			var accessor = _queryableAccessorList[n];
+			if (force)
+			{
+				if (accessor.SkipForce)
+					accessor.SkipForce = false;
+				else
+					return (accessor.Queryable = accessor.Accessor(expr)).Expression;
+			}
+
+			return accessor.Queryable.Expression;
 		}
 
 		public void ClearMemberQueryableInfo()
@@ -288,6 +296,10 @@ namespace LinqToDB.Linq
 			/// Bit set, when inline Take/Skip parameterization is enabled for query.
 			/// </summary>
 			ParameterizeTakeSkip = 0x4,
+			/// <summary>
+			/// Bit set, when PreferApply is enabled for query.
+			/// </summary>
+			PreferApply = 0x8,
 		}
 
 		class QueryCache
@@ -404,7 +416,7 @@ namespace LinqToDB.Linq
 
 					_cache   = newCache;
 					_indexes = newPriorities;
-					version  = _version;
+					_version = version;
 				}
 			}
 
@@ -437,9 +449,7 @@ namespace LinqToDB.Linq
 							// do reorder only if it is not blocked and cache wasn't replaced by new one
 							if (i > 0 && version == _version && allowReordering)
 							{
-								var index      = indexes[i];
-								indexes[i]     = indexes[i - 1];
-								indexes[i - 1] = index;
+								(indexes[i - 1], indexes[i]) = (indexes[i], indexes[i - 1]);
 							}
 
 							return cache[idx].Query;
@@ -504,6 +514,8 @@ namespace LinqToDB.Linq
 				flags |= QueryFlags.GroupByGuard;
 			if (Configuration.Linq.ParameterizeTakeSkip)
 				flags |= QueryFlags.ParameterizeTakeSkip;
+			if (Configuration.Linq.PreferApply)
+				flags |= QueryFlags.PreferApply;
 
 			var query = _queryCache.Find(dataContext, expr, flags);
 

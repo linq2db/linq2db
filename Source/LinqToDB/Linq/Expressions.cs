@@ -23,6 +23,7 @@ namespace LinqToDB.Linq
 	using Common;
 	using Extensions;
 	using LinqToDB.Common.Internal;
+	using DataProvider.Firebird;
 	using LinqToDB.Expressions;
 	using Mapping;
 
@@ -31,9 +32,25 @@ namespace LinqToDB.Linq
 	{
 		#region MapMember
 
+		static MemberHelper.MemberInfoWithType NormalizeMemeberInfo(MemberHelper.MemberInfoWithType memberInfoWithType)
+		{
+			if (memberInfoWithType.Type == null || memberInfoWithType.Type == memberInfoWithType.MemberInfo.ReflectedType)
+			{
+				return memberInfoWithType;
+			}
+
+			return new MemberHelper.MemberInfoWithType(memberInfoWithType.Type,
+				memberInfoWithType.Type.GetMemberEx(memberInfoWithType.MemberInfo) ?? memberInfoWithType.MemberInfo);
+		}
+
 		public static void MapMember(MemberInfo memberInfo, LambdaExpression expression)
 		{
 			MapMember("", memberInfo, expression);
+		}
+
+		public static void MapMember(Type objectType, MemberInfo memberInfo, LambdaExpression expression)
+		{
+			MapMember("", objectType, memberInfo, expression);
 		}
 
 		public static void MapMember(MemberInfo memberInfo, IExpressionInfo expressionInfo)
@@ -41,26 +58,33 @@ namespace LinqToDB.Linq
 			MapMember("", memberInfo, expressionInfo);
 		}
 
-		public static void MapMember(string providerName, MemberInfo memberInfo, LambdaExpression expression)
+		public static void MapMember(string providerName, MemberHelper.MemberInfoWithType memberInfoWithType, LambdaExpression expression)
 		{
+			memberInfoWithType = NormalizeMemeberInfo(memberInfoWithType);
+
 			if (!Members.TryGetValue(providerName, out var dic))
-				Members.Add(providerName, dic = new Dictionary<MemberInfo,IExpressionInfo>());
+				Members.Add(providerName, dic = new Dictionary<MemberHelper.MemberInfoWithType,IExpressionInfo>());
 
 			var expr = new LazyExpressionInfo();
 
 			expr.SetExpression(expression);
 
-			dic[memberInfo] = expr;
+			dic[memberInfoWithType] = expr;
 
 			_checkUserNamespace = false;
+		}
+
+		public static void MapMember(string providerName, MemberInfo memberInfo, LambdaExpression expression)
+		{
+			MapMember(providerName, new MemberHelper.MemberInfoWithType(memberInfo.ReflectedType, memberInfo), expression);
 		}
 
 		public static void MapMember(string providerName, MemberInfo memberInfo, IExpressionInfo expressionInfo)
 		{
 			if (!Members.TryGetValue(providerName, out var dic))
-				Members.Add(providerName, dic = new Dictionary<MemberInfo,IExpressionInfo>());
+				Members.Add(providerName, dic = new Dictionary<MemberHelper.MemberInfoWithType,IExpressionInfo>());
 
-			dic[memberInfo] = expressionInfo;
+			dic[new MemberHelper.MemberInfoWithType(memberInfo.ReflectedType, memberInfo)] = expressionInfo;
 
 			_checkUserNamespace = false;
 		}
@@ -85,18 +109,18 @@ namespace LinqToDB.Linq
 			MapMember(providerName, M(memberInfo), expression);
 		}
 
-		public static void MapMember<TR>               (string providerName, Expression<Func<TR>>                memberInfo, Expression<Func<TR>>                expression) { MapMember(providerName, MemberHelper.GetMemberInfo(memberInfo), expression); }
-		public static void MapMember<TR>               (                     Expression<Func<TR>>                memberInfo, Expression<Func<TR>>                expression) { MapMember("",           MemberHelper.GetMemberInfo(memberInfo), expression); }
-		public static void MapMember<T1,TR>            (string providerName, Expression<Func<T1,TR>>             memberInfo, Expression<Func<T1,TR>>             expression) { MapMember(providerName, MemberHelper.GetMemberInfo(memberInfo), expression); }
-		public static void MapMember<T1,TR>            (                     Expression<Func<T1,TR>>             memberInfo, Expression<Func<T1,TR>>             expression) { MapMember("",           MemberHelper.GetMemberInfo(memberInfo), expression); }
-		public static void MapMember<T1,T2,TR>         (string providerName, Expression<Func<T1,T2,TR>>          memberInfo, Expression<Func<T1,T2,TR>>          expression) { MapMember(providerName, MemberHelper.GetMemberInfo(memberInfo), expression); }
-		public static void MapMember<T1,T2,TR>         (                     Expression<Func<T1,T2,TR>>          memberInfo, Expression<Func<T1,T2,TR>>          expression) { MapMember("",           MemberHelper.GetMemberInfo(memberInfo), expression); }
-		public static void MapMember<T1,T2,T3,TR>      (string providerName, Expression<Func<T1,T2,T3,TR>>       memberInfo, Expression<Func<T1,T2,T3,TR>>       expression) { MapMember(providerName, MemberHelper.GetMemberInfo(memberInfo), expression); }
-		public static void MapMember<T1,T2,T3,TR>      (                     Expression<Func<T1,T2,T3,TR>>       memberInfo, Expression<Func<T1,T2,T3,TR>>       expression) { MapMember("",           MemberHelper.GetMemberInfo(memberInfo), expression); }
-		public static void MapMember<T1,T2,T3,T4,TR>   (string providerName, Expression<Func<T1,T2,T3,T4,TR>>    memberInfo, Expression<Func<T1,T2,T3,T4,TR>>    expression) { MapMember(providerName, MemberHelper.GetMemberInfo(memberInfo), expression); }
-		public static void MapMember<T1,T2,T3,T4,TR>   (                     Expression<Func<T1,T2,T3,T4,TR>>    memberInfo, Expression<Func<T1,T2,T3,T4,TR>>    expression) { MapMember("",           MemberHelper.GetMemberInfo(memberInfo), expression); }
-		public static void MapMember<T1,T2,T3,T4,T5,TR>(string providerName, Expression<Func<T1,T2,T3,T4,T5,TR>> memberInfo, Expression<Func<T1,T2,T3,T4,T5,TR>> expression) { MapMember(providerName, MemberHelper.GetMemberInfo(memberInfo), expression); }
-		public static void MapMember<T1,T2,T3,T4,T5,TR>(                     Expression<Func<T1,T2,T3,T4,T5,TR>> memberInfo, Expression<Func<T1,T2,T3,T4,T5,TR>> expression) { MapMember("",           MemberHelper.GetMemberInfo(memberInfo), expression); }
+		public static void MapMember<TR>               (string providerName, Expression<Func<TR>>                memberInfo, Expression<Func<TR>>                expression) { MapMember(providerName, MemberHelper.GetMemberInfoWithType(memberInfo), expression); }
+		public static void MapMember<TR>               (                     Expression<Func<TR>>                memberInfo, Expression<Func<TR>>                expression) { MapMember("",           MemberHelper.GetMemberInfoWithType(memberInfo), expression); }
+		public static void MapMember<T1,TR>            (string providerName, Expression<Func<T1,TR>>             memberInfo, Expression<Func<T1,TR>>             expression) { MapMember(providerName, MemberHelper.GetMemberInfoWithType(memberInfo), expression); }
+		public static void MapMember<T1,TR>            (                     Expression<Func<T1,TR>>             memberInfo, Expression<Func<T1,TR>>             expression) { MapMember("",           MemberHelper.GetMemberInfoWithType(memberInfo), expression); }
+		public static void MapMember<T1,T2,TR>         (string providerName, Expression<Func<T1,T2,TR>>          memberInfo, Expression<Func<T1,T2,TR>>          expression) { MapMember(providerName, MemberHelper.GetMemberInfoWithType(memberInfo), expression); }
+		public static void MapMember<T1,T2,TR>         (                     Expression<Func<T1,T2,TR>>          memberInfo, Expression<Func<T1,T2,TR>>          expression) { MapMember("",           MemberHelper.GetMemberInfoWithType(memberInfo), expression); }
+		public static void MapMember<T1,T2,T3,TR>      (string providerName, Expression<Func<T1,T2,T3,TR>>       memberInfo, Expression<Func<T1,T2,T3,TR>>       expression) { MapMember(providerName, MemberHelper.GetMemberInfoWithType(memberInfo), expression); }
+		public static void MapMember<T1,T2,T3,TR>      (                     Expression<Func<T1,T2,T3,TR>>       memberInfo, Expression<Func<T1,T2,T3,TR>>       expression) { MapMember("",           MemberHelper.GetMemberInfoWithType(memberInfo), expression); }
+		public static void MapMember<T1,T2,T3,T4,TR>   (string providerName, Expression<Func<T1,T2,T3,T4,TR>>    memberInfo, Expression<Func<T1,T2,T3,T4,TR>>    expression) { MapMember(providerName, MemberHelper.GetMemberInfoWithType(memberInfo), expression); }
+		public static void MapMember<T1,T2,T3,T4,TR>   (                     Expression<Func<T1,T2,T3,T4,TR>>    memberInfo, Expression<Func<T1,T2,T3,T4,TR>>    expression) { MapMember("",           MemberHelper.GetMemberInfoWithType(memberInfo), expression); }
+		public static void MapMember<T1,T2,T3,T4,T5,TR>(string providerName, Expression<Func<T1,T2,T3,T4,T5,TR>> memberInfo, Expression<Func<T1,T2,T3,T4,T5,TR>> expression) { MapMember(providerName, MemberHelper.GetMemberInfoWithType(memberInfo), expression); }
+		public static void MapMember<T1,T2,T3,T4,T5,TR>(                     Expression<Func<T1,T2,T3,T4,T5,TR>> memberInfo, Expression<Func<T1,T2,T3,T4,T5,TR>> expression) { MapMember("",           MemberHelper.GetMemberInfoWithType(memberInfo), expression); }
 
 		#endregion
 
@@ -255,6 +279,16 @@ namespace LinqToDB.Linq
 
 		public static LambdaExpression? ConvertMember(MappingSchema mappingSchema, Type? objectType, MemberInfo mi)
 		{
+			if (objectType != null)
+			{
+				mi = objectType.GetMemberEx(mi) ?? mi;
+			}
+
+			return ConvertMemberInternal(mappingSchema, objectType, mi);
+		}
+
+		static LambdaExpression? ConvertMemberInternal(MappingSchema mappingSchema, Type? objectType, MemberInfo mi)
+		{
 			if (_checkUserNamespace)
 			{
 				if (IsUserNamespace(mi.DeclaringType!.Namespace))
@@ -283,9 +317,11 @@ namespace LinqToDB.Linq
 
 			IExpressionInfo? expr;
 
+			var memberKey = new MemberHelper.MemberInfoWithType(objectType ?? mi.DeclaringType, mi);
+
 			foreach (var configuration in mappingSchema.ConfigurationList)
 				if (Members.TryGetValue(configuration, out var dic))
-					if (dic.TryGetValue(mi, out expr))
+					if (dic.TryGetValue(memberKey, out expr))
 						return expr.GetExpression(mappingSchema);
 
 			Type[]? args = null;
@@ -308,37 +344,54 @@ namespace LinqToDB.Linq
 			if (args != null && InitGenericConvertProvider(args, mappingSchema))
 				foreach (var configuration in mappingSchema.ConfigurationList)
 					if (Members.TryGetValue(configuration, out var dic))
-						if (dic.TryGetValue(mi, out expr))
+						if (dic.TryGetValue(memberKey, out expr))
 							return expr.GetExpression(mappingSchema);
 
-			if (!Members[""].TryGetValue(mi, out expr))
+			if (!Members[""].TryGetValue(memberKey, out expr))
 			{
 				if (mi is MethodInfo && mi.Name == "CompareString" && mi.DeclaringType!.FullName!.StartsWith("Microsoft.VisualBasic.CompilerServices."))
 				{
 					lock (_memberSync)
 					{
-						if (!Members[""].TryGetValue(mi, out expr))
+						if (!Members[""].TryGetValue(memberKey, out expr))
 						{
 							expr = new LazyExpressionInfo();
 
 							((LazyExpressionInfo)expr).SetExpression(L<string,string,bool,int>((s1,s2,b) => b ? string.CompareOrdinal(s1.ToUpper(), s2.ToUpper()) : string.CompareOrdinal(s1, s2)));
 
-							Members[""].Add(mi, expr);
+							Members[""].Add(memberKey, expr);
 						}
 					}
 				}
 			}
 
-			if (expr == null && objectType != null)
+			if (expr == null)
 			{
-				var key = new TypeMember(objectType, mi.Name);
+				if (mi is MethodInfo method &&
+				    (method.IsVirtual || method.DeclaringType != null && method.ReflectedType != null && method.DeclaringType.IsAssignableFrom(method.ReflectedType)))
+				{
+					// walking up through hierarchy to find registered converter
+					//
+					if (method.ReflectedType is not null && method.ReflectedType != typeof(object) &&
+					    method.ReflectedType.BaseType is not null)
+					{
+						var baseType = method.ReflectedType.BaseType;
+						var newMi    = baseType.GetMemberEx(mi);
+						if (newMi != null && newMi.ReflectedType != mi.ReflectedType)
+						{
+							var converted = ConvertMemberInternal(mappingSchema, objectType, newMi);
+							if (converted != null)
+								return converted;
+						}
+					}
+				}
 
-				foreach (var configuration in mappingSchema.ConfigurationList)
-					if (_typeMembers.TryGetValue(configuration, out var dic))
-						if (dic.TryGetValue(key, out expr))
-							return expr.GetExpression(mappingSchema);
-
-				_typeMembers[""].TryGetValue(key, out expr);
+				if (memberKey.Type != mi.ReflectedType)
+				{
+					var converted = ConvertMemberInternal(mappingSchema, mi.ReflectedType, mi);
+					if (converted != null)
+						return converted;
+				}
 			}
 
 			return expr?.GetExpression(mappingSchema);
@@ -404,14 +457,14 @@ namespace LinqToDB.Linq
 			}
 		}
 
-		public static MemberInfo M<T>(Expression<Func<T,object?>> func)
+		public static MemberHelper.MemberInfoWithType M<T>(Expression<Func<T,object?>> func)
 		{
-			return MemberHelper.GetMemberInfo(func);
+			return NormalizeMemeberInfo(MemberHelper.GetMemberInfoWithType(func));
 		}
 
-		public static MemberInfo M<T>(Expression<Func<T>> func)
+		public static MemberHelper.MemberInfoWithType M<T>(Expression<Func<T>> func)
 		{
-			return MemberHelper.GetMemberInfo(func);
+			return NormalizeMemeberInfo(MemberHelper.GetMemberInfoWithType(func));
 		}
 
 		public static LambdaExpression L<TR>                   (Expression<Func<TR>>                   func) { return func; }
@@ -442,7 +495,7 @@ namespace LinqToDB.Linq
 			}
 		}
 
-		static Dictionary<string,Dictionary<MemberInfo,IExpressionInfo>> Members
+		static Dictionary<string,Dictionary<MemberHelper.MemberInfoWithType,IExpressionInfo>> Members
 		{
 			get
 			{
@@ -498,16 +551,52 @@ namespace LinqToDB.Linq
 
 		#region Mapping
 
-		static Dictionary<string,Dictionary<MemberInfo,IExpressionInfo>>? _members;
-		static readonly object                                            _memberSync = new object();
+		private static          Dictionary<string, Dictionary<MemberHelper.MemberInfoWithType, IExpressionInfo>>? _members;
+		private static readonly object _memberSync = new();
 
 		static readonly Lazy<Dictionary<string,Dictionary<Tuple<ExpressionType,Type,Type>,IExpressionInfo>>> _binaries = 
 			new Lazy<Dictionary<string,Dictionary<Tuple<ExpressionType,Type,Type>,IExpressionInfo>>>(() => new Dictionary<string,Dictionary<Tuple<ExpressionType,Type,Type>,IExpressionInfo>>());
 
 		#region Common
 
-		static readonly Dictionary<MemberInfo,IExpressionInfo> _commonMembers = new Dictionary<MemberInfo,IExpressionInfo>
+		static readonly Dictionary<MemberHelper.MemberInfoWithType,IExpressionInfo> _commonMembers = new()
 		{
+			#region ToString
+
+			{ MT<bool   >(() => ((bool)   true).ToString()), N(() => L<bool,    string>((bool    p0) => Sql.ConvertTo<string>.From(p0) )) },
+			{ MT<byte   >(() => ((byte)    0)  .ToString()), N(() => L<byte,    string>((byte    p0) => Sql.ConvertTo<string>.From(p0) )) },
+			{ MT<char   >(() => ((char)   '0') .ToString()), N(() => L<char,    string>((char    p0) => Sql.ConvertTo<string>.From(p0) )) },
+			{ MT<decimal>(() => ((decimal) 0)  .ToString()), N(() => L<decimal, string>((decimal p0) => Sql.ConvertTo<string>.From(p0) )) },
+			{ MT<double >(() => ((double)  0)  .ToString()), N(() => L<double,  string>((double  p0) => Sql.ConvertTo<string>.From(p0) )) },
+			{ MT<short  >(() => ((short)   0)  .ToString()), N(() => L<short,   string>((short   p0) => Sql.ConvertTo<string>.From(p0) )) },
+			{ MT<int    >(() => ((int)     0)  .ToString()), N(() => L<int,     string>((int     p0) => Sql.ConvertTo<string>.From(p0) )) },
+			{ MT<long   >(() => ((long)    0)  .ToString()), N(() => L<long,    string>((long    p0) => Sql.ConvertTo<string>.From(p0) )) },
+			{ MT<sbyte  >(() => ((sbyte)   0)  .ToString()), N(() => L<sbyte,   string>((sbyte   p0) => Sql.ConvertTo<string>.From(p0) )) },
+			{ MT<float  >(() => ((float)   0)  .ToString()), N(() => L<float,   string>((float   p0) => Sql.ConvertTo<string>.From(p0) )) },
+			{ MT<ushort >(() => ((ushort)  0)  .ToString()), N(() => L<ushort,  string>((ushort  p0) => Sql.ConvertTo<string>.From(p0) )) },
+			{ MT<uint   >(() => ((uint)    0)  .ToString()), N(() => L<uint,    string>((uint    p0) => Sql.ConvertTo<string>.From(p0) )) },
+			{ MT<ulong  >(() => ((ulong)   0)  .ToString()), N(() => L<ulong,   string>((ulong   p0) => Sql.ConvertTo<string>.From(p0) )) },
+
+			{ MT<bool?   >(() => ((bool?)  true).ToString()!), N(() => L<bool?,    string?>((bool?   p0) => p0!.Value.ToString() )) },
+			{ MT<byte?   >(() => ((byte?)    0) .ToString()!), N(() => L<byte?,    string>((byte?    p0) => p0!.Value.ToString() )) },
+			{ MT<char?   >(() => ((char?)   '0').ToString()!), N(() => L<char?,    string>((char?    p0) => p0!.Value.ToString() )) },
+			{ MT<decimal?>(() => ((decimal?) 0) .ToString()!), N(() => L<decimal?, string>((decimal? p0) => p0!.Value.ToString() )) },
+			{ MT<double? >(() => ((double?)  0) .ToString()!), N(() => L<double?,  string>((double?  p0) => p0!.Value.ToString() )) },
+			{ MT<short?  >(() => ((short?)   0) .ToString()!), N(() => L<short?,   string>((short?   p0) => p0!.Value.ToString() )) },
+			{ MT<int?    >(() => ((int?)     0) .ToString()!), N(() => L<int?,     string>((int?     p0) => p0!.Value.ToString() )) },
+			{ MT<long?   >(() => ((long?)    0) .ToString()!), N(() => L<long?,    string>((long?    p0) => p0!.Value.ToString() )) },
+			{ MT<sbyte?  >(() => ((sbyte?)   0) .ToString()!), N(() => L<sbyte?,   string>((sbyte?   p0) => p0!.Value.ToString() )) },
+			{ MT<float?  >(() => ((float?)   0) .ToString()!), N(() => L<float?,   string>((float?   p0) => p0!.Value.ToString() )) },
+			{ MT<ushort? >(() => ((ushort?)  0) .ToString()!), N(() => L<ushort?,  string>((ushort?  p0) => p0!.Value.ToString() )) },
+			{ MT<uint?   >(() => ((uint?)    0) .ToString()!), N(() => L<uint?,    string>((uint?    p0) => p0!.Value.ToString() )) },
+			{ MT<ulong?  >(() => ((ulong?)   0) .ToString()!), N(() => L<ulong?,   string>((ulong?   p0) => p0!.Value.ToString() )) },
+
+
+			// handle all other as default
+			{ MT<object>(() => ((object)0).ToString()!), N(() => L<object, string>((object   p0) => Sql.ConvertTo<string>.From(p0) )) },
+
+			#endregion
+
 			#region string
 
 			{ M(() => "".Length               ), N(() => L<string,int>                     ((string obj)                              => Sql.Length(obj)!.Value)) },
@@ -1110,17 +1199,17 @@ namespace LinqToDB.Linq
 
 		#endregion
 
-		static Dictionary<string,Dictionary<MemberInfo,IExpressionInfo>> LoadMembers()
+		static Dictionary<string,Dictionary<MemberHelper.MemberInfoWithType,IExpressionInfo>> LoadMembers()
 		{
 			SetGenericInfoProvider(typeof(GetValueOrDefaultInfoProvider<>));
 
-			var members = new Dictionary<string,Dictionary<MemberInfo,IExpressionInfo>>
+			var members = new Dictionary<string,Dictionary<MemberHelper.MemberInfoWithType,IExpressionInfo>>
 			{
 				{ "", _commonMembers },
 
 				#region SqlServer
 
-				{ ProviderName.SqlServer, new Dictionary<MemberInfo,IExpressionInfo> {
+				{ ProviderName.SqlServer, new Dictionary<MemberHelper.MemberInfoWithType,IExpressionInfo> {
 					{ M(() => Sql.PadRight("",0,' ') ), N(() => L<string,int?,char,string>       ((string p0,int? p1,char p2) => p0.Length > p1 ? p0 : p0 + Replicate(p2, p1 - p0.Length))) },
 					{ M(() => Sql.PadLeft ("",0,' ') ), N(() => L<string,int?,char,string>       ((string p0,int? p1,char p2) => p0.Length > p1 ? p0 : Replicate(p2, p1 - p0.Length) + p0)) },
 					{ M(() => Sql.Trim    ("")       ), N(() => L<string,string?>                ((string p0)                   => Sql.TrimLeft(Sql.TrimRight(p0)))) },
@@ -1136,7 +1225,7 @@ namespace LinqToDB.Linq
 
 				#region SqlServer2000
 
-				{ ProviderName.SqlServer2000, new Dictionary<MemberInfo,IExpressionInfo> {
+				{ ProviderName.SqlServer2000, new Dictionary<MemberHelper.MemberInfoWithType,IExpressionInfo> {
 					{ M(() => Sql.MakeDateTime(0, 0, 0, 0, 0, 0) ), N(() => L<int?,int?,int?,int?,int?,int?,DateTime?>((y,m,d,h,mm,s) => Sql.Convert(Sql.DateTime2,
 						y.ToString() + "-" + m.ToString() + "-" + d.ToString() + " " +
 						h.ToString() + ":" + mm.ToString() + ":" + s.ToString(), 120))) },
@@ -1149,7 +1238,7 @@ namespace LinqToDB.Linq
 
 				#region SqlServer2005
 
-				{ ProviderName.SqlServer2005, new Dictionary<MemberInfo,IExpressionInfo> {
+				{ ProviderName.SqlServer2005, new Dictionary<MemberHelper.MemberInfoWithType,IExpressionInfo> {
 					{ M(() => Sql.MakeDateTime(0, 0, 0, 0, 0, 0) ), N(() => L<int?,int?,int?,int?,int?,int?,DateTime?>((y,m,d,h,mm,s) => Sql.Convert(Sql.DateTime2,
 						y.ToString() + "-" + m.ToString() + "-" + d.ToString() + " " +
 						h.ToString() + ":" + mm.ToString() + ":" + s.ToString(), 120))) },
@@ -1160,7 +1249,7 @@ namespace LinqToDB.Linq
 
 				#region SqlCe
 
-				{ ProviderName.SqlCe, new Dictionary<MemberInfo,IExpressionInfo> {
+				{ ProviderName.SqlCe, new Dictionary<MemberHelper.MemberInfoWithType,IExpressionInfo> {
 					{ M(() => Sql.Left    ("",0)    ), N(() => L<string?,int?,string?>    ((string? p0,int? p1)       => Sql.Substring(p0, 1, p1))) },
 					{ M(() => Sql.Right   ("",0)    ), N(() => L<string?,int?,string?>    ((string? p0,int? p1)       => Sql.Substring(p0, p0!.Length - p1 + 1, p1))) },
 					{ M(() => Sql.PadRight("",0,' ')), N(() => L<string,int?,char?,string>((string p0,int? p1,char? p2) => p0.Length > p1 ? p0 : p0 + Replicate(p2, p1 - p0.Length))) },
@@ -1178,7 +1267,7 @@ namespace LinqToDB.Linq
 
 				#region DB2
 
-				{ ProviderName.DB2, new Dictionary<MemberInfo,IExpressionInfo> {
+				{ ProviderName.DB2, new Dictionary<MemberHelper.MemberInfoWithType,IExpressionInfo> {
 					{ M(() => Sql.Space   (0)        ), N(() => L<int?,string>       ( p0           => Sql.Convert(Sql.VarChar(1000), Replicate(" ", p0)))) },
 					{ M(() => Sql.Stuff   ("",0,0,"")), N(() => L<string?,int?,int?,string?,string?>((p0,p1,p2,p3) => AltStuff(p0, p1, p2, p3))) },
 					{ M(() => Sql.PadRight("",0,' ') ), N(() => L<string,int?,char?,string>  ((p0,p1,p2)    => p0.Length > p1 ? p0 : p0 + VarChar(Replicate(p2, p1 - p0.Length)!, 1000))) },
@@ -1200,7 +1289,7 @@ namespace LinqToDB.Linq
 
 				#region Informix
 
-				{ ProviderName.Informix, new Dictionary<MemberInfo,IExpressionInfo> {
+				{ ProviderName.Informix, new Dictionary<MemberHelper.MemberInfoWithType,IExpressionInfo> {
 					{ M(() => Sql.Left ("",0)     ), N(() => L<string?,int?,string?>     ((string? p0,int? p1)            => Sql.Substring(p0,  1, p1)))                  },
 					{ M(() => Sql.Right("",0)     ), N(() => L<string?,int?,string?>     ((string? p0,int? p1)            => Sql.Substring(p0,  p0!.Length - p1 + 1, p1))) },
 					{ M(() => Sql.Stuff("",0,0,"")), N(() => L<string?,int?,int?,string?,string?>((string? p0,int? p1,int? p2,string? p3) =>     AltStuff (p0,  p1, p2, p3)))             },
@@ -1238,7 +1327,7 @@ namespace LinqToDB.Linq
 
 				#region Oracle
 
-				{ ProviderName.Oracle, new Dictionary<MemberInfo,IExpressionInfo> {
+				{ ProviderName.Oracle, new Dictionary<MemberHelper.MemberInfoWithType,IExpressionInfo> {
 					{ M(() => Sql.Left ("",0)     ), N(() => L<string?,int?,string?>             ((string? p0,int? p1)            => Sql.Substring(p0, 1, p1))) },
 					{ M(() => Sql.Right("",0)     ), N(() => L<string?,int?,string?>             ((string? p0,int? p1)            => Sql.Substring(p0, p0!.Length - p1 + 1, p1))) },
 					{ M(() => Sql.Stuff("",0,0,"")), N(() => L<string?,int?,int?,string?,string?>((string? p0,int? p1,int? p2,string? p3) => AltStuff(p0, p1, p2, p3))) },
@@ -1267,7 +1356,7 @@ namespace LinqToDB.Linq
 
 				#region Firebird
 
-				{ ProviderName.Firebird, new Dictionary<MemberInfo,IExpressionInfo> {
+				{ ProviderName.Firebird, new Dictionary<MemberHelper.MemberInfoWithType,IExpressionInfo> {
 					{ M<string?>(_  => Sql.Space(0         )), N(() => L<int?,string?>       ( p0           => Sql.PadRight(" ", p0, ' '))) },
 					{ M<string?>(s  => Sql.Stuff(s, 0, 0, s)), N(() => L<string?,int?,int?,string?,string?>((p0,p1,p2,p3) => AltStuff(p0, p1, p2, p3))) },
 
@@ -1281,13 +1370,15 @@ namespace LinqToDB.Linq
 
 					{ M(() => Sql.RoundToEven(0.0)  ), N(() => L<double?,double?>     ((double? v)        => (double?)Sql.RoundToEven((decimal)v!)))    },
 					{ M(() => Sql.RoundToEven(0.0,0)), N(() => L<double?,int?,double?>((double? v,int? p) => (double?)Sql.RoundToEven((decimal)v!, p))) },
+
+					{ M(() => Sql.ConvertTo<string>.From(Guid.Empty)), N(() => L<Guid,string?>((Guid p) => Sql.Lower(Sql.Ext.Firebird().UuidToChar(p)))) },
 				}},
 
 				#endregion
 
 				#region MySql
 
-				{ ProviderName.MySql, new Dictionary<MemberInfo,IExpressionInfo> {
+				{ ProviderName.MySql, new Dictionary<MemberHelper.MemberInfoWithType,IExpressionInfo> {
 					{ M<string>(s => Sql.Stuff(s, 0, 0, s)), N(() => L<string?,int?,int?,string?,string?>((p0,p1,p2,p3) => AltStuff(p0, p1, p2, p3))) },
 
 					{ M(() => Sql.Cosh(0)), N(() => L<double?,double?>(v => (Sql.Exp(v) + Sql.Exp(-v)) / 2)) },
@@ -1299,7 +1390,7 @@ namespace LinqToDB.Linq
 
 				#region PostgreSQL
 
-				{ ProviderName.PostgreSQL, new Dictionary<MemberInfo,IExpressionInfo> {
+				{ ProviderName.PostgreSQL, new Dictionary<MemberHelper.MemberInfoWithType,IExpressionInfo> {
 					{ M(() => Sql.Left ("",0)     ), N(() => L<string?,int?,string?>             ((p0,p1)                                 => Sql.Substring(p0, 1, p1))) },
 					{ M(() => Sql.Right("",0)     ), N(() => L<string?,int?,string?>             ((string? p0,int? p1)                    => Sql.Substring(p0, p0!.Length - p1 + 1, p1))) },
 					{ M(() => Sql.Stuff("",0,0,"")), N(() => L<string?,int?,int?,string?,string?>((string? p0,int? p1,int? p2,string? p3) => AltStuff(p0, p1, p2, p3))) },
@@ -1321,7 +1412,7 @@ namespace LinqToDB.Linq
 
 				#region SQLite
 
-				{ ProviderName.SQLite, new Dictionary<MemberInfo,IExpressionInfo> {
+				{ ProviderName.SQLite, new Dictionary<MemberHelper.MemberInfoWithType,IExpressionInfo> {
 					{ M(() => Sql.Stuff   ("",0,0,"")), N(() => L<string?,int?,int?,string?,string?>((p0,p1,p2,p3) => AltStuff(p0, p1, p2, p3))) },
 					{ M(() => Sql.PadRight("",0,' ') ), N(() => L<string,int?,char?,string>         ((p0,p1,p2)    => p0.Length > p1 ? p0 : p0 + Replicate(p2, p1 - p0.Length))) },
 					{ M(() => Sql.PadLeft ("",0,' ') ), N(() => L<string,int?,char?,string>         ((p0,p1,p2)    => p0.Length > p1 ? p0 : Replicate(p2, p1 - p0.Length) + p0)) },
@@ -1353,7 +1444,7 @@ namespace LinqToDB.Linq
 					{ M(() => Sql.Truncate(0.0)), N(() => L<double?,double?>  ((double?  v) => v >= 0 ? Sql.Floor(v) : Sql.Ceiling(v))) },
 				}},
 
-				{ ProviderName.SQLiteMS, new Dictionary<MemberInfo,IExpressionInfo> {
+				{ ProviderName.SQLiteMS, new Dictionary<MemberHelper.MemberInfoWithType,IExpressionInfo> {
 					{ M(() => Math.Floor((decimal)0)), N(() => L<decimal,decimal>((decimal x) => x > 0 ? (int)x : (int)(x-0.9999999999999999m) )) },
 					{ M(() => Math.Floor ((double)0)), N(() => L<double,double>  ((double  x) => x > 0 ? (int)x : (int)(x-0.9999999999999999) )) },
 				}},
@@ -1362,7 +1453,7 @@ namespace LinqToDB.Linq
 
 				#region Sybase
 
-				{ ProviderName.Sybase, new Dictionary<MemberInfo,IExpressionInfo> {
+				{ ProviderName.Sybase, new Dictionary<MemberHelper.MemberInfoWithType,IExpressionInfo> {
 					{ M(() => Sql.PadRight("",0,' ')), N(() => L<string,int?,char?,string>((p0,p1,p2) => p0.Length > p1 ? p0 : p0 + Replicate(p2, p1 - p0.Length))) },
 					{ M(() => Sql.PadLeft ("",0,' ')), N(() => L<string,int?,char?,string>((p0,p1,p2) => p0.Length > p1 ? p0 : Replicate(p2, p1 - p0.Length) + p0)) },
 					{ M(() => Sql.Trim    ("")      ), N(() => L<string?,string?>         ( p0        => Sql.TrimLeft(Sql.TrimRight(p0)))) },
@@ -1390,7 +1481,7 @@ namespace LinqToDB.Linq
 
 				#region Access
 
-				{ ProviderName.Access, new Dictionary<MemberInfo,IExpressionInfo> {
+				{ ProviderName.Access, new Dictionary<MemberHelper.MemberInfoWithType,IExpressionInfo> {
 					{ M(() => Sql.Stuff   ("",0,0,"")), N(() => L<string?,int?,int?,string?,string?>((p0,p1,p2,p3) => AltStuff(p0, p1, p2, p3))) },
 					{ M(() => Sql.PadRight("",0,' ') ), N(() => L<string,int?,char?,string>         ((p0,p1,p2)    => p0.Length > p1 ? p0 : p0 + Replicate(p2, p1 - p0.Length))) },
 					{ M(() => Sql.PadLeft ("",0,' ') ), N(() => L<string,int?,char?,string>         ((p0,p1,p2)    => p0.Length > p1 ? p0 : Replicate(p2, p1 - p0.Length) + p0)) },
@@ -1447,7 +1538,7 @@ namespace LinqToDB.Linq
 
 				#region SapHana
 
-				{ ProviderName.SapHana, new Dictionary<MemberInfo,IExpressionInfo> {
+				{ ProviderName.SapHana, new Dictionary<MemberHelper.MemberInfoWithType,IExpressionInfo> {
 					{ M(() => Sql.Degrees((decimal?)0)), N(() => L<decimal?,decimal?>((decimal? v) => (decimal?) (v!.Value * (180 / (decimal)Math.PI)))) },
 					{ M(() => Sql.Degrees((double?) 0)), N(() => L<double?, double?> ((double?  v) => (double?)  (v!.Value * (180 / Math.PI)))) },
 					{ M(() => Sql.Degrees((short?)  0)), N(() => L<short?,  short?>  ((short?   v) => (short?)   (v!.Value * (180 / Math.PI)))) },
@@ -1471,22 +1562,22 @@ namespace LinqToDB.Linq
 				{
 					int pCount;
 
-					if (member.Key is MethodInfo method)
+					if (member.Key.MemberInfo is MethodInfo method)
 					{
 						pCount = method.GetParameters().Length;
 
 						if (!method.IsStatic)
 							pCount++;
 					}
-					else if (member.Key is ConstructorInfo ctor)
+					else if (member.Key.MemberInfo is ConstructorInfo ctor)
 					{
 						pCount = ctor.GetParameters().Length;
 					}
-					else if (member.Key is PropertyInfo prop)
+					else if (member.Key.MemberInfo is PropertyInfo prop)
 					{
 						pCount = prop.GetGetMethod()?.IsStatic == true ? 0 : 1;
 					}
-					else if (member.Key is FieldInfo field)
+					else if (member.Key.MemberInfo is FieldInfo field)
 					{
 						pCount = field.IsStatic ? 0 : 1;
 					}
@@ -1508,53 +1599,26 @@ namespace LinqToDB.Linq
 
 		#endregion
 
-		class TypeMember
-		{
-			public TypeMember(Type type, string member)
-			{
-				Type   = type;
-				Member = member;
-			}
-
-			public readonly Type   Type;
-			public readonly string Member;
-
-			public override bool Equals(object? obj)
-			{
-				return obj is TypeMember other
-					&& Type == other.Type
-					&& string.Equals(Member, other.Member);
-			}
-
-			public override int GetHashCode()
-			{
-				unchecked
-				{
-					return (Type.GetHashCode() * 397) ^ Member.GetHashCode();
-				}
-			}
-		}
-
 		public static void MapMember(string providerName, Type objectType, MemberInfo memberInfo, LambdaExpression expression)
 		{
-			if (!_typeMembers.TryGetValue(providerName, out var dic))
-				_typeMembers.Add(providerName, dic = new Dictionary<TypeMember,IExpressionInfo>());
+			if (!Members.TryGetValue(providerName, out var dic))
+				Members.Add(providerName, dic = new Dictionary<MemberHelper.MemberInfoWithType, IExpressionInfo>());
 
 			var expr = new LazyExpressionInfo();
 
 			expr.SetExpression(expression);
 
-			dic[new TypeMember(objectType, memberInfo.Name)] = expr;
+			dic[new MemberHelper.MemberInfoWithType(objectType, memberInfo)] = expr;
 
 			_checkUserNamespace = false;
 		}
 
 		public static void MapMember(string providerName, Type objectType, MemberInfo memberInfo, IExpressionInfo expressionInfo)
 		{
-			if (!_typeMembers.TryGetValue(providerName, out var dic))
-				_typeMembers.Add(providerName, dic = new Dictionary<TypeMember,IExpressionInfo>());
+			if (!Members.TryGetValue(providerName, out var dic))
+				Members.Add(providerName, dic = new Dictionary<MemberHelper.MemberInfoWithType, IExpressionInfo>());
 
-			dic[new TypeMember(objectType, memberInfo.Name)] = expressionInfo;
+			dic[new MemberHelper.MemberInfoWithType(objectType, memberInfo)] = expressionInfo;
 
 			_checkUserNamespace = false;
 		}
@@ -1572,36 +1636,10 @@ namespace LinqToDB.Linq
 		public static void MapMember<T1,T2,T3,T4,T5,TR>(string providerName, Type objectType, Expression<Func<T1,T2,T3,T4,T5,TR>> memberInfo, Expression<Func<T1,T2,T3,T4,T5,TR>> expression) { MapMember(providerName, objectType, MemberHelper.GetMemberInfo(memberInfo), expression); }
 		public static void MapMember<T1,T2,T3,T4,T5,TR>(                     Type objectType, Expression<Func<T1,T2,T3,T4,T5,TR>> memberInfo, Expression<Func<T1,T2,T3,T4,T5,TR>> expression) { MapMember("",           objectType, MemberHelper.GetMemberInfo(memberInfo), expression); }
 
-		static TypeMember MT<T>(Expression<Func<object>> func)
+		static MemberHelper.MemberInfoWithType MT<T>(Expression<Func<object>> func)
 		{
-			return new TypeMember(typeof(T), MemberHelper.GetMemberInfo(func).Name);
+			return NormalizeMemeberInfo(MemberHelper.GetMemberInfoWithType(func));
 		}
-
-		static readonly Dictionary<string,Dictionary<TypeMember,IExpressionInfo>> _typeMembers = new Dictionary<string,Dictionary<TypeMember,IExpressionInfo>>
-		{
-			{ "", new Dictionary<TypeMember,IExpressionInfo> {
-
-				#region ToString
-
-				{ MT<bool   >(() => ((bool)   true).ToString()), N(() => L<bool,    string>((bool    p0) => Sql.ConvertTo<string>.From(p0) )) },
-				{ MT<byte   >(() => ((byte)    0)  .ToString()), N(() => L<byte,    string>((byte    p0) => Sql.ConvertTo<string>.From(p0) )) },
-				{ MT<char   >(() => ((char)   '0') .ToString()), N(() => L<char,    string>((char    p0) => Sql.ConvertTo<string>.From(p0) )) },
-				{ MT<decimal>(() => ((decimal) 0)  .ToString()), N(() => L<decimal, string>((decimal p0) => Sql.ConvertTo<string>.From(p0) )) },
-				{ MT<double >(() => ((double)  0)  .ToString()), N(() => L<double,  string>((double  p0) => Sql.ConvertTo<string>.From(p0) )) },
-				{ MT<short  >(() => ((short)   0)  .ToString()), N(() => L<short,   string>((short   p0) => Sql.ConvertTo<string>.From(p0) )) },
-				{ MT<int    >(() => ((int)     0)  .ToString()), N(() => L<int,     string>((int     p0) => Sql.ConvertTo<string>.From(p0) )) },
-				{ MT<long   >(() => ((long)    0)  .ToString()), N(() => L<long,    string>((long    p0) => Sql.ConvertTo<string>.From(p0) )) },
-				{ MT<sbyte  >(() => ((sbyte)   0)  .ToString()), N(() => L<sbyte,   string>((sbyte   p0) => Sql.ConvertTo<string>.From(p0) )) },
-				{ MT<float  >(() => ((float)   0)  .ToString()), N(() => L<float,   string>((float   p0) => Sql.ConvertTo<string>.From(p0) )) },
-//				{ MT<string >(() => ((string) "0") .ToString()), N(() => L<string,  string>((string  p0) => p0                             )) },
-				{ MT<ushort >(() => ((ushort)  0)  .ToString()), N(() => L<ushort,  string>((ushort  p0) => Sql.ConvertTo<string>.From(p0) )) },
-				{ MT<uint   >(() => ((uint)    0)  .ToString()), N(() => L<uint,    string>((uint    p0) => Sql.ConvertTo<string>.From(p0) )) },
-				{ MT<ulong  >(() => ((ulong)   0)  .ToString()), N(() => L<ulong,   string>((ulong   p0) => Sql.ConvertTo<string>.From(p0) )) },
-
-				#endregion
-
-			}},
-		};
 
 		#region Sql specific
 

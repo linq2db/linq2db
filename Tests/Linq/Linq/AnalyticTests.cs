@@ -1668,5 +1668,91 @@ namespace Tests.Linq
 					.ToList();
 			}
 		}
+
+		[Test]
+		public void LeadLagWithStringDefault([DataSources(
+			TestProvName.AllSqlServer2008Minus,
+			TestProvName.AllSybase,
+			ProviderName.SqlCe,
+			TestProvName.AllAccess,
+			ProviderName.Firebird,
+			TestProvName.MySql55,
+#if NETFRAMEWORK
+			ProviderName.SQLiteMS, // TODO: time to switch to modern sqlite.ms version for netfx
+#endif
+			// doesn't support 3-rd parameter for LEAD
+			TestProvName.MariaDB)] string context)
+		{
+			// #3423: LEAD and LAG `default` parameter can be a type other than int.
+			var data = new Issue1799Table3[] 
+			{
+				new() { ProcessID = 1, ProcessName = "One" },
+				new() { ProcessID = 2, ProcessName = "Two" },
+			};
+			using (var db    = GetDataContext(context))
+			using (var table = db.CreateLocalTable(data))
+			{
+				var leads = table.Select(p => Sql.Ext.Lead(p.ProcessName, 1, "None")
+												 	 .Over().OrderBy(p.ProcessID).ToValue())
+								 .ToArray();
+
+				CollectionAssert.AreEqual(new[] { "Two", "None" }, leads);
+
+
+				var lags = table.Select(p => Sql.Ext.Lag(p.ProcessName, 1, "None")
+												 	.Over().OrderBy(p.ProcessID).ToValue())
+								.ToArray();
+
+				CollectionAssert.AreEqual(new[] { "None", "One" }, lags);
+			}
+		}
+		
+		[Test]
+		public void LeadLagOverloads([DataSources(
+			TestProvName.AllSqlServer2008Minus,
+			TestProvName.AllSybase,
+			ProviderName.SqlCe,
+			TestProvName.AllAccess,
+#if NETFRAMEWORK
+			ProviderName.SQLiteMS, // TODO: time to switch to modern sqlite.ms version for netfx
+#endif
+			ProviderName.Firebird,
+			TestProvName.MySql55)] string context)
+		{
+			var data = new Issue1799Table3[] 
+			{
+				new() { ProcessID = 1, ProcessName = "One" },
+				new() { ProcessID = 2, ProcessName = "Two" },
+				new() { ProcessID = 3, ProcessName = "Three" },
+				new() { ProcessID = 4, ProcessName = "Four" },
+			};
+			using (var db    = GetDataContext(context))
+			using (var table = db.CreateLocalTable(data))
+			{
+				var leads = table.Select(p => Sql.Ext.Lead(p.ProcessName, 2)
+												 	 .Over().OrderBy(p.ProcessID).ToValue())
+								 .ToArray();
+
+				CollectionAssert.AreEqual(new string?[] { "Three", "Four", null, null }, leads);
+
+				leads = table.Select(p => Sql.Ext.Lead(p.ProcessName)
+											 	 .Over().OrderBy(p.ProcessID).ToValue())
+							 .ToArray();
+
+				CollectionAssert.AreEqual(new string?[] { "Two", "Three", "Four", null }, leads);
+
+				var lags = table.Select(p => Sql.Ext.Lag(p.ProcessName, 2)
+												 	.Over().OrderBy(p.ProcessID).ToValue())
+								.ToArray();
+
+				CollectionAssert.AreEqual(new string?[] { null, null, "One", "Two" }, lags);
+				
+				lags = table.Select(p => Sql.Ext.Lag(p.ProcessName)
+										 	.Over().OrderBy(p.ProcessID).ToValue())
+							.ToArray();
+
+				CollectionAssert.AreEqual(new string?[] { null, "One", "Two", "Three" }, lags);
+			}
+		}
 	}
 }

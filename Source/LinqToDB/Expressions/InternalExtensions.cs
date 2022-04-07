@@ -635,6 +635,7 @@ namespace LinqToDB.Expressions
 		/// </summary>
 		/// <param name="expression">Expression to optimize.</param>
 		/// <returns>Optimized expression.</returns>
+		[return: NotNullIfNotNull("expression")]
 		public static Expression? OptimizeExpression(this Expression? expression)
 		{
 			return _optimizeExpressionVisitor.Transform(expression);

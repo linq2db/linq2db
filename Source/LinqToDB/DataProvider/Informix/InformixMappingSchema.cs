@@ -29,6 +29,8 @@ namespace LinqToDB.DataProvider.Informix
 			SetValueToSqlConverter(typeof(bool), (sb,dt,v) => sb.Append('\'').Append((bool)v ? 't' : 'f').Append('\''));
 
 			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
+			SetDataType(typeof(byte), new SqlDataType(DataType.Int16, typeof(byte)));
+			SetDataType(typeof(byte?), new SqlDataType(DataType.Int16, typeof(byte)));
 
 			SetValueToSqlConverter(typeof(string),   (sb,dt,v)   => ConvertStringToSql  (sb, v.ToString()!));
 			SetValueToSqlConverter(typeof(char),     (sb,dt,v)   => ConvertCharToSql    (sb, (char)v));

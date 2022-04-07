@@ -272,6 +272,11 @@
 		Interval,
 
 		/// <summary>
+		/// PostgreSQL Enum type.
+		/// </summary>
+		Enum,
+
+		/// <summary>
 		/// Oracle BFILE data type.
 		/// </summary>
 		BFile,

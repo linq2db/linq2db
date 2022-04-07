@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -15,29 +14,29 @@ namespace LinqToDB.SqlQuery
 	{
 		#region Init
 
-		public SqlTable()
+		protected internal SqlTable(Type objectType, int? sourceId)
 		{
-			SourceID = Interlocked.Increment(ref SelectQuery.SourceIDCounter);
+			SourceID   = sourceId ?? Interlocked.Increment(ref SelectQuery.SourceIDCounter);
+			ObjectType = objectType;
 		}
 
 		internal SqlTable(
 			int id, string? name, string alias,
 			string? server, string? database, string? schema, string? physicalName,
-			Type?                    objectType,
+			Type                     objectType,
 			SequenceNameAttribute[]? sequenceAttributes,
 			IEnumerable<SqlField>    fields,
 			SqlTableType             sqlTableType,
 			ISqlExpression[]?        tableArguments,
 			TableOptions             tableOptions)
+			: this(objectType, id)
 		{
-			SourceID           = id;
 			Name               = name;
 			Alias              = alias;
 			Server             = server;
 			Database           = database;
 			Schema             = schema;
 			PhysicalName       = physicalName;
-			ObjectType         = objectType;
 			SequenceAttributes = sequenceAttributes;
 
 			AddRange(fields);
@@ -52,7 +51,7 @@ namespace LinqToDB.SqlQuery
 		#region Init from type
 
 		public SqlTable(MappingSchema mappingSchema, Type objectType, string? physicalName = null)
-			: this()
+			: this(objectType, null)
 		{
 			if (mappingSchema == null) throw new ArgumentNullException(nameof(mappingSchema));
 
@@ -62,7 +61,6 @@ namespace LinqToDB.SqlQuery
 			Database     = ed.DatabaseName;
 			Schema       = ed.SchemaName;
 			Name         = ed.TableName;
-			ObjectType   = objectType;
 			PhysicalName = physicalName ?? Name;
 			TableOptions = ed.TableOptions;
 
@@ -130,7 +128,7 @@ namespace LinqToDB.SqlQuery
 		#region Init from Table
 
 		public SqlTable(SqlTable table)
-			: this()
+			: this(table.ObjectType, null)
 		{
 			Alias              = table.Alias;
 			Server             = table.Server;
@@ -138,18 +136,17 @@ namespace LinqToDB.SqlQuery
 			Schema             = table.Schema;
 			Name               = table.Name;
 			PhysicalName       = table.PhysicalName;
-			ObjectType         = table.ObjectType;
 			SequenceAttributes = table.SequenceAttributes;
 
 			foreach (var field in table.Fields)
 				Add(new SqlField(field));
 
-			SqlTableType   = table.SqlTableType;
-			TableArguments = table.TableArguments;
+			SqlTableType     = table.SqlTableType;
+			TableArguments   = table.TableArguments;
 		}
 
 		public SqlTable(SqlTable table, IEnumerable<SqlField> fields, ISqlExpression[] tableArguments)
-			: this()
+			: this(table.ObjectType, null)
 		{
 			Alias              = table.Alias;
 			Server             = table.Server;
@@ -157,8 +154,8 @@ namespace LinqToDB.SqlQuery
 			Schema             = table.Schema;
 			Name               = table.Name;
 			PhysicalName       = table.PhysicalName;
-			ObjectType         = table.ObjectType;
 			SequenceAttributes = table.SequenceAttributes;
+			TableOptions       = table.TableOptions;
 
 			AddRange(fields);
 
@@ -193,7 +190,7 @@ namespace LinqToDB.SqlQuery
 		public         string?           Server         { get; set; }
 		public         string?           Database       { get; set; }
 		public         string?           Schema         { get; set; }
-		public         Type?             ObjectType     { get; set; }
+		public         Type              ObjectType     { get; protected internal set; }
 		public virtual string?           PhysicalName   { get; set; }
 		public virtual SqlTableType      SqlTableType   { get; set; }
 		public         ISqlExpression[]? TableArguments { get; set; }
@@ -216,7 +213,7 @@ namespace LinqToDB.SqlQuery
 			_identityFields.Clear();
 		}
 
-		public SequenceNameAttribute[]? SequenceAttributes { get; internal set; }
+		public SequenceNameAttribute[]? SequenceAttributes { get; protected internal set; }
 
 		private SqlField? _all;
 		public  SqlField   All => _all ??= SqlField.All(this);
@@ -263,7 +260,7 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlTableSource Members
 
-		public int SourceID { get; protected set; }
+		public int SourceID { get; }
 
 		List<ISqlExpression>? _keyFields;
 
@@ -288,7 +285,7 @@ namespace LinqToDB.SqlQuery
 
 		#region IQueryElement Members
 
-		public virtual QueryElementType ElementType { [DebuggerStepThrough] get; } = QueryElementType.SqlTable;
+		public virtual QueryElementType ElementType => QueryElementType.SqlTable;
 
 		public virtual StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
 		{
@@ -304,8 +301,8 @@ namespace LinqToDB.SqlQuery
 
 		public bool CanBeNull { get; set; } = true;
 
-		int   ISqlExpression.Precedence => Precedence.Primary;
-		Type? ISqlExpression.SystemType => ObjectType;
+		int  ISqlExpression.Precedence => Precedence.Primary;
+		Type ISqlExpression.SystemType => ObjectType;
 
 		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
 		{
@@ -341,23 +338,23 @@ namespace LinqToDB.SqlQuery
 		internal static SqlTable Inserted(Type objectType)
 			=> new (objectType)
 			{
-				Name         = "INSERTED",
-				PhysicalName = "INSERTED",
-				Schema       = null,
-				Database     = null,
-				Server       = null,
-				SqlTableType = SqlTableType.SystemTable,
+				Name             = "INSERTED",
+				PhysicalName     = "INSERTED",
+				Schema           = null,
+				Database         = null,
+				Server           = null,
+				SqlTableType     = SqlTableType.SystemTable,
 			};
 
 		internal static SqlTable Deleted(Type objectType)
 			=> new (objectType)
 			{
-				Name         = "DELETED",
-				PhysicalName = "DELETED",
-				Schema       = null,
-				Database     = null,
-				Server       = null,
-				SqlTableType = SqlTableType.SystemTable,
+				Name             = "DELETED",
+				PhysicalName     = "DELETED",
+				Schema           = null,
+				Database         = null,
+				Server           = null,
+				SqlTableType     = SqlTableType.SystemTable,
 			};
 
 		#endregion

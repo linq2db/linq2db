@@ -11,7 +11,7 @@ namespace Tests.UserTests
 	public class Issue2895Tests : TestBase
 	{
 		[Table]
-		public class InternalEmail 
+		public class InternalEmail
 		{
 			[PrimaryKey, Column]
 			public int Id { get; set; }
@@ -146,14 +146,14 @@ namespace Tests.UserTests
 		public void EagerLoadingTest([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable<InternalEmail>(new[]{new InternalEmail{Id = 10, UserId = 1, RequestId = 1}}))
-			using (db.CreateLocalTable<Request>(new[]{new Request{Id = 1, UserId = 1}}))
-			using (db.CreateLocalTable<User>(new[]{new User{Id = 1}}))
-			using (db.CreateLocalTable<Admin>(new[]{new Admin{Id = 1}}))
-			using (db.CreateLocalTable<EmailAdminAssociation>(new[]{new EmailAdminAssociation{AdminId = 1, EmailId = 10}}))
-			using (db.CreateLocalTable<Email>(new[]{new Email{Id = 10}}))
-			using (db.CreateLocalTable<EmailAttachmentAssociation>(new[]{new EmailAttachmentAssociation{EmailId = 10, AttachmentId = 100}}))
-			using (db.CreateLocalTable<Attachment>(new[]{new Attachment{Id = 100}}))
+			using (db.CreateLocalTable<InternalEmail>(new[] { new InternalEmail { Id = 10, UserId = 1, RequestId = 1 } }))
+			using (db.CreateLocalTable<Request>(new[] { new Request { Id = 1, UserId = 1 } }))
+			using (db.CreateLocalTable<User>(new[] { new User { Id = 1 } }))
+			using (db.CreateLocalTable<Admin>(new[] { new Admin { Id = 1 } }))
+			using (db.CreateLocalTable<EmailAdminAssociation>(new[] { new EmailAdminAssociation { AdminId = 1, EmailId = 10 } }))
+			using (db.CreateLocalTable<Email>(new[] { new Email { Id = 10 } }))
+			using (db.CreateLocalTable<EmailAttachmentAssociation>(new[] { new EmailAttachmentAssociation { EmailId = 10, AttachmentId = 100 } }))
+			using (db.CreateLocalTable<Attachment>(new[] { new Attachment { Id = 100 } }))
 			using (db.CreateLocalTable<Document>(new[]
 			{
 				new Document{AttachmentId = 100, Name = "Some Doc 1", Position = 1},

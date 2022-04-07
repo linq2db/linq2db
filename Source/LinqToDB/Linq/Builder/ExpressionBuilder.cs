@@ -16,6 +16,7 @@ namespace LinqToDB.Linq.Builder
 	using Mapping;
 	using SqlQuery;
 	using LinqToDB.Expressions;
+	using LinqToDB.Reflection;
 
 	partial class ExpressionBuilder
 	{
@@ -62,6 +63,7 @@ namespace LinqToDB.Linq.Builder
 			new CastBuilder                (),
 			new OfTypeBuilder              (),
 			new AsUpdatableBuilder         (),
+			new AsValueInsertableBuilder   (),
 			new LoadWithBuilder            (),
 			new DropBuilder                (),
 			new TruncateBuilder            (),
@@ -295,10 +297,10 @@ namespace LinqToDB.Linq.Builder
 				{
 					if (isQueryable)
 					{
-						var p = sequence.ExpressionsToReplace.Single(static s => s.Path.NodeType == ExpressionType.Parameter);
+						var p = sequence.ExpressionsToReplace!.Single(static s => s.Path.NodeType == ExpressionType.Parameter);
 
 						return Expression.Call(
-							((MethodCallExpression)expr).Method.DeclaringType,
+							((MethodCallExpression)expr).Method.DeclaringType!,
 							"Select",
 							new[] { p.Path.Type, paramType },
 							sequence.Expression,
@@ -437,7 +439,7 @@ namespace LinqToDB.Linq.Builder
 							{
 								var mi = EnumerableMethods
 									.First(static m => m.Name == "Count" && m.GetParameters().Length == 1)
-									.MakeGenericMethod(me.Expression.Type.GetItemType()!);
+									.MakeGenericMethod(me.Expression!.Type.GetItemType()!);
 
 								return new TransformInfo(Expression.Call(null, mi, me.Expression));
 							}
@@ -1370,7 +1372,7 @@ namespace LinqToDB.Linq.Builder
 				var parameters = new[] { p };
 				if (!HasParametersDefined(expr, parameters))
 				{
-					// trying to evaluate Querybale method.
+					// trying to evaluate Queryable method.
 					if (expression.NodeType == ExpressionType.Call && HasParametersDefined(expr, parameters.Concat(allowedParameters)))
 					{
 						var callExpression = (MethodCallExpression)expression;
@@ -1404,10 +1406,10 @@ namespace LinqToDB.Linq.Builder
 				var path =
 					Expression.Call(
 						Expression.Constant(_query),
-						MemberHelper.MethodOf<Query>(a => a.GetIQueryable(0, null!)),
-						ExpressionInstances.Int32(n), accessor ?? Expression.Constant(null, typeof(Expression)));
+						Methods.Query.GetIQueryable,
+						ExpressionInstances.Int32(n), accessor ?? Expression.Constant(null, typeof(Expression)), Expression.Constant(true));
 
-				var qex = _query.GetIQueryable(n, expression);
+				var qex = _query.GetIQueryable(n, expression, force: false);
 
 				if (expression.NodeType == ExpressionType.Call && qex.NodeType == ExpressionType.Call)
 				{

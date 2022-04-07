@@ -225,20 +225,19 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void CancelableAsyncEnumerableTest([DataSources] string context)
+		public void CancellableAsyncEnumerableTest([DataSources] string context)
 		{
 			using var cts = new CancellationTokenSource();
 			var cancellationToken = cts.Token;
 			cts.Cancel();
 			using var db = GetDataContext(context);
 			var resultQuery = db.Parent.AsAsyncEnumerable().WithCancellation(cancellationToken);
-			var list = new List<Parent>();
 			Assert.ThrowsAsync<OperationCanceledException>(async () =>
 			{
 				try
 				{
 					await foreach (var row in resultQuery)
-						list.Add(row);
+					{ }
 				}
 				catch (OperationCanceledException)
 				{

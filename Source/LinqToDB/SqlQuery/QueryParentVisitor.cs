@@ -391,6 +391,10 @@ namespace LinqToDB.SqlQuery
 					VisitX((SqlValuesTable)element);
 					break;
 
+				case QueryElementType.SqlRow:
+					VisitX((SqlRow)element);
+					break;
+
 				case QueryElementType.MergeOperationClause:
 					VisitX((SqlMergeOperationClause)element);
 					break;
@@ -521,12 +525,13 @@ namespace LinqToDB.SqlQuery
 			if (outputClause == null)
 				return;
 
-			VisitX(outputClause.SourceTable);
 			VisitX(outputClause.DeletedTable);
 			VisitX(outputClause.InsertedTable);
 			VisitX(outputClause.OutputTable);
-			if (outputClause.OutputQuery != null)
-				VisitX(outputClause.OutputQuery);
+
+			if (outputClause.OutputColumns != null)
+				foreach (var item in outputClause.OutputColumns)
+					Visit(item);
 
 			if (outputClause.HasOutputItems)
 				foreach (var item in outputClause.OutputItems)
@@ -561,6 +566,11 @@ namespace LinqToDB.SqlQuery
 		void VisitX(SqlExpression element)
 		{
 			foreach (var v in element.Parameters) Visit(v);
+		}
+
+		void VisitX(SqlRow element)
+		{
+			foreach (var v in element.Values) Visit(v);
 		}
 
 		void VisitX(SqlObjectExpression element)

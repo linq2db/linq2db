@@ -13,6 +13,8 @@ using LinqToDB.Mapping;
 
 #if NET472
 using IBM.Data.DB2;
+#elif NET5_0_OR_GREATER
+using IBM.Data.Db2;
 #else
 using IBM.Data.DB2.Core;
 #endif

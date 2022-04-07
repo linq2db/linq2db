@@ -46,10 +46,11 @@ namespace LinqToDB.DataProvider.DB2
 
 		protected DB2MappingSchema(string configuration) : base(configuration)
 		{
-			SetValueToSqlConverter(typeof(Guid), (sb,dt,v) => ConvertGuidToSql(sb, (Guid)v));
-
 			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
+			SetDataType(typeof(byte), new SqlDataType(DataType.Int16, typeof(byte)));
+			SetDataType(typeof(byte?), new SqlDataType(DataType.Int16, typeof(byte)));
 
+			SetValueToSqlConverter(typeof(Guid),     (sb,dt,v) => ConvertBinaryToSql  (sb, ((Guid)v).ToByteArray()));
 			SetValueToSqlConverter(typeof(string),   (sb,dt,v) => ConvertStringToSql  (sb, v.ToString()!));
 			SetValueToSqlConverter(typeof(char),     (sb,dt,v) => ConvertCharToSql    (sb, (char)v));
 			SetValueToSqlConverter(typeof(byte[]),   (sb,dt,v) => ConvertBinaryToSql  (sb, (byte[])v));
@@ -147,25 +148,6 @@ namespace LinqToDB.DataProvider.DB2
 		}
 
 		internal static readonly DB2MappingSchema Instance = new ();
-
-		static void ConvertGuidToSql(StringBuilder stringBuilder, Guid value)
-		{
-			var s = value.ToString("N");
-
-			stringBuilder
-				.Append("Cast(x'")
-				.Append(s.Substring( 6,  2))
-				.Append(s.Substring( 4,  2))
-				.Append(s.Substring( 2,  2))
-				.Append(s.Substring( 0,  2))
-				.Append(s.Substring(10,  2))
-				.Append(s.Substring( 8,  2))
-				.Append(s.Substring(14,  2))
-				.Append(s.Substring(12,  2))
-				.Append(s.Substring(16, 16))
-				.Append("' as char(16) for bit data)")
-				;
-		}
 	}
 
 	public class DB2zOSMappingSchema : MappingSchema

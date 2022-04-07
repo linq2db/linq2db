@@ -327,7 +327,7 @@ SELECT
 			// now we have similar issue with MySqlConnector
 			// https://github.com/mysql-net/MySqlConnector/issues/722
 			if (rv != null && rv.AsEnumerable()
-					.Any(r => r.Field<string>("ColumnName").StartsWith("@_cnet_param_")
+					.Any(r => r.Field<string>("ColumnName")!.StartsWith("@_cnet_param_")
 						||    r.Field<string>("ColumnName") == "\ue001\b\v"))
 				rv = null;
 

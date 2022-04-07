@@ -102,6 +102,7 @@ namespace Tests
 				case TestProvName.PostgreSQL11                       :
 				case TestProvName.PostgreSQL12                       :
 				case TestProvName.PostgreSQL13                       :
+				case TestProvName.PostgreSQL14                       :
 				case ProviderName.DB2                                :
 				case ProviderName.Sybase                             :
 				case ProviderName.SybaseManaged                      :
@@ -217,6 +218,7 @@ namespace Tests
 				case TestProvName.PostgreSQL11                       :
 				case TestProvName.PostgreSQL12                       :
 				case TestProvName.PostgreSQL13                       :
+				case TestProvName.PostgreSQL14                       :
 				case ProviderName.DB2                                :
 				case ProviderName.Sybase                             :
 				case ProviderName.SybaseManaged                      :
@@ -307,6 +309,17 @@ namespace Tests
 			}
 		}
 
+		public static Version GetSqliteVersion(DataConnection db)
+		{
+			using (var cmd = db.CreateCommand())
+			{
+				cmd.CommandText = "select sqlite_version();";
+				var version     = (string)cmd.ExecuteScalar()!;
+
+				return new Version(version);
+			}
+		}
+
 		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, string? tableName = null, TableOptions tableOptions = TableOptions.NotSet)
 			where T : notnull
 		{
@@ -373,6 +386,7 @@ namespace Tests
 				case TestProvName.PostgreSQL11                       :
 				case TestProvName.PostgreSQL12                       :
 				case TestProvName.PostgreSQL13                       :
+				case TestProvName.PostgreSQL14                       :
 					return "POSIX";
 				case ProviderName.SQLiteClassic                      :
 				case ProviderName.SQLiteMS                           :

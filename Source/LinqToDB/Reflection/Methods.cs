@@ -12,6 +12,7 @@ namespace LinqToDB.Reflection
 	using Linq;
 	using LinqToDB.Common;
 	using LinqToDB.Extensions;
+	using LinqToDB.SqlQuery;
 
 	/// <summary>
 	/// This API supports the LinqToDB infrastructure and is not intended to be used  directly from your code.
@@ -19,6 +20,11 @@ namespace LinqToDB.Reflection
 	/// </summary>
 	public static class Methods
 	{
+		internal static class Query
+		{
+			public static readonly MethodInfo GetIQueryable = MemberHelper.MethodOf<Linq.Query>(a => a.GetIQueryable(default, default!, default));
+		}
+
 		public static class ADONet
 		{
 			public static readonly MethodInfo IsDBNull      = MemberHelper.MethodOf<IDataRecord> (r => r.IsDBNull(0));
@@ -142,21 +148,20 @@ namespace LinqToDB.Reflection
 
 			public static class GroupBy
 			{
-				public static readonly MethodInfo Rollup       = MemberHelper.MethodOfGeneric<Sql.IGroupBy>(g => g.Rollup<object>(null!));
-				public static readonly MethodInfo Cube         = MemberHelper.MethodOfGeneric<Sql.IGroupBy>(g => g.Cube<object>(null!));
-				public static readonly MethodInfo GroupingSets = MemberHelper.MethodOfGeneric<Sql.IGroupBy>(g => g.GroupingSets<object>(null!));
+				public static readonly MethodInfo Rollup       = MemberHelper.MethodOfGeneric<global::LinqToDB.Sql.IGroupBy>(g => g.Rollup<object>(null!));
+				public static readonly MethodInfo Cube         = MemberHelper.MethodOfGeneric<global::LinqToDB.Sql.IGroupBy>(g => g.Cube<object>(null!));
+				public static readonly MethodInfo GroupingSets = MemberHelper.MethodOfGeneric<global::LinqToDB.Sql.IGroupBy>(g => g.GroupingSets<object>(null!));
 
-				public static readonly MethodInfo Grouping     = MemberHelper.MethodOf(() => Sql.Grouping(null!));
-
+				public static readonly MethodInfo Grouping     = MemberHelper.MethodOf(() => global::LinqToDB.Sql.Grouping(null!));
 			}
 
 			public static class SqlExt
 			{
-				public static readonly MethodInfo ToNotNull     = MemberHelper.MethodOfGeneric<int?>(i => Sql.ToNotNull(i));
-				public static readonly MethodInfo ToNotNullable = MemberHelper.MethodOfGeneric<int?>(i => Sql.ToNotNullable(i));
-				public static readonly MethodInfo Alias         = MemberHelper.MethodOfGeneric<int?>(i => Sql.Alias(i, ""));
-				// don't use MethodOfGeneric here (Sql.Property treatened in specifal way by it)
-				public static readonly MethodInfo Property      = typeof(Sql).GetMethodEx(nameof(Sql.Property))!.GetGenericMethodDefinition();
+				public static readonly MethodInfo ToNotNull     = MemberHelper.MethodOfGeneric<int?>(i => global::LinqToDB.Sql.ToNotNull(i));
+				public static readonly MethodInfo ToNotNullable = MemberHelper.MethodOfGeneric<int?>(i => global::LinqToDB.Sql.ToNotNullable(i));
+				public static readonly MethodInfo Alias         = MemberHelper.MethodOfGeneric<int?>(i => global::LinqToDB.Sql.Alias(i, ""));
+				// don't use MethodOfGeneric here (Sql.Property treatened in special way by it)
+				public static readonly MethodInfo Property      = typeof(global::LinqToDB.Sql).GetMethodEx(nameof(global::LinqToDB.Sql.Property))!.GetGenericMethodDefinition();
 			}
 
 			public static class Update
@@ -213,6 +218,8 @@ namespace LinqToDB.Reflection
 
 				public static class T
 				{
+					public static readonly MethodInfo AsValueInsertable = MemberHelper.MethodOfGeneric<ITable<LW1>>(q => q.AsValueInsertable());
+
 					public static readonly MethodInfo Value             = MemberHelper.MethodOfGeneric<ITable<LW1>>(q => q.Value(e => e.Value1, 1));
 					public static readonly MethodInfo ValueExpression   = MemberHelper.MethodOfGeneric<ITable<LW1>>(q => q.Value(e => e.Value1, () => 1));
 
@@ -325,9 +332,20 @@ namespace LinqToDB.Reflection
 			}
 
 			public static class DataParameter
-			{ 
+			{
 				public static readonly PropertyInfo DbDataType = MemberHelper.PropertyOf<Data.DataParameter>(dp => dp.DbDataType);
 				public static readonly PropertyInfo Value      = MemberHelper.PropertyOf<Data.DataParameter>(dp => dp.Value);
+			}
+
+			internal static class Exceptions
+			{
+				public static readonly MethodInfo DefaultInheritanceMappingException = MemberHelper.MethodOf(() => Linq.Exceptions.DefaultInheritanceMappingException(null!, null!));
+			}
+
+			internal static class Sql
+			{
+				public static readonly ConstructorInfo SqlParameterConstructor = MemberHelper.ConstructorOf(() => new SqlParameter(default(DbDataType), default(string), null));
+				public static readonly ConstructorInfo SqlValueConstructor     = MemberHelper.ConstructorOf(() => new SqlValue    (default(DbDataType), null));
 			}
 		}
 

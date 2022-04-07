@@ -85,7 +85,7 @@ namespace LinqToDB.DataProvider.Access
 				select new ColumnInfo
 				{
 					TableID     = c.Field<string>("TABLE_CAT") + "." + c.Field<string>("TABLE_SCHEM") + "." + c.Field<string>("TABLE_NAME"),
-					Name        = c.Field<string>("COLUMN_NAME"),
+					Name        = c.Field<string>("COLUMN_NAME")!,
 					IsNullable  = c.Field<short> ("NULLABLE") == 1,
 					Ordinal     = Converter.ChangeTypeTo<int>(c["ORDINAL_POSITION"]),
 					DataType    = dt?.TypeName,
@@ -134,7 +134,7 @@ namespace LinqToDB.DataProvider.Access
 				select new ProcedureParameterInfo()
 				{
 					ProcedureID   = catalog + "." + schema + "." + name,
-					ParameterName = p.Field<string>("COLUMN_NAME").TrimStart('[').TrimEnd(']'),
+					ParameterName = p.Field<string>("COLUMN_NAME")!.TrimStart('[').TrimEnd(']'),
 					IsIn          = true,
 					IsOut         = false,
 					Length        = dt.CreateParameters != null && dt.CreateParameters.Contains("length")    ? size : null,

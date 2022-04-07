@@ -11,7 +11,6 @@ namespace LinqToDB.DataProvider.Informix
 	using LinqToDB.Linq.Internal;
 	using Mapping;
 	using SqlProvider;
-	using SqlQuery;
 
 	public class InformixDataProvider : DynamicDataProviderBase<InformixProviderAdapter>
 	{
@@ -25,13 +24,13 @@ namespace LinqToDB.DataProvider.Informix
 			SqlProviderFlags.IsParameterOrderDependent         = !Adapter.IsIDSProvider;
 			SqlProviderFlags.IsSubQueryTakeSupported           = false;
 			SqlProviderFlags.IsInsertOrUpdateSupported         = false;
-			SqlProviderFlags.IsGroupByExpressionSupported      = false;
 			SqlProviderFlags.IsCrossJoinSupported              = false;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
 			SqlProviderFlags.IsDistinctOrderBySupported        = false;
 			SqlProviderFlags.IsUpdateFromSupported             = false;
 			SqlProviderFlags.IsGroupByColumnRequred            = true;
+			SqlProviderFlags.RowConstructorSupport             = RowFeature.Equality | RowFeature.In;
 
 			SetCharField("CHAR",  (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("NCHAR", (r,i) => r.GetString(i).TrimEnd(' '));
@@ -121,12 +120,16 @@ namespace LinqToDB.DataProvider.Informix
 				value    = value?.ToString();
 				dataType = dataType.WithDataType(DataType.Char);
 			}
+			else if (value is byte byteValue && dataType.DataType == DataType.Int16)
+			{
+				value = (short)byteValue;
+			}
 			else if (value is bool b)
 			{
 				// IDS provider needs short values for bulk copy, but chars still for regular SQL
 				if (parameter is BulkCopyReader.Parameter)
 				{
-					value    = (short)(b == true ? 1 : 0);
+					value    = (short)(b ? 1 : 0);
 					dataType = dataType.WithDataType(DataType.Int16);
 				}
 				else

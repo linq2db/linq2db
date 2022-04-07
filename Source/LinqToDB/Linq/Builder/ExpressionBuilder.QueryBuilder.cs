@@ -181,7 +181,7 @@ namespace LinqToDB.Linq.Builder
 									var prevCount  = ctx.SelectQuery.Select.Columns.Count;
 									var expression = ctx.BuildExpression(ma, 0, context.enforceServerSide);
 
-									if (expression.NodeType == ExpressionType.Extension && expression is DefaultValueExpression 
+									if (expression.NodeType == ExpressionType.Extension && expression is DefaultValueExpression
 																						&& ma.Expression?.NodeType == ExpressionType.Parameter)
 									{
 										var objExpression = context.builder.BuildExpression(ctx, ma.Expression, context.enforceServerSide, context.alias);
@@ -296,7 +296,7 @@ namespace LinqToDB.Linq.Builder
 								{
 									foreach (var arg in ce.Arguments.Skip(1))
 										if (!context.builder._skippedExpressions.Contains(arg))
-										context.builder._skippedExpressions.Add(arg);
+											context.builder._skippedExpressions.Add(arg);
 
 									if (context.builder.IsSubQuery(context.context, ce))
 									{
@@ -373,15 +373,19 @@ namespace LinqToDB.Linq.Builder
 							{
 								var mi      = (MemberInitExpression)expr;
 								var newPart = (NewExpression)context.builder.BuildExpression(context.context, mi.NewExpression, context.enforceServerSide);
+
 								List<MemberBinding>? bindings = null;
+
 								for (var i = 0; i < mi.Bindings.Count; i++)
 								{
 									var binding    = mi.Bindings[i];
 									var newBinding = binding;
+
 									if (binding is MemberAssignment assignment)
 									{
 										var argument = context.builder.ConvertAssignmentArgument(context.context, assignment.Expression,
 											assignment.Member, context.enforceServerSide, assignment.Member.Name);
+
 										if (argument != assignment.Expression)
 										{
 											newBinding = Expression.Bind(assignment.Member, argument);
@@ -390,8 +394,7 @@ namespace LinqToDB.Linq.Builder
 
 									if (newBinding != binding)
 									{
-										if (bindings == null)
-											bindings = mi.Bindings.Take(i).ToList();
+										bindings ??= mi.Bindings.Take(i).ToList();
 									}
 
 									bindings?.Add(newBinding);
@@ -432,9 +435,9 @@ namespace LinqToDB.Linq.Builder
 
 			var cond = (ConditionalExpression)expr;
 
-			if (cond.Test.NodeType == ExpressionType.Equal || cond.Test.NodeType == ExpressionType.NotEqual)
-			{
-				var b = (BinaryExpression)cond.Test;
+					if (cond.Test.NodeType == ExpressionType.Equal || cond.Test.NodeType == ExpressionType.NotEqual)
+					{
+						var b = (BinaryExpression)cond.Test;
 
 				Expression? cnt = null;
 				Expression? obj = null;
@@ -522,7 +525,7 @@ namespace LinqToDB.Linq.Builder
 				switch (expr)
 				{
 					case MemberExpression me:
-						expr = me.Expression;
+						expr = me.Expression!;
 						continue;
 					case MethodCallExpression mc when mc.IsQueryable():
 						expr = mc.Arguments[0];
@@ -540,8 +543,8 @@ namespace LinqToDB.Linq.Builder
 			//TODO: Multiply query check should be smarter, possibly not needed if we create fallback mechanism
 			var result = !ce.IsQueryable(FirstSingleBuilder.MethodNames)
 			       && typeof(IEnumerable).IsSameOrParentOf(ce.Type)
-			       && ce.Type != typeof(string) 
-			       && !ce.Type.IsArray 
+			       && ce.Type != typeof(string)
+			       && !ce.Type.IsArray
 			       && !ce.IsAggregate(mappingSchema);
 
 			return result;
@@ -554,14 +557,14 @@ namespace LinqToDB.Linq.Builder
 			public Expression?          Expression;
 		}
 
-		Dictionary<IBuildContext,List<SubQueryContextInfo>>? _buildContextCache;
+		Dictionary<(IBuildContext,MethodCallExpression),List<SubQueryContextInfo>>? _buildContextCache;
 
 		SubQueryContextInfo GetSubQueryContext(IBuildContext context, MethodCallExpression expr)
 		{
-			if (_buildContextCache == null || !_buildContextCache.TryGetValue(context, out var sbi))
+			if (_buildContextCache == null || !_buildContextCache.TryGetValue((context, expr), out var sbi))
 			{
 				_buildContextCache ??= new ();
-				_buildContextCache[context] = sbi = new List<SubQueryContextInfo>();
+				_buildContextCache[(context, expr)] = sbi = new List<SubQueryContextInfo>();
 			}
 
 			foreach (var item in sbi)
@@ -651,7 +654,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			return BuildSql(type, idx, QueryHelper.GetValueConverter(sourceExpression));
 		}
-		
+
 		#endregion
 
 		#region IsNonSqlMember
@@ -937,7 +940,7 @@ namespace LinqToDB.Linq.Builder
 									{
 										var me = (MemberExpression)e;
 
-										var parentType = me.Expression.Type;
+										var parentType = me.Expression!.Type;
 										var childType  = me.Type;
 
 										var queryMethod = AssociationHelper.CreateAssociationQueryLambda(context.context.Builder,

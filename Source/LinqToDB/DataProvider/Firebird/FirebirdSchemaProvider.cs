@@ -61,8 +61,8 @@ namespace LinqToDB.DataProvider.Firebird
 				select new PrimaryKeyInfo
 				{
 					TableID        = pk.Field<string>("TABLE_CATALOG") + "." + pk.Field<string>("TABLE_SCHEMA") + "." + pk.Field<string>("TABLE_NAME"),
-					PrimaryKeyName = pk.Field<string>("PK_NAME"),
-					ColumnName     = pk.Field<string>("COLUMN_NAME"),
+					PrimaryKeyName = pk.Field<string>("PK_NAME")!,
+					ColumnName     = pk.Field<string>("COLUMN_NAME")!,
 					Ordinal        = ConvertTo<int>.From(pk["ORDINAL_POSITION"]),
 				}
 			).ToList();
@@ -81,7 +81,7 @@ namespace LinqToDB.DataProvider.Firebird
 				select new ColumnInfo
 				{
 					TableID      = c.Field<string>("TABLE_CATALOG") + "." + c.Field<string>("TABLE_SCHEMA") + "." + c.Field<string>("TABLE_NAME"),
-					Name         = c.Field<string>("COLUMN_NAME"),
+					Name         = c.Field<string>("COLUMN_NAME")!,
 					DataType     = dt?.TypeName,
 					IsNullable   = Converter.ChangeTypeTo<bool>(c["IS_NULLABLE"]),
 					Ordinal      = Converter.ChangeTypeTo<int> (c["ORDINAL_POSITION"]),
@@ -106,11 +106,11 @@ namespace LinqToDB.DataProvider.Firebird
 				from c in cols.AsEnumerable()
 				select new ForeignKeyInfo
 				{
-					Name         = c.Field<string>("CONSTRAINT_NAME"),
+					Name         = c.Field<string>("CONSTRAINT_NAME")!,
 					ThisTableID  = c.Field<string>("TABLE_CATALOG") + "." + c.Field<string>("TABLE_SCHEMA") + "." + c.Field<string>("TABLE_NAME"),
-					ThisColumn   = c.Field<string>("COLUMN_NAME"),
+					ThisColumn   = c.Field<string>("COLUMN_NAME")!,
 					OtherTableID = c.Field<string>("REFERENCED_TABLE_CATALOG") + "." + c.Field<string>("REFERENCED_TABLE_SCHEMA") + "." + c.Field<string>("REFERENCED_TABLE_NAME"),
-					OtherColumn  = c.Field<string>("REFERENCED_COLUMN_NAME"),
+					OtherColumn  = c.Field<string>("REFERENCED_COLUMN_NAME")!,
 					Ordinal      = Converter.ChangeTypeTo<int> (c["ORDINAL_POSITION"]),
 				}
 			).ToList();

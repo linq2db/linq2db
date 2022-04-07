@@ -8,6 +8,7 @@
 		<tags>
 			linq linq2db LinqToDB ORM database DB SQL SqlServer Access SqlCe SqlServerCe MySql Firebird SQLite Sybase Oracle ODP PostgreSQL DB2 Informix SapHana
 		</tags>
+		<readme>README.md</readme>
 		<dependencies>
 			<group targetFramework=".NETFramework4.5" >
 				<dependency id="linq2db" version="3.0.0" />
@@ -22,8 +23,16 @@
 	</metadata>
 
 	<files>
-		<file src="..\Source\LinqToDB.Tools\bin\Release\**\linq2db.Tools.pdb" target="lib\" />
-		<file src="..\Source\LinqToDB.Tools\bin\Release\**\linq2db.Tools.xml" target="lib\" />
-		<file src="..\Source\LinqToDB.Tools\bin\Release\**\linq2db.Tools.dll" target="lib\" />
+		<file src="..\Nuget\README.Tools.md"                                              target="README.md"           />
+
+		<file src="..\Source\LinqToDB.Tools\bin\Release\net45\linq2db.Tools.pdb"          target="lib\net45\"          />
+		<file src="..\Source\LinqToDB.Tools\bin\Release\net45\linq2db.Tools.xml"          target="lib\net45\"          />
+		<file src="..\Source\LinqToDB.Tools\bin\Release\net45\linq2db.Tools.dll"          target="lib\net45\"          />
+		<file src="..\Source\LinqToDB.Tools\bin\Release\net46\linq2db.Tools.pdb"          target="lib\net46\"          />
+		<file src="..\Source\LinqToDB.Tools\bin\Release\net46\linq2db.Tools.xml"          target="lib\net46\"          />
+		<file src="..\Source\LinqToDB.Tools\bin\Release\net46\linq2db.Tools.dll"          target="lib\net46\"          />
+		<file src="..\Source\LinqToDB.Tools\bin\Release\netstandard2.0\linq2db.Tools.pdb" target="lib\netstandard2.0\" />
+		<file src="..\Source\LinqToDB.Tools\bin\Release\netstandard2.0\linq2db.Tools.xml" target="lib\netstandard2.0\" />
+		<file src="..\Source\LinqToDB.Tools\bin\Release\netstandard2.0\linq2db.Tools.dll" target="lib\netstandard2.0\" />
 	</files>
 </package>

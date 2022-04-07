@@ -34,6 +34,9 @@ namespace LinqToDB.DataProvider.Oracle
 			SqlProviderFlags.IsUpdateFromSupported             = false;
 			SqlProviderFlags.DefaultMultiQueryIsolationLevel   = IsolationLevel.ReadCommitted;
 
+			SqlProviderFlags.RowConstructorSupport = RowFeature.Equality | RowFeature.CompareToSelect | RowFeature.In |
+			                                         RowFeature.Update   | RowFeature.Overlaps;
+
 			if (version >= OracleVersion.v12)
 			{
 				SqlProviderFlags.IsApplyJoinSupported          = true;

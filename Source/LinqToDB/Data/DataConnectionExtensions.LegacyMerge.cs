@@ -24,8 +24,7 @@ namespace LinqToDB.Data
 				.MappingSchema
 				.GetEntityDescriptor(typeof(T))
 				.Columns
-				.Where(c => !c.IsPrimaryKey && !c.IsIdentity && !c.SkipOnUpdate)
-				.Any();
+				.Any(c => !c.IsPrimaryKey && !c.IsIdentity && !c.SkipOnUpdate);
 		}
 
 		/// <summary>
