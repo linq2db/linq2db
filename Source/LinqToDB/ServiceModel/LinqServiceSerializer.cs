@@ -1143,7 +1143,7 @@ namespace LinqToDB.ServiceModel
 							var elem = (SqlTableSource)e;
 
 							Append(elem.Source);
-							Append(elem._alias);
+							Append(elem.RawAlias);
 							Append(elem.Joins);
 
 							break;
