@@ -54,9 +54,9 @@ namespace LinqToDB.Data
 		public CommandType     CommandType = CommandType.Text;
 		/// <summary>
 		/// Command behavior flags. See <see cref="System.Data.CommandBehavior"/> for more details.
-		/// Default value: <see cref="CommandBehavior.Default"/>.
+		/// Default value: <see cref="Configuration.DefaultCommandBehavior"/>.
 		/// </summary>
-		public CommandBehavior CommandBehavior;
+		public CommandBehavior CommandBehavior { get; set; } = Configuration.DefaultCommandBehavior;
 
 		#region Init
 		/// <summary>
@@ -1688,8 +1688,7 @@ namespace LinqToDB.Data
 				expr = expr.Replace(dataReaderExpr, dataReaderVar);
 				expr = Expression.Block(new[] { dataReaderVar }, assignment, expr);
 
-				if (Configuration.OptimizeForSequentialAccess)
-					expr = SequentialAccessHelper.OptimizeMappingExpressionForSequentialAccess(expr, dataReader.FieldCount, reduce: false);
+				expr = SequentialAccessHelper.OptimizeMappingExpressionForSequentialAccess(expr, dataReader.FieldCount, reduce: false);
 			}
 
 			var lex = Expression.Lambda<Func<DbDataReader,T>>(expr, parameter);

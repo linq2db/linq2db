@@ -27,7 +27,7 @@ namespace Tests.Playground
 		}
 
 		[Test]
-		public void DynamicQueryViaDynamic([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServerSequentialAccess)] string context, [Values(1, 10)] int param)
+		public void DynamicQueryViaDynamic([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values(1, 10)] int param)
 		{
 			var data = RawDynamicData.Seed();
 
@@ -39,9 +39,9 @@ namespace Tests.Playground
 				var casted = result.Select(x =>
 						new RawDynamicData
 						{
-							AId = (int)x.AId,
+							AId    = (int)x.AId,
 							AValue = (int)x.AValue,
-							BId = (int)x.BId,
+							BId    = (int)x.BId,
 							BValue = (int)x.BValue
 						})
 					.ToArray();
@@ -51,7 +51,7 @@ namespace Tests.Playground
 		}
 
 		[Test]
-		public void DynamicQueryViaObject([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServerSequentialAccess)] string context, [Values(1, 10)] int param)
+		public void DynamicQueryViaObject([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values(1, 10)] int param)
 		{
 			var data = RawDynamicData.Seed();
 
@@ -63,9 +63,9 @@ namespace Tests.Playground
 				var casted = result.OfType<dynamic>().Select(x =>
 						new RawDynamicData
 						{
-							AId = (int)x.AId,
+							AId    = (int)x.AId,
 							AValue = (int)x.AValue,
-							BId = (int)x.BId,
+							BId    = (int)x.BId,
 							BValue = (int)x.BValue
 						})
 					.ToArray();

@@ -1429,7 +1429,7 @@ namespace LinqToDB.Data
 
 		DataReaderWrapper ExecuteReader()
 		{
-			return ExecuteDataReader(CommandBehavior.Default);
+			return ExecuteDataReader(Configuration.DefaultCommandBehavior);
 		}
 
 		internal DataReaderWrapper ExecuteDataReader(CommandBehavior commandBehavior)

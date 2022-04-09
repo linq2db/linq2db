@@ -42,7 +42,9 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestParameters([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var conn = GetDataConnection(context, suppressSequentialAccess: true))
+			// slow-mode required
+			using (new DefaultCommandBehavior(CommandBehavior.Default))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<string>("SELECT @p",        new { p =  1  }), Is.EqualTo("1"));
 				Assert.That(conn.Execute<string>("SELECT @p",        new { p = "1" }), Is.EqualTo("1"));

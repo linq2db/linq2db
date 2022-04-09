@@ -129,11 +129,7 @@ namespace Tests
 		public const string SqlServer2017MS              = "SqlServer.2017.MS";
 		public const string SqlServer2019MS              = "SqlServer.2019.MS";
 
-		public const string SqlServerSequentialAccess    = "SqlServer.SA";
-		public const string SqlServerSequentialAccessMS  = "SqlServer.SA.MS";
-		public const string AllSqlServerSequentialAccess = $"{SqlServerSequentialAccess},{SqlServerSequentialAccessMS}";
-
-		public const string SqlServerContained                  = "SqlServer.Contained";
+		public const string SqlServerContained           = "SqlServer.Contained";
 		public const string SqlServerContainedMS         = "SqlServer.Contained.MS";
 		public const string AllSqlServerContained        = $"{SqlServerContained},{SqlServerContainedMS}";
 
@@ -147,7 +143,7 @@ namespace Tests
 		public const string AllSqlServer2014             = $"{ProviderName.SqlServer2014},{SqlServer2014MS}";
 		public const string AllSqlServer2016             = $"{ProviderName.SqlServer2016},{SqlServer2016MS}";
 		public const string AllSqlServer2017             = $"{ProviderName.SqlServer2017},{SqlServer2017MS}";
-		public const string AllSqlServer2019             = $"{ProviderName.SqlServer2019},{SqlServer2019MS},{AllSqlServerSequentialAccess},{AllSqlServerContained}";
+		public const string AllSqlServer2019             = $"{ProviderName.SqlServer2019},{SqlServer2019MS},{AllSqlServerContained}";
 		public const string AllSqlServer2008Minus        = $"{AllSqlServer2005},{AllSqlServer2008}";
 		public const string AllSqlServer2019Plus         = $"{AllSqlServer2019},{AllSqlAzure}";
 		public const string AllSqlServer2017Plus         = $"{AllSqlServer2017},{AllSqlServer2019Plus}";

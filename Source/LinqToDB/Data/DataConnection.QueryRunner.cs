@@ -586,7 +586,7 @@ namespace LinqToDB.Data
 
 				InitFirstCommand(_dataConnection, _executionQuery!);
 
-				_dataReader = await _dataConnection.ExecuteDataReaderAsync(_dataConnection.GetCommandBehavior(CommandBehavior.Default), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				_dataReader = await _dataConnection.ExecuteDataReaderAsync(_dataConnection.GetCommandBehavior(Configuration.DefaultCommandBehavior), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 				return new DataReaderAsync(_dataReader);
 			}

@@ -4,6 +4,7 @@ using LinqToDB.DataProvider.Firebird;
 using LinqToDB.DataProvider.Oracle;
 using LinqToDB.Linq;
 using System;
+using System.Data;
 using Tests.Model;
 
 namespace Tests
@@ -21,20 +22,6 @@ namespace Tests
 		void IDisposable.Dispose()
 		{
 			FirebirdConfiguration.IdentifierQuoteMode = _oldMode;
-		}
-	}
-
-	public class OptimizeForSequentialAccess : IDisposable
-	{
-		private readonly bool _original = Configuration.OptimizeForSequentialAccess;
-		public OptimizeForSequentialAccess(bool enable)
-		{
-			Configuration.OptimizeForSequentialAccess = enable;
-		}
-
-		public void Dispose()
-		{
-			Configuration.OptimizeForSequentialAccess = _original;
 		}
 	}
 
@@ -271,5 +258,20 @@ namespace Tests
 		}
 	}
 
+	public class DefaultCommandBehavior : IDisposable
+	{
+		private readonly CommandBehavior _old;
+
+		public DefaultCommandBehavior(CommandBehavior behavior)
+		{
+			_old = Configuration.DefaultCommandBehavior;
+			Configuration.DefaultCommandBehavior = behavior;
+		}
+
+		void IDisposable.Dispose()
+		{
+			Configuration.DefaultCommandBehavior = _old;
+		}
+	}
 
 }

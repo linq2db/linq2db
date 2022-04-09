@@ -9,21 +9,15 @@ namespace Tests
 {
 	internal class TestLinqService : LinqService
 	{
-		public bool SuppressSequentialAccess { get; set; }
-
-		public TestLinqService(MappingSchema? ms, IInterceptor? interceptor, bool suppressSequentialAccess)
+		public TestLinqService(MappingSchema? ms, IInterceptor? interceptor)
 			: base(ms)
 		{
-			_interceptor             = interceptor;
-			SuppressSequentialAccess = suppressSequentialAccess;
+			_interceptor = interceptor;
 		}
 
 		public override DataConnection CreateDataContext(string? configuration)
 		{
 			var dc = base.CreateDataContext(configuration);
-
-			if (!SuppressSequentialAccess && configuration?.IsAnyOf(TestProvName.AllSqlServerSequentialAccess) == true)
-				dc.AddInterceptor(SequentialAccessCommandInterceptor.Instance);
 
 			if (_interceptor != null)
 				dc.AddInterceptor(_interceptor);

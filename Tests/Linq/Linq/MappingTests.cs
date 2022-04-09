@@ -10,6 +10,7 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
+	using System.Data;
 	using Model;
 #if NET472
 	using System.ServiceModel;
@@ -444,7 +445,9 @@ namespace Tests.Linq
 		{
 			GetProviderName(context, out var isLinqService);
 
-			using (var db = GetDataContext(context, testLinqService : false, suppressSequentialAccess: true))
+			// slow mode doesn't work with SequentialAccess behavior
+			using (new DefaultCommandBehavior(CommandBehavior.Default))
+			using (var db = GetDataContext(context, testLinqService : false))
 			{
 #if NET472
 				if (isLinqService)
@@ -467,7 +470,9 @@ namespace Tests.Linq
 		{
 			GetProviderName(context, out var isLinqService);
 
-			using (var db = GetDataContext(context, suppressSequentialAccess: true))
+			// slow mode doesn't work with SequentialAccess behavior
+			using (new DefaultCommandBehavior(CommandBehavior.Default))
+			using (var db = GetDataContext(context))
 			{
 				var ex = Assert.Throws<LinqToDBConvertException>(() => db.GetTable<BadMapping>().Select(_ => new { _.BadEnum }).ToList())!;
 				Assert.AreEqual("lastname", ex.ColumnName!.ToLower());

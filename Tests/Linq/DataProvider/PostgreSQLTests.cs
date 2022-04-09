@@ -30,6 +30,7 @@ using Newtonsoft.Json.Linq;
 
 namespace Tests.DataProvider
 {
+	using System.Data;
 	using System.Threading.Tasks;
 	using LinqToDB.Tools;
 	using Model;
@@ -51,7 +52,9 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestParameters([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			using (var conn = GetDataConnection(context, suppressSequentialAccess: true))
+			// slow-mode required
+			using (new DefaultCommandBehavior(CommandBehavior.Default))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<string>("SELECT :p"       , new { p = "1" }),                                Is.EqualTo("1"));
 				Assert.That(conn.Execute<int>   ("SELECT :p"       , new { p = new DataParameter { Value = 1 } }),    Is.EqualTo(1));

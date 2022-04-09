@@ -65,12 +65,16 @@ namespace LinqToDB.Common
 		public static bool ContinueOnCapturedContext = true;
 
 		/// <summary>
-		/// Enables mapping expression to be compatible with <see cref="CommandBehavior.SequentialAccess"/> behavior.
-		/// Note that it doesn't switch linq2db to use <see cref="CommandBehavior.SequentialAccess"/> behavior for
-		/// queries, so this optimization could be used for <see cref="CommandBehavior.Default"/> too.
-		/// Default value: <c>false</c>.
+		/// Specify default command behavior mode.
+		/// Supported values:
+		/// <list type="bullet">
+		/// <item><see cref="CommandBehavior.Default"/>Enables arbitrary access to data record fields.</item>
+		/// <item><see cref="CommandBehavior.SequentialAccess"/>Enables sequential access to data record fields. Providers could use this mode to optimize data reads from database.</item>
+		/// </list>
+		/// Assigning any other value is not supported and could result in unexpected behavior.
+		/// Default value: <see cref="CommandBehavior.SequentialAccess"/>.
 		/// </summary>
-		public static bool OptimizeForSequentialAccess;
+		public static CommandBehavior DefaultCommandBehavior = CommandBehavior.SequentialAccess;
 
 		/// <summary>
 		/// Determines the length after which logging of binary data in SQL will be truncated.

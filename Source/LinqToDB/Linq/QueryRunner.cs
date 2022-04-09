@@ -159,8 +159,7 @@ namespace LinqToDB.Linq
 						});
 				}
 
-				if (Configuration.OptimizeForSequentialAccess)
-					expression = SequentialAccessHelper.OptimizeMappingExpressionForSequentialAccess(expression, dataReader.FieldCount, reduce: false);
+				expression = SequentialAccessHelper.OptimizeMappingExpressionForSequentialAccess(expression, dataReader.FieldCount, reduce: false);
 
 				return (Expression<Func<IQueryRunner, DbDataReader, T>>)expression;
 			}

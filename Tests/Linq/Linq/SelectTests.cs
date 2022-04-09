@@ -1339,7 +1339,7 @@ namespace Tests.Linq
 		public void Select_TernaryNullableValue([DataSources] string context, [Values(null, 0, 1)] int? value)
 		{
 			// mapping fails and fallbacks to slow-mapper
-			using (var db = GetDataContext(context, suppressSequentialAccess: true))
+			using (var db = GetDataContext(context))
 			{
 				var result = db.Select(() => Sql.AsSql(value) == null ? (int?)null : Sql.AsSql(value!.Value));
 
@@ -1354,7 +1354,7 @@ namespace Tests.Linq
 		public void Select_TernaryNullableValueReversed([DataSources] string context, [Values(null, 0, 1)] int? value)
 		{
 			// mapping fails and fallbacks to slow-mapper
-			using (var db = GetDataContext(context, suppressSequentialAccess: true))
+			using (var db = GetDataContext(context))
 			{
 				var result = db.Select(() => Sql.AsSql(value) != null ? Sql.AsSql(value!.Value) : (int?)null);
 
@@ -1369,7 +1369,7 @@ namespace Tests.Linq
 		public void Select_TernaryNullableValue_Nested([DataSources] string context, [Values(null, 0, 1)] int? value)
 		{
 			// mapping fails and fallbacks to slow-mapper
-			using (var db = GetDataContext(context, suppressSequentialAccess: true))
+			using (var db = GetDataContext(context))
 			{
 				var result = db.Select(() => Sql.AsSql(value) == null ? (int?)null : (Sql.AsSql(value!.Value) < 2 ? Sql.AsSql(value.Value) : 2 + Sql.AsSql(value.Value)));
 
@@ -1384,7 +1384,7 @@ namespace Tests.Linq
 		public void Select_TernaryNullableValueReversed_Nested([DataSources] string context, [Values(null, 0, 1)] int? value)
 		{
 			// mapping fails and fallbacks to slow-mapper
-			using (var db = GetDataContext(context, suppressSequentialAccess: true))
+			using (var db = GetDataContext(context))
 			{
 				var result = db.Select(() => Sql.AsSql(value) != null ? (Sql.AsSql(value!.Value) < 2 ? Sql.AsSql(value.Value) : Sql.AsSql(value.Value) + 4) : (int?)null);
 
@@ -1753,8 +1753,7 @@ namespace Tests.Linq
 			// System.Data.SqlClient
 			// Microsoft.Data.SqlClient
 			// SqlCe
-			using (new OptimizeForSequentialAccess(true))
-			using (var db = GetDataContext(context, interceptor: SequentialAccessCommandInterceptor.Instance, suppressSequentialAccess: true))
+			using (var db = GetDataContext(context))
 			{
 				var q = db.Person
 					.Select(p => new
@@ -1774,10 +1773,8 @@ namespace Tests.Linq
 		[Test]
 		public void SequentialAccessTest_Complex([DataSources] string context)
 		{
-			// fields read out-of-order, multiple times and with different types
-			using (new OptimizeForSequentialAccess(true))
-			// suppressSequentialAccess: true to avoid interceptor added twice
-			using (var db = GetDataContext(context, interceptor: SequentialAccessCommandInterceptor.Instance, suppressSequentialAccess: true))
+			// without mapper optimization fields read out-of-order, multiple times and with different types
+			using (var db = GetDataContext(context))
 			{
 				Assert.AreEqual(typeof(InheritanceParentBase), InheritanceParent[0].GetType());
 				Assert.AreEqual(typeof(InheritanceParent1)   , InheritanceParent[1].GetType());

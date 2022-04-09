@@ -9,6 +9,7 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
+	using System.Data;
 	using LinqToDB.Common;
 	using Model;
 
@@ -1721,7 +1722,9 @@ namespace Tests.Linq
 		{
 			GetProviderName(context, out var isLinqService);
 
-			using (var db = GetDataContext(context, suppressSequentialAccess: true))
+			// slow mode doesn't work with SequentialAccess behavior
+			using (new DefaultCommandBehavior(CommandBehavior.Default))
+			using (var db = GetDataContext(context))
 			{
 				using (new Cleaner(db))
 				{

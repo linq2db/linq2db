@@ -369,7 +369,7 @@ namespace Tests
 					return;
 				}
 
-				host        = new ServiceHost(_service = new TestLinqService(ms, null, false) { AllowUpdates = true }, new Uri("net.tcp://localhost:" + (IP + TestExternals.RunID)));
+				host        = new ServiceHost(_service = new TestLinqService(ms, null) { AllowUpdates = true }, new Uri("net.tcp://localhost:" + (IP + TestExternals.RunID)));
 				_isHostOpen = true;
 			}
 
@@ -425,10 +425,9 @@ namespace Tests
 
 		protected ITestDataContext GetDataContext(
 			string         configuration,
-			MappingSchema? ms                       = null,
-			bool           testLinqService          = true,
-			IInterceptor?  interceptor              = null,
-			bool           suppressSequentialAccess = false)
+			MappingSchema? ms              = null,
+			bool           testLinqService = true,
+			IInterceptor?  interceptor     = null)
 		{
 			if (configuration.EndsWith(".LinqService"))
 			{
@@ -440,10 +439,9 @@ namespace Tests
 				RemoteDataContextBase dx;
 
 				if (testLinqService)
-					dx = new ServiceModel.TestLinqServiceDataContext(new TestLinqService(ms, interceptor, suppressSequentialAccess) { AllowUpdates = true }) { Configuration = str };
+					dx = new ServiceModel.TestLinqServiceDataContext(new TestLinqService(ms, interceptor) { AllowUpdates = true }) { Configuration = str };
 				else
 				{
-					_service!.SuppressSequentialAccess = suppressSequentialAccess;
 					if (interceptor != null)
 						_service!.AddInterceptor(interceptor);
 
@@ -451,7 +449,6 @@ namespace Tests
 						IP + TestExternals.RunID,
 						() =>
 						{
-							_service!.SuppressSequentialAccess = false;
 							if (interceptor != null)
 								_service!.RemoveInterceptor();
 						}) { Configuration = str };
@@ -468,15 +465,14 @@ namespace Tests
 #endif
 			}
 
-			return GetDataConnection(configuration, ms, interceptor, suppressSequentialAccess: suppressSequentialAccess);
+			return GetDataConnection(configuration, ms, interceptor);
 		}
 
 		protected TestDataConnection GetDataConnection(
 			string         configuration,
-			MappingSchema? ms                       = null,
-			IInterceptor?  interceptor              = null,
-			IRetryPolicy?  retryPolicy              = null,
-			bool           suppressSequentialAccess = false)
+			MappingSchema? ms            = null,
+			IInterceptor?  interceptor   = null,
+			IRetryPolicy?  retryPolicy   = null)
 		{
 			if (configuration.EndsWith(".LinqService"))
 			{
@@ -489,16 +485,7 @@ namespace Tests
 			if (ms != null)
 				res.AddMappingSchema(ms);
 
-			// add extra mapping schema to not share mappers with other sql2017/2019 providers
-			// use same schema to use cache within test provider scope
-			if (configuration.IsAnyOf(TestProvName.AllSqlServerSequentialAccess))
-			{
-				if (!suppressSequentialAccess)
-					res.AddInterceptor(SequentialAccessCommandInterceptor.Instance);
-
-				res.AddMappingSchema(_sequentialAccessSchema);
-			}
-			//else if (configuration == TestProvName.SqlServer2019FastExpressionCompiler)
+			//if (configuration == TestProvName.SqlServer2019FastExpressionCompiler)
 			//	res.AddMappingSchema(_fecSchema);
 
 			if (interceptor != null)
@@ -510,8 +497,7 @@ namespace Tests
 			return res;
 		}
 
-		private static readonly MappingSchema _sequentialAccessSchema = new ();
-		private static readonly MappingSchema _fecSchema = new ();
+		//private static readonly MappingSchema _fecSchema = new ();
 
 		protected static char GetParameterToken(string context)
 		{
@@ -1363,10 +1349,6 @@ namespace Tests
 		{
 			// SequentialAccess-enabled provider setup
 			var (provider, _) = NUnitUtils.GetContext(TestExecutionContext.CurrentContext.CurrentTest);
-			if (provider?.IsAnyOf(TestProvName.AllSqlServerSequentialAccess) == true)
-			{
-				Configuration.OptimizeForSequentialAccess = true;
-			}
 			//else if (provider == TestProvName.SqlServer2019FastExpressionCompiler)
 			{
 				//Compilation.SetExpressionCompiler(_ => ExpressionCompiler.CompileFast(_, true));
@@ -1378,10 +1360,6 @@ namespace Tests
 		{
 			// SequentialAccess-enabled provider cleanup
 			var (provider, _) = NUnitUtils.GetContext(TestExecutionContext.CurrentContext.CurrentTest);
-			if (provider?.IsAnyOf(TestProvName.AllSqlServerSequentialAccess) == true)
-			{
-				Configuration.OptimizeForSequentialAccess = false;
-			}
 			//if (provider == TestProvName.SqlServer2019FastExpressionCompiler)
 			{
 				//Compilation.SetExpressionCompiler(null);
