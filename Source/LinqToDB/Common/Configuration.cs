@@ -62,7 +62,7 @@ namespace LinqToDB.Common
 		/// Defines value to pass to <see cref="Task.ConfigureAwait(bool)"/> method for all linq2db internal await operations.
 		/// Default value: <c>false</c>.
 		/// </summary>
-		public static bool ContinueOnCapturedContext = false;
+		public static bool ContinueOnCapturedContext;
 
 		/// <summary>
 		/// Enables mapping expression to be compatible with <see cref="CommandBehavior.SequentialAccess"/> behavior.
