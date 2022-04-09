@@ -129,7 +129,7 @@ namespace Tests
 
 			Configuration.Linq.TraceMapperExpression = false;
 			// Configuration.Linq.GenerateExpressionTest  = true;
-			var assemblyPath = typeof(TestBase).Assembly.GetPath()!;
+			var assemblyPath = typeof(TestBase).Assembly.GetPath();
 
 #if NET472
 			// this is needed for machine without GAC-ed sql types (e.g. machine without SQL Server installed or CI)
