@@ -598,7 +598,7 @@ namespace Tests.Extensions
 		}
 
 		[Test]
-		public void CteTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public void CteTest([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
 		{
 			using var db = GetDataContext(context);
 

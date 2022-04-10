@@ -19,7 +19,7 @@ namespace Tests.Linq
 	{
 		public static string[] CteSupportedProviders = new[]
 		{
-			TestProvName.AllSqlServer2008Plus,
+			TestProvName.AllSqlServer,
 			TestProvName.AllFirebird,
 			TestProvName.AllPostgreSQL,
 			ProviderName.DB2,
