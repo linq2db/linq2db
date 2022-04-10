@@ -77,7 +77,6 @@ namespace LinqToDB.ServiceModel
 				if (withType)
 					Append(type);
 
-				// TODO: should we preserve DBNull is AST?
 				if (value == null || value is DBNull)
 					Append((string?)null);
 				else if (!type.IsArray)

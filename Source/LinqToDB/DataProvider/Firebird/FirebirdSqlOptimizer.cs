@@ -320,7 +320,7 @@ namespace LinqToDB.DataProvider.Firebird
 					if (!replace)
 						return e;
 
-					// TODO: temporary guard against cast to unknown type (Variant)
+					// guard against cast to unknown type (Variant)
 					if (paramValue.DbDataType.DataType == DataType.Undefined && paramValue.DbDataType.SystemType == typeof(object))
 						return e;
 

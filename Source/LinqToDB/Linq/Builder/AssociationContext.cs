@@ -110,7 +110,6 @@ namespace LinqToDB.Linq.Builder
 
 		public void SetAlias(string? alias)
 		{
-			//TODO
 		}
 
 		public ISqlExpression? GetSubQuery(IBuildContext context)

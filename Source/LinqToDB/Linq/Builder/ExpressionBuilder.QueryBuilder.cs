@@ -548,7 +548,7 @@ namespace LinqToDB.Linq.Builder
 
 		bool IsMultipleQuery(MethodCallExpression ce, MappingSchema mappingSchema)
 		{
-			//TODO: Multiply query check should be smarter, possibly not needed if we create fallback mechanism
+			//TODO: Multiple query check should be smarter, possibly not needed if we create fallback mechanism
 			var result = !ce.IsQueryable(FirstSingleBuilder.MethodNames)
 			       && typeof(IEnumerable).IsSameOrParentOf(ce.Type)
 			       && ce.Type != typeof(string)

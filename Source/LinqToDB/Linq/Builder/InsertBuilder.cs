@@ -279,7 +279,6 @@ namespace LinqToDB.Linq.Builder
 						QueryRunner.SetScalarQuery(query);
 						break;
 					case InsertType.InsertOutput:
-						//TODO:
 						var mapper = Builder.BuildMapper<T>(_outputExpression!.Body.Unwrap());
 						QueryRunner.SetRunQuery(query, mapper);
 						break;
