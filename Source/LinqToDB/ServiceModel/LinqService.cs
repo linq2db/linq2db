@@ -33,7 +33,7 @@ namespace LinqToDB.ServiceModel
 		public bool AllowUpdates { get; set; }
 
 		private MappingSchema? _mappingSchema;
-		public MappingSchema? MappingSchema
+		public  MappingSchema?  MappingSchema
 		{
 			get => _mappingSchema;
 			set

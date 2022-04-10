@@ -73,10 +73,10 @@ namespace LinqToDB.Linq
 				Expression!.EqualsTo(expr, dataContext, _queryableAccessorDic, _queryableMemberAccessorDic, _queryDependedObjects);
 		}
 
-		readonly Dictionary<Expression,QueryableAccessor> _queryableAccessorDic  = new ();
+		readonly Dictionary<Expression, QueryableAccessor>        _queryableAccessorDic  = new();
+		readonly List<QueryableAccessor>                          _queryableAccessorList = new();
+		readonly Dictionary<Expression, Expression>               _queryDependedObjects  = new();
 		private  Dictionary<MemberInfo, QueryableMemberAccessor>? _queryableMemberAccessorDic;
-		readonly List<QueryableAccessor>                  _queryableAccessorList = new ();
-		readonly Dictionary<Expression,Expression>        _queryDependedObjects  = new ();
 
 		public bool IsFastCacheable => _queryableMemberAccessorDic == null;
 

@@ -327,19 +327,19 @@ namespace Tests.Linq
 				.Association(x => x.AssociatedOne,
 					(x, db) => db.FromSql<SomeOtherClass>(someGeneratedSqlString, x.Id, idFilter));
 
-			using (var db = GetDataContext(context, ms))
-			using (var table = db.CreateLocalTable(GenerateTestData()))
-			using (var other = db.CreateLocalTable<SomeOtherClass>())
-			{
-				var query = from t in table
-					select new
-					{
-						t.Id,
-						t.AssociatedOne
-					};
+			using var db    = GetDataContext(context, ms);
+			using var table = db.CreateLocalTable(GenerateTestData());
+			using var __    = db.CreateLocalTable<SomeOtherClass>();
 
-				var result = query.ToArray();
-			}
+			var query =
+				from t in table
+				select new
+				{
+					t.Id,
+					t.AssociatedOne
+				};
+
+			_ = query.ToArray();
 		}
 
 		[Test]

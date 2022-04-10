@@ -113,10 +113,11 @@ namespace LinqToDB.Common
 			return str.Trim();
 		}
 
-		internal static void AddRange<T>(this HashSet<T> hashSet, IEnumerable<T> items)
+		internal static HashSet<T> AddRange<T>(this HashSet<T> hashSet, IEnumerable<T> items)
 		{
 			foreach (var item in items)
 				hashSet.Add(item);
+			return hashSet;
 		}
 
 		public static IQueryable<T> CreateEmptyQuery<T>()
@@ -153,6 +154,9 @@ namespace LinqToDB.Common
 			return null;
 		}
 
+		/// <summary>
+		/// Clears all linq2db caches.
+		/// </summary>
 		public static void ClearAllCache()
 		{
 			Query.ClearCaches();

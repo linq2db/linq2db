@@ -374,6 +374,9 @@ namespace LinqToDB.Expressions
 
 		static bool EqualsToX(LambdaExpression expr1, LambdaExpression expr2, EqualsToInfo info)
 		{
+			if (ReferenceEquals(expr1, expr2))
+				return true;
+
 			if (expr1.Parameters.Count != expr2.Parameters.Count || !expr1.Body.EqualsTo(expr2.Body, info))
 				return false;
 
@@ -491,6 +494,7 @@ namespace LinqToDB.Expressions
 					{
 						var enum1 = dependentAttribute.SplitExpression(expr1.Arguments[i]).GetEnumerator();
 						var enum2 = dependentAttribute.SplitExpression(expr2.Arguments[i]).GetEnumerator();
+
 						using (enum1)
 						using (enum2)
 						{
@@ -501,6 +505,7 @@ namespace LinqToDB.Expressions
 
 								var arg1 = enum1.Current;
 								var arg2 = enum2.Current;
+
 								if (info.QueryDependedObjects != null && info.QueryDependedObjects.TryGetValue(arg1, out var nevValue))
 									arg1 = nevValue;
 								if (!dependentAttribute.ExpressionsEqual(info, arg1, arg2, static (info, e1, e2) => e1.EqualsTo(e2, info)))
