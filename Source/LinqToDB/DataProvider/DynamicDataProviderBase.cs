@@ -75,7 +75,7 @@ namespace LinqToDB.DataProvider
 				call = Expression.Call(dataReaderParameter, methodInfo, indexParameter);
 			}
 
-			ReaderExpressions[new ReaderInfo { FieldType = fieldType, DataTypeName = dataTypeName, DataReaderType = dataReaderType }] =
+			ReaderExpressions[new ReaderInfo(fieldType: fieldType, dataTypeName: dataTypeName, dataReaderType: dataReaderType)] =
 				Expression.Lambda(
 					call,
 					dataReaderParameter,
@@ -94,7 +94,7 @@ namespace LinqToDB.DataProvider
 			var dataReaderParameter = Expression.Parameter(DataReaderType, "r");
 			var indexParameter      = Expression.Parameter(typeof(int), "i");
 
-			ReaderExpressions[new ReaderInfo { ProviderFieldType = fieldType, DataReaderType = dataReaderType }] =
+			ReaderExpressions[new ReaderInfo(providerFieldType: fieldType, dataReaderType: dataReaderType)] =
 				Expression.Lambda(
 					Expression.Call(dataReaderParameter, methodName, null, indexParameter),
 					dataReaderParameter,
@@ -106,7 +106,7 @@ namespace LinqToDB.DataProvider
 			var dataReaderParameter = Expression.Parameter(DataReaderType, "r");
 			var indexParameter      = Expression.Parameter(typeof(int), "i");
 
-			ReaderExpressions[new ReaderInfo { ToType = toType, DataReaderType = dataReaderType }] =
+			ReaderExpressions[new ReaderInfo(toType: toType, dataReaderType: dataReaderType)] =
 				Expression.Lambda(
 					Expression.Call(dataReaderParameter, methodName, null, indexParameter),
 					dataReaderParameter,
@@ -142,7 +142,7 @@ namespace LinqToDB.DataProvider
 			if (methodCall.Type != toType)
 				methodCall = Expression.Convert(methodCall, toType);
 
-			ReaderExpressions[new ReaderInfo { ToType = toType, ProviderFieldType = fieldType, DataReaderType = dataReaderType }] =
+			ReaderExpressions[new ReaderInfo(toType: toType, providerFieldType: fieldType, dataReaderType: dataReaderType)] =
 				Expression.Lambda(methodCall, dataReaderParameter, indexParameter);
 
 			return true;

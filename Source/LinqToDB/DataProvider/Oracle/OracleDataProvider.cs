@@ -78,15 +78,15 @@ namespace LinqToDB.DataProvider.Oracle
 			if (Adapter.OracleRefType != null)
 				SetProviderField(Adapter.OracleRefType     , Adapter.OracleRefType         , Adapter.GetOracleRefReaderMethod!        , dataReaderType: Adapter.DataReaderType);
 
-			ReaderExpressions[new ReaderInfo { ToType = typeof(DateTimeOffset), ProviderFieldType = Adapter.OracleTimeStampTZType, DataReaderType = Adapter.DataReaderType }]
+			ReaderExpressions[new ReaderInfo(toType: typeof(DateTimeOffset), providerFieldType: Adapter.OracleTimeStampTZType, dataReaderType: Adapter.DataReaderType)]
 				= Adapter.ReadDateTimeOffsetFromOracleTimeStampTZ;
 
-			ReaderExpressions[new ReaderInfo { ToType = typeof(decimal),        ProviderFieldType = Adapter.OracleDecimalType,      DataReaderType = Adapter.DataReaderType }] = Adapter.ReadOracleDecimalToDecimalAdv;
-			ReaderExpressions[new ReaderInfo { ToType = typeof(decimal),        FieldType = typeof(decimal),                        DataReaderType = Adapter.DataReaderType }] = Adapter.ReadOracleDecimalToDecimalAdv;
-			ReaderExpressions[new ReaderInfo { ToType = typeof(int),            FieldType = typeof(decimal),                        DataReaderType = Adapter.DataReaderType }] = Adapter.ReadOracleDecimalToInt;
-			ReaderExpressions[new ReaderInfo { ToType = typeof(long),           FieldType = typeof(decimal),                        DataReaderType = Adapter.DataReaderType }] = Adapter.ReadOracleDecimalToLong;
-			ReaderExpressions[new ReaderInfo {                                  FieldType = typeof(decimal),                        DataReaderType = Adapter.DataReaderType }] = Adapter.ReadOracleDecimalToDecimal;
-			ReaderExpressions[new ReaderInfo { ToType = typeof(DateTimeOffset), ProviderFieldType = Adapter.OracleTimeStampLTZType, DataReaderType = Adapter.DataReaderType }] = Adapter.ReadDateTimeOffsetFromOracleTimeStampLTZ;
+			ReaderExpressions[new ReaderInfo(toType: typeof(decimal),        providerFieldType: Adapter.OracleDecimalType,      dataReaderType: Adapter.DataReaderType)] = Adapter.ReadOracleDecimalToDecimalAdv;
+			ReaderExpressions[new ReaderInfo(toType: typeof(decimal),        fieldType: typeof(decimal),                        dataReaderType: Adapter.DataReaderType)] = Adapter.ReadOracleDecimalToDecimalAdv;
+			ReaderExpressions[new ReaderInfo(toType: typeof(int),            fieldType: typeof(decimal),                        dataReaderType: Adapter.DataReaderType)] = Adapter.ReadOracleDecimalToInt;
+			ReaderExpressions[new ReaderInfo(toType: typeof(long),           fieldType: typeof(decimal),                        dataReaderType: Adapter.DataReaderType)] = Adapter.ReadOracleDecimalToLong;
+			ReaderExpressions[new ReaderInfo(                                fieldType: typeof(decimal),                        dataReaderType: Adapter.DataReaderType)] = Adapter.ReadOracleDecimalToDecimal;
+			ReaderExpressions[new ReaderInfo(toType: typeof(DateTimeOffset), providerFieldType: Adapter.OracleTimeStampLTZType, dataReaderType: Adapter.DataReaderType)] = Adapter.ReadDateTimeOffsetFromOracleTimeStampLTZ;
 		}
 
 		public OracleVersion Version { get; }

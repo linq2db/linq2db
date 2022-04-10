@@ -1926,7 +1926,7 @@ namespace Tests.DataProvider
 				provider = new OracleDataProvider(db.DataProvider.Name, ((OracleDataProvider)db.DataProvider).Version);
 			}
 
-			provider.ReaderExpressions[new ReaderInfo { FieldType = typeof(decimal) }] = (Expression<Func<DbDataReader, int, decimal>>)((r,i) => GetDecimal(r, i));
+			provider.ReaderExpressions[new ReaderInfo(fieldType: typeof(decimal))] = (Expression<Func<DbDataReader, int, decimal>>)((r,i) => GetDecimal(r, i));
 
 			using (var db = new DataConnection(provider, DataConnection.GetConnectionString(context)))
 			{
@@ -2494,11 +2494,7 @@ namespace Tests.DataProvider
 
 			// Expression to read column value from data reader.
 			//
-			dataProvider.ReaderExpressions[new ReaderInfo
-			{
-				ToType            = typeof(MyDate),
-				ProviderFieldType = typeof(OracleTimeStampTZ),
-			}] = (Expression<Func<OracleDataReader,int,MyDate>>)((rd, idx) => OracleTimeStampTZToMyDate(rd.GetOracleTimeStampTZ(idx)));
+			dataProvider.ReaderExpressions[new ReaderInfo(toType: typeof(MyDate), providerFieldType: typeof(OracleTimeStampTZ))] = (Expression<Func<OracleDataReader,int,MyDate>>)((rd, idx) => OracleTimeStampTZToMyDate(rd.GetOracleTimeStampTZ(idx)));
 
 			// Converts object property value to data reader parameter.
 			//

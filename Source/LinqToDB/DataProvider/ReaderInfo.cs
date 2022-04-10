@@ -1,70 +1,56 @@
 ﻿using System;
+using System.Data.Common;
 
 namespace LinqToDB.DataProvider
 {
-	// TODO: V4: refactor to readonly struct
-	public struct ReaderInfo : IEquatable<ReaderInfo>
+	public readonly struct ReaderInfo : IEquatable<ReaderInfo>
 	{
-		int _hashCode;
+		private readonly int _hashCode;
 
-		private Type? _toType;
-		public  Type?  ToType
+		/// <summary>
+		/// Exact type of <see cref="DbDataReader"/> implementation, used for read operation.
+		/// </summary>
+		public readonly Type?   DataReaderType;
+		/// <summary>
+		/// Target type (e.g. type of target property to which read data will be assigned).
+		/// </summary>
+		public readonly Type?   ToType;
+		/// <summary>
+		/// Type, returned by <see cref="DbDataReader.GetProviderSpecificFieldType(int)"/> method for column.
+		/// </summary>
+		public readonly Type?   ProviderFieldType;
+		/// <summary>
+		/// Type, returned by <see cref="DbDataReader.GetFieldType(int)"/> method for column.
+		/// </summary>
+		public readonly Type?   FieldType;
+		/// <summary>
+		/// Database type name, returned by <see cref="DbDataReader.GetDataTypeName(int)"/> method for column.
+		/// Comparison done using <see cref="StringComparison.OrdinalIgnoreCase"/> mode.
+		/// </summary>
+		public readonly string? DataTypeName;
+
+		public ReaderInfo(Type? dataReaderType = null, Type? toType = null, Type? providerFieldType = null, Type? fieldType = null, string? dataTypeName = null)
 		{
-			get => _toType;
-			set { _toType = value; CalcHashCode(); }
-		}
+			DataReaderType    = dataReaderType;
+			ToType            = toType;
+			ProviderFieldType = providerFieldType;
+			FieldType         = fieldType;
+			DataTypeName      = dataTypeName;
 
-		private Type? _fieldType;
-		public  Type?  FieldType
-		{
-			get => _fieldType;
-			set { _fieldType = value; CalcHashCode(); }
-		}
-
-		private Type? _providerFieldType;
-		public  Type?  ProviderFieldType
-		{
-			get => _providerFieldType;
-			set { _providerFieldType = value; CalcHashCode(); }
-		}
-
-		private string? _dataTypeName;
-		public  string?  DataTypeName
-		{
-			get => _dataTypeName;
-			set { _dataTypeName = value?.ToLowerInvariant(); CalcHashCode(); }
-		}
-
-		private Type? _dataReaderType;
-		public Type? DataReaderType
-		{
-			get => _dataReaderType;
-			set { _dataReaderType = value; CalcHashCode(); }
-		}
-
-
-		void CalcHashCode()
-		{
 			unchecked
 			{
-				_hashCode = 639348056;
-				_hashCode = _hashCode * -1521134295 + (ToType            == null ? 0 : ToType.           GetHashCode());
-				_hashCode = _hashCode * -1521134295 + (FieldType         == null ? 0 : FieldType.        GetHashCode());
-				_hashCode = _hashCode * -1521134295 + (ProviderFieldType == null ? 0 : ProviderFieldType.GetHashCode());
-				_hashCode = _hashCode * -1521134295 + (DataTypeName      == null ? 0 : DataTypeName     .GetHashCode());
-				_hashCode = _hashCode * -1521134295 + (DataReaderType    == null ? 0 : DataReaderType   .GetHashCode());
+				var hashCode = 639348056;
+				hashCode = hashCode * -1521134295 + (DataReaderType?   .GetHashCode() ?? 0);
+				hashCode = hashCode * -1521134295 + (ToType?           .GetHashCode() ?? 0);
+				hashCode = hashCode * -1521134295 + (ProviderFieldType?.GetHashCode() ?? 0);
+				hashCode = hashCode * -1521134295 + (FieldType?        .GetHashCode() ?? 0);
+				hashCode = hashCode * -1521134295 + (DataTypeName != null ? StringComparer.OrdinalIgnoreCase.GetHashCode(DataTypeName) : 0);
+				_hashCode = hashCode;
 			}
 		}
 
-		public override bool Equals(object? obj)
-		{
-			return obj is ReaderInfo ri && Equals(ri);
-		}
-
-		public override int GetHashCode()
-		{
-			return _hashCode;
-		}
+		public override bool Equals(object? obj) => obj is ReaderInfo ri && Equals(ri);
+		public override int GetHashCode() => _hashCode;
 
 		public bool Equals(ReaderInfo other)
 		{
@@ -73,7 +59,7 @@ namespace LinqToDB.DataProvider
 				FieldType         == other.FieldType &&
 				ProviderFieldType == other.ProviderFieldType &&
 				DataTypeName      == other.DataTypeName &&
-				DataReaderType    == other.DataReaderType
+				StringComparer.OrdinalIgnoreCase.Equals(DataReaderType, other.DataReaderType)
 				;
 		}
 	}

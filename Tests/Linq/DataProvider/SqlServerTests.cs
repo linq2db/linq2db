@@ -1382,7 +1382,7 @@ namespace Tests.DataProvider
 				provider = new SqlServerDataProvider(db.DataProvider.Name, ((SqlServerDataProvider)db.DataProvider).Version, ((SqlServerDataProvider)db.DataProvider).Provider);
 			}
 
-			provider.ReaderExpressions[new ReaderInfo { FieldType = typeof(decimal) }] = (Expression<Func<DbDataReader, int, decimal>>)((r, i) => GetDecimal(r, i));
+			provider.ReaderExpressions[new ReaderInfo(fieldType: typeof(decimal))] = (Expression<Func<DbDataReader, int, decimal>>)((r, i) => GetDecimal(r, i));
 
 			using (var db = new DataConnection(provider, DataConnection.GetConnectionString(context)))
 			{
