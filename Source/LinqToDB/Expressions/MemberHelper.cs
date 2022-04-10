@@ -13,7 +13,7 @@ namespace LinqToDB.Expressions
 	public static class MemberHelper
 	{
 		[DebuggerDisplay("{Type.Name}.{MemberInfo.Name}")]
-		public struct MemberInfoWithType
+		public readonly struct MemberInfoWithType
 		{
 			public MemberInfoWithType(Type? type, MemberInfo memberInfo)
 			{
@@ -21,8 +21,8 @@ namespace LinqToDB.Expressions
 				MemberInfo = memberInfo;
 			}
 
-			public Type?      Type;
-			public MemberInfo MemberInfo;
+			public readonly Type?      Type;
+			public readonly MemberInfo MemberInfo;
 
 			public bool Equals(MemberInfoWithType other)
 			{

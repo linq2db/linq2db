@@ -119,7 +119,7 @@ namespace LinqToDB.SqlQuery
 
 		#region Static Members
 
-		struct TypeInfo
+		readonly struct TypeInfo
 		{
 			public TypeInfo(DataType dbType, int? maxLength, int? maxPrecision, int? maxScale, int? maxDisplaySize)
 			{

@@ -107,12 +107,7 @@ namespace LinqToDB.DataProvider.Sybase
 
 				if (connection != null && (dataConnection.Transaction == null || transaction != null))
 				{
-					return new ProviderConnections()
-					{
-						DataConnection      = dataConnection,
-						ProviderConnection  = connection,
-						ProviderTransaction = transaction
-					};
+					return new ProviderConnections(dataConnection, connection, transaction);
 				}
 			}
 

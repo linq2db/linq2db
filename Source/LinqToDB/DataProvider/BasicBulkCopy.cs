@@ -235,11 +235,18 @@ namespace LinqToDB.DataProvider
 				.ToString();
 		}
 
-		protected struct ProviderConnections
+		protected readonly struct ProviderConnections
 		{
-			public DataConnection DataConnection;
-			public DbConnection   ProviderConnection;
-			public DbTransaction? ProviderTransaction;
+			public ProviderConnections(DataConnection dataConnection, DbConnection providerConnection, DbTransaction? providerTransaction)
+			{
+				DataConnection      = dataConnection;
+				ProviderConnection  = providerConnection;
+				ProviderTransaction = providerTransaction;
+			}
+
+			public readonly DataConnection DataConnection;
+			public readonly DbConnection   ProviderConnection;
+			public readonly DbTransaction? ProviderTransaction;
 		}
 
 		#region ProviderSpecific Support

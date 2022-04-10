@@ -8,7 +8,7 @@ namespace LinqToDB.Common
 	///     A string representing a raw SQL query. This type enables overload resolution between
 	///     the regular and interpolated <see cref="DataExtensions.FromSql{TEntity}(IDataContext,RawSqlString,object[])" />.
 	/// </summary>
-	public struct RawSqlString
+	public readonly struct RawSqlString
 	{
 		/// <summary>
 		///     Implicitly converts a <see cref="string" /> to a <see cref="RawSqlString" />
@@ -32,6 +32,6 @@ namespace LinqToDB.Common
 		/// <summary>
 		///     The string format.
 		/// </summary>
-		public string Format { get; }
+		public readonly string Format;
 	}
 }
