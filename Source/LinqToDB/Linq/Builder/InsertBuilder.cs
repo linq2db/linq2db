@@ -481,8 +481,7 @@ namespace LinqToDB.Linq.Builder
 						sequence,
 						insertStatement.Insert.Items);
 
-				// why we even do it?
-				// TODO: remove in v4?
+				// https://github.com/linq2db/linq2db/issues/2809
 				insertStatement.Insert.Items.RemoveDuplicatesFromTail((s1, s2) => s1.Column.Equals(s2.Column));
 
 				return sequence;
