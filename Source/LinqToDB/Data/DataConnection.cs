@@ -907,22 +907,21 @@ namespace LinqToDB.Data
 
 			public static IDataProvider? GetDataProvider(IConnectionStringSettings css, string connectionString)
 			{
-				var configuration            = css.Name;
-				var providerName             = css.ProviderName;
+				var configuration = css.Name;
+				var providerName  = css.ProviderName;
 				var dataProvider  = _providerDetectors.Select(d => d(css, connectionString)).FirstOrDefault(dp => dp != null);
 
 				if (dataProvider == null)
 				{
 					IDataProvider? defaultDataProvider = null;
+
 					if (DefaultDataProvider != null)
 						_dataProviders.TryGetValue(DefaultDataProvider, out defaultDataProvider);
 
 					if (string.IsNullOrEmpty(providerName))
 						dataProvider = FindProvider(configuration, _dataProviders, defaultDataProvider);
-					else if (_dataProviders.TryGetValue(providerName!, out dataProvider)
-							|| _dataProviders.TryGetValue(configuration, out dataProvider))
-					{ }
-					else
+					else if (!_dataProviders.TryGetValue(providerName!, out dataProvider) &&
+					         !_dataProviders.TryGetValue(configuration, out dataProvider))
 					{
 						var providers = _dataProviders.Where(dp => dp.Value.ConnectionNamespace == providerName).ToList();
 

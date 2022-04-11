@@ -42,11 +42,11 @@ namespace Tests.UserTests
 		[Table("Person")]
 		class PurePerson
 		{
-			[Identity] public int                       PersonID;
-			[Column]   public string                    FirstName = null!;
-			[Column]   public string                    LastName = null!;
-			[Column]   public string?                   MiddleName;
-			[Column]   public string                    Gender = null!;
+			[Identity] public int     PersonID;
+			[Column]   public string  FirstName = null!;
+			[Column]   public string  LastName  = null!;
+			[Column]   public string? MiddleName;
+			[Column]   public string  Gender    = null!;
 		}
 
 		[Test]
