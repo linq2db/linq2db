@@ -29,17 +29,17 @@ namespace LinqToDB.Expressions
 			_slowModeDataContext = dataContext;
 		}
 
-		readonly int              _idx;
-		readonly Expression       _dataReaderParam;
-		readonly Type             _type;
-		readonly IDataContext?    _slowModeDataContext;
+		readonly int            _idx;
+		readonly Expression     _dataReaderParam;
+		readonly Type           _type;
+		readonly IDataContext?  _slowModeDataContext;
 
-		public IValueConverter?   Converter { get; }
+		public IValueConverter? Converter { get; }
 
-		public override Type           Type        => _type;
-		public override ExpressionType NodeType    => ExpressionType.Extension;
-		public override bool           CanReduce   => true;
-		public          int            Index       => _idx;
+		public override Type           Type      => _type;
+		public override ExpressionType NodeType  => ExpressionType.Extension;
+		public override bool           CanReduce => true;
+		public          int            Index     => _idx;
 
 		public override Expression Reduce()
 		{
@@ -89,6 +89,7 @@ namespace LinqToDB.Expressions
 			var toType = type.ToNullableUnderlying();
 
 			Expression ex;
+
 			if (converter != null)
 			{
 				var expectedProvType = converter.FromProviderExpression.Parameters[0].Type;

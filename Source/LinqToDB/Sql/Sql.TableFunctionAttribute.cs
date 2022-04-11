@@ -57,12 +57,12 @@ namespace LinqToDB
 				table.PhysicalName   = Name ?? methodCall.Method.Name;
 
 				var expressionStr = table.Name;
-				ExpressionAttribute.PrepareParameterValues(methodCall, ref expressionStr, false, out var knownExpressions, out var genericTypes);
+				ExpressionAttribute.PrepareParameterValues(methodCall, ref expressionStr, false, out var knownExpressions, false, out var genericTypes);
 
 				if (string.IsNullOrEmpty(expressionStr))
 					throw new LinqToDBException($"Cannot retrieve Table Function body from expression '{methodCall}'.");
 
-				table.TableArguments = ExpressionAttribute.PrepareArguments(context, string.Empty, ArgIndices, addDefault: true, knownExpressions, genericTypes, converter);
+				table.TableArguments = ExpressionAttribute.PrepareArguments(context, string.Empty, ArgIndices, true, knownExpressions, genericTypes, converter);
 
 				if (Schema   != null) table.Schema   = Schema;
 				if (Database != null) table.Database = Database;
