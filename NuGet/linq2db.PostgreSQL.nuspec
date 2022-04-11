@@ -14,15 +14,15 @@
 		<readme>README.md</readme>
 		<dependencies>
 			<group targetFramework=".NETFramework4.5">
-				<dependency id="linq2db" version="3.0.0"  />
+				<dependency id="linq2db" version="4.0.0"  />
 				<dependency id="Npgsql"  version="4.0.12" />
 			</group>
 			<group targetFramework=".NETFramework4.6.1">
-				<dependency id="linq2db" version="3.0.0"  />
+				<dependency id="linq2db" version="4.0.0"  />
 				<dependency id="Npgsql"  version="4.1.10" />
 			</group>
 			<group targetFramework=".NETStandard2.0">
-				<dependency id="linq2db" version="3.0.0"  />
+				<dependency id="linq2db" version="4.0.0"  />
 				<dependency id="Npgsql"  version="6.0.3"  />
 			</group>
 		</dependencies>

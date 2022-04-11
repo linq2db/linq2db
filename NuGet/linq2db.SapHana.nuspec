@@ -14,7 +14,7 @@
 		<tags>linq linq2db SapHana LinqToDB ORM database DB SQL</tags>
 		<readme>README.md</readme>
 		<dependencies>
-			<dependency id="linq2db" version="3.0.0" />
+			<dependency id="linq2db" version="4.0.0" />
 		</dependencies>
 		<contentFiles>
 			<files include="**\*" buildAction="None" />
