@@ -10,8 +10,21 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+
 		<ProjectReference Include="..\LinqToDB\LinqToDB.csproj" />
 
 		<PackageReference Include="Humanizer.Core" />
-	</ItemGroup>
+
+    <None Update="DataProvider\SqlServer\Schemas\Schemas.tt">
+			<Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>Schemas.generated.cs</LastGenOutput>
+		</None>
+		<Compile Update="DataProvider\SqlServer\Schemas\Schemas.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>Schemas.tt</DependentUpon>
+		</Compile>
+
+   </ItemGroup>
 </Project>

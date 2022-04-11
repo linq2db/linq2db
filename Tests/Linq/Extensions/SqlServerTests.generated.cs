@@ -969,7 +969,7 @@ namespace Tests.Extensions
 		}
 
 		[Test]
-		public void OptionQueryTraceOnTest([IncludeDataSources(true, TestProvName.AllSqlServerNoAzure)] string context)
+		public void OptionQueryTraceOnTest([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
 		{
 			using var db = GetDataContext(context);
 
