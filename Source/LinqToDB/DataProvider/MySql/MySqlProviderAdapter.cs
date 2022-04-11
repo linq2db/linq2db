@@ -130,9 +130,9 @@ namespace LinqToDB.DataProvider.MySql
 		/// </summary>
 		public Func<DbParameter, object> GetDbType { get; }
 
-		internal BulkCopyAdapter? BulkCopy { get; }
+		public BulkCopyAdapter? BulkCopy { get; }
 
-		internal class BulkCopyAdapter
+		public class BulkCopyAdapter
 		{
 			internal BulkCopyAdapter(
 				Func<DbConnection, DbTransaction?, MySqlConnector.MySqlBulkCopy> bulkCopyCreator,
@@ -142,8 +142,8 @@ namespace LinqToDB.DataProvider.MySql
 				CreateColumnMapping = bulkCopyColumnMappingCreator;
 			}
 
-			public Func<DbConnection, DbTransaction?, MySqlConnector.MySqlBulkCopy> Create              { get; }
-			public Func<int, string, MySqlBulkCopyColumnMapping>                      CreateColumnMapping { get; }
+			internal Func<DbConnection, DbTransaction?, MySqlConnector.MySqlBulkCopy> Create              { get; }
+			internal Func<int, string, MySqlBulkCopyColumnMapping>                    CreateColumnMapping { get; }
 		}
 
 		public static MySqlProviderAdapter GetInstance(string name)

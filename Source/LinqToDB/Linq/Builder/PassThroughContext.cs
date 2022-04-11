@@ -6,7 +6,7 @@ namespace LinqToDB.Linq.Builder
 	using SqlQuery;
 
 	[DebuggerDisplay("{BuildContextDebuggingHelper.GetContextInfo(this)}")]
-	abstract class PassThroughContext : IBuildContext
+	public abstract class PassThroughContext : IBuildContext
 	{
 		protected PassThroughContext(IBuildContext context)
 		{
@@ -15,10 +15,10 @@ namespace LinqToDB.Linq.Builder
 			context.Builder.Contexts.Add(this);
 		}
 
-		public IBuildContext Context { get; set; }
+		internal IBuildContext Context { get; set; }
 
 #if DEBUG
-		string? IBuildContext._sqlQueryText => Context._sqlQueryText;
+		string? IBuildContext.SqlQueryText => Context.SqlQueryText;
 		public string Path => this.GetPath();
 #endif
 

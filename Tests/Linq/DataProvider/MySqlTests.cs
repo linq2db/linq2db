@@ -540,7 +540,7 @@ namespace Tests.DataProvider
 								intUnsignedDataType = (uint)(5000 + n),
 							}).ToList();
 
-					var isNativeCopy = bulkCopyType == BulkCopyType.ProviderSpecific && ((dynamic)((MySqlDataProvider)conn.DataProvider).Adapter).BulkCopy != null;
+					var isNativeCopy = bulkCopyType == BulkCopyType.ProviderSpecific && ((MySqlProviderAdapter)((MySqlDataProvider)conn.DataProvider).Adapter).BulkCopy != null;
 
 					if (isNativeCopy)
 					{
@@ -626,7 +626,7 @@ namespace Tests.DataProvider
 								intUnsignedDataType = (uint)(5000 + n),
 							}).ToList();
 
-					var isNativeCopy = bulkCopyType == BulkCopyType.ProviderSpecific && ((dynamic)((MySqlDataProvider)conn.DataProvider).Adapter).BulkCopy != null;
+					var isNativeCopy = bulkCopyType == BulkCopyType.ProviderSpecific && ((MySqlProviderAdapter)((MySqlDataProvider)conn.DataProvider).Adapter).BulkCopy != null;
 
 					if (isNativeCopy)
 					{

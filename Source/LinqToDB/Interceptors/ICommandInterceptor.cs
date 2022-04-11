@@ -89,7 +89,7 @@ namespace LinqToDB.Interceptors
 		/// </returns>
 		Task<Option<DbDataReader>> ExecuteReaderAsync  (CommandEventData eventData, DbCommand command, CommandBehavior commandBehavior, Option<DbDataReader> result, CancellationToken cancellationToken);
 
-		// TODO: is it useful to provide isAsync flag for ExecuteReaderAsync or even have separate async version of this interceptor?
+		// no async version for now
 		/// <summary>
 		/// Event, triggered after command execution using <see cref="DbCommand.ExecuteReader(CommandBehavior)"/> or <see cref="DbCommand.ExecuteReaderAsync(CommandBehavior, CancellationToken)"/> methods.
 		/// </summary>

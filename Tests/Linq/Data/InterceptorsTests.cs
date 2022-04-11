@@ -1016,7 +1016,7 @@ namespace Tests.Data
 				interceptor.ConnectionOpenedTriggered = false;
 				interceptor.ConnectionOpeningTriggered = false;
 
-				db.ReleaseQuery();
+				((IDataContext)db).Close();
 
 				db.GetTable<Child>().ToList();
 
@@ -1066,7 +1066,7 @@ namespace Tests.Data
 				interceptor.ConnectionOpenedAsyncTriggered = false;
 				interceptor.ConnectionOpeningAsyncTriggered = false;
 
-				await db.ReleaseQueryAsync();
+				await ((IDataContext)db).CloseAsync();
 
 				await db.GetTable<Child>().ToListAsync();
 

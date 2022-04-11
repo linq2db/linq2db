@@ -26,7 +26,7 @@ namespace LinqToDB.Linq.Builder
 		readonly HashSet<Expression>                    _skippedExpressions   = new ();
 		readonly Dictionary<Expression,UnaryExpression> _convertedExpressions = new ();
 
-		public void UpdateConvertedExpression(Expression oldExpression, Expression newExpression)
+		internal void UpdateConvertedExpression(Expression oldExpression, Expression newExpression)
 		{
 			if (_convertedExpressions.TryGetValue(oldExpression, out var conversion)
 				&& !_convertedExpressions.ContainsKey(newExpression))
@@ -45,7 +45,7 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-		public void RemoveConvertedExpression(Expression ex)
+		internal void RemoveConvertedExpression(Expression ex)
 		{
 			_convertedExpressions.Remove(ex);
 		}
@@ -115,7 +115,7 @@ namespace LinqToDB.Linq.Builder
 			return resultExpr;
 		}
 
-		public Expression BuildExpression(IBuildContext context, Expression expression, bool enforceServerSide, string? alias = null)
+		internal Expression BuildExpression(IBuildContext context, Expression expression, bool enforceServerSide, string? alias = null)
 		{
 			return expression.Transform(
 				(builder: this, context, enforceServerSide, alias),
@@ -590,7 +590,7 @@ namespace LinqToDB.Linq.Builder
 			return info;
 		}
 
-		public Expression GetSubQueryExpression(IBuildContext context, MethodCallExpression expr, bool enforceServerSide, string? alias)
+		internal Expression GetSubQueryExpression(IBuildContext context, MethodCallExpression expr, bool enforceServerSide, string? alias)
 		{
 			var info = GetSubQueryContext(context, expr);
 			if (info.Expression == null)
@@ -640,7 +640,7 @@ namespace LinqToDB.Linq.Builder
 			return field;
 		}
 
-		public Expression BuildSql(Expression expression, int idx, ISqlExpression sqlExpression)
+		internal Expression BuildSql(Expression expression, int idx, ISqlExpression sqlExpression)
 		{
 			var type = expression.Type;
 
@@ -653,12 +653,12 @@ namespace LinqToDB.Linq.Builder
 			return BuildSql(type, idx, sqlExpression);
 		}
 
-		public Expression BuildSql(Type type, int idx, IValueConverter? converter)
+		internal Expression BuildSql(Type type, int idx, IValueConverter? converter)
 		{
 			return new ConvertFromDataReaderExpression(type, idx, converter, DataReaderLocal);
 		}
 
-		public Expression BuildSql(Type type, int idx, ISqlExpression? sourceExpression)
+		internal Expression BuildSql(Type type, int idx, ISqlExpression? sourceExpression)
 		{
 			return BuildSql(type, idx, QueryHelper.GetValueConverter(sourceExpression));
 		}
@@ -801,7 +801,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region Build Mapper
 
-		public Expression BuildBlock(Expression expression)
+		internal Expression BuildBlock(Expression expression)
 		{
 			if (IsBlockDisable || BlockExpressions.Count == 0)
 				return expression;
@@ -816,7 +816,7 @@ namespace LinqToDB.Linq.Builder
 			return blockExpression;
 		}
 
-		public ParameterExpression BuildVariable(Expression expr, string? name = null)
+		internal ParameterExpression BuildVariable(Expression expr, string? name = null)
 		{
 			if (name == null)
 				name = expr.Type.Name + Interlocked.Increment(ref VarIndex);
@@ -831,7 +831,7 @@ namespace LinqToDB.Linq.Builder
 			return variable;
 		}
 
-		public Expression<Func<IQueryRunner,IDataContext, DbDataReader, Expression,object?[]?,object?[]?,T>> BuildMapper<T>(Expression expr)
+		internal Expression<Func<IQueryRunner,IDataContext, DbDataReader, Expression,object?[]?,object?[]?,T>> BuildMapper<T>(Expression expr)
 		{
 			var type = typeof(T);
 
@@ -982,12 +982,12 @@ namespace LinqToDB.Linq.Builder
 			});
 		}
 
-		public Expression? AssociationRoot;
-		public Stack<Tuple<AccessorMember, IBuildContext, List<LoadWithInfo[]>?>>? AssociationPath;
+		internal Expression? AssociationRoot;
+		internal Stack<Tuple<AccessorMember, IBuildContext, List<LoadWithInfo[]>?>>? AssociationPath;
 
 		HashSet<Expression>? _buildMultipleQueryExpressions;
 
-		public Expression BuildMultipleQuery(IBuildContext context, Expression expression, bool enforceServerSide)
+		internal Expression BuildMultipleQuery(IBuildContext context, Expression expression, bool enforceServerSide)
 		{
 			var parameters = new HashSet<ParameterExpression>();
 

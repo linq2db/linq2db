@@ -337,13 +337,12 @@ namespace LinqToDB
 				throw new ObjectDisposedException(GetType().FullName);
 		}
 
-		// TODO: hide again? needs tests refactoring
 		/// <summary>
 		/// For active underlying connection, updates information about last executed query <see cref="LastQuery"/> and
 		/// releases connection, if it is not locked (<see cref="LockDbManagerCounter"/>)
 		/// and <see cref="KeepConnectionAlive"/> is <c>false</c>.
 		/// </summary>
-		public void ReleaseQuery()
+		internal void ReleaseQuery()
 		{
 			if (_dataConnection != null)
 			{
@@ -360,8 +359,12 @@ namespace LinqToDB
 			}
 		}
 
-		// TODO: hide again? needs tests refactoring
-		public async Task ReleaseQueryAsync()
+		/// <summary>
+		/// For active underlying connection, updates information about last executed query <see cref="LastQuery"/> and
+		/// releases connection, if it is not locked (<see cref="LockDbManagerCounter"/>)
+		/// and <see cref="KeepConnectionAlive"/> is <c>false</c>.
+		/// </summary>
+		internal async Task ReleaseQueryAsync()
 		{
 			if (_dataConnection != null)
 			{
@@ -409,7 +412,7 @@ namespace LinqToDB
 			{
 				KeepConnectionAlive = KeepConnectionAlive,
 				ContextID           = ContextID,
-				InlineParameters        = InlineParameters
+				InlineParameters    = InlineParameters
 			};
 
 			if (forNestedQuery && _dataConnection != null && _dataConnection.IsMarsEnabled)

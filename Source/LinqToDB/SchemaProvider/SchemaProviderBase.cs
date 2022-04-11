@@ -749,7 +749,7 @@ namespace LinqToDB.SchemaProvider
 			return databaseSchema;
 		}
 
-		internal static void SetForeignKeyMemberName(GetSchemaOptions schemaOptions, TableSchema table, ForeignKeySchema key)
+		public static void SetForeignKeyMemberName(GetSchemaOptions schemaOptions, TableSchema table, ForeignKeySchema key)
 		{
 			string? name = null;
 
