@@ -16,14 +16,14 @@ namespace LinqToDB.DataProvider.Sybase
 	using Extensions;
 	using System.Data.Common;
 
-	public class SybaseDataProviderNative  : SybaseDataProvider { public SybaseDataProviderNative()  : base(ProviderName.Sybase)        {} }
-	public class SybaseDataProviderManaged : SybaseDataProvider { public SybaseDataProviderManaged() : base(ProviderName.SybaseManaged) {} }
+	class SybaseDataProviderNative  : SybaseDataProvider { public SybaseDataProviderNative()  : base(ProviderName.Sybase)        {} }
+	class SybaseDataProviderManaged : SybaseDataProvider { public SybaseDataProviderManaged() : base(ProviderName.SybaseManaged) {} }
 
-	public class SybaseDataProvider : DynamicDataProviderBase<SybaseProviderAdapter>
+	public abstract class SybaseDataProvider : DynamicDataProviderBase<SybaseProviderAdapter>
 	{
 		#region Init
 
-		public SybaseDataProvider(string name)
+		protected SybaseDataProvider(string name)
 			: base(name, MappingSchemaInstance.Get(name), SybaseProviderAdapter.GetInstance(name))
 		{
 			SqlProviderFlags.AcceptsTakeAsParameter           = false;

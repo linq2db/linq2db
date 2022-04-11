@@ -14,10 +14,10 @@ namespace LinqToDB.DataProvider.SQLite
 	using SchemaProvider;
 	using SqlProvider;
 
-	public class SQLiteDataProviderClassic : SQLiteDataProvider { public SQLiteDataProviderClassic() : base(ProviderName.SQLiteClassic) {} }
-	public class SQLiteDataProviderMS      : SQLiteDataProvider { public SQLiteDataProviderMS()      : base(ProviderName.SQLiteMS)      {} }
+	class SQLiteDataProviderClassic : SQLiteDataProvider { public SQLiteDataProviderClassic() : base(ProviderName.SQLiteClassic) {} }
+	class SQLiteDataProviderMS      : SQLiteDataProvider { public SQLiteDataProviderMS()      : base(ProviderName.SQLiteMS)      {} }
 
-	public class SQLiteDataProvider : DynamicDataProviderBase<SQLiteProviderAdapter>
+	public abstract class SQLiteDataProvider : DynamicDataProviderBase<SQLiteProviderAdapter>
 	{
 		/// <summary>
 		/// Creates the specified SQLite provider based on the provider name.
@@ -25,7 +25,7 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <param name="name">If ProviderName.SQLite is provided,
 		/// the detection mechanism preferring System.Data.SQLite
 		/// to Microsoft.Data.Sqlite will be used.</param>
-		public SQLiteDataProvider(string name)
+		protected SQLiteDataProvider(string name)
 			: this(name, MappingSchemaInstance.Get(name))
 		{
 		}
@@ -143,7 +143,6 @@ namespace LinqToDB.DataProvider.SQLite
 			SetCharField("nchar", (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharFieldToType<char>("char" , DataTools.GetCharExpression);
 			SetCharFieldToType<char>("nchar", DataTools.GetCharExpression);
-
 		}
 
 		private void SetSqliteField<T>(Expression<Func<DbDataReader, int, T>> expr, Type[] fieldTypes, params string[] typeNames)

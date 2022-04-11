@@ -5,10 +5,11 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Async
 {
+	// Do not expose to public surface, will conflict with other libraries
 	/// <summary>
-	/// Contains extension methods for <see cref="IAsyncEnumerable{T}"/> interface.
+	/// Contains custom extension methods for <see cref="IAsyncEnumerable{T}"/> interface.
 	/// </summary>
-	public static class AsyncEnumerableExtensions
+	internal static class AsyncEnumerableExtensions
 	{
 		/// <summary>
 		///     Asynchronously creates a <see cref="List{T}" /> from <see cref="IAsyncEnumerable{T}" />
