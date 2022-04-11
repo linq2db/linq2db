@@ -83,7 +83,7 @@ namespace LinqToDB.CLI
 			return StatusCodes.INVALID_ARGUMENTS;
 		}
 
-		private (Dictionary<CliOption, object?> options, bool hasErrors) ParseCommandOptions(CliCommand command, string[] args, List<string> unknownArgs, bool reportFistErrorOnly)
+		private (Dictionary<CliOption, object?> options, bool hasErrors) ParseCommandOptions(CliCommand command, string[] args, List<string> unknownArgs, bool reportFirstErrorOnly)
 		{
 			var hasErrors          = false;
 			var cliOptions         = new Dictionary<CliOption, object?>();
