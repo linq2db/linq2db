@@ -247,13 +247,12 @@ void GenerateTypesFromMetadata()
 
 
 		if (GenerateDatabaseNameFromTable && t.TableSchema.CatalogName != null)
-		{
-			tableAttrs.Add("Database="  + ToStringLiteral(t.TableSchema.CatalogName));
-		}
-		else
-		if (DatabaseName != null) tableAttrs.Add("Database="  + ToStringLiteral(DatabaseName));
-		if (ServerName   != null) tableAttrs.Add("Server="    + ToStringLiteral(ServerName));
-		if (t.Schema     != null) tableAttrs.Add("Schema="    + ToStringLiteral(t.TableSchema.SchemaName ?? t.Schema));
+			tableAttrs.Add("Database=" + ToStringLiteral(t.TableSchema.CatalogName));
+		else if (DatabaseName != null)
+			tableAttrs.Add("Database=" + ToStringLiteral(DatabaseName));
+
+		if (ServerName != null) tableAttrs.Add("Server=" + ToStringLiteral(ServerName));
+		if (t.Schema   != null) tableAttrs.Add("Schema=" + ToStringLiteral(t.TableSchema.SchemaName ?? t.Schema));
 
 		tableAttrs.Add((tableAttrs.Count == 0 ? "" : "Name=") + ToStringLiteral(t.TableName));
 

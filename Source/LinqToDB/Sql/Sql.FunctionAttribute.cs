@@ -95,7 +95,7 @@ namespace LinqToDB
 				if (string.IsNullOrEmpty(expressionStr))
 					throw new LinqToDBException($"Cannot retrieve function name for expression '{expression}'.");
 
-				var parameters = PrepareArguments(context, expressionStr!, ArgIndices, true, knownExpressions, genericTypes, converter);
+				var parameters = PrepareArguments(context, expressionStr!, ArgIndices, addDefault: true, knownExpressions, genericTypes, converter);
 
 				return new SqlFunction(expression.Type, expressionStr!, IsAggregate, IsPure, parameters)
 				{
