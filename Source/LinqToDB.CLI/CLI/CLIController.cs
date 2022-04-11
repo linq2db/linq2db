@@ -102,7 +102,7 @@ namespace LinqToDB.CLI
 					if (option == null)
 					{
 						unknownArgs.Add(args[i]);
-						if (!hasErrors || !reportFistErrorOnly)
+						if (!hasErrors || !reportFirstErrorOnly)
 							Console.Error.WriteLine("Unrecognized option: {0}", args[i]);
 						hasErrors = true;
 					}
@@ -114,7 +114,7 @@ namespace LinqToDB.CLI
 					if (option == null)
 					{
 						unknownArgs.Add(args[i]);
-						if (!hasErrors || !reportFistErrorOnly)
+						if (!hasErrors || !reportFirstErrorOnly)
 							Console.Error.WriteLine("Unrecognized option: {0}", args[i]);
 						hasErrors = true;
 					}
@@ -122,7 +122,7 @@ namespace LinqToDB.CLI
 				else
 				{
 					hasErrors = true;
-					if (!hasErrors || !reportFistErrorOnly)
+					if (!hasErrors || !reportFirstErrorOnly)
 						Console.Error.WriteLine("Unrecognized argument: {0}", args[i]);
 					unknownArgs.Add(args[i]);
 				}
@@ -131,27 +131,27 @@ namespace LinqToDB.CLI
 				{
 					if (cliOptions.ContainsKey(option))
 					{
-						if (!hasErrors || !reportFistErrorOnly)
+						if (!hasErrors || !reportFirstErrorOnly)
 							Console.Error.WriteLine("Duplicate option: {0}", args[i]);
 						hasErrors = true;
 					}
 					else if (conflictingOptions.Contains(option))
 					{
 						var incompatibleOptions = command.GetIncompatibleOptions(option)!;
-						if (!hasErrors || !reportFistErrorOnly)
+						if (!hasErrors || !reportFirstErrorOnly)
 							Console.Error.WriteLine("Option '{0}' conflicts with other option(s): {1}", args[i], string.Join(", ", incompatibleOptions.Select(o => $"--{o.Name}")));
 						hasErrors = true;
 					}
 					else if (!option.AllowInCli)
 					{
-						if (!hasErrors || !reportFistErrorOnly)
+						if (!hasErrors || !reportFirstErrorOnly)
 							Console.Error.WriteLine("Option '{0}' not allowed in command line", args[i]);
 						hasErrors = true;
 					}
 					else if (args.Length == i + 1)
 					{
 						// currently all options has exactly one argument
-						if (!hasErrors || !reportFistErrorOnly)
+						if (!hasErrors || !reportFirstErrorOnly)
 							Console.Error.WriteLine("Option '{0}' must have value", args[i]);
 						hasErrors = true;
 					}
@@ -169,7 +169,7 @@ namespace LinqToDB.CLI
 						var value = option.ParseCLI(command, args[i], out var errorMessage);
 						if (value == null)
 						{
-							if (!hasErrors || !reportFistErrorOnly)
+							if (!hasErrors || !reportFirstErrorOnly)
 								Console.Error.WriteLine("Cannot parse option value ({0} {1}): {2}", args[i - 1], args[i], errorMessage);
 							hasErrors = true;
 						}
@@ -196,7 +196,7 @@ namespace LinqToDB.CLI
 				// to not trigger additional "required" error
 				if (option.Required && !options.ContainsKey(option))
 				{
-					if (!hasErrors || !reportFistErrorOnly)
+					if (!hasErrors || !reportFirstErrorOnly)
 						Console.Error.WriteLine("Required option '{0}' not specified", option.Name);
 					hasErrors = true;
 				}

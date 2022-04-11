@@ -470,25 +470,6 @@ void GenerateTypesFromMetadata()
 					aa.Parameters.Add("OtherKey="  + ToStringLiteral(string.Join(", ", (from c in key.OtherColumns select c.MemberName).ToArray())));
 					aa.Parameters.Add("CanBeNull=" + (key.CanBeNull ? "true" : "false"));
 
-					switch (key.AssociationType)
-					{
-						case AssociationType.OneToOne  : aa.Parameters.Add("Relationship=LinqToDB.Mapping.Relationship.OneToOne");  break;
-						case AssociationType.OneToMany : aa.Parameters.Add("Relationship=LinqToDB.Mapping.Relationship.OneToMany"); break;
-						case AssociationType.ManyToOne : aa.Parameters.Add("Relationship=LinqToDB.Mapping.Relationship.ManyToOne"); break;
-					}
-
-					if (key.BackReference != null)
-					{
-						if (!string.IsNullOrEmpty(key.KeyName))
-							aa.Parameters.Add("KeyName=" + ToStringLiteral(key.KeyName));
-						if (GenerateBackReferences && !string.IsNullOrEmpty(key.BackReference.MemberName))
-							aa.Parameters.Add("BackReferenceName=" + ToStringLiteral(key.BackReference.MemberName));
-					}
-					else
-					{
-						aa.Parameters.Add("IsBackReference=true");
-					}
-
 					key.Attributes.Add(aa);
 
 					SetPropertyValue(key, "IsNotifying", true);

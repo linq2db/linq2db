@@ -1478,7 +1478,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="PdwColumnDistributionProperties")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -1813,7 +1813,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="PdwIndexMappings")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -2026,7 +2026,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="PdwMaterializedViewColumnDistributionProperties")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -2059,7 +2059,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="PdwMaterializedViewDistributionProperties")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -2089,7 +2089,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="PdwMaterializedViewMappings")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -2231,7 +2231,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="PdwNodesColumns")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -2351,7 +2351,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="PdwNodesColumnStoreRowGroups")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -2539,7 +2539,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="PdwNodesIndexes")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -2596,7 +2596,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="PdwNodesPartitions")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -2766,7 +2766,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="PdwNodesTables")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -2798,7 +2798,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="PdwPermanentTableMappings")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -2828,7 +2828,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="PdwReplicatedTableCacheState")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -2862,7 +2862,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="PdwTableDistributionProperties")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -2891,7 +2891,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="PdwTableMappings")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -3055,7 +3055,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="ChangeTrackingTables")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -8952,7 +8952,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="DatabaseEventSessionFields")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -9148,7 +9148,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="ServerEventSessionFields")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -9451,7 +9451,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="ExternalTables")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -9558,7 +9558,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="Filetables")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -9589,7 +9589,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="FiletableSystemDefinedObjects")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -9868,7 +9868,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="FulltextIndexes")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -9901,7 +9901,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="FulltextIndexCatalogUsages")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -9942,7 +9942,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="FulltextIndexColumns")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -12475,7 +12475,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// all_objects (sys.all_objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="all_objects", BackReferenceName="AllColumns")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.AllObject AllObject { get; set; } = null!;
 
 			#endregion
@@ -12544,25 +12544,25 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// all_columns (sys.all_columns)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.AllColumn> AllColumns { get; set; } = null!;
 
 			/// <summary>
 			/// all_parameters (sys.all_parameters)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.AllParameter> AllParameters { get; set; } = null!;
 
 			/// <summary>
 			/// all_sql_modules (sys.all_sql_modules)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.AllSqlModule> AllSqlModules { get; set; } = null!;
 
 			/// <summary>
 			/// all_views (sys.all_views)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public ObjectSchema.AllView? AllView { get; set; }
 
 			#endregion
@@ -12710,7 +12710,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// all_objects (sys.all_objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="all_objects", BackReferenceName="AllParameters")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.AllObject AllObject { get; set; } = null!;
 
 			#endregion
@@ -12772,7 +12772,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// all_objects (sys.all_objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="all_objects", BackReferenceName="AllSqlModules")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.AllObject AllObject { get; set; } = null!;
 
 			#endregion
@@ -12865,7 +12865,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// all_objects (sys.all_objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="all_objects", BackReferenceName="AllView")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.AllObject AllObject { get; set; } = null!;
 
 			#endregion
@@ -12910,7 +12910,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="objects", BackReferenceName="AssemblyModule")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -13007,7 +13007,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="objects", BackReferenceName="CheckConstraint")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -13191,7 +13191,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="Columns")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -13299,7 +13299,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="ColumnStoreRowGroups")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -13563,7 +13563,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="ComputedColumns")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -13644,7 +13644,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="objects", BackReferenceName="DefaultConstraint")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -13689,7 +13689,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="Events")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -13754,7 +13754,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="EventNotifications")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -13850,7 +13850,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="ExtendedProcedures")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -14097,7 +14097,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="objects", BackReferenceName="ForeignKey")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -14169,7 +14169,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="FunctionOrderColumns")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -14283,7 +14283,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="HashIndexes")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -14477,7 +14477,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="IdentityColumns")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -14586,7 +14586,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="Indexes")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -14643,7 +14643,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="IndexColumns")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -14717,7 +14717,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="IndexResumableOperations")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -14786,7 +14786,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="InternalPartitions")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -14880,7 +14880,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="InternalTables")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -14957,7 +14957,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="objects", BackReferenceName="KeyConstraint")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -15006,7 +15006,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="MaskedColumns")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -15047,7 +15047,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="MemoryOptimizedTablesInternalAttributes")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -15076,7 +15076,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="ModuleAssemblyUsages")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -15112,7 +15112,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="NumberedProcedures")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -15183,7 +15183,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="NumberedProcedureParameters")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -15256,487 +15256,487 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// assembly_modules (sys.assembly_modules)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public ObjectSchema.AssemblyModule? AssemblyModule { get; set; }
 
 			/// <summary>
 			/// change_tracking_tables (sys.change_tracking_tables)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ChangeTrackingSchema.ChangeTrackingTable> ChangeTrackingTables { get; set; } = null!;
 
 			/// <summary>
 			/// check_constraints (sys.check_constraints)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public ObjectSchema.CheckConstraint? CheckConstraint { get; set; }
 
 			/// <summary>
 			/// columns (sys.columns)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.Column> Columns { get; set; } = null!;
 
 			/// <summary>
 			/// column_store_row_groups (sys.column_store_row_groups)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.ColumnStoreRowGroup> ColumnStoreRowGroups { get; set; } = null!;
 
 			/// <summary>
 			/// column_type_usages (sys.column_type_usages)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ScalarTypesSchema.ColumnTypeUsage> ColumnTypeUsages { get; set; } = null!;
 
 			/// <summary>
 			/// column_xml_schema_collection_usages (sys.column_xml_schema_collection_usages)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<XmlSchema.ColumnXmlSchemaCollectionUsage> ColumnXmlSchemaCollectionUsages { get; set; } = null!;
 
 			/// <summary>
 			/// computed_columns (sys.computed_columns)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.ComputedColumn> ComputedColumns { get; set; } = null!;
 
 			/// <summary>
 			/// database_event_session_fields (sys.database_event_session_fields)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ExtendedEventsSchema.DatabaseEventSessionField> DatabaseEventSessionFields { get; set; } = null!;
 
 			/// <summary>
 			/// default_constraints (sys.default_constraints)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public ObjectSchema.DefaultConstraint? DefaultConstraint { get; set; }
 
 			/// <summary>
 			/// event_notifications (sys.event_notifications)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.EventNotification> EventNotifications { get; set; } = null!;
 
 			/// <summary>
 			/// events (sys.events)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.Event> Events { get; set; } = null!;
 
 			/// <summary>
 			/// extended_procedures (sys.extended_procedures)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.ExtendedProcedure> ExtendedProcedures { get; set; } = null!;
 
 			/// <summary>
 			/// external_tables (sys.external_tables)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ExternalOperationsSchema.ExternalTable> ExternalTables { get; set; } = null!;
 
 			/// <summary>
 			/// filetables (sys.filetables)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<FilestreamAndFileTableSchema.FileTable> Filetables { get; set; } = null!;
 
 			/// <summary>
 			/// filetable_system_defined_objects (sys.filetable_system_defined_objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<FilestreamAndFileTableSchema.FileTableSystemDefinedObject> FiletableSystemDefinedObjects { get; set; } = null!;
 
 			/// <summary>
 			/// foreign_keys (sys.foreign_keys)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public ObjectSchema.ForeignKey? ForeignKey { get; set; }
 
 			/// <summary>
 			/// fulltext_index_catalog_usages (sys.fulltext_index_catalog_usages)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<FullTextSearchSchema.IndexCatalogUsage> FulltextIndexCatalogUsages { get; set; } = null!;
 
 			/// <summary>
 			/// fulltext_index_columns (sys.fulltext_index_columns)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<FullTextSearchSchema.IndexColumn> FulltextIndexColumns { get; set; } = null!;
 
 			/// <summary>
 			/// fulltext_indexes (sys.fulltext_indexes)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<FullTextSearchSchema.Index> FulltextIndexes { get; set; } = null!;
 
 			/// <summary>
 			/// function_order_columns (sys.function_order_columns)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.FunctionOrderColumn> FunctionOrderColumns { get; set; } = null!;
 
 			/// <summary>
 			/// hash_indexes (sys.hash_indexes)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.HashIndex> HashIndexes { get; set; } = null!;
 
 			/// <summary>
 			/// identity_columns (sys.identity_columns)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.IdentityColumn> IdentityColumns { get; set; } = null!;
 
 			/// <summary>
 			/// index_columns (sys.index_columns)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.IndexColumn> IndexColumns { get; set; } = null!;
 
 			/// <summary>
 			/// indexes (sys.indexes)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.Index> Indexes { get; set; } = null!;
 
 			/// <summary>
 			/// index_resumable_operations (sys.index_resumable_operations)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.IndexResumableOperation> IndexResumableOperations { get; set; } = null!;
 
 			/// <summary>
 			/// internal_partitions (sys.internal_partitions)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.InternalPartition> InternalPartitions { get; set; } = null!;
 
 			/// <summary>
 			/// internal_tables (sys.internal_tables)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.InternalTable> InternalTables { get; set; } = null!;
 
 			/// <summary>
 			/// key_constraints (sys.key_constraints)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public ObjectSchema.KeyConstraint? KeyConstraint { get; set; }
 
 			/// <summary>
 			/// ledger_column_history (sys.ledger_column_history)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<SecuritySchema.LedgerColumnHistory> LedgerColumnHistory { get; set; } = null!;
 
 			/// <summary>
 			/// ledger_table_history (sys.ledger_table_history)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<SecuritySchema.LedgerTableHistory> LedgerTableHistory { get; set; } = null!;
 
 			/// <summary>
 			/// masked_columns (sys.masked_columns)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.MaskedColumn> MaskedColumns { get; set; } = null!;
 
 			/// <summary>
 			/// memory_optimized_tables_internal_attributes (sys.memory_optimized_tables_internal_attributes)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.MemoryOptimizedTablesInternalAttribute> MemoryOptimizedTablesInternalAttributes { get; set; } = null!;
 
 			/// <summary>
 			/// module_assembly_usages (sys.module_assembly_usages)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.ModuleAssemblyUsage> ModuleAssemblyUsages { get; set; } = null!;
 
 			/// <summary>
 			/// numbered_procedure_parameters (sys.numbered_procedure_parameters)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.NumberedProcedureParameter> NumberedProcedureParameters { get; set; } = null!;
 
 			/// <summary>
 			/// numbered_procedures (sys.numbered_procedures)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.NumberedProcedure> NumberedProcedures { get; set; } = null!;
 
 			/// <summary>
 			/// parameters (sys.parameters)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.Parameter> Parameters { get; set; } = null!;
 
 			/// <summary>
 			/// parameter_type_usages (sys.parameter_type_usages)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ScalarTypesSchema.ParameterTypeUsage> ParameterTypeUsages { get; set; } = null!;
 
 			/// <summary>
 			/// parameter_xml_schema_collection_usages (sys.parameter_xml_schema_collection_usages)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<XmlSchema.ParameterXmlSchemaCollectionUsage> ParameterXmlSchemaCollectionUsages { get; set; } = null!;
 
 			/// <summary>
 			/// partitions (sys.partitions)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.Partition> Partitions { get; set; } = null!;
 
 			/// <summary>
 			/// pdw_column_distribution_properties (sys.pdw_column_distribution_properties)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<AzureSynapseAnalyticsSchema.ColumnDistributionProperty> PdwColumnDistributionProperties { get; set; } = null!;
 
 			/// <summary>
 			/// pdw_index_mappings (sys.pdw_index_mappings)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<AzureSynapseAnalyticsSchema.IndexMapping> PdwIndexMappings { get; set; } = null!;
 
 			/// <summary>
 			/// pdw_materialized_view_column_distribution_properties (sys.pdw_materialized_view_column_distribution_properties)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<AzureSynapseAnalyticsSchema.MaterializedViewColumnDistributionProperty> PdwMaterializedViewColumnDistributionProperties { get; set; } = null!;
 
 			/// <summary>
 			/// pdw_materialized_view_distribution_properties (sys.pdw_materialized_view_distribution_properties)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<AzureSynapseAnalyticsSchema.MaterializedViewDistributionProperty> PdwMaterializedViewDistributionProperties { get; set; } = null!;
 
 			/// <summary>
 			/// pdw_materialized_view_mappings (sys.pdw_materialized_view_mappings)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<AzureSynapseAnalyticsSchema.MaterializedViewMapping> PdwMaterializedViewMappings { get; set; } = null!;
 
 			/// <summary>
 			/// pdw_nodes_columns (sys.pdw_nodes_columns)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<AzureSynapseAnalyticsSchema.NodesColumn> PdwNodesColumns { get; set; } = null!;
 
 			/// <summary>
 			/// pdw_nodes_column_store_row_groups (sys.pdw_nodes_column_store_row_groups)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<AzureSynapseAnalyticsSchema.NodesColumnStoreRowGroup> PdwNodesColumnStoreRowGroups { get; set; } = null!;
 
 			/// <summary>
 			/// pdw_nodes_indexes (sys.pdw_nodes_indexes)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<AzureSynapseAnalyticsSchema.NodesIndex> PdwNodesIndexes { get; set; } = null!;
 
 			/// <summary>
 			/// pdw_nodes_partitions (sys.pdw_nodes_partitions)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<AzureSynapseAnalyticsSchema.NodesPartition> PdwNodesPartitions { get; set; } = null!;
 
 			/// <summary>
 			/// pdw_nodes_tables (sys.pdw_nodes_tables)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<AzureSynapseAnalyticsSchema.NodesTable> PdwNodesTables { get; set; } = null!;
 
 			/// <summary>
 			/// pdw_permanent_table_mappings (sys.pdw_permanent_table_mappings)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<AzureSynapseAnalyticsSchema.PermanentTableMapping> PdwPermanentTableMappings { get; set; } = null!;
 
 			/// <summary>
 			/// pdw_replicated_table_cache_state (sys.pdw_replicated_table_cache_state)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<AzureSynapseAnalyticsSchema.ReplicatedTableCacheState> PdwReplicatedTableCacheState { get; set; } = null!;
 
 			/// <summary>
 			/// pdw_table_distribution_properties (sys.pdw_table_distribution_properties)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<AzureSynapseAnalyticsSchema.TableDistributionProperty> PdwTableDistributionProperties { get; set; } = null!;
 
 			/// <summary>
 			/// pdw_table_mappings (sys.pdw_table_mappings)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<AzureSynapseAnalyticsSchema.TableMapping> PdwTableMappings { get; set; } = null!;
 
 			/// <summary>
 			/// periods (sys.periods)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.Period> Periods { get; set; } = null!;
 
 			/// <summary>
 			/// procedures (sys.procedures)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.Procedure> Procedures { get; set; } = null!;
 
 			/// <summary>
 			/// query_store_query (sys.query_store_query)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<QueryStoreSchema.QueryStoreQuery> QueryStoreQuery { get; set; } = null!;
 
 			/// <summary>
 			/// remote_data_archive_tables (sys.remote_data_archive_tables)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<StretchDatabaseSchema.RemoteDataArchiveTable> RemoteDataArchiveTables { get; set; } = null!;
 
 			/// <summary>
 			/// security_policies (sys.security_policies)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<SecuritySchema.SecurityPolicy> SecurityPolicies { get; set; } = null!;
 
 			/// <summary>
 			/// security_predicates (sys.security_predicates)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<SecuritySchema.SecurityPredicate> SecurityPredicates { get; set; } = null!;
 
 			/// <summary>
 			/// selective_xml_index_paths (sys.selective_xml_index_paths)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<XmlSchema.SelectiveXmlIndexPath> SelectiveXmlIndexPaths { get; set; } = null!;
 
 			/// <summary>
 			/// sequences (sys.sequences)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.Sequence> Sequences { get; set; } = null!;
 
 			/// <summary>
 			/// server_assembly_modules (sys.server_assembly_modules)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.ServerAssemblyModule> ServerAssemblyModules { get; set; } = null!;
 
 			/// <summary>
 			/// server_event_notifications (sys.server_event_notifications)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.ServerEventNotification> ServerEventNotifications { get; set; } = null!;
 
 			/// <summary>
 			/// server_events (sys.server_events)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.ServerEvent> ServerEvents { get; set; } = null!;
 
 			/// <summary>
 			/// server_event_session_fields (sys.server_event_session_fields)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ExtendedEventsSchema.ServerEventSessionField> ServerEventSessionFields { get; set; } = null!;
 
 			/// <summary>
 			/// server_sql_modules (sys.server_sql_modules)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.ServerSqlModule> ServerSqlModules { get; set; } = null!;
 
 			/// <summary>
 			/// server_triggers (sys.server_triggers)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.ServerTrigger> ServerTriggers { get; set; } = null!;
 
 			/// <summary>
 			/// service_queues (sys.service_queues)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public ServiceBrokerSchema.ServiceQueue? ServiceQueue { get; set; }
 
 			/// <summary>
 			/// spatial_indexes (sys.spatial_indexes)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<SpatialDataSchema.SpatialIndex> SpatialIndexes { get; set; } = null!;
 
 			/// <summary>
 			/// spatial_index_tessellations (sys.spatial_index_tessellations)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<SpatialDataSchema.SpatialIndexTessellation> SpatialIndexTessellations { get; set; } = null!;
 
 			/// <summary>
 			/// sql_dependencies (sys.sql_dependencies)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.SqlDependency> SqlDependencies { get; set; } = null!;
 
 			/// <summary>
 			/// sql_modules (sys.sql_modules)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.SqlModule> SqlModules { get; set; } = null!;
 
 			/// <summary>
 			/// stats (sys.stats)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.Stat> Stats { get; set; } = null!;
 
 			/// <summary>
 			/// stats_columns (sys.stats_columns)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.StatsColumn> StatsColumns { get; set; } = null!;
 
 			/// <summary>
 			/// synonyms (sys.synonyms)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public ObjectSchema.Synonym? Synonym { get; set; }
 
 			/// <summary>
 			/// tables (sys.tables)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public ObjectSchema.Table? Table { get; set; }
 
 			/// <summary>
 			/// trigger_events (sys.trigger_events)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.TriggerEvent> TriggerEvents { get; set; } = null!;
 
 			/// <summary>
 			/// triggers (sys.triggers)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.Trigger> Triggers { get; set; } = null!;
 
 			/// <summary>
 			/// views (sys.views)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public ObjectSchema.View? View { get; set; }
 
 			/// <summary>
 			/// xml_indexes (sys.xml_indexes)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<XmlSchema.XmlIndex> XmlIndexes { get; set; } = null!;
 
 			#endregion
@@ -15841,7 +15841,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="Parameters")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -15898,7 +15898,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="Partitions")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -15943,7 +15943,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="Periods")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -16087,7 +16087,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="Procedures")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -16212,7 +16212,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="Sequences")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -16253,7 +16253,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="ServerAssemblyModules")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -16294,7 +16294,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="ServerEvents")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -16359,7 +16359,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="ServerEventNotifications")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -16400,7 +16400,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="ServerSqlModules")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -16465,7 +16465,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="ServerTriggers")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -16548,7 +16548,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="SqlDependencies")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -16696,7 +16696,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="SqlModules")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -16770,7 +16770,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="Stats")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -16807,7 +16807,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="StatsColumns")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -16880,7 +16880,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="objects", BackReferenceName="Synonym")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -17017,7 +17017,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// system_objects (sys.system_objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="system_objects", BackReferenceName="SystemColumns")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.SystemObject SystemObject { get; set; } = null!;
 
 			#endregion
@@ -17086,25 +17086,25 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// system_columns (sys.system_columns)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.SystemColumn> SystemColumns { get; set; } = null!;
 
 			/// <summary>
 			/// system_parameters (sys.system_parameters)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.SystemParameter> SystemParameters { get; set; } = null!;
 
 			/// <summary>
 			/// system_sql_modules (sys.system_sql_modules)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.SystemSqlModule> SystemSqlModules { get; set; } = null!;
 
 			/// <summary>
 			/// system_views (sys.system_views)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
 			public ObjectSchema.SystemView? SystemView { get; set; }
 
 			#endregion
@@ -17209,7 +17209,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// system_objects (sys.system_objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="system_objects", BackReferenceName="SystemParameters")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.SystemObject SystemObject { get; set; } = null!;
 
 			#endregion
@@ -17266,7 +17266,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// system_objects (sys.system_objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="system_objects", BackReferenceName="SystemSqlModules")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.SystemObject SystemObject { get; set; } = null!;
 
 			#endregion
@@ -17359,7 +17359,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// system_objects (sys.system_objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="system_objects", BackReferenceName="SystemView")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.SystemObject SystemObject { get; set; } = null!;
 
 			#endregion
@@ -17560,7 +17560,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="objects", BackReferenceName="Table")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -17657,7 +17657,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="Triggers")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -17713,7 +17713,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="TriggerEvents")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -17841,7 +17841,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="objects", BackReferenceName="View")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -18838,7 +18838,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="QueryStoreQuery")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -19625,7 +19625,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="ColumnTypeUsages")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -19661,7 +19661,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="ParameterTypeUsages")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -20884,7 +20884,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="LedgerColumnHistory")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -20942,7 +20942,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="LedgerTableHistory")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -21128,7 +21128,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="SecurityPolicies")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -21181,7 +21181,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="SecurityPredicates")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -22831,7 +22831,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="objects", BackReferenceName="ServiceQueue")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -23072,7 +23072,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="SpatialIndexes")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -23160,7 +23160,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="SpatialIndexTessellations")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -23299,7 +23299,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="RemoteDataArchiveTables")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -23459,7 +23459,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="ColumnXmlSchemaCollectionUsages")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -23492,7 +23492,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="ParameterXmlSchemaCollectionUsages")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -23601,7 +23601,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="SelectiveXmlIndexPaths")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -23734,7 +23734,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="XmlIndexes")]
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
