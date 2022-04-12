@@ -643,6 +643,7 @@ namespace Tests.Linq
 			using (var db = GetDataConnection(context, new MappingSchema()))
 			{
 				SetupCustomTypes(db.MappingSchema, true);
+
 				using (var table = db.CreateLocalTable<AllTypesCustomMaxLength>())
 				{
 					var value = new string('я', 5000);

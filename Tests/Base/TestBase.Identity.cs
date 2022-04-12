@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Linq;
+using System.Security.Cryptography;
 using LinqToDB;
 using LinqToDB.Data;
 
@@ -16,13 +18,16 @@ namespace Tests
 		{
 			var provider = GetProviderName(context, out var _);
 
+			Console.WriteLine($"{nameof(ResetPersonIdentity)}. provider : {provider}");
+
 			var lastValue = 4;
 
 			string[]? sql = CustomizationSupport.Interceptor.InterceptResetPersonIdentity(context, lastValue);
 
+			Console.WriteLine($"{nameof(ResetPersonIdentity)}. sql : {sql?.Aggregate("\r\n", (s1,s2) => s1 + "\r\n" + s2)}");
+
 			if (sql == null)
 			{
-
 				switch (provider)
 				{
 					case string prov when prov.IsAnyOf(TestProvName.AllAccess):
@@ -104,9 +109,11 @@ CREATE COLUMN TABLE ""Person"" (
 						sql = new[] { $"UPDATE sqlite_sequence SET seq = {lastValue} WHERE name = 'Person'" };
 						break;
 					default:
-						Console.WriteLine($"Unknown provider {provider}");
+						Console.WriteLine($"Unknown provider: {provider}");
 						break;
 				}
+
+				Console.WriteLine($"{nameof(ResetPersonIdentity)}. sql : {sql?.Aggregate((s1, s2) => s1 + "\r\n" + s2)}");
 			}
 
 			if (sql != null)
