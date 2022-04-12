@@ -78,23 +78,6 @@ namespace Tests.UserTests
 			}
 		}
 
-		//[ActiveIssue("What is this test???")]
-		[Test]
-		public void TestFail([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
-		{
-			try
-			{
-				TestEnumString(context, ms => { }, true);
-				Assert.Fail("Value constraint expected");
-			}
-			catch (Microsoft.Data.Sqlite.SqliteException)
-			{
-			}
-			catch (System.Data.SQLite.SQLiteException)
-			{
-			}
-		}
-
 		[Test]
 		public void TestEnumDefaultType1([DataSources] string context)
 		{

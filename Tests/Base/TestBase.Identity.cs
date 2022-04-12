@@ -18,13 +18,9 @@ namespace Tests
 		{
 			var provider = GetProviderName(context, out var _);
 
-			Console.WriteLine($"{nameof(ResetPersonIdentity)}. provider : {provider}");
-
 			var lastValue = 4;
 
 			string[]? sql = CustomizationSupport.Interceptor.InterceptResetPersonIdentity(context, lastValue);
-
-			Console.WriteLine($"{nameof(ResetPersonIdentity)}. sql : {sql?.Aggregate("\r\n", (s1,s2) => s1 + "\r\n" + s2)}");
 
 			if (sql == null)
 			{
@@ -112,8 +108,6 @@ CREATE COLUMN TABLE ""Person"" (
 						Console.WriteLine($"Unknown provider: {provider}");
 						break;
 				}
-
-				Console.WriteLine($"{nameof(ResetPersonIdentity)}. sql : {sql?.Aggregate((s1, s2) => s1 + "\r\n" + s2)}");
 			}
 
 			if (sql != null)
