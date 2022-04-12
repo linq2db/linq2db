@@ -88,9 +88,11 @@ namespace Tests.UserTests
 				TestEnumString(context, ms => { });
 				Assert.Fail("Value constraint expected");
 			}
-			catch (Exception)
+			catch (Microsoft.Data.Sqlite.SqliteException)
 			{
-				//
+			}
+			catch (System.Data.SQLite.SQLiteException)
+			{
 			}
 		}
 
