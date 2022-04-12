@@ -25,7 +25,7 @@ namespace LinqToDB.Linq.Builder
 	{
 		#region Build Where
 
-		internal IBuildContext BuildWhere(IBuildContext? parent, IBuildContext sequence, LambdaExpression condition, bool checkForSubQuery, bool enforceHaving = false)
+		public IBuildContext BuildWhere(IBuildContext? parent, IBuildContext sequence, LambdaExpression condition, bool checkForSubQuery, bool enforceHaving = false)
 		{
 			var prevParent = sequence.Parent;
 			var ctx        = new ExpressionContext(parent, sequence, condition);
@@ -198,7 +198,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region BuildTake
 
-		internal void BuildTake(IBuildContext context, ISqlExpression expr, TakeHints? hints)
+		public void BuildTake(IBuildContext context, ISqlExpression expr, TakeHints? hints)
 		{
 			var sql = context.SelectQuery;
 
@@ -215,7 +215,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region SubQueryToSql
 
-		internal IBuildContext GetSubQuery(IBuildContext context, MethodCallExpression expr)
+		public IBuildContext GetSubQuery(IBuildContext context, MethodCallExpression expr)
 		{
 			var info = new BuildInfo(context, expr, new SelectQuery { ParentSelect = context.SelectQuery });
 			var ctx  = BuildSequence(info);
@@ -231,7 +231,7 @@ namespace LinqToDB.Linq.Builder
 			return ctx;
 		}
 
-		internal ISqlExpression SubQueryToSql(IBuildContext context, MethodCallExpression expression)
+		public ISqlExpression SubQueryToSql(IBuildContext context, MethodCallExpression expression)
 		{
 			var subQueryCtx = GetSubQueryContext(context, expression);
 			var sequence    = subQueryCtx.Context;
@@ -288,7 +288,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region IsSubQuery
 
-		internal bool IsSubQuery(IBuildContext context, MethodCallExpression call)
+		public bool IsSubQuery(IBuildContext context, MethodCallExpression call)
 		{
 			var isAggregate = call.IsAggregate(MappingSchema);
 
@@ -401,7 +401,7 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-		internal Expression ConvertExpression(Expression expression)
+		public Expression ConvertExpression(Expression expression)
 		{
 			return (_convertExpressionTransformer ??= TransformInfoVisitor<ExpressionBuilder>.Create(this, static (ctx, e) => ctx.ConvertExpressionTransformer(e)))
 				.Transform(expression);
@@ -713,7 +713,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region BuildExpression
 
-		internal SqlInfo[] ConvertExpressions(IBuildContext context, Expression expression, ConvertFlags queryConvertFlag, ColumnDescriptor? columnDescriptor)
+		public SqlInfo[] ConvertExpressions(IBuildContext context, Expression expression, ConvertFlags queryConvertFlag, ColumnDescriptor? columnDescriptor)
 		{
 			expression = ConvertExpression(expression).UnwrapConvertToObject();
 
@@ -837,13 +837,13 @@ namespace LinqToDB.Linq.Builder
 			return new[] { new SqlInfo(ConvertToSql(context, expression, false, columnDescriptor)) };
 		}
 
-		internal ISqlExpression ConvertToSqlExpression(IBuildContext context, Expression expression, ColumnDescriptor? columnDescriptor, bool isPureExpression)
+		public ISqlExpression ConvertToSqlExpression(IBuildContext context, Expression expression, ColumnDescriptor? columnDescriptor, bool isPureExpression)
 		{
 			var expr = ConvertExpression(expression);
 			return ConvertToSql(context, expr, false, columnDescriptor, isPureExpression);
 		}
 
-		internal ISqlExpression ConvertToExtensionSql(IBuildContext context, Expression expression, ColumnDescriptor? columnDescriptor)
+		public ISqlExpression ConvertToExtensionSql(IBuildContext context, Expression expression, ColumnDescriptor? columnDescriptor)
 		{
 			expression = expression.UnwrapConvertToObject();
 			var unwrapped = expression.Unwrap();
@@ -897,7 +897,7 @@ namespace LinqToDB.Linq.Builder
 			return ConvertToSql(context, expression, false, columnDescriptor);
 		}
 
-		internal ISqlExpression ConvertToSql(IBuildContext? context, Expression expression, bool unwrap = false, ColumnDescriptor? columnDescriptor = null, bool isPureExpression = false)
+		public ISqlExpression ConvertToSql(IBuildContext? context, Expression expression, bool unwrap = false, ColumnDescriptor? columnDescriptor = null, bool isPureExpression = false)
 		{
 			if (typeof(IToSqlConverter).IsSameOrParentOf(expression.Type))
 			{
@@ -1284,7 +1284,7 @@ namespace LinqToDB.Linq.Builder
 			throw new LinqException("'{0}' cannot be converted to SQL.", expression);
 		}
 
-		internal ISqlExpression ConvertFormatToSql(IBuildContext? context, MethodCallExpression mc, bool isPureExpression)
+		public ISqlExpression ConvertFormatToSql(IBuildContext? context, MethodCallExpression mc, bool isPureExpression)
 		{
 			// TODO: move PrepareRawSqlArguments to more correct location
 			TableBuilder.PrepareRawSqlArguments(mc, null,
@@ -1300,7 +1300,7 @@ namespace LinqToDB.Linq.Builder
 			return QueryHelper.ConvertFormatToConcatenation(format, sqlArguments);
 		}
 
-		internal ISqlExpression ConvertExtensionToSql(IBuildContext context, Sql.ExpressionAttribute attr, MethodCallExpression mc)
+		public ISqlExpression ConvertExtensionToSql(IBuildContext context, Sql.ExpressionAttribute attr, MethodCallExpression mc)
 		{
 			var inlineParameters = DataContext.InlineParameters;
 
@@ -1322,7 +1322,7 @@ namespace LinqToDB.Linq.Builder
 			return sqlExpression;
 		}
 
-		internal static ISqlExpression ConvertToSqlConvertible(Expression expression)
+		public static ISqlExpression ConvertToSqlConvertible(Expression expression)
 		{
 			var l = Expression.Lambda<Func<IToSqlConverter>>(Expression.Convert(expression, typeof(IToSqlConverter)));
 			var f = l.CompileExpression();
@@ -1337,7 +1337,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region IsServerSideOnly
 
-		internal bool IsServerSideOnly(Expression expr)
+		public bool IsServerSideOnly(Expression expr)
 		{
 			return _optimizationContext.IsServerSideOnly(expr);
 		}
@@ -1355,7 +1355,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region CanBeCompiled
 
-		internal bool CanBeCompiled(Expression expr)
+		public bool CanBeCompiled(Expression expr)
 		{
 			return _optimizationContext.CanBeCompiled(expr);
 		}
@@ -1986,7 +1986,7 @@ namespace LinqToDB.Linq.Builder
 			return result;
 		}
 
-		internal ISqlPredicate? ConvertObjectComparison(
+		public ISqlPredicate? ConvertObjectComparison(
 			ExpressionType nodeType,
 			IBuildContext leftContext,
 			Expression left,
@@ -2109,7 +2109,7 @@ namespace LinqToDB.Linq.Builder
 			return condition;
 		}
 
-		internal ISqlPredicate? ConvertNewObjectComparison(IBuildContext context, ExpressionType nodeType, Expression left, Expression right)
+		public ISqlPredicate? ConvertNewObjectComparison(IBuildContext context, ExpressionType nodeType, Expression left, Expression right)
 		{
 			left  = FindExpression(left);
 			right = FindExpression(right);
@@ -2190,7 +2190,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region Parameters
 
-		internal static DbDataType GetMemberDataType(MappingSchema mappingSchema, MemberInfo member)
+		public static DbDataType GetMemberDataType(MappingSchema mappingSchema, MemberInfo member)
 		{
 			var typeResult = new DbDataType(member.GetMemberType());
 
@@ -2354,7 +2354,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region ColumnDescriptor Helpers
 
-		internal ColumnDescriptor? SuggestColumnDescriptor(IBuildContext? context, Expression expr)
+		public ColumnDescriptor? SuggestColumnDescriptor(IBuildContext? context, Expression expr)
 		{
 			expr = expr.Unwrap();
 			var ctx = GetContext(context, expr);
@@ -2370,12 +2370,12 @@ namespace LinqToDB.Linq.Builder
 			return null;
 		}
 
-		internal ColumnDescriptor? SuggestColumnDescriptor(IBuildContext? context, Expression expr1, Expression expr2)
+		public ColumnDescriptor? SuggestColumnDescriptor(IBuildContext? context, Expression expr1, Expression expr2)
 		{
 			return SuggestColumnDescriptor(context, expr1) ?? SuggestColumnDescriptor(context, expr2);
 		}
 
-		internal ColumnDescriptor? SuggestColumnDescriptor(IBuildContext? context, ReadOnlyCollection<Expression> expressions)
+		public ColumnDescriptor? SuggestColumnDescriptor(IBuildContext? context, ReadOnlyCollection<Expression> expressions)
 		{
 			foreach (var expr in expressions)
 			{
@@ -2424,7 +2424,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region MakeIsPredicate
 
-		internal ISqlPredicate MakeIsPredicate(TableBuilder.TableContext table, Type typeOperand)
+		public ISqlPredicate MakeIsPredicate(TableBuilder.TableContext table, Type typeOperand)
 		{
 			if (typeOperand == table.ObjectType)
 			{
@@ -2445,7 +2445,7 @@ namespace LinqToDB.Linq.Builder
 			return MakeIsPredicate(table, table, table.InheritanceMapping, typeOperand, static (table, name) => table.SqlTable[name] ?? throw new LinqException($"Field {name} not found in table {table.SqlTable}"));
 		}
 
-		internal ISqlPredicate MakeIsPredicate<TContext>(
+		public ISqlPredicate MakeIsPredicate<TContext>(
 			TContext                              getSqlContext,
 			IBuildContext                         context,
 			List<InheritanceMapping>              inheritanceMapping,
@@ -2616,7 +2616,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region Search Condition Builder
 
-		internal void BuildSearchCondition(IBuildContext? context, Expression expression, List<SqlCondition> conditions)
+		public void BuildSearchCondition(IBuildContext? context, Expression expression, List<SqlCondition> conditions)
 		{
 			expression = GetRemoveNullPropagationTransformer(true).Transform(expression);
 
@@ -2826,7 +2826,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region Helpers
 
-		internal IBuildContext? GetContext(IBuildContext? current, Expression? expression)
+		public IBuildContext? GetContext(IBuildContext? current, Expression? expression)
 		{
 			var root = GetRootObject(expression);
 			root = root.Unwrap();
@@ -2846,7 +2846,7 @@ namespace LinqToDB.Linq.Builder
 			return MappingSchema.GetAttribute<Sql.ExpressionAttribute>(member.ReflectedType!, member, static a => a.Configuration);
 		}
 
-		internal Sql.TableFunctionAttribute? GetTableFunctionAttribute(MemberInfo member)
+		public Sql.TableFunctionAttribute? GetTableFunctionAttribute(MemberInfo member)
 		{
 			return MappingSchema.GetAttribute<Sql.TableFunctionAttribute>(member.ReflectedType!, member, static a => a.Configuration);
 		}
@@ -2940,7 +2940,7 @@ namespace LinqToDB.Linq.Builder
 			return expr;
 		}
 
-		internal bool ProcessProjection(Dictionary<MemberInfo,Expression> members, Expression expression)
+		public bool ProcessProjection(Dictionary<MemberInfo,Expression> members, Expression expression)
 		{
 			void CollectParameters(Type forType, MethodBase method, ReadOnlyCollection<Expression> arguments)
 			{
@@ -3067,7 +3067,7 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-		internal void ReplaceParent(IBuildContext oldParent, IBuildContext? newParent)
+		public void ReplaceParent(IBuildContext oldParent, IBuildContext? newParent)
 		{
 			foreach (var context in Contexts)
 				if (context != newParent)
@@ -3076,7 +3076,7 @@ namespace LinqToDB.Linq.Builder
 							context.Parent = newParent;
 		}
 
-		internal static void EnsureAggregateColumns(IBuildContext context, SelectQuery query)
+		public static void EnsureAggregateColumns(IBuildContext context, SelectQuery query)
 		{
 			if (query.Select.Columns.Count == 0)
 			{
@@ -3102,7 +3102,7 @@ namespace LinqToDB.Linq.Builder
 		List<Tuple<Expression, Tuple<CteClause, IBuildContext?>>>? _ctes;
 		Dictionary<IQueryable, Expression>?                        _ctesObjectMapping;
 
-		internal Tuple<CteClause, IBuildContext?, Expression> RegisterCte(IQueryable? queryable, Expression? cteExpression, Func<CteClause> buildFunc)
+		public Tuple<CteClause, IBuildContext?, Expression> RegisterCte(IQueryable? queryable, Expression? cteExpression, Func<CteClause> buildFunc)
 		{
 			if (cteExpression != null && queryable != null && (_ctesObjectMapping == null || !_ctesObjectMapping.ContainsKey(queryable)))
 			{
@@ -3152,7 +3152,7 @@ namespace LinqToDB.Linq.Builder
 		}
 
 
-		internal Tuple<CteClause, IBuildContext?> BuildCte(Expression cteExpression, Func<CteClause?, Tuple<CteClause, IBuildContext?>> buildFunc)
+		public Tuple<CteClause, IBuildContext?> BuildCte(Expression cteExpression, Func<CteClause?, Tuple<CteClause, IBuildContext?>> buildFunc)
 		{
 			var value = FindRegisteredCteByExpression(cteExpression, out var idx);
 			if (value?.Item2 != null)
@@ -3174,7 +3174,7 @@ namespace LinqToDB.Linq.Builder
 			return value;
 		}
 
-		internal IBuildContext? GetCteContext(Expression cteExpression)
+		public IBuildContext? GetCteContext(Expression cteExpression)
 		{
 			return FindRegisteredCteByExpression(cteExpression, out _)?.Item2;
 		}
@@ -3188,10 +3188,10 @@ namespace LinqToDB.Linq.Builder
 			Func<object?, IDataContext, Expression, object?[]?, object?>,
 			Func<object?, IDataContext, Expression, object?[]?, CancellationToken, Task<object?>>>>? _preambles;
 
-		internal static readonly ParameterExpression PreambleParam =
+		public static readonly ParameterExpression PreambleParam =
 			Expression.Parameter(typeof(object[]), "preamble");
 
-		internal int RegisterPreamble<T>(
+		public int RegisterPreamble<T>(
 			object? data,
 			Func<object?, IDataContext, Expression, object?[]?, T> func,
 			Func<object?, IDataContext, Expression, object?[]?, CancellationToken, Task<T>> funcAsync
@@ -3217,14 +3217,14 @@ namespace LinqToDB.Linq.Builder
 
 		private Stack<Type[]>? _disabledFilters;
 
-		internal void PushDisabledQueryFilters(Type[] disabledFilters)
+		public void PushDisabledQueryFilters(Type[] disabledFilters)
 		{
 			if (_disabledFilters == null)
 				_disabledFilters = new Stack<Type[]>();
 			_disabledFilters.Push(disabledFilters);
 		}
 
-		internal bool IsFilterDisabled(Type entityType)
+		public bool IsFilterDisabled(Type entityType)
 		{
 			if (_disabledFilters == null || _disabledFilters.Count == 0)
 				return false;
@@ -3234,7 +3234,7 @@ namespace LinqToDB.Linq.Builder
 			return Array.IndexOf(filter, entityType) >= 0;
 		}
 
-		internal void PopDisabledFilter()
+		public void PopDisabledFilter()
 		{
 			if (_disabledFilters == null)
 				throw new InvalidOperationException();
@@ -3248,12 +3248,12 @@ namespace LinqToDB.Linq.Builder
 
 		List<SqlQueryExtension>? _sqlQueryExtensionStack;
 
-		internal void PushSqlQueryExtension(SqlQueryExtension extension)
+		public void PushSqlQueryExtension(SqlQueryExtension extension)
 		{
 			(_sqlQueryExtensionStack ??= new()).Add(extension);
 		}
 
-		internal void PopSqlQueryExtension(SqlQueryExtension extension)
+		public void PopSqlQueryExtension(SqlQueryExtension extension)
 		{
 			if (_sqlQueryExtensionStack == null || _sqlQueryExtensionStack.Count > 0)
 				throw new InvalidOperationException();
@@ -3264,7 +3264,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region Grouping Guard
 
-		internal bool IsGroupingGuardDisabled { get; set; }
+		public bool IsGroupingGuardDisabled { get; set; }
 
 		#endregion
 	}

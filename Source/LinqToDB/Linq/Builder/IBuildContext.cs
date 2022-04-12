@@ -49,7 +49,7 @@ namespace LinqToDB.Linq.Builder
 		}
 	}
 
-	public interface IBuildContext
+	interface IBuildContext
 	{
 #if DEBUG
 		string? SqlQueryText { get; }

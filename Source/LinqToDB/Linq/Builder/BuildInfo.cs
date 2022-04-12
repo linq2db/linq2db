@@ -4,9 +4,9 @@ namespace LinqToDB.Linq.Builder
 {
 	using SqlQuery;
 
-	public class BuildInfo
+	class BuildInfo
 	{
-		internal BuildInfo(IBuildContext? parent, Expression expression, SelectQuery selectQuery)
+		public BuildInfo(IBuildContext? parent, Expression expression, SelectQuery selectQuery)
 		{
 			Parent      = parent;
 			Expression  = expression;
@@ -27,18 +27,18 @@ namespace LinqToDB.Linq.Builder
 			CreateSubQuery = buildInfo.CreateSubQuery;
 		}
 
-		internal BuildInfo?           SequenceInfo             { get; set; }
-		internal IBuildContext?       Parent                   { get; set; }
-		public   Expression           Expression               { get; set; }
-		internal SelectQuery          SelectQuery              { get; set; }
-		internal bool                 CopyTable                { get; set; }
-		internal bool                 CreateSubQuery           { get; set; }
-		internal bool                 AssociationsAsSubQueries { get; set; }
-		internal JoinType             JoinType                 { get; set; }
-		internal bool                 IsSubQuery => Parent != null;
+		public BuildInfo?           SequenceInfo             { get; set; }
+		public IBuildContext?       Parent                   { get; set; }
+		public Expression           Expression               { get; set; }
+		public SelectQuery          SelectQuery              { get; set; }
+		public bool                 CopyTable                { get; set; }
+		public bool                 CreateSubQuery           { get; set; }
+		public bool                 AssociationsAsSubQueries { get; set; }
+		public JoinType             JoinType                 { get; set; }
+		public bool                 IsSubQuery => Parent != null;
 
 		private bool _isAssociationBuilt;
-		internal bool  IsAssociationBuilt
+		public bool   IsAssociationBuilt
 		{
 			get => _isAssociationBuilt;
 			set

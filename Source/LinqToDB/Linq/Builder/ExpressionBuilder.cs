@@ -19,13 +19,13 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using LinqToDB.Reflection;
 
-	public partial class ExpressionBuilder
+	partial class ExpressionBuilder
 	{
 		#region Sequence
 
 		static readonly object _sync = new ();
 
-		static List<ISequenceBuilder> _sequenceBuilders = new ()
+		static IReadOnlyList<ISequenceBuilder> _sequenceBuilders = new ISequenceBuilder[]
 		{
 			new TableBuilder               (),
 			new IgnoreFiltersBuilder       (),
@@ -94,38 +94,30 @@ namespace LinqToDB.Linq.Builder
 			new QueryNameBuilder           (),
 		};
 
-		/// <summary>
-		/// This method is not thread-safe.
-		/// </summary>
-		public static void AddBuilder(ISequenceBuilder builder)
-		{
-			_sequenceBuilders.Add(builder);
-		}
-
 		#endregion
 
 		#region Init
 
 		readonly Query                             _query;
-		readonly List<ISequenceBuilder>            _builders = _sequenceBuilders;
+		readonly IReadOnlyList<ISequenceBuilder>   _builders = _sequenceBuilders;
 		private  bool                              _reorder;
 		private  HashSet<Expression>?              _subQueryExpressions;
 		readonly ExpressionTreeOptimizationContext _optimizationContext;
 		readonly ParametersContext                 _parametersContext;
 
-		internal ExpressionTreeOptimizationContext   OptimizationContext => _optimizationContext;
-		internal ParametersContext                   ParametersContext   => _parametersContext;
+		public ExpressionTreeOptimizationContext   OptimizationContext => _optimizationContext;
+		public ParametersContext                   ParametersContext   => _parametersContext;
 
-		internal readonly List<ParameterExpression>  BlockVariables   = new ();
-		internal readonly List<Expression>           BlockExpressions = new ();
-		internal          bool                       IsBlockDisable;
-		internal          int                        VarIndex;
+		public readonly List<ParameterExpression>  BlockVariables   = new ();
+		public readonly List<Expression>           BlockExpressions = new ();
+		public          bool                       IsBlockDisable;
+		public          int                        VarIndex;
 
-		internal SqlComment?                      Tag;
-		internal List<SqlQueryExtension>?         SqlQueryExtensions;
-		internal List<TableBuilder.TableContext>? TablesInScope;
+		public SqlComment?                      Tag;
+		public List<SqlQueryExtension>?         SqlQueryExtensions;
+		public List<TableBuilder.TableContext>? TablesInScope;
 
-		internal ExpressionBuilder(
+		public ExpressionBuilder(
 			Query                             query,
 			ExpressionTreeOptimizationContext optimizationContext,
 			ParametersContext                 parametersContext,
@@ -153,22 +145,22 @@ namespace LinqToDB.Linq.Builder
 
 		#region Public Members
 
-		internal readonly IDataContext           DataContext;
-		internal readonly Expression             OriginalExpression;
-		internal readonly Expression             Expression;
-		internal readonly ParameterExpression[]? CompiledParameters;
-		internal readonly List<IBuildContext>    Contexts = new ();
+		public readonly IDataContext           DataContext;
+		public readonly Expression             OriginalExpression;
+		public readonly Expression             Expression;
+		public readonly ParameterExpression[]? CompiledParameters;
+		public readonly List<IBuildContext>    Contexts = new ();
 
-		internal static readonly ParameterExpression QueryRunnerParam = Expression.Parameter(typeof(IQueryRunner), "qr");
-		internal static readonly ParameterExpression DataContextParam = Expression.Parameter(typeof(IDataContext), "dctx");
-		internal static readonly ParameterExpression DataReaderParam  = Expression.Parameter(typeof(DbDataReader), "rd");
-		internal        readonly ParameterExpression DataReaderLocal;
-		internal static readonly ParameterExpression ParametersParam  = Expression.Parameter(typeof(object[]),     "ps");
-		internal static readonly ParameterExpression ExpressionParam  = Expression.Parameter(typeof(Expression),   "expr");
+		public static readonly ParameterExpression QueryRunnerParam = Expression.Parameter(typeof(IQueryRunner), "qr");
+		public static readonly ParameterExpression DataContextParam = Expression.Parameter(typeof(IDataContext), "dctx");
+		public static readonly ParameterExpression DataReaderParam  = Expression.Parameter(typeof(DbDataReader), "rd");
+		public        readonly ParameterExpression DataReaderLocal;
+		public static readonly ParameterExpression ParametersParam  = Expression.Parameter(typeof(object[]),     "ps");
+		public static readonly ParameterExpression ExpressionParam  = Expression.Parameter(typeof(Expression),   "expr");
 
 		static bool _isDataContextParamInitialized;
 
-		internal static ParameterExpression GetDataContextParam()
+		public static ParameterExpression GetDataContextParam()
 		{
 			if (!_isDataContextParamInitialized)
 			{
@@ -178,13 +170,13 @@ namespace LinqToDB.Linq.Builder
 			return DataContextParam;
 		}
 
-		internal MappingSchema MappingSchema => DataContext.MappingSchema;
+		public MappingSchema MappingSchema => DataContext.MappingSchema;
 
 		#endregion
 
 		#region Builder SQL
 
-		internal Query<T> Build<T>()
+		public Query<T> Build<T>()
 		{
 			var sequence = BuildSequence(new BuildInfo((IBuildContext?)null, Expression, new SelectQuery()));
 
@@ -192,7 +184,7 @@ namespace LinqToDB.Linq.Builder
 				lock (_sync)
 				{
 					_reorder = false;
-					_sequenceBuilders = _sequenceBuilders.OrderByDescending(static _ => _.BuildCounter).ToList();
+					_sequenceBuilders = _sequenceBuilders.OrderByDescending(static _ => _.BuildCounter).ToArray();
 				}
 
 			_query.Init(sequence, _parametersContext.CurrentSqlParameters);
@@ -232,7 +224,7 @@ namespace LinqToDB.Linq.Builder
 			throw new LinqException("Sequence '{0}' cannot be converted to SQL.", buildInfo.Expression);
 		}
 
-		internal ISequenceBuilder? GetBuilder(BuildInfo buildInfo, bool throwIfNotFound = true)
+		public ISequenceBuilder? GetBuilder(BuildInfo buildInfo, bool throwIfNotFound = true)
 		{
 			buildInfo.Expression = buildInfo.Expression.Unwrap();
 
@@ -245,7 +237,7 @@ namespace LinqToDB.Linq.Builder
 			return null;
 		}
 
-		internal SequenceConvertInfo? ConvertSequence(BuildInfo buildInfo, ParameterExpression? param, bool throwExceptionIfCantConvert)
+		public SequenceConvertInfo? ConvertSequence(BuildInfo buildInfo, ParameterExpression? param, bool throwExceptionIfCantConvert)
 		{
 			buildInfo.Expression = buildInfo.Expression.Unwrap();
 
@@ -274,9 +266,9 @@ namespace LinqToDB.Linq.Builder
 
 		#region ConvertExpression
 
-		internal ParameterExpression? SequenceParameter;
+		public ParameterExpression? SequenceParameter;
 
-		internal Expression ConvertExpressionTree(Expression expression)
+		public Expression ConvertExpressionTree(Expression expression)
 		{
 			var expr = expression;
 
@@ -336,7 +328,7 @@ namespace LinqToDB.Linq.Builder
 			return expr;
 		}
 
-		internal static Expression CorrectDataConnectionReference(Expression queryExpression, Expression dataContextExpression)
+		public static Expression CorrectDataConnectionReference(Expression queryExpression, Expression dataContextExpression)
 		{
 			var result = queryExpression.Transform(dataContextExpression, static(dc, e) =>
 			{
@@ -392,7 +384,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region ExposeExpression
 
-		internal Expression ExposeExpression(Expression expression)
+		public Expression ExposeExpression(Expression expression)
 		{
 			var result = _optimizationContext.ExposeExpression(expression);
 			return result;
@@ -402,9 +394,9 @@ namespace LinqToDB.Linq.Builder
 
 		#region OptimizeExpression
 
-		internal static readonly MethodInfo[] EnumerableMethods      = typeof(Enumerable     ).GetMethods();
-		internal static readonly MethodInfo[] QueryableMethods       = typeof(Queryable      ).GetMethods();
-		internal static readonly MethodInfo[] AsyncExtensionsMethods = typeof(AsyncExtensions).GetMethods();
+		public static readonly MethodInfo[] EnumerableMethods      = typeof(Enumerable     ).GetMethods();
+		public static readonly MethodInfo[] QueryableMethods       = typeof(Queryable      ).GetMethods();
+		public static readonly MethodInfo[] AsyncExtensionsMethods = typeof(AsyncExtensions).GetMethods();
 
 		Dictionary<Expression, Expression>? _optimizedExpressions;
 
@@ -749,7 +741,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region ConvertGroupBy
 
-		internal class GroupSubQuery<TKey,TElement>
+		public class GroupSubQuery<TKey,TElement>
 		{
 			public TKey     Key     = default!;
 			public TElement Element = default!;
@@ -1509,7 +1501,7 @@ namespace LinqToDB.Linq.Builder
 			});
 		}
 
-		internal Expression AddQueryableMemberAccessors<TContext>(TContext context, AccessorMember memberInfo, IDataContext dataContext,
+		public Expression AddQueryableMemberAccessors<TContext>(TContext context, AccessorMember memberInfo, IDataContext dataContext,
 			Func<TContext, MemberInfo, IDataContext, Expression> qe)
 		{
 			return _query.AddQueryableMemberAccessors(context, memberInfo.MemberInfo, dataContext, qe);
@@ -1579,7 +1571,7 @@ namespace LinqToDB.Linq.Builder
 		/// <param name="left"></param>
 		/// <param name="right"></param>
 		/// <returns></returns>
-		internal static BinaryExpression Equal(MappingSchema mappingSchema, Expression left, Expression right)
+		public static BinaryExpression Equal(MappingSchema mappingSchema, Expression left, Expression right)
 		{
 			if (left.Type != right.Type)
 			{
@@ -1613,7 +1605,7 @@ namespace LinqToDB.Linq.Builder
 		Dictionary<Expression, Expression>? _rootExpressions;
 
 		[return: NotNullIfNotNull("expr")]
-		internal Expression? GetRootObject(Expression? expr)
+		public Expression? GetRootObject(Expression? expr)
 		{
 			if (expr == null)
 				return null;

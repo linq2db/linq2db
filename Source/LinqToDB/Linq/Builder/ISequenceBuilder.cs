@@ -2,7 +2,7 @@
 
 namespace LinqToDB.Linq.Builder
 {
-	public interface ISequenceBuilder
+	interface ISequenceBuilder
 	{
 		int                  BuildCounter { get; set; }
 		bool                 CanBuild     (ExpressionBuilder builder, BuildInfo buildInfo);
