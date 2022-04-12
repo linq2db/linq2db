@@ -300,7 +300,7 @@ namespace LinqToDB
 		/// doesn't exists.
 		/// </summary>
 		/// <returns>Data connection.</returns>
-		public DataConnection GetDataConnection()
+		internal DataConnection GetDataConnection()
 		{
 			AssertDisposed();
 

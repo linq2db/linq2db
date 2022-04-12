@@ -12,22 +12,8 @@
 		<RollForward>Major</RollForward>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="$(RID) != ''">
-		<AppHostRuntimeIdentifier>$(RID)</AppHostRuntimeIdentifier>
-		<OutputPath>bin\$(Configuration)\apphosts\$(RID)</OutputPath>
-	</PropertyGroup>
-
-	<!--
-	Generate arch-specific executables.
-	Because .net executable is actually renamed platform-specific apphost.exe + application built as assembly dll we only need platform-specific apphost.exe files.
-	All this msbuild stuff clearly wasn't designed for being customizable, so it look like a hack, but works.
-	-->
-	<Target Name="BuildSpecific" AfterTargets="Build" Condition=" '$(RID)' == '' ">
-		<!--we need to remove apphost.exe as Build target doesn't validate already existing file to be compatible with requested RID-->
-		<Delete Files="obj\$(Configuration)\netcoreapp3.1\apphost.exe" />
-		<MSBuild Projects="$(MSBuildProjectFullPath)" Properties="RID=win-x86;Platform=$(Platform);Configuration=$(Configuration)" Targets="Build" />
-		<Delete Files="obj\$(Configuration)\netcoreapp3.1\apphost.exe" />
-		<MSBuild Projects="$(MSBuildProjectFullPath)" Properties="RID=win-x64;Platform=$(Platform);Configuration=$(Configuration)" Targets="Build" />
+	<Target Name="CopyHosts" AfterTargets="Build">
+		<Copy SourceFiles="$(MSBuildThisFileDirectory)..\..\Redist\CLI\dotnet-linq2db.win-x64.exe;$(MSBuildThisFileDirectory)..\..\Redist\CLI\dotnet-linq2db.win-x86.exe" DestinationFolder="bin\$(Configuration)\netcoreapp3.1" />
 
 		<!--cleanup for pack-->
 		<ItemGroup>
@@ -39,12 +25,8 @@
 		<Delete Condition="$(Configuration) == 'Release'" Files="@(JunkFiles)" />
 	</Target>
 
-	<Target Name="CopyHosts" AfterTargets="Build" Condition=" '$(RID)' != '' ">
-		<Copy SourceFiles="bin\$(Configuration)\apphosts\$(RID)\netcoreapp3.1\$(AssemblyName).exe" DestinationFiles="bin\$(Configuration)\netcoreapp3.1\$(AssemblyName).$(RID).exe" />
-	</Target>
-
 	<ItemGroup>
-	  <EmbeddedResource Include="Template.tt" />
+		<EmbeddedResource Include="Template.tt" />
 	</ItemGroup>
 
 	<ItemGroup>
