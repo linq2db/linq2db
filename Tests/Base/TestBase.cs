@@ -460,7 +460,7 @@ namespace Tests
 				Debug.WriteLine(((IDataContext)dx).ContextID, "Provider ");
 
 				if (ms != null)
-					dx.MappingSchema = MappingSchema.CombineSchemas(dx.MappingSchema, ms);
+					dx.MappingSchema = new MappingSchema(dx.MappingSchema, ms);
 
 				return (ITestDataContext)dx;
 #else

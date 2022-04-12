@@ -92,65 +92,6 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestDefaultExpression_03([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool withDefault)
-		{
-			using (var db = GetDataContext(context))
-			{
-				var query1 = db.Person
-					.Where(r => r.ID == 123)
-					.Set(r => r.FirstName, default(string));
-				var query2 = db.Person
-					.Where(r => r.ID == 123)
-					.Set(r => r.FirstName, default(string));
-
-				if (withDefault)
-				{
-					var qry = ((LinqExtensions.Updatable<Person>)query1).Query;
-					qry     = qry.Provider.CreateQuery<Person>(Restore(qry.Expression));
-					query1  = new LinqExtensions.Updatable<Person>(qry);
-
-					qry     = ((LinqExtensions.Updatable<Person>)query2).Query;
-					qry     = qry.Provider.CreateQuery<Person>(Restore(qry.Expression));
-					query2  = new LinqExtensions.Updatable<Person>(qry);
-				}
-
-				query1.Update();
-				var cacheMiss = Query<Person>.CacheMissCount;
-				query2.Update();
-				Assert.AreEqual(cacheMiss, Query<Person>.CacheMissCount);
-			}
-		}
-
-		[Test]
-		public void TestDefaultExpression_04([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool withDefault)
-		{
-			using (var db = GetDataContext(context))
-			{
-				var query1 = db.Person
-					.Where(r => r.ID == 123)
-					.Set(r => r.Gender, default(Gender));
-				var query2 = db.Person
-					.Where(r => r.ID == 123)
-					.Set(r => r.Gender, default(Gender));
-
-				if (withDefault)
-				{
-					var qry = ((LinqExtensions.Updatable<Person>)query1).Query;
-					qry     = qry.Provider.CreateQuery<Person>(Restore(qry.Expression));
-					query1  = new LinqExtensions.Updatable<Person>(qry);
-					qry     = ((LinqExtensions.Updatable<Person>)query2).Query;
-					qry     = qry.Provider.CreateQuery<Person>(Restore(qry.Expression));
-					query2  = new LinqExtensions.Updatable<Person>(qry);
-				}
-
-				query1.Update();
-				var cacheMiss = Query<Person>.CacheMissCount;
-				query2.Update();
-				Assert.AreEqual(cacheMiss, Query<Person>.CacheMissCount);
-			}
-		}
-
-		[Test]
 		public void TestDefaultExpression_05([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool withDefault)
 		{
 			using (var db = GetDataContext(context))
