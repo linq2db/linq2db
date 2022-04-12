@@ -80,12 +80,11 @@ namespace Tests.UserTests
 
 		//[ActiveIssue("What is this test???")]
 		[Test]
-		public void TestFail([IncludeDataSources(true, TestProvName.AllSQLite)]
-			string context)
+		public void TestFail([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			try
 			{
-				TestEnumString(context, ms => { });
+				TestEnumString(context, ms => { }, true);
 				Assert.Fail("Value constraint expected");
 			}
 			catch (Microsoft.Data.Sqlite.SqliteException)
@@ -99,13 +98,13 @@ namespace Tests.UserTests
 		[Test]
 		public void TestEnumDefaultType1([DataSources] string context)
 		{
-			TestEnumString(context, ms => ms.SetDefaultFromEnumType(typeof(Gender), typeof(string)));
+			TestEnumString(context, ms => ms.SetDefaultFromEnumType(typeof(Gender), typeof(string)), false);
 		}
 
 		[Test]
 		public void TestEnumDefaultType2([DataSources] string context)
 		{
-			TestEnumString(context, ms => ms.SetDefaultFromEnumType(typeof(Enum), typeof(string)));
+			TestEnumString(context, ms => ms.SetDefaultFromEnumType(typeof(Enum), typeof(string)), false);
 		}
 
 		[Test]
@@ -116,10 +115,11 @@ namespace Tests.UserTests
 				ms.SetConverter<Gender, string>       (obj => obj.ToString() );
 				ms.SetConverter<Gender, DataParameter>(obj => new DataParameter { Value = obj.ToString(), DataType = DataType.NVarChar });
 				ms.SetConverter<string, Gender>       (txt => (Gender)Enum.Parse(typeof(Gender), txt));
-			});
+			},
+			false);
 		}
 
-		public void TestEnumString(string context, Action<MappingSchema> initMappingSchema)
+		public void TestEnumString(string context, Action<MappingSchema> initMappingSchema, bool doLoop)
 		{
 			ResetPersonIdentity(context);
 
@@ -132,13 +132,21 @@ namespace Tests.UserTests
 
 			using (var db = GetDataContext(context, ms))
 			{
-				var id = Convert.ToInt32(db.InsertWithIdentity(new Person2
+				int id;
+
+				do
 				{
-					FirstName  = new Dictionary<string, string> { { "123", "123" } },
-					LastName   = "456",
-					MiddleName = "789",
-					Gender     = Gender.M
-				}));
+					id = Convert.ToInt32(db.InsertWithIdentity(new Person2
+					{
+						FirstName  = new Dictionary<string, string> { { "123", "123" } },
+						LastName   = "456",
+						MiddleName = "789",
+						Gender     = Gender.M
+					}));
+
+					Console.WriteLine(id);
+				}
+				while (doLoop && id < 4);
 
 				var p = db.GetTable<PurePerson>().First(t => t.PersonID == id);
 
