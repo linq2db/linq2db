@@ -82,13 +82,13 @@ namespace LinqToDB.DataProvider.SqlServer
 			AddScalarType(typeof(SqlString?),   SqlString.  Null, true, DataType.NVarChar);
 			AddScalarType(typeof(SqlXml),       SqlXml.     Null, true, DataType.Xml);
 
+#if NET6_0_OR_GREATER
+			AddScalarType(typeof(SqlDateTime),  DataType.Date);
+			AddScalarType(typeof(SqlDateTime?), DataType.Date);
+#endif
+
 			AddScalarType(typeof(DateTime),  DataType.DateTime);
 			AddScalarType(typeof(DateTime?), DataType.DateTime);
-
-#if NET6_0_OR_GREATER
-			AddScalarType(typeof(DateOnly),  DataType.Date);
-			AddScalarType(typeof(DateOnly?), DataType.Date);
-#endif
 
 			SqlServerTypes.Configure(this);
 
@@ -227,9 +227,7 @@ namespace LinqToDB.DataProvider.SqlServer
 #if NET6_0_OR_GREATER
 		static void ConvertDateToSql(StringBuilder stringBuilder, SqlDataType? dt, DateOnly value)
 		{
-			string format = DATE_FORMAT;
-
-			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, value);
+			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATE_FORMAT, value);
 		}
 #endif
 

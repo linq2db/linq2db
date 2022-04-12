@@ -1293,6 +1293,10 @@ namespace LinqToDB.Mapping
 				AddScalarType(typeof(DateTimeOffset?), DataType.DateTimeOffset);
 				AddScalarType(typeof(TimeSpan),        DataType.Time);
 				AddScalarType(typeof(TimeSpan?),       DataType.Time);
+#if NET6_0_OR_GREATER
+				AddScalarType(typeof(DateOnly),        DataType.Date);
+				AddScalarType(typeof(DateOnly?),       DataType.Date);
+#endif
 				AddScalarType(typeof(byte[]),          DataType.VarBinary);
 				AddScalarType(typeof(Binary),          DataType.VarBinary);
 				AddScalarType(typeof(Guid),            DataType.Guid);

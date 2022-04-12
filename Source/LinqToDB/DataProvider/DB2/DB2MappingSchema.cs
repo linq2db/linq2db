@@ -60,6 +60,11 @@ namespace LinqToDB.DataProvider.DB2
 
 			// set reader conversions from literals
 			SetConverter<string, DateTime>(ParseDateTime);
+
+#if NET6_0_OR_GREATER
+			SetValueToSqlConverter(typeof(DateOnly), (sb,dt,v) => ConvertDateOnlyToSql(sb, dt, (DateOnly)v));
+			SetConverter<string, DateOnly>(ParseDateOnly);
+#endif
 		}
 
 		static DateTime ParseDateTime(string value)
@@ -107,6 +112,26 @@ namespace LinqToDB.DataProvider.DB2
 			};
 		}
 
+#if NET6_0_OR_GREATER
+		static void ConvertDateOnlyToSql(StringBuilder stringBuilder, SqlDataType dt, DateOnly value)
+		{
+			stringBuilder.Append('\'');
+			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATETIME_FORMAT, value);
+			stringBuilder.Append('\'');
+		}
+
+		static DateOnly ParseDateOnly(string value)
+		{
+			if (DateOnly.TryParse(value, out var res))
+				return res;
+
+			return DateOnly.ParseExact(
+				value,
+				new[] { DateParseFormats[0], },
+				CultureInfo.InvariantCulture,
+				DateTimeStyles.None);
+		}
+#endif
 
 		static void ConvertDateTimeToSql(StringBuilder stringBuilder, SqlDataType type, DateTime value)
 		{
