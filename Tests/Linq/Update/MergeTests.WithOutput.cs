@@ -124,6 +124,7 @@ namespace Tests.xUpdate
 				await foreach (var record in outputRows)
 				{
 					Assert.False(hasRecord);
+					hasRecord = true;
 
 					record.deleted.Id.Should().Be(0);
 
