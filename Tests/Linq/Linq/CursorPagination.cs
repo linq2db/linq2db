@@ -32,7 +32,7 @@ namespace Tests.Linq
 			public T       Data        = default!;
 		}
 
-		static Expression? Unwrap(Expression? ex)
+		static Expression? Unwrap(this Expression? ex)
 		{
 			if (ex == null)
 				return null;
