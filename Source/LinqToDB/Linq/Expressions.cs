@@ -654,6 +654,24 @@ namespace LinqToDB.Linq
 
 			#endregion
 
+			#region DateOnly
+#if NET6_0_OR_GREATER
+
+			{ M(() => Sql.DateOnly.Year              ), N(() => L<DateOnly,int>         ((DateOnly obj)        => Sql.DatePart(Sql.DateParts.Year,        obj)!.Value    )) },
+			{ M(() => Sql.DateOnly.Month             ), N(() => L<DateOnly,int>         ((DateOnly obj)        => Sql.DatePart(Sql.DateParts.Month,       obj)!.Value    )) },
+			{ M(() => Sql.DateOnly.DayOfYear         ), N(() => L<DateOnly,int>         ((DateOnly obj)        => Sql.DatePart(Sql.DateParts.DayOfYear,   obj)!.Value    )) },
+			{ M(() => Sql.DateOnly.Day               ), N(() => L<DateOnly,int>         ((DateOnly obj)        => Sql.DatePart(Sql.DateParts.Day,         obj)!.Value    )) },
+			{ M(() => Sql.DateOnly.DayOfWeek         ), N(() => L<DateOnly,int>         ((DateOnly obj)        => Sql.DatePart(Sql.DateParts.WeekDay,     obj)!.Value - 1)) },
+			{ M(() => Sql.DateOnly.AddYears       (0)), N(() => L<DateOnly,int,DateOnly>((DateOnly obj,int p0) => Sql.DateAdd(Sql.DateParts.Year,        p0, obj)!.Value )) },
+			{ M(() => Sql.DateOnly.AddMonths      (0)), N(() => L<DateOnly,int,DateOnly>((DateOnly obj,int p0) => Sql.DateAdd(Sql.DateParts.Month,       p0, obj)!.Value )) },
+			{ M(() => Sql.DateOnly.AddDays        (0)), N(() => L<DateOnly,int,DateOnly>((DateOnly obj,int p0) => Sql.DateAdd(Sql.DateParts.Day,         p0, obj)!.Value )) },
+			{ M(() => new DateOnly(0, 0, 0)          ), N(() => L<int,int,int,DateOnly>((int y,int m,int d)    => Sql.MakeDateOnly(y, m, d)!.Value                       )) },
+
+			{ M(() => Sql.MakeDateOnly(0, 0, 0)      ), N(() => L<int?,int?,int?,DateOnly?>((int? y,int? m,int? d) => (DateOnly?)Sql.Convert(Sql.DateOnly, y.ToString() + "-" + m.ToString() + "-" + d.ToString()))) },
+
+#endif
+			#endregion
+
 			#region DateTime
 
 			{ M(() => Sql.GetDate()                  ), N(() => L<DateTime>                (()                        => Sql.CurrentTimestamp2)) },
@@ -729,6 +747,10 @@ namespace LinqToDB.Linq
 			{ M(() => ushort.  Parse("")), N(() => L<string,ushort>  ((string p0) => Sql.ConvertTo<ushort>.  From(p0))) },
 			{ M(() => uint.    Parse("")), N(() => L<string,uint>    ((string p0) => Sql.ConvertTo<uint>.    From(p0))) },
 			{ M(() => ulong.   Parse("")), N(() => L<string,ulong>   ((string p0) => Sql.ConvertTo<ulong>.   From(p0))) },
+
+#if NET6_0_OR_GREATER
+			{ M(() => DateOnly.Parse("")), N(() => L<string,DateOnly>((string p0) => Sql.ConvertTo<DateOnly>.From(p0))) },
+#endif
 
 			#endregion
 
@@ -1002,7 +1024,6 @@ namespace LinqToDB.Linq
 			{ M(() => Convert.ToString((ushort)  0)  ), N(() => L<ushort,  string>(p0 => Sql.ConvertTo<string>.From(p0))) },
 			{ M(() => Convert.ToString((uint)    0)  ), N(() => L<uint,    string>(p0 => Sql.ConvertTo<string>.From(p0))) },
 			{ M(() => Convert.ToString((ulong)   0)  ), N(() => L<ulong,   string>(p0 => Sql.ConvertTo<string>.From(p0))) },
-
 			#endregion
 
 			#region ToUInt16

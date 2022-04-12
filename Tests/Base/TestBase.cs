@@ -45,6 +45,9 @@ namespace Tests
 			public static readonly DateTime DateTimeUtc                   = new DateTime(2020, 2, 29, 17, 54, 55, 123, DateTimeKind.Utc).AddTicks(1234);
 			public static readonly DateTime DateTime4Utc                  = new DateTime(2020, 2, 29, 17, 54, 55, 123, DateTimeKind.Utc).AddTicks(1000);
 			public static readonly DateTime Date                          = new (2020, 2, 29);
+#if NET6_0_OR_GREATER
+			public static readonly DateOnly DateOnly                      = new (2020, 2, 29);
+#endif
 			public static readonly TimeSpan TimeOfDay                     = new TimeSpan(0, 17, 54, 55, 123).Add(TimeSpan.FromTicks(1234));
 			public static readonly TimeSpan TimeOfDay4                    = new TimeSpan(0, 17, 54, 55, 123).Add(TimeSpan.FromTicks(1000));
 			public static readonly Guid     Guid1                         = new ("bc7b663d-0fde-4327-8f92-5d8cc3a11d11");
@@ -644,7 +647,7 @@ namespace Tests
 			}
 		}
 
-		#region Parent/Child Model
+#region Parent/Child Model
 
 		private   List<Parent>?      _parent;
 		protected IEnumerable<Parent> Parent
@@ -806,9 +809,9 @@ namespace Tests
 			}
 		}
 
-		#endregion
+#endregion
 
-		#region Inheritance Parent/Child Model
+#region Inheritance Parent/Child Model
 
 		private   List<InheritanceParentBase>? _inheritanceParent;
 		protected List<InheritanceParentBase>   InheritanceParent
@@ -842,9 +845,9 @@ namespace Tests
 			}
 		}
 
-		#endregion
+#endregion
 
-		#region Northwind
+#region Northwind
 
 		public TestBaseNorthwind GetNorthwindAsList(string context)
 		{
@@ -1037,7 +1040,7 @@ namespace Tests
 			}
 		}
 
-		#endregion
+#endregion
 
 		protected IEnumerable<LinqDataTypes2> AdjustExpectedData(ITestDataContext db, IEnumerable<LinqDataTypes2> data)
 		{

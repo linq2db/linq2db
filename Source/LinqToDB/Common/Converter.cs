@@ -47,6 +47,11 @@ namespace LinqToDB.Common
 			SetConverter<char,           bool>       (v => ToBoolean(v));
 			SetConverter<string,         bool>       (v => v.Length == 1 ? ToBoolean(v[0]) : bool.Parse(v));
 
+#if NET6_0_OR_GREATER
+			SetConverter<DateTime,       DateOnly>   (v => DateOnly.FromDateTime(v));
+			SetConverter<DateOnly,       DateTime>   (v => v.ToDateTime(TimeOnly.MinValue));
+#endif
+
 			SetConverter<byte  , BitArray>(v => new BitArray(new byte[] { v }));
 			SetConverter<sbyte , BitArray>(v => new BitArray(new byte[] { unchecked((byte)v) }));
 			SetConverter<short , BitArray>(v => new BitArray(BitConverter.GetBytes(v)));
