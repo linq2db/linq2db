@@ -1,4 +1,5 @@
-﻿using LinqToDB;
+﻿using System;
+using LinqToDB;
 using LinqToDB.Data;
 
 namespace Tests
@@ -101,6 +102,9 @@ CREATE COLUMN TABLE ""Person"" (
 						break;
 					case string prov when prov.IsAnyOf(TestProvName.AllSQLite):
 						sql = new[] { $"UPDATE sqlite_sequence SET seq = {lastValue} WHERE name = 'Person'" };
+						break;
+					default:
+						Console.WriteLine($"Unknown provider {provider}");
 						break;
 				}
 			}

@@ -173,10 +173,7 @@ namespace Tests
 #endif
 
 #if !DEBUG
-			Console.WriteLine("DataProviders:");
-			Console.WriteLine(dataProvidersJson);
-			Console.WriteLine();
-			Console.WriteLine("UserDataProviders:");
+			Console.WriteLine("UserDataProviders.json:");
 			Console.WriteLine(userDataProvidersJson);
 #endif
 
