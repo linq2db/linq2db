@@ -26,12 +26,14 @@ namespace LinqToDB.Linq
 
 	public abstract class Query
 	{
-		public Func<IDataContext,Expression,object?[]?,object?[]?,object?>                         GetElement      = null!;
-		public Func<IDataContext,Expression,object?[]?,object?[]?,CancellationToken,Task<object?>> GetElementAsync = null!;
+		internal Func<IDataContext,Expression,object?[]?,object?[]?,object?>                         GetElement      = null!;
+		internal Func<IDataContext,Expression,object?[]?,object?[]?,CancellationToken,Task<object?>> GetElementAsync = null!;
 
 		#region Init
 
-		public readonly List<QueryInfo> Queries = new (1);
+		internal readonly List<QueryInfo> Queries = new (1);
+
+		public IReadOnlyCollection<QueryInfo> GetQueries() => Queries;
 
 		internal abstract void Init(IBuildContext parseContext, List<ParameterAccessor> sqlParameters);
 
@@ -80,7 +82,7 @@ namespace LinqToDB.Linq
 		readonly List<QueryableAccessor>                  _queryableAccessorList = new ();
 		readonly Dictionary<Expression,Expression>        _queryDependedObjects  = new ();
 
-		public bool IsFastCacheable => _queryableMemberAccessorDic == null;
+		internal bool IsFastCacheable => _queryableMemberAccessorDic == null;
 
 		internal int AddQueryableAccessors(Expression expr, Expression<Func<Expression,IQueryable>> qe)
 		{
@@ -134,7 +136,7 @@ namespace LinqToDB.Linq
 			return accessor.Queryable.Expression;
 		}
 
-		public void ClearMemberQueryableInfo()
+		internal void ClearMemberQueryableInfo()
 		{
 			_queryableMemberAccessorDic = null;
 		}
@@ -206,12 +208,12 @@ namespace LinqToDB.Linq
 			_preambles = preambles?.ToArray();
 		}
 
-		public bool IsAnyPreambles()
+		internal bool IsAnyPreambles()
 		{
 			return _preambles?.Length > 0;
 		}
 
-		public int PreamblesCount()
+		internal int PreamblesCount()
 		{
 			return _preambles?.Length ?? 0;
 		}
@@ -349,7 +351,7 @@ namespace LinqToDB.Linq
 			/// <summary>
 			/// Count of queries which has not been found in cache.
 			/// </summary>
-			internal long CacheMissCount;
+			public long CacheMissCount;
 
 			/// <summary>
 			/// LINQ query max cache size (per entity type).
@@ -592,7 +594,7 @@ namespace LinqToDB.Linq
 		}
 	}
 
-	internal class ParameterAccessor
+	class ParameterAccessor
 	{
 		public ParameterAccessor(
 			Expression                             expression,
