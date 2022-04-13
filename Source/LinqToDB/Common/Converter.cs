@@ -50,6 +50,7 @@ namespace LinqToDB.Common
 #if NET6_0_OR_GREATER
 			SetConverter<DateTime,       DateOnly>   (v => DateOnly.FromDateTime(v));
 			SetConverter<DateOnly,       DateTime>   (v => v.ToDateTime(TimeOnly.MinValue));
+			SetConverter<string,         DateOnly>   (v => DateOnly.Parse(v));
 #endif
 
 			SetConverter<byte  , BitArray>(v => new BitArray(new byte[] { v }));

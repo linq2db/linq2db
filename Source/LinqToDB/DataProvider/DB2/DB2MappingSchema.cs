@@ -11,6 +11,7 @@ namespace LinqToDB.DataProvider.DB2
 
 	public class DB2MappingSchema : MappingSchema
 	{
+		private const string DATE_FORMAT       = "{0:yyyy-MM-dd}";
 		private const string DATETIME_FORMAT   = "{0:yyyy-MM-dd-HH.mm.ss}";
 
 		private const string TIMESTAMP0_FORMAT = "{0:yyyy-MM-dd-HH.mm.ss}";
@@ -116,7 +117,7 @@ namespace LinqToDB.DataProvider.DB2
 		static void ConvertDateOnlyToSql(StringBuilder stringBuilder, SqlDataType dt, DateOnly value)
 		{
 			stringBuilder.Append('\'');
-			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATETIME_FORMAT, value);
+			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATE_FORMAT, value);
 			stringBuilder.Append('\'');
 		}
 

@@ -31,8 +31,10 @@ namespace Tests.Linq
 			};
 		}
 
+		private const string DateOnlySkipProviders = $"{TestProvName.AllAccess},{ProviderName.SqlCe},{ProviderName.SqlServer2005}";
+
 		[Test]
-		public void Parse1([DataSources] string context)
+		public void Parse1([DataSources(DateOnlySkipProviders)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(Transaction.AllData))
@@ -44,7 +46,7 @@ namespace Tests.Linq
 		#region DatePart
 
 		[Test]
-		public void DatePartYear([DataSources] string context)
+		public void DatePartYear([DataSources(DateOnlySkipProviders)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(Transaction.AllData))
@@ -54,7 +56,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DatePartQuarter([DataSources] string context)
+		public void DatePartQuarter([DataSources(DateOnlySkipProviders)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(Transaction.AllData))
@@ -64,7 +66,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DatePartMonth([DataSources] string context)
+		public void DatePartMonth([DataSources(DateOnlySkipProviders)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(Transaction.AllData))
@@ -74,7 +76,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DatePartDayOfYear([DataSources] string context)
+		public void DatePartDayOfYear([DataSources(DateOnlySkipProviders)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(Transaction.AllData))
@@ -84,7 +86,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DatePartDay([DataSources] string context)
+		public void DatePartDay([DataSources(DateOnlySkipProviders)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(Transaction.AllData))
@@ -94,7 +96,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DatePartWeek([DataSources] string context)
+		public void DatePartWeek([DataSources(DateOnlySkipProviders)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(Transaction.AllData))
@@ -102,7 +104,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DatePartWeekDay([DataSources] string context)
+		public void DatePartWeekDay([DataSources(DateOnlySkipProviders)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(Transaction.AllData))
@@ -113,7 +115,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void DatepartDynamic(
-			[DataSources(TestProvName.AllInformix)] string context,
+			[DataSources(TestProvName.AllInformix, DateOnlySkipProviders)] string context,
 			[Values(
 				Sql.DateParts.Day,
 				Sql.DateParts.Month,
@@ -133,7 +135,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Year([DataSources] string context)
+		public void Year([DataSources(DateOnlySkipProviders)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(Transaction.AllData))
@@ -143,7 +145,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Month([DataSources] string context)
+		public void Month([DataSources(DateOnlySkipProviders)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(Transaction.AllData))
@@ -153,7 +155,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DayOfYear([DataSources] string context)
+		public void DayOfYear([DataSources(DateOnlySkipProviders)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(Transaction.AllData))
@@ -163,7 +165,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Day([DataSources] string context)
+		public void Day([DataSources(DateOnlySkipProviders)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(Transaction.AllData))
@@ -177,17 +179,17 @@ namespace Tests.Linq
 		#region DateAdd
 
 		[Test]
-		public void DateAddYear([DataSources] string context)
+		public void DateAddYear([DataSources(DateOnlySkipProviders)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(Transaction.AllData))
 				AreEqual(
-					from t in Transaction.AllData        select           Sql.DateAdd(Sql.DateParts.Year, 11, t.TransactionDate) !.Value,
-					from t in db.GetTable<Transaction>() select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Year, 11, t.TransactionDate))!.Value);
+					from t in Transaction.AllData        select           Sql.DateAdd(Sql.DateParts.Year, 12, t.TransactionDate) !.Value,
+					from t in db.GetTable<Transaction>() select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Year, 12, t.TransactionDate))!.Value);
 		}
 
 		[Test]
-		public void DateAddQuarter([DataSources] string context)
+		public void DateAddQuarter([DataSources(DateOnlySkipProviders)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(Transaction.AllData))
@@ -197,7 +199,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DateAddMonth([DataSources] string context)
+		public void DateAddMonth([DataSources(DateOnlySkipProviders)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(Transaction.AllData))
@@ -207,7 +209,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DateAddDayOfYear([DataSources] string context)
+		public void DateAddDayOfYear([DataSources(DateOnlySkipProviders)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(Transaction.AllData))
@@ -217,7 +219,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DateAddDay([DataSources] string context)
+		public void DateAddDay([DataSources(DateOnlySkipProviders)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(Transaction.AllData))
@@ -227,7 +229,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DateAddWeek([DataSources] string context)
+		public void DateAddWeek([DataSources(DateOnlySkipProviders)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(Transaction.AllData))
@@ -237,7 +239,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DateAddWeekDay([DataSources] string context)
+		public void DateAddWeekDay([DataSources(DateOnlySkipProviders)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(Transaction.AllData))
@@ -247,17 +249,17 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void AddYears([DataSources] string context)
+		public void AddYears([DataSources(DateOnlySkipProviders)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(Transaction.AllData))
 				AreEqual(
-					from t in Transaction.AllData        select           t.TransactionDate.AddYears(11),
-					from t in db.GetTable<Transaction>() select Sql.AsSql(t.TransactionDate.AddYears(11)));
+					from t in Transaction.AllData        select           t.TransactionDate.AddYears(12),
+					from t in db.GetTable<Transaction>() select Sql.AsSql(t.TransactionDate.AddYears(12)));
 		}
 
 		[Test]
-		public void AddMonths([DataSources] string context)
+		public void AddMonths([DataSources(DateOnlySkipProviders)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(Transaction.AllData))
@@ -267,7 +269,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void AddDays([DataSources] string context)
+		public void AddDays([DataSources(DateOnlySkipProviders)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(Transaction.AllData))
@@ -282,7 +284,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void SubDateDay(
-			[DataSources(TestProvName.AllInformix)]
+			[DataSources(TestProvName.AllInformix, DateOnlySkipProviders)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -293,7 +295,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void DateDiffDay(
-			[DataSources(TestProvName.AllInformix)]
+			[DataSources(TestProvName.AllInformix, DateOnlySkipProviders)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -307,7 +309,7 @@ namespace Tests.Linq
 		#region MakeDateTime
 
 		[Test]
-		public void MakeDateOnly([DataSources] string context)
+		public void MakeDateOnly([DataSources(DateOnlySkipProviders)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -316,7 +318,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MakeDateOnlyParameters([DataSources] string context)
+		public void MakeDateOnlyParameters([DataSources(DateOnlySkipProviders)] string context)
 		{
 			var year = 2010;
 			using (var db = GetDataContext(context))
@@ -326,7 +328,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MakeDateOnlyParametersMonth([DataSources] string context, [Values(1, 10)] int month)
+		public void MakeDateOnlyParametersMonth([DataSources(DateOnlySkipProviders)] string context, [Values(1, 10)] int month)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -335,7 +337,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NewDateOnly1([DataSources] string context)
+		public void NewDateOnly1([DataSources(DateOnlySkipProviders)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -344,7 +346,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NewDateOnly2([DataSources] string context)
+		public void NewDateOnly2([DataSources(DateOnlySkipProviders)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(

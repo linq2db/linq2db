@@ -49,7 +49,7 @@ namespace LinqToDB
 		[Sql.Extension(PN.DB2,        "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateAddBuilderDB2))]
 		[Sql.Extension(PN.Informix,   "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateAddBuilderInformix))]
 		[Sql.Extension(PN.MySql,      "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateAddBuilderMySql))]
-		[Sql.Extension(PN.SQLite,     "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateAddBuilderSQLite))]
+		[Sql.Extension(PN.SQLite,     "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateOnlyAddBuilderSQLite))]
 		[Sql.Extension(PN.Access,     "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateAddBuilderAccess))]
 		[Sql.Extension(PN.SapHana,    "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateAddBuilderSapHana))]
 		[Sql.Extension(PN.Firebird,   "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateAddBuilderFirebird))]
@@ -71,6 +71,31 @@ namespace LinqToDB
 			};
 		}
 
+		class DateOnlyAddBuilderSQLite : Sql.IExtensionCallBuilder
+		{
+			public void Build(Sql.ISqExtensionBuilder builder)
+			{
+				var part   = builder.GetValue<Sql.DateParts>("part");
+				var date   = builder.GetExpression("date");
+				var number = builder.GetExpression("number", true);
+
+				string expStr = "strftime('%Y-%m-%d', {0},";
+				switch (part)
+				{
+					case Sql.DateParts.Year: expStr += "{1} || ' Year')"; break;
+					case Sql.DateParts.Quarter: expStr += "({1}*3) || ' Month')"; break;
+					case Sql.DateParts.Month: expStr += "{1} || ' Month')"; break;
+					case Sql.DateParts.DayOfYear:
+					case Sql.DateParts.WeekDay:
+					case Sql.DateParts.Day: expStr += "{1} || ' Day')"; break;
+					case Sql.DateParts.Week: expStr += "({1}*7) || ' Day')"; break;
+					default:
+						throw new InvalidOperationException($"Unexpected datepart: {part}");
+				}
+
+				builder.ResultExpression = new SqlExpression(typeof(DateTime?), expStr, Precedence.Concatenate, date, number);
+			}
+		}
 		#endregion
 
 		#region DateDiff
