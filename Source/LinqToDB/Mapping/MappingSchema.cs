@@ -85,16 +85,17 @@ namespace LinqToDB.Mapping
 		{
 			_reduceDefaultValueTransformer = TransformVisitor<MappingSchema>.Create(this, static (ctx, e) => ctx.ReduceDefaultValueTransformer(e));
 
-			// always generate "unique" configuration name, if name not provided to avoid duplicate names
-			// e.g. see https://github.com/linq2db/linq2db/issues/3251
 			if (string.IsNullOrEmpty(configuration))
-				configuration = string.Empty;// $"auto_{Interlocked.Increment(ref _configurationCounter)}";
+				configuration = string.Empty;
 
-			var schemaInfo = new MappingSchemaInfo(configuration);
+			var schemaInfo = new MappingSchemaInfo(configuration!);
 
 			if (schemas == null || schemas.Length == 0)
 			{
 				Schemas = new[] { schemaInfo, Default.Schemas[0] };
+
+				if (configuration!.Length == 0)
+					_configurationID = schemaInfo.ConfigurationID;
 
 				ValueToSqlConverter = new ValueToSqlConverter(Default.ValueToSqlConverter);
 			}
@@ -112,6 +113,9 @@ namespace LinqToDB.Mapping
 				Array.Copy(schemas[0].ValueToSqlConverter.BaseConverters, 0, baseConverters, 1, schemas[0].ValueToSqlConverter.BaseConverters.Length);
 
 				ValueToSqlConverter = new ValueToSqlConverter(baseConverters);
+
+				if (configuration!.Length == 0 && Schemas[1].HasConfigurationID)
+					_configurationID = schemaInfo.ConfigurationID = Schemas[1].ConfigurationID;
 			}
 			else
 			{
@@ -139,6 +143,7 @@ namespace LinqToDB.Mapping
 			}
 		}
 
+		object _syncRoot = new();
 		internal readonly MappingSchemaInfo[] Schemas;
 
 		#endregion
@@ -216,7 +221,11 @@ namespace LinqToDB.Mapping
 		/// <param name="value">Default value.</param>
 		public void SetDefaultValue(Type type, object? value)
 		{
-			Schemas[0].SetDefaultValue(type, value);
+			lock (_syncRoot)
+			{
+				Schemas[0].SetDefaultValue(type, value);
+				ResetID();
+			}
 		}
 
 		#endregion
@@ -267,7 +276,11 @@ namespace LinqToDB.Mapping
 		/// <param name="value">If <c>true</c>, specified type value could contain <c>null</c>.</param>
 		public void SetCanBeNull(Type type, bool value)
 		{
-			Schemas[0].SetCanBeNull(type, value);
+			lock (_syncRoot)
+			{
+				Schemas[0].SetCanBeNull(type, value);
+				ResetID();
+			}
 		}
 
 		#endregion
@@ -363,10 +376,7 @@ namespace LinqToDB.Mapping
 			return null;
 		}
 
-		internal ConcurrentDictionary<object,Func<object,object>> Converters
-		{
-			get { return Schemas[0].Converters; }
-		}
+		internal ConcurrentDictionary<object,Func<object,object>> Converters => Schemas[0].Converters;
 
 		/// <summary>
 		/// Returns conversion expression from <typeparamref name="TFrom"/> type to <typeparamref name="TTo"/> type.
@@ -435,7 +445,11 @@ namespace LinqToDB.Mapping
 				var rex = (Expression<Func<TFrom,TTo>>)ReduceDefaultValue(li.CheckNullLambda);
 				var l   = rex.CompileExpression();
 
-				Schemas[0].SetConvertInfo(from, to, new ConvertInfo.LambdaInfo(li.CheckNullLambda, null, l, li.IsSchemaSpecific));
+				lock (_syncRoot)
+				{
+					Schemas[0].SetConvertInfo(from, to, new (li.CheckNullLambda, null, l, li.IsSchemaSpecific));
+					ResetID();
+				}
 
 				return l;
 			}
@@ -455,10 +469,10 @@ namespace LinqToDB.Mapping
 		/// See <see cref="DefaultValue{T}"/> and <see cref="DefaultValue"/> types for more details.
 		/// </param>
 		public void SetConvertExpression(
-			Type fromType,
-			Type toType,
+			Type             fromType,
+			Type             toType,
 			LambdaExpression expr,
-			bool addNullCheck = true)
+			bool             addNullCheck = true)
 		{
 			if (fromType == null) throw new ArgumentNullException(nameof(fromType));
 			if (toType   == null) throw new ArgumentNullException(nameof(toType));
@@ -468,7 +482,11 @@ namespace LinqToDB.Mapping
 				AddNullCheck(expr) :
 				expr;
 
-			Schemas[0].SetConvertInfo(new DbDataType(fromType), new DbDataType(toType), new ConvertInfo.LambdaInfo(ex, expr, null, false));
+			lock (_syncRoot)
+			{
+				Schemas[0].SetConvertInfo(new DbDataType(fromType), new DbDataType(toType), new (ex, expr, null, false));
+				ResetID();
+			}
 		}
 
 		/// <summary>
@@ -483,10 +501,10 @@ namespace LinqToDB.Mapping
 		/// See <see cref="DefaultValue{T}"/> and <see cref="DefaultValue"/> types for more details.
 		/// </param>
 		public void SetConvertExpression(
-			DbDataType                      fromType,
-			DbDataType                      toType,
-			LambdaExpression                expr,
-			bool                            addNullCheck = true)
+			DbDataType       fromType,
+			DbDataType       toType,
+			LambdaExpression expr,
+			bool             addNullCheck = true)
 		{
 			if (expr == null) throw new ArgumentNullException(nameof(expr));
 
@@ -494,7 +512,11 @@ namespace LinqToDB.Mapping
 				AddNullCheck(expr) :
 				expr;
 
-			Schemas[0].SetConvertInfo(fromType, toType, new ConvertInfo.LambdaInfo(ex, expr, null, false));
+			lock (_syncRoot)
+			{
+				Schemas[0].SetConvertInfo(fromType, toType, new (ex, expr, null, false));
+				ResetID();
+			}
 		}
 
 		/// <summary>
@@ -518,7 +540,11 @@ namespace LinqToDB.Mapping
 				AddNullCheck(expr) :
 				expr;
 
-			Schemas[0].SetConvertInfo(typeof(TFrom), typeof(TTo), new ConvertInfo.LambdaInfo(ex, expr, null, false));
+			lock (_syncRoot)
+			{
+				Schemas[0].SetConvertInfo(typeof(TFrom), typeof(TTo), new (ex, expr, null, false));
+				ResetID();
+			}
 		}
 
 		/// <summary>
@@ -534,7 +560,11 @@ namespace LinqToDB.Mapping
 		{
 			if (expr == null) throw new ArgumentNullException(nameof(expr));
 
-			Schemas[0].SetConvertInfo(typeof(TFrom), typeof(TTo), new ConvertInfo.LambdaInfo(checkNullExpr, expr, null, false));
+			lock (_syncRoot)
+			{
+				Schemas[0].SetConvertInfo(typeof(TFrom), typeof(TTo), new (checkNullExpr, expr, null, false));
+				ResetID();
+			}
 		}
 
 		/// <summary>
@@ -550,9 +580,12 @@ namespace LinqToDB.Mapping
 			var p  = Expression.Parameter(typeof(TFrom), "p");
 			var ex = Expression.Lambda<Func<TFrom,TTo>>(Expression.Invoke(Expression.Constant(func), p), p);
 
-			Schemas[0].SetConvertInfo(typeof(TFrom), typeof(TTo), new ConvertInfo.LambdaInfo(ex, null, func, false));
+			lock (_syncRoot)
+			{
+				Schemas[0].SetConvertInfo(typeof(TFrom), typeof(TTo), new (ex, null, func, false));
+				ResetID();
+			}
 		}
-
 
 		/// <summary>
 		/// Specify conversion delegate for conversion from <typeparamref name="TFrom"/> type to <typeparamref name="TTo"/> type.
@@ -575,7 +608,11 @@ namespace LinqToDB.Mapping
 			var p  = Expression.Parameter(typeof(TFrom), "p");
 			var ex = Expression.Lambda<Func<TFrom,TTo>>(Expression.Invoke(Expression.Constant(func), p), p);
 
-			Schemas[0].SetConvertInfo(from, to, new ConvertInfo.LambdaInfo(ex, null, func, false));
+			lock (_syncRoot)
+			{
+				Schemas[0].SetConvertInfo(from, to, new (ex, null, func, false));
+				ResetID();
+			}
 		}
 
 		internal LambdaExpression AddNullCheck(LambdaExpression expr)
@@ -893,8 +930,6 @@ namespace LinqToDB.Mapping
 
 		#region MetadataReader
 
-		readonly object _metadataReadersSyncRoot = new ();
-
 		void InitMetadataReaders()
 		{
 			if (Schemas.Length > 0)
@@ -942,10 +977,11 @@ namespace LinqToDB.Mapping
 			get => Schemas[0].MetadataReader;
 			set
 			{
-				lock (_metadataReadersSyncRoot)
+				lock (_syncRoot)
 				{
 					Schemas[0].MetadataReader = value;
 					InitMetadataReaders();
+					ResetID();
 				}
 			}
 		}
@@ -956,9 +992,7 @@ namespace LinqToDB.Mapping
 		/// <param name="reader">Metadata attributes provider.</param>
 		public void AddMetadataReader(IMetadataReader reader)
 		{
-			ResetID();
-
-			lock (_metadataReadersSyncRoot)
+			lock (_syncRoot)
 			{
 				var currentReader = MetadataReader;
 
@@ -973,12 +1007,12 @@ namespace LinqToDB.Mapping
 		}
 
 		IMetadataReader[]? _metadataReaders;
-		IMetadataReader[]  MetadataReaders
+		IMetadataReader[]   MetadataReaders
 		{
 			get
 			{
 				if (_metadataReaders == null)
-					lock (_metadataReadersSyncRoot)
+					lock (_syncRoot)
 						if (_metadataReaders == null)
 							InitMetadataReaders();
 
@@ -1243,45 +1277,11 @@ namespace LinqToDB.Mapping
 			{
 				if (_configurationID == null)
 				{
-					var idBuilder = new IdentifierBuilder(ConfigurationList.Length);
+					var idBuilder = new IdentifierBuilder();
 
-					foreach (var c in ConfigurationList)
-						idBuilder.Add(c);
-
-					var list = new List<FluentMetadataReader>();
-
-					lock (_metadataReadersSyncRoot)
-					{
-						foreach (var schema in Schemas)
-						{
-							switch (schema.MetadataReader)
-							{
-								case FluentMetadataReader fr :
-									list.Add(fr);
-									break;
-								case MetadataReader mr :
-									foreach (var r in mr.Readers)
-										if (r is FluentMetadataReader fr)
-											list.Add(fr);
-									break;
-							}
-						}
-					}
-
-					if (list.Count > 0)
-					{
-						foreach (var id in
-						(
-							from id in list
-							from a in id.GetObjectIDs()
-							orderby a
-							select a
-						)
-						.Distinct())
-						{
-							idBuilder.Add(id);
-						}
-					}
+					lock (_syncRoot)
+						for (var i = Schemas.Length - 1; i >= 0; i--)
+							idBuilder.Add(Schemas[i].ConfigurationID);
 
 					_configurationID = idBuilder.CreateID();
 				}
@@ -1293,6 +1293,12 @@ namespace LinqToDB.Mapping
 		internal void ResetID()
 		{
 			_configurationID = null;
+		}
+
+		internal void CreateID()
+		{
+			lock (_syncRoot)
+				_configurationID ??= Schemas[0].CreateID();
 		}
 
 		private string[]? _configurationList;
@@ -1388,6 +1394,8 @@ namespace LinqToDB.Mapping
 				SetConverter<DBNull, object?>(static _ => null);
 
 				ValueToSqlConverter.SetDefaults();
+
+				CreateID();
 			}
 
 			public override bool IsFluentMappingSupported => false;
@@ -1436,7 +1444,11 @@ namespace LinqToDB.Mapping
 		/// <param name="isScalarType"><c>true</c>, if provided type should be mapped to scalar database value.</param>
 		public void SetScalarType(Type type, bool isScalarType = true)
 		{
-			Schemas[0].SetScalarType(type, isScalarType);
+			lock (_syncRoot)
+			{
+				Schemas[0].SetScalarType(type, isScalarType);
+				ResetID();
+			}
 		}
 
 		/// <summary>
@@ -1524,7 +1536,11 @@ namespace LinqToDB.Mapping
 		/// <param name="dataType">LINQ to DB data type.</param>
 		public void SetDataType(Type type, DataType dataType)
 		{
-			Schemas[0].SetDataType(type, dataType);
+			lock (_syncRoot)
+			{
+				Schemas[0].SetDataType(type, dataType);
+				ResetID();
+			}
 		}
 
 		/// <summary>
@@ -1534,7 +1550,11 @@ namespace LinqToDB.Mapping
 		/// <param name="dataType">Database data type.</param>
 		public void SetDataType(Type type, SqlDataType dataType)
 		{
-			Schemas[0].SetDataType(type, dataType);
+			lock (_syncRoot)
+			{
+				Schemas[0].SetDataType(type, dataType);
+				ResetID();
+			}
 		}
 
 		/// <summary>
@@ -1665,6 +1685,8 @@ namespace LinqToDB.Mapping
 
 		#region Options
 
+		StringComparer? _columnNameComparer;
+
 		/// <summary>
 		/// Gets or sets column name comparison rules for comparison of column names in mapping with column name,
 		///  returned by provider's data reader.
@@ -1673,19 +1695,28 @@ namespace LinqToDB.Mapping
 		{
 			get
 			{
-				if (Schemas[0].ColumnNameComparer == null)
+				if (_columnNameComparer == null)
 				{
-					Schemas[0].ColumnNameComparer = Schemas
-						.Select        (static s => s.ColumnNameComparer)
-						.FirstOrDefault(static s => s != null)
-						??
-						StringComparer.Ordinal;
+					if (Schemas[0].ColumnNameComparer != null)
+						_columnNameComparer = Schemas[0].ColumnNameComparer;
+					else
+					{
+						_columnNameComparer = Schemas
+							.Select        (static s => s.ColumnNameComparer)
+							.FirstOrDefault(static s => s != null)
+							??
+							StringComparer.Ordinal;
+					}
 				}
 
-				return Schemas[0].ColumnNameComparer!;
+				return _columnNameComparer!;
 			}
 
-			set => Schemas[0].ColumnNameComparer = value;
+			set
+			{
+				Schemas[0].ColumnNameComparer = _columnNameComparer = value;
+				_configurationID = null;
+			}
 		}
 
 		#endregion
@@ -1773,7 +1804,11 @@ namespace LinqToDB.Mapping
 		/// <param name="defaultFromType">Mapped type.</param>
 		public void SetDefaultFromEnumType(Type enumType, Type defaultFromType)
 		{
-			Schemas[0].SetDefaultFromEnumType(enumType, defaultFromType);
+			lock (_syncRoot)
+			{
+				Schemas[0].SetDefaultFromEnumType(enumType, defaultFromType);
+				ResetID();
+			}
 		}
 
 		#endregion

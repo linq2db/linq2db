@@ -43,7 +43,7 @@ namespace LinqToDB.Mapping
 
 		public override string GetObjectID()
 		{
-			return $".{Configuration}.{IdentifierBuilder.CreateID(ConverterType)}.";
+			return $".{Configuration}.{IdentifierBuilder.GetObjectID(ConverterType)}.";
 		}
 	}
 }

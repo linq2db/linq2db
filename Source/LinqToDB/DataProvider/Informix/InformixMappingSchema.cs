@@ -36,6 +36,8 @@ namespace LinqToDB.DataProvider.Informix
 			SetValueToSqlConverter(typeof(char),     (sb,dt,v)   => ConvertCharToSql    (sb, (char)v));
 			SetValueToSqlConverter(typeof(DateTime), (sb,dt,v)   => ConvertDateTimeToSql(sb, dt, (DateTime)v));
 			SetValueToSqlConverter(typeof(TimeSpan), (sb, dt, v) => BuildIntervalLiteral(sb, (TimeSpan)v));
+
+			CreateID();
 		}
 
 		private void BuildIntervalLiteral(StringBuilder sb, TimeSpan interval)
@@ -112,11 +114,13 @@ namespace LinqToDB.DataProvider.Informix
 			public IfxMappingSchema()
 				: base(ProviderName.Informix, Instance)
 			{
+				CreateID();
 			}
 
 			public IfxMappingSchema(params MappingSchema[] schemas)
 				: base(ProviderName.Informix, Array<MappingSchema>.Append(schemas, Instance))
 			{
+				CreateID();
 			}
 
 			public override bool IsFluentMappingSupported => false;
@@ -127,11 +131,13 @@ namespace LinqToDB.DataProvider.Informix
 			public DB2MappingSchema()
 				: base(ProviderName.InformixDB2, Instance)
 			{
+				CreateID();
 			}
 
 			public DB2MappingSchema(params MappingSchema[] schemas)
 				: base(ProviderName.InformixDB2, Array<MappingSchema>.Append(schemas, Instance))
 			{
+				CreateID();
 			}
 
 			public override bool IsFluentMappingSupported => false;

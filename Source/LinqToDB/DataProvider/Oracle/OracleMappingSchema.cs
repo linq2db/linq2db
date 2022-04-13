@@ -35,11 +35,7 @@ namespace LinqToDB.DataProvider.Oracle
 		private const string TIMESTAMPTZ6_FORMAT = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.ffffff} +00:00'";
 		private const string TIMESTAMPTZ7_FORMAT = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.fffffff} +00:00'";
 
-		public OracleMappingSchema() : this(ProviderName.Oracle)
-		{
-		}
-
-		protected OracleMappingSchema(string configuration) : base(configuration)
+		public OracleMappingSchema() : base(ProviderName.Oracle)
 		{
 			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 
@@ -82,6 +78,8 @@ namespace LinqToDB.DataProvider.Oracle
 				else
 					sb.AppendFormat(CultureInfo.InvariantCulture, "{0:G17}D", d);
 			});
+
+			CreateID();
 		}
 
 		static void ConvertBinaryToSql(StringBuilder stringBuilder, byte[] value)
@@ -204,11 +202,13 @@ namespace LinqToDB.DataProvider.Oracle
 			public ManagedMappingSchema()
 				: base(ProviderName.OracleManaged, Instance)
 			{
+				CreateID();
 			}
 
 			public ManagedMappingSchema(params MappingSchema[] schemas)
 				: base(ProviderName.OracleManaged, Array<MappingSchema>.Append(schemas, Instance))
 			{
+				CreateID();
 			}
 
 			public override bool IsFluentMappingSupported => false;

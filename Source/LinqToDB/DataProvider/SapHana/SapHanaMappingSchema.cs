@@ -1,13 +1,12 @@
-﻿
+﻿using System;
+using System.Data.Linq;
+using System.Text;
 
 namespace LinqToDB.DataProvider.SapHana
 {
 	using Common;
 	using Mapping;
 	using SqlQuery;
-	using System;
-	using System.Data.Linq;
-	using System.Text;
 
 	public class SapHanaMappingSchema : MappingSchema
 	{
@@ -23,6 +22,8 @@ namespace LinqToDB.DataProvider.SapHana
 			SetValueToSqlConverter(typeof(char)  , (sb, dt, v) => ConvertCharToSql  (sb, (char)v));
 			SetValueToSqlConverter(typeof(byte[]), (sb, dt, v) => ConvertBinaryToSql(sb, (byte[])v));
 			SetValueToSqlConverter(typeof(Binary), (sb, dt, v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
+
+			CreateID();
 		}
 
 		static readonly Action<StringBuilder, int> AppendConversionAction = AppendConversion;
@@ -65,6 +66,7 @@ namespace LinqToDB.DataProvider.SapHana
 			public NativeMappingSchema()
 				: base(ProviderName.SapHanaNative, Instance)
 			{
+				CreateID();
 			}
 
 			public override bool IsFluentMappingSupported => false;
@@ -75,6 +77,7 @@ namespace LinqToDB.DataProvider.SapHana
 			public OdbcMappingSchema()
 				: base(ProviderName.SapHanaOdbc, Instance)
 			{
+				CreateID();
 			}
 
 			public override bool IsFluentMappingSupported => false;

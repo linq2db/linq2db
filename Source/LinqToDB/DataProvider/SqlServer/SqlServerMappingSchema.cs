@@ -83,7 +83,6 @@ namespace LinqToDB.DataProvider.SqlServer
 			AddScalarType(typeof(DateTime),  DataType.DateTime);
 			AddScalarType(typeof(DateTime?), DataType.DateTime);
 
-
 			SqlServerTypes.Configure(this);
 
 			SetValueToSqlConverter(typeof(string),         (sb,dt,v) => ConvertStringToSql        (sb, dt, v.ToString()!));
@@ -97,6 +96,8 @@ namespace LinqToDB.DataProvider.SqlServer
 			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string)));
 
 			AddMetadataReader(new SystemDataSqlServerAttributeReader());
+
+			CreateID();
 		}
 
 		internal static SqlServerMappingSchema Instance = new ();
@@ -245,6 +246,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				: base(ProviderName.SqlServer2005, Instance)
 			{
 				ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
+				CreateID();
 			}
 
 			public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
@@ -262,6 +264,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			{
 				ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 				SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => ConvertDateTimeToSql(sb, dt, (DateTime)v));
+				CreateID();
 			}
 
 			public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
@@ -279,6 +282,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			{
 				ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 				SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => ConvertDateTimeToSql(sb, dt, (DateTime)v));
+				CreateID();
 			}
 
 			public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
@@ -296,6 +300,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			{
 				ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 				SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => ConvertDateTimeToSql(sb, dt, (DateTime)v));
+				CreateID();
 			}
 
 			public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
@@ -313,6 +318,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			{
 				ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 				SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => ConvertDateTimeToSql(sb, dt, (DateTime)v));
+				CreateID();
 			}
 
 			public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
@@ -330,6 +336,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			{
 				ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 				SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => ConvertDateTimeToSql(sb, dt, (DateTime)v));
+				CreateID();
 			}
 
 			public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
@@ -347,6 +354,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			{
 				ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 				SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => ConvertDateTimeToSql(sb, dt, (DateTime)v));
+				CreateID();
 			}
 
 			public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)

@@ -40,7 +40,7 @@ namespace LinqToDB.Mapping
 
 		public override string GetObjectID()
 		{
-			var type = IdentifierBuilder.CreateID(Type);
+			var type = IdentifierBuilder.GetObjectID(Type);
 			return $".{Configuration}.{Code}.{(IsDefault?'1':'0')}.{type}.";
 		}
 	}

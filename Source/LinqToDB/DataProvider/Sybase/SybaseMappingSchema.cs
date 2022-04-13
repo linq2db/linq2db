@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Data.Linq;
+using System.Globalization;
 using System.Text;
 
 namespace LinqToDB.DataProvider.Sybase
@@ -6,8 +8,6 @@ namespace LinqToDB.DataProvider.Sybase
 	using Common;
 	using Mapping;
 	using SqlQuery;
-	using System.Data.Linq;
-	using System.Globalization;
 
 	public class SybaseMappingSchema : MappingSchema
 	{
@@ -26,6 +26,8 @@ namespace LinqToDB.DataProvider.Sybase
 			SetValueToSqlConverter(typeof(Binary)  , (sb, dt, v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
 
 			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
+
+			CreateID();
 		}
 
 		static void ConvertBinaryToSql(StringBuilder stringBuilder, byte[] value)
@@ -78,6 +80,7 @@ namespace LinqToDB.DataProvider.Sybase
 			public NativeMappingSchema()
 				: base(ProviderName.Sybase, Instance)
 			{
+				CreateID();
 			}
 
 			public override bool IsFluentMappingSupported => false;
@@ -88,6 +91,7 @@ namespace LinqToDB.DataProvider.Sybase
 			public ManagedMappingSchema()
 				: base(ProviderName.SybaseManaged, Instance)
 			{
+				CreateID();
 			}
 
 			public override bool IsFluentMappingSupported => false;

@@ -81,13 +81,13 @@ namespace Tests.UserTests
 		[Test]
 		public void TestEnumDefaultType1([DataSources] string context)
 		{
-			TestEnumString(context, ms => ms.SetDefaultFromEnumType(typeof(Gender), typeof(string)), false);
+			TestEnumString(context, ms => ms.SetDefaultFromEnumType(typeof(Gender), typeof(string)));
 		}
 
 		[Test]
 		public void TestEnumDefaultType2([DataSources] string context)
 		{
-			TestEnumString(context, ms => ms.SetDefaultFromEnumType(typeof(Enum), typeof(string)), false);
+			TestEnumString(context, ms => ms.SetDefaultFromEnumType(typeof(Enum), typeof(string)));
 		}
 
 		[Test]
@@ -98,11 +98,10 @@ namespace Tests.UserTests
 				ms.SetConverter<Gender, string>       (obj => obj.ToString() );
 				ms.SetConverter<Gender, DataParameter>(obj => new DataParameter { Value = obj.ToString(), DataType = DataType.NVarChar });
 				ms.SetConverter<string, Gender>       (txt => (Gender)Enum.Parse(typeof(Gender), txt));
-			},
-			false);
+			});
 		}
 
-		public void TestEnumString(string context, Action<MappingSchema> initMappingSchema, bool doLoop)
+		public void TestEnumString(string context, Action<MappingSchema> initMappingSchema)
 		{
 			ResetPersonIdentity(context);
 
@@ -115,21 +114,13 @@ namespace Tests.UserTests
 
 			using (var db = GetDataContext(context, ms))
 			{
-				int id;
-
-				do
+				var id = Convert.ToInt32(db.InsertWithIdentity(new Person2
 				{
-					id = Convert.ToInt32(db.InsertWithIdentity(new Person2
-					{
-						FirstName  = new Dictionary<string, string> { { "123", "123" } },
-						LastName   = "456",
-						MiddleName = "789",
-						Gender     = Gender.M
-					}));
-
-					Console.WriteLine(id);
-				}
-				while (doLoop && id < 4);
+					FirstName  = new Dictionary<string, string> { { "123", "123" } },
+					LastName   = "456",
+					MiddleName = "789",
+					Gender     = Gender.M
+				}));
 
 				var p = db.GetTable<PurePerson>().First(t => t.PersonID == id);
 

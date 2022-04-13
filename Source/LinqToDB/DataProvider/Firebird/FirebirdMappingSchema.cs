@@ -66,6 +66,8 @@ namespace LinqToDB.DataProvider.Firebird
 				else
 					sb.AppendFormat(CultureInfo.InvariantCulture, "{0:G17}", d);
 			});
+
+			CreateID();
 		}
 
 		static void BuildDateTime(StringBuilder stringBuilder, SqlDataType dt, DateTime value)
@@ -172,11 +174,13 @@ namespace LinqToDB.DataProvider.Firebird
 			public FirebirdProviderMappingSchema()
 				: base(ProviderName.Firebird, Instance)
 			{
+				CreateID();
 			}
 
 			public FirebirdProviderMappingSchema(params MappingSchema[] schemas)
 					: base(ProviderName.Firebird, Array<MappingSchema>.Append(schemas, Instance))
 			{
+				CreateID();
 			}
 
 			public override bool IsFluentMappingSupported => false;

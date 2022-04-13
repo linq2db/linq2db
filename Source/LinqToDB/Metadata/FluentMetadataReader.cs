@@ -126,7 +126,7 @@ namespace LinqToDB.Metadata
 			foreach (var type in _types)
 			{
 				var sb = new StringBuilder(".")
-					.Append(IdentifierBuilder.CreateID(type.Key))
+					.Append(IdentifierBuilder.GetObjectID(type.Key))
 					.Append('.')
 					.Append(type.Value.Count)
 					.Append('.')
@@ -141,7 +141,7 @@ namespace LinqToDB.Metadata
 			foreach (var member in _members)
 			{
 				var sb = new StringBuilder(".")
-					.Append(IdentifierBuilder.CreateID(member.Key.DeclaringType))
+					.Append(IdentifierBuilder.GetObjectID(member.Key.DeclaringType))
 					.Append('.')
 					.Append(member.Key.Name)
 					.Append('.')

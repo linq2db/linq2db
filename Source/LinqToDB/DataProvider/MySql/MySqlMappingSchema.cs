@@ -27,6 +27,8 @@ namespace LinqToDB.DataProvider.MySql
 
 			// both providers doesn't support BitArray directly and map bit fields to ulong by default
 			SetConvertExpression<BitArray?, DataParameter>(ba => new DataParameter(null, ba == null ? (ulong?)null :GetBits(ba), DataType.UInt64), false);
+
+			CreateID();
 		}
 
 		static ulong GetBits(BitArray ba)
@@ -78,11 +80,13 @@ namespace LinqToDB.DataProvider.MySql
 			public MySqlOfficialMappingSchema()
 				: base(ProviderName.MySqlOfficial, Instance)
 			{
+				CreateID();
 			}
 
 			public MySqlOfficialMappingSchema(params MappingSchema[] schemas)
 				: base(ProviderName.MySqlOfficial, Array<MappingSchema>.Append(schemas, Instance))
 			{
+				CreateID();
 			}
 
 			public override bool IsFluentMappingSupported => false;
@@ -93,11 +97,13 @@ namespace LinqToDB.DataProvider.MySql
 			public MySqlConnectorMappingSchema()
 				: base(ProviderName.MySqlConnector, Instance)
 			{
+				CreateID();
 			}
 
 			public MySqlConnectorMappingSchema(params MappingSchema[] schemas)
 				: base(ProviderName.MySqlConnector, Array<MappingSchema>.Append(schemas, Instance))
 			{
+				CreateID();
 			}
 
 			public override bool IsFluentMappingSupported => false;

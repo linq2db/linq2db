@@ -74,6 +74,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 			SetConvertExpression<ulong , DataParameter>(value => new DataParameter(null, (decimal)value , DataType.Decimal) /*{ Precision = 20, Scale = 0 }*/);
 			SetConvertExpression<ulong?, DataParameter>(value => new DataParameter(null, (decimal?)value, DataType.Decimal) /*{ Precision = 20, Scale = 0 }*/, addNullCheck: false);
+
+			CreateID();
 		}
 
 		static void BuildDateTime(StringBuilder stringBuilder, SqlDataType dt, DateTime value)
@@ -141,11 +143,13 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			public PostgreSQL92MappingSchema()
 				: base(ProviderName.PostgreSQL92, Instance)
 			{
+				CreateID();
 			}
 
 			public PostgreSQL92MappingSchema(params MappingSchema[] schemas)
-					: base(ProviderName.PostgreSQL92, Array<MappingSchema>.Append(schemas, Instance))
+				: base(ProviderName.PostgreSQL92, Array<MappingSchema>.Append(schemas, Instance))
 			{
+				CreateID();
 			}
 		}
 
@@ -154,11 +158,13 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			public PostgreSQL93MappingSchema()
 				: base(ProviderName.PostgreSQL93, Instance)
 			{
+				CreateID();
 			}
 
 			public PostgreSQL93MappingSchema(params MappingSchema[] schemas)
 				: base(ProviderName.PostgreSQL93, Array<MappingSchema>.Append(schemas, Instance))
 			{
+				CreateID();
 			}
 		}
 
@@ -167,11 +173,13 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			public PostgreSQL95MappingSchema()
 				: base(ProviderName.PostgreSQL95, Instance)
 			{
+				CreateID();
 			}
 
 			public PostgreSQL95MappingSchema(params MappingSchema[] schemas)
 				: base(ProviderName.PostgreSQL95, Array<MappingSchema>.Append(schemas, Instance))
 			{
+				CreateID();
 			}
 		}
 	}

@@ -3,7 +3,6 @@ using System.Data.Linq;
 using System.Globalization;
 using System.Text;
 
-
 namespace LinqToDB.DataProvider.SQLite
 {
 	using Common;
@@ -34,6 +33,8 @@ namespace LinqToDB.DataProvider.SQLite
 			SetValueToSqlConverter(typeof(Binary),   (sb,dt,v) => ConvertBinaryToSql  (sb, ((Binary)v).ToArray()));
 
 			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
+
+			CreateID();
 		}
 
 		static void ConvertBinaryToSql(StringBuilder stringBuilder, byte[] value)
@@ -97,6 +98,7 @@ namespace LinqToDB.DataProvider.SQLite
 			public ClassicMappingSchema()
 				: base(ProviderName.SQLiteClassic, Instance)
 			{
+				CreateID();
 			}
 
 			public override bool IsFluentMappingSupported => false;
@@ -107,6 +109,7 @@ namespace LinqToDB.DataProvider.SQLite
 			public MicrosoftMappingSchema()
 				: base(ProviderName.SQLiteMS, Instance)
 			{
+				CreateID();
 			}
 
 			public override bool IsFluentMappingSupported => false;

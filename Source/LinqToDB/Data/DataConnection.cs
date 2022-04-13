@@ -324,8 +324,8 @@ namespace LinqToDB.Data
 			}
 
 			RetryPolicy = Configuration.RetryPolicy.Factory != null
-					? Configuration.RetryPolicy.Factory(this)
-					: null;
+				? Configuration.RetryPolicy.Factory(this)
+				: null;
 
 			if (options.DataProvider != null)
 			{

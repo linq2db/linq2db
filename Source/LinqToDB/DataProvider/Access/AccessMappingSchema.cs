@@ -34,6 +34,8 @@ namespace LinqToDB.DataProvider.Access
 			SetValueToSqlConverter(typeof(char),     (sb,dt,v) => ConvertCharToSql    (sb, (char)v));
 			SetValueToSqlConverter(typeof(byte[]),   (sb,dt,v) => ConvertBinaryToSql  (sb, (byte[])v));
 			SetValueToSqlConverter(typeof(Binary),   (sb,dt,v) => ConvertBinaryToSql  (sb, ((Binary)v).ToArray()));
+
+			CreateID();
 		}
 
 		static void ConvertBinaryToSql(StringBuilder stringBuilder, byte[] value)
@@ -79,6 +81,7 @@ namespace LinqToDB.DataProvider.Access
 		{
 			public OleDbMappingSchema() : base(ProviderName.Access, Instance)
 			{
+				CreateID();
 			}
 
 			public override bool IsFluentMappingSupported => false;
@@ -88,6 +91,7 @@ namespace LinqToDB.DataProvider.Access
 		{
 			public ODBCMappingSchema() : base(ProviderName.AccessOdbc, Instance)
 			{
+				CreateID();
 			}
 
 			public override bool IsFluentMappingSupported => false;
