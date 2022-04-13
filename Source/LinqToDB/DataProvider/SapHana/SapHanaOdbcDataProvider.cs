@@ -107,7 +107,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 #if NET6_0_OR_GREATER
 				case DataType.Date:
-					dataType = dataType?.WithDataType(DataType.DateTime);
+					dataType = dataType.WithDataType(DataType.DateTime);
 					if (value is DateOnly d)
 						value = d.ToDateTime(TimeOnly.MinValue);
 					break;
