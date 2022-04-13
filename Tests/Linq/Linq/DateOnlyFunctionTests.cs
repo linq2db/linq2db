@@ -21,13 +21,20 @@ namespace Tests.Linq
 
 			public static Transaction[] AllData { get; } = new[]
 			{
-				new Transaction() { TransactionId = 1, TransactionDate = TestData.DateOnly               },
-				new Transaction() { TransactionId = 2, TransactionDate = TestData.DateOnly.AddYears(1)   },
-				new Transaction() { TransactionId = 3, TransactionDate = TestData.DateOnly.AddYears(-1)  },
-				new Transaction() { TransactionId = 4, TransactionDate = TestData.DateOnly.AddMonths(1)  },
-				new Transaction() { TransactionId = 5, TransactionDate = TestData.DateOnly.AddMonths(-1) },
-				new Transaction() { TransactionId = 6, TransactionDate = TestData.DateOnly.AddDays(1)    },
-				new Transaction() { TransactionId = 7, TransactionDate = TestData.DateOnly.AddDays(-1)   },
+				new Transaction() { TransactionId = 1 , TransactionDate = TestData.DateOnly                        },
+				new Transaction() { TransactionId = 2 , TransactionDate = TestData.DateOnly         .AddYears(1)   },
+				new Transaction() { TransactionId = 3 , TransactionDate = TestData.DateOnly         .AddYears(-1)  },
+				new Transaction() { TransactionId = 4 , TransactionDate = TestData.DateOnly         .AddMonths(1)  },
+				new Transaction() { TransactionId = 5 , TransactionDate = TestData.DateOnly         .AddMonths(-1) },
+				new Transaction() { TransactionId = 6 , TransactionDate = TestData.DateOnly         .AddDays(1)    },
+				new Transaction() { TransactionId = 7 , TransactionDate = TestData.DateOnly         .AddDays(-1)   },
+				new Transaction() { TransactionId = 8 , TransactionDate = TestData.DateOnlyAmbiguous               },
+				new Transaction() { TransactionId = 9 , TransactionDate = TestData.DateOnlyAmbiguous.AddYears(1)   },
+				new Transaction() { TransactionId = 10, TransactionDate = TestData.DateOnlyAmbiguous.AddYears(-1)  },
+				new Transaction() { TransactionId = 11, TransactionDate = TestData.DateOnlyAmbiguous.AddMonths(1)  },
+				new Transaction() { TransactionId = 12, TransactionDate = TestData.DateOnlyAmbiguous.AddMonths(-1) },
+				new Transaction() { TransactionId = 13, TransactionDate = TestData.DateOnlyAmbiguous.AddDays(1)    },
+				new Transaction() { TransactionId = 14, TransactionDate = TestData.DateOnlyAmbiguous.AddDays(-1)   },
 			};
 		}
 

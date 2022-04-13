@@ -82,11 +82,6 @@ namespace LinqToDB.DataProvider.SqlServer
 			AddScalarType(typeof(SqlString?),   SqlString.  Null, true, DataType.NVarChar);
 			AddScalarType(typeof(SqlXml),       SqlXml.     Null, true, DataType.Xml);
 
-#if NET6_0_OR_GREATER
-			AddScalarType(typeof(SqlDateTime),  DataType.Date);
-			AddScalarType(typeof(SqlDateTime?), DataType.Date);
-#endif
-
 			AddScalarType(typeof(DateTime),  DataType.DateTime);
 			AddScalarType(typeof(DateTime?), DataType.DateTime);
 

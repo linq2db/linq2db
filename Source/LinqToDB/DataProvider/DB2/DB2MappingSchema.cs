@@ -123,7 +123,7 @@ namespace LinqToDB.DataProvider.DB2
 
 		static DateOnly ParseDateOnly(string value)
 		{
-			if (DateOnly.TryParse(value, out var res))
+			if (DateOnly.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.None, out var res))
 				return res;
 
 			return DateOnly.ParseExact(
