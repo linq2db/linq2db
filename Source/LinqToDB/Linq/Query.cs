@@ -442,6 +442,7 @@ namespace LinqToDB.Linq
 				}
 
 				var allowReordering = Monitor.TryEnter(_syncPriority);
+
 				try
 				{
 					for (var i = 0; i < cache.Length; i++)

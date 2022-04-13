@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Data.Linq;
+using System.Globalization;
 using System.Text;
 
 namespace LinqToDB.DataProvider.DB2
@@ -6,8 +8,6 @@ namespace LinqToDB.DataProvider.DB2
 	using Common;
 	using Mapping;
 	using SqlQuery;
-	using System.Data.Linq;
-	using System.Globalization;
 
 	public class DB2MappingSchema : MappingSchema
 	{
@@ -40,11 +40,7 @@ namespace LinqToDB.DataProvider.DB2
 			"yyyy-MM-dd-HH.mm.ss.ffffffffffff",
 		};
 
-		public DB2MappingSchema() : this(ProviderName.DB2)
-		{
-		}
-
-		protected DB2MappingSchema(string configuration) : base(configuration)
+		DB2MappingSchema() : base(ProviderName.DB2)
 		{
 			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
 			SetDataType(typeof(byte), new SqlDataType(DataType.Int16, typeof(byte)));
@@ -157,8 +153,10 @@ namespace LinqToDB.DataProvider.DB2
 			public DB2zOSMappingSchema()
 				: base(ProviderName.DB2zOS, Instance)
 			{
-				CreateID();
+				CreateID(ref _id);
 			}
+
+			static int? _id;
 
 			public DB2zOSMappingSchema(params MappingSchema[] schemas)
 					: base(ProviderName.DB2zOS, Array<MappingSchema>.Append(schemas, Instance))
@@ -169,13 +167,15 @@ namespace LinqToDB.DataProvider.DB2
 			public override bool IsFluentMappingSupported => false;
 		}
 
-		public class DB2LUWMappingSchema : MappingSchema
+		public sealed class DB2LUWMappingSchema : MappingSchema
 		{
 			public DB2LUWMappingSchema()
 				: base(ProviderName.DB2LUW, Instance)
 			{
-				CreateID();
+				CreateID(ref _id);
 			}
+
+			static int? _id;
 
 			public DB2LUWMappingSchema(params MappingSchema[] schemas)
 					: base(ProviderName.DB2LUW, Array<MappingSchema>.Append(schemas, Instance))

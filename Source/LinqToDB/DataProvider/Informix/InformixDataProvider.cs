@@ -186,22 +186,7 @@ namespace LinqToDB.DataProvider.Informix
 			base.SetParameterType(dataConnection, parameter, dataType);
 		}
 
-		static class MappingSchemaInstance
-		{
-			public static readonly MappingSchema IfxMappingSchema = new InformixMappingSchema.IfxMappingSchema();
-			public static readonly MappingSchema DB2MappingSchema = new InformixMappingSchema.DB2MappingSchema();
-
-			public static MappingSchema Get(string providerName, MappingSchema providerSchema)
-			{
-				return providerName switch
-				{
-					ProviderName.InformixDB2 => new MappingSchema(DB2MappingSchema, providerSchema),
-					_                        => new MappingSchema(IfxMappingSchema, providerSchema),
-				};
-			}
-		}
-
-		private static MappingSchema GetMappingSchema(string name, MappingSchema providerSchema)
+		static MappingSchema GetMappingSchema(string name, MappingSchema providerSchema)
 		{
 			return name switch
 			{

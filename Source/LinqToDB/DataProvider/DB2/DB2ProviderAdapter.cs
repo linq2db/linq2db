@@ -178,8 +178,8 @@ namespace LinqToDB.DataProvider.DB2
 				CreateColumnMapping = bulkCopyColumnMappingCreator;
 			}
 
-			public Func<DbConnection, DB2BulkCopyOptions, DB2BulkCopy> Create              { get; }
-			public Func<int, string, DB2BulkCopyColumnMapping>          CreateColumnMapping { get; }
+			public Func<DbConnection,DB2BulkCopyOptions,DB2BulkCopy> Create              { get; }
+			public Func<int,string,DB2BulkCopyColumnMapping>         CreateColumnMapping { get; }
 		}
 
 		public static DB2ProviderAdapter GetInstance()
@@ -215,27 +215,27 @@ namespace LinqToDB.DataProvider.DB2
 						var rowsCopiedEventArgs             = assembly.GetType($"{clientNamespace}.DB2RowsCopiedEventArgs"            , true)!;
 						var bulkCopyColumnMappingCollection = assembly.GetType($"{clientNamespace}.DB2BulkCopyColumnMappingCollection", true)!;
 
-						var mappingSchema = new MappingSchema();
+						var mappingSchema = new MappingSchema("DB2Adapter");
 
-						var db2BinaryType       = loadType("DB2Binary"      , DataType.VarBinary)!;
-						var db2BlobType         = loadType("DB2Blob"        , DataType.Blob)!;
-						var db2ClobType         = loadType("DB2Clob"        , DataType.NText)!;
-						var db2DateType         = loadType("DB2Date"        , DataType.Date)!;
-						var db2DateTimeType     = loadType("DB2DateTime"    , DataType.DateTime , true);
-						var db2DecimalType      = loadType("DB2Decimal"     , DataType.Decimal)!;
-						var db2DecimalFloatType = loadType("DB2DecimalFloat", DataType.Decimal)!;
-						var db2DoubleType       = loadType("DB2Double"      , DataType.Double)!;
-						var db2Int16Type        = loadType("DB2Int16"       , DataType.Int16)!;
-						var db2Int32Type        = loadType("DB2Int32"       , DataType.Int32)!;
-						var db2Int64Type        = loadType("DB2Int64"       , DataType.Int64)!;
-						var db2RealType         = loadType("DB2Real"        , DataType.Single)!;
-						var db2Real370Type      = loadType("DB2Real370"     , DataType.Single)!;
-						var db2RowIdType        = loadType("DB2RowId"       , DataType.VarBinary)!;
-						var db2StringType       = loadType("DB2String"      , DataType.NVarChar)!;
-						var db2TimeType         = loadType("DB2Time"        , DataType.Time)!;
-						var db2TimeStampType    = loadType("DB2TimeStamp"   , DataType.DateTime2)!;
-						var db2XmlType          = loadType("DB2Xml"         , DataType.Xml)!;
-						var db2TimeSpanType     = loadType("DB2TimeSpan"    , DataType.Timestamp, true, true);
+						var db2BinaryType       = LoadType("DB2Binary"      , DataType.VarBinary)!;
+						var db2BlobType         = LoadType("DB2Blob"        , DataType.Blob)!;
+						var db2ClobType         = LoadType("DB2Clob"        , DataType.NText)!;
+						var db2DateType         = LoadType("DB2Date"        , DataType.Date)!;
+						var db2DateTimeType     = LoadType("DB2DateTime"    , DataType.DateTime , true);
+						var db2DecimalType      = LoadType("DB2Decimal"     , DataType.Decimal)!;
+						var db2DecimalFloatType = LoadType("DB2DecimalFloat", DataType.Decimal)!;
+						var db2DoubleType       = LoadType("DB2Double"      , DataType.Double)!;
+						var db2Int16Type        = LoadType("DB2Int16"       , DataType.Int16)!;
+						var db2Int32Type        = LoadType("DB2Int32"       , DataType.Int32)!;
+						var db2Int64Type        = LoadType("DB2Int64"       , DataType.Int64)!;
+						var db2RealType         = LoadType("DB2Real"        , DataType.Single)!;
+						var db2Real370Type      = LoadType("DB2Real370"     , DataType.Single)!;
+						var db2RowIdType        = LoadType("DB2RowId"       , DataType.VarBinary)!;
+						var db2StringType       = LoadType("DB2String"      , DataType.NVarChar)!;
+						var db2TimeType         = LoadType("DB2Time"        , DataType.Time)!;
+						var db2TimeStampType    = LoadType("DB2TimeStamp"   , DataType.DateTime2)!;
+						var db2XmlType          = LoadType("DB2Xml"         , DataType.Xml)!;
+						var db2TimeSpanType     = LoadType("DB2TimeSpan"    , DataType.Timestamp, true, true);
 						// not mapped currently: DB2MonthSpan, DB2SmartLOB, DB2TimeStampOffset, DB2XsrObjectId
 
 						var typeMapper = new TypeMapper();
@@ -268,7 +268,6 @@ namespace LinqToDB.DataProvider.DB2
 						var bulkCopy = new BulkCopyAdapter(
 							typeMapper.BuildWrappedFactory((DbConnection connection, DB2BulkCopyOptions options) => new DB2BulkCopy((DB2Connection)(object)connection, options)),
 							typeMapper.BuildWrappedFactory((int source, string destination) => new DB2BulkCopyColumnMapping(source, destination)));
-
 
 						_instance = new DB2ProviderAdapter(
 							connectionType,
@@ -304,7 +303,7 @@ namespace LinqToDB.DataProvider.DB2
 							isDB2BinaryNull,
 							bulkCopy);
 
-						Type? loadType(string typeName, DataType dataType, bool optional = false, bool obsolete = false, bool register = true)
+						Type? LoadType(string typeName, DataType dataType, bool optional = false, bool obsolete = false, bool register = true)
 						{
 							var type = assembly!.GetType($"{TypesNamespace}.{typeName}", !optional);
 							if (type == null)

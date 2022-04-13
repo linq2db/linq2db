@@ -10,18 +10,14 @@ namespace LinqToDB.DataProvider.SapHana
 
 	public class SapHanaMappingSchema : MappingSchema
 	{
-		public SapHanaMappingSchema() : this(ProviderName.SapHana)
-		{
-		}
-
-		protected SapHanaMappingSchema(string configuration) : base(configuration)
+		SapHanaMappingSchema() : base(ProviderName.SapHana)
 		{
 			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
 
-			SetValueToSqlConverter(typeof(string), (sb, dt, v) => ConvertStringToSql(sb, v.ToString()!));
-			SetValueToSqlConverter(typeof(char)  , (sb, dt, v) => ConvertCharToSql  (sb, (char)v));
-			SetValueToSqlConverter(typeof(byte[]), (sb, dt, v) => ConvertBinaryToSql(sb, (byte[])v));
-			SetValueToSqlConverter(typeof(Binary), (sb, dt, v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
+			SetValueToSqlConverter(typeof(string), (sb, _, v) => ConvertStringToSql(sb, v.ToString()!));
+			SetValueToSqlConverter(typeof(char)  , (sb, _, v) => ConvertCharToSql  (sb, (char)v));
+			SetValueToSqlConverter(typeof(byte[]), (sb, _, v) => ConvertBinaryToSql(sb, (byte[])v));
+			SetValueToSqlConverter(typeof(Binary), (sb, _, v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
 
 			CreateID();
 		}
@@ -61,24 +57,28 @@ namespace LinqToDB.DataProvider.SapHana
 
 		public override bool IsFluentMappingSupported => false;
 
-		public class NativeMappingSchema : MappingSchema
+		public sealed class NativeMappingSchema : MappingSchema
 		{
 			public NativeMappingSchema()
 				: base(ProviderName.SapHanaNative, Instance)
 			{
-				CreateID();
+				CreateID(ref _id);
 			}
+
+			static int? _id;
 
 			public override bool IsFluentMappingSupported => false;
 		}
 
-		public class OdbcMappingSchema : MappingSchema
+		public sealed class OdbcMappingSchema : MappingSchema
 		{
 			public OdbcMappingSchema()
 				: base(ProviderName.SapHanaOdbc, Instance)
 			{
-				CreateID();
+				CreateID(ref _id);
 			}
+
+			static int? _id;
 
 			public override bool IsFluentMappingSupported => false;
 		}

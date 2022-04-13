@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Text;
 
-
 namespace LinqToDB.DataProvider.Access
 {
 	using Common;
@@ -15,11 +14,7 @@ namespace LinqToDB.DataProvider.Access
 		private const string DATE_FORMAT     = "#{0:yyyy-MM-dd}#";
 		private const string DATETIME_FORMAT = "#{0:yyyy-MM-dd HH:mm:ss}#";
 
-		public AccessMappingSchema() : this(ProviderName.Access)
-		{
-		}
-
-		protected AccessMappingSchema(string configuration) : base(configuration)
+		AccessMappingSchema() : base(ProviderName.Access)
 		{
 			SetDataType(typeof(DateTime),  DataType.DateTime);
 			SetDataType(typeof(DateTime?), DataType.DateTime);
@@ -77,22 +72,26 @@ namespace LinqToDB.DataProvider.Access
 
 		public override bool IsFluentMappingSupported => false;
 
-		public class OleDbMappingSchema : MappingSchema
+		public sealed class OleDbMappingSchema : MappingSchema
 		{
 			public OleDbMappingSchema() : base(ProviderName.Access, Instance)
 			{
-				CreateID();
+				CreateID(ref _id);
 			}
+
+			static int? _id;
 
 			public override bool IsFluentMappingSupported => false;
 		}
 
-		public class ODBCMappingSchema : MappingSchema
+		public sealed class ODBCMappingSchema : MappingSchema
 		{
 			public ODBCMappingSchema() : base(ProviderName.AccessOdbc, Instance)
 			{
-				CreateID();
+				CreateID(ref _id);
 			}
+
+			static int? _id;
 
 			public override bool IsFluentMappingSupported => false;
 		}

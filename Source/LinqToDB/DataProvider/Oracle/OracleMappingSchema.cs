@@ -35,7 +35,7 @@ namespace LinqToDB.DataProvider.Oracle
 		private const string TIMESTAMPTZ6_FORMAT = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.ffffff} +00:00'";
 		private const string TIMESTAMPTZ7_FORMAT = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.fffffff} +00:00'";
 
-		public OracleMappingSchema() : base(ProviderName.Oracle)
+		OracleMappingSchema() : base(ProviderName.Oracle)
 		{
 			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 
@@ -182,12 +182,15 @@ namespace LinqToDB.DataProvider.Oracle
 
 		public override bool IsFluentMappingSupported => false;
 
-		public class NativeMappingSchema : MappingSchema
+		public sealed class NativeMappingSchema : MappingSchema
 		{
 			public NativeMappingSchema()
 				: base(ProviderName.OracleNative, Instance)
 			{
+				CreateID(ref _id);
 			}
+
+			static int? _id;
 
 			public NativeMappingSchema(params MappingSchema[] schemas)
 				: base(ProviderName.OracleNative, Array<MappingSchema>.Append(schemas, Instance))
@@ -197,13 +200,15 @@ namespace LinqToDB.DataProvider.Oracle
 			public override bool IsFluentMappingSupported => false;
 		}
 
-		public class ManagedMappingSchema : MappingSchema
+		public sealed class ManagedMappingSchema : MappingSchema
 		{
 			public ManagedMappingSchema()
 				: base(ProviderName.OracleManaged, Instance)
 			{
-				CreateID();
+				CreateID(ref _id);
 			}
+
+			static int? _id;
 
 			public ManagedMappingSchema(params MappingSchema[] schemas)
 				: base(ProviderName.OracleManaged, Array<MappingSchema>.Append(schemas, Instance))

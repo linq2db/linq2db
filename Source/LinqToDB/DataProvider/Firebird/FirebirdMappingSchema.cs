@@ -16,11 +16,7 @@ namespace LinqToDB.DataProvider.Firebird
 		private const string DATETIME_FORMAT  = "CAST('{0:yyyy-MM-dd HH:mm:ss}' AS {1})";
 		private const string TIMESTAMP_FORMAT = "CAST('{0:yyyy-MM-dd HH:mm:ss.fff}' AS {1})";
 
-		public FirebirdMappingSchema() : this(ProviderName.Firebird)
-		{
-		}
-
-		protected FirebirdMappingSchema(string configuration) : base(configuration)
+		FirebirdMappingSchema() : base(ProviderName.Firebird)
 		{
 			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 
@@ -169,16 +165,18 @@ namespace LinqToDB.DataProvider.Firebird
 		public override bool IsFluentMappingSupported => false;
 
 		// internal as it will be replaced with versioned schemas in v4
-		public class FirebirdProviderMappingSchema : MappingSchema
+		public sealed class FirebirdProviderMappingSchema : MappingSchema
 		{
 			public FirebirdProviderMappingSchema()
 				: base(ProviderName.Firebird, Instance)
 			{
-				CreateID();
+				CreateID(ref _id);
 			}
 
-			public FirebirdProviderMappingSchema(params MappingSchema[] schemas)
-					: base(ProviderName.Firebird, Array<MappingSchema>.Append(schemas, Instance))
+			static int? _id;
+
+			public FirebirdProviderMappingSchema(MappingSchema schema)
+				: base(ProviderName.Firebird, schema, Instance)
 			{
 				CreateID();
 			}

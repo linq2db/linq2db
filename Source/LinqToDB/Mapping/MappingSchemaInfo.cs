@@ -390,6 +390,13 @@ namespace LinqToDB.Mapping
 			return _configurationID.Value;
 		}
 
+		internal int CreateID(ref int? id)
+		{
+			if (_configurationID == null || _configurationID.Value == 0)
+				_configurationID = id ??= IdentifierBuilder.CreateNextID();
+			return _configurationID.Value;
+		}
+
 		#endregion
 	}
 }

@@ -4,10 +4,10 @@ using System.Data.Common;
 
 namespace LinqToDB.DataProvider.Firebird
 {
-	using LinqToDB.Common;
-	using LinqToDB.Expressions;
-	using LinqToDB.Mapping;
-	using LinqToDB.SqlQuery;
+	using Common;
+	using Expressions;
+	using Mapping;
+	using SqlQuery;
 
 	public class FirebirdProviderAdapter : IDynamicProviderAdapter
 	{
@@ -19,18 +19,18 @@ namespace LinqToDB.DataProvider.Firebird
 		public const string TypesNamespace  = "FirebirdSql.Data.Types";
 
 		private FirebirdProviderAdapter(
-			Type connectionType,
-			Type dataReaderType,
-			Type parameterType,
-			Type commandType,
-			Type transactionType,
-			Type?                              fbDecFloatType,
-			Type?                              fbZonedDateTimeType,
-			Type?                              fbZonedTimeType,
-			MappingSchema?                     mappingSchema,
-			Action<DbParameter, FbDbType>     dbTypeSetter,
-			Func<DbParameter, FbDbType>        dbTypeGetter,
-			Action clearAllPulls)
+			Type                         connectionType,
+			Type                         dataReaderType,
+			Type                         parameterType,
+			Type                         commandType,
+			Type                         transactionType,
+			Type?                        fbDecFloatType,
+			Type?                        fbZonedDateTimeType,
+			Type?                        fbZonedTimeType,
+			MappingSchema                mappingSchema,
+			Action<DbParameter,FbDbType> dbTypeSetter,
+			Func<DbParameter,FbDbType>   dbTypeGetter,
+			Action                       clearAllPulls)
 		{
 			ConnectionType  = connectionType;
 			DataReaderType  = dataReaderType;
@@ -63,7 +63,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 		public string? ProviderTypesNamespace => FbDecFloatType != null || FbZonedDateTimeType != null || FbZonedTimeType != null ? TypesNamespace : null;
 
-		public MappingSchema? MappingSchema { get; }
+		public MappingSchema MappingSchema { get; }
 
 		public Action<DbParameter, FbDbType> SetDbType { get; }
 		public Func<DbParameter, FbDbType> GetDbType { get; }
@@ -98,7 +98,7 @@ namespace LinqToDB.DataProvider.Firebird
 						typeMapper.RegisterTypeWrapper<FbParameter>(parameterType);
 						typeMapper.RegisterTypeWrapper<FbDbType>(dbType);
 
-						MappingSchema? mappingSchema = new MappingSchema();
+						var mappingSchema = new MappingSchema();
 
 						// we don't provide default mappings to non-provider types
 						// as it looks like there is no suitable .net types
@@ -106,21 +106,17 @@ namespace LinqToDB.DataProvider.Firebird
 						if (fbDecFloatType != null)
 						{
 							typeMapper.RegisterTypeWrapper<FbDecFloat>(fbDecFloatType);
-							mappingSchema ??= new MappingSchema();
-
 							mappingSchema.SetDataType(fbDecFloatType, new SqlDataType(DataType.DecFloat, fbDecFloatType, "DECFLOAT"));
 							// we don't register literal generation for decfloat as it looks like special values (inf, (s)nan are not supported in literals)
 						}
 						if (fbZonedDateTime != null)
 						{
 							typeMapper.RegisterTypeWrapper<FbZonedDateTime>(fbZonedDateTime);
-							mappingSchema ??= new MappingSchema();
 							mappingSchema.SetDataType(fbZonedDateTime, new SqlDataType(DataType.DateTimeOffset, fbZonedDateTime, "TIMESPAN WITH TIME ZONE"));
 						}
 						if (fbZonedTimeType != null)
 						{
 							typeMapper.RegisterTypeWrapper<FbZonedTime>(fbZonedTimeType);
-							mappingSchema ??= new MappingSchema();
 							mappingSchema.SetDataType(fbZonedTimeType, new SqlDataType(DataType.TimeTZ, fbZonedTimeType, "TIME WITH TIME ZONE"));
 						}
 

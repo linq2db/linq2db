@@ -14,17 +14,17 @@ namespace LinqToDB.DataProvider.Firebird
 
 	public class FirebirdDataProvider : DynamicDataProviderBase<FirebirdProviderAdapter>
 	{
-		public FirebirdDataProvider() : this(ProviderName.Firebird, null, null)
+		public FirebirdDataProvider() : this(ProviderName.Firebird, null)
 		{
 		}
 
 		protected internal FirebirdDataProvider(ISqlOptimizer sqlOptimizer)
-			: this(ProviderName.Firebird, null, sqlOptimizer)
+			: this(ProviderName.Firebird, sqlOptimizer)
 		{
 		}
 
-		protected FirebirdDataProvider(string name, MappingSchema? mappingSchema, ISqlOptimizer? sqlOptimizer)
-			: base(name, GetMappingSchema(mappingSchema, FirebirdProviderAdapter.GetInstance().MappingSchema), FirebirdProviderAdapter.GetInstance())
+		protected FirebirdDataProvider(string name, ISqlOptimizer? sqlOptimizer)
+			: base(name, GetMappingSchema(FirebirdProviderAdapter.GetInstance().MappingSchema), FirebirdProviderAdapter.GetInstance())
 		{
 			SqlProviderFlags.IsIdentityParameterRequired       = true;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
@@ -122,9 +122,9 @@ namespace LinqToDB.DataProvider.Firebird
 			base.SetParameterType(dataConnection, parameter, dataType);
 		}
 
-		private static MappingSchema GetMappingSchema(params MappingSchema?[] schemas)
+		static MappingSchema GetMappingSchema(MappingSchema schema)
 		{
-			return new FirebirdMappingSchema.FirebirdProviderMappingSchema(schemas.Where(s => s != null).ToArray()!);
+			return new FirebirdMappingSchema.FirebirdProviderMappingSchema(schema);
 		}
 
 		#region BulkCopy

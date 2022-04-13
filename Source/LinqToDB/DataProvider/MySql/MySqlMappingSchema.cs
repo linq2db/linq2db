@@ -1,22 +1,18 @@
-﻿using System.Data.Linq;
+﻿using System;
+using System.Collections;
+using System.Data.Linq;
 using System.Text;
 
 namespace LinqToDB.DataProvider.MySql
 {
-	using System;
-	using System.Collections;
-	using LinqToDB.Common;
-	using LinqToDB.Data;
+	using Common;
+	using Data;
 	using Mapping;
 	using SqlQuery;
 
 	public class MySqlMappingSchema : MappingSchema
 	{
-		public MySqlMappingSchema() : this(ProviderName.MySql)
-		{
-		}
-
-		protected MySqlMappingSchema(string configuration) : base(configuration)
+		MySqlMappingSchema() : base(ProviderName.MySql)
 		{
 			SetValueToSqlConverter(typeof(string), (sb,dt,v) => ConvertStringToSql(sb, v.ToString()!));
 			SetValueToSqlConverter(typeof(char),   (sb,dt,v) => ConvertCharToSql  (sb, (char)v));
@@ -75,13 +71,15 @@ namespace LinqToDB.DataProvider.MySql
 
 		public override bool IsFluentMappingSupported => false;
 
-		public class MySqlOfficialMappingSchema : MappingSchema
+		public sealed class MySqlOfficialMappingSchema : MappingSchema
 		{
 			public MySqlOfficialMappingSchema()
 				: base(ProviderName.MySqlOfficial, Instance)
 			{
-				CreateID();
+				CreateID(ref _id);
 			}
+
+			static int? _id;
 
 			public MySqlOfficialMappingSchema(params MappingSchema[] schemas)
 				: base(ProviderName.MySqlOfficial, Array<MappingSchema>.Append(schemas, Instance))
@@ -92,13 +90,15 @@ namespace LinqToDB.DataProvider.MySql
 			public override bool IsFluentMappingSupported => false;
 		}
 
-		public class MySqlConnectorMappingSchema : MappingSchema
+		public sealed class MySqlConnectorMappingSchema : MappingSchema
 		{
 			public MySqlConnectorMappingSchema()
 				: base(ProviderName.MySqlConnector, Instance)
 			{
-				CreateID();
+				CreateID(ref _id);
 			}
+
+			static int? _id;
 
 			public MySqlConnectorMappingSchema(params MappingSchema[] schemas)
 				: base(ProviderName.MySqlConnector, Array<MappingSchema>.Append(schemas, Instance))

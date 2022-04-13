@@ -17,16 +17,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		private const string TIMESTAMP0_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss}'::{1}";
 		private const string TIMESTAMP3_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.fff}'::{1}";
 
-		public PostgreSQLMappingSchema() : this(ProviderName.PostgreSQL)
-		{
-		}
-
-		public PostgreSQLMappingSchema(params MappingSchema[] schemas) : this(ProviderName.PostgreSQL, schemas)
-		{
-		}
-
-		protected PostgreSQLMappingSchema(string configuration, params MappingSchema[] schemas)
-			: base(configuration, schemas)
+		PostgreSQLMappingSchema() : base(ProviderName.PostgreSQL)
 		{
 			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 
@@ -138,13 +129,15 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		public override bool IsFluentMappingSupported => false;
 
-		public class PostgreSQL92MappingSchema : MappingSchema
+		public sealed class PostgreSQL92MappingSchema : MappingSchema
 		{
 			public PostgreSQL92MappingSchema()
 				: base(ProviderName.PostgreSQL92, Instance)
 			{
-				CreateID();
+				CreateID(ref _id);
 			}
+
+			static int? _id;
 
 			public PostgreSQL92MappingSchema(params MappingSchema[] schemas)
 				: base(ProviderName.PostgreSQL92, Array<MappingSchema>.Append(schemas, Instance))
@@ -153,13 +146,15 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			}
 		}
 
-		public class PostgreSQL93MappingSchema : MappingSchema
+		public sealed class PostgreSQL93MappingSchema : MappingSchema
 		{
 			public PostgreSQL93MappingSchema()
 				: base(ProviderName.PostgreSQL93, Instance)
 			{
-				CreateID();
+				CreateID(ref _id);
 			}
+
+			static int? _id;
 
 			public PostgreSQL93MappingSchema(params MappingSchema[] schemas)
 				: base(ProviderName.PostgreSQL93, Array<MappingSchema>.Append(schemas, Instance))
@@ -168,13 +163,15 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			}
 		}
 
-		public class PostgreSQL95MappingSchema : MappingSchema
+		public sealed class PostgreSQL95MappingSchema : MappingSchema
 		{
 			public PostgreSQL95MappingSchema()
 				: base(ProviderName.PostgreSQL95, Instance)
 			{
-				CreateID();
+				CreateID(ref _id);
 			}
+
+			static int? _id;
 
 			public PostgreSQL95MappingSchema(params MappingSchema[] schemas)
 				: base(ProviderName.PostgreSQL95, Array<MappingSchema>.Append(schemas, Instance))

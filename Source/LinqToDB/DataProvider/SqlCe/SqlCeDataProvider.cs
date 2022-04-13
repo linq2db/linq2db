@@ -19,7 +19,7 @@ namespace LinqToDB.DataProvider.SqlCe
 	public class SqlCeDataProvider : DynamicDataProviderBase<SqlCeProviderAdapter>
 	{
 		public SqlCeDataProvider()
-			: this(ProviderName.SqlCe, new SqlCeMappingSchema())
+			: this(ProviderName.SqlCe, SqlCeMappingSchema.Instance)
 		{
 		}
 

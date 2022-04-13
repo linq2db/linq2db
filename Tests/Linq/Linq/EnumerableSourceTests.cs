@@ -638,7 +638,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DeleteTest([DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllSybase, TestProvName.AllSybase, TestProvName.AllInformix)] string context, [Values(1, 2)] int iteration)
+		public void DeleteTest(
+			[DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllSybase, TestProvName.AllSybase, TestProvName.AllInformix)] string context,
+			[Values(1, 2, 3)] int iteration)
 		{
 			var records = new TableToInsert[]
 			{

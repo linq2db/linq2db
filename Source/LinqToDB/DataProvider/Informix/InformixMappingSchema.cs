@@ -18,11 +18,7 @@ namespace LinqToDB.DataProvider.Informix
 
 		static readonly char[] _extraEscapes = { '\r', '\n' };
 
-		public InformixMappingSchema() : this(ProviderName.Informix)
-		{
-		}
-
-		protected InformixMappingSchema(string configuration) : base(configuration)
+		InformixMappingSchema() : base(ProviderName.Informix)
 		{
 			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 
@@ -114,8 +110,10 @@ namespace LinqToDB.DataProvider.Informix
 			public IfxMappingSchema()
 				: base(ProviderName.Informix, Instance)
 			{
-				CreateID();
+				CreateID(ref _id);
 			}
+
+			static int? _id;
 
 			public IfxMappingSchema(params MappingSchema[] schemas)
 				: base(ProviderName.Informix, Array<MappingSchema>.Append(schemas, Instance))
@@ -131,8 +129,10 @@ namespace LinqToDB.DataProvider.Informix
 			public DB2MappingSchema()
 				: base(ProviderName.InformixDB2, Instance)
 			{
-				CreateID();
+				CreateID(ref _id);
 			}
+
+			static int? _id;
 
 			public DB2MappingSchema(params MappingSchema[] schemas)
 				: base(ProviderName.InformixDB2, Array<MappingSchema>.Append(schemas, Instance))

@@ -13,11 +13,7 @@ namespace LinqToDB.DataProvider.Sybase
 	{
 		private const string TIME3_FORMAT= "'{0:hh\\:mm\\:ss\\.fff}'";
 
-		public SybaseMappingSchema() : this(ProviderName.Sybase)
-		{
-		}
-
-		protected SybaseMappingSchema(string configuration) : base(configuration)
+		SybaseMappingSchema() : base(ProviderName.Sybase)
 		{
 			SetValueToSqlConverter(typeof(string)  , (sb, dt, v) => ConvertStringToSql(sb, v.ToString()!));
 			SetValueToSqlConverter(typeof(char)    , (sb, dt, v) => ConvertCharToSql  (sb, (char)v));
@@ -75,24 +71,28 @@ namespace LinqToDB.DataProvider.Sybase
 
 		public override bool IsFluentMappingSupported => false;
 
-		public class NativeMappingSchema : MappingSchema
+		public sealed class NativeMappingSchema : MappingSchema
 		{
 			public NativeMappingSchema()
 				: base(ProviderName.Sybase, Instance)
 			{
-				CreateID();
+				CreateID(ref _id);
 			}
+
+			static int? _id;
 
 			public override bool IsFluentMappingSupported => false;
 		}
 
-		public class ManagedMappingSchema : MappingSchema
+		public sealed class ManagedMappingSchema : MappingSchema
 		{
 			public ManagedMappingSchema()
 				: base(ProviderName.SybaseManaged, Instance)
 			{
-				CreateID();
+				CreateID(ref _id);
 			}
+
+			static int? _id;
 
 			public override bool IsFluentMappingSupported => false;
 		}

@@ -1301,6 +1301,12 @@ namespace LinqToDB.Mapping
 				_configurationID ??= Schemas[0].CreateID();
 		}
 
+		internal void CreateID(ref int? id)
+		{
+			lock (_syncRoot)
+				_configurationID ??= Schemas[0].CreateID(ref id);
+		}
+
 		private string[]? _configurationList;
 		/// <summary>
 		/// Gets configurations, associated with current mapping schema.

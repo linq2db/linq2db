@@ -41,8 +41,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		private const string DATETIMEOFFSET6_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.ffffff zzz}'";
 		private const string DATETIMEOFFSET7_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.fffffff zzz}'";
 
-		public SqlServerMappingSchema()
-			: base(ProviderName.SqlServer)
+		SqlServerMappingSchema() : base(ProviderName.SqlServer)
 		{
 			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 
@@ -240,14 +239,16 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		public override bool IsFluentMappingSupported => false;
 
-		public class SqlServer2005MappingSchema : MappingSchema
+		public sealed class SqlServer2005MappingSchema : MappingSchema
 		{
 			public SqlServer2005MappingSchema()
 				: base(ProviderName.SqlServer2005, Instance)
 			{
 				ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
-				CreateID();
+				CreateID(ref _id);
 			}
+
+			static int? _id;
 
 			public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
 			{
@@ -257,15 +258,17 @@ namespace LinqToDB.DataProvider.SqlServer
 			public override bool IsFluentMappingSupported => false;
 		}
 
-		public class SqlServer2008MappingSchema : MappingSchema
+		public sealed class SqlServer2008MappingSchema : MappingSchema
 		{
 			public SqlServer2008MappingSchema()
 				: base(ProviderName.SqlServer2008, Instance)
 			{
 				ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 				SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => ConvertDateTimeToSql(sb, dt, (DateTime)v));
-				CreateID();
+				CreateID(ref _id);
 			}
+
+			static int? _id;
 
 			public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
 			{
@@ -275,15 +278,17 @@ namespace LinqToDB.DataProvider.SqlServer
 			public override bool IsFluentMappingSupported => false;
 		}
 
-		public class SqlServer2012MappingSchema : MappingSchema
+		public sealed class SqlServer2012MappingSchema : MappingSchema
 		{
 			public SqlServer2012MappingSchema()
 				: base(ProviderName.SqlServer2012, Instance)
 			{
 				ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 				SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => ConvertDateTimeToSql(sb, dt, (DateTime)v));
-				CreateID();
+				CreateID(ref _id);
 			}
+
+			static int? _id;
 
 			public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
 			{
@@ -293,15 +298,17 @@ namespace LinqToDB.DataProvider.SqlServer
 			public override bool IsFluentMappingSupported => false;
 		}
 
-		public class SqlServer2014MappingSchema : MappingSchema
+		public sealed class SqlServer2014MappingSchema : MappingSchema
 		{
 			public SqlServer2014MappingSchema()
 				: base(ProviderName.SqlServer2014, Instance)
 			{
 				ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 				SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => ConvertDateTimeToSql(sb, dt, (DateTime)v));
-				CreateID();
+				CreateID(ref _id);
 			}
+
+			static int? _id;
 
 			public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
 			{
@@ -311,15 +318,17 @@ namespace LinqToDB.DataProvider.SqlServer
 			public override bool IsFluentMappingSupported => false;
 		}
 
-		public class SqlServer2016MappingSchema : MappingSchema
+		public sealed class SqlServer2016MappingSchema : MappingSchema
 		{
 			public SqlServer2016MappingSchema()
 				: base(ProviderName.SqlServer2016, Instance)
 			{
 				ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 				SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => ConvertDateTimeToSql(sb, dt, (DateTime)v));
-				CreateID();
+				CreateID(ref _id);
 			}
+
+			static int? _id;
 
 			public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
 			{
@@ -329,15 +338,17 @@ namespace LinqToDB.DataProvider.SqlServer
 			public override bool IsFluentMappingSupported => false;
 		}
 
-		public class SqlServer2017MappingSchema : MappingSchema
+		public sealed class SqlServer2017MappingSchema : MappingSchema
 		{
 			public SqlServer2017MappingSchema()
 				: base(ProviderName.SqlServer2017, Instance)
 			{
 				ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 				SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => ConvertDateTimeToSql(sb, dt, (DateTime)v));
-				CreateID();
+				CreateID(ref _id);
 			}
+
+			static int? _id;
 
 			public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
 			{
@@ -347,15 +358,17 @@ namespace LinqToDB.DataProvider.SqlServer
 			public override bool IsFluentMappingSupported => false;
 		}
 
-		public class SqlServer2019MappingSchema : MappingSchema
+		public sealed class SqlServer2019MappingSchema : MappingSchema
 		{
 			public SqlServer2019MappingSchema()
 				: base(ProviderName.SqlServer2019, Instance)
 			{
 				ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 				SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => ConvertDateTimeToSql(sb, dt, (DateTime)v));
-				CreateID();
+//				CreateID(ref _id);
 			}
+
+			//static int? _id;
 
 			public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
 			{

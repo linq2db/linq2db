@@ -13,11 +13,7 @@ namespace LinqToDB.DataProvider.SqlCe
 
 	public class SqlCeMappingSchema : MappingSchema
 	{
-		public SqlCeMappingSchema() : this(ProviderName.SqlCe)
-		{
-		}
-
-		protected SqlCeMappingSchema(string configuration) : base(configuration)
+		public SqlCeMappingSchema() : base(ProviderName.SqlCe)
 		{
 			SetConvertExpression<SqlXml,XmlReader>(
 				s => s.IsNull ? DefaultValue<XmlReader>.Value : s.CreateReader(),
@@ -55,13 +51,15 @@ namespace LinqToDB.DataProvider.SqlCe
 
 			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
 
-			SetValueToSqlConverter(typeof(string), (sb,dt,v) => ConvertStringToSql(sb, v.ToString()!));
-			SetValueToSqlConverter(typeof(char),   (sb,dt,v) => ConvertCharToSql  (sb, (char)v));
-			SetValueToSqlConverter(typeof(byte[]), (sb,dt,v) => ConvertBinaryToSql(sb, (byte[])v));
-			SetValueToSqlConverter(typeof(Binary), (sb,dt,v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
-			CreateID();
+			SetValueToSqlConverter(typeof(string), (sb,_,v) => ConvertStringToSql(sb, v.ToString()!));
+			SetValueToSqlConverter(typeof(char),   (sb,_,v) => ConvertCharToSql  (sb, (char)v));
+			SetValueToSqlConverter(typeof(byte[]), (sb,_,v) => ConvertBinaryToSql(sb, (byte[])v));
+			SetValueToSqlConverter(typeof(Binary), (sb,_,v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
 
+			CreateID(ref _id);
 		}
+
+		static int? _id;
 
 		static void ConvertBinaryToSql(StringBuilder stringBuilder, byte[] value)
 		{
@@ -89,6 +87,8 @@ namespace LinqToDB.DataProvider.SqlCe
 		{
 			DataTools.ConvertCharToSql(stringBuilder, "'", AppendConversionAction, value);
 		}
+
+		internal static readonly SqlCeMappingSchema Instance = new ();
 
 		public override bool IsFluentMappingSupported => false;
 	}

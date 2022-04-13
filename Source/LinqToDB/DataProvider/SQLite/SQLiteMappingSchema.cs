@@ -17,11 +17,7 @@ namespace LinqToDB.DataProvider.SQLite
 		private const string DATETIME2_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.ff}'";
 		private const string DATETIME3_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.fff}'";
 
-		public SQLiteMappingSchema() : this(ProviderName.SQLite)
-		{
-		}
-
-		protected SQLiteMappingSchema(string configuration) : base(configuration)
+		SQLiteMappingSchema() : base(ProviderName.SQLite)
 		{
 			SetConvertExpression<string,TimeSpan>(s => DateTime.Parse(s, null, DateTimeStyles.NoCurrentDateDefault).TimeOfDay);
 
@@ -98,8 +94,10 @@ namespace LinqToDB.DataProvider.SQLite
 			public ClassicMappingSchema()
 				: base(ProviderName.SQLiteClassic, Instance)
 			{
-				CreateID();
+				CreateID(ref _id);
 			}
+
+			static int? _id;
 
 			public override bool IsFluentMappingSupported => false;
 		}
@@ -109,8 +107,10 @@ namespace LinqToDB.DataProvider.SQLite
 			public MicrosoftMappingSchema()
 				: base(ProviderName.SQLiteMS, Instance)
 			{
-				CreateID();
+				CreateID(ref _id);
 			}
+
+			static int? _id;
 
 			public override bool IsFluentMappingSupported => false;
 		}
