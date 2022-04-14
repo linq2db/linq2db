@@ -71,6 +71,28 @@ namespace Tests.Linq
 		}
 		#endregion
 
+		#region DateOnly
+#if NET6_0_OR_GREATER
+		[Table]
+		public class DateOnlyTable : TypeTable<DateOnly>
+		{
+			public static DateOnlyTable[] Data = new[]
+			{
+				new DateOnlyTable() { Id = 1, Column = new DateOnly(1900, 1, 1), ColumnNullable = null },
+				new DateOnlyTable() { Id = 2, Column = new DateOnly(2020, 2, 29), ColumnNullable = new DateOnly(2200, 1, 1) },
+			};
+		}
+
+		[Test]
+		public void TestDateOnly([DataSources(false)] string context)
+		{
+			using var db = (TestDataConnection)GetDataContext(context);
+
+			TestType<DateOnlyTable, DateOnly>(db, DateOnlyTable.Data);
+		}
+#endif
+		#endregion
+
 		#region Boolean
 		[Table]
 		public class BooleanTable : TypeTable<bool>

@@ -1050,6 +1050,14 @@ namespace LinqToDB
 			return str?.ToUpper();
 		}
 
+		[Expression("Lpad({0},{1},'0')")]
+		[Expression(PN.SqlServer, "format({0}, 'd{1}')")]
+		[Expression(PN.SQLite, "printf('%0{1}d', {0})")]
+		public static string? ZeroPad(int? val, int length)
+		{
+			return val?.ToString("d" + length);
+		}
+
 		class ConcatAttribute : ExpressionAttribute
 		{
 			public ConcatAttribute() : base("")
