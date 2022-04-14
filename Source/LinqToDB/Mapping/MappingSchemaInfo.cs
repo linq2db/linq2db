@@ -302,6 +302,11 @@ namespace LinqToDB.Mapping
 
 		internal bool HasConfigurationID =>_configurationID != null;
 
+		public void ResetID()
+		{
+			_configurationID = null;
+		}
+
 		/// <summary>
 		/// Unique schema configuration identifier. For internal use only.
 		/// </summary>

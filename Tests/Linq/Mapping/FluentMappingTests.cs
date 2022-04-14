@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Collections.Generic;
 using System.Linq.Expressions;
+
 using LinqToDB;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
@@ -10,7 +11,6 @@ using NUnit.Framework;
 
 namespace Tests.Mapping
 {
-	using LinqToDB.Data;
 	using Model;
 
 	[TestFixture]

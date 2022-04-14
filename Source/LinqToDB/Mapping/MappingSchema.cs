@@ -1280,8 +1280,8 @@ namespace LinqToDB.Mapping
 					var idBuilder = new IdentifierBuilder();
 
 					lock (_syncRoot)
-						for (var i = Schemas.Length - 1; i >= 0; i--)
-							idBuilder.Add(Schemas[i].ConfigurationID);
+						foreach (var schema in Schemas)
+							idBuilder.Add(schema.ConfigurationID);
 
 					_configurationID = idBuilder.CreateID();
 				}
@@ -1293,6 +1293,7 @@ namespace LinqToDB.Mapping
 		internal void ResetID()
 		{
 			_configurationID = null;
+			Schemas[0].ResetID();
 		}
 
 		internal void CreateID()
