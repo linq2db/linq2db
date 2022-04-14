@@ -1,13 +1,17 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 using System.Threading;
-using LinqToDB.Expressions;
 
 namespace LinqToDB.Common.Internal
 {
+	using Expressions;
+	using Linq;
+
 	class IdentifierBuilder
 	{
 		public IdentifierBuilder()
@@ -17,6 +21,19 @@ namespace LinqToDB.Common.Internal
 		public IdentifierBuilder(object? data)
 		{
 			Add(data);
+		}
+
+		static IdentifierBuilder()
+		{
+			Query.CacheCleaners.Enqueue(ClearCache);
+		}
+
+		static void ClearCache()
+		{
+			_expressions.Clear();
+			_types.      Clear();
+			_identifiers.Clear();
+			_objects.    Clear();
 		}
 
 		readonly StringBuilder _stringBuilder = new ();
@@ -86,8 +103,36 @@ namespace LinqToDB.Common.Internal
 			{
 				Type t => GetObjectID(t),
 				null   => string.Empty,
-				_      => _objects.GetOrAdd(obj, static _ => Interlocked.Increment(ref _objectCounter).ToString())
+				_      => GetOrAddObject(obj)
 			};
+
+			static string GetOrAddObject(object o)
+			{
+				try
+				{
+					return _objects.GetOrAdd(o, static _ => Interlocked.Increment(ref _objectCounter).ToString());
+				}
+				catch (InvalidOperationException)
+				{
+					if (o is IComparable c)
+						lock (_buggyObjects)
+						{
+							var id = _buggyObjects.FirstOrDefault(bo => c.CompareTo(bo.obj) == 0);
+
+							if (id.obj == null)
+							{
+								id = (o, new ());
+								_buggyObjects.Add(id);
+							}
+
+							return GetOrAddObject(id.id);
+						}
+
+					throw;
+				}
+			}
 		}
+
+		static readonly List<(object? obj,object id)> _buggyObjects = new ();
 	}
 }
