@@ -150,38 +150,24 @@ namespace LinqToDB.DataProvider.DB2
 
 		public class DB2zOSMappingSchema : MappingSchema
 		{
-			public DB2zOSMappingSchema()
-				: base(ProviderName.DB2zOS, Instance)
+			public DB2zOSMappingSchema() : base(ProviderName.DB2zOS,  DB2ProviderAdapter.Instance.MappingSchema, Instance)
 			{
 				CreateID(ref _id);
 			}
 
 			static int? _id;
-
-			public DB2zOSMappingSchema(params MappingSchema[] schemas)
-					: base(ProviderName.DB2zOS, Array<MappingSchema>.Append(schemas, Instance))
-			{
-				CreateID();
-			}
 
 			public override bool IsFluentMappingSupported => false;
 		}
 
 		public sealed class DB2LUWMappingSchema : MappingSchema
 		{
-			public DB2LUWMappingSchema()
-				: base(ProviderName.DB2LUW, Instance)
+			public DB2LUWMappingSchema() : base(ProviderName.DB2LUW, DB2ProviderAdapter.Instance.MappingSchema, Instance)
 			{
 				CreateID(ref _id);
 			}
 
 			static int? _id;
-
-			public DB2LUWMappingSchema(params MappingSchema[] schemas)
-					: base(ProviderName.DB2LUW, Array<MappingSchema>.Append(schemas, Instance))
-			{
-				CreateID();
-			}
 
 			public override bool IsFluentMappingSupported => false;
 		}

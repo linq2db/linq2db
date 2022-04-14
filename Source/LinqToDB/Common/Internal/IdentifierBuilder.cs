@@ -65,7 +65,7 @@ namespace LinqToDB.Common.Internal
 			var id  = _identifiers.GetOrAdd(key, static _ => CreateNextID());
 
 #if DEBUG
-			Debug.WriteLine($"CreateID: '{key}' ({id})");
+			Debug.WriteLine($"CreateID => '{key}' ({id})");
 #endif
 
 			return id;

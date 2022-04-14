@@ -365,10 +365,10 @@ namespace LinqToDB.DataProvider.SqlServer
 			{
 				ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 				SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => ConvertDateTimeToSql(sb, dt, (DateTime)v));
-//				CreateID(ref _id);
+				CreateID(ref _id);
 			}
 
-			//static int? _id;
+			static int? _id;
 
 			public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
 			{

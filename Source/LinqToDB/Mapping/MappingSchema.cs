@@ -1288,6 +1288,10 @@ namespace LinqToDB.Mapping
 
 				return _configurationID.Value;
 			}
+			set
+			{
+				Schemas[0].ConfigurationID = (_configurationID = value).Value;
+			}
 		}
 
 		internal void ResetID()

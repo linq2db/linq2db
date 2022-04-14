@@ -42,10 +42,12 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		public SqlServerDataProvider(string name, SqlServerVersion version, SqlServerProvider provider)
 			: base(
-				  name,
-				  MappingSchemaInstance.Get(version),
-				  SqlServerProviderAdapter.GetInstance(provider))
+				name,
+				MappingSchemaInstance.Get(version),
+				SqlServerProviderAdapter.GetInstance(provider))
 		{
+			var mappingSchemaID = MappingSchema.ConfigurationID;
+
 			Version  = version;
 			Provider = provider;
 
@@ -104,6 +106,8 @@ namespace LinqToDB.DataProvider.SqlServer
 			SetProviderField<DbDataReader, SqlString, SqlString>((r, i) => r.GetString(i));
 
 			SqlServerTypes.Configure(this);
+
+			MappingSchema.ConfigurationID = mappingSchemaID;
 		}
 
 		#endregion

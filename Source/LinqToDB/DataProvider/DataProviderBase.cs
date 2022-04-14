@@ -10,11 +10,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
-using LinqToDB.Common.Internal;
 
 namespace LinqToDB.DataProvider
 {
 	using Common;
+	using Common.Internal;
 	using Data;
 	using Expressions;
 	using Mapping;
@@ -85,15 +85,8 @@ namespace LinqToDB.DataProvider
 		{
 		}
 
-		int? _id;
-		public int ID
-		{
-			get
-			{
-				_id ??= new IdentifierBuilder(Name).CreateID();
-				return _id.Value;
-			}
-		}
+		private int? _id;
+		public  int   ID => _id ??= new IdentifierBuilder(Name).CreateID();
 
 		public DbConnection CreateConnection(string connectionString)
 		{

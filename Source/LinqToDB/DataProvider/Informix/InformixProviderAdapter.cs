@@ -179,7 +179,7 @@ namespace LinqToDB.DataProvider.Informix
 				if (_db2Adapter == null)
 					lock (_db2SyncRoot)
 						if (_db2Adapter == null)
-							_db2Adapter = new InformixProviderAdapter(DB2ProviderAdapter.GetInstance());
+							_db2Adapter = new (DB2ProviderAdapter.Instance);
 
 				return _db2Adapter;
 			}

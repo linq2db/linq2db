@@ -18,11 +18,7 @@ namespace LinqToDB.DataProvider.DB2
 	public abstract class DB2DataProvider : DynamicDataProviderBase<DB2ProviderAdapter>
 	{
 		protected DB2DataProvider(string name, DB2Version version)
-			: base(
-				name,
-				GetMappingSchema(version, DB2ProviderAdapter.GetInstance().MappingSchema),
-				DB2ProviderAdapter.GetInstance())
-
+			: base(name, GetMappingSchema(version), DB2ProviderAdapter.Instance)
 		{
 			Version = version;
 
@@ -64,12 +60,12 @@ namespace LinqToDB.DataProvider.DB2
 
 		public DB2Version Version { get; }
 
-		private static MappingSchema GetMappingSchema(DB2Version version, MappingSchema providerSchema)
+		private static MappingSchema GetMappingSchema(DB2Version version)
 		{
 			return version switch
 			{
-				DB2Version.zOS => new DB2MappingSchema.DB2zOSMappingSchema(providerSchema),
-				_              => new DB2MappingSchema.DB2LUWMappingSchema(providerSchema),
+				DB2Version.zOS => new DB2MappingSchema.DB2zOSMappingSchema(),
+				_              => new DB2MappingSchema.DB2LUWMappingSchema(),
 			};
 		}
 
