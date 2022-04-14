@@ -231,6 +231,13 @@ namespace LinqToDB.DataProvider.SQLite
 				value = guid.ToByteArray();
 			}
 
+#if NET6_0_OR_GREATER
+			if (Name == ProviderName.SQLiteClassic && value is DateOnly d)
+			{
+				value = d.ToDateTime(TimeOnly.MinValue);
+			}
+#endif
+
 			base.SetParameter(dataConnection, parameter, name, dataType, value);
 		}
 

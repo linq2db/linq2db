@@ -102,6 +102,13 @@ namespace LinqToDB.DataProvider.MySql
 				dataType = dataType.WithDataType(DataType.VarChar);
 			}
 
+#if NET6_0_OR_GREATER
+			if (value is DateOnly d)
+			{
+				value = d.ToDateTime(TimeOnly.MinValue);
+			}
+#endif
+
 			base.SetParameter(dataConnection, parameter, name, dataType, value);
 		}
 
