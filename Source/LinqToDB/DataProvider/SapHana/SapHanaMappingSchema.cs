@@ -8,7 +8,7 @@ namespace LinqToDB.DataProvider.SapHana
 	using Mapping;
 	using SqlQuery;
 
-	public class SapHanaMappingSchema : MappingSchema
+	public class SapHanaMappingSchema : LockedMappingSchema
 	{
 		SapHanaMappingSchema() : base(ProviderName.SapHana)
 		{
@@ -18,11 +18,10 @@ namespace LinqToDB.DataProvider.SapHana
 			SetValueToSqlConverter(typeof(char)  , (sb, _, v) => ConvertCharToSql  (sb, (char)v));
 			SetValueToSqlConverter(typeof(byte[]), (sb, _, v) => ConvertBinaryToSql(sb, (byte[])v));
 			SetValueToSqlConverter(typeof(Binary), (sb, _, v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
-
-			CreateID();
 		}
 
 		static readonly Action<StringBuilder, int> AppendConversionAction = AppendConversion;
+
 		static void AppendConversion(StringBuilder stringBuilder, int value)
 		{
 			// char works with values in 0..255 range
@@ -55,32 +54,18 @@ namespace LinqToDB.DataProvider.SapHana
 
 		internal static readonly SapHanaMappingSchema Instance = new ();
 
-		public override bool IsFluentMappingSupported => false;
-
-		public sealed class NativeMappingSchema : MappingSchema
+		public sealed class NativeMappingSchema : LockedMappingSchema
 		{
-			public NativeMappingSchema()
-				: base(ProviderName.SapHanaNative, Instance)
+			public NativeMappingSchema() : base(ProviderName.SapHanaNative, Instance)
 			{
-				CreateID(ref _id);
 			}
-
-			static int? _id;
-
-			public override bool IsFluentMappingSupported => false;
 		}
 
-		public sealed class OdbcMappingSchema : MappingSchema
+		public sealed class OdbcMappingSchema : LockedMappingSchema
 		{
-			public OdbcMappingSchema()
-				: base(ProviderName.SapHanaOdbc, Instance)
+			public OdbcMappingSchema() : base(ProviderName.SapHanaOdbc, Instance)
 			{
-				CreateID(ref _id);
 			}
-
-			static int? _id;
-
-			public override bool IsFluentMappingSupported => false;
 		}
 	}
 }

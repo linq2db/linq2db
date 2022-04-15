@@ -27,10 +27,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		}
 
 		protected PostgreSQLDataProvider(string name, PostgreSQLVersion version)
-			: base(
-				name,
-				GetMappingSchema(version, NpgsqlProviderAdapter.GetInstance().MappingSchema),
-				NpgsqlProviderAdapter.GetInstance())
+			: base(name, GetMappingSchema(version), NpgsqlProviderAdapter.GetInstance())
 		{
 			Version = version;
 
@@ -532,13 +529,13 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return null;
 		}
 
-		static MappingSchema GetMappingSchema(PostgreSQLVersion version, MappingSchema providerSchema)
+		static MappingSchema GetMappingSchema(PostgreSQLVersion version)
 		{
 			return version switch
 			{
-				PostgreSQLVersion.v92 => new PostgreSQLMappingSchema.PostgreSQL92MappingSchema(providerSchema),
-				PostgreSQLVersion.v93 => new PostgreSQLMappingSchema.PostgreSQL93MappingSchema(providerSchema),
-				_                     => new PostgreSQLMappingSchema.PostgreSQL95MappingSchema(providerSchema),
+				PostgreSQLVersion.v92 => new PostgreSQLMappingSchema.PostgreSQL92MappingSchema(),
+				PostgreSQLVersion.v93 => new PostgreSQLMappingSchema.PostgreSQL93MappingSchema(),
+				_                     => new PostgreSQLMappingSchema.PostgreSQL95MappingSchema(),
 			};
 		}
 	}

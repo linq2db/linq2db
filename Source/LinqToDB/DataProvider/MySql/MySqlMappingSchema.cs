@@ -10,7 +10,7 @@ namespace LinqToDB.DataProvider.MySql
 	using Mapping;
 	using SqlQuery;
 
-	public class MySqlMappingSchema : MappingSchema
+	sealed class MySqlMappingSchema : LockedMappingSchema
 	{
 		MySqlMappingSchema() : base(ProviderName.MySql)
 		{
@@ -23,8 +23,6 @@ namespace LinqToDB.DataProvider.MySql
 
 			// both providers doesn't support BitArray directly and map bit fields to ulong by default
 			SetConvertExpression<BitArray?, DataParameter>(ba => new DataParameter(null, ba == null ? (ulong?)null :GetBits(ba), DataType.UInt64), false);
-
-			CreateID();
 		}
 
 		static ulong GetBits(BitArray ba)
@@ -69,44 +67,20 @@ namespace LinqToDB.DataProvider.MySql
 
 		internal static readonly MappingSchema Instance = new MySqlMappingSchema();
 
-		public override bool IsFluentMappingSupported => false;
-
-		public sealed class MySqlOfficialMappingSchema : MappingSchema
+		public sealed class MySqlOfficialMappingSchema : LockedMappingSchema
 		{
 			public MySqlOfficialMappingSchema()
-				: base(ProviderName.MySqlOfficial, Instance)
+				: base(ProviderName.MySqlOfficial, MySqlProviderAdapter.GetInstance(ProviderName.MySqlOfficial).MappingSchema, Instance)
 			{
-				CreateID(ref _id);
 			}
-
-			static int? _id;
-
-			public MySqlOfficialMappingSchema(params MappingSchema[] schemas)
-				: base(ProviderName.MySqlOfficial, Array<MappingSchema>.Append(schemas, Instance))
-			{
-				CreateID();
-			}
-
-			public override bool IsFluentMappingSupported => false;
 		}
 
-		public sealed class MySqlConnectorMappingSchema : MappingSchema
+		public sealed class MySqlConnectorMappingSchema : LockedMappingSchema
 		{
 			public MySqlConnectorMappingSchema()
-				: base(ProviderName.MySqlConnector, Instance)
+				: base(ProviderName.MySqlConnector, MySqlProviderAdapter.GetInstance(ProviderName.MySqlConnector).MappingSchema, Instance)
 			{
-				CreateID(ref _id);
 			}
-
-			static int? _id;
-
-			public MySqlConnectorMappingSchema(params MappingSchema[] schemas)
-				: base(ProviderName.MySqlConnector, Array<MappingSchema>.Append(schemas, Instance))
-			{
-				CreateID();
-			}
-
-			public override bool IsFluentMappingSupported => false;
 		}
 	}
 }

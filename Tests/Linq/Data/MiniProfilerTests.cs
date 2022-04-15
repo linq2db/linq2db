@@ -288,7 +288,7 @@ namespace Tests.Data
 			}
 		}
 
-		public class LinqMySqlDataProvider : MySqlDataProvider
+		class LinqMySqlDataProvider : MySqlDataProvider
 		{
 			private readonly Func<string, DbConnection> _connectionFactory;
 			public LinqMySqlDataProvider(Func<string, DbConnection> connectionFactory)

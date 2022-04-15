@@ -11,7 +11,7 @@ namespace LinqToDB.DataProvider.SqlCe
 	using Mapping;
 	using SqlQuery;
 
-	public class SqlCeMappingSchema : MappingSchema
+	public sealed class SqlCeMappingSchema : LockedMappingSchema
 	{
 		public SqlCeMappingSchema() : base(ProviderName.SqlCe)
 		{
@@ -55,11 +55,7 @@ namespace LinqToDB.DataProvider.SqlCe
 			SetValueToSqlConverter(typeof(char),   (sb,_,v) => ConvertCharToSql  (sb, (char)v));
 			SetValueToSqlConverter(typeof(byte[]), (sb,_,v) => ConvertBinaryToSql(sb, (byte[])v));
 			SetValueToSqlConverter(typeof(Binary), (sb,_,v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
-
-			CreateID(ref _id);
 		}
-
-		static int? _id;
 
 		static void ConvertBinaryToSql(StringBuilder stringBuilder, byte[] value)
 		{
@@ -89,7 +85,5 @@ namespace LinqToDB.DataProvider.SqlCe
 		}
 
 		internal static readonly SqlCeMappingSchema Instance = new ();
-
-		public override bool IsFluentMappingSupported => false;
 	}
 }

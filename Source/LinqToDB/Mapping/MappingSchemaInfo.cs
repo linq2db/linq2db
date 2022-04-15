@@ -29,8 +29,8 @@ namespace LinqToDB.Mapping
 			get => _metadataReader;
 			set
 			{
-				_metadataReader  = value;
-				_configurationID = null;
+				_metadataReader = value;
+				ResetID();
 			}
 		}
 
@@ -54,7 +54,8 @@ namespace LinqToDB.Mapping
 						_defaultValues = new ();
 
 			_defaultValues[type] = value;
-			_configurationID     = null;
+
+			ResetID();
 		}
 
 		#endregion
@@ -79,7 +80,8 @@ namespace LinqToDB.Mapping
 						_canBeNull = new ();
 
 			_canBeNull[type] = value;
-			_configurationID = null;
+
+			ResetID();
 		}
 
 		#endregion
@@ -151,7 +153,8 @@ namespace LinqToDB.Mapping
 		{
 			_convertInfo ??= new ();
 			_convertInfo.Set(from, to, expr);
-			_configurationID = null;
+
+			ResetID();
 		}
 
 		public void SetConvertInfo(Type from, Type to, ConvertInfo.LambdaInfo expr)
@@ -189,7 +192,8 @@ namespace LinqToDB.Mapping
 						_scalarTypes = new ();
 
 			_scalarTypes[type] = isScalarType;
-			_configurationID   = null;
+
+			ResetID();
 		}
 
 		#endregion
@@ -222,7 +226,8 @@ namespace LinqToDB.Mapping
 						_dataTypes = new ();
 
 			_dataTypes[type] = dataType;
-			_configurationID = null;
+
+			ResetID();
 		}
 
 		#endregion
@@ -236,7 +241,7 @@ namespace LinqToDB.Mapping
 			set
 			{
 				_columnNameComparer = value;
-				_configurationID    = null;
+				ResetID();
 			}
 		}
 
@@ -263,7 +268,8 @@ namespace LinqToDB.Mapping
 						_defaultFromEnumTypes = new ();
 
 			_defaultFromEnumTypes[enumType] = defaultFromType;
-			_configurationID                = null;
+
+			ResetID();
 		}
 
 		#endregion
@@ -302,7 +308,7 @@ namespace LinqToDB.Mapping
 
 		internal bool HasConfigurationID =>_configurationID != null;
 
-		public void ResetID()
+		public virtual void ResetID()
 		{
 			_configurationID = null;
 		}
@@ -312,95 +318,79 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		internal int ConfigurationID
 		{
-			get
-			{
-				if (_configurationID == null)
-				{
-					var idBuilder = new IdentifierBuilder(Configuration);
-
-					ProcessDictionary(_defaultValues);
-					ProcessDictionary(_canBeNull);
-					ProcessDictionary(_scalarTypes);
-					ProcessDictionary(_dataTypes);
-					ProcessDictionary(_defaultFromEnumTypes);
-
-					void ProcessDictionary<T>(ConcurrentDictionary<Type,T>? dic)
-					{
-						idBuilder.Add(dic?.Count);
-
-						if (dic?.Count > 0)
-						{
-							foreach (var (id, value) in
-								from t in dic
-								let id = IdentifierBuilder.GetObjectID(t.Key)
-								orderby id
-								select (id, t.Value))
-							{
-								idBuilder
-									.Add(id)
-									.Add(IdentifierBuilder.GetObjectID(value))
-									;
-							}
-						}
-					}
-
-					var list = new List<FluentMetadataReader>();
-
-					switch (MetadataReader)
-					{
-						case FluentMetadataReader fr :
-							list.Add(fr);
-							break;
-						case MetadataReader mr :
-							foreach (var r in mr.Readers)
-								if (r is FluentMetadataReader fr)
-									list.Add(fr);
-							break;
-					}
-
-					idBuilder.Add(list.Count);
-
-					if (list.Count > 0)
-					{
-						foreach (var id in
-							from id in list
-							from a in id.GetObjectIDs()
-							orderby a
-							select a)
-						{
-							idBuilder.Add(id);
-						}
-					}
-
-					if (_convertInfo == null)
-						idBuilder.Add(string.Empty);
-					else
-						idBuilder.Add(_convertInfo.GetConfigurationID());
-
-					idBuilder.Add(IdentifierBuilder.GetObjectID(_columnNameComparer));
-
-					_configurationID = idBuilder.CreateID();
-				}
-
-				return _configurationID.Value;
-			}
-
+			get => _configurationID ??= GenerateID();
 			set => _configurationID = value;
 		}
 
-		internal int CreateID()
+		protected virtual int GenerateID()
 		{
-			if (_configurationID == null || _configurationID.Value == 0)
-				_configurationID = IdentifierBuilder.CreateNextID();
-			return _configurationID.Value;
+			var idBuilder = new IdentifierBuilder(Configuration);
+
+			ProcessDictionary(_defaultValues);
+			ProcessDictionary(_canBeNull);
+			ProcessDictionary(_scalarTypes);
+			ProcessDictionary(_dataTypes);
+			ProcessDictionary(_defaultFromEnumTypes);
+
+			void ProcessDictionary<T>(ConcurrentDictionary<Type,T>? dic)
+			{
+				idBuilder.Add(dic?.Count);
+
+				if (dic?.Count > 0)
+				{
+					foreach (var (id, value) in
+						from t in dic
+						let id = IdentifierBuilder.GetObjectID(t.Key)
+						orderby id
+						select (id, t.Value))
+					{
+						idBuilder
+							.Add(id)
+							.Add(IdentifierBuilder.GetObjectID(value))
+							;
+					}
+				}
+			}
+
+			var list = new List<FluentMetadataReader>();
+
+			switch (MetadataReader)
+			{
+				case FluentMetadataReader fr :
+					list.Add(fr);
+					break;
+				case MetadataReader mr :
+					foreach (var r in mr.Readers)
+						if (r is FluentMetadataReader fr)
+							list.Add(fr);
+					break;
+			}
+
+			idBuilder.Add(list.Count);
+
+			if (list.Count > 0)
+			{
+				foreach (var id in
+					from id in list
+					from a in id.GetObjectIDs()
+					orderby a
+					select a)
+				{
+					idBuilder.Add(id);
+				}
+			}
+
+			if (_convertInfo == null)
+				idBuilder.Add(string.Empty);
+			else
+				idBuilder.Add(_convertInfo.GetConfigurationID());
+
+			idBuilder.Add(IdentifierBuilder.GetObjectID(_columnNameComparer));
+
+			return idBuilder.CreateID();
 		}
 
-		internal int CreateID(ref int? id)
-		{
-			if (_configurationID == null || _configurationID.Value == 0)
-				_configurationID = id ??= IdentifierBuilder.CreateNextID();
-			return _configurationID.Value;
-		}
+		public virtual bool IsLocked => false;
 
 		#endregion
 	}

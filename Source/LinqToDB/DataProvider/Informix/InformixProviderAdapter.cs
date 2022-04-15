@@ -198,7 +198,7 @@ namespace LinqToDB.DataProvider.Informix
 			var transactionType = assembly.GetType($"{IfxClientNamespace}.IfxTransaction", true)!;
 			var dbType          = assembly.GetType($"{IfxClientNamespace}.IfxType"       , true)!;
 
-			var mappingSchema = new MappingSchema();
+			var mappingSchema = new InformixAdapterMappingSchema();
 			var blobType      = loadType("IfxBlob"    , DataType.VarBinary)!;
 			var clobType      = loadType("IfxClob"    , DataType.Text)!;
 			var dateTimeType  = loadType("IfxDateTime", DataType.DateTime2)!;
@@ -281,6 +281,13 @@ namespace LinqToDB.DataProvider.Informix
 				}
 
 				return type;
+			}
+		}
+
+		sealed class InformixAdapterMappingSchema : LockedMappingSchema
+		{
+			public InformixAdapterMappingSchema() : base("InformixAdapter")
+			{
 			}
 		}
 

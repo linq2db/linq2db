@@ -46,8 +46,6 @@ namespace LinqToDB.DataProvider.SqlServer
 				MappingSchemaInstance.Get(version),
 				SqlServerProviderAdapter.GetInstance(provider))
 		{
-			var mappingSchemaID = MappingSchema.ConfigurationID;
-
 			Version  = version;
 			Provider = provider;
 
@@ -106,8 +104,6 @@ namespace LinqToDB.DataProvider.SqlServer
 			SetProviderField<DbDataReader, SqlString, SqlString>((r, i) => r.GetString(i));
 
 			SqlServerTypes.Configure(this);
-
-			MappingSchema.ConfigurationID = mappingSchemaID;
 		}
 
 		#endregion
@@ -124,25 +120,17 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		static class MappingSchemaInstance
 		{
-			static readonly MappingSchema _sqlServer2005MappingSchema = new SqlServerMappingSchema.SqlServer2005MappingSchema();
-			static readonly MappingSchema _sqlServer2008MappingSchema = new SqlServerMappingSchema.SqlServer2008MappingSchema();
-			static readonly MappingSchema _sqlServer2012MappingSchema = new SqlServerMappingSchema.SqlServer2012MappingSchema();
-			static readonly MappingSchema _sqlServer2014MappingSchema = new SqlServerMappingSchema.SqlServer2014MappingSchema();
-			static readonly MappingSchema _sqlServer2016MappingSchema = new SqlServerMappingSchema.SqlServer2016MappingSchema();
-			static readonly MappingSchema _sqlServer2017MappingSchema = new SqlServerMappingSchema.SqlServer2017MappingSchema();
-			static readonly MappingSchema _sqlServer2019MappingSchema = new SqlServerMappingSchema.SqlServer2019MappingSchema();
-
 			public static MappingSchema Get(SqlServerVersion version)
 			{
 				return version switch
 				{
-					SqlServerVersion.v2005 => _sqlServer2005MappingSchema,
-					SqlServerVersion.v2012 => _sqlServer2012MappingSchema,
-					SqlServerVersion.v2014 => _sqlServer2014MappingSchema,
-					SqlServerVersion.v2016 => _sqlServer2016MappingSchema,
-					SqlServerVersion.v2017 => _sqlServer2017MappingSchema,
-					SqlServerVersion.v2019 => _sqlServer2019MappingSchema,
-					_                      => _sqlServer2008MappingSchema,
+					SqlServerVersion.v2005 => new SqlServerMappingSchema.SqlServer2005MappingSchema(),
+					SqlServerVersion.v2012 => new SqlServerMappingSchema.SqlServer2012MappingSchema(),
+					SqlServerVersion.v2014 => new SqlServerMappingSchema.SqlServer2014MappingSchema(),
+					SqlServerVersion.v2016 => new SqlServerMappingSchema.SqlServer2016MappingSchema(),
+					SqlServerVersion.v2017 => new SqlServerMappingSchema.SqlServer2017MappingSchema(),
+					SqlServerVersion.v2019 => new SqlServerMappingSchema.SqlServer2019MappingSchema(),
+					_                      => new SqlServerMappingSchema.SqlServer2008MappingSchema(),
 				};
 			}
 		}

@@ -18,11 +18,7 @@ namespace LinqToDB.DataProvider.Informix
 	public abstract class InformixDataProvider : DynamicDataProviderBase<InformixProviderAdapter>
 	{
 		protected InformixDataProvider(string providerName)
-			: base(
-				providerName,
-				GetMappingSchema(providerName, InformixProviderAdapter.GetInstance(providerName).MappingSchema),
-				InformixProviderAdapter.GetInstance(providerName))
-
+			: base(providerName, GetMappingSchema(providerName), InformixProviderAdapter.GetInstance(providerName))
 		{
 			SqlProviderFlags.IsParameterOrderDependent         = !Adapter.IsIDSProvider;
 			SqlProviderFlags.IsSubQueryTakeSupported           = false;
@@ -186,12 +182,12 @@ namespace LinqToDB.DataProvider.Informix
 			base.SetParameterType(dataConnection, parameter, dataType);
 		}
 
-		static MappingSchema GetMappingSchema(string name, MappingSchema providerSchema)
+		static MappingSchema GetMappingSchema(string name)
 		{
 			return name switch
 			{
-				ProviderName.Informix => new InformixMappingSchema.IfxMappingSchema(providerSchema),
-				_                     => new InformixMappingSchema.DB2MappingSchema(providerSchema),
+				ProviderName.Informix => new InformixMappingSchema.IfxMappingSchema(),
+				_                     => new InformixMappingSchema.DB2MappingSchema(),
 			};
 		}
 

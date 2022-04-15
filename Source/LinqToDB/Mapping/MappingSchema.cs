@@ -49,13 +49,6 @@ namespace LinqToDB.Mapping
 		{
 		}
 
-		public MappingSchema(int n, MappingSchema schema)
-			: this(null, new[] { schema })
-		{
-			_configurationList = schema.ConfigurationList;
-			_configurationID   = schema.ConfigurationID;
-		}
-
 		/// <summary>
 		/// Creates mapping schema for specified configuration name.
 		/// </summary>
@@ -88,16 +81,16 @@ namespace LinqToDB.Mapping
 			if (string.IsNullOrEmpty(configuration))
 				configuration = string.Empty;
 
-			var schemaInfo = new MappingSchemaInfo(configuration!);
+			var schemaInfo = CreateMappingSchemaInfo(configuration!, this);
 
 			if (schemas == null || schemas.Length == 0)
 			{
 				Schemas = new[] { schemaInfo, Default.Schemas[0] };
 
-				if (configuration!.Length == 0)
+				if (configuration!.Length == 0 && !IsLockable)
 					_configurationID = schemaInfo.ConfigurationID;
 
-				ValueToSqlConverter = new ValueToSqlConverter(Default.ValueToSqlConverter);
+				ValueToSqlConverter = new (Default.ValueToSqlConverter);
 			}
 			else if (schemas.Length == 1)
 			{
@@ -112,9 +105,9 @@ namespace LinqToDB.Mapping
 
 				Array.Copy(schemas[0].ValueToSqlConverter.BaseConverters, 0, baseConverters, 1, schemas[0].ValueToSqlConverter.BaseConverters.Length);
 
-				ValueToSqlConverter = new ValueToSqlConverter(baseConverters);
+				ValueToSqlConverter = new (baseConverters);
 
-				if (configuration!.Length == 0 && Schemas[1].HasConfigurationID)
+				if (configuration!.Length == 0 && !IsLockable)
 					_configurationID = schemaInfo.ConfigurationID = Schemas[1].ConfigurationID;
 			}
 			else
@@ -139,7 +132,7 @@ namespace LinqToDB.Mapping
 				}
 
 				Schemas             = schemaList.OrderBy(static _ => _.Value).Select(static _ => _.Key).ToArray();
-				ValueToSqlConverter = new ValueToSqlConverter(baseConverters.OrderBy(static _ => _.Value).Select(static _ => _.Key).ToArray());
+				ValueToSqlConverter = new (baseConverters.OrderBy(static _ => _.Value).Select(static _ => _.Key).ToArray());
 			}
 		}
 
@@ -371,7 +364,7 @@ namespace LinqToDB.Mapping
 		/// <param name="from">Source type.</param>
 		/// <param name="to">Target type.</param>
 		/// <returns>Conversion expression or <c>null</c>, if conversion is not defined.</returns>
-		public virtual LambdaExpression? TryGetConvertExpression(Type @from, Type to)
+		public virtual LambdaExpression? TryGetConvertExpression(Type from, Type to)
 		{
 			return null;
 		}
@@ -1251,15 +1244,8 @@ namespace LinqToDB.Mapping
 		/// <returns>Fluent mapping builder.</returns>
 		public FluentMappingBuilder GetFluentMappingBuilder()
 		{
-			if (IsFluentMappingSupported)
+			if (!IsLocked)
 				return new (this);
-
-			if (this == Default)
-			{
-				Tools.ClearAllCache();
-				return new (this);
-			}
-
 			throw new LinqToDBException("Mapping Schema does not support fluent mapping.");
 		}
 
@@ -1271,45 +1257,23 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Unique schema configuration identifier. For internal use only.
 		/// </summary>
-		internal int ConfigurationID
+		internal int ConfigurationID => _configurationID ??= GenerateID();
+
+		protected internal virtual int GenerateID()
 		{
-			get
-			{
-				if (_configurationID == null)
-				{
-					var idBuilder = new IdentifierBuilder();
+			var idBuilder = new IdentifierBuilder();
 
-					lock (_syncRoot)
-						foreach (var schema in Schemas)
-							idBuilder.Add(schema.ConfigurationID);
+			lock (_syncRoot)
+				for (var i = 0; i < Schemas.Length; i++)
+					idBuilder.Add(Schemas[i].ConfigurationID);
 
-					_configurationID = idBuilder.CreateID();
-				}
-
-				return _configurationID.Value;
-			}
-			set
-			{
-				Schemas[0].ConfigurationID = (_configurationID = value).Value;
-			}
+			return idBuilder.CreateID();
 		}
 
 		internal void ResetID()
 		{
 			_configurationID = null;
 			Schemas[0].ResetID();
-		}
-
-		internal void CreateID()
-		{
-			lock (_syncRoot)
-				_configurationID ??= Schemas[0].CreateID();
-		}
-
-		internal void CreateID(ref int? id)
-		{
-			lock (_syncRoot)
-				_configurationID ??= Schemas[0].CreateID(ref id);
 		}
 
 		private string[]? _configurationList;
@@ -1354,10 +1318,9 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		public static MappingSchema Default = new DefaultMappingSchema();
 
-		class DefaultMappingSchema : MappingSchema
+		class DefaultMappingSchema : LockedMappingSchema
 		{
-			public DefaultMappingSchema()
-				: base(new MappingSchemaInfo("") { MetadataReader = Metadata.MetadataReader.Default })
+			public DefaultMappingSchema() : base(new DefaultMappingSchemaInfo())
 			{
 				AddScalarType(typeof(char),            new SqlDataType(DataType.NChar, typeof(char),  1, null, null, null));
 				AddScalarType(typeof(char?),           new SqlDataType(DataType.NChar, typeof(char?), 1, null, null, null));
@@ -1405,11 +1368,34 @@ namespace LinqToDB.Mapping
 				SetConverter<DBNull, object?>(static _ => null);
 
 				ValueToSqlConverter.SetDefaults();
-
-				CreateID();
 			}
 
-			public override bool IsFluentMappingSupported => false;
+			protected internal override int GenerateID() => 0;
+
+			class DefaultMappingSchemaInfo : MappingSchemaInfo
+			{
+				public DefaultMappingSchemaInfo() : base("")
+				{
+					MetadataReader = Metadata.MetadataReader.Default;
+				}
+
+				bool _isLocked;
+
+				public override bool IsLocked => _isLocked;
+
+				protected override int GenerateID()
+				{
+					_isLocked = true;
+					return Default.GenerateID();
+				}
+
+				public override void ResetID()
+				{
+					if (_isLocked)
+						throw new LinqToDBException("DefaultMappingSchema is locked.");
+					base.ResetID();
+				}
+			}
 		}
 
 		#endregion
@@ -1841,6 +1827,12 @@ namespace LinqToDB.Mapping
 				.Select (static _ => _.Item1);
 		}
 
-		public virtual bool IsFluentMappingSupported => true;
+		public virtual bool IsLockable => false;
+		public virtual bool IsLocked   => false;
+
+		internal virtual MappingSchemaInfo CreateMappingSchemaInfo(string configuration, MappingSchema mappingSchema)
+		{
+			return new (configuration!);
+		}
 	}
 }

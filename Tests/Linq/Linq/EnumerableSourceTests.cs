@@ -648,27 +648,25 @@ namespace Tests.Linq
 				new() { Id = 2 + iteration, Value = "Doe" },
 			};
 
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(records))
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(records);
+
+			var cacheMiss   = Query<TableToInsert>.CacheMissCount;
+			var deleteValue = new TableToInsert[]
 			{
-				var cacheMiss = Query<TableToInsert>.CacheMissCount;
+				new () { Id = 1 + iteration },
+				new () { Id = 2 + iteration },
+			};
 
-				var deleteValue = new TableToInsert[]
-				{
-					new() { Id = 1 + iteration },
-					new() { Id = 2 + iteration },
-				};
+			var queryToDelete =
+				from t in table
+				join r in deleteValue on t.Id equals r.Id
+				select t;
 
-				var queryToDelete =
-					from t in table
-					join r in deleteValue on t.Id equals r.Id
-					select t;
+			queryToDelete.Delete().Should().Be(2);
 
-				queryToDelete.Delete().Should().Be(2);
-
-				if (iteration > 1)
-					Query<TableToInsert>.CacheMissCount.Should().Be(cacheMiss);
-			}
+			if (iteration > 1)
+				Query<TableToInsert>.CacheMissCount.Should().Be(cacheMiss);
 		}
 
 		[Test]

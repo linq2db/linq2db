@@ -9,7 +9,7 @@ namespace LinqToDB.DataProvider.SQLite
 	using Mapping;
 	using SqlQuery;
 
-	public class SQLiteMappingSchema : MappingSchema
+	public class SQLiteMappingSchema : LockedMappingSchema
 	{
 		private const string DATE_FORMAT      = "'{0:yyyy-MM-dd}'";
 		private const string DATETIME0_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss}'";
@@ -29,17 +29,14 @@ namespace LinqToDB.DataProvider.SQLite
 			SetValueToSqlConverter(typeof(Binary),   (sb,dt,v) => ConvertBinaryToSql  (sb, ((Binary)v).ToArray()));
 
 			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
-
-			CreateID();
 		}
 
 		static void ConvertBinaryToSql(StringBuilder stringBuilder, byte[] value)
 		{
-			stringBuilder.Append("X'");
-
-			stringBuilder.AppendByteArrayAsHexViaLookup32(value);
-
-			stringBuilder.Append('\'');
+			stringBuilder
+				.Append("X'")
+				.AppendByteArrayAsHexViaLookup32(value)
+				.Append('\'');
 		}
 
 		static void ConvertDateTimeToSql(StringBuilder stringBuilder, DateTime value)
@@ -87,32 +84,18 @@ namespace LinqToDB.DataProvider.SQLite
 
 		internal static readonly SQLiteMappingSchema Instance = new ();
 
-		public override bool IsFluentMappingSupported => false;
-
-		public class ClassicMappingSchema : MappingSchema
+		public class ClassicMappingSchema : LockedMappingSchema
 		{
-			public ClassicMappingSchema()
-				: base(ProviderName.SQLiteClassic, Instance)
+			public ClassicMappingSchema() : base(ProviderName.SQLiteClassic, Instance)
 			{
-				CreateID(ref _id);
 			}
-
-			static int? _id;
-
-			public override bool IsFluentMappingSupported => false;
 		}
 
-		public class MicrosoftMappingSchema : MappingSchema
+		public class MicrosoftMappingSchema : LockedMappingSchema
 		{
-			public MicrosoftMappingSchema()
-				: base(ProviderName.SQLiteMS, Instance)
+			public MicrosoftMappingSchema() : base(ProviderName.SQLiteMS, Instance)
 			{
-				CreateID(ref _id);
 			}
-
-			static int? _id;
-
-			public override bool IsFluentMappingSupported => false;
 		}
 	}
 }

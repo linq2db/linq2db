@@ -11,7 +11,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	using Mapping;
 	using SqlQuery;
 
-	public class PostgreSQLMappingSchema : MappingSchema
+	sealed class PostgreSQLMappingSchema : LockedMappingSchema
 	{
 		private const string DATE_FORMAT       = "'{0:yyyy-MM-dd}'::{1}";
 		private const string TIMESTAMP0_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss}'::{1}";
@@ -65,8 +65,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 			SetConvertExpression<ulong , DataParameter>(value => new DataParameter(null, (decimal)value , DataType.Decimal) /*{ Precision = 20, Scale = 0 }*/);
 			SetConvertExpression<ulong?, DataParameter>(value => new DataParameter(null, (decimal?)value, DataType.Decimal) /*{ Precision = 20, Scale = 0 }*/, addNullCheck: false);
-
-			CreateID();
 		}
 
 		static void BuildDateTime(StringBuilder stringBuilder, SqlDataType dt, DateTime value)
@@ -127,56 +125,24 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		internal static MappingSchema Instance { get; } = new PostgreSQLMappingSchema();
 
-		public override bool IsFluentMappingSupported => false;
-
-		public sealed class PostgreSQL92MappingSchema : MappingSchema
+		public sealed class PostgreSQL92MappingSchema : LockedMappingSchema
 		{
-			public PostgreSQL92MappingSchema()
-				: base(ProviderName.PostgreSQL92, Instance)
+			public PostgreSQL92MappingSchema() : base(ProviderName.PostgreSQL92, NpgsqlProviderAdapter.GetInstance().MappingSchema, Instance)
 			{
-				CreateID(ref _id);
-			}
-
-			static int? _id;
-
-			public PostgreSQL92MappingSchema(params MappingSchema[] schemas)
-				: base(ProviderName.PostgreSQL92, Array<MappingSchema>.Append(schemas, Instance))
-			{
-				CreateID();
 			}
 		}
 
-		public sealed class PostgreSQL93MappingSchema : MappingSchema
+		public sealed class PostgreSQL93MappingSchema : LockedMappingSchema
 		{
-			public PostgreSQL93MappingSchema()
-				: base(ProviderName.PostgreSQL93, Instance)
+			public PostgreSQL93MappingSchema() : base(ProviderName.PostgreSQL93, NpgsqlProviderAdapter.GetInstance().MappingSchema, Instance)
 			{
-				CreateID(ref _id);
-			}
-
-			static int? _id;
-
-			public PostgreSQL93MappingSchema(params MappingSchema[] schemas)
-				: base(ProviderName.PostgreSQL93, Array<MappingSchema>.Append(schemas, Instance))
-			{
-				CreateID();
 			}
 		}
 
-		public sealed class PostgreSQL95MappingSchema : MappingSchema
+		public sealed class PostgreSQL95MappingSchema : LockedMappingSchema
 		{
-			public PostgreSQL95MappingSchema()
-				: base(ProviderName.PostgreSQL95, Instance)
+			public PostgreSQL95MappingSchema() : base(ProviderName.PostgreSQL95, NpgsqlProviderAdapter.GetInstance().MappingSchema, Instance)
 			{
-				CreateID(ref _id);
-			}
-
-			static int? _id;
-
-			public PostgreSQL95MappingSchema(params MappingSchema[] schemas)
-				: base(ProviderName.PostgreSQL95, Array<MappingSchema>.Append(schemas, Instance))
-			{
-				CreateID();
 			}
 		}
 	}

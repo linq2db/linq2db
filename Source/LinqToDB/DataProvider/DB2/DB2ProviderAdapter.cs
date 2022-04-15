@@ -61,7 +61,7 @@ namespace LinqToDB.DataProvider.DB2
 			var rowsCopiedEventArgs             = assembly.GetType($"{clientNamespace}.DB2RowsCopiedEventArgs"            , true)!;
 			var bulkCopyColumnMappingCollection = assembly.GetType($"{clientNamespace}.DB2BulkCopyColumnMappingCollection", true)!;
 
-			MappingSchema = new ("DB2Adapter");
+			MappingSchema = new DB2AdapterMappingSchema();
 
 			DB2BinaryType       = LoadType("DB2Binary"      , DataType.VarBinary)!;
 			DB2BlobType         = LoadType("DB2Blob"        , DataType.Blob)!;
@@ -119,8 +119,6 @@ namespace LinqToDB.DataProvider.DB2
 
 			CreateConnection = typeMapper.BuildWrappedFactory((string connectionString) => new DB2Connection(connectionString));
 
-			MappingSchema.CreateID();
-
 			Type? LoadType(string typeName, DataType dataType, bool optional = false, bool obsolete = false, bool register = true)
 			{
 				var type = assembly!.GetType($"{TypesNamespace}.{typeName}", !optional);
@@ -142,6 +140,13 @@ namespace LinqToDB.DataProvider.DB2
 		}
 
 		internal static readonly DB2ProviderAdapter Instance = new ();
+
+		sealed class DB2AdapterMappingSchema : LockedMappingSchema
+		{
+			public DB2AdapterMappingSchema() : base("DB2Adapter")
+			{
+			}
+		}
 
 		public Type ConnectionType  { get; }
 		public Type DataReaderType  { get; }

@@ -1175,7 +1175,7 @@ namespace LinqToDB.Data
 
 		public FluentMappingBuilder GetFluentMappingBuilder()
 		{
-			if (MappingSchema.IsFluentMappingSupported == false)
+			if (MappingSchema.IsLockable)
 				MappingSchema = new(MappingSchema);
 			return MappingSchema.GetFluentMappingBuilder();
 		}

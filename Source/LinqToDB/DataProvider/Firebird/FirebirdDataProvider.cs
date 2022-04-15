@@ -24,7 +24,7 @@ namespace LinqToDB.DataProvider.Firebird
 		}
 
 		protected FirebirdDataProvider(string name, ISqlOptimizer? sqlOptimizer)
-			: base(name, GetMappingSchema(FirebirdProviderAdapter.GetInstance().MappingSchema), FirebirdProviderAdapter.GetInstance())
+			: base(name, GetMappingSchema(), FirebirdProviderAdapter.Instance)
 		{
 			SqlProviderFlags.IsIdentityParameterRequired       = true;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
@@ -122,9 +122,9 @@ namespace LinqToDB.DataProvider.Firebird
 			base.SetParameterType(dataConnection, parameter, dataType);
 		}
 
-		static MappingSchema GetMappingSchema(MappingSchema schema)
+		static MappingSchema GetMappingSchema()
 		{
-			return new FirebirdMappingSchema.FirebirdProviderMappingSchema(schema);
+			return new FirebirdMappingSchema.FirebirdProviderMappingSchema();
 		}
 
 		#region BulkCopy

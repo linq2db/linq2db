@@ -9,7 +9,7 @@ namespace LinqToDB.DataProvider.DB2
 	using Mapping;
 	using SqlQuery;
 
-	public class DB2MappingSchema : MappingSchema
+	sealed class DB2MappingSchema : LockedMappingSchema
 	{
 		private const string DATETIME_FORMAT   = "{0:yyyy-MM-dd-HH.mm.ss}";
 
@@ -56,8 +56,6 @@ namespace LinqToDB.DataProvider.DB2
 
 			// set reader conversions from literals
 			SetConverter<string, DateTime>(ParseDateTime);
-
-			CreateID();
 		}
 
 		static DateTime ParseDateTime(string value)
@@ -117,14 +115,14 @@ namespace LinqToDB.DataProvider.DB2
 
 		static void ConvertBinaryToSql(StringBuilder stringBuilder, byte[] value)
 		{
-			stringBuilder.Append("BX'");
-
-			stringBuilder.AppendByteArrayAsHexViaLookup32(value);
-
-			stringBuilder.Append('\'');
+			stringBuilder
+				.Append("BX'")
+				.AppendByteArrayAsHexViaLookup32(value)
+				.Append('\'');
 		}
 
-		static readonly Action<StringBuilder, int> AppendConversionAction = AppendConversion;
+		static readonly Action<StringBuilder,int> _appendConversionAction = AppendConversion;
+
 		static void AppendConversion(StringBuilder stringBuilder, int value)
 		{
 			stringBuilder
@@ -136,40 +134,28 @@ namespace LinqToDB.DataProvider.DB2
 
 		static void ConvertStringToSql(StringBuilder stringBuilder, string value)
 		{
-			DataTools.ConvertStringToSql(stringBuilder, "||", null, AppendConversionAction, value, null);
+			DataTools.ConvertStringToSql(stringBuilder, "||", null, _appendConversionAction, value, null);
 		}
 
 		static void ConvertCharToSql(StringBuilder stringBuilder, char value)
 		{
-			DataTools.ConvertCharToSql(stringBuilder, "'", AppendConversionAction, value);
+			DataTools.ConvertCharToSql(stringBuilder, "'", _appendConversionAction, value);
 		}
 
 		internal static readonly DB2MappingSchema Instance = new ();
 
-		public override bool IsFluentMappingSupported => false;
-
-		public class DB2zOSMappingSchema : MappingSchema
+		public sealed class DB2zOSMappingSchema : LockedMappingSchema
 		{
 			public DB2zOSMappingSchema() : base(ProviderName.DB2zOS,  DB2ProviderAdapter.Instance.MappingSchema, Instance)
 			{
-				CreateID(ref _id);
 			}
-
-			static int? _id;
-
-			public override bool IsFluentMappingSupported => false;
 		}
 
-		public sealed class DB2LUWMappingSchema : MappingSchema
+		public sealed class DB2LUWMappingSchema : LockedMappingSchema
 		{
 			public DB2LUWMappingSchema() : base(ProviderName.DB2LUW, DB2ProviderAdapter.Instance.MappingSchema, Instance)
 			{
-				CreateID(ref _id);
 			}
-
-			static int? _id;
-
-			public override bool IsFluentMappingSupported => false;
 		}
 	}
 }

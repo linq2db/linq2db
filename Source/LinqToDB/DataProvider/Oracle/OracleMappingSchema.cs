@@ -11,7 +11,7 @@ namespace LinqToDB.DataProvider.Oracle
 	using SqlQuery;
 	using System.Data.Linq;
 
-	public class OracleMappingSchema : MappingSchema
+	public sealed class OracleMappingSchema : LockedMappingSchema
 	{
 		private const string DATE_FORMAT = "DATE '{0:yyyy-MM-dd}'";
 
@@ -78,20 +78,19 @@ namespace LinqToDB.DataProvider.Oracle
 				else
 					sb.AppendFormat(CultureInfo.InvariantCulture, "{0:G17}D", d);
 			});
-
-			CreateID();
 		}
 
 		static void ConvertBinaryToSql(StringBuilder stringBuilder, byte[] value)
 		{
-			stringBuilder.Append("HEXTORAW('");
-
-			stringBuilder.AppendByteArrayAsHexViaLookup32(value);
+			stringBuilder
+				.Append("HEXTORAW('")
+				.AppendByteArrayAsHexViaLookup32(value);
 
 			stringBuilder.Append("')");
 		}
 
 		static readonly Action<StringBuilder, int> AppendConversionAction = AppendConversion;
+
 		static void AppendConversion(StringBuilder stringBuilder, int value)
 		{
 			stringBuilder
@@ -180,43 +179,18 @@ namespace LinqToDB.DataProvider.Oracle
 
 		internal static readonly OracleMappingSchema Instance = new ();
 
-		public override bool IsFluentMappingSupported => false;
-
-		public sealed class NativeMappingSchema : MappingSchema
+		public sealed class NativeMappingSchema : LockedMappingSchema
 		{
-			public NativeMappingSchema()
-				: base(ProviderName.OracleNative, Instance)
-			{
-				CreateID(ref _id);
-			}
-
-			static int? _id;
-
-			public NativeMappingSchema(params MappingSchema[] schemas)
-				: base(ProviderName.OracleNative, Array<MappingSchema>.Append(schemas, Instance))
+			public NativeMappingSchema() : base(ProviderName.OracleNative, OracleProviderAdapter.GetInstance(ProviderName.OracleNative).MappingSchema, Instance)
 			{
 			}
-
-			public override bool IsFluentMappingSupported => false;
 		}
 
-		public sealed class ManagedMappingSchema : MappingSchema
+		public sealed class ManagedMappingSchema : LockedMappingSchema
 		{
-			public ManagedMappingSchema()
-				: base(ProviderName.OracleManaged, Instance)
+			public ManagedMappingSchema() : base(ProviderName.OracleManaged, OracleProviderAdapter.GetInstance(ProviderName.OracleManaged).MappingSchema, Instance)
 			{
-				CreateID(ref _id);
 			}
-
-			static int? _id;
-
-			public ManagedMappingSchema(params MappingSchema[] schemas)
-				: base(ProviderName.OracleManaged, Array<MappingSchema>.Append(schemas, Instance))
-			{
-				CreateID();
-			}
-
-			public override bool IsFluentMappingSupported => false;
 		}
 	}
 }

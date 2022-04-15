@@ -330,7 +330,7 @@ namespace Tests.Mapping
 		[Test]
 		public void FluentInheritance([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			var ms = MappingSchema.Default; // new MappingSchema();
+			var ms = new MappingSchema();
 			var mb = ms.GetFluentMappingBuilder();
 
 			mb.Entity<TestInheritancePerson>()
@@ -355,7 +355,7 @@ namespace Tests.Mapping
 		[Test]
 		public void FluentInheritance2([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			var ms = MappingSchema.Default; // new MappingSchema();
+			var ms = new MappingSchema();
 			var mb = ms.GetFluentMappingBuilder();
 
 			mb.Entity<TestInheritancePerson>()
@@ -397,7 +397,7 @@ namespace Tests.Mapping
 		[Test]
 		public void FluentInheritanceExpression([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			var ms = MappingSchema.Default; // new MappingSchema();
+			var ms = new MappingSchema();
 			var mb = ms.GetFluentMappingBuilder();
 
 			mb.Entity<DescendantEntity>()

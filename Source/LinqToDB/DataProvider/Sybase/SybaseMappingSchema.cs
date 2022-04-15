@@ -9,7 +9,7 @@ namespace LinqToDB.DataProvider.Sybase
 	using Mapping;
 	using SqlQuery;
 
-	public class SybaseMappingSchema : MappingSchema
+	sealed class SybaseMappingSchema : LockedMappingSchema
 	{
 		private const string TIME3_FORMAT= "'{0:hh\\:mm\\:ss\\.fff}'";
 
@@ -22,21 +22,21 @@ namespace LinqToDB.DataProvider.Sybase
 			SetValueToSqlConverter(typeof(Binary)  , (sb, dt, v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
 
 			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
-
-			CreateID();
 		}
 
 		static void ConvertBinaryToSql(StringBuilder stringBuilder, byte[] value)
 		{
-			stringBuilder.Append("0x");
-
-			stringBuilder.AppendByteArrayAsHexViaLookup32(value);
+			stringBuilder
+				.Append("0x")
+				.AppendByteArrayAsHexViaLookup32(value);
 		}
 
 		static void ConvertTimeSpanToSql(StringBuilder stringBuilder, SqlDataType sqlDataType, TimeSpan value)
 		{
 			if (sqlDataType.Type.DataType == DataType.Int64)
+			{
 				stringBuilder.Append(value.Ticks);
+			}
 			else
 			{
 				// to match logic for values as parameters
@@ -48,6 +48,7 @@ namespace LinqToDB.DataProvider.Sybase
 		}
 
 		static readonly Action<StringBuilder, int> AppendConversionAction = AppendConversion;
+
 		static void AppendConversion(StringBuilder stringBuilder, int value)
 		{
 			stringBuilder
@@ -69,32 +70,18 @@ namespace LinqToDB.DataProvider.Sybase
 
 		internal static readonly SybaseMappingSchema Instance = new ();
 
-		public override bool IsFluentMappingSupported => false;
-
-		public sealed class NativeMappingSchema : MappingSchema
+		public sealed class NativeMappingSchema : LockedMappingSchema
 		{
-			public NativeMappingSchema()
-				: base(ProviderName.Sybase, Instance)
+			public NativeMappingSchema() : base(ProviderName.Sybase, Instance)
 			{
-				CreateID(ref _id);
 			}
-
-			static int? _id;
-
-			public override bool IsFluentMappingSupported => false;
 		}
 
-		public sealed class ManagedMappingSchema : MappingSchema
+		public sealed class ManagedMappingSchema : LockedMappingSchema
 		{
-			public ManagedMappingSchema()
-				: base(ProviderName.SybaseManaged, Instance)
+			public ManagedMappingSchema() : base(ProviderName.SybaseManaged, Instance)
 			{
-				CreateID(ref _id);
 			}
-
-			static int? _id;
-
-			public override bool IsFluentMappingSupported => false;
 		}
 	}
 }

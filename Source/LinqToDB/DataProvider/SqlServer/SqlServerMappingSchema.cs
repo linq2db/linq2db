@@ -15,7 +15,7 @@ namespace LinqToDB.DataProvider.SqlServer
 	using Mapping;
 	using SqlQuery;
 
-	public class SqlServerMappingSchema : MappingSchema
+	sealed class SqlServerMappingSchema : LockedMappingSchema
 	{
 		private const string DATETIME0_FORMAT = "'{0:yyyy-MM-ddTHH:mm:ss}'";
 		private const string DATETIME1_FORMAT = "'{0:yyyy-MM-ddTHH:mm:ss.f}'";
@@ -95,8 +95,6 @@ namespace LinqToDB.DataProvider.SqlServer
 			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string)));
 
 			AddMetadataReader(new SystemDataSqlServerAttributeReader());
-
-			CreateID();
 		}
 
 		internal static SqlServerMappingSchema Instance = new ();
@@ -237,145 +235,101 @@ namespace LinqToDB.DataProvider.SqlServer
 			stringBuilder.AppendByteArrayAsHexViaLookup32(value);
 		}
 
-		public override bool IsFluentMappingSupported => false;
-
-		public sealed class SqlServer2005MappingSchema : MappingSchema
+		public sealed class SqlServer2005MappingSchema : LockedMappingSchema
 		{
-			public SqlServer2005MappingSchema()
-				: base(ProviderName.SqlServer2005, Instance)
+			public SqlServer2005MappingSchema() : base(ProviderName.SqlServer2005, Instance)
 			{
 				ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
-				CreateID(ref _id);
 			}
 
-			static int? _id;
-
-			public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
+			public override LambdaExpression? TryGetConvertExpression(Type from, Type to)
 			{
-				return Instance.TryGetConvertExpression(@from, to);
+				return Instance.TryGetConvertExpression(from, to);
 			}
-
-			public override bool IsFluentMappingSupported => false;
 		}
 
-		public sealed class SqlServer2008MappingSchema : MappingSchema
+		public sealed class SqlServer2008MappingSchema : LockedMappingSchema
 		{
-			public SqlServer2008MappingSchema()
-				: base(ProviderName.SqlServer2008, Instance)
+			public SqlServer2008MappingSchema() : base(ProviderName.SqlServer2008, Instance)
 			{
 				ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 				SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => ConvertDateTimeToSql(sb, dt, (DateTime)v));
-				CreateID(ref _id);
 			}
 
-			static int? _id;
-
-			public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
+			public override LambdaExpression? TryGetConvertExpression(Type from, Type to)
 			{
-				return Instance.TryGetConvertExpression(@from, to);
+				return Instance.TryGetConvertExpression(from, to);
 			}
-
-			public override bool IsFluentMappingSupported => false;
 		}
 
-		public sealed class SqlServer2012MappingSchema : MappingSchema
+		public sealed class SqlServer2012MappingSchema : LockedMappingSchema
 		{
-			public SqlServer2012MappingSchema()
-				: base(ProviderName.SqlServer2012, Instance)
+			public SqlServer2012MappingSchema() : base(ProviderName.SqlServer2012, Instance)
 			{
 				ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 				SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => ConvertDateTimeToSql(sb, dt, (DateTime)v));
-				CreateID(ref _id);
 			}
-
-			static int? _id;
 
 			public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
 			{
 				return Instance.TryGetConvertExpression(@from, to);
 			}
-
-			public override bool IsFluentMappingSupported => false;
 		}
 
-		public sealed class SqlServer2014MappingSchema : MappingSchema
+		public sealed class SqlServer2014MappingSchema : LockedMappingSchema
 		{
-			public SqlServer2014MappingSchema()
-				: base(ProviderName.SqlServer2014, Instance)
+			public SqlServer2014MappingSchema() : base(ProviderName.SqlServer2014, Instance)
 			{
 				ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 				SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => ConvertDateTimeToSql(sb, dt, (DateTime)v));
-				CreateID(ref _id);
 			}
-
-			static int? _id;
 
 			public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
 			{
 				return Instance.TryGetConvertExpression(@from, to);
 			}
-
-			public override bool IsFluentMappingSupported => false;
 		}
 
-		public sealed class SqlServer2016MappingSchema : MappingSchema
+		public sealed class SqlServer2016MappingSchema : LockedMappingSchema
 		{
-			public SqlServer2016MappingSchema()
-				: base(ProviderName.SqlServer2016, Instance)
+			public SqlServer2016MappingSchema() : base(ProviderName.SqlServer2016, Instance)
 			{
 				ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 				SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => ConvertDateTimeToSql(sb, dt, (DateTime)v));
-				CreateID(ref _id);
 			}
-
-			static int? _id;
 
 			public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
 			{
 				return Instance.TryGetConvertExpression(@from, to);
 			}
-
-			public override bool IsFluentMappingSupported => false;
 		}
 
-		public sealed class SqlServer2017MappingSchema : MappingSchema
+		public sealed class SqlServer2017MappingSchema : LockedMappingSchema
 		{
-			public SqlServer2017MappingSchema()
-				: base(ProviderName.SqlServer2017, Instance)
+			public SqlServer2017MappingSchema() : base(ProviderName.SqlServer2017, Instance)
 			{
 				ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 				SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => ConvertDateTimeToSql(sb, dt, (DateTime)v));
-				CreateID(ref _id);
 			}
-
-			static int? _id;
 
 			public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
 			{
 				return Instance.TryGetConvertExpression(@from, to);
 			}
-
-			public override bool IsFluentMappingSupported => false;
 		}
 
-		public sealed class SqlServer2019MappingSchema : MappingSchema
+		public sealed class SqlServer2019MappingSchema : LockedMappingSchema
 		{
-			public SqlServer2019MappingSchema()
-				: base(ProviderName.SqlServer2019, Instance)
+			public SqlServer2019MappingSchema() : base(ProviderName.SqlServer2019, Instance)
 			{
 				ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 				SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => ConvertDateTimeToSql(sb, dt, (DateTime)v));
-				CreateID(ref _id);
 			}
-
-			static int? _id;
 
 			public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
 			{
 				return Instance.TryGetConvertExpression(@from, to);
 			}
-
-			public override bool IsFluentMappingSupported => false;
 		}
 	}
 }
