@@ -76,7 +76,8 @@ namespace LinqToDB.DataProvider.Firebird
 			ClearAllPools = typeMapper.BuildAction(typeMapper.MapActionLambda(() => FbConnection.ClearAllPools()));
 		}
 
-		internal static readonly FirebirdProviderAdapter Instance = new ();
+		static readonly Lazy<FirebirdProviderAdapter> _lazy    = new (() => new ());
+		internal static FirebirdProviderAdapter       Instance => _lazy.Value;
 
 		sealed class FirebirdAdapterMappingSchema : LockedMappingSchema
 		{

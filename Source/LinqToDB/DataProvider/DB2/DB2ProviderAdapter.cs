@@ -139,7 +139,8 @@ namespace LinqToDB.DataProvider.DB2
 			}
 		}
 
-		internal static readonly DB2ProviderAdapter Instance = new ();
+		static readonly Lazy<DB2ProviderAdapter> _lazy = new (() => new ());
+		public static   DB2ProviderAdapter       Instance => _lazy.Value;
 
 		sealed class DB2AdapterMappingSchema : LockedMappingSchema
 		{
