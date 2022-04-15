@@ -1391,9 +1391,9 @@ namespace LinqToDB.Mapping
 
 				public override void ResetID()
 				{
-					if (_isLocked)
-						throw new LinqToDBException("DefaultMappingSchema is locked.");
-					base.ResetID();
+//					if (_isLocked)
+//						throw new LinqToDBException("DefaultMappingSchema is locked.");
+//					base.ResetID();
 				}
 			}
 		}
