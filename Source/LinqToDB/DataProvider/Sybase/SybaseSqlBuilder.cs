@@ -289,11 +289,9 @@ namespace LinqToDB.DataProvider.Sybase
 
 			if (dropTable.Table.TableOptions.HasDropIfExists())
 			{
-				var defaultDatabaseName = IsTemporary(table) ? "tempdb" : null;
-
 				_skipBrackets = true;
 				StringBuilder.Append("IF (OBJECT_ID(N'");
-				BuildPhysicalTable(table, null, defaultDatabaseName : defaultDatabaseName);
+				BuildPhysicalTable(table, null);
 				StringBuilder.AppendLine("') IS NOT NULL)");
 				_skipBrackets = false;
 
@@ -313,12 +311,11 @@ namespace LinqToDB.DataProvider.Sybase
 			{
 				var table = createTable.Table;
 
-				var isTemporary         = IsTemporary(table);
-				var defaultDatabaseName = isTemporary ? "tempdb" : null;
+				var isTemporary = IsTemporary(table);
 
 				_skipBrackets = true;
 				StringBuilder.Append("IF (OBJECT_ID(N'");
-				BuildPhysicalTable(table, null, defaultDatabaseName : defaultDatabaseName);
+				BuildPhysicalTable(table, null);
 				StringBuilder.AppendLine("') IS NULL)");
 				_skipBrackets = false;
 

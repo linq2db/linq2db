@@ -50,7 +50,7 @@ namespace InformixDataContext
 			InitMappingSchema();
 		}
 
-		public TestdataidsDB(LinqToDbConnectionOptions options)
+		public TestdataidsDB(LinqToDBConnectionOptions options)
 			: base(options)
 		{
 			InitDataContext();
