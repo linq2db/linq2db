@@ -245,9 +245,14 @@ void GenerateTypesFromMetadata()
 
 		var tableAttrs = new List<string>();
 
-		if (ServerName   != null) tableAttrs.Add("Server="    + ToStringLiteral(ServerName));
-		if (DatabaseName != null) tableAttrs.Add("Database="  + ToStringLiteral(DatabaseName));
-		if (t.Schema     != null) tableAttrs.Add("Schema="    + ToStringLiteral(t.Schema));
+
+		if (GenerateDatabaseNameFromTable && t.TableSchema.CatalogName != null)
+			tableAttrs.Add("Database=" + ToStringLiteral(t.TableSchema.CatalogName));
+		else if (DatabaseName != null)
+			tableAttrs.Add("Database=" + ToStringLiteral(DatabaseName));
+
+		if (ServerName != null) tableAttrs.Add("Server=" + ToStringLiteral(ServerName));
+		if (t.Schema   != null) tableAttrs.Add("Schema=" + ToStringLiteral(t.TableSchema.SchemaName ?? t.Schema));
 
 		tableAttrs.Add((tableAttrs.Count == 0 ? "" : "Name=") + ToStringLiteral(t.TableName));
 
@@ -442,8 +447,16 @@ void GenerateTypesFromMetadata()
 
 				foreach (var key in keys.OrderBy(k => k.MemberName))
 				{
+					string otherTableName = null;
+
+					if (key.OtherTable.TableSchema.CatalogName != null)
+						otherTableName = key.OtherTable.TableSchema.CatalogName + ".";
+					if (key.OtherTable.TableSchema.SchemaName != null)
+						otherTableName += key.OtherTable.TableSchema.SchemaName + ".";
+					otherTableName += key.OtherTable.TableSchema.TableName;
+
 					key.Comment.Add("/ <summary>");
-					key.Comment.Add("/ " + key.KeyName);
+					key.Comment.Add($"/ {key.KeyName} ({otherTableName})");
 					key.Comment.Add("/ </summary>");
 
 					if (key.AssociationType == AssociationType.OneToMany)
