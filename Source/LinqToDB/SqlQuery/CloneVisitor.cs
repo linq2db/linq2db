@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
-using LinqToDB.ServiceModel;
 
 namespace LinqToDB.SqlQuery
 {
 	using Common;
 	using Linq.Builder;
+	using Remote;
 
 	public readonly struct CloneVisitor<TContext>
 	{
@@ -790,7 +790,7 @@ namespace LinqToDB.SqlQuery
 						var rows   = new List<ISqlExpression[]>(values.Rows.Count);
 						CloneInto(rows, values.Rows);
 						clone = new SqlValuesTable(fields, fields.Select(f => f.ColumnDescriptor?.MemberInfo).ToArray(), rows);
-					}	
+					}
 					break;
 
 				}

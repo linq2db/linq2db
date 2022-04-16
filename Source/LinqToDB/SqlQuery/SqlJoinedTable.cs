@@ -4,7 +4,7 @@ using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
-	using ServiceModel;
+	using Remote;
 
 	public class SqlJoinedTable : IQueryElement, ISqlExpressionWalkable, IQueryExtendible
 	{
