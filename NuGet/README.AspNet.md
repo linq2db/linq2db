@@ -23,7 +23,7 @@ Main [article](https://linq2db.github.io/articles/get-started/asp-dotnet-core/in
 First thing we're going to do is create a new ASP.NET Core application using the dotnet CLI
 
 ```txt
-dotnet new webapp -o gettingStartedLinqToDbAspNet
+dotnet new webapp -o gettingStartedLinqToDBAspNet
 ```
 
 ### Install LINQ To DB
@@ -45,7 +45,7 @@ using LinqToDB.Data;
 
 public class AppDataConnection: DataConnection
 {
-    public AppDataConnection(LinqToDbConnectionOptions<AppDataConnection> options)
+    public AppDataConnection(LinqToDBConnectionOptions<AppDataConnection> options)
         :base(options)
     {
 
@@ -57,7 +57,7 @@ public class AppDataConnection: DataConnection
 > Note here our `AppDataConnection` inherits from `LinqToDB.Data.DataConnection` which is the base class for the `Linq To DB` connection.
 >
 > [!TIP]  
->a public constructor that accepts `LinqToDbConnectionOptions<AppDataConnection>` and passes the options on to the base constructor is required.
+>a public constructor that accepts `LinqToDBConnectionOptions<AppDataConnection>` and passes the options on to the base constructor is required.
 
 ### Add Connection String
 
@@ -94,7 +94,7 @@ public class Startup
     {
         //...
         //using LinqToDB.AspNet
-        services.AddLinqToDbContext<AppDataConnection>((provider, options) => {
+        services.AddLinqToDBContext<AppDataConnection>((provider, options) => {
             options
             //will configure the AppDataConnection to use
             //sqite with the provided connection string
@@ -109,15 +109,15 @@ public class Startup
 ```
 
 > [!TIP]  
-> There's plenty of other configuration options available, if you are familiar with `LINQ To DB` already, you can convert your existing application over to use the new `LinqToDbConnectionOptions` class as every configuration method is supported
+> There's plenty of other configuration options available, if you are familiar with `LINQ To DB` already, you can convert your existing application over to use the new `LinqToDBConnectionOptions` class as every configuration method is supported
 >
 > [!TIP]  
-> Note, only `DataConnection` supports `LinqToDbConnectionOptions`. `DataContext` is not yet supported.
+> Note, only `DataConnection` supports `LinqToDBConnectionOptions`. `DataContext` is not yet supported.
 >
 > [!TIP]  
-> Use `AddLinqToDbContext<TContext, TContextImplementation>` if you would like to resolve an interface or base class instead of the concrete class in your controllers
+> Use `AddLinqToDBContext<TContext, TContextImplementation>` if you would like to resolve an interface or base class instead of the concrete class in your controllers
 
-By default this will configure the service provider to create a new `AppDataConnection` for each HTTP Request, and will dispose of it once the request is finished. This can be configured with the last parameter to `AddLinqToDbContext(... ServiceLifetime lifetime)`, more information about lifetimes [here](https://docs.microsoft.com/en-us/aspnet/core/fundamentals/dependency-injection?view=aspnetcore-3.1#service-lifetimes)
+By default this will configure the service provider to create a new `AppDataConnection` for each HTTP Request, and will dispose of it once the request is finished. This can be configured with the last parameter to `AddLinqToDBContext(... ServiceLifetime lifetime)`, more information about lifetimes [here](https://docs.microsoft.com/en-us/aspnet/core/fundamentals/dependency-injection?view=aspnetcore-3.1#service-lifetimes)
 
 ### Simple Entity Configuration
 
@@ -239,7 +239,7 @@ public class Startup
     {
         //...
         //using LinqToDB.AspNet
-        services.AddLinqToDbContext<AppDataConnection>((provider, options) => {
+        services.AddLinqToDBContext<AppDataConnection>((provider, options) => {
             options
             //will configure the AppDataConnection to use
             //SqlServer with the provided connection string
@@ -262,7 +262,7 @@ You'll need to update your data connection to accept the new options class too.
 ```C#
 public class AppDataConnection: DataConnection
 {
-    public AppDataConnection(LinqToDbConnectionOptions<AppDataConnection> options)
+    public AppDataConnection(LinqToDBConnectionOptions<AppDataConnection> options)
         :base(options)
     {
 
@@ -272,4 +272,4 @@ public class AppDataConnection: DataConnection
 
 `DataConnection` will used the options passed into the base constructor to setup the connection.
 > [!NOTE]  
-> `DataConnection` supports `LinqToDbConnectionOptions`. However `DataContext` is not yet supported.
+> `DataConnection` supports `LinqToDBConnectionOptions`. However `DataContext` is not yet supported.

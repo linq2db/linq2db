@@ -149,8 +149,10 @@ namespace LinqToDB
 			string          Expression       { get; set; }
 			Expression[]    Arguments        { get; }
 
-			T GetValue<T>(int index);
-			T GetValue<T>(string argName);
+			T      GetValue<T>   (int    index);
+			T      GetValue<T>   (string argName);
+			object GetObjectValue(int    index);
+			object GetObjectValue(string argName);
 
 			ISqlExpression GetExpression(int index, bool unwrap = false);
 			ISqlExpression GetExpression(string argName, bool unwrap = false);
@@ -370,13 +372,30 @@ namespace LinqToDB
 					if (Method != null)
 					{
 						var parameters = Method.GetParameters();
-						for (int i = 0; i < parameters.Length; i++)
-						{
+
+						for (var i = 0; i < parameters.Length; i++)
 							if (parameters[i].Name == argName)
-							{
 								return GetValue<T>(i);
-							}
-						}
+					}
+
+					throw new InvalidOperationException(string.Format("Argument '{0}' not found", argName));
+				}
+
+				public object GetObjectValue(int index)
+				{
+					var lambda = System.Linq.Expressions.Expression.Lambda<Func<object>>(Arguments[index]);
+					return lambda.CompileExpression()();
+				}
+
+				public object GetObjectValue(string argName)
+				{
+					if (Method != null)
+					{
+						var parameters = Method.GetParameters();
+
+						for (var i = 0; i < parameters.Length; i++)
+							if (parameters[i].Name == argName)
+								return GetObjectValue(i);
 					}
 
 					throw new InvalidOperationException(string.Format("Argument '{0}' not found", argName));

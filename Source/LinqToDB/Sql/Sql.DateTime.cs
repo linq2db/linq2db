@@ -21,7 +21,7 @@ namespace LinqToDB
 			/// <summary>
 			/// This date part behavior depends on used database and also depends on where if calculated - in C# code or in database.
 			/// Eeach database could have own week numbering logic, see notes below.
-			/// 
+			///
 			/// Current implementation uses following schemas per-provider:
 			/// C# evaluation: <c>CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(date.Value, CalendarWeekRule.FirstDay, DayOfWeek.Sunday)</c>
 			/// Databases:
@@ -164,7 +164,7 @@ namespace LinqToDB
 					case Sql.DateParts.Hour        : partStr = "H"; break;
 					case Sql.DateParts.Minute      : partStr = "M"; break;
 					case Sql.DateParts.Second      : partStr = "S"; break;
-					case Sql.DateParts.Millisecond : 
+					case Sql.DateParts.Millisecond :
 						builder.Expression = "Cast(strFTime('%f', {date}) * 1000 as int) % 1000";
 						builder.Extension.Precedence = Precedence.Multiplicative;
 						break;
@@ -210,7 +210,7 @@ namespace LinqToDB
 				switch (part)
 				{
 					case Sql.DateParts.Year        : exprStr = "Year({date})";                     break;
-					case Sql.DateParts.Quarter     : 
+					case Sql.DateParts.Quarter     :
 						builder.Expression = "Floor((Month({date})-1) / 3)";
 						builder.ResultExpression = builder.Inc(builder.ConvertToSqlExpression());
 						return;
@@ -218,7 +218,7 @@ namespace LinqToDB
 					case Sql.DateParts.DayOfYear   : exprStr = "DayOfYear({date})";                break;
 					case Sql.DateParts.Day         : exprStr = "DayOfMonth({date})";               break;
 					case Sql.DateParts.Week        : exprStr = "Week({date})";                     break;
-					case Sql.DateParts.WeekDay     : 
+					case Sql.DateParts.WeekDay     :
 						builder.Expression = "MOD(Weekday({date}) + 1, 7)";
 						builder.ResultExpression = builder.Inc(builder.ConvertToSqlExpression());
 						return;
@@ -268,7 +268,7 @@ namespace LinqToDB
 						}
 					case Sql.DateParts.Day         : exprStr = "Day({date})";           break;
 					case Sql.DateParts.Week        : exprStr = "((Extend({date}, year to day) - (Mdy(12, 31 - WeekDay(Mdy(1, 1, year({date}))), Year({date}) - 1) + Interval(1) day to day)) / 7 + Interval(1) day to day)::char(10)::int"; break;
-					case Sql.DateParts.WeekDay     : 
+					case Sql.DateParts.WeekDay     :
 						{
 							builder.Expression = "weekDay({date})";
 							builder.ResultExpression = builder.Inc(builder.ConvertToSqlExpression(Precedence.Primary));
@@ -390,7 +390,7 @@ namespace LinqToDB
 
 		[Sql.Extension(               "DatePart",                                        ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DatePartBuilder))]
 		[Sql.Extension(PN.DB2,        "",                                                ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DatePartBuilderDB2))] // TODO: Not checked
-		[Sql.Extension(PN.Informix,   "",                                                ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DatePartBuilderInformix))] 
+		[Sql.Extension(PN.Informix,   "",                                                ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DatePartBuilderInformix))]
 		[Sql.Extension(PN.MySql,      "Extract({part} from {date})",                     ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DatePartBuilderMySql))]
 		[Sql.Extension(PN.PostgreSQL, "Cast(Floor(Extract({part} from {date})) as int)", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DatePartBuilderPostgre))]
 		[Sql.Extension(PN.Firebird,   "Cast(Floor(Extract({part} from {date})) as int)", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DatePartBuilderFirebird))]
@@ -486,8 +486,8 @@ namespace LinqToDB
 					case Sql.DateParts.Year        : expStr = "{0} Year";                 break;
 					case Sql.DateParts.Quarter     : expStr = "({0} * 3) Month";          break;
 					case Sql.DateParts.Month       : expStr = "{0} Month";                break;
-					case Sql.DateParts.DayOfYear   : 
-					case Sql.DateParts.WeekDay     : 
+					case Sql.DateParts.DayOfYear   :
+					case Sql.DateParts.WeekDay     :
 					case Sql.DateParts.Day         : expStr = "{0} Day";                  break;
 					case Sql.DateParts.Week        : expStr = "({0} * 7) Day";            break;
 					case Sql.DateParts.Hour        : expStr = "{0} Hour";                 break;
@@ -519,8 +519,8 @@ namespace LinqToDB
 					case Sql.DateParts.Year        : expStr = "{0} + Interval({1}) Year to Year";       break;
 					case Sql.DateParts.Quarter     : expStr = "{0} + Interval({1}) Month to Month * 3"; break;
 					case Sql.DateParts.Month       : expStr = "{0} + Interval({1}) Month to Month";     break;
-					case Sql.DateParts.DayOfYear   : 
-					case Sql.DateParts.WeekDay     : 
+					case Sql.DateParts.DayOfYear   :
+					case Sql.DateParts.WeekDay     :
 					case Sql.DateParts.Day         : expStr = "{0} + Interval({1}) Day to Day";         break;
 					case Sql.DateParts.Week        : expStr = "{0} + Interval({1}) Day to Day * 7";     break;
 					case Sql.DateParts.Hour        : expStr = "{0} + Interval({1}) Hour to Hour";       break;
@@ -549,8 +549,8 @@ namespace LinqToDB
 					case Sql.DateParts.Year        : expStr = "{0} * Interval '1 Year'";         break;
 					case Sql.DateParts.Quarter     : expStr = "{0} * Interval '1 Month' * 3";    break;
 					case Sql.DateParts.Month       : expStr = "{0} * Interval '1 Month'";        break;
-					case Sql.DateParts.DayOfYear   : 
-					case Sql.DateParts.WeekDay     : 
+					case Sql.DateParts.DayOfYear   :
+					case Sql.DateParts.WeekDay     :
 					case Sql.DateParts.Day         : expStr = "{0} * Interval '1 Day'";          break;
 					case Sql.DateParts.Week        : expStr = "{0} * Interval '1 Day' * 7";      break;
 					case Sql.DateParts.Hour        : expStr = "{0} * Interval '1 Hour'";         break;
@@ -582,8 +582,8 @@ namespace LinqToDB
 					case Sql.DateParts.Year        : expStr = "Interval {0} Year"; break;
 					case Sql.DateParts.Quarter     : expStr = "Interval {0} Quarter"; break;
 					case Sql.DateParts.Month       : expStr = "Interval {0} Month"; break;
-					case Sql.DateParts.DayOfYear   : 
-					case Sql.DateParts.WeekDay     : 
+					case Sql.DateParts.DayOfYear   :
+					case Sql.DateParts.WeekDay     :
 					case Sql.DateParts.Day         : expStr = "Interval {0} Day";          break;
 					case Sql.DateParts.Week        : expStr = "Interval {0} Week"; break;
 					case Sql.DateParts.Hour        : expStr = "Interval {0} Hour"; break;
@@ -613,8 +613,8 @@ namespace LinqToDB
 					case Sql.DateParts.Year        : expStr +=            "{1} || ' Year')"; break;
 					case Sql.DateParts.Quarter     : expStr +=       "({1}*3) || ' Month')"; break;
 					case Sql.DateParts.Month       : expStr +=           "{1} || ' Month')"; break;
-					case Sql.DateParts.DayOfYear   : 
-					case Sql.DateParts.WeekDay     : 
+					case Sql.DateParts.DayOfYear   :
+					case Sql.DateParts.WeekDay     :
 					case Sql.DateParts.Day         : expStr +=             "{1} || ' Day')"; break;
 					case Sql.DateParts.Week        : expStr +=         "({1}*7) || ' Day')"; break;
 					case Sql.DateParts.Hour        : expStr +=            "{1} || ' Hour')"; break;
@@ -651,7 +651,7 @@ namespace LinqToDB
 					Sql.DateParts.Second    => "s",
 					_                       => throw new InvalidOperationException($"Unexpected datepart: {part}"),
 				};
-				builder.ResultExpression = new SqlFunction(typeof(DateTime?), "DateAdd", 
+				builder.ResultExpression = new SqlFunction(typeof(DateTime?), "DateAdd",
 					new SqlValue(partStr), number, date);
 			}
 		}
@@ -668,23 +668,23 @@ namespace LinqToDB
 				switch (part)
 				{
 					case Sql.DateParts.Year        : function = "Add_Years";   break;
-					case Sql.DateParts.Quarter     : 
+					case Sql.DateParts.Quarter     :
 						function = "Add_Months";
-						number   = builder.Mul(number, 3);  
+						number   = builder.Mul(number, 3);
 						break;
 					case Sql.DateParts.Month       : function = "Add_Months";  break;
-					case Sql.DateParts.DayOfYear   : 
-					case Sql.DateParts.Day         : 
+					case Sql.DateParts.DayOfYear   :
+					case Sql.DateParts.Day         :
 					case Sql.DateParts.WeekDay     : function = "Add_Days";    break;
-					case Sql.DateParts.Week        : 
-						function = "Add_Days";   
-						number   = builder.Mul(number, 7);  
+					case Sql.DateParts.Week        :
+						function = "Add_Days";
+						number   = builder.Mul(number, 7);
 						break;
-					case Sql.DateParts.Hour        : 
+					case Sql.DateParts.Hour        :
 						function = "Add_Seconds";
 						number   = builder.Mul(number, 3600);
 						break;
-					case Sql.DateParts.Minute      : 
+					case Sql.DateParts.Minute      :
 						function = "Add_Seconds";
 						number   = builder.Mul(number, 60);
 						break;
@@ -732,7 +732,7 @@ namespace LinqToDB
 		}
 
 
- 
+
 		[Sql.Extension("DateAdd"        , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateAddBuilder))]
 		[Sql.Extension(PN.Oracle,     "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateAddBuilderOracle))]
 		[Sql.Extension(PN.DB2,        "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateAddBuilderDB2))]
