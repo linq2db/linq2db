@@ -281,19 +281,21 @@ namespace Tests.Linq
 		[Test]
 		public void TestQueryableCallWithParameters([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				db.Parent.Where(p => GetChildrenFiltered(db, c => c.ChildID != 5).Select(c => c.ParentID).Contains(p.ParentID)).ToList();
-			}
+			// baselines could be affected by cache
+			Query.ClearCaches();
+
+			using var db = GetDataContext(context);
+			db.Parent.Where(p => GetChildrenFiltered(db, c => c.ChildID != 5).Select(c => c.ParentID).Contains(p.ParentID)).ToList();
 		}
 
 		[Test]
 		public void TestQueryableCallWithParametersWorkaround([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				db.Parent.Where(p => GetChildrenFiltered(db, ChildFilter).Select(c => c.ParentID).Contains(p.ParentID)).ToList();
-			}
+			// baselines could be affected by cache
+			Query.ClearCaches();
+
+			using var db = GetDataContext(context);
+			db.Parent.Where(p => GetChildrenFiltered(db, ChildFilter).Select(c => c.ParentID).Contains(p.ParentID)).ToList();
 		}
 
 		[ActiveIssue(Configuration = TestProvName.AllSybase, Details = "CI: sybase image needs utf-8 enabled")]

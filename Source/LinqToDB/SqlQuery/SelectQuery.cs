@@ -7,7 +7,7 @@ using System.Threading;
 
 namespace LinqToDB.SqlQuery
 {
-	using ServiceModel;
+	using Remote;
 
 	[DebuggerDisplay("SQL = {" + nameof(SqlText) + "}")]
 	public class SelectQuery : ISqlTableSource, IQueryExtendible

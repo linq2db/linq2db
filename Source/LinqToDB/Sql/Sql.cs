@@ -1055,7 +1055,7 @@ namespace LinqToDB
 			public override ISqlExpression? GetExpression<TContext>(TContext context, IDataContext dataContext, SelectQuery query, Expression expression, Func<TContext, Expression, ColumnDescriptor?, ISqlExpression> converter)
 			{
 				var expressionStr = Expression;
-				PrepareParameterValues(expression, ref expressionStr, true, out var knownExpressions, out _);
+				PrepareParameterValues(expression, ref expressionStr, true, out var knownExpressions, true, out _);
 
 				var arr = new ISqlExpression[knownExpressions.Count];
 

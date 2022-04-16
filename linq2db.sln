@@ -108,6 +108,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NuGet", "NuGet", "{3A081B6E
 		NuGet\linq2db.Oracle.Unmanaged.nuspec = NuGet\linq2db.Oracle.Unmanaged.nuspec
 		NuGet\linq2db.png = NuGet\linq2db.png
 		NuGet\linq2db.PostgreSQL.nuspec = NuGet\linq2db.PostgreSQL.nuspec
+		NuGet\linq2db.Remote.Grpc.nuspec = NuGet\linq2db.Remote.Grpc.nuspec
+		NuGet\linq2db.Remote.Wcf.nuspec = NuGet\linq2db.Remote.Wcf.nuspec
 		NuGet\linq2db.SapHana.nuspec = NuGet\linq2db.SapHana.nuspec
 		NuGet\linq2db.SqlCe.nuspec = NuGet\linq2db.SqlCe.nuspec
 		NuGet\linq2db.SQLite.MS.nuspec = NuGet\linq2db.SQLite.MS.nuspec
@@ -122,6 +124,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NuGet", "NuGet", "{3A081B6E
 		NuGet\PackLocal.cmd = NuGet\PackLocal.cmd
 		NuGet\README.AspNet.md = NuGet\README.AspNet.md
 		NuGet\README.linq2db.md = NuGet\README.linq2db.md
+		NuGet\README.Remote.Grpc.md = NuGet\README.Remote.Grpc.md
+		NuGet\README.Remote.Wcf.md = NuGet\README.Remote.Wcf.md
 		NuGet\README.T4.md = NuGet\README.T4.md
 		NuGet\README.Tools.md = NuGet\README.Tools.md
 	EndProjectSection
@@ -261,6 +265,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "net472", "net472", "{B7AADC73-2739-4B07-B3EB-C9EF64846874}"
 	ProjectSection(SolutionItems) = preProject
 		Build\Azure\net472\access.ace.json = Build\Azure\net472\access.ace.json
+		Build\Azure\net472\access.ace.x64.json = Build\Azure\net472\access.ace.x64.json
 		Build\Azure\net472\access.mdb.json = Build\Azure\net472\access.mdb.json
 		Build\Azure\net472\sqlce.json = Build\Azure\net472\sqlce.json
 		Build\Azure\net472\sqlite.extras.json = Build\Azure\net472\sqlite.extras.json
@@ -345,6 +350,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "netcoreapp31", "netcoreapp31", "{BD5FA19A-4092-45F0-A7AF-D46666718EB5}"
 	ProjectSection(SolutionItems) = preProject
 		Build\Azure\netcoreapp31\access.ace.json = Build\Azure\netcoreapp31\access.ace.json
+		Build\Azure\netcoreapp31\access.ace.x64.json = Build\Azure\netcoreapp31\access.ace.x64.json
 		Build\Azure\netcoreapp31\access.mdb.json = Build\Azure\netcoreapp31\access.mdb.json
 		Build\Azure\netcoreapp31\db2.json = Build\Azure\netcoreapp31\db2.json
 		Build\Azure\netcoreapp31\firebird25.json = Build\Azure\netcoreapp31\firebird25.json
@@ -392,6 +398,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "net60", "net60", "{AA850554-8CD1-4231-A3E3-804B62FF3622}"
 	ProjectSection(SolutionItems) = preProject
 		Build\Azure\net60\access.ace.json = Build\Azure\net60\access.ace.json
+		Build\Azure\net60\access.ace.x64.json = Build\Azure\net60\access.ace.x64.json
 		Build\Azure\net60\access.mdb.json = Build\Azure\net60\access.mdb.json
 		Build\Azure\net60\db2.json = Build\Azure\net60\db2.json
 		Build\Azure\net60\firebird25.json = Build\Azure\net60\firebird25.json
@@ -423,6 +430,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "net60", "net60", "{AA850554
 		Build\Azure\net60\sqlserver.fts.2019.json = Build\Azure\net60\sqlserver.fts.2019.json
 		Build\Azure\net60\sybase.json = Build\Azure\net60\sybase.json
 	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LinqToDB.Remote.Wcf", "Source\LinqToDB.Remote.Wcf\LinqToDB.Remote.Wcf.csproj", "{CBFFC259-5165-4828-B9AC-15DFB769BFEC}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LinqToDB.Remote.Grpc", "Source\LinqToDB.Remote.Grpc\LinqToDB.Remote.Grpc.csproj", "{130786F1-BAD8-4390-8B4E-3FD2DEF50D56}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -479,7 +490,7 @@ Global
 		{7FEE7809-27BB-432A-8920-D0DC56F13A62}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7FEE7809-27BB-432A-8920-D0DC56F13A62}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7FEE7809-27BB-432A-8920-D0DC56F13A62}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4E3D4705-F037-4536-A45D-7AF52BB017DC}.Azure|Any CPU.ActiveCfg = Release|Any CPU
+		{4E3D4705-F037-4536-A45D-7AF52BB017DC}.Azure|Any CPU.ActiveCfg = Azure|Any CPU
 		{4E3D4705-F037-4536-A45D-7AF52BB017DC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{4E3D4705-F037-4536-A45D-7AF52BB017DC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4E3D4705-F037-4536-A45D-7AF52BB017DC}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -496,6 +507,18 @@ Global
 		{52EABB0B-0C56-43F1-B98B-6461FA841E5F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{52EABB0B-0C56-43F1-B98B-6461FA841E5F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{52EABB0B-0C56-43F1-B98B-6461FA841E5F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CBFFC259-5165-4828-B9AC-15DFB769BFEC}.Azure|Any CPU.ActiveCfg = Release|Any CPU
+		{CBFFC259-5165-4828-B9AC-15DFB769BFEC}.Azure|Any CPU.Build.0 = Release|Any CPU
+		{CBFFC259-5165-4828-B9AC-15DFB769BFEC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CBFFC259-5165-4828-B9AC-15DFB769BFEC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CBFFC259-5165-4828-B9AC-15DFB769BFEC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CBFFC259-5165-4828-B9AC-15DFB769BFEC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{130786F1-BAD8-4390-8B4E-3FD2DEF50D56}.Azure|Any CPU.ActiveCfg = Release|Any CPU
+		{130786F1-BAD8-4390-8B4E-3FD2DEF50D56}.Azure|Any CPU.Build.0 = Release|Any CPU
+		{130786F1-BAD8-4390-8B4E-3FD2DEF50D56}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{130786F1-BAD8-4390-8B4E-3FD2DEF50D56}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{130786F1-BAD8-4390-8B4E-3FD2DEF50D56}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{130786F1-BAD8-4390-8B4E-3FD2DEF50D56}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -537,6 +560,8 @@ Global
 		{BD5FA19A-4092-45F0-A7AF-D46666718EB5} = {51E64464-E257-4984-A4D5-BF9FF8B7DF1D}
 		{DAD073A0-C4D2-4C92-AB6D-F8162DB2D5D3} = {C937AC8E-2714-4850-A1EA-1710D980DF0B}
 		{AA850554-8CD1-4231-A3E3-804B62FF3622} = {51E64464-E257-4984-A4D5-BF9FF8B7DF1D}
+		{CBFFC259-5165-4828-B9AC-15DFB769BFEC} = {AF93451E-198C-4A94-8EB4-C330D886E102}
+		{130786F1-BAD8-4390-8B4E-3FD2DEF50D56} = {AF93451E-198C-4A94-8EB4-C330D886E102}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {15BBD7CE-1C8E-4407-9DCF-674982CEB3F7}

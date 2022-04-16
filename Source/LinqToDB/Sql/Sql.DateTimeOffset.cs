@@ -125,6 +125,7 @@ namespace LinqToDB
 				_                           => throw new InvalidOperationException(),
 			};
 		}
+
 		#endregion
 
 		#region DateDiff

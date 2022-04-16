@@ -1458,10 +1458,10 @@ namespace Tests.DataProvider
 					MiddleName = "X",
 					Gender     = "M"
 				};
-				
+
 				var ret = db.ExecuteProc($"[{dbName}]..[Person_Insert]", par);
 				db.GetTable<Person>().Delete(p => p.FirstName == par.FirstName);
-				
+
 				Assert.That(ret, Is.GreaterThan(0));
 			}
 		}
@@ -1502,10 +1502,10 @@ namespace Tests.DataProvider
 					MiddleName = "X",
 					Gender     = "M"
 				};
-				
+
 				var ret = db.ExecuteProc<int>($"[{dbName}]..[Person_Insert]", par);
 				db.GetTable<Person>().Delete(p => p.FirstName == par.FirstName);
-				
+
 				Assert.That(ret, Is.GreaterThan(0));
 			}
 		}
@@ -1527,7 +1527,7 @@ namespace Tests.DataProvider
 
 				var ret = await db.ExecuteProcAsync($"[{dbName}]..[Person_Insert]", par);
 				db.GetTable<Person>().Delete(p => p.FirstName == par.FirstName);
-			
+
 				Assert.That(ret, Is.GreaterThan(0));
 			}
 		}
@@ -1622,7 +1622,7 @@ namespace Tests.DataProvider
 		[Table("Issue1613")]
 		private class Issue1613Table
 		{
-			[Column("dt"), Nullable] 
+			[Column("dt"), Nullable]
 			public DateTimeOffset? DateTimeOffset { get; set; }
 		}
 
@@ -1644,7 +1644,7 @@ namespace Tests.DataProvider
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(GenerateData()))
-			{ 
+			{
 
 				var query1 = table.GroupBy(x => x.DateTimeOffset).Select(g => g.Key).ToList();
 				var query2 = table.Select(r => r.DateTimeOffset).ToList();
@@ -1654,13 +1654,13 @@ namespace Tests.DataProvider
 				Assert.AreEqual(query1, query2);
 			}
 		}
-		
+
 		[Test]
 		public void Issue1613Test2([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(GenerateData()))
-			{ 
+			{
 
 				var query1 = table.GroupBy(x => x.DateTimeOffset!.Value.Date).Select(g => g.Key).ToList();
 				var query2 = table.Select(r => r.DateTimeOffset!.Value.Date).ToList();
