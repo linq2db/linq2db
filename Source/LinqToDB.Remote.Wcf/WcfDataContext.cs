@@ -2,7 +2,7 @@
 using System.ServiceModel;
 using System.ServiceModel.Channels;
 
-namespace LinqToDB.Remote.WCF
+namespace LinqToDB.Remote.Wcf
 {
 	/// <summary>
 	/// WCF-based remote data context implementation.

@@ -2,7 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace LinqToDB.Remote.WCF
+namespace LinqToDB.Remote.Wcf
 {
 	[ServiceContract]
 	public interface IWcfLinqService

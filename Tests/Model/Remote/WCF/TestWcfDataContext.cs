@@ -3,9 +3,9 @@ using System;
 using System.ServiceModel;
 using System.Threading.Tasks;
 using LinqToDB;
-using LinqToDB.Remote.WCF;
+using LinqToDB.Remote.Wcf;
 
-namespace Tests.Model.Remote.WCF
+namespace Tests.Model.Remote.Wcf
 {
 	public class TestWcfDataContext : WcfDataContext, ITestDataContext
 	{
@@ -22,7 +22,7 @@ namespace Tests.Model.Remote.WCF
 				ReceiveTimeout         = new TimeSpan(00, 10, 00),
 				SendTimeout            = new TimeSpan(00, 10, 00),
 			},
-			new EndpointAddress("net.tcp://localhost:" + port + "/LinqOverWCF"))
+			new EndpointAddress("net.tcp://localhost:" + port + "/LinqOverWcf"))
 		{
 			((NetTcpBinding)Binding!).ReaderQuotas.MaxStringContentLength = 1000000;
 			_onDispose = onDispose;

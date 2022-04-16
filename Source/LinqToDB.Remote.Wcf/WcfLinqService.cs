@@ -2,7 +2,7 @@
 using System.ServiceModel;
 using System.Threading.Tasks;
 
-namespace LinqToDB.Remote.WCF
+namespace LinqToDB.Remote.Wcf
 {
 	[ServiceBehavior(InstanceContextMode = InstanceContextMode.Single, ConcurrencyMode = ConcurrencyMode.Multiple)]
 	public class WcfLinqService : IWcfLinqService

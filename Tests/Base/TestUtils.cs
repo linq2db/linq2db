@@ -14,7 +14,7 @@ namespace Tests
 {
 	using Model;
 #if NETFRAMEWORK
-	using Model.Remote.WCF;
+	using Model.Remote.Wcf;
 #else
 	using Model.Remote.Grpc;
 #endif

@@ -8,7 +8,7 @@ namespace Tests.Remote
 	using LinqToDB.Mapping;
 	using LinqToDB.Remote;
 
-	using LinqToDB.Remote.WCF;
+	using LinqToDB.Remote.Wcf;
 
 	internal class TestWcfLinqService : WcfLinqService
 	{
