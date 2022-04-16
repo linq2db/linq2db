@@ -7,7 +7,7 @@ using System.Linq;
 namespace LinqToDB.SqlQuery
 {
 	using Common;
-	using ServiceModel;
+	using Remote;
 
 	[DebuggerDisplay("SQL = {" + nameof(DebugSqlText) + "}")]
 	public abstract class SqlStatement : IQueryElement, ISqlExpressionWalkable, IQueryExtendible

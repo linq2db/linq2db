@@ -14,7 +14,7 @@ Action AfterGenerateLinqToDBModel  = () => {};
 public Func<Table,MemberBase> GenerateProviderSpecificTable = _ => null;
 public Func<Parameter, bool>  GenerateProcedureDbType       = _ => false;
 
-static bool GenerateLinqToDbConnectionOptionsConstructors = true;
+static bool GenerateLinqToDBConnectionOptionsConstructors = true;
 bool   GenerateObsoleteAttributeForAliases                = false;
 bool   GenerateFindExtensions                             = true;
 bool   IsCompactColumns                                   = true;
@@ -47,10 +47,10 @@ private static IEnumerable<Method> GetConstructorsImpl(string defaultConfigurati
 		yield return new Method(null, name) { AfterSignature = { ": base(\"" + defaultConfiguration + "\")" } };
 	yield return new Method(null, name, new Func<string>[] { () => "string configuration" }) { AfterSignature = { ": base(configuration)" } };
 
-	if (GenerateLinqToDbConnectionOptionsConstructors)
+	if (GenerateLinqToDBConnectionOptionsConstructors)
 	{
-		yield return new Method(null, name, new Func<string>[] { () => "LinqToDbConnectionOptions options" }) { AfterSignature = { ": base(options)" } };
-		yield return new Method(null, name, new Func<string>[] { () => string.Format("LinqToDbConnectionOptions<{0}> options", name) }) { AfterSignature = { ": base(options)" } };
+		yield return new Method(null, name, new Func<string>[] { () => "LinqToDBConnectionOptions options" }) { AfterSignature = { ": base(options)" } };
+		yield return new Method(null, name, new Func<string>[] { () => string.Format("LinqToDBConnectionOptions<{0}> options", name) }) { AfterSignature = { ": base(options)" } };
 	}
 }
 

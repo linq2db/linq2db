@@ -927,7 +927,7 @@ namespace LinqToDB.Data
 
 			InitCommand();
 
-			var commandResult = await DataConnection.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+			var commandResult = await DataConnection.ExecuteNonQueryDataAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 			stopwatch.Stop();
 			if (DataConnection.TraceSwitchConnection.TraceInfo)

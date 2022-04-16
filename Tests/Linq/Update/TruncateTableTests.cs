@@ -70,6 +70,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		[Retry(3)] // retry as attempt to fix sporadic test failures for Oracle 11g on CI
 		public void TruncateIdentityNoResetTest([DataSources] string context)
 		{
 			using var db = GetDataContext(context);

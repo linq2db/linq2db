@@ -5,12 +5,12 @@ namespace LinqToDB.AspNet.Logging
 {
 	using Data;
 
-	public class LinqToDbLoggerFactoryAdapter
+	public class LinqToDBLoggerFactoryAdapter
 	{
 		private readonly ILoggerFactory          _loggerFactory;
 		private readonly ILogger<DataConnection> _logger;
 
-		public LinqToDbLoggerFactoryAdapter(ILoggerFactory loggerFactory)
+		public LinqToDBLoggerFactoryAdapter(ILoggerFactory loggerFactory)
 		{
 			_loggerFactory = loggerFactory;
 			_logger        = _loggerFactory.CreateLogger<DataConnection>();

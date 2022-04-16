@@ -20,11 +20,7 @@ using LinqToDB.Reflection;
 using LinqToDB.Tools;
 using LinqToDB.Tools.Comparers;
 
-#if NET472
-using System.ServiceModel;
-using System.ServiceModel.Description;
-using LinqToDB.ServiceModel;
-#endif
+using Tests.Remote.ServerContainer;
 
 using NUnit.Framework;
 using NUnit.Framework.Internal;
@@ -246,7 +242,7 @@ namespace Tests
 			}
 
 #if NET472
-			LinqService.TypeResolver = str =>
+			LinqToDB.Remote.LinqService.TypeResolver = str =>
 			{
 				return str switch
 				{
@@ -343,61 +339,14 @@ namespace Tests
 			return fileName;
 		}
 
-#if NET472
-		const           int          IP = 22654;
-		static          bool         _isHostOpen;
-		static          TestLinqService? _service;
-		static readonly object       _syncRoot = new ();
+#if NETFRAMEWORK
+		public static          IServerContainer  _serverContainer  = new WcfServerContainer();
+#else
+		public static          IServerContainer  _serverContainer = new GrpcServerContainer();
 #endif
-
-		static void OpenHost(MappingSchema? ms)
-		{
-#if NET472
-			if (_isHostOpen)
-			{
-				_service!.MappingSchema = ms;
-				return;
-			}
-
-			ServiceHost host;
-
-			lock (_syncRoot)
-			{
-				if (_isHostOpen)
-				{
-					_service!.MappingSchema = ms;
-					return;
-				}
-
-				host        = new ServiceHost(_service = new TestLinqService(ms, null, false) { AllowUpdates = true }, new Uri("net.tcp://localhost:" + (IP + TestExternals.RunID)));
-				_isHostOpen = true;
-			}
-
-			host.Description.Behaviors.Add(new ServiceMetadataBehavior());
-			host.Description.Behaviors.Find<ServiceDebugBehavior>().IncludeExceptionDetailInFaults = true;
-			host.AddServiceEndpoint(typeof(IMetadataExchange), MetadataExchangeBindings.CreateMexTcpBinding(), "mex");
-			host.AddServiceEndpoint(
-				typeof(ILinqService),
-				new NetTcpBinding(SecurityMode.None)
-				{
-					MaxReceivedMessageSize = 10000000,
-					MaxBufferPoolSize      = 10000000,
-					MaxBufferSize          = 10000000,
-					CloseTimeout           = new TimeSpan(00, 01, 00),
-					OpenTimeout            = new TimeSpan(00, 01, 00),
-					ReceiveTimeout         = new TimeSpan(00, 10, 00),
-					SendTimeout            = new TimeSpan(00, 10, 00),
-				},
-				"LinqOverWCF");
-
-			host.Open();
-
-			TestExternals.Log($"host opened, Address : {host.BaseAddresses[0]}");
-#endif
-		}
 
 		public static readonly ISet<string> UserProviders;
-		public static readonly string?      DefaultProvider;
+		public static readonly string?         DefaultProvider;
 		public static readonly ISet<string> SkipCategories;
 
 		public static readonly IReadOnlyList<string> Providers = CustomizationSupport.Interceptor.GetSupportedProviders(new List<string>
@@ -423,6 +372,8 @@ namespace Tests
 			TestProvName.AllSapHana
 		}.SplitAll()).ToList();
 
+		private const string LinqServiceSuffix = ".LinqService";
+
 		protected ITestDataContext GetDataContext(
 			string         configuration,
 			MappingSchema? ms                       = null,
@@ -430,55 +381,23 @@ namespace Tests
 			IInterceptor?  interceptor              = null,
 			bool           suppressSequentialAccess = false)
 		{
-			if (configuration.EndsWith(".LinqService"))
+			if (!configuration.EndsWith(LinqServiceSuffix))
 			{
-#if NET472
-				OpenHost(ms);
-
-				var str = configuration.Substring(0, configuration.Length - ".LinqService".Length);
-
-				RemoteDataContextBase dx;
-
-				if (testLinqService)
-					dx = new ServiceModel.TestLinqServiceDataContext(new TestLinqService(ms, interceptor, suppressSequentialAccess) { AllowUpdates = true }) { Configuration = str };
-				else
-				{
-					_service!.SuppressSequentialAccess = suppressSequentialAccess;
-					if (interceptor != null)
-						_service!.AddInterceptor(interceptor);
-
-					dx = new TestServiceModelDataContext(
-						IP + TestExternals.RunID,
-						() =>
-						{
-							_service!.SuppressSequentialAccess = false;
-							if (interceptor != null)
-								_service!.RemoveInterceptor();
-						}) { Configuration = str };
-				}
-
-				Debug.WriteLine(((IDataContext)dx).ContextID, "Provider ");
-
-				if (ms != null)
-					dx.MappingSchema = MappingSchema.CombineSchemas(dx.MappingSchema, ms);
-
-				return (ITestDataContext)dx;
-#else
-				configuration = configuration.Substring(0, configuration.Length - ".LinqService".Length);
-#endif
+				return GetDataConnection(configuration, ms, interceptor, suppressSequentialAccess: suppressSequentialAccess);
 			}
 
-			return GetDataConnection(configuration, ms, interceptor, suppressSequentialAccess: suppressSequentialAccess);
+			var str = configuration.Substring(0, configuration.Length - LinqServiceSuffix.Length);
+			return _serverContainer.Prepare(ms, interceptor, suppressSequentialAccess, str);
 		}
 
 		protected TestDataConnection GetDataConnection(
-			string         configuration,
-			MappingSchema? ms                       = null,
-			IInterceptor?  interceptor              = null,
-			IRetryPolicy?  retryPolicy              = null,
-			bool           suppressSequentialAccess = false)
+				string         configuration,
+				MappingSchema? ms                       = null,
+				IInterceptor?  interceptor              = null,
+				IRetryPolicy?  retryPolicy              = null,
+				bool           suppressSequentialAccess = false)
 		{
-			if (configuration.EndsWith(".LinqService"))
+			if (configuration.EndsWith(LinqServiceSuffix))
 			{
 				throw new InvalidOperationException($"Call {nameof(GetDataContext)} for remote context creation");
 			}
@@ -567,6 +486,7 @@ namespace Tests
 			{
 				if (_types == null)
 					using (new DisableLogging())
+					using (new DisableBaseline("Default Database"))
 					using (var db = new TestDataConnection())
 						_types = db.Types.ToList();
 
@@ -581,6 +501,7 @@ namespace Tests
 			{
 				if (_types2 == null)
 					using (new DisableLogging())
+					using (new DisableBaseline("Default Database"))
 					using (var db = new TestDataConnection())
 						_types2 = db.Types2.ToList();
 
@@ -598,6 +519,7 @@ namespace Tests
 				if (_person == null)
 				{
 					using (new DisableLogging())
+					using (new DisableBaseline("Default Database"))
 					using (var db = new TestDataConnection())
 						_person = db.Person.ToList();
 
@@ -617,6 +539,7 @@ namespace Tests
 				if (_patient == null)
 				{
 					using (new DisableLogging())
+					using (new DisableBaseline("Default Database"))
 					using (var db = new TestDataConnection())
 						_patient = db.Patient.ToList();
 
@@ -636,6 +559,7 @@ namespace Tests
 				if (_doctor == null)
 				{
 					using (new DisableLogging())
+					using (new DisableBaseline("Default Database"))
 					using (var db = new TestDataConnection())
 						_doctor = db.Doctor.ToList();
 				}
@@ -644,7 +568,7 @@ namespace Tests
 			}
 		}
 
-		#region Parent/Child Model
+#region Parent/Child Model
 
 		private   List<Parent>?      _parent;
 		protected IEnumerable<Parent> Parent
@@ -653,6 +577,7 @@ namespace Tests
 			{
 				if (_parent == null)
 					using (new DisableLogging())
+					using (new DisableBaseline("Default Database"))
 					using (var db = new TestDataConnection())
 					{
 						_parent = db.Parent.ToList();
@@ -744,6 +669,7 @@ namespace Tests
 			{
 				if (_child == null)
 					using (new DisableLogging())
+					using (new DisableBaseline("Default Database"))
 					using (var db = new TestDataConnection())
 					{
 						db.Child.Delete(c => c.ParentID >= 1000);
@@ -771,6 +697,7 @@ namespace Tests
 			{
 				if (_grandChild == null)
 					using (new DisableLogging())
+					using (new DisableBaseline("Default Database"))
 					using (var db = new TestDataConnection())
 					{
 						_grandChild = db.GrandChild.ToList();
@@ -791,6 +718,7 @@ namespace Tests
 			{
 				if (_grandChild1 == null)
 					using (new DisableLogging())
+					using (new DisableBaseline("Default Database"))
 					using (var db = new TestDataConnection())
 					{
 						_grandChild1 = db.GrandChild1.ToList();
@@ -806,9 +734,9 @@ namespace Tests
 			}
 		}
 
-		#endregion
+#endregion
 
-		#region Inheritance Parent/Child Model
+#region Inheritance Parent/Child Model
 
 		private   List<InheritanceParentBase>? _inheritanceParent;
 		protected List<InheritanceParentBase>   InheritanceParent
@@ -818,6 +746,7 @@ namespace Tests
 				if (_inheritanceParent == null)
 				{
 					using (new DisableLogging())
+					using (new DisableBaseline("Default Database"))
 					using (var db = new TestDataConnection())
 						_inheritanceParent = db.InheritanceParent.ToList();
 				}
@@ -834,6 +763,7 @@ namespace Tests
 				if (_inheritanceChild == null)
 				{
 					using (new DisableLogging())
+					using (new DisableBaseline("Default Database"))
 					using (var db = new TestDataConnection())
 						_inheritanceChild = db.InheritanceChild.LoadWith(_ => _.Parent).ToList();
 				}
@@ -842,9 +772,9 @@ namespace Tests
 			}
 		}
 
-		#endregion
+#endregion
 
-		#region Northwind
+#region Northwind
 
 		public TestBaseNorthwind GetNorthwindAsList(string context)
 		{
@@ -867,6 +797,7 @@ namespace Tests
 				{
 					if (_category == null)
 						using (new DisableLogging())
+						using (new DisableBaseline("Default Database"))
 						using (var db = new NorthwindDB(_context))
 							_category = db.Category.ToList();
 					return _category;
@@ -881,6 +812,7 @@ namespace Tests
 					if (_customer == null)
 					{
 						using (new DisableLogging())
+						using (new DisableBaseline("Default Database"))
 						using (var db = new NorthwindDB(_context))
 							_customer = db.Customer.ToList();
 
@@ -900,6 +832,7 @@ namespace Tests
 					if (_employee == null)
 					{
 						using (new DisableLogging())
+						using (new DisableBaseline("Default Database"))
 						using (var db = new NorthwindDB(_context))
 						{
 							_employee = db.Employee.ToList();
@@ -923,6 +856,7 @@ namespace Tests
 				{
 					if (_employeeTerritory == null)
 						using (new DisableLogging())
+						using (new DisableBaseline("Default Database"))
 						using (var db = new NorthwindDB(_context))
 							_employeeTerritory = db.EmployeeTerritory.ToList();
 					return _employeeTerritory;
@@ -936,6 +870,7 @@ namespace Tests
 				{
 					if (_orderDetail == null)
 						using (new DisableLogging())
+						using (new DisableBaseline("Default Database"))
 						using (var db = new NorthwindDB(_context))
 							_orderDetail = db.OrderDetail.ToList();
 					return _orderDetail;
@@ -950,6 +885,7 @@ namespace Tests
 					if (_order == null)
 					{
 						using (new DisableLogging())
+						using (new DisableBaseline("Default Database"))
 						using (var db = new NorthwindDB(_context))
 							_order = db.Order.ToList();
 
@@ -971,6 +907,7 @@ namespace Tests
 				{
 					if (_product == null)
 						using (new DisableLogging())
+						using (new DisableBaseline("Default Database"))
 						using (var db = new NorthwindDB(_context))
 							_product = db.Product.ToList();
 
@@ -991,6 +928,7 @@ namespace Tests
 				{
 					if (_region == null)
 						using (new DisableLogging())
+						using (new DisableBaseline("Default Database"))
 						using (var db = new NorthwindDB(_context))
 							_region = db.Region.ToList();
 					return _region;
@@ -1004,6 +942,7 @@ namespace Tests
 				{
 					if (_shipper == null)
 						using (new DisableLogging())
+						using (new DisableBaseline("Default Database"))
 						using (var db = new NorthwindDB(_context))
 							_shipper = db.Shipper.ToList();
 					return _shipper;
@@ -1017,6 +956,7 @@ namespace Tests
 				{
 					if (_supplier == null)
 						using (new DisableLogging())
+						using (new DisableBaseline("Default Database"))
 						using (var db = new NorthwindDB(_context))
 							_supplier = db.Supplier.ToList();
 					return _supplier;
@@ -1030,6 +970,7 @@ namespace Tests
 				{
 					if (_territory == null)
 						using (new DisableLogging())
+						using (new DisableBaseline("Default Database"))
 						using (var db = new NorthwindDB(_context))
 							_territory = db.Territory.ToList();
 					return _territory;
@@ -1037,7 +978,7 @@ namespace Tests
 			}
 		}
 
-		#endregion
+#endregion
 
 		protected IEnumerable<LinqDataTypes2> AdjustExpectedData(ITestDataContext db, IEnumerable<LinqDataTypes2> data)
 		{
@@ -1284,6 +1225,7 @@ namespace Tests
 							{
 								var newCall = LinqToDB.Common.TypeHelper.MakeMethodCall(Methods.Queryable.ToArray, mc);
 								using (new DisableLogging())
+								using (new DisableBaseline("test infrastructure"))
 								{
 									var items = newCall.EvaluateExpression();
 									itemsExpression = Expression.Constant(items, entityType.MakeArrayType());
@@ -1453,7 +1395,7 @@ namespace Tests
 				if (!_dic.TryGetValue(context, out var list))
 				{
 					using (new DisableLogging())
-					using (new DisableLogging())
+					using (new DisableBaseline("Test Cache"))
 					using (var db = new DataConnection(context))
 					{
 						list = db.GetTable<T>().ToList();
