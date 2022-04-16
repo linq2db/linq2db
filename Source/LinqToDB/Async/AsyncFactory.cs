@@ -26,8 +26,7 @@ namespace LinqToDB.Async
 		private static readonly Type[] _tokenParams            = new Type[] { typeof(CancellationToken) };
 		private static readonly Type[] _beginTransactionParams = new Type[] { typeof(IsolationLevel)   , typeof(CancellationToken) };
 
-		private static readonly ConcurrentDictionary<Type, Func<DbConnection, IAsyncDbConnection>> _connectionFactories = new ();
-
+		private static readonly ConcurrentDictionary<Type, Func<DbConnection, IAsyncDbConnection>>   _connectionFactories  = new ();
 		private static readonly ConcurrentDictionary<Type, Func<DbTransaction, IAsyncDbTransaction>> _transactionFactories = new ();
 
 #if !NATIVE_ASYNC

@@ -1331,7 +1331,7 @@ namespace LinqToDB.Linq.Builder
 			return c.ToSql(expression);
 		}
 
-		readonly HashSet<Expression> _convertedPredicates = new ();
+		readonly ISet<Expression> _convertedPredicates = new HashSet<Expression>();
 
 		#endregion
 

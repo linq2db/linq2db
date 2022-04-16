@@ -85,7 +85,7 @@ namespace LinqToDB.Expressions
 			public readonly IReadOnlyDictionary<Expression, QueryableAccessor>?       QueryableAccessorDic;
 			public readonly bool                                                      CompareConstantValues;
 
-			public HashSet<Expression>?          Visited;
+			public ISet<Expression>?             Visited;
 			public Dictionary<MemberInfo, bool>? MemberCompareCache;
 
 			public void Reset()
@@ -427,7 +427,7 @@ namespace LinqToDB.Expressions
 				var eq1 = queryable.Expression;
 				var eq2 = ((IQueryable)expr2.Value).Expression;
 
-				if ((info.Visited ??= new()).Add(eq1))
+				if ((info.Visited ??= new HashSet<Expression>()).Add(eq1))
 					return eq1.EqualsTo(eq2, info);
 			}
 

@@ -123,7 +123,7 @@ namespace LinqToDB.SqlQuery
 
 		#region Helpers
 
-		public void ForEachTable<TContext>(TContext context, Action<TContext, SqlTableSource> action, HashSet<SelectQuery> visitedQueries)
+		public void ForEachTable<TContext>(TContext context, Action<TContext, SqlTableSource> action, ISet<SelectQuery> visitedQueries)
 		{
 			if (!visitedQueries.Add(this))
 				return;

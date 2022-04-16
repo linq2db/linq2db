@@ -15,7 +15,7 @@ namespace LinqToDB.SqlProvider
 			new(Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default);
 
 		private List<SqlParameter>? _actualParameters;
-		private HashSet<string>?    _usedParameterNames;
+		private ISet<string>?       _usedParameterNames;
 
 		private Dictionary<(DbDataType, string, object?), SqlParameter>? _dynamicParameters;
 

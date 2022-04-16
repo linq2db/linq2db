@@ -148,7 +148,7 @@ namespace LinqToDB.Linq
 		internal object GetConvertedEnum(Type valueType, object value)
 		{
 			if (_enumConverters == null)
-				_enumConverters = new ConcurrentDictionary<Type, Func<object, object>>();
+				_enumConverters = new ();
 
 			if (!_enumConverters.TryGetValue(valueType, out var converter))
 			{

@@ -24,7 +24,7 @@ namespace LinqToDB.Tools.EntityServices
 	{
 		public EntityMap(IDataContext dataContext)
 		{
-			_entities = new ConcurrentDictionary<T,EntityMapEntry<T>>(dataContext.GetKeyEqualityComparer<T>());
+			_entities = new (dataContext.GetKeyEqualityComparer<T>());
 		}
 
 		volatile ConcurrentDictionary<T,EntityMapEntry<T>> _entities;
@@ -149,7 +149,7 @@ namespace LinqToDB.Tools.EntityServices
 			if (_keyComparers == null)
 				lock (this)
 					if (_keyComparers == null)
-						_keyComparers = new ConcurrentDictionary<Type,IKeyComparer>();
+						_keyComparers = new ();
 
 			var keyComparer = _keyComparers.GetOrAdd(
 				key.GetType(),

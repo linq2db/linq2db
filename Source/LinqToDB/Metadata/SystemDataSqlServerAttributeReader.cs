@@ -49,7 +49,7 @@ namespace LinqToDB.Metadata
 			return Array<T>.Empty;
 		}
 
-		static readonly ConcurrentDictionary<MemberInfo,object> _cache = new ConcurrentDictionary<MemberInfo,object>();
+		static readonly ConcurrentDictionary<MemberInfo,object> _cache = new ();
 
 		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo, bool inherit)
 			where T : Attribute

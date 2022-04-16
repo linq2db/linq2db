@@ -97,13 +97,13 @@ namespace LinqToDB.SqlQuery
 				PrevAliasContext = prevAliasContext;
 			}
 
-			public HashSet<SqlParameter>?   ParamsVisited;
-			public HashSet<SqlTableSource>? TablesVisited;
-			public HashSet<string>?         AllParameterNames;
+			public ISet<SqlParameter>?   ParamsVisited;
+			public ISet<SqlTableSource>? TablesVisited;
+			public ISet<string>?         AllParameterNames;
 
 			public readonly AliasesContext? PrevAliasContext;
 			public readonly AliasesContext  NewAliases = new ();
-			public readonly HashSet<string> AllAliases = new (StringComparer.OrdinalIgnoreCase);
+			public readonly ISet<string>    AllAliases = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 		}
 
 		public static void PrepareQueryAndAliases(SqlStatement statement, AliasesContext? prevAliasContext, out AliasesContext newAliasContext)
@@ -133,7 +133,7 @@ namespace LinqToDB.SqlQuery
 						var alias = ((SqlParameter)expr).Name;
 						if (!string.IsNullOrEmpty(alias))
 						{
-							context.AllParameterNames ??= new (StringComparer.OrdinalIgnoreCase);
+							context.AllParameterNames ??= new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 							context.AllParameterNames.Add(alias!);
 						}
 					}
@@ -218,7 +218,7 @@ namespace LinqToDB.SqlQuery
 					case QueryElementType.SqlParameter:
 						{
 							var p = (SqlParameter)expr;
-							if ((context.ParamsVisited ??= new ()).Add(p))
+							if ((context.ParamsVisited ??= new HashSet<SqlParameter>()).Add(p))
 							{
 								p.Name = NormalizeParameterName(p.Name);
 							}
@@ -230,7 +230,7 @@ namespace LinqToDB.SqlQuery
 					case QueryElementType.TableSource:
 						{
 							var table = (SqlTableSource)expr;
-							if ((context.TablesVisited ??= new()).Add(table))
+							if ((context.TablesVisited ??= new HashSet<SqlTableSource>()).Add(table))
 							{
 								if (table.Source is SqlTable sqlTable)
 									context.AllAliases.Add(sqlTable.PhysicalName!);

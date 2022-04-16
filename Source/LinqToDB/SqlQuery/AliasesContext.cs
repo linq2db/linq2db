@@ -34,9 +34,9 @@ namespace LinqToDB.SqlQuery
 			return _aliasesSet;
 		}
 
-		public HashSet<string> GetUsedTableAliases()
+		public ISet<string> GetUsedTableAliases()
 		{
-			return new(_aliasesSet.Where(e => e.ElementType == QueryElementType.TableSource)
+			return new HashSet<string>(_aliasesSet.Where(e => e.ElementType == QueryElementType.TableSource)
 					.Select(e => ((SqlTableSource)e).Alias!),
 				StringComparer.OrdinalIgnoreCase);
 

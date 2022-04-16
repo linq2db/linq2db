@@ -91,7 +91,7 @@ namespace LinqToDB.SqlQuery
 
 		public List<SqlJoinedTable> Joins { get; } = new List<SqlJoinedTable>();
 
-		public void ForEach<TContext>(TContext context, Action<TContext, SqlTableSource> action, HashSet<SelectQuery> visitedQueries)
+		public void ForEach<TContext>(TContext context, Action<TContext, SqlTableSource> action, ISet<SelectQuery> visitedQueries)
 		{
 			foreach (var join in Joins)
 				join.Table.ForEach(context, action, visitedQueries);

@@ -11,10 +11,10 @@ namespace LinqToDB.SqlProvider
 	class JoinOptimizer
 	{
 		Dictionary<SqlSearchCondition,SqlSearchCondition>?                      _additionalFilter;
-		Dictionary<VirtualField,HashSet<Tuple<int,VirtualField>>>?              _equalityMap;
+		Dictionary<VirtualField,ISet<Tuple<int,VirtualField>>>?                 _equalityMap;
 		Dictionary<Tuple<SqlTableSource?,SqlTableSource>,List<FoundEquality>?>? _fieldPairCache;
 		Dictionary<int,List<VirtualField[]>?>?                                  _keysCache;
-		HashSet<int>?                                                           _removedSources;
+		ISet<int>?                                                              _removedSources;
 		Dictionary<VirtualField,VirtualField>?                                  _replaceMap;
 		SelectQuery                                                              _selectQuery = null!;
 		SqlStatement                                                            _statement = null!;
@@ -71,7 +71,7 @@ namespace LinqToDB.SqlProvider
 
 		private class IsDependedContext
 		{
-			public IsDependedContext(JoinOptimizer optimizer, HashSet<int> testedSources)
+			public IsDependedContext(JoinOptimizer optimizer, ISet<int> testedSources)
 			{
 				Optimizer     = optimizer;
 				TestedSources = testedSources;
@@ -80,7 +80,7 @@ namespace LinqToDB.SqlProvider
 			public bool Dependent;
 
 			public readonly JoinOptimizer Optimizer;
-			public readonly HashSet<int>  TestedSources;
+			public readonly ISet<int>     TestedSources;
 		}
 
 		bool IsDepended(SqlJoinedTable join, SqlJoinedTable toIgnore)
@@ -133,7 +133,7 @@ namespace LinqToDB.SqlProvider
 
 		private class IsDependedExcludeJoinsContext
 		{
-			public IsDependedExcludeJoinsContext(JoinOptimizer optimizer, HashSet<int> testedSources)
+			public IsDependedExcludeJoinsContext(JoinOptimizer optimizer, ISet<int> testedSources)
 			{
 				Optimizer     = optimizer;
 				TestedSources = testedSources;
@@ -142,10 +142,10 @@ namespace LinqToDB.SqlProvider
 			public bool Dependent;
 
 			public readonly JoinOptimizer Optimizer;
-			public readonly HashSet<int>  TestedSources;
+			public readonly ISet<int>     TestedSources;
 		}
 
-		bool IsDependedExcludeJoins(HashSet<int> testedSources)
+		bool IsDependedExcludeJoins(ISet<int> testedSources)
 		{
 			static bool CheckDependency(IsDependedExcludeJoinsContext context, IQueryElement e)
 			{
@@ -183,14 +183,14 @@ namespace LinqToDB.SqlProvider
 
 		private class HasDependencyWithParentContext
 		{
-			public HasDependencyWithParentContext(SqlJoinedTable child, HashSet<int> sources)
+			public HasDependencyWithParentContext(SqlJoinedTable child, ISet<int> sources)
 			{
 				Child   = child;
 				Sources = sources;
 			}
 
 			public readonly SqlJoinedTable Child;
-			public readonly HashSet<int>   Sources;
+			public readonly ISet<int>      Sources;
 
 			public bool Dependent;
 		}
@@ -224,7 +224,7 @@ namespace LinqToDB.SqlProvider
 
 		private class IsDependedOnJoinContext
 		{
-			public IsDependedOnJoinContext(JoinOptimizer optimizer, SqlTableSource table, HashSet<int> testedSources, int currentSourceId)
+			public IsDependedOnJoinContext(JoinOptimizer optimizer, SqlTableSource table, ISet<int> testedSources, int currentSourceId)
 			{
 				Optimizer       = optimizer;
 				Table           = table;
@@ -236,12 +236,12 @@ namespace LinqToDB.SqlProvider
 
 			public readonly JoinOptimizer  Optimizer;
 			public readonly SqlTableSource Table;
-			public readonly HashSet<int>   TestedSources;
+			public readonly ISet<int>      TestedSources;
 			public readonly int            CurrentSourceId;
 		}
 
 
-		bool IsDependedOnJoin(SqlTableSource table, SqlJoinedTable testedJoin, HashSet<int> testedSources)
+		bool IsDependedOnJoin(SqlTableSource table, SqlJoinedTable testedJoin, ISet<int> testedSources)
 		{
 			var ctx = new IsDependedOnJoinContext(this, table, testedSources, testedJoin.Table.SourceID);
 
@@ -272,7 +272,7 @@ namespace LinqToDB.SqlProvider
 		}
 
 		bool CanWeReplaceFieldInternal(
-			SqlTableSource? table, VirtualField field, HashSet<int> excludeSourceIds, int testedSourceIndex, HashSet<VirtualField> visited)
+			SqlTableSource? table, VirtualField field, ISet<int> excludeSourceIds, int testedSourceIndex, ISet<VirtualField> visited)
 		{
 			if (visited.Contains(field))
 				return false;
@@ -297,7 +297,7 @@ namespace LinqToDB.SqlProvider
 			return false;
 		}
 
-		bool CanWeReplaceField(SqlTableSource? table, VirtualField field, HashSet<int> excludeSourceId, int testedSourceId)
+		bool CanWeReplaceField(SqlTableSource? table, VirtualField field, ISet<int> excludeSourceId, int testedSourceId)
 		{
 			var visited = new HashSet<VirtualField>();
 
@@ -322,7 +322,7 @@ namespace LinqToDB.SqlProvider
 			return newField;
 		}
 
-		VirtualField? MapToSourceInternal(SqlTableSource fromTable, VirtualField field, int sourceId, HashSet<VirtualField> visited)
+		VirtualField? MapToSourceInternal(SqlTableSource fromTable, VirtualField field, int sourceId, ISet<VirtualField> visited)
 		{
 			if (visited.Contains(field))
 				return null;
@@ -411,7 +411,7 @@ namespace LinqToDB.SqlProvider
 		void AddEqualFields(VirtualField field1, VirtualField field2, int levelSourceId)
 		{
 			if (_equalityMap == null)
-				_equalityMap = new Dictionary<VirtualField, HashSet<Tuple<int, VirtualField>>>();
+				_equalityMap = new Dictionary<VirtualField, ISet<Tuple<int, VirtualField>>>();
 
 			if (!_equalityMap.TryGetValue(field1, out var set))
 			{
@@ -994,8 +994,8 @@ namespace LinqToDB.SqlProvider
 					return false;
 			}
 
-			HashSet<VirtualField>  foundFields  = new HashSet<VirtualField>(found.Select(f => f.OneField));
-			HashSet<VirtualField>? uniqueFields = null;
+			ISet<VirtualField>  foundFields  = new HashSet<VirtualField>(found.Select(f => f.OneField));
+			ISet<VirtualField>? uniqueFields = null;
 
 			for (var i = 0; i < uniqueKeys.Count; i++)
 			{
@@ -1117,8 +1117,8 @@ namespace LinqToDB.SqlProvider
 					return false;
 			}
 
-			HashSet<VirtualField>  foundFields  = new HashSet<VirtualField>(found.Select(f => f.OneField));
-			HashSet<VirtualField>? uniqueFields = null;
+			ISet<VirtualField>  foundFields  = new HashSet<VirtualField>(found.Select(f => f.OneField));
+			ISet<VirtualField>? uniqueFields = null;
 
 			for (var i = 0; i < uniqueKeys.Count; i++)
 			{
@@ -1182,8 +1182,8 @@ namespace LinqToDB.SqlProvider
 			if (found == null)
 				return false;
 
-			HashSet<VirtualField>  foundFields  = new HashSet<VirtualField>(found.Select(f => f.OneField));
-			HashSet<VirtualField>? uniqueFields = null;
+			ISet<VirtualField>  foundFields  = new HashSet<VirtualField>(found.Select(f => f.OneField));
+			ISet<VirtualField>? uniqueFields = null;
 
 			for (var i = 0; i < uniqueKeys.Count; i++)
 			{
@@ -1243,8 +1243,8 @@ namespace LinqToDB.SqlProvider
 			if (found == null)
 				return false;
 
-			HashSet<VirtualField>  foundFields  = new HashSet<VirtualField>(found.Select(f => f.OneField!));
-			HashSet<VirtualField>? uniqueFields = null;
+			ISet<VirtualField>  foundFields  = new HashSet<VirtualField>(found.Select(f => f.OneField!));
+			ISet<VirtualField>? uniqueFields = null;
 
 			for (var i = 0; i < uniqueKeys.Count; i++)
 			{

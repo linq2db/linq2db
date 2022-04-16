@@ -41,7 +41,7 @@ namespace LinqToDB.Linq
 
 	internal static class RecordsHelper
 	{
-		private static readonly ConcurrentDictionary<Type, RecordType> _recordCache = new ();
+		private static readonly ConcurrentDictionary<Type, RecordType> _recordCache             = new ();
 		private static readonly ConcurrentDictionary<MemberInfo, int>  _fsharpRecordMemberCache = new ();
 
 		internal static RecordType GetRecordType(MappingSchema mappingSchema, Type objectType)

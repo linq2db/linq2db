@@ -33,7 +33,7 @@ namespace LinqToDB.Linq.Builder
 		void PushIndent() { _indent += '\t'; }
 		void PopIndent () { _indent = _indent.Substring(1); }
 
-		readonly HashSet<Expression> _visitedExprs = new ();
+		readonly ISet<Expression> _visitedExprs = new HashSet<Expression>();
 
 		private VisitFuncVisitor<ExpressionTestGenerator>? _buildExpressionVisitor;
 
@@ -706,7 +706,7 @@ namespace LinqToDB.Linq.Builder
 
 			return types.ToArray();
 
-			static void populateBaseInterfaces(Type type, HashSet<Type> duplicateInterfaces)
+			static void populateBaseInterfaces(Type type, ISet<Type> duplicateInterfaces)
 			{
 				foreach (var iface in type.GetInterfaces())
 					duplicateInterfaces.Add(iface);
@@ -825,7 +825,7 @@ namespace LinqToDB.Linq.Builder
 			return MangleName(type, type.ToString(), "T");
 		}
 
-		readonly HashSet<object> _usedMembers = new ();
+		readonly ISet<object> _usedMembers = new HashSet<object>();
 
 		void VisitMembers(Expression expr)
 		{
@@ -902,7 +902,7 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-		readonly HashSet<Type> _usedTypes = new ();
+		readonly ISet<Type> _usedTypes = new HashSet<Type>();
 
 		void AddType(Type? type)
 		{

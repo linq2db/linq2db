@@ -87,9 +87,9 @@ namespace Tests
 		/// </summary>
 		public bool SkipForNonLinqService { get; set; }
 
-		HashSet<string>? _issueConfigurations;
+		ISet<string>? _issueConfigurations;
 
-		HashSet<string> GetIssueConfigurations()
+		ISet<string> GetIssueConfigurations()
 		{
 			return _issueConfigurations ??= new HashSet<string>(Configurations ?? Array<string>.Empty);
 		}

@@ -84,14 +84,12 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-		static readonly HashSet<string> _reservedWordsAll      = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-		static readonly HashSet<string> _reservedWordsPostgres = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-		static readonly HashSet<string> _reservedWordsOracle   = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-		static readonly HashSet<string> _reservedWordsFirebird = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+		static readonly ISet<string> _reservedWordsAll      = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+		static readonly ISet<string> _reservedWordsPostgres = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+		static readonly ISet<string> _reservedWordsOracle   = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+		static readonly ISet<string> _reservedWordsFirebird = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-
-		static readonly ConcurrentDictionary<string,HashSet<string>> _reservedWords =
-			new ConcurrentDictionary<string, HashSet<string>>(StringComparer.OrdinalIgnoreCase);
+		static readonly ConcurrentDictionary<string,ISet<string>> _reservedWords = new (StringComparer.OrdinalIgnoreCase);
 
 		public static bool IsReserved(string word, string? providerName = null)
 		{

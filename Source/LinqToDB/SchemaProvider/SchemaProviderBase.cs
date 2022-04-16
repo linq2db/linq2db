@@ -21,12 +21,12 @@ namespace LinqToDB.SchemaProvider
 		protected virtual List<ProcedureInfo>?          GetProcedures         (DataConnection dataConnection, GetSchemaOptions options) => null;
 		protected virtual List<ProcedureParameterInfo>? GetProcedureParameters(DataConnection dataConnection, IEnumerable<ProcedureInfo> procedures, GetSchemaOptions options) => null;
 
-		protected HashSet<string?>   IncludedSchemas  = null!;
-		protected HashSet<string?>   ExcludedSchemas  = null!;
-		protected HashSet<string?>   IncludedCatalogs = null!;
-		protected HashSet<string?>   ExcludedCatalogs = null!;
-		protected bool               GenerateChar1AsString;
-		protected DataTable          DataTypesSchema  = null!;
+		protected ISet<string?>   IncludedSchemas  = null!;
+		protected ISet<string?>   ExcludedSchemas  = null!;
+		protected ISet<string?>   IncludedCatalogs = null!;
+		protected ISet<string?>   ExcludedCatalogs = null!;
+		protected bool            GenerateChar1AsString;
+		protected DataTable       DataTypesSchema  = null!;
 
 		private Dictionary<string, DataTypeInfo> DataTypesDic = null!;
 		private Dictionary<string, DataTypeInfo> ProviderSpecificDataTypesDic = null!;
@@ -381,7 +381,7 @@ namespace LinqToDB.SchemaProvider
 
 		protected virtual StringComparison ForeignKeyColumnComparison(string column) => StringComparison.Ordinal;
 
-		protected static HashSet<string?> GetHashSet(string?[]? data, IEqualityComparer<string?> comparer)
+		protected static ISet<string?> GetHashSet(string?[]? data, IEqualityComparer<string?> comparer)
 		{
 			var set = new HashSet<string?>(comparer ?? StringComparer.OrdinalIgnoreCase);
 

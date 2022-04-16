@@ -19,19 +19,19 @@ namespace LinqToDB.SqlQuery
 
 		private class IsDependsOnSourcesContext
 		{
-			public IsDependsOnSourcesContext(HashSet<ISqlTableSource> onSources, HashSet<IQueryElement>? elementsToIgnore)
+			public IsDependsOnSourcesContext(ISet<ISqlTableSource> onSources, ISet<IQueryElement>? elementsToIgnore)
 			{
 				OnSources = onSources;
 				ElementsToIgnore = elementsToIgnore;
 			}
 
-			public readonly HashSet<ISqlTableSource> OnSources;
-			public readonly HashSet<IQueryElement>?  ElementsToIgnore;
+			public readonly ISet<ISqlTableSource> OnSources;
+			public readonly ISet<IQueryElement>?  ElementsToIgnore;
 
-			public          bool                     DependencyFound;
+			public          bool                  DependencyFound;
 		}
 
-		public static bool IsDependsOn(IQueryElement testedRoot, HashSet<ISqlTableSource> onSources, HashSet<IQueryElement>? elementsToIgnore = null)
+		public static bool IsDependsOn(IQueryElement testedRoot, ISet<ISqlTableSource> onSources, ISet<IQueryElement>? elementsToIgnore = null)
 		{
 			var ctx = new IsDependsOnSourcesContext(onSources, elementsToIgnore);
 
@@ -75,19 +75,19 @@ namespace LinqToDB.SqlQuery
 
 		private class IsDependsOnElementContext
 		{
-			public IsDependsOnElementContext(IQueryElement onElement, HashSet<IQueryElement>? elementsToIgnore)
+			public IsDependsOnElementContext(IQueryElement onElement, ISet<IQueryElement>? elementsToIgnore)
 			{
 				OnElement = onElement;
 				ElementsToIgnore = elementsToIgnore;
 			}
 
-			public readonly IQueryElement           OnElement;
-			public readonly HashSet<IQueryElement>? ElementsToIgnore;
+			public readonly IQueryElement        OnElement;
+			public readonly ISet<IQueryElement>? ElementsToIgnore;
 
-			public          bool                    DependencyFound;
+			public          bool                 DependencyFound;
 		}
 
-		public static bool IsDependsOn(IQueryElement testedRoot, IQueryElement onElement, HashSet<IQueryElement>? elementsToIgnore = null)
+		public static bool IsDependsOn(IQueryElement testedRoot, IQueryElement onElement, ISet<IQueryElement>? elementsToIgnore = null)
 		{
 			var ctx = new IsDependsOnElementContext(onElement, elementsToIgnore);
 
@@ -107,19 +107,19 @@ namespace LinqToDB.SqlQuery
 
 		private class DependencyCountContext
 		{
-			public DependencyCountContext(IQueryElement onElement, HashSet<IQueryElement>? elementsToIgnore)
+			public DependencyCountContext(IQueryElement onElement, ISet<IQueryElement>? elementsToIgnore)
 			{
 				OnElement = onElement;
 				ElementsToIgnore = elementsToIgnore;
 			}
 
-			public readonly IQueryElement           OnElement;
-			public readonly HashSet<IQueryElement>? ElementsToIgnore;
+			public readonly IQueryElement        OnElement;
+			public readonly ISet<IQueryElement>? ElementsToIgnore;
 
-			public          int                     DependencyCount;
+			public          int                  DependencyCount;
 		}
 
-		public static int DependencyCount(IQueryElement testedRoot, IQueryElement onElement, HashSet<IQueryElement>? elementsToIgnore = null)
+		public static int DependencyCount(IQueryElement testedRoot, IQueryElement onElement, ISet<IQueryElement>? elementsToIgnore = null)
 		{
 			var ctx = new DependencyCountContext(onElement, elementsToIgnore);
 
@@ -268,7 +268,7 @@ namespace LinqToDB.SqlQuery
 			return descriptor.GetDbDataType(true);
 		}
 
-		public static void CollectDependencies(IQueryElement root, IEnumerable<ISqlTableSource> sources, HashSet<ISqlExpression> found, IEnumerable<IQueryElement>? ignore = null)
+		public static void CollectDependencies(IQueryElement root, IEnumerable<ISqlTableSource> sources, ISet<ISqlExpression> found, IEnumerable<IQueryElement>? ignore = null)
 		{
 			var hash       = new HashSet<ISqlTableSource>(sources);
 			var hashIgnore = new HashSet<IQueryElement>(ignore ?? Enumerable.Empty<IQueryElement>());
@@ -299,7 +299,7 @@ namespace LinqToDB.SqlQuery
 			});
 		}
 
-		public static void CollectUsedSources(IQueryElement root, HashSet<ISqlTableSource> found, IEnumerable<IQueryElement>? ignore = null)
+		public static void CollectUsedSources(IQueryElement root, ISet<ISqlTableSource> found, IEnumerable<IQueryElement>? ignore = null)
 		{
 			var hashIgnore = new HashSet<IQueryElement>(ignore ?? Enumerable.Empty<IQueryElement>());
 
@@ -845,7 +845,7 @@ namespace LinqToDB.SqlQuery
 		public static ISqlExpression? GetUnderlyingExpression(ISqlExpression? expression)
 		{
 			var current = expression;
-			HashSet<ISqlExpression>? visited = null;
+			ISet<ISqlExpression>? visited = null;
 			while (current?.ElementType == QueryElementType.Column)
 			{
 				visited ??= new HashSet<ISqlExpression>();
@@ -881,8 +881,8 @@ namespace LinqToDB.SqlQuery
 		/// <returns>Field instance associated with expression</returns>
 		public static SqlField? ExtractField(ISqlExpression expression)
 		{
-			var                      current = expression;
-			HashSet<ISqlExpression>? visited = null;
+			var                   current = expression;
+			ISet<ISqlExpression>? visited = null;
 			while (true)
 			{
 				visited ??= new HashSet<ISqlExpression>();
@@ -926,7 +926,7 @@ namespace LinqToDB.SqlQuery
 		/// </summary>
 		/// <param name="root">Expression to analyze.</param>
 		/// <param name="foundSources">Output container for detected sources/</param>
-		public static void GetUsedSources(ISqlExpression root, HashSet<ISqlTableSource> foundSources)
+		public static void GetUsedSources(ISqlExpression root, ISet<ISqlTableSource> foundSources)
 		{
 			if (foundSources == null) throw new ArgumentNullException(nameof(foundSources));
 
@@ -1551,7 +1551,7 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-		public static SqlCondition CorrectSearchConditionNesting(SelectQuery sql, SqlCondition condition, HashSet<ISqlTableSource> forTableSources)
+		public static SqlCondition CorrectSearchConditionNesting(SelectQuery sql, SqlCondition condition, ISet<ISqlTableSource> forTableSources)
 		{
 			var newCondition = condition.Convert((sql, forTableSources), static (v, e) =>
 			{

@@ -89,7 +89,7 @@ public static Func<ColumnSchema,string>                 ConvertColumnMemberType 
 public static Func<TableSchema,ColumnSchema,string>     ConvertTableColumnMemberType     = (t,c) => ConvertColumnMemberType(c);
 public static Func<ProcedureSchema,ColumnSchema,string> ConvertProcedureColumnMemberType = (t,c) => ConvertColumnMemberType(c);
 
-public HashSet<string> KeyWords = new HashSet<string>
+public ISet<string> KeyWords = new HashSet<string>
 {
 	"abstract", "as",       "base",     "bool",    "break",     "byte",      "case",       "catch",     "char",    "checked",
 	"class",    "const",    "continue", "decimal", "default",   "delegate",  "do",         "double",    "else",    "enum",

@@ -15,8 +15,7 @@ namespace LinqToDB.DataProvider.SqlServer
 	/// </summary>
 	public class SqlServerTransientExceptionDetector
 	{
-		private static readonly ConcurrentDictionary<Type, Func<Exception, IEnumerable<int>>> _exceptionTypes
-			= new ConcurrentDictionary<Type, Func<Exception, IEnumerable<int>>>();
+		private static readonly ConcurrentDictionary<Type, Func<Exception, IEnumerable<int>>> _exceptionTypes = new ();
 
 		internal static void RegisterExceptionType(Type type, Func<Exception, IEnumerable<int>> errrorNumbersGetter)
 		{

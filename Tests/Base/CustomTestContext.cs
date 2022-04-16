@@ -14,7 +14,7 @@ namespace Tests
 		// it allows us to access context from other threads, started by tests and from linqservice server
 		private static readonly CustomTestContext _context = new CustomTestContext();
 
-		private readonly ConcurrentDictionary<string, object?> _state = new ConcurrentDictionary<string, object?>();
+		private readonly ConcurrentDictionary<string, object?> _state = new ();
 
 		public static CustomTestContext Get()
 		{

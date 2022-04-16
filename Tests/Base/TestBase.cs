@@ -396,9 +396,9 @@ namespace Tests
 #endif
 		}
 
-		public static readonly HashSet<string> UserProviders;
-		public static readonly string?         DefaultProvider;
-		public static readonly HashSet<string> SkipCategories;
+		public static readonly ISet<string> UserProviders;
+		public static readonly string?      DefaultProvider;
+		public static readonly ISet<string> SkipCategories;
 
 		public static readonly IReadOnlyList<string> Providers = CustomizationSupport.Interceptor.GetSupportedProviders(new List<string>
 		{

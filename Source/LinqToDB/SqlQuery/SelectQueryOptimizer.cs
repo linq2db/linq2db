@@ -70,7 +70,7 @@ namespace LinqToDB.SqlQuery
 			ResolveFields(root);
 		}
 
-		static QueryData GetQueryData(IQueryElement? root, SelectQuery selectQuery, HashSet<IQueryElement> visitedHash)
+		static QueryData GetQueryData(IQueryElement? root, SelectQuery selectQuery, ISet<IQueryElement> visitedHash)
 		{
 			var data = new QueryData { Query = selectQuery };
 
@@ -1272,7 +1272,7 @@ namespace LinqToDB.SqlQuery
 			return result;
 		}
 
-		void OptimizeApply(SelectQuery parentQuery, HashSet<ISqlTableSource> parentTableSources, SqlTableSource tableSource, SqlJoinedTable joinTable, bool isApplySupported)
+		void OptimizeApply(SelectQuery parentQuery, ISet<ISqlTableSource> parentTableSources, SqlTableSource tableSource, SqlJoinedTable joinTable, bool isApplySupported)
 		{
 			var joinSource = joinTable.Table;
 

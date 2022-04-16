@@ -106,7 +106,7 @@ namespace LinqToDB.Linq.Builder
 		readonly Query                             _query;
 		readonly List<ISequenceBuilder>            _builders = _sequenceBuilders;
 		private  bool                              _reorder;
-		private  HashSet<Expression>?              _subQueryExpressions;
+		private  ISet<Expression>?                 _subQueryExpressions;
 		readonly ExpressionTreeOptimizationContext _optimizationContext;
 		readonly ParametersContext                 _parametersContext;
 
@@ -405,7 +405,7 @@ namespace LinqToDB.Linq.Builder
 
 		Dictionary<Expression, Expression>? _optimizedExpressions;
 
-		static void CollectLambdaParameters(Expression expression, HashSet<ParameterExpression> foundParameters)
+		static void CollectLambdaParameters(Expression expression, ISet<ParameterExpression> foundParameters)
 		{
 			expression.Visit(foundParameters, static (foundParameters, e) =>
 			{
@@ -429,7 +429,7 @@ namespace LinqToDB.Linq.Builder
 			return expr;
 		}
 
-		TransformInfo OptimizeExpressionImpl(HashSet<ParameterExpression> currentParameters, Expression expr)
+		TransformInfo OptimizeExpressionImpl(ISet<ParameterExpression> currentParameters, Expression expr)
 		{
 			switch (expr.NodeType)
 			{
@@ -700,7 +700,7 @@ namespace LinqToDB.Linq.Builder
 
 					dic.Add(exprs[i], ex);
 
-					(_subQueryExpressions ??= new()).Add(ex);
+					(_subQueryExpressions ??= new HashSet<Expression>()).Add(ex);
 				}
 
 				var newBody = lbody.Transform(dic, static (dic, ex) => dic.TryGetValue(ex, out var e) ? e : ex);
@@ -1356,7 +1356,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region ConvertIQueryable
 
-		Expression ConvertIQueryable(Expression expression, HashSet<ParameterExpression> currentParameters)
+		Expression ConvertIQueryable(Expression expression, ISet<ParameterExpression> currentParameters)
 		{
 			static bool HasParametersDefined(Expression testedExpression, IEnumerable<ParameterExpression> allowed)
 			{

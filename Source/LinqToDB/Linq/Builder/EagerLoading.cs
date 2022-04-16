@@ -278,8 +278,8 @@ namespace LinqToDB.Linq.Builder
 			return newExpr;
 		}
 
-		private static readonly HashSet<string> FirstSingleMethods        = new () { "First", "FirstOrDefault", "Single", "SingleOrDefault" };
-		private static readonly HashSet<string> NotSupportedDetailMethods = new ()
+		private static readonly ISet<string> FirstSingleMethods        = new HashSet<string>() { "First", "FirstOrDefault", "Single", "SingleOrDefault" };
+		private static readonly ISet<string> NotSupportedDetailMethods = new HashSet<string>()
 		{
 			"Any",
 			"Sum",
@@ -1479,7 +1479,7 @@ namespace LinqToDB.Linq.Builder
 			// Finalize keys for recursive processing
 			var expression = detailQuery.Expression;
 			expression     = builder.ExposeExpression(expression);
-			expression     = FinalizeExpressionKeys(new HashSet<Expression>(), expression);
+			expression     = FinalizeExpressionKeys(null, expression);
 
 			var detailQueryPrepared = Query<KeyDetailEnvelope<TKey, TD>>.CreateQuery(builder.OptimizationContext, builder.ParametersContext, builder.DataContext,
 				expression);
@@ -1692,15 +1692,15 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		[return: NotNullIfNotNull("expr")]
-		internal static Expression? FinalizeExpressionKeys(HashSet<Expression> stable, Expression? expr)
+		internal static Expression? FinalizeExpressionKeys(ISet<Expression>? stable, Expression? expr)
 		{
 			if (expr == null)
 				return null;
 
-			if (stable.Contains(expr))
+			if (stable?.Contains(expr) == true)
 				return expr;
 
-			var result = expr.Transform(stable, static (stable, e) =>
+			var result = expr.Transform(stable ??= new HashSet<Expression>(), static (stable, e) =>
 			{
 				if (stable.Contains(e))
 					return e;

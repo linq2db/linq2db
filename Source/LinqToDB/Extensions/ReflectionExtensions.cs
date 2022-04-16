@@ -964,7 +964,7 @@ namespace LinqToDB.Extensions
 				member.DeclaringType!.IsNullable();
 		}
 
-		static readonly Dictionary<Type,HashSet<Type>> _castDic = new ()
+		static readonly Dictionary<Type,ISet<Type>> _castDic = new ()
 		{
 			{ typeof(decimal), new HashSet<Type> { typeof(sbyte), typeof(byte),   typeof(short), typeof(ushort), typeof(int), typeof(uint), typeof(long), typeof(ulong), typeof(char)                } },
 			{ typeof(double),  new HashSet<Type> { typeof(sbyte), typeof(byte),   typeof(short), typeof(ushort), typeof(int), typeof(uint), typeof(long), typeof(ulong), typeof(char), typeof(float) } },

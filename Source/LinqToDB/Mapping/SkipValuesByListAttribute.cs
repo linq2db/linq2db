@@ -15,7 +15,7 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Gets collection with values to skip.
 		/// </summary>
-		protected HashSet<object?> Values { get; set; }
+		protected ISet<object?> Values { get; set; }
 
 		protected SkipValuesByListAttribute(IEnumerable<object?> values)
 		{

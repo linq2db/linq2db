@@ -12,10 +12,10 @@ namespace LinqToDB.Metadata
 	public class FluentMetadataReader : IMetadataReader
 	{
 		// don't forget to put lock on List<Attribute> when access it
-		readonly ConcurrentDictionary<Type,List<Attribute>>                            _types          = new ConcurrentDictionary<Type,List<Attribute>>();
+		readonly ConcurrentDictionary<Type,List<Attribute>>                            _types          = new ();
 		// set used to guarantee uniqueness
 		// list used to guarantee same order for columns in select queries
-		readonly ConcurrentDictionary<Type,Tuple<ISet<MemberInfo>, IList<MemberInfo>>> _dynamicColumns = new ConcurrentDictionary<Type,Tuple<ISet<MemberInfo>, IList<MemberInfo>>>();
+		readonly ConcurrentDictionary<Type,Tuple<ISet<MemberInfo>, IList<MemberInfo>>> _dynamicColumns = new ();
 
 		private static bool IsSystemOrNullType(Type? type)
 			=> type == null || type == typeof(object) || type == typeof(ValueType) || type == typeof(Enum);
@@ -52,7 +52,7 @@ namespace LinqToDB.Metadata
 				attrs.Add(attribute);
 		}
 
-		readonly ConcurrentDictionary<MemberInfo,List<Attribute>> _members = new ConcurrentDictionary<MemberInfo,List<Attribute>>();
+		readonly ConcurrentDictionary<MemberInfo,List<Attribute>> _members = new ();
 
 		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo, bool inherit = true)
 			where T : Attribute

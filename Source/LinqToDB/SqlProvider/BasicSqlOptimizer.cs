@@ -280,7 +280,7 @@ namespace LinqToDB.SqlProvider
 			return statement;
 		}
 
-		static void RegisterDependency(CteClause cteClause, Dictionary<CteClause, HashSet<CteClause>> foundCte)
+		static void RegisterDependency(CteClause cteClause, Dictionary<CteClause, ISet<CteClause>> foundCte)
 		{
 			if (foundCte.ContainsKey(cteClause))
 				return;
@@ -310,7 +310,7 @@ namespace LinqToDB.SqlProvider
 			if (statement is SqlStatementWithQueryBase select)
 			{
 				// one-field class is cheaper than dictionary instance
-				var cteHolder = new WritableContext<Dictionary<CteClause, HashSet<CteClause>>?>();
+				var cteHolder = new WritableContext<Dictionary<CteClause, ISet<CteClause>>?>();
 
 				if (select is SqlMergeStatement merge)
 				{
@@ -599,9 +599,9 @@ namespace LinqToDB.SqlProvider
 				SubQuery    = subQuery;
 			}
 
-			public readonly SelectQuery              SubQuery;
-			public readonly HashSet<ISqlTableSource> AllTables   = new ();
-			public readonly HashSet<ISqlTableSource> LevelTables = new ();
+			public readonly SelectQuery           SubQuery;
+			public readonly ISet<ISqlTableSource> AllTables   = new HashSet<ISqlTableSource>();
+			public readonly ISet<ISqlTableSource> LevelTables = new HashSet<ISqlTableSource>();
 
 			public bool Modified;
 		}
@@ -805,8 +805,8 @@ namespace LinqToDB.SqlProvider
 			}
 
 			public readonly SelectQuery              SubQuery;
-			public readonly HashSet<ISqlTableSource> AllTables   = new ();
-			public readonly HashSet<ISqlTableSource> LevelTables = new ();
+			public readonly ISet<ISqlTableSource> AllTables   = new HashSet<ISqlTableSource>();
+			public readonly ISet<ISqlTableSource> LevelTables = new HashSet<ISqlTableSource>();
 
 			public bool Modified;
 			public bool IsAggregated;

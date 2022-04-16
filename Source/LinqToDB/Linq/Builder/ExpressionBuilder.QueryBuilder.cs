@@ -23,7 +23,7 @@ namespace LinqToDB.Linq.Builder
 	{
 		#region BuildExpression
 
-		readonly HashSet<Expression>                    _skippedExpressions   = new ();
+		readonly ISet<Expression>                    _skippedExpressions      = new HashSet<Expression>();
 		readonly Dictionary<Expression,UnaryExpression> _convertedExpressions = new ();
 
 		public void UpdateConvertedExpression(Expression oldExpression, Expression newExpression)
@@ -902,7 +902,7 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		static Expression GetMultipleQueryExpression(IBuildContext context, MappingSchema mappingSchema,
-			Expression expression, HashSet<ParameterExpression> parameters, out bool isLazy)
+			Expression expression, ISet<ParameterExpression> parameters, out bool isLazy)
 		{
 			var valueExpression = EagerLoading.GenerateDetailsExpression(context, mappingSchema, expression);
 
@@ -918,7 +918,7 @@ namespace LinqToDB.Linq.Builder
 			return valueExpression;
 		}
 
-		static Expression GetMultipleQueryExpressionLazy(IBuildContext context, MappingSchema mappingSchema, Expression expression, HashSet<ParameterExpression> parameters)
+		static Expression GetMultipleQueryExpressionLazy(IBuildContext context, MappingSchema mappingSchema, Expression expression, ISet<ParameterExpression> parameters)
 		{
 			expression.Visit(parameters, static (parameters, e) =>
 			{
@@ -985,7 +985,7 @@ namespace LinqToDB.Linq.Builder
 		public Expression? AssociationRoot;
 		public Stack<Tuple<AccessorMember, IBuildContext, List<LoadWithInfo[]>?>>? AssociationPath;
 
-		HashSet<Expression>? _buildMultipleQueryExpressions;
+		ISet<Expression>? _buildMultipleQueryExpressions;
 
 		public Expression BuildMultipleQuery(IBuildContext context, Expression expression, bool enforceServerSide)
 		{

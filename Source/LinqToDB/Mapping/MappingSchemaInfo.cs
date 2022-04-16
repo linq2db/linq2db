@@ -37,7 +37,7 @@ namespace LinqToDB.Mapping
 			if (_defaultValues == null)
 				lock (this)
 					if (_defaultValues == null)
-						_defaultValues = new ConcurrentDictionary<Type,object?>();
+						_defaultValues = new ();
 
 			_defaultValues[type] = value;
 		}
@@ -61,7 +61,7 @@ namespace LinqToDB.Mapping
 			if (_canBeNull == null)
 				lock (this)
 					if (_canBeNull == null)
-						_canBeNull = new ConcurrentDictionary<Type,bool>();
+						_canBeNull = new ();
 
 			_canBeNull[type] = value;
 		}
@@ -149,10 +149,7 @@ namespace LinqToDB.Mapping
 		}
 
 		private ConcurrentDictionary<object,Func<object,object>>? _converters;
-		public  ConcurrentDictionary<object,Func<object,object>>   Converters
-		{
-			get { return _converters ??= new ConcurrentDictionary<object,Func<object,object>>(); }
-		}
+		public  ConcurrentDictionary<object,Func<object,object>>   Converters => _converters ??= new();
 
 		#endregion
 
@@ -176,7 +173,7 @@ namespace LinqToDB.Mapping
 			if (_scalarTypes == null)
 				lock (this)
 					if (_scalarTypes == null)
-						_scalarTypes = new ConcurrentDictionary<Type,bool>();
+						_scalarTypes = new ();
 
 			_scalarTypes[type] = isScalarType;
 		}
@@ -208,7 +205,7 @@ namespace LinqToDB.Mapping
 			if (_dataTypes == null)
 				lock (this)
 					if (_dataTypes == null)
-						_dataTypes = new ConcurrentDictionary<Type,SqlDataType>();
+						_dataTypes = new ();
 
 			_dataTypes[type] = dataType;
 		}
@@ -239,7 +236,7 @@ namespace LinqToDB.Mapping
 			if (_defaultFromEnumTypes == null)
 				lock (this)
 					if (_defaultFromEnumTypes == null)
-						_defaultFromEnumTypes = new ConcurrentDictionary<Type, Type>();
+						_defaultFromEnumTypes = new ();
 
 			_defaultFromEnumTypes[enumType] = defaultFromType;
 		}

@@ -110,10 +110,10 @@ namespace LinqToDB.Common
 			return str.Trim();
 		}
 
-		internal static void AddRange<T>(this HashSet<T> hashSet, IEnumerable<T> items)
+		internal static void AddRange<T>(this ISet<T> set, IEnumerable<T> items)
 		{
-			foreach (var item in items) 
-				hashSet.Add(item);
+			foreach (var item in items)
+				set.Add(item);
 		}
 
 		public static IQueryable<T> CreateEmptyQuery<T>()

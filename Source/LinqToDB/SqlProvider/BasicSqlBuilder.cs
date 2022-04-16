@@ -3771,7 +3771,7 @@ namespace LinqToDB.SqlProvider
 
 		#region Aliases
 
-		HashSet<string>? _aliases;
+		ISet<string>? _aliases;
 
 		public void RemoveAlias(string alias)
 		{

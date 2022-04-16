@@ -14,7 +14,7 @@ namespace LinqToDB.Expressions
 		private readonly TContext                                 _context;
 		private readonly Action<TContext, Expression, Expression> _func;
 		private          Expression                               _path;
-		private          HashSet<Expression>?                     _visited;
+		private          ISet<Expression>?                        _visited;
 
 		public PathVisitor(TContext context, Expression path, Action<TContext, Expression, Expression> func)
 		{
@@ -224,7 +224,7 @@ namespace LinqToDB.Expressions
 
 						if (((ConstantExpression)expr).Value is IQueryable iq && _visited?.Contains(iq.Expression) != true)
 						{
-							(_visited ??= new ()).Add(iq.Expression);
+							(_visited ??= new HashSet<Expression>()).Add(iq.Expression);
 
 							_path = Expression.Property(_path, ReflectionHelper.Constant.Value);
 							ConvertPathTo(typeof(IQueryable));

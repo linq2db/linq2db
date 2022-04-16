@@ -17,7 +17,7 @@ namespace LinqToDB.Linq.Builder
 
 	public class ExpressionTreeOptimizationContext
 	{
-		HashSet<Expression>? _visitedExpressions;
+		ISet<Expression>? _visitedExpressions;
 
 		public IDataContext  DataContext   { get; }
 		public MappingSchema MappingSchema { get; }
@@ -416,7 +416,7 @@ namespace LinqToDB.Linq.Builder
 		Expression? _lastExpr2;
 		bool        _lastResult2;
 
-		private static HashSet<Expression> DefaultAllowedParams = new ()
+		private static ISet<Expression> DefaultAllowedParams = new HashSet<Expression>()
 		{
 			ExpressionBuilder.ParametersParam,
 			ExpressionBuilder.DataContextParam
@@ -446,7 +446,7 @@ namespace LinqToDB.Linq.Builder
 
 			public readonly ExpressionTreeOptimizationContext OptimizationContext;
 
-			public HashSet<Expression> AllowedParams;
+			public ISet<Expression> AllowedParams;
 
 			public void Reset()
 			{
@@ -665,7 +665,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						var e = queryable.Expression;
 
-						if (!(_visitedExpressions ??= new ()).Contains(e))
+						if (!(_visitedExpressions ??= new HashSet<Expression>()).Contains(e))
 						{
 							_visitedExpressions.Add(e);
 							return new TransformInfo(e, false, true);

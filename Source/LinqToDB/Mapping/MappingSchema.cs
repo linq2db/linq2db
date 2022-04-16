@@ -368,10 +368,7 @@ namespace LinqToDB.Mapping
 			return null;
 		}
 
-		internal ConcurrentDictionary<object,Func<object,object>> Converters
-		{
-			get { return Schemas[0].Converters; }
-		}
+		internal ConcurrentDictionary<object,Func<object,object>> Converters => Schemas[0].Converters;
 
 		/// <summary>
 		/// Returns conversion expression from <typeparamref name="TFrom"/> type to <typeparamref name="TTo"/> type.
@@ -1572,7 +1569,7 @@ namespace LinqToDB.Mapping
 			if (type == null) throw new ArgumentNullException(nameof(type));
 
 			if (_mapValues == null)
-				_mapValues = new ConcurrentDictionary<Type,MapValue[]?>();
+				_mapValues = new ();
 
 			if (_mapValues.TryGetValue(type, out var mapValues))
 				return mapValues;

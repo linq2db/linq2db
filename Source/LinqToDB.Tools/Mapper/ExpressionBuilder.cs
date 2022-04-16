@@ -25,7 +25,7 @@ namespace LinqToDB.Tools.Mapper
 
 			public readonly Tuple<MemberInfo[],LambdaExpression>[]?          MemberMappers;
 			public readonly Dictionary<Tuple<Type,Type>,ParameterExpression> Mappers     = new ();
-			public readonly HashSet<Tuple<Type,Type>>                        MapperTypes = new ();
+			public readonly ISet<Tuple<Type,Type>>                           MapperTypes = new HashSet<Tuple<Type,Type>>();
 			public readonly List<ParameterExpression>                        Locals      = new ();
 			public readonly List<Expression>                                 Expressions = new ();
 
