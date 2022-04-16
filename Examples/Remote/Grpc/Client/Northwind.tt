@@ -1,0 +1,24 @@
+<#@ template language="C#" debug="True" hostSpecific="True" #>
+<#@ output extension=".generated.cs"                        #>
+
+<#@ include file="$(LinqToDBT4SqlServerTemplatesPath)LinqToDB.SqlServer.Tools.ttinclude" once="true" #>
+<#@ include file="$(LinqToDBT4SqlServerTemplatesPath)PluralizationService.ttinclude"     once="true" #>
+<#
+	GenerateDatabaseInfo = false;
+	NamespaceName = "DataModels";
+	Model.Usings.Add("LinqToDB.Remote.Grpc");
+
+	DataContextName = "ExampleDataContext";
+	BaseDataContextClass = "GrpcDataContext";
+	GenerateConstructors = false;
+	GetSchemaOptions.GetProcedures = false;
+
+	Model.Usings.Add("System.ServiceModel");
+	Model.Usings.Add("Client");
+
+	LoadSqlServerMetadata("Server=.;Database=Northwind;Trusted_Connection=True");
+
+	GenerateModel();
+#>
+
+

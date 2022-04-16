@@ -54,7 +54,7 @@ namespace SybaseDataActionDataContext
 			InitMappingSchema();
 		}
 
-		public TestDataCoreDB(LinqToDbConnectionOptions options)
+		public TestDataCoreDB(LinqToDBConnectionOptions options)
 			: base(options)
 		{
 			InitDataContext();

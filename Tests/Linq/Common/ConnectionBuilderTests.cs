@@ -65,7 +65,7 @@ namespace Tests.Common
 		[Test]
 		public void CanUseWithLoggingFromFactory()
 		{
-			var builder = new LinqToDbConnectionOptionsBuilder();
+			var builder = new LinqToDBConnectionOptionsBuilder();
 			var factory = new TestLoggerFactory();
 			builder.UseLoggerFactory(factory);
 
@@ -82,7 +82,7 @@ namespace Tests.Common
 		[Test]
 		public void CanUseLoggingFactoryFromIoc()
 		{
-			var builder  = new LinqToDbConnectionOptionsBuilder();
+			var builder  = new LinqToDBConnectionOptionsBuilder();
 			var factory  = new TestLoggerFactory();
 			var services = new ServiceCollection();
 			services.AddSingleton<ILoggerFactory>(factory);

@@ -13,7 +13,7 @@ namespace LinqToDB
 		#region DatePart
 		[Sql.Extension(               "DatePart",                                        ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DatePartBuilder))]
 		[Sql.Extension(PN.DB2,        "",                                                ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DatePartBuilderDB2))] // TODO: Not checked
-		[Sql.Extension(PN.Informix,   "",                                                ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DatePartBuilderInformix))] 
+		[Sql.Extension(PN.Informix,   "",                                                ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DatePartBuilderInformix))]
 		[Sql.Extension(PN.MySql,      "Extract({part} from {date})",                     ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DatePartBuilderMySql))]
 		[Sql.Extension(PN.PostgreSQL, "Cast(Floor(Extract({part} from {date})) as int)", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DatePartBuilderPostgre))]
 		[Sql.Extension(PN.Firebird,   "Cast(Floor(Extract({part} from {date})) as int)", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DatePartBuilderFirebird))]
@@ -75,8 +75,8 @@ namespace LinqToDB
 					case Sql.DateParts.Year        : expStr = "{0} * Interval '1 Year'";         break;
 					case Sql.DateParts.Quarter     : expStr = "{0} * Interval '1 Month' * 3";    break;
 					case Sql.DateParts.Month       : expStr = "{0} * Interval '1 Month'";        break;
-					case Sql.DateParts.DayOfYear   : 
-					case Sql.DateParts.WeekDay     : 
+					case Sql.DateParts.DayOfYear   :
+					case Sql.DateParts.WeekDay     :
 					case Sql.DateParts.Day         : expStr = "{0} * Interval '1 Day'";          break;
 					case Sql.DateParts.Week        : expStr = "{0} * Interval '1 Day' * 7";      break;
 					case Sql.DateParts.Hour        : expStr = "{0} * Interval '1 Hour'";         break;
@@ -125,6 +125,7 @@ namespace LinqToDB
 				_                           => throw new InvalidOperationException(),
 			};
 		}
+
 		#endregion
 
 		#region DateDiff

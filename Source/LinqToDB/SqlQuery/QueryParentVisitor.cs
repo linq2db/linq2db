@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using LinqToDB.ServiceModel;
+using LinqToDB.Remote;
 
 namespace LinqToDB.SqlQuery
 {
