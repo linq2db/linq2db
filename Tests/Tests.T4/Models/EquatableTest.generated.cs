@@ -53,7 +53,7 @@ namespace EquatableDataContext
 			InitMappingSchema();
 		}
 
-		public EquatableDB(LinqToDbConnectionOptions options)
+		public EquatableDB(LinqToDBConnectionOptions options)
 			: base(options)
 		{
 			InitDataContext();
