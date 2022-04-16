@@ -273,7 +273,7 @@ DatabaseSchema LoadSystemDatabaseSchema(DataConnection dataConnection, GetSchema
 		where c.schema_name != "dbo"
 		group c by new { c.schema_name, c.view_name } into gs
 		let name = $"{gs.Key.schema_name}.{gs.Key.view_name}"
-		let doc  = xml.ContainsKey(name) ? xml[name] : null
+		let doc  = xml.TryGetValue(name, out var docValue) ? docValue : null
 		select new TableSchema
 		{
 			ID          = $"[{gs.Key.schema_name}].[{gs.Key.view_name}]",
@@ -285,7 +285,7 @@ DatabaseSchema LoadSystemDatabaseSchema(DataConnection dataConnection, GetSchema
 			Columns     =
 			(
 				from c in gs
-				let cn = doc?.Columns.ContainsKey(c.column_name) == true ? doc?.Columns[c.column_name] : null
+				let cn = doc?.Columns.TryGetValue(c.column_name, out var columnName) == true ? columnName : null
 				orderby c.column_id
 				select new ColumnSchema
 				{
@@ -362,7 +362,7 @@ DatabaseSchema LoadSystemDatabaseSchema(DataConnection dataConnection, GetSchema
 	tables =
 	(
 		from c in xml.Values
-		let table = tableDic.ContainsKey(c.Name) ? tableDic[c.Name] : null
+		let table = tableDic.TryGetValue(c.Name, out var tbl) ? tbl : null
 		let ns    = c.Name.Split('.')
 		where ns.Length == 2
 		orderby c.Name

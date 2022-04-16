@@ -601,9 +601,9 @@ namespace LinqToDB.Linq.Builder
 				var q = new List<(int idx, int sort)>();
 				for (var i = 0; i < SqlTable.Fields.Count; i++)
 				{
-					if (names.ContainsKey(SqlTable.Fields[i].Name))
+					if (names.TryGetValue(SqlTable.Fields[i].Name, out var nameIndex))
 					{
-						q.Add((i, names[SqlTable.Fields[i].Name]));
+						q.Add((i, nameIndex));
 					}
 				}
 

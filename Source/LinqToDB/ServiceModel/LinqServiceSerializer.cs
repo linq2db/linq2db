@@ -1102,8 +1102,8 @@ namespace LinqToDB.ServiceModel
 							else
 								Append(elem.SetOperators);
 
-							if (ObjectIndices.ContainsKey(elem.All))
-								Append(ObjectIndices[elem.All]);
+							if (ObjectIndices.TryGetValue(elem.All, out var idx))
+								Append(idx);
 							else
 								Builder.Append(" -");
 

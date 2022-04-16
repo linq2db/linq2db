@@ -28,7 +28,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		public const string TypesNamespace  = "NpgsqlTypes";
 
 		// maps mapped enum value to numeric value, defined in currently used provider
-		private readonly IDictionary<NpgsqlDbType, int> _knownDbTypes = new Dictionary<NpgsqlDbType, int>();
+		private readonly IReadOnlyDictionary<NpgsqlDbType, int> _knownDbTypes;
 
 		private NpgsqlProviderAdapter(
 			Type connectionType,
@@ -93,12 +93,16 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			// we should create lookup list of mapped fields, defined in used npgsql version
 			var dbTypeKnownNames    = Enum.GetNames(dbTypeType);
 			var dbMappedDbTypeNames = Enum.GetNames(typeof(NpgsqlDbType));
+
+			var dict      = new Dictionary<NpgsqlDbType, int>();
+			_knownDbTypes = dict;
+
 			foreach (var knownTypeName in from nType in dbTypeKnownNames
 										  join mType in dbMappedDbTypeNames on nType equals mType
 										  select nType)
 			{
 				// use setter([]) instead of Add() because enum contains duplicate fields with same values
-				_knownDbTypes[(NpgsqlDbType)Enum.Parse(typeof(NpgsqlDbType), knownTypeName)] = (int)Enum.Parse(dbTypeType, knownTypeName);
+				dict[(NpgsqlDbType)Enum.Parse(typeof(NpgsqlDbType), knownTypeName)] = (int)Enum.Parse(dbTypeType, knownTypeName);
 			}
 		}
 

@@ -55,10 +55,12 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 			_sqlOptimizer = new PostgreSQLSqlOptimizer(SqlProviderFlags);
 
-			ConfigureTypes();
+			var dict       = new Dictionary<string, NpgsqlProviderAdapter.NpgsqlDbType>();
+			_npgsqlTypeMap = dict;
+			ConfigureTypes(dict);
 		}
 
-		private void ConfigureTypes()
+		private void ConfigureTypes(IDictionary<string, NpgsqlProviderAdapter.NpgsqlDbType> typeMap)
 		{
 			// https://www.postgresql.org/docs/current/static/datatype.html
 			// not all types are supported now
@@ -153,7 +155,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			{
 				if (Adapter.IsDbTypeSupported(type))
 				{
-					_npgsqlTypeMap.Add(dbType, type);
+					typeMap.Add(dbType, type);
 					return true;
 				}
 				return false;
@@ -180,7 +182,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		/// This map shouldn't be used directly, you should resolve PostgreSQL types using
 		/// <see cref="GetNativeType(string, bool)"/> method, which takes into account different type aliases.
 		/// </summary>
-		private readonly IDictionary<string, NpgsqlProviderAdapter.NpgsqlDbType> _npgsqlTypeMap = new Dictionary<string, NpgsqlProviderAdapter.NpgsqlDbType>();
+		private readonly IReadOnlyDictionary<string, NpgsqlProviderAdapter.NpgsqlDbType> _npgsqlTypeMap;
 
 		private static string GetProviderName(PostgreSQLVersion version)
 		{
@@ -518,10 +520,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			if (dbType.StartsWith("bit varying("))
 				dbType = "bit varying";
 
-			if (_npgsqlTypeMap.ContainsKey(dbType))
+			if (_npgsqlTypeMap.TryGetValue(dbType, out var result))
 			{
-				var result = _npgsqlTypeMap[dbType];
-
 				// because NpgsqlDbType fields numeric values changed in npgsql4,
 				// applying flag-like array/range bits is not straightforward process
 				result = Adapter.ApplyDbTypeFlags(result, isArray, isRange, isMultiRange, convertAlways);

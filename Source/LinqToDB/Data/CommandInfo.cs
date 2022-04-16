@@ -666,9 +666,8 @@ namespace LinqToDB.Data
 			do
 			{
 				// Only process the field if we're reading it into a property.
-				if (indexMap.ContainsKey(resultIndex))
+				if (indexMap.TryGetValue(resultIndex, out var member))
 				{
-					var member = indexMap[resultIndex];
 					MethodInfo valueMethodInfo;
 					Type elementType;
 					if (member.Type.IsArray)
@@ -817,9 +816,8 @@ namespace LinqToDB.Data
 			do
 			{
 				// Only process the field if we're reading it into a property.
-				if (indexMap.ContainsKey(resultIndex))
+				if (indexMap.TryGetValue(resultIndex, out var member))
 				{
-					var member = indexMap[resultIndex];
 					MethodInfo valueMethodInfo;
 					Type elementType;
 					if (member.Type.IsArray)
@@ -1698,7 +1696,7 @@ namespace LinqToDB.Data
 		}
 
 		static readonly ConstructorInfo _expandoObjectConstructor = MemberHelper.ConstructorOf(() => new ExpandoObject());
-		static readonly MethodInfo      _expandoAddMethodInfo     = MemberHelper.MethodOf(() => ((IDictionary<string, object>)null!).Add("", ""));
+		static readonly MethodInfo      _expandoAddMethodInfo     = MemberHelper.MethodOf(() => ((IDictionary<string, object>)null!).Add(null!, null!));
 		
 		static Func<DbDataReader, T> CreateDynamicObjectReader<T>(
 			DataConnection dataConnection,

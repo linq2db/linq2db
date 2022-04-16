@@ -982,7 +982,7 @@ namespace LinqToDB.Extensions
 			if (fromType == toType)
 				return true;
 
-			if (_castDic.ContainsKey(toType) && _castDic[toType].Contains(fromType))
+			if (_castDic.TryGetValue(toType, out var set) && set.Contains(fromType))
 				return true;
 
 			var tc = TypeDescriptor.GetConverter(fromType);

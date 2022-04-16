@@ -1662,7 +1662,7 @@ public class ModelType
 
 	public IEnumerable<ModelType> Arguments => _arguments ?? System.Array.Empty<ModelType>();
 
-	private static readonly IDictionary<Type, string> _aliasedTypes = new Dictionary<Type, string>()
+	private static readonly IReadOnlyDictionary<Type, string> _aliasedTypes = new Dictionary<Type, string>()
 	{
 		{ typeof(bool),     "bool" },
 		{ typeof(byte),     "byte" },
@@ -1701,7 +1701,10 @@ public class ModelType
 		if (TypeName != null)
 			sb.Append(TypeName);
 		else if (Type != null)
-			sb.Append(_aliasedTypes.ContainsKey(Type) ? _aliasedTypes[Type] : (Type.Name.Substring(0, Type.Name.IndexOf('`') < 0 ? Type.Name.Length : Type.Name.IndexOf('`'))));
+		{
+			string alias;
+			sb.Append(_aliasedTypes.TryGetValue(Type, out alias) ? alias : (Type.Name.Substring(0, Type.Name.IndexOf('`') < 0 ? Type.Name.Length : Type.Name.IndexOf('`'))));
+		}
 		else
 			sb.Append(ElementType.ToTypeName());
 

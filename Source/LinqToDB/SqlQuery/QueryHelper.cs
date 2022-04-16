@@ -1647,7 +1647,7 @@ namespace LinqToDB.SqlQuery
 			return ctx.HasParameter;
 		}
 
-		public static IDictionary<QueryElementType, int> CountElements(ISqlExpression expr)
+		public static IReadOnlyDictionary<QueryElementType, int> CountElements(ISqlExpression expr)
 		{
 			var result = new Dictionary<QueryElementType, int>();
 			expr.VisitAll(result, static (result, e) =>

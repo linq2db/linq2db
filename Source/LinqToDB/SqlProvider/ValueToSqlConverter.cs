@@ -244,8 +244,7 @@ namespace LinqToDB.SqlProvider
 		{
 			if (converter == null)
 			{
-				if (_converters.ContainsKey(type))
-					_converters.Remove(type);
+				_converters.Remove(type);
 			}
 			else
 			{

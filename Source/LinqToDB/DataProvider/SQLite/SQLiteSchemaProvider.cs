@@ -145,8 +145,8 @@ namespace LinqToDB.DataProvider.SQLite
 				foreach (var f in result.Where(fk => string.IsNullOrEmpty(fk.OtherColumn)))
 				{
 					var k = string.Format("{0}:{1}", f.OtherTableID, f.Ordinal);
-					if (pks.ContainsKey(k))
-						f.OtherColumn = pks[k];
+					if (pks.TryGetValue(k, out var otherColumn))
+						f.OtherColumn = otherColumn;
 				}
 			}
 			return result;

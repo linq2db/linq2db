@@ -1509,6 +1509,20 @@ namespace LinqToDB.Linq.Builder
 
 						predicate = ConvertInPredicate(context!, expr);
 					}
+					else if (e.Method.Name == "ContainsKey" && typeof(IReadOnlyDictionary<,>).IsSameOrParentOf(e.Method.DeclaringType!))
+					{
+						var args = e.Method.DeclaringType!.GetGenericArguments(typeof(IReadOnlyDictionary<,>))!;
+						var minf = EnumerableMethods
+								.First(static m => m.Name == "Contains" && m.GetParameters().Length == 2)
+								.MakeGenericMethod(args[0]);
+
+						var expr = Expression.Call(
+								minf,
+								ExpressionHelper.PropertyOrField(e.Object!, "Keys"),
+								e.Arguments[0]);
+
+						predicate = ConvertInPredicate(context!, expr);
+					}
 
 #if NETFRAMEWORK
 					else if (e.Method == ReflectionHelper.Functions.String.Like11) predicate = ConvertLikePredicate(context!, e);
@@ -3030,7 +3044,7 @@ namespace LinqToDB.Linq.Builder
 
 						var assignments = new List<(MemberAssignment ma, int order)>();
 						foreach (var ma in expr.Bindings.Cast<MemberAssignment>())
-							assignments.Add((ma, dic.ContainsKey(ma.Member.Name) ? dic[ma.Member.Name] : 1000000));
+							assignments.Add((ma, dic.TryGetValue(ma.Member.Name, out var idx) ? idx : 1000000));
 
 						foreach (var (binding, _) in assignments.OrderBy(static a => a.order))
 						{

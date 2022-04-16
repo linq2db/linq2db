@@ -7,7 +7,7 @@ namespace LinqToDB.Common
 {
 	internal static class ConvertUtils
 	{
-		private static readonly IDictionary<Type, ISet<Type>> _alwaysConvert = new Dictionary<Type, ISet<Type>>()
+		private static readonly IReadOnlyDictionary<Type, ISet<Type>> _alwaysConvert = new Dictionary<Type, ISet<Type>>()
 		{
 			{ typeof(byte)  , new HashSet<Type>() { typeof(short), typeof(ushort), typeof(int) , typeof(uint), typeof(long), typeof(ulong) } },
 			{ typeof(sbyte) , new HashSet<Type>() { typeof(short), typeof(ushort), typeof(int) , typeof(uint), typeof(long), typeof(ulong) } },
@@ -19,7 +19,7 @@ namespace LinqToDB.Common
 			{ typeof(ulong) , new HashSet<Type>() { } },
 		};
 
-		private static readonly IDictionary<Type, IDictionary<Type, Tuple<IComparable, IComparable>>> _rangedConvert = new Dictionary<Type, IDictionary<Type, Tuple<IComparable, IComparable>>>()
+		private static readonly IReadOnlyDictionary<Type, IReadOnlyDictionary<Type, Tuple<IComparable, IComparable>>> _rangedConvert = new Dictionary<Type, IReadOnlyDictionary<Type, Tuple<IComparable, IComparable>>>()
 		{
 			{ typeof(byte)  , new Dictionary<Type, Tuple<IComparable, IComparable>>()
 				{
