@@ -390,7 +390,7 @@ namespace Tests.Data
 
 			using (new DisableBaseline("Multi-threading"))
 			{
-				var exceptions = new ConcurrentBag<Exception>();
+				var exceptions = new ConcurrentStack<Exception>();
 
 				var threads = Enumerable
 					.Range(1, 10)
@@ -403,7 +403,7 @@ namespace Tests.Data
 						}
 						catch (Exception e)
 						{
-							exceptions.Add(e);
+							exceptions.Push(e);
 						}
 					}))
 					.ToArray();

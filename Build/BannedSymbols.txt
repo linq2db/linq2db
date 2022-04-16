@@ -1,4 +1,4 @@
-T:T:System.Collections.Concurrent.ConcurrentBag`1;broken type
+T:System.Collections.Concurrent.ConcurrentBag`1;Don't use it, it is flawed type: https://github.com/linq2db/linq2db/pull/2066
 T:System.Data.IColumnMapping;Use DataColumnMapping class instead of ADO.NET interfaces
 T:System.Data.IColumnMappingCollection;Use ColumnMappingCollection class instead of ADO.NET interfaces
 T:System.Data.IDataAdapter;Use DataAdapter class instead of ADO.NET interfaces
