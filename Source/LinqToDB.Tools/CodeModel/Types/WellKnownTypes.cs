@@ -426,19 +426,19 @@ namespace LinqToDB.CodeModel
 
 			public static class Configuration
 			{
-				private static readonly IType _linqToDbConnectionOptionsT = Parser.Parse(typeof(LinqToDbConnectionOptions<>));
+				private static readonly IType _linqToDBConnectionOptionsT = Parser.Parse(typeof(LinqToDbConnectionOptions<>));
 
 				/// <summary>
 				/// <see cref="global::LinqToDB.Configuration.LinqToDbConnectionOptions"/> type descriptor.
 				/// </summary>
-				public static IType LinqToDbConnectionOptions { get; } = Parser.Parse<LinqToDbConnectionOptions>();
+				public static IType LinqToDBConnectionOptions { get; } = Parser.Parse<LinqToDbConnectionOptions>();
 
 				/// <summary>
 				/// Returns <see cref="LinqToDbConnectionOptions{T}"/> type descriptor.
 				/// </summary>
 				/// <param name="contextType">Context type.</param>
 				/// <returns>Type descriptor.</returns>
-				public static IType LinqToDbConnectionOptionsWithType(IType contextType) => _linqToDbConnectionOptionsT.WithTypeArguments(contextType);
+				public static IType LinqToDBConnectionOptionsWithType(IType contextType) => _linqToDBConnectionOptionsT.WithTypeArguments(contextType);
 			}
 
 			public static class Mapping

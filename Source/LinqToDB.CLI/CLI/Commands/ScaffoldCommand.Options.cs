@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using LinqToDB.Configuration;
 using LinqToDB.DataModel;
 using LinqToDB.Naming;
 using LinqToDB.Scaffold;
@@ -546,7 +547,7 @@ Naming options is an object with following properties:
 					null,
 					false,
 					"generate data context contructor with options parameter",
-					"Constructor example: public MyDataContext(LinqToDbConnectionOptions options) { ... }",
+					$"Constructor example: public MyDataContext({nameof(LinqToDbConnectionOptions)} options) {{ ... }}",
 					null,
 					null,
 					_defaultOptions.DataModel.HasUntypedOptionsConstructor);
@@ -559,7 +560,7 @@ Naming options is an object with following properties:
 					null,
 					false,
 					"generate data context contructor with generic options parameter",
-					"Constructor example: public MyDataContext(LinqToDbConnectionOptions<MyDataContext> options) { ... }",
+					$"Constructor example: public MyDataContext({nameof(LinqToDbConnectionOptions)}<MyDataContext> options) {{ ... }}",
 					null,
 					null,
 					_defaultOptions.DataModel.HasTypedOptionsConstructor);

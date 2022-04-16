@@ -22,8 +22,8 @@ namespace LinqToDB.DataModel
 			// based on selected constructors set we generate (or not) following constructors:
 			// .ctor() // default constructor
 			// .ctor(string configuration) // constructor with connection configuration name parameter
-			// .ctor(LinqToDbConnectionOptions options) // options constructor
-			// .ctor(LinqToDbConnectionOptions<T> options) // typed options constructor
+			// .ctor(LinqToDBConnectionOptions options) // options constructor
+			// .ctor(LinqToDBConnectionOptions<T> options) // typed options constructor
 
 			// first we generate empty constructors and then add body to all of them as they will have same code for body
 
@@ -46,7 +46,7 @@ namespace LinqToDB.DataModel
 			if (_dataModel.DataContext.HasUntypedOptionsConstructor)
 			{
 				var optionsParam = AST.Parameter(
-					WellKnownTypes.LinqToDB.Configuration.LinqToDbConnectionOptions,
+					WellKnownTypes.LinqToDB.Configuration.LinqToDBConnectionOptions,
 					AST.Name(CONTEXT_CONSTRUCTOR_OPTIONS_PARAMETER),
 					CodeParameterDirection.In);
 
@@ -60,7 +60,7 @@ namespace LinqToDB.DataModel
 			if (_dataModel.DataContext.HasTypedOptionsConstructor)
 			{
 				var typedOptionsParam = AST.Parameter(
-					WellKnownTypes.LinqToDB.Configuration.LinqToDbConnectionOptionsWithType(contextBuilder.Type.Type),
+					WellKnownTypes.LinqToDB.Configuration.LinqToDBConnectionOptionsWithType(contextBuilder.Type.Type),
 					AST.Name(CONTEXT_CONSTRUCTOR_OPTIONS_PARAMETER),
 					CodeParameterDirection.In);
 
