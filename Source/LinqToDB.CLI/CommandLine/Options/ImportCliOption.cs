@@ -3,7 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 
-namespace LinqToDB.CLI
+namespace LinqToDB.CommandLine
 {
 	/// <summary>
 	/// Path to JSON file with CLI options.
@@ -32,7 +32,7 @@ namespace LinqToDB.CLI
 			Examples,
 			null)
 	{
-		public override object? ParseCLI(CliCommand command, string rawValue, out string? errorDetails)
+		public override object? ParseCommandLine(CliCommand command, string rawValue, out string? errorDetails)
 		{
 			var results  = new Dictionary<CliOption, object?>();
 

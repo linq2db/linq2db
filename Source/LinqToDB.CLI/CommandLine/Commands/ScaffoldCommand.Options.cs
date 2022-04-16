@@ -6,7 +6,7 @@ using LinqToDB.DataModel;
 using LinqToDB.Naming;
 using LinqToDB.Scaffold;
 
-namespace LinqToDB.CLI
+namespace LinqToDB.CommandLine
 {
 	partial class ScaffoldCommand : CliCommand
 	{

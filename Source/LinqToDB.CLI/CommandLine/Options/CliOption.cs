@@ -1,6 +1,6 @@
 ﻿using System.Text.Json;
 
-namespace LinqToDB.CLI
+namespace LinqToDB.CommandLine
 {
 	/// <summary>
 	/// Base type for CLI command option.
@@ -38,7 +38,7 @@ namespace LinqToDB.CLI
 		/// <returns>
 		/// Returns parsed value or <c>null</c> on error.
 		/// </returns>
-		public abstract object? ParseCLI(CliCommand command, string rawValue, out string? errorDetails);
+		public abstract object? ParseCommandLine(CliCommand command, string rawValue, out string? errorDetails);
 
 		/// <summary>
 		/// Parse option value(s) using value from JSON.

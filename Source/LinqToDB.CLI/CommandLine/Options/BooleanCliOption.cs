@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text.Json;
 
-namespace LinqToDB.CLI
+namespace LinqToDB.CommandLine
 {
 	/// <summary>
 	/// Boolean CLI option descriptor.
@@ -38,7 +38,7 @@ namespace LinqToDB.CLI
 			Examples,
 			JsonExamples)
 	{
-		public override object? ParseCLI(CliCommand command, string rawValue, out string? errorDetails)
+		public override object? ParseCommandLine(CliCommand command, string rawValue, out string? errorDetails)
 		{
 			if (string.Equals(rawValue, "true", StringComparison.OrdinalIgnoreCase))
 			{

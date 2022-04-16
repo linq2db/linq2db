@@ -2,7 +2,7 @@
 using System.Text.Json;
 using LinqToDB.Naming;
 
-namespace LinqToDB.CLI
+namespace LinqToDB.CommandLine
 {
 	/// <summary>
 	/// Code identifier normalization/generation options. Not supported in CLI (JSON only).
@@ -31,7 +31,7 @@ namespace LinqToDB.CLI
 			null,
 			JsonExamples)
 	{
-		public override object? ParseCLI(CliCommand command, string rawValue, out string? errorDetails)
+		public override object? ParseCommandLine(CliCommand command, string rawValue, out string? errorDetails)
 		{
 			// not supported from CLI
 			errorDetails = null;

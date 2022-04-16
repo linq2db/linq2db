@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace LinqToDB.CLI
+namespace LinqToDB.CommandLine
 {
 	/// <summary>
 	/// Base class for CLI commands.
@@ -181,7 +181,7 @@ namespace LinqToDB.CLI
 		/// <param name="unknownArgs">List of unrecognized arguments.</param>
 		/// <returns>Command execution status code.</returns>
 		public abstract int Execute(
-			CLIController                  controller,
+			CliController                  controller,
 			string[]                       rawArgs,
 			Dictionary<CliOption, object?> options,
 			IReadOnlyCollection<string>    unknownArgs);

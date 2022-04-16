@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace LinqToDB.CLI
+namespace LinqToDB.CommandLine
 {
 	/// <summary>
 	/// Base class for CLI controller.
 	/// </summary>
-	internal abstract class CLIController
+	internal abstract class CliController
 	{
 		/// <summary>
 		/// Optional default command to execute when unknown or no command specified by caller.
@@ -27,7 +27,7 @@ namespace LinqToDB.CLI
 		/// Creates controller instance.
 		/// </summary>
 		/// <param name="defaultCommand">Optional default command.</param>
-		protected CLIController(CliCommand? defaultCommand)
+		protected CliController(CliCommand? defaultCommand)
 		{
 			_defaultCommand = defaultCommand;
 		}
@@ -166,7 +166,7 @@ namespace LinqToDB.CLI
 								conflictingOptions.Add(opt);
 						}
 
-						var value = option.ParseCLI(command, args[i], out var errorMessage);
+						var value = option.ParseCommandLine(command, args[i], out var errorMessage);
 						if (value == null)
 						{
 							if (!hasErrors || !reportFirstErrorOnly)

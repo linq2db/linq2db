@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using LinqToDB.Naming;
 
-namespace LinqToDB.CLI
+namespace LinqToDB.CommandLine
 {
 	/// <summary>
 	/// Help command implementation.
@@ -23,7 +23,7 @@ namespace LinqToDB.CLI
 		}
 
 		public override int Execute(
-			CLIController                  controller,
+			CliController                  controller,
 			string[]                       rawArgs,
 			Dictionary<CliOption, object?> options,
 			IReadOnlyCollection<string>    unknownArgs)
@@ -373,7 +373,7 @@ namespace LinqToDB.CLI
 		/// </summary>
 		/// <param name="controller">CLI controller instance.</param>
 		/// <param name="unknownArgs">Unrecognized command line arguments for current call.</param>
-		private void PrintGeneralHelp(CLIController controller, IReadOnlyCollection<string> unknownArgs)
+		private void PrintGeneralHelp(CliController controller, IReadOnlyCollection<string> unknownArgs)
 		{
 			PrintHeader();
 

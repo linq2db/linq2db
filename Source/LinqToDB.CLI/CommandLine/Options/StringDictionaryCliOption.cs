@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Text.Json;
 
-namespace LinqToDB.CLI
+namespace LinqToDB.CommandLine
 {
 	/// <summary>
 	/// Name-value string dictionary CLI option.
@@ -34,7 +34,7 @@ namespace LinqToDB.CLI
 			Examples,
 			JsonExamples)
 	{
-		public override object? ParseCLI(CliCommand command, string rawValue, out string? errorDetails)
+		public override object? ParseCommandLine(CliCommand command, string rawValue, out string? errorDetails)
 		{
 			var result = new Dictionary<string, string>();
 			foreach (var entry in rawValue.Split(','))

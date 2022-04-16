@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 
-namespace LinqToDB.CLI
+namespace LinqToDB.CommandLine
 {
 	/// <summary>
 	/// Template command implementation.
@@ -44,7 +44,7 @@ namespace LinqToDB.CLI
 		}
 
 		public override int Execute(
-			CLIController                  controller,
+			CliController                  controller,
 			string[]                       rawArgs,
 			Dictionary<CliOption, object?> options,
 			IReadOnlyCollection<string>    unknownArgs)

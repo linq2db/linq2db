@@ -13,7 +13,7 @@ using Mono.TextTemplating;
 using Microsoft.Extensions.DependencyModel;
 using Microsoft.Extensions.DependencyModel.Resolution;
 
-namespace LinqToDB.CLI
+namespace LinqToDB.CommandLine
 {
 	partial class ScaffoldCommand : CliCommand
 	{

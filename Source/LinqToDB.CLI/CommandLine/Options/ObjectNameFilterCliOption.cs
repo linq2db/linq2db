@@ -1,6 +1,6 @@
 ﻿using System.Text.Json;
 
-namespace LinqToDB.CLI
+namespace LinqToDB.CommandLine
 {
 	/// <summary>
 	/// Database object filtering by name CLI option.
@@ -33,7 +33,7 @@ namespace LinqToDB.CLI
 			Examples,
 			JsonExamples)
 	{
-		public override object? ParseCLI(CliCommand command, string rawValue, out string? errorDetails)
+		public override object? ParseCommandLine(CliCommand command, string rawValue, out string? errorDetails)
 		{
 			var filter = new NameFilter();
 

@@ -1,5 +1,5 @@
 ﻿using System;
-using LinqToDB.CLI;
+using LinqToDB.CommandLine;
 
 namespace LinqToDB.Tools
 {
@@ -9,7 +9,7 @@ namespace LinqToDB.Tools
 		{
 			try
 			{
-				return new LinqToDBCLIController().Execute(args);
+				return new LinqToDBCliController().Execute(args);
 			}
 			catch (Exception ex)
 			{

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text.Json;
 
-namespace LinqToDB.CLI
+namespace LinqToDB.CommandLine
 {
 	/// <summary>
 	/// String-typed CLI option with fixed list of allowed values.
@@ -41,7 +41,7 @@ namespace LinqToDB.CLI
 			Examples,
 			JsonExamples)
 	{
-		public override object? ParseCLI(CliCommand command, string rawValue, out string? errorDetails)
+		public override object? ParseCommandLine(CliCommand command, string rawValue, out string? errorDetails)
 		{
 			// we don't operate with large lists to bother with Values lookup optimization with dictionary
 			if (AllowMultiple)

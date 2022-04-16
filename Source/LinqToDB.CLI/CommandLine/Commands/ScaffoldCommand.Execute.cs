@@ -17,12 +17,12 @@ using LinqToDB.Naming;
 using LinqToDB.Scaffold;
 using LinqToDB.Schema;
 
-namespace LinqToDB.CLI
+namespace LinqToDB.CommandLine
 {
 	partial class ScaffoldCommand : CliCommand
 	{
 		public override int Execute(
-			CLIController                  controller,
+			CliController                  controller,
 			string[]                       rawArgs,
 			Dictionary<CliOption, object?> options,
 			IReadOnlyCollection<string>    unknownArgs)
