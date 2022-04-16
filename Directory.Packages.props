@@ -57,6 +57,15 @@
 		<PackageVersion Include="NodaTime"                                              Version="3.0.10"        />
 		<PackageVersion Include="Humanizer.Core"                                        Version="2.14.1"        />
 		<PackageVersion Include="System.Linq.Dynamic.Core"                              Version="1.2.18"        />
+		<!--remote targets + remote examples targets-->
+		<!--source-->
+		<PackageVersion Include="protobuf-net.Grpc"                                     Version="1.0.152"       />
+		<PackageVersion Include="Grpc.Net.Client"                                       Version="2.44.0"        />
+		<!--examples-->
+		<PackageVersion Include="linq2db.t4models"                                      Version="4.0.0-preview.10" />
+		<!--tests-->
+		<PackageVersion Include="System.Configuration.ConfigurationManager"             Version="6.0.0"         />
+		<PackageVersion Include="protobuf-net.Grpc.AspNetCore"                          Version="1.0.152"       />
 		<!--nuget doesn't have strong name, so we use local self-signed copy-->
 		<!--
 		<PackageVersion Include="dotMorten.Microsoft.SqlServer.Types"                   Version="1.5.0"         />

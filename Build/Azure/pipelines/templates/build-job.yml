@@ -28,6 +28,13 @@ jobs:
 
   - task: MSBuild@1
     inputs:
+      solution: 'Examples/Examples.sln'
+      configuration: 'Debug'
+      msbuildArguments: '/t:Restore;Rebuild -m'
+    displayName: Build Examples (verify)
+
+  - task: MSBuild@1
+    inputs:
       solution: '$(solution)'
       configuration: '$(build_configuration)'
       msbuildArguments: '/t:Restore;Rebuild -m /p:ContinuousIntegrationBuild=true'
@@ -112,6 +119,20 @@ jobs:
       path: '$(Build.SourcesDirectory)/Source/LinqToDB.AspNet/bin/Release'
       artifact: '$(artifact_linq2db_aspnet_binaries)'
     displayName: Publish linq2db.AspNet build results
+    condition: and(succeeded(), ${{ parameters.for_nuget }})
+
+  - task: PublishPipelineArtifact@1
+    inputs:
+      path: '$(Build.SourcesDirectory)/Source/LinqToDB.Remote.Wcf/bin/Release'
+      artifact: '$(artifact_linq2db_remote_wcf_binaries)'
+    displayName: Publish linq2db.remote.Wcf build results
+    condition: and(succeeded(), ${{ parameters.for_nuget }})
+
+  - task: PublishPipelineArtifact@1
+    inputs:
+      path: '$(Build.SourcesDirectory)/Source/LinqToDB.Remote.Grpc/bin/Release'
+      artifact: '$(artifact_linq2db_remote_grpc_binaries)'
+    displayName: Publish linq2db.remote.Grpc build results
     condition: and(succeeded(), ${{ parameters.for_nuget }})
 
   - task: PublishPipelineArtifact@1

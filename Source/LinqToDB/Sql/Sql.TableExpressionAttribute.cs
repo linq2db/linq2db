@@ -50,7 +50,7 @@ namespace LinqToDB
 				table.Name           = Expression ?? methodCall.Method.Name;
 
 				var expressionStr = table.Name;
-				ExpressionAttribute.PrepareParameterValues(methodCall, ref expressionStr, false, out var knownExpressions, out var genericTypes);
+				ExpressionAttribute.PrepareParameterValues(methodCall, ref expressionStr, false, out var knownExpressions, false, out var genericTypes);
 
 				if (string.IsNullOrEmpty(expressionStr))
 					throw new LinqToDBException($"Cannot retrieve Table Expression body from expression '{methodCall}'.");
@@ -59,7 +59,7 @@ namespace LinqToDB
 				knownExpressions.Insert(0, null);
 				knownExpressions.Insert(0, null);
 
-				table.TableArguments = ExpressionAttribute.PrepareArguments(context, expressionStr!, ArgIndices, addDefault: false, knownExpressions, genericTypes, converter).Skip(2).ToArray();
+				table.TableArguments = ExpressionAttribute.PrepareArguments(context, expressionStr!, ArgIndices, false, knownExpressions, genericTypes, converter).Skip(2).ToArray();
 
 				if (Schema   != null) table.Schema   = Schema;
 				if (Database != null) table.Database = Database;

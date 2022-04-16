@@ -279,7 +279,7 @@ namespace Tests.Data
 			var interceptor1 = new TestCommandInterceptor();
 			var interceptor2 = new TestCommandInterceptor();
 
-			var options = new LinqToDbConnectionOptionsBuilder()
+			var options = new LinqToDBConnectionOptionsBuilder()
 				.UseConfigurationString(context)
 				.WithInterceptor(interceptor1)
 				.WithInterceptor(interceptor2);
@@ -331,7 +331,7 @@ namespace Tests.Data
 			var interceptor1 = new TestCommandInterceptor();
 			var interceptor2 = new TestCommandInterceptor();
 
-			var options = new LinqToDbConnectionOptionsBuilder()
+			var options = new LinqToDBConnectionOptionsBuilder()
 				.UseConfigurationString(context)
 				.WithInterceptor(interceptor1)
 				.WithInterceptor(interceptor2);

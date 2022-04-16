@@ -55,7 +55,7 @@ public static class Pluralization
 		{ "terminus",     "termini"      }, { "thesaurus",    "thesauri"     }, { "thesis",       "theses"       },
 		{ "thief",        "thieves"      }, { "trout",        "trout"        }, { "vulva",        "vulvae"       },
 		{ "wife",         "wives"        }, { "wildebeest",   "wildebeest"   }, { "wolf",         "wolves"       },
-		{ "woman",        "women"        }, { "yen",          "yen"          },
+		{ "woman",        "women"        }, { "yen",          "yen"          }, { "database",     "databases"    },
 	};
 
 	static string GetLastWord(string str)

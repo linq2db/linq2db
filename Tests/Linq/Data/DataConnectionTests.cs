@@ -330,7 +330,7 @@ namespace Tests.Data
 		public void TestServiceCollection1([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			var collection = new ServiceCollection();
-			collection.AddLinqToDb((serviceProvider, options) => options.UseConfigurationString(context));
+			collection.AddLinqToDB((serviceProvider, options) => options.UseConfigurationString(context));
 			var provider = collection.BuildServiceProvider();
 			var con = provider.GetService<IDataContext>()!;
 			Assert.True(con is DataConnection);
@@ -341,7 +341,7 @@ namespace Tests.Data
 		public void TestServiceCollection2([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			var collection = new ServiceCollection();
-			collection.AddLinqToDbContext<DataConnection>((serviceProvider, options) => options.UseConfigurationString(context));
+			collection.AddLinqToDBContext<DataConnection>((serviceProvider, options) => options.UseConfigurationString(context));
 			var provider = collection.BuildServiceProvider();
 			var con = provider.GetService<DataConnection>()!;
 			Assert.That(con.ConfigurationString, Is.EqualTo(context));
@@ -349,14 +349,14 @@ namespace Tests.Data
 
 		public class DbConnection1 : DataConnection
 		{
-			public DbConnection1(LinqToDbConnectionOptions options) : base(options)
+			public DbConnection1(LinqToDBConnectionOptions options) : base(options)
 			{
 			}
 		}
 
 		public class DbConnection2 : DataConnection
 		{
-			public DbConnection2(LinqToDbConnectionOptions<DbConnection2> options) : base(options)
+			public DbConnection2(LinqToDBConnectionOptions<DbConnection2> options) : base(options)
 			{
 			}
 		}
@@ -365,8 +365,8 @@ namespace Tests.Data
 		public void TestSettingsPerDb([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			var collection = new ServiceCollection();
-			collection.AddLinqToDbContext<DbConnection1>((provider, options) => options.UseConfigurationString(context));
-			collection.AddLinqToDbContext<DbConnection2>((provider, options) => {});
+			collection.AddLinqToDBContext<DbConnection1>((provider, options) => options.UseConfigurationString(context));
+			collection.AddLinqToDBContext<DbConnection2>((provider, options) => {});
 
 			var serviceProvider = collection.BuildServiceProvider();
 			var c1 = serviceProvider.GetService<DbConnection1>()!;
@@ -378,7 +378,7 @@ namespace Tests.Data
 		[Test]
 		public void TestConstructorThrowsWhenGivenInvalidSettings()
 		{
-			Assert.Throws<LinqToDBException>(() => new DbConnection1(new LinqToDbConnectionOptionsBuilder().Build<DbConnection2>()));
+			Assert.Throws<LinqToDBException>(() => new DbConnection1(new LinqToDBConnectionOptionsBuilder().Build<DbConnection2>()));
 		}
 
 		// informix connection limits interfere with test
@@ -386,9 +386,11 @@ namespace Tests.Data
 		[ActiveIssue("Fails due to connection limit for development version when run with nonmanaged provider", Configuration = ProviderName.SybaseManaged)]
 		public void MultipleConnectionsTest([DataSources(TestProvName.AllInformix)] string context)
 		{
+			using var psr = new Tests.Remote.ServerContainer.PortStatusRestorer(_serverContainer, false);
+
 			using (new DisableBaseline("Multi-threading"))
 			{
-				var exceptions = new ConcurrentBag<Exception>();
+				var exceptions = new ConcurrentStack<Exception>();
 
 				var threads = Enumerable
 					.Range(1, 10)
@@ -401,7 +403,7 @@ namespace Tests.Data
 						}
 						catch (Exception e)
 						{
-							exceptions.Add(e);
+							exceptions.Push(e);
 						}
 					}))
 					.ToArray();
