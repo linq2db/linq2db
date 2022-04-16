@@ -6,11 +6,11 @@ namespace LinqToDB.Configuration
 	/// <summary>
 	/// Provides explicitly-defined <see cref="ILinqToDBSettings"/> implementation.
 	/// </summary>
-	public class Linq2DbSettings : ILinqToDBSettings
+	public class LinqToDBSettings : ILinqToDBSettings
 	{
 		private readonly IConnectionStringSettings _connectionStringSettings;
 
-		public Linq2DbSettings(
+		public LinqToDBSettings(
 			string connectionName,
 			string providerName,
 			string connectionString)
