@@ -5,7 +5,7 @@ using System.ServiceModel.Description;
 namespace Host
 {
 	using LinqToDB.Remote;
-	using LinqToDB.Remote.WCF;
+	using LinqToDB.Remote.Wcf;
 
 	class Program
 	{
@@ -30,7 +30,7 @@ namespace Host
 					ReceiveTimeout         = new TimeSpan(00, 10, 00),
 					SendTimeout            = new TimeSpan(00, 10, 00),
 				},
-				"LinqOverWCF");
+				"LinqOverWcf");
 
 			host.Open();
 

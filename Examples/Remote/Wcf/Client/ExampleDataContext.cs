@@ -17,7 +17,7 @@ namespace DataModels
 					   ReceiveTimeout         = new TimeSpan(00, 10, 00),
 					   SendTimeout            = new TimeSpan(00, 10, 00),
 				   },
-				   new EndpointAddress("net.tcp://localhost:30304/LinqOverWCF"))
+				   new EndpointAddress("net.tcp://localhost:30304/LinqOverWcf"))
 		{
 			((NetTcpBinding)Binding!).ReaderQuotas.MaxStringContentLength = 1000000;
 		}

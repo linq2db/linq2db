@@ -16,7 +16,7 @@ namespace Server
 		public void ConfigureServices(IServiceCollection services)
 		{
 			// Set up Linq2DB connection
-			DataConnection.DefaultSettings = new Linq2DbSettings(
+			DataConnection.DefaultSettings = new LinqToDBSettings(
 				"Northwind",
 				ProviderName.SqlServer,
 				"Server=.;Database=Northwind;Trusted_Connection=True"

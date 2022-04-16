@@ -8,7 +8,7 @@
 	GenerateDatabaseInfo = false;
 	NamespaceName = "DataModels";
 	Model.Usings.Add("System.ServiceModel");
-	Model.Usings.Add("LinqToDB.Remote.WCF");
+	Model.Usings.Add("LinqToDB.Remote.Wcf");
 
 	DataContextName = "ExampleDataContext";
 	BaseDataContextClass = "WcfDataContext";
