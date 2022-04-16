@@ -37,12 +37,13 @@
 	</metadata>
 	<files>
 		<file src="..\Nuget\README.T4.md"                                            target="README.md"                                                                                          />
+		<file src="..\Nuget\readme.T4.txt"                                           target="readme.txt"                                                                                         />
 
 		<file src="..\Source\LinqToDB\bin\Release\net46\linq2db.dll"                 target="tools"                                                                                              />
 		<file src="..\Tests\Linq\bin\Azure\net472\Humanizer.dll"                     target="tools"                                                                                              />
 		<file src="..\Tests\Linq\bin\Azure\net472\Oracle.ManagedDataAccess.dll"      target="tools"                                                                                              />
 		<file src="..\Tests\Linq\bin\Azure\net472\Microsoft.Bcl.AsyncInterfaces.dll" target="tools"                                                                                              />
-		
+
 		<file src="..\NuGet\Oracle\linq2db.Oracle.props"                             target="build\linq2db.Oracle.Managed.props"                                                                 />
 
 		<file src="..\NuGet\Oracle\*.*"                                              target="contentFiles\any\any\LinqToDB.Templates"                          exclude="**\*.props"              />
