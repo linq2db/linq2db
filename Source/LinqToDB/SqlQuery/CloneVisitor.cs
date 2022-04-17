@@ -699,7 +699,7 @@ namespace LinqToDB.SqlQuery
 					var ts = (SqlTableSource)(IQueryElement)element;
 
 					// TODO: Source Clone called before _objectTree update (original cloning logic)
-					var newTs = new SqlTableSource(Clone(ts.Source), ts._alias);
+					var newTs = new SqlTableSource(Clone(ts.Source), ts.RawAlias);
 
 					_objectTree.Add(element, clone = newTs);
 

@@ -328,7 +328,7 @@ namespace LinqToDB.SqlQuery
 						joins != null && !ReferenceEquals(table.Joins, joins))
 							newElement = new SqlTableSource(
 								source ?? table.Source,
-								table._alias,
+								table.RawAlias,
 								joins ?? table.Joins,
 								uk ?? (table.HasUniqueKeys ? table.UniqueKeys : null));
 

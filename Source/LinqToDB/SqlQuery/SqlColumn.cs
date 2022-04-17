@@ -226,8 +226,7 @@ namespace LinqToDB.SqlQuery
 
 		public ISqlExpression Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
-			if (!(options.SkipColumns && Expression is SqlColumn))
-				Expression = Expression.Walk(options, context, func)!;
+			Expression = Expression.Walk(options, context, func)!;
 
 			if (options.ProcessParent)
 				Parent = (SelectQuery)func(context, Parent!);
