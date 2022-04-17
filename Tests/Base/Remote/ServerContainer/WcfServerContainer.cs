@@ -13,7 +13,7 @@ using LinqToDB.Remote.Wcf;
 
 namespace Tests.Remote.ServerContainer
 {
-	using Tests.Model;
+	using Model;
 	using Tests.Model.Remote.Wcf;
 
 	public class WcfServerContainer : IServerContainer

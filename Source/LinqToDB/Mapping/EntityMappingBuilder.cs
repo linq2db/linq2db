@@ -33,9 +33,6 @@ namespace LinqToDB.Mapping
 			_builder = builder ?? throw new ArgumentNullException(nameof(builder));
 
 			Configuration = configuration;
-
-//			// We'll reset cache here, because there is no need to create builder if you don't want to change something
-//			_builder.MappingSchema.ResetEntityDescriptor(typeof(TEntity));
 		}
 
 		readonly FluentMappingBuilder _builder;

@@ -63,8 +63,6 @@ namespace LinqToDB.Mapping
 		{
 		}
 
-		//static long _configurationCounter;
-
 		/// <summary>
 		/// Creates mapping schema with specified configuration name and base mapping schemas.
 		/// </summary>
@@ -1246,7 +1244,7 @@ namespace LinqToDB.Mapping
 		{
 			if (!IsLocked)
 				return new (this);
-			throw new LinqToDBException("Mapping Schema does not support fluent mapping.");
+			throw new LinqToDBException("MappingSchema is locked. Fluent Mapping is not supported.");
 		}
 
 		#endregion
@@ -1379,21 +1377,13 @@ namespace LinqToDB.Mapping
 					MetadataReader = Metadata.MetadataReader.Default;
 				}
 
-				bool _isLocked;
-
-				public override bool IsLocked => _isLocked;
-
 				protected override int GenerateID()
 				{
-					_isLocked = true;
 					return Default.GenerateID();
 				}
 
 				public override void ResetID()
 				{
-//					if (_isLocked)
-//						throw new LinqToDBException("DefaultMappingSchema is locked.");
-//					base.ResetID();
 				}
 			}
 		}
@@ -1767,11 +1757,6 @@ namespace LinqToDB.Mapping
 		{
 			EntityDescriptorsCache.Clear();
 		}
-
-//		internal void ResetEntityDescriptor(Type type)
-//		{
-//			//EntityDescriptorsCache.Remove((type, ConfigurationID));
-//		}
 
 		#endregion
 

@@ -57,7 +57,6 @@ namespace LinqToDB.Common
 				if (ReferenceEquals(this, other)) return true;
 
 				return
-//					Equals(Delegate?.Method, other.Delegate?.Method) &&
 					IsSchemaSpecific  == other.IsSchemaSpecific  &&
 					CheckNullLambdaID == other.CheckNullLambdaID &&
 					LambdaID          == other.LambdaID;
@@ -152,19 +151,15 @@ namespace LinqToDB.Common
 
 			var idBuilder = new IdentifierBuilder(_expressions.Count);
 
-			foreach (var (id, types) in
-				from e in _expressions
-				let id = IdentifierBuilder.GetObjectID(e.Key)
-				orderby id
-				select (id, e.Value))
+			foreach (var (id, types) in _expressions
+				.Select (static e => (id : IdentifierBuilder.GetObjectID(e.Key), types : e.Value))
+				.OrderBy(static t => t.id))
 			{
 				idBuilder.Add(id).Add(types.Count);
 
-				foreach (var (id2, value) in
-					from e in types
-					let id2 = IdentifierBuilder.GetObjectID(e.Key)
-					orderby id2
-					select (id2, e.Value))
+				foreach (var (id2, value) in types
+					.Select (static e => (id2 : IdentifierBuilder.GetObjectID(e.Key), value : e.Value))
+					.OrderBy(static t => t.id2))
 				{
 					idBuilder.Add(id2).Add(IdentifierBuilder.GetObjectID(value));
 				}

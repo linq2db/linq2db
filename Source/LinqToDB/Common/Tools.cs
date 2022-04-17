@@ -121,7 +121,7 @@ namespace LinqToDB.Common
 		/// <summary>
 		/// Clears all linq2db caches.
 		/// </summary>
-		public static void ClearAllCache()
+		public static void ClearAllCaches()
 		{
 			Query.ClearCaches();
 			MappingSchema.ClearCache();

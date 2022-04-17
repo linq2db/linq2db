@@ -1725,7 +1725,6 @@ namespace LinqToDB.Data
 		/// <returns>Current connection object.</returns>
 		public DataConnection AddMappingSchema(MappingSchema mappingSchema)
 		{
-			//MappingSchema = MappingSchema.CombineSchemas(MappingSchema, mappingSchema);
 			MappingSchema = new (mappingSchema, MappingSchema);
 			_id           = null;
 
