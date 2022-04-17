@@ -58,7 +58,7 @@ namespace DB2DataContext
 			InitMappingSchema();
 		}
 
-		public TESTDATADB(LinqToDbConnectionOptions options)
+		public TESTDATADB(LinqToDBConnectionOptions options)
 			: base(options)
 		{
 			InitDataContext();

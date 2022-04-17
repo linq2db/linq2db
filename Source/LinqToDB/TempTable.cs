@@ -510,11 +510,6 @@ namespace LinqToDB
 		public TableOptions TableOptions => _table.TableOptions;
 		public string?      TableID      => _table.TableID;
 
-		public string GetTableName()
-		{
-			return _table.GetTableName();
-		}
-
 		#endregion
 
 		#region ITableMutable<T> implementation

@@ -18,8 +18,5 @@ namespace LinqToDB
 		string       TableName    { get; }
 		TableOptions TableOptions { get; }
 		string?      TableID      { get; }
-
-		//TODO: replace with extension method
-		string GetTableName();
 	}
 }

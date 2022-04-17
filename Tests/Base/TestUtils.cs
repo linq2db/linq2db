@@ -3,14 +3,21 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Diagnostics;
 
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.Firebird;
 
+
 namespace Tests
 {
 	using Model;
+#if NETFRAMEWORK
+	using Model.Remote.Wcf;
+#else
+	using Model.Remote.Grpc;
+#endif
 
 	public static class TestUtils
 	{
@@ -30,7 +37,7 @@ namespace Tests
 			return Interlocked.Increment(ref _cnt);
 		}
 
-		public const string NO_SCHEMA_NAME   = "UNUSED_SCHEMA";
+		public const string NO_SCHEMA_NAME = "UNUSED_SCHEMA";
 		public const string NO_DATABASE_NAME = "UNUSED_DB";
 		public const string NO_SERVER_NAME   = "UNUSED_SERVER";
 
@@ -135,10 +142,12 @@ namespace Tests
 
 		private static string GetContextName(IDataContext db)
 		{
-#if NET472
-			if (db is TestServiceModelDataContext linqDb)
-				return linqDb.Configuration!;
+#if NETFRAMEWORK 
+			if (db is TestWcfDataContext linqDb)
+#else
+			if (db is TestGrpcDataContext linqDb)
 #endif
+				return linqDb.Configuration!;
 
 			if (db is TestDataConnection testDb)
 				return testDb.ConfigurationString!;

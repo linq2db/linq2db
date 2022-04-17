@@ -59,7 +59,7 @@ namespace MySqlConnectorDataContext
 			InitMappingSchema();
 		}
 
-		public TestmysqlconnectordbDB(LinqToDbConnectionOptions options)
+		public TestmysqlconnectordbDB(LinqToDBConnectionOptions options)
 			: base(options)
 		{
 			InitDataContext();

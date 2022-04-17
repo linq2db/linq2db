@@ -35,14 +35,14 @@ namespace LinqToDB.Data
 		/// <summary>
 		/// Creates database connection object that uses default connection configuration from <see cref="DefaultConfiguration"/> property.
 		/// </summary>
-		public DataConnection() : this(new LinqToDbConnectionOptionsBuilder())
+		public DataConnection() : this(new LinqToDBConnectionOptionsBuilder())
 		{}
 
 		/// <summary>
 		/// Creates database connection object that uses default connection configuration from <see cref="DefaultConfiguration"/> property and provided mapping schema.
 		/// </summary>
 		/// <param name="mappingSchema">Mapping schema to use with this connection.</param>
-		public DataConnection(MappingSchema mappingSchema) : this(new LinqToDbConnectionOptionsBuilder().UseMappingSchema(mappingSchema))
+		public DataConnection(MappingSchema mappingSchema) : this(new LinqToDBConnectionOptionsBuilder().UseMappingSchema(mappingSchema))
 		{
 		}
 
@@ -53,7 +53,7 @@ namespace LinqToDB.Data
 		/// In case of null, configuration from <see cref="DefaultConfiguration"/> property will be used.</param>
 		/// <param name="mappingSchema">Mapping schema to use with this connection.</param>
 		public DataConnection(string? configurationString, MappingSchema mappingSchema)
-			: this(new LinqToDbConnectionOptionsBuilder().UseConfigurationString(configurationString ?? DefaultConfiguration!).UseMappingSchema(mappingSchema))
+			: this(new LinqToDBConnectionOptionsBuilder().UseConfigurationString(configurationString ?? DefaultConfiguration!).UseMappingSchema(mappingSchema))
 		{
 		}
 
@@ -63,7 +63,7 @@ namespace LinqToDB.Data
 		/// <param name="configurationString">Name of database connection configuration to use with this connection.
 		/// In case of <c>null</c>, configuration from <see cref="DefaultConfiguration"/> property will be used.</param>
 		public DataConnection(string? configurationString)
-			: this(new LinqToDbConnectionOptionsBuilder().UseConfigurationString(configurationString ?? DefaultConfiguration!))
+			: this(new LinqToDBConnectionOptionsBuilder().UseConfigurationString(configurationString ?? DefaultConfiguration!))
 		{
 		}
 
@@ -77,7 +77,7 @@ namespace LinqToDB.Data
 				string        providerName,
 				string        connectionString,
 				MappingSchema mappingSchema)
-			: this(new LinqToDbConnectionOptionsBuilder().UseConnectionString(providerName, connectionString).UseMappingSchema(mappingSchema))
+			: this(new LinqToDBConnectionOptionsBuilder().UseConnectionString(providerName, connectionString).UseMappingSchema(mappingSchema))
 		{
 		}
 
@@ -89,7 +89,7 @@ namespace LinqToDB.Data
 		public DataConnection(
 			string providerName,
 			string connectionString)
-			: this(new LinqToDbConnectionOptionsBuilder().UseConnectionString(providerName, connectionString))
+			: this(new LinqToDBConnectionOptionsBuilder().UseConnectionString(providerName, connectionString))
 		{
 		}
 
@@ -103,7 +103,7 @@ namespace LinqToDB.Data
 			IDataProvider dataProvider,
 			string        connectionString,
 			MappingSchema mappingSchema)
-			: this(new LinqToDbConnectionOptionsBuilder().UseConnectionString(dataProvider, connectionString).UseMappingSchema(mappingSchema))
+			: this(new LinqToDBConnectionOptionsBuilder().UseConnectionString(dataProvider, connectionString).UseMappingSchema(mappingSchema))
 		{
 		}
 
@@ -115,7 +115,7 @@ namespace LinqToDB.Data
 		public DataConnection(
 			IDataProvider dataProvider,
 			string        connectionString)
-			: this(new LinqToDbConnectionOptionsBuilder().UseConnectionString(dataProvider, connectionString))
+			: this(new LinqToDBConnectionOptionsBuilder().UseConnectionString(dataProvider, connectionString))
 		{
 		}
 
@@ -129,7 +129,7 @@ namespace LinqToDB.Data
 			IDataProvider       dataProvider,
 			Func<DbConnection> connectionFactory,
 			MappingSchema       mappingSchema)
-			: this(new LinqToDbConnectionOptionsBuilder().UseConnectionFactory(dataProvider, connectionFactory).UseMappingSchema(mappingSchema))
+			: this(new LinqToDBConnectionOptionsBuilder().UseConnectionFactory(dataProvider, connectionFactory).UseMappingSchema(mappingSchema))
 		{
 		}
 
@@ -141,7 +141,7 @@ namespace LinqToDB.Data
 		public DataConnection(
 			IDataProvider       dataProvider,
 			Func<DbConnection> connectionFactory)
-			: this(new LinqToDbConnectionOptionsBuilder().UseConnectionFactory(dataProvider, connectionFactory))
+			: this(new LinqToDBConnectionOptionsBuilder().UseConnectionFactory(dataProvider, connectionFactory))
 		{
 		}
 
@@ -155,7 +155,7 @@ namespace LinqToDB.Data
 			IDataProvider dataProvider,
 			DbConnection  connection,
 			MappingSchema mappingSchema)
-			: this(new LinqToDbConnectionOptionsBuilder().UseConnection(dataProvider, connection).UseMappingSchema(mappingSchema))
+			: this(new LinqToDBConnectionOptionsBuilder().UseConnection(dataProvider, connection).UseMappingSchema(mappingSchema))
 		{
 		}
 
@@ -185,7 +185,7 @@ namespace LinqToDB.Data
 			IDataProvider dataProvider,
 			DbConnection  connection,
 			bool          disposeConnection)
-			: this(new LinqToDbConnectionOptionsBuilder().UseConnection(dataProvider, connection, disposeConnection))
+			: this(new LinqToDBConnectionOptionsBuilder().UseConnection(dataProvider, connection, disposeConnection))
 		{
 		}
 
@@ -199,7 +199,7 @@ namespace LinqToDB.Data
 			IDataProvider  dataProvider,
 			DbTransaction transaction,
 			MappingSchema  mappingSchema)
-			: this(new LinqToDbConnectionOptionsBuilder().UseTransaction(dataProvider, transaction).UseMappingSchema(mappingSchema))
+			: this(new LinqToDBConnectionOptionsBuilder().UseTransaction(dataProvider, transaction).UseMappingSchema(mappingSchema))
 		{
 		}
 
@@ -211,26 +211,26 @@ namespace LinqToDB.Data
 		public DataConnection(
 			IDataProvider  dataProvider,
 			DbTransaction transaction)
-			: this(new LinqToDbConnectionOptionsBuilder().UseTransaction(dataProvider, transaction))
+			: this(new LinqToDBConnectionOptionsBuilder().UseTransaction(dataProvider, transaction))
 		{
 		}
 
-		DataConnection(LinqToDbConnectionOptionsBuilder builder) : this(builder.Build())
+		private DataConnection(LinqToDBConnectionOptionsBuilder builder) : this(builder.Build())
 		{
 		}
 
 		/// <summary>
-		/// Creates database connection object that uses a <see cref="LinqToDbConnectionOptions"/> to configure the connection.
+		/// Creates database connection object that uses a <see cref="LinqToDBConnectionOptions"/> to configure the connection.
 		/// </summary>
 		/// <param name="options">Options, setup ahead of time.</param>
-		public DataConnection(LinqToDbConnectionOptions options)
+		public DataConnection(LinqToDBConnectionOptions options)
 		{
 			if (options == null)
 				throw new ArgumentNullException(nameof(options));
 
 			if (!options.IsValidConfigForConnectionType(this))
 				throw new LinqToDBException(
-					$"Improper options type used to create DataConnection {GetType()}, try creating a public constructor calling base and accepting type {nameof(LinqToDbConnectionOptions)}<{GetType().Name}>");
+					$"Improper options type used to create DataConnection {GetType()}, try creating a public constructor calling base and accepting type {nameof(LinqToDBConnectionOptions)}<{GetType().Name}>");
 
 			InitConfig();
 
@@ -467,10 +467,10 @@ namespace LinqToDB.Data
 
 		private static Action<TraceInfo> _onTrace = DefaultTrace;
 		/// <summary>
-		/// Sets trace handler, used for all new connections unless overriden in <see cref="LinqToDbConnectionOptions"/>
+		/// Sets trace handler, used for all new connections unless overriden in <see cref="LinqToDBConnectionOptions"/>
 		/// defaults to calling <see cref="OnTraceInternal"/>.
 		/// </summary>
-		public  static Action<TraceInfo>  OnTrace
+		public static Action<TraceInfo>  OnTrace
 		{
 			get => _onTrace;
 			set => _onTrace = value ?? DefaultTrace;
@@ -483,7 +483,7 @@ namespace LinqToDB.Data
 
 		/// <summary>
 		/// Gets or sets trace handler, used for current connection instance.
-		/// Configured on the connection builder using <see cref="LinqToDbConnectionOptionsBuilder.WithTracing(Action{TraceInfo})"/>.
+		/// Configured on the connection builder using <see cref="LinqToDBConnectionOptionsBuilder.WithTracing(Action{TraceInfo})"/>.
 		/// defaults to <see cref="OnTrace"/>.
 		/// </summary>
 		public Action<TraceInfo> OnTraceConnection { get; set; } = _onTrace;
@@ -589,7 +589,7 @@ namespace LinqToDB.Data
 
 		/// <summary>
 		/// Gets or sets global data connection trace options. Used for all new connections
-		/// unless <see cref="LinqToDbConnectionOptionsBuilder.WithTraceLevel"/> is called on builder.
+		/// unless <see cref="LinqToDBConnectionOptionsBuilder.WithTraceLevel"/> is called on builder.
 		/// defaults to off unless library was built in debug mode.
 		/// <remarks>Should only be used when <see cref="TraceSwitchConnection"/> can not be used!</remarks>
 		/// </summary>
@@ -604,7 +604,7 @@ namespace LinqToDB.Data
 		/// Sets tracing level for data connections.
 		/// </summary>
 		/// <param name="traceLevel">Connection tracing level.</param>
-		/// <remarks>Use <see cref="TraceSwitchConnection"/> when possible, configured via <see cref="LinqToDbConnectionOptionsBuilder.WithTraceLevel"/>.</remarks>
+		/// <remarks>Use <see cref="TraceSwitchConnection"/> when possible, configured via <see cref="LinqToDBConnectionOptionsBuilder.WithTraceLevel"/>.</remarks>
 		public static void TurnTraceSwitchOn(TraceLevel traceLevel = TraceLevel.Info)
 		{
 			TraceSwitch = new TraceSwitch("DataConnection", "DataConnection trace switch", traceLevel.ToString());
@@ -627,7 +627,7 @@ namespace LinqToDB.Data
 
 		/// <summary>
 		/// Trace function. By Default use <see cref="Debug"/> class for logging, but could be replaced to log e.g. to your log file.
-		/// will be ignored if <see cref="LinqToDbConnectionOptionsBuilder.WriteTraceWith"/> is called on builder
+		/// will be ignored if <see cref="LinqToDBConnectionOptionsBuilder.WriteTraceWith"/> is called on builder
 		/// <para>First parameter contains trace message.</para>
 		/// <para>Second parameter contains trace message category (<see cref="Switch.DisplayName"/>).</para>
 		/// <para>Third parameter contains trace level for message (<see cref="TraceLevel"/>).</para>
@@ -1015,24 +1015,6 @@ namespace LinqToDB.Data
 				AddDataProvider(provider);
 				return provider;
 			}, true);
-		}
-
-		class ConnectionStringSettings : IConnectionStringSettings
-		{
-			public ConnectionStringSettings(
-				string name,
-				string connectionString,
-				string providerName)
-			{
-				Name             = name;
-				ConnectionString = connectionString;
-				ProviderName     = providerName;
-			}
-
-			public string ConnectionString { get; }
-			public string Name             { get; }
-			public string ProviderName     { get; }
-			public bool   IsGlobal         { get; }
 		}
 
 		public static void AddOrSetConfiguration(
