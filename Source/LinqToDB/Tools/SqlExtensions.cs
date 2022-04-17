@@ -123,21 +123,5 @@ namespace LinqToDB.Tools
 		}
 
 		#endregion
-
-//		#region Truncate
-//
-//		public static int Truncate<T>(this ITable<T> table)
-//		{
-//			var tableName = table.GetTableName();
-//
-//			switch (table.DataContext)
-//			{
-//				case DataConnection dc : return dc.                    Execute<int>($"TRUNCATE TABLE {tableName}");
-//				case DataContext    dx : return dx.GetDataConnection().Execute<int>($"TRUNCATE TABLE {tableName}");
-//				default                : throw new NotImplementedException();
-//			}
-//		}
-//
-//		#endregion
 	}
 }
