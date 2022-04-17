@@ -1,20 +1,20 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Text;
 
 using JetBrains.Annotations;
 
 namespace LinqToDB
 {
-	using System;
-	using System.Diagnostics.CodeAnalysis;
-	using System.Text;
+	using Data;
+	using DataProvider;
 	using Expressions;
 
 	/// <summary>
 	/// Contains extension methods for LINQ queries.
 	/// </summary>
 	[PublicAPI]
-	public static partial class TableExtensions
+	public static class TableExtensions
 	{
 		#region Table Helpers
 

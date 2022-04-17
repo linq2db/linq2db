@@ -16,7 +16,7 @@
 			// global flag change
 			if (Common.Configuration.Linq.GuardGrouping)
 				flags |= QueryFlags.GroupByGuard;
-			if (Common.Configuration.Linq.ParameterizeTakeSkip)
+			if (Common.Configuration.Linq.ParametrizeTakeSkip)
 				flags |= QueryFlags.ParameterizeTakeSkip;
 			if (Common.Configuration.Linq.PreferApply)
 				flags |= QueryFlags.PreferApply;
