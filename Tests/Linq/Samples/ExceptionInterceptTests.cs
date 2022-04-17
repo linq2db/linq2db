@@ -6,6 +6,7 @@ using LinqToDB.Data.RetryPolicy;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 using System.Data.SQLite;
+using LinqToDB;
 
 namespace Tests.Samples
 {

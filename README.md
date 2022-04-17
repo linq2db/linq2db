@@ -281,8 +281,8 @@ public class DbNorthwind : LinqToDB.Data.DataConnection
 {
   public DbNorthwind() : base("Northwind") { }
 
-  public ITable<Product>  Product  => GetTable<Product>();
-  public ITable<Category> Category => GetTable<Category>();
+  public ITable<Product>  Product  => this.GetTable<Product>();
+  public ITable<Category> Category => this.GetTable<Category>();
 
   // ... other tables ...
 }
