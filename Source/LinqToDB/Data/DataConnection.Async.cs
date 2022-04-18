@@ -337,7 +337,7 @@ namespace LinqToDB.Data
 
 #region ExecuteNonQueryAsync
 
-		protected virtual async Task<int> ExecuteNonQueryAsync(DbCommand command, CancellationToken cancellationToken)
+		protected virtual async Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken)
 		{
 			var result = Option<int>.None;
 
@@ -350,7 +350,7 @@ namespace LinqToDB.Data
 				: await CurrentCommand!.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 		}
 
-		internal async Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken)
+		internal async Task<int> ExecuteNonQueryDataAsync(CancellationToken cancellationToken)
 		{
 			if (TraceSwitchConnection.Level == TraceLevel.Off)
 #if NATIVE_ASYNC
@@ -358,7 +358,7 @@ namespace LinqToDB.Data
 #else
 				using (DataProvider.ExecuteScope(this))
 #endif
-					return await ExecuteNonQueryAsync(CurrentCommand!, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+					return await ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 			var now = DateTime.UtcNow;
 			var sw  = Stopwatch.StartNew();
@@ -381,7 +381,7 @@ namespace LinqToDB.Data
 #else
 				using (DataProvider.ExecuteScope(this))
 #endif
-					ret = await ExecuteNonQueryAsync(CurrentCommand!, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+					ret = await ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 				if (TraceSwitchConnection.TraceInfo)
 				{
@@ -419,7 +419,7 @@ namespace LinqToDB.Data
 
 #region ExecuteScalarAsync
 
-		protected virtual async Task<object?> ExecuteScalarAsync(DbCommand command, CancellationToken cancellationToken)
+		protected virtual async Task<object?> ExecuteScalarAsync(CancellationToken cancellationToken)
 		{
 			var result = Option<object?>.None;
 
@@ -432,7 +432,7 @@ namespace LinqToDB.Data
 				: await CurrentCommand!.ExecuteScalarAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 		}
 
-		internal async Task<object?> ExecuteScalarAsync(CancellationToken cancellationToken)
+		internal async Task<object?> ExecuteScalarDataAsync(CancellationToken cancellationToken)
 		{
 			if (TraceSwitchConnection.Level == TraceLevel.Off)
 #if NATIVE_ASYNC
@@ -440,7 +440,7 @@ namespace LinqToDB.Data
 #else
 				using (DataProvider.ExecuteScope(this))
 #endif
-					return await ExecuteScalarAsync(CurrentCommand!, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+					return await ExecuteScalarAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 			var now = DateTime.UtcNow;
 			var sw  = Stopwatch.StartNew();
@@ -463,7 +463,7 @@ namespace LinqToDB.Data
 #else
 				using (DataProvider.ExecuteScope(this))
 #endif
-					ret = await ExecuteScalarAsync(CurrentCommand!, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+					ret = await ExecuteScalarAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 				if (TraceSwitchConnection.TraceInfo)
 				{
@@ -501,7 +501,6 @@ namespace LinqToDB.Data
 #region ExecuteReaderAsync
 
 		protected virtual async Task<DataReaderWrapper> ExecuteReaderAsync(
-			DbCommand         command,
 			CommandBehavior   commandBehavior,
 			CancellationToken cancellationToken)
 		{
@@ -531,7 +530,7 @@ namespace LinqToDB.Data
 #else
 				using (DataProvider.ExecuteScope(this))
 #endif
-					return await ExecuteReaderAsync(CurrentCommand!, commandBehavior, cancellationToken)
+					return await ExecuteReaderAsync(commandBehavior, cancellationToken)
 						.ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 			var now = DateTime.UtcNow;
@@ -556,7 +555,7 @@ namespace LinqToDB.Data
 #else
 				using (DataProvider.ExecuteScope(this))
 #endif
-					ret = await ExecuteReaderAsync(CurrentCommand!, commandBehavior, cancellationToken)
+					ret = await ExecuteReaderAsync(commandBehavior, cancellationToken)
 						.ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 				if (TraceSwitchConnection.TraceInfo)

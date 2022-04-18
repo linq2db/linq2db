@@ -40,9 +40,8 @@ namespace LinqToDB.SqlQuery
 		public ISqlTableSource Source       { get; set; }
 		public SqlTableType    SqlTableType => Source.SqlTableType;
 
-		// TODO: remove internal.
-		internal string? _alias;
-		public   string?  Alias
+		private string? _alias;
+		public  string?  Alias
 		{
 			get
 			{
@@ -59,6 +58,8 @@ namespace LinqToDB.SqlQuery
 			}
 			set => _alias = value;
 		}
+
+		internal string? RawAlias => _alias;
 
 		private List<ISqlExpression[]>? _uniqueKeys;
 

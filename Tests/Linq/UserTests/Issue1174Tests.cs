@@ -26,7 +26,7 @@ namespace Tests.UserTests
 					return db;
 				};
 			}
-			public ITable<User> Users => GetTable<User>();
+			public ITable<User> Users => this.GetTable<User>();
 
 			public MyDB()
 			{

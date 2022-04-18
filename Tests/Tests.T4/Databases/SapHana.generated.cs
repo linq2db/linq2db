@@ -60,7 +60,7 @@ namespace SapHanaDataContext
 			InitMappingSchema();
 		}
 
-		public HXEDB(LinqToDbConnectionOptions options)
+		public HXEDB(LinqToDBConnectionOptions options)
 			: base(options)
 		{
 			InitDataContext();

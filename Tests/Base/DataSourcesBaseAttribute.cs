@@ -31,10 +31,9 @@ namespace Tests
 				GetProviders().ToList() :
 				GetProviders().Where(a => !skipAttrs.Contains(a)).ToList();
 
-#if NETFRAMEWORK
 			if (!NoLinqService && IncludeLinqService)
 				providers.AddRange(providers.Select(p => p + ".LinqService").ToList());
-#endif
+
 			return CustomizationSupport.Interceptor.InterceptTestDataSources(this, parameter.Method, providers);
 		}
 

@@ -5,6 +5,7 @@ using NUnit.Framework;
 
 namespace Tests.UserTests
 {
+	using LinqToDB;
 	using LinqToDB.Data;
 	using Model;
 

@@ -59,7 +59,7 @@ namespace MariaDBDataContext
 			InitMappingSchema();
 		}
 
-		public TestmariadbDB(LinqToDbConnectionOptions options)
+		public TestmariadbDB(LinqToDBConnectionOptions options)
 			: base(options)
 		{
 			InitDataContext();
