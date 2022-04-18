@@ -51,7 +51,6 @@ namespace LinqToDB.DataModel
 				schema.Entities,
 				entity => DefineClass(schemaEntities, entity.Class),
 				schemaContext.Properties(true),
-				false,
 				contextType,
 				AST.Member(schemaContext.Type.This, ctxField.Field.Reference),
 				() => findMethods);

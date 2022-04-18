@@ -170,7 +170,7 @@ namespace LinqToDB.Scaffold
 		public bool HasConfigurationConstructor { get; set; } = true;
 
 		/// <summary>
-		/// Enables generation of data context constructor with non-generic <c>(<see cref="LinqToDbConnectionOptions"/> options)</c> parameter.
+		/// Enables generation of data context constructor with non-generic <c>(<see cref="LinqToDBConnectionOptions"/> options)</c> parameter.
 		/// <list type="bullet">
 		/// <item>Default: <c>false</c></item>
 		/// <item>In T4 compability mode: <c>true</c></item>
@@ -179,7 +179,7 @@ namespace LinqToDB.Scaffold
 		public bool HasUntypedOptionsConstructor { get; set; }
 
 		/// <summary>
-		/// Enables generation of data context constructor with generic <c>(<see cref="LinqToDbConnectionOptions{T}"/> options)</c> parameter,
+		/// Enables generation of data context constructor with generic <c>(<see cref="LinqToDBConnectionOptions{T}"/> options)</c> parameter,
 		/// where <c>T</c> is generated data context class.
 		/// <list type="bullet">
 		/// <item>Default: <c>true</c></item>

@@ -17,7 +17,6 @@ namespace LinqToDB.DataModel
 		/// <param name="entities">Collection of entity models.</param>
 		/// <param name="defineEntityClass">Action to define new empty entity class.</param>
 		/// <param name="contextProperties">Property group in data context with table access properties.</param>
-		/// <param name="contextIsDataConnection">Indicates that data context derived from <see cref="DataConnection"/> class. Affects available API and generated code.</param>
 		/// <param name="contextType">Data context class type.</param>
 		/// <param name="context">Data context instance accessor for context property generation.</param>
 		/// <param name="findMethodsGroup">Action to get Find extension method group.</param>
@@ -25,7 +24,6 @@ namespace LinqToDB.DataModel
 			IReadOnlyCollection<EntityModel> entities,
 			Func<EntityModel, ClassBuilder>  defineEntityClass,
 			PropertyGroup                    contextProperties,
-			bool                             contextIsDataConnection,
 			IType                            contextType,
 			ICodeExpression                  context,
 			Func<MethodGroup>                findMethodsGroup)
@@ -42,7 +40,6 @@ namespace LinqToDB.DataModel
 					entity,
 					entityBuilder,
 					contextProperties,
-					contextIsDataConnection,
 					contextType,
 					context,
 					findMethodsGroup);
@@ -56,7 +53,6 @@ namespace LinqToDB.DataModel
 		/// <param name="entity">Entity data model.</param>
 		/// <param name="entityBuilder">Entity class builder.</param>
 		/// <param name="contextProperties">Property group in data context with table access properties.</param>
-		/// <param name="contextIsDataConnection">Indicates that data context derived from <see cref="DataConnection"/> class. Affects available API and generated code.</param>
 		/// <param name="contextType">Data context class type.</param>
 		/// <param name="context">Data context instance accessor for context property generation.</param>
 		/// <param name="findMethodsGroup">Action to get Find extension method group.</param>
@@ -64,7 +60,6 @@ namespace LinqToDB.DataModel
 			EntityModel       entity,
 			ClassBuilder      entityBuilder,
 			PropertyGroup     contextProperties,
-			bool              contextIsDataConnection,
 			IType             contextType,
 			ICodeExpression   context,
 			Func<MethodGroup> findMethodsGroup)
@@ -86,7 +81,7 @@ namespace LinqToDB.DataModel
 			}
 
 			// add entity access property to data context
-			BuildEntityContextProperty(entity, entityBuilder.Type.Type, contextProperties, contextIsDataConnection, context);
+			BuildEntityContextProperty(entity, entityBuilder.Type.Type, contextProperties, context);
 
 			// generate Find extension method
 			BuildFindExtensions(entity, contextType, entityBuilder.Type.Type, findMethodsGroup);
@@ -98,13 +93,11 @@ namespace LinqToDB.DataModel
 		/// <param name="model">Entity data model.</param>
 		/// <param name="entityType">Entity class type.</param>
 		/// <param name="contextProperties">Property group in data context with table access properties.</param>
-		/// <param name="contextIsDataConnection">Indicates that data context derived from <see cref="DataConnection"/> class. Affects available API and generated code.</param>
 		/// <param name="contextReference">Data context instance accessor for context property generation.</param>
 		private void BuildEntityContextProperty(
 			EntityModel     model,
 			IType           entityType,
 			PropertyGroup   contextProperties,
-			bool            contextIsDataConnection,
 			ICodeExpression contextReference)
 		{
 			// context property disabled for entity? skip generation
@@ -121,17 +114,8 @@ namespace LinqToDB.DataModel
 
 			var contextProperty = DefineProperty(contextProperties, model.ContextProperty);
 
-			// GetTable<Entity>() call calls:
-			// for DataConnection: this.GetTable<Entity>()
-			// for other contexts: DataExtensions.GetTable<Entity>() extension method
-			var getTableCall = contextIsDataConnection
-				? AST.Call(
-					contextReference,
-					WellKnownTypes.LinqToDB.Data.DataConnection_GetTable,
-					WellKnownTypes.LinqToDB.ITable(entityType),
-					new[] { entityType },
-					false)
-				: AST.ExtCall(
+			// this.GetTable<Entity>() call
+			var getTableCall = AST.ExtCall(
 					WellKnownTypes.LinqToDB.DataExtensions,
 					WellKnownTypes.LinqToDB.DataExtensions_GetTable,
 					WellKnownTypes.LinqToDB.ITable(entityType),

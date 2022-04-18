@@ -134,7 +134,6 @@ namespace LinqToDB.DataModel
 				_dataModel.DataContext.Entities,
 				entity => DefineFileClass(entity.Class),
 				dataContextBuilder.Properties(true),
-				contextIsDataConnection,
 				dataContextBuilder.Type.Type,
 				dataContextBuilder.Type.This,
 				() => findMethodsGroup ??= getExtensionsClass().Regions().New(FIND_METHODS_REGION).Methods(false));

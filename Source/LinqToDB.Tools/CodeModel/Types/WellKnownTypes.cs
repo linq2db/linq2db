@@ -426,15 +426,15 @@ namespace LinqToDB.CodeModel
 
 			public static class Configuration
 			{
-				private static readonly IType _linqToDBConnectionOptionsT = Parser.Parse(typeof(LinqToDbConnectionOptions<>));
+				private static readonly IType _linqToDBConnectionOptionsT = Parser.Parse(typeof(LinqToDBConnectionOptions<>));
 
 				/// <summary>
-				/// <see cref="global::LinqToDB.Configuration.LinqToDbConnectionOptions"/> type descriptor.
+				/// <see cref="global::LinqToDB.Configuration.LinqToDBConnectionOptions"/> type descriptor.
 				/// </summary>
-				public static IType LinqToDBConnectionOptions { get; } = Parser.Parse<LinqToDbConnectionOptions>();
+				public static IType LinqToDBConnectionOptions { get; } = Parser.Parse<LinqToDBConnectionOptions>();
 
 				/// <summary>
-				/// Returns <see cref="LinqToDbConnectionOptions{T}"/> type descriptor.
+				/// Returns <see cref="LinqToDBConnectionOptions{T}"/> type descriptor.
 				/// </summary>
 				/// <param name="contextType">Context type.</param>
 				/// <returns>Type descriptor.</returns>
@@ -645,11 +645,6 @@ namespace LinqToDB.CodeModel
 				/// <see cref="global::LinqToDB.Data.DataConnection"/> type descriptor.
 				/// </summary>
 				public static IType DataConnection           { get; } = Parser.Parse<DataConnection>();
-
-				/// <summary>
-				/// <see cref="DataConnection.GetTable{T}()"/> method reference.
-				/// </summary>
-				public static CodeIdentifier DataConnection_GetTable { get; } = new CodeIdentifier(nameof(global::LinqToDB.Data.DataConnection.GetTable), true);
 
 				/// <summary>
 				/// DataConnectionExtensions.ExecuteProc method reference.

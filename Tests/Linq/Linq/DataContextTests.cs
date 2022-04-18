@@ -161,7 +161,7 @@ namespace Tests.Linq
 
 			public DataConnection? DataConnection { get; private set; }
 
-			protected override DataConnection CreateDataConnection(LinqToDbConnectionOptions options)
+			protected override DataConnection CreateDataConnection(LinqToDBConnectionOptions options)
 			{
 				return DataConnection = base.CreateDataConnection(options);
 			}
