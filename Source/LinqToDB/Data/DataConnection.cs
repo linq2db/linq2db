@@ -1750,16 +1750,18 @@ namespace LinqToDB.Data
 
 			return new DataConnection(ConfigurationString, DataProvider, connectionString, connection, MappingSchema)
 			{
-				RetryPolicy                 = RetryPolicy,
-				CommandTimeout              = CommandTimeout,
-				InlineParameters            = InlineParameters,
-				ThrowOnDisposed             = ThrowOnDisposed,
-				OnTraceConnection         = OnTraceConnection,
-				_queryHints                 = _queryHints?.Count > 0 ? _queryHints.ToList() : null,
-				_commandInterceptor       = _commandInterceptor      .CloneAggregated(),
-				_connectionInterceptor    = _connectionInterceptor   .CloneAggregated(),
-				_dataContextInterceptor   = _dataContextInterceptor  .CloneAggregated(),
-				_entityServiceInterceptor = _entityServiceInterceptor.CloneAggregated(),
+				RetryPolicy                  = RetryPolicy,
+				CommandTimeout               = CommandTimeout,
+				InlineParameters             = InlineParameters,
+				ThrowOnDisposed              = ThrowOnDisposed,
+				OnTraceConnection            = OnTraceConnection,
+				_queryHints                  = _queryHints?.Count > 0 ? _queryHints.ToList() : null,
+				_commandInterceptor          = _commandInterceptor.CloneAggregated(),
+				_connectionInterceptor       = _connectionInterceptor.CloneAggregated(),
+				_dataContextInterceptor      = _dataContextInterceptor.CloneAggregated(),
+				_entityServiceInterceptor    = _entityServiceInterceptor.CloneAggregated(),
+				_unwrapDataObjectInterceptor = _unwrapDataObjectInterceptor.CloneAggregated(),
+				_expressionInterceptor       = _expressionInterceptor.CloneAggregated()
 			};
 		}
 
