@@ -692,7 +692,7 @@ namespace Tests.DataProvider
 				int ipIntMandatory, double ipDoubleMandatory, string ipStringMandatory,
 				int? ipIntOptional, double? ipDoubleOptional, string ipStringOptional)
 			{
-				return GetTable<FIT_CA_PARAM_TEST>(
+				return this.GetTable<FIT_CA_PARAM_TEST>(
 					this,
 					(MethodInfo) MethodBase.GetCurrentMethod()!,
 					ipIntMandatory, ipDoubleMandatory,

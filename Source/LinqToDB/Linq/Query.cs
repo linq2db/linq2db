@@ -290,28 +290,6 @@ namespace LinqToDB.Linq
 
 		#region Query cache
 
-		[Flags]
-		enum QueryFlags
-		{
-			None                = 0,
-			/// <summary>
-			/// Bit set, when group by guard set for connection.
-			/// </summary>
-			GroupByGuard        = 0x1,
-			/// <summary>
-			/// Bit set, when inline parameters enabled for connection.
-			/// </summary>
-			InlineParameters    = 0x2,
-			/// <summary>
-			/// Bit set, when inline Take/Skip parameterization is enabled for query.
-			/// </summary>
-			ParameterizeTakeSkip = 0x4,
-			/// <summary>
-			/// Bit set, when PreferApply is enabled for query.
-			/// </summary>
-			PreferApply = 0x8,
-		}
-
 		class QueryCache
 		{
 			class QueryCacheEntry
@@ -507,26 +485,10 @@ namespace LinqToDB.Linq
 			if (dataContext is IExpressionPreprocessor preprocessor)
 				expr = preprocessor.ProcessExpression(expr);
 
-
 			if (Configuration.Linq.DisableQueryCache)
 				return CreateQuery(optimizationContext, new ParametersContext(expr, optimizationContext, dataContext), dataContext, expr);
 
-			// calculate query flags
-			var flags = QueryFlags.None;
-
-			if (dataContext.InlineParameters)
-				flags |= QueryFlags.InlineParameters;
-
-			// TODO: here we have race condition due to flag being global setting
-			// to fix it we must move flags to context level and remove global flags or invalidate caches on
-			// global flag change
-			if (Configuration.Linq.GuardGrouping)
-				flags |= QueryFlags.GroupByGuard;
-			if (Configuration.Linq.ParameterizeTakeSkip)
-				flags |= QueryFlags.ParameterizeTakeSkip;
-			if (Configuration.Linq.PreferApply)
-				flags |= QueryFlags.PreferApply;
-
+			var flags = dataContext.GetQueryFlags();
 			var query = _queryCache.Find(dataContext, expr, flags);
 
 			if (query == null)

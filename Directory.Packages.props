@@ -64,6 +64,15 @@
 		<!--
 		<PackageVersion Include="dotMorten.Microsoft.SqlServer.Types"                   Version="2.5.0"         />
 		-->
+		<!--remote targets + remote examples targets-->
+		<!--source-->
+		<PackageVersion Include="protobuf-net.Grpc"                                     Version="1.0.152"       />
+		<PackageVersion Include="Grpc.Net.Client"                                       Version="2.44.0"        />
+		<!--examples-->
+		<PackageVersion Include="linq2db.t4models"                                      Version="4.0.0-preview.10" />
+		<!--tests-->
+		<PackageVersion Include="System.Configuration.ConfigurationManager"             Version="6.0.0"         />
+		<PackageVersion Include="protobuf-net.Grpc.AspNetCore"                          Version="1.0.152"       />
 	</ItemGroup>
 	
 	<!--linq2db source-->

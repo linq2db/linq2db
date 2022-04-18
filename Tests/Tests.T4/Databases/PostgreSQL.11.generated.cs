@@ -82,7 +82,7 @@ namespace PostreSQL11DataContext
 			InitMappingSchema();
 		}
 
-		public TestdbDB(LinqToDbConnectionOptions options)
+		public TestdbDB(LinqToDBConnectionOptions options)
 			: base(options)
 		{
 			InitDataContext();

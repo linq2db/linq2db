@@ -9,7 +9,7 @@ namespace LinqToDB.SqlQuery
 	using Common;
 	using Data;
 	using Mapping;
-	using ServiceModel;
+	using Remote;
 
 	public class SqlTable : ISqlTableSource, IQueryExtendible
 	{

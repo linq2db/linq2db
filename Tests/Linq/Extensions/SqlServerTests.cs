@@ -598,7 +598,7 @@ namespace Tests.Extensions
 		}
 
 		[Test]
-		public void CteTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public void CteTest([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -697,6 +697,11 @@ namespace Tests.Extensions
 			}
 			catch (System.Data.SqlClient.SqlException    ex) when (ex.Number == 8622) {}
 			catch (Microsoft.Data.SqlClient.SqlException ex) when (ex.Number == 8622) {}
+#if NETFRAMEWORK
+			catch (System.ServiceModel.FaultException    ex) when (ex.Message.Contains("8622")) {}
+#else
+			catch (Grpc.Core.RpcException                ex) when (ex.Message.Contains("8622")) {}
+#endif
 
 			Assert.That(LastQuery, Contains.Substring("WITH (ForceSeek)"));
 		}
@@ -719,6 +724,11 @@ namespace Tests.Extensions
 			}
 			catch (System.Data.SqlClient.SqlException    ex) when (ex.Number == 8622) {}
 			catch (Microsoft.Data.SqlClient.SqlException ex) when (ex.Number == 8622) {}
+#if NETFRAMEWORK
+			catch (System.ServiceModel.FaultException    ex) when (ex.Message.Contains("8622")) { }
+#else
+			catch (Grpc.Core.RpcException                ex) when (ex.Message.Contains("8622")) {}
+#endif
 
 			Assert.That(LastQuery, Contains.Substring("WITH (ForceSeek, Index(IX_ChildIndex))"));
 		}
@@ -740,6 +750,11 @@ namespace Tests.Extensions
 			}
 			catch (System.Data.SqlClient.SqlException    ex) when (ex.Number == 8622) {}
 			catch (Microsoft.Data.SqlClient.SqlException ex) when (ex.Number == 8622) {}
+#if NETFRAMEWORK
+			catch (System.ServiceModel.FaultException    ex) when (ex.Message.Contains("8622")) { }
+#else
+			catch (Grpc.Core.RpcException                ex) when (ex.Message.Contains("8622")) {}
+#endif
 
 			Assert.That(LastQuery, Contains.Substring("WITH (ForceSeek, Index(IX_ChildIndex))"));
 		}
@@ -761,6 +776,11 @@ namespace Tests.Extensions
 			}
 			catch (System.Data.SqlClient.SqlException    ex) when (ex.Number == 8622) {}
 			catch (Microsoft.Data.SqlClient.SqlException ex) when (ex.Number == 8622) {}
+#if NETFRAMEWORK
+			catch (System.ServiceModel.FaultException    ex) when (ex.Message.Contains("8622")) { }
+#else
+			catch (Grpc.Core.RpcException                ex) when (ex.Message.Contains("8622")) {}
+#endif
 
 			Assert.That(LastQuery, Contains.Substring("WITH (ForceSeek(IX_ChildIndex([ParentID])))"));
 		}

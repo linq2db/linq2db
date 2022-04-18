@@ -55,7 +55,7 @@ namespace FirebirdDataContext
 			InitMappingSchema();
 		}
 
-		public TESTDB25DB(LinqToDbConnectionOptions options)
+		public TESTDB25DB(LinqToDBConnectionOptions options)
 			: base(options)
 		{
 			InitDataContext();

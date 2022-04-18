@@ -5,12 +5,16 @@ IF [%1] EQU [snupkg] (
 nuget.exe Pack ..\BuiltNuGet\linq2db.nuspec -OutputDirectory ..\BuiltNuGet\built -Symbols -SymbolPackageFormat snupkg
 nuget.exe Pack ..\BuiltNuGet\linq2db.AspNet.nuspec -OutputDirectory ..\BuiltNuGet\built -Symbols -SymbolPackageFormat snupkg
 nuget.exe Pack ..\BuiltNuGet\linq2db.Tools.nuspec -OutputDirectory ..\BuiltNuGet\built -Symbols -SymbolPackageFormat snupkg
+nuget.exe Pack ..\BuiltNuGet\linq2db.Remote.Grpc.nuspec -OutputDirectory ..\BuiltNuGet\built -Symbols -SymbolPackageFormat snupkg
+nuget.exe Pack ..\BuiltNuGet\linq2db.Remote.Wcf.nuspec -OutputDirectory ..\BuiltNuGet\built -Symbols -SymbolPackageFormat snupkg
 ) ELSE (
 REM Azure Artifacts doesn't support snupkg yet/still
 REM https://developercommunity.visualstudio.com/idea/657354/add-snupkg-support-to-azure-devops-artifacts.html
 nuget.exe Pack ..\BuiltNuGet\linq2db.nuspec -OutputDirectory ..\BuiltNuGet\built
 nuget.exe Pack ..\BuiltNuGet\linq2db.AspNet.nuspec -OutputDirectory ..\BuiltNuGet\built
 nuget.exe Pack ..\BuiltNuGet\linq2db.Tools.nuspec -OutputDirectory ..\BuiltNuGet\built
+nuget.exe Pack ..\BuiltNuGet\linq2db.Remote.Grpc.nuspec -OutputDirectory ..\BuiltNuGet\built
+nuget.exe Pack ..\BuiltNuGet\linq2db.Remote.Wcf.nuspec -OutputDirectory ..\BuiltNuGet\built
 )
 
 nuget.exe Pack ..\BuiltNuGet\linq2db.cli.nuspec -OutputDirectory ..\BuiltNuGet\built

@@ -446,14 +446,17 @@ namespace Tests.Linq
 
 			using (var db = GetDataContext(context, testLinqService : false, suppressSequentialAccess: true))
 			{
-#if NET472
 				if (isLinqService)
 				{
-					var fe = Assert.Throws<FaultException<ExceptionDetail>>(() => db.GetTable<BadMapping>().Select(_ => new { _.NotInt }).ToList())!;
+#if NETFRAMEWORK
+					var fe = Assert.Throws<FaultException>(() => db.GetTable<BadMapping>().Select(_ => new { _.NotInt }).ToList())!;
 					Assert.True(fe.Message.ToLowerInvariant().Contains("firstname"));
+#else
+					var fe = Assert.Throws<Grpc.Core.RpcException>(() => db.GetTable<BadMapping>().Select(_ => new { _.NotInt }).ToList())!;
+					Assert.True(fe.Message.ToLowerInvariant().Contains("firstname"));
+#endif
 				}
 				else
-#endif
 				{
 					var ex = Assert.Throws<LinqToDBConvertException>(() => db.GetTable<BadMapping>().Select(_ => new { _.NotInt }).ToList())!;
 					// field name casing depends on database
@@ -532,7 +535,7 @@ namespace Tests.Linq
 			}
 		}
 
-		#region Records
+#region Records
 
 		public record Record(int Id, string Value, string BaseValue) : RecordBase(Id, BaseValue);
 		public abstract record RecordBase(int Id, string BaseValue);
@@ -681,6 +684,6 @@ namespace Tests.Linq
 			}
 		}
 
-		#endregion
+#endregion
 	}
 }

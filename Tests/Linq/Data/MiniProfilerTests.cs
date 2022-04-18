@@ -331,6 +331,8 @@ namespace Tests.Data
 				{
 					case ConnectionType.MiniProfilerNoMappings:
 					case ConnectionType.MiniProfiler:
+						if (MiniProfiler.Current == null)
+							MiniProfiler.DefaultOptions.StartProfiler();
 						Assert.IsNotNull(MiniProfiler.Current);
 						return new ProfiledDbConnection(cn, MiniProfiler.Current);
 				}
@@ -346,7 +348,7 @@ namespace Tests.Data
 			using (var db = GetDataContext(testContext + (isLinq ? ".LinqService" : null), ms))
 			{
 				if (type == ConnectionType.MiniProfiler)
-					db.AddInterceptor(new UnwrapProfilerInterceptor());
+					db.AddInterceptor(UnwrapProfilerInterceptor.Instance);
 
 				var dtValue = new DateTime(2012, 12, 12, 12, 12, 12, 0);
 
@@ -1626,34 +1628,11 @@ namespace Tests.Data
 			switch (type)
 			{
 				case ConnectionType.MiniProfiler:
-					db.AddInterceptor(new UnwrapProfilerInterceptor());
+					db.AddInterceptor(UnwrapProfilerInterceptor.Instance);
 					break;
 			}
 
 			return db;
-		}
-
-		internal class UnwrapProfilerInterceptor : UnwrapDataObjectInterceptor
-		{
-			public override DbConnection UnwrapConnection(IDataContext dataContext, DbConnection connection)
-			{
-				return connection is ProfiledDbConnection c ? c.WrappedConnection : connection;
-			}
-
-			public override DbTransaction UnwrapTransaction(IDataContext dataContext, DbTransaction transaction)
-			{
-				return transaction is ProfiledDbTransaction t ? t.WrappedTransaction : transaction;
-			}
-
-			public override DbCommand UnwrapCommand(IDataContext dataContext, DbCommand command)
-			{
-				return command is ProfiledDbCommand c ? c.InternalCommand : command;
-			}
-
-			public override DbDataReader UnwrapDataReader(IDataContext dataContext, DbDataReader dataReader)
-			{
-				return dataReader is ProfiledDbDataReader dr ? dr.WrappedReader : dataReader;
-			}
 		}
 	}
 }

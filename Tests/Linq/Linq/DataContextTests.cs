@@ -241,13 +241,13 @@ namespace Tests.Linq
 			public int CreateCalled;
 			public int CloneCalled;
 
-			protected override DataConnection CreateDataConnection(LinqToDbConnectionOptions options)
+			protected override DataConnection CreateDataConnection(LinqToDBConnectionOptions options)
 			{
 				CreateCalled++;
 				return base.CreateDataConnection(options);
 			}
 
-			protected override DataConnection CloneDataConnection(DataConnection currentConnection, LinqToDbConnectionOptions options)
+			protected override DataConnection CloneDataConnection(DataConnection currentConnection, LinqToDBConnectionOptions options)
 			{
 				CloneCalled++;
 				return base.CloneDataConnection(currentConnection, options);
