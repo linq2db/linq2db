@@ -1051,6 +1051,7 @@ namespace LinqToDB
 		}
 
 		[Expression("Lpad({0},{1},'0')")]
+		[Expression(PN.Sybase, "right(replicate('0',{1}) + cast({0} as varchar(255),{1})")]
 		[Expression(PN.PostgreSQL, "Lpad({0}::text,{1},'0')")]
 		[Expression(PN.SqlServer, "format({0}, 'd{1}')")]
 		[Expression(PN.SQLite, "printf('%0{1}d', {0})")]

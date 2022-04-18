@@ -38,7 +38,7 @@ namespace Tests.Linq
 			};
 		}
 
-		private const string DateOnlySkipProviders = $"{TestProvName.AllAccess},{ProviderName.SqlCe},{ProviderName.SqlServer2005}";
+		private const string DateOnlySkipProviders = $"{TestProvName.AllAccess},{ProviderName.SqlCe},{TestProvName.AllSqlServer2005}";
 
 		[Test]
 		public void Parse1([DataSources(DateOnlySkipProviders)] string context)

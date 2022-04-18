@@ -84,7 +84,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestDateOnly([DataSources(false, TestProvName.AllAccess, ProviderName.SqlCe, ProviderName.SqlServer2005)] string context)
+		public void TestDateOnly([DataSources(false, TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSqlServer2005)] string context)
 		{
 			using var db = (TestDataConnection)GetDataContext(context);
 
