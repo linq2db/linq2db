@@ -121,5 +121,7 @@ namespace LinqToDB
 		void AddInterceptor(IInterceptor interceptor);
 
 		IUnwrapDataObjectInterceptor? UnwrapDataObjectInterceptor { get; }
+
+		IExpressionInterceptor? ExpressionInterceptor { get; }
 	}
 }

@@ -46,6 +46,7 @@ namespace LinqToDB
 				case IDataContextInterceptor      dc : AddInterceptorImpl((IInterceptable<IDataContextInterceptor>)     interceptable, dc); break;
 				case IEntityServiceInterceptor    es : AddInterceptorImpl((IInterceptable<IEntityServiceInterceptor>)   interceptable, es); break;
 				case IUnwrapDataObjectInterceptor wr : AddInterceptorImpl((IInterceptable<IUnwrapDataObjectInterceptor>)interceptable, wr); break;
+				case IExpressionInterceptor       ep : AddInterceptorImpl((IInterceptable<IExpressionInterceptor>)      interceptable, ep); break;
 			}
 		}
 
@@ -72,6 +73,9 @@ namespace LinqToDB
 					break;
 				case IInterceptable<IUnwrapDataObjectInterceptor> wri when interceptor is IUnwrapDataObjectInterceptor wr:
 					wri.Interceptor = new AggregatedUnwrapDataObjectInterceptor { Interceptors = { wri.Interceptor!, wr } };
+					break;
+				case IInterceptable<IExpressionInterceptor> ei when interceptor is IExpressionInterceptor wr:
+					ei.Interceptor = new AggregatedExpressionInterceptor        { Interceptors = { ei.Interceptor!, wr } };
 					break;
 				default:
 					throw new NotImplementedException($"AddInterceptor for '{typeof(T).Name}' is not implemented.");
