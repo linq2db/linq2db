@@ -216,14 +216,14 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			if (excludeSchemas.Count > 0)
 			{
 				var schemasToExcludeStr =
-					string.Join(", ", excludeSchemas.OrderBy(_ => _).Select(s => ToDatabaseLiteral(dataConnection, s)));
+					string.Join(", ", excludeSchemas.OrderBy(s => s).Select(s => ToDatabaseLiteral(dataConnection, s)));
 				schemaFilter = $@"{schemaColumnName} NOT IN ({schemasToExcludeStr})";
 			}
 
 			if (includeSchemas.Count > 0)
 			{
 				var schemasToIncludeStr =
-					string.Join(", ", includeSchemas.OrderBy(_ => _).Select(s => ToDatabaseLiteral(dataConnection, s)));
+					string.Join(", ", includeSchemas.OrderBy(s => s).Select(s => ToDatabaseLiteral(dataConnection, s)));
 				if (!string.IsNullOrEmpty(schemaFilter))
 					schemaFilter += " AND ";
 				schemaFilter += $@"{schemaColumnName} IN ({schemasToIncludeStr})";
