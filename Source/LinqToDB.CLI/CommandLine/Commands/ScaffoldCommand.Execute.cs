@@ -94,7 +94,7 @@ namespace LinqToDB.CommandLine
 			ScaffoldInterceptors? interceptors = null;
 			if (interceptorsPath != null)
 			{
-				(var res, interceptors) = LoadInterceptors(interceptorsPath);
+				(var res, interceptors) = LoadInterceptors(interceptorsPath, settings);
 				if (res != StatusCodes.SUCCESS)
 					return res;
 			}

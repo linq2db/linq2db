@@ -27,12 +27,12 @@ namespace LinqToDB.CommandLine
 		/// </summary>
 		/// <param name="interceptorsPath">Path to interceptors file.</param>
 		/// <returns>Method execution status and interceptors instance on success.</returns>
-		private (int resultCode, ScaffoldInterceptors? interceptors) LoadInterceptors(string interceptorsPath)
+		private (int resultCode, ScaffoldInterceptors? interceptors) LoadInterceptors(string interceptorsPath, ScaffoldOptions options)
 		{
 			if (Path.GetExtension(interceptorsPath).Equals(".dll", StringComparison.OrdinalIgnoreCase))
-				return LoadInterceptorsFromAssembly(interceptorsPath);
+				return LoadInterceptorsFromAssembly(interceptorsPath, options);
 
-			return LoadInterceptorsFromT4(interceptorsPath);
+			return LoadInterceptorsFromT4(interceptorsPath, options);
 		}
 
 		/// <summary>
@@ -40,7 +40,7 @@ namespace LinqToDB.CommandLine
 		/// </summary>
 		/// <param name="assemblyPath">Path to assembly with interceptors.</param>
 		/// <returns>Status of operation and loaded interceptors (on failure).</returns>
-		private (int resultCode, ScaffoldInterceptors? interceptors) LoadInterceptorsFromAssembly(string assemblyPath)
+		private (int resultCode, ScaffoldInterceptors? interceptors) LoadInterceptorsFromAssembly(string assemblyPath, ScaffoldOptions options)
 		{
 			// as loaded assembly could have additional sideload references, we should try to handle them
 			var assemblyFolder = Path.GetDirectoryName(Path.GetFullPath(assemblyPath))!;
@@ -62,7 +62,7 @@ namespace LinqToDB.CommandLine
 
 			SetupInterceptorsDependencyResolver(assemblyFolder, assembly);
 
-			return LoadInterceptorsFromAssembly(assemblyPath, assembly);
+			return LoadInterceptorsFromAssembly(assemblyPath, assembly, options);
 		}
 
 		private static void SetupInterceptorsDependencyResolver(string assemblyFolder, Assembly interceptorsAssembly)
@@ -157,7 +157,7 @@ namespace LinqToDB.CommandLine
 		/// <param name="sourcePath">Interceptors source path (T4 template path or assembly path) for logging purposes.</param>
 		/// <param name="assembly">Assembly with interceptors class.</param>
 		/// <returns>Method execution status and interceptors instance on success.</returns>
-		private static (int resultCode, ScaffoldInterceptors? interceptors) LoadInterceptorsFromAssembly(string sourcePath, Assembly assembly)
+		private static (int resultCode, ScaffoldInterceptors? interceptors) LoadInterceptorsFromAssembly(string sourcePath, Assembly assembly, ScaffoldOptions options)
 		{
 			Type? interceptorsType = null;
 			foreach (var type in assembly.GetTypes())
@@ -182,8 +182,19 @@ namespace LinqToDB.CommandLine
 				return (StatusCodes.EXPECTED_ERROR, null);
 			}
 
-			// default constructor required
-			var ctor = interceptorsType.GetConstructor(Array.Empty<Type>());
+			// try options constructor first
+			object[]? args = null;
+			var ctor = interceptorsType.GetConstructor(new[] { typeof(ScaffoldOptions) });
+			if (ctor == null)
+			{
+				// try default constructor
+				ctor = interceptorsType.GetConstructor(Array.Empty<Type>());
+			}
+			else
+			{
+				args = new[] { options };
+			}
+
 			if (ctor == null)
 			{
 				Console.Error.WriteLine($"Interceptor class '{interceptorsType}' missing default constrtuctor");
@@ -192,7 +203,7 @@ namespace LinqToDB.CommandLine
 
 			try
 			{
-				return (StatusCodes.SUCCESS, (ScaffoldInterceptors)Activator.CreateInstance(interceptorsType)!);
+				return (StatusCodes.SUCCESS, (ScaffoldInterceptors)Activator.CreateInstance(interceptorsType, args)!);
 			}
 			catch (Exception ex)
 			{
@@ -225,7 +236,7 @@ namespace LinqToDB.CommandLine
 		/// </summary>
 		/// <param name="t4templatePath">Path to T4 template.</param>
 		/// <returns>Template processing status and interceptors instance on success.</returns>
-		private (int resultCode, ScaffoldInterceptors? interceptors) LoadInterceptorsFromT4(string t4templatePath)
+		private (int resultCode, ScaffoldInterceptors? interceptors) LoadInterceptorsFromT4(string t4templatePath, ScaffoldOptions options)
 		{
 			// load template source and assembly references from T4 file
 			var status = PreprocessTemplate(t4templatePath, out var refs, out var templateCode, out var imports);
@@ -238,7 +249,7 @@ namespace LinqToDB.CommandLine
 				return (status, null);
 
 			// instantiate interceptors instance
-			return LoadInterceptorsFromAssembly(t4templatePath, assembly!);
+			return LoadInterceptorsFromAssembly(t4templatePath, assembly!, options);
 		}
 
 		/// <summary>

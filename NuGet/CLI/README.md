@@ -69,6 +69,7 @@ Scaffold configs (response files) are convenient in many ways:
 ### Customize Scaffold with Code
 
 For more advanced scaffolding configuration you can use scaffold interceptor class (inherited from `ScaffoldInterceptors` class), passed as pre-built assembly (don't forget that scaffold utility use .net core 3.1+, so don't target it with .NET Framework TFM) or T4 template.
+Class, inherited from `ScaffoldInterceptors` should have default constructor or constructor with `ScaffoldOptions` parameters.
 
 Main difference between assembly and T4 approach is:
 

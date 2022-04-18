@@ -27,9 +27,15 @@ edit it's methods code to add addtional logic.
 // this is interceptors class implementation which must inherit from ScaffoldInterceptors class
 public class Interceptors : ScaffoldInterceptors
 {
-	public Interceptors()
+	private ScaffoldOptions Options { get; }
+
+	// don't add other constructors (they will be ignored), as interceptors class instantiated using default constructor or constructor with ScaffoldOptions parameter
+	public Interceptors(ScaffoldOptions options)
 	{
-		// don't add other constructors (they will be ignored), as interceptors class instantiated using default constructor
+		Options = options;
+		// Options could be used in two ways:
+		// - it contains settings, passed with command line
+		// - it could be used to configure options programmatically (it should be done here in constructor before scaffolder will start using them)
 	}
 
 	#region Schema Interceptors
