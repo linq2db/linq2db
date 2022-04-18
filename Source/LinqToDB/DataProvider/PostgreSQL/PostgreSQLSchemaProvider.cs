@@ -216,21 +216,21 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			if (excludeSchemas.Count > 0)
 			{
 				var schemasToExcludeStr =
-					string.Join(", ", excludeSchemas.Select(s => ToDatabaseLiteral(dataConnection, s)));
+					string.Join(", ", excludeSchemas.OrderBy(_ => _).Select(s => ToDatabaseLiteral(dataConnection, s)));
 				schemaFilter = $@"{schemaColumnName} NOT IN ({schemasToExcludeStr})";
 			}
 
 			if (includeSchemas.Count > 0)
 			{
 				var schemasToIncludeStr =
-					string.Join(", ", includeSchemas.Select(s => ToDatabaseLiteral(dataConnection, s)));
+					string.Join(", ", includeSchemas.OrderBy(_ => _).Select(s => ToDatabaseLiteral(dataConnection, s)));
 				if (!string.IsNullOrEmpty(schemaFilter))
 					schemaFilter += " AND ";
 				schemaFilter += $@"{schemaColumnName} IN ({schemasToIncludeStr})";
 			}
 
 			return schemaFilter;
-			}
+		}
 
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
 		{
