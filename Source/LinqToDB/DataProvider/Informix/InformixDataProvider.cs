@@ -141,7 +141,7 @@ namespace LinqToDB.DataProvider.Informix
 #if NET6_0_OR_GREATER
 			else if (value is DateOnly d)
 			{
-				d = d.ToDateTime(TimeOnly.MinValue);
+				value = d.ToDateTime(TimeOnly.MinValue);
 			}
 #endif
 

@@ -214,14 +214,18 @@ namespace LinqToDB.DataProvider.Oracle
 					break;
 
 				case DataType.DateTime :
+				{
 					if (value is DateTime dt)
 						value = DataTools.AdjustPrecision(dt, 0);
 					break;
+				}
 
 				case DataType.DateTime2:
+				{
 					if (value is DateTime dt)
 						value = DataTools.AdjustPrecision(dt, (byte?)dataType.Precision ?? 6);
 					break;
+				}
 
 #if NET6_0_OR_GREATER
 				case DataType.Date     :
