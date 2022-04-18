@@ -1487,23 +1487,12 @@ namespace LinqToDB.Linq.Builder
 
 						predicate = ConvertInPredicate(context!, expr);
 					}
-					else if (e.Method.Name == "ContainsKey" && typeof(IDictionary<,>).IsSameOrParentOf(e.Method.DeclaringType!))
+					else if (e.Method.Name == "ContainsKey" &&
+						(typeof(IDictionary<,>).IsSameOrParentOf(e.Method.DeclaringType!) ||
+						 typeof(IReadOnlyDictionary<,>).IsSameOrParentOf(e.Method.DeclaringType!)))
 					{
-						var args = e.Method.DeclaringType!.GetGenericArguments(typeof(IDictionary<,>))!;
-						var minf = EnumerableMethods
-								.First(static m => m.Name == "Contains" && m.GetParameters().Length == 2)
-								.MakeGenericMethod(args[0]);
-
-						var expr = Expression.Call(
-								minf,
-								ExpressionHelper.PropertyOrField(e.Object!, "Keys"),
-								e.Arguments[0]);
-
-						predicate = ConvertInPredicate(context!, expr);
-					}
-					else if (e.Method.Name == "ContainsKey" && typeof(IReadOnlyDictionary<,>).IsSameOrParentOf(e.Method.DeclaringType!))
-					{
-						var args = e.Method.DeclaringType!.GetGenericArguments(typeof(IReadOnlyDictionary<,>))!;
+						var type = (typeof(IDictionary<,>).IsSameOrParentOf(e.Method.DeclaringType!) ? typeof(IDictionary<,>) : typeof(IReadOnlyDictionary<,>);
+						var args = e.Method.DeclaringType!.GetGenericArguments(type)!;
 						var minf = EnumerableMethods
 								.First(static m => m.Name == "Contains" && m.GetParameters().Length == 2)
 								.MakeGenericMethod(args[0]);
