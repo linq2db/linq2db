@@ -1491,7 +1491,7 @@ namespace LinqToDB.Linq.Builder
 						(typeof(IDictionary<,>).IsSameOrParentOf(e.Method.DeclaringType!) ||
 						 typeof(IReadOnlyDictionary<,>).IsSameOrParentOf(e.Method.DeclaringType!)))
 					{
-						var type = (typeof(IDictionary<,>).IsSameOrParentOf(e.Method.DeclaringType!) ? typeof(IDictionary<,>) : typeof(IReadOnlyDictionary<,>);
+						var type = typeof(IDictionary<,>).IsSameOrParentOf(e.Method.DeclaringType!) ? typeof(IDictionary<,>) : typeof(IReadOnlyDictionary<,>);
 						var args = e.Method.DeclaringType!.GetGenericArguments(type)!;
 						var minf = EnumerableMethods
 								.First(static m => m.Name == "Contains" && m.GetParameters().Length == 2)
