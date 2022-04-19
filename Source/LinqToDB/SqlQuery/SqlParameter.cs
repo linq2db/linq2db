@@ -34,8 +34,7 @@ namespace LinqToDB.SqlQuery
 
 		Type ISqlExpression.SystemType => Type.SystemType;
 
-		//TODO: Setter used only in EnumerableContext and should be hidden.
-		public object?  Value { get; internal set; }
+		public object?    Value            { get; }
 
 		public object? CorrectParameterValue(object? rawValue)
 		{

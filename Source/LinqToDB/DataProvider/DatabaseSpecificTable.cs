@@ -77,10 +77,5 @@ namespace LinqToDB.DataProvider
 		public string       TableName    => _table.TableName;
 		public TableOptions TableOptions => _table.TableOptions;
 		public string?      TableID      => _table.TableID;
-
-		public string GetTableName()
-		{
-			return _table.GetTableName();
-		}
 	}
 }

@@ -17,9 +17,6 @@ namespace LinqToDB.DataProvider
 			_path        = path        ?? throw new ArgumentNullException(nameof(path));
 			_resolveName = resolveName ?? throw new ArgumentNullException(nameof(resolveName));
 
-			if (_path.StartsWith("file://"))
-				_path = _path.GetPathFromUri();
-
 			SetResolver();
 		}
 

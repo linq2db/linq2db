@@ -1284,7 +1284,7 @@ namespace LinqToDB.SqlQuery
 						{
 							var newTableSource = new SqlTableSource(
 								tableSource.Source,
-								tableSource._alias,
+								tableSource.RawAlias,
 								joins,
 								tableSource.HasUniqueKeys ? tableSource.UniqueKeys : null);
 							return newTableSource;

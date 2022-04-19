@@ -82,10 +82,5 @@ namespace LinqToDB.Linq
 		public string?      ServerName   { get; }
 		public TableOptions TableOptions { get; }
 		public string?      TableID      { get; }
-
-		public string GetTableName()
-		{
-			return null!;
-		}
 	}
 }

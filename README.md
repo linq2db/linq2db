@@ -77,11 +77,11 @@ var db = new LinqToDB.Data.DataConnection(
 
 ### Using Connection Options Builder
 
-You can configure connection options from code using [`LinqToDbConnectionOptionsBuilder`](https://linq2db.github.io/api/LinqToDB.Configuration.LinqToDbConnectionOptionsBuilder.html) class (check class for available options):
+You can configure connection options from code using [`LinqToDBConnectionOptionsBuilder`](https://linq2db.github.io/api/LinqToDB.Configuration.LinqToDBConnectionOptionsBuilder.html) class (check class for available options):
 
 ```cs
 // create options builder
-var builder = new LinqToDbConnectionOptionsBuilder();
+var builder = new LinqToDBConnectionOptionsBuilder();
 
 // configure connection string
 builder.UseSqlServer(connectionString);
@@ -281,8 +281,8 @@ public class DbNorthwind : LinqToDB.Data.DataConnection
 {
   public DbNorthwind() : base("Northwind") { }
 
-  public ITable<Product>  Product  => GetTable<Product>();
-  public ITable<Category> Category => GetTable<Category>();
+  public ITable<Product>  Product  => this.GetTable<Product>();
+  public ITable<Category> Category => this.GetTable<Category>();
 
   // ... other tables ...
 }

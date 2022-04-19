@@ -155,11 +155,6 @@ namespace LinqToDB.Linq
 			}
 		}
 
-		public string GetTableName() =>
-			DataContext.CreateSqlProvider()
-				.ConvertTableName(new StringBuilder(), ServerName, DatabaseName, SchemaName, TableName, TableOptions)
-				.ToString();
-
 		public ITable<T> ChangeServerName(string? serverName)
 		{
 			return new Table<T>(DataContext)
@@ -248,7 +243,7 @@ namespace LinqToDB.Linq
 
 		public override string ToString()
 		{
-			return $"Table({GetTableName()})";
+			return $"Table({this.GetTableName()})";
 		}
 
 		#endregion
