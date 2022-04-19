@@ -523,16 +523,8 @@ namespace LinqToDB.Linq.Builder
 
 									mc = mc.Update(mc.Object, args);
 									return new TransformInfo(mc, true);
-								};
+								}
 							}
-						}
-
-						var l = ConvertMethodExpression(call.Object?.Type ?? call.Method.ReflectedType!, call.Method, out var alias);
-
-						if (l != null)
-						{
-							var optimized = OptimizeExpression(ConvertMethod(call, l));
-							return new TransformInfo(optimized);
 						}
 
 						if (CompiledParameters == null && typeof(IQueryable).IsSameOrParentOf(expr.Type))
@@ -553,11 +545,6 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			return new TransformInfo(expr);
-		}
-
-		LambdaExpression? ConvertMethodExpression(Type type, MemberInfo mi, out string? alias)
-		{
-			return _optimizationContext.ConvertMethodExpression(type, mi, out alias);
 		}
 
 		Expression ConvertSubquery(Expression expr)

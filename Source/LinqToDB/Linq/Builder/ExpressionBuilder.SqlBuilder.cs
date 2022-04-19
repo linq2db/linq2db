@@ -610,7 +610,7 @@ namespace LinqToDB.Linq.Builder
 			return lambda == null ? null : ConvertMethod(pi, lambda);
 		}
 
-		static Expression ConvertMethod(MethodCallExpression pi, LambdaExpression lambda)
+		public static Expression ConvertMethod(MethodCallExpression pi, LambdaExpression lambda)
 		{
 			var ef    = lambda.Body.Unwrap();
 			var parms = new Dictionary<ParameterExpression,int>(lambda.Parameters.Count);

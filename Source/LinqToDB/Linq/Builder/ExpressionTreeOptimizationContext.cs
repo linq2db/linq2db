@@ -708,6 +708,19 @@ namespace LinqToDB.Linq.Builder
 					}
 					break;
 				}
+
+				case ExpressionType.Call:
+				{
+					var call = (MethodCallExpression)expr;
+					var l = ConvertMethodExpression(call.Object?.Type ?? call.Method.ReflectedType!, call.Method, out var alias);
+					if (l != null)
+					{
+						var transformed = ExpressionBuilder.ConvertMethod(call, l);
+						return new TransformInfo(transformed, false, true);
+					}
+
+					break;
+				}
 			}
 
 			return new TransformInfo(expr, false);
@@ -722,6 +735,12 @@ namespace LinqToDB.Linq.Builder
 			result = (_exposeExpressionTransformer ??=
 				TransformInfoVisitor<ExpressionTreeOptimizationContext>.Create(this,
 					static(ctx, e) => ctx.ExposeExpressionTransformer(e))).Transform(expression);
+
+			var interceptor = DataContext.ExpressionInterceptor;
+			if (interceptor != null)
+			{
+				result = interceptor.ProcessExpression(result);
+			}
 
 			(_exposedCache ??= new())[expression] = result;
 
