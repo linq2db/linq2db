@@ -631,18 +631,18 @@ namespace Tests.DataProvider
 		public void DateAddTest2([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = new SystemDB(context);
-			var result = db.Select(() => SqlFn.DateAdd(SqlFn.DateParts.Day, 1, DateTime.Today));
+			var result = db.Select(() => SqlFn.DateAdd(SqlFn.DateParts.Day, 1, TestData.Date));
 			Console.WriteLine(result);
-			Assert.That(result, Is.EqualTo(DateTime.Today.AddDays(1)));
+			Assert.That(result, Is.EqualTo(TestData.Date.AddDays(1)));
 		}
 
 		[Test]
 		public void DateAddTest3([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using var db = new SystemDB(context);
-			var result = db.Select(() => SqlFn.DateAdd(SqlFn.DateParts.Year, 1, DateTimeOffset.Now));
+			var result = db.Select(() => SqlFn.DateAdd(SqlFn.DateParts.Year, 1, TestData.DateTimeOffset));
 			Console.WriteLine(result);
-			Assert.That(result?.Date, Is.EqualTo(DateTime.Today.AddYears(1)));
+			Assert.That(result?.Date, Is.EqualTo(TestData.DateTimeOffset.Date.AddYears(1)));
 		}
 
 		[Test]
@@ -667,7 +667,7 @@ namespace Tests.DataProvider
 		public void DateDiffTest2([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = new SystemDB(context);
-			var result = db.Select(() => SqlFn.DateDiff(SqlFn.DateParts.Month, DateTime.Today, DateTime.Today.AddYears(1)));
+			var result = db.Select(() => SqlFn.DateDiff(SqlFn.DateParts.Month, TestData.Date, TestData.Date.AddYears(1)));
 			Console.WriteLine(result);
 			Assert.That(result, Is.EqualTo(12));
 		}
@@ -676,7 +676,7 @@ namespace Tests.DataProvider
 		public void DateDiffTest3([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using var db = new SystemDB(context);
-			var result = db.Select(() => SqlFn.DateDiff(SqlFn.DateParts.Month, DateTimeOffset.Now, DateTimeOffset.Now.AddYears(1)));
+			var result = db.Select(() => SqlFn.DateDiff(SqlFn.DateParts.Month, TestData.DateTimeOffset, TestData.DateTimeOffset.AddYears(1)));
 			Console.WriteLine(result);
 			Assert.That(result, Is.EqualTo(12));
 		}
@@ -703,7 +703,7 @@ namespace Tests.DataProvider
 		public void DateDiffBigTest2([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
 		{
 			using var db = new SystemDB(context);
-			var result = db.Select(() => SqlFn.DateDiffBig(SqlFn.DateParts.Month, DateTime.Today, DateTime.Today.AddYears(1)));
+			var result = db.Select(() => SqlFn.DateDiffBig(SqlFn.DateParts.Month, TestData.Date, TestData.Date.AddYears(1)));
 			Console.WriteLine(result);
 			Assert.That(result, Is.EqualTo(12));
 		}
@@ -712,7 +712,7 @@ namespace Tests.DataProvider
 		public void DateDiffBigTest3([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
 		{
 			using var db = new SystemDB(context);
-			var result = db.Select(() => SqlFn.DateDiffBig(SqlFn.DateParts.Month, DateTimeOffset.Now, DateTimeOffset.Now.AddYears(1)));
+			var result = db.Select(() => SqlFn.DateDiffBig(SqlFn.DateParts.Month, TestData.DateTimeOffset, TestData.DateTimeOffset.AddYears(1)));
 			Console.WriteLine(result);
 			Assert.That(result, Is.EqualTo(12));
 		}
