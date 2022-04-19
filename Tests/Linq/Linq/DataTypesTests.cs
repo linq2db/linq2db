@@ -85,7 +85,7 @@ namespace Tests.Linq
 
 		[Test]
 		// TODO: sqlite classic currently stores date with 00:00:00 timestamp, so string equality doesn't work quite right
-		public void TestDateOnly([DataSources(false, TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSqlServer2005, ProviderName.SQLiteClassic)] string context)
+		public void TestDateOnly([DataSources(false, TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSqlServer2005, TestProvName.AllSQLiteClassic)] string context)
 		{
 			using var db = (TestDataConnection)GetDataContext(context);
 

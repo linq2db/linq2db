@@ -54,6 +54,16 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
+		[Test]
+		public void Parse2([DataSources(DateOnlySkipProviders)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(Transaction.AllData))
+				AreEqual(
+					from d in from t in Transaction.AllData        select DateOnly.Parse(Sql.ConvertTo<string>.From(t.TransactionDate)) where d.Day > 0 select d,
+					from d in from t in db.GetTable<Transaction>() select DateOnly.Parse(Sql.ConvertTo<string>.From(t.TransactionDate)) where d.Day > 0 select d);
+		}
+
 		#region DatePart
 
 		[Test]
