@@ -147,7 +147,16 @@ namespace LinqToDB.DataProvider.Informix
 						{
 							switch (Type.GetTypeCode(func.SystemType.ToUnderlying()))
 							{
-								case TypeCode.String   : return new SqlFunction(func.SystemType, "To_Char", func.Parameters[1]);
+								case TypeCode.String   :
+								{
+									if (IsDateDataType(func.Parameters[1], "Date"))
+									{
+										return new SqlFunction(func.SystemType, "To_Char", func.Parameters[1], new SqlValue("%Y-%m-%d"));
+									}
+
+									return new SqlFunction(func.SystemType, "To_Char", func.Parameters[1]);
+								}
+
 								case TypeCode.Boolean  :
 								{
 									var ex = AlternativeConvertToBoolean(func, 1);
