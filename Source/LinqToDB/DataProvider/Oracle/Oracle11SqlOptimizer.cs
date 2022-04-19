@@ -158,7 +158,11 @@ namespace LinqToDB.DataProvider.Oracle
 								return ex;
 						}
 
-						if (ftype == typeof(DateTime) || ftype == typeof(DateTimeOffset))
+						if (ftype == typeof(DateTime) || ftype == typeof(DateTimeOffset)
+#if NET6_0_OR_GREATER
+							|| ftype == typeof(DateOnly)
+#endif
+							)
 						{
 							if (IsTimeDataType(func.Parameters[0]))
 							{

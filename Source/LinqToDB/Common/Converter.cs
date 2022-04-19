@@ -50,7 +50,9 @@ namespace LinqToDB.Common
 #if NET6_0_OR_GREATER
 			SetConverter<DateTime,       DateOnly>   (v => DateOnly.FromDateTime(v));
 			SetConverter<DateOnly,       DateTime>   (v => v.ToDateTime(TimeOnly.MinValue));
-			SetConverter<string,         DateOnly>   (v => DateOnly.Parse(v, CultureInfo.InvariantCulture, DateTimeStyles.None));
+
+			// use DateTime.Parse() because db processing may return strings that are full date/time.
+			SetConverter<string,         DateOnly>   (v => DateOnly.FromDateTime(DateTime.Parse(v, CultureInfo.InvariantCulture, DateTimeStyles.None)));
 #endif
 
 			SetConverter<byte  , BitArray>(v => new BitArray(new byte[] { v }));
