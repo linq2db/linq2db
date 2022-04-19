@@ -149,11 +149,17 @@ namespace LinqToDB.DataProvider.Informix
 							{
 								case TypeCode.String   :
 								{
-									if (IsDateDataType(func.Parameters[1], "Date"))
+									var stype = func.Parameters[1].SystemType!.ToUnderlying();
+									if (stype == typeof(DateTime))
 									{
+										return new SqlFunction(func.SystemType, "To_Char", func.Parameters[1], new SqlValue("%Y-%m-%d %H:%M:%S.%F"));
+									}
+#if NET6_0_OR_GREATER
+									else if (stype == typeof(DateOnly))
+									{ 
 										return new SqlFunction(func.SystemType, "To_Char", func.Parameters[1], new SqlValue("%Y-%m-%d"));
 									}
-
+#endif
 									return new SqlFunction(func.SystemType, "To_Char", func.Parameters[1]);
 								}
 
