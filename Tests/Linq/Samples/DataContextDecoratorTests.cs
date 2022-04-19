@@ -93,7 +93,8 @@ namespace Tests.Samples
 
 			public void AddInterceptor(IInterceptor interceptor) => _context.AddInterceptor(interceptor);
 
-			public IUnwrapDataObjectInterceptor? UnwrapDataObjectInterceptor { get; }
+			public IUnwrapDataObjectInterceptor? UnwrapDataObjectInterceptor => _context.UnwrapDataObjectInterceptor;
+			public IExpressionInterceptor?       ExpressionInterceptor       => _context.ExpressionInterceptor;
 		}
 
 		public class Entity
