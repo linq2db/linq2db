@@ -43,7 +43,6 @@ namespace LinqToDB.DataProvider.SQLite
 			SqlProviderFlags.IsDistinctSetOperationsSupported  = true;
 			SqlProviderFlags.IsUpdateFromSupported             = Adapter.SupportsUpdateFrom;
 			SqlProviderFlags.DefaultMultiQueryIsolationLevel   = IsolationLevel.Serializable;
-			SqlProviderFlags.IsDateOnlySupported               = Adapter.SupportsDateOnly;
 
 			if (Adapter.SupportsRowValue)
 			{
