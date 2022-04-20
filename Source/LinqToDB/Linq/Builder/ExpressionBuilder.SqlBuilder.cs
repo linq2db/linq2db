@@ -1487,9 +1487,12 @@ namespace LinqToDB.Linq.Builder
 
 						predicate = ConvertInPredicate(context!, expr);
 					}
-					else if (e.Method.Name == "ContainsKey" && typeof(IDictionary<,>).IsSameOrParentOf(e.Method.DeclaringType!))
+					else if (e.Method.Name == "ContainsKey" &&
+						(typeof(IDictionary<,>).IsSameOrParentOf(e.Method.DeclaringType!) ||
+						 typeof(IReadOnlyDictionary<,>).IsSameOrParentOf(e.Method.DeclaringType!)))
 					{
-						var args = e.Method.DeclaringType!.GetGenericArguments(typeof(IDictionary<,>))!;
+						var type = typeof(IDictionary<,>).IsSameOrParentOf(e.Method.DeclaringType!) ? typeof(IDictionary<,>) : typeof(IReadOnlyDictionary<,>);
+						var args = e.Method.DeclaringType!.GetGenericArguments(type)!;
 						var minf = EnumerableMethods
 								.First(static m => m.Name == "Contains" && m.GetParameters().Length == 2)
 								.MakeGenericMethod(args[0]);
@@ -1501,7 +1504,7 @@ namespace LinqToDB.Linq.Builder
 
 						predicate = ConvertInPredicate(context!, expr);
 					}
-
+ 
 #if NETFRAMEWORK
 					else if (e.Method == ReflectionHelper.Functions.String.Like11) predicate = ConvertLikePredicate(context!, e);
 					else if (e.Method == ReflectionHelper.Functions.String.Like12) predicate = ConvertLikePredicate(context!, e);
