@@ -76,16 +76,14 @@ namespace LinqToDB.DataProvider.Sybase
 					{
 						var stype = func.Parameters[2].SystemType!.ToUnderlying();
 
-						if (stype == typeof(DateTime))
-						{
-							return new SqlFunction(func.SystemType, "convert", func.Parameters[0], func.Parameters[2], new SqlValue(120));
-						}
+						if (stype == typeof(DateTime)
 #if NET6_0_OR_GREATER
-						else if (stype == typeof(DateOnly))
-						{
-							return new SqlFunction(func.SystemType, "convert", func.Parameters[0], func.Parameters[2], new SqlValue(120));
-						}
+							|| stype == typeof(DateOnly)
 #endif
+							)
+						{
+							return new SqlFunction(func.SystemType, "convert", func.Parameters[0], func.Parameters[2], new SqlValue(23));
+						}
 					}
 
 					break;
