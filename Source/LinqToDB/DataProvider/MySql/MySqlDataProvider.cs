@@ -103,7 +103,7 @@ namespace LinqToDB.DataProvider.MySql
 			}
 
 #if NET6_0_OR_GREATER
-			if (value is DateOnly d)
+			if (!Adapter.IsDateOnlySupported && value is DateOnly d)
 			{
 				value = d.ToDateTime(TimeOnly.MinValue);
 			}

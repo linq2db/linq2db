@@ -62,7 +62,9 @@ namespace LinqToDB.DataProvider.MySql
 
 			string  providerTypesNamespace,
 			MappingSchema    mappingSchema,
-			BulkCopyAdapter? bulkCopy)
+			BulkCopyAdapter? bulkCopy,
+			
+			bool isDateOnlySupported)
 		{
 			ProviderType = provider;
 
@@ -87,6 +89,8 @@ namespace LinqToDB.DataProvider.MySql
 
 			MappingSchema = mappingSchema;
 			BulkCopy      = bulkCopy;
+
+			IsDateOnlySupported = isDateOnlySupported;
 		}
 
 		internal MySqlProvider ProviderType { get; }
@@ -131,6 +135,8 @@ namespace LinqToDB.DataProvider.MySql
 		public Func<DbParameter, object> GetDbType { get; }
 
 		internal BulkCopyAdapter? BulkCopy { get; }
+
+		public bool IsDateOnlySupported { get; }
 
 		internal class BulkCopyAdapter
 		{
@@ -227,7 +233,8 @@ namespace LinqToDB.DataProvider.MySql
 					"GetMySqlDateTime",
 					MySqlDataTypesNamespace,
 					mappingSchema,
-					null);
+					null,
+					false);
 			}
 
 			[Wrapper]
@@ -395,7 +402,8 @@ namespace LinqToDB.DataProvider.MySql
 					"GetMySqlDateTime",
 					typesNamespace,
 					mappingSchema,
-					bulkCopy);
+					bulkCopy,
+					true);
 			}
 
 			#region wrappers
