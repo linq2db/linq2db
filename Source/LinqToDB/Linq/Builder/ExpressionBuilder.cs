@@ -140,7 +140,10 @@ namespace LinqToDB.Linq.Builder
 
 			_optimizationContext = optimizationContext;
 			_parametersContext   = parametersContext;
-			Expression           = ConvertExpressionTree(expression);
+
+			var preprocessed = _optimizationContext.PreprocessExpression(expression);
+			Expression = ConvertExpressionTree(preprocessed);
+
 			_optimizationContext.ClearVisitedCache();
 
 			DataReaderLocal      = BuildVariable(DataReaderParam, "ldr");
@@ -387,11 +390,11 @@ namespace LinqToDB.Linq.Builder
 
 		#endregion
 
-		#region ExposeExpression
+		#region PreprocessExpression
 
-		public Expression ExposeExpression(Expression expression)
+		public Expression PreprocessExpression(Expression expression)
 		{
-			var result = _optimizationContext.ExposeExpression(expression);
+			var result = _optimizationContext.PreprocessExpression(expression);
 			return result;
 		}
 
@@ -405,23 +408,13 @@ namespace LinqToDB.Linq.Builder
 
 		Dictionary<Expression, Expression>? _optimizedExpressions;
 
-		static void CollectLambdaParameters(Expression expression, HashSet<ParameterExpression> foundParameters)
-		{
-			expression.Visit(foundParameters, static (foundParameters, e) =>
-			{
-				if (e.NodeType == ExpressionType.Lambda)
-					foundParameters.AddRange(((LambdaExpression)e).Parameters);
-			});
-		}
-
 		Expression OptimizeExpression(Expression expression)
 		{
 			if (_optimizedExpressions != null && _optimizedExpressions.TryGetValue(expression, out var expr))
 				return expr;
 
-			expr = ExposeExpression(expression);
+			expr = expression;
 			var currentParameters = new HashSet<ParameterExpression>();
-			CollectLambdaParameters(expression, currentParameters);
 			expr = expr.Transform((builder: this, currentParameters), static (ctx, e) => ctx.builder.OptimizeExpressionImpl(ctx.currentParameters, e));
 
 			(_optimizedExpressions ??= new())[expression] = expr;
@@ -433,6 +426,11 @@ namespace LinqToDB.Linq.Builder
 		{
 			switch (expr.NodeType)
 			{
+				case ExpressionType.Lambda:
+				{
+					currentParameters.AddRange(((LambdaExpression)expr).Parameters);
+					break;
+				}
 				case ExpressionType.MemberAccess:
 					{
 						var me = (MemberExpression)expr;
@@ -467,7 +465,10 @@ namespace LinqToDB.Linq.Builder
 							var ex = ConvertIQueryable(expr, currentParameters);
 
 							if (!ReferenceEquals(ex, expr))
+							{
+								ex = _optimizationContext.PreprocessExpression(ex);
 								return new TransformInfo(ConvertExpressionTree(ex));
+							}
 						}
 
 						return new TransformInfo(ConvertSubquery(expr));
@@ -536,7 +537,10 @@ namespace LinqToDB.Linq.Builder
 								var ex = ConvertIQueryable(expr, currentParameters);
 
 								if (!ReferenceEquals(ex, expr))
+								{
+									ex = _optimizationContext.PreprocessExpression(ex);
 									return new TransformInfo(ConvertExpressionTree(ex));
+								}
 							}
 						}
 

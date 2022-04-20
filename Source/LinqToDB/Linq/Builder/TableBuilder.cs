@@ -167,7 +167,7 @@ namespace LinqToDB.Linq.Builder
 				var optimizationContext = new ExpressionTreeOptimizationContext(dc);
 				var optimizedExpr       = ExpressionBuilder.CorrectDataConnectionReference(filtered.Expression, ExpressionBuilder.DataContextParam);
 
-				optimizedExpr = optimizationContext.ExposeExpression(optimizedExpr);
+				optimizedExpr = optimizationContext.PreprocessExpression(optimizedExpr);
 				optimizedExpr = optimizationContext.ExpandQueryableMethods(optimizedExpr);
 
 				return optimizedExpr;

@@ -43,7 +43,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					var queryLambda         = context.association.GetQueryMethod(context.parentType, context.objectType) ?? throw new InvalidOperationException();
 					var optimizationContext = new ExpressionTreeOptimizationContext(dc);
-					var optimizedExpr       = optimizationContext.ExposeExpression(queryLambda);
+					var optimizedExpr       = optimizationContext.PreprocessExpression(queryLambda);
 					    optimizedExpr       = optimizationContext.ExpandQueryableMethods(optimizedExpr);
 					return optimizedExpr;
 				});
@@ -168,7 +168,7 @@ namespace LinqToDB.Linq.Builder
 				definedQueryMethod = (LambdaExpression)builder.AddQueryableMemberAccessors(closureExpr, onMember, builder.DataContext, static (closureExpr, mi, dc) =>
 				{
 					var optimizationContext = new ExpressionTreeOptimizationContext(dc);
-					var optimizedExpr       = optimizationContext.ExposeExpression(closureExpr);
+					var optimizedExpr       = optimizationContext.PreprocessExpression(closureExpr);
 					    optimizedExpr       = optimizationContext.ExpandQueryableMethods(optimizedExpr);
 					    optimizedExpr       = optimizedExpr.OptimizeExpression()!;
 					return optimizedExpr;

@@ -480,9 +480,6 @@ namespace LinqToDB.Linq
 
 			dependsOnParameters = optimizationContext.IsDependsOnParameters();
 
-			if (dataContext is IExpressionPreprocessor preprocessor)
-				expr = preprocessor.ProcessExpression(expr);
-
 			if (Configuration.Linq.DisableQueryCache)
 				return CreateQuery(optimizationContext, new ParametersContext(expr, optimizationContext, dataContext), dataContext, expr);
 

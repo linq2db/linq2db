@@ -304,7 +304,8 @@ namespace LinqToDB.Linq.Builder
 				foreach (var member in entityDescriptor.CalculatedMembers!)
 				{
 					var accessExpression    = Expression.MakeMemberAccess(variable, member.MemberInfo);
-					var convertedExpression = Builder.ConvertExpressionTree(accessExpression);
+					var convertedExpression = Builder.PreprocessExpression(accessExpression);
+					convertedExpression     = Builder.ConvertExpressionTree(convertedExpression);
 					var selectorLambda      = Expression.Lambda(convertedExpression, variable);
 
 					var context    = new SelectContext(Parent, selectorLambda, this);
