@@ -82,13 +82,13 @@ namespace LinqToDB
 				string expStr = "strftime('%Y-%m-%d', {0},";
 				switch (part)
 				{
-					case Sql.DateParts.Year: expStr += "{1} || ' Year')"; break;
-					case Sql.DateParts.Quarter: expStr += "({1}*3) || ' Month')"; break;
-					case Sql.DateParts.Month: expStr += "{1} || ' Month')"; break;
+					case Sql.DateParts.Year:      expStr += "{1} || ' Year')"; break;
+					case Sql.DateParts.Quarter:   expStr += "({1}*3) || ' Month')"; break;
+					case Sql.DateParts.Month:     expStr += "{1} || ' Month')"; break;
 					case Sql.DateParts.DayOfYear:
 					case Sql.DateParts.WeekDay:
-					case Sql.DateParts.Day: expStr += "{1} || ' Day')"; break;
-					case Sql.DateParts.Week: expStr += "({1}*7) || ' Day')"; break;
+					case Sql.DateParts.Day:       expStr += "{1} || ' Day')"; break;
+					case Sql.DateParts.Week:      expStr += "({1}*7) || ' Day')"; break;
 					default:
 						throw new InvalidOperationException($"Unexpected datepart: {part}");
 				}

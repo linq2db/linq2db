@@ -82,9 +82,6 @@ namespace LinqToDB.DataProvider.SapHana
 			{
 				case DataType.Boolean: if (type == typeof(bool))     return typeof(byte);     break;
 				case DataType.Guid   : if (type == typeof(Guid))     return typeof(string);   break;
-#if NET6_0_OR_GREATER
-				case DataType.Date   : if (type == typeof(DateOnly)) return typeof(DateTime); break;
-#endif
 			}
 
 			return base.ConvertParameterType(type, dataType);

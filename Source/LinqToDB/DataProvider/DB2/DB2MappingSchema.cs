@@ -121,6 +121,11 @@ namespace LinqToDB.DataProvider.DB2
 			stringBuilder.Append('\'');
 		}
 
+		private static readonly string[] DateOnlyFormats = new[]
+		{
+			"yyyy-MM-dd",
+		};
+
 		static DateOnly ParseDateOnly(string value)
 		{
 			if (DateOnly.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.None, out var res))
@@ -128,7 +133,7 @@ namespace LinqToDB.DataProvider.DB2
 
 			return DateOnly.ParseExact(
 				value,
-				new[] { DateParseFormats[0], },
+				DateOnlyFormats,
 				CultureInfo.InvariantCulture,
 				DateTimeStyles.None);
 		}

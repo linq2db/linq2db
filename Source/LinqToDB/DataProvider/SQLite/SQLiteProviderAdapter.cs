@@ -26,6 +26,7 @@ namespace LinqToDB.DataProvider.SQLite
 			bool    disposeCommandOnError,
 			bool    supportsRowValue,
 			bool    supportsUpdateFrom,
+			bool    supportsDateOnly,
 			Action? clearAllPulls)
 		{
 			ConnectionType  = connectionType;
@@ -37,6 +38,7 @@ namespace LinqToDB.DataProvider.SQLite
 			DisposeCommandOnError = disposeCommandOnError;
 			SupportsRowValue      = supportsRowValue;
 			SupportsUpdateFrom    = supportsUpdateFrom;
+			SupportsDateOnly      = supportsDateOnly;
 
 			ClearAllPools = clearAllPulls;
 		}
@@ -57,6 +59,8 @@ namespace LinqToDB.DataProvider.SQLite
 		internal bool SupportsRowValue { get; }
 		// UPDATE FROM feature introduced in SQLite 3.33.0.
 		internal bool SupportsUpdateFrom { get; }
+		// Classic driver does not store dates correctly
+		internal bool SupportsDateOnly { get; }
 
 		public Action? ClearAllPools { get; }
 
@@ -97,6 +101,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 			var supportsRowValue   = version >= (clientNamespace == MicrosoftDataSQLiteClientNamespace ? RowValueMinVersionMDS   : RowValueMinVersionSDS);
 			var supportsUpdateFrom = version >= (clientNamespace == MicrosoftDataSQLiteClientNamespace ? UpdateFromMinVersionMDS : UpdateFromMinVersionSDS);
+			var supportsDateOnly   = clientNamespace == MicrosoftDataSQLiteClientNamespace;
 
 			return new SQLiteProviderAdapter(
 				connectionType,
@@ -107,6 +112,7 @@ namespace LinqToDB.DataProvider.SQLite
 				disposeCommandOnError,
 				supportsRowValue,
 				supportsUpdateFrom,
+				supportsDateOnly,
 				clearAllPools);
 		}
 

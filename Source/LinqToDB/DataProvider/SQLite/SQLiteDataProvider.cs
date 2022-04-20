@@ -43,6 +43,7 @@ namespace LinqToDB.DataProvider.SQLite
 			SqlProviderFlags.IsDistinctSetOperationsSupported  = true;
 			SqlProviderFlags.IsUpdateFromSupported             = Adapter.SupportsUpdateFrom;
 			SqlProviderFlags.DefaultMultiQueryIsolationLevel   = IsolationLevel.Serializable;
+			SqlProviderFlags.IsDateOnlySupported               = Adapter.SupportsDateOnly;
 
 			if (Adapter.SupportsRowValue)
 			{
@@ -232,7 +233,7 @@ namespace LinqToDB.DataProvider.SQLite
 			}
 
 #if NET6_0_OR_GREATER
-			if (Name == ProviderName.SQLiteClassic && value is DateOnly d)
+			if (Adapter.SupportsDateOnly && value is DateOnly d)
 			{
 				value = d.ToDateTime(TimeOnly.MinValue);
 			}
