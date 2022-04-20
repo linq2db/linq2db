@@ -78,12 +78,12 @@ namespace LinqToDB.DataProvider.Sybase
 
 						if (stype == typeof(DateTime))
 						{
-							return new SqlFunction(func.SystemType, "dateformat", func.Parameters[2], new SqlValue("YYYY-MM-DD HH24:MI:SS"));
+							return new SqlFunction(func.SystemType, "convert", func.Parameters[0], func.Parameters[2], new SqlValue(120));
 						}
 #if NET6_0_OR_GREATER
 						else if (stype == typeof(DateOnly))
 						{
-							return new SqlFunction(func.SystemType, "dateformat", func.Parameters[2], new SqlValue("YYYY-MM-DD"));
+							return new SqlFunction(func.SystemType, "convert", func.Parameters[0], func.Parameters[2], new SqlValue(120));
 						}
 #endif
 					}
