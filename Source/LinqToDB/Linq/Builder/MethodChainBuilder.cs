@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
@@ -33,6 +33,7 @@ namespace LinqToDB.Linq.Builder
 				root = root.SkipMethodChain(builder.MappingSchema);
 			}
 
+			root = builder.PreprocessExpression(root);
 			root = builder.ConvertExpressionTree(root);
 
 			var prevSequence  = builder.BuildSequence(new BuildInfo(buildInfo, root) { CreateSubQuery = true });

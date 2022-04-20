@@ -270,6 +270,7 @@ namespace LinqToDB.Linq.Builder
 				isLeft = false;
 			}
 
+			definedQueryMethod = (LambdaExpression)builder.PreprocessExpression(definedQueryMethod);
 			definedQueryMethod = (LambdaExpression)builder.ConvertExpressionTree(definedQueryMethod);
 			definedQueryMethod = (LambdaExpression)builder.ConvertExpression(definedQueryMethod);
 			definedQueryMethod = (LambdaExpression)definedQueryMethod.OptimizeExpression()!;
