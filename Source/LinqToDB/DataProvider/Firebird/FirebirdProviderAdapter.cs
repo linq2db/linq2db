@@ -19,18 +19,19 @@ namespace LinqToDB.DataProvider.Firebird
 		public const string TypesNamespace  = "FirebirdSql.Data.Types";
 
 		private FirebirdProviderAdapter(
-			Type connectionType,
-			Type dataReaderType,
-			Type parameterType,
-			Type commandType,
-			Type transactionType,
-			Type?                              fbDecFloatType,
-			Type?                              fbZonedDateTimeType,
-			Type?                              fbZonedTimeType,
-			MappingSchema?                     mappingSchema,
-			Action<DbParameter, FbDbType>     dbTypeSetter,
-			Func<DbParameter, FbDbType>        dbTypeGetter,
-			Action clearAllPulls)
+			Type                          connectionType,
+			Type                          dataReaderType,
+			Type                          parameterType,
+			Type                          commandType,
+			Type                          transactionType,
+			Type?                         fbDecFloatType,
+			Type?                         fbZonedDateTimeType,
+			Type?                         fbZonedTimeType,
+			MappingSchema?                mappingSchema,
+			Action<DbParameter, FbDbType> dbTypeSetter,
+			Func<DbParameter, FbDbType>   dbTypeGetter,
+			Action                        clearAllPulls,
+			bool                          isDateOnlySupported)
 		{
 			ConnectionType  = connectionType;
 			DataReaderType  = dataReaderType;
@@ -43,9 +44,11 @@ namespace LinqToDB.DataProvider.Firebird
 			FbZonedTimeType     = fbZonedTimeType;
 			MappingSchema       = mappingSchema;
 
-			SetDbType = dbTypeSetter;
+			SetDbType     = dbTypeSetter;
 			GetDbType     = dbTypeGetter;
 			ClearAllPools = clearAllPulls;
+
+			IsDateOnlySupported = isDateOnlySupported;
 		}
 
 		public Type ConnectionType  { get; }
@@ -69,6 +72,8 @@ namespace LinqToDB.DataProvider.Firebird
 		public Func<DbParameter, FbDbType> GetDbType { get; }
 
 		public Action ClearAllPools { get; }
+
+		public bool IsDateOnlySupported { get; }
 
 		public static FirebirdProviderAdapter GetInstance()
 		{
@@ -141,7 +146,8 @@ namespace LinqToDB.DataProvider.Firebird
 							mappingSchema,
 							dbTypeBuilder.BuildSetter<IDbDataParameter>(),
 							dbTypeBuilder.BuildGetter<IDbDataParameter>(),
-							clearAllPools);
+							clearAllPools,
+							false);
 					}
 
 			return _instance;
