@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data.Linq;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
@@ -28,6 +29,7 @@ namespace LinqToDB.Mapping
 	/// Mapping schema.
 	/// </summary>
 	[PublicAPI]
+	[DebuggerDisplay("{DisplayID}")]
 	public class MappingSchema
 	{
 		#region Init
@@ -1295,6 +1297,15 @@ namespace LinqToDB.Mapping
 				}
 
 				return _configurationList;
+			}
+		}
+
+		string DisplayID
+		{
+			get
+			{
+				var list = Schemas == null ? "" : ConfigurationList.Aggregate("", (s1, s2) => s1.Length == 0 ? s2 : s1 + "." + s2);
+				return $"{GetType().Name} : ({_configurationID}) {list}";
 			}
 		}
 
