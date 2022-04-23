@@ -89,6 +89,10 @@ namespace LinqToDB.DataProvider.SapHana
 
 		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
 		{
+#if NET6_0_OR_GREATER
+			if (value is DateOnly d)
+				value = d.ToDateTime(TimeOnly.MinValue);
+#endif
 			switch (dataType.DataType)
 			{
 				case DataType.Boolean:
@@ -101,14 +105,6 @@ namespace LinqToDB.DataProvider.SapHana
 					dataType       = dataType.WithDataType(DataType.Char);
 					parameter.Size = 36;
 					break;
-
-#if NET6_0_OR_GREATER
-				case DataType.Date:
-					dataType = dataType.WithDataType(DataType.DateTime);
-					if (value is DateOnly d)
-						value = d.ToDateTime(TimeOnly.MinValue);
-					break;
-#endif
 			}
 
 			base.SetParameter(dataConnection, parameter, name, dataType, value);
