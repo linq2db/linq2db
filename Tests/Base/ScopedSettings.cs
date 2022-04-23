@@ -43,6 +43,7 @@ namespace Tests
 		public WithoutComparisonNullCheck()
 		{
 			Configuration.Linq.CompareNullsAsValues = false;
+			Query.ClearCaches();
 		}
 
 		public void Dispose()
