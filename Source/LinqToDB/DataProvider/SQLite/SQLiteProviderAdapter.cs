@@ -101,7 +101,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 			var supportsRowValue   = version >= (clientNamespace == MicrosoftDataSQLiteClientNamespace ? RowValueMinVersionMDS   : RowValueMinVersionSDS);
 			var supportsUpdateFrom = version >= (clientNamespace == MicrosoftDataSQLiteClientNamespace ? UpdateFromMinVersionMDS : UpdateFromMinVersionSDS);
-			var supportsDateOnly   = clientNamespace == MicrosoftDataSQLiteClientNamespace;
+			var supportsDateOnly   = clientNamespace == MicrosoftDataSQLiteClientNamespace && assembly.GetName().Version >= MinDateOnlyAssemblyVersionMDS;
 
 			return new SQLiteProviderAdapter(
 				connectionType,
@@ -116,12 +116,14 @@ namespace LinqToDB.DataProvider.SQLite
 				clearAllPools);
 		}
 
-		private static readonly Version ClearPoolsMinVersionMDS = new (6, 0, 0);
-		private static readonly Version ClearPoolsMinVersionSDS = new (1, 0, 55);
-		private static readonly Version RowValueMinVersionMDS   = new (2, 0, 0);
-		private static readonly Version RowValueMinVersionSDS   = new (1, 0, 104);
-		private static readonly Version UpdateFromMinVersionMDS = new (3, 1, 20);
-		private static readonly Version UpdateFromMinVersionSDS = new (1, 0, 114);
+		private static readonly Version ClearPoolsMinVersionMDS       = new (6, 0, 0);
+		private static readonly Version ClearPoolsMinVersionSDS       = new (1, 0, 55);
+		private static readonly Version RowValueMinVersionMDS         = new (2, 0, 0);
+		private static readonly Version RowValueMinVersionSDS         = new (1, 0, 104);
+		private static readonly Version UpdateFromMinVersionMDS       = new (3, 1, 20);
+		private static readonly Version UpdateFromMinVersionSDS       = new (1, 0, 114);
+		private static readonly Version MinDateOnlyAssemblyVersionMDS = new (6, 0, 0);
+		
 
 		public static SQLiteProviderAdapter GetInstance(string name)
 		{

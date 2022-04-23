@@ -12,11 +12,12 @@ namespace LinqToDB.DataProvider.SQLite
 
 	public class SQLiteMappingSchema : MappingSchema
 	{
-		private const string DATE_FORMAT      = "'{0:yyyy-MM-dd}'";
-		private const string DATETIME0_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss}'";
-		private const string DATETIME1_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.f}'";
-		private const string DATETIME2_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.ff}'";
-		private const string DATETIME3_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.fff}'";
+		internal const string DATE_FORMAT_RAW  = "yyyy-MM-dd";
+		private  const string DATE_FORMAT      = "'{0:yyyy-MM-dd}'";
+		private  const string DATETIME0_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss}'";
+		private  const string DATETIME1_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.f}'";
+		private  const string DATETIME2_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.ff}'";
+		private  const string DATETIME3_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.fff}'";
 
 		public SQLiteMappingSchema() : this(ProviderName.SQLite)
 		{
@@ -76,7 +77,7 @@ namespace LinqToDB.DataProvider.SQLite
 		static void ConvertDateOnlyToSql(StringBuilder stringBuilder, DateOnly value)
 		{
 			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATE_FORMAT, value);
-		} 
+		}
 #endif
 
 		static readonly Action<StringBuilder, int> AppendConversionAction = AppendConversion;
