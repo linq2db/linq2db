@@ -76,8 +76,10 @@ namespace Tests.Linq
 
 		[Test]
 		public void AllNulls(
-			[DataSources]         string context,
-			[Values(true, false)] bool   withNullCompares)
+			// Excluded Access from tests because it seems to have non compliant behavior.
+			// It is the only DB that returns 1 for `WHERE Int NOT IN (null, null)`
+			[DataSources(ProviderName.Access)] string context,
+			[Values(true, false)]              bool   withNullCompares)
 		{
 			using var nulls = withNullCompares ? null : new WithoutComparisonNullCheck();
 			using var db    = GetDataContext(context);
