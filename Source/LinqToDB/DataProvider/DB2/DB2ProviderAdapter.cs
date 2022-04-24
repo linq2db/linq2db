@@ -197,6 +197,12 @@ namespace LinqToDB.DataProvider.DB2
 							if (assembly != null)
 								clientNamespace = ClientNamespaceOld!;
 						}
+						else if (AssemblyNameOld != null && assembly.GetName().Name == AssemblyNameOld)
+						{
+							// cover case when provider factory loaded old assembly
+							clientNamespace = ClientNamespaceOld!;
+						}
+
 						if (assembly == null)
 							throw new InvalidOperationException($"Cannot load assembly {AssemblyName}");
 

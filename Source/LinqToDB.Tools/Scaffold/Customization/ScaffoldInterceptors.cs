@@ -76,7 +76,7 @@ namespace LinqToDB.Scaffold
 		/// <param name="typeParser">Type parser to create value for <see cref="TypeMapping.CLRType"/> property from <see cref="Type"/> instance or type name string.</param>
 		/// <param name="defaultMapping">Default type mapping for specified <paramref name="databaseType"/>.</param>
 		/// <returns>Type mapping information for specified <paramref name="databaseType"/>.</returns>
-		public virtual TypeMapping GetTypeMapping(DatabaseType databaseType, ITypeParser typeParser, TypeMapping defaultMapping) => defaultMapping;
+		public virtual TypeMapping? GetTypeMapping(DatabaseType databaseType, ITypeParser typeParser, TypeMapping? defaultMapping) => defaultMapping;
 		#endregion
 	}
 }

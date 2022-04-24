@@ -32,13 +32,6 @@ namespace Tests.DataProvider
 	[TestFixture]
 	public class SqlServerTests : DataProviderTestBase
 	{
-		[OneTimeSetUp]
-		protected void InitializeFixture()
-		{
-			// load spatial types support
-			//Utilities.LoadNativeAssemblies(AppDomain.CurrentDomain.BaseDirectory);
-		}
-
 		[Test]
 		public void TestParameters([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{

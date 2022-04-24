@@ -492,10 +492,10 @@ namespace LinqToDB.Schema
 		/// <param name="dataType"><see cref="DataType"/> hint enum.</param>
 		/// <param name="systemType">CLR type.</param>
 		/// <param name="providerSpecificType">Provider-specific type name.</param>
-		private void RegisterType(DatabaseType dbType, DataType dataType, Type systemType, string? providerSpecificType)
+		private void RegisterType(DatabaseType dbType, DataType dataType, Type? systemType, string? providerSpecificType)
 		{
 			IType type;
-			if (_options.PreferProviderSpecificTypes && !string.IsNullOrWhiteSpace(providerSpecificType))
+			if ((_options.PreferProviderSpecificTypes || systemType == null) && !string.IsNullOrWhiteSpace(providerSpecificType))
 			{
 				switch (providerSpecificType)
 				{
@@ -587,7 +587,12 @@ namespace LinqToDB.Schema
 				}
 			}
 			else
+			{
+				if (systemType == null)
+					return;
+
 				type = _languageProvider.TypeParser.Parse(systemType);
+			}
 
 			if (type.IsNullable)
 				throw new InvalidOperationException($"Nullability specified on type {type}");

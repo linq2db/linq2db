@@ -51,7 +51,7 @@ namespace LinqToDB.SchemaProvider
 		/// <summary>
 		/// Gets .net column type.
 		/// </summary>
-		public Type        SystemType           { get; set; } = null!;
+		public Type?       SystemType           { get; set; }
 		/// <summary>
 		/// Gets column type as <see cref="DataType"/> enumeration value.
 		/// </summary>

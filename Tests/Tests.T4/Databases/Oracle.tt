@@ -11,7 +11,7 @@
 
 //	GetSchemaOptions.IncludedSchemas = new[] { "TestUser", "SYS" };
 
-	LoadOracleMetadata(GetConnectionString("Oracle.Managed"));
+	LoadOracleMetadata(GetConnectionString("Oracle.11.Managed"));
 
 //	foreach (var t in Tables.Values)
 //		if (t.IsView)

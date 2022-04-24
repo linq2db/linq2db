@@ -306,6 +306,8 @@ This interceptor allows user to specify which .NET type should be used for speci
 - user wants to use different type for specific database type
 - default type mapping cannot map type and uses fallback type (`System.Object`)
 
+> Database type doesn't include nullability flag. Nullability applied to type automatically later.
+
 ```cs
 // IMPORTANT: this method called only once for each database type
 // ITypeParser inte
@@ -328,7 +330,7 @@ public interface ITypeParser
     // generic types allowed
     // Example: "My.NameSpace.WrapperClass+NestedClass<int, string>"
     // 
-    // valueType: specify that type is reference or value type
+    // valueType: specify that type is reference or value type to properly handle type nullability
     IType Parse(string typeName, bool valueType);
 }
 ```
@@ -337,10 +339,12 @@ public interface ITypeParser
   <summary>Example</summary>
 
 ```cs
-public override TypeMapping GetTypeMapping(DatabaseType databaseType, ITypeParser typeParser, TypeMapping defaultMapping)
+// defaultMapping could be null if tool cannot map database type
+// in such cases default type (System.Object) will be used in mapping
+public override TypeMapping? GetTypeMapping(DatabaseType databaseType, ITypeParser typeParser, TypeMapping? defaultMapping)
 {
     // use provider-specific (Npgsql) type for "date" database type
-    if (databaseType.Name?.ToLower() == "date")
+    if (databaseType?.Name?.ToLower() == "date")
         return new TypeMapping(typeParser.Parse<NpgsqlTypes.NpgsqlDate>(), null);
         // or use string if Npgsql assembly not referenced
         // return new TypeMapping(typeParser.Parse("NpgsqlTypes.NpgsqlDate", true), null);

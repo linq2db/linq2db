@@ -595,34 +595,33 @@ namespace Tests.DataProvider
 		[Table]
 		public partial class AllTypes
 		{
-			[Column(DataType = DataType.Decimal, Length = 22, Scale = 0), PrimaryKey] public decimal ID { get; set; } // NUMBER
-			[Column(DataType = DataType.Decimal, Length = 22, Precision = 20, Scale = 0), Nullable] public decimal? bigintDataType { get; set; } // NUMBER (20,0)
-			[Column(DataType = DataType.Decimal, Length = 22, Scale = 0), Nullable] public decimal? numericDataType { get; set; } // NUMBER
-			[Column(DataType = DataType.Decimal, Length = 22, Precision = 1, Scale = 0), Nullable] public sbyte? bitDataType { get; set; } // NUMBER (1,0)
-			[Column(DataType = DataType.Decimal, Length = 22, Precision = 5, Scale = 0), Nullable] public int? smallintDataType { get; set; } // NUMBER (5,0)
-			[Column(DataType = DataType.Decimal, Length = 22, Scale = 6), Nullable] public decimal? decimalDataType { get; set; } // NUMBER
-			[Column(DataType = DataType.Decimal, Length = 22, Precision = 10, Scale = 4), Nullable] public decimal? smallmoneyDataType { get; set; } // NUMBER (10,4)
-			[Column(DataType = DataType.Decimal, Length = 22, Precision = 10, Scale = 0), Nullable] public long? intDataType { get; set; } // NUMBER (10,0)
-			[Column(DataType = DataType.Decimal, Length = 22, Precision = 3, Scale = 0), Nullable] public short? tinyintDataType { get; set; } // NUMBER (3,0)
-			[Column(DataType = DataType.Decimal, Length = 22), Nullable] public decimal? moneyDataType { get; set; } // NUMBER
-			[Column(DataType = DataType.Double, Length = 8), Nullable] public double? floatDataType { get; set; } // BINARY_DOUBLE
-			[Column(DataType = DataType.Single, Length = 4), Nullable] public float? realDataType { get; set; } // BINARY_FLOAT
-			[Column(DataType = DataType.Date), Nullable] public DateTime? datetimeDataType { get; set; } // DATE
-			[Column(DataType = DataType.DateTime2, Length = 11, Scale = 6), Nullable] public DateTime? datetime2DataType { get; set; } // TIMESTAMP(6)
-			[Column(DataType = DataType.DateTimeOffset, Length = 13, Scale = 6), Nullable] public DateTimeOffset? datetimeoffsetDataType { get; set; } // TIMESTAMP(6) WITH TIME ZONE
-			[Column(DataType = DataType.DateTimeOffset, Length = 11, Scale = 6), Nullable] public DateTimeOffset? localZoneDataType { get; set; } // TIMESTAMP(6) WITH LOCAL TIME ZONE
-			[Column(DataType = DataType.Char, Length = 1), Nullable] public char? charDataType { get; set; } // CHAR(1)
-			[Column(DataType = DataType.VarChar, Length = 20), Nullable] public string? varcharDataType { get; set; } // VARCHAR2(20)
-			[Column(DataType = DataType.Text, Length = 4000), Nullable] public string? textDataType { get; set; } // CLOB
-			[Column(DataType = DataType.NChar, Length = 40), Nullable] public string? ncharDataType { get; set; } // NCHAR(40)
-			[Column(DataType = DataType.NVarChar, Length = 40), Nullable] public string? nvarcharDataType { get; set; } // NVARCHAR2(40)
-			[Column(DataType = DataType.NText, Length = 4000), Nullable] public string? ntextDataType { get; set; } // NCLOB
-			[Column(DataType = DataType.Blob, Length = 4000), Nullable] public byte[]? binaryDataType { get; set; } // BLOB
-			[Column(DataType = DataType.VarBinary, Length = 530), Nullable] public byte[]? bfileDataType { get; set; } // BFILE
-			[Column(DataType = DataType.Binary, Length = 16), Nullable] public byte[]? guidDataType { get; set; } // RAW(16)
-			[Column(DataType = DataType.Long), Nullable] public string? longDataType { get; set; } // LONG
-			[Column(DataType = DataType.Undefined, Length = 256), Nullable] public object? uriDataType { get; set; } // URITYPE
-			[Column(DataType = DataType.Xml, Length = 2000), Nullable] public string? xmlDataType { get; set; } // XMLTYPE
+			[Column(DataType = DataType.Decimal       , Length = 22   , Scale = 0)    , PrimaryKey          ] public decimal         ID                     { get; set; } // NUMBER
+			[Column(DataType = DataType.Decimal       , Length = 22   , Precision = 20, Scale = 0), Nullable] public decimal?        bigintDataType         { get; set; } // NUMBER (20,0)
+			[Column(DataType = DataType.Decimal       , Length = 22   , Scale = 0)    , Nullable            ] public decimal?        numericDataType        { get; set; } // NUMBER
+			[Column(DataType = DataType.Decimal       , Length = 22   , Precision = 1 , Scale = 0), Nullable] public sbyte?          bitDataType            { get; set; } // NUMBER (1,0)
+			[Column(DataType = DataType.Decimal       , Length = 22   , Precision = 5 , Scale = 0), Nullable] public int?            smallintDataType       { get; set; } // NUMBER (5,0)
+			[Column(DataType = DataType.Decimal       , Length = 22   , Scale = 6)    , Nullable            ] public decimal?        decimalDataType        { get; set; } // NUMBER
+			[Column(DataType = DataType.Decimal       , Length = 22   , Precision = 10, Scale = 4), Nullable] public decimal?        smallmoneyDataType     { get; set; } // NUMBER (10,4)
+			[Column(DataType = DataType.Decimal       , Length = 22   , Precision = 10, Scale = 0), Nullable] public long?           intDataType            { get; set; } // NUMBER (10,0)
+			[Column(DataType = DataType.Decimal       , Length = 22   , Precision = 3 , Scale = 0), Nullable] public short?          tinyintDataType        { get; set; } // NUMBER (3,0)
+			[Column(DataType = DataType.Decimal       , Length = 22)  , Nullable                            ] public decimal?        moneyDataType          { get; set; } // NUMBER
+			[Column(DataType = DataType.Double        , Length = 8)   , Nullable                            ] public double?         floatDataType          { get; set; } // BINARY_DOUBLE
+			[Column(DataType = DataType.Single        , Length = 4)   , Nullable                            ] public float?          realDataType           { get; set; } // BINARY_FLOAT
+			[Column(DataType = DataType.Date)         , Nullable                                            ] public DateTime?       datetimeDataType       { get; set; } // DATE
+			[Column(DataType = DataType.DateTime2     , Length = 11   , Scale = 6)    , Nullable            ] public DateTime?       datetime2DataType      { get; set; } // TIMESTAMP(6)
+			[Column(DataType = DataType.DateTimeOffset, Length = 13   , Scale = 6)    , Nullable            ] public DateTimeOffset? datetimeoffsetDataType { get; set; } // TIMESTAMP(6) WITH TIME ZONE
+			[Column(DataType = DataType.DateTimeOffset, Length = 11   , Scale = 6)    , Nullable            ] public DateTimeOffset? localZoneDataType      { get; set; } // TIMESTAMP(6) WITH LOCAL TIME ZONE
+			[Column(DataType = DataType.Char          , Length = 1)   , Nullable                            ] public char?           charDataType           { get; set; } // CHAR(1)
+			[Column(DataType = DataType.VarChar       , Length = 20)  , Nullable                            ] public string?         varcharDataType        { get; set; } // VARCHAR2(20)
+			[Column(DataType = DataType.Text          , Length = 4000), Nullable                            ] public string?         textDataType           { get; set; } // CLOB
+			[Column(DataType = DataType.NChar         , Length = 40)  , Nullable                            ] public string?         ncharDataType          { get; set; } // NCHAR(40)
+			[Column(DataType = DataType.NVarChar      , Length = 40)  , Nullable                            ] public string?         nvarcharDataType       { get; set; } // NVARCHAR2(40)
+			[Column(DataType = DataType.NText         , Length = 4000), Nullable                            ] public string?         ntextDataType          { get; set; } // NCLOB
+			[Column(DataType = DataType.Blob          , Length = 4000), Nullable                            ] public byte[]?         binaryDataType         { get; set; } // BLOB
+			[Column(DataType = DataType.VarBinary     , Length = 530) , Nullable                            ] public byte[]?         bfileDataType          { get; set; } // BFILE
+			[Column(DataType = DataType.Binary        , Length = 16)  , Nullable                            ] public byte[]?         guidDataType           { get; set; } // RAW(16)
+			[Column(DataType = DataType.Long)         , Nullable                                            ] public string?         longDataType           { get; set; } // LONG
+			[Column(DataType = DataType.Xml           , Length = 2000), Nullable                            ] public string?         xmlDataType            { get; set; } // XMLTYPE
 		}
 
 		[Table("t_entity")]
@@ -2736,8 +2735,6 @@ namespace Tests.DataProvider
 
 					new DataParameter {Name = "guidDataType"          , Direction = ParameterDirection.InputOutput, DataType = DataType.Guid,           Value = TestData.Guid1},
 
-					// TODO: it is not clear which db type use for this parameter so oracle will accept it
-					//new DataParameter {Name = "uriDataType"           , Direction = ParameterDirection.InputOutput, DataType = DataType.Undefined,      Value = "http://uri.com" },
 					new DataParameter {Name = "xmlDataType"           , Direction = ParameterDirection.InputOutput, DataType = DataType.Xml,            Value = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><test>hi</test>"},
 				};
 

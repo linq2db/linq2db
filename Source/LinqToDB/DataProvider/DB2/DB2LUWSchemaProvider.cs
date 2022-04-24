@@ -263,7 +263,7 @@ WHERE
 
 		protected override string? GetDbType(GetSchemaOptions options, string? columnType, DataTypeInfo? dataType, long? length, int? precision, int? scale, string? udtCatalog, string? udtSchema, string? udtName)
 		{
-			var type = GetDataType(columnType, options);
+			var type = GetDataType(columnType, null, options);
 
 			if (type != null)
 			{

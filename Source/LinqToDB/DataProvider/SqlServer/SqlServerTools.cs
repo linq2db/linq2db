@@ -15,7 +15,7 @@ namespace LinqToDB.DataProvider.SqlServer
 	{
 		#region Init
 
-		public static SqlServerProvider Provider = SqlServerProvider.SystemDataSqlClient;
+		public static SqlServerProvider Provider = SqlServerProvider.MicrosoftDataSqlClient;
 		private static readonly ConcurrentQueue<SqlServerDataProvider> _providers = new();
 
 		// System.Data

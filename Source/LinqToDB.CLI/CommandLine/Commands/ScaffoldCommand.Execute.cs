@@ -265,9 +265,9 @@ Possible reasons:
 Due to huge size of it, we don't include IBM.Data.DB2 provider into installation.
 You need to install it manually and specify provider path using '--provider-location <path_to_assembly>' option.
 Provider could be downloaded from:
-- for Windows: https://www.nuget.org/packages/IBM.Data.DB2.Core
-- for Linux: https://www.nuget.org/packages/IBM.Data.DB2.Core-lnx
-- for macOS: https://www.nuget.org/packages/IBM.Data.DB2.Core-osx");
+- for Windows: https://www.nuget.org/packages/Net.IBM.Data.Db2
+- for Linux: https://www.nuget.org/packages/Net.IBM.Data.Db2-lnx
+- for macOS: https://www.nuget.org/packages/Net.IBM.Data.Db2-osx");
 						return null;
 					}
 

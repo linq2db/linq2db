@@ -75,7 +75,7 @@ namespace LinqToDB.DataProvider.Firebird
 			(
 				from c in tcs.AsEnumerable()
 				let type      = c.Field<string>("COLUMN_DATA_TYPE")
-				let dt        = GetDataType(type, options)
+				let dt        = GetDataType(type, null, options)
 				let precision = Converter.ChangeTypeTo<int>(c["NUMERIC_PRECISION"])
 				select new ColumnInfo
 				{
@@ -187,7 +187,7 @@ namespace LinqToDB.DataProvider.Firebird
 					IsNullable           = isNullable,
 					MemberName           = ToValidName(columnName),
 					MemberType           = ToTypeName(systemType, isNullable),
-					SystemType           = systemType ?? typeof(object),
+					SystemType           = systemType,
 					DataType             = GetDataType(columnType, null, length, precision, scale),
 					ProviderSpecificType = GetProviderSpecificType(columnType),
 					Precision            = providerType == 21 ? 16 : null
