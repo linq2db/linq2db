@@ -606,9 +606,7 @@ namespace LinqToDB.Linq.Builder
 				Expression.Constant(alias));
 		}
 
-		private TransformInfoVisitor<ExpressionTreeOptimizationContext>? _exposeExpressionTransformer;
-
-		private TransformInfo ExposeExpressionTransformer(Expression expr)
+		public Expression ExposeExpressionTransformer(Expression expr)
 		{
 			switch (expr.NodeType)
 			{
@@ -620,7 +618,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						var ex = ConvertMemberExpression(expr, ue.Operand!, ll);
 
-						return new TransformInfo(ex, false, true);
+						return ex;
 					}
 
 					break;
@@ -631,7 +629,7 @@ namespace LinqToDB.Linq.Builder
 
 					if (me.Member.IsNullableHasValueMember())
 					{
-						return new TransformInfo(Expression.NotEqual(me.Expression!, Expression.Constant(null, me.Expression!.Type)), false, true);
+						return Expression.NotEqual(me.Expression!, Expression.Constant(null, me.Expression!.Type));
 					}
 
 					if (CanBeCompiled(expr))
@@ -643,7 +641,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						var ex = ConvertMemberExpression(expr, me.Expression!, l);
 
-						return new TransformInfo(AliasCall(ex, alias!), false, true);
+						return AliasCall(ex, alias!);
 					}
 
 					break;
@@ -658,7 +656,7 @@ namespace LinqToDB.Linq.Builder
 						if (l != null)
 						{
 							var exposed = l.GetBody(ex.Operand);
-							return new TransformInfo(exposed, false, true);
+							return exposed;
 						}
 					}
 
@@ -676,7 +674,7 @@ namespace LinqToDB.Linq.Builder
 						if (!(_visitedExpressions ??= new ()).Contains(e))
 						{
 							_visitedExpressions.Add(e);
-							return new TransformInfo(e, false, true);
+							return e;
 						}
 					}
 
@@ -710,7 +708,7 @@ namespace LinqToDB.Linq.Builder
 									});
 								}
 
-								return new TransformInfo(newBody, false, true);
+								return newBody;
 							}
 						}
 					}
@@ -724,28 +722,23 @@ namespace LinqToDB.Linq.Builder
 					if (l != null)
 					{
 						var transformed = ExpressionBuilder.ConvertMethod(call, l);
-						return new TransformInfo(transformed, false, true);
+						return transformed;
 					}
 
 					break;
 				}
 			}
 
-			return new TransformInfo(expr, false);
-		}
-
-		public Expression ExposeExpression(Expression expression)
-		{
-			var result = (_exposeExpressionTransformer ??=
-				TransformInfoVisitor<ExpressionTreeOptimizationContext>.Create(this,
-					static(ctx, e) => ctx.ExposeExpressionTransformer(e))).Transform(expression);
-
-			return result;
+			return expr;
 		}
 
 		public Expression PreprocessExpression(Expression expression)
 		{
-			var result = ExposeExpression(expression);
+			var result = expression.Transform(this, (ctx, e) =>
+			{
+				var newExpr = ctx.ExposeExpressionTransformer(e);
+				return new TransformInfo(newExpr, false, true);
+			});
 
 			var interceptor = DataContext.ExpressionInterceptor;
 			if (interceptor != null)

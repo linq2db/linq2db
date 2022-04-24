@@ -141,8 +141,7 @@ namespace LinqToDB.Linq.Builder
 			_optimizationContext = optimizationContext;
 			_parametersContext   = parametersContext;
 
-			var preprocessed = _optimizationContext.PreprocessExpression(expression);
-			Expression = ConvertExpressionTree(preprocessed);
+			Expression = ConvertExpressionTree(expression);
 
 			_optimizationContext.ClearVisitedCache();
 
@@ -424,6 +423,8 @@ namespace LinqToDB.Linq.Builder
 
 		TransformInfo OptimizeExpressionImpl(HashSet<ParameterExpression> currentParameters, Expression expr)
 		{
+			expr = _optimizationContext.ExposeExpressionTransformer(expr);
+
 			switch (expr.NodeType)
 			{
 				case ExpressionType.Lambda:
@@ -528,10 +529,17 @@ namespace LinqToDB.Linq.Builder
 							}
 						}
 
+						var l = _optimizationContext.ConvertMethodExpression(call.Object?.Type ?? call.Method.ReflectedType!, call.Method, out var alias);
+
+						if (l != null)
+						{
+							var optimized = OptimizeExpression(ConvertMethod(call, l));
+							return new TransformInfo(optimized);
+						}
+
 						if (CompiledParameters == null && typeof(IQueryable).IsSameOrParentOf(expr.Type))
 						{
 							var attr = GetTableFunctionAttribute(call.Method);
-
 							if (attr == null && !call.IsQueryable())
 							{
 								var ex = ConvertIQueryable(expr, currentParameters);

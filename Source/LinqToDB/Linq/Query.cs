@@ -477,6 +477,7 @@ namespace LinqToDB.Linq
 			var optimizationContext = new ExpressionTreeOptimizationContext(dataContext);
 
 			expr = optimizationContext.ExpandExpression(expr);
+			expr = optimizationContext.PreprocessExpression(expr);
 
 			dependsOnParameters = optimizationContext.IsDependsOnParameters();
 
