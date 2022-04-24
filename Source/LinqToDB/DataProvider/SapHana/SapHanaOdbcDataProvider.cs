@@ -121,7 +121,6 @@ namespace LinqToDB.DataProvider.SapHana
 			{
 				case DataType.Boolean  : parameter.DbType = DbType.Byte;     return;
 				case DataType.DateTime2: parameter.DbType = DbType.DateTime; return;
-				case DataType.Date     : parameter.DbType = DbType.DateTime; return;
 			}
 
 			base.SetParameterType(dataConnection, parameter, dataType);
