@@ -74,7 +74,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 		static void BuildDateTime(StringBuilder stringBuilder, SqlDataType dt, DateTime value)
 		{
-			var dbType = dt.Type.DbType ?? "timestamp";
+			var dbType = dt.Type.DbType ?? (dt.Type.DataType == DataType.Date ? "date" : "timestamp");
 			var format = TIMESTAMP_FORMAT;
 
 			if (value.Millisecond == 0)
