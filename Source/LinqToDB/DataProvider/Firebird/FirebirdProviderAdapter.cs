@@ -69,11 +69,13 @@ namespace LinqToDB.DataProvider.Firebird
 		public MappingSchema? MappingSchema { get; }
 
 		public Action<DbParameter, FbDbType> SetDbType { get; }
-		public Func<DbParameter, FbDbType> GetDbType { get; }
+		public Func<DbParameter  , FbDbType> GetDbType { get; }
 
 		public Action ClearAllPools { get; }
 
 		public bool IsDateOnlySupported { get; }
+
+		private static readonly Version MinDateOnlyVersion = new (9, 0, 0);
 
 		public static FirebirdProviderAdapter GetInstance()
 		{
@@ -147,7 +149,7 @@ namespace LinqToDB.DataProvider.Firebird
 							dbTypeBuilder.BuildSetter<IDbDataParameter>(),
 							dbTypeBuilder.BuildGetter<IDbDataParameter>(),
 							clearAllPools,
-							false);
+							assembly.GetName().Version >= MinDateOnlyVersion);
 					}
 
 			return _instance;
