@@ -5,6 +5,12 @@ LinqToDB.Data.DataConnection GetInformixConnection(string connectionString)
 	return new LinqToDB.Data.DataConnection(LinqToDB.DataProvider.Informix.InformixTools.GetDataProvider(LinqToDB.ProviderName.Informix), connectionString);
 }
 
+LinqToDB.Data.DataConnection GetInformixConnection(string connectionString, string providerName)
+{
+	return new LinqToDB.Data.DataConnection(LinqToDB.DataProvider.Informix.InformixTools.GetDataProvider(providerName), connectionString);
+}
+
+
 LinqToDB.Data.DataConnection GetInformixConnection(string host, string port, string server, string database, string uid, string password)
 {
 	return GetInformixConnection(string.Format("Host={0};Service={1};Server={2};Protocol=onsoctcp;Database={3};UID={4};PWD={5}", host, port, server, database, uid, password));
@@ -13,6 +19,12 @@ LinqToDB.Data.DataConnection GetInformixConnection(string host, string port, str
 public void LoadInformixMetadata(string connectionString)
 {
 	using (var dataConnection = GetInformixConnection(connectionString))
+		LoadMetadata(dataConnection);
+}
+
+public void LoadInformixMetadata(string connectionString, string providerName)
+{
+	using (var dataConnection = GetInformixConnection(connectionString, providerName))
 		LoadMetadata(dataConnection);
 }
 

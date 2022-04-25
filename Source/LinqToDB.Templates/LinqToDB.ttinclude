@@ -710,7 +710,7 @@ void GenerateTypesFromMetadata()
 				if (param.IsResult && p.IsFunction)
 					returnsComments = CreateXmlCommentFromText(param.Description, "returns");
 				else
-					comments.AddRange(CreateXmlCommentFromText(param.Description, "param", string.Format("name=\"{0}\"", param.ParameterName)));
+					comments.AddRange(CreateXmlCommentFromText(param.Description, "param", string.Format("name=\"{0}\"", param.ParameterName.StartsWith("@") ? param.ParameterName.Substring(1) : param.ParameterName)));
 			}
 
 			if (returnsComments != null)

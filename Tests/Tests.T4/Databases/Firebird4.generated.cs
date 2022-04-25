@@ -5,7 +5,7 @@
 // </auto-generated>
 //---------------------------------------------------------------------------------------------------
 
-#pragma warning disable 1572, 1591
+#pragma warning disable 1573, 1591
 #nullable enable
 
 using System;
@@ -27,18 +27,12 @@ namespace Firebird4DataContext
 	public partial class TESTDB40DB : LinqToDB.Data.DataConnection
 	{
 		public ITable<AllType>           AllTypes            { get { return this.GetTable<AllType>(); } }
-		public ITable<Animals17>         Animals17           { get { return this.GetTable<Animals17>(); } }
-		public ITable<Animals18>         Animals18           { get { return this.GetTable<Animals18>(); } }
-		public ITable<Animals3>          Animals3            { get { return this.GetTable<Animals3>(); } }
-		public ITable<Animals4>          Animals4            { get { return this.GetTable<Animals4>(); } }
 		public ITable<CamelCaseName>     CamelCaseNames      { get { return this.GetTable<CamelCaseName>(); } }
 		public ITable<Child>             Children            { get { return this.GetTable<Child>(); } }
 		public ITable<CollatedTable>     CollatedTables      { get { return this.GetTable<CollatedTable>(); } }
 		public ITable<DataTypeTest>      DataTypeTests       { get { return this.GetTable<DataTypeTest>(); } }
 		public ITable<Doctor>            Doctors             { get { return this.GetTable<Doctor>(); } }
 		public ITable<Dual>              Duals               { get { return this.GetTable<Dual>(); } }
-		public ITable<Eyes7>             Eyes7               { get { return this.GetTable<Eyes7>(); } }
-		public ITable<Eyes8>             Eyes8               { get { return this.GetTable<Eyes8>(); } }
 		public ITable<GrandChild>        GrandChildren       { get { return this.GetTable<GrandChild>(); } }
 		public ITable<InheritanceChild>  InheritanceChildren { get { return this.GetTable<InheritanceChild>(); } }
 		public ITable<InheritanceParent> InheritanceParents  { get { return this.GetTable<InheritanceParent>(); } }
@@ -51,10 +45,6 @@ namespace Firebird4DataContext
 		public ITable<TestIdentity>      TestIdentities      { get { return this.GetTable<TestIdentity>(); } }
 		public ITable<TestMerge1>        TestMerge1          { get { return this.GetTable<TestMerge1>(); } }
 		public ITable<TestMerge2>        TestMerge2          { get { return this.GetTable<TestMerge2>(); } }
-		public ITable<XxPatient21>       XxPatient21         { get { return this.GetTable<XxPatient21>(); } }
-		public ITable<XxPatient22>       XxPatient22         { get { return this.GetTable<XxPatient22>(); } }
-		public ITable<XxPatient23>       XxPatient23         { get { return this.GetTable<XxPatient23>(); } }
-		public ITable<XxPatient24>       XxPatient24         { get { return this.GetTable<XxPatient24>(); } }
 
 		public TESTDB40DB()
 		{
@@ -113,58 +103,6 @@ namespace Firebird4DataContext
 		[Column("blobDataType",        DbType="blob",                     DataType=LinqToDB.DataType.Blob),                                     Nullable         ] public byte[]?          BlobDataType        { get; set; } // blob
 	}
 
-	[Table("Animals17")]
-	public partial class Animals17
-	{
-		[Column(DbType="varchar(40)",  DataType=LinqToDB.DataType.NVarChar, Length=40),               NotNull] public string  AnimalType    { get; set; } = null!; // varchar(40)
-		[Column(DbType="varchar(40)",  DataType=LinqToDB.DataType.NVarChar, Length=40),               NotNull] public string  AnimalType2   { get; set; } = null!; // varchar(40)
-		[Column(DbType="integer",      DataType=LinqToDB.DataType.Int32),                PrimaryKey,  NotNull] public int     Id            { get; set; } // integer
-		[Column(DbType="varchar(255)", DataType=LinqToDB.DataType.NVarChar, Length=255),    Nullable         ] public string? Name          { get; set; } // varchar(255)
-		[Column(DbType="varchar(40)",  DataType=LinqToDB.DataType.NVarChar, Length=40),               NotNull] public string  Discriminator { get; set; } = null!; // varchar(40)
-		[Column(DbType="integer",      DataType=LinqToDB.DataType.Int32),                   Nullable         ] public int?    EyeId         { get; set; } // integer
-		[Column(DbType="varchar(40)",  DataType=LinqToDB.DataType.NVarChar, Length=40),     Nullable         ] public string? Second        { get; set; } // varchar(40)
-		[Column(DbType="varchar(40)",  DataType=LinqToDB.DataType.NVarChar, Length=40),     Nullable         ] public string? First         { get; set; } // varchar(40)
-	}
-
-	[Table("Animals18")]
-	public partial class Animals18
-	{
-		[Column(DbType="varchar(40)",  DataType=LinqToDB.DataType.NVarChar, Length=40),               NotNull] public string  AnimalType    { get; set; } = null!; // varchar(40)
-		[Column(DbType="varchar(40)",  DataType=LinqToDB.DataType.NVarChar, Length=40),               NotNull] public string  AnimalType2   { get; set; } = null!; // varchar(40)
-		[Column(DbType="integer",      DataType=LinqToDB.DataType.Int32),                PrimaryKey,  NotNull] public int     Id            { get; set; } // integer
-		[Column(DbType="varchar(255)", DataType=LinqToDB.DataType.NVarChar, Length=255),    Nullable         ] public string? Name          { get; set; } // varchar(255)
-		[Column(DbType="varchar(40)",  DataType=LinqToDB.DataType.NVarChar, Length=40),               NotNull] public string  Discriminator { get; set; } = null!; // varchar(40)
-		[Column(DbType="integer",      DataType=LinqToDB.DataType.Int32),                   Nullable         ] public int?    EyeId         { get; set; } // integer
-		[Column(DbType="varchar(40)",  DataType=LinqToDB.DataType.NVarChar, Length=40),     Nullable         ] public string? Second        { get; set; } // varchar(40)
-		[Column(DbType="varchar(40)",  DataType=LinqToDB.DataType.NVarChar, Length=40),     Nullable         ] public string? First         { get; set; } // varchar(40)
-	}
-
-	[Table("Animals3")]
-	public partial class Animals3
-	{
-		[Column(DbType="varchar(40)",  DataType=LinqToDB.DataType.NVarChar, Length=40),               NotNull] public string  AnimalType    { get; set; } = null!; // varchar(40)
-		[Column(DbType="varchar(40)",  DataType=LinqToDB.DataType.NVarChar, Length=40),               NotNull] public string  AnimalType2   { get; set; } = null!; // varchar(40)
-		[Column(DbType="integer",      DataType=LinqToDB.DataType.Int32),                PrimaryKey,  NotNull] public int     Id            { get; set; } // integer
-		[Column(DbType="varchar(255)", DataType=LinqToDB.DataType.NVarChar, Length=255),    Nullable         ] public string? Name          { get; set; } // varchar(255)
-		[Column(DbType="varchar(40)",  DataType=LinqToDB.DataType.NVarChar, Length=40),               NotNull] public string  Discriminator { get; set; } = null!; // varchar(40)
-		[Column(DbType="integer",      DataType=LinqToDB.DataType.Int32),                   Nullable         ] public int?    EyeId         { get; set; } // integer
-		[Column(DbType="varchar(40)",  DataType=LinqToDB.DataType.NVarChar, Length=40),     Nullable         ] public string? Second        { get; set; } // varchar(40)
-		[Column(DbType="varchar(40)",  DataType=LinqToDB.DataType.NVarChar, Length=40),     Nullable         ] public string? First         { get; set; } // varchar(40)
-	}
-
-	[Table("Animals4")]
-	public partial class Animals4
-	{
-		[Column(DbType="varchar(40)",  DataType=LinqToDB.DataType.NVarChar, Length=40),               NotNull] public string  AnimalType    { get; set; } = null!; // varchar(40)
-		[Column(DbType="varchar(40)",  DataType=LinqToDB.DataType.NVarChar, Length=40),               NotNull] public string  AnimalType2   { get; set; } = null!; // varchar(40)
-		[Column(DbType="integer",      DataType=LinqToDB.DataType.Int32),                PrimaryKey,  NotNull] public int     Id            { get; set; } // integer
-		[Column(DbType="varchar(255)", DataType=LinqToDB.DataType.NVarChar, Length=255),    Nullable         ] public string? Name          { get; set; } // varchar(255)
-		[Column(DbType="varchar(40)",  DataType=LinqToDB.DataType.NVarChar, Length=40),               NotNull] public string  Discriminator { get; set; } = null!; // varchar(40)
-		[Column(DbType="integer",      DataType=LinqToDB.DataType.Int32),                   Nullable         ] public int?    EyeId         { get; set; } // integer
-		[Column(DbType="varchar(40)",  DataType=LinqToDB.DataType.NVarChar, Length=40),     Nullable         ] public string? Second        { get; set; } // varchar(40)
-		[Column(DbType="varchar(40)",  DataType=LinqToDB.DataType.NVarChar, Length=40),     Nullable         ] public string? First         { get; set; } // varchar(40)
-	}
-
 	[Table("CamelCaseName")]
 	public partial class CamelCaseName
 	{
@@ -203,7 +141,7 @@ namespace Firebird4DataContext
 		[Column("DateTime_", DbType="timestamp",        DataType=LinqToDB.DataType.DateTime),                           Nullable         ] public DateTime? DateTime   { get; set; } // timestamp
 		[Column("Decimal_",  DbType="decimal(10,2)",    DataType=LinqToDB.DataType.Decimal,  Precision=10, Scale=2),    Nullable         ] public decimal?  Decimal    { get; set; } // decimal(10,2)
 		[Column("Double_",   DbType="double precision", DataType=LinqToDB.DataType.Double),                             Nullable         ] public double?   Double     { get; set; } // double precision
-		[Column("Guid_",     DbType="char(38)",         DataType=LinqToDB.DataType.NChar,    Length=38),                Nullable         ] public string?   Guid       { get; set; } // char(38)
+		[Column("Guid_",     DbType="char(16)",         DataType=LinqToDB.DataType.NChar,    Length=16),                Nullable         ] public string?   Guid       { get; set; } // char(16)
 		[Column("Int16_",    DbType="smallint",         DataType=LinqToDB.DataType.Int16),                              Nullable         ] public short?    Int16      { get; set; } // smallint
 		[Column("Int32_",    DbType="integer",          DataType=LinqToDB.DataType.Int32),                              Nullable         ] public int?      Int32      { get; set; } // integer
 		[Column("Int64_",    DbType="numeric(11,0)",    DataType=LinqToDB.DataType.Decimal,  Precision=11, Scale=0),    Nullable         ] public decimal?  Int64      { get; set; } // numeric(11,0)
@@ -227,9 +165,9 @@ namespace Firebird4DataContext
 		#region Associations
 
 		/// <summary>
-		/// FK_Doctor_Person
+		/// FK_Doctor_Person (SYSDBA.Person)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="FK_Doctor_Person", BackReferenceName="Doctor")]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -239,20 +177,6 @@ namespace Firebird4DataContext
 	public partial class Dual
 	{
 		[Column(DbType="varchar(10)", DataType=LinqToDB.DataType.NVarChar, Length=10), Nullable] public string? Dummy { get; set; } // varchar(10)
-	}
-
-	[Table("Eyes7")]
-	public partial class Eyes7
-	{
-		[Column(DbType="integer",     DataType=LinqToDB.DataType.Int32),               PrimaryKey,  NotNull] public int     Id { get; set; } // integer
-		[Column(DbType="varchar(40)", DataType=LinqToDB.DataType.NVarChar, Length=40),    Nullable         ] public string? Xy { get; set; } // varchar(40)
-	}
-
-	[Table("Eyes8")]
-	public partial class Eyes8
-	{
-		[Column(DbType="integer",     DataType=LinqToDB.DataType.Int32),               PrimaryKey,  NotNull] public int     Id { get; set; } // integer
-		[Column(DbType="varchar(40)", DataType=LinqToDB.DataType.NVarChar, Length=40),    Nullable         ] public string? Xy { get; set; } // varchar(40)
 	}
 
 	[Table("GrandChild")]
@@ -288,7 +212,7 @@ namespace Firebird4DataContext
 		[Column(DbType="timestamp",     DataType=LinqToDB.DataType.DateTime),                        Nullable] public DateTime? DateTimeValue  { get; set; } // timestamp
 		[Column(DbType="timestamp",     DataType=LinqToDB.DataType.DateTime),                        Nullable] public DateTime? DateTimeValue2 { get; set; } // timestamp
 		[Column(DbType="char(1)",       DataType=LinqToDB.DataType.NChar,    Length=1),              Nullable] public char?     BoolValue      { get; set; } // char(1)
-		[Column(DbType="char(38)",      DataType=LinqToDB.DataType.NChar,    Length=38),             Nullable] public string?   GuidValue      { get; set; } // char(38)
+		[Column(DbType="char(16)",      DataType=LinqToDB.DataType.NChar,    Length=16),             Nullable] public string?   GuidValue      { get; set; } // char(16)
 		[Column(DbType="blob",          DataType=LinqToDB.DataType.Blob),                            Nullable] public byte[]?   BinaryValue    { get; set; } // blob
 		[Column(DbType="smallint",      DataType=LinqToDB.DataType.Int16),                           Nullable] public short?    SmallIntValue  { get; set; } // smallint
 		[Column(DbType="integer",       DataType=LinqToDB.DataType.Int32),                           Nullable] public int?      IntValue       { get; set; } // integer
@@ -312,9 +236,9 @@ namespace Firebird4DataContext
 		#region Associations
 
 		/// <summary>
-		/// INTEG_636
+		/// INTEG_14411 (SYSDBA.Person)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="INTEG_636", BackReferenceName="INTEG")]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -332,15 +256,15 @@ namespace Firebird4DataContext
 		#region Associations
 
 		/// <summary>
-		/// FK_Doctor_Person_BackReference
+		/// FK_Doctor_Person_BackReference (SYSDBA.Doctor)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
 		public Doctor? Doctor { get; set; }
 
 		/// <summary>
-		/// INTEG_636_BackReference
+		/// INTEG_14411_BackReference (SYSDBA.Patient)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
 		public Patient? INTEG { get; set; }
 
 		#endregion
@@ -388,7 +312,7 @@ namespace Firebird4DataContext
 		[Column(DbType="double precision", DataType=LinqToDB.DataType.Double),                              Nullable         ] public double?   FieldDouble     { get; set; } // double precision
 		[Column(DbType="timestamp",        DataType=LinqToDB.DataType.DateTime),                            Nullable         ] public DateTime? FieldDateTime   { get; set; } // timestamp
 		[Column(DbType="blob",             DataType=LinqToDB.DataType.Blob),                                Nullable         ] public byte[]?   FieldBinary     { get; set; } // blob
-		[Column(DbType="char(38)",         DataType=LinqToDB.DataType.NChar,    Length=38),                 Nullable         ] public string?   FieldGuid       { get; set; } // char(38)
+		[Column(DbType="char(16)",         DataType=LinqToDB.DataType.NChar,    Length=16),                 Nullable         ] public string?   FieldGuid       { get; set; } // char(16)
 		[Column(DbType="decimal(18,10)",   DataType=LinqToDB.DataType.Decimal,  Precision=18, Scale=10),    Nullable         ] public decimal?  FieldDecimal    { get; set; } // decimal(18,10)
 		[Column(DbType="date",             DataType=LinqToDB.DataType.Date),                                Nullable         ] public DateTime? FieldDate       { get; set; } // date
 		[Column(DbType="timestamp",        DataType=LinqToDB.DataType.DateTime),                            Nullable         ] public DateTime? FieldTime       { get; set; } // timestamp
@@ -415,40 +339,12 @@ namespace Firebird4DataContext
 		[Column(DbType="double precision", DataType=LinqToDB.DataType.Double),                              Nullable         ] public double?   FieldDouble     { get; set; } // double precision
 		[Column(DbType="timestamp",        DataType=LinqToDB.DataType.DateTime),                            Nullable         ] public DateTime? FieldDateTime   { get; set; } // timestamp
 		[Column(DbType="blob",             DataType=LinqToDB.DataType.Blob),                                Nullable         ] public byte[]?   FieldBinary     { get; set; } // blob
-		[Column(DbType="char(38)",         DataType=LinqToDB.DataType.NChar,    Length=38),                 Nullable         ] public string?   FieldGuid       { get; set; } // char(38)
+		[Column(DbType="char(16)",         DataType=LinqToDB.DataType.NChar,    Length=16),                 Nullable         ] public string?   FieldGuid       { get; set; } // char(16)
 		[Column(DbType="decimal(18,10)",   DataType=LinqToDB.DataType.Decimal,  Precision=18, Scale=10),    Nullable         ] public decimal?  FieldDecimal    { get; set; } // decimal(18,10)
 		[Column(DbType="date",             DataType=LinqToDB.DataType.Date),                                Nullable         ] public DateTime? FieldDate       { get; set; } // date
 		[Column(DbType="timestamp",        DataType=LinqToDB.DataType.DateTime),                            Nullable         ] public DateTime? FieldTime       { get; set; } // timestamp
 		[Column(DbType="varchar(20)",      DataType=LinqToDB.DataType.NVarChar, Length=20),                 Nullable         ] public string?   FieldEnumString { get; set; } // varchar(20)
 		[Column(DbType="integer",          DataType=LinqToDB.DataType.Int32),                               Nullable         ] public int?      FieldEnumNumber { get; set; } // integer
-	}
-
-	[Table("xxPatient21")]
-	public partial class XxPatient21
-	{
-		[Column(DbType="integer",      DataType=LinqToDB.DataType.Int32),                PrimaryKey,  NotNull] public int     PersonID  { get; set; } // integer
-		[Column(DbType="varchar(255)", DataType=LinqToDB.DataType.NVarChar, Length=255),    Nullable         ] public string? Diagnosis { get; set; } // varchar(255)
-	}
-
-	[Table("xxPatient22")]
-	public partial class XxPatient22
-	{
-		[Column(DbType="integer",      DataType=LinqToDB.DataType.Int32),                PrimaryKey,  NotNull] public int     PersonID  { get; set; } // integer
-		[Column(DbType="varchar(255)", DataType=LinqToDB.DataType.NVarChar, Length=255),    Nullable         ] public string? Diagnosis { get; set; } // varchar(255)
-	}
-
-	[Table("xxPatient23")]
-	public partial class XxPatient23
-	{
-		[Column(DbType="integer",      DataType=LinqToDB.DataType.Int32),                PrimaryKey,  NotNull] public int     PersonID  { get; set; } // integer
-		[Column(DbType="varchar(255)", DataType=LinqToDB.DataType.NVarChar, Length=255),    Nullable         ] public string? Diagnosis { get; set; } // varchar(255)
-	}
-
-	[Table("xxPatient24")]
-	public partial class XxPatient24
-	{
-		[Column(DbType="integer",      DataType=LinqToDB.DataType.Int32),                PrimaryKey,  NotNull] public int     PersonID  { get; set; } // integer
-		[Column(DbType="varchar(255)", DataType=LinqToDB.DataType.NVarChar, Length=255),    Nullable         ] public string? Diagnosis { get; set; } // varchar(255)
 	}
 
 	public static partial class TESTDB40DBStoredProcedures
@@ -861,30 +757,6 @@ namespace Firebird4DataContext
 				t.ID == ID);
 		}
 
-		public static Animals17? Find(this ITable<Animals17> table, int Id)
-		{
-			return table.FirstOrDefault(t =>
-				t.Id == Id);
-		}
-
-		public static Animals18? Find(this ITable<Animals18> table, int Id)
-		{
-			return table.FirstOrDefault(t =>
-				t.Id == Id);
-		}
-
-		public static Animals3? Find(this ITable<Animals3> table, int Id)
-		{
-			return table.FirstOrDefault(t =>
-				t.Id == Id);
-		}
-
-		public static Animals4? Find(this ITable<Animals4> table, int Id)
-		{
-			return table.FirstOrDefault(t =>
-				t.Id == Id);
-		}
-
 		public static CamelCaseName? Find(this ITable<CamelCaseName> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
@@ -901,18 +773,6 @@ namespace Firebird4DataContext
 		{
 			return table.FirstOrDefault(t =>
 				t.PersonID == PersonID);
-		}
-
-		public static Eyes7? Find(this ITable<Eyes7> table, int Id)
-		{
-			return table.FirstOrDefault(t =>
-				t.Id == Id);
-		}
-
-		public static Eyes8? Find(this ITable<Eyes8> table, int Id)
-		{
-			return table.FirstOrDefault(t =>
-				t.Id == Id);
 		}
 
 		public static InheritanceChild? Find(this ITable<InheritanceChild> table, int InheritanceChildId)
@@ -961,30 +821,6 @@ namespace Firebird4DataContext
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);
-		}
-
-		public static XxPatient21? Find(this ITable<XxPatient21> table, int PersonID)
-		{
-			return table.FirstOrDefault(t =>
-				t.PersonID == PersonID);
-		}
-
-		public static XxPatient22? Find(this ITable<XxPatient22> table, int PersonID)
-		{
-			return table.FirstOrDefault(t =>
-				t.PersonID == PersonID);
-		}
-
-		public static XxPatient23? Find(this ITable<XxPatient23> table, int PersonID)
-		{
-			return table.FirstOrDefault(t =>
-				t.PersonID == PersonID);
-		}
-
-		public static XxPatient24? Find(this ITable<XxPatient24> table, int PersonID)
-		{
-			return table.FirstOrDefault(t =>
-				t.PersonID == PersonID);
 		}
 	}
 }

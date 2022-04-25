@@ -5,7 +5,7 @@
 // </auto-generated>
 //---------------------------------------------------------------------------------------------------
 
-#pragma warning disable 1572, 1573, 1591
+#pragma warning disable 1573, 1591
 #nullable enable
 
 using System;
@@ -24,51 +24,54 @@ using Microsoft.SqlServer.Types;
 
 namespace TestAzureSQL
 {
-	public partial class Issue1733DB : LinqToDB.Data.DataConnection
+	public partial class TestDataDB : LinqToDB.Data.DataConnection
 	{
-		public ITable<AllType>                  AllTypes                 { get { return this.GetTable<AllType>(); } }
-		public ITable<AllTypes2>                AllTypes2                { get { return this.GetTable<AllTypes2>(); } }
-		public ITable<Child>                    Children                 { get { return this.GetTable<Child>(); } }
-		public ITable<sys_DatabaseFirewallRule> DatabaseFirewallRules    { get { return this.GetTable<sys_DatabaseFirewallRule>(); } }
-		public ITable<DataType>                 DataTypes                { get { return this.GetTable<DataType>(); } }
-		public ITable<DecimalOverflow>          DecimalOverflows         { get { return this.GetTable<DecimalOverflow>(); } }
-		public ITable<Doctor>                   Doctors                  { get { return this.GetTable<Doctor>(); } }
-		public ITable<GrandChild>               GrandChildren            { get { return this.GetTable<GrandChild>(); } }
-		public ITable<GuidID>                   GuidIds                  { get { return this.GetTable<GuidID>(); } }
-		public ITable<GuidID2>                  GuidID2                  { get { return this.GetTable<GuidID2>(); } }
-		public ITable<IndexTable>               IndexTables              { get { return this.GetTable<IndexTable>(); } }
-		public ITable<IndexTable2>              IndexTable2              { get { return this.GetTable<IndexTable2>(); } }
-		public ITable<InheritanceChild>         InheritanceChildren      { get { return this.GetTable<InheritanceChild>(); } }
-		public ITable<InheritanceParent>        InheritanceParents       { get { return this.GetTable<InheritanceParent>(); } }
-		public ITable<Issue1115>                Issue1115                { get { return this.GetTable<Issue1115>(); } }
-		public ITable<Issue1144>                Issue1144                { get { return this.GetTable<Issue1144>(); } }
-		public ITable<LinqDataType>             LinqDataTypes            { get { return this.GetTable<LinqDataType>(); } }
-		public ITable<NameTest>                 NameTests                { get { return this.GetTable<NameTest>(); } }
-		public ITable<Parent>                   Parents                  { get { return this.GetTable<Parent>(); } }
-		public ITable<ParentChildView>          ParentChildViews         { get { return this.GetTable<ParentChildView>(); } }
-		public ITable<ParentView>               ParentViews              { get { return this.GetTable<ParentView>(); } }
-		public ITable<Patient>                  Patients                 { get { return this.GetTable<Patient>(); } }
-		public ITable<Person>                   People                   { get { return this.GetTable<Person>(); } }
-		public ITable<SameTableName>            SameTableNames           { get { return this.GetTable<SameTableName>(); } }
-		public ITable<TestSchema_SameTableName> SameTableNames0          { get { return this.GetTable<TestSchema_SameTableName>(); } }
-		public ITable<SqlType>                  SqlTypes                 { get { return this.GetTable<SqlType>(); } }
-		public ITable<TestIdentity>             TestIdentities           { get { return this.GetTable<TestIdentity>(); } }
-		public ITable<TestMerge1>               TestMerge1               { get { return this.GetTable<TestMerge1>(); } }
-		public ITable<TestMerge2>               TestMerge2               { get { return this.GetTable<TestMerge2>(); } }
-		public ITable<TestMergeIdentity>        TestMergeIdentities      { get { return this.GetTable<TestMergeIdentity>(); } }
-		public ITable<TestSchema_TestSchemaA>   TestSchemaA              { get { return this.GetTable<TestSchema_TestSchemaA>(); } }
-		public ITable<TestSchema_TestSchemaB>   TestSchemaB              { get { return this.GetTable<TestSchema_TestSchemaB>(); } }
-		public ITable<TestSchemaSameTableName>  TestSchemaSameTableNames { get { return this.GetTable<TestSchemaSameTableName>(); } }
-		public ITable<TestSchemaX>              TestSchemaX              { get { return this.GetTable<TestSchemaX>(); } }
-		public ITable<TestSchemaY>              TestSchemaY              { get { return this.GetTable<TestSchemaY>(); } }
+		public ITable<AllType>                      AllTypes                  { get { return this.GetTable<AllType>(); } }
+		public ITable<AllTypes2>                    AllTypes2                 { get { return this.GetTable<AllTypes2>(); } }
+		public ITable<Child>                        Children                  { get { return this.GetTable<Child>(); } }
+		public ITable<CollatedTable>                CollatedTables            { get { return this.GetTable<CollatedTable>(); } }
+		public ITable<CreateIfNotExistsTable>       CreateIfNotExistsTables   { get { return this.GetTable<CreateIfNotExistsTable>(); } }
+		public ITable<sys_DatabaseFirewallRule>     DatabaseFirewallRules     { get { return this.GetTable<sys_DatabaseFirewallRule>(); } }
+		public ITable<DataType>                     DataTypes                 { get { return this.GetTable<DataType>(); } }
+		public ITable<DecimalOverflow>              DecimalOverflows          { get { return this.GetTable<DecimalOverflow>(); } }
+		public ITable<Doctor>                       Doctors                   { get { return this.GetTable<Doctor>(); } }
+		public ITable<GrandChild>                   GrandChildren             { get { return this.GetTable<GrandChild>(); } }
+		public ITable<GuidID>                       GuidIds                   { get { return this.GetTable<GuidID>(); } }
+		public ITable<GuidID2>                      GuidID2                   { get { return this.GetTable<GuidID2>(); } }
+		public ITable<IndexTable>                   IndexTables               { get { return this.GetTable<IndexTable>(); } }
+		public ITable<IndexTable2>                  IndexTable2               { get { return this.GetTable<IndexTable2>(); } }
+		public ITable<InheritanceChild>             InheritanceChildren       { get { return this.GetTable<InheritanceChild>(); } }
+		public ITable<InheritanceParent>            InheritanceParents        { get { return this.GetTable<InheritanceParent>(); } }
+		public ITable<sys_Ipv6DatabaseFirewallRule> Ipv6DatabaseFirewallRules { get { return this.GetTable<sys_Ipv6DatabaseFirewallRule>(); } }
+		public ITable<Issue1115>                    Issue1115                 { get { return this.GetTable<Issue1115>(); } }
+		public ITable<Issue1144>                    Issue1144                 { get { return this.GetTable<Issue1144>(); } }
+		public ITable<LinqDataType>                 LinqDataTypes             { get { return this.GetTable<LinqDataType>(); } }
+		public ITable<NameTest>                     NameTests                 { get { return this.GetTable<NameTest>(); } }
+		public ITable<Parent>                       Parents                   { get { return this.GetTable<Parent>(); } }
+		public ITable<ParentChildView>              ParentChildViews          { get { return this.GetTable<ParentChildView>(); } }
+		public ITable<ParentView>                   ParentViews               { get { return this.GetTable<ParentView>(); } }
+		public ITable<Patient>                      Patients                  { get { return this.GetTable<Patient>(); } }
+		public ITable<Person>                       People                    { get { return this.GetTable<Person>(); } }
+		public ITable<SameTableName>                SameTableNames            { get { return this.GetTable<SameTableName>(); } }
+		public ITable<TestSchema_SameTableName>     SameTableNames0           { get { return this.GetTable<TestSchema_SameTableName>(); } }
+		public ITable<SqlType>                      SqlTypes                  { get { return this.GetTable<SqlType>(); } }
+		public ITable<TestIdentity>                 TestIdentities            { get { return this.GetTable<TestIdentity>(); } }
+		public ITable<TestMerge1>                   TestMerge1                { get { return this.GetTable<TestMerge1>(); } }
+		public ITable<TestMerge2>                   TestMerge2                { get { return this.GetTable<TestMerge2>(); } }
+		public ITable<TestMergeIdentity>            TestMergeIdentities       { get { return this.GetTable<TestMergeIdentity>(); } }
+		public ITable<TestSchema_TestSchemaA>       TestSchemaA               { get { return this.GetTable<TestSchema_TestSchemaA>(); } }
+		public ITable<TestSchema_TestSchemaB>       TestSchemaB               { get { return this.GetTable<TestSchema_TestSchemaB>(); } }
+		public ITable<TestSchemaSameTableName>      TestSchemaSameTableNames  { get { return this.GetTable<TestSchemaSameTableName>(); } }
+		public ITable<TestSchemaX>                  TestSchemaX               { get { return this.GetTable<TestSchemaX>(); } }
+		public ITable<TestSchemaY>                  TestSchemaY               { get { return this.GetTable<TestSchemaY>(); } }
 
-		public Issue1733DB(int i)
+		public TestDataDB(int i)
 		{
 			InitDataContext();
 			InitMappingSchema();
 		}
 
-		public Issue1733DB(string configuration)
+		public TestDataDB(string configuration)
 			: base(configuration)
 		{
 			InitDataContext();
@@ -85,7 +88,7 @@ namespace TestAzureSQL
 		/// <summary>
 		/// This is &lt;test&gt; table function!
 		/// </summary>
-		/// <param name="@id">
+		/// <param name="id">
 		/// This is &lt;test&gt; table function parameter!
 		/// </param>
 		[Sql.TableFunction(Schema="dbo", Name="GetParentByID")]
@@ -93,23 +96,6 @@ namespace TestAzureSQL
 		{
 			return this.GetTable<Parent>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				@id);
-		}
-
-		#endregion
-
-		#region Issue1294
-
-		[Sql.TableFunction(Schema="dbo", Name="Issue1294")]
-		public ITable<Issue1294Result> Issue1294(int? @p1, int? @p2)
-		{
-			return this.GetTable<Issue1294Result>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				@p1,
-				@p2);
-		}
-
-		public partial class Issue1294Result
-		{
-			public int? Id { get; set; }
 		}
 
 		#endregion
@@ -202,6 +188,21 @@ namespace TestAzureSQL
 		[Column("_ID"), PrimaryKey, Identity] public int  Id       { get; set; } // int
 	}
 
+	[Table(Schema="dbo", Name="CollatedTable")]
+	public partial class CollatedTable
+	{
+		[Column, NotNull] public int    Id              { get; set; } // int
+		[Column, NotNull] public string CaseSensitive   { get; set; } = null!; // nvarchar(20)
+		[Column, NotNull] public string CaseInsensitive { get; set; } = null!; // nvarchar(20)
+	}
+
+	[Table(Schema="dbo", Name="CreateIfNotExistsTable")]
+	public partial class CreateIfNotExistsTable
+	{
+		[Column, NotNull] public int Id    { get; set; } // int
+		[Column, NotNull] public int Value { get; set; } // int
+	}
+
 	[Table(Schema="sys", Name="database_firewall_rules", IsView=true)]
 	public partial class sys_DatabaseFirewallRule
 	{
@@ -238,9 +239,9 @@ namespace TestAzureSQL
 		#region Associations
 
 		/// <summary>
-		/// FK_Doctor_Person
+		/// FK_Doctor_Person (TestData.dbo.Person)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="FK_Doctor_Person", BackReferenceName="Doctor")]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -279,9 +280,9 @@ namespace TestAzureSQL
 		#region Associations
 
 		/// <summary>
-		/// FK_Patient2_IndexTable_BackReference
+		/// FK_Patient2_IndexTable_BackReference (TestData.dbo.IndexTable2)
 		/// </summary>
-		[Association(ThisKey="PKField2, PKField1", OtherKey="PKField2, PKField1", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
+		[Association(ThisKey="PKField2, PKField1", OtherKey="PKField2, PKField1", CanBeNull=true)]
 		public IndexTable2? Patient { get; set; }
 
 		#endregion
@@ -296,9 +297,9 @@ namespace TestAzureSQL
 		#region Associations
 
 		/// <summary>
-		/// FK_Patient2_IndexTable
+		/// FK_Patient2_IndexTable (TestData.dbo.IndexTable)
 		/// </summary>
-		[Association(ThisKey="PKField2, PKField1", OtherKey="PKField2, PKField1", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="FK_Patient2_IndexTable", BackReferenceName="Patient")]
+		[Association(ThisKey="PKField2, PKField1", OtherKey="PKField2, PKField1", CanBeNull=false)]
 		public IndexTable Patient2IndexTable { get; set; } = null!;
 
 		#endregion
@@ -319,6 +320,17 @@ namespace TestAzureSQL
 		[PrimaryKey, NotNull    ] public int     InheritanceParentId { get; set; } // int
 		[Column,        Nullable] public int?    TypeDiscriminator   { get; set; } // int
 		[Column,        Nullable] public string? Name                { get; set; } // nvarchar(50)
+	}
+
+	[Table(Schema="sys", Name="ipv6_database_firewall_rules", IsView=true)]
+	public partial class sys_Ipv6DatabaseFirewallRule
+	{
+		[Column("id"),                 Identity] public int      Id               { get; set; } // int
+		[Column("name"),               NotNull ] public string   Name             { get; set; } = null!; // nvarchar(128)
+		[Column("start_ipv6_address"), NotNull ] public string   StartIpv6Address { get; set; } = null!; // varchar(45)
+		[Column("end_ipv6_address"),   NotNull ] public string   EndIpv6Address   { get; set; } = null!; // varchar(45)
+		[Column("create_date"),        NotNull ] public DateTime CreateDate       { get; set; } // datetime
+		[Column("modify_date"),        NotNull ] public DateTime ModifyDate       { get; set; } // datetime
 	}
 
 	[Table(Schema="dbo", Name="Issue1115")]
@@ -389,9 +401,9 @@ namespace TestAzureSQL
 		#region Associations
 
 		/// <summary>
-		/// FK_Patient_Person
+		/// FK_Patient_Person (TestData.dbo.Person)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="FK_Patient_Person", BackReferenceName="Patient")]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -409,15 +421,15 @@ namespace TestAzureSQL
 		#region Associations
 
 		/// <summary>
-		/// FK_Doctor_Person_BackReference
+		/// FK_Doctor_Person_BackReference (TestData.dbo.Doctor)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
 		public Doctor? Doctor { get; set; }
 
 		/// <summary>
-		/// FK_Patient_Person_BackReference
+		/// FK_Patient_Person_BackReference (TestData.dbo.Patient)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
 		public Patient? Patient { get; set; }
 
 		#endregion
@@ -520,21 +532,21 @@ namespace TestAzureSQL
 		#region Associations
 
 		/// <summary>
-		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA2_BackReference
+		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA2_BackReference (TestData.TestSchema.TestSchemaB)
 		/// </summary>
-		[Association(ThisKey="TestSchemaAID", OtherKey="TargetTestSchemaAId", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+		[Association(ThisKey="TestSchemaAID", OtherKey="TargetTestSchemaAId", CanBeNull=true)]
 		public IEnumerable<TestSchema_TestSchemaB> FkTestSchemaTestSchemaBYTargetTestSchemaA2BackReferences { get; set; } = null!;
 
 		/// <summary>
-		/// FK_TestSchema_TestSchemaBY_OriginTestSchemaA_BackReference
+		/// FK_TestSchema_TestSchemaBY_OriginTestSchemaA_BackReference (TestData.TestSchema.TestSchemaB)
 		/// </summary>
-		[Association(ThisKey="TestSchemaAID", OtherKey="OriginTestSchemaAID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+		[Association(ThisKey="TestSchemaAID", OtherKey="OriginTestSchemaAID", CanBeNull=true)]
 		public IEnumerable<TestSchema_TestSchemaB> TestSchemaBYOriginTestSchemaA { get; set; } = null!;
 
 		/// <summary>
-		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA_BackReference
+		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA_BackReference (TestData.TestSchema.TestSchemaB)
 		/// </summary>
-		[Association(ThisKey="TestSchemaAID", OtherKey="TargetTestSchemaAID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+		[Association(ThisKey="TestSchemaAID", OtherKey="TargetTestSchemaAID", CanBeNull=true)]
 		public IEnumerable<TestSchema_TestSchemaB> TestSchemaBYTargetTestSchemaA { get; set; } = null!;
 
 		#endregion
@@ -551,21 +563,21 @@ namespace TestAzureSQL
 		#region Associations
 
 		/// <summary>
-		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA
+		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA (TestData.TestSchema.TestSchemaA)
 		/// </summary>
-		[Association(ThisKey="TargetTestSchemaAID", OtherKey="TestSchemaAID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_TestSchema_TestSchemaBY_TargetTestSchemaA", BackReferenceName="TestSchemaBYTargetTestSchemaA")]
+		[Association(ThisKey="TargetTestSchemaAID", OtherKey="TestSchemaAID", CanBeNull=false)]
 		public TestSchema_TestSchemaA FKTargetTestSchemaA { get; set; } = null!;
 
 		/// <summary>
-		/// FK_TestSchema_TestSchemaBY_OriginTestSchemaA
+		/// FK_TestSchema_TestSchemaBY_OriginTestSchemaA (TestData.TestSchema.TestSchemaA)
 		/// </summary>
-		[Association(ThisKey="OriginTestSchemaAID", OtherKey="TestSchemaAID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_TestSchema_TestSchemaBY_OriginTestSchemaA", BackReferenceName="TestSchemaBYOriginTestSchemaA")]
+		[Association(ThisKey="OriginTestSchemaAID", OtherKey="TestSchemaAID", CanBeNull=false)]
 		public TestSchema_TestSchemaA OriginTestSchemaA { get; set; } = null!;
 
 		/// <summary>
-		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA2
+		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA2 (TestData.TestSchema.TestSchemaA)
 		/// </summary>
-		[Association(ThisKey="TargetTestSchemaAId", OtherKey="TestSchemaAID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_TestSchema_TestSchemaBY_TargetTestSchemaA2", BackReferenceName="FkTestSchemaTestSchemaBYTargetTestSchemaA2BackReferences")]
+		[Association(ThisKey="TargetTestSchemaAId", OtherKey="TestSchemaAID", CanBeNull=false)]
 		public TestSchema_TestSchemaA TargetTestSchemaA { get; set; } = null!;
 
 		#endregion
@@ -586,21 +598,21 @@ namespace TestAzureSQL
 		#region Associations
 
 		/// <summary>
-		/// FK_TestSchemaY_TestSchemaX_BackReference
+		/// FK_TestSchemaY_TestSchemaX_BackReference (TestData.dbo.TestSchemaY)
 		/// </summary>
-		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=true)]
 		public IEnumerable<TestSchemaY> TestSchemaY { get; set; } = null!;
 
 		/// <summary>
-		/// FK_TestSchemaY_OtherID_BackReference
+		/// FK_TestSchemaY_OtherID_BackReference (TestData.dbo.TestSchemaY)
 		/// </summary>
-		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=true)]
 		public IEnumerable<TestSchemaY> TestSchemaYOtherIds { get; set; } = null!;
 
 		/// <summary>
-		/// FK_TestSchemaY_ParentTestSchemaX_BackReference
+		/// FK_TestSchemaY_ParentTestSchemaX_BackReference (TestData.dbo.TestSchemaY)
 		/// </summary>
-		[Association(ThisKey="TestSchemaXID", OtherKey="ParentTestSchemaXID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+		[Association(ThisKey="TestSchemaXID", OtherKey="ParentTestSchemaXID", CanBeNull=true)]
 		public IEnumerable<TestSchemaY> TestSchemaYParentTestSchemaX { get; set; } = null!;
 
 		#endregion
@@ -616,31 +628,31 @@ namespace TestAzureSQL
 		#region Associations
 
 		/// <summary>
-		/// FK_TestSchemaY_OtherID
+		/// FK_TestSchemaY_OtherID (TestData.dbo.TestSchemaX)
 		/// </summary>
-		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_TestSchemaY_OtherID", BackReferenceName="TestSchemaYOtherIds")]
+		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false)]
 		public TestSchemaX FkTestSchemaYOtherID { get; set; } = null!;
 
 		/// <summary>
-		/// FK_TestSchemaY_ParentTestSchemaX
+		/// FK_TestSchemaY_ParentTestSchemaX (TestData.dbo.TestSchemaX)
 		/// </summary>
-		[Association(ThisKey="ParentTestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_TestSchemaY_ParentTestSchemaX", BackReferenceName="TestSchemaYParentTestSchemaX")]
+		[Association(ThisKey="ParentTestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false)]
 		public TestSchemaX ParentTestSchemaX { get; set; } = null!;
 
 		/// <summary>
-		/// FK_TestSchemaY_TestSchemaX
+		/// FK_TestSchemaY_TestSchemaX (TestData.dbo.TestSchemaX)
 		/// </summary>
-		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_TestSchemaY_TestSchemaX", BackReferenceName="TestSchemaY")]
+		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false)]
 		public TestSchemaX TestSchemaX { get; set; } = null!;
 
 		#endregion
 	}
 
-	public static partial class Issue1733DBStoredProcedures
+	public static partial class TestDataDBStoredProcedures
 	{
 		#region AddIssue792Record
 
-		public static int AddIssue792Record(this Issue1733DB dataConnection)
+		public static int AddIssue792Record(this TestDataDB dataConnection)
 		{
 			return dataConnection.ExecuteProc("[dbo].[AddIssue792Record]");
 		}
@@ -649,7 +661,7 @@ namespace TestAzureSQL
 
 		#region DuplicateColumnNames
 
-		public static IEnumerable<DuplicateColumnNamesResult> DuplicateColumnNames(this Issue1733DB dataConnection)
+		public static IEnumerable<DuplicateColumnNamesResult> DuplicateColumnNames(this TestDataDB dataConnection)
 		{
 			var ms = dataConnection.MappingSchema;
 
@@ -672,7 +684,7 @@ namespace TestAzureSQL
 
 		#region ExecuteProcIntParameters
 
-		public static int ExecuteProcIntParameters(this Issue1733DB dataConnection, int? @input, ref int? @output)
+		public static int ExecuteProcIntParameters(this TestDataDB dataConnection, int? @input, ref int? @output)
 		{
 			var parameters = new []
 			{
@@ -697,10 +709,10 @@ namespace TestAzureSQL
 		/// <summary>
 		/// This is &lt;test&gt; procedure!
 		/// </summary>
-		/// <param name="@input">
+		/// <param name="input">
 		/// This is &lt;test&gt; procedure parameter!
 		/// </param>
-		public static IEnumerable<ExecuteProcStringParametersResult> ExecuteProcStringParameters(this Issue1733DB dataConnection, int? @input, ref int? @output)
+		public static IEnumerable<ExecuteProcStringParametersResult> ExecuteProcStringParameters(this TestDataDB dataConnection, int? @input, ref int? @output)
 		{
 			var parameters = new []
 			{
@@ -734,7 +746,7 @@ namespace TestAzureSQL
 
 		#region Issue1897
 
-		public static int Issue1897(this Issue1733DB dataConnection)
+		public static int Issue1897(this TestDataDB dataConnection)
 		{
 			return dataConnection.ExecuteProc("[dbo].[Issue1897]");
 		}
@@ -743,7 +755,7 @@ namespace TestAzureSQL
 
 		#region OutRefEnumTest
 
-		public static int OutRefEnumTest(this Issue1733DB dataConnection, string? @str, ref string? @outputStr, ref string? @inputOutputStr)
+		public static int OutRefEnumTest(this TestDataDB dataConnection, string? @str, ref string? @outputStr, ref string? @inputOutputStr)
 		{
 			var parameters = new []
 			{
@@ -775,7 +787,7 @@ namespace TestAzureSQL
 
 		#region OutRefTest
 
-		public static int OutRefTest(this Issue1733DB dataConnection, int? @ID, ref int? @outputID, ref int? @inputOutputID, string? @str, ref string? @outputStr, ref string? @inputOutputStr)
+		public static int OutRefTest(this TestDataDB dataConnection, int? @ID, ref int? @outputID, ref int? @inputOutputID, string? @str, ref string? @outputStr, ref string? @inputOutputStr)
 		{
 			var parameters = new []
 			{
@@ -818,7 +830,7 @@ namespace TestAzureSQL
 
 		#region PatientSelectAll
 
-		public static IEnumerable<PatientSelectAllResult> PatientSelectAll(this Issue1733DB dataConnection)
+		public static IEnumerable<PatientSelectAllResult> PatientSelectAll(this TestDataDB dataConnection)
 		{
 			return dataConnection.QueryProc<PatientSelectAllResult>("[dbo].[Patient_SelectAll]");
 		}
@@ -837,7 +849,7 @@ namespace TestAzureSQL
 
 		#region PatientSelectByName
 
-		public static IEnumerable<PatientSelectByNameResult> PatientSelectByName(this Issue1733DB dataConnection, string? @firstName, string? @lastName)
+		public static IEnumerable<PatientSelectByNameResult> PatientSelectByName(this TestDataDB dataConnection, string? @firstName, string? @lastName)
 		{
 			var parameters = new []
 			{
@@ -868,7 +880,7 @@ namespace TestAzureSQL
 
 		#region PersonDelete
 
-		public static int PersonDelete(this Issue1733DB dataConnection, int? @PersonID)
+		public static int PersonDelete(this TestDataDB dataConnection, int? @PersonID)
 		{
 			var parameters = new []
 			{
@@ -882,7 +894,7 @@ namespace TestAzureSQL
 
 		#region PersonInsert
 
-		public static IEnumerable<PersonInsertResult> PersonInsert(this Issue1733DB dataConnection, string? @FirstName, string? @LastName, string? @MiddleName, char? @Gender)
+		public static IEnumerable<PersonInsertResult> PersonInsert(this TestDataDB dataConnection, string? @FirstName, string? @LastName, string? @MiddleName, char? @Gender)
 		{
 			var parameters = new []
 			{
@@ -916,7 +928,7 @@ namespace TestAzureSQL
 
 		#region PersonInsertOutputParameter
 
-		public static int PersonInsertOutputParameter(this Issue1733DB dataConnection, string? @FirstName, string? @LastName, string? @MiddleName, char? @Gender, ref int? @PersonID)
+		public static int PersonInsertOutputParameter(this TestDataDB dataConnection, string? @FirstName, string? @LastName, string? @MiddleName, char? @Gender, ref int? @PersonID)
 		{
 			var parameters = new []
 			{
@@ -953,7 +965,7 @@ namespace TestAzureSQL
 
 		#region PersonSelectAll
 
-		public static IEnumerable<Person> PersonSelectAll(this Issue1733DB dataConnection)
+		public static IEnumerable<Person> PersonSelectAll(this TestDataDB dataConnection)
 		{
 			return dataConnection.QueryProc<Person>("[dbo].[Person_SelectAll]");
 		}
@@ -962,7 +974,7 @@ namespace TestAzureSQL
 
 		#region PersonSelectByKey
 
-		public static IEnumerable<Person> PersonSelectByKey(this Issue1733DB dataConnection, int? @id)
+		public static IEnumerable<Person> PersonSelectByKey(this TestDataDB dataConnection, int? @id)
 		{
 			var parameters = new []
 			{
@@ -976,7 +988,7 @@ namespace TestAzureSQL
 
 		#region PersonSelectByKeyLowercase
 
-		public static IEnumerable<PersonSelectByKeyLowercaseResult> PersonSelectByKeyLowercase(this Issue1733DB dataConnection, int? @id)
+		public static IEnumerable<PersonSelectByKeyLowercaseResult> PersonSelectByKeyLowercase(this TestDataDB dataConnection, int? @id)
 		{
 			var parameters = new []
 			{
@@ -996,7 +1008,7 @@ namespace TestAzureSQL
 
 		#region PersonSelectByName
 
-		public static IEnumerable<Person> PersonSelectByName(this Issue1733DB dataConnection, string? @firstName, string? @lastName)
+		public static IEnumerable<Person> PersonSelectByName(this TestDataDB dataConnection, string? @firstName, string? @lastName)
 		{
 			var parameters = new []
 			{
@@ -1017,7 +1029,7 @@ namespace TestAzureSQL
 
 		#region PersonSelectListByName
 
-		public static IEnumerable<Person> PersonSelectListByName(this Issue1733DB dataConnection, string? @firstName, string? @lastName)
+		public static IEnumerable<Person> PersonSelectListByName(this TestDataDB dataConnection, string? @firstName, string? @lastName)
 		{
 			var parameters = new []
 			{
@@ -1038,7 +1050,7 @@ namespace TestAzureSQL
 
 		#region PersonUpdate
 
-		public static int PersonUpdate(this Issue1733DB dataConnection, int? @PersonID, string? @FirstName, string? @LastName, string? @MiddleName, char? @Gender)
+		public static int PersonUpdate(this TestDataDB dataConnection, int? @PersonID, string? @FirstName, string? @LastName, string? @MiddleName, char? @Gender)
 		{
 			var parameters = new []
 			{
@@ -1068,7 +1080,7 @@ namespace TestAzureSQL
 
 		#region QueryProcMultipleParameters
 
-		public static IEnumerable<Person> QueryProcMultipleParameters(this Issue1733DB dataConnection, int? @input, ref int? @output1, ref int? @output2, ref int? @output3)
+		public static IEnumerable<Person> QueryProcMultipleParameters(this TestDataDB dataConnection, int? @input, ref int? @output1, ref int? @output2, ref int? @output3)
 		{
 			var parameters = new []
 			{
@@ -1100,7 +1112,7 @@ namespace TestAzureSQL
 
 		#region QueryProcParameters
 
-		public static IEnumerable<Person> QueryProcParameters(this Issue1733DB dataConnection, int? @input, ref int? @output1, ref int? @output2)
+		public static IEnumerable<Person> QueryProcParameters(this TestDataDB dataConnection, int? @input, ref int? @output1, ref int? @output2)
 		{
 			var parameters = new []
 			{
@@ -1127,7 +1139,7 @@ namespace TestAzureSQL
 
 		#region SelectImplicitColumn
 
-		public static IEnumerable<SelectImplicitColumnResult> SelectImplicitColumn(this Issue1733DB dataConnection)
+		public static IEnumerable<SelectImplicitColumnResult> SelectImplicitColumn(this TestDataDB dataConnection)
 		{
 			var ms = dataConnection.MappingSchema;
 
@@ -1148,7 +1160,7 @@ namespace TestAzureSQL
 
 		#region TableTypeTestProc
 
-		public static IEnumerable<TableTypeTestProcResult> TableTypeTestProc(this Issue1733DB dataConnection, DataTable? @table)
+		public static IEnumerable<TableTypeTestProcResult> TableTypeTestProc(this TestDataDB dataConnection, DataTable? @table)
 		{
 			var parameters = new []
 			{
@@ -1171,7 +1183,7 @@ namespace TestAzureSQL
 
 		#region TestProcedure
 
-		public static IEnumerable<TestProcedureResult> TestProcedure(this Issue1733DB dataConnection)
+		public static IEnumerable<TestProcedureResult> TestProcedure(this TestDataDB dataConnection)
 		{
 			var ms = dataConnection.MappingSchema;
 
@@ -1192,7 +1204,7 @@ namespace TestAzureSQL
 
 		#region VariableResults
 
-		public static IEnumerable<VariableResultsResult> VariableResults(this Issue1733DB dataConnection, bool? @ReturnFullRow)
+		public static IEnumerable<VariableResultsResult> VariableResults(this TestDataDB dataConnection, bool? @ReturnFullRow)
 		{
 			var parameters = new []
 			{
@@ -1219,7 +1231,7 @@ namespace TestAzureSQL
 		/// <summary>
 		/// This is &lt;test&gt; scalar function!
 		/// </summary>
-		/// <param name="@value">
+		/// <param name="value">
 		/// This is &lt;test&gt; scalar function parameter!
 		/// </param>
 		[Sql.Function(Name="dbo.ScalarFunction", ServerSideOnly=true)]

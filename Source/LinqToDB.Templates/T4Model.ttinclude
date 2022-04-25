@@ -27,7 +27,7 @@ public void GenerateModel()
 	WriteComment(this, "---------------------------------------------------------------------------------------------------");
 
 	WriteLine("");
-	WriteLine("#pragma warning disable 1572, 1591");
+	WriteLine("#pragma warning disable 1573, 1591");
 	if (EnableNullableReferenceTypes)
 		WriteLine("#nullable enable");
 	WriteLine("");

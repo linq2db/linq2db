@@ -260,6 +260,10 @@ WHERE
 
 		protected override List<ColumnSchema> GetProcedureResultColumns(DataTable resultTable, GetSchemaOptions options)
 		{
+			var dataTypeNameColumn = "DataTypeName";
+			if (!resultTable.Columns.Contains("DataTypeName"))
+				dataTypeNameColumn = "NativeDataType";
+
 			return
 			(
 				from r in resultTable.AsEnumerable()
@@ -271,7 +275,7 @@ WHERE
 				let length     = r.Field<int> ("ColumnSize")
 				let precision  = Converter.ChangeTypeTo<int>(r["NumericPrecision"])
 				let scale      = Converter.ChangeTypeTo<int>(r["NumericScale"])
-				let columnType = r.Field<string>("DataTypeName")
+				let columnType = r.Field<string>(dataTypeNameColumn)
 				let dt         = GetDataType(columnType, null, options)
 
 				select new ColumnSchema
