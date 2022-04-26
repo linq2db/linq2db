@@ -754,7 +754,7 @@ namespace LinqToDB.Linq.Builder
 			var interceptor = DataContext.ExpressionInterceptor;
 			if (interceptor != null)
 			{
-				result = interceptor.ProcessExpression(result);
+				result = interceptor.ProcessExpression(MappingSchema, result);
 			}
 
 			if (_expressionPreprocessor != null)

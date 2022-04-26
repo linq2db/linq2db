@@ -1,4 +1,5 @@
 ﻿using System.Linq.Expressions;
+using LinqToDB.Mapping;
 
 namespace LinqToDB.Interceptors
 {
@@ -10,10 +11,11 @@ namespace LinqToDB.Interceptors
 		/// <summary>
 		/// Executed when Expression is ready to translate. 
 		/// </summary>
+		/// <param name="mappingSchema">Current MappingSchema.</param>
 		/// <param name="expression">Expression for transforming.</param>
 		/// <returns>
 		/// Transformed Expression
 		/// </returns>
-		public Expression ProcessExpression(Expression expression);
+		public Expression ProcessExpression(MappingSchema mappingSchema, Expression expression);
 	}
 }

@@ -1,4 +1,5 @@
 ﻿using System.Linq.Expressions;
+using LinqToDB.Mapping;
 
 namespace LinqToDB.Interceptors
 {
@@ -9,12 +10,12 @@ namespace LinqToDB.Interceptors
 			return new AggregatedExpressionInterceptor();
 		}
 
-		public Expression ProcessExpression(Expression expression)
+		public Expression ProcessExpression(MappingSchema mappingSchema, Expression expression)
 		{
 			return Apply(() =>
 			{
 				foreach (var interceptor in Interceptors)
-					expression = interceptor.ProcessExpression(expression);
+					expression = interceptor.ProcessExpression(mappingSchema, expression);
 				return expression;
 			});
 		}

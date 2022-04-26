@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Configuration;
@@ -67,9 +68,69 @@ namespace Tests.Linq
 
 	public class EnrichInterceptor : IExpressionInterceptor
 	{
-		public Expression ProcessExpression(Expression expression)
+		static Expression ExpandExpressionMethodTransformer(MappingSchema mappingSchema, Expression expression)
 		{
-			var transformed = expression.Transform(static e =>
+			if (expression.NodeType == ExpressionType.Call)
+			{
+				var mc   = (MethodCallExpression)expression;
+				var mi   = mc.Method;
+				var attr = mappingSchema.GetAttribute<ExpressionMethodAttribute>(mi.DeclaringType!, mi);
+				if (attr != null)
+				{
+					if (attr.Expression != null)
+						return attr.Expression;
+
+					if (!string.IsNullOrEmpty(attr.MethodName))
+					{
+						Expression expr;
+
+						if (mi is MethodInfo method && method.IsGenericMethod)
+						{
+							var args  = method.GetGenericArguments();
+							var names = args.Select(t => (object)t.Name).ToArray();
+							var name  = string.Format(attr.MethodName, names);
+
+							expr = Expression.Call(
+								mi.DeclaringType!,
+								name,
+								name != attr.MethodName ? Type.EmptyTypes : args);
+						}
+						else
+						{
+							expr = Expression.Call(mi.DeclaringType!, attr.MethodName, Type.EmptyTypes);
+						}
+
+						var evaluated = (LambdaExpression?)expr.EvaluateExpression();
+
+						if (evaluated != null)
+						{
+							var newExpression = evaluated.Body.Transform(e =>
+							{
+								if (e.NodeType == ExpressionType.Parameter)
+								{
+									var idx = evaluated.Parameters.IndexOf((ParameterExpression)e);
+									if (idx != -1)
+										return mc.Arguments[idx];
+								}
+
+								return e;
+							});
+
+							return newExpression;
+						}
+					}
+				}
+			}
+
+			return expression;
+		}
+
+		public Expression ProcessExpression(MappingSchema mappingSchema, Expression expression)
+		{
+			var expanded = expression.Transform(e =>
+				new TransformInfo(ExpandExpressionMethodTransformer(mappingSchema, e), false, true));
+
+			var transformed = expanded.Transform(static e =>
 			{
 				if (e.NodeType == ExpressionType.Call)
 				{
