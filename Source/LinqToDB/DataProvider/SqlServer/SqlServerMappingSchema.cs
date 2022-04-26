@@ -248,7 +248,6 @@ namespace LinqToDB.DataProvider.SqlServer
 			stringBuilder.Append("0x");
 			stringBuilder.AppendByteArrayAsHexViaLookup32(value);
 		}
-		
 	}
 
 	public class SqlServer2005MappingSchema : MappingSchema
