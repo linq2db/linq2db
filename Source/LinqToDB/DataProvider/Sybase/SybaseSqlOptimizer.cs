@@ -1,8 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace LinqToDB.DataProvider.Sybase
 {
+	using Extensions;
 	using SqlProvider;
 	using SqlQuery;
 	using Mapping;
@@ -62,6 +64,26 @@ namespace LinqToDB.DataProvider.Sybase
 								func.Parameters[1],
 								func.Parameters[1],
 								new SqlValue(value.ValueType, null));
+					}
+
+					break;
+				}
+
+				case "$Convert$":
+				{
+					var ftype = func.SystemType.ToUnderlying();
+					if (ftype == typeof(string))
+					{
+						var stype = func.Parameters[2].SystemType!.ToUnderlying();
+
+						if (stype == typeof(DateTime)
+#if NET6_0_OR_GREATER
+							|| stype == typeof(DateOnly)
+#endif
+							)
+						{
+							return new SqlFunction(func.SystemType, "convert", func.Parameters[0], func.Parameters[2], new SqlValue(23));
+						}
 					}
 
 					break;

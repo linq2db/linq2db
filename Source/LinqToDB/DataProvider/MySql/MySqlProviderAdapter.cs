@@ -62,7 +62,9 @@ namespace LinqToDB.DataProvider.MySql
 
 			string  providerTypesNamespace,
 			MappingSchema    mappingSchema,
-			BulkCopyAdapter? bulkCopy)
+			BulkCopyAdapter? bulkCopy,
+			
+			bool isDateOnlySupported)
 		{
 			ProviderType = provider;
 
@@ -87,6 +89,8 @@ namespace LinqToDB.DataProvider.MySql
 
 			MappingSchema = mappingSchema;
 			BulkCopy      = bulkCopy;
+
+			IsDateOnlySupported = isDateOnlySupported;
 		}
 
 		internal MySqlProvider ProviderType { get; }
@@ -131,6 +135,8 @@ namespace LinqToDB.DataProvider.MySql
 		public Func<DbParameter, object> GetDbType { get; }
 
 		internal BulkCopyAdapter? BulkCopy { get; }
+
+		public bool IsDateOnlySupported { get; }
 
 		internal class BulkCopyAdapter
 		{
@@ -227,7 +233,8 @@ namespace LinqToDB.DataProvider.MySql
 					"GetMySqlDateTime",
 					MySqlDataTypesNamespace,
 					mappingSchema,
-					null);
+					null,
+					false);
 			}
 
 			[Wrapper]
@@ -298,10 +305,12 @@ namespace LinqToDB.DataProvider.MySql
 
 		internal class MySqlConnector
 		{
-			private static readonly Version MinBulkCopyVersion = new (0, 67);
-			private static readonly Version MinModernVersion   = new (1, 0);
+			private static readonly Version MinBulkCopyVersion     = new (0, 67);
+			private static readonly Version MinModernVersion       = new (1, 0);
 			// actually it was added in 2.1.0, but assembly version wasn't updated
 			private static readonly Version MinMySqlDecimalVersion = new (2, 0);
+			// added in 2.0.0 with bulk copy fix in 2.1.8
+			private static readonly Version MinDateOnlyVersion     = new (2, 0);
 
 			internal static MySqlProviderAdapter CreateAdapter()
 			{
@@ -395,7 +404,8 @@ namespace LinqToDB.DataProvider.MySql
 					"GetMySqlDateTime",
 					typesNamespace,
 					mappingSchema,
-					bulkCopy);
+					bulkCopy,
+					assembly.GetName().Version >= MinDateOnlyVersion);
 			}
 
 			#region wrappers

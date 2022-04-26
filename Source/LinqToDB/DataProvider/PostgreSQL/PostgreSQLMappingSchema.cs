@@ -61,6 +61,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			AddScalarType(typeof(TimeSpan),  DataType.Interval);
 			AddScalarType(typeof(TimeSpan?), DataType.Interval);
 
+#if NET6_0_OR_GREATER
+			SetValueToSqlConverter(typeof(DateOnly), (sb, dt, v) => BuildDate(sb, dt, (DateOnly)v));
+#endif
+
 			// npgsql doesn't support unsigned types except byte (and sbyte)
 			SetConvertExpression<ushort , DataParameter>(value => new DataParameter(null, (int  )value, DataType.Int32));
 			SetConvertExpression<ushort?, DataParameter>(value => new DataParameter(null, (int? )value, DataType.Int32), addNullCheck: false);
@@ -102,6 +106,13 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, value, dbType);
 		}
+
+#if NET6_0_OR_GREATER
+		static void BuildDate(StringBuilder stringBuilder, SqlDataType dt, DateOnly value)
+		{
+			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATE_FORMAT, value, dt.Type.DbType ?? "date");
+		}
+#endif
 
 		static void ConvertBinaryToSql(StringBuilder stringBuilder, byte[] value)
 		{
