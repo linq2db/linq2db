@@ -346,7 +346,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 			SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => SqlServerMappingSchema.ConvertDateTimeToSql(sb, dt, (DateTime)v));
-}
+		}
 
 		public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
 		{
