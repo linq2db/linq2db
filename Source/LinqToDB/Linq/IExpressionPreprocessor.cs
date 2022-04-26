@@ -18,9 +18,6 @@ namespace LinqToDB.Linq
 		/// <returns>
 		/// Transformed Expression
 		/// </returns>
-		/// <remarks>
-		/// ExpressionMethodAttribute injection already done at this point.
-		/// </remarks>
 		Expression ProcessExpression(Expression expression);
 	}
 }

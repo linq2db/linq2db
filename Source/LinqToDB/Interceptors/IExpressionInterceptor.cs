@@ -14,9 +14,6 @@ namespace LinqToDB.Interceptors
 		/// <returns>
 		/// Transformed Expression
 		/// </returns>
-		/// <remarks>
-		/// ExpressionMethodAttribute injection already done at this point.
-		/// </remarks>
 		public Expression ProcessExpression(Expression expression);
 	}
 }

@@ -1478,7 +1478,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			// Finalize keys for recursive processing
 			var expression = detailQuery.Expression;
-			expression     = builder.PreprocessExpression(expression);
+			expression     = builder.ExposeExpression(expression);
 			expression     = FinalizeExpressionKeys(new HashSet<Expression>(), expression);
 
 			var detailQueryPrepared = Query<KeyDetailEnvelope<TKey, TD>>.CreateQuery(builder.OptimizationContext, builder.ParametersContext, builder.DataContext,

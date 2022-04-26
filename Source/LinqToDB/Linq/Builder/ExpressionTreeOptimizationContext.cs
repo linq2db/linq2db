@@ -640,6 +640,7 @@ namespace LinqToDB.Linq.Builder
 					if (l != null)
 					{
 						var ex = ConvertMemberExpression(expr, me.Expression!, l);
+						ex = PreprocessExpression(ex);
 
 						return AliasCall(ex, alias!);
 					}
@@ -656,6 +657,7 @@ namespace LinqToDB.Linq.Builder
 						if (l != null)
 						{
 							var exposed = l.GetBody(ex.Operand);
+							exposed = PreprocessExpression(exposed);
 							return exposed;
 						}
 					}
@@ -708,6 +710,7 @@ namespace LinqToDB.Linq.Builder
 									});
 								}
 
+								newBody = PreprocessExpression(newBody);
 								return newBody;
 							}
 						}
@@ -722,6 +725,7 @@ namespace LinqToDB.Linq.Builder
 					if (l != null)
 					{
 						var transformed = ExpressionBuilder.ConvertMethod(call, l);
+						transformed = PreprocessExpression(transformed);
 						return transformed;
 					}
 
@@ -732,13 +736,20 @@ namespace LinqToDB.Linq.Builder
 			return expr;
 		}
 
+		public Expression ExposeExpression(Expression expression)
+		{
+			var result = expression.Transform(this,
+				static (ctx, e) =>
+				{
+					return new TransformInfo(ctx.ExposeExpressionTransformer(e), false, true);
+				});
+
+			return result;
+		}
+
 		public Expression PreprocessExpression(Expression expression)
 		{
-			var result = expression.Transform(this, (ctx, e) =>
-			{
-				var newExpr = ctx.ExposeExpressionTransformer(e);
-				return new TransformInfo(newExpr, false, true);
-			});
+			var result = expression;
 
 			var interceptor = DataContext.ExpressionInterceptor;
 			if (interceptor != null)

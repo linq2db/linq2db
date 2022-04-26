@@ -399,6 +399,12 @@ namespace LinqToDB.Linq.Builder
 
 		#endregion
 
+		public Expression ExposeExpression(Expression expression)
+		{
+			var result = _optimizationContext.ExposeExpression(expression);
+			return result;
+		}
+
 		#region OptimizeExpression
 
 		public static readonly MethodInfo[] EnumerableMethods      = typeof(Enumerable     ).GetMethods();
@@ -412,7 +418,8 @@ namespace LinqToDB.Linq.Builder
 			if (_optimizedExpressions != null && _optimizedExpressions.TryGetValue(expression, out var expr))
 				return expr;
 
-			expr = expression;
+			expr = ExposeExpression(expression);
+
 			var currentParameters = new HashSet<ParameterExpression>();
 			expr = expr.Transform((builder: this, currentParameters), static (ctx, e) => ctx.builder.OptimizeExpressionImpl(ctx.currentParameters, e));
 
@@ -423,8 +430,6 @@ namespace LinqToDB.Linq.Builder
 
 		TransformInfo OptimizeExpressionImpl(HashSet<ParameterExpression> currentParameters, Expression expr)
 		{
-			expr = _optimizationContext.ExposeExpressionTransformer(expr);
-
 			switch (expr.NodeType)
 			{
 				case ExpressionType.Lambda:
@@ -533,7 +538,9 @@ namespace LinqToDB.Linq.Builder
 
 						if (l != null)
 						{
-							var optimized = OptimizeExpression(ConvertMethod(call, l));
+							var converted = ConvertMethod(call, l);
+							converted = _optimizationContext.PreprocessExpression(converted);
+							var optimized = OptimizeExpression(converted);
 							return new TransformInfo(optimized);
 						}
 
