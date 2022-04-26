@@ -236,6 +236,9 @@ namespace LinqToDB.SqlQuery
 					if (underlyingType == typeof(char[]))         return CharArray;
 					if (underlyingType == typeof(DateTimeOffset)) return DateTimeOffset;
 					if (underlyingType == typeof(TimeSpan))       return TimeSpan;
+#if NET6_0_OR_GREATER
+					if (underlyingType == typeof(DateOnly))       return DbDate;
+#endif
 					break;
 
 				case TypeCode.DBNull   :
