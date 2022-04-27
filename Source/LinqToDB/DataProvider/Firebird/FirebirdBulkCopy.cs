@@ -12,7 +12,7 @@ namespace LinqToDB.DataProvider.Firebird
 		
 		/// <remarks>
 		/// Number based on http://www.firebirdfaq.org/faq197/
-		/// TODO: Add Compat Switch. Firebird 2.5 has 64k limit, Firebird 3.0+ 10MB. 
+		/// TODO: Add Compat Switch. Firebird 2.5 has 64k limit, Firebird 3.0+ 10MB.
 		/// </remarks>
 		protected override int MaxSqlLength => 65535;
 
