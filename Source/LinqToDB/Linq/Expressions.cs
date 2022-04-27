@@ -657,17 +657,17 @@ namespace LinqToDB.Linq
 			#region DateOnly
 #if NET6_0_OR_GREATER
 
-			{ M(() => Sql.DateOnly.Year              ), N(() => L<DateOnly,int>         ((DateOnly obj)        => Sql.DatePart(Sql.DateParts.Year,        obj)!.Value    )) },
-			{ M(() => Sql.DateOnly.Month             ), N(() => L<DateOnly,int>         ((DateOnly obj)        => Sql.DatePart(Sql.DateParts.Month,       obj)!.Value    )) },
-			{ M(() => Sql.DateOnly.DayOfYear         ), N(() => L<DateOnly,int>         ((DateOnly obj)        => Sql.DatePart(Sql.DateParts.DayOfYear,   obj)!.Value    )) },
-			{ M(() => Sql.DateOnly.Day               ), N(() => L<DateOnly,int>         ((DateOnly obj)        => Sql.DatePart(Sql.DateParts.Day,         obj)!.Value    )) },
-			{ M(() => Sql.DateOnly.DayOfWeek         ), N(() => L<DateOnly,int>         ((DateOnly obj)        => Sql.DatePart(Sql.DateParts.WeekDay,     obj)!.Value - 1)) },
-			{ M(() => Sql.DateOnly.AddYears       (0)), N(() => L<DateOnly,int,DateOnly>((DateOnly obj,int p0) => Sql.DateAdd(Sql.DateParts.Year,        p0, obj)!.Value )) },
-			{ M(() => Sql.DateOnly.AddMonths      (0)), N(() => L<DateOnly,int,DateOnly>((DateOnly obj,int p0) => Sql.DateAdd(Sql.DateParts.Month,       p0, obj)!.Value )) },
-			{ M(() => Sql.DateOnly.AddDays        (0)), N(() => L<DateOnly,int,DateOnly>((DateOnly obj,int p0) => Sql.DateAdd(Sql.DateParts.Day,         p0, obj)!.Value )) },
-			{ M(() => new DateOnly(0, 0, 0)          ), N(() => L<int,int,int,DateOnly>((int y,int m,int d)    => Sql.MakeDateOnly(y, m, d)!.Value                       )) },
+			{ M(() => Sql.Types.DateOnly.Year              ), N(() => L<DateOnly,int>         ((DateOnly obj)        => Sql.DatePart(Sql.DateParts.Year,        obj)!.Value    )) },
+			{ M(() => Sql.Types.DateOnly.Month             ), N(() => L<DateOnly,int>         ((DateOnly obj)        => Sql.DatePart(Sql.DateParts.Month,       obj)!.Value    )) },
+			{ M(() => Sql.Types.DateOnly.DayOfYear         ), N(() => L<DateOnly,int>         ((DateOnly obj)        => Sql.DatePart(Sql.DateParts.DayOfYear,   obj)!.Value    )) },
+			{ M(() => Sql.Types.DateOnly.Day               ), N(() => L<DateOnly,int>         ((DateOnly obj)        => Sql.DatePart(Sql.DateParts.Day,         obj)!.Value    )) },
+			{ M(() => Sql.Types.DateOnly.DayOfWeek         ), N(() => L<DateOnly,int>         ((DateOnly obj)        => Sql.DatePart(Sql.DateParts.WeekDay,     obj)!.Value - 1)) },
+			{ M(() => Sql.Types.DateOnly.AddYears       (0)), N(() => L<DateOnly,int,DateOnly>((DateOnly obj,int p0) => Sql.DateAdd(Sql.DateParts.Year,        p0, obj)!.Value )) },
+			{ M(() => Sql.Types.DateOnly.AddMonths      (0)), N(() => L<DateOnly,int,DateOnly>((DateOnly obj,int p0) => Sql.DateAdd(Sql.DateParts.Month,       p0, obj)!.Value )) },
+			{ M(() => Sql.Types.DateOnly.AddDays        (0)), N(() => L<DateOnly,int,DateOnly>((DateOnly obj,int p0) => Sql.DateAdd(Sql.DateParts.Day,         p0, obj)!.Value )) },
+			{ M(() => new DateOnly(0, 0, 0)                ), N(() => L<int,int,int, DateOnly>((int y,int m,int d)   => Sql.MakeDateOnly(y, m, d)!.Value                       )) },
 
-			{ M(() => Sql.MakeDateOnly(0, 0, 0)      ), N(() => L<int?,int?,int?,DateOnly?>((int? y,int? m,int? d) => (DateOnly?)Sql.Convert(Sql.DateOnly, 
+			{ M(() => Sql.MakeDateOnly(0, 0, 0)      ), N(() => L<int?,int?,int?,DateOnly?>((int? y,int? m,int? d) => (DateOnly?)Sql.Convert(Sql.Types.DateOnly,
 				y.ToString() + "-" + Sql.ZeroPad(m, 2) + "-" + Sql.ZeroPad(d, 2)))) },
 
 #endif
@@ -1408,7 +1408,7 @@ namespace LinqToDB.Linq
 					{ M(() => Sql.PadLeft ("",0,' ') ), N(() => L<string,int?,char?,string>         ((p0,p1,p2)    => p0.Length > p1 ? p0 : Replicate(p2, p1 - p0.Length) + p0)) },
 
 #if NET6_0_OR_GREATER
-					{ M(() => Sql.MakeDateOnly(0, 0, 0)), N(() => L<int?,int?,int?,DateOnly?>((y,m,d) => Sql.Convert(Sql.DateOnly,
+					{ M(() => Sql.MakeDateOnly(0, 0, 0)), N(() => L<int?,int?,int?,DateOnly?>((y,m,d) => Sql.Convert(Sql.Types.DateOnly,
 						y.ToString() + "-" +
 						Sql.ZeroPad(m, 2) + "-" +
 						Sql.ZeroPad(d, 2)))) },

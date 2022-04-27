@@ -1,4 +1,4 @@
-using PN = LinqToDB.ProviderName;
+﻿using PN = LinqToDB.ProviderName;
 using System;
 
 namespace LinqToDB
@@ -102,6 +102,12 @@ namespace LinqToDB
 			[Property(PN.SqlCe,         "Datetime",       ServerSideOnly=true)]
 			[Property(                  "Date",           ServerSideOnly=true)]
 			public static DateTime       Date => DateTime.Now;
+#if NET6_0_OR_GREATER
+			[Property(PN.SqlServer2005, "Datetime",       ServerSideOnly=true)]
+			[Property(PN.SqlCe,         "Datetime",       ServerSideOnly=true)]
+			[Property(                  "Date",           ServerSideOnly=true)]
+			public static DateOnly       DateOnly => DateOnly.FromDateTime(DateTime.Now);
+#endif
 
 			[Property(                  "Time",           ServerSideOnly=true)]
 			public static DateTime       Time => DateTime.Now;
