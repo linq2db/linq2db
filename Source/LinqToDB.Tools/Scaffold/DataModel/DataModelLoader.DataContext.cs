@@ -14,7 +14,7 @@ namespace LinqToDB.Scaffold
 		{
 			var className = _namingServices.NormalizeIdentifier(
 				_options.DataModel.DataContextClassNameOptions,
-				_options.DataModel.ContextClassName ?? _schemaProvider.DatabaseName ?? "MyDataContext");
+				_options.DataModel.ContextClassName ?? (_schemaProvider.DatabaseName + "DB") ?? "MyDataContext");
 
 			var dataContextClass = new ClassModel(className, className)
 			{

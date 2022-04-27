@@ -212,11 +212,11 @@ namespace LinqToDB.Scaffold
 		/// <summary>
 		/// Gets or sets name generation and normalization rules for data context class name.
 		/// <list type="bullet">
-		/// <item>Default: <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.SplitByUnderscore"/>, <c>Suffix = "DB"</c></item>
-		/// <item>In T4 compability mode:  <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.SplitByUnderscore"/>, <c>Suffix = "DB"</c></item>
+		/// <item>Default: <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.SplitByUnderscore"/></item>
+		/// <item>In T4 compability mode:  <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.SplitByUnderscore"/></item>
 		/// </list>
 		/// </summary>
-		public NormalizationOptions DataContextClassNameOptions { get; set; } = new() { Casing = NameCasing.Pascal, Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None, Suffix = "DB" };
+		public NormalizationOptions DataContextClassNameOptions { get; set; } = new() { Casing = NameCasing.Pascal, Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None };
 		#endregion
 
 		#region Associations
