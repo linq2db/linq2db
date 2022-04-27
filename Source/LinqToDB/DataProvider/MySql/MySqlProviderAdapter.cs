@@ -78,11 +78,9 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Returns object, because both providers use different enums and we anyway don't need typed value.
 		/// </summary>
-		public Func<DbParameter, object> GetDbType { get; protected set; } = null!;
-
-		public BulkCopyAdapter? BulkCopy { get; protected set; }
-
-		public bool IsDateOnlySupported { get; }
+		public Func<DbParameter,object> GetDbType   { get; protected set; } = null!;
+		public BulkCopyAdapter? BulkCopy            { get; protected set; }
+		public bool             IsDateOnlySupported { get; protected set; }
 
 		internal class BulkCopyAdapter
 		{
@@ -164,32 +162,6 @@ namespace LinqToDB.DataProvider.MySql
 					mappingSchema.SetDataType(mySqlDateTimeType, DataType.DateTime2);
 					mappingSchema.SetConvertExpression(mySqlDateTimeType, typeof(DateTime), dateTimeConverter);
 
-					ProviderType                = MySqlProvider.MySqlData;
-					ConnectionType              = connectionType;
-					DataReaderType              = dataReaderType;
-					ParameterType               = parameterType;
-					CommandType                 = commandType;
-					TransactionType             = transactionType;
-					MySqlDecimalType            = mySqlDecimalType;
-					MySqlDateTimeType           = mySqlDateTimeType;
-					MySqlGeometryType           = mySqlGeometryType;
-					MySqlDecimalGetter          = decimalGetter;
-					GetDbType                   = p => dbTypeGetter(p);
-					GetMySqlDecimalMethodName   = "GetMySqlDecimal";
-					GetDateTimeOffsetMethodName = null;
-					GetMySqlDateTimeMethodName  = "GetMySqlDateTime";
-					ProviderTypesNamespace      = MySqlDataTypesNamespace;
-					MappingSchema               = mappingSchema;
-					BulkCopy                    = null;
-					IsDateOnlySupported         = false;
-				}
-			}
-
-			sealed class MySqlDataAdapterMappingSchema : LockedMappingSchema
-			{
-				public MySqlDataAdapterMappingSchema() : base("MySqlDataAdapter")
-				{
-				}
 					ProviderType                = MySqlProvider.MySqlData;
 					ConnectionType              = connectionType;
 					DataReaderType              = dataReaderType;
