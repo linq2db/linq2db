@@ -24,10 +24,7 @@ namespace LinqToDB.DataProvider.Oracle
 		{}
 
 		protected internal OracleDataProvider(string name, OracleVersion version)
-			: base(
-				name,
-				GetMappingSchema(name, OracleProviderAdapter.GetInstance(name).MappingSchema),
-				OracleProviderAdapter.GetInstance(name))
+			: base(name, GetMappingSchema(name), OracleProviderAdapter.GetInstance(name))
 		{
 			Version = version;
 
@@ -108,12 +105,12 @@ namespace LinqToDB.DataProvider.Oracle
 			};
 		}
 
-		private static MappingSchema GetMappingSchema(string name, MappingSchema providerSchema)
+		private static MappingSchema GetMappingSchema(string name)
 		{
 			return name switch
 			{
-				ProviderName.OracleNative => new OracleMappingSchema.NativeMappingSchema(providerSchema),
-				_                         => new OracleMappingSchema.ManagedMappingSchema(providerSchema),
+				ProviderName.OracleNative => new OracleMappingSchema.NativeMappingSchema(),
+				_                         => new OracleMappingSchema.ManagedMappingSchema(),
 			};
 		}
 
@@ -185,11 +182,13 @@ namespace LinqToDB.DataProvider.Oracle
 						value    = Adapter.CreateOracleTimeStampTZ(dto, zone);
 					}
 					break;
-				case DataType.Boolean:
+
+				case DataType.Boolean  :
 					dataType = dataType.WithDataType(DataType.Byte);
 					if (value is bool boolValue)
 						value = boolValue ? (byte)1 : (byte)0;
 					break;
+
 				case DataType.Guid     :
 				case DataType.Binary   :
 				case DataType.VarBinary:
@@ -198,30 +197,39 @@ namespace LinqToDB.DataProvider.Oracle
 					// https://github.com/linq2db/linq2db/issues/3207
 					if (value is Guid guid) value = guid.ToByteArray();
 					break;
-				case DataType.Time:
+
+				case DataType.Time     :
 					// According to http://docs.oracle.com/cd/E16655_01/win.121/e17732/featOraCommand.htm#ODPNT258
 					// Inference of DbType and OracleDbType from Value: TimeSpan - Object - IntervalDS
 					if (value is TimeSpan)
 						dataType = dataType.WithDataType(DataType.Undefined);
 					break;
-				case DataType.BFile:
-					{
-						// TODO: BFile we do not support setting parameter value
-						value = null;
-						break;
-					}
+
+				case DataType.BFile    :
+					// TODO: BFile we do not support setting parameter value
+					value = null;
+					break;
+
 				case DataType.DateTime :
-					{
-						if (value is DateTime dt)
-							value = DataTools.AdjustPrecision(dt, 0);
-						break;
-					}
+				{
+					if (value is DateTime dt)
+						value = DataTools.AdjustPrecision(dt, 0);
+					break;
+				}
+
 				case DataType.DateTime2:
-					{
-						if (value is DateTime dt)
-							value = DataTools.AdjustPrecision(dt, (byte?)dataType.Precision ?? 6);
-						break;
-					}
+				{
+					if (value is DateTime dt)
+						value = DataTools.AdjustPrecision(dt, (byte?)dataType.Precision ?? 6);
+					break;
+				}
+
+#if NET6_0_OR_GREATER
+				case DataType.Date     :
+					if (value is DateOnly d)
+						value = d.ToDateTime(TimeOnly.MinValue);
+					break;
+#endif
 			}
 
 			if (dataType.DataType == DataType.Undefined && value is string @string && @string.Length >= 4000)
@@ -313,7 +321,7 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 		}
 
-		#region BulkCopy
+#region BulkCopy
 
 		OracleBulkCopy? _bulkCopy;
 
@@ -359,6 +367,6 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 #endif
 
-		#endregion
+#endregion
 	}
 }

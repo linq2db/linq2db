@@ -400,7 +400,8 @@ namespace LinqToDB.Common
 						{
 							var fattrs =
 								from f in fromAttrs
-								select new {
+								select new
+								{
 									f,
 									a = f.Attrs.First(a => a.Value?.Equals(toAttr.Value) ?? toAttr.Value == null)
 								} into fa

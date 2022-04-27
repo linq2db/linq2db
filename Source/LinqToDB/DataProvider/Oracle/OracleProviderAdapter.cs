@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Data;
+using System.Data.Common;
+using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider.Oracle
 {
-	using System.Data.Common;
-	using System.Linq.Expressions;
-	using LinqToDB.Common;
-	using LinqToDB.Expressions;
-	using LinqToDB.Mapping;
+	using Common;
+	using Expressions;
+	using Mapping;
 
 	public class OracleProviderAdapter : IDynamicProviderAdapter
 	{
@@ -223,7 +223,7 @@ namespace LinqToDB.DataProvider.Oracle
 				if (_nativeAdapter == null)
 					lock (_nativeSyncRoot)
 						if (_nativeAdapter == null)
-							_nativeAdapter = CreateAdapter(NativeAssemblyName, NativeClientNamespace, NativeTypesNamespace, NativeProviderFactoryName);
+							_nativeAdapter = CreateAdapter(NativeAssemblyName, NativeClientNamespace, NativeTypesNamespace, NativeProviderFactoryName, new OracleNativeClientAdapterMappingSchema());
 
 				return _nativeAdapter;
 			}
@@ -233,13 +233,27 @@ namespace LinqToDB.DataProvider.Oracle
 				if (_managedAdapter == null)
 					lock (_managedSyncRoot)
 						if (_managedAdapter == null)
-							_managedAdapter = CreateAdapter(ManagedAssemblyName, ManagedClientNamespace, ManagedTypesNamespace, null);
+							_managedAdapter = CreateAdapter(ManagedAssemblyName, ManagedClientNamespace, ManagedTypesNamespace, null, new OracleManagedClientAdapterMappingSchema());
 
 				return _managedAdapter;
 			}
 		}
 
-		private static OracleProviderAdapter CreateAdapter(string assemblyName, string clientNamespace, string typesNamespace, string? factoryName)
+		sealed class OracleNativeClientAdapterMappingSchema : LockedMappingSchema
+		{
+			public OracleNativeClientAdapterMappingSchema() : base("OracleNativeClientAdapter")
+			{
+			}
+		}
+
+		sealed class OracleManagedClientAdapterMappingSchema : LockedMappingSchema
+		{
+			public OracleManagedClientAdapterMappingSchema() : base("OracleManagedClientAdapter")
+			{
+			}
+		}
+
+		static OracleProviderAdapter CreateAdapter(string assemblyName, string clientNamespace, string typesNamespace, string? factoryName, MappingSchema mappingSchema)
 		{
 			var assembly = Tools.TryLoadAssembly(assemblyName, factoryName);
 			if (assembly == null)
@@ -251,8 +265,6 @@ namespace LinqToDB.DataProvider.Oracle
 			var transactionType = assembly.GetType($"{clientNamespace}.OracleTransaction", true)!;
 			var dbType          = assembly.GetType($"{clientNamespace}.OracleDbType"     , true)!;
 			var commandType     = assembly.GetType($"{clientNamespace}.OracleCommand"    , true)!;
-
-			var mappingSchema = new MappingSchema();
 
 			// do not set default conversion for BFile as it could be converted to file name, byte[], Stream and we don't know what user needs
 			var oracleBFileType        = loadType("OracleBFile"       , DataType.BFile, skipConvertExpression: true)!;

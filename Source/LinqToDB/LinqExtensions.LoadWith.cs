@@ -232,7 +232,7 @@ namespace LinqToDB
 		public static ILoadWithQueryable<TEntity, TProperty> LoadWith<TEntity, TProperty>(
 			this IQueryable<TEntity> source,
 			[InstantHandle] Expression<Func<TEntity, IEnumerable<TProperty>>> selector,
-			[InstantHandle] Expression<Func<IQueryable<TProperty>, IQueryable<TProperty>>> loadFunc) 
+			[InstantHandle] Expression<Func<IQueryable<TProperty>, IQueryable<TProperty>>> loadFunc)
 		where TEntity : class
 		{
 			if (source   == null) throw new ArgumentNullException(nameof(source));
@@ -321,7 +321,7 @@ namespace LinqToDB
 		public static ILoadWithQueryable<TEntity, TProperty> LoadWith<TEntity, TProperty>(
 			this IQueryable<TEntity> source,
 			[InstantHandle] Expression<Func<TEntity, TProperty>>                           selector,
-			[InstantHandle] Expression<Func<IQueryable<TProperty>, IQueryable<TProperty>>> loadFunc) 
+			[InstantHandle] Expression<Func<IQueryable<TProperty>, IQueryable<TProperty>>> loadFunc)
 		where TEntity : class
 		{
 			if (source   == null) throw new ArgumentNullException(nameof(source));

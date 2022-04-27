@@ -687,6 +687,7 @@ namespace LinqToDB.Linq
 			// we can safely assume it is block expression
 			if (expression.Body is not BlockExpression block)
 				throw new LinqException("BlockExpression missing for mapper");
+
 			return
 				Expression.Lambda<Func<IQueryRunner, DbDataReader, T>>(
 					block.Update(
@@ -715,7 +716,7 @@ namespace LinqToDB.Linq
 
 		public static void SetRunQuery<T>(
 			Query<T> query,
-			Expression<Func<IQueryRunner,IDataContext, DbDataReader, Expression,object?[]?,object?[]?,int,T>> expression)
+			Expression<Func<IQueryRunner,IDataContext,DbDataReader,Expression,object?[]?,object?[]?,int,T>> expression)
 		{
 			var queryRunnerParam = Expression.Parameter(typeof(IQueryRunner), "qr");
 			var dataReaderParam  = Expression.Parameter(typeof(DbDataReader), "dr");

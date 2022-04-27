@@ -17,7 +17,6 @@ namespace LinqToDB.DataProvider.SqlServer
 	using SqlProvider;
 
 	class SqlServerDataProvider2005SystemDataSqlClient    : SqlServerDataProvider { public SqlServerDataProvider2005SystemDataSqlClient   () : base(ProviderName.SqlServer2005, SqlServerVersion.v2005, SqlServerProvider.SystemDataSqlClient)    {} }
-
 	class SqlServerDataProvider2008SystemDataSqlClient    : SqlServerDataProvider { public SqlServerDataProvider2008SystemDataSqlClient   () : base(ProviderName.SqlServer2008, SqlServerVersion.v2008, SqlServerProvider.SystemDataSqlClient)    {} }
 	class SqlServerDataProvider2012SystemDataSqlClient    : SqlServerDataProvider { public SqlServerDataProvider2012SystemDataSqlClient   () : base(ProviderName.SqlServer2012, SqlServerVersion.v2012, SqlServerProvider.SystemDataSqlClient)    {} }
 	class SqlServerDataProvider2014SystemDataSqlClient    : SqlServerDataProvider { public SqlServerDataProvider2014SystemDataSqlClient   () : base(ProviderName.SqlServer2014, SqlServerVersion.v2014, SqlServerProvider.SystemDataSqlClient)    {} }
@@ -43,9 +42,9 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		public SqlServerDataProvider(string name, SqlServerVersion version, SqlServerProvider provider)
 			: base(
-				  name,
-				  MappingSchemaInstance.Get(version),
-				  SqlServerProviderAdapter.GetInstance(provider))
+				name,
+				MappingSchemaInstance.Get(version),
+				SqlServerProviderAdapter.GetInstance(provider))
 		{
 			Version  = version;
 			Provider = provider;
@@ -120,25 +119,17 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		static class MappingSchemaInstance
 		{
-			public static readonly MappingSchema SqlServer2005MappingSchema = new SqlServer2005MappingSchema();
-			public static readonly MappingSchema SqlServer2008MappingSchema = new SqlServer2008MappingSchema();
-			public static readonly MappingSchema SqlServer2012MappingSchema = new SqlServer2012MappingSchema();
-			public static readonly MappingSchema SqlServer2014MappingSchema = new SqlServer2014MappingSchema();
-			public static readonly MappingSchema SqlServer2016MappingSchema = new SqlServer2016MappingSchema();
-			public static readonly MappingSchema SqlServer2017MappingSchema = new SqlServer2017MappingSchema();
-			public static readonly MappingSchema SqlServer2019MappingSchema = new SqlServer2019MappingSchema();
-
 			public static MappingSchema Get(SqlServerVersion version)
 			{
 				return version switch
 				{
-					SqlServerVersion.v2005 => SqlServer2005MappingSchema,
-					SqlServerVersion.v2012 => SqlServer2012MappingSchema,
-					SqlServerVersion.v2014 => SqlServer2014MappingSchema,
-					SqlServerVersion.v2016 => SqlServer2016MappingSchema,
-					SqlServerVersion.v2017 => SqlServer2017MappingSchema,
-					SqlServerVersion.v2019 => SqlServer2019MappingSchema,
-					_                      => SqlServer2008MappingSchema,
+					SqlServerVersion.v2005 => new SqlServerMappingSchema.SqlServer2005MappingSchema(),
+					SqlServerVersion.v2012 => new SqlServerMappingSchema.SqlServer2012MappingSchema(),
+					SqlServerVersion.v2014 => new SqlServerMappingSchema.SqlServer2014MappingSchema(),
+					SqlServerVersion.v2016 => new SqlServerMappingSchema.SqlServer2016MappingSchema(),
+					SqlServerVersion.v2017 => new SqlServerMappingSchema.SqlServer2017MappingSchema(),
+					SqlServerVersion.v2019 => new SqlServerMappingSchema.SqlServer2019MappingSchema(),
+					_                      => new SqlServerMappingSchema.SqlServer2008MappingSchema(),
 				};
 			}
 		}
@@ -209,42 +200,56 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			switch (dataType.DataType)
 			{
-				case DataType.DateTime2  :
-					{
-						if (value is DateTime dt)
-							value = DataTools.AdjustPrecision(dt, (byte)(dataType.Precision ?? 7));
-						break;
-					}
-				case DataType.Udt        :
-					{
-						if (param    != null
-							&& value != null
-							&& _udtTypeNames.TryGetValue(value.GetType(), out var typeName))
-							Adapter.SetUdtTypeName(param, typeName);
-					}
+#if NET6_0_OR_GREATER
+				case DataType.Date when value is DateOnly d:
+					value = d.ToDateTime(TimeOnly.MinValue);
+					break;
 
+				case DataType.NText when value is DateOnly d:
+					value = d.ToString("yyyy-MM-dd");
 					break;
-				case DataType.NText:
-					     if (value is DateTimeOffset dto) value = dto.ToString("yyyy-MM-ddTHH:mm:ss.ffffff zzz");
-					else if (value is DateTime dt)
+#endif
+
+				case DataType.DateTime2 when value is DateTime dt:
+					value = DataTools.AdjustPrecision(dt, (byte)(dataType.Precision ?? 7));
+					break;
+
+				case DataType.Udt:
+				{
+					if (param != null
+						&& value != null
+						&& _udtTypeNames.TryGetValue(value.GetType(), out var typeName))
 					{
-						value = dt.ToString(
-							dt.Millisecond == 0
-								? "yyyy-MM-ddTHH:mm:ss"
-								: "yyyy-MM-ddTHH:mm:ss.fff");
-					}
-					else if (value is TimeSpan ts)
-					{
-						value = ts.ToString(
-							ts.Days > 0
-								? ts.Milliseconds > 0
-									? "d\\.hh\\:mm\\:ss\\.fff"
-									: "d\\.hh\\:mm\\:ss"
-								: ts.Milliseconds > 0
-									? "hh\\:mm\\:ss\\.fff"
-									: "hh\\:mm\\:ss");
+						Adapter.SetUdtTypeName(param, typeName);
 					}
 					break;
+				}
+
+				case DataType.NText when value is DateTimeOffset dto:
+					value = dto.ToString("yyyy-MM-ddTHH:mm:ss.ffffff zzz");
+					break;
+
+				case DataType.NText when value is DateTime dt:
+				{
+					value = dt.ToString(
+						dt.Millisecond == 0
+							? "yyyy-MM-ddTHH:mm:ss"
+							: "yyyy-MM-ddTHH:mm:ss.fff");
+					break;
+				}
+
+				case DataType.NText when value is TimeSpan ts:
+				{
+					value = ts.ToString(
+						ts.Days > 0
+							? ts.Milliseconds > 0
+								? "d\\.hh\\:mm\\:ss\\.fff"
+								: "d\\.hh\\:mm\\:ss"
+							: ts.Milliseconds > 0
+								? "hh\\:mm\\:ss\\.fff"
+								: "hh\\:mm\\:ss");
+					break;
+				}
 
 				case DataType.Undefined:
 					if (value != null

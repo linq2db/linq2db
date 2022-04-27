@@ -20,5 +20,10 @@ namespace LinqToDB.Mapping
 		/// Operations, affected by value skipping.
 		/// </summary>
 		public override SkipModification Affects => SkipModification.Update;
+
+		public override string GetObjectID()
+		{
+			return $".{(int)Affects}.";
+		}
 	}
 }

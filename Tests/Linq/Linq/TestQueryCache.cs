@@ -138,7 +138,8 @@ namespace Tests.Linq
 			TestMethod("Value2");
 
 			TestMethod("ValueF1", "FAIL");
-			Assert.Throws(Is.AssignableTo(typeof(Exception)), () => TestMethod("ValueF2", "FAIL"));
+			// Fluent mapping makes schema unique.
+			TestMethod("ValueF2", "FAIL");
 		}
 
 		private static MappingSchema CreateMappingSchema(string columnName, string? schemaName = null)

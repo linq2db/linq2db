@@ -41,6 +41,11 @@ namespace Tests
 			public static readonly DateTime DateTimeUtc                   = new DateTime(2020, 2, 29, 17, 54, 55, 123, DateTimeKind.Utc).AddTicks(1234);
 			public static readonly DateTime DateTime4Utc                  = new DateTime(2020, 2, 29, 17, 54, 55, 123, DateTimeKind.Utc).AddTicks(1000);
 			public static readonly DateTime Date                          = new (2020, 2, 29);
+			public static readonly DateTime DateAmbiguous                 = new (2020, 8, 9);
+#if NET6_0_OR_GREATER
+			public static readonly DateOnly DateOnly                      = new (2020, 2, 29);
+			public static readonly DateOnly DateOnlyAmbiguous             = new (2020, 8, 9);
+#endif
 			public static readonly TimeSpan TimeOfDay                     = new TimeSpan(0, 17, 54, 55, 123).Add(TimeSpan.FromTicks(1234));
 			public static readonly TimeSpan TimeOfDay4                    = new TimeSpan(0, 17, 54, 55, 123).Add(TimeSpan.FromTicks(1000));
 			public static readonly Guid     Guid1                         = new ("bc7b663d-0fde-4327-8f92-5d8cc3a11d11");
@@ -167,7 +172,14 @@ namespace Tests
 			TestContext.WriteLine("Azure configuration detected.");
 			configName += ".Azure";
 #endif
+
+#if !DEBUG
+			Console.WriteLine("UserDataProviders.json:");
+			Console.WriteLine(userDataProvidersJson);
+#endif
+
 			var testSettings = SettingsReader.Deserialize(configName, dataProvidersJson, userDataProvidersJson);
+
 			testSettings.Connections ??= new();
 
 			CopyDatabases();
@@ -214,11 +226,11 @@ namespace Tests
 
 				if (provider.Value.ConnectionString != null)
 				{
-				DataConnection.AddOrSetConfiguration(
-					provider.Key,
-					provider.Value.ConnectionString,
-					provider.Value.Provider ?? "");
-			}
+					DataConnection.AddOrSetConfiguration(
+						provider.Key,
+						provider.Value.ConnectionString,
+						provider.Value.Provider ?? "");
+				}
 			}
 #endif
 
@@ -322,6 +334,7 @@ namespace Tests
 			var fileName = Path.GetFullPath(Path.Combine(basePath, findFileName));
 
 			string? path = basePath;
+
 			while (!File.Exists(fileName))
 			{
 				TestContext.WriteLine($"File not found: {fileName}");
@@ -982,7 +995,7 @@ namespace Tests
 
 		protected IEnumerable<LinqDataTypes2> AdjustExpectedData(ITestDataContext db, IEnumerable<LinqDataTypes2> data)
 		{
-			if (db.ProviderNeedsTimeFix(db.ContextID))
+			if (db.ProviderNeedsTimeFix(db.ContextName))
 			{
 				var adjusted = new List<LinqDataTypes2>();
 				foreach (var record in data)

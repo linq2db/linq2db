@@ -94,10 +94,10 @@ namespace LinqToDB.DataProvider.Sybase
 
 		static class MappingSchemaInstance
 		{
-			public static readonly MappingSchema NativeMappingSchema  = new SybaseMappingSchema.NativeMappingSchema();
-			public static readonly MappingSchema ManagedMappingSchema = new SybaseMappingSchema.ManagedMappingSchema();
+			static readonly MappingSchema _nativeMappingSchema  = new SybaseMappingSchema.NativeMappingSchema();
+			static readonly MappingSchema _managedMappingSchema = new SybaseMappingSchema.ManagedMappingSchema();
 
-			public static MappingSchema Get(string name) => name == ProviderName.Sybase ? NativeMappingSchema : ManagedMappingSchema;
+			public static MappingSchema Get(string name) => name == ProviderName.Sybase ? _nativeMappingSchema : _managedMappingSchema;
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;
@@ -123,7 +123,8 @@ namespace LinqToDB.DataProvider.Sybase
 					break;
 
 				case DataType.Time       :
-					if (value is TimeSpan ts) value = new DateTime(1900, 1, 1) + ts;
+					if (value is TimeSpan ts)
+						value = new DateTime(1900, 1, 1) + ts;
 					break;
 
 				case DataType.Xml        :
@@ -143,12 +144,20 @@ namespace LinqToDB.DataProvider.Sybase
 					if (value == null)
 						dataType = dataType.WithDataType(DataType.Char);
 					break;
+
 				case DataType.Char       :
 				case DataType.NChar      :
 					if (Name == ProviderName.Sybase)
 						if (value is char)
 							value = value.ToString();
 					break;
+
+#if NET6_0_OR_GREATER
+				case DataType.Date       :
+					if (value is DateOnly d)
+						value = d.ToDateTime(TimeOnly.MinValue);
+					break;
+#endif
 			}
 
 			base.SetParameter(dataConnection, parameter, name, dataType, value);

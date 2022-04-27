@@ -13,7 +13,7 @@ namespace LinqToDB.SqlQuery
 	using LinqToDB.Extensions;
 	using Mapping;
 
-	public class SqlDataType : ISqlExpression
+	public class SqlDataType : ISqlExpression, IEquatable<SqlDataType>
 	{
 		#region Init
 
@@ -236,6 +236,9 @@ namespace LinqToDB.SqlQuery
 					if (underlyingType == typeof(char[]))         return CharArray;
 					if (underlyingType == typeof(DateTimeOffset)) return DateTimeOffset;
 					if (underlyingType == typeof(TimeSpan))       return TimeSpan;
+#if NET6_0_OR_GREATER
+					if (underlyingType == typeof(DateOnly))       return DbDate;
+#endif
 					break;
 
 				case TypeCode.DBNull   :
@@ -470,8 +473,6 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
-		public override int GetHashCode() => Type.GetHashCode();
-
 		#region ISqlExpression Members
 
 		public bool CanBeNull => false;
@@ -500,6 +501,32 @@ namespace LinqToDB.SqlQuery
 				sb.Append('(').Append(Type.Precision).Append(',').Append(Type.Scale).Append(')');
 
 			return sb;
+		}
+
+		#endregion
+
+		#region IEquatable<SqlDataType>
+
+		public override int GetHashCode()
+		{
+			return Type.GetHashCode();
+		}
+
+		public bool Equals(SqlDataType? other)
+		{
+			if (ReferenceEquals(null, other)) return false;
+			if (ReferenceEquals(this, other)) return true;
+
+			return Type.Equals(other.Type);
+		}
+
+		public override bool Equals(object? obj)
+		{
+			if (ReferenceEquals(null, obj)) return false;
+			if (ReferenceEquals(this, obj)) return true;
+			if (obj.GetType() != GetType()) return false;
+
+			return Equals((SqlDataType)obj);
 		}
 
 		#endregion
