@@ -736,13 +736,13 @@ namespace LinqToDB.Linq.Builder
 			return expr;
 		}
 
+		private TransformInfoVisitor<ExpressionTreeOptimizationContext>? _exposeExpressionTransformer;
+
 		public Expression ExposeExpression(Expression expression)
 		{
-			var result = expression.Transform(this,
-				static (ctx, e) =>
-				{
-					return new TransformInfo(ctx.ExposeExpressionTransformer(e), false, true);
-				});
+			var result = (_exposeExpressionTransformer ??=
+				TransformInfoVisitor<ExpressionTreeOptimizationContext>.Create(this,
+					static(ctx, e) => new TransformInfo(ctx.ExposeExpressionTransformer(e), false, true))).Transform(expression);
 
 			return result;
 		}
