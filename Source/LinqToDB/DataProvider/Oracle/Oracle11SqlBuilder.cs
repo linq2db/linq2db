@@ -656,7 +656,7 @@ END;",
 					{
 						int length = StringBuilder.Append("WHEN ").Length;
 						BuildSearchCondition(insert.When, wrapCondition: true);
-						// If `when` condition is optimized to always `true`, 
+						// If `when` condition is optimized to always `true`,
 						// then BuildSearchCondition doesn't write anything.
 						if (StringBuilder.Length == length)
 							StringBuilder.Append("1 = 1");
@@ -674,7 +674,7 @@ END;",
 			Indent--;
 		}
 
-		#endregion 
+		#endregion
 
 		protected StringBuilder? HintBuilder;
 

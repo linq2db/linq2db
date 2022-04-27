@@ -601,12 +601,12 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 #if NATIVE_ASYNC
 #pragma warning disable CS3002 // Return type is not CLS-compliant
-			public ValueTask<ulong> CompleteAsync(CancellationToken cancellationToken) 
+			public ValueTask<ulong> CompleteAsync(CancellationToken cancellationToken)
 				=> ((Func<NpgsqlBinaryImporter, CancellationToken, ValueTask<ulong>>)CompiledWrappers[5])(this, cancellationToken);
 #pragma warning restore CS3002 // Return type is not CLS-compliant
 			public ValueTask DisposeAsync()
 				=> ((Func<NpgsqlBinaryImporter, ValueTask>)CompiledWrappers[6])(this);
-			public Task StartRowAsync(CancellationToken cancellationToken) 
+			public Task StartRowAsync(CancellationToken cancellationToken)
 				=> ((Func<NpgsqlBinaryImporter, CancellationToken, Task>)CompiledWrappers[7])(this, cancellationToken);
 
 #else
