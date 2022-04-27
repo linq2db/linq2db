@@ -1,2 +1,2 @@
-/Source/*.cs  @igor-tkachev @sdanyliv @MaceWindu @viceroypenguin @jods4 @Shane32
-/Source/*.ttinclude  @igor-tkachev @sdanyliv @MaceWindu @viceroypenguin @jods4 @Shane32
+/Source/**/*.cs  @igor-tkachev @sdanyliv @MaceWindu @viceroypenguin @jods4 @Shane32
+/Source/**/*.ttinclude  @igor-tkachev @sdanyliv @MaceWindu @viceroypenguin @jods4 @Shane32
