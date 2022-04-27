@@ -1173,9 +1173,9 @@ namespace LinqToDB.CodeModel
 				if (type.Namespace != null || type.Parent != null)
 				{
 					// for nested type - check if we need to render parent type
+					var nested = false;
 					if (type.Parent != null)
 					{
-						var nested = false;
 						// skip parent types generation for types, directly nested into current class
 						// (class we currently generate AKA _currentType, not type we pass into this method)
 						// or parent classes of current class
@@ -1193,15 +1193,15 @@ namespace LinqToDB.CodeModel
 
 							t = t.Parent;
 						}
-
-						// if parent type generation required, render parent type with own qualified name resolution logic
-						if (!nested)
-						{
-							RenderType(type.Parent, null, typeOnlyContext);
-							Write('.');
-						}
 					}
-					else // type has namespace - detect which parts of namespace (if any) we should render
+
+					// if parent type generation required, render parent type with own qualified name resolution logic
+					if (type.Parent != null && !nested)
+					{
+						RenderType(type.Parent, null, typeOnlyContext);
+						Write('.');
+					}
+					else // type has namespace or used in parent type - detect which parts of parent type names/namespace (if any) we should render
 					{
 						// we go from current scope to parent scopes and check for name conflicts
 						// - if there is no conflicts -> check parent scope
@@ -1216,8 +1216,20 @@ namespace LinqToDB.CodeModel
 						var scope         = _currentScope.ToList();
 						var remainingName = new List<CodeIdentifier>();
 						var currentName   = typeName;
-						remainingName.InsertRange(0, type.Namespace!);
 
+						if (type.Parent != null)
+						{
+							var walkType = type.Parent;
+							while (walkType != null)
+							{
+								remainingName.Insert(0, walkType.Name!);
+								if (walkType.Namespace != null)
+									remainingName.InsertRange(0, walkType.Namespace);
+								walkType = walkType.Parent;
+							}
+						}
+						else
+							remainingName.InsertRange(0, type.Namespace!);
 
 						// if name prefix == currently checked scope, abort check - there is no conflict
 						// check for conflicts in current and parent scopes staring from current

@@ -245,7 +245,7 @@ namespace Cli.Default.DB2
 			/// <summary>
 			/// FK_Doctor_Person
 			/// </summary>
-			[Association(CanBeNull = false, ThisKey = nameof(PersonId), OtherKey = nameof(Person.PersonId))]
+			[Association(CanBeNull = false, ThisKey = nameof(PersonId), OtherKey = nameof(Db2AdminSchema.Person.PersonId))]
 			public Person Person { get; set; } = null!;
 			#endregion
 		}
@@ -341,7 +341,7 @@ namespace Cli.Default.DB2
 			/// <summary>
 			/// FK_Patient_Person
 			/// </summary>
-			[Association(CanBeNull = false, ThisKey = nameof(PersonId), OtherKey = nameof(Person.PersonId))]
+			[Association(CanBeNull = false, ThisKey = nameof(PersonId), OtherKey = nameof(Db2AdminSchema.Person.PersonId))]
 			public Person Person { get; set; } = null!;
 			#endregion
 		}
@@ -359,13 +359,13 @@ namespace Cli.Default.DB2
 			/// <summary>
 			/// FK_Doctor_Person backreference
 			/// </summary>
-			[Association(ThisKey = nameof(PersonId), OtherKey = nameof(Doctor.PersonId))]
+			[Association(ThisKey = nameof(PersonId), OtherKey = nameof(Db2AdminSchema.Doctor.PersonId))]
 			public Doctor? Doctor { get; set; }
 
 			/// <summary>
 			/// FK_Patient_Person backreference
 			/// </summary>
-			[Association(ThisKey = nameof(PersonId), OtherKey = nameof(Patient.PersonId))]
+			[Association(ThisKey = nameof(PersonId), OtherKey = nameof(Db2AdminSchema.Patient.PersonId))]
 			public Patient? Patient { get; set; }
 			#endregion
 		}
@@ -381,7 +381,7 @@ namespace Cli.Default.DB2
 			/// <summary>
 			/// FK_SLAVETABLE_MASTERTABLE
 			/// </summary>
-			[Association(CanBeNull = false, ThisKey = nameof(Id222222222222222222222222) + "," + nameof(Id222222222222222222222222), OtherKey = nameof(Mastertable.Id1) + "," + nameof(Id222222222222222222222222))]
+			[Association(CanBeNull = false, ThisKey = nameof(Id222222222222222222222222) + "," + nameof(Id222222222222222222222222), OtherKey = nameof(Db2AdminSchema.Mastertable.Id1) + "," + nameof(Id222222222222222222222222))]
 			public Mastertable Mastertable { get; set; } = null!;
 			#endregion
 		}
