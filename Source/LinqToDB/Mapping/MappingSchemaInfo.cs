@@ -15,7 +15,7 @@ namespace LinqToDB.Mapping
 	{
 		public MappingSchemaInfo(string configuration)
 		{
-			Configuration    = configuration;
+			Configuration = configuration;
 
 			if (configuration.Length == 0)
 				_configurationID = 0;
@@ -306,7 +306,7 @@ namespace LinqToDB.Mapping
 
 		int? _configurationID;
 
-		internal bool HasConfigurationID =>_configurationID != null;
+		internal bool HasConfigurationID => _configurationID != null;
 
 		public virtual void ResetID()
 		{

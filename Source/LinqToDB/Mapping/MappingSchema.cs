@@ -1264,14 +1264,19 @@ namespace LinqToDB.Mapping
 			var idBuilder = new IdentifierBuilder();
 
 			lock (_syncRoot)
-				for (var i = 0; i < Schemas.Length; i++)
-					idBuilder.Add(Schemas[i].ConfigurationID);
+				foreach (var s in Schemas)
+					idBuilder.Add(s.ConfigurationID);
 
 			return idBuilder.CreateID();
 		}
 
 		internal void ResetID()
 		{
+#if DEBUG
+			if (_configurationID != null)
+				Debug.WriteLine($"ResetID => '{DisplayID}'");
+#endif
+
 			_configurationID = null;
 			Schemas[0].ResetID();
 		}
@@ -1300,11 +1305,11 @@ namespace LinqToDB.Mapping
 			}
 		}
 
-		string DisplayID
+		public string DisplayID
 		{
 			get
 			{
-				var list = Schemas == null ? "" : ConfigurationList.Aggregate("", (s1, s2) => s1.Length == 0 ? s2 : s1 + "." + s2);
+				var list = Schemas == null || ConfigurationList == null? "" : ConfigurationList.Aggregate("", (s1, s2) => s1.Length == 0 ? s2 : s1 + "." + s2);
 				return $"{GetType().Name} : ({_configurationID}) {list}";
 			}
 		}
@@ -1828,7 +1833,7 @@ namespace LinqToDB.Mapping
 
 		internal virtual MappingSchemaInfo CreateMappingSchemaInfo(string configuration, MappingSchema mappingSchema)
 		{
-			return new (configuration!);
+			return new (configuration);
 		}
 	}
 }

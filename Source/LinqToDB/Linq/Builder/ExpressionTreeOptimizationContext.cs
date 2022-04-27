@@ -372,7 +372,7 @@ namespace LinqToDB.Linq.Builder
 							else
 							{
 								var attr = GetExpressionAttribute(e.Method);
-								result = attr != null && attr.ServerSideOnly;
+								result = attr?.ServerSideOnly == true;
 							}
 						}
 
@@ -388,23 +388,24 @@ namespace LinqToDB.Linq.Builder
 		static bool IsQueryMember(Expression expr)
 		{
 			expr = expr.Unwrap();
+
 			if (expr != null) switch (expr.NodeType)
+			{
+				case ExpressionType.Parameter   : return true;
+				case ExpressionType.MemberAccess: return IsQueryMember(((MemberExpression)expr).Expression!);
+				case ExpressionType.Call:
 				{
-					case ExpressionType.Parameter   : return true;
-					case ExpressionType.MemberAccess: return IsQueryMember(((MemberExpression)expr).Expression!);
-					case ExpressionType.Call:
-					{
-						var call = (MethodCallExpression)expr;
+					var call = (MethodCallExpression)expr;
 
-						if (call.Method.DeclaringType == typeof(Queryable))
-							return true;
+					if (call.Method.DeclaringType == typeof(Queryable))
+						return true;
 
-						if (call.Method.DeclaringType == typeof(Enumerable) && call.Arguments.Count > 0)
-							return IsQueryMember(call.Arguments[0]);
+					if (call.Method.DeclaringType == typeof(Enumerable) && call.Arguments.Count > 0)
+						return IsQueryMember(call.Arguments[0]);
 
-						return IsQueryMember(call.Object!);
-					}
+					return IsQueryMember(call.Object!);
 				}
+			}
 
 			return false;
 		}
@@ -416,7 +417,7 @@ namespace LinqToDB.Linq.Builder
 		Expression? _lastExpr2;
 		bool        _lastResult2;
 
-		private static HashSet<Expression> DefaultAllowedParams = new ()
+		static HashSet<Expression> DefaultAllowedParams = new ()
 		{
 			ExpressionBuilder.ParametersParam,
 			ExpressionBuilder.DataContextParam
@@ -430,7 +431,7 @@ namespace LinqToDB.Linq.Builder
 			// context allocation is cheaper than HashSet allocation
 			// and HashSet allocation is rare
 
-			var result  = null == GetCanBeCompiledVisitor().Find(expr);
+			var result = null == GetCanBeCompiledVisitor().Find(expr);
 
 			_lastExpr2 = expr;
 			return _lastResult2 = result;

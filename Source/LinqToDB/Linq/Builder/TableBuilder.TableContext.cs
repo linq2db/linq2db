@@ -323,6 +323,7 @@ namespace LinqToDB.Linq.Builder
 			Expression BuildDefaultConstructor(EntityDescriptor entityDescriptor, Type objectType, Tuple<int, SqlField?>[] index)
 			{
 				var members = new List<(ColumnDescriptor column, ConvertFromDataReaderExpression expr)>();
+
 				foreach (var idx in index)
 				{
 					if (idx.Item1 >= 0 && idx.Item2 != null)
@@ -669,6 +670,7 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				var index = new Tuple<int, SqlField?>[info.Length];
+
 				for (var i = 0; i < info.Length; i++)
 					index[i] = Tuple.Create(ConvertToParentIndex(info[i].Index, this), QueryHelper.GetUnderlyingField(info[i].Sql));
 
@@ -852,17 +854,14 @@ namespace LinqToDB.Linq.Builder
 										result = contextInfo.Context.ConvertToIndex(contextInfo.CurrentExpression, contextInfo.CurrentLevel, flags);
 									}
 									else
-
 									{
 										result = SqlTable.Fields
-											.Where(static field => !field.IsDynamic && !field.SkipOnEntityFetch)
-											.Select(static f =>
-												f.ColumnDescriptor != null
-													? new SqlInfo(f.ColumnDescriptor.MemberInfo, f)
-													: new SqlInfo(f))
+											.Where (static field => !field.IsDynamic && !field.SkipOnEntityFetch)
+											.Select(static f => f.ColumnDescriptor != null
+												? new SqlInfo(f.ColumnDescriptor.MemberInfo, f)
+												: new SqlInfo(f))
 											.ToArray();
 									}
-
 								}
 								else
 								{

@@ -162,7 +162,6 @@ namespace LinqToDB.Mapping
 
 		public Delegate? QueryFilterFunc { get; private set; }
 
-
 		bool HasInheritanceMapping()
 		{
 			var currentType = TypeAccessor.Type.BaseType;
