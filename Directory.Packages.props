@@ -18,7 +18,7 @@
 		<PackageVersion Include="Microsoft.CodeAnalysis.NetAnalyzers"                   Version="6.0.0"         />
 		<PackageVersion Include="Microsoft.SourceLink.GitHub"                           Version="1.1.1"         />
 		<!--data providers-->
-		<PackageVersion Include="MySql.Data"                                            Version="8.0.28"        />
+		<PackageVersion Include="MySql.Data"                                            Version="8.0.29"        />
 		<PackageVersion Include="AdoNetCore.AseClient"                                  Version="0.19.2"        />
 		<PackageVersion Include="System.Data.SqlClient"                                 Version="4.8.3"         />
 		<PackageVersion Include="Microsoft.Data.SqlClient"                              Version="4.1.0"         />
