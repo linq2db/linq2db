@@ -32,10 +32,14 @@ namespace LinqToDB.DataProvider.Informix
 			SetDataType(typeof(byte), new SqlDataType(DataType.Int16, typeof(byte)));
 			SetDataType(typeof(byte?), new SqlDataType(DataType.Int16, typeof(byte)));
 
-			SetValueToSqlConverter(typeof(string),   (sb,dt,v)   => ConvertStringToSql  (sb, v.ToString()!));
-			SetValueToSqlConverter(typeof(char),     (sb,dt,v)   => ConvertCharToSql    (sb, (char)v));
-			SetValueToSqlConverter(typeof(DateTime), (sb,dt,v)   => ConvertDateTimeToSql(sb, dt, (DateTime)v));
-			SetValueToSqlConverter(typeof(TimeSpan), (sb, dt, v) => BuildIntervalLiteral(sb, (TimeSpan)v));
+			SetValueToSqlConverter(typeof(string),   (sb,dt,v) => ConvertStringToSql  (sb, v.ToString()!));
+			SetValueToSqlConverter(typeof(char),     (sb,dt,v) => ConvertCharToSql    (sb, (char)v));
+			SetValueToSqlConverter(typeof(DateTime), (sb,dt,v) => ConvertDateTimeToSql(sb, dt, (DateTime)v));
+			SetValueToSqlConverter(typeof(TimeSpan), (sb,dt,v) => BuildIntervalLiteral(sb, (TimeSpan)v));
+
+#if NET6_0_OR_GREATER
+			SetValueToSqlConverter(typeof(DateOnly), (sb,dt,v) => ConvertDateOnlyToSql(sb, dt, (DateOnly)v));
+#endif
 		}
 
 		private void BuildIntervalLiteral(StringBuilder sb, TimeSpan interval)
@@ -84,7 +88,6 @@ namespace LinqToDB.DataProvider.Informix
 			}
 		}
 
-
 		static void ConvertDateTimeToSql(StringBuilder stringBuilder, SqlDataType dataType, DateTime value)
 		{
 			// datetime literal using TO_DATE function used because it works with all kinds of datetime ranges
@@ -102,6 +105,13 @@ namespace LinqToDB.DataProvider.Informix
 
 			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, value);
 		}
+
+#if NET6_0_OR_GREATER
+		static void ConvertDateOnlyToSql(StringBuilder stringBuilder, SqlDataType dataType, DateOnly value)
+		{
+			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATE_FORMAT, value);
+		}
+#endif
 
 		internal static readonly InformixMappingSchema Instance = new ();
 

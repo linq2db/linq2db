@@ -921,6 +921,16 @@ namespace LinqToDB
 			return str?.ToUpper();
 		}
 
+		[Expression("Lpad({0},{1},'0')")]
+		[Expression(PN.Sybase, "right(replicate('0',{1}) + cast({0} as varchar(255)),{1})")]
+		[Expression(PN.PostgreSQL, "Lpad({0}::text,{1},'0')")]
+		[Expression(PN.SqlServer, "format({0}, 'd{1}')")]
+		[Expression(PN.SQLite, "printf('%0{1}d', {0})")]
+		public static string? ZeroPad(int? val, int length)
+		{
+			return val?.ToString("d" + length);
+		}
+
 		class ConcatAttribute : ExpressionAttribute
 		{
 			public ConcatAttribute() : base("")
@@ -1077,6 +1087,16 @@ namespace LinqToDB
 
 		[Property("@@DATEFIRST", CanBeNull = false)]
 		public static int DateFirst => 7;
+
+#if NET6_0_OR_GREATER
+		[Function]
+		public static DateOnly? MakeDateOnly(int? year, int? month, int? day)
+		{
+			return year == null || month == null || day == null ?
+				null :
+				new DateOnly(year.Value, month.Value, day.Value);
+		}
+#endif
 
 		[Function]
 		public static DateTime? MakeDateTime(int? year, int? month, int? day)
