@@ -16,7 +16,8 @@ namespace LinqToDB.DataProvider.Firebird
 
 		internal static IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)
 		{
-			if (css.ProviderName is ProviderName.Firebird or FirebirdProviderAdapter.ClientNamespace || css.Name.Contains("Firebird"))
+			if (css.ProviderName is ProviderName.Firebird or FirebirdProviderAdapter.ClientNamespace ||
+			    css.Name.Contains("Firebird"))
 				return _firebirdDataProvider.Value;
 
 			return null;

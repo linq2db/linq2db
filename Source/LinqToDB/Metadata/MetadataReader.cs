@@ -27,8 +27,8 @@ namespace LinqToDB.Metadata
 			_readers = readers.ToList();
 		}
 
-		private IList<IMetadataReader> _readers;
-		public  IList<IMetadataReader>  Readers => _readers;
+		private List<IMetadataReader>          _readers;
+		public  IReadOnlyList<IMetadataReader>  Readers => _readers;
 
 		internal void AddReader(IMetadataReader reader)
 		{

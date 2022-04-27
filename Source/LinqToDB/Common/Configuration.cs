@@ -254,13 +254,15 @@ namespace LinqToDB.Common
 			public static bool KeepDistinctOrdered = true;
 
 			/// <summary>
-			/// Enables Take/Skip parametrization.
+			/// Enables Take/Skip parameterization.
 			/// Default value: <c>true</c>.
 			/// </summary>
 			public static bool ParametrizeTakeSkip = true;
 
 			/// <summary>
-			/// If <c>true</c>, auto support for fluent mapping is ON.
+			/// If <c>true</c>, auto support for fluent mapping is ON,
+			/// which means that you do not need to create additional MappingSchema object to define FluentMapping.
+			/// You can use <c>context.MappingSchema.GetFluentMappingBuilder()</c>.
 			/// </summary>
 			public static bool EnableAutoFluentMapping = true;
 		}

@@ -65,7 +65,7 @@ namespace LinqToDB.DataProvider.MySql
 			stringBuilder.AppendByteArrayAsHexViaLookup32(value);
 		}
 
-		internal static readonly MappingSchema Instance = new MySqlMappingSchema();
+		internal static readonly MySqlMappingSchema Instance = new ();
 
 		public sealed class MySqlOfficialMappingSchema : LockedMappingSchema
 		{

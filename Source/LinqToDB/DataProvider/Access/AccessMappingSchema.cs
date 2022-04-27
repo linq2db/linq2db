@@ -85,9 +85,9 @@ namespace LinqToDB.DataProvider.Access
 			}
 		}
 
-		public sealed class ODBCMappingSchema : LockedMappingSchema
+		public sealed class OdbcMappingSchema : LockedMappingSchema
 		{
-			public ODBCMappingSchema() : base(ProviderName.AccessOdbc, Instance)
+			public OdbcMappingSchema() : base(ProviderName.AccessOdbc, Instance)
 			{
 			}
 		}
