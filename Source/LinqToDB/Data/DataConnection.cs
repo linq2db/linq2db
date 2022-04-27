@@ -251,7 +251,7 @@ namespace LinqToDB.Data
 					break;
 
 				case ConnectionSetupType.ConnectionString:
-					if (options.ProviderName == null && options.DataProvider == null) 
+					if (options.ProviderName == null && options.DataProvider == null)
 						throw new LinqToDBException("DataProvider was not specified");
 
 					IDataProvider? dataProvider;
