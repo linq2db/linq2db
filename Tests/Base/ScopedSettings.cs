@@ -183,16 +183,16 @@ namespace Tests
 
 	public class ParameterizeTakeSkip : IDisposable
 	{
-		private readonly bool _oldValue = Configuration.Linq.ParametrizeTakeSkip;
+		private readonly bool _oldValue = Configuration.Linq.ParameterizeTakeSkip;
 
 		public ParameterizeTakeSkip(bool enable)
 		{
-			Configuration.Linq.ParametrizeTakeSkip = enable;
+			Configuration.Linq.ParameterizeTakeSkip = enable;
 		}
 
 		public void Dispose()
 		{
-			Configuration.Linq.ParametrizeTakeSkip = _oldValue;
+			Configuration.Linq.ParameterizeTakeSkip = _oldValue;
 		}
 	}
 
