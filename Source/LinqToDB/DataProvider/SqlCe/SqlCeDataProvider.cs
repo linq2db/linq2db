@@ -66,6 +66,11 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
 		{
+#if NET6_0_OR_GREATER
+			if (value is DateOnly d)
+				value = d.ToDateTime(TimeOnly.MinValue);
+#endif
+
 			switch (dataType.DataType)
 			{
 				case DataType.Xml :

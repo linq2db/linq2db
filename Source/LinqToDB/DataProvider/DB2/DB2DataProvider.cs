@@ -110,6 +110,12 @@ namespace LinqToDB.DataProvider.DB2
 				value    = (short)b;
 				dataType = dataType.WithDataType(DataType.Int16);
 			}
+#if NET6_0_OR_GREATER
+			else if (value is DateOnly d)
+			{
+				value    = d.ToDateTime(TimeOnly.MinValue);
+			}
+#endif
 
 			switch (dataType.DataType)
 			{
@@ -184,7 +190,7 @@ namespace LinqToDB.DataProvider.DB2
 			base.SetParameterType(dataConnection, parameter, dataType);
 		}
 
-		#region BulkCopy
+#region BulkCopy
 
 		DB2BulkCopy? _bulkCopy;
 
@@ -230,7 +236,7 @@ namespace LinqToDB.DataProvider.DB2
 		}
 #endif
 
-		#endregion
+#endregion
 
 	}
 }

@@ -31,6 +31,10 @@ namespace LinqToDB.DataProvider.Informix
 			SetValueToSqlConverter(typeof(char),     (sb,dt,v) => ConvertCharToSql    (sb, (char)v));
 			SetValueToSqlConverter(typeof(DateTime), (sb,dt,v) => ConvertDateTimeToSql(sb, dt, (DateTime)v));
 			SetValueToSqlConverter(typeof(TimeSpan), (sb,dt,v) => BuildIntervalLiteral(sb, (TimeSpan)v));
+
+#if NET6_0_OR_GREATER
+			SetValueToSqlConverter(typeof(DateOnly), (sb,dt,v) => ConvertDateOnlyToSql(sb, dt, (DateOnly)v));
+#endif
 		}
 
 		private void BuildIntervalLiteral(StringBuilder sb, TimeSpan interval)
@@ -97,6 +101,13 @@ namespace LinqToDB.DataProvider.Informix
 
 			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, value);
 		}
+
+#if NET6_0_OR_GREATER
+		static void ConvertDateOnlyToSql(StringBuilder stringBuilder, SqlDataType dataType, DateOnly value)
+		{
+			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATE_FORMAT, value);
+		}
+#endif
 
 		internal static readonly InformixMappingSchema Instance = new ();
 

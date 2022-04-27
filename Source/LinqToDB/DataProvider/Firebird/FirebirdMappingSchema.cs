@@ -30,6 +30,10 @@ namespace LinqToDB.DataProvider.Firebird
 			SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => BuildDateTime(sb, dt, (DateTime)v));
 			SetValueToSqlConverter(typeof(Guid)    , (sb, dt, v) => ConvertGuidToSql(sb, dt, (Guid)v));
 
+#if NET6_0_OR_GREATER
+			SetValueToSqlConverter(typeof(DateOnly), (sb, dt, v) => BuildDateOnly(sb, dt, (DateOnly)v));
+#endif
+
 			SetDataType(typeof(BigInteger), new SqlDataType(DataType.Int128, typeof(BigInteger), "INT128"));
 			SetValueToSqlConverter(typeof(BigInteger), (sb, dt, v) => sb.Append(((BigInteger)v).ToString(CultureInfo.InvariantCulture)));
 
@@ -67,7 +71,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 		static void BuildDateTime(StringBuilder stringBuilder, SqlDataType dt, DateTime value)
 		{
-			var dbType = dt.Type.DbType ?? "timestamp";
+			var dbType = dt.Type.DbType ?? (dt.Type.DataType == DataType.Date ? "date" : "timestamp");
 			var format = TIMESTAMP_FORMAT;
 
 			if (value.Millisecond == 0)
@@ -77,6 +81,13 @@ namespace LinqToDB.DataProvider.Firebird
 
 			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, value, dbType);
 		}
+
+#if NET6_0_OR_GREATER
+		static void BuildDateOnly(StringBuilder stringBuilder, SqlDataType dt, DateOnly value)
+		{
+			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATE_FORMAT, value, dt.Type.DbType ?? "date");
+		}
+#endif
 
 		static void ConvertGuidToSql(StringBuilder sb, SqlDataType dataType, Guid value)
 		{

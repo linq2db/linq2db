@@ -22,6 +22,9 @@ namespace LinqToDB.DataProvider.Access
 			SetValueToSqlConverter(typeof(bool),     (sb,dt,v) => sb.Append(v));
 			SetValueToSqlConverter(typeof(Guid),     (sb,dt,v) => sb.Append('\'').Append(((Guid)v).ToString("B")).Append('\''));
 			SetValueToSqlConverter(typeof(DateTime), (sb,dt,v) => ConvertDateTimeToSql(sb, (DateTime)v));
+#if NET6_0_OR_GREATER
+			SetValueToSqlConverter(typeof(DateOnly), (sb,dt,v) => ConvertDateOnlyToSql(sb, (DateOnly)v));
+#endif
 
 			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
 
@@ -65,6 +68,13 @@ namespace LinqToDB.DataProvider.Access
 
 			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, value);
 		}
+
+#if NET6_0_OR_GREATER
+		static void ConvertDateOnlyToSql(StringBuilder stringBuilder, DateOnly value)
+		{
+			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATE_FORMAT, value);
+		}
+#endif
 
 		internal static readonly AccessMappingSchema Instance = new ();
 

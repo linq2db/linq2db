@@ -17,6 +17,8 @@ namespace LinqToDB.DataProvider.SqlServer
 
 	sealed class SqlServerMappingSchema : LockedMappingSchema
 	{
+		private const string DATE_FORMAT      = "'{0:yyyy-MM-dd}'";
+
 		private const string DATETIME0_FORMAT = "'{0:yyyy-MM-ddTHH:mm:ss}'";
 		private const string DATETIME1_FORMAT = "'{0:yyyy-MM-ddTHH:mm:ss.f}'";
 		private const string DATETIME2_FORMAT = "'{0:yyyy-MM-ddTHH:mm:ss.ff}'";
@@ -91,6 +93,10 @@ namespace LinqToDB.DataProvider.SqlServer
 			SetValueToSqlConverter(typeof(DateTimeOffset), (sb,dt,v) => ConvertDateTimeOffsetToSql(sb, dt, (DateTimeOffset)v));
 			SetValueToSqlConverter(typeof(byte[]),         (sb,dt,v) => ConvertBinaryToSql        (sb, (byte[])v));
 			SetValueToSqlConverter(typeof(Binary),         (sb,dt,v) => ConvertBinaryToSql        (sb, ((Binary)v).ToArray()));
+
+#if NET6_0_OR_GREATER
+			SetValueToSqlConverter(typeof(DateOnly),       (sb,dt,v) => ConvertDateToSql          (sb, dt, (DateOnly)v));
+#endif
 
 			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string)));
 
@@ -201,16 +207,23 @@ namespace LinqToDB.DataProvider.SqlServer
 			else
 			{
 				var format = value.Days > 0
-					? value.Ticks % 10000000 != 0
+					? value.Ticks % 10_000_000 != 0
 						? TIMESPAN7_FORMAT
 						: TIMESPAN0_FORMAT
-					: value.Ticks % 10000000 != 0
+					: value.Ticks % 10_000_000 != 0
 						? TIME7_FORMAT
 						: TIME0_FORMAT;
 
 				stringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, value);
 			}
 		}
+
+#if NET6_0_OR_GREATER
+		static void ConvertDateToSql(StringBuilder stringBuilder, SqlDataType? dt, DateOnly value)
+		{
+			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATE_FORMAT, value);
+		}
+#endif
 
 		static void ConvertDateTimeOffsetToSql(StringBuilder stringBuilder, SqlDataType sqlDataType, DateTimeOffset value)
 		{
@@ -234,7 +247,6 @@ namespace LinqToDB.DataProvider.SqlServer
 			stringBuilder.Append("0x");
 			stringBuilder.AppendByteArrayAsHexViaLookup32(value);
 		}
-
 		public sealed class SqlServer2005MappingSchema : LockedMappingSchema
 		{
 			public SqlServer2005MappingSchema() : base(ProviderName.SqlServer2005, Instance)

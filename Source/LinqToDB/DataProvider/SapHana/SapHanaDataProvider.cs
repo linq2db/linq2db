@@ -69,6 +69,10 @@ namespace LinqToDB.DataProvider.SapHana
 		{
 			if (type.IsNullable())
 				type = type.ToUnderlying();
+#if NET6_0_OR_GREATER
+			if (type == typeof(DateOnly))
+				type = typeof(DateTime);
+#endif
 
 			switch (dataType.DataType)
 			{
@@ -85,6 +89,10 @@ namespace LinqToDB.DataProvider.SapHana
 
 		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
 		{
+#if NET6_0_OR_GREATER
+			if (value is DateOnly d)
+				value = d.ToDateTime(TimeOnly.MinValue);
+#endif
 			switch (dataType.DataType)
 			{
 				case DataType.Boolean:

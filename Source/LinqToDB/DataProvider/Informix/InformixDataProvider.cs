@@ -134,6 +134,12 @@ namespace LinqToDB.DataProvider.Informix
 					dataType = dataType.WithDataType(DataType.Char);
 				}
 			}
+#if NET6_0_OR_GREATER
+			else if (value is DateOnly d)
+			{
+				value = d.ToDateTime(TimeOnly.MinValue);
+			}
+#endif
 
 			base.SetParameter(dataConnection, parameter, name, dataType, value);
 		}

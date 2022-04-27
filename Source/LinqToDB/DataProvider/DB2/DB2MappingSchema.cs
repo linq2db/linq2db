@@ -11,6 +11,7 @@ namespace LinqToDB.DataProvider.DB2
 
 	sealed class DB2MappingSchema : LockedMappingSchema
 	{
+		private const string DATE_FORMAT       = "{0:yyyy-MM-dd}";
 		private const string DATETIME_FORMAT   = "{0:yyyy-MM-dd-HH.mm.ss}";
 
 		private const string TIMESTAMP0_FORMAT = "{0:yyyy-MM-dd-HH.mm.ss}";
@@ -56,6 +57,11 @@ namespace LinqToDB.DataProvider.DB2
 
 			// set reader conversions from literals
 			SetConverter<string, DateTime>(ParseDateTime);
+
+#if NET6_0_OR_GREATER
+			SetValueToSqlConverter(typeof(DateOnly), (sb,dt,v) => ConvertDateOnlyToSql(sb, dt, (DateOnly)v));
+			SetConverter<string, DateOnly>(ParseDateOnly);
+#endif
 		}
 
 		static DateTime ParseDateTime(string value)
@@ -102,6 +108,32 @@ namespace LinqToDB.DataProvider.DB2
 				_    => TIMESTAMP6_FORMAT, // default precision
 			};
 		}
+
+#if NET6_0_OR_GREATER
+		static void ConvertDateOnlyToSql(StringBuilder stringBuilder, SqlDataType dt, DateOnly value)
+		{
+			stringBuilder.Append('\'');
+			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATE_FORMAT, value);
+			stringBuilder.Append('\'');
+		}
+
+		private static readonly string[] DateOnlyFormats = new[]
+		{
+			"yyyy-MM-dd",
+		};
+
+		static DateOnly ParseDateOnly(string value)
+		{
+			if (DateOnly.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.None, out var res))
+				return res;
+
+			return DateOnly.ParseExact(
+				value,
+				DateOnlyFormats,
+				CultureInfo.InvariantCulture,
+				DateTimeStyles.None);
+		}
+#endif
 
 		static void ConvertDateTimeToSql(StringBuilder stringBuilder, SqlDataType type, DateTime value)
 		{

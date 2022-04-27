@@ -82,6 +82,8 @@ namespace LinqToDB.DataProvider.MySql
 
 		public BulkCopyAdapter? BulkCopy { get; protected set; }
 
+		public bool IsDateOnlySupported { get; }
+
 		internal class BulkCopyAdapter
 		{
 			internal BulkCopyAdapter(
@@ -179,6 +181,33 @@ namespace LinqToDB.DataProvider.MySql
 					ProviderTypesNamespace      = MySqlDataTypesNamespace;
 					MappingSchema               = mappingSchema;
 					BulkCopy                    = null;
+					IsDateOnlySupported         = false;
+				}
+			}
+
+			sealed class MySqlDataAdapterMappingSchema : LockedMappingSchema
+			{
+				public MySqlDataAdapterMappingSchema() : base("MySqlDataAdapter")
+				{
+				}
+					ProviderType                = MySqlProvider.MySqlData;
+					ConnectionType              = connectionType;
+					DataReaderType              = dataReaderType;
+					ParameterType               = parameterType;
+					CommandType                 = commandType;
+					TransactionType             = transactionType;
+					MySqlDecimalType            = mySqlDecimalType;
+					MySqlDateTimeType           = mySqlDateTimeType;
+					MySqlGeometryType           = mySqlGeometryType;
+					MySqlDecimalGetter          = decimalGetter;
+					GetDbType                   = p => dbTypeGetter(p);
+					GetMySqlDecimalMethodName   = "GetMySqlDecimal";
+					GetDateTimeOffsetMethodName = null;
+					GetMySqlDateTimeMethodName  = "GetMySqlDateTime";
+					ProviderTypesNamespace      = MySqlDataTypesNamespace;
+					MappingSchema               = mappingSchema;
+					BulkCopy                    = null;
+					IsDateOnlySupported         = false;
 				}
 			}
 
@@ -257,10 +286,12 @@ namespace LinqToDB.DataProvider.MySql
 
 		internal class MySqlConnector
 		{
-			private static readonly Version MinBulkCopyVersion = new (0, 67);
-			private static readonly Version MinModernVersion   = new (1, 0);
+			private static readonly Version MinBulkCopyVersion     = new (0, 67);
+			private static readonly Version MinModernVersion       = new (1, 0);
 			// actually it was added in 2.1.0, but assembly version wasn't updated
 			private static readonly Version MinMySqlDecimalVersion = new (2, 0);
+			// added in 2.0.0 with bulk copy fix in 2.1.8
+			private static readonly Version MinDateOnlyVersion     = new (2, 0);
 
 			public class MySqlConnectorProviderAdapter : MySqlProviderAdapter
 			{
@@ -358,6 +389,7 @@ namespace LinqToDB.DataProvider.MySql
 					ProviderTypesNamespace      = typesNamespace;
 					MappingSchema               = mappingSchema;
 					BulkCopy                    = bulkCopy;
+					IsDateOnlySupported         = assembly.GetName().Version >= MinDateOnlyVersion;
 				}
 			}
 

@@ -143,7 +143,11 @@ namespace LinqToDB.DataProvider.SQLite
 								return ex;
 						}
 
-						if (ftype == typeof(DateTime) || ftype == typeof(DateTimeOffset))
+						if (ftype == typeof(DateTime) || ftype == typeof(DateTimeOffset)
+#if NET6_0_OR_GREATER
+							|| ftype == typeof(DateOnly)
+#endif
+							)
 						{
 							if (IsDateDataType(func.Parameters[0], "Date"))
 								return new SqlFunction(func.SystemType, "Date", func.Parameters[1]);

@@ -53,6 +53,10 @@ namespace LinqToDB.DataProvider.Oracle
 			SetValueToSqlConverter(typeof(byte[]), (sb, dt, v)         => ConvertBinaryToSql  (sb, (byte[])v));
 			SetValueToSqlConverter(typeof(Binary), (sb, dt, v)         => ConvertBinaryToSql  (sb, ((Binary)v).ToArray()));
 
+#if NET6_0_OR_GREATER
+			SetValueToSqlConverter(typeof(DateOnly),       (sb, dt, v) => ConvertDateOnlyToSql(sb, dt, (DateOnly)v));
+#endif
+
 			// adds floating point special values support
 			SetValueToSqlConverter(typeof(float), (sb, dt, v) =>
 			{
@@ -176,6 +180,13 @@ namespace LinqToDB.DataProvider.Oracle
 
 			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, value);
 		}
+
+#if NET6_0_OR_GREATER
+		static void ConvertDateOnlyToSql(StringBuilder stringBuilder, SqlDataType dataType, DateOnly value)
+		{
+			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATE_FORMAT, value);
+		}
+#endif
 
 		internal static readonly OracleMappingSchema Instance = new ();
 
