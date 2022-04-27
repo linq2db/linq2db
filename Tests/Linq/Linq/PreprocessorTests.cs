@@ -42,7 +42,7 @@ namespace Tests.Linq
 
 
 		[Test]
-		public void Test([DataSources(false)] string context)
+		public void IncrementConstant([DataSources(false)] string context)
 		{
 			using (var db = new PostProcessorDataConnection(context))
 			{
@@ -53,5 +53,6 @@ namespace Tests.Linq
 				}
 			}
 		}
+
 	}
 }

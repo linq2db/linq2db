@@ -140,7 +140,9 @@ namespace LinqToDB.Linq.Builder
 
 			_optimizationContext = optimizationContext;
 			_parametersContext   = parametersContext;
-			Expression           = ConvertExpressionTree(expression);
+
+			Expression = ConvertExpressionTree(expression);
+
 			_optimizationContext.ClearVisitedCache();
 
 			DataReaderLocal      = BuildVariable(DataReaderParam, "ldr");
@@ -387,15 +389,21 @@ namespace LinqToDB.Linq.Builder
 
 		#endregion
 
-		#region ExposeExpression
+		#region PreprocessExpression
+
+		public Expression PreprocessExpression(Expression expression)
+		{
+			var result = _optimizationContext.PreprocessExpression(expression);
+			return result;
+		}
+
+		#endregion
 
 		public Expression ExposeExpression(Expression expression)
 		{
 			var result = _optimizationContext.ExposeExpression(expression);
 			return result;
 		}
-
-		#endregion
 
 		#region OptimizeExpression
 
@@ -405,23 +413,14 @@ namespace LinqToDB.Linq.Builder
 
 		Dictionary<Expression, Expression>? _optimizedExpressions;
 
-		static void CollectLambdaParameters(Expression expression, HashSet<ParameterExpression> foundParameters)
-		{
-			expression.Visit(foundParameters, static (foundParameters, e) =>
-			{
-				if (e.NodeType == ExpressionType.Lambda)
-					foundParameters.AddRange(((LambdaExpression)e).Parameters);
-			});
-		}
-
 		Expression OptimizeExpression(Expression expression)
 		{
 			if (_optimizedExpressions != null && _optimizedExpressions.TryGetValue(expression, out var expr))
 				return expr;
 
 			expr = ExposeExpression(expression);
+
 			var currentParameters = new HashSet<ParameterExpression>();
-			CollectLambdaParameters(expression, currentParameters);
 			expr = expr.Transform((builder: this, currentParameters), static (ctx, e) => ctx.builder.OptimizeExpressionImpl(ctx.currentParameters, e));
 
 			(_optimizedExpressions ??= new())[expression] = expr;
@@ -433,6 +432,11 @@ namespace LinqToDB.Linq.Builder
 		{
 			switch (expr.NodeType)
 			{
+				case ExpressionType.Lambda:
+				{
+					currentParameters.AddRange(((LambdaExpression)expr).Parameters);
+					break;
+				}
 				case ExpressionType.MemberAccess:
 					{
 						var me = (MemberExpression)expr;
@@ -467,7 +471,10 @@ namespace LinqToDB.Linq.Builder
 							var ex = ConvertIQueryable(expr, currentParameters);
 
 							if (!ReferenceEquals(ex, expr))
+							{
+								ex = _optimizationContext.PreprocessExpression(ex);
 								return new TransformInfo(ConvertExpressionTree(ex));
+							}
 						}
 
 						return new TransformInfo(ConvertSubquery(expr));
@@ -523,28 +530,32 @@ namespace LinqToDB.Linq.Builder
 
 									mc = mc.Update(mc.Object, args);
 									return new TransformInfo(mc, true);
-								};
+								}
 							}
 						}
 
-						var l = ConvertMethodExpression(call.Object?.Type ?? call.Method.ReflectedType!, call.Method, out var alias);
+						var l = _optimizationContext.ConvertMethodExpression(call.Object?.Type ?? call.Method.ReflectedType!, call.Method, out var alias);
 
 						if (l != null)
 						{
-							var optimized = OptimizeExpression(ConvertMethod(call, l));
+							var converted = ConvertMethod(call, l);
+							converted = _optimizationContext.PreprocessExpression(converted);
+							var optimized = OptimizeExpression(converted);
 							return new TransformInfo(optimized);
 						}
 
 						if (CompiledParameters == null && typeof(IQueryable).IsSameOrParentOf(expr.Type))
 						{
 							var attr = GetTableFunctionAttribute(call.Method);
-
 							if (attr == null && !call.IsQueryable())
 							{
 								var ex = ConvertIQueryable(expr, currentParameters);
 
 								if (!ReferenceEquals(ex, expr))
+								{
+									ex = _optimizationContext.PreprocessExpression(ex);
 									return new TransformInfo(ConvertExpressionTree(ex));
+								}
 							}
 						}
 
@@ -553,11 +564,6 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			return new TransformInfo(expr);
-		}
-
-		LambdaExpression? ConvertMethodExpression(Type type, MemberInfo mi, out string? alias)
-		{
-			return _optimizationContext.ConvertMethodExpression(type, mi, out alias);
 		}
 
 		Expression ConvertSubquery(Expression expr)

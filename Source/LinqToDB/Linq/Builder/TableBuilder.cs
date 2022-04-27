@@ -176,6 +176,7 @@ namespace LinqToDB.Linq.Builder
 			var filtered  = (IQueryable)filterFunc.DynamicInvoke(fakeQuery, builder.DataContext)!;
 			var optimized = ExpressionBuilder.CorrectDataConnectionReference(filtered.Expression, ExpressionBuilder.DataContextParam);
 
+			optimized = builder.PreprocessExpression(optimized);
 			optimized = builder.ConvertExpressionTree(optimized);
 			optimized = builder.ConvertExpression(optimized);
 

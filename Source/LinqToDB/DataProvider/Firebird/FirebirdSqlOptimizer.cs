@@ -259,7 +259,7 @@ namespace LinqToDB.DataProvider.Firebird
 					var paramValue = p.GetParameterValue(visitor.Context.ParameterValues);
 
 					// Don't cast in cast
-					if (visitor.ParentElement is SqlFunction convertFunc && convertFunc.Name == "$Convert$")
+					if (visitor.ParentElement is SqlFunction convertFunc && (convertFunc.Name == "$Convert$" || convertFunc.Name == "Convert"))
 						return e;
 
 					if (paramValue.DbDataType.SystemType == typeof(bool) && visitor.ParentElement is SqlFunction func && func.Name == "CASE")

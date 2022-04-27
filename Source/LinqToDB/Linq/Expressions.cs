@@ -360,7 +360,7 @@ namespace LinqToDB.Linq
 						var baseType = method.ReflectedType.BaseType;
 						var newMi    = baseType.GetMemberEx(mi);
 						if (newMi != null && newMi.ReflectedType != mi.ReflectedType)
-			{
+						{
 							var converted = ConvertMemberInternal(mappingSchema, objectType, newMi);
 							if (converted != null)
 								return converted;

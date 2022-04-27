@@ -17,7 +17,8 @@ namespace LinqToDB.Linq.Builder
 
 	public class ExpressionTreeOptimizationContext
 	{
-		HashSet<Expression>? _visitedExpressions;
+		HashSet<Expression>?     _visitedExpressions;
+		IExpressionPreprocessor? _expressionPreprocessor;
 
 		public IDataContext  DataContext   { get; }
 		public MappingSchema MappingSchema { get; }
@@ -26,6 +27,9 @@ namespace LinqToDB.Linq.Builder
 		{
 			DataContext = dataContext;
 			MappingSchema = dataContext.MappingSchema;
+
+			// ReSharper disable once SuspiciousTypeConversion.Global
+			_expressionPreprocessor = DataContext as IExpressionPreprocessor;
 
 			_expandExpressionTransformer =
 				TransformVisitor<ExpressionTreeOptimizationContext>.Create(this,
@@ -175,7 +179,11 @@ namespace LinqToDB.Linq.Builder
 					var queryable = (IQueryable)mc.EvaluateExpression()!;
 
 					if (!queryable.Expression.EqualsTo(mc, GetSimpleEqualsToContext(compareConstantValues: true)))
-						return new TransformInfo(queryable.Expression, false, true);
+					{
+						var newExpression = queryable.Expression;
+						newExpression = PreprocessExpression(newExpression);
+						return new TransformInfo(newExpression, false, true);
+					}
 				}
 			}
 
@@ -598,9 +606,7 @@ namespace LinqToDB.Linq.Builder
 				Expression.Constant(alias));
 		}
 
-		private TransformInfoVisitor<ExpressionTreeOptimizationContext>? _exposeExpressionTransformer;
-
-		private TransformInfo ExposeExpressionTransformer(Expression expr)
+		public Expression ExposeExpressionTransformer(Expression expr)
 		{
 			switch (expr.NodeType)
 			{
@@ -610,9 +616,9 @@ namespace LinqToDB.Linq.Builder
 					var ll = Expressions.ConvertMember(MappingSchema, ue.Operand?.Type, ue.Operand!.Type.GetProperty(nameof(Array.Length))!);
 					if (ll != null)
 					{
-						var ex = СonvertMemberExpression(expr, ue.Operand!, ll);
+						var ex = ConvertMemberExpression(expr, ue.Operand!, ll);
 
-						return new TransformInfo(ex, false, true);
+						return ex;
 					}
 
 					break;
@@ -623,7 +629,7 @@ namespace LinqToDB.Linq.Builder
 
 					if (me.Member.IsNullableHasValueMember())
 					{
-						return new TransformInfo(Expression.NotEqual(me.Expression!, Expression.Constant(null, me.Expression!.Type)), false, true);
+						return Expression.NotEqual(me.Expression!, Expression.Constant(null, me.Expression!.Type));
 					}
 
 					if (CanBeCompiled(expr))
@@ -633,9 +639,10 @@ namespace LinqToDB.Linq.Builder
 
 					if (l != null)
 					{
-						var ex = СonvertMemberExpression(expr, me.Expression!, l);
+						var ex = ConvertMemberExpression(expr, me.Expression!, l);
+						ex = PreprocessExpression(ex);
 
-						return new TransformInfo(AliasCall(ex, alias!), false, true);
+						return AliasCall(ex, alias!);
 					}
 
 					break;
@@ -650,7 +657,8 @@ namespace LinqToDB.Linq.Builder
 						if (l != null)
 						{
 							var exposed = l.GetBody(ex.Operand);
-							return new TransformInfo(exposed, false, true);
+							exposed = PreprocessExpression(exposed);
+							return exposed;
 						}
 					}
 
@@ -668,7 +676,7 @@ namespace LinqToDB.Linq.Builder
 						if (!(_visitedExpressions ??= new ()).Contains(e))
 						{
 							_visitedExpressions.Add(e);
-							return new TransformInfo(e, false, true);
+							return e;
 						}
 					}
 
@@ -702,33 +710,62 @@ namespace LinqToDB.Linq.Builder
 									});
 								}
 
-								return new TransformInfo(newBody, false, true);
+								newBody = PreprocessExpression(newBody);
+								return newBody;
 							}
 						}
 					}
 					break;
 				}
+
+				case ExpressionType.Call:
+				{
+					var call = (MethodCallExpression)expr;
+					var l = ConvertMethodExpression(call.Object?.Type ?? call.Method.ReflectedType!, call.Method, out var alias);
+					if (l != null)
+					{
+						var transformed = ExpressionBuilder.ConvertMethod(call, l);
+						transformed = PreprocessExpression(transformed);
+						return transformed;
+					}
+
+					break;
+				}
 			}
 
-			return new TransformInfo(expr, false);
+			return expr;
 		}
 
-		Dictionary<Expression, Expression>? _exposedCache;
+		private TransformInfoVisitor<ExpressionTreeOptimizationContext>? _exposeExpressionTransformer;
+
 		public Expression ExposeExpression(Expression expression)
 		{
-			if (_exposedCache != null && _exposedCache.TryGetValue(expression, out var result))
-				return result;
-
-			result = (_exposeExpressionTransformer ??=
+			var result = (_exposeExpressionTransformer ??=
 				TransformInfoVisitor<ExpressionTreeOptimizationContext>.Create(this,
-					static(ctx, e) => ctx.ExposeExpressionTransformer(e))).Transform(expression);
-
-			(_exposedCache ??= new())[expression] = result;
+					static(ctx, e) => new TransformInfo(ctx.ExposeExpressionTransformer(e), false, true))).Transform(expression);
 
 			return result;
 		}
 
-		private static Expression СonvertMemberExpression(Expression expr, Expression root, LambdaExpression l)
+		public Expression PreprocessExpression(Expression expression)
+		{
+			var result = expression;
+
+			var interceptor = DataContext.ExpressionInterceptor;
+			if (interceptor != null)
+			{
+				result = interceptor.ProcessExpression(MappingSchema, result);
+			}
+
+			if (_expressionPreprocessor != null)
+			{
+				result = _expressionPreprocessor.ProcessExpression(result);
+			}
+
+			return result;
+		}
+
+		private static Expression ConvertMemberExpression(Expression expr, Expression root, LambdaExpression l)
 		{
 			var body  = l.Body.Unwrap();
 			var parms = l.Parameters.ToDictionary(p => p);

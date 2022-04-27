@@ -120,6 +120,14 @@ namespace LinqToDB
 		/// <param name="interceptor">Interceptor.</param>
 		void AddInterceptor(IInterceptor interceptor);
 
+		/// <summary>
+		/// Current Unwrap DataObject Interceptor.
+		/// </summary>
 		IUnwrapDataObjectInterceptor? UnwrapDataObjectInterceptor { get; }
+
+		/// <summary>
+		/// Current Expression Interceptor.
+		/// </summary>
+		IExpressionInterceptor? ExpressionInterceptor { get; }
 	}
 }

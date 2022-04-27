@@ -7,7 +7,8 @@ namespace LinqToDB.Remote
 	public abstract partial class RemoteDataContextBase :
 		IInterceptable<IDataContextInterceptor>,
 		IInterceptable<IEntityServiceInterceptor>,
-		IInterceptable<IUnwrapDataObjectInterceptor>
+		IInterceptable<IUnwrapDataObjectInterceptor>,
+		IInterceptable<IExpressionInterceptor>
 	{
 		// remote context interceptors support is quite limited and supports only IDataContextInterceptor
 		// interceptors, but not other interceptors, including AggregatedInterceptor<T>
@@ -32,6 +33,15 @@ namespace LinqToDB.Remote
 		{
 			get => _unwrapDataObjectInterceptor;
 			set => _unwrapDataObjectInterceptor = value;
+		}
+
+		IExpressionInterceptor? IDataContext.ExpressionInterceptor => _expressionInterceptor;
+
+		IExpressionInterceptor? _expressionInterceptor;
+		IExpressionInterceptor? IInterceptable<IExpressionInterceptor>.Interceptor
+		{
+			get => _expressionInterceptor;
+			set => _expressionInterceptor = value;
 		}
 
 		/// <inheritdoc cref="IDataContext.AddInterceptor(IInterceptor)"/>

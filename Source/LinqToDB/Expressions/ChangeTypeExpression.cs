@@ -20,6 +20,13 @@ namespace LinqToDB.Expressions
 
 		public Expression Expression { get; private set; }
 
+		public override Expression Reduce()
+		{
+			return Convert(Expression, Type);
+		}
+
+		public override bool CanReduce => true;
+
 		public override string ToString()
 		{
 			return "(" + Type + ")" + Expression;

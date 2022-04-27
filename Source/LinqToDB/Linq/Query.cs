@@ -477,11 +477,9 @@ namespace LinqToDB.Linq
 			var optimizationContext = new ExpressionTreeOptimizationContext(dataContext);
 
 			expr = optimizationContext.ExpandExpression(expr);
+			expr = optimizationContext.PreprocessExpression(expr);
 
 			dependsOnParameters = optimizationContext.IsDependsOnParameters();
-
-			if (dataContext is IExpressionPreprocessor preprocessor)
-				expr = preprocessor.ProcessExpression(expr);
 
 			if (Configuration.Linq.DisableQueryCache)
 				return CreateQuery(optimizationContext, new ParametersContext(expr, optimizationContext, dataContext), dataContext, expr);
