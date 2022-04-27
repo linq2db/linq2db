@@ -208,42 +208,56 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			switch (dataType.DataType)
 			{
-				case DataType.DateTime2  :
-					{
-						if (value is DateTime dt)
-							value = DataTools.AdjustPrecision(dt, (byte)(dataType.Precision ?? 7));
-						break;
-					}
-				case DataType.Udt        :
-					{
-						if (param    != null
-							&& value != null
-							&& _udtTypeNames.TryGetValue(value.GetType(), out var typeName))
-							Adapter.SetUdtTypeName(param, typeName);
-					}
+#if NET6_0_OR_GREATER
+				case DataType.Date when value is DateOnly d:
+					value = d.ToDateTime(TimeOnly.MinValue);
+					break;
 
+				case DataType.NText when value is DateOnly d:
+					value = d.ToString("yyyy-MM-dd");
 					break;
-				case DataType.NText:
-					     if (value is DateTimeOffset dto) value = dto.ToString("yyyy-MM-ddTHH:mm:ss.ffffff zzz");
-					else if (value is DateTime dt)
+#endif
+
+				case DataType.DateTime2 when value is DateTime dt:
+					value = DataTools.AdjustPrecision(dt, (byte)(dataType.Precision ?? 7));
+					break;
+
+				case DataType.Udt:
+				{
+					if (param != null
+						&& value != null
+						&& _udtTypeNames.TryGetValue(value.GetType(), out var typeName))
 					{
-						value = dt.ToString(
-							dt.Millisecond == 0
-								? "yyyy-MM-ddTHH:mm:ss"
-								: "yyyy-MM-ddTHH:mm:ss.fff");
-					}
-					else if (value is TimeSpan ts)
-					{
-						value = ts.ToString(
-							ts.Days > 0
-								? ts.Milliseconds > 0
-									? "d\\.hh\\:mm\\:ss\\.fff"
-									: "d\\.hh\\:mm\\:ss"
-								: ts.Milliseconds > 0
-									? "hh\\:mm\\:ss\\.fff"
-									: "hh\\:mm\\:ss");
+						Adapter.SetUdtTypeName(param, typeName);
 					}
 					break;
+				}
+
+				case DataType.NText when value is DateTimeOffset dto:
+					value = dto.ToString("yyyy-MM-ddTHH:mm:ss.ffffff zzz");
+					break;
+
+				case DataType.NText when value is DateTime dt:
+				{
+					value = dt.ToString(
+						dt.Millisecond == 0
+							? "yyyy-MM-ddTHH:mm:ss"
+							: "yyyy-MM-ddTHH:mm:ss.fff");
+					break;
+				}
+
+				case DataType.NText when value is TimeSpan ts:
+				{
+					value = ts.ToString(
+						ts.Days > 0
+							? ts.Milliseconds > 0
+								? "d\\.hh\\:mm\\:ss\\.fff"
+								: "d\\.hh\\:mm\\:ss"
+							: ts.Milliseconds > 0
+								? "hh\\:mm\\:ss\\.fff"
+								: "hh\\:mm\\:ss");
+					break;
+				}
 
 				case DataType.Undefined:
 					if (value != null

@@ -12,11 +12,12 @@ namespace LinqToDB.DataProvider.SQLite
 
 	public class SQLiteMappingSchema : MappingSchema
 	{
-		private const string DATE_FORMAT      = "'{0:yyyy-MM-dd}'";
-		private const string DATETIME0_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss}'";
-		private const string DATETIME1_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.f}'";
-		private const string DATETIME2_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.ff}'";
-		private const string DATETIME3_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.fff}'";
+		internal const string DATE_FORMAT_RAW  = "yyyy-MM-dd";
+		private  const string DATE_FORMAT      = "'{0:yyyy-MM-dd}'";
+		private  const string DATETIME0_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss}'";
+		private  const string DATETIME1_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.f}'";
+		private  const string DATETIME2_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.ff}'";
+		private  const string DATETIME3_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.fff}'";
 
 		public SQLiteMappingSchema() : this(ProviderName.SQLite)
 		{
@@ -32,6 +33,10 @@ namespace LinqToDB.DataProvider.SQLite
 			SetValueToSqlConverter(typeof(char),     (sb,dt,v) => ConvertCharToSql    (sb, (char)v));
 			SetValueToSqlConverter(typeof(byte[]),   (sb,dt,v) => ConvertBinaryToSql  (sb, (byte[])v));
 			SetValueToSqlConverter(typeof(Binary),   (sb,dt,v) => ConvertBinaryToSql  (sb, ((Binary)v).ToArray()));
+
+#if NET6_0_OR_GREATER
+			SetValueToSqlConverter(typeof(DateOnly), (sb,dt,v) => ConvertDateOnlyToSql(sb, (DateOnly)v));
+#endif
 
 			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
 		}
@@ -67,6 +72,13 @@ namespace LinqToDB.DataProvider.SQLite
 
 			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, value);
 		}
+
+#if NET6_0_OR_GREATER
+		static void ConvertDateOnlyToSql(StringBuilder stringBuilder, DateOnly value)
+		{
+			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATE_FORMAT, value);
+		}
+#endif
 
 		static readonly Action<StringBuilder, int> AppendConversionAction = AppendConversion;
 		static void AppendConversion(StringBuilder stringBuilder, int value)

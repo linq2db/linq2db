@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 namespace LinqToDB.DataProvider.SQLite
 {
 	using System.Data.Common;
+	using System.Globalization;
 	using Common;
 	using Data;
 	using Mapping;
@@ -229,6 +230,19 @@ namespace LinqToDB.DataProvider.SQLite
 			{
 				value = guid.ToByteArray();
 			}
+
+#if NET6_0_OR_GREATER
+			if (!Adapter.SupportsDateOnly && value is DateOnly d)
+			{
+				value     = d.ToDateTime(TimeOnly.MinValue);
+				if (dataType.DataType == DataType.Date)
+				{
+					value = ((DateTime)value).ToString(SQLiteMappingSchema.DATE_FORMAT_RAW, CultureInfo.InvariantCulture);
+					if (Name == ProviderName.SQLiteClassic)
+						dataType = dataType.WithDataType(DataType.VarChar);
+				}
+			}
+#endif
 
 			base.SetParameter(dataConnection, parameter, name, dataType, value);
 		}

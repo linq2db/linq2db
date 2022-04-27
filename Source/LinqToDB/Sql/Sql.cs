@@ -287,131 +287,6 @@ namespace LinqToDB
 			return date == null ? null : new TimeSpan(date.Value.Ticks);
 		}
 
-		[Property(PN.Informix,      "Boolean",        ServerSideOnly=true)]
-		[Property(PN.PostgreSQL,    "Boolean",        ServerSideOnly=true)]
-		[Property(PN.MySql,         "Boolean",        ServerSideOnly=true)]
-		[Property(PN.SQLite,        "Boolean",        ServerSideOnly=true)]
-		[Property(PN.SapHana,       "TinyInt",        ServerSideOnly=true)]
-		[Property(                  "Bit",            ServerSideOnly=true)] public static bool           Bit                               { get { return false; } }
-
-		[Property(PN.Oracle,        "Number(19)",     ServerSideOnly=true)]
-		[Property(                  "BigInt",         ServerSideOnly=true)] public static long           BigInt                            { get { return 0; } }
-
-		[Property(PN.MySql,         "Signed",         ServerSideOnly=true)]
-		[Property(                  "Int",            ServerSideOnly=true)] public static int            Int                               { get { return 0; } }
-
-		[Property(PN.MySql,         "Signed",         ServerSideOnly=true)]
-		[Property(                  "SmallInt",       ServerSideOnly=true)] public static short          SmallInt                          { get { return 0; } }
-
-		[Property(PN.DB2,           "SmallInt",       ServerSideOnly=true)]
-		[Property(PN.Informix,      "SmallInt",       ServerSideOnly=true)]
-		[Property(PN.Oracle,        "Number(3)",      ServerSideOnly=true)]
-		[Property(PN.DB2,           "SmallInt",       ServerSideOnly=true)]
-		[Property(PN.Firebird,      "SmallInt",       ServerSideOnly=true)]
-		[Property(PN.PostgreSQL,    "SmallInt",       ServerSideOnly=true)]
-		[Property(PN.MySql,         "Unsigned",       ServerSideOnly=true)]
-		[Property(                  "TinyInt",        ServerSideOnly=true)] public static byte           TinyInt                           { get { return 0; } }
-
-		[Property(                  "Decimal",        ServerSideOnly=true)] public static decimal DefaultDecimal                           { get { return 0; } }
-		[Expression(PN.SapHana,     "Decimal({0},4)", ServerSideOnly=true)]
-		[Function(                                    ServerSideOnly=true)] public static decimal        Decimal(int precision)            {       return 0;   }
-		[Function(                                    ServerSideOnly=true)] public static decimal        Decimal(int precision, int scale) {       return 0;   }
-
-		[Property(PN.Oracle,        "Number(19,4)",   ServerSideOnly=true)]
-		[Property(PN.Firebird,      "Decimal(18,4)",  ServerSideOnly=true)]
-		[Property(PN.PostgreSQL,    "Decimal(19,4)",  ServerSideOnly=true)]
-		[Property(PN.MySql,         "Decimal(19,4)",  ServerSideOnly=true)]
-		[Property(PN.SapHana,       "Decimal(19,4)",  ServerSideOnly=true)]
-		[Property(                  "Money",          ServerSideOnly=true)] public static decimal        Money                             { get { return 0; } }
-
-		[Property(PN.Informix,      "Decimal(10,4)",  ServerSideOnly=true)]
-		[Property(PN.Oracle,        "Number(10,4)",   ServerSideOnly=true)]
-		[Property(PN.Firebird,      "Decimal(10,4)",  ServerSideOnly=true)]
-		[Property(PN.PostgreSQL,    "Decimal(10,4)",  ServerSideOnly=true)]
-		[Property(PN.MySql,         "Decimal(10,4)",  ServerSideOnly=true)]
-		[Property(PN.SqlCe,         "Decimal(10,4)",  ServerSideOnly=true)]
-		[Property(PN.SapHana,       "Decimal(10,4)",  ServerSideOnly=true)]
-		[Property(                  "SmallMoney",     ServerSideOnly=true)] public static decimal        SmallMoney                        { get { return 0; } }
-
-		[Property(PN.MySql,         "Decimal(29,10)", ServerSideOnly=true)]
-		[Property(PN.SapHana,       "Double",         ServerSideOnly=true)]
-		[Property(                  "Float",          ServerSideOnly=true)] public static double         Float                             { get { return 0; } }
-
-		[Property(PN.MySql,         "Decimal(29,10)", ServerSideOnly=true)]
-		[Property(                  "Real",           ServerSideOnly=true)] public static float         Real                              { get { return 0; } }
-
-		[Property(PN.PostgreSQL,    "TimeStamp",      ServerSideOnly=true)]
-		[Property(PN.Firebird,      "TimeStamp",      ServerSideOnly=true)]
-		[Property(PN.SapHana,       "TimeStamp",      ServerSideOnly=true)]
-		[Property(                  "DateTime",       ServerSideOnly=true)] public static DateTime       DateTime                          { get { return DateTime.Now; } }
-
-		[Property(PN.SqlServer2005, "DateTime",       ServerSideOnly=true)]
-		[Property(PN.PostgreSQL,    "TimeStamp",      ServerSideOnly=true)]
-		[Property(PN.Firebird,      "TimeStamp",      ServerSideOnly=true)]
-		[Property(PN.MySql,         "DateTime",       ServerSideOnly=true)]
-		[Property(PN.SqlCe,         "DateTime",       ServerSideOnly=true)]
-		[Property(PN.Sybase,        "DateTime",       ServerSideOnly=true)]
-		[Property(PN.SapHana,       "TimeStamp",      ServerSideOnly=true)]
-		[Property(                  "DateTime2",      ServerSideOnly=true)] public static DateTime       DateTime2                         { get { return DateTime.Now; } }
-
-		[Property(PN.PostgreSQL,    "TimeStamp",      ServerSideOnly=true)]
-		[Property(PN.Firebird,      "TimeStamp",      ServerSideOnly=true)]
-		[Property(PN.MySql,         "DateTime",       ServerSideOnly=true)]
-		[Property(PN.SqlCe,         "DateTime",       ServerSideOnly=true)]
-		[Property(PN.SapHana,       "SecondDate",     ServerSideOnly=true)]
-		[Property(                  "SmallDateTime",  ServerSideOnly=true)] public static DateTime       SmallDateTime                     { get { return DateTime.Now; } }
-
-		[Property(PN.SqlServer2005, "Datetime",       ServerSideOnly=true)]
-		[Property(PN.SqlCe,         "Datetime",       ServerSideOnly=true)]
-		[Property(                  "Date",           ServerSideOnly=true)] public static DateTime       Date                              { get { return DateTime.Now; } }
-
-		[Property(                  "Time",           ServerSideOnly=true)] public static DateTime       Time                              { get { return DateTime.Now; } }
-
-		[Property(PN.PostgreSQL,    "TimeStamp",      ServerSideOnly=true)]
-		[Property(PN.Firebird,      "TimeStamp",      ServerSideOnly=true)]
-		[Property(PN.SqlServer2019, "DateTimeOffset", ServerSideOnly=true)]
-		[Property(PN.SqlServer2017, "DateTimeOffset", ServerSideOnly=true)]
-		[Property(PN.SqlServer2016, "DateTimeOffset", ServerSideOnly=true)]
-		[Property(PN.SqlServer2014, "DateTimeOffset", ServerSideOnly=true)]
-		[Property(PN.SqlServer2012, "DateTimeOffset", ServerSideOnly=true)]
-		[Property(PN.SqlServer2008, "DateTimeOffset", ServerSideOnly=true)]
-		[Property(PN.SapHana,       "TimeStamp",      ServerSideOnly=true)]
-		[Property(                  "DateTime",       ServerSideOnly=true)] public static DateTimeOffset DateTimeOffset                    { get { return DateTimeOffset.Now; } }
-
-		[Function(PN.SqlCe,         "NChar",          ServerSideOnly=true)]
-		[Function(                                    ServerSideOnly=true)] public static string         Char(int length)                  {       return ""; }
-
-		[Property(PN.SqlCe,         "NChar",          ServerSideOnly=true)]
-		[Property(                  "Char",           ServerSideOnly=true)] public static string  DefaultChar                              { get { return ""; } }
-
-		[Function(PN.MySql,         "Char",           ServerSideOnly=true)]
-		[Function(PN.SqlCe,         "NVarChar",       ServerSideOnly=true)]
-		[Function(                                    ServerSideOnly=true)] public static string         VarChar(int length)               {       return ""; }
-
-		[Property(PN.MySql,         "Char",           ServerSideOnly=true)]
-		[Property(PN.SqlCe,         "NVarChar",       ServerSideOnly=true)]
-		[Property(                  "VarChar",        ServerSideOnly=true)] public static string  DefaultVarChar                           { get { return ""; } }
-
-		[Function(PN.DB2,           "Char",           ServerSideOnly=true)]
-		[Function(                                    ServerSideOnly=true)] public static string         NChar(int length)                 {       return ""; }
-
-		[Property(PN.DB2,           "Char",           ServerSideOnly=true)]
-		[Property(                  "NChar",          ServerSideOnly=true)] public static string  DefaultNChar                             { get { return ""; } }
-
-		[Function(PN.DB2,           "Char",           ServerSideOnly=true)]
-		[Function(PN.Oracle,        "VarChar2",       ServerSideOnly=true)]
-		[Function(PN.Firebird,      "VarChar",        ServerSideOnly=true)]
-		[Function(PN.PostgreSQL,    "VarChar",        ServerSideOnly=true)]
-		[Function(PN.MySql,         "Char",           ServerSideOnly=true)]
-		[Function(                                    ServerSideOnly=true)] public static string         NVarChar(int length)              {       return ""; }
-
-		[Property(PN.DB2,           "Char",           ServerSideOnly=true)]
-		[Property(PN.Oracle,        "VarChar2",       ServerSideOnly=true)]
-		[Property(PN.Firebird,      "VarChar",        ServerSideOnly=true)]
-		[Property(PN.PostgreSQL,    "VarChar",        ServerSideOnly=true)]
-		[Property(PN.MySql,         "Char",           ServerSideOnly=true)]
-		[Property(                  "NVarChar",       ServerSideOnly=true)] public static string  DefaultNVarChar                          { get { return ""; } }
-
 		/// <summary>
 		/// Performs value conversion to specified type. If conversion failed, returns <c>null</c>.
 		/// Supported databases:
@@ -1046,6 +921,16 @@ namespace LinqToDB
 			return str?.ToUpper();
 		}
 
+		[Expression("Lpad({0},{1},'0')")]
+		[Expression(PN.Sybase, "right(replicate('0',{1}) + cast({0} as varchar(255)),{1})")]
+		[Expression(PN.PostgreSQL, "Lpad({0}::text,{1},'0')")]
+		[Expression(PN.SqlServer, "format({0}, 'd{1}')")]
+		[Expression(PN.SQLite, "printf('%0{1}d', {0})")]
+		public static string? ZeroPad(int? val, int length)
+		{
+			return val?.ToString("d" + length);
+		}
+
 		class ConcatAttribute : ExpressionAttribute
 		{
 			public ConcatAttribute() : base("")
@@ -1202,6 +1087,16 @@ namespace LinqToDB
 
 		[Property("@@DATEFIRST", CanBeNull = false)]
 		public static int DateFirst => 7;
+
+#if NET6_0_OR_GREATER
+		[Function]
+		public static DateOnly? MakeDateOnly(int? year, int? month, int? day)
+		{
+			return year == null || month == null || day == null ?
+				null :
+				new DateOnly(year.Value, month.Value, day.Value);
+		}
+#endif
 
 		[Function]
 		public static DateTime? MakeDateTime(int? year, int? month, int? day)
