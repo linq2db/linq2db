@@ -351,17 +351,19 @@ namespace LinqToDB.Linq.Builder
 								var ne = (NewExpression)expr;
 
 								List<Expression>? arguments = null;
+
 								for (var i = 0; i < ne.Arguments.Count; i++)
 								{
 									var argument    = ne.Arguments[i];
 									var memberAlias = ne.Members?[i].Name;
-
 									var newArgument = context.builder.ConvertAssignmentArgument(context.context, argument, ne.Members?[i], context.enforceServerSide, memberAlias);
+
 									if (newArgument != argument)
 									{
 										if (arguments == null)
 											arguments = ne.Arguments.Take(i).ToList();
 									}
+
 									arguments?.Add(newArgument);
 								}
 

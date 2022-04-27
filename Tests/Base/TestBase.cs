@@ -172,7 +172,14 @@ namespace Tests
 			TestContext.WriteLine("Azure configuration detected.");
 			configName += ".Azure";
 #endif
+
+#if !DEBUG
+			Console.WriteLine("UserDataProviders.json:");
+			Console.WriteLine(userDataProvidersJson);
+#endif
+
 			var testSettings = SettingsReader.Deserialize(configName, dataProvidersJson, userDataProvidersJson);
+
 			testSettings.Connections ??= new();
 
 			CopyDatabases();
@@ -219,11 +226,11 @@ namespace Tests
 
 				if (provider.Value.ConnectionString != null)
 				{
-				DataConnection.AddOrSetConfiguration(
-					provider.Key,
-					provider.Value.ConnectionString,
-					provider.Value.Provider ?? "");
-			}
+					DataConnection.AddOrSetConfiguration(
+						provider.Key,
+						provider.Value.ConnectionString,
+						provider.Value.Provider ?? "");
+				}
 			}
 #endif
 
@@ -327,6 +334,7 @@ namespace Tests
 			var fileName = Path.GetFullPath(Path.Combine(basePath, findFileName));
 
 			string? path = basePath;
+
 			while (!File.Exists(fileName))
 			{
 				TestContext.WriteLine($"File not found: {fileName}");
@@ -987,7 +995,7 @@ namespace Tests
 
 		protected IEnumerable<LinqDataTypes2> AdjustExpectedData(ITestDataContext db, IEnumerable<LinqDataTypes2> data)
 		{
-			if (db.ProviderNeedsTimeFix(db.ContextID))
+			if (db.ProviderNeedsTimeFix(db.ContextName))
 			{
 				var adjusted = new List<LinqDataTypes2>();
 				foreach (var record in data)

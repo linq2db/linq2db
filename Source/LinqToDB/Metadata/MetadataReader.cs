@@ -27,7 +27,8 @@ namespace LinqToDB.Metadata
 			_readers = readers.ToList();
 		}
 
-		IList<IMetadataReader> _readers;
+		private List<IMetadataReader>          _readers;
+		public  IReadOnlyList<IMetadataReader>  Readers => _readers;
 
 		internal void AddReader(IMetadataReader reader)
 		{
@@ -120,7 +121,7 @@ namespace LinqToDB.Metadata
 				cols[i] = readers[i].GetDynamicColumns(type);
 				length  += cols[i].Length;
 			}
-			
+
 			var columns = length == 0 ? Array<MemberInfo>.Empty : new MemberInfo[length];
 			length = 0;
 			for (var i = 0; i < cols.Length; i++)

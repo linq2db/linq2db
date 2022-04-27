@@ -28,7 +28,7 @@ namespace LinqToDB.SqlProvider
 		{
 			type = type.ToNullableUnderlying();
 
-			if (_converters.ContainsKey(type))
+			if (_converters?.ContainsKey(type) == true)
 				return true;
 
 			for (var i = 0; i < BaseConverters.Length; i++)
@@ -78,7 +78,7 @@ namespace LinqToDB.SqlProvider
 
 		internal readonly ValueToSqlConverter[] BaseConverters;
 
-		readonly Dictionary<Type,ConverterType> _converters = new ();
+		Dictionary<Type,ConverterType>? _converters;
 
 		ConverterType? _booleanConverter;
 		ConverterType? _charConverter;
@@ -199,7 +199,7 @@ namespace LinqToDB.SqlProvider
 
 			ConverterType? converter = null;
 
-			if (_converters.Count > 0)
+			if (_converters?.Count > 0)
 			{
 				if (!_converters.TryGetValue(type, out converter))
 				{
@@ -257,12 +257,12 @@ namespace LinqToDB.SqlProvider
 		{
 			if (converter == null)
 			{
-				if (_converters.ContainsKey(type))
+				if (_converters?.ContainsKey(type) == true)
 					_converters.Remove(type);
 			}
 			else
 			{
-				_converters[type] = converter;
+				(_converters ??= new())[type] = converter;
 
 				if (!type.IsEnum)
 				{

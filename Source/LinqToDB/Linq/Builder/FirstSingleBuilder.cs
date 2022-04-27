@@ -350,7 +350,7 @@ namespace LinqToDB.Linq.Builder
 
 					if (expression == null)
 					{
-						if (   !Builder.DataContext.SqlProviderFlags.IsSubQueryColumnSupported 
+						if (   !Builder.DataContext.SqlProviderFlags.IsSubQueryColumnSupported
 						    || Sequence.IsExpression(null, level, RequestFor.Object).Result)
 						{
 							return Builder.BuildMultipleQuery(Parent!, _methodCall, enforceServerSide);

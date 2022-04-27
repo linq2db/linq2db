@@ -36,21 +36,21 @@ namespace LinqToDB.Linq.Builder
 				_                                           => UpdateType.Update,
 			};
 
-			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+			var sequence         = builder.BuildSequence(new (buildInfo, methodCall.Arguments[0]));
 			var updateStatement  = sequence.Statement as SqlUpdateStatement ?? new SqlUpdateStatement(sequence.SelectQuery);
 			var genericArguments = methodCall.Method.GetGenericArguments();
 			var outputExpression = (LambdaExpression?)methodCall.GetArgumentByName("outputExpression")?.Unwrap();
 
 			Type? objectType;
 
-			sequence.Statement   = updateStatement;
+			sequence.Statement = updateStatement;
 
 			static LambdaExpression? RewriteOutputExpression(LambdaExpression? expr)
 			{
 				if (expr == default) return default;
-				
+
 				var outputType = expr.Parameters[0].Type;
-				var param1 = Expression.Parameter(outputType, "source");
+				var param1     = Expression.Parameter(outputType, "source");
 
 				return Expression.Lambda(
 					// (source, deleted, inserted) => expr(deleted, inserted)
@@ -78,10 +78,11 @@ namespace LinqToDB.Linq.Builder
 					CheckAssociation(sequence);
 
 					var expr = methodCall.Arguments[1].Unwrap();
+
 					if (expr is LambdaExpression lex && lex.ReturnType == typeof(bool))
 					{
 						sequence = builder.BuildWhere(buildInfo.Parent, sequence, (LambdaExpression)methodCall.Arguments[1].Unwrap(), false);
-						expr = methodCall.Arguments[2].Unwrap();
+						expr     = methodCall.Arguments[2].Unwrap();
 					}
 
 					if (sequence.SelectQuery.Select.SkipValue != null || !sequence.SelectQuery.Select.OrderBy.IsEmpty)
@@ -165,7 +166,7 @@ namespace LinqToDB.Linq.Builder
 				return new UpdateContext(buildInfo.Parent, sequence);
 
 			var insertedTable = builder.DataContext.SqlProviderFlags.OutputUpdateUseSpecialTables ? SqlTable.Inserted(objectType) : updateStatement.GetUpdateTable();
-			var deletedTable     = SqlTable.Deleted(objectType);
+			var deletedTable  = SqlTable.Deleted(objectType);
 
 			if (insertedTable == null)
 				throw new InvalidOperationException("Cannot find target table for UPDATE statement");
@@ -186,6 +187,7 @@ namespace LinqToDB.Linq.Builder
 					var param2 = Expression.Parameter(outputType, "deleted");
 					var param3 = Expression.Parameter(outputType, "inserted");
 					var returnType = typeof(UpdateOutput<>).MakeGenericType(outputType);
+
 					return Expression.Lambda(
 						// (source, deleted, inserted) => new UpdateOutput<T> { Deleted = deleted, Inserted = inserted, }
 						Expression.MemberInit(
@@ -213,6 +215,7 @@ namespace LinqToDB.Linq.Builder
 					var param1 = Expression.Parameter(outputType, "source");
 					var param2 = Expression.Parameter(outputType, "deleted");
 					var param3 = Expression.Parameter(outputType, "inserted");
+
 					return Expression.Lambda(
 						// (source, deleted, inserted) => inserted
 						param3,
@@ -223,6 +226,7 @@ namespace LinqToDB.Linq.Builder
 				var destination = builder.BuildSequence(new BuildInfo(buildInfo, outputTable, new SelectQuery()));
 
 				outputExpression ??= BuildDefaultOutputExpression(objectType);
+
 				BuildSetterWithContext(
 					builder,
 					buildInfo,
@@ -452,7 +456,7 @@ namespace LinqToDB.Linq.Builder
 
 			var sp  = fieldsContext.Parent;
 			var ctx = new ExpressionContext(buildInfo.Parent, fieldsContext, extract);
-			
+
 			builder.ReplaceParent(ctx, sp);
 
 			Mapping.ColumnDescriptor? columnDescriptor = null;
@@ -472,7 +476,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				var column = GetField(ext);
 				columnDescriptor = QueryHelper.GetColumnDescriptor(column);
-				setExpression    = new SqlSetExpression(column, null); 
+				setExpression    = new SqlSetExpression(column, null);
 			}
 
 			sp  = valuesContext.Parent;
@@ -485,7 +489,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				var sql   = ctx.ConvertToSql(fieldExpr, 0, ConvertFlags.Field);
 				var field = sql.Select(s => QueryHelper.GetUnderlyingField(s.Sql)).FirstOrDefault(f => f != null);
-				
+
 				if (sql.Length != 1)
 					throw new LinqException($"Expression '{extract}' can not be used as Update Field.");
 
@@ -544,7 +548,7 @@ namespace LinqToDB.Linq.Builder
 			// Note: this ParseSet overload doesn't support a SqlRow value.
 			// This overload is called for a constants, e.g. `Set(x => x.Name, "Doe")`.
 			// SqlRow can't be constructed as C# values, they can only be used inside expressions, so the call
-			// `Set(x => SqlRow(x.Name, x.Age), SqlRow("Doe", 18))` 
+			// `Set(x => SqlRow(x.Name, x.Age), SqlRow("Doe", 18))`
 			// is not possible (2nd SqlRow would be called at runtime and throw).
 			// This is useless anyway, as `Set(x => x.Name, "Doe").Set(x => x.Age, 18)` generates simpler SQL anyway.
 

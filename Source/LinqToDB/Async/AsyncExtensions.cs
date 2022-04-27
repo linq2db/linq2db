@@ -28,7 +28,7 @@ namespace LinqToDB.Async
 		///     The task result contains a <see cref="List{T}" /> that contains elements from the input sequence.
 		/// </returns>
 		public static async Task<List<T>> ToListAsync<T>(
-			this IAsyncEnumerable<T> source, 
+			this IAsyncEnumerable<T> source,
 			CancellationToken        cancellationToken = default)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));

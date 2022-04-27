@@ -6,7 +6,7 @@ namespace LinqToDB.Common
 	public static class StringBuilderExtensions
 	{
 		private static readonly uint[] _lookup32 = CreateLookup32();
-        
+
 		private static uint[] CreateLookup32()
 		{
 			var result = new uint[256];
@@ -17,7 +17,7 @@ namespace LinqToDB.Common
 			}
 			return result;
 		}
-        
+
 		/// <summary>
 		/// Appends an array of bytes to a <see cref="StringBuilder"/> in hex (i.e. 255->FF)
 		/// format utilizing a static lookup table to minimize allocations.
@@ -29,18 +29,21 @@ namespace LinqToDB.Common
 		/// https://stackoverflow.com/a/624379/2937845
 		/// Which indicated that  https://stackoverflow.com/a/24343727/2937845's
 		/// implementation of ByteArrayToHexViaLookup32 was the fastest method
-		/// not involving unsafe 
+		/// not involving unsafe
 		/// </remarks>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void AppendByteArrayAsHexViaLookup32(this StringBuilder sb, byte[] bytes)
+		public static StringBuilder AppendByteArrayAsHexViaLookup32(this StringBuilder sb, byte[] bytes)
 		{
 			var lookup32 = _lookup32;
+
 			foreach (var b in bytes)
 			{
 				var val = lookup32[b];
 				sb.Append((char)val);
 				sb.Append((char) (val >> 16));
 			}
+
+			return sb;
 		}
 	}
 }

@@ -10,6 +10,7 @@ using System.Text;
 using System.Threading;
 
 using JetBrains.Annotations;
+using LinqToDB.Common.Internal;
 
 namespace LinqToDB.Data
 {
@@ -226,35 +227,41 @@ namespace LinqToDB.Data
 		{
 			if (options == null)
 				throw new ArgumentNullException(nameof(options));
-			
+
 			if (!options.IsValidConfigForConnectionType(this))
 				throw new LinqToDBException(
 					$"Improper options type used to create DataConnection {GetType()}, try creating a public constructor calling base and accepting type {nameof(LinqToDBConnectionOptions)}<{GetType().Name}>");
-			
+
 			InitConfig();
 
 			DbConnection?  localConnection  = null;
 			DbTransaction? localTransaction = null;
-			
+
 			switch (options.SetupType)
 			{
 				case ConnectionSetupType.ConfigurationString:
 				case ConnectionSetupType.DefaultConfiguration:
+				{
 					ConfigurationString = options.ConfigurationString ?? DefaultConfiguration;
+
 					if (ConfigurationString == null)
 						throw new LinqToDBException("Configuration string is not provided.");
+
 					var ci = GetConfigurationInfo(ConfigurationString);
 
 					DataProvider     = ci.DataProvider;
 					ConnectionString = ci.ConnectionString;
 					MappingSchema    = DataProvider.MappingSchema;
-					break;
 
+					break;
+				}
 				case ConnectionSetupType.ConnectionString:
-					if (options.ProviderName == null && options.DataProvider == null) 
+				{
+					if (options.ProviderName == null && options.DataProvider == null)
 						throw new LinqToDBException("DataProvider was not specified");
 
 					IDataProvider? dataProvider;
+
 					if (options.ProviderName != null)
 					{
 						if (!_dataProviders.TryGetValue(options.ProviderName, out dataProvider))
@@ -269,54 +276,56 @@ namespace LinqToDB.Data
 					DataProvider     = dataProvider;
 					ConnectionString = options.ConnectionString;
 					MappingSchema    = DataProvider.MappingSchema;
+
 					break;
-				
+				}
 				case ConnectionSetupType.ConnectionFactory:
+				{
 					//copy to tmp variable so that if the factory in options gets changed later we will still use the old one
 					//is this expected?
 					var originalConnectionFactory = options.ConnectionFactory!;
+
 					_connectionFactory = () =>
 					{
 						var connection = originalConnectionFactory();
-						
 						return connection;
 					};
 
 					DataProvider  = options.DataProvider!;
 					MappingSchema = DataProvider.MappingSchema;
+
 					break;
-				
+				}
 				case ConnectionSetupType.Connection:
-					{
-						localConnection    = options.DbConnection;
-						_disposeConnection = options.DisposeConnection;
+				{
+					localConnection    = options.DbConnection;
+					_disposeConnection = options.DisposeConnection;
 
-						DataProvider  = options.DataProvider!;
-						MappingSchema = DataProvider.MappingSchema;
-						break;
-					}
-
+					DataProvider  = options.DataProvider!;
+					MappingSchema = DataProvider.MappingSchema;
+					break;
+				}
 				case ConnectionSetupType.Transaction:
-					{
-						localConnection        = options.DbTransaction!.Connection;
-						localTransaction       = options.DbTransaction;
+				{
+					localConnection    = options.DbTransaction!.Connection;
+					localTransaction   = options.DbTransaction;
 
-						_closeTransaction  = false;
-						_closeConnection   = false;
-						_disposeConnection = false;
+					_closeTransaction  = false;
+					_closeConnection   = false;
+					_disposeConnection = false;
 
-						DataProvider  = options.DataProvider!;
-						MappingSchema = DataProvider.MappingSchema;
-						break;
-					}
+					DataProvider  = options.DataProvider!;
+					MappingSchema = DataProvider.MappingSchema;
 
+					break;
+				}
 				default:
 					throw new NotImplementedException($"SetupType: {options.SetupType}");
 			}
 
 			RetryPolicy = Configuration.RetryPolicy.Factory != null
-					? Configuration.RetryPolicy.Factory(this)
-					: null;
+				? Configuration.RetryPolicy.Factory(this)
+				: null;
 
 			if (options.DataProvider != null)
 			{
@@ -327,6 +336,10 @@ namespace LinqToDB.Data
 			if (options.MappingSchema != null)
 			{
 				AddMappingSchema(options.MappingSchema);
+			}
+			else if (Configuration.Linq.EnableAutoFluentMapping)
+			{
+				MappingSchema = new (MappingSchema);
 			}
 
 			if (options.OnTrace != null)
@@ -389,9 +402,7 @@ namespace LinqToDB.Data
 		/// </summary>
 		public IRetryPolicy? RetryPolicy         { get; set; }
 
-		static readonly ConcurrentDictionary<string,int> _configurationIDs;
-		static int _maxID;
-
+		private int  _msID;
 		private int? _id;
 		/// <summary>
 		/// For internal use only.
@@ -400,14 +411,11 @@ namespace LinqToDB.Data
 		{
 			get
 			{
-				if (!_id.HasValue)
+				if (!_id.HasValue || _msID != MappingSchema.ConfigurationID)
 				{
-					var key = MappingSchema.ConfigurationID + "." + (ConfigurationString ?? ConnectionString ?? Connection.ConnectionString);
-
-					if (!_configurationIDs.TryGetValue(key, out var id))
-						_configurationIDs[key] = id = Interlocked.Increment(ref _maxID);
-
-					_id = id;
+					_id = new IdentifierBuilder(_msID = MappingSchema.ConfigurationID)
+						.Add((ConfigurationString ?? ConnectionString ?? Connection.ConnectionString))
+						.CreateID();
 				}
 
 				return _id.Value;
@@ -674,8 +682,6 @@ namespace LinqToDB.Data
 
 		static DataConnection()
 		{
-			_configurationIDs = new ConcurrentDictionary<string,int>();
-
 			// lazy registration of embedded providers using detectors
 			AddProviderDetector(LinqToDB.DataProvider.Access    .AccessTools    .ProviderDetector);
 			AddProviderDetector(LinqToDB.DataProvider.DB2       .DB2Tools       .ProviderDetector);
@@ -901,22 +907,21 @@ namespace LinqToDB.Data
 
 			public static IDataProvider? GetDataProvider(IConnectionStringSettings css, string connectionString)
 			{
-				var configuration            = css.Name;
-				var providerName             = css.ProviderName;
+				var configuration = css.Name;
+				var providerName  = css.ProviderName;
 				var dataProvider  = _providerDetectors.Select(d => d(css, connectionString)).FirstOrDefault(dp => dp != null);
 
 				if (dataProvider == null)
 				{
 					IDataProvider? defaultDataProvider = null;
+
 					if (DefaultDataProvider != null)
 						_dataProviders.TryGetValue(DefaultDataProvider, out defaultDataProvider);
 
 					if (string.IsNullOrEmpty(providerName))
 						dataProvider = FindProvider(configuration, _dataProviders, defaultDataProvider);
-					else if (_dataProviders.TryGetValue(providerName!, out dataProvider)
-							|| _dataProviders.TryGetValue(configuration, out dataProvider))
-					{ }
-					else
+					else if (!_dataProviders.TryGetValue(providerName!, out dataProvider) &&
+					         !_dataProviders.TryGetValue(configuration, out dataProvider))
 					{
 						var providers = _dataProviders.Where(dp => dp.Value.ConnectionNamespace == providerName).ToList();
 
@@ -1148,6 +1153,13 @@ namespace LinqToDB.Data
 			}
 
 			_dataContextInterceptor?.OnClosed(new (this));
+		}
+
+		public FluentMappingBuilder GetFluentMappingBuilder()
+		{
+			if (MappingSchema.IsLockable)
+				MappingSchema = new(MappingSchema);
+			return MappingSchema.GetFluentMappingBuilder();
 		}
 
 		#endregion
@@ -1608,13 +1620,13 @@ namespace LinqToDB.Data
 						dataConnection.TransactionAsync!.Rollback();
 
 						if (dataConnection._closeTransaction)
-				{
+						{
 							dataConnection.TransactionAsync.Dispose();
 							dataConnection.TransactionAsync = null;
 
 							if (dataConnection._command != null)
 								dataConnection._command.Transaction = null;
-				}
+						}
 
 						return true;
 					});
@@ -1704,7 +1716,7 @@ namespace LinqToDB.Data
 		/// Gets list of query hints (writable collection), that will be used only for next query, executed through current connection.
 		/// </summary>
 		public  List<string>  NextQueryHints => _nextQueryHints ??= new List<string>();
-		
+
 		/// <summary>
 		/// Adds additional mapping schema to current connection.
 		/// </summary>
@@ -1713,7 +1725,7 @@ namespace LinqToDB.Data
 		/// <returns>Current connection object.</returns>
 		public DataConnection AddMappingSchema(MappingSchema mappingSchema)
 		{
-			MappingSchema = MappingSchema.CombineSchemas(MappingSchema, mappingSchema);
+			MappingSchema = new (mappingSchema, MappingSchema);
 			_id           = null;
 
 			return this;

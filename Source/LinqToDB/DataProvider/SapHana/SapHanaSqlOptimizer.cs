@@ -48,7 +48,7 @@ namespace LinqToDB.DataProvider.SapHana
 				{
 					case "%":
 						return new SqlFunction(be.SystemType, "MOD", be.Expr1, be.Expr2);
-					case "&": 
+					case "&":
 						return new SqlFunction(be.SystemType, "BITAND", be.Expr1, be.Expr2);
 					case "|":
 						return Sub(
@@ -60,9 +60,9 @@ namespace LinqToDB.DataProvider.SapHana
 							Add(be.Expr1, be.Expr2, be.SystemType),
 							Mul(new SqlFunction(be.SystemType, "BITAND", be.Expr1, be.Expr2), 2),
 							be.SystemType);
-					case "+": 
-						return be.SystemType == typeof(string) ? 
-							new SqlBinaryExpression(be.SystemType, be.Expr1, "||", be.Expr2, be.Precedence) : 
+					case "+":
+						return be.SystemType == typeof(string) ?
+							new SqlBinaryExpression(be.SystemType, be.Expr1, "||", be.Expr2, be.Precedence) :
 							expression;
 				}
 			}

@@ -5,9 +5,9 @@ namespace LinqToDB.Mapping
 	/// <summary>
 	/// Marks target member as dynamic columns store.
 	/// </summary>
-	/// <seealso cref="System.Attribute" />
+	/// <seealso cref="Attribute" />
 	[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
-	public class DynamicColumnsStoreAttribute : Attribute, IConfigurationProvider
+	public class DynamicColumnsStoreAttribute : MappingAttribute, IConfigurationProvider
 	{
 		/// <summary>
 		/// Gets or sets mapping schema configuration name, for which this attribute should be taken into account.
@@ -15,5 +15,10 @@ namespace LinqToDB.Mapping
 		/// Attributes with <c>null</c> or empty string <see cref="Configuration"/> value applied to all configurations (if no attribute found for current configuration).
 		/// </summary>
 		public string? Configuration { get; set; }
+
+		public override string GetObjectID()
+		{
+			return $"{Configuration}";
+		}
 	}
 }

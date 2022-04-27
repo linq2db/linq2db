@@ -9,7 +9,7 @@ namespace LinqToDB.Mapping
 	/// projection in your query explicitly, if you want to select data from such mapping.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, AllowMultiple = true, Inherited = true)]
-	public class TableAttribute : Attribute
+	public class TableAttribute : MappingAttribute
 	{
 		/// <summary>
 		/// Creates new table mapping attribute.
@@ -86,7 +86,7 @@ namespace LinqToDB.Mapping
 		/// Otherwise all supported members of scalar type will be used:
 		/// - public instance fields and properties;
 		/// - explicit interface implementation properties.
-		/// Also see <seealso cref="LinqToDB.Common.Configuration.IsStructIsScalarType"/> and <seealso cref="ScalarTypeAttribute"/>.
+		/// Also see <seealso cref="Common.Configuration.IsStructIsScalarType"/> and <seealso cref="ScalarTypeAttribute"/>.
 		/// Default value: <c>true</c>.
 		/// </summary>
 		public bool   IsColumnAttributeRequired { get; set; }
@@ -95,5 +95,10 @@ namespace LinqToDB.Mapping
 		/// This property is not used by linq2db and could be used for informational purposes.
 		/// </summary>
 		public bool   IsView                    { get; set; }
+
+		public override string GetObjectID()
+		{
+			return $".{Configuration}.{Name}.{Schema}.{Database}.{Server}.{(IsTemporary?'1':'0')}.{(int)TableOptions}.{(IsColumnAttributeRequired?'1':'0')}.{(IsView?'1':'0')}.";
+		}
 	}
 }

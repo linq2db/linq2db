@@ -47,7 +47,7 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		/// <param name="attribute">Mapping attribute to add to specified member.</param>
 		/// <returns>Returns current column or association mapping builder.</returns>
-		public PropertyMappingBuilder<TEntity, TProperty> HasAttribute(Attribute attribute)
+		public PropertyMappingBuilder<TEntity, TProperty> HasAttribute(MappingAttribute attribute)
 		{
 			_entity.HasAttribute(_memberInfo, attribute);
 			return this;
@@ -214,11 +214,10 @@ namespace LinqToDB.Mapping
 		{
 			var getter     = _memberGetter;
 			var memberName = null as string;
-			var me         = _memberGetter.Body.Unwrap() as MemberExpression;
 
-			if (me != null && me.Expression is MemberExpression)
+			if (_memberGetter.Body.Unwrap() is MemberExpression { Expression: MemberExpression } me)
 			{
-				for (MemberExpression? m = me; m != null; m = m.Expression as MemberExpression)
+				for (var m = me; m != null; m = m.Expression as MemberExpression)
 				{
 					memberName = m.Member.Name + (memberName != null ? "." + memberName : "");
 				}
