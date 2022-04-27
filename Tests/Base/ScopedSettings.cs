@@ -38,18 +38,18 @@ namespace Tests
 		}
 	}
 
-	public class WithoutComparisonNullCheck : IDisposable
+	public class CompareNullsAsValuesOption : IDisposable
 	{
-		public WithoutComparisonNullCheck()
+		private readonly bool _original = Configuration.Linq.CompareNullsAsValues;
+
+		public CompareNullsAsValuesOption(bool enable)
 		{
-			Configuration.Linq.CompareNullsAsValues = false;
-			Query.ClearCaches();
+			Configuration.Linq.CompareNullsAsValues = enable;
 		}
 
-		public void Dispose()
+		void IDisposable.Dispose()
 		{
-			Configuration.Linq.CompareNullsAsValues = true;
-			Query.ClearCaches();
+			Configuration.Linq.CompareNullsAsValues = _original;
 		}
 	}
 
