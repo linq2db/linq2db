@@ -257,7 +257,7 @@ namespace LinqToDB.Common
 			/// Enables Take/Skip parameterization.
 			/// Default value: <c>true</c>.
 			/// </summary>
-			public static bool ParametrizeTakeSkip = true;
+			public static bool ParameterizeTakeSkip = true;
 
 			/// <summary>
 			/// If <c>true</c>, auto support for fluent mapping is ON,
