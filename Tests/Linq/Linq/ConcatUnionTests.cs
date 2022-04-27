@@ -1385,7 +1385,6 @@ namespace Tests.Linq
 			query.Concat(query).ToArray();
 		}
 
-		[ActiveIssue(2619)]
 		[Test(Description = "set query with ORDER BY requires wrapping into subquery for some DBs")]
 		public void Issue2619_Query1([DataSources] string context)
 		{
@@ -1397,7 +1396,6 @@ namespace Tests.Linq
 				.ToList();
 		}
 
-		[ActiveIssue(2619)]
 		[Test(Description = "set query with ORDER BY requires wrapping into subquery for some DBs")]
 		public void Issue2619_Query2([DataSources] string context)
 		{
