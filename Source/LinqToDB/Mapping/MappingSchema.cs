@@ -1104,7 +1104,7 @@ namespace LinqToDB.Mapping
 		/// <param name="inherit">If <c>true</c> - include inherited attributes.</param>
 		/// <param name="exactForConfiguration">If <c>true</c> - only associated to configuration attributes will be returned.</param>
 		/// <returns>Attributes of specified type.</returns>
-		public T[] GetAttributes<T>(Type type, Func<T,string?> configGetter, bool inherit = true, 
+		public T[] GetAttributes<T>(Type type, Func<T,string?> configGetter, bool inherit = true,
 			bool exactForConfiguration = false)
 			where T : Attribute
 		{
