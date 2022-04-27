@@ -1,14 +1,13 @@
 ﻿using System;
+using System.Globalization;
 using System.Text;
 
 namespace LinqToDB.DataProvider.Informix
 {
-	using System.Globalization;
-	using Common;
 	using Mapping;
 	using SqlQuery;
 
-	public class InformixMappingSchema : MappingSchema
+	sealed class InformixMappingSchema : LockedMappingSchema
 	{
 		private const string DATE_FORMAT               = "TO_DATE('{0:yyyy-MM-dd}', '%Y-%m-%d')";
 		private const string DATETIME_FORMAT           = "TO_DATE('{0:yyyy-MM-dd HH:mm:ss}', '%Y-%m-%d %H:%M:%S')";
@@ -18,19 +17,15 @@ namespace LinqToDB.DataProvider.Informix
 
 		static readonly char[] _extraEscapes = { '\r', '\n' };
 
-		public InformixMappingSchema() : this(ProviderName.Informix)
-		{
-		}
-
-		protected InformixMappingSchema(string configuration) : base(configuration)
+		InformixMappingSchema() : base(ProviderName.Informix)
 		{
 			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 
 			SetValueToSqlConverter(typeof(bool), (sb,dt,v) => sb.Append('\'').Append((bool)v ? 't' : 'f').Append('\''));
 
 			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
-			SetDataType(typeof(byte), new SqlDataType(DataType.Int16, typeof(byte)));
-			SetDataType(typeof(byte?), new SqlDataType(DataType.Int16, typeof(byte)));
+			SetDataType(typeof(byte),   new SqlDataType(DataType.Int16,    typeof(byte)));
+			SetDataType(typeof(byte?),  new SqlDataType(DataType.Int16,    typeof(byte)));
 
 			SetValueToSqlConverter(typeof(string),   (sb,dt,v) => ConvertStringToSql  (sb, v.ToString()!));
 			SetValueToSqlConverter(typeof(char),     (sb,dt,v) => ConvertCharToSql    (sb, (char)v));
@@ -57,7 +52,8 @@ namespace LinqToDB.DataProvider.Informix
 				(absoluteTs.Ticks / 100) % 100000);
 		}
 
-		static readonly Action<StringBuilder, int> AppendConversionAction = AppendConversion;
+		static readonly Action<StringBuilder,int> _appendConversionAction = AppendConversion;
+
 		static void AppendConversion(StringBuilder stringBuilder, int value)
 		{
 			// chr works with values in 0..255 range, bigger/smaller values will be converted to byte
@@ -71,7 +67,7 @@ namespace LinqToDB.DataProvider.Informix
 
 		static void ConvertStringToSql(StringBuilder stringBuilder, string value)
 		{
-			DataTools.ConvertStringToSql(stringBuilder, "||", null, AppendConversionAction, value, _extraEscapes);
+			DataTools.ConvertStringToSql(stringBuilder, "||", null, _appendConversionAction, value, _extraEscapes);
 		}
 
 		static void ConvertCharToSql(StringBuilder stringBuilder, char value)
@@ -83,7 +79,7 @@ namespace LinqToDB.DataProvider.Informix
 					AppendConversion(stringBuilder, value);
 					break;
 				default:
-					DataTools.ConvertCharToSql(stringBuilder, "'", AppendConversionAction, value);
+					DataTools.ConvertCharToSql(stringBuilder, "'", _appendConversionAction, value);
 					break;
 			}
 		}
@@ -115,28 +111,16 @@ namespace LinqToDB.DataProvider.Informix
 
 		internal static readonly InformixMappingSchema Instance = new ();
 
-		public class IfxMappingSchema : MappingSchema
+		public sealed class IfxMappingSchema : LockedMappingSchema
 		{
-			public IfxMappingSchema()
-				: base(ProviderName.Informix, Instance)
-			{
-			}
-
-			public IfxMappingSchema(params MappingSchema[] schemas)
-				: base(ProviderName.Informix, Array<MappingSchema>.Append(schemas, Instance))
+			public IfxMappingSchema() : base(ProviderName.Informix, InformixProviderAdapter.GetInstance(ProviderName.Informix).MappingSchema, Instance)
 			{
 			}
 		}
 
-		public class DB2MappingSchema : MappingSchema
+		public sealed class DB2MappingSchema : LockedMappingSchema
 		{
-			public DB2MappingSchema()
-				: base(ProviderName.InformixDB2, Instance)
-			{
-			}
-
-			public DB2MappingSchema(params MappingSchema[] schemas)
-				: base(ProviderName.InformixDB2, Array<MappingSchema>.Append(schemas, Instance))
+			public DB2MappingSchema() : base(ProviderName.InformixDB2, InformixProviderAdapter.GetInstance(ProviderName.InformixDB2).MappingSchema, Instance)
 			{
 			}
 		}

@@ -10,7 +10,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\LinqToDB\LinqToDB.csproj" />
+		<ProjectReference Include="..\LinqToDB\LinqToDB.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

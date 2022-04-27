@@ -135,7 +135,7 @@ namespace LinqToDB.DataProvider.Access
 			base.SetParameterType(dataConnection, parameter, dataType);
 		}
 
-		private static readonly MappingSchema MappingSchemaInstance = new AccessMappingSchema.ODBCMappingSchema();
+		private static readonly MappingSchema MappingSchemaInstance = new AccessMappingSchema.OdbcMappingSchema();
 
 		#region BulkCopy
 

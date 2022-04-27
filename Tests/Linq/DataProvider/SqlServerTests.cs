@@ -1282,30 +1282,21 @@ namespace Tests.DataProvider
 		[Test]
 		public void CreateAllTypes([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = GetDataConnection(context))
-			{
-				var ms = new MappingSchema();
+			using var db = GetDataConnection(context);
+			var       ms = new MappingSchema();
 
-				db.AddMappingSchema(ms);
+			db.AddMappingSchema(ms);
 
-				ms.GetFluentMappingBuilder()
-					.Entity<AllTypes>()
-						.HasTableName("AllTypeCreateTest");
+			ms.GetFluentMappingBuilder()
+				.Entity<AllTypes>()
+					.HasTableName("AllTypeCreateTest");
 
-				try
-				{
-					db.DropTable<AllTypes>();
-				}
-				catch
-				{
-				}
+			db.DropTable<AllTypes>(tableOptions:TableOptions.DropIfExists);
 
-				var table = db.CreateTable<AllTypes>();
+			var table = db.CreateTable<AllTypes>();
+			var list  = table.ToList();
 
-				var list = table.ToList();
-
-				db.DropTable<AllTypes>();
-			}
+			db.DropTable<AllTypes>();
 		}
 
 		[Test]

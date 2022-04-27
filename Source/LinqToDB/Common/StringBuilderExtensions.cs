@@ -32,15 +32,18 @@ namespace LinqToDB.Common
 		/// not involving unsafe
 		/// </remarks>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void AppendByteArrayAsHexViaLookup32(this StringBuilder sb, byte[] bytes)
+		public static StringBuilder AppendByteArrayAsHexViaLookup32(this StringBuilder sb, byte[] bytes)
 		{
 			var lookup32 = _lookup32;
+
 			foreach (var b in bytes)
 			{
 				var val = lookup32[b];
 				sb.Append((char)val);
 				sb.Append((char) (val >> 16));
 			}
+
+			return sb;
 		}
 	}
 }

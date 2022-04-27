@@ -42,11 +42,11 @@ namespace Tests.UserTests
 		[Table("Person")]
 		class PurePerson
 		{
-			[Identity] public int                       PersonID;
-			[Column]   public string                    FirstName = null!;
-			[Column]   public string                    LastName = null!;
-			[Column]   public string?                   MiddleName;
-			[Column]   public string                    Gender = null!;
+			[Identity] public int     PersonID;
+			[Column]   public string  FirstName = null!;
+			[Column]   public string  LastName  = null!;
+			[Column]   public string? MiddleName;
+			[Column]   public string  Gender    = null!;
 		}
 
 		[Test]
@@ -75,22 +75,6 @@ namespace Tests.UserTests
 				Assert.That(p2.FirstName,              Is.EqualTo("123"));
 
 				db.Delete(p1);
-			}
-		}
-
-		//[ActiveIssue("What is this test???")]
-		[Test]
-		public void TestFail([IncludeDataSources(true, TestProvName.AllSQLite)]
-			string context)
-		{
-			try
-			{
-				TestEnumString(context, ms => { });
-				Assert.Fail("Value constraint expected");
-			}
-			catch (Exception)
-			{
-				//
 			}
 		}
 

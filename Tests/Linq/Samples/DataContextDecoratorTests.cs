@@ -33,7 +33,8 @@ namespace Tests.Samples
 				MappingSchema = mappingSchema;
 			}
 
-			public string              ContextID             => _context.ContextID;
+			public string              ContextName           => _context.ContextName;
+			public int                 ContextID             => _context.ContextID;
 			public Func<ISqlOptimizer> GetSqlOptimizer       => _context.GetSqlOptimizer;
 			public Type                DataReaderType        => _context.DataReaderType;
 			public Func<ISqlBuilder>   CreateSqlProvider     => _context.CreateSqlProvider;
@@ -94,6 +95,10 @@ namespace Tests.Samples
 			public void AddInterceptor(IInterceptor interceptor) => _context.AddInterceptor(interceptor);
 
 			public IUnwrapDataObjectInterceptor? UnwrapDataObjectInterceptor { get; }
+			public FluentMappingBuilder          GetFluentMappingBuilder()
+			{
+				return MappingSchema.GetFluentMappingBuilder();
+			}
 		}
 
 		public class Entity

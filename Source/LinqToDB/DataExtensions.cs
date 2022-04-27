@@ -1496,7 +1496,7 @@ namespace LinqToDB
 		///         LINQ operators - <code>context.FromSql&lt;Blogs&gt;("SELECT * FROM dbo.Blogs").OrderBy(b => b.Name);</code>
 		///     </para>
 		///     <para>
-		///         As with any API that accepts SQL it is important to parametrize any user input to protect against a SQL injection
+		///         As with any API that accepts SQL it is important to parameterize any user input to protect against a SQL injection
 		///         attack. You can include parameter place holders in the SQL query string and then supply parameter values as additional
 		///         arguments. Any parameter values you supply will automatically be converted to a DbParameter -
 		///         <code>context.FromSql&lt;Blogs&gt;("SELECT * FROM [dbo].[SearchBlogs]({0})", userSuppliedSearchTerm);</code>

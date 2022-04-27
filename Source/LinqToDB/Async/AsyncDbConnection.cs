@@ -52,7 +52,7 @@ namespace LinqToDB.Async
 		public virtual ConnectionState State => Connection.State;
 
 		public virtual DbCommand CreateCommand() => Connection.CreateCommand();
-		
+
 		public virtual void Open     ()                                    => Connection.Open();
 		public virtual Task OpenAsync(CancellationToken cancellationToken) => Connection.OpenAsync(cancellationToken);
 
