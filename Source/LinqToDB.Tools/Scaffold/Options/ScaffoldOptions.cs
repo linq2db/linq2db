@@ -73,8 +73,8 @@ namespace LinqToDB.Scaffold
 			options.DataModel.AssociationCollectionType                      = null;
 			options.DataModel.MapProcedureResultToEntity                     = true;
 			options.DataModel.TableFunctionReturnsTable                      = true;
-			options.DataModel.GenerateProceduresSchemaError                  = true;
-			options.DataModel.SkipProceduresWithSchemaErrors                 = false;
+			options.DataModel.GenerateProceduresSchemaError                  = false;
+			options.DataModel.SkipProceduresWithSchemaErrors                 = true;
 			options.DataModel.GenerateProcedureResultAsList                  = false;
 			options.DataModel.GenerateProcedureParameterDbType               = false;
 			options.DataModel.GenerateProcedureSync                          = true;

@@ -261,18 +261,20 @@ Possible reasons:
 					if (providerLocation == null || !File.Exists(providerLocation))
 					{
 						// we cannot add 90 Megabytes (compressed size) of native provider for single db just because we can
+						// note: we use IBM.Data.DB2.Core because Net.IBM.Data.Db2 and Net5.IBM.Data.Db2 require
+						// net6/net5 runtime and fail to load if .net core 3.1 runtime used to run tool (default runtime for tool)
 						Console.Error.WriteLine(@$"Cannot locate IBM.Data.DB2.Core.dll provider assembly.
 Due to huge size of it, we don't include IBM.Data.DB2 provider into installation.
 You need to install it manually and specify provider path using '--provider-location <path_to_assembly>' option.
 Provider could be downloaded from:
-- for Windows: https://www.nuget.org/packages/Net.IBM.Data.Db2
-- for Linux: https://www.nuget.org/packages/Net.IBM.Data.Db2-lnx
-- for macOS: https://www.nuget.org/packages/Net.IBM.Data.Db2-osx");
+- for Windows: https://www.nuget.org/packages/Net.IBM.Data.DB2.Core
+- for Linux: https://www.nuget.org/packages/Net.IBM.Data.DB2.Core-lnx
+- for macOS: https://www.nuget.org/packages/Net.IBM.Data.DB2.Core-osx");
 						return null;
 					}
 
 					var assembly = Assembly.LoadFrom(providerLocation);
-					DbProviderFactories.RegisterFactory("IBM.Data.DB2", assembly.GetType("IBM.Data.DB2.Core.DB2Factory")!);
+					DbProviderFactories.RegisterFactory("IBM.Data.DB2", assembly.GetType($"{assembly.GetName().Name}.DB2Factory")!);
 					break;
 				}
 				case ProviderName.Access:

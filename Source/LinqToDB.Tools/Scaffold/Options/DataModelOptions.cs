@@ -391,7 +391,7 @@ namespace LinqToDB.Scaffold
 		/// Enables generation of error if stored procedure or table function schema load failed.
 		/// <list type="bullet">
 		/// <item>Default: <c>false</c></item>
-		/// <item>In T4 compability mode: <c>true</c></item>
+		/// <item>In T4 compability mode: <c>false</c></item>
 		/// </list>
 		/// </summary>
 		public bool GenerateProceduresSchemaError { get; set; }
@@ -403,7 +403,7 @@ namespace LinqToDB.Scaffold
 		/// table function must have return result set.
 		/// <list type="bullet">
 		/// <item>Default: <c>false</c></item>
-		/// <item>In T4 compability mode: <c>false</c></item>
+		/// <item>In T4 compability mode: <c>true</c></item>
 		/// </list>
 		/// </summary>
 		public bool SkipProceduresWithSchemaErrors { get; set; }
