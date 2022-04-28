@@ -1390,10 +1390,15 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 
-			((from item in db.Person select item)
+			var query = ((from item in db.Person select item)
 				.OrderBy(i => i.ID))
-				.Union((from item in db.Person select item))
-				.ToList();
+				.Union((from item in db.Person select item));
+
+			var sql = query.ToString()!;
+
+			sql.Should().NotContain("ORDER BY");
+
+			query.ToList();
 		}
 
 		[Test(Description = "set query with ORDER BY requires wrapping into subquery for some DBs")]
@@ -1401,10 +1406,50 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 
-			(from item in db.Person select item)
+			var query = (from item in db.Person select item)
 				.Union((from item in db.Person select item)
+				.OrderBy(i => i.ID));
+
+			var sql = query.ToString()!;
+
+			sql.Should().NotContain("ORDER BY");
+
+			query.ToList();
+		}
+
+		[Test(Description = "set query with ORDER BY requires wrapping into subquery for some DBs")]
+		public void Issue2619_Query3([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = ((from item in db.Person select item)
 				.OrderBy(i => i.ID))
-				.ToList();
+				.UnionAll((from item in db.Person select item));
+
+			var sql = query.ToString()!;
+
+			sql.Should().Contain("ORDER BY", Exactly.Once());
+			sql.Substring(sql.IndexOf("ORDER BY")).Should().Contain("UNION", Exactly.Once());
+
+			query.ToList();
+		}
+
+		[Test(Description = "set query with ORDER BY requires wrapping into subquery for some DBs")]
+		public void Issue2619_Query4([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = (from item in db.Person select item)
+				.UnionAll((from item in db.Person select item)
+				.OrderBy(i => i.ID));
+
+			var sql = query.ToString()!;
+
+			sql.Should().Contain("ORDER BY", Exactly.Once());
+			sql.Should().Contain("UNION", Exactly.Once());
+			sql.Substring(sql.IndexOf("ORDER BY")).Should().NotContain("UNION");
+
+			query.ToList();
 		}
 
 		[Test(Description = "ArgumentOutOfRangeException : Index was out of range. Must be non-negative and less than the size of the collection.")]
