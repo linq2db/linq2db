@@ -5,6 +5,7 @@ using System;
 using System.Data.Common;
 using System.Linq;
 using System.Text;
+using LinqToDB.DataProvider;
 
 namespace Microsoft.EntityFrameworkCore.Infrastructure
 {
@@ -22,10 +23,12 @@ namespace Microsoft.EntityFrameworkCore.Infrastructure
     {
         // NB: When adding new options, make sure to update the copy constructor below.
 
-        private string?       _connectionString;
-        private DbConnection? _connection;
-        private int?          _commandTimeout;
-        private bool          _useRelationalNulls;
+        private string?        _connectionString;
+        private DbConnection?  _connection;
+        private string?        _providerName;
+        private IDataProvider? _dataProvider;
+        private int?           _commandTimeout;
+        private bool           _useRelationalNulls;
 
         /// <summary>
         ///     Creates a new set of options with everything set to default values.
@@ -112,6 +115,46 @@ namespace Microsoft.EntityFrameworkCore.Infrastructure
             clone._connection = connection;
 
             return clone;
+        }
+
+        /// <summary>
+        ///     Creates a new instance with all options the same as for this instance, but with the given option changed.
+        ///     It is unusual to call this method directly. Instead use <see cref="DbContextOptionsBuilder" />.
+        /// </summary>
+        /// <param name="providerName"> The option to change. </param>
+        /// <returns> A new instance with the option changed. </returns>
+        public virtual RelationalOptionsExtension WithProvider(string providerName)
+        {
+	        if (providerName == null)
+	        {
+		        throw new ArgumentNullException(nameof(providerName));
+	        }
+
+	        var clone = Clone();
+
+	        clone._providerName = providerName;
+
+	        return clone;
+        }
+
+        /// <summary>
+        ///     Creates a new instance with all options the same as for this instance, but with the given option changed.
+        ///     It is unusual to call this method directly. Instead use <see cref="DbContextOptionsBuilder" />.
+        /// </summary>
+        /// <param name="dataProvider"> The option to change. </param>
+        /// <returns> A new instance with the option changed. </returns>
+        public virtual RelationalOptionsExtension WithProvider(IDataProvider dataProvider)
+        {
+	        if (dataProvider == null)
+	        {
+		        throw new ArgumentNullException(nameof(dataProvider));
+	        }
+
+	        var clone = Clone();
+
+	        clone._dataProvider = dataProvider;
+
+	        return clone;
         }
 
         /// <summary>
@@ -211,6 +254,10 @@ namespace Microsoft.EntityFrameworkCore.Infrastructure
         public virtual void Validate(IDbContextOptions options)
         {
         }
+
+        public virtual string?        ProviderName => _providerName;
+        public virtual IDataProvider? DataProvider => _dataProvider;
+
 
         /// <summary>
         ///     Information/metadata for a <see cref="RelationalOptionsExtension" />.

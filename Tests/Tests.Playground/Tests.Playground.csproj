@@ -6,8 +6,11 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<Compile Include="..\Linq\Common\ConnectionBuilderTests.cs" Link="ConnectionBuilderTests.cs" />
+		<Compile Include="..\Linq\Data\DataConnectionTests.cs" Link="DataConnectionTests.cs" />
 		<Compile Include="..\Linq\TestsInitialization.cs" Link="TestsInitialization.cs" />
 		<Compile Include="..\Linq\Create\CreateData.cs" Link="CreateData.cs" />
+		<Compile Include="..\Linq\UserTests\Issue1498Tests.cs" Link="Issue1498Tests.cs" />
 	</ItemGroup>
 
 	<ItemGroup>

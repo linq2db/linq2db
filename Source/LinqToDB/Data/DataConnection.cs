@@ -10,6 +10,8 @@ using System.Text;
 using System.Threading;
 
 using JetBrains.Annotations;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace LinqToDB.Data
 {
@@ -114,7 +116,7 @@ namespace LinqToDB.Data
 		public DataConnection(
 			IDataProvider dataProvider,
 			string        connectionString)
-			: this(new LinqToDBConnectionOptionsBuilder().UseConnectionString(dataProvider, connectionString))
+			: this(new DbContextOptionsBuilder().UseConnectionString(dataProvider, connectionString))
 		{
 		}
 
@@ -235,6 +237,182 @@ namespace LinqToDB.Data
 
 			DbConnection?  localConnection  = null;
 			DbTransaction? localTransaction = null;
+			
+			switch (options.SetupType)
+			{
+				case ConnectionSetupType.ConfigurationString:
+				case ConnectionSetupType.DefaultConfiguration:
+					ConfigurationString = options.ConfigurationString ?? DefaultConfiguration;
+					if (ConfigurationString == null)
+						throw new LinqToDBException("Configuration string is not provided.");
+					var ci = GetConfigurationInfo(ConfigurationString);
+
+					DataProvider     = ci.DataProvider;
+					ConnectionString = ci.ConnectionString;
+					MappingSchema    = DataProvider.MappingSchema;
+					break;
+
+				case ConnectionSetupType.ConnectionString:
+					if (options.ProviderName == null && options.DataProvider == null) 
+						throw new LinqToDBException("DataProvider was not specified");
+
+					IDataProvider? dataProvider;
+					if (options.ProviderName != null)
+					{
+						if (!_dataProviders.TryGetValue(options.ProviderName, out dataProvider))
+							dataProvider = GetDataProvider(options.ProviderName, options.ConnectionString!);
+
+						if (dataProvider == null)
+							throw new LinqToDBException($"DataProvider '{options.ProviderName}' not found.");
+					}
+					else
+						dataProvider = options.DataProvider!;
+
+					DataProvider     = dataProvider;
+					ConnectionString = options.ConnectionString;
+					MappingSchema    = DataProvider.MappingSchema;
+					break;
+				
+				case ConnectionSetupType.ConnectionFactory:
+					//copy to tmp variable so that if the factory in options gets changed later we will still use the old one
+					//is this expected?
+					var originalConnectionFactory = options.ConnectionFactory!;
+					_connectionFactory = () =>
+					{
+						var connection = originalConnectionFactory();
+						
+						return connection;
+					};
+
+					DataProvider  = options.DataProvider!;
+					MappingSchema = DataProvider.MappingSchema;
+					break;
+				
+				case ConnectionSetupType.Connection:
+					{
+						localConnection    = options.DbConnection;
+						_disposeConnection = options.DisposeConnection;
+
+						DataProvider  = options.DataProvider!;
+						MappingSchema = DataProvider.MappingSchema;
+						break;
+					}
+
+				case ConnectionSetupType.Transaction:
+					{
+						localConnection        = options.DbTransaction!.Connection;
+						localTransaction       = options.DbTransaction;
+
+						_closeTransaction  = false;
+						_closeConnection   = false;
+						_disposeConnection = false;
+
+						DataProvider  = options.DataProvider!;
+						MappingSchema = DataProvider.MappingSchema;
+						break;
+					}
+
+				default:
+					throw new NotImplementedException($"SetupType: {options.SetupType}");
+			}
+
+			RetryPolicy = Configuration.RetryPolicy.Factory != null
+					? Configuration.RetryPolicy.Factory(this)
+					: null;
+
+			if (options.DataProvider != null)
+			{
+				DataProvider  = options.DataProvider;
+				MappingSchema = DataProvider.MappingSchema;
+			}
+
+			if (options.MappingSchema != null)
+			{
+				AddMappingSchema(options.MappingSchema);
+			}
+
+			if (options.OnTrace != null)
+			{
+				OnTraceConnection = options.OnTrace;
+			}
+
+			if (options.TraceLevel != null)
+			{
+				TraceSwitchConnection = new TraceSwitch("DataConnection", "DataConnection trace switch")
+				{
+					Level = options.TraceLevel.Value
+				};
+			}
+
+			if (options.WriteTrace != null)
+			{
+				WriteTraceLineConnection = options.WriteTrace;
+			}
+
+			if (options.Interceptors != null)
+			{
+				foreach (var interceptor in options.Interceptors)
+					AddInterceptor(interceptor);
+			}
+
+			if (localConnection != null)
+			{
+				_connection = localConnection is IAsyncDbConnection asyncDbConnection
+					? asyncDbConnection
+					: AsyncFactory.Create(localConnection);
+			}
+
+			if (localTransaction != null)
+			{
+				TransactionAsync = AsyncFactory.Create(localTransaction);
+			}
+
+			DataProvider.InitContext(this);
+		}
+
+		/// <summary>
+		/// Creates database connection object that uses a <see cref="LinqToDBConnectionOptions"/> to configure the connection.
+		/// </summary>
+		/// <param name="options">Options, setup ahead of time.</param>
+		public DataConnection(DbContextOptions options)
+		{
+			if (options == null)
+				throw new ArgumentNullException(nameof(options));
+
+			var extension = options.GetExtension<RelationalOptionsExtension>();
+			
+			/*
+			if (!options.IsValidConfigForConnectionType(this))
+				throw new LinqToDBException(
+					$"Improper options type used to create DataConnection {GetType()}, try creating a public constructor calling base and accepting type {nameof(LinqToDBConnectionOptions)}<{GetType().Name}>");
+					*/
+			
+			InitConfig();
+
+			DbConnection?  localConnection  = null;
+			DbTransaction? localTransaction = null;
+
+			if (extension.ConnectionString != null)
+			{
+				if (extension.ProviderName == null && extension.DataProvider == null) 
+					throw new LinqToDBException("DataProvider was not specified");
+
+				IDataProvider? dataProvider;
+				if (extension.ProviderName != null)
+				{
+					if (!_dataProviders.TryGetValue(extension.ProviderName, out dataProvider))
+						dataProvider = GetDataProvider(extension.ProviderName, extension.ConnectionString!);
+
+					if (dataProvider == null)
+						throw new LinqToDBException($"DataProvider '{extension.ProviderName}' not found.");
+				}
+				else
+					dataProvider = extension.DataProvider!;
+
+				DataProvider     = dataProvider;
+				ConnectionString = extension.ConnectionString;
+				MappingSchema    = DataProvider.MappingSchema;
+			}
 			
 			switch (options.SetupType)
 			{
