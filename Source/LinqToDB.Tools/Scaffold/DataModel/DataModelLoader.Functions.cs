@@ -105,8 +105,9 @@ namespace LinqToDB.Scaffold
 
 					// tuple model class
 					var @class = new ClassModel(
-						_namingServices.NormalizeIdentifier(_options.DataModel.FunctionTupleResultClassNameOptions,
-						func.Name.Name))
+						_namingServices.NormalizeIdentifier(
+							_options.DataModel.FunctionTupleResultClassNameOptions,
+							func.Name.Name))
 					{
 						IsPublic  = true,
 						IsPartial = true
@@ -259,8 +260,9 @@ namespace LinqToDB.Scaffold
 			{
 				var asyncResult = new AsyncProcedureResult(
 					new ClassModel(
-						_namingServices.NormalizeIdentifier(_options.DataModel.AsyncProcedureResultClassNameOptions,
-						func.Name.Name))
+						_namingServices.NormalizeIdentifier(
+							_options.DataModel.AsyncProcedureResultClassNameOptions,
+							func.Name.Name))
 					{
 						IsPublic  = true
 					}, new PropertyModel("Result")
@@ -425,8 +427,9 @@ namespace LinqToDB.Scaffold
 			}
 
 			var resultClass = new ClassModel(
-				_namingServices.NormalizeIdentifier(_options.DataModel.ProcedureResultClassNameOptions,
-				funcName.Name))
+				_namingServices.NormalizeIdentifier(
+					_options.DataModel.ProcedureResultClassNameOptions,
+					funcName.Name))
 			{
 				IsPublic  = true,
 				IsPartial = true

@@ -56,16 +56,15 @@
 				using var handle = new SafeWaitHandle(process.Handle, false);
 				waitHandle.SetSafeWaitHandle(handle);
 
-				if (!waitHandle.WaitOne(TimeSpan.FromSeconds(20)))
-				{
+				var timeouted = !waitHandle.WaitOne(TimeSpan.FromSeconds(20));
+
+				if (!process.HasExited)
+					process.Kill();
+
+				if (timeouted)
 					throw new Exception($"Timeout during scaffolding of {connectionStringName} database");
-				}
 			}
 
-			if (!process.HasExited)
-			{
-				process.Kill();
-			}
 		}
 	}
 #>
