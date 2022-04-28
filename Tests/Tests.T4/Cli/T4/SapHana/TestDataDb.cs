@@ -84,8 +84,8 @@ namespace Cli.T4.SapHana
 
 		public partial class GetParentByIdResult
 		{
-			[Column("ParentID", DataType = DataType.Int32, DbType = "INTEGER", SkipOnInsert = true, SkipOnUpdate = true)] public int? ParentID { get; set; }
-			[Column("Value1"  , DataType = DataType.Int32, DbType = "INTEGER", SkipOnInsert = true, SkipOnUpdate = true)] public int? Value1   { get; set; }
+			[Column("ParentID")] public int? ParentID { get; set; }
+			[Column("Value1"  )] public int? Value1   { get; set; }
 		}
 		#endregion
 		#endregion
@@ -387,12 +387,12 @@ namespace Cli.T4.SapHana
 
 		public partial class PatientSelectAllResult
 		{
-			[Column("PersonID"  , DataType = DataType.Int32   , DbType = "INTEGER"      , SkipOnInsert = true, SkipOnUpdate = true)] public int?    PersonID   { get; set; }
-			[Column("FirstName" , DataType = DataType.NVarChar, DbType = "NVARCHAR(50)" , SkipOnInsert = true, SkipOnUpdate = true)] public string? FirstName  { get; set; }
-			[Column("LastName"  , DataType = DataType.NVarChar, DbType = "NVARCHAR(50)" , SkipOnInsert = true, SkipOnUpdate = true)] public string? LastName   { get; set; }
-			[Column("MiddleName", DataType = DataType.NVarChar, DbType = "NVARCHAR(50)" , SkipOnInsert = true, SkipOnUpdate = true)] public string? MiddleName { get; set; }
-			[Column("Gender"    , DataType = DataType.VarChar , DbType = "VARCHAR(1)"   , SkipOnInsert = true, SkipOnUpdate = true)] public string? Gender     { get; set; }
-			[Column("Diagnosis" , DataType = DataType.NVarChar, DbType = "NVARCHAR(256)", SkipOnInsert = true, SkipOnUpdate = true)] public string? Diagnosis  { get; set; }
+			[Column("PersonID"  )] public int?    PersonID   { get; set; }
+			[Column("FirstName" )] public string? FirstName  { get; set; }
+			[Column("LastName"  )] public string? LastName   { get; set; }
+			[Column("MiddleName")] public string? MiddleName { get; set; }
+			[Column("Gender"    )] public string? Gender     { get; set; }
+			[Column("Diagnosis" )] public string? Diagnosis  { get; set; }
 		}
 		#endregion
 
@@ -415,12 +415,12 @@ namespace Cli.T4.SapHana
 
 		public partial class PatientSelectByNameResult
 		{
-			[Column("PersonID"  , DataType = DataType.Int32   , DbType = "INTEGER"      , SkipOnInsert = true, SkipOnUpdate = true)] public int?    PersonID   { get; set; }
-			[Column("FirstName" , DataType = DataType.NVarChar, DbType = "NVARCHAR(50)" , SkipOnInsert = true, SkipOnUpdate = true)] public string? FirstName  { get; set; }
-			[Column("LastName"  , DataType = DataType.NVarChar, DbType = "NVARCHAR(50)" , SkipOnInsert = true, SkipOnUpdate = true)] public string? LastName   { get; set; }
-			[Column("MiddleName", DataType = DataType.NVarChar, DbType = "NVARCHAR(50)" , SkipOnInsert = true, SkipOnUpdate = true)] public string? MiddleName { get; set; }
-			[Column("Gender"    , DataType = DataType.VarChar , DbType = "VARCHAR(1)"   , SkipOnInsert = true, SkipOnUpdate = true)] public string? Gender     { get; set; }
-			[Column("Diagnosis" , DataType = DataType.NVarChar, DbType = "NVARCHAR(256)", SkipOnInsert = true, SkipOnUpdate = true)] public string? Diagnosis  { get; set; }
+			[Column("PersonID"  )] public int?    PersonID   { get; set; }
+			[Column("FirstName" )] public string? FirstName  { get; set; }
+			[Column("LastName"  )] public string? LastName   { get; set; }
+			[Column("MiddleName")] public string? MiddleName { get; set; }
+			[Column("Gender"    )] public string? Gender     { get; set; }
+			[Column("Diagnosis" )] public string? Diagnosis  { get; set; }
 		}
 		#endregion
 
@@ -504,11 +504,11 @@ namespace Cli.T4.SapHana
 
 		public partial class PersonSelectAllResult
 		{
-			[Column("PersonID"  , DataType  = DataType.Int32   , DbType   = "INTEGER"        , SkipOnInsert = true          , SkipOnUpdate = true                     )] public int     PersonID   { get; set; }
-			[Column("FirstName" , CanBeNull = false            , DataType = DataType.NVarChar, DbType       = "NVARCHAR(50)", SkipOnInsert = true, SkipOnUpdate = true)] public string  FirstName  { get; set; } = null!;
-			[Column("LastName"  , CanBeNull = false            , DataType = DataType.NVarChar, DbType       = "NVARCHAR(50)", SkipOnInsert = true, SkipOnUpdate = true)] public string  LastName   { get; set; } = null!;
-			[Column("MiddleName", DataType  = DataType.NVarChar, DbType   = "NVARCHAR(50)"   , SkipOnInsert = true          , SkipOnUpdate = true                     )] public string? MiddleName { get; set; }
-			[Column("Gender"    , CanBeNull = false            , DataType = DataType.VarChar , DbType       = "VARCHAR(1)"  , SkipOnInsert = true, SkipOnUpdate = true)] public string  Gender     { get; set; } = null!;
+			[Column("PersonID"                     )] public int     PersonID   { get; set; }
+			[Column("FirstName" , CanBeNull = false)] public string  FirstName  { get; set; } = null!;
+			[Column("LastName"  , CanBeNull = false)] public string  LastName   { get; set; } = null!;
+			[Column("MiddleName"                   )] public string? MiddleName { get; set; }
+			[Column("Gender"    , CanBeNull = false)] public string  Gender     { get; set; } = null!;
 		}
 		#endregion
 
@@ -527,11 +527,11 @@ namespace Cli.T4.SapHana
 
 		public partial class PersonSelectByKeyResult
 		{
-			[Column("PersonID"  , DataType  = DataType.Int32   , DbType   = "INTEGER"        , SkipOnInsert = true          , SkipOnUpdate = true                     )] public int     PersonID   { get; set; }
-			[Column("FirstName" , CanBeNull = false            , DataType = DataType.NVarChar, DbType       = "NVARCHAR(50)", SkipOnInsert = true, SkipOnUpdate = true)] public string  FirstName  { get; set; } = null!;
-			[Column("LastName"  , CanBeNull = false            , DataType = DataType.NVarChar, DbType       = "NVARCHAR(50)", SkipOnInsert = true, SkipOnUpdate = true)] public string  LastName   { get; set; } = null!;
-			[Column("MiddleName", DataType  = DataType.NVarChar, DbType   = "NVARCHAR(50)"   , SkipOnInsert = true          , SkipOnUpdate = true                     )] public string? MiddleName { get; set; }
-			[Column("Gender"    , CanBeNull = false            , DataType = DataType.VarChar , DbType       = "VARCHAR(1)"  , SkipOnInsert = true, SkipOnUpdate = true)] public string  Gender     { get; set; } = null!;
+			[Column("PersonID"                     )] public int     PersonID   { get; set; }
+			[Column("FirstName" , CanBeNull = false)] public string  FirstName  { get; set; } = null!;
+			[Column("LastName"  , CanBeNull = false)] public string  LastName   { get; set; } = null!;
+			[Column("MiddleName"                   )] public string? MiddleName { get; set; }
+			[Column("Gender"    , CanBeNull = false)] public string  Gender     { get; set; } = null!;
 		}
 		#endregion
 
@@ -554,11 +554,11 @@ namespace Cli.T4.SapHana
 
 		public partial class PersonSelectByNameResult
 		{
-			[Column("PersonID"  , DataType  = DataType.Int32   , DbType   = "INTEGER"        , SkipOnInsert = true          , SkipOnUpdate = true                     )] public int     PersonID   { get; set; }
-			[Column("FirstName" , CanBeNull = false            , DataType = DataType.NVarChar, DbType       = "NVARCHAR(50)", SkipOnInsert = true, SkipOnUpdate = true)] public string  FirstName  { get; set; } = null!;
-			[Column("LastName"  , CanBeNull = false            , DataType = DataType.NVarChar, DbType       = "NVARCHAR(50)", SkipOnInsert = true, SkipOnUpdate = true)] public string  LastName   { get; set; } = null!;
-			[Column("MiddleName", DataType  = DataType.NVarChar, DbType   = "NVARCHAR(50)"   , SkipOnInsert = true          , SkipOnUpdate = true                     )] public string? MiddleName { get; set; }
-			[Column("Gender"    , CanBeNull = false            , DataType = DataType.VarChar , DbType       = "VARCHAR(1)"  , SkipOnInsert = true, SkipOnUpdate = true)] public string  Gender     { get; set; } = null!;
+			[Column("PersonID"                     )] public int     PersonID   { get; set; }
+			[Column("FirstName" , CanBeNull = false)] public string  FirstName  { get; set; } = null!;
+			[Column("LastName"  , CanBeNull = false)] public string  LastName   { get; set; } = null!;
+			[Column("MiddleName"                   )] public string? MiddleName { get; set; }
+			[Column("Gender"    , CanBeNull = false)] public string  Gender     { get; set; } = null!;
 		}
 		#endregion
 
@@ -581,11 +581,11 @@ namespace Cli.T4.SapHana
 
 		public partial class PersonSelectListByNameResult
 		{
-			[Column("PersonID"  , DataType  = DataType.Int32   , DbType   = "INTEGER"        , SkipOnInsert = true          , SkipOnUpdate = true                     )] public int     PersonID   { get; set; }
-			[Column("FirstName" , CanBeNull = false            , DataType = DataType.NVarChar, DbType       = "NVARCHAR(50)", SkipOnInsert = true, SkipOnUpdate = true)] public string  FirstName  { get; set; } = null!;
-			[Column("LastName"  , CanBeNull = false            , DataType = DataType.NVarChar, DbType       = "NVARCHAR(50)", SkipOnInsert = true, SkipOnUpdate = true)] public string  LastName   { get; set; } = null!;
-			[Column("MiddleName", DataType  = DataType.NVarChar, DbType   = "NVARCHAR(50)"   , SkipOnInsert = true          , SkipOnUpdate = true                     )] public string? MiddleName { get; set; }
-			[Column("Gender"    , CanBeNull = false            , DataType = DataType.VarChar , DbType       = "VARCHAR(1)"  , SkipOnInsert = true, SkipOnUpdate = true)] public string  Gender     { get; set; } = null!;
+			[Column("PersonID"                     )] public int     PersonID   { get; set; }
+			[Column("FirstName" , CanBeNull = false)] public string  FirstName  { get; set; } = null!;
+			[Column("LastName"  , CanBeNull = false)] public string  LastName   { get; set; } = null!;
+			[Column("MiddleName"                   )] public string? MiddleName { get; set; }
+			[Column("Gender"    , CanBeNull = false)] public string  Gender     { get; set; } = null!;
 		}
 		#endregion
 
@@ -627,7 +627,7 @@ namespace Cli.T4.SapHana
 
 		public partial class SelectImplicitColumnResult
 		{
-			[Column("123", DataType = DataType.Int32, DbType = "INTEGER", SkipOnInsert = true, SkipOnUpdate = true)] public int? _123 { get; set; }
+			[Column("123")] public int? _123 { get; set; }
 		}
 		#endregion
 

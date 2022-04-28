@@ -157,11 +157,11 @@ namespace Cli.T4.Sybase
 
 		public partial class PersonSelectAllResult
 		{
-			[Column("PersonID"  , DbType    = "Integer"     , SkipOnInsert = true          , SkipOnUpdate = true                     )] public int     PersonID   { get; set; }
-			[Column("FirstName" , CanBeNull = false         , DbType       = "varchar(150)", SkipOnInsert = true, SkipOnUpdate = true)] public string  FirstName  { get; set; } = null!;
-			[Column("LastName"  , CanBeNull = false         , DbType       = "varchar(150)", SkipOnInsert = true, SkipOnUpdate = true)] public string  LastName   { get; set; } = null!;
-			[Column("MiddleName", DbType    = "varchar(150)", SkipOnInsert = true          , SkipOnUpdate = true                     )] public string? MiddleName { get; set; }
-			[Column("Gender"    , CanBeNull = false         , DbType       = "char(1)"     , SkipOnInsert = true, SkipOnUpdate = true)] public string  Gender     { get; set; } = null!;
+			[Column("PersonID"                     )] public int     PersonID   { get; set; }
+			[Column("FirstName" , CanBeNull = false)] public string  FirstName  { get; set; } = null!;
+			[Column("LastName"  , CanBeNull = false)] public string  LastName   { get; set; } = null!;
+			[Column("MiddleName"                   )] public string? MiddleName { get; set; }
+			[Column("Gender"    , CanBeNull = false)] public string  Gender     { get; set; } = null!;
 		}
 		#endregion
 		#endregion

@@ -118,8 +118,8 @@ namespace Cli.T4.SqlServer
 
 		public partial class Issue1921Result
 		{
-			[Column("name" , CanBeNull = false                  , DataType = LinqToDB.DataType.NVarChar, DbType       = "nvarchar(128)", SkipOnInsert = true, SkipOnUpdate = true)] public string name  { get; set; } = null!;
-			[Column("objid", DataType  = LinqToDB.DataType.Int32, DbType   = "int"                     , SkipOnInsert = true           , SkipOnUpdate = true                     )] public int?   objid { get; set; }
+			[Column("name" , CanBeNull = false)] public string name  { get; set; } = null!;
+			[Column("objid"                   )] public int?   objid { get; set; }
 		}
 		#endregion
 		#endregion
@@ -430,12 +430,12 @@ namespace Cli.T4.SqlServer
 
 		public partial class PatientSelectAllResult
 		{
-			[Column("PersonID"  , DataType  = LinqToDB.DataType.Int32   , DbType   = "int"                     , SkipOnInsert = true           , SkipOnUpdate = true                     )] public int     PersonID   { get; set; }
-			[Column("FirstName" , CanBeNull = false                     , DataType = LinqToDB.DataType.NVarChar, DbType       = "nvarchar(50)" , SkipOnInsert = true, SkipOnUpdate = true)] public string  FirstName  { get; set; } = null!;
-			[Column("LastName"  , CanBeNull = false                     , DataType = LinqToDB.DataType.NVarChar, DbType       = "nvarchar(50)" , SkipOnInsert = true, SkipOnUpdate = true)] public string  LastName   { get; set; } = null!;
-			[Column("MiddleName", DataType  = LinqToDB.DataType.NVarChar, DbType   = "nvarchar(50)"            , SkipOnInsert = true           , SkipOnUpdate = true                     )] public string? MiddleName { get; set; }
-			[Column("Gender"    , DataType  = LinqToDB.DataType.Char    , DbType   = "char(1)"                 , SkipOnInsert = true           , SkipOnUpdate = true                     )] public char    Gender     { get; set; }
-			[Column("Diagnosis" , CanBeNull = false                     , DataType = LinqToDB.DataType.NVarChar, DbType       = "nvarchar(256)", SkipOnInsert = true, SkipOnUpdate = true)] public string  Diagnosis  { get; set; } = null!;
+			[Column("PersonID"                     )] public int     PersonID   { get; set; }
+			[Column("FirstName" , CanBeNull = false)] public string  FirstName  { get; set; } = null!;
+			[Column("LastName"  , CanBeNull = false)] public string  LastName   { get; set; } = null!;
+			[Column("MiddleName"                   )] public string? MiddleName { get; set; }
+			[Column("Gender"                       )] public char    Gender     { get; set; }
+			[Column("Diagnosis" , CanBeNull = false)] public string  Diagnosis  { get; set; } = null!;
 		}
 		#endregion
 
@@ -458,12 +458,12 @@ namespace Cli.T4.SqlServer
 
 		public partial class PatientSelectByNameResult
 		{
-			[Column("PersonID"  , DataType  = LinqToDB.DataType.Int32   , DbType   = "int"                     , SkipOnInsert = true           , SkipOnUpdate = true                     )] public int     PersonID   { get; set; }
-			[Column("FirstName" , CanBeNull = false                     , DataType = LinqToDB.DataType.NVarChar, DbType       = "nvarchar(50)" , SkipOnInsert = true, SkipOnUpdate = true)] public string  FirstName  { get; set; } = null!;
-			[Column("LastName"  , CanBeNull = false                     , DataType = LinqToDB.DataType.NVarChar, DbType       = "nvarchar(50)" , SkipOnInsert = true, SkipOnUpdate = true)] public string  LastName   { get; set; } = null!;
-			[Column("MiddleName", DataType  = LinqToDB.DataType.NVarChar, DbType   = "nvarchar(50)"            , SkipOnInsert = true           , SkipOnUpdate = true                     )] public string? MiddleName { get; set; }
-			[Column("Gender"    , DataType  = LinqToDB.DataType.Char    , DbType   = "char(1)"                 , SkipOnInsert = true           , SkipOnUpdate = true                     )] public char    Gender     { get; set; }
-			[Column("Diagnosis" , CanBeNull = false                     , DataType = LinqToDB.DataType.NVarChar, DbType       = "nvarchar(256)", SkipOnInsert = true, SkipOnUpdate = true)] public string  Diagnosis  { get; set; } = null!;
+			[Column("PersonID"                     )] public int     PersonID   { get; set; }
+			[Column("FirstName" , CanBeNull = false)] public string  FirstName  { get; set; } = null!;
+			[Column("LastName"  , CanBeNull = false)] public string  LastName   { get; set; } = null!;
+			[Column("MiddleName"                   )] public string? MiddleName { get; set; }
+			[Column("Gender"                       )] public char    Gender     { get; set; }
+			[Column("Diagnosis" , CanBeNull = false)] public string  Diagnosis  { get; set; } = null!;
 		}
 		#endregion
 
@@ -505,7 +505,7 @@ namespace Cli.T4.SqlServer
 
 		public partial class PersonInsertResult
 		{
-			[Column("PersonID", DataType = LinqToDB.DataType.Int32, DbType = "int", SkipOnInsert = true, SkipOnUpdate = true)] public int? PersonID { get; set; }
+			[Column("PersonID")] public int? PersonID { get; set; }
 		}
 		#endregion
 
@@ -548,11 +548,11 @@ namespace Cli.T4.SqlServer
 
 		public partial class PersonSelectAllResult
 		{
-			[Column("PersonID"  , DataType  = LinqToDB.DataType.Int32   , DbType   = "int"                     , SkipOnInsert = true          , SkipOnUpdate = true                     )] public int     PersonID   { get; set; }
-			[Column("FirstName" , CanBeNull = false                     , DataType = LinqToDB.DataType.NVarChar, DbType       = "nvarchar(50)", SkipOnInsert = true, SkipOnUpdate = true)] public string  FirstName  { get; set; } = null!;
-			[Column("LastName"  , CanBeNull = false                     , DataType = LinqToDB.DataType.NVarChar, DbType       = "nvarchar(50)", SkipOnInsert = true, SkipOnUpdate = true)] public string  LastName   { get; set; } = null!;
-			[Column("MiddleName", DataType  = LinqToDB.DataType.NVarChar, DbType   = "nvarchar(50)"            , SkipOnInsert = true          , SkipOnUpdate = true                     )] public string? MiddleName { get; set; }
-			[Column("Gender"    , DataType  = LinqToDB.DataType.Char    , DbType   = "char(1)"                 , SkipOnInsert = true          , SkipOnUpdate = true                     )] public char    Gender     { get; set; }
+			[Column("PersonID"                     )] public int     PersonID   { get; set; }
+			[Column("FirstName" , CanBeNull = false)] public string  FirstName  { get; set; } = null!;
+			[Column("LastName"  , CanBeNull = false)] public string  LastName   { get; set; } = null!;
+			[Column("MiddleName"                   )] public string? MiddleName { get; set; }
+			[Column("Gender"                       )] public char    Gender     { get; set; }
 		}
 		#endregion
 
@@ -568,11 +568,11 @@ namespace Cli.T4.SqlServer
 
 		public partial class PersonSelectByKeyResult
 		{
-			[Column("PersonID"  , DataType  = LinqToDB.DataType.Int32   , DbType   = "int"                     , SkipOnInsert = true          , SkipOnUpdate = true                     )] public int     PersonID   { get; set; }
-			[Column("FirstName" , CanBeNull = false                     , DataType = LinqToDB.DataType.NVarChar, DbType       = "nvarchar(50)", SkipOnInsert = true, SkipOnUpdate = true)] public string  FirstName  { get; set; } = null!;
-			[Column("LastName"  , CanBeNull = false                     , DataType = LinqToDB.DataType.NVarChar, DbType       = "nvarchar(50)", SkipOnInsert = true, SkipOnUpdate = true)] public string  LastName   { get; set; } = null!;
-			[Column("MiddleName", DataType  = LinqToDB.DataType.NVarChar, DbType   = "nvarchar(50)"            , SkipOnInsert = true          , SkipOnUpdate = true                     )] public string? MiddleName { get; set; }
-			[Column("Gender"    , DataType  = LinqToDB.DataType.Char    , DbType   = "char(1)"                 , SkipOnInsert = true          , SkipOnUpdate = true                     )] public char    Gender     { get; set; }
+			[Column("PersonID"                     )] public int     PersonID   { get; set; }
+			[Column("FirstName" , CanBeNull = false)] public string  FirstName  { get; set; } = null!;
+			[Column("LastName"  , CanBeNull = false)] public string  LastName   { get; set; } = null!;
+			[Column("MiddleName"                   )] public string? MiddleName { get; set; }
+			[Column("Gender"                       )] public char    Gender     { get; set; }
 		}
 		#endregion
 
@@ -588,8 +588,8 @@ namespace Cli.T4.SqlServer
 
 		public partial class PersonSelectByKeyLowercaseResult
 		{
-			[Column("PersonID" , DataType  = LinqToDB.DataType.Int32, DbType   = "int"                     , SkipOnInsert = true          , SkipOnUpdate = true                     )] public int    PersonID  { get; set; }
-			[Column("FirstName", CanBeNull = false                  , DataType = LinqToDB.DataType.NVarChar, DbType       = "nvarchar(50)", SkipOnInsert = true, SkipOnUpdate = true)] public string FirstName { get; set; } = null!;
+			[Column("PersonID"                    )] public int    PersonID  { get; set; }
+			[Column("FirstName", CanBeNull = false)] public string FirstName { get; set; } = null!;
 		}
 		#endregion
 
@@ -612,11 +612,11 @@ namespace Cli.T4.SqlServer
 
 		public partial class PersonSelectByNameResult
 		{
-			[Column("PersonID"  , DataType  = LinqToDB.DataType.Int32   , DbType   = "int"                     , SkipOnInsert = true          , SkipOnUpdate = true                     )] public int     PersonID   { get; set; }
-			[Column("FirstName" , CanBeNull = false                     , DataType = LinqToDB.DataType.NVarChar, DbType       = "nvarchar(50)", SkipOnInsert = true, SkipOnUpdate = true)] public string  FirstName  { get; set; } = null!;
-			[Column("LastName"  , CanBeNull = false                     , DataType = LinqToDB.DataType.NVarChar, DbType       = "nvarchar(50)", SkipOnInsert = true, SkipOnUpdate = true)] public string  LastName   { get; set; } = null!;
-			[Column("MiddleName", DataType  = LinqToDB.DataType.NVarChar, DbType   = "nvarchar(50)"            , SkipOnInsert = true          , SkipOnUpdate = true                     )] public string? MiddleName { get; set; }
-			[Column("Gender"    , DataType  = LinqToDB.DataType.Char    , DbType   = "char(1)"                 , SkipOnInsert = true          , SkipOnUpdate = true                     )] public char    Gender     { get; set; }
+			[Column("PersonID"                     )] public int     PersonID   { get; set; }
+			[Column("FirstName" , CanBeNull = false)] public string  FirstName  { get; set; } = null!;
+			[Column("LastName"  , CanBeNull = false)] public string  LastName   { get; set; } = null!;
+			[Column("MiddleName"                   )] public string? MiddleName { get; set; }
+			[Column("Gender"                       )] public char    Gender     { get; set; }
 		}
 		#endregion
 
@@ -639,11 +639,11 @@ namespace Cli.T4.SqlServer
 
 		public partial class PersonSelectListByNameResult
 		{
-			[Column("PersonID"  , DataType  = LinqToDB.DataType.Int32   , DbType   = "int"                     , SkipOnInsert = true          , SkipOnUpdate = true                     )] public int     PersonID   { get; set; }
-			[Column("FirstName" , CanBeNull = false                     , DataType = LinqToDB.DataType.NVarChar, DbType       = "nvarchar(50)", SkipOnInsert = true, SkipOnUpdate = true)] public string  FirstName  { get; set; } = null!;
-			[Column("LastName"  , CanBeNull = false                     , DataType = LinqToDB.DataType.NVarChar, DbType       = "nvarchar(50)", SkipOnInsert = true, SkipOnUpdate = true)] public string  LastName   { get; set; } = null!;
-			[Column("MiddleName", DataType  = LinqToDB.DataType.NVarChar, DbType   = "nvarchar(50)"            , SkipOnInsert = true          , SkipOnUpdate = true                     )] public string? MiddleName { get; set; }
-			[Column("Gender"    , DataType  = LinqToDB.DataType.Char    , DbType   = "char(1)"                 , SkipOnInsert = true          , SkipOnUpdate = true                     )] public char    Gender     { get; set; }
+			[Column("PersonID"                     )] public int     PersonID   { get; set; }
+			[Column("FirstName" , CanBeNull = false)] public string  FirstName  { get; set; } = null!;
+			[Column("LastName"  , CanBeNull = false)] public string  LastName   { get; set; } = null!;
+			[Column("MiddleName"                   )] public string? MiddleName { get; set; }
+			[Column("Gender"                       )] public char    Gender     { get; set; }
 		}
 		#endregion
 
@@ -701,11 +701,11 @@ namespace Cli.T4.SqlServer
 
 		public partial class QueryProcMultipleParametersResult
 		{
-			[Column("PersonID"  , DataType  = LinqToDB.DataType.Int32   , DbType   = "int"                     , SkipOnInsert = true          , SkipOnUpdate = true                     )] public int     PersonID   { get; set; }
-			[Column("FirstName" , CanBeNull = false                     , DataType = LinqToDB.DataType.NVarChar, DbType       = "nvarchar(50)", SkipOnInsert = true, SkipOnUpdate = true)] public string  FirstName  { get; set; } = null!;
-			[Column("LastName"  , CanBeNull = false                     , DataType = LinqToDB.DataType.NVarChar, DbType       = "nvarchar(50)", SkipOnInsert = true, SkipOnUpdate = true)] public string  LastName   { get; set; } = null!;
-			[Column("MiddleName", DataType  = LinqToDB.DataType.NVarChar, DbType   = "nvarchar(50)"            , SkipOnInsert = true          , SkipOnUpdate = true                     )] public string? MiddleName { get; set; }
-			[Column("Gender"    , DataType  = LinqToDB.DataType.Char    , DbType   = "char(1)"                 , SkipOnInsert = true          , SkipOnUpdate = true                     )] public char    Gender     { get; set; }
+			[Column("PersonID"                     )] public int     PersonID   { get; set; }
+			[Column("FirstName" , CanBeNull = false)] public string  FirstName  { get; set; } = null!;
+			[Column("LastName"  , CanBeNull = false)] public string  LastName   { get; set; } = null!;
+			[Column("MiddleName"                   )] public string? MiddleName { get; set; }
+			[Column("Gender"                       )] public char    Gender     { get; set; }
 		}
 		#endregion
 
@@ -731,11 +731,11 @@ namespace Cli.T4.SqlServer
 
 		public partial class QueryProcParametersResult
 		{
-			[Column("PersonID"  , DataType  = LinqToDB.DataType.Int32   , DbType   = "int"                     , SkipOnInsert = true          , SkipOnUpdate = true                     )] public int     PersonID   { get; set; }
-			[Column("FirstName" , CanBeNull = false                     , DataType = LinqToDB.DataType.NVarChar, DbType       = "nvarchar(50)", SkipOnInsert = true, SkipOnUpdate = true)] public string  FirstName  { get; set; } = null!;
-			[Column("LastName"  , CanBeNull = false                     , DataType = LinqToDB.DataType.NVarChar, DbType       = "nvarchar(50)", SkipOnInsert = true, SkipOnUpdate = true)] public string  LastName   { get; set; } = null!;
-			[Column("MiddleName", DataType  = LinqToDB.DataType.NVarChar, DbType   = "nvarchar(50)"            , SkipOnInsert = true          , SkipOnUpdate = true                     )] public string? MiddleName { get; set; }
-			[Column("Gender"    , DataType  = LinqToDB.DataType.Char    , DbType   = "char(1)"                 , SkipOnInsert = true          , SkipOnUpdate = true                     )] public char    Gender     { get; set; }
+			[Column("PersonID"                     )] public int     PersonID   { get; set; }
+			[Column("FirstName" , CanBeNull = false)] public string  FirstName  { get; set; } = null!;
+			[Column("LastName"  , CanBeNull = false)] public string  LastName   { get; set; } = null!;
+			[Column("MiddleName"                   )] public string? MiddleName { get; set; }
+			[Column("Gender"                       )] public char    Gender     { get; set; }
 		}
 		#endregion
 
@@ -766,8 +766,8 @@ namespace Cli.T4.SqlServer
 
 		public partial class TableTypeTestProcResult
 		{
-			[Column("Id"  , DataType = LinqToDB.DataType.Int32   , DbType = "int"         , SkipOnInsert = true, SkipOnUpdate = true)] public int?    Id   { get; set; }
-			[Column("Name", DataType = LinqToDB.DataType.NVarChar, DbType = "nvarchar(10)", SkipOnInsert = true, SkipOnUpdate = true)] public string? Name { get; set; }
+			[Column("Id"  )] public int?    Id   { get; set; }
+			[Column("Name")] public string? Name { get; set; }
 		}
 		#endregion
 
@@ -798,9 +798,9 @@ namespace Cli.T4.SqlServer
 
 		public partial class VariableResultsResult
 		{
-			[Column("Code"  , DataType  = LinqToDB.DataType.Int32, DbType   = "int"                    , SkipOnInsert = true        , SkipOnUpdate = true                     )] public int    Code   { get; set; }
-			[Column("Value1", CanBeNull = false                  , DataType = LinqToDB.DataType.VarChar, DbType       = "varchar(4)", SkipOnInsert = true, SkipOnUpdate = true)] public string Value1 { get; set; } = null!;
-			[Column("Value2", CanBeNull = false                  , DataType = LinqToDB.DataType.VarChar, DbType       = "varchar(4)", SkipOnInsert = true, SkipOnUpdate = true)] public string Value2 { get; set; } = null!;
+			[Column("Code"                     )] public int    Code   { get; set; }
+			[Column("Value1", CanBeNull = false)] public string Value1 { get; set; } = null!;
+			[Column("Value2", CanBeNull = false)] public string Value2 { get; set; } = null!;
 		}
 		#endregion
 		#endregion

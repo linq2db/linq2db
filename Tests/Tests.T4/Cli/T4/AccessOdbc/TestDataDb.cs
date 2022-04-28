@@ -332,12 +332,12 @@ namespace Cli.T4.Access.Odbc
 
 		public partial class PatientSelectByNameResult
 		{
-			[Column("PersonID"  , DataType = DataType.Int32  , DbType = "COUNTER"     , SkipOnInsert = true, SkipOnUpdate = true)] public int     PersonID   { get; set; }
-			[Column("FirstName" , DataType = DataType.VarChar, DbType = "VARCHAR(255)", SkipOnInsert = true, SkipOnUpdate = true)] public string? FirstName  { get; set; }
-			[Column("LastName"  , DataType = DataType.VarChar, DbType = "VARCHAR(255)", SkipOnInsert = true, SkipOnUpdate = true)] public string? LastName   { get; set; }
-			[Column("MiddleName", DataType = DataType.VarChar, DbType = "VARCHAR(255)", SkipOnInsert = true, SkipOnUpdate = true)] public string? MiddleName { get; set; }
-			[Column("Gender"    , DataType = DataType.VarChar, DbType = "VARCHAR(255)", SkipOnInsert = true, SkipOnUpdate = true)] public string? Gender     { get; set; }
-			[Column("Diagnosis" , DataType = DataType.VarChar, DbType = "VARCHAR(255)", SkipOnInsert = true, SkipOnUpdate = true)] public string? Diagnosis  { get; set; }
+			[Column("PersonID"  )] public int     PersonID   { get; set; }
+			[Column("FirstName" )] public string? FirstName  { get; set; }
+			[Column("LastName"  )] public string? LastName   { get; set; }
+			[Column("MiddleName")] public string? MiddleName { get; set; }
+			[Column("Gender"    )] public string? Gender     { get; set; }
+			[Column("Diagnosis" )] public string? Diagnosis  { get; set; }
 		}
 		#endregion
 
@@ -390,11 +390,11 @@ namespace Cli.T4.Access.Odbc
 
 		public partial class PersonSelectByKeyResult
 		{
-			[Column("PersonID"  , DataType = DataType.Int32  , DbType = "COUNTER"     , SkipOnInsert = true, SkipOnUpdate = true)] public int     PersonID   { get; set; }
-			[Column("FirstName" , DataType = DataType.VarChar, DbType = "VARCHAR(255)", SkipOnInsert = true, SkipOnUpdate = true)] public string? FirstName  { get; set; }
-			[Column("LastName"  , DataType = DataType.VarChar, DbType = "VARCHAR(255)", SkipOnInsert = true, SkipOnUpdate = true)] public string? LastName   { get; set; }
-			[Column("MiddleName", DataType = DataType.VarChar, DbType = "VARCHAR(255)", SkipOnInsert = true, SkipOnUpdate = true)] public string? MiddleName { get; set; }
-			[Column("Gender"    , DataType = DataType.VarChar, DbType = "VARCHAR(255)", SkipOnInsert = true, SkipOnUpdate = true)] public string? Gender     { get; set; }
+			[Column("PersonID"  )] public int     PersonID   { get; set; }
+			[Column("FirstName" )] public string? FirstName  { get; set; }
+			[Column("LastName"  )] public string? LastName   { get; set; }
+			[Column("MiddleName")] public string? MiddleName { get; set; }
+			[Column("Gender"    )] public string? Gender     { get; set; }
 		}
 		#endregion
 
@@ -417,11 +417,11 @@ namespace Cli.T4.Access.Odbc
 
 		public partial class PersonSelectByNameResult
 		{
-			[Column("PersonID"  , DataType = DataType.Int32  , DbType = "COUNTER"     , SkipOnInsert = true, SkipOnUpdate = true)] public int     PersonID   { get; set; }
-			[Column("FirstName" , DataType = DataType.VarChar, DbType = "VARCHAR(255)", SkipOnInsert = true, SkipOnUpdate = true)] public string? FirstName  { get; set; }
-			[Column("LastName"  , DataType = DataType.VarChar, DbType = "VARCHAR(255)", SkipOnInsert = true, SkipOnUpdate = true)] public string? LastName   { get; set; }
-			[Column("MiddleName", DataType = DataType.VarChar, DbType = "VARCHAR(255)", SkipOnInsert = true, SkipOnUpdate = true)] public string? MiddleName { get; set; }
-			[Column("Gender"    , DataType = DataType.VarChar, DbType = "VARCHAR(255)", SkipOnInsert = true, SkipOnUpdate = true)] public string? Gender     { get; set; }
+			[Column("PersonID"  )] public int     PersonID   { get; set; }
+			[Column("FirstName" )] public string? FirstName  { get; set; }
+			[Column("LastName"  )] public string? LastName   { get; set; }
+			[Column("MiddleName")] public string? MiddleName { get; set; }
+			[Column("Gender"    )] public string? Gender     { get; set; }
 		}
 		#endregion
 
@@ -444,11 +444,11 @@ namespace Cli.T4.Access.Odbc
 
 		public partial class PersonSelectListByNameResult
 		{
-			[Column("PersonID"  , DataType = DataType.Int32  , DbType = "COUNTER"     , SkipOnInsert = true, SkipOnUpdate = true)] public int     PersonID   { get; set; }
-			[Column("FirstName" , DataType = DataType.VarChar, DbType = "VARCHAR(255)", SkipOnInsert = true, SkipOnUpdate = true)] public string? FirstName  { get; set; }
-			[Column("LastName"  , DataType = DataType.VarChar, DbType = "VARCHAR(255)", SkipOnInsert = true, SkipOnUpdate = true)] public string? LastName   { get; set; }
-			[Column("MiddleName", DataType = DataType.VarChar, DbType = "VARCHAR(255)", SkipOnInsert = true, SkipOnUpdate = true)] public string? MiddleName { get; set; }
-			[Column("Gender"    , DataType = DataType.VarChar, DbType = "VARCHAR(255)", SkipOnInsert = true, SkipOnUpdate = true)] public string? Gender     { get; set; }
+			[Column("PersonID"  )] public int     PersonID   { get; set; }
+			[Column("FirstName" )] public string? FirstName  { get; set; }
+			[Column("LastName"  )] public string? LastName   { get; set; }
+			[Column("MiddleName")] public string? MiddleName { get; set; }
+			[Column("Gender"    )] public string? Gender     { get; set; }
 		}
 		#endregion
 

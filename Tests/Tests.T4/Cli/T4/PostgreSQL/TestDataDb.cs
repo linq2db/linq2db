@@ -112,8 +112,8 @@ namespace Cli.T4.PostgreSQL
 
 		public partial class GetParentByIdResult
 		{
-			[Column("ParentID", DataType = DataType.Int32, DbType = "integer", SkipOnInsert = true, SkipOnUpdate = true)] public int? ParentID { get; set; }
-			[Column("Value1"  , DataType = DataType.Int32, DbType = "integer", SkipOnInsert = true, SkipOnUpdate = true)] public int? Value1   { get; set; }
+			[Column("ParentID")] public int? ParentID { get; set; }
+			[Column("Value1"  )] public int? Value1   { get; set; }
 		}
 		#endregion
 
@@ -128,7 +128,7 @@ namespace Cli.T4.PostgreSQL
 
 		public partial class TestTableFunctionResult
 		{
-			[Column("param2", DataType = DataType.Int32, DbType = "integer", SkipOnInsert = true, SkipOnUpdate = true)] public int? param2 { get; set; }
+			[Column("param2")] public int? param2 { get; set; }
 		}
 		#endregion
 
@@ -143,8 +143,8 @@ namespace Cli.T4.PostgreSQL
 
 		public partial class TestTableFunction1Result
 		{
-			[Column("param3", DataType = DataType.Int32, DbType = "integer", SkipOnInsert = true, SkipOnUpdate = true)] public int? param3 { get; set; }
-			[Column("param4", DataType = DataType.Int32, DbType = "integer", SkipOnInsert = true, SkipOnUpdate = true)] public int? param4 { get; set; }
+			[Column("param3")] public int? param3 { get; set; }
+			[Column("param4")] public int? param4 { get; set; }
 		}
 		#endregion
 
@@ -159,53 +159,53 @@ namespace Cli.T4.PostgreSQL
 
 		public partial class TestTableFunctionSchemaResult
 		{
-			[Column("ID"                 , DataType = DataType.Int32         , DbType       = "integer"                        , SkipOnInsert = true, SkipOnUpdate = true)] public int?                        ID                  { get; set; }
-			[Column("bigintDataType"     , DataType = DataType.Int64         , DbType       = "bigint"                         , SkipOnInsert = true, SkipOnUpdate = true)] public long?                       bigintDataType      { get; set; }
-			[Column("numericDataType"    , DataType = DataType.Decimal       , DbType       = "numeric(0,0)"                   , SkipOnInsert = true, SkipOnUpdate = true)] public decimal?                    numericDataType     { get; set; }
-			[Column("smallintDataType"   , DataType = DataType.Int16         , DbType       = "smallint"                       , SkipOnInsert = true, SkipOnUpdate = true)] public short?                      smallintDataType    { get; set; }
-			[Column("intDataType"        , DataType = DataType.Int32         , DbType       = "integer"                        , SkipOnInsert = true, SkipOnUpdate = true)] public int?                        intDataType         { get; set; }
-			[Column("moneyDataType"      , DataType = DataType.Money         , DbType       = "money"                          , SkipOnInsert = true, SkipOnUpdate = true)] public decimal?                    moneyDataType       { get; set; }
-			[Column("doubleDataType"     , DataType = DataType.Double        , DbType       = "double precision"               , SkipOnInsert = true, SkipOnUpdate = true)] public double?                     doubleDataType      { get; set; }
-			[Column("realDataType"       , DataType = DataType.Single        , DbType       = "real"                           , SkipOnInsert = true, SkipOnUpdate = true)] public float?                      realDataType        { get; set; }
-			[Column("timestampDataType"  , DataType = DataType.DateTime2     , DbType       = "timestamp (0) without time zone", SkipOnInsert = true, SkipOnUpdate = true)] public DateTime?                   timestampDataType   { get; set; }
-			[Column("timestampTZDataType", DataType = DataType.DateTimeOffset, DbType       = "timestamp (0) with time zone"   , SkipOnInsert = true, SkipOnUpdate = true)] public DateTimeOffset?             timestampTZDataType { get; set; }
-			[Column("dateDataType"       , DataType = DataType.Date          , DbType       = "date"                           , SkipOnInsert = true, SkipOnUpdate = true)] public DateTime?                   dateDataType        { get; set; }
-			[Column("timeDataType"       , DataType = DataType.Time          , DbType       = "time without time zone"         , SkipOnInsert = true, SkipOnUpdate = true)] public TimeSpan?                   timeDataType        { get; set; }
-			[Column("timeTZDataType"     , DataType = DataType.Time          , DbType       = "time with time zone"            , SkipOnInsert = true, SkipOnUpdate = true)] public DateTimeOffset?             timeTZDataType      { get; set; }
-			[Column("intervalDataType"   , DataType = DataType.Interval      , DbType       = "interval"                       , SkipOnInsert = true, SkipOnUpdate = true)] public TimeSpan?                   intervalDataType    { get; set; }
-			[Column("intervalDataType2"  , DataType = DataType.Interval      , DbType       = "interval"                       , SkipOnInsert = true, SkipOnUpdate = true)] public TimeSpan?                   intervalDataType2   { get; set; }
-			[Column("charDataType"       , DataType = DataType.NChar         , DbType       = "character(1)"                   , SkipOnInsert = true, SkipOnUpdate = true)] public char?                       charDataType        { get; set; }
-			[Column("char20DataType"     , DataType = DataType.NChar         , DbType       = "character(20)"                  , SkipOnInsert = true, SkipOnUpdate = true)] public string?                     char20DataType      { get; set; }
-			[Column("varcharDataType"    , DataType = DataType.NVarChar      , DbType       = "character varying(20)"          , SkipOnInsert = true, SkipOnUpdate = true)] public string?                     varcharDataType     { get; set; }
-			[Column("textDataType"       , DataType = DataType.Text          , DbType       = "text"                           , SkipOnInsert = true, SkipOnUpdate = true)] public string?                     textDataType        { get; set; }
-			[Column("binaryDataType"     , DataType = DataType.Binary        , DbType       = "bytea"                          , SkipOnInsert = true, SkipOnUpdate = true)] public byte[]?                     binaryDataType      { get; set; }
-			[Column("uuidDataType"       , DataType = DataType.Guid          , DbType       = "uuid"                           , SkipOnInsert = true, SkipOnUpdate = true)] public Guid?                       uuidDataType        { get; set; }
-			[Column("bitDataType"        , DataType = DataType.BitArray      , DbType       = "bit(3)"                         , SkipOnInsert = true, SkipOnUpdate = true)] public BitArray?                   bitDataType         { get; set; }
-			[Column("booleanDataType"    , DataType = DataType.Boolean       , DbType       = "boolean"                        , SkipOnInsert = true, SkipOnUpdate = true)] public bool?                       booleanDataType     { get; set; }
-			[Column("colorDataType"      , DbType   = "public.color"         , SkipOnInsert = true                             , SkipOnUpdate = true                     )] public string?                     colorDataType       { get; set; }
-			[Column("pointDataType"      , DataType = DataType.Udt           , DbType       = "point"                          , SkipOnInsert = true, SkipOnUpdate = true)] public NpgsqlPoint?                pointDataType       { get; set; }
-			[Column("lsegDataType"       , DataType = DataType.Udt           , DbType       = "lseg"                           , SkipOnInsert = true, SkipOnUpdate = true)] public NpgsqlLSeg?                 lsegDataType        { get; set; }
-			[Column("boxDataType"        , DataType = DataType.Udt           , DbType       = "box"                            , SkipOnInsert = true, SkipOnUpdate = true)] public NpgsqlBox?                  boxDataType         { get; set; }
-			[Column("pathDataType"       , DataType = DataType.Udt           , DbType       = "path"                           , SkipOnInsert = true, SkipOnUpdate = true)] public NpgsqlPath?                 pathDataType        { get; set; }
-			[Column("polygonDataType"    , DataType = DataType.Udt           , DbType       = "polygon"                        , SkipOnInsert = true, SkipOnUpdate = true)] public NpgsqlPolygon?              polygonDataType     { get; set; }
-			[Column("circleDataType"     , DataType = DataType.Udt           , DbType       = "circle"                         , SkipOnInsert = true, SkipOnUpdate = true)] public NpgsqlCircle?               circleDataType      { get; set; }
-			[Column("lineDataType"       , DataType = DataType.Udt           , DbType       = "line"                           , SkipOnInsert = true, SkipOnUpdate = true)] public NpgsqlLine?                 lineDataType        { get; set; }
-			[Column("inetDataType"       , DataType = DataType.Udt           , DbType       = "inet"                           , SkipOnInsert = true, SkipOnUpdate = true)] public IPAddress?                  inetDataType        { get; set; }
-			[Column("cidrDataType"       , DataType = DataType.Udt           , DbType       = "cidr"                           , SkipOnInsert = true, SkipOnUpdate = true)] public ValueTuple<IPAddress, int>? cidrDataType        { get; set; }
-			[Column("macaddrDataType"    , DataType = DataType.Udt           , DbType       = "macaddr"                        , SkipOnInsert = true, SkipOnUpdate = true)] public PhysicalAddress?            macaddrDataType     { get; set; }
-			[Column("macaddr8DataType"   , DataType = DataType.Udt           , DbType       = "macaddr8"                       , SkipOnInsert = true, SkipOnUpdate = true)] public PhysicalAddress?            macaddr8DataType    { get; set; }
-			[Column("jsonDataType"       , DataType = DataType.Json          , DbType       = "json"                           , SkipOnInsert = true, SkipOnUpdate = true)] public string?                     jsonDataType        { get; set; }
-			[Column("jsonbDataType"      , DataType = DataType.BinaryJson    , DbType       = "jsonb"                          , SkipOnInsert = true, SkipOnUpdate = true)] public string?                     jsonbDataType       { get; set; }
-			[Column("xmlDataType"        , DataType = DataType.Xml           , DbType       = "xml"                            , SkipOnInsert = true, SkipOnUpdate = true)] public string?                     xmlDataType         { get; set; }
-			[Column("varBitDataType"     , DataType = DataType.BitArray      , DbType       = "bit varying(-1)"                , SkipOnInsert = true, SkipOnUpdate = true)] public BitArray?                   varBitDataType      { get; set; }
-			[Column("strarray"           , DbType   = "text[]"               , SkipOnInsert = true                             , SkipOnUpdate = true                     )] public string[]?                   strarray            { get; set; }
-			[Column("intarray"           , DbType   = "integer[]"            , SkipOnInsert = true                             , SkipOnUpdate = true                     )] public int[]?                      intarray            { get; set; }
-			[Column("int2darray"         , DbType   = "integer[]"            , SkipOnInsert = true                             , SkipOnUpdate = true                     )] public int[]?                      int2darray          { get; set; }
-			[Column("longarray"          , DbType   = "bigint[]"             , SkipOnInsert = true                             , SkipOnUpdate = true                     )] public long[]?                     longarray           { get; set; }
-			[Column("intervalarray"      , DbType   = "interval[]"           , SkipOnInsert = true                             , SkipOnUpdate = true                     )] public TimeSpan[]?                 intervalarray       { get; set; }
-			[Column("doublearray"        , DbType   = "double precision[]"   , SkipOnInsert = true                             , SkipOnUpdate = true                     )] public double[]?                   doublearray         { get; set; }
-			[Column("numericarray"       , DbType   = "numeric[]"            , SkipOnInsert = true                             , SkipOnUpdate = true                     )] public decimal[]?                  numericarray        { get; set; }
-			[Column("decimalarray"       , DbType   = "numeric[]"            , SkipOnInsert = true                             , SkipOnUpdate = true                     )] public decimal[]?                  decimalarray        { get; set; }
+			[Column("ID"                 )] public int?                        ID                  { get; set; }
+			[Column("bigintDataType"     )] public long?                       bigintDataType      { get; set; }
+			[Column("numericDataType"    )] public decimal?                    numericDataType     { get; set; }
+			[Column("smallintDataType"   )] public short?                      smallintDataType    { get; set; }
+			[Column("intDataType"        )] public int?                        intDataType         { get; set; }
+			[Column("moneyDataType"      )] public decimal?                    moneyDataType       { get; set; }
+			[Column("doubleDataType"     )] public double?                     doubleDataType      { get; set; }
+			[Column("realDataType"       )] public float?                      realDataType        { get; set; }
+			[Column("timestampDataType"  )] public DateTime?                   timestampDataType   { get; set; }
+			[Column("timestampTZDataType")] public DateTimeOffset?             timestampTZDataType { get; set; }
+			[Column("dateDataType"       )] public DateTime?                   dateDataType        { get; set; }
+			[Column("timeDataType"       )] public TimeSpan?                   timeDataType        { get; set; }
+			[Column("timeTZDataType"     )] public DateTimeOffset?             timeTZDataType      { get; set; }
+			[Column("intervalDataType"   )] public TimeSpan?                   intervalDataType    { get; set; }
+			[Column("intervalDataType2"  )] public TimeSpan?                   intervalDataType2   { get; set; }
+			[Column("charDataType"       )] public char?                       charDataType        { get; set; }
+			[Column("char20DataType"     )] public string?                     char20DataType      { get; set; }
+			[Column("varcharDataType"    )] public string?                     varcharDataType     { get; set; }
+			[Column("textDataType"       )] public string?                     textDataType        { get; set; }
+			[Column("binaryDataType"     )] public byte[]?                     binaryDataType      { get; set; }
+			[Column("uuidDataType"       )] public Guid?                       uuidDataType        { get; set; }
+			[Column("bitDataType"        )] public BitArray?                   bitDataType         { get; set; }
+			[Column("booleanDataType"    )] public bool?                       booleanDataType     { get; set; }
+			[Column("colorDataType"      )] public string?                     colorDataType       { get; set; }
+			[Column("pointDataType"      )] public NpgsqlPoint?                pointDataType       { get; set; }
+			[Column("lsegDataType"       )] public NpgsqlLSeg?                 lsegDataType        { get; set; }
+			[Column("boxDataType"        )] public NpgsqlBox?                  boxDataType         { get; set; }
+			[Column("pathDataType"       )] public NpgsqlPath?                 pathDataType        { get; set; }
+			[Column("polygonDataType"    )] public NpgsqlPolygon?              polygonDataType     { get; set; }
+			[Column("circleDataType"     )] public NpgsqlCircle?               circleDataType      { get; set; }
+			[Column("lineDataType"       )] public NpgsqlLine?                 lineDataType        { get; set; }
+			[Column("inetDataType"       )] public IPAddress?                  inetDataType        { get; set; }
+			[Column("cidrDataType"       )] public ValueTuple<IPAddress, int>? cidrDataType        { get; set; }
+			[Column("macaddrDataType"    )] public PhysicalAddress?            macaddrDataType     { get; set; }
+			[Column("macaddr8DataType"   )] public PhysicalAddress?            macaddr8DataType    { get; set; }
+			[Column("jsonDataType"       )] public string?                     jsonDataType        { get; set; }
+			[Column("jsonbDataType"      )] public string?                     jsonbDataType       { get; set; }
+			[Column("xmlDataType"        )] public string?                     xmlDataType         { get; set; }
+			[Column("varBitDataType"     )] public BitArray?                   varBitDataType      { get; set; }
+			[Column("strarray"           )] public string[]?                   strarray            { get; set; }
+			[Column("intarray"           )] public int[]?                      intarray            { get; set; }
+			[Column("int2darray"         )] public int[]?                      int2darray          { get; set; }
+			[Column("longarray"          )] public long[]?                     longarray           { get; set; }
+			[Column("intervalarray"      )] public TimeSpan[]?                 intervalarray       { get; set; }
+			[Column("doublearray"        )] public double[]?                   doublearray         { get; set; }
+			[Column("numericarray"       )] public decimal[]?                  numericarray        { get; set; }
+			[Column("decimalarray"       )] public decimal[]?                  decimalarray        { get; set; }
 		}
 		#endregion
 		#endregion

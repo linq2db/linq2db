@@ -185,8 +185,8 @@ namespace Cli.T4.Firebird
 
 		public partial class OutRefEnumTestResult
 		{
-			[Column("INPUTOUTPUTSTR", DataType = DataType.NVarChar, DbType = "varchar(50)", SkipOnInsert = true, SkipOnUpdate = true)] public string? INPUTOUTPUTSTR { get; set; }
-			[Column("OUTPUTSTR"     , DataType = DataType.NVarChar, DbType = "varchar(50)", SkipOnInsert = true, SkipOnUpdate = true)] public string? OUTPUTSTR      { get; set; }
+			[Column("INPUTOUTPUTSTR")] public string? INPUTOUTPUTSTR { get; set; }
+			[Column("OUTPUTSTR"     )] public string? OUTPUTSTR      { get; set; }
 		}
 		#endregion
 
@@ -217,10 +217,10 @@ namespace Cli.T4.Firebird
 
 		public partial class OutRefTestResult
 		{
-			[Column("INPUTOUTPUTID" , DataType = DataType.Int32   , DbType = "integer"    , SkipOnInsert = true, SkipOnUpdate = true)] public int?    INPUTOUTPUTID  { get; set; }
-			[Column("INPUTOUTPUTSTR", DataType = DataType.NVarChar, DbType = "varchar(50)", SkipOnInsert = true, SkipOnUpdate = true)] public string? INPUTOUTPUTSTR { get; set; }
-			[Column("OUTPUTID"      , DataType = DataType.Int32   , DbType = "integer"    , SkipOnInsert = true, SkipOnUpdate = true)] public int?    OUTPUTID       { get; set; }
-			[Column("OUTPUTSTR"     , DataType = DataType.NVarChar, DbType = "varchar(50)", SkipOnInsert = true, SkipOnUpdate = true)] public string? OUTPUTSTR      { get; set; }
+			[Column("INPUTOUTPUTID" )] public int?    INPUTOUTPUTID  { get; set; }
+			[Column("INPUTOUTPUTSTR")] public string? INPUTOUTPUTSTR { get; set; }
+			[Column("OUTPUTID"      )] public int?    OUTPUTID       { get; set; }
+			[Column("OUTPUTSTR"     )] public string? OUTPUTSTR      { get; set; }
 		}
 		#endregion
 
@@ -232,12 +232,12 @@ namespace Cli.T4.Firebird
 
 		public partial class PatientSelectAllResult
 		{
-			[Column("PERSONID"  , DataType = DataType.Int32   , DbType = "integer"     , SkipOnInsert = true, SkipOnUpdate = true)] public int?    PERSONID   { get; set; }
-			[Column("FIRSTNAME" , DataType = DataType.NVarChar, DbType = "varchar(50)" , SkipOnInsert = true, SkipOnUpdate = true)] public string? FIRSTNAME  { get; set; }
-			[Column("LASTNAME"  , DataType = DataType.NVarChar, DbType = "varchar(50)" , SkipOnInsert = true, SkipOnUpdate = true)] public string? LASTNAME   { get; set; }
-			[Column("MIDDLENAME", DataType = DataType.NVarChar, DbType = "varchar(50)" , SkipOnInsert = true, SkipOnUpdate = true)] public string? MIDDLENAME { get; set; }
-			[Column("GENDER"    , DataType = DataType.NChar   , DbType = "char(1)"     , SkipOnInsert = true, SkipOnUpdate = true)] public string? GENDER     { get; set; }
-			[Column("DIAGNOSIS" , DataType = DataType.NVarChar, DbType = "varchar(256)", SkipOnInsert = true, SkipOnUpdate = true)] public string? DIAGNOSIS  { get; set; }
+			[Column("PERSONID"  )] public int?    PERSONID   { get; set; }
+			[Column("FIRSTNAME" )] public string? FIRSTNAME  { get; set; }
+			[Column("LASTNAME"  )] public string? LASTNAME   { get; set; }
+			[Column("MIDDLENAME")] public string? MIDDLENAME { get; set; }
+			[Column("GENDER"    )] public string? GENDER     { get; set; }
+			[Column("DIAGNOSIS" )] public string? DIAGNOSIS  { get; set; }
 		}
 		#endregion
 
@@ -260,10 +260,10 @@ namespace Cli.T4.Firebird
 
 		public partial class PatientSelectByNameResult
 		{
-			[Column("PERSONID"  , DataType = DataType.Int32   , DbType = "integer"     , SkipOnInsert = true, SkipOnUpdate = true)] public int?    PERSONID   { get; set; }
-			[Column("MIDDLENAME", DataType = DataType.NVarChar, DbType = "varchar(50)" , SkipOnInsert = true, SkipOnUpdate = true)] public string? MIDDLENAME { get; set; }
-			[Column("GENDER"    , DataType = DataType.NChar   , DbType = "char(1)"     , SkipOnInsert = true, SkipOnUpdate = true)] public string? GENDER     { get; set; }
-			[Column("DIAGNOSIS" , DataType = DataType.NVarChar, DbType = "varchar(256)", SkipOnInsert = true, SkipOnUpdate = true)] public string? DIAGNOSIS  { get; set; }
+			[Column("PERSONID"  )] public int?    PERSONID   { get; set; }
+			[Column("MIDDLENAME")] public string? MIDDLENAME { get; set; }
+			[Column("GENDER"    )] public string? GENDER     { get; set; }
+			[Column("DIAGNOSIS" )] public string? DIAGNOSIS  { get; set; }
 		}
 		#endregion
 
@@ -308,7 +308,7 @@ namespace Cli.T4.Firebird
 
 		public partial class PersonInsertResult
 		{
-			[Column("PERSONID", DataType = DataType.Int32, DbType = "integer", SkipOnInsert = true, SkipOnUpdate = true)] public int? PERSONID { get; set; }
+			[Column("PERSONID")] public int? PERSONID { get; set; }
 		}
 		#endregion
 
@@ -339,7 +339,7 @@ namespace Cli.T4.Firebird
 
 		public partial class PersonInsertOutputParameterResult
 		{
-			[Column("PERSONID", DataType = DataType.Int32, DbType = "integer", SkipOnInsert = true, SkipOnUpdate = true)] public int? PERSONID { get; set; }
+			[Column("PERSONID")] public int? PERSONID { get; set; }
 		}
 		#endregion
 
@@ -351,11 +351,11 @@ namespace Cli.T4.Firebird
 
 		public partial class PersonSelectAllResult
 		{
-			[Column("PERSONID"  , DataType = DataType.Int32   , DbType = "integer"    , SkipOnInsert = true, SkipOnUpdate = true)] public int?    PERSONID   { get; set; }
-			[Column("FIRSTNAME" , DataType = DataType.NVarChar, DbType = "varchar(50)", SkipOnInsert = true, SkipOnUpdate = true)] public string? FIRSTNAME  { get; set; }
-			[Column("LASTNAME"  , DataType = DataType.NVarChar, DbType = "varchar(50)", SkipOnInsert = true, SkipOnUpdate = true)] public string? LASTNAME   { get; set; }
-			[Column("MIDDLENAME", DataType = DataType.NVarChar, DbType = "varchar(50)", SkipOnInsert = true, SkipOnUpdate = true)] public string? MIDDLENAME { get; set; }
-			[Column("GENDER"    , DataType = DataType.NChar   , DbType = "char(1)"    , SkipOnInsert = true, SkipOnUpdate = true)] public string? GENDER     { get; set; }
+			[Column("PERSONID"  )] public int?    PERSONID   { get; set; }
+			[Column("FIRSTNAME" )] public string? FIRSTNAME  { get; set; }
+			[Column("LASTNAME"  )] public string? LASTNAME   { get; set; }
+			[Column("MIDDLENAME")] public string? MIDDLENAME { get; set; }
+			[Column("GENDER"    )] public string? GENDER     { get; set; }
 		}
 		#endregion
 
@@ -374,11 +374,11 @@ namespace Cli.T4.Firebird
 
 		public partial class PersonSelectByKeyResult
 		{
-			[Column("PERSONID"  , DataType = DataType.Int32   , DbType = "integer"    , SkipOnInsert = true, SkipOnUpdate = true)] public int?    PERSONID   { get; set; }
-			[Column("FIRSTNAME" , DataType = DataType.NVarChar, DbType = "varchar(50)", SkipOnInsert = true, SkipOnUpdate = true)] public string? FIRSTNAME  { get; set; }
-			[Column("LASTNAME"  , DataType = DataType.NVarChar, DbType = "varchar(50)", SkipOnInsert = true, SkipOnUpdate = true)] public string? LASTNAME   { get; set; }
-			[Column("MIDDLENAME", DataType = DataType.NVarChar, DbType = "varchar(50)", SkipOnInsert = true, SkipOnUpdate = true)] public string? MIDDLENAME { get; set; }
-			[Column("GENDER"    , DataType = DataType.NChar   , DbType = "char(1)"    , SkipOnInsert = true, SkipOnUpdate = true)] public string? GENDER     { get; set; }
+			[Column("PERSONID"  )] public int?    PERSONID   { get; set; }
+			[Column("FIRSTNAME" )] public string? FIRSTNAME  { get; set; }
+			[Column("LASTNAME"  )] public string? LASTNAME   { get; set; }
+			[Column("MIDDLENAME")] public string? MIDDLENAME { get; set; }
+			[Column("GENDER"    )] public string? GENDER     { get; set; }
 		}
 		#endregion
 
@@ -401,11 +401,11 @@ namespace Cli.T4.Firebird
 
 		public partial class PersonSelectByNameResult
 		{
-			[Column("PERSONID"  , DataType = DataType.Int32   , DbType = "integer"    , SkipOnInsert = true, SkipOnUpdate = true)] public int?    PERSONID   { get; set; }
-			[Column("FIRSTNAME" , DataType = DataType.NVarChar, DbType = "varchar(50)", SkipOnInsert = true, SkipOnUpdate = true)] public string? FIRSTNAME  { get; set; }
-			[Column("LASTNAME"  , DataType = DataType.NVarChar, DbType = "varchar(50)", SkipOnInsert = true, SkipOnUpdate = true)] public string? LASTNAME   { get; set; }
-			[Column("MIDDLENAME", DataType = DataType.NVarChar, DbType = "varchar(50)", SkipOnInsert = true, SkipOnUpdate = true)] public string? MIDDLENAME { get; set; }
-			[Column("GENDER"    , DataType = DataType.NChar   , DbType = "char(1)"    , SkipOnInsert = true, SkipOnUpdate = true)] public string? GENDER     { get; set; }
+			[Column("PERSONID"  )] public int?    PERSONID   { get; set; }
+			[Column("FIRSTNAME" )] public string? FIRSTNAME  { get; set; }
+			[Column("LASTNAME"  )] public string? LASTNAME   { get; set; }
+			[Column("MIDDLENAME")] public string? MIDDLENAME { get; set; }
+			[Column("GENDER"    )] public string? GENDER     { get; set; }
 		}
 		#endregion
 
@@ -447,8 +447,8 @@ namespace Cli.T4.Firebird
 
 		public partial class ScalarDataReaderResult
 		{
-			[Column("INTFIELD"   , DataType = DataType.Int32   , DbType = "integer"    , SkipOnInsert = true, SkipOnUpdate = true)] public int?    INTFIELD    { get; set; }
-			[Column("STRINGFIELD", DataType = DataType.NVarChar, DbType = "varchar(50)", SkipOnInsert = true, SkipOnUpdate = true)] public string? STRINGFIELD { get; set; }
+			[Column("INTFIELD"   )] public int?    INTFIELD    { get; set; }
+			[Column("STRINGFIELD")] public string? STRINGFIELD { get; set; }
 		}
 		#endregion
 
@@ -460,8 +460,8 @@ namespace Cli.T4.Firebird
 
 		public partial class ScalarOutputParameterResult
 		{
-			[Column("OUTPUTINT"   , DataType = DataType.Int32   , DbType = "integer"    , SkipOnInsert = true, SkipOnUpdate = true)] public int?    OUTPUTINT    { get; set; }
-			[Column("OUTPUTSTRING", DataType = DataType.NVarChar, DbType = "varchar(50)", SkipOnInsert = true, SkipOnUpdate = true)] public string? OUTPUTSTRING { get; set; }
+			[Column("OUTPUTINT"   )] public int?    OUTPUTINT    { get; set; }
+			[Column("OUTPUTSTRING")] public string? OUTPUTSTRING { get; set; }
 		}
 		#endregion
 
@@ -473,7 +473,7 @@ namespace Cli.T4.Firebird
 
 		public partial class ScalarReturnParameterResult
 		{
-			[Column("RETURN_VALUE", DataType = DataType.Int32, DbType = "integer", SkipOnInsert = true, SkipOnUpdate = true)] public int? RETURNVALUE { get; set; }
+			[Column("RETURN_VALUE")] public int? RETURNVALUE { get; set; }
 		}
 		#endregion
 
@@ -508,11 +508,11 @@ namespace Cli.T4.Firebird
 
 		public partial class TestV4TypesResult
 		{
-			[Column("COL_TSTZ"      , DataType = DataType.DateTimeOffset, DbType = "timestamp with time zone", SkipOnInsert = true, SkipOnUpdate = true                     )] public FbZonedDateTime? COLTSTZ       { get; set; }
-			[Column("COL_TTZ"       , DataType = DataType.TimeTZ        , DbType = "time with time zone"     , SkipOnInsert = true, SkipOnUpdate = true                     )] public FbZonedTime?     COLTTZ        { get; set; }
-			[Column("COL_DECFLOAT16", DataType = DataType.DecFloat      , DbType = "decfloat"                , Precision    = 16  , SkipOnInsert = true, SkipOnUpdate = true)] public FbDecFloat?      COLDECFLOAT16 { get; set; }
-			[Column("COL_DECFLOAT34", DataType = DataType.DecFloat      , DbType = "decfloat"                , SkipOnInsert = true, SkipOnUpdate = true                     )] public FbDecFloat?      COLDECFLOAT34 { get; set; }
-			[Column("COL_INT_128"   , DataType = DataType.Int128        , DbType = "int128"                  , SkipOnInsert = true, SkipOnUpdate = true                     )] public BigInteger?      COLINT128     { get; set; }
+			[Column("COL_TSTZ"      )] public FbZonedDateTime? COLTSTZ       { get; set; }
+			[Column("COL_TTZ"       )] public FbZonedTime?     COLTTZ        { get; set; }
+			[Column("COL_DECFLOAT16")] public FbDecFloat?      COLDECFLOAT16 { get; set; }
+			[Column("COL_DECFLOAT34")] public FbDecFloat?      COLDECFLOAT34 { get; set; }
+			[Column("COL_INT_128"   )] public BigInteger?      COLINT128     { get; set; }
 		}
 		#endregion
 		#endregion

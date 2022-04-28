@@ -442,12 +442,10 @@ namespace LinqToDB.Scaffold
 
 				var metadata = new ColumnMetadata()
 				{
-					Name         = col.Name ?? string.Empty,
-					DbType       = col.Type,
-					DataType     = typeMapping.DataType,
-					CanBeNull    = col.Nullable,
-					SkipOnInsert = true,
-					SkipOnUpdate = true
+					Name      = col.Name ?? string.Empty,
+					DbType    = _options.DataModel.GenerateDbType   ? col.Type             : null,
+					DataType  = _options.DataModel.GenerateDataType ? typeMapping.DataType : null,
+					CanBeNull = col.Nullable
 				};
 
 				var property  = new PropertyModel(

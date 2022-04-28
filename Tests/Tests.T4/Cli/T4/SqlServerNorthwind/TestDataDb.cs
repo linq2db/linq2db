@@ -176,8 +176,8 @@ namespace Cli.T4.SqlServerNorthwind
 
 		public partial class CustOrderHistResult
 		{
-			[Column("ProductName", CanBeNull = false         , DataType = DataType.NVarChar, DbType       = "nvarchar(40)", SkipOnInsert = true, SkipOnUpdate = true)] public string ProductName { get; set; } = null!;
-			[Column("Total"      , DataType  = DataType.Int32, DbType   = "int"            , SkipOnInsert = true          , SkipOnUpdate = true                     )] public int?   Total       { get; set; }
+			[Column("ProductName", CanBeNull = false)] public string ProductName { get; set; } = null!;
+			[Column("Total"                         )] public int?   Total       { get; set; }
 		}
 		#endregion
 
@@ -193,11 +193,11 @@ namespace Cli.T4.SqlServerNorthwind
 
 		public partial class CustOrdersDetailResult
 		{
-			[Column("ProductName"  , CanBeNull = false         , DataType = DataType.NVarChar, DbType       = "nvarchar(40)", SkipOnInsert = true, SkipOnUpdate = true)] public string   ProductName   { get; set; } = null!;
-			[Column("UnitPrice"    , DataType  = DataType.Money, DbType   = "money"          , SkipOnInsert = true          , SkipOnUpdate = true                     )] public decimal  UnitPrice     { get; set; }
-			[Column("Quantity"     , DataType  = DataType.Int16, DbType   = "smallint"       , SkipOnInsert = true          , SkipOnUpdate = true                     )] public short    Quantity      { get; set; }
-			[Column("Discount"     , DataType  = DataType.Int32, DbType   = "int"            , SkipOnInsert = true          , SkipOnUpdate = true                     )] public int?     Discount      { get; set; }
-			[Column("ExtendedPrice", DataType  = DataType.Money, DbType   = "money"          , SkipOnInsert = true          , SkipOnUpdate = true                     )] public decimal? ExtendedPrice { get; set; }
+			[Column("ProductName"  , CanBeNull = false)] public string   ProductName   { get; set; } = null!;
+			[Column("UnitPrice"                       )] public decimal  UnitPrice     { get; set; }
+			[Column("Quantity"                        )] public short    Quantity      { get; set; }
+			[Column("Discount"                        )] public int?     Discount      { get; set; }
+			[Column("ExtendedPrice"                   )] public decimal? ExtendedPrice { get; set; }
 		}
 		#endregion
 
@@ -216,10 +216,10 @@ namespace Cli.T4.SqlServerNorthwind
 
 		public partial class CustOrdersOrdersResult
 		{
-			[Column("OrderID"     , DataType = DataType.Int32   , DbType = "int"     , SkipOnInsert = true, SkipOnUpdate = true)] public int       OrderID      { get; set; }
-			[Column("OrderDate"   , DataType = DataType.DateTime, DbType = "datetime", SkipOnInsert = true, SkipOnUpdate = true)] public DateTime? OrderDate    { get; set; }
-			[Column("RequiredDate", DataType = DataType.DateTime, DbType = "datetime", SkipOnInsert = true, SkipOnUpdate = true)] public DateTime? RequiredDate { get; set; }
-			[Column("ShippedDate" , DataType = DataType.DateTime, DbType = "datetime", SkipOnInsert = true, SkipOnUpdate = true)] public DateTime? ShippedDate  { get; set; }
+			[Column("OrderID"     )] public int       OrderID      { get; set; }
+			[Column("OrderDate"   )] public DateTime? OrderDate    { get; set; }
+			[Column("RequiredDate")] public DateTime? RequiredDate { get; set; }
+			[Column("ShippedDate" )] public DateTime? ShippedDate  { get; set; }
 		}
 		#endregion
 
@@ -236,12 +236,12 @@ namespace Cli.T4.SqlServerNorthwind
 
 		public partial class EmployeeSalesByCountryResult
 		{
-			[Column("Country"    , DataType  = DataType.NVarChar, DbType   = "nvarchar(15)"   , SkipOnInsert = true          , SkipOnUpdate = true                     )] public string?   Country     { get; set; }
-			[Column("LastName"   , CanBeNull = false            , DataType = DataType.NVarChar, DbType       = "nvarchar(20)", SkipOnInsert = true, SkipOnUpdate = true)] public string    LastName    { get; set; } = null!;
-			[Column("FirstName"  , CanBeNull = false            , DataType = DataType.NVarChar, DbType       = "nvarchar(10)", SkipOnInsert = true, SkipOnUpdate = true)] public string    FirstName   { get; set; } = null!;
-			[Column("ShippedDate", DataType  = DataType.DateTime, DbType   = "datetime"       , SkipOnInsert = true          , SkipOnUpdate = true                     )] public DateTime? ShippedDate { get; set; }
-			[Column("OrderID"    , DataType  = DataType.Int32   , DbType   = "int"            , SkipOnInsert = true          , SkipOnUpdate = true                     )] public int       OrderID     { get; set; }
-			[Column("SaleAmount" , DataType  = DataType.Money   , DbType   = "money"          , SkipOnInsert = true          , SkipOnUpdate = true                     )] public decimal?  SaleAmount  { get; set; }
+			[Column("Country"                       )] public string?   Country     { get; set; }
+			[Column("LastName"   , CanBeNull = false)] public string    LastName    { get; set; } = null!;
+			[Column("FirstName"  , CanBeNull = false)] public string    FirstName   { get; set; } = null!;
+			[Column("ShippedDate"                   )] public DateTime? ShippedDate { get; set; }
+			[Column("OrderID"                       )] public int       OrderID     { get; set; }
+			[Column("SaleAmount"                    )] public decimal?  SaleAmount  { get; set; }
 		}
 		#endregion
 
@@ -258,10 +258,10 @@ namespace Cli.T4.SqlServerNorthwind
 
 		public partial class SalesByYearResult
 		{
-			[Column("ShippedDate", DataType = DataType.DateTime, DbType = "datetime"    , SkipOnInsert = true, SkipOnUpdate = true)] public DateTime? ShippedDate { get; set; }
-			[Column("OrderID"    , DataType = DataType.Int32   , DbType = "int"         , SkipOnInsert = true, SkipOnUpdate = true)] public int       OrderID     { get; set; }
-			[Column("Subtotal"   , DataType = DataType.Money   , DbType = "money"       , SkipOnInsert = true, SkipOnUpdate = true)] public decimal?  Subtotal    { get; set; }
-			[Column("Year"       , DataType = DataType.NVarChar, DbType = "nvarchar(30)", SkipOnInsert = true, SkipOnUpdate = true)] public string?   Year        { get; set; }
+			[Column("ShippedDate")] public DateTime? ShippedDate { get; set; }
+			[Column("OrderID"    )] public int       OrderID     { get; set; }
+			[Column("Subtotal"   )] public decimal?  Subtotal    { get; set; }
+			[Column("Year"       )] public string?   Year        { get; set; }
 		}
 		#endregion
 
@@ -284,8 +284,8 @@ namespace Cli.T4.SqlServerNorthwind
 
 		public partial class SalesByCategoryResult
 		{
-			[Column("ProductName"  , CanBeNull = false           , DataType = DataType.NVarChar, DbType       = "nvarchar(40)", SkipOnInsert = true, SkipOnUpdate = true)] public string   ProductName   { get; set; } = null!;
-			[Column("TotalPurchase", DataType  = DataType.Decimal, DbType   = "decimal(38, 2)" , SkipOnInsert = true          , SkipOnUpdate = true                     )] public decimal? TotalPurchase { get; set; }
+			[Column("ProductName"  , CanBeNull = false)] public string   ProductName   { get; set; } = null!;
+			[Column("TotalPurchase"                   )] public decimal? TotalPurchase { get; set; }
 		}
 		#endregion
 
@@ -297,8 +297,8 @@ namespace Cli.T4.SqlServerNorthwind
 
 		public partial class TenMostExpensiveProductsResult
 		{
-			[Column("TenMostExpensiveProducts", CanBeNull = false         , DataType = DataType.NVarChar, DbType       = "nvarchar(40)", SkipOnInsert = true, SkipOnUpdate = true)] public string   TenMostExpensiveProducts { get; set; } = null!;
-			[Column("UnitPrice"               , DataType  = DataType.Money, DbType   = "money"          , SkipOnInsert = true          , SkipOnUpdate = true                     )] public decimal? UnitPrice                { get; set; }
+			[Column("TenMostExpensiveProducts", CanBeNull = false)] public string   TenMostExpensiveProducts { get; set; } = null!;
+			[Column("UnitPrice"                                  )] public decimal? UnitPrice                { get; set; }
 		}
 		#endregion
 		#endregion

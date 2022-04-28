@@ -291,56 +291,56 @@ namespace Cli.T4.MySql
 
 		public partial class Issue2313ParametersResult
 		{
-			[Column("`VarChar255`"        , DataType = DataType.VarChar  , DbType       = "VARCHAR(255)"      , SkipOnInsert = true, SkipOnUpdate = true)] public string?   VarChar255         { get; set; }
-			[Column("`VarChar1`"          , DataType = DataType.VarChar  , DbType       = "VARCHAR(1)"        , SkipOnInsert = true, SkipOnUpdate = true)] public char?     VarChar1           { get; set; }
-			[Column("`Char255`"           , DataType = DataType.Char     , DbType       = "CHAR(255)"         , SkipOnInsert = true, SkipOnUpdate = true)] public string?   Char255            { get; set; }
-			[Column("`Char1`"             , DataType = DataType.Char     , DbType       = "CHAR(1)"           , SkipOnInsert = true, SkipOnUpdate = true)] public char?     Char1              { get; set; }
-			[Column("`VarBinary255`"      , DataType = DataType.VarBinary, DbType       = "VARBINARY(255)"    , SkipOnInsert = true, SkipOnUpdate = true)] public byte[]?   VarBinary255       { get; set; }
-			[Column("`Binary255`"         , DataType = DataType.Binary   , DbType       = "BINARY(255)"       , SkipOnInsert = true, SkipOnUpdate = true)] public byte[]?   Binary255          { get; set; }
-			[Column("`TinyBlob`"          , DataType = DataType.Blob     , DbType       = "BLOB"              , SkipOnInsert = true, SkipOnUpdate = true)] public byte[]?   TinyBlob           { get; set; }
-			[Column("`Blob`"              , DataType = DataType.Blob     , DbType       = "BLOB"              , SkipOnInsert = true, SkipOnUpdate = true)] public byte[]?   Blob               { get; set; }
-			[Column("`MediumBlob`"        , DataType = DataType.Blob     , DbType       = "BLOB"              , SkipOnInsert = true, SkipOnUpdate = true)] public byte[]?   MediumBlob         { get; set; }
-			[Column("`LongBlob`"          , DataType = DataType.Blob     , DbType       = "BLOB"              , SkipOnInsert = true, SkipOnUpdate = true)] public byte[]?   LongBlob           { get; set; }
-			[Column("`TinyText`"          , DataType = DataType.Text     , DbType       = "TEXT"              , SkipOnInsert = true, SkipOnUpdate = true)] public string?   TinyText           { get; set; }
-			[Column("`Text`"              , DataType = DataType.Text     , DbType       = "TEXT"              , SkipOnInsert = true, SkipOnUpdate = true)] public string?   Text               { get; set; }
-			[Column("`MediumText`"        , DataType = DataType.Text     , DbType       = "TEXT"              , SkipOnInsert = true, SkipOnUpdate = true)] public string?   MediumText         { get; set; }
-			[Column("`LongText`"          , DataType = DataType.Text     , DbType       = "TEXT"              , SkipOnInsert = true, SkipOnUpdate = true)] public string?   LongText           { get; set; }
-			[Column("`Date`"              , DataType = DataType.Date     , DbType       = "DATE"              , SkipOnInsert = true, SkipOnUpdate = true)] public DateTime? Date               { get; set; }
-			[Column("`DateTime`"          , DataType = DataType.DateTime , DbType       = "DATETIME"          , SkipOnInsert = true, SkipOnUpdate = true)] public DateTime? DateTime           { get; set; }
-			[Column("`TimeStamp`"         , DataType = DataType.DateTime , DbType       = "TIMESTAMP"         , SkipOnInsert = true, SkipOnUpdate = true)] public DateTime? TimeStamp          { get; set; }
-			[Column("`Time`"              , DataType = DataType.Time     , DbType       = "TIME"              , SkipOnInsert = true, SkipOnUpdate = true)] public TimeSpan? Time               { get; set; }
-			[Column("`Json`"              , DataType = DataType.Json     , DbType       = "JSON"              , SkipOnInsert = true, SkipOnUpdate = true)] public string?   Json               { get; set; }
-			[Column("`TinyInt`"           , DataType = DataType.SByte    , DbType       = "TINYINT"           , SkipOnInsert = true, SkipOnUpdate = true)] public sbyte?    TinyInt            { get; set; }
-			[Column("`TinyIntUnsigned`"   , DataType = DataType.Byte     , DbType       = "TINYINT UNSIGNED"  , SkipOnInsert = true, SkipOnUpdate = true)] public byte?     TinyIntUnsigned    { get; set; }
-			[Column("`SmallInt`"          , DataType = DataType.Int16    , DbType       = "SMALLINT"          , SkipOnInsert = true, SkipOnUpdate = true)] public short?    SmallInt           { get; set; }
-			[Column("`SmallIntUnsigned`"  , DataType = DataType.UInt16   , DbType       = "SMALLINT UNSIGNED" , SkipOnInsert = true, SkipOnUpdate = true)] public ushort?   SmallIntUnsigned   { get; set; }
-			[Column("`MediumInt`"         , DataType = DataType.Int32    , DbType       = "MEDIUMINT"         , SkipOnInsert = true, SkipOnUpdate = true)] public int?      MediumInt          { get; set; }
-			[Column("`MediumIntUnsigned`" , DataType = DataType.UInt32   , DbType       = "MEDIUMINT UNSIGNED", SkipOnInsert = true, SkipOnUpdate = true)] public uint?     MediumIntUnsigned  { get; set; }
-			[Column("`Int`"               , DataType = DataType.Int32    , DbType       = "INT"               , SkipOnInsert = true, SkipOnUpdate = true)] public int?      Int                { get; set; }
-			[Column("`IntUnsigned`"       , DataType = DataType.UInt32   , DbType       = "INT UNSIGNED"      , SkipOnInsert = true, SkipOnUpdate = true)] public uint?     IntUnsigned        { get; set; }
-			[Column("`BigInt`"            , DataType = DataType.Int64    , DbType       = "BIGINT"            , SkipOnInsert = true, SkipOnUpdate = true)] public long?     BigInt             { get; set; }
-			[Column("`BigIntUnsigned`"    , DataType = DataType.UInt64   , DbType       = "BIGINT UNSIGNED"   , SkipOnInsert = true, SkipOnUpdate = true)] public ulong?    BigIntUnsigned     { get; set; }
-			[Column("`Decimal`"           , DataType = DataType.Decimal  , DbType       = "DECIMAL(10,0)"     , SkipOnInsert = true, SkipOnUpdate = true)] public decimal?  Decimal            { get; set; }
-			[Column("`Float`"             , DataType = DataType.Single   , DbType       = "FLOAT"             , SkipOnInsert = true, SkipOnUpdate = true)] public float?    Float              { get; set; }
-			[Column("`Double`"            , DataType = DataType.Double   , DbType       = "DOUBLE"            , SkipOnInsert = true, SkipOnUpdate = true)] public double?   Double             { get; set; }
-			[Column("`Boolean`"           , DataType = DataType.SByte    , DbType       = "BOOL"              , SkipOnInsert = true, SkipOnUpdate = true)] public bool?     Boolean            { get; set; }
-			[Column("`Bit1`"              , DataType = DataType.BitArray , DbType       = "BIT"               , SkipOnInsert = true, SkipOnUpdate = true)] public bool?     Bit1               { get; set; }
-			[Column("`Bit8`"              , DataType = DataType.BitArray , DbType       = "BIT"               , SkipOnInsert = true, SkipOnUpdate = true)] public bool?     Bit8               { get; set; }
-			[Column("`Bit10`"             , DataType = DataType.BitArray , DbType       = "BIT"               , SkipOnInsert = true, SkipOnUpdate = true)] public bool?     Bit10              { get; set; }
-			[Column("`Bit16`"             , DataType = DataType.BitArray , DbType       = "BIT"               , SkipOnInsert = true, SkipOnUpdate = true)] public bool?     Bit16              { get; set; }
-			[Column("`Bit32`"             , DataType = DataType.BitArray , DbType       = "BIT"               , SkipOnInsert = true, SkipOnUpdate = true)] public bool?     Bit32              { get; set; }
-			[Column("`Bit64`"             , DataType = DataType.BitArray , DbType       = "BIT"               , SkipOnInsert = true, SkipOnUpdate = true)] public bool?     Bit64              { get; set; }
-			[Column("`Enum`"              , DataType = DataType.VarChar  , DbType       = "ENUM"              , SkipOnInsert = true, SkipOnUpdate = true)] public string?   Enum               { get; set; }
-			[Column("`Set`"               , DataType = DataType.VarChar  , DbType       = "ENUM"              , SkipOnInsert = true, SkipOnUpdate = true)] public string?   Set                { get; set; }
-			[Column("`Year`"              , DataType = DataType.Int32    , DbType       = "YEAR"              , SkipOnInsert = true, SkipOnUpdate = true)] public int?      Year               { get; set; }
-			[Column("`Geometry`"          , DbType   = "GEOMETRY"        , SkipOnInsert = true                , SkipOnUpdate = true                     )] public byte[]?   Geometry           { get; set; }
-			[Column("`Point`"             , DbType   = "GEOMETRY"        , SkipOnInsert = true                , SkipOnUpdate = true                     )] public byte[]?   Point              { get; set; }
-			[Column("`LineString`"        , DbType   = "GEOMETRY"        , SkipOnInsert = true                , SkipOnUpdate = true                     )] public byte[]?   LineString         { get; set; }
-			[Column("`Polygon`"           , DbType   = "GEOMETRY"        , SkipOnInsert = true                , SkipOnUpdate = true                     )] public byte[]?   Polygon            { get; set; }
-			[Column("`MultiPoint`"        , DbType   = "GEOMETRY"        , SkipOnInsert = true                , SkipOnUpdate = true                     )] public byte[]?   MultiPoint         { get; set; }
-			[Column("`MultiLineString`"   , DbType   = "GEOMETRY"        , SkipOnInsert = true                , SkipOnUpdate = true                     )] public byte[]?   MultiLineString    { get; set; }
-			[Column("`MultiPolygon`"      , DbType   = "GEOMETRY"        , SkipOnInsert = true                , SkipOnUpdate = true                     )] public byte[]?   MultiPolygon       { get; set; }
-			[Column("`GeometryCollection`", DbType   = "GEOMETRY"        , SkipOnInsert = true                , SkipOnUpdate = true                     )] public byte[]?   GeometryCollection { get; set; }
+			[Column("`VarChar255`"        )] public string?   VarChar255         { get; set; }
+			[Column("`VarChar1`"          )] public char?     VarChar1           { get; set; }
+			[Column("`Char255`"           )] public string?   Char255            { get; set; }
+			[Column("`Char1`"             )] public char?     Char1              { get; set; }
+			[Column("`VarBinary255`"      )] public byte[]?   VarBinary255       { get; set; }
+			[Column("`Binary255`"         )] public byte[]?   Binary255          { get; set; }
+			[Column("`TinyBlob`"          )] public byte[]?   TinyBlob           { get; set; }
+			[Column("`Blob`"              )] public byte[]?   Blob               { get; set; }
+			[Column("`MediumBlob`"        )] public byte[]?   MediumBlob         { get; set; }
+			[Column("`LongBlob`"          )] public byte[]?   LongBlob           { get; set; }
+			[Column("`TinyText`"          )] public string?   TinyText           { get; set; }
+			[Column("`Text`"              )] public string?   Text               { get; set; }
+			[Column("`MediumText`"        )] public string?   MediumText         { get; set; }
+			[Column("`LongText`"          )] public string?   LongText           { get; set; }
+			[Column("`Date`"              )] public DateTime? Date               { get; set; }
+			[Column("`DateTime`"          )] public DateTime? DateTime           { get; set; }
+			[Column("`TimeStamp`"         )] public DateTime? TimeStamp          { get; set; }
+			[Column("`Time`"              )] public TimeSpan? Time               { get; set; }
+			[Column("`Json`"              )] public string?   Json               { get; set; }
+			[Column("`TinyInt`"           )] public sbyte?    TinyInt            { get; set; }
+			[Column("`TinyIntUnsigned`"   )] public byte?     TinyIntUnsigned    { get; set; }
+			[Column("`SmallInt`"          )] public short?    SmallInt           { get; set; }
+			[Column("`SmallIntUnsigned`"  )] public ushort?   SmallIntUnsigned   { get; set; }
+			[Column("`MediumInt`"         )] public int?      MediumInt          { get; set; }
+			[Column("`MediumIntUnsigned`" )] public uint?     MediumIntUnsigned  { get; set; }
+			[Column("`Int`"               )] public int?      Int                { get; set; }
+			[Column("`IntUnsigned`"       )] public uint?     IntUnsigned        { get; set; }
+			[Column("`BigInt`"            )] public long?     BigInt             { get; set; }
+			[Column("`BigIntUnsigned`"    )] public ulong?    BigIntUnsigned     { get; set; }
+			[Column("`Decimal`"           )] public decimal?  Decimal            { get; set; }
+			[Column("`Float`"             )] public float?    Float              { get; set; }
+			[Column("`Double`"            )] public double?   Double             { get; set; }
+			[Column("`Boolean`"           )] public bool?     Boolean            { get; set; }
+			[Column("`Bit1`"              )] public bool?     Bit1               { get; set; }
+			[Column("`Bit8`"              )] public bool?     Bit8               { get; set; }
+			[Column("`Bit10`"             )] public bool?     Bit10              { get; set; }
+			[Column("`Bit16`"             )] public bool?     Bit16              { get; set; }
+			[Column("`Bit32`"             )] public bool?     Bit32              { get; set; }
+			[Column("`Bit64`"             )] public bool?     Bit64              { get; set; }
+			[Column("`Enum`"              )] public string?   Enum               { get; set; }
+			[Column("`Set`"               )] public string?   Set                { get; set; }
+			[Column("`Year`"              )] public int?      Year               { get; set; }
+			[Column("`Geometry`"          )] public byte[]?   Geometry           { get; set; }
+			[Column("`Point`"             )] public byte[]?   Point              { get; set; }
+			[Column("`LineString`"        )] public byte[]?   LineString         { get; set; }
+			[Column("`Polygon`"           )] public byte[]?   Polygon            { get; set; }
+			[Column("`MultiPoint`"        )] public byte[]?   MultiPoint         { get; set; }
+			[Column("`MultiLineString`"   )] public byte[]?   MultiLineString    { get; set; }
+			[Column("`MultiPolygon`"      )] public byte[]?   MultiPolygon       { get; set; }
+			[Column("`GeometryCollection`")] public byte[]?   GeometryCollection { get; set; }
 		}
 		#endregion
 
@@ -447,56 +447,56 @@ namespace Cli.T4.MySql
 
 		public partial class Issue2313ResultsResult
 		{
-			[Column("`VarChar255`"        , DataType = DataType.VarChar  , DbType       = "VARCHAR(255)"      , SkipOnInsert = true, SkipOnUpdate = true)] public string?   VarChar255         { get; set; }
-			[Column("`VarChar1`"          , DataType = DataType.VarChar  , DbType       = "VARCHAR(1)"        , SkipOnInsert = true, SkipOnUpdate = true)] public char?     VarChar1           { get; set; }
-			[Column("`Char255`"           , DataType = DataType.Char     , DbType       = "CHAR(255)"         , SkipOnInsert = true, SkipOnUpdate = true)] public string?   Char255            { get; set; }
-			[Column("`Char1`"             , DataType = DataType.Char     , DbType       = "CHAR(1)"           , SkipOnInsert = true, SkipOnUpdate = true)] public char?     Char1              { get; set; }
-			[Column("`VarBinary255`"      , DataType = DataType.VarBinary, DbType       = "VARBINARY(255)"    , SkipOnInsert = true, SkipOnUpdate = true)] public byte[]?   VarBinary255       { get; set; }
-			[Column("`Binary255`"         , DataType = DataType.Binary   , DbType       = "BINARY(255)"       , SkipOnInsert = true, SkipOnUpdate = true)] public byte[]?   Binary255          { get; set; }
-			[Column("`TinyBlob`"          , DataType = DataType.Blob     , DbType       = "BLOB"              , SkipOnInsert = true, SkipOnUpdate = true)] public byte[]?   TinyBlob           { get; set; }
-			[Column("`Blob`"              , DataType = DataType.Blob     , DbType       = "BLOB"              , SkipOnInsert = true, SkipOnUpdate = true)] public byte[]?   Blob               { get; set; }
-			[Column("`MediumBlob`"        , DataType = DataType.Blob     , DbType       = "BLOB"              , SkipOnInsert = true, SkipOnUpdate = true)] public byte[]?   MediumBlob         { get; set; }
-			[Column("`LongBlob`"          , DataType = DataType.Blob     , DbType       = "BLOB"              , SkipOnInsert = true, SkipOnUpdate = true)] public byte[]?   LongBlob           { get; set; }
-			[Column("`TinyText`"          , DataType = DataType.Text     , DbType       = "TEXT"              , SkipOnInsert = true, SkipOnUpdate = true)] public string?   TinyText           { get; set; }
-			[Column("`Text`"              , DataType = DataType.Text     , DbType       = "TEXT"              , SkipOnInsert = true, SkipOnUpdate = true)] public string?   Text               { get; set; }
-			[Column("`MediumText`"        , DataType = DataType.Text     , DbType       = "TEXT"              , SkipOnInsert = true, SkipOnUpdate = true)] public string?   MediumText         { get; set; }
-			[Column("`LongText`"          , DataType = DataType.Text     , DbType       = "TEXT"              , SkipOnInsert = true, SkipOnUpdate = true)] public string?   LongText           { get; set; }
-			[Column("`Date`"              , DataType = DataType.Date     , DbType       = "DATE"              , SkipOnInsert = true, SkipOnUpdate = true)] public DateTime? Date               { get; set; }
-			[Column("`DateTime`"          , DataType = DataType.DateTime , DbType       = "DATETIME"          , SkipOnInsert = true, SkipOnUpdate = true)] public DateTime? DateTime           { get; set; }
-			[Column("`TimeStamp`"         , DataType = DataType.DateTime , DbType       = "TIMESTAMP"         , SkipOnInsert = true, SkipOnUpdate = true)] public DateTime? TimeStamp          { get; set; }
-			[Column("`Time`"              , DataType = DataType.Time     , DbType       = "TIME"              , SkipOnInsert = true, SkipOnUpdate = true)] public TimeSpan? Time               { get; set; }
-			[Column("`TinyInt`"           , DataType = DataType.SByte    , DbType       = "TINYINT"           , SkipOnInsert = true, SkipOnUpdate = true)] public sbyte?    TinyInt            { get; set; }
-			[Column("`TinyIntUnsigned`"   , DataType = DataType.Byte     , DbType       = "TINYINT UNSIGNED"  , SkipOnInsert = true, SkipOnUpdate = true)] public byte?     TinyIntUnsigned    { get; set; }
-			[Column("`SmallInt`"          , DataType = DataType.Int16    , DbType       = "SMALLINT"          , SkipOnInsert = true, SkipOnUpdate = true)] public short?    SmallInt           { get; set; }
-			[Column("`SmallIntUnsigned`"  , DataType = DataType.UInt16   , DbType       = "SMALLINT UNSIGNED" , SkipOnInsert = true, SkipOnUpdate = true)] public ushort?   SmallIntUnsigned   { get; set; }
-			[Column("`MediumInt`"         , DataType = DataType.Int32    , DbType       = "MEDIUMINT"         , SkipOnInsert = true, SkipOnUpdate = true)] public int?      MediumInt          { get; set; }
-			[Column("`MediumIntUnsigned`" , DataType = DataType.UInt32   , DbType       = "MEDIUMINT UNSIGNED", SkipOnInsert = true, SkipOnUpdate = true)] public uint?     MediumIntUnsigned  { get; set; }
-			[Column("`Int`"               , DataType = DataType.Int32    , DbType       = "INT"               , SkipOnInsert = true, SkipOnUpdate = true)] public int?      Int                { get; set; }
-			[Column("`IntUnsigned`"       , DataType = DataType.UInt32   , DbType       = "INT UNSIGNED"      , SkipOnInsert = true, SkipOnUpdate = true)] public uint?     IntUnsigned        { get; set; }
-			[Column("`BigInt`"            , DataType = DataType.Int64    , DbType       = "BIGINT"            , SkipOnInsert = true, SkipOnUpdate = true)] public long?     BigInt             { get; set; }
-			[Column("`BigIntUnsigned`"    , DataType = DataType.UInt64   , DbType       = "BIGINT UNSIGNED"   , SkipOnInsert = true, SkipOnUpdate = true)] public ulong?    BigIntUnsigned     { get; set; }
-			[Column("`Decimal`"           , DataType = DataType.Decimal  , DbType       = "DECIMAL(10,0)"     , SkipOnInsert = true, SkipOnUpdate = true)] public decimal?  Decimal            { get; set; }
-			[Column("`Float`"             , DataType = DataType.Single   , DbType       = "FLOAT"             , SkipOnInsert = true, SkipOnUpdate = true)] public float?    Float              { get; set; }
-			[Column("`Double`"            , DataType = DataType.Double   , DbType       = "DOUBLE"            , SkipOnInsert = true, SkipOnUpdate = true)] public double?   Double             { get; set; }
-			[Column("`Boolean`"           , DataType = DataType.SByte    , DbType       = "BOOL"              , SkipOnInsert = true, SkipOnUpdate = true)] public bool?     Boolean            { get; set; }
-			[Column("`Bit1`"              , DataType = DataType.BitArray , DbType       = "BIT"               , SkipOnInsert = true, SkipOnUpdate = true)] public bool?     Bit1               { get; set; }
-			[Column("`Bit8`"              , DataType = DataType.BitArray , DbType       = "BIT"               , SkipOnInsert = true, SkipOnUpdate = true)] public bool?     Bit8               { get; set; }
-			[Column("`Bit10`"             , DataType = DataType.BitArray , DbType       = "BIT"               , SkipOnInsert = true, SkipOnUpdate = true)] public bool?     Bit10              { get; set; }
-			[Column("`Bit16`"             , DataType = DataType.BitArray , DbType       = "BIT"               , SkipOnInsert = true, SkipOnUpdate = true)] public bool?     Bit16              { get; set; }
-			[Column("`Bit32`"             , DataType = DataType.BitArray , DbType       = "BIT"               , SkipOnInsert = true, SkipOnUpdate = true)] public bool?     Bit32              { get; set; }
-			[Column("`Bit64`"             , DataType = DataType.BitArray , DbType       = "BIT"               , SkipOnInsert = true, SkipOnUpdate = true)] public bool?     Bit64              { get; set; }
-			[Column("`Enum`"              , DataType = DataType.VarChar  , DbType       = "ENUM"              , SkipOnInsert = true, SkipOnUpdate = true)] public string?   Enum               { get; set; }
-			[Column("`Set`"               , DataType = DataType.VarChar  , DbType       = "ENUM"              , SkipOnInsert = true, SkipOnUpdate = true)] public string?   Set                { get; set; }
-			[Column("`Year`"              , DataType = DataType.Int32    , DbType       = "YEAR"              , SkipOnInsert = true, SkipOnUpdate = true)] public int?      Year               { get; set; }
-			[Column("`Json`"              , DataType = DataType.Json     , DbType       = "JSON"              , SkipOnInsert = true, SkipOnUpdate = true)] public string?   Json               { get; set; }
-			[Column("`Geometry`"          , DbType   = "GEOMETRY"        , SkipOnInsert = true                , SkipOnUpdate = true                     )] public byte[]?   Geometry           { get; set; }
-			[Column("`Point`"             , DbType   = "GEOMETRY"        , SkipOnInsert = true                , SkipOnUpdate = true                     )] public byte[]?   Point              { get; set; }
-			[Column("`LineString`"        , DbType   = "GEOMETRY"        , SkipOnInsert = true                , SkipOnUpdate = true                     )] public byte[]?   LineString         { get; set; }
-			[Column("`Polygon`"           , DbType   = "GEOMETRY"        , SkipOnInsert = true                , SkipOnUpdate = true                     )] public byte[]?   Polygon            { get; set; }
-			[Column("`MultiPoint`"        , DbType   = "GEOMETRY"        , SkipOnInsert = true                , SkipOnUpdate = true                     )] public byte[]?   MultiPoint         { get; set; }
-			[Column("`MultiLineString`"   , DbType   = "GEOMETRY"        , SkipOnInsert = true                , SkipOnUpdate = true                     )] public byte[]?   MultiLineString    { get; set; }
-			[Column("`MultiPolygon`"      , DbType   = "GEOMETRY"        , SkipOnInsert = true                , SkipOnUpdate = true                     )] public byte[]?   MultiPolygon       { get; set; }
-			[Column("`GeometryCollection`", DbType   = "GEOMETRY"        , SkipOnInsert = true                , SkipOnUpdate = true                     )] public byte[]?   GeometryCollection { get; set; }
+			[Column("`VarChar255`"        )] public string?   VarChar255         { get; set; }
+			[Column("`VarChar1`"          )] public char?     VarChar1           { get; set; }
+			[Column("`Char255`"           )] public string?   Char255            { get; set; }
+			[Column("`Char1`"             )] public char?     Char1              { get; set; }
+			[Column("`VarBinary255`"      )] public byte[]?   VarBinary255       { get; set; }
+			[Column("`Binary255`"         )] public byte[]?   Binary255          { get; set; }
+			[Column("`TinyBlob`"          )] public byte[]?   TinyBlob           { get; set; }
+			[Column("`Blob`"              )] public byte[]?   Blob               { get; set; }
+			[Column("`MediumBlob`"        )] public byte[]?   MediumBlob         { get; set; }
+			[Column("`LongBlob`"          )] public byte[]?   LongBlob           { get; set; }
+			[Column("`TinyText`"          )] public string?   TinyText           { get; set; }
+			[Column("`Text`"              )] public string?   Text               { get; set; }
+			[Column("`MediumText`"        )] public string?   MediumText         { get; set; }
+			[Column("`LongText`"          )] public string?   LongText           { get; set; }
+			[Column("`Date`"              )] public DateTime? Date               { get; set; }
+			[Column("`DateTime`"          )] public DateTime? DateTime           { get; set; }
+			[Column("`TimeStamp`"         )] public DateTime? TimeStamp          { get; set; }
+			[Column("`Time`"              )] public TimeSpan? Time               { get; set; }
+			[Column("`TinyInt`"           )] public sbyte?    TinyInt            { get; set; }
+			[Column("`TinyIntUnsigned`"   )] public byte?     TinyIntUnsigned    { get; set; }
+			[Column("`SmallInt`"          )] public short?    SmallInt           { get; set; }
+			[Column("`SmallIntUnsigned`"  )] public ushort?   SmallIntUnsigned   { get; set; }
+			[Column("`MediumInt`"         )] public int?      MediumInt          { get; set; }
+			[Column("`MediumIntUnsigned`" )] public uint?     MediumIntUnsigned  { get; set; }
+			[Column("`Int`"               )] public int?      Int                { get; set; }
+			[Column("`IntUnsigned`"       )] public uint?     IntUnsigned        { get; set; }
+			[Column("`BigInt`"            )] public long?     BigInt             { get; set; }
+			[Column("`BigIntUnsigned`"    )] public ulong?    BigIntUnsigned     { get; set; }
+			[Column("`Decimal`"           )] public decimal?  Decimal            { get; set; }
+			[Column("`Float`"             )] public float?    Float              { get; set; }
+			[Column("`Double`"            )] public double?   Double             { get; set; }
+			[Column("`Boolean`"           )] public bool?     Boolean            { get; set; }
+			[Column("`Bit1`"              )] public bool?     Bit1               { get; set; }
+			[Column("`Bit8`"              )] public bool?     Bit8               { get; set; }
+			[Column("`Bit10`"             )] public bool?     Bit10              { get; set; }
+			[Column("`Bit16`"             )] public bool?     Bit16              { get; set; }
+			[Column("`Bit32`"             )] public bool?     Bit32              { get; set; }
+			[Column("`Bit64`"             )] public bool?     Bit64              { get; set; }
+			[Column("`Enum`"              )] public string?   Enum               { get; set; }
+			[Column("`Set`"               )] public string?   Set                { get; set; }
+			[Column("`Year`"              )] public int?      Year               { get; set; }
+			[Column("`Json`"              )] public string?   Json               { get; set; }
+			[Column("`Geometry`"          )] public byte[]?   Geometry           { get; set; }
+			[Column("`Point`"             )] public byte[]?   Point              { get; set; }
+			[Column("`LineString`"        )] public byte[]?   LineString         { get; set; }
+			[Column("`Polygon`"           )] public byte[]?   Polygon            { get; set; }
+			[Column("`MultiPoint`"        )] public byte[]?   MultiPoint         { get; set; }
+			[Column("`MultiLineString`"   )] public byte[]?   MultiLineString    { get; set; }
+			[Column("`MultiPolygon`"      )] public byte[]?   MultiPolygon       { get; set; }
+			[Column("`GeometryCollection`")] public byte[]?   GeometryCollection { get; set; }
 		}
 		#endregion
 
@@ -541,11 +541,11 @@ namespace Cli.T4.MySql
 
 		public partial class TestProcedureResult
 		{
-			[Column("PersonID"  , DataType  = DataType.Int32  , DbType   = "INT"           , SkipOnInsert = true         , SkipOnUpdate = true                     )] public int     PersonID   { get; set; }
-			[Column("FirstName" , CanBeNull = false           , DataType = DataType.VarChar, DbType       = "VARCHAR(50)", SkipOnInsert = true, SkipOnUpdate = true)] public string  FirstName  { get; set; } = null!;
-			[Column("LastName"  , CanBeNull = false           , DataType = DataType.VarChar, DbType       = "VARCHAR(50)", SkipOnInsert = true, SkipOnUpdate = true)] public string  LastName   { get; set; } = null!;
-			[Column("MiddleName", DataType  = DataType.VarChar, DbType   = "VARCHAR(50)"   , SkipOnInsert = true         , SkipOnUpdate = true                     )] public string? MiddleName { get; set; }
-			[Column("Gender"    , DataType  = DataType.Char   , DbType   = "CHAR(1)"       , SkipOnInsert = true         , SkipOnUpdate = true                     )] public char    Gender     { get; set; }
+			[Column("PersonID"                     )] public int     PersonID   { get; set; }
+			[Column("FirstName" , CanBeNull = false)] public string  FirstName  { get; set; } = null!;
+			[Column("LastName"  , CanBeNull = false)] public string  LastName   { get; set; } = null!;
+			[Column("MiddleName"                   )] public string? MiddleName { get; set; }
+			[Column("Gender"                       )] public char    Gender     { get; set; }
 		}
 		#endregion
 		#endregion
