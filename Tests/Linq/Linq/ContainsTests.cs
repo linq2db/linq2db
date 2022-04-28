@@ -14,10 +14,16 @@ namespace Tests.Linq
 	{
 		private TempTable<Src> SetupSrcTable(IDataContext db)
 		{
+			db.GetFluentMappingBuilder()
+				.Entity<Src>()
+					.Property(e => e.CEnum)
+						.HasDataType(DataType.VarChar)
+						.HasConversion(v => $"___{v}___", v => (ConvertedEnum)Enum.Parse(typeof(ConvertedEnum), v.Substring(3, v.Length - 6)));
+
 			var data = new[]
 			{
 				new Src { Id = 1 },
-				new Src { Id = 2, Int = 2, Enum = ContainsEnum.Value2 },
+				new Src { Id = 2, Int = 2, Enum = ContainsEnum.Value2, CEnum = ConvertedEnum.Value2 },
 			};
 
 			var src  = db.CreateLocalTable(data);
@@ -85,6 +91,36 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void FunctionalCEnum(
+			[DataSources] string context,
+			[Values]      bool   withNullCompares)
+		{
+			using var _   = new CompareNullsAsValuesOption(withNullCompares);
+			using var db  = GetDataContext(context);
+			using var src = SetupSrcTable(db);
+
+			int? result;
+
+			result = FetchId(s => s.CEnum.In(ConvertedEnum.Value3, ConvertedEnum.Value4));
+			result.Should().Be(0);
+
+			result = FetchId(s => s.CEnum.In(ConvertedEnum.Value3, null));
+			result.Should().Be(withNullCompares ? 1 : 0);
+
+			result = FetchId(s => s.CEnum.In(ConvertedEnum.Value3, ConvertedEnum.Value2));
+			result.Should().Be(2);
+
+			result = FetchId(s => s.CEnum.NotIn(null, ConvertedEnum.Value2));
+			result.Should().Be(0);
+
+			result = FetchId(s => s.CEnum.NotIn(ConvertedEnum.Value3, ConvertedEnum.Value2));
+			result.Should().Be(withNullCompares ? 1 : 0);
+
+			int FetchId(Expression<Func<Src, bool>> predicate)
+				=> src.Where(predicate).Select(x => x.Id).FirstOrDefault();
+		}
+
+		[Test]
 		public void Empty(
 			[DataSources] string context,
 			[Values]      bool   withNullCompares)
@@ -123,6 +159,27 @@ namespace Tests.Linq
 			count.Should().Be(2);
 
 			count = src.Count(s => !s.Enum.In(Array.Empty<ContainsEnum?>()));
+			count.Should().Be(2);
+		}
+
+		[Test]
+		public void EmptyCEnum(
+			[DataSources] string context,
+			[Values]      bool   withNullCompares)
+		{
+			using var _   = new CompareNullsAsValuesOption(withNullCompares);
+			using var db  = GetDataContext(context);
+			using var src = SetupSrcTable(db);
+
+			int count;
+			
+			count = src.Count(s => s.CEnum.In(Array.Empty<ConvertedEnum?>()));
+			count.Should().Be(0);
+
+			count = src.Count(s => s.CEnum.NotIn(Array.Empty<ConvertedEnum?>()));
+			count.Should().Be(2);
+
+			count = src.Count(s => !s.CEnum.In(Array.Empty<ConvertedEnum?>()));
 			count.Should().Be(2);
 		}
 
@@ -166,11 +223,32 @@ namespace Tests.Linq
 			count.Should().Be(withNullCompares ? 1 : 0);
 		}
 
+		[Test]
+		public void AllNullsCEnum(
+			// Excluded Access from tests because it seems to have non compliant behavior.
+			// It is the only DB that returns 1 for `WHERE CEnum NOT IN (null, null)`
+			[DataSources(TestProvName.AllAccess)] string context,
+			[Values]                              bool   withNullCompares)
+		{
+			using var _   = new CompareNullsAsValuesOption(withNullCompares);
+			using var db  = GetDataContext(context);
+			using var src = SetupSrcTable(db);
+
+			int count;
+			
+			count = src.Count(s => s.CEnum.In(null, null));
+			count.Should().Be(withNullCompares ? 1 : 0);
+
+			count = src.Count(s => s.CEnum.NotIn(null, null));
+			count.Should().Be(withNullCompares ? 1 : 0);
+		}
+
 		class Src
 		{
-			public int           Id   { get; set; }
-			public int?          Int  { get; set; }
-			public ContainsEnum? Enum { get; set; }
+			public int            Id    { get; set; }
+			public int?           Int   { get; set; }
+			public ContainsEnum?  Enum  { get; set; }
+			public ConvertedEnum? CEnum { get; set; }
 		}
 
 		enum ContainsEnum
@@ -179,6 +257,14 @@ namespace Tests.Linq
 			[MapValue("TWO")  ] Value2,
 			[MapValue("THREE")] Value3,
 			[MapValue("FOUR") ] Value4,
+		}
+
+		enum ConvertedEnum
+		{
+			Value1,
+			Value2,
+			Value3,
+			Value4,
 		}
 	}
 }
