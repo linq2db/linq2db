@@ -1,25 +1,20 @@
 ﻿using System;
+using System.Data.Linq;
+using System.Globalization;
 using System.Text;
-
 
 namespace LinqToDB.DataProvider.Access
 {
 	using Common;
 	using Mapping;
 	using SqlQuery;
-	using System.Data.Linq;
-	using System.Globalization;
 
-	public class AccessMappingSchema : MappingSchema
+	sealed class AccessMappingSchema : LockedMappingSchema
 	{
 		private const string DATE_FORMAT     = "#{0:yyyy-MM-dd}#";
 		private const string DATETIME_FORMAT = "#{0:yyyy-MM-dd HH:mm:ss}#";
 
-		public AccessMappingSchema() : this(ProviderName.Access)
-		{
-		}
-
-		protected AccessMappingSchema(string configuration) : base(configuration)
+		AccessMappingSchema() : base(ProviderName.Access)
 		{
 			SetDataType(typeof(DateTime),  DataType.DateTime);
 			SetDataType(typeof(DateTime?), DataType.DateTime);
@@ -41,12 +36,12 @@ namespace LinqToDB.DataProvider.Access
 
 		static void ConvertBinaryToSql(StringBuilder stringBuilder, byte[] value)
 		{
-			stringBuilder.Append("0x");
-
-			stringBuilder.AppendByteArrayAsHexViaLookup32(value);
+			stringBuilder
+				.Append("0x")
+				.AppendByteArrayAsHexViaLookup32(value);
 		}
 
-		static readonly Action<StringBuilder, int> AppendConversionAction = AppendConversion;
+		static readonly Action<StringBuilder, int> _appendConversionAction = AppendConversion;
 
 		static void AppendConversion(StringBuilder stringBuilder, int value)
 		{
@@ -59,12 +54,12 @@ namespace LinqToDB.DataProvider.Access
 
 		static void ConvertStringToSql(StringBuilder stringBuilder, string value)
 		{
-			DataTools.ConvertStringToSql(stringBuilder, "+", null, AppendConversionAction, value, null);
+			DataTools.ConvertStringToSql(stringBuilder, "+", null, _appendConversionAction, value, null);
 		}
 
 		static void ConvertCharToSql(StringBuilder stringBuilder, char value)
 		{
-			DataTools.ConvertCharToSql(stringBuilder, "'", AppendConversionAction, value);
+			DataTools.ConvertCharToSql(stringBuilder, "'", _appendConversionAction, value);
 		}
 
 		static void ConvertDateTimeToSql(StringBuilder stringBuilder, DateTime value)
@@ -83,18 +78,16 @@ namespace LinqToDB.DataProvider.Access
 
 		internal static readonly AccessMappingSchema Instance = new ();
 
-		public class OleDbMappingSchema : MappingSchema
+		public sealed class OleDbMappingSchema : LockedMappingSchema
 		{
-			public OleDbMappingSchema()
-				: base(ProviderName.Access, Instance)
+			public OleDbMappingSchema() : base(ProviderName.Access, Instance)
 			{
 			}
 		}
 
-		public class ODBCMappingSchema : MappingSchema
+		public sealed class OdbcMappingSchema : LockedMappingSchema
 		{
-			public ODBCMappingSchema()
-				: base(ProviderName.AccessOdbc, Instance)
+			public OdbcMappingSchema() : base(ProviderName.AccessOdbc, Instance)
 			{
 			}
 		}

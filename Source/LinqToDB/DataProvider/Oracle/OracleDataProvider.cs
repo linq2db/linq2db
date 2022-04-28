@@ -24,10 +24,7 @@ namespace LinqToDB.DataProvider.Oracle
 		{}
 
 		protected OracleDataProvider(string name, OracleVersion version)
-			: base(
-				name,
-				GetMappingSchema(name, OracleProviderAdapter.GetInstance(name).MappingSchema),
-				OracleProviderAdapter.GetInstance(name))
+			: base(name, GetMappingSchema(name), OracleProviderAdapter.GetInstance(name))
 		{
 			Version = version;
 
@@ -108,12 +105,12 @@ namespace LinqToDB.DataProvider.Oracle
 			};
 		}
 
-		private static MappingSchema GetMappingSchema(string name, MappingSchema providerSchema)
+		private static MappingSchema GetMappingSchema(string name)
 		{
 			return name switch
 			{
-				ProviderName.OracleNative => new OracleMappingSchema.NativeMappingSchema(providerSchema),
-				_                         => new OracleMappingSchema.ManagedMappingSchema(providerSchema),
+				ProviderName.OracleNative => new OracleMappingSchema.NativeMappingSchema(),
+				_                         => new OracleMappingSchema.ManagedMappingSchema(),
 			};
 		}
 

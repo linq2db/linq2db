@@ -68,7 +68,7 @@ namespace LinqToDB.DataProvider.SqlServer
 						sys.extended_properties x
 					ON
 						OBJECT_ID('[' + TABLE_CATALOG + '].[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']') = x.major_id AND
-						x.minor_id = 0 AND 
+						x.minor_id = 0 AND
 						x.name = 'MS_Description'
 				WHERE
 					t.object_id IS NULL OR

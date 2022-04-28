@@ -2322,7 +2322,7 @@ namespace LinqToDB.Data
 			return dataConnection.DataProvider.BulkCopyAsync(
 				dataConnection.GetTable<T>(),
 				new BulkCopyOptions { MaxBatchSize = maxBatchSize },
-				source, 
+				source,
 				cancellationToken);
 		}
 
@@ -2343,7 +2343,7 @@ namespace LinqToDB.Data
 			return dataConnection.DataProvider.BulkCopyAsync(
 				dataConnection.GetTable<T>(),
 				new BulkCopyOptions(),
-				source, 
+				source,
 				cancellationToken);
 		}
 

@@ -58,7 +58,6 @@ namespace Tests.Remote.ServerContainer
 						service.RemoveInterceptor();
 				})
 			{ Configuration = configuration };
-		
 
 			Debug.WriteLine(((IDataContext) dx).ContextID, "Provider ");
 

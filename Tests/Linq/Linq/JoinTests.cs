@@ -2887,7 +2887,7 @@ namespace Tests.Linq
 		#endregion
 
 
-		[ActiveIssue(1224, Configurations = new[] 
+		[ActiveIssue(1224, Configurations = new[]
 		{
 			TestProvName.AllSQLite,
 			TestProvName.AllAccess,

@@ -277,7 +277,7 @@ namespace LinqToDB.Linq.Builder
 
 							if ((memberRecordType & RecordType.CallConstructorOnWrite) != 0)
 							{
-								var expr = BuildFromParametrizedConstructor(member.Type, exprs);
+								var expr = BuildFromParameterizedConstructor(member.Type, exprs);
 
 								yield return (member.Name, expr);
 							}
@@ -302,7 +302,7 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-		ConstructorInfo SelectParametrizedConstructor(Type objectType)
+		ConstructorInfo SelectParameterizedConstructor(Type objectType)
 		{
 			var constructors = objectType.GetConstructors();
 
@@ -320,10 +320,10 @@ namespace LinqToDB.Linq.Builder
 			return constructors[0];
 		}
 
-		Expression BuildFromParametrizedConstructor(Type objectType,
+		Expression BuildFromParameterizedConstructor(Type objectType,
 			IList<(string Name, Expression? Expr)> expressions)
 		{
-			var ctor = SelectParametrizedConstructor(objectType);
+			var ctor = SelectParameterizedConstructor(objectType);
 
 			var parameters = ctor.GetParameters();
 			var argFound   = false;
@@ -402,7 +402,7 @@ namespace LinqToDB.Linq.Builder
 
 			var exprs = GetExpressions(entityDescriptor.TypeAccessor, recordType, columns).ToList();
 
-			return BuildFromParametrizedConstructor(objectType, exprs);
+			return BuildFromParameterizedConstructor(objectType, exprs);
 		}
 
 		Expression BuildDefaultConstructor(EntityDescriptor entityDescriptor, Type objectType, Tuple<int, SqlField?>[] index)

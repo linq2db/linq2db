@@ -1,15 +1,15 @@
 ﻿using System;
+using System.Data.Linq;
+using System.Globalization;
 using System.Text;
 
 namespace LinqToDB.DataProvider.DB2
 {
-	using LinqToDB.Common;
+	using Common;
 	using Mapping;
 	using SqlQuery;
-	using System.Data.Linq;
-	using System.Globalization;
 
-	public class DB2MappingSchema : MappingSchema
+	sealed class DB2MappingSchema : LockedMappingSchema
 	{
 		private const string DATE_FORMAT       = "{0:yyyy-MM-dd}";
 		private const string DATETIME_FORMAT   = "{0:yyyy-MM-dd-HH.mm.ss}";
@@ -41,11 +41,7 @@ namespace LinqToDB.DataProvider.DB2
 			"yyyy-MM-dd-HH.mm.ss.ffffffffffff",
 		};
 
-		public DB2MappingSchema() : this(ProviderName.DB2)
-		{
-		}
-
-		protected DB2MappingSchema(string configuration) : base(configuration)
+		DB2MappingSchema() : base(ProviderName.DB2)
 		{
 			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
 			SetDataType(typeof(byte), new SqlDataType(DataType.Int16, typeof(byte)));
@@ -151,14 +147,14 @@ namespace LinqToDB.DataProvider.DB2
 
 		static void ConvertBinaryToSql(StringBuilder stringBuilder, byte[] value)
 		{
-			stringBuilder.Append("BX'");
-
-			stringBuilder.AppendByteArrayAsHexViaLookup32(value);
-
-			stringBuilder.Append('\'');
+			stringBuilder
+				.Append("BX'")
+				.AppendByteArrayAsHexViaLookup32(value)
+				.Append('\'');
 		}
 
-		static readonly Action<StringBuilder, int> AppendConversionAction = AppendConversion;
+		static readonly Action<StringBuilder,int> _appendConversionAction = AppendConversion;
+
 		static void AppendConversion(StringBuilder stringBuilder, int value)
 		{
 			stringBuilder
@@ -170,40 +166,28 @@ namespace LinqToDB.DataProvider.DB2
 
 		static void ConvertStringToSql(StringBuilder stringBuilder, string value)
 		{
-			DataTools.ConvertStringToSql(stringBuilder, "||", null, AppendConversionAction, value, null);
+			DataTools.ConvertStringToSql(stringBuilder, "||", null, _appendConversionAction, value, null);
 		}
 
 		static void ConvertCharToSql(StringBuilder stringBuilder, char value)
 		{
-			DataTools.ConvertCharToSql(stringBuilder, "'", AppendConversionAction, value);
+			DataTools.ConvertCharToSql(stringBuilder, "'", _appendConversionAction, value);
 		}
 
 		internal static readonly DB2MappingSchema Instance = new ();
-	}
 
-	public class DB2zOSMappingSchema : MappingSchema
-	{
-		public DB2zOSMappingSchema()
-			: base(ProviderName.DB2zOS, DB2MappingSchema.Instance)
+		public sealed class DB2zOSMappingSchema : LockedMappingSchema
 		{
+			public DB2zOSMappingSchema() : base(ProviderName.DB2zOS,  DB2ProviderAdapter.Instance.MappingSchema, Instance)
+			{
+			}
 		}
 
-		public DB2zOSMappingSchema(params MappingSchema[] schemas)
-				: base(ProviderName.DB2zOS, Array<MappingSchema>.Append(schemas, DB2MappingSchema.Instance))
+		public sealed class DB2LUWMappingSchema : LockedMappingSchema
 		{
-		}
-	}
-
-	public class DB2LUWMappingSchema : MappingSchema
-	{
-		public DB2LUWMappingSchema()
-			: base(ProviderName.DB2LUW, DB2MappingSchema.Instance)
-		{
-		}
-
-		public DB2LUWMappingSchema(params MappingSchema[] schemas)
-				: base(ProviderName.DB2LUW, Array<MappingSchema>.Append(schemas, DB2MappingSchema.Instance))
-		{
+			public DB2LUWMappingSchema() : base(ProviderName.DB2LUW, DB2ProviderAdapter.Instance.MappingSchema, Instance)
+			{
+			}
 		}
 	}
 }

@@ -1,22 +1,18 @@
-﻿using System.Data.Linq;
+﻿using System;
+using System.Collections;
+using System.Data.Linq;
 using System.Text;
 
 namespace LinqToDB.DataProvider.MySql
 {
-	using System;
-	using System.Collections;
-	using LinqToDB.Common;
-	using LinqToDB.Data;
+	using Common;
+	using Data;
 	using Mapping;
 	using SqlQuery;
 
-	public class MySqlMappingSchema : MappingSchema
+	sealed class MySqlMappingSchema : LockedMappingSchema
 	{
-		public MySqlMappingSchema() : this(ProviderName.MySql)
-		{
-		}
-
-		protected MySqlMappingSchema(string configuration) : base(configuration)
+		MySqlMappingSchema() : base(ProviderName.MySql)
 		{
 			SetValueToSqlConverter(typeof(string), (sb,dt,v) => ConvertStringToSql(sb, v.ToString()!));
 			SetValueToSqlConverter(typeof(char),   (sb,dt,v) => ConvertCharToSql  (sb, (char)v));
@@ -69,30 +65,20 @@ namespace LinqToDB.DataProvider.MySql
 			stringBuilder.AppendByteArrayAsHexViaLookup32(value);
 		}
 
-		internal static readonly MappingSchema Instance = new MySqlMappingSchema();
+		internal static readonly MySqlMappingSchema Instance = new ();
 
-		public class MySqlOfficialMappingSchema : MappingSchema
+		public sealed class MySqlOfficialMappingSchema : LockedMappingSchema
 		{
 			public MySqlOfficialMappingSchema()
-				: base(ProviderName.MySqlOfficial, Instance)
-			{
-			}
-
-			public MySqlOfficialMappingSchema(params MappingSchema[] schemas)
-				: base(ProviderName.MySqlOfficial, Array<MappingSchema>.Append(schemas, Instance))
+				: base(ProviderName.MySqlOfficial, MySqlProviderAdapter.GetInstance(ProviderName.MySqlOfficial).MappingSchema, Instance)
 			{
 			}
 		}
 
-		public class MySqlConnectorMappingSchema : MappingSchema
+		public sealed class MySqlConnectorMappingSchema : LockedMappingSchema
 		{
 			public MySqlConnectorMappingSchema()
-				: base(ProviderName.MySqlConnector, Instance)
-			{
-			}
-
-			public MySqlConnectorMappingSchema(params MappingSchema[] schemas)
-				: base(ProviderName.MySqlConnector, Array<MappingSchema>.Append(schemas, Instance))
+				: base(ProviderName.MySqlConnector, MySqlProviderAdapter.GetInstance(ProviderName.MySqlConnector).MappingSchema, Instance)
 			{
 			}
 		}

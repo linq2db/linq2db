@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Linq.Expressions;
+
 using JetBrains.Annotations;
 
 namespace LinqToDB
 {
+	using Mapping;
+
 	/// <summary>
 	/// When applied to method or property, tells linq2db to replace them in queryable LINQ expression with another expression,
 	/// returned by method, specified in this attribute.
@@ -30,7 +33,7 @@ namespace LinqToDB
 	/// </summary>
 	[PublicAPI]
 	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Method, AllowMultiple = true, Inherited = true)]
-	public class ExpressionMethodAttribute : Attribute
+	public class ExpressionMethodAttribute : MappingAttribute
 	{
 		/// <summary>
 		/// Creates instance of attribute.
@@ -94,5 +97,9 @@ namespace LinqToDB
 		/// </summary>
 		public string? Alias { get; set; }
 
+		public override string GetObjectID()
+		{
+			return $".{Configuration}.{MethodName}.{(IsColumn?1:0)}.{Alias}.";
+		}
 	}
 }

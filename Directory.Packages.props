@@ -21,7 +21,7 @@
 		<PackageVersion Include="Microsoft.CodeAnalysis.CSharp"                         Version="4.0.1"         />
 		<PackageVersion Include="Microsoft.Extensions.DependencyModel"                  Version="6.0.0"         />
 		<!--data providers-->
-		<PackageVersion Include="MySql.Data"                                            Version="8.0.28"        />
+		<PackageVersion Include="MySql.Data"                                            Version="8.0.29"        />
 		<PackageVersion Include="AdoNetCore.AseClient"                                  Version="0.19.2"        />
 		<PackageVersion Include="System.Data.SqlClient"                                 Version="4.8.3"         />
 		<PackageVersion Include="Microsoft.Data.SqlClient"                              Version="4.1.0"         />

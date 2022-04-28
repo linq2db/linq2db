@@ -16,7 +16,7 @@ namespace LinqToDB.Common
 	/// </summary>
 	public static class Compilation
 	{
-		private static Func<LambdaExpression, Delegate?>? _compiler;
+		private static Func<LambdaExpression,Delegate?>? _compiler;
 
 		/// <summary>
 		/// Sets LINQ expression compilation method.
@@ -264,6 +264,13 @@ namespace LinqToDB.Common
 			/// Default value: <c>true</c>.
 			/// </summary>
 			public static bool ParameterizeTakeSkip = true;
+
+			/// <summary>
+			/// If <c>true</c>, auto support for fluent mapping is ON,
+			/// which means that you do not need to create additional MappingSchema object to define FluentMapping.
+			/// You can use <c>context.MappingSchema.GetFluentMappingBuilder()</c>.
+			/// </summary>
+			public static bool EnableAutoFluentMapping = true;
 		}
 
 		/// <summary>

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq.Expressions;
+
 using JetBrains.Annotations;
 
 namespace LinqToDB.Mapping
@@ -21,7 +22,7 @@ namespace LinqToDB.Mapping
 	/// </summary>
 	[PublicAPI]
 	[AttributeUsage(AttributeTargets.Method | AttributeTargets.Property | AttributeTargets.Field, AllowMultiple=false)]
-	public class AssociationAttribute : Attribute
+	public class AssociationAttribute : MappingAttribute
 	{
 		/// <summary>
 		/// Creates attribute instance.
@@ -65,7 +66,6 @@ namespace LinqToDB.Mapping
 		/// Predicate expression lambda function takes two parameters: this record and other record and returns boolean result.
 		/// </summary>
 		public Expression?  Predicate           { get; set; }
-
 
 		/// <summary>
 		/// Specifies static property or method without parameters, that returns IQueryable expression. If is set, other association keys are ignored.
@@ -158,5 +158,10 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		/// <returns>List of key members.</returns>
 		public string[] GetOtherKeys() => AssociationDescriptor.ParseKeys(OtherKey);
+
+		public override string GetObjectID()
+		{
+			return $".{Configuration}.{ThisKey}.{OtherKey}.{ExpressionPredicate}.{QueryExpressionMethod}.{Storage}.{(CanBeNull?1:0)}.{KeyName}.{BackReferenceName}.{(IsBackReference?1:0)}.{(int)Relationship}.{AliasName}.";
+		}
 	}
 }

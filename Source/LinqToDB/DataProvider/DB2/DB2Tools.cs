@@ -52,7 +52,7 @@ namespace LinqToDB.DataProvider.DB2
 						{
 							var cs = string.IsNullOrWhiteSpace(connectionString) ? css.ConnectionString : connectionString;
 
-							using (var conn = DB2ProviderAdapter.GetInstance().CreateConnection(cs))
+							using (var conn = DB2ProviderAdapter.Instance.CreateConnection(cs))
 							{
 								conn.Open();
 

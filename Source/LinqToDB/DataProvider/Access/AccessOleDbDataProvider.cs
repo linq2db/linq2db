@@ -106,7 +106,7 @@ namespace LinqToDB.DataProvider.Access
 			base.SetParameterType(dataConnection, parameter, dataType);
 		}
 
-		private static readonly MappingSchema MappingSchemaInstance = new AccessMappingSchema.OleDbMappingSchema();
+		static readonly MappingSchema MappingSchemaInstance = new AccessMappingSchema.OleDbMappingSchema();
 
 		#region BulkCopy
 

@@ -2,13 +2,16 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 
 namespace LinqToDB.Common
 {
-	using System.Diagnostics.CodeAnalysis;
+	using Data;
+	using Linq;
+	using Mapping;
 	using Reflection;
 
 	/// <summary>
@@ -74,10 +77,11 @@ namespace LinqToDB.Common
 			return str.Trim();
 		}
 
-		internal static void AddRange<T>(this HashSet<T> hashSet, IEnumerable<T> items)
+		internal static HashSet<T> AddRange<T>(this HashSet<T> hashSet, IEnumerable<T> items)
 		{
-			foreach (var item in items) 
+			foreach (var item in items)
 				hashSet.Add(item);
+			return hashSet;
 		}
 
 		public static IQueryable<T> CreateEmptyQuery<T>()
@@ -112,6 +116,16 @@ namespace LinqToDB.Common
 #endif
 
 			return null;
+		}
+
+		/// <summary>
+		/// Clears all linq2db caches.
+		/// </summary>
+		public static void ClearAllCaches()
+		{
+			Query.ClearCaches();
+			MappingSchema.ClearCache();
+			DataConnection.ClearObjectReaderCache();
 		}
 	}
 }

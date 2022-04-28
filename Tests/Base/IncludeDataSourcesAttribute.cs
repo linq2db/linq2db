@@ -19,7 +19,7 @@ namespace Tests
 
 		protected override IEnumerable<string> GetProviders()
 		{
-			return Providers.Where(TestBase.UserProviders.Contains);
+			return Providers.Intersect(TestBase.UserProviders);
 		}
 	}
 }

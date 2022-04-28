@@ -85,8 +85,8 @@ namespace LinqToDB.DataProvider.SqlCe
 
 						subStrPredicate =
 							new SqlPredicate.ExprExpr(
-								new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary, 
-									new SqlFunction(typeof(string), "SUBSTRING", 
+								new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary,
+									new SqlFunction(typeof(string), "SUBSTRING",
 										predicate.Expr1,
 										indexExpression,
 										new SqlFunction(typeof(int), "Length", predicate.Expr2))),

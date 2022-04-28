@@ -296,7 +296,7 @@ namespace Tests.Data
 			}
 		}
 
-		public class LinqMySqlDataProvider : MySqlDataProvider
+		class LinqMySqlDataProvider : MySqlDataProvider
 		{
 			private readonly Func<string, DbConnection> _connectionFactory;
 			public LinqMySqlDataProvider(Func<string, DbConnection> connectionFactory)
@@ -577,7 +577,7 @@ namespace Tests.Data
 
 				// test connection server type property
 				var cs = DataConnection.GetConnectionString(GetProviderName(context, out var _));
-				using (var cn = DB2ProviderAdapter.GetInstance().CreateConnection(cs))
+				using (var cn = DB2ProviderAdapter.Instance.CreateConnection(cs))
 				{
 					cn.Open();
 

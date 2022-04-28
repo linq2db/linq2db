@@ -11,7 +11,7 @@ namespace LinqToDB.Common
 	/// <summary>
 	/// Stores database type attributes.
 	/// </summary>
-	public struct DbDataType
+	public struct DbDataType : IEquatable<DbDataType>
 	{
 		[DebuggerStepThrough]
 		public DbDataType(Type systemType) : this()

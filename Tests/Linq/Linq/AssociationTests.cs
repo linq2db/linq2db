@@ -662,8 +662,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestGenericAssociationRuntime([DataSources(TestProvName.AllAccess, TestProvName.AllSQLite)]
-			string context)
+		public void TestGenericAssociationRuntime([DataSources(TestProvName.AllAccess, TestProvName.AllSQLite)] string context)
 		{
 			var ids = new[] { 1, 5 };
 

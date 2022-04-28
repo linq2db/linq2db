@@ -82,7 +82,7 @@ namespace LinqToDB.Common
 
 						if (_enumerator.MoveNext())
 							yield return _enumerator.Current;
-						else 
+						else
 						{
 							_sourceDepleted = true;
 							break;

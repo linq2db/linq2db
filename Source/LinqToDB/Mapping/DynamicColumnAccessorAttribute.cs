@@ -15,7 +15,7 @@ namespace LinqToDB.Mapping
 	/// // or
 	/// object this.Getter(string propertyName, object defaultValue);
 	/// // where defaultValue is default value for property type for current MappingSchema
-	/// 
+	///
 	/// static void Setter(Entity object, string propertyName, object value)
 	/// or
 	/// void this.Setter(string propertyName, object value)
@@ -23,7 +23,7 @@ namespace LinqToDB.Mapping
 	/// </remarks>
 	/// <seealso cref="Attribute" />
 	[AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
-	public class DynamicColumnAccessorAttribute : Attribute, IConfigurationProvider
+	public class DynamicColumnAccessorAttribute : MappingAttribute, IConfigurationProvider
 	{
 		/// <summary>
 		/// Gets or sets mapping schema configuration name, for which this attribute should be taken into account.
@@ -77,6 +77,11 @@ namespace LinqToDB.Mapping
 
 			if (setters != 1 || getters != 1)
 				throw new LinqToDBException($"{nameof(DynamicColumnAccessorAttribute)} should have exactly one setter and getter configured.");
+		}
+
+		public override string GetObjectID()
+		{
+			return $".{Configuration}.{SetterMethod}.{GetterMethod}.{SetterExpressionMethod}.{GetterExpressionMethod}.";
 		}
 	}
 }

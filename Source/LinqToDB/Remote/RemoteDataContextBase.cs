@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 
 using JetBrains.Annotations;
+using LinqToDB.Common.Internal;
 
 namespace LinqToDB.Remote
 {
@@ -101,8 +102,11 @@ namespace LinqToDB.Remote
 		protected abstract IDataContext Clone    ();
 		protected abstract string       ContextIDPrefix { get; }
 
-		string?            _contextID;
-		string IDataContext.ContextID => _contextID ??= GetConfigurationInfo().MappingSchema.ConfigurationList[0];
+		string?            _contextName;
+		string IDataContext.ContextName => _contextName ??= GetConfigurationInfo().MappingSchema.ConfigurationList[0];
+
+		int?               _contextID;
+		int    IDataContext.ContextID   => _contextID   ??= new IdentifierBuilder(((IDataContext)this).ContextName).CreateID();
 
 		private MappingSchema? _mappingSchema;
 		public  MappingSchema   MappingSchema
@@ -381,6 +385,11 @@ namespace LinqToDB.Remote
 				await _dataContextInterceptor.OnClosingAsync(new (this)).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 				await _dataContextInterceptor.OnClosedAsync (new (this)).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			}
+		}
+
+		public FluentMappingBuilder GetFluentMappingBuilder()
+		{
+			return MappingSchema.GetFluentMappingBuilder();
 		}
 
 		public virtual void Dispose()
