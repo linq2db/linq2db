@@ -1,17 +1,11 @@
-﻿// Copyright (c) .NET Foundation. All rights reserved.
-// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
+﻿using System;
+using LinqToDB.Infrastructure.Internal;
 
-using System;
-using System.Collections.Generic;
-using JetBrains.Annotations;
-using Microsoft.EntityFrameworkCore.SqlServer.Infrastructure.Internal;
-using Microsoft.EntityFrameworkCore.Storage;
-
-namespace Microsoft.EntityFrameworkCore.Infrastructure
+namespace LinqToDB.Infrastructure
 {
     /// <summary>
     ///     <para>
-    ///         Allows SQL Server specific configuration to be performed on <see cref="DbContextOptions" />.
+    ///         Allows SQL Server specific configuration to be performed on <see cref="DataContextOptions" />.
     ///     </para>
     /// </summary>
     public class SqlServerDbContextOptionsBuilder
@@ -21,7 +15,7 @@ namespace Microsoft.EntityFrameworkCore.Infrastructure
         ///     Initializes a new instance of the <see cref="SqlServerDbContextOptionsBuilder" /> class.
         /// </summary>
         /// <param name="optionsBuilder"> The options builder. </param>
-        public SqlServerDbContextOptionsBuilder(DbContextOptionsBuilder optionsBuilder)
+        public SqlServerDbContextOptionsBuilder(DataContextOptionsBuilder optionsBuilder)
             : base(optionsBuilder)
         {
         }

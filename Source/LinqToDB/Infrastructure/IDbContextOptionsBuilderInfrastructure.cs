@@ -1,8 +1,8 @@
-﻿namespace Microsoft.EntityFrameworkCore.Infrastructure
+﻿namespace LinqToDB.Infrastructure
 {
     /// <summary>
     ///     <para>
-    ///         Explicitly implemented by <see cref="DbContextOptionsBuilder" /> to hide methods that are used by database provider
+    ///         Explicitly implemented by <see cref="DataContextOptionsBuilder" /> to hide methods that are used by database provider
     ///         extension methods but not intended to be called by application developers.
     ///     </para>
     ///     <para>

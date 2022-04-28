@@ -1,15 +1,12 @@
-﻿// Copyright (c) .NET Foundation. All rights reserved.
-// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
-
-using System;
+﻿using System;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 
-namespace Microsoft.EntityFrameworkCore.Infrastructure
+namespace LinqToDB.Infrastructure
 {
     /// <summary>
     ///     <para>
-    ///         Allows relational database specific configuration to be performed on <see cref="DbContextOptions" />.
+    ///         Allows relational database specific configuration to be performed on <see cref="DataContextOptions" />.
     ///     </para>
     ///     <para>
     ///         Instances of this class are typically returned from methods that configure the context to use a
@@ -24,7 +21,7 @@ namespace Microsoft.EntityFrameworkCore.Infrastructure
         ///     Initializes a new instance of the <see cref="RelationalDbContextOptionsBuilder{TBuilder, TExtension}" /> class.
         /// </summary>
         /// <param name="optionsBuilder"> The core options builder. </param>
-        protected RelationalDbContextOptionsBuilder([NotNull] DbContextOptionsBuilder optionsBuilder)
+        protected RelationalDbContextOptionsBuilder([NotNull] DataContextOptionsBuilder optionsBuilder)
         {
 	        if (optionsBuilder == null)
 	        {
@@ -37,27 +34,10 @@ namespace Microsoft.EntityFrameworkCore.Infrastructure
         /// <summary>
         ///     Gets the core options builder.
         /// </summary>
-        protected virtual DbContextOptionsBuilder OptionsBuilder { get; }
+        protected virtual DataContextOptionsBuilder OptionsBuilder { get; }
 
         /// <inheritdoc />
-        DbContextOptionsBuilder IRelationalDbContextOptionsBuilderInfrastructure.OptionsBuilder => OptionsBuilder;
-
-        /// <summary>
-        ///     Configures the wait time (in seconds) before terminating the attempt to execute a command and generating an error.
-        /// </summary>
-        /// <param name="commandTimeout"> The time in seconds to wait for the command to execute. </param>
-        /// <returns> The same builder instance so that multiple calls can be chained. </returns>
-        public virtual TBuilder CommandTimeout(int? commandTimeout)
-            => WithOption(e => (TExtension)e.WithCommandTimeout(commandTimeout));
-
-        /// <summary>
-        ///     Configures the context to use relational database semantics when comparing null values. By default,
-        ///     Entity Framework will use C# semantics for null values, and generate SQL to compensate for differences
-        ///     in how the database handles nulls.
-        /// </summary>
-        /// <returns> The same builder instance so that multiple calls can be chained. </returns>
-        public virtual TBuilder UseRelationalNulls(bool useRelationalNulls = true)
-            => WithOption(e => (TExtension)e.WithUseRelationalNulls(useRelationalNulls));
+        DataContextOptionsBuilder IRelationalDbContextOptionsBuilderInfrastructure.OptionsBuilder => OptionsBuilder;
 
         /// <summary>
         ///     Sets an option by cloning the extension used to store the settings. This ensures the builder

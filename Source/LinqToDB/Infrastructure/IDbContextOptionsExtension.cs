@@ -1,13 +1,10 @@
-﻿// Copyright (c) .NET Foundation. All rights reserved.
-// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
+﻿using System;
 
-using System;
-
-namespace Microsoft.EntityFrameworkCore.Infrastructure
+namespace LinqToDB.Infrastructure
 {
     /// <summary>
     ///     <para>
-    ///         Interface for extensions that are stored in <see cref="DbContextOptions.Extensions" />.
+    ///         Interface for extensions that are stored in <see cref="DataContextOptions.Extensions" />.
     ///     </para>
     ///     <para>
     ///         This interface is typically used by database providers (and other extensions). It is generally
@@ -35,6 +32,6 @@ namespace Microsoft.EntityFrameworkCore.Infrastructure
         ///     If options are invalid, then an exception should be thrown.
         /// </summary>
         /// <param name="options"> The options being validated. </param>
-        void Validate(IDbContextOptions options);
+        void Validate(IDataContextOptions options);
     }
 }

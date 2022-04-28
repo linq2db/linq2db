@@ -31,7 +31,7 @@ namespace Tests.Data
 	public class DataConnectionTests : TestBase
 	{
 		[Test]
-		public void Test1([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void UsingDataProvider([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			var connectionString = DataConnection.GetConnectionString(context);
 			var dataProvider = DataConnection.GetDataProvider(context);
@@ -44,7 +44,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void Test2()
+		public void UsingDefaultConfiguration()
 		{
 			using (var conn = new DataConnection())
 			{
@@ -349,14 +349,14 @@ namespace Tests.Data
 
 		public class DbConnection1 : DataConnection
 		{
-			public DbConnection1(LinqToDBConnectionOptions options) : base(options)
+			public DbConnection1(DataContextOptions options) : base(options)
 			{
 			}
 		}
 
 		public class DbConnection2 : DataConnection
 		{
-			public DbConnection2(LinqToDBConnectionOptions<DbConnection2> options) : base(options)
+			public DbConnection2(DataContextOptions<DbConnection2> options) : base(options)
 			{
 			}
 		}
@@ -378,7 +378,7 @@ namespace Tests.Data
 		[Test]
 		public void TestConstructorThrowsWhenGivenInvalidSettings()
 		{
-			Assert.Throws<LinqToDBException>(() => new DbConnection1(new LinqToDBConnectionOptionsBuilder().Build<DbConnection2>()));
+			Assert.Throws<LinqToDBException>(() => new DbConnection1(new DataContextOptionsBuilder<DbConnection2>().Options));
 		}
 
 		// informix connection limits interfere with test

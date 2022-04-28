@@ -111,7 +111,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			InitMappingSchema();
 		}
 
-		public SystemDB(LinqToDBConnectionOptions options)
+		public SystemDB(DataContextOptions options)
 			: base(options)
 		{
 			InitSchemas();
@@ -119,7 +119,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			InitMappingSchema();
 		}
 
-		public SystemDB(LinqToDBConnectionOptions<SystemDB> options)
+		public SystemDB(DataContextOptions<SystemDB> options)
 			: base(options)
 		{
 			InitSchemas();

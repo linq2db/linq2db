@@ -1,9 +1,8 @@
-﻿// Copyright (c) .NET Foundation. All rights reserved.
-// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
+﻿using System;
 
-using System;
+#pragma warning disable CS1574, CS1584, CS1581, CS1580
 
-namespace Microsoft.EntityFrameworkCore.Infrastructure
+namespace LinqToDB.Infrastructure
 {
     /// <summary>
     ///     <para>
@@ -20,14 +19,14 @@ namespace Microsoft.EntityFrameworkCore.Infrastructure
     public interface ISingletonOptions
     {
         /// <summary>
-        ///     Initializes the singleton options from the given <see cref="IDbContextOptions" />.
+        ///     Initializes the singleton options from the given <see cref="IDataContextOptions" />.
         /// </summary>
-        void Initialize(IDbContextOptions options);
+        void Initialize(IDataContextOptions options);
 
         /// <summary>
-        ///     Validates that the options in given <see cref="IDbContextOptions" /> have not
+        ///     Validates that the options in given <see cref="IDataContextOptions" /> have not
         ///     changed when compared to the options already set here, and throws if they have.
         /// </summary>
-        void Validate(IDbContextOptions options);
+        void Validate(IDataContextOptions options);
     }
 }

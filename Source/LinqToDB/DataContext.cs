@@ -8,17 +8,18 @@ using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
+
 namespace LinqToDB
 {
 #if !NATIVE_ASYNC
 	using Async;
 #endif
-	using Configuration;
 	using Data;
 	using DataProvider;
 	using Linq;
 	using Mapping;
 	using SqlProvider;
+	using Infrastructure;
 
 	/// <summary>
 	/// Implements abstraction over non-persistent database connection that could be released after query or transaction execution.
@@ -26,8 +27,8 @@ namespace LinqToDB
 	[PublicAPI]
 	public partial class DataContext : IDataContext
 	{
-		private          LinqToDBConnectionOptions        _prebuiltOptions;
-		private readonly LinqToDBConnectionOptionsBuilder _optionsBuilder = new ();
+		private CoreOptionsExtension _prebuiltOptionsExtension;
+		private DataContextOptions _prebuiltOptions;
 
 		private bool _disposed;
 
@@ -47,11 +48,11 @@ namespace LinqToDB
 		/// <see cref="DataConnection.DefaultConfiguration"/> for more details.
 		/// </param>
 		public DataContext(string? configurationString)
-			: this(new LinqToDBConnectionOptionsBuilder()
+			: this(new DataContextOptionsBuilder()
 				.UseConfigurationString(
 					configurationString ?? DataConnection.DefaultConfiguration
 						?? throw new ArgumentNullException($"Neither {nameof(configurationString)} nor {nameof(DataConnection)}.{DataConnection.DefaultConfiguration} specified"))
-				.Build())
+				.Options)
 		{
 		}
 
@@ -61,11 +62,11 @@ namespace LinqToDB
 		/// <param name="dataProvider">Database provider implementation.</param>
 		/// <param name="connectionString">Database connection string.</param>
 		public DataContext(IDataProvider dataProvider, string connectionString)
-			: this(new LinqToDBConnectionOptionsBuilder()
+			: this(new DataContextOptionsBuilder()
 				.UseConnectionString(
 					dataProvider     ?? throw new ArgumentNullException(nameof(dataProvider)),
 					connectionString ?? throw new ArgumentNullException(nameof(connectionString)))
-				.Build())
+				.Options)
 		{
 		}
 
@@ -75,62 +76,47 @@ namespace LinqToDB
 		/// <param name="providerName">Name of database provider to use with this connection. <see cref="ProviderName"/> class for list of providers.</param>
 		/// <param name="connectionString">Database connection string to use for connection with database.</param>
 		public DataContext( string providerName, string connectionString)
-			: this(new LinqToDBConnectionOptionsBuilder()
+			: this(new DataContextOptionsBuilder()
 				.UseConnectionString(
 					providerName     ?? throw new ArgumentNullException(nameof(providerName)),
 					connectionString ?? throw new ArgumentNullException(nameof(connectionString)))
-				.Build())
+				.Options)
 		{
 		}
 
 		/// <summary>
-		/// Creates database context object that uses a <see cref="LinqToDBConnectionOptions"/> to configure the connection.
+		/// Creates database context object that uses a <see cref="DataContextOptions"/> to configure the connection.
 		/// </summary>
 		/// <param name="options">Options, setup ahead of time.</param>
-		public DataContext(LinqToDBConnectionOptions options)
+		public DataContext(DataContextOptions options)
 		{
-			// reveng options back to builder
+			var extension = options.FindExtension<CoreOptionsExtension>();
 
-			// shared options
-			if (options.OnTrace       != null) _optionsBuilder.WithTracing     (options.OnTrace);
-			if (options.TraceLevel    != null) _optionsBuilder.WithTraceLevel  (options.TraceLevel.Value);
-			if (options.WriteTrace    != null) _optionsBuilder.WriteTraceWith  (options.WriteTrace);
+			extension ??= new CoreOptionsExtension();
 
-			var dataProvider = options.DataProvider;
-			if (dataProvider == null)
+			_prebuiltOptions = options;
+
+			var dataProvider = extension.DataProvider;
 			{
-				if (options.ProviderName != null && options.ConnectionString != null)
+				if (dataProvider == null)
 				{
-					dataProvider = DataConnection.GetDataProvider(options.ProviderName, options.ConnectionString)
-					  ?? throw new LinqToDBException($"DataProvider '{options.ProviderName}' not found.");
+					if (extension.ProviderName != null && extension.ConnectionString != null)
+					{
+						dataProvider =
+							DataConnection.GetDataProvider(extension.ProviderName, extension.ConnectionString)
+							?? throw new LinqToDBException($"DataProvider '{extension.ProviderName}' not found.");
+					}
+					else if (extension.ConfigurationString != null)
+						dataProvider = DataConnection.GetDataProvider(extension.ConfigurationString);
 				}
-				else if (options.ConfigurationString != null)
-					dataProvider = DataConnection.GetDataProvider(options.ConfigurationString);
+
+				if (dataProvider == null)
+					throw new LinqToDBException($"DataProvider not specified.");
+
+				_prebuiltOptions = _prebuiltOptions.WithExtension(extension.WithDataProvider(dataProvider));
 			}
 
-			if (dataProvider == null)
-				throw new LinqToDBException($"DataProvider not specified.");
-
-			_optionsBuilder.UseDataProvider (dataProvider);
-			_optionsBuilder.UseMappingSchema(options.MappingSchema ?? dataProvider.MappingSchema);
-
-			// setup type-dependent
-			if      (options.DbTransaction       != null) _optionsBuilder.UseTransaction        (dataProvider, options.DbTransaction);
-			else if (options.ConnectionFactory   != null) _optionsBuilder.UseConnectionFactory  (dataProvider, options.ConnectionFactory);
-			else if (options.ConfigurationString != null) _optionsBuilder.UseConfigurationString(options.ConfigurationString);
-			else if (options.DbConnection        != null) _optionsBuilder.UseConnection         (dataProvider, options.DbConnection, options.DisposeConnection);
-			else if (options.ConnectionString    != null) _optionsBuilder.UseConnectionString   (options.ProviderName!, options.ConnectionString);
-
-			// interceptors magic
-			// as we need to aggregate interceptors, we don't pass them as-is from options to builder but manage separately
-			if (options.Interceptors != null)
-			{
-				foreach (var interceptor in options.Interceptors)
-					AddInterceptor(interceptor);
-			}
-
-			// rebuild options instead of saving parameter directly (to have aggregated interceptors there)
-			_prebuiltOptions = _optionsBuilder.Build();
+			_prebuiltOptionsExtension = _prebuiltOptions.GetExtension<CoreOptionsExtension>();
 
 			ContextID = dataProvider.Name;
 		}
@@ -138,15 +124,15 @@ namespace LinqToDB
 		/// <summary>
 		/// Gets initial value for database connection configuration name.
 		/// </summary>
-		public string?       ConfigurationString => _optionsBuilder.ConfigurationString;
+		public string?       ConfigurationString => _prebuiltOptionsExtension.ConfigurationString;
 		/// <summary>
 		/// Gets initial value for database connection string.
 		/// </summary>
-		public string?       ConnectionString    => _optionsBuilder.ConnectionString;
+		public string?       ConnectionString    => _prebuiltOptionsExtension.ConnectionString;
 		/// <summary>
 		/// Gets database provider implementation.
 		/// </summary>
-		public IDataProvider DataProvider        => _optionsBuilder.DataProvider!;
+		public IDataProvider DataProvider        => _prebuiltOptionsExtension.DataProvider!;
 		/// <summary>
 		/// Gets or sets context identifier. Uses provider's name by default.
 		/// </summary>
@@ -156,11 +142,11 @@ namespace LinqToDB
 		/// </summary>
 		public MappingSchema MappingSchema
 		{
-			get => _optionsBuilder.MappingSchema!;
+			get => _prebuiltOptionsExtension.MappingSchema!;
 			set
 			{
-				_optionsBuilder.UseMappingSchema(value ?? throw new ArgumentNullException(nameof(value)));
-				_prebuiltOptions = _optionsBuilder.Build();
+				_prebuiltOptionsExtension = _prebuiltOptionsExtension.WithMappingSchema(value);
+				_prebuiltOptions          = _prebuiltOptions.WithExtension(_prebuiltOptionsExtension);
 			}
 		}
 		/// <summary>
@@ -293,7 +279,7 @@ namespace LinqToDB
 		/// Creates instance of <see cref="DataConnection"/> class, used by context internally.
 		/// </summary>
 		/// <returns>New <see cref="DataConnection"/> instance.</returns>
-		protected virtual DataConnection CreateDataConnection(LinqToDBConnectionOptions options) => new (options);
+		protected virtual DataConnection CreateDataConnection(DataContextOptions options) => new (options);
 
 		/// <summary>
 		/// Returns associated database connection <see cref="DataConnection"/> or create new connection, if connection
@@ -394,10 +380,10 @@ namespace LinqToDB
 		/// Used by <see cref="IDataContext.Clone(bool)"/> API only if <see cref="DataConnection.IsMarsEnabled"/>
 		/// is <c>true</c> and there is an active connection associated with current context.
 		/// <param name="currentConnection"><see cref="DataConnection"/> instance, used by current context instance.</param>
-		/// <param name="options">Connection options, will have <see cref="LinqToDBConnectionOptions.DbConnection"/> or <see cref="LinqToDBConnectionOptions.DbTransaction"/> set.</param>
+		/// <param name="options">Connection options, will have <see cref="CoreOptionsExtension.DbConnection"/> or <see cref="CoreOptionsExtension.DbTransaction"/> set.</param>
 		/// <returns>New <see cref="DataConnection"/> instance.</returns>
 		/// </summary>
-		protected virtual DataConnection CloneDataConnection(DataConnection currentConnection, LinqToDBConnectionOptions options) => new (options);
+		protected virtual DataConnection CloneDataConnection(DataConnection currentConnection, DataContextOptions options) => new (options);
 
 		IDataContext IDataContext.Clone(bool forNestedQuery)
 		{
@@ -412,15 +398,15 @@ namespace LinqToDB
 
 			if (forNestedQuery && _dataConnection != null && _dataConnection.IsMarsEnabled)
 			{
-				var builderClone       = _optionsBuilder.Clone();
-				builderClone.SetupType = ConnectionSetupType.DefaultConfiguration;
+				var coreOptions = _prebuiltOptionsExtension;
 
 				if (_dataConnection.TransactionAsync != null)
-					builderClone.UseTransaction(builderClone.DataProvider!, _dataConnection.TransactionAsync.Transaction);
+					coreOptions = coreOptions.WithTransaction(_dataConnection.TransactionAsync.Transaction);
 				else
-					builderClone.UseConnection(builderClone.DataProvider!, _dataConnection.EnsureConnection().Connection);
+					coreOptions = coreOptions.WithConnection(_dataConnection.EnsureConnection().Connection);
 
-				dc._dataConnection = CloneDataConnection(_dataConnection, builderClone.Build());
+				var newOptions = _prebuiltOptions.WithExtension(coreOptions);
+				dc._dataConnection = CloneDataConnection(_dataConnection, newOptions);
 			}
 
 			dc.QueryHints.    AddRange(QueryHints);

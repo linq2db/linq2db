@@ -73,8 +73,8 @@ namespace LinqToDB
 					aggregator = new();
 					aggregator.Interceptors.AddRange(ai.Interceptors);
 
-					_optionsBuilder.WithInterceptor(aggregator);
-					_prebuiltOptions = _optionsBuilder.Build();
+					_prebuiltOptionsExtension = _prebuiltOptionsExtension.WithInterceptor(aggregator);
+					_prebuiltOptions          = _prebuiltOptions.WithExtension(_prebuiltOptionsExtension);
 				}
 				else
 				{
@@ -83,8 +83,8 @@ namespace LinqToDB
 						aggregator = new();
 						_dataConnection?.AddInterceptor(aggregator);
 
-						_optionsBuilder.WithInterceptor(aggregator);
-						_prebuiltOptions = _optionsBuilder.Build();
+						_prebuiltOptionsExtension = _prebuiltOptionsExtension.WithInterceptor(aggregator);
+						_prebuiltOptions          = _prebuiltOptions.WithExtension(_prebuiltOptionsExtension);
 					}
 
 					aggregator.Interceptors.Add(intercept);

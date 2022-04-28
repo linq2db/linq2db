@@ -1,41 +1,44 @@
-﻿// Copyright (c) .NET Foundation. All rights reserved.
-// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Data.Common;
+using System.Diagnostics;
 using System.Linq;
-using LinqToDB.Data;
-using LinqToDB.Interceptors;
-using Microsoft.EntityFrameworkCore.Infrastructure;
 
-namespace Microsoft.EntityFrameworkCore
+
+namespace LinqToDB
 {
+	using Data;
+	using DataProvider;
+	using Infrastructure;
+	using Interceptors;
+	using Mapping;
+
     /// <summary>
     ///     <para>
-    ///         Provides a simple API surface for configuring <see cref="DbContextOptions" />. Databases (and other extensions)
+    ///         Provides a simple API surface for configuring <see cref="DataContextOptions" />. Databases (and other extensions)
     ///         typically define extension methods on this object that allow you to configure the database connection (and other
     ///         options) to be used for a context.
     ///     </para>
     /// </summary>
-    public class DbContextOptionsBuilder : IDbContextOptionsBuilderInfrastructure
+    public class DataContextOptionsBuilder : IDbContextOptionsBuilderInfrastructure
     {
-        private DbContextOptions _options;
+        private DataContextOptions _options;
 
         /// <summary>
-        ///     Initializes a new instance of the <see cref="DbContextOptionsBuilder" /> class with no options set.
+        ///     Initializes a new instance of the <see cref="DataContextOptionsBuilder" /> class with no options set.
         /// </summary>
-        public DbContextOptionsBuilder()
-            : this(new DbContextOptions<DataConnection>())
+        public DataContextOptionsBuilder()
+            : this(new DataContextOptions<DataConnection>())
         {
         }
 
         /// <summary>
-        ///     Initializes a new instance of the <see cref="DbContextOptionsBuilder" /> class to further configure
-        ///     a given <see cref="DbContextOptions" />.
+        ///     Initializes a new instance of the <see cref="DataContextOptionsBuilder" /> class to further configure
+        ///     a given <see cref="DataContextOptions" />.
         /// </summary>
         /// <param name="options"> The options to be configured. </param>
-        public DbContextOptionsBuilder(DbContextOptions options)
+        public DataContextOptionsBuilder(DataContextOptions options)
         {
 	        if (options == null)
 	        {
@@ -48,7 +51,7 @@ namespace Microsoft.EntityFrameworkCore
         /// <summary>
         ///     Gets the options being configured.
         /// </summary>
-        public virtual DbContextOptions Options => _options;
+        public virtual DataContextOptions Options => _options;
 
         /// <summary>
         ///     <para>
@@ -69,7 +72,7 @@ namespace Microsoft.EntityFrameworkCore
         /// <typeparam name="TService"> The type (usually an interface) that defines the contract of the service to replace. </typeparam>
         /// <typeparam name="TImplementation"> The new implementation type for the service. </typeparam>
         /// <returns> The same builder instance so that multiple calls can be chained. </returns>
-        public virtual DbContextOptionsBuilder ReplaceService<TService, TImplementation>()
+        public virtual DataContextOptionsBuilder ReplaceService<TService, TImplementation>()
             where TImplementation : TService
             => WithOption(e => e.WithReplacedService(typeof(TService), typeof(TImplementation)));
 
@@ -98,7 +101,7 @@ namespace Microsoft.EntityFrameworkCore
         /// </summary>
         /// <param name="interceptors"> The interceptors to add. </param>
         /// <returns> The same builder instance so that multiple calls can be chained. </returns>
-        public virtual DbContextOptionsBuilder AddInterceptors(IEnumerable<IInterceptor> interceptors)
+        public virtual DataContextOptionsBuilder AddInterceptors(IEnumerable<IInterceptor> interceptors)
             => WithOption(e => e.WithInterceptors(interceptors));
 
         /// <summary>
@@ -122,8 +125,119 @@ namespace Microsoft.EntityFrameworkCore
         /// </summary>
         /// <param name="interceptors"> The interceptors to add. </param>
         /// <returns> The same builder instance so that multiple calls can be chained. </returns>
-        public virtual DbContextOptionsBuilder AddInterceptors(params IInterceptor[] interceptors)
+        public virtual DataContextOptionsBuilder AddInterceptors(params IInterceptor[] interceptors)
             => AddInterceptors((IEnumerable<IInterceptor>)interceptors);
+
+
+        public virtual DataContextOptionsBuilder UseConnectionString(string providerName, string connectionString)
+        {
+	        return WithOption(e => e.WithProviderName(providerName).WithConnectionString(connectionString));
+        }
+
+        public virtual DataContextOptionsBuilder UseConnectionString(IDataProvider dataProvider, string connectionString)
+        {
+	        return WithOption(e => e.WithDataProvider(dataProvider).WithConnectionString(connectionString));
+        }
+
+        public virtual DataContextOptionsBuilder UseConnectionString(string connectionString)
+        {
+	        return WithOption(e => e.WithConnectionString(connectionString));
+        }
+
+        public virtual DataContextOptionsBuilder UseConfigurationString(string? configurationString)
+        {
+	        return WithOption(e => e.WithConfigurationString(configurationString));
+        }
+
+        public virtual DataContextOptionsBuilder UseConfigurationString(string? configurationString, MappingSchema mappingSchema)
+        {
+	        return WithOption(e => e.WithConfigurationString(configurationString).WithMappingSchema(mappingSchema));
+        }
+
+        public virtual DataContextOptionsBuilder UseConnection(DbConnection connection)
+        {
+	        return WithOption(e => e.WithConnection(connection));
+        }
+
+        public virtual DataContextOptionsBuilder UseConnection(IDataProvider dataProvider, DbConnection connection)
+        {
+	        return WithOption(e => e.WithDataProvider(dataProvider).WithConnection(connection));
+        }
+
+        public virtual DataContextOptionsBuilder UseConnection(IDataProvider dataProvider, DbConnection connection, bool disposeConnection)
+        {
+	        return WithOption(e => e.WithDataProvider(dataProvider).WithConnection(connection).WithDisposeConnection(disposeConnection));
+        }
+
+        public virtual DataContextOptionsBuilder UseProvider(string providerName)
+        {
+	        return WithOption(e => e.WithProviderName(providerName));
+        }
+
+        public virtual DataContextOptionsBuilder UseDataProvider(IDataProvider dataProvider)
+        {
+	        return WithOption(e => e.WithDataProvider(dataProvider));
+        }
+
+        public virtual DataContextOptionsBuilder UseMappingSchema(MappingSchema mappingSchema)
+        {
+	        return WithOption(e => e.WithMappingSchema(mappingSchema));
+        }
+
+        public virtual DataContextOptionsBuilder UseConnectionFactory(Func<DbConnection> connectionFactory)
+        {
+	        return WithOption(e => e.WithConnectionFactory(connectionFactory));
+        }
+
+        public virtual DataContextOptionsBuilder UseConnectionFactory(IDataProvider dataProvider, Func<DbConnection> connectionFactory)
+        {
+	        return WithOption(e => e.WithDataProvider(dataProvider).WithConnectionFactory(connectionFactory));
+        }
+
+        public virtual DataContextOptionsBuilder UseTransaction(IDataProvider dataProvider, DbTransaction transaction)
+        {
+	        return WithOption(e => e.WithDataProvider(dataProvider).WithTransaction(transaction));
+        }
+
+        /// <summary>
+        /// Configure the database to use specified trace level.
+        /// </summary>
+        /// <returns>The builder instance so calls can be chained.</returns>
+        public virtual DataContextOptionsBuilder WithTraceLevel(TraceLevel traceLevel)
+        {
+	        return WithOption(e => e.WithTraceLevel(traceLevel));
+        }
+
+        /// <summary>
+        /// Configure the database to use the specified callback for logging or tracing.
+        /// </summary>
+        /// <param name="onTrace">Callback, may not be called depending on the trace level.</param>
+        /// <returns>The builder instance so calls can be chained.</returns>
+        public virtual DataContextOptionsBuilder WithTracing(Action<TraceInfo> onTrace)
+        {
+	        return WithOption(e => e.WithTracing(onTrace));
+        }
+
+        /// <summary>
+        /// Configure the database to use the specified trace level and callback for logging or tracing.
+        /// </summary>
+        /// <param name="traceLevel">Trace level to use.</param>
+        /// <param name="onTrace">Callback, may not be called depending on the trace level.</param>
+        /// <returns>The builder instance so calls can be chained.</returns>
+        public virtual DataContextOptionsBuilder WithTracing(TraceLevel traceLevel, Action<TraceInfo> onTrace)
+        {
+	        return WithOption(e => e.WithTracing(onTrace).WithTraceLevel(traceLevel));
+        }
+
+        /// <summary>
+        /// Configure the database to use the specified a string trace callback.
+        /// </summary>
+        /// <param name="write">Callback, may not be called depending on the trace level.</param>
+        /// <returns>The builder instance so calls can be chained.</returns>
+        public DataContextOptionsBuilder WriteTraceWith(Action<string?, string?, TraceLevel> write)
+        {
+	        return WithOption(e => e.WriteTraceWith(write));
+        }
 
         /// <summary>
         ///     <para>
@@ -146,7 +260,7 @@ namespace Microsoft.EntityFrameworkCore
 	        _options = _options.WithExtension(extension);
         }
 
-        private DbContextOptionsBuilder WithOption(Func<CoreOptionsExtension, CoreOptionsExtension> withFunc)
+        private DataContextOptionsBuilder WithOption(Func<CoreOptionsExtension, CoreOptionsExtension> withFunc)
         {
             ((IDbContextOptionsBuilderInfrastructure)this).AddOrUpdateExtension(
                 withFunc(Options.FindExtension<CoreOptionsExtension>() ?? new CoreOptionsExtension()));
@@ -161,7 +275,7 @@ namespace Microsoft.EntityFrameworkCore
         /// </summary>
         /// <returns> A string that represents the current object. </returns>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public override string ToString() => base.ToString();
+        public override string? ToString() => base.ToString();
 
         /// <summary>
         ///     Determines whether the specified object is equal to the current object.

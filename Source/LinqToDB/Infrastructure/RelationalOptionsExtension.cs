@@ -1,18 +1,13 @@
-﻿// Copyright (c) .NET Foundation. All rights reserved.
-// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
-
-using System;
-using System.Data.Common;
+﻿using System;
 using System.Linq;
 using System.Text;
-using LinqToDB.DataProvider;
 
-namespace Microsoft.EntityFrameworkCore.Infrastructure
+namespace LinqToDB.Infrastructure
 {
     /// <summary>
     ///     <para>
     ///         Represents options managed by the relational database providers.
-    ///         These options are set using <see cref="DbContextOptionsBuilder" />.
+    ///         These options are set using <see cref="DataContextOptionsBuilder" />.
     ///     </para>
     ///     <para>
     ///         Instances of this class are designed to be immutable. To change an option, call one of the 'With...'
@@ -22,13 +17,6 @@ namespace Microsoft.EntityFrameworkCore.Infrastructure
     public abstract class RelationalOptionsExtension : IDbContextOptionsExtension
     {
         // NB: When adding new options, make sure to update the copy constructor below.
-
-        private string?        _connectionString;
-        private DbConnection?  _connection;
-        private string?        _providerName;
-        private IDataProvider? _dataProvider;
-        private int?           _commandTimeout;
-        private bool           _useRelationalNulls;
 
         /// <summary>
         ///     Creates a new set of options with everything set to default values.
@@ -47,11 +35,6 @@ namespace Microsoft.EntityFrameworkCore.Infrastructure
 	        {
 		        throw new ArgumentNullException(nameof(copyFrom));
 	        }
-
-            _connectionString = copyFrom._connectionString;
-            _connection = copyFrom._connection;
-            _commandTimeout = copyFrom._commandTimeout;
-            _useRelationalNulls = copyFrom._useRelationalNulls;
         }
 
         /// <summary>
@@ -66,153 +49,13 @@ namespace Microsoft.EntityFrameworkCore.Infrastructure
         protected abstract RelationalOptionsExtension Clone();
 
         /// <summary>
-        ///     The connection string, or <c>null</c> if a <see cref="DbConnection" /> was used instead of
-        ///     a connection string.
-        /// </summary>
-        public virtual string? ConnectionString => _connectionString;
-
-        /// <summary>
-        ///     Creates a new instance with all options the same as for this instance, but with the given option changed.
-        ///     It is unusual to call this method directly. Instead use <see cref="DbContextOptionsBuilder" />.
-        /// </summary>
-        /// <param name="connectionString"> The option to change. </param>
-        /// <returns> A new instance with the option changed. </returns>
-        public virtual RelationalOptionsExtension WithConnectionString(string connectionString)
-        {
-	        if (string.IsNullOrEmpty(connectionString))
-	        {
-		        throw new ArgumentException("Value cannot be null or empty.", nameof(connectionString));
-	        }
-
-            var clone = Clone();
-
-            clone._connectionString = connectionString;
-
-            return clone;
-        }
-
-        /// <summary>
-        ///     The <see cref="DbConnection" />, or <c>null</c> if a connection string was used instead of
-        ///     the full connection object.
-        /// </summary>
-        public virtual DbConnection? Connection => _connection;
-
-        /// <summary>
-        ///     Creates a new instance with all options the same as for this instance, but with the given option changed.
-        ///     It is unusual to call this method directly. Instead use <see cref="DbContextOptionsBuilder" />.
-        /// </summary>
-        /// <param name="connection"> The option to change. </param>
-        /// <returns> A new instance with the option changed. </returns>
-        public virtual RelationalOptionsExtension WithConnection(DbConnection connection)
-        {
-	        if (connection == null)
-	        {
-		        throw new ArgumentNullException(nameof(connection));
-	        }
-
-            var clone = Clone();
-
-            clone._connection = connection;
-
-            return clone;
-        }
-
-        /// <summary>
-        ///     Creates a new instance with all options the same as for this instance, but with the given option changed.
-        ///     It is unusual to call this method directly. Instead use <see cref="DbContextOptionsBuilder" />.
-        /// </summary>
-        /// <param name="providerName"> The option to change. </param>
-        /// <returns> A new instance with the option changed. </returns>
-        public virtual RelationalOptionsExtension WithProvider(string providerName)
-        {
-	        if (providerName == null)
-	        {
-		        throw new ArgumentNullException(nameof(providerName));
-	        }
-
-	        var clone = Clone();
-
-	        clone._providerName = providerName;
-
-	        return clone;
-        }
-
-        /// <summary>
-        ///     Creates a new instance with all options the same as for this instance, but with the given option changed.
-        ///     It is unusual to call this method directly. Instead use <see cref="DbContextOptionsBuilder" />.
-        /// </summary>
-        /// <param name="dataProvider"> The option to change. </param>
-        /// <returns> A new instance with the option changed. </returns>
-        public virtual RelationalOptionsExtension WithProvider(IDataProvider dataProvider)
-        {
-	        if (dataProvider == null)
-	        {
-		        throw new ArgumentNullException(nameof(dataProvider));
-	        }
-
-	        var clone = Clone();
-
-	        clone._dataProvider = dataProvider;
-
-	        return clone;
-        }
-
-        /// <summary>
-        ///     The command timeout, or <c>null</c> if none has been set.
-        /// </summary>
-        public virtual int? CommandTimeout => _commandTimeout;
-
-        /// <summary>
-        ///     Creates a new instance with all options the same as for this instance, but with the given option changed.
-        ///     It is unusual to call this method directly. Instead use <see cref="DbContextOptionsBuilder" />.
-        /// </summary>
-        /// <param name="commandTimeout"> The option to change. </param>
-        /// <returns> A new instance with the option changed. </returns>
-        public virtual RelationalOptionsExtension WithCommandTimeout(int? commandTimeout)
-        {
-            if (commandTimeout.HasValue
-                && commandTimeout <= 0)
-            {
-                throw new InvalidOperationException("Invalid CommandTimeout");
-            }
-
-            var clone = Clone();
-
-            clone._commandTimeout = commandTimeout;
-
-            return clone;
-        }
-
-        /// <summary>
-        ///     Indicates whether or not to use relational database semantics when comparing null values. By default,
-        ///     Entity Framework will use C# semantics for null values, and generate SQL to compensate for differences
-        ///     in how the database handles nulls.
-        /// </summary>
-        public virtual bool UseRelationalNulls => _useRelationalNulls;
-
-        /// <summary>
-        ///     Creates a new instance with all options the same as for this instance, but with the given option changed.
-        ///     It is unusual to call this method directly. Instead use <see cref="DbContextOptionsBuilder" />.
-        /// </summary>
-        /// <param name="useRelationalNulls"> The option to change. </param>
-        /// <returns> A new instance with the option changed. </returns>
-        public virtual RelationalOptionsExtension WithUseRelationalNulls(bool useRelationalNulls)
-        {
-            var clone = Clone();
-
-            clone._useRelationalNulls = useRelationalNulls;
-
-            return clone;
-        }
-
-        /// <summary>
         ///     Finds an existing <see cref="RelationalOptionsExtension" /> registered on the given options
         ///     or throws if none has been registered. This is typically used to find some relational
         ///     configuration when it is known that a relational provider is being used.
         /// </summary>
         /// <param name="options"> The context options to look in. </param>
         /// <returns> The extension. </returns>
-        public static RelationalOptionsExtension Extract(IDbContextOptions options)
+        public static RelationalOptionsExtension Extract(IDataContextOptions options)
         {
 	        if (options == null)
 	        {
@@ -251,13 +94,9 @@ namespace Microsoft.EntityFrameworkCore.Infrastructure
         ///     If options are invalid, then an exception should be thrown.
         /// </summary>
         /// <param name="options"> The options being validated. </param>
-        public virtual void Validate(IDbContextOptions options)
+        public virtual void Validate(IDataContextOptions options)
         {
         }
-
-        public virtual string?        ProviderName => _providerName;
-        public virtual IDataProvider? DataProvider => _dataProvider;
-
 
         /// <summary>
         ///     Information/metadata for a <see cref="RelationalOptionsExtension" />.
@@ -305,17 +144,6 @@ namespace Microsoft.EntityFrameworkCore.Infrastructure
                     if (_logFragment == null)
                     {
                         var builder = new StringBuilder();
-
-                        if (Extension._commandTimeout != null)
-                        {
-                            builder.Append("CommandTimeout=").Append(Extension._commandTimeout).Append(' ');
-                        }
-
-                        if (Extension._useRelationalNulls)
-                        {
-                            builder.Append("UseRelationalNulls ");
-                        }
-
                         _logFragment = builder.ToString();
                     }
 

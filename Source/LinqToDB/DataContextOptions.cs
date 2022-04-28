@@ -1,22 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
-using LinqToDB;
-using LinqToDB.Common.Internal;
-using Microsoft.EntityFrameworkCore.Infrastructure;
 
-namespace Microsoft.EntityFrameworkCore
+namespace LinqToDB
 {
+	using Common.Internal;
+	using Infrastructure;
+
     /// <summary>
     ///     The options to be used by a <see cref="IDataContext" />.
     /// </summary>
-    public abstract class DbContextOptions : IDbContextOptions
+    public abstract class DataContextOptions : IDataContextOptions
     {
         /// <summary>
-        ///     Initializes a new instance of the <see cref="DbContextOptions" /> class. You normally use a <see cref="DbContextOptionsBuilder" />
+        ///     Initializes a new instance of the <see cref="DataContextOptions" /> class. You normally use a <see cref="DataContextOptionsBuilder" />
         ///     to create instances of this class and it is not designed to be directly constructed in your application code.
         /// </summary>
         /// <param name="extensions"> The extensions that store the configured options. </param>
-        protected DbContextOptions(
+        protected DataContextOptions(
             IReadOnlyDictionary<Type, IDbContextOptionsExtension> extensions)
         {
             _extensions = extensions ?? throw new ArgumentNullException(nameof(extensions));
@@ -35,7 +35,7 @@ namespace Microsoft.EntityFrameworkCore
         public virtual TExtension? FindExtension<TExtension>()
             where TExtension : class, IDbContextOptionsExtension
         {
-	        return _extensions.TryGetValue(typeof(TExtension), out var extension) ? (TExtension)extension : null;
+	        return _extensions.TryGetValue(typeof(TExtension), out var extension) ? (TExtension?)extension : null;
         }
 
         /// <summary>
@@ -57,12 +57,12 @@ namespace Microsoft.EntityFrameworkCore
 
         /// <summary>
         ///     Adds the given extension to the underlying options and creates a new
-        ///     <see cref="DbContextOptions" /> with the extension added.
+        ///     <see cref="DataContextOptions" /> with the extension added.
         /// </summary>
         /// <typeparam name="TExtension"> The type of extension to be added. </typeparam>
         /// <param name="extension"> The extension to be added. </param>
         /// <returns> The new options instance with the given extension added. </returns>
-        public abstract DbContextOptions WithExtension<TExtension>(TExtension extension)
+        public abstract DataContextOptions WithExtension<TExtension>(TExtension extension)
             where TExtension : class, IDbContextOptionsExtension;
 
         private readonly IReadOnlyDictionary<Type, IDbContextOptionsExtension> _extensions;

@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using LinqToDB;
 using LinqToDB.AspNet.Logging;
 using LinqToDB.Configuration;
+using LinqToDB.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NUnit.Framework;
@@ -65,14 +67,16 @@ namespace Tests.Common
 		[Test]
 		public void CanUseWithLoggingFromFactory()
 		{
-			var builder = new LinqToDBConnectionOptionsBuilder();
+			var builder = new DataContextOptionsBuilder();
 			var factory = new TestLoggerFactory();
 			builder.UseLoggerFactory(factory);
 
-			Assert.NotNull(builder.WriteTrace);
+			var extension = builder.Options.GetExtension<CoreOptionsExtension>();
+
+			Assert.NotNull(extension.WriteTrace);
 
 			var expectedMessage = "this is a test log";
-			builder.WriteTrace!(expectedMessage, "some category", TraceLevel.Info);
+			extension.WriteTrace!(expectedMessage, "some category", TraceLevel.Info);
 
 			Assert.That(factory.Loggers, Has.One.Items);
 			var testLogger = factory.Loggers.Single();
@@ -82,16 +86,17 @@ namespace Tests.Common
 		[Test]
 		public void CanUseLoggingFactoryFromIoc()
 		{
-			var builder  = new LinqToDBConnectionOptionsBuilder();
+			var builder  = new DataContextOptionsBuilder();
 			var factory  = new TestLoggerFactory();
 			var services = new ServiceCollection();
 			services.AddSingleton<ILoggerFactory>(factory);
 			builder.UseDefaultLogging(services.BuildServiceProvider());
 
-			Assert.NotNull(builder.WriteTrace);
+			var extension = builder.Options.GetExtension<CoreOptionsExtension>();
+			Assert.NotNull(extension.WriteTrace);
 
 			var expectedMessage = "this is a test log";
-			builder.WriteTrace!(expectedMessage, "some category", TraceLevel.Info);
+			extension.WriteTrace!(expectedMessage, "some category", TraceLevel.Info);
 
 			Assert.That(factory.Loggers, Has.One.Items);
 			var testLogger = factory.Loggers.Single();

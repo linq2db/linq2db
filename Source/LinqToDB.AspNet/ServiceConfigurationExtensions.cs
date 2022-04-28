@@ -30,7 +30,7 @@ namespace LinqToDB.AspNet
 		/// <param name="serviceCollection"> The <see cref="IServiceCollection" /> to add services to. </param>
 		/// <param name="configure">
 		///     <para>
-		///         An action to configure the <see cref="LinqToDBConnectionOptionsBuilder" /> for the context.
+		///         An action to configure the <see cref="LinqToDataConnectionOptionsBuilder" /> for the context.
 		///     </para>
 		/// </param>
 		/// <param name="lifetime"> The lifetime with which to register the Context service in the container.
@@ -50,9 +50,9 @@ namespace LinqToDB.AspNet
 		///     The same service collection so that multiple calls can be chained.
 		/// </returns>
 		public static IServiceCollection AddLinqToDB(
-			this IServiceCollection serviceCollection,
-			Action<IServiceProvider, LinqToDBConnectionOptionsBuilder> configure,
-			ServiceLifetime lifetime = ServiceLifetime.Scoped)
+			this IServiceCollection                             serviceCollection,
+			Action<IServiceProvider, DataContextOptionsBuilder> configure,
+			ServiceLifetime                                     lifetime = ServiceLifetime.Scoped)
 		{
 			return AddLinqToDBContext<IDataContext, DataConnection>(serviceCollection, configure, lifetime);
 		}
@@ -76,17 +76,17 @@ namespace LinqToDB.AspNet
 		/// </example>
 		/// <typeparam name="TContext">
 		/// 	The type of context to be registered. Must inherit from <see cref="IDataContext"/>
-		/// 	and expose a constructor that takes <see cref="LinqToDBConnectionOptions{TContext}" /> (where T is <typeparamref name="TContext"/>)
+		/// 	and expose a constructor that takes <see cref="DataContextOptions{TContext}" /> (where T is <typeparamref name="TContext"/>)
 		/// 	and passes it to the base constructor of <see cref="DataConnection" />.
 		/// </typeparam>
 		/// <param name="serviceCollection"> The <see cref="IServiceCollection" /> to add services to. </param>
 		/// <param name="configure">
 		///     <para>
-		///         An action to configure the <see cref="LinqToDBConnectionOptionsBuilder" /> for the context.
+		///         An action to configure the <see cref="LinqToDataConnectionOptionsBuilder" /> for the context.
 		///     </para>
 		///     <para>
 		///         In order for the options to be passed into your context, you need to expose a constructor on your context that takes
-		///         <see cref="LinqToDBConnectionOptions{TContext}" /> and passes it to the base constructor of <see cref="DataConnection" />.
+		///         <see cref="DataContextOptions{TContext}" /> and passes it to the base constructor of <see cref="DataConnection" />.
 		///     </para>
 		/// </param>
 		/// <param name="lifetime">
@@ -102,7 +102,7 @@ namespace LinqToDB.AspNet
 		/// </returns>
 		public static IServiceCollection AddLinqToDBContext<TContext>(
 			this IServiceCollection serviceCollection,
-			Action<IServiceProvider, LinqToDBConnectionOptionsBuilder> configure,
+			Action<IServiceProvider, DataContextOptionsBuilder> configure,
 			ServiceLifetime lifetime  = ServiceLifetime.Scoped) where TContext : IDataContext
 		{
 			return AddLinqToDBContext<TContext, TContext>(serviceCollection, configure, lifetime);
@@ -131,17 +131,17 @@ namespace LinqToDB.AspNet
 		/// <typeparam name="TContextImplementation">
 		///		The concrete implementation type used to fulfill requests for <typeparamref name="TContext"/> from the container.
 		/// 	Must inherit from <see cref="IDataContext"/> and <typeparamref name="TContext"/>
-		/// 	and expose a constructor that takes <see cref="LinqToDBConnectionOptions{TContext}" /> (where T is <typeparamref name="TContextImplementation"/>)
+		/// 	and expose a constructor that takes <see cref="DataContextOptions{TContext}" /> (where T is <typeparamref name="TContextImplementation"/>)
 		/// 	and passes it to the base constructor of <see cref="DataConnection" />.
 		/// </typeparam>
 		/// <param name="serviceCollection"> The <see cref="IServiceCollection" /> to add services to. </param>
 		/// <param name="configure">
 		///     <para>
-		///         An action to configure the <see cref="LinqToDBConnectionOptionsBuilder" /> for the context.
+		///         An action to configure the <see cref="LinqToDataConnectionOptionsBuilder" /> for the context.
 		///     </para>
 		///     <para>
 		///         In order for the options to be passed into your context, you need to expose a constructor on your context that takes
-		///         <see cref="LinqToDBConnectionOptions{TContext}" /> and passes it to the base constructor of <see cref="DataConnection" />.
+		///         <see cref="DataContextOptions{TContext}" /> and passes it to the base constructor of <see cref="DataConnection" />.
 		///     </para>
 		/// </param>
 		/// <param name="lifetime">
@@ -157,41 +157,41 @@ namespace LinqToDB.AspNet
 		/// </returns>
 		public static IServiceCollection AddLinqToDBContext<TContext, TContextImplementation>(
 			this IServiceCollection serviceCollection,
-			Action<IServiceProvider, LinqToDBConnectionOptionsBuilder> configure,
+			Action<IServiceProvider, DataContextOptionsBuilder> configure,
 			ServiceLifetime lifetime  = ServiceLifetime.Scoped) where TContextImplementation : TContext, IDataContext
 		{
 			var hasTypedConstructor = HasTypedContextConstructor<TContextImplementation>();
 			serviceCollection.TryAdd(new ServiceDescriptor(typeof(TContext), typeof(TContextImplementation), lifetime));
-			serviceCollection.TryAdd(new ServiceDescriptor(typeof(LinqToDBConnectionOptions<TContextImplementation>),
+			serviceCollection.TryAdd(new ServiceDescriptor(typeof(DataContextOptions<TContextImplementation>),
 				provider =>
 				{
-					var builder = new LinqToDBConnectionOptionsBuilder();
+					var builder = new DataContextOptionsBuilder();
 					configure(provider, builder);
-					return builder.Build<TContextImplementation>();
+					return builder.Options;
 				},
 				lifetime));
 
 			if (!hasTypedConstructor)
-				serviceCollection.TryAdd(new ServiceDescriptor(typeof(LinqToDBConnectionOptions),
-					provider => provider.GetRequiredService(typeof(LinqToDBConnectionOptions<TContextImplementation>)), lifetime));
+				serviceCollection.TryAdd(new ServiceDescriptor(typeof(DataContextOptions),
+					provider => provider.GetRequiredService(typeof(DataContextOptions<TContextImplementation>)), lifetime));
 
 			return serviceCollection;
 		}
 
-		private static bool HasTypedContextConstructor<TContext>()
+		private static bool HasTypedContextConstructor<TContext>() where TContext : IDataContext
 		{
 			var typedConstructorInfo   = typeof(TContext).GetConstructor(
 				BindingFlags.Public | BindingFlags.Instance | BindingFlags.ExactBinding,
 				null,
-				new[] {typeof(LinqToDBConnectionOptions<TContext>)},
+				new[] {typeof(DataContextOptions<TContext>)},
 				null);
 
 			var untypedConstructorInfo = typedConstructorInfo == null
-				? typeof(TContext).GetConstructor(new[] {typeof(LinqToDBConnectionOptions) })
+				? typeof(TContext).GetConstructor(new[] {typeof(DataContextOptions) })
 				: null;
 
 			if (typedConstructorInfo == null && untypedConstructorInfo == null)
-				throw new ArgumentException($"Missing constructor accepting '{nameof(LinqToDBConnectionOptions)}' on type "
+				throw new ArgumentException($"Missing constructor accepting '{nameof(DataContextOptions)}' on type "
 											+ typeof(TContext).Name);
 
 			return typedConstructorInfo != null;
