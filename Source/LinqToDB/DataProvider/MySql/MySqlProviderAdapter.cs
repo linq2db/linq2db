@@ -13,7 +13,7 @@ namespace LinqToDB.DataProvider.MySql
 	using Mapping;
 	using SqlQuery;
 
-	class MySqlProviderAdapter : IDynamicProviderAdapter
+	public class MySqlProviderAdapter : IDynamicProviderAdapter
 	{
 		private static readonly object _mysqlDataSyncRoot      = new ();
 		private static readonly object _mysqlConnectorSyncRoot = new ();
@@ -33,7 +33,7 @@ namespace LinqToDB.DataProvider.MySql
 		public const string OldMySqlConnectorNamespace       = "MySql.Data.MySqlClient";
 		public const string OldMySqlConnectorTypesNamespace  = "MySql.Data.Types";
 
-		internal enum MySqlProvider
+		public enum MySqlProvider
 		{
 			MySqlData,
 			MySqlConnector

@@ -18,7 +18,7 @@ namespace LinqToDB.Mapping
 	/// <see cref="IEquatable{T}"/> collection.
 	/// 
 	/// By default associations are used only for joins generation in LINQ queries and will have <c>null</c> value for loaded
-	/// records. To load data into association, you should explicitly specify it in your query using <see cref="LinqExtensions.LoadWith{TEntity,TProperty}(System.Linq.IQueryable{TEntity},System.Linq.Expressions.Expression{System.Func{TEntity,TProperty}})"/> method.
+	/// records. To load data into association, you should explicitly specify it in your query using <see cref="LinqExtensions.LoadWith{TEntity,TProperty}(System.Linq.IQueryable{TEntity},Expression{Func{TEntity,TProperty}})"/> method.
 	/// </summary>
 	[PublicAPI]
 	[AttributeUsage(AttributeTargets.Method | AttributeTargets.Property | AttributeTargets.Field, AllowMultiple=false)]
@@ -105,7 +105,7 @@ namespace LinqToDB.Mapping
 		public Expression?  QueryExpression       { get; set; }
 
 		/// <summary>
-		/// Specify name of property or field to store association value, loaded using <see cref="LinqExtensions.LoadWith{TEntity,TProperty}(System.Linq.IQueryable{TEntity},System.Linq.Expressions.Expression{System.Func{TEntity,TProperty}})"/> method.
+		/// Specify name of property or field to store association value, loaded using <see cref="LinqExtensions.LoadWith{TEntity,TProperty}(System.Linq.IQueryable{TEntity},Expression{Func{TEntity,TProperty}})"/> method.
 		/// When not specified, current association member will be used.
 		/// </summary>
 		public string?      Storage             { get; set; }
@@ -161,7 +161,7 @@ namespace LinqToDB.Mapping
 
 		public override string GetObjectID()
 		{
-			return $".{Configuration}.{ThisKey}.{OtherKey}.{ExpressionPredicate}.{QueryExpressionMethod}.{Storage}.{(CanBeNull?1:0)}.{KeyName}.{BackReferenceName}.{(IsBackReference?1:0)}.{(int)Relationship}.{AliasName}.";
+			return $".{Configuration}.{ThisKey}.{OtherKey}.{ExpressionPredicate}.{QueryExpressionMethod}.{Storage}.{(CanBeNull?1:0)}.{AliasName}.";
 		}
 	}
 }
