@@ -17,26 +17,26 @@ using System.Linq;
 
 namespace Cli.T4.SQLiteNorthwind
 {
-	public partial class TestDataDb : DataConnection
+	public partial class TestDataDB : DataConnection
 	{
-		public TestDataDb()
+		public TestDataDB()
 		{
 			InitDataContext();
 		}
 
-		public TestDataDb(string configuration)
+		public TestDataDB(string configuration)
 			: base(configuration)
 		{
 			InitDataContext();
 		}
 
-		public TestDataDb(LinqToDBConnectionOptions options)
+		public TestDataDB(LinqToDBConnectionOptions options)
 			: base(options)
 		{
 			InitDataContext();
 		}
 
-		public TestDataDb(LinqToDBConnectionOptions<TestDataDb> options)
+		public TestDataDB(LinqToDBConnectionOptions<TestDataDB> options)
 			: base(options)
 		{
 			InitDataContext();
@@ -70,7 +70,7 @@ namespace Cli.T4.SQLiteNorthwind
 	}
 
 	[Table("Categories")]
-	public class Category
+	public partial class Category
 	{
 		[Column("CategoryID"  , IsPrimaryKey = true )] public int     CategoryID   { get; set; } // int
 		[Column("CategoryName", CanBeNull    = false)] public string  CategoryName { get; set; } = null!; // varchar(15)
@@ -149,21 +149,21 @@ namespace Cli.T4.SQLiteNorthwind
 	}
 
 	[Table("CustomerCustomerDemo")]
-	public class CustomerCustomerDemo
+	public partial class CustomerCustomerDemo
 	{
 		[Column("CustomerID"    , CanBeNull = false, IsPrimaryKey = true, PrimaryKeyOrder = 0)] public string CustomerID     { get; set; } = null!; // varchar(5)
 		[Column("CustomerTypeID", CanBeNull = false, IsPrimaryKey = true, PrimaryKeyOrder = 1)] public string CustomerTypeID { get; set; } = null!; // varchar(10)
 	}
 
 	[Table("CustomerDemographics")]
-	public class CustomerDemographic
+	public partial class CustomerDemographic
 	{
 		[Column("CustomerTypeID", CanBeNull = false, IsPrimaryKey = true)] public string  CustomerTypeID { get; set; } = null!; // varchar(10)
 		[Column("CustomerDesc"                                          )] public string? CustomerDesc   { get; set; } // text(max)
 	}
 
 	[Table("Customers")]
-	public class Customer
+	public partial class Customer
 	{
 		[Column("CustomerID"  , CanBeNull = false, IsPrimaryKey = true)] public string  CustomerID   { get; set; } = null!; // varchar(5)
 		[Column("CompanyName" , CanBeNull = false                     )] public string  CompanyName  { get; set; } = null!; // varchar(40)
@@ -179,7 +179,7 @@ namespace Cli.T4.SQLiteNorthwind
 	}
 
 	[Table("Employees")]
-	public class Employee
+	public partial class Employee
 	{
 		[Column("EmployeeID"     , IsPrimaryKey = true                      )] public int       EmployeeID      { get; set; } // int
 		[Column("LastName"       , CanBeNull    = false                     )] public string    LastName        { get; set; } = null!; // varchar(20)
@@ -202,14 +202,14 @@ namespace Cli.T4.SQLiteNorthwind
 	}
 
 	[Table("EmployeeTerritories")]
-	public class EmployeeTerritory
+	public partial class EmployeeTerritory
 	{
 		[Column("EmployeeID" , IsPrimaryKey = true , PrimaryKeyOrder = 0                        )] public int    EmployeeID  { get; set; } // int
 		[Column("TerritoryID", CanBeNull    = false, IsPrimaryKey    = true, PrimaryKeyOrder = 1)] public string TerritoryID { get; set; } = null!; // varchar(20)
 	}
 
 	[Table("Order Details")]
-	public class OrderDetail
+	public partial class OrderDetail
 	{
 		[Column("OrderID"  , IsPrimaryKey = true, PrimaryKeyOrder = 0)] public int     OrderID   { get; set; } // int
 		[Column("ProductID", IsPrimaryKey = true, PrimaryKeyOrder = 1)] public int     ProductID { get; set; } // int
@@ -219,7 +219,7 @@ namespace Cli.T4.SQLiteNorthwind
 	}
 
 	[Table("Orders")]
-	public class Order
+	public partial class Order
 	{
 		[Column("OrderID"       , IsPrimaryKey = true                     )] public int       OrderID        { get; set; } // int
 		[Column("CustomerID"                                              )] public string?   CustomerID     { get; set; } // varchar(5)
@@ -238,7 +238,7 @@ namespace Cli.T4.SQLiteNorthwind
 	}
 
 	[Table("Products")]
-	public class Product
+	public partial class Product
 	{
 		[Column("ProductID"      , IsPrimaryKey = true )] public int     ProductID       { get; set; } // int
 		[Column("ProductName"    , CanBeNull    = false)] public string  ProductName     { get; set; } = null!; // varchar(40)
@@ -253,14 +253,14 @@ namespace Cli.T4.SQLiteNorthwind
 	}
 
 	[Table("Region")]
-	public class Region
+	public partial class Region
 	{
 		[Column("RegionID"         , IsPrimaryKey = true )] public int    RegionID          { get; set; } // int
 		[Column("RegionDescription", CanBeNull    = false)] public string RegionDescription { get; set; } = null!; // varchar(50)
 	}
 
 	[Table("Shippers")]
-	public class Shipper
+	public partial class Shipper
 	{
 		[Column("ShipperID"  , IsPrimaryKey = true )] public int     ShipperID   { get; set; } // int
 		[Column("CompanyName", CanBeNull    = false)] public string  CompanyName { get; set; } = null!; // varchar(40)
@@ -268,7 +268,7 @@ namespace Cli.T4.SQLiteNorthwind
 	}
 
 	[Table("Suppliers")]
-	public class Supplier
+	public partial class Supplier
 	{
 		[Column("SupplierID"  , IsPrimaryKey = true )] public int     SupplierID   { get; set; } // int
 		[Column("CompanyName" , CanBeNull    = false)] public string  CompanyName  { get; set; } = null!; // varchar(40)
@@ -285,7 +285,7 @@ namespace Cli.T4.SQLiteNorthwind
 	}
 
 	[Table("Territories")]
-	public class Territory
+	public partial class Territory
 	{
 		[Column("TerritoryID"         , CanBeNull = false, IsPrimaryKey = true)] public string TerritoryID          { get; set; } = null!; // varchar(20)
 		[Column("TerritoryDescription", CanBeNull = false                     )] public string TerritoryDescription { get; set; } = null!; // varchar(50)
@@ -293,7 +293,7 @@ namespace Cli.T4.SQLiteNorthwind
 	}
 
 	[Table("Alphabetical list of products", IsView = true)]
-	public class AlphabeticalListOfProduct
+	public partial class AlphabeticalListOfProduct
 	{
 		[Column("ProductID"                         )] public int     ProductID       { get; set; } // int
 		[Column("ProductName"    , CanBeNull = false)] public string  ProductName     { get; set; } = null!; // varchar(40)
@@ -309,14 +309,14 @@ namespace Cli.T4.SQLiteNorthwind
 	}
 
 	[Table("Current Product List", IsView = true)]
-	public class CurrentProductList
+	public partial class CurrentProductList
 	{
 		[Column("ProductID"                     )] public int    ProductID   { get; set; } // int
 		[Column("ProductName", CanBeNull = false)] public string ProductName { get; set; } = null!; // varchar(40)
 	}
 
 	[Table("Customer and Suppliers by City", IsView = true)]
-	public class CustomerAndSuppliersByCity
+	public partial class CustomerAndSuppliersByCity
 	{
 		[Column("City"                           )] public string? City         { get; set; } // varchar(15)
 		[Column("CompanyName" , CanBeNull = false)] public string  CompanyName  { get; set; } = null!; // varchar(40)
@@ -325,7 +325,7 @@ namespace Cli.T4.SQLiteNorthwind
 	}
 
 	[Table("Order Details Extended", IsView = true)]
-	public class OrderDetailsExtended
+	public partial class OrderDetailsExtended
 	{
 		[Column("OrderID"                         )] public int     OrderID       { get; set; } // int
 		[Column("ProductID"                       )] public int     ProductID     { get; set; } // int
@@ -337,14 +337,14 @@ namespace Cli.T4.SQLiteNorthwind
 	}
 
 	[Table("Order Subtotals", IsView = true)]
-	public class OrderSubtotal
+	public partial class OrderSubtotal
 	{
 		[Column("OrderID" )] public int     OrderID  { get; set; } // int
 		[Column("Subtotal")] public object? Subtotal { get; set; } // NUMERIC
 	}
 
 	[Table("Summary of Sales by Quarter", IsView = true)]
-	public class SummaryOfSalesByQuarter
+	public partial class SummaryOfSalesByQuarter
 	{
 		[Column("ShippedDate", SkipOnInsert = true, SkipOnUpdate = true)] public DateTime? ShippedDate { get; set; } // timestamp
 		[Column("OrderID"                                              )] public int       OrderID     { get; set; } // int
@@ -352,7 +352,7 @@ namespace Cli.T4.SQLiteNorthwind
 	}
 
 	[Table("Summary of Sales by Year", IsView = true)]
-	public class SummaryOfSalesByYear
+	public partial class SummaryOfSalesByYear
 	{
 		[Column("ShippedDate", SkipOnInsert = true, SkipOnUpdate = true)] public DateTime? ShippedDate { get; set; } // timestamp
 		[Column("OrderID"                                              )] public int       OrderID     { get; set; } // int
@@ -360,7 +360,7 @@ namespace Cli.T4.SQLiteNorthwind
 	}
 
 	[Table("Orders Qry", IsView = true)]
-	public class OrdersQry
+	public partial class OrdersQry
 	{
 		[Column("OrderID"                                                  )] public int       OrderID        { get; set; } // int
 		[Column("CustomerID"                                               )] public string?   CustomerID     { get; set; } // varchar(5)
@@ -385,14 +385,14 @@ namespace Cli.T4.SQLiteNorthwind
 	}
 
 	[Table("Products Above Average Price", IsView = true)]
-	public class ProductsAboveAveragePrice
+	public partial class ProductsAboveAveragePrice
 	{
 		[Column("ProductName", CanBeNull = false)] public string  ProductName { get; set; } = null!; // varchar(40)
 		[Column("UnitPrice"                     )] public double? UnitPrice   { get; set; } // float
 	}
 
 	[Table("Products by Category", IsView = true)]
-	public class ProductsByCategory
+	public partial class ProductsByCategory
 	{
 		[Column("CategoryName"   , CanBeNull = false)] public string  CategoryName    { get; set; } = null!; // varchar(15)
 		[Column("ProductName"    , CanBeNull = false)] public string  ProductName     { get; set; } = null!; // varchar(40)

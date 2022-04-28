@@ -23,26 +23,26 @@ using System.Reflection;
 
 namespace Cli.T4.SqlServer
 {
-	public partial class TestDataDb : DataConnection
+	public partial class TestDataDB : DataConnection
 	{
-		public TestDataDb()
+		public TestDataDB()
 		{
 			InitDataContext();
 		}
 
-		public TestDataDb(string configuration)
+		public TestDataDB(string configuration)
 			: base(configuration)
 		{
 			InitDataContext();
 		}
 
-		public TestDataDb(LinqToDBConnectionOptions options)
+		public TestDataDB(LinqToDBConnectionOptions options)
 			: base(options)
 		{
 			InitDataContext();
 		}
 
-		public TestDataDb(LinqToDBConnectionOptions<TestDataDb> options)
+		public TestDataDB(LinqToDBConnectionOptions<TestDataDB> options)
 			: base(options)
 		{
 			InitDataContext();
@@ -92,7 +92,7 @@ namespace Cli.T4.SqlServer
 
 		#region Table Functions
 		#region GetParentById
-		private static readonly MethodInfo _getParentById = MemberHelper.MethodOf<TestDataDb>(ctx => ctx.GetParentById(default));
+		private static readonly MethodInfo _getParentById = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.GetParentById(default));
 
 		/// <summary>
 		/// This is &lt;test&gt; table function!
@@ -108,7 +108,7 @@ namespace Cli.T4.SqlServer
 		#endregion
 
 		#region Issue1921
-		private static readonly MethodInfo _issue1921 = MemberHelper.MethodOf<TestDataDb>(ctx => ctx.Issue1921());
+		private static readonly MethodInfo _issue1921 = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.Issue1921());
 
 		[Sql.TableFunction("Issue1921", Schema = "dbo")]
 		public ITable<Issue1921Result> Issue1921()
@@ -126,13 +126,13 @@ namespace Cli.T4.SqlServer
 	}
 
 	[Table("DataType", Schema = "dbo")]
-	public class DataType
+	public partial class DataType
 	{
 		[Column("id")] public int Id { get; set; } // int
 	}
 
 	[Table("CollatedTable", Schema = "dbo")]
-	public class CollatedTable
+	public partial class CollatedTable
 	{
 		[Column("Id"                                )] public int    Id              { get; set; } // int
 		[Column("CaseSensitive"  , CanBeNull = false)] public string CaseSensitive   { get; set; } = null!; // nvarchar(20)
@@ -140,7 +140,7 @@ namespace Cli.T4.SqlServer
 	}
 
 	[Table("InheritanceParent", Schema = "dbo")]
-	public class InheritanceParent
+	public partial class InheritanceParent
 	{
 		[Column("InheritanceParentId", IsPrimaryKey = true)] public int     InheritanceParentId { get; set; } // int
 		[Column("TypeDiscriminator"                       )] public int?    TypeDiscriminator   { get; set; } // int
@@ -177,37 +177,37 @@ namespace Cli.T4.SqlServer
 
 		public static AllType? Find(this ITable<AllType> table, int id)
 		{
-			return table.FirstOrDefault(e => e.Id == id);
+			return table.FirstOrDefault(e => e.ID == id);
 		}
 
 		public static AllTypes2? Find(this ITable<AllTypes2> table, int id)
 		{
-			return table.FirstOrDefault(e => e.Id == id);
+			return table.FirstOrDefault(e => e.ID == id);
 		}
 
 		public static Parent? Find(this ITable<Parent> table, int id)
 		{
-			return table.FirstOrDefault(e => e.Id == id);
+			return table.FirstOrDefault(e => e.ID == id);
 		}
 
 		public static Child? Find(this ITable<Child> table, int id)
 		{
-			return table.FirstOrDefault(e => e.Id == id);
+			return table.FirstOrDefault(e => e.ID == id);
 		}
 
 		public static GrandChild? Find(this ITable<GrandChild> table, int id)
 		{
-			return table.FirstOrDefault(e => e.Id == id);
+			return table.FirstOrDefault(e => e.ID == id);
 		}
 
 		public static LinqDataType? Find(this ITable<LinqDataType> table, int id)
 		{
-			return table.FirstOrDefault(e => e.Id == id);
+			return table.FirstOrDefault(e => e.ID == id);
 		}
 
 		public static TestIdentity? Find(this ITable<TestIdentity> table, int id)
 		{
-			return table.FirstOrDefault(e => e.Id == id);
+			return table.FirstOrDefault(e => e.ID == id);
 		}
 
 		public static IndexTable? Find(this ITable<IndexTable> table, int pkField1, int pkField2)
@@ -222,12 +222,12 @@ namespace Cli.T4.SqlServer
 
 		public static GuidID? Find(this ITable<GuidID> table, Guid id)
 		{
-			return table.FirstOrDefault(e => e.Id == id);
+			return table.FirstOrDefault(e => e.ID == id);
 		}
 
 		public static GuidID2? Find(this ITable<GuidID2> table, Guid id)
 		{
-			return table.FirstOrDefault(e => e.Id == id);
+			return table.FirstOrDefault(e => e.ID == id);
 		}
 
 		public static DecimalOverflow? Find(this ITable<DecimalOverflow> table, decimal decimal1)
@@ -237,7 +237,7 @@ namespace Cli.T4.SqlServer
 
 		public static SqlType? Find(this ITable<SqlType> table, int id)
 		{
-			return table.FirstOrDefault(e => e.Id == id);
+			return table.FirstOrDefault(e => e.ID == id);
 		}
 
 		public static TestMerge1? Find(this ITable<TestMerge1> table, int id)
@@ -283,14 +283,14 @@ namespace Cli.T4.SqlServer
 
 		#region Stored Procedures
 		#region AddIssue792Record
-		public static int AddIssue792Record(this TestDataDb dataConnection)
+		public static int AddIssue792Record(this TestDataDB dataConnection)
 		{
 			return dataConnection.ExecuteProc("[dbo].[AddIssue792Record]");
 		}
 		#endregion
 
 		#region DuplicateColumnNames
-		public static IEnumerable<DuplicateColumnNamesResult> DuplicateColumnNames(this TestDataDb dataConnection)
+		public static IEnumerable<DuplicateColumnNamesResult> DuplicateColumnNames(this TestDataDB dataConnection)
 		{
 			return dataConnection.QueryProc(dataReader => new DuplicateColumnNamesResult()
 			{
@@ -307,7 +307,7 @@ namespace Cli.T4.SqlServer
 		#endregion
 
 		#region ExecuteProcIntParameters
-		public static int ExecuteProcIntParameters(this TestDataDb dataConnection, int? input, ref int? output)
+		public static int ExecuteProcIntParameters(this TestDataDB dataConnection, int? input, ref int? output)
 		{
 			var parameters = new []
 			{
@@ -329,7 +329,7 @@ namespace Cli.T4.SqlServer
 		/// <param name="input">
 		/// This is &lt;test&gt; procedure parameter!
 		/// </param>
-		public static IEnumerable<ExecuteProcStringParametersResult> ExecuteProcStringParameters(this TestDataDb dataConnection, int? input, ref int? output)
+		public static IEnumerable<ExecuteProcStringParametersResult> ExecuteProcStringParameters(this TestDataDB dataConnection, int? input, ref int? output)
 		{
 			var parameters = new []
 			{
@@ -353,14 +353,14 @@ namespace Cli.T4.SqlServer
 		#endregion
 
 		#region Issue1897
-		public static int Issue1897(this TestDataDb dataConnection)
+		public static int Issue1897(this TestDataDB dataConnection)
 		{
 			return dataConnection.ExecuteProc("[dbo].[Issue1897]");
 		}
 		#endregion
 
 		#region OutRefEnumTest
-		public static int OutRefEnumTest(this TestDataDb dataConnection, string? str, ref string? outputStr, ref string? inputOutputStr)
+		public static int OutRefEnumTest(this TestDataDB dataConnection, string? str, ref string? outputStr, ref string? inputOutputStr)
 		{
 			var parameters = new []
 			{
@@ -386,7 +386,7 @@ namespace Cli.T4.SqlServer
 		#endregion
 
 		#region OutRefTest
-		public static int OutRefTest(this TestDataDb dataConnection, int? id, ref int? outputId, ref int? inputOutputId, string? str, ref string? outputStr, ref string? inputOutputStr)
+		public static int OutRefTest(this TestDataDB dataConnection, int? id, ref int? outputId, ref int? inputOutputId, string? str, ref string? outputStr, ref string? inputOutputStr)
 		{
 			var parameters = new []
 			{
@@ -423,7 +423,7 @@ namespace Cli.T4.SqlServer
 		#endregion
 
 		#region PatientSelectAll
-		public static IEnumerable<PatientSelectAllResult> PatientSelectAll(this TestDataDb dataConnection)
+		public static IEnumerable<PatientSelectAllResult> PatientSelectAll(this TestDataDB dataConnection)
 		{
 			return dataConnection.QueryProc<PatientSelectAllResult>("[dbo].[Patient_SelectAll]");
 		}
@@ -440,7 +440,7 @@ namespace Cli.T4.SqlServer
 		#endregion
 
 		#region PatientSelectByName
-		public static IEnumerable<PatientSelectByNameResult> PatientSelectByName(this TestDataDb dataConnection, string? firstName, string? lastName)
+		public static IEnumerable<PatientSelectByNameResult> PatientSelectByName(this TestDataDB dataConnection, string? firstName, string? lastName)
 		{
 			var parameters = new []
 			{
@@ -468,7 +468,7 @@ namespace Cli.T4.SqlServer
 		#endregion
 
 		#region PersonDelete
-		public static int PersonDelete(this TestDataDb dataConnection, int? personId)
+		public static int PersonDelete(this TestDataDB dataConnection, int? personId)
 		{
 			var parameters = new []
 			{
@@ -479,7 +479,7 @@ namespace Cli.T4.SqlServer
 		#endregion
 
 		#region PersonInsert
-		public static IEnumerable<PersonInsertResult> PersonInsert(this TestDataDb dataConnection, string? firstName, string? lastName, string? middleName, char? gender)
+		public static IEnumerable<PersonInsertResult> PersonInsert(this TestDataDB dataConnection, string? firstName, string? lastName, string? middleName, char? gender)
 		{
 			var parameters = new []
 			{
@@ -510,7 +510,7 @@ namespace Cli.T4.SqlServer
 		#endregion
 
 		#region PersonInsertOutputParameter
-		public static int PersonInsertOutputParameter(this TestDataDb dataConnection, string? firstName, string? lastName, string? middleName, char? gender, ref int? personId)
+		public static int PersonInsertOutputParameter(this TestDataDB dataConnection, string? firstName, string? lastName, string? middleName, char? gender, ref int? personId)
 		{
 			var parameters = new []
 			{
@@ -541,7 +541,7 @@ namespace Cli.T4.SqlServer
 		#endregion
 
 		#region PersonSelectAll
-		public static IEnumerable<PersonSelectAllResult> PersonSelectAll(this TestDataDb dataConnection)
+		public static IEnumerable<PersonSelectAllResult> PersonSelectAll(this TestDataDB dataConnection)
 		{
 			return dataConnection.QueryProc<PersonSelectAllResult>("[dbo].[Person_SelectAll]");
 		}
@@ -557,7 +557,7 @@ namespace Cli.T4.SqlServer
 		#endregion
 
 		#region PersonSelectByKey
-		public static IEnumerable<PersonSelectByKeyResult> PersonSelectByKey(this TestDataDb dataConnection, int? id)
+		public static IEnumerable<PersonSelectByKeyResult> PersonSelectByKey(this TestDataDB dataConnection, int? id)
 		{
 			var parameters = new []
 			{
@@ -577,7 +577,7 @@ namespace Cli.T4.SqlServer
 		#endregion
 
 		#region PersonSelectByKeyLowercase
-		public static IEnumerable<PersonSelectByKeyLowercaseResult> PersonSelectByKeyLowercase(this TestDataDb dataConnection, int? id)
+		public static IEnumerable<PersonSelectByKeyLowercaseResult> PersonSelectByKeyLowercase(this TestDataDB dataConnection, int? id)
 		{
 			var parameters = new []
 			{
@@ -594,7 +594,7 @@ namespace Cli.T4.SqlServer
 		#endregion
 
 		#region PersonSelectByName
-		public static IEnumerable<PersonSelectByNameResult> PersonSelectByName(this TestDataDb dataConnection, string? firstName, string? lastName)
+		public static IEnumerable<PersonSelectByNameResult> PersonSelectByName(this TestDataDB dataConnection, string? firstName, string? lastName)
 		{
 			var parameters = new []
 			{
@@ -621,7 +621,7 @@ namespace Cli.T4.SqlServer
 		#endregion
 
 		#region PersonSelectListByName
-		public static IEnumerable<PersonSelectListByNameResult> PersonSelectListByName(this TestDataDb dataConnection, string? firstName, string? lastName)
+		public static IEnumerable<PersonSelectListByNameResult> PersonSelectListByName(this TestDataDB dataConnection, string? firstName, string? lastName)
 		{
 			var parameters = new []
 			{
@@ -648,7 +648,7 @@ namespace Cli.T4.SqlServer
 		#endregion
 
 		#region PersonUpdate
-		public static int PersonUpdate(this TestDataDb dataConnection, int? personId, string? firstName, string? lastName, string? middleName, char? gender)
+		public static int PersonUpdate(this TestDataDB dataConnection, int? personId, string? firstName, string? lastName, string? middleName, char? gender)
 		{
 			var parameters = new []
 			{
@@ -675,7 +675,7 @@ namespace Cli.T4.SqlServer
 		#endregion
 
 		#region QueryProcMultipleParameters
-		public static IEnumerable<QueryProcMultipleParametersResult> QueryProcMultipleParameters(this TestDataDb dataConnection, int? input, ref int? output1, ref int? output2, ref int? output3)
+		public static IEnumerable<QueryProcMultipleParametersResult> QueryProcMultipleParameters(this TestDataDB dataConnection, int? input, ref int? output1, ref int? output2, ref int? output3)
 		{
 			var parameters = new []
 			{
@@ -710,7 +710,7 @@ namespace Cli.T4.SqlServer
 		#endregion
 
 		#region QueryProcParameters
-		public static IEnumerable<QueryProcParametersResult> QueryProcParameters(this TestDataDb dataConnection, int? input, ref int? output1, ref int? output2)
+		public static IEnumerable<QueryProcParametersResult> QueryProcParameters(this TestDataDB dataConnection, int? input, ref int? output1, ref int? output2)
 		{
 			var parameters = new []
 			{
@@ -740,7 +740,7 @@ namespace Cli.T4.SqlServer
 		#endregion
 
 		#region SelectImplicitColumn
-		public static IEnumerable<SelectImplicitColumnResult> SelectImplicitColumn(this TestDataDb dataConnection)
+		public static IEnumerable<SelectImplicitColumnResult> SelectImplicitColumn(this TestDataDB dataConnection)
 		{
 			return dataConnection.QueryProc(dataReader => new SelectImplicitColumnResult()
 			{
@@ -755,7 +755,7 @@ namespace Cli.T4.SqlServer
 		#endregion
 
 		#region TableTypeTestProc
-		public static IEnumerable<TableTypeTestProcResult> TableTypeTestProc(this TestDataDb dataConnection, DataTable? table)
+		public static IEnumerable<TableTypeTestProcResult> TableTypeTestProc(this TestDataDB dataConnection, DataTable? table)
 		{
 			var parameters = new []
 			{
@@ -772,7 +772,7 @@ namespace Cli.T4.SqlServer
 		#endregion
 
 		#region TestProcedure
-		public static IEnumerable<TestProcedureResult> TestProcedure(this TestDataDb dataConnection)
+		public static IEnumerable<TestProcedureResult> TestProcedure(this TestDataDB dataConnection)
 		{
 			return dataConnection.QueryProc(dataReader => new TestProcedureResult()
 			{
@@ -787,7 +787,7 @@ namespace Cli.T4.SqlServer
 		#endregion
 
 		#region VariableResults
-		public static IEnumerable<VariableResultsResult> VariableResults(this TestDataDb dataConnection, bool? returnFullRow)
+		public static IEnumerable<VariableResultsResult> VariableResults(this TestDataDB dataConnection, bool? returnFullRow)
 		{
 			var parameters = new []
 			{
@@ -823,7 +823,7 @@ namespace Cli.T4.SqlServer
 	}
 
 	[Table("InheritanceChild", Schema = "dbo")]
-	public class InheritanceChild
+	public partial class InheritanceChild
 	{
 		[Column("InheritanceChildId" , IsPrimaryKey = true)] public int     InheritanceChildId  { get; set; } // int
 		[Column("InheritanceParentId"                     )] public int     InheritanceParentId { get; set; } // int
@@ -832,7 +832,7 @@ namespace Cli.T4.SqlServer
 	}
 
 	[Table("Person", Schema = "dbo")]
-	public class Person
+	public partial class Person
 	{
 		[Column("PersonID"  , IsPrimaryKey = true , IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int     PersonID   { get; set; } // int
 		[Column("FirstName" , CanBeNull    = false                                                             )] public string  FirstName  { get; set; } = null!; // nvarchar(50)
@@ -856,7 +856,7 @@ namespace Cli.T4.SqlServer
 	}
 
 	[Table("Doctor", Schema = "dbo")]
-	public class Doctor
+	public partial class Doctor
 	{
 		[Column("PersonID", IsPrimaryKey = true )] public int    PersonID { get; set; } // int
 		[Column("Taxonomy", CanBeNull    = false)] public string Taxonomy { get; set; } = null!; // nvarchar(50)
@@ -871,7 +871,7 @@ namespace Cli.T4.SqlServer
 	}
 
 	[Table("Patient", Schema = "dbo")]
-	public class Patient
+	public partial class Patient
 	{
 		[Column("PersonID" , IsPrimaryKey = true )] public int    PersonID  { get; set; } // int
 		[Column("Diagnosis", CanBeNull    = false)] public string Diagnosis { get; set; } = null!; // nvarchar(256)
@@ -886,9 +886,9 @@ namespace Cli.T4.SqlServer
 	}
 
 	[Table("AllTypes", Schema = "dbo")]
-	public class AllType
+	public partial class AllType
 	{
-		[Column("ID"                      , IsPrimaryKey = true, IsIdentity   = true, SkipOnInsert = true, SkipOnUpdate = true)] public int             Id                       { get; set; } // int
+		[Column("ID"                      , IsPrimaryKey = true, IsIdentity   = true, SkipOnInsert = true, SkipOnUpdate = true)] public int             ID                       { get; set; } // int
 		[Column("bigintDataType"                                                                                              )] public long?           BigintDataType           { get; set; } // bigint
 		[Column("numericDataType"                                                                                             )] public decimal?        NumericDataType          { get; set; } // numeric(18, 1)
 		[Column("bitDataType"                                                                                                 )] public bool?           BitDataType              { get; set; } // bit
@@ -934,9 +934,9 @@ namespace Cli.T4.SqlServer
 	}
 
 	[Table("AllTypes2", Schema = "dbo")]
-	public class AllTypes2
+	public partial class AllTypes2
 	{
-		[Column("ID"                    , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int             Id                     { get; set; } // int
+		[Column("ID"                    , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int             ID                     { get; set; } // int
 		[Column("dateDataType"                                                                                            )] public DateTime?       DateDataType           { get; set; } // date
 		[Column("datetimeoffsetDataType"                                                                                  )] public DateTimeOffset? DatetimeoffsetDataType { get; set; } // datetimeoffset(7)
 		[Column("datetime2DataType"                                                                                       )] public DateTime?       Datetime2DataType      { get; set; } // datetime2(7)
@@ -950,45 +950,45 @@ namespace Cli.T4.SqlServer
 	/// This is Parent table
 	/// </summary>
 	[Table("Parent", Schema = "dbo")]
-	public class Parent
+	public partial class Parent
 	{
 		[Column("ParentID"                                                                                  )] public int? ParentID { get; set; } // int
 		[Column("Value1"                                                                                    )] public int? Value1   { get; set; } // int
-		[Column("_ID"     , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int  Id       { get; set; } // int
+		[Column("_ID"     , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int  ID       { get; set; } // int
 	}
 
 	[Table("Child", Schema = "dbo")]
-	public class Child
+	public partial class Child
 	{
 		[Column("ParentID"                                                                                  )] public int? ParentID { get; set; } // int
 		/// <summary>
 		/// This ChildID column
 		/// </summary>
 		[Column("ChildID"                                                                                   )] public int? ChildID  { get; set; } // int
-		[Column("_ID"     , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int  Id       { get; set; } // int
+		[Column("_ID"     , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int  ID       { get; set; } // int
 	}
 
 	[Table("CreateIfNotExistsTable", Schema = "dbo")]
-	public class CreateIfNotExistsTable
+	public partial class CreateIfNotExistsTable
 	{
 		[Column("Id"   )] public int Id    { get; set; } // int
 		[Column("Value")] public int Value { get; set; } // int
 	}
 
 	[Table("GrandChild", Schema = "dbo")]
-	public class GrandChild
+	public partial class GrandChild
 	{
 		[Column("ParentID"                                                                                      )] public int? ParentID     { get; set; } // int
 		[Column("ChildID"                                                                                       )] public int? ChildID      { get; set; } // int
 		[Column("GrandChildID"                                                                                  )] public int? GrandChildID { get; set; } // int
-		[Column("_ID"         , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int  Id           { get; set; } // int
+		[Column("_ID"         , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int  ID           { get; set; } // int
 	}
 
 	[Table("LinqDataTypes", Schema = "dbo")]
-	public class LinqDataType
+	public partial class LinqDataType
 	{
-		[Column("_ID"           , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int       Id             { get; set; } // int
-		[Column("ID"                                                                                              )] public int?      Id1            { get; set; } // int
+		[Column("_ID"           , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int       ID             { get; set; } // int
+		[Column("ID"                                                                                              )] public int?      ID1            { get; set; } // int
 		[Column("MoneyValue"                                                                                      )] public decimal?  MoneyValue     { get; set; } // decimal(10, 4)
 		[Column("DateTimeValue"                                                                                   )] public DateTime? DateTimeValue  { get; set; } // datetime
 		[Column("DateTimeValue2"                                                                                  )] public DateTime? DateTimeValue2 { get; set; } // datetime2(7)
@@ -1002,13 +1002,13 @@ namespace Cli.T4.SqlServer
 	}
 
 	[Table("TestIdentity", Schema = "dbo")]
-	public class TestIdentity
+	public partial class TestIdentity
 	{
-		[Column("ID", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int Id { get; set; } // int
+		[Column("ID", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int ID { get; set; } // int
 	}
 
 	[Table("IndexTable", Schema = "dbo")]
-	public class IndexTable
+	public partial class IndexTable
 	{
 		[Column("PKField1"   , IsPrimaryKey = true, PrimaryKeyOrder = 1)] public int PKField1    { get; set; } // int
 		[Column("PKField2"   , IsPrimaryKey = true, PrimaryKeyOrder = 0)] public int PKField2    { get; set; } // int
@@ -1025,7 +1025,7 @@ namespace Cli.T4.SqlServer
 	}
 
 	[Table("IndexTable2", Schema = "dbo")]
-	public class IndexTable2
+	public partial class IndexTable2
 	{
 		[Column("PKField1", IsPrimaryKey = true, PrimaryKeyOrder = 1)] public int PKField1 { get; set; } // int
 		[Column("PKField2", IsPrimaryKey = true, PrimaryKeyOrder = 0)] public int PKField2 { get; set; } // int
@@ -1040,26 +1040,26 @@ namespace Cli.T4.SqlServer
 	}
 
 	[Table("Name.Test", Schema = "dbo")]
-	public class NameTest
+	public partial class NameTest
 	{
 		[Column("Name.Test")] public int? NameTest1 { get; set; } // int
 	}
 
 	[Table("GuidID", Schema = "dbo")]
-	public class GuidID
+	public partial class GuidID
 	{
-		[Column("ID"    , IsPrimaryKey = true)] public Guid Id     { get; set; } // uniqueidentifier
+		[Column("ID"    , IsPrimaryKey = true)] public Guid ID     { get; set; } // uniqueidentifier
 		[Column("Field1"                     )] public int? Field1 { get; set; } // int
 	}
 
 	[Table("GuidID2", Schema = "dbo")]
-	public class GuidID2
+	public partial class GuidID2
 	{
-		[Column("ID", IsPrimaryKey = true)] public Guid Id { get; set; } // uniqueidentifier
+		[Column("ID", IsPrimaryKey = true)] public Guid ID { get; set; } // uniqueidentifier
 	}
 
 	[Table("DecimalOverflow", Schema = "dbo")]
-	public class DecimalOverflow
+	public partial class DecimalOverflow
 	{
 		[Column("Decimal1", IsPrimaryKey = true)] public decimal  Decimal1 { get; set; } // decimal(38, 20)
 		[Column("Decimal2"                     )] public decimal? Decimal2 { get; set; } // decimal(31, 2)
@@ -1069,14 +1069,14 @@ namespace Cli.T4.SqlServer
 	}
 
 	[Table("SqlTypes", Schema = "dbo")]
-	public class SqlType
+	public partial class SqlType
 	{
-		[Column("ID" , IsPrimaryKey = true)] public int             Id  { get; set; } // int
+		[Column("ID" , IsPrimaryKey = true)] public int             ID  { get; set; } // int
 		[Column("HID"                     )] public SqlHierarchyId? Hid { get; set; } // hierarchyid
 	}
 
 	[Table("TestMerge1", Schema = "dbo")]
-	public class TestMerge1
+	public partial class TestMerge1
 	{
 		[Column("Id"             , IsPrimaryKey = true)] public int             Id              { get; set; } // int
 		[Column("Field1"                              )] public int?            Field1          { get; set; } // int
@@ -1104,7 +1104,7 @@ namespace Cli.T4.SqlServer
 	}
 
 	[Table("TestMerge2", Schema = "dbo")]
-	public class TestMerge2
+	public partial class TestMerge2
 	{
 		[Column("Id"             , IsPrimaryKey = true)] public int             Id              { get; set; } // int
 		[Column("Field1"                              )] public int?            Field1          { get; set; } // int
@@ -1132,14 +1132,14 @@ namespace Cli.T4.SqlServer
 	}
 
 	[Table("TestMergeIdentity", Schema = "dbo")]
-	public class TestMergeIdentity
+	public partial class TestMergeIdentity
 	{
 		[Column("Id"   , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int  Id    { get; set; } // int
 		[Column("Field"                                                                                  )] public int? Field { get; set; } // int
 	}
 
 	[Table("TestSchemaX", Schema = "dbo")]
-	public class TestSchemaX
+	public partial class TestSchemaX
 	{
 		[Column("TestSchemaXID", IsPrimaryKey = true)] public int TestSchemaXID { get; set; } // int
 		[Column("Field1"                            )] public int Field1        { get; set; } // int
@@ -1166,7 +1166,7 @@ namespace Cli.T4.SqlServer
 	}
 
 	[Table("TestSchemaY", Schema = "dbo")]
-	public class TestSchemaY
+	public partial class TestSchemaY
 	{
 		[Column("TestSchemaXID"      )] public int TestSchemaXID       { get; set; } // int
 		[Column("ParentTestSchemaXID")] public int ParentTestSchemaXID { get; set; } // int
@@ -1194,7 +1194,7 @@ namespace Cli.T4.SqlServer
 	}
 
 	[Table("TestSchemaA", Schema = "TestSchema")]
-	public class TestSchema_TestSchemaA
+	public partial class TestSchema_TestSchemaA
 	{
 		[Column("TestSchemaAID", IsPrimaryKey = true)] public int TestSchemaAID { get; set; } // int
 		[Column("Field1"                            )] public int Field1        { get; set; } // int
@@ -1221,7 +1221,7 @@ namespace Cli.T4.SqlServer
 	}
 
 	[Table("TestSchemaB", Schema = "TestSchema")]
-	public class TestSchema_TestSchemaB
+	public partial class TestSchema_TestSchemaB
 	{
 		[Column("TestSchemaBID"          , IsPrimaryKey = true)] public int TestSchemaBID        { get; set; } // int
 		[Column("OriginTestSchemaAID"                         )] public int OriginTestSchemaAID  { get; set; } // int
@@ -1250,7 +1250,7 @@ namespace Cli.T4.SqlServer
 	}
 
 	[Table("Issue1144", Schema = "dbo")]
-	public class Issue1144
+	public partial class Issue1144
 	{
 		/// <summary>
 		/// Column description
@@ -1259,39 +1259,39 @@ namespace Cli.T4.SqlServer
 	}
 
 	[Table("SameTableName", Schema = "dbo")]
-	public class SameTableName
+	public partial class SameTableName
 	{
 		[Column("id")] public int? Id { get; set; } // int
 	}
 
 	[Table("TestSchema_SameTableName", Schema = "dbo")]
-	public class TestSchemaSameTableName
+	public partial class TestSchemaSameTableName
 	{
 		[Column("id")] public int? Id { get; set; } // int
 	}
 
 	[Table("SameTableName", Schema = "TestSchema")]
-	public class TestSchema_SameTableName
+	public partial class TestSchema_SameTableName
 	{
 		[Column("id")] public int? Id { get; set; } // int
 	}
 
 	[Table("Issue1115", Schema = "dbo")]
-	public class Issue1115
+	public partial class Issue1115
 	{
 		[Column("id", IsPrimaryKey = true)] public SqlHierarchyId Id { get; set; } // hierarchyid
 	}
 
 	[Table("ParentView", Schema = "dbo", IsView = true)]
-	public class ParentView
+	public partial class ParentView
 	{
 		[Column("ParentID"                                                             )] public int? ParentID { get; set; } // int
 		[Column("Value1"                                                               )] public int? Value1   { get; set; } // int
-		[Column("_ID"     , IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int  Id       { get; set; } // int
+		[Column("_ID"     , IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int  ID       { get; set; } // int
 	}
 
 	[Table("ParentChildView", Schema = "dbo", IsView = true)]
-	public class ParentChildView
+	public partial class ParentChildView
 	{
 		[Column("ParentID")] public int? ParentID { get; set; } // int
 		[Column("Value1"  )] public int? Value1   { get; set; } // int

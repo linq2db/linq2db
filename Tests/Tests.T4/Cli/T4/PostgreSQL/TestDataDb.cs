@@ -25,9 +25,9 @@ using System.Reflection;
 
 namespace Cli.T4.PostgreSQL
 {
-	public partial class TestDataDb : DataConnection
+	public partial class TestDataDB : DataConnection
 	{
-		static TestDataDb()
+		static TestDataDB()
 		{
 			ContextSchema.SetConvertExpression<object?[], ExtensionMethods.TestFunctionParametersResult>(tuple => new ExtensionMethods.TestFunctionParametersResult()
 			{
@@ -35,24 +35,24 @@ namespace Cli.T4.PostgreSQL
 				Param3 = (int?)(tuple[1])
 			});
 		}
-		public TestDataDb()
+		public TestDataDB()
 		{
 			InitDataContext();
 		}
 
-		public TestDataDb(string configuration)
+		public TestDataDB(string configuration)
 			: base(configuration)
 		{
 			InitDataContext();
 		}
 
-		public TestDataDb(LinqToDBConnectionOptions options)
+		public TestDataDB(LinqToDBConnectionOptions options)
 			: base(options)
 		{
 			InitDataContext();
 		}
 
-		public TestDataDb(LinqToDBConnectionOptions<TestDataDb> options)
+		public TestDataDB(LinqToDBConnectionOptions<TestDataDB> options)
 			: base(options)
 		{
 			InitDataContext();
@@ -102,7 +102,7 @@ namespace Cli.T4.PostgreSQL
 
 		#region Table Functions
 		#region GetParentById
-		private static readonly MethodInfo _getParentById = MemberHelper.MethodOf<TestDataDb>(ctx => ctx.GetParentById(default));
+		private static readonly MethodInfo _getParentById = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.GetParentById(default));
 
 		[Sql.TableFunction("GetParentByID", Schema = "public")]
 		public ITable<GetParentByIdResult> GetParentById(int? id)
@@ -118,7 +118,7 @@ namespace Cli.T4.PostgreSQL
 		#endregion
 
 		#region TestTableFunction
-		private static readonly MethodInfo _testTableFunction = MemberHelper.MethodOf<TestDataDb>(ctx => ctx.TestTableFunction(default));
+		private static readonly MethodInfo _testTableFunction = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.TestTableFunction(default));
 
 		[Sql.TableFunction("TestTableFunction", Schema = "public")]
 		public ITable<TestTableFunctionResult> TestTableFunction(int? param1)
@@ -133,7 +133,7 @@ namespace Cli.T4.PostgreSQL
 		#endregion
 
 		#region TestTableFunction1
-		private static readonly MethodInfo _testTableFunction1 = MemberHelper.MethodOf<TestDataDb>(ctx => ctx.TestTableFunction1(default, default));
+		private static readonly MethodInfo _testTableFunction1 = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.TestTableFunction1(default, default));
 
 		[Sql.TableFunction("TestTableFunction1", Schema = "public")]
 		public ITable<TestTableFunction1Result> TestTableFunction1(int? param1, int? param2)
@@ -149,7 +149,7 @@ namespace Cli.T4.PostgreSQL
 		#endregion
 
 		#region TestTableFunctionSchema
-		private static readonly MethodInfo _testTableFunctionSchema = MemberHelper.MethodOf<TestDataDb>(ctx => ctx.TestTableFunctionSchema());
+		private static readonly MethodInfo _testTableFunctionSchema = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.TestTableFunctionSchema());
 
 		[Sql.TableFunction("TestTableFunctionSchema", Schema = "public")]
 		public ITable<TestTableFunctionSchemaResult> TestTableFunctionSchema()
@@ -214,9 +214,9 @@ namespace Cli.T4.PostgreSQL
 	}
 
 	[Table("AllTypes", Schema = "public")]
-	public class AllType
+	public partial class AllType
 	{
-		[Column("ID"                 , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int                         Id                  { get; set; } // integer
+		[Column("ID"                 , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int                         ID                  { get; set; } // integer
 		[Column("bigintDataType"                                                                                       )] public long?                       BigintDataType      { get; set; } // bigint
 		[Column("numericDataType"                                                                                      )] public decimal?                    NumericDataType     { get; set; } // numeric
 		[Column("smallintDataType"                                                                                     )] public short?                      SmallintDataType    { get; set; } // smallint
@@ -270,22 +270,22 @@ namespace Cli.T4.PostgreSQL
 		#region Table Extensions
 		public static AllType? Find(this ITable<AllType> table, int id)
 		{
-			return table.FirstOrDefault(e => e.Id == id);
+			return table.FirstOrDefault(e => e.ID == id);
 		}
 
 		public static SequenceCustomNamingTest? Find(this ITable<SequenceCustomNamingTest> table, int id)
 		{
-			return table.FirstOrDefault(e => e.Id == id);
+			return table.FirstOrDefault(e => e.ID == id);
 		}
 
 		public static test_schema_TestSchemaIdentity? Find(this ITable<test_schema_TestSchemaIdentity> table, int id)
 		{
-			return table.FirstOrDefault(e => e.Id == id);
+			return table.FirstOrDefault(e => e.ID == id);
 		}
 
 		public static test_schema_Testserialidentity? Find(this ITable<test_schema_Testserialidentity> table, int id)
 		{
-			return table.FirstOrDefault(e => e.Id == id);
+			return table.FirstOrDefault(e => e.ID == id);
 		}
 
 		public static test_schema_Testsamename? Find(this ITable<test_schema_Testsamename> table, int id)
@@ -355,7 +355,7 @@ namespace Cli.T4.PostgreSQL
 
 		public static SequenceTest1? Find(this ITable<SequenceTest1> table, int id)
 		{
-			return table.FirstOrDefault(e => e.Id == id);
+			return table.FirstOrDefault(e => e.ID == id);
 		}
 
 		public static Patient? Find(this ITable<Patient> table, int personId)
@@ -365,17 +365,17 @@ namespace Cli.T4.PostgreSQL
 
 		public static SequenceTest2? Find(this ITable<SequenceTest2> table, int id)
 		{
-			return table.FirstOrDefault(e => e.Id == id);
+			return table.FirstOrDefault(e => e.ID == id);
 		}
 
 		public static SequenceTest3? Find(this ITable<SequenceTest3> table, int id)
 		{
-			return table.FirstOrDefault(e => e.Id == id);
+			return table.FirstOrDefault(e => e.ID == id);
 		}
 
 		public static TestIdentity? Find(this ITable<TestIdentity> table, int id)
 		{
-			return table.FirstOrDefault(e => e.Id == id);
+			return table.FirstOrDefault(e => e.ID == id);
 		}
 
 		public static SameName1? Find(this ITable<SameName1> table, int id)
@@ -518,38 +518,38 @@ namespace Cli.T4.PostgreSQL
 	}
 
 	[Table("SequenceCustomNamingTest", Schema = "public")]
-	public class SequenceCustomNamingTest
+	public partial class SequenceCustomNamingTest
 	{
-		[Column("ID"   , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int     Id    { get; set; } // integer
+		[Column("ID"   , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int     ID    { get; set; } // integer
 		[Column("Value"                                                                                  )] public string? Value { get; set; } // character varying(50)
 	}
 
 	[Table("TestSchemaIdentity", Schema = "test_schema")]
-	public class test_schema_TestSchemaIdentity
+	public partial class test_schema_TestSchemaIdentity
 	{
-		[Column("ID", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int Id { get; set; } // integer
+		[Column("ID", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int ID { get; set; } // integer
 	}
 
 	[Table("testserialidentity", Schema = "test_schema")]
-	public class test_schema_Testserialidentity
+	public partial class test_schema_Testserialidentity
 	{
-		[Column("ID", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int Id { get; set; } // integer
+		[Column("ID", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int ID { get; set; } // integer
 	}
 
 	[Table("testsamename", Schema = "test_schema")]
-	public class test_schema_Testsamename
+	public partial class test_schema_Testsamename
 	{
 		[Column("id", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int Id { get; set; } // integer
 	}
 
 	[Table("testsamename", Schema = "public")]
-	public class Testsamename
+	public partial class Testsamename
 	{
 		[Column("id", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int Id { get; set; } // integer
 	}
 
 	[Table("TestMerge1", Schema = "public")]
-	public class TestMerge1
+	public partial class TestMerge1
 	{
 		[Column("Id"             , IsPrimaryKey = true)] public int             Id              { get; set; } // integer
 		[Column("Field1"                              )] public int?            Field1          { get; set; } // integer
@@ -577,7 +577,7 @@ namespace Cli.T4.PostgreSQL
 	}
 
 	[Table("TestMerge2", Schema = "public")]
-	public class TestMerge2
+	public partial class TestMerge2
 	{
 		[Column("Id"             , IsPrimaryKey = true)] public int             Id              { get; set; } // integer
 		[Column("Field1"                              )] public int?            Field1          { get; set; } // integer
@@ -605,14 +605,14 @@ namespace Cli.T4.PostgreSQL
 	}
 
 	[Table("InventoryResource", Schema = "public")]
-	public class InventoryResource
+	public partial class InventoryResource
 	{
 		[Column("Id"    , IsPrimaryKey = true )] public Guid   Id     { get; set; } // uuid
 		[Column("Status", CanBeNull    = false)] public string Status { get; set; } = null!; // character varying
 	}
 
 	[Table("EmployeeTimeOffBalance", Schema = "public")]
-	public class EmployeeTimeOffBalance
+	public partial class EmployeeTimeOffBalance
 	{
 		[Column("Id"              , IsPrimaryKey = true)] public int Id               { get; set; } // integer
 		[Column("TrackingTimeType"                     )] public int TrackingTimeType { get; set; } // integer
@@ -620,20 +620,20 @@ namespace Cli.T4.PostgreSQL
 	}
 
 	[Table("Employee", Schema = "public")]
-	public class Employee
+	public partial class Employee
 	{
 		[Column("EmployeeId", IsPrimaryKey = true)] public int EmployeeId { get; set; } // integer
 	}
 
 	[Table("LeaveRequest", Schema = "public")]
-	public class LeaveRequest
+	public partial class LeaveRequest
 	{
 		[Column("Id"        , IsPrimaryKey = true)] public int Id         { get; set; } // integer
 		[Column("EmployeeId"                     )] public int EmployeeId { get; set; } // integer
 	}
 
 	[Table("LeaveRequestDateEntry", Schema = "public")]
-	public class LeaveRequestDateEntry
+	public partial class LeaveRequestDateEntry
 	{
 		[Column("Id"            , IsPrimaryKey = true)] public int      Id             { get; set; } // integer
 		[Column("EndHour"                            )] public decimal? EndHour        { get; set; } // numeric
@@ -642,14 +642,14 @@ namespace Cli.T4.PostgreSQL
 	}
 
 	[Table("TagTestTable", Schema = "public")]
-	public class TagTestTable
+	public partial class TagTestTable
 	{
-		[Column("ID"  )] public int     Id   { get; set; } // integer
+		[Column("ID"  )] public int     ID   { get; set; } // integer
 		[Column("Name")] public string? Name { get; set; } // text
 	}
 
 	[Table("InheritanceParent", Schema = "public")]
-	public class InheritanceParent
+	public partial class InheritanceParent
 	{
 		[Column("InheritanceParentId", IsPrimaryKey = true)] public int     InheritanceParentId { get; set; } // integer
 		[Column("TypeDiscriminator"                       )] public int?    TypeDiscriminator   { get; set; } // integer
@@ -657,7 +657,7 @@ namespace Cli.T4.PostgreSQL
 	}
 
 	[Table("InheritanceChild", Schema = "public")]
-	public class InheritanceChild
+	public partial class InheritanceChild
 	{
 		[Column("InheritanceChildId" , IsPrimaryKey = true)] public int     InheritanceChildId  { get; set; } // integer
 		[Column("InheritanceParentId"                     )] public int     InheritanceParentId { get; set; } // integer
@@ -666,13 +666,13 @@ namespace Cli.T4.PostgreSQL
 	}
 
 	[Table("entity", Schema = "public")]
-	public class Entity
+	public partial class Entity
 	{
 		[Column("the_name", CanBeNull = false)] public string TheName { get; set; } = null!; // character varying(255)
 	}
 
 	[Table("Doctor", Schema = "public")]
-	public class Doctor
+	public partial class Doctor
 	{
 		[Column("PersonID", IsPrimaryKey = true )] public int    PersonID { get; set; } // integer
 		[Column("Taxonomy", CanBeNull    = false)] public string Taxonomy { get; set; } = null!; // character varying(50)
@@ -690,7 +690,7 @@ namespace Cli.T4.PostgreSQL
 	/// This is the Person table
 	/// </summary>
 	[Table("Person", Schema = "public")]
-	public class Person
+	public partial class Person
 	{
 		/// <summary>
 		/// This is the Person.PersonID column
@@ -717,14 +717,14 @@ namespace Cli.T4.PostgreSQL
 	}
 
 	[Table("SequenceTest1", Schema = "public")]
-	public class SequenceTest1
+	public partial class SequenceTest1
 	{
-		[Column("ID"   , IsPrimaryKey = true)] public int     Id    { get; set; } // integer
+		[Column("ID"   , IsPrimaryKey = true)] public int     ID    { get; set; } // integer
 		[Column("Value"                     )] public string? Value { get; set; } // character varying(50)
 	}
 
 	[Table("Patient", Schema = "public")]
-	public class Patient
+	public partial class Patient
 	{
 		[Column("PersonID" , IsPrimaryKey = true )] public int    PersonID  { get; set; } // integer
 		[Column("Diagnosis", CanBeNull    = false)] public string Diagnosis { get; set; } = null!; // character varying(256)
@@ -739,21 +739,21 @@ namespace Cli.T4.PostgreSQL
 	}
 
 	[Table("Parent", Schema = "public")]
-	public class Parent
+	public partial class Parent
 	{
 		[Column("ParentID")] public int? ParentID { get; set; } // integer
 		[Column("Value1"  )] public int? Value1   { get; set; } // integer
 	}
 
 	[Table("Child", Schema = "public")]
-	public class Child
+	public partial class Child
 	{
 		[Column("ParentID")] public int? ParentID { get; set; } // integer
 		[Column("ChildID" )] public int? ChildID  { get; set; } // integer
 	}
 
 	[Table("GrandChild", Schema = "public")]
-	public class GrandChild
+	public partial class GrandChild
 	{
 		[Column("ParentID"    )] public int? ParentID     { get; set; } // integer
 		[Column("ChildID"     )] public int? ChildID      { get; set; } // integer
@@ -761,9 +761,9 @@ namespace Cli.T4.PostgreSQL
 	}
 
 	[Table("LinqDataTypes", Schema = "public")]
-	public class LinqDataType
+	public partial class LinqDataType
 	{
-		[Column("ID"            )] public int?      Id             { get; set; } // integer
+		[Column("ID"            )] public int?      ID             { get; set; } // integer
 		[Column("MoneyValue"    )] public decimal?  MoneyValue     { get; set; } // numeric(10,4)
 		[Column("DateTimeValue" )] public DateTime? DateTimeValue  { get; set; } // timestamp (6) without time zone
 		[Column("DateTimeValue2")] public DateTime? DateTimeValue2 { get; set; } // timestamp (6) without time zone
@@ -777,27 +777,27 @@ namespace Cli.T4.PostgreSQL
 	}
 
 	[Table("SequenceTest2", Schema = "public")]
-	public class SequenceTest2
+	public partial class SequenceTest2
 	{
-		[Column("ID"   , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int     Id    { get; set; } // integer
+		[Column("ID"   , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int     ID    { get; set; } // integer
 		[Column("Value"                                                                                  )] public string? Value { get; set; } // character varying(50)
 	}
 
 	[Table("SequenceTest3", Schema = "public")]
-	public class SequenceTest3
+	public partial class SequenceTest3
 	{
-		[Column("ID"   , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int     Id    { get; set; } // integer
+		[Column("ID"   , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int     ID    { get; set; } // integer
 		[Column("Value"                                                                                  )] public string? Value { get; set; } // character varying(50)
 	}
 
 	[Table("TestIdentity", Schema = "public")]
-	public class TestIdentity
+	public partial class TestIdentity
 	{
-		[Column("ID", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int Id { get; set; } // integer
+		[Column("ID", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int ID { get; set; } // integer
 	}
 
 	[Table("same_name1", Schema = "public")]
-	public class SameName1
+	public partial class SameName1
 	{
 		[Column("id"       , IsPrimaryKey = true)] public int  Id       { get; set; } // integer
 		[Column("same_name"                     )] public int? SameName { get; set; } // integer
@@ -812,7 +812,7 @@ namespace Cli.T4.PostgreSQL
 	}
 
 	[Table("same_name", Schema = "public")]
-	public class SameName
+	public partial class SameName
 	{
 		[Column("id", IsPrimaryKey = true)] public int Id { get; set; } // integer
 
@@ -832,7 +832,7 @@ namespace Cli.T4.PostgreSQL
 	}
 
 	[Table("same_name2", Schema = "public")]
-	public class SameName2
+	public partial class SameName2
 	{
 		[Column("id"       , IsPrimaryKey = true)] public int  Id       { get; set; } // integer
 		[Column("same_name"                     )] public int? SameName { get; set; } // integer
@@ -847,7 +847,7 @@ namespace Cli.T4.PostgreSQL
 	}
 
 	[Table("CollatedTable", Schema = "public")]
-	public class CollatedTable
+	public partial class CollatedTable
 	{
 		[Column("Id"                                )] public int    Id              { get; set; } // integer
 		[Column("CaseSensitive"  , CanBeNull = false)] public string CaseSensitive   { get; set; } = null!; // character varying(20)
@@ -858,7 +858,7 @@ namespace Cli.T4.PostgreSQL
 	/// This is the Issue2023 matview
 	/// </summary>
 	[Table("Issue2023", Schema = "public", IsView = true)]
-	public class Issue2023
+	public partial class Issue2023
 	{
 		/// <summary>
 		/// This is the Issue2023.PersonID column

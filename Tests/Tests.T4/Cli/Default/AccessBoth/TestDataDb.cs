@@ -17,20 +17,20 @@ using System.Threading.Tasks;
 
 namespace Cli.Default.Access.Both
 {
-	public partial class TestDataDb : DataConnection
+	public partial class TestDataDB : DataConnection
 	{
-		public TestDataDb()
+		public TestDataDB()
 		{
 			InitDataContext();
 		}
 
-		public TestDataDb(string configuration)
+		public TestDataDB(string configuration)
 			: base(configuration)
 		{
 			InitDataContext();
 		}
 
-		public TestDataDb(LinqToDBConnectionOptions<TestDataDb> options)
+		public TestDataDB(LinqToDBConnectionOptions<TestDataDB> options)
 			: base(options)
 		{
 			InitDataContext();
@@ -56,8 +56,8 @@ namespace Cli.Default.Access.Both
 		public ITable<LinqDataTypesQuery>  LinqDataTypesQueries => this.GetTable<LinqDataTypesQuery>();
 		public ITable<LinqDataTypesQuery1> LinqDataTypesQuery1  => this.GetTable<LinqDataTypesQuery1>();
 		public ITable<LinqDataTypesQuery2> LinqDataTypesQuery2  => this.GetTable<LinqDataTypesQuery2>();
-		public ITable<PatientSelectAll>    PatientSelectAlls    => this.GetTable<PatientSelectAll>();
-		public ITable<PersonSelectAll>     PersonSelectAlls     => this.GetTable<PersonSelectAll>();
+		public ITable<PatientSelectAll>    PatientSelectAll     => this.GetTable<PatientSelectAll>();
+		public ITable<PersonSelectAll>     PersonSelectAll      => this.GetTable<PersonSelectAll>();
 		public ITable<ScalarDataReader>    ScalarDataReaders    => this.GetTable<ScalarDataReader>();
 	}
 

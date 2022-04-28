@@ -18,26 +18,26 @@ using System.Linq;
 
 namespace Cli.T4.DB2
 {
-	public partial class TestDataDb : DataConnection
+	public partial class TestDataDB : DataConnection
 	{
-		public TestDataDb()
+		public TestDataDB()
 		{
 			InitDataContext();
 		}
 
-		public TestDataDb(string configuration)
+		public TestDataDB(string configuration)
 			: base(configuration)
 		{
 			InitDataContext();
 		}
 
-		public TestDataDb(LinqToDBConnectionOptions options)
+		public TestDataDB(LinqToDBConnectionOptions options)
 			: base(options)
 		{
 			InitDataContext();
 		}
 
-		public TestDataDb(LinqToDBConnectionOptions<TestDataDb> options)
+		public TestDataDB(LinqToDBConnectionOptions<TestDataDB> options)
 			: base(options)
 		{
 			InitDataContext();
@@ -72,9 +72,9 @@ namespace Cli.T4.DB2
 	}
 
 	[Table("ALLTYPES", Schema = "DB2ADMIN")]
-	public class DB2ADMIN_Alltype
+	public partial class DB2ADMIN_Alltype
 	{
-		[Column("ID"               , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int       Id                { get; set; } // INTEGER
+		[Column("ID"               , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int       ID                { get; set; } // INTEGER
 		[Column("BIGINTDATATYPE"                                                                                     )] public long?     Bigintdatatype    { get; set; } // BIGINT
 		[Column("INTDATATYPE"                                                                                        )] public int?      Intdatatype       { get; set; } // INTEGER
 		[Column("SMALLINTDATATYPE"                                                                                   )] public short?    Smallintdatatype  { get; set; } // SMALLINT
@@ -102,7 +102,7 @@ namespace Cli.T4.DB2
 		#region Table Extensions
 		public static DB2ADMIN_Alltype? Find(this ITable<DB2ADMIN_Alltype> table, int id)
 		{
-			return table.FirstOrDefault(e => e.Id == id);
+			return table.FirstOrDefault(e => e.ID == id);
 		}
 
 		public static DB2ADMIN_Doctor? Find(this ITable<DB2ADMIN_Doctor> table, int personId)
@@ -122,12 +122,12 @@ namespace Cli.T4.DB2
 
 		public static DB2ADMIN_KeepIdentityTest? Find(this ITable<DB2ADMIN_KeepIdentityTest> table, int id)
 		{
-			return table.FirstOrDefault(e => e.Id == id);
+			return table.FirstOrDefault(e => e.ID == id);
 		}
 
 		public static DB2ADMIN_Mastertable? Find(this ITable<DB2ADMIN_Mastertable> table, int id1, int id2)
 		{
-			return table.FirstOrDefault(e => e.Id1 == id1 && e.Id2 == id2);
+			return table.FirstOrDefault(e => e.ID1 == id1 && e.ID2 == id2);
 		}
 
 		public static DB2ADMIN_Patient? Find(this ITable<DB2ADMIN_Patient> table, int personId)
@@ -142,7 +142,7 @@ namespace Cli.T4.DB2
 
 		public static DB2ADMIN_TestIdentity? Find(this ITable<DB2ADMIN_TestIdentity> table, int id)
 		{
-			return table.FirstOrDefault(e => e.Id == id);
+			return table.FirstOrDefault(e => e.ID == id);
 		}
 
 		public static DB2ADMIN_TestMerge1? Find(this ITable<DB2ADMIN_TestMerge1> table, int id)
@@ -168,14 +168,14 @@ namespace Cli.T4.DB2
 
 		#region Stored Procedures
 		#region Addissue792Record
-		public static int Addissue792Record(this TestDataDb dataConnection)
+		public static int Addissue792Record(this TestDataDB dataConnection)
 		{
 			return dataConnection.ExecuteProc("DB2ADMIN.ADDISSUE792RECORD");
 		}
 		#endregion
 
 		#region PersonSelectbykey
-		public static int PersonSelectbykey(this TestDataDb dataConnection, int? id)
+		public static int PersonSelectbykey(this TestDataDB dataConnection, int? id)
 		{
 			var parameters = new []
 			{
@@ -188,14 +188,14 @@ namespace Cli.T4.DB2
 	}
 
 	[Table("Child", Schema = "DB2ADMIN")]
-	public class DB2ADMIN_Child
+	public partial class DB2ADMIN_Child
 	{
 		[Column("ParentID")] public int? ParentID { get; set; } // INTEGER
 		[Column("ChildID" )] public int? ChildID  { get; set; } // INTEGER
 	}
 
 	[Table("CollatedTable", Schema = "DB2ADMIN")]
-	public class DB2ADMIN_CollatedTable
+	public partial class DB2ADMIN_CollatedTable
 	{
 		[Column("Id"                                )] public int    Id              { get; set; } // INTEGER
 		[Column("CaseSensitive"  , CanBeNull = false)] public string CaseSensitive   { get; set; } = null!; // VARCHAR(80)
@@ -203,14 +203,14 @@ namespace Cli.T4.DB2
 	}
 
 	[Table("CreateIfNotExistsTable", Schema = "DB2ADMIN")]
-	public class DB2ADMIN_CreateIfNotExistsTable
+	public partial class DB2ADMIN_CreateIfNotExistsTable
 	{
 		[Column("Id"   )] public int Id    { get; set; } // INTEGER
 		[Column("Value")] public int Value { get; set; } // INTEGER
 	}
 
 	[Table("Doctor", Schema = "DB2ADMIN")]
-	public class DB2ADMIN_Doctor
+	public partial class DB2ADMIN_Doctor
 	{
 		[Column("PersonID", IsPrimaryKey = true )] public int    PersonID { get; set; } // INTEGER
 		[Column("Taxonomy", CanBeNull    = false)] public string Taxonomy { get; set; } = null!; // VARCHAR(50)
@@ -225,7 +225,7 @@ namespace Cli.T4.DB2
 	}
 
 	[Table("GrandChild", Schema = "DB2ADMIN")]
-	public class DB2ADMIN_GrandChild
+	public partial class DB2ADMIN_GrandChild
 	{
 		[Column("ParentID"    )] public int? ParentID     { get; set; } // INTEGER
 		[Column("ChildID"     )] public int? ChildID      { get; set; } // INTEGER
@@ -233,7 +233,7 @@ namespace Cli.T4.DB2
 	}
 
 	[Table("InheritanceChild", Schema = "DB2ADMIN")]
-	public class DB2ADMIN_InheritanceChild
+	public partial class DB2ADMIN_InheritanceChild
 	{
 		[Column("InheritanceChildId" , IsPrimaryKey = true)] public int     InheritanceChildId  { get; set; } // INTEGER
 		[Column("InheritanceParentId"                     )] public int     InheritanceParentId { get; set; } // INTEGER
@@ -242,7 +242,7 @@ namespace Cli.T4.DB2
 	}
 
 	[Table("InheritanceParent", Schema = "DB2ADMIN")]
-	public class DB2ADMIN_InheritanceParent
+	public partial class DB2ADMIN_InheritanceParent
 	{
 		[Column("InheritanceParentId", IsPrimaryKey = true)] public int     InheritanceParentId { get; set; } // INTEGER
 		[Column("TypeDiscriminator"                       )] public int?    TypeDiscriminator   { get; set; } // INTEGER
@@ -250,7 +250,7 @@ namespace Cli.T4.DB2
 	}
 
 	[Table("Ints", Schema = "DB2ADMIN")]
-	public class DB2ADMIN_Int
+	public partial class DB2ADMIN_Int
 	{
 		[Column("One"  )] public int  One   { get; set; } // INTEGER
 		[Column("Two"  )] public int  Two   { get; set; } // INTEGER
@@ -261,16 +261,16 @@ namespace Cli.T4.DB2
 	}
 
 	[Table("KeepIdentityTest", Schema = "DB2ADMIN")]
-	public class DB2ADMIN_KeepIdentityTest
+	public partial class DB2ADMIN_KeepIdentityTest
 	{
-		[Column("ID"   , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int  Id    { get; set; } // INTEGER
+		[Column("ID"   , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int  ID    { get; set; } // INTEGER
 		[Column("Value"                                                                                  )] public int? Value { get; set; } // INTEGER
 	}
 
 	[Table("LinqDataTypes", Schema = "DB2ADMIN")]
-	public class DB2ADMIN_LinqDataType
+	public partial class DB2ADMIN_LinqDataType
 	{
-		[Column("ID"            )] public int?      Id             { get; set; } // INTEGER
+		[Column("ID"            )] public int?      ID             { get; set; } // INTEGER
 		[Column("MoneyValue"    )] public decimal?  MoneyValue     { get; set; } // DECIMAL(10,4)
 		[Column("DateTimeValue" )] public DateTime? DateTimeValue  { get; set; } // TIMESTAMP
 		[Column("DateTimeValue2")] public DateTime? DateTimeValue2 { get; set; } // TIMESTAMP
@@ -284,29 +284,29 @@ namespace Cli.T4.DB2
 	}
 
 	[Table("MASTERTABLE", Schema = "DB2ADMIN")]
-	public class DB2ADMIN_Mastertable
+	public partial class DB2ADMIN_Mastertable
 	{
-		[Column("ID1", IsPrimaryKey = true, PrimaryKeyOrder = 0)] public int Id1 { get; set; } // INTEGER
-		[Column("ID2", IsPrimaryKey = true, PrimaryKeyOrder = 1)] public int Id2 { get; set; } // INTEGER
+		[Column("ID1", IsPrimaryKey = true, PrimaryKeyOrder = 0)] public int ID1 { get; set; } // INTEGER
+		[Column("ID2", IsPrimaryKey = true, PrimaryKeyOrder = 1)] public int ID2 { get; set; } // INTEGER
 
 		#region Associations
 		/// <summary>
 		/// FK_SLAVETABLE_MASTERTABLE backreference
 		/// </summary>
-		[Association(ThisKey = nameof(Id1) + "," + nameof(Id1), OtherKey = nameof(DB2ADMIN_Slavetable.Id222222222222222222222222) + "," + nameof(Id1))]
+		[Association(ThisKey = nameof(ID1) + "," + nameof(ID1), OtherKey = nameof(DB2ADMIN_Slavetable.ID222222222222222222222222) + "," + nameof(ID1))]
 		public IEnumerable<DB2ADMIN_Slavetable> Slavetables { get; set; } = null!;
 		#endregion
 	}
 
 	[Table("Parent", Schema = "DB2ADMIN")]
-	public class DB2ADMIN_Parent
+	public partial class DB2ADMIN_Parent
 	{
 		[Column("ParentID")] public int? ParentID { get; set; } // INTEGER
 		[Column("Value1"  )] public int? Value1   { get; set; } // INTEGER
 	}
 
 	[Table("Patient", Schema = "DB2ADMIN")]
-	public class DB2ADMIN_Patient
+	public partial class DB2ADMIN_Patient
 	{
 		[Column("PersonID" , IsPrimaryKey = true )] public int    PersonID  { get; set; } // INTEGER
 		[Column("Diagnosis", CanBeNull    = false)] public string Diagnosis { get; set; } = null!; // VARCHAR(256)
@@ -321,7 +321,7 @@ namespace Cli.T4.DB2
 	}
 
 	[Table("Person", Schema = "DB2ADMIN")]
-	public class DB2ADMIN_Person
+	public partial class DB2ADMIN_Person
 	{
 		[Column("PersonID"  , IsPrimaryKey = true , IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int     PersonID   { get; set; } // INTEGER
 		[Column("FirstName" , CanBeNull    = false                                                             )] public string  FirstName  { get; set; } = null!; // VARCHAR(50)
@@ -345,43 +345,43 @@ namespace Cli.T4.DB2
 	}
 
 	[Table("SLAVETABLE", Schema = "DB2ADMIN")]
-	public class DB2ADMIN_Slavetable
+	public partial class DB2ADMIN_Slavetable
 	{
-		[Column("ID1"                          )] public int Id1                        { get; set; } // INTEGER
-		[Column("ID 2222222222222222222222  22")] public int Id222222222222222222222222 { get; set; } // INTEGER
-		[Column("ID 2222222222222222"          )] public int Id2222222222222222         { get; set; } // INTEGER
+		[Column("ID1"                          )] public int ID1                        { get; set; } // INTEGER
+		[Column("ID 2222222222222222222222  22")] public int ID222222222222222222222222 { get; set; } // INTEGER
+		[Column("ID 2222222222222222"          )] public int ID2222222222222222         { get; set; } // INTEGER
 
 		#region Associations
 		/// <summary>
 		/// FK_SLAVETABLE_MASTERTABLE
 		/// </summary>
-		[Association(CanBeNull = false, ThisKey = nameof(Id222222222222222222222222) + "," + nameof(Id222222222222222222222222), OtherKey = nameof(DB2ADMIN_Mastertable.Id1) + "," + nameof(Id222222222222222222222222))]
+		[Association(CanBeNull = false, ThisKey = nameof(ID222222222222222222222222) + "," + nameof(ID222222222222222222222222), OtherKey = nameof(DB2ADMIN_Mastertable.ID1) + "," + nameof(ID222222222222222222222222))]
 		public DB2ADMIN_Mastertable Mastertable { get; set; } = null!;
 		#endregion
 	}
 
 	[Table("TagTestTable", Schema = "DB2ADMIN")]
-	public class DB2ADMIN_TagTestTable
+	public partial class DB2ADMIN_TagTestTable
 	{
-		[Column("ID"  )] public int     Id   { get; set; } // INTEGER
+		[Column("ID"  )] public int     ID   { get; set; } // INTEGER
 		[Column("Name")] public string? Name { get; set; } // VARCHAR(1020)
 	}
 
 	[Table("Test", Schema = "DB2ADMIN")]
-	public class DB2ADMIN_Test
+	public partial class DB2ADMIN_Test
 	{
 		[Column("Id"          )] public int  Id           { get; set; } // INTEGER
 		[Column("TestAnimalId")] public int? TestAnimalId { get; set; } // INTEGER
 	}
 
 	[Table("TestIdentity", Schema = "DB2ADMIN")]
-	public class DB2ADMIN_TestIdentity
+	public partial class DB2ADMIN_TestIdentity
 	{
-		[Column("ID", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int Id { get; set; } // INTEGER
+		[Column("ID", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int ID { get; set; } // INTEGER
 	}
 
 	[Table("TestMerge1", Schema = "DB2ADMIN")]
-	public class DB2ADMIN_TestMerge1
+	public partial class DB2ADMIN_TestMerge1
 	{
 		[Column("Id"             , IsPrimaryKey = true)] public int       Id              { get; set; } // INTEGER
 		[Column("Field1"                              )] public int?      Field1          { get; set; } // INTEGER
@@ -408,7 +408,7 @@ namespace Cli.T4.DB2
 	}
 
 	[Table("TestMerge2", Schema = "DB2ADMIN")]
-	public class DB2ADMIN_TestMerge2
+	public partial class DB2ADMIN_TestMerge2
 	{
 		[Column("Id"             , IsPrimaryKey = true)] public int       Id              { get; set; } // INTEGER
 		[Column("Field1"                              )] public int?      Field1          { get; set; } // INTEGER
@@ -435,7 +435,7 @@ namespace Cli.T4.DB2
 	}
 
 	[Table("testmerge1", Schema = "DB2ADMIN")]
-	public class DB2ADMIN_Testmerge1
+	public partial class DB2ADMIN_Testmerge1
 	{
 		[Column("id"    , IsPrimaryKey = true)] public int  Id     { get; set; } // INTEGER
 		[Column("field1"                     )] public int? Field1 { get; set; } // INTEGER
@@ -446,7 +446,7 @@ namespace Cli.T4.DB2
 	}
 
 	[Table("testmerge2", Schema = "DB2ADMIN")]
-	public class DB2ADMIN_Testmerge2
+	public partial class DB2ADMIN_Testmerge2
 	{
 		[Column("id"    , IsPrimaryKey = true)] public int  Id     { get; set; } // INTEGER
 		[Column("field1"                     )] public int? Field1 { get; set; } // INTEGER
@@ -457,7 +457,7 @@ namespace Cli.T4.DB2
 	}
 
 	[Table("PERSONVIEW", Schema = "DB2ADMIN", IsView = true)]
-	public class DB2ADMIN_Personview
+	public partial class DB2ADMIN_Personview
 	{
 		[Column("PersonID"                     )] public int     PersonID   { get; set; } // INTEGER
 		[Column("FirstName" , CanBeNull = false)] public string  FirstName  { get; set; } = null!; // VARCHAR(50)

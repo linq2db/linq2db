@@ -18,26 +18,26 @@ using System.Linq;
 
 namespace Cli.T4.SqlServerNorthwind
 {
-	public partial class TestDataDb : DataConnection
+	public partial class TestDataDB : DataConnection
 	{
-		public TestDataDb()
+		public TestDataDB()
 		{
 			InitDataContext();
 		}
 
-		public TestDataDb(string configuration)
+		public TestDataDB(string configuration)
 			: base(configuration)
 		{
 			InitDataContext();
 		}
 
-		public TestDataDb(LinqToDBConnectionOptions options)
+		public TestDataDB(LinqToDBConnectionOptions options)
 			: base(options)
 		{
 			InitDataContext();
 		}
 
-		public TestDataDb(LinqToDBConnectionOptions<TestDataDb> options)
+		public TestDataDB(LinqToDBConnectionOptions<TestDataDB> options)
 			: base(options)
 		{
 			InitDataContext();
@@ -77,7 +77,7 @@ namespace Cli.T4.SqlServerNorthwind
 	}
 
 	[Table("CustomerDemographics", Schema = "dbo")]
-	public class CustomerDemographic
+	public partial class CustomerDemographic
 	{
 		[Column("CustomerTypeID", CanBeNull = false, IsPrimaryKey = true)] public string  CustomerTypeID { get; set; } = null!; // nchar(10)
 		[Column("CustomerDesc"                                          )] public string? CustomerDesc   { get; set; } // ntext
@@ -162,7 +162,7 @@ namespace Cli.T4.SqlServerNorthwind
 
 		#region Stored Procedures
 		#region CustOrderHist
-		public static IEnumerable<CustOrderHistResult> CustOrderHist(this TestDataDb dataConnection, string? customerId)
+		public static IEnumerable<CustOrderHistResult> CustOrderHist(this TestDataDB dataConnection, string? customerId)
 		{
 			var parameters = new []
 			{
@@ -182,7 +182,7 @@ namespace Cli.T4.SqlServerNorthwind
 		#endregion
 
 		#region CustOrdersDetail
-		public static IEnumerable<CustOrdersDetailResult> CustOrdersDetail(this TestDataDb dataConnection, int? orderId)
+		public static IEnumerable<CustOrdersDetailResult> CustOrdersDetail(this TestDataDB dataConnection, int? orderId)
 		{
 			var parameters = new []
 			{
@@ -202,7 +202,7 @@ namespace Cli.T4.SqlServerNorthwind
 		#endregion
 
 		#region CustOrdersOrders
-		public static IEnumerable<CustOrdersOrdersResult> CustOrdersOrders(this TestDataDb dataConnection, string? customerId)
+		public static IEnumerable<CustOrdersOrdersResult> CustOrdersOrders(this TestDataDB dataConnection, string? customerId)
 		{
 			var parameters = new []
 			{
@@ -224,7 +224,7 @@ namespace Cli.T4.SqlServerNorthwind
 		#endregion
 
 		#region Employee Sales By Country
-		public static IEnumerable<EmployeeSalesByCountryResult> EmployeeSalesByCountry(this TestDataDb dataConnection, DateTime? beginningDate, DateTime? endingDate)
+		public static IEnumerable<EmployeeSalesByCountryResult> EmployeeSalesByCountry(this TestDataDB dataConnection, DateTime? beginningDate, DateTime? endingDate)
 		{
 			var parameters = new []
 			{
@@ -246,7 +246,7 @@ namespace Cli.T4.SqlServerNorthwind
 		#endregion
 
 		#region Sales By Year
-		public static IEnumerable<SalesByYearResult> SalesByYear(this TestDataDb dataConnection, DateTime? beginningDate, DateTime? endingDate)
+		public static IEnumerable<SalesByYearResult> SalesByYear(this TestDataDB dataConnection, DateTime? beginningDate, DateTime? endingDate)
 		{
 			var parameters = new []
 			{
@@ -266,7 +266,7 @@ namespace Cli.T4.SqlServerNorthwind
 		#endregion
 
 		#region SalesByCategory
-		public static IEnumerable<SalesByCategoryResult> SalesByCategory(this TestDataDb dataConnection, string? categoryName, string? ordYear)
+		public static IEnumerable<SalesByCategoryResult> SalesByCategory(this TestDataDB dataConnection, string? categoryName, string? ordYear)
 		{
 			var parameters = new []
 			{
@@ -290,7 +290,7 @@ namespace Cli.T4.SqlServerNorthwind
 		#endregion
 
 		#region Ten Most Expensive Products
-		public static IEnumerable<TenMostExpensiveProductsResult> TenMostExpensiveProducts(this TestDataDb dataConnection)
+		public static IEnumerable<TenMostExpensiveProductsResult> TenMostExpensiveProducts(this TestDataDB dataConnection)
 		{
 			return dataConnection.QueryProc<TenMostExpensiveProductsResult>("[dbo].[Ten Most Expensive Products]");
 		}
@@ -305,7 +305,7 @@ namespace Cli.T4.SqlServerNorthwind
 	}
 
 	[Table("Region", Schema = "dbo")]
-	public class Region
+	public partial class Region
 	{
 		[Column("RegionID"         , IsPrimaryKey = true )] public int    RegionID          { get; set; } // int
 		[Column("RegionDescription", CanBeNull    = false)] public string RegionDescription { get; set; } = null!; // nchar(50)
@@ -320,7 +320,7 @@ namespace Cli.T4.SqlServerNorthwind
 	}
 
 	[Table("Employees", Schema = "dbo")]
-	public class Employee
+	public partial class Employee
 	{
 		[Column("EmployeeID"     , IsPrimaryKey = true , IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int       EmployeeID      { get; set; } // int
 		[Column("LastName"       , CanBeNull    = false                                                             )] public string    LastName        { get; set; } = null!; // nvarchar(20)
@@ -369,7 +369,7 @@ namespace Cli.T4.SqlServerNorthwind
 	}
 
 	[Table("Categories", Schema = "dbo")]
-	public class Category
+	public partial class Category
 	{
 		[Column("CategoryID"  , IsPrimaryKey = true , IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int     CategoryID   { get; set; } // int
 		[Column("CategoryName", CanBeNull    = false                                                             )] public string  CategoryName { get; set; } = null!; // nvarchar(15)
@@ -386,7 +386,7 @@ namespace Cli.T4.SqlServerNorthwind
 	}
 
 	[Table("Customers", Schema = "dbo")]
-	public class Customer
+	public partial class Customer
 	{
 		[Column("CustomerID"  , CanBeNull = false, IsPrimaryKey = true)] public string  CustomerID   { get; set; } = null!; // nchar(5)
 		[Column("CompanyName" , CanBeNull = false                     )] public string  CompanyName  { get; set; } = null!; // nvarchar(40)
@@ -416,7 +416,7 @@ namespace Cli.T4.SqlServerNorthwind
 	}
 
 	[Table("Shippers", Schema = "dbo")]
-	public class Shipper
+	public partial class Shipper
 	{
 		[Column("ShipperID"  , IsPrimaryKey = true , IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int     ShipperID   { get; set; } // int
 		[Column("CompanyName", CanBeNull    = false                                                             )] public string  CompanyName { get; set; } = null!; // nvarchar(40)
@@ -432,7 +432,7 @@ namespace Cli.T4.SqlServerNorthwind
 	}
 
 	[Table("Suppliers", Schema = "dbo")]
-	public class Supplier
+	public partial class Supplier
 	{
 		[Column("SupplierID"  , IsPrimaryKey = true , IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int     SupplierID   { get; set; } // int
 		[Column("CompanyName" , CanBeNull    = false                                                             )] public string  CompanyName  { get; set; } = null!; // nvarchar(40)
@@ -457,7 +457,7 @@ namespace Cli.T4.SqlServerNorthwind
 	}
 
 	[Table("Orders", Schema = "dbo")]
-	public class Order
+	public partial class Order
 	{
 		[Column("OrderID"       , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int       OrderID        { get; set; } // int
 		[Column("CustomerID"                                                                                      )] public string?   CustomerID     { get; set; } // nchar(5)
@@ -502,7 +502,7 @@ namespace Cli.T4.SqlServerNorthwind
 	}
 
 	[Table("Products", Schema = "dbo")]
-	public class Product
+	public partial class Product
 	{
 		[Column("ProductID"      , IsPrimaryKey = true , IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int      ProductID       { get; set; } // int
 		[Column("ProductName"    , CanBeNull    = false                                                             )] public string   ProductName     { get; set; } = null!; // nvarchar(40)
@@ -537,7 +537,7 @@ namespace Cli.T4.SqlServerNorthwind
 	}
 
 	[Table("Order Details", Schema = "dbo")]
-	public class OrderDetail
+	public partial class OrderDetail
 	{
 		[Column("OrderID"  , IsPrimaryKey = true, PrimaryKeyOrder = 0)] public int     OrderID   { get; set; } // int
 		[Column("ProductID", IsPrimaryKey = true, PrimaryKeyOrder = 1)] public int     ProductID { get; set; } // int
@@ -561,7 +561,7 @@ namespace Cli.T4.SqlServerNorthwind
 	}
 
 	[Table("CustomerCustomerDemo", Schema = "dbo")]
-	public class CustomerCustomerDemo
+	public partial class CustomerCustomerDemo
 	{
 		[Column("CustomerID"    , CanBeNull = false, IsPrimaryKey = true, PrimaryKeyOrder = 0)] public string CustomerID     { get; set; } = null!; // nchar(5)
 		[Column("CustomerTypeID", CanBeNull = false, IsPrimaryKey = true, PrimaryKeyOrder = 1)] public string CustomerTypeID { get; set; } = null!; // nchar(10)
@@ -582,7 +582,7 @@ namespace Cli.T4.SqlServerNorthwind
 	}
 
 	[Table("Territories", Schema = "dbo")]
-	public class Territory
+	public partial class Territory
 	{
 		[Column("TerritoryID"         , CanBeNull = false, IsPrimaryKey = true)] public string TerritoryID          { get; set; } = null!; // nvarchar(20)
 		[Column("TerritoryDescription", CanBeNull = false                     )] public string TerritoryDescription { get; set; } = null!; // nchar(50)
@@ -604,7 +604,7 @@ namespace Cli.T4.SqlServerNorthwind
 	}
 
 	[Table("EmployeeTerritories", Schema = "dbo")]
-	public class EmployeeTerritory
+	public partial class EmployeeTerritory
 	{
 		[Column("EmployeeID" , IsPrimaryKey = true , PrimaryKeyOrder = 0                        )] public int    EmployeeID  { get; set; } // int
 		[Column("TerritoryID", CanBeNull    = false, IsPrimaryKey    = true, PrimaryKeyOrder = 1)] public string TerritoryID { get; set; } = null!; // nvarchar(20)
@@ -625,7 +625,7 @@ namespace Cli.T4.SqlServerNorthwind
 	}
 
 	[Table("Orders Qry", Schema = "dbo", IsView = true)]
-	public class OrdersQry
+	public partial class OrdersQry
 	{
 		[Column("OrderID"                          )] public int       OrderID        { get; set; } // int
 		[Column("CustomerID"                       )] public string?   CustomerID     { get; set; } // nchar(5)
@@ -650,7 +650,7 @@ namespace Cli.T4.SqlServerNorthwind
 	}
 
 	[Table("Quarterly Orders", Schema = "dbo", IsView = true)]
-	public class QuarterlyOrder
+	public partial class QuarterlyOrder
 	{
 		[Column("CustomerID" )] public string? CustomerID  { get; set; } // nchar(5)
 		[Column("CompanyName")] public string? CompanyName { get; set; } // nvarchar(40)
@@ -659,7 +659,7 @@ namespace Cli.T4.SqlServerNorthwind
 	}
 
 	[Table("Invoices", Schema = "dbo", IsView = true)]
-	public class Invoice
+	public partial class Invoice
 	{
 		[Column("ShipName"                         )] public string?   ShipName       { get; set; } // nvarchar(40)
 		[Column("ShipAddress"                      )] public string?   ShipAddress    { get; set; } // nvarchar(60)
@@ -690,7 +690,7 @@ namespace Cli.T4.SqlServerNorthwind
 	}
 
 	[Table("Product Sales for 1997", Schema = "dbo", IsView = true)]
-	public class ProductSalesFor1997
+	public partial class ProductSalesFor1997
 	{
 		[Column("CategoryName", CanBeNull = false)] public string   CategoryName { get; set; } = null!; // nvarchar(15)
 		[Column("ProductName" , CanBeNull = false)] public string   ProductName  { get; set; } = null!; // nvarchar(40)
@@ -698,14 +698,14 @@ namespace Cli.T4.SqlServerNorthwind
 	}
 
 	[Table("Current Product List", Schema = "dbo", IsView = true)]
-	public class CurrentProductList
+	public partial class CurrentProductList
 	{
 		[Column("ProductID"  , IsIdentity = true , SkipOnInsert = true, SkipOnUpdate = true)] public int    ProductID   { get; set; } // int
 		[Column("ProductName", CanBeNull  = false                                          )] public string ProductName { get; set; } = null!; // nvarchar(40)
 	}
 
 	[Table("Order Details Extended", Schema = "dbo", IsView = true)]
-	public class OrderDetailsExtended
+	public partial class OrderDetailsExtended
 	{
 		[Column("OrderID"                         )] public int      OrderID       { get; set; } // int
 		[Column("ProductID"                       )] public int      ProductID     { get; set; } // int
@@ -717,14 +717,14 @@ namespace Cli.T4.SqlServerNorthwind
 	}
 
 	[Table("Products Above Average Price", Schema = "dbo", IsView = true)]
-	public class ProductsAboveAveragePrice
+	public partial class ProductsAboveAveragePrice
 	{
 		[Column("ProductName", CanBeNull = false)] public string   ProductName { get; set; } = null!; // nvarchar(40)
 		[Column("UnitPrice"                     )] public decimal? UnitPrice   { get; set; } // money
 	}
 
 	[Table("Products by Category", Schema = "dbo", IsView = true)]
-	public class ProductsByCategory
+	public partial class ProductsByCategory
 	{
 		[Column("CategoryName"   , CanBeNull = false)] public string  CategoryName    { get; set; } = null!; // nvarchar(15)
 		[Column("ProductName"    , CanBeNull = false)] public string  ProductName     { get; set; } = null!; // nvarchar(40)
@@ -734,7 +734,7 @@ namespace Cli.T4.SqlServerNorthwind
 	}
 
 	[Table("Alphabetical list of products", Schema = "dbo", IsView = true)]
-	public class AlphabeticalListOfProduct
+	public partial class AlphabeticalListOfProduct
 	{
 		[Column("ProductID"                         )] public int      ProductID       { get; set; } // int
 		[Column("ProductName"    , CanBeNull = false)] public string   ProductName     { get; set; } = null!; // nvarchar(40)
@@ -750,14 +750,14 @@ namespace Cli.T4.SqlServerNorthwind
 	}
 
 	[Table("Order Subtotals", Schema = "dbo", IsView = true)]
-	public class OrderSubtotal
+	public partial class OrderSubtotal
 	{
 		[Column("OrderID" )] public int      OrderID  { get; set; } // int
 		[Column("Subtotal")] public decimal? Subtotal { get; set; } // money
 	}
 
 	[Table("Customer and Suppliers by City", Schema = "dbo", IsView = true)]
-	public class CustomerAndSuppliersByCity
+	public partial class CustomerAndSuppliersByCity
 	{
 		[Column("City"                           )] public string? City         { get; set; } // nvarchar(15)
 		[Column("CompanyName" , CanBeNull = false)] public string  CompanyName  { get; set; } = null!; // nvarchar(40)
@@ -766,7 +766,7 @@ namespace Cli.T4.SqlServerNorthwind
 	}
 
 	[Table("Sales Totals by Amount", Schema = "dbo", IsView = true)]
-	public class SalesTotalsByAmount
+	public partial class SalesTotalsByAmount
 	{
 		[Column("SaleAmount"                    )] public decimal?  SaleAmount  { get; set; } // money
 		[Column("OrderID"                       )] public int       OrderID     { get; set; } // int
@@ -775,7 +775,7 @@ namespace Cli.T4.SqlServerNorthwind
 	}
 
 	[Table("Sales by Category", Schema = "dbo", IsView = true)]
-	public class SalesByCategory
+	public partial class SalesByCategory
 	{
 		[Column("CategoryID"                     )] public int      CategoryID   { get; set; } // int
 		[Column("CategoryName", CanBeNull = false)] public string   CategoryName { get; set; } = null!; // nvarchar(15)
@@ -784,7 +784,7 @@ namespace Cli.T4.SqlServerNorthwind
 	}
 
 	[Table("Summary of Sales by Quarter", Schema = "dbo", IsView = true)]
-	public class SummaryOfSalesByQuarter
+	public partial class SummaryOfSalesByQuarter
 	{
 		[Column("ShippedDate")] public DateTime? ShippedDate { get; set; } // datetime
 		[Column("OrderID"    )] public int       OrderID     { get; set; } // int
@@ -792,7 +792,7 @@ namespace Cli.T4.SqlServerNorthwind
 	}
 
 	[Table("Summary of Sales by Year", Schema = "dbo", IsView = true)]
-	public class SummaryOfSalesByYear
+	public partial class SummaryOfSalesByYear
 	{
 		[Column("ShippedDate")] public DateTime? ShippedDate { get; set; } // datetime
 		[Column("OrderID"    )] public int       OrderID     { get; set; } // int
@@ -800,7 +800,7 @@ namespace Cli.T4.SqlServerNorthwind
 	}
 
 	[Table("Category Sales for 1997", Schema = "dbo", IsView = true)]
-	public class CategorySalesFor1997
+	public partial class CategorySalesFor1997
 	{
 		[Column("CategoryName" , CanBeNull = false)] public string   CategoryName  { get; set; } = null!; // nvarchar(15)
 		[Column("CategorySales"                   )] public decimal? CategorySales { get; set; } // money

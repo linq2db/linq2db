@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using LinqToDB.Naming;
 
@@ -304,6 +305,8 @@ namespace LinqToDB.CommandLine
 
 						printJsonProperty(indent, "pluralize_if_ends_with_word_only", namingOption.Default.PluralizeOnlyIfLastWordIsText ? "true" : "false");
 						printJsonProperty(indent, "ignore_all_caps", namingOption.Default.DontCaseAllCaps ? "true" : "false");
+						if (namingOption.Default.MaxUpperCaseWordLength > 1)
+							printJsonProperty(indent, "max_uppercase_word_length", namingOption.Default.MaxUpperCaseWordLength.ToString(CultureInfo.InvariantCulture));
 
 						Console.Out.WriteLine("{0}            }}", indent);
 

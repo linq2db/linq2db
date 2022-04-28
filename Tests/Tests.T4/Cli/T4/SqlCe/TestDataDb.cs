@@ -18,26 +18,26 @@ using System.Linq;
 
 namespace Cli.T4.SqlCe
 {
-	public partial class TestDataDb : DataConnection
+	public partial class TestDataDB : DataConnection
 	{
-		public TestDataDb()
+		public TestDataDB()
 		{
 			InitDataContext();
 		}
 
-		public TestDataDb(string configuration)
+		public TestDataDB(string configuration)
 			: base(configuration)
 		{
 			InitDataContext();
 		}
 
-		public TestDataDb(LinqToDBConnectionOptions options)
+		public TestDataDB(LinqToDBConnectionOptions options)
 			: base(options)
 		{
 			InitDataContext();
 		}
 
-		public TestDataDb(LinqToDBConnectionOptions<TestDataDb> options)
+		public TestDataDB(LinqToDBConnectionOptions<TestDataDB> options)
 			: base(options)
 		{
 			InitDataContext();
@@ -64,9 +64,9 @@ namespace Cli.T4.SqlCe
 	}
 
 	[Table("AllTypes")]
-	public class AllType
+	public partial class AllType
 	{
-		[Column("ID"                      , IsPrimaryKey = true)] public int       Id                       { get; set; } // int
+		[Column("ID"                      , IsPrimaryKey = true)] public int       ID                       { get; set; } // int
 		[Column("bigintDataType"                               )] public long?     BigintDataType           { get; set; } // bigint
 		[Column("numericDataType"                              )] public decimal?  NumericDataType          { get; set; } // numeric(18, 0)
 		[Column("bitDataType"                                  )] public bool?     BitDataType              { get; set; } // bit
@@ -93,7 +93,7 @@ namespace Cli.T4.SqlCe
 		#region Table Extensions
 		public static AllType? Find(this ITable<AllType> table, int id)
 		{
-			return table.FirstOrDefault(e => e.Id == id);
+			return table.FirstOrDefault(e => e.ID == id);
 		}
 
 		public static Doctor? Find(this ITable<Doctor> table, int personId)
@@ -113,12 +113,12 @@ namespace Cli.T4.SqlCe
 
 		public static Issue695? Find(this ITable<Issue695> table, int id)
 		{
-			return table.FirstOrDefault(e => e.Id == id);
+			return table.FirstOrDefault(e => e.ID == id);
 		}
 
 		public static Issue695Parent? Find(this ITable<Issue695Parent> table, int id)
 		{
-			return table.FirstOrDefault(e => e.Id == id);
+			return table.FirstOrDefault(e => e.ID == id);
 		}
 
 		public static Patient? Find(this ITable<Patient> table, int personId)
@@ -133,7 +133,7 @@ namespace Cli.T4.SqlCe
 
 		public static TestIdentity? Find(this ITable<TestIdentity> table, int id)
 		{
-			return table.FirstOrDefault(e => e.Id == id);
+			return table.FirstOrDefault(e => e.ID == id);
 		}
 
 		public static TestMerge1? Find(this ITable<TestMerge1> table, int id)
@@ -149,21 +149,21 @@ namespace Cli.T4.SqlCe
 	}
 
 	[Table("Child")]
-	public class Child
+	public partial class Child
 	{
 		[Column("ParentID")] public int? ParentID { get; set; } // int
 		[Column("ChildID" )] public int? ChildID  { get; set; } // int
 	}
 
 	[Table("DataTypes")]
-	public class DataType
+	public partial class DataType
 	{
-		[Column("ID"        )] public int?     Id         { get; set; } // int
+		[Column("ID"        )] public int?     ID         { get; set; } // int
 		[Column("MoneyValue")] public decimal? MoneyValue { get; set; } // numeric(10, 4)
 	}
 
 	[Table("Doctor")]
-	public class Doctor
+	public partial class Doctor
 	{
 		[Column("PersonID", IsPrimaryKey = true )] public int    PersonID { get; set; } // int
 		[Column("Taxonomy", CanBeNull    = false)] public string Taxonomy { get; set; } = null!; // nvarchar(50)
@@ -178,7 +178,7 @@ namespace Cli.T4.SqlCe
 	}
 
 	[Table("GrandChild")]
-	public class GrandChild
+	public partial class GrandChild
 	{
 		[Column("ParentID"    )] public int? ParentID     { get; set; } // int
 		[Column("ChildID"     )] public int? ChildID      { get; set; } // int
@@ -186,7 +186,7 @@ namespace Cli.T4.SqlCe
 	}
 
 	[Table("InheritanceChild")]
-	public class InheritanceChild
+	public partial class InheritanceChild
 	{
 		[Column("InheritanceChildId" , IsPrimaryKey = true)] public int     InheritanceChildId  { get; set; } // int
 		[Column("InheritanceParentId"                     )] public int     InheritanceParentId { get; set; } // int
@@ -195,7 +195,7 @@ namespace Cli.T4.SqlCe
 	}
 
 	[Table("InheritanceParent")]
-	public class InheritanceParent
+	public partial class InheritanceParent
 	{
 		[Column("InheritanceParentId", IsPrimaryKey = true)] public int     InheritanceParentId { get; set; } // int
 		[Column("TypeDiscriminator"                       )] public int?    TypeDiscriminator   { get; set; } // int
@@ -203,38 +203,38 @@ namespace Cli.T4.SqlCe
 	}
 
 	[Table("Issue695")]
-	public class Issue695
+	public partial class Issue695
 	{
-		[Column("ID"         , IsPrimaryKey = true)] public int Id          { get; set; } // int
+		[Column("ID"         , IsPrimaryKey = true)] public int ID          { get; set; } // int
 		[Column("UniqueValue"                     )] public int UniqueValue { get; set; } // int
 
 		#region Associations
 		/// <summary>
 		/// FK_Issue695_Parent
 		/// </summary>
-		[Association(CanBeNull = false, ThisKey = nameof(Id) + "," + nameof(Id), OtherKey = nameof(Issue695Parent.Id) + "," + nameof(Id))]
+		[Association(CanBeNull = false, ThisKey = nameof(ID) + "," + nameof(ID), OtherKey = nameof(Issue695Parent.ID) + "," + nameof(ID))]
 		public Issue695Parent Parent { get; set; } = null!;
 		#endregion
 	}
 
 	[Table("Issue695Parent")]
-	public class Issue695Parent
+	public partial class Issue695Parent
 	{
-		[Column("ID", IsPrimaryKey = true)] public int Id { get; set; } // int
+		[Column("ID", IsPrimaryKey = true)] public int ID { get; set; } // int
 
 		#region Associations
 		/// <summary>
 		/// FK_Issue695_Parent backreference
 		/// </summary>
-		[Association(ThisKey = nameof(Id) + "," + nameof(Id), OtherKey = nameof(Issue695.Id) + "," + nameof(Id))]
+		[Association(ThisKey = nameof(ID) + "," + nameof(ID), OtherKey = nameof(Issue695.ID) + "," + nameof(ID))]
 		public IEnumerable<Issue695> Issue695Parents { get; set; } = null!;
 		#endregion
 	}
 
 	[Table("LinqDataTypes")]
-	public class LinqDataType
+	public partial class LinqDataType
 	{
-		[Column("ID"            )] public int?      Id             { get; set; } // int
+		[Column("ID"            )] public int?      ID             { get; set; } // int
 		[Column("MoneyValue"    )] public decimal?  MoneyValue     { get; set; } // numeric(10, 4)
 		[Column("DateTimeValue" )] public DateTime? DateTimeValue  { get; set; } // datetime
 		[Column("DateTimeValue2")] public DateTime? DateTimeValue2 { get; set; } // datetime
@@ -248,14 +248,14 @@ namespace Cli.T4.SqlCe
 	}
 
 	[Table("Parent")]
-	public class Parent
+	public partial class Parent
 	{
 		[Column("ParentID")] public int? ParentID { get; set; } // int
 		[Column("Value1"  )] public int? Value1   { get; set; } // int
 	}
 
 	[Table("Patient")]
-	public class Patient
+	public partial class Patient
 	{
 		[Column("PersonID" , IsPrimaryKey = true )] public int    PersonID  { get; set; } // int
 		[Column("Diagnosis", CanBeNull    = false)] public string Diagnosis { get; set; } = null!; // nvarchar(256)
@@ -270,7 +270,7 @@ namespace Cli.T4.SqlCe
 	}
 
 	[Table("Person")]
-	public class Person
+	public partial class Person
 	{
 		[Column("PersonID"  , IsPrimaryKey = true )] public int     PersonID   { get; set; } // int
 		[Column("FirstName" , CanBeNull    = false)] public string  FirstName  { get; set; } = null!; // nvarchar(50)
@@ -294,13 +294,13 @@ namespace Cli.T4.SqlCe
 	}
 
 	[Table("TestIdentity")]
-	public class TestIdentity
+	public partial class TestIdentity
 	{
-		[Column("ID", IsPrimaryKey = true)] public int Id { get; set; } // int
+		[Column("ID", IsPrimaryKey = true)] public int ID { get; set; } // int
 	}
 
 	[Table("TestMerge1")]
-	public class TestMerge1
+	public partial class TestMerge1
 	{
 		[Column("Id"             , IsPrimaryKey = true)] public int       Id              { get; set; } // int
 		[Column("Field1"                              )] public int?      Field1          { get; set; } // int
@@ -325,7 +325,7 @@ namespace Cli.T4.SqlCe
 	}
 
 	[Table("TestMerge2")]
-	public class TestMerge2
+	public partial class TestMerge2
 	{
 		[Column("Id"             , IsPrimaryKey = true)] public int       Id              { get; set; } // int
 		[Column("Field1"                              )] public int?      Field1          { get; set; } // int

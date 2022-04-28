@@ -20,26 +20,26 @@ using System.Numerics;
 
 namespace Cli.T4.Firebird
 {
-	public partial class TestDataDb : DataConnection
+	public partial class TestDataDB : DataConnection
 	{
-		public TestDataDb()
+		public TestDataDB()
 		{
 			InitDataContext();
 		}
 
-		public TestDataDb(string configuration)
+		public TestDataDB(string configuration)
 			: base(configuration)
 		{
 			InitDataContext();
 		}
 
-		public TestDataDb(LinqToDBConnectionOptions options)
+		public TestDataDB(LinqToDBConnectionOptions options)
 			: base(options)
 		{
 			InitDataContext();
 		}
 
-		public TestDataDb(LinqToDBConnectionOptions<TestDataDb> options)
+		public TestDataDB(LinqToDBConnectionOptions<TestDataDB> options)
 			: base(options)
 		{
 			InitDataContext();
@@ -69,9 +69,9 @@ namespace Cli.T4.Firebird
 	}
 
 	[Table("AllTypes", Schema = "SYSDBA")]
-	public class AllType
+	public partial class AllType
 	{
-		[Column("ID"                 , IsPrimaryKey = true)] public int              Id                  { get; set; } // integer
+		[Column("ID"                 , IsPrimaryKey = true)] public int              ID                  { get; set; } // integer
 		[Column("bigintDataType"                          )] public long?            BigintDataType      { get; set; } // bigint
 		[Column("smallintDataType"                        )] public short?           SmallintDataType    { get; set; } // smallint
 		[Column("decimalDataType"                         )] public decimal?         DecimalDataType     { get; set; } // decimal(18,0)
@@ -99,7 +99,7 @@ namespace Cli.T4.Firebird
 		#region Table Extensions
 		public static AllType? Find(this ITable<AllType> table, int id)
 		{
-			return table.FirstOrDefault(e => e.Id == id);
+			return table.FirstOrDefault(e => e.ID == id);
 		}
 
 		public static CamelCaseName? Find(this ITable<CamelCaseName> table, int id)
@@ -139,12 +139,12 @@ namespace Cli.T4.Firebird
 
 		public static SequenceTest? Find(this ITable<SequenceTest> table, int id)
 		{
-			return table.FirstOrDefault(e => e.Id == id);
+			return table.FirstOrDefault(e => e.ID == id);
 		}
 
 		public static TestIdentity? Find(this ITable<TestIdentity> table, int id)
 		{
-			return table.FirstOrDefault(e => e.Id == id);
+			return table.FirstOrDefault(e => e.ID == id);
 		}
 
 		public static TestMerge1? Find(this ITable<TestMerge1> table, int id)
@@ -160,14 +160,14 @@ namespace Cli.T4.Firebird
 
 		#region Stored Procedures
 		#region AddIssue792Record
-		public static int AddIssue792Record(this TestDataDb dataConnection)
+		public static int AddIssue792Record(this TestDataDB dataConnection)
 		{
 			return dataConnection.ExecuteProc("\"AddIssue792Record\"");
 		}
 		#endregion
 
 		#region OutRefEnumTest
-		public static IEnumerable<OutRefEnumTestResult> OutRefEnumTest(this TestDataDb dataConnection, string? str, string? inInputoutputstr)
+		public static IEnumerable<OutRefEnumTestResult> OutRefEnumTest(this TestDataDB dataConnection, string? str, string? inInputoutputstr)
 		{
 			var parameters = new []
 			{
@@ -191,7 +191,7 @@ namespace Cli.T4.Firebird
 		#endregion
 
 		#region OutRefTest
-		public static IEnumerable<OutRefTestResult> OutRefTest(this TestDataDb dataConnection, int? id, int? inInputoutputid, string? str, string? inInputoutputstr)
+		public static IEnumerable<OutRefTestResult> OutRefTest(this TestDataDB dataConnection, int? id, int? inInputoutputid, string? str, string? inInputoutputstr)
 		{
 			var parameters = new []
 			{
@@ -225,7 +225,7 @@ namespace Cli.T4.Firebird
 		#endregion
 
 		#region PatientSelectAll
-		public static IEnumerable<PatientSelectAllResult> PatientSelectAll(this TestDataDb dataConnection)
+		public static IEnumerable<PatientSelectAllResult> PatientSelectAll(this TestDataDB dataConnection)
 		{
 			return dataConnection.QueryProc<PatientSelectAllResult>("\"Patient_SelectAll\"");
 		}
@@ -242,7 +242,7 @@ namespace Cli.T4.Firebird
 		#endregion
 
 		#region PatientSelectByName
-		public static IEnumerable<PatientSelectByNameResult> PatientSelectByName(this TestDataDb dataConnection, string? firstname, string? lastname)
+		public static IEnumerable<PatientSelectByNameResult> PatientSelectByName(this TestDataDB dataConnection, string? firstname, string? lastname)
 		{
 			var parameters = new []
 			{
@@ -268,7 +268,7 @@ namespace Cli.T4.Firebird
 		#endregion
 
 		#region PersonDelete
-		public static int PersonDelete(this TestDataDb dataConnection, int? personid)
+		public static int PersonDelete(this TestDataDB dataConnection, int? personid)
 		{
 			var parameters = new []
 			{
@@ -282,7 +282,7 @@ namespace Cli.T4.Firebird
 		#endregion
 
 		#region PersonInsert
-		public static IEnumerable<PersonInsertResult> PersonInsert(this TestDataDb dataConnection, string? firstname, string? lastname, string? middlename, char? gender)
+		public static IEnumerable<PersonInsertResult> PersonInsert(this TestDataDB dataConnection, string? firstname, string? lastname, string? middlename, char? gender)
 		{
 			var parameters = new []
 			{
@@ -313,7 +313,7 @@ namespace Cli.T4.Firebird
 		#endregion
 
 		#region PersonInsertOutputParameter
-		public static IEnumerable<PersonInsertOutputParameterResult> PersonInsertOutputParameter(this TestDataDb dataConnection, string? firstname, string? lastname, string? middlename, char? gender)
+		public static IEnumerable<PersonInsertOutputParameterResult> PersonInsertOutputParameter(this TestDataDB dataConnection, string? firstname, string? lastname, string? middlename, char? gender)
 		{
 			var parameters = new []
 			{
@@ -344,7 +344,7 @@ namespace Cli.T4.Firebird
 		#endregion
 
 		#region PersonSelectAll
-		public static IEnumerable<PersonSelectAllResult> PersonSelectAll(this TestDataDb dataConnection)
+		public static IEnumerable<PersonSelectAllResult> PersonSelectAll(this TestDataDB dataConnection)
 		{
 			return dataConnection.QueryProc<PersonSelectAllResult>("\"Person_SelectAll\"");
 		}
@@ -360,7 +360,7 @@ namespace Cli.T4.Firebird
 		#endregion
 
 		#region PersonSelectByKey
-		public static IEnumerable<PersonSelectByKeyResult> PersonSelectByKey(this TestDataDb dataConnection, int? id)
+		public static IEnumerable<PersonSelectByKeyResult> PersonSelectByKey(this TestDataDB dataConnection, int? id)
 		{
 			var parameters = new []
 			{
@@ -383,7 +383,7 @@ namespace Cli.T4.Firebird
 		#endregion
 
 		#region PersonSelectByName
-		public static IEnumerable<PersonSelectByNameResult> PersonSelectByName(this TestDataDb dataConnection, string? inFirstname, string? inLastname)
+		public static IEnumerable<PersonSelectByNameResult> PersonSelectByName(this TestDataDB dataConnection, string? inFirstname, string? inLastname)
 		{
 			var parameters = new []
 			{
@@ -410,7 +410,7 @@ namespace Cli.T4.Firebird
 		#endregion
 
 		#region PersonUpdate
-		public static int PersonUpdate(this TestDataDb dataConnection, int? personid, string? firstname, string? lastname, string? middlename, char? gender)
+		public static int PersonUpdate(this TestDataDB dataConnection, int? personid, string? firstname, string? lastname, string? middlename, char? gender)
 		{
 			var parameters = new []
 			{
@@ -440,7 +440,7 @@ namespace Cli.T4.Firebird
 		#endregion
 
 		#region ScalarDataReader
-		public static IEnumerable<ScalarDataReaderResult> ScalarDataReader(this TestDataDb dataConnection)
+		public static IEnumerable<ScalarDataReaderResult> ScalarDataReader(this TestDataDB dataConnection)
 		{
 			return dataConnection.QueryProc<ScalarDataReaderResult>("\"Scalar_DataReader\"");
 		}
@@ -453,7 +453,7 @@ namespace Cli.T4.Firebird
 		#endregion
 
 		#region ScalarOutputParameter
-		public static IEnumerable<ScalarOutputParameterResult> ScalarOutputParameter(this TestDataDb dataConnection)
+		public static IEnumerable<ScalarOutputParameterResult> ScalarOutputParameter(this TestDataDB dataConnection)
 		{
 			return dataConnection.QueryProc<ScalarOutputParameterResult>("\"Scalar_OutputParameter\"");
 		}
@@ -466,7 +466,7 @@ namespace Cli.T4.Firebird
 		#endregion
 
 		#region ScalarReturnParameter
-		public static IEnumerable<ScalarReturnParameterResult> ScalarReturnParameter(this TestDataDb dataConnection)
+		public static IEnumerable<ScalarReturnParameterResult> ScalarReturnParameter(this TestDataDB dataConnection)
 		{
 			return dataConnection.QueryProc<ScalarReturnParameterResult>("\"Scalar_ReturnParameter\"");
 		}
@@ -478,7 +478,7 @@ namespace Cli.T4.Firebird
 		#endregion
 
 		#region TestV4Types
-		public static IEnumerable<TestV4TypesResult> TestV4Types(this TestDataDb dataConnection, FbZonedDateTime? tstz, FbZonedTime? ttz, FbDecFloat? decfloat16, FbDecFloat? decfloat34, BigInteger? int128)
+		public static IEnumerable<TestV4TypesResult> TestV4Types(this TestDataDB dataConnection, FbZonedDateTime? tstz, FbZonedTime? ttz, FbDecFloat? decfloat16, FbDecFloat? decfloat34, BigInteger? int128)
 		{
 			var parameters = new []
 			{
@@ -519,7 +519,7 @@ namespace Cli.T4.Firebird
 	}
 
 	[Table("CamelCaseName", Schema = "SYSDBA")]
-	public class CamelCaseName
+	public partial class CamelCaseName
 	{
 		[Column("Id"    , IsPrimaryKey = true)] public int     Id    { get; set; } // integer
 		[Column("NAME1"                      )] public string? Name1 { get; set; } // varchar(20)
@@ -530,14 +530,14 @@ namespace Cli.T4.Firebird
 	}
 
 	[Table("Child", Schema = "SYSDBA")]
-	public class Child
+	public partial class Child
 	{
 		[Column("ParentID")] public int? ParentID { get; set; } // integer
 		[Column("ChildID" )] public int? ChildID  { get; set; } // integer
 	}
 
 	[Table("CollatedTable", Schema = "SYSDBA")]
-	public class CollatedTable
+	public partial class CollatedTable
 	{
 		[Column("Id"             )] public int     Id              { get; set; } // integer
 		[Column("CaseSensitive"  )] public string? CaseSensitive   { get; set; } // varchar(20)
@@ -545,7 +545,7 @@ namespace Cli.T4.Firebird
 	}
 
 	[Table("DataTypeTest", Schema = "SYSDBA")]
-	public class DataTypeTest
+	public partial class DataTypeTest
 	{
 		[Column("DataTypeID", IsPrimaryKey = true)] public int       DataTypeID { get; set; } // integer
 		[Column("Binary_"                        )] public byte[]?   Binary     { get; set; } // blob
@@ -572,7 +572,7 @@ namespace Cli.T4.Firebird
 	}
 
 	[Table("Doctor", Schema = "SYSDBA")]
-	public class Doctor
+	public partial class Doctor
 	{
 		[Column("PersonID", IsPrimaryKey = true )] public int    PersonID { get; set; } // integer
 		[Column("Taxonomy", CanBeNull    = false)] public string Taxonomy { get; set; } = null!; // varchar(50)
@@ -587,13 +587,13 @@ namespace Cli.T4.Firebird
 	}
 
 	[Table("Dual", Schema = "SYSDBA")]
-	public class Dual
+	public partial class Dual
 	{
 		[Column("Dummy")] public string? Dummy { get; set; } // varchar(10)
 	}
 
 	[Table("GrandChild", Schema = "SYSDBA")]
-	public class GrandChild
+	public partial class GrandChild
 	{
 		[Column("ParentID"    )] public int? ParentID     { get; set; } // integer
 		[Column("ChildID"     )] public int? ChildID      { get; set; } // integer
@@ -601,7 +601,7 @@ namespace Cli.T4.Firebird
 	}
 
 	[Table("InheritanceChild", Schema = "SYSDBA")]
-	public class InheritanceChild
+	public partial class InheritanceChild
 	{
 		[Column("InheritanceChildId" , IsPrimaryKey = true)] public int     InheritanceChildId  { get; set; } // integer
 		[Column("InheritanceParentId"                     )] public int     InheritanceParentId { get; set; } // integer
@@ -610,7 +610,7 @@ namespace Cli.T4.Firebird
 	}
 
 	[Table("InheritanceParent", Schema = "SYSDBA")]
-	public class InheritanceParent
+	public partial class InheritanceParent
 	{
 		[Column("InheritanceParentId", IsPrimaryKey = true)] public int     InheritanceParentId { get; set; } // integer
 		[Column("TypeDiscriminator"                       )] public int?    TypeDiscriminator   { get; set; } // integer
@@ -618,9 +618,9 @@ namespace Cli.T4.Firebird
 	}
 
 	[Table("LinqDataTypes", Schema = "SYSDBA")]
-	public class LinqDataType
+	public partial class LinqDataType
 	{
-		[Column("ID"            )] public int?      Id             { get; set; } // integer
+		[Column("ID"            )] public int?      ID             { get; set; } // integer
 		[Column("MoneyValue"    )] public decimal?  MoneyValue     { get; set; } // decimal(10,4)
 		[Column("DateTimeValue" )] public DateTime? DateTimeValue  { get; set; } // timestamp
 		[Column("DateTimeValue2")] public DateTime? DateTimeValue2 { get; set; } // timestamp
@@ -634,14 +634,14 @@ namespace Cli.T4.Firebird
 	}
 
 	[Table("Parent", Schema = "SYSDBA")]
-	public class Parent
+	public partial class Parent
 	{
 		[Column("ParentID")] public int? ParentID { get; set; } // integer
 		[Column("Value1"  )] public int? Value1   { get; set; } // integer
 	}
 
 	[Table("Patient", Schema = "SYSDBA")]
-	public class Patient
+	public partial class Patient
 	{
 		[Column("PersonID" , IsPrimaryKey = true )] public int    PersonID  { get; set; } // integer
 		[Column("Diagnosis", CanBeNull    = false)] public string Diagnosis { get; set; } = null!; // varchar(256)
@@ -656,7 +656,7 @@ namespace Cli.T4.Firebird
 	}
 
 	[Table("Person", Schema = "SYSDBA")]
-	public class Person
+	public partial class Person
 	{
 		[Column("PersonID"  , IsPrimaryKey = true )] public int     PersonID   { get; set; } // integer
 		[Column("FirstName" , CanBeNull    = false)] public string  FirstName  { get; set; } = null!; // varchar(50)
@@ -680,20 +680,20 @@ namespace Cli.T4.Firebird
 	}
 
 	[Table("SequenceTest", Schema = "SYSDBA")]
-	public class SequenceTest
+	public partial class SequenceTest
 	{
-		[Column("ID"    , IsPrimaryKey = true )] public int    Id    { get; set; } // integer
+		[Column("ID"    , IsPrimaryKey = true )] public int    ID    { get; set; } // integer
 		[Column("Value_", CanBeNull    = false)] public string Value { get; set; } = null!; // varchar(50)
 	}
 
 	[Table("TestIdentity", Schema = "SYSDBA")]
-	public class TestIdentity
+	public partial class TestIdentity
 	{
-		[Column("ID", IsPrimaryKey = true)] public int Id { get; set; } // integer
+		[Column("ID", IsPrimaryKey = true)] public int ID { get; set; } // integer
 	}
 
 	[Table("TestMerge1", Schema = "SYSDBA")]
-	public class TestMerge1
+	public partial class TestMerge1
 	{
 		[Column("Id"             , IsPrimaryKey = true)] public int       Id              { get; set; } // integer
 		[Column("Field1"                              )] public int?      Field1          { get; set; } // integer
@@ -720,7 +720,7 @@ namespace Cli.T4.Firebird
 	}
 
 	[Table("TestMerge2", Schema = "SYSDBA")]
-	public class TestMerge2
+	public partial class TestMerge2
 	{
 		[Column("Id"             , IsPrimaryKey = true)] public int       Id              { get; set; } // integer
 		[Column("Field1"                              )] public int?      Field1          { get; set; } // integer
@@ -747,7 +747,7 @@ namespace Cli.T4.Firebird
 	}
 
 	[Table("PersonView", Schema = "SYSDBA", IsView = true)]
-	public class PersonView
+	public partial class PersonView
 	{
 		[Column("PersonID"  )] public int?    PersonID   { get; set; } // integer
 		[Column("FirstName" )] public string? FirstName  { get; set; } // varchar(50)

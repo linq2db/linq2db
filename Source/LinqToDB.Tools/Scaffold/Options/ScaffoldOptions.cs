@@ -53,6 +53,7 @@ namespace LinqToDB.Scaffold
 			options.DataModel.IncludeDatabaseName                            = false;
 			options.DataModel.GenerateDefaultSchema                          = true;
 			options.DataModel.BaseEntityClass                                = null;
+			options.DataModel.EntityClassIsPartial                           = true;
 			options.DataModel.EntityClassNameProvider                        = null;
 			options.DataModel.EntityContextPropertyNameProvider              = null;
 			options.DataModel.GenerateDataType                               = false;
@@ -82,7 +83,7 @@ namespace LinqToDB.Scaffold
 			options.DataModel.GenerateSchemaAsType                           = false;
 			options.DataModel.GenerateFindExtensions                         = FindTypes.FindByPkOnTable;
 			options.DataModel.OrderFindParametersByColumnOrdinal             = false;
-			options.DataModel.EntityColumnPropertyNameOptions                = new() { Casing = NameCasing.T4CompatNonPluralized, Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None                                                        };
+			options.DataModel.EntityColumnPropertyNameOptions                = new() { Casing = NameCasing.T4CompatNonPluralized, Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None                 , MaxUpperCaseWordLength        = 2    };
 			options.DataModel.EntityClassNameOptions                         = new() { Casing = NameCasing.T4CompatNonPluralized, Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.Singular             , PluralizeOnlyIfLastWordIsText = true };
 			options.DataModel.EntityContextPropertyNameOptions               = new() { Casing = NameCasing.T4CompatPluralized   , Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.PluralIfLongerThanOne, PluralizeOnlyIfLastWordIsText = true };
 			options.DataModel.DataContextClassNameOptions                    = new() { Casing = NameCasing.Pascal               , Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None                                                        };
@@ -97,7 +98,7 @@ namespace LinqToDB.Scaffold
 			options.DataModel.ProcedureResultClassNameOptions                = new() { Casing = NameCasing.Pascal               , Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None                 , Suffix = "Result"                    };
 			options.DataModel.AsyncProcedureResultClassNameOptions           = new() { Casing = NameCasing.Pascal               , Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None                 , Suffix = "Results"                   };
 			options.DataModel.AsyncProcedureResultClassPropertiesNameOptions = new() { Casing = NameCasing.Pascal               , Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None                                                        };
-			options.DataModel.ProcedureResultColumnPropertyNameOptions       = new() { Casing = NameCasing.None                 , Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None                                                        };
+			options.DataModel.ProcedureResultColumnPropertyNameOptions       = new() { Casing = NameCasing.None                 , Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None                 , MaxUpperCaseWordLength        = 2    };
 			options.DataModel.SchemaClassNameOptions                         = new() { Casing = NameCasing.Pascal               , Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None                 , Suffix = "Schema"                    };
 			options.DataModel.SchemaPropertyNameOptions                      = new() { Casing = NameCasing.Pascal               , Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None                                                        };
 			options.DataModel.FindParameterNameOptions                       = new() { Casing = NameCasing.CamelCase            , Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None                 , DontCaseAllCaps = false              };

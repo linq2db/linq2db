@@ -50,10 +50,19 @@ namespace LinqToDB.Scaffold
 		public string? BaseEntityClass { get; set; }
 
 		/// <summary>
+		/// Enables partial class modifier applied to entity mapping classes.
+		/// <list type="bullet">
+		/// <item>Default: <c>false</c></item>
+		/// <item>In T4 compability mode: <c>true</c></item>
+		/// </list>
+		/// </summary>
+		public bool EntityClassIsPartial { get; set; }
+
+		/// <summary>
 		/// Gets or sets name generation and normalization rules for entity column properties.
 		/// <list type="bullet">
 		/// <item>Default: <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.SplitByUnderscore"/></item>
-		/// <item>In T4 compability mode: <see cref="NameCasing.T4CompatNonPluralized"/>, <see cref="NameTransformation.SplitByUnderscore"/></item>
+		/// <item>In T4 compability mode: <see cref="NameCasing.T4CompatNonPluralized"/>, <see cref="NameTransformation.SplitByUnderscore"/>, <see cref="NormalizationOptions.MaxUpperCaseWordLength"/>=2</item>
 		/// </list>
 		/// </summary>
 		public NormalizationOptions EntityColumnPropertyNameOptions { get; set; } = new() { Casing = NameCasing.Pascal, Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None };
@@ -210,7 +219,7 @@ namespace LinqToDB.Scaffold
 		public string? BaseContextClass { get; set; }
 
 		/// <summary>
-		/// Gets or sets name generation and normalization rules for data context class name.
+		/// Gets or sets name generation and normalization rules for data context class name when name not provided by user but generated automatically.
 		/// <list type="bullet">
 		/// <item>Default: <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.SplitByUnderscore"/></item>
 		/// <item>In T4 compability mode:  <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.SplitByUnderscore"/></item>
@@ -372,7 +381,7 @@ namespace LinqToDB.Scaffold
 		/// Gets or sets name generation and normalization rules for column properties of custom mapping class for result record of stored procedure or table function.
 		/// <list type="bullet">
 		/// <item>Default: <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.SplitByUnderscore"/></item>
-		/// <item>In T4 compability mode: <see cref="NameCasing.None"/>, <see cref="NameTransformation.SplitByUnderscore"/></item>
+		/// <item>In T4 compability mode: <see cref="NameCasing.None"/>, <see cref="NameTransformation.SplitByUnderscore"/>, <see cref="NormalizationOptions.MaxUpperCaseWordLength"/>=2</item>
 		/// </list>
 		/// </summary>
 		public NormalizationOptions ProcedureResultColumnPropertyNameOptions { get; set; } = new() { Casing = NameCasing.Pascal, Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None };

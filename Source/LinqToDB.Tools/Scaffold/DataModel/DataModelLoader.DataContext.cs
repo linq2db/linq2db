@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using LinqToDB.CodeModel;
 using LinqToDB.DataModel;
+using LinqToDB.Naming;
 
 namespace LinqToDB.Scaffold
 {
@@ -12,9 +13,20 @@ namespace LinqToDB.Scaffold
 		/// <returns>Data context model instance.</returns>
 		private DataContextModel BuildDataContext()
 		{
-			var className = _namingServices.NormalizeIdentifier(
-				_options.DataModel.DataContextClassNameOptions,
-				_options.DataModel.ContextClassName ?? (_schemaProvider.DatabaseName + "DB") ?? "MyDataContext");
+			string className;
+			if (_options.DataModel.ContextClassName != null)
+			{
+				// name provided by user and shouldn't be modified except cases when it is invalid
+				className = _namingServices.NormalizeIdentifier(
+					NormalizationOptions.None,
+					_options.DataModel.ContextClassName);
+			}
+			else
+			{
+				className = _namingServices.NormalizeIdentifier(
+					_options.DataModel.DataContextClassNameOptions,
+					_schemaProvider.DatabaseName != null ? (_schemaProvider.DatabaseName + "DB") : "MyDataContext");
+			}
 
 			var dataContextClass = new ClassModel(className, className)
 			{

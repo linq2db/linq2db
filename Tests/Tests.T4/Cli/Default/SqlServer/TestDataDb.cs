@@ -19,7 +19,7 @@ using System.Threading.Tasks;
 
 namespace Cli.Default.SqlServer
 {
-	public partial class TestDataDb : DataConnection
+	public partial class TestDataDB : DataConnection
 	{
 		#region Schemas
 		public void InitSchemas()
@@ -30,20 +30,20 @@ namespace Cli.Default.SqlServer
 		public TestSchemaSchema.DataContext TestSchema { get; set; } = null!;
 		#endregion
 
-		public TestDataDb()
+		public TestDataDB()
 		{
 			InitSchemas();
 			InitDataContext();
 		}
 
-		public TestDataDb(string configuration)
+		public TestDataDB(string configuration)
 			: base(configuration)
 		{
 			InitSchemas();
 			InitDataContext();
 		}
 
-		public TestDataDb(LinqToDBConnectionOptions<TestDataDb> options)
+		public TestDataDB(LinqToDBConnectionOptions<TestDataDB> options)
 			: base(options)
 		{
 			InitSchemas();

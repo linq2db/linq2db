@@ -36,5 +36,23 @@ namespace LinqToDB.Naming
 		/// Skip normalization (except <see cref="Suffix"/> and <see cref="Prefix"/>) if name contains only uppercase letters.
 		/// </summary>
 		public bool               DontCaseAllCaps               { get; set; }
+
+		/// <summary>
+		/// Don't case upper-case words if their length not longer than specified by <see cref="MaxUpperCaseWordLength"/> length.
+		/// E.g. setting value to 2 will preserve 2-letter abbreviations like ID.
+		/// </summary>
+		public int                MaxUpperCaseWordLength        { get; set; }
+
+		/// <summary>
+		/// Non-modifying transformation options.
+		/// </summary>
+		internal static readonly NormalizationOptions None = new ()
+		{
+			Transformation                = NameTransformation.None,
+			Casing                        = NameCasing.None,
+			DontCaseAllCaps               = true,
+			PluralizeOnlyIfLastWordIsText = false,
+			Pluralization                 = Pluralization.None,
+		};
 	}
 }

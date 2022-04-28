@@ -31,8 +31,10 @@ namespace LinqToDB.Naming
 			if (!settings.DontCaseAllCaps || name.EnumerateCharacters().Any(c => c.category != UnicodeCategory.UppercaseLetter))
 			{
 				// first split identifier into text/non-text fragments, optionally treat underscore as discarded separator
-				var words = SplitIntoWords(name, settings.Transformation == NameTransformation.SplitByUnderscore
-							|| settings.Transformation == NameTransformation.Association);
+				var words = SplitIntoWords(
+					name,
+					settings.Transformation == NameTransformation.SplitByUnderscore ||
+					settings.Transformation == NameTransformation.Association);
 
 				// find last word to apply pluralization to it (if configured)
 				var lastTextIndex = -1;
@@ -56,9 +58,9 @@ namespace LinqToDB.Naming
 				var firstWord = true;
 				for (var i = 0; i < words.Count; i++)
 				{
-					var (word, isText) = words[i];
+					var (word, isText, isUpperCase) = words[i];
 
-					if (!isText)
+					if (!isText || (isUpperCase && word.Length <= settings.MaxUpperCaseWordLength))
 						identifier.Append(word);
 					else
 					{
@@ -173,9 +175,9 @@ namespace LinqToDB.Naming
 		/// <param name="str">String to split.</param>
 		/// <param name="removeUnderscores">Optionally treat underscores as word separators.</param>
 		/// <returns>Sequence of pairs word + type of word (text or non-text word).</returns>
-		private List<(string word, bool isText)> SplitIntoWords(string str, bool removeUnderscores)
+		private List<(string word, bool isText, bool isUpperCase)> SplitIntoWords(string str, bool removeUnderscores)
 		{
-			var results     = new List<(string word, bool isText)>();
+			var results     = new List<(string word, bool isText, bool isUpperCase)>();
 			// split text into fragments/sub-texts (not words) by underscore
 			var fragments   = removeUnderscores ? str.Split('_') : new []{ str };
 			var currentWord = new StringBuilder();
@@ -256,17 +258,17 @@ namespace LinqToDB.Naming
 				}
 
 				if (currentWord.Length > 0)
-					results.Add((currentWord.ToString(), isText));
+					results.Add((currentWord.ToString(), isText, uppercaseWord));
 
 				// saves currently collected word and initialize flags for next word
 				void CommitWord(bool asText)
 				{
-					results.Add((currentWord.ToString(), asText));
+					results.Add((currentWord.ToString(), asText, uppercaseWord));
 					currentWord.Clear();
 
-					isText = false;
+					isText        = false;
 					uppercaseWord = false;
-					length = 0;
+					length        = 0;
 				}
 			}
 

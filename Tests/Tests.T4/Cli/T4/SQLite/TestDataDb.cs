@@ -18,26 +18,26 @@ using System.Linq;
 
 namespace Cli.T4.SQLite
 {
-	public partial class TestDataDb : DataConnection
+	public partial class TestDataDB : DataConnection
 	{
-		public TestDataDb()
+		public TestDataDB()
 		{
 			InitDataContext();
 		}
 
-		public TestDataDb(string configuration)
+		public TestDataDB(string configuration)
 			: base(configuration)
 		{
 			InitDataContext();
 		}
 
-		public TestDataDb(LinqToDBConnectionOptions options)
+		public TestDataDB(LinqToDBConnectionOptions options)
 			: base(options)
 		{
 			InitDataContext();
 		}
 
-		public TestDataDb(LinqToDBConnectionOptions<TestDataDb> options)
+		public TestDataDB(LinqToDBConnectionOptions<TestDataDB> options)
 			: base(options)
 		{
 			InitDataContext();
@@ -66,13 +66,13 @@ namespace Cli.T4.SQLite
 	}
 
 	[Table("Dual")]
-	public class Dual
+	public partial class Dual
 	{
 		[Column("Dummy")] public string? Dummy { get; set; } // varchar(10)
 	}
 
 	[Table("InheritanceParent")]
-	public class InheritanceParent
+	public partial class InheritanceParent
 	{
 		[Column("InheritanceParentId")] public long    InheritanceParentId { get; set; } // integer
 		[Column("TypeDiscriminator"  )] public long?   TypeDiscriminator   { get; set; } // integer
@@ -80,7 +80,7 @@ namespace Cli.T4.SQLite
 	}
 
 	[Table("InheritanceChild")]
-	public class InheritanceChild
+	public partial class InheritanceChild
 	{
 		[Column("InheritanceChildId" )] public long    InheritanceChildId  { get; set; } // integer
 		[Column("InheritanceParentId")] public long    InheritanceParentId { get; set; } // integer
@@ -89,7 +89,7 @@ namespace Cli.T4.SQLite
 	}
 
 	[Table("Person")]
-	public class Person
+	public partial class Person
 	{
 		[Column("PersonID"  , IsPrimaryKey = true , IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public long    PersonID   { get; set; } // integer
 		[Column("FirstName" , CanBeNull    = false                                                             )] public string  FirstName  { get; set; } = null!; // nvarchar(50)
@@ -132,17 +132,17 @@ namespace Cli.T4.SQLite
 
 		public static TestIdentity? Find(this ITable<TestIdentity> table, long id)
 		{
-			return table.FirstOrDefault(e => e.Id == id);
+			return table.FirstOrDefault(e => e.ID == id);
 		}
 
 		public static AllType? Find(this ITable<AllType> table, long id)
 		{
-			return table.FirstOrDefault(e => e.Id == id);
+			return table.FirstOrDefault(e => e.ID == id);
 		}
 
 		public static PrimaryKeyTable? Find(this ITable<PrimaryKeyTable> table, long id)
 		{
-			return table.FirstOrDefault(e => e.Id == id);
+			return table.FirstOrDefault(e => e.ID == id);
 		}
 
 		public static FKTestPosition? Find(this ITable<FKTestPosition> table, long company, long department, long positionId)
@@ -153,7 +153,7 @@ namespace Cli.T4.SQLite
 	}
 
 	[Table("Doctor")]
-	public class Doctor
+	public partial class Doctor
 	{
 		[Column("PersonID", IsPrimaryKey = true )] public long   PersonID { get; set; } // integer
 		[Column("Taxonomy", CanBeNull    = false)] public string Taxonomy { get; set; } = null!; // nvarchar(50)
@@ -168,7 +168,7 @@ namespace Cli.T4.SQLite
 	}
 
 	[Table("Patient")]
-	public class Patient
+	public partial class Patient
 	{
 		[Column("PersonID" , IsPrimaryKey = true )] public long   PersonID  { get; set; } // integer
 		[Column("Diagnosis", CanBeNull    = false)] public string Diagnosis { get; set; } = null!; // nvarchar(256)
@@ -183,21 +183,21 @@ namespace Cli.T4.SQLite
 	}
 
 	[Table("Parent")]
-	public class Parent
+	public partial class Parent
 	{
 		[Column("ParentID")] public int? ParentID { get; set; } // int
 		[Column("Value1"  )] public int? Value1   { get; set; } // int
 	}
 
 	[Table("Child")]
-	public class Child
+	public partial class Child
 	{
 		[Column("ParentID")] public int? ParentID { get; set; } // int
 		[Column("ChildID" )] public int? ChildID  { get; set; } // int
 	}
 
 	[Table("GrandChild")]
-	public class GrandChild
+	public partial class GrandChild
 	{
 		[Column("ParentID"    )] public int? ParentID     { get; set; } // int
 		[Column("ChildID"     )] public int? ChildID      { get; set; } // int
@@ -205,9 +205,9 @@ namespace Cli.T4.SQLite
 	}
 
 	[Table("LinqDataTypes")]
-	public class LinqDataType
+	public partial class LinqDataType
 	{
-		[Column("ID"            )] public int?      Id             { get; set; } // int
+		[Column("ID"            )] public int?      ID             { get; set; } // int
 		[Column("MoneyValue"    )] public decimal?  MoneyValue     { get; set; } // decimal
 		[Column("DateTimeValue" )] public DateTime? DateTimeValue  { get; set; } // datetime
 		[Column("DateTimeValue2")] public DateTime? DateTimeValue2 { get; set; } // datetime2
@@ -221,15 +221,15 @@ namespace Cli.T4.SQLite
 	}
 
 	[Table("TestIdentity")]
-	public class TestIdentity
+	public partial class TestIdentity
 	{
-		[Column("ID", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public long Id { get; set; } // integer
+		[Column("ID", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public long ID { get; set; } // integer
 	}
 
 	[Table("AllTypes")]
-	public class AllType
+	public partial class AllType
 	{
-		[Column("ID"                      , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public long      Id                       { get; set; } // integer
+		[Column("ID"                      , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public long      ID                       { get; set; } // integer
 		[Column("bigintDataType"                                                                                            )] public long?     BigintDataType           { get; set; } // bigint
 		[Column("numericDataType"                                                                                           )] public decimal?  NumericDataType          { get; set; } // numeric
 		[Column("bitDataType"                                                                                               )] public bool?     BitDataType              { get; set; } // bit
@@ -256,22 +256,22 @@ namespace Cli.T4.SQLite
 	}
 
 	[Table("PrimaryKeyTable")]
-	public class PrimaryKeyTable
+	public partial class PrimaryKeyTable
 	{
-		[Column("ID"  , IsPrimaryKey = true )] public long   Id   { get; set; } // integer
+		[Column("ID"  , IsPrimaryKey = true )] public long   ID   { get; set; } // integer
 		[Column("Name", CanBeNull    = false)] public string Name { get; set; } = null!; // nvarchar(50)
 
 		#region Associations
 		/// <summary>
 		/// FK_ForeignKeyTable_0_0 backreference
 		/// </summary>
-		[Association(ThisKey = nameof(Id), OtherKey = nameof(ForeignKeyTable.PrimaryKeyTableID))]
+		[Association(ThisKey = nameof(ID), OtherKey = nameof(ForeignKeyTable.PrimaryKeyTableID))]
 		public IEnumerable<ForeignKeyTable> ForeignKeyTables { get; set; } = null!;
 		#endregion
 	}
 
 	[Table("ForeignKeyTable")]
-	public class ForeignKeyTable
+	public partial class ForeignKeyTable
 	{
 		[Column("PrimaryKeyTableID"                   )] public long   PrimaryKeyTableID { get; set; } // integer
 		[Column("Name"             , CanBeNull = false)] public string Name              { get; set; } = null!; // nvarchar(50)
@@ -280,13 +280,13 @@ namespace Cli.T4.SQLite
 		/// <summary>
 		/// FK_ForeignKeyTable_0_0
 		/// </summary>
-		[Association(CanBeNull = false, ThisKey = nameof(PrimaryKeyTableID), OtherKey = nameof(SQLite.PrimaryKeyTable.Id))]
+		[Association(CanBeNull = false, ThisKey = nameof(PrimaryKeyTableID), OtherKey = nameof(SQLite.PrimaryKeyTable.ID))]
 		public PrimaryKeyTable PrimaryKeyTable { get; set; } = null!;
 		#endregion
 	}
 
 	[Table("FKTestPosition")]
-	public class FKTestPosition
+	public partial class FKTestPosition
 	{
 		[Column("Company"   , IsPrimaryKey = true , PrimaryKeyOrder = 0)] public long   Company    { get; set; } // integer
 		[Column("Department", IsPrimaryKey = true , PrimaryKeyOrder = 1)] public long   Department { get; set; } // integer
@@ -295,7 +295,7 @@ namespace Cli.T4.SQLite
 	}
 
 	[Table("TestMerge1")]
-	public class TestMerge1
+	public partial class TestMerge1
 	{
 		[Column("Id"             )] public long      Id              { get; set; } // integer
 		[Column("Field1"         )] public long?     Field1          { get; set; } // integer
@@ -320,7 +320,7 @@ namespace Cli.T4.SQLite
 	}
 
 	[Table("TestMerge2")]
-	public class TestMerge2
+	public partial class TestMerge2
 	{
 		[Column("Id"             )] public long      Id              { get; set; } // integer
 		[Column("Field1"         )] public long?     Field1          { get; set; } // integer
@@ -345,7 +345,7 @@ namespace Cli.T4.SQLite
 	}
 
 	[Table("TEST_T4_CASING")]
-	public class TestT4Casing
+	public partial class TestT4Casing
 	{
 		[Column("ALL_CAPS"             )] public int AllCaps             { get; set; } // int
 		[Column("CAPS"                 )] public int Caps                { get; set; } // int

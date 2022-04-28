@@ -166,7 +166,16 @@ namespace LinqToDB.CommandLine
 							return null;
 						}
 						break;
-					default                                :
+					case "max_uppercase_word_length":
+						if (property.Value.ValueKind == JsonValueKind.Number && property.Value.TryGetInt32(out var maxLength) && maxLength > 1)
+							options.MaxUpperCaseWordLength = maxLength;
+						else
+						{
+							errorDetails = $"max_uppercase_word_length : expected number >= 2, but got: {property.Value}";
+							return null;
+						}
+						break;
+					default:
 						errorDetails = $"unexpected property '{property.Name}'";
 						return null;
 				}

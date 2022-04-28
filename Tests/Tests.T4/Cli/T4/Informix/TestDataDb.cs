@@ -18,26 +18,26 @@ using System.Linq;
 
 namespace Cli.T4.Informix
 {
-	public partial class TestDataDb : DataConnection
+	public partial class TestDataDB : DataConnection
 	{
-		public TestDataDb()
+		public TestDataDB()
 		{
 			InitDataContext();
 		}
 
-		public TestDataDb(string configuration)
+		public TestDataDB(string configuration)
 			: base(configuration)
 		{
 			InitDataContext();
 		}
 
-		public TestDataDb(LinqToDBConnectionOptions options)
+		public TestDataDB(LinqToDBConnectionOptions options)
 			: base(options)
 		{
 			InitDataContext();
 		}
 
-		public TestDataDb(LinqToDBConnectionOptions<TestDataDb> options)
+		public TestDataDB(LinqToDBConnectionOptions<TestDataDB> options)
 			: base(options)
 		{
 			InitDataContext();
@@ -65,7 +65,7 @@ namespace Cli.T4.Informix
 	}
 
 	[Table("inheritanceparent", Schema = "informix")]
-	public class Inheritanceparent
+	public partial class Inheritanceparent
 	{
 		[Column("inheritanceparentid", IsPrimaryKey = true)] public int     Inheritanceparentid { get; set; } // INTEGER
 		[Column("typediscriminator"                       )] public int?    Typediscriminator   { get; set; } // INTEGER
@@ -128,7 +128,7 @@ namespace Cli.T4.Informix
 	}
 
 	[Table("inheritancechild", Schema = "informix")]
-	public class Inheritancechild
+	public partial class Inheritancechild
 	{
 		[Column("inheritancechildid" , IsPrimaryKey = true)] public int     Inheritancechildid  { get; set; } // INTEGER
 		[Column("inheritanceparentid"                     )] public int     Inheritanceparentid { get; set; } // INTEGER
@@ -137,7 +137,7 @@ namespace Cli.T4.Informix
 	}
 
 	[Table("person", Schema = "informix")]
-	public class Person
+	public partial class Person
 	{
 		[Column("personid"  , IsPrimaryKey = true , IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int     Personid   { get; set; } // SERIAL
 		[Column("firstname" , CanBeNull    = false                                                             )] public string  Firstname  { get; set; } = null!; // NVARCHAR(50)
@@ -161,7 +161,7 @@ namespace Cli.T4.Informix
 	}
 
 	[Table("doctor", Schema = "informix")]
-	public class Doctor
+	public partial class Doctor
 	{
 		[Column("personid", IsPrimaryKey = true )] public int    Personid { get; set; } // INTEGER
 		[Column("taxonomy", CanBeNull    = false)] public string Taxonomy { get; set; } = null!; // NVARCHAR(50)
@@ -176,7 +176,7 @@ namespace Cli.T4.Informix
 	}
 
 	[Table("patient", Schema = "informix")]
-	public class Patient
+	public partial class Patient
 	{
 		[Column("personid" , IsPrimaryKey = true )] public int    Personid  { get; set; } // INTEGER
 		[Column("diagnosis", CanBeNull    = false)] public string Diagnosis { get; set; } = null!; // NVARCHAR(100)
@@ -191,21 +191,21 @@ namespace Cli.T4.Informix
 	}
 
 	[Table("parent", Schema = "informix")]
-	public class Parent
+	public partial class Parent
 	{
 		[Column("parentid")] public int? Parentid { get; set; } // INTEGER
 		[Column("value1"  )] public int? Value1   { get; set; } // INTEGER
 	}
 
 	[Table("child", Schema = "informix")]
-	public class Child
+	public partial class Child
 	{
 		[Column("parentid")] public int? Parentid { get; set; } // INTEGER
 		[Column("childid" )] public int? Childid  { get; set; } // INTEGER
 	}
 
 	[Table("grandchild", Schema = "informix")]
-	public class Grandchild
+	public partial class Grandchild
 	{
 		[Column("parentid"    )] public int? Parentid     { get; set; } // INTEGER
 		[Column("childid"     )] public int? Childid      { get; set; } // INTEGER
@@ -213,7 +213,7 @@ namespace Cli.T4.Informix
 	}
 
 	[Table("linqdatatypes", Schema = "informix")]
-	public class Linqdatatype
+	public partial class Linqdatatype
 	{
 		[Column("id"            )] public int?      Id             { get; set; } // INTEGER
 		[Column("moneyvalue"    )] public decimal?  Moneyvalue     { get; set; } // DECIMAL(10,4)
@@ -229,13 +229,13 @@ namespace Cli.T4.Informix
 	}
 
 	[Table("testidentity", Schema = "informix")]
-	public class Testidentity
+	public partial class Testidentity
 	{
 		[Column("id", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int Id { get; set; } // SERIAL
 	}
 
 	[Table("alltypes", Schema = "informix")]
-	public class Alltype
+	public partial class Alltype
 	{
 		[Column("id"              , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int       Id               { get; set; } // SERIAL
 		[Column("bigintdatatype"                                                                                    )] public long?     Bigintdatatype   { get; set; } // BIGINT
@@ -261,7 +261,7 @@ namespace Cli.T4.Informix
 	}
 
 	[Table("testunique", Schema = "informix")]
-	public class Testunique
+	public partial class Testunique
 	{
 		[Column("id1", IsPrimaryKey = true, PrimaryKeyOrder = 0)] public int Id1 { get; set; } // INTEGER
 		[Column("id2", IsPrimaryKey = true, PrimaryKeyOrder = 1)] public int Id2 { get; set; } // INTEGER
@@ -284,7 +284,7 @@ namespace Cli.T4.Informix
 	}
 
 	[Table("testfkunique", Schema = "informix")]
-	public class Testfkunique
+	public partial class Testfkunique
 	{
 		[Column("id1")] public int Id1 { get; set; } // INTEGER
 		[Column("id2")] public int Id2 { get; set; } // INTEGER
@@ -307,7 +307,7 @@ namespace Cli.T4.Informix
 	}
 
 	[Table("testmerge1", Schema = "informix")]
-	public class Testmerge1
+	public partial class Testmerge1
 	{
 		[Column("id"             , IsPrimaryKey = true)] public int       Id              { get; set; } // INTEGER
 		[Column("field1"                              )] public int?      Field1          { get; set; } // INTEGER
@@ -331,7 +331,7 @@ namespace Cli.T4.Informix
 	}
 
 	[Table("testmerge2", Schema = "informix")]
-	public class Testmerge2
+	public partial class Testmerge2
 	{
 		[Column("id"             , IsPrimaryKey = true)] public int       Id              { get; set; } // INTEGER
 		[Column("field1"                              )] public int?      Field1          { get; set; } // INTEGER
@@ -355,7 +355,7 @@ namespace Cli.T4.Informix
 	}
 
 	[Table("collatedtable", Schema = "informix")]
-	public class Collatedtable
+	public partial class Collatedtable
 	{
 		[Column("id"                                )] public int    Id              { get; set; } // INTEGER
 		[Column("casesensitive"  , CanBeNull = false)] public string Casesensitive   { get; set; } = null!; // VARCHAR(20)
@@ -363,7 +363,7 @@ namespace Cli.T4.Informix
 	}
 
 	[Table("personview", Schema = "informix", IsView = true)]
-	public class Personview
+	public partial class Personview
 	{
 		[Column("personid"  , IsIdentity = true , SkipOnInsert = true, SkipOnUpdate = true)] public int     Personid   { get; set; } // SERIAL
 		[Column("firstname" , CanBeNull  = false                                          )] public string  Firstname  { get; set; } = null!; // NVARCHAR(50)

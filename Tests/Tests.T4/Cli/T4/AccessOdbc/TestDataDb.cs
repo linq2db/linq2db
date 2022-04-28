@@ -17,26 +17,26 @@ using System.Collections.Generic;
 
 namespace Cli.T4.Access.Odbc
 {
-	public partial class TestDataDb : DataConnection
+	public partial class TestDataDB : DataConnection
 	{
-		public TestDataDb()
+		public TestDataDB()
 		{
 			InitDataContext();
 		}
 
-		public TestDataDb(string configuration)
+		public TestDataDB(string configuration)
 			: base(configuration)
 		{
 			InitDataContext();
 		}
 
-		public TestDataDb(LinqToDBConnectionOptions options)
+		public TestDataDB(LinqToDBConnectionOptions options)
 			: base(options)
 		{
 			InitDataContext();
 		}
 
-		public TestDataDb(LinqToDBConnectionOptions<TestDataDb> options)
+		public TestDataDB(LinqToDBConnectionOptions<TestDataDB> options)
 			: base(options)
 		{
 			InitDataContext();
@@ -62,15 +62,15 @@ namespace Cli.T4.Access.Odbc
 		public ITable<LinqDataTypesQuery>  LinqDataTypesQueries => this.GetTable<LinqDataTypesQuery>();
 		public ITable<LinqDataTypesQuery1> LinqDataTypesQuery1  => this.GetTable<LinqDataTypesQuery1>();
 		public ITable<LinqDataTypesQuery2> LinqDataTypesQuery2  => this.GetTable<LinqDataTypesQuery2>();
-		public ITable<PatientSelectAll>    PatientSelectAlls    => this.GetTable<PatientSelectAll>();
-		public ITable<PersonSelectAll>     PersonSelectAlls     => this.GetTable<PersonSelectAll>();
+		public ITable<PatientSelectAll>    PatientSelectAll     => this.GetTable<PatientSelectAll>();
+		public ITable<PersonSelectAll>     PersonSelectAll      => this.GetTable<PersonSelectAll>();
 		public ITable<ScalarDataReader>    ScalarDataReaders    => this.GetTable<ScalarDataReader>();
 	}
 
 	[Table("AllTypes")]
-	public class AllType
+	public partial class AllType
 	{
-		[Column("ID"                      , IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int       Id                       { get; set; } // COUNTER
+		[Column("ID"                      , IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int       ID                       { get; set; } // COUNTER
 		[Column("bitDataType"                                                                          )] public bool      BitDataType              { get; set; } // BIT
 		[Column("smallintDataType"                                                                     )] public short?    SmallintDataType         { get; set; } // SMALLINT
 		[Column("decimalDataType"                                                                      )] public decimal?  DecimalDataType          { get; set; } // DECIMAL(18, 0)
@@ -95,14 +95,14 @@ namespace Cli.T4.Access.Odbc
 	}
 
 	[Table("Child")]
-	public class Child
+	public partial class Child
 	{
 		[Column("ParentID")] public int? ParentID { get; set; } // INTEGER
 		[Column("ChildID" )] public int? ChildID  { get; set; } // INTEGER
 	}
 
 	[Table("DataTypeTest")]
-	public class DataTypeTest
+	public partial class DataTypeTest
 	{
 		[Column("DataTypeID", IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int       DataTypeID { get; set; } // COUNTER
 		[Column("Binary_"                                                                )] public byte[]?   Binary     { get; set; } // LONGBINARY
@@ -129,20 +129,20 @@ namespace Cli.T4.Access.Odbc
 	}
 
 	[Table("Doctor")]
-	public class Doctor
+	public partial class Doctor
 	{
 		[Column("PersonID")] public int?    PersonID { get; set; } // INTEGER
 		[Column("Taxonomy")] public string? Taxonomy { get; set; } // VARCHAR(50)
 	}
 
 	[Table("Dual")]
-	public class Dual
+	public partial class Dual
 	{
 		[Column("Dummy")] public string? Dummy { get; set; } // VARCHAR(10)
 	}
 
 	[Table("GrandChild")]
-	public class GrandChild
+	public partial class GrandChild
 	{
 		[Column("ParentID"    )] public int? ParentID     { get; set; } // INTEGER
 		[Column("ChildID"     )] public int? ChildID      { get; set; } // INTEGER
@@ -150,7 +150,7 @@ namespace Cli.T4.Access.Odbc
 	}
 
 	[Table("InheritanceChild")]
-	public class InheritanceChild
+	public partial class InheritanceChild
 	{
 		[Column("InheritanceChildId" )] public int?    InheritanceChildId  { get; set; } // INTEGER
 		[Column("InheritanceParentId")] public int?    InheritanceParentId { get; set; } // INTEGER
@@ -159,7 +159,7 @@ namespace Cli.T4.Access.Odbc
 	}
 
 	[Table("InheritanceParent")]
-	public class InheritanceParent
+	public partial class InheritanceParent
 	{
 		[Column("InheritanceParentId")] public int?    InheritanceParentId { get; set; } // INTEGER
 		[Column("TypeDiscriminator"  )] public int?    TypeDiscriminator   { get; set; } // INTEGER
@@ -167,9 +167,9 @@ namespace Cli.T4.Access.Odbc
 	}
 
 	[Table("LinqDataTypes")]
-	public class LinqDataType
+	public partial class LinqDataType
 	{
-		[Column("ID"            )] public int?      Id             { get; set; } // INTEGER
+		[Column("ID"            )] public int?      ID             { get; set; } // INTEGER
 		[Column("MoneyValue"    )] public decimal?  MoneyValue     { get; set; } // DECIMAL(10, 4)
 		[Column("DateTimeValue" )] public DateTime? DateTimeValue  { get; set; } // DATETIME
 		[Column("DateTimeValue2")] public DateTime? DateTimeValue2 { get; set; } // DATETIME
@@ -183,21 +183,21 @@ namespace Cli.T4.Access.Odbc
 	}
 
 	[Table("Parent")]
-	public class Parent
+	public partial class Parent
 	{
 		[Column("ParentID")] public int? ParentID { get; set; } // INTEGER
 		[Column("Value1"  )] public int? Value1   { get; set; } // INTEGER
 	}
 
 	[Table("Patient")]
-	public class Patient
+	public partial class Patient
 	{
 		[Column("PersonID" )] public int?    PersonID  { get; set; } // INTEGER
 		[Column("Diagnosis")] public string? Diagnosis { get; set; } // VARCHAR(255)
 	}
 
 	[Table("Person")]
-	public class Person
+	public partial class Person
 	{
 		[Column("PersonID"  , IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int     PersonID   { get; set; } // COUNTER
 		[Column("FirstName"                                                              )] public string? FirstName  { get; set; } // VARCHAR(50)
@@ -207,13 +207,13 @@ namespace Cli.T4.Access.Odbc
 	}
 
 	[Table("TestIdentity")]
-	public class TestIdentity
+	public partial class TestIdentity
 	{
-		[Column("ID", IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int Id { get; set; } // COUNTER
+		[Column("ID", IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int ID { get; set; } // COUNTER
 	}
 
 	[Table("TestMerge1")]
-	public class TestMerge1
+	public partial class TestMerge1
 	{
 		[Column("Id"             )] public int?      Id              { get; set; } // INTEGER
 		[Column("Field1"         )] public int?      Field1          { get; set; } // INTEGER
@@ -239,7 +239,7 @@ namespace Cli.T4.Access.Odbc
 	}
 
 	[Table("TestMerge2")]
-	public class TestMerge2
+	public partial class TestMerge2
 	{
 		[Column("Id"             )] public int?      Id              { get; set; } // INTEGER
 		[Column("Field1"         )] public int?      Field1          { get; set; } // INTEGER
@@ -265,25 +265,25 @@ namespace Cli.T4.Access.Odbc
 	}
 
 	[Table("LinqDataTypes Query", IsView = true)]
-	public class LinqDataTypesQuery
+	public partial class LinqDataTypesQuery
 	{
 		[Column("DateTimeValue")] public DateTime? DateTimeValue { get; set; } // DATETIME
 	}
 
 	[Table("LinqDataTypes Query1", IsView = true)]
-	public class LinqDataTypesQuery1
+	public partial class LinqDataTypesQuery1
 	{
-		[Column("ID")] public int? Id { get; set; } // INTEGER
+		[Column("ID")] public int? ID { get; set; } // INTEGER
 	}
 
 	[Table("LinqDataTypes Query2", IsView = true)]
-	public class LinqDataTypesQuery2
+	public partial class LinqDataTypesQuery2
 	{
-		[Column("ID")] public int? Id { get; set; } // INTEGER
+		[Column("ID")] public int? ID { get; set; } // INTEGER
 	}
 
 	[Table("Patient_SelectAll", IsView = true)]
-	public class PatientSelectAll
+	public partial class PatientSelectAll
 	{
 		[Column("PersonID"  , IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int     PersonID   { get; set; } // COUNTER
 		[Column("FirstName"                                                              )] public string? FirstName  { get; set; } // VARCHAR(50)
@@ -294,7 +294,7 @@ namespace Cli.T4.Access.Odbc
 	}
 
 	[Table("Person_SelectAll", IsView = true)]
-	public class PersonSelectAll
+	public partial class PersonSelectAll
 	{
 		[Column("PersonID"  , IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int     PersonID   { get; set; } // COUNTER
 		[Column("FirstName"                                                              )] public string? FirstName  { get; set; } // VARCHAR(50)
@@ -304,7 +304,7 @@ namespace Cli.T4.Access.Odbc
 	}
 
 	[Table("Scalar_DataReader", IsView = true)]
-	public class ScalarDataReader
+	public partial class ScalarDataReader
 	{
 		[Column("intField"   )] public int?    IntField    { get; set; } // INTEGER
 		[Column("stringField")] public string? StringField { get; set; } // VARCHAR
@@ -314,7 +314,7 @@ namespace Cli.T4.Access.Odbc
 	{
 		#region Stored Procedures
 		#region PatientSelectByName
-		public static IEnumerable<PatientSelectByNameResult> PatientSelectByName(this TestDataDb dataConnection, string? firstName, string? lastName)
+		public static IEnumerable<PatientSelectByNameResult> PatientSelectByName(this TestDataDB dataConnection, string? firstName, string? lastName)
 		{
 			var parameters = new []
 			{
@@ -342,7 +342,7 @@ namespace Cli.T4.Access.Odbc
 		#endregion
 
 		#region PersonDelete
-		public static int PersonDelete(this TestDataDb dataConnection, int? personId)
+		public static int PersonDelete(this TestDataDB dataConnection, int? personId)
 		{
 			var parameters = new []
 			{
@@ -353,7 +353,7 @@ namespace Cli.T4.Access.Odbc
 		#endregion
 
 		#region PersonInsert
-		public static int PersonInsert(this TestDataDb dataConnection, string? firstName, string? middleName, string? lastName, string? gender)
+		public static int PersonInsert(this TestDataDB dataConnection, string? firstName, string? middleName, string? lastName, string? gender)
 		{
 			var parameters = new []
 			{
@@ -379,7 +379,7 @@ namespace Cli.T4.Access.Odbc
 		#endregion
 
 		#region PersonSelectByKey
-		public static IEnumerable<PersonSelectByKeyResult> PersonSelectByKey(this TestDataDb dataConnection, int? id)
+		public static IEnumerable<PersonSelectByKeyResult> PersonSelectByKey(this TestDataDB dataConnection, int? id)
 		{
 			var parameters = new []
 			{
@@ -399,7 +399,7 @@ namespace Cli.T4.Access.Odbc
 		#endregion
 
 		#region PersonSelectByName
-		public static IEnumerable<PersonSelectByNameResult> PersonSelectByName(this TestDataDb dataConnection, string? firstName, string? lastName)
+		public static IEnumerable<PersonSelectByNameResult> PersonSelectByName(this TestDataDB dataConnection, string? firstName, string? lastName)
 		{
 			var parameters = new []
 			{
@@ -426,7 +426,7 @@ namespace Cli.T4.Access.Odbc
 		#endregion
 
 		#region PersonSelectListByName
-		public static IEnumerable<PersonSelectListByNameResult> PersonSelectListByName(this TestDataDb dataConnection, string? firstName, string? lastName)
+		public static IEnumerable<PersonSelectListByNameResult> PersonSelectListByName(this TestDataDB dataConnection, string? firstName, string? lastName)
 		{
 			var parameters = new []
 			{
@@ -453,7 +453,7 @@ namespace Cli.T4.Access.Odbc
 		#endregion
 
 		#region PersonUpdate
-		public static int PersonUpdate(this TestDataDb dataConnection, int? id, int? personId, string? firstName, string? middleName, string? lastName, string? gender)
+		public static int PersonUpdate(this TestDataDB dataConnection, int? id, int? personId, string? firstName, string? middleName, string? lastName, string? gender)
 		{
 			var parameters = new []
 			{

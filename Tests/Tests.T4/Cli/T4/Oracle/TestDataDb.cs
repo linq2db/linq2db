@@ -20,26 +20,26 @@ using System.Linq;
 
 namespace Cli.T4.Oracle
 {
-	public partial class TestDataDb : DataConnection
+	public partial class TestDataDB : DataConnection
 	{
-		public TestDataDb()
+		public TestDataDB()
 		{
 			InitDataContext();
 		}
 
-		public TestDataDb(string configuration)
+		public TestDataDB(string configuration)
 			: base(configuration)
 		{
 			InitDataContext();
 		}
 
-		public TestDataDb(LinqToDBConnectionOptions options)
+		public TestDataDB(LinqToDBConnectionOptions options)
 			: base(options)
 		{
 			InitDataContext();
 		}
 
-		public TestDataDb(LinqToDBConnectionOptions<TestDataDb> options)
+		public TestDataDB(LinqToDBConnectionOptions<TestDataDB> options)
 			: base(options)
 		{
 			InitDataContext();
@@ -88,9 +88,9 @@ namespace Cli.T4.Oracle
 	}
 
 	[Table("AllTypes", Schema = "MANAGED")]
-	public class AllType
+	public partial class AllType
 	{
-		[Column("ID"                    , IsPrimaryKey = true)] public decimal         Id                     { get; set; } // NUMBER
+		[Column("ID"                    , IsPrimaryKey = true)] public decimal         ID                     { get; set; } // NUMBER
 		[Column("bigintDataType"                             )] public decimal?        BigintDataType         { get; set; } // NUMBER (20,0)
 		[Column("numericDataType"                            )] public decimal?        NumericDataType        { get; set; } // NUMBER
 		[Column("bitDataType"                                )] public sbyte?          BitDataType            { get; set; } // NUMBER (1,0)
@@ -125,7 +125,7 @@ namespace Cli.T4.Oracle
 		#region Table Extensions
 		public static AllType? Find(this ITable<AllType> table, decimal id)
 		{
-			return table.FirstOrDefault(e => e.Id == id);
+			return table.FirstOrDefault(e => e.ID == id);
 		}
 
 		public static Binarydatum? Find(this ITable<Binarydatum> table, decimal binarydataid)
@@ -160,7 +160,7 @@ namespace Cli.T4.Oracle
 
 		public static LongRawTable? Find(this ITable<LongRawTable> table, decimal id)
 		{
-			return table.FirstOrDefault(e => e.Id == id);
+			return table.FirstOrDefault(e => e.ID == id);
 		}
 
 		public static Patient? Find(this ITable<Patient> table, decimal personId)
@@ -180,7 +180,7 @@ namespace Cli.T4.Oracle
 
 		public static Sequencetest? Find(this ITable<Sequencetest> table, decimal id)
 		{
-			return table.FirstOrDefault(e => e.Id == id);
+			return table.FirstOrDefault(e => e.ID == id);
 		}
 
 		public static TEntity? Find(this ITable<TEntity> table, decimal entityId)
@@ -190,7 +190,7 @@ namespace Cli.T4.Oracle
 
 		public static TestIdentity? Find(this ITable<TestIdentity> table, decimal id)
 		{
-			return table.FirstOrDefault(e => e.Id == id);
+			return table.FirstOrDefault(e => e.ID == id);
 		}
 
 		public static TestMerge1? Find(this ITable<TestMerge1> table, decimal id)
@@ -226,7 +226,7 @@ namespace Cli.T4.Oracle
 
 		#region Stored Procedures
 		#region PersonUpdate
-		public static int PersonUpdate(this TestDataDb dataConnection, decimal? ppersonid, string? pfirstname, string? plastname, string? pmiddlename, string? pgender)
+		public static int PersonUpdate(this TestDataDB dataConnection, decimal? ppersonid, string? pfirstname, string? plastname, string? pmiddlename, string? pgender)
 		{
 			var parameters = new []
 			{
@@ -244,7 +244,7 @@ namespace Cli.T4.Oracle
 		#endregion
 
 		#region PersonDelete
-		public static int PersonDelete(this TestDataDb dataConnection, decimal? ppersonid)
+		public static int PersonDelete(this TestDataDB dataConnection, decimal? ppersonid)
 		{
 			var parameters = new []
 			{
@@ -258,7 +258,7 @@ namespace Cli.T4.Oracle
 		#endregion
 
 		#region Outreftest
-		public static int Outreftest(this TestDataDb dataConnection, decimal? pid, out decimal? poutputid, ref decimal? pinputoutputid, string? pstr, out string? poutputstr, ref string? pinputoutputstr)
+		public static int Outreftest(this TestDataDB dataConnection, decimal? pid, out decimal? poutputid, ref decimal? pinputoutputid, string? pstr, out string? poutputstr, ref string? pinputoutputstr)
 		{
 			var parameters = new []
 			{
@@ -295,7 +295,7 @@ namespace Cli.T4.Oracle
 		#endregion
 
 		#region Outrefenumtest
-		public static int Outrefenumtest(this TestDataDb dataConnection, string? pstr, out string? poutputstr, ref string? pinputoutputstr)
+		public static int Outrefenumtest(this TestDataDB dataConnection, string? pstr, out string? poutputstr, ref string? pinputoutputstr)
 		{
 			var parameters = new []
 			{
@@ -318,7 +318,7 @@ namespace Cli.T4.Oracle
 	}
 
 	[Table("BINARYDATA", Schema = "MANAGED")]
-	public class Binarydatum
+	public partial class Binarydatum
 	{
 		[Column("BINARYDATAID", IsPrimaryKey = true )] public decimal  Binarydataid { get; set; } // NUMBER
 		[Column("STAMP"                             )] public DateTime Stamp        { get; set; } // TIMESTAMP(6)
@@ -326,14 +326,14 @@ namespace Cli.T4.Oracle
 	}
 
 	[Table("Child", Schema = "MANAGED")]
-	public class Child
+	public partial class Child
 	{
 		[Column("ParentID")] public decimal? ParentID { get; set; } // NUMBER
 		[Column("ChildID" )] public decimal? ChildID  { get; set; } // NUMBER
 	}
 
 	[Table("CollatedTable", Schema = "MANAGED")]
-	public class CollatedTable
+	public partial class CollatedTable
 	{
 		[Column("Id"                                )] public decimal Id              { get; set; } // NUMBER
 		[Column("CaseSensitive"  , CanBeNull = false)] public string  CaseSensitive   { get; set; } = null!; // VARCHAR2(20)
@@ -341,7 +341,7 @@ namespace Cli.T4.Oracle
 	}
 
 	[Table("DataTypeTest", Schema = "MANAGED")]
-	public class DataTypeTest
+	public partial class DataTypeTest
 	{
 		[Column("DataTypeID", IsPrimaryKey = true)] public decimal   DataTypeID { get; set; } // NUMBER
 		[Column("Binary_"                        )] public byte[]?   Binary     { get; set; } // RAW(50)
@@ -368,7 +368,7 @@ namespace Cli.T4.Oracle
 	}
 
 	[Table("DecimalOverflow", Schema = "MANAGED")]
-	public class DecimalOverflow
+	public partial class DecimalOverflow
 	{
 		[Column("Decimal1")] public decimal? Decimal1 { get; set; } // NUMBER (38,20)
 		[Column("Decimal2")] public decimal? Decimal2 { get; set; } // NUMBER (31,2)
@@ -378,14 +378,14 @@ namespace Cli.T4.Oracle
 	}
 
 	[Table("Dest2", Schema = "MANAGED")]
-	public class Dest2
+	public partial class Dest2
 	{
-		[Column("ID" )] public decimal Id  { get; set; } // NUMBER
+		[Column("ID" )] public decimal ID  { get; set; } // NUMBER
 		[Column("Int")] public decimal Int { get; set; } // NUMBER
 	}
 
 	[Table("Doctor", Schema = "MANAGED")]
-	public class Doctor
+	public partial class Doctor
 	{
 		[Column("PersonID", IsPrimaryKey = true )] public decimal PersonID { get; set; } // NUMBER
 		[Column("Taxonomy", CanBeNull    = false)] public string  Taxonomy { get; set; } = null!; // NVARCHAR2(50)
@@ -400,7 +400,7 @@ namespace Cli.T4.Oracle
 	}
 
 	[Table("GrandChild", Schema = "MANAGED")]
-	public class GrandChild
+	public partial class GrandChild
 	{
 		[Column("ParentID"    )] public decimal? ParentID     { get; set; } // NUMBER
 		[Column("ChildID"     )] public decimal? ChildID      { get; set; } // NUMBER
@@ -408,7 +408,7 @@ namespace Cli.T4.Oracle
 	}
 
 	[Table("InheritanceChild", Schema = "MANAGED")]
-	public class InheritanceChild
+	public partial class InheritanceChild
 	{
 		[Column("InheritanceChildId" , IsPrimaryKey = true)] public decimal  InheritanceChildId  { get; set; } // NUMBER
 		[Column("InheritanceParentId"                     )] public decimal  InheritanceParentId { get; set; } // NUMBER
@@ -417,7 +417,7 @@ namespace Cli.T4.Oracle
 	}
 
 	[Table("InheritanceParent", Schema = "MANAGED")]
-	public class InheritanceParent
+	public partial class InheritanceParent
 	{
 		[Column("InheritanceParentId", IsPrimaryKey = true)] public decimal  InheritanceParentId { get; set; } // NUMBER
 		[Column("TypeDiscriminator"                       )] public decimal? TypeDiscriminator   { get; set; } // NUMBER
@@ -425,7 +425,7 @@ namespace Cli.T4.Oracle
 	}
 
 	[Table("Issue2564Table", Schema = "MANAGED")]
-	public class Issue2564Table
+	public partial class Issue2564Table
 	{
 		[Column("Id"                    , IsPrimaryKey = true)] public long      Id                     { get; set; } // NUMBER (19,0)
 		[Column("TimestampGenerated"                         )] public DateTime  TimestampGenerated     { get; set; } // TIMESTAMP(6)
@@ -437,9 +437,9 @@ namespace Cli.T4.Oracle
 	}
 
 	[Table("LinqDataTypes", Schema = "MANAGED")]
-	public class LinqDataType
+	public partial class LinqDataType
 	{
-		[Column("ID"            )] public decimal?  Id             { get; set; } // NUMBER
+		[Column("ID"            )] public decimal?  ID             { get; set; } // NUMBER
 		[Column("MoneyValue"    )] public decimal?  MoneyValue     { get; set; } // NUMBER (10,4)
 		[Column("DateTimeValue" )] public DateTime? DateTimeValue  { get; set; } // TIMESTAMP(6)
 		[Column("DateTimeValue2")] public DateTime? DateTimeValue2 { get; set; } // TIMESTAMP(6)
@@ -453,9 +453,9 @@ namespace Cli.T4.Oracle
 	}
 
 	[Table("LINQDATATYPESBC", Schema = "MANAGED")]
-	public class Linqdatatypesbc
+	public partial class Linqdatatypesbc
 	{
-		[Column("ID"            )] public decimal?  Id             { get; set; } // NUMBER
+		[Column("ID"            )] public decimal?  ID             { get; set; } // NUMBER
 		[Column("MONEYVALUE"    )] public decimal?  Moneyvalue     { get; set; } // NUMBER (10,4)
 		[Column("DATETIMEVALUE" )] public DateTime? Datetimevalue  { get; set; } // TIMESTAMP(6)
 		[Column("DATETIMEVALUE2")] public DateTime? Datetimevalue2 { get; set; } // TIMESTAMP(6)
@@ -468,21 +468,21 @@ namespace Cli.T4.Oracle
 	}
 
 	[Table("LongRawTable", Schema = "MANAGED")]
-	public class LongRawTable
+	public partial class LongRawTable
 	{
-		[Column("ID"             , IsPrimaryKey = true)] public decimal Id              { get; set; } // NUMBER
+		[Column("ID"             , IsPrimaryKey = true)] public decimal ID              { get; set; } // NUMBER
 		[Column("longRawDataType"                     )] public byte[]? LongRawDataType { get; set; } // LONG RAW
 	}
 
 	[Table("Parent", Schema = "MANAGED")]
-	public class Parent
+	public partial class Parent
 	{
 		[Column("ParentID")] public decimal? ParentID { get; set; } // NUMBER
 		[Column("Value1"  )] public decimal? Value1   { get; set; } // NUMBER
 	}
 
 	[Table("Patient", Schema = "MANAGED")]
-	public class Patient
+	public partial class Patient
 	{
 		[Column("PersonID" , IsPrimaryKey = true )] public decimal PersonID  { get; set; } // NUMBER
 		[Column("Diagnosis", CanBeNull    = false)] public string  Diagnosis { get; set; } = null!; // NVARCHAR2(256)
@@ -497,7 +497,7 @@ namespace Cli.T4.Oracle
 	}
 
 	[Table("Person", Schema = "MANAGED")]
-	public class Person
+	public partial class Person
 	{
 		[Column("PersonID"  , IsPrimaryKey = true )] public decimal PersonID   { get; set; } // NUMBER
 		[Column("FirstName" , CanBeNull    = false)] public string  FirstName  { get; set; } = null!; // VARCHAR2(50)
@@ -524,7 +524,7 @@ namespace Cli.T4.Oracle
 	/// This is table
 	/// </summary>
 	[Table("SchemaTestTable", Schema = "MANAGED")]
-	public class SchemaTestTable
+	public partial class SchemaTestTable
 	{
 		/// <summary>
 		/// This is column
@@ -533,26 +533,26 @@ namespace Cli.T4.Oracle
 	}
 
 	[Table("SEQUENCETEST", Schema = "MANAGED")]
-	public class Sequencetest
+	public partial class Sequencetest
 	{
-		[Column("ID"   , IsPrimaryKey = true )] public decimal Id    { get; set; } // NUMBER
+		[Column("ID"   , IsPrimaryKey = true )] public decimal ID    { get; set; } // NUMBER
 		[Column("VALUE", CanBeNull    = false)] public string  Value { get; set; } = null!; // VARCHAR2(50)
 	}
 
 	[Table("STG_TRADE_INFORMATION", Schema = "MANAGED")]
-	public class StgTradeInformation
+	public partial class StgTradeInformation
 	{
-		[Column("STG_TRADE_ID"         )] public decimal   StgTradeId          { get; set; } // NUMBER
+		[Column("STG_TRADE_ID"         )] public decimal   StgTradeID          { get; set; } // NUMBER
 		[Column("STG_TRADE_VERSION"    )] public decimal   StgTradeVersion     { get; set; } // NUMBER
-		[Column("INFORMATION_TYPE_ID"  )] public decimal   InformationTypeId   { get; set; } // NUMBER
+		[Column("INFORMATION_TYPE_ID"  )] public decimal   InformationTypeID   { get; set; } // NUMBER
 		[Column("INFORMATION_TYPE_NAME")] public string?   InformationTypeName { get; set; } // VARCHAR2(50)
 		[Column("VALUE"                )] public string?   Value               { get; set; } // VARCHAR2(4000)
-		[Column("VALUE_AS_INTEGER"     )] public decimal?  ValueAsInteger      { get; set; } // NUMBER
-		[Column("VALUE_AS_DATE"        )] public DateTime? ValueAsDate         { get; set; } // DATE
+		[Column("VALUE_AS_INTEGER"     )] public decimal?  ValueASInteger      { get; set; } // NUMBER
+		[Column("VALUE_AS_DATE"        )] public DateTime? ValueASDate         { get; set; } // DATE
 	}
 
 	[Table("StringTest", Schema = "MANAGED")]
-	public class StringTest
+	public partial class StringTest
 	{
 		[Column("StringValue1"                   )] public string? StringValue1 { get; set; } // VARCHAR2(50)
 		[Column("StringValue2"                   )] public string? StringValue2 { get; set; } // CHAR(50)
@@ -560,7 +560,7 @@ namespace Cli.T4.Oracle
 	}
 
 	[Table("t_entity", Schema = "MANAGED")]
-	public class TEntity
+	public partial class TEntity
 	{
 		[Column("entity_id", IsPrimaryKey = true)] public decimal   EntityId { get; set; } // NUMBER
 		[Column("time"                          )] public DateTime? Time     { get; set; } // DATE
@@ -568,13 +568,13 @@ namespace Cli.T4.Oracle
 	}
 
 	[Table("TestIdentity", Schema = "MANAGED")]
-	public class TestIdentity
+	public partial class TestIdentity
 	{
-		[Column("ID", IsPrimaryKey = true)] public decimal Id { get; set; } // NUMBER
+		[Column("ID", IsPrimaryKey = true)] public decimal ID { get; set; } // NUMBER
 	}
 
 	[Table("TestMerge1", Schema = "MANAGED")]
-	public class TestMerge1
+	public partial class TestMerge1
 	{
 		[Column("Id"             , IsPrimaryKey = true)] public decimal         Id              { get; set; } // NUMBER
 		[Column("Field1"                              )] public decimal?        Field1          { get; set; } // NUMBER
@@ -600,7 +600,7 @@ namespace Cli.T4.Oracle
 	}
 
 	[Table("TestMerge2", Schema = "MANAGED")]
-	public class TestMerge2
+	public partial class TestMerge2
 	{
 		[Column("Id"             , IsPrimaryKey = true)] public decimal         Id              { get; set; } // NUMBER
 		[Column("Field1"                              )] public decimal?        Field1          { get; set; } // NUMBER
@@ -626,20 +626,20 @@ namespace Cli.T4.Oracle
 	}
 
 	[Table("TestSequenceSchemaTable", Schema = "MANAGED")]
-	public class TestSequenceSchemaTable
+	public partial class TestSequenceSchemaTable
 	{
 		[Column("Id", IsPrimaryKey = true)] public long Id { get; set; } // NUMBER (19,0)
 	}
 
 	[Table("TestSource", Schema = "MANAGED")]
-	public class TestSource
+	public partial class TestSource
 	{
-		[Column("ID")] public decimal Id { get; set; } // NUMBER
+		[Column("ID")] public decimal ID { get; set; } // NUMBER
 		[Column("N" )] public decimal N  { get; set; } // NUMBER
 	}
 
 	[Table("t_test_user", Schema = "MANAGED")]
-	public class TTestUser
+	public partial class TTestUser
 	{
 		[Column("user_id", IsPrimaryKey = true )] public decimal UserId { get; set; } // NUMBER
 		[Column("name"   , CanBeNull    = false)] public string  Name   { get; set; } = null!; // VARCHAR2(255)
@@ -654,7 +654,7 @@ namespace Cli.T4.Oracle
 	}
 
 	[Table("t_test_user_contract", Schema = "MANAGED")]
-	public class TTestUserContract
+	public partial class TTestUserContract
 	{
 		[Column("user_contract_id", IsPrimaryKey = true )] public decimal UserContractId { get; set; } // NUMBER
 		[Column("user_id"                               )] public decimal UserId         { get; set; } // NUMBER
@@ -674,7 +674,7 @@ namespace Cli.T4.Oracle
 	/// This is matview
 	/// </summary>
 	[Table("SchemaTestMatView", Schema = "MANAGED", IsView = true)]
-	public class SchemaTestMatView
+	public partial class SchemaTestMatView
 	{
 		/// <summary>
 		/// This is matview column
@@ -683,7 +683,7 @@ namespace Cli.T4.Oracle
 	}
 
 	[Table("SchemaTestView", Schema = "MANAGED", IsView = true)]
-	public class SchemaTestView
+	public partial class SchemaTestView
 	{
 		/// <summary>
 		/// This is view column

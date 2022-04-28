@@ -14,6 +14,11 @@ namespace LinqToDB.Naming
 		/// </summary>
 		public static readonly INameConversionProvider Instance = new HumanizerNameConverter();
 
+		static HumanizerNameConverter()
+		{
+			Humanizer.Inflections.Vocabularies.Default.AddUncountable("all");
+		}
+
 		private HumanizerNameConverter()
 		{
 		}

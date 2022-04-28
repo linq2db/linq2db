@@ -56,7 +56,7 @@
 				using var handle = new SafeWaitHandle(process.Handle, false);
 				waitHandle.SetSafeWaitHandle(handle);
 
-				var timeouted = !waitHandle.WaitOne(TimeSpan.FromSeconds(20));
+				var timeouted = !waitHandle.WaitOne(TimeSpan.FromSeconds(30));
 
 				if (!process.HasExited)
 					process.Kill();

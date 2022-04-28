@@ -58,10 +58,11 @@ namespace LinqToDB.Scaffold
 
 			// entity class properties
 			var classModel       = new ClassModel(_options.CodeGeneration.ClassPerFile ? className : dataContext.Class.FileName!, className);
-			classModel.Summary = table.Description;
-			classModel.BaseType = baseType;
-			classModel.IsPublic = true;
+			classModel.Summary   = table.Description;
+			classModel.BaseType  = baseType;
+			classModel.IsPublic  = true;
 			classModel.Namespace = _options.CodeGeneration.Namespace;
+			classModel.IsPartial = _options.DataModel.EntityClassIsPartial;
 
 			// entity data model
 			var entity = new EntityModel(

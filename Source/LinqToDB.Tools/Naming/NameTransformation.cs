@@ -6,6 +6,10 @@
 	public enum NameTransformation
 	{
 		/// <summary>
+		/// No transformations applied.
+		/// </summary>
+		None,
+		/// <summary>
 		/// Split name into words using underscore as word separator.
 		/// E.g.: SOME_NAME -> [SOME, NAME].
 		/// </summary>

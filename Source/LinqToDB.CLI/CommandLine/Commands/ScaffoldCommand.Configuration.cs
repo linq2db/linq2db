@@ -91,8 +91,10 @@ namespace LinqToDB.CommandLine
 			if (options.Remove(DataModel.DbTypeInProcedures            , out value)) settings.GenerateProcedureParameterDbType   = (bool)value!;
 			if (options.Remove(DataModel.SchemasAsTypes                , out value)) settings.GenerateSchemaAsType               = (bool)value!;
 			if (options.Remove(DataModel.FindParametersInOrdinalOrder  , out value)) settings.OrderFindParametersByColumnOrdinal = (bool)value!;
+			if (options.Remove(DataModel.EntityClassIsPartial          , out value)) settings.EntityClassIsPartial               = (bool)value!;
 
 			// strings
+			if (options.Remove(DataModel.BaseEntity          , out value)) settings.BaseEntityClass  = (string)value!;
 			if (options.Remove(DataModel.BaseEntity          , out value)) settings.BaseEntityClass  = (string)value!;
 			if (options.Remove(DataModel.DataContextName     , out value)) settings.ContextClassName = (string)value!;
 			if (options.Remove(DataModel.DataContextBaseClass, out value)) settings.BaseContextClass = (string)value!;

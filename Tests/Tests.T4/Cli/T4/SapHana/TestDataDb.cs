@@ -22,26 +22,26 @@ using System.Reflection;
 
 namespace Cli.T4.SapHana
 {
-	public partial class TestDataDb : DataConnection
+	public partial class TestDataDB : DataConnection
 	{
-		public TestDataDb()
+		public TestDataDB()
 		{
 			InitDataContext();
 		}
 
-		public TestDataDb(string configuration)
+		public TestDataDB(string configuration)
 			: base(configuration)
 		{
 			InitDataContext();
 		}
 
-		public TestDataDb(LinqToDBConnectionOptions options)
+		public TestDataDB(LinqToDBConnectionOptions options)
 			: base(options)
 		{
 			InitDataContext();
 		}
 
-		public TestDataDb(LinqToDBConnectionOptions<TestDataDb> options)
+		public TestDataDB(LinqToDBConnectionOptions<TestDataDB> options)
 			: base(options)
 		{
 			InitDataContext();
@@ -74,7 +74,7 @@ namespace Cli.T4.SapHana
 
 		#region Table Functions
 		#region GetParentById
-		private static readonly MethodInfo _getParentById = MemberHelper.MethodOf<TestDataDb>(ctx => ctx.GetParentById(default));
+		private static readonly MethodInfo _getParentById = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.GetParentById(default));
 
 		[Sql.TableFunction("GetParentByID", Schema = "TESTDB")]
 		public ITable<GetParentByIdResult> GetParentById(int? id)
@@ -92,9 +92,9 @@ namespace Cli.T4.SapHana
 	}
 
 	[Table("AllTypes", Schema = "TESTDB")]
-	public class AllType
+	public partial class AllType
 	{
-		[Column("ID"                  , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int       Id                   { get; set; } // INTEGER
+		[Column("ID"                  , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int       ID                   { get; set; } // INTEGER
 		[Column("bigintDataType"                                                                                        )] public long?     BigintDataType       { get; set; } // BIGINT
 		[Column("smallintDataType"                                                                                      )] public short?    SmallintDataType     { get; set; } // SMALLINT
 		[Column("decimalDataType"                                                                                       )] public decimal?  DecimalDataType      { get; set; } // DECIMAL(34, 0)
@@ -128,7 +128,7 @@ namespace Cli.T4.SapHana
 		#region Table Extensions
 		public static AllType? Find(this ITable<AllType> table, int id)
 		{
-			return table.FirstOrDefault(e => e.Id == id);
+			return table.FirstOrDefault(e => e.ID == id);
 		}
 
 		public static PrdGlobalEccCVMARA? Find(this ITable<PrdGlobalEccCVMARA> table, int id)
@@ -148,7 +148,7 @@ namespace Cli.T4.SapHana
 
 		public static TestIdentity? Find(this ITable<TestIdentity> table, int id)
 		{
-			return table.FirstOrDefault(e => e.Id == id);
+			return table.FirstOrDefault(e => e.ID == id);
 		}
 
 		public static Person? Find(this ITable<Person> table, int personId)
@@ -188,20 +188,20 @@ namespace Cli.T4.SapHana
 
 		public static AllTypesGeo? Find(this ITable<AllTypesGeo> table, int id)
 		{
-			return table.FirstOrDefault(e => e.Id == id);
+			return table.FirstOrDefault(e => e.ID == id);
 		}
 		#endregion
 
 		#region Stored Procedures
 		#region AddIssue792Record
-		public static int AddIssue792Record(this TestDataDb dataConnection)
+		public static int AddIssue792Record(this TestDataDB dataConnection)
 		{
 			return dataConnection.ExecuteProc("\"TESTDB\".\"AddIssue792Record\"");
 		}
 		#endregion
 
 		#region Dropconstraintfromtable
-		public static int Dropconstraintfromtable(this TestDataDb dataConnection, string? tablename, string? constraintname, string? schemaname)
+		public static int Dropconstraintfromtable(this TestDataDB dataConnection, string? tablename, string? constraintname, string? schemaname)
 		{
 			var parameters = new []
 			{
@@ -223,7 +223,7 @@ namespace Cli.T4.SapHana
 		#endregion
 
 		#region Dropexistingfunction
-		public static int Dropexistingfunction(this TestDataDb dataConnection, string? functionname, string? schemaname)
+		public static int Dropexistingfunction(this TestDataDB dataConnection, string? functionname, string? schemaname)
 		{
 			var parameters = new []
 			{
@@ -241,7 +241,7 @@ namespace Cli.T4.SapHana
 		#endregion
 
 		#region Dropexistingprocedure
-		public static int Dropexistingprocedure(this TestDataDb dataConnection, string? procedurename, string? schemaname)
+		public static int Dropexistingprocedure(this TestDataDB dataConnection, string? procedurename, string? schemaname)
 		{
 			var parameters = new []
 			{
@@ -259,7 +259,7 @@ namespace Cli.T4.SapHana
 		#endregion
 
 		#region Dropexistingtable
-		public static int Dropexistingtable(this TestDataDb dataConnection, string? tablename, string? schemaname)
+		public static int Dropexistingtable(this TestDataDB dataConnection, string? tablename, string? schemaname)
 		{
 			var parameters = new []
 			{
@@ -277,7 +277,7 @@ namespace Cli.T4.SapHana
 		#endregion
 
 		#region Dropexistingview
-		public static int Dropexistingview(this TestDataDb dataConnection, string? viewname, string? schemaname)
+		public static int Dropexistingview(this TestDataDB dataConnection, string? viewname, string? schemaname)
 		{
 			var parameters = new []
 			{
@@ -295,7 +295,7 @@ namespace Cli.T4.SapHana
 		#endregion
 
 		#region DuplicateColumnNames
-		public static IEnumerable<DuplicateColumnNamesResult> DuplicateColumnNames(this TestDataDb dataConnection)
+		public static IEnumerable<DuplicateColumnNamesResult> DuplicateColumnNames(this TestDataDB dataConnection)
 		{
 			return dataConnection.QueryProc(dataReader => new DuplicateColumnNamesResult()
 			{
@@ -312,7 +312,7 @@ namespace Cli.T4.SapHana
 		#endregion
 
 		#region OutRefEnumTest
-		public static int OutRefEnumTest(this TestDataDb dataConnection, string? str, out string? outputstr, ref string? inputoutputstr)
+		public static int OutRefEnumTest(this TestDataDB dataConnection, string? str, out string? outputstr, ref string? inputoutputstr)
 		{
 			var parameters = new []
 			{
@@ -338,7 +338,7 @@ namespace Cli.T4.SapHana
 		#endregion
 
 		#region OutRefTest
-		public static int OutRefTest(this TestDataDb dataConnection, int? id, out int? outputid, ref int? inputoutputid, string? str, out string? outputstr, ref string? inputoutputstr)
+		public static int OutRefTest(this TestDataDB dataConnection, int? id, out int? outputid, ref int? inputoutputid, string? str, out string? outputstr, ref string? inputoutputstr)
 		{
 			var parameters = new []
 			{
@@ -380,7 +380,7 @@ namespace Cli.T4.SapHana
 		#endregion
 
 		#region PatientSelectAll
-		public static IEnumerable<PatientSelectAllResult> PatientSelectAll(this TestDataDb dataConnection)
+		public static IEnumerable<PatientSelectAllResult> PatientSelectAll(this TestDataDB dataConnection)
 		{
 			return dataConnection.QueryProc<PatientSelectAllResult>("\"TESTDB\".\"Patient_SelectAll\"");
 		}
@@ -397,7 +397,7 @@ namespace Cli.T4.SapHana
 		#endregion
 
 		#region PatientSelectByName
-		public static IEnumerable<PatientSelectByNameResult> PatientSelectByName(this TestDataDb dataConnection, string? firstname, string? lastname)
+		public static IEnumerable<PatientSelectByNameResult> PatientSelectByName(this TestDataDB dataConnection, string? firstname, string? lastname)
 		{
 			var parameters = new []
 			{
@@ -425,7 +425,7 @@ namespace Cli.T4.SapHana
 		#endregion
 
 		#region PersonDelete
-		public static int PersonDelete(this TestDataDb dataConnection, int? personid)
+		public static int PersonDelete(this TestDataDB dataConnection, int? personid)
 		{
 			var parameters = new []
 			{
@@ -439,7 +439,7 @@ namespace Cli.T4.SapHana
 		#endregion
 
 		#region PersonInsert
-		public static int PersonInsert(this TestDataDb dataConnection, string? firstname, string? lastname, string? middlename, char? gender)
+		public static int PersonInsert(this TestDataDB dataConnection, string? firstname, string? lastname, string? middlename, char? gender)
 		{
 			var parameters = new []
 			{
@@ -465,7 +465,7 @@ namespace Cli.T4.SapHana
 		#endregion
 
 		#region PersonInsertOutputParameter
-		public static int PersonInsertOutputParameter(this TestDataDb dataConnection, string? firstname, string? lastname, string? middlename, char? gender, out int? personid)
+		public static int PersonInsertOutputParameter(this TestDataDB dataConnection, string? firstname, string? lastname, string? middlename, char? gender, out int? personid)
 		{
 			var parameters = new []
 			{
@@ -497,7 +497,7 @@ namespace Cli.T4.SapHana
 		#endregion
 
 		#region PersonSelectAll
-		public static IEnumerable<PersonSelectAllResult> PersonSelectAll(this TestDataDb dataConnection)
+		public static IEnumerable<PersonSelectAllResult> PersonSelectAll(this TestDataDB dataConnection)
 		{
 			return dataConnection.QueryProc<PersonSelectAllResult>("\"TESTDB\".\"Person_SelectAll\"");
 		}
@@ -513,7 +513,7 @@ namespace Cli.T4.SapHana
 		#endregion
 
 		#region PersonSelectByKey
-		public static IEnumerable<PersonSelectByKeyResult> PersonSelectByKey(this TestDataDb dataConnection, int? id)
+		public static IEnumerable<PersonSelectByKeyResult> PersonSelectByKey(this TestDataDB dataConnection, int? id)
 		{
 			var parameters = new []
 			{
@@ -536,7 +536,7 @@ namespace Cli.T4.SapHana
 		#endregion
 
 		#region PersonSelectByName
-		public static IEnumerable<PersonSelectByNameResult> PersonSelectByName(this TestDataDb dataConnection, string? firstname, string? lastname)
+		public static IEnumerable<PersonSelectByNameResult> PersonSelectByName(this TestDataDB dataConnection, string? firstname, string? lastname)
 		{
 			var parameters = new []
 			{
@@ -563,7 +563,7 @@ namespace Cli.T4.SapHana
 		#endregion
 
 		#region PersonSelectListByName
-		public static IEnumerable<PersonSelectListByNameResult> PersonSelectListByName(this TestDataDb dataConnection, string? firstname, string? lastname)
+		public static IEnumerable<PersonSelectListByNameResult> PersonSelectListByName(this TestDataDB dataConnection, string? firstname, string? lastname)
 		{
 			var parameters = new []
 			{
@@ -590,7 +590,7 @@ namespace Cli.T4.SapHana
 		#endregion
 
 		#region PersonUpdate
-		public static int PersonUpdate(this TestDataDb dataConnection, int? personid, string? firstname, string? lastname, string? middlename, char? gender)
+		public static int PersonUpdate(this TestDataDB dataConnection, int? personid, string? firstname, string? lastname, string? middlename, char? gender)
 		{
 			var parameters = new []
 			{
@@ -620,7 +620,7 @@ namespace Cli.T4.SapHana
 		#endregion
 
 		#region SelectImplicitColumn
-		public static IEnumerable<SelectImplicitColumnResult> SelectImplicitColumn(this TestDataDb dataConnection)
+		public static IEnumerable<SelectImplicitColumnResult> SelectImplicitColumn(this TestDataDB dataConnection)
 		{
 			return dataConnection.QueryProc<SelectImplicitColumnResult>("\"TESTDB\".\"SelectImplicitColumn\"");
 		}
@@ -632,7 +632,7 @@ namespace Cli.T4.SapHana
 		#endregion
 
 		#region Prd.Global.Ecc/CvMarAproc
-		public static IEnumerable<PrdGlobalEccCvMarAprocResult> PrdGlobalEccCvMarAproc(this TestDataDb dataConnection)
+		public static IEnumerable<PrdGlobalEccCvMarAprocResult> PrdGlobalEccCvMarAproc(this TestDataDB dataConnection)
 		{
 			return dataConnection.QueryProc(dataReader => new PrdGlobalEccCvMarAprocResult()
 			{
@@ -651,13 +651,13 @@ namespace Cli.T4.SapHana
 	}
 
 	[Table("prd.global.ecc/CV_MARA", Schema = "TESTDB")]
-	public class PrdGlobalEccCVMARA
+	public partial class PrdGlobalEccCVMARA
 	{
 		[Column("Id", IsPrimaryKey = true)] public int Id { get; set; } // INTEGER
 	}
 
 	[Table("TestMerge2", Schema = "TESTDB")]
-	public class TestMerge2
+	public partial class TestMerge2
 	{
 		[Column("Id"             , IsPrimaryKey = true)] public int       Id              { get; set; } // INTEGER
 		[Column("Field1"                              )] public int?      Field1          { get; set; } // INTEGER
@@ -684,7 +684,7 @@ namespace Cli.T4.SapHana
 	}
 
 	[Table("TestMerge1", Schema = "TESTDB")]
-	public class TestMerge1
+	public partial class TestMerge1
 	{
 		[Column("Id"             , IsPrimaryKey = true)] public int       Id              { get; set; } // INTEGER
 		[Column("Field1"                              )] public int?      Field1          { get; set; } // INTEGER
@@ -711,13 +711,13 @@ namespace Cli.T4.SapHana
 	}
 
 	[Table("TestIdentity", Schema = "TESTDB")]
-	public class TestIdentity
+	public partial class TestIdentity
 	{
-		[Column("ID", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int Id { get; set; } // INTEGER
+		[Column("ID", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int ID { get; set; } // INTEGER
 	}
 
 	[Table("Person", Schema = "TESTDB")]
-	public class Person
+	public partial class Person
 	{
 		[Column("PersonID"  , IsPrimaryKey = true , IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int     PersonID   { get; set; } // INTEGER
 		[Column("FirstName" , CanBeNull    = false                                                             )] public string  FirstName  { get; set; } = null!; // NVARCHAR(50)
@@ -741,7 +741,7 @@ namespace Cli.T4.SapHana
 	}
 
 	[Table("Patient", Schema = "TESTDB")]
-	public class Patient
+	public partial class Patient
 	{
 		[Column("PersonID" , IsPrimaryKey = true )] public int    PersonID  { get; set; } // INTEGER
 		[Column("Diagnosis", CanBeNull    = false)] public string Diagnosis { get; set; } = null!; // NVARCHAR(256)
@@ -756,16 +756,16 @@ namespace Cli.T4.SapHana
 	}
 
 	[Table("Parent", Schema = "TESTDB")]
-	public class Parent
+	public partial class Parent
 	{
 		[Column("ParentID")] public int? ParentID { get; set; } // INTEGER
 		[Column("Value1"  )] public int? Value1   { get; set; } // INTEGER
 	}
 
 	[Table("LinqDataTypes", Schema = "TESTDB")]
-	public class LinqDataType
+	public partial class LinqDataType
 	{
-		[Column("ID"            )] public int?      Id             { get; set; } // INTEGER
+		[Column("ID"            )] public int?      ID             { get; set; } // INTEGER
 		[Column("MoneyValue"    )] public decimal?  MoneyValue     { get; set; } // DECIMAL(10, 4)
 		[Column("DateTimeValue" )] public DateTime? DateTimeValue  { get; set; } // TIMESTAMP
 		[Column("DateTimeValue2")] public DateTime? DateTimeValue2 { get; set; } // TIMESTAMP
@@ -779,7 +779,7 @@ namespace Cli.T4.SapHana
 	}
 
 	[Table("InheritanceParent", Schema = "TESTDB")]
-	public class InheritanceParent
+	public partial class InheritanceParent
 	{
 		[Column("InheritanceParentId", IsPrimaryKey = true)] public int     InheritanceParentId { get; set; } // INTEGER
 		[Column("TypeDiscriminator"                       )] public int?    TypeDiscriminator   { get; set; } // INTEGER
@@ -787,7 +787,7 @@ namespace Cli.T4.SapHana
 	}
 
 	[Table("InheritanceChild", Schema = "TESTDB")]
-	public class InheritanceChild
+	public partial class InheritanceChild
 	{
 		[Column("InheritanceChildId" , IsPrimaryKey = true)] public int     InheritanceChildId  { get; set; } // INTEGER
 		[Column("InheritanceParentId"                     )] public int     InheritanceParentId { get; set; } // INTEGER
@@ -796,7 +796,7 @@ namespace Cli.T4.SapHana
 	}
 
 	[Table("IndexTable2", Schema = "TESTDB")]
-	public class IndexTable2
+	public partial class IndexTable2
 	{
 		[Column("PKField1", IsPrimaryKey = true, PrimaryKeyOrder = 0)] public int PKField1 { get; set; } // INTEGER
 		[Column("PKField2", IsPrimaryKey = true, PrimaryKeyOrder = 1)] public int PKField2 { get; set; } // INTEGER
@@ -811,7 +811,7 @@ namespace Cli.T4.SapHana
 	}
 
 	[Table("IndexTable", Schema = "TESTDB")]
-	public class IndexTable
+	public partial class IndexTable
 	{
 		[Column("PKField1"   , IsPrimaryKey = true, PrimaryKeyOrder = 0)] public int PKField1    { get; set; } // INTEGER
 		[Column("PKField2"   , IsPrimaryKey = true, PrimaryKeyOrder = 1)] public int PKField2    { get; set; } // INTEGER
@@ -828,7 +828,7 @@ namespace Cli.T4.SapHana
 	}
 
 	[Table("GrandChild", Schema = "TESTDB")]
-	public class GrandChild
+	public partial class GrandChild
 	{
 		[Column("ParentID"    )] public int? ParentID     { get; set; } // INTEGER
 		[Column("ChildID"     )] public int? ChildID      { get; set; } // INTEGER
@@ -836,7 +836,7 @@ namespace Cli.T4.SapHana
 	}
 
 	[Table("Doctor", Schema = "TESTDB")]
-	public class Doctor
+	public partial class Doctor
 	{
 		[Column("PersonID", IsPrimaryKey = true )] public int    PersonID { get; set; } // INTEGER
 		[Column("Taxonomy", CanBeNull    = false)] public string Taxonomy { get; set; } = null!; // NVARCHAR(50)
@@ -851,7 +851,7 @@ namespace Cli.T4.SapHana
 	}
 
 	[Table("CollatedTable", Schema = "TESTDB")]
-	public class CollatedTable
+	public partial class CollatedTable
 	{
 		[Column("Id"                                )] public int    Id              { get; set; } // INTEGER
 		[Column("CaseSensitive"  , CanBeNull = false)] public string CaseSensitive   { get; set; } = null!; // NVARCHAR(20)
@@ -859,16 +859,16 @@ namespace Cli.T4.SapHana
 	}
 
 	[Table("Child", Schema = "TESTDB")]
-	public class Child
+	public partial class Child
 	{
 		[Column("ParentID")] public int? ParentID { get; set; } // INTEGER
 		[Column("ChildID" )] public int? ChildID  { get; set; } // INTEGER
 	}
 
 	[Table("BulkInsertUpperCaseColumns", Schema = "TESTDB")]
-	public class BulkInsertUpperCaseColumn
+	public partial class BulkInsertUpperCaseColumn
 	{
-		[Column("ID"           )] public int?      Id            { get; set; } // INTEGER
+		[Column("ID"           )] public int?      ID            { get; set; } // INTEGER
 		[Column("MONEYVALUE"   )] public decimal?  Moneyvalue    { get; set; } // DECIMAL(10, 4)
 		[Column("DATETIMEVALUE")] public DateTime? Datetimevalue { get; set; } // TIMESTAMP
 		[Column("BOOLVALUE"    )] public byte?     Boolvalue     { get; set; } // TINYINT
@@ -880,9 +880,9 @@ namespace Cli.T4.SapHana
 	}
 
 	[Table("BulkInsertLowerCaseColumns", Schema = "TESTDB")]
-	public class BulkInsertLowerCaseColumn
+	public partial class BulkInsertLowerCaseColumn
 	{
-		[Column("ID"           )] public int?      Id            { get; set; } // INTEGER
+		[Column("ID"           )] public int?      ID            { get; set; } // INTEGER
 		[Column("MoneyValue"   )] public decimal?  MoneyValue    { get; set; } // DECIMAL(10, 4)
 		[Column("DateTimeValue")] public DateTime? DateTimeValue { get; set; } // TIMESTAMP
 		[Column("BoolValue"    )] public byte?     BoolValue     { get; set; } // TINYINT
@@ -894,15 +894,15 @@ namespace Cli.T4.SapHana
 	}
 
 	[Table("AllTypesGeo", Schema = "TESTDB")]
-	public class AllTypesGeo
+	public partial class AllTypesGeo
 	{
-		[Column("ID"                , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int     Id                 { get; set; } // INTEGER
+		[Column("ID"                , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int     ID                 { get; set; } // INTEGER
 		[Column("dataType"                                                                                            )] public string? DataType           { get; set; } // VARCHAR(20)
 		[Column("stgeometryDataType"                                                                                  )] public byte[]? StgeometryDataType { get; set; } // ST_GEOMETRY
 	}
 
 	[Table("ParentChildView", Schema = "TESTDB", IsView = true)]
-	public class ParentChildView
+	public partial class ParentChildView
 	{
 		[Column("ParentID")] public int? ParentID { get; set; } // INTEGER
 		[Column("Value1"  )] public int? Value1   { get; set; } // INTEGER
@@ -910,7 +910,7 @@ namespace Cli.T4.SapHana
 	}
 
 	[Table("ParentView", Schema = "TESTDB", IsView = true)]
-	public class ParentView
+	public partial class ParentView
 	{
 		[Column("ParentID")] public int? ParentID { get; set; } // INTEGER
 		[Column("Value1"  )] public int? Value1   { get; set; } // INTEGER
