@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using LinqToDB.Infrastructure;
 
 namespace LinqToDB.SqlQuery
 {
@@ -9,20 +10,22 @@ namespace LinqToDB.SqlQuery
 
 	class SelectQueryOptimizer
 	{
-		public SelectQueryOptimizer(SqlProviderFlags flags, IQueryElement rootElement, SelectQuery selectQuery, int level, params IQueryElement[] dependencies)
+		public SelectQueryOptimizer(SqlProviderFlags flags, LinqOptionsExtension linqOptions, IQueryElement rootElement, SelectQuery selectQuery, int level, params IQueryElement[] dependencies)
 		{
 			_flags        = flags;
+			_linqOptions  = linqOptions;
 			_selectQuery  = selectQuery;
 			_rootElement  = rootElement;
 			_level        = level;
 			_dependencies = dependencies;
 		}
 
-		readonly SqlProviderFlags _flags;
-		readonly SelectQuery      _selectQuery;
-		readonly IQueryElement    _rootElement;
-		readonly int              _level;
-		readonly IQueryElement[]  _dependencies;
+		readonly SqlProviderFlags     _flags;
+		readonly LinqOptionsExtension _linqOptions;
+		readonly SelectQuery          _selectQuery;
+		readonly IQueryElement        _rootElement;
+		readonly int                  _level;
+		readonly IQueryElement[]      _dependencies;
 
 		public void FinalizeAndValidate(bool isApplySupported)
 		{
@@ -446,7 +449,9 @@ namespace LinqToDB.SqlQuery
 				if (e is SelectQuery sql && sql != context.optimizer._selectQuery)
 				{
 					sql.ParentSelect = context.optimizer._selectQuery;
-					new SelectQueryOptimizer(context.optimizer._flags, context.optimizer._rootElement, sql, context.optimizer._level + 1, context.optimizer._dependencies)
+					new SelectQueryOptimizer(context.optimizer._flags, context.optimizer._linqOptions,
+							context.optimizer._rootElement, sql, context.optimizer._level + 1,
+							context.optimizer._dependencies)
 						.FinalizeAndValidateInternal(context.isApplySupported);
 
 					if (sql.IsParameterDependent)
@@ -1348,7 +1353,7 @@ namespace LinqToDB.SqlQuery
 
 								if (contains)
 								{
-									if (isApplySupported && Configuration.Linq.PreferApply)
+									if (isApplySupported && _linqOptions.PreferApply)
 										return;
 
 									searchCondition.Insert(0, condition);
@@ -1636,7 +1641,7 @@ namespace LinqToDB.SqlQuery
 					if (_flags.IsDistinctOrderBySupported)
 						continue;
 
-					if (Configuration.Linq.KeepDistinctOrdered)
+					if (_linqOptions.KeepDistinctOrdered)
 					{
 						// trying to convert to GROUP BY quivalent
 						QueryHelper.TryConvertOrderedDistinctToGroupBy(query, _flags);

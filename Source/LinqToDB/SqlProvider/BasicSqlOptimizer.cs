@@ -45,10 +45,10 @@ namespace LinqToDB.SqlProvider
 //statement.EnsureFindTables();
 			//TODO: We can use Walk here but OptimizeUnions fails with subqueries. Needs revising.
 			statement.WalkQueries(
-				(SqlProviderFlags, statement),
+				(SqlProviderFlags, linqOptions, statement),
 				static (context, selectQuery) =>
 				{
-					new SelectQueryOptimizer(context.SqlProviderFlags, context.statement, selectQuery, 0).FinalizeAndValidate(
+					new SelectQueryOptimizer(context.SqlProviderFlags, context.linqOptions, context.statement, selectQuery, 0).FinalizeAndValidate(
 						context.SqlProviderFlags.IsApplyJoinSupported);
 
 					return selectQuery;
@@ -69,10 +69,10 @@ namespace LinqToDB.SqlProvider
 			if (!SqlProviderFlags.IsCountSubQuerySupported || !SqlProviderFlags.IsSubQueryColumnSupported)
 			{
 				statement.WalkQueries(
-					(SqlProviderFlags, statement),
+					(SqlProviderFlags, linqOptions, statement),
 					static (context, selectQuery) =>
 					{
-						new SelectQueryOptimizer(context.SqlProviderFlags, context.statement, selectQuery, 0).FinalizeAndValidate(
+						new SelectQueryOptimizer(context.SqlProviderFlags, context.linqOptions, context.statement, selectQuery, 0).FinalizeAndValidate(
 							context.SqlProviderFlags.IsApplyJoinSupported);
 
 						return selectQuery;
@@ -92,7 +92,7 @@ namespace LinqToDB.SqlProvider
 
 			statement = CorrectUnionOrderBy(statement);
 			statement = FixSetOperationNulls(statement);
-			statement = OptimizeUpdateSubqueries(statement);
+			statement = OptimizeUpdateSubqueries(statement, linqOptions);
 
 			// provider specific query correction
 			statement = FinalizeStatement(statement, evaluationContext, linqOptions);
@@ -160,16 +160,16 @@ namespace LinqToDB.SqlProvider
 		}
 
 		protected virtual SqlStatement FixSetOperationNulls(SqlStatement statement)
-							{
-			statement.VisitParentFirst(static e =>
-								{
-				if (e.ElementType == QueryElementType.SqlQuery)
 		{
+			statement.VisitParentFirst(static e =>
+			{
+				if (e.ElementType == QueryElementType.SqlQuery)
+				{
 					var query = (SelectQuery)e;
 					if (query.HasSetOperators)
-			{
-						for (int i = 0; i < query.Select.Columns.Count; i++)
-				{
+					{
+						for (var i = 0; i < query.Select.Columns.Count; i++)
+						{
 							var column     = query.Select.Columns[i];
 							var columnExpr = column.Expression;
 
@@ -182,7 +182,7 @@ namespace LinqToDB.SqlProvider
 								CorrelateNullValueTypes(ref otherExpr, columnExpr);
 
 								otherColumn.Expression = otherExpr;
-								}
+							}
 
 							column.Expression = columnExpr;
 						}
@@ -246,7 +246,7 @@ namespace LinqToDB.SqlProvider
 		}
 
 		//TODO: move tis to standard optimizer
-		protected virtual SqlStatement OptimizeUpdateSubqueries(SqlStatement statement)
+		protected virtual SqlStatement OptimizeUpdateSubqueries(SqlStatement statement, LinqOptionsExtension linqOptions)
 		{
 			if (statement is SqlUpdateStatement updateStatement)
 			{
@@ -254,7 +254,7 @@ namespace LinqToDB.SqlProvider
 				{
 					if (setItem.Expression is SelectQuery q)
 					{
-						var optimizer = new SelectQueryOptimizer(SqlProviderFlags, q, q, 0);
+						var optimizer = new SelectQueryOptimizer(SqlProviderFlags, linqOptions, q, q, 0);
 						optimizer.FinalizeAndValidate(SqlProviderFlags.IsApplyJoinSupported);
 					}
 				}
@@ -3572,7 +3572,8 @@ namespace LinqToDB.SqlProvider
 			return newStatement;
 		}
 
-		public virtual void ConvertSkipTake(MappingSchema mappingSchema, SelectQuery selectQuery, OptimizationContext optimizationContext, out ISqlExpression? takeExpr, out ISqlExpression? skipExpr)
+		public virtual void ConvertSkipTake(MappingSchema mappingSchema, SelectQuery selectQuery,
+			OptimizationContext optimizationContext, out ISqlExpression? takeExpr, out ISqlExpression? skipExpr)
 		{
 			// make skip take as parameters or evaluate otherwise
 
@@ -3590,8 +3591,7 @@ namespace LinqToDB.SqlProvider
 						var takeValue = takeExpr.EvaluateExpression(optimizationContext.Context)!;
 						var takeParameter = new SqlParameter(new DbDataType(takeValue.GetType()), "take", takeValue)
 						{
-							IsQueryParameter = !QueryHelper.NeedParameterInlining(takeExpr) &&
-							                   Configuration.Linq.ParameterizeTakeSkip
+							IsQueryParameter = !QueryHelper.NeedParameterInlining(takeExpr)
 						};
 						takeExpr = takeParameter;
 					}
@@ -3612,8 +3612,7 @@ namespace LinqToDB.SqlProvider
 						var skipValue = skipExpr.EvaluateExpression(optimizationContext.Context)!;
 						var skipParameter = new SqlParameter(new DbDataType(skipValue.GetType()), "skip", skipValue)
 						{
-							IsQueryParameter = !QueryHelper.NeedParameterInlining(skipExpr) &&
-							                   Configuration.Linq.ParameterizeTakeSkip
+							IsQueryParameter = !QueryHelper.NeedParameterInlining(skipExpr)
 						};
 						skipExpr = skipParameter;
 					}

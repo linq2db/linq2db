@@ -206,8 +206,9 @@ namespace LinqToDB.Linq.Builder
 				query     = RemoveContextFromQuery(clonedContext, query);
 
 				//TODO: Why it is not handled by main optimizer
-				var sqlFlags = builder.DataContext.SqlProviderFlags;
-				new SelectQueryOptimizer(sqlFlags, query, query, 0, statement)
+				var sqlFlags    = builder.DataContext.SqlProviderFlags;
+				var linqOptions = builder.DataContext.GetLinqOptions();
+				new SelectQueryOptimizer(sqlFlags, linqOptions, query, query, 0, statement)
 					.FinalizeAndValidate(sqlFlags.IsApplyJoinSupported);
 				
 				if (query.From.Tables.Count == 0)
