@@ -1,5 +1,6 @@
 ﻿namespace LinqToDB.DataProvider.Oracle
 {
+	using Infrastructure;
 	using SqlProvider;
 	using SqlQuery;
 
@@ -9,7 +10,7 @@
 		{
 		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement)
+		public override SqlStatement TransformStatement(SqlStatement statement, LinqOptionsExtension linqOptions)
 		{
 			if (statement.IsUpdate() || statement.IsInsert() || statement.IsDelete())
 				statement = ReplaceTakeSkipWithRowNum(statement, false);
@@ -17,7 +18,7 @@
 			switch (statement.QueryType)
 			{
 				case QueryType.Delete : statement = GetAlternativeDelete((SqlDeleteStatement) statement); break;
-				case QueryType.Update : statement = GetAlternativeUpdate((SqlUpdateStatement) statement); break;
+				case QueryType.Update : statement = GetAlternativeUpdate((SqlUpdateStatement) statement, linqOptions); break;
 			}
 			
 			return statement;

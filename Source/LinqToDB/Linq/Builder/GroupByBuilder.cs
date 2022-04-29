@@ -9,6 +9,7 @@ using System.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
+	using Infrastructure;
 	using Common;
 	using Extensions;
 	using LinqToDB.Expressions;
@@ -245,6 +246,7 @@ namespace LinqToDB.Linq.Builder
 			internal class Grouping<TKey,TElement> : IGrouping<TKey,TElement>
 			{
 				public Grouping(
+					LinqOptionsExtension    linqOptions,
 					TKey                    key,
 					IQueryRunner            queryRunner,
 					List<ParameterAccessor> parameters,
@@ -258,7 +260,7 @@ namespace LinqToDB.Linq.Builder
 					_parameters      = parameters;
 					_itemReader      = itemReader;
 
-					if (Configuration.Linq.PreloadGroups)
+					if (linqOptions.PreloadGroups)
 					{
 						_items = GetItems();
 					}
@@ -302,14 +304,15 @@ namespace LinqToDB.Linq.Builder
 
 			interface IGroupByHelper
 			{
-				Expression GetGrouping(GroupByContext context);
+				Expression           GetGrouping(GroupByContext context);
+				LinqOptionsExtension LinqOptions { get; set; }
 			}
 
 			class GroupByHelper<TKey,TElement,TSource> : IGroupByHelper
 			{
 				public Expression GetGrouping(GroupByContext context)
 				{
-					if (Configuration.Linq.GuardGrouping && !context._isGroupingGuardDisabled)
+					if (LinqOptions.GuardGrouping && !context._isGroupingGuardDisabled)
 					{
 						if (context.Element.Lambda.Parameters.Count == 1 &&
 							context.Element.Body == context.Element.Lambda.Parameters[0])
@@ -379,9 +382,10 @@ namespace LinqToDB.Linq.Builder
 
 					return Expression.Call(
 						null,
-						MemberHelper.MethodOf(() => GetGrouping(null!, null!, default!, null!)),
+						MemberHelper.MethodOf(() => GetGrouping(null!, null!, null!, default!, null!)),
 						new Expression[]
 						{
+							Expression.Constant(context.Builder.DataContext.GetLinqOptions()),
 							ExpressionBuilder.QueryRunnerParam,
 							Expression.Constant(context.Builder.ParametersContext.CurrentSqlParameters),
 							keyExpr,
@@ -389,13 +393,16 @@ namespace LinqToDB.Linq.Builder
 						});
 				}
 
+				public LinqOptionsExtension LinqOptions { get; set; } = null!;
+
 				static IGrouping<TKey,TElement> GetGrouping(
+					LinqOptionsExtension                                    linqOptions,
 					IQueryRunner                                            runner,
 					List<ParameterAccessor>                                 parameterAccessor,
 					TKey                                                    key,
 					Func<IDataContext,TKey,object?[]?,IQueryable<TElement>> itemReader)
 				{
-					return new Grouping<TKey,TElement>(key, runner, parameterAccessor, itemReader);
+					return new Grouping<TKey,TElement>(linqOptions, key, runner, parameterAccessor, itemReader);
 				}
 			}
 
@@ -411,7 +418,9 @@ namespace LinqToDB.Linq.Builder
 				Builder.IsBlockDisable = true;
 
 				var helper = (IGroupByHelper)Activator.CreateInstance(gtype)!;
-				var expr   = helper.GetGrouping(this);
+				helper.LinqOptions = Builder.DataContext.GetLinqOptions();
+
+				var expr = helper.GetGrouping(this);
 
 				Builder.IsBlockDisable = isBlockDisable;
 

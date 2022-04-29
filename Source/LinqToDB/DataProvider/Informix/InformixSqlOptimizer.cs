@@ -2,6 +2,7 @@
 
 namespace LinqToDB.DataProvider.Informix
 {
+	using Infrastructure;
 	using Extensions;
 	using SqlProvider;
 	using SqlQuery;
@@ -78,7 +79,7 @@ namespace LinqToDB.DataProvider.Informix
 				p.IsQueryParameter = false;
 		}
 
-		public override SqlStatement Finalize(SqlStatement statement)
+		public override SqlStatement Finalize(SqlStatement statement, LinqOptionsExtension linqOptions)
 		{
 			CheckAliases(statement, int.MaxValue);
 
@@ -94,10 +95,10 @@ namespace LinqToDB.DataProvider.Informix
 						select.VisitAll(ClearQueryParameter);
 				});
 
-			return base.Finalize(statement);
+			return base.Finalize(statement, linqOptions);
 		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement)
+		public override SqlStatement TransformStatement(SqlStatement statement, LinqOptionsExtension linqOptions)
 		{
 			switch (statement.QueryType)
 			{
@@ -109,7 +110,7 @@ namespace LinqToDB.DataProvider.Informix
 					break;
 
 				case QueryType.Update:
-					statement = GetAlternativeUpdate((SqlUpdateStatement)statement);
+					statement = GetAlternativeUpdate((SqlUpdateStatement)statement, linqOptions);
 					break;
 			}
 

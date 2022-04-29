@@ -1,5 +1,6 @@
 ﻿namespace LinqToDB.DataProvider.Access
 {
+	using Infrastructure;
 	using SqlProvider;
 	using SqlQuery;
 
@@ -9,9 +10,9 @@
 		{
 		}
 
-		public override SqlStatement Finalize(SqlStatement statement)
+		public override SqlStatement Finalize(SqlStatement statement, LinqOptionsExtension linqOptions)
 		{
-			statement = base.Finalize(statement);
+			statement = base.Finalize(statement, linqOptions);
 
 			statement = WrapParameters(statement);
 

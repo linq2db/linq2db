@@ -224,7 +224,11 @@ namespace LinqToDB.Data
 			if (options == null)
 				throw new ArgumentNullException(nameof(options));
 
-			LinqOptions = options.FindExtension<LinqOptionsExtension>() ?? new LinqOptionsExtension();
+			// Initialize default
+			var linqExtension = options.FindExtension<LinqOptionsExtension>();
+			if (linqExtension == null)
+				options = options.WithExtension(new LinqOptionsExtension());
+
 			var extension = options.FindExtension<CoreDataContextOptionsExtension>();
 			
 			/*
@@ -366,6 +370,8 @@ namespace LinqToDB.Data
 			}
 
 			DataProvider.InitContext(this);
+
+			Options = options;
 		}
 
 		#endregion
@@ -375,7 +381,7 @@ namespace LinqToDB.Data
 		/// <summary>
 		/// Current DataContext LINQ options
 		/// </summary>
-		public LinqOptionsExtension LinqOptions { get; private set; }
+		public DataContextOptions Options { get; private set; }
 
 		/// <summary>
 		/// Database configuration name (connection string name).
@@ -549,7 +555,7 @@ namespace LinqToDB.Data
 
 					sb.AppendLine(info.TraceInfoStep.ToString());
 
-					if (Configuration.Linq.TraceMapperExpression && info.MapperExpression != null)
+					if (info.MapperExpression != null && info.DataConnection.GetLinqOptions().TraceMapperExpression)
 						sb.AppendLine(info.MapperExpression.GetDebugView());
 
 					WriteTraceLineConnection(sb.ToString(), TraceSwitchConnection.DisplayName, info.TraceLevel);
@@ -1728,14 +1734,14 @@ namespace LinqToDB.Data
 
 		#region ICloneable Members
 
-		DataConnection(string? configurationString, IDataProvider dataProvider, string? connectionString, DbConnection? connection, MappingSchema mappingSchema, LinqOptionsExtension linqOptions)
+		DataConnection(string? configurationString, IDataProvider dataProvider, string? connectionString, DbConnection? connection, MappingSchema mappingSchema, DataContextOptions options)
 		{
 			ConfigurationString = configurationString;
 			DataProvider        = dataProvider;
 			ConnectionString    = connectionString;
 			_connection         = connection != null ? AsyncFactory.Create(connection) : null;
 			MappingSchema       = mappingSchema;
-			LinqOptions         = linqOptions;
+			Options             = options;
 		}
 
 		/// <summary>
@@ -1754,7 +1760,7 @@ namespace LinqToDB.Data
 			// will not work for providers that remove security information from connection string
 			var connectionString = ConnectionString ?? (connection == null ? _connection?.ConnectionString : null);
 
-			return new DataConnection(ConfigurationString, DataProvider, connectionString, connection, MappingSchema, LinqOptions)
+			return new DataConnection(ConfigurationString, DataProvider, connectionString, connection, MappingSchema, Options)
 				{
 					RetryPolicy               = RetryPolicy,
 					CommandTimeout            = CommandTimeout,

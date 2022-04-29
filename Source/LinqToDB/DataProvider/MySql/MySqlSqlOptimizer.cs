@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace LinqToDB.DataProvider.MySql
 {
+	using Infrastructure;
 	using Extensions;
 	using SqlProvider;
 	using SqlQuery;
@@ -18,7 +18,7 @@ namespace LinqToDB.DataProvider.MySql
 
 		public override bool CanCompareSearchConditions => true;
 
-		public override SqlStatement TransformStatement(SqlStatement statement)
+		public override SqlStatement TransformStatement(SqlStatement statement, LinqOptionsExtension linqOptions)
 		{
 			return statement.QueryType switch
 			{

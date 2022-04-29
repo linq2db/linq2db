@@ -28,7 +28,6 @@ namespace LinqToDB
 	public partial class DataContext : IDataContext
 	{
 		private CoreDataContextOptionsExtension _prebuiltCoreExtension;
-		private LinqOptionsExtension            _prebuiltLinqExtension;
 		private DataContextOptions              _prebuiltOptions;
 
 		private bool _disposed;
@@ -126,15 +125,13 @@ namespace LinqToDB
 				_prebuiltOptions = _prebuiltOptions.WithExtension(linqExtension);
 			}
 
-			_prebuiltLinqExtension = linqExtension;
-
 			ContextID              = dataProvider.Name;
 		}
 
 		/// <summary>
 		/// Current DataContext LINQ options
 		/// </summary>
-		public LinqOptionsExtension LinqOptions => _prebuiltLinqExtension;
+		public DataContextOptions Options => _prebuiltOptions;
 
 		/// <summary>
 		/// Gets initial value for database connection configuration name.

@@ -2,6 +2,7 @@
 
 namespace LinqToDB.DataProvider.Firebird
 {
+	using Infrastructure;
 	using System.Linq;
 	using Extensions;
 	using SqlQuery;
@@ -13,11 +14,11 @@ namespace LinqToDB.DataProvider.Firebird
 		{
 		}
 
-		public override SqlStatement Finalize(SqlStatement statement)
+		public override SqlStatement Finalize(SqlStatement statement, LinqOptionsExtension linqOptions)
 		{
 			CheckAliases(statement, int.MaxValue);
 
-			statement = base.Finalize(statement);
+			statement = base.Finalize(statement, linqOptions);
 
 			return statement;
 		}
@@ -141,12 +142,12 @@ namespace LinqToDB.DataProvider.Firebird
 			return new SqlSearchCondition(new SqlCondition(false, new SqlPredicate.Expr(expr)));
 		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement)
+		public override SqlStatement TransformStatement(SqlStatement statement, LinqOptionsExtension linqOptions)
 		{
 			return statement.QueryType switch
 			{
 				QueryType.Delete => GetAlternativeDelete((SqlDeleteStatement)statement),
-				QueryType.Update => GetAlternativeUpdate((SqlUpdateStatement)statement),
+				QueryType.Update => GetAlternativeUpdate((SqlUpdateStatement)statement, linqOptions),
 				_                => statement,
 			};
 		}
@@ -230,9 +231,10 @@ namespace LinqToDB.DataProvider.Firebird
 			return base.ConvertFunction(func);
 		}
 
-		public override SqlStatement FinalizeStatement(SqlStatement statement, EvaluationContext context)
+		public override SqlStatement FinalizeStatement(SqlStatement statement, EvaluationContext context,
+			LinqOptionsExtension                                    linqOptions)
 		{
-			statement = base.FinalizeStatement(statement, context);
+			statement = base.FinalizeStatement(statement, context, linqOptions);
 			statement = WrapParameters(statement, context);
 			return statement;
 		}

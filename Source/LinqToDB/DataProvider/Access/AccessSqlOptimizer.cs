@@ -1,4 +1,5 @@
-﻿using LinqToDB.Linq;
+﻿using LinqToDB.Infrastructure;
+using LinqToDB.Linq;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.DataProvider.Access
@@ -36,7 +37,7 @@ namespace LinqToDB.DataProvider.Access
 			throw new LinqException("Access does not support `Replace` function which is required for such query.");
 		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement)
+		public override SqlStatement TransformStatement(SqlStatement statement, LinqOptionsExtension linqOptions)
 		{
 			return statement.QueryType switch
 			{

@@ -113,6 +113,8 @@ namespace LinqToDB.Common
 			public static bool BulkCopyUseConnectionCommandTimeout;
 		}
 
+		// N: supported in options
+
 		/// <summary>
 		/// LINQ query settings.
 		/// </summary>

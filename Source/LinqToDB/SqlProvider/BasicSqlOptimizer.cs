@@ -8,6 +8,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace LinqToDB.SqlProvider
 {
+	using Infrastructure;
 	using Common;
 	using Extensions;
 	using Linq;
@@ -16,7 +17,7 @@ namespace LinqToDB.SqlProvider
 	using Mapping;
 	using DataProvider;
 	using Common.Internal;
-	using LinqToDB.Expressions;
+	using Expressions;
 
 	public class BasicSqlOptimizer : ISqlOptimizer
 	{
@@ -33,7 +34,7 @@ namespace LinqToDB.SqlProvider
 
 		#region ISqlOptimizer Members
 
-		public virtual SqlStatement Finalize(SqlStatement statement)
+		public virtual SqlStatement Finalize(SqlStatement statement, LinqOptionsExtension linqOptions)
 		{
 			FixRootSelect (statement);
 			FixEmptySelect(statement);
@@ -81,7 +82,7 @@ namespace LinqToDB.SqlProvider
 
 
 //statement.EnsureFindTables();
-			if (Configuration.Linq.OptimizeJoins)
+			if (linqOptions.OptimizeJoins)
 			{
 				OptimizeJoins(statement);
 
@@ -94,7 +95,7 @@ namespace LinqToDB.SqlProvider
 			statement = OptimizeUpdateSubqueries(statement);
 
 			// provider specific query correction
-			statement = FinalizeStatement(statement, evaluationContext);
+			statement = FinalizeStatement(statement, evaluationContext, linqOptions);
 //statement.EnsureFindTables();
 			return statement;
 		}
@@ -274,8 +275,9 @@ namespace LinqToDB.SqlProvider
 		/// Used for correcting statement and should return new statement if changes were made.
 		/// </summary>
 		/// <param name="statement"></param>
+		/// <param name="linqOptions"></param>
 		/// <returns></returns>
-		public virtual SqlStatement TransformStatement(SqlStatement statement)
+		public virtual SqlStatement TransformStatement(SqlStatement statement, LinqOptionsExtension linqOptions)
 		{
 			return statement;
 		}
@@ -2648,7 +2650,7 @@ namespace LinqToDB.SqlProvider
 			return false;
 		}
 
-		protected SqlUpdateStatement GetAlternativeUpdate(SqlUpdateStatement updateStatement)
+		protected SqlUpdateStatement GetAlternativeUpdate(SqlUpdateStatement updateStatement, LinqOptionsExtension linqOptions)
 		{
 			var sourcesCount  = QueryHelper.EnumerateAccessibleSources(updateStatement.SelectQuery).Skip(1).Take(2).Count();
 
@@ -2701,7 +2703,7 @@ namespace LinqToDB.SqlProvider
 					var column = QueryHelper.NeedColumnForExpression(clonedQuery, compareKeys[i], false);
 					if (column == null)
 						throw new LinqToDBException($"Can not create query column for expression '{compareKeys[i]}'.");
-					var compare = QueryHelper.GenerateEquality(tableKeys[i], column);
+					var compare = QueryHelper.GenerateEquality(tableKeys[i], column, linqOptions.CompareNullsAsValues);
 					clonedQuery.Where.SearchCondition.Conditions.Add(compare);
 				}
 
@@ -2907,7 +2909,7 @@ namespace LinqToDB.SqlProvider
 			});
 		}
 
-		protected SqlStatement GetAlternativeUpdatePostgreSqlite(SqlUpdateStatement statement)
+		protected SqlStatement GetAlternativeUpdatePostgreSqlite(SqlUpdateStatement statement, LinqOptionsExtension linqOptions)
 		{
 			if (statement.SelectQuery.Select.HasModifier)
 				statement = QueryHelper.WrapQuery(statement, statement.SelectQuery, allowMutation: true);
@@ -3170,7 +3172,7 @@ namespace LinqToDB.SqlProvider
 					if (column == null)
 						throw new LinqToDBException($"Can not create query column for expression '{keys2[i]}'.");
 
-					var compare = QueryHelper.GenerateEquality(keys1[i], column);
+					var compare = QueryHelper.GenerateEquality(keys1[i], column, linqOptions.CompareNullsAsValues);
 					statement.SelectQuery.Where.SearchCondition.Conditions.Add(compare);
 				}
 			}
@@ -3531,9 +3533,9 @@ namespace LinqToDB.SqlProvider
 			return null != statement.Find(this, static (ctx, e) => ctx.IsParameterDependedElement(e));
 		}
 
-		public virtual SqlStatement FinalizeStatement(SqlStatement statement, EvaluationContext context)
+		public virtual SqlStatement FinalizeStatement(SqlStatement statement, EvaluationContext context, LinqOptionsExtension linqOptions)
 		{
-			var newStatement = TransformStatement(statement);
+			var newStatement = TransformStatement(statement, linqOptions);
 
 			if (SqlProviderFlags.IsParameterOrderDependent)
 			{

@@ -2,6 +2,7 @@
 
 namespace LinqToDB.DataProvider.SqlCe
 {
+	using Infrastructure;
 	using Extensions;
 	using SqlQuery;
 	using SqlProvider;
@@ -12,7 +13,7 @@ namespace LinqToDB.DataProvider.SqlCe
 		{
 		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement)
+		public override SqlStatement TransformStatement(SqlStatement statement, LinqOptionsExtension linqOptions)
 		{
 			// This function mutates statement which is allowed only in this place
 			CorrectSkipAndColumns(statement);
@@ -32,7 +33,7 @@ namespace LinqToDB.DataProvider.SqlCe
 					break;
 
 				case QueryType.Update :
-					statement = GetAlternativeUpdate((SqlUpdateStatement) statement);
+					statement = GetAlternativeUpdate((SqlUpdateStatement) statement, linqOptions);
 					break;
 			}
 

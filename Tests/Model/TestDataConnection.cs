@@ -5,6 +5,7 @@ using System.Text;
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.Infrastructure;
 using LinqToDB.SqlProvider;
 using LinqToDB.SqlQuery;
 
@@ -82,7 +83,7 @@ namespace Tests.Model
 			var provider  = ((IDataContext)this).CreateSqlProvider();
 			var optimizer = ((IDataContext)this).GetSqlOptimizer  ();
 
-			var statement = (SqlSelectStatement)optimizer.Finalize(new SqlSelectStatement(query));
+			var statement = (SqlSelectStatement)optimizer.Finalize(new SqlSelectStatement(query), new LinqOptionsExtension());
 			SqlStatement.PrepareQueryAndAliases(statement, null, out var aliasesContext);
 			var optimizationContext = new OptimizationContext(new EvaluationContext(SqlParameterValues.Empty), aliasesContext, false);
 

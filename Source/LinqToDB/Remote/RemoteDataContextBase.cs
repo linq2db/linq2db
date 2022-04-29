@@ -164,11 +164,11 @@ namespace LinqToDB.Remote
 		}
 
 
-		LinqOptionsExtension? _linqOptions;
+		DataContextOptions? _options;
 		/// <summary>
 		/// Current DataContext LINQ options
 		/// </summary>
-		public LinqOptionsExtension LinqOptions => _linqOptions ??= new LinqOptionsExtension();
+		public DataContextOptions Options => _options ??= new DataContextOptions<RemoteDataContextBase>();
 
 		SqlProviderFlags IDataContext.SqlProviderFlags      => GetConfigurationInfo().LinqServiceInfo.SqlProviderFlags;
 		TableOptions     IDataContext.SupportedTableOptions => GetConfigurationInfo().LinqServiceInfo.SupportedTableOptions;

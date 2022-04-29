@@ -15,6 +15,7 @@ namespace LinqToDB.Linq
 #if !NATIVE_ASYNC
 	using Async;
 #endif
+	using Infrastructure;
 	using Builder;
 	using Common;
 	using Common.Logging;
@@ -44,6 +45,7 @@ namespace LinqToDB.Linq
 			ConfigurationID         = dataContext.MappingSchema.ConfigurationID;
 			SqlOptimizer            = dataContext.GetSqlOptimizer();
 			SqlProviderFlags        = dataContext.SqlProviderFlags;
+			LinqOptions             = dataContext.GetLinqOptions();
 			InlineParameters        = dataContext.InlineParameters;
 			IsEntityServiceProvided = dataContext is IInterceptable<IEntityServiceInterceptor> { Interceptor: {} };
 		}
@@ -52,15 +54,16 @@ namespace LinqToDB.Linq
 
 		#region Compare
 
-		internal readonly string           ContextID;
-		internal readonly Type             ContextType;
-		internal readonly Expression?      Expression;
-		internal readonly MappingSchema    MappingSchema;
-		internal readonly string           ConfigurationID;
-		internal readonly bool             InlineParameters;
-		internal readonly ISqlOptimizer    SqlOptimizer;
-		internal readonly SqlProviderFlags SqlProviderFlags;
-		internal readonly bool             IsEntityServiceProvided;
+		internal readonly string               ContextID;
+		internal readonly Type                 ContextType;
+		internal readonly Expression?          Expression;
+		internal readonly MappingSchema        MappingSchema;
+		internal readonly string               ConfigurationID;
+		internal readonly bool                 InlineParameters;
+		internal readonly ISqlOptimizer        SqlOptimizer;
+		internal readonly SqlProviderFlags     SqlProviderFlags;
+		internal readonly LinqOptionsExtension LinqOptions;
+		internal readonly bool                 IsEntityServiceProvided;
 
 		protected bool Compare(IDataContext dataContext, Expression expr)
 		{
@@ -292,20 +295,20 @@ namespace LinqToDB.Linq
 		{
 			class QueryCacheEntry
 			{
-				public QueryCacheEntry(Query<T> query, QueryFlags flags)
+				public QueryCacheEntry(Query<T> query, LinqOptionsExtension linqOptions)
 				{
 					// query doesn't have GetHashCode now, so we cannot precalculate hashcode to speed-up search
-					Query = query;
-					Flags = flags;
+					Query       = query;
+					LinqOptions = linqOptions;
 				}
 
-				public Query<T>   Query { get; }
-				public QueryFlags Flags { get; }
+				public Query<T>             Query       { get; }
+				public LinqOptionsExtension LinqOptions { get; }
 
 				// accepts components to avoid QueryCacheEntry allocation for cached query
-				public bool Compare(IDataContext context, Expression queryExpression, QueryFlags flags)
+				public bool Compare(IDataContext context, Expression queryExpression, LinqOptionsExtension linqOptions)
 				{
-					return Flags == flags && Query.Compare(context, queryExpression);
+					return LinqOptions == linqOptions && Query.Compare(context, queryExpression);
 				}
 			}
 
@@ -352,7 +355,7 @@ namespace LinqToDB.Linq
 			/// <summary>
 			/// Adds query to cache if it is not cached already.
 			/// </summary>
-			public void TryAdd(IDataContext dataContext, Query<T> query, QueryFlags flags)
+			public void TryAdd(IDataContext dataContext, Query<T> query, LinqOptionsExtension linqOptions)
 			{
 				// because Add is less frequent operation than Find, it is fine to have put bigger locks here
 				QueryCacheEntry[] cache;
@@ -365,7 +368,7 @@ namespace LinqToDB.Linq
 				}
 
 				for (var i = 0; i < cache.Length; i++)
-					if (cache[i].Compare(dataContext, query.Expression!, flags))
+					if (cache[i].Compare(dataContext, query.Expression!, linqOptions))
 						// already added by another thread
 						return;
 
@@ -381,7 +384,7 @@ namespace LinqToDB.Linq
 						// check only added queries, each version could add 1 query to first position, so we
 						// test only first N queries
 						for (var i = 0; i < cache.Length && i < versionsDiff; i++)
-							if (cache[i].Compare(dataContext, query.Expression!, flags))
+							if (cache[i].Compare(dataContext, query.Expression!, linqOptions))
 								// already added by another thread
 								return;
 					}
@@ -391,7 +394,7 @@ namespace LinqToDB.Linq
 					var newCache      = new QueryCacheEntry[cache.Length == CacheSize ? CacheSize : cache.Length + 1];
 					var newPriorities = new int[newCache.Length];
 
-					newCache[0]      = new QueryCacheEntry(query, flags);
+					newCache[0]      = new QueryCacheEntry(query, linqOptions);
 					newPriorities[0] = 0;
 
 					for (var i = 1; i < newCache.Length; i++)
@@ -409,7 +412,7 @@ namespace LinqToDB.Linq
 			/// <summary>
 			/// Search for query in cache and of found, try to move it to better position in cache.
 			/// </summary>
-			public Query<T>? Find(IDataContext dataContext, Expression expr, QueryFlags flags)
+			public Query<T>? Find(IDataContext dataContext, Expression expr, LinqOptionsExtension linqOptions)
 			{
 				QueryCacheEntry[] cache;
 				int[]             indexes;
@@ -430,7 +433,7 @@ namespace LinqToDB.Linq
 						// if we have reordering lock, we can enumerate queries in priority order
 						var idx = allowReordering ? indexes[i] : i;
 
-						if (cache[idx].Compare(dataContext, expr, flags))
+						if (cache[idx].Compare(dataContext, expr, linqOptions))
 						{
 							// do reorder only if it is not blocked and cache wasn't replaced by new one
 							if (i > 0 && version == _version && allowReordering)
@@ -483,18 +486,19 @@ namespace LinqToDB.Linq
 			if (dataContext is IExpressionPreprocessor preprocessor)
 				expr = preprocessor.ProcessExpression(expr);
 
-			if (Configuration.Linq.DisableQueryCache)
+			var linqOptions = dataContext.GetLinqOptions();
+
+			if (linqOptions.DisableQueryCache)
 				return CreateQuery(optimizationContext, new ParametersContext(expr, optimizationContext, dataContext), dataContext, expr);
 
-			var flags = dataContext.GetQueryFlags();
-			var query = _queryCache.Find(dataContext, expr, flags);
+			var query = _queryCache.Find(dataContext, expr, linqOptions);
 
 			if (query == null)
 			{
 				query = CreateQuery(optimizationContext, new ParametersContext(expr, optimizationContext, dataContext), dataContext, expr);
 
 				if (!query.DoNotCache)
-					_queryCache.TryAdd(dataContext, query, flags);
+					_queryCache.TryAdd(dataContext, query, linqOptions);
 			}
 
 			return query;
@@ -502,7 +506,8 @@ namespace LinqToDB.Linq
 
 		internal static Query<T> CreateQuery(ExpressionTreeOptimizationContext optimizationContext, ParametersContext parametersContext, IDataContext dataContext, Expression expr)
 		{
-			if (Configuration.Linq.GenerateExpressionTest)
+			var linqOptions = optimizationContext.DataContext.GetLinqOptions();
+			if (linqOptions.GenerateExpressionTest)
 			{
 				var testFile = new ExpressionTestGenerator().GenerateSource(expr);
 
@@ -521,7 +526,7 @@ namespace LinqToDB.Linq
 			}
 			catch (Exception)
 			{
-				if (!Configuration.Linq.GenerateExpressionTest)
+				if (!linqOptions.GenerateExpressionTest)
 				{
 					dataContext.WriteTraceLine(
 						"To generate test code to diagnose the problem set 'LinqToDB.Common.Configuration.Linq.GenerateExpressionTest = true'.",

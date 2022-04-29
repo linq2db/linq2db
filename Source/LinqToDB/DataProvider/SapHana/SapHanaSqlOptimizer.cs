@@ -2,6 +2,7 @@
 
 namespace LinqToDB.DataProvider.SapHana
 {
+	using Infrastructure;
 	using Extensions;
 	using SqlProvider;
 	using SqlQuery;
@@ -13,12 +14,12 @@ namespace LinqToDB.DataProvider.SapHana
 
 		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement)
+		public override SqlStatement TransformStatement(SqlStatement statement, LinqOptionsExtension linqOptions)
 		{
 			switch (statement.QueryType)
 			{
 				case QueryType.Delete: statement = GetAlternativeDelete((SqlDeleteStatement) statement); break;
-				case QueryType.Update: statement = GetAlternativeUpdate((SqlUpdateStatement) statement); break;
+				case QueryType.Update: statement = GetAlternativeUpdate((SqlUpdateStatement) statement, linqOptions); break;
 			}
 			return statement;
 		}

@@ -4,6 +4,7 @@ using System.Linq;
 
 namespace LinqToDB.DataProvider.Sybase
 {
+	using Infrastructure;
 	using Extensions;
 	using SqlProvider;
 	using SqlQuery;
@@ -15,7 +16,7 @@ namespace LinqToDB.DataProvider.Sybase
 		{
 		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement)
+		public override SqlStatement TransformStatement(SqlStatement statement, LinqOptionsExtension linqOptions)
 		{
 			return statement.QueryType switch
 			{

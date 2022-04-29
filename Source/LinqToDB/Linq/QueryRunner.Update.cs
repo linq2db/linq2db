@@ -64,7 +64,7 @@ namespace LinqToDB.Linq
 
 				if (fieldCount == 0)
 				{
-					if (Configuration.Linq.IgnoreEmptyUpdate)
+					if (dataContext.GetLinqOptions().IgnoreEmptyUpdate)
 						return null;
 
 					throw new LinqException(
@@ -108,7 +108,7 @@ namespace LinqToDB.Linq
 				var ei               = Configuration.Linq.DisableQueryCache || entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Update) || columnFilter != null
 					? CreateQuery(dataContext, entityDescriptor, obj, columnFilter, tableName, serverName, databaseName, schemaName, tableOptions, type)
 					: Cache<T>.QueryCache.GetOrCreate(
-						(operation: 'U', dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, columnFilter, tableName, schemaName, databaseName, serverName, tableOptions, type, dataContext.GetQueryFlags()),
+						(operation: 'U', dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, columnFilter, tableName, schemaName, databaseName, serverName, tableOptions, type, LinqOptions: dataContext.GetLinqOptions()),
 						new { dataContext, entityDescriptor, obj},
 						static (entry, key, context) =>
 						{
@@ -138,7 +138,7 @@ namespace LinqToDB.Linq
 				var ei               = Configuration.Linq.DisableQueryCache || entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Update) || columnFilter != null
 					? CreateQuery(dataContext, entityDescriptor, obj, columnFilter, tableName, serverName, databaseName, schemaName, tableOptions, type)
 					: Cache<T>.QueryCache.GetOrCreate(
-						(operation: 'U', dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, columnFilter, tableName, schemaName, databaseName, serverName, tableOptions, type, dataContext.GetQueryFlags()),
+						(operation: 'U', dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, columnFilter, tableName, schemaName, databaseName, serverName, tableOptions, type, LinqOptions: dataContext.GetLinqOptions()),
 						new { dataContext, entityDescriptor, obj },
 						static (entry, key, context) =>
 						{

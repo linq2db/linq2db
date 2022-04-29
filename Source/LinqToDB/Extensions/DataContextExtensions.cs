@@ -3,6 +3,8 @@
 // ReSharper disable once CheckNamespace
 namespace LinqToDB
 {
+	using Infrastructure;
+
 	/// <summary>
 	/// Internal data context helpers.
 	/// </summary>
@@ -29,5 +31,11 @@ namespace LinqToDB
 
 			return null;
 		}
+
+		public static LinqOptionsExtension GetLinqOptions(this IDataContext context)
+		{
+			return context.Options.GetExtension<LinqOptionsExtension>();
+		}
+
 	}
 }

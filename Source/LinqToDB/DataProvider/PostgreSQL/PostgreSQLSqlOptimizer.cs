@@ -3,6 +3,7 @@ using System.Linq;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
+	using Infrastructure;
 	using Extensions;
 	using SqlProvider;
 	using SqlQuery;
@@ -16,19 +17,19 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		public override bool CanCompareSearchConditions => true;
 
-		public override SqlStatement Finalize(SqlStatement statement)
+		public override SqlStatement Finalize(SqlStatement statement, LinqOptionsExtension linqOptions)
 		{
 			CheckAliases(statement, int.MaxValue);
 
-			return base.Finalize(statement);
+			return base.Finalize(statement, linqOptions);
 		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement)
+		public override SqlStatement TransformStatement(SqlStatement statement, LinqOptionsExtension linqOptions)
 		{
 			return statement.QueryType switch
 			{
 				QueryType.Delete => GetAlternativeDelete((SqlDeleteStatement)statement),
-				QueryType.Update => GetAlternativeUpdatePostgreSqlite((SqlUpdateStatement)statement),
+				QueryType.Update => GetAlternativeUpdatePostgreSqlite((SqlUpdateStatement)statement, linqOptions),
 				_                => statement,
 			};
 		}

@@ -50,7 +50,7 @@ namespace LinqToDB.Data
 				{
 					_mapperExpression = value;
 
-					if (value != null && Configuration.Linq.TraceMapperExpression &&
+					if (value != null && DataContext.GetLinqOptions().TraceMapperExpression &&
 					    _dataConnection.TraceSwitchConnection.TraceInfo)
 					{
 						_dataConnection.OnTraceConnection(new TraceInfo(_dataConnection, TraceInfoStep.MapperCreated, TraceOperation.BuildMapping, _isAsync)

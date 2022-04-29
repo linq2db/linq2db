@@ -26,7 +26,7 @@ namespace LinqToDB.Linq
 			var mappingSchemaID = dataContext.MappingSchema.ConfigurationID;
 
 			var result = QueryRunner.Cache<T>.QueryCache.GetOrCreate(
-				(operation: "CT", contextID, contextType, mappingSchemaID, expression: _expression, dataContext.GetQueryFlags()),
+				(operation: "CT", contextID, contextType, mappingSchemaID, expression: _expression, LinqOptions: dataContext.GetLinqOptions()),
 				(dataContext, lambda: _lambda),
 				static (o, key, ctx) =>
 				{

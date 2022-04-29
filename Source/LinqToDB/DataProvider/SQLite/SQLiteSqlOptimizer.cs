@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using LinqToDB.Linq;
 
 namespace LinqToDB.DataProvider.SQLite
 {
+	using Infrastructure;
 	using Extensions;
 	using SqlProvider;
 	using SqlQuery;
@@ -19,7 +17,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 		public override bool CanCompareSearchConditions => true;
 
-		public override SqlStatement TransformStatement(SqlStatement statement)
+		public override SqlStatement TransformStatement(SqlStatement statement, LinqOptionsExtension linqOptions)
 		{
 			switch (statement.QueryType)
 			{
@@ -34,11 +32,11 @@ namespace LinqToDB.DataProvider.SQLite
 				{
 					if (SqlProviderFlags.IsUpdateFromSupported)
 					{
-						statement = GetAlternativeUpdatePostgreSqlite((SqlUpdateStatement)statement);
+						statement = GetAlternativeUpdatePostgreSqlite((SqlUpdateStatement)statement, linqOptions);
 					}
 					else
 					{
-						statement = GetAlternativeUpdate((SqlUpdateStatement)statement);
+						statement = GetAlternativeUpdate((SqlUpdateStatement)statement, linqOptions);
 					}
 
 					break;

@@ -2,6 +2,7 @@
 
 namespace LinqToDB.SqlProvider
 {
+	using Infrastructure;
 	using Mapping;
 	using SqlQuery;
 
@@ -12,7 +13,7 @@ namespace LinqToDB.SqlProvider
 		/// </summary>
 		/// <param name="statement"></param>
 		/// <returns>Query which is ready for optimization.</returns>
-		SqlStatement Finalize          (SqlStatement statement);
+		SqlStatement Finalize(SqlStatement statement, LinqOptionsExtension linqOptions);
 
 		/// <summary>
 		/// Examine query for parameter dependency.

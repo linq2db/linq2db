@@ -1,15 +1,16 @@
-﻿using LinqToDB.SqlProvider;
-using LinqToDB.SqlQuery;
-
-namespace LinqToDB.DataProvider.SqlServer
+﻿namespace LinqToDB.DataProvider.SqlServer
 {
+	using Infrastructure;
+	using SqlProvider;
+	using SqlQuery;
+
 	class SqlServer2008SqlOptimizer : SqlServerSqlOptimizer
 	{
 		public SqlServer2008SqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags, SqlServerVersion.v2008)
 		{
 		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement)
+		public override SqlStatement TransformStatement(SqlStatement statement, LinqOptionsExtension linqOptions)
 		{
 			//SQL Server 2008 supports ROW_NUMBER but not OFFSET/FETCH
 

@@ -1,5 +1,6 @@
 ﻿namespace LinqToDB.DataProvider.SqlServer
 {
+	using Infrastructure;
 	using SqlProvider;
 	using SqlQuery;
 
@@ -9,7 +10,7 @@
 		{
 		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement)
+		public override SqlStatement TransformStatement(SqlStatement statement, LinqOptionsExtension linqOptions)
 		{
 			//SQL Server 2005 supports ROW_NUMBER but not OFFSET/FETCH
 
