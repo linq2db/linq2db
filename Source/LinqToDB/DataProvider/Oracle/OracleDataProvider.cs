@@ -18,12 +18,12 @@ namespace LinqToDB.DataProvider.Oracle
 	class OracleDataProviderManaged11 : OracleDataProvider { public OracleDataProviderManaged11() : base(ProviderName.OracleManaged, OracleVersion.v11) {} }
 	class OracleDataProviderManaged12 : OracleDataProvider { public OracleDataProviderManaged12() : base(ProviderName.OracleManaged, OracleVersion.v12) {} }
 
-	public class OracleDataProvider : DynamicDataProviderBase<OracleProviderAdapter>
+	public abstract class OracleDataProvider : DynamicDataProviderBase<OracleProviderAdapter>
 	{
-		protected internal OracleDataProvider(string name) : this(name, OracleVersion.v12)
+		protected OracleDataProvider(string name) : this(name, OracleVersion.v12)
 		{}
 
-		protected internal OracleDataProvider(string name, OracleVersion version)
+		protected OracleDataProvider(string name, OracleVersion version)
 			: base(name, GetMappingSchema(name), OracleProviderAdapter.GetInstance(name))
 		{
 			Version = version;

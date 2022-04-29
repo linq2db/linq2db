@@ -40,7 +40,9 @@ namespace Tests.Data
 		public void RestoreOriginalTraceLevel()
 		{
 			DataConnection.TraceSwitch.Level = OriginalTraceLevel;
+#pragma warning disable CS0618 // Type or member is obsolete
 			DataConnection.OnTrace           = OriginalOnTrace;
+#pragma warning restore CS0618 // Type or member is obsolete
 			DataConnection.WriteTraceLine    = OriginalWrite;
 		}
 
@@ -672,7 +674,9 @@ namespace Tests.Data
 		public void OnTraceConnectionShouldUseStatic()
 		{
 			bool traceCalled = false;
+#pragma warning disable CS0618 // Type or member is obsolete
 			DataConnection.OnTrace = info => traceCalled = true;
+#pragma warning restore CS0618 // Type or member is obsolete
 
 			using (var db = new DataConnection())
 			{
@@ -685,7 +689,9 @@ namespace Tests.Data
 		public void OnTraceConnectionShouldUseFromBuilder()
 		{
 			bool defaultTraceCalled = false;
+#pragma warning disable CS0618 // Type or member is obsolete
 			DataConnection.OnTrace = info => defaultTraceCalled = true;
+#pragma warning restore CS0618 // Type or member is obsolete
 
 			bool builderTraceCalled = false;
 			var builder = new LinqToDBConnectionOptionsBuilder().WithTracing(info => builderTraceCalled = true);

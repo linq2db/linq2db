@@ -5,7 +5,7 @@
 // </auto-generated>
 //---------------------------------------------------------------------------------------------------
 
-#pragma warning disable 1572, 1591
+#pragma warning disable 1573, 1591
 #nullable enable
 
 using System;
@@ -26,6 +26,7 @@ namespace Firebird3DataContext
 		public ITable<AllType>           AllTypes            { get { return this.GetTable<AllType>(); } }
 		public ITable<CamelCaseName>     CamelCaseNames      { get { return this.GetTable<CamelCaseName>(); } }
 		public ITable<Child>             Children            { get { return this.GetTable<Child>(); } }
+		public ITable<CollatedTable>     CollatedTables      { get { return this.GetTable<CollatedTable>(); } }
 		public ITable<DataTypeTest>      DataTypeTests       { get { return this.GetTable<DataTypeTest>(); } }
 		public ITable<Doctor>            Doctors             { get { return this.GetTable<Doctor>(); } }
 		public ITable<Dual>              Duals               { get { return this.GetTable<Dual>(); } }
@@ -62,6 +63,13 @@ namespace Firebird3DataContext
 			InitMappingSchema();
 		}
 
+		public TESTDB30DB(LinqToDBConnectionOptions<TESTDB30DB> options)
+			: base(options)
+		{
+			InitDataContext();
+			InitMappingSchema();
+		}
+
 		partial void InitDataContext  ();
 		partial void InitMappingSchema();
 	}
@@ -69,21 +77,22 @@ namespace Firebird3DataContext
 	[Table("AllTypes")]
 	public partial class AllType
 	{
-		[Column(                     DbType="integer",         DataType=LinqToDB.DataType.Int32),                           PrimaryKey,  NotNull] public int       ID                { get; set; } // integer
-		[Column("bigintDataType",    DbType="bigint",          DataType=LinqToDB.DataType.Int64),                              Nullable         ] public long?     BigintDataType    { get; set; } // bigint
-		[Column("smallintDataType",  DbType="smallint",        DataType=LinqToDB.DataType.Int16),                              Nullable         ] public short?    SmallintDataType  { get; set; } // smallint
-		[Column("decimalDataType",   DbType="decimal(18,0)",   DataType=LinqToDB.DataType.Decimal,  Precision=18, Scale=0),    Nullable         ] public decimal?  DecimalDataType   { get; set; } // decimal(18,0)
-		[Column("intDataType",       DbType="integer",         DataType=LinqToDB.DataType.Int32),                              Nullable         ] public int?      IntDataType       { get; set; } // integer
-		[Column("floatDataType",     DbType="float",           DataType=LinqToDB.DataType.Single),                             Nullable         ] public float?    FloatDataType     { get; set; } // float
-		[Column("realDataType",      DbType="float",           DataType=LinqToDB.DataType.Single),                             Nullable         ] public float?    RealDataType      { get; set; } // float
-		[Column("timestampDataType", DbType="timestamp",       DataType=LinqToDB.DataType.DateTime),                           Nullable         ] public DateTime? TimestampDataType { get; set; } // timestamp
-		[Column("charDataType",      DbType="char(1)",         DataType=LinqToDB.DataType.NChar,    Length=1),                 Nullable         ] public char?     CharDataType      { get; set; } // char(1)
-		[Column("char20DataType",    DbType="char(20)",        DataType=LinqToDB.DataType.NChar,    Length=20),                Nullable         ] public string?   Char20DataType    { get; set; } // char(20)
-		[Column("varcharDataType",   DbType="varchar(20)",     DataType=LinqToDB.DataType.NVarChar, Length=20),                Nullable         ] public string?   VarcharDataType   { get; set; } // varchar(20)
-		[Column("textDataType",      DbType="blob sub_type 1", DataType=LinqToDB.DataType.Text),                               Nullable         ] public string?   TextDataType      { get; set; } // blob sub_type 1
-		[Column("ncharDataType",     DbType="char(20)",        DataType=LinqToDB.DataType.NChar,    Length=20),                Nullable         ] public string?   NcharDataType     { get; set; } // char(20)
-		[Column("nvarcharDataType",  DbType="varchar(20)",     DataType=LinqToDB.DataType.NVarChar, Length=20),                Nullable         ] public string?   NvarcharDataType  { get; set; } // varchar(20)
-		[Column("blobDataType",      DbType="blob",            DataType=LinqToDB.DataType.Blob),                               Nullable         ] public byte[]?   BlobDataType      { get; set; } // blob
+		[Column(                     DbType="integer",          DataType=LinqToDB.DataType.Int32),                           PrimaryKey,  NotNull] public int       ID                { get; set; } // integer
+		[Column("bigintDataType",    DbType="bigint",           DataType=LinqToDB.DataType.Int64),                              Nullable         ] public long?     BigintDataType    { get; set; } // bigint
+		[Column("smallintDataType",  DbType="smallint",         DataType=LinqToDB.DataType.Int16),                              Nullable         ] public short?    SmallintDataType  { get; set; } // smallint
+		[Column("decimalDataType",   DbType="decimal(18,0)",    DataType=LinqToDB.DataType.Decimal,  Precision=18, Scale=0),    Nullable         ] public decimal?  DecimalDataType   { get; set; } // decimal(18,0)
+		[Column("intDataType",       DbType="integer",          DataType=LinqToDB.DataType.Int32),                              Nullable         ] public int?      IntDataType       { get; set; } // integer
+		[Column("floatDataType",     DbType="float",            DataType=LinqToDB.DataType.Single),                             Nullable         ] public float?    FloatDataType     { get; set; } // float
+		[Column("realDataType",      DbType="float",            DataType=LinqToDB.DataType.Single),                             Nullable         ] public float?    RealDataType      { get; set; } // float
+		[Column("doubleDataType",    DbType="double precision", DataType=LinqToDB.DataType.Double),                             Nullable         ] public double?   DoubleDataType    { get; set; } // double precision
+		[Column("timestampDataType", DbType="timestamp",        DataType=LinqToDB.DataType.DateTime),                           Nullable         ] public DateTime? TimestampDataType { get; set; } // timestamp
+		[Column("charDataType",      DbType="char(1)",          DataType=LinqToDB.DataType.NChar,    Length=1),                 Nullable         ] public char?     CharDataType      { get; set; } // char(1)
+		[Column("char20DataType",    DbType="char(20)",         DataType=LinqToDB.DataType.NChar,    Length=20),                Nullable         ] public string?   Char20DataType    { get; set; } // char(20)
+		[Column("varcharDataType",   DbType="varchar(20)",      DataType=LinqToDB.DataType.NVarChar, Length=20),                Nullable         ] public string?   VarcharDataType   { get; set; } // varchar(20)
+		[Column("textDataType",      DbType="blob sub_type 1",  DataType=LinqToDB.DataType.Text),                               Nullable         ] public string?   TextDataType      { get; set; } // blob sub_type 1
+		[Column("ncharDataType",     DbType="char(20)",         DataType=LinqToDB.DataType.NChar,    Length=20),                Nullable         ] public string?   NcharDataType     { get; set; } // char(20)
+		[Column("nvarcharDataType",  DbType="varchar(20)",      DataType=LinqToDB.DataType.NVarChar, Length=20),                Nullable         ] public string?   NvarcharDataType  { get; set; } // varchar(20)
+		[Column("blobDataType",      DbType="blob",             DataType=LinqToDB.DataType.Blob),                               Nullable         ] public byte[]?   BlobDataType      { get; set; } // blob
 	}
 
 	[Table("CamelCaseName")]
@@ -104,6 +113,14 @@ namespace Firebird3DataContext
 		[Column(DbType="integer", DataType=LinqToDB.DataType.Int32), Nullable] public int? ChildID  { get; set; } // integer
 	}
 
+	[Table("CollatedTable")]
+	public partial class CollatedTable
+	{
+		[Column(DbType="integer",     DataType=LinqToDB.DataType.Int32),               NotNull    ] public int     Id              { get; set; } // integer
+		[Column(DbType="varchar(20)", DataType=LinqToDB.DataType.NVarChar, Length=20),    Nullable] public string? CaseSensitive   { get; set; } // varchar(20)
+		[Column(DbType="varchar(20)", DataType=LinqToDB.DataType.NVarChar, Length=20),    Nullable] public string? CaseInsensitive { get; set; } // varchar(20)
+	}
+
 	[Table("DataTypeTest")]
 	public partial class DataTypeTest
 	{
@@ -116,7 +133,7 @@ namespace Firebird3DataContext
 		[Column("DateTime_", DbType="timestamp",        DataType=LinqToDB.DataType.DateTime),                           Nullable         ] public DateTime? DateTime   { get; set; } // timestamp
 		[Column("Decimal_",  DbType="decimal(10,2)",    DataType=LinqToDB.DataType.Decimal,  Precision=10, Scale=2),    Nullable         ] public decimal?  Decimal    { get; set; } // decimal(10,2)
 		[Column("Double_",   DbType="double precision", DataType=LinqToDB.DataType.Double),                             Nullable         ] public double?   Double     { get; set; } // double precision
-		[Column("Guid_",     DbType="char(38)",         DataType=LinqToDB.DataType.NChar,    Length=38),                Nullable         ] public string?   Guid       { get; set; } // char(38)
+		[Column("Guid_",     DbType="char(16)",         DataType=LinqToDB.DataType.NChar,    Length=16),                Nullable         ] public string?   Guid       { get; set; } // char(16)
 		[Column("Int16_",    DbType="smallint",         DataType=LinqToDB.DataType.Int16),                              Nullable         ] public short?    Int16      { get; set; } // smallint
 		[Column("Int32_",    DbType="integer",          DataType=LinqToDB.DataType.Int32),                              Nullable         ] public int?      Int32      { get; set; } // integer
 		[Column("Int64_",    DbType="numeric(11,0)",    DataType=LinqToDB.DataType.Decimal,  Precision=11, Scale=0),    Nullable         ] public decimal?  Int64      { get; set; } // numeric(11,0)
@@ -140,9 +157,9 @@ namespace Firebird3DataContext
 		#region Associations
 
 		/// <summary>
-		/// FK_Doctor_Person
+		/// FK_Doctor_Person (SYSDBA.Person)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="FK_Doctor_Person", BackReferenceName="Doctor")]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -187,7 +204,7 @@ namespace Firebird3DataContext
 		[Column(DbType="timestamp",     DataType=LinqToDB.DataType.DateTime),                        Nullable] public DateTime? DateTimeValue  { get; set; } // timestamp
 		[Column(DbType="timestamp",     DataType=LinqToDB.DataType.DateTime),                        Nullable] public DateTime? DateTimeValue2 { get; set; } // timestamp
 		[Column(DbType="char(1)",       DataType=LinqToDB.DataType.NChar,    Length=1),              Nullable] public char?     BoolValue      { get; set; } // char(1)
-		[Column(DbType="char(38)",      DataType=LinqToDB.DataType.NChar,    Length=38),             Nullable] public string?   GuidValue      { get; set; } // char(38)
+		[Column(DbType="char(16)",      DataType=LinqToDB.DataType.NChar,    Length=16),             Nullable] public string?   GuidValue      { get; set; } // char(16)
 		[Column(DbType="blob",          DataType=LinqToDB.DataType.Blob),                            Nullable] public byte[]?   BinaryValue    { get; set; } // blob
 		[Column(DbType="smallint",      DataType=LinqToDB.DataType.Int16),                           Nullable] public short?    SmallIntValue  { get; set; } // smallint
 		[Column(DbType="integer",       DataType=LinqToDB.DataType.Int32),                           Nullable] public int?      IntValue       { get; set; } // integer
@@ -211,9 +228,9 @@ namespace Firebird3DataContext
 		#region Associations
 
 		/// <summary>
-		/// INTEG_18
+		/// INTEG_8861 (SYSDBA.Person)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="INTEG_18", BackReferenceName="INTEG")]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -231,15 +248,15 @@ namespace Firebird3DataContext
 		#region Associations
 
 		/// <summary>
-		/// FK_Doctor_Person_BackReference
+		/// FK_Doctor_Person_BackReference (SYSDBA.Doctor)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
 		public Doctor? Doctor { get; set; }
 
 		/// <summary>
-		/// INTEG_18_BackReference
+		/// INTEG_8861_BackReference (SYSDBA.Patient)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
 		public Patient? INTEG { get; set; }
 
 		#endregion
@@ -287,7 +304,7 @@ namespace Firebird3DataContext
 		[Column(DbType="double precision", DataType=LinqToDB.DataType.Double),                              Nullable         ] public double?   FieldDouble     { get; set; } // double precision
 		[Column(DbType="timestamp",        DataType=LinqToDB.DataType.DateTime),                            Nullable         ] public DateTime? FieldDateTime   { get; set; } // timestamp
 		[Column(DbType="blob",             DataType=LinqToDB.DataType.Blob),                                Nullable         ] public byte[]?   FieldBinary     { get; set; } // blob
-		[Column(DbType="char(38)",         DataType=LinqToDB.DataType.NChar,    Length=38),                 Nullable         ] public string?   FieldGuid       { get; set; } // char(38)
+		[Column(DbType="char(16)",         DataType=LinqToDB.DataType.NChar,    Length=16),                 Nullable         ] public string?   FieldGuid       { get; set; } // char(16)
 		[Column(DbType="decimal(18,10)",   DataType=LinqToDB.DataType.Decimal,  Precision=18, Scale=10),    Nullable         ] public decimal?  FieldDecimal    { get; set; } // decimal(18,10)
 		[Column(DbType="date",             DataType=LinqToDB.DataType.Date),                                Nullable         ] public DateTime? FieldDate       { get; set; } // date
 		[Column(DbType="timestamp",        DataType=LinqToDB.DataType.DateTime),                            Nullable         ] public DateTime? FieldTime       { get; set; } // timestamp
@@ -314,7 +331,7 @@ namespace Firebird3DataContext
 		[Column(DbType="double precision", DataType=LinqToDB.DataType.Double),                              Nullable         ] public double?   FieldDouble     { get; set; } // double precision
 		[Column(DbType="timestamp",        DataType=LinqToDB.DataType.DateTime),                            Nullable         ] public DateTime? FieldDateTime   { get; set; } // timestamp
 		[Column(DbType="blob",             DataType=LinqToDB.DataType.Blob),                                Nullable         ] public byte[]?   FieldBinary     { get; set; } // blob
-		[Column(DbType="char(38)",         DataType=LinqToDB.DataType.NChar,    Length=38),                 Nullable         ] public string?   FieldGuid       { get; set; } // char(38)
+		[Column(DbType="char(16)",         DataType=LinqToDB.DataType.NChar,    Length=16),                 Nullable         ] public string?   FieldGuid       { get; set; } // char(16)
 		[Column(DbType="decimal(18,10)",   DataType=LinqToDB.DataType.Decimal,  Precision=18, Scale=10),    Nullable         ] public decimal?  FieldDecimal    { get; set; } // decimal(18,10)
 		[Column(DbType="date",             DataType=LinqToDB.DataType.Date),                                Nullable         ] public DateTime? FieldDate       { get; set; } // date
 		[Column(DbType="timestamp",        DataType=LinqToDB.DataType.DateTime),                            Nullable         ] public DateTime? FieldTime       { get; set; } // timestamp
@@ -337,9 +354,19 @@ namespace Firebird3DataContext
 
 		public static IEnumerable<OutRefEnumTestResult> OutRefEnumTest(this TESTDB30DB dataConnection, string? STR, string? IN_INPUTOUTPUTSTR)
 		{
-			return dataConnection.QueryProc<OutRefEnumTestResult>("\"OutRefEnumTest\"",
-				new DataParameter("STR",               STR,               LinqToDB.DataType.NVarChar),
-				new DataParameter("IN_INPUTOUTPUTSTR", IN_INPUTOUTPUTSTR, LinqToDB.DataType.NVarChar));
+			var parameters = new []
+			{
+				new DataParameter("STR",               STR,               LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("IN_INPUTOUTPUTSTR", IN_INPUTOUTPUTSTR, LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				}
+			};
+
+			return dataConnection.QueryProc<OutRefEnumTestResult>("\"OutRefEnumTest\"", parameters);
 		}
 
 		public partial class OutRefEnumTestResult
@@ -354,11 +381,27 @@ namespace Firebird3DataContext
 
 		public static IEnumerable<OutRefTestResult> OutRefTest(this TESTDB30DB dataConnection, int? ID, int? IN_INPUTOUTPUTID, string? STR, string? IN_INPUTOUTPUTSTR)
 		{
-			return dataConnection.QueryProc<OutRefTestResult>("\"OutRefTest\"",
-				new DataParameter("ID",                ID,                LinqToDB.DataType.Int32),
-				new DataParameter("IN_INPUTOUTPUTID",  IN_INPUTOUTPUTID,  LinqToDB.DataType.Int32),
-				new DataParameter("STR",               STR,               LinqToDB.DataType.NVarChar),
-				new DataParameter("IN_INPUTOUTPUTSTR", IN_INPUTOUTPUTSTR, LinqToDB.DataType.NVarChar));
+			var parameters = new []
+			{
+				new DataParameter("ID",                ID,                LinqToDB.DataType.Int32)
+				{
+					Size = 4
+				},
+				new DataParameter("IN_INPUTOUTPUTID",  IN_INPUTOUTPUTID,  LinqToDB.DataType.Int32)
+				{
+					Size = 4
+				},
+				new DataParameter("STR",               STR,               LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("IN_INPUTOUTPUTSTR", IN_INPUTOUTPUTSTR, LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				}
+			};
+
+			return dataConnection.QueryProc<OutRefTestResult>("\"OutRefTest\"", parameters);
 		}
 
 		public partial class OutRefTestResult
@@ -394,9 +437,19 @@ namespace Firebird3DataContext
 
 		public static IEnumerable<PatientSelectByNameResult> PatientSelectByName(this TESTDB30DB dataConnection, string? FIRSTNAME, string? LASTNAME)
 		{
-			return dataConnection.QueryProc<PatientSelectByNameResult>("\"Patient_SelectByName\"",
-				new DataParameter("FIRSTNAME", FIRSTNAME, LinqToDB.DataType.NVarChar),
-				new DataParameter("LASTNAME",  LASTNAME,  LinqToDB.DataType.NVarChar));
+			var parameters = new []
+			{
+				new DataParameter("FIRSTNAME", FIRSTNAME, LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("LASTNAME",  LASTNAME,  LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				}
+			};
+
+			return dataConnection.QueryProc<PatientSelectByNameResult>("\"Patient_SelectByName\"", parameters);
 		}
 
 		public partial class PatientSelectByNameResult
@@ -413,8 +466,15 @@ namespace Firebird3DataContext
 
 		public static int PersonDelete(this TESTDB30DB dataConnection, int? PERSONID)
 		{
-			return dataConnection.ExecuteProc("\"Person_Delete\"",
-				new DataParameter("PERSONID", PERSONID, LinqToDB.DataType.Int32));
+			var parameters = new []
+			{
+				new DataParameter("PERSONID", PERSONID, LinqToDB.DataType.Int32)
+				{
+					Size = 4
+				}
+			};
+
+			return dataConnection.ExecuteProc("\"Person_Delete\"", parameters);
 		}
 
 		#endregion
@@ -423,11 +483,27 @@ namespace Firebird3DataContext
 
 		public static IEnumerable<PersonInsertResult> PersonInsert(this TESTDB30DB dataConnection, string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER)
 		{
-			return dataConnection.QueryProc<PersonInsertResult>("\"Person_Insert\"",
-				new DataParameter("FIRSTNAME",  FIRSTNAME,  LinqToDB.DataType.NVarChar),
-				new DataParameter("LASTNAME",   LASTNAME,   LinqToDB.DataType.NVarChar),
-				new DataParameter("MIDDLENAME", MIDDLENAME, LinqToDB.DataType.NVarChar),
-				new DataParameter("GENDER",     GENDER,     LinqToDB.DataType.NChar));
+			var parameters = new []
+			{
+				new DataParameter("FIRSTNAME",  FIRSTNAME,  LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("LASTNAME",   LASTNAME,   LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("MIDDLENAME", MIDDLENAME, LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("GENDER",     GENDER,     LinqToDB.DataType.NChar)
+				{
+					Size = 1
+				}
+			};
+
+			return dataConnection.QueryProc<PersonInsertResult>("\"Person_Insert\"", parameters);
 		}
 
 		public partial class PersonInsertResult
@@ -441,11 +517,27 @@ namespace Firebird3DataContext
 
 		public static IEnumerable<PersonInsertOutputParameterResult> PersonInsertOutputParameter(this TESTDB30DB dataConnection, string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER)
 		{
-			return dataConnection.QueryProc<PersonInsertOutputParameterResult>("\"Person_Insert_OutputParameter\"",
-				new DataParameter("FIRSTNAME",  FIRSTNAME,  LinqToDB.DataType.NVarChar),
-				new DataParameter("LASTNAME",   LASTNAME,   LinqToDB.DataType.NVarChar),
-				new DataParameter("MIDDLENAME", MIDDLENAME, LinqToDB.DataType.NVarChar),
-				new DataParameter("GENDER",     GENDER,     LinqToDB.DataType.NChar));
+			var parameters = new []
+			{
+				new DataParameter("FIRSTNAME",  FIRSTNAME,  LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("LASTNAME",   LASTNAME,   LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("MIDDLENAME", MIDDLENAME, LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("GENDER",     GENDER,     LinqToDB.DataType.NChar)
+				{
+					Size = 1
+				}
+			};
+
+			return dataConnection.QueryProc<PersonInsertOutputParameterResult>("\"Person_Insert_OutputParameter\"", parameters);
 		}
 
 		public partial class PersonInsertOutputParameterResult
@@ -477,8 +569,15 @@ namespace Firebird3DataContext
 
 		public static IEnumerable<PersonSelectByKeyResult> PersonSelectByKey(this TESTDB30DB dataConnection, int? ID)
 		{
-			return dataConnection.QueryProc<PersonSelectByKeyResult>("\"Person_SelectByKey\"",
-				new DataParameter("ID", ID, LinqToDB.DataType.Int32));
+			var parameters = new []
+			{
+				new DataParameter("ID", ID, LinqToDB.DataType.Int32)
+				{
+					Size = 4
+				}
+			};
+
+			return dataConnection.QueryProc<PersonSelectByKeyResult>("\"Person_SelectByKey\"", parameters);
 		}
 
 		public partial class PersonSelectByKeyResult
@@ -496,9 +595,19 @@ namespace Firebird3DataContext
 
 		public static IEnumerable<PersonSelectByNameResult> PersonSelectByName(this TESTDB30DB dataConnection, string? IN_FIRSTNAME, string? IN_LASTNAME)
 		{
-			return dataConnection.QueryProc<PersonSelectByNameResult>("\"Person_SelectByName\"",
-				new DataParameter("IN_FIRSTNAME", IN_FIRSTNAME, LinqToDB.DataType.NVarChar),
-				new DataParameter("IN_LASTNAME",  IN_LASTNAME,  LinqToDB.DataType.NVarChar));
+			var parameters = new []
+			{
+				new DataParameter("IN_FIRSTNAME", IN_FIRSTNAME, LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("IN_LASTNAME",  IN_LASTNAME,  LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				}
+			};
+
+			return dataConnection.QueryProc<PersonSelectByNameResult>("\"Person_SelectByName\"", parameters);
 		}
 
 		public partial class PersonSelectByNameResult
@@ -516,12 +625,31 @@ namespace Firebird3DataContext
 
 		public static int PersonUpdate(this TESTDB30DB dataConnection, int? PERSONID, string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER)
 		{
-			return dataConnection.ExecuteProc("\"Person_Update\"",
-				new DataParameter("PERSONID",   PERSONID,   LinqToDB.DataType.Int32),
-				new DataParameter("FIRSTNAME",  FIRSTNAME,  LinqToDB.DataType.NVarChar),
-				new DataParameter("LASTNAME",   LASTNAME,   LinqToDB.DataType.NVarChar),
-				new DataParameter("MIDDLENAME", MIDDLENAME, LinqToDB.DataType.NVarChar),
-				new DataParameter("GENDER",     GENDER,     LinqToDB.DataType.NChar));
+			var parameters = new []
+			{
+				new DataParameter("PERSONID",   PERSONID,   LinqToDB.DataType.Int32)
+				{
+					Size = 4
+				},
+				new DataParameter("FIRSTNAME",  FIRSTNAME,  LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("LASTNAME",   LASTNAME,   LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("MIDDLENAME", MIDDLENAME, LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("GENDER",     GENDER,     LinqToDB.DataType.NChar)
+				{
+					Size = 1
+				}
+			};
+
+			return dataConnection.ExecuteProc("\"Person_Update\"", parameters);
 		}
 
 		#endregion

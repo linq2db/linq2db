@@ -32,7 +32,7 @@ namespace LinqToDB.DataProvider.Access
 				return _accessODBCDataProvider.Value;
 			}
 
-			if (css.ProviderName == ProviderName.Access || css.Name.Contains("Access"))
+			if (css.ProviderName == ProviderName.Access || (css.Name.Contains("Access") && !css.Name.Contains("DataAccess")))
 			{
 				if (connectionString.Contains("*.mdb")
 					|| connectionString.Contains("*.accdb"))

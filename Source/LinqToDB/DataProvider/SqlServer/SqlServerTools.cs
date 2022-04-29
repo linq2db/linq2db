@@ -15,7 +15,7 @@ namespace LinqToDB.DataProvider.SqlServer
 	{
 		#region Init
 
-		public static SqlServerProvider Provider = SqlServerProvider.SystemDataSqlClient;
+		public static SqlServerProvider Provider = SqlServerProvider.MicrosoftDataSqlClient;
 		private static readonly ConcurrentQueue<SqlServerDataProvider> _providers = new();
 
 		// System.Data
@@ -55,7 +55,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		public static bool AutoDetectProvider { get; set; } = true;
 
-		internal static string QuoteIdentifier(string identifier)
+		public static string QuoteIdentifier(string identifier)
 		{
 			return QuoteIdentifier(new StringBuilder(), identifier).ToString();
 		}

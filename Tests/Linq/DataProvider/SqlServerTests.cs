@@ -32,13 +32,6 @@ namespace Tests.DataProvider
 	[TestFixture]
 	public class SqlServerTests : DataProviderTestBase
 	{
-		[OneTimeSetUp]
-		protected void InitializeFixture()
-		{
-			// load spatial types support
-			//Utilities.LoadNativeAssemblies(AppDomain.CurrentDomain.BaseDirectory);
-		}
-
 		[Test]
 		public void TestParameters([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
@@ -1363,6 +1356,14 @@ namespace Tests.DataProvider
 			[Column] public decimal Decimal3;
 		}
 
+		internal class TestSqlServerDataProvider : SqlServerDataProvider
+		{
+			public TestSqlServerDataProvider(string providerName, SqlServerVersion version, SqlServerProvider provider)
+				: base(providerName, version, provider)
+			{
+			}
+		}
+
 		[Test]
 		public void OverflowTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
@@ -1370,7 +1371,7 @@ namespace Tests.DataProvider
 
 			using (var db = GetDataConnection(context))
 			{
-				provider = new SqlServerDataProvider(db.DataProvider.Name, ((SqlServerDataProvider)db.DataProvider).Version, ((SqlServerDataProvider)db.DataProvider).Provider);
+				provider = new TestSqlServerDataProvider(db.DataProvider.Name, ((SqlServerDataProvider)db.DataProvider).Version, ((SqlServerDataProvider)db.DataProvider).Provider);
 			}
 
 			provider.ReaderExpressions[new ReaderInfo { FieldType = typeof(decimal) }] = (Expression<Func<DbDataReader, int, decimal>>)((r, i) => GetDecimal(r, i));
@@ -1679,7 +1680,7 @@ namespace Tests.DataProvider
 		{
 			var parameters = new []
 			{
-				new DataParameter("@return", null, LinqToDB.DataType.Int32)
+				new DataParameter("@return", null, DataType.Int32)
 				{
 					Direction = ParameterDirection.ReturnValue
 				}

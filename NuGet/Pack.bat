@@ -17,6 +17,10 @@ nuget.exe Pack ..\BuiltNuGet\linq2db.Remote.Grpc.nuspec -OutputDirectory ..\Buil
 nuget.exe Pack ..\BuiltNuGet\linq2db.Remote.Wcf.nuspec -OutputDirectory ..\BuiltNuGet\built
 )
 
+nuget.exe Pack ..\BuiltNuGet\linq2db.cli.nuspec -OutputDirectory ..\BuiltNuGet\built
+
+REM disable new T4 nugets publishing, prepare for their obsoletion and removal
+REM goto eof:
 nuget.exe Pack ..\BuiltNuGet\linq2db.Access.nuspec -OutputDirectory ..\BuiltNuGet\built
 nuget.exe Pack ..\BuiltNuGet\linq2db.DB2.nuspec -OutputDirectory ..\BuiltNuGet\built
 nuget.exe Pack ..\BuiltNuGet\linq2db.DB2.Core.nuspec -OutputDirectory ..\BuiltNuGet\built

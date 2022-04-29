@@ -540,7 +540,7 @@ namespace Tests.DataProvider
 								intUnsignedDataType = (uint)(5000 + n),
 							}).ToList();
 
-					var isNativeCopy = bulkCopyType == BulkCopyType.ProviderSpecific && ((MySqlDataProvider)conn.DataProvider).Adapter.BulkCopy != null;
+					var isNativeCopy = bulkCopyType == BulkCopyType.ProviderSpecific && ((MySqlProviderAdapter)((MySqlDataProvider)conn.DataProvider).Adapter).BulkCopy != null;
 
 					if (isNativeCopy)
 					{
@@ -626,7 +626,7 @@ namespace Tests.DataProvider
 								intUnsignedDataType = (uint)(5000 + n),
 							}).ToList();
 
-					var isNativeCopy = bulkCopyType == BulkCopyType.ProviderSpecific && ((MySqlDataProvider)conn.DataProvider).Adapter.BulkCopy != null;
+					var isNativeCopy = bulkCopyType == BulkCopyType.ProviderSpecific && ((MySqlProviderAdapter)((MySqlDataProvider)conn.DataProvider).Adapter).BulkCopy != null;
 
 					if (isNativeCopy)
 					{
@@ -1339,9 +1339,7 @@ namespace Tests.DataProvider
 
 					foreach (var actualColumn in actualTable.Columns)
 					{
-						var expectedColumn = expectedTable.Columns
-							.Where(_ => _.ColumnName == actualColumn.ColumnName)
-							.SingleOrDefault()!;
+						var expectedColumn = expectedTable.Columns.SingleOrDefault(_ => _.ColumnName == actualColumn.ColumnName)!;
 
 						Assert.IsNotNull(expectedColumn);
 

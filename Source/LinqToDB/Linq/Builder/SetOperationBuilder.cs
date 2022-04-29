@@ -333,7 +333,7 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				var nonUnique = _unionMembers
-					.GroupBy(static m => m.Alias, StringComparer.InvariantCultureIgnoreCase)
+					.GroupBy(static m => m.Alias, StringComparer.OrdinalIgnoreCase)
 					.Where(static g => g.Count() > 1);
 
 				foreach (var g in nonUnique)

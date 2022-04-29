@@ -403,6 +403,12 @@ namespace LinqToDB.DataProvider.Oracle
 				if (precision < 20) return typeof(long);
 			}
 
+			if (dataType == "BINARY_INTEGER")
+				return typeof(int);
+			if (dataType?.StartsWith("INTERVAL DAY") == true)
+				return typeof(TimeSpan);
+			if (dataType?.StartsWith("INTERVAL YEAR") == true)
+				return typeof(long);
 			if (dataType?.StartsWith("TIMESTAMP") == true)
 				return dataType.EndsWith("TIME ZONE") ? typeof(DateTimeOffset) : typeof(DateTime);
 
@@ -417,13 +423,12 @@ namespace LinqToDB.DataProvider.Oracle
 				case "BFILE"                  : return DataType.VarBinary;
 				case "BINARY_DOUBLE"          : return DataType.Double;
 				case "BINARY_FLOAT"           : return DataType.Single;
+				case "BINARY_INTEGER"         : return DataType.Int32;
 				case "BLOB"                   : return DataType.Blob;
 				case "CHAR"                   : return DataType.Char;
 				case "CLOB"                   : return DataType.Text;
 				case "DATE"                   : return DataType.DateTime;
 				case "FLOAT"                  : return DataType.Decimal;
-				case "INTERVAL DAY TO SECOND" : return DataType.Time;
-				case "INTERVAL YEAR TO MONTH" : return DataType.Int64;
 				case "LONG"                   : return DataType.Long;
 				case "LONG RAW"               : return DataType.LongRaw;
 				case "NCHAR"                  : return DataType.NChar;
@@ -437,6 +442,10 @@ namespace LinqToDB.DataProvider.Oracle
 				default:
 					if (dataType?.StartsWith("TIMESTAMP") == true)
 						return dataType.EndsWith("TIME ZONE") ? DataType.DateTimeOffset : DataType.DateTime2;
+					if (dataType?.StartsWith("INTERVAL DAY") == true)
+						return DataType.Time;
+					if (dataType?.StartsWith("INTERVAL YEAR") == true)
+						return DataType.Int64;
 					break;
 			}
 

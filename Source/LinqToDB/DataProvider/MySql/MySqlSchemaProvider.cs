@@ -358,7 +358,7 @@ SELECT
 					IsNullable           = isNullable,
 					MemberName           = ToValidName(columnName.Trim('`')),
 					MemberType           = ToTypeName(systemType, isNullable),
-					SystemType           = systemType ?? typeof(object),
+					SystemType           = systemType,
 					DataType             = GetDataType(dataType, null, length, precision, scale),
 					ProviderSpecificType = GetProviderSpecificType(dataType),
 					IsIdentity           = r.IsNull("IsIdentity") ? false : r.Field<bool>("IsIdentity")

@@ -26,12 +26,14 @@ namespace LinqToDB.Linq
 
 	public abstract class Query
 	{
-		public Func<IDataContext,Expression,object?[]?,object?[]?,object?>                         GetElement      = null!;
-		public Func<IDataContext,Expression,object?[]?,object?[]?,CancellationToken,Task<object?>> GetElementAsync = null!;
+		internal Func<IDataContext,Expression,object?[]?,object?[]?,object?>                         GetElement      = null!;
+		internal Func<IDataContext,Expression,object?[]?,object?[]?,CancellationToken,Task<object?>> GetElementAsync = null!;
 
 		#region Init
 
 		internal readonly List<QueryInfo> Queries = new (1);
+
+		public IReadOnlyCollection<QueryInfo> GetQueries() => Queries;
 
 		internal abstract void Init(IBuildContext parseContext, List<ParameterAccessor> sqlParameters);
 
@@ -78,7 +80,7 @@ namespace LinqToDB.Linq
 		readonly Dictionary<Expression, Expression>               _queryDependedObjects  = new();
 		private  Dictionary<MemberInfo, QueryableMemberAccessor>? _queryableMemberAccessorDic;
 
-		public bool IsFastCacheable => _queryableMemberAccessorDic == null;
+		internal bool IsFastCacheable => _queryableMemberAccessorDic == null;
 
 		internal int AddQueryableAccessors(Expression expr, Expression<Func<Expression,IQueryable>> qe)
 		{
@@ -132,7 +134,7 @@ namespace LinqToDB.Linq
 			return accessor.Queryable.Expression;
 		}
 
-		public void ClearMemberQueryableInfo()
+		internal void ClearMemberQueryableInfo()
 		{
 			_queryableMemberAccessorDic = null;
 		}
@@ -203,12 +205,12 @@ namespace LinqToDB.Linq
 			_preambles = preambles?.ToArray();
 		}
 
-		public bool IsAnyPreambles()
+		internal bool IsAnyPreambles()
 		{
 			return _preambles?.Length > 0;
 		}
 
-		public int PreamblesCount()
+		internal int PreamblesCount()
 		{
 			return _preambles?.Length ?? 0;
 		}
@@ -244,7 +246,7 @@ namespace LinqToDB.Linq
 		#endregion
 	}
 
-	class Query<T> : Query
+	public class Query<T> : Query
 	{
 		#region Init
 
@@ -275,11 +277,11 @@ namespace LinqToDB.Linq
 
 		#region Properties & Fields
 
-		public bool DoNotCache;
+		internal bool DoNotCache;
 
-		public Func<IDataContext,Expression,object?[]?,object?[]?,IEnumerable<T>>      GetIEnumerable = null!;
-		public Func<IDataContext,Expression,object?[]?,object?[]?,IAsyncEnumerable<T>> GetIAsyncEnumerable = null!;
-		public Func<IDataContext,Expression,object?[]?,object?[]?,Func<T,bool>,CancellationToken,Task> GetForEachAsync = null!;
+		internal Func<IDataContext,Expression,object?[]?,object?[]?,IEnumerable<T>>                      GetIEnumerable      = null!;
+		internal Func<IDataContext,Expression,object?[]?,object?[]?,IAsyncEnumerable<T>>                 GetIAsyncEnumerable = null!;
+		internal Func<IDataContext,Expression,object?[]?,object?[]?,Func<T,bool>,CancellationToken,Task> GetForEachAsync     = null!;
 
 		#endregion
 
@@ -324,7 +326,7 @@ namespace LinqToDB.Linq
 			/// <summary>
 			/// Count of queries which has not been found in cache.
 			/// </summary>
-			internal long CacheMissCount;
+			public long CacheMissCount;
 
 			/// <summary>
 			/// LINQ query max cache size (per entity type).
@@ -536,23 +538,23 @@ namespace LinqToDB.Linq
 		#endregion
 	}
 
-	class QueryInfo : IQueryContext
+	public class QueryInfo : IQueryContext
 	{
 		public SqlStatement    Statement   { get; set; } = null!;
 		public object?         Context     { get; set; }
 		public SqlParameter[]? Parameters  { get; set; }
 		public AliasesContext? Aliases     { get; set; }
 
-		public List<ParameterAccessor> ParameterAccessors = new ();
+		internal List<ParameterAccessor> ParameterAccessors = new ();
 
-		public void AddParameterAccessor(ParameterAccessor accessor)
+		internal void AddParameterAccessor(ParameterAccessor accessor)
 		{
 			ParameterAccessors.Add(accessor);
 			accessor.SqlParameter.AccessorId = ParameterAccessors.Count - 1;
 		}
 	}
 
-	internal class ParameterAccessor
+	class ParameterAccessor
 	{
 		public ParameterAccessor(
 			Expression                             expression,

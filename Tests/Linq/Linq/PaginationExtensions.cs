@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -88,7 +89,8 @@ namespace Tests.Linq
 
 		#region Helpers
 
-		static Expression? Unwrap(Expression? ex)
+		[return: NotNullIfNotNull("ex")]
+		static Expression? Unwrap(this Expression? ex)
 		{
 			if (ex == null)
 				return null;

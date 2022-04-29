@@ -470,7 +470,8 @@ namespace LinqToDB.Data
 		/// Sets trace handler, used for all new connections unless overriden in <see cref="LinqToDBConnectionOptions"/>
 		/// defaults to calling <see cref="OnTraceInternal"/>.
 		/// </summary>
-		public static Action<TraceInfo>  OnTrace
+		[Obsolete("Use OnTraceConnection instance property or LinqToDbConnectionOptions.OnTrace setting.")]
+		public  static Action<TraceInfo>  OnTrace
 		{
 			get => _onTrace;
 			set => _onTrace = value ?? DefaultTrace;
@@ -1413,6 +1414,9 @@ namespace LinqToDB.Data
 			var rd = result.HasValue
 				? result.Value
 				: _command!.ExecuteReader(commandBehavior);
+
+			if (_commandInterceptor != null)
+				_commandInterceptor.AfterExecuteReader(new (this), _command!, commandBehavior, rd);
 
 			var wrapper = new DataReaderWrapper(this, rd, _command!);
 

@@ -207,9 +207,9 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		/// <param name="func">Column mapping property or field getter expression.</param>
 		/// <returns>Returns fluent property mapping builder.</returns>
-		public PropertyMappingBuilder<TEntity,TProperty> Property<TProperty>(Expression<Func<TEntity,TProperty>> func)
+		public PropertyMappingBuilder<TEntity, TProperty> Property<TProperty>(Expression<Func<TEntity,TProperty>> func)
 		{
-			return new PropertyMappingBuilder<TEntity,TProperty>(this, func).IsColumn();
+			return new PropertyMappingBuilder<TEntity, TProperty>(this, func).IsColumn();
 		}
 
 		/// <summary>
@@ -246,7 +246,7 @@ namespace LinqToDB.Mapping
 			var thisKeyName  = MemberHelper.GetMemberInfo(thisKey).Name;
 			var otherKeyName = MemberHelper.GetMemberInfo(otherKey).Name;
 
-			return Property(prop).HasAttribute(new AssociationAttribute { ThisKey = thisKeyName, OtherKey = otherKeyName, CanBeNull = canBeNull });
+			return Property( prop ).HasAttribute( new AssociationAttribute { ThisKey = thisKeyName, OtherKey = otherKeyName, CanBeNull = canBeNull } );
 		}
 
 		/// <summary>
@@ -273,7 +273,7 @@ namespace LinqToDB.Mapping
 			var thisKeyName  = MemberHelper.GetMemberInfo(thisKey).Name;
 			var otherKeyName = MemberHelper.GetMemberInfo(otherKey).Name;
 
-			return Property(prop).HasAttribute(new AssociationAttribute { ThisKey = thisKeyName, OtherKey = otherKeyName, CanBeNull = canBeNull });
+			return Property( prop ).HasAttribute( new AssociationAttribute { ThisKey = thisKeyName, OtherKey = otherKeyName, CanBeNull = canBeNull } );
 		}
 
 		/// <summary>
@@ -292,7 +292,7 @@ namespace LinqToDB.Mapping
 			if (prop      == null) throw new ArgumentNullException(nameof(prop));
 			if (predicate == null) throw new ArgumentNullException(nameof(predicate));
 
-			return Property(prop).HasAttribute(new AssociationAttribute { Predicate = predicate, CanBeNull = canBeNull, Relationship = Relationship.OneToMany });
+			return Property( prop ).HasAttribute( new AssociationAttribute { Predicate = predicate, CanBeNull = canBeNull } );
 		}
 
 		/// <summary>
@@ -311,7 +311,7 @@ namespace LinqToDB.Mapping
 			if (prop      == null) throw new ArgumentNullException(nameof(prop));
 			if (predicate == null) throw new ArgumentNullException(nameof(predicate));
 
-			return Property(prop).HasAttribute(new AssociationAttribute { Predicate = predicate, CanBeNull = canBeNull });
+			return Property( prop ).HasAttribute( new AssociationAttribute { Predicate = predicate, CanBeNull = canBeNull } );
 		}
 
 		/// <summary>
@@ -330,7 +330,7 @@ namespace LinqToDB.Mapping
 			if (prop            == null) throw new ArgumentNullException(nameof(prop));
 			if (queryExpression == null) throw new ArgumentNullException(nameof(queryExpression));
 
-			return Property(prop).HasAttribute(new AssociationAttribute { QueryExpression = queryExpression, CanBeNull = canBeNull, Relationship = Relationship.OneToMany });
+			return Property( prop ).HasAttribute( new AssociationAttribute { QueryExpression = queryExpression, CanBeNull = canBeNull } );
 		}
 
 		/// <summary>
@@ -349,7 +349,7 @@ namespace LinqToDB.Mapping
 			if (prop            == null) throw new ArgumentNullException(nameof(prop));
 			if (queryExpression == null) throw new ArgumentNullException(nameof(queryExpression));
 
-			return Property(prop).HasAttribute(new AssociationAttribute { QueryExpression = queryExpression, CanBeNull = canBeNull });
+			return Property( prop ).HasAttribute( new AssociationAttribute { QueryExpression = queryExpression, CanBeNull = canBeNull } );
 		}
 
 		/// <summary>
