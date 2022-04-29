@@ -39,7 +39,7 @@
 	<PropertyGroup Label="Code Analysis Setup">
 		<RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
 		<!--enable on release build only to not slowdown development/testing-->
-		<RunAnalyzersDuringBuild Condition="$(Configuration) == 'Release'">true</RunAnalyzersDuringBuild>
+		<RunAnalyzersDuringBuild Condition="$(Configuration) != 'Debug'">true</RunAnalyzersDuringBuild>
 		<RunAnalyzersDuringLiveAnalysis>true</RunAnalyzersDuringLiveAnalysis>
 
 		<AnalysisLevel>preview-All</AnalysisLevel>
@@ -62,6 +62,10 @@
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>build; analyzers</IncludeAssets>
 		</PackageReference>
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(Language)'=='C#'">
+		<Compile Include="$(MSBuildThisFileDirectory)/../Source/Shared/*.cs" LinkBase="Compatibility" />
 	</ItemGroup>
 
 </Project>

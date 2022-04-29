@@ -126,11 +126,9 @@ namespace Tests
 				}
 			};
 
-			// Configuration.RetryPolicy.Factory = db => new Retry();
-
 			Configuration.Linq.TraceMapperExpression = false;
 			// Configuration.Linq.GenerateExpressionTest  = true;
-			var assemblyPath = typeof(TestBase).Assembly.GetPath();
+			var assemblyPath = Path.GetDirectoryName(typeof(TestBase).Assembly.Location)!;
 
 #if NET472
 			// this is needed for machine without GAC-ed sql types (e.g. machine without SQL Server installed or CI)
@@ -404,13 +402,13 @@ namespace Tests
 		}
 
 		protected TestDataConnection GetDataConnection(
-				string         configuration,
-				MappingSchema? ms                       = null,
-				IInterceptor?  interceptor              = null,
-				IRetryPolicy?  retryPolicy              = null,
-				bool           suppressSequentialAccess = false)
+			string         configuration,
+			MappingSchema? ms                       = null,
+			IInterceptor?  interceptor              = null,
+			IRetryPolicy?  retryPolicy              = null,
+			bool           suppressSequentialAccess = false)
 		{
-			if (configuration.EndsWith(LinqServiceSuffix))
+			if (configuration.EndsWith(".LinqService"))
 			{
 				throw new InvalidOperationException($"Call {nameof(GetDataContext)} for remote context creation");
 			}
@@ -581,7 +579,7 @@ namespace Tests
 			}
 		}
 
-#region Parent/Child Model
+		#region Parent/Child Model
 
 		private   List<Parent>?      _parent;
 		protected IEnumerable<Parent> Parent
@@ -747,9 +745,9 @@ namespace Tests
 			}
 		}
 
-#endregion
+		#endregion
 
-#region Inheritance Parent/Child Model
+		#region Inheritance Parent/Child Model
 
 		private   List<InheritanceParentBase>? _inheritanceParent;
 		protected List<InheritanceParentBase>   InheritanceParent
@@ -785,9 +783,9 @@ namespace Tests
 			}
 		}
 
-#endregion
+		#endregion
 
-#region Northwind
+		#region Northwind
 
 		public TestBaseNorthwind GetNorthwindAsList(string context)
 		{
@@ -991,7 +989,7 @@ namespace Tests
 			}
 		}
 
-#endregion
+		#endregion
 
 		protected IEnumerable<LinqDataTypes2> AdjustExpectedData(ITestDataContext db, IEnumerable<LinqDataTypes2> data)
 		{
@@ -1225,7 +1223,7 @@ namespace Tests
 				{
 					var mc = (MethodCallExpression)e;
 
-					if (mc.IsSameGenericMethod(Methods.LinqToDB.AsSubQuery))
+					if (mc.Method.IsGenericMethod && mc.Method.GetGenericMethodDefinition() == Methods.LinqToDB.AsSubQuery)
 						return mc.Arguments[0];
 
 					if (typeof(ITable<>).IsSameOrParentOf(mc.Type))

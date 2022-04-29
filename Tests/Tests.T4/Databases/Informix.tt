@@ -5,6 +5,6 @@
 <#
 	NamespaceName = "InformixDataContext";
 
-	LoadInformixMetadata(GetConnectionString("Informix"));
+	LoadInformixMetadata(GetConnectionString("Informix"), LinqToDB.ProviderName.Informix);
 	GenerateModel();
 #>

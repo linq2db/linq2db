@@ -48,7 +48,8 @@ namespace LinqToDB.Tools
 		[ExpressionMethod(nameof(InImpl4))]
 		public static bool In<T>(this T value, T cmp1, T cmp2)
 		{
-			return object.Equals(value, cmp1) || object.Equals(value, cmp2);
+			var comparer = EqualityComparer<T>.Default;
+			return comparer.Equals(value, cmp1) || comparer.Equals(value, cmp2);
 		}
 
 		static Expression<Func<T,T,T,bool>> InImpl4<T>()
@@ -59,7 +60,8 @@ namespace LinqToDB.Tools
 		[ExpressionMethod(nameof(InImpl5))]
 		public static bool In<T>(this T value, T cmp1, T cmp2, T cmp3)
 		{
-			return object.Equals(value, cmp1) || object.Equals(value, cmp2) || object.Equals(value, cmp3);
+			var comparer = EqualityComparer<T>.Default;
+			return comparer.Equals(value, cmp1) || comparer.Equals(value, cmp2) || comparer.Equals(value, cmp3);
 		}
 
 		static Expression<Func<T,T,T,T,bool>> InImpl5<T>()
@@ -103,7 +105,8 @@ namespace LinqToDB.Tools
 		[ExpressionMethod(nameof(NotInImpl4))]
 		public static bool NotIn<T>(this T value, T cmp1, T cmp2)
 		{
-			return !object.Equals(value, cmp1) && !object.Equals(value, cmp2);
+			var comparer = EqualityComparer<T>.Default;
+			return !comparer.Equals(value, cmp1) && !comparer.Equals(value, cmp2);
 		}
 
 		static Expression<Func<T,T,T,bool>> NotInImpl4<T>()
@@ -114,7 +117,8 @@ namespace LinqToDB.Tools
 		[ExpressionMethod(nameof(NotInImpl5))]
 		public static bool NotIn<T>(this T value, T cmp1, T cmp2, T cmp3)
 		{
-			return !object.Equals(value, cmp1) && !object.Equals(value, cmp2) && !object.Equals(value, cmp3);
+			var comparer = EqualityComparer<T>.Default;
+			return !comparer.Equals(value, cmp1) && !comparer.Equals(value, cmp2) && !comparer.Equals(value, cmp3);
 		}
 
 		static Expression<Func<T,T,T,T,bool>> NotInImpl5<T>()

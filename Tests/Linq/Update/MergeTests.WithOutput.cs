@@ -88,17 +88,19 @@ namespace Tests.xUpdate
 					.InsertWhenNotMatched()
 					.MergeWithOutputAsync((a, deleted, inserted) => new {a, deleted, inserted});
 
-				var result = await outputRows.ToArrayAsync();
+				var cnt = 0;
+				await foreach (var record in outputRows)
+				{
+					cnt++;
 
-				result.Should().HaveCount(1);
+					record.a.Should().Be("INSERT");
+					record.deleted.Id.Should().Be(0);
 
-				var record = result[0];
+					record.inserted.Id.Should().Be(5);
+					record.inserted.Field1.Should().Be(10);
+				}
 
-				record.a.Should().Be("INSERT");
-				record.deleted.Id.Should().Be(0);
-
-				record.inserted.Id.Should().Be(5);
-				record.inserted.Field1.Should().Be(10);
+				Assert.AreEqual(1, cnt);
 			}
 		}
 
@@ -118,16 +120,19 @@ namespace Tests.xUpdate
 					.InsertWhenNotMatched()
 					.MergeWithOutputAsync((a, deleted, inserted) => new {deleted, inserted});
 
-				var result = await outputRows.ToArrayAsync();
+				var hasRecord = false;
+				await foreach (var record in outputRows)
+				{
+					Assert.False(hasRecord);
+					hasRecord = true;
 
-				result.Should().HaveCount(1);
+					record.deleted.Id.Should().Be(0);
 
-				var record = result[0];
+					record.inserted.Id.Should().Be(5);
+					record.inserted.Field1.Should().Be(10);
+				}
 
-				record.deleted.Id.Should().Be(0);
-
-				record.inserted.Id.Should().Be(5);
-				record.inserted.Field1.Should().Be(10);
+				Assert.True(hasRecord);
 			}
 		}
 

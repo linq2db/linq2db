@@ -11,7 +11,7 @@
 		</tags>
 		<readme>README.md</readme>
 		<dependencies>
-			<dependency id="linq2db" version="3.0.0" />
+			<dependency id="linq2db" version="4.0.0" />
 		</dependencies>
 		<contentFiles>
 			<files include="**\*" buildAction="None" />
@@ -19,6 +19,7 @@
 	</metadata>
 	<files>
 		<file src="..\Nuget\README.T4.md"                                                  target="README.md"                                                    />
+		<file src="..\Nuget\readme.T4.txt"                                                 target="readme.txt"                                                   />
 
 		<file src="..\Source\LinqToDB\bin\Release\net46\linq2db.dll"                       target="tools"                                                        />
 		<file src="..\Tests\Linq\bin\Azure\net472\Humanizer.dll"                           target="tools"                                                        />

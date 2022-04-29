@@ -13,7 +13,7 @@ namespace LinqToDB.Common
 	using LinqToDB.Common.Internal;
 	using Mapping;
 
-	static class ConvertBuilder
+	public static class ConvertBuilder
 	{
 		static readonly MethodInfo _defaultConverter = MemberHelper.MethodOf(() => ConvertDefault(null!, typeof(int)));
 

@@ -552,7 +552,7 @@ namespace LinqToDB.Extensions
 		/// true if the <paramref name="type"/> derives from <paramref name="check"/>; otherwise, false.
 		/// </returns>
 		[Pure]
-		internal static bool IsSubClassOf(this Type type, Type check)
+		public static bool IsSubClassOf(this Type type, Type check)
 		{
 			if (type  == null) throw new ArgumentNullException(nameof(type));
 			if (check == null) throw new ArgumentNullException(nameof(check));

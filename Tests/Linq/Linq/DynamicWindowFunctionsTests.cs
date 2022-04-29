@@ -15,7 +15,7 @@ namespace Tests.Linq
 	{
 		#region Helpers
 
-		static Expression? Unwrap(Expression? ex)
+		static Expression? Unwrap(this Expression? ex)
 		{
 			if (ex == null)
 				return null;

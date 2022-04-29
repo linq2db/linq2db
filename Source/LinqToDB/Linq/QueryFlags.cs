@@ -7,20 +7,24 @@ namespace LinqToDB.Linq
 	{
 		None                 = 0,
 		/// <summary>
-		/// Bit set, when group by guard set for connection.
+		/// Bit set, when <see cref="Common.Configuration.Linq.GuardGrouping"/> enabled for connection.
 		/// </summary>
-		GroupByGuard         = 0x1,
+		GroupByGuard         = 0x01,
 		/// <summary>
 		/// Bit set, when inline parameters enabled for connection.
 		/// </summary>
-		InlineParameters     = 0x2,
+		InlineParameters     = 0x02,
 		/// <summary>
-		/// Bit set, when inline Take/Skip parameterization is enabled for query.
+		/// Bit set, when <see cref="Common.Configuration.Linq.ParameterizeTakeSkip"/> is enabled for query.
 		/// </summary>
-		ParameterizeTakeSkip = 0x4,
+		ParameterizeTakeSkip = 0x04,
 		/// <summary>
-		/// Bit set, when PreferApply is enabled for query.
+		/// Bit set, when <see cref="Common.Configuration.Linq.PreferApply"/> is enabled for query.
 		/// </summary>
-		PreferApply          = 0x8,
+		PreferApply          = 0x08,
+		/// <summary>
+		/// BIt set, when <see cref="Common.Configuration.Linq.CompareNullsAsValues"/> is enabled for query.
+		/// </summary>
+		CompareNullsAsValues = 0x10,
 	}
 }

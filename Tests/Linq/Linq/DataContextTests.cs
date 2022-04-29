@@ -81,7 +81,7 @@ namespace Tests.Linq
 		[Test]
 		public void ProviderConnectionStringConstructorTest2([DataSources(false)] string context)
 		{
-			using (var db  = (TestDataConnection)GetDataContext(context))
+			using (var db = (TestDataConnection)GetDataContext(context))
 			using (var db1 = new DataContext(db.DataProvider.Name, "BAD"))
 			{
 				Assert.Throws(typeof(ArgumentException), () => db1.GetTable<Child>().ToList());
@@ -92,14 +92,14 @@ namespace Tests.Linq
 		[ActiveIssue("Provider detector picks managed provider as we don't have separate provider name for native Sybase provider", Configuration = ProviderName.Sybase)]
 		public void ProviderConnectionStringConstructorTest3([DataSources(false)] string context)
 		{
-			using (var db  = (TestDataConnection)GetDataContext(context))
+			using (var db = (TestDataConnection)GetDataContext(context))
 			using (var db1 = new DataContext(db.DataProvider.Name, db.ConnectionString!))
 			{
 				Assert.AreEqual(db.DataProvider.Name, db1.DataProvider.Name);
-				Assert.AreEqual(db.ConnectionString , db1.ConnectionString);
+				Assert.AreEqual(db.ConnectionString, db1.ConnectionString);
 
 				AreEqual(
-					db .GetTable<Child>().OrderBy(_ => _.ChildID).ToList(),
+					db.GetTable<Child>().OrderBy(_ => _.ChildID).ToList(),
 					db1.GetTable<Child>().OrderBy(_ => _.ChildID).ToList());
 			}
 		}
@@ -152,24 +152,40 @@ namespace Tests.Linq
 			}
 		}
 
+		class TestDataContext: DataContext
+		{
+			public TestDataContext(string context)
+				: base(context)
+			{
+			}
+
+			public DataConnection? DataConnection { get; private set; }
+
+			protected override DataConnection CreateDataConnection(LinqToDBConnectionOptions options)
+			{
+				return DataConnection = base.CreateDataConnection(options);
+			}
+		}
+
 		[Test]
 		public void CommandTimeoutTests([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = new DataContext(context))
+			using (var db = new TestDataContext(context))
 			{
-
+				db.KeepConnectionAlive = true;
 				db.CommandTimeout = 10;
-				var dataConnection = db.GetDataConnection();
-				Assert.That(dataConnection.CommandTimeout, Is.EqualTo(10));
+				Assert.Null(db.DataConnection);
+				db.GetTable<Person>().ToList();
+				Assert.NotNull(db.DataConnection);
+				Assert.That(db.DataConnection!.CommandTimeout, Is.EqualTo(10));
 
 				db.CommandTimeout = -10;
-				Assert.That(dataConnection.CommandTimeout, Is.EqualTo(-1));
+				Assert.That(db.DataConnection.CommandTimeout, Is.EqualTo(-1));
 
 				db.CommandTimeout = 11;
 				var record = db.GetTable<Child>().First();
 
-				dataConnection = db.GetDataConnection();
-				Assert.That(dataConnection.CommandTimeout, Is.EqualTo(11));
+				Assert.That(db.DataConnection!.CommandTimeout, Is.EqualTo(11));
 			}
 		}
 
@@ -179,14 +195,15 @@ namespace Tests.Linq
 			using (var db = new NewDataContext(context))
 			{
 				Assert.AreEqual(0, db.CreateCalled);
-				using (db.GetDataConnection())
-				{
-					Assert.AreEqual(1, db.CreateCalled);
-					using (db.GetDataConnection())
-					{
-						Assert.AreEqual(1, db.CreateCalled);
-					}
-				}
+
+				db.KeepConnectionAlive = true;
+				db.GetTable<Person>().ToList();
+				Assert.AreEqual(1, db.CreateCalled);
+				db.GetTable<Person>().ToList();
+				Assert.AreEqual(1, db.CreateCalled);
+				db.KeepConnectionAlive = false;
+				db.GetTable<Person>().ToList();
+				Assert.AreEqual(2, db.CreateCalled);
 			}
 		}
 
@@ -203,11 +220,12 @@ namespace Tests.Linq
 						Assert.False(db.IsMarsEnabled);
 						Assert.AreEqual(0, db.CloneCalled);
 
-						using (db.GetDataConnection())
-						{
-							using (((IDataContext)db).Clone(true))
-								Assert.AreEqual(db.IsMarsEnabled ? 1 : 0, db.CloneCalled);
-						}
+						// create and preserve underlying dataconnection
+						db.KeepConnectionAlive = true;
+						db.GetTable<Person>().ToList();
+
+						using (((IDataContext)db).Clone(true))
+							Assert.AreEqual(db.IsMarsEnabled ? 1 : 0, db.CloneCalled);
 					}
 				}
 			}

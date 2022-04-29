@@ -5,7 +5,7 @@ using LinqToDB.Common;
 
 namespace LinqToDB.Expressions
 {
-	internal class ValueTaskToTaskMapper : ICustomMapper
+	public class ValueTaskToTaskMapper : ICustomMapper
 	{
 		bool ICustomMapper.CanMap(Expression expression)
 		{

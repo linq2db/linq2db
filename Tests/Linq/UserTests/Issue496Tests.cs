@@ -15,7 +15,7 @@ namespace Tests.UserTests
 		new class Parent1
 		{
 			public int ParentID;
-			[Association(ThisKey = "ParentID", OtherKey = "ParentID", CanBeNull = true, IsBackReference = true)]
+			[Association(ThisKey = "ParentID", OtherKey = "ParentID", CanBeNull = true)]
 			public ICollection<Child1> Children = null!;
 		}
 
@@ -30,7 +30,7 @@ namespace Tests.UserTests
 		class Parent2
 		{
 			public int ParentID;
-			[Association(ThisKey = "ParentID", OtherKey = "ParentID", CanBeNull = true, IsBackReference = true)]
+			[Association(ThisKey = "ParentID", OtherKey = "ParentID", CanBeNull = true)]
 			public ICollection<Child2> Children = null!;
 		}
 
@@ -50,7 +50,7 @@ namespace Tests.UserTests
 		class Parent3
 		{
 			public int ParentID;
-			[Association(ThisKey = "ParentID", OtherKey = "ParentID", CanBeNull = true, IsBackReference = true)]
+			[Association(ThisKey = "ParentID", OtherKey = "ParentID", CanBeNull = true)]
 			public ICollection<Child3> Children = null!;
 		}
 
@@ -66,7 +66,7 @@ namespace Tests.UserTests
 		{
 			[Column]
 			public MyInt? ParentID;
-			[Association(ThisKey = "ParentID", OtherKey = "ParentID", CanBeNull = true, IsBackReference = true)]
+			[Association(ThisKey = "ParentID", OtherKey = "ParentID", CanBeNull = true)]
 			public ICollection<Child4> Children = null!;
 		}
 
@@ -82,7 +82,7 @@ namespace Tests.UserTests
 		{
 			[Column]
 			public MyInt? ParentID;
-			[Association(ThisKey = "ParentID", OtherKey = "ParentID", CanBeNull = true, IsBackReference = true)]
+			[Association(ThisKey = "ParentID", OtherKey = "ParentID", CanBeNull = true)]
 			public ICollection<Child5> Children = null!;
 		}
 

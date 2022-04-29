@@ -162,7 +162,7 @@ namespace LinqToDB.DataProvider.SqlServer
 						x.name = 'MS_Description' AND x.class = 1")
 				.Select(c =>
 				{
-					var dti = GetDataType(c.DataType, options);
+					var dti = GetDataType(c.DataType, null, options);
 
 					if (dti != null)
 					{

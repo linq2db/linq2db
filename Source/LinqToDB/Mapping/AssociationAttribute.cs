@@ -10,15 +10,15 @@ namespace LinqToDB.Mapping
 	/// Could be applied to:
 	/// - instance properties and fields;
 	/// - instance and static methods.
-	///
+	/// 
 	/// For associations, defined using static methods, <c>this</c> mapping side defined by type of first parameter.
 	/// Also, optionally, you can pass data context object as extra method parameter.
-	///
+	/// 
 	/// Based on association type - to one or to multiple records - result type should be target record's mapping type or
 	/// <see cref="IEquatable{T}"/> collection.
-	///
+	/// 
 	/// By default associations are used only for joins generation in LINQ queries and will have <c>null</c> value for loaded
-	/// records. To load data into association, you should explicitly specify it in your query using <see cref="LinqExtensions.LoadWith{TEntity,TProperty}(System.Linq.IQueryable{TEntity},System.Linq.Expressions.Expression{System.Func{TEntity,TProperty}})"/> method.
+	/// records. To load data into association, you should explicitly specify it in your query using <see cref="LinqExtensions.LoadWith{TEntity,TProperty}(System.Linq.IQueryable{TEntity},Expression{Func{TEntity,TProperty}})"/> method.
 	/// </summary>
 	[PublicAPI]
 	[AttributeUsage(AttributeTargets.Method | AttributeTargets.Property | AttributeTargets.Field, AllowMultiple=false)]
@@ -77,7 +77,7 @@ namespace LinqToDB.Mapping
 		/// {
 		///     [Association(ExpressionQueryMethod = nameof(OtherImpl), CanBeNull = true)]
 		///     public SomeOtherEntity Other { get; set; }
-		///
+		/// 
 		///     public static Expression&lt;Func&lt;SomeEntity, IDataContext, IQueryable&lt;SomeOtherEntity&gt;&gt;&gt; OtherImpl()
 		///     {
 		///         return (e, db) =&gt; db.GetTable&lt;SomeOtherEntity&gt;().Where(se =&gt; se.Id == e.Id);
@@ -105,7 +105,7 @@ namespace LinqToDB.Mapping
 		public Expression?  QueryExpression       { get; set; }
 
 		/// <summary>
-		/// Specify name of property or field to store association value, loaded using <see cref="LinqExtensions.LoadWith{TEntity,TProperty}(System.Linq.IQueryable{TEntity},System.Linq.Expressions.Expression{System.Func{TEntity,TProperty}})"/> method.
+		/// Specify name of property or field to store association value, loaded using <see cref="LinqExtensions.LoadWith{TEntity,TProperty}(System.Linq.IQueryable{TEntity},Expression{Func{TEntity,TProperty}})"/> method.
 		/// When not specified, current association member will be used.
 		/// </summary>
 		public string?      Storage             { get; set; }
@@ -121,21 +121,25 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// This property is not used by linq2db and could be used for informational purposes.
 		/// </summary>
+		[Obsolete("This property is not used by linq2db and will be removed in future")]
 		public string?      KeyName             { get; set; }
 
 		/// <summary>
 		/// This property is not used by linq2db and could be used for informational purposes.
 		/// </summary>
+		[Obsolete("This property is not used by linq2db and will be removed in future")]
 		public string?      BackReferenceName   { get; set; }
 
 		/// <summary>
 		/// This property is not used by linq2db and could be used for informational purposes.
 		/// </summary>
+		[Obsolete("This property is not used by linq2db and will be removed in future")]
 		public bool         IsBackReference     { get; set; }
 
 		/// <summary>
 		/// This property is not used by linq2db and could be used for informational purposes.
 		/// </summary>
+		[Obsolete("This property is not used by linq2db and will be removed in future")]
 		public Relationship Relationship        { get; set; }
 
 		/// <summary>
@@ -147,17 +151,17 @@ namespace LinqToDB.Mapping
 		/// Returns <see cref="ThisKey"/> value as a list of key member names.
 		/// </summary>
 		/// <returns>List of key members.</returns>
-		public string[] GetThisKeys () { return AssociationDescriptor.ParseKeys(ThisKey);  }
+		public string[] GetThisKeys() => AssociationDescriptor.ParseKeys(ThisKey);
 
 		/// <summary>
 		/// Returns <see cref="OtherKey"/> value as a list of key member names.
 		/// </summary>
 		/// <returns>List of key members.</returns>
-		public string[] GetOtherKeys() { return AssociationDescriptor.ParseKeys(OtherKey); }
+		public string[] GetOtherKeys() => AssociationDescriptor.ParseKeys(OtherKey);
 
 		public override string GetObjectID()
 		{
-			return $".{Configuration}.{ThisKey}.{OtherKey}.{ExpressionPredicate}.{QueryExpressionMethod}.{Storage}.{(CanBeNull?1:0)}.{KeyName}.{BackReferenceName}.{(IsBackReference?1:0)}.{(int)Relationship}.{AliasName}.";
+			return $".{Configuration}.{ThisKey}.{OtherKey}.{ExpressionPredicate}.{QueryExpressionMethod}.{Storage}.{(CanBeNull?1:0)}.{AliasName}.";
 		}
 	}
 }

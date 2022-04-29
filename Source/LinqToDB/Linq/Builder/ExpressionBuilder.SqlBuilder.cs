@@ -231,7 +231,7 @@ namespace LinqToDB.Linq.Builder
 			return ctx;
 		}
 
-		internal ISqlExpression SubQueryToSql(IBuildContext context, MethodCallExpression expression)
+		public ISqlExpression SubQueryToSql(IBuildContext context, MethodCallExpression expression)
 		{
 			var subQueryCtx = GetSubQueryContext(context, expression);
 			var sequence    = subQueryCtx.Context;
@@ -288,7 +288,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region IsSubQuery
 
-		internal bool IsSubQuery(IBuildContext context, MethodCallExpression call)
+		public bool IsSubQuery(IBuildContext context, MethodCallExpression call)
 		{
 			var isAggregate = call.IsAggregate(MappingSchema);
 
@@ -393,7 +393,7 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-		internal Expression ConvertExpression(Expression expression)
+		public Expression ConvertExpression(Expression expression)
 		{
 			return (_convertExpressionTransformer ??= TransformInfoVisitor<ExpressionBuilder>.Create(this, static (ctx, e) => ctx.ConvertExpressionTransformer(e)))
 				.Transform(expression);
@@ -2104,7 +2104,7 @@ namespace LinqToDB.Linq.Builder
 			return condition;
 		}
 
-		internal ISqlPredicate? ConvertNewObjectComparison(IBuildContext context, ExpressionType nodeType, Expression left, Expression right)
+		public ISqlPredicate? ConvertNewObjectComparison(IBuildContext context, ExpressionType nodeType, Expression left, Expression right)
 		{
 			left  = FindExpression(left);
 			right = FindExpression(right);
@@ -2382,7 +2382,6 @@ namespace LinqToDB.Linq.Builder
 			return null;
 		}
 
-
 		#endregion
 
 		#region LIKE predicate
@@ -2420,7 +2419,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region MakeIsPredicate
 
-		internal ISqlPredicate MakeIsPredicate(TableBuilder.TableContext table, Type typeOperand)
+		public ISqlPredicate MakeIsPredicate(TableBuilder.TableContext table, Type typeOperand)
 		{
 			if (typeOperand == table.ObjectType)
 			{
@@ -2441,7 +2440,7 @@ namespace LinqToDB.Linq.Builder
 			return MakeIsPredicate(table, table, table.InheritanceMapping, typeOperand, static (table, name) => table.SqlTable[name] ?? throw new LinqException($"Field {name} not found in table {table.SqlTable}"));
 		}
 
-		internal ISqlPredicate MakeIsPredicate<TContext>(
+		public ISqlPredicate MakeIsPredicate<TContext>(
 			TContext                              getSqlContext,
 			IBuildContext                         context,
 			List<InheritanceMapping>              inheritanceMapping,
@@ -2612,7 +2611,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region Search Condition Builder
 
-		internal void BuildSearchCondition(IBuildContext? context, Expression expression, List<SqlCondition> conditions)
+		public void BuildSearchCondition(IBuildContext? context, Expression expression, List<SqlCondition> conditions)
 		{
 			expression = GetRemoveNullPropagationTransformer(true).Transform(expression);
 
@@ -2842,7 +2841,7 @@ namespace LinqToDB.Linq.Builder
 			return MappingSchema.GetAttribute<Sql.ExpressionAttribute>(member.ReflectedType!, member, static a => a.Configuration);
 		}
 
-		internal Sql.TableFunctionAttribute? GetTableFunctionAttribute(MemberInfo member)
+		public Sql.TableFunctionAttribute? GetTableFunctionAttribute(MemberInfo member)
 		{
 			return MappingSchema.GetAttribute<Sql.TableFunctionAttribute>(member.ReflectedType!, member, static a => a.Configuration);
 		}

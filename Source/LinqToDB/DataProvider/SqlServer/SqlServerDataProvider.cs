@@ -31,16 +31,16 @@ namespace LinqToDB.DataProvider.SqlServer
 	class SqlServerDataProvider2017MicrosoftDataSqlClient : SqlServerDataProvider { public SqlServerDataProvider2017MicrosoftDataSqlClient() : base(ProviderName.SqlServer2017, SqlServerVersion.v2017, SqlServerProvider.MicrosoftDataSqlClient) {} }
 	class SqlServerDataProvider2019MicrosoftDataSqlClient : SqlServerDataProvider { public SqlServerDataProvider2019MicrosoftDataSqlClient() : base(ProviderName.SqlServer2019, SqlServerVersion.v2019, SqlServerProvider.MicrosoftDataSqlClient) {} }
 
-	public class SqlServerDataProvider : DynamicDataProviderBase<SqlServerProviderAdapter>
+	public abstract class SqlServerDataProvider : DynamicDataProviderBase<SqlServerProviderAdapter>
 	{
 		#region Init
 
-		public SqlServerDataProvider(string name, SqlServerVersion version)
+		protected SqlServerDataProvider(string name, SqlServerVersion version)
 			: this(name, version, SqlServerProvider.MicrosoftDataSqlClient)
 		{
 		}
 
-		public SqlServerDataProvider(string name, SqlServerVersion version, SqlServerProvider provider)
+		protected SqlServerDataProvider(string name, SqlServerVersion version, SqlServerProvider provider)
 			: base(
 				name,
 				MappingSchemaInstance.Get(version),

@@ -25,7 +25,7 @@ namespace LinqToDB.Linq.Builder
 
 		static readonly object _sync = new ();
 
-		static List<ISequenceBuilder> _sequenceBuilders = new ()
+		static IReadOnlyList<ISequenceBuilder> _sequenceBuilders = new ISequenceBuilder[]
 		{
 			new TableBuilder               (),
 			new IgnoreFiltersBuilder       (),
@@ -94,17 +94,12 @@ namespace LinqToDB.Linq.Builder
 			new QueryNameBuilder           (),
 		};
 
-		public static void AddBuilder(ISequenceBuilder builder)
-		{
-			_sequenceBuilders.Add(builder);
-		}
-
 		#endregion
 
 		#region Init
 
 		readonly Query                             _query;
-		readonly List<ISequenceBuilder>            _builders = _sequenceBuilders;
+		readonly IReadOnlyList<ISequenceBuilder>   _builders = _sequenceBuilders;
 		private  bool                              _reorder;
 		private  HashSet<Expression>?              _subQueryExpressions;
 		readonly ExpressionTreeOptimizationContext _optimizationContext;
@@ -181,7 +176,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region Builder SQL
 
-		internal Query<T> Build<T>()
+		public Query<T> Build<T>()
 		{
 			var sequence = BuildSequence(new BuildInfo((IBuildContext?)null, Expression, new SelectQuery()));
 
@@ -189,7 +184,7 @@ namespace LinqToDB.Linq.Builder
 				lock (_sync)
 				{
 					_reorder = false;
-					_sequenceBuilders = _sequenceBuilders.OrderByDescending(static _ => _.BuildCounter).ToList();
+					_sequenceBuilders = _sequenceBuilders.OrderByDescending(static _ => _.BuildCounter).ToArray();
 				}
 
 			_query.Init(sequence, _parametersContext.CurrentSqlParameters);
@@ -1576,7 +1571,7 @@ namespace LinqToDB.Linq.Builder
 		/// <param name="left"></param>
 		/// <param name="right"></param>
 		/// <returns></returns>
-		internal static BinaryExpression Equal(MappingSchema mappingSchema, Expression left, Expression right)
+		public static BinaryExpression Equal(MappingSchema mappingSchema, Expression left, Expression right)
 		{
 			if (left.Type != right.Type)
 			{
@@ -1610,7 +1605,7 @@ namespace LinqToDB.Linq.Builder
 		Dictionary<Expression, Expression>? _rootExpressions;
 
 		[return: NotNullIfNotNull("expr")]
-		internal Expression? GetRootObject(Expression? expr)
+		public Expression? GetRootObject(Expression? expr)
 		{
 			if (expr == null)
 				return null;

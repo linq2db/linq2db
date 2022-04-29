@@ -567,7 +567,7 @@ namespace Tests.Tools.Mapper
 
 		class Object3
 		{
-			public HashSet<string> HashSet = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+			public HashSet<string> HashSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 		}
 
 		[Test]

@@ -13,7 +13,7 @@ namespace LinqToDB.DataProvider.MySql
 	using Mapping;
 	using SqlQuery;
 
-	class MySqlProviderAdapter : IDynamicProviderAdapter
+	public class MySqlProviderAdapter : IDynamicProviderAdapter
 	{
 		private static readonly object _mysqlDataSyncRoot      = new ();
 		private static readonly object _mysqlConnectorSyncRoot = new ();
@@ -33,7 +33,7 @@ namespace LinqToDB.DataProvider.MySql
 		public const string OldMySqlConnectorNamespace       = "MySql.Data.MySqlClient";
 		public const string OldMySqlConnectorTypesNamespace  = "MySql.Data.Types";
 
-		internal enum MySqlProvider
+		public enum MySqlProvider
 		{
 			MySqlData,
 			MySqlConnector
@@ -82,7 +82,7 @@ namespace LinqToDB.DataProvider.MySql
 		public BulkCopyAdapter? BulkCopy            { get; protected set; }
 		public bool             IsDateOnlySupported { get; protected set; }
 
-		internal class BulkCopyAdapter
+		public class BulkCopyAdapter
 		{
 			internal BulkCopyAdapter(
 				Func<DbConnection, DbTransaction?, MySqlConnector.MySqlBulkCopy> bulkCopyCreator,
@@ -92,8 +92,8 @@ namespace LinqToDB.DataProvider.MySql
 				CreateColumnMapping = bulkCopyColumnMappingCreator;
 			}
 
-			public Func<DbConnection,DbTransaction?,MySqlConnector.MySqlBulkCopy> Create              { get; }
-			public Func<int,string,MySqlBulkCopyColumnMapping>                    CreateColumnMapping { get; }
+			internal Func<DbConnection, DbTransaction?, MySqlConnector.MySqlBulkCopy> Create              { get; }
+			internal Func<int, string, MySqlBulkCopyColumnMapping>                    CreateColumnMapping { get; }
 		}
 
 		public static MySqlProviderAdapter GetInstance(string name)

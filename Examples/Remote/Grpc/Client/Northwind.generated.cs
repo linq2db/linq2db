@@ -83,7 +83,7 @@ namespace DataModels
 		/// <summary>
 		/// FK_Products_Categories_BackReference
 		/// </summary>
-		[Association(ThisKey="CategoryID", OtherKey="CategoryID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+		[Association(ThisKey="CategoryID", OtherKey="CategoryID", CanBeNull=true)]
 		public IEnumerable<Product> Products { get; set; }
 
 		#endregion
@@ -123,13 +123,13 @@ namespace DataModels
 		/// <summary>
 		/// FK_CustomerCustomerDemo_Customers_BackReference
 		/// </summary>
-		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true)]
 		public IEnumerable<CustomerCustomerDemo> CustomerCustomerDemoes { get; set; }
 
 		/// <summary>
 		/// FK_Orders_Customers_BackReference
 		/// </summary>
-		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true)]
 		public IEnumerable<Order> Orders { get; set; }
 
 		#endregion
@@ -155,13 +155,13 @@ namespace DataModels
 		/// <summary>
 		/// FK_CustomerCustomerDemo_Customers
 		/// </summary>
-		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_CustomerCustomerDemo_Customers", BackReferenceName="CustomerCustomerDemoes")]
+		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=false)]
 		public Customer Customer { get; set; }
 
 		/// <summary>
 		/// FK_CustomerCustomerDemo
 		/// </summary>
-		[Association(ThisKey="CustomerTypeID", OtherKey="CustomerTypeID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_CustomerCustomerDemo", BackReferenceName="CustomerCustomerDemoes")]
+		[Association(ThisKey="CustomerTypeID", OtherKey="CustomerTypeID", CanBeNull=false)]
 		public CustomerDemographic CustomerType { get; set; }
 
 		#endregion
@@ -178,7 +178,7 @@ namespace DataModels
 		/// <summary>
 		/// FK_CustomerCustomerDemo_BackReference
 		/// </summary>
-		[Association(ThisKey="CustomerTypeID", OtherKey="CustomerTypeID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+		[Association(ThisKey="CustomerTypeID", OtherKey="CustomerTypeID", CanBeNull=true)]
 		public IEnumerable<CustomerCustomerDemo> CustomerCustomerDemoes { get; set; }
 
 		#endregion
@@ -211,25 +211,25 @@ namespace DataModels
 		/// <summary>
 		/// FK_EmployeeTerritories_Employees_BackReference
 		/// </summary>
-		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true)]
 		public IEnumerable<EmployeeTerritory> EmployeeTerritories { get; set; }
 
 		/// <summary>
 		/// FK_Employees_Employees
 		/// </summary>
-		[Association(ThisKey="ReportsTo", OtherKey="EmployeeID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_Employees_Employees", BackReferenceName="FkEmployeesEmployeesBackReferences")]
+		[Association(ThisKey="ReportsTo", OtherKey="EmployeeID", CanBeNull=true)]
 		public Employee FkEmployeesEmployee { get; set; }
 
 		/// <summary>
 		/// FK_Employees_Employees_BackReference
 		/// </summary>
-		[Association(ThisKey="EmployeeID", OtherKey="ReportsTo", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+		[Association(ThisKey="EmployeeID", OtherKey="ReportsTo", CanBeNull=true)]
 		public IEnumerable<Employee> FkEmployeesEmployeesBackReferences { get; set; }
 
 		/// <summary>
 		/// FK_Orders_Employees_BackReference
 		/// </summary>
-		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true)]
 		public IEnumerable<Order> Orders { get; set; }
 
 		#endregion
@@ -246,13 +246,13 @@ namespace DataModels
 		/// <summary>
 		/// FK_EmployeeTerritories_Employees
 		/// </summary>
-		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_EmployeeTerritories_Employees", BackReferenceName="EmployeeTerritories")]
+		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=false)]
 		public Employee Employee { get; set; }
 
 		/// <summary>
 		/// FK_EmployeeTerritories_Territories
 		/// </summary>
-		[Association(ThisKey="TerritoryID", OtherKey="TerritoryID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_EmployeeTerritories_Territories", BackReferenceName="EmployeeTerritories")]
+		[Association(ThisKey="TerritoryID", OtherKey="TerritoryID", CanBeNull=false)]
 		public Territory Territory { get; set; }
 
 		#endregion
@@ -312,25 +312,25 @@ namespace DataModels
 		/// <summary>
 		/// FK_Orders_Customers
 		/// </summary>
-		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_Orders_Customers", BackReferenceName="Orders")]
+		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true)]
 		public Customer Customer { get; set; }
 
 		/// <summary>
 		/// FK_Orders_Employees
 		/// </summary>
-		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_Orders_Employees", BackReferenceName="Orders")]
+		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true)]
 		public Employee Employee { get; set; }
 
 		/// <summary>
 		/// FK_Order_Details_Orders_BackReference
 		/// </summary>
-		[Association(ThisKey="OrderID", OtherKey="OrderID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+		[Association(ThisKey="OrderID", OtherKey="OrderID", CanBeNull=true)]
 		public IEnumerable<OrderDetail> OrderDetails { get; set; }
 
 		/// <summary>
 		/// FK_Orders_Shippers
 		/// </summary>
-		[Association(ThisKey="ShipVia", OtherKey="ShipperID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_Orders_Shippers", BackReferenceName="Orders")]
+		[Association(ThisKey="ShipVia", OtherKey="ShipperID", CanBeNull=true)]
 		public Shipper Shipper { get; set; }
 
 		#endregion
@@ -350,13 +350,13 @@ namespace DataModels
 		/// <summary>
 		/// FK_Order_Details_Orders
 		/// </summary>
-		[Association(ThisKey="OrderID", OtherKey="OrderID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_Order_Details_Orders", BackReferenceName="OrderDetails")]
+		[Association(ThisKey="OrderID", OtherKey="OrderID", CanBeNull=false)]
 		public Order Order { get; set; }
 
 		/// <summary>
 		/// FK_Order_Details_Products
 		/// </summary>
-		[Association(ThisKey="ProductID", OtherKey="ProductID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_Order_Details_Products", BackReferenceName="OrderDetails")]
+		[Association(ThisKey="ProductID", OtherKey="ProductID", CanBeNull=false)]
 		public Product Product { get; set; }
 
 		#endregion
@@ -425,19 +425,19 @@ namespace DataModels
 		/// <summary>
 		/// FK_Products_Categories
 		/// </summary>
-		[Association(ThisKey="CategoryID", OtherKey="CategoryID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_Products_Categories", BackReferenceName="Products")]
+		[Association(ThisKey="CategoryID", OtherKey="CategoryID", CanBeNull=true)]
 		public Category Category { get; set; }
 
 		/// <summary>
 		/// FK_Order_Details_Products_BackReference
 		/// </summary>
-		[Association(ThisKey="ProductID", OtherKey="ProductID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+		[Association(ThisKey="ProductID", OtherKey="ProductID", CanBeNull=true)]
 		public IEnumerable<OrderDetail> OrderDetails { get; set; }
 
 		/// <summary>
 		/// FK_Products_Suppliers
 		/// </summary>
-		[Association(ThisKey="SupplierID", OtherKey="SupplierID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_Products_Suppliers", BackReferenceName="Products")]
+		[Association(ThisKey="SupplierID", OtherKey="SupplierID", CanBeNull=true)]
 		public Supplier Supplier { get; set; }
 
 		#endregion
@@ -488,7 +488,7 @@ namespace DataModels
 		/// <summary>
 		/// FK_Territories_Region_BackReference
 		/// </summary>
-		[Association(ThisKey="RegionID", OtherKey="RegionID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+		[Association(ThisKey="RegionID", OtherKey="RegionID", CanBeNull=true)]
 		public IEnumerable<Territory> Territories { get; set; }
 
 		#endregion
@@ -524,7 +524,7 @@ namespace DataModels
 		/// <summary>
 		/// FK_Orders_Shippers_BackReference
 		/// </summary>
-		[Association(ThisKey="ShipperID", OtherKey="ShipVia", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+		[Association(ThisKey="ShipperID", OtherKey="ShipVia", CanBeNull=true)]
 		public IEnumerable<Order> Orders { get; set; }
 
 		#endregion
@@ -567,7 +567,7 @@ namespace DataModels
 		/// <summary>
 		/// FK_Products_Suppliers_BackReference
 		/// </summary>
-		[Association(ThisKey="SupplierID", OtherKey="SupplierID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+		[Association(ThisKey="SupplierID", OtherKey="SupplierID", CanBeNull=true)]
 		public IEnumerable<Product> Products { get; set; }
 
 		#endregion
@@ -585,13 +585,13 @@ namespace DataModels
 		/// <summary>
 		/// FK_EmployeeTerritories_Territories_BackReference
 		/// </summary>
-		[Association(ThisKey="TerritoryID", OtherKey="TerritoryID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+		[Association(ThisKey="TerritoryID", OtherKey="TerritoryID", CanBeNull=true)]
 		public IEnumerable<EmployeeTerritory> EmployeeTerritories { get; set; }
 
 		/// <summary>
 		/// FK_Territories_Region
 		/// </summary>
-		[Association(ThisKey="RegionID", OtherKey="RegionID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_Territories_Region", BackReferenceName="Territories")]
+		[Association(ThisKey="RegionID", OtherKey="RegionID", CanBeNull=false)]
 		public Region Region { get; set; }
 
 		#endregion

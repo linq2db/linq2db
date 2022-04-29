@@ -18,7 +18,7 @@ namespace Tests.Linq
 		public class SomeEntity
 		{
 			[Column]
-		    public int Id { get; set; }
+			public int Id { get; set; }
 
 			[Column]
 			public string? OwnerStr { get; set; }
@@ -87,7 +87,7 @@ namespace Tests.Linq
 		public class SomeOtherEntity
 		{
 			[Column]
-		    public int Id { get; set; }
+			public int Id { get; set; }
 
 			[Column]
 			public string? StrValue { get; set; }
@@ -528,7 +528,6 @@ WHERE
 
 			[Association(ThisKey = nameof(ParentId), OtherKey = nameof(Id))]
 			public TreeItem? Parent { get; set; }
-
 		}
 
 		[Test]
@@ -542,7 +541,7 @@ WHERE
 				DoGeneric(treeItems);
 			}
 		}
-		
+
 		void DoGeneric<T>(ITable<T> treeItems) where T: ITreeItem
 		{
 			var query1 = treeItems
@@ -555,16 +554,14 @@ WHERE
 				select t.Children;
 
 			var result2 = query2.ToArray();
-
 		}
-
 
 		public class Entity
 		{
 			[Column]
 			public int Id { get; set; }
 
-			[Association(QueryExpressionMethod = nameof(Entity2LanguageExpr), CanBeNull = true, Relationship = Relationship.OneToOne)]
+			[Association(QueryExpressionMethod = nameof(Entity2LanguageExpr), CanBeNull = true)]
 			public Entity2Language? Entity2Language { get; set; }
 
 			public static Expression<Func<Entity, IDataContext, IQueryable<Entity2Language>>> Entity2LanguageExpr()
@@ -587,7 +584,7 @@ WHERE
 			[Column]
 			public int LanguageId { get; set; }
 
-			[Association(ThisKey = nameof(LanguageId), OtherKey = nameof(QueryableAssociationTests.Language.Id), CanBeNull = false, Relationship = Relationship.OneToOne)]
+			[Association(ThisKey = nameof(LanguageId), OtherKey = nameof(QueryableAssociationTests.Language.Id), CanBeNull = false)]
 			public Language Language { get; set; } = null!;
 		}
 
@@ -619,7 +616,7 @@ WHERE
 						LanguageName = x.Entity2Language.Language.Name
 					})
 					.First();
-			
+
 				Assert.AreEqual(1, value.EntityId);
 				Assert.AreEqual(1, value.LanguageId);
 				Assert.AreEqual("English", value.LanguageName);
@@ -636,7 +633,7 @@ WHERE
 
 			[ExpressionMethod(nameof(BelongsToCurrentUserFailExpr))]
 			public bool BelongsToCurrentUserFail { get; set; }
-			
+
 			public static Expression<Func<EntityWithUser, CustomDataConnection, bool>> BelongsToCurrentUserExpr()
 			{
 				return (e, db) => e.UserId == db.CurrentUserId;
@@ -666,7 +663,7 @@ WHERE
 				var count = db
 					.GetTable<EntityWithUser>()
 					.Count(x => x.BelongsToCurrentUser);
-			
+
 				Assert.AreEqual(currentUser, count);
 			}
 		}
@@ -693,7 +690,7 @@ WHERE
 		
 			}
 		}
-	
+
 		class CustomDataConnection : DataConnection
 		{
 			public CustomDataConnection(string? configurationString) : base(configurationString)
@@ -713,13 +710,12 @@ WHERE
 			public int CurrentUserId { get; set; }
 		}
 
-
 		public class UserGroup
 		{
 			[Column]
 			public int Id { get; set; }
 
-			[Association(QueryExpressionMethod = nameof(UsersWithLanguageExpression), Relationship = Relationship.OneToMany)]
+			[Association(QueryExpressionMethod = nameof(UsersWithLanguageExpression))]
 			public IQueryable<User> UsersWithLanguage(IDataContext db, int languageId)
 			{
 				return (_usersWithLanguageExpression ??= UsersWithLanguageExpression().CompileExpression())(this, db, languageId);
@@ -738,12 +734,12 @@ WHERE
 					.Where(x => x.UserGroupId == p.Id && x.LanguageId == languageId);
 			}
 
-			[Association(QueryExpressionMethod = nameof(UsersWithLanguageLikeExpression), Relationship = Relationship.OneToMany)]
+			[Association(QueryExpressionMethod = nameof(UsersWithLanguageLikeExpression))]
 			public IQueryable<User> UsersWithLanguageLike(IDataContext db, string language)
 			{
 				return (_usersWithLanguageLikeExpression ??= UsersWithLanguageLikeExpression().CompileExpression())(this, db, language);
 			}
-						
+
 			public static Expression<Func<UserGroup, IDataContext, string, IQueryable<User>>> UsersWithLanguageLikeExpression()
 			{
 				return (p, db, language) => db
@@ -754,7 +750,7 @@ WHERE
 
 			private static Func<UserGroup, IDataContext, string, IQueryable<User>>? _usersWithLanguageLikeExpression;
 
-			[Association(QueryExpressionMethod = nameof(FirstUserWithMultipleParametersExpression), Relationship = Relationship.OneToOne, CanBeNull = true)]
+			[Association(QueryExpressionMethod = nameof(FirstUserWithMultipleParametersExpression), CanBeNull = true)]
 			public User? FirstUserWithMultipleParameters(IDataContext db, int parameter1, string parameter2, decimal parameter3)
 			{
 				return (_firstUserWithMultipleParametersExpression ??=
@@ -770,14 +766,13 @@ WHERE
 					.Where(x => x.UserGroupId == p.Id)
 					.Take(1);
 			}
-						
 
 			private static Func<UserGroup, IDataContext, int, string?, decimal, IQueryable<User>>? _firstUserWithMultipleParametersExpression;
 		
 			private static Func<UserGroup, IDataContext, int, IQueryable<User>>? _usersWithLanguageExpression;
 			
 			
-			[Association(QueryExpressionMethod = nameof(FirstUserWithLanguageExpression), Relationship = Relationship.OneToOne, CanBeNull = true)]
+			[Association(QueryExpressionMethod = nameof(FirstUserWithLanguageExpression), CanBeNull = true)]
 			public User? FirstUsersWithLanguage(IDataContext db, int languageId)
 			{
 				return (_firstUserWithLanguageExpression ??= FirstUserWithLanguageExpression().CompileExpression())(this, db, languageId).FirstOrDefault();
@@ -793,25 +788,25 @@ WHERE
 			
 			private static Func<UserGroup, IDataContext, int, IQueryable<User>>? _firstUserWithLanguageExpression;
 		}
-		
+
 		public class User
 		{
 			[Column]
 			public int Id { get; set; }
-			
+
 			[Column]
 			public int UserGroupId { get; set; }
-			
-			[Association(ThisKey = nameof(UserGroupId), OtherKey = nameof(QueryableAssociationTests.UserGroup.Id), Relationship = Relationship.OneToOne, CanBeNull = false)]
+
+			[Association(ThisKey = nameof(UserGroupId), OtherKey = nameof(QueryableAssociationTests.UserGroup.Id), CanBeNull = false)]
 			public UserGroup UserGroup { get; set; } = null!;
 
 			[Column]
 			public int LanguageId { get; set; }
-			
-			[Association(ThisKey = nameof(LanguageId), OtherKey = nameof(QueryableAssociationTests.Language.Id), Relationship = Relationship.OneToOne, CanBeNull = true)]
+
+			[Association(ThisKey = nameof(LanguageId), OtherKey = nameof(QueryableAssociationTests.Language.Id), CanBeNull = true)]
 			public Language? Language { get; set; }
 		}
-		
+
 		public class Language
 		{
 			[Column]

@@ -364,6 +364,11 @@ namespace LinqToDB
 			}
 		}
 
+		/// <summary>
+		/// For active underlying connection, updates information about last executed query <see cref="LastQuery"/> and
+		/// releases connection, if it is not locked (<see cref="LockDbManagerCounter"/>)
+		/// and <see cref="KeepConnectionAlive"/> is <c>false</c>.
+		/// </summary>
 		internal async Task ReleaseQueryAsync()
 		{
 			if (_dataConnection != null)
