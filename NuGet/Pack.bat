@@ -2,25 +2,25 @@ rmdir ..\BuiltNuGet\built /S /Q
 md ..\BuiltNuGet\built
 
 IF [%1] EQU [snupkg] (
-REM nuget.exe Pack ..\BuiltNuGet\linq2db.nuspec -OutputDirectory ..\BuiltNuGet\built -Symbols -SymbolPackageFormat snupkg
-REM nuget.exe Pack ..\BuiltNuGet\linq2db.AspNet.nuspec -OutputDirectory ..\BuiltNuGet\built -Symbols -SymbolPackageFormat snupkg
-REM nuget.exe Pack ..\BuiltNuGet\linq2db.Tools.nuspec -OutputDirectory ..\BuiltNuGet\built -Symbols -SymbolPackageFormat snupkg
-REM nuget.exe Pack ..\BuiltNuGet\linq2db.Remote.Grpc.nuspec -OutputDirectory ..\BuiltNuGet\built -Symbols -SymbolPackageFormat snupkg
-REM nuget.exe Pack ..\BuiltNuGet\linq2db.Remote.Wcf.nuspec -OutputDirectory ..\BuiltNuGet\built -Symbols -SymbolPackageFormat snupkg
+nuget.exe Pack ..\BuiltNuGet\linq2db.nuspec -OutputDirectory ..\BuiltNuGet\built -Symbols -SymbolPackageFormat snupkg
+nuget.exe Pack ..\BuiltNuGet\linq2db.AspNet.nuspec -OutputDirectory ..\BuiltNuGet\built -Symbols -SymbolPackageFormat snupkg
+nuget.exe Pack ..\BuiltNuGet\linq2db.Tools.nuspec -OutputDirectory ..\BuiltNuGet\built -Symbols -SymbolPackageFormat snupkg
+nuget.exe Pack ..\BuiltNuGet\linq2db.Remote.Grpc.nuspec -OutputDirectory ..\BuiltNuGet\built -Symbols -SymbolPackageFormat snupkg
+nuget.exe Pack ..\BuiltNuGet\linq2db.Remote.Wcf.nuspec -OutputDirectory ..\BuiltNuGet\built -Symbols -SymbolPackageFormat snupkg
 ) ELSE (
 REM Azure Artifacts doesn't support snupkg yet/still
 REM https://developercommunity.visualstudio.com/idea/657354/add-snupkg-support-to-azure-devops-artifacts.html
-REM nuget.exe Pack ..\BuiltNuGet\linq2db.nuspec -OutputDirectory ..\BuiltNuGet\built
-REM nuget.exe Pack ..\BuiltNuGet\linq2db.AspNet.nuspec -OutputDirectory ..\BuiltNuGet\built
-REM nuget.exe Pack ..\BuiltNuGet\linq2db.Tools.nuspec -OutputDirectory ..\BuiltNuGet\built
-REM nuget.exe Pack ..\BuiltNuGet\linq2db.Remote.Grpc.nuspec -OutputDirectory ..\BuiltNuGet\built
-REM nuget.exe Pack ..\BuiltNuGet\linq2db.Remote.Wcf.nuspec -OutputDirectory ..\BuiltNuGet\built
+nuget.exe Pack ..\BuiltNuGet\linq2db.nuspec -OutputDirectory ..\BuiltNuGet\built
+nuget.exe Pack ..\BuiltNuGet\linq2db.AspNet.nuspec -OutputDirectory ..\BuiltNuGet\built
+nuget.exe Pack ..\BuiltNuGet\linq2db.Tools.nuspec -OutputDirectory ..\BuiltNuGet\built
+nuget.exe Pack ..\BuiltNuGet\linq2db.Remote.Grpc.nuspec -OutputDirectory ..\BuiltNuGet\built
+nuget.exe Pack ..\BuiltNuGet\linq2db.Remote.Wcf.nuspec -OutputDirectory ..\BuiltNuGet\built
 )
 
 nuget.exe Pack ..\BuiltNuGet\linq2db.cli.nuspec -OutputDirectory ..\BuiltNuGet\built
 
 REM disable new T4 nugets publishing, prepare for their obsoletion and removal
-goto eof:
+REM goto eof:
 nuget.exe Pack ..\BuiltNuGet\linq2db.Access.nuspec -OutputDirectory ..\BuiltNuGet\built
 nuget.exe Pack ..\BuiltNuGet\linq2db.DB2.nuspec -OutputDirectory ..\BuiltNuGet\built
 nuget.exe Pack ..\BuiltNuGet\linq2db.DB2.Core.nuspec -OutputDirectory ..\BuiltNuGet\built
