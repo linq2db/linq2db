@@ -1417,8 +1417,9 @@ namespace Tests.Linq
 			query.ToList();
 		}
 
+		// disabled databases doesn't support order by in specified position
 		[Test(Description = "set query with ORDER BY requires wrapping into subquery for some DBs")]
-		public void Issue2619_Query3([DataSources] string context)
+		public void Issue2619_Query3([DataSources(TestProvName.AllSybase, TestProvName.AllSqlServer, ProviderName.SqlCe)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1434,8 +1435,9 @@ namespace Tests.Linq
 			query.ToList();
 		}
 
+		// disabled databases doesn't support order by in specified position
 		[Test(Description = "set query with ORDER BY requires wrapping into subquery for some DBs")]
-		public void Issue2619_Query4([DataSources] string context)
+		public void Issue2619_Query4([DataSources(TestProvName.AllSybase, TestProvName.AllSqlServer, ProviderName.SqlCe)] string context)
 		{
 			using var db = GetDataContext(context);
 
