@@ -1,0 +1,21 @@
+<#@ template language="C#" debug="True" hostSpecific="True" #>
+<#@ output extension=".generated.cs"                        #>
+
+<#@ include file="$(LinqToDBT4SqlServerTemplatesPath)LinqToDB.SqlServer.ttinclude" once="true" #>
+<#@ include file="$(LinqToDBT4SqlServerTemplatesPath)LinqToDB.Tools.ttinclude" once="true" #>
+<#@ include file="$(LinqToDBT4SqlServerTemplatesPath)PluralizationService.ttinclude"     once="true" #>
+<#
+	GenerateDatabaseInfo = false;
+	NamespaceName = "DataModels";
+	Model.Usings.Add("System.ServiceModel");
+	Model.Usings.Add("LinqToDB.Remote.Wcf");
+
+	DataContextName = "ExampleDataContext";
+	BaseDataContextClass = "WcfDataContext";
+	GenerateConstructors = false;
+	GetSchemaOptions.GetProcedures = false;
+
+	LoadSqlServerMetadata("Server=.;Database=Northwind;Trusted_Connection=True");
+
+	GenerateModel();
+#>

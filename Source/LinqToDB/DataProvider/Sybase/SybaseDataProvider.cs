@@ -14,12 +14,16 @@ namespace LinqToDB.DataProvider.Sybase
 	using SchemaProvider;
 	using SqlProvider;
 	using Extensions;
-	
-	public class SybaseDataProvider : DynamicDataProviderBase<SybaseProviderAdapter>
+	using System.Data.Common;
+
+	class SybaseDataProviderNative  : SybaseDataProvider { public SybaseDataProviderNative()  : base(ProviderName.Sybase)        {} }
+	class SybaseDataProviderManaged : SybaseDataProvider { public SybaseDataProviderManaged() : base(ProviderName.SybaseManaged) {} }
+
+	public abstract class SybaseDataProvider : DynamicDataProviderBase<SybaseProviderAdapter>
 	{
 		#region Init
 
-		public SybaseDataProvider(string name)
+		protected SybaseDataProvider(string name)
 			: base(name, MappingSchemaInstance.Get(name), SybaseProviderAdapter.GetInstance(name))
 		{
 			SqlProviderFlags.AcceptsTakeAsParameter           = false;
@@ -38,8 +42,8 @@ namespace LinqToDB.DataProvider.Sybase
 			SetCharFieldToType<char>("char",  DataTools.GetCharExpression);
 			SetCharFieldToType<char>("nchar", DataTools.GetCharExpression);
 
-			SetProviderField<IDataReader,TimeSpan,DateTime>((r,i) => r.GetDateTime(i) - new DateTime(1900, 1, 1));
-			SetField<IDataReader,DateTime>("time", (r,i) => GetDateTimeAsTime(r.GetDateTime(i)));
+			SetProviderField<DbDataReader, TimeSpan,DateTime>((r,i) => r.GetDateTime(i) - new DateTime(1900, 1, 1));
+			SetField<DbDataReader, DateTime>("time", (r,i) => GetDateTimeAsTime(r.GetDateTime(i)));
 
 			_sqlOptimizer = new SybaseSqlOptimizer(SqlProviderFlags);
 		}
@@ -90,10 +94,10 @@ namespace LinqToDB.DataProvider.Sybase
 
 		static class MappingSchemaInstance
 		{
-			public static readonly MappingSchema NativeMappingSchema  = new SybaseMappingSchema.NativeMappingSchema();
-			public static readonly MappingSchema ManagedMappingSchema = new SybaseMappingSchema.ManagedMappingSchema();
+			static readonly MappingSchema _nativeMappingSchema  = new SybaseMappingSchema.NativeMappingSchema();
+			static readonly MappingSchema _managedMappingSchema = new SybaseMappingSchema.ManagedMappingSchema();
 
-			public static MappingSchema Get(string name) => name == ProviderName.Sybase ? NativeMappingSchema : ManagedMappingSchema;
+			public static MappingSchema Get(string name) => name == ProviderName.Sybase ? _nativeMappingSchema : _managedMappingSchema;
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;
@@ -108,7 +112,7 @@ namespace LinqToDB.DataProvider.Sybase
 			return new SybaseSchemaProvider(this);
 		}
 
-		public override void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object? value)
+		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
 		{
 			switch (dataType.DataType)
 			{
@@ -119,7 +123,8 @@ namespace LinqToDB.DataProvider.Sybase
 					break;
 
 				case DataType.Time       :
-					if (value is TimeSpan ts) value = new DateTime(1900, 1, 1) + ts;
+					if (value is TimeSpan ts)
+						value = new DateTime(1900, 1, 1) + ts;
 					break;
 
 				case DataType.Xml        :
@@ -139,18 +144,26 @@ namespace LinqToDB.DataProvider.Sybase
 					if (value == null)
 						dataType = dataType.WithDataType(DataType.Char);
 					break;
+
 				case DataType.Char       :
 				case DataType.NChar      :
 					if (Name == ProviderName.Sybase)
 						if (value is char)
 							value = value.ToString();
 					break;
+
+#if NET6_0_OR_GREATER
+				case DataType.Date       :
+					if (value is DateOnly d)
+						value = d.ToDateTime(TimeOnly.MinValue);
+					break;
+#endif
 			}
 
-			base.SetParameter(dataConnection, parameter, "@" + name, dataType, value);
+			base.SetParameter(dataConnection, parameter, name, dataType, value);
 		}
 
-		protected override void SetParameterType(DataConnection dataConnection, IDbDataParameter parameter, DbDataType dataType)
+		protected override void SetParameterType(DataConnection dataConnection, DbParameter parameter, DbDataType dataType)
 		{
 			if (parameter is BulkCopyReader.Parameter)
 				return;
@@ -171,7 +184,7 @@ namespace LinqToDB.DataProvider.Sybase
 
 			if (type != null)
 			{
-				var param = TryGetProviderParameter(parameter, dataConnection.MappingSchema);
+				var param = TryGetProviderParameter(dataConnection, parameter);
 				if (param != null)
 				{
 					Adapter.SetDbType(param, type.Value);

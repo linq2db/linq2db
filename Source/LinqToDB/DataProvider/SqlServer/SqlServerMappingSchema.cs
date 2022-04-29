@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data.Linq;
 using System.Data.SqlTypes;
+using System.Globalization;
 using System.IO;
 using System.Linq.Expressions;
 using System.Text;
@@ -8,15 +9,16 @@ using System.Xml;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using System.Globalization;
 	using Common;
 	using Expressions;
-	using LinqToDB.Metadata;
+	using Metadata;
 	using Mapping;
 	using SqlQuery;
 
-	public class SqlServerMappingSchema : MappingSchema
+	sealed class SqlServerMappingSchema : LockedMappingSchema
 	{
+		private const string DATE_FORMAT      = "'{0:yyyy-MM-dd}'";
+
 		private const string DATETIME0_FORMAT = "'{0:yyyy-MM-ddTHH:mm:ss}'";
 		private const string DATETIME1_FORMAT = "'{0:yyyy-MM-ddTHH:mm:ss.f}'";
 		private const string DATETIME2_FORMAT = "'{0:yyyy-MM-ddTHH:mm:ss.ff}'";
@@ -41,8 +43,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		private const string DATETIMEOFFSET6_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.ffffff zzz}'";
 		private const string DATETIMEOFFSET7_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.fffffff zzz}'";
 
-		public SqlServerMappingSchema()
-			: base(ProviderName.SqlServer)
+		SqlServerMappingSchema() : base(ProviderName.SqlServer)
 		{
 			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 
@@ -83,7 +84,6 @@ namespace LinqToDB.DataProvider.SqlServer
 			AddScalarType(typeof(DateTime),  DataType.DateTime);
 			AddScalarType(typeof(DateTime?), DataType.DateTime);
 
-
 			SqlServerTypes.Configure(this);
 
 			SetValueToSqlConverter(typeof(string),         (sb,dt,v) => ConvertStringToSql        (sb, dt, v.ToString()!));
@@ -93,6 +93,10 @@ namespace LinqToDB.DataProvider.SqlServer
 			SetValueToSqlConverter(typeof(DateTimeOffset), (sb,dt,v) => ConvertDateTimeOffsetToSql(sb, dt, (DateTimeOffset)v));
 			SetValueToSqlConverter(typeof(byte[]),         (sb,dt,v) => ConvertBinaryToSql        (sb, (byte[])v));
 			SetValueToSqlConverter(typeof(Binary),         (sb,dt,v) => ConvertBinaryToSql        (sb, ((Binary)v).ToArray()));
+
+#if NET6_0_OR_GREATER
+			SetValueToSqlConverter(typeof(DateOnly),       (sb,dt,v) => ConvertDateToSql          (sb, dt, (DateOnly)v));
+#endif
 
 			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string)));
 
@@ -203,16 +207,23 @@ namespace LinqToDB.DataProvider.SqlServer
 			else
 			{
 				var format = value.Days > 0
-					? value.Ticks % 10000000 != 0
+					? value.Ticks % 10_000_000 != 0
 						? TIMESPAN7_FORMAT
 						: TIMESPAN0_FORMAT
-					: value.Ticks % 10000000 != 0
+					: value.Ticks % 10_000_000 != 0
 						? TIME7_FORMAT
 						: TIME0_FORMAT;
 
 				stringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, value);
 			}
 		}
+
+#if NET6_0_OR_GREATER
+		static void ConvertDateToSql(StringBuilder stringBuilder, SqlDataType? dt, DateOnly value)
+		{
+			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATE_FORMAT, value);
+		}
+#endif
 
 		static void ConvertDateTimeOffsetToSql(StringBuilder stringBuilder, SqlDataType sqlDataType, DateTimeOffset value)
 		{
@@ -236,94 +247,101 @@ namespace LinqToDB.DataProvider.SqlServer
 			stringBuilder.Append("0x");
 			stringBuilder.AppendByteArrayAsHexViaLookup32(value);
 		}
-		
-	}
-
-	public class SqlServer2000MappingSchema : MappingSchema
-	{
-		public SqlServer2000MappingSchema()
-			: base(ProviderName.SqlServer2000, SqlServerMappingSchema.Instance)
+		public sealed class SqlServer2005MappingSchema : LockedMappingSchema
 		{
-			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
+			public SqlServer2005MappingSchema() : base(ProviderName.SqlServer2005, Instance)
+			{
+				ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
+			}
+
+			public override LambdaExpression? TryGetConvertExpression(Type from, Type to)
+			{
+				return Instance.TryGetConvertExpression(from, to);
+			}
 		}
 
-		public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
+		public sealed class SqlServer2008MappingSchema : LockedMappingSchema
 		{
-			return SqlServerMappingSchema.Instance.TryGetConvertExpression(@from, to);
-		}
-	}
+			public SqlServer2008MappingSchema() : base(ProviderName.SqlServer2008, Instance)
+			{
+				ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
+				SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => ConvertDateTimeToSql(sb, dt, (DateTime)v));
+			}
 
-	public class SqlServer2005MappingSchema : MappingSchema
-	{
-		public SqlServer2005MappingSchema()
-			: base(ProviderName.SqlServer2005, SqlServerMappingSchema.Instance)
-		{
-			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
-		}
-
-		public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
-		{
-			return SqlServerMappingSchema.Instance.TryGetConvertExpression(@from, to);
-		}
-	}
-
-	public class SqlServer2008MappingSchema : MappingSchema
-	{
-		public SqlServer2008MappingSchema()
-			: base(ProviderName.SqlServer2008, SqlServerMappingSchema.Instance)
-		{
-			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
-			SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => SqlServerMappingSchema.ConvertDateTimeToSql(sb, dt, (DateTime)v));
+			public override LambdaExpression? TryGetConvertExpression(Type from, Type to)
+			{
+				return Instance.TryGetConvertExpression(from, to);
+			}
 		}
 
-		public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
+		public sealed class SqlServer2012MappingSchema : LockedMappingSchema
 		{
-			return SqlServerMappingSchema.Instance.TryGetConvertExpression(@from, to);
-		}
-	}
+			public SqlServer2012MappingSchema() : base(ProviderName.SqlServer2012, Instance)
+			{
+				ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
+				SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => ConvertDateTimeToSql(sb, dt, (DateTime)v));
+			}
 
-	public class SqlServer2012MappingSchema : MappingSchema
-	{
-		public SqlServer2012MappingSchema()
-			: base(ProviderName.SqlServer2012, SqlServerMappingSchema.Instance)
-		{
-			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
-			SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => SqlServerMappingSchema.ConvertDateTimeToSql(sb, dt, (DateTime)v));
-		}
-
-		public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
-		{
-			return SqlServerMappingSchema.Instance.TryGetConvertExpression(@from, to);
-		}
-	}
-
-	public class SqlServer2016MappingSchema : MappingSchema
-	{
-		public SqlServer2016MappingSchema()
-			: base(ProviderName.SqlServer2016, SqlServerMappingSchema.Instance)
-		{
-			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
-			SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => SqlServerMappingSchema.ConvertDateTimeToSql(sb, dt, (DateTime)v));
+			public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
+			{
+				return Instance.TryGetConvertExpression(@from, to);
+			}
 		}
 
-		public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
+		public sealed class SqlServer2014MappingSchema : LockedMappingSchema
 		{
-			return SqlServerMappingSchema.Instance.TryGetConvertExpression(@from, to);
-		}
-	}
+			public SqlServer2014MappingSchema() : base(ProviderName.SqlServer2014, Instance)
+			{
+				ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
+				SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => ConvertDateTimeToSql(sb, dt, (DateTime)v));
+			}
 
-	public class SqlServer2017MappingSchema : MappingSchema
-	{
-		public SqlServer2017MappingSchema()
-			: base(ProviderName.SqlServer2017, SqlServerMappingSchema.Instance)
-		{
-			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
-			SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => SqlServerMappingSchema.ConvertDateTimeToSql(sb, dt, (DateTime)v));
+			public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
+			{
+				return Instance.TryGetConvertExpression(@from, to);
+			}
 		}
 
-		public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
+		public sealed class SqlServer2016MappingSchema : LockedMappingSchema
 		{
-			return SqlServerMappingSchema.Instance.TryGetConvertExpression(@from, to);
+			public SqlServer2016MappingSchema() : base(ProviderName.SqlServer2016, Instance)
+			{
+				ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
+				SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => ConvertDateTimeToSql(sb, dt, (DateTime)v));
+			}
+
+			public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
+			{
+				return Instance.TryGetConvertExpression(@from, to);
+			}
+		}
+
+		public sealed class SqlServer2017MappingSchema : LockedMappingSchema
+		{
+			public SqlServer2017MappingSchema() : base(ProviderName.SqlServer2017, Instance)
+			{
+				ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
+				SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => ConvertDateTimeToSql(sb, dt, (DateTime)v));
+			}
+
+			public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
+			{
+				return Instance.TryGetConvertExpression(@from, to);
+			}
+		}
+
+		public sealed class SqlServer2019MappingSchema : LockedMappingSchema
+		{
+			public SqlServer2019MappingSchema() : base(ProviderName.SqlServer2019, Instance)
+			{
+				ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
+				SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => ConvertDateTimeToSql(sb, dt, (DateTime)v));
+			}
+
+			public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
+			{
+				return Instance.TryGetConvertExpression(@from, to);
+			}
 		}
 	}
 }

@@ -1,30 +1,32 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.Runtime.CompilerServices;
+using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
-	using System;
-	using System.Runtime.CompilerServices;
 	using Common;
 	using Data;
 	using Mapping;
 	using SqlProvider;
 
-	public class PostgreSQLDataProvider : DynamicDataProviderBase<NpgsqlProviderAdapter>
+	class PostgreSQLDataProvider92 : PostgreSQLDataProvider { public PostgreSQLDataProvider92() : base(ProviderName.PostgreSQL92, PostgreSQLVersion.v92) {} }
+	class PostgreSQLDataProvider93 : PostgreSQLDataProvider { public PostgreSQLDataProvider93() : base(ProviderName.PostgreSQL93, PostgreSQLVersion.v93) {} }
+	class PostgreSQLDataProvider95 : PostgreSQLDataProvider { public PostgreSQLDataProvider95() : base(ProviderName.PostgreSQL95, PostgreSQLVersion.v95) {} }
+
+	public abstract class PostgreSQLDataProvider : DynamicDataProviderBase<NpgsqlProviderAdapter>
 	{
-		public PostgreSQLDataProvider(PostgreSQLVersion version = PostgreSQLVersion.v92)
+		protected PostgreSQLDataProvider(PostgreSQLVersion version)
 			: this(GetProviderName(version), version)
 		{
 		}
 
-		public PostgreSQLDataProvider(string name, PostgreSQLVersion version = PostgreSQLVersion.v92)
-			: base(
-				  name,
-				  GetMappingSchema(version, NpgsqlProviderAdapter.GetInstance().MappingSchema),
-				  NpgsqlProviderAdapter.GetInstance())
+		protected PostgreSQLDataProvider(string name, PostgreSQLVersion version)
+			: base(name, GetMappingSchema(version), NpgsqlProviderAdapter.GetInstance())
 		{
 			Version = version;
 
@@ -167,7 +169,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		public PostgreSQLVersion Version { get; }
 
-		internal bool HasMacAddr8 => Adapter.IsDbTypeSupported(NpgsqlProviderAdapter.NpgsqlDbType.MacAddr8);
+		public bool HasMacAddr8 => Adapter.IsDbTypeSupported(NpgsqlProviderAdapter.NpgsqlDbType.MacAddr8);
 
 		/// <summary>
 		/// Map of canonical PostgreSQL type name to NpgsqlDbType enumeration value.
@@ -208,12 +210,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return new PostgreSQLSchemaProvider(this);
 		}
 
-#if !NETFRAMEWORK
-		public override bool? IsDBNullAllowed(IDataReader reader, int idx)
-		{
-			return true;
-		}
-#endif
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal object? NormalizeTimeStamp(object? value, DbDataType dataType)
 		{
@@ -240,7 +236,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		}
 
 
-		public override void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object? value)
+		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
 		{
 			if (value is IDictionary && dataType.DataType == DataType.Undefined)
 				dataType = dataType.WithDataType(DataType.Dictionary);
@@ -250,7 +246,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			base.SetParameter(dataConnection, parameter, name, dataType, value);
 		}
 
-		protected override void SetParameterType(DataConnection dataConnection, IDbDataParameter parameter, DbDataType dataType)
+		protected override void SetParameterType(DataConnection dataConnection, DbParameter parameter, DbDataType dataType)
 		{
 			// didn't tried to detect and cleanup unnecessary type mappings, as npgsql develops rapidly and
 			// it doesn't pay efforts to track changes for each version in this area
@@ -292,7 +288,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 			if (type != null)
 			{
-				var param = TryGetProviderParameter(parameter, dataConnection.MappingSchema);
+				var param = TryGetProviderParameter(dataConnection, parameter);
 				if (param != null)
 				{
 					Adapter.SetDbType(param, type.Value);
@@ -532,13 +528,13 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return null;
 		}
 
-		private static MappingSchema GetMappingSchema(PostgreSQLVersion version, MappingSchema providerSchema)
+		static MappingSchema GetMappingSchema(PostgreSQLVersion version)
 		{
 			return version switch
 			{
-				PostgreSQLVersion.v92 => new PostgreSQL92MappingSchema(providerSchema),
-				PostgreSQLVersion.v93 => new PostgreSQL93MappingSchema(providerSchema),
-				_                     => new PostgreSQL95MappingSchema(providerSchema),
+				PostgreSQLVersion.v92 => new PostgreSQLMappingSchema.PostgreSQL92MappingSchema(),
+				PostgreSQLVersion.v93 => new PostgreSQLMappingSchema.PostgreSQL93MappingSchema(),
+				_                     => new PostgreSQLMappingSchema.PostgreSQL95MappingSchema(),
 			};
 		}
 	}

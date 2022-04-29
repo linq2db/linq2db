@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data;
+using System.Data.Common;
 using System.Linq;
 using BenchmarkDotNet.Attributes;
 using LinqToDB.Benchmarks.Mappings;
@@ -13,7 +14,7 @@ namespace LinqToDB.Benchmarks.Queries
 	{
 		private const int      _iterations = 2;
 		private DataConnection _db     = null!;
-		private IDbConnection  _cn     = null!;
+		private DbConnection   _cn     = null!;
 		private Func<DataConnection, Workflow, int> _compiledLinqSet    = null!;
 		private Func<DataConnection, Workflow, int> _compiledLinqObject = null!;
 
@@ -35,7 +36,7 @@ namespace LinqToDB.Benchmarks.Queries
 		public void Setup()
 		{
 			_cn = new MockDbConnection(new QueryResult() { Return = 1 }, ConnectionState.Open);
-			_db = new DataConnection(new PostgreSQLDataProvider(PostgreSQLVersion.v95), _cn);
+			_db = new DataConnection(PostgreSQLTools.GetDataProvider(PostgreSQLVersion.v95), _cn);
 
 			_compiledLinqSet = CompiledQuery.Compile<DataConnection, Workflow, int>(
 				(db, record) => db.GetTable<Workflow>()

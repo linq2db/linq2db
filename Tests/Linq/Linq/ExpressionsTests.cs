@@ -242,7 +242,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MethodExpression8([DataSources(ProviderName.SQLiteMS)] string context)
+		public void MethodExpression8([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -263,7 +263,7 @@ namespace Tests.Linq
 		[Test]
 		public void MethodExpression9([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 				AreEqual(
 					from ch in Child
 					from p in
@@ -282,7 +282,7 @@ namespace Tests.Linq
 		[Test]
 		public void MethodExpression10([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 				AreEqual(
 					from ch in Child
 					from p in
@@ -819,7 +819,7 @@ namespace Tests.Linq
 
 		#region issue 2688
 		[Test]
-		public void NullableNullValueTest1([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public void NullableNullValueTest1([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -828,7 +828,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NullableNullValueTest2([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public void NullableNullValueTest2([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -837,7 +837,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NullableNullValueTest3([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public void NullableNullValueTest3([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -846,7 +846,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NullableNullValueTest4([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public void NullableNullValueTest4([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -855,7 +855,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NullableNullValueTest5([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public void NullableNullValueTest5([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1048,7 +1048,7 @@ namespace Tests.Linq
 		#region Null check generated
 
 		[Test]
-		public void TestNullCheckInExpressionLeft([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestNullCheckInExpressionLeft([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1057,7 +1057,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNullCheckInExpressionRight([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestNullCheckInExpressionRight([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1066,7 +1066,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNullCheckInExpressionUsingFieldLeft([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestNullCheckInExpressionUsingFieldLeft([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1075,7 +1075,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNullCheckInExpressionUsingFieldRight([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestNullCheckInExpressionUsingFieldRight([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

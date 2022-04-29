@@ -25,7 +25,7 @@ namespace LinqToDB.DataProvider.DB2
 
 		protected override List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
 		{
-			DataTypesSchema = ((DbConnection)dataConnection.Connection).GetSchema("DataTypes");
+			DataTypesSchema = dataConnection.Connection.GetSchema("DataTypes");
 
 			return DataTypesSchema.AsEnumerable()
 				.Select(t => new DataTypeInfo
@@ -48,7 +48,7 @@ namespace LinqToDB.DataProvider.DB2
 		{
 			LoadCurrentSchema(dataConnection);
 
-			var tables = ((DbConnection)dataConnection.Connection).GetSchema("Tables");
+			var tables = dataConnection.Connection.GetSchema("Tables");
 
 			return
 			(
@@ -66,7 +66,7 @@ namespace LinqToDB.DataProvider.DB2
 					CatalogName        = catalog,
 					SchemaName         = schema,
 					TableName          = name,
-					IsDefaultSchema    = schema.IsNullOrEmpty(),
+					IsDefaultSchema    = string.IsNullOrEmpty(schema),
 					IsView             = t.Field<string>("TABLE_TYPE") == "VIEW",
 					Description        = t.Field<string>("REMARKS"),
 					IsProviderSpecific = system || _systemSchemas.Contains(schema)
@@ -263,7 +263,7 @@ WHERE
 
 		protected override string? GetDbType(GetSchemaOptions options, string? columnType, DataTypeInfo? dataType, long? length, int? precision, int? scale, string? udtCatalog, string? udtSchema, string? udtName)
 		{
-			var type = GetDataType(columnType, options);
+			var type = GetDataType(columnType, null, options);
 
 			if (type != null)
 			{
@@ -378,7 +378,7 @@ WHERE
 
 		protected override string GetDataSourceName(DataConnection dbConnection)
 		{
-			var str = ((DbConnection)dbConnection.Connection).ConnectionString;
+			var str = dbConnection.Connection.ConnectionString;
 
 			var host = str?.Split(';')
 				.Select(s =>
@@ -515,7 +515,7 @@ WHERE
 
 	static class DB2Extensions
 	{
-		public static string? ToString(this IDataReader reader, int i)
+		public static string? ToString(this DbDataReader reader, int i)
 		{
 			var value = Converter.ChangeTypeTo<string?>(reader[i]);
 			return value?.TrimEnd();

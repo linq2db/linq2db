@@ -18,6 +18,7 @@ namespace LinqToDB.Linq
 	using Builder;
 	using Common;
 	using Common.Logging;
+	using Interceptors;
 	using LinqToDB.Expressions;
 	using Mapping;
 	using SqlProvider;
@@ -25,58 +26,61 @@ namespace LinqToDB.Linq
 
 	public abstract class Query
 	{
-		public Func<IDataContext,Expression,object?[]?,object?[]?,object?>                         GetElement      = null!;
-		public Func<IDataContext,Expression,object?[]?,object?[]?,CancellationToken,Task<object?>> GetElementAsync = null!;
+		internal Func<IDataContext,Expression,object?[]?,object?[]?,object?>                         GetElement      = null!;
+		internal Func<IDataContext,Expression,object?[]?,object?[]?,CancellationToken,Task<object?>> GetElementAsync = null!;
 
-#region Init
+		#region Init
 
 		internal readonly List<QueryInfo> Queries = new (1);
+
+		public IReadOnlyCollection<QueryInfo> GetQueries() => Queries;
 
 		internal abstract void Init(IBuildContext parseContext, List<ParameterAccessor> sqlParameters);
 
 		internal Query(IDataContext dataContext, Expression? expression)
 		{
-			ContextID        = dataContext.ContextID;
-			ContextType      = dataContext.GetType();
-			Expression       = expression;
-			MappingSchema    = dataContext.MappingSchema;
-			ConfigurationID  = dataContext.MappingSchema.ConfigurationID;
-			SqlOptimizer     = dataContext.GetSqlOptimizer();
-			SqlProviderFlags = dataContext.SqlProviderFlags;
-			InlineParameters = dataContext.InlineParameters;
+			ContextID               = dataContext.ContextID;
+			ContextType             = dataContext.GetType();
+			Expression              = expression;
+			MappingSchema           = dataContext.MappingSchema;
+			ConfigurationID         = dataContext.MappingSchema.ConfigurationID;
+			SqlOptimizer            = dataContext.GetSqlOptimizer();
+			SqlProviderFlags        = dataContext.SqlProviderFlags;
+			InlineParameters        = dataContext.InlineParameters;
+			IsEntityServiceProvided = dataContext is IInterceptable<IEntityServiceInterceptor> { Interceptor: {} };
 		}
 
-#endregion
+		#endregion
 
-#region Compare
+		#region Compare
 
-		internal readonly string           ContextID;
+		internal readonly int              ContextID;
 		internal readonly Type             ContextType;
 		internal readonly Expression?      Expression;
 		internal readonly MappingSchema    MappingSchema;
-		internal readonly string           ConfigurationID;
+		internal readonly int              ConfigurationID;
 		internal readonly bool             InlineParameters;
 		internal readonly ISqlOptimizer    SqlOptimizer;
 		internal readonly SqlProviderFlags SqlProviderFlags;
+		internal readonly bool             IsEntityServiceProvided;
 
 		protected bool Compare(IDataContext dataContext, Expression expr)
 		{
 			return
-				ContextID.Length       == dataContext.ContextID.Length &&
-				ContextID              == dataContext.ContextID        &&
-				ConfigurationID.Length == dataContext.MappingSchema.ConfigurationID.Length &&
-				ConfigurationID        == dataContext.MappingSchema.ConfigurationID &&
-				InlineParameters       == dataContext.InlineParameters &&
-				ContextType            == dataContext.GetType()        &&
+				ContextID               == dataContext.ContextID                                                        &&
+				ConfigurationID         == dataContext.MappingSchema.ConfigurationID                                    &&
+				InlineParameters        == dataContext.InlineParameters                                                 &&
+				ContextType             == dataContext.GetType()                                                        &&
+				IsEntityServiceProvided == dataContext is IInterceptable<IEntityServiceInterceptor> { Interceptor: {} } &&
 				Expression!.EqualsTo(expr, dataContext, _queryableAccessorDic, _queryableMemberAccessorDic, _queryDependedObjects);
 		}
 
-		readonly Dictionary<Expression,QueryableAccessor> _queryableAccessorDic  = new ();
+		readonly Dictionary<Expression, QueryableAccessor>        _queryableAccessorDic  = new();
+		readonly List<QueryableAccessor>                          _queryableAccessorList = new();
+		readonly Dictionary<Expression, Expression>               _queryDependedObjects  = new();
 		private  Dictionary<MemberInfo, QueryableMemberAccessor>? _queryableMemberAccessorDic;
-		readonly List<QueryableAccessor>                  _queryableAccessorList = new ();
-		readonly Dictionary<Expression,Expression>        _queryDependedObjects  = new ();
 
-		public bool IsFastCacheable => _queryableMemberAccessorDic == null;
+		internal bool IsFastCacheable => _queryableMemberAccessorDic == null;
 
 		internal int AddQueryableAccessors(Expression expr, Expression<Func<Expression,IQueryable>> qe)
 		{
@@ -130,21 +134,20 @@ namespace LinqToDB.Linq
 			return accessor.Queryable.Expression;
 		}
 
-		public void ClearMemberQueryableInfo()
+		internal void ClearMemberQueryableInfo()
 		{
 			_queryableMemberAccessorDic = null;
 		}
 
-#endregion
+		#endregion
 
-#region Helpers
+		#region Helpers
 
 		ConcurrentDictionary<Type,Func<object,object>>? _enumConverters;
 
 		internal object GetConvertedEnum(Type valueType, object value)
 		{
-			if (_enumConverters == null)
-				_enumConverters = new ConcurrentDictionary<Type, Func<object, object>>();
+			_enumConverters ??= new ();
 
 			if (!_enumConverters.TryGetValue(valueType, out var converter))
 			{
@@ -164,9 +167,9 @@ namespace LinqToDB.Linq
 			return converter(value);
 		}
 
-#endregion
+		#endregion
 
-#region Cache Support
+		#region Cache Support
 
 		internal static readonly ConcurrentQueue<Action> CacheCleaners = new ();
 
@@ -183,9 +186,9 @@ namespace LinqToDB.Linq
 			}
 		}
 
-#endregion
+		#endregion
 
-#region Eager Loading
+		#region Eager Loading
 
 		private Tuple<
 			object?,
@@ -202,12 +205,12 @@ namespace LinqToDB.Linq
 			_preambles = preambles?.ToArray();
 		}
 
-		public bool IsAnyPreambles()
+		internal bool IsAnyPreambles()
 		{
 			return _preambles?.Length > 0;
 		}
 
-		public int PreamblesCount()
+		internal int PreamblesCount()
 		{
 			return _preambles?.Length ?? 0;
 		}
@@ -240,12 +243,12 @@ namespace LinqToDB.Linq
 			return preambles;
 		}
 
-#endregion
+		#endregion
 	}
 
-	class Query<T> : Query
+	public class Query<T> : Query
 	{
-#region Init
+		#region Init
 
 		internal Query(IDataContext dataContext, Expression? expression)
 			: base(dataContext, expression)
@@ -258,7 +261,10 @@ namespace LinqToDB.Linq
 			var statement = parseContext.GetResultStatement();
 
 			if (parseContext.Builder.Tag != null)
-				(statement.Tag ??= new SqlComment()).Lines.AddRange(parseContext.Builder.Tag.Lines);
+				(statement.Tag ??= new()).Lines.AddRange(parseContext.Builder.Tag.Lines);
+
+			if (parseContext.Builder.SqlQueryExtensions != null)
+				(statement.SqlQueryExtensions ??= new()).AddRange(parseContext.Builder.SqlQueryExtensions);
 
 			Queries.Add(new QueryInfo
 			{
@@ -267,40 +273,19 @@ namespace LinqToDB.Linq
 			});
 		}
 
-#endregion
+		#endregion
 
-#region Properties & Fields
+		#region Properties & Fields
 
-		public bool DoNotCache;
+		internal bool DoNotCache;
 
-		public Func<IDataContext,Expression,object?[]?,object?[]?,IEnumerable<T>>      GetIEnumerable = null!;
-		public Func<IDataContext,Expression,object?[]?,object?[]?,IAsyncEnumerable<T>> GetIAsyncEnumerable = null!;
-		public Func<IDataContext,Expression,object?[]?,object?[]?,Func<T,bool>,CancellationToken,Task> GetForEachAsync = null!;
+		internal Func<IDataContext,Expression,object?[]?,object?[]?,IEnumerable<T>>                      GetIEnumerable      = null!;
+		internal Func<IDataContext,Expression,object?[]?,object?[]?,IAsyncEnumerable<T>>                 GetIAsyncEnumerable = null!;
+		internal Func<IDataContext,Expression,object?[]?,object?[]?,Func<T,bool>,CancellationToken,Task> GetForEachAsync     = null!;
 
-#endregion
+		#endregion
 
-#region Query cache
-		[Flags]
-		enum QueryFlags
-		{
-			None                = 0,
-			/// <summary>
-			/// Bit set, when group by guard set for connection.
-			/// </summary>
-			GroupByGuard        = 0x1,
-			/// <summary>
-			/// Bit set, when inline parameters enabled for connection.
-			/// </summary>
-			InlineParameters    = 0x2,
-			/// <summary>
-			/// Bit set, when inline Take/Skip parameterization is enabled for query.
-			/// </summary>
-			ParameterizeTakeSkip = 0x4,
-			/// <summary>
-			/// Bit set, when PreferApply is enabled for query.
-			/// </summary>
-			PreferApply = 0x8,
-		}
+		#region Query cache
 
 		class QueryCache
 		{
@@ -341,7 +326,7 @@ namespace LinqToDB.Linq
 			/// <summary>
 			/// Count of queries which has not been found in cache.
 			/// </summary>
-			internal long CacheMissCount;
+			public long CacheMissCount;
 
 			/// <summary>
 			/// LINQ query max cache size (per entity type).
@@ -437,6 +422,7 @@ namespace LinqToDB.Linq
 				}
 
 				var allowReordering = Monitor.TryEnter(_syncPriority);
+
 				try
 				{
 					for (var i = 0; i < cache.Length; i++)
@@ -468,9 +454,9 @@ namespace LinqToDB.Linq
 			}
 		}
 
-#endregion
+		#endregion
 
-#region Query
+		#region Query
 
 		private static readonly QueryCache _queryCache = new ();
 
@@ -497,26 +483,10 @@ namespace LinqToDB.Linq
 			if (dataContext is IExpressionPreprocessor preprocessor)
 				expr = preprocessor.ProcessExpression(expr);
 
-
 			if (Configuration.Linq.DisableQueryCache)
 				return CreateQuery(optimizationContext, new ParametersContext(expr, optimizationContext, dataContext), dataContext, expr);
 
-			// calculate query flags
-			var flags = QueryFlags.None;
-
-			if (dataContext.InlineParameters)
-				flags |= QueryFlags.InlineParameters;
-
-			// TODO: here we have race condition due to flag being global setting
-			// to fix it we must move flags to context level and remove global flags or invalidate caches on
-			// global flag change
-			if (Configuration.Linq.GuardGrouping)
-				flags |= QueryFlags.GroupByGuard;
-			if (Configuration.Linq.ParameterizeTakeSkip)
-				flags |= QueryFlags.ParameterizeTakeSkip;
-			if (Configuration.Linq.PreferApply)
-				flags |= QueryFlags.PreferApply;
-
+			var flags = dataContext.GetQueryFlags();
 			var query = _queryCache.Find(dataContext, expr, flags);
 
 			if (query == null)
@@ -565,26 +535,26 @@ namespace LinqToDB.Linq
 			return query;
 		}
 
-#endregion
+		#endregion
 	}
 
-	class QueryInfo : IQueryContext
+	public class QueryInfo : IQueryContext
 	{
 		public SqlStatement    Statement   { get; set; } = null!;
 		public object?         Context     { get; set; }
 		public SqlParameter[]? Parameters  { get; set; }
 		public AliasesContext? Aliases     { get; set; }
 
-		public List<ParameterAccessor> ParameterAccessors = new ();
+		internal List<ParameterAccessor> ParameterAccessors = new ();
 
-		public void AddParameterAccessor(ParameterAccessor accessor)
+		internal void AddParameterAccessor(ParameterAccessor accessor)
 		{
 			ParameterAccessors.Add(accessor);
 			accessor.SqlParameter.AccessorId = ParameterAccessors.Count - 1;
 		}
 	}
 
-	internal class ParameterAccessor
+	class ParameterAccessor
 	{
 		public ParameterAccessor(
 			Expression                             expression,

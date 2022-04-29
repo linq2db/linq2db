@@ -6,7 +6,7 @@
 		<RootNamespace>LinqToDB</RootNamespace>
 
 		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\linq2db.xml</DocumentationFile>
-		<TargetFrameworks>net45;net46;net472;netstandard2.0;netstandard2.1;netcoreapp2.1;netcoreapp3.1;net6.0</TargetFrameworks>
+		<TargetFrameworks>net45;net46;net472;netstandard2.0;netstandard2.1;netcoreapp3.1;net6.0</TargetFrameworks>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -28,6 +28,56 @@
 		<EmbeddedResource Include="SqlQuery\ReservedWordsFirebird.txt" />
 		<EmbeddedResource Include="SqlQuery\ReservedWordsPostgres.txt" />
 
+		<None Update="DataProvider\MySql\MySqlHints.tt">
+			<LastGenOutput>MySqlHints.generated.cs</LastGenOutput>
+			<Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<Compile Update="DataProvider\MySql\MySqlHints.generated.cs">
+			<DependentUpon>MySqlHints.tt</DependentUpon>
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+		</Compile>
+
+		<None Update="DataProvider\PostgreSQL\PostgreSQLHints.tt">
+			<LastGenOutput>PostgreSQLHints.generated.cs</LastGenOutput>
+			<Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<Compile Update="DataProvider\PostgreSQL\PostgreSQLHints.generated.cs">
+			<DependentUpon>PostgreSQLHints.tt</DependentUpon>
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+		</Compile>
+
+		<None Update="DataProvider\Oracle\OracleHints.tt">
+			<LastGenOutput>OracleHints.generated.cs</LastGenOutput>
+			<Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<Compile Update="DataProvider\Oracle\OracleHints.generated.cs">
+			<DependentUpon>OracleHints.tt</DependentUpon>
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+		</Compile>
+
+		<None Update="DataProvider\SqlCe\SqlCeHints.tt">
+			<LastGenOutput>SqlCeHints.generated.cs</LastGenOutput>
+			<Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<Compile Update="DataProvider\SqlCe\SqlCeHints.generated.cs">
+			<DependentUpon>SqlCeHints.tt</DependentUpon>
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+		</Compile>
+
+		<None Update="DataProvider\SqlServer\SqlServerHints.tt">
+			<Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>SqlServerHints.generated.cs</LastGenOutput>
+		</None>
+		<Compile Update="DataProvider\SqlServer\SqlServerHints.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>SqlServerHints.tt</DependentUpon>
+		</Compile>
+
 		<None Update="AsyncExtensions.tt">
 			<Generator>TextTemplatingFileGenerator</Generator>
 			<LastGenOutput>AsyncExtensions.generated.cs</LastGenOutput>
@@ -37,18 +87,17 @@
 			<AutoGen>True</AutoGen>
 			<DependentUpon>AsyncExtensions.tt</DependentUpon>
 		</Compile>
-		<Compile Update="Common\Internal\MutableTuple.generated.cs">
-			<DesignTime>True</DesignTime>
-			<AutoGen>True</AutoGen>
-			<DependentUpon>MutableTuple.tt</DependentUpon>
-		</Compile>
 
 		<None Update="Common\Internal\MutableTuple.tt">
 			<Generator>TextTemplatingFileGenerator</Generator>
 			<LastGenOutput>MutableTuple.generated.cs</LastGenOutput>
 		</None>
+		<Compile Update="Common\Internal\MutableTuple.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>MutableTuple.tt</DependentUpon>
+		</Compile>
 	</ItemGroup>
-
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net46' OR '$(TargetFramework)' == 'net472' ">
 		<Reference Include="Microsoft.CSharp" />
@@ -61,18 +110,16 @@
 		<Reference Include="System.ComponentModel.DataAnnotations" />
 	</ItemGroup>
 
-	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netcoreapp2.1' ">
+	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
 		<PackageReference Include="System.Data.DataSetExtensions" />
+	</ItemGroup>
+
+	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'net472' ">
+		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" />
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netstandard2.1' ">
 		<PackageReference Include="Microsoft.CSharp" />
-	</ItemGroup>
-
-	<ItemGroup Condition=" '$(TargetFramework)' != 'net45' AND '$(TargetFramework)' != 'net46' AND '$(TargetFramework)' != 'net472' ">
 		<PackageReference Include="System.ComponentModel.Annotations" />
-	</ItemGroup>
-	<ItemGroup Condition=" '$(TargetFramework)' != 'net45' AND '$(TargetFramework)' != 'net46' ">
-		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" />
 	</ItemGroup>
 </Project>

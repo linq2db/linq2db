@@ -1,38 +1,44 @@
 ﻿using System;
-using System.Data;
 using System.Diagnostics;
 
 namespace LinqToDB.Configuration
 {
+	using System.Collections.Generic;
+	using System.Data.Common;
+	using System.Linq;
 	using Data;
 	using DataProvider;
+	using LinqToDB.Interceptors;
 	using Mapping;
 
 	/// <summary>
-	/// Used to build <see cref="LinqToDbConnectionOptions"/>
+	/// Used to build <see cref="LinqToDBConnectionOptions"/>
 	/// which is used by <see cref="DataConnection"/>
 	/// to determine connection settings.
 	/// </summary>
-	public class LinqToDbConnectionOptionsBuilder
+	public class LinqToDBConnectionOptionsBuilder
 	{
+		private List<IInterceptor>? _interceptors;
+
 		public MappingSchema?                        MappingSchema       { get; private set; }
 		public IDataProvider?                        DataProvider        { get; private set; }
-		public IDbConnection?                        DbConnection        { get; private set; }
+		public DbConnection?                         DbConnection        { get; private set; }
 		public bool                                  DisposeConnection   { get; private set; }
 		public string?                               ConfigurationString { get; private set; }
 		public string?                               ProviderName        { get; private set; }
 		public string?                               ConnectionString    { get; private set; }
-		public Func<IDbConnection>?                  ConnectionFactory   { get; private set; }
-		public IDbTransaction?                       DbTransaction       { get; private set; }
+		public Func<DbConnection>?                   ConnectionFactory   { get; private set; }
+		public DbTransaction?                        DbTransaction       { get; private set; }
 		public Action<TraceInfo>?                    OnTrace             { get; private set; }
 		public TraceLevel?                           TraceLevel          { get; private set; }
 		public Action<string?, string?, TraceLevel>? WriteTrace          { get; private set; }
+		public IReadOnlyList<IInterceptor>?          Interceptors        => _interceptors;
 
 		private void CheckAssignSetupType(ConnectionSetupType type)
 		{
 			if (SetupType != ConnectionSetupType.DefaultConfiguration)
 				throw new LinqToDBException(
-					$"LinqToDbConnectionOptionsBuilder already setup using {SetupType}, use Reset first to overwrite");
+					$"{nameof(LinqToDBConnectionOptionsBuilder)} already setup using {SetupType}, use Reset first to overwrite");
 			SetupType = type;
 		}
 
@@ -41,17 +47,17 @@ namespace LinqToDB.Configuration
 		/// <summary>
 		/// Build the immutable options used by the database.
 		/// </summary>
-		public LinqToDbConnectionOptions<TContext> Build<TContext>()
+		public LinqToDBConnectionOptions<TContext> Build<TContext>()
 		{
-			return new LinqToDbConnectionOptions<TContext>(this);
+			return new LinqToDBConnectionOptions<TContext>(this);
 		}
 
 		/// <summary>
 		/// Build the immutable options used by the database.
 		/// </summary>
-		public LinqToDbConnectionOptions Build()
+		public LinqToDBConnectionOptions Build()
 		{
-			return new LinqToDbConnectionOptions(this);
+			return new LinqToDBConnectionOptions(this);
 		}
 
 		/// <summary>
@@ -60,7 +66,7 @@ namespace LinqToDB.Configuration
 		/// <param name="providerName">See <see cref="LinqToDB.ProviderName"/> for Default providers.</param>
 		/// <param name="connectionString">Database specific connections string.</param>
 		/// <returns>The builder instance so calls can be chained.</returns>
-		public LinqToDbConnectionOptionsBuilder UseConnectionString(
+		public LinqToDBConnectionOptionsBuilder UseConnectionString(
 			string providerName,
 			string connectionString)
 		{
@@ -78,7 +84,7 @@ namespace LinqToDB.Configuration
 		/// <param name="dataProvider">Used by the connection to determine functionality when executing commands/queries.</param>
 		/// <param name="connectionString">Database specific connections string.</param>
 		/// <returns>The builder instance so calls can be chained.</returns>
-		public LinqToDbConnectionOptionsBuilder UseConnectionString(
+		public LinqToDBConnectionOptionsBuilder UseConnectionString(
 			IDataProvider dataProvider,
 			string connectionString)
 		{
@@ -95,23 +101,24 @@ namespace LinqToDB.Configuration
 		/// </summary>
 		/// <param name="configurationString">Used used to lookup configuration, must be specified before the Database is created.</param>
 		/// <returns>The builder instance so calls can be chained.</returns>
-		public LinqToDbConnectionOptionsBuilder UseConfigurationString(
+		public LinqToDBConnectionOptionsBuilder UseConfigurationString(
 			string configurationString)
 		{
 			CheckAssignSetupType(ConnectionSetupType.ConfigurationString);
+
 			ConfigurationString = configurationString ?? throw new ArgumentNullException(nameof(configurationString));
 			return this;
 		}
 
 		/// <summary>
-		/// Configure the database to use the specified provider and callback as an <see cref="IDbConnection"/> factory.
+		/// Configure the database to use the specified provider and callback as an <see cref="DbConnection"/> factory.
 		/// </summary>
 		/// <param name="dataProvider">Used by the connection to determine functionality when executing commands/queries.</param>
 		/// <param name="connectionFactory">Factory function used to obtain the connection.</param>
 		/// <returns>The builder instance so calls can be chained.</returns>
-		public LinqToDbConnectionOptionsBuilder UseConnectionFactory(
-			IDataProvider dataProvider,
-			Func<IDbConnection> connectionFactory)
+		public LinqToDBConnectionOptionsBuilder UseConnectionFactory(
+			IDataProvider      dataProvider,
+			Func<DbConnection> connectionFactory)
 		{
 			CheckAssignSetupType(ConnectionSetupType.ConnectionFactory);
 
@@ -122,15 +129,15 @@ namespace LinqToDB.Configuration
 		}
 
 		/// <summary>
-		/// Configure the database to use the specified provider and an existing <see cref="IDbConnection"/>.
+		/// Configure the database to use the specified provider and an existing <see cref="DbConnection"/>.
 		/// </summary>
 		/// <param name="dataProvider">Used by the connection to determine functionality when executing commands/queries.</param>
 		/// <param name="connection">Existing connection, can be open or closed, will be opened automatically if closed.</param>
 		/// <param name="disposeConnection">Indicates if the connection should be disposed when the context is disposed.</param>
 		/// <returns>The builder instance so calls can be chained.</returns>
-		public LinqToDbConnectionOptionsBuilder UseConnection(
+		public LinqToDBConnectionOptionsBuilder UseConnection(
 			IDataProvider dataProvider,
-			IDbConnection connection,
+			DbConnection  connection,
 			bool          disposeConnection = false)
 		{
 			CheckAssignSetupType(ConnectionSetupType.Connection);
@@ -144,13 +151,13 @@ namespace LinqToDB.Configuration
 		}
 
 		/// <summary>
-		/// Configure the database to use the specified provider and an existing <see cref="IDbTransaction"/>.
+		/// Configure the database to use the specified provider and an existing <see cref="System.Data.Common.DbTransaction"/>.
 		/// </summary>
 		/// <param name="dataProvider">Used by the connection to determine functionality when executing commands/queries.</param>
 		/// <param name="transaction">Existing transaction.</param>
 		/// <returns>The builder instance so calls can be chained.</returns>
-		public LinqToDbConnectionOptionsBuilder UseTransaction(IDataProvider dataProvider,
-			IDbTransaction transaction)
+		public LinqToDBConnectionOptionsBuilder UseTransaction(IDataProvider dataProvider,
+			DbTransaction transaction)
 		{
 			CheckAssignSetupType(ConnectionSetupType.Transaction);
 
@@ -165,7 +172,7 @@ namespace LinqToDB.Configuration
 		/// </summary>
 		/// <param name="mappingSchema">Used to define the mapping between sql and classes.</param>
 		/// <returns>The builder instance so calls can be chained.</returns>
-		public LinqToDbConnectionOptionsBuilder UseMappingSchema(MappingSchema mappingSchema)
+		public LinqToDBConnectionOptionsBuilder UseMappingSchema(MappingSchema mappingSchema)
 		{
 			MappingSchema = mappingSchema ?? throw new ArgumentNullException(nameof(mappingSchema));
 			return this;
@@ -176,7 +183,7 @@ namespace LinqToDB.Configuration
 		/// </summary>
 		/// <param name="dataProvider">Used by the connection to determine functionality when executing commands/queries.</param>
 		/// <returns>The builder instance so calls can be chained.</returns>
-		public LinqToDbConnectionOptionsBuilder UseDataProvider(IDataProvider dataProvider)
+		public LinqToDBConnectionOptionsBuilder UseDataProvider(IDataProvider dataProvider)
 		{
 			DataProvider = dataProvider ?? throw new ArgumentNullException(nameof(dataProvider));
 			return this;
@@ -186,7 +193,7 @@ namespace LinqToDB.Configuration
 		/// Configure the database to use specified trace level.
 		/// </summary>
 		/// <returns>The builder instance so calls can be chained.</returns>
-		public LinqToDbConnectionOptionsBuilder WithTraceLevel(TraceLevel traceLevel)
+		public LinqToDBConnectionOptionsBuilder WithTraceLevel(TraceLevel traceLevel)
 		{
 			TraceLevel = traceLevel;
 			return this;
@@ -197,7 +204,7 @@ namespace LinqToDB.Configuration
 		/// </summary>
 		/// <param name="onTrace">Callback, may not be called depending on the trace level.</param>
 		/// <returns>The builder instance so calls can be chained.</returns>
-		public LinqToDbConnectionOptionsBuilder WithTracing(Action<TraceInfo> onTrace)
+		public LinqToDBConnectionOptionsBuilder WithTracing(Action<TraceInfo> onTrace)
 		{
 			OnTrace = onTrace;
 			return this;
@@ -209,20 +216,25 @@ namespace LinqToDB.Configuration
 		/// <param name="traceLevel">Trace level to use.</param>
 		/// <param name="onTrace">Callback, may not be called depending on the trace level.</param>
 		/// <returns>The builder instance so calls can be chained.</returns>
-		public LinqToDbConnectionOptionsBuilder WithTracing(TraceLevel traceLevel, Action<TraceInfo> onTrace)
+		public LinqToDBConnectionOptionsBuilder WithTracing(TraceLevel traceLevel, Action<TraceInfo> onTrace)
 		{
 			TraceLevel = traceLevel;
 			OnTrace    = onTrace;
 			return this;
 		}
 
+		public LinqToDBConnectionOptionsBuilder WithInterceptor(IInterceptor interceptor)
+		{
+			(_interceptors ??= new List<IInterceptor>()).Add(interceptor);
+			return this;
+		}
 
 		/// <summary>
 		/// Configure the database to use the specified a string trace callback.
 		/// </summary>
 		/// <param name="write">Callback, may not be called depending on the trace level.</param>
 		/// <returns>The builder instance so calls can be chained.</returns>
-		public LinqToDbConnectionOptionsBuilder WriteTraceWith(Action<string?, string?, TraceLevel> write)
+		public LinqToDBConnectionOptionsBuilder WriteTraceWith(Action<string?, string?, TraceLevel> write)
 		{
 			WriteTrace = write;
 			return this;
@@ -232,7 +244,7 @@ namespace LinqToDB.Configuration
 		/// Reset the builder back to default configuration undoing all previous configured values
 		/// </summary>
 		/// <returns>The builder instance so calls can be chained.</returns>
-		public LinqToDbConnectionOptionsBuilder Reset()
+		public LinqToDBConnectionOptionsBuilder Reset()
 		{
 			MappingSchema       = null;
 			DataProvider        = null;
@@ -245,9 +257,33 @@ namespace LinqToDB.Configuration
 			TraceLevel          = null;
 			OnTrace             = null;
 			WriteTrace          = null;
+			_interceptors?.Clear();
 			SetupType           = ConnectionSetupType.DefaultConfiguration;
 
 			return this;
+		}
+
+		/// <summary>
+		/// Clone builder without interceptors.
+		/// </summary>
+		internal LinqToDBConnectionOptionsBuilder Clone()
+		{
+			return new LinqToDBConnectionOptionsBuilder()
+			{
+				MappingSchema       = MappingSchema,
+				DataProvider        = DataProvider,
+				ConfigurationString = ConfigurationString,
+				ConnectionString    = ConnectionString,
+				DbConnection        = DbConnection,
+				ProviderName        = ProviderName,
+				DbTransaction       = DbTransaction,
+				ConnectionFactory   = ConnectionFactory,
+				TraceLevel          = TraceLevel,
+				OnTrace             = OnTrace,
+				WriteTrace          = WriteTrace,
+				SetupType           = SetupType,
+				_interceptors       = _interceptors == null ? null : _interceptors.ToList()
+			};
 		}
 	}
 }

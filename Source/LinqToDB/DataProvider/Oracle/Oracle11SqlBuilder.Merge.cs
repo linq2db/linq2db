@@ -23,14 +23,17 @@
 
 		protected override void BuildMergeInto(SqlMergeStatement merge)
 		{
-			StringBuilder.Append("MERGE ");
+			StringBuilder.Append("MERGE");
+
+			StartStatementQueryExtensions(merge.SelectQuery);
+
+			StringBuilder.Append(' ');
 
 			if (merge.Hint != null)
 			{
-				StringBuilder
-					.Append("/*+ ")
-					.Append(merge.Hint)
-					.Append(" */ ");
+				if (HintBuilder!.Length > 0)
+					HintBuilder.Append(' ');
+				HintBuilder.Append(merge.Hint);
 			}
 
 			StringBuilder.Append("INTO ");

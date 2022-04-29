@@ -8,28 +8,22 @@ namespace LinqToDB.DataProvider.Sybase
 	using SqlQuery;
 	using SqlProvider;
 	using Mapping;
+	using System.Data.Common;
 
 	partial class SybaseSqlBuilder : BasicSqlBuilder
 	{
-		private readonly SybaseDataProvider? _provider;
-
-		public SybaseSqlBuilder(
-			SybaseDataProvider? provider,
-			MappingSchema       mappingSchema,
-			ISqlOptimizer       sqlOptimizer,
-			SqlProviderFlags    sqlProviderFlags)
-			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
+		public SybaseSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
-			_provider = provider;
 		}
 
-		// remote context
-		public SybaseSqlBuilder(
-			MappingSchema    mappingSchema,
-			ISqlOptimizer    sqlOptimizer,
-			SqlProviderFlags sqlProviderFlags)
-			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
+		SybaseSqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
 		{
+		}
+
+		protected override ISqlBuilder CreateSqlBuilder()
+		{
+			return new SybaseSqlBuilder(this) { _skipAliases = _isSelect };
 		}
 
 		protected override void BuildGetIdentity(SqlInsertClause insertClause)
@@ -46,15 +40,8 @@ namespace LinqToDB.DataProvider.Sybase
 			return "TOP {0}";
 		}
 
-		private  bool _isSelect;
-		readonly bool _skipAliases;
-
-		SybaseSqlBuilder(SybaseDataProvider? provider, bool skipAliases, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
-		{
-			_provider    = provider;
-			_skipAliases = skipAliases;
-		}
+		bool _isSelect;
+		bool _skipAliases;
 
 		protected override void BuildSelectClause(SelectQuery selectQuery)
 		{
@@ -68,11 +55,6 @@ namespace LinqToDB.DataProvider.Sybase
 			base.BuildColumnExpression(selectQuery, expr, alias, ref addAlias);
 
 			if (_skipAliases) addAlias = false;
-		}
-
-		protected override ISqlBuilder CreateSqlBuilder()
-		{
-			return new SybaseSqlBuilder(_provider, _isSelect, MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}
 
 		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
@@ -152,7 +134,10 @@ namespace LinqToDB.DataProvider.Sybase
 					if (value.Length > 26)
 						value = value.Substring(0, 26);
 
-					return sb.Append('@').Append(value);
+					if (value.Length == 0 || value[0] != '@')
+						sb.Append('@');
+
+					return sb.Append(value);
 
 				case ConvertType.NameToQueryField:
 				case ConvertType.NameToQueryFieldAlias:
@@ -209,16 +194,16 @@ namespace LinqToDB.DataProvider.Sybase
 			StringBuilder.Append(')');
 		}
 
-		protected override string? GetProviderTypeName(IDbDataParameter parameter)
+		protected override string? GetProviderTypeName(IDataContext dataContext, DbParameter parameter)
 		{
-			if (_provider != null)
+			if (DataProvider is SybaseDataProvider provider)
 			{
-				var param = _provider.TryGetProviderParameter(parameter, MappingSchema);
+				var param = provider.TryGetProviderParameter(dataContext, parameter);
 				if (param != null)
-					return _provider.Adapter.GetDbType(param).ToString();
+					return provider.Adapter.GetDbType(param).ToString();
 			}
 
-			return base.GetProviderTypeName(parameter);
+			return base.GetProviderTypeName(dataContext, parameter);
 		}
 
 		protected override void BuildTruncateTable(SqlTruncateTableStatement truncateTable)
@@ -304,11 +289,9 @@ namespace LinqToDB.DataProvider.Sybase
 
 			if (dropTable.Table.TableOptions.HasDropIfExists())
 			{
-				var defaultDatabaseName = IsTemporary(table) ? "tempdb" : null;
-
 				_skipBrackets = true;
 				StringBuilder.Append("IF (OBJECT_ID(N'");
-				BuildPhysicalTable(table, null, defaultDatabaseName : defaultDatabaseName);
+				BuildPhysicalTable(table, null);
 				StringBuilder.AppendLine("') IS NOT NULL)");
 				_skipBrackets = false;
 
@@ -328,12 +311,11 @@ namespace LinqToDB.DataProvider.Sybase
 			{
 				var table = createTable.Table;
 
-				var isTemporary         = IsTemporary(table);
-				var defaultDatabaseName = isTemporary ? "tempdb" : null;
+				var isTemporary = IsTemporary(table);
 
 				_skipBrackets = true;
 				StringBuilder.Append("IF (OBJECT_ID(N'");
-				BuildPhysicalTable(table, null, defaultDatabaseName : defaultDatabaseName);
+				BuildPhysicalTable(table, null);
 				StringBuilder.AppendLine("') IS NULL)");
 				_skipBrackets = false;
 

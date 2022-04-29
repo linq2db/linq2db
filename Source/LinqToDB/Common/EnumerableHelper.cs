@@ -6,10 +6,10 @@ using LinqToDB.Async;
 
 namespace LinqToDB.Common
 {
-	internal class EnumerableHelper
+	public class EnumerableHelper
 	{
 #if NATIVE_ASYNC
-		public static IEnumerable<T> AsyncToSyncEnumerable<T>(IAsyncEnumerator<T> enumerator)
+		internal static IEnumerable<T> AsyncToSyncEnumerable<T>(IAsyncEnumerator<T> enumerator)
 		{
 			var result = SafeAwaiter.Run(() => enumerator.MoveNextAsync());
 			while (result)
@@ -20,7 +20,7 @@ namespace LinqToDB.Common
 		}
 
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
-		public static async IAsyncEnumerable<T> SyncToAsyncEnumerable<T>(IEnumerable<T> enumerable)
+		internal static async IAsyncEnumerable<T> SyncToAsyncEnumerable<T>(IEnumerable<T> enumerable)
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
 		{
 			foreach (var item in enumerable)
@@ -82,7 +82,7 @@ namespace LinqToDB.Common
 
 						if (_enumerator.MoveNext())
 							yield return _enumerator.Current;
-						else 
+						else
 						{
 							_sourceDepleted = true;
 							break;

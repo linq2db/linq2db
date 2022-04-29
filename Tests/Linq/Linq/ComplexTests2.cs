@@ -338,12 +338,12 @@ namespace Tests.Linq
 
 					Assert.NotNull(db.GetTable<Dog>().First(x => x.AnimalType == AnimalType.Big));
 					Assert.NotNull(db.GetTable<Dog>().First(x => x.AnimalType == d.AnimalType));
-					
+
 					Assert.NotNull(db.GetTable<Dog>().First(x => x.AnimalType2 == AnimalType2.Big));
 					Assert.NotNull(db.GetTable<Dog>().First(x => x.AnimalType2 == d.AnimalType2));
 
 					Assert.NotNull(db.GetTable<Animal>().First(x => x is SuperWildAnimal));
-					
+
 					Assert.NotNull(db.GetTable<Test>().First(x => x.TestAnimal is Dog && ((Dog)x.TestAnimal).EyeId == 1));
 				}
 				finally
@@ -462,7 +462,7 @@ namespace Tests.Linq
 
 					void Validate(bool insertOrReplace)
 					{
-						if (insertOrReplace && context.Contains("Oracle") && context.Contains("Native"))
+						if (insertOrReplace && context.IsAnyOf(TestProvName.AllOracleNative))
 							Assert.AreEqual(-1, cnt);
 						else
 							Assert.AreEqual(1, cnt);
@@ -519,7 +519,7 @@ namespace Tests.Linq
 
 					void Validate(bool insertOrReplace)
 					{
-						if (insertOrReplace && context.Contains("Oracle") && context.Contains("Native"))
+						if (insertOrReplace && context.IsAnyOf(TestProvName.AllOracleNative))
 							Assert.AreEqual(-1, cnt);
 						else
 							Assert.AreEqual(1, cnt);

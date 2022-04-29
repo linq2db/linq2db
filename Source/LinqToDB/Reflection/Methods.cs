@@ -27,7 +27,7 @@ namespace LinqToDB.Reflection
 
 		public static class ADONet
 		{
-			public static readonly MethodInfo IsDBNull      = MemberHelper.MethodOf<IDataRecord> (r => r.IsDBNull(0));
+			public static readonly MethodInfo IsDBNull      = MemberHelper.MethodOf<DbDataReader>(r => r.IsDBNull(0));
 			public static readonly MethodInfo IsDBNullAsync = MemberHelper.MethodOf<DbDataReader>(r => r.IsDBNullAsync(0));
 		}
 
@@ -101,7 +101,7 @@ namespace LinqToDB.Reflection
 
 		public static class LinqToDB
 		{
-			internal static readonly MethodInfo EvaluateExpression = MemberHelper.MethodOf(() => InternalExtensions.EvaluateExpression(null));
+			internal static readonly MethodInfo EvaluateExpression = MemberHelper.MethodOf(() => ExpressionEvaluator.EvaluateExpression(null));
 
 			public static readonly MethodInfo GetTable    = MemberHelper.MethodOfGeneric<IDataContext>(dc => dc.GetTable<object>());
 
@@ -136,6 +136,7 @@ namespace LinqToDB.Reflection
 
 			public static class Table
 			{
+				public static readonly MethodInfo TableID      = MemberHelper.MethodOfGeneric<ITable<int>>(t => t.TableID     (null!));
 				public static readonly MethodInfo TableName    = MemberHelper.MethodOfGeneric<ITable<int>>(t => t.TableName   (null!));
 				public static readonly MethodInfo SchemaName   = MemberHelper.MethodOfGeneric<ITable<int>>(t => t.SchemaName  (null!));
 				public static readonly MethodInfo DatabaseName = MemberHelper.MethodOfGeneric<ITable<int>>(t => t.DatabaseName(null!));

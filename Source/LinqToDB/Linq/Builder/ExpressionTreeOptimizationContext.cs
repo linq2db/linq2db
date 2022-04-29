@@ -311,66 +311,73 @@ namespace LinqToDB.Linq.Builder
 			if (_isServerSideOnlyCache != null && _isServerSideOnlyCache.TryGetValue(expr, out var result))
 				return result;
 
-			result = false;
-
-			switch (expr.NodeType)
+			if (expr.Type == typeof(Sql.SqlID))
 			{
-				case ExpressionType.MemberAccess:
+				result = true;
+			}
+			else
+			{
+				result = false;
+
+				switch (expr.NodeType)
 				{
-					var ex = (MemberExpression)expr;
-					var l  = Expressions.ConvertMember(MappingSchema, ex.Expression?.Type, ex.Member);
-
-					if (l != null)
+					case ExpressionType.MemberAccess:
 					{
-						result = IsServerSideOnly(l.Body.Unwrap());
-					}
-					else
-					{
-						var attr = GetExpressionAttribute(ex.Member);
-						result = attr != null && attr.ServerSideOnly;
-					}
-
-					break;
-				}
-
-				case ExpressionType.Call:
-				{
-					var e = (MethodCallExpression)expr;
-
-					if (e.Method.DeclaringType == typeof(Enumerable))
-					{
-						if (CountBuilder.MethodNames.Contains(e.Method.Name) || e.IsAggregate(MappingSchema))
-							result = IsQueryMember(e.Arguments[0]);
-					}
-					else if (e.IsAggregate(MappingSchema) || e.IsAssociation(MappingSchema))
-					{
-						result = true;
-					}
-					else if (e.Method.DeclaringType == typeof(Queryable))
-					{
-						switch (e.Method.Name)
-						{
-							case "Any"     :
-							case "All"     :
-							case "Contains": result = true; break;
-						}
-					}
-					else
-					{
-						var l = Expressions.ConvertMember(MappingSchema, e.Object?.Type, e.Method);
+						var ex = (MemberExpression)expr;
+						var l  = Expressions.ConvertMember(MappingSchema, ex.Expression?.Type, ex.Member);
 
 						if (l != null)
 						{
-							result = (_isServerSideOnlyVisitor ??= FindVisitor<ExpressionTreeOptimizationContext>.Create(this, static (ctx, e) => ctx.IsServerSideOnly(e))).Find(l.Body.Unwrap()) != null;
+							result = IsServerSideOnly(l.Body.Unwrap());
 						}
 						else
 						{
-							var attr = GetExpressionAttribute(e.Method);
+							var attr = GetExpressionAttribute(ex.Member);
 							result = attr != null && attr.ServerSideOnly;
 						}
+
+						break;
 					}
 
-					break;
+					case ExpressionType.Call:
+					{
+						var e = (MethodCallExpression)expr;
+
+						if (e.Method.DeclaringType == typeof(Enumerable))
+						{
+							if (CountBuilder.MethodNames.Contains(e.Method.Name) || e.IsAggregate(MappingSchema))
+								result = IsQueryMember(e.Arguments[0]);
+						}
+						else if (e.IsAggregate(MappingSchema) || e.IsAssociation(MappingSchema))
+						{
+							result = true;
+						}
+						else if (e.Method.DeclaringType == typeof(Queryable))
+						{
+							switch (e.Method.Name)
+							{
+								case "Any"     :
+								case "All"     :
+								case "Contains": result = true; break;
+							}
+						}
+						else
+						{
+							var l = Expressions.ConvertMember(MappingSchema, e.Object?.Type, e.Method);
+
+							if (l != null)
+							{
+								result = (_isServerSideOnlyVisitor ??= FindVisitor<ExpressionTreeOptimizationContext>.Create(this, static (ctx, e) => ctx.IsServerSideOnly(e))).Find(l.Body.Unwrap()) != null;
+							}
+							else
+							{
+								var attr = GetExpressionAttribute(e.Method);
+								result = attr?.ServerSideOnly == true;
+							}
+						}
+
+						break;
+					}
 				}
 			}
 
@@ -381,23 +388,24 @@ namespace LinqToDB.Linq.Builder
 		static bool IsQueryMember(Expression expr)
 		{
 			expr = expr.Unwrap();
+
 			if (expr != null) switch (expr.NodeType)
+			{
+				case ExpressionType.Parameter   : return true;
+				case ExpressionType.MemberAccess: return IsQueryMember(((MemberExpression)expr).Expression!);
+				case ExpressionType.Call:
 				{
-					case ExpressionType.Parameter   : return true;
-					case ExpressionType.MemberAccess: return IsQueryMember(((MemberExpression)expr).Expression!);
-					case ExpressionType.Call:
-					{
-						var call = (MethodCallExpression)expr;
+					var call = (MethodCallExpression)expr;
 
-						if (call.Method.DeclaringType == typeof(Queryable))
-							return true;
+					if (call.Method.DeclaringType == typeof(Queryable))
+						return true;
 
-						if (call.Method.DeclaringType == typeof(Enumerable) && call.Arguments.Count > 0)
-							return IsQueryMember(call.Arguments[0]);
+					if (call.Method.DeclaringType == typeof(Enumerable) && call.Arguments.Count > 0)
+						return IsQueryMember(call.Arguments[0]);
 
-						return IsQueryMember(call.Object!);
-					}
+					return IsQueryMember(call.Object!);
 				}
+			}
 
 			return false;
 		}
@@ -409,7 +417,7 @@ namespace LinqToDB.Linq.Builder
 		Expression? _lastExpr2;
 		bool        _lastResult2;
 
-		private static HashSet<Expression> DefaultAllowedParams = new ()
+		static HashSet<Expression> DefaultAllowedParams = new ()
 		{
 			ExpressionBuilder.ParametersParam,
 			ExpressionBuilder.DataContextParam
@@ -423,7 +431,7 @@ namespace LinqToDB.Linq.Builder
 			// context allocation is cheaper than HashSet allocation
 			// and HashSet allocation is rare
 
-			var result  = null == GetCanBeCompiledVisitor().Find(expr);
+			var result = null == GetCanBeCompiledVisitor().Find(expr);
 
 			_lastExpr2 = expr;
 			return _lastResult2 = result;
@@ -462,7 +470,7 @@ namespace LinqToDB.Linq.Builder
 		private bool CanBeCompiledFind(CanBeCompiledContext context, Expression ex)
 		{
 			if (IsServerSideOnly(ex))
-					return true;
+				return true;
 
 			switch (ex.NodeType)
 			{

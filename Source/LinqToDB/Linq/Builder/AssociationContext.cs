@@ -12,7 +12,7 @@ namespace LinqToDB.Linq.Builder
 	class AssociationContext : IBuildContext
 	{
 #if DEBUG
-		string? IBuildContext._sqlQueryText => TableContext._sqlQueryText;
+		string? IBuildContext.SqlQueryText => TableContext.SqlQueryText;
 		public string Path => this.GetPath();
 #endif
 		public ExpressionBuilder Builder { get; }
@@ -25,8 +25,8 @@ namespace LinqToDB.Linq.Builder
 			set => throw new NotImplementedException();
 		}
 
-		public SqlStatement? Statement 
-		{ 
+		public SqlStatement? Statement
+		{
 			get => SubqueryContext.Statement;
 			set => SubqueryContext.Statement = value;
 		}

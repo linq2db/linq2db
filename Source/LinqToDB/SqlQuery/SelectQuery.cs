@@ -7,8 +7,10 @@ using System.Threading;
 
 namespace LinqToDB.SqlQuery
 {
+	using Remote;
+
 	[DebuggerDisplay("SQL = {" + nameof(SqlText) + "}")]
-	public class SelectQuery : ISqlTableSource
+	public class SelectQuery : ISqlTableSource, IQueryExtendible
 	{
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		protected string DebugSqlText => SqlText;
@@ -19,12 +21,12 @@ namespace LinqToDB.SqlQuery
 		{
 			SourceID = Interlocked.Increment(ref SourceIDCounter);
 
-			Select  = new SqlSelectClause (this);
-			From    = new SqlFromClause   (this);
-			Where   = new SqlWhereClause  (this);
-			GroupBy = new SqlGroupByClause(this);
-			Having  = new SqlWhereClause  (this);
-			OrderBy = new SqlOrderByClause(this);
+			Select  = new(this);
+			From    = new(this);
+			Where   = new(this);
+			GroupBy = new(this);
+			Having  = new(this);
+			OrderBy = new(this);
 		}
 
 		internal SelectQuery(int id)
@@ -43,6 +45,7 @@ namespace LinqToDB.SqlQuery
 			List<ISqlExpression[]>? uniqueKeys,
 			SelectQuery?            parentSelect,
 			bool                    parameterDependent,
+			string?                 queryName,
 			bool                    doNotSetAliases)
 		{
 			Select               = select;
@@ -54,6 +57,7 @@ namespace LinqToDB.SqlQuery
 			_setOperators        = setOperators;
 			ParentSelect         = parentSelect;
 			IsParameterDependent = parameterDependent;
+			QueryName            = queryName;
 			DoNotSetAliases      = doNotSetAliases;
 
 			if (uniqueKeys != null)
@@ -89,6 +93,8 @@ namespace LinqToDB.SqlQuery
 		/// Gets or sets flag when sub-query can be removed during optimization.
 		/// </summary>
 		public bool               DoNotRemove         { get; set; }
+		public string?                  QueryName          { get; set; }
+		public List<SqlQueryExtension>? SqlQueryExtensions { get; set; }
 		public bool            DoNotSetAliases      { get; set; }
 
 		List<ISqlExpression[]>? _uniqueKeys;
@@ -106,7 +112,6 @@ namespace LinqToDB.SqlQuery
 
 		private List<SqlSetOperator>? _setOperators;
 		public  List<SqlSetOperator>   SetOperators => _setOperators ??= new List<SqlSetOperator>();
-
 		public  bool            HasSetOperators    => _setOperators != null && _setOperators.Count > 0;
 
 		public void AddUnion(SelectQuery union, bool isAll)
@@ -180,7 +185,6 @@ namespace LinqToDB.SqlQuery
 
 		public bool CanBeNull => true;
 		public int Precedence => SqlQuery.Precedence.Unknown;
-
 
 		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
 		{

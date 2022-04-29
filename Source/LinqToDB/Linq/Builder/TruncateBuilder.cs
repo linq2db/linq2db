@@ -30,12 +30,6 @@ namespace LinqToDB.Linq.Builder
 			return new TruncateContext(buildInfo.Parent, sequence);
 		}
 
-		protected override SequenceConvertInfo? Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-		{
-			return null;
-		}
-
 		#endregion
 
 		#region TruncateContext

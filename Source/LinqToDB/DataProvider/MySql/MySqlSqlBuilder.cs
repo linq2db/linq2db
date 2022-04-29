@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Text;
+using System.Data.Common;
 
 namespace LinqToDB.DataProvider.MySql
 {
@@ -13,25 +14,18 @@ namespace LinqToDB.DataProvider.MySql
 
 	class MySqlSqlBuilder : BasicSqlBuilder
 	{
-		private readonly MySqlDataProvider? _provider;
-
-		public MySqlSqlBuilder(
-			MySqlDataProvider? provider,
-			MappingSchema      mappingSchema,
-			ISqlOptimizer      sqlOptimizer,
-			SqlProviderFlags   sqlProviderFlags)
-			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
+		public MySqlSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
-			_provider = provider;
 		}
 
-		// remote context
-		public MySqlSqlBuilder(
-			MappingSchema    mappingSchema,
-			ISqlOptimizer    sqlOptimizer,
-			SqlProviderFlags sqlProviderFlags)
-			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
+		MySqlSqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
 		{
+		}
+
+		protected override ISqlBuilder CreateSqlBuilder()
+		{
+			return new MySqlSqlBuilder(this) { HintBuilder = HintBuilder };
 		}
 
 		static MySqlSqlBuilder()
@@ -76,11 +70,6 @@ namespace LinqToDB.DataProvider.MySql
 		protected override void BuildCommand(SqlStatement statement, int commandNumber)
 		{
 			StringBuilder.AppendLine("SELECT LAST_INSERT_ID()");
-		}
-
-		protected override ISqlBuilder CreateSqlBuilder()
-		{
-			return new MySqlSqlBuilder(MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}
 
 		protected override string LimitFormat(SelectQuery selectQuery)
@@ -260,7 +249,7 @@ namespace LinqToDB.DataProvider.MySql
 				 DataType.Text,           _,                  _,                   _                   ) => "LONGTEXT",
 				_ => null
 			})
-			{
+						{
 				case null  : base.BuildDataTypeFromDataType(type, forCreateTable); break;
 				case var t : StringBuilder.Append(t);                              break;
 			};
@@ -274,7 +263,9 @@ namespace LinqToDB.DataProvider.MySql
 
 			var alias = GetTableAlias(table);
 
-			AppendIndent().Append("DELETE");
+			AppendIndent().Append("DELETE ");
+			StartStatementQueryExtensions(deleteStatement.SelectQuery);
+			StringBuilder.Append(' ');
 
 			if (alias != null)
 			{
@@ -493,16 +484,16 @@ namespace LinqToDB.DataProvider.MySql
 			return sb.Append(table);
 		}
 
-		protected override string? GetProviderTypeName(IDbDataParameter parameter)
+		protected override string? GetProviderTypeName(IDataContext dataContext, DbParameter parameter)
 		{
-			if (_provider != null)
+			if (DataProvider is MySqlDataProvider provider)
 			{
-				var param = _provider.TryGetProviderParameter(parameter, MappingSchema);
+				var param = provider.TryGetProviderParameter(dataContext, parameter);
 				if (param != null)
-					return _provider.Adapter.GetDbType(param).ToString();
+					return provider.Adapter.GetDbType(param).ToString();
 			}
 
-			return base.GetProviderTypeName(parameter);
+			return base.GetProviderTypeName(dataContext, parameter);
 		}
 
 		protected override void BuildTruncateTable(SqlTruncateTableStatement truncateTable)
@@ -594,6 +585,73 @@ namespace LinqToDB.DataProvider.MySql
 
 			if (table.TableOptions.HasCreateIfNotExists())
 				StringBuilder.Append("IF NOT EXISTS ");
+		}
+
+		protected StringBuilder? HintBuilder;
+
+		int  _hintPosition;
+		bool _isTopLevelBuilder;
+
+		protected override void StartStatementQueryExtensions(SelectQuery? selectQuery)
+		{
+			if (HintBuilder == null)
+			{
+				HintBuilder        = new();
+				_isTopLevelBuilder = true;
+				_hintPosition      = StringBuilder.Length;
+
+				if (Statement is SqlInsertStatement)
+					_hintPosition -= " INTO ".Length;
+
+				if (selectQuery?.QueryName is {} queryName)
+					HintBuilder
+						.Append("QB_NAME(")
+						.Append(queryName)
+						.Append(')')
+						;
+			}
+			else if (selectQuery?.QueryName is {} queryName)
+			{
+				StringBuilder
+					.Append(" /*+ QB_NAME(")
+					.Append(queryName)
+					.Append(") */")
+					;
+			}
+		}
+
+		protected override void FinalizeBuildQuery(SqlStatement statement)
+		{
+			base.FinalizeBuildQuery(statement);
+
+			if (statement.SqlQueryExtensions is not null && HintBuilder is not null)
+			{
+				if (HintBuilder.Length > 0 && HintBuilder[HintBuilder.Length - 1] != ' ')
+					HintBuilder.Append(' ');
+				BuildQueryExtensions(HintBuilder, statement.SqlQueryExtensions, null, " ", null);
+			}
+
+			if (_isTopLevelBuilder && HintBuilder!.Length > 0)
+			{
+				HintBuilder.Insert(0, " /*+ ");
+				HintBuilder.Append(" */");
+
+				StringBuilder.Insert(_hintPosition, HintBuilder);
+			}
+		}
+
+		protected override void BuildTableExtensions(SqlTable table, string alias)
+		{
+			if (table.SqlQueryExtensions is not null)
+			{
+				if (HintBuilder is not null)
+					BuildTableExtensions(HintBuilder, table, alias, null, " ", null, ext =>
+						ext.Scope is
+							Sql.QueryExtensionScope.TableHint or
+							Sql.QueryExtensionScope.TablesInScopeHint);
+
+				BuildTableExtensions(StringBuilder, table, alias, " ", ", ", null, ext => ext.Scope is Sql.QueryExtensionScope.IndexHint);
+			}
 		}
 	}
 }

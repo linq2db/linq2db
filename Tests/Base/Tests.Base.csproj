@@ -9,27 +9,30 @@
 	<ItemGroup>
 		<ProjectReference Include="..\Model\Tests.Model.csproj" />
 
-		<PackageReference Include="NUnit3TestAdapter" />
-		<PackageReference Include="Microsoft.NET.Test.Sdk" />
-		<PackageReference Include="FirebirdSql.Data.FirebirdClient" />
-		<PackageReference Include="FastExpressionCompiler" />
+		<PackageReference Include="NUnit" />
+		<PackageReference Include="MiniProfiler.Shared" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)' == 'net472' ">
-		<None Update="SqlServerTypes\x64\msvcr120.dll">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="SqlServerTypes\x64\SqlServerSpatial140.dll">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="SqlServerTypes\x86\msvcr120.dll">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="SqlServerTypes\x86\SqlServerSpatial140.dll">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-
-		<PackageReference Include="Microsoft.SqlServer.Types" />
-
+		<Reference Include="Microsoft.CSharp" />
+		<Reference Include="System.ServiceModel" />
+		
+		<PackageReference Include="System.Text.Json" />
 	</ItemGroup>
+
+	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">
+		<!--netcoreapp31 needed due to very old transient depndency from oracle 2.19 provider-->
+		<PackageReference Include="System.Text.Json" />
+	</ItemGroup>
+	
+	<ItemGroup Condition=" '$(TargetFramework)' != 'net472' ">
+		<PackageReference Include="protobuf-net.Grpc.AspNetCore" />
+	</ItemGroup>
+	
+	<ItemGroup>
+	  <Compile Update="TestProviders\TestNoopProvider.cs">
+	    <SubType>Source</SubType>
+	  </Compile>
+	</ItemGroup>
+
 </Project>

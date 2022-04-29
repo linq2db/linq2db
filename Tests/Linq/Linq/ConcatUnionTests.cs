@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using FluentAssertions;
 using LinqToDB;
@@ -8,8 +10,7 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
-	using System;
-	using System.Linq.Expressions;
+	using LinqToDB.Data;
 	using Model;
 
 
@@ -639,7 +640,7 @@ namespace Tests.Linq
 		[Test]
 		public void Concat90()
 		{
-			using(var context = new TestDataConnection())
+			using(var context = new DataConnection())
 			{
 				var join1 =
 					from t1 in context.GetTable<TestEntity1>()
@@ -1177,7 +1178,6 @@ namespace Tests.Linq
 			[ExpressionMethod(nameof(FullNameExpr), IsColumn = true)]
 			public string FullName { get; set; } = null!;
 
-
 			private static Expression<Func<Issue3323Table, string>> FullNameExpr() => entity => entity.FistName + " " + entity.LastName;
 		}
 
@@ -1385,28 +1385,73 @@ namespace Tests.Linq
 			query.Concat(query).ToArray();
 		}
 
-		[ActiveIssue(2619)]
 		[Test(Description = "set query with ORDER BY requires wrapping into subquery for some DBs")]
 		public void Issue2619_Query1([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
-			((from item in db.Person select item)
+			var query = ((from item in db.Person select item)
 				.OrderBy(i => i.ID))
-				.Union((from item in db.Person select item))
-				.ToList();
+				.Union((from item in db.Person select item));
+
+			var sql = query.ToString()!;
+
+			sql.Should().NotContain("ORDER BY");
+
+			query.ToList();
 		}
 
-		[ActiveIssue(2619)]
 		[Test(Description = "set query with ORDER BY requires wrapping into subquery for some DBs")]
 		public void Issue2619_Query2([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
-			(from item in db.Person select item)
+			var query = (from item in db.Person select item)
 				.Union((from item in db.Person select item)
+				.OrderBy(i => i.ID));
+
+			var sql = query.ToString()!;
+
+			sql.Should().NotContain("ORDER BY");
+
+			query.ToList();
+		}
+
+		// disabled databases doesn't support order by in specified position
+		[Test(Description = "set query with ORDER BY requires wrapping into subquery for some DBs")]
+		public void Issue2619_Query3([DataSources(TestProvName.AllSybase, TestProvName.AllSqlServer, ProviderName.SqlCe)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = ((from item in db.Person select item)
 				.OrderBy(i => i.ID))
-				.ToList();
+				.UnionAll((from item in db.Person select item));
+
+			var sql = query.ToString()!;
+
+			sql.Should().Contain("ORDER BY", Exactly.Once());
+			sql.Substring(sql.IndexOf("ORDER BY")).Should().Contain("UNION", Exactly.Once());
+
+			query.ToList();
+		}
+
+		// disabled databases doesn't support order by in specified position
+		[Test(Description = "set query with ORDER BY requires wrapping into subquery for some DBs")]
+		public void Issue2619_Query4([DataSources(TestProvName.AllSybase, TestProvName.AllSqlServer, ProviderName.SqlCe)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = (from item in db.Person select item)
+				.UnionAll((from item in db.Person select item)
+				.OrderBy(i => i.ID));
+
+			var sql = query.ToString()!;
+
+			sql.Should().Contain("ORDER BY", Exactly.Once());
+			sql.Should().Contain("UNION", Exactly.Once());
+			sql.Substring(sql.IndexOf("ORDER BY")).Should().NotContain("UNION");
+
+			query.ToList();
 		}
 
 		[Test(Description = "ArgumentOutOfRangeException : Index was out of range. Must be non-negative and less than the size of the collection.")]

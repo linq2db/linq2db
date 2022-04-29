@@ -37,7 +37,7 @@ namespace Tests.Data
 		[Test]
 		public void TestColumnNameComparerCaseInsensivity([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var p1 = PersonSelectByKeyLowercaseColumns(db, 1).First();
 				var p2 = db.Query<Person>("SELECT PersonID, FirstName FROM Person WHERE PersonID = @id", new { id = 1 }).First();
@@ -51,7 +51,7 @@ namespace Tests.Data
 		[Test]
 		public void Test([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var p1 = PersonSelectByKey(db, 1).First();
 				var p2 = db.Query<Person>("SELECT * FROM Person WHERE PersonID = @id", new { id = 1 }).First();
@@ -95,7 +95,7 @@ namespace Tests.Data
 		[Test]
 		public void VariableResultsTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var set1 = db.QueryProc<VariableResult>("[VariableResults]",
 					new DataParameter("@ReturnFullRow", 0)).First();
@@ -125,7 +125,7 @@ namespace Tests.Data
 		[Test]
 		public void VariableResultsTestWithAnonymParam([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var set1 = db.QueryProc<VariableResult>("[VariableResults]",
 					new { ReturnFullRow = 0 }).First();
@@ -153,11 +153,11 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void TestQueryProcRebind([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestQueryProcRebind([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
-				var input = DataParameter.Int32("input", 1);
+				var input   = DataParameter.Int32("input", 1);
 				var output1 = new DataParameter("output1", null, DataType.Int32) { Direction = ParameterDirection.Output };
 				var output2 = new DataParameter("output2", null, DataType.Int32) { Direction = ParameterDirection.Output };
 				var persons = db.QueryProc<Person>("QueryProcParameters", input, output1, output2);
@@ -168,16 +168,13 @@ namespace Tests.Data
 
 				Assert.AreEqual(2, output1.Value);
 				Assert.AreEqual(3, output2.Value);
-
-				Assert.AreEqual(2, ((IDataParameter)db.Command.Parameters["output1"]).Value);
-				Assert.AreEqual(3, ((IDataParameter)db.Command.Parameters["output2"]).Value);
 			}
 		}
 
 		[Test]
-		public async Task TestQueryProcAsyncRebind([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public async Task TestQueryProcAsyncRebind([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var input = DataParameter.Int32("input", 1);
 				var output1 = new DataParameter("output1", null, DataType.Int32) { Direction = ParameterDirection.Output };
@@ -190,17 +187,13 @@ namespace Tests.Data
 
 				Assert.AreEqual(2, output1.Value);
 				Assert.AreEqual(3, output2.Value);
-
-				Assert.AreEqual(2, ((IDataParameter)db.Command.Parameters["output1"]).Value);
-				Assert.AreEqual(3, ((IDataParameter)db.Command.Parameters["output2"]).Value);
-
 			}
 		}
 
 		[Test]
-		public void TestQueryProcTemplateRebind([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestQueryProcTemplateRebind([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var input = DataParameter.Int32("input", 1);
 				var output1 = new DataParameter("output1", null, DataType.Int32) { Direction = ParameterDirection.Output };
@@ -211,16 +204,13 @@ namespace Tests.Data
 
 				Assert.AreEqual(2, output1.Value);
 				Assert.AreEqual(3, output2.Value);
-
-				Assert.AreEqual(2, ((IDataParameter)db.Command.Parameters["output1"]).Value);
-				Assert.AreEqual(3, ((IDataParameter)db.Command.Parameters["output2"]).Value);
 			}
 		}
 
 		[Test]
-		public async Task TestQueryProcAsyncTemplateRebind([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public async Task TestQueryProcAsyncTemplateRebind([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var input = DataParameter.Int32("input", 1);
 				var output1 = new DataParameter("output1", null, DataType.Int32) { Direction = ParameterDirection.Output };
@@ -233,16 +223,13 @@ namespace Tests.Data
 
 				Assert.AreEqual(2, output1.Value);
 				Assert.AreEqual(3, output2.Value);
-
-				Assert.AreEqual(2, ((IDataParameter)db.Command.Parameters["output1"]).Value);
-				Assert.AreEqual(3, ((IDataParameter)db.Command.Parameters["output2"]).Value);
 			}
 		}
 
 		[Test]
-		public void TestQueryProcReaderRebind([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestQueryProcReaderRebind([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var input = DataParameter.Int32("input", 1);
 				var output1 = new DataParameter("output1", null, DataType.Int32) { Direction = ParameterDirection.Output };
@@ -255,16 +242,13 @@ namespace Tests.Data
 
 				Assert.AreEqual(2, output1.Value);
 				Assert.AreEqual(3, output2.Value);
-
-				Assert.AreEqual(2, ((IDataParameter)db.Command.Parameters["output1"]).Value);
-				Assert.AreEqual(3, ((IDataParameter)db.Command.Parameters["output2"]).Value);
 			}
 		}
 
 		[Test]
-		public async Task TestQueryProcAsyncReaderRebind([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public async Task TestQueryProcAsyncReaderRebind([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var input = DataParameter.Int32("input", 1);
 				var output1 = new DataParameter("output1", null, DataType.Int32) { Direction = ParameterDirection.Output };
@@ -277,9 +261,6 @@ namespace Tests.Data
 
 				Assert.AreEqual(2, output1.Value);
 				Assert.AreEqual(3, output2.Value);
-
-				Assert.AreEqual(2, ((IDataParameter)db.Command.Parameters["output1"]).Value);
-				Assert.AreEqual(3, ((IDataParameter)db.Command.Parameters["output2"]).Value);
 			}
 		}
 
@@ -290,9 +271,9 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void TestQueryProcMultipleRebind([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestQueryProcMultipleRebind([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var input = DataParameter.Int32("input", 1);
 				var output1 = new DataParameter("output1", null, DataType.Int32) { Direction = ParameterDirection.Output };
@@ -306,9 +287,9 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public async Task TestQueryProcMultipleAsyncRebind([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public async Task TestQueryProcMultipleAsyncRebind([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var input = DataParameter.Int32("input", 1);
 				var output1 = new DataParameter("output1", null, DataType.Int32) { Direction = ParameterDirection.Output };
@@ -322,9 +303,9 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void TestExecuteProcIntRebind([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestExecuteProcIntRebind([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var input = DataParameter.Int32("input", 1);
 				var output = new DataParameter("output", null, DataType.Int32) { Direction = ParameterDirection.Output };
@@ -335,9 +316,9 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public async Task TestExecuteProcAsyncIntRebind([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public async Task TestExecuteProcAsyncIntRebind([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var input = DataParameter.Int32("input", 1);
 				var output = new DataParameter("output", null, DataType.Int32) { Direction = ParameterDirection.Output };
@@ -348,9 +329,9 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void TestExecuteProcTRebind([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestExecuteProcTRebind([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var input = DataParameter.Int32("input", 1);
 				var output = new DataParameter("output", null, DataType.Int32) { Direction = ParameterDirection.Output };
@@ -361,9 +342,9 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public async Task TestExecuteProcAsyncRebind([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public async Task TestExecuteProcAsyncRebind([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var input = DataParameter.Int32("input", 1);
 				var output = new DataParameter("output", null, DataType.Int32) { Direction = ParameterDirection.Output };
@@ -374,9 +355,9 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void TestExecuteReaderProcRebind([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestExecuteReaderProcRebind([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var input = DataParameter.Int32("input", 1);
 				var output1 = new DataParameter("output1", null, DataType.Int32) { Direction = ParameterDirection.Output };
@@ -395,9 +376,9 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public async Task TestExecuteReaderProcAsyncRebind([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public async Task TestExecuteReaderProcAsyncRebind([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var input = DataParameter.Int32("input", 1);
 				var output1 = new DataParameter("output1", null, DataType.Int32) { Direction = ParameterDirection.Output };

@@ -520,15 +520,23 @@ namespace LinqToDB.SqlQuery
 
 		public static bool IsEqualTables(SqlTable? table1, SqlTable? table2)
 		{
+			if (table1 == null || table2 == null)
+				return false;
+
 			var result =
-				table1                 != null
-				&& table2              != null
-				&& table1.ObjectType   == table2.ObjectType
-				&& table1.Database     == table2.Database
-				&& table1.Server       == table2.Server
-				&& table1.Schema       == table2.Schema
-				&& table1.Name         == table2.Name
-				&& table1.PhysicalName == table2.PhysicalName;
+				table1.ObjectType   == table2.ObjectType &&
+				table1.Database     == table2.Database   &&
+				table1.Server       == table2.Server     &&
+				table1.Schema       == table2.Schema     &&
+				table1.Name         == table2.Name       &&
+				table1.PhysicalName == table2.PhysicalName;
+
+			if (result)
+			{
+				result =
+					(table1.SqlQueryExtensions == null || table1.SqlQueryExtensions.Count == 0) &&
+					(table2.SqlQueryExtensions == null || table2.SqlQueryExtensions.Count == 0);
+			}
 
 			return result;
 		}
@@ -1276,7 +1284,7 @@ namespace LinqToDB.SqlQuery
 						{
 							var newTableSource = new SqlTableSource(
 								tableSource.Source,
-								tableSource._alias,
+								tableSource.RawAlias,
 								joins,
 								tableSource.HasUniqueKeys ? tableSource.UniqueKeys : null);
 							return newTableSource;

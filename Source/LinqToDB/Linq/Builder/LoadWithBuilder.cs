@@ -212,7 +212,7 @@ namespace LinqToDB.Linq.Builder
 
 							if (lastMember == null)
 								goto default;
-							
+
 							var expr  = cexpr.Object;
 
 							if (expr == null)
@@ -286,12 +286,6 @@ namespace LinqToDB.Linq.Builder
 						}
 				}
 			}
-		}
-
-		protected override SequenceConvertInfo? Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-		{
-			return null;
 		}
 
 		internal class LoadWithContext : PassThroughContext

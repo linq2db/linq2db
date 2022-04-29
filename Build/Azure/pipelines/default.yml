@@ -1,5 +1,4 @@
 variables:
-  - template: templates/test-vars.yml
   - template: templates/build-vars.yml
   - name: artifact_nugets
     value: nugets
@@ -31,19 +30,21 @@ stages:
   - template: templates/build-job.yml
     parameters:
       for_nuget: true
-      for_tests: false
-##############
-#  NUGET JOB #
+      for_tests: eq(variables['System.PullRequest.TargetBranch'], variables['release_branch'])
+
+#############
+# NUGET JOB #
 ##############
   - template: templates/nuget-job.yml
     parameters:
       publish: true
+
 #############
 # TEST JOBS #
 #############
   - template: templates/test-matrix.yml
     parameters:
-      enabled: and(eq(variables['System.PullRequest.TargetBranch'], 'release'), succeeded())
+      enabled: and(eq(variables['System.PullRequest.TargetBranch'], variables['release_branch']), succeeded())
       experimental: false
       with_baselines: true
-      mac_enabled: and(eq(variables['System.PullRequest.TargetBranch'], 'release'), succeeded()) # enable macos testing only for release
+      mac_enabled: and(eq(variables['System.PullRequest.TargetBranch'], variables['release_branch']), succeeded()) # enable macos testing only for release

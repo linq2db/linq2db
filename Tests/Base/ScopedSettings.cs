@@ -1,14 +1,35 @@
 ﻿using LinqToDB;
 using LinqToDB.Common;
-using LinqToDB.Data.DbCommandProcessor;
 using LinqToDB.DataProvider.Firebird;
 using LinqToDB.DataProvider.Oracle;
 using LinqToDB.Linq;
 using System;
+using System.Globalization;
+using System.Threading;
 using Tests.Model;
 
 namespace Tests
 {
+	public class InvariantCultureRegion : IDisposable
+	{
+		private readonly CultureInfo? _original;
+
+		public InvariantCultureRegion()
+		{
+			if (!Thread.CurrentThread.CurrentCulture.Equals(CultureInfo.InvariantCulture))
+			{
+				_original = Thread.CurrentThread.CurrentCulture;
+				Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
+			}
+		}
+
+		void IDisposable.Dispose()
+		{
+			if (_original != null)
+				Thread.CurrentThread.CurrentCulture = _original;
+		}
+	}
+
 	public class FirebirdQuoteMode : IDisposable
 	{
 		private readonly FirebirdIdentifierQuoteMode _oldMode;
@@ -22,20 +43,6 @@ namespace Tests
 		void IDisposable.Dispose()
 		{
 			FirebirdConfiguration.IdentifierQuoteMode = _oldMode;
-		}
-	}
-
-	public class CustomCommandProcessor : IDisposable
-	{
-		private readonly IDbCommandProcessor? _original = DbCommandProcessorExtensions.Instance;
-		public CustomCommandProcessor(IDbCommandProcessor? processor)
-		{
-			DbCommandProcessorExtensions.Instance = processor;
-		}
-
-		public void Dispose()
-		{
-			DbCommandProcessorExtensions.Instance = _original;
 		}
 	}
 
@@ -53,17 +60,18 @@ namespace Tests
 		}
 	}
 
-	public class WithoutComparisonNullCheck : IDisposable
+	public class CompareNullsAsValuesOption : IDisposable
 	{
-		public WithoutComparisonNullCheck()
+		private readonly bool _original = Configuration.Linq.CompareNullsAsValues;
+
+		public CompareNullsAsValuesOption(bool enable)
 		{
-			Configuration.Linq.CompareNullsAsValues = false;
+			Configuration.Linq.CompareNullsAsValues = enable;
 		}
 
-		public void Dispose()
+		void IDisposable.Dispose()
 		{
-			Configuration.Linq.CompareNullsAsValues = true;
-			Query.ClearCaches();
+			Configuration.Linq.CompareNullsAsValues = _original;
 		}
 	}
 

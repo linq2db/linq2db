@@ -20,7 +20,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestExcept([DataSources(ProviderName.SqlServer2000)] string context)
+		public void TestExcept([DataSources] string context)
 		{
 			var testData = GenerateTestData();
 			using (var db = GetDataContext(context))
@@ -59,7 +59,7 @@ namespace Tests.Linq
 				var expected = e1.Where(e => !e2.Contains(e, ComparerBuilder.GetEqualityComparer<SampleData>())).ToArray();
 				var actual = query.ToArray();
 
-				if (!context.Contains(ProviderName.PostgreSQL)) // postgres has a bug?
+				if (!context.IsAnyOf(TestProvName.AllPostgreSQL)) // postgres has a bug?
 					AreEqual(expected, actual, ComparerBuilder.GetEqualityComparer<SampleData>());
 			}
 		}
@@ -82,13 +82,13 @@ namespace Tests.Linq
 				var expected = e1.Where(e => e2.Contains(e, ComparerBuilder.GetEqualityComparer<SampleData>())).ToArray();
 				var actual = query.ToArray();
 
-				if (!context.Contains(ProviderName.PostgreSQL)) // postgres has a bug?
+				if (!context.IsAnyOf(TestProvName.AllPostgreSQL)) // postgres has a bug?
 					AreEqual(expected, actual, ComparerBuilder.GetEqualityComparer<SampleData>());
 			}
 		}
 
 		[Test]
-		public void TestExceptProjection([DataSources(ProviderName.SqlServer2000)] string context)
+		public void TestExceptProjection([DataSources] string context)
 		{
 			var testData = GenerateTestData();
 			using (var db = GetDataContext(context))
@@ -112,7 +112,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestIntersect([DataSources(ProviderName.SqlServer2000)] string context)
+		public void TestIntersect([DataSources] string context)
 		{
 			var testData = GenerateTestData();
 			using (var db = GetDataContext(context))

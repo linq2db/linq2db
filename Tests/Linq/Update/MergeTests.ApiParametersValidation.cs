@@ -248,6 +248,7 @@ namespace Tests.xUpdate
 			public string?      SchemaName   { get; }
 			public string       TableName    { get; } = null!;
 			public TableOptions TableOptions { get; }
+			public string?      TableID      { get; }
 
 			public string GetTableName()
 			{

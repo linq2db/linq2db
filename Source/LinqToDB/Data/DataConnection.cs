@@ -8,10 +8,9 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 using JetBrains.Annotations;
-using LinqToDB.Common.Internal.Cache;
+using LinqToDB.Common.Internal;
 
 namespace LinqToDB.Data
 {
@@ -19,7 +18,6 @@ namespace LinqToDB.Data
 	using Common;
 	using Configuration;
 	using DataProvider;
-	using DbCommandProcessor;
 	using Expressions;
 	using Mapping;
 	using RetryPolicy;
@@ -37,14 +35,14 @@ namespace LinqToDB.Data
 		/// <summary>
 		/// Creates database connection object that uses default connection configuration from <see cref="DefaultConfiguration"/> property.
 		/// </summary>
-		public DataConnection() : this(new LinqToDbConnectionOptionsBuilder())
+		public DataConnection() : this(new LinqToDBConnectionOptionsBuilder())
 		{}
 
 		/// <summary>
 		/// Creates database connection object that uses default connection configuration from <see cref="DefaultConfiguration"/> property and provided mapping schema.
 		/// </summary>
 		/// <param name="mappingSchema">Mapping schema to use with this connection.</param>
-		public DataConnection(MappingSchema mappingSchema) : this(new LinqToDbConnectionOptionsBuilder().UseMappingSchema(mappingSchema))
+		public DataConnection(MappingSchema mappingSchema) : this(new LinqToDBConnectionOptionsBuilder().UseMappingSchema(mappingSchema))
 		{
 		}
 
@@ -55,7 +53,7 @@ namespace LinqToDB.Data
 		/// In case of null, configuration from <see cref="DefaultConfiguration"/> property will be used.</param>
 		/// <param name="mappingSchema">Mapping schema to use with this connection.</param>
 		public DataConnection(string? configurationString, MappingSchema mappingSchema)
-			: this(new LinqToDbConnectionOptionsBuilder().UseConfigurationString(configurationString ?? DefaultConfiguration!).UseMappingSchema(mappingSchema))
+			: this(new LinqToDBConnectionOptionsBuilder().UseConfigurationString(configurationString ?? DefaultConfiguration!).UseMappingSchema(mappingSchema))
 		{
 		}
 
@@ -65,7 +63,7 @@ namespace LinqToDB.Data
 		/// <param name="configurationString">Name of database connection configuration to use with this connection.
 		/// In case of <c>null</c>, configuration from <see cref="DefaultConfiguration"/> property will be used.</param>
 		public DataConnection(string? configurationString)
-			: this(new LinqToDbConnectionOptionsBuilder().UseConfigurationString(configurationString ?? DefaultConfiguration!))
+			: this(new LinqToDBConnectionOptionsBuilder().UseConfigurationString(configurationString ?? DefaultConfiguration!))
 		{
 		}
 
@@ -79,7 +77,7 @@ namespace LinqToDB.Data
 				string        providerName,
 				string        connectionString,
 				MappingSchema mappingSchema)
-			: this(new LinqToDbConnectionOptionsBuilder().UseConnectionString(providerName, connectionString).UseMappingSchema(mappingSchema))
+			: this(new LinqToDBConnectionOptionsBuilder().UseConnectionString(providerName, connectionString).UseMappingSchema(mappingSchema))
 		{
 		}
 
@@ -91,7 +89,7 @@ namespace LinqToDB.Data
 		public DataConnection(
 			string providerName,
 			string connectionString)
-			: this(new LinqToDbConnectionOptionsBuilder().UseConnectionString(providerName, connectionString))
+			: this(new LinqToDBConnectionOptionsBuilder().UseConnectionString(providerName, connectionString))
 		{
 		}
 
@@ -105,7 +103,7 @@ namespace LinqToDB.Data
 			IDataProvider dataProvider,
 			string        connectionString,
 			MappingSchema mappingSchema)
-			: this(new LinqToDbConnectionOptionsBuilder().UseConnectionString(dataProvider, connectionString).UseMappingSchema(mappingSchema))
+			: this(new LinqToDBConnectionOptionsBuilder().UseConnectionString(dataProvider, connectionString).UseMappingSchema(mappingSchema))
 		{
 		}
 
@@ -117,7 +115,7 @@ namespace LinqToDB.Data
 		public DataConnection(
 			IDataProvider dataProvider,
 			string        connectionString)
-			: this(new LinqToDbConnectionOptionsBuilder().UseConnectionString(dataProvider, connectionString))
+			: this(new LinqToDBConnectionOptionsBuilder().UseConnectionString(dataProvider, connectionString))
 		{
 		}
 
@@ -129,9 +127,9 @@ namespace LinqToDB.Data
 		/// <param name="mappingSchema">Mapping schema to use with this connection.</param>
 		public DataConnection(
 			IDataProvider       dataProvider,
-			Func<IDbConnection> connectionFactory,
+			Func<DbConnection> connectionFactory,
 			MappingSchema       mappingSchema)
-			: this(new LinqToDbConnectionOptionsBuilder().UseConnectionFactory(dataProvider, connectionFactory).UseMappingSchema(mappingSchema))
+			: this(new LinqToDBConnectionOptionsBuilder().UseConnectionFactory(dataProvider, connectionFactory).UseMappingSchema(mappingSchema))
 		{
 		}
 
@@ -142,8 +140,8 @@ namespace LinqToDB.Data
 		/// <param name="connectionFactory">Database connection factory method.</param>
 		public DataConnection(
 			IDataProvider       dataProvider,
-			Func<IDbConnection> connectionFactory)
-			: this(new LinqToDbConnectionOptionsBuilder().UseConnectionFactory(dataProvider, connectionFactory))
+			Func<DbConnection> connectionFactory)
+			: this(new LinqToDBConnectionOptionsBuilder().UseConnectionFactory(dataProvider, connectionFactory))
 		{
 		}
 
@@ -155,9 +153,9 @@ namespace LinqToDB.Data
 		/// <param name="mappingSchema">Mapping schema to use with this connection.</param>
 		public DataConnection(
 			IDataProvider dataProvider,
-			IDbConnection connection,
+			DbConnection  connection,
 			MappingSchema mappingSchema)
-			: this(new LinqToDbConnectionOptionsBuilder().UseConnection(dataProvider, connection).UseMappingSchema(mappingSchema))
+			: this(new LinqToDBConnectionOptionsBuilder().UseConnection(dataProvider, connection).UseMappingSchema(mappingSchema))
 		{
 		}
 
@@ -171,7 +169,7 @@ namespace LinqToDB.Data
 		/// </remarks>
 		public DataConnection(
 			IDataProvider dataProvider,
-			IDbConnection connection)
+			DbConnection  connection)
 			: this(dataProvider, connection, false)
 		{
 
@@ -185,9 +183,9 @@ namespace LinqToDB.Data
 		/// <param name="disposeConnection">If true <paramref name="connection"/> would be disposed on DataConnection disposing.</param>
 		public DataConnection(
 			IDataProvider dataProvider,
-			IDbConnection connection,
+			DbConnection  connection,
 			bool          disposeConnection)
-			: this(new LinqToDbConnectionOptionsBuilder().UseConnection(dataProvider, connection, disposeConnection))
+			: this(new LinqToDBConnectionOptionsBuilder().UseConnection(dataProvider, connection, disposeConnection))
 		{
 		}
 
@@ -199,9 +197,9 @@ namespace LinqToDB.Data
 		/// <param name="mappingSchema">Mapping schema to use with this connection.</param>
 		public DataConnection(
 			IDataProvider  dataProvider,
-			IDbTransaction transaction,
+			DbTransaction transaction,
 			MappingSchema  mappingSchema)
-			: this(new LinqToDbConnectionOptionsBuilder().UseTransaction(dataProvider, transaction).UseMappingSchema(mappingSchema))
+			: this(new LinqToDBConnectionOptionsBuilder().UseTransaction(dataProvider, transaction).UseMappingSchema(mappingSchema))
 		{
 		}
 
@@ -212,52 +210,58 @@ namespace LinqToDB.Data
 		/// <param name="transaction">Existing database transaction to use.</param>
 		public DataConnection(
 			IDataProvider  dataProvider,
-			IDbTransaction transaction)
-			: this(new LinqToDbConnectionOptionsBuilder().UseTransaction(dataProvider, transaction))
+			DbTransaction transaction)
+			: this(new LinqToDBConnectionOptionsBuilder().UseTransaction(dataProvider, transaction))
 		{
 		}
 
-		private DataConnection(LinqToDbConnectionOptionsBuilder builder) : this(builder.Build())
+		private DataConnection(LinqToDBConnectionOptionsBuilder builder) : this(builder.Build())
 		{
 		}
 
 		/// <summary>
-		/// Creates database connection object that uses a LinqToDbConnectionOptions to configure the connection.
+		/// Creates database connection object that uses a <see cref="LinqToDBConnectionOptions"/> to configure the connection.
 		/// </summary>
 		/// <param name="options">Options, setup ahead of time.</param>
-		public DataConnection(LinqToDbConnectionOptions options)
+		public DataConnection(LinqToDBConnectionOptions options)
 		{
 			if (options == null)
 				throw new ArgumentNullException(nameof(options));
 
 			if (!options.IsValidConfigForConnectionType(this))
 				throw new LinqToDBException(
-					$"Improper options type used to create DataConnection {GetType()}, try creating a public constructor calling base and accepting type {nameof(LinqToDbConnectionOptions)}<{GetType().Name}>");
+					$"Improper options type used to create DataConnection {GetType()}, try creating a public constructor calling base and accepting type {nameof(LinqToDBConnectionOptions)}<{GetType().Name}>");
 
 			InitConfig();
 
-			IDbConnection?  localConnection  = null;
-			IDbTransaction? localTransaction = null;
+			DbConnection?  localConnection  = null;
+			DbTransaction? localTransaction = null;
 
 			switch (options.SetupType)
 			{
 				case ConnectionSetupType.ConfigurationString:
 				case ConnectionSetupType.DefaultConfiguration:
+				{
 					ConfigurationString = options.ConfigurationString ?? DefaultConfiguration;
+
 					if (ConfigurationString == null)
 						throw new LinqToDBException("Configuration string is not provided.");
+
 					var ci = GetConfigurationInfo(ConfigurationString);
 
 					DataProvider     = ci.DataProvider;
 					ConnectionString = ci.ConnectionString;
 					MappingSchema    = DataProvider.MappingSchema;
-					break;
 
+					break;
+				}
 				case ConnectionSetupType.ConnectionString:
+				{
 					if (options.ProviderName == null && options.DataProvider == null)
 						throw new LinqToDBException("DataProvider was not specified");
 
 					IDataProvider? dataProvider;
+
 					if (options.ProviderName != null)
 					{
 						if (!_dataProviders.TryGetValue(options.ProviderName, out dataProvider))
@@ -272,54 +276,56 @@ namespace LinqToDB.Data
 					DataProvider     = dataProvider;
 					ConnectionString = options.ConnectionString;
 					MappingSchema    = DataProvider.MappingSchema;
-					break;
 
+					break;
+				}
 				case ConnectionSetupType.ConnectionFactory:
+				{
 					//copy to tmp variable so that if the factory in options gets changed later we will still use the old one
 					//is this expected?
 					var originalConnectionFactory = options.ConnectionFactory!;
+
 					_connectionFactory = () =>
 					{
 						var connection = originalConnectionFactory();
-
 						return connection;
 					};
 
 					DataProvider  = options.DataProvider!;
 					MappingSchema = DataProvider.MappingSchema;
+
 					break;
-
+				}
 				case ConnectionSetupType.Connection:
-					{
-						localConnection    = options.DbConnection;
-						_disposeConnection = options.DisposeConnection;
+				{
+					localConnection    = options.DbConnection;
+					_disposeConnection = options.DisposeConnection;
 
-						DataProvider  = options.DataProvider!;
-						MappingSchema = DataProvider.MappingSchema;
-						break;
-					}
-
+					DataProvider  = options.DataProvider!;
+					MappingSchema = DataProvider.MappingSchema;
+					break;
+				}
 				case ConnectionSetupType.Transaction:
-					{
-						localConnection        = options.DbTransaction!.Connection;
-						localTransaction       = options.DbTransaction;
+				{
+					localConnection    = options.DbTransaction!.Connection;
+					localTransaction   = options.DbTransaction;
 
-						_closeTransaction  = false;
-						_closeConnection   = false;
-						_disposeConnection = false;
+					_closeTransaction  = false;
+					_closeConnection   = false;
+					_disposeConnection = false;
 
-						DataProvider  = options.DataProvider!;
-						MappingSchema = DataProvider.MappingSchema;
-						break;
-					}
+					DataProvider  = options.DataProvider!;
+					MappingSchema = DataProvider.MappingSchema;
 
+					break;
+				}
 				default:
 					throw new NotImplementedException($"SetupType: {options.SetupType}");
 			}
 
 			RetryPolicy = Configuration.RetryPolicy.Factory != null
-					? Configuration.RetryPolicy.Factory(this)
-					: null;
+				? Configuration.RetryPolicy.Factory(this)
+				: null;
 
 			if (options.DataProvider != null)
 			{
@@ -330,6 +336,10 @@ namespace LinqToDB.Data
 			if (options.MappingSchema != null)
 			{
 				AddMappingSchema(options.MappingSchema);
+			}
+			else if (Configuration.Linq.EnableAutoFluentMapping)
+			{
+				MappingSchema = new (MappingSchema);
 			}
 
 			if (options.OnTrace != null)
@@ -350,10 +360,16 @@ namespace LinqToDB.Data
 				WriteTraceLineConnection = options.WriteTrace;
 			}
 
+			if (options.Interceptors != null)
+			{
+				foreach (var interceptor in options.Interceptors)
+					AddInterceptor(interceptor);
+			}
+
 			if (localConnection != null)
 			{
-				_connection = localConnection is IAsyncDbConnection asyncDbConection
-					? asyncDbConection
+				_connection = localConnection is IAsyncDbConnection asyncDbConnection
+					? asyncDbConnection
 					: AsyncFactory.Create(localConnection);
 			}
 
@@ -361,6 +377,8 @@ namespace LinqToDB.Data
 			{
 				TransactionAsync = AsyncFactory.Create(localTransaction);
 			}
+
+			DataProvider.InitContext(this);
 		}
 
 		#endregion
@@ -384,9 +402,7 @@ namespace LinqToDB.Data
 		/// </summary>
 		public IRetryPolicy? RetryPolicy         { get; set; }
 
-		static readonly ConcurrentDictionary<string,int> _configurationIDs;
-		static int _maxID;
-
+		private int  _msID;
 		private int? _id;
 		/// <summary>
 		/// For internal use only.
@@ -395,14 +411,11 @@ namespace LinqToDB.Data
 		{
 			get
 			{
-				if (!_id.HasValue)
+				if (!_id.HasValue || _msID != MappingSchema.ConfigurationID)
 				{
-					var key = MappingSchema.ConfigurationID + "." + (ConfigurationString ?? ConnectionString ?? Connection.ConnectionString);
-
-					if (!_configurationIDs.TryGetValue(key, out var id))
-						_configurationIDs[key] = id = Interlocked.Increment(ref _maxID);
-
-					_id = id;
+					_id = new IdentifierBuilder(_msID = MappingSchema.ConfigurationID)
+						.Add((ConfigurationString ?? ConnectionString ?? Connection.ConnectionString))
+						.CreateID();
 				}
 
 				return _id.Value;
@@ -454,9 +467,10 @@ namespace LinqToDB.Data
 
 		private static Action<TraceInfo> _onTrace = DefaultTrace;
 		/// <summary>
-		/// Sets trace handler, used for all new connections unless overriden in <see cref="LinqToDbConnectionOptions"/>
+		/// Sets trace handler, used for all new connections unless overriden in <see cref="LinqToDBConnectionOptions"/>
 		/// defaults to calling <see cref="OnTraceInternal"/>.
 		/// </summary>
+		[Obsolete("Use OnTraceConnection instance property or LinqToDbConnectionOptions.OnTrace setting.")]
 		public  static Action<TraceInfo>  OnTrace
 		{
 			get => _onTrace;
@@ -470,7 +484,7 @@ namespace LinqToDB.Data
 
 		/// <summary>
 		/// Gets or sets trace handler, used for current connection instance.
-		/// Configured on the connection builder using <see cref="LinqToDbConnectionOptionsBuilder.WithTracing(Action{TraceInfo})"/>.
+		/// Configured on the connection builder using <see cref="LinqToDBConnectionOptionsBuilder.WithTracing(Action{TraceInfo})"/>.
 		/// defaults to <see cref="OnTrace"/>.
 		/// </summary>
 		public Action<TraceInfo> OnTraceConnection { get; set; } = _onTrace;
@@ -576,7 +590,7 @@ namespace LinqToDB.Data
 
 		/// <summary>
 		/// Gets or sets global data connection trace options. Used for all new connections
-		/// unless <see cref="LinqToDbConnectionOptionsBuilder.WithTraceLevel"/> is called on builder.
+		/// unless <see cref="LinqToDBConnectionOptionsBuilder.WithTraceLevel"/> is called on builder.
 		/// defaults to off unless library was built in debug mode.
 		/// <remarks>Should only be used when <see cref="TraceSwitchConnection"/> can not be used!</remarks>
 		/// </summary>
@@ -591,7 +605,7 @@ namespace LinqToDB.Data
 		/// Sets tracing level for data connections.
 		/// </summary>
 		/// <param name="traceLevel">Connection tracing level.</param>
-		/// <remarks>Use <see cref="TraceSwitchConnection"/> when possible, configured via <see cref="LinqToDbConnectionOptionsBuilder.WithTraceLevel"/>.</remarks>
+		/// <remarks>Use <see cref="TraceSwitchConnection"/> when possible, configured via <see cref="LinqToDBConnectionOptionsBuilder.WithTraceLevel"/>.</remarks>
 		public static void TurnTraceSwitchOn(TraceLevel traceLevel = TraceLevel.Info)
 		{
 			TraceSwitch = new TraceSwitch("DataConnection", "DataConnection trace switch", traceLevel.ToString());
@@ -614,7 +628,7 @@ namespace LinqToDB.Data
 
 		/// <summary>
 		/// Trace function. By Default use <see cref="Debug"/> class for logging, but could be replaced to log e.g. to your log file.
-		/// will be ignored if <see cref="LinqToDbConnectionOptionsBuilder.WriteTraceWith"/> is called on builder
+		/// will be ignored if <see cref="LinqToDBConnectionOptionsBuilder.WriteTraceWith"/> is called on builder
 		/// <para>First parameter contains trace message.</para>
 		/// <para>Second parameter contains trace message category (<see cref="Switch.DisplayName"/>).</para>
 		/// <para>Third parameter contains trace level for message (<see cref="TraceLevel"/>).</para>
@@ -642,16 +656,12 @@ namespace LinqToDB.Data
 		/// </summary>
 		public static ILinqToDBSettings? DefaultSettings
 		{
-			get
-			{
 #if NETFRAMEWORK
-				return _defaultSettings ??= LinqToDBSection.Instance;
+			get => _defaultSettings ??= LinqToDBSection.Instance;
 #else
-				return _defaultSettings;
+			get => _defaultSettings;
 #endif
-
-			}
-			set { _defaultSettings = value; }
+			set => _defaultSettings = value;
 		}
 
 		[SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
@@ -673,8 +683,6 @@ namespace LinqToDB.Data
 
 		static DataConnection()
 		{
-			_configurationIDs = new ConcurrentDictionary<string,int>();
-
 			// lazy registration of embedded providers using detectors
 			AddProviderDetector(LinqToDB.DataProvider.Access    .AccessTools    .ProviderDetector);
 			AddProviderDetector(LinqToDB.DataProvider.DB2       .DB2Tools       .ProviderDetector);
@@ -701,8 +709,8 @@ namespace LinqToDB.Data
 					var dataProviderType = Type.GetType(provider.TypeName, true)!;
 					var providerInstance = (IDataProviderFactory)Activator.CreateInstance(dataProviderType)!;
 
-					if (!provider.Name.IsNullOrEmpty())
-						AddDataProvider(provider.Name, providerInstance.GetDataProvider(provider.Attributes));
+					if (!string.IsNullOrEmpty(provider.Name))
+						AddDataProvider(provider.Name!, providerInstance.GetDataProvider(provider.Attributes));
 				}
 			}
 		}
@@ -718,6 +726,17 @@ namespace LinqToDB.Data
 		public static void AddProviderDetector(Func<IConnectionStringSettings,string,IDataProvider?> providerDetector)
 		{
 			_providerDetectors.Add(providerDetector);
+		}
+
+		/// <summary>
+		/// Registers database provider factory method.
+		/// Factory accepts connection string settings and connection string. Could return <c>null</c>, if cannot create provider
+		/// instance using provided options.
+		/// </summary>
+		/// <param name="providerDetector">Factory method delegate.</param>
+		public static void InsertProviderDetector(Func<IConnectionStringSettings,string,IDataProvider?> providerDetector)
+		{
+			_providerDetectors.Insert(0, providerDetector);
 		}
 
 		static void InitConnectionStrings()
@@ -889,23 +908,21 @@ namespace LinqToDB.Data
 
 			public static IDataProvider? GetDataProvider(IConnectionStringSettings css, string connectionString)
 			{
-				var configuration            = css.Name;
-				var providerName             = css.ProviderName;
-
+				var configuration = css.Name;
+				var providerName  = css.ProviderName;
 				var dataProvider  = _providerDetectors.Select(d => d(css, connectionString)).FirstOrDefault(dp => dp != null);
 
 				if (dataProvider == null)
 				{
 					IDataProvider? defaultDataProvider = null;
+
 					if (DefaultDataProvider != null)
 						_dataProviders.TryGetValue(DefaultDataProvider, out defaultDataProvider);
 
-					if (providerName.IsNullOrEmpty())
+					if (string.IsNullOrEmpty(providerName))
 						dataProvider = FindProvider(configuration, _dataProviders, defaultDataProvider);
-					else if (_dataProviders.TryGetValue(providerName, out dataProvider)
-							|| _dataProviders.TryGetValue(configuration, out dataProvider))
-					{ }
-					else
+					else if (!_dataProviders.TryGetValue(providerName!, out dataProvider) &&
+					         !_dataProviders.TryGetValue(configuration, out dataProvider))
 					{
 						var providers = _dataProviders.Where(dp => dp.Value.ConnectionNamespace == providerName).ToList();
 
@@ -990,22 +1007,15 @@ namespace LinqToDB.Data
 			_configurations.AddOrUpdate(configuration, info, (s,i) => info);
 		}
 
-		class ConnectionStringSettings : IConnectionStringSettings
+		internal static Lazy<IDataProvider> CreateDataProvider<T>()
+			where T : IDataProvider, new()
 		{
-			public ConnectionStringSettings(
-				string name,
-				string connectionString,
-				string providerName)
+			return new(() =>
 			{
-				Name             = name;
-				ConnectionString = connectionString;
-				ProviderName     = providerName;
-			}
-
-			public string ConnectionString { get; }
-			public string Name             { get; }
-			public string ProviderName     { get; }
-			public bool   IsGlobal         { get; }
+				var provider = new T();
+				AddDataProvider(provider);
+				return provider;
+			}, true);
 		}
 
 		public static void AddOrSetConfiguration(
@@ -1047,12 +1057,25 @@ namespace LinqToDB.Data
 		/// </summary>
 		/// <param name="configurationString">Connection name.</param>
 		/// <returns>Connection string.</returns>
-		[Pure]
 		public static string GetConnectionString(string configurationString)
 		{
 			InitConfig();
 
 			return GetConfigurationInfo(configurationString).ConnectionString;
+		}
+
+		/// <summary>
+		/// Returns connection string for specified configuration name or NULL.
+		/// </summary>
+		/// <param name="configurationString">Configuration.</param>
+		/// <returns>Connection string or NULL.</returns>
+		public static string? TryGetConnectionString(string? configurationString)
+		{
+			InitConfig();
+
+			var key = configurationString ?? DefaultConfiguration;
+
+			return key != null && _configurations.TryGetValue(key, out var ci) ? ci.ConnectionString : null;
 		}
 
 		#endregion
@@ -1064,12 +1087,12 @@ namespace LinqToDB.Data
 		bool                 _closeTransaction;
 		IAsyncDbConnection?  _connection;
 
-		readonly Func<IDbConnection>? _connectionFactory;
+		readonly Func<DbConnection>? _connectionFactory;
 
 		/// <summary>
 		/// Gets underlying database connection, used by current connection object.
 		/// </summary>
-		public IDbConnection Connection => EnsureConnection().Connection;
+		public DbConnection Connection => EnsureConnection().Connection;
 
 		internal IAsyncDbConnection EnsureConnection(bool connect = true)
 		{
@@ -1077,7 +1100,7 @@ namespace LinqToDB.Data
 
 			if (_connection == null)
 			{
-				IDbConnection connection;
+				DbConnection connection;
 				if (_connectionFactory != null)
 					connection = _connectionFactory();
 				else
@@ -1093,53 +1116,23 @@ namespace LinqToDB.Data
 
 			if (connect && _connection.State == ConnectionState.Closed)
 			{
-				OnBeforeConnectionOpen?.Invoke(this, _connection.Connection);
+				_connectionInterceptor?.ConnectionOpening(new (this), _connection.Connection);
+
 				_connection.Open();
 				_closeConnection = true;
-				OnConnectionOpened?.Invoke(this, _connection.Connection);
+
+				_connectionInterceptor?.ConnectionOpened(new (this), _connection.Connection);
 			}
 
 			return _connection;
 		}
 
 		/// <summary>
-		/// Event, triggered before connection closed using <see cref="Close"/> method.
-		/// </summary>
-		public event EventHandler? OnClosing;
-		/// <summary>
-		/// Event, triggered after connection closed using <see cref="Close"/> method.
-		/// </summary>
-		public event EventHandler? OnClosed;
-
-		/// <inheritdoc />
-		public Action<EntityCreatedEventArgs>? OnEntityCreated    { get; set; }
-
-		/// <summary>
-		/// Event, triggered before connection opened using <see cref="IDbConnection.Open"/> method.
-		/// </summary>
-		public event Action<DataConnection, IDbConnection>? OnBeforeConnectionOpen;
-
-		/// <summary>
-		/// Event, triggered before connection opened using <see cref="DbConnection.OpenAsync()"/> methods.
-		/// </summary>
-		public event Func<DataConnection, IDbConnection, CancellationToken, Task>? OnBeforeConnectionOpenAsync;
-
-		/// <summary>
-		/// Event, triggered right after connection opened using <see cref="IDbConnection.Open"/> method.
-		/// </summary>
-		public event Action<DataConnection, IDbConnection>? OnConnectionOpened;
-
-		/// <summary>
-		/// Event, triggered right after connection opened using <see cref="DbConnection.OpenAsync()"/> methods.
-		/// </summary>
-		public event Func<DataConnection, IDbConnection, CancellationToken, Task>? OnConnectionOpenedAsync;
-
-		/// <summary>
 		/// Closes and dispose associated underlying database transaction/connection.
 		/// </summary>
 		public virtual void Close()
 		{
-			OnClosing?.Invoke(this, EventArgs.Empty);
+			_dataContextInterceptor?.OnClosing(new (this));
 
 			DisposeCommand();
 
@@ -1160,22 +1153,35 @@ namespace LinqToDB.Data
 					_connection.Close();
 			}
 
-			OnClosed?.Invoke(this, EventArgs.Empty);
+			_dataContextInterceptor?.OnClosed(new (this));
+		}
+
+		public FluentMappingBuilder GetFluentMappingBuilder()
+		{
+			if (MappingSchema.IsLockable)
+				MappingSchema = new(MappingSchema);
+			return MappingSchema.GetFluentMappingBuilder();
 		}
 
 		#endregion
 
 		#region Command
+		private DbCommand? _command;
+
+		/// <summary>
+		/// Gets current command instance if it exists or <c>null</c> otherwise.
+		/// </summary>
+		internal DbCommand? CurrentCommand => _command;
+
+		/// <summary>
+		/// Creates if needed and returns current command instance.
+		/// </summary>
+		internal DbCommand GetOrCreateCommand() => _command ??= CreateCommand();
 
 		/// <summary>
 		/// Contains text of last command, sent to database using current connection.
 		/// </summary>
-		public string? LastQuery;
-
-		/// <summary>
-		/// Contains last parameters, sent to database using current connection.
-		/// </summary>
-		public IDataParameterCollection? LastParameters;
+		public string? LastQuery { get; private set; }
 
 		internal void InitCommand(CommandType commandType, string sql, DataParameter[]? parameters, IReadOnlyCollection<string>? queryHints, bool withParameters)
 		{
@@ -1185,9 +1191,15 @@ namespace LinqToDB.Data
 				sql             = sqlProvider.ApplyQueryHints(sql, queryHints);
 			}
 
-			DataProvider.InitCommand(this, commandType, sql, parameters, withParameters);
-			LastQuery      = Command.CommandText;
-			LastParameters = Command.Parameters;
+			_command = DataProvider.InitCommand(this, GetOrCreateCommand(), commandType, sql, parameters, withParameters);
+		}
+
+		internal void CommitCommandInit()
+		{
+			if (_commandInterceptor != null)
+				_command = _commandInterceptor.CommandInitialized(new (this), _command!);
+
+			LastQuery = _command!.CommandText;
 		}
 
 		private int? _commandTimeout;
@@ -1204,6 +1216,7 @@ namespace LinqToDB.Data
 			{
 				if (value < 0)
 				{
+					// to reset to default timeout we dispose command because as command has no reset timeout API
 					_commandTimeout = null;
 					DisposeCommand();
 				}
@@ -1216,29 +1229,12 @@ namespace LinqToDB.Data
 			}
 		}
 
-		private IDbCommand? _command;
-
 		/// <summary>
-		/// Provides acess to current <see cref="_command"/> instance. Used for logs to avoid command instance creation
-		/// in <see cref="Command"/> getter if <see cref="_command"/> is not initialized.
+		/// This is internal API and is not intended for use by Linq To DB applications.
 		/// </summary>
-		internal IDbCommand? GetCurrentCommand() => _command;
-
-		/// <summary>
-		/// Gets or sets command object, used by current connection.
-		/// </summary>
-		public  IDbCommand  Command
+		public DbCommand CreateCommand()
 		{
-			get => _command ??= CreateCommand();
-			set => _command = value;
-		}
-
-		/// <summary>
-		/// For internal use only.
-		/// </summary>
-		public IDbCommand CreateCommand()
-		{
-			var command = Connection.CreateCommand();
+			var command = EnsureConnection().CreateCommand();
 
 			if (_commandTimeout.HasValue)
 				command.CommandTimeout = _commandTimeout.Value;
@@ -1250,29 +1246,36 @@ namespace LinqToDB.Data
 		}
 
 		/// <summary>
-		/// For internal use only.
+		/// This is internal API and is not intended for use by Linq To DB applications.
 		/// </summary>
 		public void DisposeCommand()
 		{
 			if (_command != null)
 			{
-				DataProvider.DisposeCommand(this);
+				DataProvider.DisposeCommand(_command);
 				_command = null;
 			}
 		}
 
 		#region ExecuteNonQuery
 
-		protected virtual int ExecuteNonQuery(IDbCommand command)
+		protected virtual int ExecuteNonQuery(DbCommand command)
 		{
-			return Command.ExecuteNonQueryExt();
+			if (_commandInterceptor == null)
+				return command.ExecuteNonQuery();
+
+			var result = _commandInterceptor.ExecuteNonQuery(new (this), command, Option<int>.None);
+
+			return result.HasValue
+				? result.Value
+				: command.ExecuteNonQuery();
 		}
 
 		internal int ExecuteNonQuery()
 		{
 			if (TraceSwitchConnection.Level == TraceLevel.Off)
 				using (DataProvider.ExecuteScope(this))
-					return ExecuteNonQuery(Command);
+					return ExecuteNonQuery(CurrentCommand!);
 
 			var now = DateTime.UtcNow;
 			var sw  = Stopwatch.StartNew();
@@ -1282,7 +1285,7 @@ namespace LinqToDB.Data
 				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute, TraceOperation.ExecuteNonQuery, false)
 				{
 					TraceLevel     = TraceLevel.Info,
-					Command        = GetCurrentCommand(),
+					Command        = CurrentCommand,
 					StartTime      = now,
 				});
 			}
@@ -1291,14 +1294,14 @@ namespace LinqToDB.Data
 			{
 				int ret;
 				using (DataProvider.ExecuteScope(this))
-					ret = ExecuteNonQuery(Command);
+					ret = ExecuteNonQuery(CurrentCommand!);
 
 				if (TraceSwitchConnection.TraceInfo)
 				{
 					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute, TraceOperation.ExecuteNonQuery, false)
 					{
 						TraceLevel      = TraceLevel.Info,
-						Command         = GetCurrentCommand(),
+						Command         = CurrentCommand,
 						StartTime       = now,
 						ExecutionTime   = sw.Elapsed,
 						RecordsAffected = ret,
@@ -1314,7 +1317,7 @@ namespace LinqToDB.Data
 					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error, TraceOperation.ExecuteNonQuery, false)
 					{
 						TraceLevel     = TraceLevel.Error,
-						Command        = GetCurrentCommand(),
+						Command        = CurrentCommand,
 						StartTime      = now,
 						ExecutionTime  = sw.Elapsed,
 						Exception      = ex,
@@ -1329,16 +1332,23 @@ namespace LinqToDB.Data
 
 		#region ExecuteScalar
 
-		protected virtual object? ExecuteScalar(IDbCommand command)
+		protected virtual object? ExecuteScalar(DbCommand command)
 		{
-			return Command.ExecuteScalarExt();
+			var result = Option<object?>.None;
+
+			if (_commandInterceptor != null)
+				result = _commandInterceptor.ExecuteScalar(new (this), command, result);
+
+			return result.HasValue
+				? result.Value
+				: command.ExecuteScalar();
 		}
 
 		object? ExecuteScalar()
 		{
 			if (TraceSwitchConnection.Level == TraceLevel.Off)
 				using (DataProvider.ExecuteScope(this))
-					return ExecuteScalar(Command);
+					return ExecuteScalar(CurrentCommand!);
 
 			var now = DateTime.UtcNow;
 			var sw  = Stopwatch.StartNew();
@@ -1348,7 +1358,7 @@ namespace LinqToDB.Data
 				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute, TraceOperation.ExecuteScalar, false)
 				{
 					TraceLevel     = TraceLevel.Info,
-					Command        = GetCurrentCommand(),
+					Command        = CurrentCommand,
 					StartTime      = now,
 				});
 			}
@@ -1357,14 +1367,14 @@ namespace LinqToDB.Data
 			{
 				object? ret;
 				using (DataProvider.ExecuteScope(this))
-					ret = ExecuteScalar(Command);
+					ret = ExecuteScalar(CurrentCommand!);
 
 				if (TraceSwitchConnection.TraceInfo)
 				{
 					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute, TraceOperation.ExecuteScalar, false)
 					{
 						TraceLevel     = TraceLevel.Info,
-						Command        = GetCurrentCommand(),
+						Command        = CurrentCommand,
 						StartTime      = now,
 						ExecutionTime  = sw.Elapsed,
 					});
@@ -1379,7 +1389,7 @@ namespace LinqToDB.Data
 					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error, TraceOperation.ExecuteScalar, false)
 					{
 						TraceLevel     = TraceLevel.Error,
-						Command        = GetCurrentCommand(),
+						Command        = CurrentCommand,
 						StartTime      = now,
 						ExecutionTime  = sw.Elapsed,
 						Exception      = ex,
@@ -1394,21 +1404,37 @@ namespace LinqToDB.Data
 
 		#region ExecuteReader
 
-		protected virtual IDataReader ExecuteReader(IDbCommand command, CommandBehavior commandBehavior)
+		protected virtual DataReaderWrapper ExecuteReader(CommandBehavior commandBehavior)
 		{
-			return command.ExecuteReaderExt(commandBehavior);
+			var result = Option<DbDataReader>.None;
+
+			if (_commandInterceptor != null)
+				result = _commandInterceptor.ExecuteReader(new (this), _command!, commandBehavior, result);
+
+			var rd = result.HasValue
+				? result.Value
+				: _command!.ExecuteReader(commandBehavior);
+
+			if (_commandInterceptor != null)
+				_commandInterceptor.AfterExecuteReader(new (this), _command!, commandBehavior, rd);
+
+			var wrapper = new DataReaderWrapper(this, rd, _command!);
+
+			_command = null;
+
+			return wrapper;
 		}
 
-		IDataReader ExecuteReader()
+		DataReaderWrapper ExecuteReader()
 		{
-			return ExecuteReader(CommandBehavior.Default);
+			return ExecuteDataReader(CommandBehavior.Default);
 		}
 
-		internal IDataReader ExecuteReader(CommandBehavior commandBehavior)
+		internal DataReaderWrapper ExecuteDataReader(CommandBehavior commandBehavior)
 		{
 			if (TraceSwitchConnection.Level == TraceLevel.Off)
 				using (DataProvider.ExecuteScope(this))
-					return ExecuteReader(Command, GetCommandBehavior(commandBehavior));
+					return ExecuteReader(GetCommandBehavior(commandBehavior));
 
 			var now = DateTime.UtcNow;
 			var sw  = Stopwatch.StartNew();
@@ -1418,24 +1444,24 @@ namespace LinqToDB.Data
 				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute, TraceOperation.ExecuteReader, false)
 				{
 					TraceLevel     = TraceLevel.Info,
-					Command        = GetCurrentCommand(),
+					Command        = CurrentCommand,
 					StartTime      = now,
 				});
 			}
 
 			try
 			{
-				IDataReader ret;
+				DataReaderWrapper ret;
 
 				using (DataProvider.ExecuteScope(this))
-					ret = ExecuteReader(Command, GetCommandBehavior(commandBehavior));
+					ret = ExecuteReader(GetCommandBehavior(commandBehavior));
 
 				if (TraceSwitchConnection.TraceInfo)
 				{
 					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute, TraceOperation.ExecuteReader, false)
 					{
 						TraceLevel     = TraceLevel.Info,
-						Command        = GetCurrentCommand(),
+						Command        = ret.Command,
 						StartTime      = now,
 						ExecutionTime  = sw.Elapsed,
 					});
@@ -1450,7 +1476,7 @@ namespace LinqToDB.Data
 					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error, TraceOperation.ExecuteReader, false)
 					{
 						TraceLevel     = TraceLevel.Error,
-						Command        = GetCurrentCommand(),
+						Command        = CurrentCommand,
 						StartTime      = now,
 						ExecutionTime  = sw.Elapsed,
 						Exception      = ex,
@@ -1477,7 +1503,7 @@ namespace LinqToDB.Data
 		/// <summary>
 		/// Gets current transaction, associated with connection.
 		/// </summary>
-		public IDbTransaction? Transaction => TransactionAsync?.Transaction;
+		public DbTransaction? Transaction => TransactionAsync?.Transaction;
 
 		/// <summary>
 		/// Async transaction wrapper over <see cref="Transaction"/>.
@@ -1501,13 +1527,13 @@ namespace LinqToDB.Data
 				default(object?),
 				static (dataContext, _) =>
 				{
-					// Create new transaction object.
-					//
-					dataContext.TransactionAsync = AsyncFactory.Create(dataContext.EnsureConnection().BeginTransaction());
+			// Create new transaction object.
+			//
+					dataContext.TransactionAsync = dataContext.EnsureConnection().BeginTransaction();
 
 					dataContext._closeTransaction = true;
 
-					// If the active command exists.
+			// If the active command exists.
 					if (dataContext._command != null)
 						dataContext._command.Transaction = dataContext.Transaction;
 
@@ -1535,13 +1561,13 @@ namespace LinqToDB.Data
 				isolationLevel,
 				static (dataConnection, isolationLevel) =>
 				{
-					// Create new transaction object.
-					//
-					dataConnection.TransactionAsync = AsyncFactory.Create(dataConnection.EnsureConnection().BeginTransaction(isolationLevel));
+			// Create new transaction object.
+			//
+					dataConnection.TransactionAsync = dataConnection.EnsureConnection().BeginTransaction(isolationLevel);
 
 					dataConnection._closeTransaction = true;
 
-					// If the active command exists.
+			// If the active command exists.
 					if (dataConnection._command != null)
 						dataConnection._command.Transaction = dataConnection.Transaction;
 
@@ -1568,13 +1594,13 @@ namespace LinqToDB.Data
 						dataConnection.TransactionAsync!.Commit();
 
 						if (dataConnection._closeTransaction)
-						{
+				{
 							dataConnection.TransactionAsync.Dispose();
 							dataConnection.TransactionAsync = null;
 
 							if (dataConnection._command != null)
 								dataConnection._command.Transaction = null;
-						}
+				}
 
 						return true;
 					});
@@ -1673,7 +1699,7 @@ namespace LinqToDB.Data
 		#region MappingSchema
 
 		/// <summary>
-		/// Gets maping schema, used for current connection.
+		/// Gets mapping schema, used for current connection.
 		/// </summary>
 		public  MappingSchema  MappingSchema { get; private set; }
 
@@ -1703,7 +1729,7 @@ namespace LinqToDB.Data
 		/// <returns>Current connection object.</returns>
 		public DataConnection AddMappingSchema(MappingSchema mappingSchema)
 		{
-			MappingSchema = MappingSchema.CombineSchemas(MappingSchema, mappingSchema);
+			MappingSchema = new (mappingSchema, MappingSchema);
 			_id           = null;
 
 			return this;
@@ -1713,7 +1739,7 @@ namespace LinqToDB.Data
 
 		#region ICloneable Members
 
-		DataConnection(string? configurationString, IDataProvider dataProvider, string? connectionString, IDbConnection? connection, MappingSchema mappingSchema)
+		DataConnection(string? configurationString, IDataProvider dataProvider, string? connectionString, DbConnection? connection, MappingSchema mappingSchema)
 		{
 			ConfigurationString = configurationString;
 			DataProvider        = dataProvider;
@@ -1740,19 +1766,16 @@ namespace LinqToDB.Data
 
 			return new DataConnection(ConfigurationString, DataProvider, connectionString, connection, MappingSchema)
 			{
-				OnEntityCreated             = OnEntityCreated,
 				RetryPolicy                 = RetryPolicy,
 				CommandTimeout              = CommandTimeout,
 				InlineParameters            = InlineParameters,
 				ThrowOnDisposed             = ThrowOnDisposed,
+				OnTraceConnection         = OnTraceConnection,
 				_queryHints                 = _queryHints?.Count > 0 ? _queryHints.ToList() : null,
-				OnTraceConnection           = OnTraceConnection,
-				OnClosed                    = OnClosed,
-				OnClosing                   = OnClosing,
-				OnBeforeConnectionOpen      = OnBeforeConnectionOpen,
-				OnConnectionOpened          = OnConnectionOpened,
-				OnBeforeConnectionOpenAsync = OnBeforeConnectionOpenAsync,
-				OnConnectionOpenedAsync     = OnConnectionOpenedAsync,
+				_commandInterceptor       = _commandInterceptor      .CloneAggregated(),
+				_connectionInterceptor    = _connectionInterceptor   .CloneAggregated(),
+				_dataContextInterceptor   = _dataContextInterceptor  .CloneAggregated(),
+				_entityServiceInterceptor = _entityServiceInterceptor.CloneAggregated(),
 			};
 		}
 

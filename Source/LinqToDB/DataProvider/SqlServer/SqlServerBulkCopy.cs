@@ -94,11 +94,11 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			if (table.TryGetDataConnection(out var dataConnection))
 			{
-				var connection = _provider.TryGetProviderConnection(dataConnection.Connection, table.DataContext.MappingSchema);
-
+				var connection  = _provider.TryGetProviderConnection(dataConnection, dataConnection.Connection);
 				var transaction = dataConnection.Transaction;
+
 				if (connection != null && transaction != null)
-					transaction = _provider.TryGetProviderTransaction(transaction, table.DataContext.MappingSchema);
+					transaction = _provider.TryGetProviderTransaction(dataConnection, transaction);
 
 				if (connection != null && (dataConnection.Transaction == null || transaction != null))
 				{
@@ -274,7 +274,6 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			switch (((SqlServerDataProvider)helper.DataConnection.DataProvider).Version)
 			{
-				case SqlServerVersion.v2000 :
 				case SqlServerVersion.v2005 : ret = MultipleRowsCopy2(helper, source, ""); break;
 				default                     : ret = MultipleRowsCopy1(helper, source);     break;
 			}
@@ -298,7 +297,6 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			switch (((SqlServerDataProvider)helper.DataConnection.DataProvider).Version)
 			{
-				case SqlServerVersion.v2000:
 				case SqlServerVersion.v2005:
 					ret = await MultipleRowsCopy2Async(helper, source, "", cancellationToken)
 						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
@@ -330,7 +328,6 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			switch (((SqlServerDataProvider)helper.DataConnection.DataProvider).Version)
 			{
-				case SqlServerVersion.v2000:
 				case SqlServerVersion.v2005:
 					ret = await MultipleRowsCopy2Async(helper, source, "", cancellationToken)
 						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);

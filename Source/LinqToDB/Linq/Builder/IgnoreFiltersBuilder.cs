@@ -17,17 +17,11 @@ namespace LinqToDB.Linq.Builder
 		{
 			var types = (Type[])methodCall.Arguments[1].EvaluateExpression()!;
 
-			builder.AddDisabledQueryFilters(types);
+			builder.PushDisabledQueryFilters(types);
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
-			builder.RemoveDisabledFilter();
+			builder.PopDisabledFilter();
 
 			return sequence;
-		}
-
-		protected override SequenceConvertInfo? Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-		{
-			return null;
 		}
 	}
 }

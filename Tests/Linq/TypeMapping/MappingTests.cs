@@ -29,8 +29,8 @@ namespace Tests.TypeMapping
 			public int     Value    { get; set; }
 			public string? StrValue { get; set; }
 
-			public OtherClass GetOther       (int idx) => new OtherClass { OtherStrProp = "OtherStrValue" + idx        };
-			public OtherClass GetOtherAnother(int idx) => new OtherClass { OtherStrProp = "OtherAnotherStrValue" + idx };
+			public OtherClass GetOther       (int idx) => new () { OtherStrProp = "OtherStrValue" + idx        };
+			public OtherClass GetOtherAnother(int idx) => new () { OtherStrProp = "OtherAnotherStrValue" + idx };
 
 			public void SomeAction() => ++Value;
 
@@ -148,7 +148,7 @@ namespace Tests.TypeMapping
 		[Wrapper]
 		internal class SqlErrorCollection : IEnumerable
 		{
-			private List<object> _errors = new List<object>()
+			private List<object> _errors = new ()
 			{
 				new SqlError(),
 				new SqlError()

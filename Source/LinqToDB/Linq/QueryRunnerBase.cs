@@ -1,11 +1,11 @@
-﻿using System.Collections.Generic;
-using System.Data;
+﻿using System;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
+	using Data;
 	using SqlQuery;
 
 	abstract class QueryRunnerBase : IQueryRunner
@@ -22,15 +22,15 @@ namespace LinqToDB.Linq
 
 		protected readonly Query    Query;
 
-		public IDataContext         DataContext      { get; set; }
-		public Expression           Expression       { get; set; }
-		public object?[]?           Parameters       { get; set; }
-		public object?[]?           Preambles        { get; set; }
+		public IDataContext         DataContext      { get; }
+		public Expression           Expression       { get; }
+		public object?[]?           Parameters       { get; }
+		public object?[]?           Preambles        { get; }
 		public abstract Expression? MapperExpression { get; set; }
 
 		public abstract int                    ExecuteNonQuery();
 		public abstract object?                ExecuteScalar  ();
-		public abstract IDataReader            ExecuteReader  ();
+		public abstract DataReaderWrapper      ExecuteReader  ();
 		public abstract Task<object?>          ExecuteScalarAsync  (CancellationToken cancellationToken);
 		public abstract Task<IDataReaderAsync> ExecuteReaderAsync  (CancellationToken cancellationToken);
 		public abstract Task<int>              ExecuteNonQueryAsync(CancellationToken cancellationToken);

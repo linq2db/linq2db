@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
+	using System.Data.Common;
 	using Common;
 	using Data;
 	using Expressions;
@@ -54,11 +55,11 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 			Func<string, NpgsqlConnection> connectionCreator,
 
-			Action<IDbDataParameter, NpgsqlDbType> dbTypeSetter,
-			Func  <IDbDataParameter, NpgsqlDbType> dbTypeGetter,
+			Action<DbParameter, NpgsqlDbType> dbTypeSetter,
+			Func  <DbParameter, NpgsqlDbType> dbTypeGetter,
 
-			Func<IDbConnection, string, NpgsqlBinaryImporter>                           beginBinaryImport,
-			Func<IDbConnection, string, CancellationToken, Task<NpgsqlBinaryImporter>>? beginBinaryImportAsync)
+			Func<DbConnection, string, NpgsqlBinaryImporter>                           beginBinaryImport,
+			Func<DbConnection, string, CancellationToken, Task<NpgsqlBinaryImporter>>? beginBinaryImportAsync)
 		{
 			ConnectionType  = connectionType;
 			DataReaderType  = dataReaderType;
@@ -85,7 +86,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			SetDbType = dbTypeSetter;
 			GetDbType = dbTypeGetter;
 
-			BeginBinaryImport      = beginBinaryImport;
+			BeginBinaryImport          = beginBinaryImport;
 			BeginBinaryImportAsync = beginBinaryImportAsync;
 
 			// because NpgsqlDbType enumeration changes often (compared to other providers)
@@ -126,8 +127,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		public string ProviderTypesNamespace => TypesNamespace;
 
-		public Action<IDbDataParameter, NpgsqlDbType> SetDbType { get; }
-		public Func  <IDbDataParameter, NpgsqlDbType> GetDbType { get; }
+		public Action<DbParameter, NpgsqlDbType> SetDbType { get; }
+		public Func  <DbParameter, NpgsqlDbType> GetDbType { get; }
 
 		public bool IsDbTypeSupported(NpgsqlDbType type) => _knownDbTypes.ContainsKey(type);
 
@@ -139,8 +140,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 			// a bit of magic to properly handle different numeric values for enums in npgsql 3 and 4
 			var result = _knownDbTypes[type];
-			if (isArray     ) result |= _knownDbTypes[NpgsqlDbType.Array];
-			if (isRange     ) result |= _knownDbTypes[NpgsqlDbType.Range];
+			if (isArray) result |= _knownDbTypes[NpgsqlDbType.Array];
+			if (isRange) result |= _knownDbTypes[NpgsqlDbType.Range];
 			if (isMultiRange) result |= _knownDbTypes[NpgsqlDbType.Multirange];
 
 			// because resulting value will not map to any prefefined value, enum conversion will be performed
@@ -151,8 +152,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		private readonly Func<string, NpgsqlConnection> _connectionCreator;
 		public NpgsqlConnection CreateConnection(string connectionString) => _connectionCreator(connectionString);
 
-		public Func<IDbConnection, string, NpgsqlBinaryImporter>                           BeginBinaryImport      { get; }
-		public Func<IDbConnection, string, CancellationToken, Task<NpgsqlBinaryImporter>>? BeginBinaryImportAsync { get; }
+		public Func<DbConnection, string, NpgsqlBinaryImporter> BeginBinaryImport { get; }
+		public Func<DbConnection, string, CancellationToken, Task<NpgsqlBinaryImporter>>? BeginBinaryImportAsync { get; }
 
 		public MappingSchema MappingSchema { get; }
 
@@ -197,20 +198,20 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						var paramMapper   = typeMapper.Type<NpgsqlParameter>();
 						var dbTypeBuilder = paramMapper.Member(p => p.NpgsqlDbType);
 
-						var pConnection = Expression.Parameter(typeof(IDbConnection));
+						var pConnection = Expression.Parameter(typeof(DbConnection));
 						var pCommand    = Expression.Parameter(typeof(string));
 						var pToken      = Expression.Parameter(typeof(CancellationToken));
 
-						var beginBinaryImport = Expression.Lambda<Func<IDbConnection, string, NpgsqlBinaryImporter>>(
-								typeMapper.MapExpression((IDbConnection conn, string command) => typeMapper.Wrap<NpgsqlBinaryImporter>(((NpgsqlConnection)conn).BeginBinaryImport(command)), pConnection, pCommand),
+						var beginBinaryImport = Expression.Lambda<Func<DbConnection, string, NpgsqlBinaryImporter>>(
+								typeMapper.MapExpression((DbConnection conn, string command) => typeMapper.Wrap<NpgsqlBinaryImporter>(((NpgsqlConnection)(object)conn).BeginBinaryImport(command)), pConnection, pCommand),
 								pConnection, pCommand)
 							.CompileExpression();
 
-						Func<IDbConnection, string, CancellationToken, Task<NpgsqlBinaryImporter>>? beginBinaryImportAsync = null;
+						Func<DbConnection, string, CancellationToken, Task<NpgsqlBinaryImporter>>? beginBinaryImportAsync = null;
 						if (connectionType.GetMethod(nameof(BeginBinaryImportAsync)) != null)
 						{
-							beginBinaryImportAsync = Expression.Lambda<Func<IDbConnection, string, CancellationToken, Task<NpgsqlBinaryImporter>>>(
-									typeMapper.MapExpression((IDbConnection conn, string command, CancellationToken cancellationToken) => typeMapper.WrapTask<NpgsqlBinaryImporter>(((NpgsqlConnection)conn).BeginBinaryImportAsync(command, cancellationToken), npgsqlBinaryImporterType, cancellationToken), pConnection, pCommand, pToken),
+							beginBinaryImportAsync = Expression.Lambda<Func<DbConnection, string, CancellationToken, Task<NpgsqlBinaryImporter>>>(
+									typeMapper.MapExpression((DbConnection conn, string command, CancellationToken cancellationToken) => typeMapper.WrapTask<NpgsqlBinaryImporter>(((NpgsqlConnection)(object)conn).BeginBinaryImportAsync(command, cancellationToken), npgsqlBinaryImporterType, cancellationToken), pConnection, pCommand, pToken),
 									pConnection, pCommand, pToken)
 								.CompileExpression();
 						}
@@ -344,8 +345,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 							typeMapper.BuildWrappedFactory((string connectionString) => new NpgsqlConnection(connectionString)),
 
-							dbTypeBuilder.BuildSetter<IDbDataParameter>(),
-							dbTypeBuilder.BuildGetter<IDbDataParameter>(),
+							dbTypeBuilder.BuildSetter<DbParameter>(),
+							dbTypeBuilder.BuildGetter<DbParameter>(),
 
 							beginBinaryImport,
 							beginBinaryImportAsync);
@@ -527,7 +528,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			public void    Dispose()         => ((Action<NpgsqlConnection>)CompiledWrappers[2])(this);
 
 			// not implemented, as it is not called from wrapper
-			internal NpgsqlBinaryImporter       BeginBinaryImport(string copyFromCommand) => throw new NotImplementedException();
+			internal NpgsqlBinaryImporter BeginBinaryImport(string copyFromCommand) => throw new NotImplementedException();
 			internal Task<NpgsqlBinaryImporter> BeginBinaryImportAsync(string copyFromCommand, CancellationToken cancellationToken) => throw new NotImplementedException();
 		}
 
@@ -600,12 +601,12 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 #if NATIVE_ASYNC
 #pragma warning disable CS3002 // Return type is not CLS-compliant
-			public ValueTask<ulong> CompleteAsync(CancellationToken cancellationToken) 
+			public ValueTask<ulong> CompleteAsync(CancellationToken cancellationToken)
 				=> ((Func<NpgsqlBinaryImporter, CancellationToken, ValueTask<ulong>>)CompiledWrappers[5])(this, cancellationToken);
 #pragma warning restore CS3002 // Return type is not CLS-compliant
 			public ValueTask DisposeAsync()
 				=> ((Func<NpgsqlBinaryImporter, ValueTask>)CompiledWrappers[6])(this);
-			public Task StartRowAsync(CancellationToken cancellationToken) 
+			public Task StartRowAsync(CancellationToken cancellationToken)
 				=> ((Func<NpgsqlBinaryImporter, CancellationToken, Task>)CompiledWrappers[7])(this, cancellationToken);
 
 #else

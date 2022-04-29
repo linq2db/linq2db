@@ -11,7 +11,7 @@ namespace LinqToDB.DataProvider.Oracle
 	using SqlQuery;
 	using System.Data.Linq;
 
-	public class OracleMappingSchema : MappingSchema
+	public sealed class OracleMappingSchema : LockedMappingSchema
 	{
 		private const string DATE_FORMAT = "DATE '{0:yyyy-MM-dd}'";
 
@@ -35,11 +35,7 @@ namespace LinqToDB.DataProvider.Oracle
 		private const string TIMESTAMPTZ6_FORMAT = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.ffffff} +00:00'";
 		private const string TIMESTAMPTZ7_FORMAT = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.fffffff} +00:00'";
 
-		public OracleMappingSchema() : this(ProviderName.Oracle)
-		{
-		}
-
-		protected OracleMappingSchema(string configuration) : base(configuration)
+		OracleMappingSchema() : base(ProviderName.Oracle)
 		{
 			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 
@@ -56,6 +52,10 @@ namespace LinqToDB.DataProvider.Oracle
 			SetValueToSqlConverter(typeof(char)          , (sb, dt, v) => ConvertCharToSql    (sb, (char)v));
 			SetValueToSqlConverter(typeof(byte[]), (sb, dt, v)         => ConvertBinaryToSql  (sb, (byte[])v));
 			SetValueToSqlConverter(typeof(Binary), (sb, dt, v)         => ConvertBinaryToSql  (sb, ((Binary)v).ToArray()));
+
+#if NET6_0_OR_GREATER
+			SetValueToSqlConverter(typeof(DateOnly),       (sb, dt, v) => ConvertDateOnlyToSql(sb, dt, (DateOnly)v));
+#endif
 
 			// adds floating point special values support
 			SetValueToSqlConverter(typeof(float), (sb, dt, v) =>
@@ -86,14 +86,15 @@ namespace LinqToDB.DataProvider.Oracle
 
 		static void ConvertBinaryToSql(StringBuilder stringBuilder, byte[] value)
 		{
-			stringBuilder.Append("HEXTORAW('");
-
-			stringBuilder.AppendByteArrayAsHexViaLookup32(value);
+			stringBuilder
+				.Append("HEXTORAW('")
+				.AppendByteArrayAsHexViaLookup32(value);
 
 			stringBuilder.Append("')");
 		}
 
 		static readonly Action<StringBuilder, int> AppendConversionAction = AppendConversion;
+
 		static void AppendConversion(StringBuilder stringBuilder, int value)
 		{
 			stringBuilder
@@ -180,30 +181,25 @@ namespace LinqToDB.DataProvider.Oracle
 			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, value);
 		}
 
+#if NET6_0_OR_GREATER
+		static void ConvertDateOnlyToSql(StringBuilder stringBuilder, SqlDataType dataType, DateOnly value)
+		{
+			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATE_FORMAT, value);
+		}
+#endif
+
 		internal static readonly OracleMappingSchema Instance = new ();
 
-		public class NativeMappingSchema : MappingSchema
+		public sealed class NativeMappingSchema : LockedMappingSchema
 		{
-			public NativeMappingSchema()
-				: base(ProviderName.OracleNative, Instance)
-			{
-			}
-
-			public NativeMappingSchema(params MappingSchema[] schemas)
-				: base(ProviderName.OracleNative, Array<MappingSchema>.Append(schemas, Instance))
+			public NativeMappingSchema() : base(ProviderName.OracleNative, OracleProviderAdapter.GetInstance(ProviderName.OracleNative).MappingSchema, Instance)
 			{
 			}
 		}
 
-		public class ManagedMappingSchema : MappingSchema
+		public sealed class ManagedMappingSchema : LockedMappingSchema
 		{
-			public ManagedMappingSchema()
-				: base(ProviderName.OracleManaged, Instance)
-			{
-			}
-
-			public ManagedMappingSchema(params MappingSchema[] schemas)
-				: base(ProviderName.OracleManaged, Array<MappingSchema>.Append(schemas, Instance))
+			public ManagedMappingSchema() : base(ProviderName.OracleManaged, OracleProviderAdapter.GetInstance(ProviderName.OracleManaged).MappingSchema, Instance)
 			{
 			}
 		}

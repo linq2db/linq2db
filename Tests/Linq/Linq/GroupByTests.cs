@@ -1458,7 +1458,7 @@ namespace Tests.Linq
 			// extra field is generated in the GROUP BY clause, for example:
 			// GROUP BY p.LastName, p.LastName <--- the second one is redundant
 
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var q =
 					from d in db.Doctor
@@ -2041,7 +2041,7 @@ namespace Tests.Linq
 		[Test]
 		public void Issue680Test([DataSources(false)] string context)
 		{
-			using (var db    = new TestDataConnection(context))
+			using (var db    = GetDataConnection(context))
 			using (var table = db.CreateLocalTable<Issue680Table>())
 			{
 				var result = (from record in table
@@ -2157,7 +2157,7 @@ namespace Tests.Linq
 			};
 		}
 
-		[ActiveIssue(1078, Details = "Disabled providers doesn't support sub-query columns and use join (which is not correct right now)", Configurations = new[] { TestProvName.AllAccess, ProviderName.SqlServer2000, ProviderName.SqlCe })]
+		[ActiveIssue(1078, Details = "Disabled providers doesn't support sub-query columns and use join (which is not correct right now)", Configurations = new[] { TestProvName.AllAccess, ProviderName.SqlCe })]
 		[Test]
 		public void Issue1078Test([DataSources] string context)
 		{

@@ -1,10 +1,11 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Reflection;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
-	using LinqToDB.Reflection;
+	using Reflection;
 
 	class PassThroughBuilder : MethodCallBuilder
 	{
@@ -18,12 +19,6 @@ namespace LinqToDB.Linq.Builder
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			return builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
-		}
-
-		protected override SequenceConvertInfo? Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-		{
-			return null;
 		}
 	}
 }

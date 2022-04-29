@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.Common;
 using System.Linq;
 using System.Text.RegularExpressions;
 
@@ -41,7 +40,7 @@ namespace LinqToDB.DataProvider.Access
 		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection,
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
-			var connection = _provider.TryGetProviderConnection(dataConnection.Connection, dataConnection.MappingSchema);
+			var connection = _provider.TryGetProviderConnection(dataConnection, dataConnection.Connection);
 			if (connection == null)
 				return Array<ForeignKeyInfo>.Empty;
 
@@ -51,22 +50,22 @@ namespace LinqToDB.DataProvider.Access
 			var data = _provider.Adapter.GetOleDbSchemaTable(connection, OleDbProviderAdapter.OleDbSchemaGuid.Foreign_Keys, null);
 
 			var q = from fk in data.AsEnumerable()
-					select new ForeignKeyInfo
-					{
-						Name         = fk.Field<string>("FK_NAME")!,
-						ThisColumn   = fk.Field<string>("FK_COLUMN_NAME")!,
-						OtherColumn  = fk.Field<string>("PK_COLUMN_NAME")!,
-						ThisTableID  = fk.Field<string>("FK_TABLE_CATALOG") + "." + fk.Field<string>("FK_TABLE_SCHEMA") + "." + fk.Field<string>("FK_TABLE_NAME"),
-						OtherTableID = fk.Field<string>("PK_TABLE_CATALOG") + "." + fk.Field<string>("PK_TABLE_SCHEMA") + "." + fk.Field<string>("PK_TABLE_NAME"),
-						Ordinal      = ConvertTo<int>.From(fk.Field<long>("ORDINAL")),
-					};
+				select new ForeignKeyInfo
+				{
+					Name         = fk.Field<string>("FK_NAME")!,
+					ThisColumn   = fk.Field<string>("FK_COLUMN_NAME")!,
+					OtherColumn  = fk.Field<string>("PK_COLUMN_NAME")!,
+					ThisTableID  = fk.Field<string>("FK_TABLE_CATALOG") + "." + fk.Field<string>("FK_TABLE_SCHEMA") + "." + fk.Field<string>("FK_TABLE_NAME"),
+					OtherTableID = fk.Field<string>("PK_TABLE_CATALOG") + "." + fk.Field<string>("PK_TABLE_SCHEMA") + "." + fk.Field<string>("PK_TABLE_NAME"),
+					Ordinal      = ConvertTo<int>.From(fk.Field<long>("ORDINAL")),
+				};
 
 			return q.ToList();
 		}
 
 		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			var tables = ExecuteOnNewConnection(dataConnection, cn => ((DbConnection)cn.Connection).GetSchema("Tables"));
+			var tables = ExecuteOnNewConnection(dataConnection, cn => cn.Connection.GetSchema("Tables"));
 
 			return
 			(
@@ -82,7 +81,7 @@ namespace LinqToDB.DataProvider.Access
 					CatalogName        = catalog,
 					SchemaName         = schema,
 					TableName          = name,
-					IsDefaultSchema    = schema.IsNullOrEmpty(),
+					IsDefaultSchema    = string.IsNullOrEmpty(schema),
 					IsView             = t.Field<string>("TABLE_TYPE") == "VIEW",
 					IsProviderSpecific = system,
 					Description        = t.Field<string>("DESCRIPTION")
@@ -93,7 +92,7 @@ namespace LinqToDB.DataProvider.Access
 		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection,
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
-			var idxs = ExecuteOnNewConnection(dataConnection, cn => ((DbConnection)cn.Connection).GetSchema("Indexes"));
+			var idxs = ExecuteOnNewConnection(dataConnection, cn => cn.Connection.GetSchema("Indexes"));
 
 			return
 			(
@@ -111,7 +110,7 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			var cs = ExecuteOnNewConnection(dataConnection, cn => ((DbConnection)cn.Connection).GetSchema("Columns"));
+			var cs = ExecuteOnNewConnection(dataConnection, cn => cn.Connection.GetSchema("Columns"));
 
 			return
 			(
@@ -163,7 +162,7 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override List<ProcedureInfo>? GetProcedures(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			var ps = ExecuteOnNewConnection(dataConnection, cn => ((DbConnection)cn.Connection).GetSchema("Procedures"));
+			var ps = ExecuteOnNewConnection(dataConnection, cn => cn.Connection.GetSchema("Procedures"));
 
 			return
 			(
@@ -177,7 +176,7 @@ namespace LinqToDB.DataProvider.Access
 					CatalogName         = catalog,
 					SchemaName          = schema,
 					ProcedureName       = name,
-					IsDefaultSchema     = schema.IsNullOrEmpty(),
+					IsDefaultSchema     = string.IsNullOrEmpty(schema),
 					ProcedureDefinition = p.Field<string>("PROCEDURE_DEFINITION")
 				}
 			).ToList();
@@ -283,9 +282,9 @@ namespace LinqToDB.DataProvider.Access
 			{
 				var parms = dataType.CreateParameters;
 
-				if (!parms.IsNullOrWhiteSpace())
+				if (!string.IsNullOrWhiteSpace(parms))
 				{
-					var paramNames  = parms.Split(',');
+					var paramNames  = parms!.Split(',');
 					var paramValues = new object?[paramNames.Length];
 
 					for (var i = 0; i < paramNames.Length; i++)
@@ -339,7 +338,7 @@ namespace LinqToDB.DataProvider.Access
 					IsNullable           = isNullable,
 					MemberName           = ToValidName(columnName),
 					MemberType           = ToTypeName(systemType, isNullable),
-					SystemType           = GetSystemType(columnType, null, dt, length, precision, scale, options) ?? systemType ?? typeof(object),
+					SystemType           = GetSystemType(columnType, null, dt, length, precision, scale, options) ?? systemType,
 					DataType             = GetDataType(dt?.TypeName, columnType, length, precision, scale),
 					ProviderSpecificType = GetProviderSpecificType(columnType),
 					IsIdentity           = r.Field<bool>("IsAutoIncrement"),

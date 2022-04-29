@@ -3,11 +3,11 @@
 
 	<PropertyGroup>
 		<AssemblyName>Tests.T4</AssemblyName>
+
+		<NoWarn>(NoWarn);618</NoWarn>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Humanizer.Core" />
-		<PackageReference Include="System.ComponentModel.Annotations" />
 		<PackageReference Include="Npgsql" />
 		<PackageReference Include="FirebirdSql.Data.FirebirdClient" />
 
@@ -15,6 +15,7 @@
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)' == 'net472'">
+		<Reference Include="System.ComponentModel.DataAnnotations" />
 		<Reference Include="PresentationCore" />
 		<Reference Include="PresentationFramework" />
 		<Reference Include="WindowsBase" />
@@ -35,9 +36,17 @@
 		<Content Include="Models\bbb.txt" />
 	</ItemGroup>
 
+	<ItemGroup Condition="'$(TargetFramework)' == 'net472'">
+		<Compile Update="WPF\ViewModel.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>ViewModel.tt</DependentUpon>
+		</Compile>
+	</ItemGroup>
+	
 	<ItemGroup Condition="'$(TargetFramework)' != 'net472'">
-		<Compile Remove="WPF\ViewModel.cs" />
-		<Compile Remove="WPF\ViewModel.generated.cs" />
+		<Compile Remove="WPF\*.cs" />
+		<None Include="WPF\ViewModel.cs" />
 
 		<None Remove="SqlServer.tt" />
 		<None Remove="SqlServerAzure.tt" />
@@ -47,6 +56,16 @@
 	</ItemGroup>
 
 	<ItemGroup>
+
+		<None Update="Cli\Default.tt">
+		  <LastGenOutput>Default.generated.cs</LastGenOutput>
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+
+		<None Update="Cli\T4.tt">
+		  <LastGenOutput>T4.generated.cs</LastGenOutput>
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		</None>
 
 		<None Update="Databases\AccessODBC.tt">
 			<LastGenOutput>AccessODBC.generated.cs</LastGenOutput>
@@ -136,6 +155,70 @@
 			<Generator>TextTemplatingFileGenerator</Generator>
 			<LastGenOutput>Firebird.generated.cs</LastGenOutput>
 		</None>
+		<None Update="Default\AccessOleDb.tt">
+		  <LastGenOutput>AccessOleDb.generated.cs</LastGenOutput>
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<None Update="Default\AccessOdbc.tt">
+		  <LastGenOutput>AccessODBC.generated.cs</LastGenOutput>
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<None Update="Default\DB2.tt">
+		  <LastGenOutput>DB2.generated.cs</LastGenOutput>
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<None Update="Default\Firebird.tt">
+		  <LastGenOutput>Firebird.generated.cs</LastGenOutput>
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<None Update="Default\Informix.tt">
+		  <LastGenOutput>Informix.generated.cs</LastGenOutput>
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<None Update="Default\MySql.tt">
+		  <LastGenOutput>MySql.generated.cs</LastGenOutput>
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<None Update="Default\MariaDB.tt">
+		  <LastGenOutput>MariaDB.generated.cs</LastGenOutput>
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<None Update="Default\Oracle.tt">
+		  <LastGenOutput>Oracle.generated.cs</LastGenOutput>
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<None Update="Default\PostgreSQL.tt">
+		  <LastGenOutput>PostgreSQL.generated.cs</LastGenOutput>
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<None Update="Default\SapHana.tt">
+		  <LastGenOutput>SapHana.generated.cs</LastGenOutput>
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<None Update="Default\SqlCe.tt">
+		  <LastGenOutput>SqlCe.generated.cs</LastGenOutput>
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<None Update="Default\SQLite.Northwind.tt">
+		  <LastGenOutput>SQLite.Northwind.generated.cs</LastGenOutput>
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<None Update="Default\SQLite.tt">
+		  <LastGenOutput>SQLite.generated.cs</LastGenOutput>
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<None Update="Default\SqlServer.Northwind.tt">
+		  <LastGenOutput>SqlServer.Northwind.generated.cs</LastGenOutput>
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<None Update="Default\SqlServer.tt">
+		  <LastGenOutput>SqlServer.generated.cs</LastGenOutput>
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<None Update="Default\Sybase.tt">
+		  <LastGenOutput>Sybase.generated.cs</LastGenOutput>
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		</None>
 		<None Update="Unlock.tt">
 			<LastGenOutput>Unlock.generated.cs</LastGenOutput>
 			<Generator>TextTemplatingFileGenerator</Generator>
@@ -167,6 +250,16 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<Compile Update="Cli\Default.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>Default.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Cli\T4.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>T4.tt</DependentUpon>
+		</Compile>
 		<Compile Update="Databases\Access.generated.cs">
 			<DesignTime>True</DesignTime>
 			<AutoGen>True</AutoGen>
@@ -282,6 +375,86 @@
 			<AutoGen>True</AutoGen>
 			<DependentUpon>Sybase.tt</DependentUpon>
 		</Compile>
+		<Compile Update="Default\AccessOleDb.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>AccessOleDb.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Default\AccessODBC.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>AccessOdbc.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Default\DB2.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>DB2.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Default\Firebird.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>Firebird.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Default\Informix.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>Informix.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Default\MariaDB.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>MariaDB.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Default\MySql.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>MySql.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Default\Oracle.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>Oracle.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Default\PostgreSQL.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>PostgreSQL.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Default\SapHana.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>SapHana.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Default\SqlCe.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>SqlCe.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Default\SQLite.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>SQLite.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Default\SQLite.Northwind.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>SQLite.Northwind.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Default\SqlServer.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>SqlServer.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Default\SqlServer.Northwind.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>SqlServer.Northwind.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Default\Sybase.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>Sybase.tt</DependentUpon>
+		</Compile>
 		<Compile Update="Models\EditableModelTest.generated.cs">
 			<DesignTime>True</DesignTime>
 			<AutoGen>True</AutoGen>
@@ -306,11 +479,6 @@
 			<DesignTime>True</DesignTime>
 			<AutoGen>True</AutoGen>
 			<DependentUpon>Unlock.tt</DependentUpon>
-		</Compile>
-		<Compile Update="WPF\ViewModel.generated.cs">
-			<DesignTime>True</DesignTime>
-			<AutoGen>True</AutoGen>
-			<DependentUpon>ViewModel.tt</DependentUpon>
 		</Compile>
 	</ItemGroup>
 

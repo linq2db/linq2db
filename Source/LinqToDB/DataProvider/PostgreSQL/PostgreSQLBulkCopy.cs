@@ -1,17 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
+using System.Data.Common;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using LinqToDB.Common;
-using LinqToDB.Data;
-using LinqToDB.Extensions;
-using LinqToDB.Mapping;
-using LinqToDB.SqlProvider;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
+	using Common;
+	using Data;
+	using Mapping;
+	using SqlProvider;
+	using Extensions;
+
 	class PostgreSQLBulkCopy : BasicBulkCopy
 	{
 		/// <remarks>
@@ -79,7 +80,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		private BulkCopyRowsCopied ProviderSpecificCopyImpl<T>(DataConnection dataConnection, ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 			where T : notnull
 		{
-			var connection = _provider.TryGetProviderConnection(dataConnection.Connection, table.DataContext.MappingSchema);
+			var connection = _provider.TryGetProviderConnection(dataConnection, dataConnection.Connection);
 
 			if (connection == null)
 				return MultipleRowsCopy(table, options, source);
@@ -135,7 +136,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			DataConnection                             dataConnection,
 			BulkCopyOptions                            options,
 			IEnumerable<T>                             source,
-			IDbConnection                              connection,
+			DbConnection                               connection,
 			string                                     tableName,
 			ColumnDescriptor[]                         columns,
 			DbDataType[]                               columnTypes,
@@ -228,7 +229,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			CancellationToken cancellationToken)
 			where T : notnull
 		{
-			var connection = _provider.TryGetProviderConnection(dataConnection.Connection, table.DataContext.MappingSchema);
+			var connection = _provider.TryGetProviderConnection(dataConnection, dataConnection.Connection);
 
 			if (connection == null)
 				return await MultipleRowsCopyAsync(table, options, source, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
@@ -271,7 +272,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 								.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 						else
 							await writer.WriteAsync(_provider.NormalizeTimeStamp(columns[i].GetValue(item!), columnTypes[i]), dbTypes[i]!, cancellationToken)
-								.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+							.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 					}
 
 					currentCount++;
@@ -330,7 +331,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		private async Task<BulkCopyRowsCopied> ProviderSpecificCopyImplAsync<T>(DataConnection dataConnection, ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		where T: notnull
 		{
-			var connection = _provider.TryGetProviderConnection(dataConnection.Connection, table.DataContext.MappingSchema);
+			var connection = _provider.TryGetProviderConnection(dataConnection, dataConnection.Connection);
 
 			if (connection == null)
 				return await MultipleRowsCopyAsync(table, options, source, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
@@ -376,7 +377,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 								.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 						else
 							await writer.WriteAsync(_provider.NormalizeTimeStamp(columns[i].GetValue(item!), columnTypes[i]), dbTypes[i]!, cancellationToken)
-								.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+							.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 					}
 
 					currentCount++;

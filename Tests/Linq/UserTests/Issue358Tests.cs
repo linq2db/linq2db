@@ -5,6 +5,8 @@ using NUnit.Framework;
 
 namespace Tests.UserTests
 {
+	using LinqToDB;
+	using LinqToDB.Data;
 	using Model;
 
 	[TestFixture]
@@ -25,7 +27,7 @@ namespace Tests.UserTests
 		[Test]
 		public void HasIsNull()
 		{
-			using (var db = new TestDataConnection())
+			using (var db = new DataConnection())
 			{
 				var qry =
 					from p in db.GetTable<TestIssue358Class>()
@@ -42,7 +44,7 @@ namespace Tests.UserTests
 		[Test]
 		public void ContainsDoesNotHaveIsNull()
 		{
-			using (var db = new TestDataConnection())
+			using (var db = new DataConnection())
 			{
 				var filter = new[] {TestIssue358Enum.Value2};
 
@@ -61,7 +63,7 @@ namespace Tests.UserTests
 		[Test]
 		public void NoIsNull()
 		{
-			using (var db = new TestDataConnection())
+			using (var db = new DataConnection())
 			{
 				var qry =
 					from p in db.GetTable<TestIssue358Class>()
@@ -78,7 +80,7 @@ namespace Tests.UserTests
 		[Test]
 		public void ContainsNoIsNull()
 		{
-			using (var db = new TestDataConnection())
+			using (var db = new DataConnection())
 			{
 				var filter = new[] {TestIssue358Enum.Value2};
 
@@ -149,15 +151,13 @@ namespace Tests.UserTests
 		[Test]
 		public void Test4WithoutComparasionNullCheck([DataSources] string context)
 		{
-			using (new WithoutComparisonNullCheck())
-			using (var db = GetDataContext(context))
-			{
-				var bigintFilter = new long?[] {2};
+			using var _  = new CompareNullsAsValuesOption(false);
+			using var db = GetDataContext(context);
+			var bigintFilter = new long?[] {2};
 
-				AreEqual(FixData,
-					   Types2.Where(_ => !bigintFilter.Contains(_.BigIntValue) && _.BigIntValue != null),
-					db.Types2.Where(_ => !bigintFilter.Contains(_.BigIntValue)));
-			}
+			AreEqual(FixData,
+				   Types2.Where(_ => !bigintFilter.Contains(_.BigIntValue) && _.BigIntValue != null),
+				db.Types2.Where(_ => !bigintFilter.Contains(_.BigIntValue)));
 		}
 
 		[Test]

@@ -71,6 +71,28 @@ namespace Tests.Linq
 		}
 		#endregion
 
+		#region DateOnly
+#if NET6_0_OR_GREATER
+		[Table]
+		public class DateOnlyTable : TypeTable<DateOnly>
+		{
+			public static DateOnlyTable[] Data = new[]
+			{
+				new DateOnlyTable() { Id = 1, Column = new DateOnly(1900, 1, 1), ColumnNullable = null },
+				new DateOnlyTable() { Id = 2, Column = new DateOnly(2020, 2, 29), ColumnNullable = new DateOnly(2200, 1, 1) },
+			};
+		}
+
+		[Test]
+		public void TestDateOnly([DataSources(false)] string context)
+		{
+			using var db = (TestDataConnection)GetDataContext(context);
+
+			TestType<DateOnlyTable, DateOnly>(db, DateOnlyTable.Data);
+		}
+#endif
+		#endregion
+
 		#region Boolean
 		[Table]
 		public class BooleanTable : TypeTable<bool>
@@ -88,7 +110,7 @@ namespace Tests.Linq
 			using var db = (TestDataConnection)GetDataContext(context);
 
 			var data = BooleanTable.Data;
-			if (context.Contains("Access") || context.Contains("Sybase"))
+			if (context.IsAnyOf(TestProvName.AllAccess, TestProvName.AllSybase))
 			{
 				// for both Access and ASE BIT type cannot be NULL
 				data = data.Select(r => new BooleanTable() { Id = r.Id, Column = r.Column, ColumnNullable = r.ColumnNullable ?? false }).ToArray();
@@ -162,19 +184,35 @@ namespace Tests.Linq
 
 			// test parameter
 			db.InlineParameters = false;
-			var record = table.Where(r => Equality(r.Column, data[1].Column) && Equality(r.ColumnNullable, data[1].ColumnNullable)).ToArray()[0];
+			db.OnNextCommandInitialized((_, cmd) =>
+			{
+				Assert.AreEqual(2, cmd.Parameters.Count);
+				return cmd;
+			});
+
+			var records = table.Where(r => Equality(r.Column, data[1].Column) && Equality(r.ColumnNullable, data[1].ColumnNullable)).ToArray();
+			Assert.AreEqual(1, records.Length);
+
+			var record = records[0];
 			Assert.AreEqual(2, record.Id);
 			Assert.AreEqual(data[1].Column, record.Column);
 			Assert.AreEqual(data[1].ColumnNullable, record.ColumnNullable);
-			Assert.AreEqual(2, db.LastParameters?.Count);
 
 			// test literal
 			db.InlineParameters = true;
-			record = table.Where(r => Equality(r.Column, data[1].Column) && Equality(r.ColumnNullable, data[1].ColumnNullable)).ToArray()[0];
+			db.OnNextCommandInitialized((_, cmd) =>
+			{
+				Assert.AreEqual(0, cmd.Parameters.Count);
+				return cmd;
+			});
+
+			records = table.Where(r => Equality(r.Column, data[1].Column) && Equality(r.ColumnNullable, data[1].ColumnNullable)).ToArray();
+			Assert.AreEqual(1, records.Length);
+
+			record = records[0];
 			Assert.AreEqual(2, record.Id);
 			Assert.AreEqual(data[1].Column, record.Column);
 			Assert.AreEqual(data[1].ColumnNullable, record.ColumnNullable);
-			Assert.AreEqual(0, db.LastParameters?.Count);
 			db.InlineParameters = false;
 
 			// test bulk copy

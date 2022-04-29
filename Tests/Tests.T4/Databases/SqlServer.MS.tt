@@ -35,7 +35,7 @@
 
 	GetSchemaOptions.LoadTable = t => t.Name != "Products" && t.Name != "Person";
 	
-	LoadSqlServerMetadata(GetConnectionString("Northwind"), SqlServerVersion.v2012, LinqToDB.DataProvider.SqlServer.SqlServerProvider.MicrosoftDataSqlClient);
+	LoadSqlServerMetadata(GetConnectionString("SqlServer.Northwind"), SqlServerVersion.v2012, LinqToDB.DataProvider.SqlServer.SqlServerProvider.MicrosoftDataSqlClient);
 
 	Tables["Order Details"].Columns["OrderID"]. MemberName = "ID";
 

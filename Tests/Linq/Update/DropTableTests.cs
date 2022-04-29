@@ -82,7 +82,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void DropSpecificDatabaseTableTest([DataSources(false, TestProvName.AllSapHana)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				// cleanup
 				db.DropTable<DropTableTest>(throwExceptionIfNotExists: false);
@@ -92,7 +92,7 @@ namespace Tests.xUpdate
 
 				// no idea why, but Access ODBC needs database set in CREATE TABLE for INSERT to work
 				// still it doesn't distinguish CREATE TABLE with and without database name
-				var table = db.CreateTable<DropTableTest>(databaseName: context == ProviderName.AccessOdbc ? database : null)
+				var table = db.CreateTable<DropTableTest>(databaseName: context.IsAnyOf(ProviderName.AccessOdbc) ? database : null)
 					.SchemaName(schema)
 					.DatabaseName(database);
 

@@ -75,7 +75,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void Test3([DataSources(TestProvName.AllAccess, ProviderName.SqlServer2000, TestProvName.AllSybase)] string context)
+		public void Test3([DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

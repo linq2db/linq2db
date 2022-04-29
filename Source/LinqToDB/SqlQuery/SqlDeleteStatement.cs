@@ -35,7 +35,7 @@ namespace LinqToDB.SqlQuery
 			Table       = ((ISqlExpressionWalkable?)Table)?.Walk(options, context, func) as SqlTable;
 			SelectQuery = (SelectQuery)SelectQuery.Walk(options, context, func);
 
-			return null;
+			return base.Walk(options, context, func);
 		}
 
 		public override StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)

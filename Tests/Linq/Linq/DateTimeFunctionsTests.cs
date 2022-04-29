@@ -102,7 +102,7 @@ namespace Tests.Linq
 		[Test]
 		public void CurrentTimestampUtc(
 			[DataSources(ProviderName.Access, TestProvName.AllFirebird, ProviderName.SqlCe,
-				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
+				TestProvName.AllSqlServer2005)]
 			string context)
 		{
 			using (new DisableBaseline("Server-side date generation test"))
@@ -259,7 +259,7 @@ namespace Tests.Linq
 		[Test]
 		public void DatePartWeekNumberingType([DataSources(false)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var dates = new[]
 				{
@@ -1338,7 +1338,9 @@ namespace Tests.Linq
 						new CustomIntComparer(1));
 				}
 				// used type has precision == 1/300 of second
-				else if (context.Contains("Sybase") || context.Contains("SqlCe") || context.Contains("SqlServer") || context.Contains("Azure"))
+				else if (context.IsAnyOf(TestProvName.AllSybase)
+					|| context.IsAnyOf(ProviderName.SqlCe)
+					|| context.IsAnyOf(TestProvName.AllSqlServer))
 				{
 					AreEqual(
 						from t in Types select (int)(t.DateTimeValue.AddMilliseconds(2023456789) - t.DateTimeValue).TotalMilliseconds,
@@ -1365,7 +1367,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				if(context.Contains(ProviderName.SQLiteMS))
+				if(context.IsAnyOf(ProviderName.SQLiteMS))
 				{
 					AreEqual(
 						from t in Types select Sql.DateDiff(Sql.DateParts.Millisecond, t.DateTimeValue, t.DateTimeValue.AddMilliseconds(2023456789)),
@@ -1373,7 +1375,9 @@ namespace Tests.Linq
 						new CustomNullableIntComparer(1));
 				}
 				// used type has precision == 1/300 of second
-				else if (context.Contains("Sybase") || context.Contains("SqlCe") || context.Contains("SqlServer") || context.Contains("Azure"))
+				else if (context.IsAnyOf(TestProvName.AllSybase)
+					|| context.IsAnyOf(ProviderName.SqlCe)
+					|| context.IsAnyOf(TestProvName.AllSqlServer))
 				{
 					AreEqual(
 						from t in Types select Sql.DateDiff(Sql.DateParts.Millisecond, t.DateTimeValue, t.DateTimeValue.AddMilliseconds(2023456789)),

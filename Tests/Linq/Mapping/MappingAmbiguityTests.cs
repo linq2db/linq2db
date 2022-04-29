@@ -38,7 +38,7 @@ namespace Tests.Mapping
 		[Test]
 		public void TestCreate([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable<TestTable>())
 			{
 				var sql = db.LastQuery!;
@@ -73,7 +73,7 @@ namespace Tests.Mapping
 					.UpdateWhenMatched()
 					.Merge();
 
-				if (context.Contains("Oracle") && context.Contains("Native"))
+				if (context.IsAnyOf(TestProvName.AllOracleNative))
 					Assert.AreEqual(-1, res);
 				else
 					Assert.AreEqual(0, res);

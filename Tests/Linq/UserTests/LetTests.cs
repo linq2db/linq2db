@@ -7,7 +7,8 @@ using NUnit.Framework;
 
 namespace Tests.UserTests
 {
-	using Model;
+	using LinqToDB;
+	using LinqToDB.Data;
 
 	[TestFixture]
 	public class LetTests : TestBase
@@ -57,7 +58,7 @@ namespace Tests.UserTests
 		[Test]
 		public void LetTest1()
 		{
-			using (var repository = new TestDataConnection())
+			using (var repository = new DataConnection())
 			{
 				var q =
 					from t1 in repository.GetTable<Table2>()
@@ -76,7 +77,7 @@ namespace Tests.UserTests
 		[Test]
 		public void LetTest2()
 		{
-			using (var repository = new TestDataConnection())
+			using (var repository = new DataConnection())
 			{
 				var q =
 					from t1 in repository.GetTable<Table2>()

@@ -31,7 +31,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override string GetDataSourceName(DataConnection dbConnection)
 		{
-			var connection = _provider.TryGetProviderConnection(dbConnection.Connection, dbConnection.MappingSchema);
+			var connection = _provider.TryGetProviderConnection(dbConnection, dbConnection.Connection);
 			if (connection == null)
 				return string.Empty;
 
@@ -40,7 +40,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override string GetDatabaseName(DataConnection dbConnection)
 		{
-			var connection = _provider.TryGetProviderConnection(dbConnection.Connection, dbConnection.MappingSchema);
+			var connection = _provider.TryGetProviderConnection(dbConnection, dbConnection.Connection);
 			if (connection == null)
 				return string.Empty;
 
@@ -106,7 +106,7 @@ namespace LinqToDB.DataProvider.Oracle
 					FROM
 					(
 						SELECT NAME, ISVIEW, CASE c.MatView WHEN 1 THEN mvc.COMMENTS ELSE tc.COMMENTS END AS COMMENTS
-						FROM 
+						FROM
 						(
 							SELECT t.TABLE_NAME NAME, 0 as IsView, 0 as MatView FROM USER_TABLES t
 								LEFT JOIN USER_MVIEWS tm ON t.TABLE_NAME = tm.CONTAINER_NAME
@@ -206,7 +206,7 @@ namespace LinqToDB.DataProvider.Oracle
 			{
 				// This is significally faster
 				sql = @"
-					SELECT 
+					SELECT
 						(SELECT USER FROM DUAL) || '.' || c.TABLE_NAME as TableID,
 						c.COLUMN_NAME                                  as Name,
 						c.DATA_TYPE                                    as DataType,
@@ -287,7 +287,7 @@ namespace LinqToDB.DataProvider.Oracle
 							ON
 								PKCON.OWNER           = FKCON.R_OWNER AND
 								PKCON.CONSTRAINT_NAME = FKCON.R_CONSTRAINT_NAME
-						WHERE 
+						WHERE
 							FKCON.CONSTRAINT_TYPE = 'R'          AND
 							FKCOLS.POSITION       = PKCOLS.POSITION AND
 							FKCON.OWNER " + SchemasFilter + @" AND
@@ -312,7 +312,7 @@ namespace LinqToDB.DataProvider.Oracle
 									FKCOLS.CONSTRAINT_NAME = FKCON.CONSTRAINT_NAME
 								JOIN USER_CONS_COLUMNS PKCOLS ON
 									PKCOLS.CONSTRAINT_NAME = FKCON.R_CONSTRAINT_NAME
-						WHERE 
+						WHERE
 							FKCON.CONSTRAINT_TYPE = 'R' AND
 							FKCOLS.POSITION       = PKCOLS.POSITION
 						ORDER BY Ordinal, Name
@@ -325,7 +325,7 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			LoadCurrentUser(dataConnection);
 
-			var ps = ((DbConnection)dataConnection.Connection).GetSchema("Procedures");
+			var ps = dataConnection.Connection.GetSchema("Procedures");
 
 			return
 			(
@@ -354,7 +354,7 @@ namespace LinqToDB.DataProvider.Oracle
 			// uses ALL_ARGUMENTS view
 			// https://docs.oracle.com/cd/B28359_01/server.111/b28320/statviews_1014.htm#REFRN20015
 			// SELECT * FROM ALL_ARGUMENTS WHERE DATA_LEVEL = 0 AND (OWNER = :OWNER  OR :OWNER is null) AND (OBJECT_NAME = :OBJECTNAME  OR :OBJECTNAME is null)
-			var pps = ((DbConnection)dataConnection.Connection).GetSchema("ProcedureParameters");
+			var pps = dataConnection.Connection.GetSchema("ProcedureParameters");
 
 			// SEQUENCE filter filters-out non-argument records without DATA_TYPE
 			// check https://llblgen.com/tinyforum/Messages.aspx?ThreadID=22795
@@ -403,6 +403,12 @@ namespace LinqToDB.DataProvider.Oracle
 				if (precision < 20) return typeof(long);
 			}
 
+			if (dataType == "BINARY_INTEGER")
+				return typeof(int);
+			if (dataType?.StartsWith("INTERVAL DAY") == true)
+				return typeof(TimeSpan);
+			if (dataType?.StartsWith("INTERVAL YEAR") == true)
+				return typeof(long);
 			if (dataType?.StartsWith("TIMESTAMP") == true)
 				return dataType.EndsWith("TIME ZONE") ? typeof(DateTimeOffset) : typeof(DateTime);
 
@@ -417,13 +423,12 @@ namespace LinqToDB.DataProvider.Oracle
 				case "BFILE"                  : return DataType.VarBinary;
 				case "BINARY_DOUBLE"          : return DataType.Double;
 				case "BINARY_FLOAT"           : return DataType.Single;
+				case "BINARY_INTEGER"         : return DataType.Int32;
 				case "BLOB"                   : return DataType.Blob;
 				case "CHAR"                   : return DataType.Char;
 				case "CLOB"                   : return DataType.Text;
 				case "DATE"                   : return DataType.DateTime;
 				case "FLOAT"                  : return DataType.Decimal;
-				case "INTERVAL DAY TO SECOND" : return DataType.Time;
-				case "INTERVAL YEAR TO MONTH" : return DataType.Int64;
 				case "LONG"                   : return DataType.Long;
 				case "LONG RAW"               : return DataType.LongRaw;
 				case "NCHAR"                  : return DataType.NChar;
@@ -437,6 +442,10 @@ namespace LinqToDB.DataProvider.Oracle
 				default:
 					if (dataType?.StartsWith("TIMESTAMP") == true)
 						return dataType.EndsWith("TIME ZONE") ? DataType.DateTimeOffset : DataType.DateTime2;
+					if (dataType?.StartsWith("INTERVAL DAY") == true)
+						return DataType.Time;
+					if (dataType?.StartsWith("INTERVAL YEAR") == true)
+						return DataType.Int64;
 					break;
 			}
 

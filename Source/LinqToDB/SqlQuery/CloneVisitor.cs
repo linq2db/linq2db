@@ -8,6 +8,7 @@ namespace LinqToDB.SqlQuery
 {
 	using Common;
 	using Linq.Builder;
+	using Remote;
 
 	public readonly struct CloneVisitor<TContext>
 	{
@@ -157,10 +158,12 @@ namespace LinqToDB.SqlQuery
 					{
 						IsParameterDependent = selectQuery.IsParameterDependent,
 						DoNotRemove          = selectQuery.DoNotRemove,
+						QueryName            = selectQuery.QueryName,
+						SqlQueryExtensions   = selectQuery.SqlQueryExtensions,
 						DoNotSetAliases      = selectQuery.DoNotSetAliases
 					};
 
-					_objectTree.Add(element,         clone = newSelectQuery);
+					_objectTree.Add(element, clone = newSelectQuery);
 					_objectTree.Add(selectQuery.All, newSelectQuery.All);
 
 					if (selectQuery.ParentSelect != null)
@@ -696,7 +699,7 @@ namespace LinqToDB.SqlQuery
 					var ts = (SqlTableSource)(IQueryElement)element;
 
 					// TODO: Source Clone called before _objectTree update (original cloning logic)
-					var newTs = new SqlTableSource(Clone(ts.Source), ts._alias);
+					var newTs = new SqlTableSource(Clone(ts.Source), ts.RawAlias);
 
 					_objectTree.Add(element, clone = newTs);
 
@@ -800,6 +803,28 @@ namespace LinqToDB.SqlQuery
 				//case QueryElementType.MergeSourceTable:
 				default:
 					throw new NotImplementedException($"Unsupported query element type: {element.GetType()} ({element.ElementType})");
+			}
+
+			if (element is IQueryExtendible { SqlQueryExtensions: {} } qe)
+			{
+				var te = (IQueryExtendible)clone;
+
+				te.SqlQueryExtensions = new(qe.SqlQueryExtensions.Count);
+
+				foreach (var item in qe.SqlQueryExtensions)
+				{
+					var ext = new SqlQueryExtension
+					{
+						Configuration = item.Configuration,
+						Scope         = item.Scope,
+						BuilderType   = item.BuilderType,
+					};
+
+					foreach (var arg in item.Arguments)
+						ext.Arguments.Add(arg.Key, Clone(arg.Value));
+
+					te.SqlQueryExtensions.Add(ext);
+				}
 			}
 
 			return (T)clone;

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using LinqToDB.Remote;
 
 namespace LinqToDB.SqlQuery
 {
@@ -45,16 +46,16 @@ namespace LinqToDB.SqlQuery
 					}
 
 				case QueryElementType.SqlExpression:
-				{
+					{
 						VisitX((SqlExpression)element);
-					break;
-				}
+						break;
+					}
 
 				case QueryElementType.SqlObjectExpression:
-				{
-					VisitX((SqlObjectExpression)element);
-					break;
-				}
+					{
+						VisitX((SqlObjectExpression)element);
+						break;
+					}
 
 				case QueryElementType.SqlBinaryExpression:
 					{
@@ -412,6 +413,13 @@ namespace LinqToDB.SqlQuery
 
 				default:
 					throw new InvalidOperationException($"Visit visitor not implemented for element {element.ElementType}");
+			}
+
+			if (element is IQueryExtendible { SqlQueryExtensions.Count: > 0 } qe)
+			{
+				foreach (var ext in qe.SqlQueryExtensions)
+				foreach (var arg in ext.Arguments)
+					Visit(arg.Value);
 			}
 
 			if (_visitStatic != null)

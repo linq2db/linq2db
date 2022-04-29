@@ -13,16 +13,18 @@ namespace LinqToDB.DataProvider.Oracle
 	using Mapping;
 	using SqlProvider;
 
-	public class OracleDataProvider : DynamicDataProviderBase<OracleProviderAdapter>
-	{
-		public OracleDataProvider(string name) : this(name, OracleVersion.v12)
-		{ }
+	class OracleDataProviderNative11  : OracleDataProvider { public OracleDataProviderNative11()  : base(ProviderName.OracleNative,  OracleVersion.v11) {} }
+	class OracleDataProviderNative12  : OracleDataProvider { public OracleDataProviderNative12()  : base(ProviderName.OracleNative,  OracleVersion.v12) {} }
+	class OracleDataProviderManaged11 : OracleDataProvider { public OracleDataProviderManaged11() : base(ProviderName.OracleManaged, OracleVersion.v11) {} }
+	class OracleDataProviderManaged12 : OracleDataProvider { public OracleDataProviderManaged12() : base(ProviderName.OracleManaged, OracleVersion.v12) {} }
 
-		public OracleDataProvider(string name, OracleVersion version)
-			: base(
-				name,
-				GetMappingSchema(name, OracleProviderAdapter.GetInstance(name).MappingSchema),
-				OracleProviderAdapter.GetInstance(name))
+	public abstract class OracleDataProvider : DynamicDataProviderBase<OracleProviderAdapter>
+	{
+		protected OracleDataProvider(string name) : this(name, OracleVersion.v12)
+		{}
+
+		protected OracleDataProvider(string name, OracleVersion version)
+			: base(name, GetMappingSchema(name), OracleProviderAdapter.GetInstance(name))
 		{
 			Version = version;
 
@@ -33,6 +35,7 @@ namespace LinqToDB.DataProvider.Oracle
 			SqlProviderFlags.IsDistinctOrderBySupported        = false;
 			SqlProviderFlags.IsUpdateFromSupported             = false;
 			SqlProviderFlags.DefaultMultiQueryIsolationLevel   = IsolationLevel.ReadCommitted;
+			SqlProviderFlags.IsNamingQueryBlockSupported       = true;
 
 			SqlProviderFlags.RowConstructorSupport = RowFeature.Equality | RowFeature.CompareToSelect | RowFeature.In |
 			                                         RowFeature.Update   | RowFeature.Overlaps;
@@ -102,12 +105,12 @@ namespace LinqToDB.DataProvider.Oracle
 			};
 		}
 
-		private static MappingSchema GetMappingSchema(string name, MappingSchema providerSchema)
+		private static MappingSchema GetMappingSchema(string name)
 		{
 			return name switch
 			{
-				ProviderName.OracleNative => new OracleMappingSchema.NativeMappingSchema(providerSchema),
-				_                         => new OracleMappingSchema.ManagedMappingSchema(providerSchema),
+				ProviderName.OracleNative => new OracleMappingSchema.NativeMappingSchema(),
+				_                         => new OracleMappingSchema.ManagedMappingSchema(),
 			};
 		}
 
@@ -117,29 +120,24 @@ namespace LinqToDB.DataProvider.Oracle
 
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider() => new OracleSchemaProvider(this);
 
-		public override void InitCommand(DataConnection dataConnection, CommandType commandType, string commandText, DataParameter[]? parameters, bool withParameters)
+		public override DbCommand InitCommand(DataConnection dataConnection, DbCommand command, CommandType commandType, string commandText, DataParameter[]? parameters, bool withParameters)
 		{
-			dataConnection.DisposeCommand();
+			command = base.InitCommand(dataConnection, command, commandType, commandText, parameters, withParameters);
 
-			var command = TryGetProviderCommand(dataConnection.Command, dataConnection.MappingSchema);
+			var rawCommand = TryGetProviderCommand(dataConnection, command);
 
-			if (command != null)
+			if (rawCommand != null)
 			{
 				// binding disabled for native provider without parameters to reduce changes to fail when SQL contains
 				// parameter-like token.
 				// This is mostly issue with triggers creation, because they can have record tokens like :NEW
 				// incorectly identified by native provider as parameter
 				var bind = Name != ProviderName.OracleNative || parameters?.Length > 0 || withParameters;
-				Adapter.SetBindByName(command, bind);
-			}
+				Adapter.SetBindByName(rawCommand, bind);
 
-			base.InitCommand(dataConnection, commandType, commandText, parameters, withParameters);
-
-			if (command != null)
-			{
 				// https://docs.oracle.com/cd/B19306_01/win.102/b14307/featData.htm
 				// For LONG data type fetching initialization
-				Adapter.SetInitialLONGFetchSize(command, -1);
+				Adapter.SetInitialLONGFetchSize(rawCommand, -1);
 
 				if (parameters != null)
 					foreach (var parameter in parameters)
@@ -148,25 +146,31 @@ namespace LinqToDB.DataProvider.Oracle
 							&& parameter.Value is object[] value
 							&& value.Length != 0)
 						{
-							Adapter.SetArrayBindCount(command, value.Length);
+							Adapter.SetArrayBindCount(rawCommand, value.Length);
 							break;
 						}
 					}
 			}
+
+			return command;
 		}
 
-		public override void DisposeCommand(DataConnection dataConnection)
+		public override void ClearCommandParameters(DbCommand command)
 		{
-			foreach (DbParameter? param in dataConnection.Command.Parameters)
+			// both native and managed providers implement IDisposable for parameters
+			if (command.Parameters.Count > 0)
 			{
-				if (param is IDisposable disposable)
-					disposable.Dispose();
-			}
+				foreach (DbParameter? param in command.Parameters)
+				{
+					if (param is IDisposable disposable)
+						disposable.Dispose();
+				}
 
-			base.DisposeCommand(dataConnection);
+				command.Parameters.Clear();
+			}
 		}
 
-		public override void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object? value)
+		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
 		{
 			switch (dataType.DataType)
 			{
@@ -178,11 +182,13 @@ namespace LinqToDB.DataProvider.Oracle
 						value    = Adapter.CreateOracleTimeStampTZ(dto, zone);
 					}
 					break;
-				case DataType.Boolean:
+
+				case DataType.Boolean  :
 					dataType = dataType.WithDataType(DataType.Byte);
 					if (value is bool boolValue)
 						value = boolValue ? (byte)1 : (byte)0;
 					break;
+
 				case DataType.Guid     :
 				case DataType.Binary   :
 				case DataType.VarBinary:
@@ -191,30 +197,39 @@ namespace LinqToDB.DataProvider.Oracle
 					// https://github.com/linq2db/linq2db/issues/3207
 					if (value is Guid guid) value = guid.ToByteArray();
 					break;
-				case DataType.Time:
+
+				case DataType.Time     :
 					// According to http://docs.oracle.com/cd/E16655_01/win.121/e17732/featOraCommand.htm#ODPNT258
 					// Inference of DbType and OracleDbType from Value: TimeSpan - Object - IntervalDS
 					if (value is TimeSpan)
 						dataType = dataType.WithDataType(DataType.Undefined);
 					break;
-				case DataType.BFile:
-					{
-						// TODO: BFile we do not support setting parameter value
-						value = null;
-						break;
-					}
+
+				case DataType.BFile    :
+					// TODO: BFile we do not support setting parameter value
+					value = null;
+					break;
+
 				case DataType.DateTime :
-					{
-						if (value is DateTime dt)
-							value = DataTools.AdjustPrecision(dt, 0);
-						break;
-					}
+				{
+					if (value is DateTime dt)
+						value = DataTools.AdjustPrecision(dt, 0);
+					break;
+				}
+
 				case DataType.DateTime2:
-					{
-						if (value is DateTime dt)
-							value = DataTools.AdjustPrecision(dt, (byte?)dataType.Precision ?? 6);
-						break;
-					}
+				{
+					if (value is DateTime dt)
+						value = DataTools.AdjustPrecision(dt, (byte?)dataType.Precision ?? 6);
+					break;
+				}
+
+#if NET6_0_OR_GREATER
+				case DataType.Date     :
+					if (value is DateOnly d)
+						value = d.ToDateTime(TimeOnly.MinValue);
+					break;
+#endif
 			}
 
 			if (dataType.DataType == DataType.Undefined && value is string @string && @string.Length >= 4000)
@@ -241,7 +256,7 @@ namespace LinqToDB.DataProvider.Oracle
 			return base.ConvertParameterType(type, dataType);
 		}
 
-		protected override void SetParameterType(DataConnection dataConnection, IDbDataParameter parameter, DbDataType dataType)
+		protected override void SetParameterType(DataConnection dataConnection, DbParameter parameter, DbDataType dataType)
 		{
 			if (parameter is BulkCopyReader.Parameter)
 				return;
@@ -269,7 +284,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 			if (type != null)
 			{
-				var param = TryGetProviderParameter(parameter, dataConnection.MappingSchema);
+				var param = TryGetProviderParameter(dataConnection, parameter);
 				if (param != null)
 				{
 					Adapter.SetDbType(param, type.Value);
@@ -306,7 +321,7 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 		}
 
-		#region BulkCopy
+#region BulkCopy
 
 		OracleBulkCopy? _bulkCopy;
 
@@ -352,6 +367,6 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 #endif
 
-		#endregion
+#endregion
 	}
 }

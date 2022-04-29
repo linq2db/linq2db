@@ -210,7 +210,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void InnerJoinArray6(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllPostgreSQLLess10)] string context, [Values(1, 2)] int iteration)
+			[DataSources(TestProvName.AllAccess, TestProvName.AllPostgreSQL9)] string context, [Values(1, 2)] int iteration)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -236,7 +236,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void InnerJoinArray6Postgres([IncludeDataSources(TestProvName.AllPostgreSQLLess10)] string context, [Values(1, 2)] int iteration)
+		public void InnerJoinArray6Postgres([IncludeDataSources(TestProvName.AllPostgreSQL9)] string context, [Values(1, 2)] int iteration)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -598,9 +598,9 @@ namespace Tests.Linq
 		[Test]
 		public void UpdateTest(
 			[DataSources(
-				TestProvName.AllAccess, 
-				ProviderName.DB2, 
-				TestProvName.AllSybase, 
+				TestProvName.AllAccess,
+				ProviderName.DB2,
+				TestProvName.AllSybase,
 				ProviderName.SqlCe,
 				TestProvName.AllInformix)]
 			string context, [Values(1, 2)] int iteration)
@@ -638,7 +638,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DeleteTest([DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllSybase, TestProvName.AllSybase, TestProvName.AllInformix)] string context, [Values(1, 2)] int iteration)
+		public void DeleteTest(
+			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase, TestProvName.AllSybase, TestProvName.AllInformix)] string context,
+			[Values(1, 2)] int iteration)
 		{
 			var records = new TableToInsert[]
 			{
@@ -646,27 +648,25 @@ namespace Tests.Linq
 				new() { Id = 2 + iteration, Value = "Doe" },
 			};
 
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(records))
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(records);
+
+			var cacheMiss   = Query<TableToInsert>.CacheMissCount;
+			var deleteValue = new TableToInsert[]
 			{
-				var cacheMiss = Query<TableToInsert>.CacheMissCount;
+				new () { Id = 1 + iteration },
+				new () { Id = 2 + iteration },
+			};
 
-				var deleteValue = new TableToInsert[]
-				{
-					new() { Id = 1 + iteration },
-					new() { Id = 2 + iteration },
-				};
+			var queryToDelete =
+				from t in table
+				join r in deleteValue on t.Id equals r.Id
+				select t;
 
-				var queryToDelete =
-					from t in table
-					join r in deleteValue on t.Id equals r.Id
-					select t;
+			queryToDelete.Delete().Should().Be(2);
 
-				queryToDelete.Delete().Should().Be(2);
-
-				if (iteration > 1)
-					Query<TableToInsert>.CacheMissCount.Should().Be(cacheMiss);
-			}
+			if (iteration > 1)
+				Query<TableToInsert>.CacheMissCount.Should().Be(cacheMiss);
 		}
 
 		[Test]
@@ -773,7 +773,8 @@ namespace Tests.Linq
 
 		[Test]
 		public void StringSubQuery(
-			[DataSources(ProviderName.SQLiteMS, TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllSybase,
+			[DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllSybase,
+				ProviderName.SQLiteMS,
 				TestProvName.AllSybase, TestProvName.AllInformix)]
 			string context, [Values(1, 2)] int iteration)
 		{
@@ -830,7 +831,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void NullConstantProjection(
-			[DataSources(ProviderName.SQLiteMS, TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllSybase,
+			[DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllSybase,
 				TestProvName.AllSybase, TestProvName.AllInformix)]
 			string context, [Values(1, 2)] int iteration)
 		{
@@ -854,7 +855,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void ConstantProjection(
-			[DataSources(ProviderName.SQLiteMS, TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllSybase,
+			[DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllSybase,
 				TestProvName.AllSybase, TestProvName.AllInformix)]
 			string context, [Values(1, 2)] int iteration)
 		{
@@ -874,7 +875,6 @@ namespace Tests.Linq
 				personWithList.Should().HaveCountGreaterThan(0);
 				personWithList.All(p => p.SomeList!.Count == 0).Should().BeTrue();
 			}
-
 		}
 	}
 }

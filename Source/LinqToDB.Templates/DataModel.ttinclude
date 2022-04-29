@@ -29,6 +29,7 @@ public string   OneToManyAssociationType      = "IEnumerable<{0}>";
 
 public bool     GenerateDatabaseInfo          = true;
 public bool     GenerateDatabaseName;
+public bool     GenerateDatabaseNameFromTable;
 public bool     GenerateConstructors          = true;
 public string   DefaultConfiguration;
 public bool     GenerateAssociations          = true;
@@ -43,6 +44,8 @@ public bool PluralizeClassNames;
 public bool SingularizeClassNames               = true;
 public bool PluralizeDataContextPropertyNames   = true;
 public bool SingularizeDataContextPropertyNames;
+public bool PluralizeForeignKeyNames            = true;
+public bool SingularizeForeignKeyNames          = true;
 
 public bool NormalizeNames                      = true;
 public bool NormalizeNamesWithoutUnderscores;
@@ -102,13 +105,17 @@ public static Func<string, bool>  IsValueType    = IsValueTypeDefault;
 public static Func<string,string> ToPlural       = s => s + "s";
 public static Func<string,string> ToSingular     = s => s;
 
+static Func<DataConnection,GetSchemaOptions,DatabaseSchema> LoadDatabaseSchema = (dataConnection, schemaOptions) =>
+{
+	var sp = dataConnection.DataProvider.GetSchemaProvider();
+	return sp.GetSchema(dataConnection, schemaOptions);
+};
 
 void LoadServerMetadata(DataConnection dataConnection)
 {
 	SqlBuilder = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema);
 
-	var sp = dataConnection.DataProvider.GetSchemaProvider();
-	var db = sp.GetSchema(dataConnection, GetSchemaOptions);
+	var db = LoadDatabaseSchema(dataConnection, GetSchemaOptions);
 
 	if (DatabaseName == null && GenerateDatabaseName)
 		DatabaseName = db.Database;
@@ -135,7 +142,7 @@ void LoadServerMetadata(DataConnection dataConnection)
 			{
 				TableSchema             = t,
 				IsDefaultSchema         = t.IsDefaultSchema,
-				Schema                  = t.IsDefaultSchema && !IncludeDefaultSchema || string.IsNullOrEmpty(t.SchemaName) ? null : t.SchemaName,
+				Schema                  = t.IsDefaultSchema && !IncludeDefaultSchema || string.IsNullOrEmpty(t.GroupName ?? t.SchemaName) ? null : t.GroupName ?? t.SchemaName,
 				BaseClass               = BaseEntityClass,
 				TableName               = t.TableName,
 				TypeName                = t.TypeName,
@@ -251,6 +258,7 @@ void LoadServerMetadata(DataConnection dataConnection)
 		var keyName = (key.k.OtherTable.IsDefaultSchema ? null : key.k.OtherTable.SchemaName + ".")
 			+ key.k.OtherTable.TableName + "."
 			+ key.KeyName;
+
 		key.t.table.ForeignKeys.Add(keyName, key.key);
 
 		if (key.k.BackReference != null)
@@ -258,8 +266,9 @@ void LoadServerMetadata(DataConnection dataConnection)
 
 		key.key.MemberName = key.key.MemberName.Replace(".", string.Empty);
 
-		key.key.MemberName = key.key.AssociationType == AssociationType.OneToMany ?
-			ToPlural(key.key.MemberName) : ToSingular(key.key.MemberName);
+		key.key.MemberName = key.key.AssociationType == AssociationType.OneToMany
+			? PluralizeForeignKeyNames   ? ToPlural  (key.key.MemberName) : key.key.MemberName
+			: SingularizeForeignKeyNames ? ToSingular(key.key.MemberName) : key.key.MemberName;
 	}
 
 	var procedures = db.Procedures
@@ -322,7 +331,7 @@ void LoadServerMetadata(DataConnection dataConnection)
 						Size          = pr.Size,
 						ParameterName = CheckParameterName(CheckType(pr.SystemType, pr.ParameterName)),
 						ParameterType = pr.ParameterType,
-						SystemType    = pr.SystemType,
+						SystemType    = pr.SystemType ?? typeof(object),
 						DataType      = pr.DataType.ToString(),
 						IsNullable    = pr.IsNullable,
 						Description   = pr.Description,
@@ -367,6 +376,7 @@ Dictionary<string,TR> ToDictionary<T,TR>(IEnumerable<T> source, Func<T,string> k
 
 string CheckType(Type type, string typeName)
 {
+	type = type ?? typeof(object);
 	if (!Model.Usings.Contains(type.Namespace))
 		Model.Usings.Add(type.Namespace);
 
@@ -472,10 +482,10 @@ void LoadMetadata(DataConnection dataConnection)
 	foreach (var t in Tables.Values)
 	{
 		var hasDuplicates = t.Columns.Values
-				.Select(c => c.MemberName)
-				.Concat(t.ForeignKeys.Values.Select(f => f.MemberName))
-				.ToLookup(n => n)
-				.Any(g => g.Count() > 1);
+			.Select(c => c.MemberName)
+			.Concat(t.ForeignKeys.Values.Select(f => f.MemberName))
+			.ToLookup(n => n)
+			.Any(g => g.Count() > 1);
 
 		if (hasDuplicates)
 		{
@@ -904,7 +914,7 @@ static string SplitAndJoin(string value, string join, params char[] split)
 
 static string NormalizeFragment(string s)
 {
-	return char.ToUpper(s[0]) + (s.Substring(1).All(char.IsUpper) ? s.Substring(1).ToLower() : s.Substring(1));
+	return s.Length == 0 ? s : char.ToUpper(s[0]) + (s.Substring(1).All(char.IsUpper) ? s.Substring(1).ToLower() : s.Substring(1));
 }
 
 private string GetAssociationExtensionSingularNameDefault(ForeignKey key)

@@ -12,12 +12,11 @@ namespace LinqToDB
 	using Mapping;
 	using SqlQuery;
 
-	
 	partial class Sql
 	{
 		/// <summary>
 		/// An Attribute that allows custom Expressions to be defined
-		/// for a Method used within a Linq Expression. 
+		/// for a Method used within a Linq Expression.
 		/// </summary>
 		[PublicAPI]
 		[Serializable]
@@ -26,7 +25,7 @@ namespace LinqToDB
 		{
 			/// <summary>
 			/// Creates an Expression that will be used in SQL,
-			/// in place of the method call decorated by this attribute. 
+			/// in place of the method call decorated by this attribute.
 			/// </summary>
 			/// <param name="expression">The SQL expression. Use {0},{1}... for parameters given to the method call.</param>
 			public ExpressionAttribute(string? expression)
@@ -107,7 +106,7 @@ namespace LinqToDB
 			/// <summary>
 			/// If <c>true</c> The expression will only be evaluated on the
 			/// database server. If it cannot, an exception will
-			/// be thrown. 
+			/// be thrown.
 			/// </summary>
 			public bool           ServerSideOnly   { get; set; }
 			/// <summary>
@@ -145,7 +144,7 @@ namespace LinqToDB
 			/// <example>
 			/// For example Random function is NOT Pure function because it returns different result all time.
 			/// But expression <see cref="CurrentTimestamp"/> is Pure in case of executed query.
-			/// <see cref="DateAdd(DateParts,double?,System.DateTime?)"/> is also Pure function because it returns the same result with the same parameters.  
+			/// <see cref="DateAdd(DateParts,double?,System.DateTime?)"/> is also Pure function because it returns the same result with the same parameters.
 			/// </example>
 			/// </summary>
 			public bool           IsPure          { get; set; }
@@ -153,9 +152,14 @@ namespace LinqToDB
 			/// Used to determine whether the return type should be treated as
 			/// something that can be null If CanBeNull is not explicitly set.
 			/// <para>Default is <see cref="IsNullableType.Undefined"/>,
-			/// which will be treated as <c>true</c></para> 
+			/// which will be treated as <c>true</c></para>
 			/// </summary>
 			public IsNullableType IsNullable       { get; set; }
+
+			/// <summary>
+			/// if <c>true</c>, do not generate generic parameters.
+			/// </summary>
+			public bool IgnoreGenericParameters { get; set; }
 
 			internal  bool? _canBeNull;
 			/// <summary>
@@ -264,7 +268,13 @@ namespace LinqToDB
 
 			public static readonly SqlExpression UnknownExpression = new ("!!!");
 
-			public static void PrepareParameterValues(Expression expression, ref string? expressionStr, bool includeInstance, out List<Expression?> knownExpressions, out List<ISqlExpression>? genericTypes)
+			public static void PrepareParameterValues(
+				Expression                expression,
+				ref string?               expressionStr,
+				bool                      includeInstance,
+				out List<Expression?>     knownExpressions,
+				bool                      ignoreGenericParameters,
+				out List<ISqlExpression>? genericTypes)
 			{
 				knownExpressions = new List<Expression?>();
 				genericTypes     = null;
@@ -305,18 +315,21 @@ namespace LinqToDB
 						}
 					}
 
-					if (mc.Method.DeclaringType!.IsGenericType)
+					if (!ignoreGenericParameters)
 					{
-						genericTypes ??= new List<ISqlExpression>();
-						genericTypes.AddRange(mc.Method.DeclaringType.GetGenericArguments()
-							.Select(static t => (ISqlExpression)SqlDataType.GetDataType(t)));
-					}
+						if (mc.Method.DeclaringType!.IsGenericType)
+						{
+							genericTypes ??= new List<ISqlExpression>();
+							genericTypes.AddRange(mc.Method.DeclaringType.GetGenericArguments()
+								.Select(static t => (ISqlExpression)SqlDataType.GetDataType(t)));
+						}
 
-					if (mc.Method.IsGenericMethod)
-					{
-						genericTypes ??= new List<ISqlExpression>();
-						genericTypes.AddRange(mc.Method.GetGenericArguments()
-							.Select(static t => (ISqlExpression)SqlDataType.GetDataType(t)));
+						if (mc.Method.IsGenericMethod)
+						{
+							genericTypes ??= new List<ISqlExpression>();
+							genericTypes.AddRange(mc.Method.GetGenericArguments()
+								.Select(static t => (ISqlExpression)SqlDataType.GetDataType(t)));
+						}
 					}
 				}
 				else
@@ -328,11 +341,18 @@ namespace LinqToDB
 				}
 			}
 
-			public static ISqlExpression[] PrepareArguments<TContext>(TContext context, string expressionStr, int[]? argIndices, bool addDefault, List<Expression?> knownExpressions, List<ISqlExpression>? genericTypes, Func<TContext, Expression, ColumnDescriptor?, ISqlExpression?> converter)
+			public static ISqlExpression[] PrepareArguments<TContext>(
+				TContext              context,
+				string                expressionStr,
+				int[]?                argIndices,
+				bool                  addDefault,
+				List<Expression?>     knownExpressions,
+				List<ISqlExpression>? genericTypes,
+				Func<TContext,Expression,ColumnDescriptor?,ISqlExpression?> converter)
 			{
 				var parms = new List<ISqlExpression?>();
+				var ctx   = WritableContext.Create(false, (context, expressionStr, argIndices, knownExpressions, genericTypes, converter, parms));
 
-				var ctx = WritableContext.Create(false, (context, expressionStr, argIndices, knownExpressions, genericTypes, converter, parms));
 				ResolveExpressionValues(
 					ctx,
 					expressionStr!,
@@ -387,7 +407,7 @@ namespace LinqToDB
 
 				if (!ctx.WriteableValue)
 				{
-					// It means that we have to prepare parameters for function 
+					// It means that we have to prepare parameters for function
 					if (argIndices != null)
 					{
 						for (var idx = 0; idx < argIndices.Length; idx++)
@@ -442,12 +462,12 @@ namespace LinqToDB
 				Expression expression, Func<TContext, Expression, ColumnDescriptor?, ISqlExpression> converter)
 			{
 				var expressionStr = Expression;
-				PrepareParameterValues(expression, ref expressionStr, true, out var knownExpressions, out var genericTypes);
+				PrepareParameterValues(expression, ref expressionStr, true, out var knownExpressions, IgnoreGenericParameters, out var genericTypes);
 
 				if (string.IsNullOrEmpty(expressionStr))
 					throw new LinqToDBException($"Cannot retrieve SQL Expression body from expression '{expression}'.");
 
-				var parameters = PrepareArguments(context, expressionStr!, ArgIndices, addDefault: false, knownExpressions, genericTypes, converter);
+				var parameters = PrepareArguments(context, expressionStr!, ArgIndices, false, knownExpressions, genericTypes, converter);
 
 				return new SqlExpression(expression.Type, expressionStr!, Precedence,
 					(IsAggregate      ? SqlFlags.IsAggregate      : SqlFlags.None) |

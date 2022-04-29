@@ -42,7 +42,7 @@ namespace Tests.DataProvider
 		public void DateTimeConversion([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			var ms = new MappingSchema();
-			
+
 			ms.SetConverter<long, DateTime>(ticks => new DateTime(ticks, DateTimeKind.Unspecified));
 			ms.SetConverter<DateTime, DataParameter>(d => new DataParameter("", d.Ticks, DataType.Long));
 
@@ -62,7 +62,7 @@ namespace Tests.DataProvider
 
 		[ActiveIssue("Improving MappingSchema needed.")]
 		[Test]
-		public void DoubleParametrization([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void DoubleParameterization([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			var data = ClassRealTypes.Seed();
 

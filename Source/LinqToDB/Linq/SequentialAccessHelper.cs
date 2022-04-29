@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Data;
+using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Collections.Generic;
 
 namespace LinqToDB.Linq
 {
-	using System.Collections.Generic;
 	using Extensions;
 	using Common;
 	using LinqToDB.Expressions;
@@ -71,7 +72,7 @@ namespace LinqToDB.Linq
 					if (columnIndex != null)
 					{
 						// test IsDBNull method by-name to support overrides
-						if (call.Object != null && typeof(IDataReader).IsAssignableFrom(call.Object.Type) && call.Method.Name == nameof(IDataReader.IsDBNull))
+						if (call.Object != null && typeof(DbDataReader).IsAssignableFrom(call.Object.Type) && call.Method.Name == nameof(DbDataReader.IsDBNull))
 						{
 							var index = columnIndex.Value * 2;
 							if (context.NewVariables[index] == null)
@@ -162,9 +163,9 @@ namespace LinqToDB.Linq
 					foreach (var arg in call.Arguments)
 					{
 						// unknown method call with data reader parameter
-						if (typeof(IDataReader).IsAssignableFrom(arg.Unwrap().Type))
+						if (typeof(DbDataReader).IsAssignableFrom(arg.Unwrap().Type))
 						{
-							context.FailMessage = $"Method {call.Method.DeclaringType?.Name}.{call.Method.Name} with {nameof(IDataReader)} parameter not supported";
+							context.FailMessage = $"Method {call.Method.DeclaringType?.Name}.{call.Method.Name} with {nameof(DbDataReader)} parameter not supported";
 						}
 					}
 				}
@@ -173,9 +174,9 @@ namespace LinqToDB.Linq
 					foreach (var arg in invoke.Arguments)
 					{
 						// invoke call with data reader parameter
-						if (typeof(IDataReader).IsAssignableFrom(arg.Unwrap().Type))
+						if (typeof(DbDataReader).IsAssignableFrom(arg.Unwrap().Type))
 						{
-							context.FailMessage = $"Method invoke with {nameof(IDataReader)} parameter not supported";
+							context.FailMessage = $"Method invoke with {nameof(DbDataReader)} parameter not supported";
 						}
 					}
 				}
@@ -184,9 +185,9 @@ namespace LinqToDB.Linq
 					foreach (var arg in newExpr.Arguments)
 					{
 						// unknown constructor call with data reader parameter
-						if (typeof(IDataReader).IsAssignableFrom(arg.Unwrap().Type))
+						if (typeof(DbDataReader).IsAssignableFrom(arg.Unwrap().Type))
 						{
-							context.FailMessage = $"{newExpr.Type} constructor with {nameof(IDataReader)} parameter not supported";
+							context.FailMessage = $"{newExpr.Type} constructor with {nameof(DbDataReader)} parameter not supported";
 						}
 					}
 				}
@@ -270,7 +271,7 @@ namespace LinqToDB.Linq
 			// instance method of data reader
 			// check that method accept single integer constant as parameter
 			// this is currently how we detect method that we must process
-			if (attr == null && !call.Method.IsStatic && typeof(IDataReader).IsAssignableFrom(call.Object!.Type)
+			if (attr == null && !call.Method.IsStatic && typeof(DbDataReader).IsAssignableFrom(call.Object!.Type)
 				&& call.Arguments.Count == 1 && call.Arguments[0] is ConstantExpression c2 && c2.Type == typeof(int))
 				return (int)c2.Value!;
 
@@ -327,9 +328,9 @@ namespace LinqToDB.Linq
 					foreach (var arg in call.Arguments)
 					{
 						// unknown method or constructor call with data reader parameter
-						if (typeof(IDataReader).IsAssignableFrom(arg.Unwrap().Type))
+						if (typeof(DbDataReader).IsAssignableFrom(arg.Unwrap().Type))
 						{
-							context.FailMessage = $"Method {call.Method.DeclaringType?.Name}.{call.Method.Name} with {nameof(IDataReader)} not supported";
+							context.FailMessage = $"Method {call.Method.DeclaringType?.Name}.{call.Method.Name} with {nameof(DbDataReader)} not supported";
 						}
 					}
 				}
@@ -378,7 +379,7 @@ namespace LinqToDB.Linq
 							return;
 						}
 
-						if (call.Method.Name != nameof(IDataReader.IsDBNull))
+						if (call.Method.Name != nameof(DbDataReader.IsDBNull))
 						{
 							if (context.RawCall == null)
 								context.RawCall = call;

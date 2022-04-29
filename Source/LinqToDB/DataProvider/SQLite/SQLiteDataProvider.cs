@@ -7,13 +7,18 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.SQLite
 {
+	using System.Data.Common;
+	using System.Globalization;
 	using Common;
 	using Data;
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
 
-	public class SQLiteDataProvider : DynamicDataProviderBase<SQLiteProviderAdapter>
+	class SQLiteDataProviderClassic : SQLiteDataProvider { public SQLiteDataProviderClassic() : base(ProviderName.SQLiteClassic) {} }
+	class SQLiteDataProviderMS      : SQLiteDataProvider { public SQLiteDataProviderMS()      : base(ProviderName.SQLiteMS)      {} }
+
+	public abstract class SQLiteDataProvider : DynamicDataProviderBase<SQLiteProviderAdapter>
 	{
 		/// <summary>
 		/// Creates the specified SQLite provider based on the provider name.
@@ -21,7 +26,7 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <param name="name">If ProviderName.SQLite is provided,
 		/// the detection mechanism preferring System.Data.SQLite
 		/// to Microsoft.Data.Sqlite will be used.</param>
-		public SQLiteDataProvider(string name)
+		protected SQLiteDataProvider(string name)
 			: this(name, MappingSchemaInstance.Get(name))
 		{
 		}
@@ -53,33 +58,33 @@ namespace LinqToDB.DataProvider.SQLite
 			 * - sqlite has only 5 types: https://sqlite.org/datatype3.html
 			 * - types applied to value, not to column => column could contain value of any type (e.g. all 5 types)
 			 * - there is "column type affinity" thingy, which doesn't help with data read
-			 * 
+			 *
 			 * Which means our general approach to build column read expression, where we ask data reader
 			 * about column type and read value using corresponding Get*() method, doesn't work as provider cannot
 			 * give us detailed type information.
-			 * 
+			 *
 			 * How it works for supported providers
 			 * System.Data.Sqlite:
 			 * This provider actually works fine, as it use column type name from create table statement to infer column
 			 * type. In other words, while you use proper type names to create your table and don't mix values of different
 			 * types in your column - you are safe.
-			 * 
+			 *
 			 * Microsoft.Data.Sqlite:
 			 * This provider decides to leave typing to user and return data to user only using 5 basic types
 			 * (v1.x also could return int-typed value, which is just casted long value).
-			 * 
+			 *
 			 * Which means we need to handle Microsoft.Data.Sqlite in special way to be able to read data from database
 			 * without fallback to slow-mode mapping
-			 * 
+			 *
 			 * There are two ways to fix it:
 			 * 1. implement extra type-name resolve as it is done by System.Data.Sqlite (we can still get type name from provider)
 			 * 2. implement mixed type support using target field type
-			 * 
+			 *
 			 * in other words use column type name vs target field type to decide value of which type we should create (read)
-			 * 
+			 *
 			 * While 2 sounds tempting, it doesn't work well with mapping to custom field types. Also VARIANT-like columns is
 			 * not something users usually do, even with sqlite, so we will implement first approach here.
-			 * 
+			 *
 			 * Type information we can get from provider:
 			 * 1. column type name from GetDataTypeName(): could be type name from CREATE TABLE statement or if this
 			 *    information missing - standard type: INTEGER, REAL, TEXT, BLOB
@@ -130,19 +135,18 @@ namespace LinqToDB.DataProvider.SQLite
 					"DATETIME", "DATETIME2", "DATE", "SMALLDATE", "SMALLDATETIME", "TIME", "TIMESTAMP", "DATETIMEOFFSET");
 
 				// also specify explicit converter for non-integer numerics, repored as integer by provider
-				SetToType<IDataReader, float  , long>((r, i) => r.GetFloat(i));
-				SetToType<IDataReader, double , long>((r, i) => r.GetDouble(i));
-				SetToType<IDataReader, decimal, long>((r, i) => r.GetDecimal(i));
+				SetToType<DbDataReader, float  , long>((r, i) => r.GetFloat(i));
+				SetToType<DbDataReader, double , long>((r, i) => r.GetDouble(i));
+				SetToType<DbDataReader, decimal, long>((r, i) => r.GetDecimal(i));
 			}
 
 			SetCharField("char",  (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("nchar", (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharFieldToType<char>("char" , DataTools.GetCharExpression);
 			SetCharFieldToType<char>("nchar", DataTools.GetCharExpression);
-
 		}
 
-		private void SetSqliteField<T>(Expression<Func<IDataReader, int, T>> expr, Type[] fieldTypes, params string[] typeNames)
+		private void SetSqliteField<T>(Expression<Func<DbDataReader, int, T>> expr, Type[] fieldTypes, params string[] typeNames)
 		{
 			foreach (var fieldType in fieldTypes)
 			{
@@ -172,13 +176,7 @@ namespace LinqToDB.DataProvider.SQLite
 			return typeName;
 		}
 
-		public override IDisposable? ExecuteScope(DataConnection dataConnection)
-		{
-			if (Adapter.DisposeCommandOnError)
-				return new CallOnExceptionRegion(dataConnection, static dc => dc.DisposeCommand());
-
-			return base.ExecuteScope(dataConnection);
-		}
+		public override IExecutionScope? ExecuteScope(DataConnection dataConnection) => Adapter.DisposeCommandOnError ? new DisposeCommandOnExceptionRegion(dataConnection) : null;
 
 		public override TableOptions SupportedTableOptions =>
 			TableOptions.IsTemporary               |
@@ -189,7 +187,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{
-			return new SQLiteSqlBuilder(mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
+			return new SQLiteSqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
 		}
 
 		static class MappingSchemaInstance
@@ -209,7 +207,7 @@ namespace LinqToDB.DataProvider.SQLite
 			return new SQLiteSchemaProvider();
 		}
 
-		public override bool? IsDBNullAllowed(IDataReader reader, int idx)
+		public override bool? IsDBNullAllowed(DbDataReader reader, int idx)
 		{
 			if (SQLiteTools.AlwaysCheckDbNull)
 				return true;
@@ -217,7 +215,7 @@ namespace LinqToDB.DataProvider.SQLite
 			return base.IsDBNullAllowed(reader, idx);
 		}
 
-		public override void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object? value)
+		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
 		{
 			// handles situation, when char values were serialized as character hex value for some
 			// versions of Microsoft.Data.Sqlite
@@ -233,10 +231,23 @@ namespace LinqToDB.DataProvider.SQLite
 				value = guid.ToByteArray();
 			}
 
-			base.SetParameter(dataConnection, parameter, "@" + name, dataType, value);
+#if NET6_0_OR_GREATER
+			if (!Adapter.SupportsDateOnly && value is DateOnly d)
+			{
+				value     = d.ToDateTime(TimeOnly.MinValue);
+				if (dataType.DataType == DataType.Date)
+				{
+					value = ((DateTime)value).ToString(SQLiteMappingSchema.DATE_FORMAT_RAW, CultureInfo.InvariantCulture);
+					if (Name == ProviderName.SQLiteClassic)
+						dataType = dataType.WithDataType(DataType.VarChar);
+				}
+			}
+#endif
+
+			base.SetParameter(dataConnection, parameter, name, dataType, value);
 		}
 
-		protected override void SetParameterType(DataConnection dataConnection, IDbDataParameter parameter, DbDataType dataType)
+		protected override void SetParameterType(DataConnection dataConnection, DbParameter parameter, DbDataType dataType)
 		{
 			switch (dataType.DataType)
 			{

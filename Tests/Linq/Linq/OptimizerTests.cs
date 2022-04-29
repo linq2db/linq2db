@@ -129,7 +129,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void AsSubQueryGrouping1([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer2005Plus)] string context)
+		public void AsSubQueryGrouping1([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer)] string context)
 		{
 			var testData = GenerateTestData();
 
@@ -146,7 +146,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void AsSubQueryGrouping2([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer2005Plus)] string context)
+		public void AsSubQueryGrouping2([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer)] string context)
 		{
 			var testData = GenerateTestData();
 

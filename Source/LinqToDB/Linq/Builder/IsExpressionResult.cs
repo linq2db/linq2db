@@ -10,7 +10,7 @@ namespace LinqToDB.Linq.Builder
 		/// <summary>
 		/// Indicates when test or request was successful.
 		/// </summary>
-		public readonly bool           Result;
+		public   readonly bool           Result;
 
 		/// <summary>
 		/// Stores found Context during <see cref="RequestFor.Table"/> request.

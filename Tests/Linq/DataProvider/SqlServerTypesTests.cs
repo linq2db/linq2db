@@ -120,6 +120,7 @@ namespace Tests.DataProvider
 			public  static IEnumerable<SqlTypes> Data([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 			{
 				if (_data == null)
+					using (new DisableBaseline("test cache"))
 					using (var db = new DataConnection(context.Replace(".LinqService", "")))
 						_data = db.GetTable<SqlTypes>().ToList();
 
@@ -170,7 +171,7 @@ namespace Tests.DataProvider
 
 				AreEqual(
 					SqlTypes.Data(context)
-						.Where(t => (bool)hid.IsDescendantOf(t.HID) == true),
+						.Where(t => (bool)hid.IsDescendantOf(t.HID)),
 					db.GetTable<SqlTypes>()
 						.Where(t => (bool)hid.IsDescendantOf(t.HID) == true));
 			}

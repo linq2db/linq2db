@@ -35,8 +35,8 @@ namespace LinqToDB.SqlProvider
 
 		public virtual SqlStatement Finalize(SqlStatement statement)
 		{
+			FixRootSelect (statement);
 			FixEmptySelect(statement);
-
 			FinalizeCte(statement);
 
 			var evaluationContext = new EvaluationContext(null);
@@ -101,35 +101,53 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual SqlStatement CorrectUnionOrderBy(SqlStatement statement)
 		{
-			return QueryHelper.WrapQuery(
-				(object?)null,
-				statement,
-				static (_, q, parentElement) =>
+			var queriesToWrap = new HashSet<SelectQuery>();
+
+			statement.Visit(queriesToWrap, (wrap, e) =>
+			{
+				if (e is SelectQuery sc && sc.HasSetOperators)
 				{
-					if (q.OrderBy.IsEmpty)
-						return false;
+					var prevQuery = sc;
 
-
-					if (q.HasSetOperators && q.SetOperators[0].Operation == SetOperation.UnionAll)
-						return true;
-
-					var isUnionAll = false;
-					if (parentElement != null)
+					for (int i = 0; i < sc.SetOperators.Count; i++)
 					{
-						if (parentElement.ElementType == QueryElementType.SetOperator)
-						{
-							isUnionAll = ((SqlSetOperator)parentElement).Operation == SetOperation.UnionAll;
-						}
-						else if (parentElement.ElementType == QueryElementType.SqlQuery)
-						{
-							var parentQuery = (SelectQuery)parentElement;
-							isUnionAll = parentQuery.HasSetOperators &&
-							                  parentQuery.SetOperators[0].Operation == SetOperation.UnionAll;
-						}
-					}
+						var currentOperator = sc.SetOperators[i];
+						var currentQuery    = currentOperator.SelectQuery;
 
-					return isUnionAll;
-				},
+						if (currentOperator.Operation == SetOperation.Union)
+						{
+							if (!prevQuery.Select.HasModifier && !prevQuery.OrderBy.IsEmpty)
+							{
+								prevQuery.OrderBy.Items.Clear();
+							}
+
+							if (!currentQuery.Select.HasModifier && !currentQuery.OrderBy.IsEmpty)
+							{
+								currentQuery.OrderBy.Items.Clear();
+							}
+						}
+						else 
+						{
+							if (!prevQuery.OrderBy.IsEmpty)
+							{
+								wrap.Add(prevQuery);
+							}
+
+							if (!currentQuery.OrderBy.IsEmpty)
+							{
+								wrap.Add(currentQuery);
+							}
+						}
+
+						prevQuery = currentOperator.SelectQuery;
+					}
+				}
+			});
+
+			return QueryHelper.WrapQuery(
+				queriesToWrap,
+				statement,
+				static (wrap, q, parentElement) => wrap.Contains(q),
 				null,
 				allowMutation: true,
 				withStack: true);
@@ -159,16 +177,16 @@ namespace LinqToDB.SqlProvider
 		}
 
 		protected virtual SqlStatement FixSetOperationNulls(SqlStatement statement)
-		{
+							{
 			statement.VisitParentFirst(static e =>
-			{
+								{
 				if (e.ElementType == QueryElementType.SqlQuery)
-				{
+		{
 					var query = (SelectQuery)e;
 					if (query.HasSetOperators)
-					{
+			{
 						for (int i = 0; i < query.Select.Columns.Count; i++)
-						{
+				{
 							var column     = query.Select.Columns[i];
 							var columnExpr = column.Expression;
 
@@ -181,7 +199,7 @@ namespace LinqToDB.SqlProvider
 								CorrelateNullValueTypes(ref otherExpr, columnExpr);
 
 								otherColumn.Expression = otherExpr;
-							}
+								}
 
 							column.Expression = columnExpr;
 						}
@@ -194,13 +212,62 @@ namespace LinqToDB.SqlProvider
 			return statement;
 		}
 
+		bool FixRootSelect(SqlStatement statement)
+		{
+			if (statement.SelectQuery is {} query         &&
+				query.Select.HasModifier == false         &&
+				query.DoNotRemove        == false         &&
+				query.QueryName is null                   &&
+				query.Where.  IsEmpty                     &&
+				query.GroupBy.IsEmpty                     &&
+				query.Having. IsEmpty                     &&
+				query.OrderBy.IsEmpty                     &&
+				query.From.Tables is { Count : 1 } tables &&
+				tables[0].Source  is SelectQuery   child  &&
+				tables[0].Joins.Count      == 0           &&
+				child.DoNotRemove          == false       &&
+				query.Select.Columns.Count == child.Select.Columns.Count)
+			{
+				for (var i = 0; i < query.Select.Columns.Count; i++)
+				{
+					var pc = query.Select.Columns[i];
+					var cc = child.Select.Columns[i];
+
+					if (pc.Expression != cc)
+						return false;
+				}
+
+				if (statement is SqlSelectStatement)
+				{
+					if (statement.SelectQuery.SqlQueryExtensions != null)
+						(child.SqlQueryExtensions ??= new()).AddRange(statement.SelectQuery.SqlQueryExtensions);
+					statement.SelectQuery = child;
+				}
+				else
+				{
+					var dic = new Dictionary<ISqlExpression,ISqlExpression>(query.Select.Columns.Count + 1)
+					{
+						{ statement.SelectQuery, child }
+					};
+
+					foreach (var pc in query.Select.Columns)
+						dic.Add(pc, pc.Expression);
+
+					statement.Walk(WalkOptions.Default, dic, static (d, ex) => d.TryGetValue(ex, out var e) ? e : ex);
+				}
+
+				return true;
+			}
+
+			return false;
+		}
 
 		//TODO: move tis to standard optimizer
 		protected virtual SqlStatement OptimizeUpdateSubqueries(SqlStatement statement)
 		{
 			if (statement is SqlUpdateStatement updateStatement)
 			{
-				foreach (var setItem in updateStatement.Update.Items) 
+				foreach (var setItem in updateStatement.Update.Items)
 				{
 					if (setItem.Expression is SelectQuery q)
 					{
@@ -308,7 +375,7 @@ namespace LinqToDB.SqlProvider
 					var ordered = TopoSorting.TopoSort(cteHolder.WriteableValue.Keys, cteHolder, static (cteHolder, i) => cteHolder.WriteableValue![i]).ToList();
 
 					Utils.MakeUniqueNames(ordered, null, static (n, a) => !ReservedWords.IsReserved(n), static c => c.Name, static (c, n, a) => c.Name = n,
-						static c => c.Name.IsNullOrEmpty() ? "CTE_1" : c.Name, StringComparer.OrdinalIgnoreCase);
+						static c => string.IsNullOrEmpty(c.Name) ? "CTE_1" : c.Name, StringComparer.OrdinalIgnoreCase);
 
 					select.With = new SqlWithClause();
 					select.With.Clauses.AddRange(ordered);
@@ -337,7 +404,7 @@ namespace LinqToDB.SqlProvider
 					// we interested in modifying only expressions which have parameters
 					if (HasParameters(expr))
 					{
-						if (expr.Expr.IsNullOrEmpty() || expr.Parameters.Length == 0)
+						if (string.IsNullOrEmpty(expr.Expr) || expr.Parameters.Length == 0)
 							return expr;
 
 						var newExpressions = new List<ISqlExpression>();
@@ -1391,8 +1458,8 @@ namespace LinqToDB.SqlProvider
 		protected virtual ISqlPredicate OptimizeRowInList(SqlPredicate.InList predicate)
 		{
 			if (!SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.In))
-			{			
-				var left    = predicate.Expr1; 
+			{
+				var left    = predicate.Expr1;
 				var op      = predicate.IsNot ? SqlPredicate.Operator.NotEqual : SqlPredicate.Operator.Equal;
 				var isOr    = !predicate.IsNot;
 				var rewrite = new SqlSearchCondition();
@@ -1421,14 +1488,14 @@ namespace LinqToDB.SqlProvider
 		protected ISqlPredicate RowComparisonFallback(SqlPredicate.Operator op, SqlRow row1, SqlRow row2, EvaluationContext context)
 		{
 			var rewrite = new SqlSearchCondition();
-						
+
 			if (op is SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual)
-			{			
+			{
 				// (a1, a2) =  (b1, b2) => a1 =  b1 and a2 = b2
 				// (a1, a2) <> (b1, b2) => a1 <> b1 or  a2 <> b2
 				bool isOr = op == SqlPredicate.Operator.NotEqual;
-				var compares = row1.Values.Zip(row2.Values, (a, b) => 
-				{					
+				var compares = row1.Values.Zip(row2.Values, (a, b) =>
+				{
 					// There is a trap here, neither `a` nor `b` should be a constant null value,
 					// because ExprExpr reduces `a == null` to `a is null`,
 					// which is not the same and not equivalent to the Row expression.
@@ -1473,8 +1540,8 @@ namespace LinqToDB.SqlProvider
 				if (row1.Values.Length != 2 || row2.Values.Length != 2)
 					throw new LinqException("Unsupported SqlRow conversion from operator: " + op);
 
-				rewrite.Conditions.Add(new SqlCondition(false, new SqlPredicate.ExprExpr(row1.Values[0], SqlPredicate.Operator.LessOrEqual, row2.Values[1], withNull: false))); 
-				rewrite.Conditions.Add(new SqlCondition(false, new SqlPredicate.ExprExpr(row2.Values[0], SqlPredicate.Operator.LessOrEqual, row1.Values[1], withNull: false))); 
+				rewrite.Conditions.Add(new SqlCondition(false, new SqlPredicate.ExprExpr(row1.Values[0], SqlPredicate.Operator.LessOrEqual, row2.Values[1], withNull: false)));
+				rewrite.Conditions.Add(new SqlCondition(false, new SqlPredicate.ExprExpr(row2.Values[0], SqlPredicate.Operator.LessOrEqual, row1.Values[1], withNull: false)));
 				*/
 
 				return rewrite;
@@ -1513,6 +1580,10 @@ namespace LinqToDB.SqlProvider
 				case QueryElementType.SqlValue:
 				{
 					var value = (SqlValue)element;
+
+					if (value.Value is Sql.SqlID)
+						break;
+
 					if (visitor.Context.MappingSchema != null)
 					{
 						// TODO:
@@ -1520,6 +1591,7 @@ namespace LinqToDB.SqlProvider
 						// as currently we cannot change ValueConverter signatures, we use pre-created instance of type wrapper
 						//var dataType = new SqlDataType(value.ValueType);
 						_typeWrapper.Type = value.ValueType;
+
 						if (!visitor.Context.MappingSchema.ValueToSqlConverter.CanConvert(_typeWrapper, value.Value))
 						{
 							// we cannot generate SQL literal, so just convert to parameter
@@ -1926,8 +1998,8 @@ namespace LinqToDB.SqlProvider
 					return ConvertConvertion(func);
 
 
-				case "$ToLower$": return new SqlFunction(func.SystemType, "Lower", func.IsAggregate, func.IsPure, func.Precedence, func.Parameters);
-				case "$ToUpper$": return new SqlFunction(func.SystemType, "Upper", func.IsAggregate, func.IsPure, func.Precedence, func.Parameters);
+				case "$ToLower$": return new SqlFunction(func.SystemType, "Lower",   func.IsAggregate, func.IsPure, func.Precedence, func.Parameters);
+				case "$ToUpper$": return new SqlFunction(func.SystemType, "Upper",   func.IsAggregate, func.IsPure, func.Precedence, func.Parameters);
 				case "$Replace$": return new SqlFunction(func.SystemType, "Replace", func.IsAggregate, func.IsPure, func.Precedence, func.Parameters);
 
 			}
@@ -2072,7 +2144,7 @@ namespace LinqToDB.SqlProvider
 				case QueryElementType.ExprExprPredicate:
 				{
 					var exprExpr = (SqlPredicate.ExprExpr)predicate;
-					var reduced = exprExpr.Reduce(visitor.Context.OptimizationContext.Context);
+					var reduced  = exprExpr.Reduce(visitor.Context.OptimizationContext.Context);
 
 					if (!ReferenceEquals(reduced, exprExpr))
 					{
@@ -2615,8 +2687,8 @@ namespace LinqToDB.SqlProvider
 					throw new LinqToDBException("Query can't be translated to UPDATE Statement.");
 
 				// we have to ensure that clone do not contain tableToUpdate
-				var objectTree  = new Dictionary<IQueryElement, IQueryElement>();
-				var clonedQuery = updateStatement.SelectQuery.Clone(objectTree);
+				var objectTree   = new Dictionary<IQueryElement, IQueryElement>();
+				var clonedQuery  = updateStatement.SelectQuery.Clone(objectTree);
 
 				var tableToUpdateMapping = new Dictionary<IQueryElement,IQueryElement>(objectTree);
 				// remove mapping from updatable table
@@ -2744,59 +2816,59 @@ namespace LinqToDB.SqlProvider
 
 				if (processUniversalUpdate)
 				{
-					foreach (var item in updateStatement.Update.Items)
+				foreach (var item in updateStatement.Update.Items)
+				{
+					var ex = item.Expression!.Convert(objectTree, static (v, expr) =>
+						v.Context.TryGetValue(expr, out var newValue)
+							? newValue
+							: expr);
+
+					var usedSources = new HashSet<ISqlTableSource>();
+					QueryHelper.GetUsedSources(ex, usedSources);
+					usedSources.Remove(tableToUpdate);
+					if (objectTree.TryGetValue(tableToUpdate, out var replaced))
+						usedSources.Remove((ISqlTableSource)replaced);
+
+					if (usedSources.Count > 0)
 					{
-						var ex = item.Expression!.Convert(objectTree, static (v, expr) =>
-							v.Context.TryGetValue(expr, out var newValue)
-								? newValue
-								: expr);
+						// it means that update value column depends on other tables and we have to generate more complicated query
 
-						var usedSources = new HashSet<ISqlTableSource>();
-						QueryHelper.GetUsedSources(ex, usedSources);
-						usedSources.Remove(tableToUpdate);
-						if (objectTree.TryGetValue(tableToUpdate, out var replaced))
-							usedSources.Remove((ISqlTableSource)replaced);
+						var innerQuery = clonedQuery.Clone(static e => e is not SqlTable);
 
-						if (usedSources.Count > 0)
-						{
-							// it means that update value column depends on other tables and we have to generate more complicated query
+						innerQuery.ParentSelect = sql;
 
-							var innerQuery = clonedQuery.Clone(static e => e is not SqlTable);
+						innerQuery.Select.Columns.Clear();
 
-							innerQuery.ParentSelect = sql;
-
-							innerQuery.Select.Columns.Clear();
-
-							var remapped = ex.Convert((tableToUpdateMapping, innerQuery, objectTree),
-								static (v, e) =>
+						var remapped = ex.Convert((tableToUpdateMapping, innerQuery, objectTree),
+							static (v, e) =>
+							{
+								if (v.Context.tableToUpdateMapping.TryGetValue(e, out var n))
 								{
-									if (v.Context.tableToUpdateMapping.TryGetValue(e, out var n))
-									{
-										e = n;
-										v.Context.objectTree.Remove(e);
-										v.Context.objectTree.Add(e, n);
-									}
+									e = n;
+									v.Context.objectTree.Remove(e);
+									v.Context.objectTree.Add(e, n);
+								}
 
-									if (e is SqlColumn clmn && clmn.Parent != v.Context.innerQuery || e is SqlField)
-									{
+								if (e is SqlColumn clmn && clmn.Parent != v.Context.innerQuery || e is SqlField)
+								{
 										var column = QueryHelper.NeedColumnForExpression(v.Context.innerQuery,
 											(ISqlExpression)e, false);
-										if (column != null)
-										{
-											v.Context.objectTree.Remove(e);
-											v.Context.objectTree.Add(e, column);
-											return column;
-										}
+									if (column != null)
+									{
+										v.Context.objectTree.Remove(e);
+										v.Context.objectTree.Add(e, column);
+										return column;
 									}
+								}
 
-									return e;
+								return e;
 
-								});
+							});
 
-							innerQuery.Select.AddNew(remapped);
+						innerQuery.Select.AddNew(remapped);
 							innerQuery.RemoveNotUnusedColumns();
-							ex = innerQuery;
-						}
+						ex = innerQuery;
+					}
 
 						item.Column = tableToUpdate[QueryHelper.GetUnderlyingField(item.Column)!.Name]
 						              ?? throw new LinqException(
@@ -2806,16 +2878,16 @@ namespace LinqToDB.SqlProvider
 					}
 				}
 
-				if (updateStatement.Output != null)
-				{
-					newUpdateStatement.Output = updateStatement.Output.Convert(objectTree, static (v, e) =>
+					if (updateStatement.Output != null)
 					{
-						if (v.Context.TryGetValue(e, out var newElement))
-							return newElement;
+						newUpdateStatement.Output = updateStatement.Output.Convert(objectTree, static (v, e) =>
+						{
+							if (v.Context.TryGetValue(e, out var newElement))
+								return newElement;
 
-						return e;
-					});
-				}
+							return e;
+						});
+					}
 
 				newUpdateStatement.Update.Table = updateStatement.Update.Table != null ? tableToUpdate : null;
 				newUpdateStatement.With         = updateStatement.With;
@@ -3534,8 +3606,7 @@ namespace LinqToDB.SqlProvider
 						var takeValue = takeExpr.EvaluateExpression(optimizationContext.Context)!;
 						var takeParameter = new SqlParameter(new DbDataType(takeValue.GetType()), "take", takeValue)
 						{
-							IsQueryParameter = !QueryHelper.NeedParameterInlining(takeExpr) &&
-							                   Configuration.Linq.ParameterizeTakeSkip
+							IsQueryParameter = !QueryHelper.NeedParameterInlining(takeExpr) && Configuration.Linq.ParameterizeTakeSkip
 						};
 						takeExpr = takeParameter;
 					}
@@ -3556,8 +3627,7 @@ namespace LinqToDB.SqlProvider
 						var skipValue = skipExpr.EvaluateExpression(optimizationContext.Context)!;
 						var skipParameter = new SqlParameter(new DbDataType(skipValue.GetType()), "skip", skipValue)
 						{
-							IsQueryParameter = !QueryHelper.NeedParameterInlining(skipExpr) &&
-							                   Configuration.Linq.ParameterizeTakeSkip
+							IsQueryParameter = !QueryHelper.NeedParameterInlining(skipExpr) && Configuration.Linq.ParameterizeTakeSkip
 						};
 						skipExpr = skipParameter;
 					}

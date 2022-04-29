@@ -59,7 +59,7 @@ namespace LinqToDB.SchemaProvider
 		/// <summary>
 		/// Gets .net type for parameter.
 		/// </summary>
-		public Type     SystemType           { get; set; } = null!;
+		public Type?    SystemType           { get; set; }
 		/// <summary>
 		/// Gets parameter type as <see cref="DataType"/> enumeration value.
 		/// </summary>

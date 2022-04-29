@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.Common;
 using System.Linq;
 using System.Data;
 
@@ -31,8 +30,8 @@ namespace LinqToDB.DataProvider.SQLite
 
 		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			var tables = ((DbConnection)dataConnection.Connection).GetSchema("Tables");
-			var views =  ((DbConnection)dataConnection.Connection).GetSchema("Views");
+			var tables = dataConnection.Connection.GetSchema("Tables");
+			var views =  dataConnection.Connection.GetSchema("Views");
 
 			return Enumerable
 				.Empty<TableInfo>()
@@ -49,7 +48,7 @@ namespace LinqToDB.DataProvider.SQLite
 						CatalogName     = catalog,
 						SchemaName      = schema,
 						TableName       = name,
-						IsDefaultSchema = schema.IsNullOrEmpty(),
+						IsDefaultSchema = string.IsNullOrEmpty(schema),
 					}
 				)
 				.Concat(
@@ -63,7 +62,7 @@ namespace LinqToDB.DataProvider.SQLite
 						CatalogName     = catalog,
 						SchemaName      = schema,
 						TableName       = name,
-						IsDefaultSchema = schema.IsNullOrEmpty(),
+						IsDefaultSchema = string.IsNullOrEmpty(schema),
 						IsView          = true,
 					}
 				).ToList();
@@ -72,7 +71,7 @@ namespace LinqToDB.DataProvider.SQLite
 		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection,
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
-			var dbConnection = (DbConnection)dataConnection.Connection;
+			var dbConnection = dataConnection.Connection;
 			var pks          = dbConnection.GetSchema("IndexColumns");
 			var idxs         = dbConnection.GetSchema("Indexes");
 
@@ -94,7 +93,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			var cs = ((DbConnection)dataConnection.Connection).GetSchema("Columns");
+			var cs = dataConnection.Connection.GetSchema("Columns");
 
 			return
 			(
@@ -122,7 +121,7 @@ namespace LinqToDB.DataProvider.SQLite
 		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection,
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
-			var fks = ((DbConnection)dataConnection.Connection).GetSchema("ForeignKeys");
+			var fks = dataConnection.Connection.GetSchema("ForeignKeys");
 
 			var result =
 			(
@@ -155,11 +154,15 @@ namespace LinqToDB.DataProvider.SQLite
 
 		protected override string GetDatabaseName(DataConnection dbConnection)
 		{
-			return ((DbConnection)dbConnection.Connection).DataSource;
+			return dbConnection.Connection.DataSource;
 		}
 
 		protected override DataType GetDataType(string? dataType, string? columnType, long? length, int? prec, int? scale)
 		{
+			// note that sqlite doesn't have types (it has facets) so type name will contain anything
+			// user specified in create table statement
+			// here we just map some well-known database types (non-sqlite specific) but this list
+			// will never be complete
 			return dataType switch
 			{
 				"smallint"         => DataType.Int16,
@@ -189,6 +192,7 @@ namespace LinqToDB.DataProvider.SQLite
 				"image"            => DataType.Image,
 				"general"          => DataType.VarBinary,
 				"oleobject"        => DataType.VarBinary,
+				"object"           => DataType.Variant,
 				"varchar"          => DataType.VarChar,
 				"nvarchar"         => DataType.NVarChar,
 				"memo"             => DataType.Text,
@@ -217,6 +221,7 @@ namespace LinqToDB.DataProvider.SQLite
 		{
 			return dataType switch
 			{
+				"object"    => typeof(object),
 				"datetime2" => typeof(DateTime),
 				_ => base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale, options),
 			};

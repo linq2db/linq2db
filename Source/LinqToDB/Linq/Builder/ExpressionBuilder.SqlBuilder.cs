@@ -7,6 +7,8 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading.Tasks;
+using System.Threading;
+using System.Runtime.CompilerServices;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -18,8 +20,6 @@ namespace LinqToDB.Linq.Builder
 	using Mapping;
 	using Reflection;
 	using SqlQuery;
-	using System.Threading;
-	using System.Runtime.CompilerServices;
 
 	partial class ExpressionBuilder
 	{
@@ -231,7 +231,7 @@ namespace LinqToDB.Linq.Builder
 			return ctx;
 		}
 
-		internal ISqlExpression SubQueryToSql(IBuildContext context, MethodCallExpression expression)
+		public ISqlExpression SubQueryToSql(IBuildContext context, MethodCallExpression expression)
 		{
 			var subQueryCtx = GetSubQueryContext(context, expression);
 			var sequence    = subQueryCtx.Context;
@@ -288,7 +288,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region IsSubQuery
 
-		internal bool IsSubQuery(IBuildContext context, MethodCallExpression call)
+		public bool IsSubQuery(IBuildContext context, MethodCallExpression call)
 		{
 			var isAggregate = call.IsAggregate(MappingSchema);
 
@@ -317,9 +317,6 @@ namespace LinqToDB.Linq.Builder
 						if (mc.IsAssociation(MappingSchema))
 							return true;
 
-						if (IsGetTable(mc.Method))
-							break;
-
 						return GetTableFunctionAttribute(mc.Method) != null;
 					}
 
@@ -330,11 +327,6 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			return false;
-		}
-
-		bool IsGetTable(MethodInfo mi)
-		{
-			return mi.Name == "GetTable" && (mi.DeclaringType == typeof(DataConnection) || mi.DeclaringType == typeof(DataExtensions));
 		}
 
 		bool IsSubQuerySource(IBuildContext context, Expression? expr)
@@ -401,7 +393,7 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-		internal Expression ConvertExpression(Expression expression)
+		public Expression ConvertExpression(Expression expression)
 		{
 			return (_convertExpressionTransformer ??= TransformInfoVisitor<ExpressionBuilder>.Create(this, static (ctx, e) => ctx.ConvertExpressionTransformer(e)))
 				.Transform(expression);
@@ -1268,6 +1260,9 @@ namespace LinqToDB.Linq.Builder
 						return sql;
 					break;
 				}
+//
+//				case ExpressionType.New when expression.Type == typeof(Sql.SqlID) :
+//					return new SqlValue(typeof(Sql.SqlID), expression.EvaluateExpression());
 			}
 
 			if (expression.Type == typeof(bool) && _convertedPredicates.Add(expression))
@@ -1304,13 +1299,13 @@ namespace LinqToDB.Linq.Builder
 			if (attr.InlineParameters)
 				DataContext.InlineParameters = true;
 
-			var sqlExpression =
-				attr.GetExpression(
-					(this_: this, context: context),
-					DataContext,
-					context!.SelectQuery,
-					mc,
-					static (context, e, descriptor) => context.this_.ConvertToExtensionSql(context.context, e, descriptor));
+			var sqlExpression = attr.GetExpression(
+				(this_: this, context),
+				DataContext,
+				context!.SelectQuery,
+				mc,
+				static (context, e, descriptor) => context.this_.ConvertToExtensionSql(context.context, e, descriptor));
+
 			if (sqlExpression == null)
 				throw new LinqToDBException($"Cannot convert to SQL method '{mc}'.");
 
@@ -1321,7 +1316,7 @@ namespace LinqToDB.Linq.Builder
 
 		public static ISqlExpression ConvertToSqlConvertible(Expression expression)
 		{
-			var l = Expression.Lambda<Func<IToSqlConverter>>(expression);
+			var l = Expression.Lambda<Func<IToSqlConverter>>(Expression.Convert(expression, typeof(IToSqlConverter)));
 			var f = l.CompileExpression();
 			var c = f();
 
@@ -1492,9 +1487,12 @@ namespace LinqToDB.Linq.Builder
 
 						predicate = ConvertInPredicate(context!, expr);
 					}
-					else if (e.Method.Name == "ContainsKey" && typeof(IDictionary<,>).IsSameOrParentOf(e.Method.DeclaringType!))
+					else if (e.Method.Name == "ContainsKey" &&
+						(typeof(IDictionary<,>).IsSameOrParentOf(e.Method.DeclaringType!) ||
+						 typeof(IReadOnlyDictionary<,>).IsSameOrParentOf(e.Method.DeclaringType!)))
 					{
-						var args = e.Method.DeclaringType!.GetGenericArguments(typeof(IDictionary<,>))!;
+						var type = typeof(IDictionary<,>).IsSameOrParentOf(e.Method.DeclaringType!) ? typeof(IDictionary<,>) : typeof(IReadOnlyDictionary<,>);
+						var args = e.Method.DeclaringType!.GetGenericArguments(type)!;
 						var minf = EnumerableMethods
 								.First(static m => m.Name == "Contains" && m.GetParameters().Length == 2)
 								.MakeGenericMethod(args[0]);
@@ -1506,7 +1504,7 @@ namespace LinqToDB.Linq.Builder
 
 						predicate = ConvertInPredicate(context!, expr);
 					}
-
+ 
 #if NETFRAMEWORK
 					else if (e.Method == ReflectionHelper.Functions.String.Like11) predicate = ConvertLikePredicate(context!, e);
 					else if (e.Method == ReflectionHelper.Functions.String.Like12) predicate = ConvertLikePredicate(context!, e);
@@ -2106,7 +2104,7 @@ namespace LinqToDB.Linq.Builder
 			return condition;
 		}
 
-		internal ISqlPredicate? ConvertNewObjectComparison(IBuildContext context, ExpressionType nodeType, Expression left, Expression right)
+		public ISqlPredicate? ConvertNewObjectComparison(IBuildContext context, ExpressionType nodeType, Expression left, Expression right)
 		{
 			left  = FindExpression(left);
 			right = FindExpression(right);
@@ -2383,7 +2381,6 @@ namespace LinqToDB.Linq.Builder
 
 			return null;
 		}
-	
 
 		#endregion
 
@@ -2422,7 +2419,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region MakeIsPredicate
 
-		internal ISqlPredicate MakeIsPredicate(TableBuilder.TableContext table, Type typeOperand)
+		public ISqlPredicate MakeIsPredicate(TableBuilder.TableContext table, Type typeOperand)
 		{
 			if (typeOperand == table.ObjectType)
 			{
@@ -2443,7 +2440,7 @@ namespace LinqToDB.Linq.Builder
 			return MakeIsPredicate(table, table, table.InheritanceMapping, typeOperand, static (table, name) => table.SqlTable[name] ?? throw new LinqException($"Field {name} not found in table {table.SqlTable}"));
 		}
 
-		internal ISqlPredicate MakeIsPredicate<TContext>(
+		public ISqlPredicate MakeIsPredicate<TContext>(
 			TContext                              getSqlContext,
 			IBuildContext                         context,
 			List<InheritanceMapping>              inheritanceMapping,
@@ -2614,7 +2611,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region Search Condition Builder
 
-		internal void BuildSearchCondition(IBuildContext? context, Expression expression, List<SqlCondition> conditions)
+		public void BuildSearchCondition(IBuildContext? context, Expression expression, List<SqlCondition> conditions)
 		{
 			expression = GetRemoveNullPropagationTransformer(true).Transform(expression);
 
@@ -2844,7 +2841,7 @@ namespace LinqToDB.Linq.Builder
 			return MappingSchema.GetAttribute<Sql.ExpressionAttribute>(member.ReflectedType!, member, static a => a.Configuration);
 		}
 
-		internal Sql.TableFunctionAttribute? GetTableFunctionAttribute(MemberInfo member)
+		public Sql.TableFunctionAttribute? GetTableFunctionAttribute(MemberInfo member)
 		{
 			return MappingSchema.GetAttribute<Sql.TableFunctionAttribute>(member.ReflectedType!, member, static a => a.Configuration);
 		}
@@ -3082,7 +3079,7 @@ namespace LinqToDB.Linq.Builder
 				if (sql.Length > 0)
 				{
 					// Handling case when all columns are aggregates, it cause query to produce only single record and we have to include at least one aggregation in Select statement.
-					// 
+					//
 					var allAggregate = sql.All(static s => QueryHelper.IsAggregationOrWindowFunction(s.Sql));
 					if (allAggregate)
 					{
@@ -3148,7 +3145,7 @@ namespace LinqToDB.Linq.Builder
 			idx = null;
 			return null;
 		}
-		
+
 
 		public Tuple<CteClause, IBuildContext?> BuildCte(Expression cteExpression, Func<CteClause?, Tuple<CteClause, IBuildContext?>> buildFunc)
 		{
@@ -3197,8 +3194,8 @@ namespace LinqToDB.Linq.Builder
 		{
 			_preambles ??= new();
 			_preambles.Add(
-				Tuple.Create<object?, 
-					Func<object?, IDataContext, Expression, object?[]?, object?>, 
+				Tuple.Create<object?,
+					Func<object?, IDataContext, Expression, object?[]?, object?>,
 					Func<object?, IDataContext, Expression, object?[]?, CancellationToken, Task<object?>>
 				>
 				(
@@ -3215,7 +3212,7 @@ namespace LinqToDB.Linq.Builder
 
 		private Stack<Type[]>? _disabledFilters;
 
-		public void AddDisabledQueryFilters(Type[] disabledFilters)
+		public void PushDisabledQueryFilters(Type[] disabledFilters)
 		{
 			if (_disabledFilters == null)
 				_disabledFilters = new Stack<Type[]>();
@@ -3232,12 +3229,30 @@ namespace LinqToDB.Linq.Builder
 			return Array.IndexOf(filter, entityType) >= 0;
 		}
 
-		public void RemoveDisabledFilter()
+		public void PopDisabledFilter()
 		{
 			if (_disabledFilters == null)
 				throw new InvalidOperationException();
 
 			_ = _disabledFilters.Pop();
+		}
+
+		#endregion
+
+		#region Query Hint Stack
+
+		List<SqlQueryExtension>? _sqlQueryExtensionStack;
+
+		public void PushSqlQueryExtension(SqlQueryExtension extension)
+		{
+			(_sqlQueryExtensionStack ??= new()).Add(extension);
+		}
+
+		public void PopSqlQueryExtension(SqlQueryExtension extension)
+		{
+			if (_sqlQueryExtensionStack == null || _sqlQueryExtensionStack.Count > 0)
+				throw new InvalidOperationException();
+			_sqlQueryExtensionStack.RemoveAt(_sqlQueryExtensionStack.Count - 1);
 		}
 
 		#endregion

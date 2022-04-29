@@ -1,32 +1,27 @@
-﻿namespace LinqToDB.DataProvider.Access
+﻿using System;
+using System.Data.Common;
+using System.Text;
+
+namespace LinqToDB.DataProvider.Access
 {
-	using System.Data;
-	using System.Text;
-	using LinqToDB.SqlQuery;
+	using SqlQuery;
 	using Mapping;
 	using SqlProvider;
 
 	class AccessODBCSqlBuilder : AccessSqlBuilderBase
 	{
-		private readonly AccessODBCDataProvider? _provider;
-
-		public AccessODBCSqlBuilder(
-			AccessODBCDataProvider? provider,
-			MappingSchema           mappingSchema,
-			ISqlOptimizer           sqlOptimizer,
-			SqlProviderFlags        sqlProviderFlags)
-			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
+		public AccessODBCSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
-			_provider = provider;
 		}
 
-			// remote context
-		public AccessODBCSqlBuilder(
-			MappingSchema    mappingSchema,
-			ISqlOptimizer    sqlOptimizer,
-			SqlProviderFlags sqlProviderFlags)
-			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
+		AccessODBCSqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
 		{
+		}
+
+		protected override ISqlBuilder CreateSqlBuilder()
+		{
+			return new AccessODBCSqlBuilder(this);
 		}
 
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
@@ -42,21 +37,16 @@
 			return base.Convert(sb, value, convertType);
 		}
 
-		protected override ISqlBuilder CreateSqlBuilder()
+		protected override string? GetProviderTypeName(IDataContext dataContext, DbParameter parameter)
 		{
-			return new AccessODBCSqlBuilder(_provider, MappingSchema, SqlOptimizer, SqlProviderFlags);
-		}
-
-		protected override string? GetProviderTypeName(IDbDataParameter parameter)
-		{
-			if (_provider != null)
+			if (DataProvider is AccessODBCDataProvider provider)
 			{
-				var param = _provider.TryGetProviderParameter(parameter, MappingSchema);
+				var param = provider.TryGetProviderParameter(dataContext, parameter);
 				if (param != null)
-					return _provider.Adapter.GetDbType(param).ToString();
+					return provider.Adapter.GetDbType(param).ToString();
 			}
 
-			return base.GetProviderTypeName(parameter);
+			return base.GetProviderTypeName(dataContext, parameter);
 		}
 
 		protected override void BuildColumnExpression(SelectQuery? selectQuery, ISqlExpression expr, string? alias, ref bool addAlias)

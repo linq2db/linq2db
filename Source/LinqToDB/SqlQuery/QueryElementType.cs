@@ -71,6 +71,7 @@
 
 		GroupingSet,
 
-		Comment
+		Comment,
+		SqlID
 	}
 }

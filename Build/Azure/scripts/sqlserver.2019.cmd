@@ -13,23 +13,18 @@ if %errorlevel% NEQ 0 goto repeat
 echo "SQL Server is operational"
 
 docker exec mssql sqlcmd -S localhost -U sa -P Password12! -Q "SELECT @@Version"
-echo "create TestData"
-docker exec mssql sqlcmd -S localhost -U sa -P Password12! -Q "CREATE DATABASE TestData;"
-echo "create TestData2019"
-REM both db and catalog are case-sensitive
-docker exec mssql sqlcmd -S localhost -U sa -P Password12! -Q "CREATE DATABASE TestData2019 COLLATE Latin1_General_CS_AS;"
-echo "create TestData2019SA"
-docker exec mssql sqlcmd -S localhost -U sa -P Password12! -Q "CREATE DATABASE TestData2019SA;"
-echo "create TestData2019FEC"
-docker exec mssql sqlcmd -S localhost -U sa -P Password12! -Q "CREATE DATABASE TestData2019FEC;"
-echo "create TestDataContained"
-docker exec mssql sqlcmd -S localhost -U sa -P Password12! -Q "sp_configure 'contained database authentication', 1;"
-docker exec mssql sqlcmd -S localhost -U sa -P Password12! -Q "RECONFIGURE;"
-docker exec mssql sqlcmd -S localhost -U sa -P Password12! -Q "CREATE DATABASE TestDataContained CONTAINMENT = PARTIAL;"
-echo "copy Northwind"
-docker cp scripts/northwind.sql mssql:northwind.sql
-echo "create Northwind"
-docker exec mssql sqlcmd -S localhost -U sa -P Password12! -i northwind.sql
+
+docker exec mssql sqlcmd -S localhost -U sa -P Password12! -Q "CREATE DATABASE TestData COLLATE Latin1_General_CS_AS;"
+docker exec mssql sqlcmd -S localhost -U sa -P Password12! -Q "CREATE DATABASE TestDataMS COLLATE Latin1_General_CS_AS;"
+
+REM FTS required
+goto:eof
+docker exec mssql sqlcmd -S localhost -U sa -P Password12! -Q "CREATE DATABASE Northwind;"
+docker exec mssql sqlcmd -S localhost -U sa -P Password12! -Q "CREATE DATABASE NorthwindMS;"
+docker cp northwind.sql mssql:northwind.sql
+docker exec mssql sqlcmd -S localhost -U sa -P Password12! -d Northwind -i northwind.sql
+docker exec mssql sqlcmd -S localhost -U sa -P Password12! -d NorthwindMS -i northwind.sql
+
 goto:eof
 
 :fail

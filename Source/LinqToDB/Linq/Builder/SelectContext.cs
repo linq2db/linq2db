@@ -25,7 +25,7 @@ namespace LinqToDB.Linq.Builder
 		#region Init
 
 #if DEBUG
-		public string _sqlQueryText => SelectQuery == null ? "" : SelectQuery.SqlText;
+		public string SqlQueryText => SelectQuery == null ? "" : SelectQuery.SqlText;
 		public string Path => this.GetPath();
 		public MethodCallExpression? Debug_MethodCall;
 #endif
@@ -993,7 +993,7 @@ namespace LinqToDB.Linq.Builder
 
 		public virtual void SetAlias(string? alias)
 		{
-			if (!alias.IsNullOrEmpty() && !alias.Contains('<') && SelectQuery.Select.From.Tables.Count == 1)
+			if (!string.IsNullOrEmpty(alias) && !alias!.Contains('<') && SelectQuery.Select.From.Tables.Count == 1)
 			{
 				SelectQuery.Select.From.Tables[0].Alias = alias;
 			}

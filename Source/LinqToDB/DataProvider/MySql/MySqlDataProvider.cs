@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -11,26 +12,20 @@ namespace LinqToDB.DataProvider.MySql
 	using Mapping;
 	using SqlProvider;
 
-	public class MySqlDataProvider : DynamicDataProviderBase<MySqlProviderAdapter>
-	{
-		public MySqlDataProvider(string name)
-			: this(name, null)
-		{
-		}
+	class MySqlDataProviderMySqlOfficial  : MySqlDataProvider { public MySqlDataProviderMySqlOfficial()  : base(ProviderName.MySqlOfficial)  {} }
+	class MySqlDataProviderMySqlConnector : MySqlDataProvider { public MySqlDataProviderMySqlConnector() : base(ProviderName.MySqlConnector) {} }
 
-		protected MySqlDataProvider(string name, MappingSchema? mappingSchema)
-			: base(
-				  name,
-				  mappingSchema != null
-					? new MappingSchema(mappingSchema, MySqlProviderAdapter.GetInstance(name).MappingSchema)
-					: GetMappingSchema(name, MySqlProviderAdapter.GetInstance(name).MappingSchema),
-				  MySqlProviderAdapter.GetInstance(name))
+	public abstract class MySqlDataProvider : DynamicDataProviderBase<MySqlProviderAdapter>
+	{
+		protected MySqlDataProvider(string name)
+			: base(name, GetMappingSchema(name), MySqlProviderAdapter.GetInstance(name))
 		{
 			SqlProviderFlags.IsDistinctOrderBySupported        = false;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 			SqlProviderFlags.IsDistinctSetOperationsSupported  = false;
 			SqlProviderFlags.IsUpdateFromSupported             = false;
+			SqlProviderFlags.IsNamingQueryBlockSupported       = true;
 			SqlProviderFlags.RowConstructorSupport             = RowFeature.Equality | RowFeature.Comparisons | RowFeature.CompareToSelect | RowFeature.In;
 
 			_sqlOptimizer = new MySqlSqlOptimizer(SqlProviderFlags);
@@ -69,12 +64,12 @@ namespace LinqToDB.DataProvider.MySql
 			return new MySqlSqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
 		}
 
-		private static MappingSchema GetMappingSchema(string name, MappingSchema providerSchema)
+		private static MappingSchema GetMappingSchema(string name)
 		{
 			return name switch
 			{
-				ProviderName.MySqlConnector => new MySqlMappingSchema.MySqlConnectorMappingSchema(providerSchema),
-				_                           => new MySqlMappingSchema.MySqlOfficialMappingSchema(providerSchema),
+				ProviderName.MySqlConnector => new MySqlMappingSchema.MySqlConnectorMappingSchema(),
+				_                           => new MySqlMappingSchema.MySqlOfficialMappingSchema(),
 			};
 		}
 
@@ -85,7 +80,7 @@ namespace LinqToDB.DataProvider.MySql
 			return _sqlOptimizer;
 		}
 
-		public override void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object? value)
+		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
 		{
 			// mysql.data bugs workaround
 			if (Adapter.MySqlDecimalType != null && Adapter.MySqlDecimalGetter != null && value?.GetType() == Adapter.MySqlDecimalType)
@@ -97,10 +92,17 @@ namespace LinqToDB.DataProvider.MySql
 				dataType = dataType.WithDataType(DataType.VarChar);
 			}
 
+#if NET6_0_OR_GREATER
+			if (!Adapter.IsDateOnlySupported && value is DateOnly d)
+			{
+				value = d.ToDateTime(TimeOnly.MinValue);
+			}
+#endif
+
 			base.SetParameter(dataConnection, parameter, name, dataType, value);
 		}
 
-		protected override void SetParameterType(DataConnection dataConnection, IDbDataParameter parameter, DbDataType dataType)
+		protected override void SetParameterType(DataConnection dataConnection, DbParameter parameter, DbDataType dataType)
 		{
 			// VarNumeric - mysql.data trims fractional part
 			// Date/DateTime2 - mysql.data trims time part

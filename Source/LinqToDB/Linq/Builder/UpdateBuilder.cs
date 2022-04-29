@@ -36,7 +36,7 @@ namespace LinqToDB.Linq.Builder
 				_                                           => UpdateType.Update,
 			};
 
-			var sequence         = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+			var sequence         = builder.BuildSequence(new (buildInfo, methodCall.Arguments[0]));
 			var updateStatement  = sequence.Statement as SqlUpdateStatement ?? new SqlUpdateStatement(sequence.SelectQuery);
 			var genericArguments = methodCall.Method.GetGenericArguments();
 			var outputExpression = (LambdaExpression?)methodCall.GetArgumentByName("outputExpression")?.Unwrap();
@@ -78,10 +78,11 @@ namespace LinqToDB.Linq.Builder
 					CheckAssociation(sequence);
 
 					var expr = methodCall.Arguments[1].Unwrap();
+
 					if (expr is LambdaExpression lex && lex.ReturnType == typeof(bool))
 					{
 						sequence = builder.BuildWhere(buildInfo.Parent, sequence, (LambdaExpression)methodCall.Arguments[1].Unwrap(), false);
-						expr = methodCall.Arguments[2].Unwrap();
+						expr     = methodCall.Arguments[2].Unwrap();
 					}
 
 					if (sequence.SelectQuery.Select.SkipValue != null || !sequence.SelectQuery.Select.OrderBy.IsEmpty)
@@ -186,6 +187,7 @@ namespace LinqToDB.Linq.Builder
 					var param2 = Expression.Parameter(outputType, "deleted");
 					var param3 = Expression.Parameter(outputType, "inserted");
 					var returnType = typeof(UpdateOutput<>).MakeGenericType(outputType);
+
 					return Expression.Lambda(
 						// (source, deleted, inserted) => new UpdateOutput<T> { Deleted = deleted, Inserted = inserted, }
 						Expression.MemberInit(
@@ -213,6 +215,7 @@ namespace LinqToDB.Linq.Builder
 					var param1 = Expression.Parameter(outputType, "source");
 					var param2 = Expression.Parameter(outputType, "deleted");
 					var param3 = Expression.Parameter(outputType, "inserted");
+
 					return Expression.Lambda(
 						// (source, deleted, inserted) => inserted
 						param3,
@@ -223,6 +226,7 @@ namespace LinqToDB.Linq.Builder
 				var destination = builder.BuildSequence(new BuildInfo(buildInfo, outputTable, new SelectQuery()));
 
 				outputExpression ??= BuildDefaultOutputExpression(objectType);
+
 				BuildSetterWithContext(
 					builder,
 					buildInfo,
@@ -291,12 +295,6 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 			}
-		}
-
-		protected override SequenceConvertInfo? Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-		{
-			return null;
 		}
 
 		#endregion
@@ -458,7 +456,7 @@ namespace LinqToDB.Linq.Builder
 
 			var sp  = fieldsContext.Parent;
 			var ctx = new ExpressionContext(buildInfo.Parent, fieldsContext, extract);
-			
+
 			builder.ReplaceParent(ctx, sp);
 
 			Mapping.ColumnDescriptor? columnDescriptor = null;
@@ -478,7 +476,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				var column = GetField(ext);
 				columnDescriptor = QueryHelper.GetColumnDescriptor(column);
-				setExpression    = new SqlSetExpression(column, null); 
+				setExpression    = new SqlSetExpression(column, null);
 			}
 
 			sp  = valuesContext.Parent;
@@ -491,7 +489,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				var sql   = ctx.ConvertToSql(fieldExpr, 0, ConvertFlags.Field);
 				var field = sql.Select(s => QueryHelper.GetUnderlyingField(s.Sql)).FirstOrDefault(f => f != null);
-				
+
 				if (sql.Length != 1)
 					throw new LinqException($"Expression '{extract}' can not be used as Update Field.");
 
@@ -500,11 +498,11 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		internal static void ParseSet(
-			ExpressionBuilder      builder,
-			LambdaExpression       extract,
-			MethodCallExpression   updateMethod,
-			int                    valueIndex,
-			IBuildContext          select,
+			ExpressionBuilder               builder,
+			LambdaExpression                extract,
+			MethodCallExpression            updateMethod,
+			int                             valueIndex,
+			IBuildContext                   select,
 			List<SqlSetExpression> items)
 		{
 			var ext        = extract.Body.Unwrap();
@@ -550,7 +548,7 @@ namespace LinqToDB.Linq.Builder
 			// Note: this ParseSet overload doesn't support a SqlRow value.
 			// This overload is called for a constants, e.g. `Set(x => x.Name, "Doe")`.
 			// SqlRow can't be constructed as C# values, they can only be used inside expressions, so the call
-			// `Set(x => SqlRow(x.Name, x.Age), SqlRow("Doe", 18))` 
+			// `Set(x => SqlRow(x.Name, x.Age), SqlRow("Doe", 18))`
 			// is not possible (2nd SqlRow would be called at runtime and throw).
 			// This is useless anyway, as `Set(x => x.Name, "Doe").Set(x => x.Age, 18)` generates simpler SQL anyway.
 
@@ -624,7 +622,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (updateStatement.SelectQuery.From.Tables.Count > 0 && updateStatement.SelectQuery.From.Tables[0].Source is SelectQuery)
 				{
-					var expr   = BuildExpression(null, 0, false);
+				var expr   = BuildExpression(null, 0, false);
 
 					var setColumns = new HashSet<string>();
 
@@ -651,7 +649,7 @@ namespace LinqToDB.Linq.Builder
 							columns.Add(c.Expression);
 					}
 
-					var mapper = Builder.BuildMapper<T>(expr);
+				var mapper = Builder.BuildMapper<T>(expr);
 
 					updateStatement.Output!.OutputColumns = columns;
 
@@ -664,9 +662,9 @@ namespace LinqToDB.Linq.Builder
 
 					updateStatement.Output!.OutputColumns = Sequence[0].SelectQuery.Select.Columns.Select(c => c.Expression).ToList();
 
-					QueryRunner.SetRunQuery(query, mapper);
-				}
+				QueryRunner.SetRunQuery(query, mapper);
 			}
+		}
 		}
 		#endregion
 
@@ -726,12 +724,6 @@ namespace LinqToDB.Linq.Builder
 				updateStatement.Update.Items.RemoveDuplicatesFromTail((s1, s2) => s1.Column.Equals(s2.Column));
 
 				return sequence;
-			}
-
-			protected override SequenceConvertInfo? Convert(
-				ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-			{
-				return null;
 			}
 		}
 
