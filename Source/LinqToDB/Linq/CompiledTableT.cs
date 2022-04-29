@@ -27,10 +27,10 @@ namespace LinqToDB.Linq
 
 			var result = QueryRunner.Cache<T>.QueryCache.GetOrCreate(
 				(operation: "CT", contextID, contextType, mappingSchemaID, expression: _expression, LinqOptions: dataContext.GetLinqOptions()),
-				(dataContext, lambda: _lambda),
+				(dataContext, lambda: _lambda, linqOptions: dataContext.GetLinqOptions()),
 				static (o, key, ctx) =>
 				{
-					o.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
+					o.SlidingExpiration = ctx.linqOptions.CacheSlidingExpiration;
 
 					var query = new Query<T>(ctx.dataContext, key.expression);
 
