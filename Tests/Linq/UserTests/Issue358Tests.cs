@@ -151,15 +151,13 @@ namespace Tests.UserTests
 		[Test]
 		public void Test4WithoutComparasionNullCheck([DataSources] string context)
 		{
-			using (new WithoutComparisonNullCheck())
-			using (var db = GetDataContext(context))
-			{
-				var bigintFilter = new long?[] {2};
+			using var _  = new CompareNullsAsValuesOption(false);
+			using var db = GetDataContext(context);
+			var bigintFilter = new long?[] {2};
 
-				AreEqual(FixData,
-					   Types2.Where(_ => !bigintFilter.Contains(_.BigIntValue) && _.BigIntValue != null),
-					db.Types2.Where(_ => !bigintFilter.Contains(_.BigIntValue)));
-			}
+			AreEqual(FixData,
+				   Types2.Where(_ => !bigintFilter.Contains(_.BigIntValue) && _.BigIntValue != null),
+				db.Types2.Where(_ => !bigintFilter.Contains(_.BigIntValue)));
 		}
 
 		[Test]

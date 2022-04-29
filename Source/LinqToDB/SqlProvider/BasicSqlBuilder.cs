@@ -104,6 +104,13 @@ namespace LinqToDB.SqlProvider
 		/// Default value: <code>"("</code>
 		/// </summary>
 		protected virtual string OpenParens => "(";
+
+		protected StringBuilder RemoveInlineComma()
+		{
+			StringBuilder.Length -= InlineComma.Length;
+			return StringBuilder;
+		}
+
 		#endregion
 
 		#region Helpers
@@ -2444,234 +2451,206 @@ namespace LinqToDB.SqlProvider
 
 		void BuildInListPredicate(ISqlPredicate predicate)
 		{
-			var p = (SqlPredicate.InList)predicate;
+			var p      = (SqlPredicate.InList)predicate;
+			var values = p.Values;
 
-			if (p.Values == null || p.Values.Count == 0)
+			// Handle x.In(IEnumerable variable)
+			if (values.Count == 1 && values[0] is SqlParameter pr)
 			{
-				BuildPredicate(new SqlPredicate.Expr(new SqlValue(false)));
-			}
-			else
-			{
-				ICollection values = p.Values;
-
-				if (p.Values.Count == 1 && p.Values[0] is SqlParameter pr)
+				var prValue = pr.GetParameterValue(OptimizationContext.Context.ParameterValues).Value;
+				switch (prValue)
 				{
-					var paramValue = pr.GetParameterValue(OptimizationContext.Context.ParameterValues);
-					if (!(p.Expr1.SystemType == typeof(string) && paramValue.Value is string))
-					{
-						var prValue = paramValue.Value;
+					case null:
+						BuildPredicate(new SqlPredicate.Expr(new SqlValue(false)));
+						return;
+					// Be careful that string is IEnumerable, we don't want to handle x.In(string) here
+					case string:
+						break;
+					case IEnumerable items:
+						if (p.Expr1 is ISqlTableSource table)
+							TableSourceIn(table, items);
+						else
+							InValues(items);
+						return;
+				}
+			}
 
-						if (prValue == null)
+			// Handle x.In(val1, val2, val3)
+			InValues(values);
+			return;
+
+			void TableSourceIn(ISqlTableSource table, IEnumerable items)
+			{				
+				var keys = table.GetKeys(true);
+				if (keys is null or { Count: 0 })
+					throw new SqlException("Cannot create IN expression.");
+
+				var firstValue = true;
+
+				if (keys.Count == 1)
+				{
+					foreach (var item in items)
+					{
+						if (firstValue)
 						{
-							BuildPredicate(new SqlPredicate.Expr(new SqlValue(false)));
-							return;
+							firstValue = false;
+							BuildExpression(GetPrecedence(p), keys[0]);
+							StringBuilder.Append(p.IsNot ? " NOT IN (" : " IN (");
 						}
 
-						if (prValue is IEnumerable items)
+						var field = GetUnderlayingField(keys[0]);
+						var value = field.ColumnDescriptor.MemberAccessor.GetValue(item!);
+
+						if (value is ISqlExpression expression)
+							BuildExpression(expression);
+						else
+							BuildValue(new SqlDataType(field), value);
+
+						StringBuilder.Append(InlineComma);
+					}
+				}
+				else
+				{
+					var len = StringBuilder.Length;
+					var rem = 1;
+
+					foreach (var item in items)
+					{
+						if (firstValue)
 						{
-							if (p.Expr1 is ISqlTableSource table)
+							firstValue = false;
+							StringBuilder.Append('(');
+						}
+
+						foreach (var key in keys)
+						{
+							var field = GetUnderlayingField(key);
+							var value = field.ColumnDescriptor.MemberAccessor.GetValue(item!);
+
+							BuildExpression(GetPrecedence(p), key);
+
+							if (value == null)
 							{
-								var firstValue = true;
-								var keys       = table.GetKeys(true);
-
-								if (keys == null || keys.Count == 0)
-									throw new SqlException("Cannot create IN expression.");
-
-								if (keys.Count == 1)
-								{
-									foreach (var item in items)
-									{
-										if (firstValue)
-										{
-											firstValue = false;
-											BuildExpression(GetPrecedence(p), keys[0]);
-											StringBuilder.Append(p.IsNot ? " NOT IN (" : " IN (");
-										}
-
-										var field = GetUnderlayingField(keys[0]);
-										var value = field.ColumnDescriptor.MemberAccessor.GetValue(item!);
-
-										if (value is ISqlExpression expression)
-											BuildExpression(expression);
-										else
-											BuildValue(new SqlDataType(field), value);
-
-										StringBuilder.Append(InlineComma);
-									}
-								}
-								else
-								{
-									var len = StringBuilder.Length;
-									var rem = 1;
-
-									foreach (var item in items)
-									{
-										if (firstValue)
-										{
-											firstValue = false;
-											StringBuilder.Append('(');
-										}
-
-										foreach (var key in keys)
-										{
-											var field = GetUnderlayingField(key);
-											var value = field.ColumnDescriptor.MemberAccessor.GetValue(item!);
-
-											BuildExpression(GetPrecedence(p), key);
-
-											if (value == null)
-											{
-												StringBuilder.Append(" IS NULL");
-											}
-											else
-											{
-												StringBuilder.Append(" = ");
-												BuildValue(new SqlDataType(field), value);
-											}
-
-											StringBuilder.Append(" AND ");
-										}
-
-										StringBuilder.Remove(StringBuilder.Length - 4, 4).Append("OR ");
-
-										if (StringBuilder.Length - len >= 50)
-										{
-											StringBuilder.AppendLine();
-											AppendIndent();
-											StringBuilder.Append(' ');
-											len = StringBuilder.Length;
-											rem = 5 + Indent;
-										}
-									}
-
-									if (!firstValue)
-										StringBuilder.Remove(StringBuilder.Length - rem, rem);
-								}
-
-								if (firstValue)
-									BuildPredicate(new SqlPredicate.Expr(new SqlValue(p.IsNot)));
-								else
-									StringBuilder.Remove(StringBuilder.Length - 2, 2).Append(')');
+								StringBuilder.Append(" IS NULL");
 							}
 							else
 							{
-								BuildInListValues(p, items);
+								StringBuilder.Append(" = ");
+								BuildValue(new SqlDataType(field), value);
 							}
 
-							return;
+							StringBuilder.Append(" AND ");
+						}
+
+						StringBuilder.Remove(StringBuilder.Length - 4, 4).Append("OR ");
+
+						if (StringBuilder.Length - len >= 50)
+						{
+							StringBuilder.AppendLine();
+							AppendIndent();
+							StringBuilder.Append(' ');
+							len = StringBuilder.Length;
+							rem = 5 + Indent;
 						}
 					}
 
+					if (!firstValue)
+						StringBuilder.Remove(StringBuilder.Length - rem, rem);
 				}
 
-				BuildInListValues(p, values);
-			}
-		}
-
-		void BuildInListValues(SqlPredicate.InList predicate, IEnumerable values)
-		{
-			var firstValue = true;
-			var len        = StringBuilder.Length;
-			var hasNull    = false;
-			var count      = 0;
-			var longList   = false;
-
-			SqlDataType? sqlDataType = null;
-
-			foreach (object? value in values)
-			{
-				if (count++ >= SqlProviderFlags.MaxInListValuesCount)
-				{
-					count    = 1;
-					longList = true;
-
-					// start building next bucked
-					firstValue = true;
+				if (firstValue)
+					BuildPredicate(new SqlPredicate.Expr(new SqlValue(p.IsNot)));
+				else
 					StringBuilder.Remove(StringBuilder.Length - 2, 2).Append(')');
-					if (predicate.IsNot)
-						StringBuilder.Append(" AND ");
+			}
+
+			void InValues(IEnumerable values)
+			{
+				var firstValue    = true;
+				var len           = StringBuilder.Length;
+				var checkNull     = p.WithNull != null;
+				var hasNull       = false;
+				var count         = 0;
+				var multipleParts = false;
+
+				var sqlDataType = p.Expr1.ElementType switch
+				{
+					QueryElementType.SqlField => new SqlDataType((SqlField)p.Expr1),
+					QueryElementType.SqlParameter => new SqlDataType(((SqlParameter)p.Expr1).Type),
+					_ => null,
+				};
+
+				foreach (object? value in values)
+				{
+					if (++count > SqlProviderFlags.MaxInListValuesCount)
+					{
+						count       =  1;
+					 	multipleParts = true;
+
+						// start building next bucket
+						firstValue = true;
+						RemoveInlineComma()
+							.Append(')')
+							.Append(p.IsNot ? " AND " : " OR ");
+					}
+
+					object? val = value;
+
+					if (checkNull)
+					{
+						if (val is ISqlExpression sqlExpr && sqlExpr.TryEvaluateExpression(OptimizationContext.Context, out var evaluated))
+							val = evaluated;
+
+						if (val == null)
+						{
+							hasNull = true;
+							continue;
+						}
+					}
+
+					if (firstValue)
+					{
+						firstValue = false;
+						BuildExpression(GetPrecedence(p), p.Expr1);
+						StringBuilder.Append(p.IsNot ? " NOT IN (" : " IN (");
+					}
+
+					if (value is ISqlExpression expression)
+						BuildExpression(expression);
 					else
-						StringBuilder.Append(" OR ");
-				}
+						BuildValue(sqlDataType, value);
 
-				object? val = value;
-
-				if (val is ISqlExpression sqlExpr && sqlExpr.TryEvaluateExpression(OptimizationContext.Context, out var evaluated))
-				{
-					val = evaluated;
-				}
-
-				if (val == null)
-				{
-					hasNull = true;
-					continue;
+					StringBuilder.Append(InlineComma);
 				}
 
 				if (firstValue)
 				{
-					firstValue = false;
-					BuildExpression(GetPrecedence(predicate), predicate.Expr1);
-					StringBuilder.Append(predicate.IsNot ? " NOT IN (" : " IN (");
-
-					switch (predicate.Expr1.ElementType)
-					{
-						case QueryElementType.SqlField:
-							{
-								var field = (SqlField)predicate.Expr1;
-
-								sqlDataType = new SqlDataType(field);
-							}
-							break;
-
-						case QueryElementType.SqlParameter:
-							{
-								var p = (SqlParameter)predicate.Expr1;
-								sqlDataType = new SqlDataType(p.Type);
-							}
-
-							break;
-					}
+					// Nothing was built, because the values contained only null values, or nothing at all.
+					BuildPredicate(
+						hasNull ?
+						new SqlPredicate.IsNull(p.Expr1, p.IsNot) :
+						new SqlPredicate.Expr(new SqlValue(p.IsNot)));
 				}
-
-				if (value is ISqlExpression expression)
-					BuildExpression(expression);
 				else
-					BuildValue(sqlDataType, value);
-
-				StringBuilder.Append(InlineComma);
-			}
-
-			if (firstValue)
-			{
-				BuildPredicate(
-					hasNull ?
-					new SqlPredicate.IsNull(predicate.Expr1, predicate.IsNot) :
-					new SqlPredicate.Expr(new SqlValue(predicate.IsNot)));
-			}
-			else
-			{
-				StringBuilder.Remove(StringBuilder.Length - 2, 2).Append(')');
-
-				if (hasNull)
 				{
-					StringBuilder.Insert(len, "(");
-					StringBuilder.Append(" OR ");
-					BuildPredicate(new SqlPredicate.IsNull(predicate.Expr1, predicate.IsNot));
-					StringBuilder.Append(')');
-				}
-				else if (predicate.WithNull == true && predicate.Expr1.ShouldCheckForNull())
-				{
-					StringBuilder.Insert(len, "(");
-					StringBuilder.Append(" OR ");
-					BuildPredicate(new SqlPredicate.IsNull(predicate.Expr1, false));
-					StringBuilder.Append(')');
-				}
-			}
+					RemoveInlineComma().Append(')');
 
-			if (longList && !hasNull)
-			{
-				StringBuilder.Insert(len, "(");
-				StringBuilder.Append(')');
+					if (hasNull)
+					{
+						StringBuilder.Append(p.IsNot ? " AND " : " OR ");
+						BuildPredicate(new SqlPredicate.IsNull(p.Expr1, p.IsNot));
+						multipleParts = true;
+					}
+					else if (p.WithNull == true && p.Expr1.ShouldCheckForNull())
+					{
+						StringBuilder.Append(" OR ");
+	 					BuildPredicate(new SqlPredicate.IsNull(p.Expr1, false));
+		 				multipleParts = true;
+			 		}
+				} 
+
+				if (multipleParts && !hasNull)
+					StringBuilder.Insert(len, "(").Append(')');
 			}
 		}
 

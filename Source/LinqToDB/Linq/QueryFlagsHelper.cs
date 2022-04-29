@@ -20,6 +20,8 @@
 				flags |= QueryFlags.ParameterizeTakeSkip;
 			if (Common.Configuration.Linq.PreferApply)
 				flags |= QueryFlags.PreferApply;
+			if (Common.Configuration.Linq.CompareNullsAsValues)
+				flags |= QueryFlags.CompareNullsAsValues;
 
 			return flags;
 		}
