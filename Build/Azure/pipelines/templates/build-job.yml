@@ -137,6 +137,13 @@ jobs:
 
   - task: PublishPipelineArtifact@1
     inputs:
+      path: '$(Build.SourcesDirectory)/Source/LinqToDB.CLI/bin/Release'
+      artifact: '$(artifact_linq2db_cli_binaries)'
+    displayName: Publish linq2db.CLI build results
+    condition: and(succeeded(), ${{ parameters.for_nuget }})
+
+  - task: PublishPipelineArtifact@1
+    inputs:
       path: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net472'
       artifact: '$(netfx472_tests)'
     displayName: Publish nuget artifacts part 1
