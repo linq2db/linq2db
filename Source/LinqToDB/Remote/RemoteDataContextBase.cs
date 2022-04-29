@@ -18,6 +18,7 @@ namespace LinqToDB.Remote
 	using Interceptors;
 	using Mapping;
 	using SqlProvider;
+	using Infrastructure;
 
 	[PublicAPI]
 	public abstract partial class RemoteDataContextBase : IDataContext
@@ -161,6 +162,13 @@ namespace LinqToDB.Remote
 
 			set => _sqlOptimizerType = value;
 		}
+
+
+		LinqOptionsExtension? _linqOptions;
+		/// <summary>
+		/// Current DataContext LINQ options
+		/// </summary>
+		public LinqOptionsExtension LinqOptions => _linqOptions ??= new LinqOptionsExtension();
 
 		SqlProviderFlags IDataContext.SqlProviderFlags      => GetConfigurationInfo().LinqServiceInfo.SqlProviderFlags;
 		TableOptions     IDataContext.SupportedTableOptions => GetConfigurationInfo().LinqServiceInfo.SupportedTableOptions;

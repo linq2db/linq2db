@@ -1,5 +1,6 @@
 ﻿
-namespace LinqToDB.Configuration
+// ReSharper disable once CheckNamespace
+namespace LinqToDB
 {
 	using DataProvider.Access;
 	using DataProvider.DB2;
@@ -144,7 +145,7 @@ namespace LinqToDB.Configuration
 		/// </summary>
 		/// <param name="builder">Instance of <see cref="DataContextOptionsBuilder"/>.</param>
 		/// <param name="connectionString">PostgreSQL connection string.</param>
-		/// <param name="dialect">POstgreSQL dialect support level.</param>
+		/// <param name="dialect">PostgreSQL dialect support level.</param>
 		/// <returns>The builder instance so calls can be chained.</returns>
 		public static DataContextOptionsBuilder UsePostgreSQL(this DataContextOptionsBuilder builder, string connectionString, PostgreSQLVersion dialect)
 		{

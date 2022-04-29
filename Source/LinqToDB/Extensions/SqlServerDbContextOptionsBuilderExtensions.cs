@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Data.Common;
 
-namespace LinqToDB.Extensions
+// ReSharper disable once CheckNamespace
+namespace LinqToDB
 {
 	using Infrastructure;
 	using Infrastructure.Internal;
@@ -129,8 +130,8 @@ namespace LinqToDB.Extensions
         private static void ConfigureWarnings(DataContextOptionsBuilder optionsBuilder)
         {
             var coreOptionsExtension
-                = optionsBuilder.Options.FindExtension<CoreOptionsExtension>()
-                ?? new CoreOptionsExtension();
+                = optionsBuilder.Options.FindExtension<CoreDataContextOptionsExtension>()
+                ?? new CoreDataContextOptionsExtension();
 
             ((IDbContextOptionsBuilderInfrastructure)optionsBuilder).AddOrUpdateExtension(coreOptionsExtension);
         }

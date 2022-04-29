@@ -199,6 +199,18 @@ namespace LinqToDB
 	        return WithOption(e => e.WithDataProvider(dataProvider).WithTransaction(transaction));
         }
 
+        public virtual DataContextOptionsBuilder WithOptions(Action<LinqOptionsBuilder> linqOptionsAction)
+        {
+	        if (linqOptionsAction == null)
+	        {
+		        throw new ArgumentNullException(nameof(linqOptionsAction));
+	        }
+
+	        linqOptionsAction.Invoke(new LinqOptionsBuilder(this));
+
+	        return this;
+        }
+
         /// <summary>
         /// Configure the database to use specified trace level.
         /// </summary>
@@ -260,10 +272,10 @@ namespace LinqToDB
 	        _options = _options.WithExtension(extension);
         }
 
-        private DataContextOptionsBuilder WithOption(Func<CoreOptionsExtension, CoreOptionsExtension> withFunc)
+        private DataContextOptionsBuilder WithOption(Func<CoreDataContextOptionsExtension, CoreDataContextOptionsExtension> withFunc)
         {
             ((IDbContextOptionsBuilderInfrastructure)this).AddOrUpdateExtension(
-                withFunc(Options.FindExtension<CoreOptionsExtension>() ?? new CoreOptionsExtension()));
+                withFunc(Options.FindExtension<CoreDataContextOptionsExtension>() ?? new CoreDataContextOptionsExtension()));
 
             return this;
         }

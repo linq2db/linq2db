@@ -1,12 +1,13 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
-using LinqToDB.Data;
-using LinqToDB.Linq;
-using LinqToDB.Reflection;
 
-namespace LinqToDB.Configuration
+namespace LinqToDB.Infrastructure
 {
-	public class LinqOptionsExtension : IDbConnectionOptionsExtension
+	using Data;
+	using Linq;
+
+	public class LinqOptionsExtension : IDbContextOptionsExtension, IEquatable<LinqOptionsExtension>
 	{
 		private bool     _preloadGroups;
 		private bool     _ignoreEmptyUpdate;
@@ -22,7 +23,7 @@ namespace LinqToDB.Configuration
 		private bool     _keepDistinctOrdered;
 		private bool     _parameterizeTakeSkip;
 
-		protected LinqOptionsExtension()
+		public LinqOptionsExtension()
 		{
 			_preloadGroups          = Common.Configuration.Linq.PreloadGroups;
 			_ignoreEmptyUpdate      = Common.Configuration.Linq.IgnoreEmptyUpdate;
@@ -202,15 +203,144 @@ namespace LinqToDB.Configuration
 			return new LinqOptionsExtension(this);
 		}
 
-		public IDbConnectionOptions ApplyExtension(IDbConnectionOptions options)
+		private LinqOptionsExtension SetValue(Action<LinqOptionsExtension> setter)
 		{
-			return options;
+			var clone = Clone();
+			setter(clone);
+
+			return clone;
 		}
 
-		public void Validate(IDbConnectionOptions options)
+		public virtual LinqOptionsExtension WithPreloadGroups(bool preloadGroups) =>
+			SetValue(o => o._preloadGroups = preloadGroups);
+
+		public virtual LinqOptionsExtension WithIgnoreEmptyUpdate(bool ignoreEmptyUpdate) =>
+			SetValue(o => o._ignoreEmptyUpdate = ignoreEmptyUpdate);
+
+		public virtual LinqOptionsExtension WithGenerateExpressionTest(bool generateExpressionTest) =>
+			SetValue(o => o._generateExpressionTest = generateExpressionTest);
+
+		public virtual LinqOptionsExtension WithTraceMapperExpression(bool traceMapperExpression) =>
+			SetValue(o => o._traceMapperExpression = traceMapperExpression);
+
+		public virtual LinqOptionsExtension WithDoNotClearOrderBys(bool doNotClearOrderBys) =>
+			SetValue(o => o._doNotClearOrderBys = doNotClearOrderBys);
+
+		public virtual LinqOptionsExtension WithOptimizeJoins(bool optimizeJoins) =>
+			SetValue(o => o._optimizeJoins = optimizeJoins);
+
+		public virtual LinqOptionsExtension WithCompareNullsAsValues(bool compareNullsAsValues) =>
+			SetValue(o => o._compareNullsAsValues = compareNullsAsValues);
+
+		public virtual LinqOptionsExtension WithGuardGrouping(bool guardGrouping) =>
+			SetValue(o => o._guardGrouping = guardGrouping);
+
+		public virtual LinqOptionsExtension WithDisableQueryCache(bool disableQueryCache) =>
+			SetValue(o => o._disableQueryCache = disableQueryCache);
+
+		public virtual LinqOptionsExtension WithCacheSlidingExpiration(TimeSpan cacheSlidingExpiration) =>
+			SetValue(o => o._cacheSlidingExpiration = cacheSlidingExpiration);
+
+		public virtual LinqOptionsExtension WithPreferApply(bool preferApply) =>
+			SetValue(o => o._preferApply = preferApply);
+
+		public virtual LinqOptionsExtension WithKeepDistinctOrdered(bool keepDistinctOrdered) =>
+			SetValue(o => o._keepDistinctOrdered = keepDistinctOrdered);
+
+		public virtual LinqOptionsExtension WithParameterizeTakeSkip(bool parameterizeTakeSkip) =>
+			SetValue(o => o._parameterizeTakeSkip = parameterizeTakeSkip);
+
+		public DbContextOptionsExtensionInfo Info => throw new NotImplementedException();
+
+		public void ApplyServices()
 		{
 		}
 
+		public void Validate(IDataContextOptions options)
+		{
+		}
 
+		#region IEquatable implementation
+
+		public bool Equals(LinqOptionsExtension? other)
+		{
+			if (ReferenceEquals(null, other))
+			{
+				return false;
+			}
+
+			if (ReferenceEquals(this, other))
+			{
+				return true;
+			}
+
+			return _preloadGroups          == other._preloadGroups               &&
+			       _ignoreEmptyUpdate      == other._ignoreEmptyUpdate           &&
+			       _generateExpressionTest == other._generateExpressionTest      &&
+			       _traceMapperExpression  == other._traceMapperExpression       &&
+			       _doNotClearOrderBys     == other._doNotClearOrderBys          &&
+			       _optimizeJoins          == other._optimizeJoins               &&
+			       _compareNullsAsValues   == other._compareNullsAsValues        &&
+			       _guardGrouping          == other._guardGrouping               &&
+			       _disableQueryCache      == other._disableQueryCache           &&
+			       _cacheSlidingExpiration.Equals(other._cacheSlidingExpiration) &&
+			       _preferApply          == other._preferApply                   &&
+			       _keepDistinctOrdered  == other._keepDistinctOrdered           &&
+			       _parameterizeTakeSkip == other._parameterizeTakeSkip;
+		}
+
+		public override bool Equals(object? obj)
+		{
+			if (ReferenceEquals(null, obj))
+			{
+				return false;
+			}
+
+			if (ReferenceEquals(this, obj))
+			{
+				return true;
+			}
+
+			if (obj.GetType() != this.GetType())
+			{
+				return false;
+			}
+
+			return Equals((LinqOptionsExtension)obj);
+		}
+
+		[SuppressMessage("ReSharper", "NonReadonlyMemberInGetHashCode")]
+		public override int GetHashCode()
+		{
+			unchecked
+			{
+				var hashCode = _preloadGroups.GetHashCode();
+				hashCode = (hashCode * 397) ^ _ignoreEmptyUpdate.GetHashCode();
+				hashCode = (hashCode * 397) ^ _generateExpressionTest.GetHashCode();
+				hashCode = (hashCode * 397) ^ _traceMapperExpression.GetHashCode();
+				hashCode = (hashCode * 397) ^ _doNotClearOrderBys.GetHashCode();
+				hashCode = (hashCode * 397) ^ _optimizeJoins.GetHashCode();
+				hashCode = (hashCode * 397) ^ _compareNullsAsValues.GetHashCode();
+				hashCode = (hashCode * 397) ^ _guardGrouping.GetHashCode();
+				hashCode = (hashCode * 397) ^ _disableQueryCache.GetHashCode();
+				hashCode = (hashCode * 397) ^ _cacheSlidingExpiration.GetHashCode();
+				hashCode = (hashCode * 397) ^ _preferApply.GetHashCode();
+				hashCode = (hashCode * 397) ^ _keepDistinctOrdered.GetHashCode();
+				hashCode = (hashCode * 397) ^ _parameterizeTakeSkip.GetHashCode();
+				return hashCode;
+			}
+		}
+
+		public static bool operator ==(LinqOptionsExtension? left, LinqOptionsExtension? right)
+		{
+			return Equals(left, right);
+		}
+
+		public static bool operator !=(LinqOptionsExtension? left, LinqOptionsExtension? right)
+		{
+			return !Equals(left, right);
+		}
+
+		#endregion
 	}
 }

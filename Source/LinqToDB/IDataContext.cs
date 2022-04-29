@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 
 using JetBrains.Annotations;
+using LinqToDB.Infrastructure;
 
 namespace LinqToDB
 {
@@ -69,6 +70,11 @@ namespace LinqToDB
 		/// Gets or sets flag to close context after query execution or leave it open.
 		/// </summary>
 		bool                CloseAfterUse         { get; set; }
+
+		/// <summary>
+		/// Current DataContext LINQ options
+		/// </summary>
+		LinqOptionsExtension LinqOptions { get; }
 
 		/// <summary>
 		/// Returns column value reader expression.

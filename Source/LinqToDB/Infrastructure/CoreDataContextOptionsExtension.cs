@@ -24,7 +24,7 @@ namespace LinqToDB.Infrastructure
     ///         methods to obtain a new instance with the option changed.
     ///     </para>
     /// </summary>
-    public class CoreOptionsExtension : IDbContextOptionsExtension
+    public class CoreDataContextOptionsExtension : IDbContextOptionsExtension
     {
         private IDictionary<Type, Type>?       _replacedServices;
         private DbContextOptionsExtensionInfo? _info;
@@ -38,8 +38,6 @@ namespace LinqToDB.Infrastructure
         private int?           _commandTimeout;
         private bool           _disposeConnection;
 
-        private          bool                _useRelationalNulls;
-
         private MappingSchema?                        _mappingSchema;
         private Func<DbConnection>?                   _connectionFactory;
         private DbTransaction?                        _transaction;
@@ -51,7 +49,7 @@ namespace LinqToDB.Infrastructure
         /// <summary>
         ///     Creates a new set of options with everything set to default values.
         /// </summary>
-        public CoreOptionsExtension()
+        public CoreDataContextOptionsExtension()
         {
         }
 
@@ -59,7 +57,7 @@ namespace LinqToDB.Infrastructure
         ///     Called by a derived class constructor when implementing the <see cref="Clone" /> method.
         /// </summary>
         /// <param name="copyFrom"> The instance that is being cloned. </param>
-        protected CoreOptionsExtension(CoreOptionsExtension copyFrom)
+        protected CoreDataContextOptionsExtension(CoreDataContextOptionsExtension copyFrom)
         {
 	        _interceptors        = copyFrom.Interceptors?.ToList();
             _connectionString    = copyFrom._connectionString;
@@ -69,7 +67,6 @@ namespace LinqToDB.Infrastructure
             _dataProvider        = copyFrom._dataProvider;
             _commandTimeout      = copyFrom._commandTimeout;
             _disposeConnection   = copyFrom._disposeConnection;
-            _useRelationalNulls  = copyFrom._useRelationalNulls;
             _mappingSchema       = copyFrom._mappingSchema;
             _connectionFactory   = copyFrom._connectionFactory;
             _transaction         = copyFrom._transaction;
@@ -99,7 +96,7 @@ namespace LinqToDB.Infrastructure
         ///     Override this method in a derived class to ensure that any clone created is also of that class.
         /// </summary>
         /// <returns> A clone of this instance, which can be modified before being returned as immutable. </returns>
-        protected virtual CoreOptionsExtension Clone() => new CoreOptionsExtension(this);
+        protected virtual CoreDataContextOptionsExtension Clone() => new CoreDataContextOptionsExtension(this);
 
         /// <summary>
         ///     Creates a new instance with all options the same as for this instance, but with the given option changed.
@@ -108,7 +105,7 @@ namespace LinqToDB.Infrastructure
         /// <param name="serviceType"> The service contract. </param>
         /// <param name="implementationType"> The implementation type to use for the service. </param>
         /// <returns> A new instance with the option changed. </returns>
-        public virtual CoreOptionsExtension WithReplacedService(Type serviceType, Type implementationType)
+        public virtual CoreDataContextOptionsExtension WithReplacedService(Type serviceType, Type implementationType)
         {
             var clone = Clone();
 
@@ -128,7 +125,7 @@ namespace LinqToDB.Infrastructure
         /// </summary>
         /// <param name="interceptors"> The option to change. </param>
         /// <returns> A new instance with the option changed. </returns>
-        public virtual CoreOptionsExtension WithInterceptors(IEnumerable<IInterceptor> interceptors)
+        public virtual CoreDataContextOptionsExtension WithInterceptors(IEnumerable<IInterceptor> interceptors)
         {
 	        if (interceptors == null)
 	        {
@@ -150,7 +147,7 @@ namespace LinqToDB.Infrastructure
         /// </summary>
         /// <param name="interceptor"> The option to change. </param>
         /// <returns> A new instance with the option changed. </returns>
-        public virtual CoreOptionsExtension WithInterceptor(IInterceptor interceptor)
+        public virtual CoreDataContextOptionsExtension WithInterceptor(IInterceptor interceptor)
         {
 	        if (interceptor == null)
 	        {
@@ -231,19 +228,12 @@ namespace LinqToDB.Infrastructure
         public DbTransaction? DbTransaction => _transaction;
 
         /// <summary>
-        ///     Indicates whether or not to use relational database semantics when comparing null values. By default,
-        ///     Entity Framework will use C# semantics for null values, and generate SQL to compensate for differences
-        ///     in how the database handles nulls.
-        /// </summary>
-        public virtual bool UseRelationalNulls => _useRelationalNulls;
-
-        /// <summary>
         ///     Creates a new instance with all options the same as for this instance, but with the given option changed.
         ///     It is unusual to call this method directly. Instead use <see cref="DataContextOptionsBuilder" />.
         /// </summary>
         /// <param name="connectionString"> The option to change. </param>
         /// <returns> A new instance with the option changed. </returns>
-        public virtual CoreOptionsExtension WithConnectionString(string connectionString)
+        public virtual CoreDataContextOptionsExtension WithConnectionString(string connectionString)
         {
 	        if (string.IsNullOrEmpty(connectionString))
 	        {
@@ -257,7 +247,13 @@ namespace LinqToDB.Infrastructure
 	        return clone;
         }
 
-        public virtual CoreOptionsExtension WithConfigurationString(string? configurationString)
+        /// <summary>
+        ///     Creates a new instance with all options the same as for this instance, but with the given option changed.
+        ///     It is unusual to call this method directly. Instead use <see cref="DataContextOptionsBuilder" />.
+        /// </summary>
+        /// <param name="configurationString"> The option to change. </param>
+        /// <returns> A new instance with the option changed. </returns>
+        public virtual CoreDataContextOptionsExtension WithConfigurationString(string? configurationString)
         {
 	        var clone = Clone();
 
@@ -272,7 +268,7 @@ namespace LinqToDB.Infrastructure
         /// </summary>
         /// <param name="connection"> The option to change. </param>
         /// <returns> A new instance with the option changed. </returns>
-        public virtual CoreOptionsExtension WithConnection(DbConnection connection)
+        public virtual CoreDataContextOptionsExtension WithConnection(DbConnection connection)
         {
 	        if (connection == null)
 	        {
@@ -292,7 +288,7 @@ namespace LinqToDB.Infrastructure
         /// </summary>
         /// <param name="disposeConnection"> The option to change. </param>
         /// <returns> A new instance with the option changed. </returns>
-        public virtual CoreOptionsExtension WithDisposeConnection(bool disposeConnection)
+        public virtual CoreDataContextOptionsExtension WithDisposeConnection(bool disposeConnection)
         {
 	        var clone = Clone();
 
@@ -308,7 +304,7 @@ namespace LinqToDB.Infrastructure
         /// </summary>
         /// <param name="providerName"> The option to change. </param>
         /// <returns> A new instance with the option changed. </returns>
-        public virtual CoreOptionsExtension WithProviderName(string providerName)
+        public virtual CoreDataContextOptionsExtension WithProviderName(string providerName)
         {
 	        if (providerName == null)
 	        {
@@ -328,7 +324,7 @@ namespace LinqToDB.Infrastructure
         /// </summary>
         /// <param name="dataProvider"> The option to change. </param>
         /// <returns> A new instance with the option changed. </returns>
-        public virtual CoreOptionsExtension WithDataProvider(IDataProvider dataProvider)
+        public virtual CoreDataContextOptionsExtension WithDataProvider(IDataProvider dataProvider)
         {
 	        if (dataProvider == null)
 	        {
@@ -348,7 +344,7 @@ namespace LinqToDB.Infrastructure
         /// </summary>
         /// <param name="mappingSchema"> The option to change. </param>
         /// <returns> A new instance with the option changed. </returns>
-        public virtual CoreOptionsExtension WithMappingSchema(MappingSchema mappingSchema)
+        public virtual CoreDataContextOptionsExtension WithMappingSchema(MappingSchema mappingSchema)
         {
 	        if (mappingSchema == null)
 	        {
@@ -368,7 +364,7 @@ namespace LinqToDB.Infrastructure
         /// </summary>
         /// <param name="connectionFactory"> The option to change. </param>
         /// <returns> A new instance with the option changed. </returns>
-        public virtual CoreOptionsExtension WithConnectionFactory(Func<DbConnection> connectionFactory)
+        public virtual CoreDataContextOptionsExtension WithConnectionFactory(Func<DbConnection> connectionFactory)
         {
 	        if (connectionFactory == null)
 	        {
@@ -388,7 +384,7 @@ namespace LinqToDB.Infrastructure
         /// </summary>
         /// <param name="transaction"> The option to change. </param>
         /// <returns> A new instance with the option changed. </returns>
-        public virtual CoreOptionsExtension WithTransaction(DbTransaction transaction)
+        public virtual CoreDataContextOptionsExtension WithTransaction(DbTransaction transaction)
         {
 	        if (transaction == null)
 	        {
@@ -408,7 +404,7 @@ namespace LinqToDB.Infrastructure
         /// </summary>
         /// <param name="traceLevel"> The option to change. </param>
         /// <returns> A new instance with the option changed. </returns>
-        public CoreOptionsExtension WithTraceLevel(TraceLevel traceLevel)
+        public CoreDataContextOptionsExtension WithTraceLevel(TraceLevel traceLevel)
         {
 	        var clone = Clone();
 
@@ -423,7 +419,7 @@ namespace LinqToDB.Infrastructure
         /// </summary>
         /// <param name="onTrace"> The option to change. </param>
         /// <returns> A new instance with the option changed. </returns>
-        public virtual CoreOptionsExtension WithTracing(Action<TraceInfo> onTrace)
+        public virtual CoreDataContextOptionsExtension WithTracing(Action<TraceInfo> onTrace)
         {
 	        if (onTrace == null)
 	        {
@@ -437,7 +433,13 @@ namespace LinqToDB.Infrastructure
 	        return clone;
         }
 
-        public virtual CoreOptionsExtension WriteTraceWith(Action<string?, string?, TraceLevel> write)
+        /// <summary>
+        ///     Creates a new instance with all options the same as for this instance, but with the given option changed.
+        ///     It is unusual to call this method directly. Instead use <see cref="DataContextOptionsBuilder" />.
+        /// </summary>
+        /// <param name="write"> The option to change. </param>
+        /// <returns> A new instance with the option changed. </returns>
+        public virtual CoreDataContextOptionsExtension WriteTraceWith(Action<string?, string?, TraceLevel> write)
         {
 	        if (write == null)
 	        {
@@ -450,22 +452,6 @@ namespace LinqToDB.Infrastructure
 
 	        return clone;
         }
-
-        /// <summary>
-        ///     Creates a new instance with all options the same as for this instance, but with the given option changed.
-        ///     It is unusual to call this method directly. Instead use <see cref="DataContextOptionsBuilder" />.
-        /// </summary>
-        /// <param name="useRelationalNulls"> The option to change. </param>
-        /// <returns> A new instance with the option changed. </returns>
-        public virtual CoreOptionsExtension WithUseRelationalNulls(bool useRelationalNulls)
-        {
-	        var clone = Clone();
-
-	        clone._useRelationalNulls = useRelationalNulls;
-
-	        return clone;
-        }
-
 
         /// <summary>
         ///     The options set from the <see cref="DataContextOptionsBuilder.ReplaceService{TService,TImplementation}" /> method.
@@ -492,13 +478,13 @@ namespace LinqToDB.Infrastructure
             private long?   _serviceProviderHash;
             private string? _logFragment;
 
-            public ExtensionInfo(CoreOptionsExtension extension)
+            public ExtensionInfo(CoreDataContextOptionsExtension extension)
                 : base(extension)
             {
             }
 
-            private new CoreOptionsExtension Extension
-                => (CoreOptionsExtension)base.Extension;
+            private new CoreDataContextOptionsExtension Extension
+                => (CoreDataContextOptionsExtension)base.Extension;
 
             public override bool IsDatabaseProvider => false;
 
@@ -513,11 +499,6 @@ namespace LinqToDB.Infrastructure
 		                if (Extension._commandTimeout != null)
 		                {
 			                builder.Append("CommandTimeout=").Append(Extension._commandTimeout).Append(' ');
-		                }
-
-		                if (Extension._useRelationalNulls)
-		                {
-			                builder.Append("UseRelationalNulls ");
 		                }
 
 		                _logFragment = builder.ToString();
