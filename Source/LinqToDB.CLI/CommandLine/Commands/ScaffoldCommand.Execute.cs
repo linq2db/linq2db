@@ -146,7 +146,7 @@ namespace LinqToDB.CommandLine
 			for (var i = 0; i < sourceCode.Length; i++)
 			{
 				// TODO: add file name normalization/deduplication?
-				var fileName = $@"{output}\{sourceCode[i].FileName}";
+				var fileName = Path.Combine(output, sourceCode[i].FileName);
 				if (File.Exists(fileName) && !overwrite)
 				{
 					Console.WriteLine($"File '{fileName}' already exists. Specify '--overwrite true' option if you want to ovrerwrite existing files");
