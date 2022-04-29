@@ -101,35 +101,53 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual SqlStatement CorrectUnionOrderBy(SqlStatement statement)
 		{
-			return QueryHelper.WrapQuery(
-				(object?)null,
-				statement,
-				static (_, q, parentElement) =>
+			var queriesToWrap = new HashSet<SelectQuery>();
+
+			statement.Visit(queriesToWrap, (wrap, e) =>
+			{
+				if (e is SelectQuery sc && sc.HasSetOperators)
 				{
-					if (q.OrderBy.IsEmpty)
-						return false;
+					var prevQuery = sc;
 
-
-					if (q.HasSetOperators && q.SetOperators[0].Operation == SetOperation.UnionAll)
-						return true;
-
-					var isUnionAll = false;
-					if (parentElement != null)
+					for (int i = 0; i < sc.SetOperators.Count; i++)
 					{
-						if (parentElement.ElementType == QueryElementType.SetOperator)
-						{
-							isUnionAll = ((SqlSetOperator)parentElement).Operation == SetOperation.UnionAll;
-						}
-						else if (parentElement.ElementType == QueryElementType.SqlQuery)
-						{
-							var parentQuery = (SelectQuery)parentElement;
-							isUnionAll = parentQuery.HasSetOperators &&
-							                  parentQuery.SetOperators[0].Operation == SetOperation.UnionAll;
-						}
-					}
+						var currentOperator = sc.SetOperators[i];
+						var currentQuery    = currentOperator.SelectQuery;
 
-					return isUnionAll;
-				},
+						if (currentOperator.Operation == SetOperation.Union)
+						{
+							if (!prevQuery.Select.HasModifier && !prevQuery.OrderBy.IsEmpty)
+							{
+								prevQuery.OrderBy.Items.Clear();
+							}
+
+							if (!currentQuery.Select.HasModifier && !currentQuery.OrderBy.IsEmpty)
+							{
+								currentQuery.OrderBy.Items.Clear();
+							}
+						}
+						else 
+						{
+							if (!prevQuery.OrderBy.IsEmpty)
+							{
+								wrap.Add(prevQuery);
+							}
+
+							if (!currentQuery.OrderBy.IsEmpty)
+							{
+								wrap.Add(currentQuery);
+							}
+						}
+
+						prevQuery = currentOperator.SelectQuery;
+					}
+				}
+			});
+
+			return QueryHelper.WrapQuery(
+				queriesToWrap,
+				statement,
+				static (wrap, q, parentElement) => wrap.Contains(q),
 				null,
 				allowMutation: true,
 				withStack: true);

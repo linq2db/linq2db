@@ -336,5 +336,10 @@ namespace LinqToDB.DataProvider.Informix
 			return newExpr;
 		}
 
+		protected override bool IsReserved(string word)
+		{
+			return ReservedWords.IsReserved(word, ProviderName.Informix);
+		}
+
 	}
 }

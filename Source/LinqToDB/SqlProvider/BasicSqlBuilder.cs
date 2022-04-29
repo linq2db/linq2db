@@ -3772,7 +3772,7 @@ namespace LinqToDB.SqlProvider
 
 			for (var i = 1; ; i++)
 			{
-				if (!_aliases.Contains(alias) && !ReservedWords.IsReserved(alias))
+				if (!_aliases.Contains(alias) && !IsReserved(alias))
 				{
 					_aliases.Add(alias);
 					break;
