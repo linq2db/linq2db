@@ -118,20 +118,20 @@ namespace LinqToDB.DataProvider.DB2
 						Description = rd.ToString(9),
 					};
 
-					SetColumnParameters(ci, Converter.ChangeTypeTo<long?>(size), Converter.ChangeTypeTo<int?> (scale));
+					SetColumnParameters(ci, Converter.ChangeTypeTo<int?>(size), Converter.ChangeTypeTo<int?> (scale));
 
 					return ci;
 				},
 				sql).ToList();
 		}
 
-		static void SetColumnParameters(ColumnInfo ci, long? size, int? scale)
+		static void SetColumnParameters(ColumnInfo ci, int? size, int? scale)
 		{
 			switch (ci.DataType)
 			{
 				case "DECIMAL"                   :
 				case "DECFLOAT"                  :
-					if (size  > 0) ci.Precision = (int)size;
+					if (size  > 0) ci.Precision = size;
 					if (scale > 0) ci.Scale     = scale;
 					break;
 
@@ -248,7 +248,7 @@ namespace LinqToDB.DataProvider.DB2
 					var dataType = rd.ToString(3);
 					var mode     = ConvertTo<string>.From(rd[4]);
 					var ordinal  = rd[5];
-					var length   = ConvertTo<long?>. From(rd[6]);
+					var length   = ConvertTo<int?>.  From(rd[6]);
 					var scale    = ConvertTo<int?>.  From(rd[7]);
 
 					var ppi = new ProcedureParameterInfo

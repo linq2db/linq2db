@@ -471,7 +471,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			).ToList();
 		}
 
-		protected override DataType GetDataType(string? dataType, string? columnType, long? length, int? prec, int? scale)
+		protected override DataType GetDataType(string? dataType, string? columnType, int? length, int? prec, int? scale)
 		{
 			if (dataType == null)
 				return DataType.Undefined;
@@ -571,7 +571,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		static Regex _matchType  = new (@"^(.*)(\(\d+(,\s*\d+)?\))(.*){1}$", RegexOptions.Compiled);
 
 		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo,
-			long? length, int? precision, int? scale, GetSchemaOptions options)
+			int? length, int? precision, int? scale, GetSchemaOptions options)
 		{
 			var foundType = base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale, options);
 			if (foundType != null)

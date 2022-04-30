@@ -67,12 +67,8 @@ namespace LinqToDB.Metadata
 
 			// generate database type attributes
 			if (metadata.DbType?.Name  != null) attr.Parameter(WellKnownTypes.LinqToDB.Mapping.ColumnAttribute_DbType, _builder.Constant(metadata.DbType.Name, true));
-			// TODO: linq2db fix required
-			// min/max check added to avoid issues with type inconsistance in schema API and metadata
-			// In different places we use long or int type for type length
-			// this will not lead to type information loss, as we are not aware of any DB that will depend on length values outside of int32 range
-			if (metadata.DbType?.Length != null && metadata.DbType.Length >= int.MinValue && metadata.DbType.Length <= int.MaxValue)
-				attr.Parameter(WellKnownTypes.LinqToDB.Mapping.ColumnAttribute_Length, _builder.Constant((int)metadata.DbType.Length.Value, true));
+			if (metadata.DbType?.Length != null)
+				attr.Parameter(WellKnownTypes.LinqToDB.Mapping.ColumnAttribute_Length, _builder.Constant(metadata.DbType.Length.Value, true));
 			if (metadata.DbType?.Precision != null) attr.Parameter(WellKnownTypes.LinqToDB.Mapping.ColumnAttribute_Precision, _builder.Constant(metadata.DbType.Precision.Value, true));
 			if (metadata.DbType?.Scale     != null) attr.Parameter(WellKnownTypes.LinqToDB.Mapping.ColumnAttribute_Scale    , _builder.Constant(metadata.DbType.Scale.Value    , true));
 

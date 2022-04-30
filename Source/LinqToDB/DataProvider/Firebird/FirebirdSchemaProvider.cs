@@ -84,7 +84,7 @@ namespace LinqToDB.DataProvider.Firebird
 					DataType     = dt?.TypeName,
 					IsNullable   = Converter.ChangeTypeTo<bool>(c["IS_NULLABLE"]),
 					Ordinal      = Converter.ChangeTypeTo<int> (c["ORDINAL_POSITION"]),
-					Length       = (type != "char" && type != "varchar") ? null : Converter.ChangeTypeTo<long>(c["COLUMN_SIZE"]),
+					Length       = (type != "char" && type != "varchar") ? null : Converter.ChangeTypeTo<int>(c["COLUMN_SIZE"]),
 					Precision    = precision == 0 ? null : precision,
 					Scale        = (type != "decimal" && type != "numeric") ? null : Converter.ChangeTypeTo<int>(c["NUMERIC_SCALE"]),
 					IsIdentity   = false,
@@ -257,7 +257,7 @@ namespace LinqToDB.DataProvider.Firebird
 			return dataTypes;
 		}
 
-		protected override DataType GetDataType(string? dataType, string? columnType, long? length, int? prec, int? scale)
+		protected override DataType GetDataType(string? dataType, string? columnType, int? length, int? prec, int? scale)
 		{
 			return dataType?.ToLower() switch
 			{
@@ -301,7 +301,7 @@ namespace LinqToDB.DataProvider.Firebird
 			return base.GetProviderSpecificType(dataType);
 		}
 
-		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, long? length, int? precision, int? scale, GetSchemaOptions options)
+		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, int? length, int? precision, int? scale, GetSchemaOptions options)
 		{
 			switch (dataType?.ToLower())
 			{
