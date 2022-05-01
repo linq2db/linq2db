@@ -866,24 +866,43 @@ namespace LinqToDB.CodeModel
 		/// <param name="attributes">Flags with type/member attributes and modifiers.</param>
 		private void WriteModifiers(Modifiers attributes)
 		{
-			// note that we emit only modifiers we currently support in our AST model
-			// also Modifiers.Extension handled not here but in method generator
+			// Modifiers.Extension handled not here but in method generator
 
+			// modifiers ordered according to
+			// https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0036
+			// rule defaults
+
+			// note that multiple flags could be specified to generate valid "private protected" or "protected internal"
 			// access modifiers
 			if (attributes.HasFlag(Modifiers.Public))
 				Write("public ");
-			else if (attributes.HasFlag(Modifiers.Private))
+			if (attributes.HasFlag(Modifiers.Private))
 				Write("private ");
+			if (attributes.HasFlag(Modifiers.Protected))
+				Write("protected ");
+			if (attributes.HasFlag(Modifiers.Internal))
+				Write("internal ");
 
 			if (attributes.HasFlag(Modifiers.Static))
 				Write("static ");
-
-			if (attributes.HasFlag(Modifiers.Async))
-				Write("async ");
+			if (attributes.HasFlag(Modifiers.New))
+				Write("new ");
+			if (attributes.HasFlag(Modifiers.Virtual))
+				Write("virtual ");
+			if (attributes.HasFlag(Modifiers.Abstract))
+				Write("abstract ");
+			if (attributes.HasFlag(Modifiers.Sealed))
+				Write("sealed ");
+			if (attributes.HasFlag(Modifiers.Override))
+				Write("override ");
 
 			if (attributes.HasFlag(Modifiers.ReadOnly))
 				Write("readonly ");
 
+			if (attributes.HasFlag(Modifiers.Async))
+				Write("async ");
+
+			// partial specifier treated separately by spec and always go after all modifiers
 			if (attributes.HasFlag(Modifiers.Partial))
 				Write("partial ");
 		}

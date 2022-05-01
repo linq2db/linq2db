@@ -38,6 +38,17 @@
 		}
 
 		/// <summary>
+		/// Add custom attribute to type.
+		/// </summary>
+		/// <param name="attribute">Custom attribute.</param>
+		/// <returns>Type builder.</returns>
+		public TBuilder AddAttribute(CodeAttribute attribute)
+		{
+			Type.AddAttribute(attribute);
+			return (TBuilder)this;
+		}
+
+		/// <summary>
 		/// Add xml-doc to type.
 		/// </summary>
 		/// <returns>Xml-doc builder.</returns>
@@ -49,12 +60,12 @@
 		}
 
 		/// <summary>
-		/// Mark type as public.
+		/// Set modifiers to type. Replaces old value.
 		/// </summary>
 		/// <returns>Type builder.</returns>
-		public TBuilder Public()
+		public TBuilder SetModifiers(Modifiers modifiers)
 		{
-			Type.Attributes |= Modifiers.Public;
+			Type.Attributes = modifiers;
 			return (TBuilder)this;
 		}
 	}

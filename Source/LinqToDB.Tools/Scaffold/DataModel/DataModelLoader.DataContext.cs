@@ -30,8 +30,7 @@ namespace LinqToDB.Scaffold
 
 			var dataContextClass = new ClassModel(className, className)
 			{
-				IsPartial = true,
-				IsPublic  = true,
+				Modifiers = Modifiers.Public | Modifiers.Partial,
 				Namespace = _options.CodeGeneration.Namespace
 			};
 

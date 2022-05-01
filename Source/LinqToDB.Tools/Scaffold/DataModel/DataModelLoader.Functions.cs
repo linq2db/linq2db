@@ -109,8 +109,7 @@ namespace LinqToDB.Scaffold
 							_options.DataModel.FunctionTupleResultClassNameOptions,
 							func.Name.Name))
 					{
-						IsPublic  = true,
-						IsPartial = true
+						Modifiers = Modifiers.Public | Modifiers.Partial
 					};
 					funcModel.ReturnTuple = new TupleModel(@class)
 					{
@@ -124,7 +123,7 @@ namespace LinqToDB.Scaffold
 
 						var prop = new PropertyModel(_namingServices.NormalizeIdentifier(_options.DataModel.FunctionTupleResultPropertyNameOptions, field.Name ?? "Field"), typeMapping.CLRType.WithNullability(field.Nullable))
 						{
-							IsPublic  = true,
+							Modifiers = Modifiers.Public,
 							IsDefault = true,
 							HasSetter = true
 						};
@@ -264,10 +263,10 @@ namespace LinqToDB.Scaffold
 							_options.DataModel.AsyncProcedureResultClassNameOptions,
 							func.Name.Name))
 					{
-						IsPublic  = true
+						Modifiers = Modifiers.Public
 					}, new PropertyModel("Result")
 					{
-						IsPublic  = true,
+						Modifiers = Modifiers.Public,
 						IsDefault = true,
 						HasSetter = true
 					});
@@ -278,7 +277,7 @@ namespace LinqToDB.Scaffold
 						parameter,
 						new PropertyModel(_namingServices.NormalizeIdentifier(_options.DataModel.AsyncProcedureResultClassPropertiesNameOptions, parameter.Parameter.Name), parameter.Parameter.Type)
 						{
-							IsPublic  = true,
+							Modifiers = Modifiers.Public,
 							IsDefault = true,
 							HasSetter = true
 						});
@@ -361,15 +360,12 @@ namespace LinqToDB.Scaffold
 
 				var wrapperClass = new ClassModel(_options.CodeGeneration.ClassPerFile ? schemaClassName : dataContext.Class.FileName!, schemaClassName)
 				{
-					IsPublic  = true,
-					IsPartial = true,
-					IsStatic  = true,
+					Modifiers = Modifiers.Public | Modifiers.Partial | Modifiers.Static,
 					Namespace = _options.CodeGeneration.Namespace
 				};
 				var contextClass = new ClassModel("DataContext")
 				{
-					IsPublic  = true,
-					IsPartial = true
+					Modifiers = Modifiers.Public | Modifiers.Partial
 				};
 				schemaModel = new AdditionalSchemaModel(contextPropertyName, wrapperClass, contextClass);
 				dataContext.AdditionalSchemas.Add(schemaName, schemaModel);
@@ -431,8 +427,7 @@ namespace LinqToDB.Scaffold
 					_options.DataModel.ProcedureResultClassNameOptions,
 					funcName.Name))
 			{
-				IsPublic  = true,
-				IsPartial = true
+				Modifiers = Modifiers.Partial | Modifiers.Public
 			};
 			var model = new ResultTableModel(resultClass);
 
@@ -452,7 +447,7 @@ namespace LinqToDB.Scaffold
 					_namingServices.NormalizeIdentifier(_options.DataModel.ProcedureResultColumnPropertyNameOptions, col.Name ?? "Column"),
 					typeMapping.CLRType.WithNullability(col.Nullable))
 				{
-					IsPublic  = true,
+					Modifiers = Modifiers.Public,
 					HasSetter = true,
 					IsDefault = true,
 				};

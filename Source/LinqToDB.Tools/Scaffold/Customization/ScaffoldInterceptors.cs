@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using LinqToDB.CodeModel;
+using LinqToDB.DataModel;
+using LinqToDB.Metadata;
 using LinqToDB.Schema;
 
 namespace LinqToDB.Scaffold
@@ -77,6 +80,24 @@ namespace LinqToDB.Scaffold
 		/// <param name="defaultMapping">Default type mapping for specified <paramref name="databaseType"/>.</param>
 		/// <returns>Type mapping information for specified <paramref name="databaseType"/>.</returns>
 		public virtual TypeMapping? GetTypeMapping(DatabaseType databaseType, ITypeParser typeParser, TypeMapping? defaultMapping) => defaultMapping;
+		#endregion
+
+		#region Data Model/Code Generation
+		/// <summary>
+		/// Using this method user could modify entity code generation options:
+		/// <list type="bullet">
+		/// <item>modify associated table/view metadata descriptor: <see cref="EntityModel.Metadata"/></item>
+		/// <item>modify entity class code generation options including custom attributes: <see cref="EntityModel.Class"/></item>
+		/// <item>modify/add/remove data context table access property: <see cref="EntityModel.ContextProperty"/></item>
+		/// <item>edit list of generated Find/FindAsync/FindQuery extensions: <see cref="EntityModel.FindExtensions"/></item>
+		/// <item>modify column list: <see cref="EntityModel.Columns"/> including column metadata and property code generation options.</item>
+		/// </list>
+		/// </summary>
+		/// <param name="typeParser">Type parser service to create type tokens.</param>
+		/// <param name="entityModel">Entity model descriptor.</param>
+		public virtual void PreprocessEntity(ITypeParser typeParser, EntityModel entityModel)
+		{
+		}
 		#endregion
 	}
 }

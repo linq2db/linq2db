@@ -148,7 +148,7 @@ namespace LinqToDB.DataModel
 				// add schema reference to data context class
 				var schemaProp = contextSchemaProperties!
 					.New(AST.Name(schema.DataContextPropertyName), schemaContextType)
-						.Public()
+						.SetModifiers(Modifiers.Public)
 						.Default(true);
 
 				initSchemasMethod!
@@ -172,9 +172,7 @@ namespace LinqToDB.DataModel
 				return extensionsClass ??= dataContextBuilder
 					.Group
 						.New(AST.Name(EXTENSIONS_CLASS))
-							.Public()
-							.Static()
-							.Partial();
+							.SetModifiers(Modifiers.Public | Modifiers.Static | Modifiers.Partial);
 			}
 		}
 	}

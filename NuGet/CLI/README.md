@@ -130,7 +130,14 @@ Scaffold process is a multi-stange process with following steps:
 - generation of data context code model from object model
 - generation of source code from code model
 
-Each of those steps has own interception points to customize model.
+We allow injection of interceptors/extension points at some of those stages. They could be split into three categories:
+- Database schema load interceptors. Those interceptors allow user to add, remove or modify information about database objects, used for data model generation.
+- Database type mapping interceptor. This interceptor allows user to override default .NET type used for specific database type in data model or specify .NET type for database type, not known to scaffold utility (e.g. some custom database type)
+- Data model interceptors. Those interceptors work with generate data model objects and allow user to modify them before they will be converted to source code. Such objects include:
+  - entities (table/view mapping classes)
+  - methods for stored procedure or function mapping
+  - associations (foreign key relations)
+  - some other generated objects.
 
 #### Schema Load Interceptors
 
@@ -292,13 +299,7 @@ public sealed record ResultColumn(string? Name, DatabaseType Type, bool Nullable
 
 </details>
 
-#### Data Model Interceptors
-
-Those interceptors called during data context model generation from database schema.
-
-TBD: not implemented yet
-
-##### Type mapping interceptor
+#### Type mapping interceptor
 
 This interceptor allows user to specify which .NET type should be used for specific database type and usefull in several cases:
 
@@ -356,10 +357,227 @@ public override TypeMapping? GetTypeMapping(DatabaseType databaseType, ITypePars
 
 </details>
 
-#### Code Model Interceptors
+#### Data Model Interceptors
 
-> TBD: not implemented yet
+This group of interceptors allow user to modify generated data model objects before they converted to source code.
 
-#### Code Generation Interceptors
+```cs
+// This interceptor works with single entity model object that
+// corresponds to database table or view.
+// List of options, available for modification:
+// - Table/view mapping metadata
+// - Entity class code generation options (name, visibility, inheritance, etc)
+// - Data context table property for entity
+// - Find/FindQuery entity extensions generation options
+// - List of entity column properties (column metada and property code generation options)
+void PreprocessEntity(ITypeParser typeParser, EntityModel entityModel);
+```
 
-> TBD: not implemented yet
+<details>
+  <summary>Interceptor implementation examples</summary>
+
+```cs
+// several use-cases cases of entity customization
+public override void PreprocessEntity(ITypeParser typeParser, EntityModel entityModel)
+{
+    // change type for specific column: use DateOnly type for event_date columns in audit table
+    if (entityModel.Metadata.Name?.Name.StartsWith("Audit$") == true)
+    {
+        var dateColumn = entityModel.Columns.Where(c => c.Metadata.Name == "event_date").Single();
+        // create type from name string because CLI tool use .net core 3.1 runtime without DateOnly type
+        dateColumn.Property.Type = typeParser.Parse("System.DateOnly", true);
+    }
+
+    // for log tables, remove table access properties from data context class
+    if (entityModel.Metadata.Name?.Name.StartsWith("Logs$") == true)
+        entityModel.ContextProperty = null;
+
+    // for table with name "alltypes" we cannot recognize separate words to properly generate class name
+    // let's modify generated entity class name in model
+    if (entityModel.Class.Name == "Alltypes")
+        entityModel.Class.Name = "AllTypes";
+
+    // mark column as non-editable
+    var creatorColumn = entityModel.Columns.Where(c => c.Metadata.Name == "created_by").FirstOrDefault();
+    if (creatorColumn != null)
+        creatorColumn.Metadata.SkipOnUpdate = true;
+}
+```
+</details>
+
+<details>
+  <summary>Data model classes</summary>
+ 
+```cs
+// data model descriptors
+
+// entity descriptor
+public sealed class EntityModel
+{
+    public EntityMetadata    Metadata        { get; set; }
+    public ClassModel        Class           { get; set; }
+    public PropertyModel?    ContextProperty { get; set; }
+    public FindTypes         FindExtensions  { get; set; }
+    public List<ColumnModel> Columns         { get;      }
+}
+
+// column descriptor
+public sealed class ColumnModel
+{
+    public ColumnMetadata Metadata { get; set; }
+    public PropertyModel  Property { get; set; }
+}
+
+// Flags to specify generated Find/FindQuery extensions per-entity
+[Flags]
+public enum FindTypes
+{
+    // specify generated method signatures:
+
+    None,
+    /// <summary>
+    /// Method version: sync Find().
+    /// </summary>
+    Sync                       = 0x0001,
+    /// <summary>
+    /// Method version: async FindAsync().
+    /// </summary>
+    Async                      = 0x0002,
+    /// <summary>
+    /// Method version: FindQuery().
+    /// </summary>
+    Query                      = 0x0004,
+
+    // specify what should be passed to methods: primary key values or whole entity instance
+
+    /// <summary>
+    /// Method primary key: from parameters.
+    /// </summary>
+    ByPrimaryKey               = 0x0010,
+    /// <summary>
+    /// Method primary key: from entity object.
+    /// </summary>
+    ByEntity                   = 0x0020,
+
+    // specify extended type
+
+    /// <summary>
+    /// Method extends: entity table.
+    /// </summary>
+    OnTable                    = 0x0100,
+    /// <summary>
+    /// Method extends: generated context.
+    /// </summary>
+    OnContext                  = 0x0200,
+
+    // some ready-to-use flags combinations
+    FindByPkOnTable            = Sync | ByPrimaryKey | OnTable,
+    FindAsyncByPkOnTable       = Async | ByPrimaryKey | OnTable,
+    FindQueryByPkOnTable       = Query | ByPrimaryKey | OnTable,
+    FindByRecordOnTable        = Sync | ByEntity | OnTable,
+    FindAsyncByRecordOnTable   = Async | ByEntity | OnTable,
+    FindQueryByRecordOnTable   = Query | ByEntity | OnTable,
+    FindByPkOnContext          = Sync | ByPrimaryKey | OnContext,
+    FindAsyncByPkOnContext     = Async | ByPrimaryKey | OnContext,
+    FindQueryByPkOnContext     = Query | ByPrimaryKey | OnContext,
+    FindByRecordOnContext      = Sync | ByEntity | OnContext,
+    FindAsyncByRecordOnContext = Async | ByEntity | OnContext,
+    FindQueryByRecordOnContext = Query | ByEntity | OnContext,
+}
+
+```
+
+</details>
+
+<details>
+  <summary>Code models</summary>
+
+ ```cs
+
+public sealed class ClassModel
+{
+    public string?              Summary          { get; set; }
+    public string               Name             { get; set; }
+    public string?              Namespace        { get; set; }
+    public IType?               BaseType         { get; set; }
+    public List<IType>?         Interfaces       { get; set; }
+    public Modifiers            Modifiers        { get; set; }
+    public string?              FileName         { get; set; }
+    public List<CodeAttribute>? CustomAttributes { get; set; }
+}
+
+public sealed class PropertyModel
+{
+    public string               Name             { get; set; }
+    public IType?               Type             { get; set; }
+    public string?              Summary          { get; set; }
+    public Modifiers            Modifiers        { get; set; }
+    public bool                 IsDefault        { get; set; }
+    public bool                 HasSetter        { get; set; }
+    public string?              TrailingComment  { get; set; }
+    public List<CodeAttribute>? CustomAttributes { get; set; }
+}
+
+// various modifiers on type/type member
+[Flags]
+public enum Modifiers
+{
+    None      = 0,
+    Public    = 0x0001,
+    Protected = 0x0002,
+    Internal  = 0x0004,
+    Private   = 0x0008,
+    New       = 0x0010,
+    Override  = 0x0020,
+    Abstract  = 0x0040,
+    Sealed    = 0x0080,
+    Partial   = 0x0100,
+    Extension = 0x0200,
+    ReadOnly  = 0x0400,
+    Async     = 0x0800,
+    Static    = 0x1000,
+    Virtual   = 0x2000,
+}
+
+ ```
+
+</details>
+
+<details>
+  <summary>Metadata models</summary>
+
+ ```cs
+public sealed class EntityMetadata
+{
+    public ObjectName?  Name                      { get; set; }
+    public bool         IsView                    { get; set; }
+    public string?      Configuration             { get; set; }
+    public bool         IsColumnAttributeRequired { get; set; } = true;
+    public bool         IsTemporary               { get; set; }
+    public TableOptions TableOptions              { get; set; }
+}
+
+public sealed class ColumnMetadata
+{
+    public string?       Name              { get; set; }
+    public DatabaseType? DbType            { get; set; }
+    public DataType?     DataType          { get; set; }
+    public bool          CanBeNull         { get; set; }
+    public bool          SkipOnInsert      { get; set; }
+    public bool          SkipOnUpdate      { get; set; }
+    public bool          IsIdentity        { get; set; }
+    public bool          IsPrimaryKey      { get; set; }
+    public int?          PrimaryKeyOrder   { get; set; }
+    public string?       Configuration     { get; set; }
+    public string?       MemberName        { get; set; }
+    public string?       Storage           { get; set; }
+    public string?       CreateFormat      { get; set; }
+    public bool          IsColumn          { get; set; } = true;
+    public bool          IsDiscriminator   { get; set; }
+    public bool          SkipOnEntityFetch { get; set; }
+    public int?          Order             { get; set; }
+}
+
+ ```
+ 
+</details>

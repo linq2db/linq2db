@@ -77,8 +77,7 @@ namespace LinqToDB.DataModel
 					var schemaProp = dataContextClass
 						.Properties(true)
 							.New(AST.Name(CONTEXT_SCHEMA_PROPERTY), WellKnownTypes.LinqToDB.Mapping.MappingSchema)
-								.Public()
-								.Static()
+								.SetModifiers(Modifiers.Public | Modifiers.Static)
 								.Default(false)
 								.SetInitializer(AST.New(WellKnownTypes.LinqToDB.Mapping.MappingSchema));
 					schemaProperty = schemaProp.Property.Reference;

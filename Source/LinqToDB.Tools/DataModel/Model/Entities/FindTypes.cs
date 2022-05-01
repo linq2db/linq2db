@@ -89,6 +89,5 @@ namespace LinqToDB.DataModel
 		/// Generate extension method on generated context object with entity object as parameter.
 		/// </summary>
 		FindQueryByRecordOnContext = Query | ByEntity | OnContext,
-
 	}
 }
