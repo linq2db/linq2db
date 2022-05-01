@@ -485,6 +485,104 @@ public enum FindTypes
     FindQueryByRecordOnContext = Query | ByEntity | OnContext,
 }
 
+public sealed class StoredProcedureModel : TableFunctionModelBase
+{
+    public FunctionParameterModel? Return  { get; set; }
+    public List<FunctionResult>    Results { get; set; } = new();
+}
+
+public sealed class TableFunctionModel : TableFunctionModelBase
+{
+    public string                MethodInfoFieldName { get; set; }
+    public TableFunctionMetadata Metadata            { get; set; }
+    public FunctionResult?       Result              { get; set; }
+}
+
+public sealed class ScalarFunctionModel : ScalarFunctionModelBase
+{
+    public IType?      Return      { get; set; }
+    public TupleModel? ReturnTuple { get; set; }
+}
+
+public sealed class AggregateFunctionModel : ScalarFunctionModelBase
+{
+    public IType ReturnType { get; set; }
+}
+
+public abstract class TableFunctionModelBase : FunctionModelBase
+{
+    public ObjectName Name  { get; set; }
+    public string?    Error { get; set; }
+}
+
+public abstract class ScalarFunctionModelBase : FunctionModelBase
+{
+    public FunctionMetadata Metadata { get; set; }
+}
+
+public abstract class FunctionModelBase
+{
+    public MethodModel                  Method     { get; set; }
+    public List<FunctionParameterModel> Parameters { get;      } = new();
+}
+
+public sealed class FunctionParameterModel
+{
+    public ParameterModel                 Parameter  { get; set; }
+    public string?                        DbName     { get; set; }
+    public DatabaseType?                  Type       { get; set; }
+    public DataType?                      DataType   { get; set; }
+    public bool                           IsNullable { get; set; }
+    public System.Data.ParameterDirection Direction  { get; set; }
+}
+
+public sealed class TupleModel
+{
+    public ClassModel            Class     { get; set; }
+    public bool                  CanBeNull { get; set; }
+    public List<TupleFieldModel> Fields    { get;      } = new ();
+}
+
+public sealed class TupleFieldModel
+{
+    public PropertyModel Property { get; set; }
+    public DatabaseType  Type     { get; set; }
+    public DataType?     DataType { get; set; }
+}
+
+public sealed record FunctionResult(
+    ResultTableModel?     CustomTable,
+    EntityModel?          Entity,
+    AsyncProcedureResult? AsyncResult);
+
+public sealed class ResultTableModel
+{
+    public ClassModel        Class   { get; set; }
+    public List<ColumnModel> Columns { get;      } = new ();
+}
+
+public sealed class AsyncProcedureResult
+{
+    public ClassModel                                        Class               { get; set; }
+    public PropertyModel                                     MainResult          { get; set; }
+    public Dictionary<FunctionParameterModel, PropertyModel> ParameterProperties { get; } = new();
+}
+
+public sealed class AssociationModel
+{
+    public AssociationMetadata SourceMetadata         { get; set; }
+    public AssociationMetadata TargetMetadata         { get; set; }
+    public EntityModel         Source                 { get; set; }
+    public EntityModel         Target                 { get; set; }
+    public PropertyModel?      Property               { get; set; }
+    public PropertyModel?      BackreferenceProperty  { get; set; }
+    public MethodModel?        Extension              { get; set; }
+    public MethodModel?        BackreferenceExtension { get; set; }
+    public ColumnModel[]?      FromColumns            { get; set; }
+    public ColumnModel[]?      ToColumns              { get; set; }
+    public bool                ManyToOne              { get; set; }
+}
+
 ```
 
 </details>
@@ -518,6 +616,22 @@ public sealed class PropertyModel
     public List<CodeAttribute>? CustomAttributes { get; set; }
 }
 
+public sealed class MethodModel
+{
+    public string?              Summary          { get; set; }
+    public string               Name             { get; set; }
+    public Modifiers            Modifiers        { get; set; }
+    public List<CodeAttribute>? CustomAttributes { get; set; }
+}
+
+public sealed class ParameterModel
+{
+    public string                 Name        { get; set; }
+    public IType                  Type        { get; set; }
+    public string?                Description { get; set; }
+    public CodeParameterDirection Direction   { get; set; }
+}
+
 // various modifiers on type/type member
 [Flags]
 public enum Modifiers
@@ -532,11 +646,18 @@ public enum Modifiers
     Abstract  = 0x0040,
     Sealed    = 0x0080,
     Partial   = 0x0100,
-    Extension = 0x0200,
+    Extension = 0x0200 | Static,
     ReadOnly  = 0x0400,
     Async     = 0x0800,
     Static    = 0x1000,
     Virtual   = 0x2000,
+}
+
+public enum CodeParameterDirection
+{
+    In,
+    Ref,
+    Out
 }
 
  ```
@@ -576,6 +697,45 @@ public sealed class ColumnMetadata
     public bool          IsDiscriminator   { get; set; }
     public bool          SkipOnEntityFetch { get; set; }
     public int?          Order             { get; set; }
+}
+
+// table function/stored procedure
+public sealed class TableFunctionMetadata
+{
+    public ObjectName? Name          { get; set; }
+    public string?     Configuration { get; set; }
+    public int[]?      ArgIndices    { get; set; }
+}
+
+// scalar/aggregate function
+public sealed class FunctionMetadata
+{
+    public ObjectName?         Name             { get; set; }
+    public int[]?              ArgIndices       { get; set; }
+    public string?             Configuration    { get; set; }
+    public bool?               ServerSideOnly   { get; set; }
+    public bool?               PreferServerSide { get; set; }
+    public bool?               InlineParameters { get; set; }
+    public bool?               IsPredicate      { get; set; }
+    public bool?               IsAggregate      { get; set; }
+    public bool?               IsWindowFunction { get; set; }
+    public bool?               IsPure           { get; set; }
+    public bool?               CanBeNull        { get; set; }
+    public Sql.IsNullableType? IsNullable       { get; set; }
+}
+
+public sealed class AssociationMetadata
+{
+    public bool             CanBeNull             { get; set; }
+    public ICodeExpression? ThisKeyExpression     { get; set; }
+    public ICodeExpression? OtherKeyExpression    { get; set; }
+    public string?          Configuration         { get; set; }
+    public string?          Alias                 { get; set; }
+    public string?          Storage               { get; set; }
+    public string?          ThisKey               { get; set; }
+    public string?          OtherKey              { get; set; }
+    public string?          ExpressionPredicate   { get; set; }
+    public string?          QueryExpressionMethod { get; set; }
 }
 
  ```

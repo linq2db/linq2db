@@ -116,7 +116,7 @@ namespace LinqToDB.DataModel
 				initSchemasMethod = schemasRegion
 					.Methods(false)
 						.New(AST.Name(SCHEMAS_INIT_METHOD))
-							.Public();
+							.SetModifiers(Modifiers.Public);
 
 				contextSchemaProperties = schemasRegion.Properties(true);
 			}

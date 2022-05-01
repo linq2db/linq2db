@@ -316,8 +316,7 @@ namespace LinqToDB.DataModel
 
 			var find       = findMethodsGroup()
 				.New(AST.Name(methodName))
-					.Public()
-					.Extension()
+					.SetModifiers(Modifiers.Public | Modifiers.Static | Modifiers.Extension)
 					.Returns(returnType);
 			;
 			foreach (var param in methodParameters)

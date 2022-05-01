@@ -60,7 +60,7 @@ namespace LinqToDB.DataModel
 			schemaContext
 				.Constructors()
 					.New()
-						.Public()
+						.SetModifiers(Modifiers.Public)
 						.Parameter(ctorParam)
 						.Body()
 							.Append(

@@ -252,13 +252,6 @@ namespace LinqToDB.Metadata
 			if (metadata.Configuration         != null) attr.Parameter(WellKnownTypes.LinqToDB.Mapping.AssociationAttribute_Configuration    , _builder.Constant(metadata.Configuration        , true));
 			if (metadata.Alias                 != null) attr.Parameter(WellKnownTypes.LinqToDB.Mapping.AssociationAttribute_AliasName        , _builder.Constant(metadata.Alias                , true));
 			if (metadata.Storage               != null) attr.Parameter(WellKnownTypes.LinqToDB.Mapping.AssociationAttribute_Storage          , _builder.Constant(metadata.Storage              , true));
-			// deprecated non-functional properties, subject to removal in future
-			if (metadata.KeyName               != null) attr.Parameter(WellKnownTypes.LinqToDB.Mapping.AssociationAttribute_KeyName          , _builder.Constant(metadata.KeyName              , true));
-			if (metadata.BackReferenceName     != null) attr.Parameter(WellKnownTypes.LinqToDB.Mapping.AssociationAttribute_BackReferenceName, _builder.Constant(metadata.BackReferenceName    , true));
-			if (metadata.HasIsBackReference    != null) attr.Parameter(WellKnownTypes.LinqToDB.Mapping.AssociationAttribute_IsBackReference  , _builder.Constant(metadata.IsBackReference      , true));
-#pragma warning disable CS0618
-			if (metadata.Relationship          != null) attr.Parameter(WellKnownTypes.LinqToDB.Mapping.AssociationAttribute_Relationship     , _builder.Constant(metadata.Relationship.Value   , true));
-#pragma warning restore CS0618
 		}
 	}
 }

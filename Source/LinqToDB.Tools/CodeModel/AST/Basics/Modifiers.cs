@@ -58,7 +58,7 @@ namespace LinqToDB.CodeModel
 		/// <summary>
 		/// Extension method.
 		/// </summary>
-		Extension = 0x0200,
+		Extension = 0x0200 | Static,
 		/// <summary>
 		/// Read-only field.
 		/// </summary>

@@ -253,17 +253,13 @@ namespace LinqToDB.Scaffold
 			{
 				association.Extension = new MethodModel(fromAssociationName)
 				{
-					Public    = true,
-					Static    = true,
-					Extension = true,
+					Modifiers = Modifiers.Public | Modifiers.Static | Modifiers.Extension,
 					Summary   = summary
 				};
 
 				association.BackreferenceExtension = new MethodModel(toAssocationName)
 				{
-					Public    = true,
-					Static    = true,
-					Extension = true,
+					Modifiers = Modifiers.Public | Modifiers.Static | Modifiers.Extension,
 					Summary   = backreferenceSummary
 				};
 			}

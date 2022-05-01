@@ -24,10 +24,8 @@ namespace LinqToDB.Scaffold
 				_namingServices.NormalizeIdentifier(_options.DataModel.ProcedureNameOptions,
 				name.Name))
 			{
-				Public    = true,
-				Static    = true,
+				Modifiers = Modifiers.Public | Modifiers.Static | Modifiers.Extension,
 				Summary   = func.Description,
-				Extension = true
 			};
 
 			var metadata = new FunctionMetadata()
@@ -53,6 +51,8 @@ namespace LinqToDB.Scaffold
 
 			BuildParameters(func.Parameters, funcModel.Parameters);
 
+			_interceptors.PreprocessAggregateFunction(_languageProvider.TypeParser, funcModel);
+
 			if (isNonDefaultSchema && _options.DataModel.GenerateSchemaAsType)
 				GetOrAddAdditionalSchema(dataContext, func.Name.Schema!).AggregateFunctions.Add(funcModel);
 			else
@@ -73,9 +73,8 @@ namespace LinqToDB.Scaffold
 				_namingServices.NormalizeIdentifier(_options.DataModel.ProcedureNameOptions,
 				name.Name))
 			{
-				Public  = true,
-				Static  = true,
-				Summary = func.Description
+				Modifiers = Modifiers.Public | Modifiers.Static,
+				Summary   = func.Description
 			};
 
 			var metadata = new FunctionMetadata()
@@ -141,6 +140,8 @@ namespace LinqToDB.Scaffold
 					break;
 			}
 
+			_interceptors.PreprocessScalarFunction(_languageProvider.TypeParser, funcModel);
+
 			if (isNonDefaultSchema && _options.DataModel.GenerateSchemaAsType)
 				GetOrAddAdditionalSchema(dataContext, func.Name.Schema!).ScalarFunctions.Add(funcModel);
 			else
@@ -161,8 +162,8 @@ namespace LinqToDB.Scaffold
 				_namingServices.NormalizeIdentifier(_options.DataModel.ProcedureNameOptions,
 				name.Name))
 			{
-				Public  = true,
-				Summary = func.Description
+				Modifiers = Modifiers.Public,
+				Summary   = func.Description
 			};
 
 			var metadata  = new TableFunctionMetadata() { Name = name };
@@ -179,6 +180,8 @@ namespace LinqToDB.Scaffold
 
 			if (func.Result != null)
 				funcModel.Result = PrepareResultSetModel(func.Name, func.Result);
+
+			_interceptors.PreprocessTableFunction(_languageProvider.TypeParser, funcModel);
 
 			if (isNonDefaultSchema && _options.DataModel.GenerateSchemaAsType)
 				GetOrAddAdditionalSchema(dataContext, func.Name.Schema!).TableFunctions.Add(funcModel);
@@ -200,10 +203,8 @@ namespace LinqToDB.Scaffold
 				_namingServices.NormalizeIdentifier(_options.DataModel.ProcedureNameOptions,
 				name.Name))
 			{
-				Public    = true,
-				Static    = true,
+				Modifiers = Modifiers.Public | Modifiers.Static | Modifiers.Extension,
 				Summary   = func.Description,
-				Extension = true
 			};
 
 			var funcModel = new StoredProcedureModel(name, method)
@@ -287,6 +288,8 @@ namespace LinqToDB.Scaffold
 				funcModel.Results.Clear();
 				funcModel.Results.Add(new FunctionResult(resultModel?.CustomTable, resultModel?.Entity, asyncResult));
 			}
+
+			_interceptors.PreprocessStoredProcedure(_languageProvider.TypeParser, funcModel);
 
 			if (isNonDefaultSchema && _options.DataModel.GenerateSchemaAsType)
 				GetOrAddAdditionalSchema(dataContext, func.Name.Schema!).StoredProcedures.Add(funcModel);

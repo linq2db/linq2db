@@ -141,14 +141,17 @@ namespace LinqToDB.DataModel
 		{
 			var builder = methods.New(AST.Name(async ? model.Name + ASYNC_SUFFIX : model.Name));
 
-			if (model.Public   ) builder.Public   ();
-			if (model.Static   ) builder.Static   ();
-			if (model.Partial  ) builder.Partial  ();
-			if (model.Extension) builder.Extension();
-			if (withAwait)       builder.Async    ();
+			if (withAwait)
+				builder.SetModifiers(model.Modifiers | Modifiers.Async);
+			else
+				builder.SetModifiers(model.Modifiers);
 
 			if (model.Summary != null)
 				builder.XmlComment().Summary(model.Summary);
+
+			if (model.CustomAttributes != null)
+				foreach (var attr in model.CustomAttributes)
+					builder.AddAttribute(attr);
 
 			return builder;
 		}

@@ -1,4 +1,5 @@
-﻿using LinqToDB.CodeModel;
+﻿using System.Collections.Generic;
+using LinqToDB.CodeModel;
 
 namespace LinqToDB.DataModel
 {
@@ -36,7 +37,7 @@ namespace LinqToDB.DataModel
 		/// </summary>
 		/// <param name="direction">New parameter direction.</param>
 		/// <returns>Parameter model with new direction or same model if direction not changed.</returns>
-		public ParameterModel WithDirection(CodeParameterDirection direction)
+		internal ParameterModel WithDirection(CodeParameterDirection direction)
 		{
 			if (direction == Direction)
 				return this;
