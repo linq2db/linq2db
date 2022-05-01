@@ -78,8 +78,10 @@ namespace LinqToDB.CommandLine
 			AddOption(_dataModelOptions, DataModel.ReturnListFromProcedures);
 			AddOption(_dataModelOptions, DataModel.DbTypeInProcedures);
 			AddOption(_dataModelOptions, DataModel.SchemasAsTypes);
+			AddOption(_dataModelOptions, DataModel.GenerateIEquatable);
 			AddOption(_dataModelOptions, DataModel.GenerateFind);
 			AddOption(_dataModelOptions, DataModel.FindParametersInOrdinalOrder);
+			AddOption(_dataModelOptions, DataModel.EntityClassIsPartial);
 			AddOption(_dataModelOptions, DataModel.SchemaTypeClassNames);
 			// naming options
 			AddOption(_dataModelOptions, DataModel.DataContextClassNaming);

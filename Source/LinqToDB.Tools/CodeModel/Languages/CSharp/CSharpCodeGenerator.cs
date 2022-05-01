@@ -804,6 +804,22 @@ namespace LinqToDB.CodeModel
 			Write(')');
 		}
 
+		protected override void Visit(CodeAsOperator expression)
+		{
+			// TODO: priority brackets?
+			Visit(expression.Value);
+			Write(" as ");
+			Visit(expression.Type);
+		}
+
+		protected override void Visit(CodeSuppressNull expression)
+		{
+			// TODO: priority brackets?
+			Visit(expression.Value);
+			if (_useNRT)
+				Write("!");
+		}
+
 		// we don't generate retrhow right now (and it will require try-catch support too by AST)
 		protected override void Visit     (CodeThrowStatement  statement ) => WriteThrow(statement );
 		protected override void Visit     (CodeThrowExpression expression) => WriteThrow(expression);

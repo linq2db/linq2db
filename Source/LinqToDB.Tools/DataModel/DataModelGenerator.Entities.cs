@@ -80,11 +80,103 @@ namespace LinqToDB.DataModel
 				_metadataBuilder.BuildColumnMetadata(columnModel.Metadata, columnBuilder);
 			}
 
+			// generate IEquatable interface implementation
+			BuildEntityIEquatable(entity, entityBuilder);
+
 			// add entity access property to data context
 			BuildEntityContextProperty(entity, entityBuilder.Type.Type, contextProperties, context);
 
 			// generate Find extension method
 			BuildFindExtensions(entity, contextType, entityBuilder.Type.Type, findMethodsGroup);
+		}
+
+		private void BuildEntityIEquatable(EntityModel entity, ClassBuilder entityBuilder)
+		{
+			if (!entity.ImplementsIEquatable)
+				return;
+
+			var pk = entity.Columns.Where(static c => c.Metadata.IsPrimaryKey).ToArray();
+			if (pk.Length == 0)
+				return;
+
+			entityBuilder.Implements(WellKnownTypes.System.IEquatable(entityBuilder.Type.Type));
+
+			var keySelectors    = new ICodeExpression[pk.Length];
+			var lambdaType      = WellKnownTypes.System.Linq.Expressions.Expression(WellKnownTypes.System.Func(WellKnownTypes.System.ObjectNullable, entityBuilder.Type.Type));
+			var entityParameter = AST.LambdaParameter(AST.Name(ENTITY_IEQUATABLE_COMPARER_LAMBDA_PARAMETER), entityBuilder.Type.Type);
+
+			for (var i = 0; i < pk.Length; i++)
+			{
+				var column      = pk[i];
+				var lambda      = AST.Lambda(lambdaType, true).Parameter(entityParameter);
+
+				lambda.Body().Append(AST.Return(AST.Member(entityParameter.Reference, _columnProperties[column].Reference)));
+
+				keySelectors[i] = lambda.Method;
+			}
+
+			// generate static field with comparer instance
+			var region = entityBuilder.Regions().New(ENTITY_IEQUATABLE_REGION);
+
+			var fieldType = WellKnownTypes.System.Collections.Generic.IEqualityComparer(entityBuilder.Type.Type);
+
+			var comparerField = region
+				.Fields(false)
+					.New(AST.Name(ENTITY_IEQUATABLE_COMPARER_FIELD), fieldType)
+						.Private()
+						.Static()
+						.ReadOnly()
+						.AddInitializer(AST.Call(
+							new CodeTypeReference(WellKnownTypes.LinqToDB.Tools.Comparers.ComparerBuilder),
+							WellKnownTypes.LinqToDB.Tools.Comparers.ComparerBuilder_GetEqualityComparer,
+							fieldType,
+							new[] { entityBuilder.Type.Type },
+							false,
+							keySelectors));
+
+			var methods = region.Methods(false);
+
+			// generate IEquatable.Equals
+			var parameter = AST.Parameter(entityBuilder.Type.Type.WithNullability(true), WellKnownTypes.System.IEquatable_Equals_Parameter, CodeParameterDirection.In);
+			methods.New(WellKnownTypes.System.IEquatable_Equals)
+				.SetModifiers(Modifiers.Public)
+				.Parameter(parameter)
+				.Returns(WellKnownTypes.System.Boolean)
+				.Body().Append(AST.Return(
+					AST.Call(
+						comparerField.Field.Reference,
+						WellKnownTypes.System.Collections.Generic.IEqualityComparer_Equals,
+						WellKnownTypes.System.Boolean,
+						entityBuilder.Type.This,
+						AST.SuppressNull(parameter.Reference))
+					));
+
+			// override object.GetHashCode
+			methods.New(WellKnownTypes.System.Object_GetHashCode)
+				.SetModifiers(Modifiers.Public | Modifiers.Override)
+				.Returns(WellKnownTypes.System.Int32)
+				.Body().Append(AST.Return(
+					AST.Call(
+						comparerField.Field.Reference,
+						WellKnownTypes.System.Collections.Generic.IEqualityComparer_GetHashCode,
+						WellKnownTypes.System.Int32,
+						entityBuilder.Type.This)
+					));
+
+			// override object.Equals
+			parameter = AST.Parameter(WellKnownTypes.System.ObjectNullable, WellKnownTypes.System.Object_Equals_Parameter, CodeParameterDirection.In);
+			methods.New(WellKnownTypes.System.Object_Equals)
+				.SetModifiers(Modifiers.Public | Modifiers.Override)
+				.Parameter(parameter)
+				.Returns(WellKnownTypes.System.Boolean)
+				.Body()
+					.Append(
+						AST.Return(
+							AST.Call(
+								entityBuilder.Type.This,
+								WellKnownTypes.System.IEquatable_Equals,
+								WellKnownTypes.System.Boolean,
+								AST.As(entityBuilder.Type.Type, parameter.Reference))));
 		}
 
 		/// <summary>

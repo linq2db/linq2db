@@ -78,7 +78,8 @@ namespace LinqToDB.Scaffold
 						Modifiers = Modifiers.Public,
 						Summary   = table.Description
 					});
-			entity.FindExtensions = _options.DataModel.GenerateFindExtensions;
+			entity.ImplementsIEquatable = _options.DataModel.GenerateIEquatable;
+			entity.FindExtensions       = _options.DataModel.GenerateFindExtensions;
 
 			// add entity to lookup
 			_entities.Add(table.Name, new TableWithEntity(table, entity));

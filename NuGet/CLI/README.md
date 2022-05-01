@@ -414,11 +414,12 @@ public override void PreprocessEntity(ITypeParser typeParser, EntityModel entity
 // entity descriptor
 public sealed class EntityModel
 {
-    public EntityMetadata    Metadata        { get; set; }
-    public ClassModel        Class           { get; set; }
-    public PropertyModel?    ContextProperty { get; set; }
-    public FindTypes         FindExtensions  { get; set; }
-    public List<ColumnModel> Columns         { get;      }
+    public EntityMetadata    Metadata             { get; set; }
+    public ClassModel        Class                { get; set; }
+    public PropertyModel?    ContextProperty      { get; set; }
+    public FindTypes         FindExtensions       { get; set; }
+    public bool              ImplementsIEquatable { get; set; }
+    public List<ColumnModel> Columns              { get;      }
 }
 
 // column descriptor
