@@ -18,16 +18,13 @@ namespace LinqToDB.DataProvider.Oracle
 	class OracleDataProviderManaged11 : OracleDataProvider { public OracleDataProviderManaged11() : base(ProviderName.OracleManaged, OracleVersion.v11) {} }
 	class OracleDataProviderManaged12 : OracleDataProvider { public OracleDataProviderManaged12() : base(ProviderName.OracleManaged, OracleVersion.v12) {} }
 
-	public class OracleDataProvider : DynamicDataProviderBase<OracleProviderAdapter>
+	public abstract class OracleDataProvider : DynamicDataProviderBase<OracleProviderAdapter>
 	{
-		protected internal OracleDataProvider(string name) : this(name, OracleVersion.v12)
+		protected OracleDataProvider(string name) : this(name, OracleVersion.v12)
 		{}
 
-		protected internal OracleDataProvider(string name, OracleVersion version)
-			: base(
-				name,
-				GetMappingSchema(name, OracleProviderAdapter.GetInstance(name).MappingSchema),
-				OracleProviderAdapter.GetInstance(name))
+		protected OracleDataProvider(string name, OracleVersion version)
+			: base(name, GetMappingSchema(name), OracleProviderAdapter.GetInstance(name))
 		{
 			Version = version;
 
@@ -108,12 +105,12 @@ namespace LinqToDB.DataProvider.Oracle
 			};
 		}
 
-		private static MappingSchema GetMappingSchema(string name, MappingSchema providerSchema)
+		private static MappingSchema GetMappingSchema(string name)
 		{
 			return name switch
 			{
-				ProviderName.OracleNative => new OracleMappingSchema.NativeMappingSchema(providerSchema),
-				_                         => new OracleMappingSchema.ManagedMappingSchema(providerSchema),
+				ProviderName.OracleNative => new OracleMappingSchema.NativeMappingSchema(),
+				_                         => new OracleMappingSchema.ManagedMappingSchema(),
 			};
 		}
 

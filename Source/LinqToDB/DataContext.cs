@@ -128,7 +128,8 @@ namespace LinqToDB
 				_prebuiltOptions = _prebuiltOptions.WithExtension(linqExtension);
 			}
 
-			ContextID              = dataProvider.Name;
+			ContextID   = dataProvider.ID;
+			ContextName = dataProvider.Name;
 		}
 
 		/// <summary>
@@ -151,7 +152,13 @@ namespace LinqToDB
 		/// <summary>
 		/// Gets or sets context identifier. Uses provider's name by default.
 		/// </summary>
-		public string        ContextID           { get; set; }
+		public string ContextName { get; private set; }
+
+		/// <summary>
+		/// Gets or sets ContextID.
+		/// </summary>
+		public int ContextID { get; private set; }
+
 		/// <summary>
 		/// Gets or sets mapping schema. Uses provider's mapping schema by default.
 		/// </summary>
@@ -360,6 +367,11 @@ namespace LinqToDB
 			}
 		}
 
+		/// <summary>
+		/// For active underlying connection, updates information about last executed query <see cref="LastQuery"/> and
+		/// releases connection, if it is not locked (<see cref="LockDbManagerCounter"/>)
+		/// and <see cref="KeepConnectionAlive"/> is <c>false</c>.
+		/// </summary>
 		internal async Task ReleaseQueryAsync()
 		{
 			if (_dataConnection != null)
@@ -407,8 +419,9 @@ namespace LinqToDB
 			var dc = new DataContext(_prebuiltOptions)
 			{
 				KeepConnectionAlive = KeepConnectionAlive,
+				ContextName         = ContextName,
 				ContextID           = ContextID,
-				InlineParameters        = InlineParameters
+				InlineParameters    = InlineParameters
 			};
 
 			if (forNestedQuery && _dataConnection != null && _dataConnection.IsMarsEnabled)
@@ -567,6 +580,11 @@ namespace LinqToDB
 		IQueryRunner IDataContext.GetQueryRunner(Query query, int queryNumber, Expression expression, object?[]? parameters, object?[]? preambles)
 		{
 			return new QueryRunner(this, ((IDataContext)GetDataConnection()).GetQueryRunner(query, queryNumber, expression, parameters, preambles));
+		}
+
+		public FluentMappingBuilder GetFluentMappingBuilder()
+		{
+			return MappingSchema.GetFluentMappingBuilder();
 		}
 
 		class QueryRunner : IQueryRunner

@@ -270,11 +270,11 @@
 			},
 			"Sybase": {
 				"Provider": "Sybase.Data.AseClient",
-				"ConnectionString": "Data Source=DBHost;Port=5000;Database=TestData;Uid=sa;Password=TestPassword;ConnectionTimeout=300;EnableBulkLoad=1;MinPoolSize=100;MaxPoolSize=200;"
+				"ConnectionString": "Data Source=DBHost;Port=5000;Database=TestData;Uid=sa;Password=TestPassword;ConnectionTimeout=300;EnableBulkLoad=1;MinPoolSize=100;MaxPoolSize=200;AnsiNull=1;"
 			},
 			"Sybase.Managed": {
 				"Provider": "AdoNetCore.AseClient",
-				"ConnectionString": "Data Source=DBHost;Port=5000;Database=TestDataCore;Uid=sa;Password=TestPassword;ConnectionTimeout=300;EnableBulkLoad=1;MinPoolSize=100;MaxPoolSize=200;"
+				"ConnectionString": "Data Source=DBHost;Port=5000;Database=TestDataCore;Uid=sa;Password=TestPassword;ConnectionTimeout=300;EnableBulkLoad=1;MinPoolSize=100;MaxPoolSize=200;AnsiNull=1;"
 			},
 			"SapHana.Native": {
 				"Provider": "Sap.Data.Hana",
@@ -290,9 +290,9 @@
 
 			"MySql"           : { "Provider": "MySql.Data"    , "ConnectionString": "Server=localhost;Port=3306;Database=testdata;Uid=root;Pwd=root;charset=utf8;Allow User Variables=True;"                                                 },
 			"MySqlConnector"  : { "Provider": "MySqlConnector", "ConnectionString": "Server=localhost;Port=3306;Database=testdataconnector;Uid=root;Pwd=root;charset=utf8;Allow User Variables=True;AllowLoadLocalInfile=true;"              },
-			"MySql55"         : { "Provider": "MySql.Data"    , "ConnectionString": "Server=localhost;Port=3306;Database=testdata;Uid=root;Pwd=root;charset=utf8;Allow User Variables=True;SslMode=None;"                                    },
+			"MySql55"         : { "Provider": "MySql.Data"    , "ConnectionString": "Server=localhost;Port=3306;Database=testdata;Uid=root;Pwd=root;charset=utf8;Allow User Variables=True;SslMode=disabled;"                                    },
 			"MySql55Connector": { "Provider": "MySqlConnector", "ConnectionString": "Server=localhost;Port=3306;Database=testdataconnector;Uid=root;Pwd=root;charset=utf8;Allow User Variables=True;SslMode=None;AllowLoadLocalInfile=true;" },
-			"MariaDB"         : { "Provider": "MySql.Data"    , "ConnectionString": "Server=localhost;Port=3306;Database=testdata;Uid=root;Pwd=root;charset=utf8;Allow User Variables=True;SslMode=None;"                                    },
+			"MariaDB"         : { "Provider": "MySql.Data"    , "ConnectionString": "Server=localhost;Port=3306;Database=testdata;Uid=root;Pwd=root;charset=utf8;Allow User Variables=True;SslMode=disabled;"                                    },
 			"MariaDBConnector": { "Provider": "MySqlConnector", "ConnectionString": "Server=localhost;Port=3306;Database=testdataconnector;Uid=root;Pwd=root;charset=utf8;Allow User Variables=True;SslMode=None;AllowLoadLocalInfile=true;" },
 
 			"PostgreSQL.10": { "Provider": "Npgsql", "ConnectionString": "Server=localhost;Port=5432;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100" },
@@ -326,7 +326,7 @@
 			"SqlServer.Northwind"   : { "Provider": "System.Data.SqlClient"   , "ConnectionString": "Server=localhost;Database=Northwind;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"   },
 			"SqlServer.Northwind.MS": { "Provider": "Microsoft.Data.SqlClient", "ConnectionString": "Server=localhost;Database=NorthwindMS;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true" },
 
-			"Sybase.Managed": { "Provider": "AdoNetCore.AseClient", "ConnectionString": "Data Source=127.0.0.1;Port=5000;Database=TestDataCore;Uid=sa;Password=myPassword;ConnectionTimeout=300;EnableBulkLoad=1;MinPoolSize=100;MaxPoolSize=200;" },
+			"Sybase.Managed": { "Provider": "AdoNetCore.AseClient", "ConnectionString": "Data Source=127.0.0.1;Port=5000;Database=TestDataCore;Uid=sa;Password=myPassword;ConnectionTimeout=300;EnableBulkLoad=1;MinPoolSize=100;MaxPoolSize=200;AnsiNull=1;" },
 
 			"Oracle.Managed"   : { "Provider": "Oracle.ManagedDataAccess.Client", "ConnectionString": "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=localhost)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=ORC12)));User Id=system;Password=oracle;" },
 			"Oracle.11.Managed": { "Provider": "Oracle.ManagedDataAccess.Client", "ConnectionString": "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=localhost)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=XE)));User Id=system;Password=oracle;"    },

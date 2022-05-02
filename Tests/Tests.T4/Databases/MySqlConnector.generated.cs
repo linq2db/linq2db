@@ -5,7 +5,7 @@
 // </auto-generated>
 //---------------------------------------------------------------------------------------------------
 
-#pragma warning disable 1572, 1591
+#pragma warning disable 1573, 1591
 #nullable enable
 
 using System;
@@ -21,11 +21,12 @@ using LinqToDB.Mapping;
 
 namespace MySqlConnectorDataContext
 {
-	public partial class TestmysqlconnectordbDB : LinqToDB.Data.DataConnection
+	public partial class TestdbconnectorDB : LinqToDB.Data.DataConnection
 	{
 		public ITable<Alltype>           Alltypes           { get { return this.GetTable<Alltype>(); } }
 		public ITable<Alltypesnoyear>    Alltypesnoyears    { get { return this.GetTable<Alltypesnoyear>(); } }
 		public ITable<Child>             Children           { get { return this.GetTable<Child>(); } }
+		public ITable<Collatedtable>     Collatedtables     { get { return this.GetTable<Collatedtable>(); } }
 		public ITable<Datatypetest>      Datatypetests      { get { return this.GetTable<Datatypetest>(); } }
 		public ITable<Doctor>            Doctors            { get { return this.GetTable<Doctor>(); } }
 		public ITable<Fulltextindextest> Fulltextindextests { get { return this.GetTable<Fulltextindextest>(); } }
@@ -46,20 +47,27 @@ namespace MySqlConnectorDataContext
 		public ITable<Testmerge2>        Testmerge2         { get { return this.GetTable<Testmerge2>(); } }
 		public ITable<Testsamename>      Testsamenames      { get { return this.GetTable<Testsamename>(); } }
 
-		public TestmysqlconnectordbDB()
+		public TestdbconnectorDB()
 		{
 			InitDataContext();
 			InitMappingSchema();
 		}
 
-		public TestmysqlconnectordbDB(string configuration)
+		public TestdbconnectorDB(string configuration)
 			: base(configuration)
 		{
 			InitDataContext();
 			InitMappingSchema();
 		}
 
-		public TestmysqlconnectordbDB(LinqToDBConnectionOptions options)
+		public TestdbconnectorDB(LinqToDBConnectionOptions options)
+			: base(options)
+		{
+			InitDataContext();
+			InitMappingSchema();
+		}
+
+		public TestdbconnectorDB(LinqToDBConnectionOptions<TestdbconnectorDB> options)
 			: base(options)
 		{
 			InitDataContext();
@@ -142,6 +150,14 @@ namespace MySqlConnectorDataContext
 		[Column, Nullable] public int? ChildID  { get; set; } // int
 	}
 
+	[Table("collatedtable")]
+	public partial class Collatedtable
+	{
+		[Column, NotNull] public int    Id              { get; set; } // int
+		[Column, NotNull] public string CaseSensitive   { get; set; } = null!; // varchar(20)
+		[Column, NotNull] public string CaseInsensitive { get; set; } = null!; // varchar(20)
+	}
+
 	[Table("datatypetest")]
 	public partial class Datatypetest
 	{
@@ -178,9 +194,9 @@ namespace MySqlConnectorDataContext
 		#region Associations
 
 		/// <summary>
-		/// FK_Doctor_Person
+		/// FK_Doctor_Person (testdbconnector..person)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="FK_Doctor_Person", BackReferenceName="DoctorPerson")]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -258,9 +274,9 @@ namespace MySqlConnectorDataContext
 		#region Associations
 
 		/// <summary>
-		/// FK_Patient_Person
+		/// FK_Patient_Person (testdbconnector..person)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="FK_Patient_Person", BackReferenceName="PatientPerson")]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -278,15 +294,15 @@ namespace MySqlConnectorDataContext
 		#region Associations
 
 		/// <summary>
-		/// FK_Doctor_Person_BackReference
+		/// FK_Doctor_Person_BackReference (testdbconnector..doctor)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
 		public Doctor? DoctorPerson { get; set; }
 
 		/// <summary>
-		/// FK_Patient_Person_BackReference
+		/// FK_Patient_Person_BackReference (testdbconnector..patient)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
 		public Patient? PatientPerson { get; set; }
 
 		#endregion
@@ -367,11 +383,11 @@ namespace MySqlConnectorDataContext
 		[PrimaryKey, NotNull] public int ID { get; set; } // int
 	}
 
-	public static partial class TestmysqlconnectordbDBStoredProcedures
+	public static partial class TestdbconnectorDBStoredProcedures
 	{
 		#region AddIssue792Record
 
-		public static int AddIssue792Record(this TestmysqlconnectordbDB dataConnection)
+		public static int AddIssue792Record(this TestdbconnectorDB dataConnection)
 		{
 			return dataConnection.ExecuteProc("`AddIssue792Record`");
 		}
@@ -380,7 +396,7 @@ namespace MySqlConnectorDataContext
 
 		#region Issue2313Parameters
 
-		public static IEnumerable<Issue2313ParametersResult> Issue2313Parameters(this TestmysqlconnectordbDB dataConnection, string? VarChar255, char? VarChar1, string? Char255, char? Char1, byte[]? VarBinary255, byte[]? Binary255, byte[]? TinyBlob, byte[]? Blob, byte[]? MediumBlob, byte[]? LongBlob, string? TinyText, string? Text, string? MediumText, string? LongText, DateTime? Date, DateTime? DateTime, DateTime? TimeStamp, TimeSpan? Time, string? Json, sbyte? TinyInt, byte? TinyIntUnsigned, short? SmallInt, ushort? SmallIntUnsigned, int? MediumInt, uint? MediumIntUnsigned, int? Int, uint? IntUnsigned, long? BigInt, ulong? BigIntUnsigned, decimal? Decimal, float? Float, double? Double, bool? Boolean, bool? Bit1, byte? Bit8, ushort? Bit10, ushort? Bit16, uint? Bit32, ulong? Bit64, string? Enum, string? Set, int? Year, byte[]? Geometry, byte[]? Point, byte[]? LineString, byte[]? Polygon, byte[]? MultiPoint, byte[]? MultiLineString, byte[]? MultiPolygon, byte[]? GeometryCollection)
+		public static IEnumerable<Issue2313ParametersResult> Issue2313Parameters(this TestdbconnectorDB dataConnection, string? VarChar255, char? VarChar1, string? Char255, char? Char1, byte[]? VarBinary255, byte[]? Binary255, byte[]? TinyBlob, byte[]? Blob, byte[]? MediumBlob, byte[]? LongBlob, string? TinyText, string? Text, string? MediumText, string? LongText, DateTime? Date, DateTime? DateTime, DateTime? TimeStamp, TimeSpan? Time, string? Json, sbyte? TinyInt, byte? TinyIntUnsigned, short? SmallInt, ushort? SmallIntUnsigned, int? MediumInt, uint? MediumIntUnsigned, int? Int, uint? IntUnsigned, long? BigInt, ulong? BigIntUnsigned, decimal? Decimal, float? Float, double? Double, bool? Boolean, bool? Bit1, byte? Bit8, ushort? Bit10, ushort? Bit16, uint? Bit32, ulong? Bit64, string? Enum, string? Set, int? Year, byte[]? Geometry, byte[]? Point, byte[]? LineString, byte[]? Polygon, byte[]? MultiPoint, byte[]? MultiLineString, byte[]? MultiPolygon, byte[]? GeometryCollection)
 		{
 			var parameters = new []
 			{
@@ -539,7 +555,7 @@ namespace MySqlConnectorDataContext
 
 		#region Issue2313Results
 
-		public static IEnumerable<Issue2313ResultsResult> Issue2313Results(this TestmysqlconnectordbDB dataConnection, string? VarChar255, char? VarChar1, string? Char255, char? Char1, byte[]? VarBinary255, byte[]? Binary255, byte[]? TinyBlob, byte[]? Blob, byte[]? MediumBlob, byte[]? LongBlob, string? TinyText, string? Text, string? MediumText, string? LongText, DateTime? Date, DateTime? DateTime, DateTime? TimeStamp, TimeSpan? Time, sbyte? TinyInt, byte? TinyIntUnsigned, short? SmallInt, ushort? SmallIntUnsigned, int? MediumInt, uint? MediumIntUnsigned, int? Int, uint? IntUnsigned, long? BigInt, ulong? BigIntUnsigned, decimal? Decimal, float? Float, double? Double, bool? Boolean, bool? Bit1, byte? Bit8, ushort? Bit10, ushort? Bit16, uint? Bit32, ulong? Bit64, string? Enum, string? Set, string? Json, byte[]? Geometry, byte[]? Point, byte[]? LineString, byte[]? Polygon, byte[]? MultiPoint, byte[]? MultiLineString, byte[]? MultiPolygon, byte[]? GeometryCollection, int? Year)
+		public static IEnumerable<Issue2313ResultsResult> Issue2313Results(this TestdbconnectorDB dataConnection, string? VarChar255, char? VarChar1, string? Char255, char? Char1, byte[]? VarBinary255, byte[]? Binary255, byte[]? TinyBlob, byte[]? Blob, byte[]? MediumBlob, byte[]? LongBlob, string? TinyText, string? Text, string? MediumText, string? LongText, DateTime? Date, DateTime? DateTime, DateTime? TimeStamp, TimeSpan? Time, sbyte? TinyInt, byte? TinyIntUnsigned, short? SmallInt, ushort? SmallIntUnsigned, int? MediumInt, uint? MediumIntUnsigned, int? Int, uint? IntUnsigned, long? BigInt, ulong? BigIntUnsigned, decimal? Decimal, float? Float, double? Double, bool? Boolean, bool? Bit1, byte? Bit8, ushort? Bit10, ushort? Bit16, uint? Bit32, ulong? Bit64, string? Enum, string? Set, string? Json, byte[]? Geometry, byte[]? Point, byte[]? LineString, byte[]? Polygon, byte[]? MultiPoint, byte[]? MultiLineString, byte[]? MultiPolygon, byte[]? GeometryCollection, int? Year)
 		{
 			var parameters = new []
 			{
@@ -698,7 +714,7 @@ namespace MySqlConnectorDataContext
 
 		#region TestOutputParametersWithoutTableProcedure
 
-		public static int TestOutputParametersWithoutTableProcedure(this TestmysqlconnectordbDB dataConnection, string? aInParam, out bool? aOutParam)
+		public static int TestOutputParametersWithoutTableProcedure(this TestdbconnectorDB dataConnection, string? aInParam, out bool? aOutParam)
 		{
 			var parameters = new []
 			{
@@ -723,7 +739,7 @@ namespace MySqlConnectorDataContext
 
 		#region TestProcedure
 
-		public static IEnumerable<Person> TestProcedure(this TestmysqlconnectordbDB dataConnection, int? param3, ref int? param2, out int? param1)
+		public static IEnumerable<Person> TestProcedure(this TestdbconnectorDB dataConnection, int? param3, ref int? param2, out int? param1)
 		{
 			var parameters = new []
 			{

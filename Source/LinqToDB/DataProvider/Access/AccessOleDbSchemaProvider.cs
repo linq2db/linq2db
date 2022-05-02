@@ -338,7 +338,7 @@ namespace LinqToDB.DataProvider.Access
 					IsNullable           = isNullable,
 					MemberName           = ToValidName(columnName),
 					MemberType           = ToTypeName(systemType, isNullable),
-					SystemType           = GetSystemType(columnType, null, dt, length, precision, scale, options) ?? systemType ?? typeof(object),
+					SystemType           = GetSystemType(columnType, null, dt, length, precision, scale, options) ?? systemType,
 					DataType             = GetDataType(dt?.TypeName, columnType, length, precision, scale),
 					ProviderSpecificType = GetProviderSpecificType(columnType),
 					IsIdentity           = r.Field<bool>("IsAutoIncrement"),

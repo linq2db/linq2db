@@ -14,7 +14,9 @@
 
 		<ProjectReference Include="..\LinqToDB\LinqToDB.csproj" />
 
-		<None Update="DataProvider\SqlServer\Schemas\Schemas.tt">
+		<PackageReference Include="Humanizer.Core" />
+
+    <None Update="DataProvider\SqlServer\Schemas\Schemas.tt">
 			<Generator>TextTemplatingFileGenerator</Generator>
 			<LastGenOutput>Schemas.generated.cs</LastGenOutput>
 		</None>
@@ -23,5 +25,6 @@
 			<AutoGen>True</AutoGen>
 			<DependentUpon>Schemas.tt</DependentUpon>
 		</Compile>
-	</ItemGroup>
+
+   </ItemGroup>
 </Project>

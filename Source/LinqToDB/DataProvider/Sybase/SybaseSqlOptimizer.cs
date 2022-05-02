@@ -102,7 +102,7 @@ namespace LinqToDB.DataProvider.Sybase
 				return statement;
 
 			if (statement.SelectQuery.From.Tables.Count > 0)
-			{ 
+			{
 				if (tableToUpdate == statement.SelectQuery.From.Tables[0].Source)
 					return statement;
 

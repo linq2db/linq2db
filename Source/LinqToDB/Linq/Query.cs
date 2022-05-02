@@ -27,12 +27,14 @@ namespace LinqToDB.Linq
 
 	public abstract class Query
 	{
-		public Func<IDataContext,Expression,object?[]?,object?[]?,object?>                         GetElement      = null!;
-		public Func<IDataContext,Expression,object?[]?,object?[]?,CancellationToken,Task<object?>> GetElementAsync = null!;
+		internal Func<IDataContext,Expression,object?[]?,object?[]?,object?>                         GetElement      = null!;
+		internal Func<IDataContext,Expression,object?[]?,object?[]?,CancellationToken,Task<object?>> GetElementAsync = null!;
 
 		#region Init
 
 		internal readonly List<QueryInfo> Queries = new (1);
+
+		public IReadOnlyCollection<QueryInfo> GetQueries() => Queries;
 
 		internal abstract void Init(IBuildContext parseContext, List<ParameterAccessor> sqlParameters);
 
@@ -54,11 +56,11 @@ namespace LinqToDB.Linq
 
 		#region Compare
 
-		internal readonly string               ContextID;
+		internal readonly int                  ContextID;
 		internal readonly Type                 ContextType;
 		internal readonly Expression?          Expression;
 		internal readonly MappingSchema        MappingSchema;
-		internal readonly string               ConfigurationID;
+		internal readonly int                  ConfigurationID;
 		internal readonly bool                 InlineParameters;
 		internal readonly ISqlOptimizer        SqlOptimizer;
 		internal readonly SqlProviderFlags     SqlProviderFlags;
@@ -68,9 +70,7 @@ namespace LinqToDB.Linq
 		protected bool Compare(IDataContext dataContext, Expression expr)
 		{
 			return
-				ContextID.Length        == dataContext.ContextID.Length                                                 &&
 				ContextID               == dataContext.ContextID                                                        &&
-				ConfigurationID.Length  == dataContext.MappingSchema.ConfigurationID.Length                             &&
 				ConfigurationID         == dataContext.MappingSchema.ConfigurationID                                    &&
 				InlineParameters        == dataContext.InlineParameters                                                 &&
 				ContextType             == dataContext.GetType()                                                        &&
@@ -78,12 +78,12 @@ namespace LinqToDB.Linq
 				Expression!.EqualsTo(expr, dataContext, _queryableAccessorDic, _queryableMemberAccessorDic, _queryDependedObjects);
 		}
 
-		readonly Dictionary<Expression,QueryableAccessor> _queryableAccessorDic  = new ();
+		readonly Dictionary<Expression, QueryableAccessor>        _queryableAccessorDic  = new();
+		readonly List<QueryableAccessor>                          _queryableAccessorList = new();
+		readonly Dictionary<Expression, Expression>               _queryDependedObjects  = new();
 		private  Dictionary<MemberInfo, QueryableMemberAccessor>? _queryableMemberAccessorDic;
-		readonly List<QueryableAccessor>                  _queryableAccessorList = new ();
-		readonly Dictionary<Expression,Expression>        _queryDependedObjects  = new ();
 
-		public bool IsFastCacheable => _queryableMemberAccessorDic == null;
+		internal bool IsFastCacheable => _queryableMemberAccessorDic == null;
 
 		internal int AddQueryableAccessors(Expression expr, Expression<Func<Expression,IQueryable>> qe)
 		{
@@ -137,7 +137,7 @@ namespace LinqToDB.Linq
 			return accessor.Queryable.Expression;
 		}
 
-		public void ClearMemberQueryableInfo()
+		internal void ClearMemberQueryableInfo()
 		{
 			_queryableMemberAccessorDic = null;
 		}
@@ -150,8 +150,7 @@ namespace LinqToDB.Linq
 
 		internal object GetConvertedEnum(Type valueType, object value)
 		{
-			if (_enumConverters == null)
-				_enumConverters = new ConcurrentDictionary<Type, Func<object, object>>();
+			_enumConverters ??= new ();
 
 			if (!_enumConverters.TryGetValue(valueType, out var converter))
 			{
@@ -209,12 +208,12 @@ namespace LinqToDB.Linq
 			_preambles = preambles?.ToArray();
 		}
 
-		public bool IsAnyPreambles()
+		internal bool IsAnyPreambles()
 		{
 			return _preambles?.Length > 0;
 		}
 
-		public int PreamblesCount()
+		internal int PreamblesCount()
 		{
 			return _preambles?.Length ?? 0;
 		}
@@ -250,7 +249,7 @@ namespace LinqToDB.Linq
 		#endregion
 	}
 
-	class Query<T> : Query
+	public class Query<T> : Query
 	{
 		#region Init
 
@@ -281,11 +280,11 @@ namespace LinqToDB.Linq
 
 		#region Properties & Fields
 
-		public bool DoNotCache;
+		internal bool DoNotCache;
 
-		public Func<IDataContext,Expression,object?[]?,object?[]?,IEnumerable<T>>      GetIEnumerable = null!;
-		public Func<IDataContext,Expression,object?[]?,object?[]?,IAsyncEnumerable<T>> GetIAsyncEnumerable = null!;
-		public Func<IDataContext,Expression,object?[]?,object?[]?,Func<T,bool>,CancellationToken,Task> GetForEachAsync = null!;
+		internal Func<IDataContext,Expression,object?[]?,object?[]?,IEnumerable<T>>                      GetIEnumerable      = null!;
+		internal Func<IDataContext,Expression,object?[]?,object?[]?,IAsyncEnumerable<T>>                 GetIAsyncEnumerable = null!;
+		internal Func<IDataContext,Expression,object?[]?,object?[]?,Func<T,bool>,CancellationToken,Task> GetForEachAsync     = null!;
 
 		#endregion
 
@@ -330,7 +329,7 @@ namespace LinqToDB.Linq
 			/// <summary>
 			/// Count of queries which has not been found in cache.
 			/// </summary>
-			internal long CacheMissCount;
+			public long CacheMissCount;
 
 			/// <summary>
 			/// LINQ query max cache size (per entity type).
@@ -426,6 +425,7 @@ namespace LinqToDB.Linq
 				}
 
 				var allowReordering = Monitor.TryEnter(_syncPriority);
+
 				try
 				{
 					for (var i = 0; i < cache.Length; i++)
@@ -544,23 +544,23 @@ namespace LinqToDB.Linq
 		#endregion
 	}
 
-	class QueryInfo : IQueryContext
+	public class QueryInfo : IQueryContext
 	{
 		public SqlStatement    Statement   { get; set; } = null!;
 		public object?         Context     { get; set; }
 		public SqlParameter[]? Parameters  { get; set; }
 		public AliasesContext? Aliases     { get; set; }
 
-		public List<ParameterAccessor> ParameterAccessors = new ();
+		internal List<ParameterAccessor> ParameterAccessors = new ();
 
-		public void AddParameterAccessor(ParameterAccessor accessor)
+		internal void AddParameterAccessor(ParameterAccessor accessor)
 		{
 			ParameterAccessors.Add(accessor);
 			accessor.SqlParameter.AccessorId = ParameterAccessors.Count - 1;
 		}
 	}
 
-	internal class ParameterAccessor
+	class ParameterAccessor
 	{
 		public ParameterAccessor(
 			Expression                             expression,

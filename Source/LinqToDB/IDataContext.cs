@@ -28,7 +28,8 @@ namespace LinqToDB
 		/// <summary>
 		/// Provider identifier.
 		/// </summary>
-		string              ContextID             { get; }
+		string              ContextName           { get; }
+		int                 ContextID             { get; }
 		/// <summary>
 		/// Gets SQL builder service factory method for current context data provider.
 		/// </summary>
@@ -127,5 +128,7 @@ namespace LinqToDB
 		void AddInterceptor(IInterceptor interceptor);
 
 		IUnwrapDataObjectInterceptor? UnwrapDataObjectInterceptor { get; }
+
+		FluentMappingBuilder GetFluentMappingBuilder();
 	}
 }

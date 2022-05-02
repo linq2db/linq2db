@@ -10,6 +10,7 @@ using System.Text;
 using System.Threading;
 
 using JetBrains.Annotations;
+using LinqToDB.Common.Internal;
 
 namespace LinqToDB.Data
 {
@@ -312,8 +313,8 @@ namespace LinqToDB.Data
 
 			//TODO:			
 			RetryPolicy = Configuration.RetryPolicy.Factory != null
-					? Configuration.RetryPolicy.Factory(this)
-					: null;
+				? Configuration.RetryPolicy.Factory(this)
+				: null;
 
 			if (dbExtension != null)
 			{
@@ -396,9 +397,7 @@ namespace LinqToDB.Data
 		/// </summary>
 		public IRetryPolicy? RetryPolicy         { get; set; }
 
-		static readonly ConcurrentDictionary<string,int> _configurationIDs;
-		static int _maxID;
-
+		private int  _msID;
 		private int? _id;
 		/// <summary>
 		/// For internal use only.
@@ -407,14 +406,11 @@ namespace LinqToDB.Data
 		{
 			get
 			{
-				if (!_id.HasValue)
+				if (!_id.HasValue || _msID != MappingSchema.ConfigurationID)
 				{
-					var key = MappingSchema.ConfigurationID + "." + (ConfigurationString ?? ConnectionString ?? Connection.ConnectionString);
-
-					if (!_configurationIDs.TryGetValue(key, out var id))
-						_configurationIDs[key] = id = Interlocked.Increment(ref _maxID);
-
-					_id = id;
+					_id = new IdentifierBuilder(_msID = MappingSchema.ConfigurationID)
+						.Add((ConfigurationString ?? ConnectionString ?? Connection.ConnectionString))
+						.CreateID();
 				}
 
 				return _id.Value;
@@ -469,7 +465,8 @@ namespace LinqToDB.Data
 		/// Sets trace handler, used for all new connections unless overriden in <see cref="DataContextOptions"/>
 		/// defaults to calling <see cref="OnTraceInternal"/>.
 		/// </summary>
-		public static Action<TraceInfo>  OnTrace
+		[Obsolete("Use OnTraceConnection instance property or LinqToDbConnectionOptions.OnTrace setting.")]
+		public  static Action<TraceInfo>  OnTrace
 		{
 			get => _onTrace;
 			set => _onTrace = value ?? DefaultTrace;
@@ -681,8 +678,6 @@ namespace LinqToDB.Data
 
 		static DataConnection()
 		{
-			_configurationIDs = new ConcurrentDictionary<string,int>();
-
 			// lazy registration of embedded providers using detectors
 			AddProviderDetector(LinqToDB.DataProvider.Access    .AccessTools    .ProviderDetector);
 			AddProviderDetector(LinqToDB.DataProvider.DB2       .DB2Tools       .ProviderDetector);
@@ -908,22 +903,21 @@ namespace LinqToDB.Data
 
 			public static IDataProvider? GetDataProvider(IConnectionStringSettings css, string connectionString)
 			{
-				var configuration            = css.Name;
-				var providerName             = css.ProviderName;
+				var configuration = css.Name;
+				var providerName  = css.ProviderName;
 				var dataProvider  = _providerDetectors.Select(d => d(css, connectionString)).FirstOrDefault(dp => dp != null);
 
 				if (dataProvider == null)
 				{
 					IDataProvider? defaultDataProvider = null;
+
 					if (DefaultDataProvider != null)
 						_dataProviders.TryGetValue(DefaultDataProvider, out defaultDataProvider);
 
 					if (string.IsNullOrEmpty(providerName))
 						dataProvider = FindProvider(configuration, _dataProviders, defaultDataProvider);
-					else if (_dataProviders.TryGetValue(providerName!, out dataProvider)
-							|| _dataProviders.TryGetValue(configuration, out dataProvider))
-					{ }
-					else
+					else if (!_dataProviders.TryGetValue(providerName!, out dataProvider) &&
+					         !_dataProviders.TryGetValue(configuration, out dataProvider))
 					{
 						var providers = _dataProviders.Where(dp => dp.Value.ConnectionNamespace == providerName).ToList();
 
@@ -1155,6 +1149,13 @@ namespace LinqToDB.Data
 			}
 
 			_dataContextInterceptor?.OnClosed(new (this));
+		}
+
+		public FluentMappingBuilder GetFluentMappingBuilder()
+		{
+			if (MappingSchema.IsLockable)
+				MappingSchema = new(MappingSchema);
+			return MappingSchema.GetFluentMappingBuilder();
 		}
 
 		#endregion
@@ -1409,6 +1410,9 @@ namespace LinqToDB.Data
 				? result.Value
 				: _command!.ExecuteReader(commandBehavior);
 
+			if (_commandInterceptor != null)
+				_commandInterceptor.AfterExecuteReader(new (this), _command!, commandBehavior, rd);
+
 			var wrapper = new DataReaderWrapper(this, rd, _command!);
 
 			_command = null;
@@ -1615,13 +1619,13 @@ namespace LinqToDB.Data
 						dataConnection.TransactionAsync!.Rollback();
 
 						if (dataConnection._closeTransaction)
-				{
+						{
 							dataConnection.TransactionAsync.Dispose();
 							dataConnection.TransactionAsync = null;
 
 							if (dataConnection._command != null)
 								dataConnection._command.Transaction = null;
-				}
+						}
 
 						return true;
 					});
@@ -1711,7 +1715,7 @@ namespace LinqToDB.Data
 		/// Gets list of query hints (writable collection), that will be used only for next query, executed through current connection.
 		/// </summary>
 		public  List<string>  NextQueryHints => _nextQueryHints ??= new List<string>();
-		
+
 		/// <summary>
 		/// Adds additional mapping schema to current connection.
 		/// </summary>
@@ -1720,7 +1724,7 @@ namespace LinqToDB.Data
 		/// <returns>Current connection object.</returns>
 		public DataConnection AddMappingSchema(MappingSchema mappingSchema)
 		{
-			MappingSchema = MappingSchema.CombineSchemas(MappingSchema, mappingSchema);
+			MappingSchema = new (mappingSchema, MappingSchema);
 			_id           = null;
 
 			return this;

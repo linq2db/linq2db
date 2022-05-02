@@ -5,7 +5,7 @@
 // </auto-generated>
 //---------------------------------------------------------------------------------------------------
 
-#pragma warning disable 1572, 1591
+#pragma warning disable 1573, 1591
 #nullable enable
 
 using System;
@@ -25,6 +25,7 @@ namespace SybaseDataContext
 	{
 		public ITable<AllType>           AllTypes            { get { return this.GetTable<AllType>(); } }
 		public ITable<Child>             Children            { get { return this.GetTable<Child>(); } }
+		public ITable<CollatedTable>     CollatedTables      { get { return this.GetTable<CollatedTable>(); } }
 		public ITable<Doctor>            Doctors             { get { return this.GetTable<Doctor>(); } }
 		public ITable<GrandChild>        GrandChildren       { get { return this.GetTable<GrandChild>(); } }
 		public ITable<InheritanceChild>  InheritanceChildren { get { return this.GetTable<InheritanceChild>(); } }
@@ -55,6 +56,13 @@ namespace SybaseDataContext
 		}
 
 		public TestDataDB(LinqToDBConnectionOptions options)
+			: base(options)
+		{
+			InitDataContext();
+			InitMappingSchema();
+		}
+
+		public TestDataDB(LinqToDBConnectionOptions<TestDataDB> options)
 			: base(options)
 		{
 			InitDataContext();
@@ -107,6 +115,14 @@ namespace SybaseDataContext
 		[Column, Nullable] public int? ChildID  { get; set; } // int
 	}
 
+	[Table(Schema="dbo", Name="CollatedTable")]
+	public partial class CollatedTable
+	{
+		[Column, NotNull] public int    Id              { get; set; } // int
+		[Column, NotNull] public string CaseSensitive   { get; set; } = null!; // nvarchar(60)
+		[Column, NotNull] public string CaseInsensitive { get; set; } = null!; // nvarchar(60)
+	}
+
 	[Table(Schema="dbo", Name="Doctor")]
 	public partial class Doctor
 	{
@@ -116,9 +132,9 @@ namespace SybaseDataContext
 		#region Associations
 
 		/// <summary>
-		/// FK_Doctor_Person
+		/// FK_Doctor_Person (TestData.dbo.Person)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="FK_Doctor_Person", BackReferenceName="Doctor")]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -152,8 +168,8 @@ namespace SybaseDataContext
 	[Table(Schema="dbo", Name="KeepIdentityTest")]
 	public partial class KeepIdentityTest
 	{
-		[Identity          ] public decimal ID    { get; set; } // numeric(12, 0)
-		[Column,   Nullable] public int?    Value { get; set; } // int
+		[Identity          ] public int  ID    { get; set; } // int
+		[Column,   Nullable] public int? Value { get; set; } // int
 	}
 
 	[Table(Schema="dbo", Name="LinqDataTypes")]
@@ -188,9 +204,9 @@ namespace SybaseDataContext
 		#region Associations
 
 		/// <summary>
-		/// FK_Patient_Person
+		/// FK_Patient_Person (TestData.dbo.Person)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="FK_Patient_Person", BackReferenceName="Patient")]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -208,15 +224,15 @@ namespace SybaseDataContext
 		#region Associations
 
 		/// <summary>
-		/// FK_Doctor_Person_BackReference
+		/// FK_Doctor_Person_BackReference (TestData.dbo.Doctor)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
 		public Doctor? Doctor { get; set; }
 
 		/// <summary>
-		/// FK_Patient_Person_BackReference
+		/// FK_Patient_Person_BackReference (TestData.dbo.Patient)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
 		public Patient? Patient { get; set; }
 
 		#endregion

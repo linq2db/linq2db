@@ -643,6 +643,7 @@ namespace Tests.Linq
 			using (var db = GetDataConnection(context, new MappingSchema()))
 			{
 				SetupCustomTypes(db.MappingSchema, true);
+
 				using (var table = db.CreateLocalTable<AllTypesCustomMaxLength>())
 				{
 					var value = new string('я', 5000);
@@ -721,25 +722,23 @@ namespace Tests.Linq
 		private void SetupCustomTypes(MappingSchema ms, bool asDataParameter = false)
 		{
 			ms.AddScalarType(typeof(VarBinary), DataType.VarBinary);
-			ms.AddScalarType(typeof(VarChar), DataType.VarChar);
-			ms.AddScalarType(typeof(NVarChar), DataType.NVarChar);
+			ms.AddScalarType(typeof(VarChar),   DataType.VarChar);
+			ms.AddScalarType(typeof(NVarChar),  DataType.NVarChar);
+
+			ms.SetConvertExpression<string, VarChar>  (v => new () { Value = v });
+			ms.SetConvertExpression<string, NVarChar> (v => new () { Value = v });
+			ms.SetConvertExpression<byte[], VarBinary>(v => new () { Value = v });
 
 			if (!asDataParameter)
 			{
-				ms.SetConvertExpression<string, VarChar>  (v => new VarChar()   { Value = v });
-				ms.SetConvertExpression<string, NVarChar> (v => new NVarChar()  { Value = v });
-				ms.SetConvertExpression<byte[], VarBinary>(v => new VarBinary() { Value = v });
-				ms.SetConvertExpression<VarChar?, string?>  (v => v == null ? null : v.Value);
-				ms.SetConvertExpression<NVarChar?, string?> (v => v == null ? null : v.Value);
+				ms.SetConvertExpression<VarChar?,   string?>(v => v == null ? null : v.Value);
+				ms.SetConvertExpression<NVarChar?,  string?>(v => v == null ? null : v.Value);
 				ms.SetConvertExpression<VarBinary?, byte[]?>(v => v == null ? null : v.Value);
 			}
 			else
 			{
-				ms.SetConvertExpression<string, VarChar>  (v => new VarChar()   { Value = v });
-				ms.SetConvertExpression<string, NVarChar> (v => new NVarChar()  { Value = v });
-				ms.SetConvertExpression<byte[], VarBinary>(v => new VarBinary() { Value = v });
-				ms.SetConvertExpression<VarChar?, DataParameter?>  (v => v == null ? null : DataParameter.VarChar(null, v.Value));
-				ms.SetConvertExpression<NVarChar?, DataParameter?> (v => v == null ? null : DataParameter.NVarChar(null, v.Value));
+				ms.SetConvertExpression<VarChar?,   DataParameter?>(v => v == null ? null : DataParameter.VarChar  (null, v.Value));
+				ms.SetConvertExpression<NVarChar?,  DataParameter?>(v => v == null ? null : DataParameter.NVarChar (null, v.Value));
 				ms.SetConvertExpression<VarBinary?, DataParameter?>(v => v == null ? null : DataParameter.VarBinary(null, v.Value));
 			}
 		}

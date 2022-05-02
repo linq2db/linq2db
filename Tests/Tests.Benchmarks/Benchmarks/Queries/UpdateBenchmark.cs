@@ -36,7 +36,7 @@ namespace LinqToDB.Benchmarks.Queries
 		public void Setup()
 		{
 			_cn = new MockDbConnection(new QueryResult() { Return = 1 }, ConnectionState.Open);
-			_db = new DataConnection(new PostgreSQLDataProvider95(), _cn);
+			_db = new DataConnection(PostgreSQLTools.GetDataProvider(PostgreSQLVersion.v95), _cn);
 
 			_compiledLinqSet = CompiledQuery.Compile<DataConnection, Workflow, int>(
 				(db, record) => db.GetTable<Workflow>()

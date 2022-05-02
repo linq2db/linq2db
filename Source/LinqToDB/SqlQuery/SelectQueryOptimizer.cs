@@ -1482,7 +1482,7 @@ namespace LinqToDB.SqlQuery
 					{
 						ApplySubQueryExtensions(_selectQuery, sql);
 
-					if (!_selectQuery.Select.Columns.All(static c => QueryHelper.IsAggregationOrWindowFunction(c.Expression)))
+						if (!_selectQuery.Select.Columns.All(static c => QueryHelper.IsAggregationOrWindowFunction(c.Expression)))
 							ApplySubsequentOrder(_selectQuery, sql);
 					}
 

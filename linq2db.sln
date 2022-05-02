@@ -96,6 +96,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NuGet", "NuGet", "{3A081B6E
 		NuGet\Icon_list.png = NuGet\Icon_list.png
 		NuGet\linq2db.Access.nuspec = NuGet\linq2db.Access.nuspec
 		NuGet\linq2db.AspNet.nuspec = NuGet\linq2db.AspNet.nuspec
+		NuGet\linq2db.cli.nuspec = NuGet\linq2db.cli.nuspec
 		NuGet\linq2db.DB2.Core.nuspec = NuGet\linq2db.DB2.Core.nuspec
 		NuGet\linq2db.DB2.nuspec = NuGet\linq2db.DB2.nuspec
 		NuGet\linq2db.Firebird.nuspec = NuGet\linq2db.Firebird.nuspec
@@ -127,7 +128,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NuGet", "NuGet", "{3A081B6E
 		NuGet\README.Remote.Grpc.md = NuGet\README.Remote.Grpc.md
 		NuGet\README.Remote.Wcf.md = NuGet\README.Remote.Wcf.md
 		NuGet\README.T4.md = NuGet\README.T4.md
+		NuGet\readme.T4.txt = NuGet\readme.T4.txt
 		NuGet\README.Tools.md = NuGet\README.Tools.md
+		NuGet\TestToolLocal.cmd = NuGet\TestToolLocal.cmd
 	EndProjectSection
 EndProject
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Tests.FSharp", "Tests\FSharp\Tests.FSharp.fsproj", "{E3E09A92-ED23-457B-8E59-CCD34667B6EE}"
@@ -254,6 +257,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LinqToDB.AspNet", "Source\L
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{ED41F9D3-8E93-4D80-A45F-21A90428253F}"
 	ProjectSection(SolutionItems) = preProject
+		.github\CODEOWNERS = .github\CODEOWNERS
 		.github\ISSUE_TEMPLATE.md = .github\ISSUE_TEMPLATE.md
 	EndProjectSection
 EndProject
@@ -435,6 +439,24 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LinqToDB.Remote.Wcf", "Sour
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LinqToDB.Remote.Grpc", "Source\LinqToDB.Remote.Grpc\LinqToDB.Remote.Grpc.csproj", "{130786F1-BAD8-4390-8B4E-3FD2DEF50D56}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LinqToDB.CLI", "Source\LinqToDB.CLI\LinqToDB.CLI.csproj", "{CECB0D6C-33BD-4A00-8882-0D8622D4ACEA}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Shared", "Shared", "{D069A715-29E5-4CFD-9112-63ED5633971F}"
+	ProjectSection(SolutionItems) = preProject
+		Source\Shared\HashCode.cs = Source\Shared\HashCode.cs
+		Source\Shared\IsExternalInit.cs = Source\Shared\IsExternalInit.cs
+		Source\Shared\JetBrains.Annotations.cs = Source\Shared\JetBrains.Annotations.cs
+		Source\Shared\NullableAttributes.cs = Source\Shared\NullableAttributes.cs
+		Source\Shared\TupleElementNamesAttribute.cs = Source\Shared\TupleElementNamesAttribute.cs
+		Source\Shared\ValueTuple.cs = Source\Shared\ValueTuple.cs
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "CLI", "CLI", "{6152B55A-E7B0-4E7A-8E26-922FD91C6A95}"
+	ProjectSection(SolutionItems) = preProject
+		NuGet\CLI\DotnetToolSettings.xml = NuGet\CLI\DotnetToolSettings.xml
+		NuGet\CLI\README.md = NuGet\CLI\README.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Azure|Any CPU = Azure|Any CPU
@@ -507,6 +529,12 @@ Global
 		{52EABB0B-0C56-43F1-B98B-6461FA841E5F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{52EABB0B-0C56-43F1-B98B-6461FA841E5F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{52EABB0B-0C56-43F1-B98B-6461FA841E5F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CECB0D6C-33BD-4A00-8882-0D8622D4ACEA}.Azure|Any CPU.ActiveCfg = Release|Any CPU
+		{CECB0D6C-33BD-4A00-8882-0D8622D4ACEA}.Azure|Any CPU.Build.0 = Release|Any CPU
+		{CECB0D6C-33BD-4A00-8882-0D8622D4ACEA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CECB0D6C-33BD-4A00-8882-0D8622D4ACEA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CECB0D6C-33BD-4A00-8882-0D8622D4ACEA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CECB0D6C-33BD-4A00-8882-0D8622D4ACEA}.Release|Any CPU.Build.0 = Release|Any CPU
 		{CBFFC259-5165-4828-B9AC-15DFB769BFEC}.Azure|Any CPU.ActiveCfg = Release|Any CPU
 		{CBFFC259-5165-4828-B9AC-15DFB769BFEC}.Azure|Any CPU.Build.0 = Release|Any CPU
 		{CBFFC259-5165-4828-B9AC-15DFB769BFEC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -560,6 +588,9 @@ Global
 		{BD5FA19A-4092-45F0-A7AF-D46666718EB5} = {51E64464-E257-4984-A4D5-BF9FF8B7DF1D}
 		{DAD073A0-C4D2-4C92-AB6D-F8162DB2D5D3} = {C937AC8E-2714-4850-A1EA-1710D980DF0B}
 		{AA850554-8CD1-4231-A3E3-804B62FF3622} = {51E64464-E257-4984-A4D5-BF9FF8B7DF1D}
+		{CECB0D6C-33BD-4A00-8882-0D8622D4ACEA} = {AF93451E-198C-4A94-8EB4-C330D886E102}
+		{D069A715-29E5-4CFD-9112-63ED5633971F} = {AF93451E-198C-4A94-8EB4-C330D886E102}
+		{6152B55A-E7B0-4E7A-8E26-922FD91C6A95} = {3A081B6E-D3B3-433F-A3CA-EE29CD24C324}
 		{CBFFC259-5165-4828-B9AC-15DFB769BFEC} = {AF93451E-198C-4A94-8EB4-C330D886E102}
 		{130786F1-BAD8-4390-8B4E-3FD2DEF50D56} = {AF93451E-198C-4A94-8EB4-C330D886E102}
 	EndGlobalSection

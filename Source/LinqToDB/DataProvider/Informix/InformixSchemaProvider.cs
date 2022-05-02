@@ -247,10 +247,10 @@ namespace LinqToDB.DataProvider.Informix
 			{
 				// uh-oh, how long IS the default major?
 				k = arr[j].end_point - arr[j].start_point;
- 
+
 				// add in the extra
 				k += len;
- 
+
 				c.ColumnType = c.DataType + " " + arr[j].datetype + " (" + k + ") TO " + arr[i].datetype;
 				c.Precision = 5;
 			}

@@ -82,7 +82,7 @@ namespace LinqToDB.Remote
 						.Append("-- ")
 						.Append("ServiceModel")
 						.Append(' ')
-						.Append(DataContext.ContextID)
+						.Append(DataContext.ContextName)
 						.Append(' ')
 						.Append(sqlBuilder.Name)
 						.AppendLine();

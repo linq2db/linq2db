@@ -331,7 +331,7 @@ void LoadServerMetadata(DataConnection dataConnection)
 						Size          = pr.Size,
 						ParameterName = CheckParameterName(CheckType(pr.SystemType, pr.ParameterName)),
 						ParameterType = pr.ParameterType,
-						SystemType    = pr.SystemType,
+						SystemType    = pr.SystemType ?? typeof(object),
 						DataType      = pr.DataType.ToString(),
 						IsNullable    = pr.IsNullable,
 						Description   = pr.Description,
@@ -376,6 +376,7 @@ Dictionary<string,TR> ToDictionary<T,TR>(IEnumerable<T> source, Func<T,string> k
 
 string CheckType(Type type, string typeName)
 {
+	type = type ?? typeof(object);
 	if (!Model.Usings.Contains(type.Namespace))
 		Model.Usings.Add(type.Namespace);
 

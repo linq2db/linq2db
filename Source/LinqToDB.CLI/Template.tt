@@ -1,0 +1,128 @@
+﻿// @template directive is pre-configured and shouldn't be edited
+<#@ template language="C#" inherits="LinqToDB.LinqToDBHost" linePragmas="false" #>
+
+// specify additional references using @assembly directive. E.g. (remove space before #@)
+// (full path expected or you can get "The given assembly name or codebase was invalid" error)
+// < #@ assembly name="c:\path_to\Npgsql.dll" #>
+// linq2db.dll, linq2db.Tools.dll, and runtime's System*.dll assemblies already refereced
+
+// additional namespace imports (usings)
+<#@ import namespace="System"                     #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ import namespace="LinqToDB.CodeModel"         #>
+<#@ import namespace="LinqToDB.Schema"            #>
+<#@ import namespace="LinqToDB.Scaffold"          #>
+
+/*
+
+IMPORTANT:
+This T4 template doesn't use code-generation feature of T4, so don't try to add any codegeneration logic to it - it will be ignored.
+T4 used for only one reason - it allows you to specify both code of interceptor and additional assembly references using single file.
+
+This template already contains no-op implementation of interceptors (see Interceptors class below) and you only need to
+edit it's methods code to add addtional logic.
+
+*/
+
+// this is interceptors class implementation which must inherit from ScaffoldInterceptors class
+public class Interceptors : ScaffoldInterceptors
+{
+	private ScaffoldOptions Options { get; }
+
+	// don't add other constructors (they will be ignored), as interceptors class instantiated using default constructor or constructor with ScaffoldOptions parameter
+	public Interceptors(ScaffoldOptions options)
+	{
+		Options = options;
+		// Options could be used in two ways:
+		// - it contains settings, passed with command line
+		// - it could be used to configure options programmatically (it should be done here in constructor before scaffolder will start using them)
+	}
+
+	#region Schema Interceptors
+	/// <summary>
+	/// Using this method you can add, remove or modify table schema information.
+	/// </summary>
+	/// <param name="tables">Table schema, provided by schema provider.</param>
+	/// <returns>Table schema with interceptor logic applied.</returns>
+	public override IEnumerable<Table> GetTables(IEnumerable<Table> tables)
+	{
+		return tables;
+	}
+
+	/// <summary>
+	/// Using this method you can add, remove or modify view schema information.
+	/// </summary>
+	/// <param name="views">View schema, provided by schema provider.</param>
+	/// <returns>View schema with interceptor logic applied.</returns>
+	public override IEnumerable<View> GetViews(IEnumerable<View> views)
+	{
+		return views;
+	}
+
+	/// <summary>
+	/// Using this method you can add, remove or modify foreign key constrains schema information.
+	/// </summary>
+	/// <param name="keys">Foreign key schema, provided by schema provider.</param>
+	/// <returns>Foreign key schema with interceptor logic applied.</returns>
+	public override IEnumerable<ForeignKey> GetForeignKeys(IEnumerable<ForeignKey> keys)
+	{
+		return keys;
+	}
+
+	/// <summary>
+	/// Using this method you can add, remove or modify stored procedure schema information.
+	/// </summary>
+	/// <param name="procedures">Stored procedure schema, provided by schema provider.</param>
+	/// <returns>Stored procedure schema with interceptor logic applied.</returns>
+	public override IEnumerable<StoredProcedure> GetProcedures(IEnumerable<StoredProcedure> procedures)
+	{
+		return procedures;
+	}
+
+	/// <summary>
+	/// Using this method you can add, remove or modify table function schema information.
+	/// </summary>
+	/// <param name="functions">Table function schema, provided by schema provider.</param>
+	/// <returns>Table function schema with interceptor logic applied.</returns>
+	public override IEnumerable<TableFunction> GetTableFunctions(IEnumerable<TableFunction> functions)
+	{
+		return functions;
+	}
+
+	/// <summary>
+	/// Using this method you can add, remove or modify scalar function schema information.
+	/// </summary>
+	/// <param name="functions">Scalar function schema, provided by schema provider.</param>
+	/// <returns>Scalar function schema with interceptor logic applied.</returns>
+	public override IEnumerable<ScalarFunction> GetScalarFunctions(IEnumerable<ScalarFunction> functions)
+	{
+		return functions;
+	}
+
+	/// <summary>
+	/// Using this method you can add, remove or modify aggregate function schema information.
+	/// </summary>
+	/// <param name="functions">Aggregate function schema, provided by schema provider.</param>
+	/// <returns>Aggregate function schema with interceptor logic applied.</returns>
+	public override IEnumerable<AggregateFunction> GetAggregateFunctions(IEnumerable<AggregateFunction> functions)
+	{
+		return functions;
+	}
+	#endregion
+
+	#region Type mapping Interceptors
+	/// <summary>
+	/// Using this method you can specify which .NET type and <see cref="DataType"/> enum value to use with specific database type.
+	/// Method called only once per database type.
+	/// <see cref="TypeMapping.CLRType"/> shouldn't be a nullable type, as nullability applied to it later automatically based on owning object (e.g. column or procedure parameter) nullability.
+	/// </summary>
+	/// <param name="databaseType">Database type specification.</param>
+	/// <param name="typeParser">Type parser to create value for <see cref="TypeMapping.CLRType"/> property from <see cref="Type"/> instance or type name string.</param>
+	/// <param name="defaultMapping">Default type mapping for specified <paramref name="databaseType"/>.</param>
+	/// <returns>Type mapping information for specified <paramref name="databaseType"/>.</returns>
+	public override TypeMapping? GetTypeMapping(DatabaseType databaseType, ITypeParser typeParser, TypeMapping? defaultMapping)
+	{
+		return defaultMapping;
+	}
+	#endregion
+}

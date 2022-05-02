@@ -1,19 +1,20 @@
 ﻿#if NETFRAMEWORK
 using System;
+using System.ServiceModel;
+using System.ServiceModel.Description;
+using System.Diagnostics;
+using System.Collections.Concurrent;
+
+using LinqToDB;
 using LinqToDB.Interceptors;
 using LinqToDB.Mapping;
 using LinqToDB.Remote;
-using System.ServiceModel;
-using System.ServiceModel.Description;
 using LinqToDB.Remote.Wcf;
-using System.Diagnostics;
-using LinqToDB;
-using Tests.Model.Remote.Wcf;
-using Tests.Model;
-using System.Collections.Concurrent;
 
 namespace Tests.Remote.ServerContainer
 {
+	using Model;
+	using Tests.Model.Remote.Wcf;
 
 	public class WcfServerContainer : IServerContainer
 	{
@@ -57,7 +58,7 @@ namespace Tests.Remote.ServerContainer
 			Debug.WriteLine(((IDataContext)dx).ContextID, "Provider ");
 
 			if (ms != null)
-				dx.MappingSchema = MappingSchema.CombineSchemas(dx.MappingSchema, ms);
+				dx.MappingSchema = new MappingSchema(dx.MappingSchema, ms);
 
 			return dx;
 		}

@@ -117,7 +117,7 @@ namespace Tests.Data
 				{
 					dataProvider = DataConnection.GetDataProvider("DB2", connectionString)!;
 
-					Assert.That(dataProvider, Is.TypeOf<DB2LUWDataProvider>());
+					Assert.That(dataProvider, Is.InstanceOf<DB2DataProvider>());
 
 					var sqlServerDataProvider = (DB2DataProvider)dataProvider;
 
@@ -130,7 +130,7 @@ namespace Tests.Data
 				{
 					dataProvider = DataConnection.GetDataProvider("System.Data.SqlClient", "MyConfig.2005", connectionString)!;
 
-					Assert.That(dataProvider, Is.TypeOf<SqlServerDataProvider2005SystemDataSqlClient>());
+					Assert.That(dataProvider, Is.InstanceOf<SqlServerDataProvider>());
 
 					var sqlServerDataProvider = (SqlServerDataProvider)dataProvider;
 
@@ -148,7 +148,7 @@ namespace Tests.Data
 				{
 					dataProvider = DataConnection.GetDataProvider("SqlServer", connectionString)!;
 
-					Assert.That(dataProvider, Is.TypeOf<SqlServerDataProvider2008SystemDataSqlClient>());
+					Assert.That(dataProvider, Is.InstanceOf<SqlServerDataProvider>());
 
 					var sqlServerDataProvider = (SqlServerDataProvider)dataProvider;
 
@@ -166,7 +166,7 @@ namespace Tests.Data
 				{
 					dataProvider = DataConnection.GetDataProvider("SqlServer.2012", connectionString)!;
 
-					Assert.That(dataProvider, Is.TypeOf<SqlServerDataProvider2012SystemDataSqlClient>());
+					Assert.That(dataProvider, Is.InstanceOf<SqlServerDataProvider>());
 
 					var sqlServerDataProvider = (SqlServerDataProvider)dataProvider;
 
@@ -184,7 +184,7 @@ namespace Tests.Data
 				{
 					dataProvider = DataConnection.GetDataProvider("SqlServer", "SqlServer.2014", connectionString)!;
 
-					Assert.That(dataProvider, Is.TypeOf<SqlServerDataProvider2014SystemDataSqlClient>());
+					Assert.That(dataProvider, Is.InstanceOf<SqlServerDataProvider>());
 
 					var sqlServerDataProvider = (SqlServerDataProvider)dataProvider;
 
@@ -202,7 +202,7 @@ namespace Tests.Data
 					{
 						dataProvider = DataConnection.GetDataProvider("SqlServer", "SqlServer.2017", connectionString)!;
 
-						Assert.That(dataProvider, Is.TypeOf<SqlServerDataProvider2017SystemDataSqlClient>());
+						Assert.That(dataProvider, Is.InstanceOf<SqlServerDataProvider>());
 
 						var sqlServerDataProvider = (SqlServerDataProvider)dataProvider;
 
@@ -812,6 +812,7 @@ namespace Tests.Data
 		}
 
 		[Test]
+		[Obsolete("DataConnection.OnTrace")]
 		public void TestCloneOnTraceConnection([DataSources(false)] string context)
 		{
 			using (var db = GetDataConnection(context))

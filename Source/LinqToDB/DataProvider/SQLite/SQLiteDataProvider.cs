@@ -18,7 +18,7 @@ namespace LinqToDB.DataProvider.SQLite
 	class SQLiteDataProviderClassic : SQLiteDataProvider { public SQLiteDataProviderClassic() : base(ProviderName.SQLiteClassic) {} }
 	class SQLiteDataProviderMS      : SQLiteDataProvider { public SQLiteDataProviderMS()      : base(ProviderName.SQLiteMS)      {} }
 
-	public class SQLiteDataProvider : DynamicDataProviderBase<SQLiteProviderAdapter>
+	public abstract class SQLiteDataProvider : DynamicDataProviderBase<SQLiteProviderAdapter>
 	{
 		/// <summary>
 		/// Creates the specified SQLite provider based on the provider name.

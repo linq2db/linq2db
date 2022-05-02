@@ -1,32 +1,23 @@
 ﻿using System;
+using System.Data.Linq;
+using System.Globalization;
 using System.Net.NetworkInformation;
 using System.Text;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
-	using LinqToDB.Common;
-	using LinqToDB.Data;
-	using LinqToDB.SqlQuery;
+	using Common;
+	using Data;
 	using Mapping;
-	using System.Data.Linq;
-	using System.Globalization;
+	using SqlQuery;
 
-	public class PostgreSQLMappingSchema : MappingSchema
+	sealed class PostgreSQLMappingSchema : LockedMappingSchema
 	{
 		private const string DATE_FORMAT       = "'{0:yyyy-MM-dd}'::{1}";
 		private const string TIMESTAMP0_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss}'::{1}";
 		private const string TIMESTAMP3_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.fff}'::{1}";
 
-		public PostgreSQLMappingSchema() : this(ProviderName.PostgreSQL)
-		{
-		}
-
-		public PostgreSQLMappingSchema(params MappingSchema[] schemas) : this(ProviderName.PostgreSQL, schemas)
-		{
-		}
-
-		protected PostgreSQLMappingSchema(string configuration, params MappingSchema[] schemas)
-			: base(configuration, schemas)
+		PostgreSQLMappingSchema() : base(ProviderName.PostgreSQL)
 		{
 			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 
@@ -144,44 +135,26 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		}
 
 		internal static MappingSchema Instance { get; } = new PostgreSQLMappingSchema();
-	}
 
-	public class PostgreSQL92MappingSchema : MappingSchema
-	{
-		public PostgreSQL92MappingSchema()
-			: base(ProviderName.PostgreSQL92, PostgreSQLMappingSchema.Instance)
+		public sealed class PostgreSQL92MappingSchema : LockedMappingSchema
 		{
+			public PostgreSQL92MappingSchema() : base(ProviderName.PostgreSQL92, NpgsqlProviderAdapter.GetInstance().MappingSchema, Instance)
+			{
+			}
 		}
 
-		public PostgreSQL92MappingSchema(params MappingSchema[] schemas)
-				: base(ProviderName.PostgreSQL92, Array<MappingSchema>.Append(schemas, PostgreSQLMappingSchema.Instance))
+		public sealed class PostgreSQL93MappingSchema : LockedMappingSchema
 		{
-		}
-	}
-
-	public class PostgreSQL93MappingSchema : MappingSchema
-	{
-		public PostgreSQL93MappingSchema()
-			: base(ProviderName.PostgreSQL93, PostgreSQLMappingSchema.Instance)
-		{
+			public PostgreSQL93MappingSchema() : base(ProviderName.PostgreSQL93, NpgsqlProviderAdapter.GetInstance().MappingSchema, Instance)
+			{
+			}
 		}
 
-		public PostgreSQL93MappingSchema(params MappingSchema[] schemas)
-				: base(ProviderName.PostgreSQL93, Array<MappingSchema>.Append(schemas, PostgreSQLMappingSchema.Instance))
+		public sealed class PostgreSQL95MappingSchema : LockedMappingSchema
 		{
-		}
-	}
-
-	public class PostgreSQL95MappingSchema : MappingSchema
-	{
-		public PostgreSQL95MappingSchema()
-			: base(ProviderName.PostgreSQL95, PostgreSQLMappingSchema.Instance)
-		{
-		}
-
-		public PostgreSQL95MappingSchema(params MappingSchema[] schemas)
-				: base(ProviderName.PostgreSQL95, Array<MappingSchema>.Append(schemas, PostgreSQLMappingSchema.Instance))
-		{
+			public PostgreSQL95MappingSchema() : base(ProviderName.PostgreSQL95, NpgsqlProviderAdapter.GetInstance().MappingSchema, Instance)
+			{
+			}
 		}
 	}
 }

@@ -298,11 +298,11 @@ namespace Tests.Linq
 		[Test]
 		public void ComparisionNullCheckOff([DataSources] string context)
 		{
-			using (new WithoutComparisonNullCheck())
-			using (var db = GetDataContext(context))
-				AreEqual(
-					   Parent.Where(p => p.Value1 != 1 && p.Value1 != null),
-					db.Parent.Where(p => p.Value1 != 1 && p.Value1 != null));
+			using var _  = new CompareNullsAsValuesOption(false);
+			using var db = GetDataContext(context);
+			AreEqual(
+				   Parent.Where(p => p.Value1 != 1 && p.Value1 != null),
+				db.Parent.Where(p => p.Value1 != 1 && p.Value1 != null));
 		}
 
 		[Test]

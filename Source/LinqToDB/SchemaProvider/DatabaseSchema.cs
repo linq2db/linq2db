@@ -13,7 +13,7 @@ namespace LinqToDB.SchemaProvider
 		public string                ServerVersion                 { get; set; } = null!;
 		public List<TableSchema>     Tables                        { get; set; } = null!;
 		public List<ProcedureSchema> Procedures                    { get; set; } = null!;
-		public DataTable             DataTypesSchema               { get; set; } = null!;
+		public DataTable?            DataTypesSchema               { get; set; }
 		public string?               ProviderSpecificTypeNamespace { get; set; }
 	}
 }

@@ -52,8 +52,8 @@ namespace LinqToDB.Linq.Builder
 	interface IBuildContext
 	{
 #if DEBUG
-		string? _sqlQueryText { get; }
-		string   Path         { get; }
+		string? SqlQueryText { get; }
+		string  Path         { get; }
 #endif
 
 		ExpressionBuilder  Builder     { get; }

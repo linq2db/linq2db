@@ -207,7 +207,7 @@ namespace LinqToDB.DataProvider.Oracle
 							}
 #if NET6_0_OR_GREATER
 							else if (stype == typeof(DateOnly))
-							{ 
+							{
 								return new SqlFunction(func.SystemType, "To_Char", func.Parameters[1], new SqlValue("YYYY-MM-DD"));
 							}
 #endif
@@ -220,7 +220,7 @@ namespace LinqToDB.DataProvider.Oracle
 						return func.Parameters.Length == 2?
 							new SqlFunction(func.SystemType, "InStr", func.Parameters[1], func.Parameters[0]):
 							new SqlFunction(func.SystemType, "InStr", func.Parameters[1], func.Parameters[0], func.Parameters[2]);
-					case "Avg"            : 
+					case "Avg"            :
 						return new SqlFunction(
 							func.SystemType,
 							"Round",

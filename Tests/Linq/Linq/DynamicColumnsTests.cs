@@ -577,7 +577,7 @@ namespace Tests.Linq
 			using (db.CreateLocalTable<BananaTable>())
 			{
 				db.GetTable<BananaTable>().Insert(() => new BananaTable() { Id = 1, Property = "test1" });
-				
+
 				var res = db.GetTable<BananaTable>().ToList();
 				Assert.AreEqual(1, res.Count);
 				Assert.AreEqual("test1", res[0].Property);

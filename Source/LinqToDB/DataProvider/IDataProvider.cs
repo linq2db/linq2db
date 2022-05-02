@@ -17,6 +17,7 @@ namespace LinqToDB.DataProvider
 	public interface IDataProvider
 	{
 		string           Name                  { get; }
+		int              ID                    { get; }
 		string?          ConnectionNamespace   { get; }
 		Type             DataReaderType        { get; }
 		MappingSchema    MappingSchema         { get; }

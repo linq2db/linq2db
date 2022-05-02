@@ -159,6 +159,10 @@ namespace LinqToDB.DataProvider.SQLite
 
 		protected override DataType GetDataType(string? dataType, string? columnType, long? length, int? prec, int? scale)
 		{
+			// note that sqlite doesn't have types (it has facets) so type name will contain anything
+			// user specified in create table statement
+			// here we just map some well-known database types (non-sqlite specific) but this list
+			// will never be complete
 			return dataType switch
 			{
 				"smallint"         => DataType.Int16,
@@ -188,6 +192,7 @@ namespace LinqToDB.DataProvider.SQLite
 				"image"            => DataType.Image,
 				"general"          => DataType.VarBinary,
 				"oleobject"        => DataType.VarBinary,
+				"object"           => DataType.Variant,
 				"varchar"          => DataType.VarChar,
 				"nvarchar"         => DataType.NVarChar,
 				"memo"             => DataType.Text,
@@ -216,6 +221,7 @@ namespace LinqToDB.DataProvider.SQLite
 		{
 			return dataType switch
 			{
+				"object"    => typeof(object),
 				"datetime2" => typeof(DateTime),
 				_ => base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale, options),
 			};

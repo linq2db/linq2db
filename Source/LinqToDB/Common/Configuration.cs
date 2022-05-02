@@ -17,7 +17,7 @@ namespace LinqToDB.Common
 	/// </summary>
 	public static class Compilation
 	{
-		private static Func<LambdaExpression, Delegate?>? _compiler;
+		private static Func<LambdaExpression,Delegate?>? _compiler;
 
 		/// <summary>
 		/// Sets LINQ expression compilation method.
@@ -28,13 +28,19 @@ namespace LinqToDB.Common
 			_compiler = compiler;
 		}
 
-		internal static TDelegate CompileExpression<TDelegate>(this Expression<TDelegate> expression)
+		/// <summary>
+		/// Internal API.
+		/// </summary>
+		public static TDelegate CompileExpression<TDelegate>(this Expression<TDelegate> expression)
 			where TDelegate : Delegate
 		{
 			return ((TDelegate?)_compiler?.Invoke(expression)) ?? expression.Compile();
 		}
 
-		internal static Delegate CompileExpression(this LambdaExpression expression)
+		/// <summary>
+		/// Internal API.
+		/// </summary>
+		public static Delegate CompileExpression(this LambdaExpression expression)
 		{
 			return _compiler?.Invoke(expression) ?? expression.Compile();
 		}
@@ -332,6 +338,13 @@ namespace LinqToDB.Common
 				get => Options.ParameterizeTakeSkip;
 				set => Options = Options.WithParameterizeTakeSkip(value);
 			}
+
+			/// <summary>
+			/// If <c>true</c>, auto support for fluent mapping is ON,
+			/// which means that you do not need to create additional MappingSchema object to define FluentMapping.
+			/// You can use <c>context.MappingSchema.GetFluentMappingBuilder()</c>.
+			/// </summary>
+			public static bool EnableAutoFluentMapping = true;
 		}
 
 		/// <summary>

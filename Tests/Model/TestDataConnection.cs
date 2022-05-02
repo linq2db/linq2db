@@ -25,7 +25,7 @@ namespace Tests.Model
 //			if (configString == ProviderName.SqlServer2008 && ++_counter > 1000)
 //				OnClosing += TestDataConnection_OnClosing;
 		}
-		
+
 		public TestDataConnection()
 		{
 		}
@@ -80,33 +80,6 @@ namespace Tests.Model
 			var methodInfo = (typeof(TestDataConnection)).GetMethod("GetParentByID", new [] {typeof(int?)})!;
 
 			return this.GetTable<Parent>(this, methodInfo, id);
-		}
-
-		public string GetSqlText(SelectQuery query)
-		{
-			var provider  = ((IDataContext)this).CreateSqlProvider();
-			var optimizer = ((IDataContext)this).GetSqlOptimizer  ();
-
-			var statement = (SqlSelectStatement)optimizer.Finalize(new SqlSelectStatement(query), new LinqOptionsExtension());
-			SqlStatement.PrepareQueryAndAliases(statement, null, out var aliasesContext);
-			var optimizationContext = new OptimizationContext(new EvaluationContext(SqlParameterValues.Empty), aliasesContext, false);
-
-			statement = (SqlSelectStatement)optimizer.PrepareStatementForRemoting(statement, MappingSchema, aliasesContext, optimizationContext.Context);
-
-			var cc = provider.CommandCount(statement);
-			var sb = new StringBuilder();
-
-			var commands = new string[cc];
-
-			for (var i = 0; i < cc; i++)
-			{
-				sb.Length = 0;
-
-				provider.BuildSql(i, statement, sb, optimizationContext);
-				commands[i] = sb.ToString();
-			}
-
-			return string.Join("\n\n", commands);
 		}
 
 		[ExpressionMethod(nameof(Expression9))]
