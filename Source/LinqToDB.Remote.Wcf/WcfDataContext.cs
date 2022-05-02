@@ -12,28 +12,28 @@ namespace LinqToDB.Remote.Wcf
 		#region Init
 
 		// clone constructor
-		private WcfDataContext()
+		private WcfDataContext() : base(new DataContextOptions<WcfDataContext>())
 		{
 		}
 
-		public WcfDataContext(string endpointConfigurationName)
+		public WcfDataContext(string endpointConfigurationName) : this()
 		{
 			_endpointConfigurationName = endpointConfigurationName ?? throw new ArgumentNullException(nameof(endpointConfigurationName));
 		}
 
-		public WcfDataContext(string endpointConfigurationName, string remoteAddress)
+		public WcfDataContext(string endpointConfigurationName, string remoteAddress) : this()
 		{
 			_endpointConfigurationName = endpointConfigurationName ?? throw new ArgumentNullException(nameof(endpointConfigurationName));
 			_remoteAddress             = remoteAddress             ?? throw new ArgumentNullException(nameof(remoteAddress));
 		}
 
-		public WcfDataContext(string endpointConfigurationName, EndpointAddress endpointAddress)
+		public WcfDataContext(string endpointConfigurationName, EndpointAddress endpointAddress) : this()
 		{
 			_endpointConfigurationName = endpointConfigurationName ?? throw new ArgumentNullException(nameof(endpointConfigurationName));
 			_endpointAddress           = endpointAddress           ?? throw new ArgumentNullException(nameof(endpointAddress));
 		}
 
-		public WcfDataContext(Binding binding, EndpointAddress endpointAddress)
+		public WcfDataContext(Binding binding, EndpointAddress endpointAddress) : this()
 		{
 			Binding          = binding         ?? throw new ArgumentNullException(nameof(binding));
 			_endpointAddress = endpointAddress ?? throw new ArgumentNullException(nameof(endpointAddress));

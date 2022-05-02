@@ -24,6 +24,16 @@ namespace LinqToDB.Remote
 	[PublicAPI]
 	public abstract partial class RemoteDataContextBase : IDataContext
 	{
+		protected RemoteDataContextBase(DataContextOptions options)
+		{
+			// Initialize default
+			var linqExtension = options.FindExtension<LinqOptionsExtension>();
+			if (linqExtension == null)
+				options = options.WithExtension(Common.Configuration.Linq.Options);
+
+			_options = options;
+		}
+
 		public string? Configuration { get; set; }
 
 		class ConfigurationInfo
@@ -168,11 +178,11 @@ namespace LinqToDB.Remote
 		}
 
 
-		DataContextOptions? _options;
+		DataContextOptions _options;
 		/// <summary>
 		/// Current DataContext LINQ options
 		/// </summary>
-		public DataContextOptions Options => _options ??= new DataContextOptions<RemoteDataContextBase>();
+		public DataContextOptions Options => _options;
 
 		SqlProviderFlags IDataContext.SqlProviderFlags      => GetConfigurationInfo().LinqServiceInfo.SqlProviderFlags;
 		TableOptions     IDataContext.SupportedTableOptions => GetConfigurationInfo().LinqServiceInfo.SupportedTableOptions;

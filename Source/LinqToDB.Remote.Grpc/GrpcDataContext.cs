@@ -23,7 +23,7 @@ namespace LinqToDB.Remote.Grpc
 		/// Creates instance of grpc-based remote data context.
 		/// </summary>
 		/// <param name="address">Server address.</param>
-		public GrpcDataContext(string address)
+		public GrpcDataContext(string address) : base(new DataContextOptions<GrpcDataContext>())
 		{
 			if (string.IsNullOrWhiteSpace(address))
 				throw new ArgumentException($"'{nameof(address)}' cannot be null or whitespace.", nameof(address));

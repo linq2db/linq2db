@@ -82,5 +82,7 @@ namespace LinqToDB
         ///     Returns true if <see cref="Freeze" />. has been called.
         /// </summary>
         public virtual bool IsFrozen { get; private set; }
+
+        public abstract bool IsValidForDataContext(Type contextType);
     }
 }

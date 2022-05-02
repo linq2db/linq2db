@@ -165,7 +165,7 @@ namespace LinqToDB.AspNet
 			serviceCollection.TryAdd(new ServiceDescriptor(typeof(DataContextOptions<TContextImplementation>),
 				provider =>
 				{
-					var builder = new DataContextOptionsBuilder();
+					var builder = new DataContextOptionsBuilder<TContextImplementation>();
 					configure(provider, builder);
 					return builder.Options;
 				},

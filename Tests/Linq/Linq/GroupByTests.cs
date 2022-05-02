@@ -2239,22 +2239,22 @@ namespace Tests.Linq
 		public void Issue2306Test1([DataSources] string context)
 		{
 			Query.ClearCaches();
-			using (var db = GetDataContext(context))
 			using (new GuardGrouping(false))
+			using (var db = GetDataContext(context))
 			{
 				db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList());
 			}
 
 			Query.ClearCaches();
-			using (var db = GetDataContext(context))
 			using (new GuardGrouping(true))
+			using (var db = GetDataContext(context))
 			{
 				Assert.Throws<LinqToDBException>(() => db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList()));
 			}
 
 			Query.ClearCaches();
-			using (var db = GetDataContext(context))
 			using (new GuardGrouping(true))
+			using (var db = GetDataContext(context))
 			{
 				db.Person.GroupBy(p => p.ID).DisableGuard().ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList());
 			}
@@ -2266,20 +2266,20 @@ namespace Tests.Linq
 		public void Issue2306Test2([DataSources] string context)
 		{
 			Query.ClearCaches();
-			using (var db = GetDataContext(context))
 			using (new GuardGrouping(false))
+			using (var db = GetDataContext(context))
 			{
 				db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList());
 			}
 
-			using (var db = GetDataContext(context))
 			using (new GuardGrouping(true))
+			using (var db = GetDataContext(context))
 			{
 				Assert.Throws<LinqToDBException>(() => db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList()));
 			}
 
-			using (var db = GetDataContext(context))
 			using (new GuardGrouping(true))
+			using (var db = GetDataContext(context))
 			{
 				db.Person.GroupBy(p => p.ID).DisableGuard().ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList());
 			}
@@ -2290,20 +2290,20 @@ namespace Tests.Linq
 		public void Issue2306Test3([DataSources] string context)
 		{
 			Query.ClearCaches();
-			using (var db = GetDataContext(context))
 			using (new GuardGrouping(true))
+			using (var db = GetDataContext(context))
 			{
 				Assert.Throws<LinqToDBException>(() => db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList()));
 			}
 
-			using (var db = GetDataContext(context))
 			using (new GuardGrouping(false))
+			using (var db = GetDataContext(context))
 			{
 				db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList());
 			}
 
-			using (var db = GetDataContext(context))
 			using (new GuardGrouping(true))
+			using (var db = GetDataContext(context))
 			{
 				db.Person.GroupBy(p => p.ID).DisableGuard().ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList());
 			}

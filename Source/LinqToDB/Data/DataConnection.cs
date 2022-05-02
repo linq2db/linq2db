@@ -225,14 +225,17 @@ namespace LinqToDB.Data
 			if (options == null)
 				throw new ArgumentNullException(nameof(options));
 
+			// Initialize default
+			var linqExtension = options.FindExtension<LinqOptionsExtension>();
+			if (linqExtension == null)
+				options = options.WithExtension(Configuration.Linq.Options);
+
 			var coreExtension = options.FindExtension<CoreDataContextOptionsExtension>();
 			var dbExtension   = options.FindExtension<DbDataContextOptionsExtension>();
 			
-			/*
-			if (!options.IsValidConfigForConnectionType(this))
+			if (!options.IsValidForDataContext(GetType()))
 				throw new LinqToDBException(
-					$"Improper options type used to create DataConnection {GetType()}, try creating a public constructor calling base and accepting type {nameof(LinqToDBConnectionOptions)}<{GetType().Name}>");
-					*/
+					$"Improper options type used to create DataConnection {GetType()}, try creating a public constructor calling base and accepting type {nameof(DataContextOptions)}<{GetType().Name}>");
 			
 			InitConfig();
 
@@ -241,7 +244,7 @@ namespace LinqToDB.Data
 
 			if (dbExtension == null || dbExtension.ConfigurationString != null)
 			{
-				ConfigurationString = DefaultConfiguration;
+				ConfigurationString = dbExtension?.ConfigurationString ?? DefaultConfiguration;
 				if (ConfigurationString == null)
 					throw new LinqToDBException("Configuration string is not provided.");
 				var ci = GetConfigurationInfo(ConfigurationString);

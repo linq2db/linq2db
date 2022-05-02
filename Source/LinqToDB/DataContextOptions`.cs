@@ -57,5 +57,10 @@ namespace LinqToDB
         ///     The type of context that these options are for (<typeparamref name="TContext" />).
         /// </summary>
         public override Type ContextType => typeof(TContext);
+
+        public override bool IsValidForDataContext(Type contextType)
+        {
+		return typeof(TContext).IsAssignableFrom(contextType);
+        }
     }
 }
