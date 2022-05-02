@@ -164,7 +164,8 @@ namespace LinqToDB.Linq
 				var ei = cacheDisabled
 					? CreateQuery(dataContext, entityDescriptor, obj, columnFilter, tableName, serverName, databaseName, schema, tableOptions, type)
 					: Cache<T>.QueryCache.GetOrCreate(
-					(operation: "IR", dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schema, databaseName, serverName, tableOptions, type, LinqOptions: linqOptions),
+					(operation: "IR", dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schema, databaseName, serverName, tableOptions, 
+						type, queryFlags: dataContext.GetQueryFlags(), LinqOptions: linqOptions),
 					( dataContext, entityDescriptor, obj, linqOptions ),
 					static (entry, key, context) =>
 					{
@@ -201,7 +202,8 @@ namespace LinqToDB.Linq
 				var ei = cacheDisabled
 					? CreateQuery(dataContext, entityDescriptor, obj, columnFilter, tableName, serverName, databaseName, schema, tableOptions, type)
 					: Cache<T>.QueryCache.GetOrCreate(
-					(operation: "IR", dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schema, databaseName, serverName, tableOptions, type, LinqOptions: linqOptions),
+					(operation: "IR", dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schema, databaseName, serverName, tableOptions, 
+						type, queryFlags: dataContext.GetQueryFlags(), LinqOptions: linqOptions),
 					( dataContext, entityDescriptor, obj, linqOptions ),
 					static (entry, key, context) =>
 					{

@@ -25,9 +25,11 @@ namespace LinqToDB.Linq
 			var contextType     = dataContext.GetType();
 			var mappingSchemaID = dataContext.MappingSchema.ConfigurationID;
 
+			var linqOptions = dataContext.GetLinqOptions();
+
 			var result = QueryRunner.Cache<T>.QueryCache.GetOrCreate(
-				(operation: "CT", contextID, contextType, mappingSchemaID, expression: _expression, LinqOptions: dataContext.GetLinqOptions()),
-				(dataContext, lambda: _lambda, linqOptions: dataContext.GetLinqOptions()),
+				(operation: "CT", contextID, contextType, mappingSchemaID, expression: _expression, queryFlags: dataContext.GetQueryFlags(), LinqOptions: linqOptions),
+				(dataContext, lambda: _lambda, linqOptions),
 				static (o, key, ctx) =>
 				{
 					o.SlidingExpiration = ctx.linqOptions.CacheSlidingExpiration;

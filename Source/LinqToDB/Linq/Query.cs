@@ -294,20 +294,22 @@ namespace LinqToDB.Linq
 		{
 			class QueryCacheEntry
 			{
-				public QueryCacheEntry(Query<T> query, LinqOptionsExtension linqOptions)
+				public QueryCacheEntry(Query<T> query, QueryFlags queryFlags, LinqOptionsExtension linqOptions)
 				{
 					// query doesn't have GetHashCode now, so we cannot precalculate hashcode to speed-up search
 					Query       = query;
 					LinqOptions = linqOptions;
+					QueryFlags  = queryFlags;
 				}
 
 				public Query<T>             Query       { get; }
 				public LinqOptionsExtension LinqOptions { get; }
+				public QueryFlags           QueryFlags  { get; }
 
 				// accepts components to avoid QueryCacheEntry allocation for cached query
-				public bool Compare(IDataContext context, Expression queryExpression, LinqOptionsExtension linqOptions)
+				public bool Compare(IDataContext context, Expression queryExpression, QueryFlags queryFlags, LinqOptionsExtension linqOptions)
 				{
-					return LinqOptions == linqOptions && Query.Compare(context, queryExpression);
+					return QueryFlags == queryFlags && LinqOptions == linqOptions && Query.Compare(context, queryExpression);
 				}
 			}
 
@@ -354,7 +356,7 @@ namespace LinqToDB.Linq
 			/// <summary>
 			/// Adds query to cache if it is not cached already.
 			/// </summary>
-			public void TryAdd(IDataContext dataContext, Query<T> query, LinqOptionsExtension linqOptions)
+			public void TryAdd(IDataContext dataContext, Query<T> query, QueryFlags queryFlags, LinqOptionsExtension linqOptions)
 			{
 				// because Add is less frequent operation than Find, it is fine to have put bigger locks here
 				QueryCacheEntry[] cache;
@@ -367,7 +369,7 @@ namespace LinqToDB.Linq
 				}
 
 				for (var i = 0; i < cache.Length; i++)
-					if (cache[i].Compare(dataContext, query.Expression!, linqOptions))
+					if (cache[i].Compare(dataContext, query.Expression!, queryFlags, linqOptions))
 						// already added by another thread
 						return;
 
@@ -383,7 +385,7 @@ namespace LinqToDB.Linq
 						// check only added queries, each version could add 1 query to first position, so we
 						// test only first N queries
 						for (var i = 0; i < cache.Length && i < versionsDiff; i++)
-							if (cache[i].Compare(dataContext, query.Expression!, linqOptions))
+							if (cache[i].Compare(dataContext, query.Expression!, queryFlags, linqOptions))
 								// already added by another thread
 								return;
 					}
@@ -393,7 +395,7 @@ namespace LinqToDB.Linq
 					var newCache      = new QueryCacheEntry[cache.Length == CacheSize ? CacheSize : cache.Length + 1];
 					var newPriorities = new int[newCache.Length];
 
-					newCache[0]      = new QueryCacheEntry(query, linqOptions);
+					newCache[0]      = new QueryCacheEntry(query, queryFlags, linqOptions);
 					newPriorities[0] = 0;
 
 					for (var i = 1; i < newCache.Length; i++)
@@ -411,7 +413,7 @@ namespace LinqToDB.Linq
 			/// <summary>
 			/// Search for query in cache and of found, try to move it to better position in cache.
 			/// </summary>
-			public Query<T>? Find(IDataContext dataContext, Expression expr, LinqOptionsExtension linqOptions)
+			public Query<T>? Find(IDataContext dataContext, Expression expr, QueryFlags queryFlags, LinqOptionsExtension linqOptions)
 			{
 				QueryCacheEntry[] cache;
 				int[]             indexes;
@@ -433,7 +435,7 @@ namespace LinqToDB.Linq
 						// if we have reordering lock, we can enumerate queries in priority order
 						var idx = allowReordering ? indexes[i] : i;
 
-						if (cache[idx].Compare(dataContext, expr, linqOptions))
+						if (cache[idx].Compare(dataContext, expr, queryFlags, linqOptions))
 						{
 							// do reorder only if it is not blocked and cache wasn't replaced by new one
 							if (i > 0 && version == _version && allowReordering)
@@ -491,14 +493,15 @@ namespace LinqToDB.Linq
 			if (linqOptions.DisableQueryCache)
 				return CreateQuery(optimizationContext, new ParametersContext(expr, optimizationContext, dataContext), dataContext, expr);
 
-			var query = _queryCache.Find(dataContext, expr, linqOptions);
+			var queryFlags = dataContext.GetQueryFlags();
+			var query      = _queryCache.Find(dataContext, expr, queryFlags, linqOptions);
 
 			if (query == null)
 			{
 				query = CreateQuery(optimizationContext, new ParametersContext(expr, optimizationContext, dataContext), dataContext, expr);
 
 				if (!query.DoNotCache)
-					_queryCache.TryAdd(dataContext, query, linqOptions);
+					_queryCache.TryAdd(dataContext, query, queryFlags, linqOptions);
 			}
 
 			return query;

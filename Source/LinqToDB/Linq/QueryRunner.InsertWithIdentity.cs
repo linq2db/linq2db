@@ -89,7 +89,8 @@ namespace LinqToDB.Linq
 				var ei = linqOptions.DisableQueryCache || entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Insert) || columnFilter != null
 					? CreateQuery(dataContext, entityDescriptor, obj!, columnFilter, tableName, serverName, databaseName, schemaName, tableOptions, type)
 					: Cache<T>.QueryCache.GetOrCreate(
-						(operation: "II", dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schemaName, databaseName, serverName, tableOptions, type, LinqOptions: linqOptions),
+						(operation: "II", dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schemaName, databaseName, serverName, tableOptions, 
+							type, queryFlags: dataContext.GetQueryFlags(), LinqOptions: linqOptions),
 						( dataContext, entityDescriptor, obj, linqOptions ),
 						static (entry, key, context) =>
 						{
@@ -121,7 +122,8 @@ namespace LinqToDB.Linq
 				var ei = linqOptions.DisableQueryCache || entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Insert) || columnFilter != null
 					? CreateQuery(dataContext, entityDescriptor, obj!, columnFilter, tableName, serverName, databaseName, schemaName, tableOptions, type)
 					: Cache<T>.QueryCache.GetOrCreate(
-						(operation: "II", dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schemaName, databaseName, serverName, tableOptions, type, LinqOptions: linqOptions),
+						(operation: "II", dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schemaName, databaseName, serverName, tableOptions, 
+							type, queryFlags: dataContext.GetQueryFlags(), LinqOptions: linqOptions),
 						( dataContext, entityDescriptor, obj, linqOptions ),
 						static (entry, key, context) =>
 						{
