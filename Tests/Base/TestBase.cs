@@ -396,6 +396,39 @@ namespace Tests
 		}
 
 		protected TestDataConnection GetDataConnection(
+			string                            configuration,
+			Action<DataContextOptionsBuilder> dbOptionsBuilder)
+		{
+			if (configuration.EndsWith(LinqServiceSuffix))
+			{
+				throw new InvalidOperationException($"Call {nameof(GetDataContext)} for remote context creation");
+			}
+
+			Debug.WriteLine(configuration, "Provider ");
+
+			var builder = new DataContextOptionsBuilder<TestDataConnection>()
+				.UseConfigurationString(configuration);
+
+			dbOptionsBuilder.Invoke(builder);
+
+			var res = new TestDataConnection(builder.Options);
+
+			/*
+			// add extra mapping schema to not share mappers with other sql2017/2019 providers
+			// use same schema to use cache within test provider scope
+			if (configuration.IsAnyOf(TestProvName.AllSqlServerSequentialAccess))
+			{
+				if (!suppressSequentialAccess)
+					res.AddInterceptor(SequentialAccessCommandInterceptor.Instance);
+
+				res.AddMappingSchema(_sequentialAccessSchema);
+			}
+			*/
+
+			return res;
+		}
+
+		protected TestDataConnection GetDataConnection(
 				string         configuration,
 				MappingSchema? ms                       = null,
 				IInterceptor?  interceptor              = null,

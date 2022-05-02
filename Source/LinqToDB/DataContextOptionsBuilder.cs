@@ -1,20 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data.Common;
-using System.Diagnostics;
 using System.Linq;
 
 
 namespace LinqToDB
 {
 	using Data;
-	using DataProvider;
 	using Infrastructure;
 	using Interceptors;
-	using Mapping;
 
-    /// <summary>
+	/// <summary>
     ///     <para>
     ///         Provides a simple API surface for configuring <see cref="DataContextOptions" />. Databases (and other extensions)
     ///         typically define extension methods on this object that allow you to configure the database connection (and other
@@ -62,7 +58,7 @@ namespace LinqToDB
 
         /// <summary>
         ///     <para>
-        ///         Replaces the internal Entity Framework implementation of a service contract with a different
+        ///         Replaces the internal linq2db implementation of a service contract with a different
         ///         implementation.
         ///     </para>
         ///     <para>
@@ -81,8 +77,8 @@ namespace LinqToDB
         ///         Adds <see cref="IInterceptor" /> instances to those registered on the context.
         ///     </para>
         ///     <para>
-        ///         Interceptors can be used to view, change, or suppress operations taken by Entity Framework.
-        ///         See the specific implementations of <see cref="IInterceptor" /> for details. For example, 'IDbCommandInterceptor'.
+        ///         Interceptors can be used to view, change, or suppress operations taken by linq2db.
+        ///         See the specific implementations of <see cref="IInterceptor" /> for details. For example, 'ICommandInterceptor'.
         ///     </para>
         ///     <para>
         ///         A single interceptor instance can implement multiple different interceptor interfaces. I will be registered as
@@ -109,8 +105,8 @@ namespace LinqToDB
         ///         Adds <see cref="IInterceptor" /> instances to those registered on the context.
         ///     </para>
         ///     <para>
-        ///         Interceptors can be used to view, change, or suppress operations taken by Entity Framework.
-        ///         See the specific implementations of <see cref="IInterceptor" /> for details. For example, 'IDbCommandInterceptor'.
+        ///         Interceptors can be used to view, change, or suppress operations taken by linq2db.
+        ///         See the specific implementations of <see cref="IInterceptor" /> for details. For example, 'ICommandInterceptor'.
         ///     </para>
         ///     <para>
         ///         Extensions can also register multiple <see cref="IInterceptor" />s in the internal service provider.
@@ -129,76 +125,6 @@ namespace LinqToDB
             => AddInterceptors((IEnumerable<IInterceptor>)interceptors);
 
 
-        public virtual DataContextOptionsBuilder UseConnectionString(string providerName, string connectionString)
-        {
-	        return WithOption(e => e.WithProviderName(providerName).WithConnectionString(connectionString));
-        }
-
-        public virtual DataContextOptionsBuilder UseConnectionString(IDataProvider dataProvider, string connectionString)
-        {
-	        return WithOption(e => e.WithDataProvider(dataProvider).WithConnectionString(connectionString));
-        }
-
-        public virtual DataContextOptionsBuilder UseConnectionString(string connectionString)
-        {
-	        return WithOption(e => e.WithConnectionString(connectionString));
-        }
-
-        public virtual DataContextOptionsBuilder UseConfigurationString(string? configurationString)
-        {
-	        return WithOption(e => e.WithConfigurationString(configurationString));
-        }
-
-        public virtual DataContextOptionsBuilder UseConfigurationString(string? configurationString, MappingSchema mappingSchema)
-        {
-	        return WithOption(e => e.WithConfigurationString(configurationString).WithMappingSchema(mappingSchema));
-        }
-
-        public virtual DataContextOptionsBuilder UseConnection(DbConnection connection)
-        {
-	        return WithOption(e => e.WithConnection(connection));
-        }
-
-        public virtual DataContextOptionsBuilder UseConnection(IDataProvider dataProvider, DbConnection connection)
-        {
-	        return WithOption(e => e.WithDataProvider(dataProvider).WithConnection(connection));
-        }
-
-        public virtual DataContextOptionsBuilder UseConnection(IDataProvider dataProvider, DbConnection connection, bool disposeConnection)
-        {
-	        return WithOption(e => e.WithDataProvider(dataProvider).WithConnection(connection).WithDisposeConnection(disposeConnection));
-        }
-
-        public virtual DataContextOptionsBuilder UseProvider(string providerName)
-        {
-	        return WithOption(e => e.WithProviderName(providerName));
-        }
-
-        public virtual DataContextOptionsBuilder UseDataProvider(IDataProvider dataProvider)
-        {
-	        return WithOption(e => e.WithDataProvider(dataProvider));
-        }
-
-        public virtual DataContextOptionsBuilder UseMappingSchema(MappingSchema mappingSchema)
-        {
-	        return WithOption(e => e.WithMappingSchema(mappingSchema));
-        }
-
-        public virtual DataContextOptionsBuilder UseConnectionFactory(Func<DbConnection> connectionFactory)
-        {
-	        return WithOption(e => e.WithConnectionFactory(connectionFactory));
-        }
-
-        public virtual DataContextOptionsBuilder UseConnectionFactory(IDataProvider dataProvider, Func<DbConnection> connectionFactory)
-        {
-	        return WithOption(e => e.WithDataProvider(dataProvider).WithConnectionFactory(connectionFactory));
-        }
-
-        public virtual DataContextOptionsBuilder UseTransaction(IDataProvider dataProvider, DbTransaction transaction)
-        {
-	        return WithOption(e => e.WithDataProvider(dataProvider).WithTransaction(transaction));
-        }
-
         public virtual DataContextOptionsBuilder WithOptions(Action<LinqOptionsBuilder> linqOptionsAction)
         {
 	        if (linqOptionsAction == null)
@@ -209,46 +135,6 @@ namespace LinqToDB
 	        linqOptionsAction.Invoke(new LinqOptionsBuilder(this));
 
 	        return this;
-        }
-
-        /// <summary>
-        /// Configure the database to use specified trace level.
-        /// </summary>
-        /// <returns>The builder instance so calls can be chained.</returns>
-        public virtual DataContextOptionsBuilder WithTraceLevel(TraceLevel traceLevel)
-        {
-	        return WithOption(e => e.WithTraceLevel(traceLevel));
-        }
-
-        /// <summary>
-        /// Configure the database to use the specified callback for logging or tracing.
-        /// </summary>
-        /// <param name="onTrace">Callback, may not be called depending on the trace level.</param>
-        /// <returns>The builder instance so calls can be chained.</returns>
-        public virtual DataContextOptionsBuilder WithTracing(Action<TraceInfo> onTrace)
-        {
-	        return WithOption(e => e.WithTracing(onTrace));
-        }
-
-        /// <summary>
-        /// Configure the database to use the specified trace level and callback for logging or tracing.
-        /// </summary>
-        /// <param name="traceLevel">Trace level to use.</param>
-        /// <param name="onTrace">Callback, may not be called depending on the trace level.</param>
-        /// <returns>The builder instance so calls can be chained.</returns>
-        public virtual DataContextOptionsBuilder WithTracing(TraceLevel traceLevel, Action<TraceInfo> onTrace)
-        {
-	        return WithOption(e => e.WithTracing(onTrace).WithTraceLevel(traceLevel));
-        }
-
-        /// <summary>
-        /// Configure the database to use the specified a string trace callback.
-        /// </summary>
-        /// <param name="write">Callback, may not be called depending on the trace level.</param>
-        /// <returns>The builder instance so calls can be chained.</returns>
-        public DataContextOptionsBuilder WriteTraceWith(Action<string?, string?, TraceLevel> write)
-        {
-	        return WithOption(e => e.WriteTraceWith(write));
         }
 
         /// <summary>

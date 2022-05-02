@@ -2,7 +2,6 @@
 
 namespace LinqToDB.Infrastructure
 {
-
 	public interface IDataContextOptions
     {
         /// <summary>

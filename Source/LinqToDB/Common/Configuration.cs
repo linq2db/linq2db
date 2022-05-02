@@ -7,6 +7,7 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.Common
 {
+	using Infrastructure;
 	using Data;
 	using Data.RetryPolicy;
 	using Linq;
@@ -121,13 +122,36 @@ namespace LinqToDB.Common
 		[PublicAPI]
 		public static class Linq
 		{
+			static Linq()
+			{
+				_options = new LinqOptionsExtension()
+					.WithOptimizeJoins(true)
+					.WithCompareNullsAsValues(true)
+					.WithGuardGrouping(true)
+					.WithCacheSlidingExpiration(TimeSpan.FromHours(1))
+					.WithPreferApply(true)
+					.WithKeepDistinctOrdered(true)
+					.WithParameterizeTakeSkip(true);
+			}
+
+			private static volatile LinqOptionsExtension _options;
+			public static  LinqOptionsExtension  Options
+			{
+				get => _options;
+				set => _options = value;
+			}
+
 			/// <summary>
 			/// Controls how group data for LINQ queries ended with GroupBy will be loaded:
 			/// - if <c>true</c> - group data will be loaded together with main query, resulting in 1 + N queries, where N - number of groups;
 			/// - if <c>false</c> - group data will be loaded when you call enumerator for specific group <see cref="System.Linq.IGrouping{TKey, TElement}"/>.
 			/// Default value: <c>false</c>.
 			/// </summary>
-			public static bool PreloadGroups;
+			public static bool PreloadGroups
+			{
+				get => Options.PreloadGroups;
+				set => Options = Options.WithPreloadGroups(value);
+			}
 
 			/// <summary>
 			/// Controls behavior of linq2db when there is no updateable fields in Update query:
@@ -135,7 +159,11 @@ namespace LinqToDB.Common
 			/// - if <c>false</c> - <see cref="LinqException"/> will be thrown.
 			/// Default value: <c>false</c>.
 			/// </summary>
-			public static bool IgnoreEmptyUpdate;
+			public static bool IgnoreEmptyUpdate
+			{
+				get => Options.IgnoreEmptyUpdate;
+				set => Options = Options.WithIgnoreEmptyUpdate(value);
+			}
 
 			/// <summary>
 			/// Enables generation of test class for each LINQ query, executed while this option is enabled.
@@ -145,14 +173,22 @@ namespace LinqToDB.Common
 			/// See <see cref="DataConnection.TraceSwitch"/> for more details.
 			/// Default value: <c>false</c>.
 			/// </summary>
-			public static bool GenerateExpressionTest;
+			public static bool GenerateExpressionTest
+			{
+				get => Options.GenerateExpressionTest;
+				set => Options = Options.WithGenerateExpressionTest(value);
+			}
 
 			/// <summary>
 			/// Enables logging of generated mapping expression to data connection tracing infrastructure.
 			/// See <see cref="DataConnection.TraceSwitch"/> for more details.
 			/// Default value: <c>false</c>.
 			/// </summary>
-			public static bool TraceMapperExpression;
+			public static bool TraceMapperExpression
+			{
+				get => Options.TraceMapperExpression;
+				set => Options = Options.WithTraceMapperExpression(value);
+			}
 
 			/// <summary>
 			/// Controls behavior, when LINQ query chain contains multiple <see cref="System.Linq.Queryable.OrderBy{TSource, TKey}(System.Linq.IQueryable{TSource}, Expression{Func{TSource, TKey}})"/> or <see cref="System.Linq.Queryable.OrderByDescending{TSource, TKey}(System.Linq.IQueryable{TSource}, Expression{Func{TSource, TKey}})"/> calls:
@@ -160,7 +196,11 @@ namespace LinqToDB.Common
 			/// - if <c>false</c> - OrderBy* call will discard sort specifications, added by previous OrderBy* and ThenBy* calls.
 			/// Default value: <c>false</c>.
 			/// </summary>
-			public static bool DoNotClearOrderBys;
+			public static bool DoNotClearOrderBys
+			{
+				get => Options.DoNotClearOrderBys;
+				set => Options = Options.WithDoNotClearOrderBys(value);
+			}
 
 			/// <summary>
 			/// If enabled, linq2db will try to reduce number of generated SQL JOINs for LINQ query.
@@ -170,7 +210,11 @@ namespace LinqToDB.Common
 			/// - removes left joins if joined table is not used in query.
 			/// Default value: <c>true</c>.
 			/// </summary>
-			public static bool OptimizeJoins = true;
+			public static bool OptimizeJoins
+			{
+				get => Options.OptimizeJoins;
+				set => Options = Options.WithOptimizeJoins(value);
+			}
 
 			/// <summary>
 			/// If set to true nullable fields would be checked for IS NULL in Equal/NotEqual comparisons.
@@ -205,7 +249,11 @@ namespace LinqToDB.Common
 			/// SELECT Value FROM MyEntity WHERE Value IS NULL OR NOT Value IN (1, 2, 3)
 			/// </code>
 			/// </example>
-			public static bool CompareNullsAsValues = true;
+			public static bool CompareNullsAsValues
+			{
+				get => Options.CompareNullsAsValues;
+				set => Options = Options.WithCompareNullsAsValues(value);
+			}
 
 			/// <summary>
 			/// Controls behavior of LINQ query, which ends with GroupBy call.
@@ -216,7 +264,11 @@ namespace LinqToDB.Common
 			/// <remarks>
 			/// <a href="https://github.com/linq2db/linq2db/issues/365">More details</a>.
 			/// </remarks>
-			public static bool GuardGrouping = true;
+			public static bool GuardGrouping
+			{
+				get => Options.GuardGrouping;
+				set => Options = Options.WithGuardGrouping(value);
+			}
 
 			/// <summary>
 			/// Used to disable LINQ expressions caching for queries.
@@ -233,19 +285,31 @@ namespace LinqToDB.Common
 			/// <para />
 			/// <a href="https://github.com/linq2db/linq2db/issues/256">More details</a>.
 			/// </summary>
-			public static bool DisableQueryCache;
+			public static bool DisableQueryCache
+			{
+				get => Options.DisableQueryCache;
+				set => Options = Options.WithDisableQueryCache(value);
+			}
 
 			/// <summary>
 			/// Specifies timeout when query will be evicted from cache since last execution of query.
 			/// Default value is 1 hour.
 			/// </summary>
-			public static TimeSpan CacheSlidingExpiration = TimeSpan.FromHours(1);
+			public static TimeSpan CacheSlidingExpiration
+			{
+				get => Options.CacheSlidingExpiration;
+				set => Options = Options.WithCacheSlidingExpiration(value);
+			}
 
 			/// <summary>
 			/// Used to generate CROSS APPLY or OUTER APPLY if possible.
 			/// Default value: <c>true</c>.
 			/// </summary>
-			public static bool PreferApply = true;
+			public static bool PreferApply
+			{
+				get => Options.PreferApply;
+				set => Options = Options.WithPreferApply(value);
+			}
 
 			/// <summary>
 			/// Allows SQL generation to automatically transform
@@ -253,13 +317,21 @@ namespace LinqToDB.Common
 			/// Into GROUP BY equivalent if syntax is not supported
 			/// Default value: <c>true</c>.
 			/// </summary>
-			public static bool KeepDistinctOrdered = true;
+			public static bool KeepDistinctOrdered
+			{
+				get => Options.KeepDistinctOrdered;
+				set => Options = Options.WithKeepDistinctOrdered(value);
+			}
 
 			/// <summary>
 			/// Enables Take/Skip parameterization.
 			/// Default value: <c>true</c>.
 			/// </summary>
-			public static bool ParameterizeTakeSkip = true;
+			public static bool ParameterizeTakeSkip
+			{
+				get => Options.ParameterizeTakeSkip;
+				set => Options = Options.WithParameterizeTakeSkip(value);
+			}
 		}
 
 		/// <summary>

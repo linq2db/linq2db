@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using JetBrains.Annotations;
+using LinqToDB.Extensions;
 
 
 namespace LinqToDB
@@ -28,6 +29,7 @@ namespace LinqToDB
 	public partial class DataContext : IDataContext
 	{
 		private CoreDataContextOptionsExtension _prebuiltCoreExtension;
+		private DbDataContextOptionsExtension   _prebuiltDbExtension;
 		private DataContextOptions              _prebuiltOptions;
 
 		private bool _disposed;
@@ -90,9 +92,9 @@ namespace LinqToDB
 		/// <param name="options">Options, setup ahead of time.</param>
 		public DataContext(DataContextOptions options)
 		{
-			var extension = options.FindExtension<CoreDataContextOptionsExtension>();
+			var extension = options.FindExtension<DbDataContextOptionsExtension>();
 
-			extension ??= new CoreDataContextOptionsExtension();
+			extension ??= new DbDataContextOptionsExtension();
 
 			_prebuiltOptions = options;
 
@@ -116,12 +118,13 @@ namespace LinqToDB
 				_prebuiltOptions = _prebuiltOptions.WithExtension(extension.WithDataProvider(dataProvider));
 			}
 
+			_prebuiltDbExtension   = _prebuiltOptions.GetExtension<DbDataContextOptionsExtension>();
 			_prebuiltCoreExtension = _prebuiltOptions.GetExtension<CoreDataContextOptionsExtension>();
 
 			var linqExtension = _prebuiltOptions.FindExtension<LinqOptionsExtension>();
 			if (linqExtension == null)
 			{
-				linqExtension    = new	LinqOptionsExtension();
+				linqExtension    = Common.Configuration.Linq.Options;
 				_prebuiltOptions = _prebuiltOptions.WithExtension(linqExtension);
 			}
 
@@ -136,15 +139,15 @@ namespace LinqToDB
 		/// <summary>
 		/// Gets initial value for database connection configuration name.
 		/// </summary>
-		public string?       ConfigurationString => _prebuiltCoreExtension.ConfigurationString;
+		public string?       ConfigurationString => _prebuiltDbExtension.ConfigurationString;
 		/// <summary>
 		/// Gets initial value for database connection string.
 		/// </summary>
-		public string?       ConnectionString    => _prebuiltCoreExtension.ConnectionString;
+		public string?       ConnectionString    => _prebuiltDbExtension.ConnectionString;
 		/// <summary>
 		/// Gets database provider implementation.
 		/// </summary>
-		public IDataProvider DataProvider        => _prebuiltCoreExtension.DataProvider!;
+		public IDataProvider DataProvider        => _prebuiltDbExtension.DataProvider!;
 		/// <summary>
 		/// Gets or sets context identifier. Uses provider's name by default.
 		/// </summary>
@@ -154,11 +157,11 @@ namespace LinqToDB
 		/// </summary>
 		public MappingSchema MappingSchema
 		{
-			get => _prebuiltCoreExtension.MappingSchema!;
+			get => _prebuiltDbExtension.MappingSchema!;
 			set
 			{
-				_prebuiltCoreExtension = _prebuiltCoreExtension.WithMappingSchema(value);
-				_prebuiltOptions       = _prebuiltOptions.WithExtension(_prebuiltCoreExtension);
+				_prebuiltDbExtension = _prebuiltDbExtension.WithMappingSchema(value);
+				_prebuiltOptions     = _prebuiltOptions.WithExtension(_prebuiltCoreExtension);
 			}
 		}
 		/// <summary>
@@ -392,7 +395,7 @@ namespace LinqToDB
 		/// Used by <see cref="IDataContext.Clone(bool)"/> API only if <see cref="DataConnection.IsMarsEnabled"/>
 		/// is <c>true</c> and there is an active connection associated with current context.
 		/// <param name="currentConnection"><see cref="DataConnection"/> instance, used by current context instance.</param>
-		/// <param name="options">Connection options, will have <see cref="CoreDataContextOptionsExtension.DbConnection"/> or <see cref="CoreDataContextOptionsExtension.DbTransaction"/> set.</param>
+		/// <param name="options">Connection options, will have <see cref="DbConnection"/> or <see cref="DbTransaction"/> set.</param>
 		/// <returns>New <see cref="DataConnection"/> instance.</returns>
 		/// </summary>
 		protected virtual DataConnection CloneDataConnection(DataConnection currentConnection, DataContextOptions options) => new (options);
@@ -410,7 +413,7 @@ namespace LinqToDB
 
 			if (forNestedQuery && _dataConnection != null && _dataConnection.IsMarsEnabled)
 			{
-				var coreOptions = _prebuiltCoreExtension;
+				var coreOptions = _prebuiltDbExtension;
 
 				if (_dataConnection.TransactionAsync != null)
 					coreOptions = coreOptions.WithTransaction(_dataConnection.TransactionAsync.Transaction);

@@ -34,7 +34,7 @@ namespace LinqToDB
 
 		public static LinqOptionsExtension GetLinqOptions(this IDataContext context)
 		{
-			return context.Options.GetExtension<LinqOptionsExtension>();
+			return context.Options.FindExtension<LinqOptionsExtension>() ?? Common.Configuration.Linq.Options;
 		}
 
 	}

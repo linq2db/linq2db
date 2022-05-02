@@ -227,9 +227,10 @@ namespace LinqToDB.Data
 			// Initialize default
 			var linqExtension = options.FindExtension<LinqOptionsExtension>();
 			if (linqExtension == null)
-				options = options.WithExtension(new LinqOptionsExtension());
+				options = options.WithExtension(Configuration.Linq.Options);
 
-			var extension = options.FindExtension<CoreDataContextOptionsExtension>();
+			var coreExtension = options.FindExtension<CoreDataContextOptionsExtension>();
+			var dbExtension   = options.FindExtension<DbDataContextOptionsExtension>();
 			
 			/*
 			if (!options.IsValidConfigForConnectionType(this))
@@ -242,7 +243,7 @@ namespace LinqToDB.Data
 			DbConnection?  localConnection  = null;
 			DbTransaction? localTransaction = null;
 
-			if (extension == null || extension.ConfigurationString != null)
+			if (dbExtension == null || dbExtension.ConfigurationString != null)
 			{
 				ConfigurationString = DefaultConfiguration;
 				if (ConfigurationString == null)
@@ -253,32 +254,32 @@ namespace LinqToDB.Data
 				ConnectionString = ci.ConnectionString;
 				MappingSchema    = DataProvider.MappingSchema;
 			}
-			else if (extension.ConnectionString != null)
+			else if (dbExtension.ConnectionString != null)
 			{
-				if (extension.ProviderName == null && extension.DataProvider == null)
+				if (dbExtension.ProviderName == null && dbExtension.DataProvider == null)
 					throw new LinqToDBException("DataProvider was not specified");
 
 				IDataProvider? dataProvider;
-				if (extension.ProviderName != null)
+				if (dbExtension.ProviderName != null)
 				{
-					if (!_dataProviders.TryGetValue(extension.ProviderName, out dataProvider))
-						dataProvider = GetDataProvider(extension.ProviderName, extension.ConnectionString!);
+					if (!_dataProviders.TryGetValue(dbExtension.ProviderName, out dataProvider))
+						dataProvider = GetDataProvider(dbExtension.ProviderName, dbExtension.ConnectionString!);
 
 					if (dataProvider == null)
-						throw new LinqToDBException($"DataProvider '{extension.ProviderName}' not found.");
+						throw new LinqToDBException($"DataProvider '{dbExtension.ProviderName}' not found.");
 				}
 				else
-					dataProvider = extension.DataProvider!;
+					dataProvider = dbExtension.DataProvider!;
 
 				DataProvider     = dataProvider;
-				ConnectionString = extension.ConnectionString;
+				ConnectionString = dbExtension.ConnectionString;
 				MappingSchema    = DataProvider.MappingSchema;
 			}
-			else if (extension.ConnectionFactory != null)
+			else if (dbExtension.ConnectionFactory != null)
 			{
 				//copy to tmp variable so that if the factory in options gets changed later we will still use the old one
 				//is this expected?
-				var originalConnectionFactory = extension.ConnectionFactory!;
+				var originalConnectionFactory = dbExtension.ConnectionFactory!;
 				_connectionFactory = () =>
 				{
 					var connection = originalConnectionFactory();
@@ -286,27 +287,27 @@ namespace LinqToDB.Data
 					return connection;
 				};
 
-				DataProvider  = extension.DataProvider ?? throw new LinqToDBException("DataProvider was not specified");
+				DataProvider  = dbExtension.DataProvider ?? throw new LinqToDBException("DataProvider was not specified");
 				MappingSchema = DataProvider.MappingSchema;
 			}
-			else if (extension.DbConnection != null)
+			else if (dbExtension.DbConnection != null)
 			{
-				localConnection    = extension.DbConnection;
-				_disposeConnection = extension.DisposeConnection;
+				localConnection    = dbExtension.DbConnection;
+				_disposeConnection = dbExtension.DisposeConnection;
 
-				DataProvider  = extension.DataProvider ?? throw new LinqToDBException("DataProvider was not specified");
+				DataProvider  = dbExtension.DataProvider ?? throw new LinqToDBException("DataProvider was not specified");
 				MappingSchema = DataProvider.MappingSchema;
 			} 
-			else if (extension.DbTransaction != null)
+			else if (dbExtension.DbTransaction != null)
 			{
-				localConnection  = extension.DbTransaction.Connection;
-				localTransaction = extension.DbTransaction;
+				localConnection  = dbExtension.DbTransaction.Connection;
+				localTransaction = dbExtension.DbTransaction;
 
 				_closeTransaction  = false;
 				_closeConnection   = false;
 				_disposeConnection = false;
 
-				DataProvider  = extension.DataProvider ?? throw new LinqToDBException("DataProvider was not specified");;
+				DataProvider  = dbExtension.DataProvider ?? throw new LinqToDBException("DataProvider was not specified");;
 				MappingSchema = DataProvider.MappingSchema;
 			}
 			else
@@ -319,40 +320,40 @@ namespace LinqToDB.Data
 					? Configuration.RetryPolicy.Factory(this)
 					: null;
 
-			if (extension != null)
+			if (dbExtension != null)
 			{
-				if (extension.DataProvider != null)
+				if (dbExtension.DataProvider != null)
 				{
-					DataProvider  = extension.DataProvider;
+					DataProvider  = dbExtension.DataProvider;
 					MappingSchema = DataProvider.MappingSchema;
 				}
 
-				if (extension.MappingSchema != null)
+				if (dbExtension.MappingSchema != null)
 				{
-					AddMappingSchema(extension.MappingSchema);
+					AddMappingSchema(dbExtension.MappingSchema);
 				}
 
-				if (extension.OnTrace != null)
+				if (dbExtension.OnTrace != null)
 				{
-					OnTraceConnection = extension.OnTrace;
+					OnTraceConnection = dbExtension.OnTrace;
 				}
 
-				if (extension.TraceLevel != null)
+				if (dbExtension.TraceLevel != null)
 				{
 					TraceSwitchConnection = new TraceSwitch("DataConnection", "DataConnection trace switch")
 					{
-						Level = extension.TraceLevel.Value
+						Level = dbExtension.TraceLevel.Value
 					};
 				}
 
-				if (extension.WriteTrace != null)
+				if (dbExtension.WriteTrace != null)
 				{
-					WriteTraceLineConnection = extension.WriteTrace;
+					WriteTraceLineConnection = dbExtension.WriteTrace;
 				}
 
-				if (extension.Interceptors != null)
+				if (coreExtension?.Interceptors != null)
 				{
-					foreach (var interceptor in extension.Interceptors)
+					foreach (var interceptor in coreExtension.Interceptors)
 						AddInterceptor(interceptor);
 				}
 			}
@@ -486,7 +487,7 @@ namespace LinqToDB.Data
 
 		/// <summary>
 		/// Gets or sets trace handler, used for current connection instance.
-		/// Configured on the connection builder using <see cref="DataContextOptionsBuilder.WithTracing(Action{TraceInfo})"/>.
+		/// Configured on the connection builder using <see cref="DbDataContextOptionsBuilderExtensions.WithTracing(DataContextOptionsBuilder,Action{TraceInfo})"/>.
 		/// defaults to <see cref="OnTrace"/>.
 		/// </summary>
 		public Action<TraceInfo> OnTraceConnection { get; set; } = _onTrace;
@@ -592,7 +593,7 @@ namespace LinqToDB.Data
 
 		/// <summary>
 		/// Gets or sets global data connection trace options. Used for all new connections
-		/// unless <see cref="DataContextOptionsBuilder.WithTraceLevel"/> is called on builder.
+		/// unless <see cref="DbDataContextOptionsBuilderExtensions.WithTraceLevel"/> is called on builder.
 		/// defaults to off unless library was built in debug mode.
 		/// <remarks>Should only be used when <see cref="TraceSwitchConnection"/> can not be used!</remarks>
 		/// </summary>
@@ -607,7 +608,7 @@ namespace LinqToDB.Data
 		/// Sets tracing level for data connections.
 		/// </summary>
 		/// <param name="traceLevel">Connection tracing level.</param>
-		/// <remarks>Use <see cref="TraceSwitchConnection"/> when possible, configured via <see cref="DataContextOptionsBuilder.WithTraceLevel"/>.</remarks>
+		/// <remarks>Use <see cref="TraceSwitchConnection"/> when possible, configured via <see cref="DbDataContextOptionsBuilderExtensions.WithTraceLevel"/>.</remarks>
 		public static void TurnTraceSwitchOn(TraceLevel traceLevel = TraceLevel.Info)
 		{
 			TraceSwitch = new TraceSwitch("DataConnection", "DataConnection trace switch", traceLevel.ToString());
@@ -630,7 +631,7 @@ namespace LinqToDB.Data
 
 		/// <summary>
 		/// Trace function. By Default use <see cref="Debug"/> class for logging, but could be replaced to log e.g. to your log file.
-		/// will be ignored if <see cref="DataContextOptionsBuilder.WriteTraceWith"/> is called on builder
+		/// will be ignored if <see cref="DbDataContextOptionsBuilderExtensions.WriteTraceWith"/> is called on builder
 		/// <para>First parameter contains trace message.</para>
 		/// <para>Second parameter contains trace message category (<see cref="Switch.DisplayName"/>).</para>
 		/// <para>Third parameter contains trace level for message (<see cref="TraceLevel"/>).</para>

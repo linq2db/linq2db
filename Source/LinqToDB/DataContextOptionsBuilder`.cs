@@ -38,7 +38,7 @@ namespace LinqToDB
 
         /// <summary>
         ///     <para>
-        ///         Replaces the internal Entity Framework implementation of a service contract with a different
+        ///         Replaces the internal linq2db implementation of a service contract with a different
         ///         implementation.
         ///     </para>
         ///     <para>

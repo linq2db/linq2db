@@ -25,19 +25,6 @@ namespace LinqToDB.Infrastructure
 
 		public LinqOptionsExtension()
 		{
-			_preloadGroups          = Common.Configuration.Linq.PreloadGroups;
-			_ignoreEmptyUpdate      = Common.Configuration.Linq.IgnoreEmptyUpdate;
-			_generateExpressionTest = Common.Configuration.Linq.GenerateExpressionTest;
-			_traceMapperExpression  = Common.Configuration.Linq.TraceMapperExpression;
-			_doNotClearOrderBys     = Common.Configuration.Linq.DoNotClearOrderBys;
-			_optimizeJoins          = Common.Configuration.Linq.OptimizeJoins;
-			_compareNullsAsValues   = Common.Configuration.Linq.CompareNullsAsValues;
-			_guardGrouping          = Common.Configuration.Linq.GuardGrouping;
-			_disableQueryCache      = Common.Configuration.Linq.DisableQueryCache;
-			_cacheSlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
-			_preferApply            = Common.Configuration.Linq.PreferApply;
-			_keepDistinctOrdered    = Common.Configuration.Linq.KeepDistinctOrdered;
-			_parameterizeTakeSkip   = Common.Configuration.Linq.ParameterizeTakeSkip;
 		}
 
 		protected LinqOptionsExtension(LinqOptionsExtension copyFrom)

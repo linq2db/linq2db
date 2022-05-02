@@ -50,18 +50,6 @@ namespace LinqToDB
 	        var extensions = Extensions.ToDictionary(p => p.GetType(), p => p);
             extensions[typeof(TExtension)] = extension;
 
-			/*
-			// propagate to base
-            var current = typeof(TExtension);
-            while (current.BaseType != null && current.BaseType != typeof(object))
-            {
-	            current = current.BaseType;
-				if (extensions.ContainsKey(current))
-					break;
-				extensions[current] = extension;
-            }
-            */
-
             return new DataContextOptions<TContext>(extensions);
         }
 

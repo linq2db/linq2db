@@ -25,7 +25,7 @@ namespace LinqToDB
 		protected virtual LinqOptionsBuilder WithOption(Func<LinqOptionsExtension, LinqOptionsExtension> setAction)
 		{
 			((IDataContextOptionsBuilderInfrastructure)OptionsBuilder).AddOrUpdateExtension(
-				setAction(OptionsBuilder.Options.FindExtension<LinqOptionsExtension>() ?? new LinqOptionsExtension()));
+				setAction(OptionsBuilder.Options.FindExtension<LinqOptionsExtension>() ?? Common.Configuration.Linq.Options));
 
 			return this;
 		}

@@ -15,6 +15,10 @@ namespace Tests.Model
 	{
 		//static int _counter;
 
+		public TestDataConnection(DataContextOptions options) : base(options)
+		{
+		}
+
 		public TestDataConnection(string configString)
 			: base(configString)
 		{
