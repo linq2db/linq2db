@@ -753,7 +753,7 @@ namespace LinqToDB.Linq.Builder
 							return GetVisitor(enforceServerSide).Find(info) != null;
 						}
 
-						var attr = GetExpressionAttribute(pi.Member);
+						var attr = pi.Member.GetExpressionAttribute(MappingSchema);
 						return attr != null && (attr.PreferServerSide || enforceServerSide) && !CanBeCompiled(expr);
 					}
 
@@ -765,7 +765,7 @@ namespace LinqToDB.Linq.Builder
 						if (l != null)
 							return GetVisitor(enforceServerSide).Find(l.Body.Unwrap()) != null;
 
-						var attr = GetExpressionAttribute(pi.Method);
+						var attr = pi.Method.GetExpressionAttribute(MappingSchema);
 						return attr != null && (attr.PreferServerSide || enforceServerSide) && !CanBeCompiled(expr);
 					}
 				default:

@@ -532,7 +532,7 @@ namespace LinqToDB.Linq.Builder
 
 						if (CompiledParameters == null && typeof(IQueryable).IsSameOrParentOf(expr.Type))
 						{
-							var attr = GetTableFunctionAttribute(call.Method);
+							var attr = call.Method.GetTableFunctionAttribute(MappingSchema);
 
 							if (attr == null && !call.IsQueryable())
 							{
@@ -1051,7 +1051,7 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.MemberAccess   :
 					{
 						var ma   = (MemberExpression)ex;
-						var attr = GetExpressionAttribute(ma.Member);
+						var attr = ma.Member.GetExpressionAttribute(MappingSchema);
 
 						if (attr != null)
 							return true;
