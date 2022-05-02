@@ -24,7 +24,7 @@ namespace LinqToDB
 		/// <returns> The same builder instance so that multiple calls can be chained. </returns>
 		protected virtual LinqOptionsBuilder WithOption(Func<LinqOptionsExtension, LinqOptionsExtension> setAction)
 		{
-			((IDbContextOptionsBuilderInfrastructure)OptionsBuilder).AddOrUpdateExtension(
+			((IDataContextOptionsBuilderInfrastructure)OptionsBuilder).AddOrUpdateExtension(
 				setAction(OptionsBuilder.Options.FindExtension<LinqOptionsExtension>() ?? new LinqOptionsExtension()));
 
 			return this;

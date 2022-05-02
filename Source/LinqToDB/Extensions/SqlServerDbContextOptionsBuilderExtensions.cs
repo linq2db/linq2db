@@ -22,7 +22,7 @@ namespace LinqToDB
         public static DataContextOptionsBuilder UseSqlServer(
             this DataContextOptionsBuilder            optionsBuilder,
             string                                    connectionString,
-            Action<SqlServerDbContextOptionsBuilder>? sqlServerOptionsAction = null)
+            Action<SqlServerDataContextOptionsBuilder>? sqlServerOptionsAction = null)
         {
 	        if (optionsBuilder == null)
 	        {
@@ -36,11 +36,11 @@ namespace LinqToDB
 
 	        optionsBuilder = optionsBuilder.UseConnectionString(connectionString);
             var extension = GetOrCreateExtension(optionsBuilder);
-            ((IDbContextOptionsBuilderInfrastructure)optionsBuilder).AddOrUpdateExtension(extension);
+            ((IDataContextOptionsBuilderInfrastructure)optionsBuilder).AddOrUpdateExtension(extension);
 
             ConfigureWarnings(optionsBuilder);
 
-            sqlServerOptionsAction?.Invoke(new SqlServerDbContextOptionsBuilder(optionsBuilder));
+            sqlServerOptionsAction?.Invoke(new SqlServerDataContextOptionsBuilder(optionsBuilder));
 
             return optionsBuilder;
         }
@@ -59,7 +59,7 @@ namespace LinqToDB
         public static DataContextOptionsBuilder UseSqlServer(
             this DataContextOptionsBuilder              optionsBuilder,
             DbConnection                              connection,
-            Action<SqlServerDbContextOptionsBuilder>? sqlServerOptionsAction = null)
+            Action<SqlServerDataContextOptionsBuilder>? sqlServerOptionsAction = null)
         {
 	        if (optionsBuilder == null)
 	        {
@@ -74,11 +74,11 @@ namespace LinqToDB
 	        optionsBuilder = optionsBuilder.UseConnection(connection);
 
             var extension = GetOrCreateExtension(optionsBuilder);
-            ((IDbContextOptionsBuilderInfrastructure)optionsBuilder).AddOrUpdateExtension(extension);
+            ((IDataContextOptionsBuilderInfrastructure)optionsBuilder).AddOrUpdateExtension(extension);
 
             ConfigureWarnings(optionsBuilder);
 
-            sqlServerOptionsAction?.Invoke(new SqlServerDbContextOptionsBuilder(optionsBuilder));
+            sqlServerOptionsAction?.Invoke(new SqlServerDataContextOptionsBuilder(optionsBuilder));
 
             return optionsBuilder;
         }
@@ -94,7 +94,7 @@ namespace LinqToDB
         public static DataContextOptionsBuilder<TContext> UseSqlServer<TContext>(
             this DataContextOptionsBuilder<TContext>    optionsBuilder,
                   string                              connectionString,
-            Action<SqlServerDbContextOptionsBuilder>? sqlServerOptionsAction = null)
+            Action<SqlServerDataContextOptionsBuilder>? sqlServerOptionsAction = null)
             where TContext : IDataContext
             => (DataContextOptionsBuilder<TContext>)UseSqlServer(
                 (DataContextOptionsBuilder)optionsBuilder, connectionString, sqlServerOptionsAction);
@@ -114,7 +114,7 @@ namespace LinqToDB
         public static DataContextOptionsBuilder<TContext> UseSqlServer<TContext>(
             this DataContextOptionsBuilder<TContext>    optionsBuilder,
             DbConnection                              connection,
-            Action<SqlServerDbContextOptionsBuilder>? sqlServerOptionsAction = null)
+            Action<SqlServerDataContextOptionsBuilder>? sqlServerOptionsAction = null)
             where TContext : IDataContext
         {
 	        return (DataContextOptionsBuilder<TContext>)UseSqlServer(
@@ -133,7 +133,7 @@ namespace LinqToDB
                 = optionsBuilder.Options.FindExtension<CoreDataContextOptionsExtension>()
                 ?? new CoreDataContextOptionsExtension();
 
-            ((IDbContextOptionsBuilderInfrastructure)optionsBuilder).AddOrUpdateExtension(coreOptionsExtension);
+            ((IDataContextOptionsBuilderInfrastructure)optionsBuilder).AddOrUpdateExtension(coreOptionsExtension);
         }
     }
 }

@@ -21,7 +21,7 @@ namespace LinqToDB
     ///         options) to be used for a context.
     ///     </para>
     /// </summary>
-    public class DataContextOptionsBuilder : IDbContextOptionsBuilderInfrastructure
+    public class DataContextOptionsBuilder : IDataContextOptionsBuilderInfrastructure
     {
         private DataContextOptions _options;
 
@@ -262,7 +262,7 @@ namespace LinqToDB
         /// </summary>
         /// <typeparam name="TExtension"> The type of extension to be added. </typeparam>
         /// <param name="extension"> The extension to be added. </param>
-        void IDbContextOptionsBuilderInfrastructure.AddOrUpdateExtension<TExtension>(TExtension extension)
+        void IDataContextOptionsBuilderInfrastructure.AddOrUpdateExtension<TExtension>(TExtension extension)
         {
 	        if (extension == null)
 	        {
@@ -274,7 +274,7 @@ namespace LinqToDB
 
         private DataContextOptionsBuilder WithOption(Func<CoreDataContextOptionsExtension, CoreDataContextOptionsExtension> withFunc)
         {
-            ((IDbContextOptionsBuilderInfrastructure)this).AddOrUpdateExtension(
+            ((IDataContextOptionsBuilderInfrastructure)this).AddOrUpdateExtension(
                 withFunc(Options.FindExtension<CoreDataContextOptionsExtension>() ?? new CoreDataContextOptionsExtension()));
 
             return this;

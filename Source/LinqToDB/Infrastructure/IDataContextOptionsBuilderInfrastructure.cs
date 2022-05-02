@@ -10,7 +10,7 @@
     ///         not used in application code.
     ///     </para>
     /// </summary>
-    public interface IDbContextOptionsBuilderInfrastructure
+    public interface IDataContextOptionsBuilderInfrastructure
     {
         /// <summary>
         ///     <para>

@@ -11,7 +11,7 @@ namespace LinqToDB.Infrastructure
 	public class LinqOptionsBuilder
 	{
 		/// <summary>
-		///     Initializes a new instance of the <see cref="SqlServerDbContextOptionsBuilder" /> class.
+		///     Initializes a new instance of the <see cref="SqlServerDataContextOptionsBuilder" /> class.
 		/// </summary>
 		/// <param name="optionsBuilder"> The options builder. </param>
 		public LinqOptionsBuilder(DataContextOptionsBuilder optionsBuilder)
@@ -32,7 +32,7 @@ namespace LinqToDB.Infrastructure
 		/// <returns> The same builder instance so that multiple calls can be chained. </returns>
 		protected virtual LinqOptionsBuilder WithOption(Func<LinqOptionsExtension, LinqOptionsExtension> setAction)
 		{
-			((IDbContextOptionsBuilderInfrastructure)OptionsBuilder).AddOrUpdateExtension(
+			((IDataContextOptionsBuilderInfrastructure)OptionsBuilder).AddOrUpdateExtension(
 				setAction(OptionsBuilder.Options.FindExtension<LinqOptionsExtension>() ?? new LinqOptionsExtension()));
 
 			return this;

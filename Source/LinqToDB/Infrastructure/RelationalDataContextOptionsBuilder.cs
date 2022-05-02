@@ -13,15 +13,15 @@ namespace LinqToDB.Infrastructure
     ///         particular relational database provider.
     ///     </para>
     /// </summary>
-    public abstract class RelationalDbContextOptionsBuilder<TBuilder, TExtension> : IRelationalDbContextOptionsBuilderInfrastructure
-        where TBuilder : RelationalDbContextOptionsBuilder<TBuilder, TExtension>
+    public abstract class RelationalDataContextOptionsBuilder<TBuilder, TExtension> : IRelationalDataContextOptionsBuilderInfrastructure
+        where TBuilder : RelationalDataContextOptionsBuilder<TBuilder, TExtension>
         where TExtension : RelationalOptionsExtension, new()
     {
         /// <summary>
-        ///     Initializes a new instance of the <see cref="RelationalDbContextOptionsBuilder{TBuilder, TExtension}" /> class.
+        ///     Initializes a new instance of the <see cref="RelationalDataContextOptionsBuilder{TBuilder,TExtension}" /> class.
         /// </summary>
         /// <param name="optionsBuilder"> The core options builder. </param>
-        protected RelationalDbContextOptionsBuilder([NotNull] DataContextOptionsBuilder optionsBuilder)
+        protected RelationalDataContextOptionsBuilder([NotNull] DataContextOptionsBuilder optionsBuilder)
         {
 	        if (optionsBuilder == null)
 	        {
@@ -37,7 +37,7 @@ namespace LinqToDB.Infrastructure
         protected virtual DataContextOptionsBuilder OptionsBuilder { get; }
 
         /// <inheritdoc />
-        DataContextOptionsBuilder IRelationalDbContextOptionsBuilderInfrastructure.OptionsBuilder => OptionsBuilder;
+        DataContextOptionsBuilder IRelationalDataContextOptionsBuilderInfrastructure.OptionsBuilder => OptionsBuilder;
 
         /// <summary>
         ///     Sets an option by cloning the extension used to store the settings. This ensures the builder
@@ -47,7 +47,7 @@ namespace LinqToDB.Infrastructure
         /// <returns> The same builder instance so that multiple calls can be chained. </returns>
         protected virtual TBuilder WithOption([NotNull] Func<TExtension, TExtension> setAction)
         {
-            ((IDbContextOptionsBuilderInfrastructure)OptionsBuilder).AddOrUpdateExtension(
+            ((IDataContextOptionsBuilderInfrastructure)OptionsBuilder).AddOrUpdateExtension(
                 setAction(OptionsBuilder.Options.FindExtension<TExtension>() ?? new TExtension()));
 
             return (TBuilder)this;

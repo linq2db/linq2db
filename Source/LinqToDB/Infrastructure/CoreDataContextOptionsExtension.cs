@@ -16,7 +16,7 @@ namespace LinqToDB.Infrastructure
 
     /// <summary>
     ///     <para>
-    ///         Represents options managed by the core of Entity Framework, as opposed to those managed
+    ///         Represents options managed by the core of linq2db, as opposed to those managed
     ///         by database providers or extensions. These options are set using <see cref="DataContextOptionsBuilder" />.
     ///     </para>
     ///     <para>

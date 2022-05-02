@@ -19,7 +19,7 @@ namespace LinqToDB.Infrastructure.Internal
     public interface ISqlServerOptions : ISingletonOptions
     {
         /// <summary>
-        ///     Reflects the option set by <see cref="SqlServerDbContextOptionsBuilder.UseRowNumberForPaging" />.
+        ///     Reflects the option set by <see cref="SqlServerDataContextOptionsBuilder.UseRowNumberForPaging" />.
         /// </summary>
         bool RowNumberPagingEnabled { get; }
     }
