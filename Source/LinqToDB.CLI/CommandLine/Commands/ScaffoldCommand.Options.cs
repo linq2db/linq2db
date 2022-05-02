@@ -560,7 +560,7 @@ Naming options is an object with following properties:
 					null,
 					false,
 					"generate data context contructor with options parameter",
-					$"Constructor example: public MyDataContext({nameof(LinqToDBConnectionOptions)} options) {{ ... }}",
+					$"Constructor example: public MyDataContext({nameof(DataContextOptions)} options) {{ ... }}",
 					null,
 					null,
 					_defaultOptions.DataModel.HasUntypedOptionsConstructor);
@@ -573,7 +573,7 @@ Naming options is an object with following properties:
 					null,
 					false,
 					"generate data context contructor with generic options parameter",
-					$"Constructor example: public MyDataContext({nameof(LinqToDBConnectionOptions)}<MyDataContext> options) {{ ... }}",
+					$"Constructor example: public MyDataContext({nameof(DataContextOptions)}<MyDataContext> options) {{ ... }}",
 					null,
 					null,
 					_defaultOptions.DataModel.HasTypedOptionsConstructor);

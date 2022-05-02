@@ -6,6 +6,7 @@ using LinqToDB.SqlQuery;
 using NUnit.Framework;
 using System;
 using System.Linq;
+using LinqToDB.Infrastructure;
 
 namespace Tests.UserTests
 {
@@ -18,9 +19,9 @@ namespace Tests.UserTests
 			{
 			}
 
-			public override SqlStatement Finalize(SqlStatement statement)
+			public override SqlStatement Finalize(SqlStatement statement, LinqOptionsExtension linqOptions)
 			{
-				statement = base.Finalize(statement);
+				statement = base.Finalize(statement, linqOptions);
 
 				AddConditions(statement);
 

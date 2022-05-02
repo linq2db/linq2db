@@ -10,7 +10,7 @@ namespace LinqToDB.Configuration
 	/// to determine connection settings.
 	/// </summary>
 	[Obsolete("Use 'DataContextOptionsBuilder instead.'")]
-	public class LinqToDataConnectionOptionsBuilder : DataContextOptionsBuilder
+	public class LinqToDBConnectionOptionsBuilder : DataContextOptionsBuilder
 	{
 		public DataContextOptions Build() => Options;
 	}

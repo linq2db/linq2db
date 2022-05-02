@@ -133,7 +133,7 @@ namespace LinqToDB.CommandLine
 
 			var generator  = new Scaffolder(LanguageProviders.CSharp, HumanizerNameConverter.Instance, settings, interceptors);
 			var dataModel  = generator.LoadDataModel(schemaProvider, typeMappingsProvider);
-			var sqlBuilder = dc.DataProvider.CreateSqlBuilder(dc.MappingSchema);
+			var sqlBuilder = dc.DataProvider.CreateSqlBuilder(dc.MappingSchema, dc.LinqOptions);
 			var files      = generator.GenerateCodeModel(
 				sqlBuilder,
 				dataModel,

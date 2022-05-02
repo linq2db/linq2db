@@ -30,7 +30,7 @@ namespace LinqToDB.AspNet
 		/// <param name="serviceCollection"> The <see cref="IServiceCollection" /> to add services to. </param>
 		/// <param name="configure">
 		///     <para>
-		///         An action to configure the <see cref="LinqToDataConnectionOptionsBuilder" /> for the context.
+		///         An action to configure the <see cref="LinqToDBConnectionOptionsBuilder" /> for the context.
 		///     </para>
 		/// </param>
 		/// <param name="lifetime"> The lifetime with which to register the Context service in the container.
@@ -82,7 +82,7 @@ namespace LinqToDB.AspNet
 		/// <param name="serviceCollection"> The <see cref="IServiceCollection" /> to add services to. </param>
 		/// <param name="configure">
 		///     <para>
-		///         An action to configure the <see cref="LinqToDataConnectionOptionsBuilder" /> for the context.
+		///         An action to configure the <see cref="LinqToDBConnectionOptionsBuilder" /> for the context.
 		///     </para>
 		///     <para>
 		///         In order for the options to be passed into your context, you need to expose a constructor on your context that takes
@@ -137,7 +137,7 @@ namespace LinqToDB.AspNet
 		/// <param name="serviceCollection"> The <see cref="IServiceCollection" /> to add services to. </param>
 		/// <param name="configure">
 		///     <para>
-		///         An action to configure the <see cref="LinqToDataConnectionOptionsBuilder" /> for the context.
+		///         An action to configure the <see cref="LinqToDBConnectionOptionsBuilder" /> for the context.
 		///     </para>
 		///     <para>
 		///         In order for the options to be passed into your context, you need to expose a constructor on your context that takes

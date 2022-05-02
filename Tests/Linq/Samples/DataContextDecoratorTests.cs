@@ -82,6 +82,8 @@ namespace Tests.Samples
 				return _context.GetQueryRunner(query, queryNumber, expression, parameters, preambles);
 			}
 
+			public DataContextOptions Options => _context.Options;
+
 			public Expression GetReaderExpression(DbDataReader reader, int idx, Expression readerExpression, Type toType)
 			{
 				return _context.GetReaderExpression(reader, idx, readerExpression, toType);

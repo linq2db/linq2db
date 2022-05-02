@@ -694,9 +694,9 @@ namespace Tests.Data
 #pragma warning restore CS0618 // Type or member is obsolete
 
 			bool builderTraceCalled = false;
-			var builder = new LinqToDBConnectionOptionsBuilder().WithTracing(info => builderTraceCalled = true);
+			var builder = new DataContextOptionsBuilder().WithTracing(info => builderTraceCalled = true);
 
-			using (var db = new DataConnection(builder.Build()))
+			using (var db = new DataConnection(builder.Options))
 			{
 				db.OnTraceConnection(new TraceInfo(db, TraceInfoStep.BeforeExecute, TraceOperation.BuildMapping, false));
 			}
@@ -721,9 +721,9 @@ namespace Tests.Data
 		{
 			var staticTraceLevel = DataConnection.TraceSwitch.Level;
 			var builderTraceLevel = staticTraceLevel + 1;
-			var builder = new LinqToDBConnectionOptionsBuilder().WithTraceLevel(builderTraceLevel);
+			var builder = new DataContextOptionsBuilder().WithTraceLevel(builderTraceLevel);
 
-			using (var db = new DataConnection(builder.Build()))
+			using (var db = new DataConnection(builder.Options))
 			{
 				Assert.AreEqual(builderTraceLevel, db.TraceSwitchConnection.Level);
 				Assert.AreNotEqual(staticTraceLevel, db.TraceSwitchConnection.Level);
@@ -751,10 +751,10 @@ namespace Tests.Data
 			DataConnection.WriteTraceLine = (s, s1, arg3) => staticWriteCalled = true;
 
 			var builderWriteCalled = false;
-			var builder = new LinqToDBConnectionOptionsBuilder()
+			var builder = new DataContextOptionsBuilder()
 				.WriteTraceWith((s, s1, a3) => builderWriteCalled = true);
 
-			using (var db = new DataConnection(builder.Build()))
+			using (var db = new DataConnection(builder.Options))
 			{
 				db.WriteTraceLineConnection(null, null, TraceLevel.Info);
 			}

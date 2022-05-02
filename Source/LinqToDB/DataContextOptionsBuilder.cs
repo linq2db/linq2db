@@ -124,6 +124,29 @@ namespace LinqToDB
         public virtual DataContextOptionsBuilder AddInterceptors(params IInterceptor[] interceptors)
             => AddInterceptors((IEnumerable<IInterceptor>)interceptors);
 
+        /// <summary>
+        ///     <para>
+        ///         Adds <see cref="IInterceptor" /> instance to those registered on the context.
+        ///     </para>
+        ///     <para>
+        ///         Interceptors can be used to view, change, or suppress operations taken by linq2db.
+        ///         See the specific implementations of <see cref="IInterceptor" /> for details. For example, 'ICommandInterceptor'.
+        ///     </para>
+        ///     <para>
+        ///         Extensions can also register multiple <see cref="IInterceptor" />s in the internal service provider.
+        ///         If both injected and application interceptors are found, then the injected interceptors are run in the
+        ///         order that they are resolved from the service provider, and then the application interceptors are run
+        ///         in the order that they were added to the context.
+        ///     </para>
+        ///     <para>
+        ///         Calling this method multiple times will result in all interceptors in every call being added to the context.
+        ///         Interceptors added in a previous call are not overridden by interceptors added in a later call.
+        ///     </para>
+        /// </summary>
+        /// <param name="interceptor"> The interceptor to add. </param>
+        /// <returns> The same builder instance so that multiple calls can be chained. </returns>
+        public virtual DataContextOptionsBuilder WithInterceptor(IInterceptor interceptor)
+	        => AddInterceptors(interceptor);
 
         public virtual DataContextOptionsBuilder WithOptions(Action<LinqOptionsBuilder> linqOptionsAction)
         {

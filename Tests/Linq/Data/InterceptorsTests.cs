@@ -279,12 +279,12 @@ namespace Tests.Data
 			var interceptor1 = new TestCommandInterceptor();
 			var interceptor2 = new TestCommandInterceptor();
 
-			var options = new LinqToDBConnectionOptionsBuilder()
+			var builder = new DataContextOptionsBuilder()
 				.UseConfigurationString(context)
 				.WithInterceptor(interceptor1)
 				.WithInterceptor(interceptor2);
 
-			using (var db = new DataConnection(options.Build()))
+			using (var db = new DataConnection(builder.Options))
 			{
 				db.OnNextCommandInitialized((args, command) =>
 				{
@@ -331,12 +331,12 @@ namespace Tests.Data
 			var interceptor1 = new TestCommandInterceptor();
 			var interceptor2 = new TestCommandInterceptor();
 
-			var options = new LinqToDBConnectionOptionsBuilder()
+			var builder = new DataContextOptionsBuilder()
 				.UseConfigurationString(context)
 				.WithInterceptor(interceptor1)
 				.WithInterceptor(interceptor2);
 
-			using (var db = new DataContext(options.Build()))
+			using (var db = new DataContext(builder.Options))
 			{
 				db.CloseAfterUse = closeAfterUse;
 
