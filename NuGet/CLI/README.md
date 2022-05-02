@@ -131,6 +131,7 @@ Scaffold process is a multi-stange process with following steps:
 - generation of source code from code model
 
 We allow injection of interceptors/extension points at some of those stages. They could be split into three categories:
+
 - Database schema load interceptors. Those interceptors allow user to add, remove or modify information about database objects, used for data model generation.
 - Database type mapping interceptor. This interceptor allows user to override default .NET type used for specific database type in data model or specify .NET type for database type, not known to scaffold utility (e.g. some custom database type)
 - Data model interceptors. Those interceptors work with generate data model objects and allow user to modify them before they will be converted to source code. Such objects include:
@@ -195,11 +196,12 @@ public override IEnumerable<Table> GetTables(IEnumerable<Table> tables)
         new PrimaryKey("PK_my_table_name", new[] { "pk" }));
 }
 ```
+
 </details>
 
 <details>
   <summary>Database schema models</summary>
- 
+
 ```cs
 // generic descriptors
 public sealed record ObjectName(string? Server, string? Database, string? Schema, string Name);
@@ -403,11 +405,12 @@ public override void PreprocessEntity(ITypeParser typeParser, EntityModel entity
         creatorColumn.Metadata.SkipOnUpdate = true;
 }
 ```
+
 </details>
 
 <details>
   <summary>Data model classes</summary>
- 
+
 ```cs
 // data model descriptors
 
@@ -739,6 +742,6 @@ public sealed class AssociationMetadata
     public string?          QueryExpressionMethod { get; set; }
 }
 
- ```
- 
+```
+
 </details>
