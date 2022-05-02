@@ -224,11 +224,6 @@ namespace LinqToDB.Data
 			if (options == null)
 				throw new ArgumentNullException(nameof(options));
 
-			// Initialize default
-			var linqExtension = options.FindExtension<LinqOptionsExtension>();
-			if (linqExtension == null)
-				options = options.WithExtension(Configuration.Linq.Options);
-
 			var coreExtension = options.FindExtension<CoreDataContextOptionsExtension>();
 			var dbExtension   = options.FindExtension<DbDataContextOptionsExtension>();
 			

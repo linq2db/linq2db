@@ -395,6 +395,21 @@ namespace Tests
 			return _serverContainer.Prepare(ms, interceptor, suppressSequentialAccess, str);
 		}
 
+		protected ITestDataContext GetDataContext(
+			string                            configuration,
+			Action<DataContextOptionsBuilder> dbOptionsBuilder)
+		{
+			if (!configuration.EndsWith(LinqServiceSuffix))
+			{
+				return GetDataConnection(configuration, dbOptionsBuilder);
+			}
+
+			throw new NotImplementedException();
+
+			/*var str = configuration.Substring(0, configuration.Length - LinqServiceSuffix.Length);
+			return _serverContainer.Prepare(ms, interceptor, suppressSequentialAccess, str);*/
+		}
+
 		protected TestDataConnection GetDataConnection(
 			string                            configuration,
 			Action<DataContextOptionsBuilder> dbOptionsBuilder)

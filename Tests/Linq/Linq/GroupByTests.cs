@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Linq;
-
+using FluentAssertions;
 using LinqToDB;
 using LinqToDB.SqlQuery;
 using NUnit.Framework;
@@ -1973,6 +1973,22 @@ namespace Tests.Linq
 						.ToList();
 				});
 
+			}
+		}
+
+		[Test]
+		public void GroupByGuardCheckOptions([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool guard)
+		{
+			using (var db = GetDataContext(context, b => b.WithOptions(o => o.WithGuardGrouping(guard))))
+			{
+				// group on client
+				var query = db.Person
+					.GroupBy(_ => _.Gender);
+
+				if (guard)
+					query.Invoking(q => q.ToList()).Should().Throw<LinqToDBException>();
+				else
+					query.Invoking(q => q.ToList()).Should().NotThrow();
 			}
 		}
 
