@@ -627,6 +627,11 @@ namespace LinqToDB.Linq.Builder
 						return new TransformInfo(Expression.NotEqual(me.Expression!, Expression.Constant(null, me.Expression!.Type)), false, true);
 					}
 
+					if (me.Member.IsNullableValueMember())
+					{
+						return new TransformInfo(Expression.Convert(me.Expression!, me.Type), false, true);
+					}
+
 					if (CanBeCompiled(expr))
 						break;
 

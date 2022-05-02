@@ -14,7 +14,7 @@ namespace Tests.UserTests
 	public class Issue3506Tests : TestBase
 	{
 		[Test]
-		public void Test1([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void Test1([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			var cats = new[]
 			{
@@ -45,7 +45,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void Test2([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void Test2([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			var cats = new[]
 			{
