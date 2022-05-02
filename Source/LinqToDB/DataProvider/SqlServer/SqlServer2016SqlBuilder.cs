@@ -2,14 +2,15 @@
 
 namespace LinqToDB.DataProvider.SqlServer
 {
+	using Infrastructure;
 	using Mapping;
 	using SqlQuery;
 	using SqlProvider;
 
 	class SqlServer2016SqlBuilder : SqlServer2014SqlBuilder
 	{
-		public SqlServer2016SqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
+		public SqlServer2016SqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, LinqOptionsExtension linqOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, linqOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 

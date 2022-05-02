@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.Informix
 {
+	using Infrastructure;
 	using Common;
 	using Data;
 	using Linq.Internal;
@@ -85,9 +86,9 @@ namespace LinqToDB.DataProvider.Informix
 			TableOptions.CreateIfNotExists         |
 			TableOptions.DropIfExists;
 
-		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
+		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, LinqOptionsExtension linqOptions)
 		{
-			return new InformixSqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
+			return new InformixSqlBuilder(this, mappingSchema, linqOptions, GetSqlOptimizer(), SqlProviderFlags);
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;

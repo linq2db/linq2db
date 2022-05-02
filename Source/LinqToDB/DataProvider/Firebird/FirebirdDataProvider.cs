@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.Firebird
 {
+	using Infrastructure;
 	using Common;
 	using Data;
 	using Mapping;
@@ -58,9 +59,9 @@ namespace LinqToDB.DataProvider.Firebird
 			TableOptions.CreateIfNotExists          |
 			TableOptions.DropIfExists;
 
-		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
+		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, LinqOptionsExtension linqOptions)
 		{
-			return new FirebirdSqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
+			return new FirebirdSqlBuilder(this, mappingSchema, linqOptions, GetSqlOptimizer(), SqlProviderFlags);
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;

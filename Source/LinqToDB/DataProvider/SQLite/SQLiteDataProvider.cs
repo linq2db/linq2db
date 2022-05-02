@@ -4,11 +4,12 @@ using System.Data;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Data.Common;
+using System.Globalization;
 
 namespace LinqToDB.DataProvider.SQLite
 {
-	using System.Data.Common;
-	using System.Globalization;
+	using Infrastructure;
 	using Common;
 	using Data;
 	using Mapping;
@@ -185,9 +186,9 @@ namespace LinqToDB.DataProvider.SQLite
 			TableOptions.CreateIfNotExists         |
 			TableOptions.DropIfExists;
 
-		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
+		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, LinqOptionsExtension linqOptions)
 		{
-			return new SQLiteSqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
+			return new SQLiteSqlBuilder(this, mappingSchema, linqOptions, GetSqlOptimizer(), SqlProviderFlags);
 		}
 
 		static class MappingSchemaInstance

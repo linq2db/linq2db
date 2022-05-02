@@ -68,7 +68,7 @@ namespace LinqToDB.Data
 			{
 				SetCommand(true);
 
-				var sqlProvider = _dataConnection.DataProvider.CreateSqlBuilder(_dataConnection.MappingSchema);
+				var sqlProvider = _dataConnection.DataProvider.CreateSqlBuilder(_dataConnection.MappingSchema, _dataConnection.LinqOptions);
 
 				var sb = new StringBuilder();
 
@@ -102,7 +102,7 @@ namespace LinqToDB.Data
 
 						var sql = sb.ToString();
 
-						var sqlBuilder = _dataConnection.DataProvider.CreateSqlBuilder(_dataConnection.MappingSchema);
+						var sqlBuilder = _dataConnection.DataProvider.CreateSqlBuilder(_dataConnection.MappingSchema, _dataConnection.LinqOptions);
 						sql = sqlBuilder.ApplyQueryHints(sql, _executionQuery.PreparedQuery.QueryHints);
 
 						sb = new StringBuilder(sql);
@@ -242,7 +242,7 @@ namespace LinqToDB.Data
 					sql.IsParameterDependent = true;
 				}
 
-				var sqlBuilder   = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema);
+				var sqlBuilder   = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema, dataConnection.LinqOptions);
 				var sqlOptimizer = dataConnection.DataProvider.GetSqlOptimizer();
 
 				var cc = sqlBuilder.CommandCount(sql);

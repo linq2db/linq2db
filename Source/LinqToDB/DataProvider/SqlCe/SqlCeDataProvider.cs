@@ -10,6 +10,7 @@ using System.Xml.Linq;
 
 namespace LinqToDB.DataProvider.SqlCe
 {
+	using Infrastructure;
 	using Common;
 	using Data;
 	using Mapping;
@@ -47,9 +48,9 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		public override TableOptions SupportedTableOptions => TableOptions.None;
 
-		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
+		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, LinqOptionsExtension linqOptions)
 		{
-			return new SqlCeSqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
+			return new SqlCeSqlBuilder(this, mappingSchema, linqOptions, GetSqlOptimizer(), SqlProviderFlags);
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;

@@ -26,7 +26,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 			switch (statement.QueryType)
 			{
-				case QueryType.Delete : statement = GetAlternativeDelete((SqlDeleteStatement) statement); break;
+				case QueryType.Delete : statement = GetAlternativeDelete((SqlDeleteStatement) statement, linqOptions); break;
 				case QueryType.Update : statement = GetAlternativeUpdate((SqlUpdateStatement) statement, linqOptions); break;
 			}
 
@@ -154,7 +154,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 						if (ftype == typeof(bool))
 						{
-							var ex = AlternativeConvertToBoolean(func, 1);
+							var ex = AlternativeConvertToBoolean(func, visitor.Context.LinqOptions, 1);
 							if (ex != null)
 								return ex;
 						}

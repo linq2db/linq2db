@@ -41,7 +41,7 @@ namespace LinqToDB.DataProvider.Access
 		{
 			return statement.QueryType switch
 			{
-				QueryType.Delete => GetAlternativeDelete((SqlDeleteStatement)statement),
+				QueryType.Delete => GetAlternativeDelete((SqlDeleteStatement)statement, linqOptions),
 				QueryType.Update => CorrectAccessUpdate((SqlUpdateStatement)statement),
 				_                => statement,
 			};

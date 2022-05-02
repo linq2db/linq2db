@@ -4,14 +4,15 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.Access
 {
+	using Infrastructure;
 	using SqlQuery;
 	using Mapping;
 	using SqlProvider;
 
 	class AccessODBCSqlBuilder : AccessSqlBuilderBase
 	{
-		public AccessODBCSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
+		public AccessODBCSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, LinqOptionsExtension linqOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, linqOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 

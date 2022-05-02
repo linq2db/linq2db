@@ -1,16 +1,16 @@
 ﻿﻿using System;
-﻿using System.Data;
-
+﻿
 namespace LinqToDB.DataProvider.Access
 {
+	using Infrastructure;
 	using System.Data.Common;
 	using Mapping;
 	using SqlProvider;
 
 	class AccessOleDbSqlBuilder : AccessSqlBuilderBase
 	{
-		public AccessOleDbSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
+		public AccessOleDbSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, LinqOptionsExtension linqOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, linqOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 

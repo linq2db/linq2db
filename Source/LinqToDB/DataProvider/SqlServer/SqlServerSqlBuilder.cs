@@ -6,6 +6,7 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
+	using Infrastructure;
 	using Common;
 	using Mapping;
 	using SqlQuery;
@@ -13,8 +14,8 @@ namespace LinqToDB.DataProvider.SqlServer
 
 	abstract class SqlServerSqlBuilder : BasicSqlBuilder
 	{
-		protected SqlServerSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
+		protected SqlServerSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, LinqOptionsExtension linqOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, linqOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 

@@ -228,7 +228,12 @@ namespace LinqToDB.Data
 			// Initialize default
 			var linqExtension = options.FindExtension<LinqOptionsExtension>();
 			if (linqExtension == null)
-				options = options.WithExtension(Configuration.Linq.Options);
+			{
+				linqExtension = Configuration.Linq.Options;
+				options       = options.WithExtension(linqExtension);
+			}
+
+			LinqOptions = linqExtension;
 
 			var coreExtension = options.FindExtension<CoreDataContextOptionsExtension>();
 			var dbExtension   = options.FindExtension<DbDataContextOptionsExtension>();
@@ -379,9 +384,14 @@ namespace LinqToDB.Data
 		#region Public Properties
 
 		/// <summary>
-		/// Current DataContext LINQ options
+		/// Current DataContext options
 		/// </summary>
 		public DataContextOptions Options { get; private set; }
+
+		/// <summary>
+		/// Current DataContext LINQ options
+		/// </summary>
+		public LinqOptionsExtension LinqOptions { get; private set; }
 
 		/// <summary>
 		/// Database configuration name (connection string name).
@@ -1185,7 +1195,7 @@ namespace LinqToDB.Data
 		{
 			if (queryHints?.Count > 0)
 			{
-				var sqlProvider = DataProvider.CreateSqlBuilder(MappingSchema);
+				var sqlProvider = DataProvider.CreateSqlBuilder(MappingSchema, LinqOptions);
 				sql             = sqlProvider.ApplyQueryHints(sql, queryHints);
 			}
 
@@ -1744,6 +1754,7 @@ namespace LinqToDB.Data
 			ConnectionString    = connectionString;
 			_connection         = connection != null ? AsyncFactory.Create(connection) : null;
 			MappingSchema       = mappingSchema;
+			LinqOptions         = options.GetExtension<LinqOptionsExtension>();
 			Options             = options;
 		}
 

@@ -23,7 +23,7 @@ namespace LinqToDB.DataProvider.SQLite
 			{
 				case QueryType.Delete :
 				{
-					statement = GetAlternativeDelete((SqlDeleteStatement)statement);
+					statement = GetAlternativeDelete((SqlDeleteStatement)statement, linqOptions);
 					statement.SelectQuery!.From.Tables[0].Alias = "$";
 					break;
 				}
@@ -136,7 +136,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 						if (ftype == typeof(bool))
 						{
-							var ex = AlternativeConvertToBoolean(func, 1);
+							var ex = AlternativeConvertToBoolean(func, visitor.Context.LinqOptions, 1);
 							if (ex != null)
 								return ex;
 						}

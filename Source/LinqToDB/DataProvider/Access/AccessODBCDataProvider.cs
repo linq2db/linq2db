@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-
 using OdbcType = LinqToDB.DataProvider.OdbcProviderAdapter.OdbcType;
 
 namespace LinqToDB.DataProvider.Access
 {
+	using Infrastructure;
 	using Common;
 	using Data;
 	using Mapping;
@@ -46,9 +46,9 @@ namespace LinqToDB.DataProvider.Access
 
 		public override TableOptions SupportedTableOptions => TableOptions.None;
 
-		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
+		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, LinqOptionsExtension linqOptions)
 		{
-			return new AccessODBCSqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
+			return new AccessODBCSqlBuilder(this, mappingSchema, linqOptions, GetSqlOptimizer(), SqlProviderFlags);
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;

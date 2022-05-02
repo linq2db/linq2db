@@ -223,7 +223,7 @@ namespace LinqToDB.Linq.Builder
 					builder.ConvertToSql(outerKeyContext, outerKeySelector),
 					SqlPredicate.Operator.Equal,
 					builder.ConvertToSql(innerKeyContext, innerKeySelector),
-					Common.Configuration.Linq.CompareNullsAsValues ? true : null);
+					builder.LinqOptions.CompareNullsAsValues ? true : null);
 			}
 
 			condition.Conditions.Add(new SqlCondition(false, predicate));
@@ -246,7 +246,7 @@ namespace LinqToDB.Linq.Builder
 					builder.ConvertToSql(outerKeyContext, outerKeySelector),
 					SqlPredicate.Operator.Equal,
 					builder.ConvertToSql(subQueryKeyContext, innerKeySelector),
-					Common.Configuration.Linq.CompareNullsAsValues ? true : null);
+					builder.LinqOptions.CompareNullsAsValues ? true : null);
 			}
 
 			subQuerySelect.Where.SearchCondition.Conditions.Add(new SqlCondition(false, predicate));

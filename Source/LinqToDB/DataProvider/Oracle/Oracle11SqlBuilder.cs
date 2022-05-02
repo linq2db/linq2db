@@ -1,9 +1,9 @@
 ﻿using System;
-using System.Data;
 using System.Linq;
 
 namespace LinqToDB.DataProvider.Oracle
 {
+	using Infrastructure;
 	using Common;
 	using SqlQuery;
 	using SqlProvider;
@@ -13,8 +13,8 @@ namespace LinqToDB.DataProvider.Oracle
 
 	partial class Oracle11SqlBuilder : BasicSqlBuilder
 	{
-		public Oracle11SqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
+		public Oracle11SqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, LinqOptionsExtension linqOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, linqOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
@@ -73,7 +73,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override bool BuildWhere(SelectQuery selectQuery)
 		{
-			SqlOptimizer.ConvertSkipTake(MappingSchema, selectQuery, OptimizationContext, out var takeExpr, out var skipEpr);
+			SqlOptimizer.ConvertSkipTake(MappingSchema, LinqOptions, selectQuery, OptimizationContext, out var takeExpr, out var skipEpr);
 
 			return
 				base.BuildWhere(selectQuery) ||

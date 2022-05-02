@@ -4,6 +4,7 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.Access
 {
+	using Infrastructure;
 	using Extensions;
 	using Mapping;
 	using SqlProvider;
@@ -11,8 +12,8 @@ namespace LinqToDB.DataProvider.Access
 
 	abstract class AccessSqlBuilderBase : BasicSqlBuilder
 	{
-		protected AccessSqlBuilderBase(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
+		protected AccessSqlBuilderBase(IDataProvider? provider, MappingSchema mappingSchema, LinqOptionsExtension linqOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, linqOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 

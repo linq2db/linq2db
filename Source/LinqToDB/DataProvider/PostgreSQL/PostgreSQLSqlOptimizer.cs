@@ -28,7 +28,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			return statement.QueryType switch
 			{
-				QueryType.Delete => GetAlternativeDelete((SqlDeleteStatement)statement),
+				QueryType.Delete => GetAlternativeDelete((SqlDeleteStatement)statement, linqOptions),
 				QueryType.Update => GetAlternativeUpdatePostgreSqlite((SqlUpdateStatement)statement, linqOptions),
 				_                => statement,
 			};
@@ -65,7 +65,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					case "Convert"   :
 						if (func.SystemType.ToUnderlying() == typeof(bool))
 						{
-							var ex = AlternativeConvertToBoolean(func, 1);
+							var ex = AlternativeConvertToBoolean(func, visitor.Context.LinqOptions, 1);
 							if (ex != null)
 								return ex;
 						}

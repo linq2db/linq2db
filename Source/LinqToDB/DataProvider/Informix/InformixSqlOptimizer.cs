@@ -103,7 +103,7 @@ namespace LinqToDB.DataProvider.Informix
 			switch (statement.QueryType)
 			{
 				case QueryType.Delete:
-					var deleteStatement = GetAlternativeDelete((SqlDeleteStatement)statement);
+					var deleteStatement = GetAlternativeDelete((SqlDeleteStatement)statement, linqOptions);
 					statement = deleteStatement;
 					if (deleteStatement.SelectQuery != null)
 						deleteStatement.SelectQuery.From.Tables[0].Alias = "$";
@@ -166,7 +166,7 @@ namespace LinqToDB.DataProvider.Informix
 
 								case TypeCode.Boolean  :
 								{
-									var ex = AlternativeConvertToBoolean(func, 1);
+									var ex = AlternativeConvertToBoolean(func, visitor.Context.LinqOptions, 1);
 									if (ex != null)
 										return ex;
 									break;

@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
+	using Infrastructure;
 	using Common;
 	using Data;
 	using Extensions;
@@ -143,17 +144,17 @@ namespace LinqToDB.DataProvider.SqlServer
 			TableOptions.CreateIfNotExists          |
 			TableOptions.DropIfExists;
 
-		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
+		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, LinqOptionsExtension linqOptions)
 		{
 			return Version switch
 			{
-				SqlServerVersion.v2005 => new SqlServer2005SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags),
-				SqlServerVersion.v2008 => new SqlServer2008SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags),
-				SqlServerVersion.v2012 => new SqlServer2012SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags),
-				SqlServerVersion.v2014 => new SqlServer2014SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags),
-				SqlServerVersion.v2016 => new SqlServer2016SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags),
-				SqlServerVersion.v2017 => new SqlServer2017SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags),
-				SqlServerVersion.v2019 => new SqlServer2019SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags),
+				SqlServerVersion.v2005 => new SqlServer2005SqlBuilder(this, mappingSchema, linqOptions, GetSqlOptimizer(), SqlProviderFlags),
+				SqlServerVersion.v2008 => new SqlServer2008SqlBuilder(this, mappingSchema, linqOptions, GetSqlOptimizer(), SqlProviderFlags),
+				SqlServerVersion.v2012 => new SqlServer2012SqlBuilder(this, mappingSchema, linqOptions, GetSqlOptimizer(), SqlProviderFlags),
+				SqlServerVersion.v2014 => new SqlServer2014SqlBuilder(this, mappingSchema, linqOptions, GetSqlOptimizer(), SqlProviderFlags),
+				SqlServerVersion.v2016 => new SqlServer2016SqlBuilder(this, mappingSchema, linqOptions, GetSqlOptimizer(), SqlProviderFlags),
+				SqlServerVersion.v2017 => new SqlServer2017SqlBuilder(this, mappingSchema, linqOptions, GetSqlOptimizer(), SqlProviderFlags),
+				SqlServerVersion.v2019 => new SqlServer2019SqlBuilder(this, mappingSchema, linqOptions, GetSqlOptimizer(), SqlProviderFlags),
 				_                      => throw new InvalidOperationException(),
 			};
 		}

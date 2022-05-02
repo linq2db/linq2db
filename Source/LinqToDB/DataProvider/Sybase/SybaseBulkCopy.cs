@@ -131,7 +131,7 @@ namespace LinqToDB.DataProvider.Sybase
 			var transaction    = providerConnections.ProviderTransaction;
 			var ed             = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T));
 			var columns        = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
-			var sb             = _provider.CreateSqlBuilder(table.DataContext.MappingSchema);
+			var sb             = _provider.CreateSqlBuilder(table.DataContext.MappingSchema, dataConnection.LinqOptions);
 			var rd             = createDataReader(columns);
 			var sqlopt         = SybaseProviderAdapter.AseBulkCopyOptions.Default;
 			var rc             = new BulkCopyRowsCopied();

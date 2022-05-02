@@ -145,7 +145,7 @@ namespace LinqToDB.DataProvider.SapHana
 				else if (Common.Configuration.Data.BulkCopyUseConnectionCommandTimeout)
 					bc.BulkCopyTimeout = connection.ConnectionTimeout;
 
-				var sqlBuilder = dataConnection.DataProvider.CreateSqlBuilder(table.DataContext.MappingSchema);
+				var sqlBuilder = dataConnection.DataProvider.CreateSqlBuilder(table.DataContext.MappingSchema, dataConnection.LinqOptions);
 				var tableName  = GetTableName(sqlBuilder, options, table);
 
 				bc.DestinationTableName = tableName;
@@ -220,7 +220,7 @@ namespace LinqToDB.DataProvider.SapHana
 				else if (Common.Configuration.Data.BulkCopyUseConnectionCommandTimeout)
 					bc.BulkCopyTimeout = connection.ConnectionTimeout;
 
-				var sqlBuilder = dataConnection.DataProvider.CreateSqlBuilder(table.DataContext.MappingSchema);
+				var sqlBuilder = dataConnection.DataProvider.CreateSqlBuilder(table.DataContext.MappingSchema, dataConnection.LinqOptions);
 				var tableName  = GetTableName(sqlBuilder, options, table);
 
 				bc.DestinationTableName = tableName;

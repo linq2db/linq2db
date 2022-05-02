@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.SapHana
 {
+	using Infrastructure;
 	using Common;
 	using Data;
 	using Extensions;
@@ -53,9 +54,9 @@ namespace LinqToDB.DataProvider.SapHana
 			TableOptions.IsLocalTemporaryStructure  |
 			TableOptions.IsLocalTemporaryData;
 
-		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
+		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, LinqOptionsExtension linqOptions)
 		{
-			return new SapHanaSqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
+			return new SapHanaSqlBuilder(this, mappingSchema, linqOptions, GetSqlOptimizer(), SqlProviderFlags);
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;

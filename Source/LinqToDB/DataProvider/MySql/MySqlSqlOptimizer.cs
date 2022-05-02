@@ -104,7 +104,7 @@ namespace LinqToDB.DataProvider.MySql
 
 						if (ftype == typeof(bool))
 						{
-							var ex = AlternativeConvertToBoolean(func, 1);
+							var ex = AlternativeConvertToBoolean(func, visitor.Context.LinqOptions, 1);
 							if (ex != null)
 								return ex;
 						}

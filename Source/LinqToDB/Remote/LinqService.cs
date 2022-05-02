@@ -75,7 +75,7 @@ namespace LinqToDB.Remote
 			return new LinqServiceInfo
 			{
 				MappingSchemaType     = ctx.DataProvider.MappingSchema.GetType().AssemblyQualifiedName!,
-				SqlBuilderType        = ctx.DataProvider.CreateSqlBuilder(ctx.MappingSchema).GetType().AssemblyQualifiedName!,
+				SqlBuilderType        = ctx.DataProvider.CreateSqlBuilder(ctx.MappingSchema, ctx.LinqOptions).GetType().AssemblyQualifiedName!,
 				SqlOptimizerType      = ctx.DataProvider.GetSqlOptimizer().GetType().AssemblyQualifiedName!,
 				SqlProviderFlags      = ctx.DataProvider.SqlProviderFlags,
 				SupportedTableOptions = ctx.DataProvider.SupportedTableOptions
@@ -89,7 +89,7 @@ namespace LinqToDB.Remote
 			return Task.FromResult(new LinqServiceInfo()
 			{
 				MappingSchemaType     = ctx.DataProvider.MappingSchema.GetType().AssemblyQualifiedName!,
-				SqlBuilderType        = ctx.DataProvider.CreateSqlBuilder(ctx.MappingSchema).GetType().AssemblyQualifiedName!,
+				SqlBuilderType        = ctx.DataProvider.CreateSqlBuilder(ctx.MappingSchema, ctx.LinqOptions).GetType().AssemblyQualifiedName!,
 				SqlOptimizerType      = ctx.DataProvider.GetSqlOptimizer().GetType().AssemblyQualifiedName!,
 				SqlProviderFlags      = ctx.DataProvider.SqlProviderFlags,
 				SupportedTableOptions = ctx.DataProvider.SupportedTableOptions

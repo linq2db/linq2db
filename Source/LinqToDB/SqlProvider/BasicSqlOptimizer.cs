@@ -56,11 +56,11 @@ namespace LinqToDB.SqlProvider
 			);
 
 			statement.WalkQueries(
-				(context: this, evaluationContext),
+				(context: this, evaluationContext, linqOptions),
 				static (context, selectQuery) =>
 				{
-					if (!context.context.SqlProviderFlags.IsCountSubQuerySupported)  selectQuery = context.context.MoveCountSubQuery (selectQuery, context.evaluationContext);
-					if (!context.context.SqlProviderFlags.IsSubQueryColumnSupported) selectQuery = context.context.MoveSubQueryColumn(selectQuery, context.evaluationContext);
+					if (!context.context.SqlProviderFlags.IsCountSubQuerySupported)  selectQuery = context.context.MoveCountSubQuery (selectQuery, context.evaluationContext, context.linqOptions);
+					if (!context.context.SqlProviderFlags.IsSubQueryColumnSupported) selectQuery = context.context.MoveSubQueryColumn(selectQuery, context.evaluationContext, context.linqOptions);
 
 					return selectQuery;
 				}
@@ -448,13 +448,13 @@ namespace LinqToDB.SqlProvider
 			return result;
 		}
 
-		SelectQuery MoveCountSubQuery(SelectQuery selectQuery, EvaluationContext context)
+		SelectQuery MoveCountSubQuery(SelectQuery selectQuery, EvaluationContext context, LinqOptionsExtension linqOptions)
 		{
-			selectQuery.Visit((context, optimizer: this), static (context, e) => context.optimizer.MoveCountSubQuery(e, context.context));
+			selectQuery.Visit((context, optimizer: this, linqOptions), static (context, e) => context.optimizer.MoveCountSubQuery(e, context.context, context.linqOptions));
 			return selectQuery;
 		}
 
-		void MoveCountSubQuery(IQueryElement element, EvaluationContext context)
+		void MoveCountSubQuery(IQueryElement element, EvaluationContext context, LinqOptionsExtension linqOptions)
 		{
 			if (element.ElementType != QueryElementType.SqlQuery)
 				return;
@@ -489,6 +489,7 @@ namespace LinqToDB.SqlProvider
 					//
 					subQuery.Where.SearchCondition = (SqlSearchCondition)OptimizeElement(
 						null,
+						linqOptions, 
 						subQuery.Where.SearchCondition,
 						new OptimizationContext(context, new AliasesContext(), false),
 						false)!;
@@ -631,9 +632,9 @@ namespace LinqToDB.SqlProvider
 			return true;
 		}
 
-		SelectQuery MoveSubQueryColumn(SelectQuery selectQuery, EvaluationContext context)
+		SelectQuery MoveSubQueryColumn(SelectQuery selectQuery, EvaluationContext context, LinqOptionsExtension linqOptions)
 		{
-			selectQuery.Visit((context, optimizer: this), static (context, element) =>
+			selectQuery.Visit((context, optimizer: this, linqOptions), static (context, element) =>
 			{
 				if (element.ElementType != QueryElementType.SqlQuery)
 					return;
@@ -682,6 +683,7 @@ namespace LinqToDB.SqlProvider
 
 						subQuery.Where.SearchCondition = (SqlSearchCondition)context.optimizer.OptimizeElement(
 							null,
+							context.linqOptions,
 							subQuery.Where.SearchCondition,
 							new OptimizationContext(context.context, new AliasesContext(), false),
 							false)!;
@@ -1248,7 +1250,7 @@ namespace LinqToDB.SqlProvider
 		}
 
 
-		public virtual ISqlPredicate OptimizePredicate(ISqlPredicate predicate, EvaluationContext context)
+		public virtual ISqlPredicate OptimizePredicate(ISqlPredicate predicate, EvaluationContext context, LinqOptionsExtension linqOptions)
 		{
 			// Avoiding infinite recursion
 			//
@@ -1364,10 +1366,10 @@ namespace LinqToDB.SqlProvider
 							if (cond.Predicate is SqlPredicate.ExprExpr ee)
 							{
 								if (ee.Operator == SqlPredicate.Operator.Equal)
-									return new SqlPredicate.ExprExpr(ee.Expr1, SqlPredicate.Operator.NotEqual, ee.Expr2, Configuration.Linq.CompareNullsAsValues ? true : null);
+									return new SqlPredicate.ExprExpr(ee.Expr1, SqlPredicate.Operator.NotEqual, ee.Expr2, linqOptions.CompareNullsAsValues ? true : null);
 
 								if (ee.Operator == SqlPredicate.Operator.NotEqual)
-									return new SqlPredicate.ExprExpr(ee.Expr1, SqlPredicate.Operator.Equal, ee.Expr2, Configuration.Linq.CompareNullsAsValues ? true : null);
+									return new SqlPredicate.ExprExpr(ee.Expr1, SqlPredicate.Operator.Equal, ee.Expr2, linqOptions.CompareNullsAsValues ? true : null);
 							}
 						}
 					}
@@ -1901,9 +1903,9 @@ namespace LinqToDB.SqlProvider
 		#region Conversion
 
 		[return: NotNullIfNotNull("element")]
-		public virtual IQueryElement? ConvertElement(MappingSchema mappingSchema, IQueryElement? element, OptimizationContext context)
+		public virtual IQueryElement? ConvertElement(MappingSchema mappingSchema, LinqOptionsExtension linqOptions, IQueryElement? element, OptimizationContext context)
 		{
-			return OptimizeElement(mappingSchema, element, context, true);
+			return OptimizeElement(mappingSchema, linqOptions, element, context, true);
 		}
 
 		public virtual ISqlExpression ConvertExpressionImpl(ISqlExpression expression, ConvertVisitor<RunOptimizationContext> visitor)
@@ -2012,36 +2014,40 @@ namespace LinqToDB.SqlProvider
 		public readonly struct RunOptimizationContext
 		{
 			public RunOptimizationContext(
-				OptimizationContext optimizationContext,
-				BasicSqlOptimizer   optimizer,
-				MappingSchema?      mappingSchema,
-				bool                register,
+				OptimizationContext  optimizationContext,
+				BasicSqlOptimizer    optimizer,
+				MappingSchema?       mappingSchema,
+				LinqOptionsExtension linqOptions,
+				bool                 register,
 				Func<ConvertVisitor<RunOptimizationContext>, IQueryElement, IQueryElement> func)
 			{
 				OptimizationContext = optimizationContext;
 				Optimizer           = optimizer;
 				MappingSchema       = mappingSchema;
+				LinqOptions         = linqOptions;
 				Register            = register;
 				Func                = func;
 			}
 
-			public readonly OptimizationContext OptimizationContext;
-			public readonly BasicSqlOptimizer   Optimizer;
-			public readonly bool                Register;
-			public readonly MappingSchema?      MappingSchema;
+			public readonly OptimizationContext  OptimizationContext;
+			public readonly BasicSqlOptimizer    Optimizer;
+			public readonly bool                 Register;
+			public readonly MappingSchema?       MappingSchema;
+			public readonly LinqOptionsExtension LinqOptions;
 
 			public readonly Func<ConvertVisitor<RunOptimizationContext>, IQueryElement, IQueryElement> Func;
 		}
 
 		static IQueryElement RunOptimization(
-			IQueryElement       element,
-			OptimizationContext optimizationContext,
-			BasicSqlOptimizer   optimizer,
-			MappingSchema?      mappingSchema,
-			bool                register,
+			IQueryElement        element,
+			OptimizationContext  optimizationContext,
+			BasicSqlOptimizer    optimizer,
+			MappingSchema?       mappingSchema,
+			LinqOptionsExtension linqOptions,
+			bool                 register,
 			Func<ConvertVisitor<RunOptimizationContext>,IQueryElement,IQueryElement> func)
 		{
-			var ctx = new RunOptimizationContext(optimizationContext, optimizer, mappingSchema, register, func);
+			var ctx = new RunOptimizationContext(optimizationContext, optimizer, mappingSchema, linqOptions, register, func);
 
 			for (;;)
 			{
@@ -2084,7 +2090,7 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
-		public IQueryElement? OptimizeElement(MappingSchema? mappingSchema, IQueryElement? element, OptimizationContext optimizationContext, bool withConversion)
+		public IQueryElement? OptimizeElement(MappingSchema? mappingSchema, LinqOptionsExtension linqOptions, IQueryElement? element, OptimizationContext optimizationContext, bool withConversion)
 		{
 			if (element == null)
 				return null;
@@ -2092,7 +2098,7 @@ namespace LinqToDB.SqlProvider
 			if (optimizationContext.IsOptimized(element, out var newElement))
 				return newElement!;
 
-			newElement = RunOptimization(element, optimizationContext, this, mappingSchema, !withConversion,
+			newElement = RunOptimization(element, optimizationContext, this, mappingSchema, linqOptions, !withConversion,
 				static (visitor, e) =>
 				{
 					var ne = e;
@@ -2100,7 +2106,7 @@ namespace LinqToDB.SqlProvider
 						ne = visitor.Context.Optimizer.OptimizeExpression(expr1, visitor);
 
 					if (ne is ISqlPredicate pred1)
-						ne = visitor.Context.Optimizer.OptimizePredicate(pred1, visitor.Context.OptimizationContext.Context);
+						ne = visitor.Context.Optimizer.OptimizePredicate(pred1, visitor.Context.OptimizationContext.Context, visitor.Context.LinqOptions);
 
 					if (!ReferenceEquals(ne, e))
 						return ne;
@@ -2115,7 +2121,7 @@ namespace LinqToDB.SqlProvider
 				if (mappingSchema == null)
 					throw new InvalidOperationException("MappingSchema is required for conversion");
 
-				newElement = RunOptimization(newElement, optimizationContext, this, mappingSchema, true,
+				newElement = RunOptimization(newElement, optimizationContext, this, mappingSchema, linqOptions, true,
 					static(visitor, e) =>
 					{
 						var ne = e;
@@ -2519,7 +2525,7 @@ namespace LinqToDB.SqlProvider
 
 		#region Alternative Builders
 
-		protected ISqlExpression? AlternativeConvertToBoolean(SqlFunction func, int paramNumber)
+		protected ISqlExpression? AlternativeConvertToBoolean(SqlFunction func, LinqOptionsExtension linqOptions, int paramNumber)
 		{
 			var par = func.Parameters[paramNumber];
 
@@ -2530,7 +2536,7 @@ namespace LinqToDB.SqlProvider
 				sc.Conditions.Add(
 					new SqlCondition(false,
 						new SqlPredicate.ExprExpr(par, SqlPredicate.Operator.NotEqual, new SqlValue(0),
-							Configuration.Linq.CompareNullsAsValues ? false : null)));
+							linqOptions.CompareNullsAsValues ? false : null)));
 
 				return new SqlFunction(func.SystemType, "CASE", sc, new SqlValue(true), new SqlValue(false))
 				{
@@ -2587,7 +2593,7 @@ namespace LinqToDB.SqlProvider
 				new SqlFunction(func.SystemType, "Floor", par1) : par1;
 		}
 
-		protected SqlDeleteStatement GetAlternativeDelete(SqlDeleteStatement deleteStatement)
+		protected SqlDeleteStatement GetAlternativeDelete(SqlDeleteStatement deleteStatement, LinqOptionsExtension linqOptions)
 		{
 			if ((deleteStatement.SelectQuery.From.Tables.Count > 1 || deleteStatement.SelectQuery.From.Tables[0].Joins.Count > 0) &&
 				deleteStatement.SelectQuery.From.Tables[0].Source is SqlTable table)
@@ -2614,7 +2620,7 @@ namespace LinqToDB.SqlProvider
 					{
 						sc2.Conditions.Add(new SqlCondition(
 							false,
-							new SqlPredicate.ExprExpr(copyKeys[i], SqlPredicate.Operator.Equal, tableKeys[i], Configuration.Linq.CompareNullsAsValues ? true : null)));
+							new SqlPredicate.ExprExpr(copyKeys[i], SqlPredicate.Operator.Equal, tableKeys[i], linqOptions.CompareNullsAsValues ? true : null)));
 					}
 
 					deleteStatement.SelectQuery.Where.SearchCondition.Conditions.Clear();
@@ -3590,13 +3596,13 @@ namespace LinqToDB.SqlProvider
 			return newStatement;
 		}
 
-		public virtual void ConvertSkipTake(MappingSchema mappingSchema, SelectQuery selectQuery,
+		public virtual void ConvertSkipTake(MappingSchema mappingSchema, LinqOptionsExtension linqOptions, SelectQuery selectQuery,
 			OptimizationContext optimizationContext, out ISqlExpression? takeExpr, out ISqlExpression? skipExpr)
 		{
 			// make skip take as parameters or evaluate otherwise
 
-			takeExpr = ConvertElement(mappingSchema, selectQuery.Select.TakeValue, optimizationContext) as ISqlExpression;
-			skipExpr = ConvertElement(mappingSchema, selectQuery.Select.SkipValue, optimizationContext) as ISqlExpression;
+			takeExpr = ConvertElement(mappingSchema, linqOptions, selectQuery.Select.TakeValue, optimizationContext) as ISqlExpression;
+			skipExpr = ConvertElement(mappingSchema, linqOptions, selectQuery.Select.SkipValue, optimizationContext) as ISqlExpression;
 
 			if (takeExpr != null)
 			{

@@ -2,13 +2,14 @@
 
 namespace LinqToDB.DataProvider.DB2
 {
+	using Infrastructure;
 	using Mapping;
 	using SqlProvider;
 
 	class DB2zOSSqlBuilder : DB2SqlBuilderBase
 	{
-		public DB2zOSSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
+		public DB2zOSSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, LinqOptionsExtension linqOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, linqOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 

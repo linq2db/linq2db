@@ -146,7 +146,7 @@ namespace LinqToDB.DataProvider.Firebird
 		{
 			return statement.QueryType switch
 			{
-				QueryType.Delete => GetAlternativeDelete((SqlDeleteStatement)statement),
+				QueryType.Delete => GetAlternativeDelete((SqlDeleteStatement)statement, linqOptions),
 				QueryType.Update => GetAlternativeUpdate((SqlUpdateStatement)statement, linqOptions),
 				_                => statement,
 			};
@@ -168,7 +168,7 @@ namespace LinqToDB.DataProvider.Firebird
 						{
 							if (func.SystemType.ToUnderlying() == typeof(bool))
 							{
-								var ex = AlternativeConvertToBoolean(func, 1);
+								var ex = AlternativeConvertToBoolean(func, convertVisitor.Context.LinqOptions, 1);
 								if (ex != null)
 									return ex;
 							}
@@ -178,7 +178,7 @@ namespace LinqToDB.DataProvider.Firebird
 						{
 							if (func.SystemType.ToUnderlying() == typeof(bool))
 							{
-								var ex = AlternativeConvertToBoolean(func, 2);
+								var ex = AlternativeConvertToBoolean(func, convertVisitor.Context.LinqOptions, 2);
 								if (ex != null)
 									return ex;
 							}

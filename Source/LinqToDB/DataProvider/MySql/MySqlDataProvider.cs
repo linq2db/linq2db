@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.MySql
 {
+	using Infrastructure;
 	using Common;
 	using Data;
 	using Mapping;
@@ -59,9 +60,9 @@ namespace LinqToDB.DataProvider.MySql
 			TableOptions.CreateIfNotExists         |
 			TableOptions.DropIfExists;
 
-		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
+		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, LinqOptionsExtension linqOptions)
 		{
-			return new MySqlSqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
+			return new MySqlSqlBuilder(this, mappingSchema, linqOptions, GetSqlOptimizer(), SqlProviderFlags);
 		}
 
 		private static MappingSchema GetMappingSchema(string name)

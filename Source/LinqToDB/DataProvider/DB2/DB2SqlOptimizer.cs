@@ -22,7 +22,7 @@ namespace LinqToDB.DataProvider.DB2
 			// This is mutable part
 			return statement.QueryType switch
 			{
-				QueryType.Delete => GetAlternativeDelete((SqlDeleteStatement)statement),
+				QueryType.Delete => GetAlternativeDelete((SqlDeleteStatement)statement, linqOptions),
 				QueryType.Update => GetAlternativeUpdate((SqlUpdateStatement)statement, linqOptions),
 				_                => statement,
 			};
@@ -71,7 +71,7 @@ namespace LinqToDB.DataProvider.DB2
 
 						if (func.SystemType.ToUnderlying() == typeof(bool))
 						{
-							var ex = AlternativeConvertToBoolean(func, 1);
+							var ex = AlternativeConvertToBoolean(func, visitor.Context.LinqOptions, 1);
 							if (ex != null)
 								return ex;
 						}

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Data;
 using System.Linq;
 using System.Text;
 
@@ -10,6 +9,7 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.Firebird
 {
+	using Infrastructure;
 	using Common;
 	using Mapping;
 	using SqlQuery;
@@ -18,8 +18,8 @@ namespace LinqToDB.DataProvider.Firebird
 
 	public partial class FirebirdSqlBuilder : BasicSqlBuilder
 	{
-		public FirebirdSqlBuilder(IDataProvider provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
+		public FirebirdSqlBuilder(IDataProvider provider, MappingSchema mappingSchema, LinqOptionsExtension linqOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, linqOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 

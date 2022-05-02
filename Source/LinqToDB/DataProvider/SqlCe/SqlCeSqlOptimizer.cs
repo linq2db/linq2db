@@ -28,7 +28,7 @@ namespace LinqToDB.DataProvider.SqlCe
 			switch (statement.QueryType)
 			{
 				case QueryType.Delete :
-					statement = GetAlternativeDelete((SqlDeleteStatement) statement);
+					statement = GetAlternativeDelete((SqlDeleteStatement) statement, linqOptions);
 					statement.SelectQuery!.From.Tables[0].Alias = "$";
 					break;
 

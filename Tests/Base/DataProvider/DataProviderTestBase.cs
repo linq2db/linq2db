@@ -40,7 +40,7 @@ namespace Tests.DataProvider
 			//
 			Debug.WriteLine("{0} {1}:{2} -> NULL", fieldName, type.Name, dataType);
 
-			tableName = conn.DataProvider.CreateSqlBuilder(conn.DataProvider.MappingSchema).ConvertInline(tableName, ConvertType.NameToQueryTable);
+			tableName = conn.DataProvider.CreateSqlBuilder(conn.DataProvider.MappingSchema, conn.LinqOptions).ConvertInline(tableName, ConvertType.NameToQueryTable);
 			var sql   = string.Format(GetNullSql(conn),  fieldName, tableName);
 			var value = conn.Execute<T>(sql);
 

@@ -12,6 +12,7 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.Linq.Builder
 {
+	using Infrastructure;
 	using Common;
 	using Extensions;
 	using Mapping;
@@ -117,6 +118,8 @@ namespace LinqToDB.Linq.Builder
 		public List<SqlQueryExtension>?         SqlQueryExtensions;
 		public List<TableBuilder.TableContext>? TablesInScope;
 
+		public readonly LinqOptionsExtension LinqOptions;
+
 		public ExpressionBuilder(
 			Query                             query,
 			ExpressionTreeOptimizationContext optimizationContext,
@@ -129,9 +132,10 @@ namespace LinqToDB.Linq.Builder
 
 			CollectQueryDepended(expression);
 
-			CompiledParameters   = compiledParameters;
-			DataContext          = dataContext;
-			OriginalExpression   = expression;
+			CompiledParameters = compiledParameters;
+			DataContext        = dataContext;
+			LinqOptions        = dataContext.GetLinqOptions();
+			OriginalExpression = expression;
 
 			_optimizationContext = optimizationContext;
 			_parametersContext   = parametersContext;

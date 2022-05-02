@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.Oracle
 {
+	using Infrastructure;
 	using Common;
 	using Data;
 	using Extensions;
@@ -96,12 +97,12 @@ namespace LinqToDB.DataProvider.Oracle
 			TableOptions.CreateIfNotExists          |
 			TableOptions.DropIfExists;
 
-		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
+		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, LinqOptionsExtension linqOptions)
 		{
 			return Version switch
 			{
-				OracleVersion.v11 => new Oracle11SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags),
-				_                 => new Oracle12SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags),
+				OracleVersion.v11 => new Oracle11SqlBuilder(this, mappingSchema, linqOptions, GetSqlOptimizer(), SqlProviderFlags),
+				_                 => new Oracle12SqlBuilder(this, mappingSchema, linqOptions, GetSqlOptimizer(), SqlProviderFlags),
 			};
 		}
 

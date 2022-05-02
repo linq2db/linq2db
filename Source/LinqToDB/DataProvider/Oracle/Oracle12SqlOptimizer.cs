@@ -17,7 +17,7 @@
 
 			switch (statement.QueryType)
 			{
-				case QueryType.Delete : statement = GetAlternativeDelete((SqlDeleteStatement) statement); break;
+				case QueryType.Delete : statement = GetAlternativeDelete((SqlDeleteStatement) statement, linqOptions); break;
 				case QueryType.Update : statement = GetAlternativeUpdate((SqlUpdateStatement) statement, linqOptions); break;
 			}
 			

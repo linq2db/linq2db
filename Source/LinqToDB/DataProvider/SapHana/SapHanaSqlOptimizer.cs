@@ -18,7 +18,7 @@ namespace LinqToDB.DataProvider.SapHana
 		{
 			switch (statement.QueryType)
 			{
-				case QueryType.Delete: statement = GetAlternativeDelete((SqlDeleteStatement) statement); break;
+				case QueryType.Delete: statement = GetAlternativeDelete((SqlDeleteStatement) statement, linqOptions); break;
 				case QueryType.Update: statement = GetAlternativeUpdate((SqlUpdateStatement) statement, linqOptions); break;
 			}
 			return statement;
@@ -36,7 +36,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 					if (ftype == typeof(bool))
 					{
-						var ex = AlternativeConvertToBoolean(func, 1);
+						var ex = AlternativeConvertToBoolean(func, visitor.Context.LinqOptions, 1);
 						if (ex != null)
 							return ex;
 					}

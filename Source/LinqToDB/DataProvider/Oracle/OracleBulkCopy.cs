@@ -49,7 +49,7 @@ namespace LinqToDB.DataProvider.Oracle
 				{
 					var ed        = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T));
 					var columns   = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
-					var sb        = _provider.CreateSqlBuilder(table.DataContext.MappingSchema);
+					var sb        = _provider.CreateSqlBuilder(table.DataContext.MappingSchema, dataConnection.LinqOptions);
 
 					// ODP.NET doesn't bulk copy doesn't work if columns that require escaping:
 					// - if escaping applied, pre-flight validation fails as it performs uppercase comparison and quotes make it fail with

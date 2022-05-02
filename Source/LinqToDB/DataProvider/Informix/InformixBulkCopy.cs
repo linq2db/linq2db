@@ -149,7 +149,7 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			var ed      = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T));
 			var columns = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
-			var sb      = _provider.CreateSqlBuilder(table.DataContext.MappingSchema);
+			var sb      = _provider.CreateSqlBuilder(table.DataContext.MappingSchema, dataConnection.LinqOptions);
 			var rd      = new BulkCopyReader<T>(dataConnection, columns, source);
 			var sqlopt  = InformixProviderAdapter.IfxBulkCopyOptions.Default;
 			var rc      = new BulkCopyRowsCopied();

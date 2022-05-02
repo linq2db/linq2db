@@ -13,6 +13,7 @@ using System.Xml.Linq;
 
 namespace LinqToDB.DataProvider
 {
+	using Infrastructure;
 	using Common;
 	using Common.Internal;
 	using Data;
@@ -99,7 +100,7 @@ namespace LinqToDB.DataProvider
 		}
 
 		protected abstract DbConnection  CreateConnectionInternal (string connectionString);
-		public    abstract ISqlBuilder   CreateSqlBuilder(MappingSchema mappingSchema);
+		public    abstract ISqlBuilder   CreateSqlBuilder(MappingSchema mappingSchema, LinqOptionsExtension linqOptions);
 		public    abstract ISqlOptimizer GetSqlOptimizer ();
 
 		public virtual DbCommand InitCommand(DataConnection dataConnection, DbCommand command, CommandType commandType, string commandText, DataParameter[]? parameters, bool withParameters)

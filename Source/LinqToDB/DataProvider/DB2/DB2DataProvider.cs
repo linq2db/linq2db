@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.DB2
 {
+	using Infrastructure;
 	using Common;
 	using Data;
 	using Mapping;
@@ -84,11 +85,11 @@ namespace LinqToDB.DataProvider.DB2
 			TableOptions.CreateIfNotExists          |
 			TableOptions.DropIfExists;
 
-		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
+		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, LinqOptionsExtension linqOptions)
 		{
 			return Version == DB2Version.zOS ?
-				new DB2zOSSqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags) :
-				new DB2LUWSqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
+				new DB2zOSSqlBuilder(this, mappingSchema, linqOptions, GetSqlOptimizer(), SqlProviderFlags) :
+				new DB2LUWSqlBuilder(this, mappingSchema, linqOptions, GetSqlOptimizer(), SqlProviderFlags);
 		}
 
 		readonly DB2SqlOptimizer _sqlOptimizer;

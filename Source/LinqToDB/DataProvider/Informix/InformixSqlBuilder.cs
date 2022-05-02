@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 using System.Text;
 
 namespace LinqToDB.DataProvider.Informix
 {
+	using Infrastructure;
 	using SqlQuery;
 	using SqlProvider;
 	using System.Globalization;
@@ -14,8 +14,8 @@ namespace LinqToDB.DataProvider.Informix
 
 	partial class InformixSqlBuilder : BasicSqlBuilder
 	{
-		public InformixSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
+		public InformixSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, LinqOptionsExtension linqOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, linqOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 

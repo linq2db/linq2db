@@ -7,6 +7,7 @@ using System.Threading;
 
 namespace LinqToDB.DataProvider
 {
+	using Infrastructure;
 	using System.Data.Common;
 	using Common;
 	using Data;
@@ -24,8 +25,8 @@ namespace LinqToDB.DataProvider
 		SqlProviderFlags SqlProviderFlags      { get; }
 		TableOptions     SupportedTableOptions { get; }
 		void             InitContext           (IDataContext dataContext);
-		DbConnection     CreateConnection      (string        connectionString);
-		ISqlBuilder      CreateSqlBuilder      (MappingSchema mappingSchema);
+		DbConnection     CreateConnection      (string       connectionString);
+		ISqlBuilder      CreateSqlBuilder(MappingSchema      mappingSchema, LinqOptionsExtension linqOptions);
 		ISqlOptimizer    GetSqlOptimizer       ();
 		/// <summary>
 		/// Initializes <see cref="DataConnection"/> command object.

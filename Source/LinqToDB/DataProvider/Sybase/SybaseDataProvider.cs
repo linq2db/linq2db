@@ -8,6 +8,7 @@ using System.Threading;
 
 namespace LinqToDB.DataProvider.Sybase
 {
+	using Infrastructure;
 	using Data;
 	using Mapping;
 	using Common;
@@ -87,9 +88,9 @@ namespace LinqToDB.DataProvider.Sybase
 			TableOptions.CreateIfNotExists          |
 			TableOptions.DropIfExists;
 
-		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
+		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, LinqOptionsExtension linqOptions)
 		{
-			return new SybaseSqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
+			return new SybaseSqlBuilder(this, mappingSchema, linqOptions, GetSqlOptimizer(), SqlProviderFlags);
 		}
 
 		static class MappingSchemaInstance
