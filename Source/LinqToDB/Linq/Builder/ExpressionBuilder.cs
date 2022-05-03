@@ -1414,12 +1414,14 @@ namespace LinqToDB.Linq.Builder
 				var n    = _query.AddQueryableAccessors(expression, l);
 
 				_parametersContext._expressionAccessors.TryGetValue(expression, out var accessor);
+				if (accessor == null)
+					throw new LinqToDBException($"IQueryable value accessor for '{expression}' not found.");
 
 				var path =
 					Expression.Call(
 						Expression.Constant(_query),
 						Methods.Query.GetIQueryable,
-						ExpressionInstances.Int32(n), accessor ?? Expression.Constant(null, typeof(Expression)), Expression.Constant(true));
+						ExpressionInstances.Int32(n), accessor, Expression.Constant(true));
 
 				var qex = _query.GetIQueryable(n, expression, force: false);
 
