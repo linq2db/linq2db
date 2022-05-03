@@ -18,7 +18,7 @@
 		<PackageVersion Include="Microsoft.CodeAnalysis.NetAnalyzers"                   Version="6.0.0"         />
 		<PackageVersion Include="Microsoft.SourceLink.GitHub"                           Version="1.1.1"         />
 		<PackageVersion Include="Mono.TextTemplating"                                   Version="2.2.1"         />
-		<PackageVersion Include="Microsoft.CodeAnalysis.CSharp"                         Version="4.0.1"         />
+		<PackageVersion Include="Microsoft.CodeAnalysis.CSharp"                         Version="4.1.0"         />
 		<PackageVersion Include="Microsoft.Extensions.DependencyModel"                  Version="6.0.0"         />
 		<!--data providers-->
 		<PackageVersion Include="MySql.Data"                                            Version="8.0.29"        />
@@ -31,10 +31,10 @@
 		<!--3.21 provider currently contains bug which leads to test failure with oracle 12-->
 		<PackageVersion Include="Oracle.ManagedDataAccess.Core"                         Version="2.19.140"      />
 		<!--<PackageVersion Include="Oracle.ManagedDataAccess.Core"                         Version="3.21.50"       />-->
-		<PackageVersion Include="FirebirdSql.Data.FirebirdClient"                       Version="9.0.0"         />
+		<PackageVersion Include="FirebirdSql.Data.FirebirdClient"                       Version="9.0.1"         />
 		<PackageVersion Include="System.Data.SQLite.Core"                               Version="1.0.115.5"     />
 		<PackageVersion Include="IBM.Data.DB.Provider"                                  Version="11.5.5010.4"   />
-		<PackageVersion Include="IBM.Data.DB2.Core"                                     Version="3.1.0.500"     />
+		<PackageVersion Include="IBM.Data.DB2.Core"                                     Version="3.1.0.600"     />
 		<PackageVersion Include="IBM.Data.DB2.Core-lnx"                                 Version="3.1.0.500"     />
 		<PackageVersion Include="IBM.Data.DB2.Core-osx"                                 Version="3.1.0.500"     />
 		<PackageVersion Include="Net.IBM.Data.Db2"                                      Version="6.0.0.200"     />
