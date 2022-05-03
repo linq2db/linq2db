@@ -9,6 +9,7 @@
 		<Compile Include="..\Linq\Common\ConnectionBuilderTests.cs" Link="ConnectionBuilderTests.cs" />
 		<Compile Include="..\Linq\DataProvider\SqlServerTests.cs" Link="SqlServerTests.cs" />
 		<Compile Include="..\Linq\Data\DataConnectionTests.cs" Link="DataConnectionTests.cs" />
+		<Compile Include="..\Linq\Data\RetryPolicyTest.cs" Link="RetryPolicyTest.cs" />
 		<Compile Include="..\Linq\Linq\AbstractionTests.cs" Link="AbstractionTests.cs" />
 		<Compile Include="..\Linq\Linq\AK107Tests.cs" Link="AK107Tests.cs" />
 		<Compile Include="..\Linq\Linq\AllAnyTests.cs" Link="AllAnyTests.cs" />

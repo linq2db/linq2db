@@ -86,7 +86,7 @@ namespace Tests.Data
 		{}
 
 		[Test]
-		public void RetryPoliceTest([DataSources(false)] string context)
+		public void RetryPolicy([DataSources(false)] string context)
 		{
 			var ret = new Retry();
 			Assert.Throws<TestException>(() =>
@@ -102,10 +102,40 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public async Task ExecuteTestAsync([IncludeDataSources(TestProvName.AllSqlServer2008)] string context)
+		public void RetryPolicyOptions1([DataSources(false)] string context)
 		{
 			var ret = new Retry();
+			Assert.Throws<TestException>(() =>
+			{
+				using (var db = GetDataConnection(context, o => o.UseRetryPolicy(r => r.WithRetryPolicy(ret))))
+				{
+					// ReSharper disable once ReturnValueOfPureMethodIsNotUsed
+					db.GetTable<FakeClass>().ToList();
+				}
+			});
 
+			Assert.AreEqual(2, ret.Count); // 1 - open connection, 1 - execute command
+		}
+
+		[Test]
+		public void RetryPolicyOptions2([DataSources(false)] string context)
+		{
+			var ret = new Retry();
+			Assert.Throws<TestException>(() =>
+			{
+				using (var db = GetDataConnection(context, o => o.UseRetryPolicy(ret)))
+				{
+					// ReSharper disable once ReturnValueOfPureMethodIsNotUsed
+					db.GetTable<FakeClass>().ToList();
+				}
+			});
+
+			Assert.AreEqual(2, ret.Count); // 1 - open connection, 1 - execute command
+		}
+
+		[Test]
+		public async Task ExecuteAsync([IncludeDataSources(TestProvName.AllSqlServer2008)] string context)
+		{
 			using (var db = GetDataConnection(context, retryPolicy: new SqlServerRetryPolicy()))
 			{
 				var i = await db.ExecuteAsync("SELECT 1");
@@ -115,13 +145,24 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void RetryPoliceTestAsync([DataSources(false)] string context)
+		public async Task ExecuteAsyncOption([IncludeDataSources(TestProvName.AllSqlServer2008)] string context)
+		{
+			using (var db = GetDataConnection(context, o => o.UseRetryPolicy(new SqlServerRetryPolicy())))
+			{
+				var i = await db.ExecuteAsync("SELECT 1");
+
+				Assert.That(i, Is.EqualTo(-1));
+			}
+		}
+
+		[Test]
+		public void RetryPolicyAsync([DataSources(false)] string context)
 		{
 			var ret = new Retry();
 
 			try
 			{
-				using (var db = GetDataConnection(context, retryPolicy: ret))
+				using (var db = GetDataConnection(context, o => o.UseRetryPolicy(ret)))
 				{
 					var r = db.GetTable<FakeClass>().ToListAsync();
 					r.Wait();
@@ -136,7 +177,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void Issue2672_RetryPolicyFactoryTest([DataSources(false)] string context)
+		public void RetryPolicyFactory([DataSources(false)] string context)
 		{
 			try
 			{
@@ -158,7 +199,24 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void Issue2672_ExternalConnection([DataSources(false)] string context)
+		public void RetryPolicyFactoryOption([DataSources(false)] string context)
+		{
+			try
+			{
+				using (var db = GetDataConnection(context, o => o.UseRetryPolicy(o => o.WithFactory(cn => new DummyRetryPolicy()))))
+				using (db.CreateLocalTable<MyEntity>())
+				{
+					Assert.Fail("Exception expected");
+				}
+			}
+			catch (NotImplementedException ex)
+			{
+				Assert.AreEqual("Execute", ex.Message);
+			}
+		}
+
+		[Test]
+		public void ExternalConnection([DataSources(false)] string context)
 		{
 			using (var db1 = GetDataConnection(context))
 			{
@@ -178,6 +236,30 @@ namespace Tests.Data
 				finally
 				{
 					Configuration.RetryPolicy.Factory = null;
+				}
+			}
+		}
+
+		[Test]
+		public void ExternalConnectionOption([DataSources(false)] string context)
+		{
+			using (var db1 = GetDataConnection(context))
+			{
+				try
+				{
+					using (var db = GetDataConnection(context,
+						       o => o.UseDataProvider(db1.DataProvider)
+							       .UseConnection(db1.Connection)
+							       .UseRetryPolicy(o => o.WithFactory(_ => new DummyRetryPolicy()))))
+
+					using (db.CreateLocalTable<MyEntity>())
+					{
+						Assert.Fail("Exception expected");
+					}
+				}
+				catch (NotImplementedException ex)
+				{
+					Assert.AreEqual("ExecuteT", ex.Message);
 				}
 			}
 		}

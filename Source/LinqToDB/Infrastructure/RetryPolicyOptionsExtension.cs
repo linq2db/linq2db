@@ -7,6 +7,7 @@ namespace LinqToDB.Infrastructure
 
 	public class RetryPolicyOptionsExtension : IDbContextOptionsExtension
 	{
+		private IRetryPolicy?                       _retryPolicy;
 		private Func<DataConnection,IRetryPolicy?>? _factory;
 		private int                                 _maxRetryCount;
 		private TimeSpan                            _maxDelay;
@@ -21,6 +22,7 @@ namespace LinqToDB.Infrastructure
 
 		public RetryPolicyOptionsExtension(RetryPolicyOptionsExtension copyFrom)
 		{
+			_retryPolicy     = copyFrom._retryPolicy;
 			_factory         = copyFrom._factory;
 			_maxRetryCount   = copyFrom._maxRetryCount;
 			_maxDelay        = copyFrom._maxDelay;
@@ -30,61 +32,63 @@ namespace LinqToDB.Infrastructure
 		}
 
 		/// <summary>
+		/// Retry policy for new <see cref="DataConnection"/> instance.
+		/// </summary>
+		public IRetryPolicy? RetryPolicy => _retryPolicy;
+
+		/// <summary>
 		/// Retry policy factory method, used to create retry policy for new <see cref="DataConnection"/> instance.
 		/// If factory method is not set, retry policy is not used.
-		/// Not set by default.
 		/// </summary>
 		public Func<DataConnection, IRetryPolicy?>? Factory => _factory;
 
 		/// <summary>
 		/// The number of retry attempts.
-		/// Default value: <c>5</c>.
 		/// </summary>
 		public int MaxRetryCount => _maxRetryCount;
 
 		/// <summary>
 		/// The maximum time delay between retries, must be nonnegative.
-		/// Default value: 30 seconds.
 		/// </summary>
 		public TimeSpan MaxDelay => _maxDelay;
 
 		/// <summary>
 		/// The maximum random factor, must not be lesser than 1.
-		/// Default value: <c>1.1</c>.
 		/// </summary>
 		public double RandomFactor => _randomFactor;
 
 		/// <summary>
 		/// The base for the exponential function used to compute the delay between retries, must be positive.
-		/// Default value: <c>2</c>.
 		/// </summary>
 		public double ExponentialBase => _exponentialBase;
 
 		/// <summary>
 		/// The coefficient for the exponential function used to compute the delay between retries, must be nonnegative.
-		/// Default value: 1 second.
 		/// </summary>
 		public TimeSpan Coefficient => _coefficient;
 
 		#region With Methods
 
+		public RetryPolicyOptionsExtension WithRetryPolicy(IRetryPolicy retryPolicy) =>
+			SetValue(o => o._retryPolicy = retryPolicy);
+		
 		public RetryPolicyOptionsExtension WithFactory(Func<DataConnection, IRetryPolicy?>? factory) =>
 			SetValue(o => o._factory = factory);
 
-		public RetryPolicyOptionsExtension WithMaxRetryCount(int defaultMaxRetryCount) =>
-			SetValue(o => o._maxRetryCount = defaultMaxRetryCount);
+		public RetryPolicyOptionsExtension WithMaxRetryCount(int maxRetryCount) =>
+			SetValue(o => o._maxRetryCount = maxRetryCount);
 
-		public RetryPolicyOptionsExtension WithMaxDelay(TimeSpan defaultMaxDelay) =>
-			SetValue(o => o._maxDelay = defaultMaxDelay);
+		public RetryPolicyOptionsExtension WithMaxDelay(TimeSpan maxDelay) =>
+			SetValue(o => o._maxDelay = maxDelay);
 
-		public RetryPolicyOptionsExtension WithRandomFactor(double defaultRandomFactor) =>
-			SetValue(o => o._randomFactor = defaultRandomFactor);
+		public RetryPolicyOptionsExtension WithRandomFactor(double randomFactor) =>
+			SetValue(o => o._randomFactor = randomFactor);
 
-		public RetryPolicyOptionsExtension WithExponentialBase(double defaultExponentialBase) =>
-			SetValue(o => o._exponentialBase = defaultExponentialBase);
+		public RetryPolicyOptionsExtension WithExponentialBase(double exponentialBase) =>
+			SetValue(o => o._exponentialBase = exponentialBase);
 
-		public RetryPolicyOptionsExtension WithCoefficient(TimeSpan defaultCoefficient) =>
-			SetValue(o => o._coefficient = defaultCoefficient);
+		public RetryPolicyOptionsExtension WithCoefficient(TimeSpan coefficient) =>
+			SetValue(o => o._coefficient = coefficient);
 
 		#endregion
 
@@ -116,6 +120,7 @@ namespace LinqToDB.Infrastructure
 		{
 			throw new NotImplementedException();
 		}
+		
 	}
 	
 }

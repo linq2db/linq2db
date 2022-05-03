@@ -2,9 +2,12 @@
 
 namespace LinqToDB.Infrastructure
 {
+	using Data;
+	using Data.RetryPolicy;
+
 	/// <summary>
 	///     <para>
-	///         Allows SQL Server specific configuration to be performed on <see cref="DataContextOptions" />.
+	///         Allows specific Retry Policy configuration to be performed on <see cref="DataContextOptions" />.
 	///     </para>
 	/// </summary>
 	public class RetryPolicyOptionsBuilder
@@ -24,6 +27,61 @@ namespace LinqToDB.Infrastructure
 		protected virtual DataContextOptionsBuilder OptionsBuilder { get; }
 
 		/// <summary>
+		/// Uses retry policy
+		/// </summary>
+		public RetryPolicyOptionsBuilder WithRetryPolicy(IRetryPolicy retryPolicy) =>
+			WithOption(o => o.WithRetryPolicy(retryPolicy));
+
+		/// <summary>
+		/// Uses default retry policy factory
+		/// </summary>
+		public RetryPolicyOptionsBuilder UseDefaultRetryPolicyFactory() =>
+			WithOption(o => o.WithFactory(DefaultRetryPolicyFactory.GetRetryPolicy));
+
+		/// <summary>
+		/// Retry policy factory method, used to create retry policy for new <see cref="DataConnection"/> instance.
+		/// If factory method is not set, retry policy is not used.
+		/// Not set by default.
+		/// </summary>
+		public RetryPolicyOptionsBuilder WithFactory(Func<DataConnection, IRetryPolicy?>? factory) =>
+			WithOption(o => o.WithFactory(factory));
+
+		/// <summary>
+		/// The number of retry attempts.
+		/// Default value: <c>5</c>.
+		/// </summary>
+		public RetryPolicyOptionsBuilder WithMaxRetryCount(int maxRetryCount) =>
+			WithOption(o => o.WithMaxRetryCount(maxRetryCount));
+
+		/// <summary>
+		/// The maximum time delay between retries, must be nonnegative.
+		/// Default value: 30 seconds.
+		/// </summary>
+		public RetryPolicyOptionsBuilder WithMaxDelay(TimeSpan defaultMaxDelay) =>
+			WithOption(o => o.WithMaxDelay(defaultMaxDelay));
+
+		/// <summary>
+		/// The maximum random factor, must not be lesser than 1.
+		/// Default value: <c>1.1</c>.
+		/// </summary>
+		public RetryPolicyOptionsBuilder WithRandomFactor(double randomFactor) =>
+			WithOption(o => o.WithRandomFactor(randomFactor));
+
+		/// <summary>
+		/// The base for the exponential function used to compute the delay between retries, must be positive.
+		/// Default value: <c>2</c>.
+		/// </summary>
+		public RetryPolicyOptionsBuilder WithExponentialBase(double exponentialBase) =>
+			WithOption(o => o.WithExponentialBase(exponentialBase));
+
+		/// <summary>
+		/// The coefficient for the exponential function used to compute the delay between retries, must be nonnegative.
+		/// Default value: 1 second.
+		/// </summary>
+		public RetryPolicyOptionsBuilder WithCoefficient(TimeSpan coefficient) =>
+			WithOption(o => o.WithCoefficient(coefficient));
+
+		/// <summary>
 		///     Sets an option by cloning the extension used to store the settings. This ensures the builder
 		///     does not modify options that are already in use elsewhere.
 		/// </summary>
@@ -32,7 +90,7 @@ namespace LinqToDB.Infrastructure
 		protected virtual RetryPolicyOptionsBuilder WithOption(Func<RetryPolicyOptionsExtension, RetryPolicyOptionsExtension> setAction)
 		{
 			((IDataContextOptionsBuilderInfrastructure)OptionsBuilder).AddOrUpdateExtension(
-				setAction(OptionsBuilder.Options.FindExtension<RetryPolicyOptionsExtension>() ?? new RetryPolicyOptionsExtension()));
+				setAction(OptionsBuilder.Options.FindExtension<RetryPolicyOptionsExtension>() ?? Common.Configuration.RetryPolicy.Options));
 
 			return this;
 		}

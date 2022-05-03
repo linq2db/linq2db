@@ -7,6 +7,7 @@ using System.Linq;
 namespace LinqToDB
 {
 	using Data;
+	using Data.RetryPolicy;
 	using Infrastructure;
 	using Interceptors;
 
@@ -156,6 +157,30 @@ namespace LinqToDB
 	        }
 
 	        linqOptionsAction.Invoke(new LinqOptionsBuilder(this));
+
+	        return this;
+        }
+
+        public virtual DataContextOptionsBuilder UseRetryPolicy(Action<RetryPolicyOptionsBuilder> retryPolicyOptionsAction)
+        {
+	        if (retryPolicyOptionsAction == null)
+	        {
+		        throw new ArgumentNullException(nameof(retryPolicyOptionsAction));
+	        }
+
+	        retryPolicyOptionsAction.Invoke(new RetryPolicyOptionsBuilder(this));
+
+	        return this;
+        }
+
+        public virtual DataContextOptionsBuilder UseRetryPolicy(IRetryPolicy retryPolicy)
+        {
+	        if (retryPolicy == null)
+	        {
+		        throw new ArgumentNullException(nameof(retryPolicy));
+	        }
+
+	        new RetryPolicyOptionsBuilder(this).WithRetryPolicy(retryPolicy);
 
 	        return this;
         }

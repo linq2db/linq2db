@@ -247,7 +247,7 @@ namespace LinqToDB.Data
 			DbConnection?  localConnection  = null;
 			DbTransaction? localTransaction = null;
 
-			if (dbExtension == null || dbExtension.ConfigurationString != null)
+			if (dbExtension == null || dbExtension.ConfigurationString != null && dbExtension.DataProvider == null)
 			{
 				ConfigurationString = dbExtension?.ConfigurationString ?? DefaultConfiguration;
 				if (ConfigurationString == null)
@@ -319,10 +319,15 @@ namespace LinqToDB.Data
 				throw new LinqToDBException("DataConnection options improperly configured.");
 			}
 
-			//TODO:			
-			RetryPolicy = Configuration.RetryPolicy.Factory != null
-				? Configuration.RetryPolicy.Factory(this)
-				: null;
+
+			var retryPolicyExtension = options.FindExtension<RetryPolicyOptionsExtension>() ??
+			                           Configuration.RetryPolicy.Options;
+
+			RetryPolicy = retryPolicyExtension.RetryPolicy != null
+				? retryPolicyExtension.RetryPolicy
+				: retryPolicyExtension.Factory != null
+					? retryPolicyExtension.Factory(this)
+					: null;
 
 			if (dbExtension != null)
 			{
