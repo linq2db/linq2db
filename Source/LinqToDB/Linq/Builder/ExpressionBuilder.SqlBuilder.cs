@@ -876,6 +876,11 @@ namespace LinqToDB.Linq.Builder
 
 			if (context is SelectContext selectContext)
 			{
+				var result = ConvertToSql(context, expression, false, columnDescriptor);
+
+				if (!(result is SqlField field) || field.Table!.All != field)
+					return result;
+
 				if (null != expression.Find(selectContext.Body))
 					return context.ConvertToSql(null, 0, ConvertFlags.Field).Select(static _ => _.Sql).First();
 			}
