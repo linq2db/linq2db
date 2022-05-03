@@ -185,18 +185,7 @@ namespace LinqToDB.Infrastructure
 		public bool ParameterizeTakeSkip => _parameterizeTakeSkip;
 
 
-		protected virtual LinqOptionsExtension Clone()
-		{
-			return new LinqOptionsExtension(this);
-		}
-
-		private LinqOptionsExtension SetValue(Action<LinqOptionsExtension> setter)
-		{
-			var clone = Clone();
-			setter(clone);
-
-			return clone;
-		}
+		#region With Methods
 
 		public virtual LinqOptionsExtension WithPreloadGroups(bool preloadGroups) =>
 			SetValue(o => o._preloadGroups = preloadGroups);
@@ -236,6 +225,25 @@ namespace LinqToDB.Infrastructure
 
 		public virtual LinqOptionsExtension WithParameterizeTakeSkip(bool parameterizeTakeSkip) =>
 			SetValue(o => o._parameterizeTakeSkip = parameterizeTakeSkip);
+
+		#endregion
+
+		#region Helper Methods
+
+		protected virtual LinqOptionsExtension Clone()
+		{
+			return new LinqOptionsExtension(this);
+		}
+
+		private LinqOptionsExtension SetValue(Action<LinqOptionsExtension> setter)
+		{
+			var clone = Clone();
+			setter(clone);
+
+			return clone;
+		}
+
+		#endregion
 
 		public DbContextOptionsExtensionInfo Info => throw new NotImplementedException();
 

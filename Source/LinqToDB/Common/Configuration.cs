@@ -390,12 +390,34 @@ namespace LinqToDB.Common
 		[PublicAPI]
 		public static class RetryPolicy
 		{
+			private static volatile RetryPolicyOptionsExtension _options;
+
+			public static  RetryPolicyOptionsExtension Options
+			{
+				get => _options;
+				set => _options = value;
+			}
+
+			static RetryPolicy()
+			{
+				_options = new RetryPolicyOptionsExtension()
+					.WithMaxRetryCount(5)
+					.WithMaxDelay(TimeSpan.FromSeconds(30))
+					.WithRandomFactor(1.1)
+					.WithExponentialBase(2)
+					.WithCoefficient(TimeSpan.FromSeconds(1));
+			}
+
 			/// <summary>
 			/// Retry policy factory method, used to create retry policy for new <see cref="DataConnection"/> instance.
 			/// If factory method is not set, retry policy is not used.
 			/// Not set by default.
 			/// </summary>
-			public static Func<DataConnection,IRetryPolicy?>? Factory;
+			public static Func<DataConnection,IRetryPolicy?>? Factory
+			{
+				get => Options.Factory;
+				set => Options = Options.WithFactory(value);
+			}
 
 			/// <summary>
 			/// Status of use of default retry policy.
@@ -412,31 +434,51 @@ namespace LinqToDB.Common
 			/// The default number of retry attempts.
 			/// Default value: <c>5</c>.
 			/// </summary>
-			public static int DefaultMaxRetryCount = 5;
+			public static int DefaultMaxRetryCount
+			{
+				get => Options.MaxRetryCount;
+				set => Options = Options.WithMaxRetryCount(value);
+			}
 
 			/// <summary>
 			/// The default maximum time delay between retries, must be nonnegative.
 			/// Default value: 30 seconds.
 			/// </summary>
-			public static TimeSpan DefaultMaxDelay = TimeSpan.FromSeconds(30);
+			public static TimeSpan DefaultMaxDelay
+			{
+				get => Options.MaxDelay;
+				set => Options = Options.WithMaxDelay(value);
+			}
 
 			/// <summary>
 			/// The default maximum random factor, must not be lesser than 1.
 			/// Default value: <c>1.1</c>.
 			/// </summary>
-			public static double DefaultRandomFactor = 1.1;
+			public static double DefaultRandomFactor
+			{
+				get => Options.RandomFactor;
+				set => Options = Options.WithRandomFactor(value);
+			}
 
 			/// <summary>
 			/// The default base for the exponential function used to compute the delay between retries, must be positive.
 			/// Default value: <c>2</c>.
 			/// </summary>
-			public static double DefaultExponentialBase = 2;
+			public static double DefaultExponentialBase
+			{
+				get => Options.ExponentialBase;
+				set => Options = Options.WithExponentialBase(value);
+			}
 
 			/// <summary>
 			/// The default coefficient for the exponential function used to compute the delay between retries, must be nonnegative.
 			/// Default value: 1 second.
 			/// </summary>
-			public static TimeSpan DefaultCoefficient = TimeSpan.FromSeconds(1);
+			public static TimeSpan DefaultCoefficient
+			{
+				get => Options.Coefficient;
+				set => Options = Options.WithCoefficient(value);
+			}
 		}
 
 		/// <summary>
