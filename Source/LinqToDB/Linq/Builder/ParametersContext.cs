@@ -63,11 +63,6 @@ namespace LinqToDB.Linq.Builder
 			return null;
 		}
 
-		public void CombineAccessors(Expression parametersExpression)
-		{
-			parametersExpression.GetExpressionAccessors(ExpressionBuilder.ExpressionParam, _expressionAccessors);
-		}
-
 		#region Build Parameter
 
 		internal List<(Expression Expression, ColumnDescriptor? Column, ParameterAccessor Accessor)>? _parameters;

@@ -607,71 +607,7 @@ namespace LinqToDB.Linq.Builder
 			if (lambda == null)
 				lambda = Expressions.ConvertMember(MappingSchema, pi.Object?.Type, pi.Method);
 
-			return lambda == null ? null : ConvertMethod(pi, lambda);
-		}
-
-		Expression ConvertMethod(MethodCallExpression pi, LambdaExpression lambda)
-		{
-			var ef    = lambda.Body.Unwrap();
-			var parms = new Dictionary<ParameterExpression,int>(lambda.Parameters.Count);
-			var pn    = pi.Method.IsStatic ? 0 : -1;
-
-			foreach (var p in lambda.Parameters)
-				parms.Add(p, pn++);
-
-			var pie = ef.Transform((pi, parms), static (context, wpi) =>
-			{
-				if (wpi.NodeType == ExpressionType.Parameter)
-				{
-					if (context.parms.TryGetValue((ParameterExpression)wpi, out var n))
-					{
-						if (n >= context.pi.Arguments.Count)
-						{
-							if (DataContextParam.Type.IsSameOrParentOf(wpi.Type))
-							{
-								if (DataContextParam.Type != wpi.Type)
-									return Expression.Convert(DataContextParam, wpi.Type);
-								return DataContextParam;
-							}
-
-							throw new LinqToDBException($"Can't convert {wpi} to expression.");
-						}
-
-						var result = n < 0 ? context.pi.Object! : context.pi.Arguments[n];
-
-						if (result.Type != wpi.Type)
-						{
-							var noConvert = result.UnwrapConvert();
-							if (noConvert.Type == wpi.Type)
-							{
-								result = noConvert;
-							}
-							else
-							{
-								if (noConvert.Type.IsValueType)
-									result = Expression.Convert(noConvert, wpi.Type);
-							}
-						}
-
-						return result;
-					}
-				}
-
-				return wpi;
-			});
-
-			ParametersContext.CombineAccessors(pie);
-
-			if (pi.Method.ReturnType != pie.Type)
-			{
-				pie = pie.UnwrapConvert();
-				if (pi.Method.ReturnType != pie.Type)
-				{
-					pie = new ChangeTypeExpression(pie, pi.Method.ReturnType);
-				}
-			}
-
-			return pie;
+			return lambda == null ? null : OptimizationContext.ConvertMethod(pi, lambda);
 		}
 
 		Expression? ConvertNew(NewExpression pi)

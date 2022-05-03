@@ -522,14 +522,6 @@ namespace LinqToDB.Linq.Builder
 							}
 						}
 
-						var l = ConvertMethodExpression(call.Object?.Type ?? call.Method.ReflectedType!, call.Method, out var alias);
-
-						if (l != null)
-						{
-							var optimized = OptimizeExpression(ConvertMethod(call, l));
-							return new TransformInfo(optimized);
-						}
-
 						if (CompiledParameters == null && typeof(IQueryable).IsSameOrParentOf(expr.Type))
 						{
 							var attr = GetTableFunctionAttribute(call.Method);

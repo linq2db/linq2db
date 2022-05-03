@@ -174,11 +174,10 @@ namespace LinqToDB.Expressions
 			return Sql.ExtensionAttribute.ExcludeExtensionChain(mappingSchema, expr);
 		}
 
-		public static void GetExpressionAccessors(
-			this Expression                    expression, 
-			Expression                         path,
-			Dictionary<Expression, Expression> accessors)
+		public static Dictionary<Expression,Expression> GetExpressionAccessors(this Expression expression, Expression path)
 		{
+			var accessors = new Dictionary<Expression,Expression>();
+
 			expression.Path(path, accessors, static (accessors, e, p) =>
 			{
 				switch (e.NodeType)
@@ -216,12 +215,6 @@ namespace LinqToDB.Expressions
 						break;
 				}
 			});
-		}
-
-		public static Dictionary<Expression,Expression> GetExpressionAccessors(this Expression expression, Expression path)
-		{
-			var accessors = new Dictionary<Expression,Expression>();
-			expression.GetExpressionAccessors(path, accessors);
 
 			return accessors;
 		}
