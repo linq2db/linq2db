@@ -778,7 +778,11 @@ namespace LinqToDB.Linq.Builder
 					});
 
 			if (ex.Type != expr.Type)
-				ex = new ChangeTypeExpression(ex, expr.Type);
+			{
+				//ex = new ChangeTypeExpression(ex, expr.Type);
+				ex = Expression.Convert(ex, expr.Type);
+			}
+
 			return ex;
 		}
 

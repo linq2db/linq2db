@@ -483,7 +483,10 @@ namespace LinqToDB.Linq.Builder
 						var expr = body.Transform(ma, static (ma, wpi) => wpi.NodeType == ExpressionType.Parameter ? ma.Expression! : wpi);
 
 						if (expr.Type != e.Type)
-							expr = new ChangeTypeExpression(expr, e.Type);
+						{
+							//expr = new ChangeTypeExpression(expr, e.Type);
+							expr = Expression.Convert(expr, e.Type);
+						}
 
 						//TODO: looks like a mess: ConvertExpression can not work without OptimizeExpression
 						return new TransformInfo(OptimizeExpression(ConvertExpression(expr)));
