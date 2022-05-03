@@ -27,7 +27,7 @@ namespace Cli.Default.Access.Odbc
 			InitDataContext();
 		}
 
-		public TestDataDB(LinqToDBConnectionOptions<TestDataDB> options)
+		public TestDataDB(DataContextOptions<TestDataDB> options)
 			: base(options)
 		{
 			InitDataContext();

@@ -30,7 +30,7 @@ namespace Cli.Default.Sybase
 			InitDataContext();
 		}
 
-		public TestDataDB(LinqToDBConnectionOptions<TestDataDB> options)
+		public TestDataDB(DataContextOptions<TestDataDB> options)
 			: base(options)
 		{
 			InitDataContext();

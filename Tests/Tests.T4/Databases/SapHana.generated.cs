@@ -61,14 +61,14 @@ namespace SapHanaDataContext
 			InitMappingSchema();
 		}
 
-		public SYSTEMDBDB(LinqToDBConnectionOptions options)
+		public SYSTEMDBDB(DataContextOptions options)
 			: base(options)
 		{
 			InitDataContext();
 			InitMappingSchema();
 		}
 
-		public SYSTEMDBDB(LinqToDBConnectionOptions<SYSTEMDBDB> options)
+		public SYSTEMDBDB(DataContextOptions<SYSTEMDBDB> options)
 			: base(options)
 		{
 			InitDataContext();

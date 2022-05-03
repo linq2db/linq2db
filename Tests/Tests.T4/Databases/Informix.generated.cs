@@ -51,14 +51,14 @@ namespace InformixDataContext
 			InitMappingSchema();
 		}
 
-		public TestdataidsDB(LinqToDBConnectionOptions options)
+		public TestdataidsDB(DataContextOptions options)
 			: base(options)
 		{
 			InitDataContext();
 			InitMappingSchema();
 		}
 
-		public TestdataidsDB(LinqToDBConnectionOptions<TestdataidsDB> options)
+		public TestdataidsDB(DataContextOptions<TestdataidsDB> options)
 			: base(options)
 		{
 			InitDataContext();

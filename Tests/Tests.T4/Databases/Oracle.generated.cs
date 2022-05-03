@@ -75,14 +75,14 @@ namespace OracleDataContext
 			InitMappingSchema();
 		}
 
-		public XEDB(LinqToDBConnectionOptions options)
+		public XEDB(DataContextOptions options)
 			: base(options)
 		{
 			InitDataContext();
 			InitMappingSchema();
 		}
 
-		public XEDB(LinqToDBConnectionOptions<XEDB> options)
+		public XEDB(DataContextOptions<XEDB> options)
 			: base(options)
 		{
 			InitDataContext();

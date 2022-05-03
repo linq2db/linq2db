@@ -30,7 +30,7 @@ namespace Cli.Default.Access.OleDb
 			InitDataContext();
 		}
 
-		public TestDataDB(LinqToDBConnectionOptions<TestDataDB> options)
+		public TestDataDB(DataContextOptions<TestDataDB> options)
 			: base(options)
 		{
 			InitDataContext();

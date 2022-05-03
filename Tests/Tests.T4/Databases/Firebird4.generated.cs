@@ -59,14 +59,14 @@ namespace Firebird4DataContext
 			InitMappingSchema();
 		}
 
-		public TESTDB40DB(LinqToDBConnectionOptions options)
+		public TESTDB40DB(DataContextOptions options)
 			: base(options)
 		{
 			InitDataContext();
 			InitMappingSchema();
 		}
 
-		public TESTDB40DB(LinqToDBConnectionOptions<TESTDB40DB> options)
+		public TESTDB40DB(DataContextOptions<TESTDB40DB> options)
 			: base(options)
 		{
 			InitDataContext();

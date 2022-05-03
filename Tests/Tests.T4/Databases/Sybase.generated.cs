@@ -55,14 +55,14 @@ namespace SybaseDataContext
 			InitMappingSchema();
 		}
 
-		public TestDataDB(LinqToDBConnectionOptions options)
+		public TestDataDB(DataContextOptions options)
 			: base(options)
 		{
 			InitDataContext();
 			InitMappingSchema();
 		}
 
-		public TestDataDB(LinqToDBConnectionOptions<TestDataDB> options)
+		public TestDataDB(DataContextOptions<TestDataDB> options)
 			: base(options)
 		{
 			InitDataContext();

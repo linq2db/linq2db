@@ -22,8 +22,8 @@ namespace LinqToDB.DataModel
 			// based on selected constructors set we generate (or not) following constructors:
 			// .ctor() // default constructor
 			// .ctor(string configuration) // constructor with connection configuration name parameter
-			// .ctor(LinqToDBConnectionOptions options) // options constructor
-			// .ctor(LinqToDBConnectionOptions<T> options) // typed options constructor
+			// .ctor(DataContextOptions options) // options constructor
+			// .ctor(DataContextOptions<T> options) // typed options constructor
 
 			// first we generate empty constructors and then add body to all of them as they will have same code for body
 

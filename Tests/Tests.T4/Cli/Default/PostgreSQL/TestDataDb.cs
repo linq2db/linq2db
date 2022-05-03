@@ -42,7 +42,7 @@ namespace Cli.Default.PostgreSQL
 			InitDataContext();
 		}
 
-		public TestDataDB(LinqToDBConnectionOptions<TestDataDB> options)
+		public TestDataDB(DataContextOptions<TestDataDB> options)
 			: base(options)
 		{
 			InitSchemas();

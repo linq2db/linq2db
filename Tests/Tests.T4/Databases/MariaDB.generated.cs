@@ -60,14 +60,14 @@ namespace MariaDBDataContext
 			InitMappingSchema();
 		}
 
-		public TestdbDB(LinqToDBConnectionOptions options)
+		public TestdbDB(DataContextOptions options)
 			: base(options)
 		{
 			InitDataContext();
 			InitMappingSchema();
 		}
 
-		public TestdbDB(LinqToDBConnectionOptions<TestdbDB> options)
+		public TestdbDB(DataContextOptions<TestdbDB> options)
 			: base(options)
 		{
 			InitDataContext();

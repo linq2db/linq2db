@@ -46,13 +46,13 @@ namespace Cli.T4.PostgreSQL
 			InitDataContext();
 		}
 
-		public TestDataDB(LinqToDBConnectionOptions options)
+		public TestDataDB(DataContextOptions options)
 			: base(options)
 		{
 			InitDataContext();
 		}
 
-		public TestDataDB(LinqToDBConnectionOptions<TestDataDB> options)
+		public TestDataDB(DataContextOptions<TestDataDB> options)
 			: base(options)
 		{
 			InitDataContext();
