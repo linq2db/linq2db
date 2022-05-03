@@ -336,6 +336,10 @@ namespace LinqToDB.Data
 				{
 					AddMappingSchema(dbExtension.MappingSchema);
 				}
+				else if (Configuration.Linq.EnableAutoFluentMapping)
+				{
+					MappingSchema = new (MappingSchema);
+				}
 
 				if (dbExtension.OnTrace != null)
 				{
