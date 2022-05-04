@@ -4,6 +4,8 @@ using System.Text;
 
 namespace LinqToDB.Infrastructure
 {
+	using DataProvider;
+
     /// <summary>
     ///     <para>
     ///         Represents options managed by the relational database providers.
@@ -97,6 +99,11 @@ namespace LinqToDB.Infrastructure
         public virtual void Validate(IDataContextOptions options)
         {
         }
+
+        /// <summary>
+        ///     Returns specific to options DataProvider.
+        /// </summary>
+        public abstract IDataProvider GetDataProvider(DbDataContextOptionsExtension dbOptions);
 
         /// <summary>
         ///     Information/metadata for a <see cref="RelationalOptionsExtension" />.

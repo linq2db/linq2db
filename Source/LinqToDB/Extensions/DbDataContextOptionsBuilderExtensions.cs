@@ -52,12 +52,12 @@ namespace LinqToDB
 	        return WithOption(optionsBuilder, e => e.WithDataProvider(dataProvider).WithConnection(connection).WithDisposeConnection(disposeConnection));
         }
 
-        public static DataContextOptionsBuilder UseProvider(this DataContextOptionsBuilder optionsBuilder, string providerName)
+        public static DataContextOptionsBuilder UseProvider(this DataContextOptionsBuilder optionsBuilder, string? providerName)
         {
 	        return WithOption(optionsBuilder, e => e.WithProviderName(providerName));
         }
 
-        public static DataContextOptionsBuilder UseDataProvider(this DataContextOptionsBuilder optionsBuilder, IDataProvider dataProvider)
+        public static DataContextOptionsBuilder UseDataProvider(this DataContextOptionsBuilder optionsBuilder, IDataProvider? dataProvider)
         {
 	        return WithOption(optionsBuilder, e => e.WithDataProvider(dataProvider));
         }

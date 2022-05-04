@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Data;
 using System.Data.Common;
 using System.Reflection;
 using System.Text;
@@ -8,6 +7,7 @@ using System.Text;
 namespace LinqToDB.DataProvider.SqlServer
 {
 	using Common;
+	using Common.Internal.Cache;
 	using Configuration;
 	using Data;
 
@@ -17,6 +17,8 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		public static SqlServerProvider Provider = SqlServerProvider.MicrosoftDataSqlClient;
 		private static readonly ConcurrentQueue<SqlServerDataProvider> _providers = new();
+
+		private static readonly MemoryCache<(SqlServerProvider provider, string connectionString)> _providerCache = new(new ());
 
 		// System.Data
 		// and/or
@@ -107,54 +109,15 @@ namespace LinqToDB.DataProvider.SqlServer
 						{
 							var cs = string.IsNullOrWhiteSpace(connectionString) ? css.ConnectionString : connectionString;
 
-							using (var conn = SqlServerProviderAdapter.GetInstance(provider).CreateConnection(cs))
+							var detectedVersion = DetectServerVersionCached(provider, cs);
+
+							if (detectedVersion != null)
 							{
-								conn.Open();
-
-								if (int.TryParse(conn.ServerVersion.Split('.')[0], out var version))
-								{
-									if (version <= 8)
-										// sql server <= 2000
-										return null;
-
-									using (var cmd = conn.CreateCommand())
-									{
-										cmd.CommandText = "SELECT compatibility_level FROM sys.databases WHERE name = db_name()";
-										var level = Converter.ChangeTypeTo<int>(cmd.ExecuteScalar());
-
-										if (level >= 150)
-											return GetDataProvider(SqlServerVersion.v2019, provider);
-										if (level >= 140)
-											return GetDataProvider(SqlServerVersion.v2017, provider);
-										if (level >= 130)
-											return GetDataProvider(SqlServerVersion.v2016, provider);
-										if (level >= 120)
-											return GetDataProvider(SqlServerVersion.v2014, provider);
-										if (level >= 110)
-											return GetDataProvider(SqlServerVersion.v2012, provider);
-										if (level >= 100)
-											return GetDataProvider(SqlServerVersion.v2008, provider);
-										if (level >= 90)
-											return GetDataProvider(SqlServerVersion.v2005, provider);
-										if (level < 90)
-											// sql server <= 2000
-											return null;
-
-										switch (version)
-										{
-											// versions below 9 handled above already
-											case  9 : return GetDataProvider(SqlServerVersion.v2005, provider);
-											case 10 : return GetDataProvider(SqlServerVersion.v2008, provider);
-											case 11 : return GetDataProvider(SqlServerVersion.v2012, provider);
-											case 12 : return GetDataProvider(SqlServerVersion.v2014, provider);
-											case 13 : return GetDataProvider(SqlServerVersion.v2016, provider);
-											case 14 : return GetDataProvider(SqlServerVersion.v2017, provider);
-											//case 15 : // v2019 : no own dialect yet
-											default : return GetDataProvider(SqlServerVersion.v2019, provider);
-										}
-									}
-								}
+								return GetDataProvider(detectedVersion.Value, provider);
 							}
+
+							return null;
+
 						}
 						catch
 						{
@@ -165,6 +128,92 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 
 			return null;
+		}
+
+		/// <summary>
+		/// Clears provider version cache.
+		/// </summary>
+		public static void ClearCache()
+		{
+			_providerCache.Clear();
+		}
+
+		/// <summary>
+		/// Connects to SQL Server Database and parses version information.
+		/// </summary>
+		/// <param name="provider"></param>
+		/// <param name="connectionString"></param>
+		/// <returns>Detected SQL Server version.</returns>
+		/// <remarks>Uses cache to avoid unwanted connections to Database.</remarks>
+		public static SqlServerVersion? DetectServerVersionCached(SqlServerProvider provider, string connectionString)
+		{
+			var cacheKey = (provider, connectionString);
+
+			var version = _providerCache.GetOrCreate(cacheKey, entry =>
+			{
+				entry.SlidingExpiration = Configuration.Linq.CacheSlidingExpiration;
+				return DetectServerVersion(entry.Key.provider, entry.Key.connectionString);
+			});
+
+			return version;
+		}
+
+		/// <summary>
+		/// Connects to SQL Server Database and parses version information.
+		/// </summary>
+		/// <param name="provider"></param>
+		/// <param name="connectionString"></param>
+		/// <returns>Detected SQL Server version.</returns>
+		public static SqlServerVersion? DetectServerVersion(SqlServerProvider provider, string connectionString)
+		{
+			using var conn = SqlServerProviderAdapter.GetInstance(provider).CreateConnection(connectionString);
+			conn.Open();
+
+			if (!int.TryParse(conn.ServerVersion.Split('.')[0], out var version))
+			{
+				return null;
+			}
+
+			if (version <= 8)
+				// sql server <= 2000
+				return null;
+
+			using (var cmd = conn.CreateCommand())
+			{
+				cmd.CommandText = "SELECT compatibility_level FROM sys.databases WHERE name = db_name()";
+				var level = Converter.ChangeTypeTo<int>(cmd.ExecuteScalar());
+
+				if (level >= 150)
+					return SqlServerVersion.v2019;
+				if (level >= 140)
+					return SqlServerVersion.v2017;
+				if (level >= 130)
+					return SqlServerVersion.v2016;
+				if (level >= 120)
+					return SqlServerVersion.v2014;
+				if (level >= 110)
+					return SqlServerVersion.v2012;
+				if (level >= 100)
+					return SqlServerVersion.v2008;
+				if (level >= 90)
+					return SqlServerVersion.v2005;
+				if (level < 90)
+					// sql server <= 2000
+					return null;
+
+				switch (version)
+				{
+					// versions below 9 handled above already
+					case  9 : return SqlServerVersion.v2005;
+					case 10 : return SqlServerVersion.v2008;
+					case 11 : return SqlServerVersion.v2012;
+					case 12 : return SqlServerVersion.v2014;
+					case 13 : return SqlServerVersion.v2016;
+					case 14 : return SqlServerVersion.v2017;
+					//case 15 : // v2019 : no own dialect yet
+					default : return SqlServerVersion.v2019;
+				}
+			}
 		}
 
 		#endregion

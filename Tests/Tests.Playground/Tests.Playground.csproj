@@ -10,6 +10,7 @@
 		<Compile Include="..\Linq\DataProvider\SqlServerTests.cs" Link="SqlServerTests.cs" />
 		<Compile Include="..\Linq\Data\DataConnectionTests.cs" Link="DataConnectionTests.cs" />
 		<Compile Include="..\Linq\Data\RetryPolicyTest.cs" Link="RetryPolicyTest.cs" />
+		<Compile Include="..\Linq\Data\TraceTests.cs" Link="TraceTests.cs" />
 		<Compile Include="..\Linq\Linq\AbstractionTests.cs" Link="AbstractionTests.cs" />
 		<Compile Include="..\Linq\Linq\AK107Tests.cs" Link="AK107Tests.cs" />
 		<Compile Include="..\Linq\Linq\AllAnyTests.cs" Link="AllAnyTests.cs" />
@@ -31,7 +32,10 @@
 		<Compile Include="..\Linq\Linq\GroupByTests.cs" Link="GroupByTests.cs" />
 		<Compile Include="..\Linq\TestsInitialization.cs" Link="TestsInitialization.cs" />
 		<Compile Include="..\Linq\Create\CreateData.cs" Link="CreateData.cs" />
+		<Compile Include="..\Linq\Update\BulkCopyTests.cs" Link="BulkCopyTests.cs" />
+		<Compile Include="..\Linq\UserTests\Issue1174Tests.cs" Link="Issue1174Tests.cs" />
 		<Compile Include="..\Linq\UserTests\Issue1498Tests.cs" Link="Issue1498Tests.cs" />
+		<Compile Include="..\Linq\UserTests\Issue927Tests.cs" Link="Issue927Tests.cs" />
 	</ItemGroup>
 
 	<ItemGroup>

@@ -80,6 +80,14 @@ namespace LinqToDB.Infrastructure
 		/// <returns> A clone of this instance, which can be modified before being returned as immutable. </returns>
 		protected virtual DbDataContextOptionsExtension Clone() => new DbDataContextOptionsExtension(this);
 
+		private DbDataContextOptionsExtension SetValue(Action<DbDataContextOptionsExtension> setter)
+		{
+			var clone = Clone();
+			setter(clone);
+
+			return clone;
+		}
+
 		/// <summary>
 		/// Gets <see cref="MappingSchema"/> instance to use with <see cref="DataConnection"/> instance.
 		/// </summary>
@@ -150,19 +158,8 @@ namespace LinqToDB.Infrastructure
 		/// </summary>
 		/// <param name="connectionString"> The option to change. </param>
 		/// <returns> A new instance with the option changed. </returns>
-		public virtual DbDataContextOptionsExtension WithConnectionString(string connectionString)
-		{
-			if (string.IsNullOrEmpty(connectionString))
-			{
-				throw new ArgumentException("Value cannot be null or empty.", nameof(connectionString));
-			}
-
-			var clone = Clone();
-
-			clone._connectionString = connectionString;
-
-			return clone;
-		}
+		public virtual DbDataContextOptionsExtension WithConnectionString(string? connectionString) =>
+			SetValue(o => o._connectionString = connectionString);
 
 		/// <summary>
 		///     Creates a new instance with all options the same as for this instance, but with the given option changed.
@@ -170,14 +167,8 @@ namespace LinqToDB.Infrastructure
 		/// </summary>
 		/// <param name="configurationString"> The option to change. </param>
 		/// <returns> A new instance with the option changed. </returns>
-		public virtual DbDataContextOptionsExtension WithConfigurationString(string? configurationString)
-		{
-			var clone = Clone();
-
-			clone._configurationString = configurationString;
-
-			return clone;
-		}
+		public virtual DbDataContextOptionsExtension WithConfigurationString(string? configurationString) =>
+			SetValue(o => o._configurationString = configurationString);
 
 		/// <summary>
 		///     Creates a new instance with all options the same as for this instance, but with the given option changed.
@@ -185,19 +176,8 @@ namespace LinqToDB.Infrastructure
 		/// </summary>
 		/// <param name="connection"> The option to change. </param>
 		/// <returns> A new instance with the option changed. </returns>
-		public virtual DbDataContextOptionsExtension WithConnection(DbConnection connection)
-		{
-			if (connection == null)
-			{
-				throw new ArgumentNullException(nameof(connection));
-			}
-
-			var clone = Clone();
-
-			clone._dbConnection = connection;
-
-			return clone;
-		}
+		public virtual DbDataContextOptionsExtension WithConnection(DbConnection? connection) =>
+			SetValue(o => o._dbConnection = connection);
 
 		/// <summary>
 		///     Creates a new instance with all options the same as for this instance, but with the given option changed.
@@ -205,15 +185,8 @@ namespace LinqToDB.Infrastructure
 		/// </summary>
 		/// <param name="disposeConnection"> The option to change. </param>
 		/// <returns> A new instance with the option changed. </returns>
-		public virtual DbDataContextOptionsExtension WithDisposeConnection(bool disposeConnection)
-		{
-			var clone = Clone();
-
-			clone._disposeConnection = disposeConnection;
-
-			return clone;
-		}
-
+		public virtual DbDataContextOptionsExtension WithDisposeConnection(bool disposeConnection) =>
+			SetValue(o => o._disposeConnection = disposeConnection);
 
 		/// <summary>
 		///     Creates a new instance with all options the same as for this instance, but with the given option changed.
@@ -221,19 +194,8 @@ namespace LinqToDB.Infrastructure
 		/// </summary>
 		/// <param name="providerName"> The option to change. </param>
 		/// <returns> A new instance with the option changed. </returns>
-		public virtual DbDataContextOptionsExtension WithProviderName(string providerName)
-		{
-			if (providerName == null)
-			{
-				throw new ArgumentNullException(nameof(providerName));
-			}
-
-			var clone = Clone();
-
-			clone._providerName = providerName;
-
-			return clone;
-		}
+		public virtual DbDataContextOptionsExtension WithProviderName(string? providerName) =>
+			SetValue(o => o._providerName = providerName);
 
 		/// <summary>
 		///     Creates a new instance with all options the same as for this instance, but with the given option changed.
@@ -241,19 +203,8 @@ namespace LinqToDB.Infrastructure
 		/// </summary>
 		/// <param name="dataProvider"> The option to change. </param>
 		/// <returns> A new instance with the option changed. </returns>
-		public virtual DbDataContextOptionsExtension WithDataProvider(IDataProvider dataProvider)
-		{
-			if (dataProvider == null)
-			{
-				throw new ArgumentNullException(nameof(dataProvider));
-			}
-
-			var clone = Clone();
-
-			clone._dataProvider = dataProvider;
-
-			return clone;
-		}
+		public virtual DbDataContextOptionsExtension WithDataProvider(IDataProvider? dataProvider) =>
+			SetValue(o => o._dataProvider = dataProvider);
 
 		/// <summary>
 		///     Creates a new instance with all options the same as for this instance, but with the given option changed.
@@ -261,19 +212,8 @@ namespace LinqToDB.Infrastructure
 		/// </summary>
 		/// <param name="mappingSchema"> The option to change. </param>
 		/// <returns> A new instance with the option changed. </returns>
-		public virtual DbDataContextOptionsExtension WithMappingSchema(MappingSchema mappingSchema)
-		{
-			if (mappingSchema == null)
-			{
-				throw new ArgumentNullException(nameof(mappingSchema));
-			}
-
-			var clone = Clone();
-
-			clone._mappingSchema = mappingSchema;
-
-			return clone;
-		}
+		public virtual DbDataContextOptionsExtension WithMappingSchema(MappingSchema? mappingSchema) =>
+			SetValue(o => o._mappingSchema = mappingSchema);
 
 		/// <summary>
 		///     Creates a new instance with all options the same as for this instance, but with the given option changed.
@@ -281,19 +221,8 @@ namespace LinqToDB.Infrastructure
 		/// </summary>
 		/// <param name="connectionFactory"> The option to change. </param>
 		/// <returns> A new instance with the option changed. </returns>
-		public virtual DbDataContextOptionsExtension WithConnectionFactory(Func<DbConnection> connectionFactory)
-		{
-			if (connectionFactory == null)
-			{
-				throw new ArgumentNullException(nameof(connectionFactory));
-			}
-
-			var clone = Clone();
-
-			clone._connectionFactory = connectionFactory;
-
-			return clone;
-		}
+		public virtual DbDataContextOptionsExtension WithConnectionFactory(Func<DbConnection>? connectionFactory) =>
+			SetValue(o => o._connectionFactory = connectionFactory);
 
 		/// <summary>
 		///     Creates a new instance with all options the same as for this instance, but with the given option changed.
@@ -301,19 +230,8 @@ namespace LinqToDB.Infrastructure
 		/// </summary>
 		/// <param name="transaction"> The option to change. </param>
 		/// <returns> A new instance with the option changed. </returns>
-		public virtual DbDataContextOptionsExtension WithTransaction(DbTransaction transaction)
-		{
-			if (transaction == null)
-			{
-				throw new ArgumentNullException(nameof(transaction));
-			}
-
-			var clone = Clone();
-
-			clone._transaction = transaction;
-
-			return clone;
-		}
+		public virtual DbDataContextOptionsExtension WithTransaction(DbTransaction? transaction) =>
+			SetValue(o => o._transaction = transaction);
 
 		/// <summary>
 		///     Creates a new instance with all options the same as for this instance, but with the given option changed.
@@ -321,14 +239,8 @@ namespace LinqToDB.Infrastructure
 		/// </summary>
 		/// <param name="traceLevel"> The option to change. </param>
 		/// <returns> A new instance with the option changed. </returns>
-		public DbDataContextOptionsExtension WithTraceLevel(TraceLevel traceLevel)
-		{
-			var clone = Clone();
-
-			clone._traceLevel = traceLevel;
-
-			return clone;
-		}
+		public virtual DbDataContextOptionsExtension WithTraceLevel(TraceLevel traceLevel) =>
+			SetValue(o => o._traceLevel = traceLevel);
 
 		/// <summary>
 		///     Creates a new instance with all options the same as for this instance, but with the given option changed.
@@ -336,19 +248,8 @@ namespace LinqToDB.Infrastructure
 		/// </summary>
 		/// <param name="onTrace"> The option to change. </param>
 		/// <returns> A new instance with the option changed. </returns>
-		public virtual DbDataContextOptionsExtension WithTracing(Action<TraceInfo> onTrace)
-		{
-			if (onTrace == null)
-			{
-				throw new ArgumentNullException(nameof(onTrace));
-			}
-
-			var clone = Clone();
-
-			clone._onTrace = onTrace;
-
-			return clone;
-		}
+		public virtual DbDataContextOptionsExtension WithTracing(Action<TraceInfo>? onTrace) =>
+			SetValue(o => o._onTrace = onTrace);
 
 		/// <summary>
 		///     Creates a new instance with all options the same as for this instance, but with the given option changed.
@@ -356,19 +257,8 @@ namespace LinqToDB.Infrastructure
 		/// </summary>
 		/// <param name="write"> The option to change. </param>
 		/// <returns> A new instance with the option changed. </returns>
-		public virtual DbDataContextOptionsExtension WriteTraceWith(Action<string?, string?, TraceLevel> write)
-		{
-			if (write == null)
-			{
-				throw new ArgumentNullException(nameof(write));
-			}
-
-			var clone = Clone();
-
-			clone._writeTrace = write;
-
-			return clone;
-		}
+		public virtual DbDataContextOptionsExtension WriteTraceWith(Action<string?, string?, TraceLevel>? write) =>
+			SetValue(o => o._writeTrace = write);
 
 		/// <summary>
 		///     The options set from the <see cref="DataContextOptionsBuilder.ReplaceService{TService,TImplementation}" /> method.

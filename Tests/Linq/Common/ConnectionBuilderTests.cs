@@ -5,10 +5,14 @@ using System.Linq;
 using LinqToDB;
 using LinqToDB.AspNet.Logging;
 using LinqToDB.Configuration;
+using LinqToDB.Data;
+using LinqToDB.DataProvider.SqlCe;
+using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NUnit.Framework;
+using Tests.Model;
 
 namespace Tests.Common
 {
@@ -101,6 +105,20 @@ namespace Tests.Common
 			Assert.That(factory.Loggers, Has.One.Items);
 			var testLogger = factory.Loggers.Single();
 			Assert.Contains(expectedMessage, testLogger.Messages);
+		}
+
+		[Test]
+		public void SqlServerBuilderWitAutoDetect([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var provider = !context.EndsWith(".MS") ? SqlServerProvider.SystemDataSqlClient : SqlServerProvider.MicrosoftDataSqlClient;
+			var cs = DataConnection.GetConnectionString(context);
+
+			var builder =
+				new DataContextOptionsBuilder().UseSqlServer(cs,
+					o => o.UseProvider(provider).AutodetectServerVersion());
+
+			using var dc = new DataConnection(builder.Options);
+			_ = dc.GetTable<Parent>().First();
 		}
 	}
 }

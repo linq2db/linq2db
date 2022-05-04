@@ -16,45 +16,6 @@ namespace LinqToDB
 	/// </summary>
 	public static class LinqToDBConnectionOptionsBuilderExtensions
 	{
-		#region UseSqlServer
-		/// <summary>
-		/// Configure connection to use SQL Server default provider, dialect and connection string.
-		/// </summary>
-		/// <param name="builder">Instance of <see cref="DataContextOptionsBuilder"/>.</param>
-		/// <param name="connectionString">SQL Server connection string.</param>
-		/// <returns>The builder instance so calls can be chained.</returns>
-		/// <remarks>
-		/// <para>
-		/// Default provider configured using <see cref="SqlServerTools.Provider"/> option and set to <see cref="SqlServerProvider.SystemDataSqlClient"/> by default.
-		/// </para>
-		/// <para>
-		/// SQL Server dialect will be choosen automatically:
-		/// <list type="bullet">
-		/// <item>if <see cref="SqlServerTools.AutoDetectProvider"/> (default: <c>true</c>) enabled, Linq To DB will query server for version</item>
-		/// <item>otherwise <see cref="SqlServerVersion.v2008"/> will be used as default dialect.</item>
-		/// </list>
-		/// </para>
-		/// For more fine-grained configuration see <see cref="UseSqlServer(DataContextOptionsBuilder, string, SqlServerProvider, SqlServerVersion)"/> overload.
-		/// </remarks>
-		public static DataContextOptionsBuilder UseSqlServer(this DataContextOptionsBuilder builder, string connectionString)
-		{
-			return builder.UseConnectionString(ProviderName.SqlServer, connectionString);
-		}
-
-		/// <summary>
-		/// Configure connection to use specific SQL Server provider, dialect and connection string.
-		/// </summary>
-		/// <param name="builder">Instance of <see cref="DataContextOptionsBuilder"/>.</param>
-		/// <param name="connectionString">SQL Server connection string.</param>
-		/// <param name="provider">SQL Server provider to use.</param>
-		/// <param name="dialect">SQL Server dialect support level.</param>
-		/// <returns>The builder instance so calls can be chained.</returns>
-		public static DataContextOptionsBuilder UseSqlServer(this DataContextOptionsBuilder builder, string connectionString, SqlServerProvider provider, SqlServerVersion dialect)
-		{
-			return builder.UseConnectionString(SqlServerTools.GetDataProvider(dialect, provider), connectionString);
-		}
-		#endregion
-
 		#region UseOracle
 		/// <summary>
 		/// Configure connection to use Oracle default provider, dialect and connection string.

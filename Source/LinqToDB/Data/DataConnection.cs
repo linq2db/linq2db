@@ -247,39 +247,35 @@ namespace LinqToDB.Data
 			DbConnection?  localConnection  = null;
 			DbTransaction? localTransaction = null;
 
-			if (dbExtension == null || dbExtension.ConfigurationString != null && (dbExtension.DbConnection == null))
+			if (dbExtension?.ConnectionString != null)
 			{
-				ConfigurationString = dbExtension?.ConfigurationString ?? DefaultConfiguration;
-				if (ConfigurationString == null)
-					throw new LinqToDBException("Configuration string is not provided.");
-				var ci = GetConfigurationInfo(ConfigurationString);
-
-				DataProvider     = ci.DataProvider;
-				ConnectionString = ci.ConnectionString;
-				MappingSchema    = DataProvider.MappingSchema;
-			}
-			else if (dbExtension.ConnectionString != null)
-			{
-				if (dbExtension.ProviderName == null && dbExtension.DataProvider == null)
-					throw new LinqToDBException("DataProvider was not specified");
-
 				IDataProvider? dataProvider;
-				if (dbExtension.ProviderName != null)
-				{
-					if (!_dataProviders.TryGetValue(dbExtension.ProviderName, out dataProvider))
-						dataProvider = GetDataProvider(dbExtension.ProviderName, dbExtension.ConnectionString!);
 
-					if (dataProvider == null)
-						throw new LinqToDBException($"DataProvider '{dbExtension.ProviderName}' not found.");
+				if (dbExtension.ProviderName == null && dbExtension.DataProvider == null)
+				{
+					var relational = RelationalOptionsExtension.Extract(options);
+
+					dataProvider = relational.GetDataProvider(dbExtension);
 				}
 				else
-					dataProvider = dbExtension.DataProvider!;
+				{
+					if (dbExtension.ProviderName != null)
+					{
+						if (!_dataProviders.TryGetValue(dbExtension.ProviderName, out dataProvider))
+							dataProvider = GetDataProvider(dbExtension.ProviderName, dbExtension.ConnectionString!);
+
+						if (dataProvider == null)
+							throw new LinqToDBException($"DataProvider '{dbExtension.ProviderName}' not found.");
+					}
+					else
+						dataProvider = dbExtension.DataProvider!;
+				}
 
 				DataProvider     = dataProvider;
 				ConnectionString = dbExtension.ConnectionString;
 				MappingSchema    = DataProvider.MappingSchema;
 			}
-			else if (dbExtension.ConnectionFactory != null)
+			else if (dbExtension?.ConnectionFactory != null)
 			{
 				//copy to tmp variable so that if the factory in options gets changed later we will still use the old one
 				//is this expected?
@@ -294,7 +290,7 @@ namespace LinqToDB.Data
 				DataProvider  = dbExtension.DataProvider ?? throw new LinqToDBException("DataProvider was not specified");
 				MappingSchema = DataProvider.MappingSchema;
 			}
-			else if (dbExtension.DbConnection != null)
+			else if (dbExtension?.DbConnection != null)
 			{
 				localConnection    = dbExtension.DbConnection;
 				_disposeConnection = dbExtension.DisposeConnection;
@@ -302,7 +298,7 @@ namespace LinqToDB.Data
 				DataProvider  = dbExtension.DataProvider ?? throw new LinqToDBException("DataProvider was not specified");
 				MappingSchema = DataProvider.MappingSchema;
 			} 
-			else if (dbExtension.DbTransaction != null)
+			else if (dbExtension?.DbTransaction != null)
 			{
 				localConnection  = dbExtension.DbTransaction.Connection;
 				localTransaction = dbExtension.DbTransaction;
@@ -314,11 +310,20 @@ namespace LinqToDB.Data
 				DataProvider  = dbExtension.DataProvider ?? throw new LinqToDBException("DataProvider was not specified");;
 				MappingSchema = DataProvider.MappingSchema;
 			}
-			else
+			else 
 			{
-				throw new LinqToDBException("DataConnection options improperly configured.");
-			}
+				ConfigurationString = dbExtension?.ConfigurationString ?? DefaultConfiguration;
+				if (ConfigurationString == null)
+				{
+					throw new LinqToDBException("Configuration string is not provided.");
+				}
 
+				var ci = GetConfigurationInfo(ConfigurationString);
+
+				DataProvider     = ci.DataProvider;
+				ConnectionString = ci.ConnectionString;
+				MappingSchema    = DataProvider.MappingSchema;
+			}
 
 			var retryPolicyExtension = options.FindExtension<RetryPolicyOptionsExtension>() ??
 			                           Configuration.RetryPolicy.Options;

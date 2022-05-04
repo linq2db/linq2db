@@ -6,6 +6,7 @@ namespace LinqToDB
 {
 	using Infrastructure;
 	using Infrastructure.Internal;
+	using DataProvider.SqlServer;
 
     /// <summary>
     ///     SQL Server specific extension methods for <see cref="DataContextOptionsBuilder" />.
@@ -20,21 +21,21 @@ namespace LinqToDB
         /// <param name="sqlServerOptionsAction">An optional action to allow additional SQL Server specific configuration.</param>
         /// <returns> The options builder so that further configuration can be chained. </returns>
         public static DataContextOptionsBuilder UseSqlServer(
-            this DataContextOptionsBuilder            optionsBuilder,
-            string                                    connectionString,
+            this DataContextOptionsBuilder              optionsBuilder,
+            string                                      connectionString,
             Action<SqlServerDataContextOptionsBuilder>? sqlServerOptionsAction = null)
         {
 	        if (optionsBuilder == null)
-	        {
 		        throw new ArgumentNullException(nameof(optionsBuilder));
-	        }
 
 	        if (connectionString == null)
-	        {
 		        throw new ArgumentNullException(nameof(connectionString));
-	        }
 
-	        optionsBuilder = optionsBuilder.UseConnectionString(connectionString);
+	        optionsBuilder = optionsBuilder
+		        .UseConnectionString(connectionString)
+		        .UseProvider(null)
+		        .UseDataProvider(null);
+
             var extension = GetOrCreateExtension(optionsBuilder);
             ((IDataContextOptionsBuilderInfrastructure)optionsBuilder).AddOrUpdateExtension(extension);
 
@@ -58,20 +59,19 @@ namespace LinqToDB
         /// <returns> The options builder so that further configuration can be chained. </returns>
         public static DataContextOptionsBuilder UseSqlServer(
             this DataContextOptionsBuilder              optionsBuilder,
-            DbConnection                              connection,
+            DbConnection                                connection,
             Action<SqlServerDataContextOptionsBuilder>? sqlServerOptionsAction = null)
         {
 	        if (optionsBuilder == null)
-	        {
 		        throw new ArgumentNullException(nameof(optionsBuilder));
-	        }
 
 	        if (connection == null)
-	        {
 		        throw new ArgumentNullException(nameof(connection));
-	        }
 
-	        optionsBuilder = optionsBuilder.UseConnection(connection);
+	        optionsBuilder = optionsBuilder
+		        .UseProvider(null)
+		        .UseDataProvider(null)
+		        .UseConnection(connection);
 
             var extension = GetOrCreateExtension(optionsBuilder);
             ((IDataContextOptionsBuilderInfrastructure)optionsBuilder).AddOrUpdateExtension(extension);
@@ -93,7 +93,7 @@ namespace LinqToDB
         /// <returns> The options builder so that further configuration can be chained. </returns>
         public static DataContextOptionsBuilder<TContext> UseSqlServer<TContext>(
             this DataContextOptionsBuilder<TContext>    optionsBuilder,
-                  string                              connectionString,
+                  string                                connectionString,
             Action<SqlServerDataContextOptionsBuilder>? sqlServerOptionsAction = null)
             where TContext : IDataContext
             => (DataContextOptionsBuilder<TContext>)UseSqlServer(
@@ -113,13 +113,50 @@ namespace LinqToDB
         /// <returns> The options builder so that further configuration can be chained. </returns>
         public static DataContextOptionsBuilder<TContext> UseSqlServer<TContext>(
             this DataContextOptionsBuilder<TContext>    optionsBuilder,
-            DbConnection                              connection,
+            DbConnection                                connection,
             Action<SqlServerDataContextOptionsBuilder>? sqlServerOptionsAction = null)
             where TContext : IDataContext
         {
 	        return (DataContextOptionsBuilder<TContext>)UseSqlServer(
 		        (DataContextOptionsBuilder)optionsBuilder, connection, sqlServerOptionsAction);
         }
+
+		/// <summary>
+		/// Configure connection to use SQL Server default provider, dialect and connection string.
+		/// </summary>
+		/// <param name="builder">Instance of <see cref="DataContextOptionsBuilder"/>.</param>
+		/// <param name="connectionString">SQL Server connection string.</param>
+		/// <returns>The builder instance so calls can be chained.</returns>
+		/// <remarks>
+		/// <para>
+		/// Default provider configured using <see cref="SqlServerTools.Provider"/> option and set to <see cref="SqlServerProvider.SystemDataSqlClient"/> by default.
+		/// </para>
+		/// <para>
+		/// SQL Server dialect will be choosen automatically:
+		/// <list type="bullet">
+		/// <item>if <see cref="SqlServerTools.AutoDetectProvider"/> (default: <c>true</c>) enabled, Linq To DB will query server for version</item>
+		/// <item>otherwise <see cref="SqlServerVersion.v2008"/> will be used as default dialect.</item>
+		/// </list>
+		/// </para>
+		/// For more fine-grained configuration see <see cref="UseSqlServer(DataContextOptionsBuilder, string, SqlServerProvider, SqlServerVersion)"/> overload.
+		/// </remarks>
+		public static DataContextOptionsBuilder UseSqlServer(this DataContextOptionsBuilder builder, string connectionString)
+		{
+			return builder.UseSqlServer(connectionString);
+		}
+
+		/// <summary>
+		/// Configure connection to use specific SQL Server provider, dialect and connection string.
+		/// </summary>
+		/// <param name="builder">Instance of <see cref="DataContextOptionsBuilder"/>.</param>
+		/// <param name="connectionString">SQL Server connection string.</param>
+		/// <param name="provider">SQL Server provider to use.</param>
+		/// <param name="dialect">SQL Server dialect support level.</param>
+		/// <returns>The builder instance so calls can be chained.</returns>
+		public static DataContextOptionsBuilder UseSqlServer(this DataContextOptionsBuilder builder, string connectionString, SqlServerProvider provider, SqlServerVersion dialect)
+		{
+			return builder.UseSqlServer(connectionString, o => o.UseProvider(provider).UseServerVersion(dialect));
+		}
 
         private static SqlServerOptionsExtension GetOrCreateExtension(DataContextOptionsBuilder optionsBuilder)
         {

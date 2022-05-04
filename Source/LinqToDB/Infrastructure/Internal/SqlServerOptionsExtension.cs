@@ -1,93 +1,86 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Text;
+using LinqToDB.DataProvider;
+using LinqToDB.DataProvider.SqlServer;
 
 namespace LinqToDB.Infrastructure.Internal
 {
-    /// <summary>
-    ///     This is an internal API that supports the Entity Framework Core infrastructure and not subject to
-    ///     the same compatibility standards as public APIs. It may be changed or removed without notice in
-    ///     any release. You should only use it directly in your code with extreme caution and knowing that
-    ///     doing so can result in application failures when updating to a new Entity Framework Core release.
-    /// </summary>
+	/// <summary>
+	/// This is internal API and is not intended for use by Linq To DB applications.
+	/// It may change or be removed without further notice.
+	/// </summary>
     public class SqlServerOptionsExtension : RelationalOptionsExtension
     {
         private DbContextOptionsExtensionInfo? _info;
-        private bool?                          _rowNumberPaging;
 
-        /// <summary>
-        ///     This is an internal API that supports the Entity Framework Core infrastructure and not subject to
-        ///     the same compatibility standards as public APIs. It may be changed or removed without notice in
-        ///     any release. You should only use it directly in your code with extreme caution and knowing that
-        ///     doing so can result in application failures when updating to a new Entity Framework Core release.
-        /// </summary>
+        private SqlServerVersion? _serverVersion  = SqlServerVersion.v2008;
+        private SqlServerProvider _serverProvider = SqlServerTools.Provider;
+
         public SqlServerOptionsExtension()
         {
         }
 
         // NB: When adding new options, make sure to update the copy ctor below.
 
-        /// <summary>
-        ///     This is an internal API that supports the Entity Framework Core infrastructure and not subject to
-        ///     the same compatibility standards as public APIs. It may be changed or removed without notice in
-        ///     any release. You should only use it directly in your code with extreme caution and knowing that
-        ///     doing so can result in application failures when updating to a new Entity Framework Core release.
-        /// </summary>
         protected SqlServerOptionsExtension(SqlServerOptionsExtension copyFrom)
             : base(copyFrom)
         {
-            _rowNumberPaging = copyFrom._rowNumberPaging;
+            _serverVersion  = copyFrom._serverVersion;
+            _serverProvider = copyFrom._serverProvider;
         }
 
-        /// <summary>
-        ///     This is an internal API that supports the Entity Framework Core infrastructure and not subject to
-        ///     the same compatibility standards as public APIs. It may be changed or removed without notice in
-        ///     any release. You should only use it directly in your code with extreme caution and knowing that
-        ///     doing so can result in application failures when updating to a new Entity Framework Core release.
-        /// </summary>
         public override DbContextOptionsExtensionInfo Info
             => _info ??= new ExtensionInfo(this);
 
-        /// <summary>
-        ///     This is an internal API that supports the Entity Framework Core infrastructure and not subject to
-        ///     the same compatibility standards as public APIs. It may be changed or removed without notice in
-        ///     any release. You should only use it directly in your code with extreme caution and knowing that
-        ///     doing so can result in application failures when updating to a new Entity Framework Core release.
-        /// </summary>
         protected override RelationalOptionsExtension Clone()
             => new SqlServerOptionsExtension(this);
 
-        /// <summary>
-        ///     This is an internal API that supports the Entity Framework Core infrastructure and not subject to
-        ///     the same compatibility standards as public APIs. It may be changed or removed without notice in
-        ///     any release. You should only use it directly in your code with extreme caution and knowing that
-        ///     doing so can result in application failures when updating to a new Entity Framework Core release.
-        /// </summary>
-        public virtual bool? RowNumberPaging => _rowNumberPaging;
+		public virtual SqlServerVersion? ServerVersion => _serverVersion;
 
-        /// <summary>
-        ///     This is an internal API that supports the Entity Framework Core infrastructure and not subject to
-        ///     the same compatibility standards as public APIs. It may be changed or removed without notice in
-        ///     any release. You should only use it directly in your code with extreme caution and knowing that
-        ///     doing so can result in application failures when updating to a new Entity Framework Core release.
-        /// </summary>
-        public virtual SqlServerOptionsExtension WithRowNumberPaging(bool rowNumberPaging)
+		public virtual SqlServerProvider ServerProvider => _serverProvider;
+
+
+		public virtual SqlServerOptionsExtension WithServerVersion(SqlServerVersion? serverVersion)
+			=> SetValue(o => o._serverVersion = serverVersion);
+
+		public virtual SqlServerOptionsExtension WithServerProvider(SqlServerProvider serverProvider)
+			=> SetValue(o => o._serverProvider = serverProvider);
+
+        private SqlServerOptionsExtension SetValue(Action<SqlServerOptionsExtension> setter)
         {
-            var clone = (SqlServerOptionsExtension)Clone();
+	        var clone = (SqlServerOptionsExtension)Clone();
+	        setter(clone);
 
-            clone._rowNumberPaging = rowNumberPaging;
-
-            return clone;
+	        return clone;
         }
 
-        /// <summary>
-        ///     This is an internal API that supports the Entity Framework Core infrastructure and not subject to
-        ///     the same compatibility standards as public APIs. It may be changed or removed without notice in
-        ///     any release. You should only use it directly in your code with extreme caution and knowing that
-        ///     doing so can result in application failures when updating to a new Entity Framework Core release.
-        /// </summary>
         public override void ApplyServices()
         {
 
+        }
+
+        public override IDataProvider GetDataProvider(DbDataContextOptionsExtension dbOptions)
+        {
+	        SqlServerVersion serverVersion;
+
+	        if (_serverVersion != null)
+	        {
+		        serverVersion = _serverVersion.Value;
+	        }
+	        else
+	        {
+		        if (dbOptions.ConnectionString == null)
+		        {
+			        throw new InvalidOperationException(
+				        "For SQL provider detection, connection string should be defined.");
+		        }
+
+		        serverVersion = SqlServerTools.DetectServerVersionCached(_serverProvider, dbOptions.ConnectionString) ??
+		                        SqlServerVersion.v2008;
+	        }
+
+	        return SqlServerTools.GetDataProvider(serverVersion, _serverProvider);
         }
 
         private sealed class ExtensionInfo : RelationalExtensionInfo
@@ -115,11 +108,6 @@ namespace LinqToDB.Infrastructure.Internal
 
                         builder.Append(base.LogFragment);
 
-                        if (Extension._rowNumberPaging == true)
-                        {
-                            builder.Append("RowNumberPaging ");
-                        }
-
                         _logFragment = builder.ToString();
                     }
 
@@ -131,7 +119,7 @@ namespace LinqToDB.Infrastructure.Internal
             {
                 if (_serviceProviderHash == null)
                 {
-                    _serviceProviderHash = (base.GetServiceProviderHashCode() * 397) ^ (Extension._rowNumberPaging?.GetHashCode() ?? 0L);
+                    _serviceProviderHash = (base.GetServiceProviderHashCode() * 397);
                 }
 
                 return _serviceProviderHash.Value;
