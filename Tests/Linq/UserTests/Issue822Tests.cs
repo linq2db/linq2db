@@ -17,7 +17,7 @@ namespace Tests.UserTests
 		int? ID2;
 
 		[Test]
-		public void TestWrongValue([DataSources] string context)
+		public void TestWrongValue([DataSources] string context, [Values(1, 2)] int _)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -41,7 +41,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestNullValue([DataSources] string context)
+		public void TestNullValue([DataSources] string context, [Values(1, 2)] int _)
 		{
 			using (var db = GetDataContext(context))
 			{

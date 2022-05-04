@@ -171,10 +171,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MethodExpression5([DataSources(ProviderName.SqlCe)] string context)
+		public void MethodExpression5([DataSources(ProviderName.SqlCe)] string context, [Values(1, 2) ]int n)
 		{
-			var n = 2;
-
 			using (var db = GetDataContext(context))
 				AreEqual(
 					   Parent.Select(p => Child.Where(c => c.ParentID == p.ParentID).Count() + n),
