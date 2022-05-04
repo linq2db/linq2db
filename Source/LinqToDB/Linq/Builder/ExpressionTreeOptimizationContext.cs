@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -13,7 +14,6 @@ namespace LinqToDB.Linq.Builder
 	using Mapping;
 	using SqlQuery;
 	using Reflection;
-	using System.Runtime.CompilerServices;
 
 	public class ExpressionTreeOptimizationContext
 	{
