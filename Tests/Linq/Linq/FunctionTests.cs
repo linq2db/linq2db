@@ -15,6 +15,7 @@ using NUnit.Framework;
 namespace Tests.Linq
 {
 	using LinqToDB.Common;
+	using LinqToDB.Mapping;
 	using Model;
 
 	[TestFixture]
@@ -617,6 +618,25 @@ namespace Tests.Linq
 				var str = q.ToString()!;
 				Assert.True(str.Contains(" matches "));
 			}
+		}
+
+		[Table]
+		class TagsTable
+		{
+			[Column] public string? Name { get; set; }
+		}
+
+		[Test]
+		public void Issue3543Test([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tags = db.CreateLocalTable<TagsTable>();
+
+			(from tag in tags
+			 select new
+			 {
+				 Name = tag.Name!.Substring(tag.Name.IndexOf(".") + 1, tag.Name.IndexOf(".", 5) - tag.Name.IndexOf(".") - 1)
+			 }).ToList();
 		}
 	}
 
