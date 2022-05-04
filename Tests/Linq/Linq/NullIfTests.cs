@@ -29,7 +29,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Ints(
-			[DataSources(TestProvName.AllAccess)] string context)
+			[DataSources(TestProvName.AllAccess, ProviderName.SqlCe)] string context)
 		{
 			using var db  = GetDataContext(context);
 			using var src = SetupSrcTable(db);
@@ -53,7 +53,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Strings(
-			[DataSources(TestProvName.AllAccess)] string context)
+			[DataSources(TestProvName.AllAccess, ProviderName.SqlCe)] string context)
 		{
 			using var db  = GetDataContext(context);
 			using var src = SetupSrcTable(db);
