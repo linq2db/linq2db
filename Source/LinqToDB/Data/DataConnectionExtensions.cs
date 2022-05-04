@@ -2193,7 +2193,7 @@ namespace LinqToDB.Data
 			where T : class
 		{
 			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
-			return dataConnection.DataProvider.BulkCopy(dataConnection.GetTable<T>(), options, source);
+			return dataConnection.DataProvider.BulkCopy(dataConnection.Options, dataConnection.GetTable<T>(), options, source);
 		}
 
 		/// <summary>
@@ -2209,8 +2209,7 @@ namespace LinqToDB.Data
 		{
 			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
 
-			return dataConnection.DataProvider.BulkCopy(
-				dataConnection.GetTable<T>(),
+			return dataConnection.DataProvider.BulkCopy(dataConnection.Options, dataConnection.GetTable<T>(),
 				new BulkCopyOptions { MaxBatchSize = maxBatchSize },
 				source);
 		}
@@ -2227,8 +2226,7 @@ namespace LinqToDB.Data
 		{
 			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
 
-			return dataConnection.DataProvider.BulkCopy(
-				dataConnection.GetTable<T>(),
+			return dataConnection.DataProvider.BulkCopy(dataConnection.Options, dataConnection.GetTable<T>(),
 				new BulkCopyOptions(),
 				source);
 		}
@@ -2246,7 +2244,9 @@ namespace LinqToDB.Data
 		{
 			if (table == null) throw new ArgumentNullException(nameof(table));
 
-			return table.GetDataProvider().BulkCopy(table, options, source);
+			var dataConnection = table.GetDataConnection();
+
+			return table.GetDataProvider().BulkCopy(dataConnection.Options, table, options, source);
 		}
 
 		/// <summary>
@@ -2262,7 +2262,9 @@ namespace LinqToDB.Data
 		{
 			if (table == null) throw new ArgumentNullException(nameof(table));
 
-			return table.GetDataProvider().BulkCopy(table, new BulkCopyOptions { MaxBatchSize = maxBatchSize, }, source);
+			var dataConnection = table.GetDataConnection();
+
+			return table.GetDataProvider().BulkCopy(dataConnection.Options, table, new BulkCopyOptions { MaxBatchSize = maxBatchSize, }, source);
 		}
 
 		/// <summary>
@@ -2277,7 +2279,9 @@ namespace LinqToDB.Data
 		{
 			if (table == null) throw new ArgumentNullException(nameof(table));
 
-			return table.GetDataProvider().BulkCopy(table, new BulkCopyOptions(), source);
+			var dataConnection = table.GetDataConnection();
+
+			return table.GetDataProvider().BulkCopy(dataConnection.Options, table, new BulkCopyOptions(), source);
 		}
 
 		
@@ -2301,7 +2305,7 @@ namespace LinqToDB.Data
 			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
 			if (source         == null) throw new ArgumentNullException(nameof(source));
 
-			return dataConnection.DataProvider.BulkCopyAsync(dataConnection.GetTable<T>(), options, source, cancellationToken);
+			return dataConnection.DataProvider.BulkCopyAsync(dataConnection.Options, dataConnection.GetTable<T>(), options, source, cancellationToken);
 		}
 
 		/// <summary>
@@ -2319,8 +2323,7 @@ namespace LinqToDB.Data
 			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
 			if (source         == null) throw new ArgumentNullException(nameof(source));
 
-			return dataConnection.DataProvider.BulkCopyAsync(
-				dataConnection.GetTable<T>(),
+			return dataConnection.DataProvider.BulkCopyAsync(dataConnection.Options, dataConnection.GetTable<T>(),
 				new BulkCopyOptions { MaxBatchSize = maxBatchSize },
 				source,
 				cancellationToken);
@@ -2340,8 +2343,7 @@ namespace LinqToDB.Data
 			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
 			if (source         == null) throw new ArgumentNullException(nameof(source));
 
-			return dataConnection.DataProvider.BulkCopyAsync(
-				dataConnection.GetTable<T>(),
+			return dataConnection.DataProvider.BulkCopyAsync(dataConnection.Options, dataConnection.GetTable<T>(),
 				new BulkCopyOptions(),
 				source,
 				cancellationToken);
@@ -2362,7 +2364,9 @@ namespace LinqToDB.Data
 			if (table  == null) throw new ArgumentNullException(nameof(table));
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
-			return table.GetDataProvider().BulkCopyAsync(table, options, source, cancellationToken);
+			var dataConnection = table.GetDataConnection();
+
+			return table.GetDataProvider().BulkCopyAsync(dataConnection.Options, table, options, source, cancellationToken);
 		}
 
 		/// <summary>
@@ -2380,7 +2384,9 @@ namespace LinqToDB.Data
 			if (table  == null) throw new ArgumentNullException(nameof(table));
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
-			return table.GetDataProvider().BulkCopyAsync(table, new BulkCopyOptions { MaxBatchSize = maxBatchSize, }, source, cancellationToken);
+			var dataConnection = table.GetDataConnection();
+
+			return table.GetDataProvider().BulkCopyAsync(dataConnection.Options, table, new BulkCopyOptions { MaxBatchSize = maxBatchSize, }, source, cancellationToken);
 		}
 
 		/// <summary>
@@ -2397,7 +2403,9 @@ namespace LinqToDB.Data
 			if (table  == null) throw new ArgumentNullException(nameof(table));
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
-			return table.GetDataProvider().BulkCopyAsync(table, new BulkCopyOptions(), source, cancellationToken);
+			var dataConnection = table.GetDataConnection();
+
+			return table.GetDataProvider().BulkCopyAsync(dataConnection.Options, table, new BulkCopyOptions(), source, cancellationToken);
 		}
 
 		#endregion
@@ -2420,7 +2428,7 @@ namespace LinqToDB.Data
 			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
 			if (source         == null) throw new ArgumentNullException(nameof(source));
 
-			return dataConnection.DataProvider.BulkCopyAsync(dataConnection.GetTable<T>(), options, source, cancellationToken);
+			return dataConnection.DataProvider.BulkCopyAsync(dataConnection.Options, dataConnection.GetTable<T>(), options, source, cancellationToken);
 		}
 
 		/// <summary>
@@ -2438,8 +2446,7 @@ namespace LinqToDB.Data
 			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
 			if (source         == null) throw new ArgumentNullException(nameof(source));
 
-			return dataConnection.DataProvider.BulkCopyAsync(
-				dataConnection.GetTable<T>(),
+			return dataConnection.DataProvider.BulkCopyAsync(dataConnection.Options, dataConnection.GetTable<T>(),
 				new BulkCopyOptions { MaxBatchSize = maxBatchSize },
 				source,
 				cancellationToken);
@@ -2459,8 +2466,7 @@ namespace LinqToDB.Data
 			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
 			if (source         == null) throw new ArgumentNullException(nameof(source));
 
-			return dataConnection.DataProvider.BulkCopyAsync(
-				dataConnection.GetTable<T>(),
+			return dataConnection.DataProvider.BulkCopyAsync(dataConnection.Options, dataConnection.GetTable<T>(),
 				new BulkCopyOptions(),
 				source,
 				cancellationToken);
@@ -2481,7 +2487,9 @@ namespace LinqToDB.Data
 			if (table  == null) throw new ArgumentNullException(nameof(table));
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
-			return table.GetDataProvider().BulkCopyAsync(table, options, source, cancellationToken);
+			var dataConnection = table.GetDataConnection();
+
+			return table.GetDataProvider().BulkCopyAsync(dataConnection.Options, table, options, source, cancellationToken);
 		}
 
 		/// <summary>
@@ -2499,7 +2507,9 @@ namespace LinqToDB.Data
 			if (table  == null) throw new ArgumentNullException(nameof(table));
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
-			return table.GetDataProvider().BulkCopyAsync(table, new BulkCopyOptions { MaxBatchSize = maxBatchSize, }, source, cancellationToken);
+			var dataConnection = table.GetDataConnection();
+
+			return table.GetDataProvider().BulkCopyAsync(dataConnection.Options, table, new BulkCopyOptions { MaxBatchSize = maxBatchSize, }, source, cancellationToken);
 		}
 
 		/// <summary>
@@ -2516,7 +2526,9 @@ namespace LinqToDB.Data
 			if (table  == null) throw new ArgumentNullException(nameof(table));
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
-			return table.GetDataProvider().BulkCopyAsync(table, new BulkCopyOptions(), source, cancellationToken);
+			var dataConnection = table.GetDataConnection();
+
+			return table.GetDataProvider().BulkCopyAsync(dataConnection.Options, table, new BulkCopyOptions(), source, cancellationToken);
 		}
 
 #endif

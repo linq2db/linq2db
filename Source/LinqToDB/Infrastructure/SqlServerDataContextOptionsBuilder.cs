@@ -22,13 +22,6 @@ namespace LinqToDB.Infrastructure
         {
         }
 
-        /*/// <summary>
-        ///     Use a ROW_NUMBER() in queries instead of OFFSET/FETCH. This method is backwards-compatible to SQL Server 2005.
-        /// </summary>
-        [Obsolete("Row-number paging is no longer supported. See https://aka.ms/AA6h122 for more information.")]
-        public virtual SqlServerDataContextOptionsBuilder UseRowNumberForPaging(bool useRowNumberForPaging = true)
-            => WithOption(e => e.WithRowNumberPaging(useRowNumberForPaging));*/
-
 		/// <summary>
 		/// SQL Server dialect will be detected automatically.
 		/// </summary>

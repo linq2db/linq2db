@@ -262,35 +262,38 @@ namespace LinqToDB.DataProvider.SQLite
 
 		#region BulkCopy
 
-		public override BulkCopyRowsCopied BulkCopy<T>(
-			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+		public override BulkCopyRowsCopied BulkCopy<T>(DataContextOptions options, ITable<T> table,
+			BulkCopyOptions                                               bulkCopyOptions,
+			IEnumerable<T>                                                source)
 		{
 			return new SQLiteBulkCopy().BulkCopy(
-				options.BulkCopyType == BulkCopyType.Default ? SQLiteTools.DefaultBulkCopyType : options.BulkCopyType,
+				bulkCopyOptions.BulkCopyType == BulkCopyType.Default ? SQLiteTools.DefaultBulkCopyType : bulkCopyOptions.BulkCopyType,
 				table,
-				options,
+				bulkCopyOptions,
 				source);
 		}
 
-		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
-			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataContextOptions options, ITable<T> table,
+			BulkCopyOptions bulkCopyOptions,
+			IEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			return new SQLiteBulkCopy().BulkCopyAsync(
-				options.BulkCopyType == BulkCopyType.Default ? SQLiteTools.DefaultBulkCopyType : options.BulkCopyType,
+				bulkCopyOptions.BulkCopyType == BulkCopyType.Default ? SQLiteTools.DefaultBulkCopyType : bulkCopyOptions.BulkCopyType,
 				table,
-				options,
+				bulkCopyOptions,
 				source,
 				cancellationToken);
 		}
 
 #if NATIVE_ASYNC
-		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
-			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataContextOptions options, ITable<T> table,
+			BulkCopyOptions bulkCopyOptions,
+			IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			return new SQLiteBulkCopy().BulkCopyAsync(
-				options.BulkCopyType == BulkCopyType.Default ? SQLiteTools.DefaultBulkCopyType : options.BulkCopyType,
+				bulkCopyOptions.BulkCopyType == BulkCopyType.Default ? SQLiteTools.DefaultBulkCopyType : bulkCopyOptions.BulkCopyType,
 				table,
-				options,
+				bulkCopyOptions,
 				source,
 				cancellationToken);
 		}

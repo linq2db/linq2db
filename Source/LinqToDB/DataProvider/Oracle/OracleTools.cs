@@ -7,6 +7,8 @@ using System.Reflection;
 
 namespace LinqToDB.DataProvider.Oracle
 {
+	using Infrastructure.Internal;
+	using Common.Internal.Cache;
 	using Common;
 	using Configuration;
 	using Data;
@@ -58,6 +60,8 @@ namespace LinqToDB.DataProvider.Oracle
 
 		static readonly Lazy<IDataProvider> _oracleManagedDataProvider11 = DataConnection.CreateDataProvider<OracleDataProviderManaged11>();
 		static readonly Lazy<IDataProvider> _oracleManagedDataProvider12 = DataConnection.CreateDataProvider<OracleDataProviderManaged12>();
+
+		static readonly MemoryCache<(bool managed, string connectionString)> _providerCache = new(new ());
 
 		public static bool AutoDetectProvider { get; set; } = true;
 
@@ -112,44 +116,75 @@ namespace LinqToDB.DataProvider.Oracle
 			return null;
 		}
 
-		private static OracleVersion DetectProviderVersion(IConnectionStringSettings css, string connectionString, bool managed)
+		private static OracleVersion DetectServerVersion(IConnectionStringSettings css, string connectionString, bool managed)
 		{
 			try
 			{
 				var cs = string.IsNullOrWhiteSpace(connectionString) ? css.ConnectionString : connectionString;
 
-				OracleProviderAdapter providerAdapter;
-
-#if NETFRAMEWORK
-				if (!managed)
-					providerAdapter = OracleProviderAdapter.GetInstance(ProviderName.OracleNative);
-				else
-#endif
-					providerAdapter = OracleProviderAdapter.GetInstance(ProviderName.OracleManaged);
-
-				using (var conn = providerAdapter.CreateConnection(cs))
-				{
-					conn.Open();
-
-					var command = conn.CreateCommand();
-					command.CommandText =
-						"select VERSION from PRODUCT_COMPONENT_VERSION where PRODUCT like 'PL/SQL%'";
-					if (command.ExecuteScalar() is string result)
-					{
-						var version = int.Parse(result.Split('.')[0]);
-
-						if (version <= 11)
-							return OracleVersion.v11;
-
-						return OracleVersion.v12;
-					}
-					return DefaultVersion;
-				}
+				return DetectServerVersionCached(cs, managed);
 			}
 			catch
 			{
 				return DefaultVersion;
 			}
+		}
+
+		/// <summary>
+		/// Clears provider version cache.
+		/// </summary>
+		public static void ClearCache()
+		{
+			_providerCache.Clear();
+		}
+
+		/// <summary>
+		/// Connects to Oracle Database and parses version information.
+		/// </summary>
+		/// <param name="connectionString"></param>
+		/// <param name="managed"></param>
+		/// <returns>Detected Oracle version.</returns>
+		/// <remarks>Uses cache to avoid unwanted connections to Database.</remarks>
+		public static OracleVersion DetectServerVersionCached(string connectionString, bool managed)
+		{
+			var cacheKey = (managed, connectionString);
+
+			var version = _providerCache.GetOrCreate(cacheKey, entry =>
+			{
+				entry.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
+				return DetectServerVersion(entry.Key.connectionString, entry.Key.managed);
+			});
+
+			return version;
+		}
+
+		public static OracleVersion DetectServerVersion(string connectionString, bool managed)
+		{
+			OracleProviderAdapter providerAdapter;
+
+#if NETFRAMEWORK
+			if (!managed)
+				providerAdapter = OracleProviderAdapter.GetInstance(ProviderName.OracleNative);
+			else
+#endif
+				providerAdapter = OracleProviderAdapter.GetInstance(ProviderName.OracleManaged);
+
+			using var conn = providerAdapter.CreateConnection(connectionString);
+			conn.Open();
+
+			var command = conn.CreateCommand();
+			command.CommandText =
+				"select VERSION from PRODUCT_COMPONENT_VERSION where PRODUCT like 'PL/SQL%'";
+			if (command.ExecuteScalar() is string result)
+			{
+				var version = int.Parse(result.Split('.')[0]);
+
+				if (version <= 11)
+					return OracleVersion.v11;
+
+				return OracleVersion.v12;
+			}
+			return DefaultVersion;
 		}
 
 		public static OracleVersion DefaultVersion = OracleVersion.v12;
@@ -160,7 +195,7 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			var version = DefaultVersion;
 			if (AutoDetectProvider)
-				version = DetectProviderVersion(css, connectionString, managed);
+				version = DetectServerVersion(css, connectionString, managed);
 
 			return GetVersionedDataProvider(version, managed);
 		}
@@ -261,9 +296,32 @@ namespace LinqToDB.DataProvider.Oracle
 
 		#endregion
 
+		#region Options
+
+		static volatile OracleOptionsExtension _options;
+
+		static OracleTools()
+		{
+			_options = new OracleOptionsExtension()
+				.WithDefaultBulkCopyType(BulkCopyType.MultipleRows)
+				.WithAlternativeBulkCopy(AlternativeBulkCopy.InsertAll);
+		}
+
+		public static OracleOptionsExtension Options
+		{
+			get => _options;
+			set => _options = value;
+		}
+
+		#endregion
+
 		#region BulkCopy
 
-		public  static BulkCopyType  DefaultBulkCopyType { get; set; } = BulkCopyType.MultipleRows;
+		public  static BulkCopyType  DefaultBulkCopyType
+		{
+			get => Options.DefaultBulkCopyType;
+			set => Options = Options.WithDefaultBulkCopyType(value);
+		}
 
 #endregion
 
@@ -271,7 +329,11 @@ namespace LinqToDB.DataProvider.Oracle
 		/// Specifies type of multi-row INSERT operation to generate for <see cref="BulkCopyType.RowByRow"/> bulk copy mode.
 		/// Default value: <see cref="AlternativeBulkCopy.InsertAll"/>.
 		/// </summary>
-		public static AlternativeBulkCopy UseAlternativeBulkCopy = AlternativeBulkCopy.InsertAll;
+		public static AlternativeBulkCopy UseAlternativeBulkCopy
+		{
+			get => Options.AlternativeBulkCopy;
+			set => Options = Options.WithAlternativeBulkCopy(value);
+		}
 
 		/// <summary>
 		/// Gets or sets flag to tell LinqToDB to quote identifiers, if they contain lowercase letters.

@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 namespace LinqToDB.DataProvider.Oracle
 {
 	using Infrastructure;
+	using Infrastructure.Internal;
 	using Common;
 	using Data;
 	using Extensions;
@@ -324,45 +325,55 @@ namespace LinqToDB.DataProvider.Oracle
 
 #region BulkCopy
 
-		OracleBulkCopy? _bulkCopy;
-
-		public override BulkCopyRowsCopied BulkCopy<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+		public override BulkCopyRowsCopied BulkCopy<T>(
+			DataContextOptions options, 
+			ITable<T>          table,
+			BulkCopyOptions    bulkCopyOptions,
+			IEnumerable<T>     source)
 		{
-			if (_bulkCopy == null)
-				_bulkCopy = new OracleBulkCopy(this);
+			var extension = options.FindExtension<OracleOptionsExtension>() ?? OracleTools.Options;
+			var bulkCopy  = new OracleBulkCopy(this, extension.AlternativeBulkCopy);
 
-			return _bulkCopy.BulkCopy(
-				options.BulkCopyType == BulkCopyType.Default ? OracleTools.DefaultBulkCopyType : options.BulkCopyType,
+			return bulkCopy.BulkCopy(
+				bulkCopyOptions.BulkCopyType == BulkCopyType.Default ? extension.DefaultBulkCopyType : bulkCopyOptions.BulkCopyType,
 				table,
-				options,
+				bulkCopyOptions,
 				source);
 		}
 
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
-			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
+			DataContextOptions options, 
+			ITable<T>          table,
+			BulkCopyOptions    bulkCopyOptions,
+			IEnumerable<T>     source,
+			CancellationToken  cancellationToken)
 		{
-			if (_bulkCopy == null)
-				_bulkCopy = new OracleBulkCopy(this);
+			var extension = options.FindExtension<OracleOptionsExtension>() ?? OracleTools.Options;
+			var bulkCopy  = new OracleBulkCopy(this, extension.AlternativeBulkCopy);
 
-			return _bulkCopy.BulkCopyAsync(
-				options.BulkCopyType == BulkCopyType.Default ? OracleTools.DefaultBulkCopyType : options.BulkCopyType,
+			return bulkCopy.BulkCopyAsync(
+				bulkCopyOptions.BulkCopyType == BulkCopyType.Default ? extension.DefaultBulkCopyType : bulkCopyOptions.BulkCopyType,
 				table,
-				options,
+				bulkCopyOptions,
 				source,
 				cancellationToken);
 		}
 
 #if NATIVE_ASYNC
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
-			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
+			DataContextOptions  options, 
+			ITable<T>           table,
+			BulkCopyOptions     bulkCopyOptions,
+			IAsyncEnumerable<T> source, 
+			CancellationToken cancellationToken)
 		{
-			if (_bulkCopy == null)
-				_bulkCopy = new OracleBulkCopy(this);
+			var extension = options.FindExtension<OracleOptionsExtension>() ?? OracleTools.Options;
+			var bulkCopy  = new OracleBulkCopy(this, extension.AlternativeBulkCopy);
 
-			return _bulkCopy.BulkCopyAsync(
-				options.BulkCopyType == BulkCopyType.Default ? OracleTools.DefaultBulkCopyType : options.BulkCopyType,
+			return bulkCopy.BulkCopyAsync(
+				bulkCopyOptions.BulkCopyType == BulkCopyType.Default ? extension.DefaultBulkCopyType : bulkCopyOptions.BulkCopyType,
 				table,
-				options,
+				bulkCopyOptions,
 				source,
 				cancellationToken);
 		}

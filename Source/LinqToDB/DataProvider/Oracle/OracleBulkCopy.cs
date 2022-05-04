@@ -24,12 +24,15 @@ namespace LinqToDB.DataProvider.Oracle
 		/// Max is actually more arbitrary in later versions than Oracle 8.
 		/// </summary>
 		private const      int                _maxSqlLength  = 65535;
-		protected override int                MaxParameters => _maxParameters;
-		protected override int                MaxSqlLength  => _maxSqlLength;
-		private readonly   OracleDataProvider _provider;
-		public OracleBulkCopy(OracleDataProvider provider)
+		protected override int                 MaxParameters => _maxParameters;
+		protected override int                 MaxSqlLength  => _maxSqlLength;
+		private readonly   OracleDataProvider  _provider;
+		private readonly   AlternativeBulkCopy _useAlternativeBulkCopy;
+
+		public OracleBulkCopy(OracleDataProvider provider, AlternativeBulkCopy useAlternativeBulkCopy)
 		{
-			_provider = provider;
+			_provider                    = provider;
+			_useAlternativeBulkCopy = useAlternativeBulkCopy;
 		}
 
 		protected override BulkCopyRowsCopied ProviderSpecificCopy<T>(
@@ -159,7 +162,7 @@ namespace LinqToDB.DataProvider.Oracle
 		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(
 			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
-			return OracleTools.UseAlternativeBulkCopy switch
+			return _useAlternativeBulkCopy switch
 			{
 				AlternativeBulkCopy.InsertInto => OracleMultipleRowsCopy2(new MultipleRowsHelper<T>(table, options), source),
 				AlternativeBulkCopy.InsertDual => OracleMultipleRowsCopy3(new MultipleRowsHelper<T>(table, options), source),
@@ -170,7 +173,7 @@ namespace LinqToDB.DataProvider.Oracle
 		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
 			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			switch (OracleTools.UseAlternativeBulkCopy)
+			switch (_useAlternativeBulkCopy)
 			{
 				case AlternativeBulkCopy.InsertInto: return OracleMultipleRowsCopy2Async(new MultipleRowsHelper<T>(table, options), source, cancellationToken);
 				case AlternativeBulkCopy.InsertDual: return OracleMultipleRowsCopy3Async(new MultipleRowsHelper<T>(table, options), source, cancellationToken);
@@ -182,7 +185,7 @@ namespace LinqToDB.DataProvider.Oracle
 		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
 			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			switch (OracleTools.UseAlternativeBulkCopy)
+			switch (_useAlternativeBulkCopy)
 			{
 				case AlternativeBulkCopy.InsertInto: return OracleMultipleRowsCopy2Async(new MultipleRowsHelper<T>(table, options), source, cancellationToken);
 				case AlternativeBulkCopy.InsertDual: return OracleMultipleRowsCopy3Async(new MultipleRowsHelper<T>(table, options), source, cancellationToken);

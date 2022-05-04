@@ -441,25 +441,29 @@ namespace LinqToDB.DataProvider
 
 		#region BulkCopy
 
-		public virtual BulkCopyRowsCopied BulkCopy<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+		public virtual BulkCopyRowsCopied BulkCopy<T>(DataContextOptions options, ITable<T> table,
+			BulkCopyOptions                                              bulkCopyOptions,
+			IEnumerable<T>                                               source)
 			where T : notnull
 		{
-			return new BasicBulkCopy().BulkCopy(options.BulkCopyType, table, options, source);
+			return new BasicBulkCopy().BulkCopy(bulkCopyOptions.BulkCopyType, table, bulkCopyOptions, source);
 		}
 
-		public virtual Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
-			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
+		public virtual Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataContextOptions options, ITable<T> table,
+			BulkCopyOptions bulkCopyOptions,
+			IEnumerable<T> source, CancellationToken cancellationToken)
 			where T : notnull
 		{
-			return new BasicBulkCopy().BulkCopyAsync(options.BulkCopyType, table, options, source, cancellationToken);
+			return new BasicBulkCopy().BulkCopyAsync(bulkCopyOptions.BulkCopyType, table, bulkCopyOptions, source, cancellationToken);
 		}
 
 #if NATIVE_ASYNC
-		public virtual Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
-			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
+		public virtual Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataContextOptions options, ITable<T> table,
+			BulkCopyOptions bulkCopyOptions,
+			IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 			where T: notnull
 		{
-			return new BasicBulkCopy().BulkCopyAsync(options.BulkCopyType, table, options, source, cancellationToken);
+			return new BasicBulkCopy().BulkCopyAsync(bulkCopyOptions.BulkCopyType, table, bulkCopyOptions, source, cancellationToken);
 		}
 #endif
 

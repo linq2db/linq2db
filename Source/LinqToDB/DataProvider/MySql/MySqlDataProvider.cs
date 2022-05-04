@@ -120,44 +120,47 @@ namespace LinqToDB.DataProvider.MySql
 
 		#region BulkCopy
 
-		public override BulkCopyRowsCopied BulkCopy<T>(
-			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+		public override BulkCopyRowsCopied BulkCopy<T>(DataContextOptions options, ITable<T> table,
+			BulkCopyOptions                                               bulkCopyOptions,
+			IEnumerable<T>                                                source)
 		{
 			if (source == null)
 				throw new ArgumentNullException(nameof(source));
 
 			return new MySqlBulkCopy(this).BulkCopy(
-				options.BulkCopyType == BulkCopyType.Default ? MySqlTools.DefaultBulkCopyType : options.BulkCopyType,
+				bulkCopyOptions.BulkCopyType == BulkCopyType.Default ? MySqlTools.DefaultBulkCopyType : bulkCopyOptions.BulkCopyType,
 				table,
-				options,
+				bulkCopyOptions,
 				source);
 		}
 
-		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
-			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataContextOptions options, ITable<T> table,
+			BulkCopyOptions bulkCopyOptions,
+			IEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			if (source == null)
 				throw new ArgumentNullException(nameof(source));
 
 			return new MySqlBulkCopy(this).BulkCopyAsync(
-				options.BulkCopyType == BulkCopyType.Default ? MySqlTools.DefaultBulkCopyType : options.BulkCopyType,
+				bulkCopyOptions.BulkCopyType == BulkCopyType.Default ? MySqlTools.DefaultBulkCopyType : bulkCopyOptions.BulkCopyType,
 				table,
-				options,
+				bulkCopyOptions,
 				source,
 				cancellationToken);
 		}
 
 #if NATIVE_ASYNC
-		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
-			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataContextOptions options, ITable<T> table,
+			BulkCopyOptions bulkCopyOptions,
+			IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			if (source == null)
 				throw new ArgumentNullException(nameof(source));
 
 			return new MySqlBulkCopy(this).BulkCopyAsync(
-				options.BulkCopyType == BulkCopyType.Default ? MySqlTools.DefaultBulkCopyType : options.BulkCopyType,
+				bulkCopyOptions.BulkCopyType == BulkCopyType.Default ? MySqlTools.DefaultBulkCopyType : bulkCopyOptions.BulkCopyType,
 				table,
-				options,
+				bulkCopyOptions,
 				source,
 				cancellationToken);
 		}
