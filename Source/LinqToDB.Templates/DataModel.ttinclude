@@ -766,7 +766,7 @@ public partial class Column : Property
 	public bool      IsIdentity;
 	public string    ColumnType; // Type of the column in database
 	public string    DataType;
-	public long?     Length;
+	public int?      Length;
 	public int?      Precision;
 	public int?      Scale;
 	public DbType    DbType;
@@ -861,7 +861,7 @@ public class Parameter
 	public bool     IsIn          { get; set; }
 	public bool     IsOut         { get; set; }
 	public bool     IsResult      { get; set; }
-	public long?    Size          { get; set; }
+	public int?     Size          { get; set; }
 
 	public string   ParameterName { get; set; }
 	public string   ParameterType { get; set; }

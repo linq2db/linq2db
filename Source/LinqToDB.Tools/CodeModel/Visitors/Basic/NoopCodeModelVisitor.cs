@@ -316,6 +316,17 @@
 			Visit(expression.Value);
 		}
 
+		protected override void Visit(CodeAsOperator expression)
+		{
+			Visit(expression.Value);
+			Visit(expression.Type);
+		}
+
+		protected override void Visit(CodeSuppressNull expression)
+		{
+			Visit(expression.Value);
+		}
+
 		protected override void Visit(CodeReference reference)
 		{
 			Visit(reference.Referenced.Name);

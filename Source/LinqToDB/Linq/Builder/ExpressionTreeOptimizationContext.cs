@@ -148,11 +148,6 @@ namespace LinqToDB.Linq.Builder
 			return result;
 		}
 
-		Sql.ExpressionAttribute? GetExpressionAttribute(MemberInfo member)
-		{
-			return MappingSchema.GetAttribute<Sql.ExpressionAttribute>(member.ReflectedType!, member, a => a.Configuration);
-		}
-
 		public Expression ExpandQueryableMethods(Expression expression)
 		{
 			var result = (_expandQueryableMethodsTransformer ??= TransformInfoVisitor<ExpressionTreeOptimizationContext>.Create(this, static (ctx, e) => ctx.ExpandQueryableMethodsTransformer(e)))
@@ -332,7 +327,7 @@ namespace LinqToDB.Linq.Builder
 						}
 						else
 						{
-							var attr = GetExpressionAttribute(ex.Member);
+							var attr = ex.Member.GetExpressionAttribute(MappingSchema);
 							result = attr != null && attr.ServerSideOnly;
 						}
 
@@ -371,7 +366,7 @@ namespace LinqToDB.Linq.Builder
 							}
 							else
 							{
-								var attr = GetExpressionAttribute(e.Method);
+								var attr = e.Method.GetExpressionAttribute(MappingSchema);
 								result = attr?.ServerSideOnly == true;
 							}
 						}
@@ -578,7 +573,7 @@ namespace LinqToDB.Linq.Builder
 					if (mc.Method.DeclaringType!.IsConstantable(false) || mc.Method.DeclaringType == typeof(object))
 						return false;
 
-					var attr = GetExpressionAttribute(mc.Method);
+					var attr = mc.Method.GetExpressionAttribute(MappingSchema);
 
 					if (attr != null && !attr.ServerSideOnly)
 						return false;
@@ -836,7 +831,7 @@ namespace LinqToDB.Linq.Builder
 							return GetVisitor(enforceServerSide).Find(info) != null;
 						}
 
-						var attr = GetExpressionAttribute(pi.Member);
+						var attr = pi.Member.GetExpressionAttribute(MappingSchema);
 						return attr != null && (attr.PreferServerSide || enforceServerSide) && !CanBeCompiled(expr);
 					}
 
@@ -848,7 +843,7 @@ namespace LinqToDB.Linq.Builder
 						if (l != null)
 							return GetVisitor(enforceServerSide).Find(l.Body.Unwrap()) != null;
 
-						var attr = GetExpressionAttribute(pi.Method);
+						var attr = pi.Method.GetExpressionAttribute(MappingSchema);
 						return attr != null && (attr.PreferServerSide || enforceServerSide) && !CanBeCompiled(expr);
 					}
 				default:

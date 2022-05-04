@@ -16,7 +16,7 @@
 	/// Type nullability also not included here, as it is a property of typed object.
 	/// </para>
 	/// </remarks>
-	public sealed record DatabaseType(string? Name, long? Length, int? Precision, int? Scale)
+	public sealed record DatabaseType(string? Name, int? Length, int? Precision, int? Scale)
 	{
 		public override string ToString() => $"{Name}{(Length != null || Precision != null || Scale != null ? $"({Length ?? Precision}{(Scale != null ? ", " + Scale : null)})" : null)}";
 	}

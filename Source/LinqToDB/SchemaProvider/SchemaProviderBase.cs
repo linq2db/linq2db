@@ -11,7 +11,7 @@ namespace LinqToDB.SchemaProvider
 
 	public abstract class SchemaProviderBase : ISchemaProvider
 	{
-		protected abstract DataType                            GetDataType   (string? dataType, string? columnType, long? length, int? prec, int? scale);
+		protected abstract DataType                            GetDataType   (string? dataType, string? columnType, int? length, int? prec, int? scale);
 		protected abstract List<TableInfo>                     GetTables     (DataConnection dataConnection, GetSchemaOptions options);
 		protected abstract IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables, GetSchemaOptions options);
 		protected abstract List<ColumnInfo>                    GetColumns    (DataConnection dataConnection, GetSchemaOptions options);
@@ -587,7 +587,7 @@ namespace LinqToDB.SchemaProvider
 				.ToList();
 		}
 
-		protected virtual Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, long? length, int? precision, int? scale, GetSchemaOptions options)
+		protected virtual Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, int? length, int? precision, int? scale, GetSchemaOptions options)
 		{
 			var systemType = dataTypeInfo != null ? Type.GetType(dataTypeInfo.DataType) : null;
 
@@ -597,7 +597,7 @@ namespace LinqToDB.SchemaProvider
 			return systemType;
 		}
 
-		protected virtual string? GetDbType(GetSchemaOptions options, string? columnType, DataTypeInfo? dataType, long? length, int? precision, int? scale, string? udtCatalog, string? udtSchema, string? udtName)
+		protected virtual string? GetDbType(GetSchemaOptions options, string? columnType, DataTypeInfo? dataType, int? length, int? precision, int? scale, string? udtCatalog, string? udtSchema, string? udtName)
 		{
 			var dbType = columnType;
 

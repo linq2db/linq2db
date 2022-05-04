@@ -60,9 +60,10 @@ namespace LinqToDB.Scaffold
 			var classModel       = new ClassModel(_options.CodeGeneration.ClassPerFile ? className : dataContext.Class.FileName!, className);
 			classModel.Summary   = table.Description;
 			classModel.BaseType  = baseType;
-			classModel.IsPublic  = true;
 			classModel.Namespace = _options.CodeGeneration.Namespace;
-			classModel.IsPartial = _options.DataModel.EntityClassIsPartial;
+			classModel.Modifiers = Modifiers.Public;
+			if (_options.DataModel.EntityClassIsPartial)
+				classModel.Modifiers = classModel.Modifiers | Modifiers.Partial;
 
 			// entity data model
 			var entity = new EntityModel(
@@ -74,15 +75,19 @@ namespace LinqToDB.Scaffold
 					// concrete type argument will be set later during AST generation
 					: new PropertyModel(contextPropertyName, WellKnownTypes.LinqToDB.ITableT)
 					{
-						IsPublic = true,
-						Summary  = table.Description
+						Modifiers = Modifiers.Public,
+						Summary   = table.Description
 					});
-			entity.FindExtensions = _options.DataModel.GenerateFindExtensions;
+			entity.ImplementsIEquatable = _options.DataModel.GenerateIEquatable;
+			entity.FindExtensions       = _options.DataModel.GenerateFindExtensions;
 
 			// add entity to lookup
 			_entities.Add(table.Name, new TableWithEntity(table, entity));
 
 			BuildEntityColumns(table, entity);
+
+			// call interceptor after entity model completely configured
+			_interceptors.PreprocessEntity(_languageProvider.TypeParser, entity);
 
 			// add entity to model
 			if (isNonDefaultSchema && _options.DataModel.GenerateSchemaAsType)
@@ -112,7 +117,7 @@ namespace LinqToDB.Scaffold
 
 				var columnProperty = new PropertyModel(propertyName, propertyType)
 				{
-					IsPublic        = true,
+					Modifiers       = Modifiers.Public,
 					IsDefault       = true,
 					HasSetter       = true,
 					Summary         = column.Description,
@@ -230,14 +235,14 @@ namespace LinqToDB.Scaffold
 			{
 				association.Property = new PropertyModel(fromAssociationName)
 				{
-					IsPublic  = true,
+					Modifiers = Modifiers.Public,
 					IsDefault = true,
 					HasSetter = true,
 					Summary   = summary
 				};
 				association.BackreferenceProperty = new PropertyModel(toAssocationName)
 				{
-					IsPublic  = true,
+					Modifiers = Modifiers.Public,
 					IsDefault = true,
 					HasSetter = true,
 					Summary   = backreferenceSummary
@@ -249,17 +254,13 @@ namespace LinqToDB.Scaffold
 			{
 				association.Extension = new MethodModel(fromAssociationName)
 				{
-					Public    = true,
-					Static    = true,
-					Extension = true,
+					Modifiers = Modifiers.Public | Modifiers.Static | Modifiers.Extension,
 					Summary   = summary
 				};
 
 				association.BackreferenceExtension = new MethodModel(toAssocationName)
 				{
-					Public    = true,
-					Static    = true,
-					Extension = true,
+					Modifiers = Modifiers.Public | Modifiers.Static | Modifiers.Extension,
 					Summary   = backreferenceSummary
 				};
 			}

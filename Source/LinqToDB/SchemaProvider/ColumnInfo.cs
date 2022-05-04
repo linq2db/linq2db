@@ -11,7 +11,7 @@ namespace LinqToDB.SchemaProvider
 		public int       Ordinal;
 		public string?   DataType;
 		public string?   ColumnType;
-		public long?     Length;
+		public int?      Length;
 		public int?      Precision;
 		public int?      Scale;
 		public string?   Description;

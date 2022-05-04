@@ -73,6 +73,8 @@ namespace LinqToDB.CodeModel
 				case CodeElementType.Array               : Visit((CodeNewArray            )node); break;
 				case CodeElementType.Index               : Visit((CodeIndex               )node); break;
 				case CodeElementType.Cast                : Visit((CodeTypeCast            )node); break;
+				case CodeElementType.AsOperator          : Visit((CodeAsOperator          )node); break;
+				case CodeElementType.SuppressNull        : Visit((CodeSuppressNull        )node); break;
 				case CodeElementType.ThrowStatement      : Visit((CodeThrowStatement      )node); break;
 				case CodeElementType.ThrowExpression     : Visit((CodeThrowExpression     )node); break;
 				case CodeElementType.Reference           : Visit((CodeReference           )node); break;
@@ -91,6 +93,8 @@ namespace LinqToDB.CodeModel
 		protected abstract void Visit(FieldGroup               group     );
 		protected abstract void Visit(PragmaGroup              group     );
 		protected abstract void Visit(CodeTypeCast             expression);
+		protected abstract void Visit(CodeAsOperator           expression);
+		protected abstract void Visit(CodeSuppressNull         expression);
 		protected abstract void Visit(CodeThrowStatement       statement );
 		protected abstract void Visit(CodeThrowExpression      expression);
 		protected abstract void Visit(CodeVariable             expression);
