@@ -1,19 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Data.Common;
 using System.Data.SqlTypes;
-using System.Drawing;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using LinqToDB.Common;
+using LinqToDB.Configuration;
 using LinqToDB.Data;
 using LinqToDB.Expressions;
 using LinqToDB.Mapping;
-using LinqToDB.Tools.DataProvider.SqlServer.Schemas;
+using LinqToDB.Tools.Comparers;
 
 namespace LinqToDB.CodeModel
 {
@@ -28,8 +27,9 @@ namespace LinqToDB.CodeModel
 
 		public static class System
 		{
-			private static readonly IType _func1 = Parser.Parse(typeof(Func<,>));
-			private static readonly IType _func2 = Parser.Parse(typeof(Func<,,>));
+			private static readonly IType _func1       = Parser.Parse(typeof(Func<,>));
+			private static readonly IType _func2       = Parser.Parse(typeof(Func<,,>));
+			private static readonly IType _iequatableT = Parser.Parse(typeof(IEquatable<>));
 
 			/// <summary>
 			/// <see cref="bool"/> type descriptor.
@@ -79,6 +79,38 @@ namespace LinqToDB.CodeModel
 			/// <param name="arg1">Second argument type.</param>
 			/// <returns>Type descriptor.</returns>
 			public static IType Func(IType returnType, IType arg0, IType arg1) => _func2.WithTypeArguments(arg0, arg1, returnType);
+
+			/// <summary>
+			/// Returns <see cref="IEquatable{T}"/> type descriptor.
+			/// </summary>
+			/// <param name="type">Compared type.</param>
+			/// <returns>Type descriptor.</returns>
+			public static IType IEquatable(IType type) => _iequatableT.WithTypeArguments(type);
+
+			/// <summary>
+			/// <see cref="IEquatable{T}.Equals(T)"/> method reference.
+			/// </summary>
+			public static CodeIdentifier IEquatable_Equals  { get; } = new CodeIdentifier(nameof(IEquatable<int>.Equals), true);
+
+			/// <summary>
+			/// <see cref="IEquatable{T}.Equals(T)"/> parameter name.
+			/// </summary>
+			public static CodeIdentifier IEquatable_Equals_Parameter { get; } = new CodeIdentifier("other", true);
+
+			/// <summary>
+			/// <see cref="object.GetHashCode()"/> method reference.
+			/// </summary>
+			public static CodeIdentifier Object_GetHashCode { get; } = new CodeIdentifier(nameof(global::System.Object.GetHashCode), true);
+
+			/// <summary>
+			/// <see cref="object.Equals(object)"/> method reference.
+			/// </summary>
+			public static CodeIdentifier Object_Equals      { get; } = new CodeIdentifier(nameof(global::System.Object.Equals), true);
+
+			/// <summary>
+			/// <see cref="object.Equals(object)"/> parameter name.
+			/// </summary>
+			public static CodeIdentifier Object_Equals_Parameter { get; } = new CodeIdentifier("obj", true);
 
 			public class Reflection
 			{
@@ -223,8 +255,9 @@ namespace LinqToDB.CodeModel
 			{
 				public static class Generic
 				{
-					private static readonly IType _ienumerableT = Parser.Parse(typeof(IEnumerable<>));
-					private static readonly IType _listT        = Parser.Parse(typeof(List<>));
+					private static readonly IType _ienumerableT       = Parser.Parse(typeof(IEnumerable<>));
+					private static readonly IType _listT              = Parser.Parse(typeof(List<>));
+					private static readonly IType _iequalityComparerT = Parser.Parse(typeof(IEqualityComparer<>));
 
 					/// <summary>
 					/// Returns <see cref="IEnumerable{T}"/> type descriptor.
@@ -238,13 +271,30 @@ namespace LinqToDB.CodeModel
 					/// <param name="elementType">Element type.</param>
 					/// <returns>Type descriptor.</returns>
 					public static IType List(IType elementType) => _listT.WithTypeArguments(elementType);
+
+					/// <summary>
+					/// Returns <see cref="IEqualityComparer{T}"/> type descriptor.
+					/// </summary>
+					/// <param name="type">Compared type.</param>
+					/// <returns>Type descriptor.</returns>
+					public static IType IEqualityComparer(IType type) => _iequalityComparerT.WithTypeArguments(type);
+
+					/// <summary>
+					/// <see cref="IEqualityComparer{T}.GetHashCode(T)"/> method reference.
+					/// </summary>
+					public static CodeIdentifier IEqualityComparer_GetHashCode { get; } = new CodeIdentifier(nameof(IEqualityComparer<int>.GetHashCode), true);
+
+					/// <summary>
+					/// <see cref="IEqualityComparer{T}.Equals(T, T)"/> method reference.
+					/// </summary>
+					public static CodeIdentifier IEqualityComparer_Equals { get; } = new CodeIdentifier(nameof(IEqualityComparer<int>.Equals), true);
 				}
 			}
 
 			public static class Threading
 			{
 				/// <summary>
-				/// <see cref="System.Threading.CancellationToken"/> type descriptor.
+				/// <see cref="global::System.Threading.CancellationToken"/> type descriptor.
 				/// </summary>
 				public static IType CancellationToken { get; } = Parser.Parse(typeof(CancellationToken));
 
@@ -304,12 +354,12 @@ namespace LinqToDB.CodeModel
 			public static IType DataExtensions            { get; } = Parser.Parse(typeof(DataExtensions));
 
 			/// <summary>
-			/// <see cref="LinqToDB.AsyncExtensions"/> type descriptor.
+			/// <see cref="global::LinqToDB.AsyncExtensions"/> type descriptor.
 			/// </summary>
 			public static IType AsyncExtensions           { get; } = Parser.Parse(typeof(AsyncExtensions));
 
 			/// <summary>
-			/// <see cref="MappingSchema"/> property reference.
+			/// <see cref="IDataContext.MappingSchema"/> property reference.
 			/// </summary>
 			public static CodeReference IDataContext_MappingSchema { get; } = PropertyOrField((IDataContext ctx) => ctx.MappingSchema, false);
 
@@ -403,7 +453,7 @@ namespace LinqToDB.CodeModel
 			public static class Expressions
 			{
 				/// <summary>
-				/// <see cref="LinqToDB.Expressions.MemberHelper"/> type descriptor.
+				/// <see cref="global::LinqToDB.Expressions.MemberHelper"/> type descriptor.
 				/// </summary>
 				public static IType MemberHelper { get; } = Parser.Parse(typeof(MemberHelper));
 
@@ -416,7 +466,7 @@ namespace LinqToDB.CodeModel
 			public static class Common
 			{
 				/// <summary>
-				/// <see cref="Common.Converter"/> type descriptor.
+				/// <see cref="global::LinqToDB.Common.Converter"/> type descriptor.
 				/// </summary>
 				public static IType Converter { get; } = Parser.Parse(typeof(Converter));
 
@@ -428,10 +478,10 @@ namespace LinqToDB.CodeModel
 
 			public static class Configuration
 			{
-				private static readonly IType _dataConnectionOptionsT = Parser.Parse(typeof(DataContextOptions<>));
+				private static readonly IType _dataContextOptionsT = Parser.Parse(typeof(DataContextOptions<>));
 
 				/// <summary>
-				/// <see cref="DataContextOptions{TContext}"/> type descriptor.
+				/// <see cref="DataContextOptions"/> type descriptor.
 				/// </summary>
 				public static IType DataContextOptions { get; } = Parser.Parse<DataContextOptions>();
 
@@ -440,29 +490,29 @@ namespace LinqToDB.CodeModel
 				/// </summary>
 				/// <param name="contextType">Context type.</param>
 				/// <returns>Type descriptor.</returns>
-				public static IType DataContextOptionsWithType(IType contextType) => _dataConnectionOptionsT.WithTypeArguments(contextType);
+				public static IType DataContextOptionsWithType(IType contextType) => _dataContextOptionsT.WithTypeArguments(contextType);
 			}
 
 			public static class Mapping
 			{
 				/// <summary>
-				/// <see cref="LinqToDB.Mapping.AssociationAttribute"/> type descriptor.
+				/// <see cref="global::LinqToDB.Mapping.AssociationAttribute"/> type descriptor.
 				/// </summary>
 				public static IType AssociationAttribute { get; } = Parser.Parse<AssociationAttribute>();
 				/// <summary>
-				/// <see cref="LinqToDB.Mapping.NotColumnAttribute"/> type descriptor.
+				/// <see cref="global::LinqToDB.Mapping.NotColumnAttribute"/> type descriptor.
 				/// </summary>
 				public static IType NotColumnAttribute   { get; } = Parser.Parse<NotColumnAttribute>();
 				/// <summary>
-				/// <see cref="LinqToDB.Mapping.ColumnAttribute"/> type descriptor.
+				/// <see cref="global::LinqToDB.Mapping.ColumnAttribute"/> type descriptor.
 				/// </summary>
 				public static IType ColumnAttribute      { get; } = Parser.Parse<ColumnAttribute>();
 				/// <summary>
-				/// <see cref="LinqToDB.Mapping.TableAttribute"/> type descriptor.
+				/// <see cref="global::LinqToDB.Mapping.TableAttribute"/> type descriptor.
 				/// </summary>
 				public static IType TableAttribute       { get; } = Parser.Parse<TableAttribute>();
 				/// <summary>
-				/// <see cref="LinqToDB.Mapping.MappingSchema"/> type descriptor.
+				/// <see cref="global::LinqToDB.Mapping.MappingSchema"/> type descriptor.
 				/// </summary>
 				public static IType MappingSchema        { get; } = Parser.Parse<MappingSchema>();
 
@@ -517,21 +567,21 @@ namespace LinqToDB.CodeModel
 				/// </summary>
 				public static CodeIdentifier AssociationAttribute_IsBackReference       { get; } = new CodeIdentifier(nameof(global::LinqToDB.Mapping.AssociationAttribute.IsBackReference), true);
 				/// <summary>
-				/// <see cref="Relationship"/> property reference.
+				/// <see cref="AssociationAttribute.Relationship"/> property reference.
 				/// </summary>
 				public static CodeIdentifier AssociationAttribute_Relationship          { get; } = new CodeIdentifier(nameof(global::LinqToDB.Mapping.AssociationAttribute.Relationship), true);
 #pragma warning restore CS0618 // Type or member is obsolete
 
 				/// <summary>
-				/// <see cref="InformationSchema.Schema"/> property reference.
+				/// <see cref="TableAttribute.Schema"/> property reference.
 				/// </summary>
 				public static CodeIdentifier TableAttribute_Schema                    { get; } = new CodeIdentifier(nameof(global::LinqToDB.Mapping.TableAttribute.Schema), true);
 				/// <summary>
-				/// <see cref="CompatibilitySchema.Database"/> property reference.
+				/// <see cref="TableAttribute.Database"/> property reference.
 				/// </summary>
 				public static CodeIdentifier TableAttribute_Database                  { get; } = new CodeIdentifier(nameof(global::LinqToDB.Mapping.TableAttribute.Database), true);
 				/// <summary>
-				/// <see cref="CompatibilitySchema.Server"/> property reference.
+				/// <see cref="TableAttribute.Server"/> property reference.
 				/// </summary>
 				public static CodeIdentifier TableAttribute_Server                    { get; } = new CodeIdentifier(nameof(global::LinqToDB.Mapping.TableAttribute.Server), true);
 				/// <summary>
@@ -551,7 +601,7 @@ namespace LinqToDB.CodeModel
 				/// </summary>
 				public static CodeIdentifier TableAttribute_IsTemporary               { get; } = new CodeIdentifier(nameof(global::LinqToDB.Mapping.TableAttribute.IsTemporary), true);
 				/// <summary>
-				/// <see cref="TableOptions"/> property reference.
+				/// <see cref="TableAttribute.TableOptions"/> property reference.
 				/// </summary>
 				public static CodeIdentifier TableAttribute_TableOptions              { get; } = new CodeIdentifier(nameof(global::LinqToDB.Mapping.TableAttribute.TableOptions), true);
 
@@ -564,11 +614,11 @@ namespace LinqToDB.CodeModel
 				/// </summary>
 				public static CodeIdentifier ColumnAttribute_Configuration     { get; } = new CodeIdentifier(nameof(global::LinqToDB.Mapping.ColumnAttribute.Configuration), true);
 				/// <summary>
-				/// <see cref="DataType"/> property reference.
+				/// <see cref="ColumnAttribute.DataType"/> property reference.
 				/// </summary>
 				public static CodeIdentifier ColumnAttribute_DataType          { get; } = new CodeIdentifier(nameof(global::LinqToDB.Mapping.ColumnAttribute.DataType), true);
 				/// <summary>
-				/// <see cref="DbType"/> property reference.
+				/// <see cref="ColumnAttribute.DbType"/> property reference.
 				/// </summary>
 				public static CodeIdentifier ColumnAttribute_DbType            { get; } = new CodeIdentifier(nameof(global::LinqToDB.Mapping.ColumnAttribute.DbType), true);
 				/// <summary>
@@ -640,11 +690,11 @@ namespace LinqToDB.CodeModel
 				/// </summary>
 				public static IType DataParameterArray       { get; } = new ArrayType(DataParameter, new int?[] { null }, false);
 				/// <summary>
-				/// <see cref="LinqToDB.Data.DataConnectionExtensions"/> type descriptor.
+				/// <see cref="global::LinqToDB.Data.DataConnectionExtensions"/> type descriptor.
 				/// </summary>
 				public static IType DataConnectionExtensions { get; } = Parser.Parse(typeof(DataConnectionExtensions));
 				/// <summary>
-				/// <see cref="LinqToDB.Data.DataConnection"/> type descriptor.
+				/// <see cref="global::LinqToDB.Data.DataConnection"/> type descriptor.
 				/// </summary>
 				public static IType DataConnection           { get; } = Parser.Parse<DataConnection>();
 
@@ -670,11 +720,11 @@ namespace LinqToDB.CodeModel
 				/// </summary>
 				public static CodeReference DataParameter_Direction { get; } = PropertyOrField((DataParameter dp) => dp.Direction, false);
 				/// <summary>
-				/// <see cref="DbType"/> property reference.
+				/// <see cref="DataParameter.DbType"/> property reference.
 				/// </summary>
 				public static CodeReference DataParameter_DbType    { get; } = PropertyOrField((DataParameter dp) => dp.DbType, true);
 				/// <summary>
-				/// <see cref="Size"/> property reference.
+				/// <see cref="DataParameter.Size"/> property reference.
 				/// </summary>
 				public static CodeReference DataParameter_Size      { get; } = PropertyOrField((DataParameter dp) => dp.Size, false);
 				/// <summary>
@@ -689,6 +739,21 @@ namespace LinqToDB.CodeModel
 				/// <see cref="DataParameter.Value"/> property reference.
 				/// </summary>
 				public static CodeReference DataParameter_Value     { get; } = PropertyOrField((DataParameter dp) => dp.Value, true);
+			}
+
+			public static class Tools
+			{
+				public static class Comparers
+				{
+					/// <summary>
+					/// <see cref="global::LinqToDB.Tools.Comparers.ComparerBuilder"/> type descriptor.
+					/// </summary>
+					public static IType ComparerBuilder { get; } = Parser.Parse(typeof(ComparerBuilder));
+					/// <summary>
+					/// <see cref="ComparerBuilder.GetEqualityComparer{T}(Expression{Func{T, object?}}[])"/> method reference.
+					/// </summary>
+					public static CodeIdentifier ComparerBuilder_GetEqualityComparer { get; } = new CodeIdentifier(nameof(global::LinqToDB.Tools.Comparers.ComparerBuilder.GetEqualityComparer), true);
+				}
 			}
 		}
 

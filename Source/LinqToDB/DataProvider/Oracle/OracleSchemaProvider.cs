@@ -364,6 +364,7 @@ namespace LinqToDB.DataProvider.Oracle
 				let schema    = pp.Field<string>("OWNER") // not null
 				let name      = pp.Field<string>("OBJECT_NAME") // nullable (???)
 				let direction = pp.Field<string>("IN_OUT") // nullable: IN, OUT, IN/OUT
+				let length    = Converter.ChangeTypeTo<long?>(pp["DATA_LENGTH"])
 				where IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0 || schema == _currentUser
 				select new ProcedureParameterInfo
 				{
@@ -371,7 +372,7 @@ namespace LinqToDB.DataProvider.Oracle
 					ParameterName = pp.Field<string>("ARGUMENT_NAME"), // nullable
 					DataType      = pp.Field<string>("DATA_TYPE"), // nullable, but only for sequence = 0
 					Ordinal       = Converter.ChangeTypeTo<int>  (pp["POSITION"]), // not null, 0 - return value
-					Length        = Converter.ChangeTypeTo<long?>(pp["DATA_LENGTH"]), // nullable
+					Length        = length > int.MaxValue ? null : (int?)length, // nullable
 					Precision     = Converter.ChangeTypeTo<int?> (pp["DATA_PRECISION"]), // nullable
 					Scale         = Converter.ChangeTypeTo<int?> (pp["DATA_SCALE"]), // nullable
 					IsIn          = direction.StartsWith("IN"),
@@ -381,7 +382,7 @@ namespace LinqToDB.DataProvider.Oracle
 			).ToList();
 		}
 
-		protected override string? GetDbType(GetSchemaOptions options, string? columnType, DataTypeInfo? dataType, long? length, int? precision, int? scale, string? udtCatalog, string? udtSchema, string? udtName)
+		protected override string? GetDbType(GetSchemaOptions options, string? columnType, DataTypeInfo? dataType, int? length, int? precision, int? scale, string? udtCatalog, string? udtSchema, string? udtName)
 		{
 			switch (columnType)
 			{
@@ -393,7 +394,7 @@ namespace LinqToDB.DataProvider.Oracle
 			return base.GetDbType(options, columnType, dataType, length, precision, scale, udtCatalog, udtSchema, udtName);
 		}
 
-		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, long? length, int? precision, int? scale, GetSchemaOptions options)
+		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, int? length, int? precision, int? scale, GetSchemaOptions options)
 		{
 			if (dataType == "NUMBER" && precision > 0 && (scale ?? 0) == 0)
 			{
@@ -415,7 +416,7 @@ namespace LinqToDB.DataProvider.Oracle
 			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale, options);
 		}
 
-		protected override DataType GetDataType(string? dataType, string? columnType, long? length, int? prec, int? scale)
+		protected override DataType GetDataType(string? dataType, string? columnType, int? length, int? prec, int? scale)
 		{
 			switch (dataType)
 			{

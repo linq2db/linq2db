@@ -17,7 +17,7 @@ namespace LinqToDB.DataProvider.Sybase
 			_provider = provider;
 		}
 
-		protected override DataType GetDataType(string? dataType, string? columnType, long? length, int? prec, int? scale)
+		protected override DataType GetDataType(string? dataType, string? columnType, int? length, int? prec, int? scale)
 		{
 			switch (dataType)
 			{

@@ -154,6 +154,7 @@ namespace LinqToDB.Common.Internal
 			}
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Type UnwrapNullableType(this Type type)
 			=> Nullable.GetUnderlyingType(type) ?? type;
 

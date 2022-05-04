@@ -212,6 +212,14 @@
 		/// </summary>
 		Cast,
 		/// <summary>
+		/// <c>as</c> operator expression.
+		/// </summary>
+		AsOperator,
+		/// <summary>
+		/// <c>!</c> null-forgiving operator expression.
+		/// </summary>
+		SuppressNull,
+		/// <summary>
 		/// Method call expression.
 		/// </summary>
 		CallExpression,

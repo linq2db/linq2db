@@ -67,12 +67,8 @@ namespace LinqToDB.Metadata
 
 			// generate database type attributes
 			if (metadata.DbType?.Name  != null) attr.Parameter(WellKnownTypes.LinqToDB.Mapping.ColumnAttribute_DbType, _builder.Constant(metadata.DbType.Name, true));
-			// TODO: linq2db fix required
-			// min/max check added to avoid issues with type inconsistance in schema API and metadata
-			// In different places we use long or int type for type length
-			// this will not lead to type information loss, as we are not aware of any DB that will depend on length values outside of int32 range
-			if (metadata.DbType?.Length != null && metadata.DbType.Length >= int.MinValue && metadata.DbType.Length <= int.MaxValue)
-				attr.Parameter(WellKnownTypes.LinqToDB.Mapping.ColumnAttribute_Length, _builder.Constant((int)metadata.DbType.Length.Value, true));
+			if (metadata.DbType?.Length != null)
+				attr.Parameter(WellKnownTypes.LinqToDB.Mapping.ColumnAttribute_Length, _builder.Constant(metadata.DbType.Length.Value, true));
 			if (metadata.DbType?.Precision != null) attr.Parameter(WellKnownTypes.LinqToDB.Mapping.ColumnAttribute_Precision, _builder.Constant(metadata.DbType.Precision.Value, true));
 			if (metadata.DbType?.Scale     != null) attr.Parameter(WellKnownTypes.LinqToDB.Mapping.ColumnAttribute_Scale    , _builder.Constant(metadata.DbType.Scale.Value    , true));
 
@@ -256,13 +252,6 @@ namespace LinqToDB.Metadata
 			if (metadata.Configuration         != null) attr.Parameter(WellKnownTypes.LinqToDB.Mapping.AssociationAttribute_Configuration    , _builder.Constant(metadata.Configuration        , true));
 			if (metadata.Alias                 != null) attr.Parameter(WellKnownTypes.LinqToDB.Mapping.AssociationAttribute_AliasName        , _builder.Constant(metadata.Alias                , true));
 			if (metadata.Storage               != null) attr.Parameter(WellKnownTypes.LinqToDB.Mapping.AssociationAttribute_Storage          , _builder.Constant(metadata.Storage              , true));
-			// deprecated non-functional properties, subject to removal in future
-			if (metadata.KeyName               != null) attr.Parameter(WellKnownTypes.LinqToDB.Mapping.AssociationAttribute_KeyName          , _builder.Constant(metadata.KeyName              , true));
-			if (metadata.BackReferenceName     != null) attr.Parameter(WellKnownTypes.LinqToDB.Mapping.AssociationAttribute_BackReferenceName, _builder.Constant(metadata.BackReferenceName    , true));
-			if (metadata.HasIsBackReference    != null) attr.Parameter(WellKnownTypes.LinqToDB.Mapping.AssociationAttribute_IsBackReference  , _builder.Constant(metadata.IsBackReference      , true));
-#pragma warning disable CS0618
-			if (metadata.Relationship          != null) attr.Parameter(WellKnownTypes.LinqToDB.Mapping.AssociationAttribute_Relationship     , _builder.Constant(metadata.Relationship.Value   , true));
-#pragma warning restore CS0618
 		}
 	}
 }

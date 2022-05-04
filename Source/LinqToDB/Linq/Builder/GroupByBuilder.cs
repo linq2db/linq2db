@@ -518,9 +518,7 @@ namespace LinqToDB.Linq.Builder
 					return SqlFunction.CreateCount(call.Type, SelectQuery);
 				}
 
-				var attribute =
-					Builder.MappingSchema.GetAttribute<Sql.ExpressionAttribute>(call.Method.DeclaringType!, call.Method,
-						c => c.Configuration);
+				var attribute = call.Method.GetExpressionAttribute(Builder.MappingSchema);
 
 				if (attribute != null)
 				{

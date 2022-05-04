@@ -1023,6 +1023,38 @@ WHERE
 			}
 		}
 
+		[Table]
+		public class PropertyHistory
+		{
+			[Column] public string? DocumentNo { get; set; }
 
+			[Association(QueryExpressionMethod = nameof(CustomerApplicationImpl), CanBeNull = true)]
+			public CustomerApplication? CustomerApplication { get; set; }
+
+			static Expression<Func<PropertyHistory, IDataContext, IQueryable<CustomerApplication>>> CustomerApplicationImpl() =>
+			  (e, dc) => dc.GetTable<CustomerApplication>().Where(a => a.Id == Sql.Convert(Sql.Types.Int, e.DocumentNo)).Take(1);
+		}
+
+		[Table]
+		public class CustomerApplication
+		{
+			[PrimaryKey] public int Id { get; set; }
+		}
+
+		[Test]
+		public void Issue3525ConvertInQuery([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db           = GetDataContext(context);
+			using var history      = db.CreateLocalTable<PropertyHistory>();
+			using var applications = db.CreateLocalTable<CustomerApplication>();
+
+			history.Select(i =>
+				new
+				{
+					DocNo         = i.DocumentNo,
+					ApplicationId = i.CustomerApplication!.Id,
+				})
+				.ToList();
+		}
 	}
 }

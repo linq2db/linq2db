@@ -57,27 +57,5 @@ namespace LinqToDB.Metadata
 		// options below not used by linq2db but used by T4 generator so we can use it for backward compatibility
 		// even if it doesn't enable any linq2db functionality it could have been used by users
 		// for now we plan to obsolete them in v4 and remove or restore later based on feedback
-
-		/// <summary>
-		/// Enables generation of nonfunctional <see cref="IsBackReference"/> attribute property.
-		/// </summary>
-		public bool?            HasIsBackReference    { get; set; }
-		/// <summary>
-		/// Nonfunctional flag to indicate that it is back reference association (from foreign key target to source).
-		/// </summary>
-		public bool             IsBackReference       { get; set; }
-		/// <summary>
-		/// Nonfunctional field that could contain foreign key name (or anything else).
-		/// </summary>
-		public string?          KeyName               { get; set; }
-		/// <summary>
-		/// Nonfunctional field that could contain foreign key name (or anything else).
-		/// </summary>
-		public string?          BackReferenceName     { get; set; }
-		/// <summary>
-		/// Nonfunctional field to specify type of relation.
-		/// </summary>
-		[Obsolete("This enum is not used by linq2db and will be removed in future")]
-		public Relationship?    Relationship          { get; set; }
 	}
 }

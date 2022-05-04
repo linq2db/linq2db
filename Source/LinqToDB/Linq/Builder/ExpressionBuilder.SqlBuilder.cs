@@ -317,7 +317,7 @@ namespace LinqToDB.Linq.Builder
 						if (mc.IsAssociation(MappingSchema))
 							return true;
 
-						return GetTableFunctionAttribute(mc.Method) != null;
+						return mc.Method.GetTableFunctionAttribute(MappingSchema) != null;
 					}
 
 					mc = mc.Arguments[0] as MethodCallExpression;
@@ -1085,7 +1085,7 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.MemberAccess:
 				{
 					var ma   = (MemberExpression)expression;
-					var attr = GetExpressionAttribute(ma.Member);
+					var attr = ma.Member.GetExpressionAttribute(MappingSchema);
 
 					var converted = attr?.GetExpression((this_: this, context: context!), DataContext, context!.SelectQuery, ma,
 							static (context, e, descriptor) => context.this_.ConvertToExtensionSql(context.context, e, descriptor));
@@ -1195,7 +1195,7 @@ namespace LinqToDB.Linq.Builder
 					if (expr != null)
 						return ConvertToSql(context, expr, unwrap);
 
-					var attr = GetExpressionAttribute(e.Method);
+					var attr = e.Method.GetExpressionAttribute(MappingSchema);
 
 					if (attr != null)
 					{
@@ -1515,7 +1515,7 @@ namespace LinqToDB.Linq.Builder
 					if (predicate != null)
 						return predicate;
 
-					var attr = GetExpressionAttribute(e.Method);
+					var attr = e.Method.GetExpressionAttribute(MappingSchema);
 
 					if (attr != null && attr.GetIsPredicate(expression))
 						break;
@@ -2724,7 +2724,7 @@ namespace LinqToDB.Linq.Builder
 					case ExpressionType.MemberAccess :
 						{
 							var ma   = (MemberExpression)pi;
-							var attr = context.Builder.GetExpressionAttribute(ma.Member);
+							var attr = ma.Member.GetExpressionAttribute(context.Builder.MappingSchema);
 
 							if (attr == null && !ma.Member.IsNullableValueMember())
 							{
@@ -2762,7 +2762,7 @@ namespace LinqToDB.Linq.Builder
 
 							if (e.Method.DeclaringType != typeof(Enumerable))
 							{
-								var attr = context.Builder.GetExpressionAttribute(e.Method);
+								var attr = e.Method.GetExpressionAttribute(context.Builder.MappingSchema);
 
 								if (attr == null && context.CanBeCompiled)
 									return !context.Builder.CanBeCompiled(pi);
@@ -2834,16 +2834,6 @@ namespace LinqToDB.Linq.Builder
 					return current;
 
 			return null;
-		}
-
-		Sql.ExpressionAttribute? GetExpressionAttribute(MemberInfo member)
-		{
-			return MappingSchema.GetAttribute<Sql.ExpressionAttribute>(member.ReflectedType!, member, static a => a.Configuration);
-		}
-
-		public Sql.TableFunctionAttribute? GetTableFunctionAttribute(MemberInfo member)
-		{
-			return MappingSchema.GetAttribute<Sql.TableFunctionAttribute>(member.ReflectedType!, member, static a => a.Configuration);
 		}
 
 		bool IsNullConstant(Expression expr)

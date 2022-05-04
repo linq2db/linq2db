@@ -3,6 +3,7 @@ using System.Text;
 
 namespace LinqToDB.Extensions
 {
+	using System.Reflection;
 	using Common;
 	using Mapping;
 	using SqlQuery;
@@ -83,5 +84,14 @@ namespace LinqToDB.Extensions
 				throw new LinqToDBException($"Cannot convert value of type {value?.GetType()} to SQL");
 		}
 
+		public static Sql.ExpressionAttribute? GetExpressionAttribute(this MemberInfo member, MappingSchema mappingSchema)
+		{
+			return mappingSchema.GetAttribute<Sql.ExpressionAttribute>(member.ReflectedType!, member, static a => a.Configuration);
+		}
+
+		public static Sql.TableFunctionAttribute? GetTableFunctionAttribute(this MemberInfo member, MappingSchema mappingSchema)
+		{
+			return mappingSchema.GetAttribute<Sql.TableFunctionAttribute>(member.ReflectedType!, member, static a => a.Configuration);
+		}
 	}
 }

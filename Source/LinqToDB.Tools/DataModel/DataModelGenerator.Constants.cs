@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Reflection;
 using System.Threading;
 
 namespace LinqToDB.DataModel
@@ -81,6 +82,19 @@ namespace LinqToDB.DataModel
 		/// Find extension methods region.
 		/// </summary>
 		private const string FIND_METHODS_REGION                          = "Table Extensions";
+
+		/// <summary>
+		/// Entity <see cref="IEquatable{T}"/> interface implementation.
+		/// </summary>
+		private const string ENTITY_IEQUATABLE_REGION                     = "IEquatable<T> support";
+		/// <summary>
+		/// Entity field to store comparer instance implementation for <see cref="IEquatable{T}"/> interface implementation.
+		/// </summary>
+		private const string ENTITY_IEQUATABLE_COMPARER_FIELD             = "_equalityComparer";
+		/// <summary>
+		/// Name of parameter of primary key column selector lambda.
+		/// </summary>
+		private const string ENTITY_IEQUATABLE_COMPARER_LAMBDA_PARAMETER  = "c";
 
 		/// <summary>
 		/// Assocation properties region name.

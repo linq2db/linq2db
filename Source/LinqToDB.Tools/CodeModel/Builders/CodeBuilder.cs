@@ -333,6 +333,14 @@ namespace LinqToDB.CodeModel
 		public CodeTypeCast Cast(IType type, ICodeExpression value) => new(type, value);
 
 		/// <summary>
+		/// Creates type conversion expression using <c>as</c> operator.
+		/// </summary>
+		/// <param name="type">Target type.</param>
+		/// <param name="expression">Casted value expression.</param>
+		/// <returns><c>as</c> operator expression.</returns>
+		public CodeAsOperator As(IType type, ICodeExpression expression) => new(type, expression);
+
+		/// <summary>
 		/// Creates <c>null</c> constant.
 		/// </summary>
 		/// <param name="type">Type of constant.</param>
@@ -407,5 +415,12 @@ namespace LinqToDB.CodeModel
 		/// <param name="position">Optional identifier position (e.g. position of parameter for parameter name identifier) to use with invalid name fix options.</param>
 		/// <returns>Identifier instance.</returns>
 		public CodeIdentifier Name(string name, NameFixOptions? fixOptions, int? position) => new(name, fixOptions, position);
+
+		/// <summary>
+		/// Generate null-forgiving operator (!).
+		/// </summary>
+		/// <param name="value">Expression to apply operator to.</param>
+		/// <returns>Operator expression.</returns>
+		public CodeSuppressNull SuppressNull(ICodeExpression value) => new (value);
 	}
 }

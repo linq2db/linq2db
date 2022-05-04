@@ -24,10 +24,8 @@ namespace LinqToDB.Scaffold
 				_namingServices.NormalizeIdentifier(_options.DataModel.ProcedureNameOptions,
 				name.Name))
 			{
-				Public    = true,
-				Static    = true,
+				Modifiers = Modifiers.Public | Modifiers.Static | Modifiers.Extension,
 				Summary   = func.Description,
-				Extension = true
 			};
 
 			var metadata = new FunctionMetadata()
@@ -53,6 +51,8 @@ namespace LinqToDB.Scaffold
 
 			BuildParameters(func.Parameters, funcModel.Parameters);
 
+			_interceptors.PreprocessAggregateFunction(_languageProvider.TypeParser, funcModel);
+
 			if (isNonDefaultSchema && _options.DataModel.GenerateSchemaAsType)
 				GetOrAddAdditionalSchema(dataContext, func.Name.Schema!).AggregateFunctions.Add(funcModel);
 			else
@@ -73,9 +73,8 @@ namespace LinqToDB.Scaffold
 				_namingServices.NormalizeIdentifier(_options.DataModel.ProcedureNameOptions,
 				name.Name))
 			{
-				Public  = true,
-				Static  = true,
-				Summary = func.Description
+				Modifiers = Modifiers.Public | Modifiers.Static,
+				Summary   = func.Description
 			};
 
 			var metadata = new FunctionMetadata()
@@ -109,8 +108,7 @@ namespace LinqToDB.Scaffold
 							_options.DataModel.FunctionTupleResultClassNameOptions,
 							func.Name.Name))
 					{
-						IsPublic  = true,
-						IsPartial = true
+						Modifiers = Modifiers.Public | Modifiers.Partial
 					};
 					funcModel.ReturnTuple = new TupleModel(@class)
 					{
@@ -124,7 +122,7 @@ namespace LinqToDB.Scaffold
 
 						var prop = new PropertyModel(_namingServices.NormalizeIdentifier(_options.DataModel.FunctionTupleResultPropertyNameOptions, field.Name ?? "Field"), typeMapping.CLRType.WithNullability(field.Nullable))
 						{
-							IsPublic  = true,
+							Modifiers = Modifiers.Public,
 							IsDefault = true,
 							HasSetter = true
 						};
@@ -141,6 +139,8 @@ namespace LinqToDB.Scaffold
 					funcModel.Return = WellKnownTypes.System.ObjectNullable;
 					break;
 			}
+
+			_interceptors.PreprocessScalarFunction(_languageProvider.TypeParser, funcModel);
 
 			if (isNonDefaultSchema && _options.DataModel.GenerateSchemaAsType)
 				GetOrAddAdditionalSchema(dataContext, func.Name.Schema!).ScalarFunctions.Add(funcModel);
@@ -162,8 +162,8 @@ namespace LinqToDB.Scaffold
 				_namingServices.NormalizeIdentifier(_options.DataModel.ProcedureNameOptions,
 				name.Name))
 			{
-				Public  = true,
-				Summary = func.Description
+				Modifiers = Modifiers.Public,
+				Summary   = func.Description
 			};
 
 			var metadata  = new TableFunctionMetadata() { Name = name };
@@ -180,6 +180,8 @@ namespace LinqToDB.Scaffold
 
 			if (func.Result != null)
 				funcModel.Result = PrepareResultSetModel(func.Name, func.Result);
+
+			_interceptors.PreprocessTableFunction(_languageProvider.TypeParser, funcModel);
 
 			if (isNonDefaultSchema && _options.DataModel.GenerateSchemaAsType)
 				GetOrAddAdditionalSchema(dataContext, func.Name.Schema!).TableFunctions.Add(funcModel);
@@ -201,10 +203,8 @@ namespace LinqToDB.Scaffold
 				_namingServices.NormalizeIdentifier(_options.DataModel.ProcedureNameOptions,
 				name.Name))
 			{
-				Public    = true,
-				Static    = true,
+				Modifiers = Modifiers.Public | Modifiers.Static | Modifiers.Extension,
 				Summary   = func.Description,
-				Extension = true
 			};
 
 			var funcModel = new StoredProcedureModel(name, method)
@@ -264,10 +264,10 @@ namespace LinqToDB.Scaffold
 							_options.DataModel.AsyncProcedureResultClassNameOptions,
 							func.Name.Name))
 					{
-						IsPublic  = true
+						Modifiers = Modifiers.Public
 					}, new PropertyModel("Result")
 					{
-						IsPublic  = true,
+						Modifiers = Modifiers.Public,
 						IsDefault = true,
 						HasSetter = true
 					});
@@ -278,7 +278,7 @@ namespace LinqToDB.Scaffold
 						parameter,
 						new PropertyModel(_namingServices.NormalizeIdentifier(_options.DataModel.AsyncProcedureResultClassPropertiesNameOptions, parameter.Parameter.Name), parameter.Parameter.Type)
 						{
-							IsPublic  = true,
+							Modifiers = Modifiers.Public,
 							IsDefault = true,
 							HasSetter = true
 						});
@@ -288,6 +288,8 @@ namespace LinqToDB.Scaffold
 				funcModel.Results.Clear();
 				funcModel.Results.Add(new FunctionResult(resultModel?.CustomTable, resultModel?.Entity, asyncResult));
 			}
+
+			_interceptors.PreprocessStoredProcedure(_languageProvider.TypeParser, funcModel);
 
 			if (isNonDefaultSchema && _options.DataModel.GenerateSchemaAsType)
 				GetOrAddAdditionalSchema(dataContext, func.Name.Schema!).StoredProcedures.Add(funcModel);
@@ -361,15 +363,12 @@ namespace LinqToDB.Scaffold
 
 				var wrapperClass = new ClassModel(_options.CodeGeneration.ClassPerFile ? schemaClassName : dataContext.Class.FileName!, schemaClassName)
 				{
-					IsPublic  = true,
-					IsPartial = true,
-					IsStatic  = true,
+					Modifiers = Modifiers.Public | Modifiers.Partial | Modifiers.Static,
 					Namespace = _options.CodeGeneration.Namespace
 				};
 				var contextClass = new ClassModel("DataContext")
 				{
-					IsPublic  = true,
-					IsPartial = true
+					Modifiers = Modifiers.Public | Modifiers.Partial
 				};
 				schemaModel = new AdditionalSchemaModel(contextPropertyName, wrapperClass, contextClass);
 				dataContext.AdditionalSchemas.Add(schemaName, schemaModel);
@@ -431,8 +430,7 @@ namespace LinqToDB.Scaffold
 					_options.DataModel.ProcedureResultClassNameOptions,
 					funcName.Name))
 			{
-				IsPublic  = true,
-				IsPartial = true
+				Modifiers = Modifiers.Partial | Modifiers.Public
 			};
 			var model = new ResultTableModel(resultClass);
 
@@ -452,7 +450,7 @@ namespace LinqToDB.Scaffold
 					_namingServices.NormalizeIdentifier(_options.DataModel.ProcedureResultColumnPropertyNameOptions, col.Name ?? "Column"),
 					typeMapping.CLRType.WithNullability(col.Nullable))
 				{
-					IsPublic  = true,
+					Modifiers = Modifiers.Public,
 					HasSetter = true,
 					IsDefault = true,
 				};

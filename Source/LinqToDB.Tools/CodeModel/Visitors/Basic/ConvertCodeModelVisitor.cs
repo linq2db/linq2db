@@ -66,6 +66,8 @@ namespace LinqToDB.CodeModel
 				case CodeElementType.Array               : return Visit((CodeNewArray            )node);
 				case CodeElementType.Index               : return Visit((CodeIndex               )node);
 				case CodeElementType.Cast                : return Visit((CodeTypeCast            )node);
+				case CodeElementType.AsOperator          : return Visit((CodeAsOperator          )node);
+				case CodeElementType.SuppressNull        : return Visit((CodeSuppressNull        )node);
 				case CodeElementType.ThrowStatement      : return Visit((CodeThrowStatement      )node);
 				case CodeElementType.ThrowExpression     : return Visit((CodeThrowExpression     )node);
 				case CodeElementType.Reference           : return Visit((CodeReference           )node);
@@ -150,6 +152,26 @@ namespace LinqToDB.CodeModel
 
 			if (value != expression.Value)
 				return new CodeTypeCast(expression.Type, value);
+
+			return expression;
+		}
+
+		protected virtual ICodeElement Visit(CodeAsOperator expression)
+		{
+			var value = (ICodeExpression)Visit(expression.Value);
+
+			if (value != expression.Value)
+				return new CodeAsOperator(expression.Type, value);
+
+			return expression;
+		}
+
+		protected virtual ICodeElement Visit(CodeSuppressNull expression)
+		{
+			var value = (ICodeExpression)Visit(expression.Value);
+
+			if (value != expression.Value)
+				return new CodeSuppressNull(value);
 
 			return expression;
 		}

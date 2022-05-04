@@ -34,6 +34,9 @@
 		<GenerateNeutralResourcesLanguageAttribute>false</GenerateNeutralResourcesLanguageAttribute>
 
 		<ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+
+		<!--required for SkipLocalInit-->
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	</PropertyGroup>
 
 	<PropertyGroup Label="Code Analysis Setup">

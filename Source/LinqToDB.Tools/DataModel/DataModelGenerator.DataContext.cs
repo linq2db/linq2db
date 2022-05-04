@@ -28,7 +28,7 @@ namespace LinqToDB.DataModel
 			// first we generate empty constructors and then add body to all of them as they will have same code for body
 
 			if (_dataModel.DataContext.HasDefaultConstructor)
-				ctors.Add(constructors.New().Public().Body());
+				ctors.Add(constructors.New().SetModifiers(Modifiers.Public).Body());
 			if (_dataModel.DataContext.HasConfigurationConstructor)
 			{
 				var configurationParam = AST.Parameter(
@@ -39,7 +39,7 @@ namespace LinqToDB.DataModel
 				ctors.Add(constructors
 					.New()
 						.Parameter(configurationParam)
-						.Public()
+						.SetModifiers(Modifiers.Public)
 						.Base(configurationParam.Reference)
 						.Body());
 			}
@@ -53,7 +53,7 @@ namespace LinqToDB.DataModel
 				ctors.Add(constructors
 					.New()
 						.Parameter(optionsParam)
-						.Public()
+						.SetModifiers(Modifiers.Public)
 						.Base(optionsParam.Reference)
 						.Body());
 			}
@@ -67,7 +67,7 @@ namespace LinqToDB.DataModel
 				ctors.Add(constructors
 					.New()
 						.Parameter(typedOptionsParam)
-						.Public()
+						.SetModifiers(Modifiers.Public)
 						.Base(typedOptionsParam.Reference)
 						.Body());
 			}
@@ -77,7 +77,7 @@ namespace LinqToDB.DataModel
 			var initDataContext = contextBuilder
 				.Methods(true)
 					.New(AST.Name(CONTEXT_INIT_METHOD))
-						.Partial();
+						.SetModifiers(Modifiers.Partial);
 
 			foreach (var body in ctors)
 			{
