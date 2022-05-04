@@ -388,9 +388,9 @@ namespace LinqToDB.Data
 				TransactionAsync = AsyncFactory.Create(localTransaction);
 			}
 
-			DataProvider.InitContext(this);
-
 			Options = options;
+
+			DataProvider.InitContext(this);
 		}
 
 		#endregion
