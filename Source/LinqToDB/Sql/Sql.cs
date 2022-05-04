@@ -165,6 +165,17 @@ namespace LinqToDB
 			return obj;
 		}
 
+		[Expression("NULLIF({0}, {1})", PreferServerSide = true)]
+		public static T? NullIf<T>(T? value, T compareTo) where T : class
+		{
+			return value != null && EqualityComparer<T>.Default.Equals(value, compareTo) ? null : value;
+		}
+
+		[Expression("NULLIF({0}, {1})", PreferServerSide = true)]
+		public static T? NullIf<T>(T? value, T compareTo) where T : struct
+		{
+			return value.HasValue && EqualityComparer<T>.Default.Equals(value.Value, compareTo) ? null : value;
+		}
 		#endregion
 
 		#region NoConvert
