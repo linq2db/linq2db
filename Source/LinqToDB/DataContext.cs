@@ -96,37 +96,50 @@ namespace LinqToDB
 
 			extension ??= new DbDataContextOptionsExtension();
 
-			_prebuiltOptions = options;
-
 			var dataProvider = extension.DataProvider;
+			if (dataProvider == null)
 			{
-				if (dataProvider == null)
+				if (extension.ProviderName != null && extension.ConnectionString != null)
 				{
-					if (extension.ProviderName != null && extension.ConnectionString != null)
-					{
-						dataProvider =
-							DataConnection.GetDataProvider(extension.ProviderName, extension.ConnectionString)
-							?? throw new LinqToDBException($"DataProvider '{extension.ProviderName}' not found.");
-					}
-					else if (extension.ConfigurationString != null)
-						dataProvider = DataConnection.GetDataProvider(extension.ConfigurationString);
+					dataProvider =
+						DataConnection.GetDataProvider(extension.ProviderName, extension.ConnectionString)
+						?? throw new LinqToDBException($"DataProvider '{extension.ProviderName}' not found.");
 				}
-
-				if (dataProvider == null)
-					throw new LinqToDBException($"DataProvider not specified.");
-
-				_prebuiltOptions = _prebuiltOptions.WithExtension(extension.WithDataProvider(dataProvider));
+				else if (extension.ConfigurationString != null)
+					dataProvider = DataConnection.GetDataProvider(extension.ConfigurationString);
 			}
 
-			_prebuiltDbExtension   = _prebuiltOptions.GetExtension<DbDataContextOptionsExtension>();
-			_prebuiltCoreExtension = _prebuiltOptions.GetExtension<CoreDataContextOptionsExtension>();
+			if (dataProvider == null)
+				throw new LinqToDBException($"DataProvider not specified.");
 
-			var linqExtension = _prebuiltOptions.FindExtension<LinqOptionsExtension>();
+			extension = extension
+				.WithMappingSchema(dataProvider.MappingSchema)
+				.WithDataProvider(dataProvider);
+
+			options = options.WithExtension(extension);
+
+			_prebuiltDbExtension = options.GetExtension<DbDataContextOptionsExtension>();
+
+			var coreExtension = options.FindExtension<CoreDataContextOptionsExtension>();
+			if (coreExtension != null)
+			{
+				_prebuiltCoreExtension = coreExtension;
+			}
+			else
+			{
+				coreExtension          = new CoreDataContextOptionsExtension();
+				options                = options.WithExtension(coreExtension);
+				_prebuiltCoreExtension = coreExtension;
+			}
+
+			var linqExtension = options.FindExtension<LinqOptionsExtension>();
 			if (linqExtension == null)
 			{
-				linqExtension    = Common.Configuration.Linq.Options;
-				_prebuiltOptions = _prebuiltOptions.WithExtension(linqExtension);
+				linqExtension = Common.Configuration.Linq.Options;
+				options       = options.WithExtension(linqExtension);
 			}
+
+			_prebuiltOptions = options;
 
 			ContextID   = dataProvider.ID;
 			ContextName = dataProvider.Name;

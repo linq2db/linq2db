@@ -247,7 +247,7 @@ namespace LinqToDB.Data
 			DbConnection?  localConnection  = null;
 			DbTransaction? localTransaction = null;
 
-			if (dbExtension == null || dbExtension.ConfigurationString != null && dbExtension.DataProvider == null)
+			if (dbExtension == null || dbExtension.ConfigurationString != null && (dbExtension.DbConnection == null))
 			{
 				ConfigurationString = dbExtension?.ConfigurationString ?? DefaultConfiguration;
 				if (ConfigurationString == null)
