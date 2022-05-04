@@ -1004,7 +1004,10 @@ namespace LinqToDB.Linq.Builder
 						e.Type.IsEnum && Enum.GetUnderlyingType(e.Type) == t)
 						return o;
 
-					return new SqlFunction(e.Type, "$Convert$", SqlDataType.GetDataType(e.Type), s, o);
+					return new SqlFunction(e.Type, "$Convert$", SqlDataType.GetDataType(e.Type), s, o)
+					{
+						CanBeNull = o.CanBeNull
+					};
 				}
 
 				case ExpressionType.Conditional:
