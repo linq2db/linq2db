@@ -67,7 +67,7 @@ namespace LinqToDB.SchemaProvider
 		/// <summary>
 		/// Gets column type length.
 		/// </summary>
-		public long?       Length               { get; set; }
+		public int?        Length               { get; set; }
 		/// <summary>
 		/// Gets column type precision.
 		/// </summary>

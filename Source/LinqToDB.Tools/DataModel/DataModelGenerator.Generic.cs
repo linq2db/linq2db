@@ -81,15 +81,21 @@ namespace LinqToDB.DataModel
 		{
 			var @class = classes.New(AST.Name(model.Name));
 
-			if (model.IsPublic ) @class.Public ();
-			if (model.IsStatic ) @class.Static ();
-			if (model.IsPartial) @class.Partial();
+			@class.SetModifiers(model.Modifiers);
 
 			if (model.BaseType != null)
 				@class.Inherits(model.BaseType);
 
+			if (model.Interfaces != null)
+				foreach (var iface in model.Interfaces)
+					@class.Implements(iface);
+
 			if (model.Summary != null)
 				@class.XmlComment().Summary(model.Summary);
+
+			if (model.CustomAttributes != null)
+				foreach (var attr in model.CustomAttributes)
+					@class.AddAttribute(attr);
 
 			return @class;
 		}
@@ -104,8 +110,7 @@ namespace LinqToDB.DataModel
 		{
 			var propertyBuilder = propertyGroup.New(AST.Name(property.Name, null, propertyGroup.Members.Count + 1), property.Type!);
 
-			if (property.IsPublic)
-				propertyBuilder.Public();
+			propertyBuilder.SetModifiers(property.Modifiers);
 
 			if (property.IsDefault)
 				propertyBuilder.Default(property.HasSetter);
@@ -116,6 +121,10 @@ namespace LinqToDB.DataModel
 
 			if (property.TrailingComment != null)
 				propertyBuilder.TrailingComment(property.TrailingComment);
+
+			if (property.CustomAttributes != null)
+				foreach (var attr in property.CustomAttributes)
+					propertyBuilder.AddAttribute(attr);
 
 			return propertyBuilder;
 		}
@@ -132,14 +141,17 @@ namespace LinqToDB.DataModel
 		{
 			var builder = methods.New(AST.Name(async ? model.Name + ASYNC_SUFFIX : model.Name));
 
-			if (model.Public   ) builder.Public   ();
-			if (model.Static   ) builder.Static   ();
-			if (model.Partial  ) builder.Partial  ();
-			if (model.Extension) builder.Extension();
-			if (withAwait)       builder.Async    ();
+			if (withAwait)
+				builder.SetModifiers(model.Modifiers | Modifiers.Async);
+			else
+				builder.SetModifiers(model.Modifiers);
 
 			if (model.Summary != null)
 				builder.XmlComment().Summary(model.Summary);
+
+			if (model.CustomAttributes != null)
+				foreach (var attr in model.CustomAttributes)
+					builder.AddAttribute(attr);
 
 			return builder;
 		}

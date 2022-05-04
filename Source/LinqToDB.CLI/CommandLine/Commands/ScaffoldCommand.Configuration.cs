@@ -90,6 +90,7 @@ namespace LinqToDB.CommandLine
 			if (options.Remove(DataModel.ReturnListFromProcedures      , out value)) settings.GenerateProcedureResultAsList      = (bool)value!;
 			if (options.Remove(DataModel.DbTypeInProcedures            , out value)) settings.GenerateProcedureParameterDbType   = (bool)value!;
 			if (options.Remove(DataModel.SchemasAsTypes                , out value)) settings.GenerateSchemaAsType               = (bool)value!;
+			if (options.Remove(DataModel.GenerateIEquatable            , out value)) settings.GenerateIEquatable                 = (bool)value!;
 			if (options.Remove(DataModel.FindParametersInOrdinalOrder  , out value)) settings.OrderFindParametersByColumnOrdinal = (bool)value!;
 			if (options.Remove(DataModel.EntityClassIsPartial          , out value)) settings.EntityClassIsPartial               = (bool)value!;
 

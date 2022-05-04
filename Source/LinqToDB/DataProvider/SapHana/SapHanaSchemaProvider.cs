@@ -425,7 +425,7 @@ namespace LinqToDB.DataProvider.SapHana
 			return columnName.IndexOfAny(invalidCharacters) > -1 ? string.Empty : columnName;
 		}
 
-		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, long? length, int? precision, int? scale, GetSchemaOptions options)
+		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, int? length, int? precision, int? scale, GetSchemaOptions options)
 		{
 			switch (dataType)
 			{
@@ -446,7 +446,7 @@ namespace LinqToDB.DataProvider.SapHana
 			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale, options);
 		}
 
-		protected override DataType GetDataType(string? dataType, string? columnType, long? length, int? prec, int? scale)
+		protected override DataType GetDataType(string? dataType, string? columnType, int? length, int? prec, int? scale)
 		{
 			switch (dataType)
 			{

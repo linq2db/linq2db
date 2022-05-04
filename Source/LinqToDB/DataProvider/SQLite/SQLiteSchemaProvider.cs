@@ -101,6 +101,7 @@ namespace LinqToDB.DataProvider.SQLite
 				let tschema  = c.Field<string>("TABLE_SCHEMA")
 				let schema   = tschema == "sqlite_default_schema" ? "" : tschema
 				let dataType = c.Field<string>("DATA_TYPE")!.Trim()
+				let length   = Converter.ChangeTypeTo<long>(c["CHARACTER_MAXIMUM_LENGTH"])
 				select new ColumnInfo
 				{
 					TableID      = c.Field<string>("TABLE_CATALOG") + "." + schema + "." + c.Field<string>("TABLE_NAME"),
@@ -108,7 +109,7 @@ namespace LinqToDB.DataProvider.SQLite
 					IsNullable   = c.Field<bool>  ("IS_NULLABLE"),
 					Ordinal      = Converter.ChangeTypeTo<int> (c["ORDINAL_POSITION"]),
 					DataType     = dataType,
-					Length       = Converter.ChangeTypeTo<long>(c["CHARACTER_MAXIMUM_LENGTH"]),
+					Length       = length > int.MaxValue ? null : (int?)length,
 					Precision    = Converter.ChangeTypeTo<int> (c["NUMERIC_PRECISION"]),
 					Scale        = Converter.ChangeTypeTo<int> (c["NUMERIC_SCALE"]),
 					IsIdentity   = c.Field<bool>  ("AUTOINCREMENT"),
@@ -157,7 +158,7 @@ namespace LinqToDB.DataProvider.SQLite
 			return dbConnection.Connection.DataSource;
 		}
 
-		protected override DataType GetDataType(string? dataType, string? columnType, long? length, int? prec, int? scale)
+		protected override DataType GetDataType(string? dataType, string? columnType, int? length, int? prec, int? scale)
 		{
 			// note that sqlite doesn't have types (it has facets) so type name will contain anything
 			// user specified in create table statement
@@ -217,7 +218,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 		protected override string? GetProviderSpecificTypeNamespace() => null;
 
-		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, long? length, int? precision, int? scale, GetSchemaOptions options)
+		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, int? length, int? precision, int? scale, GetSchemaOptions options)
 		{
 			return dataType switch
 			{

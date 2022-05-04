@@ -25,38 +25,12 @@ namespace LinqToDB.CodeModel
 		public TMethod Method { get; }
 
 		/// <summary>
-		/// Mark method as public.
+		/// Set modifiers to method. Replaces old value.
 		/// </summary>
 		/// <returns>Builder instance.</returns>
-		public TBuilder Public()
+		public TBuilder SetModifiers(Modifiers modifiers)
 		{
-			if (Method.ElementType == CodeElementType.Lambda)
-				throw new InvalidOperationException();
-
-			Method.Attributes |= Modifiers.Public;
-			return (TBuilder)this;
-		}
-
-		/// <summary>
-		/// Mark method as async.
-		/// </summary>
-		/// <returns>Builder instance.</returns>
-		public TBuilder Async()
-		{
-			Method.Attributes |= Modifiers.Async;
-			return (TBuilder)this;
-		}
-
-		/// <summary>
-		/// Mark method as partial.
-		/// </summary>
-		/// <returns>Builder instance.</returns>
-		public TBuilder Partial()
-		{
-			if (Method.ElementType == CodeElementType.Lambda)
-				throw new InvalidOperationException();
-
-			Method.Attributes |= Modifiers.Partial;
+			Method.Attributes = modifiers;
 			return (TBuilder)this;
 		}
 

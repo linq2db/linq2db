@@ -11,26 +11,6 @@
 		}
 
 		/// <summary>
-		/// Mark class static.
-		/// </summary>
-		/// <returns>Class builder instance.</returns>
-		public ClassBuilder Static()
-		{
-			Type.Attributes |= Modifiers.Static;
-			return this;
-		}
-
-		/// <summary>
-		/// Mark class partial.
-		/// </summary>
-		/// <returns>Class builder instance.</returns>
-		public ClassBuilder Partial()
-		{
-			Type.Attributes |= Modifiers.Partial;
-			return this;
-		}
-
-		/// <summary>
 		/// Add base type to inherit.
 		/// </summary>
 		/// <param name="baseClass">Base class descriptor.</param>

@@ -309,7 +309,8 @@ namespace LinqToDB.CodeModel
 			}
 
 			// save new name back to identifier instance
-			name.Name = identifierName;
+			if (name.Name != identifierName)
+				name.Name = identifierName;
 
 			// register new name in scope
 			if (add)

@@ -81,6 +81,7 @@ namespace LinqToDB.Scaffold
 			options.DataModel.GenerateProcedureSync                          = true;
 			options.DataModel.GenerateProcedureAsync                         = false;
 			options.DataModel.GenerateSchemaAsType                           = false;
+			options.DataModel.GenerateIEquatable                             = false;
 			options.DataModel.GenerateFindExtensions                         = FindTypes.FindByPkOnTable;
 			options.DataModel.OrderFindParametersByColumnOrdinal             = false;
 			options.DataModel.EntityColumnPropertyNameOptions                = new() { Casing = NameCasing.T4CompatNonPluralized, Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None                 , MaxUpperCaseWordLength        = 2    };

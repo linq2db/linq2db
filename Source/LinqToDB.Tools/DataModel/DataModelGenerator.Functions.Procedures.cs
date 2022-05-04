@@ -577,12 +577,9 @@ namespace LinqToDB.DataModel
 					ctorInitializers[initializersIdx] = AST.Assign(WellKnownTypes.LinqToDB.Data.DataParameter_DbType, AST.Constant(dbType.Name!, true));
 					initializersIdx++;
 				}
-				// TODO: linq2db refactoring required
-				// min/max check added to avoid issues with type inconsistance in schema API and metadata
-				// (in one place we use long, in another int for type size)
-				if (dbType.Length != null && dbType.Length >= int.MinValue && dbType.Length <= int.MaxValue)
+				if (dbType.Length != null)
 				{
-					ctorInitializers[initializersIdx] = AST.Assign(WellKnownTypes.LinqToDB.Data.DataParameter_Size, AST.Constant((int)dbType.Length.Value, true));
+					ctorInitializers[initializersIdx] = AST.Assign(WellKnownTypes.LinqToDB.Data.DataParameter_Size, AST.Constant(dbType.Length.Value, true));
 					initializersIdx++;
 				}
 				if (dbType.Precision != null)

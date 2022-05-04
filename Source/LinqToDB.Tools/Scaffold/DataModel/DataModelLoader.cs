@@ -150,7 +150,10 @@ Changes to this file may cause incorrect behavior and will be lost if the code i
 
 					var association = BuildAssociations(fk, defaultSchemas);
 					if (association != null)
+					{
+						_interceptors.PreprocessAssociation(_languageProvider.TypeParser, association);
 						dataContext.Associations.Add(association);
+					}
 				}
 			}
 

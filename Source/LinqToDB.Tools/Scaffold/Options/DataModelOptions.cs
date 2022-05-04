@@ -484,6 +484,15 @@ namespace LinqToDB.Scaffold
 		public bool GenerateSchemaAsType { get; set; } = true;
 
 		/// <summary>
+		/// Enables generation of <see cref="IEquatable{T}"/> interface implementation on entity classes with primary key.
+		/// <list type="bullet">
+		/// <item>Default: <c>false</c></item>
+		/// <item>In T4 compability mode: <c>false</c></item>
+		/// </list>
+		/// </summary>
+		public bool GenerateIEquatable { get; set; } 
+
+		/// <summary>
 		/// Provides base names for schema wrapper class and main data context property for additional schemas (when <see cref="GenerateSchemaAsType"/> option set).
 		/// <list type="bullet">
 		/// <item>Default: empty</item>

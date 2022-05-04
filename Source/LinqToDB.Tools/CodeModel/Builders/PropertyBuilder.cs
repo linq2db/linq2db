@@ -16,22 +16,12 @@
 		public CodeProperty Property { get; }
 
 		/// <summary>
-		/// Mark property public.
+		/// Set modifiers to property. Replaces old value.
 		/// </summary>
 		/// <returns>Builder instance.</returns>
-		public PropertyBuilder Public()
+		public PropertyBuilder SetModifiers(Modifiers modifiers)
 		{
-			Property.Attributes |= Modifiers.Public;
-			return this;
-		}
-
-		/// <summary>
-		/// Mark property static.
-		/// </summary>
-		/// <returns>Builder instance.</returns>
-		public PropertyBuilder Static()
-		{
-			Property.Attributes |= Modifiers.Static;
+			Property.Attributes = modifiers;
 			return this;
 		}
 
@@ -81,6 +71,17 @@
 			var attr = new CodeAttribute(type);
 			Property.AddAttribute(attr);
 			return new AttributeBuilder(attr);
+		}
+
+		/// <summary>
+		/// Add custom attribute to property.
+		/// </summary>
+		/// <param name="attribute">Custom attribute.</param>
+		/// <returns>Builder instance.</returns>
+		public PropertyBuilder AddAttribute(CodeAttribute attribute)
+		{
+			Property.AddAttribute(attribute);
+			return this;
 		}
 
 		/// <summary>

@@ -65,7 +65,7 @@ namespace LinqToDB.DataModel
 				|| !_entityBuilders.TryGetValue(association.Target, out var targetBuilder))
 			{
 				// data model misconfiguration (e.g. entity was removed from model, but not its associations)
-				throw new InvalidOperationException($"Association {association.SourceMetadata.KeyName} connects tables, missing from current model.");
+				throw new InvalidOperationException("Discovered association that connects tables, missing from current model.");
 			}
 
 			// build metadata keys for association
