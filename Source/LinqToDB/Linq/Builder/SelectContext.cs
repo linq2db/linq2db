@@ -23,7 +23,7 @@ namespace LinqToDB.Linq.Builder
 		#region Init
 
 #if DEBUG
-		public string _sqlQueryText => SelectQuery == null ? "" : SelectQuery.SqlText;
+		public string SqlQueryText  => SelectQuery == null ? "" : SelectQuery.SqlText;
 		public string Path          => this.GetPath();
 		public int    ContextId     { get; }
 
@@ -97,7 +97,7 @@ namespace LinqToDB.Linq.Builder
 		#region BuildExpression
 
 		public virtual Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
-		{
+				{
 			throw new NotImplementedException();
 		}
 
@@ -107,8 +107,8 @@ namespace LinqToDB.Linq.Builder
 
 		public virtual SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 		{
-			throw new NotImplementedException();
-		}
+					throw new NotImplementedException();
+				}
 
 		#endregion
 
@@ -117,7 +117,7 @@ namespace LinqToDB.Linq.Builder
 		public virtual SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 		{
 			throw new NotImplementedException();
-		}
+				}
 
 		#endregion
 
@@ -134,10 +134,10 @@ namespace LinqToDB.Linq.Builder
 						// updating type for Inheritance mapping
 						//
 						return bodyRef.UpdateType(path.Type);
-					}
+						}
 
 					return path;
-				}
+					}
 
 				if (path.Type != Body.Type && flags.HasFlag(ProjectFlags.Expression))
 					return new SqlEagerLoadExpression(this, path, GetEagerLoadExpression(path));
@@ -149,24 +149,24 @@ namespace LinqToDB.Linq.Builder
 				result = Builder.Project(this, path, null, 0, flags, Body);
 
 				if (!ReferenceEquals(result, Body))
-				{
+								{
 					if (flags.HasFlag(ProjectFlags.Root) &&
 					    !(result is ContextRefExpression || result is MemberExpression ||
 					      result is MethodCallExpression))
-					{
+									{
 						return path;
+							}
 					}
 				}
-			}
 
 			return result;
-		}
+							}
 
 		public virtual Expression GetEagerLoadExpression(Expression path)
-		{
+												{
 			return Builder.GetSequenceExpression(this);
-		}
-		
+							}
+
 		#region IsExpression
 
 		public virtual IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)

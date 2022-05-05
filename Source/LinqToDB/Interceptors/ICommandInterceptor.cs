@@ -88,5 +88,15 @@ namespace LinqToDB.Interceptors
 		/// When event returns <see cref="Option{T}.None"/>, Linq To DB will execute command, otherwise it will use returned value as execution result.
 		/// </returns>
 		Task<Option<DbDataReader>> ExecuteReaderAsync  (CommandEventData eventData, DbCommand command, CommandBehavior commandBehavior, Option<DbDataReader> result, CancellationToken cancellationToken);
+
+		// no async version for now
+		/// <summary>
+		/// Event, triggered after command execution using <see cref="DbCommand.ExecuteReader(CommandBehavior)"/> or <see cref="DbCommand.ExecuteReaderAsync(CommandBehavior, CancellationToken)"/> methods.
+		/// </summary>
+		/// <param name="eventData">Additional data for event.</param>
+		/// <param name="command">Executed command.</param>
+		/// <param name="commandBehavior">Behavior, used for command execution.</param>
+		/// <param name="dataReader"><see cref="DbDataReader"/> instance, returned by <see cref="DbCommand.ExecuteReader(CommandBehavior)"/> or <see cref="DbCommand.ExecuteReaderAsync(CommandBehavior, CancellationToken)"/> methods.</param>
+		void AfterExecuteReader(CommandEventData eventData, DbCommand command, CommandBehavior commandBehavior, DbDataReader dataReader);
 	}
 }

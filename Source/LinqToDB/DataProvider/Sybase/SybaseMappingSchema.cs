@@ -1,24 +1,19 @@
 ﻿using System;
+using System.Data.Linq;
+using System.Globalization;
 using System.Text;
-
 
 namespace LinqToDB.DataProvider.Sybase
 {
 	using Common;
 	using Mapping;
 	using SqlQuery;
-	using System.Data.Linq;
-	using System.Globalization;
 
-	public class SybaseMappingSchema : MappingSchema
+	sealed class SybaseMappingSchema : LockedMappingSchema
 	{
 		private const string TIME3_FORMAT= "'{0:hh\\:mm\\:ss\\.fff}'";
 
-		public SybaseMappingSchema() : this(ProviderName.Sybase)
-		{
-		}
-
-		protected SybaseMappingSchema(string configuration) : base(configuration)
+		SybaseMappingSchema() : base(ProviderName.Sybase)
 		{
 			SetValueToSqlConverter(typeof(string)  , (sb, dt, v) => ConvertStringToSql(sb, v.ToString()!));
 			SetValueToSqlConverter(typeof(char)    , (sb, dt, v) => ConvertCharToSql  (sb, (char)v));
@@ -31,15 +26,17 @@ namespace LinqToDB.DataProvider.Sybase
 
 		static void ConvertBinaryToSql(StringBuilder stringBuilder, byte[] value)
 		{
-			stringBuilder.Append("0x");
-
-			stringBuilder.AppendByteArrayAsHexViaLookup32(value);
+			stringBuilder
+				.Append("0x")
+				.AppendByteArrayAsHexViaLookup32(value);
 		}
 
 		static void ConvertTimeSpanToSql(StringBuilder stringBuilder, SqlDataType sqlDataType, TimeSpan value)
 		{
 			if (sqlDataType.Type.DataType == DataType.Int64)
+			{
 				stringBuilder.Append(value.Ticks);
+			}
 			else
 			{
 				// to match logic for values as parameters
@@ -51,6 +48,7 @@ namespace LinqToDB.DataProvider.Sybase
 		}
 
 		static readonly Action<StringBuilder, int> AppendConversionAction = AppendConversion;
+
 		static void AppendConversion(StringBuilder stringBuilder, int value)
 		{
 			stringBuilder
@@ -72,18 +70,16 @@ namespace LinqToDB.DataProvider.Sybase
 
 		internal static readonly SybaseMappingSchema Instance = new ();
 
-		public class NativeMappingSchema : MappingSchema
+		public sealed class NativeMappingSchema : LockedMappingSchema
 		{
-			public NativeMappingSchema()
-				: base(ProviderName.Sybase, Instance)
+			public NativeMappingSchema() : base(ProviderName.Sybase, Instance)
 			{
 			}
 		}
 
-		public class ManagedMappingSchema : MappingSchema
+		public sealed class ManagedMappingSchema : LockedMappingSchema
 		{
-			public ManagedMappingSchema()
-				: base(ProviderName.SybaseManaged, Instance)
+			public ManagedMappingSchema() : base(ProviderName.SybaseManaged, Instance)
 			{
 			}
 		}

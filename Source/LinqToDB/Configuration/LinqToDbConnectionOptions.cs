@@ -10,21 +10,21 @@ namespace LinqToDB.Configuration
 	using LinqToDB.Interceptors;
 	using Mapping;
 
-	public class LinqToDbConnectionOptions<T> : LinqToDbConnectionOptions
+	public class LinqToDBConnectionOptions<T> : LinqToDBConnectionOptions
 	{
 		public override bool IsValidConfigForConnectionType(DataConnection connection)
 		{
 			return connection is T;
 		}
 
-		public LinqToDbConnectionOptions(LinqToDbConnectionOptionsBuilder builder) : base(builder)
+		public LinqToDBConnectionOptions(LinqToDBConnectionOptionsBuilder builder) : base(builder)
 		{
 		}
 	}
 
-	public class LinqToDbConnectionOptions
+	public class LinqToDBConnectionOptions
 	{
-		public LinqToDbConnectionOptions(LinqToDbConnectionOptionsBuilder builder)
+		public LinqToDBConnectionOptions(LinqToDBConnectionOptionsBuilder builder)
 		{
 			SetupType = builder.SetupType;
 			switch (SetupType)
@@ -60,7 +60,7 @@ namespace LinqToDB.Configuration
 		/// <summary>
 		/// constructor for unit tests
 		/// </summary>
-		internal LinqToDbConnectionOptions()
+		internal LinqToDBConnectionOptions()
 		{
 			SetupType = ConnectionSetupType.DefaultConfiguration;
 		}

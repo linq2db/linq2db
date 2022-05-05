@@ -106,7 +106,7 @@ namespace LinqToDB.DataProvider.Oracle
 					FROM
 					(
 						SELECT NAME, ISVIEW, CASE c.MatView WHEN 1 THEN mvc.COMMENTS ELSE tc.COMMENTS END AS COMMENTS
-						FROM 
+						FROM
 						(
 							SELECT t.TABLE_NAME NAME, 0 as IsView, 0 as MatView FROM USER_TABLES t
 								LEFT JOIN USER_MVIEWS tm ON t.TABLE_NAME = tm.CONTAINER_NAME
@@ -206,7 +206,7 @@ namespace LinqToDB.DataProvider.Oracle
 			{
 				// This is significally faster
 				sql = @"
-					SELECT 
+					SELECT
 						(SELECT USER FROM DUAL) || '.' || c.TABLE_NAME as TableID,
 						c.COLUMN_NAME                                  as Name,
 						c.DATA_TYPE                                    as DataType,
@@ -287,7 +287,7 @@ namespace LinqToDB.DataProvider.Oracle
 							ON
 								PKCON.OWNER           = FKCON.R_OWNER AND
 								PKCON.CONSTRAINT_NAME = FKCON.R_CONSTRAINT_NAME
-						WHERE 
+						WHERE
 							FKCON.CONSTRAINT_TYPE = 'R'          AND
 							FKCOLS.POSITION       = PKCOLS.POSITION AND
 							FKCON.OWNER " + SchemasFilter + @" AND
@@ -312,7 +312,7 @@ namespace LinqToDB.DataProvider.Oracle
 									FKCOLS.CONSTRAINT_NAME = FKCON.CONSTRAINT_NAME
 								JOIN USER_CONS_COLUMNS PKCOLS ON
 									PKCOLS.CONSTRAINT_NAME = FKCON.R_CONSTRAINT_NAME
-						WHERE 
+						WHERE
 							FKCON.CONSTRAINT_TYPE = 'R' AND
 							FKCOLS.POSITION       = PKCOLS.POSITION
 						ORDER BY Ordinal, Name
@@ -364,6 +364,7 @@ namespace LinqToDB.DataProvider.Oracle
 				let schema    = pp.Field<string>("OWNER") // not null
 				let name      = pp.Field<string>("OBJECT_NAME") // nullable (???)
 				let direction = pp.Field<string>("IN_OUT") // nullable: IN, OUT, IN/OUT
+				let length    = Converter.ChangeTypeTo<long?>(pp["DATA_LENGTH"])
 				where IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0 || schema == _currentUser
 				select new ProcedureParameterInfo
 				{
@@ -371,7 +372,7 @@ namespace LinqToDB.DataProvider.Oracle
 					ParameterName = pp.Field<string>("ARGUMENT_NAME"), // nullable
 					DataType      = pp.Field<string>("DATA_TYPE"), // nullable, but only for sequence = 0
 					Ordinal       = Converter.ChangeTypeTo<int>  (pp["POSITION"]), // not null, 0 - return value
-					Length        = Converter.ChangeTypeTo<long?>(pp["DATA_LENGTH"]), // nullable
+					Length        = length > int.MaxValue ? null : (int?)length, // nullable
 					Precision     = Converter.ChangeTypeTo<int?> (pp["DATA_PRECISION"]), // nullable
 					Scale         = Converter.ChangeTypeTo<int?> (pp["DATA_SCALE"]), // nullable
 					IsIn          = direction.StartsWith("IN"),
@@ -381,7 +382,7 @@ namespace LinqToDB.DataProvider.Oracle
 			).ToList();
 		}
 
-		protected override string? GetDbType(GetSchemaOptions options, string? columnType, DataTypeInfo? dataType, long? length, int? precision, int? scale, string? udtCatalog, string? udtSchema, string? udtName)
+		protected override string? GetDbType(GetSchemaOptions options, string? columnType, DataTypeInfo? dataType, int? length, int? precision, int? scale, string? udtCatalog, string? udtSchema, string? udtName)
 		{
 			switch (columnType)
 			{
@@ -393,7 +394,7 @@ namespace LinqToDB.DataProvider.Oracle
 			return base.GetDbType(options, columnType, dataType, length, precision, scale, udtCatalog, udtSchema, udtName);
 		}
 
-		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, long? length, int? precision, int? scale, GetSchemaOptions options)
+		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, int? length, int? precision, int? scale, GetSchemaOptions options)
 		{
 			if (dataType == "NUMBER" && precision > 0 && (scale ?? 0) == 0)
 			{
@@ -403,13 +404,19 @@ namespace LinqToDB.DataProvider.Oracle
 				if (precision < 20) return typeof(long);
 			}
 
+			if (dataType == "BINARY_INTEGER")
+				return typeof(int);
+			if (dataType?.StartsWith("INTERVAL DAY") == true)
+				return typeof(TimeSpan);
+			if (dataType?.StartsWith("INTERVAL YEAR") == true)
+				return typeof(long);
 			if (dataType?.StartsWith("TIMESTAMP") == true)
 				return dataType.EndsWith("TIME ZONE") ? typeof(DateTimeOffset) : typeof(DateTime);
 
 			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale, options);
 		}
 
-		protected override DataType GetDataType(string? dataType, string? columnType, long? length, int? prec, int? scale)
+		protected override DataType GetDataType(string? dataType, string? columnType, int? length, int? prec, int? scale)
 		{
 			switch (dataType)
 			{
@@ -417,13 +424,12 @@ namespace LinqToDB.DataProvider.Oracle
 				case "BFILE"                  : return DataType.VarBinary;
 				case "BINARY_DOUBLE"          : return DataType.Double;
 				case "BINARY_FLOAT"           : return DataType.Single;
+				case "BINARY_INTEGER"         : return DataType.Int32;
 				case "BLOB"                   : return DataType.Blob;
 				case "CHAR"                   : return DataType.Char;
 				case "CLOB"                   : return DataType.Text;
 				case "DATE"                   : return DataType.DateTime;
 				case "FLOAT"                  : return DataType.Decimal;
-				case "INTERVAL DAY TO SECOND" : return DataType.Time;
-				case "INTERVAL YEAR TO MONTH" : return DataType.Int64;
 				case "LONG"                   : return DataType.Long;
 				case "LONG RAW"               : return DataType.LongRaw;
 				case "NCHAR"                  : return DataType.NChar;
@@ -437,6 +443,10 @@ namespace LinqToDB.DataProvider.Oracle
 				default:
 					if (dataType?.StartsWith("TIMESTAMP") == true)
 						return dataType.EndsWith("TIME ZONE") ? DataType.DateTimeOffset : DataType.DateTime2;
+					if (dataType?.StartsWith("INTERVAL DAY") == true)
+						return DataType.Time;
+					if (dataType?.StartsWith("INTERVAL YEAR") == true)
+						return DataType.Int64;
 					break;
 			}
 

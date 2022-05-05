@@ -25,7 +25,7 @@ namespace Tests.UserTests
 			{
 			}
 
-			public ITable<Table1> Table1 => GetTable<Table1>();
+			public ITable<Table1> Table1 => this.GetTable<Table1>();
 		}
 
 		[Test]

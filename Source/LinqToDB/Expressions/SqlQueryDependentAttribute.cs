@@ -56,7 +56,7 @@ namespace LinqToDB.Expressions
 		}
 
 		/// <summary>
-		/// Compares two expressions during expression tree comparison. 
+		/// Compares two expressions during expression tree comparison.
 		/// Has to be overriden if specific comparison required.
 		/// </summary>
 		/// <param name="context"></param>

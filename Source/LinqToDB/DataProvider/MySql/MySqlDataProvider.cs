@@ -15,20 +15,10 @@ namespace LinqToDB.DataProvider.MySql
 	class MySqlDataProviderMySqlOfficial  : MySqlDataProvider { public MySqlDataProviderMySqlOfficial()  : base(ProviderName.MySqlOfficial)  {} }
 	class MySqlDataProviderMySqlConnector : MySqlDataProvider { public MySqlDataProviderMySqlConnector() : base(ProviderName.MySqlConnector) {} }
 
-	public class MySqlDataProvider : DynamicDataProviderBase<MySqlProviderAdapter>
+	public abstract class MySqlDataProvider : DynamicDataProviderBase<MySqlProviderAdapter>
 	{
-		public MySqlDataProvider(string name)
-			: this(name, null)
-		{
-		}
-
-		protected MySqlDataProvider(string name, MappingSchema? mappingSchema)
-			: base(
-				  name,
-				  mappingSchema != null
-					? new MappingSchema(mappingSchema, MySqlProviderAdapter.GetInstance(name).MappingSchema)
-					: GetMappingSchema(name, MySqlProviderAdapter.GetInstance(name).MappingSchema),
-				  MySqlProviderAdapter.GetInstance(name))
+		protected MySqlDataProvider(string name)
+			: base(name, GetMappingSchema(name), MySqlProviderAdapter.GetInstance(name))
 		{
 			SqlProviderFlags.IsDistinctOrderBySupported        = false;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
@@ -74,12 +64,12 @@ namespace LinqToDB.DataProvider.MySql
 			return new MySqlSqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
 		}
 
-		private static MappingSchema GetMappingSchema(string name, MappingSchema providerSchema)
+		private static MappingSchema GetMappingSchema(string name)
 		{
 			return name switch
 			{
-				ProviderName.MySqlConnector => new MySqlMappingSchema.MySqlConnectorMappingSchema(providerSchema),
-				_                           => new MySqlMappingSchema.MySqlOfficialMappingSchema(providerSchema),
+				ProviderName.MySqlConnector => new MySqlMappingSchema.MySqlConnectorMappingSchema(),
+				_                           => new MySqlMappingSchema.MySqlOfficialMappingSchema(),
 			};
 		}
 
@@ -101,6 +91,13 @@ namespace LinqToDB.DataProvider.MySql
 				// https://github.com/mysql/mysql-connector-net/blob/8.0/MySQL.Data/src/Types/MySqlDecimal.cs#L103
 				dataType = dataType.WithDataType(DataType.VarChar);
 			}
+
+#if NET6_0_OR_GREATER
+			if (!Adapter.IsDateOnlySupported && value is DateOnly d)
+			{
+				value = d.ToDateTime(TimeOnly.MinValue);
+			}
+#endif
 
 			base.SetParameter(dataConnection, parameter, name, dataType, value);
 		}

@@ -4,13 +4,13 @@ namespace LinqToDB.Expressions
 {
 	// could allow more targets later if needed
 	[AttributeUsage(AttributeTargets.Method)]
-	internal class TypeWrapperNameAttribute : Attribute
+	public class TypeWrapperNameAttribute : Attribute
 	{
 		public TypeWrapperNameAttribute(string name)
 		{
 			Name = name;
 		}
 
-		public string Name { get; }
+		internal string Name { get; }
 	}
 }

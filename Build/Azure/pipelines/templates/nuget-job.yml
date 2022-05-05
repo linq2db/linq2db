@@ -36,7 +36,25 @@ jobs:
       targetPath: '$(Build.SourcesDirectory)/Source/LinqToDB.AspNet/bin/Release'
 
   - task: DownloadPipelineArtifact@2
-    displayName: Download test files (for t4 tools, part 1)
+    displayName: Download LinqToDB.Remote.Wcf files
+    inputs:
+      artifactName: '$(artifact_linq2db_remote_wcf_binaries)'
+      targetPath: '$(Build.SourcesDirectory)/Source/LinqToDB.Remote.Wcf/bin/Release'
+
+  - task: DownloadPipelineArtifact@2
+    displayName: Download LinqToDB.Remote.Grpc files
+    inputs:
+      artifactName: '$(artifact_linq2db_remote_grpc_binaries)'
+      targetPath: '$(Build.SourcesDirectory)/Source/LinqToDB.Remote.Grpc/bin/Release'
+
+  - task: DownloadPipelineArtifact@2
+    displayName: Download LinqToDB.CLI files
+    inputs:
+      artifactName: '$(artifact_linq2db_cli_binaries)'
+      targetPath: '$(Build.SourcesDirectory)/Source/LinqToDB.CLI/bin/Release'
+
+  - task: DownloadPipelineArtifact@2
+    displayName: Download test files (for t4 nugets)
     inputs:
       artifactName: '$(netfx472_tests)'
       targetPath: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net472'

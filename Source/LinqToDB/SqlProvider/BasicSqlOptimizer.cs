@@ -41,7 +41,7 @@ namespace LinqToDB.SqlProvider
 
 			var evaluationContext = new EvaluationContext(null);
 
-			//statement.EnsureFindTables();
+//statement.EnsureFindTables();
 
 			//TODO: We can use Walk here but OptimizeUnions fails with subqueries. Needs revising.
 			statement.WalkQueries(
@@ -72,42 +72,60 @@ namespace LinqToDB.SqlProvider
 			// provider specific query correction
 			statement = FinalizeStatement(statement, evaluationContext);
 
-			//statement.EnsureFindTables();
+//statement.EnsureFindTables();
 
 			return statement;
 		}
 
 		protected virtual SqlStatement CorrectUnionOrderBy(SqlStatement statement)
 		{
-			return QueryHelper.WrapQuery(
-				(object?)null,
-				statement,
-				static (_, q, parentElement) =>
+			var queriesToWrap = new HashSet<SelectQuery>();
+
+			statement.Visit(queriesToWrap, (wrap, e) =>
+			{
+				if (e is SelectQuery sc && sc.HasSetOperators)
 				{
-					if (q.OrderBy.IsEmpty)
-						return false;
+					var prevQuery = sc;
 
-
-					if (q.HasSetOperators && q.SetOperators[0].Operation == SetOperation.UnionAll)
-						return true;
-
-					var isUnionAll = false;
-					if (parentElement != null)
+					for (int i = 0; i < sc.SetOperators.Count; i++)
 					{
-						if (parentElement.ElementType == QueryElementType.SetOperator)
+						var currentOperator = sc.SetOperators[i];
+						var currentQuery    = currentOperator.SelectQuery;
+
+						if (currentOperator.Operation == SetOperation.Union)
 						{
-							isUnionAll = ((SqlSetOperator)parentElement).Operation == SetOperation.UnionAll;
+							if (!prevQuery.Select.HasModifier && !prevQuery.OrderBy.IsEmpty)
+							{
+								prevQuery.OrderBy.Items.Clear();
+							}
+
+							if (!currentQuery.Select.HasModifier && !currentQuery.OrderBy.IsEmpty)
+							{
+								currentQuery.OrderBy.Items.Clear();
+							}
 						}
-						else if (parentElement.ElementType == QueryElementType.SqlQuery)
+						else 
+					{
+							if (!prevQuery.OrderBy.IsEmpty)
 						{
-							var parentQuery = (SelectQuery)parentElement;
-							isUnionAll = parentQuery.HasSetOperators &&
-							                  parentQuery.SetOperators[0].Operation == SetOperation.UnionAll;
+								wrap.Add(prevQuery);
+						}
+
+							if (!currentQuery.OrderBy.IsEmpty)
+						{
+								wrap.Add(currentQuery);
+							}
+						}
+
+						prevQuery = currentOperator.SelectQuery;
 						}
 					}
+			});
 
-					return isUnionAll;
-				},
+			return QueryHelper.WrapQuery(
+				queriesToWrap,
+				statement,
+				static (wrap, q, parentElement) => wrap.Contains(q),
 				null,
 				allowMutation: true,
 				withStack: true);
@@ -1042,8 +1060,8 @@ namespace LinqToDB.SqlProvider
 		protected virtual ISqlPredicate OptimizeRowInList(SqlPredicate.InList predicate)
 		{
 			if (!SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.In))
-			{			
-				var left    = predicate.Expr1; 
+			{
+				var left    = predicate.Expr1;
 				var op      = predicate.IsNot ? SqlPredicate.Operator.NotEqual : SqlPredicate.Operator.Equal;
 				var isOr    = !predicate.IsNot;
 				var rewrite = new SqlSearchCondition();
@@ -1074,12 +1092,12 @@ namespace LinqToDB.SqlProvider
 			var rewrite = new SqlSearchCondition();
 						
 			if (op is SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual)
-			{			
+			{
 				// (a1, a2) =  (b1, b2) => a1 =  b1 and a2 = b2
 				// (a1, a2) <> (b1, b2) => a1 <> b1 or  a2 <> b2
 				bool isOr = op == SqlPredicate.Operator.NotEqual;
-				var compares = row1.Values.Zip(row2.Values, (a, b) => 
-				{					
+				var compares = row1.Values.Zip(row2.Values, (a, b) =>
+				{
 					// There is a trap here, neither `a` nor `b` should be a constant null value,
 					// because ExprExpr reduces `a == null` to `a is null`,
 					// which is not the same and not equivalent to the Row expression.
@@ -1124,8 +1142,8 @@ namespace LinqToDB.SqlProvider
 				if (row1.Values.Length != 2 || row2.Values.Length != 2)
 					throw new LinqException("Unsupported SqlRow conversion from operator: " + op);
 
-				rewrite.Conditions.Add(new SqlCondition(false, new SqlPredicate.ExprExpr(row1.Values[0], SqlPredicate.Operator.LessOrEqual, row2.Values[1], withNull: false))); 
-				rewrite.Conditions.Add(new SqlCondition(false, new SqlPredicate.ExprExpr(row2.Values[0], SqlPredicate.Operator.LessOrEqual, row1.Values[1], withNull: false))); 
+				rewrite.Conditions.Add(new SqlCondition(false, new SqlPredicate.ExprExpr(row1.Values[0], SqlPredicate.Operator.LessOrEqual, row2.Values[1], withNull: false)));
+				rewrite.Conditions.Add(new SqlCondition(false, new SqlPredicate.ExprExpr(row2.Values[0], SqlPredicate.Operator.LessOrEqual, row1.Values[1], withNull: false)));
 				*/
 
 				return rewrite;
@@ -3190,8 +3208,7 @@ namespace LinqToDB.SqlProvider
 						var takeValue = takeExpr.EvaluateExpression(optimizationContext.Context)!;
 						var takeParameter = new SqlParameter(new DbDataType(takeValue.GetType()), "take", takeValue)
 						{
-							IsQueryParameter = !QueryHelper.NeedParameterInlining(takeExpr) &&
-							                   Configuration.Linq.ParameterizeTakeSkip
+							IsQueryParameter = !QueryHelper.NeedParameterInlining(takeExpr) && Configuration.Linq.ParameterizeTakeSkip
 						};
 						takeExpr = takeParameter;
 					}
@@ -3212,8 +3229,7 @@ namespace LinqToDB.SqlProvider
 						var skipValue = skipExpr.EvaluateExpression(optimizationContext.Context)!;
 						var skipParameter = new SqlParameter(new DbDataType(skipValue.GetType()), "skip", skipValue)
 						{
-							IsQueryParameter = !QueryHelper.NeedParameterInlining(skipExpr) &&
-							                   Configuration.Linq.ParameterizeTakeSkip
+							IsQueryParameter = !QueryHelper.NeedParameterInlining(skipExpr) && Configuration.Linq.ParameterizeTakeSkip
 						};
 						skipExpr = skipParameter;
 					}

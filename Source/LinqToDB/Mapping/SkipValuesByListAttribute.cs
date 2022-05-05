@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 
 namespace LinqToDB.Mapping
 {
@@ -35,6 +36,16 @@ namespace LinqToDB.Mapping
 		public override bool ShouldSkip(object obj, EntityDescriptor entityDescriptor, ColumnDescriptor columnDescriptor)
 		{
 			return Values?.Contains(columnDescriptor.MemberAccessor.Getter!(obj)) ?? false;
+		}
+
+		public override string GetObjectID()
+		{
+			var sb = new StringBuilder(base.GetObjectID());
+
+			foreach (var value in Values)
+				sb.Append(value).Append('.');
+
+			return sb.ToString();
 		}
 	}
 }

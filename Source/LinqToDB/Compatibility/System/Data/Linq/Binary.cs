@@ -107,7 +107,7 @@ namespace System.Data.Linq
 		}
 
 		/// <summary>
-		/// Simple hash using pseudo-random coefficients for each byte in 
+		/// Simple hash using pseudo-random coefficients for each byte in
 		/// the array to achieve order dependency.
 		/// </summary>
 		private void ComputeHash()

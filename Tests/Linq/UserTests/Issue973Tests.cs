@@ -12,13 +12,13 @@ using Tests.Model;
 namespace Tests.UserTests
 {
 	/// <summary>
-	/// Builder for parametrized sql IN expression
+	/// Builder for parameterized sql IN expression
 	/// </summary>
 	/// <seealso cref="Sql.IExtensionCallBuilder" />
 	public class InExpressionItemBuilder : Sql.IExtensionCallBuilder
 	{
 		/// <summary>
-		/// Builds the parametrized sql IN expression
+		/// Builds the parameterized sql IN expression
 		/// </summary>
 		/// <param name="builder">The builder.</param>
 		/// <exception cref="ArgumentNullException">Values for \"In\" operation should not be empty - values</exception>

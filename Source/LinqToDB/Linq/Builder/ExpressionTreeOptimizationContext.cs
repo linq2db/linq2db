@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -13,7 +14,6 @@ namespace LinqToDB.Linq.Builder
 	using Mapping;
 	using SqlQuery;
 	using Reflection;
-	using System.Runtime.CompilerServices;
 
 	public class ExpressionTreeOptimizationContext
 	{
@@ -146,11 +146,6 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			return result;
-		}
-
-		Sql.ExpressionAttribute? GetExpressionAttribute(MemberInfo member)
-		{
-			return MappingSchema.GetAttribute<Sql.ExpressionAttribute>(member.ReflectedType!, member, a => a.Configuration);
 		}
 
 		public Expression ExpandQueryableMethods(Expression expression)
@@ -332,7 +327,7 @@ namespace LinqToDB.Linq.Builder
 						}
 						else
 						{
-							var attr = GetExpressionAttribute(ex.Member);
+							var attr = ex.Member.GetExpressionAttribute(MappingSchema);
 							result = attr != null && attr.ServerSideOnly;
 						}
 
@@ -371,8 +366,8 @@ namespace LinqToDB.Linq.Builder
 							}
 							else
 							{
-								var attr = GetExpressionAttribute(e.Method);
-								result = attr != null && attr.ServerSideOnly;
+								var attr = e.Method.GetExpressionAttribute(MappingSchema);
+								result = attr?.ServerSideOnly == true;
 							}
 						}
 
@@ -428,7 +423,7 @@ namespace LinqToDB.Linq.Builder
 		Expression? _lastExpr2;
 		bool        _lastResult2;
 
-		private static HashSet<Expression> DefaultAllowedParams = new ()
+		static HashSet<Expression> DefaultAllowedParams = new ()
 		{
 			ExpressionBuilder.ParametersParam,
 			ExpressionBuilder.DataContextParam
@@ -442,7 +437,7 @@ namespace LinqToDB.Linq.Builder
 			// context allocation is cheaper than HashSet allocation
 			// and HashSet allocation is rare
 
-			var result  = null == GetCanBeCompiledVisitor().Find(expr);
+			var result = null == GetCanBeCompiledVisitor().Find(expr);
 
 			_lastExpr2 = expr;
 			return _lastResult2 = result;
@@ -593,7 +588,7 @@ namespace LinqToDB.Linq.Builder
 					if (mc.Method.DeclaringType!.IsConstantable(false) || mc.Method.DeclaringType == typeof(object))
 						return false;
 
-					var attr = GetExpressionAttribute(mc.Method);
+					var attr = mc.Method.GetExpressionAttribute(MappingSchema);
 
 					if (attr != null && !attr.ServerSideOnly)
 						return false;
@@ -641,6 +636,11 @@ namespace LinqToDB.Linq.Builder
 					{
 						return new TransformInfo(Expression.NotEqual(me.Expression!, Expression.Constant(null, me.Expression!.Type)), false, true);
 					}
+
+					//if (me.Member.IsNullableValueMember())
+					//{
+					//	return new TransformInfo(Expression.Convert(me.Expression!, me.Type), false, true);
+					//}
 
 					if (CanBeCompiled(expr))
 						break;
@@ -733,6 +733,21 @@ namespace LinqToDB.Linq.Builder
 					}
 					break;
 				}
+
+				case ExpressionType.Call:
+				{
+					var call = (MethodCallExpression)expr;
+
+					var l = ConvertMethodExpression(call.Object?.Type ?? call.Method.ReflectedType!, call.Method, out var alias);
+
+					if (l != null)
+					{
+						var converted = ConvertMethod(call, l);
+						return new TransformInfo(converted, false, true);
+					}
+
+					break;
+				}
 			}
 
 			return new TransformInfo(expr, false);
@@ -782,7 +797,11 @@ namespace LinqToDB.Linq.Builder
 					});
 
 			if (ex.Type != expr.Type)
-				ex = new ChangeTypeExpression(ex, expr.Type);
+			{
+				//ex = new ChangeTypeExpression(ex, expr.Type);
+				ex = Expression.Convert(ex, expr.Type);
+			}
+
 			return ex;
 		}
 
@@ -827,6 +846,69 @@ namespace LinqToDB.Linq.Builder
 			return null;
 		}
 
+		public Expression ConvertMethod(MethodCallExpression pi, LambdaExpression lambda)
+		{
+			var ef    = lambda.Body.Unwrap();
+			var parms = new Dictionary<ParameterExpression,int>(lambda.Parameters.Count);
+			var pn    = pi.Method.IsStatic ? 0 : -1;
+
+			foreach (var p in lambda.Parameters)
+				parms.Add(p, pn++);
+
+			var pie = ef.Transform((pi, parms), static (context, wpi) =>
+			{
+				if (wpi.NodeType == ExpressionType.Parameter)
+				{
+					if (context.parms.TryGetValue((ParameterExpression)wpi, out var n))
+					{
+						if (n >= context.pi.Arguments.Count)
+						{
+							if (ExpressionBuilder.DataContextParam.Type.IsSameOrParentOf(wpi.Type))
+							{
+								if (ExpressionBuilder.DataContextParam.Type != wpi.Type)
+									return Expression.Convert(ExpressionBuilder.DataContextParam, wpi.Type);
+								return ExpressionBuilder.DataContextParam;
+							}
+
+							throw new LinqToDBException($"Can't convert {wpi} to expression.");
+						}
+
+						var result = n < 0 ? context.pi.Object! : context.pi.Arguments[n];
+
+						if (result.Type != wpi.Type)
+						{
+							var noConvert = result.UnwrapConvert();
+							if (noConvert.Type == wpi.Type)
+							{
+								result = noConvert;
+							}
+							else
+							{
+								if (noConvert.Type.IsValueType)
+									result = Expression.Convert(noConvert, wpi.Type);
+							}
+						}
+
+						return result;
+					}
+				}
+
+				return wpi;
+			});
+
+			if (pi.Method.ReturnType != pie.Type)
+			{
+				pie = pie.UnwrapConvert();
+				if (pi.Method.ReturnType != pie.Type)
+				{
+					// pie = new ChangeTypeExpression(pie, pi.Method.ReturnType);
+					pie = Expression.Convert(pie, pi.Method.ReturnType);
+				}
+			}
+
+			return pie;
+		}
+
 		#region PreferServerSide
 
 		private FindVisitor<ExpressionTreeOptimizationContext>? _enforceServerSideVisitorTrue;
@@ -860,7 +942,7 @@ namespace LinqToDB.Linq.Builder
 							return GetVisitor(enforceServerSide).Find(info) != null;
 						}
 
-						var attr = GetExpressionAttribute(pi.Member);
+						var attr = pi.Member.GetExpressionAttribute(MappingSchema);
 						return attr != null && (attr.PreferServerSide || enforceServerSide) && !CanBeCompiled(expr);
 					}
 
@@ -872,7 +954,7 @@ namespace LinqToDB.Linq.Builder
 						if (l != null)
 							return GetVisitor(enforceServerSide).Find(l.Body.Unwrap()) != null;
 
-						var attr = GetExpressionAttribute(pi.Method);
+						var attr = pi.Method.GetExpressionAttribute(MappingSchema);
 						return attr != null && (attr.PreferServerSide || enforceServerSide) && !CanBeCompiled(expr);
 					}
 				default:

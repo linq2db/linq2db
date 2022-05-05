@@ -13,7 +13,7 @@ namespace LinqToDB.Common
 	using LinqToDB.Common.Internal;
 	using Mapping;
 
-	static class ConvertBuilder
+	public static class ConvertBuilder
 	{
 		static readonly MethodInfo _defaultConverter = MemberHelper.MethodOf(() => ConvertDefault(null!, typeof(int)));
 
@@ -400,7 +400,8 @@ namespace LinqToDB.Common
 						{
 							var fattrs =
 								from f in fromAttrs
-								select new {
+								select new
+								{
 									f,
 									a = f.Attrs.First(a => a.Value?.Equals(toAttr.Value) ?? toAttr.Value == null)
 								} into fa

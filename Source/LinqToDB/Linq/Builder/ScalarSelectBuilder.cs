@@ -53,7 +53,7 @@ namespace LinqToDB.Linq.Builder
 			}
 
 #if DEBUG
-			public string _sqlQueryText => SelectQuery == null ? "" : SelectQuery.SqlText;
+			public string SqlQueryText => SelectQuery == null ? "" : SelectQuery.SqlText;
 			public string Path          => this.GetPath();
 			public int    ContextId     { get; }
 #endif

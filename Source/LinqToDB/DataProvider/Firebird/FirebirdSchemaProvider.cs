@@ -75,7 +75,7 @@ namespace LinqToDB.DataProvider.Firebird
 			(
 				from c in tcs.AsEnumerable()
 				let type      = c.Field<string>("COLUMN_DATA_TYPE")
-				let dt        = GetDataType(type, options)
+				let dt        = GetDataType(type, null, options)
 				let precision = Converter.ChangeTypeTo<int>(c["NUMERIC_PRECISION"])
 				select new ColumnInfo
 				{
@@ -84,7 +84,7 @@ namespace LinqToDB.DataProvider.Firebird
 					DataType     = dt?.TypeName,
 					IsNullable   = Converter.ChangeTypeTo<bool>(c["IS_NULLABLE"]),
 					Ordinal      = Converter.ChangeTypeTo<int> (c["ORDINAL_POSITION"]),
-					Length       = (type != "char" && type != "varchar") ? null : Converter.ChangeTypeTo<long>(c["COLUMN_SIZE"]),
+					Length       = (type != "char" && type != "varchar") ? null : Converter.ChangeTypeTo<int>(c["COLUMN_SIZE"]),
 					Precision    = precision == 0 ? null : precision,
 					Scale        = (type != "decimal" && type != "numeric") ? null : Converter.ChangeTypeTo<int>(c["NUMERIC_SCALE"]),
 					IsIdentity   = false,
@@ -187,7 +187,7 @@ namespace LinqToDB.DataProvider.Firebird
 					IsNullable           = isNullable,
 					MemberName           = ToValidName(columnName),
 					MemberType           = ToTypeName(systemType, isNullable),
-					SystemType           = systemType ?? typeof(object),
+					SystemType           = systemType,
 					DataType             = GetDataType(columnType, null, length, precision, scale),
 					ProviderSpecificType = GetProviderSpecificType(columnType),
 					Precision            = providerType == 21 ? 16 : null
@@ -213,7 +213,7 @@ namespace LinqToDB.DataProvider.Firebird
 		{
 			var dataTypes = base.GetDataTypes(dataConnection);
 
-			var knownTypes = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+			var knownTypes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 			foreach (var dataType in dataTypes)
 			{
 				knownTypes.Add(dataType.TypeName);
@@ -226,7 +226,7 @@ namespace LinqToDB.DataProvider.Firebird
 				}
 			}
 
-			// as on 8.5.4 version provider doesn't add new FB4 types to DATATYPES schema API and older boolean type
+			// provider doesn't add new FB4 types to DATATYPES schema API and older boolean type
 			// https://github.com/FirebirdSQL/NETProvider/blob/master/Provider/src/FirebirdSql.Data.FirebirdClient/Schema/FbMetaData.xml
 			if (!knownTypes.Contains("boolean"))
 				dataTypes.Add(new DataTypeInfo { ProviderSpecific = false, TypeName = "boolean", DataType = "System.Boolean", ProviderDbType = 3 });
@@ -257,7 +257,7 @@ namespace LinqToDB.DataProvider.Firebird
 			return dataTypes;
 		}
 
-		protected override DataType GetDataType(string? dataType, string? columnType, long? length, int? prec, int? scale)
+		protected override DataType GetDataType(string? dataType, string? columnType, int? length, int? prec, int? scale)
 		{
 			return dataType?.ToLower() switch
 			{
@@ -301,7 +301,7 @@ namespace LinqToDB.DataProvider.Firebird
 			return base.GetProviderSpecificType(dataType);
 		}
 
-		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, long? length, int? precision, int? scale, GetSchemaOptions options)
+		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, int? length, int? precision, int? scale, GetSchemaOptions options)
 		{
 			switch (dataType?.ToLower())
 			{

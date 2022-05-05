@@ -134,7 +134,7 @@ namespace LinqToDB.SqlQuery
 				return true;
 
 
-			if (!(other is SqlFunction func) || Name != func.Name || Parameters.Length != func.Parameters.Length && SystemType != func.SystemType)
+			if (!(other is SqlFunction func) || Name != func.Name || Parameters.Length != func.Parameters.Length || SystemType != func.SystemType)
 				return false;
 
 			for (var i = 0; i < Parameters.Length; i++)

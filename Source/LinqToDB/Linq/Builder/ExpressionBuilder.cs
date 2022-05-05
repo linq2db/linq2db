@@ -24,7 +24,7 @@ namespace LinqToDB.Linq.Builder
 
 		static readonly object _sync = new ();
 
-		static List<ISequenceBuilder> _sequenceBuilders = new ()
+		static IReadOnlyList<ISequenceBuilder> _sequenceBuilders = new ISequenceBuilder[]
 		{
 			new TableBuilder               (),
 			new IgnoreFiltersBuilder       (),
@@ -93,17 +93,12 @@ namespace LinqToDB.Linq.Builder
 			new QueryNameBuilder           (),
 		};
 
-		public static void AddBuilder(ISequenceBuilder builder)
-		{
-			_sequenceBuilders.Add(builder);
-		}
-
 		#endregion
 
 		#region Init
 
 		readonly Query                             _query;
-		readonly List<ISequenceBuilder>            _builders = _sequenceBuilders;
+		readonly IReadOnlyList<ISequenceBuilder>   _builders = _sequenceBuilders;
 		private  bool                              _reorder;
 		readonly ExpressionTreeOptimizationContext _optimizationContext;
 		readonly ParametersContext                 _parametersContext;
@@ -179,7 +174,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region Builder SQL
 
-		internal Query<T> Build<T>()
+		public Query<T> Build<T>()
 		{
 			var sequence = BuildSequence(new BuildInfo((IBuildContext?)null, Expression, new SelectQuery()));
 
@@ -187,7 +182,7 @@ namespace LinqToDB.Linq.Builder
 				lock (_sync)
 				{
 					_reorder = false;
-					_sequenceBuilders = _sequenceBuilders.OrderByDescending(static _ => _.BuildCounter).ToList();
+					_sequenceBuilders = _sequenceBuilders.OrderByDescending(static _ => _.BuildCounter).ToArray();
 				}
 
 			_query.Init(sequence, _parametersContext.CurrentSqlParameters);
@@ -548,17 +543,9 @@ namespace LinqToDB.Linq.Builder
 							}
 						}
 
-						var l = ConvertMethodExpression(call.Object?.Type ?? call.Method.ReflectedType!, call.Method, out var alias);
-
-						if (l != null)
-						{
-							var optimized = OptimizeExpression(ConvertMethod(call, l));
-							return new TransformInfo(optimized);
-						}
-
 						if (CompiledParameters == null && typeof(IQueryable).IsSameOrParentOf(expr.Type))
 						{
-							var attr = GetTableFunctionAttribute(call.Method);
+							var attr = call.Method.GetTableFunctionAttribute(MappingSchema);
 
 							if (attr == null && !call.IsQueryable())
 							{
@@ -1079,7 +1066,7 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.MemberAccess   :
 					{
 						var ma   = (MemberExpression)ex;
-						var attr = GetExpressionAttribute(ma.Member);
+						var attr = ma.Member.GetExpressionAttribute(MappingSchema);
 
 						if (attr != null)
 							return true;
@@ -1442,12 +1429,14 @@ namespace LinqToDB.Linq.Builder
 				var n    = _query.AddQueryableAccessors(expression, l);
 
 				_parametersContext._expressionAccessors.TryGetValue(expression, out var accessor);
+				if (accessor == null)
+					throw new LinqToDBException($"IQueryable value accessor for '{expression}' not found.");
 
 				var path =
 					Expression.Call(
 						Expression.Constant(_query),
 						Methods.Query.GetIQueryable,
-						ExpressionInstances.Int32(n), accessor ?? Expression.Constant(null, typeof(Expression)), Expression.Constant(true));
+						ExpressionInstances.Int32(n), accessor, Expression.Constant(true));
 
 				var qex = _query.GetIQueryable(n, expression, force: false);
 
@@ -1610,7 +1599,7 @@ namespace LinqToDB.Linq.Builder
 		/// <param name="left"></param>
 		/// <param name="right"></param>
 		/// <returns></returns>
-		internal static BinaryExpression Equal(MappingSchema mappingSchema, Expression left, Expression right)
+		public static BinaryExpression Equal(MappingSchema mappingSchema, Expression left, Expression right)
 		{
 			if (left.Type != right.Type)
 			{
@@ -1644,7 +1633,7 @@ namespace LinqToDB.Linq.Builder
 		Dictionary<Expression, Expression>? _rootExpressions;
 
 		[return: NotNullIfNotNull("expr")]
-		internal Expression? GetRootObject(Expression? expr)
+		public Expression? GetRootObject(Expression? expr)
 		{
 			if (expr == null)
 				return null;

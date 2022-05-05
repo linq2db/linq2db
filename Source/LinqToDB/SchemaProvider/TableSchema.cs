@@ -57,5 +57,10 @@ namespace LinqToDB.SchemaProvider
 		/// Gets list of table foreign keys.
 		/// </summary>
 		public List<ForeignKeySchema> ForeignKeys { get; set; } = null!;
+		/// <summary>
+		/// Gets table group name. Used by T4 templates to group tables to generate Schema Type if <c>GenerateSchemaAsType</c> is <c>true</c>.
+		/// If NULL, SchemaName is used.
+		/// </summary>
+		public string? GroupName { get; set; }
 	}
 }

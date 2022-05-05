@@ -26,8 +26,8 @@ namespace LinqToDB
 	[PublicAPI]
 	public partial class DataContext : IDataContext
 	{
-		private          LinqToDbConnectionOptions        _prebuiltOptions;
-		private readonly LinqToDbConnectionOptionsBuilder _optionsBuilder = new ();
+		private          LinqToDBConnectionOptions        _prebuiltOptions;
+		private readonly LinqToDBConnectionOptionsBuilder _optionsBuilder = new ();
 
 		private bool _disposed;
 
@@ -47,7 +47,7 @@ namespace LinqToDB
 		/// <see cref="DataConnection.DefaultConfiguration"/> for more details.
 		/// </param>
 		public DataContext(string? configurationString)
-			: this(new LinqToDbConnectionOptionsBuilder()
+			: this(new LinqToDBConnectionOptionsBuilder()
 				.UseConfigurationString(
 					configurationString ?? DataConnection.DefaultConfiguration
 						?? throw new ArgumentNullException($"Neither {nameof(configurationString)} nor {nameof(DataConnection)}.{DataConnection.DefaultConfiguration} specified"))
@@ -61,7 +61,7 @@ namespace LinqToDB
 		/// <param name="dataProvider">Database provider implementation.</param>
 		/// <param name="connectionString">Database connection string.</param>
 		public DataContext(IDataProvider dataProvider, string connectionString)
-			: this(new LinqToDbConnectionOptionsBuilder()
+			: this(new LinqToDBConnectionOptionsBuilder()
 				.UseConnectionString(
 					dataProvider     ?? throw new ArgumentNullException(nameof(dataProvider)),
 					connectionString ?? throw new ArgumentNullException(nameof(connectionString)))
@@ -75,7 +75,7 @@ namespace LinqToDB
 		/// <param name="providerName">Name of database provider to use with this connection. <see cref="ProviderName"/> class for list of providers.</param>
 		/// <param name="connectionString">Database connection string to use for connection with database.</param>
 		public DataContext( string providerName, string connectionString)
-			: this(new LinqToDbConnectionOptionsBuilder()
+			: this(new LinqToDBConnectionOptionsBuilder()
 				.UseConnectionString(
 					providerName     ?? throw new ArgumentNullException(nameof(providerName)),
 					connectionString ?? throw new ArgumentNullException(nameof(connectionString)))
@@ -84,10 +84,10 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Creates database context object that uses a <see cref="LinqToDbConnectionOptions"/> to configure the connection.
+		/// Creates database context object that uses a <see cref="LinqToDBConnectionOptions"/> to configure the connection.
 		/// </summary>
 		/// <param name="options">Options, setup ahead of time.</param>
-		public DataContext(LinqToDbConnectionOptions options)
+		public DataContext(LinqToDBConnectionOptions options)
 		{
 			// reveng options back to builder
 
@@ -97,6 +97,7 @@ namespace LinqToDB
 			if (options.WriteTrace    != null) _optionsBuilder.WriteTraceWith  (options.WriteTrace);
 
 			var dataProvider = options.DataProvider;
+
 			if (dataProvider == null)
 			{
 				if (options.ProviderName != null && options.ConnectionString != null)
@@ -132,7 +133,8 @@ namespace LinqToDB
 			// rebuild options instead of saving parameter directly (to have aggregated interceptors there)
 			_prebuiltOptions = _optionsBuilder.Build();
 
-			ContextID = dataProvider.Name;
+			ContextID   = dataProvider.ID;
+			ContextName = dataProvider.Name;
 		}
 
 		/// <summary>
@@ -147,10 +149,13 @@ namespace LinqToDB
 		/// Gets database provider implementation.
 		/// </summary>
 		public IDataProvider DataProvider        => _optionsBuilder.DataProvider!;
+
 		/// <summary>
 		/// Gets or sets context identifier. Uses provider's name by default.
 		/// </summary>
-		public string        ContextID           { get; set; }
+		public string        ContextName         { get; private set; }
+
+		public int           ContextID           { get; private set; }
 		/// <summary>
 		/// Gets or sets mapping schema. Uses provider's mapping schema by default.
 		/// </summary>
@@ -293,7 +298,7 @@ namespace LinqToDB
 		/// Creates instance of <see cref="DataConnection"/> class, used by context internally.
 		/// </summary>
 		/// <returns>New <see cref="DataConnection"/> instance.</returns>
-		protected virtual DataConnection CreateDataConnection(LinqToDbConnectionOptions options) => new (options);
+		protected virtual DataConnection CreateDataConnection(LinqToDBConnectionOptions options) => new (options);
 
 		/// <summary>
 		/// Returns associated database connection <see cref="DataConnection"/> or create new connection, if connection
@@ -359,6 +364,11 @@ namespace LinqToDB
 			}
 		}
 
+		/// <summary>
+		/// For active underlying connection, updates information about last executed query <see cref="LastQuery"/> and
+		/// releases connection, if it is not locked (<see cref="LockDbManagerCounter"/>)
+		/// and <see cref="KeepConnectionAlive"/> is <c>false</c>.
+		/// </summary>
 		internal async Task ReleaseQueryAsync()
 		{
 			if (_dataConnection != null)
@@ -394,10 +404,10 @@ namespace LinqToDB
 		/// Used by <see cref="IDataContext.Clone(bool)"/> API only if <see cref="DataConnection.IsMarsEnabled"/>
 		/// is <c>true</c> and there is an active connection associated with current context.
 		/// <param name="currentConnection"><see cref="DataConnection"/> instance, used by current context instance.</param>
-		/// <param name="options">Connection options, will have <see cref="LinqToDbConnectionOptions.DbConnection"/> or <see cref="LinqToDbConnectionOptions.DbTransaction"/> set.</param>
+		/// <param name="options">Connection options, will have <see cref="LinqToDBConnectionOptions.DbConnection"/> or <see cref="LinqToDBConnectionOptions.DbTransaction"/> set.</param>
 		/// <returns>New <see cref="DataConnection"/> instance.</returns>
 		/// </summary>
-		protected virtual DataConnection CloneDataConnection(DataConnection currentConnection, LinqToDbConnectionOptions options) => new (options);
+		protected virtual DataConnection CloneDataConnection(DataConnection currentConnection, LinqToDBConnectionOptions options) => new (options);
 
 		IDataContext IDataContext.Clone(bool forNestedQuery)
 		{
@@ -406,8 +416,9 @@ namespace LinqToDB
 			var dc = new DataContext(_prebuiltOptions)
 			{
 				KeepConnectionAlive = KeepConnectionAlive,
+				ContextName         = ContextName,
 				ContextID           = ContextID,
-				InlineParameters        = InlineParameters
+				InlineParameters    = InlineParameters
 			};
 
 			if (forNestedQuery && _dataConnection != null && _dataConnection.IsMarsEnabled)
@@ -566,6 +577,11 @@ namespace LinqToDB
 		IQueryRunner IDataContext.GetQueryRunner(Query query, int queryNumber, Expression expression, object?[]? parameters, object?[]? preambles)
 		{
 			return new QueryRunner(this, ((IDataContext)GetDataConnection()).GetQueryRunner(query, queryNumber, expression, parameters, preambles));
+		}
+
+		public FluentMappingBuilder GetFluentMappingBuilder()
+		{
+			return MappingSchema.GetFluentMappingBuilder();
 		}
 
 		class QueryRunner : IQueryRunner

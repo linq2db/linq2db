@@ -10,10 +10,6 @@
 		<!--<DefineConstants>JETBRAINS;$(DefineConstants)</DefineConstants>-->
 	</PropertyGroup>
 
-	<ItemGroup Condition=" '$(TargetFramework)' == 'net472' ">
-	  <Compile Include="..\..\Source\LinqToDB\Compatibility\System\Diagnostics\CodeAnalysis\NullableAttributes.cs" Link="NullableAttributes.cs" />
-	</ItemGroup>
-
 	<ItemGroup>
 		<PackageReference Include="BenchmarkDotNet" />
 		<PackageReference Condition="$(DefineConstants.Contains('JETBRAINS'))" Include="JetBrains.Profiler.Api" />

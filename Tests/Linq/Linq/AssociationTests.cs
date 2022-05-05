@@ -662,8 +662,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestGenericAssociationRuntime([DataSources(TestProvName.AllAccess, TestProvName.AllSQLite)]
-			string context)
+		public void TestGenericAssociationRuntime([DataSources(TestProvName.AllAccess, TestProvName.AllSQLite)] string context)
 		{
 			var ids = new[] { 1, 5 };
 
@@ -985,11 +984,7 @@ namespace Tests.Linq
 			public int  AssociatedObjectId { get; set; }
 			public int? AssociationTypeId  { get; set; }
 
-			[Association(
-				ThisKey      = nameof(AssociationTypeId),
-				OtherKey     = nameof(Lookup.Id),
-				CanBeNull    = true,
-				Relationship = Relationship.ManyToOne)]
+			[Association(ThisKey   = nameof(AssociationTypeId), OtherKey  = nameof(Lookup.Id), CanBeNull = true)]
 			public Lookup? AssociationTypeCode { get; set; }
 
 			public static Expression<Func<Resource, IDataContext, IQueryable<User>>> UserExpression =>
@@ -1170,7 +1165,7 @@ namespace Tests.Linq
 			/// <summary>
 			/// Owner.
 			/// </summary>
-			[Association(ExpressionPredicate = nameof(OwnerPredicate), CanBeNull = true, Relationship = Relationship.ManyToOne, IsBackReference = false)]
+			[Association(ExpressionPredicate = nameof(OwnerPredicate), CanBeNull = true)]
 			public Issue2981OwnerEntity? Owner { get; set; }
 
 			public static Expression<Func<T, Issue2981OwnerEntity, bool>> OwnerPredicate { get; set; } = (T entity, Issue2981OwnerEntity owner) => entity.OwnerId == owner.Id;

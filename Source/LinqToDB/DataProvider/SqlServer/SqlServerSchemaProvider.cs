@@ -68,7 +68,7 @@ namespace LinqToDB.DataProvider.SqlServer
 						sys.extended_properties x
 					ON
 						OBJECT_ID('[' + TABLE_CATALOG + '].[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']') = x.major_id AND
-						x.minor_id = 0 AND 
+						x.minor_id = 0 AND
 						x.name = 'MS_Description'
 				WHERE
 					t.object_id IS NULL OR
@@ -162,7 +162,7 @@ namespace LinqToDB.DataProvider.SqlServer
 						x.name = 'MS_Description' AND x.class = 1")
 				.Select(c =>
 				{
-					var dti = GetDataType(c.DataType, options);
+					var dti = GetDataType(c.DataType, null, options);
 
 					if (dti != null)
 					{
@@ -297,7 +297,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				.ToList();
 		}
 
-		protected override DataType GetDataType(string? dataType, string? columnType, long? length, int? prec, int? scale)
+		protected override DataType GetDataType(string? dataType, string? columnType, int? length, int? prec, int? scale)
 		{
 			switch (dataType)
 			{
@@ -385,7 +385,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			return base.GetProviderSpecificType(dataType);
 		}
 
-		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, long? length, int? precision, int? scale, GetSchemaOptions options)
+		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, int? length, int? precision, int? scale, GetSchemaOptions options)
 		{
 			switch (dataType)
 			{
@@ -399,7 +399,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale, options);
 		}
 
-		protected override string? GetDbType(GetSchemaOptions options, string? columnType, DataTypeInfo? dataType, long? length, int? precision, int? scale, string? udtCatalog, string? udtSchema, string? udtName)
+		protected override string? GetDbType(GetSchemaOptions options, string? columnType, DataTypeInfo? dataType, int? length, int? precision, int? scale, string? udtCatalog, string? udtSchema, string? udtName)
 		{
 			// database name for udt not supported by sql server
 			if (udtName != null)

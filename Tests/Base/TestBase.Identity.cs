@@ -1,4 +1,7 @@
-﻿using LinqToDB;
+﻿using System;
+using System.Linq;
+using System.Security.Cryptography;
+using LinqToDB;
 using LinqToDB.Data;
 
 namespace Tests
@@ -21,7 +24,6 @@ namespace Tests
 
 			if (sql == null)
 			{
-
 				switch (provider)
 				{
 					case string prov when prov.IsAnyOf(TestProvName.AllAccess):
@@ -101,6 +103,9 @@ CREATE COLUMN TABLE ""Person"" (
 						break;
 					case string prov when prov.IsAnyOf(TestProvName.AllSQLite):
 						sql = new[] { $"UPDATE sqlite_sequence SET seq = {lastValue} WHERE name = 'Person'" };
+						break;
+					default:
+						Console.WriteLine($"Unknown provider: {provider}");
 						break;
 				}
 			}

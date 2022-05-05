@@ -9,7 +9,7 @@ namespace LinqToDB.Mapping
 	/// <see cref="DataExtensions.Update{T}(IDataContext, T, string?, string?, string?, string?, TableOptions)"/> methods.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = true)]
-	public class IdentityAttribute : Attribute
+	public class IdentityAttribute : MappingAttribute
 	{
 		/// <summary>
 		/// Creates attribute instance.
@@ -33,5 +33,10 @@ namespace LinqToDB.Mapping
 		/// Attributes with <c>null</c> or empty string <see cref="Configuration"/> value applied to all configurations (if no attribute found for current configuration).
 		/// </summary>
 		public string? Configuration { get; set; }
+
+		public override string GetObjectID()
+		{
+			return $"{Configuration}";
+		}
 	}
 }

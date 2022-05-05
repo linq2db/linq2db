@@ -32,7 +32,7 @@ namespace Tests.Linq
 			public T       Data        = default!;
 		}
 
-		static Expression? Unwrap(Expression? ex)
+		static Expression? Unwrap(this Expression? ex)
 		{
 			if (ex == null)
 				return null;
@@ -242,7 +242,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void PaginationViaCursor([IncludeDataSources(false, TestProvName.AllSqlServer2008Plus)] string context)
+		public void PaginationViaCursor([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			var take = 12;
 			var sampleData = Enumerable.Range(1, 100).Select(i => new Booking

@@ -20,9 +20,9 @@ namespace LinqToDB.Linq.Builder
 			#region Properties
 
 #if DEBUG
-			public string _sqlQueryText => SelectQuery == null ? "" : SelectQuery.SqlText;
-			public string Path          => this.GetPath();
-			public int    ContextId     { get; private set; }
+			public string SqlQueryText => SelectQuery == null ? "" : SelectQuery.SqlText;
+			public string Path         => this.GetPath();
+			public int    ContextId    { get; private set; }
 #endif
 
 			public ExpressionBuilder      Builder     { get; }
@@ -119,7 +119,7 @@ namespace LinqToDB.Linq.Builder
 				IsSubQuery               = buildInfo.IsSubQuery;
 
 				var mc   = (MethodCallExpression)Expression;
-				var attr = builder.GetTableFunctionAttribute(mc.Method)!;
+				var attr = mc.Method.GetTableFunctionAttribute(builder.MappingSchema)!;
 
 				if (!typeof(IQueryable<>).IsSameOrParentOf(mc.Method.ReturnType))
 					throw new LinqException("Table function has to return IQueryable<T>.");
@@ -201,14 +201,14 @@ namespace LinqToDB.Linq.Builder
 			public virtual SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 			{
 				throw new NotImplementedException();
-			}
+									}
 
 			#endregion
 
 			#region ConvertToIndex
 
 			public virtual SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
-			{
+							{
 				throw new NotImplementedException();
 			}
 
@@ -224,7 +224,7 @@ namespace LinqToDB.Linq.Builder
 						return new SqlEagerLoadExpression(this, path, Builder.GetSequenceExpression(this));
 
 					return Builder.BuildEntityExpression(this, ObjectType, flags);
-				}
+			}
 
 				if (path is not MemberExpression member)
 					return Builder.CreateSqlError(this, path);
@@ -252,7 +252,7 @@ namespace LinqToDB.Linq.Builder
 			#region GetContext
 
 			public IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)
-			{
+					{
 				if (!buildInfo.CreateSubQuery)
 					return this;
 
@@ -481,24 +481,24 @@ namespace LinqToDB.Linq.Builder
 										return newField;
 									}
 								}
-							}
+			}
 
 							if (throwException &&
 								EntityDescriptor != null &&
 								EntityDescriptor.TypeAccessor.Type == memberExpression.Member.DeclaringType)
-							{
+			{
 								throw new LinqException("Member '{0}.{1}' is not a table column.",
 									memberExpression.Member.DeclaringType.Name, memberExpression.Member.Name);
+				}
+						}
 							}
 						}
-					}
-				}
 
 				if (throwException)
-				{
+										{
 					throw new LinqException($"Member '{expression}' is not a table column.");
-				}
-				return null;
+										}
+					return null;
 			}
 
 			#endregion

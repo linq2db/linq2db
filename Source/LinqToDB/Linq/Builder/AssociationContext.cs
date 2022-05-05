@@ -14,9 +14,9 @@ namespace LinqToDB.Linq.Builder
 	class AssociationContext : IBuildContext
 	{
 #if DEBUG
-		string? IBuildContext._sqlQueryText => TableContext._sqlQueryText;
-		public string         Path          => this.GetPath();
-		public int            ContextId     { get; }
+		string? IBuildContext.SqlQueryText => TableContext.SqlQueryText;
+		public string         Path         => this.GetPath();
+		public int            ContextId    { get; }
 #endif
 		public ExpressionBuilder Builder { get; }
 		public Expression?       Expression { get; }

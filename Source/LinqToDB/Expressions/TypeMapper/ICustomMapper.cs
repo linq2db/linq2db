@@ -2,7 +2,7 @@
 
 namespace LinqToDB.Expressions
 {
-	internal interface ICustomMapper
+	public interface ICustomMapper
 	{
 		bool CanMap(Expression expression);
 		Expression Map(Expression expression);

@@ -14,10 +14,10 @@ namespace LinqToDB.Mapping
 	[AttributeUsage(
 		AttributeTargets.Field | AttributeTargets.Property,
 		AllowMultiple = true, Inherited = true)]
-	public class ColumnAliasAttribute : Attribute
+	public class ColumnAliasAttribute : MappingAttribute
 	{
 		/// <summary>
-		/// Use <see cref="ColumnAliasAttribute.ColumnAliasAttribute(string)"/> constructor or specify <see cref="MemberName"/> value.
+		/// Use <see cref="ColumnAliasAttribute(string)"/> constructor or specify <see cref="MemberName"/> value.
 		/// </summary>
 		public ColumnAliasAttribute()
 		{
@@ -43,5 +43,10 @@ namespace LinqToDB.Mapping
 		/// Gets or sets the name of target property or field.
 		/// </summary>
 		public string? MemberName { get; set; }
+
+		public override string GetObjectID()
+		{
+			return $".{Configuration}.{MemberName}.";
+		}
 	}
 }

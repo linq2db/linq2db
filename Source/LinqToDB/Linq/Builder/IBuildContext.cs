@@ -62,7 +62,7 @@ namespace LinqToDB.Linq.Builder
 	internal interface IBuildContext
 	{
 #if DEBUG
-		string? _sqlQueryText { get; }
+		string? SqlQueryText  { get; }
 		string  Path          { get; }
 		int     ContextId     { get; }
 #endif

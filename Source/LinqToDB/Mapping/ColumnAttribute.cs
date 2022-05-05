@@ -12,7 +12,7 @@ namespace LinqToDB.Mapping
 	[AttributeUsage(
 		AttributeTargets.Field | AttributeTargets.Property | AttributeTargets.Class | AttributeTargets.Interface,
 		AllowMultiple = true, Inherited = true)]
-	public class ColumnAttribute : Attribute
+	public class ColumnAttribute : MappingAttribute
 	{
 		/// <summary>
 		/// Creates attribute instance.
@@ -338,5 +338,10 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		/// <returns><c>true</c> if <see cref="Order"/> property was set in attribute.</returns>
 		internal bool HasOrder() => _order.HasValue;
+
+		public override string GetObjectID()
+		{
+			return $".{Configuration}.{Name}.{MemberName}.{(int)DataType}.{DbType}.{(IsColumn?'1':'0')}.{Storage}.{(IsDiscriminator?'1':'0')}.{(SkipOnEntityFetch?'1':'0')}.{_skipOnInsert}.{_skipOnUpdate}.{_isIdentity}.{_isPrimaryKey}.{PrimaryKeyOrder}.{_canBeNull}.{_length}.{_precision}.{_scale}.{CreateFormat}.{_order}.";
+		}
 	}
 }

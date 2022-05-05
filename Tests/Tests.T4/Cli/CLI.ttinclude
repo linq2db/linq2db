@@ -1,0 +1,70 @@
+﻿<#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net472\linq2db.Tests.Base.dll" #>
+<#@ import namespace="System"                                                        #>
+<#@ import namespace="System.IO"                                                     #>
+<#@ import namespace="System.Diagnostics"                                            #>
+<#@ import namespace="System.Threading"                                              #>
+<#@ import namespace="Microsoft.Win32.SafeHandles"                                   #>
+<#+
+#nullable enable
+	string GetConnectionString(string config)
+	{
+		var settings = Tests.Tools.SettingsReader.Deserialize(
+			"NET472",
+			System.IO.File.ReadAllText(Host.ResolvePath(@"..\..\DataProviders.json")),
+			System.IO.File.ReadAllText(Host.ResolvePath(@"..\..\UserDataProviders.json")));
+
+		return settings.Connections[config]!.ConnectionString!;
+	}
+
+	void RunCliTool(
+		string  providerName,
+		string? connectionStringName,
+		string  namespaceName,
+		string  targetFolder,
+		string  mode,
+		string? providerLocation           = null,
+		string? connectionString           = null,
+		string? additionalConnectionString = null)
+	{
+		if(Directory.Exists(targetFolder))
+			Directory.Delete(targetFolder, true);
+		Directory.CreateDirectory(targetFolder);
+
+		connectionString ??= GetConnectionString(connectionStringName!);
+		var arguments = $"linq2db scaffold -o {targetFolder} -p {providerName} -c \"{connectionString}\" -t {mode} --nrt true -n {namespaceName} --context-name TestDataDB";
+		if (providerLocation != null)
+		{
+			arguments += $" -l \"{providerLocation}\"";
+		}
+		if (additionalConnectionString != null)
+		{
+			arguments += $" --additional-connection \"{additionalConnectionString}\"";
+		}
+
+		using (var process = new Process())
+		{
+			// FOR DEBUG
+			// WriteLine($"// {arguments}");
+			process.StartInfo.FileName       = "dotnet";
+			process.StartInfo.Arguments      = arguments;
+			process.StartInfo.CreateNoWindow = true;
+			//process.StartInfo.WindowStyle    = ProcessWindowStyle.Hidden;
+			using var waitHandle             = new ManualResetEvent(false);
+
+			if (process.Start())
+			{
+				using var handle = new SafeWaitHandle(process.Handle, false);
+				waitHandle.SetSafeWaitHandle(handle);
+
+				var timeouted = !waitHandle.WaitOne(TimeSpan.FromSeconds(60));
+
+				if (!process.HasExited)
+					process.Kill();
+
+				if (timeouted)
+					throw new Exception($"Timeout during scaffolding of {connectionStringName} database");
+			}
+
+		}
+	}
+#>

@@ -22,7 +22,7 @@ namespace LinqToDB.Linq.Builder
 		readonly Type _elementType;
 
 #if DEBUG
-		public string? _sqlQueryText { get; }
+		public string?               SqlQueryText { get; }
 		public string  Path          => this.GetPath();
 		public int     ContextId     { get; }
 #endif

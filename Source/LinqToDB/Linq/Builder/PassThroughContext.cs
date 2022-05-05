@@ -22,7 +22,7 @@ namespace LinqToDB.Linq.Builder
 		public IBuildContext Context { get; set; }
 
 #if DEBUG
-		string? IBuildContext._sqlQueryText => Context._sqlQueryText;
+		string? IBuildContext.SqlQueryText => Context.SqlQueryText;
 		public string         Path          => this.GetPath();
 		public int            ContextId     { get; }
 #endif

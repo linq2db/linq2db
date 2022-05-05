@@ -65,6 +65,11 @@ namespace LinqToDB.DataProvider.Access
 
 		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
 		{
+#if NET6_0_OR_GREATER
+			if (value is DateOnly d)
+				value = d.ToDateTime(TimeOnly.MinValue);
+#endif
+
 			switch (dataType.DataType)
 			{
 				case DataType.SByte:
@@ -130,7 +135,7 @@ namespace LinqToDB.DataProvider.Access
 			base.SetParameterType(dataConnection, parameter, dataType);
 		}
 
-		private static readonly MappingSchema MappingSchemaInstance = new AccessMappingSchema.ODBCMappingSchema();
+		private static readonly MappingSchema MappingSchemaInstance = new AccessMappingSchema.OdbcMappingSchema();
 
 		#region BulkCopy
 

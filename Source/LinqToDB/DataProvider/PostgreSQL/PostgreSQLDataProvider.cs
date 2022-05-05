@@ -16,10 +16,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 	class PostgreSQLDataProvider92 : PostgreSQLDataProvider { public PostgreSQLDataProvider92() : base(ProviderName.PostgreSQL92, PostgreSQLVersion.v92) {} }
 	class PostgreSQLDataProvider93 : PostgreSQLDataProvider { public PostgreSQLDataProvider93() : base(ProviderName.PostgreSQL93, PostgreSQLVersion.v93) {} }
+	class PostgreSQLDataProvider95 : PostgreSQLDataProvider { public PostgreSQLDataProvider95() : base(ProviderName.PostgreSQL95, PostgreSQLVersion.v95) {} }
 
-	public class PostgreSQLDataProvider95 : PostgreSQLDataProvider { public PostgreSQLDataProvider95() : base(ProviderName.PostgreSQL95, PostgreSQLVersion.v95) {} }
-
-	public class PostgreSQLDataProvider : DynamicDataProviderBase<NpgsqlProviderAdapter>
+	public abstract class PostgreSQLDataProvider : DynamicDataProviderBase<NpgsqlProviderAdapter>
 	{
 		protected PostgreSQLDataProvider(PostgreSQLVersion version)
 			: this(GetProviderName(version), version)
@@ -27,10 +26,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		}
 
 		protected PostgreSQLDataProvider(string name, PostgreSQLVersion version)
-			: base(
-				name,
-				GetMappingSchema(version, NpgsqlProviderAdapter.GetInstance().MappingSchema),
-				NpgsqlProviderAdapter.GetInstance())
+			: base(name, GetMappingSchema(version), NpgsqlProviderAdapter.GetInstance())
 		{
 			Version = version;
 
@@ -173,7 +169,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		public PostgreSQLVersion Version { get; }
 
-		internal bool HasMacAddr8 => Adapter.IsDbTypeSupported(NpgsqlProviderAdapter.NpgsqlDbType.MacAddr8);
+		public bool HasMacAddr8 => Adapter.IsDbTypeSupported(NpgsqlProviderAdapter.NpgsqlDbType.MacAddr8);
 
 		/// <summary>
 		/// Map of canonical PostgreSQL type name to NpgsqlDbType enumeration value.
@@ -532,13 +528,13 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return null;
 		}
 
-		private static MappingSchema GetMappingSchema(PostgreSQLVersion version, MappingSchema providerSchema)
+		static MappingSchema GetMappingSchema(PostgreSQLVersion version)
 		{
 			return version switch
 			{
-				PostgreSQLVersion.v92 => new PostgreSQL92MappingSchema(providerSchema),
-				PostgreSQLVersion.v93 => new PostgreSQL93MappingSchema(providerSchema),
-				_                     => new PostgreSQL95MappingSchema(providerSchema),
+				PostgreSQLVersion.v92 => new PostgreSQLMappingSchema.PostgreSQL92MappingSchema(),
+				PostgreSQLVersion.v93 => new PostgreSQLMappingSchema.PostgreSQL93MappingSchema(),
+				_                     => new PostgreSQLMappingSchema.PostgreSQL95MappingSchema(),
 			};
 		}
 	}

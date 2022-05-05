@@ -14,6 +14,7 @@ using System.Xml.Linq;
 namespace LinqToDB.DataProvider
 {
 	using Common;
+	using Common.Internal;
 	using Data;
 	using Expressions;
 	using Mapping;
@@ -84,6 +85,9 @@ namespace LinqToDB.DataProvider
 		public virtual void InitContext(IDataContext dataContext)
 		{
 		}
+
+		private int? _id;
+		public  int   ID => _id ??= new IdentifierBuilder(Name).CreateID();
 
 		public DbConnection CreateConnection(string connectionString)
 		{

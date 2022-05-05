@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
+using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.DB2
 {
-	using System.Data.Common;
 	using Common;
 	using Data;
 	using Mapping;
@@ -19,11 +18,7 @@ namespace LinqToDB.DataProvider.DB2
 	public abstract class DB2DataProvider : DynamicDataProviderBase<DB2ProviderAdapter>
 	{
 		protected DB2DataProvider(string name, DB2Version version)
-			: base(
-				name,
-				GetMappingSchema(version, DB2ProviderAdapter.GetInstance().MappingSchema),
-				DB2ProviderAdapter.GetInstance())
-
+			: base(name, GetMappingSchema(version), DB2ProviderAdapter.Instance)
 		{
 			Version = version;
 
@@ -65,12 +60,12 @@ namespace LinqToDB.DataProvider.DB2
 
 		public DB2Version Version { get; }
 
-		private static MappingSchema GetMappingSchema(DB2Version version, MappingSchema providerSchema)
+		private static MappingSchema GetMappingSchema(DB2Version version)
 		{
 			return version switch
 			{
-				DB2Version.zOS => new DB2zOSMappingSchema(providerSchema),
-				_              => new DB2LUWMappingSchema(providerSchema),
+				DB2Version.zOS => new DB2MappingSchema.DB2zOSMappingSchema(),
+				_              => new DB2MappingSchema.DB2LUWMappingSchema(),
 			};
 		}
 
@@ -115,6 +110,12 @@ namespace LinqToDB.DataProvider.DB2
 				value    = (short)b;
 				dataType = dataType.WithDataType(DataType.Int16);
 			}
+#if NET6_0_OR_GREATER
+			else if (value is DateOnly d)
+			{
+				value    = d.ToDateTime(TimeOnly.MinValue);
+			}
+#endif
 
 			switch (dataType.DataType)
 			{
@@ -189,7 +190,7 @@ namespace LinqToDB.DataProvider.DB2
 			base.SetParameterType(dataConnection, parameter, dataType);
 		}
 
-		#region BulkCopy
+#region BulkCopy
 
 		DB2BulkCopy? _bulkCopy;
 
@@ -235,7 +236,7 @@ namespace LinqToDB.DataProvider.DB2
 		}
 #endif
 
-		#endregion
+#endregion
 
 	}
 }

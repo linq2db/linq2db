@@ -6,7 +6,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\FSharp\Tests.FSharp.fsproj" />
+		<Compile Include="..\Linq\TestsInitialization.cs" Link="TestsInitialization.cs" />
 		<Compile Include="..\Linq\Create\CreateData.cs" Link="CreateData.cs" />
 		<Compile Include="..\Linq\Linq\AssociationTests.cs" Link="AssociationTests.cs" />
 		<Compile Include="..\Linq\Linq\ConcatUnionTests.cs" Link="ConcatUnionTests.cs" />

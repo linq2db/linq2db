@@ -5,7 +5,7 @@
 // </auto-generated>
 //---------------------------------------------------------------------------------------------------
 
-#pragma warning disable 1572, 1591
+#pragma warning disable 1573, 1591
 #nullable enable
 
 using System;
@@ -25,11 +25,13 @@ namespace DB2DataContext
 	{
 		public ITable<DB2ADMIN_ALLTYPE>                ALLTYPES                { get { return this.GetTable<DB2ADMIN_ALLTYPE>(); } }
 		public ITable<DB2ADMIN_Child>                  Children                { get { return this.GetTable<DB2ADMIN_Child>(); } }
+		public ITable<DB2ADMIN_CollatedTable>          CollatedTables          { get { return this.GetTable<DB2ADMIN_CollatedTable>(); } }
 		public ITable<DB2ADMIN_CreateIfNotExistsTable> CreateIfNotExistsTables { get { return this.GetTable<DB2ADMIN_CreateIfNotExistsTable>(); } }
 		public ITable<DB2ADMIN_Doctor>                 Doctors                 { get { return this.GetTable<DB2ADMIN_Doctor>(); } }
 		public ITable<DB2ADMIN_GrandChild>             GrandChildren           { get { return this.GetTable<DB2ADMIN_GrandChild>(); } }
 		public ITable<DB2ADMIN_InheritanceChild>       InheritanceChildren     { get { return this.GetTable<DB2ADMIN_InheritanceChild>(); } }
 		public ITable<DB2ADMIN_InheritanceParent>      InheritanceParents      { get { return this.GetTable<DB2ADMIN_InheritanceParent>(); } }
+		public ITable<DB2ADMIN_Int>                    Ints                    { get { return this.GetTable<DB2ADMIN_Int>(); } }
 		public ITable<DB2ADMIN_KeepIdentityTest>       KeepIdentityTests       { get { return this.GetTable<DB2ADMIN_KeepIdentityTest>(); } }
 		public ITable<DB2ADMIN_LinqDataType>           LinqDataTypes           { get { return this.GetTable<DB2ADMIN_LinqDataType>(); } }
 		public ITable<DB2ADMIN_MASTERTABLE>            Mastertables            { get { return this.GetTable<DB2ADMIN_MASTERTABLE>(); } }
@@ -38,6 +40,7 @@ namespace DB2DataContext
 		public ITable<DB2ADMIN_Person>                 People                  { get { return this.GetTable<DB2ADMIN_Person>(); } }
 		public ITable<DB2ADMIN_PERSONVIEW>             Personviews             { get { return this.GetTable<DB2ADMIN_PERSONVIEW>(); } }
 		public ITable<DB2ADMIN_SLAVETABLE>             Slavetables             { get { return this.GetTable<DB2ADMIN_SLAVETABLE>(); } }
+		public ITable<DB2ADMIN_TagTestTable>           TagTestTables           { get { return this.GetTable<DB2ADMIN_TagTestTable>(); } }
 		public ITable<DB2ADMIN_Test>                   Tests                   { get { return this.GetTable<DB2ADMIN_Test>(); } }
 		public ITable<DB2ADMIN_TestIdentity>           TestIdentities          { get { return this.GetTable<DB2ADMIN_TestIdentity>(); } }
 		public ITable<DB2ADMIN_Testmerge1>             Testmerge1              { get { return this.GetTable<DB2ADMIN_Testmerge1>(); } }
@@ -58,7 +61,14 @@ namespace DB2DataContext
 			InitMappingSchema();
 		}
 
-		public TESTDATADB(LinqToDbConnectionOptions options)
+		public TESTDATADB(LinqToDBConnectionOptions options)
+			: base(options)
+		{
+			InitDataContext();
+			InitMappingSchema();
+		}
+
+		public TESTDATADB(LinqToDBConnectionOptions<TESTDATADB> options)
 			: base(options)
 		{
 			InitDataContext();
@@ -102,6 +112,14 @@ namespace DB2DataContext
 		[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), Nullable] public int? ChildID  { get; set; } // INTEGER
 	}
 
+	[Table(Schema="DB2ADMIN", Name="CollatedTable")]
+	public partial class DB2ADMIN_CollatedTable
+	{
+		[Column(DbType="INTEGER",     DataType=LinqToDB.DataType.Int32),              NotNull] public int    Id              { get; set; } // INTEGER
+		[Column(DbType="VARCHAR(80)", DataType=LinqToDB.DataType.VarChar, Length=80), NotNull] public string CaseSensitive   { get; set; } = null!; // VARCHAR(80)
+		[Column(DbType="VARCHAR(80)", DataType=LinqToDB.DataType.VarChar, Length=80), NotNull] public string CaseInsensitive { get; set; } = null!; // VARCHAR(80)
+	}
+
 	[Table(Schema="DB2ADMIN", Name="CreateIfNotExistsTable")]
 	public partial class DB2ADMIN_CreateIfNotExistsTable
 	{
@@ -118,9 +136,9 @@ namespace DB2DataContext
 		#region Associations
 
 		/// <summary>
-		/// FK_Doctor_Person
+		/// FK_Doctor_Person (TESTDB2.DB2ADMIN.Person)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="FK_Doctor_Person", BackReferenceName="Doctor")]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
 		public DB2ADMIN_Person Person { get; set; } = null!;
 
 		#endregion
@@ -149,6 +167,17 @@ namespace DB2DataContext
 		[Column(DbType="INTEGER",     DataType=LinqToDB.DataType.Int32),              PrimaryKey,  NotNull] public int     InheritanceParentId { get; set; } // INTEGER
 		[Column(DbType="INTEGER",     DataType=LinqToDB.DataType.Int32),                 Nullable         ] public int?    TypeDiscriminator   { get; set; } // INTEGER
 		[Column(DbType="VARCHAR(50)", DataType=LinqToDB.DataType.VarChar, Length=50),    Nullable         ] public string? Name                { get; set; } // VARCHAR(50)
+	}
+
+	[Table(Schema="DB2ADMIN", Name="Ints")]
+	public partial class DB2ADMIN_Int
+	{
+		[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), NotNull    ] public int  One   { get; set; } // INTEGER
+		[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), NotNull    ] public int  Two   { get; set; } // INTEGER
+		[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), NotNull    ] public int  Three { get; set; } // INTEGER
+		[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), NotNull    ] public int  Four  { get; set; } // INTEGER
+		[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), NotNull    ] public int  Five  { get; set; } // INTEGER
+		[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32),    Nullable] public int? Nil   { get; set; } // INTEGER
 	}
 
 	[Table(Schema="DB2ADMIN", Name="KeepIdentityTest")]
@@ -183,9 +212,9 @@ namespace DB2DataContext
 		#region Associations
 
 		/// <summary>
-		/// FK_SLAVETABLE_MASTERTABLE_BackReference
+		/// FK_SLAVETABLE_MASTERTABLE_BackReference (TESTDB2.DB2ADMIN.SLAVETABLE)
 		/// </summary>
-		[Association(ThisKey="ID1, ID2", OtherKey="ID222222222222222222222222, ID1", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+		[Association(ThisKey="ID1, ID2", OtherKey="ID222222222222222222222222, ID1", CanBeNull=true)]
 		public IEnumerable<DB2ADMIN_SLAVETABLE> Slavetables { get; set; } = null!;
 
 		#endregion
@@ -207,9 +236,9 @@ namespace DB2DataContext
 		#region Associations
 
 		/// <summary>
-		/// FK_Patient_Person
+		/// FK_Patient_Person (TESTDB2.DB2ADMIN.Person)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="FK_Patient_Person", BackReferenceName="Patient")]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
 		public DB2ADMIN_Person Person { get; set; } = null!;
 
 		#endregion
@@ -227,15 +256,15 @@ namespace DB2DataContext
 		#region Associations
 
 		/// <summary>
-		/// FK_Doctor_Person_BackReference
+		/// FK_Doctor_Person_BackReference (TESTDB2.DB2ADMIN.Doctor)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
 		public DB2ADMIN_Doctor? Doctor { get; set; }
 
 		/// <summary>
-		/// FK_Patient_Person_BackReference
+		/// FK_Patient_Person_BackReference (TESTDB2.DB2ADMIN.Patient)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
 		public DB2ADMIN_Patient? Patient { get; set; }
 
 		#endregion
@@ -261,12 +290,19 @@ namespace DB2DataContext
 		#region Associations
 
 		/// <summary>
-		/// FK_SLAVETABLE_MASTERTABLE
+		/// FK_SLAVETABLE_MASTERTABLE (TESTDB2.DB2ADMIN.MASTERTABLE)
 		/// </summary>
-		[Association(ThisKey="ID222222222222222222222222, ID1", OtherKey="ID1, ID2", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_SLAVETABLE_MASTERTABLE", BackReferenceName="Slavetables")]
+		[Association(ThisKey="ID222222222222222222222222, ID1", OtherKey="ID1, ID2", CanBeNull=false)]
 		public DB2ADMIN_MASTERTABLE MASTERTABLE { get; set; } = null!;
 
 		#endregion
+	}
+
+	[Table(Schema="DB2ADMIN", Name="TagTestTable")]
+	public partial class DB2ADMIN_TagTestTable
+	{
+		[Column(DbType="INTEGER",       DataType=LinqToDB.DataType.Int32),                NotNull    ] public int     ID   { get; set; } // INTEGER
+		[Column(DbType="VARCHAR(1020)", DataType=LinqToDB.DataType.VarChar, Length=1020),    Nullable] public string? Name { get; set; } // VARCHAR(1020)
 	}
 
 	[Table(Schema="DB2ADMIN", Name="Test")]

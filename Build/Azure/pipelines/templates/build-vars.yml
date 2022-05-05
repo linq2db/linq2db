@@ -7,6 +7,6 @@ variables:
   build_configuration: 'Azure'
   assemblyVersion: 4.0.0
   ${{ if eq(variables['Build.SourceBranchName'], 'release') }}:
-    packageVersion: 4.0.0
+    packageVersion: 4.0.0-rc.2
   ${{ if ne(variables['Build.SourceBranchName'], 'release') }}:
     packageVersion: 4.0.0

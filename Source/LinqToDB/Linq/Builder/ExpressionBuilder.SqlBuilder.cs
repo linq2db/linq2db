@@ -147,12 +147,12 @@ namespace LinqToDB.Linq.Builder
 		public IBuildContext GetSubQuery(IBuildContext context, Expression expr, bool isTest)
 		{
 			var info = new BuildInfo(context, expr, new SelectQuery {ParentSelect = context.SelectQuery})
-		{
+			{
 				CreateSubQuery = true,
-				IsTest = isTest
+				IsTest         = isTest
 			};
 
-			var ctx  = BuildSequence(info);
+			var ctx = BuildSequence(info);
 
 			/*
 			if (ctx.SelectQuery.Select.Columns.Count == 0)
@@ -169,7 +169,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region IsSubQuery
 
-		internal bool IsSubQuery(IBuildContext context, MethodCallExpression call)
+		public bool IsSubQuery(IBuildContext context, MethodCallExpression call)
 		{
 			var isAggregate = call.IsAggregate(MappingSchema);
 
@@ -204,10 +204,7 @@ namespace LinqToDB.Linq.Builder
 						if (mc.IsAssociation(MappingSchema))
 							return true;
 
-						if (IsGetTable(mc.Method))
-							break;
-
-						return GetTableFunctionAttribute(mc.Method) != null;
+						return mc.Method.GetTableFunctionAttribute(MappingSchema) != null;
 					}
 
 					mc = mc.Arguments[0] as MethodCallExpression;
@@ -217,11 +214,6 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			return false;
-		}
-
-		bool IsGetTable(MethodInfo mi)
-		{
-			return mi.Name == "GetTable" && (mi.DeclaringType == typeof(DataConnection) || mi.DeclaringType == typeof(DataExtensions));
 		}
 
 		bool IsSubQuerySource(IBuildContext context, Expression? expr)
@@ -288,7 +280,7 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-		internal Expression ConvertExpression(Expression expression)
+		public Expression ConvertExpression(Expression expression)
 		{
 			return (_convertExpressionTransformer ??= TransformInfoVisitor<ExpressionBuilder>.Create(this, static (ctx, e) => ctx.ConvertExpressionTransformer(e)))
 				.Transform(expression);
@@ -378,7 +370,10 @@ namespace LinqToDB.Linq.Builder
 						var expr = body.Transform(ma, static (ma, wpi) => wpi.NodeType == ExpressionType.Parameter ? ma.Expression! : wpi);
 
 						if (expr.Type != e.Type)
-							expr = new ChangeTypeExpression(expr, e.Type);
+						{
+							//expr = new ChangeTypeExpression(expr, e.Type);
+							expr = Expression.Convert(expr, e.Type);
+						}
 
 						//TODO: looks like a mess: ConvertExpression can not work without OptimizeExpression
 						return new TransformInfo(OptimizeExpression(ConvertExpression(expr)));
@@ -502,69 +497,7 @@ namespace LinqToDB.Linq.Builder
 			if (lambda == null)
 				lambda = Expressions.ConvertMember(MappingSchema, pi.Object?.Type, pi.Method);
 
-			return lambda == null ? null : ConvertMethod(pi, lambda);
-		}
-
-		static Expression ConvertMethod(MethodCallExpression pi, LambdaExpression lambda)
-		{
-			var ef    = lambda.Body.Unwrap();
-			var parms = new Dictionary<ParameterExpression,int>(lambda.Parameters.Count);
-			var pn    = pi.Method.IsStatic ? 0 : -1;
-
-			foreach (var p in lambda.Parameters)
-				parms.Add(p, pn++);
-
-			var pie = ef.Transform((pi, parms), static (context, wpi) =>
-			{
-				if (wpi.NodeType == ExpressionType.Parameter)
-				{
-					if (context.parms.TryGetValue((ParameterExpression)wpi, out var n))
-					{
-						if (n >= context.pi.Arguments.Count)
-						{
-							if (DataContextParam.Type.IsSameOrParentOf(wpi.Type))
-							{
-								if (DataContextParam.Type != wpi.Type)
-									return Expression.Convert(DataContextParam, wpi.Type);
-								return DataContextParam;
-							}
-
-							throw new LinqToDBException($"Can't convert {wpi} to expression.");
-						}
-
-						var result = n < 0 ? context.pi.Object! : context.pi.Arguments[n];
-
-						if (result.Type != wpi.Type)
-						{
-							var noConvert = result.UnwrapConvert();
-							if (noConvert.Type == wpi.Type)
-							{
-								result = noConvert;
-							}
-							else
-							{
-								if (noConvert.Type.IsValueType)
-									result = Expression.Convert(noConvert, wpi.Type);
-							}
-						}
-
-						return result;
-					}
-				}
-
-				return wpi;
-			});
-
-			if (pi.Method.ReturnType != pie.Type)
-			{
-				pie = pie.UnwrapConvert();
-				if (pi.Method.ReturnType != pie.Type)
-				{
-				pie = new ChangeTypeExpression(pie, pi.Method.ReturnType);
-				}
-			}
-
-			return pie;
+			return lambda == null ? null : OptimizationContext.ConvertMethod(pi, lambda);
 		}
 
 		Expression? ConvertNew(NewExpression pi)
@@ -771,7 +704,11 @@ namespace LinqToDB.Linq.Builder
 
 			/*if (context is SelectContext selectContext)
 			{
-				return ConvertToSql(context, expression);
+				var result = ConvertToSql(context, expression, false, columnDescriptor);
+
+				if (!(result is SqlField field) || field.Table!.All != field)
+					return result;
+
 				if (null != expression.Find(selectContext.Body))
 					return context.ConvertToSql(null, 0, ConvertFlags.Field).Select(static _ => _.Sql).First();
 			}*/
@@ -1198,7 +1135,7 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.MemberAccess:
 				{
 					var ma   = (MemberExpression)expression;
-					var attr = GetExpressionAttribute(ma.Member);
+					var attr = ma.Member.GetExpressionAttribute(MappingSchema);
 
 					var converted = attr?.GetExpression((this_: this, context: context!), DataContext, context!.SelectQuery, ma,
 							static (context, e, descriptor) => context.this_.ConvertToExtensionSql(context.context, e, descriptor));
@@ -1366,7 +1303,7 @@ namespace LinqToDB.Linq.Builder
 					if (expr != null)
 						return CreatePlaceholder(context, ConvertToSql(context, expr, unwrap: unwrap), expression, alias: alias);
 
-					var attr = GetExpressionAttribute(e.Method);
+					var attr = e.Method.GetExpressionAttribute(MappingSchema);
 
 					if (attr != null)
 					{
@@ -1667,9 +1604,12 @@ namespace LinqToDB.Linq.Builder
 
 						predicate = ConvertInPredicate(context!, expr);
 					}
-					else if (e.Method.Name == "ContainsKey" && typeof(IDictionary<,>).IsSameOrParentOf(e.Method.DeclaringType!))
+					else if (e.Method.Name == "ContainsKey" &&
+						(typeof(IDictionary<,>).IsSameOrParentOf(e.Method.DeclaringType!) ||
+						 typeof(IReadOnlyDictionary<,>).IsSameOrParentOf(e.Method.DeclaringType!)))
 					{
-						var args = e.Method.DeclaringType!.GetGenericArguments(typeof(IDictionary<,>))!;
+						var type = typeof(IDictionary<,>).IsSameOrParentOf(e.Method.DeclaringType!) ? typeof(IDictionary<,>) : typeof(IReadOnlyDictionary<,>);
+						var args = e.Method.DeclaringType!.GetGenericArguments(type)!;
 						var minf = EnumerableMethods
 								.First(static m => m.Name == "Contains" && m.GetParameters().Length == 2)
 								.MakeGenericMethod(args[0]);
@@ -1681,7 +1621,7 @@ namespace LinqToDB.Linq.Builder
 
 						predicate = ConvertInPredicate(context!, expr);
 					}
-
+ 
 #if NETFRAMEWORK
 					else if (e.Method == ReflectionHelper.Functions.String.Like11) predicate = ConvertLikePredicate(context!, e, flags);
 					else if (e.Method == ReflectionHelper.Functions.String.Like12) predicate = ConvertLikePredicate(context!, e, flags);
@@ -1692,7 +1632,7 @@ namespace LinqToDB.Linq.Builder
 					if (predicate != null)
 						return predicate;
 
-					var attr = GetExpressionAttribute(e.Method);
+					var attr = e.Method.GetExpressionAttribute(MappingSchema);
 
 					if (attr != null && attr.GetIsPredicate(expression))
 						break;
@@ -2581,7 +2521,6 @@ namespace LinqToDB.Linq.Builder
 			return null;
 		}
 
-
 		#endregion
 
 		#region LIKE predicate
@@ -2619,7 +2558,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region MakeIsPredicate
 
-		internal ISqlPredicate MakeIsPredicate(TableBuilder.TableContext table, Type typeOperand)
+		public ISqlPredicate MakeIsPredicate(TableBuilder.TableContext table, Type typeOperand)
 		{
 			if (typeOperand == table.ObjectType)
 			{
@@ -2640,7 +2579,7 @@ namespace LinqToDB.Linq.Builder
 			return MakeIsPredicate(table, table, table.InheritanceMapping, typeOperand, static (table, name) => table.SqlTable[name] ?? throw new LinqException($"Field {name} not found in table {table.SqlTable}"));
 		}
 
-		internal ISqlPredicate MakeIsPredicate<TContext>(
+		public ISqlPredicate MakeIsPredicate<TContext>(
 			TContext                              getSqlContext,
 			IBuildContext                         context,
 			List<InheritanceMapping>              inheritanceMapping,
@@ -2929,7 +2868,7 @@ namespace LinqToDB.Linq.Builder
 					case ExpressionType.MemberAccess :
 						{
 							var ma   = (MemberExpression)pi;
-							var attr = context.Builder.GetExpressionAttribute(ma.Member);
+							var attr = ma.Member.GetExpressionAttribute(context.Builder.MappingSchema);
 
 							if (attr == null && !ma.Member.IsNullableValueMember())
 							{
@@ -2978,7 +2917,7 @@ namespace LinqToDB.Linq.Builder
 
 							if (e.Method.DeclaringType != typeof(Enumerable))
 							{
-								var attr = context.Builder.GetExpressionAttribute(e.Method);
+								var attr = e.Method.GetExpressionAttribute(context.Builder.MappingSchema);
 
 								if (attr == null && context.CanBeCompiled)
 									return !context.Builder.CanBeCompiled(pi);
@@ -3052,16 +2991,6 @@ namespace LinqToDB.Linq.Builder
 					return current;
 
 			return null;
-		}
-
-		Sql.ExpressionAttribute? GetExpressionAttribute(MemberInfo member)
-		{
-			return MappingSchema.GetAttribute<Sql.ExpressionAttribute>(member.ReflectedType!, member, static a => a.Configuration);
-		}
-
-		internal Sql.TableFunctionAttribute? GetTableFunctionAttribute(MemberInfo member)
-		{
-			return MappingSchema.GetAttribute<Sql.TableFunctionAttribute>(member.ReflectedType!, member, static a => a.Configuration);
 		}
 
 		bool IsNullConstant(Expression expr)

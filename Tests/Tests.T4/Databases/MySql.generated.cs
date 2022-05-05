@@ -5,7 +5,7 @@
 // </auto-generated>
 //---------------------------------------------------------------------------------------------------
 
-#pragma warning disable 1572, 1591
+#pragma warning disable 1573, 1591
 #nullable enable
 
 using System;
@@ -26,6 +26,7 @@ namespace MySqlDataContext
 		public ITable<Alltype>           Alltypes           { get { return this.GetTable<Alltype>(); } }
 		public ITable<Alltypesnoyear>    Alltypesnoyears    { get { return this.GetTable<Alltypesnoyear>(); } }
 		public ITable<Child>             Children           { get { return this.GetTable<Child>(); } }
+		public ITable<Collatedtable>     Collatedtables     { get { return this.GetTable<Collatedtable>(); } }
 		public ITable<Datatypetest>      Datatypetests      { get { return this.GetTable<Datatypetest>(); } }
 		public ITable<Doctor>            Doctors            { get { return this.GetTable<Doctor>(); } }
 		public ITable<Fulltextindextest> Fulltextindextests { get { return this.GetTable<Fulltextindextest>(); } }
@@ -59,7 +60,14 @@ namespace MySqlDataContext
 			InitMappingSchema();
 		}
 
-		public TestdbDB(LinqToDbConnectionOptions options)
+		public TestdbDB(LinqToDBConnectionOptions options)
+			: base(options)
+		{
+			InitDataContext();
+			InitMappingSchema();
+		}
+
+		public TestdbDB(LinqToDBConnectionOptions<TestdbDB> options)
 			: base(options)
 		{
 			InitDataContext();
@@ -142,6 +150,14 @@ namespace MySqlDataContext
 		[Column, Nullable] public int? ChildID  { get; set; } // int
 	}
 
+	[Table("collatedtable")]
+	public partial class Collatedtable
+	{
+		[Column, NotNull] public int    Id              { get; set; } // int
+		[Column, NotNull] public string CaseSensitive   { get; set; } = null!; // varchar(20)
+		[Column, NotNull] public string CaseInsensitive { get; set; } = null!; // varchar(20)
+	}
+
 	[Table("datatypetest")]
 	public partial class Datatypetest
 	{
@@ -178,9 +194,9 @@ namespace MySqlDataContext
 		#region Associations
 
 		/// <summary>
-		/// FK_Doctor_Person
+		/// FK_Doctor_Person (testdb..person)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="FK_Doctor_Person", BackReferenceName="DoctorPerson")]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -258,9 +274,9 @@ namespace MySqlDataContext
 		#region Associations
 
 		/// <summary>
-		/// FK_Patient_Person
+		/// FK_Patient_Person (testdb..person)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="FK_Patient_Person", BackReferenceName="PatientPerson")]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -278,15 +294,15 @@ namespace MySqlDataContext
 		#region Associations
 
 		/// <summary>
-		/// FK_Doctor_Person_BackReference
+		/// FK_Doctor_Person_BackReference (testdb..doctor)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
 		public Doctor? DoctorPerson { get; set; }
 
 		/// <summary>
-		/// FK_Patient_Person_BackReference
+		/// FK_Patient_Person_BackReference (testdb..patient)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
 		public Patient? PatientPerson { get; set; }
 
 		#endregion

@@ -125,9 +125,9 @@ namespace LinqToDB.DataProvider.Access
 					IsNullable  = c.Field<bool>  ("IS_NULLABLE"),
 					Ordinal     = Converter.ChangeTypeTo<int>(c["ORDINAL_POSITION"]),
 					DataType    = dt?.TypeName,
-					Length      = dt?.CreateParameters != null && dt.CreateParameters.Contains("max length") ? Converter.ChangeTypeTo<long?>(c["CHARACTER_MAXIMUM_LENGTH"]) : null,
-					Precision   = dt?.CreateParameters != null && dt.CreateParameters.Contains("precision")  ? Converter.ChangeTypeTo<int?>(c["NUMERIC_PRECISION"])         : null,
-					Scale       = dt?.CreateParameters != null && dt.CreateParameters.Contains("scale")      ? Converter.ChangeTypeTo<int?>(c["NUMERIC_SCALE"])             : null,
+					Length      = dt?.CreateParameters != null && dt.CreateParameters.Contains("max length") ? Converter.ChangeTypeTo<int?>(c["CHARACTER_MAXIMUM_LENGTH"]) : null,
+					Precision   = dt?.CreateParameters != null && dt.CreateParameters.Contains("precision")  ? Converter.ChangeTypeTo<int?>(c["NUMERIC_PRECISION"])        : null,
+					Scale       = dt?.CreateParameters != null && dt.CreateParameters.Contains("scale")      ? Converter.ChangeTypeTo<int?>(c["NUMERIC_SCALE"])            : null,
 					// ole db provider returns incorrect flags (reports INT NOT NULL columns as identity)
 					// https://github.com/linq2db/linq2db/issues/3149
 					//IsIdentity  = dt?.ProviderDbType == 3 && flags == COUNTER_OR_BIT,
@@ -199,12 +199,12 @@ namespace LinqToDB.DataProvider.Access
 
 				for (var i = 0; i < names.Count; ++i)
 				{
-					var   paramName = names[i].Value;
-					var   rawType   = types[i].Value.Split(separators, StringSplitOptions.RemoveEmptyEntries);
-					var   dataType  = rawType[0];
-					long? size      = null;
-					int?  precision = null;
-					int?  scale     = null;
+					var  paramName = names[i].Value;
+					var  rawType   = types[i].Value.Split(separators, StringSplitOptions.RemoveEmptyEntries);
+					var  dataType  = rawType[0];
+					int? size      = null;
+					int? precision = null;
+					int? scale     = null;
 
 					if (rawType.Length > 2)
 					{
@@ -213,7 +213,7 @@ namespace LinqToDB.DataProvider.Access
 					}
 					else if (rawType.Length > 1)
 					{
-						size      = ConvertTo<long?>.From(rawType[1]);
+						size      = ConvertTo<int?>.From(rawType[1]);
 					}
 
 					list.Add(new ProcedureParameterInfo
@@ -274,7 +274,7 @@ namespace LinqToDB.DataProvider.Access
 			return dts;
 		}
 
-		protected override string? GetDbType(GetSchemaOptions options, string? columnType, DataTypeInfo? dataType, long? length, int? precision, int? scale, string? udtCatalog, string? udtSchema, string? udtName)
+		protected override string? GetDbType(GetSchemaOptions options, string? columnType, DataTypeInfo? dataType, int? length, int? precision, int? scale, string? udtCatalog, string? udtSchema, string? udtName)
 		{
 			var dbType = columnType ?? dataType?.TypeName;
 
@@ -291,9 +291,9 @@ namespace LinqToDB.DataProvider.Access
 					{
 						switch (paramNames[i].Trim().ToLower())
 						{
-							case "max length": paramValues[i] = length; break;
+							case "max length": paramValues[i] = length;    break;
 							case "precision" : paramValues[i] = precision; break;
-							case "scale"     : paramValues[i] = scale; break;
+							case "scale"     : paramValues[i] = scale;     break;
 						}
 					}
 
@@ -338,7 +338,7 @@ namespace LinqToDB.DataProvider.Access
 					IsNullable           = isNullable,
 					MemberName           = ToValidName(columnName),
 					MemberType           = ToTypeName(systemType, isNullable),
-					SystemType           = GetSystemType(columnType, null, dt, length, precision, scale, options) ?? systemType ?? typeof(object),
+					SystemType           = GetSystemType(columnType, null, dt, length, precision, scale, options) ?? systemType,
 					DataType             = GetDataType(dt?.TypeName, columnType, length, precision, scale),
 					ProviderSpecificType = GetProviderSpecificType(columnType),
 					IsIdentity           = r.Field<bool>("IsAutoIncrement"),

@@ -78,7 +78,7 @@ namespace LinqToDB.DataProvider.Access
 			(
 				from c in cs.AsEnumerable()
 				let typeName = c.Field<string>("TYPE_NAME")
-				let dt       = GetDataType(typeName, options)
+				let dt       = GetDataType(typeName, null, options)
 				let size     = Converter.ChangeTypeTo<int?>(c["COLUMN_SIZE"])
 				let scale    = Converter.ChangeTypeTo<int?>(c["DECIMAL_DIGITS"])
 				select new ColumnInfo
@@ -129,7 +129,7 @@ namespace LinqToDB.DataProvider.Access
 				let name     = p.Field<string>("PROCEDURE_NAME")
 				let size     = p.Field<int?>("COLUMN_SIZE")
 				let typeName = p.Field<string>("TYPE_NAME")
-				let dt       = GetDataType(typeName, options)
+				let dt       = GetDataType(typeName, null, options)
 				select new ProcedureParameterInfo()
 				{
 					ProcedureID   = catalog + "." + schema + "." + name,
@@ -152,7 +152,7 @@ namespace LinqToDB.DataProvider.Access
 			return dataConnection.Connection.GetSchema("ProcedureColumns", new[] { null, null, commandText.TrimStart('[').TrimEnd(']') });
 		}
 
-		protected override string? GetDbType(GetSchemaOptions options, string? columnType, DataTypeInfo? dataType, long? length, int? precision, int? scale, string? udtCatalog, string? udtSchema, string? udtName)
+		protected override string? GetDbType(GetSchemaOptions options, string? columnType, DataTypeInfo? dataType, int? length, int? precision, int? scale, string? udtCatalog, string? udtSchema, string? udtName)
 		{
 			var dbType = columnType;
 
@@ -213,7 +213,7 @@ namespace LinqToDB.DataProvider.Access
 				let columnType = r.Field<string>("TYPE_NAME")
 				let columnName = r.Field<string>("COLUMN_NAME")
 				let isNullable = r.Field<short> ("NULLABLE") == 1
-				let dt         = GetDataType(columnType, options)
+				let dt         = GetDataType(columnType, null, options)
 				let length     = r.Field<int?>  ("COLUMN_SIZE")
 				let precision  = length
 				let scale      = Converter.ChangeTypeTo<int>(r["DECIMAL_DIGITS"])
@@ -226,7 +226,7 @@ namespace LinqToDB.DataProvider.Access
 					IsNullable           = isNullable,
 					MemberName           = ToValidName(columnName),
 					MemberType           = ToTypeName(systemType, isNullable),
-					SystemType           = systemType ?? typeof(object),
+					SystemType           = systemType,
 					DataType             = GetDataType(columnType, null, length, precision, scale),
 					ProviderSpecificType = GetProviderSpecificType(columnType),
 					IsIdentity           = columnType == "COUNTER",

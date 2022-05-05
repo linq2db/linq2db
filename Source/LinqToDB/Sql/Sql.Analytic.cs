@@ -385,7 +385,7 @@ namespace LinqToDB
 
 		public interface IAndExpected<out TR>
 		{
-			// TokenName used only for chain continuation 
+			// TokenName used only for chain continuation
 			[Sql.Extension("", TokenName = "and_connector")]
 			ISecondBoundaryExpected<TR> And { get; }
 		}
@@ -412,7 +412,7 @@ namespace LinqToDB
 		#region Extensions
 
 		[Sql.Extension("{function} FILTER (WHERE {filter})", TokenName = FunctionToken, ChainPrecedence = 2, IsWindowFunction = true)]
-		public static IAnalyticFunctionWithoutWindow<T> Filter<T>(this IAnalyticFunctionWithoutWindow<T> func, 
+		public static IAnalyticFunctionWithoutWindow<T> Filter<T>(this IAnalyticFunctionWithoutWindow<T> func,
 			[ExprParameter] bool filter)
 		{
 			throw new LinqException($"'{nameof(Filter)}' is server-side method.");
@@ -736,7 +736,7 @@ namespace LinqToDB
 		public static IAnalyticFunctionWithoutWindow<T> Lag<T>(this Sql.ISqlExtension? ext, [ExprParameter] T expr, [ExprParameter] int offset, [ExprParameter] T @default)
 		{
 			throw new LinqException($"'{nameof(Lag)}' is server-side method.");
-		}		
+		}
 
 		[Sql.Extension("LAG({expr}{_}{modifier?}, {offset}, {default})", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true)]
 		public static IAnalyticFunctionWithoutWindow<T> Lag<T>(this Sql.ISqlExtension? ext, [ExprParameter] T expr, [SqlQueryDependent] Sql.Nulls nulls, [ExprParameter] int offset, [ExprParameter] T @default)

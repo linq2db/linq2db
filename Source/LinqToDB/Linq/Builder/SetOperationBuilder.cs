@@ -91,11 +91,11 @@ namespace LinqToDB.Linq.Builder
 			set1.SelectQuery.SetOperators.Add(setOperator);
 
 			return new SetOperationContext(set1, set2, methodCall);
-		}
+				}
 
 		protected override SequenceConvertInfo? Convert(
 			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-		{
+				{
 			return null;
 		}
 
@@ -147,35 +147,35 @@ namespace LinqToDB.Linq.Builder
 					else
 						alias = memberExpression.Member.Name;
 					current = memberExpression.Expression;
-				}
-
-				return alias;
 			}
 
+				return alias;
+				}
+
 			SqlGenericConstructorExpression MatchSequences(Expression root, Expression leftExpr,  Expression rightExpr, IBuildContext leftSequence, IBuildContext rightSequence)
-			{
+				{
 				if (leftExpr is SqlGenericConstructorExpression leftGenericPrep &&
 				    rightExpr is not SqlGenericConstructorExpression)
-				{
+							{
 					throw new NotImplementedException();
-				}
+						}
 
 				if (rightExpr is SqlGenericConstructorExpression rightGenericPrep &&
 				    rightExpr is not SqlGenericConstructorExpression)
-				{
+								{
 					throw new NotImplementedException();
-				}
+					}
 
 				if (leftExpr is SqlGenericConstructorExpression leftGeneric &&
 				    rightExpr is SqlGenericConstructorExpression rightGeneric)
-				{
+					{
 					var newAssignments =
 						new List<SqlGenericConstructorExpression.Assignment>(leftGeneric.Assignments.Count);
 
 					var matched = new HashSet<MemberInfo>(MemberInfoComparer.Instance);
 
 					for (int l = 0; l < leftGeneric.Assignments.Count; l++)
-					{
+							{
 						var left = leftGeneric.Assignments[l];
 
 						var found = false;
@@ -184,7 +184,7 @@ namespace LinqToDB.Linq.Builder
 						var mi = root.Type.GetMemberEx(left.MemberInfo);
 
 						if (mi == null)
-						{
+					{
 							// handling inheritance mapping
 							//
 							if (left.MemberInfo.ReflectedType == null)
@@ -192,17 +192,17 @@ namespace LinqToDB.Linq.Builder
 
 							rootObj = new ContextRefExpression(left.MemberInfo.ReflectedType, this);
 							mi      = left.MemberInfo;
-						}
+				}
 
 						var ma = Expression.MakeMemberAccess(rootObj, mi);
 
 						var assignmentExpr = (Expression)ma;
 
 						for (int r = 0; r < rightGeneric.Assignments.Count; r++)
-						{
+				{
 							var right = rightGeneric.Assignments[r];
 							if (MemberInfoComparer.Instance.Equals(left.MemberInfo, right.MemberInfo))
-							{
+					{
 								if (left.Expression is SqlGenericConstructorExpression || right.Expression is SqlGenericConstructorExpression)
 									assignmentExpr = MatchSequences(assignmentExpr, left.Expression, right.Expression, leftSequence, rightSequence);
 								else
@@ -210,11 +210,11 @@ namespace LinqToDB.Linq.Builder
 
 								found = true;
 								break;
-							}
-						}
+					}
+				}
 
 						if (!found)
-						{
+				{
 							if (left.Expression is not SqlPlaceholderExpression leftPlaceholder)
 								throw new NotImplementedException();
 
@@ -225,7 +225,7 @@ namespace LinqToDB.Linq.Builder
 									Expression.MakeMemberAccess(rightGeneric, left.MemberInfo)));
 
 							_matchedPairs.Add(ma, (_matchedPairs.Count, left, right));
-						}
+					}
 
 						newAssignments.Add(new SqlGenericConstructorExpression.Assignment(left.MemberInfo, assignmentExpr));
 
@@ -257,25 +257,25 @@ namespace LinqToDB.Linq.Builder
 						_matchedPairs.Add(ma, (_matchedPairs.Count, left, right));
 
 						newAssignments.Add(new SqlGenericConstructorExpression.Assignment(left.MemberInfo, ma));
-					}
+									}
 
 					// Shortcut, we can result object from any side
 					//
 					if (leftGeneric.ConstructType  == SqlGenericConstructorExpression.CreateType.Full &&
 					    rightGeneric.ConstructType == SqlGenericConstructorExpression.CreateType.Full)
-					{
+							{
 						return leftGeneric;
 					};
 
 					//TODO: try to merge with constructor
 					return new SqlGenericConstructorExpression(false, leftGeneric.ObjectType, newAssignments);
-				}
+							}
 
 				throw new NotImplementedException();
-			}
+						}
 
 			void Init()
-			{
+						{
 				var ref1 = new ContextRefExpression(_type, _sequence1);
 				var ref2 = new ContextRefExpression(_type, _sequence2);
 
@@ -287,12 +287,12 @@ namespace LinqToDB.Linq.Builder
 				_body = MatchSequences(root, expr1, expr2, _sequence1, _sequence2);
 
 				foreach (var matchedPair in _matchedPairs.OrderBy(x => x.Value.idx))
-				{
+											{
 					var alias = GenerateColumnAlias(matchedPair.Key);
 
 					var leftExpression = Builder.ConvertToSqlExpr(this, matchedPair.Value.left.Expression);
 					if (leftExpression is SqlPlaceholderExpression placehoderLeft)
-					{
+										{
 						if (alias != null)
 							placehoderLeft.Alias = alias;
 
@@ -307,22 +307,22 @@ namespace LinqToDB.Linq.Builder
 							placehoderRight.Alias = alias;
 
 						var rightColumn = Builder.MakeColumn(_sequence2.SelectQuery, placehoderRight);
-					}
-				}
-			}
+								}
+							}
+						}
 
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
-			{
+						{
 				var expr = Builder.FinalizeProjection(this,
 					Builder.MakeExpression(new ContextRefExpression(typeof(T), this), ProjectFlags.Expression));
 
 				var mapper = Builder.BuildMapper<T>(expr);
 
 				QueryRunner.SetRunQuery(query, mapper);
-			}
+					}
 
 			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
-			{
+					{
 				throw new NotImplementedException();
 			}
 
@@ -342,30 +342,30 @@ namespace LinqToDB.Linq.Builder
 			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 			{
 				throw new NotImplementedException();
-			}
+							}
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
-			{
+							{
 				if (SequenceHelper.IsSameContext(path, this) &&
 				    (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AssociationRoot)))
-				{
+								{
 					return path;
 				}
 
 				if (flags.HasFlag(ProjectFlags.SQL))
-				{
+									{
 					if (_body != null)
-					{
+										{
 						var projected = Builder.Project(this, path, null, -1, flags, _body);
 						if (projected is MemberExpression)
-						{
+											{
 							if (_createdSQL.TryGetValue(projected, out var placeholderExpression))
 								return placeholderExpression;
 							return Builder.CreateSqlError(this, projected);
-						}
+											}
 						return projected;
-					}
-				}
+										}
+									}
 				else if (SequenceHelper.IsSameContext(path, this) && flags.HasFlag(ProjectFlags.Expression))
 				{
 					if (_body != null)
@@ -375,15 +375,15 @@ namespace LinqToDB.Linq.Builder
 							var expr = Builder.BuildEntityExpression(this, _body.ObjectType, flags);
 
 							return expr;
-						}
+									}
 
 						//_body.TryConstruct()
 
 						throw new NotImplementedException($"Handle other CreateTypes: {_body.ConstructType}");
-					}
+							}
 
 					throw new NotImplementedException("Scalar handling not implemented");
-				}
+					}
 
 
 				return base.MakeExpression(path, flags);

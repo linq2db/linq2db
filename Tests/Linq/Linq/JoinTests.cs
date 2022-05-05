@@ -2134,7 +2134,7 @@ namespace Tests.Linq
 		{
 			[PrimaryKey] public int Id { get; set; }
 
-			[Association(ThisKey = "Id", OtherKey = "FactId", CanBeNull = true, Relationship = Relationship.OneToMany, IsBackReference = true)]
+			[Association(ThisKey = "Id", OtherKey = "FactId", CanBeNull = true)]
 			public IEnumerable<Tag> TagFactIdIds { get; set; } = null!;
 
 			public static readonly Fact[] Data = new[]
@@ -2667,7 +2667,7 @@ namespace Tests.Linq
 			[Column("inId"), PrimaryKey] public int InId { get; set; }
 			[Column("inIdMain")]         public int InIdMain { get; set; }
 
-			[Association(ThisKey = "InIdMain", OtherKey = "InId", CanBeNull = false, Relationship = Relationship.ManyToOne)]
+			[Association(ThisKey = "InIdMain", OtherKey = "InId", CanBeNull = false)]
 			public StMain Main { get; set; } = null!;
 
 			public static StVersion[] Data = Array<StVersion>.Empty;
@@ -2886,7 +2886,7 @@ namespace Tests.Linq
 		#endregion
 
 
-		[ActiveIssue(1224, Configurations = new[] 
+		[ActiveIssue(1224, Configurations = new[]
 		{
 			TestProvName.AllSQLite,
 			TestProvName.AllAccess,

@@ -40,9 +40,10 @@ namespace LinqToDB.Interceptors
 			return await Apply(async () =>
 			{
 				foreach (var interceptor in Interceptors)
-					result = await interceptor.ExecuteScalarAsync(eventData, command, result, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					result = await interceptor.ExecuteScalarAsync(eventData, command, result, cancellationToken)
+					.ConfigureAwait(Configuration.ContinueOnCapturedContext);
 				return result;
-			}).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			}).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 		}
 
 		public Option<int> ExecuteNonQuery(CommandEventData eventData, DbCommand command, Option<int> result)
@@ -60,9 +61,10 @@ namespace LinqToDB.Interceptors
 			return await Apply(async () =>
 			{
 				foreach (var interceptor in Interceptors)
-					result = await interceptor.ExecuteNonQueryAsync(eventData, command, result, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					result = await interceptor.ExecuteNonQueryAsync(eventData, command, result, cancellationToken)
+					.ConfigureAwait(Configuration.ContinueOnCapturedContext);
 				return result;
-			}).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			}).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 		}
 
 		public Option<DbDataReader> ExecuteReader(CommandEventData eventData, DbCommand command, CommandBehavior commandBehavior, Option<DbDataReader> result)
@@ -80,9 +82,19 @@ namespace LinqToDB.Interceptors
 			return await Apply(async () =>
 			{
 				foreach (var interceptor in Interceptors)
-					result = await interceptor.ExecuteReaderAsync(eventData, command, commandBehavior, result, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					result = await interceptor.ExecuteReaderAsync(eventData, command, commandBehavior, result, cancellationToken)
+					.ConfigureAwait(Configuration.ContinueOnCapturedContext);
 				return result;
-			}).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			}).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+		}
+
+		public void AfterExecuteReader(CommandEventData eventData, DbCommand command, CommandBehavior commandBehavior, DbDataReader dataReader)
+		{
+			Apply(() =>
+			{
+				foreach (var interceptor in Interceptors)
+					interceptor.AfterExecuteReader(eventData, command, commandBehavior, dataReader);
+			});
 		}
 	}
 }

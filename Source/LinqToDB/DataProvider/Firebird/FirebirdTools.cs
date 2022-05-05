@@ -1,15 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Data;
+using System.Data.Common;
 using System.Reflection;
 
 using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.Firebird
 {
-	using System.Data.Common;
+	using Configuration;
 	using Data;
-	using LinqToDB.Configuration;
 
 	[PublicAPI]
 	public static class FirebirdTools
@@ -18,12 +16,9 @@ namespace LinqToDB.DataProvider.Firebird
 
 		internal static IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)
 		{
-			if (css.ProviderName == ProviderName.Firebird
-				|| css.ProviderName == FirebirdProviderAdapter.ClientNamespace
-				|| css.Name.Contains("Firebird"))
-			{
+			if (css.ProviderName is ProviderName.Firebird or FirebirdProviderAdapter.ClientNamespace ||
+			    css.Name.Contains("Firebird"))
 				return _firebirdDataProvider.Value;
-			}
 
 			return null;
 		}
@@ -36,13 +31,13 @@ namespace LinqToDB.DataProvider.Firebird
 		public static void ResolveFirebird(string path)
 		{
 			if (path == null) throw new ArgumentNullException(nameof(path));
-			new AssemblyResolver(path, FirebirdProviderAdapter.AssemblyName);
+			_ = new AssemblyResolver(path, FirebirdProviderAdapter.AssemblyName);
 		}
 
 		public static void ResolveFirebird(Assembly assembly)
 		{
 			if (assembly == null) throw new ArgumentNullException(nameof(assembly));
-			new AssemblyResolver(assembly, FirebirdProviderAdapter.AssemblyName);
+			_ = new AssemblyResolver(assembly, FirebirdProviderAdapter.AssemblyName);
 		}
 
 		#region CreateDataConnection
@@ -72,7 +67,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 		#region ClearAllPools
 
-		public static void ClearAllPools() => FirebirdProviderAdapter.GetInstance().ClearAllPools();
+		public static void ClearAllPools() => FirebirdProviderAdapter.Instance.ClearAllPools();
 
 		#endregion
 	}

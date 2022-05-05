@@ -140,7 +140,7 @@ WHERE
 					// IMPORTANT: reader calls must be ordered to support SequentialAccess
 					var tableId     = dataConnection.Connection.Database + "." + rd.ToString(0) + "." + rd.ToString(1);
 					var name        = rd.ToString(2)!;
-					var size        = Converter.ChangeTypeTo<long?>(rd[3]);
+					var size        = Converter.ChangeTypeTo<int?>(rd[3]);
 					var scale       = Converter.ChangeTypeTo<int?>(rd[4]);
 					var isNullable  = rd.ToString(5) == "Y";
 					var isIdentity  = rd.ToString(6) == "Y";
@@ -170,13 +170,13 @@ WHERE
 				sql).ToList();
 		}
 
-		static void SetColumnParameters(ColumnInfo ci, long? size, int? scale)
+		static void SetColumnParameters(ColumnInfo ci, int? size, int? scale)
 		{
 			switch (ci.DataType)
 			{
 				case "DECIMAL"                   :
 				case "DECFLOAT"                  :
-					if (size  > 0) ci.Precision = (int?)size;
+					if (size  > 0) ci.Precision = size;
 					if (scale > 0) ci.Scale     = scale;
 					break;
 
@@ -261,9 +261,9 @@ WHERE
 				.ToList();
 		}
 
-		protected override string? GetDbType(GetSchemaOptions options, string? columnType, DataTypeInfo? dataType, long? length, int? precision, int? scale, string? udtCatalog, string? udtSchema, string? udtName)
+		protected override string? GetDbType(GetSchemaOptions options, string? columnType, DataTypeInfo? dataType, int? length, int? precision, int? scale, string? udtCatalog, string? udtSchema, string? udtName)
 		{
-			var type = GetDataType(columnType, options);
+			var type = GetDataType(columnType, null, options);
 
 			if (type != null)
 			{
@@ -298,7 +298,7 @@ WHERE
 			return base.GetDbType(options, columnType, dataType, length, precision, scale, udtCatalog, udtSchema, udtName);
 		}
 
-		protected override DataType GetDataType(string? dataType, string? columnType, long? length, int? prec, int? scale)
+		protected override DataType GetDataType(string? dataType, string? columnType, int? length, int? prec, int? scale)
 		{
 			return dataType switch
 			{
@@ -446,9 +446,9 @@ ORDER BY PROCSCHEMA, PROCNAME";
 					var pName    = rd.ToString(2);
 					var dataType = rd.ToString(3);
 					var mode     = ConvertTo<string>.From(rd[4]);
-					var ordinal  = ConvertTo<int>.From(rd[5]);
-					var length   = ConvertTo<long?>.From(rd[6]);
-					var scale    = ConvertTo<int?>. From(rd[7]);
+					var ordinal  = ConvertTo<int>   .From(rd[5]);
+					var length   = ConvertTo<int?>  .From(rd[6]);
+					var scale    = ConvertTo<int?>  .From(rd[7]);
 
 					var ppi = new ProcedureParameterInfo
 					{
@@ -478,7 +478,6 @@ SELECT
 	PARMNAME,
 	TYPENAME,
 	PARM_MODE,
-
 	ORDINAL,
 	LENGTH,
 	SCALE

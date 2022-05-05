@@ -14,8 +14,4 @@
 	GenerateDataTypes = true;
 
 	GenerateModel();
-
-//	GenerationEnvironment.Replace(
-//		"#pragma warning disable 1572, 1591",
-//		"#pragma warning disable 1572, 1591, 618");
 #>

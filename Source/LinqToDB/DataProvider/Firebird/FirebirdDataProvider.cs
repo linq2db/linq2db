@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Data.Common;
 using System.Linq;
 using System.Threading;
@@ -15,17 +14,17 @@ namespace LinqToDB.DataProvider.Firebird
 
 	public class FirebirdDataProvider : DynamicDataProviderBase<FirebirdProviderAdapter>
 	{
-		public FirebirdDataProvider() : this(ProviderName.Firebird, null, null)
+		public FirebirdDataProvider() : this(ProviderName.Firebird, null)
 		{
 		}
 
-		protected internal FirebirdDataProvider(ISqlOptimizer sqlOptimizer)
-			: this(ProviderName.Firebird, null, sqlOptimizer)
+		public FirebirdDataProvider(ISqlOptimizer sqlOptimizer)
+			: this(ProviderName.Firebird, sqlOptimizer)
 		{
 		}
 
-		protected FirebirdDataProvider(string name, MappingSchema? mappingSchema, ISqlOptimizer? sqlOptimizer)
-			: base(name, GetMappingSchema(mappingSchema, FirebirdProviderAdapter.GetInstance().MappingSchema), FirebirdProviderAdapter.GetInstance())
+		protected FirebirdDataProvider(string name, ISqlOptimizer? sqlOptimizer)
+			: base(name, GetMappingSchema(), FirebirdProviderAdapter.Instance)
 		{
 			SqlProviderFlags.IsIdentityParameterRequired       = true;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
@@ -89,6 +88,13 @@ namespace LinqToDB.DataProvider.Firebird
 				dataType = dataType.WithDataType(DataType.Char);
 			}
 
+#if NET6_0_OR_GREATER
+			if (!Adapter.IsDateOnlySupported && value is DateOnly d)
+			{
+				value = d.ToDateTime(TimeOnly.MinValue);
+			}
+#endif
+
 			base.SetParameter(dataConnection, parameter, name, dataType, value);
 		}
 
@@ -123,9 +129,9 @@ namespace LinqToDB.DataProvider.Firebird
 			base.SetParameterType(dataConnection, parameter, dataType);
 		}
 
-		private static MappingSchema GetMappingSchema(params MappingSchema?[] schemas)
+		static MappingSchema GetMappingSchema()
 		{
-			return new FirebirdProviderMappingSchema(schemas.Where(s => s != null).ToArray()!);
+			return new FirebirdMappingSchema.FirebirdProviderMappingSchema();
 		}
 
 		#region BulkCopy

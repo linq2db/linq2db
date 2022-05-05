@@ -53,7 +53,7 @@ namespace Tests.Extensions
 	GenerateOptionTest2("MaxRecursion");
 	GenerateOptionTest ("NoPerformanceSpool", "2019Plus");
 	GenerateOptionTest ("OptimizeForUnknown", "2008Plus");
-	GenerateOptionTest2("QueryTraceOn");
+	GenerateOptionTest2("QueryTraceOn",       "NoAzure");
 	GenerateOptionTest ("Recompile");
 	GenerateOptionTest ("RobustPlan");
 #>

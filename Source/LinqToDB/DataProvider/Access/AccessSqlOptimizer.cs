@@ -95,8 +95,8 @@ namespace LinqToDB.DataProvider.Access
 						subStrPredicate =
 							new SqlPredicate.ExprExpr(
 								new SqlFunction(typeof(int), "InStr",
-									indexExpr, 
-									predicate.Expr1, 
+									indexExpr,
+									predicate.Expr1,
 									predicate.Expr2,
 									new SqlValue(0)),
 								SqlPredicate.Operator.Equal,

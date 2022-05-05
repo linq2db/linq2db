@@ -81,7 +81,7 @@ namespace LinqToDB.Linq.Builder
 								return BuildContextType.FromSqlScalarMethod;
 						}
 
-						var attr = builder.GetTableFunctionAttribute(mc.Method);
+						var attr = mc.Method.GetTableFunctionAttribute(builder.MappingSchema);
 
 						if (attr != null)
 							return BuildContextType.TableFunctionAttribute;

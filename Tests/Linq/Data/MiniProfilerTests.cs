@@ -74,7 +74,7 @@ namespace Tests.Data
 
 			private static IDataProvider GetDataProvider()
 			{
-				return new SqlServerDataProvider("MiniProfiler." + ProviderName.SqlServer2012, SqlServerVersion.v2012, SqlServerProvider.SystemDataSqlClient);
+				return new SqlServerTests.TestSqlServerDataProvider("MiniProfiler." + ProviderName.SqlServer2012, SqlServerVersion.v2012, SqlServerProvider.SystemDataSqlClient);
 			}
 
 			private static DbConnection GetConnection(string configurationString)
@@ -270,12 +270,20 @@ namespace Tests.Data
 			public object? Value { get; set; }
 		}
 
+		class TestMySqlDataProvider : MySqlDataProvider
+		{
+			public TestMySqlDataProvider(string providerName)
+				: base(providerName)
+			{
+			}
+		}
+
 		// tests support of data reader methods by Mapper.Map (using MySql.Data provider only)
 		[Test]
 		public void TestMapperMap([IncludeDataSources(TestProvName.AllMySqlData)] string context, [Values] ConnectionType type)
 		{
 			// AllowZeroDateTime is to enable MySqlDateTime type
-			using (var db = CreateDataConnection(new MySqlDataProviderMySqlOfficial(), context, type, "MySql.Data.MySqlClient.MySqlConnection, MySql.Data", ";AllowZeroDateTime=true"))
+			using (var db = CreateDataConnection(new TestMySqlDataProvider(ProviderName.MySqlOfficial), context, type, "MySql.Data.MySqlClient.MySqlConnection, MySql.Data", ";AllowZeroDateTime=true"))
 			{
 				var dtValue = new DateTime(2012, 12, 12, 12, 12, 12, 0);
 
@@ -288,7 +296,7 @@ namespace Tests.Data
 			}
 		}
 
-		public class LinqMySqlDataProvider : MySqlDataProvider
+		class LinqMySqlDataProvider : MySqlDataProvider
 		{
 			private readonly Func<string, DbConnection> _connectionFactory;
 			public LinqMySqlDataProvider(Func<string, DbConnection> connectionFactory)
@@ -323,6 +331,8 @@ namespace Tests.Data
 				{
 					case ConnectionType.MiniProfilerNoMappings:
 					case ConnectionType.MiniProfiler:
+						if (MiniProfiler.Current == null)
+							MiniProfiler.DefaultOptions.StartProfiler();
 						Assert.IsNotNull(MiniProfiler.Current);
 						return new ProfiledDbConnection(cn, MiniProfiler.Current);
 				}
@@ -338,7 +348,7 @@ namespace Tests.Data
 			using (var db = GetDataContext(testContext + (isLinq ? ".LinqService" : null), ms))
 			{
 				if (type == ConnectionType.MiniProfiler)
-					db.AddInterceptor(new UnwrapProfilerInterceptor());
+					db.AddInterceptor(UnwrapProfilerInterceptor.Instance);
 
 				var dtValue = new DateTime(2012, 12, 12, 12, 12, 12, 0);
 
@@ -358,7 +368,7 @@ namespace Tests.Data
 		{
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
 			// AllowZeroDateTime is to enable MySqlDateTime type
-			using (var db = CreateDataConnection(new MySqlDataProviderMySqlOfficial(), context, type, "MySql.Data.MySqlClient.MySqlConnection, MySql.Data", ";AllowZeroDateTime=true"))
+			using (var db = CreateDataConnection(new TestMySqlDataProvider(ProviderName.MySqlOfficial), context, type, "MySql.Data.MySqlClient.MySqlConnection, MySql.Data", ";AllowZeroDateTime=true"))
 			{
 				var trace = string.Empty;
 				db.OnTraceConnection += (TraceInfo ti) =>
@@ -424,7 +434,7 @@ namespace Tests.Data
 #else
 			var connectionTypeName = "MySqlConnector.MySqlConnection, MySqlConnector";
 #endif
-			using (var db = CreateDataConnection(new MySqlDataProviderMySqlConnector(), context, type, connectionTypeName, ";AllowZeroDateTime=true"))
+			using (var db = CreateDataConnection(new TestMySqlDataProvider(ProviderName.MySqlConnector), context, type, connectionTypeName, ";AllowZeroDateTime=true"))
 			{
 				var trace = string.Empty;
 				db.OnTraceConnection += (TraceInfo ti) =>
@@ -507,14 +517,22 @@ namespace Tests.Data
 			}
 		}
 
+		class TestDB2LUWDataProvider : DB2DataProvider
+		{
+			public TestDB2LUWDataProvider()
+				: base(ProviderName.DB2LUW, DB2Version.LUW)
+			{
+			}
+		}
+
 		[Test]
 		public void TestDB2([IncludeDataSources(ProviderName.DB2)] string context, [Values] ConnectionType type)
 		{
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
 #if NETCOREAPP3_1
-			using (var db = CreateDataConnection(new DB2LUWDataProvider(), context, type, $"{DB2ProviderAdapter.ClientNamespaceOld}.DB2Connection, {DB2ProviderAdapter.AssemblyNameOld}"))
+			using (var db = CreateDataConnection(new TestDB2LUWDataProvider(), context, type, $"{DB2ProviderAdapter.ClientNamespaceOld}.DB2Connection, {DB2ProviderAdapter.AssemblyNameOld}"))
 #else
-			using (var db = CreateDataConnection(new DB2LUWDataProvider(), context, type, $"{DB2ProviderAdapter.ClientNamespace}.DB2Connection, {DB2ProviderAdapter.AssemblyName}"))
+			using (var db = CreateDataConnection(new TestDB2LUWDataProvider(), context, type, $"{DB2ProviderAdapter.ClientNamespace}.DB2Connection, {DB2ProviderAdapter.AssemblyName}"))
 #endif
 			{
 				var trace = string.Empty;
@@ -559,7 +577,7 @@ namespace Tests.Data
 
 				// test connection server type property
 				var cs = DataConnection.GetConnectionString(GetProviderName(context, out var _));
-				using (var cn = DB2ProviderAdapter.GetInstance().CreateConnection(cs))
+				using (var cn = DB2ProviderAdapter.Instance.CreateConnection(cs))
 				{
 					cn.Open();
 
@@ -599,9 +617,9 @@ namespace Tests.Data
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
 			using (new DisableBaseline("TODO: debug reason for inconsistent bulk copy sql"))
 #if NET472
-			using (var db = CreateDataConnection(new SqlServerDataProvider(providerName, version, SqlServerProvider.SystemDataSqlClient), context, type, typeof(SqlConnection)))
+			using (var db = CreateDataConnection(new SqlServerTests.TestSqlServerDataProvider(providerName, version, SqlServerProvider.SystemDataSqlClient), context, type, typeof(SqlConnection)))
 #else
-			using (var db = CreateDataConnection(new SqlServerDataProvider(providerName, version, SqlServerProvider.SystemDataSqlClient), context, type, "System.Data.SqlClient.SqlConnection, System.Data.SqlClient"))
+			using (var db = CreateDataConnection(new SqlServerTests.TestSqlServerDataProvider(providerName, version, SqlServerProvider.SystemDataSqlClient), context, type, "System.Data.SqlClient.SqlConnection, System.Data.SqlClient"))
 #endif
 			{
 				var trace = string.Empty;
@@ -767,7 +785,7 @@ namespace Tests.Data
 
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
 			using (new DisableBaseline("TODO: debug reason for inconsistent bulk copy sql"))
-			using (var db = CreateDataConnection(new SqlServerDataProvider(providerName, version, SqlServerProvider.MicrosoftDataSqlClient), context, type, "Microsoft.Data.SqlClient.SqlConnection, Microsoft.Data.SqlClient"))
+			using (var db = CreateDataConnection(new SqlServerTests.TestSqlServerDataProvider(providerName, version, SqlServerProvider.MicrosoftDataSqlClient), context, type, "Microsoft.Data.SqlClient.SqlConnection, Microsoft.Data.SqlClient"))
 			{
 				var trace = string.Empty;
 				db.OnTraceConnection += (TraceInfo ti) =>
@@ -1088,7 +1106,7 @@ namespace Tests.Data
 		public void TestInformixIFX([IncludeDataSources(ProviderName.Informix)] string context, [Values] ConnectionType type)
 		{
 			var unmapped  = type == ConnectionType.MiniProfilerNoMappings;
-			var provider  = new InformixDataProviderInformix();
+			var provider  = new TestInformixDataProvider(ProviderName.Informix);
 			using (var db = CreateDataConnection(provider, context, type, "IBM.Data.Informix.IfxConnection, IBM.Data.Informix"))
 			{
 				var trace = string.Empty;
@@ -1131,7 +1149,6 @@ namespace Tests.Data
 				if (provider.Adapter.IsIDSProvider)
 					TestBulkCopy();
 
-
 				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
 
 				void TestBulkCopy()
@@ -1163,11 +1180,19 @@ namespace Tests.Data
 		}
 #endif
 
+		class TestInformixDataProvider : InformixDataProvider
+		{
+			public TestInformixDataProvider(string providerName)
+				: base(providerName)
+			{
+			}
+		}
+
 		[Test]
 		public void TestInformixDB2([IncludeDataSources(ProviderName.InformixDB2)] string context, [Values] ConnectionType type)
 		{
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
-			var provider = new InformixDataProviderDB2();
+			var provider = new TestInformixDataProvider(ProviderName.InformixDB2);
 #if NETCOREAPP3_1
 			using (var db = CreateDataConnection(provider, context, type, $"{DB2ProviderAdapter.ClientNamespaceOld}.DB2Connection, {DB2ProviderAdapter.AssemblyNameOld}"))
 #else
@@ -1238,7 +1263,7 @@ namespace Tests.Data
 		{
 			var wrapped   = type == ConnectionType.MiniProfilerNoMappings || type == ConnectionType.MiniProfiler;
 			var unmapped  = type == ConnectionType.MiniProfilerNoMappings;
-			using (var db = CreateDataConnection(new OracleDataProvider(ProviderName.OracleNative), context, type, "Oracle.DataAccess.Client.OracleConnection, Oracle.DataAccess"))
+			using (var db = CreateDataConnection(new OracleTests.TestOracleDataProvider(ProviderName.OracleNative), context, type, "Oracle.DataAccess.Client.OracleConnection, Oracle.DataAccess"))
 			{
 				var trace = string.Empty;
 				db.OnTraceConnection += (TraceInfo ti) =>
@@ -1326,7 +1351,7 @@ namespace Tests.Data
 		{
 			var wrapped   = type == ConnectionType.MiniProfilerNoMappings || type == ConnectionType.MiniProfiler;
 			var unmapped  = type == ConnectionType.MiniProfilerNoMappings;
-			using (var db = CreateDataConnection(new OracleDataProvider(ProviderName.OracleManaged), context, type, "Oracle.ManagedDataAccess.Client.OracleConnection, Oracle.ManagedDataAccess"))
+			using (var db = CreateDataConnection(new OracleTests.TestOracleDataProvider(ProviderName.OracleManaged), context, type, "Oracle.ManagedDataAccess.Client.OracleConnection, Oracle.ManagedDataAccess"))
 			{
 				var trace = string.Empty;
 				db.OnTraceConnection += (TraceInfo ti) =>
@@ -1603,34 +1628,11 @@ namespace Tests.Data
 			switch (type)
 			{
 				case ConnectionType.MiniProfiler:
-					db.AddInterceptor(new UnwrapProfilerInterceptor());
+					db.AddInterceptor(UnwrapProfilerInterceptor.Instance);
 					break;
 			}
 
 			return db;
-		}
-
-		internal class UnwrapProfilerInterceptor : UnwrapDataObjectInterceptor
-		{
-			public override DbConnection UnwrapConnection(IDataContext dataContext, DbConnection connection)
-			{
-				return connection is ProfiledDbConnection c ? c.WrappedConnection : connection;
-			}
-
-			public override DbTransaction UnwrapTransaction(IDataContext dataContext, DbTransaction transaction)
-			{
-				return transaction is ProfiledDbTransaction t ? t.WrappedTransaction : transaction;
-			}
-
-			public override DbCommand UnwrapCommand(IDataContext dataContext, DbCommand command)
-			{
-				return command is ProfiledDbCommand c ? c.InternalCommand : command;
-			}
-
-			public override DbDataReader UnwrapDataReader(IDataContext dataContext, DbDataReader dataReader)
-			{
-				return dataReader is ProfiledDbDataReader dr ? dr.WrappedReader : dataReader;
-			}
 		}
 	}
 }

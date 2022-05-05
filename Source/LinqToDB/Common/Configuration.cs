@@ -16,7 +16,7 @@ namespace LinqToDB.Common
 	/// </summary>
 	public static class Compilation
 	{
-		private static Func<LambdaExpression, Delegate?>? _compiler;
+		private static Func<LambdaExpression,Delegate?>? _compiler;
 
 		/// <summary>
 		/// Sets LINQ expression compilation method.
@@ -27,13 +27,19 @@ namespace LinqToDB.Common
 			_compiler = compiler;
 		}
 
-		internal static TDelegate CompileExpression<TDelegate>(this Expression<TDelegate> expression)
+		/// <summary>
+		/// Internal API.
+		/// </summary>
+		public static TDelegate CompileExpression<TDelegate>(this Expression<TDelegate> expression)
 			where TDelegate : Delegate
 		{
 			return ((TDelegate?)_compiler?.Invoke(expression)) ?? expression.Compile();
 		}
 
-		internal static Delegate CompileExpression(this LambdaExpression expression)
+		/// <summary>
+		/// Internal API.
+		/// </summary>
+		public static Delegate CompileExpression(this LambdaExpression expression)
 		{
 			return _compiler?.Invoke(expression) ?? expression.Compile();
 		}
@@ -60,9 +66,9 @@ namespace LinqToDB.Common
 
 		/// <summary>
 		/// Defines value to pass to <see cref="Task.ConfigureAwait(bool)"/> method for all linq2db internal await operations.
-		/// Default value: <c>true</c>.
+		/// Default value: <c>false</c>.
 		/// </summary>
-		public static bool ContinueOnCapturedContext = true;
+		public static bool ContinueOnCapturedContext;
 
 		/// <summary>
 		/// Enables mapping expression to be compatible with <see cref="CommandBehavior.SequentialAccess"/> behavior.
@@ -258,6 +264,13 @@ namespace LinqToDB.Common
 			/// Default value: <c>true</c>.
 			/// </summary>
 			public static bool ParameterizeTakeSkip = true;
+
+			/// <summary>
+			/// If <c>true</c>, auto support for fluent mapping is ON,
+			/// which means that you do not need to create additional MappingSchema object to define FluentMapping.
+			/// You can use <c>context.MappingSchema.GetFluentMappingBuilder()</c>.
+			/// </summary>
+			public static bool EnableAutoFluentMapping = true;
 		}
 
 		/// <summary>

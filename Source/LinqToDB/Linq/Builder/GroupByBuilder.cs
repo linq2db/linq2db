@@ -286,7 +286,7 @@ namespace LinqToDB.Linq.Builder
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 					{
 				if (flags.HasFlag(ProjectFlags.Root))
-							{
+						{
 					if (SequenceHelper.IsSameContext(path, this))
 						return path;
 
@@ -307,7 +307,7 @@ namespace LinqToDB.Linq.Builder
 					result = Builder.ConvertToSqlExpr(this, result, newFlags);
 					// appending missing keys
 					AppendGroupBy(Builder, GroupByContext.CurrentPlaceholders, GroupByContext.SubQuery.SelectQuery, result);
-					
+
 					// we return SQL nested as GroupByContext
 					result = Builder.UpdateNesting(GroupByContext, result);
 				}
@@ -355,7 +355,7 @@ namespace LinqToDB.Linq.Builder
 			public SelectContext   Element { get; }
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
-								{
+				{
 				if (SequenceHelper.IsSameContext(path, this) &&
 				    (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AggregtionRoot) || flags.HasFlag(ProjectFlags.Test)))
 				{
@@ -366,7 +366,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					var result = Builder.MakeExpression(_keyRef, flags);
 					return result;
-				}
+						}
 
 				if (path is MemberExpression me && me.Expression is ContextRefExpression && me.Member.Name == "Key")
 						{
@@ -378,12 +378,12 @@ namespace LinqToDB.Linq.Builder
 				var newPath = SequenceHelper.CorrectExpression(path, this, Element);
 
 				return newPath;
-						}
+				}
 
 			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 				{
 				throw new NotImplementedException();
-				}
+			}
 
 			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 			{
@@ -445,7 +445,7 @@ namespace LinqToDB.Linq.Builder
 				if (buildInfo.IsAggregation && !buildInfo.CreateSubQuery)
 						{
 					return this;
-				}
+						}
 
 				if (!SequenceHelper.IsSameContext(expression, this))
 					return null;

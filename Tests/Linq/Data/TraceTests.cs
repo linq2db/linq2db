@@ -40,7 +40,9 @@ namespace Tests.Data
 		public void RestoreOriginalTraceLevel()
 		{
 			DataConnection.TraceSwitch.Level = OriginalTraceLevel;
+#pragma warning disable CS0618 // Type or member is obsolete
 			DataConnection.OnTrace           = OriginalOnTrace;
+#pragma warning restore CS0618 // Type or member is obsolete
 			DataConnection.WriteTraceLine    = OriginalWrite;
 		}
 
@@ -672,7 +674,9 @@ namespace Tests.Data
 		public void OnTraceConnectionShouldUseStatic()
 		{
 			bool traceCalled = false;
+#pragma warning disable CS0618 // Type or member is obsolete
 			DataConnection.OnTrace = info => traceCalled = true;
+#pragma warning restore CS0618 // Type or member is obsolete
 
 			using (var db = new DataConnection())
 			{
@@ -685,10 +689,12 @@ namespace Tests.Data
 		public void OnTraceConnectionShouldUseFromBuilder()
 		{
 			bool defaultTraceCalled = false;
+#pragma warning disable CS0618 // Type or member is obsolete
 			DataConnection.OnTrace = info => defaultTraceCalled = true;
+#pragma warning restore CS0618 // Type or member is obsolete
 
 			bool builderTraceCalled = false;
-			var builder = new LinqToDbConnectionOptionsBuilder().WithTracing(info => builderTraceCalled = true);
+			var builder = new LinqToDBConnectionOptionsBuilder().WithTracing(info => builderTraceCalled = true);
 
 			using (var db = new DataConnection(builder.Build()))
 			{
@@ -715,7 +721,7 @@ namespace Tests.Data
 		{
 			var staticTraceLevel = DataConnection.TraceSwitch.Level;
 			var builderTraceLevel = staticTraceLevel + 1;
-			var builder = new LinqToDbConnectionOptionsBuilder().WithTraceLevel(builderTraceLevel);
+			var builder = new LinqToDBConnectionOptionsBuilder().WithTraceLevel(builderTraceLevel);
 
 			using (var db = new DataConnection(builder.Build()))
 			{
@@ -745,7 +751,7 @@ namespace Tests.Data
 			DataConnection.WriteTraceLine = (s, s1, arg3) => staticWriteCalled = true;
 
 			var builderWriteCalled = false;
-			var builder = new LinqToDbConnectionOptionsBuilder()
+			var builder = new LinqToDBConnectionOptionsBuilder()
 				.WriteTraceWith((s, s1, a3) => builderWriteCalled = true);
 
 			using (var db = new DataConnection(builder.Build()))

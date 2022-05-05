@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 namespace LinqToDB.DataProvider.SQLite
 {
 	using System.Data.Common;
+	using System.Globalization;
 	using Common;
 	using Data;
 	using Mapping;
@@ -17,7 +18,7 @@ namespace LinqToDB.DataProvider.SQLite
 	class SQLiteDataProviderClassic : SQLiteDataProvider { public SQLiteDataProviderClassic() : base(ProviderName.SQLiteClassic) {} }
 	class SQLiteDataProviderMS      : SQLiteDataProvider { public SQLiteDataProviderMS()      : base(ProviderName.SQLiteMS)      {} }
 
-	public class SQLiteDataProvider : DynamicDataProviderBase<SQLiteProviderAdapter>
+	public abstract class SQLiteDataProvider : DynamicDataProviderBase<SQLiteProviderAdapter>
 	{
 		/// <summary>
 		/// Creates the specified SQLite provider based on the provider name.
@@ -143,7 +144,6 @@ namespace LinqToDB.DataProvider.SQLite
 			SetCharField("nchar", (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharFieldToType<char>("char" , DataTools.GetCharExpression);
 			SetCharFieldToType<char>("nchar", DataTools.GetCharExpression);
-
 		}
 
 		private void SetSqliteField<T>(Expression<Func<DbDataReader, int, T>> expr, Type[] fieldTypes, params string[] typeNames)
@@ -230,6 +230,19 @@ namespace LinqToDB.DataProvider.SQLite
 			{
 				value = guid.ToByteArray();
 			}
+
+#if NET6_0_OR_GREATER
+			if (!Adapter.SupportsDateOnly && value is DateOnly d)
+			{
+				value     = d.ToDateTime(TimeOnly.MinValue);
+				if (dataType.DataType == DataType.Date)
+				{
+					value = ((DateTime)value).ToString(SQLiteMappingSchema.DATE_FORMAT_RAW, CultureInfo.InvariantCulture);
+					if (Name == ProviderName.SQLiteClassic)
+						dataType = dataType.WithDataType(DataType.VarChar);
+				}
+			}
+#endif
 
 			base.SetParameter(dataConnection, parameter, name, dataType, value);
 		}

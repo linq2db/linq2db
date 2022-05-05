@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using LinqToDB.ServiceModel;
+using LinqToDB.Remote;
 
 namespace LinqToDB.SqlQuery
 {
@@ -328,7 +328,7 @@ namespace LinqToDB.SqlQuery
 						joins != null && !ReferenceEquals(table.Joins, joins))
 							newElement = new SqlTableSource(
 								source ?? table.Source,
-								table._alias,
+								table.RawAlias,
 								joins ?? table.Joins,
 								uk ?? (table.HasUniqueKeys ? table.UniqueKeys : null));
 

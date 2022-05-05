@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 namespace LinqToDB.Tools
 {
-	using System.Text;
 	using Common;
 	using Data;
-	using LinqToDB.Mapping;
-	using LinqToDB.SqlProvider;
+	using Mapping;
+	using SqlProvider;
 
 	public static class DataExtensions
 	{
