@@ -29,7 +29,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Ints(
-			[DataSources(TestProvName.AllAccess, ProviderName.SqlCe)] string context)
+			[DataSources] string context)
 		{
 			using var db  = GetDataContext(context);
 			using var src = SetupSrcTable(db);
@@ -42,6 +42,10 @@ namespace Tests.Linq
 			ints[0].Should().Be(2);
 			ints[1].Should().Be(3);
 
+			ints = src.Select(s => Sql.NullIf(s.Int, default(int?))).ToArray();
+			ints[0].Should().Be(2);
+			ints[1].Should().Be(3);
+
 			ints = src.Select(s => Sql.NullIf(s.NullableInt, 2)).ToArray();
 			ints[0].Should().Be(null);
 			ints[1].Should().Be(null);
@@ -49,11 +53,15 @@ namespace Tests.Linq
 			ints = src.Select(s => Sql.NullIf(s.NullableInt, 4)).ToArray();
 			ints[0].Should().Be(2);
 			ints[1].Should().Be(null);
+
+			ints = src.Select(s => Sql.NullIf(s.NullableInt, default(int?))).ToArray();
+			ints[0].Should().Be(2);
+			ints[1].Should().Be(null);
 		}
 
 		[Test]
 		public void Strings(
-			[DataSources(TestProvName.AllAccess, ProviderName.SqlCe)] string context)
+			[DataSources] string context)
 		{
 			using var db  = GetDataContext(context);
 			using var src = SetupSrcTable(db);
@@ -66,11 +74,19 @@ namespace Tests.Linq
 			strings[0].Should().Be("abc");
 			strings[1].Should().Be("def");
 
+			strings = src.Select(s => Sql.NullIf(s.String, null)).ToArray();
+			strings[0].Should().Be("abc");
+			strings[1].Should().Be("def");
+
 			strings = src.Select(s => Sql.NullIf(s.NullableString, "abc")).ToArray();
 			strings[0].Should().Be(null);
 			strings[1].Should().Be(null);
 
 			strings = src.Select(s => Sql.NullIf(s.NullableString, "xyz")).ToArray();
+			strings[0].Should().Be("abc");
+			strings[1].Should().Be(null);
+
+			strings = src.Select(s => Sql.NullIf(s.NullableString, null)).ToArray();
 			strings[0].Should().Be("abc");
 			strings[1].Should().Be(null);
 		}
