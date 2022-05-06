@@ -33,6 +33,7 @@ namespace Tests.DataProvider
 	using System.Threading.Tasks;
 	using LinqToDB.Tools;
 	using Model;
+	using Npgsql;
 
 	[TestFixture]
 	public class PostgreSQLTests : DataProviderTestBase
@@ -2315,6 +2316,80 @@ namespace Tests.DataProvider
 				Assert.True(data.SequenceEqual(res));
 			}
 		}
+
+		#region issue #3548
+		[Table]
+		public partial class User
+		{
+			[PrimaryKey                                                 ] public int          Id             { get; set; }
+			[Column(DataType = DataType.Enum, DbType = "user_type_enum")] public UserTypeEnum Type           { get; set; }
+			[Column                                                     ] public int?         OrganizationId { get; set; }
+
+			[ExpressionMethod(nameof(InYourOrganizationSelector))]
+			public bool InYourOrganization(User callingUser) => throw new NotImplementedException();
+
+			internal static Expression<Func<User, User, bool>> InYourOrganizationSelector()
+			{
+				return (user, callingUser) => (user.Type == UserTypeEnum.Organization && user.Id == callingUser.Id)
+						|| (user.Type == UserTypeEnum.Organization && callingUser.Type == UserTypeEnum.OrganizationUser && user.Id == callingUser.OrganizationId)
+						|| (user.Type == UserTypeEnum.OrganizationUser && callingUser.Type == UserTypeEnum.Organization && user.OrganizationId == callingUser.Id)
+						|| (user.Type == UserTypeEnum.OrganizationUser && callingUser.Type == UserTypeEnum.OrganizationUser && user.OrganizationId == callingUser.OrganizationId);
+			}
+
+			public static readonly User[] Data = new[]
+			{
+				new User() { Id = 1, Type = UserTypeEnum.Organization },
+				new User() { Id = 2, Type = UserTypeEnum.Organization },
+				new User() { Id = 3, Type = UserTypeEnum.OrganizationUser, OrganizationId = 1 },
+				new User() { Id = 4, Type = UserTypeEnum.OrganizationUser, OrganizationId = 2 },
+			};
+		}
+
+		[PgName("user_type_enum")]
+		public enum UserTypeEnum
+		{
+			[PgName("org")]
+			[MapValue("org")]
+			Organization = 1,
+
+			[PgName("org_user")]
+			[MapValue("org_user")]
+			OrganizationUser = 2,
+		}
+
+		[Test]
+		public void Issue3548Test([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			using (var db = GetDataConnection(context))
+				db.Execute("DROP TABLE IF EXISTS \"User\";DROP TYPE IF EXISTS user_type_enum;CREATE TYPE user_type_enum AS ENUM('org', 'org_user');");
+			NpgsqlConnection.GlobalTypeMapper.MapEnum<UserTypeEnum>();
+
+			try
+			{
+				using var db = GetDataContext(context);
+				using var _  = db.CreateLocalTable(User.Data);
+
+				var user  = new User() { Id = 1, Type = UserTypeEnum.Organization };
+				var users = db.GetTable<User>().Where(x => x.InYourOrganization(user)).OrderBy(x => x.Id).Select(x => x.Id.ToString()).ToList();
+
+				Assert.AreEqual(2, users.Count);
+				Assert.AreEqual("1", users[0]);
+				Assert.AreEqual("3", users[1]);
+
+				user  = new User() { Id = 4, Type = UserTypeEnum.Organization };
+				users = db.GetTable<User>().Where(x => x.InYourOrganization(user)).OrderBy(x => x.Id).Select(x => x.Id.ToString()).ToList();
+
+				Assert.AreEqual(2, users.Count);
+				Assert.AreEqual("2", users[0]);
+				Assert.AreEqual("4", users[1]);
+			}
+			finally
+			{
+				using (var db = GetDataConnection(context))
+					db.Execute("DROP TYPE IF EXISTS user_type_enum;");
+			}
+		}
+		#endregion
 	}
 
 	public static class TestPgAggregates
