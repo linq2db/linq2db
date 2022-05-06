@@ -80,7 +80,7 @@ namespace LinqToDB.SqlQuery
 				{
 					var sqlValue = (SqlValue)expr;
 					result = sqlValue.Value;
-					if (sqlValue.Value != sqlValue.OriginalValue)
+					if (!Equals(sqlValue.Value, sqlValue.OriginalValue))
 					{
 						errorMessage = "Conversion applied";
 						return false;
@@ -99,7 +99,7 @@ namespace LinqToDB.SqlQuery
 
 					var parameterValue = sqlParameter.GetParameterValue(context.ParameterValues);
 
-					if (parameterValue.OriginalValue != parameterValue.ProviderValue)
+					if (!Equals(parameterValue.OriginalValue, parameterValue.ProviderValue))
 					{
 						errorMessage = "Conversion applied";
 						return false;

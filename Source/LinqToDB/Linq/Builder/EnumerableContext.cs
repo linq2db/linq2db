@@ -604,9 +604,12 @@ namespace LinqToDB.Linq.Builder
 				}
 				else
 				{
+					var originalValueExpr = column.GetOriginalValueLambda().GetBody(getter.Parameters[0]);
+					originalValueExpr = Expression.Convert(originalValueExpr, typeof(object));
+
 					generator.AddExpression(Expression.New(Methods.LinqToDB.Sql.SqlValueConstructor,
 						Expression.Constant(column.GetDbDataType(true)),
-						Expression.Convert(getter.Body, typeof(object))));
+						Expression.Convert(getter.Body, typeof(object)), originalValueExpr));
 				}
 
 				var param = Expression.Parameter(typeof(object), "e");
