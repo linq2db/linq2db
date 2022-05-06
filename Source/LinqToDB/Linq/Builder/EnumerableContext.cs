@@ -521,6 +521,7 @@ namespace LinqToDB.Linq.Builder
 						var body = Expression.New(Methods.LinqToDB.Sql.SqlValueConstructor,
 							Expression.Constant(new DbDataType(_elementType,
 								ColumnDescriptor.CalculateDataType(Builder.MappingSchema, _elementType))),
+							param,
 							param);
 
 						var getterLambda = Expression.Lambda<Func<object, ISqlExpression>>(body, param);

@@ -75,7 +75,7 @@ namespace Tests.UserTests
 				Assert.AreEqual("1", users[0]);
 				Assert.AreEqual("3", users[1]);
 
-				user  = new User() { Id = 4, Type = UserTypeEnum.Organization };
+				user  = new User() { Id = 4, Type = UserTypeEnum.OrganizationUser, OrganizationId = 2 };
 				users = db.GetTable<User>().Where(x => x.InYourOrganization(user)).OrderBy(x => x.Id).Select(x => x.Id.ToString()).ToList();
 
 				Assert.AreEqual(2, users.Count);

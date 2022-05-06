@@ -760,7 +760,7 @@ namespace LinqToDB.SqlQuery
 				{
 					// TODO: do we really need cloning here?
 					var value = (SqlValue)(IQueryElement)element;
-					_objectTree.Add(element, clone = new SqlValue(value.ValueType, value.Value));
+					_objectTree.Add(element, clone = new SqlValue(value.ValueType, value.Value, value.OriginalValue));
 					break;
 				}
 

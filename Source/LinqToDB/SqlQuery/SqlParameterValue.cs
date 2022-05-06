@@ -4,16 +4,18 @@ namespace LinqToDB.SqlQuery
 {
 	using Common;
 
-	[DebuggerDisplay("{Value}, {DbDataType}")]
+	[DebuggerDisplay("{OriginalValue} => DB: {ProviderValue}, {DbDataType}")]
 	public class SqlParameterValue
 	{
-		public SqlParameterValue(object? value, DbDataType dbDataType)
+		public SqlParameterValue(object? providerValue, object? originalValue, DbDataType dbDataType)
 		{
-			Value       = value;
-			DbDataType = dbDataType;
+			ProviderValue = providerValue;
+			OriginalValue = originalValue;
+			DbDataType    = dbDataType;
 		}
 
-		public object?    Value      { get; }
-		public DbDataType DbDataType { get; }
+		public object?    ProviderValue { get; }
+		public object?    OriginalValue { get; }
+		public DbDataType DbDataType    { get; }
 	}
 }

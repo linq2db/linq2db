@@ -1736,9 +1736,9 @@ namespace LinqToDB.SqlProvider
 					StringBuilder.Append(InlineComma);
 				var field = valuesTable.Fields[i];
 				if (IsSqlValuesTableValueTypeRequired(valuesTable, Array<ISqlExpression[]>.Empty, -1, i))
-					BuildTypedExpression(new SqlDataType(field), new SqlValue(field.Type, null));
+					BuildTypedExpression(new SqlDataType(field), new SqlValue(field.Type, null, null));
 				else
-					BuildExpression(new SqlValue(field.Type, null));
+					BuildExpression(new SqlValue(field.Type, null, null));
 				Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
 			}
 
@@ -2457,7 +2457,7 @@ namespace LinqToDB.SqlProvider
 			// Handle x.In(IEnumerable variable)
 			if (values.Count == 1 && values[0] is SqlParameter pr)
 			{
-				var prValue = pr.GetParameterValue(OptimizationContext.Context.ParameterValues).Value;
+				var prValue = pr.GetParameterValue(OptimizationContext.Context.ParameterValues).ProviderValue;
 				switch (prValue)
 				{
 					case null:
@@ -2855,7 +2855,7 @@ namespace LinqToDB.SqlProvider
 						if (inlining)
 						{
 							var paramValue = parm.GetParameterValue(OptimizationContext.Context.ParameterValues);
-							if (!MappingSchema.TryConvertToSql(StringBuilder, new SqlDataType(paramValue.DbDataType), paramValue.Value))
+							if (!MappingSchema.TryConvertToSql(StringBuilder, new SqlDataType(paramValue.DbDataType), paramValue.ProviderValue))
 								inlining = false;
 						}
 

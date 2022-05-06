@@ -9,26 +9,32 @@ namespace LinqToDB.SqlQuery
 
 	public class SqlValue : ISqlExpression
 	{
-		public SqlValue(Type systemType, object? value)
+		public SqlValue(Type systemType, object? value, object? originalValue)
 		{
-			_valueType  = new DbDataType(systemType);
-			_value     = value;
+			_valueType     = new DbDataType(systemType);
+			_value         = value;
+			_originalValue = originalValue;
 		}
 
-		public SqlValue(DbDataType valueType, object? value)
+		public SqlValue(DbDataType valueType, object? value, object? originalValue)
 		{
-			_valueType = valueType;
-			_value     = value;
+			_valueType     = valueType;
+			_value         = value;
+			_originalValue = originalValue;
 		}
 
 		public SqlValue(object value)
 		{
-			_value     = value ?? throw new ArgumentNullException(nameof(value), "Untyped null value");
-			_valueType = new DbDataType(value.GetType());
+			_value         = value ?? throw new ArgumentNullException(nameof(value), "Untyped null value");
+			_originalValue = value;
+			_valueType     = new DbDataType(value.GetType());
 		}
 
 		object? _value;
 
+		/// <summary>
+		/// Provider specific value
+		/// </summary>
 		public object? Value
 		{
 			get => _value;
@@ -39,6 +45,24 @@ namespace LinqToDB.SqlQuery
 
 				_value    = value;
 				_hashCode = null;
+			}
+		}
+
+		object? _originalValue;
+
+		/// <summary>
+		/// Value before conversion
+		/// </summary>
+		public object? OriginalValue
+		{
+			get => _originalValue;
+			internal set
+			{
+				if (_originalValue == value)
+					return;
+
+				_originalValue = value;
+				_hashCode      = null;
 			}
 		}
 
@@ -113,6 +137,9 @@ namespace LinqToDB.SqlQuery
 
 			if (Value != null)
 				hashCode = unchecked(hashCode + (hashCode * 397) ^ Value.GetHashCode());
+
+			if (OriginalValue != null)
+				hashCode = unchecked(hashCode + (hashCode * 397) ^ OriginalValue.GetHashCode());
 
 			_hashCode = hashCode;
 			return hashCode;

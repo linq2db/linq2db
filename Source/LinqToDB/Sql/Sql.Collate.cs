@@ -65,7 +65,7 @@ namespace LinqToDB
 				var collation = builder.GetValue<string>("collation");
 
 				// collation cannot be parameter
-				builder.ResultExpression = new SqlExpression(typeof(string), $"COLLATION_KEY_BIT({{0}}, {{1}})", Precedence.Primary, expr, new SqlValue(typeof(string), collation));
+				builder.ResultExpression = new SqlExpression(typeof(string), $"COLLATION_KEY_BIT({{0}}, {{1}})", Precedence.Primary, expr, new SqlValue(typeof(string), collation, collation));
 			}
 		}
 	}

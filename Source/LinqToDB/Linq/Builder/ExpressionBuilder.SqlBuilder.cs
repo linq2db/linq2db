@@ -1353,10 +1353,10 @@ namespace LinqToDB.Linq.Builder
 			ISqlExpression IsCaseSensitive(MethodCallExpression mc)
 			{
 				if (mc.Arguments.Count <= 1)
-					return new SqlValue(typeof(bool?), null);
+					return new SqlValue(typeof(bool?), null, null);
 
 				if (!typeof(StringComparison).IsSameOrParentOf(mc.Arguments[1].Type))
-					return new SqlValue(typeof(bool?), null);
+					return new SqlValue(typeof(bool?), null, null);
 
 				var arg = mc.Arguments[1];
 

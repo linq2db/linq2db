@@ -170,7 +170,7 @@ namespace LinqToDB.SqlProvider
 					var suggested = QueryHelper.SuggestDbDataType(reference);
 					if (suggested != null)
 					{
-						toCorrect = new SqlValue(suggested.Value, null);
+						toCorrect = new SqlValue(suggested.Value, null, null);
 					}
 				}
 			}
@@ -865,7 +865,7 @@ namespace LinqToDB.SqlProvider
 				return newParam;
 			}
 
-			return new SqlValue(dbDataType, value);
+			return new SqlValue(dbDataType, value, value);
 		}
 
 		public virtual ISqlExpression OptimizeExpression(ISqlExpression expression, ConvertVisitor<RunOptimizationContext> convertVisitor)
@@ -1879,7 +1879,7 @@ namespace LinqToDB.SqlProvider
 						},
 
 					// (some - some) ==> 0
-					(var some1, "-", var some2) when some1.Equals(some2) => new SqlValue(be.SystemType, 0),
+					(var some1, "-", var some2) when some1.Equals(some2) => new SqlValue(be.SystemType, 0, 0),
 
 					// (some - (s1 - s2)) ==> (some - s1) + s2
 					(var some, "-", SqlBinaryExpression(var s1, "-", var s2)) => new SqlBinaryExpression(be.SystemType, new SqlBinaryExpression(be.SystemType, some, "-", s1), "+", s2),
@@ -2357,10 +2357,10 @@ namespace LinqToDB.SqlProvider
 			{
 				var paramValue = parameter.GetParameterValue(context.ParameterValues);
 
-				if (paramValue.Value == null)
+				if (paramValue.ProviderValue == null)
 					return new SqlPredicate.Expr(new SqlValue(p.IsNot));
 
-				if (paramValue.Value is IEnumerable items)
+				if (paramValue.ProviderValue is IEnumerable items)
 				{
 					if (p.Expr1 is ISqlTableSource table)
 					{
@@ -3857,7 +3857,7 @@ namespace LinqToDB.SqlProvider
 			if (expr.ElementType != QueryElementType.SqlValue)
 			{
 				if (expr.TryEvaluateExpression(context, out var value))
-					expr = new SqlValue(expr.GetExpressionType(), value);
+					expr = new SqlValue(expr.GetExpressionType(), value, value);
 			}
 
 			return expr;

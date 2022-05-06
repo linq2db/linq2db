@@ -689,7 +689,7 @@ namespace LinqToDB.Remote
 							var p = (SqlParameter)e;
 
 							var pValue = p.GetParameterValue(evaluationContext.ParameterValues);
-							var v      = pValue.Value;
+							var v      = pValue.ProviderValue;
 							var t      = v == null ? pValue.DbDataType.SystemType : v.GetType();
 
 							if (v == null || t.IsArray || t == typeof(string) || !(v is IEnumerable))
@@ -781,7 +781,7 @@ namespace LinqToDB.Remote
 							Append(elem.IsQueryParameter);
 							Append(paramValue.DbDataType);
 
-							var value = paramValue.Value;
+							var value = paramValue.ProviderValue;
 							var type  = value == null ? paramValue.DbDataType.SystemType : value.GetType();
 
 							if (value == null || type.IsEnum || type.IsArray || type == typeof(string) || !(value is IEnumerable))
@@ -833,6 +833,8 @@ namespace LinqToDB.Remote
 							Append(elem.ValueType);
 							var type  = elem.Value?.GetType() ?? elem.ValueType.SystemType;
 							Append(type, elem.Value);
+							var originalType = elem.OriginalValue?.GetType() ?? elem.ValueType.SystemType;
+							Append(originalType, elem.OriginalValue);
 
 							break;
 						}
@@ -1685,10 +1687,11 @@ namespace LinqToDB.Remote
 
 					case QueryElementType.SqlValue :
 						{
-							var dbDataType = ReadDbDataType();
-							var value      = ReadValue(ReadType()!);
+							var dbDataType    = ReadDbDataType();
+							var value         = ReadValue(ReadType()!);
+							var originalValue = ReadValue(ReadType()!);
 
-							obj = new SqlValue(dbDataType, value);
+							obj = new SqlValue(dbDataType, value, originalValue);
 
 							break;
 						}

@@ -32,9 +32,9 @@ namespace LinqToDB.Extensions
 
 						if (Configuration.UseEnumValueNameForStringColumns && type == typeof(string) &&
 						    mappingSchema.GetMapValues(underlyingType)             == null)
-							return new SqlValue(type, value!.ToString());
+							return new SqlValue(type, value!.ToString(), value);
 
-						return new SqlValue(type, Converter.ChangeType(value, type, mappingSchema));
+						return new SqlValue(type, Converter.ChangeType(value, type, mappingSchema), value);
 					}
 				}
 			}
@@ -42,7 +42,7 @@ namespace LinqToDB.Extensions
 			if (systemType == typeof(object) && value != null)
 				systemType = value.GetType();
 
-			return new SqlValue(systemType, value);
+			return new SqlValue(systemType, value, value);
 		}
 
 		public static bool TryConvertToSql(this MappingSchema mappingSchema, StringBuilder stringBuilder, SqlDataType? dataType, object? value)

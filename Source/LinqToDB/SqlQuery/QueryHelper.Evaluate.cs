@@ -12,7 +12,7 @@ namespace LinqToDB.SqlQuery
 			{
 				return value;
 			}
-			return new SqlParameterValue(parameter.Value, parameter.Type);
+			return new SqlParameterValue(parameter.Value, parameter.Value, parameter.Type);
 		}
 
 		public static bool TryEvaluateExpression(this IQueryElement expr, EvaluationContext context, out object? result)
@@ -80,9 +80,9 @@ namespace LinqToDB.SqlQuery
 				{
 					var sqlValue = (SqlValue)expr;
 					result = sqlValue.Value;
-					if (result != null && sqlValue.ValueType.DataType == DataType.Enum && !result.GetType().IsEnum)
+					if (sqlValue.Value != sqlValue.OriginalValue)
 					{
-						errorMessage = "Types not match";
+						errorMessage = "Conversion applied";
 						return false;
 					}
 					return true;
@@ -97,7 +97,15 @@ namespace LinqToDB.SqlQuery
 						return false;
 					}
 
-					result = sqlParameter.GetParameterValue(context.ParameterValues).Value;
+					var parameterValue = sqlParameter.GetParameterValue(context.ParameterValues);
+
+					if (parameterValue.OriginalValue != parameterValue.ProviderValue)
+					{
+						errorMessage = "Conversion applied";
+						return false;
+					}
+
+					result = parameterValue.OriginalValue;
 					return true;
 				}
 				case QueryElementType.IsNullPredicate:
