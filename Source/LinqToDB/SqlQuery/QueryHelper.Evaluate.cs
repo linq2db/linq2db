@@ -76,7 +76,17 @@ namespace LinqToDB.SqlQuery
 			errorMessage = null;
 			switch (expr.ElementType)
 			{
-				case QueryElementType.SqlValue           : result = ((SqlValue)expr).Value; return true;
+				case QueryElementType.SqlValue           :
+				{
+					var sqlValue = (SqlValue)expr;
+					result = sqlValue.Value;
+					if (result != null && sqlValue.ValueType.DataType == DataType.Enum && !result.GetType().IsEnum)
+					{
+						errorMessage = "Types not match";
+						return false;
+					}
+					return true;
+				}
 				case QueryElementType.SqlParameter       :
 				{
 					var sqlParameter = (SqlParameter)expr;
