@@ -48,6 +48,7 @@ namespace LinqToDB
 			public string? Schema        { get; set; }
 			public string? Database      { get; set; }
 			public string? Server        { get; set; }
+			public string? Package       { get; set; }
 			public int[]?  ArgIndices    { get; set; }
 
 			public virtual void SetTable<TContext>(TContext context, ISqlBuilder sqlBuilder, MappingSchema mappingSchema, SqlTable table, MethodCallExpression methodCall, Func<TContext, Expression, ColumnDescriptor?, ISqlExpression> converter)
