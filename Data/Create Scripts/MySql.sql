@@ -808,6 +808,9 @@ CREATE OR REPLACE PACKAGE BODY TEST_PACKAGE2 AS
 END TEST_PACKAGE2;
 GO
 
+set session sql_mode=default;
+GO
+
 -- SKIP MySql55Connector END
 -- SKIP MySql55 END
 -- SKIP MySqlConnector END
