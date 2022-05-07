@@ -7,21 +7,21 @@ namespace LinqToDB.Infrastructure
 	using Data;
 	using Linq;
 
-	public class LinqOptionsExtension : IDbContextOptionsExtension, IEquatable<LinqOptionsExtension>
+	public class LinqOptionsExtension : IDataContextOptionsExtension, IEquatable<LinqOptionsExtension>
 	{
-		private bool     _preloadGroups;
-		private bool     _ignoreEmptyUpdate;
-		private bool     _generateExpressionTest;
-		private bool     _traceMapperExpression;
-		private bool     _doNotClearOrderBys;
-		private bool     _optimizeJoins;
-		private bool     _compareNullsAsValues;
-		private bool     _guardGrouping;
-		private bool     _disableQueryCache;
-		private TimeSpan _cacheSlidingExpiration;
-		private bool     _preferApply;
-		private bool     _keepDistinctOrdered;
-		private bool     _parameterizeTakeSkip;
+		bool     _preloadGroups;
+		bool     _ignoreEmptyUpdate;
+		bool     _generateExpressionTest;
+		bool     _traceMapperExpression;
+		bool     _doNotClearOrderBys;
+		bool     _optimizeJoins;
+		bool     _compareNullsAsValues;
+		bool     _guardGrouping;
+		bool     _disableQueryCache;
+		TimeSpan _cacheSlidingExpiration;
+		bool     _preferApply;
+		bool     _keepDistinctOrdered;
+		bool     _parameterizeTakeSkip;
 
 		public LinqOptionsExtension()
 		{
@@ -187,44 +187,70 @@ namespace LinqToDB.Infrastructure
 
 		#region With Methods
 
-		public virtual LinqOptionsExtension WithPreloadGroups(bool preloadGroups) =>
-			SetValue(o => o._preloadGroups = preloadGroups);
+		public virtual LinqOptionsExtension WithPreloadGroups(bool preloadGroups)
+		{
+			return SetValue(o => o._preloadGroups = preloadGroups);
+		}
 
-		public virtual LinqOptionsExtension WithIgnoreEmptyUpdate(bool ignoreEmptyUpdate) =>
-			SetValue(o => o._ignoreEmptyUpdate = ignoreEmptyUpdate);
+		public virtual LinqOptionsExtension WithIgnoreEmptyUpdate(bool ignoreEmptyUpdate)
+		{
+			return SetValue(o => o._ignoreEmptyUpdate = ignoreEmptyUpdate);
+		}
 
-		public virtual LinqOptionsExtension WithGenerateExpressionTest(bool generateExpressionTest) =>
-			SetValue(o => o._generateExpressionTest = generateExpressionTest);
+		public virtual LinqOptionsExtension WithGenerateExpressionTest(bool generateExpressionTest)
+		{
+			return SetValue(o => o._generateExpressionTest = generateExpressionTest);
+		}
 
-		public virtual LinqOptionsExtension WithTraceMapperExpression(bool traceMapperExpression) =>
-			SetValue(o => o._traceMapperExpression = traceMapperExpression);
+		public virtual LinqOptionsExtension WithTraceMapperExpression(bool traceMapperExpression)
+		{
+			return SetValue(o => o._traceMapperExpression = traceMapperExpression);
+		}
 
-		public virtual LinqOptionsExtension WithDoNotClearOrderBys(bool doNotClearOrderBys) =>
-			SetValue(o => o._doNotClearOrderBys = doNotClearOrderBys);
+		public virtual LinqOptionsExtension WithDoNotClearOrderBys(bool doNotClearOrderBys)
+		{
+			return SetValue(o => o._doNotClearOrderBys = doNotClearOrderBys);
+		}
 
-		public virtual LinqOptionsExtension WithOptimizeJoins(bool optimizeJoins) =>
-			SetValue(o => o._optimizeJoins = optimizeJoins);
+		public virtual LinqOptionsExtension WithOptimizeJoins(bool optimizeJoins)
+		{
+			return SetValue(o => o._optimizeJoins = optimizeJoins);
+		}
 
-		public virtual LinqOptionsExtension WithCompareNullsAsValues(bool compareNullsAsValues) =>
-			SetValue(o => o._compareNullsAsValues = compareNullsAsValues);
+		public virtual LinqOptionsExtension WithCompareNullsAsValues(bool compareNullsAsValues)
+		{
+			return SetValue(o => o._compareNullsAsValues = compareNullsAsValues);
+		}
 
-		public virtual LinqOptionsExtension WithGuardGrouping(bool guardGrouping) =>
-			SetValue(o => o._guardGrouping = guardGrouping);
+		public virtual LinqOptionsExtension WithGuardGrouping(bool guardGrouping)
+		{
+			return SetValue(o => o._guardGrouping = guardGrouping);
+		}
 
-		public virtual LinqOptionsExtension WithDisableQueryCache(bool disableQueryCache) =>
-			SetValue(o => o._disableQueryCache = disableQueryCache);
+		public virtual LinqOptionsExtension WithDisableQueryCache(bool disableQueryCache)
+		{
+			return SetValue(o => o._disableQueryCache = disableQueryCache);
+		}
 
-		public virtual LinqOptionsExtension WithCacheSlidingExpiration(TimeSpan cacheSlidingExpiration) =>
-			SetValue(o => o._cacheSlidingExpiration = cacheSlidingExpiration);
+		public virtual LinqOptionsExtension WithCacheSlidingExpiration(TimeSpan cacheSlidingExpiration)
+		{
+			return SetValue(o => o._cacheSlidingExpiration = cacheSlidingExpiration);
+		}
 
-		public virtual LinqOptionsExtension WithPreferApply(bool preferApply) =>
-			SetValue(o => o._preferApply = preferApply);
+		public virtual LinqOptionsExtension WithPreferApply(bool preferApply)
+		{
+			return SetValue(o => o._preferApply = preferApply);
+		}
 
-		public virtual LinqOptionsExtension WithKeepDistinctOrdered(bool keepDistinctOrdered) =>
-			SetValue(o => o._keepDistinctOrdered = keepDistinctOrdered);
+		public virtual LinqOptionsExtension WithKeepDistinctOrdered(bool keepDistinctOrdered)
+		{
+			return SetValue(o => o._keepDistinctOrdered = keepDistinctOrdered);
+		}
 
-		public virtual LinqOptionsExtension WithParameterizeTakeSkip(bool parameterizeTakeSkip) =>
-			SetValue(o => o._parameterizeTakeSkip = parameterizeTakeSkip);
+		public virtual LinqOptionsExtension WithParameterizeTakeSkip(bool parameterizeTakeSkip)
+		{
+			return SetValue(o => o._parameterizeTakeSkip = parameterizeTakeSkip);
+		}
 
 		#endregion
 
@@ -235,9 +261,10 @@ namespace LinqToDB.Infrastructure
 			return new LinqOptionsExtension(this);
 		}
 
-		private LinqOptionsExtension SetValue(Action<LinqOptionsExtension> setter)
+		LinqOptionsExtension SetValue(Action<LinqOptionsExtension> setter)
 		{
 			var clone = Clone();
+
 			setter(clone);
 
 			return clone;
@@ -245,7 +272,7 @@ namespace LinqToDB.Infrastructure
 
 		#endregion
 
-		public DbContextOptionsExtensionInfo Info => throw new NotImplementedException();
+		public DataContextOptionsExtensionInfo Info => throw new NotImplementedException();
 
 		public void ApplyServices()
 		{
@@ -259,47 +286,32 @@ namespace LinqToDB.Infrastructure
 
 		public bool Equals(LinqOptionsExtension? other)
 		{
-			if (ReferenceEquals(null, other))
-			{
-				return false;
-			}
+			if (ReferenceEquals(null, other)) return false;
+			if (ReferenceEquals(this, other)) return true;
 
-			if (ReferenceEquals(this, other))
-			{
-				return true;
-			}
-
-			return _preloadGroups          == other._preloadGroups               &&
-			       _ignoreEmptyUpdate      == other._ignoreEmptyUpdate           &&
-			       _generateExpressionTest == other._generateExpressionTest      &&
-			       _traceMapperExpression  == other._traceMapperExpression       &&
-			       _doNotClearOrderBys     == other._doNotClearOrderBys          &&
-			       _optimizeJoins          == other._optimizeJoins               &&
-			       _compareNullsAsValues   == other._compareNullsAsValues        &&
-			       _guardGrouping          == other._guardGrouping               &&
-			       _disableQueryCache      == other._disableQueryCache           &&
-			       _cacheSlidingExpiration.Equals(other._cacheSlidingExpiration) &&
-			       _preferApply          == other._preferApply                   &&
-			       _keepDistinctOrdered  == other._keepDistinctOrdered           &&
-			       _parameterizeTakeSkip == other._parameterizeTakeSkip;
+			return
+				_preloadGroups          == other._preloadGroups               &&
+				_ignoreEmptyUpdate      == other._ignoreEmptyUpdate           &&
+				_generateExpressionTest == other._generateExpressionTest      &&
+				_traceMapperExpression  == other._traceMapperExpression       &&
+				_doNotClearOrderBys     == other._doNotClearOrderBys          &&
+				_optimizeJoins          == other._optimizeJoins               &&
+				_compareNullsAsValues   == other._compareNullsAsValues        &&
+				_guardGrouping          == other._guardGrouping               &&
+				_disableQueryCache      == other._disableQueryCache           &&
+				_cacheSlidingExpiration.Equals(other._cacheSlidingExpiration) &&
+				_preferApply            == other._preferApply                   &&
+				_keepDistinctOrdered    == other._keepDistinctOrdered           &&
+				_parameterizeTakeSkip   == other._parameterizeTakeSkip;
 		}
 
 		public override bool Equals(object? obj)
 		{
-			if (ReferenceEquals(null, obj))
-			{
-				return false;
-			}
-
-			if (ReferenceEquals(this, obj))
-			{
-				return true;
-			}
+			if (ReferenceEquals(null, obj)) return false;
+			if (ReferenceEquals(this, obj)) return true;
 
 			if (obj.GetType() != this.GetType())
-			{
 				return false;
-			}
 
 			return Equals((LinqOptionsExtension)obj);
 		}

@@ -7,8 +7,6 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using JetBrains.Annotations;
-using LinqToDB.Extensions;
-
 
 namespace LinqToDB
 {
@@ -29,7 +27,7 @@ namespace LinqToDB
 	public partial class DataContext : IDataContext
 	{
 		private CoreDataContextOptionsExtension _prebuiltCoreExtension;
-		private DbDataContextOptionsExtension   _prebuiltDbExtension;
+		private DataContextOptionsExtension   _prebuiltDbExtension;
 		private DataContextOptions              _prebuiltOptions;
 
 		private bool _disposed;
@@ -92,9 +90,9 @@ namespace LinqToDB
 		/// <param name="options">Options, setup ahead of time.</param>
 		public DataContext(DataContextOptions options)
 		{
-			var extension = options.FindExtension<DbDataContextOptionsExtension>();
+			var extension = options.FindExtension<DataContextOptionsExtension>();
 
-			extension ??= new DbDataContextOptionsExtension();
+			extension ??= new DataContextOptionsExtension();
 
 			var dataProvider = extension.DataProvider;
 			if (dataProvider == null)
@@ -118,7 +116,7 @@ namespace LinqToDB
 
 			options = options.WithExtension(extension);
 
-			_prebuiltDbExtension = options.GetExtension<DbDataContextOptionsExtension>();
+			_prebuiltDbExtension = options.GetExtension<DataContextOptionsExtension>();
 
 			var coreExtension = options.FindExtension<CoreDataContextOptionsExtension>();
 			if (coreExtension != null)

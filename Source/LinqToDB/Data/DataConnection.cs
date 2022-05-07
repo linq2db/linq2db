@@ -10,12 +10,12 @@ using System.Text;
 using System.Threading;
 
 using JetBrains.Annotations;
-using LinqToDB.Common.Internal;
 
 namespace LinqToDB.Data
 {
 	using Async;
 	using Common;
+	using Common.Internal;
 	using Configuration;
 	using DataProvider;
 	using Expressions;
@@ -75,9 +75,9 @@ namespace LinqToDB.Data
 		/// <param name="connectionString">Database connection string to use for connection with database.</param>
 		/// <param name="mappingSchema">Mapping schema to use with this connection.</param>
 		public DataConnection(
-				string        providerName,
-				string        connectionString,
-				MappingSchema mappingSchema)
+			string        providerName,
+			string        connectionString,
+			MappingSchema mappingSchema)
 			: this(new DataContextOptionsBuilder().UseConnectionString(providerName, connectionString).UseMappingSchema(mappingSchema).Options)
 		{
 		}
@@ -227,6 +227,7 @@ namespace LinqToDB.Data
 
 			// Initialize default
 			var linqExtension = options.FindExtension<LinqOptionsExtension>();
+
 			if (linqExtension == null)
 			{
 				linqExtension = Configuration.Linq.Options;
@@ -236,12 +237,12 @@ namespace LinqToDB.Data
 			LinqOptions = linqExtension;
 
 			var coreExtension = options.FindExtension<CoreDataContextOptionsExtension>();
-			var dbExtension   = options.FindExtension<DbDataContextOptionsExtension>();
-			
+			var dbExtension   = options.FindExtension<DataContextOptionsExtension>();
+
 			if (!options.IsValidForDataContext(GetType()))
 				throw new LinqToDBException(
 					$"Improper options type used to create DataConnection {GetType()}, try creating a public constructor calling base and accepting type {nameof(DataContextOptions)}<{GetType().Name}>");
-			
+
 			InitConfig();
 
 			DbConnection?  localConnection  = null;
@@ -283,7 +284,7 @@ namespace LinqToDB.Data
 				_connectionFactory = () =>
 				{
 					var connection = originalConnectionFactory();
-						
+
 					return connection;
 				};
 
@@ -297,7 +298,7 @@ namespace LinqToDB.Data
 
 				DataProvider  = dbExtension.DataProvider ?? throw new LinqToDBException("DataProvider was not specified");
 				MappingSchema = DataProvider.MappingSchema;
-			} 
+			}
 			else if (dbExtension?.DbTransaction != null)
 			{
 				localConnection  = dbExtension.DbTransaction.Connection;
@@ -310,7 +311,7 @@ namespace LinqToDB.Data
 				DataProvider  = dbExtension.DataProvider ?? throw new LinqToDBException("DataProvider was not specified");;
 				MappingSchema = DataProvider.MappingSchema;
 			}
-			else 
+			else
 			{
 				ConfigurationString = dbExtension?.ConfigurationString ?? DefaultConfiguration;
 				if (ConfigurationString == null)

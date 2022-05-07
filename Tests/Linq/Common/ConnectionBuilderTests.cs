@@ -75,7 +75,7 @@ namespace Tests.Common
 			var factory = new TestLoggerFactory();
 			builder.UseLoggerFactory(factory);
 
-			var extension = builder.Options.GetExtension<DbDataContextOptionsExtension>();
+			var extension = builder.Options.GetExtension<DataContextOptionsExtension>();
 
 			Assert.NotNull(extension.WriteTrace);
 
@@ -96,7 +96,7 @@ namespace Tests.Common
 			services.AddSingleton<ILoggerFactory>(factory);
 			builder.UseDefaultLogging(services.BuildServiceProvider());
 
-			var extension = builder.Options.GetExtension<DbDataContextOptionsExtension>();
+			var extension = builder.Options.GetExtension<DataContextOptionsExtension>();
 			Assert.NotNull(extension.WriteTrace);
 
 			var expectedMessage = "this is a test log";

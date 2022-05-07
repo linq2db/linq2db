@@ -5,15 +5,15 @@ namespace LinqToDB.Infrastructure
 	using Data;
 	using Data.RetryPolicy;
 
-	public class RetryPolicyOptionsExtension : IDbContextOptionsExtension
+	public class RetryPolicyOptionsExtension : IDataContextOptionsExtension
 	{
-		private IRetryPolicy?                       _retryPolicy;
-		private Func<DataConnection,IRetryPolicy?>? _factory;
-		private int                                 _maxRetryCount;
-		private TimeSpan                            _maxDelay;
-		private double                              _randomFactor;
-		private double                              _exponentialBase;
-		private TimeSpan                            _coefficient;
+		IRetryPolicy?                       _retryPolicy;
+		Func<DataConnection,IRetryPolicy?>? _factory;
+		int                                 _maxRetryCount;
+		TimeSpan                            _maxDelay;
+		double                              _randomFactor;
+		double                              _exponentialBase;
+		TimeSpan                            _coefficient;
 
 		public RetryPolicyOptionsExtension()
 		{
@@ -40,7 +40,7 @@ namespace LinqToDB.Infrastructure
 		/// Retry policy factory method, used to create retry policy for new <see cref="DataConnection"/> instance.
 		/// If factory method is not set, retry policy is not used.
 		/// </summary>
-		public Func<DataConnection, IRetryPolicy?>? Factory => _factory;
+		public Func<DataConnection,IRetryPolicy?>? Factory => _factory;
 
 		/// <summary>
 		/// The number of retry attempts.
@@ -69,26 +69,40 @@ namespace LinqToDB.Infrastructure
 
 		#region With Methods
 
-		public RetryPolicyOptionsExtension WithRetryPolicy(IRetryPolicy retryPolicy) =>
-			SetValue(o => o._retryPolicy = retryPolicy);
-		
-		public RetryPolicyOptionsExtension WithFactory(Func<DataConnection, IRetryPolicy?>? factory) =>
-			SetValue(o => o._factory = factory);
+		public RetryPolicyOptionsExtension WithRetryPolicy(IRetryPolicy retryPolicy)
+		{
+			return SetValue(o => o._retryPolicy = retryPolicy);
+		}
 
-		public RetryPolicyOptionsExtension WithMaxRetryCount(int maxRetryCount) =>
-			SetValue(o => o._maxRetryCount = maxRetryCount);
+		public RetryPolicyOptionsExtension WithFactory(Func<DataConnection, IRetryPolicy?>? factory)
+		{
+			return SetValue(o => o._factory = factory);
+		}
 
-		public RetryPolicyOptionsExtension WithMaxDelay(TimeSpan maxDelay) =>
-			SetValue(o => o._maxDelay = maxDelay);
+		public RetryPolicyOptionsExtension WithMaxRetryCount(int maxRetryCount)
+		{
+			return SetValue(o => o._maxRetryCount = maxRetryCount);
+		}
 
-		public RetryPolicyOptionsExtension WithRandomFactor(double randomFactor) =>
-			SetValue(o => o._randomFactor = randomFactor);
+		public RetryPolicyOptionsExtension WithMaxDelay(TimeSpan maxDelay)
+		{
+			return SetValue(o => o._maxDelay = maxDelay);
+		}
 
-		public RetryPolicyOptionsExtension WithExponentialBase(double exponentialBase) =>
-			SetValue(o => o._exponentialBase = exponentialBase);
+		public RetryPolicyOptionsExtension WithRandomFactor(double randomFactor)
+		{
+			return SetValue(o => o._randomFactor = randomFactor);
+		}
 
-		public RetryPolicyOptionsExtension WithCoefficient(TimeSpan coefficient) =>
-			SetValue(o => o._coefficient = coefficient);
+		public RetryPolicyOptionsExtension WithExponentialBase(double exponentialBase)
+		{
+			return SetValue(o => o._exponentialBase = exponentialBase);
+		}
+
+		public RetryPolicyOptionsExtension WithCoefficient(TimeSpan coefficient)
+		{
+			return SetValue(o => o._coefficient = coefficient);
+		}
 
 		#endregion
 
@@ -99,9 +113,10 @@ namespace LinqToDB.Infrastructure
 			return new RetryPolicyOptionsExtension(this);
 		}
 
-		private RetryPolicyOptionsExtension SetValue(Action<RetryPolicyOptionsExtension> setter)
+		RetryPolicyOptionsExtension SetValue(Action<RetryPolicyOptionsExtension> setter)
 		{
 			var clone = Clone();
+
 			setter(clone);
 
 			return clone;
@@ -109,7 +124,7 @@ namespace LinqToDB.Infrastructure
 
 		#endregion
 
-		public DbContextOptionsExtensionInfo Info => throw new NotImplementedException();
+		public DataContextOptionsExtensionInfo Info => throw new NotImplementedException();
 
 		public void ApplyServices()
 		{
@@ -120,7 +135,5 @@ namespace LinqToDB.Infrastructure
 		{
 			throw new NotImplementedException();
 		}
-		
 	}
-	
 }
