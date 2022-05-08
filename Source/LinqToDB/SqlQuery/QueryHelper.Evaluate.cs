@@ -12,7 +12,7 @@ namespace LinqToDB.SqlQuery
 			{
 				return value;
 			}
-			return new SqlParameterValue(parameter.Value, parameter.Value, parameter.Type);
+			return new SqlParameterValue(parameter.Value, parameter.Type);
 		}
 
 		public static bool TryEvaluateExpression(this IQueryElement expr, EvaluationContext context, out object? result)
@@ -99,13 +99,7 @@ namespace LinqToDB.SqlQuery
 
 					var parameterValue = sqlParameter.GetParameterValue(context.ParameterValues);
 
-					if (!Equals(parameterValue.OriginalValue, parameterValue.ProviderValue))
-					{
-						errorMessage = "Conversion applied";
-						return false;
-					}
-
-					result = parameterValue.OriginalValue;
+					result = parameterValue.ProviderValue;
 					return true;
 				}
 				case QueryElementType.IsNullPredicate:

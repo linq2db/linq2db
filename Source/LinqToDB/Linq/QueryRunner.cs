@@ -248,7 +248,6 @@ namespace LinqToDB.Linq
 			foreach (var p in queryContext.ParameterAccessors)
 			{
 				var providerValue = p.ValueAccessor(expression, parametersContext, parameters);
-				var originalValue = p.OriginalAccessor(expression, parametersContext, parameters);
 
 				if (providerValue is IEnumerable vs)
 				{
@@ -282,7 +281,7 @@ namespace LinqToDB.Linq
 
 				var dbDataType = p.DbDataTypeAccessor(expression, parametersContext, parameters);
 
-				parameterValues.AddValue(p.SqlParameter, providerValue, originalValue, p.SqlParameter.Type.WithSetValues(dbDataType));
+				parameterValues.AddValue(p.SqlParameter, providerValue, p.SqlParameter.Type.WithSetValues(dbDataType));
 			}
 		}
 
