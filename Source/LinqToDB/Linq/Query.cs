@@ -7,6 +7,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using LinqToDB.Common.Internal;
 
 // ReSharper disable StaticMemberInGenericType
 
@@ -44,7 +45,7 @@ namespace LinqToDB.Linq
 			ContextType             = dataContext.GetType();
 			Expression              = expression;
 			MappingSchema           = dataContext.MappingSchema;
-			ConfigurationID         = dataContext.MappingSchema.ConfigurationID;
+			ConfigurationID         = ((IConfigurationID)dataContext.MappingSchema).ConfigurationID;
 			SqlOptimizer            = dataContext.GetSqlOptimizer();
 			SqlProviderFlags        = dataContext.SqlProviderFlags;
 			LinqOptions             = dataContext.GetLinqOptions();
@@ -71,7 +72,7 @@ namespace LinqToDB.Linq
 		{
 			return
 				ContextID               == dataContext.ContextID                                                        &&
-				ConfigurationID         == dataContext.MappingSchema.ConfigurationID                                    &&
+				ConfigurationID         == ((IConfigurationID)dataContext.MappingSchema).ConfigurationID                &&
 				InlineParameters        == dataContext.InlineParameters                                                 &&
 				ContextType             == dataContext.GetType()                                                        &&
 				IsEntityServiceProvided == dataContext is IInterceptable<IEntityServiceInterceptor> { Interceptor: {} } &&
@@ -534,7 +535,7 @@ namespace LinqToDB.Linq
 				if (!linqOptions.GenerateExpressionTest)
 				{
 					dataContext.WriteTraceLine(
-						"To generate test code to diagnose the problem set 'LinqToDB.Common.Configuration.Linq.GenerateExpressionTest = true'.\n" + 
+						"To generate test code to diagnose the problem set 'LinqToDB.Common.Configuration.Linq.GenerateExpressionTest = true'.\n" +
 						"Or specify LINQ options during 'DataContextOptions' building 'builder.WithOptions(o => o.WithGenerateExpressionTest(true))'",
 						dataContext.GetTraceSwitch().DisplayName,
 						TraceLevel.Error);

@@ -59,5 +59,7 @@ namespace LinqToDB
 		{
 			return typeof(TContext).IsAssignableFrom(contextType);
 		}
+
+		public static DataContextOptions<TContext> Default { get; } = new ();
 	}
 }

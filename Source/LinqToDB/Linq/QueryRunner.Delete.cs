@@ -3,6 +3,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
+using LinqToDB.Common.Internal;
 
 namespace LinqToDB.Linq
 {
@@ -79,7 +80,19 @@ namespace LinqToDB.Linq
 				var ei = linqOptions.DisableQueryCache
 					? CreateQuery(dataContext, tableName, serverName, databaseName, schemaName, tableOptions, type)
 					: Cache<T>.QueryCache.GetOrCreate(
-						(operation: 'D', dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schemaName, databaseName, serverName, tableOptions, type, queryFlags: dataContext.GetQueryFlags(), LinqOptions: linqOptions),
+						(
+							operation: 'D',
+							((IConfigurationID)dataContext.MappingSchema).ConfigurationID,
+							dataContext.ContextID,
+							tableName,
+							schemaName,
+							databaseName,
+							serverName,
+							tableOptions,
+							type,
+							queryFlags: dataContext.GetQueryFlags(),
+							LinqOptions: linqOptions
+						),
 						(dataContext, linqOptions),
 						static (entry, key, context) =>
 						{
@@ -109,7 +122,19 @@ namespace LinqToDB.Linq
 				var ei   = linqOptions.DisableQueryCache
 					? CreateQuery(dataContext, tableName, serverName, databaseName, schemaName, tableOptions, type)
 					: Cache<T>.QueryCache.GetOrCreate(
-						(operation: 'D', dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schemaName, databaseName, serverName, tableOptions, type, queryFlags: dataContext.GetQueryFlags(), LinqOptions: linqOptions),
+						(
+							operation: 'D',
+							((IConfigurationID)dataContext.MappingSchema).ConfigurationID,
+							dataContext.ContextID,
+							tableName,
+							schemaName,
+							databaseName,
+							serverName,
+							tableOptions,
+							type,
+							queryFlags: dataContext.GetQueryFlags(),
+							LinqOptions: linqOptions
+						),
 						(dataContext, linqOptions),
 						static (entry, key, context) =>
 						{

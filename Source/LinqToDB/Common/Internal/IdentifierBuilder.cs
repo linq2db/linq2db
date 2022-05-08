@@ -38,6 +38,15 @@ namespace LinqToDB.Common.Internal
 
 		readonly StringBuilder _stringBuilder = new ();
 
+		public IdentifierBuilder Add(IConfigurationID? data)
+		{
+			_stringBuilder
+				.Append('.')
+				.Append(data?.ConfigurationID)
+				;
+			return this;
+		}
+
 		public IdentifierBuilder Add(string? data)
 		{
 			_stringBuilder
@@ -47,11 +56,29 @@ namespace LinqToDB.Common.Internal
 			return this;
 		}
 
+		public IdentifierBuilder Add(bool data)
+		{
+			_stringBuilder
+				.Append('.')
+				.Append(data ? "1" : "0")
+				;
+			return this;
+		}
+
 		public IdentifierBuilder Add(object? data)
 		{
 			_stringBuilder
 				.Append('.')
 				.Append(data)
+				;
+			return this;
+		}
+
+		public IdentifierBuilder Add(string format, object? data)
+		{
+			_stringBuilder
+				.Append('.')
+				.AppendFormat(format, data)
 				;
 			return this;
 		}

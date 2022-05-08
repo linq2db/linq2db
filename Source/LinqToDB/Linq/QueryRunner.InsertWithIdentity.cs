@@ -1,14 +1,15 @@
 ﻿using System;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
-	using SqlQuery;
-	using Mapping;
+	using Common.Internal;
 	using Common.Internal.Cache;
-	using System.Linq;
+	using Mapping;
+	using SqlQuery;
 
 	static partial class QueryRunner
 	{
@@ -89,9 +90,20 @@ namespace LinqToDB.Linq
 				var ei = linqOptions.DisableQueryCache || entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Insert) || columnFilter != null
 					? CreateQuery(dataContext, entityDescriptor, obj!, columnFilter, tableName, serverName, databaseName, schemaName, tableOptions, type)
 					: Cache<T>.QueryCache.GetOrCreate(
-						(operation: "II", dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schemaName, databaseName, serverName, tableOptions, 
-							type, queryFlags: dataContext.GetQueryFlags(), LinqOptions: linqOptions),
-						( dataContext, entityDescriptor, obj, linqOptions ),
+						(
+							operation: "II",
+							((IConfigurationID)dataContext.MappingSchema).ConfigurationID,
+							dataContext.ContextID,
+							tableName,
+							schemaName,
+							databaseName,
+							serverName,
+							tableOptions,
+							type,
+							queryFlags: dataContext.GetQueryFlags(),
+							LinqOptions: linqOptions
+						),
+						(dataContext, entityDescriptor, obj, linqOptions),
 						static (entry, key, context) =>
 						{
 							entry.SlidingExpiration = context.linqOptions.CacheSlidingExpiration;
@@ -122,9 +134,20 @@ namespace LinqToDB.Linq
 				var ei = linqOptions.DisableQueryCache || entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Insert) || columnFilter != null
 					? CreateQuery(dataContext, entityDescriptor, obj!, columnFilter, tableName, serverName, databaseName, schemaName, tableOptions, type)
 					: Cache<T>.QueryCache.GetOrCreate(
-						(operation: "II", dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schemaName, databaseName, serverName, tableOptions, 
-							type, queryFlags: dataContext.GetQueryFlags(), LinqOptions: linqOptions),
-						( dataContext, entityDescriptor, obj, linqOptions ),
+						(
+							operation: "II",
+							((IConfigurationID)dataContext.MappingSchema).ConfigurationID,
+							dataContext.ContextID,
+							tableName,
+							schemaName,
+							databaseName,
+							serverName,
+							tableOptions,
+							type,
+							queryFlags: dataContext.GetQueryFlags(),
+							LinqOptions: linqOptions
+						),
+						(dataContext, entityDescriptor, obj, linqOptions),
 						static (entry, key, context) =>
 						{
 							entry.SlidingExpiration = context.linqOptions.CacheSlidingExpiration;

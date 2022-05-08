@@ -25,7 +25,7 @@ namespace LinqToDB
 		/// Initializes a new instance of the <see cref="DataContextOptionsBuilder" /> class with no options set.
 		/// </summary>
 		public DataContextOptionsBuilder()
-			: this(new DataContextOptions<DataConnection>())
+			: this(DataContextOptions<DataConnection>.Default)
 		{
 		}
 

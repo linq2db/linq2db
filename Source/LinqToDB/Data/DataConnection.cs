@@ -29,14 +29,14 @@ namespace LinqToDB.Data
 	/// or attached to existing connection or transaction.
 	/// </summary>
 	[PublicAPI]
-	public partial class DataConnection : IDataContext, ICloneable
+	public partial class DataConnection : IDataContext, ICloneable, IConfigurationID
 	{
 		#region .ctor
 
 		/// <summary>
 		/// Creates database connection object that uses default connection configuration from <see cref="DefaultConfiguration"/> property.
 		/// </summary>
-		public DataConnection() : this(new DataContextOptions<DataConnection>())
+		public DataConnection() : this(DataContextOptions<DataConnection>.Default)
 		{}
 
 		/// <summary>
@@ -425,23 +425,21 @@ namespace LinqToDB.Data
 		/// </summary>
 		public IRetryPolicy? RetryPolicy         { get; set; }
 
-		private int  _msID;
-		private int? _id;
-		/// <summary>
-		/// For internal use only.
-		/// </summary>
-		public  int   ID
+		int  _msID;
+		int? _configurationID;
+
+		int IConfigurationID.ConfigurationID
 		{
 			get
 			{
-				if (!_id.HasValue || _msID != MappingSchema.ConfigurationID)
+				if (!_configurationID.HasValue || _msID != ((IConfigurationID)MappingSchema).ConfigurationID)
 				{
-					_id = new IdentifierBuilder(_msID = MappingSchema.ConfigurationID)
-						.Add((ConfigurationString ?? ConnectionString ?? Connection.ConnectionString))
+					_configurationID = new IdentifierBuilder(_msID = ((IConfigurationID)MappingSchema).ConfigurationID)
+						.Add(ConfigurationString ?? ConnectionString ?? Connection.ConnectionString)
 						.CreateID();
 				}
 
-				return _id.Value;
+				return _configurationID.Value;
 			}
 		}
 
@@ -1752,8 +1750,8 @@ namespace LinqToDB.Data
 		/// <returns>Current connection object.</returns>
 		public DataConnection AddMappingSchema(MappingSchema mappingSchema)
 		{
-			MappingSchema = new (mappingSchema, MappingSchema);
-			_id           = null;
+			MappingSchema    = new (mappingSchema, MappingSchema);
+			_configurationID = null;
 
 			return this;
 		}

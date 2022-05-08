@@ -1,9 +1,9 @@
 ﻿using System;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Infrastructure
 {
+	using LinqToDB.Common.Internal;
 	using Data;
 	using Linq;
 
@@ -289,20 +289,7 @@ namespace LinqToDB.Infrastructure
 			if (ReferenceEquals(null, other)) return false;
 			if (ReferenceEquals(this, other)) return true;
 
-			return
-				_preloadGroups          == other._preloadGroups               &&
-				_ignoreEmptyUpdate      == other._ignoreEmptyUpdate           &&
-				_generateExpressionTest == other._generateExpressionTest      &&
-				_traceMapperExpression  == other._traceMapperExpression       &&
-				_doNotClearOrderBys     == other._doNotClearOrderBys          &&
-				_optimizeJoins          == other._optimizeJoins               &&
-				_compareNullsAsValues   == other._compareNullsAsValues        &&
-				_guardGrouping          == other._guardGrouping               &&
-				_disableQueryCache      == other._disableQueryCache           &&
-				_cacheSlidingExpiration.Equals(other._cacheSlidingExpiration) &&
-				_preferApply            == other._preferApply                   &&
-				_keepDistinctOrdered    == other._keepDistinctOrdered           &&
-				_parameterizeTakeSkip   == other._parameterizeTakeSkip;
+			return ConfigurationID == other.ConfigurationID;
 		}
 
 		public override bool Equals(object? obj)
@@ -310,32 +297,15 @@ namespace LinqToDB.Infrastructure
 			if (ReferenceEquals(null, obj)) return false;
 			if (ReferenceEquals(this, obj)) return true;
 
-			if (obj.GetType() != this.GetType())
+			if (obj.GetType() != GetType())
 				return false;
 
 			return Equals((LinqOptionsExtension)obj);
 		}
 
-		[SuppressMessage("ReSharper", "NonReadonlyMemberInGetHashCode")]
 		public override int GetHashCode()
 		{
-			unchecked
-			{
-				var hashCode = _preloadGroups.GetHashCode();
-				hashCode = (hashCode * 397) ^ _ignoreEmptyUpdate.GetHashCode();
-				hashCode = (hashCode * 397) ^ _generateExpressionTest.GetHashCode();
-				hashCode = (hashCode * 397) ^ _traceMapperExpression.GetHashCode();
-				hashCode = (hashCode * 397) ^ _doNotClearOrderBys.GetHashCode();
-				hashCode = (hashCode * 397) ^ _optimizeJoins.GetHashCode();
-				hashCode = (hashCode * 397) ^ _compareNullsAsValues.GetHashCode();
-				hashCode = (hashCode * 397) ^ _guardGrouping.GetHashCode();
-				hashCode = (hashCode * 397) ^ _disableQueryCache.GetHashCode();
-				hashCode = (hashCode * 397) ^ _cacheSlidingExpiration.GetHashCode();
-				hashCode = (hashCode * 397) ^ _preferApply.GetHashCode();
-				hashCode = (hashCode * 397) ^ _keepDistinctOrdered.GetHashCode();
-				hashCode = (hashCode * 397) ^ _parameterizeTakeSkip.GetHashCode();
-				return hashCode;
-			}
+			return ConfigurationID;
 		}
 
 		public static bool operator ==(LinqOptionsExtension? left, LinqOptionsExtension? right)
@@ -347,6 +317,23 @@ namespace LinqToDB.Infrastructure
 		{
 			return !Equals(left, right);
 		}
+
+		int? _configurationID;
+		int   ConfigurationID => _configurationID ??= new IdentifierBuilder()
+			.Add(_preloadGroups)
+			.Add(_ignoreEmptyUpdate)
+			.Add(_generateExpressionTest)
+			.Add(_traceMapperExpression)
+			.Add(_doNotClearOrderBys)
+			.Add(_optimizeJoins)
+			.Add(_compareNullsAsValues)
+			.Add(_guardGrouping)
+			.Add(_disableQueryCache)
+			.Add(_cacheSlidingExpiration)
+			.Add(_preferApply)
+			.Add(_keepDistinctOrdered)
+			.Add(_parameterizeTakeSkip)
+			.CreateID();
 
 		#endregion
 	}

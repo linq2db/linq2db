@@ -4,6 +4,7 @@ using System.Linq.Expressions;
 namespace LinqToDB.Remote
 {
 	using Common;
+	using Common.Internal;
 	using Common.Internal.Cache;
 	using Expressions;
 	using Extensions;
@@ -13,7 +14,7 @@ namespace LinqToDB.Remote
 	/// Implements conversions support between raw values and string to support de-/serialization of remote data context
 	/// query AST and result values.
 	/// </summary>
-	internal class SerializationConverter
+	class SerializationConverter
 	{
 		static readonly Type _stringType = typeof(string);
 		static readonly MemoryCache<(Type from, int schemaId)> _serializeConverters   = new (new ());
@@ -33,7 +34,7 @@ namespace LinqToDB.Remote
 			var from = value.GetType();
 
 			var converter = _serializeConverters.GetOrCreate(
-				(from, ms.ConfigurationID),
+				(from, ((IConfigurationID)ms).ConfigurationID),
 				ms,
 				static (o, ms) =>
 				{
@@ -84,7 +85,7 @@ namespace LinqToDB.Remote
 			to = to.ToNullableUnderlying();
 
 			var converter = _deserializeConverters.GetOrCreate(
-				(to, ms.ConfigurationID),
+				(to, ((IConfigurationID)ms).ConfigurationID),
 				ms,
 				static (o, ms) =>
 				{
@@ -94,14 +95,14 @@ namespace LinqToDB.Remote
 					Type? enumType = null;
 
 					var li = ms.GetConverter(new DbDataType(_stringType), new DbDataType(to), false);
+
 					if (li == null && to.IsEnum)
 					{
 						enumType = to;
 						to = Enum.GetUnderlyingType(to);
 					}
 
-					if (li == null)
-						li = ms.GetConverter(new DbDataType(_stringType), new DbDataType(to), true)!;
+					li ??= ms.GetConverter(new DbDataType(_stringType), new DbDataType(to), true)!;
 
 					var b  = li.CheckNullLambda.Body;
 					var ps = li.CheckNullLambda.Parameters;

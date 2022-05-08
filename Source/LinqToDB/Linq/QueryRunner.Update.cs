@@ -7,9 +7,10 @@ using System.Threading.Tasks;
 namespace LinqToDB.Linq
 {
 	using Common;
-	using SqlQuery;
-	using Mapping;
+	using Common.Internal;
 	using Common.Internal.Cache;
+	using Mapping;
+	using SqlQuery;
 
 	static partial class QueryRunner
 	{
@@ -110,9 +111,20 @@ namespace LinqToDB.Linq
 				var ei = linqOptions.DisableQueryCache || entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Update) || columnFilter != null
 					? CreateQuery(dataContext, entityDescriptor, obj, columnFilter, tableName, serverName, databaseName, schemaName, tableOptions, type)
 					: Cache<T>.QueryCache.GetOrCreate(
-						(operation: 'U', dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, columnFilter, tableName, schemaName, databaseName, serverName, 
-							tableOptions, queryFlags: dataContext.GetQueryFlags(), type, LinqOptions: linqOptions),
-						( dataContext, entityDescriptor, obj, linqOptions ),
+						(
+							operation: 'U',
+							((IConfigurationID)dataContext.MappingSchema).ConfigurationID,
+							dataContext.ContextID,
+							columnFilter, tableName,
+							schemaName,
+							databaseName,
+							serverName,
+							tableOptions,
+							queryFlags: dataContext.GetQueryFlags(),
+							type,
+							LinqOptions: linqOptions
+						),
+						(dataContext, entityDescriptor, obj, linqOptions),
 						static (entry, key, context) =>
 						{
 							entry.SlidingExpiration = context.linqOptions.CacheSlidingExpiration;
@@ -143,8 +155,20 @@ namespace LinqToDB.Linq
 				var ei = linqOptions.DisableQueryCache || entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Update) || columnFilter != null
 					? CreateQuery(dataContext, entityDescriptor, obj, columnFilter, tableName, serverName, databaseName, schemaName, tableOptions, type)
 					: Cache<T>.QueryCache.GetOrCreate(
-						(operation: 'U', dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, columnFilter, tableName, schemaName, databaseName, serverName, 
-							tableOptions, type, queryFlags: dataContext.GetQueryFlags(), LinqOptions: linqOptions),
+						(
+							operation: 'U',
+							((IConfigurationID)dataContext.MappingSchema).ConfigurationID,
+							dataContext.ContextID,
+							columnFilter,
+							tableName,
+							schemaName,
+							databaseName,
+							serverName,
+							tableOptions,
+							type,
+							queryFlags: dataContext.GetQueryFlags(),
+							LinqOptions: linqOptions
+						),
 						( dataContext, entityDescriptor, obj, linqOptions ),
 						static (entry, key, context) =>
 						{

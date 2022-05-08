@@ -142,7 +142,7 @@ namespace LinqToDB.Infrastructure
 		/// <summary>
 		/// Gets custom trace writer to use with <see cref="DataConnection"/> instance.
 		/// </summary>
-		public virtual Action<string?, string?, TraceLevel>? WriteTrace => _writeTrace;
+		public virtual Action<string?,string?,TraceLevel>? WriteTrace => _writeTrace;
 
 		/// <summary>
 		/// Gets connection factory to use with <see cref="DataConnection"/> instance.

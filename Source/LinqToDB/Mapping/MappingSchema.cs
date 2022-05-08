@@ -30,7 +30,7 @@ namespace LinqToDB.Mapping
 	/// </summary>
 	[PublicAPI]
 	[DebuggerDisplay("{DisplayID}")]
-	public class MappingSchema
+	public class MappingSchema : IConfigurationID
 	{
 		#region Init
 
@@ -1257,7 +1257,7 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Unique schema configuration identifier. For internal use only.
 		/// </summary>
-		internal int ConfigurationID => _configurationID ??= GenerateID();
+		int IConfigurationID.ConfigurationID => _configurationID ??= GenerateID();
 
 		protected internal virtual int GenerateID()
 		{
@@ -1746,7 +1746,7 @@ namespace LinqToDB.Mapping
 		public EntityDescriptor GetEntityDescriptor(Type type)
 		{
 			var ed = EntityDescriptorsCache.GetOrCreate(
-				(entityType: type, ConfigurationID),
+				(entityType: type, ((IConfigurationID)this).ConfigurationID),
 				this,
 				static (o, context) =>
 				{

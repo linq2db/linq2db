@@ -7,9 +7,10 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
-	using SqlQuery;
-	using Mapping;
+	using Common.Internal;
 	using Common.Internal.Cache;
+	using Mapping;
+	using SqlQuery;
 
 	static partial class QueryRunner
 	{
@@ -38,11 +39,13 @@ namespace LinqToDB.Linq
 
 				var sqlQuery = new SelectQuery();
 
-				ParameterAccessor? param = null;
+				ParameterAccessor? param;
 
-				var insertOrUpdateStatement = new SqlInsertOrUpdateStatement(sqlQuery);
-				insertOrUpdateStatement.Insert.Into  = sqlTable;
-				insertOrUpdateStatement.Update.Table = sqlTable;
+				var insertOrUpdateStatement = new SqlInsertOrUpdateStatement(sqlQuery)
+				{
+					Insert = { Into  = sqlTable },
+					Update = { Table = sqlTable }
+				};
 
 				sqlQuery.From.Table(sqlTable);
 
@@ -156,16 +159,28 @@ namespace LinqToDB.Linq
 				var entityDescriptor = dataContext.MappingSchema.GetEntityDescriptor(type);
 				var linqOptions      = dataContext.GetLinqOptions();
 
-				var cacheDisabled = linqOptions.DisableQueryCache
-				                    || columnFilter != null
-				                    || entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Insert)
-				                    || entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Update);
+				var cacheDisabled =
+					linqOptions.DisableQueryCache                                           ||
+					columnFilter != null                                                    ||
+					entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Insert) ||
+					entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Update);
 
 				var ei = cacheDisabled
 					? CreateQuery(dataContext, entityDescriptor, obj, columnFilter, tableName, serverName, databaseName, schema, tableOptions, type)
 					: Cache<T>.QueryCache.GetOrCreate(
-					(operation: "IR", dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schema, databaseName, serverName, tableOptions, 
-						type, queryFlags: dataContext.GetQueryFlags(), LinqOptions: linqOptions),
+					(
+						operation: "IR",
+						((IConfigurationID)dataContext.MappingSchema).ConfigurationID,
+						dataContext.ContextID,
+						tableName,
+						schema,
+						databaseName,
+						serverName,
+						tableOptions,
+						type,
+						queryFlags: dataContext.GetQueryFlags(),
+						LinqOptions: linqOptions
+					),
 					( dataContext, entityDescriptor, obj, linqOptions ),
 					static (entry, key, context) =>
 					{
@@ -194,17 +209,29 @@ namespace LinqToDB.Linq
 				var entityDescriptor = dataContext.MappingSchema.GetEntityDescriptor(type);
 				var linqOptions      = dataContext.GetLinqOptions();
 
-				var cacheDisabled = linqOptions.DisableQueryCache
-				                    || columnFilter != null
-				                    || entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Insert)
-				                    || entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Update);
+				var cacheDisabled =
+					linqOptions.DisableQueryCache                                           ||
+					columnFilter != null                                                    ||
+					entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Insert) ||
+					entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Update);
 
 				var ei = cacheDisabled
 					? CreateQuery(dataContext, entityDescriptor, obj, columnFilter, tableName, serverName, databaseName, schema, tableOptions, type)
 					: Cache<T>.QueryCache.GetOrCreate(
-					(operation: "IR", dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schema, databaseName, serverName, tableOptions, 
-						type, queryFlags: dataContext.GetQueryFlags(), LinqOptions: linqOptions),
-					( dataContext, entityDescriptor, obj, linqOptions ),
+					(
+						operation: "IR",
+						((IConfigurationID)dataContext.MappingSchema).ConfigurationID,
+						dataContext.ContextID,
+						tableName,
+						schema,
+						databaseName,
+						serverName,
+						tableOptions,
+						type,
+						queryFlags: dataContext.GetQueryFlags(),
+						LinqOptions: linqOptions
+					),
+					(dataContext, entityDescriptor, obj, linqOptions),
 					static (entry, key, context) =>
 					{
 						entry.SlidingExpiration = context.linqOptions.CacheSlidingExpiration;
@@ -241,7 +268,7 @@ namespace LinqToDB.Linq
 			foreach (var key in keys)
 				firstStatement.SelectQuery.Where.Expr(key.Column).Equal.Expr(key.Expression!);
 
-			//TODO! looks not working solution
+			// TODO! looks not working solution
 			if (firstStatement.Update.Items.Count > 0)
 			{
 				query.Queries[0].Statement = new SqlUpdateStatement(firstStatement.SelectQuery)

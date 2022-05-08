@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 namespace LinqToDB.Linq
 {
 	using Builder;
+	using Common.Internal;
 	using Common.Internal.Cache;
 
 	class CompiledTable<T>
@@ -21,14 +22,20 @@ namespace LinqToDB.Linq
 
 		Query<T> GetInfo(IDataContext dataContext)
 		{
-			var contextID       = dataContext.ContextID;
-			var contextType     = dataContext.GetType();
-			var mappingSchemaID = dataContext.MappingSchema.ConfigurationID;
-
+			var contextID   = dataContext.ContextID;
+			var contextType = dataContext.GetType();
 			var linqOptions = dataContext.GetLinqOptions();
 
 			var result = QueryRunner.Cache<T>.QueryCache.GetOrCreate(
-				(operation: "CT", contextID, contextType, mappingSchemaID, expression: _expression, queryFlags: dataContext.GetQueryFlags(), LinqOptions: linqOptions),
+				(
+					operation: "CT",
+					contextID,
+					contextType,
+					mappingSchemaID: ((IConfigurationID)dataContext.MappingSchema).ConfigurationID,
+					expression: _expression,
+					queryFlags: dataContext.GetQueryFlags(),
+					LinqOptions: linqOptions
+				),
 				(dataContext, lambda: _lambda, linqOptions),
 				static (o, key, ctx) =>
 				{

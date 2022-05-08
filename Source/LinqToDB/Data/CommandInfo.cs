@@ -14,6 +14,7 @@ using System.Runtime.CompilerServices;
 using System.Diagnostics;
 
 using JetBrains.Annotations;
+using LinqToDB.Common.Internal;
 
 // type, readertype, configID, sql, additionalKey, isScalar
 using QueryKey = System.ValueTuple<System.Type, System.Type, int, string, string?, bool>;
@@ -319,7 +320,7 @@ namespace LinqToDB.Data
 		{
 			return typeof(object) == type || typeof(ExpandoObject) == type;
 		}
-		
+
 		IEnumerable<T> ReadEnumerator<T>(DataReaderWrapper rd, IExecutionScope? scope, bool disposeReader = true)
 		{
 			var startedOn = DateTime.UtcNow;
@@ -1382,7 +1383,7 @@ namespace LinqToDB.Data
 			var linqOptions = dataConnection.GetLinqOptions();
 
 			var func = _parameterReaders.GetOrCreate(
-				(type: parameters.GetType(), dataConnection.ID),
+				(type: parameters.GetType(), ((IConfigurationID)dataConnection).ConfigurationID),
 				(dataConnection, linqOptions),
 				static (o, ctx) =>
 			{
@@ -1532,7 +1533,7 @@ namespace LinqToDB.Data
 			var linqOptions = dataConnection.GetLinqOptions();
 
 			var func = _objectReaders.GetOrCreate(
-				new QueryKey(typeof(T), dataReader.GetType(), dataConnection.ID, sql, additionalKey, dataReader.FieldCount <= 1),
+				new QueryKey(typeof(T), dataReader.GetType(), ((IConfigurationID)dataConnection).ConfigurationID, sql, additionalKey, dataReader.FieldCount <= 1),
 				(dataConnection, dataReader, linqOptions),
 				static (e, context) =>
 			{
@@ -1559,7 +1560,7 @@ namespace LinqToDB.Data
 		{
 			var linqOptions = dataConnection.GetLinqOptions();
 
-			var key = (typeof(T), dataReader.GetType(), dataConnection.ID, sql, additionalKey, dataReader.FieldCount <= 1);
+			var key = (typeof(T), dataReader.GetType(), ((IConfigurationID)dataConnection).ConfigurationID, sql, additionalKey, dataReader.FieldCount <= 1);
 
 			Delegate func;
 			if (!key.Item6 && IsDynamicType(typeof(T)))
@@ -1707,7 +1708,7 @@ namespace LinqToDB.Data
 
 		static readonly ConstructorInfo _expandoObjectConstructor = MemberHelper.ConstructorOf(() => new ExpandoObject());
 		static readonly MethodInfo      _expandoAddMethodInfo     = MemberHelper.MethodOf(() => ((IDictionary<string, object>)null!).Add("", ""));
-		
+
 		static Func<DbDataReader, T> CreateDynamicObjectReader<T>(
 			DataConnection dataConnection,
 			DbDataReader dataReader,
