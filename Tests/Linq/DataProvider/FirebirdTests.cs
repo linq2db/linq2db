@@ -1057,7 +1057,6 @@ namespace Tests.DataProvider
 					}
 				};
 
-				// test procedure calls
 				db.ExecuteProc("TEST_PROCEDURE", parameters);
 				Assert.AreEqual(4, parameters[1].Value);
 				db.ExecuteProc("TEST_PACKAGE1.TEST_PROCEDURE", parameters);

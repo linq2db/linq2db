@@ -5,11 +5,18 @@ using System.Linq;
 using System.Text;
 using System.Xml;
 using System.Xml.Linq;
+using System.Collections.Generic;
+using System.Data;
+using System.Globalization;
+using System.Reflection;
+using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
+using LinqToDB.SchemaProvider;
+using LinqToDB.Tools.Comparers;
 
 #if NET472
 using IBM.Data.DB2;
@@ -25,11 +32,6 @@ using NUnit.Framework;
 
 namespace Tests.DataProvider
 {
-	using System.Collections.Generic;
-	using System.Globalization;
-	using System.Threading.Tasks;
-	using LinqToDB.SchemaProvider;
-	using LinqToDB.Tools.Comparers;
 	using Model;
 
 	[TestFixture]
@@ -924,6 +926,78 @@ namespace Tests.DataProvider
 				}
 
 				Assert.True(usedSchemas.Select(_ => _.Length).Distinct().Count() > 1);
+			}
+		}
+
+		[Test]
+		public void TestModule([IncludeDataSources(false, ProviderName.DB2)] string context)
+		{
+			using (var db = GetDataConnection(context))
+			{
+				var parameters = new []
+				{
+					new DataParameter("I", 1, DataType.Int32),
+					new DataParameter("O", null, DataType.Int32)
+					{
+						Direction = ParameterDirection.Output
+					}
+				};
+
+				Assert.AreEqual(4, db.QueryProc<int>("TEST_PROCEDURE", new { i = 1 }).First());
+				Assert.AreEqual(2, db.QueryProc<int>("TEST_MODULE1.TEST_PROCEDURE", new { i = 1 }).First());
+				Assert.AreEqual(3, db.QueryProc<int>("TEST_MODULE2.TEST_PROCEDURE", new { i = 1 }).First());
+
+				Assert.AreEqual(4, db.Person.Select(p => DB2ModuleFunctions.TestFunction(1)).First());
+				Assert.AreEqual(2, db.Person.Select(p => DB2ModuleFunctions.TestFunctionP1(1)).First());
+				Assert.AreEqual(3, db.Person.Select(p => DB2ModuleFunctions.TestFunctionP2(1)).First());
+
+				Assert.AreEqual(4, DB2ModuleFunctions.TestTableFunction(db, 1).Select(r => r.O).First());
+				Assert.AreEqual(2, DB2ModuleFunctions.TestTableFunctionP1(db, 1).Select(r => r.O).First());
+				Assert.AreEqual(3, DB2ModuleFunctions.TestTableFunctionP2(db, 1).Select(r => r.O).First());
+			}
+		}
+
+		static class DB2ModuleFunctions
+		{
+			[Sql.Function("TEST_FUNCTION", ServerSideOnly = true)]
+			public static int TestFunction(int param)
+			{
+				throw new InvalidOperationException("Scalar function cannot be called outside of query");
+			}
+
+			[Sql.Function("TEST_MODULE1.TEST_FUNCTION", ServerSideOnly = true)]
+			public static int TestFunctionP1(int param)
+			{
+				throw new InvalidOperationException("Scalar function cannot be called outside of query");
+			}
+
+			[Sql.Function("TEST_MODULE2.TEST_FUNCTION", ServerSideOnly = true)]
+			public static int TestFunctionP2(int param)
+			{
+				throw new InvalidOperationException("Scalar function cannot be called outside of query");
+			}
+
+			[Sql.TableFunction("TEST_TABLE_FUNCTION", argIndices: new[] { 1 })]
+			public static LinqToDB.ITable<Record> TestTableFunction(IDataContext db, int param1)
+			{
+				return db.GetTable<Record>(null, (MethodInfo)MethodBase.GetCurrentMethod()!, db, param1);
+			}
+
+			[Sql.TableFunction("TEST_TABLE_FUNCTION", argIndices: new[] { 1 }, Package = "TEST_MODULE1")]
+			public static LinqToDB.ITable<Record> TestTableFunctionP1(IDataContext db, int param1)
+			{
+				return db.GetTable<Record>(null, (MethodInfo)MethodBase.GetCurrentMethod()!, db, param1);
+			}
+
+			[Sql.TableFunction("TEST_TABLE_FUNCTION", argIndices: new[] { 1 }, Package = "TEST_MODULE2")]
+			public static LinqToDB.ITable<Record> TestTableFunctionP2(IDataContext db, int param1)
+			{
+				return db.GetTable<Record>(null, (MethodInfo)MethodBase.GetCurrentMethod()!, db, param1);
+			}
+
+			public class Record
+			{
+				public int O { get; set; }
 			}
 		}
 	}

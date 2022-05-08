@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Xml;
 using System.Xml.Linq;
+using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Common;
@@ -15,7 +16,6 @@ using NUnit.Framework;
 
 namespace Tests.DataProvider
 {
-	using System.Threading.Tasks;
 	using Model;
 
 	[TestFixture]
@@ -774,6 +774,80 @@ namespace Tests.DataProvider
 			using (var db = GetDataContext(context))
 			{
 				Assert.Throws<ArgumentException>(() => db.GetTable<AllTypesGeo>().ToArray());
+			}
+		}
+
+		[Test]
+		public void TestModule([IncludeDataSources(false, TestProvName.AllSapHana)] string context)
+		{
+			using (var db = GetDataConnection(context))
+			{
+				Assert.AreEqual(4, db.ExecuteProc<int>("TEST_PROCEDURE", new { i = 1 }));
+
+				// native provider cannot call library member As it replaces : separator with ? parameter token
+				if (context.IsAnyOf(ProviderName.SapHanaOdbc))
+				{
+					Assert.AreEqual(2, db.QueryProc<int>("TEST_PACKAGE1:TEST_PROCEDURE", new { i = 1 }).First());
+					Assert.AreEqual(3, db.QueryProc<int>("TEST_PACKAGE2:TEST_PROCEDURE", new { i = 1 }).First());
+				}
+
+				Assert.AreEqual(4, db.Person.Select(p => SapHanaModuleFunctions.TestFunction(1)).First());
+				if (context.IsAnyOf(ProviderName.SapHanaOdbc))
+				{
+					Assert.AreEqual(2, db.Person.Select(p => SapHanaModuleFunctions.TestFunctionP1(1)).First());
+					Assert.AreEqual(3, db.Person.Select(p => SapHanaModuleFunctions.TestFunctionP2(1)).First());
+				}
+
+				Assert.AreEqual(4, SapHanaModuleFunctions.TestTableFunction(db, 1).Select(r => r.O).First());
+				if (context.IsAnyOf(ProviderName.SapHanaOdbc))
+				{
+					Assert.AreEqual(2, SapHanaModuleFunctions.TestTableFunctionP1(db, 1).Select(r => r.O).First());
+					Assert.AreEqual(3, SapHanaModuleFunctions.TestTableFunctionP2(db, 1).Select(r => r.O).First());
+				}
+			}
+		}
+
+		static class SapHanaModuleFunctions
+		{
+			[Sql.Function("TEST_FUNCTION", ServerSideOnly = true)]
+			public static int TestFunction(int param)
+			{
+				throw new InvalidOperationException("Scalar function cannot be called outside of query");
+			}
+
+			[Sql.Function("TEST_PACKAGE1:TEST_FUNCTION", ServerSideOnly = true)]
+			public static int TestFunctionP1(int param)
+			{
+				throw new InvalidOperationException("Scalar function cannot be called outside of query");
+			}
+
+			[Sql.Function("TEST_PACKAGE2:TEST_FUNCTION", ServerSideOnly = true)]
+			public static int TestFunctionP2(int param)
+			{
+				throw new InvalidOperationException("Scalar function cannot be called outside of query");
+			}
+
+			[Sql.TableFunction("TEST_TABLE_FUNCTION", argIndices: new[] { 1 })]
+			public static LinqToDB.ITable<Record> TestTableFunction(IDataContext db, int param1)
+			{
+				return db.GetTable<Record>(null, (MethodInfo)MethodBase.GetCurrentMethod()!, db, param1);
+			}
+
+			[Sql.TableFunction("TEST_TABLE_FUNCTION", argIndices: new[] { 1 }, Package = "TEST_PACKAGE1")]
+			public static LinqToDB.ITable<Record> TestTableFunctionP1(IDataContext db, int param1)
+			{
+				return db.GetTable<Record>(null, (MethodInfo)MethodBase.GetCurrentMethod()!, db, param1);
+			}
+
+			[Sql.TableFunction("TEST_TABLE_FUNCTION", argIndices: new[] { 1 }, Package = "TEST_PACKAGE2")]
+			public static LinqToDB.ITable<Record> TestTableFunctionP2(IDataContext db, int param1)
+			{
+				return db.GetTable<Record>(null, (MethodInfo)MethodBase.GetCurrentMethod()!, db, param1);
+			}
+
+			public class Record
+			{
+				public int O { get; set; }
 			}
 		}
 	}
