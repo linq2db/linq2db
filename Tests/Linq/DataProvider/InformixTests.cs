@@ -450,8 +450,8 @@ namespace Tests.DataProvider
 
 			foreach (var column in ed.Columns)
 			{
-				var actualValue = column.GetValue(actual);
-				var testValue   = column.GetValue(test);
+				var actualValue = column.GetProviderValue(actual);
+				var testValue   = column.GetProviderValue(test);
 
 				Assert.That(actualValue, Is.EqualTo(testValue),
 					actualValue is DateTimeOffset
