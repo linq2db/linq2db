@@ -115,6 +115,16 @@ namespace LinqToDB
 		/// </summary>
 		public const string Oracle        = "Oracle";
 		/// <summary>
+		/// Oracle (11g dialect) ODP.NET native provider.
+		/// Used as configuration name for Oracle native provider mapping schema <see cref="DataProvider.Oracle.OracleMappingSchema.NativeMappingSchema"/>.
+		/// </summary>
+		public const string Oracle11Native  = "Oracle.11.Native";
+		/// <summary>
+		/// Oracle (11g dialect) ODP.NET managed provider.
+		/// Used as configuration name for Oracle managed provider mapping schema <see cref="DataProvider.Oracle.OracleMappingSchema.ManagedMappingSchema"/>.
+		/// </summary>
+		public const string Oracle11Managed = "Oracle.11.Managed";
+		/// <summary>
 		/// Oracle ODP.NET native provider.
 		/// Used as configuration name for Oracle native provider mapping schema <see cref="DataProvider.Oracle.OracleMappingSchema.NativeMappingSchema"/>.
 		/// </summary>

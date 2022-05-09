@@ -13,10 +13,10 @@ namespace LinqToDB.DataProvider.Oracle
 	using Mapping;
 	using SqlProvider;
 
-	class OracleDataProviderNative11  : OracleDataProvider { public OracleDataProviderNative11()  : base(ProviderName.OracleNative  + ".11" , OracleVersion.v11) {} }
-	class OracleDataProviderNative12  : OracleDataProvider { public OracleDataProviderNative12()  : base(ProviderName.OracleNative          , OracleVersion.v12) {} }
-	class OracleDataProviderManaged11 : OracleDataProvider { public OracleDataProviderManaged11() : base(ProviderName.OracleManaged + ".11" , OracleVersion.v11) {} }
-	class OracleDataProviderManaged12 : OracleDataProvider { public OracleDataProviderManaged12() : base(ProviderName.OracleManaged         , OracleVersion.v12) {} }
+	class OracleDataProviderNative11  : OracleDataProvider { public OracleDataProviderNative11()  : base(ProviderName.Oracle11Native , OracleVersion.v11) {} }
+	class OracleDataProviderNative12  : OracleDataProvider { public OracleDataProviderNative12()  : base(ProviderName.OracleNative   , OracleVersion.v12) {} }
+	class OracleDataProviderManaged11 : OracleDataProvider { public OracleDataProviderManaged11() : base(ProviderName.Oracle11Managed, OracleVersion.v11) {} }
+	class OracleDataProviderManaged12 : OracleDataProvider { public OracleDataProviderManaged12() : base(ProviderName.OracleManaged  , OracleVersion.v12) {} }
 
 	public abstract class OracleDataProvider : DynamicDataProviderBase<OracleProviderAdapter>
 	{
@@ -105,12 +105,12 @@ namespace LinqToDB.DataProvider.Oracle
 			};
 		}
 
-		private static MappingSchema GetMappingSchema(string name)
+		private static MappingSchema GetMappingSchema(string name, OracleVersion version)
 		{
 			return name switch
 			{
-				ProviderName.OracleNative => new OracleMappingSchema.NativeMappingSchema(),
-				_                         => new OracleMappingSchema.ManagedMappingSchema(),
+				ProviderName.OracleNative => new OracleMappingSchema.NativeMappingSchema(version),
+				_                         => new OracleMappingSchema.ManagedMappingSchema(version),
 			};
 		}
 
