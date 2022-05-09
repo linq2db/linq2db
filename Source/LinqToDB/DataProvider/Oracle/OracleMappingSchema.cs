@@ -206,14 +206,14 @@ namespace LinqToDB.DataProvider.Oracle
 
 		public sealed class Native11MappingSchema : LockedMappingSchema
 		{
-			public NativeMappingSchema() : base(ProviderName.Oracle11Native, OracleProviderAdapter.GetInstance(ProviderName.OracleNative).MappingSchema, Instance)
+			public Native11MappingSchema() : base(ProviderName.Oracle11Native, OracleProviderAdapter.GetInstance(ProviderName.OracleNative).MappingSchema, Instance)
 			{
 			}
 		}
 
 		public sealed class Managed11MappingSchema : LockedMappingSchema
 		{
-			public ManagedMappingSchema() : base(ProviderName.Oracle11Managed, OracleProviderAdapter.GetInstance(ProviderName.OracleManaged).MappingSchema, Instance)
+			public Managed11MappingSchema() : base(ProviderName.Oracle11Managed, OracleProviderAdapter.GetInstance(ProviderName.OracleManaged).MappingSchema, Instance)
 			{
 			}
 		}
