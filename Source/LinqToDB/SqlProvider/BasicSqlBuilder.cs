@@ -147,11 +147,11 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, OptimizationContext optimizationContext, int indent, bool skipAlias)
 		{
-			Statement = statement;
-			StringBuilder = sb;
+			Statement           = statement;
+			StringBuilder       = sb;
 			OptimizationContext = optimizationContext;
-			Indent = indent;
-			SkipAlias = skipAlias;
+			Indent              = indent;
+			SkipAlias           = skipAlias;
 
 			if (commandNumber == 0)
 			{
@@ -249,17 +249,17 @@ namespace LinqToDB.SqlProvider
 		{
 			switch (Statement.QueryType)
 			{
-				case QueryType.Select        : BuildSelectQuery((SqlSelectStatement)Statement); break;
-				case QueryType.Delete        : BuildDeleteQuery((SqlDeleteStatement)Statement); break;
+				case QueryType.Select        : BuildSelectQuery((SqlSelectStatement)Statement);                                             break;
+				case QueryType.Delete        : BuildDeleteQuery((SqlDeleteStatement)Statement);                                             break;
 				case QueryType.Update        : BuildUpdateQuery(Statement, Statement.SelectQuery!, ((SqlUpdateStatement)Statement).Update); break;
-				case QueryType.Insert        : BuildInsertQuery(Statement, ((SqlInsertStatement)Statement).Insert, false); break;
-				case QueryType.InsertOrUpdate: BuildInsertOrUpdateQuery((SqlInsertOrUpdateStatement)Statement); break;
-				case QueryType.CreateTable   : BuildCreateTableStatement((SqlCreateTableStatement)Statement); break;
-				case QueryType.DropTable     : BuildDropTableStatement((SqlDropTableStatement)Statement); break;
-				case QueryType.TruncateTable : BuildTruncateTableStatement((SqlTruncateTableStatement)Statement); break;
-				case QueryType.Merge         : BuildMergeStatement((SqlMergeStatement)Statement); break;
-				case QueryType.MultiInsert   : BuildMultiInsertQuery((SqlMultiInsertStatement)Statement); break;
-				default                      : BuildUnknownQuery(); break;
+				case QueryType.Insert        : BuildInsertQuery(Statement, ((SqlInsertStatement)Statement).Insert, false);                  break;
+				case QueryType.InsertOrUpdate: BuildInsertOrUpdateQuery((SqlInsertOrUpdateStatement)Statement);                             break;
+				case QueryType.CreateTable   : BuildCreateTableStatement((SqlCreateTableStatement)Statement);                               break;
+				case QueryType.DropTable     : BuildDropTableStatement((SqlDropTableStatement)Statement);                                   break;
+				case QueryType.TruncateTable : BuildTruncateTableStatement((SqlTruncateTableStatement)Statement);                           break;
+				case QueryType.Merge         : BuildMergeStatement((SqlMergeStatement)Statement);                                           break;
+				case QueryType.MultiInsert   : BuildMultiInsertQuery((SqlMultiInsertStatement)Statement);                                   break;
+				default                      : BuildUnknownQuery();                                                                         break;
 			}
 		}
 
@@ -280,7 +280,7 @@ namespace LinqToDB.SqlProvider
 
 		protected void BuildDeleteQuery2(SqlDeleteStatement deleteStatement)
 		{
-			BuildStep = Step.Tag; BuildTag(deleteStatement);
+			BuildStep = Step.Tag;          BuildTag(deleteStatement);
 			BuildStep = Step.DeleteClause; BuildDeleteClause(deleteStatement);
 
 			while (StringBuilder[StringBuilder.Length - 1] == ' ')
@@ -383,7 +383,7 @@ namespace LinqToDB.SqlProvider
 
 		protected void BuildInsertQuery2(SqlStatement statement, SqlInsertClause insertClause, bool addAlias)
 		{
-			BuildStep = Step.Tag; BuildTag(statement);
+			BuildStep = Step.Tag;          BuildTag(statement);
 			BuildStep = Step.InsertClause; BuildInsertClause(statement, insertClause, addAlias);
 
 			AppendIndent().AppendLine("SELECT * FROM");
@@ -391,7 +391,7 @@ namespace LinqToDB.SqlProvider
 
 			++Indent;
 
-			BuildStep = Step.WithClause; BuildWithClause(statement.GetWithClause());
+			BuildStep = Step.WithClause;   BuildWithClause(statement.GetWithClause());
 
 			if (statement.QueryType == QueryType.Insert && statement.SelectQuery!.From.Tables.Count != 0)
 			{

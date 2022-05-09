@@ -953,8 +953,6 @@ namespace Tests.DataProvider
 				Assert.AreEqual(2, db.Person.Select(p => DB2ModuleFunctions.TestFunctionP1(1)).First());
 				Assert.AreEqual(3, db.Person.Select(p => DB2ModuleFunctions.TestFunctionP2(1)).First());
 
-				// DB2 needs TABLE() wrapper over table function call and current Sql.FunctionAttribute
-				// implementation is not suitable for automatic TABLE generation
 				Assert.AreEqual(4, DB2ModuleFunctions.TestTableFunction(db, 1).Select(r => r.O).First());
 				Assert.AreEqual(2, DB2ModuleFunctions.TestTableFunctionP1(db, 1).Select(r => r.O).First());
 				Assert.AreEqual(3, DB2ModuleFunctions.TestTableFunctionP2(db, 1).Select(r => r.O).First());

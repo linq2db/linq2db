@@ -105,12 +105,14 @@ namespace LinqToDB.DataProvider.Oracle
 			};
 		}
 
-		private static MappingSchema GetMappingSchema(string name, OracleVersion version)
+		private static MappingSchema GetMappingSchema(string name)
 		{
 			return name switch
 			{
-				ProviderName.OracleNative => new OracleMappingSchema.NativeMappingSchema(version),
-				_                         => new OracleMappingSchema.ManagedMappingSchema(version),
+				ProviderName.Oracle11Native  => new OracleMappingSchema.Native11MappingSchema(),
+				ProviderName.Oracle11Managed => new OracleMappingSchema.Managed11MappingSchema(),
+				ProviderName.OracleNative    => new OracleMappingSchema.NativeMappingSchema(),
+				_                            => new OracleMappingSchema.ManagedMappingSchema(),
 			};
 		}
 
@@ -128,11 +130,11 @@ namespace LinqToDB.DataProvider.Oracle
 
 			if (rawCommand != null)
 			{
-				// binding disabled for native provider without parameters to reduce changes to fail when SQL contains
+				// binding disabled for native provider without parameters to reduce chances to fail when SQL contains
 				// parameter-like token.
 				// This is mostly issue with triggers creation, because they can have record tokens like :NEW
 				// incorectly identified by native provider as parameter
-				var bind = Name != ProviderName.OracleNative || parameters?.Length > 0 || withParameters;
+				var bind = !Adapter.BindingByNameEnabled || parameters?.Length > 0 || withParameters;
 				Adapter.SetBindByName(rawCommand, bind);
 
 				// https://docs.oracle.com/cd/B19306_01/win.102/b14307/featData.htm
