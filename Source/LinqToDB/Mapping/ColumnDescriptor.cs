@@ -750,7 +750,7 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		/// <param name="obj">Entity object to extract column value from.</param>
 		/// <returns>Returns column value, converted to database type.</returns>
-		public virtual object? GetValue(object obj)
+		public virtual object? GetProviderValue(object obj)
 		{
 			if (_getter == null)
 			{

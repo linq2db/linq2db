@@ -2377,8 +2377,7 @@ namespace LinqToDB.SqlProvider
 
 							foreach (var item in items)
 							{
-								var value = cd.MemberAccessor.GetValue(item!);
-								values.Add(mappingSchema.GetSqlValue(cd.MemberType, value));
+								values.Add(mappingSchema.GetSqlValueFromObject(cd, item!));
 							}
 
 							if (values.Count == 0)
@@ -2396,13 +2395,13 @@ namespace LinqToDB.SqlProvider
 
 								foreach (var key in keys)
 								{
-									var field = ExpectsUnderlyingField(key);
-									var cd    = field.ColumnDescriptor;
-									var value = cd.MemberAccessor.GetValue(item!);
+									var field    = ExpectsUnderlyingField(key);
+									var cd       = field.ColumnDescriptor;
+									var sqlValue = mappingSchema.GetSqlValueFromObject(cd, item!);
 									//TODO: review
-									var cond  = value == null ?
+									var cond = sqlValue.Value == null ?
 										new SqlCondition(false, new SqlPredicate.IsNull  (field, false)) :
-										new SqlCondition(false, new SqlPredicate.ExprExpr(field, SqlPredicate.Operator.Equal, mappingSchema.GetSqlValue(value), null));
+										new SqlCondition(false, new SqlPredicate.ExprExpr(field, SqlPredicate.Operator.Equal, sqlValue, null));
 
 									itemCond.Conditions.Add(cond);
 								}

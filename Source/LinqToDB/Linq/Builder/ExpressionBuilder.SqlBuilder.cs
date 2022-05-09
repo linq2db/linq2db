@@ -1324,20 +1324,26 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			dbType = dbType.WithSystemType(expr.Type);
+			var originalValue = expr.EvaluateExpression();
+			var value         = originalValue;
+			var newExpr       = expr;
 
 			if (columnDescriptor != null)
 			{
-				expr = columnDescriptor.ApplyConversions(expr, dbType, true);
+				newExpr = columnDescriptor.ApplyConversions(expr, dbType, true);
 			}
 			else
 			{
 				if (!MappingSchema.ValueToSqlConverter.CanConvert(dbType.SystemType))
-					expr = ColumnDescriptor.ApplyConversions(MappingSchema, expr, dbType, null, true);
+					newExpr = ColumnDescriptor.ApplyConversions(MappingSchema, expr, dbType, null, true);
 			}
 
-			var value = expr.EvaluateExpression();
+			if (!ReferenceEquals(newExpr, expr))
+			{
+				value = newExpr.EvaluateExpression();
+			}
 
-			sqlValue = MappingSchema.GetSqlValue(expr.Type, value);
+			sqlValue = MappingSchema.GetSqlValue(expr.Type, value, originalValue);
 
 			_constants.Add(key, sqlValue);
 
