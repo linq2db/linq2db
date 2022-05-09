@@ -227,7 +227,7 @@ namespace LinqToDB.DataProvider
 			};
 
 			return sqlBuilder
-				.BuildObjectName(new (), sqlTable.TableName, tableOptions: sqlTable.TableOptions)
+				.BuildObjectName(new (), sqlTable.TableName, escape: escaped, tableOptions: sqlTable.TableOptions)
 				.ToString();
 		}
 
