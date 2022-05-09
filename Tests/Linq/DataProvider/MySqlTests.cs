@@ -2114,19 +2114,8 @@ namespace Tests.DataProvider
 				db.Execute("SET SQL_MODE='ORACLE'");
 
 				Assert.AreEqual(4, db.QueryProc<int>("TEST_PROCEDURE", new { i = 1 }).First());
-
-				if (!context.IsAnyOf(TestProvName.AllMySqlData))
-				{
-					Assert.AreEqual(2, db.QueryProc<int>("TEST_PACKAGE1.TEST_PROCEDURE", new { i = 1 }).First());
-					Assert.AreEqual(3, db.QueryProc<int>("TEST_PACKAGE2.TEST_PROCEDURE", new { i = 1 }).First());
-				}
-				else
-				{
-					// check this BS...
-					// https://github.com/mysql/mysql-connector-net/blob/8.0/MySQL.Data/src/ProcedureCache.cs#L136
-					Assert.AreEqual(2, db.Query<int>("CALL TEST_PACKAGE1.TEST_PROCEDURE(@i)", new { i = 1 }).First());
-					Assert.AreEqual(3, db.Query<int>("CALL TEST_PACKAGE2.TEST_PROCEDURE(@i)", new { i = 1 }).First());
-				}
+				Assert.AreEqual(2, db.QueryProc<int>("TEST_PACKAGE1.TEST_PROCEDURE", new { i = 1 }).First());
+				Assert.AreEqual(3, db.QueryProc<int>("TEST_PACKAGE2.TEST_PROCEDURE", new { i = 1 }).First());
 
 				Assert.AreEqual(4, db.Person.Select(p => MariaDBModuleFunctions.TestFunction(1)).First());
 				Assert.AreEqual(2, db.Person.Select(p => MariaDBModuleFunctions.TestFunctionP1(1)).First());

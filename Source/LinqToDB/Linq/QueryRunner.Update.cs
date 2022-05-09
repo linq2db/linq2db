@@ -29,10 +29,10 @@ namespace LinqToDB.Linq
 			{
 				var sqlTable = new SqlTable<T>(dataContext.MappingSchema);
 
-				if (tableName    != null) sqlTable.PhysicalName = tableName;
-				if (serverName   != null) sqlTable.Server       = serverName;
-				if (databaseName != null) sqlTable.Database     = databaseName;
-				if (schemaName   != null) sqlTable.Schema       = schemaName;
+				if (tableName    != null) sqlTable.TableName = sqlTable.TableName with { Name     = tableName    };
+				if (serverName   != null) sqlTable.TableName = sqlTable.TableName with { Server   = serverName   };
+				if (databaseName != null) sqlTable.TableName = sqlTable.TableName with { Database = databaseName };
+				if (schemaName   != null) sqlTable.TableName = sqlTable.TableName with { Schema   = schemaName   };
 				if (tableOptions.IsSet()) sqlTable.TableOptions = tableOptions;
 
 				var sqlQuery = new SelectQuery();

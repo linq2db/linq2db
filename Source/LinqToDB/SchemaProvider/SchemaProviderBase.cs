@@ -8,6 +8,7 @@ namespace LinqToDB.SchemaProvider
 {
 	using Common;
 	using Data;
+	using LinqToDB.SqlProvider;
 
 	public abstract class SchemaProviderBase : ISchemaProvider
 	{
@@ -280,6 +281,7 @@ namespace LinqToDB.SchemaProvider
 						{
 							CatalogName         = sp.CatalogName,
 							SchemaName          = sp.SchemaName,
+							PackageName         = sp.PackageName,
 							ProcedureName       = sp.ProcedureName,
 							MemberName          = ToValidName(sp.ProcedureName),
 							IsFunction          = sp.IsFunction,
@@ -334,12 +336,9 @@ namespace LinqToDB.SchemaProvider
 						{
 							if (!procedure.IsResultDynamic && (!procedure.IsFunction || procedure.IsTableFunction) && options.LoadProcedure(procedure))
 							{
-								var commandText = sqlProvider.ConvertTableName(new StringBuilder(),
-									null,
-									procedure.CatalogName,
-									procedure.SchemaName,
-									procedure.ProcedureName,
-									TableOptions.NotSet).ToString();
+								var commandText = sqlProvider.BuildObjectName(
+									new (),
+									new (procedure.ProcedureName, Database: procedure.CatalogName, Schema: procedure.SchemaName, Package: procedure.PackageName)).ToString();
 
 								LoadProcedureTableSchema(dataConnection, options, procedure, commandText, tables);
 							}

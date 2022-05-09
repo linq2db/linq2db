@@ -15,15 +15,18 @@ namespace LinqToDB.SqlQuery
 	{
 		#region Init
 
-		protected internal SqlTable(Type objectType, int? sourceId)
+		protected internal SqlTable(Type objectType, int? sourceId, SqlObjectName tableName)
 		{
 			SourceID   = sourceId ?? Interlocked.Increment(ref SelectQuery.SourceIDCounter);
 			ObjectType = objectType;
+			TableName  = tableName;
 		}
 
 		internal SqlTable(
-			int id, string? name, string alias,
-			string? server, string? database, string? schema, string? physicalName,
+			int                      id,
+			string?                  name,
+			string                   alias,
+			SqlObjectName            tableName,
 			Type                     objectType,
 			SequenceNameAttribute[]? sequenceAttributes,
 			IEnumerable<SqlField>    fields,
@@ -31,14 +34,10 @@ namespace LinqToDB.SqlQuery
 			ISqlExpression[]?        tableArguments,
 			TableOptions             tableOptions,
 			string?                  tableID)
-			: this(objectType, id)
+			: this(objectType, id, tableName)
 		{
 			Name               = name;
 			Alias              = alias;
-			Server             = server;
-			Database           = database;
-			Schema             = schema;
-			PhysicalName       = physicalName;
 			SequenceAttributes = sequenceAttributes;
 			ID                 = tableID;
 
@@ -54,17 +53,14 @@ namespace LinqToDB.SqlQuery
 		#region Init from type
 
 		public SqlTable(MappingSchema mappingSchema, Type objectType, string? physicalName = null)
-			: this(objectType, null)
+			: this(objectType, null, new(String.Empty))
 		{
 			if (mappingSchema == null) throw new ArgumentNullException(nameof(mappingSchema));
 
 			var ed = mappingSchema.GetEntityDescriptor(objectType);
 
-			Server       = ed.ServerName;
-			Database     = ed.DatabaseName;
-			Schema       = ed.SchemaName;
-			Name         = ed.TableName;
-			PhysicalName = physicalName ?? Name;
+			Name         = ed.Name.Name;
+			TableName    = physicalName != null ? ed.Name with { Name = physicalName } : ed.Name;
 			TableOptions = ed.TableOptions;
 
 			foreach (var column in ed.Columns)
@@ -131,40 +127,32 @@ namespace LinqToDB.SqlQuery
 		#region Init from Table
 
 		public SqlTable(SqlTable table)
-			: this(table.ObjectType, null)
+			: this(table.ObjectType, null, table.TableName)
 		{
 			Alias              = table.Alias;
-			Server             = table.Server;
-			Database           = table.Database;
-			Schema             = table.Schema;
 			Name               = table.Name;
-			PhysicalName       = table.PhysicalName;
 			SequenceAttributes = table.SequenceAttributes;
 
 			foreach (var field in table.Fields)
 				Add(new SqlField(field));
 
-			SqlTableType   = table.SqlTableType;
-			TableArguments = table.TableArguments;
+			SqlTableType       = table.SqlTableType;
+			TableArguments     = table.TableArguments;
 			SqlQueryExtensions = table.SqlQueryExtensions;
 		}
 
 		public SqlTable(SqlTable table, IEnumerable<SqlField> fields, ISqlExpression[] tableArguments)
-			: this(table.ObjectType, null)
+			: this(table.ObjectType, null, table.TableName)
 		{
 			Alias              = table.Alias;
-			Server             = table.Server;
-			Database           = table.Database;
-			Schema             = table.Schema;
 			Name               = table.Name;
-			PhysicalName       = table.PhysicalName;
 			SequenceAttributes = table.SequenceAttributes;
 			TableOptions       = table.TableOptions;
 
 			AddRange(fields);
 
-			SqlTableType   = table.SqlTableType;
-			TableArguments = tableArguments;
+			SqlTableType       = table.SqlTableType;
+			TableArguments     = tableArguments;
 			SqlQueryExtensions = table.SqlQueryExtensions;
 		}
 
@@ -192,11 +180,8 @@ namespace LinqToDB.SqlQuery
 
 		public virtual string?           Name           { get; set; }
 		public         string?           Alias          { get; set; }
-		public         string?           Server         { get; set; }
-		public         string?           Database       { get; set; }
-		public         string?           Schema         { get; set; }
+		public virtual SqlObjectName     TableName      { get; set; }
 		public         Type              ObjectType     { get; protected internal set; }
-		public virtual string?           PhysicalName   { get; set; }
 		public virtual SqlTableType      SqlTableType   { get; set; }
 		public         ISqlExpression[]? TableArguments { get; set; }
 		public         TableOptions      TableOptions   { get; set; }
@@ -296,9 +281,9 @@ namespace LinqToDB.SqlQuery
 
 		public virtual StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
 		{
-			if (Server   != null) sb.Append($"[{Server}].");
-			if (Database != null) sb.Append($"[{Database}].");
-			if (Schema   != null) sb.Append($"[{Schema}].");
+			if (TableName.Server   != null) sb.Append($"[{TableName.Server}].");
+			if (TableName.Database != null) sb.Append($"[{TableName.Database}].");
+			if (TableName.Schema   != null) sb.Append($"[{TableName.Schema}].");
 			return sb.Append($"[{Name}({SourceID})]");
 		}
 
@@ -350,10 +335,7 @@ namespace LinqToDB.SqlQuery
 			=> new (objectType)
 			{
 				Name         = "INSERTED",
-				PhysicalName = "INSERTED",
-				Schema       = null,
-				Database     = null,
-				Server       = null,
+				TableName    = new ("INSERTED"),
 				SqlTableType = SqlTableType.SystemTable,
 			};
 
@@ -361,10 +343,7 @@ namespace LinqToDB.SqlQuery
 			=> new (objectType)
 			{
 				Name         = "DELETED",
-				PhysicalName = "DELETED",
-				Schema       = null,
-				Database     = null,
-				Server       = null,
+				TableName    = new ("DELETED"),
 				SqlTableType = SqlTableType.SystemTable,
 			};
 

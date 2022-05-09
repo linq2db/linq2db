@@ -215,23 +215,19 @@ namespace LinqToDB.DataProvider
 		protected internal static string GetTableName<T>(ISqlBuilder sqlBuilder, BulkCopyOptions options, ITable<T> table, bool escaped = true)
 			where T : notnull
 		{
-			var sqlTable = new SqlTable(typeof(T), null)
+			var tableName = new SqlObjectName(
+				           options.TableName    ?? table.TableName,
+				Server   : options.ServerName   ?? table.ServerName,
+				Database : options.DatabaseName ?? table.DatabaseName,
+				Schema   : options.SchemaName   ?? table.SchemaName);
+
+			var sqlTable = new SqlTable(typeof(T), null, tableName)
 			{
-				Server       = options.ServerName   ?? table.ServerName,
-				Database     = options.DatabaseName ?? table.DatabaseName,
-				Schema       = options.SchemaName   ?? table.SchemaName,
-				PhysicalName = options.TableName    ?? table.TableName,
 				TableOptions = options.TableOptions.Or(table.TableOptions)
 			};
 
 			return sqlBuilder
-				.BuildTableName(
-					new StringBuilder(),
-					escaped ? sqlBuilder.GetTableServerName  (sqlTable)  : sqlTable.Server,
-					escaped ? sqlBuilder.GetTableDatabaseName(sqlTable)  : sqlTable.Database,
-					escaped ? sqlBuilder.GetTableSchemaName  (sqlTable)  : sqlTable.Schema,
-					escaped ? sqlBuilder.GetTablePhysicalName(sqlTable)! : sqlTable.PhysicalName,
-					sqlTable.TableOptions)
+				.BuildObjectName(new (), sqlTable.TableName, tableOptions: sqlTable.TableOptions)
 				.ToString();
 		}
 

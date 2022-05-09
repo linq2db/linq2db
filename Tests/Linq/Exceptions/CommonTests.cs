@@ -53,7 +53,7 @@ namespace Tests.Exceptions
 
 									if (oldTable.Name == "Parent")
 									{
-										var newTable = new SqlTable(oldTable) { Name = v.Context.tableName, PhysicalName = v.Context.tableName };
+										var newTable = new SqlTable(oldTable) { Name = v.Context.tableName, TableName = new (v.Context.tableName) };
 
 										foreach (var field in oldTable.Fields)
 											v.Context.dic.Add(field, newTable[field.Name] ?? throw new InvalidOperationException());

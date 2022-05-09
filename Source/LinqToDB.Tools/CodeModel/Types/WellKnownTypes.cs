@@ -426,6 +426,10 @@ namespace LinqToDB.CodeModel
 			/// </summary>
 			public static CodeIdentifier Sql_TableFunctionAttribute_Server        { get; } = new CodeIdentifier(nameof(Sql.TableFunctionAttribute.Server), true);
 			/// <summary>
+			/// <see cref="Sql.TableFunctionAttribute.Package"/> property reference.
+			/// </summary>
+			public static CodeIdentifier Sql_TableFunctionAttribute_Package       { get; } = new CodeIdentifier(nameof(Sql.TableFunctionAttribute.Package), true);
+			/// <summary>
 			/// <see cref="Sql.TableFunctionAttribute.Configuration"/> property reference.
 			/// </summary>
 			public static CodeIdentifier Sql_TableFunctionAttribute_Configuration { get; } = new CodeIdentifier(nameof(Sql.TableFunctionAttribute.Configuration), true);

@@ -525,11 +525,8 @@ namespace LinqToDB.SqlQuery
 
 			var result =
 				table1.ObjectType   == table2.ObjectType &&
-				table1.Database     == table2.Database   &&
-				table1.Server       == table2.Server     &&
-				table1.Schema       == table2.Schema     &&
-				table1.Name         == table2.Name       &&
-				table1.PhysicalName == table2.PhysicalName;
+				table1.TableName    == table2.TableName  &&
+				table1.Name         == table2.Name;
 
 			if (result)
 			{

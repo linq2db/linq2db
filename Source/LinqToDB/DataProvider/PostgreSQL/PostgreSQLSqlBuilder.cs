@@ -146,13 +146,13 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			switch (convertType)
 			{
-				case ConvertType.NameToQueryField:
+				case ConvertType.NameToQueryField     :
 				case ConvertType.NameToQueryFieldAlias:
-				case ConvertType.NameToQueryTable:
+				case ConvertType.NameToQueryTable     :
 				case ConvertType.NameToQueryTableAlias:
-				case ConvertType.NameToDatabase:
-				case ConvertType.NameToSchema:
-				case ConvertType.SequenceName:
+				case ConvertType.NameToDatabase       :
+				case ConvertType.NameToSchema         :
+				case ConvertType.SequenceName         :
 					if (IdentifierQuoteMode != PostgreSQLIdentifierQuoteMode.None)
 					{
 						if (value.Length > 0 && value[0] == '"')
@@ -235,16 +235,13 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 				if (attr != null)
 				{
-					var name     = ConvertInline(attr.SequenceName, ConvertType.SequenceName);
-					var server   = GetTableServerName(table);
-					var database = GetTableDatabaseName(table);
-					var schema   = attr.Schema != null
-						? ConvertInline(attr.Schema, ConvertType.NameToSchema)
-						: GetTableSchemaName(table);
+					var sequenceName = table.TableName with { Name = attr.SequenceName };
+					if (attr.Schema != null)
+						sequenceName = sequenceName with { Schema = attr.Schema };
 
 					var sb = new StringBuilder();
 					sb.Append("nextval(");
-					MappingSchema.ConvertToSqlValue(sb, null, BuildTableName(new StringBuilder(), server, database, schema, name, table.TableOptions).ToString());
+					MappingSchema.ConvertToSqlValue(sb, null, BuildObjectName(new StringBuilder(), sequenceName, ConvertType.SequenceName, true, TableOptions.NotSet).ToString());
 					sb.Append(')');
 					return new SqlExpression(sb.ToString(), Precedence.Primary);
 				}
@@ -290,17 +287,17 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return base.BuildJoinType(join, condition);
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table, TableOptions tableOptions)
+		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions)
 		{
-			if (database != null && database.Length == 0) database = null;
-			if (schema   != null && schema.  Length == 0) schema   = null;
-
 			// "db..table" syntax not supported and postgresql doesn't support database name, if it is not current database
 			// so we can clear database name to avoid error from server
-			if (database != null && schema == null)
-				database = null;
+			if (name.Database != null && name.Schema == null)
+				name = name with { Database = null };
 
-			return base.BuildTableName(sb, null, database, schema, table, tableOptions);
+			if (name.Schema == null || tableOptions.HasIsTemporary())
+				name = name with { Schema = null };
+
+			return escape ? Convert(sb, name.Name, objectType) : sb.Append(name.Name);
 		}
 
 		protected override string? GetProviderTypeName(IDataContext dataContext, DbParameter parameter)
@@ -357,11 +354,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		protected override void BuildMergeStatement(SqlMergeStatement merge)
 		{
 			throw new LinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
-		}
-
-		public override string? GetTableSchemaName(SqlTable table)
-		{
-			return table.Schema == null || table.TableOptions.HasIsTemporary() ? null : ConvertInline(table.Schema, ConvertType.NameToSchema);
 		}
 
 		protected override void BuildCreateTableCommand(SqlTable table)

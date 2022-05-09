@@ -26,10 +26,10 @@ namespace LinqToDB.Linq
 				var sqlTable    = new SqlTable<T>(dataContext.MappingSchema);
 				var createTable = new SqlCreateTableStatement(sqlTable);
 
-				if (tableName    != null) sqlTable.PhysicalName = tableName;
-				if (serverName   != null) sqlTable.Server       = serverName;
-				if (databaseName != null) sqlTable.Database     = databaseName;
-				if (schemaName   != null) sqlTable.Schema       = schemaName;
+				if (tableName    != null) sqlTable.TableName = sqlTable.TableName with { Name     = tableName    };
+				if (serverName   != null) sqlTable.TableName = sqlTable.TableName with { Server   = serverName   };
+				if (databaseName != null) sqlTable.TableName = sqlTable.TableName with { Database = databaseName };
+				if (schemaName   != null) sqlTable.TableName = sqlTable.TableName with { Schema   = schemaName   };
 				if (tableOptions.IsSet()) sqlTable.TableOptions = tableOptions;
 
 				createTable.StatementHeader = statementHeader;
@@ -47,10 +47,10 @@ namespace LinqToDB.Linq
 
 				ITable<T> table = new Table<T>(dataContext);
 
-				if (sqlTable.PhysicalName != null) table = table.TableName   (sqlTable.PhysicalName);
-				if (sqlTable.Server       != null) table = table.ServerName  (sqlTable.Server);
-				if (sqlTable.Database     != null) table = table.DatabaseName(sqlTable.Database);
-				if (sqlTable.Schema       != null) table = table.SchemaName  (sqlTable.Schema);
+				if (sqlTable.TableName.Name     != null) table = table.TableName   (sqlTable.TableName.Name);
+				if (sqlTable.TableName.Server   != null) table = table.ServerName  (sqlTable.TableName.Server);
+				if (sqlTable.TableName.Database != null) table = table.DatabaseName(sqlTable.TableName.Database);
+				if (sqlTable.TableName.Schema   != null) table = table.SchemaName  (sqlTable.TableName.Schema);
 				if (sqlTable.TableOptions.IsSet()) table = table.TableOptions(sqlTable.TableOptions);
 
 				return table;
@@ -71,10 +71,10 @@ namespace LinqToDB.Linq
 				var sqlTable = new SqlTable<T>(dataContext.MappingSchema);
 				var createTable = new SqlCreateTableStatement(sqlTable);
 
-				if (tableName    != null) sqlTable.PhysicalName = tableName;
-				if (serverName   != null) sqlTable.Server       = serverName;
-				if (databaseName != null) sqlTable.Database     = databaseName;
-				if (schemaName   != null) sqlTable.Schema       = schemaName;
+				if (tableName    != null) sqlTable.TableName = sqlTable.TableName with { Name     = tableName    };
+				if (serverName   != null) sqlTable.TableName = sqlTable.TableName with { Server   = serverName   };
+				if (databaseName != null) sqlTable.TableName = sqlTable.TableName with { Database = databaseName };
+				if (schemaName   != null) sqlTable.TableName = sqlTable.TableName with { Schema   = schemaName   };
 				if (tableOptions.IsSet()) sqlTable.TableOptions = tableOptions;
 
 				createTable.StatementHeader = statementHeader;
@@ -92,10 +92,10 @@ namespace LinqToDB.Linq
 
 				ITable<T> table = new Table<T>(dataContext);
 
-				if (sqlTable.PhysicalName != null) table = table.TableName   (sqlTable.PhysicalName);
-				if (sqlTable.Server       != null) table = table.ServerName  (sqlTable.Server);
-				if (sqlTable.Database     != null) table = table.DatabaseName(sqlTable.Database);
-				if (sqlTable.Schema       != null) table = table.SchemaName  (sqlTable.Schema);
+				if (sqlTable.TableName.Name     != null) table = table.TableName   (sqlTable.TableName.Name);
+				if (sqlTable.TableName.Server   != null) table = table.ServerName  (sqlTable.TableName.Server);
+				if (sqlTable.TableName.Database != null) table = table.DatabaseName(sqlTable.TableName.Database);
+				if (sqlTable.TableName.Schema   != null) table = table.SchemaName  (sqlTable.TableName.Schema);
 				if (sqlTable.TableOptions.IsSet()) table = table.TableOptions(sqlTable.TableOptions);
 
 				return table;

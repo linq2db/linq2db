@@ -2,6 +2,7 @@
 
 namespace LinqToDB.DataProvider.DB2
 {
+	using LinqToDB.SqlQuery;
 	using Mapping;
 	using SqlProvider;
 
@@ -22,5 +23,15 @@ namespace LinqToDB.DataProvider.DB2
 		}
 
 		protected override DB2Version Version => DB2Version.LUW;
+
+		protected override string GetPhysicalTableName(ISqlTableSource table, string? alias, bool ignoreTableExpression = false, string? defaultDatabaseName = null)
+		{
+			var name = base.GetPhysicalTableName(table, alias, ignoreTableExpression, defaultDatabaseName);
+
+			if (table.SqlTableType == SqlTableType.Function)
+				return $"TABLE({name})";
+
+			return name;
+		}
 	}
 }

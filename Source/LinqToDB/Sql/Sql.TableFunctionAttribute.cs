@@ -55,7 +55,7 @@ namespace LinqToDB
 			{
 				table.SqlTableType   = SqlTableType.Function;
 				table.Name           = Name ?? methodCall.Method.Name;
-				table.PhysicalName   = Name ?? methodCall.Method.Name;
+				table.TableName      = table.TableName with { Name = Name ?? methodCall.Method.Name };
 
 				var expressionStr = table.Name;
 				ExpressionAttribute.PrepareParameterValues(methodCall, ref expressionStr, false, out var knownExpressions, false, out var genericTypes);
@@ -65,9 +65,10 @@ namespace LinqToDB
 
 				table.TableArguments = ExpressionAttribute.PrepareArguments(context, string.Empty, ArgIndices, true, knownExpressions, genericTypes, converter);
 
-				if (Schema   != null) table.Schema   = Schema;
-				if (Database != null) table.Database = Database;
-				if (Server   != null) table.Server   = Server;
+				if (Schema   != null) table.TableName = table.TableName with { Schema   = Schema };
+				if (Database != null) table.TableName = table.TableName with { Database = Database };
+				if (Server   != null) table.TableName = table.TableName with { Server   = Server };
+				if (Package  != null) table.TableName = table.TableName with { Package  = Package };
 			}
 		}
 	}

@@ -725,9 +725,10 @@ void GenerateTypesFromMetadata()
 			{
 				var tableAttrs = new List<string>();
 
-				if (ServerName   != null) tableAttrs.Add("Server="   + ToStringLiteral(ServerName));
-				if (DatabaseName != null) tableAttrs.Add("Database=" + ToStringLiteral(DatabaseName));
-				if (p.Schema     != null) tableAttrs.Add("Schema="   + ToStringLiteral(p.Schema));
+				if (ServerName    != null) tableAttrs.Add("Server="   + ToStringLiteral(ServerName));
+				if (DatabaseName  != null) tableAttrs.Add("Database=" + ToStringLiteral(DatabaseName));
+				if (p.Schema      != null) tableAttrs.Add("Schema="   + ToStringLiteral(p.Schema));
+				if (p.PackageName != null) tableAttrs.Add("Package="  + ToStringLiteral(p.PackageName));
 
 				tableAttrs.Add("Name=" + ToStringLiteral(p.ProcedureName));
 
@@ -743,8 +744,9 @@ void GenerateTypesFromMetadata()
 					var resultParam = p.ProcParameters.Single(pr => pr.IsResult);
 					return resultParam.Type.ToTypeName();
 				};
-				var paramCount = p.ProcParameters.Count(pr => !pr.IsResult);
-				p.Attributes.Add(new Attribute("Sql.Function", "Name=" + ToStringLiteral((p.Schema != null ? p.Schema + "." : null) + p.ProcedureName), "ServerSideOnly=true, IsAggregate = true" + (paramCount > 0 ? (", ArgIndices = new[] { " + string.Join(", ", Enumerable.Range(0, p.ProcParameters.Count(pr => !pr.IsResult))) + " }") : null)));
+				var paramCount   = p.ProcParameters.Count(pr => !pr.IsResult);
+				var functionName = SqlBuilder.BuildObjectName(new StringBuilder(), new SqlObjectName(p.ProcedureName, Schema: p.Schema, Package: p.PackageName), ConvertType.NameToQueryTable, true, TableOptions.NotSet).ToString();
+				p.Attributes.Add(new Attribute("Sql.Function", "Name=" + ToStringLiteral(functionName), "ServerSideOnly=true, IsAggregate = true" + (paramCount > 0 ? (", ArgIndices = new[] { " + string.Join(", ", Enumerable.Range(0, p.ProcParameters.Count(pr => !pr.IsResult))) + " }") : null)));
 
 				if (p.IsDefaultSchema || !GenerateSchemaAsType)
 					p.ParameterBuilders.Add(() => "this IEnumerable<TSource> src");
@@ -758,9 +760,10 @@ void GenerateTypesFromMetadata()
 			}
 			else if (p.IsFunction)
 			{
-				p.IsStatic    = true;
-				p.TypeBuilder = () => p.ProcParameters.Single(pr => pr.IsResult).Type.ToTypeName();
-				p.Attributes.Add(new Attribute("Sql.Function", "Name=" + ToStringLiteral((p.Schema != null ? p.Schema + "." : null)  + p.ProcedureName), "ServerSideOnly=true"));
+				p.IsStatic       = true;
+				p.TypeBuilder    = () => p.ProcParameters.Single(pr => pr.IsResult).Type.ToTypeName();
+				var functionName = SqlBuilder.BuildObjectName(new StringBuilder(), new SqlObjectName(p.ProcedureName, Schema: p.Schema, Package: p.PackageName), ConvertType.NameToQueryTable, true, TableOptions.NotSet).ToString();
+				p.Attributes.Add(new Attribute("Sql.Function", "Name=" + ToStringLiteral(functionName), "ServerSideOnly=true"));
 			}
 			else
 			{
@@ -801,12 +804,11 @@ void GenerateTypesFromMetadata()
 			else
 			{
 				var spName =
-					SqlBuilder.BuildTableName(
+					SqlBuilder.BuildObjectName(
 						new StringBuilder(),
-						ServerName   == null ? null : (string)SqlBuilder.ConvertInline(ServerName,      LinqToDB.SqlProvider.ConvertType.NameToServer),
-						DatabaseName == null ? null : (string)SqlBuilder.ConvertInline(DatabaseName,    LinqToDB.SqlProvider.ConvertType.NameToDatabase),
-						p.Schema     == null ? null : (string)SqlBuilder.ConvertInline(p.Schema,        LinqToDB.SqlProvider.ConvertType.NameToSchema),
-													  (string)SqlBuilder.ConvertInline(p.ProcedureName, LinqToDB.SqlProvider.ConvertType.NameToQueryTable),
+						new SqlObjectName(p.ProcedureName, Server: ServerName, Database: DatabaseName, Schema: p.Schema, Package: p.PackageName),
+						LinqToDB.SqlProvider.ConvertType.NameToQueryTable,
+						true,
 						LinqToDB.TableOptions.NotSet
 					).ToString();
 

@@ -131,15 +131,6 @@ namespace LinqToDB.DataProvider.SapHana
 				base.BuildFromClause(statement, selectQuery);
 		}
 
-		public static bool TryConvertParameterSymbol { get; set; }
-
-		private static List<char>? _convertParameterSymbols;
-		public  static List<char>  ConvertParameterSymbols
-		{
-			get => _convertParameterSymbols == null ? (_convertParameterSymbols = new List<char>()) : _convertParameterSymbols;
-			set => _convertParameterSymbols = value ?? new List<char>();
-		}
-
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{
 			switch (convertType)
@@ -162,10 +153,11 @@ namespace LinqToDB.DataProvider.SapHana
 						return sb.Append('"').Append(value).Append('"');
 					}
 
-				case ConvertType.NameToServer     :
-				case ConvertType.NameToDatabase   :
-				case ConvertType.NameToSchema     :
-				case ConvertType.NameToQueryTable :
+				case ConvertType.NameToServer    :
+				case ConvertType.NameToDatabase  :
+				case ConvertType.NameToSchema    :
+				case ConvertType.NameToPackage   :
+				case ConvertType.NameToQueryTable:
 					if (value.Length > 0 && value[0] == '\"')
 						return sb.Append(value);
 
@@ -188,22 +180,31 @@ namespace LinqToDB.DataProvider.SapHana
 			StringBuilder.Append(')');
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table, TableOptions tableOptions)
+		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions)
 		{
-			if (server   != null && server.Length == 0) server = null;
-			if (schema   != null && schema.Length == 0) schema = null;
-
-			// <table_name> ::= [[<linked_server_name>.]<schema_name>.]<identifier>
-			if (server != null && schema == null)
+			// <table_name> ::= [[<linked_server_name>.]<schema_name>.][library_name:]<identifier>
+			if (name.Server != null && name.Schema == null)
 				throw new LinqToDBException("You must specify schema name for linked server queries.");
 
-			if (server != null)
-				sb.Append(server).Append('.');
+			if (name.Server != null)
+			{
+				(escape ? Convert(sb, name.Server, ConvertType.NameToServer) : sb.Append(name.Server))
+					.Append('.');
+			}
 
-			if (schema != null)
-				sb.Append(schema).Append('.');
+			if (name.Schema != null)
+			{
+				(escape ? Convert(sb, name.Schema, ConvertType.NameToSchema) : sb.Append(name.Schema))
+					.Append('.');
+			}
 
-			return sb.Append(table);
+			if (name.Package != null)
+			{
+				(escape ? Convert(sb, name.Package, ConvertType.NameToPackage) : sb.Append(name.Package))
+					.Append(':');
+			}
+
+			return escape ? Convert(sb, name.Name, objectType) : sb.Append(name.Name);
 		}
 
 		protected override void BuildCreateTableCommand(SqlTable table)

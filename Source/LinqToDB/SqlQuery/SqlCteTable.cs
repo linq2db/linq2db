@@ -16,15 +16,15 @@ namespace LinqToDB.SqlQuery
 			set => base.Name = value;
 		}
 
-		public override string?    PhysicalName
+		public override SqlObjectName TableName
 		{
-			get => Cte?.Name ?? base.PhysicalName;
-			set => base.PhysicalName = value;
+			get => Cte?.Name != null ? new (Cte.Name) : base.TableName;
+			set => base.TableName = base.TableName with { Name = value.Name };
 		}
 
 		// required by Clone :-/
-		internal string? BaseName         => base.Name;
-		internal string? BasePhysicalName => base.PhysicalName;
+		internal string?       BaseName      => base.Name;
+		internal SqlObjectName BaseTableName => base.TableName;
 
 		public SqlCteTable(
 			MappingSchema mappingSchema,
@@ -39,35 +39,29 @@ namespace LinqToDB.SqlQuery
 		}
 
 		internal SqlCteTable(int id, string alias, SqlField[] fields, CteClause cte)
-			: base(id, cte.Name, alias, string.Empty, string.Empty, string.Empty, cte.Name, cte.ObjectType, null, fields, SqlTableType.Cte, null, TableOptions.NotSet, null)
+			: base(id, cte.Name, alias, new(cte.Name!), cte.ObjectType, null, fields, SqlTableType.Cte, null, TableOptions.NotSet, null)
 		{
 			Cte = cte ?? throw new ArgumentNullException(nameof(cte));
 		}
 
 		internal SqlCteTable(int id, string alias, SqlField[] fields)
-			: base(id, null, alias, string.Empty, string.Empty, string.Empty, null, null!, null, fields, SqlTableType.Cte, null, TableOptions.NotSet, null)
+			: base(id, null, alias, new(string.Empty), null!, null, fields, SqlTableType.Cte, null, TableOptions.NotSet, null)
 		{
 		}
 
 		internal void SetDelayedCteObject(CteClause cte)
 		{
-			Cte          = cte ?? throw new ArgumentNullException(nameof(cte));
-			Name         = cte.Name;
-			PhysicalName = cte.Name;
-			ObjectType   = cte.ObjectType;
+			Cte        = cte ?? throw new ArgumentNullException(nameof(cte));
+			Name       = cte.Name;
+			TableName  = TableName with { Name = cte.Name! };
+			ObjectType = cte.ObjectType;
 		}
 
 		public SqlCteTable(SqlCteTable table, IEnumerable<SqlField> fields, CteClause cte)
-			: base(table.ObjectType, null)
+			: base(table.ObjectType, null, table.TableName)
 		{
 			Alias              = table.Alias;
-			Server             = table.Server;
-			Database           = table.Database;
-			Schema             = table.Schema;
-
-			PhysicalName       = table.PhysicalName;
 			SequenceAttributes = table.SequenceAttributes;
-
 			Cte                = cte;
 
 			AddRange(fields);
