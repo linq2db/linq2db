@@ -10,23 +10,14 @@ namespace LinqToDB.Extensions
 
 	static class MappingExtensions
 	{
-		public static SqlValue GetSqlValue(this MappingSchema mappingSchema, object providerValue, object? originalValue)
-		{
-			if (providerValue == null)
-				throw new InvalidOperationException();
-
-			return GetSqlValue(mappingSchema, providerValue.GetType(), providerValue);
-		}
-
 		public static SqlValue GetSqlValueFromObject(this MappingSchema mappingSchema, ColumnDescriptor columnDescriptor, object obj)
 		{
-			var originalValue = columnDescriptor.MemberAccessor.GetValue(obj);
 			var providerValue = columnDescriptor.GetProviderValue(obj);
 
-			return new SqlValue(columnDescriptor.GetDbDataType(true), providerValue, originalValue);
+			return new SqlValue(columnDescriptor.GetDbDataType(true), providerValue);
 		}
 
-		public static SqlValue GetSqlValue(this MappingSchema mappingSchema, Type systemType, object? providerValue, object? originalValue)
+		public static SqlValue GetSqlValue(this MappingSchema mappingSchema, Type systemType, object? originalValue)
 		{
 			var underlyingType = systemType.ToNullableUnderlying();
 
@@ -34,23 +25,23 @@ namespace LinqToDB.Extensions
 			{
 				if (underlyingType.IsEnum && mappingSchema.GetAttribute<Sql.EnumAttribute>(underlyingType) == null)
 				{
-					if (providerValue != null || systemType == underlyingType)
+					if (originalValue != null || systemType == underlyingType)
 					{
 						var type = Converter.GetDefaultMappingFromEnumType(mappingSchema, systemType)!;
 
 						if (Configuration.UseEnumValueNameForStringColumns && type == typeof(string) &&
 						    mappingSchema.GetMapValues(underlyingType)             == null)
-							return new SqlValue(type, providerValue!.ToString(), originalValue);
+							return new SqlValue(type, originalValue!.ToString());
 
-						return new SqlValue(type, Converter.ChangeType(providerValue, type, mappingSchema), originalValue);
+						return new SqlValue(type, Converter.ChangeType(originalValue, type, mappingSchema));
 					}
 				}
 			}
 
-			if (systemType == typeof(object) && providerValue != null)
-				systemType = providerValue.GetType();
+			if (systemType == typeof(object) && originalValue != null)
+				systemType = originalValue.GetType();
 
-			return new SqlValue(systemType, providerValue, originalValue);
+			return new SqlValue(systemType, originalValue);
 		}
 
 		public static bool TryConvertToSql(this MappingSchema mappingSchema, StringBuilder stringBuilder, SqlDataType? dataType, object? value)

@@ -1397,7 +1397,7 @@ namespace LinqToDB.SqlQuery
 				{
 					var value = StripDoubleQuotes(format.Substring(lastMatchPosition, match.Index - lastMatchPosition + brackets));
 					current = new SqlBinaryExpression(typeof(string),
-						new SqlValue(typeof(string), value, value),
+						new SqlValue(typeof(string), value),
 						"+", current,
 						Precedence.Additive);
 				}
@@ -1411,10 +1411,10 @@ namespace LinqToDB.SqlQuery
 			{
 				var value = StripDoubleQuotes(format.Substring(lastMatchPosition, format.Length - lastMatchPosition));
 				result = new SqlBinaryExpression(typeof(string),
-					result, "+", new SqlValue(typeof(string), value, value), Precedence.Additive);
+					result, "+", new SqlValue(typeof(string), value), Precedence.Additive);
 			}
 
-			result ??= new SqlValue(typeof(string), format, format);
+			result ??= new SqlValue(typeof(string), format);
 
 			return result;
 		}

@@ -9,24 +9,21 @@ namespace LinqToDB.SqlQuery
 
 	public class SqlValue : ISqlExpression
 	{
-		public SqlValue(Type systemType, object? value, object? originalValue)
+		public SqlValue(Type systemType, object? value)
 		{
 			_valueType    = new DbDataType(systemType);
 			Value         = value;
-			OriginalValue = originalValue;
 		}
 
-		public SqlValue(DbDataType valueType, object? value, object? originalValue)
+		public SqlValue(DbDataType valueType, object? value)
 		{
 			_valueType    = valueType;
 			Value         = value;
-			OriginalValue = originalValue;
 		}
 
 		public SqlValue(object value)
 		{
 			Value         = value ?? throw new ArgumentNullException(nameof(value), "Untyped null value");
-			OriginalValue = value;
 			_valueType    = new DbDataType(value.GetType());
 		}
 
@@ -34,11 +31,6 @@ namespace LinqToDB.SqlQuery
 		/// Provider specific value
 		/// </summary>
 		public object? Value { get; }
-
-		/// <summary>
-		/// Value before conversion
-		/// </summary>
-		public object? OriginalValue { get; }
 
 		DbDataType _valueType;
 
@@ -111,9 +103,6 @@ namespace LinqToDB.SqlQuery
 
 			if (Value != null)
 				hashCode = unchecked(hashCode + (hashCode * 397) ^ Value.GetHashCode());
-
-			if (OriginalValue != null)
-				hashCode = unchecked(hashCode + (hashCode * 397) ^ OriginalValue.GetHashCode());
 
 			_hashCode = hashCode;
 			return hashCode;

@@ -38,7 +38,7 @@ namespace LinqToDB
 			public ISqlExpression ToSql(Expression expression)
 			{
 				var value = expression.EvaluateExpression();
-				return new SqlValue(typeof(SqlID), value, value);
+				return new SqlValue(typeof(SqlID), value);
 			}
 
 			public static SqlID Parse(string value)

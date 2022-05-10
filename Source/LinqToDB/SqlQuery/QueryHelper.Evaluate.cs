@@ -80,11 +80,6 @@ namespace LinqToDB.SqlQuery
 				{
 					var sqlValue = (SqlValue)expr;
 					result = sqlValue.Value;
-					if (!Equals(sqlValue.Value, sqlValue.OriginalValue))
-					{
-						errorMessage = "Conversion applied";
-						return false;
-					}
 					return true;
 				}
 				case QueryElementType.SqlParameter       :
@@ -120,6 +115,15 @@ namespace LinqToDB.SqlQuery
 					if (!exprExpr.Expr1.TryEvaluateExpression(context, out var value1, out errorMessage) ||
 					    !exprExpr.Expr2.TryEvaluateExpression(context, out var value2, out errorMessage))
 						return false;
+
+					if (value1 != null && value2 != null)
+					{
+						if (value1.GetType().IsEnum != value2.GetType().IsEnum)
+						{
+							errorMessage = "Types mismatch";
+							return false;
+						}
+					}
 
 					switch (exprExpr.Operator)
 					{

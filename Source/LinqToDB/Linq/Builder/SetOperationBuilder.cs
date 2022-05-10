@@ -271,7 +271,7 @@ namespace LinqToDB.Linq.Builder
 
 										var newInfo = new SqlInfo(
 											info.MemberChain,
-											new SqlValue(dbType, null, null),
+											new SqlValue(dbType, null),
 											Sequences[idx].SelectQuery,
 											_unionMembers.Count - 1);
 
@@ -308,7 +308,7 @@ namespace LinqToDB.Linq.Builder
 
 					var newInfo = new SqlInfo(
 						info.MemberChain,
-							new SqlValue(dbType, null, null),
+							new SqlValue(dbType, null),
 						sequence.SelectQuery,
 						midx);
 					member.Infos.Add(newInfo);

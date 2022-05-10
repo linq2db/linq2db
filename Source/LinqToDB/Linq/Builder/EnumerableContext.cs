@@ -521,7 +521,6 @@ namespace LinqToDB.Linq.Builder
 						var body = Expression.New(Methods.LinqToDB.Sql.SqlValueConstructor,
 							Expression.Constant(new DbDataType(_elementType,
 								ColumnDescriptor.CalculateDataType(Builder.MappingSchema, _elementType))),
-							param,
 							param);
 
 						var getterLambda = Expression.Lambda<Func<object, ISqlExpression>>(body, param);
@@ -604,12 +603,9 @@ namespace LinqToDB.Linq.Builder
 				}
 				else
 				{
-					var originalValueExpr = column.GetOriginalValueLambda().GetBody(getter.Parameters[0]);
-					originalValueExpr = Expression.Convert(originalValueExpr, typeof(object));
-
 					generator.AddExpression(Expression.New(Methods.LinqToDB.Sql.SqlValueConstructor,
 						Expression.Constant(column.GetDbDataType(true)),
-						Expression.Convert(getter.Body, typeof(object)), originalValueExpr));
+						Expression.Convert(getter.Body, typeof(object))));
 				}
 
 				var param = Expression.Parameter(typeof(object), "e");

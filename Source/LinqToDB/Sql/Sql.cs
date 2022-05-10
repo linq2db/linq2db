@@ -649,7 +649,7 @@ namespace LinqToDB
 							"REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE({0}, '\x09', ''), '\x0a', ''), '\x0b', ''), '\x0c', ''), '\x0d', ''), '\x20', ''), '\x85', ''), '\xa0', ''), '\x1680', ''), '\x2000', ''), '\x2001', ''), '\x2002', ''), '\x2003', ''), '\x2004', ''), '\x2005', ''), '\x2006', ''), '\x2007', ''), '\x2008', ''), '\x2009', ''), '\x200a', ''), '\x2028', ''), '\x2029', ''), '\x205f', ''), '\x3000', '')",
 							str),
 						SqlPredicate.Operator.Equal,
-						new SqlValue(typeof(string), string.Empty, string.Empty), false),
+						new SqlValue(typeof(string), string.Empty), false),
 					true);
 
 				if (str.CanBeNull)
@@ -678,7 +678,7 @@ namespace LinqToDB
 							Precedence.Comparison,
 							SqlFlags.IsPredicate,
 							str,
-							new SqlValue(typeof(string), whiteSpaces, whiteSpaces)),
+							new SqlValue(typeof(string), whiteSpaces)),
 						true,
 						Precedence.LogicalNegation),
 					true);
@@ -709,7 +709,7 @@ namespace LinqToDB
 							Precedence.Comparison,
 							SqlFlags.IsPredicate,
 							str,
-							new SqlValue(typeof(string), whiteSpaces, whiteSpaces)),
+							new SqlValue(typeof(string), whiteSpaces)),
 						true,
 						Precedence.LogicalNegation),
 					true);
@@ -736,7 +736,7 @@ namespace LinqToDB
 					new SqlPredicate.Like(
 						str,
 						true,
-						new SqlValue(typeof(string), whiteSpaces, whiteSpaces),
+						new SqlValue(typeof(string), whiteSpaces),
 						null),
 					true);
 
@@ -762,7 +762,7 @@ namespace LinqToDB
 					new SqlPredicate.Like(
 						str,
 						true,
-						new SqlValue(new DbDataType(typeof(string), DataType.NVarChar), whiteSpaces, whiteSpaces),
+						new SqlValue(new DbDataType(typeof(string), DataType.NVarChar), whiteSpaces),
 						null),
 					true);
 
@@ -787,7 +787,7 @@ namespace LinqToDB
 					new SqlPredicate.ExprExpr(
 						new SqlFunction(typeof(string), "LTRIM", str),
 						SqlPredicate.Operator.Equal,
-						new SqlValue(typeof(string), string.Empty, string.Empty), false),
+						new SqlValue(typeof(string), string.Empty), false),
 					true);
 
 				if (str.CanBeNull)
@@ -809,9 +809,9 @@ namespace LinqToDB
 				var condition = new SqlCondition(
 					false,
 					new SqlPredicate.ExprExpr(
-						new SqlExpression(typeof(string), "TRIM({1} FROM {0})", str, new SqlValue(new DbDataType(typeof(string), DataType.NVarChar), WHITESPACES, WHITESPACES)),
+						new SqlExpression(typeof(string), "TRIM({1} FROM {0})", str, new SqlValue(new DbDataType(typeof(string), DataType.NVarChar), WHITESPACES)),
 						SqlPredicate.Operator.Equal,
-						new SqlValue(typeof(string), string.Empty, string.Empty), false),
+						new SqlValue(typeof(string), string.Empty), false),
 					true);
 
 				if (str.CanBeNull)
@@ -832,7 +832,7 @@ namespace LinqToDB
 
 				var condition = new SqlCondition(
 					false,
-					new SqlPredicate.IsNull(new SqlFunction(typeof(string), "LTRIM", str, new SqlValue(typeof(string), WHITESPACES, WHITESPACES)), false),
+					new SqlPredicate.IsNull(new SqlFunction(typeof(string), "LTRIM", str, new SqlValue(typeof(string), WHITESPACES)), false),
 					true);
 
 				if (str.CanBeNull)
@@ -854,9 +854,9 @@ namespace LinqToDB
 				var condition = new SqlCondition(
 					false,
 					new SqlPredicate.ExprExpr(
-						new SqlFunction(typeof(string), "LTRIM", str, new SqlValue(typeof(string), ASCII_WHITESPACES, ASCII_WHITESPACES)),
+						new SqlFunction(typeof(string), "LTRIM", str, new SqlValue(typeof(string), ASCII_WHITESPACES)),
 						SqlPredicate.Operator.Equal,
-						new SqlValue(typeof(string), string.Empty, string.Empty), false),
+						new SqlValue(typeof(string), string.Empty), false),
 					true);
 
 				if (str.CanBeNull)
@@ -878,9 +878,9 @@ namespace LinqToDB
 				var condition = new SqlCondition(
 					false,
 					new SqlPredicate.ExprExpr(
-						new SqlFunction(typeof(string), "LTRIM", str, new SqlValue(typeof(string), WHITESPACES, WHITESPACES)),
+						new SqlFunction(typeof(string), "LTRIM", str, new SqlValue(typeof(string), WHITESPACES)),
 						SqlPredicate.Operator.Equal,
-						new SqlValue(typeof(string), string.Empty, string.Empty), false),
+						new SqlValue(typeof(string), string.Empty), false),
 					true);
 
 				if (str.CanBeNull)

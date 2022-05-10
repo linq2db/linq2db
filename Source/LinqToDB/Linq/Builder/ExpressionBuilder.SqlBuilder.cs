@@ -1324,26 +1324,20 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			dbType = dbType.WithSystemType(expr.Type);
-			var originalValue = expr.EvaluateExpression();
-			var value         = originalValue;
-			var newExpr       = expr;
 
 			if (columnDescriptor != null)
 			{
-				newExpr = columnDescriptor.ApplyConversions(expr, dbType, true);
+				expr = columnDescriptor.ApplyConversions(expr, dbType, true);
 			}
 			else
 			{
 				if (!MappingSchema.ValueToSqlConverter.CanConvert(dbType.SystemType))
-					newExpr = ColumnDescriptor.ApplyConversions(MappingSchema, expr, dbType, null, true);
+					expr = ColumnDescriptor.ApplyConversions(MappingSchema, expr, dbType, null, true);
 			}
 
-			if (!ReferenceEquals(newExpr, expr))
-			{
-				value = newExpr.EvaluateExpression();
-			}
+			var value = expr.EvaluateExpression();
 
-			sqlValue = MappingSchema.GetSqlValue(expr.Type, value, originalValue);
+			sqlValue = MappingSchema.GetSqlValue(expr.Type, value);
 
 			_constants.Add(key, sqlValue);
 
@@ -1359,10 +1353,10 @@ namespace LinqToDB.Linq.Builder
 			ISqlExpression IsCaseSensitive(MethodCallExpression mc)
 			{
 				if (mc.Arguments.Count <= 1)
-					return new SqlValue(typeof(bool?), null, null);
+					return new SqlValue(typeof(bool?), null);
 
 				if (!typeof(StringComparison).IsSameOrParentOf(mc.Arguments[1].Type))
-					return new SqlValue(typeof(bool?), null, null);
+					return new SqlValue(typeof(bool?), null);
 
 				var arg = mc.Arguments[1];
 

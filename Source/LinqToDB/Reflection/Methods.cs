@@ -346,7 +346,7 @@ namespace LinqToDB.Reflection
 			internal static class Sql
 			{
 				public static readonly ConstructorInfo SqlParameterConstructor = MemberHelper.ConstructorOf(() => new SqlParameter(default(DbDataType), default(string), null));
-				public static readonly ConstructorInfo SqlValueConstructor     = MemberHelper.ConstructorOf(() => new SqlValue    (default(DbDataType), null, null));
+				public static readonly ConstructorInfo SqlValueConstructor     = MemberHelper.ConstructorOf(() => new SqlValue    (default(DbDataType), null));
 			}
 		}
 

@@ -833,8 +833,6 @@ namespace LinqToDB.Remote
 							Append(elem.ValueType);
 							var type  = elem.Value?.GetType() ?? elem.ValueType.SystemType;
 							Append(type, elem.Value);
-							var originalType = elem.OriginalValue?.GetType() ?? elem.ValueType.SystemType;
-							Append(originalType, elem.OriginalValue);
 
 							break;
 						}
@@ -1689,9 +1687,8 @@ namespace LinqToDB.Remote
 						{
 							var dbDataType    = ReadDbDataType();
 							var value         = ReadValue(ReadType()!);
-							var originalValue = ReadValue(ReadType()!);
 
-							obj = new SqlValue(dbDataType, value, originalValue);
+							obj = new SqlValue(dbDataType, value);
 
 							break;
 						}
@@ -2403,7 +2400,7 @@ namespace LinqToDB.Remote
 						{
 							obj = new SqlComment(ReadStringList());
 							break;
-						};
+						}
 
 					default:
 						throw new InvalidOperationException($"Parse not implemented for element {(QueryElementType)type}");

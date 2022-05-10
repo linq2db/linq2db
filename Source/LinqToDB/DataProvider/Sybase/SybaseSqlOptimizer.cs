@@ -63,7 +63,7 @@ namespace LinqToDB.DataProvider.Sybase
 								func.Parameters[0],
 								func.Parameters[1],
 								func.Parameters[1],
-								new SqlValue(value.ValueType, null, null));
+								new SqlValue(value.ValueType, null));
 					}
 
 					break;

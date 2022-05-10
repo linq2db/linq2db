@@ -321,9 +321,9 @@ namespace LinqToDB.SqlProvider
 					StringBuilder.Append(InlineComma);
 
 				if (IsSqlValuesTableValueTypeRequired(merge.Source.SourceEnumerable!, Array<ISqlExpression[]>.Empty, -1, i))
-					BuildTypedExpression(new SqlDataType(field), new SqlValue(field.Type, null, null));
+					BuildTypedExpression(new SqlDataType(field), new SqlValue(field.Type, null));
 				else
-					BuildExpression(new SqlValue(field.Type, null, null));
+					BuildExpression(new SqlValue(field.Type, null));
 
 				if (!SupportsColumnAliasesInSource)
 				{
