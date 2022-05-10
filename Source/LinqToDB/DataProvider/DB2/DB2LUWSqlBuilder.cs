@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LinqToDB.DataProvider.DB2;
+﻿namespace LinqToDB.DataProvider.DB2;
 
 using System.Text;
 using LinqToDB.SqlQuery;

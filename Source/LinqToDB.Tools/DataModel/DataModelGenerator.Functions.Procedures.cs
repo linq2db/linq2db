@@ -1,9 +1,6 @@
-﻿using System;
-using System.Linq;
-using LinqToDB.Schema;
+﻿using LinqToDB.Schema;
 using LinqToDB.CodeModel;
 using LinqToDB.Common;
-using System.Collections.Generic;
 
 namespace LinqToDB.DataModel;
 

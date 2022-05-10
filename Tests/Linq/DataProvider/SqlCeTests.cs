@@ -1,9 +1,6 @@
-﻿using System;
-using System.Data.Linq;
+﻿using System.Data.Linq;
 using System.Data.SqlTypes;
 using System.Diagnostics;
-using System.Linq;
-using System.IO;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -18,7 +15,6 @@ using NUnit.Framework;
 namespace Tests.DataProvider;
 
 using System.Globalization;
-using System.Threading.Tasks;
 using LinqToDB.Linq;
 using Model;
 

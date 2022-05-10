@@ -1,7 +1,4 @@
-﻿using System;
-using System.Linq;
-
-using Tests.Model;
+﻿using Tests.Model;
 
 using LinqToDB;
 using LinqToDB.Mapping;

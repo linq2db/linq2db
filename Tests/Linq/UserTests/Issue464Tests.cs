@@ -7,8 +7,6 @@ using NUnit.Framework;
 
 namespace Tests.UserTests;
 
-using System.Linq;
-
 using LinqToDB.DataProvider.Firebird;
 
 [TestFixture]

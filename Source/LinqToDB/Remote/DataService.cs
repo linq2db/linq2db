@@ -1,8 +1,5 @@
 ﻿#if NETFRAMEWORK
-using System;
-using System.Collections.Generic;
 using System.Data.Services.Providers;
-using System.Linq;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Remote;

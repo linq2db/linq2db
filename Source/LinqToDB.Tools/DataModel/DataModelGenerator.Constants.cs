@@ -1,7 +1,4 @@
-﻿using System;
-using System.Reflection;
-using System.Threading;
-
+﻿using System.Reflection;
 namespace LinqToDB.DataModel;
 
 // while those names used later as wrapped in CodeIdentifier AST class,

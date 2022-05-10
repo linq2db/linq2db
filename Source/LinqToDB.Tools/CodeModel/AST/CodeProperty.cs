@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace LinqToDB.CodeModel;
+﻿namespace LinqToDB.CodeModel;
 
 /// <summary>
 /// Class property declaration.

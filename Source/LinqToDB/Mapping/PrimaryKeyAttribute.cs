@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LinqToDB.Mapping;
+﻿namespace LinqToDB.Mapping;
 
 /// <summary>
 /// Marks property or field as a member of primary key for current mapping type.

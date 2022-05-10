@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LinqToDB.CodeModel;
+﻿namespace LinqToDB.CodeModel;
 
 /// <summary>
 /// Base visitor for code generators for specific languages.

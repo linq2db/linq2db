@@ -1,8 +1,5 @@
-﻿using System;
+﻿namespace LinqToDB.DataProvider.Firebird;
 
-namespace LinqToDB.DataProvider.Firebird;
-
-using System.Linq;
 using Extensions;
 using SqlQuery;
 using SqlProvider;

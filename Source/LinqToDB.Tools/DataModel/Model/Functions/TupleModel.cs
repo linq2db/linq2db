@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace LinqToDB.DataModel;
+﻿namespace LinqToDB.DataModel;
 
 /// <summary>
 /// Tuple class descriptor for specific scalar function return value, when function returns tuple.

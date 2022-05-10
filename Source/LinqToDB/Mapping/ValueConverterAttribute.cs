@@ -1,5 +1,4 @@
-﻿using System;
-using LinqToDB.Common.Internal;
+﻿using LinqToDB.Common.Internal;
 
 namespace LinqToDB.Mapping;
 

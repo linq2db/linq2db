@@ -1,7 +1,5 @@
 ﻿#if NET472
-using System;
 using System.ServiceModel;
-using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Remote.Wcf;
 

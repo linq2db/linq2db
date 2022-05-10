@@ -1,16 +1,12 @@
 ﻿extern alias MySqlData;
 extern alias MySqlConnector;
 
-using System;
 using System.Data.Linq;
-using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
 using System.Collections;
-using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
-using System.Threading.Tasks;
 using System.Reflection;
 
 using LinqToDB;
@@ -2120,7 +2116,7 @@ public class MySqlTests : DataProviderTestBase
 					Assert.AreEqual(4, db.QueryProc<int>("TEST_PROCEDURE", new { i = 1 }).First());
 					Assert.AreEqual(2, db.QueryProc<int>("TEST_PACKAGE1.TEST_PROCEDURE", new { i = 1 }).First());
 					Assert.AreEqual(3, db.QueryProc<int>("TEST_PACKAGE2.TEST_PROCEDURE", new { i = 1 }).First());
-				}
+}
 				else
 				{
 					// MySql.Data cannot call package proedures using CommandType.StoredProcedure

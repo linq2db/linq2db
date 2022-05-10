@@ -1,5 +1,3 @@
-using System;
-
 namespace LinqToDB.Reflection;
 
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface)]

@@ -1,7 +1,4 @@
-﻿using System;
-using System.IO;
-
-namespace LinqToDB.DataProvider.Access;
+﻿namespace LinqToDB.DataProvider.Access;
 
 using Data;
 using SchemaProvider;

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-
-namespace LinqToDB.CodeModel;
+﻿namespace LinqToDB.CodeModel;
 
 /// <summary>
 /// This visitor collects imports for all types, used in code model.

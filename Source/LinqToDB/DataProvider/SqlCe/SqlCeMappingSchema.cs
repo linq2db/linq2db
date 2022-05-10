@@ -1,7 +1,5 @@
-﻿using System;
-using System.Data.Linq;
+﻿using System.Data.Linq;
 using System.Data.SqlTypes;
-using System.IO;
 using System.Text;
 using System.Xml;
 

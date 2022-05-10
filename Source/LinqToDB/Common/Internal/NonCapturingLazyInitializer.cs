@@ -1,7 +1,4 @@
-﻿using System;
-using System.Threading;
-
-namespace LinqToDB.Common.Internal;
+﻿namespace LinqToDB.Common.Internal;
 
     internal static class NonCapturingLazyInitializer
     {

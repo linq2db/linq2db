@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-
-namespace LinqToDB.CommandLine;
+﻿namespace LinqToDB.CommandLine;
 
 /// <summary>
 /// Base class for CLI controller.

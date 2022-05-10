@@ -2,8 +2,6 @@
 
 namespace LinqToDB.DataProvider.SapHana;
 
-using System.Collections.Generic;
-using System.Linq;
 using Configuration;
 
 [UsedImplicitly]

@@ -1,6 +1,5 @@
 ﻿namespace Tests.UserTests;
 
-using System.Linq;
 using LinqToDB;
 using NUnit.Framework;
 

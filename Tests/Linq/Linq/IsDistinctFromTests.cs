@@ -1,7 +1,6 @@
 ﻿using LinqToDB;
 using LinqToDB.Data;
 using NUnit.Framework;
-using System.Linq;
 using FluentAssertions;
 
 namespace Tests.Linq;

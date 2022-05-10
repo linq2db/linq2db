@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections;
 using System.Data.Linq;
 using System.Diagnostics;
 using System.Linq.Expressions;
-using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Xml;
@@ -30,7 +27,6 @@ using Newtonsoft.Json.Linq;
 
 namespace Tests.DataProvider;
 
-using System.Threading.Tasks;
 using LinqToDB.Tools;
 using Model;
 using Npgsql;

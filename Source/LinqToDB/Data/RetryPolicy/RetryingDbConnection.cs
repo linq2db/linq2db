@@ -1,10 +1,6 @@
-﻿using System;
-using System.Data;
+﻿using System.Data;
 using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
-using System.Threading;
-using System.Threading.Tasks;
-
 namespace LinqToDB.Data.RetryPolicy;
 
 using Configuration;

@@ -1,5 +1,4 @@
 ﻿#if !NETFRAMEWORK
-using System;
 using System.Text;
 using System.Runtime.Serialization;
 using LinqToDB.Common;

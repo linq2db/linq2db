@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LinqToDB.Mapping;
+﻿namespace LinqToDB.Mapping;
 
 /// <summary>
 /// Contains reference to filter function defined by <see cref="EntityMappingBuilder{T}.HasQueryFilter(System.Func{System.Linq.IQueryable{T},LinqToDB.IDataContext,System.Linq.IQueryable{T}})"/>

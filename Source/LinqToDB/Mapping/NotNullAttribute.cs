@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LinqToDB.Mapping;
+﻿namespace LinqToDB.Mapping;
 
 /// <summary>
 /// Sets nullability flag for current column to <c>false</c>.

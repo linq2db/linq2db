@@ -1,9 +1,6 @@
-﻿using System;
-using System.Data;
-using System.Collections.Generic;
+﻿using System.Data;
 using System.Data.Common;
 using System.Globalization;
-using System.Linq;
 using System.Text;
 using System.Net;
 using System.Net.NetworkInformation;

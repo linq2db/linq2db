@@ -1,6 +1,4 @@
-﻿using System;
-using System.Diagnostics;
-using System.Linq;
+﻿using System.Diagnostics;
 using System.Linq.Expressions;
 
 using LinqToDB;
@@ -11,7 +9,6 @@ using NUnit.Framework;
 
 namespace Tests.Linq;
 
-using System.Collections.Generic;
 using LinqToDB.Common;
 using Model;
 

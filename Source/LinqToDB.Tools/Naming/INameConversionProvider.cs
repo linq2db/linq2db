@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LinqToDB.Naming;
+﻿namespace LinqToDB.Naming;
 
 /// <summary>
 /// Name conversion provider.

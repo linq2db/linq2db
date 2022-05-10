@@ -2,7 +2,6 @@
 
 namespace LinqToDB.DataProvider.Informix;
 
-using System.Collections.Generic;
 using Configuration;
 
 [UsedImplicitly]

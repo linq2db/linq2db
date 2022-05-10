@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-
-namespace LinqToDB.DataProvider.MySql;
+﻿namespace LinqToDB.DataProvider.MySql;
 
 using Extensions;
 using SqlProvider;

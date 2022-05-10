@@ -1,6 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
+﻿using System.Data;
+using System.Data.Common;
 
 using OdbcType = LinqToDB.DataProvider.OdbcProviderAdapter.OdbcType;
 
@@ -11,9 +10,6 @@ using Data;
 using Mapping;
 using SchemaProvider;
 using SqlProvider;
-using System.Data.Common;
-using System.Threading;
-using System.Threading.Tasks;
 
 public class AccessODBCDataProvider : DynamicDataProviderBase<OdbcProviderAdapter>
 {

@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-
-namespace LinqToDB.DataProvider.PostgreSQL;
+﻿namespace LinqToDB.DataProvider.PostgreSQL;
 
 using Extensions;
 using SqlProvider;

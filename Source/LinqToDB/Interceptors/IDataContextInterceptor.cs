@@ -1,7 +1,4 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
-
-namespace LinqToDB.Interceptors;
+﻿namespace LinqToDB.Interceptors;
 
 public interface IDataContextInterceptor : IInterceptor
 {

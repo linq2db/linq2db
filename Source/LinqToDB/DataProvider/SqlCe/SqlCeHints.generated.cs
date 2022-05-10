@@ -1,6 +1,5 @@
 ﻿// Generated.
 //
-using System;
 using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider.SqlCe

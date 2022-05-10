@@ -1,5 +1,4 @@
-﻿using System;
-using LinqToDB;
+﻿using LinqToDB;
 using LinqToDB.Mapping;
 
 namespace Tests.DataProvider;

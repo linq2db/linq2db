@@ -1,8 +1,5 @@
 ﻿#if NETFRAMEWORK1
 
-using System;
-using System.Linq;
-
 using LinqToDB;
 
 using NUnit.Framework;

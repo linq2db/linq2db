@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Tests.Remote.ServerContainer;
+﻿namespace Tests.Remote.ServerContainer;
 
 public class PortStatusRestorer : IDisposable
 {

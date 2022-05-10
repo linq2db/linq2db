@@ -1,7 +1,5 @@
-﻿using System;
-using System.Data.Linq;
+﻿using System.Data.Linq;
 using System.Diagnostics;
-using System.Linq;
 using System.Text;
 using System.Xml;
 using System.Xml.Linq;
@@ -942,7 +940,7 @@ public class DB2Tests : DataProviderTestBase
 				new DataParameter("O", null, DataType.Int32)
 				{
 					Direction = ParameterDirection.Output
-				}
+}
 			};
 
 			Assert.AreEqual(4, db.QueryProc<int>("TEST_PROCEDURE", new { i = 1 }).First());

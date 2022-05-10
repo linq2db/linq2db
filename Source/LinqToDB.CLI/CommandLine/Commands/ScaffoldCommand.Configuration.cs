@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using LinqToDB.DataModel;
+﻿using LinqToDB.DataModel;
 using LinqToDB.Naming;
 using LinqToDB.Scaffold;
 using LinqToDB.Schema;

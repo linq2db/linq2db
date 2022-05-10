@@ -5,7 +5,6 @@ namespace Tests.UserTests;
 
 using LinqToDB;
 using LinqToDB.Mapping;
-using System.Linq;
 
 public class Issue1064Tests : TestBase
 {

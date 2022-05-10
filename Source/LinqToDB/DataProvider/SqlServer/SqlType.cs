@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LinqToDB.DataProvider.SqlServer;
+﻿namespace LinqToDB.DataProvider.SqlServer;
 
 /// <summary>
 /// See <see href="https://docs.microsoft.com/en-us/sql/t-sql/data-types/data-types-transact-sql">Data types</see>.

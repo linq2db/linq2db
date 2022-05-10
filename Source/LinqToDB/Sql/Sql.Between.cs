@@ -1,5 +1,4 @@
-﻿using System;
-using LinqToDB.SqlQuery;
+﻿using LinqToDB.SqlQuery;
 
 namespace LinqToDB;
 

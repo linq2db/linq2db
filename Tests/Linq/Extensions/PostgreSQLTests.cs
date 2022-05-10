@@ -1,7 +1,4 @@
-﻿using System;
-using System.Linq;
-
-using LinqToDB;
+﻿using LinqToDB;
 using LinqToDB.DataProvider.PostgreSQL;
 
 using NUnit.Framework;

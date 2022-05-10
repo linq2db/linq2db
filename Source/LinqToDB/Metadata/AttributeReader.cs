@@ -1,5 +1,4 @@
-﻿using System;
-using System.Reflection;
+﻿using System.Reflection;
 using LinqToDB.Common;
 using LinqToDB.Extensions;
 

@@ -4,8 +4,6 @@ using LinqToDB.DataProvider.Firebird;
 using LinqToDB.SqlProvider;
 using LinqToDB.SqlQuery;
 using NUnit.Framework;
-using System;
-using System.Linq;
 
 namespace Tests.UserTests;
 

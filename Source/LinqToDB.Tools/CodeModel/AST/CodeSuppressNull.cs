@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LinqToDB.CodeModel;
+﻿namespace LinqToDB.CodeModel;
 
 /// <summary>
 /// null-forgiving operator.

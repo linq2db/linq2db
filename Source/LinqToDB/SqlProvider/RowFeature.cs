@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LinqToDB.SqlProvider;
+﻿namespace LinqToDB.SqlProvider;
 
 // changing this enum incorrectly could break remote context serialization
 // e.g. WCF require flags to be sequential

@@ -3,7 +3,6 @@ using LinqToDB;
 using LinqToDB.Metadata;
 using NUnit.Framework;
 using System.ComponentModel;
-using System.Linq;
 
 namespace Tests.Metadata;
 

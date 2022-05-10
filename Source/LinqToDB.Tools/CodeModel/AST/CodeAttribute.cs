@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using LinqToDB.Common;
+﻿using LinqToDB.Common;
 
 namespace LinqToDB.CodeModel;
 

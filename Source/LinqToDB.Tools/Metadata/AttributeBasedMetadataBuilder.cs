@@ -1,5 +1,4 @@
-﻿using System;
-using LinqToDB.Schema;
+﻿using LinqToDB.Schema;
 using LinqToDB.CodeModel;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;

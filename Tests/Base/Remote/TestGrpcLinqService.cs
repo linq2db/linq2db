@@ -1,6 +1,4 @@
 ﻿#if !NETFRAMEWORK
-using System;
-
 namespace Tests.Remote;
 
 using LinqToDB.Data;

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-
-namespace LinqToDB.DataProvider.Informix;
+﻿namespace LinqToDB.DataProvider.Informix;
 
 using Common;
 using Data;

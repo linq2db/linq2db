@@ -1,5 +1,4 @@
-﻿using System;
-using LinqToDB.CommandLine;
+﻿using LinqToDB.CommandLine;
 
 namespace LinqToDB.Tools;
 

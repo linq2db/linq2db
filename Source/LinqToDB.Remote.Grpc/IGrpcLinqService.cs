@@ -1,5 +1,4 @@
 ﻿using System.ServiceModel;
-using System.Threading.Tasks;
 using LinqToDB.Remote.Grpc.Dto;
 using ProtoBuf.Grpc;
 

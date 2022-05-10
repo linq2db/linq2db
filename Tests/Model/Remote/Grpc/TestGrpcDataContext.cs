@@ -1,7 +1,5 @@
 ﻿#if !NETFRAMEWORK
-using System;
 using System.Net.Http;
-using System.Threading.Tasks;
 using Grpc.Net.Client;
 using LinqToDB;
 using LinqToDB.Remote;

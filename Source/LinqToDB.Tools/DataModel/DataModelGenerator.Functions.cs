@@ -1,5 +1,4 @@
-﻿using System;
-using System.Text;
+﻿using System.Text;
 using LinqToDB.Schema;
 using LinqToDB.CodeModel;
 using LinqToDB.Data;

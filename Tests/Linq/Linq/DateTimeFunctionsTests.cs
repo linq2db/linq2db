@@ -1,15 +1,10 @@
-﻿using System;
-using System.Linq;
-
-using LinqToDB;
+﻿using LinqToDB;
 
 using NUnit.Framework;
 
 namespace Tests.Linq;
 
 using Model;
-using System.Collections.Generic;
-
 [TestFixture]
 public class DateTimeFunctionsTests : TestBase
 {

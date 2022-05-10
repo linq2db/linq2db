@@ -1,6 +1,4 @@
 ﻿#if NET6_0_OR_GREATER
-using System;
-using System.Linq;
 using LinqToDB;
 using NUnit.Framework;
 

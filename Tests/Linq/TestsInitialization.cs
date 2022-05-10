@@ -1,9 +1,6 @@
-﻿using System;
-using System.Data.Common;
+﻿using System.Data.Common;
 using System.Reflection;
 using NUnit.Framework;
-using System.IO;
-
 using Tests;
 
 /// <summary>

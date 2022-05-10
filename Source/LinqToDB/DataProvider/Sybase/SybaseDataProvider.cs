@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
+﻿using System.Data;
+using System.Data.Common;
 using System.Xml;
 using System.Xml.Linq;
-using System.Threading.Tasks;
-using System.Threading;
 
 namespace LinqToDB.DataProvider.Sybase;
 
@@ -14,7 +11,6 @@ using Common;
 using SchemaProvider;
 using SqlProvider;
 using Extensions;
-using System.Data.Common;
 
 class SybaseDataProviderNative  : SybaseDataProvider { public SybaseDataProviderNative()  : base(ProviderName.Sybase)        {} }
 class SybaseDataProviderManaged : SybaseDataProvider { public SybaseDataProviderManaged() : base(ProviderName.SybaseManaged) {} }

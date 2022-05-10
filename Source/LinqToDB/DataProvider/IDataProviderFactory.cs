@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using LinqToDB.Configuration;
+﻿using LinqToDB.Configuration;
 
 namespace LinqToDB.DataProvider;
 

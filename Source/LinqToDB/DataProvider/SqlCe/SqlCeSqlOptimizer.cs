@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LinqToDB.DataProvider.SqlCe;
+﻿namespace LinqToDB.DataProvider.SqlCe;
 
 using Extensions;
 using SqlQuery;

@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LinqToDB.Mapping;
+﻿namespace LinqToDB.Mapping;
 
 /// <summary>
 /// This attribute allows to override default types, defined in mapping schema, for current column.

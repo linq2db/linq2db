@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LinqToDB.Schema;
+﻿namespace LinqToDB.Schema;
 
 /// <summary>
 /// Defines loadable database objects.

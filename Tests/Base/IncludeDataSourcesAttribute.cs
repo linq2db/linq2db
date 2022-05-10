@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-
-namespace Tests;
+﻿namespace Tests;
 
 [AttributeUsage(AttributeTargets.Parameter)]
 public class IncludeDataSourcesAttribute : DataSourcesBaseAttribute

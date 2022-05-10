@@ -1,6 +1,4 @@
-﻿using System;
-using System.Linq;
-using LinqToDB;
+﻿using LinqToDB;
 using LinqToDB.Data;
 
 #if NET472
@@ -12,7 +10,6 @@ namespace Tests.DataProvider;
 
 using System.Data.Linq;
 using System.Diagnostics;
-using System.Threading.Tasks;
 using LinqToDB.DataProvider.Informix;
 using LinqToDB.Mapping;
 using Model;

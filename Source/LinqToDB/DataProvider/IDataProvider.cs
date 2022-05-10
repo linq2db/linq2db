@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
+﻿using System.Data;
+using System.Data.Common;
 using System.Linq.Expressions;
-using System.Threading.Tasks;
-using System.Threading;
 
 namespace LinqToDB.DataProvider;
 
-using System.Data.Common;
 using Common;
 using Data;
 using Mapping;

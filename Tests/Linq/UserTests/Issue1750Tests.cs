@@ -1,6 +1,4 @@
 ﻿using NUnit.Framework;
-using System;
-using System.Linq;
 using LinqToDB;
 
 namespace Tests.UserTests;

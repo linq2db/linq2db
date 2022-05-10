@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LinqToDB.Mapping;
+﻿namespace LinqToDB.Mapping;
 
 /// <summary>
 /// Maps databse table or view to a class or interface.

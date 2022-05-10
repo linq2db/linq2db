@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-
-namespace LinqToDB.SqlQuery;
+﻿namespace LinqToDB.SqlQuery;
 
 public readonly struct QueryFindVisitor<TContext>
 {

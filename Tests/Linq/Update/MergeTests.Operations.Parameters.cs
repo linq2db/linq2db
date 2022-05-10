@@ -1,8 +1,6 @@
 ﻿using LinqToDB;
 using LinqToDB.Data;
 using NUnit.Framework;
-using System;
-using System.Linq;
 using Tests.Model;
 
 // ReSharper disable once CheckNamespace

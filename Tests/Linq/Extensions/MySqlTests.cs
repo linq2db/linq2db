@@ -1,7 +1,4 @@
-﻿using System;
-using System.Linq;
-
-using LinqToDB;
+﻿using LinqToDB;
 using LinqToDB.DataProvider.MySql;
 
 using NUnit.Framework;

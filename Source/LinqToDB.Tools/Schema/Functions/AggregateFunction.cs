@@ -1,7 +1,6 @@
-﻿using System.Collections.Generic;
-using LinqToDB.SqlQuery;
+﻿namespace LinqToDB.Schema;
 
-namespace LinqToDB.Schema;
+using SqlQuery;
 
 /// <summary>
 /// Aggregate function descriptor.

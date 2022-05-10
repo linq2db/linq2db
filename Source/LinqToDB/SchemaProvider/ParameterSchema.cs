@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LinqToDB.SchemaProvider;
+﻿namespace LinqToDB.SchemaProvider;
 
 /// <summary>
 /// Describes database procedure or function parameter.

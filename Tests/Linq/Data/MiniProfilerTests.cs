@@ -1,15 +1,12 @@
 ﻿extern alias MySqlConnector;
 extern alias MySqlData;
 
-using System;
 using System.Data;
 using System.Data.Common;
 using System.Data.SqlClient;
 using System.Data.SqlTypes;
 using System.Globalization;
-using System.Linq;
 using System.Numerics;
-using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Common;

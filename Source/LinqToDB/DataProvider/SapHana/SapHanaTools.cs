@@ -1,5 +1,4 @@
-﻿using System;
-using System.Data;
+﻿using System.Data;
 using System.Data.Common;
 using System.Reflection;
 
@@ -7,8 +6,6 @@ namespace LinqToDB.DataProvider.SapHana;
 
 using Data;
 using Configuration;
-using System;
-using System.IO;
 using LinqToDB.Common;
 
 public static class SapHanaTools

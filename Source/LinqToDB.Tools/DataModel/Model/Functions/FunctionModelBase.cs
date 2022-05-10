@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using LinqToDB.Schema;
+﻿using LinqToDB.Schema;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataModel;

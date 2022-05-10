@@ -1,6 +1,4 @@
 ﻿#if !NATIVE_ASYNC
-using System.Threading;
-
 namespace LinqToDB.Async;
 
 ///// <summary>

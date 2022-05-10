@@ -1,8 +1,4 @@
-﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
-
-using LinqToDB.Data.RetryPolicy;
+﻿using LinqToDB.Data.RetryPolicy;
 
 namespace Tests;
 

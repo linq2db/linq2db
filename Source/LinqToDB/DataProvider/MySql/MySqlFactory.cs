@@ -2,7 +2,6 @@
 
 namespace LinqToDB.DataProvider.MySql;
 
-using System.Collections.Generic;
 using Configuration;
 
 [UsedImplicitly]

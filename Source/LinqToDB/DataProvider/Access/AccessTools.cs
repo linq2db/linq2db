@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
+﻿using System.Data;
+using System.Data.Common;
+using System.Security;
 
 namespace LinqToDB.DataProvider.Access;
 
-using System.Data.Common;
-using System.IO;
-using System.Security;
 using Data;
 using LinqToDB.Configuration;
 

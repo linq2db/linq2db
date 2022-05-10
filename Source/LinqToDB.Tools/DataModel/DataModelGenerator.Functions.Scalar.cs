@@ -1,5 +1,4 @@
-﻿using System;
-using LinqToDB.CodeModel;
+﻿using LinqToDB.CodeModel;
 using LinqToDB.Common;
 
 namespace LinqToDB.DataModel;

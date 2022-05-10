@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LinqToDB.Interceptors;
+﻿namespace LinqToDB.Interceptors;
 
 class AggregatedEntityServiceInterceptor : AggregatedInterceptor<IEntityServiceInterceptor>, IEntityServiceInterceptor
 {

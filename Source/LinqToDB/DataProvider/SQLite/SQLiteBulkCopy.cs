@@ -1,11 +1,6 @@
-﻿using System.Collections.Generic;
-
-namespace LinqToDB.DataProvider.SQLite;
+﻿namespace LinqToDB.DataProvider.SQLite;
 
 using Data;
-using System.Threading;
-using System.Threading.Tasks;
-
 class SQLiteBulkCopy : BasicBulkCopy
 {
 	

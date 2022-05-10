@@ -1,8 +1,4 @@
-﻿using System;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using System.Linq.Expressions;
 
 namespace LinqToDB;
 
@@ -11,7 +7,6 @@ using JetBrains.Annotations;
 using Linq;
 using Async;
 using Reflection;
-using System.Collections.Generic;
 
 using static LinqToDB.Reflection.Methods.LinqToDB.Merge;
 

@@ -1,5 +1,4 @@
 ﻿#if !NET45
-using System;
 #endif
 
 namespace LinqToDB.Common;

@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using LinqToDB.CodeModel;
+﻿using LinqToDB.CodeModel;
 using LinqToDB.Metadata;
 
 namespace LinqToDB.DataModel;

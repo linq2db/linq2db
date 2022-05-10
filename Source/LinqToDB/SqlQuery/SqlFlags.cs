@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LinqToDB.SqlQuery;
+﻿namespace LinqToDB.SqlQuery;
 
 [Flags]
 public enum SqlFlags

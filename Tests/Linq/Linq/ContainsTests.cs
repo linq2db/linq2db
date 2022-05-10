@@ -3,8 +3,6 @@ using LinqToDB;
 using LinqToDB.Tools;
 using LinqToDB.Mapping;
 using NUnit.Framework;
-using System;
-using System.Linq;
 using System.Linq.Expressions;
 
 namespace Tests.Linq;

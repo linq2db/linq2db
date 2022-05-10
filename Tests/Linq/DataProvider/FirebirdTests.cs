@@ -1,7 +1,5 @@
-﻿using System;
-using System.Data.Linq;
+﻿using System.Data.Linq;
 using System.Diagnostics;
-using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
 using System.Collections.Generic;
@@ -1054,7 +1052,7 @@ public class FirebirdTests : DataProviderTestBase
 				new DataParameter("O", null, DataType.Int32)
 				{
 					Direction = ParameterDirection.Output
-				}
+}
 			};
 
 			db.ExecuteProc("TEST_PROCEDURE", parameters);
