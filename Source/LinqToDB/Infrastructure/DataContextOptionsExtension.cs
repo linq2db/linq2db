@@ -22,16 +22,14 @@ namespace LinqToDB.Infrastructure
 	/// </summary>
 	public class DataContextOptionsExtension : IDataContextOptionsExtension
 	{
-		DataContextOptionsExtensionInfo? _info;
-
-		string?        _connectionString;
-		string?        _configurationString;
-		DbConnection?  _dbConnection;
-		string?        _providerName;
-		IDataProvider? _dataProvider;
-		int?           _commandTimeout;
-		bool           _disposeConnection;
-
+		DataContextOptionsExtensionInfo?    _info;
+		string?                             _connectionString;
+		string?                             _configurationString;
+		DbConnection?                       _dbConnection;
+		string?                             _providerName;
+		IDataProvider?                      _dataProvider;
+		int?                                _commandTimeout;
+		bool                                _disposeConnection;
 		MappingSchema?                      _mappingSchema;
 		Func<DbConnection>?                 _connectionFactory;
 		DbTransaction?                      _transaction;
