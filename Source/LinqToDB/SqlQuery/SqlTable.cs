@@ -60,7 +60,7 @@ namespace LinqToDB.SqlQuery
 			var ed = mappingSchema.GetEntityDescriptor(objectType);
 
 			Name         = ed.Name.Name;
-			TableName    = physicalName != null ? ed.Name with { Name = physicalName } : ed.Name;
+			TableName    = physicalName != null && ed.Name.Name != physicalName ? ed.Name with { Name = physicalName } : ed.Name;
 			TableOptions = ed.TableOptions;
 
 			foreach (var column in ed.Columns)

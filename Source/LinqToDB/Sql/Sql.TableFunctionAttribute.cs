@@ -53,9 +53,13 @@ namespace LinqToDB
 
 			public virtual void SetTable<TContext>(TContext context, ISqlBuilder sqlBuilder, MappingSchema mappingSchema, SqlTable table, MethodCallExpression methodCall, Func<TContext, Expression, ColumnDescriptor?, ISqlExpression> converter)
 			{
-				table.SqlTableType   = SqlTableType.Function;
-				table.Name           = Name ?? methodCall.Method.Name;
-				table.TableName      = table.TableName with { Name = Name ?? methodCall.Method.Name };
+				table.SqlTableType = SqlTableType.Function;
+				table.TableName    = new SqlObjectName(
+					table.Name = Name     ?? methodCall.Method.Name,
+					Schema  : Schema      ?? table.TableName.Schema,
+					Database: Database    ?? table.TableName.Database,
+					Server  : Server      ?? table.TableName.Server,
+					Package : Package     ?? table.TableName.Package);
 
 				var expressionStr = table.Name;
 				ExpressionAttribute.PrepareParameterValues(methodCall, ref expressionStr, false, out var knownExpressions, false, out var genericTypes);
@@ -64,11 +68,6 @@ namespace LinqToDB
 					throw new LinqToDBException($"Cannot retrieve Table Function body from expression '{methodCall}'.");
 
 				table.TableArguments = ExpressionAttribute.PrepareArguments(context, string.Empty, ArgIndices, true, knownExpressions, genericTypes, converter);
-
-				if (Schema   != null) table.TableName = table.TableName with { Schema   = Schema };
-				if (Database != null) table.TableName = table.TableName with { Database = Database };
-				if (Server   != null) table.TableName = table.TableName with { Server   = Server };
-				if (Package  != null) table.TableName = table.TableName with { Package  = Package };
 			}
 		}
 	}

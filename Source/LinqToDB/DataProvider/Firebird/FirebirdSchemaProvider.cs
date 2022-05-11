@@ -15,10 +15,18 @@ namespace LinqToDB.DataProvider.Firebird
 	class FirebirdSchemaProvider : SchemaProviderBase
 	{
 		private readonly FirebirdDataProvider _provider;
+		private int _majorVersion;
 
 		public FirebirdSchemaProvider(FirebirdDataProvider provider)
 		{
 			_provider = provider;
+		}
+
+		public override DatabaseSchema GetSchema(DataConnection dataConnection, GetSchemaOptions? options = null)
+		{
+			_majorVersion = int.Parse(dataConnection.Execute<string>("SELECT rdb$get_context('SYSTEM', 'ENGINE_VERSION') from rdb$database").Split('.')[0], CultureInfo.InvariantCulture);
+
+			return base.GetSchema(dataConnection, options);
 		}
 
 		protected override string GetDatabaseName(DataConnection dbConnection)
@@ -116,17 +124,10 @@ namespace LinqToDB.DataProvider.Firebird
 			).ToList();
 		}
 
-		private string GetServerVersion(DataConnection dataConnection)
-		{
-			return dataConnection.Execute<string>("SELECT rdb$get_context('SYSTEM', 'ENGINE_VERSION') from rdb$database");
-		}
-
 		protected override List<ProcedureInfo>? GetProcedures(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			var supportsPackages = int.Parse(GetServerVersion(dataConnection).Split('.')[0], CultureInfo.InvariantCulture) >= 3;
-
 			string sql;
-			if (supportsPackages)
+			if (_majorVersion >= 3)
 			{
 				sql = @"SELECT
 	RDB$PACKAGE_NAME                                        AS PackageName,
@@ -194,10 +195,8 @@ WHERE RDB$SYSTEM_FLAG = 0";
 
 		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection, IEnumerable<ProcedureInfo> procedures, GetSchemaOptions options)
 		{
-			var supportsPackages = int.Parse(GetServerVersion(dataConnection).Split('.')[0], CultureInfo.InvariantCulture) >= 3;
-
 			string sql;
-			if (supportsPackages)
+			if (_majorVersion >= 3)
 			{
 				sql = @"SELECT
 	p.RDB$PACKAGE_NAME                                   AS PackageName,

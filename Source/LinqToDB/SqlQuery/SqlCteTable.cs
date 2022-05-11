@@ -19,7 +19,7 @@ namespace LinqToDB.SqlQuery
 		public override SqlObjectName TableName
 		{
 			get => Cte?.Name != null ? new (Cte.Name) : base.TableName;
-			set => base.TableName = base.TableName with { Name = value.Name };
+			set => base.TableName = new(value.Name);
 		}
 
 		// required by Clone :-/
@@ -53,7 +53,7 @@ namespace LinqToDB.SqlQuery
 		{
 			Cte        = cte ?? throw new ArgumentNullException(nameof(cte));
 			Name       = cte.Name;
-			TableName  = TableName with { Name = cte.Name! };
+			TableName  = new (cte.Name!);
 			ObjectType = cte.ObjectType;
 		}
 

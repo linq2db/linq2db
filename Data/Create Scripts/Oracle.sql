@@ -1002,9 +1002,9 @@ CREATE TABLE "TestMerge2"
 /
 
 CREATE OR REPLACE
-PROCEDURE AddIssue792Record() IS
+PROCEDURE AddIssue792Record IS
 BEGIN
-	INSERT INTO dbo."AllTypes"("char20DataType") VALUES('issue792');
+	INSERT INTO "AllTypes"("char20DataType") VALUES('issue792');
 END;
 /
 

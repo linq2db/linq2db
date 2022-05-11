@@ -30,10 +30,15 @@ namespace LinqToDB.Linq
 				var fieldDic = new Dictionary<SqlField, ParameterAccessor>();
 				var sqlTable = new SqlTable(dataContext.MappingSchema, type);
 
-				if (tableName    != null) sqlTable.TableName = sqlTable.TableName with { Name     = tableName    };
-				if (serverName   != null) sqlTable.TableName = sqlTable.TableName with { Server   = serverName   };
-				if (databaseName != null) sqlTable.TableName = sqlTable.TableName with { Database = databaseName };
-				if (schemaName   != null) sqlTable.TableName = sqlTable.TableName with { Schema   = schemaName   };
+				if (tableName != null || schemaName != null || databaseName != null || databaseName != null)
+				{
+					sqlTable.TableName = new(
+						          tableName    ?? sqlTable.TableName.Name,
+						Server  : serverName   ?? sqlTable.TableName.Server,
+						Database: databaseName ?? sqlTable.TableName.Database,
+						Schema  : schemaName   ?? sqlTable.TableName.Schema);
+				}
+
 				if (tableOptions.IsSet()) sqlTable.TableOptions = tableOptions;
 
 				var sqlQuery = new SelectQuery();

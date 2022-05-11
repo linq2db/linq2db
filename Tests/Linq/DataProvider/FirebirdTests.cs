@@ -836,11 +836,11 @@ namespace Tests.DataProvider
 				Assert.IsNotNull(proc.ResultTable);
 				Assert.AreEqual(5, proc.ResultTable!.Columns.Count);
 
-				AssertParameter("DECFLOAT16" , "decfloat"                , DataType.DecFloat      , typeof(FbDecFloat)     , 16  , "FbDecFloat"     );
-				AssertParameter("DECFLOAT34" , "decfloat"                , DataType.DecFloat      , typeof(FbDecFloat)     , 34  , "FbDecFloat"     );
-				AssertParameter("TSTZ"       , "timestamp with time zone", DataType.DateTimeOffset, typeof(FbZonedDateTime), null, "FbZonedDateTime");
-				AssertParameter("TTZ"        , "time with time zone"     , DataType.TimeTZ        , typeof(FbZonedTime)    , null, "FbZonedTime"    );
-				AssertParameter("INT_128"    , "int128"                  , DataType.Int128        , typeof(BigInteger)     , null, null             );
+				AssertParameter("DECFLOAT16" , "DECFLOAT"                , DataType.DecFloat      , typeof(FbDecFloat)     , 16  , "FbDecFloat"     );
+				AssertParameter("DECFLOAT34" , "DECFLOAT"                , DataType.DecFloat      , typeof(FbDecFloat)     , 34  , "FbDecFloat"     );
+				AssertParameter("TSTZ"       , "TIMESTAMP WITH TIME ZONE", DataType.DateTimeOffset, typeof(FbZonedDateTime), null, "FbZonedDateTime");
+				AssertParameter("TTZ"        , "TIME WITH TIME ZONE"     , DataType.TimeTZ        , typeof(FbZonedTime)    , null, "FbZonedTime"    );
+				AssertParameter("INT_128"    , "INT128"                  , DataType.Int128        , typeof(BigInteger)     , null, null             );
 
 				AssertColumn("COL_DECFLOAT16" , "decfloat"                , DataType.DecFloat      , typeof(FbDecFloat)     , 16  , "FbDecFloat"     );
 				AssertColumn("COL_DECFLOAT34" , "decfloat"                , DataType.DecFloat      , typeof(FbDecFloat)     , null, "FbDecFloat"     );
