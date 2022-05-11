@@ -236,9 +236,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 				if (attr != null)
 				{
-					var sequenceName = table.TableName with { Name = attr.SequenceName };
-					if (attr.Schema != null)
-						sequenceName = sequenceName with { Schema = attr.Schema };
+					var sequenceName = new SqlObjectName(attr.SequenceName, Server: table.TableName.Server, Database: table.TableName.Database, Schema: attr.Schema ?? table.TableName.Schema);
 
 					var sb = new StringBuilder();
 					sb.Append("nextval(");
@@ -290,13 +288,21 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions)
 		{
-			// "db..table" syntax not supported and postgresql doesn't support database name, if it is not current database
-			// so we can clear database name to avoid error from server
-			if (name.Database != null && name.Schema == null)
-				name = name with { Database = null };
+			var schemaName = tableOptions.HasIsTemporary() ? null : name.Schema;
 
-			if (name.Schema == null || tableOptions.HasIsTemporary())
-				name = name with { Schema = null };
+			// "db..table" syntax not supported and postgresql doesn't support database name, if it is not current database
+			// so we can ignore database name to avoid error from server
+			if (name.Database != null && schemaName != null)
+			{
+				(escape ? Convert(sb, name.Database, ConvertType.NameToDatabase) : sb.Append(name.Database))
+					.Append('.');
+			}
+
+			if (schemaName != null)
+			{
+				(escape ? Convert(sb, schemaName, ConvertType.NameToSchema) : sb.Append(schemaName))
+					.Append('.');
+			}
 
 			return escape ? Convert(sb, name.Name, objectType) : sb.Append(name.Name);
 		}
