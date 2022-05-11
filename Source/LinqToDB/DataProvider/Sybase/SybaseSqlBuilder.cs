@@ -154,6 +154,7 @@ namespace LinqToDB.DataProvider.Sybase
 				case ConvertType.NameToDatabase  :
 				case ConvertType.NameToSchema    :
 				case ConvertType.NameToQueryTable:
+				case ConvertType.NameToProcedure :
 					if (_skipBrackets || value.Length > 28 || value.Length > 0 && (value[0] == '[' || value[0] == '#'))
 						return sb.Append(value);
 

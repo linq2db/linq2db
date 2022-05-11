@@ -283,7 +283,7 @@ namespace LinqToDB.SchemaProvider
 							SchemaName          = sp.SchemaName,
 							PackageName         = sp.PackageName,
 							ProcedureName       = sp.ProcedureName,
-							MemberName          = ToValidName(sp.ProcedureName),
+							MemberName          = ToValidName($"{sp.PackageName}{(sp.PackageName != null ? "_" : null)}{sp.ProcedureName}"),
 							IsFunction          = sp.IsFunction,
 							IsTableFunction     = sp.IsTableFunction,
 							IsResultDynamic     = sp.IsResultDynamic,
@@ -598,7 +598,7 @@ namespace LinqToDB.SchemaProvider
 
 		protected virtual string? GetDbType(GetSchemaOptions options, string? columnType, DataTypeInfo? dataType, int? length, int? precision, int? scale, string? udtCatalog, string? udtSchema, string? udtName)
 		{
-			var dbType = columnType;
+			var dbType = columnType ?? dataType?.TypeName;
 
 			if (dataType != null)
 			{

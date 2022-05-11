@@ -27,7 +27,7 @@ namespace LinqToDB.Metadata
 			// TODO: linq2db fix required
 			// currently we miss FQN-based mapping support at least for for stored procedures and non-table functions
 			// and they require raw SQL name instead
-			return sqlBuilder.BuildObjectName(new (), name, ConvertType.NameToQueryTable).ToString();
+			return sqlBuilder.BuildObjectName(new (), name, ConvertType.NameToProcedure).ToString();
 		}
 	}
 }

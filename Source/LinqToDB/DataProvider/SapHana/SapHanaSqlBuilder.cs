@@ -158,6 +158,7 @@ namespace LinqToDB.DataProvider.SapHana
 				case ConvertType.NameToSchema    :
 				case ConvertType.NameToPackage   :
 				case ConvertType.NameToQueryTable:
+				case ConvertType.NameToProcedure :
 					if (value.Length > 0 && value[0] == '\"')
 						return sb.Append(value);
 

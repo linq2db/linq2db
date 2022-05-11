@@ -170,11 +170,12 @@ WHERE RDB$SYSTEM_FLAG = 0";
 			return dataConnection.Query(rd =>
 			{
 				// IMPORTANT: reader calls must be ordered to support SequentialAccess
-				var packageName   = rd.IsDBNull(0) ? null : rd.GetString(0);
-				var procedureName = rd.GetString(1);
-				var description   = rd.IsDBNull(2) ? null : rd.GetString(2);
-				var source        = rd.IsDBNull(3) ? null : rd.GetString(3);
-				var procedureType = rd.GetString(4);
+				// TrimEnd added to remove padding from union text columns
+				var packageName   = rd.IsDBNull(0) ? null : rd.GetString(0).TrimEnd();
+				var procedureName = rd.GetString(1).TrimEnd();
+				var description   = rd.IsDBNull(2) ? null : rd.GetString(2).TrimEnd();
+				var source        = rd.IsDBNull(3) ? null : rd.GetString(3).TrimEnd();
+				var procedureType = rd.GetString(4).TrimEnd();
 
 				return new ProcedureInfo()
 				{
@@ -276,13 +277,14 @@ FROM RDB$FUNCTION_ARGUMENTS p
 			return dataConnection.Query(rd =>
 			{
 				// IMPORTANT: reader calls must be ordered to support SequentialAccess
-				var packageName   = rd.IsDBNull(0) ? null : rd.GetString(0);
-				var procedureName = rd.GetString(1);
-				var parameterName = rd.IsDBNull(2) ? null : rd.GetString(2);
+				// TrimEnd added to remove padding from union text columns
+				var packageName   = rd.IsDBNull(0) ? null : rd.GetString(0).TrimEnd();
+				var procedureName = rd.GetString(1).TrimEnd();
+				var parameterName = rd.IsDBNull(2) ? null : rd.GetString(2).TrimEnd();
 				var ordinal       = rd.GetInt32(3);
 				// 2: return, 0: in, 1: out
 				var direction     = rd.GetInt32(4);
-				var description   = rd.IsDBNull(5) ? null : rd.GetString(5);
+				var description   = rd.IsDBNull(5) ? null : rd.GetString(5).TrimEnd();
 				var type          = rd.GetInt32(6);
 				var subType       = rd.IsDBNull(7) ? (int?)null : rd.GetInt32(7);
 				var length        = rd.GetInt32(8);
@@ -380,7 +382,10 @@ FROM RDB$FUNCTION_ARGUMENTS p
 			}
 			catch (Exception ex)
 			{
-				if (ex.Message.Contains("SQL error code = -84")) // procedure XXX does not return any values
+				// procedure XXX does not return any values
+				if (ex.Message.Contains("SQL error code = -84")
+					// SchemaOnly doesn't work for non-selectable procedures in FB
+					|| ex.Message.Contains("is not selectable"))
 					return null;
 				throw;
 			}
@@ -504,6 +509,30 @@ FROM RDB$FUNCTION_ARGUMENTS p
 							procedure.Parameters.RemoveAt(i);
 							break;
 						}
+		}
+
+		/// <summary>
+		/// Builds table function call command.
+		/// </summary>
+		protected override string BuildTableFunctionLoadTableSchemaCommand(ProcedureSchema procedure, string commandText)
+		{
+			commandText = "SELECT * FROM " + commandText;
+
+			if (procedure.Parameters.Count > 0)
+			{
+				commandText += "(";
+
+				for (var i = 0; i < procedure.Parameters.Count; i++)
+				{
+					if (i != 0)
+						commandText += ",";
+					commandText += "NULL";
+				}
+
+				commandText += ")";
+			}
+
+			return commandText;
 		}
 	}
 }

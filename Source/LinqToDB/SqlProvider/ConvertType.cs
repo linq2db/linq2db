@@ -90,6 +90,11 @@ namespace LinqToDB.SqlProvider
 		NameToPackage,
 
 		/// <summary>
+		/// Provided name should be converted to function/procedure name.
+		/// </summary>
+		NameToProcedure,
+
+		/// <summary>
 		/// Provided name should be converted to query table name.
 		/// For example:
 		///     Person -> [Person]

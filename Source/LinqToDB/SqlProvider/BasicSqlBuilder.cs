@@ -3371,7 +3371,7 @@ namespace LinqToDB.SqlProvider
 
 						var sb = new StringBuilder();
 
-						BuildObjectName(sb, tableName, ConvertType.NameToQueryTable, true, tbl.TableOptions);
+						BuildObjectName(sb, tableName, tbl.SqlTableType == SqlTableType.Function ? ConvertType.NameToProcedure : ConvertType.NameToQueryTable, true, tbl.TableOptions);
 
 						if (!ignoreTableExpression && tbl.SqlTableType == SqlTableType.Expression)
 						{

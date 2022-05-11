@@ -169,6 +169,7 @@ namespace LinqToDB.DataProvider.Firebird
 				case ConvertType.NameToQueryTableAlias :
 				case ConvertType.NameToQueryField      :
 				case ConvertType.NameToQueryTable      :
+				case ConvertType.NameToProcedure       :
 				case ConvertType.NameToPackage         :
 				case ConvertType.SequenceName          :
 					if (FirebirdConfiguration.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Quote ||

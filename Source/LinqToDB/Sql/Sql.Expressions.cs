@@ -404,7 +404,7 @@ namespace LinqToDB
 							Server  : (qualified & TableQualification.ServerName)   != 0 ? sqlTable.TableName.Server       : null,
 							Database: (qualified & TableQualification.DatabaseName) != 0 ? sqlTable.TableName.Database     : null,
 							Schema  : (qualified & TableQualification.SchemaName)   != 0 ? sqlTable.TableName.Schema       : null),
-						ConvertType.NameToQueryTable,
+						sqlTable.SqlTableType == SqlTableType.Function ? ConvertType.NameToProcedure : ConvertType.NameToQueryTable,
 						true,
 						(qualified & TableQualification.TableOptions) != 0 ? sqlTable.TableOptions : TableOptions.NotSet);
 

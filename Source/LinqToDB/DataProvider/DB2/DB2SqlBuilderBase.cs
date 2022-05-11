@@ -186,6 +186,7 @@ namespace LinqToDB.DataProvider.DB2
 				case ConvertType.NameToQueryField     :
 				case ConvertType.NameToQueryFieldAlias:
 				case ConvertType.NameToQueryTable     :
+				case ConvertType.NameToProcedure      :
 				case ConvertType.NameToPackage        :
 				case ConvertType.NameToSchema         :
 				case ConvertType.NameToDatabase       :
@@ -248,12 +249,6 @@ namespace LinqToDB.DataProvider.DB2
 			if (schemaName != null)
 			{
 				(escape ? Convert(sb, schemaName, ConvertType.NameToSchema) : sb.Append(schemaName))
-					.Append('.');
-			}
-
-			if (name.Package != null)
-			{
-				(escape ? Convert(sb, name.Package, ConvertType.NameToPackage) : sb.Append(name.Package))
 					.Append('.');
 			}
 

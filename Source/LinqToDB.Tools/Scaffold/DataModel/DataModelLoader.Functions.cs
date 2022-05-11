@@ -23,7 +23,7 @@ namespace LinqToDB.Scaffold
 
 			var method = new MethodModel(
 				_namingServices.NormalizeIdentifier(_options.DataModel.ProcedureNameOptions,
-				name.Name))
+				(func.Name.Package != null ? $"{func.Name.Package}_" : null) + name.Name))
 			{
 				Modifiers = Modifiers.Public | Modifiers.Static | Modifiers.Extension,
 				Summary   = func.Description,
@@ -72,7 +72,7 @@ namespace LinqToDB.Scaffold
 
 			var method = new MethodModel(
 				_namingServices.NormalizeIdentifier(_options.DataModel.ProcedureNameOptions,
-				name.Name))
+				(func.Name.Package != null ? $"{func.Name.Package}_" : null) + name.Name))
 			{
 				Modifiers = Modifiers.Public | Modifiers.Static,
 				Summary   = func.Description
@@ -161,7 +161,7 @@ namespace LinqToDB.Scaffold
 
 			var method = new MethodModel(
 				_namingServices.NormalizeIdentifier(_options.DataModel.ProcedureNameOptions,
-				name.Name))
+				(func.Name.Package != null ? $"{func.Name.Package}_" : null) + name.Name))
 			{
 				Modifiers = Modifiers.Public,
 				Summary   = func.Description
@@ -202,7 +202,7 @@ namespace LinqToDB.Scaffold
 
 			var method = new MethodModel(
 				_namingServices.NormalizeIdentifier(_options.DataModel.ProcedureNameOptions,
-				name.Name))
+				(func.Name.Package != null ? $"{func.Name.Package}_" : null) + name.Name))
 			{
 				Modifiers = Modifiers.Public | Modifiers.Static | Modifiers.Extension,
 				Summary   = func.Description,
@@ -429,7 +429,7 @@ namespace LinqToDB.Scaffold
 			var resultClass = new ClassModel(
 				_namingServices.NormalizeIdentifier(
 					_options.DataModel.ProcedureResultClassNameOptions,
-					funcName.Name))
+					(funcName.Package != null ? $"{funcName.Package}_" : null) + funcName.Name))
 			{
 				Modifiers = Modifiers.Partial | Modifiers.Public
 			};

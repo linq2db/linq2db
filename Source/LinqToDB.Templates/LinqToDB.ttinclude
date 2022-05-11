@@ -1,7 +1,10 @@
 <#@ assembly name="System.Data"                    #>
 <#@ import namespace="System.Data"                 #>
 <#@ import namespace="System.Globalization"        #>
+<#@ import namespace="LinqToDB"                    #>
 <#@ import namespace="LinqToDB.Data"               #>
+<#@ import namespace="LinqToDB.SqlProvider"        #>
+<#@ import namespace="LinqToDB.SqlQuery"           #>
 <#@ include file="DataModel.ttinclude" once="true" #>
 <#
 	if (BaseDataContextClass == null)
@@ -745,7 +748,7 @@ void GenerateTypesFromMetadata()
 					return resultParam.Type.ToTypeName();
 				};
 				var paramCount   = p.ProcParameters.Count(pr => !pr.IsResult);
-				var functionName = SqlBuilder.BuildObjectName(new StringBuilder(), new SqlObjectName(p.ProcedureName, Schema: p.Schema, Package: p.PackageName), ConvertType.NameToQueryTable, true, TableOptions.NotSet).ToString();
+				var functionName = SqlBuilder.BuildObjectName(new StringBuilder(), new SqlObjectName(p.ProcedureName, Schema: p.Schema, Package: p.PackageName), ConvertType.NameToProcedure, true, TableOptions.NotSet).ToString();
 				p.Attributes.Add(new Attribute("Sql.Function", "Name=" + ToStringLiteral(functionName), "ServerSideOnly=true, IsAggregate = true" + (paramCount > 0 ? (", ArgIndices = new[] { " + string.Join(", ", Enumerable.Range(0, p.ProcParameters.Count(pr => !pr.IsResult))) + " }") : null)));
 
 				if (p.IsDefaultSchema || !GenerateSchemaAsType)
@@ -762,7 +765,7 @@ void GenerateTypesFromMetadata()
 			{
 				p.IsStatic       = true;
 				p.TypeBuilder    = () => p.ProcParameters.Single(pr => pr.IsResult).Type.ToTypeName();
-				var functionName = SqlBuilder.BuildObjectName(new StringBuilder(), new SqlObjectName(p.ProcedureName, Schema: p.Schema, Package: p.PackageName), ConvertType.NameToQueryTable, true, TableOptions.NotSet).ToString();
+				var functionName = SqlBuilder.BuildObjectName(new StringBuilder(), new SqlObjectName(p.ProcedureName, Schema: p.Schema, Package: p.PackageName), ConvertType.NameToProcedure, true, TableOptions.NotSet).ToString();
 				p.Attributes.Add(new Attribute("Sql.Function", "Name=" + ToStringLiteral(functionName), "ServerSideOnly=true"));
 			}
 			else
@@ -807,7 +810,7 @@ void GenerateTypesFromMetadata()
 					SqlBuilder.BuildObjectName(
 						new StringBuilder(),
 						new SqlObjectName(p.ProcedureName, Server: ServerName, Database: DatabaseName, Schema: p.Schema, Package: p.PackageName),
-						LinqToDB.SqlProvider.ConvertType.NameToQueryTable,
+						LinqToDB.SqlProvider.ConvertType.NameToProcedure,
 						true,
 						LinqToDB.TableOptions.NotSet
 					).ToString();

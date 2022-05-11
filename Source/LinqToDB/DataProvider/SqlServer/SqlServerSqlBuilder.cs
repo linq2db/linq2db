@@ -231,6 +231,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				case ConvertType.NameToDatabase  :
 				case ConvertType.NameToSchema    :
 				case ConvertType.NameToQueryTable:
+				case ConvertType.NameToProcedure :
 					if (value.Length > 0 && value[0] == '[')
 						return sb.Append(value);
 

@@ -174,7 +174,7 @@ namespace LinqToDB.DataModel
 			// TODO: linq2db refactoring
 			// This method needed only because right now we don't have API that accepts name components
 			// for some function API
-			return _sqlBuilder.BuildObjectName(new (), name, ConvertType.NameToQueryTable).ToString();
+			return _sqlBuilder.BuildObjectName(new (), name, ConvertType.NameToProcedure).ToString();
 		}
 	}
 }

@@ -10,6 +10,8 @@ namespace LinqToDB.DataProvider.DB2
 	using Data;
 	using SchemaProvider;
 
+	// Known Issues:
+	// - CommandBehavior.SchemaOnly doesn't return schema for stored procedures
 	class DB2LUWSchemaProvider : SchemaProviderBase
 	{
 		private readonly DB2DataProvider _provider;
@@ -33,11 +35,12 @@ namespace LinqToDB.DataProvider.DB2
 					TypeName         = t.Field<string>("SQL_TYPE_NAME")!,
 					DataType         = t.Field<string>("FRAMEWORK_TYPE")!,
 					CreateParameters = t.Field<string>("CREATE_PARAMS"),
+					ProviderDbType   = t.Field<int   >("PROVIDER_TYPE"),
 				})
 				.Union(
 				new[]
 				{
-					new DataTypeInfo { TypeName = "CHARACTER", CreateParameters = "LENGTH", DataType = "System.String" }
+					new DataTypeInfo { TypeName = "CHARACTER", CreateParameters = "LENGTH", DataType = "System.String", ProviderDbType = 12 }
 				})
 				.ToList();
 		}
@@ -434,7 +437,7 @@ SELECT * FROM (
 	+ (IncludedSchemas.Count == 0 ? " AND f.FUNCSCHEMA NOT IN ('SYSPROC', 'SYSIBMADM', 'SQLJ', 'SYSIBM')" : null);
 
 			if (IncludedSchemas.Count == 0)
-				sql += " AND PROCSCHEMA NOT IN ('SYSPROC', 'SYSIBMADM', 'SQLJ', 'SYSIBM')";
+				sql += " AND f.FUNCSCHEMA NOT IN ('SYSPROC', 'SYSIBMADM', 'SQLJ', 'SYSIBM')";
 
 			sql += @")
 ORDER BY OBJECTMODULENAME, PROCSCHEMA, PROCNAME";
@@ -453,10 +456,9 @@ ORDER BY OBJECTMODULENAME, PROCSCHEMA, PROCNAME";
 						var module    = rd.ToString(6);
 						var isDefault = rd.GetInt32(7) == 1;
 
-						return new ProcedureInfo
+						return new ProcedureInfo()
 						{
 							ProcedureID         = $"{schema}.{name}({id})",
-							CatalogName         = dataConnection.Connection.Database,
 							SchemaName          = schema,
 							PackageName         = module,
 							ProcedureName       = name,
@@ -540,9 +542,7 @@ SELECT
 	'Y'
 FROM
 	SYSCAT.FUNCPARMS
-	WHERE ROWTYPE <> 'R'
-WHERE
-	" + GetSchemaFilter("FUNCSCHEMA"))
+	WHERE ROWTYPE <> 'R' AND " + GetSchemaFilter("FUNCSCHEMA"))
 				.ToList();
 		}
 
@@ -567,6 +567,56 @@ WHERE
 			}
 
 			return $"{schemaNameField} = '{CurrentSchema}'";
+		}
+
+		protected override string BuildTableFunctionLoadTableSchemaCommand(ProcedureSchema procedure, string commandText)
+		{
+			if (procedure.IsTableFunction)
+			{
+				commandText = "SELECT * FROM TABLE(" + commandText + "(";
+
+				for (var i = 0; i < procedure.Parameters.Count; i++)
+				{
+					if (i != 0)
+						commandText += ",";
+					commandText += "NULL";
+				}
+
+				commandText += "))";
+
+				return commandText;
+			}
+
+			return base.BuildTableFunctionLoadTableSchemaCommand(procedure, commandText);
+		}
+
+		protected override List<ColumnSchema> GetProcedureResultColumns(DataTable resultTable, GetSchemaOptions options)
+		{
+			return
+			(
+				from r in resultTable.AsEnumerable()
+
+				let dt          = GetDataTypeByProviderDbType(r.Field<int>("ProviderType"), options)
+				let columnName = r.Field<string>("ColumnName")
+				let isNullable = r.Field<bool>  ("AllowDBNull")
+				let length     = r.Field<int?>  ("ColumnSize")
+				let precision  = Converter.ChangeTypeTo<int>(r["NumericPrecision"])
+				let scale      = Converter.ChangeTypeTo<int>(r["NumericScale"])
+				let columnType = GetDbType(options, null, dt, length, precision, scale, null, null, null)
+				let systemType = GetSystemType(columnType, null, dt, length, precision, scale, options)
+
+				select new ColumnSchema()
+				{
+					ColumnName           = columnName,
+					ColumnType           = GetDbType(options, columnType, dt, length, precision, scale, null, null, null),
+					IsNullable           = isNullable,
+					MemberName           = ToValidName(columnName),
+					MemberType           = ToTypeName(systemType, isNullable),
+					SystemType           = systemType,
+					DataType             = GetDataType(columnType, null, length, precision, scale),
+					ProviderSpecificType = GetProviderSpecificType(columnType),
+				}
+			).ToList();
 		}
 	}
 

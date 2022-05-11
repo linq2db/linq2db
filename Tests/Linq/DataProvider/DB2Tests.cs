@@ -15,6 +15,7 @@ using System.Linq.Expressions;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
+using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
 using LinqToDB.Tools.Comparers;
@@ -33,7 +34,6 @@ using NUnit.Framework;
 
 namespace Tests.DataProvider
 {
-	using LinqToDB.Linq;
 	using Model;
 
 	[TestFixture]

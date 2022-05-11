@@ -209,6 +209,7 @@ namespace LinqToDB.DataProvider.Oracle
 				case ConvertType.NameToQueryFieldAlias:
 				case ConvertType.NameToQueryField     :
 				case ConvertType.NameToQueryTable     :
+				case ConvertType.NameToProcedure      :
 				case ConvertType.NameToPackage        :
 				case ConvertType.NameToServer         :
 				case ConvertType.SequenceName         :

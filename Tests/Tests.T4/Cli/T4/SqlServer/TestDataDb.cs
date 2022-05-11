@@ -50,6 +50,13 @@ namespace Cli.T4.SqlServer
 
 		partial void InitDataContext();
 
+		public ITable<TestSchema_TestSchemaA>   TestSchemaA              => this.GetTable<TestSchema_TestSchemaA>();
+		public ITable<TestSchema_TestSchemaB>   TestSchemaB              => this.GetTable<TestSchema_TestSchemaB>();
+		public ITable<Issue1144>                Issue1144                => this.GetTable<Issue1144>();
+		public ITable<SameTableName>            SameTableNames           => this.GetTable<SameTableName>();
+		public ITable<TestSchemaSameTableName>  TestSchemaSameTableNames => this.GetTable<TestSchemaSameTableName>();
+		public ITable<TestSchema_SameTableName> SameTableNames1          => this.GetTable<TestSchema_SameTableName>();
+		public ITable<Issue1115>                Issue1115                => this.GetTable<Issue1115>();
 		public ITable<DataType>                 DataTypes                => this.GetTable<DataType>();
 		public ITable<CollatedTable>            CollatedTables           => this.GetTable<CollatedTable>();
 		public ITable<InheritanceParent>        InheritanceParents       => this.GetTable<InheritanceParent>();
@@ -57,6 +64,7 @@ namespace Cli.T4.SqlServer
 		public ITable<Person>                   People                   => this.GetTable<Person>();
 		public ITable<Doctor>                   Doctors                  => this.GetTable<Doctor>();
 		public ITable<Patient>                  Patients                 => this.GetTable<Patient>();
+		public ITable<CreateIfNotExistsTable>   CreateIfNotExistsTables  => this.GetTable<CreateIfNotExistsTable>();
 		public ITable<AllType>                  AllTypes                 => this.GetTable<AllType>();
 		public ITable<AllTypes2>                AllTypes2                => this.GetTable<AllTypes2>();
 		/// <summary>
@@ -64,7 +72,6 @@ namespace Cli.T4.SqlServer
 		/// </summary>
 		public ITable<Parent>                   Parents                  => this.GetTable<Parent>();
 		public ITable<Child>                    Children                 => this.GetTable<Child>();
-		public ITable<CreateIfNotExistsTable>   CreateIfNotExistsTables  => this.GetTable<CreateIfNotExistsTable>();
 		public ITable<GrandChild>               GrandChildren            => this.GetTable<GrandChild>();
 		public ITable<LinqDataType>             LinqDataTypes            => this.GetTable<LinqDataType>();
 		public ITable<TestIdentity>             TestIdentities           => this.GetTable<TestIdentity>();
@@ -80,13 +87,6 @@ namespace Cli.T4.SqlServer
 		public ITable<TestMergeIdentity>        TestMergeIdentities      => this.GetTable<TestMergeIdentity>();
 		public ITable<TestSchemaX>              TestSchemaX              => this.GetTable<TestSchemaX>();
 		public ITable<TestSchemaY>              TestSchemaY              => this.GetTable<TestSchemaY>();
-		public ITable<TestSchema_TestSchemaA>   TestSchemaA              => this.GetTable<TestSchema_TestSchemaA>();
-		public ITable<TestSchema_TestSchemaB>   TestSchemaB              => this.GetTable<TestSchema_TestSchemaB>();
-		public ITable<Issue1144>                Issue1144                => this.GetTable<Issue1144>();
-		public ITable<SameTableName>            SameTableNames           => this.GetTable<SameTableName>();
-		public ITable<TestSchemaSameTableName>  TestSchemaSameTableNames => this.GetTable<TestSchemaSameTableName>();
-		public ITable<TestSchema_SameTableName> SameTableNames1          => this.GetTable<TestSchema_SameTableName>();
-		public ITable<Issue1115>                Issue1115                => this.GetTable<Issue1115>();
 		public ITable<ParentView>               ParentViews              => this.GetTable<ParentView>();
 		public ITable<ParentChildView>          ParentChildViews         => this.GetTable<ParentChildView>();
 
@@ -125,31 +125,56 @@ namespace Cli.T4.SqlServer
 		#endregion
 	}
 
-	[Table("DataType", Schema = "dbo")]
-	public partial class DataType
+	[Table("TestSchemaA", Schema = "TestSchema")]
+	public partial class TestSchema_TestSchemaA
 	{
-		[Column("id")] public int Id { get; set; } // int
-	}
+		[Column("TestSchemaAID", IsPrimaryKey = true)] public int TestSchemaAID { get; set; } // int
+		[Column("Field1"                            )] public int Field1        { get; set; } // int
 
-	[Table("CollatedTable", Schema = "dbo")]
-	public partial class CollatedTable
-	{
-		[Column("Id"                                )] public int    Id              { get; set; } // int
-		[Column("CaseSensitive"  , CanBeNull = false)] public string CaseSensitive   { get; set; } = null!; // nvarchar(20)
-		[Column("CaseInsensitive", CanBeNull = false)] public string CaseInsensitive { get; set; } = null!; // nvarchar(20)
-	}
+		#region Associations
+		/// <summary>
+		/// FK_TestSchema_TestSchemaBY_OriginTestSchemaA backreference
+		/// </summary>
+		[Association(ThisKey = nameof(TestSchemaAID), OtherKey = nameof(TestSchema_TestSchemaB.OriginTestSchemaAID))]
+		public IEnumerable<TestSchema_TestSchemaB> TestSchemaByOriginTestSchemaA { get; set; } = null!;
 
-	[Table("InheritanceParent", Schema = "dbo")]
-	public partial class InheritanceParent
-	{
-		[Column("InheritanceParentId", IsPrimaryKey = true)] public int     InheritanceParentId { get; set; } // int
-		[Column("TypeDiscriminator"                       )] public int?    TypeDiscriminator   { get; set; } // int
-		[Column("Name"                                    )] public string? Name                { get; set; } // nvarchar(50)
+		/// <summary>
+		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA backreference
+		/// </summary>
+		[Association(ThisKey = nameof(TestSchemaAID), OtherKey = nameof(TestSchema_TestSchemaB.TargetTestSchemaAID))]
+		public IEnumerable<TestSchema_TestSchemaB> TestSchemaByTargetTestSchemaA { get; set; } = null!;
+
+		/// <summary>
+		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA2 backreference
+		/// </summary>
+		[Association(ThisKey = nameof(TestSchemaAID), OtherKey = nameof(TestSchema_TestSchemaB.TargetTestSchemaAID1))]
+		public IEnumerable<TestSchema_TestSchemaB> TestSchemaByTargetTestSchemaA1 { get; set; } = null!;
+		#endregion
 	}
 
 	public static partial class ExtensionMethods
 	{
 		#region Table Extensions
+		public static TestSchema_TestSchemaA? Find(this ITable<TestSchema_TestSchemaA> table, int testSchemaAid)
+		{
+			return table.FirstOrDefault(e => e.TestSchemaAID == testSchemaAid);
+		}
+
+		public static TestSchema_TestSchemaB? Find(this ITable<TestSchema_TestSchemaB> table, int testSchemaBid)
+		{
+			return table.FirstOrDefault(e => e.TestSchemaBID == testSchemaBid);
+		}
+
+		public static Issue1144? Find(this ITable<Issue1144> table, int id)
+		{
+			return table.FirstOrDefault(e => e.Id == id);
+		}
+
+		public static Issue1115? Find(this ITable<Issue1115> table, SqlHierarchyId id)
+		{
+			return table.FirstOrDefault(e => (bool)(e.Id == id));
+		}
+
 		public static InheritanceParent? Find(this ITable<InheritanceParent> table, int inheritanceParentId)
 		{
 			return table.FirstOrDefault(e => e.InheritanceParentId == inheritanceParentId);
@@ -258,26 +283,6 @@ namespace Cli.T4.SqlServer
 		public static TestSchemaX? Find(this ITable<TestSchemaX> table, int testSchemaXid)
 		{
 			return table.FirstOrDefault(e => e.TestSchemaXID == testSchemaXid);
-		}
-
-		public static TestSchema_TestSchemaA? Find(this ITable<TestSchema_TestSchemaA> table, int testSchemaAid)
-		{
-			return table.FirstOrDefault(e => e.TestSchemaAID == testSchemaAid);
-		}
-
-		public static TestSchema_TestSchemaB? Find(this ITable<TestSchema_TestSchemaB> table, int testSchemaBid)
-		{
-			return table.FirstOrDefault(e => e.TestSchemaBID == testSchemaBid);
-		}
-
-		public static Issue1144? Find(this ITable<Issue1144> table, int id)
-		{
-			return table.FirstOrDefault(e => e.Id == id);
-		}
-
-		public static Issue1115? Find(this ITable<Issue1115> table, SqlHierarchyId id)
-		{
-			return table.FirstOrDefault(e => (bool)(e.Id == id));
 		}
 		#endregion
 
@@ -822,6 +827,90 @@ namespace Cli.T4.SqlServer
 		#endregion
 	}
 
+	[Table("TestSchemaB", Schema = "TestSchema")]
+	public partial class TestSchema_TestSchemaB
+	{
+		[Column("TestSchemaBID"          , IsPrimaryKey = true)] public int TestSchemaBID        { get; set; } // int
+		[Column("OriginTestSchemaAID"                         )] public int OriginTestSchemaAID  { get; set; } // int
+		[Column("TargetTestSchemaAID"                         )] public int TargetTestSchemaAID  { get; set; } // int
+		[Column("Target_Test_Schema_A_ID"                     )] public int TargetTestSchemaAID1 { get; set; } // int
+
+		#region Associations
+		/// <summary>
+		/// FK_TestSchema_TestSchemaBY_OriginTestSchemaA
+		/// </summary>
+		[Association(CanBeNull = false, ThisKey = nameof(OriginTestSchemaAID), OtherKey = nameof(TestSchema_TestSchemaA.TestSchemaAID))]
+		public TestSchema_TestSchemaA OriginTestSchemaA { get; set; } = null!;
+
+		/// <summary>
+		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA
+		/// </summary>
+		[Association(CanBeNull = false, ThisKey = nameof(TargetTestSchemaAID), OtherKey = nameof(TestSchema_TestSchemaA.TestSchemaAID))]
+		public TestSchema_TestSchemaA TargetTestSchemaA { get; set; } = null!;
+
+		/// <summary>
+		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA2
+		/// </summary>
+		[Association(CanBeNull = false, ThisKey = nameof(TargetTestSchemaAID1), OtherKey = nameof(TestSchema_TestSchemaA.TestSchemaAID))]
+		public TestSchema_TestSchemaA TargetTestSchemaA1 { get; set; } = null!;
+		#endregion
+	}
+
+	[Table("Issue1144", Schema = "dbo")]
+	public partial class Issue1144
+	{
+		/// <summary>
+		/// Column description
+		/// </summary>
+		[Column("id", IsPrimaryKey = true)] public int Id { get; set; } // int
+	}
+
+	[Table("SameTableName", Schema = "dbo")]
+	public partial class SameTableName
+	{
+		[Column("id")] public int? Id { get; set; } // int
+	}
+
+	[Table("TestSchema_SameTableName", Schema = "dbo")]
+	public partial class TestSchemaSameTableName
+	{
+		[Column("id")] public int? Id { get; set; } // int
+	}
+
+	[Table("SameTableName", Schema = "TestSchema")]
+	public partial class TestSchema_SameTableName
+	{
+		[Column("id")] public int? Id { get; set; } // int
+	}
+
+	[Table("Issue1115", Schema = "dbo")]
+	public partial class Issue1115
+	{
+		[Column("id", IsPrimaryKey = true)] public SqlHierarchyId Id { get; set; } // hierarchyid
+	}
+
+	[Table("DataType", Schema = "dbo")]
+	public partial class DataType
+	{
+		[Column("id")] public int Id { get; set; } // int
+	}
+
+	[Table("CollatedTable", Schema = "dbo")]
+	public partial class CollatedTable
+	{
+		[Column("Id"                                )] public int    Id              { get; set; } // int
+		[Column("CaseSensitive"  , CanBeNull = false)] public string CaseSensitive   { get; set; } = null!; // nvarchar(20)
+		[Column("CaseInsensitive", CanBeNull = false)] public string CaseInsensitive { get; set; } = null!; // nvarchar(20)
+	}
+
+	[Table("InheritanceParent", Schema = "dbo")]
+	public partial class InheritanceParent
+	{
+		[Column("InheritanceParentId", IsPrimaryKey = true)] public int     InheritanceParentId { get; set; } // int
+		[Column("TypeDiscriminator"                       )] public int?    TypeDiscriminator   { get; set; } // int
+		[Column("Name"                                    )] public string? Name                { get; set; } // nvarchar(50)
+	}
+
 	[Table("InheritanceChild", Schema = "dbo")]
 	public partial class InheritanceChild
 	{
@@ -883,6 +972,13 @@ namespace Cli.T4.SqlServer
 		[Association(CanBeNull = false, ThisKey = nameof(PersonID), OtherKey = nameof(SqlServer.Person.PersonID))]
 		public Person Person { get; set; } = null!;
 		#endregion
+	}
+
+	[Table("CreateIfNotExistsTable", Schema = "dbo")]
+	public partial class CreateIfNotExistsTable
+	{
+		[Column("Id"   )] public int Id    { get; set; } // int
+		[Column("Value")] public int Value { get; set; } // int
 	}
 
 	[Table("AllTypes", Schema = "dbo")]
@@ -966,13 +1062,6 @@ namespace Cli.T4.SqlServer
 		/// </summary>
 		[Column("ChildID"                                                                                   )] public int? ChildID  { get; set; } // int
 		[Column("_ID"     , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int  ID       { get; set; } // int
-	}
-
-	[Table("CreateIfNotExistsTable", Schema = "dbo")]
-	public partial class CreateIfNotExistsTable
-	{
-		[Column("Id"   )] public int Id    { get; set; } // int
-		[Column("Value")] public int Value { get; set; } // int
 	}
 
 	[Table("GrandChild", Schema = "dbo")]
@@ -1146,12 +1235,6 @@ namespace Cli.T4.SqlServer
 
 		#region Associations
 		/// <summary>
-		/// FK_TestSchemaY_TestSchemaX backreference
-		/// </summary>
-		[Association(ThisKey = nameof(TestSchemaXID), OtherKey = nameof(SqlServer.TestSchemaY.TestSchemaXID))]
-		public IEnumerable<TestSchemaY> TestSchemaY { get; set; } = null!;
-
-		/// <summary>
 		/// FK_TestSchemaY_ParentTestSchemaX backreference
 		/// </summary>
 		[Association(ThisKey = nameof(TestSchemaXID), OtherKey = nameof(SqlServer.TestSchemaY.ParentTestSchemaXID))]
@@ -1162,6 +1245,12 @@ namespace Cli.T4.SqlServer
 		/// </summary>
 		[Association(ThisKey = nameof(TestSchemaXID), OtherKey = nameof(SqlServer.TestSchemaY.TestSchemaXID))]
 		public IEnumerable<TestSchemaY> TestSchemaYOtherIds { get; set; } = null!;
+
+		/// <summary>
+		/// FK_TestSchemaY_TestSchemaX backreference
+		/// </summary>
+		[Association(ThisKey = nameof(TestSchemaXID), OtherKey = nameof(SqlServer.TestSchemaY.TestSchemaXID))]
+		public IEnumerable<TestSchemaY> TestSchemaY { get; set; } = null!;
 		#endregion
 	}
 
@@ -1174,12 +1263,6 @@ namespace Cli.T4.SqlServer
 
 		#region Associations
 		/// <summary>
-		/// FK_TestSchemaY_TestSchemaX
-		/// </summary>
-		[Association(CanBeNull = false, ThisKey = nameof(TestSchemaXID), OtherKey = nameof(SqlServer.TestSchemaX.TestSchemaXID))]
-		public TestSchemaX TestSchemaX { get; set; } = null!;
-
-		/// <summary>
 		/// FK_TestSchemaY_ParentTestSchemaX
 		/// </summary>
 		[Association(CanBeNull = false, ThisKey = nameof(ParentTestSchemaXID), OtherKey = nameof(SqlServer.TestSchemaX.TestSchemaXID))]
@@ -1189,97 +1272,14 @@ namespace Cli.T4.SqlServer
 		/// FK_TestSchemaY_OtherID
 		/// </summary>
 		[Association(CanBeNull = false, ThisKey = nameof(TestSchemaXID), OtherKey = nameof(SqlServer.TestSchemaX.TestSchemaXID))]
+		public TestSchemaX TestSchemaX { get; set; } = null!;
+
+		/// <summary>
+		/// FK_TestSchemaY_TestSchemaX
+		/// </summary>
+		[Association(CanBeNull = false, ThisKey = nameof(TestSchemaXID), OtherKey = nameof(SqlServer.TestSchemaX.TestSchemaXID))]
 		public TestSchemaX TestSchemaX1 { get; set; } = null!;
 		#endregion
-	}
-
-	[Table("TestSchemaA", Schema = "TestSchema")]
-	public partial class TestSchema_TestSchemaA
-	{
-		[Column("TestSchemaAID", IsPrimaryKey = true)] public int TestSchemaAID { get; set; } // int
-		[Column("Field1"                            )] public int Field1        { get; set; } // int
-
-		#region Associations
-		/// <summary>
-		/// FK_TestSchema_TestSchemaBY_OriginTestSchemaA backreference
-		/// </summary>
-		[Association(ThisKey = nameof(TestSchemaAID), OtherKey = nameof(TestSchema_TestSchemaB.OriginTestSchemaAID))]
-		public IEnumerable<TestSchema_TestSchemaB> TestSchemaByOriginTestSchemaA { get; set; } = null!;
-
-		/// <summary>
-		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA backreference
-		/// </summary>
-		[Association(ThisKey = nameof(TestSchemaAID), OtherKey = nameof(TestSchema_TestSchemaB.TargetTestSchemaAID))]
-		public IEnumerable<TestSchema_TestSchemaB> TestSchemaByTargetTestSchemaA { get; set; } = null!;
-
-		/// <summary>
-		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA2 backreference
-		/// </summary>
-		[Association(ThisKey = nameof(TestSchemaAID), OtherKey = nameof(TestSchema_TestSchemaB.TargetTestSchemaAID1))]
-		public IEnumerable<TestSchema_TestSchemaB> TestSchemaByTargetTestSchemaA1 { get; set; } = null!;
-		#endregion
-	}
-
-	[Table("TestSchemaB", Schema = "TestSchema")]
-	public partial class TestSchema_TestSchemaB
-	{
-		[Column("TestSchemaBID"          , IsPrimaryKey = true)] public int TestSchemaBID        { get; set; } // int
-		[Column("OriginTestSchemaAID"                         )] public int OriginTestSchemaAID  { get; set; } // int
-		[Column("TargetTestSchemaAID"                         )] public int TargetTestSchemaAID  { get; set; } // int
-		[Column("Target_Test_Schema_A_ID"                     )] public int TargetTestSchemaAID1 { get; set; } // int
-
-		#region Associations
-		/// <summary>
-		/// FK_TestSchema_TestSchemaBY_OriginTestSchemaA
-		/// </summary>
-		[Association(CanBeNull = false, ThisKey = nameof(OriginTestSchemaAID), OtherKey = nameof(TestSchema_TestSchemaA.TestSchemaAID))]
-		public TestSchema_TestSchemaA OriginTestSchemaA { get; set; } = null!;
-
-		/// <summary>
-		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA
-		/// </summary>
-		[Association(CanBeNull = false, ThisKey = nameof(TargetTestSchemaAID), OtherKey = nameof(TestSchema_TestSchemaA.TestSchemaAID))]
-		public TestSchema_TestSchemaA TargetTestSchemaA { get; set; } = null!;
-
-		/// <summary>
-		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA2
-		/// </summary>
-		[Association(CanBeNull = false, ThisKey = nameof(TargetTestSchemaAID1), OtherKey = nameof(TestSchema_TestSchemaA.TestSchemaAID))]
-		public TestSchema_TestSchemaA TargetTestSchemaA1 { get; set; } = null!;
-		#endregion
-	}
-
-	[Table("Issue1144", Schema = "dbo")]
-	public partial class Issue1144
-	{
-		/// <summary>
-		/// Column description
-		/// </summary>
-		[Column("id", IsPrimaryKey = true)] public int Id { get; set; } // int
-	}
-
-	[Table("SameTableName", Schema = "dbo")]
-	public partial class SameTableName
-	{
-		[Column("id")] public int? Id { get; set; } // int
-	}
-
-	[Table("TestSchema_SameTableName", Schema = "dbo")]
-	public partial class TestSchemaSameTableName
-	{
-		[Column("id")] public int? Id { get; set; } // int
-	}
-
-	[Table("SameTableName", Schema = "TestSchema")]
-	public partial class TestSchema_SameTableName
-	{
-		[Column("id")] public int? Id { get; set; } // int
-	}
-
-	[Table("Issue1115", Schema = "dbo")]
-	public partial class Issue1115
-	{
-		[Column("id", IsPrimaryKey = true)] public SqlHierarchyId Id { get; set; } // hierarchyid
 	}
 
 	[Table("ParentView", Schema = "dbo", IsView = true)]

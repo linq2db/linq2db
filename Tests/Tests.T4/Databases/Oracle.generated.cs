@@ -12,6 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Reflection;
 
 using LinqToDB;
 using LinqToDB.Common;
@@ -91,6 +92,58 @@ namespace OracleDataContext
 
 		partial void InitDataContext  ();
 		partial void InitMappingSchema();
+
+		#region Table Functions
+
+		#region TestPACKAGE1TestTableFunction
+
+		[Sql.TableFunction(Schema="MANAGED", Package="TEST_PACKAGE1", Name="TEST_TABLE_FUNCTION")]
+		public ITable<TestTableFUNCTIONResult> TestPACKAGE1TestTableFunction(decimal? I)
+		{
+			return this.GetTable<TestTableFUNCTIONResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
+				I);
+		}
+
+		public partial class TestTableFUNCTIONResult
+		{
+			public decimal? O { get; set; }
+		}
+
+		#endregion
+
+		#region TestPACKAGE2TestTableFunction
+
+		[Sql.TableFunction(Schema="MANAGED", Package="TEST_PACKAGE2", Name="TEST_TABLE_FUNCTION")]
+		public ITable<TestTableFUNCTIONResult0> TestPACKAGE2TestTableFunction(decimal? I)
+		{
+			return this.GetTable<TestTableFUNCTIONResult0>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
+				I);
+		}
+
+		public partial class TestTableFUNCTIONResult0
+		{
+			public decimal? O { get; set; }
+		}
+
+		#endregion
+
+		#region TestTableFunction
+
+		[Sql.TableFunction(Schema="MANAGED", Name="TEST_TABLE_FUNCTION")]
+		public ITable<TestTableFUNCTIONResult1> TestTableFunction(decimal? I)
+		{
+			return this.GetTable<TestTableFUNCTIONResult1>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
+				I);
+		}
+
+		public partial class TestTableFUNCTIONResult1
+		{
+			public decimal? O { get; set; }
+		}
+
+		#endregion
+
+		#endregion
 	}
 
 	[Table(Schema="MANAGED", Name="AllTypes")]
@@ -483,7 +536,7 @@ namespace OracleDataContext
 		#region Associations
 
 		/// <summary>
-		/// SYS_C00901116_BackReference (MANAGED.t_test_user_contract)
+		/// SYS_C00903359_BackReference (MANAGED.t_test_user_contract)
 		/// </summary>
 		[Association(ThisKey="UserId", OtherKey="UserId", CanBeNull=true)]
 		public IEnumerable<TTestUserContract> Syscs { get; set; } = null!;
@@ -502,7 +555,7 @@ namespace OracleDataContext
 		#region Associations
 
 		/// <summary>
-		/// SYS_C00901116 (MANAGED.t_test_user)
+		/// SYS_C00903359 (MANAGED.t_test_user)
 		/// </summary>
 		[Association(ThisKey="UserId", OtherKey="UserId", CanBeNull=false)]
 		public TTestUser User { get; set; } = null!;
@@ -512,40 +565,81 @@ namespace OracleDataContext
 
 	public static partial class XEDBStoredProcedures
 	{
-		#region PersonUpdate
+		#region TestPACKAGE1TestProcedure
 
-		public static int PersonUpdate(this XEDB dataConnection, decimal? PPERSONID, string? PFIRSTNAME, string? PLASTNAME, string? PMIDDLENAME, string? PGENDER)
+		public static int TestPACKAGE1TestProcedure(this XEDB dataConnection, decimal? I, out decimal? O)
 		{
 			var parameters = new []
 			{
-				new DataParameter("PPERSONID",   PPERSONID,   LinqToDB.DataType.Decimal)
+				new DataParameter("I", I, LinqToDB.DataType.Decimal)
 				{
 					Size = 22
 				},
-				new DataParameter("PFIRSTNAME",  PFIRSTNAME,  LinqToDB.DataType.NVarChar),
-				new DataParameter("PLASTNAME",   PLASTNAME,   LinqToDB.DataType.NVarChar),
-				new DataParameter("PMIDDLENAME", PMIDDLENAME, LinqToDB.DataType.NVarChar),
-				new DataParameter("PGENDER",     PGENDER,     LinqToDB.DataType.Char)
+				new DataParameter("O", null, LinqToDB.DataType.Decimal)
+				{
+					Direction = ParameterDirection.Output,
+					Size      = 22
+				}
 			};
 
-			return dataConnection.ExecuteProc("MANAGED.PERSON_UPDATE", parameters);
+			var ret = dataConnection.ExecuteProc("MANAGED.TEST_PACKAGE1.TEST_PROCEDURE", parameters);
+
+			O = Converter.ChangeTypeTo<decimal?>(parameters[1].Value);
+
+			return ret;
 		}
 
 		#endregion
 
-		#region PersonDelete
+		#region TestPACKAGE2TestProcedure
 
-		public static int PersonDelete(this XEDB dataConnection, decimal? PPERSONID)
+		public static int TestPACKAGE2TestProcedure(this XEDB dataConnection, decimal? I, out decimal? O)
 		{
 			var parameters = new []
 			{
-				new DataParameter("PPERSONID", PPERSONID, LinqToDB.DataType.Decimal)
+				new DataParameter("I", I, LinqToDB.DataType.Decimal)
 				{
 					Size = 22
+				},
+				new DataParameter("O", null, LinqToDB.DataType.Decimal)
+				{
+					Direction = ParameterDirection.Output,
+					Size      = 22
 				}
 			};
 
-			return dataConnection.ExecuteProc("MANAGED.PERSON_DELETE", parameters);
+			var ret = dataConnection.ExecuteProc("MANAGED.TEST_PACKAGE2.TEST_PROCEDURE", parameters);
+
+			O = Converter.ChangeTypeTo<decimal?>(parameters[1].Value);
+
+			return ret;
+		}
+
+		#endregion
+
+		#region OUTREFENUMTEST
+
+		public static int OUTREFENUMTEST(this XEDB dataConnection, string? PSTR, out string? POUTPUTSTR, ref string? PINPUTOUTPUTSTR)
+		{
+			var parameters = new []
+			{
+				new DataParameter("PSTR",            PSTR,            LinqToDB.DataType.NVarChar),
+				new DataParameter("POUTPUTSTR", null,      LinqToDB.DataType.NVarChar)
+				{
+					Direction = ParameterDirection.Output
+				},
+				new DataParameter("PINPUTOUTPUTSTR", PINPUTOUTPUTSTR, LinqToDB.DataType.NVarChar)
+				{
+					Direction = ParameterDirection.InputOutput
+				}
+			};
+
+			var ret = dataConnection.ExecuteProc("MANAGED.OUTREFENUMTEST", parameters);
+
+			POUTPUTSTR      = Converter.ChangeTypeTo<string?>(parameters[1].Value);
+			PINPUTOUTPUTSTR = Converter.ChangeTypeTo<string?>(parameters[2].Value);
+
+			return ret;
 		}
 
 		#endregion
@@ -593,29 +687,199 @@ namespace OracleDataContext
 
 		#endregion
 
-		#region OUTREFENUMTEST
+		#region PersonDelete
 
-		public static int OUTREFENUMTEST(this XEDB dataConnection, string? PSTR, out string? POUTPUTSTR, ref string? PINPUTOUTPUTSTR)
+		public static int PersonDelete(this XEDB dataConnection, decimal? PPERSONID)
 		{
 			var parameters = new []
 			{
-				new DataParameter("PSTR",            PSTR,            LinqToDB.DataType.NVarChar),
-				new DataParameter("POUTPUTSTR", null,      LinqToDB.DataType.NVarChar)
+				new DataParameter("PPERSONID", PPERSONID, LinqToDB.DataType.Decimal)
 				{
-					Direction = ParameterDirection.Output
-				},
-				new DataParameter("PINPUTOUTPUTSTR", PINPUTOUTPUTSTR, LinqToDB.DataType.NVarChar)
-				{
-					Direction = ParameterDirection.InputOutput
+					Size = 22
 				}
 			};
 
-			var ret = dataConnection.ExecuteProc("MANAGED.OUTREFENUMTEST", parameters);
+			return dataConnection.ExecuteProc("MANAGED.PERSON_DELETE", parameters);
+		}
 
-			POUTPUTSTR      = Converter.ChangeTypeTo<string?>(parameters[1].Value);
-			PINPUTOUTPUTSTR = Converter.ChangeTypeTo<string?>(parameters[2].Value);
+		#endregion
+
+		#region PersonUpdate
+
+		public static int PersonUpdate(this XEDB dataConnection, decimal? PPERSONID, string? PFIRSTNAME, string? PLASTNAME, string? PMIDDLENAME, string? PGENDER)
+		{
+			var parameters = new []
+			{
+				new DataParameter("PPERSONID",   PPERSONID,   LinqToDB.DataType.Decimal)
+				{
+					Size = 22
+				},
+				new DataParameter("PFIRSTNAME",  PFIRSTNAME,  LinqToDB.DataType.NVarChar),
+				new DataParameter("PLASTNAME",   PLASTNAME,   LinqToDB.DataType.NVarChar),
+				new DataParameter("PMIDDLENAME", PMIDDLENAME, LinqToDB.DataType.NVarChar),
+				new DataParameter("PGENDER",     PGENDER,     LinqToDB.DataType.Char)
+			};
+
+			return dataConnection.ExecuteProc("MANAGED.PERSON_UPDATE", parameters);
+		}
+
+		#endregion
+
+		#region TestProcedure
+
+		public static int TestProcedure(this XEDB dataConnection, decimal? I, out decimal? O)
+		{
+			var parameters = new []
+			{
+				new DataParameter("I", I, LinqToDB.DataType.Decimal)
+				{
+					Size = 22
+				},
+				new DataParameter("O", null, LinqToDB.DataType.Decimal)
+				{
+					Direction = ParameterDirection.Output,
+					Size      = 22
+				}
+			};
+
+			var ret = dataConnection.ExecuteProc("MANAGED.TEST_PROCEDURE", parameters);
+
+			O = Converter.ChangeTypeTo<decimal?>(parameters[1].Value);
 
 			return ret;
+		}
+
+		#endregion
+	}
+
+	public static partial class SqlFunctions
+	{
+		#region TestPACKAGE1TestFunction
+
+		[Sql.Function(Name="MANAGED.TEST_PACKAGE1.TEST_FUNCTION", ServerSideOnly=true)]
+		public static decimal? TestPACKAGE1TestFunction(decimal? I)
+		{
+			throw new InvalidOperationException();
+		}
+
+		#endregion
+
+		#region TestPACKAGE2TestFunction
+
+		[Sql.Function(Name="MANAGED.TEST_PACKAGE2.TEST_FUNCTION", ServerSideOnly=true)]
+		public static decimal? TestPACKAGE2TestFunction(decimal? I)
+		{
+			throw new InvalidOperationException();
+		}
+
+		#endregion
+
+		#region PatientSelectall
+
+		[Sql.Function(Name="MANAGED.PATIENT_SELECTALL", ServerSideOnly=true)]
+		public static object? PatientSelectall()
+		{
+			throw new InvalidOperationException();
+		}
+
+		#endregion
+
+		#region PatientSelectbyname
+
+		[Sql.Function(Name="MANAGED.PATIENT_SELECTBYNAME", ServerSideOnly=true)]
+		public static object? PatientSelectbyname(string? PFIRSTNAME, string? PLASTNAME)
+		{
+			throw new InvalidOperationException();
+		}
+
+		#endregion
+
+		#region PersonInsert
+
+		[Sql.Function(Name="MANAGED.PERSON_INSERT", ServerSideOnly=true)]
+		public static object? PersonInsert(string? PFIRSTNAME, string? PLASTNAME, string? PMIDDLENAME, string? PGENDER)
+		{
+			throw new InvalidOperationException();
+		}
+
+		#endregion
+
+		#region PersonSelectall
+
+		[Sql.Function(Name="MANAGED.PERSON_SELECTALL", ServerSideOnly=true)]
+		public static object? PersonSelectall()
+		{
+			throw new InvalidOperationException();
+		}
+
+		#endregion
+
+		#region PersonSelectallbygender
+
+		[Sql.Function(Name="MANAGED.PERSON_SELECTALLBYGENDER", ServerSideOnly=true)]
+		public static object? PersonSelectallbygender(string? PGENDER)
+		{
+			throw new InvalidOperationException();
+		}
+
+		#endregion
+
+		#region PersonSelectbykey
+
+		[Sql.Function(Name="MANAGED.PERSON_SELECTBYKEY", ServerSideOnly=true)]
+		public static object? PersonSelectbykey(decimal? PID)
+		{
+			throw new InvalidOperationException();
+		}
+
+		#endregion
+
+		#region PersonSelectbyname
+
+		[Sql.Function(Name="MANAGED.PERSON_SELECTBYNAME", ServerSideOnly=true)]
+		public static object? PersonSelectbyname(string? PFIRSTNAME, string? PLASTNAME)
+		{
+			throw new InvalidOperationException();
+		}
+
+		#endregion
+
+		#region PersonSelectlistbyname
+
+		[Sql.Function(Name="MANAGED.PERSON_SELECTLISTBYNAME", ServerSideOnly=true)]
+		public static object? PersonSelectlistbyname(string? PFIRSTNAME, string? PLASTNAME)
+		{
+			throw new InvalidOperationException();
+		}
+
+		#endregion
+
+		#region ScalarDatareader
+
+		[Sql.Function(Name="MANAGED.SCALAR_DATAREADER", ServerSideOnly=true)]
+		public static object? ScalarDatareader()
+		{
+			throw new InvalidOperationException();
+		}
+
+		#endregion
+
+		#region ScalarReturnparameter
+
+		[Sql.Function(Name="MANAGED.SCALAR_RETURNPARAMETER", ServerSideOnly=true)]
+		public static int? ScalarReturnparameter()
+		{
+			throw new InvalidOperationException();
+		}
+
+		#endregion
+
+		#region TestFunction
+
+		[Sql.Function(Name="MANAGED.TEST_FUNCTION", ServerSideOnly=true)]
+		public static decimal? TestFunction(decimal? I)
+		{
+			throw new InvalidOperationException();
 		}
 
 		#endregion
