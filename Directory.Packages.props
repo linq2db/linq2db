@@ -27,10 +27,8 @@
 		<PackageVersion Include="Microsoft.Data.SqlClient"                              Version="4.1.0"         />
 		<PackageVersion Include="System.Data.OleDb"                                     Version="6.0.0"         />
 		<PackageVersion Include="System.Data.Odbc"                                      Version="6.0.0"         />
-		<PackageVersion Include="Oracle.ManagedDataAccess"                              Version="21.5.0"        />
-		<!--3.21 provider currently contains bug which leads to test failure with oracle 12-->
-		<PackageVersion Include="Oracle.ManagedDataAccess.Core"                         Version="2.19.140"      />
-		<!--<PackageVersion Include="Oracle.ManagedDataAccess.Core"                         Version="3.21.50"       />-->
+		<PackageVersion Include="Oracle.ManagedDataAccess"                              Version="21.6.1"        />
+		<PackageVersion Include="Oracle.ManagedDataAccess.Core"                         Version="3.21.61"       />
 		<PackageVersion Include="FirebirdSql.Data.FirebirdClient"                       Version="9.0.1"         />
 		<PackageVersion Include="System.Data.SQLite.Core"                               Version="1.0.115.5"     />
 		<PackageVersion Include="IBM.Data.DB.Provider"                                  Version="11.5.5010.4"   />
@@ -41,19 +39,19 @@
 		<PackageVersion Include="Net.IBM.Data.Db2-lnx"                                  Version="6.0.0.200"     />
 		<PackageVersion Include="Net.IBM.Data.Db2-osx"                                  Version="6.0.0.200"     />
 		<PackageVersion Include="Npgsql"                                                Version="6.0.4"         />
-		<PackageVersion Include="Microsoft.Data.Sqlite"                                 Version="6.0.4"         />
+		<PackageVersion Include="Microsoft.Data.Sqlite"                                 Version="6.0.5"         />
 		<PackageVersion Include="Microsoft.SqlServer.Types"                             Version="14.0.1016.290" />
 		<!--tests support-->
 		<PackageVersion Include="NUnit"                                                 Version="3.13.3"        />
 		<PackageVersion Include="NUnit3TestAdapter"                                     Version="4.2.1"         />
-		<PackageVersion Include="Microsoft.NET.Test.Sdk"                                Version="17.1.0"        />
+		<PackageVersion Include="Microsoft.NET.Test.Sdk"                                Version="17.2.0"        />
 		<PackageVersion Include="FluentAssertions"                                      Version="6.6.0"         />
 		<PackageVersion Include="BenchmarkDotNet"                                       Version="0.13.1"        />
 		<PackageVersion Include="JetBrains.Profiler.Api"                                Version="1.1.8"         />
-		<PackageVersion Include="FSharp.Core"                                           Version="6.0.3"         />
+		<PackageVersion Include="FSharp.Core"                                           Version="6.0.4"         />
 		<!--packages for test projects-->
 		<PackageVersion Include="System.Collections.Immutable"                          Version="6.0.0"         />
-		<PackageVersion Include="System.Text.Json"                                      Version="6.0.3"         />
+		<PackageVersion Include="System.Text.Json"                                      Version="6.0.4"         />
 		<PackageVersion Include="MiniProfiler.Shared"                                   Version="4.2.22"        />
 		<PackageVersion Include="Microsoft.AspNet.OData"                                Version="7.5.14"        />
 		<PackageVersion Include="Microsoft.AspNetCore.OData"                            Version="8.0.4"         />
