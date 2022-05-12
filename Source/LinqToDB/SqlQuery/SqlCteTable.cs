@@ -4,34 +4,30 @@ using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
+	using System.Diagnostics.CodeAnalysis;
 	using Mapping;
 
 	public class SqlCteTable : SqlTable
 	{
-		public          CteClause? Cte  { get; private set; }
+		CteClause? _cte;
 
-		public override string?    Name
+		[DisallowNull]
+		public CteClause? Cte
 		{
-			get => Cte?.Name ?? base.Name;
-			set => base.Name = value;
+			get => _cte;
+			private set
+			{
+				_cte = value;
+				TableName = new (_cte.Name!);
+			}
 		}
-
-		public override SqlObjectName TableName
-		{
-			get => Cte?.Name != null ? new (Cte.Name) : base.TableName;
-			set => base.TableName = new(value.Name);
-		}
-
-		// required by Clone :-/
-		internal string?       BaseName      => base.Name;
-		internal SqlObjectName BaseTableName => base.TableName;
 
 		public SqlCteTable(
 			MappingSchema mappingSchema,
 			CteClause     cte)
 			: base(mappingSchema, cte.ObjectType, cte.Name)
 		{
-			Cte = cte ?? throw new ArgumentNullException(nameof(cte));
+			Cte = cte;
 
 			// CTE has it's own names even there is mapping
 			foreach (var field in Fields)
@@ -41,7 +37,7 @@ namespace LinqToDB.SqlQuery
 		internal SqlCteTable(int id, string alias, SqlField[] fields, CteClause cte)
 			: base(id, cte.Name, alias, new(cte.Name!), cte.ObjectType, null, fields, SqlTableType.Cte, null, TableOptions.NotSet, null)
 		{
-			Cte = cte ?? throw new ArgumentNullException(nameof(cte));
+			Cte = cte;
 		}
 
 		internal SqlCteTable(int id, string alias, SqlField[] fields)
@@ -51,9 +47,7 @@ namespace LinqToDB.SqlQuery
 
 		internal void SetDelayedCteObject(CteClause cte)
 		{
-			Cte        = cte ?? throw new ArgumentNullException(nameof(cte));
-			Name       = cte.Name;
-			TableName  = new (cte.Name!);
+			Cte        = cte;
 			ObjectType = cte.ObjectType;
 		}
 

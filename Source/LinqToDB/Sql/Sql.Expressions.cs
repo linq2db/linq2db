@@ -443,7 +443,7 @@ namespace LinqToDB
 
 				var sqlTable = (SqlTable)sqlField.Table!;
 
-				builder.ResultExpression = new SqlField(sqlTable, sqlTable.Name!);
+				builder.ResultExpression = new SqlField(sqlTable, sqlTable.TableName.Name);
 			}
 		}
 
@@ -459,7 +459,7 @@ namespace LinqToDB
 
 				var sqlTable = (SqlTable)sqlField.Table!;
 
-				builder.ResultExpression = new SqlField(sqlTable, sqlTable.Name!);
+				builder.ResultExpression = new SqlField(sqlTable, sqlTable.TableName.Name);
 			}
 		}
 

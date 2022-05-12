@@ -3290,13 +3290,13 @@ namespace LinqToDB.SqlProvider
 
 			if (identityField == null)
 				if (throwException)
-					throw new SqlException("Identity field must be defined for '{0}'.", table.Name);
+					throw new SqlException("Identity field must be defined for '{0}'.", table.NameForLogging);
 				else
 					return null;
 
 			if (table.ObjectType == null)
 				if (throwException)
-					throw new SqlException("Sequence name can not be retrieved for the '{0}' table.", table.Name);
+					throw new SqlException("Sequence name can not be retrieved for the '{0}' table.", table.NameForLogging);
 				else
 					return null;
 
@@ -3304,7 +3304,7 @@ namespace LinqToDB.SqlProvider
 
 			if (attrs.IsNullOrEmpty())
 				if (throwException)
-					throw new SqlException("Sequence name can not be retrieved for the '{0}' table.", table.Name);
+					throw new SqlException("Sequence name can not be retrieved for the '{0}' table.", table.NameForLogging);
 				else
 					return null;
 
@@ -3394,10 +3394,9 @@ namespace LinqToDB.SqlProvider
 							}
 
 							sb.Length = 0;
-							sb.AppendFormat(tbl.Name!, values);
+							sb.AppendFormat(tbl.Expression!, values);
 						}
-
-						if (tbl.SqlTableType == SqlTableType.Function)
+						else if (tbl.SqlTableType == SqlTableType.Function)
 						{
 							sb.Append('(');
 

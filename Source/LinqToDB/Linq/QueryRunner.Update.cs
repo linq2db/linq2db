@@ -74,8 +74,8 @@ namespace LinqToDB.Linq
 
 					throw new LinqException(
 						keys.Count == sqlTable.Fields.Count ?
-							$"There are no fields to update in the type '{sqlTable.Name}'. No PK is defined or all fields are keys." :
-							$"There are no fields to update in the type '{sqlTable.Name}'.");
+							$"There are no fields to update in the type '{sqlTable.NameForLogging}'. No PK is defined or all fields are keys." :
+							$"There are no fields to update in the type '{sqlTable.NameForLogging}'.");
 				}
 
 				foreach (var field in keys)

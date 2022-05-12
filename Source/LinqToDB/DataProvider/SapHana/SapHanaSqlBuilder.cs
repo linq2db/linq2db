@@ -38,7 +38,7 @@ namespace LinqToDB.DataProvider.SapHana
 				var table = insertClause.Into;
 
 				if (identityField == null || table == null)
-					throw new SqlException("Identity field must be defined for '{0}'.", insertClause.Into.Name);
+					throw new SqlException("Identity field must be defined for '{0}'.", insertClause.Into.NameForLogging);
 
 				StringBuilder.Append("SELECT CURRENT_IDENTITY_VALUE() FROM DUMMY");
 			}

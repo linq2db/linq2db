@@ -47,7 +47,7 @@ namespace LinqToDB.Linq
 				var keys = sqlTable.GetKeys(true).Cast<SqlField>().ToList();
 
 				if (keys.Count == 0)
-					throw new LinqException($"Table '{sqlTable.Name}' does not have primary key.");
+					throw new LinqException($"Table '{sqlTable.NameForLogging}' does not have primary key.");
 
 				foreach (var field in keys)
 				{

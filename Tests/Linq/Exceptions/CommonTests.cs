@@ -22,7 +22,7 @@ namespace Tests.Exceptions
 
 			protected override SqlStatement ProcessQuery(SqlStatement statement, EvaluationContext context)
 			{
-				if (statement.IsInsert() && statement.RequireInsertClause().Into!.Name == "Parent")
+				if (statement.IsInsert() && statement.RequireInsertClause().Into!.TableName.Name == "Parent")
 				{
 					var expr =
 						statement.RequireInsertClause().Find(static e =>
@@ -51,9 +51,9 @@ namespace Tests.Exceptions
 								{
 									var oldTable = (SqlTable)e;
 
-									if (oldTable.Name == "Parent")
+									if (oldTable.TableName.Name == "Parent")
 									{
-										var newTable = new SqlTable(oldTable) { Name = v.Context.tableName, TableName = new (v.Context.tableName) };
+										var newTable = new SqlTable(oldTable) { TableName = new (v.Context.tableName) };
 
 										foreach (var field in oldTable.Fields)
 											v.Context.dic.Add(field, newTable[field.Name] ?? throw new InvalidOperationException());

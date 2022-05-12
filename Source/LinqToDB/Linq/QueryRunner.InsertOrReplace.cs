@@ -80,7 +80,7 @@ namespace LinqToDB.Linq
 					}
 					else if (field.IsIdentity)
 					{
-						throw new LinqException("InsertOrReplace method does not support identity field '{0}.{1}'.", sqlTable.Name, field.Name);
+						throw new LinqException("InsertOrReplace method does not support identity field '{0}.{1}'.", sqlTable.NameForLogging, field.Name);
 					}
 				}
 
@@ -92,7 +92,7 @@ namespace LinqToDB.Linq
 					.Except(keys);
 
 				if (keys.Count == 0)
-					throw new LinqException("InsertOrReplace method requires the '{0}' table to have a primary key.", sqlTable.Name);
+					throw new LinqException("InsertOrReplace method requires the '{0}' table to have a primary key.", sqlTable.NameForLogging);
 
 				var q =
 				(
@@ -105,7 +105,7 @@ namespace LinqToDB.Linq
 
 				if (missedKey != null)
 					throw new LinqException("InsertOrReplace method requires the '{0}.{1}' field to be included in the insert setter.",
-						sqlTable.Name,
+						sqlTable.NameForLogging,
 						missedKey.Name);
 
 				var fieldCount = 0;
@@ -130,7 +130,7 @@ namespace LinqToDB.Linq
 				}
 
 				if (fieldCount == 0)
-					throw new LinqException("There are no fields to update in the type '{0}'.", sqlTable.Name);
+					throw new LinqException("There are no fields to update in the type '{0}'.", sqlTable.NameForLogging);
 
 				insertOrUpdateStatement.Update.Keys.AddRange(q.Select(i => i.i));
 

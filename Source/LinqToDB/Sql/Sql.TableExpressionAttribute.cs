@@ -47,14 +47,8 @@ namespace LinqToDB
 			public override void SetTable<TContext>(TContext context, ISqlBuilder sqlBuilder, MappingSchema mappingSchema, SqlTable table, MethodCallExpression methodCall, Func<TContext, Expression, ColumnDescriptor?, ISqlExpression> converter)
 			{
 				table.SqlTableType = SqlTableType.Expression;
-				table.TableName    = new SqlObjectName(
-					table.Name = Expression ?? methodCall.Method.Name,
-					Schema  : Schema        ?? table.TableName.Schema,
-					Database: Database      ?? table.TableName.Database,
-					Server  : Server        ?? table.TableName.Server,
-					Package : Package       ?? table.TableName.Package);
+				var expressionStr  = table.Expression = Expression ?? methodCall.Method.Name!;
 
-				var expressionStr = table.Name;
 				ExpressionAttribute.PrepareParameterValues(methodCall, ref expressionStr, false, out var knownExpressions, false, out var genericTypes);
 
 				if (string.IsNullOrEmpty(expressionStr))
@@ -63,6 +57,14 @@ namespace LinqToDB
 				// Add two fake expressions, TableName and Alias
 				knownExpressions.Insert(0, null);
 				knownExpressions.Insert(0, null);
+
+				if (Schema != null || Database != null || Server != null || Package != null)
+					table.TableName = new SqlObjectName(
+						table.TableName.Name,
+						Schema  : Schema   ?? table.TableName.Schema,
+						Database: Database ?? table.TableName.Database,
+						Server  : Server   ?? table.TableName.Server,
+						Package : Package  ?? table.TableName.Package);
 
 				table.TableArguments = ExpressionAttribute.PrepareArguments(context, expressionStr!, ArgIndices, false, knownExpressions, genericTypes, converter).Skip(2).ToArray();
 			}

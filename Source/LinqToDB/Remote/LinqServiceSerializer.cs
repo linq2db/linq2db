@@ -865,7 +865,7 @@ namespace LinqToDB.Remote
 							var elem = (SqlTable)e;
 
 							Append(elem.SourceID);
-							Append(elem.Name);
+							Append(elem.Expression);
 							Append(elem.Alias);
 							Append(elem.TableName);
 							Append(elem.ObjectType);
@@ -1716,7 +1716,7 @@ namespace LinqToDB.Remote
 					case QueryElementType.SqlTable :
 						{
 							var sourceID           = ReadInt();
-							var name               = ReadString();
+							var expression         = ReadString();
 							var alias              = ReadString()!;
 							var tableName          = ReadObjectName();
 							var objectType         = ReadType()!;
@@ -1745,7 +1745,7 @@ namespace LinqToDB.Remote
 							var tableOptions = (TableOptions)ReadInt();
 
 							obj = new SqlTable(
-								sourceID, name, alias, tableName, objectType, sequenceAttributes, flds,
+								sourceID, expression, alias, tableName, objectType, sequenceAttributes, flds,
 								sqlTableType, tableArgs, tableOptions, tableID);
 
 							break;

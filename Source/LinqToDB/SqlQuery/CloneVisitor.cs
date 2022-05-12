@@ -270,7 +270,6 @@ namespace LinqToDB.SqlQuery
 							Array<SqlField>.Empty,
 							Clone(cteTable.Cte))
 					{
-						Name         = cteTable.BaseName,
 						Alias        = cteTable.Alias,
 						TableName    = cteTable.TableName,
 						ObjectType   = cteTable.ObjectType,
@@ -663,7 +662,6 @@ namespace LinqToDB.SqlQuery
 
 					var newTable = new SqlTable(table.ObjectType, null, table.TableName)
 					{
-						Name               = table.Name,
 						Alias              = table.Alias,
 						SqlTableType       = table.SqlTableType,
 						SequenceAttributes = table.SequenceAttributes,
