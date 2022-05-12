@@ -9,17 +9,13 @@ namespace LinqToDB.SqlQuery
 
 	public class SqlCteTable : SqlTable
 	{
-		CteClause? _cte;
-
 		[DisallowNull]
-		public CteClause? Cte
+		public CteClause? Cte { get; set; }
+
+		public override SqlObjectName TableName
 		{
-			get => _cte;
-			private set
-			{
-				_cte = value;
-				TableName = new (_cte.Name!);
-			}
+			get => new SqlObjectName(Cte?.Name ?? string.Empty);
+			set { }
 		}
 
 		public SqlCteTable(
@@ -35,7 +31,7 @@ namespace LinqToDB.SqlQuery
 		}
 
 		internal SqlCteTable(int id, string alias, SqlField[] fields, CteClause cte)
-			: base(id, cte.Name, alias, new(cte.Name!), cte.ObjectType, null, fields, SqlTableType.Cte, null, TableOptions.NotSet, null)
+			: base(id, null, alias, new(string.Empty), cte.ObjectType, null, fields, SqlTableType.Cte, null, TableOptions.NotSet, null)
 		{
 			Cte = cte;
 		}

@@ -179,7 +179,7 @@ namespace LinqToDB.SqlQuery
 		}
 
 		public         string?           Alias          { get; set; }
-		public         SqlObjectName     TableName      { get; set; }
+		public virtual SqlObjectName     TableName      { get; set; }
 		public         Type              ObjectType     { get; protected internal set; }
 		public virtual SqlTableType      SqlTableType   { get; set; }
 		public         TableOptions      TableOptions   { get; set; }
