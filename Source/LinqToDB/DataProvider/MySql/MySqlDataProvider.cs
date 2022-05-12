@@ -118,20 +118,6 @@ namespace LinqToDB.DataProvider.MySql
 			base.SetParameterType(dataConnection, parameter, dataType);
 		}
 
-		public override DbCommand InitCommand(DataConnection dataConnection, DbCommand command, CommandType commandType, string commandText, DataParameter[]? parameters, bool withParameters)
-		{
-			// mysql.data does unnecerssary stuff with procedure names and breaks everything
-			// https://github.com/mysql/mysql-connector-net/blob/8.0/MySQL.Data/src/ProcedureCache.cs#L136
-			// this code needed only for calls of package procedures, but we cannot recognize it here
-			if (commandType == CommandType.StoredProcedure && !Adapter.IsPackageProceduresSupported)
-			{
-				commandText = $"CALL {commandText}({string.Join(",", (parameters ?? Array<DataParameter>.Empty).Select(x => '@' + x.Name))})";
-				commandType = CommandType.Text;
-			}
-
-			return base.InitCommand(dataConnection, command, commandType, commandText, parameters, withParameters);
-		}
-
 		#region BulkCopy
 
 		public override BulkCopyRowsCopied BulkCopy<T>(
