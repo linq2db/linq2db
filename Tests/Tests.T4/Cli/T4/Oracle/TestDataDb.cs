@@ -314,6 +314,13 @@ namespace Cli.T4.Oracle
 		}
 		#endregion
 
+		#region Addissue792Record
+		public static int Addissue792Record(this TestDataDB dataConnection)
+		{
+			return dataConnection.ExecuteProc("MANAGED.ADDISSUE792RECORD");
+		}
+		#endregion
+
 		#region Outrefenumtest
 		public static int Outrefenumtest(this TestDataDB dataConnection, string? pstr, out string? poutputstr, ref string? pinputoutputstr)
 		{
@@ -861,7 +868,7 @@ namespace Cli.T4.Oracle
 
 		#region Associations
 		/// <summary>
-		/// SYS_C00903359 backreference
+		/// SYS_C00903690 backreference
 		/// </summary>
 		[Association(ThisKey = nameof(UserId), OtherKey = nameof(TTestUserContract.UserId))]
 		public IEnumerable<TTestUserContract> Syscs { get; set; } = null!;
@@ -878,7 +885,7 @@ namespace Cli.T4.Oracle
 
 		#region Associations
 		/// <summary>
-		/// SYS_C00903359
+		/// SYS_C00903690
 		/// </summary>
 		[Association(CanBeNull = false, ThisKey = nameof(UserId), OtherKey = nameof(TTestUser.UserId))]
 		public TTestUser User { get; set; } = null!;

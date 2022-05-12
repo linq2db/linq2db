@@ -22,7 +22,7 @@ namespace Cli.Default.Oracle
 
 		#region Associations
 		/// <summary>
-		/// SYS_C00903359
+		/// SYS_C00903690
 		/// </summary>
 		[Association(CanBeNull = false, ThisKey = nameof(UserId), OtherKey = nameof(TTestUser.UserId))]
 		public TTestUser User { get; set; } = null!;

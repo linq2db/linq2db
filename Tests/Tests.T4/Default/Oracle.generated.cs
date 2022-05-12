@@ -536,7 +536,7 @@ namespace Default.Oracle
 		#region Associations
 
 		/// <summary>
-		/// SYS_C00903359_BackReference (MANAGED.t_test_user_contract)
+		/// SYS_C00903690_BackReference (MANAGED.t_test_user_contract)
 		/// </summary>
 		[Association(ThisKey="UserId", OtherKey="UserId", CanBeNull=true)]
 		public IEnumerable<TTestUserContract> Syscs { get; set; } = null!;
@@ -555,7 +555,7 @@ namespace Default.Oracle
 		#region Associations
 
 		/// <summary>
-		/// SYS_C00903359 (MANAGED.t_test_user)
+		/// SYS_C00903690 (MANAGED.t_test_user)
 		/// </summary>
 		[Association(ThisKey="UserId", OtherKey="UserId", CanBeNull=false)]
 		public TTestUser User { get; set; } = null!;
@@ -613,6 +613,15 @@ namespace Default.Oracle
 			O = Converter.ChangeTypeTo<decimal?>(parameters[1].Value);
 
 			return ret;
+		}
+
+		#endregion
+
+		#region ADDISSUE792RECORD
+
+		public static int ADDISSUE792RECORD(this TestDataDB dataConnection)
+		{
+			return dataConnection.ExecuteProc("MANAGED.ADDISSUE792RECORD");
 		}
 
 		#endregion
