@@ -1958,8 +1958,8 @@ namespace LinqToDB.SqlProvider
 			switch (join.JoinType)
 			{
 				case JoinType.Inner when SqlProviderFlags.IsCrossJoinSupported && condition.Conditions.IsNullOrEmpty() :
-					                       StringBuilder.Append("CROSS JOIN ");  return false;
-				case JoinType.Inner      : StringBuilder.Append("INNER JOIN ");  return true;
+					                      StringBuilder.Append("CROSS JOIN ");  return false;
+				case JoinType.Inner     : StringBuilder.Append("INNER JOIN ");  return true;
 				case JoinType.Left      : StringBuilder.Append("LEFT JOIN ");   return true;
 				case JoinType.CrossApply: StringBuilder.Append("CROSS APPLY "); return false;
 				case JoinType.OuterApply: StringBuilder.Append("OUTER APPLY "); return false;

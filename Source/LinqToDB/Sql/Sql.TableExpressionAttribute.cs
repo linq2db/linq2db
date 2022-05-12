@@ -48,11 +48,11 @@ namespace LinqToDB
 			{
 				table.SqlTableType = SqlTableType.Expression;
 				table.TableName    = new SqlObjectName(
-					Expression            ?? methodCall.Method.Name,
-					Schema  : Schema      ?? table.TableName.Schema,
-					Database: Database    ?? table.TableName.Database,
-					Server  : Server      ?? table.TableName.Server,
-					Package : Package     ?? table.TableName.Package);
+					table.Name = Expression ?? methodCall.Method.Name,
+					Schema  : Schema        ?? table.TableName.Schema,
+					Database: Database      ?? table.TableName.Database,
+					Server  : Server        ?? table.TableName.Server,
+					Package : Package       ?? table.TableName.Package);
 
 				var expressionStr = table.Name;
 				ExpressionAttribute.PrepareParameterValues(methodCall, ref expressionStr, false, out var knownExpressions, false, out var genericTypes);

@@ -17,6 +17,9 @@ namespace LinqToDB.DataProvider.Oracle
 		private readonly OracleDataProvider _provider;
 		private int _majorVersion;
 
+		// both managed and native providers will execute procedure
+		protected override bool GetProcedureSchemaExecutesProcedure => true;
+
 		protected string? SchemasFilter { get; private set; }
 
 		public OracleSchemaProvider(OracleDataProvider provider)
