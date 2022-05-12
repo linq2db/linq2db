@@ -179,7 +179,10 @@ namespace LinqToDB.DataProvider.SqlServer
 		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions)
 		{
 			var databaseName = name.Database;
-			if (name.Name.StartsWith("#") || tableOptions.IsTemporaryOptionSet())
+
+			// remove database name, which could be inherited from non-temporary table mapping
+			// except explicit use of tempdb, needed in some cases at least for sql server 2014
+			if ((name.Name.StartsWith("#") || tableOptions.IsTemporaryOptionSet()) && databaseName != "tempdb")
 				databaseName = null;
 
 			if (name.Server != null && (databaseName == null || name.Schema == null))
@@ -281,7 +284,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			{
 				var defaultDatabaseName =
 					table.TableName.Name.StartsWith("#") || table.TableOptions.IsTemporaryOptionSet() ?
-						"[tempdb]" : null;
+						"tempdb" : null;
 
 				StringBuilder.Append("IF (OBJECT_ID(N'");
 				BuildPhysicalTable(table, alias: null, defaultDatabaseName: defaultDatabaseName);
@@ -400,7 +403,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 				var defaultDatabaseName =
 					table.TableName.Name.StartsWith("#") || table.TableOptions.IsTemporaryOptionSet() ?
-						"[tempdb]" : null;
+						"tempdb" : null;
 
 				StringBuilder.Append("IF (OBJECT_ID(N'");
 				BuildPhysicalTable(table, null, defaultDatabaseName : defaultDatabaseName);
