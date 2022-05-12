@@ -369,12 +369,12 @@ namespace LinqToDB.Data
 				{
 					WriteTraceLineConnection = dbExtension.WriteTrace;
 				}
+			}
 
-				if (coreExtension?.Interceptors != null)
-				{
-					foreach (var interceptor in coreExtension.Interceptors)
-						AddInterceptor(interceptor);
-				}
+			if (coreExtension?.Interceptors != null)
+			{
+				foreach (var interceptor in coreExtension.Interceptors)
+					AddInterceptor(interceptor);
 			}
 
 			if (localConnection != null)
