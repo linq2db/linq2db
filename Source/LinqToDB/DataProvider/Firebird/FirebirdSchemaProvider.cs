@@ -129,43 +129,49 @@ namespace LinqToDB.DataProvider.Firebird
 			string sql;
 			if (_majorVersion >= 3)
 			{
-				sql = @"SELECT
-	RDB$PACKAGE_NAME                                        AS PackageName,
-	RDB$PROCEDURE_NAME                                      AS ProcedureName,
-	RDB$DESCRIPTION                                         AS Description,
-	RDB$PROCEDURE_SOURCE                                    AS Source,
-	CASE WHEN RDB$PROCEDURE_TYPE = 1 THEN 'TF' ELSE 'P' END AS Type
-FROM RDB$PROCEDURES
-WHERE RDB$SYSTEM_FLAG = 0 AND (RDB$PRIVATE_FLAG IS NULL OR RDB$PRIVATE_FLAG = 0) AND RDB$PROCEDURE_TYPE IS NOT NULL
-UNION ALL
-SELECT 
-	RDB$PACKAGE_NAME,
-	RDB$FUNCTION_NAME,
-	RDB$DESCRIPTION,
-	RDB$FUNCTION_SOURCE,
-	'F'
-FROM RDB$FUNCTIONS
-WHERE RDB$SYSTEM_FLAG = 0  AND (RDB$PRIVATE_FLAG IS NULL OR RDB$PRIVATE_FLAG = 0)";
+				sql = @"
+SELECT * FROM (
+	SELECT
+		RDB$PACKAGE_NAME                                        AS PackageName,
+		RDB$PROCEDURE_NAME                                      AS ProcedureName,
+		RDB$DESCRIPTION                                         AS Description,
+		RDB$PROCEDURE_SOURCE                                    AS Source,
+		CASE WHEN RDB$PROCEDURE_TYPE = 1 THEN 'TF' ELSE 'P' END AS Type
+	FROM RDB$PROCEDURES
+	WHERE RDB$SYSTEM_FLAG = 0 AND (RDB$PRIVATE_FLAG IS NULL OR RDB$PRIVATE_FLAG = 0) AND RDB$PROCEDURE_TYPE IS NOT NULL
+	UNION ALL
+	SELECT 
+		RDB$PACKAGE_NAME,
+		RDB$FUNCTION_NAME,
+		RDB$DESCRIPTION,
+		RDB$FUNCTION_SOURCE,
+		'F'
+	FROM RDB$FUNCTIONS
+	WHERE RDB$SYSTEM_FLAG = 0  AND (RDB$PRIVATE_FLAG IS NULL OR RDB$PRIVATE_FLAG = 0)
+) ORDER BY PackageName, ProcedureName";
 			}
 			else
 			{
-				sql = @"SELECT
-	NULL                                                    AS PackageName,
-	RDB$PROCEDURE_NAME                                      AS ProcedureName,
-	RDB$DESCRIPTION                                         AS Description,
-	RDB$PROCEDURE_SOURCE                                    AS Source,
-	CASE WHEN RDB$PROCEDURE_TYPE = 1 THEN 'TF' ELSE 'P' END AS Type
-FROM RDB$PROCEDURES
-WHERE RDB$SYSTEM_FLAG = 0 AND RDB$PROCEDURE_TYPE IS NOT NULL
-UNION ALL
-SELECT 
-	NULL,
-	RDB$FUNCTION_NAME,
-	RDB$DESCRIPTION,
-	NULL,
-	'F'
-FROM RDB$FUNCTIONS
-WHERE RDB$SYSTEM_FLAG = 0";
+				sql = @"
+SELECT * FROM (
+	SELECT
+		NULL                                                    AS PackageName,
+		RDB$PROCEDURE_NAME                                      AS ProcedureName,
+		RDB$DESCRIPTION                                         AS Description,
+		RDB$PROCEDURE_SOURCE                                    AS Source,
+		CASE WHEN RDB$PROCEDURE_TYPE = 1 THEN 'TF' ELSE 'P' END AS Type
+	FROM RDB$PROCEDURES
+	WHERE RDB$SYSTEM_FLAG = 0 AND RDB$PROCEDURE_TYPE IS NOT NULL
+	UNION ALL
+	SELECT 
+		NULL,
+		RDB$FUNCTION_NAME,
+		RDB$DESCRIPTION,
+		NULL,
+		'F'
+	FROM RDB$FUNCTIONS
+	WHERE RDB$SYSTEM_FLAG = 0
+) ORDER BY ProcedureName";
 			}
 
 			return dataConnection.Query(rd =>

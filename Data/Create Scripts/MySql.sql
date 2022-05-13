@@ -810,10 +810,6 @@ GO
 
 set session sql_mode=default
 GO
-set global sql_mode=default
-GO
-SET @@global.sql_mode=(SELECT REPLACE(@@global.sql_mode, 'ONLY_FULL_GROUP_BY', ''))
-GO
 
 -- SKIP MySql55Connector END
 -- SKIP MySql55 END
