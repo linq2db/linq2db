@@ -30,7 +30,7 @@ GRANT SELECT ON sys.dba_users TO testuser;
 EXIT;
 EOL
 
-docker cp setup.sql oracle:/setup.sql
-docker exec oracle sqlplus / as sysdba @/setup.sql
+#docker cp setup.sql oracle:/setup.sql
+#docker exec oracle sqlplus / as sysdba @/setup.sql
 
 docker logs oracle
