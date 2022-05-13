@@ -183,7 +183,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			// remove database name, which could be inherited from non-temporary table mapping
 			// except explicit use of tempdb, needed in some cases at least for sql server 2014
 			if ((name.Name.StartsWith("#") || tableOptions.IsTemporaryOptionSet()) && databaseName != "tempdb")
-				databaseName = null;
+				databaseName = "tempdb";
 
 			if (name.Server != null && (databaseName == null || name.Schema == null))
 				// all components required for linked-server syntax by SQL server

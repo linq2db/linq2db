@@ -20,4 +20,17 @@ until docker logs oracle | grep -q 'DATABASE IS READY TO USE!'; do
     fi;
 done
 
+cat <<-EOL > setup.sql
+alter session set "_ORACLE_SCRIPT"=true;
+alter session set container=orclpdb1;
+create user test identified by test;
+grant unlimited  tablespace to test;
+grant all privileges to test identified by test;
+GRANT SELECT ON sys.dba_users TO test;
+EXIT;
+EOL
+
+docker cp setup.sql oracle:/setup.sql
+docker exec oracle sqlplus / as sysdba @/setup.sql
+
 docker logs oracle

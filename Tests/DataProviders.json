@@ -328,8 +328,8 @@
 
 			"Sybase.Managed": { "Provider": "AdoNetCore.AseClient", "ConnectionString": "Data Source=127.0.0.1;Port=5000;Database=TestDataCore;Uid=sa;Password=myPassword;ConnectionTimeout=300;EnableBulkLoad=1;MinPoolSize=100;MaxPoolSize=200;AnsiNull=1;" },
 
-			"Oracle.Managed"   : { "Provider": "Oracle.ManagedDataAccess.Client", "ConnectionString": "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=localhost)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=ORC12)));User Id=system;Password=oracle;" },
-			"Oracle.11.Managed": { "Provider": "Oracle.ManagedDataAccess.Client", "ConnectionString": "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=localhost)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=XE)));User Id=system;Password=oracle;"    },
+			"Oracle.Managed"   : { "Provider": "Oracle.ManagedDataAccess.Client", "ConnectionString": "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=localhost)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=ORC12)));User Id=test;Password=test;" },
+			"Oracle.11.Managed": { "Provider": "Oracle.ManagedDataAccess.Client", "ConnectionString": "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=localhost)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=XE)));User Id=test;Password=test;"    },
 
 			"Informix"    : { "Provider": "Informix", "ConnectionString": "Server=localhost:9089;Database=testdb;userid=informix;password=in4mix" },
 			"Informix.DB2": { "ConnectionString": "Server=localhost:9089;Database=testdb;userid=informix;password=in4mix"                         },
