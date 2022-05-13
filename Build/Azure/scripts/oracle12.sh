@@ -23,10 +23,10 @@ done
 cat <<-EOL > setup.sql
 alter session set "_ORACLE_SCRIPT"=true;
 alter session set container=orclpdb1;
-create user test identified by test;
-grant unlimited  tablespace to test;
-grant all privileges to test identified by test;
-GRANT SELECT ON sys.dba_users TO test;
+create user testuser identified by testuser;
+grant unlimited  tablespace to testuser;
+grant all privileges to testuser identified by testuser;
+GRANT SELECT ON sys.dba_users TO testuser;
 EXIT;
 EOL
 
