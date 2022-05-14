@@ -530,7 +530,6 @@ namespace LinqToDB.Mapping
 			var objParam   = Expression.Parameter(MemberAccessor.TypeAccessor.Type, "obj");
 			var getterExpr = MemberAccessor.GetterExpression.GetBody(objParam);
 
-
 			_getOriginalValueLambda = Expression.Lambda(getterExpr, objParam);
 			return _getOriginalValueLambda;
 		}
