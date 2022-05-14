@@ -668,7 +668,7 @@ namespace LinqToDB
 			{
 				var str = builder.GetExpression("str");
 
-				var whiteSpaces = $"%[^{WHITESPACES}]%";
+				const string whiteSpaces = $"%[^{WHITESPACES}]%";
 				var condition = new SqlCondition(
 					false,
 					new SqlPredicate.NotExpr(
