@@ -5,6 +5,7 @@ using System.Text;
 namespace LinqToDB.Linq
 {
 	using Extensions;
+	using LinqToDB.SqlQuery;
 	using Reflection;
 
 	class Table<T> : ExpressionQuery<T>, ITable<T>, ITableMutable<T>, ITable
@@ -31,10 +32,7 @@ namespace LinqToDB.Linq
 
 			var ed = dataContext.MappingSchema.GetEntityDescriptor(typeof(T));
 
-			_serverName   = ed.ServerName;
-			_databaseName = ed.DatabaseName;
-			_schemaName   = ed.SchemaName;
-			_tableName    = ed.TableName;
+			_name         = ed.Name;
 			_tableOptions = ed.TableOptions;
 		}
 
@@ -47,56 +45,55 @@ namespace LinqToDB.Linq
 		static MethodInfo? _tableIDMethodInfo;
 		// ReSharper restore StaticMemberInGenericType
 
-		private string? _serverName;
+		private SqlObjectName _name;
+
 		public  string?  ServerName
 		{
-			get => _serverName;
+			get => _name.Server;
 			set
 			{
-				if (_serverName != value)
+				if (_name.Server != value)
 				{
 					Expression = Expression.Call(
 						null,
 						_serverNameMethodInfo ??= Methods.LinqToDB.Table.ServerName.MakeGenericMethod(typeof(T)),
 						Expression, Expression.Constant(value));
 
-					_serverName = value;
+					_name = _name with { Server = value };
 				}
 			}
 		}
 
-		private string? _databaseName;
 		public  string?  DatabaseName
 		{
-			get => _databaseName;
+			get => _name.Database;
 			set
 			{
-				if (_databaseName != value)
+				if (_name.Database != value)
 				{
 					Expression = Expression.Call(
 						null,
 						_databaseNameMethodInfo ??= Methods.LinqToDB.Table.DatabaseName.MakeGenericMethod(typeof(T)),
 						Expression, Expression.Constant(value));
 
-					_databaseName = value;
+					_name = _name with { Database = value };
 				}
 			}
 		}
 
-		private string? _schemaName;
 		public  string?  SchemaName
 		{
-			get => _schemaName;
+			get => _name.Schema;
 			set
 			{
-				if (_schemaName != value)
+				if (_name.Schema != value)
 				{
 					Expression = Expression.Call(
 						null,
 						_schemaNameMethodInfo ??= Methods.LinqToDB.Table.SchemaName.MakeGenericMethod(typeof(T)),
 						Expression, Expression.Constant(value));
 
-					_schemaName = value;
+					_name = _name with { Schema = value };
 				}
 			}
 		}
@@ -119,20 +116,19 @@ namespace LinqToDB.Linq
 			}
 		}
 
-		private string _tableName = null!;
 		public  string  TableName
 		{
-			get => _tableName;
+			get => _name.Name;
 			set
 			{
-				if (_tableName != value)
+				if (_name.Name != value)
 				{
 					Expression = Expression.Call(
 						null,
 						_tableNameMethodInfo ??= Methods.LinqToDB.Table.TableName.MakeGenericMethod(typeof(T)),
 						Expression, Expression.Constant(value));
 
-					_tableName = value;
+					_name = _name with { Name = value };
 				}
 			}
 		}

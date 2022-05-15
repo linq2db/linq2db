@@ -12,6 +12,7 @@ using LinqToDB.Configuration;
 using LinqToDB.Data;
 using LinqToDB.Expressions;
 using LinqToDB.Mapping;
+using LinqToDB.Tools.Comparers;
 
 namespace LinqToDB.CodeModel
 {
@@ -26,8 +27,9 @@ namespace LinqToDB.CodeModel
 
 		public static class System
 		{
-			private static readonly IType _func1 = Parser.Parse(typeof(Func<,>));
-			private static readonly IType _func2 = Parser.Parse(typeof(Func<,,>));
+			private static readonly IType _func1       = Parser.Parse(typeof(Func<,>));
+			private static readonly IType _func2       = Parser.Parse(typeof(Func<,,>));
+			private static readonly IType _iequatableT = Parser.Parse(typeof(IEquatable<>));
 
 			/// <summary>
 			/// <see cref="bool"/> type descriptor.
@@ -77,6 +79,38 @@ namespace LinqToDB.CodeModel
 			/// <param name="arg1">Second argument type.</param>
 			/// <returns>Type descriptor.</returns>
 			public static IType Func(IType returnType, IType arg0, IType arg1) => _func2.WithTypeArguments(arg0, arg1, returnType);
+
+			/// <summary>
+			/// Returns <see cref="IEquatable{T}"/> type descriptor.
+			/// </summary>
+			/// <param name="type">Compared type.</param>
+			/// <returns>Type descriptor.</returns>
+			public static IType IEquatable(IType type) => _iequatableT.WithTypeArguments(type);
+
+			/// <summary>
+			/// <see cref="IEquatable{T}.Equals(T)"/> method reference.
+			/// </summary>
+			public static CodeIdentifier IEquatable_Equals  { get; } = new CodeIdentifier(nameof(IEquatable<int>.Equals), true);
+
+			/// <summary>
+			/// <see cref="IEquatable{T}.Equals(T)"/> parameter name.
+			/// </summary>
+			public static CodeIdentifier IEquatable_Equals_Parameter { get; } = new CodeIdentifier("other", true);
+
+			/// <summary>
+			/// <see cref="object.GetHashCode()"/> method reference.
+			/// </summary>
+			public static CodeIdentifier Object_GetHashCode { get; } = new CodeIdentifier(nameof(global::System.Object.GetHashCode), true);
+
+			/// <summary>
+			/// <see cref="object.Equals(object)"/> method reference.
+			/// </summary>
+			public static CodeIdentifier Object_Equals      { get; } = new CodeIdentifier(nameof(global::System.Object.Equals), true);
+
+			/// <summary>
+			/// <see cref="object.Equals(object)"/> parameter name.
+			/// </summary>
+			public static CodeIdentifier Object_Equals_Parameter { get; } = new CodeIdentifier("obj", true);
 
 			public class Reflection
 			{
@@ -221,8 +255,9 @@ namespace LinqToDB.CodeModel
 			{
 				public static class Generic
 				{
-					private static readonly IType _ienumerableT = Parser.Parse(typeof(IEnumerable<>));
-					private static readonly IType _listT        = Parser.Parse(typeof(List<>));
+					private static readonly IType _ienumerableT       = Parser.Parse(typeof(IEnumerable<>));
+					private static readonly IType _listT              = Parser.Parse(typeof(List<>));
+					private static readonly IType _iequalityComparerT = Parser.Parse(typeof(IEqualityComparer<>));
 
 					/// <summary>
 					/// Returns <see cref="IEnumerable{T}"/> type descriptor.
@@ -236,6 +271,23 @@ namespace LinqToDB.CodeModel
 					/// <param name="elementType">Element type.</param>
 					/// <returns>Type descriptor.</returns>
 					public static IType List(IType elementType) => _listT.WithTypeArguments(elementType);
+
+					/// <summary>
+					/// Returns <see cref="IEqualityComparer{T}"/> type descriptor.
+					/// </summary>
+					/// <param name="type">Compared type.</param>
+					/// <returns>Type descriptor.</returns>
+					public static IType IEqualityComparer(IType type) => _iequalityComparerT.WithTypeArguments(type);
+
+					/// <summary>
+					/// <see cref="IEqualityComparer{T}.GetHashCode(T)"/> method reference.
+					/// </summary>
+					public static CodeIdentifier IEqualityComparer_GetHashCode { get; } = new CodeIdentifier(nameof(IEqualityComparer<int>.GetHashCode), true);
+
+					/// <summary>
+					/// <see cref="IEqualityComparer{T}.Equals(T, T)"/> method reference.
+					/// </summary>
+					public static CodeIdentifier IEqualityComparer_Equals { get; } = new CodeIdentifier(nameof(IEqualityComparer<int>.Equals), true);
 				}
 			}
 
@@ -373,6 +425,10 @@ namespace LinqToDB.CodeModel
 			/// <see cref="Sql.TableFunctionAttribute.Server"/> property reference.
 			/// </summary>
 			public static CodeIdentifier Sql_TableFunctionAttribute_Server        { get; } = new CodeIdentifier(nameof(Sql.TableFunctionAttribute.Server), true);
+			/// <summary>
+			/// <see cref="Sql.TableFunctionAttribute.Package"/> property reference.
+			/// </summary>
+			public static CodeIdentifier Sql_TableFunctionAttribute_Package       { get; } = new CodeIdentifier(nameof(Sql.TableFunctionAttribute.Package), true);
 			/// <summary>
 			/// <see cref="Sql.TableFunctionAttribute.Configuration"/> property reference.
 			/// </summary>
@@ -687,6 +743,21 @@ namespace LinqToDB.CodeModel
 				/// <see cref="DataParameter.Value"/> property reference.
 				/// </summary>
 				public static CodeReference DataParameter_Value     { get; } = PropertyOrField((DataParameter dp) => dp.Value, true);
+			}
+
+			public static class Tools
+			{
+				public static class Comparers
+				{
+					/// <summary>
+					/// <see cref="global::LinqToDB.Tools.Comparers.ComparerBuilder"/> type descriptor.
+					/// </summary>
+					public static IType ComparerBuilder { get; } = Parser.Parse(typeof(ComparerBuilder));
+					/// <summary>
+					/// <see cref="ComparerBuilder.GetEqualityComparer{T}(Expression{Func{T, object?}}[])"/> method reference.
+					/// </summary>
+					public static CodeIdentifier ComparerBuilder_GetEqualityComparer { get; } = new CodeIdentifier(nameof(global::LinqToDB.Tools.Comparers.ComparerBuilder.GetEqualityComparer), true);
+				}
 			}
 		}
 

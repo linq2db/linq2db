@@ -4,28 +4,29 @@ using System.Diagnostics;
 using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
+using System.Collections.Generic;
+using System.Data;
+using System.Globalization;
+using System.Linq.Expressions;
+using System.Numerics;
+using System.Reflection;
+using System.Threading.Tasks;
 
 using FirebirdSql.Data.FirebirdClient;
+using FirebirdSql.Data.Types;
 
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.Firebird;
 using LinqToDB.Mapping;
+using LinqToDB.Linq;
+using LinqToDB.SchemaProvider;
 
 using NUnit.Framework;
 
 namespace Tests.DataProvider
 {
-	using System.Collections.Generic;
-	using System.Data;
-	using System.Globalization;
-	using System.Linq.Expressions;
-	using System.Numerics;
-	using System.Threading.Tasks;
-	using FirebirdSql.Data.Types;
-	using LinqToDB.Linq;
-	using LinqToDB.SchemaProvider;
 	using Model;
 
 	[TestFixture]
@@ -835,11 +836,11 @@ namespace Tests.DataProvider
 				Assert.IsNotNull(proc.ResultTable);
 				Assert.AreEqual(5, proc.ResultTable!.Columns.Count);
 
-				AssertParameter("DECFLOAT16" , "decfloat"                , DataType.DecFloat      , typeof(FbDecFloat)     , 16  , "FbDecFloat"     );
-				AssertParameter("DECFLOAT34" , "decfloat"                , DataType.DecFloat      , typeof(FbDecFloat)     , 34  , "FbDecFloat"     );
-				AssertParameter("TSTZ"       , "timestamp with time zone", DataType.DateTimeOffset, typeof(FbZonedDateTime), null, "FbZonedDateTime");
-				AssertParameter("TTZ"        , "time with time zone"     , DataType.TimeTZ        , typeof(FbZonedTime)    , null, "FbZonedTime"    );
-				AssertParameter("INT_128"    , "int128"                  , DataType.Int128        , typeof(BigInteger)     , null, null             );
+				AssertParameter("DECFLOAT16" , "DECFLOAT"                , DataType.DecFloat      , typeof(FbDecFloat)     , 16  , "FbDecFloat"     );
+				AssertParameter("DECFLOAT34" , "DECFLOAT"                , DataType.DecFloat      , typeof(FbDecFloat)     , 34  , "FbDecFloat"     );
+				AssertParameter("TSTZ"       , "TIMESTAMP WITH TIME ZONE", DataType.DateTimeOffset, typeof(FbZonedDateTime), null, "FbZonedDateTime");
+				AssertParameter("TTZ"        , "TIME WITH TIME ZONE"     , DataType.TimeTZ        , typeof(FbZonedTime)    , null, "FbZonedTime"    );
+				AssertParameter("INT_128"    , "INT128"                  , DataType.Int128        , typeof(BigInteger)     , null, null             );
 
 				AssertColumn("COL_DECFLOAT16" , "decfloat"                , DataType.DecFloat      , typeof(FbDecFloat)     , 16  , "FbDecFloat"     );
 				AssertColumn("COL_DECFLOAT34" , "decfloat"                , DataType.DecFloat      , typeof(FbDecFloat)     , null, "FbDecFloat"     );
@@ -1040,6 +1041,81 @@ namespace Tests.DataProvider
 				Assert.AreEqual(decfloat34, res[0].COL_DECFLOAT34);
 				Assert.AreEqual(int128    , res[0].COL_INT_128);
 			}
+		}
+
+		[Test]
+		public void TestModule([IncludeDataSources(false, TestProvName.AllFirebird3Plus)] string context)
+		{
+			using (var db = GetDataConnection(context))
+			{
+				var parameters = new []
+				{
+					new DataParameter("I", 1, DataType.Int32),
+					new DataParameter("O", null, DataType.Int32)
+					{
+						Direction = ParameterDirection.Output
+					}
+				};
+
+				db.ExecuteProc("TEST_PROCEDURE", parameters);
+				Assert.AreEqual(4, parameters[1].Value);
+				db.ExecuteProc("TEST_PACKAGE1.TEST_PROCEDURE", parameters);
+				Assert.AreEqual(2, parameters[1].Value);
+				db.ExecuteProc("TEST_PACKAGE2.TEST_PROCEDURE", parameters);
+				Assert.AreEqual(3, parameters[1].Value);
+
+				Assert.AreEqual(4, db.Person.Select(p => FirebirdModuleFunctions.TestFunction(1)).First());
+				Assert.AreEqual(2, db.Person.Select(p => FirebirdModuleFunctions.TestFunctionP1(1)).First());
+				Assert.AreEqual(3, db.Person.Select(p => FirebirdModuleFunctions.TestFunctionP2(1)).First());
+
+				Assert.AreEqual(4, FirebirdModuleFunctions.TestTableFunction(db, 1).Select(r => r.O).First());
+				Assert.AreEqual(2, FirebirdModuleFunctions.TestTableFunctionP1(db, 1).Select(r => r.O).First());
+				Assert.AreEqual(3, FirebirdModuleFunctions.TestTableFunctionP2(db, 1).Select(r => r.O).First());
+			}
+		}
+	}
+
+	static class FirebirdModuleFunctions
+	{
+		[Sql.Function("TEST_FUNCTION", ServerSideOnly = true)]
+		public static int TestFunction(int param)
+		{
+			throw new InvalidOperationException("Scalar function cannot be called outside of query");
+		}
+
+		[Sql.Function("TEST_PACKAGE1.TEST_FUNCTION", ServerSideOnly = true)]
+		public static int TestFunctionP1(int param)
+		{
+			throw new InvalidOperationException("Scalar function cannot be called outside of query");
+		}
+
+		[Sql.Function("TEST_PACKAGE2.TEST_FUNCTION", ServerSideOnly = true)]
+		public static int TestFunctionP2(int param)
+		{
+			throw new InvalidOperationException("Scalar function cannot be called outside of query");
+		}
+
+		[Sql.TableFunction("TEST_TABLE_FUNCTION", argIndices: new[] { 1 })]
+		public static LinqToDB.ITable<Record> TestTableFunction(IDataContext db, int param1)
+		{
+			return db.GetTable<Record>(null, (MethodInfo)MethodBase.GetCurrentMethod()!, db, param1);
+		}
+
+		[Sql.TableFunction("TEST_TABLE_FUNCTION", argIndices: new[] { 1 }, Package = "TEST_PACKAGE1")]
+		public static LinqToDB.ITable<Record> TestTableFunctionP1(IDataContext db, int param1)
+		{
+			return db.GetTable<Record>(null, (MethodInfo)MethodBase.GetCurrentMethod()!, db, param1);
+		}
+
+		[Sql.TableFunction("TEST_TABLE_FUNCTION", argIndices: new[] { 1 }, Package = "TEST_PACKAGE2")]
+		public static LinqToDB.ITable<Record> TestTableFunctionP2(IDataContext db, int param1)
+		{
+			return db.GetTable<Record>(null, (MethodInfo)MethodBase.GetCurrentMethod()!, db, param1);
+		}
+
+		public class Record
+		{
+			public int O { get; set; }
 		}
 	}
 

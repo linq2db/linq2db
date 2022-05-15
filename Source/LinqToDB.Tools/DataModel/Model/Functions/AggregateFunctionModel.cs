@@ -1,6 +1,7 @@
 ﻿using LinqToDB.Metadata;
 using LinqToDB.Schema;
 using LinqToDB.CodeModel;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataModel
 {
@@ -9,7 +10,7 @@ namespace LinqToDB.DataModel
 	/// </summary>
 	public sealed class AggregateFunctionModel : ScalarFunctionModelBase
 	{
-		public AggregateFunctionModel(ObjectName name, MethodModel method, FunctionMetadata metadata, IType returnType)
+		public AggregateFunctionModel(SqlObjectName name, MethodModel method, FunctionMetadata metadata, IType returnType)
 			: base(name, method, metadata)
 		{
 			ReturnType = returnType;

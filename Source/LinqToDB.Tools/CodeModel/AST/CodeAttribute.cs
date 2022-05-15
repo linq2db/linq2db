@@ -3,16 +3,17 @@ using LinqToDB.Common;
 
 namespace LinqToDB.CodeModel
 {
-	
 	/// <summary>
 	/// Custom attribute declaration.
 	/// </summary>
 	public sealed class CodeAttribute : ITopLevelElement
 	{
+		public record CodeNamedParameter(CodeIdentifier Property, ICodeExpression Value);
+
 		private readonly List<ICodeExpression>    _parameters;
 		private readonly List<CodeNamedParameter> _namedParameters;
 
-		internal CodeAttribute(
+		public CodeAttribute(
 			CodeTypeToken                    type,
 			IEnumerable<ICodeExpression>?    parameters,
 			IEnumerable<CodeNamedParameter>? namedParameters)
@@ -42,15 +43,12 @@ namespace LinqToDB.CodeModel
 
 		CodeElementType ICodeElement.ElementType => CodeElementType.Attribute;
 
-		// use pretty record instead of ugly tuple
-		public record CodeNamedParameter(CodeIdentifier Property, ICodeExpression Value);
-
-		internal void AddParameter(ICodeExpression parameterValue)
+		public void AddParameter(ICodeExpression parameterValue)
 		{
 			_parameters.Add(parameterValue);
 		}
 
-		internal void AddNamedParameter(CodeIdentifier property, ICodeExpression value)
+		public void AddNamedParameter(CodeIdentifier property, ICodeExpression value)
 		{
 			_namedParameters.Add(new(property, value));
 		}

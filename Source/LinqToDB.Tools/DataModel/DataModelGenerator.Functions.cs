@@ -4,6 +4,7 @@ using LinqToDB.Schema;
 using LinqToDB.CodeModel;
 using LinqToDB.Data;
 using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataModel
 {
@@ -77,8 +78,7 @@ namespace LinqToDB.DataModel
 					var schemaProp = dataContextClass
 						.Properties(true)
 							.New(AST.Name(CONTEXT_SCHEMA_PROPERTY), WellKnownTypes.LinqToDB.Mapping.MappingSchema)
-								.Public()
-								.Static()
+								.SetModifiers(Modifiers.Public | Modifiers.Static)
 								.Default(false)
 								.SetInitializer(AST.New(WellKnownTypes.LinqToDB.Mapping.MappingSchema));
 					schemaProperty = schemaProp.Property.Reference;
@@ -169,23 +169,12 @@ namespace LinqToDB.DataModel
 		/// </summary>
 		/// <param name="name">Procedure/function object name.</param>
 		/// <returns>Fully-qualified name of procedure or function.</returns>
-		private string BuildFunctionName(ObjectName name)
+		private string BuildFunctionName(SqlObjectName name)
 		{
 			// TODO: linq2db refactoring
 			// This method needed only because right now we don't have API that accepts name components
 			// for some function API
-			//
-			// BuildTableName used because there is no separate API for function-like objects
-			// TODO: actually it is another refactoring goal, as this method should be named as something like BuildFQN
-			return _sqlBuilder.BuildTableName(
-				new StringBuilder(),
-				name.Server   == null ? null : _sqlBuilder.ConvertInline(name.Server  , ConvertType.NameToServer    ),
-				name.Database == null ? null : _sqlBuilder.ConvertInline(name.Database, ConvertType.NameToDatabase  ),
-				name.Schema   == null ? null : _sqlBuilder.ConvertInline(name.Schema  , ConvertType.NameToSchema    ),
-											   // NameToQueryTable used as we don't have separate ConvertType for procedures/functions
-											   _sqlBuilder.ConvertInline(name.Name    , ConvertType.NameToQueryTable),
-				TableOptions.NotSet
-			).ToString();
+			return _sqlBuilder.BuildObjectName(new (), name, ConvertType.NameToProcedure).ToString();
 		}
 	}
 }

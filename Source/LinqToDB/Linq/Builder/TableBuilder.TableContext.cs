@@ -119,7 +119,7 @@ namespace LinqToDB.Linq.Builder
 				AssociationsToSubQueries = buildInfo.AssociationsAsSubQueries;
 
 				var mc   = (MethodCallExpression)Expression;
-				var attr = builder.GetTableFunctionAttribute(mc.Method)!;
+				var attr = mc.Method.GetTableFunctionAttribute(builder.MappingSchema)!;
 
 				if (!typeof(IQueryable<>).IsSameOrParentOf(mc.Method.ReturnType))
 					throw new LinqException("Table function has to return IQueryable<T>.");
@@ -275,10 +275,10 @@ namespace LinqToDB.Linq.Builder
 								ExpressionBuilder.DataContextParam,
 								expr,
 								Expression.Constant(SqlTable.TableOptions),
-								Expression.Constant(SqlTable.PhysicalName, typeof(string)),
-								Expression.Constant(SqlTable.Schema,       typeof(string)),
-								Expression.Constant(SqlTable.Database,     typeof(string)),
-								Expression.Constant(SqlTable.Server,       typeof(string))
+								Expression.Constant(SqlTable.TableName.Name,     typeof(string)),
+								Expression.Constant(SqlTable.TableName.Schema,   typeof(string)),
+								Expression.Constant(SqlTable.TableName.Database, typeof(string)),
+								Expression.Constant(SqlTable.TableName.Server,   typeof(string))
 							),
 							expr.Type);
 				}

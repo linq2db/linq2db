@@ -8,10 +8,11 @@ namespace LinqToDB.SchemaProvider
 {
 	using Common;
 	using Data;
+	using LinqToDB.SqlProvider;
 
 	public abstract class SchemaProviderBase : ISchemaProvider
 	{
-		protected abstract DataType                            GetDataType   (string? dataType, string? columnType, long? length, int? prec, int? scale);
+		protected abstract DataType                            GetDataType   (string? dataType, string? columnType, int? length, int? prec, int? scale);
 		protected abstract List<TableInfo>                     GetTables     (DataConnection dataConnection, GetSchemaOptions options);
 		protected abstract IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables, GetSchemaOptions options);
 		protected abstract List<ColumnInfo>                    GetColumns    (DataConnection dataConnection, GetSchemaOptions options);
@@ -280,8 +281,9 @@ namespace LinqToDB.SchemaProvider
 						{
 							CatalogName         = sp.CatalogName,
 							SchemaName          = sp.SchemaName,
+							PackageName         = sp.PackageName,
 							ProcedureName       = sp.ProcedureName,
-							MemberName          = ToValidName(sp.ProcedureName),
+							MemberName          = ToValidName($"{sp.PackageName}{(sp.PackageName != null ? "_" : null)}{sp.ProcedureName}"),
 							IsFunction          = sp.IsFunction,
 							IsTableFunction     = sp.IsTableFunction,
 							IsResultDynamic     = sp.IsResultDynamic,
@@ -334,12 +336,9 @@ namespace LinqToDB.SchemaProvider
 						{
 							if (!procedure.IsResultDynamic && (!procedure.IsFunction || procedure.IsTableFunction) && options.LoadProcedure(procedure))
 							{
-								var commandText = sqlProvider.ConvertTableName(new StringBuilder(),
-									null,
-									procedure.CatalogName,
-									procedure.SchemaName,
-									procedure.ProcedureName,
-									TableOptions.NotSet).ToString();
+								var commandText = sqlProvider.BuildObjectName(
+									new (),
+									new (procedure.ProcedureName, Database: procedure.CatalogName, Schema: procedure.SchemaName, Package: procedure.PackageName)).ToString();
 
 								LoadProcedureTableSchema(dataConnection, options, procedure, commandText, tables);
 							}
@@ -587,7 +586,7 @@ namespace LinqToDB.SchemaProvider
 				.ToList();
 		}
 
-		protected virtual Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, long? length, int? precision, int? scale, GetSchemaOptions options)
+		protected virtual Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, int? length, int? precision, int? scale, GetSchemaOptions options)
 		{
 			var systemType = dataTypeInfo != null ? Type.GetType(dataTypeInfo.DataType) : null;
 
@@ -597,9 +596,9 @@ namespace LinqToDB.SchemaProvider
 			return systemType;
 		}
 
-		protected virtual string? GetDbType(GetSchemaOptions options, string? columnType, DataTypeInfo? dataType, long? length, int? precision, int? scale, string? udtCatalog, string? udtSchema, string? udtName)
+		protected virtual string? GetDbType(GetSchemaOptions options, string? columnType, DataTypeInfo? dataType, int? length, int? precision, int? scale, string? udtCatalog, string? udtSchema, string? udtName)
 		{
-			var dbType = columnType;
+			var dbType = columnType ?? dataType?.TypeName;
 
 			if (dataType != null)
 			{

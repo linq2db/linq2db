@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using LinqToDB.Schema;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataModel
 {
@@ -8,16 +9,11 @@ namespace LinqToDB.DataModel
 	/// </summary>
 	public abstract class FunctionModelBase
 	{
-		protected FunctionModelBase(ObjectName name, MethodModel method)
+		protected FunctionModelBase(SqlObjectName name, MethodModel method)
 		{
-			Name   = name;
 			Method = method;
 		}
 
-		/// <summary>
-		/// Gets or sets database name of function/procedure.
-		/// </summary>
-		public ObjectName                   Name       { get; set; }
 		/// <summary>
 		/// Gets or sets method descriptor for function/procedure.
 		/// </summary>

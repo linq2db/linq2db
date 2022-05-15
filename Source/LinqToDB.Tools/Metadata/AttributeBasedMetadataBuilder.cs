@@ -2,6 +2,7 @@
 using LinqToDB.Schema;
 using LinqToDB.CodeModel;
 using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Metadata
 {
@@ -14,10 +15,10 @@ namespace LinqToDB.Metadata
 	/// </summary>
 	internal sealed class AttributeBasedMetadataBuilder : IMetadataBuilder
 	{
-		private readonly CodeBuilder              _builder;
-		private readonly Func<ObjectName, string> _fqnGenerator;
+		private readonly CodeBuilder                 _builder;
+		private readonly Func<SqlObjectName, string> _fqnGenerator;
 
-		public AttributeBasedMetadataBuilder(CodeBuilder builder, Func<ObjectName, string> fqnGenerator)
+		public AttributeBasedMetadataBuilder(CodeBuilder builder, Func<SqlObjectName, string> fqnGenerator)
 		{
 			_builder      = builder;
 			_fqnGenerator = fqnGenerator;
@@ -67,12 +68,8 @@ namespace LinqToDB.Metadata
 
 			// generate database type attributes
 			if (metadata.DbType?.Name  != null) attr.Parameter(WellKnownTypes.LinqToDB.Mapping.ColumnAttribute_DbType, _builder.Constant(metadata.DbType.Name, true));
-			// TODO: linq2db fix required
-			// min/max check added to avoid issues with type inconsistance in schema API and metadata
-			// In different places we use long or int type for type length
-			// this will not lead to type information loss, as we are not aware of any DB that will depend on length values outside of int32 range
-			if (metadata.DbType?.Length != null && metadata.DbType.Length >= int.MinValue && metadata.DbType.Length <= int.MaxValue)
-				attr.Parameter(WellKnownTypes.LinqToDB.Mapping.ColumnAttribute_Length, _builder.Constant((int)metadata.DbType.Length.Value, true));
+			if (metadata.DbType?.Length != null)
+				attr.Parameter(WellKnownTypes.LinqToDB.Mapping.ColumnAttribute_Length, _builder.Constant(metadata.DbType.Length.Value, true));
 			if (metadata.DbType?.Precision != null) attr.Parameter(WellKnownTypes.LinqToDB.Mapping.ColumnAttribute_Precision, _builder.Constant(metadata.DbType.Precision.Value, true));
 			if (metadata.DbType?.Scale     != null) attr.Parameter(WellKnownTypes.LinqToDB.Mapping.ColumnAttribute_Scale    , _builder.Constant(metadata.DbType.Scale.Value    , true));
 
@@ -104,10 +101,10 @@ namespace LinqToDB.Metadata
 				// otherwise generated code will be refactoring-unfriendly (will break on class rename)
 				// note that rename could happen not only as user's action in generated code, but also during code
 				// generation to resolve naming conflicts with other members/types
-				attr.Parameter(_builder.Constant(metadata.Name.Name, true));
-				if (metadata.Name.Schema   != null) attr.Parameter(WellKnownTypes.LinqToDB.Mapping.TableAttribute_Schema  , _builder.Constant(metadata.Name.Schema  , true));
-				if (metadata.Name.Database != null) attr.Parameter(WellKnownTypes.LinqToDB.Mapping.TableAttribute_Database, _builder.Constant(metadata.Name.Database, true));
-				if (metadata.Name.Server   != null) attr.Parameter(WellKnownTypes.LinqToDB.Mapping.TableAttribute_Server  , _builder.Constant(metadata.Name.Server  , true));
+				attr.Parameter(_builder.Constant(metadata.Name.Value.Name, true));
+				if (metadata.Name.Value.Schema   != null) attr.Parameter(WellKnownTypes.LinqToDB.Mapping.TableAttribute_Schema  , _builder.Constant(metadata.Name.Value.Schema  , true));
+				if (metadata.Name.Value.Database != null) attr.Parameter(WellKnownTypes.LinqToDB.Mapping.TableAttribute_Database, _builder.Constant(metadata.Name.Value.Database, true));
+				if (metadata.Name.Value.Server   != null) attr.Parameter(WellKnownTypes.LinqToDB.Mapping.TableAttribute_Server  , _builder.Constant(metadata.Name.Value.Server  , true));
 			}
 
 			if (metadata.IsView                              ) attr.Parameter(WellKnownTypes.LinqToDB.Mapping.TableAttribute_IsView                   , _builder.Constant(true                  , true));
@@ -125,7 +122,7 @@ namespace LinqToDB.Metadata
 			{
 				// TODO: linq2db fix
 				// currently we don't have mapping API for functions that use FQN components, so we need to generate raw SQL name
-				attr.Parameter(_builder.Constant(_fqnGenerator(metadata.Name), true));
+				attr.Parameter(_builder.Constant(_fqnGenerator(metadata.Name.Value), true));
 			}
 
 			if (metadata.Configuration    != null) attr.Parameter(WellKnownTypes.LinqToDB.Sql_ExpressionAttribute_Configuration   , _builder.Constant(metadata.Configuration         , true));
@@ -152,10 +149,11 @@ namespace LinqToDB.Metadata
 			if (metadata.Name != null)
 			{
 				// compared to Sql.FunctionAttribute, Sql.TableFunctionAttribute provides proper FQN mapping attributes
-				if (metadata.Name.Name     != null) attr.Parameter(_builder.Constant(metadata.Name.Name, true));
-				if (metadata.Name.Schema   != null) attr.Parameter(WellKnownTypes.LinqToDB.Sql_TableFunctionAttribute_Schema  , _builder.Constant(metadata.Name.Schema  , true));
-				if (metadata.Name.Database != null) attr.Parameter(WellKnownTypes.LinqToDB.Sql_TableFunctionAttribute_Database, _builder.Constant(metadata.Name.Database, true));
-				if (metadata.Name.Server   != null) attr.Parameter(WellKnownTypes.LinqToDB.Sql_TableFunctionAttribute_Server  , _builder.Constant(metadata.Name.Server  , true));
+				if (metadata.Name.Value.Name     != null) attr.Parameter(_builder.Constant(metadata.Name.Value.Name, true));
+				if (metadata.Name.Value.Package  != null) attr.Parameter(WellKnownTypes.LinqToDB.Sql_TableFunctionAttribute_Package , _builder.Constant(metadata.Name.Value.Package , true));
+				if (metadata.Name.Value.Schema   != null) attr.Parameter(WellKnownTypes.LinqToDB.Sql_TableFunctionAttribute_Schema  , _builder.Constant(metadata.Name.Value.Schema  , true));
+				if (metadata.Name.Value.Database != null) attr.Parameter(WellKnownTypes.LinqToDB.Sql_TableFunctionAttribute_Database, _builder.Constant(metadata.Name.Value.Database, true));
+				if (metadata.Name.Value.Server   != null) attr.Parameter(WellKnownTypes.LinqToDB.Sql_TableFunctionAttribute_Server  , _builder.Constant(metadata.Name.Value.Server  , true));
 			}
 
 			if (metadata.Configuration != null) attr.Parameter(WellKnownTypes.LinqToDB.Sql_TableFunctionAttribute_Configuration, _builder.Constant(metadata.Configuration, true));
@@ -256,13 +254,6 @@ namespace LinqToDB.Metadata
 			if (metadata.Configuration         != null) attr.Parameter(WellKnownTypes.LinqToDB.Mapping.AssociationAttribute_Configuration    , _builder.Constant(metadata.Configuration        , true));
 			if (metadata.Alias                 != null) attr.Parameter(WellKnownTypes.LinqToDB.Mapping.AssociationAttribute_AliasName        , _builder.Constant(metadata.Alias                , true));
 			if (metadata.Storage               != null) attr.Parameter(WellKnownTypes.LinqToDB.Mapping.AssociationAttribute_Storage          , _builder.Constant(metadata.Storage              , true));
-			// deprecated non-functional properties, subject to removal in future
-			if (metadata.KeyName               != null) attr.Parameter(WellKnownTypes.LinqToDB.Mapping.AssociationAttribute_KeyName          , _builder.Constant(metadata.KeyName              , true));
-			if (metadata.BackReferenceName     != null) attr.Parameter(WellKnownTypes.LinqToDB.Mapping.AssociationAttribute_BackReferenceName, _builder.Constant(metadata.BackReferenceName    , true));
-			if (metadata.HasIsBackReference    != null) attr.Parameter(WellKnownTypes.LinqToDB.Mapping.AssociationAttribute_IsBackReference  , _builder.Constant(metadata.IsBackReference      , true));
-#pragma warning disable CS0618
-			if (metadata.Relationship          != null) attr.Parameter(WellKnownTypes.LinqToDB.Mapping.AssociationAttribute_Relationship     , _builder.Constant(metadata.Relationship.Value   , true));
-#pragma warning restore CS0618
 		}
 	}
 }

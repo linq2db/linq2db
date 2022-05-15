@@ -1643,8 +1643,8 @@ namespace LinqToDB.Linq
 
 		// TODO: why chars ignored for SQL?
 		[CLSCompliant(false)]
-		[Sql.Expression(ProviderName.Firebird, "TRIM(TRAILING FROM {0})")]
-		[Sql.Function("RTrim", 0)]
+		[Sql.Expression(ProviderName.Firebird, "TRIM(TRAILING FROM {0})", IsNullable = Sql.IsNullableType.SameAsFirstParameter)]
+		[Sql.Function("RTrim", 0,                                         IsNullable = Sql.IsNullableType.SameAsFirstParameter)]
 		public static string? TrimRight(string? str, params char[] trimChars)
 		{
 			return str?.TrimEnd(trimChars);
@@ -1652,8 +1652,8 @@ namespace LinqToDB.Linq
 
 		// TODO: why chars ignored for SQL?
 		[CLSCompliant(false)]
-		[Sql.Expression(ProviderName.Firebird, "TRIM(LEADING FROM {0})")]
-		[Sql.Function("LTrim", 0)]
+		[Sql.Expression(ProviderName.Firebird, "TRIM(LEADING FROM {0})", IsNullable = Sql.IsNullableType.SameAsFirstParameter)]
+		[Sql.Function("LTrim", 0,                                        IsNullable = Sql.IsNullableType.SameAsFirstParameter)]
 		public static string? TrimLeft(string? str, params char[] trimChars)
 		{
 			return str?.TrimStart(trimChars);
@@ -1663,7 +1663,7 @@ namespace LinqToDB.Linq
 
 		#region Provider specific functions
 
-		[Sql.Function]
+		[Sql.Function(IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
 		public static int? ConvertToCaseCompareTo(string? str, string? value)
 		{
 			return str == null || value == null ? (int?)null : str.CompareTo(value);
@@ -1671,7 +1671,7 @@ namespace LinqToDB.Linq
 
 		// Access, DB2, Firebird, Informix, MySql, Oracle, PostgreSQL, SQLite
 		//
-		[Sql.Function]
+		[Sql.Function(IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
 		public static string? AltStuff(string? str, int? startLocation, int? length, string? value)
 		{
 			return Sql.Stuff(str, startLocation, length, value);
@@ -1679,15 +1679,15 @@ namespace LinqToDB.Linq
 
 		// DB2
 		//
-		[Sql.Function]
-		public static string? VarChar(object obj, int? size)
+		[Sql.Function(IsNullable = Sql.IsNullableType.SameAsFirstParameter)]
+		public static string? VarChar(object? obj, int? size)
 		{
-			return obj.ToString();
+			return obj?.ToString();
 		}
 
 		// DB2
 		//
-		[Sql.Function]
+		[Sql.Function(IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
 		public static string? Hex(Guid? guid)
 		{
 			return guid == null ? null : guid.ToString();
@@ -1696,10 +1696,10 @@ namespace LinqToDB.Linq
 		// DB2, PostgreSQL, Access, MS SQL, SqlCe
 		//
 		[CLSCompliant(false)]
-		[Sql.Function]
-		[Sql.Function(ProviderName.DB2,        "Repeat")]
-		[Sql.Function(ProviderName.PostgreSQL, "Repeat")]
-		[Sql.Function(ProviderName.Access,     "string", 1, 0)]
+		[Sql.Function(                                         IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
+		[Sql.Function(ProviderName.DB2,        "Repeat",       IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
+		[Sql.Function(ProviderName.PostgreSQL, "Repeat",       IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
+		[Sql.Function(ProviderName.Access,     "string", 1, 0, IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
 		public static string? Replicate(string? str, int? count)
 		{
 			if (str == null || count == null)
@@ -1714,10 +1714,10 @@ namespace LinqToDB.Linq
 		}
 
 		[CLSCompliant(false)]
-		[Sql.Function]
-		[Sql.Function(ProviderName.DB2,        "Repeat")]
-		[Sql.Function(ProviderName.PostgreSQL, "Repeat")]
-		[Sql.Function(ProviderName.Access,     "string", 1, 0)]
+		[Sql.Function(                                         IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
+		[Sql.Function(ProviderName.DB2,        "Repeat",       IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
+		[Sql.Function(ProviderName.PostgreSQL, "Repeat",       IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
+		[Sql.Function(ProviderName.Access,     "string", 1, 0, IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
 		public static string? Replicate(char? ch, int? count)
 		{
 			if (ch == null || count == null)
@@ -1755,15 +1755,15 @@ namespace LinqToDB.Linq
 
 		// MSSQL
 		//
-		[Sql.Function]
+		[Sql.Function(IsNullable = Sql.IsNullableType.SameAsFirstParameter)]
 		public static decimal? Round(decimal? value, int precision, int mode) => 0;
 
-		[Sql.Function]
+		[Sql.Function(IsNullable = Sql.IsNullableType.SameAsFirstParameter)]
 		public static double?  Round(double?  value, int precision, int mode) => 0;
 
 		// Access
 		//
-		[Sql.Function(ProviderName.Access, "DateSerial")]
+		[Sql.Function(ProviderName.Access, "DateSerial", IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
 		public static DateTime? MakeDateTime2(int? year, int? month, int? day)
 		{
 			return year == null || month == null || day == null?
@@ -1795,7 +1795,7 @@ namespace LinqToDB.Linq
 
 		// Informix
 		//
-		[Sql.Function]
+		[Sql.Function(IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
 		public static DateTime? Mdy(int? month, int? day, int? year)
 		{
 			return year == null || month == null || day == null ?

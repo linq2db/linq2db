@@ -1,6 +1,7 @@
 ﻿using LinqToDB.Metadata;
 using LinqToDB.Schema;
 using LinqToDB.CodeModel;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataModel
 {
@@ -9,7 +10,7 @@ namespace LinqToDB.DataModel
 	/// </summary>
 	public sealed class ScalarFunctionModel : ScalarFunctionModelBase
 	{
-		public ScalarFunctionModel(ObjectName name, MethodModel method, FunctionMetadata metadata)
+		public ScalarFunctionModel(SqlObjectName name, MethodModel method, FunctionMetadata metadata)
 			: base(name, method, metadata)
 		{
 		}

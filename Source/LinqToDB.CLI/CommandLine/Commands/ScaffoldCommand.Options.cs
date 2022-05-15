@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using LinqToDB.Configuration;
@@ -766,6 +767,19 @@ Naming options is an object with following properties:
 					null,
 					null,
 					_defaultOptions.DataModel.GenerateSchemaAsType);
+
+			/// <summary>
+			/// Generates <see cref="IEquatable{T}"/> interface implementation on entity class for entity with primary key columns.
+			/// </summary>
+			public static readonly CliOption GenerateIEquatable = new BooleanCliOption(
+					"equatable-entities",
+					null,
+					false,
+					"entity classes will implement IEquatable<T> interface using primary key column(s) for identity calculation. Requires reference to linq2db.Tools nuget from generated code.",
+					null,
+					null,
+					null,
+					_defaultOptions.DataModel.GenerateIEquatable);
 
 			/// <summary>
 			/// Generate Find extension method for entity option.

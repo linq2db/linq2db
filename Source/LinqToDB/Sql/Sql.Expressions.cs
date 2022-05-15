@@ -332,12 +332,14 @@ namespace LinqToDB
 						builder.ResultExpression = new SqlExpression(typeof(string), tableHelper.TableName, Precedence.Primary);
 					else
 					{
+						var tableName = new SqlObjectName(
+							tableHelper.TableName,
+							Server  : (qualified & TableQualification.ServerName)   != 0 ? tableHelper.ServerName   : null,
+							Database: (qualified & TableQualification.DatabaseName) != 0 ? tableHelper.DatabaseName : null,
+							Schema  : (qualified & TableQualification.SchemaName)   != 0 ? tableHelper.SchemaName   : null);
 						var table = new SqlTable(tableType)
 						{
-							PhysicalName = tableHelper.TableName,
-							Server       = (qualified & TableQualification.ServerName)   != 0 ? tableHelper.ServerName   : null,
-							Database     = (qualified & TableQualification.DatabaseName) != 0 ? tableHelper.DatabaseName : null,
-							Schema       = (qualified & TableQualification.SchemaName)   != 0 ? tableHelper.SchemaName   : null,
+							TableName    = tableName,
 							TableOptions = (qualified & TableQualification.TableOptions) != 0 ? tableHelper.TableOptions : TableOptions.NotSet,
 						};
 
@@ -351,11 +353,15 @@ namespace LinqToDB
 					if (qualified != TableQualification.None)
 					{
 						var sb = new StringBuilder();
-						builder.DataContext.CreateSqlProvider().ConvertTableName(sb,
-							(qualified & TableQualification.ServerName)   != 0 ? tableHelper.ServerName   : null,
-							(qualified & TableQualification.DatabaseName) != 0 ? tableHelper.DatabaseName : null,
-							(qualified & TableQualification.SchemaName)   != 0 ? tableHelper.SchemaName   : null,
-							name,
+						builder.DataContext.CreateSqlProvider().BuildObjectName(
+							sb,
+							new SqlObjectName(
+								name,
+								Server  : (qualified & TableQualification.ServerName)   != 0 ? tableHelper.ServerName   : null,
+								Database: (qualified & TableQualification.DatabaseName) != 0 ? tableHelper.DatabaseName : null,
+								Schema  : (qualified & TableQualification.SchemaName)   != 0 ? tableHelper.SchemaName   : null),
+							ConvertType.NameToQueryTable,
+							true,
 							(qualified & TableQualification.TableOptions) != 0 ? tableHelper.TableOptions : TableOptions.NotSet);
 						name = sb.ToString();
 					}
@@ -385,17 +391,21 @@ namespace LinqToDB
 				var qualified    = builder.Arguments.Length <= 1 ? TableQualification.Full : builder.GetValue<TableQualification>(1);
 				var isExpression = builder.Member.Name == "TableExpr";
 
-				var name = sqlTable.PhysicalName!;
+				var name = sqlTable.TableName.Name;
 
 				if (qualified != TableQualification.None)
 				{
 					var sb = new StringBuilder();
 
-					builder.DataContext.CreateSqlProvider().ConvertTableName(sb,
-						(qualified & TableQualification.ServerName)   != 0 ? sqlTable.Server       : null,
-						(qualified & TableQualification.DatabaseName) != 0 ? sqlTable.Database     : null,
-						(qualified & TableQualification.SchemaName)   != 0 ? sqlTable.Schema       : null,
-						sqlTable.PhysicalName!,
+					builder.DataContext.CreateSqlProvider().BuildObjectName(
+						sb,
+						new SqlObjectName(
+							sqlTable.TableName.Name,
+							Server  : (qualified & TableQualification.ServerName)   != 0 ? sqlTable.TableName.Server       : null,
+							Database: (qualified & TableQualification.DatabaseName) != 0 ? sqlTable.TableName.Database     : null,
+							Schema  : (qualified & TableQualification.SchemaName)   != 0 ? sqlTable.TableName.Schema       : null),
+						sqlTable.SqlTableType == SqlTableType.Function ? ConvertType.NameToProcedure : ConvertType.NameToQueryTable,
+						true,
 						(qualified & TableQualification.TableOptions) != 0 ? sqlTable.TableOptions : TableOptions.NotSet);
 
 					name = sb.ToString();
@@ -433,7 +443,7 @@ namespace LinqToDB
 
 				var sqlTable = (SqlTable)sqlField.Table!;
 
-				builder.ResultExpression = new SqlField(sqlTable, sqlTable.Name!);
+				builder.ResultExpression = new SqlField(sqlTable, sqlTable.TableName.Name);
 			}
 		}
 
@@ -449,7 +459,7 @@ namespace LinqToDB
 
 				var sqlTable = (SqlTable)sqlField.Table!;
 
-				builder.ResultExpression = new SqlField(sqlTable, sqlTable.Name!);
+				builder.ResultExpression = new SqlField(sqlTable, sqlTable.TableName.Name);
 			}
 		}
 
@@ -507,11 +517,15 @@ namespace LinqToDB
 
 				var sqlBuilder = dataContext.CreateSqlProvider();
 				var sb = new StringBuilder();
-				sqlBuilder.ConvertTableName(sb,
-					(qualification & TableQualification.ServerName)   != 0 ? table.ServerName   : null,
-					(qualification & TableQualification.DatabaseName) != 0 ? table.DatabaseName : null,
-					(qualification & TableQualification.SchemaName)   != 0 ? table.SchemaName   : null,
-					table.TableName,
+				sqlBuilder.BuildObjectName(
+					sb,
+					new SqlObjectName(
+						table.TableName,
+						Server  : (qualification & TableQualification.ServerName)   != 0 ? table.ServerName   : null,
+						Database: (qualification & TableQualification.DatabaseName) != 0 ? table.DatabaseName : null,
+						Schema  : (qualification & TableQualification.SchemaName)   != 0 ? table.SchemaName   : null),
+					ConvertType.NameToQueryTable,
+					true,
 					(qualification & TableQualification.TableOptions) != 0 ? table.TableOptions : TableOptions.NotSet);
 				result = sb.ToString();
 			}
@@ -553,11 +567,15 @@ namespace LinqToDB
 				var sqlBuilder = dataContext.CreateSqlProvider();
 				var sb         = new StringBuilder();
 
-				sqlBuilder.ConvertTableName(sb,
-					(qualification & TableQualification.ServerName)   != 0 ? table.ServerName   : null,
-					(qualification & TableQualification.DatabaseName) != 0 ? table.DatabaseName : null,
-					(qualification & TableQualification.SchemaName)   != 0 ? table.SchemaName   : null,
-					table.TableName,
+				sqlBuilder.BuildObjectName(
+					sb,
+					new SqlObjectName(
+						table.TableName,
+						Server  : (qualification & TableQualification.ServerName)   != 0 ? table.ServerName   : null,
+						Database: (qualification & TableQualification.DatabaseName) != 0 ? table.DatabaseName : null,
+						Schema  : (qualification & TableQualification.SchemaName)   != 0 ? table.SchemaName   : null),
+					ConvertType.NameToQueryTable,
+					true,
 					(qualification & TableQualification.TableOptions) != 0 ? table.TableOptions : TableOptions.NotSet);
 
 				name = sb.ToString();

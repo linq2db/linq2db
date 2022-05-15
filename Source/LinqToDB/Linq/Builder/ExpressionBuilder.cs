@@ -522,17 +522,9 @@ namespace LinqToDB.Linq.Builder
 							}
 						}
 
-						var l = ConvertMethodExpression(call.Object?.Type ?? call.Method.ReflectedType!, call.Method, out var alias);
-
-						if (l != null)
-						{
-							var optimized = OptimizeExpression(ConvertMethod(call, l));
-							return new TransformInfo(optimized);
-						}
-
 						if (CompiledParameters == null && typeof(IQueryable).IsSameOrParentOf(expr.Type))
 						{
-							var attr = GetTableFunctionAttribute(call.Method);
+							var attr = call.Method.GetTableFunctionAttribute(MappingSchema);
 
 							if (attr == null && !call.IsQueryable())
 							{
@@ -1051,7 +1043,7 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.MemberAccess   :
 					{
 						var ma   = (MemberExpression)ex;
-						var attr = GetExpressionAttribute(ma.Member);
+						var attr = ma.Member.GetExpressionAttribute(MappingSchema);
 
 						if (attr != null)
 							return true;
@@ -1414,12 +1406,14 @@ namespace LinqToDB.Linq.Builder
 				var n    = _query.AddQueryableAccessors(expression, l);
 
 				_parametersContext._expressionAccessors.TryGetValue(expression, out var accessor);
+				if (accessor == null)
+					throw new LinqToDBException($"IQueryable value accessor for '{expression}' not found.");
 
 				var path =
 					Expression.Call(
 						Expression.Constant(_query),
 						Methods.Query.GetIQueryable,
-						ExpressionInstances.Int32(n), accessor ?? Expression.Constant(null, typeof(Expression)), Expression.Constant(true));
+						ExpressionInstances.Int32(n), accessor, Expression.Constant(true));
 
 				var qex = _query.GetIQueryable(n, expression, force: false);
 

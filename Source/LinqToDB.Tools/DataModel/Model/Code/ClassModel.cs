@@ -1,4 +1,5 @@
-﻿using LinqToDB.CodeModel;
+﻿using System.Collections.Generic;
+using LinqToDB.CodeModel;
 
 namespace LinqToDB.DataModel
 {
@@ -21,38 +22,40 @@ namespace LinqToDB.DataModel
 		/// <summary>
 		/// Gets or sets xml-doc comment summary section text for class.
 		/// </summary>
-		public string? Summary   { get; set; }
+		public string?              Summary          { get; set; }
 
 		/// <summary>
 		/// Gets or sets class name.
 		/// </summary>
-		public string  Name      { get; set; }
+		public string               Name             { get; set; }
 		/// <summary>
 		/// Gets or sets class namespace.
 		/// </summary>
-		public string? Namespace { get; set; }
+		public string?              Namespace        { get; set; }
 
 		/// <summary>
 		/// Gets or sets type of base class to inherit current class from.
 		/// </summary>
-		public IType?  BaseType  { get; set; }
+		public IType?               BaseType         { get; set; }
 
 		/// <summary>
-		/// Get or sets class visibility.
+		/// List of implemented interfaces, could be <c>null</c>.
 		/// </summary>
-		public bool    IsPublic  { get; set; }
+		public List<IType>?         Interfaces       { get; set; }
+
 		/// <summary>
-		/// Get or sets class static attribute.
+		/// Get or sets class modifiers.
 		/// </summary>
-		public bool    IsStatic  { get; set; }
-		/// <summary>
-		/// Get or sets class partial modifier status.
-		/// </summary>
-		public bool    IsPartial { get; set; }
+		public Modifiers            Modifiers        { get; set; }
 
 		/// <summary>
 		/// Gets or sets optional file name for class without extension.
 		/// </summary>
-		public string? FileName  { get; set; }
+		public string?              FileName         { get; set; }
+
+		/// <summary>
+		/// List of additional custom attributes. Doesn't include metadata attributes.
+		/// </summary>
+		public List<CodeAttribute>? CustomAttributes { get; set; }
 	}
 }

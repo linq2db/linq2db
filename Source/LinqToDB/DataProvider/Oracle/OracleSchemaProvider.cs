@@ -10,9 +10,15 @@ namespace LinqToDB.DataProvider.Oracle
 	using Data;
 	using SchemaProvider;
 
+	// Missing features:
+	// - function with ref_cursor return type returns object, need to find out how to map it
 	class OracleSchemaProvider : SchemaProviderBase
 	{
 		private readonly OracleDataProvider _provider;
+		private int _majorVersion;
+
+		// both managed and native providers will execute procedure
+		protected override bool GetProcedureSchemaExecutesProcedure => true;
 
 		protected string? SchemasFilter { get; private set; }
 
@@ -25,6 +31,7 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			var defaultSchema = dataConnection.Execute<string>("SELECT USER FROM DUAL");
 			SchemasFilter     = BuildSchemaFilter(options, defaultSchema, OracleMappingSchema.ConvertStringToSql);
+			_majorVersion     = int.Parse(dataConnection.Execute<string>("select VERSION from PRODUCT_COMPONENT_VERSION where PRODUCT like 'PL/SQL%'").Split('.')[0]);
 
 			return base.GetSchema(dataConnection, options);
 		}
@@ -323,24 +330,76 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override List<ProcedureInfo>? GetProcedures(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			LoadCurrentUser(dataConnection);
+			if (SchemasFilter == null)
+				return null;
 
-			var ps = dataConnection.Connection.GetSchema("Procedures");
+			string sql;
+			if (IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0)
+			{
+				// This could be very slow
+				sql = @"SELECT
+	p.OWNER                                                                                                                              AS Owner,
+	CASE WHEN p.OWNER = USER THEN 1 ELSE 0 END                                                                                           AS IsDefault,
+	p.OVERLOAD                                                                                                                           AS Overload,
+	CASE WHEN p.OBJECT_TYPE = 'PACKAGE' THEN p.OBJECT_NAME ELSE NULL END                                                                 AS PackageName,
+	CASE WHEN p.OBJECT_TYPE = 'PACKAGE' THEN p.PROCEDURE_NAME ELSE p.OBJECT_NAME END                                                     AS ProcedureName,
+	CASE WHEN a.DATA_TYPE IS NULL THEN 'PROCEDURE' WHEN a.DATA_TYPE = 'TABLE' THEN 'TABLE_FUNCTION' ELSE 'FUNCTION' END AS ProcedureType
+FROM ALL_PROCEDURES p
+	LEFT OUTER JOIN ALL_ARGUMENTS a ON
+		a.OWNER = p.OWNER
+			AND ((a.PACKAGE_NAME = p.OBJECT_NAME AND a.OBJECT_NAME = p.PROCEDURE_NAME)
+				OR (a.PACKAGE_NAME IS NULL AND p.PROCEDURE_NAME IS NULL AND a.OBJECT_NAME = p.OBJECT_NAME))
+			AND a.ARGUMENT_NAME IS NULL
+			AND a.DATA_LEVEL = 0
+WHERE ((p.OBJECT_TYPE IN ('PROCEDURE', 'FUNCTION') AND PROCEDURE_NAME IS NULL) OR PROCEDURE_NAME IS NOT NULL)
+	AND p.OWNER " + SchemasFilter + @"
+ORDER BY
+	CASE WHEN p.OBJECT_TYPE = 'PACKAGE' THEN p.OBJECT_NAME ELSE NULL END,
+	CASE WHEN p.OBJECT_TYPE = 'PACKAGE' THEN p.PROCEDURE_NAME ELSE p.OBJECT_NAME END";
+			}
+			else
+			{
+				sql = @"SELECT
+	USER                                                                                                                                 AS Owner,
+	1                                                                                                                                    AS IsDefault,
+	p.OVERLOAD                                                                                                                           AS Overload,
+	CASE WHEN p.OBJECT_TYPE = 'PACKAGE' THEN p.OBJECT_NAME ELSE NULL END                                                                 AS PackageName,
+	CASE WHEN p.OBJECT_TYPE = 'PACKAGE' THEN p.PROCEDURE_NAME ELSE p.OBJECT_NAME END                                                     AS ProcedureName,
+	CASE WHEN a.DATA_TYPE IS NULL THEN 'PROCEDURE' WHEN a.DATA_TYPE = 'TABLE' THEN 'TABLE_FUNCTION' ELSE 'FUNCTION' END AS ProcedureType
+FROM USER_PROCEDURES p
+		LEFT OUTER JOIN USER_ARGUMENTS a ON
+			((a.PACKAGE_NAME = p.OBJECT_NAME AND a.OBJECT_NAME = p.PROCEDURE_NAME)
+					OR (a.PACKAGE_NAME IS NULL AND p.PROCEDURE_NAME IS NULL AND a.OBJECT_NAME = p.OBJECT_NAME))
+				AND a.ARGUMENT_NAME IS NULL
+				AND a.DATA_LEVEL = 0
+WHERE ((p.OBJECT_TYPE IN ('PROCEDURE', 'FUNCTION') AND PROCEDURE_NAME IS NULL) OR PROCEDURE_NAME IS NOT NULL)
+ORDER BY
+	CASE WHEN p.OBJECT_TYPE = 'PACKAGE' THEN p.OBJECT_NAME ELSE NULL END,
+	CASE WHEN p.OBJECT_TYPE = 'PACKAGE' THEN p.PROCEDURE_NAME ELSE p.OBJECT_NAME END";
+			}
 
-			return
-			(
-				from p in ps.AsEnumerable()
-				let schema = p.Field<string>("OWNER")
-				let name   = p.Field<string>("OBJECT_NAME")
-				where IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0 || schema == _currentUser
-				select new ProcedureInfo
+			return dataConnection.Query(rd =>
+			{
+				// IMPORTANT: reader calls must be ordered to support SequentialAccess
+				var schema        = rd.GetString(0);
+				var isDefault     = rd.GetInt32(1) != 0;
+				var overload      = rd.IsDBNull(2) ? null : rd.GetString(2);
+				var packageName   = rd.IsDBNull(3) ? null : rd.GetString(3);
+				var procedureName = rd.GetString(4);
+				var procedureType = rd.GetString(5);
+
+				return new ProcedureInfo()
 				{
-					ProcedureID     = schema + "." + name,
+					ProcedureID     = $"{schema}.{overload}.{packageName}.{procedureName}",
 					SchemaName      = schema,
-					ProcedureName   = name,
-					IsDefaultSchema = schema == _currentUser,
-				}
-			).ToList();
+					PackageName     = packageName,
+					ProcedureName   = procedureName,
+					IsFunction      = procedureType != "PROCEDURE",
+					IsTableFunction = procedureType == "TABLE_FUNCTION",
+					IsDefaultSchema = isDefault
+				};
+			},
+				sql).ToList();
 		}
 
 		private void LoadCurrentUser(DataConnection dataConnection)
@@ -351,37 +410,87 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection, IEnumerable<ProcedureInfo> procedures, GetSchemaOptions options)
 		{
-			// uses ALL_ARGUMENTS view
-			// https://docs.oracle.com/cd/B28359_01/server.111/b28320/statviews_1014.htm#REFRN20015
-			// SELECT * FROM ALL_ARGUMENTS WHERE DATA_LEVEL = 0 AND (OWNER = :OWNER  OR :OWNER is null) AND (OBJECT_NAME = :OBJECTNAME  OR :OBJECTNAME is null)
-			var pps = dataConnection.Connection.GetSchema("ProcedureParameters");
+			if (SchemasFilter == null)
+				return new();
 
 			// SEQUENCE filter filters-out non-argument records without DATA_TYPE
 			// check https://llblgen.com/tinyforum/Messages.aspx?ThreadID=22795
-			return
-			(
-				from pp in pps.AsEnumerable().Where(_ => Converter.ChangeTypeTo<int>(_["SEQUENCE"]) > 0)
-				let schema    = pp.Field<string>("OWNER") // not null
-				let name      = pp.Field<string>("OBJECT_NAME") // nullable (???)
-				let direction = pp.Field<string>("IN_OUT") // nullable: IN, OUT, IN/OUT
-				where IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0 || schema == _currentUser
-				select new ProcedureParameterInfo
+			// DATA_LEVEL filters out sub-types
+			string sql;
+			if (IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0)
+			{
+				sql = @"SELECT
+	OWNER          AS Owner,
+	PACKAGE_NAME   AS PackageName,
+	OBJECT_NAME    AS ProcedureName,
+	OVERLOAD       AS Overload,
+	IN_OUT         AS Direction,
+	DATA_LENGTH    AS DataLength,
+	ARGUMENT_NAME  AS Name,
+	DATA_TYPE      AS Type,
+	POSITION       AS Ordinal,
+	DATA_PRECISION AS Precision,
+	DATA_SCALE     AS Scale
+FROM ALL_ARGUMENTS
+WHERE OWNER " + SchemasFilter + @" AND SEQUENCE > 0 AND DATA_LEVEL = 0
+	AND (DATA_TYPE <> 'TABLE' OR IN_OUT <> 'OUT' OR POSITION <> 0)";
+			}
+			else
+			{
+				sql = @"SELECT
+	USER           AS Owner,
+	PACKAGE_NAME   AS PackageName,
+	OBJECT_NAME    AS ProcedureName,
+	OVERLOAD       AS Overload,
+	IN_OUT         AS Direction,
+	DATA_LENGTH    AS DataLength,
+	ARGUMENT_NAME  AS Name,
+	DATA_TYPE      AS Type,
+	POSITION       AS Ordinal,
+	DATA_PRECISION AS Precision,
+	DATA_SCALE     AS Scale
+FROM ALL_ARGUMENTS
+WHERE SEQUENCE > 0 AND DATA_LEVEL = 0 AND OWNER = USER
+	AND (DATA_TYPE <> 'TABLE' OR IN_OUT <> 'OUT' OR POSITION <> 0)";
+
+			}
+
+			return dataConnection.Query(rd =>
+			{
+				// IMPORTANT: reader calls must be ordered to support SequentialAccess
+				var schema        = rd.GetString(0);
+				var packageName   = rd.IsDBNull(1) ?       null : rd.GetString(1);
+				var procedureName = rd.GetString(2);
+				var overload      = rd.IsDBNull(3) ?       null : rd.GetString(3);
+				// IN, OUT, IN/OUT
+				var direction     = rd.GetString(4);
+				var length        = rd.IsDBNull(5) ? (int?)null : rd.GetInt32(5);
+				var name          = rd.IsDBNull(6) ?       null : rd.GetString(6);
+				var dataType      = rd.GetString(7);
+				// 0 - return value
+				var ordinal       = rd.GetInt32(8);
+				var precision     = rd.IsDBNull(9) ? (int?)null : rd.GetInt32(9);
+				var scale         = rd.IsDBNull(10)? (int?)null : rd.GetInt32(10);
+
+				return new ProcedureParameterInfo()
 				{
-					ProcedureID   = schema + "." + name,
-					ParameterName = pp.Field<string>("ARGUMENT_NAME"), // nullable
-					DataType      = pp.Field<string>("DATA_TYPE"), // nullable, but only for sequence = 0
-					Ordinal       = Converter.ChangeTypeTo<int>  (pp["POSITION"]), // not null, 0 - return value
-					Length        = Converter.ChangeTypeTo<long?>(pp["DATA_LENGTH"]), // nullable
-					Precision     = Converter.ChangeTypeTo<int?> (pp["DATA_PRECISION"]), // nullable
-					Scale         = Converter.ChangeTypeTo<int?> (pp["DATA_SCALE"]), // nullable
+					ProcedureID   = $"{schema}.{overload}.{packageName}.{procedureName}",
+					Ordinal       = ordinal,
+					ParameterName = name,
+					DataType      = dataType,
+					Length        = length,
+					Precision     = precision,
+					Scale         = scale,
 					IsIn          = direction.StartsWith("IN"),
 					IsOut         = direction.EndsWith("OUT"),
+					IsResult      = ordinal == 0,
 					IsNullable    = true
-				}
-			).ToList();
+				};
+			},
+				sql).ToList();
 		}
 
-		protected override string? GetDbType(GetSchemaOptions options, string? columnType, DataTypeInfo? dataType, long? length, int? precision, int? scale, string? udtCatalog, string? udtSchema, string? udtName)
+		protected override string? GetDbType(GetSchemaOptions options, string? columnType, DataTypeInfo? dataType, int? length, int? precision, int? scale, string? udtCatalog, string? udtSchema, string? udtName)
 		{
 			switch (columnType)
 			{
@@ -393,7 +502,7 @@ namespace LinqToDB.DataProvider.Oracle
 			return base.GetDbType(options, columnType, dataType, length, precision, scale, udtCatalog, udtSchema, udtName);
 		}
 
-		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, long? length, int? precision, int? scale, GetSchemaOptions options)
+		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, int? length, int? precision, int? scale, GetSchemaOptions options)
 		{
 			if (dataType == "NUMBER" && precision > 0 && (scale ?? 0) == 0)
 			{
@@ -415,7 +524,7 @@ namespace LinqToDB.DataProvider.Oracle
 			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale, options);
 		}
 
-		protected override DataType GetDataType(string? dataType, string? columnType, long? length, int? prec, int? scale)
+		protected override DataType GetDataType(string? dataType, string? columnType, int? length, int? prec, int? scale)
 		{
 			switch (dataType)
 			{
@@ -483,6 +592,56 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 
 			return base.GetProviderSpecificType(dataType);
+		}
+
+		protected override string BuildTableFunctionLoadTableSchemaCommand(ProcedureSchema procedure, string commandText)
+		{
+			if (procedure.IsTableFunction && _majorVersion <= 11)
+			{
+				commandText = "SELECT * FROM TABLE(" + commandText + "(";
+
+				for (var i = 0; i < procedure.Parameters.Count; i++)
+				{
+					if (i != 0)
+						commandText += ",";
+					commandText += "NULL";
+				}
+
+				commandText += "))";
+
+				return commandText;
+			}
+
+			return base.BuildTableFunctionLoadTableSchemaCommand(procedure, commandText);
+		}
+
+		protected override List<ColumnSchema> GetProcedureResultColumns(DataTable resultTable, GetSchemaOptions options)
+		{
+			return
+			(
+				from r in resultTable.AsEnumerable()
+
+				let dt         = GetDataTypeByProviderDbType(r.Field<int>("ProviderType"), options)
+				let columnName = r.Field<string>("ColumnName")
+				let isNullable = r.Field<bool>  ("AllowDBNull")
+				let length     = r.Field<int?>  ("ColumnSize")
+				let precision  = Converter.ChangeTypeTo<int>(r["NumericPrecision"])
+				let scale      = Converter.ChangeTypeTo<int>(r["NumericScale"])
+				let columnType = GetDbType(options, null, dt, length, precision, scale, null, null, null)
+				let systemType = GetSystemType(columnType, null, dt, length, precision, scale, options)
+
+				select new ColumnSchema
+				{
+					ColumnName           = columnName,
+					ColumnType           = GetDbType(options, columnType, dt, length, precision, scale, null, null, null),
+					IsNullable           = isNullable,
+					MemberName           = ToValidName(columnName),
+					MemberType           = ToTypeName(systemType, isNullable),
+					SystemType           = systemType,
+					DataType             = GetDataType(columnType, null, length, precision, scale),
+					ProviderSpecificType = GetProviderSpecificType(columnType)
+				}
+			).ToList();
 		}
 	}
 }

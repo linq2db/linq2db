@@ -34,7 +34,7 @@ namespace LinqToDB.DataProvider.Access
 				var field = trun.Table!.IdentityFields[commandNumber - 1];
 
 				StringBuilder.Append("ALTER TABLE ");
-				ConvertTableName(StringBuilder, trun.Table.Server, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName!, trun.Table.TableOptions);
+				BuildObjectName(StringBuilder, trun.Table.TableName, ConvertType.NameToQueryTable, true, trun.Table.TableOptions);
 				StringBuilder.Append(" ALTER COLUMN ");
 				Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
 				StringBuilder.AppendLine(" COUNTER(1, 1)");
@@ -274,6 +274,7 @@ namespace LinqToDB.DataProvider.Access
 				case ConvertType.NameToDatabase  :
 				case ConvertType.NameToSchema    :
 				case ConvertType.NameToQueryTable:
+				case ConvertType.NameToProcedure :
 					if (value.Length > 0 && value[0] == '[')
 							return sb.Append(value);
 
@@ -304,15 +305,15 @@ namespace LinqToDB.DataProvider.Access
 			StringBuilder.Append(')');
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table, TableOptions tableOptions)
+		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions)
 		{
-			if (database != null && database.Length == 0)
-				database = null;
+			if (name.Database != null)
+			{
+				(escape ? Convert(sb, name.Database, ConvertType.NameToDatabase) : sb.Append(name.Database))
+					.Append('.');
+			}
 
-			if (database != null)
-				sb.Append(database).Append('.');
-
-			return sb.Append(table);
+			return escape ? Convert(sb, name.Name, objectType) : sb.Append(name.Name);
 		}
 
 		protected override void BuildMergeStatement(SqlMergeStatement merge)

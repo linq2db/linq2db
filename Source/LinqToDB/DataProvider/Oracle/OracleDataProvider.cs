@@ -13,10 +13,10 @@ namespace LinqToDB.DataProvider.Oracle
 	using Mapping;
 	using SqlProvider;
 
-	class OracleDataProviderNative11  : OracleDataProvider { public OracleDataProviderNative11()  : base(ProviderName.OracleNative,  OracleVersion.v11) {} }
-	class OracleDataProviderNative12  : OracleDataProvider { public OracleDataProviderNative12()  : base(ProviderName.OracleNative,  OracleVersion.v12) {} }
-	class OracleDataProviderManaged11 : OracleDataProvider { public OracleDataProviderManaged11() : base(ProviderName.OracleManaged, OracleVersion.v11) {} }
-	class OracleDataProviderManaged12 : OracleDataProvider { public OracleDataProviderManaged12() : base(ProviderName.OracleManaged, OracleVersion.v12) {} }
+	class OracleDataProviderNative11  : OracleDataProvider { public OracleDataProviderNative11()  : base(ProviderName.Oracle11Native , OracleVersion.v11) {} }
+	class OracleDataProviderNative12  : OracleDataProvider { public OracleDataProviderNative12()  : base(ProviderName.OracleNative   , OracleVersion.v12) {} }
+	class OracleDataProviderManaged11 : OracleDataProvider { public OracleDataProviderManaged11() : base(ProviderName.Oracle11Managed, OracleVersion.v11) {} }
+	class OracleDataProviderManaged12 : OracleDataProvider { public OracleDataProviderManaged12() : base(ProviderName.OracleManaged  , OracleVersion.v12) {} }
 
 	public abstract class OracleDataProvider : DynamicDataProviderBase<OracleProviderAdapter>
 	{
@@ -109,8 +109,10 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			return name switch
 			{
-				ProviderName.OracleNative => new OracleMappingSchema.NativeMappingSchema(),
-				_                         => new OracleMappingSchema.ManagedMappingSchema(),
+				ProviderName.Oracle11Native  => new OracleMappingSchema.Native11MappingSchema(),
+				ProviderName.Oracle11Managed => new OracleMappingSchema.Managed11MappingSchema(),
+				ProviderName.OracleNative    => new OracleMappingSchema.NativeMappingSchema(),
+				_                            => new OracleMappingSchema.ManagedMappingSchema(),
 			};
 		}
 
@@ -128,11 +130,11 @@ namespace LinqToDB.DataProvider.Oracle
 
 			if (rawCommand != null)
 			{
-				// binding disabled for native provider without parameters to reduce changes to fail when SQL contains
+				// binding disabled for native provider without parameters to reduce chances to fail when SQL contains
 				// parameter-like token.
 				// This is mostly issue with triggers creation, because they can have record tokens like :NEW
 				// incorectly identified by native provider as parameter
-				var bind = Name != ProviderName.OracleNative || parameters?.Length > 0 || withParameters;
+				var bind = !Adapter.BindingByNameEnabled || parameters?.Length > 0 || withParameters;
 				Adapter.SetBindByName(rawCommand, bind);
 
 				// https://docs.oracle.com/cd/B19306_01/win.102/b14307/featData.htm

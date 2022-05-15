@@ -317,7 +317,7 @@ namespace LinqToDB.Linq.Builder
 						if (mc.IsAssociation(MappingSchema))
 							return true;
 
-						return GetTableFunctionAttribute(mc.Method) != null;
+						return mc.Method.GetTableFunctionAttribute(MappingSchema) != null;
 					}
 
 					mc = mc.Arguments[0] as MethodCallExpression;
@@ -483,7 +483,10 @@ namespace LinqToDB.Linq.Builder
 						var expr = body.Transform(ma, static (ma, wpi) => wpi.NodeType == ExpressionType.Parameter ? ma.Expression! : wpi);
 
 						if (expr.Type != e.Type)
-							expr = new ChangeTypeExpression(expr, e.Type);
+						{
+							//expr = new ChangeTypeExpression(expr, e.Type);
+							expr = Expression.Convert(expr, e.Type);
+						}
 
 						//TODO: looks like a mess: ConvertExpression can not work without OptimizeExpression
 						return new TransformInfo(OptimizeExpression(ConvertExpression(expr)));
@@ -607,69 +610,7 @@ namespace LinqToDB.Linq.Builder
 			if (lambda == null)
 				lambda = Expressions.ConvertMember(MappingSchema, pi.Object?.Type, pi.Method);
 
-			return lambda == null ? null : ConvertMethod(pi, lambda);
-		}
-
-		static Expression ConvertMethod(MethodCallExpression pi, LambdaExpression lambda)
-		{
-			var ef    = lambda.Body.Unwrap();
-			var parms = new Dictionary<ParameterExpression,int>(lambda.Parameters.Count);
-			var pn    = pi.Method.IsStatic ? 0 : -1;
-
-			foreach (var p in lambda.Parameters)
-				parms.Add(p, pn++);
-
-			var pie = ef.Transform((pi, parms), static (context, wpi) =>
-			{
-				if (wpi.NodeType == ExpressionType.Parameter)
-				{
-					if (context.parms.TryGetValue((ParameterExpression)wpi, out var n))
-					{
-						if (n >= context.pi.Arguments.Count)
-						{
-							if (DataContextParam.Type.IsSameOrParentOf(wpi.Type))
-							{
-								if (DataContextParam.Type != wpi.Type)
-									return Expression.Convert(DataContextParam, wpi.Type);
-								return DataContextParam;
-							}
-
-							throw new LinqToDBException($"Can't convert {wpi} to expression.");
-						}
-
-						var result = n < 0 ? context.pi.Object! : context.pi.Arguments[n];
-
-						if (result.Type != wpi.Type)
-						{
-							var noConvert = result.UnwrapConvert();
-							if (noConvert.Type == wpi.Type)
-							{
-								result = noConvert;
-							}
-							else
-							{
-								if (noConvert.Type.IsValueType)
-									result = Expression.Convert(noConvert, wpi.Type);
-							}
-						}
-
-						return result;
-					}
-				}
-
-				return wpi;
-			});
-
-			if (pi.Method.ReturnType != pie.Type)
-			{
-				pie = pie.UnwrapConvert();
-				if (pi.Method.ReturnType != pie.Type)
-				{
-					pie = new ChangeTypeExpression(pie, pi.Method.ReturnType);
-				}
-			}
-
-			return pie;
+			return lambda == null ? null : OptimizationContext.ConvertMethod(pi, lambda);
 		}
 
 		Expression? ConvertNew(NewExpression pi)
@@ -876,6 +817,11 @@ namespace LinqToDB.Linq.Builder
 
 			if (context is SelectContext selectContext)
 			{
+				var result = ConvertToSql(context, expression, false, columnDescriptor);
+
+				if (!(result is SqlField field) || field.Table!.All != field)
+					return result;
+
 				if (null != expression.Find(selectContext.Body))
 					return context.ConvertToSql(null, 0, ConvertFlags.Field).Select(static _ => _.Sql).First();
 			}
@@ -1058,7 +1004,10 @@ namespace LinqToDB.Linq.Builder
 						e.Type.IsEnum && Enum.GetUnderlyingType(e.Type) == t)
 						return o;
 
-					return new SqlFunction(e.Type, "$Convert$", SqlDataType.GetDataType(e.Type), s, o);
+					return new SqlFunction(e.Type, "$Convert$", SqlDataType.GetDataType(e.Type), s, o)
+					{
+						CanBeNull = o.CanBeNull
+					};
 				}
 
 				case ExpressionType.Conditional:
@@ -1085,7 +1034,7 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.MemberAccess:
 				{
 					var ma   = (MemberExpression)expression;
-					var attr = GetExpressionAttribute(ma.Member);
+					var attr = ma.Member.GetExpressionAttribute(MappingSchema);
 
 					var converted = attr?.GetExpression((this_: this, context: context!), DataContext, context!.SelectQuery, ma,
 							static (context, e, descriptor) => context.this_.ConvertToExtensionSql(context.context, e, descriptor));
@@ -1195,7 +1144,7 @@ namespace LinqToDB.Linq.Builder
 					if (expr != null)
 						return ConvertToSql(context, expr, unwrap);
 
-					var attr = GetExpressionAttribute(e.Method);
+					var attr = e.Method.GetExpressionAttribute(MappingSchema);
 
 					if (attr != null)
 					{
@@ -1515,7 +1464,7 @@ namespace LinqToDB.Linq.Builder
 					if (predicate != null)
 						return predicate;
 
-					var attr = GetExpressionAttribute(e.Method);
+					var attr = e.Method.GetExpressionAttribute(MappingSchema);
 
 					if (attr != null && attr.GetIsPredicate(expression))
 						break;
@@ -2724,7 +2673,7 @@ namespace LinqToDB.Linq.Builder
 					case ExpressionType.MemberAccess :
 						{
 							var ma   = (MemberExpression)pi;
-							var attr = context.Builder.GetExpressionAttribute(ma.Member);
+							var attr = ma.Member.GetExpressionAttribute(context.Builder.MappingSchema);
 
 							if (attr == null && !ma.Member.IsNullableValueMember())
 							{
@@ -2762,7 +2711,7 @@ namespace LinqToDB.Linq.Builder
 
 							if (e.Method.DeclaringType != typeof(Enumerable))
 							{
-								var attr = context.Builder.GetExpressionAttribute(e.Method);
+								var attr = e.Method.GetExpressionAttribute(context.Builder.MappingSchema);
 
 								if (attr == null && context.CanBeCompiled)
 									return !context.Builder.CanBeCompiled(pi);
@@ -2834,16 +2783,6 @@ namespace LinqToDB.Linq.Builder
 					return current;
 
 			return null;
-		}
-
-		Sql.ExpressionAttribute? GetExpressionAttribute(MemberInfo member)
-		{
-			return MappingSchema.GetAttribute<Sql.ExpressionAttribute>(member.ReflectedType!, member, static a => a.Configuration);
-		}
-
-		public Sql.TableFunctionAttribute? GetTableFunctionAttribute(MemberInfo member)
-		{
-			return MappingSchema.GetAttribute<Sql.TableFunctionAttribute>(member.ReflectedType!, member, static a => a.Configuration);
 		}
 
 		bool IsNullConstant(Expression expr)

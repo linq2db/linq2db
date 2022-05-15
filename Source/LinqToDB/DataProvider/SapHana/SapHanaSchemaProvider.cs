@@ -316,11 +316,10 @@ namespace LinqToDB.DataProvider.SapHana
 					F.SCHEMA_NAME,
 					F.FUNCTION_NAME AS PROCEDURE_NAME,
 					1 AS IS_FUNCTION,
-					CASE WHEN FP.DATA_TYPE_NAME = 'TABLE_TYPE' THEN 1 ELSE 0 END AS IS_TABLE_FUNCTION,
+					CASE WHEN F.FUNCTION_USAGE_TYPE = 'TABLE' THEN 1 ELSE 0 END AS IS_TABLE_FUNCTION,
 					DEFINITION
 				FROM FUNCTIONS AS F
-				JOIN FUNCTION_PARAMETERS AS FP ON F.FUNCTION_OID = FP.FUNCTION_OID
-				WHERE FP.PARAMETER_TYPE = 'RETURN' AND F.SCHEMA_NAME " + SchemasFilter)
+				WHERE F.SCHEMA_NAME " + SchemasFilter)
 			.ToList();
 		}
 
@@ -425,7 +424,7 @@ namespace LinqToDB.DataProvider.SapHana
 			return columnName.IndexOfAny(invalidCharacters) > -1 ? string.Empty : columnName;
 		}
 
-		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, long? length, int? precision, int? scale, GetSchemaOptions options)
+		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, int? length, int? precision, int? scale, GetSchemaOptions options)
 		{
 			switch (dataType)
 			{
@@ -446,7 +445,7 @@ namespace LinqToDB.DataProvider.SapHana
 			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale, options);
 		}
 
-		protected override DataType GetDataType(string? dataType, string? columnType, long? length, int? prec, int? scale)
+		protected override DataType GetDataType(string? dataType, string? columnType, int? length, int? prec, int? scale)
 		{
 			switch (dataType)
 			{

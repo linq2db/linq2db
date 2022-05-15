@@ -112,7 +112,7 @@ namespace Tests.Mapping
 
 			var ed = ms.GetEntityDescriptor(typeof(MyClass));
 
-			Assert.That(ed.TableName, Is.EqualTo("newname"));
+			Assert.That(ed.Name.Name, Is.EqualTo("newname"));
 			Assert.That(ed.Columns.First().ColumnName, Is.EqualTo("id1"));
 		}
 
@@ -126,12 +126,12 @@ namespace Tests.Mapping
 
 			var ed = ms.GetEntityDescriptor(typeof(MyClass));
 
-			Assert.That(ed.TableName, Is.EqualTo("NewName"));
+			Assert.That(ed.Name.Name, Is.EqualTo("NewName"));
 
 			var ms2 = new MappingSchema();
 			var ed2 = ms2.GetEntityDescriptor(typeof(MyClass));
 
-			Assert.That(ed2.TableName, Is.EqualTo("MyClass"));
+			Assert.That(ed2.Name.Name, Is.EqualTo("MyClass"));
 		}
 
 		[Test]
@@ -144,7 +144,7 @@ namespace Tests.Mapping
 
 			var ed = ms.GetEntityDescriptor(typeof(MyClass));
 
-			Assert.That(ed.TableName, Is.EqualTo("MyClass"));
+			Assert.That(ed.Name.Name, Is.EqualTo("MyClass"));
 		}
 
 		[Test]
@@ -232,8 +232,8 @@ namespace Tests.Mapping
 
 			var ed = ms.GetEntityDescriptor(typeof(MyClass));
 
-			Assert.That(ed.TableName,  Is.EqualTo("Table"));
-			Assert.That(ed.SchemaName, Is.EqualTo("Schema"));
+			Assert.That(ed.Name.Name,   Is.EqualTo("Table"));
+			Assert.That(ed.Name.Schema, Is.EqualTo("Schema"));
 		}
 
 		[Test]
@@ -428,13 +428,13 @@ namespace Tests.Mapping
 
 			var od1 = ms.GetEntityDescriptor(typeof(MyClass));
 
-			Assert.AreEqual("Name1", od1.TableName);
+			Assert.AreEqual("Name1", od1.Name.Name);
 
 			b.Entity<MyClass>().HasTableName("Name2");
 
 			var od2 = ms.GetEntityDescriptor(typeof(MyClass));
 
-			Assert.AreEqual("Name2", od2.TableName);
+			Assert.AreEqual("Name2", od2.Name.Name);
 
 		}
 
@@ -509,7 +509,7 @@ namespace Tests.Mapping
 
 			var ed = ms.GetEntityDescriptor(typeof(MyInheritedClass4));
 
-			Assert.AreEqual(nameof(IInterfaceBase), ed.TableName);
+			Assert.AreEqual(nameof(IInterfaceBase), ed.Name.Name);
 
 			Assert.AreEqual(true, ed[nameof(MyInheritedClass4.IntValue)]!    .SkipOnUpdate);
 			Assert.AreEqual(true, ed[nameof(MyInheritedClass4.StringValue)]! .SkipOnInsert);

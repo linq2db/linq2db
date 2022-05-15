@@ -170,7 +170,7 @@ namespace LinqToDB.Linq.Builder
 					var optimizationContext = new ExpressionTreeOptimizationContext(dc);
 					var optimizedExpr       = optimizationContext.ExposeExpression(closureExpr);
 					    optimizedExpr       = optimizationContext.ExpandQueryableMethods(optimizedExpr);
-					    optimizedExpr       = optimizedExpr.OptimizeExpression()!;
+					    optimizedExpr       = optimizedExpr.OptimizeExpression(dc.MappingSchema)!;
 					return optimizedExpr;
 				});
 			}
@@ -272,7 +272,7 @@ namespace LinqToDB.Linq.Builder
 
 			definedQueryMethod = (LambdaExpression)builder.ConvertExpressionTree(definedQueryMethod);
 			definedQueryMethod = (LambdaExpression)builder.ConvertExpression(definedQueryMethod);
-			definedQueryMethod = (LambdaExpression)definedQueryMethod.OptimizeExpression()!;
+			definedQueryMethod = (LambdaExpression)definedQueryMethod.OptimizeExpression(builder.MappingSchema)!;
 
 			return definedQueryMethod;
 		}

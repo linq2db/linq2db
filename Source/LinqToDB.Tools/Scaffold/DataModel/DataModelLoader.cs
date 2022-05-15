@@ -4,6 +4,7 @@ using LinqToDB.CodeModel;
 using LinqToDB.DataModel;
 using LinqToDB.Naming;
 using LinqToDB.Schema;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Scaffold
 {
@@ -28,7 +29,7 @@ namespace LinqToDB.Scaffold
 
 		// lookups for created data model objects:
 		// entity model lookup by schema table/view object (e.g. for conversion of foreign keys to associations)
-		private readonly Dictionary<ObjectName, TableWithEntity>   _entities = new ();
+		private readonly Dictionary<SqlObjectName, TableWithEntity>   _entities = new ();
 		// column model lookup
 		private readonly Dictionary<EntityModel, Dictionary<string, ColumnModel>> _columns  = new ();
 
@@ -105,7 +106,7 @@ Changes to this file may cause incorrect behavior and will be lost if the code i
 			// load foreign keys as associations
 			if (_options.Schema.LoadedObjects.HasFlag(SchemaObjects.ForeignKey))
 			{
-				Dictionary<(ObjectName from, ObjectName to), List<ISet<ForeignKeyColumnMapping>>>? duplicateFKs = null;
+				Dictionary<(SqlObjectName from, SqlObjectName to), List<ISet<ForeignKeyColumnMapping>>>? duplicateFKs = null;
 
 				foreach (var fk in _interceptors.GetForeignKeys(_schemaProvider.GetForeignKeys()))
 				{
@@ -150,7 +151,10 @@ Changes to this file may cause incorrect behavior and will be lost if the code i
 
 					var association = BuildAssociations(fk, defaultSchemas);
 					if (association != null)
+					{
+						_interceptors.PreprocessAssociation(_languageProvider.TypeParser, association);
 						dataContext.Associations.Add(association);
+					}
 				}
 			}
 

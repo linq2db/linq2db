@@ -6,7 +6,7 @@ namespace LinqToDB.DataProvider.Oracle
 	using SqlProvider;
 	using SqlQuery;
 
-	class Oracle12SqlBuilder : Oracle11SqlBuilder
+	class Oracle12SqlBuilder : OracleSqlBuilderBase
 	{
 		public Oracle12SqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)

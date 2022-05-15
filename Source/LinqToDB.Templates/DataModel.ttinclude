@@ -275,11 +275,12 @@ void LoadServerMetadata(DataConnection dataConnection)
 		.Select(p => new
 		{
 			p,
-			key = p.IsDefaultSchema ? p.ProcedureName : p.SchemaName + "." + p.ProcedureName,
+			key = p.IsDefaultSchema ? (p.PackageName == null ? null : (p.PackageName + ".")) + p.ProcedureName : p.SchemaName + "." + (p.PackageName == null ? null : (p.PackageName + ".")) + p.ProcedureName,
 			proc = new Procedure
 			{
 				Schema              = (p.IsDefaultSchema && !IncludeDefaultSchema) || string.IsNullOrEmpty(p.SchemaName)? null : p.SchemaName,
 				ProcedureName       = p.ProcedureName,
+				PackageName         = p.PackageName,
 				Name                = ToValidName(p.MemberName, true),
 				IsFunction          = p.IsFunction,
 				IsTableFunction     = p.IsTableFunction,
@@ -766,7 +767,7 @@ public partial class Column : Property
 	public bool      IsIdentity;
 	public string    ColumnType; // Type of the column in database
 	public string    DataType;
-	public long?     Length;
+	public int?      Length;
 	public int?      Precision;
 	public int?      Scale;
 	public DbType    DbType;
@@ -841,6 +842,7 @@ public partial class Procedure : Method
 {
 	public string Schema              { get; set; }
 	public string ProcedureName       { get; set; }
+	public string PackageName         { get; set; }
 	public bool   IsFunction          { get; set; }
 	public bool   IsTableFunction     { get; set; }
 	public bool   IsAggregateFunction { get; set; }
@@ -861,7 +863,7 @@ public class Parameter
 	public bool     IsIn          { get; set; }
 	public bool     IsOut         { get; set; }
 	public bool     IsResult      { get; set; }
-	public long?    Size          { get; set; }
+	public int?     Size          { get; set; }
 
 	public string   ParameterName { get; set; }
 	public string   ParameterType { get; set; }

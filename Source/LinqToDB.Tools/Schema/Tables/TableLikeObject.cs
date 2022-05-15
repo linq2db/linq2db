@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Schema
 {
@@ -11,7 +12,7 @@ namespace LinqToDB.Schema
 	/// <param name="Identity">Optional identity column descriptor.</param>
 	/// <param name="PrimaryKey">Optional primary key descriptor.</param>
 	public abstract record TableLikeObject(
-		ObjectName                  Name,
+		SqlObjectName               Name,
 		string?                     Description,
 		IReadOnlyCollection<Column> Columns,
 		Identity?                   Identity,

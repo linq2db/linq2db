@@ -2,13 +2,13 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Text;
+using System.Data.Common;
 
 namespace LinqToDB.DataProvider.Sybase
 {
 	using SqlQuery;
 	using SqlProvider;
 	using Mapping;
-	using System.Data.Common;
 
 	partial class SybaseSqlBuilder : BasicSqlBuilder
 	{
@@ -151,9 +151,10 @@ namespace LinqToDB.DataProvider.Sybase
 
 					return sb.Append('[').Append(value).Append(']');
 
-				case ConvertType.NameToDatabase:
-				case ConvertType.NameToSchema:
+				case ConvertType.NameToDatabase  :
+				case ConvertType.NameToSchema    :
 				case ConvertType.NameToQueryTable:
+				case ConvertType.NameToProcedure :
 					if (_skipBrackets || value.Length > 28 || value.Length > 0 && (value[0] == '[' || value[0] == '#'))
 						return sb.Append(value);
 
@@ -224,7 +225,7 @@ namespace LinqToDB.DataProvider.Sybase
 			if (statement is SqlTruncateTableStatement trun)
 			{
 				StringBuilder.Append("sp_chgattribute ");
-				ConvertTableName(StringBuilder, trun.Table!.Server, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName!, trun.Table.TableOptions);
+				BuildObjectName(StringBuilder, trun.Table!.TableName, ConvertType.NameToQueryTable, true, trun.Table.TableOptions);
 				StringBuilder.AppendLine(", 'identity_burn_max', 0, '0'");
 			}
 		}
@@ -236,49 +237,37 @@ namespace LinqToDB.DataProvider.Sybase
 			StringBuilder.AppendLine(enable ? " ON" : " OFF");
 		}
 
-		public override string? GetTableDatabaseName(SqlTable table)
+		private string GetTablePhysicalName(string physicalName, TableOptions tableOptions)
 		{
-			if (IsTemporary(table))
-				return null;
+			if (physicalName.StartsWith("#") || !tableOptions.IsTemporaryOptionSet())
+				return physicalName;
 
-			return base.GetTableDatabaseName(table);
+			switch (tableOptions & TableOptions.IsTemporaryOptionSet)
+			{
+				case TableOptions.IsTemporary                                                                              :
+				case TableOptions.IsTemporary |                                          TableOptions.IsLocalTemporaryData :
+				case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                     :
+				case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData :
+				case                                                                     TableOptions.IsLocalTemporaryData :
+				case                            TableOptions.IsLocalTemporaryStructure                                     :
+				case                            TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData :
+					return $"#{physicalName}";
+				case TableOptions.IsGlobalTemporaryStructure                                                               :
+				case TableOptions.IsGlobalTemporaryStructure | TableOptions.IsGlobalTemporaryData                          :
+					return $"##{physicalName}";
+				case var value :
+					throw new InvalidOperationException($"Incompatible table options '{value}'");
+			}
 		}
 
-		public override string? GetTablePhysicalName(SqlTable table)
+		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions)
 		{
-			if (table.PhysicalName == null)
-				return null;
+			if (name.Database != null && IsTemporary(name.Name, tableOptions))
+				name = name with { Database = null };
 
-			var physicalName = table.PhysicalName.StartsWith("#") ? table.PhysicalName : GetName();
+			name = name with { Name = GetTablePhysicalName(name.Name, tableOptions) };
 
-			string GetName()
-			{
-				if (table.TableOptions.IsTemporaryOptionSet())
-				{
-					switch (table.TableOptions & TableOptions.IsTemporaryOptionSet)
-					{
-						case TableOptions.IsTemporary                                                                              :
-						case TableOptions.IsTemporary |                                          TableOptions.IsLocalTemporaryData :
-						case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                     :
-						case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData :
-						case                                                                     TableOptions.IsLocalTemporaryData :
-						case                            TableOptions.IsLocalTemporaryStructure                                     :
-						case                            TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData :
-							return $"#{table.PhysicalName}";
-						case TableOptions.IsGlobalTemporaryStructure                                                               :
-						case TableOptions.IsGlobalTemporaryStructure | TableOptions.IsGlobalTemporaryData                          :
-							return $"##{table.PhysicalName}";
-						case var value :
-							throw new InvalidOperationException($"Incompatible table options '{value}'");
-					}
-				}
-				else
-				{
-					return table.PhysicalName;
-				}
-			}
-
-			return Convert(new StringBuilder(), physicalName, ConvertType.NameToQueryTable).ToString();
+			return base.BuildObjectName(sb, name, objectType, escape, tableOptions);
 		}
 
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
@@ -311,7 +300,7 @@ namespace LinqToDB.DataProvider.Sybase
 			{
 				var table = createTable.Table;
 
-				var isTemporary = IsTemporary(table);
+				var isTemporary = IsTemporary(table.TableName.Name, table.TableOptions);
 
 				_skipBrackets = true;
 				StringBuilder.Append("IF (OBJECT_ID(N'");
@@ -337,7 +326,7 @@ namespace LinqToDB.DataProvider.Sybase
 
 			if (createTable.StatementHeader == null && createTable.Table!.TableOptions.HasCreateIfNotExists())
 			{
-				if (!IsTemporary(createTable.Table))
+				if (!IsTemporary(createTable.Table.TableName.Name, createTable.Table.TableOptions))
 				{
 					Indent--;
 					AppendIndent().AppendLine("')");
@@ -347,9 +336,9 @@ namespace LinqToDB.DataProvider.Sybase
 			}
 		}
 
-		static bool IsTemporary(SqlTable table)
+		static bool IsTemporary(string tableName, TableOptions tableOptions)
 		{
-			return table.TableOptions.IsTemporaryOptionSet() || table.PhysicalName!.StartsWith("#");
+			return tableOptions.IsTemporaryOptionSet() || tableName.StartsWith("#");
 		}
 
 		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr) => BuildIsDistinctPredicateFallback(expr);
