@@ -11,36 +11,26 @@ namespace LinqToDB.SqlQuery
 	{
 		public SqlValue(Type systemType, object? value)
 		{
-			_valueType  = new DbDataType(systemType);
-			_value     = value;
+			_valueType    = new DbDataType(systemType);
+			Value         = value;
 		}
 
 		public SqlValue(DbDataType valueType, object? value)
 		{
-			_valueType = valueType;
-			_value     = value;
+			_valueType    = valueType;
+			Value         = value;
 		}
 
 		public SqlValue(object value)
 		{
-			_value     = value ?? throw new ArgumentNullException(nameof(value), "Untyped null value");
-			_valueType = new DbDataType(value.GetType());
+			Value         = value ?? throw new ArgumentNullException(nameof(value), "Untyped null value");
+			_valueType    = new DbDataType(value.GetType());
 		}
 
-		object? _value;
-
-		public object? Value
-		{
-			get => _value;
-			internal set
-			{
-				if (_value == value)
-					return;
-
-				_value    = value;
-				_hashCode = null;
-			}
-		}
+		/// <summary>
+		/// Provider specific value
+		/// </summary>
+		public object? Value { get; }
 
 		DbDataType _valueType;
 

@@ -336,7 +336,7 @@ namespace LinqToDB.Data
 			{
 				var p          = command.CreateParameter();
 				var dbDataType = parmValue.DbDataType;
-				var paramValue = parameter.CorrectParameterValue(parmValue.Value);
+				var paramValue = parameter.CorrectParameterValue(parmValue.ProviderValue);
 
 				if (dbDataType.DataType == DataType.Undefined)
 				{

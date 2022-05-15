@@ -668,6 +668,7 @@ namespace LinqToDB
 			{
 				var str = builder.GetExpression("str");
 
+				const string whiteSpaces = $"%[^{WHITESPACES}]%";
 				var condition = new SqlCondition(
 					false,
 					new SqlPredicate.NotExpr(
@@ -677,7 +678,7 @@ namespace LinqToDB
 							Precedence.Comparison,
 							SqlFlags.IsPredicate,
 							str,
-							new SqlValue(typeof(string), $"%[^{WHITESPACES}]%")),
+							new SqlValue(typeof(string), whiteSpaces)),
 						true,
 						Precedence.LogicalNegation),
 					true);
@@ -698,6 +699,7 @@ namespace LinqToDB
 			{
 				var str = builder.GetExpression("str");
 
+				var whiteSpaces = $"[^{WHITESPACES}]";
 				var condition = new SqlCondition(
 					false,
 					new SqlPredicate.NotExpr(
@@ -707,7 +709,7 @@ namespace LinqToDB
 							Precedence.Comparison,
 							SqlFlags.IsPredicate,
 							str,
-							new SqlValue(typeof(string), $"[^{WHITESPACES}]")),
+							new SqlValue(typeof(string), whiteSpaces)),
 						true,
 						Precedence.LogicalNegation),
 					true);
@@ -728,12 +730,13 @@ namespace LinqToDB
 			{
 				var str = builder.GetExpression("str");
 
+				var whiteSpaces = $"%[^{WHITESPACES}]%";
 				var condition = new SqlCondition(
 					false,
 					new SqlPredicate.Like(
 						str,
 						true,
-						new SqlValue(typeof(string), $"%[^{WHITESPACES}]%"),
+						new SqlValue(typeof(string), whiteSpaces),
 						null),
 					true);
 
@@ -753,12 +756,13 @@ namespace LinqToDB
 			{
 				var str = builder.GetExpression("str");
 
+				var whiteSpaces = $"%[^{WHITESPACES}]%";
 				var condition = new SqlCondition(
 					false,
 					new SqlPredicate.Like(
 						str,
 						true,
-						new SqlValue(new DbDataType(typeof(string), DataType.NVarChar), $"%[^{WHITESPACES}]%"),
+						new SqlValue(new DbDataType(typeof(string), DataType.NVarChar), whiteSpaces),
 						null),
 					true);
 

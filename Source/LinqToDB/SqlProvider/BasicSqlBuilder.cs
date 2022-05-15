@@ -2441,7 +2441,7 @@ namespace LinqToDB.SqlProvider
 			// Handle x.In(IEnumerable variable)
 			if (values.Count == 1 && values[0] is SqlParameter pr)
 			{
-				var prValue = pr.GetParameterValue(OptimizationContext.Context.ParameterValues).Value;
+				var prValue = pr.GetParameterValue(OptimizationContext.Context.ParameterValues).ProviderValue;
 				switch (prValue)
 				{
 					case null:
@@ -2839,7 +2839,7 @@ namespace LinqToDB.SqlProvider
 						if (inlining)
 						{
 							var paramValue = parm.GetParameterValue(OptimizationContext.Context.ParameterValues);
-							if (!MappingSchema.TryConvertToSql(StringBuilder, new SqlDataType(paramValue.DbDataType), paramValue.Value))
+							if (!MappingSchema.TryConvertToSql(StringBuilder, new SqlDataType(paramValue.DbDataType), paramValue.ProviderValue))
 								inlining = false;
 						}
 

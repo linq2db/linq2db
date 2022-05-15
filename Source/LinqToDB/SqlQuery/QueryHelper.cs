@@ -1392,10 +1392,9 @@ namespace LinqToDB.SqlQuery
 				var brackets = open.Length / 2;
 				if (match.Index > lastMatchPosition)
 				{
-
+					var value = StripDoubleQuotes(format.Substring(lastMatchPosition, match.Index - lastMatchPosition + brackets));
 					current = new SqlBinaryExpression(typeof(string),
-						new SqlValue(typeof(string),
-							StripDoubleQuotes(format.Substring(lastMatchPosition, match.Index - lastMatchPosition + brackets))),
+						new SqlValue(typeof(string), value),
 						"+", current,
 						Precedence.Additive);
 				}
@@ -1407,9 +1406,9 @@ namespace LinqToDB.SqlQuery
 
 			if (result != null && lastMatchPosition < format.Length)
 			{
+				var value = StripDoubleQuotes(format.Substring(lastMatchPosition, format.Length - lastMatchPosition));
 				result = new SqlBinaryExpression(typeof(string),
-					result, "+", new SqlValue(typeof(string),
-						StripDoubleQuotes(format.Substring(lastMatchPosition, format.Length - lastMatchPosition))), Precedence.Additive);
+					result, "+", new SqlValue(typeof(string), value), Precedence.Additive);
 			}
 
 			result ??= new SqlValue(typeof(string), format);
