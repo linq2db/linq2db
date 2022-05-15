@@ -44,7 +44,7 @@ namespace LinqToDB.DataProvider.Informix
 				var field = trun.Table!.IdentityFields[commandNumber - 1];
 
 				StringBuilder.Append("ALTER TABLE ");
-				ConvertTableName(StringBuilder, trun.Table.Server, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName!, trun.Table.TableOptions);
+				BuildObjectName(StringBuilder, trun.Table.TableName, ConvertType.NameToQueryTable, true, trun.Table.TableOptions);
 				StringBuilder.Append(" MODIFY ");
 				Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
 				StringBuilder.AppendLine(" SERIAL(1)");
@@ -177,8 +177,12 @@ namespace LinqToDB.DataProvider.Informix
 			switch (convertType)
 			{
 				case ConvertType.NameToQueryFieldAlias:
-				case ConvertType.NameToQueryField:
-				case ConvertType.NameToQueryTable:
+				case ConvertType.NameToQueryField     :
+				case ConvertType.NameToQueryTable     :
+				case ConvertType.NameToProcedure      :
+				case ConvertType.NameToServer         :
+				case ConvertType.NameToDatabase       :
+				case ConvertType.NameToSchema         :
 					if (value.Length > 0 && !IsValidIdentifier(value))
 						// I wonder what to do if identifier has " in name?
 						return sb.Append('"').Append(value).Append('"');
@@ -228,28 +232,38 @@ namespace LinqToDB.DataProvider.Informix
 		}
 
 		// https://www.ibm.com/support/knowledgecenter/en/SSGU8G_12.1.0/com.ibm.sqls.doc/ids_sqs_1652.htm
-		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table, TableOptions tableOptions)
+		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions)
 		{
-			if (server   != null && server  .Length == 0) server   = null;
-			if (database != null && database.Length == 0) database = null;
-			if (schema   != null && schema.  Length == 0) schema   = null;
-
-			if (server != null && database == null)
+			if (name.Server != null && name.Database == null)
 				throw new LinqToDBException("You must specify database for linked server query");
 
-			if (database != null)
-				sb.Append(database);
+			if (name.Database != null)
+			{
+				if (escape)
+					Convert(sb, name.Database, ConvertType.NameToDatabase);
+				else
+					sb.Append(name.Database);
+			}
 
-			if (server != null)
-				sb.Append('@').Append(server);
+			if (name.Server != null)
+			{
+				sb.Append('@');
+				if (escape)
+					Convert(sb, name.Server, ConvertType.NameToServer);
+				else
+					sb.Append(name.Server);
+			}
 
-			if (database != null)
+			if (name.Database != null)
 				sb.Append(':');
 
-			if (schema != null)
-				sb.Append(schema).Append('.');
+			if (name.Schema != null)
+			{
+				(escape ? Convert(sb, name.Schema, ConvertType.NameToSchema) : sb.Append(name.Schema))
+					.Append('.');
+			}
 
-			return sb.Append(table);
+			return escape ? Convert(sb, name.Name, objectType) : sb.Append(name.Name);
 		}
 
 		protected override string? GetProviderTypeName(IDataContext dataContext, DbParameter parameter)
@@ -340,6 +354,5 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			return ReservedWords.IsReserved(word, ProviderName.Informix);
 		}
-
 	}
 }

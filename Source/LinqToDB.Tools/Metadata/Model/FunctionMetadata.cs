@@ -1,4 +1,5 @@
 ﻿using LinqToDB.Schema;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Metadata
 {
@@ -11,7 +12,7 @@ namespace LinqToDB.Metadata
 		/// <summary>
 		/// Function name.
 		/// </summary>
-		public ObjectName?         Name             { get; set; }
+		public SqlObjectName?      Name             { get; set; }
 		/// <summary>
 		/// Contains indexes of mapped method parameters, that should be mapped to function parameter with position
 		/// matching position of index in array.

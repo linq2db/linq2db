@@ -33,7 +33,7 @@ namespace Tests
 		/// <summary>
 		/// MariaDB over MySqlConnector.
 		/// </summary>
-		public const string MariaDBConnector  = "MariaDBMariaDBConnector";
+		public const string MariaDBConnector  = "MariaDBConnector";
 		/// <summary>
 		/// MySQL 5.5 over MySql.Data.
 		/// </summary>

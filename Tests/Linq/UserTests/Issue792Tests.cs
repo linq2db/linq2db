@@ -88,6 +88,7 @@ namespace Tests.UserTests
 			ProviderName.DB2,
 			ProviderName.Access,
 			TestProvName.AllMySql,
+			TestProvName.AllOracle,
 			TestProvName.AllSqlServer)]
 			string context)
 		{

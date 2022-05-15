@@ -1614,10 +1614,10 @@ namespace Sql2017ProcSchema
 		#region Associations
 
 		/// <summary>
-		/// FK_TestSchemaY_OtherID (TestData2017.dbo.TestSchemaX)
+		/// FK_TestSchemaY_TestSchemaX (TestData2017.dbo.TestSchemaX)
 		/// </summary>
 		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false)]
-		public TestSchemaX FkTestSchemaYOtherID { get; set; } = null!;
+		public TestSchemaX FkTestSchemaYTestSchemaX { get; set; } = null!;
 
 		/// <summary>
 		/// FK_TestSchemaY_ParentTestSchemaX (TestData2017.dbo.TestSchemaX)
@@ -1626,7 +1626,7 @@ namespace Sql2017ProcSchema
 		public TestSchemaX ParentTestSchemaX { get; set; } = null!;
 
 		/// <summary>
-		/// FK_TestSchemaY_TestSchemaX (TestData2017.dbo.TestSchemaX)
+		/// FK_TestSchemaY_OtherID (TestData2017.dbo.TestSchemaX)
 		/// </summary>
 		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false)]
 		public TestSchemaX TestSchemaX { get; set; } = null!;
@@ -2265,7 +2265,7 @@ namespace Sql2017ProcSchema
 		/// <param name="value">
 		/// This is &lt;test&gt; scalar function parameter!
 		/// </param>
-		[Sql.Function(Name="ScalarFunction", ServerSideOnly=true)]
+		[Sql.Function(Name="[ScalarFunction]", ServerSideOnly=true)]
 		public static int? ScalarFunction(int? @value)
 		{
 			throw new InvalidOperationException();
@@ -2585,19 +2585,19 @@ namespace Sql2017ProcSchema
 		#region TestSchemaY Associations
 
 		/// <summary>
-		/// FK_TestSchemaY_OtherID
+		/// FK_TestSchemaY_TestSchemaX
 		/// </summary>
 		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false)]
-		public static IQueryable<TestSchemaX> FkTestSchemaYOtherIds(this TestSchemaY obj, IDataContext db)
+		public static IQueryable<TestSchemaX> FkTestSchemaYTestSchemaX(this TestSchemaY obj, IDataContext db)
 		{
 			return db.GetTable<TestSchemaX>().Where(c => c.TestSchemaXID == obj.TestSchemaXID);
 		}
 
 		/// <summary>
-		/// FK_TestSchemaY_OtherID
+		/// FK_TestSchemaY_TestSchemaX
 		/// </summary>
 		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false)]
-		public static TestSchemaY FkTestSchemaYOtherID(this TestSchemaX obj, IDataContext db)
+		public static TestSchemaY FkTestSchemaYTestSchemaX0(this TestSchemaX obj, IDataContext db)
 		{
 			return db.GetTable<TestSchemaY>().Where(c => c.TestSchemaXID == obj.TestSchemaXID).First();
 		}
@@ -2621,7 +2621,7 @@ namespace Sql2017ProcSchema
 		}
 
 		/// <summary>
-		/// FK_TestSchemaY_TestSchemaX
+		/// FK_TestSchemaY_OtherID
 		/// </summary>
 		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false)]
 		public static IQueryable<TestSchemaX> TestSchemaX(this TestSchemaY obj, IDataContext db)
@@ -2630,7 +2630,7 @@ namespace Sql2017ProcSchema
 		}
 
 		/// <summary>
-		/// FK_TestSchemaY_TestSchemaX
+		/// FK_TestSchemaY_OtherID
 		/// </summary>
 		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false)]
 		public static TestSchemaY TestSchemaX0(this TestSchemaX obj, IDataContext db)

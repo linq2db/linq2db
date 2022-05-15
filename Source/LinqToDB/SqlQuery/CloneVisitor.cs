@@ -270,12 +270,8 @@ namespace LinqToDB.SqlQuery
 							Array<SqlField>.Empty,
 							Clone(cteTable.Cte))
 					{
-						Name         = cteTable.BaseName,
 						Alias        = cteTable.Alias,
-						Server       = cteTable.Server,
-						Database     = cteTable.Database,
-						Schema       = cteTable.Schema,
-						PhysicalName = cteTable.BasePhysicalName,
+						TableName    = cteTable.TableName,
 						ObjectType   = cteTable.ObjectType,
 						SqlTableType = cteTable.SqlTableType,
 					};
@@ -664,14 +660,9 @@ namespace LinqToDB.SqlQuery
 				{
 					var table = (SqlTable)(IQueryElement)element;
 
-					var newTable = new SqlTable(table.ObjectType, null)
+					var newTable = new SqlTable(table.ObjectType, null, table.TableName)
 					{
-						Name               = table.Name,
 						Alias              = table.Alias,
-						Server             = table.Server,
-						Database           = table.Database,
-						Schema             = table.Schema,
-						PhysicalName       = table.PhysicalName,
 						SqlTableType       = table.SqlTableType,
 						SequenceAttributes = table.SequenceAttributes,
 					};

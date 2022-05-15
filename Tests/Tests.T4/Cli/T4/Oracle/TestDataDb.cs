@@ -9,11 +9,13 @@ using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Configuration;
 using LinqToDB.Data;
+using LinqToDB.Expressions;
 using LinqToDB.Mapping;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Reflection;
 
 #pragma warning disable 1573, 1591
 #nullable enable
@@ -85,6 +87,53 @@ namespace Cli.T4.Oracle
 		/// </summary>
 		public ITable<SchemaTestMatView>       SchemaTestMatViews       => this.GetTable<SchemaTestMatView>();
 		public ITable<SchemaTestView>          SchemaTestViews          => this.GetTable<SchemaTestView>();
+
+		#region Table Functions
+		#region TestPackage1TestTableFunction
+		private static readonly MethodInfo _testTableFunction = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.TestPackage1TestTableFunction(default));
+
+		[Sql.TableFunction("TEST_TABLE_FUNCTION", Package = "TEST_PACKAGE1", Schema = "MANAGED")]
+		public ITable<TestPackage1TestTableFunctionResult> TestPackage1TestTableFunction(decimal? i)
+		{
+			return this.GetTable<TestPackage1TestTableFunctionResult>(this, _testTableFunction, i);
+		}
+
+		public partial class TestPackage1TestTableFunctionResult
+		{
+			[Column("O")] public decimal? O { get; set; }
+		}
+		#endregion
+
+		#region TestPackage2TestTableFunction
+		private static readonly MethodInfo _testTableFunction1 = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.TestPackage2TestTableFunction(default));
+
+		[Sql.TableFunction("TEST_TABLE_FUNCTION", Package = "TEST_PACKAGE2", Schema = "MANAGED")]
+		public ITable<TestPackage2TestTableFunctionResult> TestPackage2TestTableFunction(decimal? i)
+		{
+			return this.GetTable<TestPackage2TestTableFunctionResult>(this, _testTableFunction1, i);
+		}
+
+		public partial class TestPackage2TestTableFunctionResult
+		{
+			[Column("O")] public decimal? O { get; set; }
+		}
+		#endregion
+
+		#region TestTableFunction
+		private static readonly MethodInfo _testTableFunction2 = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.TestTableFunction(default));
+
+		[Sql.TableFunction("TEST_TABLE_FUNCTION", Schema = "MANAGED")]
+		public ITable<TestTableFunctionResult> TestTableFunction(decimal? i)
+		{
+			return this.GetTable<TestTableFunctionResult>(this, _testTableFunction2, i);
+		}
+
+		public partial class TestTableFunctionResult
+		{
+			[Column("O")] public decimal? O { get; set; }
+		}
+		#endregion
+		#endregion
 	}
 
 	[Table("AllTypes", Schema = "MANAGED")]
@@ -225,35 +274,71 @@ namespace Cli.T4.Oracle
 		#endregion
 
 		#region Stored Procedures
-		#region PersonUpdate
-		public static int PersonUpdate(this TestDataDB dataConnection, decimal? ppersonid, string? pfirstname, string? plastname, string? pmiddlename, string? pgender)
+		#region TestPackage1TestProcedure
+		public static int TestPackage1TestProcedure(this TestDataDB dataConnection, decimal? i, out decimal? o)
 		{
 			var parameters = new []
 			{
-				new DataParameter("PPERSONID", ppersonid, DataType.Decimal)
+				new DataParameter("I", i, DataType.Decimal)
 				{
 					Size = 22
 				},
-				new DataParameter("PFIRSTNAME", pfirstname, DataType.NVarChar),
-				new DataParameter("PLASTNAME", plastname, DataType.NVarChar),
-				new DataParameter("PMIDDLENAME", pmiddlename, DataType.NVarChar),
-				new DataParameter("PGENDER", pgender, DataType.Char)
-			};
-			return dataConnection.ExecuteProc("MANAGED.PERSON_UPDATE", parameters);
-		}
-		#endregion
-
-		#region PersonDelete
-		public static int PersonDelete(this TestDataDB dataConnection, decimal? ppersonid)
-		{
-			var parameters = new []
-			{
-				new DataParameter("PPERSONID", ppersonid, DataType.Decimal)
+				new DataParameter("O", null, DataType.Decimal)
 				{
+					Direction = ParameterDirection.Output,
 					Size = 22
 				}
 			};
-			return dataConnection.ExecuteProc("MANAGED.PERSON_DELETE", parameters);
+			o = Converter.ChangeTypeTo<decimal?>(parameters[1].Value);
+			return dataConnection.ExecuteProc("MANAGED.TEST_PACKAGE1.TEST_PROCEDURE", parameters);
+		}
+		#endregion
+
+		#region TestPackage2TestProcedure
+		public static int TestPackage2TestProcedure(this TestDataDB dataConnection, decimal? i, out decimal? o)
+		{
+			var parameters = new []
+			{
+				new DataParameter("I", i, DataType.Decimal)
+				{
+					Size = 22
+				},
+				new DataParameter("O", null, DataType.Decimal)
+				{
+					Direction = ParameterDirection.Output,
+					Size = 22
+				}
+			};
+			o = Converter.ChangeTypeTo<decimal?>(parameters[1].Value);
+			return dataConnection.ExecuteProc("MANAGED.TEST_PACKAGE2.TEST_PROCEDURE", parameters);
+		}
+		#endregion
+
+		#region Addissue792Record
+		public static int Addissue792Record(this TestDataDB dataConnection)
+		{
+			return dataConnection.ExecuteProc("MANAGED.ADDISSUE792RECORD");
+		}
+		#endregion
+
+		#region Outrefenumtest
+		public static int Outrefenumtest(this TestDataDB dataConnection, string? pstr, out string? poutputstr, ref string? pinputoutputstr)
+		{
+			var parameters = new []
+			{
+				new DataParameter("PSTR", pstr, DataType.NVarChar),
+				new DataParameter("POUTPUTSTR", null, DataType.NVarChar)
+				{
+					Direction = ParameterDirection.Output
+				},
+				new DataParameter("PINPUTOUTPUTSTR", pinputoutputstr, DataType.NVarChar)
+				{
+					Direction = ParameterDirection.InputOutput
+				}
+			};
+			poutputstr = Converter.ChangeTypeTo<string?>(parameters[1].Value);
+			pinputoutputstr = Converter.ChangeTypeTo<string?>(parameters[2].Value);
+			return dataConnection.ExecuteProc("MANAGED.OUTREFENUMTEST", parameters);
 		}
 		#endregion
 
@@ -294,24 +379,161 @@ namespace Cli.T4.Oracle
 		}
 		#endregion
 
-		#region Outrefenumtest
-		public static int Outrefenumtest(this TestDataDB dataConnection, string? pstr, out string? poutputstr, ref string? pinputoutputstr)
+		#region PersonDelete
+		public static int PersonDelete(this TestDataDB dataConnection, decimal? ppersonid)
 		{
 			var parameters = new []
 			{
-				new DataParameter("PSTR", pstr, DataType.NVarChar),
-				new DataParameter("POUTPUTSTR", null, DataType.NVarChar)
+				new DataParameter("PPERSONID", ppersonid, DataType.Decimal)
 				{
-					Direction = ParameterDirection.Output
-				},
-				new DataParameter("PINPUTOUTPUTSTR", pinputoutputstr, DataType.NVarChar)
-				{
-					Direction = ParameterDirection.InputOutput
+					Size = 22
 				}
 			};
-			poutputstr = Converter.ChangeTypeTo<string?>(parameters[1].Value);
-			pinputoutputstr = Converter.ChangeTypeTo<string?>(parameters[2].Value);
-			return dataConnection.ExecuteProc("MANAGED.OUTREFENUMTEST", parameters);
+			return dataConnection.ExecuteProc("MANAGED.PERSON_DELETE", parameters);
+		}
+		#endregion
+
+		#region PersonUpdate
+		public static int PersonUpdate(this TestDataDB dataConnection, decimal? ppersonid, string? pfirstname, string? plastname, string? pmiddlename, string? pgender)
+		{
+			var parameters = new []
+			{
+				new DataParameter("PPERSONID", ppersonid, DataType.Decimal)
+				{
+					Size = 22
+				},
+				new DataParameter("PFIRSTNAME", pfirstname, DataType.NVarChar),
+				new DataParameter("PLASTNAME", plastname, DataType.NVarChar),
+				new DataParameter("PMIDDLENAME", pmiddlename, DataType.NVarChar),
+				new DataParameter("PGENDER", pgender, DataType.Char)
+			};
+			return dataConnection.ExecuteProc("MANAGED.PERSON_UPDATE", parameters);
+		}
+		#endregion
+
+		#region TestProcedure
+		public static int TestProcedure(this TestDataDB dataConnection, decimal? i, out decimal? o)
+		{
+			var parameters = new []
+			{
+				new DataParameter("I", i, DataType.Decimal)
+				{
+					Size = 22
+				},
+				new DataParameter("O", null, DataType.Decimal)
+				{
+					Direction = ParameterDirection.Output,
+					Size = 22
+				}
+			};
+			o = Converter.ChangeTypeTo<decimal?>(parameters[1].Value);
+			return dataConnection.ExecuteProc("MANAGED.TEST_PROCEDURE", parameters);
+		}
+		#endregion
+		#endregion
+
+		#region Scalar Functions
+		#region TestPackage1TestFunction
+		[Sql.Function("MANAGED.TEST_PACKAGE1.TEST_FUNCTION", ServerSideOnly = true)]
+		public static decimal? TestPackage1TestFunction(decimal? i)
+		{
+			throw new InvalidOperationException("Scalar function cannot be called outside of query");
+		}
+		#endregion
+
+		#region TestPackage2TestFunction
+		[Sql.Function("MANAGED.TEST_PACKAGE2.TEST_FUNCTION", ServerSideOnly = true)]
+		public static decimal? TestPackage2TestFunction(decimal? i)
+		{
+			throw new InvalidOperationException("Scalar function cannot be called outside of query");
+		}
+		#endregion
+
+		#region PatientSelectall
+		[Sql.Function("MANAGED.PATIENT_SELECTALL", ServerSideOnly = true)]
+		public static object? PatientSelectall()
+		{
+			throw new InvalidOperationException("Scalar function cannot be called outside of query");
+		}
+		#endregion
+
+		#region PatientSelectbyname
+		[Sql.Function("MANAGED.PATIENT_SELECTBYNAME", ServerSideOnly = true)]
+		public static object? PatientSelectbyname(string? pfirstname, string? plastname)
+		{
+			throw new InvalidOperationException("Scalar function cannot be called outside of query");
+		}
+		#endregion
+
+		#region PersonInsert
+		[Sql.Function("MANAGED.PERSON_INSERT", ServerSideOnly = true)]
+		public static object? PersonInsert(string? pfirstname, string? plastname, string? pmiddlename, string? pgender)
+		{
+			throw new InvalidOperationException("Scalar function cannot be called outside of query");
+		}
+		#endregion
+
+		#region PersonSelectall
+		[Sql.Function("MANAGED.PERSON_SELECTALL", ServerSideOnly = true)]
+		public static object? PersonSelectall()
+		{
+			throw new InvalidOperationException("Scalar function cannot be called outside of query");
+		}
+		#endregion
+
+		#region PersonSelectallbygender
+		[Sql.Function("MANAGED.PERSON_SELECTALLBYGENDER", ServerSideOnly = true)]
+		public static object? PersonSelectallbygender(string? pgender)
+		{
+			throw new InvalidOperationException("Scalar function cannot be called outside of query");
+		}
+		#endregion
+
+		#region PersonSelectbykey
+		[Sql.Function("MANAGED.PERSON_SELECTBYKEY", ServerSideOnly = true)]
+		public static object? PersonSelectbykey(decimal? pid)
+		{
+			throw new InvalidOperationException("Scalar function cannot be called outside of query");
+		}
+		#endregion
+
+		#region PersonSelectbyname
+		[Sql.Function("MANAGED.PERSON_SELECTBYNAME", ServerSideOnly = true)]
+		public static object? PersonSelectbyname(string? pfirstname, string? plastname)
+		{
+			throw new InvalidOperationException("Scalar function cannot be called outside of query");
+		}
+		#endregion
+
+		#region PersonSelectlistbyname
+		[Sql.Function("MANAGED.PERSON_SELECTLISTBYNAME", ServerSideOnly = true)]
+		public static object? PersonSelectlistbyname(string? pfirstname, string? plastname)
+		{
+			throw new InvalidOperationException("Scalar function cannot be called outside of query");
+		}
+		#endregion
+
+		#region ScalarDatareader
+		[Sql.Function("MANAGED.SCALAR_DATAREADER", ServerSideOnly = true)]
+		public static object? ScalarDatareader()
+		{
+			throw new InvalidOperationException("Scalar function cannot be called outside of query");
+		}
+		#endregion
+
+		#region ScalarReturnparameter
+		[Sql.Function("MANAGED.SCALAR_RETURNPARAMETER", ServerSideOnly = true)]
+		public static int? ScalarReturnparameter()
+		{
+			throw new InvalidOperationException("Scalar function cannot be called outside of query");
+		}
+		#endregion
+
+		#region TestFunction
+		[Sql.Function("MANAGED.TEST_FUNCTION", ServerSideOnly = true)]
+		public static decimal? TestFunction(decimal? i)
+		{
+			throw new InvalidOperationException("Scalar function cannot be called outside of query");
 		}
 		#endregion
 		#endregion
@@ -646,7 +868,7 @@ namespace Cli.T4.Oracle
 
 		#region Associations
 		/// <summary>
-		/// SYS_C00901116 backreference
+		/// SYS_C00903690 backreference
 		/// </summary>
 		[Association(ThisKey = nameof(UserId), OtherKey = nameof(TTestUserContract.UserId))]
 		public IEnumerable<TTestUserContract> Syscs { get; set; } = null!;
@@ -663,7 +885,7 @@ namespace Cli.T4.Oracle
 
 		#region Associations
 		/// <summary>
-		/// SYS_C00901116
+		/// SYS_C00903690
 		/// </summary>
 		[Association(CanBeNull = false, ThisKey = nameof(UserId), OtherKey = nameof(TTestUser.UserId))]
 		public TTestUser User { get; set; } = null!;

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Schema
 {
@@ -12,7 +13,7 @@ namespace LinqToDB.Schema
 	/// <param name="SchemaError">If <paramref name="Result" /> schema failed to load, contains generated exception.</param>
 	/// <param name="Result">Result set schema or <c>null</c> if schema load failed.</param>
 	public sealed record TableFunction(
-		ObjectName                         Name,
+		SqlObjectName                      Name,
 		string?                            Description,
 		IReadOnlyCollection<Parameter>     Parameters,
 		Exception?                         SchemaError,

@@ -162,6 +162,15 @@ namespace LinqToDB.Remote
 				Append(type.Scale);
 			}
 
+			protected void Append(SqlObjectName name)
+			{
+				Append(name.Name);
+				Append(name.Server);
+				Append(name.Database);
+				Append(name.Schema);
+				Append(name.Package);
+			}
+
 			protected void Append(IQueryElement? element)
 			{
 				Builder.Append(' ').Append(element == null ? 0 : ObjectIndices[element]);
@@ -296,6 +305,11 @@ namespace LinqToDB.Remote
 				var scale      = ReadNullableInt();
 
 				return new DbDataType(systemType, dataType, dbType, length, precision, scale);
+			}
+
+			protected SqlObjectName ReadObjectName()
+			{
+				return new (ReadString()!, ReadString(), ReadString(), ReadString(), ReadString());
 			}
 
 			protected DbDataType? ReadDbDataTypeNullable()
@@ -851,12 +865,9 @@ namespace LinqToDB.Remote
 							var elem = (SqlTable)e;
 
 							Append(elem.SourceID);
-							Append(elem.Name);
+							Append(elem.Expression);
 							Append(elem.Alias);
-							Append(elem.Server);
-							Append(elem.Database);
-							Append(elem.Schema);
-							Append(elem.PhysicalName);
+							Append(elem.TableName);
 							Append(elem.ObjectType);
 							Append(elem.ID);
 
@@ -1705,12 +1716,9 @@ namespace LinqToDB.Remote
 					case QueryElementType.SqlTable :
 						{
 							var sourceID           = ReadInt();
-							var name               = ReadString();
+							var expression         = ReadString();
 							var alias              = ReadString()!;
-							var server             = ReadString();
-							var database           = ReadString();
-							var schema             = ReadString();
-							var physicalName       = ReadString();
+							var tableName          = ReadObjectName();
 							var objectType         = ReadType()!;
 							var tableID            = ReadString();
 							var sequenceAttributes = null as SequenceNameAttribute[];
@@ -1737,7 +1745,7 @@ namespace LinqToDB.Remote
 							var tableOptions = (TableOptions)ReadInt();
 
 							obj = new SqlTable(
-								sourceID, name, alias, server, database, schema, physicalName, objectType, sequenceAttributes, flds,
+								sourceID, expression, alias, tableName, objectType, sequenceAttributes, flds,
 								sqlTableType, tableArgs, tableOptions, tableID);
 
 							break;

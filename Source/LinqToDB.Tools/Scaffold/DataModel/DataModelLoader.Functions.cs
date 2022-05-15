@@ -5,6 +5,7 @@ using LinqToDB.Schema;
 using LinqToDB.CodeModel;
 using LinqToDB.DataModel;
 using System.Linq;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Scaffold
 {
@@ -22,7 +23,7 @@ namespace LinqToDB.Scaffold
 
 			var method = new MethodModel(
 				_namingServices.NormalizeIdentifier(_options.DataModel.ProcedureNameOptions,
-				name.Name))
+				(func.Name.Package != null ? $"{func.Name.Package}_" : null) + name.Name))
 			{
 				Modifiers = Modifiers.Public | Modifiers.Static | Modifiers.Extension,
 				Summary   = func.Description,
@@ -71,7 +72,7 @@ namespace LinqToDB.Scaffold
 
 			var method = new MethodModel(
 				_namingServices.NormalizeIdentifier(_options.DataModel.ProcedureNameOptions,
-				name.Name))
+				(func.Name.Package != null ? $"{func.Name.Package}_" : null) + name.Name))
 			{
 				Modifiers = Modifiers.Public | Modifiers.Static,
 				Summary   = func.Description
@@ -160,7 +161,7 @@ namespace LinqToDB.Scaffold
 
 			var method = new MethodModel(
 				_namingServices.NormalizeIdentifier(_options.DataModel.ProcedureNameOptions,
-				name.Name))
+				(func.Name.Package != null ? $"{func.Name.Package}_" : null) + name.Name))
 			{
 				Modifiers = Modifiers.Public,
 				Summary   = func.Description
@@ -201,7 +202,7 @@ namespace LinqToDB.Scaffold
 
 			var method = new MethodModel(
 				_namingServices.NormalizeIdentifier(_options.DataModel.ProcedureNameOptions,
-				name.Name))
+				(func.Name.Package != null ? $"{func.Name.Package}_" : null) + name.Name))
 			{
 				Modifiers = Modifiers.Public | Modifiers.Static | Modifiers.Extension,
 				Summary   = func.Description,
@@ -383,7 +384,7 @@ namespace LinqToDB.Scaffold
 		/// <param name="funcName">Database name for function/procedure.</param>
 		/// <param name="columns">Result set columns schema. Must be ordered by ordinal.</param>
 		/// <returns>Model for result set.</returns>
-		private FunctionResult PrepareResultSetModel(ObjectName funcName, IReadOnlyCollection<ResultColumn> columns)
+		private FunctionResult PrepareResultSetModel(SqlObjectName funcName, IReadOnlyCollection<ResultColumn> columns)
 		{
 			// try to find entity model with same set of columns
 			// column equality check includes: name, database type and nullability
@@ -428,7 +429,7 @@ namespace LinqToDB.Scaffold
 			var resultClass = new ClassModel(
 				_namingServices.NormalizeIdentifier(
 					_options.DataModel.ProcedureResultClassNameOptions,
-					funcName.Name))
+					(funcName.Package != null ? $"{funcName.Package}_" : null) + funcName.Name))
 			{
 				Modifiers = Modifiers.Partial | Modifiers.Public
 			};

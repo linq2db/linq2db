@@ -40,6 +40,7 @@ namespace LinqToDB.DataProvider.Oracle
 			Type transactionType,
 
 			MappingSchema mappingSchema,
+			bool bindingByNameEnabled,
 
 			Type oracleBFileType,
 			Type oracleBinaryType,
@@ -89,7 +90,8 @@ namespace LinqToDB.DataProvider.Oracle
 			CommandType     = commandType;
 			TransactionType = transactionType;
 
-			MappingSchema = mappingSchema;
+			MappingSchema        = mappingSchema;
+			BindingByNameEnabled = bindingByNameEnabled;
 
 			OracleBFileType        = oracleBFileType;
 			OracleBinaryType       = oracleBinaryType;
@@ -140,6 +142,7 @@ namespace LinqToDB.DataProvider.Oracle
 		public Type CommandType     { get; }
 		public Type TransactionType { get; }
 
+		public bool BindingByNameEnabled   { get; }
 		public MappingSchema MappingSchema { get; }
 
 		public Type  OracleBFileType        { get; }
@@ -400,6 +403,7 @@ namespace LinqToDB.DataProvider.Oracle
 				commandType,
 				transactionType,
 				mappingSchema,
+				assemblyName != ManagedAssemblyName,
 
 				oracleBFileType,
 				oracleBinaryType,

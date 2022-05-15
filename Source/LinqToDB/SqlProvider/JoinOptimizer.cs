@@ -1347,8 +1347,8 @@ namespace LinqToDB.SqlProvider
 			{
 				if (source is SqlTable table)
 				{
-					var res = $"({source.SourceID}).{table.Name}";
-					if (table.Alias != table.Name && !string.IsNullOrEmpty(table.Alias))
+					var res = $"({source.SourceID}).{table.NameForLogging}";
+					if (table.Alias != table.NameForLogging && !string.IsNullOrEmpty(table.Alias))
 						res = res + "(" + table.Alias + ")";
 
 					return res;

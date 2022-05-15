@@ -30,8 +30,8 @@ namespace LinqToDB.Linq.Builder
 
 			switch (methodCall.Method.Name)
 			{
-				case nameof(LinqExtensions.With)                : table.SqlTable.Name = $"{{0}} {{1}} WITH ({value})"; break;
-				case nameof(LinqExtensions.WithTableExpression) : table.SqlTable.Name = value;                         break;
+				case nameof(LinqExtensions.With)                : table.SqlTable.Expression = $"{{0}} {{1}} WITH ({value})"; break;
+				case nameof(LinqExtensions.WithTableExpression) : table.SqlTable.Expression = value;                         break;
 			}
 
 			return sequence;

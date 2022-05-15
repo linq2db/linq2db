@@ -657,7 +657,7 @@ namespace LinqToDB.Linq.Builder
 				var ed = mappingSchema.GetEntityDescriptor(type);
 				if (ed != null && !type.IsInterface)
 				{
-					attr += "\t[Table(" + (string.IsNullOrEmpty(ed.TableName) ? "" : "\"" + ed.TableName + "\"") + ")]" + Environment.NewLine;
+					attr += "\t[Table(" + (string.IsNullOrEmpty(ed.Name.Name) ? "" : "\"" + ed.Name.Name + "\"") + ")]" + Environment.NewLine;
 				}
 
 				_typeBuilder.AppendFormat(

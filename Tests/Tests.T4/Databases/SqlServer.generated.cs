@@ -2254,7 +2254,7 @@ namespace DataModel
 		/// <param name="value">
 		/// This is &lt;test&gt; scalar function parameter!
 		/// </param>
-		[Sql.Function(Name="ScalarFunction", ServerSideOnly=true)]
+		[Sql.Function(Name="[ScalarFunction]", ServerSideOnly=true)]
 		public static int? ScalarFunction(int? @value)
 		{
 			throw new InvalidOperationException();

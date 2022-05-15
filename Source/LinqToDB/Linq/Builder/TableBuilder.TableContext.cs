@@ -275,10 +275,10 @@ namespace LinqToDB.Linq.Builder
 								ExpressionBuilder.DataContextParam,
 								expr,
 								Expression.Constant(SqlTable.TableOptions),
-								Expression.Constant(SqlTable.PhysicalName, typeof(string)),
-								Expression.Constant(SqlTable.Schema,       typeof(string)),
-								Expression.Constant(SqlTable.Database,     typeof(string)),
-								Expression.Constant(SqlTable.Server,       typeof(string))
+								Expression.Constant(SqlTable.TableName.Name,     typeof(string)),
+								Expression.Constant(SqlTable.TableName.Schema,   typeof(string)),
+								Expression.Constant(SqlTable.TableName.Database, typeof(string)),
+								Expression.Constant(SqlTable.TableName.Server,   typeof(string))
 							),
 							expr.Type);
 				}

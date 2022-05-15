@@ -1323,7 +1323,7 @@ namespace Tests.Linq
 			ProviderName.Firebird,
 			TestProvName.AllMySql55,
 			// doesn't support LAG with 3 parameters
-			TestProvName.MariaDB)] string context)
+			TestProvName.AllMariaDB)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(Position.TestData))
@@ -1366,7 +1366,7 @@ namespace Tests.Linq
 			ProviderName.Firebird,
 			TestProvName.AllMySql55,
 			// doesn't support 3-rd parameter for LEAD
-			TestProvName.MariaDB)] string context)
+			TestProvName.AllMariaDB)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(Position.TestData))
@@ -1488,7 +1488,7 @@ namespace Tests.Linq
 			TestProvName.AllSQLite,
 			TestProvName.AllSapHana,
 			TestProvName.AllMySql55,
-			TestProvName.MariaDB)] string context)
+			TestProvName.AllMariaDB)] string context)
 		{
 			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(Position.TestData))
@@ -1660,7 +1660,7 @@ namespace Tests.Linq
 			ProviderName.Firebird,
 			TestProvName.AllMySql55,
 			// doesn't support 3-rd parameter for LEAD
-			TestProvName.MariaDB)] string context)
+			TestProvName.AllMariaDB)] string context)
 		{
 			// #3423: LEAD and LAG `default` parameter can be a type other than int.
 			var data = new Issue1799Table3[]
