@@ -123,9 +123,9 @@ namespace LinqToDB
 		}
 
 		static DataContextOptionsBuilder WithOption(DataContextOptionsBuilder optionsBuilder,
-			Func<DataContextOptionsExtension,DataContextOptionsExtension>         action)
+			Func<DataContextOptionsExtensionOld,DataContextOptionsExtensionOld>         action)
 		{
-			var dbOptionsExtension = optionsBuilder.Options.FindExtension<DataContextOptionsExtension>() ?? new DataContextOptionsExtension();
+			var dbOptionsExtension = optionsBuilder.Options.FindExtension<DataContextOptionsExtensionOld>() ?? new DataContextOptionsExtensionOld();
 
 			dbOptionsExtension = action(dbOptionsExtension);
 

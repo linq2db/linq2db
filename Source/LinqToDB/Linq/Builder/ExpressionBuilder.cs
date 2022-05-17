@@ -118,7 +118,7 @@ namespace LinqToDB.Linq.Builder
 		public List<SqlQueryExtension>?         SqlQueryExtensions;
 		public List<TableBuilder.TableContext>? TablesInScope;
 
-		public readonly LinqOptionsExtension LinqOptions;
+		public readonly LinqOptionSet LinqOptions;
 
 		public ExpressionBuilder(
 			Query                             query,

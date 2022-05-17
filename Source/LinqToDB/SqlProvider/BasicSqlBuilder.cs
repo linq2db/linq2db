@@ -24,7 +24,7 @@ namespace LinqToDB.SqlProvider
 	{
 		#region Init
 
-		protected BasicSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, LinqOptionsExtension linqOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+		protected BasicSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, LinqOptionSet linqOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 		{
 			DataProvider     = provider;
 			MappingSchema    = mappingSchema;
@@ -47,7 +47,7 @@ namespace LinqToDB.SqlProvider
 
 		public OptimizationContext  OptimizationContext { get; protected set; } = null!;
 		public MappingSchema        MappingSchema       { get; }
-		public LinqOptionsExtension LinqOptions         { get; }
+		public LinqOptionSet LinqOptions         { get; }
 		public StringBuilder        StringBuilder       { get; set; } = null!;
 		public SqlProviderFlags     SqlProviderFlags    { get; }
 

@@ -14,7 +14,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement, LinqOptionsExtension linqOptions)
+		public override SqlStatement TransformStatement(SqlStatement statement, LinqOptionSet linqOptions)
 		{
 			switch (statement.QueryType)
 			{

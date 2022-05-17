@@ -22,10 +22,10 @@ namespace LinqToDB
 		/// </summary>
 		/// <param name="setAction"> An action to set the option. </param>
 		/// <returns> The same builder instance so that multiple calls can be chained. </returns>
-		protected virtual LinqOptionsBuilder WithOption(Func<LinqOptionsExtension, LinqOptionsExtension> setAction)
+		protected virtual LinqOptionsBuilder WithOption(Func<LinqOptionSet, LinqOptionSet> setAction)
 		{
 			((IDataContextOptionsBuilderInfrastructure)OptionsBuilder).AddOrUpdateExtension(
-				setAction(OptionsBuilder.Options.FindExtension<LinqOptionsExtension>() ?? Common.Configuration.Linq.Options));
+				setAction(OptionsBuilder.Options.FindExtension<LinqOptionSet>() ?? Common.Configuration.Linq.Options));
 
 			return this;
 		}
@@ -38,7 +38,7 @@ namespace LinqToDB
 		/// Default value: <c>false</c>.
 		/// </summary>
 		public virtual LinqOptionsBuilder WithPreloadGroups(bool preloadGroups) =>
-			WithOption(o => o.WithPreloadGroups(preloadGroups));
+			WithOption(o => o with { PreloadGroups = preloadGroups });
 
 		/// <summary>
 		/// Controls behavior of linq2db when there is no updateable fields in Update query:
@@ -47,7 +47,7 @@ namespace LinqToDB
 		/// Default value: <c>false</c>.
 		/// </summary>
 		public virtual LinqOptionsBuilder WithIgnoreEmptyUpdate(bool ignoreEmptyUpdate) =>
-			WithOption(o => o.WithIgnoreEmptyUpdate(ignoreEmptyUpdate));
+			WithOption(o => o with { IgnoreEmptyUpdate = ignoreEmptyUpdate });
 
 		/// <summary>
 		/// Enables generation of test class for each LINQ query, executed while this option is enabled.
@@ -58,7 +58,7 @@ namespace LinqToDB
 		/// Default value: <c>false</c>.
 		/// </summary>
 		public virtual LinqOptionsBuilder WithGenerateExpressionTest(bool generateExpressionTest) =>
-			WithOption(o => o.WithGenerateExpressionTest(generateExpressionTest));
+			WithOption(o => o with { GenerateExpressionTest = generateExpressionTest });
 
 		/// <summary>
 		/// Enables logging of generated mapping expression to data connection tracing infrastructure.
@@ -66,7 +66,7 @@ namespace LinqToDB
 		/// Default value: <c>false</c>.
 		/// </summary>
 		public virtual LinqOptionsBuilder WithTraceMapperExpression(bool traceMapperExpression) =>
-			WithOption(o => o.WithTraceMapperExpression(traceMapperExpression));
+			WithOption(o => o with { TraceMapperExpression = traceMapperExpression });
 
 		/// <summary>
 		/// Controls behavior, when LINQ query chain contains multiple <see cref="System.Linq.Queryable.OrderBy{TSource, TKey}(System.Linq.IQueryable{TSource}, Expression{Func{TSource, TKey}})"/> or <see cref="System.Linq.Queryable.OrderByDescending{TSource, TKey}(System.Linq.IQueryable{TSource}, Expression{Func{TSource, TKey}})"/> calls:
@@ -75,7 +75,7 @@ namespace LinqToDB
 		/// Default value: <c>false</c>.
 		/// </summary>
 		public virtual LinqOptionsBuilder WithDoNotClearOrderBys(bool doNotClearOrderBys) =>
-			WithOption(o => o.WithDoNotClearOrderBys(doNotClearOrderBys));
+			WithOption(o => o with { DoNotClearOrderBys = doNotClearOrderBys });
 
 		/// <summary>
 		/// If enabled, linq2db will try to reduce number of generated SQL JOINs for LINQ query.
@@ -86,7 +86,7 @@ namespace LinqToDB
 		/// Default value: <c>true</c>.
 		/// </summary>
 		public virtual LinqOptionsBuilder WithOptimizeJoins(bool optimizeJoins) =>
-			WithOption(o => o.WithOptimizeJoins(optimizeJoins));
+			WithOption(o => o with { OptimizeJoins = optimizeJoins });
 
 		/// <summary>
 		/// If set to true nullable fields would be checked for IS NULL in Equal/NotEqual comparisons.
@@ -122,7 +122,7 @@ namespace LinqToDB
 		/// </code>
 		/// </example>
 		public virtual LinqOptionsBuilder WithCompareNullsAsValues(bool compareNullsAsValues) =>
-			WithOption(o => o.WithCompareNullsAsValues(compareNullsAsValues));
+			WithOption(o => o with { CompareNullsAsValues = compareNullsAsValues });
 
 		/// <summary>
 		/// Controls behavior of LINQ query, which ends with GroupBy call.
@@ -134,7 +134,7 @@ namespace LinqToDB
 		/// <a href="https://github.com/linq2db/linq2db/issues/365">More details</a>.
 		/// </remarks>
 		public virtual LinqOptionsBuilder WithGuardGrouping(bool guardGrouping) =>
-			WithOption(o => o.WithGuardGrouping(guardGrouping));
+			WithOption(o => o with { GuardGrouping = guardGrouping });
 
 		/// <summary>
 		/// Used to disable LINQ expressions caching for queries.
@@ -152,21 +152,21 @@ namespace LinqToDB
 		/// <a href="https://github.com/linq2db/linq2db/issues/256">More details</a>.
 		/// </summary>
 		public virtual LinqOptionsBuilder WithDisableQueryCache(bool disableQueryCache) =>
-			WithOption(o => o.WithDisableQueryCache(disableQueryCache));
+			WithOption(o => o with { DisableQueryCache = disableQueryCache });
 
 		/// <summary>
 		/// Specifies timeout when query will be evicted from cache since last execution of query.
 		/// Default value is 1 hour.
 		/// </summary>
 		public virtual LinqOptionsBuilder WithCacheSlidingExpiration(TimeSpan cacheSlidingExpiration) =>
-			WithOption(o => o.WithCacheSlidingExpiration(cacheSlidingExpiration));
+			WithOption(o => o with { CacheSlidingExpiration = cacheSlidingExpiration });
 
 		/// <summary>
 		/// Used to generate CROSS APPLY or OUTER APPLY if possible.
 		/// Default value: <c>true</c>.
 		/// </summary>
 		public virtual LinqOptionsBuilder WithPreferApply(bool preferApply) =>
-			WithOption(o => o.WithPreferApply(preferApply));
+			WithOption(o => o with { PreferApply = preferApply });
 
 		/// <summary>
 		/// Allows SQL generation to automatically transform
@@ -175,14 +175,21 @@ namespace LinqToDB
 		/// Default value: <c>true</c>.
 		/// </summary>
 		public virtual LinqOptionsBuilder WithKeepDistinctOrdered(bool keepDistinctOrdered) =>
-			WithOption(o => o.WithKeepDistinctOrdered(keepDistinctOrdered));
+			WithOption(o => o with { KeepDistinctOrdered = keepDistinctOrdered });
 
 		/// <summary>
 		/// Enables Take/Skip parameterization.
 		/// Default value: <c>true</c>.
 		/// </summary>
 		public virtual LinqOptionsBuilder WithParameterizeTakeSkip(bool parameterizeTakeSkip) =>
-			WithOption(o => o.WithParameterizeTakeSkip(parameterizeTakeSkip));
+			WithOption(o => o with { ParameterizeTakeSkip = parameterizeTakeSkip });
 
+		/// <summary>
+		/// If <c>true</c>, auto support for fluent mapping is ON,
+		/// which means that you do not need to create additional MappingSchema object to define FluentMapping.
+		/// You can use <c>context.MappingSchema.GetFluentMappingBuilder()</c>.
+		/// </summary>
+		public virtual LinqOptionsBuilder WithEnableAutoFluentMapping(bool enableAutoFluentMapping) =>
+			WithOption(o => o with { EnableAutoFluentMapping = enableAutoFluentMapping });
 	}
 }

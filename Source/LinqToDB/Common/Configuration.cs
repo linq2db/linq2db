@@ -128,20 +128,8 @@ namespace LinqToDB.Common
 		[PublicAPI]
 		public static class Linq
 		{
-			static Linq()
-			{
-				_options = new LinqOptionsExtension()
-					.WithOptimizeJoins(true)
-					.WithCompareNullsAsValues(true)
-					.WithGuardGrouping(true)
-					.WithCacheSlidingExpiration(TimeSpan.FromHours(1))
-					.WithPreferApply(true)
-					.WithKeepDistinctOrdered(true)
-					.WithParameterizeTakeSkip(true);
-			}
-
-			private static volatile LinqOptionsExtension _options;
-			public static  LinqOptionsExtension  Options
+			private static volatile LinqOptionSet _options = new ();
+			public  static LinqOptionSet Options
 			{
 				get => _options;
 				set => _options = value;
@@ -156,7 +144,7 @@ namespace LinqToDB.Common
 			public static bool PreloadGroups
 			{
 				get => Options.PreloadGroups;
-				set => Options = Options.WithPreloadGroups(value);
+				set => Options = Options with { PreloadGroups = value };
 			}
 
 			/// <summary>
@@ -168,7 +156,7 @@ namespace LinqToDB.Common
 			public static bool IgnoreEmptyUpdate
 			{
 				get => Options.IgnoreEmptyUpdate;
-				set => Options = Options.WithIgnoreEmptyUpdate(value);
+				set => Options = Options with { IgnoreEmptyUpdate = value };
 			}
 
 			/// <summary>
@@ -182,7 +170,7 @@ namespace LinqToDB.Common
 			public static bool GenerateExpressionTest
 			{
 				get => Options.GenerateExpressionTest;
-				set => Options = Options.WithGenerateExpressionTest(value);
+				set => Options = Options with { GenerateExpressionTest = value };
 			}
 
 			/// <summary>
@@ -193,7 +181,7 @@ namespace LinqToDB.Common
 			public static bool TraceMapperExpression
 			{
 				get => Options.TraceMapperExpression;
-				set => Options = Options.WithTraceMapperExpression(value);
+				set => Options = Options with { TraceMapperExpression = value };
 			}
 
 			/// <summary>
@@ -205,7 +193,7 @@ namespace LinqToDB.Common
 			public static bool DoNotClearOrderBys
 			{
 				get => Options.DoNotClearOrderBys;
-				set => Options = Options.WithDoNotClearOrderBys(value);
+				set => Options = Options with { DoNotClearOrderBys = value };
 			}
 
 			/// <summary>
@@ -219,7 +207,7 @@ namespace LinqToDB.Common
 			public static bool OptimizeJoins
 			{
 				get => Options.OptimizeJoins;
-				set => Options = Options.WithOptimizeJoins(value);
+				set => Options = Options with { OptimizeJoins = value };
 			}
 
 			/// <summary>
@@ -258,7 +246,7 @@ namespace LinqToDB.Common
 			public static bool CompareNullsAsValues
 			{
 				get => Options.CompareNullsAsValues;
-				set => Options = Options.WithCompareNullsAsValues(value);
+				set => Options = Options with { CompareNullsAsValues = value };
 			}
 
 			/// <summary>
@@ -273,7 +261,7 @@ namespace LinqToDB.Common
 			public static bool GuardGrouping
 			{
 				get => Options.GuardGrouping;
-				set => Options = Options.WithGuardGrouping(value);
+				set => Options = Options with { GuardGrouping = value };
 			}
 
 			/// <summary>
@@ -294,7 +282,7 @@ namespace LinqToDB.Common
 			public static bool DisableQueryCache
 			{
 				get => Options.DisableQueryCache;
-				set => Options = Options.WithDisableQueryCache(value);
+				set => Options = Options with { DisableQueryCache = value };
 			}
 
 			/// <summary>
@@ -304,7 +292,7 @@ namespace LinqToDB.Common
 			public static TimeSpan CacheSlidingExpiration
 			{
 				get => Options.CacheSlidingExpiration;
-				set => Options = Options.WithCacheSlidingExpiration(value);
+				set => Options = Options with { CacheSlidingExpiration = value };
 			}
 
 			/// <summary>
@@ -314,7 +302,7 @@ namespace LinqToDB.Common
 			public static bool PreferApply
 			{
 				get => Options.PreferApply;
-				set => Options = Options.WithPreferApply(value);
+				set => Options = Options with { PreferApply = value };
 			}
 
 			/// <summary>
@@ -326,7 +314,7 @@ namespace LinqToDB.Common
 			public static bool KeepDistinctOrdered
 			{
 				get => Options.KeepDistinctOrdered;
-				set => Options = Options.WithKeepDistinctOrdered(value);
+				set => Options = Options with { KeepDistinctOrdered = value };
 			}
 
 			/// <summary>
@@ -336,7 +324,7 @@ namespace LinqToDB.Common
 			public static bool ParameterizeTakeSkip
 			{
 				get => Options.ParameterizeTakeSkip;
-				set => Options = Options.WithParameterizeTakeSkip(value);
+				set => Options = Options with { ParameterizeTakeSkip = value };
 			}
 
 			/// <summary>
@@ -344,7 +332,11 @@ namespace LinqToDB.Common
 			/// which means that you do not need to create additional MappingSchema object to define FluentMapping.
 			/// You can use <c>context.MappingSchema.GetFluentMappingBuilder()</c>.
 			/// </summary>
-			public static bool EnableAutoFluentMapping = true;
+			public static bool EnableAutoFluentMapping
+			{
+				get => Options.EnableAutoFluentMapping;
+				set => Options = Options with { EnableAutoFluentMapping = value };
+			}
 		}
 
 		/// <summary>

@@ -226,7 +226,7 @@ namespace LinqToDB.Data
 				throw new ArgumentNullException(nameof(options));
 
 			// Initialize default
-			var linqExtension = options.FindExtension<LinqOptionsExtension>();
+			var linqExtension = options.FindExtension<LinqOptionSet>();
 
 			if (linqExtension == null)
 			{
@@ -237,7 +237,7 @@ namespace LinqToDB.Data
 			LinqOptions = linqExtension;
 
 			var coreExtension = options.FindExtension<CoreDataContextOptionsExtension>();
-			var dbExtension   = options.FindExtension<DataContextOptionsExtension>();
+			var dbExtension   = options.FindExtension<DataContextOptionsExtensionOld>();
 
 			if (!options.IsValidForDataContext(GetType()))
 				throw new LinqToDBException(
@@ -406,7 +406,7 @@ namespace LinqToDB.Data
 		/// <summary>
 		/// Current DataContext LINQ options
 		/// </summary>
-		public LinqOptionsExtension LinqOptions { get; private set; }
+		public LinqOptionSet LinqOptions { get; private set; }
 
 		/// <summary>
 		/// Database configuration name (connection string name).
@@ -1767,7 +1767,7 @@ namespace LinqToDB.Data
 			ConnectionString    = connectionString;
 			_connection         = connection != null ? AsyncFactory.Create(connection) : null;
 			MappingSchema       = mappingSchema;
-			LinqOptions         = options.GetExtension<LinqOptionsExtension>();
+			LinqOptions         = options.GetExtension<LinqOptionSet>();
 			Options             = options;
 		}
 

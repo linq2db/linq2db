@@ -13,14 +13,14 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 		}
 
-		public override SqlStatement Finalize(SqlStatement statement, LinqOptionsExtension linqOptions)
+		public override SqlStatement Finalize(SqlStatement statement, LinqOptionSet linqOptions)
 		{
 			CheckAliases(statement, 30);
 
 			return base.Finalize(statement, linqOptions);
 		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement, LinqOptionsExtension linqOptions)
+		public override SqlStatement TransformStatement(SqlStatement statement, LinqOptionSet linqOptions)
 		{
 			statement = ReplaceTakeSkipWithRowNum(statement, false);
 

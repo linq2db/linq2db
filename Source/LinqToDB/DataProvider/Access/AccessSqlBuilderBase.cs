@@ -12,7 +12,7 @@ namespace LinqToDB.DataProvider.Access
 
 	abstract class AccessSqlBuilderBase : BasicSqlBuilder
 	{
-		protected AccessSqlBuilderBase(IDataProvider? provider, MappingSchema mappingSchema, LinqOptionsExtension linqOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+		protected AccessSqlBuilderBase(IDataProvider? provider, MappingSchema mappingSchema, LinqOptionSet linqOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, linqOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}

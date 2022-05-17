@@ -13,7 +13,7 @@ namespace LinqToDB.SqlProvider
 		/// </summary>
 		/// <param name="statement"></param>
 		/// <returns>Query which is ready for optimization.</returns>
-		SqlStatement Finalize(SqlStatement statement, LinqOptionsExtension linqOptions);
+		SqlStatement Finalize(SqlStatement statement, LinqOptionSet linqOptions);
 
 		/// <summary>
 		/// Examine query for parameter dependency.
@@ -30,7 +30,7 @@ namespace LinqToDB.SqlProvider
 		/// <param name="optimizationContext"></param>
 		/// <param name="takeExpr"></param>
 		/// <param name="skipExpr"></param>
-		void ConvertSkipTake(MappingSchema mappingSchema, LinqOptionsExtension linqOptions, SelectQuery selectQuery, OptimizationContext optimizationContext, out ISqlExpression? takeExpr, out ISqlExpression? skipExpr);
+		void ConvertSkipTake(MappingSchema mappingSchema, LinqOptionSet linqOptions, SelectQuery selectQuery, OptimizationContext optimizationContext, out ISqlExpression? takeExpr, out ISqlExpression? skipExpr);
 
 		/// <summary>
 		/// Converts query element to specific provider dialect. 
@@ -40,7 +40,7 @@ namespace LinqToDB.SqlProvider
 		/// <param name="context"></param>
 		/// <returns></returns>
 		[return: NotNullIfNotNull("element")]
-		IQueryElement? ConvertElement(MappingSchema mappingSchema, LinqOptionsExtension linqOptions, IQueryElement? element, OptimizationContext context);
+		IQueryElement? ConvertElement(MappingSchema mappingSchema, LinqOptionSet linqOptions, IQueryElement? element, OptimizationContext context);
 
 	}
 }

@@ -63,7 +63,7 @@ namespace LinqToDB.Infrastructure.Internal
 		{
 		}
 
-		public override IDataProvider GetDataProvider(DataContextOptionsExtension dbOptions)
+		public override IDataProvider GetDataProvider(DataContextOptionsExtensionOld dbOptions)
 		{
 			SqlServerVersion serverVersion;
 

@@ -4,10 +4,11 @@ using System.Collections.Generic;
 namespace LinqToDB
 {
 	using Common.Internal;
+	using Data;
 	using Infrastructure;
 
 	/// <summary>
-	/// The options to be used by a <see cref="IDataContext" />.
+	/// The options to be used by a <see cref="DataConnection" />.
 	/// </summary>
 	public abstract class DataContextOptions : IDataContextOptions
 	{

@@ -246,7 +246,7 @@ namespace LinqToDB.Linq.Builder
 			internal class Grouping<TKey,TElement> : IGrouping<TKey,TElement>
 			{
 				public Grouping(
-					LinqOptionsExtension    linqOptions,
+					LinqOptionSet    linqOptions,
 					TKey                    key,
 					IQueryRunner            queryRunner,
 					List<ParameterAccessor> parameters,
@@ -305,7 +305,7 @@ namespace LinqToDB.Linq.Builder
 			interface IGroupByHelper
 			{
 				Expression           GetGrouping(GroupByContext context);
-				LinqOptionsExtension LinqOptions { get; set; }
+				LinqOptionSet LinqOptions { get; set; }
 			}
 
 			class GroupByHelper<TKey,TElement,TSource> : IGroupByHelper
@@ -393,10 +393,10 @@ namespace LinqToDB.Linq.Builder
 						});
 				}
 
-				public LinqOptionsExtension LinqOptions { get; set; } = null!;
+				public LinqOptionSet LinqOptions { get; set; } = null!;
 
 				static IGrouping<TKey,TElement> GetGrouping(
-					LinqOptionsExtension                                    linqOptions,
+					LinqOptionSet                                    linqOptions,
 					IQueryRunner                                            runner,
 					List<ParameterAccessor>                                 parameterAccessor,
 					TKey                                                    key,

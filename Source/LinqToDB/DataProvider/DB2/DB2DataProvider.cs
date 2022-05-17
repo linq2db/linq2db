@@ -85,7 +85,7 @@ namespace LinqToDB.DataProvider.DB2
 			TableOptions.CreateIfNotExists          |
 			TableOptions.DropIfExists;
 
-		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, LinqOptionsExtension linqOptions)
+		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, LinqOptionSet linqOptions)
 		{
 			return Version == DB2Version.zOS ?
 				new DB2zOSSqlBuilder(this, mappingSchema, linqOptions, GetSqlOptimizer(), SqlProviderFlags) :

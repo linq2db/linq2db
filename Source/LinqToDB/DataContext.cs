@@ -27,7 +27,7 @@ namespace LinqToDB
 	public partial class DataContext : IDataContext
 	{
 		private CoreDataContextOptionsExtension _prebuiltCoreExtension;
-		private DataContextOptionsExtension   _prebuiltDbExtension;
+		private DataContextOptionsExtensionOld   _prebuiltDbExtension;
 		private DataContextOptions              _prebuiltOptions;
 
 		private bool _disposed;
@@ -90,9 +90,9 @@ namespace LinqToDB
 		/// <param name="options">Options, setup ahead of time.</param>
 		public DataContext(DataContextOptions options)
 		{
-			var extension = options.FindExtension<DataContextOptionsExtension>();
+			var extension = options.FindExtension<DataContextOptionsExtensionOld>();
 
-			extension ??= new DataContextOptionsExtension();
+			extension ??= new DataContextOptionsExtensionOld();
 
 			var dataProvider = extension.DataProvider;
 			if (dataProvider == null)
@@ -116,7 +116,7 @@ namespace LinqToDB
 
 			options = options.WithExtension(extension);
 
-			_prebuiltDbExtension = options.GetExtension<DataContextOptionsExtension>();
+			_prebuiltDbExtension = options.GetExtension<DataContextOptionsExtensionOld>();
 
 			var coreExtension = options.FindExtension<CoreDataContextOptionsExtension>();
 			if (coreExtension != null)
@@ -130,7 +130,7 @@ namespace LinqToDB
 				_prebuiltCoreExtension = coreExtension;
 			}
 
-			var linqExtension = options.FindExtension<LinqOptionsExtension>();
+			var linqExtension = options.FindExtension<LinqOptionSet>();
 			if (linqExtension == null)
 			{
 				linqExtension = Common.Configuration.Linq.Options;

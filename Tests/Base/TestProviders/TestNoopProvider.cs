@@ -297,7 +297,7 @@ namespace Tests
 			// Just for triggering of static constructor
 		}
 
-		public override ISqlBuilder     CreateSqlBuilder (MappingSchema mappingSchema, LinqOptionsExtension linqOptions) => new TestNoopSqlBuilder(this, MappingSchema, linqOptions);
+		public override ISqlBuilder     CreateSqlBuilder (MappingSchema mappingSchema, LinqOptionSet linqOptions) => new TestNoopSqlBuilder(this, MappingSchema, linqOptions);
 		public override ISchemaProvider GetSchemaProvider(                           ) => throw new NotImplementedException();
 		public override ISqlOptimizer   GetSqlOptimizer  (                           ) => TestNoopSqlOptimizer.Instance;
 		public override TableOptions    SupportedTableOptions => TableOptions.None;
@@ -305,7 +305,7 @@ namespace Tests
 
 	internal class TestNoopSqlBuilder : BasicSqlBuilder
 	{
-		public TestNoopSqlBuilder(IDataProvider provider, MappingSchema mappingSchema, LinqOptionsExtension linqOptions)
+		public TestNoopSqlBuilder(IDataProvider provider, MappingSchema mappingSchema, LinqOptionSet linqOptions)
 			: base(provider, mappingSchema, linqOptions, TestNoopSqlOptimizer.Instance, new SqlProviderFlags())
 		{
 		}

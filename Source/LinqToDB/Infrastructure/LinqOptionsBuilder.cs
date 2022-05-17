@@ -29,10 +29,10 @@ namespace LinqToDB.Infrastructure
 		/// </summary>
 		/// <param name="setAction"> An action to set the option. </param>
 		/// <returns>The same builder instance so that multiple calls can be chained.</returns>
-		protected virtual LinqOptionsBuilder WithOption(Func<LinqOptionsExtension, LinqOptionsExtension> setAction)
+		protected virtual LinqOptionsBuilder WithOption(Func<LinqOptionSet, LinqOptionSet> setAction)
 		{
 			((IDataContextOptionsBuilderInfrastructure)OptionsBuilder).AddOrUpdateExtension(
-				setAction(OptionsBuilder.Options.FindExtension<LinqOptionsExtension>() ?? Common.Configuration.Linq.Options));
+				setAction(OptionsBuilder.Options.FindExtension<LinqOptionSet>() ?? Common.Configuration.Linq.Options));
 
 			return this;
 		}

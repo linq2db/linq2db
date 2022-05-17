@@ -10,7 +10,7 @@
 		{
 		}
 
-		public override SqlStatement Finalize(SqlStatement statement, LinqOptionsExtension linqOptions)
+		public override SqlStatement Finalize(SqlStatement statement, LinqOptionSet linqOptions)
 		{
 			statement = base.Finalize(statement, linqOptions);
 

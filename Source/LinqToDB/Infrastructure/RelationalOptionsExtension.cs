@@ -92,7 +92,7 @@ namespace LinqToDB.Infrastructure
 		/// <summary>
 		/// Returns specific to options DataProvider.
 		/// </summary>
-		public abstract IDataProvider GetDataProvider(DataContextOptionsExtension dbOptions);
+		public abstract IDataProvider GetDataProvider(DataContextOptionsExtensionOld dbOptions);
 
 		/// <summary>
 		/// Information/metadata for a <see cref="RelationalOptionsExtension" />.

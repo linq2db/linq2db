@@ -79,7 +79,7 @@ namespace LinqToDB.DataProvider.Informix
 				p.IsQueryParameter = false;
 		}
 
-		public override SqlStatement Finalize(SqlStatement statement, LinqOptionsExtension linqOptions)
+		public override SqlStatement Finalize(SqlStatement statement, LinqOptionSet linqOptions)
 		{
 			CheckAliases(statement, int.MaxValue);
 
@@ -98,7 +98,7 @@ namespace LinqToDB.DataProvider.Informix
 			return base.Finalize(statement, linqOptions);
 		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement, LinqOptionsExtension linqOptions)
+		public override SqlStatement TransformStatement(SqlStatement statement, LinqOptionSet linqOptions)
 		{
 			switch (statement.QueryType)
 			{

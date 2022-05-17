@@ -18,7 +18,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 	public partial class FirebirdSqlBuilder : BasicSqlBuilder
 	{
-		public FirebirdSqlBuilder(IDataProvider provider, MappingSchema mappingSchema, LinqOptionsExtension linqOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+		public FirebirdSqlBuilder(IDataProvider provider, MappingSchema mappingSchema, LinqOptionSet linqOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, linqOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}

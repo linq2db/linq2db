@@ -75,7 +75,7 @@ namespace LinqToDB
 		/// <summary>
 		/// Current DataContext LINQ options
 		/// </summary>
-		DataContextOptions Options { get; }
+		DataContextOptions  Options               { get; }
 
 		/// <summary>
 		/// Returns column value reader expression.
