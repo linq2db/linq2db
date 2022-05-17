@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Data;
+using System.Data.Common;
 using System.Linq;
+using LinqToDB.Infrastructure;
 
 namespace LinqToDB.DataProvider.Oracle
 {
@@ -9,12 +11,11 @@ namespace LinqToDB.DataProvider.Oracle
 	using SqlProvider;
 	using System.Text;
 	using Mapping;
-	using System.Data.Common;
 
 	abstract partial class OracleSqlBuilderBase : BasicSqlBuilder
 	{
-		public OracleSqlBuilderBase(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
+		public OracleSqlBuilderBase(IDataProvider? provider, MappingSchema mappingSchema, LinqOptionSet linqOptionSet, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, linqOptionSet, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
@@ -68,7 +69,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override bool BuildWhere(SelectQuery selectQuery)
 		{
-			SqlOptimizer.ConvertSkipTake(MappingSchema, selectQuery, OptimizationContext, out var takeExpr, out var skipEpr);
+			SqlOptimizer.ConvertSkipTake(MappingSchema, LinqOptions, selectQuery, OptimizationContext, out var takeExpr, out var skipEpr);
 
 			return
 				base.BuildWhere(selectQuery) ||
@@ -388,7 +389,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 						.AppendLine("\tBEGIN")
 						.Append("\t\tEXECUTE IMMEDIATE 'DROP SEQUENCE ");
-					
+
 					AppendSchemaPrefix(StringBuilder, dropTable.Table!.TableName.Schema);
 					Convert(StringBuilder, MakeIdentitySequenceName(dropTable.Table.TableName.Name), ConvertType.SequenceName);
 
@@ -652,7 +653,7 @@ END;",
 		protected void BuildMultiInsertClause(SqlMultiInsertStatement statement)
 		{
 			StringBuilder.AppendLine(statement.InsertType == MultiInsertType.First ? "INSERT FIRST" : "INSERT ALL");
-			
+
 			Indent++;
 
 			if (statement.InsertType == MultiInsertType.Unconditional)
@@ -678,7 +679,7 @@ END;",
 					{
 						StringBuilder.AppendLine("ELSE");
 					}
-		
+
 					BuildInsertClause(statement, insert.Insert, "INTO ", appendTableName: true, addAlias: false);
 				}
 			}

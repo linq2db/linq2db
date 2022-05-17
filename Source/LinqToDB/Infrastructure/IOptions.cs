@@ -13,19 +13,19 @@ namespace LinqToDB.Infrastructure
 	/// The implementation does not need to be thread-safe.
 	/// </para>
 	/// </summary>
-	interface IOptions<T> where T : IOptionSet
+	interface IOptions
 	{
 		/// <summary>
 		/// Gets the extensions that store the configured options.
 		/// </summary>
-		IEnumerable<T> OptionSets { get; }
+		IEnumerable<IOptionSet> OptionSets { get; }
 
 		/// <summary>
 		/// Gets the extension of the specified type. Returns null if no extension of the specified type is configured.
 		/// </summary>
 		/// <typeparam name="TSet">The type of the option set to get.</typeparam>
 		/// <returns>The extension, or <see langword="null" /> if none was found.</returns>
-		TSet? FindExtension<TSet>()
-			where TSet : class, T;
+		TSet? Find<TSet>()
+			where TSet : class, IOptionSet;
 	}
 }

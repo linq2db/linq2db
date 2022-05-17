@@ -328,7 +328,7 @@ namespace LinqToDB.DataProvider.Oracle
 #region BulkCopy
 
 		public override BulkCopyRowsCopied BulkCopy<T>(
-			DataContextOptions options, 
+			DataContextOptions options,
 			ITable<T>          table,
 			BulkCopyOptions    bulkCopyOptions,
 			IEnumerable<T>     source)
@@ -344,7 +344,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
-			DataContextOptions options, 
+			DataContextOptions options,
 			ITable<T>          table,
 			BulkCopyOptions    bulkCopyOptions,
 			IEnumerable<T>     source,
@@ -363,10 +363,10 @@ namespace LinqToDB.DataProvider.Oracle
 
 #if NATIVE_ASYNC
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
-			DataContextOptions  options, 
+			DataContextOptions  options,
 			ITable<T>           table,
 			BulkCopyOptions     bulkCopyOptions,
-			IAsyncEnumerable<T> source, 
+			IAsyncEnumerable<T> source,
 			CancellationToken cancellationToken)
 		{
 			var extension = options.FindExtension<OracleOptionsExtension>() ?? OracleTools.Options;

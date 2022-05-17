@@ -1,20 +1,16 @@
 ﻿using System;
-using System.Data;
-using System.Linq;
+using LinqToDB.Infrastructure;
 
 namespace LinqToDB.DataProvider.Oracle
 {
-	using Common;
 	using SqlQuery;
 	using SqlProvider;
-	using System.Text;
 	using Mapping;
-	using System.Data.Common;
 
 	partial class Oracle11SqlBuilder : OracleSqlBuilderBase
 	{
-		public Oracle11SqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
+		public Oracle11SqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, LinqOptionSet linqOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, linqOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 

@@ -63,26 +63,26 @@ namespace LinqToDB.DataProvider
 		ISchemaProvider    GetSchemaProvider     ();
 
 		BulkCopyRowsCopied BulkCopy<T>(
-			DataContextOptions options, 
-			ITable<T>          table, 
+			DataContextOptions options,
+			ITable<T>          table,
 			BulkCopyOptions    bulkCopyOptions,
 			IEnumerable<T>     source)
 		where T : notnull;
 
 		Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
-			DataContextOptions options, 
+			DataContextOptions options,
 			ITable<T>          table,
 			BulkCopyOptions    bulkCopyOptions,
-			IEnumerable<T>     source, 
+			IEnumerable<T>     source,
 			CancellationToken  cancellationToken)
 		where T : notnull;
 
 #if NATIVE_ASYNC
 		Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
-			DataContextOptions  options, 
+			DataContextOptions  options,
 			ITable<T>           table,
 			BulkCopyOptions     bulkCopyOptions,
-			IAsyncEnumerable<T> source, 
+			IAsyncEnumerable<T> source,
 			CancellationToken   cancellationToken)
 		where T: notnull;
 #endif
