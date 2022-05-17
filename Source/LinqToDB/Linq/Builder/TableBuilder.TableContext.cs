@@ -1255,7 +1255,7 @@ namespace LinqToDB.Linq.Builder
 						}
 						else
 						{
-							var tableLevel  = FindContextExpression(expression, level, true, true)!;
+							var tableLevel  = FindContextExpression(expression, level, false, true)!;
 
 							var result = tableLevel.Context.GetContext(tableLevel.CurrentExpression, tableLevel.CurrentLevel + 1, buildInfo);
 							if (result == null)
