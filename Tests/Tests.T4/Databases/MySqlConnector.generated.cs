@@ -769,7 +769,7 @@ namespace MySqlConnectorDataContext
 	{
 		#region TestFunction
 
-		[Sql.Function(Name="TestFunction", ServerSideOnly=true)]
+		[Sql.Function(Name="`TestFunction`", ServerSideOnly=true)]
 		public static string? TestFunction(int? param)
 		{
 			throw new InvalidOperationException();

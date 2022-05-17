@@ -92,6 +92,7 @@ public class a_CreateData : TestBase
 
 						var isDrop =
 							command.TrimStart().StartsWith("DROP")          ||
+							command.TrimStart().Contains("DROP PACKAGE ")   ||
 							command.TrimStart().Contains("DROP PROCEDURE ") ||
 							command.TrimStart().StartsWith("CALL DROP");
 

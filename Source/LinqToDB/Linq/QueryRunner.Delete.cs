@@ -25,10 +25,15 @@ namespace LinqToDB.Linq
 			{
 				var sqlTable = new SqlTable(dataContext.MappingSchema, type);
 
-				if (tableName    != null) sqlTable.PhysicalName = tableName;
-				if (serverName   != null) sqlTable.Server       = serverName;
-				if (databaseName != null) sqlTable.Database     = databaseName;
-				if (schemaName   != null) sqlTable.Schema       = schemaName;
+				if (tableName != null || schemaName != null || databaseName != null || databaseName != null)
+				{
+					sqlTable.TableName = new(
+						          tableName    ?? sqlTable.TableName.Name,
+						Server  : serverName   ?? sqlTable.TableName.Server,
+						Database: databaseName ?? sqlTable.TableName.Database,
+						Schema  : schemaName   ?? sqlTable.TableName.Schema);
+				}
+
 				if (tableOptions.IsSet()) sqlTable.TableOptions = tableOptions;
 
 				var deleteStatement = new SqlDeleteStatement();
@@ -43,7 +48,7 @@ namespace LinqToDB.Linq
 				var keys = sqlTable.GetKeys(true).Cast<SqlField>().ToList();
 
 				if (keys.Count == 0)
-					throw new LinqException($"Table '{sqlTable.Name}' does not have primary key.");
+					throw new LinqException($"Table '{sqlTable.NameForLogging}' does not have primary key.");
 
 				foreach (var field in keys)
 				{

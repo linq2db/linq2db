@@ -59,9 +59,7 @@ namespace LinqToDB.Tools
 					{
 						if (useIdentity)
 						{
-							var sb = new StringBuilder();
-							sqlBuilder.BuildTableName(sb, entityDescriptor.ServerName, entityDescriptor.DatabaseName, entityDescriptor.SchemaName, entityDescriptor.TableName, entityDescriptor.TableOptions);
-							var tableName = sb.ToString();
+							var tableName = sqlBuilder.BuildObjectName(new (), entityDescriptor.Name, tableOptions: entityDescriptor.TableOptions).ToString();
 
 							var identity = context.Select(() => new { last = Sql.CurrentIdentity(tableName), step = Sql.IdentityStep(tableName) });
 

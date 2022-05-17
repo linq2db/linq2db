@@ -69,8 +69,8 @@ namespace Cli.T4.SapHana
 		public ITable<BulkInsertUpperCaseColumn> BulkInsertUpperCaseColumns => this.GetTable<BulkInsertUpperCaseColumn>();
 		public ITable<BulkInsertLowerCaseColumn> BulkInsertLowerCaseColumns => this.GetTable<BulkInsertLowerCaseColumn>();
 		public ITable<AllTypesGeo>               AllTypesGeos               => this.GetTable<AllTypesGeo>();
-		public ITable<ParentChildView>           ParentChildViews           => this.GetTable<ParentChildView>();
 		public ITable<ParentView>                ParentViews                => this.GetTable<ParentView>();
+		public ITable<ParentChildView>           ParentChildViews           => this.GetTable<ParentChildView>();
 
 		#region Table Functions
 		#region GetParentById
@@ -86,6 +86,21 @@ namespace Cli.T4.SapHana
 		{
 			[Column("ParentID")] public int? ParentID { get; set; }
 			[Column("Value1"  )] public int? Value1   { get; set; }
+		}
+		#endregion
+
+		#region TestTableFunction
+		private static readonly MethodInfo _testTableFunction = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.TestTableFunction(default));
+
+		[Sql.TableFunction("TEST_TABLE_FUNCTION", Schema = "TESTDB")]
+		public ITable<TestTableFunctionResult> TestTableFunction(int? i)
+		{
+			return this.GetTable<TestTableFunctionResult>(this, _testTableFunction, i);
+		}
+
+		public partial class TestTableFunctionResult
+		{
+			[Column("O")] public int? O { get; set; }
 		}
 		#endregion
 		#endregion
@@ -631,6 +646,28 @@ namespace Cli.T4.SapHana
 		}
 		#endregion
 
+		#region TestProcedure
+		public static IEnumerable<TestProcedureResult> TestProcedure(this TestDataDB dataConnection, int? i)
+		{
+			var parameters = new []
+			{
+				new DataParameter("I", i, DataType.Int32)
+				{
+					Size = 10
+				}
+			};
+			return dataConnection.QueryProc(dataReader => new TestProcedureResult()
+			{
+				Column = Converter.ChangeTypeTo<int?>(dataReader.GetValue(0), dataConnection.MappingSchema)
+			}, "\"TESTDB\".\"TEST_PROCEDURE\"", parameters);
+		}
+
+		public partial class TestProcedureResult
+		{
+			public int? Column { get; set; }
+		}
+		#endregion
+
 		#region Prd.Global.Ecc/CvMarAproc
 		public static IEnumerable<PrdGlobalEccCvMarAprocResult> PrdGlobalEccCvMarAproc(this TestDataDB dataConnection)
 		{
@@ -645,6 +682,16 @@ namespace Cli.T4.SapHana
 		{
 			public int?    id  { get; set; }
 			public string? id1 { get; set; }
+		}
+		#endregion
+		#endregion
+
+		#region Scalar Functions
+		#region TestFunction
+		[Sql.Function("\"TESTDB\".\"TEST_FUNCTION\"", ServerSideOnly = true)]
+		public static int? TestFunction(int? i)
+		{
+			throw new InvalidOperationException("Scalar function cannot be called outside of query");
 		}
 		#endregion
 		#endregion
@@ -901,18 +948,18 @@ namespace Cli.T4.SapHana
 		[Column("stgeometryDataType"                                                                                  )] public byte[]? StgeometryDataType { get; set; } // ST_GEOMETRY
 	}
 
+	[Table("ParentView", Schema = "TESTDB", IsView = true)]
+	public partial class ParentView
+	{
+		[Column("ParentID")] public int? ParentID { get; set; } // INTEGER
+		[Column("Value1"  )] public int? Value1   { get; set; } // INTEGER
+	}
+
 	[Table("ParentChildView", Schema = "TESTDB", IsView = true)]
 	public partial class ParentChildView
 	{
 		[Column("ParentID")] public int? ParentID { get; set; } // INTEGER
 		[Column("Value1"  )] public int? Value1   { get; set; } // INTEGER
 		[Column("ChildID" )] public int? ChildID  { get; set; } // INTEGER
-	}
-
-	[Table("ParentView", Schema = "TESTDB", IsView = true)]
-	public partial class ParentView
-	{
-		[Column("ParentID")] public int? ParentID { get; set; } // INTEGER
-		[Column("Value1"  )] public int? Value1   { get; set; } // INTEGER
 	}
 }

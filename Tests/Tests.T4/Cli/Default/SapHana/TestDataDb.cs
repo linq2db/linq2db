@@ -58,8 +58,8 @@ namespace Cli.Default.SapHana
 		public ITable<BulkInsertUpperCaseColumn> BulkInsertUpperCaseColumns => this.GetTable<BulkInsertUpperCaseColumn>();
 		public ITable<BulkInsertLowerCaseColumn> BulkInsertLowerCaseColumns => this.GetTable<BulkInsertLowerCaseColumn>();
 		public ITable<AllTypesGeo>               AllTypesGeos               => this.GetTable<AllTypesGeo>();
-		public ITable<ParentChildView>           ParentChildViews           => this.GetTable<ParentChildView>();
 		public ITable<ParentView>                ParentViews                => this.GetTable<ParentView>();
+		public ITable<ParentChildView>           ParentChildViews           => this.GetTable<ParentChildView>();
 	}
 
 	public static partial class ExtensionMethods

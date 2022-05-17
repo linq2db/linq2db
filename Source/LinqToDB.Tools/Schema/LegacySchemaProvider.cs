@@ -5,6 +5,7 @@ using LinqToDB.CodeModel;
 using LinqToDB.Data;
 using LinqToDB.Scaffold;
 using LinqToDB.SchemaProvider;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Schema
 {
@@ -118,11 +119,12 @@ namespace LinqToDB.Schema
 			if (!load)
 				return;
 
-			var dbName = new ObjectName(
-				null,
-				string.IsNullOrWhiteSpace(proc.CatalogName) ? null : proc.CatalogName,
-				string.IsNullOrWhiteSpace(proc.SchemaName ) ? null : proc.SchemaName,
-				proc.ProcedureName);
+			var dbName = new SqlObjectName(
+				proc.ProcedureName,
+				Database: string.IsNullOrWhiteSpace(proc.CatalogName)     ? null : proc.CatalogName,
+				Schema  : string.IsNullOrWhiteSpace(proc.SchemaName )     ? null : proc.SchemaName,
+				Package : string.IsNullOrWhiteSpace(proc.PackageName )    ? null : proc.PackageName);
+
 			var description = string.IsNullOrWhiteSpace(proc.Description) ? null : proc.Description;
 
 			// API debug asserts for unexpected/unsupported inputs
@@ -157,7 +159,7 @@ namespace LinqToDB.Schema
 			}
 			else if (proc.IsTableFunction)
 			{
-				if (_options.LoadTableFunction(new ObjectName(null, null, proc.SchemaName, proc.ProcedureName)))
+				if (_options.LoadTableFunction(new SqlObjectName(proc.ProcedureName, Schema: proc.SchemaName, Package: proc.PackageName)))
 					_tableFunctions.Add(new TableFunction(dbName, description, parameters, schemaError, resultSet));
 			}
 			else if (proc.IsAggregateFunction)
@@ -180,7 +182,7 @@ namespace LinqToDB.Schema
 		/// <param name="proc">Procedure/function legacy model.</param>
 		/// <param name="onlyInputs">Ignore non-input parameters (in/out parameters also ignored).</param>
 		/// <returns>Returns procedure/function parameters and return value models.</returns>
-		private (List<Parameter> parameters, Result result) ParseParameters(ObjectName functionName, ProcedureSchema proc, bool onlyInputs)
+		private (List<Parameter> parameters, Result result) ParseParameters(SqlObjectName functionName, ProcedureSchema proc, bool onlyInputs)
 		{
 			// scalar function can return tuple only for pgsql
 			var detectTuples = proc.IsFunction && !proc.IsTableFunction && !proc.IsAggregateFunction && _isPostgreSql;
@@ -268,7 +270,7 @@ namespace LinqToDB.Schema
 		/// <param name="functionName">Procedure/function database name.</param>
 		/// <param name="proc">Procedure/function legacy model.</param>
 		/// <returns>Returns procedure/function result set schema model.</returns>
-		private List<ResultColumn>? ParseResultSet(ObjectName functionName, ProcedureSchema proc)
+		private List<ResultColumn>? ParseResultSet(SqlObjectName functionName, ProcedureSchema proc)
 		{
 			List<ResultColumn>? resultSet = null;
 			if (proc.ResultTable != null)
@@ -308,7 +310,7 @@ namespace LinqToDB.Schema
 		/// <param name="functionName">Procedure/function database name.</param>
 		/// <param name="column">Legacy column model.</param>
 		/// <returns>Column model.</returns>
-		private ResultColumn ParseProcedureColumn(ObjectName functionName, ColumnSchema column)
+		private ResultColumn ParseProcedureColumn(SqlObjectName functionName, ColumnSchema column)
 		{
 			// debug asserts
 			if (string.IsNullOrWhiteSpace(column.ColumnType))
@@ -415,13 +417,12 @@ namespace LinqToDB.Schema
 		/// </summary>
 		/// <param name="table">Table model.</param>
 		/// <returns>Table name.</returns>
-		private static ObjectName GetTableName(TableSchema table)
+		private static SqlObjectName GetTableName(TableSchema table)
 		{
-			return new ObjectName(
-				null,
-				string.IsNullOrWhiteSpace(table.CatalogName) ? null : table.CatalogName,
-				string.IsNullOrWhiteSpace(table.SchemaName ) ? null : table.SchemaName,
-				table.TableName!);
+			return new SqlObjectName(
+				table.TableName!,
+				Database: string.IsNullOrWhiteSpace(table.CatalogName) ? null : table.CatalogName,
+				Schema  : string.IsNullOrWhiteSpace(table.SchemaName ) ? null : table.SchemaName);
 		}
 
 		/// <summary>
@@ -454,7 +455,7 @@ namespace LinqToDB.Schema
 		/// <param name="tableName">Table or view name.</param>
 		/// <param name="column">Legacy column model.</param>
 		/// <returns></returns>
-		private Column ParseColumn(ObjectName tableName, ColumnSchema column)
+		private Column ParseColumn(SqlObjectName tableName, ColumnSchema column)
 		{
 			// debug asserts
 			if (string.IsNullOrWhiteSpace(column.ColumnName))
@@ -683,7 +684,7 @@ namespace LinqToDB.Schema
 
 			legacyOptions.LoadProcedure = p =>
 			{
-				var name = new ObjectName(null, null, p.SchemaName, p.ProcedureName);
+				var name = new SqlObjectName(p.ProcedureName, Schema: p.SchemaName, Package: p.PackageName);
 				if (!p.IsFunction)
 					return options.LoadProceduresSchema && options.LoadProcedureSchema(name);
 
@@ -693,7 +694,7 @@ namespace LinqToDB.Schema
 				throw new InvalidOperationException($"{nameof(GetSchemaOptions)}.{nameof(GetSchemaOptions.LoadProcedure)} called for non-table returning object {p.ProcedureName}");
 			};
 
-			legacyOptions.LoadTable     = t => options.LoadTableOrView(new ObjectName(null, null, t.Schema, t.Name), t.IsView);
+			legacyOptions.LoadTable     = t => options.LoadTableOrView(new SqlObjectName(t.Name, Schema: t.Schema), t.IsView);
 			legacyOptions.UseSchemaOnly = options.UseSafeSchemaLoad;
 
 			return legacyOptions;

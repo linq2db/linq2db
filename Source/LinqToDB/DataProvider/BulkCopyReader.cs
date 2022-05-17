@@ -160,7 +160,7 @@ namespace LinqToDB.DataProvider
 
 		private object? GetValueInternal(int ordinal)
 		{
-			var value = _columns[ordinal].GetValue(Current);
+			var value = _columns[ordinal].GetProviderValue(Current);
 
 			_dataConnection.DataProvider.SetParameter(_dataConnection, _valueConverter, string.Empty, _columnTypes[ordinal], value);
 
@@ -174,7 +174,7 @@ namespace LinqToDB.DataProvider
 
 			for (var it = 0; it < count; ++it)
 			{
-				var value = _columns[it].GetValue(obj);
+				var value = _columns[it].GetProviderValue(obj);
 				_dataConnection.DataProvider.SetParameter(_dataConnection, _valueConverter, string.Empty, _columnTypes[it], value);
 				values[it] = _valueConverter.Value;
 			}

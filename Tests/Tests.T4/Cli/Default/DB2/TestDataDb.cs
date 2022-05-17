@@ -18,10 +18,10 @@ namespace Cli.Default.DB2
 		#region Schemas
 		public void InitSchemas()
 		{
-			Db2Admin = new Db2AdminSchema.DataContext(this);
+			Db2Inst1 = new Db2Inst1Schema.DataContext(this);
 		}
 
-		public Db2AdminSchema.DataContext Db2Admin { get; set; } = null!;
+		public Db2Inst1Schema.DataContext Db2Inst1 { get; set; } = null!;
 		#endregion
 
 		public TestDataDB()

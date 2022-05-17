@@ -356,7 +356,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 				var value = new object?[list.Count];
 				for (var j = 0; j < value.Length; j++)
-					value[j] = column.GetValue(list[j]);
+					value[j] = column.GetProviderValue(list[j]);
 
 				helper.Parameters.Add(new DataParameter(":p" + (i + 1), value, dataType, column.DbType)
 				{
@@ -379,7 +379,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 				var value = new object?[list.Count];
 				for (var j = 0; j < value.Length; j++)
-					value[j] = column.GetValue(list[j]);
+					value[j] = column.GetProviderValue(list[j]);
 
 				helper.Parameters.Add(new DataParameter(":p" + (i + 1), value, dataType, column.DbType)
 				{

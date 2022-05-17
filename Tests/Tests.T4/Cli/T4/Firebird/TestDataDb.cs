@@ -7,13 +7,16 @@
 
 using FirebirdSql.Data.Types;
 using LinqToDB;
+using LinqToDB.Common;
 using LinqToDB.Configuration;
 using LinqToDB.Data;
+using LinqToDB.Expressions;
 using LinqToDB.Mapping;
 using System;
-using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Numerics;
+using System.Reflection;
 
 #pragma warning disable 1573, 1591
 #nullable enable
@@ -66,6 +69,278 @@ namespace Cli.T4.Firebird
 		public ITable<TestMerge1>        TestMerge1          => this.GetTable<TestMerge1>();
 		public ITable<TestMerge2>        TestMerge2          => this.GetTable<TestMerge2>();
 		public ITable<PersonView>        PersonViews         => this.GetTable<PersonView>();
+
+		#region Table Functions
+		#region TestPackage2TestTableFunction
+		private static readonly MethodInfo _testTableFunction = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.TestPackage2TestTableFunction(default));
+
+		[Sql.TableFunction("TEST_TABLE_FUNCTION", Package = "TEST_PACKAGE2")]
+		public ITable<TestPackage2TestTableFunctionResult> TestPackage2TestTableFunction(int? i)
+		{
+			return this.GetTable<TestPackage2TestTableFunctionResult>(this, _testTableFunction, i);
+		}
+
+		public partial class TestPackage2TestTableFunctionResult
+		{
+			[Column("O")] public int? O { get; set; }
+		}
+		#endregion
+
+		#region PersonSelectByKey
+		private static readonly MethodInfo _personSelectByKey = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.PersonSelectByKey(default));
+
+		[Sql.TableFunction("Person_SelectByKey")]
+		public ITable<PersonSelectByKeyResult> PersonSelectByKey(int? id)
+		{
+			return this.GetTable<PersonSelectByKeyResult>(this, _personSelectByKey, id);
+		}
+
+		public partial class PersonSelectByKeyResult
+		{
+			[Column("PERSONID"  )] public int?    PERSONID   { get; set; }
+			[Column("FIRSTNAME" )] public string? FIRSTNAME  { get; set; }
+			[Column("LASTNAME"  )] public string? LASTNAME   { get; set; }
+			[Column("MIDDLENAME")] public string? MIDDLENAME { get; set; }
+			[Column("GENDER"    )] public string? GENDER     { get; set; }
+		}
+		#endregion
+
+		#region PersonSelectAll
+		private static readonly MethodInfo _personSelectAll = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.PersonSelectAll());
+
+		[Sql.TableFunction("Person_SelectAll")]
+		public ITable<PersonSelectAllResult> PersonSelectAll()
+		{
+			return this.GetTable<PersonSelectAllResult>(this, _personSelectAll);
+		}
+
+		public partial class PersonSelectAllResult
+		{
+			[Column("PERSONID"  )] public int?    PERSONID   { get; set; }
+			[Column("FIRSTNAME" )] public string? FIRSTNAME  { get; set; }
+			[Column("LASTNAME"  )] public string? LASTNAME   { get; set; }
+			[Column("MIDDLENAME")] public string? MIDDLENAME { get; set; }
+			[Column("GENDER"    )] public string? GENDER     { get; set; }
+		}
+		#endregion
+
+		#region PersonSelectByName
+		private static readonly MethodInfo _personSelectByName = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.PersonSelectByName(default, default));
+
+		[Sql.TableFunction("Person_SelectByName")]
+		public ITable<PersonSelectByNameResult> PersonSelectByName(string? inFirstname, string? inLastname)
+		{
+			return this.GetTable<PersonSelectByNameResult>(this, _personSelectByName, inFirstname, inLastname);
+		}
+
+		public partial class PersonSelectByNameResult
+		{
+			[Column("PERSONID"  )] public int?    PERSONID   { get; set; }
+			[Column("FIRSTNAME" )] public string? FIRSTNAME  { get; set; }
+			[Column("LASTNAME"  )] public string? LASTNAME   { get; set; }
+			[Column("MIDDLENAME")] public string? MIDDLENAME { get; set; }
+			[Column("GENDER"    )] public string? GENDER     { get; set; }
+		}
+		#endregion
+
+		#region PersonInsert
+		private static readonly MethodInfo _personInsert = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.PersonInsert(default, default, default, default));
+
+		[Sql.TableFunction("Person_Insert")]
+		public ITable<PersonInsertResult> PersonInsert(string? firstname, string? lastname, string? middlename, char? gender)
+		{
+			return this.GetTable<PersonInsertResult>(this, _personInsert, firstname, lastname, middlename, gender);
+		}
+
+		public partial class PersonInsertResult
+		{
+			[Column("PERSONID")] public int? PERSONID { get; set; }
+		}
+		#endregion
+
+		#region PersonInsertOutputParameter
+		private static readonly MethodInfo _personInsertOutputParameter = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.PersonInsertOutputParameter(default, default, default, default));
+
+		[Sql.TableFunction("Person_Insert_OutputParameter")]
+		public ITable<PersonInsertOutputParameterResult> PersonInsertOutputParameter(string? firstname, string? lastname, string? middlename, char? gender)
+		{
+			return this.GetTable<PersonInsertOutputParameterResult>(this, _personInsertOutputParameter, firstname, lastname, middlename, gender);
+		}
+
+		public partial class PersonInsertOutputParameterResult
+		{
+			[Column("PERSONID")] public int? PERSONID { get; set; }
+		}
+		#endregion
+
+		#region PatientSelectAll
+		private static readonly MethodInfo _patientSelectAll = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.PatientSelectAll());
+
+		[Sql.TableFunction("Patient_SelectAll")]
+		public ITable<PatientSelectAllResult> PatientSelectAll()
+		{
+			return this.GetTable<PatientSelectAllResult>(this, _patientSelectAll);
+		}
+
+		public partial class PatientSelectAllResult
+		{
+			[Column("PERSONID"  )] public int?    PERSONID   { get; set; }
+			[Column("FIRSTNAME" )] public string? FIRSTNAME  { get; set; }
+			[Column("LASTNAME"  )] public string? LASTNAME   { get; set; }
+			[Column("MIDDLENAME")] public string? MIDDLENAME { get; set; }
+			[Column("GENDER"    )] public string? GENDER     { get; set; }
+			[Column("DIAGNOSIS" )] public string? DIAGNOSIS  { get; set; }
+		}
+		#endregion
+
+		#region PatientSelectByName
+		private static readonly MethodInfo _patientSelectByName = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.PatientSelectByName(default, default));
+
+		[Sql.TableFunction("Patient_SelectByName")]
+		public ITable<PatientSelectByNameResult> PatientSelectByName(string? firstname, string? lastname)
+		{
+			return this.GetTable<PatientSelectByNameResult>(this, _patientSelectByName, firstname, lastname);
+		}
+
+		public partial class PatientSelectByNameResult
+		{
+			[Column("PERSONID"  )] public int?    PERSONID   { get; set; }
+			[Column("MIDDLENAME")] public string? MIDDLENAME { get; set; }
+			[Column("GENDER"    )] public string? GENDER     { get; set; }
+			[Column("DIAGNOSIS" )] public string? DIAGNOSIS  { get; set; }
+		}
+		#endregion
+
+		#region OutRefTest
+		private static readonly MethodInfo _outRefTest = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.OutRefTest(default, default, default, default));
+
+		[Sql.TableFunction("OutRefTest")]
+		public ITable<OutRefTestResult> OutRefTest(int? id, int? inInputoutputid, string? str, string? inInputoutputstr)
+		{
+			return this.GetTable<OutRefTestResult>(this, _outRefTest, id, inInputoutputid, str, inInputoutputstr);
+		}
+
+		public partial class OutRefTestResult
+		{
+			[Column("INPUTOUTPUTID" )] public int?    INPUTOUTPUTID  { get; set; }
+			[Column("INPUTOUTPUTSTR")] public string? INPUTOUTPUTSTR { get; set; }
+			[Column("OUTPUTID"      )] public int?    OUTPUTID       { get; set; }
+			[Column("OUTPUTSTR"     )] public string? OUTPUTSTR      { get; set; }
+		}
+		#endregion
+
+		#region OutRefEnumTest
+		private static readonly MethodInfo _outRefEnumTest = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.OutRefEnumTest(default, default));
+
+		[Sql.TableFunction("OutRefEnumTest")]
+		public ITable<OutRefEnumTestResult> OutRefEnumTest(string? str, string? inInputoutputstr)
+		{
+			return this.GetTable<OutRefEnumTestResult>(this, _outRefEnumTest, str, inInputoutputstr);
+		}
+
+		public partial class OutRefEnumTestResult
+		{
+			[Column("INPUTOUTPUTSTR")] public string? INPUTOUTPUTSTR { get; set; }
+			[Column("OUTPUTSTR"     )] public string? OUTPUTSTR      { get; set; }
+		}
+		#endregion
+
+		#region ScalarDataReader
+		private static readonly MethodInfo _scalarDataReader = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.ScalarDataReader());
+
+		[Sql.TableFunction("Scalar_DataReader")]
+		public ITable<ScalarDataReaderResult> ScalarDataReader()
+		{
+			return this.GetTable<ScalarDataReaderResult>(this, _scalarDataReader);
+		}
+
+		public partial class ScalarDataReaderResult
+		{
+			[Column("INTFIELD"   )] public int?    INTFIELD    { get; set; }
+			[Column("STRINGFIELD")] public string? STRINGFIELD { get; set; }
+		}
+		#endregion
+
+		#region ScalarOutputParameter
+		private static readonly MethodInfo _scalarOutputParameter = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.ScalarOutputParameter());
+
+		[Sql.TableFunction("Scalar_OutputParameter")]
+		public ITable<ScalarOutputParameterResult> ScalarOutputParameter()
+		{
+			return this.GetTable<ScalarOutputParameterResult>(this, _scalarOutputParameter);
+		}
+
+		public partial class ScalarOutputParameterResult
+		{
+			[Column("OUTPUTINT"   )] public int?    OUTPUTINT    { get; set; }
+			[Column("OUTPUTSTRING")] public string? OUTPUTSTRING { get; set; }
+		}
+		#endregion
+
+		#region ScalarReturnParameter
+		private static readonly MethodInfo _scalarReturnParameter = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.ScalarReturnParameter());
+
+		[Sql.TableFunction("Scalar_ReturnParameter")]
+		public ITable<ScalarReturnParameterResult> ScalarReturnParameter()
+		{
+			return this.GetTable<ScalarReturnParameterResult>(this, _scalarReturnParameter);
+		}
+
+		public partial class ScalarReturnParameterResult
+		{
+			[Column("RETURN_VALUE")] public int? RETURNVALUE { get; set; }
+		}
+		#endregion
+
+		#region TestTableFunction
+		private static readonly MethodInfo _testTableFunction1 = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.TestTableFunction(default));
+
+		[Sql.TableFunction("TEST_TABLE_FUNCTION")]
+		public ITable<TestTableFunctionResult> TestTableFunction(int? i)
+		{
+			return this.GetTable<TestTableFunctionResult>(this, _testTableFunction1, i);
+		}
+
+		public partial class TestTableFunctionResult
+		{
+			[Column("O")] public int? O { get; set; }
+		}
+		#endregion
+
+		#region TestV4Types
+		private static readonly MethodInfo _testV4Types = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.TestV4Types(default, default, default, default, default));
+
+		[Sql.TableFunction("TEST_V4_TYPES")]
+		public ITable<TestV4TypesResult> TestV4Types(FbZonedDateTime? tstz, FbZonedTime? ttz, FbDecFloat? decfloat16, FbDecFloat? decfloat34, BigInteger? int128)
+		{
+			return this.GetTable<TestV4TypesResult>(this, _testV4Types, tstz, ttz, decfloat16, decfloat34, int128);
+		}
+
+		public partial class TestV4TypesResult
+		{
+			[Column("COL_TSTZ"      )] public FbZonedDateTime? COLTSTZ       { get; set; }
+			[Column("COL_TTZ"       )] public FbZonedTime?     COLTTZ        { get; set; }
+			[Column("COL_DECFLOAT16")] public FbDecFloat?      COLDECFLOAT16 { get; set; }
+			[Column("COL_DECFLOAT34")] public FbDecFloat?      COLDECFLOAT34 { get; set; }
+			[Column("COL_INT_128"   )] public BigInteger?      COLINT128     { get; set; }
+		}
+		#endregion
+
+		#region TestPackage1TestTableFunction
+		private static readonly MethodInfo _testTableFunction2 = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.TestPackage1TestTableFunction(default));
+
+		[Sql.TableFunction("TEST_TABLE_FUNCTION", Package = "TEST_PACKAGE1")]
+		public ITable<TestPackage1TestTableFunctionResult> TestPackage1TestTableFunction(int? i)
+		{
+			return this.GetTable<TestPackage1TestTableFunctionResult>(this, _testTableFunction2, i);
+		}
+
+		public partial class TestPackage1TestTableFunctionResult
+		{
+			[Column("O")] public int? O { get; set; }
+		}
+		#endregion
+		#endregion
 	}
 
 	[Table("AllTypes", Schema = "SYSDBA")]
@@ -159,253 +434,43 @@ namespace Cli.T4.Firebird
 		#endregion
 
 		#region Stored Procedures
-		#region AddIssue792Record
-		public static int AddIssue792Record(this TestDataDB dataConnection)
-		{
-			return dataConnection.ExecuteProc("\"AddIssue792Record\"");
-		}
-		#endregion
-
-		#region OutRefEnumTest
-		public static IEnumerable<OutRefEnumTestResult> OutRefEnumTest(this TestDataDB dataConnection, string? str, string? inInputoutputstr)
+		#region TestPackage2TestProcedure
+		public static int TestPackage2TestProcedure(this TestDataDB dataConnection, int? i, out int? o)
 		{
 			var parameters = new []
 			{
-				new DataParameter("STR", str, DataType.NVarChar)
-				{
-					Size = 50
-				},
-				new DataParameter("IN_INPUTOUTPUTSTR", inInputoutputstr, DataType.NVarChar)
-				{
-					Size = 50
-				}
-			};
-			return dataConnection.QueryProc<OutRefEnumTestResult>("\"OutRefEnumTest\"", parameters);
-		}
-
-		public partial class OutRefEnumTestResult
-		{
-			[Column("INPUTOUTPUTSTR")] public string? INPUTOUTPUTSTR { get; set; }
-			[Column("OUTPUTSTR"     )] public string? OUTPUTSTR      { get; set; }
-		}
-		#endregion
-
-		#region OutRefTest
-		public static IEnumerable<OutRefTestResult> OutRefTest(this TestDataDB dataConnection, int? id, int? inInputoutputid, string? str, string? inInputoutputstr)
-		{
-			var parameters = new []
-			{
-				new DataParameter("ID", id, DataType.Int32)
+				new DataParameter("I", i, DataType.Int32)
 				{
 					Size = 4
 				},
-				new DataParameter("IN_INPUTOUTPUTID", inInputoutputid, DataType.Int32)
+				new DataParameter("O", null, DataType.Int32)
 				{
-					Size = 4
-				},
-				new DataParameter("STR", str, DataType.NVarChar)
-				{
-					Size = 50
-				},
-				new DataParameter("IN_INPUTOUTPUTSTR", inInputoutputstr, DataType.NVarChar)
-				{
-					Size = 50
-				}
-			};
-			return dataConnection.QueryProc<OutRefTestResult>("\"OutRefTest\"", parameters);
-		}
-
-		public partial class OutRefTestResult
-		{
-			[Column("INPUTOUTPUTID" )] public int?    INPUTOUTPUTID  { get; set; }
-			[Column("INPUTOUTPUTSTR")] public string? INPUTOUTPUTSTR { get; set; }
-			[Column("OUTPUTID"      )] public int?    OUTPUTID       { get; set; }
-			[Column("OUTPUTSTR"     )] public string? OUTPUTSTR      { get; set; }
-		}
-		#endregion
-
-		#region PatientSelectAll
-		public static IEnumerable<PatientSelectAllResult> PatientSelectAll(this TestDataDB dataConnection)
-		{
-			return dataConnection.QueryProc<PatientSelectAllResult>("\"Patient_SelectAll\"");
-		}
-
-		public partial class PatientSelectAllResult
-		{
-			[Column("PERSONID"  )] public int?    PERSONID   { get; set; }
-			[Column("FIRSTNAME" )] public string? FIRSTNAME  { get; set; }
-			[Column("LASTNAME"  )] public string? LASTNAME   { get; set; }
-			[Column("MIDDLENAME")] public string? MIDDLENAME { get; set; }
-			[Column("GENDER"    )] public string? GENDER     { get; set; }
-			[Column("DIAGNOSIS" )] public string? DIAGNOSIS  { get; set; }
-		}
-		#endregion
-
-		#region PatientSelectByName
-		public static IEnumerable<PatientSelectByNameResult> PatientSelectByName(this TestDataDB dataConnection, string? firstname, string? lastname)
-		{
-			var parameters = new []
-			{
-				new DataParameter("FIRSTNAME", firstname, DataType.NVarChar)
-				{
-					Size = 50
-				},
-				new DataParameter("LASTNAME", lastname, DataType.NVarChar)
-				{
-					Size = 50
-				}
-			};
-			return dataConnection.QueryProc<PatientSelectByNameResult>("\"Patient_SelectByName\"", parameters);
-		}
-
-		public partial class PatientSelectByNameResult
-		{
-			[Column("PERSONID"  )] public int?    PERSONID   { get; set; }
-			[Column("MIDDLENAME")] public string? MIDDLENAME { get; set; }
-			[Column("GENDER"    )] public string? GENDER     { get; set; }
-			[Column("DIAGNOSIS" )] public string? DIAGNOSIS  { get; set; }
-		}
-		#endregion
-
-		#region PersonDelete
-		public static int PersonDelete(this TestDataDB dataConnection, int? personid)
-		{
-			var parameters = new []
-			{
-				new DataParameter("PERSONID", personid, DataType.Int32)
-				{
+					Direction = ParameterDirection.Output,
 					Size = 4
 				}
 			};
-			return dataConnection.ExecuteProc("\"Person_Delete\"", parameters);
+			o = Converter.ChangeTypeTo<int?>(parameters[1].Value);
+			return dataConnection.ExecuteProc("TEST_PACKAGE2.TEST_PROCEDURE", parameters);
 		}
 		#endregion
 
-		#region PersonInsert
-		public static IEnumerable<PersonInsertResult> PersonInsert(this TestDataDB dataConnection, string? firstname, string? lastname, string? middlename, char? gender)
+		#region TestProcedure
+		public static int TestProcedure(this TestDataDB dataConnection, int? i, out int? o)
 		{
 			var parameters = new []
 			{
-				new DataParameter("FIRSTNAME", firstname, DataType.NVarChar)
+				new DataParameter("I", i, DataType.Int32)
 				{
-					Size = 50
+					Size = 4
 				},
-				new DataParameter("LASTNAME", lastname, DataType.NVarChar)
+				new DataParameter("O", null, DataType.Int32)
 				{
-					Size = 50
-				},
-				new DataParameter("MIDDLENAME", middlename, DataType.NVarChar)
-				{
-					Size = 50
-				},
-				new DataParameter("GENDER", gender, DataType.NChar)
-				{
-					Size = 1
-				}
-			};
-			return dataConnection.QueryProc<PersonInsertResult>("\"Person_Insert\"", parameters);
-		}
-
-		public partial class PersonInsertResult
-		{
-			[Column("PERSONID")] public int? PERSONID { get; set; }
-		}
-		#endregion
-
-		#region PersonInsertOutputParameter
-		public static IEnumerable<PersonInsertOutputParameterResult> PersonInsertOutputParameter(this TestDataDB dataConnection, string? firstname, string? lastname, string? middlename, char? gender)
-		{
-			var parameters = new []
-			{
-				new DataParameter("FIRSTNAME", firstname, DataType.NVarChar)
-				{
-					Size = 50
-				},
-				new DataParameter("LASTNAME", lastname, DataType.NVarChar)
-				{
-					Size = 50
-				},
-				new DataParameter("MIDDLENAME", middlename, DataType.NVarChar)
-				{
-					Size = 50
-				},
-				new DataParameter("GENDER", gender, DataType.NChar)
-				{
-					Size = 1
-				}
-			};
-			return dataConnection.QueryProc<PersonInsertOutputParameterResult>("\"Person_Insert_OutputParameter\"", parameters);
-		}
-
-		public partial class PersonInsertOutputParameterResult
-		{
-			[Column("PERSONID")] public int? PERSONID { get; set; }
-		}
-		#endregion
-
-		#region PersonSelectAll
-		public static IEnumerable<PersonSelectAllResult> PersonSelectAll(this TestDataDB dataConnection)
-		{
-			return dataConnection.QueryProc<PersonSelectAllResult>("\"Person_SelectAll\"");
-		}
-
-		public partial class PersonSelectAllResult
-		{
-			[Column("PERSONID"  )] public int?    PERSONID   { get; set; }
-			[Column("FIRSTNAME" )] public string? FIRSTNAME  { get; set; }
-			[Column("LASTNAME"  )] public string? LASTNAME   { get; set; }
-			[Column("MIDDLENAME")] public string? MIDDLENAME { get; set; }
-			[Column("GENDER"    )] public string? GENDER     { get; set; }
-		}
-		#endregion
-
-		#region PersonSelectByKey
-		public static IEnumerable<PersonSelectByKeyResult> PersonSelectByKey(this TestDataDB dataConnection, int? id)
-		{
-			var parameters = new []
-			{
-				new DataParameter("ID", id, DataType.Int32)
-				{
+					Direction = ParameterDirection.Output,
 					Size = 4
 				}
 			};
-			return dataConnection.QueryProc<PersonSelectByKeyResult>("\"Person_SelectByKey\"", parameters);
-		}
-
-		public partial class PersonSelectByKeyResult
-		{
-			[Column("PERSONID"  )] public int?    PERSONID   { get; set; }
-			[Column("FIRSTNAME" )] public string? FIRSTNAME  { get; set; }
-			[Column("LASTNAME"  )] public string? LASTNAME   { get; set; }
-			[Column("MIDDLENAME")] public string? MIDDLENAME { get; set; }
-			[Column("GENDER"    )] public string? GENDER     { get; set; }
-		}
-		#endregion
-
-		#region PersonSelectByName
-		public static IEnumerable<PersonSelectByNameResult> PersonSelectByName(this TestDataDB dataConnection, string? inFirstname, string? inLastname)
-		{
-			var parameters = new []
-			{
-				new DataParameter("IN_FIRSTNAME", inFirstname, DataType.NVarChar)
-				{
-					Size = 50
-				},
-				new DataParameter("IN_LASTNAME", inLastname, DataType.NVarChar)
-				{
-					Size = 50
-				}
-			};
-			return dataConnection.QueryProc<PersonSelectByNameResult>("\"Person_SelectByName\"", parameters);
-		}
-
-		public partial class PersonSelectByNameResult
-		{
-			[Column("PERSONID"  )] public int?    PERSONID   { get; set; }
-			[Column("FIRSTNAME" )] public string? FIRSTNAME  { get; set; }
-			[Column("LASTNAME"  )] public string? LASTNAME   { get; set; }
-			[Column("MIDDLENAME")] public string? MIDDLENAME { get; set; }
-			[Column("GENDER"    )] public string? GENDER     { get; set; }
+			o = Converter.ChangeTypeTo<int?>(parameters[1].Value);
+			return dataConnection.ExecuteProc("TEST_PROCEDURE", parameters);
 		}
 		#endregion
 
@@ -439,80 +504,86 @@ namespace Cli.T4.Firebird
 		}
 		#endregion
 
-		#region ScalarDataReader
-		public static IEnumerable<ScalarDataReaderResult> ScalarDataReader(this TestDataDB dataConnection)
-		{
-			return dataConnection.QueryProc<ScalarDataReaderResult>("\"Scalar_DataReader\"");
-		}
-
-		public partial class ScalarDataReaderResult
-		{
-			[Column("INTFIELD"   )] public int?    INTFIELD    { get; set; }
-			[Column("STRINGFIELD")] public string? STRINGFIELD { get; set; }
-		}
-		#endregion
-
-		#region ScalarOutputParameter
-		public static IEnumerable<ScalarOutputParameterResult> ScalarOutputParameter(this TestDataDB dataConnection)
-		{
-			return dataConnection.QueryProc<ScalarOutputParameterResult>("\"Scalar_OutputParameter\"");
-		}
-
-		public partial class ScalarOutputParameterResult
-		{
-			[Column("OUTPUTINT"   )] public int?    OUTPUTINT    { get; set; }
-			[Column("OUTPUTSTRING")] public string? OUTPUTSTRING { get; set; }
-		}
-		#endregion
-
-		#region ScalarReturnParameter
-		public static IEnumerable<ScalarReturnParameterResult> ScalarReturnParameter(this TestDataDB dataConnection)
-		{
-			return dataConnection.QueryProc<ScalarReturnParameterResult>("\"Scalar_ReturnParameter\"");
-		}
-
-		public partial class ScalarReturnParameterResult
-		{
-			[Column("RETURN_VALUE")] public int? RETURNVALUE { get; set; }
-		}
-		#endregion
-
-		#region TestV4Types
-		public static IEnumerable<TestV4TypesResult> TestV4Types(this TestDataDB dataConnection, FbZonedDateTime? tstz, FbZonedTime? ttz, FbDecFloat? decfloat16, FbDecFloat? decfloat34, BigInteger? int128)
+		#region PersonDelete
+		public static int PersonDelete(this TestDataDB dataConnection, int? personid)
 		{
 			var parameters = new []
 			{
-				new DataParameter("TSTZ", tstz, DataType.DateTimeOffset)
+				new DataParameter("PERSONID", personid, DataType.Int32)
 				{
-					Size = 12
-				},
-				new DataParameter("TTZ", ttz, DataType.TimeTZ)
-				{
-					Size = 8
-				},
-				new DataParameter("DECFLOAT16", decfloat16, DataType.DecFloat)
-				{
-					Size = 8
-				},
-				new DataParameter("DECFLOAT34", decfloat34, DataType.DecFloat)
-				{
-					Size = 16
-				},
-				new DataParameter("INT_128", int128, DataType.Int128)
-				{
-					Size = 16
+					Size = 4
 				}
 			};
-			return dataConnection.QueryProc<TestV4TypesResult>("TEST_V4_TYPES", parameters);
+			return dataConnection.ExecuteProc("\"Person_Delete\"", parameters);
 		}
+		#endregion
 
-		public partial class TestV4TypesResult
+		#region AddIssue792Record
+		public static int AddIssue792Record(this TestDataDB dataConnection)
 		{
-			[Column("COL_TSTZ"      )] public FbZonedDateTime? COLTSTZ       { get; set; }
-			[Column("COL_TTZ"       )] public FbZonedTime?     COLTTZ        { get; set; }
-			[Column("COL_DECFLOAT16")] public FbDecFloat?      COLDECFLOAT16 { get; set; }
-			[Column("COL_DECFLOAT34")] public FbDecFloat?      COLDECFLOAT34 { get; set; }
-			[Column("COL_INT_128"   )] public BigInteger?      COLINT128     { get; set; }
+			return dataConnection.ExecuteProc("\"AddIssue792Record\"");
+		}
+		#endregion
+
+		#region TestPackage1TestProcedure
+		public static int TestPackage1TestProcedure(this TestDataDB dataConnection, int? i, out int? o)
+		{
+			var parameters = new []
+			{
+				new DataParameter("I", i, DataType.Int32)
+				{
+					Size = 4
+				},
+				new DataParameter("O", null, DataType.Int32)
+				{
+					Direction = ParameterDirection.Output,
+					Size = 4
+				}
+			};
+			o = Converter.ChangeTypeTo<int?>(parameters[1].Value);
+			return dataConnection.ExecuteProc("TEST_PACKAGE1.TEST_PROCEDURE", parameters);
+		}
+		#endregion
+		#endregion
+
+		#region Scalar Functions
+		#region Ltrim
+		[Sql.Function("LTRIM", ServerSideOnly = true)]
+		public static string? Ltrim(string? par2)
+		{
+			throw new InvalidOperationException("Scalar function cannot be called outside of query");
+		}
+		#endregion
+
+		#region Rtrim
+		[Sql.Function("RTRIM", ServerSideOnly = true)]
+		public static string? Rtrim(string? par4)
+		{
+			throw new InvalidOperationException("Scalar function cannot be called outside of query");
+		}
+		#endregion
+
+		#region TestPackage1TestFunction
+		[Sql.Function("TEST_PACKAGE1.TEST_FUNCTION", ServerSideOnly = true)]
+		public static int? TestPackage1TestFunction(int? i)
+		{
+			throw new InvalidOperationException("Scalar function cannot be called outside of query");
+		}
+		#endregion
+
+		#region TestPackage2TestFunction
+		[Sql.Function("TEST_PACKAGE2.TEST_FUNCTION", ServerSideOnly = true)]
+		public static int? TestPackage2TestFunction(int? i)
+		{
+			throw new InvalidOperationException("Scalar function cannot be called outside of query");
+		}
+		#endregion
+
+		#region TestFunction
+		[Sql.Function("TEST_FUNCTION", ServerSideOnly = true)]
+		public static int? TestFunction(int? i)
+		{
+			throw new InvalidOperationException("Scalar function cannot be called outside of query");
 		}
 		#endregion
 		#endregion
@@ -648,7 +719,7 @@ namespace Cli.T4.Firebird
 
 		#region Associations
 		/// <summary>
-		/// INTEG_14411
+		/// INTEG_15118
 		/// </summary>
 		[Association(CanBeNull = false, ThisKey = nameof(PersonID), OtherKey = nameof(Firebird.Person.PersonID))]
 		public Person Person { get; set; } = null!;
@@ -672,7 +743,7 @@ namespace Cli.T4.Firebird
 		public Doctor? Doctor { get; set; }
 
 		/// <summary>
-		/// INTEG_14411 backreference
+		/// INTEG_15118 backreference
 		/// </summary>
 		[Association(ThisKey = nameof(PersonID), OtherKey = nameof(Patient.PersonID))]
 		public Patient? Integ { get; set; }

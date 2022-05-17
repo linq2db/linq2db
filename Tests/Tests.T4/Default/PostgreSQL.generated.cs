@@ -644,7 +644,7 @@ namespace Default.PostgreSQL
 	{
 		#region AddIfNotExists
 
-		[Sql.Function(Name="public.add_if_not_exists", ServerSideOnly=true)]
+		[Sql.Function(Name="add_if_not_exists", ServerSideOnly=true)]
 		public static object? AddIfNotExists(string? p_name)
 		{
 			throw new InvalidOperationException();
@@ -654,7 +654,7 @@ namespace Default.PostgreSQL
 
 		#region Addissue792record
 
-		[Sql.Function(Name="public.addissue792record", ServerSideOnly=true)]
+		[Sql.Function(Name="addissue792record", ServerSideOnly=true)]
 		public static object? Addissue792record()
 		{
 			throw new InvalidOperationException();
@@ -664,7 +664,7 @@ namespace Default.PostgreSQL
 
 		#region Bool
 
-		[Sql.Function(Name="public.bool", ServerSideOnly=true)]
+		[Sql.Function(Name="bool", ServerSideOnly=true)]
 		public static string? Bool(int? param)
 		{
 			throw new InvalidOperationException();
@@ -674,7 +674,7 @@ namespace Default.PostgreSQL
 
 		#region Floatrange
 
-		[Sql.Function(Name="public.floatrange", ServerSideOnly=true)]
+		[Sql.Function(Name="floatrange", ServerSideOnly=true)]
 		public static object? Floatrange(double? par6, double? par7, string? par8)
 		{
 			throw new InvalidOperationException();
@@ -684,7 +684,7 @@ namespace Default.PostgreSQL
 
 		#region FnTest
 
-		[Sql.Function(Name="\"SchemaName\".\"fnTest\"", ServerSideOnly=true)]
+		[Sql.Function(Name="\"fnTest\"", ServerSideOnly=true)]
 		public static string? FnTest(int? param)
 		{
 			throw new InvalidOperationException();
@@ -694,7 +694,7 @@ namespace Default.PostgreSQL
 
 		#region Issue1742Date
 
-		[Sql.Function(Name="public.issue_1742_date", ServerSideOnly=true)]
+		[Sql.Function(Name="issue_1742_date", ServerSideOnly=true)]
 		public static int? Issue1742Date(DateTime? p1)
 		{
 			throw new InvalidOperationException();
@@ -704,7 +704,7 @@ namespace Default.PostgreSQL
 
 		#region Issue1742Ts
 
-		[Sql.Function(Name="public.issue_1742_ts", ServerSideOnly=true)]
+		[Sql.Function(Name="issue_1742_ts", ServerSideOnly=true)]
 		public static int? Issue1742Ts(DateTime? p1)
 		{
 			throw new InvalidOperationException();
@@ -714,7 +714,7 @@ namespace Default.PostgreSQL
 
 		#region Issue1742Tstz
 
-		[Sql.Function(Name="public.issue_1742_tstz", ServerSideOnly=true)]
+		[Sql.Function(Name="issue_1742_tstz", ServerSideOnly=true)]
 		public static int? Issue1742Tstz(DateTimeOffset? p1)
 		{
 			throw new InvalidOperationException();
@@ -724,7 +724,7 @@ namespace Default.PostgreSQL
 
 		#region Reverse
 
-		[Sql.Function(Name="public.reverse", ServerSideOnly=true)]
+		[Sql.Function(Name="reverse", ServerSideOnly=true)]
 		public static string? Reverse(string? par14)
 		{
 			throw new InvalidOperationException();
@@ -734,7 +734,7 @@ namespace Default.PostgreSQL
 
 		#region TestAvg
 
-		[Sql.Function(Name="public.test_avg", ServerSideOnly=true, IsAggregate = true, ArgIndices = new[] { 0 })]
+		[Sql.Function(Name="test_avg", ServerSideOnly=true, IsAggregate = true, ArgIndices = new[] { 0 })]
 		public static double? TestAvg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, double?>> par16)
 		{
 			throw new InvalidOperationException();
@@ -744,7 +744,7 @@ namespace Default.PostgreSQL
 
 		#region TestFunctionParameters
 
-		[Sql.Function(Name="public.\"TestFunctionParameters\"", ServerSideOnly=true)]
+		[Sql.Function(Name="\"TestFunctionParameters\"", ServerSideOnly=true)]
 		public static TestFunctionParametersResult? TestFunctionParameters(int? param1, int? param2)
 		{
 			throw new InvalidOperationException();
@@ -754,7 +754,7 @@ namespace Default.PostgreSQL
 
 		#region TestScalarFunction
 
-		[Sql.Function(Name="public.\"TestScalarFunction\"", ServerSideOnly=true)]
+		[Sql.Function(Name="\"TestScalarFunction\"", ServerSideOnly=true)]
 		public static string? TestScalarFunction(int? param)
 		{
 			throw new InvalidOperationException();
@@ -764,7 +764,7 @@ namespace Default.PostgreSQL
 
 		#region TestSingleOutParameterFunction
 
-		[Sql.Function(Name="public.\"TestSingleOutParameterFunction\"", ServerSideOnly=true)]
+		[Sql.Function(Name="\"TestSingleOutParameterFunction\"", ServerSideOnly=true)]
 		public static int? TestSingleOutParameterFunction(int? param1)
 		{
 			throw new InvalidOperationException();

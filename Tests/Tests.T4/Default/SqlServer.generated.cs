@@ -630,10 +630,10 @@ namespace Default.SqlServer
 		#region Associations
 
 		/// <summary>
-		/// FK_TestSchemaY_OtherID (TestData2017.dbo.TestSchemaX)
+		/// FK_TestSchemaY_TestSchemaX (TestData2017.dbo.TestSchemaX)
 		/// </summary>
 		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false)]
-		public TestSchemaX FkTestSchemaYOtherID { get; set; } = null!;
+		public TestSchemaX FkTestSchemaYTestSchemaX { get; set; } = null!;
 
 		/// <summary>
 		/// FK_TestSchemaY_ParentTestSchemaX (TestData2017.dbo.TestSchemaX)
@@ -642,7 +642,7 @@ namespace Default.SqlServer
 		public TestSchemaX ParentTestSchemaX { get; set; } = null!;
 
 		/// <summary>
-		/// FK_TestSchemaY_TestSchemaX (TestData2017.dbo.TestSchemaX)
+		/// FK_TestSchemaY_OtherID (TestData2017.dbo.TestSchemaX)
 		/// </summary>
 		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false)]
 		public TestSchemaX TestSchemaX { get; set; } = null!;
@@ -1236,7 +1236,7 @@ namespace Default.SqlServer
 		/// <param name="value">
 		/// This is &lt;test&gt; scalar function parameter!
 		/// </param>
-		[Sql.Function(Name="dbo.ScalarFunction", ServerSideOnly=true)]
+		[Sql.Function(Name="[dbo].[ScalarFunction]", ServerSideOnly=true)]
 		public static int? ScalarFunction(int? @value)
 		{
 			throw new InvalidOperationException();

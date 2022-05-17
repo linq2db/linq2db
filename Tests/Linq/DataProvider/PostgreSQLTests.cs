@@ -33,6 +33,7 @@ namespace Tests.DataProvider
 	using System.Threading.Tasks;
 	using LinqToDB.Tools;
 	using Model;
+	using Npgsql;
 
 	[TestFixture]
 	public class PostgreSQLTests : DataProviderTestBase
@@ -2315,6 +2316,7 @@ namespace Tests.DataProvider
 				Assert.True(data.SequenceEqual(res));
 			}
 		}
+
 	}
 
 	public static class TestPgAggregates

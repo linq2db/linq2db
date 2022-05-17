@@ -156,9 +156,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					for (var i = 0; i < columns.Length; i++)
 					{
 						if (npgsqlTypes[i] != null)
-							writer.Write(_provider.NormalizeTimeStamp(columns[i].GetValue(item!), columnTypes[i]), npgsqlTypes[i]!.Value);
+							writer.Write(_provider.NormalizeTimeStamp(columns[i].GetProviderValue(item!), columnTypes[i]), npgsqlTypes[i]!.Value);
 						else
-							writer.Write(_provider.NormalizeTimeStamp(columns[i].GetValue(item!), columnTypes[i]), dbTypes[i]!);
+							writer.Write(_provider.NormalizeTimeStamp(columns[i].GetProviderValue(item!), columnTypes[i]), dbTypes[i]!);
 					}
 
 					currentCount++;
@@ -268,10 +268,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					for (var i = 0; i < columns.Length; i++)
 					{
 						if (npgsqlTypes[i] != null)
-							await writer.WriteAsync(_provider.NormalizeTimeStamp(columns[i].GetValue(item!), columnTypes[i]), npgsqlTypes[i]!.Value, cancellationToken)
+							await writer.WriteAsync(_provider.NormalizeTimeStamp(columns[i].GetProviderValue(item!), columnTypes[i]), npgsqlTypes[i]!.Value, cancellationToken)
 								.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 						else
-							await writer.WriteAsync(_provider.NormalizeTimeStamp(columns[i].GetValue(item!), columnTypes[i]), dbTypes[i]!, cancellationToken)
+							await writer.WriteAsync(_provider.NormalizeTimeStamp(columns[i].GetProviderValue(item!), columnTypes[i]), dbTypes[i]!, cancellationToken)
 							.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 					}
 
@@ -373,10 +373,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					for (var i = 0; i < columns.Length; i++)
 					{
 						if (npgsqlTypes[i] != null)
-							await writer.WriteAsync(_provider.NormalizeTimeStamp(columns[i].GetValue(item!), columnTypes[i]), npgsqlTypes[i]!.Value, cancellationToken)
+							await writer.WriteAsync(_provider.NormalizeTimeStamp(columns[i].GetProviderValue(item!), columnTypes[i]), npgsqlTypes[i]!.Value, cancellationToken)
 								.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 						else
-							await writer.WriteAsync(_provider.NormalizeTimeStamp(columns[i].GetValue(item!), columnTypes[i]), dbTypes[i]!, cancellationToken)
+							await writer.WriteAsync(_provider.NormalizeTimeStamp(columns[i].GetProviderValue(item!), columnTypes[i]), dbTypes[i]!, cancellationToken)
 							.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 					}
 

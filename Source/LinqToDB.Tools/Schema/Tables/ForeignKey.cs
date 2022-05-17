@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Schema
 {
@@ -12,8 +13,8 @@ namespace LinqToDB.Schema
 	/// <param name="Relation">Ordered list of source-target pairs of columns, used by foreign key relation.</param>
 	public sealed record ForeignKey(
 		string                                 Name,
-		ObjectName                             Source,
-		ObjectName                             Target,
+		SqlObjectName                          Source,
+		SqlObjectName                          Target,
 		IReadOnlyList<ForeignKeyColumnMapping> Relation)
 	{
 		public override string ToString() => $"{Name}: {Source}({string.Join(", ", Relation.Select(_ => _.SourceColumn))}) => {Target}({string.Join(", ", Relation.Select(_ => _.TargetColumn))})";

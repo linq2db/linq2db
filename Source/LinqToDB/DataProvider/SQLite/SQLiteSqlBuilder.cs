@@ -8,6 +8,7 @@ namespace LinqToDB.DataProvider.SQLite
 	using SqlQuery;
 	using SqlProvider;
 	using Mapping;
+	using LinqToDB.Extensions;
 
 	public class SQLiteSqlBuilder : BasicSqlBuilder
 	{
@@ -38,11 +39,8 @@ namespace LinqToDB.DataProvider.SQLite
 		{
 			if (statement is SqlTruncateTableStatement trun)
 			{
-				StringBuilder
-					.Append("UPDATE SQLITE_SEQUENCE SET SEQ=0 WHERE NAME='")
-					.Append(trun.Table!.PhysicalName)
-					.AppendLine("'")
-					;
+				StringBuilder.Append("UPDATE SQLITE_SEQUENCE SET SEQ=0 WHERE NAME=");
+				MappingSchema.ConvertToSqlValue(StringBuilder, null, trun.Table!.TableName.Name);
 			}
 			else
 			{
@@ -79,9 +77,10 @@ namespace LinqToDB.DataProvider.SQLite
 
 					return sb.Append('[').Append(value).Append(']');
 
-				case ConvertType.NameToDatabase:
-				case ConvertType.NameToSchema:
+				case ConvertType.NameToDatabase  :
+				case ConvertType.NameToSchema    :
 				case ConvertType.NameToQueryTable:
+				case ConvertType.NameToProcedure :
 					if (value.Length > 0 && value[0] == '[')
 						return sb.Append(value);
 
@@ -130,17 +129,18 @@ namespace LinqToDB.DataProvider.SQLite
 			}
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table, TableOptions tableOptions)
+		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions)
 		{
-			if (database != null && database.Length == 0) database = null;
-
 			// either "temp", "main" or attached db name supported
 			if (tableOptions.IsTemporaryOptionSet())
 				sb.Append("temp.");
-			else if (database != null)
-				sb.Append(database).Append('.');
+			else  if (name.Database != null)
+			{
+				(escape ? Convert(sb, name.Database, ConvertType.NameToDatabase) : sb.Append(name.Database))
+					.Append('.');
+			}
 
-			return sb.Append(table);
+			return escape ? Convert(sb, name.Name, objectType) : sb.Append(name.Name);
 		}
 
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)

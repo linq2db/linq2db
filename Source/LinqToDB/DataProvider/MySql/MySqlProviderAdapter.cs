@@ -13,7 +13,7 @@ namespace LinqToDB.DataProvider.MySql
 	using Mapping;
 	using SqlQuery;
 
-	public class MySqlProviderAdapter : IDynamicProviderAdapter
+	public abstract class MySqlProviderAdapter : IDynamicProviderAdapter
 	{
 		private static readonly object _mysqlDataSyncRoot      = new ();
 		private static readonly object _mysqlConnectorSyncRoot = new ();
@@ -82,6 +82,8 @@ namespace LinqToDB.DataProvider.MySql
 		public BulkCopyAdapter? BulkCopy            { get; protected set; }
 		public bool             IsDateOnlySupported { get; protected set; }
 
+		public abstract bool    IsPackageProceduresSupported { get; }
+
 		public class BulkCopyAdapter
 		{
 			internal BulkCopyAdapter(
@@ -124,6 +126,8 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			public class MySqlDataProviderAdapter : MySqlProviderAdapter
 			{
+				public override bool IsPackageProceduresSupported => false;
+
 				public MySqlDataProviderAdapter()
 				{
 					var assembly = Common.Tools.TryLoadAssembly(MySqlDataAssemblyName, null);
@@ -267,6 +271,8 @@ namespace LinqToDB.DataProvider.MySql
 
 			public class MySqlConnectorProviderAdapter : MySqlProviderAdapter
 			{
+				public override bool IsPackageProceduresSupported => true;
+
 				public MySqlConnectorProviderAdapter()
 				{
 					var assembly = Common.Tools.TryLoadAssembly(MySqlConnectorAssemblyName, null);

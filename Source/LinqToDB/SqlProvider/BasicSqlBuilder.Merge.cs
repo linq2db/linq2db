@@ -33,13 +33,15 @@ namespace LinqToDB.SqlProvider
 
 		/// <summary>
 		/// If <see cref="IsValuesSyntaxSupported"/> set to false and provider doesn't support SELECTs without
-		/// FROM clause, this property should contain name of table with single record.
+		/// FROM clause, this property should contain name of table (or equivalent SQL) with single record.
+		/// IMPORTANT: as this property could return SQL, we don't escape it, so it should contain only valid SQL/identifiers.
 		/// </summary>
 		protected virtual string? FakeTable => null;
 
 		/// <summary>
 		/// If <see cref="IsValuesSyntaxSupported"/> set to false and provider doesn't support SELECTs without
 		/// FROM clause, this property could contain name of schema for table with single record.
+		/// Returned name should be already escaped if escaping required.
 		/// </summary>
 		protected virtual string? FakeTableSchema => null;
 
@@ -193,7 +195,7 @@ namespace LinqToDB.SqlProvider
 			mergeSource = ConvertElement(mergeSource);
 			StringBuilder.Append(' ');
 
-			ConvertTableName(StringBuilder, null, null, null, mergeSource.Name, TableOptions.NotSet);
+			BuildObjectName(StringBuilder, new (mergeSource.Name), ConvertType.NameToQueryTable, true, TableOptions.NotSet);
 
 			if (SupportsColumnAliasesInSource)
 			{
@@ -350,7 +352,8 @@ namespace LinqToDB.SqlProvider
 			if (FakeTable == null)
 				return false;
 
-			BuildTableName(StringBuilder, null, null, FakeTableSchema, FakeTable, TableOptions.NotSet);
+			// NO ESCAPING!
+			BuildObjectName(StringBuilder, new (FakeTable, Schema: FakeTableSchema), ConvertType.NameToQueryTable, false, TableOptions.NotSet);
 			return true;
 		}
 

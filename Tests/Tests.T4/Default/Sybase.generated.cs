@@ -77,30 +77,30 @@ namespace Default.Sybase
 	{
 		[Column(),                                                              Identity   ] public int       ID                    { get; set; } // int
 		[Column("bigintDataType"),                                                 Nullable] public long?     BigintDataType        { get; set; } // bigint
-		[Column("uBigintDataType"),                                                Nullable] public object?   UBigintDataType       { get; set; } // ubigint
+		[Column("uBigintDataType"),                                                Nullable] public ulong?    UBigintDataType       { get; set; } // ubigint
 		[Column("numericDataType"),                                                Nullable] public decimal?  NumericDataType       { get; set; } // numeric(18, 1)
 		[Column("bitDataType"),                                                 NotNull    ] public bool      BitDataType           { get; set; } // bit
 		[Column("smallintDataType"),                                               Nullable] public short?    SmallintDataType      { get; set; } // smallint
-		[Column("uSmallintDataType"),                                              Nullable] public object?   USmallintDataType     { get; set; } // usmallint
+		[Column("uSmallintDataType"),                                              Nullable] public ushort?   USmallintDataType     { get; set; } // usmallint
 		[Column("decimalDataType"),                                                Nullable] public decimal?  DecimalDataType       { get; set; } // decimal(18, 1)
 		[Column("smallmoneyDataType"),                                             Nullable] public decimal?  SmallmoneyDataType    { get; set; } // smallmoney
 		[Column("intDataType"),                                                    Nullable] public int?      IntDataType           { get; set; } // int
-		[Column("uIntDataType"),                                                   Nullable] public object?   UIntDataType          { get; set; } // uint
+		[Column("uIntDataType"),                                                   Nullable] public uint?     UIntDataType          { get; set; } // uint
 		[Column("tinyintDataType"),                                                Nullable] public sbyte?    TinyintDataType       { get; set; } // tinyint
 		[Column("moneyDataType"),                                                  Nullable] public decimal?  MoneyDataType         { get; set; } // money
 		[Column("floatDataType"),                                                  Nullable] public double?   FloatDataType         { get; set; } // float
 		[Column("realDataType"),                                                   Nullable] public float?    RealDataType          { get; set; } // real
 		[Column("datetimeDataType"),                                               Nullable] public DateTime? DatetimeDataType      { get; set; } // datetime
 		[Column("smalldatetimeDataType"),                                          Nullable] public DateTime? SmalldatetimeDataType { get; set; } // smalldatetime
-		[Column("dateDataType"),                                                   Nullable] public object?   DateDataType          { get; set; } // date
-		[Column("timeDataType"),                                                   Nullable] public object?   TimeDataType          { get; set; } // time
+		[Column("dateDataType"),                                                   Nullable] public DateTime? DateDataType          { get; set; } // date
+		[Column("timeDataType"),                                                   Nullable] public TimeSpan? TimeDataType          { get; set; } // time
 		[Column("charDataType"),                                                   Nullable] public char?     CharDataType          { get; set; } // char(1)
 		[Column("char20DataType"),                                                 Nullable] public string?   Char20DataType        { get; set; } // char(20)
 		[Column("varcharDataType"),                                                Nullable] public string?   VarcharDataType       { get; set; } // varchar(20)
 		[Column("textDataType"),                                                   Nullable] public string?   TextDataType          { get; set; } // text
 		[Column("ncharDataType"),                                                  Nullable] public string?   NcharDataType         { get; set; } // nchar(60)
 		[Column("nvarcharDataType"),                                               Nullable] public string?   NvarcharDataType      { get; set; } // nvarchar(60)
-		[Column("ntextDataType"),                                                  Nullable] public object?   NtextDataType         { get; set; } // unitext
+		[Column("ntextDataType"),                                                  Nullable] public string?   NtextDataType         { get; set; } // unitext
 		[Column("binaryDataType"),                                                 Nullable] public byte[]?   BinaryDataType        { get; set; } // binary(1)
 		[Column("varbinaryDataType"),                                              Nullable] public byte[]?   VarbinaryDataType     { get; set; } // varbinary(1)
 		[Column("imageDataType"),                                                  Nullable] public byte[]?   ImageDataType         { get; set; } // image
@@ -245,20 +245,20 @@ namespace Default.Sybase
 		[Column("hashkey"),   NotNull    ] public int     Hashkey  { get; set; } // int
 		[Column("id"),        NotNull    ] public int     Id       { get; set; } // int
 		[Column("sequence"),  NotNull    ] public short   Sequence { get; set; } // smallint
-		[Column("exec_min"),     Nullable] public object? ExecMin  { get; set; } // ubigint
-		[Column("exec_max"),     Nullable] public object? ExecMax  { get; set; } // ubigint
-		[Column("exec_avg"),     Nullable] public object? ExecAvg  { get; set; } // ubigint
-		[Column("elap_min"),     Nullable] public object? ElapMin  { get; set; } // ubigint
-		[Column("elap_max"),     Nullable] public object? ElapMax  { get; set; } // ubigint
-		[Column("elap_avg"),     Nullable] public object? ElapAvg  { get; set; } // ubigint
-		[Column("lio_min"),      Nullable] public object? LioMin   { get; set; } // ubigint
-		[Column("lio_max"),      Nullable] public object? LioMax   { get; set; } // ubigint
-		[Column("lio_avg"),      Nullable] public object? LioAvg   { get; set; } // ubigint
-		[Column("pio_min"),      Nullable] public object? PioMin   { get; set; } // ubigint
-		[Column("pio_max"),      Nullable] public object? PioMax   { get; set; } // ubigint
-		[Column("pio_avg"),      Nullable] public object? PioAvg   { get; set; } // ubigint
-		[Column("cnt"),          Nullable] public object? Cnt      { get; set; } // ubigint
-		[Column("abort_cnt"),    Nullable] public object? AbortCnt { get; set; } // ubigint
+		[Column("exec_min"),     Nullable] public ulong?  ExecMin  { get; set; } // ubigint
+		[Column("exec_max"),     Nullable] public ulong?  ExecMax  { get; set; } // ubigint
+		[Column("exec_avg"),     Nullable] public ulong?  ExecAvg  { get; set; } // ubigint
+		[Column("elap_min"),     Nullable] public ulong?  ElapMin  { get; set; } // ubigint
+		[Column("elap_max"),     Nullable] public ulong?  ElapMax  { get; set; } // ubigint
+		[Column("elap_avg"),     Nullable] public ulong?  ElapAvg  { get; set; } // ubigint
+		[Column("lio_min"),      Nullable] public ulong?  LioMin   { get; set; } // ubigint
+		[Column("lio_max"),      Nullable] public ulong?  LioMax   { get; set; } // ubigint
+		[Column("lio_avg"),      Nullable] public ulong?  LioAvg   { get; set; } // ubigint
+		[Column("pio_min"),      Nullable] public ulong?  PioMin   { get; set; } // ubigint
+		[Column("pio_max"),      Nullable] public ulong?  PioMax   { get; set; } // ubigint
+		[Column("pio_avg"),      Nullable] public ulong?  PioAvg   { get; set; } // ubigint
+		[Column("cnt"),          Nullable] public ulong?  Cnt      { get; set; } // ubigint
+		[Column("abort_cnt"),    Nullable] public ulong?  AbortCnt { get; set; } // ubigint
 		[Column("qtext"),        Nullable] public string? Qtext    { get; set; } // varchar(510)
 	}
 
@@ -288,8 +288,8 @@ namespace Default.Sybase
 		[Column,        Nullable] public byte[]?   FieldBinary     { get; set; } // varbinary(20)
 		[Column,        Nullable] public string?   FieldGuid       { get; set; } // char(36)
 		[Column,        Nullable] public decimal?  FieldDecimal    { get; set; } // decimal(24, 10)
-		[Column,        Nullable] public object?   FieldDate       { get; set; } // date
-		[Column,        Nullable] public object?   FieldTime       { get; set; } // time
+		[Column,        Nullable] public DateTime? FieldDate       { get; set; } // date
+		[Column,        Nullable] public TimeSpan? FieldTime       { get; set; } // time
 		[Column,        Nullable] public string?   FieldEnumString { get; set; } // varchar(20)
 		[Column,        Nullable] public int?      FieldEnumNumber { get; set; } // int
 	}
@@ -314,8 +314,8 @@ namespace Default.Sybase
 		[Column,        Nullable] public byte[]?   FieldBinary     { get; set; } // varbinary(20)
 		[Column,        Nullable] public string?   FieldGuid       { get; set; } // char(36)
 		[Column,        Nullable] public decimal?  FieldDecimal    { get; set; } // decimal(24, 10)
-		[Column,        Nullable] public object?   FieldDate       { get; set; } // date
-		[Column,        Nullable] public object?   FieldTime       { get; set; } // time
+		[Column,        Nullable] public DateTime? FieldDate       { get; set; } // date
+		[Column,        Nullable] public TimeSpan? FieldTime       { get; set; } // time
 		[Column,        Nullable] public string?   FieldEnumString { get; set; } // varchar(20)
 		[Column,        Nullable] public int?      FieldEnumNumber { get; set; } // int
 	}

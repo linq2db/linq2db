@@ -12,6 +12,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
+using System.Reflection;
 
 using FluentAssertions;
 
@@ -26,6 +27,7 @@ using LinqToDB.Linq;
 using LinqToDB.Linq.Internal;
 using LinqToDB.SchemaProvider;
 using LinqToDB.Tools;
+using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
@@ -34,8 +36,6 @@ using Oracle.ManagedDataAccess.Types;
 
 namespace Tests.DataProvider
 {
-	using LinqToDB.Mapping;
-
 	using Model;
 
 	[TestFixture]
@@ -3959,6 +3959,81 @@ CREATE TABLE ""TABLE_A""(
 					Assert.AreEqual(1, insertedData[0].Id);
 					Assert.AreEqual(2, insertedData[1].Id);
 				}
+			}
+		}
+
+		[Test]
+		public void TestModule([IncludeDataSources(false, TestProvName.AllOracle)] string context)
+		{
+			using (var db = GetDataConnection(context))
+			{
+				var parameters = new []
+				{
+					new DataParameter("I", 1, DataType.Int32),
+					new DataParameter("O", null, DataType.Int32)
+					{
+						Direction = ParameterDirection.Output
+					}
+				};
+
+				db.ExecuteProc("TEST_PROCEDURE", parameters);
+				Assert.AreEqual(4, parameters[1].Value);
+				db.ExecuteProc("TEST_PACKAGE1.TEST_PROCEDURE", parameters);
+				Assert.AreEqual(2, parameters[1].Value);
+				db.ExecuteProc("TEST_PACKAGE2.TEST_PROCEDURE", parameters);
+				Assert.AreEqual(3, parameters[1].Value);
+
+				Assert.AreEqual(4, db.Person.Select(p => OracleModuleFunctions.TestFunction(1)).First());
+				Assert.AreEqual(2, db.Person.Select(p => OracleModuleFunctions.TestFunctionP1(1)).First());
+				Assert.AreEqual(3, db.Person.Select(p => OracleModuleFunctions.TestFunctionP2(1)).First());
+
+				Assert.AreEqual(4, OracleModuleFunctions.TestTableFunction(db, 1).Select(r => r.O).First());
+				Assert.AreEqual(2, OracleModuleFunctions.TestTableFunctionP1(db, 1).Select(r => r.O).First());
+				Assert.AreEqual(3, OracleModuleFunctions.TestTableFunctionP2(db, 1).Select(r => r.O).First());
+			}
+		}
+
+		static class OracleModuleFunctions
+		{
+			[Sql.Function("TEST_FUNCTION", ServerSideOnly = true)]
+			public static int TestFunction(int param)
+			{
+				throw new InvalidOperationException("Scalar function cannot be called outside of query");
+			}
+
+			[Sql.Function("TEST_PACKAGE1.TEST_FUNCTION", ServerSideOnly = true)]
+			public static int TestFunctionP1(int param)
+			{
+				throw new InvalidOperationException("Scalar function cannot be called outside of query");
+			}
+
+			[Sql.Function("TEST_PACKAGE2.TEST_FUNCTION", ServerSideOnly = true)]
+			public static int TestFunctionP2(int param)
+			{
+				throw new InvalidOperationException("Scalar function cannot be called outside of query");
+			}
+
+			[Sql.TableFunction("TEST_TABLE_FUNCTION", argIndices: new[] { 1 })]
+			public static LinqToDB.ITable<Record> TestTableFunction(IDataContext db, int param1)
+			{
+				return db.GetTable<Record>(null, (MethodInfo)MethodBase.GetCurrentMethod()!, db, param1);
+			}
+
+			[Sql.TableFunction("TEST_TABLE_FUNCTION", argIndices: new[] { 1 }, Package = "TEST_PACKAGE1")]
+			public static LinqToDB.ITable<Record> TestTableFunctionP1(IDataContext db, int param1)
+			{
+				return db.GetTable<Record>(null, (MethodInfo)MethodBase.GetCurrentMethod()!, db, param1);
+			}
+
+			[Sql.TableFunction("TEST_TABLE_FUNCTION", argIndices: new[] { 1 }, Package = "TEST_PACKAGE2")]
+			public static LinqToDB.ITable<Record> TestTableFunctionP2(IDataContext db, int param1)
+			{
+				return db.GetTable<Record>(null, (MethodInfo)MethodBase.GetCurrentMethod()!, db, param1);
+			}
+
+			public class Record
+			{
+				public int O { get; set; }
 			}
 		}
 	}

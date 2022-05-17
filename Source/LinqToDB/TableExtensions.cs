@@ -79,7 +79,7 @@ namespace LinqToDB
 			where T : notnull
 		{
 			return table.DataContext.CreateSqlProvider()
-				.ConvertTableName(new StringBuilder(), table.ServerName, table.DatabaseName, table.SchemaName, table.TableName, table.TableOptions)
+				.BuildObjectName(new (), new (table.TableName, Server: table.ServerName, Database: table.DatabaseName, Schema: table.SchemaName), tableOptions: table.TableOptions)
 				.ToString();
 		}
 

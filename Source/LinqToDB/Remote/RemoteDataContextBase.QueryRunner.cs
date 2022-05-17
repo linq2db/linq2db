@@ -94,7 +94,7 @@ namespace LinqToDB.Remote
 						{
 							var parameterValue = p.GetParameterValue(_evaluationContext.ParameterValues);
 
-							var value = parameterValue.Value;
+							var value = parameterValue.ProviderValue;
 
 							sb
 								.Append("-- DECLARE ")
@@ -110,7 +110,7 @@ namespace LinqToDB.Remote
 						{
 							var parameterValue = p.GetParameterValue(_evaluationContext.ParameterValues);
 
-							var value = parameterValue.Value;
+							var value = parameterValue.ProviderValue;
 
 							if(value != null)
 								if (value is string || value is char)

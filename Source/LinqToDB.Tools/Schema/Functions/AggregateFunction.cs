@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Schema
 {
@@ -10,7 +11,7 @@ namespace LinqToDB.Schema
 	/// <param name="Parameters">Ordered list of parameters.</param>
 	/// <param name="Result">Function return value descriptor.</param>
 	public sealed record AggregateFunction(
-		ObjectName                     Name,
+		SqlObjectName                  Name,
 		string?                        Description,
 		IReadOnlyCollection<Parameter> Parameters,
 		ScalarResult                   Result)

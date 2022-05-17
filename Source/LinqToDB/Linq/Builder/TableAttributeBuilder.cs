@@ -32,10 +32,10 @@ namespace LinqToDB.Linq.Builder
 
 			switch (methodCall.Method.Name)
 			{
-				case nameof(LinqExtensions.TableName)     : table.SqlTable.PhysicalName  = (string)      value!; break;
-				case nameof(LinqExtensions.ServerName)    : table.SqlTable.Server        = (string?)     value;  break;
-				case nameof(LinqExtensions.DatabaseName)  : table.SqlTable.Database      = (string?)     value;  break;
-				case nameof(LinqExtensions.SchemaName)    : table.SqlTable.Schema        = (string?)     value;  break;
+				case nameof(LinqExtensions.TableName)     : table.SqlTable.TableName = table.SqlTable.TableName with { Name     = (string)value! }; break;
+				case nameof(LinqExtensions.ServerName)    : table.SqlTable.TableName = table.SqlTable.TableName with { Server   = (string?)value }; break;
+				case nameof(LinqExtensions.DatabaseName)  : table.SqlTable.TableName = table.SqlTable.TableName with { Database = (string?)value }; break;
+				case nameof(LinqExtensions.SchemaName)    : table.SqlTable.TableName = table.SqlTable.TableName with { Schema   = (string?)value }; break;
 				case nameof(TableExtensions.TableOptions) : table.SqlTable.TableOptions  = (TableOptions)value!; break;
 				case nameof(TableExtensions.IsTemporary)  : table.SqlTable.Set((bool)value!, TableOptions.IsTemporary); break;
 				case nameof(LinqExtensions.TableID)       : table.SqlTable.ID            = (string?)     value;  break;

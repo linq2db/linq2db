@@ -233,7 +233,7 @@ namespace LinqToDB.SqlQuery
 							if ((context.TablesVisited ??= new()).Add(table))
 							{
 								if (table.Source is SqlTable sqlTable)
-									context.AllAliases.Add(sqlTable.PhysicalName!);
+									context.AllAliases.Add(sqlTable.TableName.Name);
 							}
 
 							context.NewAliases.RegisterAliased(expr);

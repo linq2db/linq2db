@@ -85,7 +85,7 @@ namespace LinqToDB.DataProvider
 			for (var i = 0; i < Columns.Length; i++)
 			{
 				var column = Columns[i];
-				var value  = column.GetValue(item);
+				var value  = column.GetProviderValue(item);
 
 				var position = StringBuilder.Length;
 

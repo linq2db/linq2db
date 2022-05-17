@@ -87,7 +87,7 @@ namespace LinqToDB.DataProvider.Oracle
 					var conv = mappingSchema.ValueToSqlConverter;
 					converters[i] = (sb, obj) =>
 					{
-						var value = c.GetValue(obj);
+						var value = c.GetProviderValue(obj);
 
 						if (value is string && c.MemberType == typeof(string))
 						{
@@ -157,7 +157,7 @@ namespace LinqToDB.DataProvider.Oracle
 				}
 
 				table.SqlTableType   = SqlTableType.Expression;
-				table.Name           = $"XmlTable(\'/t/r\' PASSING XmlType({{2}}) COLUMNS {columns}) {{1}}";
+				table.Expression     = $"XmlTable(\'/t/r\' PASSING XmlType({{2}}) COLUMNS {columns}) {{1}}";
 				table.TableArguments = new[] { arg };
 			}
 		}

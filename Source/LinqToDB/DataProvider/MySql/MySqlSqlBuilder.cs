@@ -377,7 +377,9 @@ namespace LinqToDB.DataProvider.MySql
 				case ConvertType.NameToQueryTableAlias:
 				case ConvertType.NameToDatabase       :
 				case ConvertType.NameToSchema         :
+				case ConvertType.NameToPackage        :
 				case ConvertType.NameToQueryTable     :
+				case ConvertType.NameToProcedure      :
 					// https://dev.mysql.com/doc/refman/8.0/en/identifiers.html
 					if (value.Contains('`'))
 						value = value.Replace("`", "``");
@@ -473,15 +475,21 @@ namespace LinqToDB.DataProvider.MySql
 			StringBuilder.Append(')');
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table, TableOptions tableOptions)
+		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions)
 		{
-			if (database != null && database.Length == 0)
-				database = null;
+			if (name.Database != null)
+			{
+				(escape ? Convert(sb, name.Database, ConvertType.NameToDatabase) : sb.Append(name.Database))
+					.Append('.');
+			}
 
-			if (database != null)
-				sb.Append(database).Append('.');
+			if (name.Package != null)
+			{
+				(escape ? Convert(sb, name.Package, ConvertType.NameToPackage) : sb.Append(name.Package))
+					.Append('.');
+			}
 
-			return sb.Append(table);
+			return escape ? Convert(sb, name.Name, objectType) : sb.Append(name.Name);
 		}
 
 		protected override string? GetProviderTypeName(IDataContext dataContext, DbParameter parameter)

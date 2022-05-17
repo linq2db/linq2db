@@ -52,6 +52,10 @@ namespace Cli.Default.SqlServer
 
 		partial void InitDataContext();
 
+		public ITable<Issue1144>               Issue1144                => this.GetTable<Issue1144>();
+		public ITable<SameTableName>           SameTableNames           => this.GetTable<SameTableName>();
+		public ITable<TestSchemaSameTableName> TestSchemaSameTableNames => this.GetTable<TestSchemaSameTableName>();
+		public ITable<Issue1115>               Issue1115                => this.GetTable<Issue1115>();
 		public ITable<DataType>                DataTypes                => this.GetTable<DataType>();
 		public ITable<CollatedTable>           CollatedTables           => this.GetTable<CollatedTable>();
 		public ITable<InheritanceParent>       InheritanceParents       => this.GetTable<InheritanceParent>();
@@ -59,6 +63,7 @@ namespace Cli.Default.SqlServer
 		public ITable<Person>                  People                   => this.GetTable<Person>();
 		public ITable<Doctor>                  Doctors                  => this.GetTable<Doctor>();
 		public ITable<Patient>                 Patients                 => this.GetTable<Patient>();
+		public ITable<CreateIfNotExistsTable>  CreateIfNotExistsTables  => this.GetTable<CreateIfNotExistsTable>();
 		public ITable<AllType>                 AllTypes                 => this.GetTable<AllType>();
 		public ITable<AllTypes2>               AllTypes2                => this.GetTable<AllTypes2>();
 		/// <summary>
@@ -66,7 +71,6 @@ namespace Cli.Default.SqlServer
 		/// </summary>
 		public ITable<Parent>                  Parents                  => this.GetTable<Parent>();
 		public ITable<Child>                   Children                 => this.GetTable<Child>();
-		public ITable<CreateIfNotExistsTable>  CreateIfNotExistsTables  => this.GetTable<CreateIfNotExistsTable>();
 		public ITable<GrandChild>              GrandChildren            => this.GetTable<GrandChild>();
 		public ITable<LinqDataType>            LinqDataTypes            => this.GetTable<LinqDataType>();
 		public ITable<TestIdentity>            TestIdentities           => this.GetTable<TestIdentity>();
@@ -82,10 +86,6 @@ namespace Cli.Default.SqlServer
 		public ITable<TestMergeIdentity>       TestMergeIdentities      => this.GetTable<TestMergeIdentity>();
 		public ITable<TestSchemaX>             TestSchemaX              => this.GetTable<TestSchemaX>();
 		public ITable<TestSchemaY>             TestSchemaY              => this.GetTable<TestSchemaY>();
-		public ITable<Issue1144>               Issue1144                => this.GetTable<Issue1144>();
-		public ITable<SameTableName>           SameTableNames           => this.GetTable<SameTableName>();
-		public ITable<TestSchemaSameTableName> TestSchemaSameTableNames => this.GetTable<TestSchemaSameTableName>();
-		public ITable<Issue1115>               Issue1115                => this.GetTable<Issue1115>();
 		public ITable<ParentView>              ParentViews              => this.GetTable<ParentView>();
 		public ITable<ParentChildView>         ParentChildViews         => this.GetTable<ParentChildView>();
 	}
@@ -93,6 +93,26 @@ namespace Cli.Default.SqlServer
 	public static partial class ExtensionMethods
 	{
 		#region Table Extensions
+		public static Issue1144? Find(this ITable<Issue1144> table, int id)
+		{
+			return table.FirstOrDefault(e => e.Id == id);
+		}
+
+		public static Task<Issue1144?> FindAsync(this ITable<Issue1144> table, int id, CancellationToken cancellationToken = default)
+		{
+			return table.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
+		}
+
+		public static Issue1115? Find(this ITable<Issue1115> table, SqlHierarchyId id)
+		{
+			return table.FirstOrDefault(e => (bool)(e.Id == id));
+		}
+
+		public static Task<Issue1115?> FindAsync(this ITable<Issue1115> table, SqlHierarchyId id, CancellationToken cancellationToken = default)
+		{
+			return table.FirstOrDefaultAsync(e => (bool)(e.Id == id), cancellationToken);
+		}
+
 		public static InheritanceParent? Find(this ITable<InheritanceParent> table, int inheritanceParentId)
 		{
 			return table.FirstOrDefault(e => e.InheritanceParentId == inheritanceParentId);
@@ -311,26 +331,6 @@ namespace Cli.Default.SqlServer
 		public static Task<TestSchemaX?> FindAsync(this ITable<TestSchemaX> table, int testSchemaXid, CancellationToken cancellationToken = default)
 		{
 			return table.FirstOrDefaultAsync(e => e.TestSchemaXid == testSchemaXid, cancellationToken);
-		}
-
-		public static Issue1144? Find(this ITable<Issue1144> table, int id)
-		{
-			return table.FirstOrDefault(e => e.Id == id);
-		}
-
-		public static Task<Issue1144?> FindAsync(this ITable<Issue1144> table, int id, CancellationToken cancellationToken = default)
-		{
-			return table.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
-		}
-
-		public static Issue1115? Find(this ITable<Issue1115> table, SqlHierarchyId id)
-		{
-			return table.FirstOrDefault(e => (bool)(e.Id == id));
-		}
-
-		public static Task<Issue1115?> FindAsync(this ITable<Issue1115> table, SqlHierarchyId id, CancellationToken cancellationToken = default)
-		{
-			return table.FirstOrDefaultAsync(e => (bool)(e.Id == id), cancellationToken);
 		}
 		#endregion
 	}

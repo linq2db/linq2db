@@ -651,7 +651,7 @@ namespace Tests.Linq
 
 				var sqlTable = (SqlTable)field.Table!;
 
-				var newField = new SqlField(sqlTable, sqlTable.PhysicalName!);
+				var newField = new SqlField(sqlTable, sqlTable.TableName.Name);
 
 				builder.AddParameter("table_field", newField);
 			}

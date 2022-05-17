@@ -1,6 +1,7 @@
 ﻿using System.Reflection;
 using LinqToDB.Metadata;
 using LinqToDB.Schema;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataModel
 {
@@ -10,7 +11,7 @@ namespace LinqToDB.DataModel
 	public sealed class TableFunctionModel : TableFunctionModelBase
 	{
 		public TableFunctionModel(
-			ObjectName            name,
+			SqlObjectName         name,
 			MethodModel           method,
 			TableFunctionMetadata metadata,
 			string                methodInfoFieldName)

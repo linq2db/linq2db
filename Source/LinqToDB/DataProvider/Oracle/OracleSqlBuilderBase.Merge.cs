@@ -3,7 +3,7 @@
 	using SqlQuery;
 	using System.Text;
 
-	partial class Oracle11SqlBuilder
+	abstract partial class OracleSqlBuilderBase
 	{
 		// Oracle doesn't support TABLE_ALIAS(COLUMN_ALIAS, ...) syntax
 		protected override bool SupportsColumnAliasesInSource => false;
