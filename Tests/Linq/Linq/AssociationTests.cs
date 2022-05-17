@@ -1309,7 +1309,61 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue3557([DataSources] string context)
+		public void Issue3557Case1([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var data = db.CreateLocalTable(Data.Records);
+			using var subData1 = db.CreateLocalTable(SubData1.Records);
+			using var subData2 = db.CreateLocalTable(SubData2.Records);
+
+			var result = data
+				.Select(
+				i => new
+				{
+					Id     = i.Id,
+					Reason = i.SubData == null ? null : i.SubData.SubDatas.Select(s => s.Reason).FirstOrDefault(),
+				})
+				.OrderBy(r => r.Id)
+				.ToList();
+
+			Assert.AreEqual(3, result.Count);
+			Assert.AreEqual(1, result[0].Id);
+			Assert.AreEqual(2, result[1].Id);
+			Assert.AreEqual(3, result[2].Id);
+			Assert.IsNull(null, result[0].Reason);
+			Assert.IsNull(null, result[1].Reason);
+			Assert.True(result[2].Reason == "прст1" || result[2].Reason == "прст2");
+		}
+
+		[Test]
+		public void Issue3557Case2([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var data = db.CreateLocalTable(Data.Records);
+			using var subData1 = db.CreateLocalTable(SubData1.Records);
+			using var subData2 = db.CreateLocalTable(SubData2.Records);
+
+			var result = data
+				.Select(
+				i => new
+				{
+					Id     = i.Id,
+					Reason = i.SubData!.SubDatas.Select(s => s.Reason).FirstOrDefault() ?? string.Empty,
+				})
+				.OrderBy(r => r.Id)
+				.ToList();
+
+			Assert.AreEqual(3, result.Count);
+			Assert.AreEqual(1, result[0].Id);
+			Assert.AreEqual(2, result[1].Id);
+			Assert.AreEqual(3, result[2].Id);
+			Assert.AreEqual(string.Empty, result[0].Reason);
+			Assert.AreEqual(string.Empty, result[1].Reason);
+			Assert.True(result[2].Reason == "прст1" || result[2].Reason == "прст2");
+		}
+
+		[Test]
+		public void Issue3557Case3([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var data = db.CreateLocalTable(Data.Records);
@@ -1332,7 +1386,7 @@ namespace Tests.Linq
 			Assert.AreEqual(3, result[2].Id);
 			Assert.IsNull(null, result[0].Reason);
 			Assert.IsNull(null, result[1].Reason);
-			Assert.True(result[3].Reason == "прст1" || result[3].Reason == "прст2");
+			Assert.True(result[2].Reason == "прст1" || result[2].Reason == "прст2");
 		}
 		#endregion
 	}
