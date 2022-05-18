@@ -38,5 +38,13 @@ namespace LinqToDB.Infrastructure
 
 			return null;
 		}
+
+		public void Apply<TA>(TA obj)
+		{
+			if (_sets != null)
+				foreach (var item in _sets.Values)
+					if (item is IApplicable<TA> a)
+						a.Apply(obj);
+		}
 	}
 }

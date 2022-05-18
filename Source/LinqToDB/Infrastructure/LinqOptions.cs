@@ -195,9 +195,9 @@ namespace LinqToDB.Infrastructure
 		{
 		}
 
-		void IApplicable<DataConnection>.Apply(DataConnection obj)
+		void IApplicable<DataConnection>.Apply(DataConnection dataConnection)
 		{
-			obj.LinqOptions = this;
+			DataConnection.ConfigurationApplier.Apply(dataConnection, this);
 		}
 
 		#region IEquatable implementation

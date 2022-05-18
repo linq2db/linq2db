@@ -6,10 +6,12 @@ using System.Linq;
 
 namespace LinqToDB.Data
 {
+	using Common.Internal;
 	using Configuration;
 	using DataProvider;
+	using Infrastructure;
 
-	public partial class DataConnection
+	public partial class DataConnection : IConfigurationID
 	{
 		static class Configuration
 		{
@@ -37,7 +39,11 @@ namespace LinqToDB.Data
 #else
 			get => _defaultSettings;
 #endif
-			set => _defaultSettings = value;
+			set
+			{
+				_defaultSettings              = value;
+				_defaultDataConnectionOptions = null;
+			}
 		}
 
 		/// <summary>
@@ -56,6 +62,9 @@ namespace LinqToDB.Data
 				}
 			}
 		}
+
+		private  static DataConnectionOptions? _defaultDataConnectionOptions;
+		internal static DataConnectionOptions   DefaultDataConnectionOptions => _defaultDataConnectionOptions ??= new();
 
 		class ConfigurationInfo
 		{
@@ -342,7 +351,7 @@ namespace LinqToDB.Data
 				connectionString,
 				dataProvider);
 
-			Configuration.Info.AddOrUpdate(configuration, info, (s, i) => info);
+			Configuration.Info.AddOrUpdate(configuration, info, (_, _) => info);
 		}
 
 		internal static Lazy<IDataProvider> CreateDataProvider<T>()
@@ -406,6 +415,143 @@ namespace LinqToDB.Data
 			var key = configurationString ?? DefaultConfiguration;
 
 			return key != null && Configuration.Info.TryGetValue(key, out var ci) ? ci.ConnectionString : null;
+		}
+
+		static string? _defaultConfiguration;
+		static string? _defaultDataProvider;
+
+		/// <summary>
+		/// Gets or sets default connection configuration name. Used by <see cref="DataConnection"/> by default and could be set automatically from:
+		/// <para> - <see cref="ILinqToDBSettings.DefaultConfiguration"/>;</para>
+		/// <para> - first non-global connection string name from <see cref="ILinqToDBSettings.ConnectionStrings"/>;</para>
+		/// <para> - first non-global connection string name passed to <see cref="SetConnectionStrings"/> method.</para>
+		/// </summary>
+		/// <seealso cref="DefaultConfiguration"/>
+		public static string? DefaultConfiguration
+		{
+			get => _defaultConfiguration;
+			set
+			{
+				_defaultConfiguration         = value;
+				_defaultDataConnectionOptions = null;
+			}
+		}
+
+		/// <summary>
+		/// Gets or sets name of default data provider, used by new connection if user didn't specified provider explicitly in constructor or in connection options.
+		/// Initialized with value from <see cref="DefaultSettings"/>.<see cref="ILinqToDBSettings.DefaultDataProvider"/>.
+		/// </summary>
+		/// <seealso cref="DefaultConfiguration"/>
+		public static string? DefaultDataProvider
+		{
+			get => _defaultDataProvider;
+			set
+			{
+				_defaultDataProvider          = value;
+				_defaultDataConnectionOptions = null;
+			}
+		}
+
+		int  _msID;
+		int? _configurationID;
+
+		int IConfigurationID.ConfigurationID
+		{
+			get
+			{
+				if (!_configurationID.HasValue || _msID != ((IConfigurationID)MappingSchema).ConfigurationID)
+				{
+					_configurationID = new IdentifierBuilder()
+						.Add(_msID = ((IConfigurationID)MappingSchema).ConfigurationID)
+						.Add(ConfigurationString ?? ConnectionString ?? Connection.ConnectionString)
+						.CreateID();
+				}
+
+				return _configurationID.Value;
+			}
+		}
+
+		internal static class ConfigurationApplier
+		{
+			public static void Apply(DataConnection dataConnection, LinqOptions options)
+			{
+				dataConnection.LinqOptions = options;
+			}
+
+			public static void Apply(DataConnection dataConnection, DataConnectionOptions options)
+			{
+				if (options.SavedDataProvider != null)
+				{
+					dataConnection.DataProvider     = options.SavedDataProvider;
+					dataConnection.ConnectionString = options.SavedConnectionString;
+					dataConnection.MappingSchema    = options.SavedDataProvider.MappingSchema;
+
+					return;
+				}
+
+				switch (
+				          options.ConfigurationString,
+				                           options.ConnectionString,
+				                                                options.DataProvider,
+				                                                                 options.ProviderName)
+				{
+					case (_,               {} connectionString, {} dataProvider, _) :
+					{
+						dataConnection.DataProvider     = dataProvider;
+						dataConnection.ConnectionString = connectionString;
+						dataConnection.MappingSchema    = dataProvider.MappingSchema;
+
+						break;
+					}
+					case (_,               {} connectionString, _,               {} providerName) :
+					{
+						if (!_dataProviders.TryGetValue(providerName, out var dataProvider))
+							dataProvider = GetDataProvider(providerName, connectionString);
+
+						if (dataProvider == null)
+							throw new LinqToDBException($"DataProvider '{options.ProviderName}' not found.");
+
+						dataConnection.DataProvider     = dataProvider;
+						dataConnection.ConnectionString = connectionString;
+						dataConnection.MappingSchema    = dataProvider.MappingSchema;
+
+						break;
+					}
+					case (_,               {},                  _,               _) :
+					{
+						throw new LinqToDBException("DataProvider was not specified");
+					}
+					case ({} configString, _,                   _,               _) :
+					{
+						dataConnection.ConfigurationString = configString;
+
+						var ci = GetConfigurationInfo(configString);
+
+						dataConnection.DataProvider     = ci.DataProvider;
+						dataConnection.ConnectionString = ci.ConnectionString;
+						dataConnection.MappingSchema    = ci.DataProvider.MappingSchema;
+
+						break;
+					}
+					case (null,            _,                   _,                _) when DefaultConfiguration != null :
+					{
+						dataConnection.ConfigurationString = DefaultConfiguration;
+
+						var ci = GetConfigurationInfo(DefaultConfiguration);
+
+						dataConnection.DataProvider     = ci.DataProvider;
+						dataConnection.ConnectionString = ci.ConnectionString;
+						dataConnection.MappingSchema    = ci.DataProvider.MappingSchema;
+
+						break;
+					}
+					default :
+						throw new LinqToDBException("Invalid configuration. Configuration string is not provided.");
+				}
+
+				options.SavedDataProvider     = dataConnection.DataProvider;
+				options.SavedConnectionString = dataConnection.ConnectionString;
+			}
 		}
 	}
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data.Common;
 
 namespace LinqToDB.Data
 {
@@ -9,16 +10,24 @@ namespace LinqToDB.Data
 	/// <param name="ConfigurationString">
 	/// Gets configuration string name to use with <see cref="DataConnection"/> instance.
 	/// </param>
+	/// <param name="ConnectionString">
+	/// The connection string, or <c>null</c> if a <see cref="DbConnection" /> was used instead of a connection string.
+	/// </param>
+	/// <param name="ProviderName">
+	/// Gets provider name to use with <see cref="DataConnection"/> instance.
+	/// </param>
 	public sealed record DataConnectionOptions(
-		string? ConfigurationString,
-		string? ConnectionString,
-		IDataProvider? DataProvider
+		string?        ConfigurationString,
+		string?        ConnectionString,
+		IDataProvider? DataProvider,
+		string?        ProviderName
 	) : IOptionSet, IApplicable<DataConnection>
 	{
 		public DataConnectionOptions() : this(
 			ConfigurationString : null,
 			ConnectionString    : null,
-			DataProvider        : null)
+			DataProvider        : null,
+			ProviderName        : null)
 		{
 		}
 
@@ -27,10 +36,16 @@ namespace LinqToDB.Data
 			.Add(ConfigurationString)
 			.Add(ConnectionString)
 			//.Add(DataProvider?.ID)
+			.Add(ProviderName)
 			.CreateID();
 
-		void IApplicable<DataConnection>.Apply(DataConnection obj)
+		public IDataProvider? SavedDataProvider     { get; set; }
+		public string?        SavedConnectionString { get; set; }
+
+
+		void IApplicable<DataConnection>.Apply(DataConnection dataConnection)
 		{
+			DataConnection.ConfigurationApplier.Apply(dataConnection, this);
 		}
 
 		#region IEquatable implementation

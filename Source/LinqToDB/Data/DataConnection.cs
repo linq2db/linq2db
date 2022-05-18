@@ -27,7 +27,7 @@ namespace LinqToDB.Data
 	/// or attached to existing connection or transaction.
 	/// </summary>
 	[PublicAPI]
-	public partial class DataConnection : IDataContext, ICloneable, IConfigurationID
+	public partial class DataConnection : IDataContext, ICloneable
 	{
 		#region .ctor
 
@@ -405,8 +405,8 @@ namespace LinqToDB.Data
 
 			LinqOptions ??= Common.Configuration.Linq.Options;
 
-//			var coreExtension = options.Find<CoreDataContextOptionsExtension>();
-//			var dbExtension   = options.FindExtension<DataContextOptionsExtensionOld>();
+			var coreExtension = options.Find<CoreDataContextOptionsExtension>();
+			var dbExtension   = options.Find<DataContextOptionsExtensionOld>();
 //
 //			if (!options.IsValidForDataContext(GetType()))
 //				throw new LinqToDBException(
@@ -574,7 +574,7 @@ namespace LinqToDB.Data
 		/// <summary>
 		/// Current DataContext LINQ options
 		/// </summary>
-		public LinqOptions   LinqOptions         { get; internal set; }
+		public LinqOptions   LinqOptions         { get; private set; }
 
 		/// <summary>
 		/// Database configuration name (connection string name).
@@ -583,7 +583,7 @@ namespace LinqToDB.Data
 		/// <summary>
 		/// Database provider implementation for specific database engine.
 		/// </summary>
-		public IDataProvider DataProvider        { get; private set; }
+		public IDataProvider DataProvider        { get; internal set; }
 		/// <summary>
 		/// Database connection string.
 		/// </summary>
@@ -592,24 +592,6 @@ namespace LinqToDB.Data
 		/// Retry policy for current connection.
 		/// </summary>
 		public IRetryPolicy? RetryPolicy         { get; set; }
-
-		int  _msID;
-		int? _configurationID;
-
-		int IConfigurationID.ConfigurationID
-		{
-			get
-			{
-				if (!_configurationID.HasValue || _msID != ((IConfigurationID)MappingSchema).ConfigurationID)
-				{
-					_configurationID = new IdentifierBuilder(_msID = ((IConfigurationID)MappingSchema).ConfigurationID)
-						.Add(ConfigurationString ?? ConnectionString ?? Connection.ConnectionString)
-						.CreateID();
-				}
-
-				return _configurationID.Value;
-			}
-		}
 
 		private bool? _isMarsEnabled;
 		/// <summary>
@@ -626,22 +608,6 @@ namespace LinqToDB.Data
 			}
 			set => _isMarsEnabled = value;
 		}
-
-		/// <summary>
-		/// Gets or sets default connection configuration name. Used by <see cref="DataConnection"/> by default and could be set automatically from:
-		/// <para> - <see cref="ILinqToDBSettings.DefaultConfiguration"/>;</para>
-		/// <para> - first non-global connection string name from <see cref="ILinqToDBSettings.ConnectionStrings"/>;</para>
-		/// <para> - first non-global connection string name passed to <see cref="SetConnectionStrings"/> method.</para>
-		/// </summary>
-		/// <seealso cref="DefaultConfiguration"/>
-		public  static string? DefaultConfiguration { get; set; }
-
-		/// <summary>
-		/// Gets or sets name of default data provider, used by new connection if user didn't specified provider explicitly in constructor or in connection options.
-		/// Initialized with value from <see cref="DefaultSettings"/>.<see cref="ILinqToDBSettings.DefaultDataProvider"/>.
-		/// </summary>
-		/// <seealso cref="DefaultConfiguration"/>
-		public  static string? DefaultDataProvider { get; set; }
 
 		private static Action<TraceInfo> _onTrace = DefaultTrace;
 		/// <summary>
