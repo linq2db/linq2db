@@ -379,7 +379,7 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				static IEnumerable<TElement> GetGrouping(
-					LinqOptionSet     linqOptions,
+					LinqOptions     linqOptions,
 					IQueryRunner             runner,
 					List<ParameterAccessor>  parameterAccessor,
 					TKey                     key,

@@ -130,7 +130,7 @@ namespace LinqToDB
 				_prebuiltCoreExtension = coreExtension;
 			}
 
-			var linqExtension = options.FindExtension<LinqOptionSet>();
+			var linqExtension = options.FindExtension<LinqOptions>();
 			if (linqExtension == null)
 			{
 				linqExtension = Common.Configuration.Linq.Options;

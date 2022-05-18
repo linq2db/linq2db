@@ -32,9 +32,9 @@ namespace LinqToDB
 			return null;
 		}
 
-		public static LinqOptionSet GetLinqOptions(this IDataContext context)
+		public static LinqOptions GetLinqOptions(this IDataContext context)
 		{
-			return context.Options.GetExtension<LinqOptionSet>();
+			return context.Options.GetExtension<LinqOptions>();
 		}
 
 	}

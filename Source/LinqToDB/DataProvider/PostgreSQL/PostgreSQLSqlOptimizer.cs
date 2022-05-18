@@ -17,14 +17,14 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		public override bool CanCompareSearchConditions => true;
 
-		public override SqlStatement Finalize(SqlStatement statement, LinqOptionSet linqOptions)
+		public override SqlStatement Finalize(SqlStatement statement, LinqOptions linqOptions)
 		{
 			CheckAliases(statement, int.MaxValue);
 
 			return base.Finalize(statement, linqOptions);
 		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement, LinqOptionSet linqOptions)
+		public override SqlStatement TransformStatement(SqlStatement statement, LinqOptions linqOptions)
 		{
 			return statement.QueryType switch
 			{

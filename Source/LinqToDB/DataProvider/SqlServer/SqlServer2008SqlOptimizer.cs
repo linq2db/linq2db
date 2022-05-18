@@ -10,7 +10,7 @@
 		{
 		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement, LinqOptionSet linqOptions)
+		public override SqlStatement TransformStatement(SqlStatement statement, LinqOptions linqOptions)
 		{
 			//SQL Server 2008 supports ROW_NUMBER but not OFFSET/FETCH
 

@@ -42,7 +42,7 @@ namespace LinqToDB.DataProvider.Access
 
 		public override TableOptions SupportedTableOptions => TableOptions.None;
 
-		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, LinqOptionSet linqOptions)
+		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, LinqOptions linqOptions)
 		{
 			return new AccessOleDbSqlBuilder(this, mappingSchema, linqOptions, GetSqlOptimizer(), SqlProviderFlags);
 		}

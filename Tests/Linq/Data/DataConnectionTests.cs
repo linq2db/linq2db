@@ -10,13 +10,11 @@ using System.Transactions;
 
 using LinqToDB;
 using LinqToDB.AspNet;
-using LinqToDB.Configuration;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.DB2;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Data.RetryPolicy;
-using LinqToDB.Extensions;
 using LinqToDB.Interceptors;
 using LinqToDB.Mapping;
 

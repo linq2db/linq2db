@@ -128,8 +128,8 @@ namespace LinqToDB.Common
 		[PublicAPI]
 		public static class Linq
 		{
-			private static volatile LinqOptionSet _options = new ();
-			public  static LinqOptionSet Options
+			private static volatile LinqOptions _options = new ();
+			public  static LinqOptions Options
 			{
 				get => _options;
 				set => _options = value;

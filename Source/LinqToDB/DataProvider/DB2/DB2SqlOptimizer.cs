@@ -12,7 +12,7 @@ namespace LinqToDB.DataProvider.DB2
 		{
 		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement, LinqOptionSet linqOptions)
+		public override SqlStatement TransformStatement(SqlStatement statement, LinqOptions linqOptions)
 		{
 			// DB2 LUW 9/10 supports only FETCH, v11 adds OFFSET, but for that we need to introduce versions into DB2 provider first
 			statement = SeparateDistinctFromPagination(statement, q => q.Select.SkipValue != null);

@@ -10,7 +10,7 @@
 		{
 		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement, LinqOptionSet linqOptions)
+		public override SqlStatement TransformStatement(SqlStatement statement, LinqOptions linqOptions)
 		{
 			if (statement.IsUpdate() || statement.IsInsert() || statement.IsDelete())
 				statement = ReplaceTakeSkipWithRowNum(statement, false);

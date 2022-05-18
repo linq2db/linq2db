@@ -3,22 +3,22 @@ using System.Collections.Generic;
 
 namespace LinqToDB.Infrastructure
 {
-	class DataOptions : OptionsBase<DataOptions>
+	public class DataOptions : OptionsBase<DataOptions>
 	{
 		public override DataOptions WithOptions(IOptionSet options)
 		{
 			switch (options)
 			{
-				case LinqOptionSet lo : _linqOptions = lo; break;
+				case LinqOptions lo : _linqOptions = lo; break;
 				default               : return base.WithOptions(options);
 			}
 
 			return this;
 		}
 
-		LinqOptionSet? _linqOptions;
+		LinqOptions? _linqOptions;
 
-		public LinqOptionSet LinqOptions => _linqOptions ?? Common.Configuration.Linq.Options;
+		public LinqOptions LinqOptions => _linqOptions ?? Common.Configuration.Linq.Options;
 
 		public override IEnumerable<IOptionSet> OptionSets
 		{
@@ -36,7 +36,7 @@ namespace LinqToDB.Infrastructure
 		{
 			var type = typeof(TSet);
 
-			if (type == typeof(LinqOptionSet)) return (TSet)(IOptionSet)LinqOptions;
+			if (type == typeof(LinqOptions)) return (TSet)(IOptionSet)LinqOptions;
 
 			return base.Find<TSet>();
 		}

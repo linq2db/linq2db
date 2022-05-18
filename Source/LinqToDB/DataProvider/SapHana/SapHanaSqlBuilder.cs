@@ -11,7 +11,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 	partial class SapHanaSqlBuilder : BasicSqlBuilder
 	{
-		public SapHanaSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, LinqOptionSet linqOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+		public SapHanaSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, LinqOptions linqOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, linqOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}

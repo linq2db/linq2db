@@ -16,7 +16,7 @@ namespace LinqToDB.DataProvider.Sybase
 		{
 		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement, LinqOptionSet linqOptions)
+		public override SqlStatement TransformStatement(SqlStatement statement, LinqOptions linqOptions)
 		{
 			return statement.QueryType switch
 			{

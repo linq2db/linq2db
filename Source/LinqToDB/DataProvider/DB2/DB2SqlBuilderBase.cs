@@ -16,7 +16,7 @@ namespace LinqToDB.DataProvider.DB2
 
 	abstract partial class DB2SqlBuilderBase : BasicSqlBuilder
 	{
-		protected DB2SqlBuilderBase(IDataProvider? provider, MappingSchema mappingSchema, LinqOptionSet linqOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+		protected DB2SqlBuilderBase(IDataProvider? provider, MappingSchema mappingSchema, LinqOptions linqOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, linqOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}

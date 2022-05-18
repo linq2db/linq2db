@@ -54,7 +54,7 @@ namespace LinqToDB.DataProvider.SapHana
 			TableOptions.IsLocalTemporaryStructure  |
 			TableOptions.IsLocalTemporaryData;
 
-		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, LinqOptionSet linqOptions)
+		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, LinqOptions linqOptions)
 		{
 			return new SapHanaSqlBuilder(this, mappingSchema, linqOptions, GetSqlOptimizer(), SqlProviderFlags);
 		}

@@ -14,7 +14,7 @@ namespace LinqToDB.DataProvider.Firebird
 		{
 		}
 
-		public override SqlStatement Finalize(SqlStatement statement, LinqOptionSet linqOptions)
+		public override SqlStatement Finalize(SqlStatement statement, LinqOptions linqOptions)
 		{
 			CheckAliases(statement, int.MaxValue);
 
@@ -142,7 +142,7 @@ namespace LinqToDB.DataProvider.Firebird
 			return new SqlSearchCondition(new SqlCondition(false, new SqlPredicate.Expr(expr)));
 		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement, LinqOptionSet linqOptions)
+		public override SqlStatement TransformStatement(SqlStatement statement, LinqOptions linqOptions)
 		{
 			return statement.QueryType switch
 			{
@@ -232,7 +232,7 @@ namespace LinqToDB.DataProvider.Firebird
 		}
 
 		public override SqlStatement FinalizeStatement(SqlStatement statement, EvaluationContext context,
-			LinqOptionSet                                    linqOptions)
+			LinqOptions                                    linqOptions)
 		{
 			statement = base.FinalizeStatement(statement, context, linqOptions);
 			statement = WrapParameters(statement, context);

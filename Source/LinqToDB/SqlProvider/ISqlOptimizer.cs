@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace LinqToDB.SqlProvider
 {
@@ -13,7 +14,7 @@ namespace LinqToDB.SqlProvider
 		/// </summary>
 		/// <param name="statement"></param>
 		/// <returns>Query which is ready for optimization.</returns>
-		SqlStatement Finalize(SqlStatement statement, LinqOptionSet linqOptions);
+		SqlStatement Finalize(SqlStatement statement, LinqOptions linqOptions);
 
 		/// <summary>
 		/// Examine query for parameter dependency.
@@ -30,17 +31,16 @@ namespace LinqToDB.SqlProvider
 		/// <param name="optimizationContext"></param>
 		/// <param name="takeExpr"></param>
 		/// <param name="skipExpr"></param>
-		void ConvertSkipTake(MappingSchema mappingSchema, LinqOptionSet linqOptions, SelectQuery selectQuery, OptimizationContext optimizationContext, out ISqlExpression? takeExpr, out ISqlExpression? skipExpr);
+		void ConvertSkipTake(MappingSchema mappingSchema, LinqOptions linqOptions, SelectQuery selectQuery, OptimizationContext optimizationContext, out ISqlExpression? takeExpr, out ISqlExpression? skipExpr);
 
 		/// <summary>
-		/// Converts query element to specific provider dialect. 
+		/// Converts query element to specific provider dialect.
 		/// </summary>
 		/// <param name="mappingSchema"></param>
 		/// <param name="element"></param>
 		/// <param name="context"></param>
 		/// <returns></returns>
 		[return: NotNullIfNotNull("element")]
-		IQueryElement? ConvertElement(MappingSchema mappingSchema, LinqOptionSet linqOptions, IQueryElement? element, OptimizationContext context);
-
+		IQueryElement? ConvertElement(MappingSchema mappingSchema, LinqOptions linqOptions, IQueryElement? element, OptimizationContext context);
 	}
 }

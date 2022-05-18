@@ -10,7 +10,7 @@ namespace LinqToDB.SqlQuery
 
 	class SelectQueryOptimizer
 	{
-		public SelectQueryOptimizer(SqlProviderFlags flags, LinqOptionSet linqOptions, IQueryElement rootElement, SelectQuery selectQuery, int level, params IQueryElement[] dependencies)
+		public SelectQueryOptimizer(SqlProviderFlags flags, LinqOptions linqOptions, IQueryElement rootElement, SelectQuery selectQuery, int level, params IQueryElement[] dependencies)
 		{
 			_flags        = flags;
 			_linqOptions  = linqOptions;
@@ -21,7 +21,7 @@ namespace LinqToDB.SqlQuery
 		}
 
 		readonly SqlProviderFlags     _flags;
-		readonly LinqOptionSet _linqOptions;
+		readonly LinqOptions _linqOptions;
 		readonly SelectQuery          _selectQuery;
 		readonly IQueryElement        _rootElement;
 		readonly int                  _level;

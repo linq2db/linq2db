@@ -98,7 +98,7 @@ namespace LinqToDB.DataProvider.Oracle
 			TableOptions.CreateIfNotExists          |
 			TableOptions.DropIfExists;
 
-		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, LinqOptionSet linqOptions)
+		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, LinqOptions linqOptions)
 		{
 			return Version switch
 			{

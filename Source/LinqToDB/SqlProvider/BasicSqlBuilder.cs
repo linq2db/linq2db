@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Data.Linq;
 using System.Data.SqlTypes;
 using System.Diagnostics.CodeAnalysis;
@@ -13,7 +14,6 @@ using System.Text.RegularExpressions;
 namespace LinqToDB.SqlProvider
 {
 	using Infrastructure;
-	using System.Data.Common;
 	using Common;
 	using DataProvider;
 	using Mapping;
@@ -24,7 +24,7 @@ namespace LinqToDB.SqlProvider
 	{
 		#region Init
 
-		protected BasicSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, LinqOptionSet linqOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+		protected BasicSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, LinqOptions linqOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 		{
 			DataProvider     = provider;
 			MappingSchema    = mappingSchema;
@@ -49,7 +49,7 @@ namespace LinqToDB.SqlProvider
 		public MappingSchema       MappingSchema       { get;                }
 		public StringBuilder       StringBuilder       { get; set;           } = null!;
 		public SqlProviderFlags    SqlProviderFlags    { get;                }
-		public LinqOptionSet       LinqOptions         { get;                }
+		public LinqOptions       LinqOptions         { get;                }
 
 		protected IDataProvider?      DataProvider;
 		protected ValueToSqlConverter ValueToSqlConverter => MappingSchema.ValueToSqlConverter;
@@ -2468,7 +2468,7 @@ namespace LinqToDB.SqlProvider
 			return;
 
 			void TableSourceIn(ISqlTableSource table, IEnumerable items)
-			{				
+			{
 				var keys = table.GetKeys(true);
 				if (keys is null or { Count: 0 })
 					throw new SqlException("Cannot create IN expression.");
@@ -2635,7 +2635,7 @@ namespace LinqToDB.SqlProvider
 	 					BuildPredicate(new SqlPredicate.IsNull(p.Expr1, false));
 		 				multipleParts = true;
 			 		}
-				} 
+				}
 
 				if (multipleParts && !hasNull)
 					StringBuilder.Insert(len, "(").Append(')');

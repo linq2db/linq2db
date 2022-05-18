@@ -34,7 +34,7 @@ namespace LinqToDB.SqlProvider
 
 		#region ISqlOptimizer Members
 
-		public virtual SqlStatement Finalize(SqlStatement statement, LinqOptionSet linqOptions)
+		public virtual SqlStatement Finalize(SqlStatement statement, LinqOptions linqOptions)
 		{
 			FixRootSelect (statement);
 			FixEmptySelect(statement);
@@ -264,7 +264,7 @@ namespace LinqToDB.SqlProvider
 		}
 
 		//TODO: move tis to standard optimizer
-		protected virtual SqlStatement OptimizeUpdateSubqueries(SqlStatement statement, LinqOptionSet linqOptions)
+		protected virtual SqlStatement OptimizeUpdateSubqueries(SqlStatement statement, LinqOptions linqOptions)
 		{
 			if (statement is SqlUpdateStatement updateStatement)
 			{
@@ -295,7 +295,7 @@ namespace LinqToDB.SqlProvider
 		/// <param name="statement"></param>
 		/// <param name="linqOptions"></param>
 		/// <returns></returns>
-		public virtual SqlStatement TransformStatement(SqlStatement statement, LinqOptionSet linqOptions)
+		public virtual SqlStatement TransformStatement(SqlStatement statement, LinqOptions linqOptions)
 		{
 			return statement;
 		}
@@ -448,13 +448,13 @@ namespace LinqToDB.SqlProvider
 			return result;
 		}
 
-		SelectQuery MoveCountSubQuery(SelectQuery selectQuery, EvaluationContext context, LinqOptionSet linqOptions)
+		SelectQuery MoveCountSubQuery(SelectQuery selectQuery, EvaluationContext context, LinqOptions linqOptions)
 		{
 			selectQuery.Visit((context, optimizer: this, linqOptions), static (context, e) => context.optimizer.MoveCountSubQuery(e, context.context, context.linqOptions));
 			return selectQuery;
 		}
 
-		void MoveCountSubQuery(IQueryElement element, EvaluationContext context, LinqOptionSet linqOptions)
+		void MoveCountSubQuery(IQueryElement element, EvaluationContext context, LinqOptions linqOptions)
 		{
 			if (element.ElementType != QueryElementType.SqlQuery)
 				return;
@@ -632,7 +632,7 @@ namespace LinqToDB.SqlProvider
 			return true;
 		}
 
-		SelectQuery MoveSubQueryColumn(SelectQuery selectQuery, EvaluationContext context, LinqOptionSet linqOptions)
+		SelectQuery MoveSubQueryColumn(SelectQuery selectQuery, EvaluationContext context, LinqOptions linqOptions)
 		{
 			selectQuery.Visit((context, optimizer: this, linqOptions), static (context, element) =>
 			{
@@ -1250,7 +1250,7 @@ namespace LinqToDB.SqlProvider
 		}
 
 
-		public virtual ISqlPredicate OptimizePredicate(ISqlPredicate predicate, EvaluationContext context, LinqOptionSet linqOptions)
+		public virtual ISqlPredicate OptimizePredicate(ISqlPredicate predicate, EvaluationContext context, LinqOptions linqOptions)
 		{
 			// Avoiding infinite recursion
 			//
@@ -1903,7 +1903,7 @@ namespace LinqToDB.SqlProvider
 		#region Conversion
 
 		[return: NotNullIfNotNull("element")]
-		public virtual IQueryElement? ConvertElement(MappingSchema mappingSchema, LinqOptionSet linqOptions, IQueryElement? element, OptimizationContext context)
+		public virtual IQueryElement? ConvertElement(MappingSchema mappingSchema, LinqOptions linqOptions, IQueryElement? element, OptimizationContext context)
 		{
 			return OptimizeElement(mappingSchema, linqOptions, element, context, true);
 		}
@@ -2017,7 +2017,7 @@ namespace LinqToDB.SqlProvider
 				OptimizationContext  optimizationContext,
 				BasicSqlOptimizer    optimizer,
 				MappingSchema?       mappingSchema,
-				LinqOptionSet linqOptions,
+				LinqOptions linqOptions,
 				bool                 register,
 				Func<ConvertVisitor<RunOptimizationContext>, IQueryElement, IQueryElement> func)
 			{
@@ -2033,7 +2033,7 @@ namespace LinqToDB.SqlProvider
 			public readonly BasicSqlOptimizer    Optimizer;
 			public readonly bool                 Register;
 			public readonly MappingSchema?       MappingSchema;
-			public readonly LinqOptionSet LinqOptions;
+			public readonly LinqOptions LinqOptions;
 
 			public readonly Func<ConvertVisitor<RunOptimizationContext>, IQueryElement, IQueryElement> Func;
 		}
@@ -2043,7 +2043,7 @@ namespace LinqToDB.SqlProvider
 			OptimizationContext  optimizationContext,
 			BasicSqlOptimizer    optimizer,
 			MappingSchema?       mappingSchema,
-			LinqOptionSet linqOptions,
+			LinqOptions linqOptions,
 			bool                 register,
 			Func<ConvertVisitor<RunOptimizationContext>,IQueryElement,IQueryElement> func)
 		{
@@ -2090,7 +2090,7 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
-		public IQueryElement? OptimizeElement(MappingSchema? mappingSchema, LinqOptionSet linqOptions, IQueryElement? element, OptimizationContext optimizationContext, bool withConversion)
+		public IQueryElement? OptimizeElement(MappingSchema? mappingSchema, LinqOptions linqOptions, IQueryElement? element, OptimizationContext optimizationContext, bool withConversion)
 		{
 			if (element == null)
 				return null;
@@ -2524,7 +2524,7 @@ namespace LinqToDB.SqlProvider
 
 		#region Alternative Builders
 
-		protected ISqlExpression? AlternativeConvertToBoolean(SqlFunction func, LinqOptionSet linqOptions, int paramNumber)
+		protected ISqlExpression? AlternativeConvertToBoolean(SqlFunction func, LinqOptions linqOptions, int paramNumber)
 		{
 			var par = func.Parameters[paramNumber];
 
@@ -2592,7 +2592,7 @@ namespace LinqToDB.SqlProvider
 				new SqlFunction(func.SystemType, "Floor", par1) : par1;
 		}
 
-		protected SqlDeleteStatement GetAlternativeDelete(SqlDeleteStatement deleteStatement, LinqOptionSet linqOptions)
+		protected SqlDeleteStatement GetAlternativeDelete(SqlDeleteStatement deleteStatement, LinqOptions linqOptions)
 		{
 			if ((deleteStatement.SelectQuery.From.Tables.Count > 1 || deleteStatement.SelectQuery.From.Tables[0].Joins.Count > 0) &&
 				deleteStatement.SelectQuery.From.Tables[0].Source is SqlTable table)
@@ -2673,7 +2673,7 @@ namespace LinqToDB.SqlProvider
 			return false;
 		}
 
-		protected SqlUpdateStatement GetAlternativeUpdate(SqlUpdateStatement updateStatement, LinqOptionSet linqOptions)
+		protected SqlUpdateStatement GetAlternativeUpdate(SqlUpdateStatement updateStatement, LinqOptions linqOptions)
 		{
 			var sourcesCount  = QueryHelper.EnumerateAccessibleSources(updateStatement.SelectQuery).Skip(1).Take(2).Count();
 
@@ -2932,7 +2932,7 @@ namespace LinqToDB.SqlProvider
 			});
 		}
 
-		protected SqlStatement GetAlternativeUpdatePostgreSqlite(SqlUpdateStatement statement, LinqOptionSet linqOptions)
+		protected SqlStatement GetAlternativeUpdatePostgreSqlite(SqlUpdateStatement statement, LinqOptions linqOptions)
 		{
 			if (statement.SelectQuery.Select.HasModifier)
 				statement = QueryHelper.WrapQuery(statement, statement.SelectQuery, allowMutation: true);
@@ -3556,7 +3556,7 @@ namespace LinqToDB.SqlProvider
 			return null != statement.Find(this, static (ctx, e) => ctx.IsParameterDependedElement(e));
 		}
 
-		public virtual SqlStatement FinalizeStatement(SqlStatement statement, EvaluationContext context, LinqOptionSet linqOptions)
+		public virtual SqlStatement FinalizeStatement(SqlStatement statement, EvaluationContext context, LinqOptions linqOptions)
 		{
 			var newStatement = TransformStatement(statement, linqOptions);
 
@@ -3595,7 +3595,7 @@ namespace LinqToDB.SqlProvider
 			return newStatement;
 		}
 
-		public virtual void ConvertSkipTake(MappingSchema mappingSchema, LinqOptionSet linqOptions, SelectQuery selectQuery,
+		public virtual void ConvertSkipTake(MappingSchema mappingSchema, LinqOptions linqOptions, SelectQuery selectQuery,
 			OptimizationContext optimizationContext, out ISqlExpression? takeExpr, out ISqlExpression? skipExpr)
 		{
 			// make skip take as parameters or evaluate otherwise

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace LinqToDB.Infrastructure
 {
-	abstract class OptionsBase<T> : IOptions
+	public abstract class OptionsBase<T> : IOptions
 		where T : OptionsBase<T>
 	{
 		public virtual T WithOptions(IOptionSet options)

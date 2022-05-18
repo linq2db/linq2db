@@ -86,7 +86,7 @@ namespace LinqToDB.DataProvider.Informix
 			TableOptions.CreateIfNotExists         |
 			TableOptions.DropIfExists;
 
-		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, LinqOptionSet linqOptions)
+		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, LinqOptions linqOptions)
 		{
 			return new InformixSqlBuilder(this, mappingSchema, linqOptions, GetSqlOptimizer(), SqlProviderFlags);
 		}

@@ -27,7 +27,7 @@ namespace LinqToDB.Remote
 		protected RemoteDataContextBase(DataContextOptions options)
 		{
 			// Initialize default
-			var linqExtension = options.FindExtension<LinqOptionSet>();
+			var linqExtension = options.FindExtension<LinqOptions>();
 			if (linqExtension == null)
 				options = options.WithExtension(Common.Configuration.Linq.Options);
 
@@ -230,7 +230,7 @@ namespace LinqToDB.Remote
 			return null;
 		}
 
-		static readonly ConcurrentDictionary<Tuple<Type, MappingSchema, Type, SqlProviderFlags, LinqOptionSet>, Func<ISqlBuilder>> _sqlBuilders = new ();
+		static readonly ConcurrentDictionary<Tuple<Type, MappingSchema, Type, SqlProviderFlags, LinqOptions>, Func<ISqlBuilder>> _sqlBuilders = new ();
 
 		Func<ISqlBuilder>? _createSqlProvider;
 
@@ -263,7 +263,7 @@ namespace LinqToDB.Remote
 								{
 									typeof(IDataProvider),
 									typeof(MappingSchema),
-									typeof(LinqOptionSet),
+									typeof(LinqOptions),
 									typeof(ISqlOptimizer),
 									typeof(SqlProviderFlags)
 								}) ?? throw new InvalidOperationException($"Constructor for type '{key.Item1.Name}' not found."),

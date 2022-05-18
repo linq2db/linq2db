@@ -13,7 +13,7 @@ namespace LinqToDB.DataProvider.SqlCe
 		{
 		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement, LinqOptionSet linqOptions)
+		public override SqlStatement TransformStatement(SqlStatement statement, LinqOptions linqOptions)
 		{
 			// This function mutates statement which is allowed only in this place
 			CorrectSkipAndColumns(statement);

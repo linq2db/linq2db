@@ -8,7 +8,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 	class SqlServer2019SqlBuilder : SqlServer2017SqlBuilder
 	{
-		public SqlServer2019SqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, LinqOptionSet linqOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+		public SqlServer2019SqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, LinqOptions linqOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, linqOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}

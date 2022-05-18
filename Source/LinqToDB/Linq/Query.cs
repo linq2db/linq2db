@@ -65,7 +65,7 @@ namespace LinqToDB.Linq
 		internal readonly bool                 InlineParameters;
 		internal readonly ISqlOptimizer        SqlOptimizer;
 		internal readonly SqlProviderFlags     SqlProviderFlags;
-		internal readonly LinqOptionSet LinqOptions;
+		internal readonly LinqOptions LinqOptions;
 		internal readonly bool                 IsEntityServiceProvided;
 
 		protected bool Compare(IDataContext dataContext, Expression expr)
@@ -295,7 +295,7 @@ namespace LinqToDB.Linq
 		{
 			class QueryCacheEntry
 			{
-				public QueryCacheEntry(Query<T> query, QueryFlags queryFlags, LinqOptionSet linqOptions)
+				public QueryCacheEntry(Query<T> query, QueryFlags queryFlags, LinqOptions linqOptions)
 				{
 					// query doesn't have GetHashCode now, so we cannot precalculate hashcode to speed-up search
 					Query       = query;
@@ -304,11 +304,11 @@ namespace LinqToDB.Linq
 				}
 
 				public Query<T>             Query       { get; }
-				public LinqOptionSet LinqOptions { get; }
+				public LinqOptions LinqOptions { get; }
 				public QueryFlags           QueryFlags  { get; }
 
 				// accepts components to avoid QueryCacheEntry allocation for cached query
-				public bool Compare(IDataContext context, Expression queryExpression, QueryFlags queryFlags, LinqOptionSet linqOptions)
+				public bool Compare(IDataContext context, Expression queryExpression, QueryFlags queryFlags, LinqOptions linqOptions)
 				{
 					return QueryFlags == queryFlags && LinqOptions == linqOptions && Query.Compare(context, queryExpression);
 				}
@@ -357,7 +357,7 @@ namespace LinqToDB.Linq
 			/// <summary>
 			/// Adds query to cache if it is not cached already.
 			/// </summary>
-			public void TryAdd(IDataContext dataContext, Query<T> query, QueryFlags queryFlags, LinqOptionSet linqOptions)
+			public void TryAdd(IDataContext dataContext, Query<T> query, QueryFlags queryFlags, LinqOptions linqOptions)
 			{
 				// because Add is less frequent operation than Find, it is fine to have put bigger locks here
 				QueryCacheEntry[] cache;
@@ -414,7 +414,7 @@ namespace LinqToDB.Linq
 			/// <summary>
 			/// Search for query in cache and of found, try to move it to better position in cache.
 			/// </summary>
-			public Query<T>? Find(IDataContext dataContext, Expression expr, QueryFlags queryFlags, LinqOptionSet linqOptions)
+			public Query<T>? Find(IDataContext dataContext, Expression expr, QueryFlags queryFlags, LinqOptions linqOptions)
 			{
 				QueryCacheEntry[] cache;
 				int[]             indexes;

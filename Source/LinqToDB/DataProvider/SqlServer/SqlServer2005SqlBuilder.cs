@@ -9,7 +9,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 	class SqlServer2005SqlBuilder : SqlServerSqlBuilder
 	{
-		public SqlServer2005SqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, LinqOptionSet linqOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+		public SqlServer2005SqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, LinqOptions linqOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, linqOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}

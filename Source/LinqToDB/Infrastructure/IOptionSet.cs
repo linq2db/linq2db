@@ -11,7 +11,7 @@ namespace LinqToDB.Infrastructure
 	/// It is generally not used in application code.
 	/// </para>
 	/// </summary>
-	interface IOptionSet
+	public interface IOptionSet
 	{
 		int ConfigurationID { get; }
 	}

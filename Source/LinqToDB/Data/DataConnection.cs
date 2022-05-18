@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -226,11 +224,11 @@ namespace LinqToDB.Data
 				throw new ArgumentNullException(nameof(options));
 
 			// Initialize default
-			var linqExtension = options.FindExtension<LinqOptionSet>();
+			var linqExtension = options.FindExtension<LinqOptions>();
 
 			if (linqExtension == null)
 			{
-				linqExtension = Configuration.Linq.Options;
+				linqExtension = Common.Configuration.Linq.Options;
 				options       = options.WithExtension(linqExtension);
 			}
 
@@ -242,8 +240,6 @@ namespace LinqToDB.Data
 			if (!options.IsValidForDataContext(GetType()))
 				throw new LinqToDBException(
 					$"Improper options type used to create DataConnection {GetType()}, try creating a public constructor calling base and accepting type {nameof(DataContextOptions)}<{GetType().Name}>");
-
-			InitConfig();
 
 			DbConnection?  localConnection  = null;
 			DbTransaction? localTransaction = null;
@@ -308,7 +304,7 @@ namespace LinqToDB.Data
 				_closeConnection   = false;
 				_disposeConnection = false;
 
-				DataProvider  = dbExtension.DataProvider ?? throw new LinqToDBException("DataProvider was not specified");;
+				DataProvider  = dbExtension.DataProvider ?? throw new LinqToDBException("DataProvider was not specified");
 				MappingSchema = DataProvider.MappingSchema;
 			}
 			else
@@ -326,8 +322,7 @@ namespace LinqToDB.Data
 				MappingSchema    = DataProvider.MappingSchema;
 			}
 
-			var retryPolicyExtension = options.FindExtension<RetryPolicyOptionsExtension>() ??
-			                           Configuration.RetryPolicy.Options;
+			var retryPolicyExtension = options.FindExtension<RetryPolicyOptionsExtension>() ?? Common.Configuration.RetryPolicy.Options;
 
 			RetryPolicy = retryPolicyExtension.RetryPolicy != null
 				? retryPolicyExtension.RetryPolicy
@@ -347,7 +342,7 @@ namespace LinqToDB.Data
 				{
 					AddMappingSchema(dbExtension.MappingSchema);
 				}
-				else if (Configuration.Linq.EnableAutoFluentMapping)
+				else if (Common.Configuration.Linq.EnableAutoFluentMapping)
 				{
 					MappingSchema = new (MappingSchema);
 				}
@@ -394,6 +389,179 @@ namespace LinqToDB.Data
 			DataProvider.InitContext(this);
 		}
 
+/*
+		/// <summary>
+		/// Creates database connection object that uses a <see cref="DataOptions"/> to configure the connection.
+		/// </summary>
+		/// <param name="options">Options, setup ahead of time.</param>
+		public DataConnection(DataOptions options)
+		{
+			if (options == null)
+				throw new ArgumentNullException(nameof(options));
+
+			foreach (var item in options.OptionSets)
+				if (item is IApplicable<DataConnection> a)
+					a.Apply(this);
+
+			LinqOptions ??= Common.Configuration.Linq.Options;
+
+//			var coreExtension = options.Find<CoreDataContextOptionsExtension>();
+//			var dbExtension   = options.FindExtension<DataContextOptionsExtensionOld>();
+//
+//			if (!options.IsValidForDataContext(GetType()))
+//				throw new LinqToDBException(
+//					$"Improper options type used to create DataConnection {GetType()}, try creating a public constructor calling base and accepting type {nameof(DataContextOptions)}<{GetType().Name}>");
+//
+//			DbConnection?  localConnection  = null;
+//			DbTransaction? localTransaction = null;
+//
+//			if (dbExtension?.ConnectionString != null)
+//			{
+//				IDataProvider? dataProvider;
+//
+//				if (dbExtension.ProviderName == null && dbExtension.DataProvider == null)
+//				{
+//					var relational = RelationalOptionsExtension.Extract(options);
+//
+//					dataProvider = relational.GetDataProvider(dbExtension);
+//				}
+//				else
+//				{
+//					if (dbExtension.ProviderName != null)
+//					{
+//						if (!_dataProviders.TryGetValue(dbExtension.ProviderName, out dataProvider))
+//							dataProvider = GetDataProvider(dbExtension.ProviderName, dbExtension.ConnectionString!);
+//
+//						if (dataProvider == null)
+//							throw new LinqToDBException($"DataProvider '{dbExtension.ProviderName}' not found.");
+//					}
+//					else
+//						dataProvider = dbExtension.DataProvider!;
+//				}
+//
+//				DataProvider     = dataProvider;
+//				ConnectionString = dbExtension.ConnectionString;
+//				MappingSchema    = DataProvider.MappingSchema;
+//			}
+//			else if (dbExtension?.ConnectionFactory != null)
+//			{
+//				//copy to tmp variable so that if the factory in options gets changed later we will still use the old one
+//				//is this expected?
+//				var originalConnectionFactory = dbExtension.ConnectionFactory!;
+//				_connectionFactory = () =>
+//				{
+//					var connection = originalConnectionFactory();
+//
+//					return connection;
+//				};
+//
+//				DataProvider  = dbExtension.DataProvider ?? throw new LinqToDBException("DataProvider was not specified");
+//				MappingSchema = DataProvider.MappingSchema;
+//			}
+//			else if (dbExtension?.DbConnection != null)
+//			{
+//				localConnection    = dbExtension.DbConnection;
+//				_disposeConnection = dbExtension.DisposeConnection;
+//
+//				DataProvider  = dbExtension.DataProvider ?? throw new LinqToDBException("DataProvider was not specified");
+//				MappingSchema = DataProvider.MappingSchema;
+//			}
+//			else if (dbExtension?.DbTransaction != null)
+//			{
+//				localConnection  = dbExtension.DbTransaction.Connection;
+//				localTransaction = dbExtension.DbTransaction;
+//
+//				_closeTransaction  = false;
+//				_closeConnection   = false;
+//				_disposeConnection = false;
+//
+//				DataProvider  = dbExtension.DataProvider ?? throw new LinqToDBException("DataProvider was not specified");;
+//				MappingSchema = DataProvider.MappingSchema;
+//			}
+//			else
+//			{
+//				ConfigurationString = dbExtension?.ConfigurationString ?? DefaultConfiguration;
+//				if (ConfigurationString == null)
+//				{
+//					throw new LinqToDBException("Configuration string is not provided.");
+//				}
+//
+//				var ci = GetConfigurationInfo(ConfigurationString);
+//
+//				DataProvider     = ci.DataProvider;
+//				ConnectionString = ci.ConnectionString;
+//				MappingSchema    = DataProvider.MappingSchema;
+//			}
+//
+//			var retryPolicyExtension = options.FindExtension<RetryPolicyOptionsExtension>() ??
+//			                           Configuration.RetryPolicy.Options;
+//
+//			RetryPolicy = retryPolicyExtension.RetryPolicy != null
+//				? retryPolicyExtension.RetryPolicy
+//				: retryPolicyExtension.Factory != null
+//					? retryPolicyExtension.Factory(this)
+//					: null;
+//
+//			if (dbExtension != null)
+//			{
+//				if (dbExtension.DataProvider != null)
+//				{
+//					DataProvider  = dbExtension.DataProvider;
+//					MappingSchema = DataProvider.MappingSchema;
+//				}
+//
+//				if (dbExtension.MappingSchema != null)
+//				{
+//					AddMappingSchema(dbExtension.MappingSchema);
+//				}
+//				else if (Configuration.Linq.EnableAutoFluentMapping)
+//				{
+//					MappingSchema = new (MappingSchema);
+//				}
+//
+//				if (dbExtension.OnTrace != null)
+//				{
+//					OnTraceConnection = dbExtension.OnTrace;
+//				}
+//
+//				if (dbExtension.TraceLevel != null)
+//				{
+//					TraceSwitchConnection = new TraceSwitch("DataConnection", "DataConnection trace switch")
+//					{
+//						Level = dbExtension.TraceLevel.Value
+//					};
+//				}
+//
+//				if (dbExtension.WriteTrace != null)
+//				{
+//					WriteTraceLineConnection = dbExtension.WriteTrace;
+//				}
+//			}
+//
+//			if (coreExtension?.Interceptors != null)
+//			{
+//				foreach (var interceptor in coreExtension.Interceptors)
+//					AddInterceptor(interceptor);
+//			}
+//
+//			if (localConnection != null)
+//			{
+//				_connection = localConnection is IAsyncDbConnection asyncDbConnection
+//					? asyncDbConnection
+//					: AsyncFactory.Create(localConnection);
+//			}
+//
+//			if (localTransaction != null)
+//			{
+//				TransactionAsync = AsyncFactory.Create(localTransaction);
+//			}
+//
+//			Options = options;
+//
+//			DataProvider.InitContext(this);
+		}
+*/
+
 		#endregion
 
 		#region Public Properties
@@ -406,7 +574,7 @@ namespace LinqToDB.Data
 		/// <summary>
 		/// Current DataContext LINQ options
 		/// </summary>
-		public LinqOptionSet LinqOptions { get; private set; }
+		public LinqOptions   LinqOptions         { get; internal set; }
 
 		/// <summary>
 		/// Database configuration name (connection string name).
@@ -452,8 +620,7 @@ namespace LinqToDB.Data
 		{
 			get
 			{
-				if (_isMarsEnabled == null)
-					_isMarsEnabled = (bool)(DataProvider.GetConnectionInfo(this, "IsMarsEnabled") ?? false);
+				_isMarsEnabled ??= (bool)(DataProvider.GetConnectionInfo(this, "IsMarsEnabled") ?? false);
 
 				return _isMarsEnabled.Value;
 			}
@@ -467,28 +634,18 @@ namespace LinqToDB.Data
 		/// <para> - first non-global connection string name passed to <see cref="SetConnectionStrings"/> method.</para>
 		/// </summary>
 		/// <seealso cref="DefaultConfiguration"/>
-		private static string? _defaultConfiguration;
-		public  static string? DefaultConfiguration
-		{
-			get { InitConfig(); return _defaultConfiguration; }
-			set => _defaultConfiguration = value;
-		}
+		public  static string? DefaultConfiguration { get; set; }
 
 		/// <summary>
 		/// Gets or sets name of default data provider, used by new connection if user didn't specified provider explicitly in constructor or in connection options.
 		/// Initialized with value from <see cref="DefaultSettings"/>.<see cref="ILinqToDBSettings.DefaultDataProvider"/>.
 		/// </summary>
 		/// <seealso cref="DefaultConfiguration"/>
-		private static string? _defaultDataProvider;
-		public  static string? DefaultDataProvider
-		{
-			get { InitConfig(); return _defaultDataProvider; }
-			set => _defaultDataProvider = value;
-		}
+		public  static string? DefaultDataProvider { get; set; }
 
 		private static Action<TraceInfo> _onTrace = DefaultTrace;
 		/// <summary>
-		/// Sets trace handler, used for all new connections unless overriden in <see cref="DataContextOptions"/>
+		/// Sets trace handler, used for all new connections unless overridden in <see cref="DataContextOptions"/>
 		/// defaults to calling <see cref="OnTraceInternal"/>.
 		/// </summary>
 		[Obsolete("Use OnTraceConnection instance property or LinqToDbConnectionOptions.OnTrace setting.")]
@@ -600,7 +757,7 @@ namespace LinqToDB.Data
 			}
 		}
 
-		private static TraceSwitch _traceSwitch = new ("DataConnection",
+		static TraceSwitch _traceSwitch = new ("DataConnection",
 			"DataConnection trace switch",
 #if DEBUG
 			"Warning"
@@ -632,8 +789,7 @@ namespace LinqToDB.Data
 			TraceSwitch = new TraceSwitch("DataConnection", "DataConnection trace switch", traceLevel.ToString());
 		}
 
-
-		private TraceSwitch? _traceSwitchConnection;
+		TraceSwitch? _traceSwitchConnection;
 
 		/// <summary>
 		/// gets or sets the trace switch,
@@ -664,440 +820,6 @@ namespace LinqToDB.Data
 		/// Used for the current instance.
 		/// </summary>
 		public Action<string?, string?, TraceLevel> WriteTraceLineConnection { get; } = WriteTraceLine;
-
-		#endregion
-
-		#region Configuration
-
-		private static ILinqToDBSettings? _defaultSettings;
-
-		/// <summary>
-		/// Gets or sets default connection settings. By default contains settings from linq2db configuration section from configuration file (not supported by .Net Core).
-		/// <seealso cref="ILinqToDBSettings"/>
-		/// </summary>
-		public static ILinqToDBSettings? DefaultSettings
-		{
-#if NETFRAMEWORK
-			get => _defaultSettings ??= LinqToDBSection.Instance;
-#else
-			get => _defaultSettings;
-#endif
-			set => _defaultSettings = value;
-		}
-
-		[SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
-		static IDataProvider? FindProvider(
-			string configuration,
-			IEnumerable<KeyValuePair<string,IDataProvider>> ps,
-			IDataProvider? defp)
-		{
-			foreach (var p in ps.OrderByDescending(kv => kv.Key.Length))
-				if (configuration == p.Key || configuration.StartsWith(p.Key + '.'))
-					return p.Value;
-
-			foreach (var p in ps.OrderByDescending(kv => kv.Value.Name.Length))
-				if (configuration == p.Value.Name || configuration.StartsWith(p.Value.Name + '.'))
-					return p.Value;
-
-			return defp;
-		}
-
-		static DataConnection()
-		{
-			// lazy registration of embedded providers using detectors
-			AddProviderDetector(LinqToDB.DataProvider.Access    .AccessTools    .ProviderDetector);
-			AddProviderDetector(LinqToDB.DataProvider.DB2       .DB2Tools       .ProviderDetector);
-			AddProviderDetector(LinqToDB.DataProvider.Firebird  .FirebirdTools  .ProviderDetector);
-			AddProviderDetector(LinqToDB.DataProvider.Informix  .InformixTools  .ProviderDetector);
-			AddProviderDetector(LinqToDB.DataProvider.MySql     .MySqlTools     .ProviderDetector);
-			AddProviderDetector(LinqToDB.DataProvider.Oracle    .OracleTools    .ProviderDetector);
-			AddProviderDetector(LinqToDB.DataProvider.PostgreSQL.PostgreSQLTools.ProviderDetector);
-			AddProviderDetector(LinqToDB.DataProvider.SapHana   .SapHanaTools   .ProviderDetector);
-			AddProviderDetector(LinqToDB.DataProvider.SqlCe     .SqlCeTools     .ProviderDetector);
-			AddProviderDetector(LinqToDB.DataProvider.SQLite    .SQLiteTools    .ProviderDetector);
-			AddProviderDetector(LinqToDB.DataProvider.SqlServer .SqlServerTools .ProviderDetector);
-			AddProviderDetector(LinqToDB.DataProvider.Sybase    .SybaseTools    .ProviderDetector);
-
-			var section = DefaultSettings;
-
-			if (section != null)
-			{
-				DefaultConfiguration = section.DefaultConfiguration;
-				DefaultDataProvider  = section.DefaultDataProvider;
-
-				foreach (var provider in section.DataProviders)
-				{
-					var dataProviderType = Type.GetType(provider.TypeName, true)!;
-					var providerInstance = (IDataProviderFactory)Activator.CreateInstance(dataProviderType)!;
-
-					if (!string.IsNullOrEmpty(provider.Name))
-						AddDataProvider(provider.Name!, providerInstance.GetDataProvider(provider.Attributes));
-				}
-			}
-		}
-
-		static readonly List<Func<IConnectionStringSettings,string,IDataProvider?>> _providerDetectors = new();
-
-		/// <summary>
-		/// Registers database provider factory method.
-		/// Factory accepts connection string settings and connection string. Could return <c>null</c>, if cannot create provider
-		/// instance using provided options.
-		/// </summary>
-		/// <param name="providerDetector">Factory method delegate.</param>
-		public static void AddProviderDetector(Func<IConnectionStringSettings,string,IDataProvider?> providerDetector)
-		{
-			_providerDetectors.Add(providerDetector);
-		}
-
-		/// <summary>
-		/// Registers database provider factory method.
-		/// Factory accepts connection string settings and connection string. Could return <c>null</c>, if cannot create provider
-		/// instance using provided options.
-		/// </summary>
-		/// <param name="providerDetector">Factory method delegate.</param>
-		public static void InsertProviderDetector(Func<IConnectionStringSettings,string,IDataProvider?> providerDetector)
-		{
-			_providerDetectors.Insert(0, providerDetector);
-		}
-
-		static void InitConnectionStrings()
-		{
-			if (DefaultSettings == null)
-				return;
-
-			foreach (var css in DefaultSettings.ConnectionStrings)
-			{
-				_configurations[css.Name] = new ConfigurationInfo(css);
-
-				if (DefaultConfiguration == null && !css.IsGlobal /*IsMachineConfig(css)*/)
-				{
-					DefaultConfiguration = css.Name;
-				}
-			}
-		}
-
-		static readonly object _initSyncRoot = new ();
-		static          bool   _initialized;
-
-		static void InitConfig()
-		{
-			lock (_initSyncRoot)
-			{
-				if (!_initialized)
-				{
-					_initialized = true;
-					InitConnectionStrings();
-				}
-			}
-		}
-
-		static readonly ConcurrentDictionary<string,IDataProvider> _dataProviders = new ();
-
-		/// <summary>
-		/// Registers database provider implementation by provided unique name.
-		/// </summary>
-		/// <param name="providerName">Provider name, to which provider implementation will be mapped.</param>
-		/// <param name="dataProvider">Database provider implementation.</param>
-		public static void AddDataProvider(
-			string        providerName,
-			IDataProvider dataProvider)
-		{
-			if (providerName == null) throw new ArgumentNullException(nameof(providerName));
-			if (dataProvider == null) throw new ArgumentNullException(nameof(dataProvider));
-
-			if (string.IsNullOrEmpty(dataProvider.Name))
-				throw new ArgumentException("dataProvider.Name cannot be empty.", nameof(dataProvider));
-
-			_dataProviders[providerName] = dataProvider;
-		}
-
-		/// <summary>
-		/// Registers database provider implementation using <see cref="IDataProvider.Name"/> name.
-		/// </summary>
-		/// <param name="dataProvider">Database provider implementation.</param>
-		public static void AddDataProvider(IDataProvider dataProvider)
-		{
-			if (dataProvider == null) throw new ArgumentNullException(nameof(dataProvider));
-
-			AddDataProvider(dataProvider.Name, dataProvider);
-		}
-
-		/// <summary>
-		/// Returns database provider implementation, associated with provided connection configuration name.
-		/// </summary>
-		/// <param name="configurationString">Connection configuration name.</param>
-		/// <returns>Database provider.</returns>
-		public static IDataProvider GetDataProvider(string configurationString)
-		{
-			InitConfig();
-
-			return GetConfigurationInfo(configurationString).DataProvider;
-		}
-
-		/// <summary>
-		/// Returns database provider associated with provider name, configuration and connection string.
-		/// </summary>
-		/// <param name="providerName">Provider name.</param>
-		/// <param name="configurationString">Connection configuration name.</param>
-		/// <param name="connectionString">Connection string.</param>
-		/// <returns>Database provider.</returns>
-		public static IDataProvider? GetDataProvider(
-			string providerName,
-			string configurationString,
-			string connectionString)
-		{
-			InitConfig();
-
-			return ConfigurationInfo.GetDataProvider(
-				new ConnectionStringSettings(configurationString, connectionString, providerName),
-				connectionString);
-		}
-
-		/// <summary>
-		/// Returns database provider associated with provider name and connection string.
-		/// </summary>
-		/// <param name="providerName">Provider name.</param>
-		/// <param name="connectionString">Connection string.</param>
-		/// <returns>Database provider.</returns>
-		public static IDataProvider? GetDataProvider(
-			string providerName,
-			string connectionString)
-		{
-			InitConfig();
-
-			return ConfigurationInfo.GetDataProvider(
-				new ConnectionStringSettings(providerName, connectionString, providerName),
-				connectionString);
-		}
-
-		/// <summary>
-		/// Returns registered database providers.
-		/// </summary>
-		/// <returns>
-		/// Returns registered providers collection.
-		/// </returns>
-		public static IReadOnlyDictionary<string, IDataProvider> GetRegisteredProviders() =>
-			_dataProviders.ToDictionary(p => p.Key, p => p.Value);
-
-		class ConfigurationInfo
-		{
-			private readonly bool    _dataProviderSet;
-			private readonly string? _configurationString;
-			public ConfigurationInfo(string configurationString, string connectionString, IDataProvider? dataProvider)
-			{
-				ConnectionString     = connectionString;
-				_dataProvider        = dataProvider;
-				_dataProviderSet     = dataProvider != null;
-				_configurationString = configurationString;
-			}
-
-			public ConfigurationInfo(IConnectionStringSettings connectionStringSettings)
-			{
-				ConnectionString = connectionStringSettings.ConnectionString;
-
-				_connectionStringSettings = connectionStringSettings;
-			}
-
-			private string? _connectionString;
-			public  string  ConnectionString
-			{
-				get => _connectionString!;
-				set
-				{
-					if (!_dataProviderSet)
-						_dataProvider = null;
-
-					_connectionString = value;
-				}
-			}
-
-			private readonly IConnectionStringSettings? _connectionStringSettings;
-
-			private IDataProvider? _dataProvider;
-			public  IDataProvider  DataProvider
-			{
-				get
-				{
-					var dataProvider = _dataProvider ??= GetDataProvider(_connectionStringSettings!, ConnectionString);
-
-					if (dataProvider == null)
-						throw new LinqToDBException($"DataProvider is not provided for configuration: {_configurationString}");
-
-					return dataProvider;
-				}
-			}
-
-			public static IDataProvider? GetDataProvider(IConnectionStringSettings css, string connectionString)
-			{
-				var configuration = css.Name;
-				var providerName  = css.ProviderName;
-				var dataProvider  = _providerDetectors.Select(d => d(css, connectionString)).FirstOrDefault(dp => dp != null);
-
-				if (dataProvider == null)
-				{
-					IDataProvider? defaultDataProvider = null;
-
-					if (DefaultDataProvider != null)
-						_dataProviders.TryGetValue(DefaultDataProvider, out defaultDataProvider);
-
-					if (string.IsNullOrEmpty(providerName))
-						dataProvider = FindProvider(configuration, _dataProviders, defaultDataProvider);
-					else if (!_dataProviders.TryGetValue(providerName!, out dataProvider) &&
-					         !_dataProviders.TryGetValue(configuration, out dataProvider))
-					{
-						var providers = _dataProviders.Where(dp => dp.Value.ConnectionNamespace == providerName).ToList();
-
-						dataProvider = providers.Count switch
-						{
-							0 => defaultDataProvider,
-							1 => providers[0].Value,
-							_ => FindProvider(configuration, providers, providers[0].Value),
-						};
-					}
-				}
-
-				if (dataProvider != null && DefaultConfiguration == null && !css.IsGlobal/*IsMachineConfig(css)*/)
-				{
-					DefaultConfiguration = css.Name;
-				}
-
-				return dataProvider;
-			}
-		}
-
-		static ConfigurationInfo GetConfigurationInfo(string? configurationString)
-		{
-			var key = configurationString ?? DefaultConfiguration;
-
-			if (key == null)
-				throw new LinqToDBException("Configuration string is not provided.");
-
-			if (_configurations.TryGetValue(key, out var ci))
-				return ci;
-
-			throw new LinqToDBException($"Configuration '{configurationString}' is not defined.");
-		}
-
-		/// <summary>
-		/// Register connection strings for use by data connection class.
-		/// </summary>
-		/// <param name="connectionStrings">Collection of connection string configurations.</param>
-		public static void SetConnectionStrings(IEnumerable<IConnectionStringSettings> connectionStrings)
-		{
-			foreach (var css in connectionStrings)
-			{
-				_configurations[css.Name] = new ConfigurationInfo(css);
-
-				if (DefaultConfiguration == null && !css.IsGlobal /*IsMachineConfig(css)*/)
-				{
-					DefaultConfiguration = css.Name;
-				}
-			}
-		}
-
-		static readonly ConcurrentDictionary<string,ConfigurationInfo> _configurations = new ();
-
-		/// <summary>
-		/// Register connection configuration with specified connection string and database provider implementation.
-		/// </summary>
-		/// <param name="configuration">Connection configuration name.</param>
-		/// <param name="connectionString">Connection string.</param>
-		/// <param name="dataProvider">Database provider. If not specified, will use provider, registered using <paramref name="configuration"/> value.</param>
-		public static void AddConfiguration(
-			string configuration,
-			string connectionString,
-			IDataProvider? dataProvider = null)
-		{
-			if (configuration    == null) throw new ArgumentNullException(nameof(configuration));
-			if (connectionString == null) throw new ArgumentNullException(nameof(connectionString));
-
-			if (dataProvider == null)
-			{
-				IDataProvider? defaultDataProvider = null;
-				if (DefaultDataProvider != null)
-					_dataProviders.TryGetValue(DefaultDataProvider, out defaultDataProvider);
-
-				dataProvider = FindProvider(configuration, _dataProviders, defaultDataProvider);
-			}
-
-			var info = new ConfigurationInfo(
-				configuration,
-				connectionString,
-				dataProvider);
-
-			_configurations.AddOrUpdate(configuration, info, (s,i) => info);
-		}
-
-		internal static Lazy<IDataProvider> CreateDataProvider<T>()
-			where T : IDataProvider, new()
-		{
-			return new(() =>
-			{
-				var provider = new T();
-				AddDataProvider(provider);
-				return provider;
-			}, true);
-		}
-
-		public static void AddOrSetConfiguration(
-			string configuration,
-			string connectionString,
-			string dataProvider)
-		{
-			if (configuration    == null) throw new ArgumentNullException(nameof(configuration));
-			if (connectionString == null) throw new ArgumentNullException(nameof(connectionString));
-			if (dataProvider     == null) throw new ArgumentNullException(nameof(dataProvider));
-
-			InitConfig();
-
-			var info = new ConfigurationInfo(
-				new ConnectionStringSettings(configuration, connectionString, dataProvider));
-
-			_configurations.AddOrUpdate(configuration, info, (s,i) => info);
-		}
-
-		/// <summary>
-		/// Sets connection string for specified connection name.
-		/// </summary>
-		/// <param name="configuration">Connection name.</param>
-		/// <param name="connectionString">Connection string.</param>
-		public static void SetConnectionString(
-			string configuration,
-			string connectionString)
-		{
-			if (configuration    == null) throw new ArgumentNullException(nameof(configuration));
-			if (connectionString == null) throw new ArgumentNullException(nameof(connectionString));
-
-			InitConfig();
-
-			GetConfigurationInfo(configuration).ConnectionString = connectionString;
-		}
-
-		/// <summary>
-		/// Returns connection string for specified connection name.
-		/// </summary>
-		/// <param name="configurationString">Connection name.</param>
-		/// <returns>Connection string.</returns>
-		public static string GetConnectionString(string configurationString)
-		{
-			InitConfig();
-
-			return GetConfigurationInfo(configurationString).ConnectionString;
-		}
-
-		/// <summary>
-		/// Returns connection string for specified configuration name or NULL.
-		/// </summary>
-		/// <param name="configurationString">Configuration.</param>
-		/// <returns>Connection string or NULL.</returns>
-		public static string? TryGetConnectionString(string? configurationString)
-		{
-			InitConfig();
-
-			var key = configurationString ?? DefaultConfiguration;
-
-			return key != null && _configurations.TryGetValue(key, out var ci) ? ci.ConnectionString : null;
-		}
 
 		#endregion
 
@@ -1521,6 +1243,7 @@ namespace LinqToDB.Data
 		#endregion
 
 		#region Transaction
+
 		/// <summary>
 		/// Gets current transaction, associated with connection.
 		/// </summary>
@@ -1615,13 +1338,13 @@ namespace LinqToDB.Data
 						dataConnection.TransactionAsync!.Commit();
 
 						if (dataConnection._closeTransaction)
-				{
+						{
 							dataConnection.TransactionAsync.Dispose();
 							dataConnection.TransactionAsync = null;
 
 							if (dataConnection._command != null)
 								dataConnection._command.Transaction = null;
-				}
+						}
 
 						return true;
 					});
@@ -1767,7 +1490,7 @@ namespace LinqToDB.Data
 			ConnectionString    = connectionString;
 			_connection         = connection != null ? AsyncFactory.Create(connection) : null;
 			MappingSchema       = mappingSchema;
-			LinqOptions         = options.GetExtension<LinqOptionSet>();
+			LinqOptions         = options.GetExtension<LinqOptions>();
 			Options             = options;
 		}
 
@@ -1811,7 +1534,7 @@ namespace LinqToDB.Data
 
 		protected void CheckAndThrowOnDisposed()
 		{
-			if (Disposed && (ThrowOnDisposed ?? Configuration.Data.ThrowOnDisposed))
+			if (Disposed && (ThrowOnDisposed ?? Common.Configuration.Data.ThrowOnDisposed))
 				throw new ObjectDisposedException("DataConnection", "IDataContext is disposed, see https://github.com/linq2db/linq2db/wiki/Managing-data-connection");
 		}
 
