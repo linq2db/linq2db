@@ -1,15 +1,14 @@
 ﻿using System;
 
-namespace LinqToDB.SqlQuery
+namespace LinqToDB.SqlQuery;
+
+public enum JoinType
 {
-	public enum JoinType
-	{
-		Auto,
-		Inner,
-		Left,
-		CrossApply,
-		OuterApply,
-		Right,
-		Full
-	}
+	Auto,
+	Inner,
+	Left,
+	CrossApply,
+	OuterApply,
+	Right,
+	Full
 }

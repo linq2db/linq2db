@@ -2,10 +2,9 @@
 
 using LinqToDB.SqlQuery;
 
-namespace LinqToDB.Linq.Builder
+namespace LinqToDB.Linq.Builder;
+
+public interface IToSqlConverter
 {
-	public interface IToSqlConverter
-	{
-		ISqlExpression ToSql(Expression expression);
-	}
+	ISqlExpression ToSql(Expression expression);
 }

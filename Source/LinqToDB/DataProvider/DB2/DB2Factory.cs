@@ -1,27 +1,26 @@
 ﻿using JetBrains.Annotations;
 
-namespace LinqToDB.DataProvider.DB2
+namespace LinqToDB.DataProvider.DB2;
+
+using System.Collections.Generic;
+using System.Linq;
+using Configuration;
+
+[UsedImplicitly]
+class DB2Factory : IDataProviderFactory
 {
-	using System.Collections.Generic;
-	using System.Linq;
-	using Configuration;
-
-	[UsedImplicitly]
-	class DB2Factory : IDataProviderFactory
+	IDataProvider IDataProviderFactory.GetDataProvider(IEnumerable<NamedValue> attributes)
 	{
-		IDataProvider IDataProviderFactory.GetDataProvider(IEnumerable<NamedValue> attributes)
+		var version = attributes.FirstOrDefault(_ => _.Name == "version");
+		if (version != null)
 		{
-			var version = attributes.FirstOrDefault(_ => _.Name == "version");
-			if (version != null)
+			switch (version.Value)
 			{
-				switch (version.Value)
-				{
-					case "zOS" :
-					case "z/OS": return DB2Tools.GetDataProvider(DB2Version.zOS);
-				}
+				case "zOS" :
+				case "z/OS": return DB2Tools.GetDataProvider(DB2Version.zOS);
 			}
-
-			return DB2Tools.GetDataProvider(DB2Version.LUW);
 		}
+
+		return DB2Tools.GetDataProvider(DB2Version.LUW);
 	}
 }

@@ -4,73 +4,73 @@ using System.Data;
 using System.Data.Common;
 using System.Linq;
 
-namespace LinqToDB.DataProvider.SapHana
+namespace LinqToDB.DataProvider.SapHana;
+
+using Common;
+using Data;
+using SchemaProvider;
+
+class SapHanaOdbcSchemaProvider : SapHanaSchemaProvider
 {
-	using Common;
-	using Data;
-	using SchemaProvider;
-
-	class SapHanaOdbcSchemaProvider : SapHanaSchemaProvider
+	protected override List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
 	{
-		protected override List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
-		{
-			var dts = dataConnection.Connection.GetSchema("DataTypes");
+		var dts = dataConnection.Connection.GetSchema("DataTypes");
 
-			var dt = dts.AsEnumerable()
-				.Where(x=> x["ProviderDbType"] != DBNull.Value)
-				.Select(t => new DataTypeInfo
-				{
-					TypeName         = t.Field<string>("TypeName")!,
-					DataType         = t.Field<string>("DataType")!,
-					CreateFormat     = t.Field<string>("CreateFormat"),
-					CreateParameters = t.Field<string>("CreateParameters"),
-					ProviderDbType   = Converter.ChangeTypeTo<int>(t["ProviderDbType"]),
-				}).ToList();
-
-			return dt.GroupBy(x => new {x.TypeName, x.ProviderDbType}).Select(y =>
+		var dt = dts.AsEnumerable()
+			.Where(x=> x["ProviderDbType"] != DBNull.Value)
+			.Select(t => new DataTypeInfo
 			{
-				var x = y.First();
-				if (x.CreateFormat == null)
-				{
-					x.CreateFormat = x.TypeName;
-					if (x.CreateParameters != null)
-					{
-						x.CreateFormat += string.Concat('(',
-							string.Join(", ",
-								Enumerable.Range(0, x.CreateParameters.Split(',').Length)
-									.Select(i => string.Concat('{', i, '}'))),
-							')');
-					}
-				}
-				return x;
+				TypeName         = t.Field<string>("TypeName")!,
+				DataType         = t.Field<string>("DataType")!,
+				CreateFormat     = t.Field<string>("CreateFormat"),
+				CreateParameters = t.Field<string>("CreateParameters"),
+				ProviderDbType   = Converter.ChangeTypeTo<int>(t["ProviderDbType"]),
 			}).ToList();
-		}
 
-		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection,
-			IEnumerable<TableSchema> tables, GetSchemaOptions options)
+		return dt.GroupBy(x => new {x.TypeName, x.ProviderDbType}).Select(y =>
 		{
-			return dataConnection.Query(rd =>
+			var x = y.First();
+			if (x.CreateFormat == null)
 			{
-				// IMPORTANT: reader calls must be ordered to support SequentialAccess
-				var schema     = rd.GetString(0);
-				var tableName  = rd.GetString(1);
-				var indexName  = rd.GetString(2);
-				var constraint = rd.IsDBNull(3) ? null : rd.GetString(3);
-
-				if (constraint != "PRIMARY KEY")
-					return null;
-
-				var columnName = rd.GetString(4);
-				var position   = rd.GetInt32(5);
-
-				return new PrimaryKeyInfo
+				x.CreateFormat = x.TypeName;
+				if (x.CreateParameters != null)
 				{
-					TableID        = string.Concat(schema, '.', tableName),
-					ColumnName     = columnName,
-					Ordinal        = position,
-					PrimaryKeyName = indexName
-				};
-			}, @"
+					x.CreateFormat += string.Concat('(',
+						string.Join(", ",
+							Enumerable.Range(0, x.CreateParameters.Split(',').Length)
+								.Select(i => string.Concat('{', i, '}'))),
+						')');
+				}
+			}
+			return x;
+		}).ToList();
+	}
+
+	protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection,
+		IEnumerable<TableSchema> tables, GetSchemaOptions options)
+	{
+		return dataConnection.Query(rd =>
+		{
+			// IMPORTANT: reader calls must be ordered to support SequentialAccess
+			var schema     = rd.GetString(0);
+			var tableName  = rd.GetString(1);
+			var indexName  = rd.GetString(2);
+			var constraint = rd.IsDBNull(3) ? null : rd.GetString(3);
+
+			if (constraint != "PRIMARY KEY")
+				return null;
+
+			var columnName = rd.GetString(4);
+			var position   = rd.GetInt32(5);
+
+			return new PrimaryKeyInfo
+			{
+				TableID        = string.Concat(schema, '.', tableName),
+				ColumnName     = columnName,
+				Ordinal        = position,
+				PrimaryKeyName = indexName
+			};
+		}, @"
 				SELECT
 					SCHEMA_NAME,
 					TABLE_NAME,
@@ -79,7 +79,6 @@ namespace LinqToDB.DataProvider.SapHana
 					COLUMN_NAME,
 					POSITION
 				FROM INDEX_COLUMNS")
-				.Where(x => x != null).ToList()!;
-		}
+			.Where(x => x != null).ToList()!;
 	}
 }

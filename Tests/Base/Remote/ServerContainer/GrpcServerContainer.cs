@@ -16,147 +16,146 @@ using ProtoBuf.Grpc.Server;
 using Tests.Model;
 using Tests.Model.Remote.Grpc;
 
-namespace Tests.Remote.ServerContainer
+namespace Tests.Remote.ServerContainer;
+
+public class GrpcServerContainer : IServerContainer
 {
-	public class GrpcServerContainer : IServerContainer
+	private const int Port = 22654;
+
+	private readonly object _syncRoot = new ();
+
+	//useful for async tests
+	public bool KeepSamePortBetweenThreads { get; set; } = true;
+
+	private ConcurrentDictionary<int, TestGrpcLinqService> _openHosts = new();
+
+	public GrpcServerContainer()
 	{
-		private const int Port = 22654;
+	}
 
-		private readonly object _syncRoot = new ();
+	public ITestDataContext Prepare(
+		MappingSchema? ms,
+		IInterceptor? interceptor,
+		bool suppressSequentialAccess,
+		string configuration)
+	{
+		var service = OpenHost(ms, interceptor, suppressSequentialAccess);
 
-		//useful for async tests
-		public bool KeepSamePortBetweenThreads { get; set; } = true;
-
-		private ConcurrentDictionary<int, TestGrpcLinqService> _openHosts = new();
-
-		public GrpcServerContainer()
+		service.SuppressSequentialAccess = suppressSequentialAccess;
+		if (interceptor != null)
 		{
+			service.AddInterceptor(interceptor);
 		}
 
-		public ITestDataContext Prepare(
-			MappingSchema? ms,
-			IInterceptor? interceptor,
-			bool suppressSequentialAccess,
-			string configuration)
-		{
-			var service = OpenHost(ms, interceptor, suppressSequentialAccess);
+		var url = $"https://localhost:{GetPort()}";
 
-			service.SuppressSequentialAccess = suppressSequentialAccess;
-			if (interceptor != null)
+		var dx = new TestGrpcDataContext(
+			url,
+			() =>
 			{
-				service.AddInterceptor(interceptor);
-			}
+				service.SuppressSequentialAccess = false;
+				if (interceptor != null)
+					service.RemoveInterceptor();
+			})
+		{ Configuration = configuration };
 
-			var url = $"https://localhost:{GetPort()}";
+		Debug.WriteLine(((IDataContext) dx).ContextID, "Provider ");
 
-			var dx = new TestGrpcDataContext(
-				url,
-				() =>
-				{
-					service.SuppressSequentialAccess = false;
-					if (interceptor != null)
-						service.RemoveInterceptor();
-				})
-			{ Configuration = configuration };
+		if (ms != null)
+			dx.MappingSchema = new MappingSchema(dx.MappingSchema, ms);
 
-			Debug.WriteLine(((IDataContext) dx).ContextID, "Provider ");
+		return dx;
+	}
 
-			if (ms != null)
-				dx.MappingSchema = new MappingSchema(dx.MappingSchema, ms);
-
-			return dx;
+	private TestGrpcLinqService OpenHost(MappingSchema? ms, IInterceptor? interceptor, bool suppressSequentialAccess)
+	{
+		var port = GetPort();
+		if (_openHosts.TryGetValue(port, out var service))
+		{
+			service.MappingSchema = ms;
+			return service;
 		}
 
-		private TestGrpcLinqService OpenHost(MappingSchema? ms, IInterceptor? interceptor, bool suppressSequentialAccess)
+		lock (_syncRoot)
 		{
-			var port = GetPort();
-			if (_openHosts.TryGetValue(port, out var service))
+			if (_openHosts.TryGetValue(port, out service))
 			{
 				service.MappingSchema = ms;
 				return service;
 			}
 
-			lock (_syncRoot)
+			service = new TestGrpcLinqService(
+				new LinqService()
+				{
+					AllowUpdates = true
+				},
+				interceptor,
+				suppressSequentialAccess
+				);
+			service.MappingSchema = ms;
+
+			Startup.GrpcLinqService = service;
+
+			var hb = Host.CreateDefaultBuilder();
+			var host = hb.ConfigureWebHostDefaults(
+			webBuilder =>
 			{
-				if (_openHosts.TryGetValue(port, out service))
-				{
-					service.MappingSchema = ms;
-					return service;
-				}
+				webBuilder.UseStartup<Startup>();
 
-				service = new TestGrpcLinqService(
-					new LinqService()
-					{
-						AllowUpdates = true
-					},
-					interceptor,
-					suppressSequentialAccess
-					);
-				service.MappingSchema = ms;
+				var url = $"https://localhost:{port}";
+				webBuilder.UseUrls(url);
+			}).Build();
 
-				Startup.GrpcLinqService = service;
+			host.Start();
 
-				var hb = Host.CreateDefaultBuilder();
-				var host = hb.ConfigureWebHostDefaults(
-				webBuilder =>
-				{
-					webBuilder.UseStartup<Startup>();
-
-					var url = $"https://localhost:{port}";
-					webBuilder.UseUrls(url);
-				}).Build();
-
-				host.Start();
-
-				_openHosts[port] = service;
-			}
-
-			TestExternals.Log("gRCP host opened");
-
-			return service;
+			_openHosts[port] = service;
 		}
 
+		TestExternals.Log("gRCP host opened");
 
-		//Environment.CurrentManagedThreadId need for a parallel test like DataConnectionTests.MultipleConnectionsTest
-		public int GetPort()
+		return service;
+	}
+
+
+	//Environment.CurrentManagedThreadId need for a parallel test like DataConnectionTests.MultipleConnectionsTest
+	public int GetPort()
+	{
+		if(KeepSamePortBetweenThreads)
 		{
-			if(KeepSamePortBetweenThreads)
-			{
-				return Port;
-			}
-
-			return Port + (Environment.CurrentManagedThreadId % 1000) + TestExternals.RunID;
+			return Port;
 		}
 
+		return Port + (Environment.CurrentManagedThreadId % 1000) + TestExternals.RunID;
+	}
 
-		public class Startup
+
+	public class Startup
+	{
+		internal static TestGrpcLinqService? GrpcLinqService;
+
+		public void ConfigureServices(IServiceCollection services)
 		{
-			internal static TestGrpcLinqService? GrpcLinqService;
-
-			public void ConfigureServices(IServiceCollection services)
+			if (GrpcLinqService == null)
 			{
-				if (GrpcLinqService == null)
-				{
-					throw new InvalidOperationException("Grpc service should be created first");
-				}
-
-				services.AddGrpc();
-				services.AddCodeFirstGrpc();
-				services.AddSingleton(p => GrpcLinqService);
-
+				throw new InvalidOperationException("Grpc service should be created first");
 			}
 
-			public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+			services.AddGrpc();
+			services.AddCodeFirstGrpc();
+			services.AddSingleton(p => GrpcLinqService);
+
+		}
+
+		public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+		{
+			app.UseDeveloperExceptionPage();
+
+			app.UseRouting();
+
+			app.UseEndpoints(endpoints =>
 			{
-				app.UseDeveloperExceptionPage();
-
-				app.UseRouting();
-
-				app.UseEndpoints(endpoints =>
-				{
-					endpoints.MapGrpcService<TestGrpcLinqService>();
-				});
-			}
+				endpoints.MapGrpcService<TestGrpcLinqService>();
+			});
 		}
 	}
 }

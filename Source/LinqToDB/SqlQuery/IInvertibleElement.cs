@@ -1,8 +1,7 @@
-﻿namespace LinqToDB.SqlQuery
+﻿namespace LinqToDB.SqlQuery;
+
+public interface IInvertibleElement
 {
-	public interface IInvertibleElement
-	{
-		bool CanInvert();
-		IQueryElement Invert();
-	}
+	bool CanInvert();
+	IQueryElement Invert();
 }

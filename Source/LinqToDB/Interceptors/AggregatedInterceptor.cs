@@ -3,110 +3,109 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
-namespace LinqToDB.Interceptors
+namespace LinqToDB.Interceptors;
+
+abstract class AggregatedInterceptor<TInterceptor>: IInterceptor
+	where TInterceptor : IInterceptor
 {
-	abstract class AggregatedInterceptor<TInterceptor>: IInterceptor
-		where TInterceptor : IInterceptor
+	public List<TInterceptor> Interceptors { get; } = new ();
+
+	// as we support interceptor removal we should delay removal when interceptors collection enumerated to
+	// avoid errors
+	bool _enumerating;
+	readonly List<TInterceptor> _removeList = new ();
+
+	public void Add(TInterceptor interceptor)
 	{
-		public List<TInterceptor> Interceptors { get; } = new ();
+		Interceptors.Add(interceptor);
+	}
 
-		// as we support interceptor removal we should delay removal when interceptors collection enumerated to
-		// avoid errors
-		bool _enumerating;
-		readonly List<TInterceptor> _removeList = new ();
+	public void Remove(TInterceptor interceptor)
+	{
+		if (!_enumerating)
+			Interceptors.Remove(interceptor);
+		else
+			_removeList.Add(interceptor);
+	}
 
-		public void Add(TInterceptor interceptor)
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	protected void RemoveDelayed()
+	{
+		foreach (var interceptor in _removeList)
+			Interceptors.Remove(interceptor);
+		_removeList.Clear();
+	}
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	protected void Apply(Action func)
+	{
+		_enumerating = true;
+
+		try
 		{
-			Interceptors.Add(interceptor);
+			func();
 		}
-
-		public void Remove(TInterceptor interceptor)
+		finally
 		{
-			if (!_enumerating)
-				Interceptors.Remove(interceptor);
-			else
-				_removeList.Add(interceptor);
+			_enumerating = false;
+			RemoveDelayed();
 		}
+	}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected void RemoveDelayed()
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	protected T Apply<T>(Func<T> func)
+	{
+		_enumerating = true;
+
+		try
 		{
-			foreach (var interceptor in _removeList)
-				Interceptors.Remove(interceptor);
-			_removeList.Clear();
+			return func();
 		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected void Apply(Action func)
+		finally
 		{
-			_enumerating = true;
-
-			try
-			{
-				func();
-			}
-			finally
-			{
-				_enumerating = false;
-				RemoveDelayed();
-			}
+			_enumerating = false;
+			RemoveDelayed();
 		}
+	}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected T Apply<T>(Func<T> func)
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	protected async Task Apply(Func<Task> func)
+	{
+		_enumerating = true;
+
+		try
 		{
-			_enumerating = true;
-
-			try
-			{
-				return func();
-			}
-			finally
-			{
-				_enumerating = false;
-				RemoveDelayed();
-			}
+			await func().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected async Task Apply(Func<Task> func)
+		finally
 		{
-			_enumerating = true;
-
-			try
-			{
-				await func().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-			}
-			finally
-			{
-				_enumerating = false;
-				RemoveDelayed();
-			}
+			_enumerating = false;
+			RemoveDelayed();
 		}
+	}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected async Task<T> Apply<T>(Func<Task<T>> func)
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	protected async Task<T> Apply<T>(Func<Task<T>> func)
+	{
+		_enumerating = true;
+
+		try
 		{
-			_enumerating = true;
-
-			try
-			{
-				return await func().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-			}
-			finally
-			{
-				_enumerating = false;
-				RemoveDelayed();
-			}
+			return await func().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
-
-		protected abstract AggregatedInterceptor<TInterceptor> Create();
-
-		public AggregatedInterceptor<TInterceptor> Clone()
+		finally
 		{
-			var clone = Create();
-			clone.Interceptors.AddRange(Interceptors);
-			return clone;
+			_enumerating = false;
+			RemoveDelayed();
 		}
+	}
+
+	protected abstract AggregatedInterceptor<TInterceptor> Create();
+
+	public AggregatedInterceptor<TInterceptor> Clone()
+	{
+		var clone = Create();
+		clone.Interceptors.AddRange(Interceptors);
+		return clone;
 	}
 }

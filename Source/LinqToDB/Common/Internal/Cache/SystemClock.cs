@@ -3,16 +3,15 @@
 
 using System;
 
-namespace LinqToDB.Common.Internal.Cache
+namespace LinqToDB.Common.Internal.Cache;
+
+/// <summary>
+/// Provides access to the normal system clock.
+/// </summary>
+public class SystemClock : ISystemClock
 {
 	/// <summary>
-	/// Provides access to the normal system clock.
+	/// Retrieves the current system time in UTC.
 	/// </summary>
-	public class SystemClock : ISystemClock
-	{
-		/// <summary>
-		/// Retrieves the current system time in UTC.
-		/// </summary>
-		public DateTimeOffset UtcNow => DateTimeOffset.UtcNow;
-	}
+	public DateTimeOffset UtcNow => DateTimeOffset.UtcNow;
 }

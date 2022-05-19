@@ -1,11 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Text;
 
-namespace LinqToDB.SqlQuery
+namespace LinqToDB.SqlQuery;
+
+public interface IQueryElement
 {
-	public interface IQueryElement
-	{
-		QueryElementType ElementType { get; }
-		StringBuilder    ToString (StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic);
-	}
+	QueryElementType ElementType { get; }
+	StringBuilder    ToString (StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic);
 }

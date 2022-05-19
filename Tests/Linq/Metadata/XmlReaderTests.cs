@@ -8,12 +8,12 @@ using LinqToDB.Metadata;
 
 using NUnit.Framework;
 
-namespace Tests.Metadata
+namespace Tests.Metadata;
+
+public class XmlReaderTests
 {
-	public class XmlReaderTests
-	{
-		const string Data =
-			@"<?xml version='1.0' encoding='utf-8' ?>
+	const string Data =
+		@"<?xml version='1.0' encoding='utf-8' ?>
 			<Types>
 				<Type Name='MyType'>
 					<Member Name='Field1'>
@@ -45,48 +45,47 @@ namespace Tests.Metadata
 				</Type>
 			</Types>";
 
-		[Test]
-		public void Parse()
-		{
-			new XmlAttributeReader(new MemoryStream(Encoding.UTF8.GetBytes(Data)));
-		}
+	[Test]
+	public void Parse()
+	{
+		new XmlAttributeReader(new MemoryStream(Encoding.UTF8.GetBytes(Data)));
+	}
 
-		[Test]
-		public void TypeAttribute()
-		{
-			var rd    = new XmlAttributeReader(new MemoryStream(Encoding.UTF8.GetBytes(Data)));
-			var attrs = rd.GetAttributes<TableAttribute>(typeof(XmlReaderTests));
+	[Test]
+	public void TypeAttribute()
+	{
+		var rd    = new XmlAttributeReader(new MemoryStream(Encoding.UTF8.GetBytes(Data)));
+		var attrs = rd.GetAttributes<TableAttribute>(typeof(XmlReaderTests));
 
-			Assert.NotNull (attrs);
-			Assert.AreEqual(1, attrs.Length);
-			Assert.AreEqual("TestName", attrs[0].Name);
-		}
+		Assert.NotNull (attrs);
+		Assert.AreEqual(1, attrs.Length);
+		Assert.AreEqual("TestName", attrs[0].Name);
+	}
 
-		public int Field1;
+	public int Field1;
 
-		[Test]
-		public void FieldAttribute()
-		{
-			var rd    = new XmlAttributeReader(new MemoryStream(Encoding.UTF8.GetBytes(Data)));
-			var attrs = rd.GetAttributes<ColumnAttribute>(typeof(XmlReaderTests), MemberHelper.MemberOf<XmlReaderTests>(a => a.Field1));
+	[Test]
+	public void FieldAttribute()
+	{
+		var rd    = new XmlAttributeReader(new MemoryStream(Encoding.UTF8.GetBytes(Data)));
+		var attrs = rd.GetAttributes<ColumnAttribute>(typeof(XmlReaderTests), MemberHelper.MemberOf<XmlReaderTests>(a => a.Field1));
 
-			Assert.NotNull (attrs);
-			Assert.AreEqual(1, attrs.Length);
-			Assert.AreEqual("TestName", attrs[0].Name);
-		}
+		Assert.NotNull (attrs);
+		Assert.AreEqual(1, attrs.Length);
+		Assert.AreEqual("TestName", attrs[0].Name);
+	}
 
-		public int Property1 { get; set; }
+	public int Property1 { get; set; }
 
-		[Test]
-		public void PropertyAttribute()
-		{
-			var rd    = new XmlAttributeReader(new MemoryStream(Encoding.UTF8.GetBytes(Data)));
-			var attrs = rd.GetAttributes<ColumnAttribute>(typeof(XmlReaderTests), MemberHelper.MemberOf<XmlReaderTests>(a => a.Property1));
+	[Test]
+	public void PropertyAttribute()
+	{
+		var rd    = new XmlAttributeReader(new MemoryStream(Encoding.UTF8.GetBytes(Data)));
+		var attrs = rd.GetAttributes<ColumnAttribute>(typeof(XmlReaderTests), MemberHelper.MemberOf<XmlReaderTests>(a => a.Property1));
 
-			Assert.NotNull (attrs);
-			Assert.AreEqual(1, attrs.Length);
-			Assert.AreEqual("TestName", attrs[0].Name);
-		}
+		Assert.NotNull (attrs);
+		Assert.AreEqual(1, attrs.Length);
+		Assert.AreEqual("TestName", attrs[0].Name);
 	}
 }
 #endif

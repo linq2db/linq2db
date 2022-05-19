@@ -1,13 +1,12 @@
-﻿namespace LinqToDB.CodeModel
+﻿namespace LinqToDB.CodeModel;
+
+/// <summary>
+/// <see cref="CodeLambda"/> object builder.
+/// </summary>
+public sealed class LambdaMethodBuilder : MethodBaseBuilder<LambdaMethodBuilder, CodeLambda>
 {
-	/// <summary>
-	/// <see cref="CodeLambda"/> object builder.
-	/// </summary>
-	public sealed class LambdaMethodBuilder : MethodBaseBuilder<LambdaMethodBuilder, CodeLambda>
+	internal LambdaMethodBuilder(CodeLambda method)
+		: base(method)
 	{
-		internal LambdaMethodBuilder(CodeLambda method)
-			: base(method)
-		{
-		}
 	}
 }

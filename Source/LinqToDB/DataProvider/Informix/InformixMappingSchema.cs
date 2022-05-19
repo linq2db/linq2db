@@ -2,127 +2,126 @@
 using System.Globalization;
 using System.Text;
 
-namespace LinqToDB.DataProvider.Informix
+namespace LinqToDB.DataProvider.Informix;
+
+using Mapping;
+using SqlQuery;
+
+sealed class InformixMappingSchema : LockedMappingSchema
 {
-	using Mapping;
-	using SqlQuery;
+	private const string DATE_FORMAT               = "TO_DATE('{0:yyyy-MM-dd}', '%Y-%m-%d')";
+	private const string DATETIME_FORMAT           = "TO_DATE('{0:yyyy-MM-dd HH:mm:ss}', '%Y-%m-%d %H:%M:%S')";
+	private const string DATETIME5_EXPLICIT_FORMAT = "TO_DATE('{0:yyyy-MM-dd HH:mm:ss.fffff}', '%Y-%m-%d %H:%M:%S.%F5')";
+	private const string DATETIME5_FORMAT          = "TO_DATE('{0:yyyy-MM-dd HH:mm:ss.fffff}', '%Y-%m-%d %H:%M:%S%F5')";
+	private const string INTERVAL5_FORMAT          = "INTERVAL({0} {1:00}:{2:00}:{3:00}.{4:00000}) DAY TO FRACTION(5)";
 
-	sealed class InformixMappingSchema : LockedMappingSchema
+	static readonly char[] _extraEscapes = { '\r', '\n' };
+
+	InformixMappingSchema() : base(ProviderName.Informix)
 	{
-		private const string DATE_FORMAT               = "TO_DATE('{0:yyyy-MM-dd}', '%Y-%m-%d')";
-		private const string DATETIME_FORMAT           = "TO_DATE('{0:yyyy-MM-dd HH:mm:ss}', '%Y-%m-%d %H:%M:%S')";
-		private const string DATETIME5_EXPLICIT_FORMAT = "TO_DATE('{0:yyyy-MM-dd HH:mm:ss.fffff}', '%Y-%m-%d %H:%M:%S.%F5')";
-		private const string DATETIME5_FORMAT          = "TO_DATE('{0:yyyy-MM-dd HH:mm:ss.fffff}', '%Y-%m-%d %H:%M:%S%F5')";
-		private const string INTERVAL5_FORMAT          = "INTERVAL({0} {1:00}:{2:00}:{3:00}.{4:00000}) DAY TO FRACTION(5)";
+		ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 
-		static readonly char[] _extraEscapes = { '\r', '\n' };
+		SetValueToSqlConverter(typeof(bool), (sb,dt,v) => sb.Append('\'').Append((bool)v ? 't' : 'f').Append('\''));
 
-		InformixMappingSchema() : base(ProviderName.Informix)
-		{
-			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
+		SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
+		SetDataType(typeof(byte),   new SqlDataType(DataType.Int16,    typeof(byte)));
+		SetDataType(typeof(byte?),  new SqlDataType(DataType.Int16,    typeof(byte)));
 
-			SetValueToSqlConverter(typeof(bool), (sb,dt,v) => sb.Append('\'').Append((bool)v ? 't' : 'f').Append('\''));
-
-			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
-			SetDataType(typeof(byte),   new SqlDataType(DataType.Int16,    typeof(byte)));
-			SetDataType(typeof(byte?),  new SqlDataType(DataType.Int16,    typeof(byte)));
-
-			SetValueToSqlConverter(typeof(string),   (sb,dt,v) => ConvertStringToSql  (sb, v.ToString()!));
-			SetValueToSqlConverter(typeof(char),     (sb,dt,v) => ConvertCharToSql    (sb, (char)v));
-			SetValueToSqlConverter(typeof(DateTime), (sb,dt,v) => ConvertDateTimeToSql(sb, dt, (DateTime)v));
-			SetValueToSqlConverter(typeof(TimeSpan), (sb,dt,v) => BuildIntervalLiteral(sb, (TimeSpan)v));
+		SetValueToSqlConverter(typeof(string),   (sb,dt,v) => ConvertStringToSql  (sb, v.ToString()!));
+		SetValueToSqlConverter(typeof(char),     (sb,dt,v) => ConvertCharToSql    (sb, (char)v));
+		SetValueToSqlConverter(typeof(DateTime), (sb,dt,v) => ConvertDateTimeToSql(sb, dt, (DateTime)v));
+		SetValueToSqlConverter(typeof(TimeSpan), (sb,dt,v) => BuildIntervalLiteral(sb, (TimeSpan)v));
 
 #if NET6_0_OR_GREATER
-			SetValueToSqlConverter(typeof(DateOnly), (sb,dt,v) => ConvertDateOnlyToSql(sb, dt, (DateOnly)v));
+		SetValueToSqlConverter(typeof(DateOnly), (sb,dt,v) => ConvertDateOnlyToSql(sb, dt, (DateOnly)v));
 #endif
-		}
+	}
 
-		private void BuildIntervalLiteral(StringBuilder sb, TimeSpan interval)
+	private void BuildIntervalLiteral(StringBuilder sb, TimeSpan interval)
+	{
+		// for now just generate DAYS TO FRACTION(5) interval, hardly anyone needs YEAR TO MONTH one
+		// and if he needs, it is easy to workaround by adding another one converter to mapping schema
+		var absoluteTs = interval < TimeSpan.Zero ? (TimeSpan.Zero - interval) : interval;
+		sb.AppendFormat(
+			CultureInfo.InvariantCulture,
+			INTERVAL5_FORMAT,
+			interval.Days,
+			absoluteTs.Hours,
+			absoluteTs.Minutes,
+			absoluteTs.Seconds,
+			(absoluteTs.Ticks / 100) % 100000);
+	}
+
+	static readonly Action<StringBuilder,int> _appendConversionAction = AppendConversion;
+
+	static void AppendConversion(StringBuilder stringBuilder, int value)
+	{
+		// chr works with values in 0..255 range, bigger/smaller values will be converted to byte
+		// this is fine as long as we don't have out-of-range characters in _extraEscapes
+		stringBuilder
+			.Append("chr(")
+			.Append(value)
+			.Append(')')
+			;
+	}
+
+	static void ConvertStringToSql(StringBuilder stringBuilder, string value)
+	{
+		DataTools.ConvertStringToSql(stringBuilder, "||", null, _appendConversionAction, value, _extraEscapes);
+	}
+
+	static void ConvertCharToSql(StringBuilder stringBuilder, char value)
+	{
+		switch (value)
 		{
-			// for now just generate DAYS TO FRACTION(5) interval, hardly anyone needs YEAR TO MONTH one
-			// and if he needs, it is easy to workaround by adding another one converter to mapping schema
-			var absoluteTs = interval < TimeSpan.Zero ? (TimeSpan.Zero - interval) : interval;
-			sb.AppendFormat(
-				CultureInfo.InvariantCulture,
-				INTERVAL5_FORMAT,
-				interval.Days,
-				absoluteTs.Hours,
-				absoluteTs.Minutes,
-				absoluteTs.Seconds,
-				(absoluteTs.Ticks / 100) % 100000);
+			case '\r':
+			case '\n':
+				AppendConversion(stringBuilder, value);
+				break;
+			default:
+				DataTools.ConvertCharToSql(stringBuilder, "'", _appendConversionAction, value);
+				break;
 		}
+	}
 
-		static readonly Action<StringBuilder,int> _appendConversionAction = AppendConversion;
+	static void ConvertDateTimeToSql(StringBuilder stringBuilder, SqlDataType dataType, DateTime value)
+	{
+		// datetime literal using TO_DATE function used because it works with all kinds of datetime ranges
+		// without generation of range-specific literals
+		// see Issue1307Tests tests
+		string format;
+		if ((value.Ticks % 10000000) / 100 != 0)
+			format = InformixConfiguration.ExplicitFractionalSecondsSeparator ?
+				DATETIME5_EXPLICIT_FORMAT :
+				DATETIME5_FORMAT;
+		else
+			format = value.Hour == 0 && value.Minute == 0 && value.Second == 0
+				? DATE_FORMAT
+				: DATETIME_FORMAT;
 
-		static void AppendConversion(StringBuilder stringBuilder, int value)
-		{
-			// chr works with values in 0..255 range, bigger/smaller values will be converted to byte
-			// this is fine as long as we don't have out-of-range characters in _extraEscapes
-			stringBuilder
-				.Append("chr(")
-				.Append(value)
-				.Append(')')
-				;
-		}
-
-		static void ConvertStringToSql(StringBuilder stringBuilder, string value)
-		{
-			DataTools.ConvertStringToSql(stringBuilder, "||", null, _appendConversionAction, value, _extraEscapes);
-		}
-
-		static void ConvertCharToSql(StringBuilder stringBuilder, char value)
-		{
-			switch (value)
-			{
-				case '\r':
-				case '\n':
-					AppendConversion(stringBuilder, value);
-					break;
-				default:
-					DataTools.ConvertCharToSql(stringBuilder, "'", _appendConversionAction, value);
-					break;
-			}
-		}
-
-		static void ConvertDateTimeToSql(StringBuilder stringBuilder, SqlDataType dataType, DateTime value)
-		{
-			// datetime literal using TO_DATE function used because it works with all kinds of datetime ranges
-			// without generation of range-specific literals
-			// see Issue1307Tests tests
-			string format;
-			if ((value.Ticks % 10000000) / 100 != 0)
-				format = InformixConfiguration.ExplicitFractionalSecondsSeparator ?
-					DATETIME5_EXPLICIT_FORMAT :
-					DATETIME5_FORMAT;
-			else
-				format = value.Hour == 0 && value.Minute == 0 && value.Second == 0
-					? DATE_FORMAT
-					: DATETIME_FORMAT;
-
-			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, value);
-		}
+		stringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, value);
+	}
 
 #if NET6_0_OR_GREATER
-		static void ConvertDateOnlyToSql(StringBuilder stringBuilder, SqlDataType dataType, DateOnly value)
-		{
-			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATE_FORMAT, value);
-		}
+	static void ConvertDateOnlyToSql(StringBuilder stringBuilder, SqlDataType dataType, DateOnly value)
+	{
+		stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATE_FORMAT, value);
+	}
 #endif
 
-		internal static readonly InformixMappingSchema Instance = new ();
+	internal static readonly InformixMappingSchema Instance = new ();
 
-		public sealed class IfxMappingSchema : LockedMappingSchema
+	public sealed class IfxMappingSchema : LockedMappingSchema
+	{
+		public IfxMappingSchema() : base(ProviderName.Informix, InformixProviderAdapter.GetInstance(ProviderName.Informix).MappingSchema, Instance)
 		{
-			public IfxMappingSchema() : base(ProviderName.Informix, InformixProviderAdapter.GetInstance(ProviderName.Informix).MappingSchema, Instance)
-			{
-			}
 		}
+	}
 
-		public sealed class DB2MappingSchema : LockedMappingSchema
+	public sealed class DB2MappingSchema : LockedMappingSchema
+	{
+		public DB2MappingSchema() : base(ProviderName.InformixDB2, InformixProviderAdapter.GetInstance(ProviderName.InformixDB2).MappingSchema, Instance)
 		{
-			public DB2MappingSchema() : base(ProviderName.InformixDB2, InformixProviderAdapter.GetInstance(ProviderName.InformixDB2).MappingSchema, Instance)
-			{
-			}
 		}
 	}
 }

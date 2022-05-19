@@ -2,24 +2,23 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Tests
+namespace Tests;
+
+[AttributeUsage(AttributeTargets.Parameter)]
+public class IncludeDataSourcesAttribute : DataSourcesBaseAttribute
 {
-	[AttributeUsage(AttributeTargets.Parameter)]
-	public class IncludeDataSourcesAttribute : DataSourcesBaseAttribute
+	public IncludeDataSourcesAttribute(params string[] includeProviders)
+		: base(false, includeProviders)
 	{
-		public IncludeDataSourcesAttribute(params string[] includeProviders)
-			: base(false, includeProviders)
-		{
-		}
+	}
 
-		public IncludeDataSourcesAttribute(bool includeLinqService, params string[] includeProviders)
-			: base(includeLinqService, includeProviders)
-		{
-		}
+	public IncludeDataSourcesAttribute(bool includeLinqService, params string[] includeProviders)
+		: base(includeLinqService, includeProviders)
+	{
+	}
 
-		protected override IEnumerable<string> GetProviders()
-		{
-			return Providers.Intersect(TestBase.UserProviders);
-		}
+	protected override IEnumerable<string> GetProviders()
+	{
+		return Providers.Intersect(TestBase.UserProviders);
 	}
 }

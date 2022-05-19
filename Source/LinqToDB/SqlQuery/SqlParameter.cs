@@ -3,164 +3,163 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text;
 
-namespace LinqToDB.SqlQuery
+namespace LinqToDB.SqlQuery;
+
+using Common;
+
+public class SqlParameter : ISqlExpression
 {
-	using Common;
-
-	public class SqlParameter : ISqlExpression
+	public SqlParameter(DbDataType type, string? name, object? value)
 	{
-		public SqlParameter(DbDataType type, string? name, object? value)
-		{
-			IsQueryParameter = true;
-			Name             = name;
-			Type             = type;
-			Value            = value;
+		IsQueryParameter = true;
+		Name             = name;
+		Type             = type;
+		Value            = value;
 
 #if DEBUG
-			_paramNumber = ++_paramCounter;
+		_paramNumber = ++_paramCounter;
 #endif
-		}
+	}
 
 #if DEBUG
-		readonly int _paramNumber;
-		static   int _paramCounter;
+	readonly int _paramNumber;
+	static   int _paramCounter;
 #endif
 
-		// meh, nullable...
-		public string?    Name             { get; set; }
-		public DbDataType Type             { get; set; }
-		public bool       IsQueryParameter { get; set; }
-		internal int?     AccessorId       { get; set; }
+	// meh, nullable...
+	public string?    Name             { get; set; }
+	public DbDataType Type             { get; set; }
+	public bool       IsQueryParameter { get; set; }
+	internal int?     AccessorId       { get; set; }
 
-		Type ISqlExpression.SystemType => Type.SystemType;
+	Type ISqlExpression.SystemType => Type.SystemType;
 
-		public object?    Value            { get; }
+	public object?    Value            { get; }
 
-		public object? CorrectParameterValue(object? rawValue)
+	public object? CorrectParameterValue(object? rawValue)
+	{
+		var value = rawValue;
+
+		var valueConverter = ValueConverter;
+		return valueConverter == null ? value : valueConverter(value);
+	}
+
+	#region Value Converter
+
+	internal List<int>? TakeValues;
+
+	private Func<object?, object?>? _valueConverter;
+	public  Func<object?, object?>?  ValueConverter
+	{
+		get
 		{
-			var value = rawValue;
+			if (_valueConverter == null && TakeValues != null)
+				foreach (var take in TakeValues.ToArray())
+					SetTakeConverter(take);
 
-			var valueConverter = ValueConverter;
-			return valueConverter == null ? value : valueConverter(value);
+			return _valueConverter;
 		}
 
-		#region Value Converter
+		set => _valueConverter = value;
+	}
 
-		internal List<int>? TakeValues;
+	internal void SetTakeConverter(int take)
+	{
+		if (TakeValues == null)
+			TakeValues = new List<int>();
 
-		private Func<object?, object?>? _valueConverter;
-		public  Func<object?, object?>?  ValueConverter
-		{
-			get
-			{
-				if (_valueConverter == null && TakeValues != null)
-					foreach (var take in TakeValues.ToArray())
-						SetTakeConverter(take);
+		TakeValues.Add(take);
 
-				return _valueConverter;
-			}
+		SetTakeConverterInternal(take);
+	}
 
-			set => _valueConverter = value;
-		}
+	void SetTakeConverterInternal(int take)
+	{
+		var conv = _valueConverter;
 
-		internal void SetTakeConverter(int take)
-		{
-			if (TakeValues == null)
-				TakeValues = new List<int>();
+		if (conv == null)
+			_valueConverter = v => v == null ? null : ((int) v + take);
+		else
+			_valueConverter = v => v == null ? null : ((int) conv(v)! + take);
+	}
 
-			TakeValues.Add(take);
+	#endregion
 
-			SetTakeConverterInternal(take);
-		}
-
-		void SetTakeConverterInternal(int take)
-		{
-			var conv = _valueConverter;
-
-			if (conv == null)
-				_valueConverter = v => v == null ? null : ((int) v + take);
-			else
-				_valueConverter = v => v == null ? null : ((int) conv(v)! + take);
-		}
-
-		#endregion
-
-		#region Overrides
+	#region Overrides
 
 #if OVERRIDETOSTRING
 
-		public override string ToString()
-		{
-			return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
-		}
+	public override string ToString()
+	{
+		return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
+	}
 
 #endif
 
-		#endregion
+	#endregion
 
-		#region ISqlExpression Members
+	#region ISqlExpression Members
 
-		public int Precedence => SqlQuery.Precedence.Primary;
+	public int Precedence => SqlQuery.Precedence.Primary;
 
-		#endregion
+	#endregion
 
-		#region ISqlExpressionWalkable Members
+	#region ISqlExpressionWalkable Members
 
-		ISqlExpression ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-		{
-			return func(context, this);
-		}
+	ISqlExpression ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
+	{
+		return func(context, this);
+	}
 
-		#endregion
+	#endregion
 
-		#region IEquatable<ISqlExpression> Members
+	#region IEquatable<ISqlExpression> Members
 
-		bool IEquatable<ISqlExpression>.Equals(ISqlExpression? other)
-		{
-			return ReferenceEquals(this, other);
-		}
+	bool IEquatable<ISqlExpression>.Equals(ISqlExpression? other)
+	{
+		return ReferenceEquals(this, other);
+	}
 
-		public override int GetHashCode()
-		{
-			return RuntimeHelpers.GetHashCode(this);
-		}
+	public override int GetHashCode()
+	{
+		return RuntimeHelpers.GetHashCode(this);
+	}
 
-		#endregion
+	#endregion
 
-		#region ISqlExpression Members
+	#region ISqlExpression Members
 
-		public bool CanBeNull => SqlDataType.TypeCanBeNull(Type.SystemType);
+	public bool CanBeNull => SqlDataType.TypeCanBeNull(Type.SystemType);
 
-		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
-		{
-			return ((ISqlExpression)this).Equals(other) && comparer(this, other);
-		}
+	public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
+	{
+		return ((ISqlExpression)this).Equals(other) && comparer(this, other);
+	}
 
-		#endregion
+	#endregion
 
-		#region IQueryElement Members
+	#region IQueryElement Members
 
-		public QueryElementType ElementType => QueryElementType.SqlParameter;
+	public QueryElementType ElementType => QueryElementType.SqlParameter;
 
-		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
-		{
-			if (Name?.StartsWith("@") == false)
-				sb.Append('@');
+	StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
+	{
+		if (Name?.StartsWith("@") == false)
+			sb.Append('@');
 
-			sb
-				.Append(Name ?? "parameter");
+		sb
+			.Append(Name ?? "parameter");
 
 #if DEBUG
-			sb.Append('(').Append(_paramNumber).Append(')');
+		sb.Append('(').Append(_paramNumber).Append(')');
 #endif
-			if (Value != null)
-				sb
-					.Append('[')
-					.Append(Value)
-					.Append(']');
-			return sb;
-		}
-
-		#endregion
+		if (Value != null)
+			sb
+				.Append('[')
+				.Append(Value)
+				.Append(']');
+		return sb;
 	}
+
+	#endregion
 }

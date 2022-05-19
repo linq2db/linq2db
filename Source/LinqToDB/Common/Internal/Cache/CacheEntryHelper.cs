@@ -4,63 +4,62 @@
 using System;
 using System.Threading;
 
-namespace LinqToDB.Common.Internal.Cache
+namespace LinqToDB.Common.Internal.Cache;
+
+internal class CacheEntryHelper<TKey>
+		where TKey : notnull
 {
-	internal class CacheEntryHelper<TKey>
-			where TKey : notnull
+	private static readonly AsyncLocal<CacheEntryStack<TKey>> _scopes = new ();
+
+	internal static CacheEntryStack<TKey>? Scopes
 	{
-		private static readonly AsyncLocal<CacheEntryStack<TKey>> _scopes = new ();
+		get => _scopes.Value;
+		set => _scopes.Value = value!;
+	}
 
-		internal static CacheEntryStack<TKey>? Scopes
-		{
-			get => _scopes.Value;
-			set => _scopes.Value = value!;
-		}
-
-		internal static CacheEntry<TKey>? Current
-		{
-			get
-			{
-				var scopes = GetOrCreateScopes();
-				return scopes.Peek();
-			}
-		}
-
-		internal static IDisposable EnterScope(CacheEntry<TKey> entry)
+	internal static CacheEntry<TKey>? Current
+	{
+		get
 		{
 			var scopes = GetOrCreateScopes();
+			return scopes.Peek();
+		}
+	}
 
-			var scopeLease = new ScopeLease(scopes);
-			Scopes = scopes.Push(entry);
+	internal static IDisposable EnterScope(CacheEntry<TKey> entry)
+	{
+		var scopes = GetOrCreateScopes();
 
-			return scopeLease;
+		var scopeLease = new ScopeLease(scopes);
+		Scopes = scopes.Push(entry);
+
+		return scopeLease;
+	}
+
+	private static CacheEntryStack<TKey> GetOrCreateScopes()
+	{
+		var scopes = Scopes;
+		if (scopes == null)
+		{
+			scopes = CacheEntryStack<TKey>.Empty;
+			Scopes = scopes;
 		}
 
-		private static CacheEntryStack<TKey> GetOrCreateScopes()
-		{
-			var scopes = Scopes;
-			if (scopes == null)
-			{
-				scopes = CacheEntryStack<TKey>.Empty;
-				Scopes = scopes;
-			}
+		return scopes;
+	}
 
-			return scopes;
+	private sealed class ScopeLease : IDisposable
+	{
+		readonly CacheEntryStack<TKey> _cacheEntryStack;
+
+		public ScopeLease(CacheEntryStack<TKey> cacheEntryStack)
+		{
+			_cacheEntryStack = cacheEntryStack;
 		}
 
-		private sealed class ScopeLease : IDisposable
+		public void Dispose()
 		{
-			readonly CacheEntryStack<TKey> _cacheEntryStack;
-
-			public ScopeLease(CacheEntryStack<TKey> cacheEntryStack)
-			{
-				_cacheEntryStack = cacheEntryStack;
-			}
-
-			public void Dispose()
-			{
-				Scopes = _cacheEntryStack;
-			}
+			Scopes = _cacheEntryStack;
 		}
 	}
 }

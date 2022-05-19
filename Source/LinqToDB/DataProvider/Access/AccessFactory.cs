@@ -2,16 +2,15 @@
 
 using JetBrains.Annotations;
 
-namespace LinqToDB.DataProvider.Access
-{
-	using Configuration;
+namespace LinqToDB.DataProvider.Access;
 
-	[UsedImplicitly]
-	class AccessFactory : IDataProviderFactory
+using Configuration;
+
+[UsedImplicitly]
+class AccessFactory : IDataProviderFactory
+{
+	IDataProvider IDataProviderFactory.GetDataProvider(IEnumerable<NamedValue> attributes)
 	{
-		IDataProvider IDataProviderFactory.GetDataProvider(IEnumerable<NamedValue> attributes)
-		{
-			return AccessTools.GetDataProvider();
-		}
+		return AccessTools.GetDataProvider();
 	}
 }

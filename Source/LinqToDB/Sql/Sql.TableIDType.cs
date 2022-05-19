@@ -1,14 +1,13 @@
 ﻿using System;
 
-namespace LinqToDB
+namespace LinqToDB;
+
+public partial class Sql
 {
-	public partial class Sql
+	public enum SqlIDType
 	{
-		public enum SqlIDType
-		{
-			TableAlias,
-			TableName,
-			TableSpec
-		}
+		TableAlias,
+		TableName,
+		TableSpec
 	}
 }

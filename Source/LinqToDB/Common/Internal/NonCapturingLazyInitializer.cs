@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Threading;
 
-namespace LinqToDB.Common.Internal
-{
+namespace LinqToDB.Common.Internal;
+
     internal static class NonCapturingLazyInitializer
     {
         public static TValue EnsureInitialized<TParam, TValue>(
@@ -71,4 +71,4 @@ namespace LinqToDB.Common.Internal
 
             return Volatile.Read(ref target)!;
         }
-    }}
+    }

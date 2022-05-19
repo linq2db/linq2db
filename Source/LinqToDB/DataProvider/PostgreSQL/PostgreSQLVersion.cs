@@ -1,9 +1,8 @@
-﻿namespace LinqToDB.DataProvider.PostgreSQL
+﻿namespace LinqToDB.DataProvider.PostgreSQL;
+
+public enum PostgreSQLVersion
 {
-	public enum PostgreSQLVersion
-	{
-		v92,
-		v93,
-		v95,
-	}
+	v92,
+	v93,
+	v95,
 }

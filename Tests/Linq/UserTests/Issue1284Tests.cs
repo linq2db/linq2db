@@ -3,115 +3,114 @@ using LinqToDB;
 using NUnit.Framework;
 using Tests.Linq;
 
-namespace Tests.UserTests
+namespace Tests.UserTests;
+
+[TestFixture]
+public class Issue1284Tests : TestBase
 {
-	[TestFixture]
-	public class Issue1284Tests : TestBase
+	[Test]
+	public void TestCteExpressionIsNotATable([CteTests.CteContextSource] string context)
 	{
-		[Test]
-		public void TestCteExpressionIsNotATable([CteTests.CteContextSource] string context)
+		using (var db = GetDataContext(context))
 		{
-			using (var db = GetDataContext(context))
-			{
-				var query = db.Person.Select(person => new { entry = person });
-				var cte   = query.AsCte();
+			var query = db.Person.Select(person => new { entry = person });
+			var cte   = query.AsCte();
 
-				var result   = cte.Where(x => x.entry.ID == 1).ToList();
-				var expected = query.Where(x => x.entry.ID == 1).ToList();
+			var result   = cte.Where(x => x.entry.ID == 1).ToList();
+			var expected = query.Where(x => x.entry.ID == 1).ToList();
 
-				AreEqual(expected, result);
-			}
+			AreEqual(expected, result);
 		}
+	}
 
-		[Test]
-		public void TestCteNoFieldList([CteTests.CteContextSource] string context)
+	[Test]
+	public void TestCteNoFieldList([CteTests.CteContextSource] string context)
+	{
+		using (var db = GetDataContext(context))
 		{
-			using (var db = GetDataContext(context))
-			{
-				var query = db.Person
-					.Select(person => new { entry = person, rn = 1 })
-					.Where(x => x.rn == 1)
-					.Select(x => x.entry);
+			var query = db.Person
+				.Select(person => new { entry = person, rn = 1 })
+				.Where(x => x.rn == 1)
+				.Select(x => x.entry);
 
-				var cte = query
-					.AsCte("cte");
+			var cte = query
+				.AsCte("cte");
 
-				var expected = query;
+			var expected = query;
 
-				AreEqual(expected, cte);
-			}
+			AreEqual(expected, cte);
 		}
+	}
 
-		[Test]
-		public void TestCteInvalidMapping([CteTests.CteContextSource] string context)
+	[Test]
+	public void TestCteInvalidMapping([CteTests.CteContextSource] string context)
+	{
+		using (var db = GetDataContext(context))
 		{
-			using (var db = GetDataContext(context))
-			{
-				var query = db.Person
-					.Select(person => new { entry = person, rn = 1 })
-					.Where(x => x.rn == 1);
+			var query = db.Person
+				.Select(person => new { entry = person, rn = 1 })
+				.Where(x => x.rn == 1);
 
-				var cte = query
-					.AsCte();
+			var cte = query
+				.AsCte();
 
-				var item = cte.First();
+			var item = cte.First();
 
-				var expected = query
-					.First();
+			var expected = query
+				.First();
 
-				Assert.AreEqual(expected, item);
-			}
+			Assert.AreEqual(expected, item);
 		}
+	}
 
-		[Test]
-		public void TestCteInvalidMappingUnion([CteTests.CteContextSource] string context)
+	[Test]
+	public void TestCteInvalidMappingUnion([CteTests.CteContextSource] string context)
+	{
+		using (var db = GetDataContext(context))
 		{
-			using (var db = GetDataContext(context))
-			{
-				var query = db.Person
-					.Select(person => new { entry = person, rn = 1 })
-					.Concat(db.Person
-					.Select(person => new { entry = person, rn = 2 }))
-					.Where(x => x.rn == 1);
+			var query = db.Person
+				.Select(person => new { entry = person, rn = 1 })
+				.Concat(db.Person
+				.Select(person => new { entry = person, rn = 2 }))
+				.Where(x => x.rn == 1);
 
-				var cte = query
-					.AsCte();
+			var cte = query
+				.AsCte();
 
-				var item = cte.First();
+			var item = cte.First();
 
-				var expected = query
-					.First();
+			var expected = query
+				.First();
 
-				Assert.AreEqual(expected, item);
-			}
+			Assert.AreEqual(expected, item);
 		}
+	}
 
-		[Test]
-		public void TestCteReservedWords([CteTests.CteContextSource] string context)
+	[Test]
+	public void TestCteReservedWords([CteTests.CteContextSource] string context)
+	{
+		using (var db = GetDataContext(context))
 		{
-			using (var db = GetDataContext(context))
-			{
-				var query = db.Person
-					.Select(person => new
+			var query = db.Person
+				.Select(person => new
+				{
+					x = new
 					{
-						x = new
+						Obj = new
 						{
-							Obj = new
-							{
-								Operator = person.LastName
-							}
-						},
-					})
-					.Select(x => x.x);
+							Operator = person.LastName
+						}
+					},
+				})
+				.Select(x => x.x);
 
-				var cte = query
-					.AsCte();
+			var cte = query
+				.AsCte();
 
-				var item = cte.FirstOrDefault();
-				var expected = query.FirstOrDefault();
+			var item = cte.FirstOrDefault();
+			var expected = query.FirstOrDefault();
 
-				Assert.AreEqual(expected, item);
-			}
+			Assert.AreEqual(expected, item);
 		}
 	}
 }

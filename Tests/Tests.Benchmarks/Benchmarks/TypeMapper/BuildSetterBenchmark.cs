@@ -2,64 +2,63 @@
 using System.Data;
 using BenchmarkDotNet.Attributes;
 
-namespace LinqToDB.Benchmarks.TypeMapping
+namespace LinqToDB.Benchmarks.TypeMapping;
+
+// shows small performance degradation due to indirect call
+public class BuildSetterBenchmark
 {
-	// shows small performance degradation due to indirect call
-	public class BuildSetterBenchmark
+	private static readonly string Parameter = "TestString";
+
+	private Original.TestClass _classInstance = new Original.TestClass();
+
+	private Action<ITestClass, Wrapped.TestEnum> _enumPropertySetter = null!;
+	private Action<ITestClass, SqlDbType       > _knownEnumPropertySetter = null!;
+	private Action<ITestClass, string          > _stringPropertySetter = null!;
+
+	[GlobalSetup]
+	public void Setup()
 	{
-		private static readonly string Parameter = "TestString";
+		var typeMapper           = Wrapped.Helper.CreateTypeMapper();
+		var typeBuilder          = typeMapper.Type<Wrapped.TestClass>();
 
-		private Original.TestClass _classInstance = new Original.TestClass();
+		_enumPropertySetter      = typeBuilder.Member(p => p.EnumProperty     ).BuildSetter<ITestClass>();
+		_knownEnumPropertySetter = typeBuilder.Member(p => p.KnownEnumProperty).BuildSetter<ITestClass>();
+		_stringPropertySetter    = typeBuilder.Member(p => p.StringProperty   ).BuildSetter<ITestClass>();
+	}
 
-		private Action<ITestClass, Wrapped.TestEnum> _enumPropertySetter = null!;
-		private Action<ITestClass, SqlDbType       > _knownEnumPropertySetter = null!;
-		private Action<ITestClass, string          > _stringPropertySetter = null!;
+	[Benchmark]
+	public void TypeMapperAsEnum()
+	{
+		_enumPropertySetter(_classInstance, Wrapped.TestEnum.Three);
+	}
 
-		[GlobalSetup]
-		public void Setup()
-		{
-			var typeMapper           = Wrapped.Helper.CreateTypeMapper();
-			var typeBuilder          = typeMapper.Type<Wrapped.TestClass>();
+	[Benchmark(Baseline = true)]
+	public void DirectAccessAsEnum()
+	{
+		_classInstance.EnumProperty = Original.TestEnum.Three;
+	}
 
-			_enumPropertySetter      = typeBuilder.Member(p => p.EnumProperty     ).BuildSetter<ITestClass>();
-			_knownEnumPropertySetter = typeBuilder.Member(p => p.KnownEnumProperty).BuildSetter<ITestClass>();
-			_stringPropertySetter    = typeBuilder.Member(p => p.StringProperty   ).BuildSetter<ITestClass>();
-		}
+	[Benchmark]
+	public void TypeMapperAsKnownEnum()
+	{
+		_knownEnumPropertySetter(_classInstance, SqlDbType.BigInt);
+	}
 
-		[Benchmark]
-		public void TypeMapperAsEnum()
-		{
-			_enumPropertySetter(_classInstance, Wrapped.TestEnum.Three);
-		}
+	[Benchmark]
+	public void DirectAccessAsKnownEnum()
+	{
+		_classInstance.KnownEnumProperty = SqlDbType.BigInt;
+	}
 
-		[Benchmark(Baseline = true)]
-		public void DirectAccessAsEnum()
-		{
-			_classInstance.EnumProperty = Original.TestEnum.Three;
-		}
+	[Benchmark]
+	public void TypeMapperAsString()
+	{
+		_stringPropertySetter(_classInstance, Parameter);
+	}
 
-		[Benchmark]
-		public void TypeMapperAsKnownEnum()
-		{
-			_knownEnumPropertySetter(_classInstance, SqlDbType.BigInt);
-		}
-
-		[Benchmark]
-		public void DirectAccessAsKnownEnum()
-		{
-			_classInstance.KnownEnumProperty = SqlDbType.BigInt;
-		}
-
-		[Benchmark]
-		public void TypeMapperAsString()
-		{
-			_stringPropertySetter(_classInstance, Parameter);
-		}
-
-		[Benchmark]
-		public void DirectAccessAsString()
-		{
-			_classInstance.StringProperty = Parameter;
-		}
+	[Benchmark]
+	public void DirectAccessAsString()
+	{
+		_classInstance.StringProperty = Parameter;
 	}
 }

@@ -5,41 +5,40 @@ using System.Reflection;
 using LinqToDB.Common;
 using LinqToDB.Expressions;
 
-namespace LinqToDB.Data
+namespace LinqToDB.Data;
+
+internal static class TransactionScopeHelper
 {
-	internal static class TransactionScopeHelper
+	static readonly Func<bool> _getInScopeFunc = GetTransactionScopeFunc();
+
+	public static bool IsInsideTransactionScope => _getInScopeFunc();
+
+	static Func<bool> GetTransactionScopeFunc()
 	{
-		static readonly Func<bool> _getInScopeFunc = GetTransactionScopeFunc();
-
-		public static bool IsInsideTransactionScope => _getInScopeFunc();
-
-		static Func<bool> GetTransactionScopeFunc()
-		{
-			// netfx:   "System.Transactions"
-			// netcore: "System.Transactions.Local"
-			// check for both names as I'm not sure how it will work with netstandard builds
-			var assembly = AppDomain.CurrentDomain.GetAssemblies()
-				.FirstOrDefault(a =>
-				{
-					var n = a.GetName().Name;
-					return n == "System.Transactions" || n == "System.Transactions.Local";
-				});
-
-			if (assembly != null)
+		// netfx:   "System.Transactions"
+		// netcore: "System.Transactions.Local"
+		// check for both names as I'm not sure how it will work with netstandard builds
+		var assembly = AppDomain.CurrentDomain.GetAssemblies()
+			.FirstOrDefault(a =>
 			{
-				var t = assembly.GetType("System.Transactions.Transaction");
-				
-				var currentDataProperty = t?.GetProperty("Current", BindingFlags.Public | BindingFlags.Static);
-				if (currentDataProperty != null)
-				{
-					var body   = Expression.NotEqual(Expression.MakeMemberAccess(null, currentDataProperty),
-						ExpressionInstances.UntypedNull);
-					var lambda = Expression.Lambda<Func<bool>>(body);
-					return lambda.CompileExpression();
-				}
-			}
+				var n = a.GetName().Name;
+				return n == "System.Transactions" || n == "System.Transactions.Local";
+			});
 
-			return () => false;
+		if (assembly != null)
+		{
+			var t = assembly.GetType("System.Transactions.Transaction");
+			
+			var currentDataProperty = t?.GetProperty("Current", BindingFlags.Public | BindingFlags.Static);
+			if (currentDataProperty != null)
+			{
+				var body   = Expression.NotEqual(Expression.MakeMemberAccess(null, currentDataProperty),
+					ExpressionInstances.UntypedNull);
+				var lambda = Expression.Lambda<Func<bool>>(body);
+				return lambda.CompileExpression();
+			}
 		}
+
+		return () => false;
 	}
 }

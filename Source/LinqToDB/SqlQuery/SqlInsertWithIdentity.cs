@@ -1,7 +1,6 @@
-﻿namespace LinqToDB.SqlQuery
+﻿namespace LinqToDB.SqlQuery;
+
+public class SqlInsertWithIdentity
 {
-	public class SqlInsertWithIdentity
-	{
-		
-	}
+	
 }

@@ -1,16 +1,15 @@
 ﻿using JetBrains.Annotations;
 
-namespace LinqToDB.DataProvider.MySql
-{
-	using System.Collections.Generic;
-	using Configuration;
+namespace LinqToDB.DataProvider.MySql;
 
-	[UsedImplicitly]
-	class MySqlFactory : IDataProviderFactory
+using System.Collections.Generic;
+using Configuration;
+
+[UsedImplicitly]
+class MySqlFactory : IDataProviderFactory
+{
+	IDataProvider IDataProviderFactory.GetDataProvider(IEnumerable<NamedValue> attributes)
 	{
-		IDataProvider IDataProviderFactory.GetDataProvider(IEnumerable<NamedValue> attributes)
-		{
-			return MySqlTools.GetDataProvider();
-		}
+		return MySqlTools.GetDataProvider();
 	}
 }

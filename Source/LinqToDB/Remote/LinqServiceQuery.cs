@@ -1,12 +1,11 @@
 ﻿using System.Collections.Generic;
 
-namespace LinqToDB.Remote
-{
-	using SqlQuery;
+namespace LinqToDB.Remote;
 
-	public class LinqServiceQuery
-	{
-		public SqlStatement                 Statement  { get; set; } = null!;
-		public IReadOnlyCollection<string>? QueryHints { get; set; }
-	}
+using SqlQuery;
+
+public class LinqServiceQuery
+{
+	public SqlStatement                 Statement  { get; set; } = null!;
+	public IReadOnlyCollection<string>? QueryHints { get; set; }
 }

@@ -1,10 +1,9 @@
 ﻿using System;
 
-namespace LinqToDB.Tools.Comparers
+namespace LinqToDB.Tools.Comparers;
+
+[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
+public class IgnoreComparisonAttribute: Attribute
 {
-	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
-	public class IgnoreComparisonAttribute: Attribute
-	{
-		
-	}
+	
 }

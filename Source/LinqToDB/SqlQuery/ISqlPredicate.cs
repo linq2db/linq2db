@@ -1,8 +1,7 @@
-﻿namespace LinqToDB.SqlQuery
+﻿namespace LinqToDB.SqlQuery;
+
+public interface ISqlPredicate : IQueryElement, ISqlExpressionWalkable
 {
-	public interface ISqlPredicate : IQueryElement, ISqlExpressionWalkable
-	{
-		bool CanBeNull  { get; }
-		int  Precedence { get; }
-	}
+	bool CanBeNull  { get; }
+	int  Precedence { get; }
 }

@@ -1,60 +1,59 @@
 ﻿using System.Data;
 using BenchmarkDotNet.Attributes;
 
-namespace LinqToDB.Benchmarks.TypeMapping
+namespace LinqToDB.Benchmarks.TypeMapping;
+
+// shows small performance degradation due to indirect call
+public class WrapActionBenchmark
 {
-	// shows small performance degradation due to indirect call
-	public class WrapActionBenchmark
+	private static readonly string      Parameter            = "TestString";
+	private static readonly IDataReader IDataReaderParameter = null!;
+
+	private Original.TestClass2 _originalInstance = null!;
+	private Wrapped.TestClass2  _wrapperInstance = null!;
+
+	[GlobalSetup]
+	public void Setup()
 	{
-		private static readonly string      Parameter            = "TestString";
-		private static readonly IDataReader IDataReaderParameter = null!;
+		var typeMapper    = Wrapped.Helper.CreateTypeMapper();
 
-		private Original.TestClass2 _originalInstance = null!;
-		private Wrapped.TestClass2  _wrapperInstance = null!;
+		_originalInstance = new Original.TestClass2(Parameter);
+		_wrapperInstance  = typeMapper.BuildWrappedFactory((string p) => new Wrapped.TestClass2(p))(Parameter);
+	}
 
-		[GlobalSetup]
-		public void Setup()
-		{
-			var typeMapper    = Wrapped.Helper.CreateTypeMapper();
+	[Benchmark]
+	public void TypeMapperAction()
+	{
+		_wrapperInstance.CreateDatabase();
+	}
 
-			_originalInstance = new Original.TestClass2(Parameter);
-			_wrapperInstance  = typeMapper.BuildWrappedFactory((string p) => new Wrapped.TestClass2(p))(Parameter);
-		}
+	[Benchmark(Baseline = true)]
+	public void DirectAccessAction()
+	{
+		_originalInstance.CreateDatabase();
+	}
 
-		[Benchmark]
-		public void TypeMapperAction()
-		{
-			_wrapperInstance.CreateDatabase();
-		}
+	[Benchmark]
+	public void TypeMapperActionWithCast()
+	{
+		_wrapperInstance.Dispose();
+	}
 
-		[Benchmark(Baseline = true)]
-		public void DirectAccessAction()
-		{
-			_originalInstance.CreateDatabase();
-		}
+	[Benchmark]
+	public void DirectAccessActionWithCast()
+	{
+		_originalInstance.Dispose();
+	}
 
-		[Benchmark]
-		public void TypeMapperActionWithCast()
-		{
-			_wrapperInstance.Dispose();
-		}
+	[Benchmark]
+	public void TypeMapperActionWithParameter()
+	{
+		_wrapperInstance.WriteToServer(IDataReaderParameter);
+	}
 
-		[Benchmark]
-		public void DirectAccessActionWithCast()
-		{
-			_originalInstance.Dispose();
-		}
-
-		[Benchmark]
-		public void TypeMapperActionWithParameter()
-		{
-			_wrapperInstance.WriteToServer(IDataReaderParameter);
-		}
-
-		[Benchmark]
-		public void DirectAccessActionWithParameter()
-		{
-			_originalInstance.WriteToServer(IDataReaderParameter);
-		}
+	[Benchmark]
+	public void DirectAccessActionWithParameter()
+	{
+		_originalInstance.WriteToServer(IDataReaderParameter);
 	}
 }

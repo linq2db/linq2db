@@ -3,20 +3,19 @@ using System.Data.Services.Providers;
 
 using NUnit.Framework;
 
-namespace Tests.Linq
-{
-	using Model;
-	using LinqToDB.Remote;
+namespace Tests.Linq;
 
-	[TestFixture]
-	public class DataServiceTests
+using Model;
+using LinqToDB.Remote;
+
+[TestFixture]
+public class DataServiceTests
+{
+	[Test]
+	public void Test1()
 	{
-		[Test]
-		public void Test1()
-		{
-			var ds = new DataService<NorthwindDB>();
-			var mp = ds.GetService(typeof(IDataServiceMetadataProvider));
-		}
+		var ds = new DataService<NorthwindDB>();
+		var mp = ds.GetService(typeof(IDataServiceMetadataProvider));
 	}
 }
 #endif

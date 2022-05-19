@@ -3,21 +3,20 @@
 using LinqToDB.Common.Internal;
 #endif
 
-namespace System.Threading.Tasks
+namespace System.Threading.Tasks;
+
+static class TaskEx
 {
-	static class TaskEx
+	public static Task CompletedTask
 	{
-		public static Task CompletedTask
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get
 		{
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get
-			{
 #if NET45
-				return TaskCache.False;
+			return TaskCache.False;
 #else
-				return Task.CompletedTask;
+			return Task.CompletedTask;
 #endif
-			}
 		}
 	}
 }

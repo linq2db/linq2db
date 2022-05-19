@@ -1,12 +1,11 @@
-﻿namespace LinqToDB.Configuration
+﻿namespace LinqToDB.Configuration;
+
+internal enum ConnectionSetupType
 {
-	internal enum ConnectionSetupType
-	{
-		DefaultConfiguration,
-		ConnectionString,
-		ConfigurationString,
-		Connection,
-		ConnectionFactory,
-		Transaction
-	}
+	DefaultConfiguration,
+	ConnectionString,
+	ConfigurationString,
+	Connection,
+	ConnectionFactory,
+	Transaction
 }

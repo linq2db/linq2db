@@ -1,10 +1,9 @@
 ﻿using System;
 
-namespace LinqToDB.SqlProvider
-{
-	using SqlQuery;
+namespace LinqToDB.SqlProvider;
 
-	class NoneExtensionBuilder : ISqlExtensionBuilder
-	{
-	}
+using SqlQuery;
+
+class NoneExtensionBuilder : ISqlExtensionBuilder
+{
 }

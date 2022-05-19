@@ -1,38 +1,37 @@
 ﻿using LinqToDB.Mapping;
 
-namespace Tests.Model
+namespace Tests.Model;
+
+public class OracleSpecific
 {
-	public class OracleSpecific
+	[Table("SEQUENCETEST")]
+	public class SequenceTest
 	{
-		[Table("SEQUENCETEST")]
-		public class SequenceTest
+		[Identity, SequenceName("SEQUENCETESTSEQ")]
+		public int    ID;
+		[Column("VALUE")]
+		public string Value = null!;
+	}
+
+	public class StringTest
+	{
+		public string  KeyValue = null!;
+		public string? StringValue1;
+		public string? StringValue2;
+
+		public override bool Equals(object? obj)
 		{
-			[Identity, SequenceName("SEQUENCETESTSEQ")]
-			public int    ID;
-			[Column("VALUE")]
-			public string Value = null!;
+			if (obj is not StringTest other)
+				return false;
+
+			return    string.Equals(KeyValue, other.KeyValue)
+			       && string.Equals(StringValue1, other.StringValue1)
+			       && string.Equals(StringValue2, other.StringValue2);
 		}
 
-		public class StringTest
+		public override int GetHashCode()
 		{
-			public string  KeyValue = null!;
-			public string? StringValue1;
-			public string? StringValue2;
-
-			public override bool Equals(object? obj)
-			{
-				if (obj is not StringTest other)
-					return false;
-
-				return    string.Equals(KeyValue, other.KeyValue)
-				       && string.Equals(StringValue1, other.StringValue1)
-				       && string.Equals(StringValue2, other.StringValue2);
-			}
-
-			public override int GetHashCode()
-			{
-				return string.Format("{0}{1}{2}", KeyValue, StringValue1, StringValue2).GetHashCode();
-			}
+			return string.Format("{0}{1}{2}", KeyValue, StringValue1, StringValue2).GetHashCode();
 		}
 	}
 }

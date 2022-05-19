@@ -1,96 +1,95 @@
-﻿namespace LinqToDB.DataProvider.Oracle
+﻿namespace LinqToDB.DataProvider.Oracle;
+
+using SqlQuery;
+using System.Text;
+
+abstract partial class OracleSqlBuilderBase
 {
-	using SqlQuery;
-	using System.Text;
+	// Oracle doesn't support TABLE_ALIAS(COLUMN_ALIAS, ...) syntax
+	protected override bool SupportsColumnAliasesInSource => false;
 
-	abstract partial class OracleSqlBuilderBase
+	// NULL value in sort leads to "cannot insert NULL into (TARGET.NON_NULL_COLUMN)" error in insert command
+	// TODO: find a way to workaround it
+	protected override bool IsEmptyValuesSourceSupported => true;
+
+	// VALUES(...) syntax not supported by Oracle
+	protected override bool IsValuesSyntaxSupported => false;
+
+	// bad thing that user can change this table, but broken merge will be minor issue in this case
+	protected override string FakeTable => "dual";
+
+	// dual table owner
+	protected override string FakeTableSchema => "sys";
+
+	protected override void BuildMergeInto(SqlMergeStatement merge)
 	{
-		// Oracle doesn't support TABLE_ALIAS(COLUMN_ALIAS, ...) syntax
-		protected override bool SupportsColumnAliasesInSource => false;
+		StringBuilder.Append("MERGE");
 
-		// NULL value in sort leads to "cannot insert NULL into (TARGET.NON_NULL_COLUMN)" error in insert command
-		// TODO: find a way to workaround it
-		protected override bool IsEmptyValuesSourceSupported => true;
+		StartStatementQueryExtensions(merge.SelectQuery);
 
-		// VALUES(...) syntax not supported by Oracle
-		protected override bool IsValuesSyntaxSupported => false;
+		StringBuilder.Append(' ');
 
-		// bad thing that user can change this table, but broken merge will be minor issue in this case
-		protected override string FakeTable => "dual";
-
-		// dual table owner
-		protected override string FakeTableSchema => "sys";
-
-		protected override void BuildMergeInto(SqlMergeStatement merge)
+		if (merge.Hint != null)
 		{
-			StringBuilder.Append("MERGE");
-
-			StartStatementQueryExtensions(merge.SelectQuery);
-
-			StringBuilder.Append(' ');
-
-			if (merge.Hint != null)
-			{
-				if (HintBuilder!.Length > 0)
-					HintBuilder.Append(' ');
-				HintBuilder.Append(merge.Hint);
-			}
-
-			StringBuilder.Append("INTO ");
-			BuildTableName(merge.Target, true, true);
-			StringBuilder.AppendLine();
+			if (HintBuilder!.Length > 0)
+				HintBuilder.Append(' ');
+			HintBuilder.Append(merge.Hint);
 		}
 
-		protected override void BuildMergeOperationInsert(SqlMergeOperationClause operation)
+		StringBuilder.Append("INTO ");
+		BuildTableName(merge.Target, true, true);
+		StringBuilder.AppendLine();
+	}
+
+	protected override void BuildMergeOperationInsert(SqlMergeOperationClause operation)
+	{
+		StringBuilder
+			.AppendLine()
+			.AppendLine("WHEN NOT MATCHED THEN")
+			.Append("INSERT");
+
+		var insertClause = new SqlInsertClause();
+		insertClause.Items.AddRange(operation.Items);
+
+		BuildInsertClause(new SqlInsertOrUpdateStatement(null), insertClause, null, false, false);
+
+		if (operation.Where != null)
 		{
-			StringBuilder
-				.AppendLine()
-				.AppendLine("WHEN NOT MATCHED THEN")
-				.Append("INSERT");
-
-			var insertClause = new SqlInsertClause();
-			insertClause.Items.AddRange(operation.Items);
-
-			BuildInsertClause(new SqlInsertOrUpdateStatement(null), insertClause, null, false, false);
-
-			if (operation.Where != null)
-			{
-				StringBuilder.Append(" WHERE ");
-				BuildSearchCondition(Precedence.Unknown, operation.Where, wrapCondition: true);
-			}
+			StringBuilder.Append(" WHERE ");
+			BuildSearchCondition(Precedence.Unknown, operation.Where, wrapCondition: true);
 		}
+	}
 
-		protected override void BuildMergeOperationUpdate(SqlMergeOperationClause operation)
+	protected override void BuildMergeOperationUpdate(SqlMergeOperationClause operation)
+	{
+		StringBuilder
+			.AppendLine()
+			.AppendLine("WHEN MATCHED THEN")
+			.AppendLine("UPDATE");
+
+		var update = new SqlUpdateClause();
+		update.Items.AddRange(operation.Items);
+		BuildUpdateSet(null, update);
+
+		if (operation.Where != null)
 		{
 			StringBuilder
-				.AppendLine()
-				.AppendLine("WHEN MATCHED THEN")
-				.AppendLine("UPDATE");
-
-			var update = new SqlUpdateClause();
-			update.Items.AddRange(operation.Items);
-			BuildUpdateSet(null, update);
-
-			if (operation.Where != null)
-			{
-				StringBuilder
-					.AppendLine("WHERE")
-					.Append('\t');
-
-				BuildSearchCondition(Precedence.Unknown, operation.Where, wrapCondition: true);
-			}
-		}
-
-		protected override void BuildMergeOperationUpdateWithDelete(SqlMergeOperationClause operation)
-		{
-			BuildMergeOperationUpdate(operation);
-
-			StringBuilder
-				.AppendLine()
-				.AppendLine("DELETE WHERE")
+				.AppendLine("WHERE")
 				.Append('\t');
 
-			BuildSearchCondition(Precedence.Unknown, operation.WhereDelete!, wrapCondition: true);
+			BuildSearchCondition(Precedence.Unknown, operation.Where, wrapCondition: true);
 		}
+	}
+
+	protected override void BuildMergeOperationUpdateWithDelete(SqlMergeOperationClause operation)
+	{
+		BuildMergeOperationUpdate(operation);
+
+		StringBuilder
+			.AppendLine()
+			.AppendLine("DELETE WHERE")
+			.Append('\t');
+
+		BuildSearchCondition(Precedence.Unknown, operation.WhereDelete!, wrapCondition: true);
 	}
 }

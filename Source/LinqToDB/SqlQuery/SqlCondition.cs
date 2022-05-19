@@ -1,66 +1,65 @@
 ﻿using System.Collections.Generic;
 using System.Text;
 
-namespace LinqToDB.SqlQuery
+namespace LinqToDB.SqlQuery;
+
+public class SqlCondition : IQueryElement
 {
-	public class SqlCondition : IQueryElement
+	public SqlCondition(bool isNot, ISqlPredicate predicate)
 	{
-		public SqlCondition(bool isNot, ISqlPredicate predicate)
-		{
-			IsNot     = isNot;
-			Predicate = predicate;
-		}
+		IsNot     = isNot;
+		Predicate = predicate;
+	}
 
-		public SqlCondition(bool isNot, ISqlPredicate predicate, bool isOr)
-		{
-			IsNot     = isNot;
-			Predicate = predicate;
-			IsOr      = isOr;
-		}
+	public SqlCondition(bool isNot, ISqlPredicate predicate, bool isOr)
+	{
+		IsNot     = isNot;
+		Predicate = predicate;
+		IsOr      = isOr;
+	}
 
-		public bool          IsNot     { get; set; }
-		public ISqlPredicate Predicate { get; set; }
-		public bool          IsOr      { get; set; }
+	public bool          IsNot     { get; set; }
+	public ISqlPredicate Predicate { get; set; }
+	public bool          IsOr      { get; set; }
 
-		public int Precedence =>
-			IsNot ? SqlQuery.Precedence.LogicalNegation :
-				IsOr  ? SqlQuery.Precedence.LogicalDisjunction :
-					SqlQuery.Precedence.LogicalConjunction;
+	public int Precedence =>
+		IsNot ? SqlQuery.Precedence.LogicalNegation :
+			IsOr  ? SqlQuery.Precedence.LogicalDisjunction :
+				SqlQuery.Precedence.LogicalConjunction;
 
-		public bool CanBeNull => Predicate.CanBeNull;
+	public bool CanBeNull => Predicate.CanBeNull;
 
 #if OVERRIDETOSTRING
 
-			public override string ToString()
-			{
-				return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
-			}
+		public override string ToString()
+		{
+			return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
+		}
 
 #endif
 
-		#region IQueryElement Members
+	#region IQueryElement Members
 
-		public QueryElementType ElementType => QueryElementType.Condition;
+	public QueryElementType ElementType => QueryElementType.Condition;
 
-		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
-		{
-			if (dic.ContainsKey(this))
-				return sb.Append("...");
+	StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
+	{
+		if (dic.ContainsKey(this))
+			return sb.Append("...");
 
-			dic.Add(this, this);
+		dic.Add(this, this);
 
-			sb.Append('(');
+		sb.Append('(');
 
-			if (IsNot) sb.Append("NOT ");
+		if (IsNot) sb.Append("NOT ");
 
-			Predicate.ToString(sb, dic);
-			sb.Append(')').Append(IsOr ? " OR " : " AND ");
+		Predicate.ToString(sb, dic);
+		sb.Append(')').Append(IsOr ? " OR " : " AND ");
 
-			dic.Remove(this);
+		dic.Remove(this);
 
-			return sb;
-		}
-
-		#endregion
+		return sb;
 	}
+
+	#endregion
 }

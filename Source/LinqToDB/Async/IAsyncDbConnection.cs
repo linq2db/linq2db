@@ -7,84 +7,83 @@ using System.Threading.Tasks;
 using JetBrains.Annotations;
 using LinqToDB.Data.RetryPolicy;
 
-namespace LinqToDB.Async
+namespace LinqToDB.Async;
+
+/// <summary>
+/// Wrapper over <see cref="DbConnection"/> instance which contains all operations that could have custom implementation like:
+/// <list type="bullet">
+/// <item><see cref="IRetryPolicy"/> support</item>
+/// <item>asynchronous operations, missing from <see cref="DbConnection"/> but provided by data provider implementation.</item>.
+/// </list>
+/// </summary>
+[PublicAPI]
+public interface IAsyncDbConnection : IDisposable, IAsyncDisposable
 {
 	/// <summary>
-	/// Wrapper over <see cref="DbConnection"/> instance which contains all operations that could have custom implementation like:
-	/// <list type="bullet">
-	/// <item><see cref="IRetryPolicy"/> support</item>
-	/// <item>asynchronous operations, missing from <see cref="DbConnection"/> but provided by data provider implementation.</item>.
-	/// </list>
+	/// Gets underlying connection instance.
 	/// </summary>
-	[PublicAPI]
-	public interface IAsyncDbConnection : IDisposable, IAsyncDisposable
-	{
-		/// <summary>
-		/// Gets underlying connection instance.
-		/// </summary>
-		DbConnection Connection { get; }
+	DbConnection Connection { get; }
 
-		/// <summary>
-		/// Returns cloned connection instance, if underlying provider supports cloning or null otherwise.
-		/// </summary>
-		DbConnection? TryClone();
+	/// <summary>
+	/// Returns cloned connection instance, if underlying provider supports cloning or null otherwise.
+	/// </summary>
+	DbConnection? TryClone();
 
-		/// <inheritdoc cref="DbConnection.ConnectionString"/>
-		string ConnectionString { get; set; }
+	/// <inheritdoc cref="DbConnection.ConnectionString"/>
+	string ConnectionString { get; set; }
 
-		/// <inheritdoc cref="DbConnection.State"/>
-		ConnectionState State { get; }
+	/// <inheritdoc cref="DbConnection.State"/>
+	ConnectionState State { get; }
 
-		/// <inheritdoc cref="DbConnection.CreateCommand"/>
-		DbCommand CreateCommand();
+	/// <inheritdoc cref="DbConnection.CreateCommand"/>
+	DbCommand CreateCommand();
 
-		/// <inheritdoc cref="DbConnection.Open"/>
-		void Open();
-		/// <inheritdoc cref="DbConnection.OpenAsync(CancellationToken)"/>
-		Task OpenAsync(CancellationToken cancellationToken);
+	/// <inheritdoc cref="DbConnection.Open"/>
+	void Open();
+	/// <inheritdoc cref="DbConnection.OpenAsync(CancellationToken)"/>
+	Task OpenAsync(CancellationToken cancellationToken);
 
-		/// <inheritdoc cref="DbConnection.Close"/>
-		void Close();
-		/// <summary>
-		/// Closes current connection asynchonously.
-		/// </summary>
-		/// <returns>Async operation task.</returns>
-		Task CloseAsync();
+	/// <inheritdoc cref="DbConnection.Close"/>
+	void Close();
+	/// <summary>
+	/// Closes current connection asynchonously.
+	/// </summary>
+	/// <returns>Async operation task.</returns>
+	Task CloseAsync();
 
-		/// <summary>
-		/// Starts new transaction for current connection with default isolation level.
-		/// </summary>
-		/// <returns>Database transaction object.</returns>
-		IAsyncDbTransaction BeginTransaction();
+	/// <summary>
+	/// Starts new transaction for current connection with default isolation level.
+	/// </summary>
+	/// <returns>Database transaction object.</returns>
+	IAsyncDbTransaction BeginTransaction();
 
-		/// <summary>
-		/// Starts new transaction for current connection with specified isolation level.
-		/// </summary>
-		/// <param name="isolationLevel">Transaction isolation level.</param>
-		/// <returns>Database transaction object.</returns>
-		IAsyncDbTransaction BeginTransaction(IsolationLevel isolationLevel);
+	/// <summary>
+	/// Starts new transaction for current connection with specified isolation level.
+	/// </summary>
+	/// <param name="isolationLevel">Transaction isolation level.</param>
+	/// <returns>Database transaction object.</returns>
+	IAsyncDbTransaction BeginTransaction(IsolationLevel isolationLevel);
 
-		/// <summary>
-		/// Starts new transaction asynchronously for current connection with default isolation level.
-		/// </summary>
-		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
-		/// <returns>Database transaction object.</returns>
+	/// <summary>
+	/// Starts new transaction asynchronously for current connection with default isolation level.
+	/// </summary>
+	/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+	/// <returns>Database transaction object.</returns>
 #if NATIVE_ASYNC
-		ValueTask<IAsyncDbTransaction> BeginTransactionAsync(CancellationToken cancellationToken);
+	ValueTask<IAsyncDbTransaction> BeginTransactionAsync(CancellationToken cancellationToken);
 #else
-		Task<IAsyncDbTransaction> BeginTransactionAsync(CancellationToken cancellationToken);
+	Task<IAsyncDbTransaction> BeginTransactionAsync(CancellationToken cancellationToken);
 #endif
 
-		/// <summary>
-		/// Starts new transaction asynchronously for current connection with specified isolation level.
-		/// </summary>
-		/// <param name="isolationLevel">Transaction isolation level.</param>
-		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
-		/// <returns>Database transaction object.</returns>
+	/// <summary>
+	/// Starts new transaction asynchronously for current connection with specified isolation level.
+	/// </summary>
+	/// <param name="isolationLevel">Transaction isolation level.</param>
+	/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+	/// <returns>Database transaction object.</returns>
 #if NATIVE_ASYNC
-		ValueTask<IAsyncDbTransaction> BeginTransactionAsync(IsolationLevel isolationLevel, CancellationToken cancellationToken);
+	ValueTask<IAsyncDbTransaction> BeginTransactionAsync(IsolationLevel isolationLevel, CancellationToken cancellationToken);
 #else
-		Task<IAsyncDbTransaction> BeginTransactionAsync(IsolationLevel isolationLevel, CancellationToken cancellationToken);
+	Task<IAsyncDbTransaction> BeginTransactionAsync(IsolationLevel isolationLevel, CancellationToken cancellationToken);
 #endif
-	}
 }

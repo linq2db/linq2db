@@ -1,19 +1,18 @@
 ﻿using System.Linq.Expressions;
 
-namespace LinqToDB.Linq.Builder
+namespace LinqToDB.Linq.Builder;
+
+using LinqToDB.Expressions;
+
+class AsUpdatableBuilder : MethodCallBuilder
 {
-	using LinqToDB.Expressions;
-
-	class AsUpdatableBuilder : MethodCallBuilder
+	protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 	{
-		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-		{
-			return methodCall.IsQueryable("AsUpdatable");
-		}
+		return methodCall.IsQueryable("AsUpdatable");
+	}
 
-		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-		{
-			return builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
-		}
+	protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+	{
+		return builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 	}
 }

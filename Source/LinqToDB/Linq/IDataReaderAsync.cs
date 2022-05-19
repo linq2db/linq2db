@@ -4,16 +4,15 @@ using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace LinqToDB.Linq
-{
-	public interface IDataReaderAsync : IDisposable,
+namespace LinqToDB.Linq;
+
+public interface IDataReaderAsync : IDisposable,
 #if NATIVE_ASYNC
-		IAsyncDisposable
+	IAsyncDisposable
 #else
-		Async.IAsyncDisposable
+	Async.IAsyncDisposable
 #endif
-	{
-		DbDataReader DataReader { get; }
-		Task<bool>   ReadAsync(CancellationToken cancellationToken);
-	}
+{
+	DbDataReader DataReader { get; }
+	Task<bool>   ReadAsync(CancellationToken cancellationToken);
 }

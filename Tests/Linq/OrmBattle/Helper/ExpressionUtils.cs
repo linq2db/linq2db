@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Linq.Expressions;
 
-namespace Tests.OrmBattle.Helper
-{
+namespace Tests.OrmBattle.Helper;
+
     public static class ExpressionUtils
     {
         public static MemberExpression ExtractMember(Expression expression)
@@ -19,4 +19,3 @@ namespace Tests.OrmBattle.Helper
             return (MemberExpression) current;
         }
     }
-}

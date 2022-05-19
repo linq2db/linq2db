@@ -1,33 +1,32 @@
 ﻿using System.Collections.Generic;
 
-namespace LinqToDB.CodeModel
+namespace LinqToDB.CodeModel;
+
+/// <summary>
+/// Group of constructors.
+/// </summary>
+public sealed class ConstructorGroup : MemberGroup<CodeConstructor>
 {
-	/// <summary>
-	/// Group of constructors.
-	/// </summary>
-	public sealed class ConstructorGroup : MemberGroup<CodeConstructor>
+	public ConstructorGroup(IEnumerable<CodeConstructor>? members, CodeClass owner)
+		: base(members)
 	{
-		public ConstructorGroup(IEnumerable<CodeConstructor>? members, CodeClass owner)
-			: base(members)
-		{
-			Class = owner;
-		}
+		Class = owner;
+	}
 
-		public ConstructorGroup(CodeClass owner)
-			: this(null, owner)
-		{
-		}
+	public ConstructorGroup(CodeClass owner)
+		: this(null, owner)
+	{
+	}
 
-		/// <summary>
-		/// Owner class.
-		/// </summary>
-		public CodeClass Class { get; }
+	/// <summary>
+	/// Owner class.
+	/// </summary>
+	public CodeClass Class { get; }
 
-		public override CodeElementType ElementType => CodeElementType.ConstructorGroup;
+	public override CodeElementType ElementType => CodeElementType.ConstructorGroup;
 
-		public ConstructorBuilder New()
-		{
-			return new ConstructorBuilder(AddMember(new CodeConstructor(Class)));
-		}
+	public ConstructorBuilder New()
+	{
+		return new ConstructorBuilder(AddMember(new CodeConstructor(Class)));
 	}
 }

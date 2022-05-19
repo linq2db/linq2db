@@ -8,114 +8,113 @@ using NUnit.Framework;
 using System.Data.SQLite;
 using LinqToDB;
 
-namespace Tests.Samples
+namespace Tests.Samples;
+
+[TestFixture]
+public class ExceptionInterceptTests : TestBase
 {
-	[TestFixture]
-	public class ExceptionInterceptTests : TestBase
+	private class Retry : IRetryPolicy
 	{
-		private class Retry : IRetryPolicy
+		public int Count { get; private set; }
+
+		TResult IRetryPolicy.Execute<TResult>(Func<TResult> operation)
 		{
-			public int Count { get; private set; }
-
-			TResult IRetryPolicy.Execute<TResult>(Func<TResult> operation)
+			Count++;
+			try
 			{
-				Count++;
-				try
-				{
-					return operation();
-				}
-				catch (Exception original)
-				{
-					throw Intercept(original);
-				}
+				return operation();
 			}
-
-			Task<TResult> IRetryPolicy.ExecuteAsync<TResult>(Func<CancellationToken, Task<TResult>> operation, CancellationToken cancellationToken)
+			catch (Exception original)
 			{
-				Count++;
-				try
-				{
-					var res = operation(cancellationToken);
-					res.Wait(cancellationToken);
-					return res;
-				}
-				catch (Exception original)
-				{
-					throw Intercept(original);
-				}
-			}
-
-			void IRetryPolicy.Execute(Action operation)
-			{
-				Count++;
-				try
-				{
-					operation();
-				}
-				catch (Exception original)
-				{
-					throw Intercept(original);
-				}
-			}
-
-			Task IRetryPolicy.ExecuteAsync(Func<CancellationToken, Task> operation, CancellationToken cancellationToken)
-			{
-				Count++;
-				try
-				{
-					var res = operation(cancellationToken);
-					res.Wait(cancellationToken);
-					return res;
-				}
-				catch (Exception original)
-				{
-					throw Intercept(original);
-				}
-			}
-
-			static Func<Exception, Exception> defaultExceptionIntercept = (original) => original;
-			private Func<Exception, Exception> _exceptionIntercept = defaultExceptionIntercept;
-			public Func<Exception, Exception> Intercept
-			{
-				get { return _exceptionIntercept; }
-				set { _exceptionIntercept = value ?? defaultExceptionIntercept; }
+				throw Intercept(original);
 			}
 		}
 
-		public class TestTable
+		Task<TResult> IRetryPolicy.ExecuteAsync<TResult>(Func<CancellationToken, Task<TResult>> operation, CancellationToken cancellationToken)
 		{
-			[Column(IsIdentity = true)]
-			public int ID { get; set; }
-		}
-
-		[Test]
-		public void StandardExceptionExecuteReader([IncludeDataSources(TestProvName.AllSQLiteClassic)]
-			string context)
-		{
-			Assert.Throws<SQLiteException>(() =>
+			Count++;
+			try
 			{
-				using (var db = GetDataConnection(context))
-				{
-					db.GetTable<TestTable>().ToList();
-				}
-			});
-		}
-
-		[Test]
-		public void InterceptedExceptionExecuteReader([DataSources(false)] string context)
-		{
-			var ret = new Retry();
-
-			ret.Intercept = (ex) => new DivideByZeroException("Intercepted exception", ex);
-
-			Assert.Throws<DivideByZeroException>(() =>
+				var res = operation(cancellationToken);
+				res.Wait(cancellationToken);
+				return res;
+			}
+			catch (Exception original)
 			{
-				using (var db = GetDataConnection(context))
-				{
-					db.RetryPolicy = ret;
-					db.GetTable<TestTable>().ToList();
-				}
-			});
+				throw Intercept(original);
+			}
 		}
+
+		void IRetryPolicy.Execute(Action operation)
+		{
+			Count++;
+			try
+			{
+				operation();
+			}
+			catch (Exception original)
+			{
+				throw Intercept(original);
+			}
+		}
+
+		Task IRetryPolicy.ExecuteAsync(Func<CancellationToken, Task> operation, CancellationToken cancellationToken)
+		{
+			Count++;
+			try
+			{
+				var res = operation(cancellationToken);
+				res.Wait(cancellationToken);
+				return res;
+			}
+			catch (Exception original)
+			{
+				throw Intercept(original);
+			}
+		}
+
+		static Func<Exception, Exception> defaultExceptionIntercept = (original) => original;
+		private Func<Exception, Exception> _exceptionIntercept = defaultExceptionIntercept;
+		public Func<Exception, Exception> Intercept
+		{
+			get { return _exceptionIntercept; }
+			set { _exceptionIntercept = value ?? defaultExceptionIntercept; }
+		}
+	}
+
+	public class TestTable
+	{
+		[Column(IsIdentity = true)]
+		public int ID { get; set; }
+	}
+
+	[Test]
+	public void StandardExceptionExecuteReader([IncludeDataSources(TestProvName.AllSQLiteClassic)]
+		string context)
+	{
+		Assert.Throws<SQLiteException>(() =>
+		{
+			using (var db = GetDataConnection(context))
+			{
+				db.GetTable<TestTable>().ToList();
+			}
+		});
+	}
+
+	[Test]
+	public void InterceptedExceptionExecuteReader([DataSources(false)] string context)
+	{
+		var ret = new Retry();
+
+		ret.Intercept = (ex) => new DivideByZeroException("Intercepted exception", ex);
+
+		Assert.Throws<DivideByZeroException>(() =>
+		{
+			using (var db = GetDataConnection(context))
+			{
+				db.RetryPolicy = ret;
+				db.GetTable<TestTable>().ToList();
+			}
+		});
 	}
 }

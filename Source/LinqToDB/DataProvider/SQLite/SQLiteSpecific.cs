@@ -3,37 +3,36 @@ using System.Linq.Expressions;
 
 using JetBrains.Annotations;
 
-namespace LinqToDB.DataProvider.SQLite
+namespace LinqToDB.DataProvider.SQLite;
+
+using Linq;
+using SqlProvider;
+
+public interface ISQLiteSpecificTable<out TSource> : ITable<TSource>
+	where TSource : notnull
 {
-	using Linq;
-	using SqlProvider;
+}
 
-	public interface ISQLiteSpecificTable<out TSource> : ITable<TSource>
-		where TSource : notnull
+class SQLiteSpecificTable<TSource> : DatabaseSpecificTable<TSource>, ISQLiteSpecificTable<TSource>, ITable
+	where TSource : notnull
+{
+	public SQLiteSpecificTable(ITable<TSource> table) : base(table)
 	{
 	}
+}
 
-	class SQLiteSpecificTable<TSource> : DatabaseSpecificTable<TSource>, ISQLiteSpecificTable<TSource>, ITable
+public static partial class SQLiteTools
+{
+	[LinqTunnel, Pure]
+	[Sql.QueryExtension(null, Sql.QueryExtensionScope.None, typeof(NoneExtensionBuilder))]
+	public static ISQLiteSpecificTable<TSource> AsSQLite<TSource>(this ITable<TSource> table)
 		where TSource : notnull
 	{
-		public SQLiteSpecificTable(ITable<TSource> table) : base(table)
-		{
-		}
-	}
+		table.Expression = Expression.Call(
+			null,
+			MethodHelper.GetMethodInfo(AsSQLite, table),
+			table.Expression);
 
-	public static partial class SQLiteTools
-	{
-		[LinqTunnel, Pure]
-		[Sql.QueryExtension(null, Sql.QueryExtensionScope.None, typeof(NoneExtensionBuilder))]
-		public static ISQLiteSpecificTable<TSource> AsSQLite<TSource>(this ITable<TSource> table)
-			where TSource : notnull
-		{
-			table.Expression = Expression.Call(
-				null,
-				MethodHelper.GetMethodInfo(AsSQLite, table),
-				table.Expression);
-
-			return new SQLiteSpecificTable<TSource>(table);
-		}
+		return new SQLiteSpecificTable<TSource>(table);
 	}
 }

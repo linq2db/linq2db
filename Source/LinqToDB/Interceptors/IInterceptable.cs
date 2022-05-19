@@ -1,14 +1,13 @@
 ﻿using System;
 
-namespace LinqToDB.Interceptors
-{
-	public interface IInterceptable
-	{
-	}
+namespace LinqToDB.Interceptors;
 
-	public interface IInterceptable<T> : IInterceptable
-		where T : IInterceptor
-	{
-		T? Interceptor { get; set; }
-	}
+public interface IInterceptable
+{
+}
+
+public interface IInterceptable<T> : IInterceptable
+	where T : IInterceptor
+{
+	T? Interceptor { get; set; }
 }

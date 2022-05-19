@@ -4,33 +4,32 @@ using NUnit.Framework;
 
 using Tests.Model;
 
-namespace Tests.UserTests
+namespace Tests.UserTests;
+
+[TestFixture]
+public class Issue352Tests : TestBase
 {
-	[TestFixture]
-	public class Issue352Tests : TestBase
+	[Test]
+	public void Test([NorthwindDataContext] string context)
 	{
-		[Test]
-		public void Test([NorthwindDataContext] string context)
+		using (var db = new NorthwindDB(context))
 		{
-			using (var db = new NorthwindDB(context))
-			{
-				var zz =
-					from e in db.Employee
-					from et in db.EmployeeTerritory
-					where et.EmployeeID == e.EmployeeID
-					group e by new { e.EmployeeID }
-					into g
-					select new
-					{
-						g.Key.EmployeeID,
-						//g.FirstOrDefault().FirstName,
-						db.Employee.FirstOrDefault(em => em.EmployeeID == g.Key.EmployeeID)!.FirstName,
-					};
+			var zz =
+				from e in db.Employee
+				from et in db.EmployeeTerritory
+				where et.EmployeeID == e.EmployeeID
+				group e by new { e.EmployeeID }
+				into g
+				select new
+				{
+					g.Key.EmployeeID,
+					//g.FirstOrDefault().FirstName,
+					db.Employee.FirstOrDefault(em => em.EmployeeID == g.Key.EmployeeID)!.FirstName,
+				};
 
-				//    zz = zz.OrderBy(a => a.FirstName);
+			//    zz = zz.OrderBy(a => a.FirstName);
 
-				var res = zz.ToList();
-			}
+			var res = zz.ToList();
 		}
 	}
 }

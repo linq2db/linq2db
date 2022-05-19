@@ -5,594 +5,593 @@ using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace LinqToDB.Data
+namespace LinqToDB.Data;
+
+using Async;
+using Common;
+using LinqToDB.Interceptors;
+using RetryPolicy;
+
+public partial class DataConnection
 {
-	using Async;
-	using Common;
-	using LinqToDB.Interceptors;
-	using RetryPolicy;
-
-	public partial class DataConnection
+#if NETSTANDARD2_1PLUS
+	/// <summary>
+	/// This is internal API and is not intended for use by Linq To DB applications.
+	/// </summary>
+	public async ValueTask DisposeCommandAsync()
 	{
-#if NETSTANDARD2_1PLUS
-		/// <summary>
-		/// This is internal API and is not intended for use by Linq To DB applications.
-		/// </summary>
-		public async ValueTask DisposeCommandAsync()
+		if (_command != null)
 		{
-			if (_command != null)
-			{
-				await DataProvider.DisposeCommandAsync(_command).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-				_command = null;
-			}
+			await DataProvider.DisposeCommandAsync(_command).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+			_command = null;
 		}
+	}
 #endif
 
-		/// <summary>
-		/// Starts new transaction asynchronously for current connection with default isolation level. If connection already has transaction, it will be rolled back.
-		/// </summary>
-		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
-		/// <returns>Database transaction object.</returns>
-		public virtual async Task<DataConnectionTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
+	/// <summary>
+	/// Starts new transaction asynchronously for current connection with default isolation level. If connection already has transaction, it will be rolled back.
+	/// </summary>
+	/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+	/// <returns>Database transaction object.</returns>
+	public virtual async Task<DataConnectionTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
+	{
+		await EnsureConnectionAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+
+		// If transaction is open, we dispose it, it will rollback all changes.
+		//
+		if (TransactionAsync != null) await TransactionAsync.DisposeAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
+
+		var dataConnectionTransaction = await TraceActionAsync(
+			this,
+			TraceOperation.BeginTransaction,
+			static _ => "BeginTransactionAsync",
+			default(object?),
+			static async (dataConnection, _, cancellationToken) =>
+			{
+		// Create new transaction object.
+		//
+				dataConnection.TransactionAsync = await dataConnection._connection!.BeginTransactionAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+
+				dataConnection._closeTransaction = true;
+
+		// If the active command exists.
+		//
+				if (dataConnection._command != null)
+					dataConnection._command.Transaction = dataConnection.Transaction;
+
+				return new DataConnectionTransaction(dataConnection);
+			}, cancellationToken)
+			.ConfigureAwait(Configuration.ContinueOnCapturedContext);
+
+		return dataConnectionTransaction;
+	}
+
+	/// <summary>
+	/// Starts new transaction asynchronously for current connection with specified isolation level. If connection already have transaction, it will be rolled back.
+	/// </summary>
+	/// <param name="isolationLevel">Transaction isolation level.</param>
+	/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+	/// <returns>Database transaction object.</returns>
+	public virtual async Task<DataConnectionTransaction> BeginTransactionAsync(IsolationLevel isolationLevel, CancellationToken cancellationToken = default)
+	{
+		await EnsureConnectionAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+
+		// If transaction is open, we dispose it, it will rollback all changes.
+		//
+		if (TransactionAsync != null) await TransactionAsync.DisposeAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
+
+		var dataConnectionTransaction = await TraceActionAsync(
+			this,
+			TraceOperation.BeginTransaction,
+			static il => $"BeginTransactionAsync({il})",
+			isolationLevel,
+			static async (dataConnection, isolationLevel, cancellationToken) =>
+			{
+		// Create new transaction object.
+		//
+				dataConnection.TransactionAsync = await dataConnection._connection!.BeginTransactionAsync(isolationLevel, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+
+				dataConnection._closeTransaction = true;
+
+		// If the active command exists.
+		//
+				if (dataConnection._command != null)
+					dataConnection._command.Transaction = dataConnection.Transaction;
+
+				return new DataConnectionTransaction(dataConnection);
+			}, cancellationToken)
+			.ConfigureAwait(Configuration.ContinueOnCapturedContext);
+
+		return dataConnectionTransaction;
+	}
+
+	/// <summary>
+	/// Ensure that database connection opened. If opened connection missing, it will be opened asynchronously.
+	/// </summary>
+	/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+	/// <returns>Async operation task.</returns>
+	public async Task EnsureConnectionAsync(CancellationToken cancellationToken = default)
+	{
+		CheckAndThrowOnDisposed();
+
+		if (_connection == null)
 		{
-			await EnsureConnectionAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+			DbConnection connection;
+			if (_connectionFactory != null)
+				connection = _connectionFactory();
+			else
+				connection = DataProvider.CreateConnection(ConnectionString!);
 
-			// If transaction is open, we dispose it, it will rollback all changes.
-			//
-			if (TransactionAsync != null) await TransactionAsync.DisposeAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
+			_connection = AsyncFactory.Create(connection);
 
-			var dataConnectionTransaction = await TraceActionAsync(
-				this,
-				TraceOperation.BeginTransaction,
-				static _ => "BeginTransactionAsync",
-				default(object?),
-				static async (dataConnection, _, cancellationToken) =>
-				{
-			// Create new transaction object.
-			//
-					dataConnection.TransactionAsync = await dataConnection._connection!.BeginTransactionAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-
-					dataConnection._closeTransaction = true;
-
-			// If the active command exists.
-			//
-					if (dataConnection._command != null)
-						dataConnection._command.Transaction = dataConnection.Transaction;
-
-					return new DataConnectionTransaction(dataConnection);
-				}, cancellationToken)
-				.ConfigureAwait(Configuration.ContinueOnCapturedContext);
-
-			return dataConnectionTransaction;
+			if (RetryPolicy != null)
+				_connection = new RetryingDbConnection(this, _connection, RetryPolicy);
 		}
 
-		/// <summary>
-		/// Starts new transaction asynchronously for current connection with specified isolation level. If connection already have transaction, it will be rolled back.
-		/// </summary>
-		/// <param name="isolationLevel">Transaction isolation level.</param>
-		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
-		/// <returns>Database transaction object.</returns>
-		public virtual async Task<DataConnectionTransaction> BeginTransactionAsync(IsolationLevel isolationLevel, CancellationToken cancellationToken = default)
+		if (_connection.State == ConnectionState.Closed)
 		{
-			await EnsureConnectionAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-
-			// If transaction is open, we dispose it, it will rollback all changes.
-			//
-			if (TransactionAsync != null) await TransactionAsync.DisposeAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
-
-			var dataConnectionTransaction = await TraceActionAsync(
-				this,
-				TraceOperation.BeginTransaction,
-				static il => $"BeginTransactionAsync({il})",
-				isolationLevel,
-				static async (dataConnection, isolationLevel, cancellationToken) =>
-				{
-			// Create new transaction object.
-			//
-					dataConnection.TransactionAsync = await dataConnection._connection!.BeginTransactionAsync(isolationLevel, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-
-					dataConnection._closeTransaction = true;
-
-			// If the active command exists.
-			//
-					if (dataConnection._command != null)
-						dataConnection._command.Transaction = dataConnection.Transaction;
-
-					return new DataConnectionTransaction(dataConnection);
-				}, cancellationToken)
-				.ConfigureAwait(Configuration.ContinueOnCapturedContext);
-
-			return dataConnectionTransaction;
-		}
-
-		/// <summary>
-		/// Ensure that database connection opened. If opened connection missing, it will be opened asynchronously.
-		/// </summary>
-		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
-		/// <returns>Async operation task.</returns>
-		public async Task EnsureConnectionAsync(CancellationToken cancellationToken = default)
-		{
-			CheckAndThrowOnDisposed();
-
-			if (_connection == null)
-			{
-				DbConnection connection;
-				if (_connectionFactory != null)
-					connection = _connectionFactory();
-				else
-					connection = DataProvider.CreateConnection(ConnectionString!);
-
-				_connection = AsyncFactory.Create(connection);
-
-				if (RetryPolicy != null)
-					_connection = new RetryingDbConnection(this, _connection, RetryPolicy);
-			}
-
-			if (_connection.State == ConnectionState.Closed)
-			{
-				try
-				{
-					if (_connectionInterceptor != null)
-						await _connectionInterceptor.ConnectionOpeningAsync(new (this), _connection.Connection, cancellationToken)
-							.ConfigureAwait(Configuration.ContinueOnCapturedContext);
-
-					await _connection.OpenAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-
-					_closeConnection = true;
-
-					if (_connectionInterceptor != null)
-						await _connectionInterceptor.ConnectionOpenedAsync(new (this), _connection.Connection, cancellationToken)
-							.ConfigureAwait(Configuration.ContinueOnCapturedContext);
-				}
-				catch (Exception ex)
-				{
-					if (TraceSwitchConnection.TraceError)
-					{
-						OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error, TraceOperation.Open, true)
-						{
-							TraceLevel = TraceLevel.Error,
-							StartTime  = DateTime.UtcNow,
-							Exception  = ex,
-						});
-					}
-
-					throw;
-				}
-			}
-		}
-
-		/// <summary>
-		/// Commits started (if any) transaction, associated with connection.
-		/// If underlying provider doesn't support asynchronous commit, it will be performed synchronously.
-		/// </summary>
-		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
-		/// <returns>Asynchronous operation completion task.</returns>
-		public virtual async Task CommitTransactionAsync(CancellationToken cancellationToken = default)
-		{
-			if (TransactionAsync != null)
-			{
-				await TraceActionAsync(
-					this,
-					TraceOperation.CommitTransaction,
-					static _ => "CommitTransactionAsync",
-					default(object?),
-					static async (dataConnection, _, cancellationToken) =>
-					{
-						await dataConnection.TransactionAsync!.CommitAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-
-						if (dataConnection._closeTransaction)
-				{
-							await dataConnection.TransactionAsync.DisposeAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
-							dataConnection.TransactionAsync = null;
-
-							if (dataConnection._command != null)
-								dataConnection._command.Transaction = null;
-				}
-						return _;
-					}, cancellationToken)
-					.ConfigureAwait(Configuration.ContinueOnCapturedContext);
-			}
-		}
-
-		/// <summary>
-		/// Rollbacks started (if any) transaction, associated with connection.
-		/// If underlying provider doesn't support asynchonous commit, it will be performed synchonously.
-		/// </summary>
-		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
-		/// <returns>Asynchronous operation completion task.</returns>
-		public virtual async Task RollbackTransactionAsync(CancellationToken cancellationToken = default)
-		{
-			if (TransactionAsync != null)
-			{
-				await TraceActionAsync(
-					this,
-					TraceOperation.RollbackTransaction,
-					static _ => "RollbackTransactionAsync",
-					default(object?),
-					static async (dataConnection, _, cancellationToken) =>
-					{
-						await dataConnection.TransactionAsync!.RollbackAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-
-						if (dataConnection._closeTransaction)
-				{
-							await dataConnection.TransactionAsync.DisposeAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
-							dataConnection.TransactionAsync = null;
-
-							if (dataConnection._command != null)
-								dataConnection._command.Transaction = null;
-				}
-						return _;
-					}, cancellationToken)
-					.ConfigureAwait(Configuration.ContinueOnCapturedContext);
-			}
-		}
-
-
-		/// <summary>
-		/// Closes and dispose associated underlying database transaction/connection asynchronously.
-		/// </summary>
-		/// <returns>Asynchronous operation completion task.</returns>
-		public virtual async Task CloseAsync()
-		{
-			if (_dataContextInterceptor != null)
-				await _dataContextInterceptor.OnClosingAsync(new (this)).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-
-#if NETSTANDARD2_1PLUS
-			await DisposeCommandAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
-#else
-			DisposeCommand();
-#endif
-
-			if (TransactionAsync != null && _closeTransaction)
-			{
-				await TransactionAsync.DisposeAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
-				TransactionAsync = null;
-			}
-
-			if (_connection != null)
-			{
-				if (_disposeConnection)
-				{
-					await _connection.DisposeAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
-					_connection = null;
-				}
-				else if (_closeConnection)
-					await _connection.CloseAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
-			}
-
-			if (_dataContextInterceptor != null)
-				await _dataContextInterceptor.OnClosedAsync(new (this)).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-		}
-
-		/// <summary>
-		/// Disposes connection asynchronously.
-		/// </summary>
-		/// <returns>Asynchronous operation completion task.</returns>
-#if NATIVE_ASYNC
-		public async ValueTask DisposeAsync()
-#else
-		public async Task DisposeAsync()
-#endif
-		{
-			Disposed = true;
-			await CloseAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
-		}
-
-		protected static async Task<TResult> TraceActionAsync<TContext, TResult>(
-			DataConnection                                                   dataConnection,
-			TraceOperation                                                   traceOperation,
-			Func<TContext, string?>?                                         commandText,
-			TContext                                                         context,
-			Func<DataConnection, TContext, CancellationToken, Task<TResult>> action,
-			CancellationToken                                                cancellationToken)
-		{
-			var now       = DateTime.UtcNow;
-			Stopwatch? sw = null;
-			var sql       = dataConnection.TraceSwitchConnection.TraceInfo ? commandText?.Invoke(context) : null;
-
-			if (dataConnection.TraceSwitchConnection.TraceInfo)
-			{
-				sw = Stopwatch.StartNew();
-				dataConnection.OnTraceConnection(new TraceInfo(dataConnection, TraceInfoStep.BeforeExecute, traceOperation, true)
-				{
-					TraceLevel  = TraceLevel.Info,
-					CommandText = sql,
-					StartTime   = now,
-				});
-			}
-
 			try
 			{
-				var actionResult = await action(dataConnection, context, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				if (_connectionInterceptor != null)
+					await _connectionInterceptor.ConnectionOpeningAsync(new (this), _connection.Connection, cancellationToken)
+						.ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
-				if (dataConnection.TraceSwitchConnection.TraceInfo)
-				{
-					dataConnection.OnTraceConnection(new TraceInfo(dataConnection, TraceInfoStep.AfterExecute, traceOperation, true)
-					{
-						TraceLevel    = TraceLevel.Info,
-						CommandText   = sql,
-						StartTime     = now,
-						ExecutionTime = sw!.Elapsed
-					});
-				}
+				await _connection.OpenAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
-				return actionResult;
-			}
-			catch (Exception ex)
-			{
-				if (dataConnection.TraceSwitchConnection.TraceError)
-				{
-					dataConnection.OnTraceConnection(new TraceInfo(dataConnection, TraceInfoStep.Error, traceOperation, true)
-					{
-						TraceLevel    = TraceLevel.Error,
-						CommandText   = dataConnection.TraceSwitchConnection.TraceInfo ? sql : commandText?.Invoke(context),
-						StartTime     = now,
-						ExecutionTime = sw?.Elapsed,
-						Exception     = ex,
-					});
-				}
+				_closeConnection = true;
 
-				throw;
-			}
-		}
-
-#region ExecuteNonQueryAsync
-
-		protected virtual async Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken)
-		{
-			var result = Option<int>.None;
-
-			if (_commandInterceptor != null)
-				result = await _commandInterceptor.ExecuteNonQueryAsync(new (this), CurrentCommand!, result, cancellationToken)
-					.ConfigureAwait(Configuration.ContinueOnCapturedContext);
-
-			return result.HasValue
-				? result.Value
-				: await CurrentCommand!.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-		}
-
-		internal async Task<int> ExecuteNonQueryDataAsync(CancellationToken cancellationToken)
-		{
-			if (TraceSwitchConnection.Level == TraceLevel.Off)
-#if NATIVE_ASYNC
-				await using (DataProvider.ExecuteScope(this))
-#else
-				using (DataProvider.ExecuteScope(this))
-#endif
-					return await ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-
-			var now = DateTime.UtcNow;
-			var sw  = Stopwatch.StartNew();
-
-			if (TraceSwitchConnection.TraceInfo)
-			{
-				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute, TraceOperation.ExecuteNonQuery, true)
-				{
-					TraceLevel     = TraceLevel.Info,
-					StartTime      = now,
-					Command        = CurrentCommand,
-				});
-			}
-
-			try
-			{
-				int ret;
-#if NATIVE_ASYNC
-				await using (DataProvider.ExecuteScope(this))
-#else
-				using (DataProvider.ExecuteScope(this))
-#endif
-					ret = await ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-
-				if (TraceSwitchConnection.TraceInfo)
-				{
-					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute, TraceOperation.ExecuteNonQuery, true)
-					{
-						TraceLevel      = TraceLevel.Info,
-						Command         = CurrentCommand,
-						StartTime       = now,
-						ExecutionTime   = sw.Elapsed,
-						RecordsAffected = ret,
-					});
-				}
-
-				return ret;
+				if (_connectionInterceptor != null)
+					await _connectionInterceptor.ConnectionOpenedAsync(new (this), _connection.Connection, cancellationToken)
+						.ConfigureAwait(Configuration.ContinueOnCapturedContext);
 			}
 			catch (Exception ex)
 			{
 				if (TraceSwitchConnection.TraceError)
 				{
-					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error, TraceOperation.ExecuteNonQuery, true)
+					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error, TraceOperation.Open, true)
 					{
-						TraceLevel     = TraceLevel.Error,
-						Command        = CurrentCommand,
-						StartTime      = now,
-						ExecutionTime  = sw.Elapsed,
-						Exception      = ex,
+						TraceLevel = TraceLevel.Error,
+						StartTime  = DateTime.UtcNow,
+						Exception  = ex,
 					});
 				}
 
 				throw;
 			}
 		}
+	}
+
+	/// <summary>
+	/// Commits started (if any) transaction, associated with connection.
+	/// If underlying provider doesn't support asynchronous commit, it will be performed synchronously.
+	/// </summary>
+	/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+	/// <returns>Asynchronous operation completion task.</returns>
+	public virtual async Task CommitTransactionAsync(CancellationToken cancellationToken = default)
+	{
+		if (TransactionAsync != null)
+		{
+			await TraceActionAsync(
+				this,
+				TraceOperation.CommitTransaction,
+				static _ => "CommitTransactionAsync",
+				default(object?),
+				static async (dataConnection, _, cancellationToken) =>
+				{
+					await dataConnection.TransactionAsync!.CommitAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+
+					if (dataConnection._closeTransaction)
+			{
+						await dataConnection.TransactionAsync.DisposeAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
+						dataConnection.TransactionAsync = null;
+
+						if (dataConnection._command != null)
+							dataConnection._command.Transaction = null;
+			}
+					return _;
+				}, cancellationToken)
+				.ConfigureAwait(Configuration.ContinueOnCapturedContext);
+		}
+	}
+
+	/// <summary>
+	/// Rollbacks started (if any) transaction, associated with connection.
+	/// If underlying provider doesn't support asynchonous commit, it will be performed synchonously.
+	/// </summary>
+	/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+	/// <returns>Asynchronous operation completion task.</returns>
+	public virtual async Task RollbackTransactionAsync(CancellationToken cancellationToken = default)
+	{
+		if (TransactionAsync != null)
+		{
+			await TraceActionAsync(
+				this,
+				TraceOperation.RollbackTransaction,
+				static _ => "RollbackTransactionAsync",
+				default(object?),
+				static async (dataConnection, _, cancellationToken) =>
+				{
+					await dataConnection.TransactionAsync!.RollbackAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+
+					if (dataConnection._closeTransaction)
+			{
+						await dataConnection.TransactionAsync.DisposeAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
+						dataConnection.TransactionAsync = null;
+
+						if (dataConnection._command != null)
+							dataConnection._command.Transaction = null;
+			}
+					return _;
+				}, cancellationToken)
+				.ConfigureAwait(Configuration.ContinueOnCapturedContext);
+		}
+	}
+
+
+	/// <summary>
+	/// Closes and dispose associated underlying database transaction/connection asynchronously.
+	/// </summary>
+	/// <returns>Asynchronous operation completion task.</returns>
+	public virtual async Task CloseAsync()
+	{
+		if (_dataContextInterceptor != null)
+			await _dataContextInterceptor.OnClosingAsync(new (this)).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+
+#if NETSTANDARD2_1PLUS
+		await DisposeCommandAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
+#else
+		DisposeCommand();
+#endif
+
+		if (TransactionAsync != null && _closeTransaction)
+		{
+			await TransactionAsync.DisposeAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
+			TransactionAsync = null;
+		}
+
+		if (_connection != null)
+		{
+			if (_disposeConnection)
+			{
+				await _connection.DisposeAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				_connection = null;
+			}
+			else if (_closeConnection)
+				await _connection.CloseAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
+		}
+
+		if (_dataContextInterceptor != null)
+			await _dataContextInterceptor.OnClosedAsync(new (this)).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+	}
+
+	/// <summary>
+	/// Disposes connection asynchronously.
+	/// </summary>
+	/// <returns>Asynchronous operation completion task.</returns>
+#if NATIVE_ASYNC
+	public async ValueTask DisposeAsync()
+#else
+	public async Task DisposeAsync()
+#endif
+	{
+		Disposed = true;
+		await CloseAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
+	}
+
+	protected static async Task<TResult> TraceActionAsync<TContext, TResult>(
+		DataConnection                                                   dataConnection,
+		TraceOperation                                                   traceOperation,
+		Func<TContext, string?>?                                         commandText,
+		TContext                                                         context,
+		Func<DataConnection, TContext, CancellationToken, Task<TResult>> action,
+		CancellationToken                                                cancellationToken)
+	{
+		var now       = DateTime.UtcNow;
+		Stopwatch? sw = null;
+		var sql       = dataConnection.TraceSwitchConnection.TraceInfo ? commandText?.Invoke(context) : null;
+
+		if (dataConnection.TraceSwitchConnection.TraceInfo)
+		{
+			sw = Stopwatch.StartNew();
+			dataConnection.OnTraceConnection(new TraceInfo(dataConnection, TraceInfoStep.BeforeExecute, traceOperation, true)
+			{
+				TraceLevel  = TraceLevel.Info,
+				CommandText = sql,
+				StartTime   = now,
+			});
+		}
+
+		try
+		{
+			var actionResult = await action(dataConnection, context, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+
+			if (dataConnection.TraceSwitchConnection.TraceInfo)
+			{
+				dataConnection.OnTraceConnection(new TraceInfo(dataConnection, TraceInfoStep.AfterExecute, traceOperation, true)
+				{
+					TraceLevel    = TraceLevel.Info,
+					CommandText   = sql,
+					StartTime     = now,
+					ExecutionTime = sw!.Elapsed
+				});
+			}
+
+			return actionResult;
+		}
+		catch (Exception ex)
+		{
+			if (dataConnection.TraceSwitchConnection.TraceError)
+			{
+				dataConnection.OnTraceConnection(new TraceInfo(dataConnection, TraceInfoStep.Error, traceOperation, true)
+				{
+					TraceLevel    = TraceLevel.Error,
+					CommandText   = dataConnection.TraceSwitchConnection.TraceInfo ? sql : commandText?.Invoke(context),
+					StartTime     = now,
+					ExecutionTime = sw?.Elapsed,
+					Exception     = ex,
+				});
+			}
+
+			throw;
+		}
+	}
+
+#region ExecuteNonQueryAsync
+
+	protected virtual async Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken)
+	{
+		var result = Option<int>.None;
+
+		if (_commandInterceptor != null)
+			result = await _commandInterceptor.ExecuteNonQueryAsync(new (this), CurrentCommand!, result, cancellationToken)
+				.ConfigureAwait(Configuration.ContinueOnCapturedContext);
+
+		return result.HasValue
+			? result.Value
+			: await CurrentCommand!.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+	}
+
+	internal async Task<int> ExecuteNonQueryDataAsync(CancellationToken cancellationToken)
+	{
+		if (TraceSwitchConnection.Level == TraceLevel.Off)
+#if NATIVE_ASYNC
+			await using (DataProvider.ExecuteScope(this))
+#else
+			using (DataProvider.ExecuteScope(this))
+#endif
+				return await ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+
+		var now = DateTime.UtcNow;
+		var sw  = Stopwatch.StartNew();
+
+		if (TraceSwitchConnection.TraceInfo)
+		{
+			OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute, TraceOperation.ExecuteNonQuery, true)
+			{
+				TraceLevel     = TraceLevel.Info,
+				StartTime      = now,
+				Command        = CurrentCommand,
+			});
+		}
+
+		try
+		{
+			int ret;
+#if NATIVE_ASYNC
+			await using (DataProvider.ExecuteScope(this))
+#else
+			using (DataProvider.ExecuteScope(this))
+#endif
+				ret = await ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+
+			if (TraceSwitchConnection.TraceInfo)
+			{
+				OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute, TraceOperation.ExecuteNonQuery, true)
+				{
+					TraceLevel      = TraceLevel.Info,
+					Command         = CurrentCommand,
+					StartTime       = now,
+					ExecutionTime   = sw.Elapsed,
+					RecordsAffected = ret,
+				});
+			}
+
+			return ret;
+		}
+		catch (Exception ex)
+		{
+			if (TraceSwitchConnection.TraceError)
+			{
+				OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error, TraceOperation.ExecuteNonQuery, true)
+				{
+					TraceLevel     = TraceLevel.Error,
+					Command        = CurrentCommand,
+					StartTime      = now,
+					ExecutionTime  = sw.Elapsed,
+					Exception      = ex,
+				});
+			}
+
+			throw;
+		}
+	}
 
 #endregion
 
 #region ExecuteScalarAsync
 
-		protected virtual async Task<object?> ExecuteScalarAsync(CancellationToken cancellationToken)
+	protected virtual async Task<object?> ExecuteScalarAsync(CancellationToken cancellationToken)
+	{
+		var result = Option<object?>.None;
+
+		if (_commandInterceptor != null)
+			result = await _commandInterceptor.ExecuteScalarAsync(new (this), CurrentCommand!, result, cancellationToken)
+				.ConfigureAwait(Configuration.ContinueOnCapturedContext);
+
+		return result.HasValue
+			? result.Value
+			: await CurrentCommand!.ExecuteScalarAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+	}
+
+	internal async Task<object?> ExecuteScalarDataAsync(CancellationToken cancellationToken)
+	{
+		if (TraceSwitchConnection.Level == TraceLevel.Off)
+#if NATIVE_ASYNC
+			await using (DataProvider.ExecuteScope(this))
+#else
+			using (DataProvider.ExecuteScope(this))
+#endif
+				return await ExecuteScalarAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+
+		var now = DateTime.UtcNow;
+		var sw  = Stopwatch.StartNew();
+
+		if (TraceSwitchConnection.TraceInfo)
 		{
-			var result = Option<object?>.None;
-
-			if (_commandInterceptor != null)
-				result = await _commandInterceptor.ExecuteScalarAsync(new (this), CurrentCommand!, result, cancellationToken)
-					.ConfigureAwait(Configuration.ContinueOnCapturedContext);
-
-			return result.HasValue
-				? result.Value
-				: await CurrentCommand!.ExecuteScalarAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+			OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute, TraceOperation.ExecuteScalar, true)
+			{
+				TraceLevel     = TraceLevel.Info,
+				Command        = CurrentCommand,
+				StartTime      = now,
+			});
 		}
 
-		internal async Task<object?> ExecuteScalarDataAsync(CancellationToken cancellationToken)
+		try
 		{
-			if (TraceSwitchConnection.Level == TraceLevel.Off)
+			object? ret;
 #if NATIVE_ASYNC
-				await using (DataProvider.ExecuteScope(this))
+			await using (DataProvider.ExecuteScope(this))
 #else
-				using (DataProvider.ExecuteScope(this))
+			using (DataProvider.ExecuteScope(this))
 #endif
-					return await ExecuteScalarAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-
-			var now = DateTime.UtcNow;
-			var sw  = Stopwatch.StartNew();
+				ret = await ExecuteScalarAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 			if (TraceSwitchConnection.TraceInfo)
 			{
-				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute, TraceOperation.ExecuteScalar, true)
+				OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute, TraceOperation.ExecuteScalar, true)
 				{
-					TraceLevel     = TraceLevel.Info,
-					Command        = CurrentCommand,
-					StartTime      = now,
+					TraceLevel      = TraceLevel.Info,
+					Command         = CurrentCommand,
+					StartTime       = now,
+					ExecutionTime   = sw.Elapsed,
 				});
 			}
 
-			try
-			{
-				object? ret;
-#if NATIVE_ASYNC
-				await using (DataProvider.ExecuteScope(this))
-#else
-				using (DataProvider.ExecuteScope(this))
-#endif
-					ret = await ExecuteScalarAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-
-				if (TraceSwitchConnection.TraceInfo)
-				{
-					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute, TraceOperation.ExecuteScalar, true)
-					{
-						TraceLevel      = TraceLevel.Info,
-						Command         = CurrentCommand,
-						StartTime       = now,
-						ExecutionTime   = sw.Elapsed,
-					});
-				}
-
-				return ret;
-			}
-			catch (Exception ex)
-			{
-				if (TraceSwitchConnection.TraceError)
-				{
-					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error, TraceOperation.ExecuteScalar, true)
-					{
-						TraceLevel     = TraceLevel.Error,
-						Command        = CurrentCommand,
-						StartTime      = now,
-						ExecutionTime  = sw.Elapsed,
-						Exception      = ex,
-					});
-				}
-
-				throw;
-			}
+			return ret;
 		}
+		catch (Exception ex)
+		{
+			if (TraceSwitchConnection.TraceError)
+			{
+				OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error, TraceOperation.ExecuteScalar, true)
+				{
+					TraceLevel     = TraceLevel.Error,
+					Command        = CurrentCommand,
+					StartTime      = now,
+					ExecutionTime  = sw.Elapsed,
+					Exception      = ex,
+				});
+			}
+
+			throw;
+		}
+	}
 
 #endregion
 
 #region ExecuteReaderAsync
 
-		protected virtual async Task<DataReaderWrapper> ExecuteReaderAsync(
-			CommandBehavior   commandBehavior,
-			CancellationToken cancellationToken)
-		{
-			var result = Option<DbDataReader>.None;
+	protected virtual async Task<DataReaderWrapper> ExecuteReaderAsync(
+		CommandBehavior   commandBehavior,
+		CancellationToken cancellationToken)
+	{
+		var result = Option<DbDataReader>.None;
 
-			if (_commandInterceptor != null)
-				result = await _commandInterceptor.ExecuteReaderAsync(new (this), CurrentCommand!, commandBehavior, result, cancellationToken)
+		if (_commandInterceptor != null)
+			result = await _commandInterceptor.ExecuteReaderAsync(new (this), CurrentCommand!, commandBehavior, result, cancellationToken)
+				.ConfigureAwait(Configuration.ContinueOnCapturedContext);
+
+		var dr = result.HasValue
+			? result.Value
+			: await CurrentCommand!.ExecuteReaderAsync(commandBehavior, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+
+		if (_commandInterceptor != null)
+			_commandInterceptor.AfterExecuteReader(new (this), _command!, commandBehavior, dr);
+
+		var wrapper = new DataReaderWrapper(this, dr, CurrentCommand);
+		_command    = null;
+
+		return wrapper;
+	}
+
+	internal async Task<DataReaderWrapper> ExecuteDataReaderAsync(
+		CommandBehavior commandBehavior,
+		CancellationToken cancellationToken)
+	{
+		if (TraceSwitchConnection.Level == TraceLevel.Off)
+#if NATIVE_ASYNC
+			await using (DataProvider.ExecuteScope(this))
+#else
+			using (DataProvider.ExecuteScope(this))
+#endif
+				return await ExecuteReaderAsync(commandBehavior, cancellationToken)
 					.ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
-			var dr = result.HasValue
-				? result.Value
-				: await CurrentCommand!.ExecuteReaderAsync(commandBehavior, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+		var now = DateTime.UtcNow;
+		var sw  = Stopwatch.StartNew();
 
-			if (_commandInterceptor != null)
-				_commandInterceptor.AfterExecuteReader(new (this), _command!, commandBehavior, dr);
-
-			var wrapper = new DataReaderWrapper(this, dr, CurrentCommand);
-			_command    = null;
-
-			return wrapper;
+		if (TraceSwitchConnection.TraceInfo)
+		{
+			OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute, TraceOperation.ExecuteReader, true)
+			{
+				TraceLevel     = TraceLevel.Info,
+				Command        = CurrentCommand,
+				StartTime      = now,
+			});
 		}
 
-		internal async Task<DataReaderWrapper> ExecuteDataReaderAsync(
-			CommandBehavior commandBehavior,
-			CancellationToken cancellationToken)
+		try
 		{
-			if (TraceSwitchConnection.Level == TraceLevel.Off)
-#if NATIVE_ASYNC
-				await using (DataProvider.ExecuteScope(this))
-#else
-				using (DataProvider.ExecuteScope(this))
-#endif
-					return await ExecuteReaderAsync(commandBehavior, cancellationToken)
-						.ConfigureAwait(Configuration.ContinueOnCapturedContext);
+			DataReaderWrapper ret;
 
-			var now = DateTime.UtcNow;
-			var sw  = Stopwatch.StartNew();
+#if NATIVE_ASYNC
+			await using (DataProvider.ExecuteScope(this))
+#else
+			using (DataProvider.ExecuteScope(this))
+#endif
+				ret = await ExecuteReaderAsync(commandBehavior, cancellationToken)
+					.ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 			if (TraceSwitchConnection.TraceInfo)
 			{
-				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute, TraceOperation.ExecuteReader, true)
+				OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute, TraceOperation.ExecuteReader, true)
 				{
 					TraceLevel     = TraceLevel.Info,
-					Command        = CurrentCommand,
+					Command        = ret.Command,
 					StartTime      = now,
+					ExecutionTime  = sw.Elapsed,
 				});
 			}
 
-			try
-			{
-				DataReaderWrapper ret;
-
-#if NATIVE_ASYNC
-				await using (DataProvider.ExecuteScope(this))
-#else
-				using (DataProvider.ExecuteScope(this))
-#endif
-					ret = await ExecuteReaderAsync(commandBehavior, cancellationToken)
-						.ConfigureAwait(Configuration.ContinueOnCapturedContext);
-
-				if (TraceSwitchConnection.TraceInfo)
-				{
-					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute, TraceOperation.ExecuteReader, true)
-					{
-						TraceLevel     = TraceLevel.Info,
-						Command        = ret.Command,
-						StartTime      = now,
-						ExecutionTime  = sw.Elapsed,
-					});
-				}
-
-				return ret;
-			}
-			catch (Exception ex)
-			{
-				if (TraceSwitchConnection.TraceError)
-				{
-					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error, TraceOperation.ExecuteReader, true)
-					{
-						TraceLevel     = TraceLevel.Error,
-						Command        = CurrentCommand,
-						StartTime      = now,
-						ExecutionTime  = sw.Elapsed,
-						Exception      = ex,
-					});
-				}
-
-				throw;
-			}
+			return ret;
 		}
+		catch (Exception ex)
+		{
+			if (TraceSwitchConnection.TraceError)
+			{
+				OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error, TraceOperation.ExecuteReader, true)
+				{
+					TraceLevel     = TraceLevel.Error,
+					Command        = CurrentCommand,
+					StartTime      = now,
+					ExecutionTime  = sw.Elapsed,
+					Exception      = ex,
+				});
+			}
+
+			throw;
+		}
+	}
 
 #endregion
-	}
 }

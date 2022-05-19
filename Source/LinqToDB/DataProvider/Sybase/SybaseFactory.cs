@@ -2,17 +2,16 @@
 using System.Linq;
 using JetBrains.Annotations;
 
-namespace LinqToDB.DataProvider.Sybase
-{
-	using Configuration;
+namespace LinqToDB.DataProvider.Sybase;
 
-	[UsedImplicitly]
-	class SybaseFactory : IDataProviderFactory
+using Configuration;
+
+[UsedImplicitly]
+class SybaseFactory : IDataProviderFactory
+{
+	IDataProvider IDataProviderFactory.GetDataProvider(IEnumerable<NamedValue> attributes)
 	{
-		IDataProvider IDataProviderFactory.GetDataProvider(IEnumerable<NamedValue> attributes)
-		{
-			var assemblyName = attributes.FirstOrDefault(_ => _.Name == "assemblyName");
-			return SybaseTools.GetDataProvider(null, assemblyName?.Value);
-		}
+		var assemblyName = attributes.FirstOrDefault(_ => _.Name == "assemblyName");
+		return SybaseTools.GetDataProvider(null, assemblyName?.Value);
 	}
 }

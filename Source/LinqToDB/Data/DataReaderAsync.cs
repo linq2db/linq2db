@@ -6,228 +6,227 @@ using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace LinqToDB.Data
-{
-	public class DataReaderAsync : IDisposable
+namespace LinqToDB.Data;
+
+public class DataReaderAsync : IDisposable
 #if !NETFRAMEWORK
-		, IAsyncDisposable
+	, IAsyncDisposable
 #endif
+{
+	internal DataReaderWrapper? ReaderWrapper     { get; private set; }
+	public   DbDataReader?      Reader            => ReaderWrapper?.DataReader;
+	public   CommandInfo?       CommandInfo       { get; }
+	internal int                ReadNumber        { get; set; }
+	internal CancellationToken  CancellationToken { get; set; }
+	private  DateTime           StartedOn         { get; }      = DateTime.UtcNow;
+	private  Stopwatch          Stopwatch         { get; }      = Stopwatch.StartNew();
+
+	public DataReaderAsync(CommandInfo commandInfo, DataReaderWrapper dataReader)
 	{
-		internal DataReaderWrapper? ReaderWrapper     { get; private set; }
-		public   DbDataReader?      Reader            => ReaderWrapper?.DataReader;
-		public   CommandInfo?       CommandInfo       { get; }
-		internal int                ReadNumber        { get; set; }
-		internal CancellationToken  CancellationToken { get; set; }
-		private  DateTime           StartedOn         { get; }      = DateTime.UtcNow;
-		private  Stopwatch          Stopwatch         { get; }      = Stopwatch.StartNew();
+		CommandInfo   = commandInfo;
+		ReaderWrapper = dataReader;
+	}
 
-		public DataReaderAsync(CommandInfo commandInfo, DataReaderWrapper dataReader)
+	public void Dispose()
+	{
+		if (ReaderWrapper != null)
 		{
-			CommandInfo   = commandInfo;
-			ReaderWrapper = dataReader;
-		}
+			ReaderWrapper.Dispose();
 
-		public void Dispose()
-		{
-			if (ReaderWrapper != null)
+			if (CommandInfo?.DataConnection.TraceSwitchConnection.TraceInfo == true)
 			{
-				ReaderWrapper.Dispose();
-
-				if (CommandInfo?.DataConnection.TraceSwitchConnection.TraceInfo == true)
+				CommandInfo.DataConnection.OnTraceConnection(new TraceInfo(CommandInfo.DataConnection, TraceInfoStep.Completed, TraceOperation.ExecuteReader, false)
 				{
-					CommandInfo.DataConnection.OnTraceConnection(new TraceInfo(CommandInfo.DataConnection, TraceInfoStep.Completed, TraceOperation.ExecuteReader, false)
-					{
-						TraceLevel      = TraceLevel.Info,
-						Command         = ReaderWrapper.Command,
-						StartTime       = StartedOn,
-						ExecutionTime   = Stopwatch.Elapsed,
-						RecordsAffected = ReadNumber,
-					});
-				}
-
-				ReaderWrapper.Dispose();
-				ReaderWrapper = null;
+					TraceLevel      = TraceLevel.Info,
+					Command         = ReaderWrapper.Command,
+					StartTime       = StartedOn,
+					ExecutionTime   = Stopwatch.Elapsed,
+					RecordsAffected = ReadNumber,
+				});
 			}
+
+			ReaderWrapper.Dispose();
+			ReaderWrapper = null;
 		}
+	}
 
 #if NETSTANDARD2_1PLUS
-		public async ValueTask DisposeAsync()
+	public async ValueTask DisposeAsync()
+	{
+		if (ReaderWrapper != null)
 		{
-			if (ReaderWrapper != null)
+			await ReaderWrapper.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+
+			if (CommandInfo?.DataConnection.TraceSwitchConnection.TraceInfo == true)
 			{
-				await ReaderWrapper.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-
-				if (CommandInfo?.DataConnection.TraceSwitchConnection.TraceInfo == true)
+				CommandInfo.DataConnection.OnTraceConnection(new TraceInfo(CommandInfo.DataConnection, TraceInfoStep.Completed, TraceOperation.ExecuteReader, true)
 				{
-					CommandInfo.DataConnection.OnTraceConnection(new TraceInfo(CommandInfo.DataConnection, TraceInfoStep.Completed, TraceOperation.ExecuteReader, true)
-					{
-						TraceLevel      = TraceLevel.Info,
-						Command         = ReaderWrapper.Command,
-						StartTime       = StartedOn,
-						ExecutionTime   = Stopwatch.Elapsed,
-						RecordsAffected = ReadNumber,
-					});
-				}
-
-				await ReaderWrapper.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-				ReaderWrapper = null;
+					TraceLevel      = TraceLevel.Info,
+					Command         = ReaderWrapper.Command,
+					StartTime       = StartedOn,
+					ExecutionTime   = Stopwatch.Elapsed,
+					RecordsAffected = ReadNumber,
+				});
 			}
+
+			await ReaderWrapper.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			ReaderWrapper = null;
 		}
+	}
 #elif NATIVE_ASYNC
-		public ValueTask DisposeAsync()
-		{
-			Dispose();
-			return default;
-		}
+	public ValueTask DisposeAsync()
+	{
+		Dispose();
+		return default;
+	}
 #else
-		public Task DisposeAsync()
-		{
-			Dispose();
-			return TaskEx.CompletedTask;
-		}
+	public Task DisposeAsync()
+	{
+		Dispose();
+		return TaskEx.CompletedTask;
+	}
 #endif
 
-		#region Query with object reader
+	#region Query with object reader
 
-		public Task<List<T>> QueryToListAsync<T>(Func<DbDataReader, T> objectReader)
-		{
-			return QueryToListAsync(objectReader, CancellationToken.None);
-		}
-
-		public async Task<List<T>> QueryToListAsync<T>(Func<DbDataReader, T> objectReader, CancellationToken cancellationToken)
-		{
-			var list = new List<T>();
-			await QueryForEachAsync(objectReader, list.Add, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-			return list;
-		}
-
-		public Task<T[]> QueryToArrayAsync<T>(Func<DbDataReader, T> objectReader)
-		{
-			return QueryToArrayAsync(objectReader, CancellationToken.None);
-		}
-
-		public async Task<T[]> QueryToArrayAsync<T>(Func<DbDataReader, T> objectReader, CancellationToken cancellationToken)
-		{
-			var list = new List<T>();
-			await QueryForEachAsync(objectReader, list.Add, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-			return list.ToArray();
-		}
-
-		public Task QueryForEachAsync<T>(Func<DbDataReader, T> objectReader, Action<T> action)
-		{
-			return QueryForEachAsync(objectReader, action, CancellationToken.None);
-		}
-
-		public async Task QueryForEachAsync<T>(Func<DbDataReader, T> objectReader, Action<T> action, CancellationToken cancellationToken)
-		{
-			while (await Reader!.ReadAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
-				action(objectReader(Reader));
-		}
-
-		#endregion
-
-		#region Query
-
-		public Task<List<T>> QueryToListAsync<T>()
-		{
-			return QueryToListAsync<T>(CancellationToken.None);
-		}
-
-		public async Task<List<T>> QueryToListAsync<T>(CancellationToken cancellationToken)
-		{
-			var list = new List<T>();
-			await QueryForEachAsync<T>(list.Add, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-			return list;
-		}
-
-		public Task<T[]> QueryToArrayAsync<T>()
-		{
-			return QueryToArrayAsync<T>(CancellationToken.None);
-		}
-
-		public async Task<T[]> QueryToArrayAsync<T>(CancellationToken cancellationToken)
-		{
-			var list = new List<T>();
-			await QueryForEachAsync<T>(list.Add, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-			return list.ToArray();
-		}
-
-		public Task QueryForEachAsync<T>(Action<T> action)
-		{
-			return QueryForEachAsync(action, CancellationToken.None);
-		}
-
-		public async Task QueryForEachAsync<T>(Action<T> action, CancellationToken cancellationToken)
-		{
-			if (ReadNumber != 0)
-				if (!await Reader!.NextResultAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
-					return;
-
-			ReadNumber++;
-
-			await CommandInfo!.ExecuteQueryAsync(Reader!, CommandInfo.CommandText + "$$$" + ReadNumber, action, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-		}
-
-		#endregion
-
-		#region Query with template
-
-		public Task<List<T>> QueryToListAsync<T>(T template)
-		{
-			return QueryToListAsync(template, CancellationToken.None);
-		}
-
-		public async Task<List<T>> QueryToListAsync<T>(T template, CancellationToken cancellationToken)
-		{
-			var list = new List<T>();
-			await QueryForEachAsync(template, list.Add, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-			return list;
-		}
-
-		public Task<T[]> QueryToArrayAsync<T>(T template)
-		{
-			return QueryToArrayAsync(template, CancellationToken.None);
-		}
-
-		public async Task<T[]> QueryToArrayAsync<T>(T template, CancellationToken cancellationToken)
-		{
-			var list = new List<T>();
-			await QueryForEachAsync(template, list.Add, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-			return list.ToArray();
-		}
-
-		public Task QueryForEachAsync<T>(T template, Action<T> action)
-		{
-			return QueryForEachAsync(template, action, CancellationToken.None);
-		}
-
-		public Task QueryForEachAsync<T>(T template, Action<T> action, CancellationToken cancellationToken)
-		{
-			return QueryForEachAsync(action, cancellationToken);
-		}
-
-		#endregion
-
-		#region Execute scalar
-
-		public Task<T> ExecuteForEachAsync<T>()
-		{
-			return ExecuteForEachAsync<T>(CancellationToken.None);
-		}
-
-		public async Task<T> ExecuteForEachAsync<T>(CancellationToken cancellationToken)
-		{
-			if (ReadNumber != 0)
-				if (!await Reader!.NextResultAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
-					return default(T)!;
-
-			ReadNumber++;
-
-			var sql = CommandInfo!.CommandText + "$$$" + ReadNumber;
-
-			return await CommandInfo.ExecuteScalarAsync<T>(Reader!, sql, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-		}
-
-		#endregion
+	public Task<List<T>> QueryToListAsync<T>(Func<DbDataReader, T> objectReader)
+	{
+		return QueryToListAsync(objectReader, CancellationToken.None);
 	}
+
+	public async Task<List<T>> QueryToListAsync<T>(Func<DbDataReader, T> objectReader, CancellationToken cancellationToken)
+	{
+		var list = new List<T>();
+		await QueryForEachAsync(objectReader, list.Add, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+		return list;
+	}
+
+	public Task<T[]> QueryToArrayAsync<T>(Func<DbDataReader, T> objectReader)
+	{
+		return QueryToArrayAsync(objectReader, CancellationToken.None);
+	}
+
+	public async Task<T[]> QueryToArrayAsync<T>(Func<DbDataReader, T> objectReader, CancellationToken cancellationToken)
+	{
+		var list = new List<T>();
+		await QueryForEachAsync(objectReader, list.Add, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+		return list.ToArray();
+	}
+
+	public Task QueryForEachAsync<T>(Func<DbDataReader, T> objectReader, Action<T> action)
+	{
+		return QueryForEachAsync(objectReader, action, CancellationToken.None);
+	}
+
+	public async Task QueryForEachAsync<T>(Func<DbDataReader, T> objectReader, Action<T> action, CancellationToken cancellationToken)
+	{
+		while (await Reader!.ReadAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+			action(objectReader(Reader));
+	}
+
+	#endregion
+
+	#region Query
+
+	public Task<List<T>> QueryToListAsync<T>()
+	{
+		return QueryToListAsync<T>(CancellationToken.None);
+	}
+
+	public async Task<List<T>> QueryToListAsync<T>(CancellationToken cancellationToken)
+	{
+		var list = new List<T>();
+		await QueryForEachAsync<T>(list.Add, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+		return list;
+	}
+
+	public Task<T[]> QueryToArrayAsync<T>()
+	{
+		return QueryToArrayAsync<T>(CancellationToken.None);
+	}
+
+	public async Task<T[]> QueryToArrayAsync<T>(CancellationToken cancellationToken)
+	{
+		var list = new List<T>();
+		await QueryForEachAsync<T>(list.Add, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+		return list.ToArray();
+	}
+
+	public Task QueryForEachAsync<T>(Action<T> action)
+	{
+		return QueryForEachAsync(action, CancellationToken.None);
+	}
+
+	public async Task QueryForEachAsync<T>(Action<T> action, CancellationToken cancellationToken)
+	{
+		if (ReadNumber != 0)
+			if (!await Reader!.NextResultAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+				return;
+
+		ReadNumber++;
+
+		await CommandInfo!.ExecuteQueryAsync(Reader!, CommandInfo.CommandText + "$$$" + ReadNumber, action, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+	}
+
+	#endregion
+
+	#region Query with template
+
+	public Task<List<T>> QueryToListAsync<T>(T template)
+	{
+		return QueryToListAsync(template, CancellationToken.None);
+	}
+
+	public async Task<List<T>> QueryToListAsync<T>(T template, CancellationToken cancellationToken)
+	{
+		var list = new List<T>();
+		await QueryForEachAsync(template, list.Add, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+		return list;
+	}
+
+	public Task<T[]> QueryToArrayAsync<T>(T template)
+	{
+		return QueryToArrayAsync(template, CancellationToken.None);
+	}
+
+	public async Task<T[]> QueryToArrayAsync<T>(T template, CancellationToken cancellationToken)
+	{
+		var list = new List<T>();
+		await QueryForEachAsync(template, list.Add, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+		return list.ToArray();
+	}
+
+	public Task QueryForEachAsync<T>(T template, Action<T> action)
+	{
+		return QueryForEachAsync(template, action, CancellationToken.None);
+	}
+
+	public Task QueryForEachAsync<T>(T template, Action<T> action, CancellationToken cancellationToken)
+	{
+		return QueryForEachAsync(action, cancellationToken);
+	}
+
+	#endregion
+
+	#region Execute scalar
+
+	public Task<T> ExecuteForEachAsync<T>()
+	{
+		return ExecuteForEachAsync<T>(CancellationToken.None);
+	}
+
+	public async Task<T> ExecuteForEachAsync<T>(CancellationToken cancellationToken)
+	{
+		if (ReadNumber != 0)
+			if (!await Reader!.NextResultAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+				return default(T)!;
+
+		ReadNumber++;
+
+		var sql = CommandInfo!.CommandText + "$$$" + ReadNumber;
+
+		return await CommandInfo.ExecuteScalarAsync<T>(Reader!, sql, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+	}
+
+	#endregion
 }

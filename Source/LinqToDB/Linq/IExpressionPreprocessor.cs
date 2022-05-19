@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Linq.Expressions;
 
-namespace LinqToDB.Linq
+namespace LinqToDB.Linq;
+
+public interface IExpressionPreprocessor
 {
-	public interface IExpressionPreprocessor
-	{
-		Expression ProcessExpression(Expression expression);
-	}
+	Expression ProcessExpression(Expression expression);
 }

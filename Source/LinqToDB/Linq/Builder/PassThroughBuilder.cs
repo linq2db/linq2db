@@ -2,23 +2,22 @@
 using System.Reflection;
 using System.Linq.Expressions;
 
-namespace LinqToDB.Linq.Builder
+namespace LinqToDB.Linq.Builder;
+
+using LinqToDB.Expressions;
+using Reflection;
+
+class PassThroughBuilder : MethodCallBuilder
 {
-	using LinqToDB.Expressions;
-	using Reflection;
+	static readonly MethodInfo[] _supportedMethods = { Methods.Enumerable.AsQueryable, Methods.LinqToDB.AsQueryable, Methods.LinqToDB.SqlExt.Alias };
 
-	class PassThroughBuilder : MethodCallBuilder
+	protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 	{
-		static readonly MethodInfo[] _supportedMethods = { Methods.Enumerable.AsQueryable, Methods.LinqToDB.AsQueryable, Methods.LinqToDB.SqlExt.Alias };
+		return methodCall.IsSameGenericMethod(_supportedMethods);
+	}
 
-		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-		{
-			return methodCall.IsSameGenericMethod(_supportedMethods);
-		}
-
-		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-		{
-			return builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
-		}
+	protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+	{
+		return builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 	}
 }

@@ -1,9 +1,8 @@
-﻿namespace LinqToDB.Linq.Builder
+﻿namespace LinqToDB.Linq.Builder;
+
+public enum ConvertFlags
 {
-	public enum ConvertFlags
-	{
-		Field,
-		Key,
-		All,
-	}
+	Field,
+	Key,
+	All,
 }

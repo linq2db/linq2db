@@ -6,41 +6,40 @@ using LinqToDB.SqlQuery;
 
 using NUnit.Framework;
 
-namespace Tests.Linq
+namespace Tests.Linq;
+
+using Model;
+
+[TestFixture]
+public class ParserTests : TestBase
 {
-	using Model;
-
-	[TestFixture]
-	public class ParserTests : TestBase
+	[Test]
+	public void Join6([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 	{
-		[Test]
-		public void Join6([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		using (var db = GetDataConnection(context))
 		{
-			using (var db = GetDataConnection(context))
-			{
-				var actual =
-					from g in db.GrandChild
-					join p in db.Parent4 on g.Child!.ParentID equals p.ParentID
-					select g;
+			var actual =
+				from g in db.GrandChild
+				join p in db.Parent4 on g.Child!.ParentID equals p.ParentID
+				select g;
 
-				var expected =
-					from g in GrandChild
-					join p in Parent4 on g.Child!.ParentID equals p.ParentID
-					select g;
+			var expected =
+				from g in GrandChild
+				join p in Parent4 on g.Child!.ParentID equals p.ParentID
+				select g;
 
-				AreEqual(expected, actual);
-			}
+			AreEqual(expected, actual);
 		}
+	}
 
-		[Test]
-		public void OracleXmlTable()
+	[Test]
+	public void OracleXmlTable()
+	{
+		using (var db = new TestDataConnection())
 		{
-			using (var db = new TestDataConnection())
-			{
-				Assert.IsNotNull(db.OracleXmlTable<Person>(() => "<xml/>"));
-				Assert.IsNotNull(db.OracleXmlTable<Person>("<xml/>"));
-				Assert.IsNotNull(db.OracleXmlTable(new[] { new Person() }));
-			}
+			Assert.IsNotNull(db.OracleXmlTable<Person>(() => "<xml/>"));
+			Assert.IsNotNull(db.OracleXmlTable<Person>("<xml/>"));
+			Assert.IsNotNull(db.OracleXmlTable(new[] { new Person() }));
 		}
 	}
 }

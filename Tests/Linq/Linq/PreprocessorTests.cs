@@ -7,50 +7,49 @@ using LinqToDB.Linq;
 
 using NUnit.Framework;
 
-namespace Tests.Linq
+namespace Tests.Linq;
+
+using LinqToDB;
+using Model;
+
+[TestFixture]
+public class PreprocessorTests : TestBase
 {
-	using LinqToDB;
-	using Model;
-
-	[TestFixture]
-	public class PreprocessorTests : TestBase
+	class PostProcessorDataConnection : DataConnection, IExpressionPreprocessor
 	{
-		class PostProcessorDataConnection : DataConnection, IExpressionPreprocessor
+		public PostProcessorDataConnection(string configurationString) : base(configurationString)
 		{
-			public PostProcessorDataConnection(string configurationString) : base(configurationString)
-			{
-			}
-
-			public Expression ProcessExpression(Expression expression)
-			{
-				var result = expression.Transform<object?>(null, static (_, e) =>
-				{
-					if (e.NodeType == ExpressionType.Constant)
-					{
-						var constant = (ConstantExpression) e;
-						if (constant.Value is int)
-						{
-							return Expression.Constant((int) constant.Value + 1);
-						}
-					}
-					return e;
-				});
-
-				return result;
-			}
 		}
 
-
-		[Test]
-		public void Test([DataSources(false)] string context)
+		public Expression ProcessExpression(Expression expression)
 		{
-			using (var db = new PostProcessorDataConnection(context))
+			var result = expression.Transform<object?>(null, static (_, e) =>
 			{
-				for (int i = 0; i < 3; i++)
+				if (e.NodeType == ExpressionType.Constant)
 				{
-					var newId = db.GetTable<Parent>().Where(p => p.ParentID == 1).Select(p => p.ParentID).First();
-					Assert.AreEqual(2, newId);
+					var constant = (ConstantExpression) e;
+					if (constant.Value is int)
+					{
+						return Expression.Constant((int) constant.Value + 1);
+					}
 				}
+				return e;
+			});
+
+			return result;
+		}
+	}
+
+
+	[Test]
+	public void Test([DataSources(false)] string context)
+	{
+		using (var db = new PostProcessorDataConnection(context))
+		{
+			for (int i = 0; i < 3; i++)
+			{
+				var newId = db.GetTable<Parent>().Where(p => p.ParentID == 1).Select(p => p.ParentID).First();
+				Assert.AreEqual(2, newId);
 			}
 		}
 	}

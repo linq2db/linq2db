@@ -1,13 +1,12 @@
-﻿namespace LinqToDB.Linq
+﻿namespace LinqToDB.Linq;
+
+using SqlQuery;
+
+public interface IQueryContext
 {
-	using SqlQuery;
+	SqlStatement    Statement   { get; }
+	object?         Context     { get; set; }
 
-	public interface IQueryContext
-	{
-		SqlStatement    Statement   { get; }
-		object?         Context     { get; set; }
-
-		SqlParameter[]? Parameters  { get; set; }
-		AliasesContext? Aliases     { get; set; }
-	}
+	SqlParameter[]? Parameters  { get; set; }
+	AliasesContext? Aliases     { get; set; }
 }

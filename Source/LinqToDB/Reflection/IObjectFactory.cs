@@ -1,9 +1,8 @@
 using System;
 
-namespace LinqToDB.Reflection
+namespace LinqToDB.Reflection;
+
+public interface IObjectFactory
 {
-	public interface IObjectFactory
-	{
-		object CreateInstance(TypeAccessor typeAccessor);
-	}
+	object CreateInstance(TypeAccessor typeAccessor);
 }

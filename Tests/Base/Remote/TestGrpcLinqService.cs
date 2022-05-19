@@ -1,75 +1,74 @@
 ﻿#if !NETFRAMEWORK
 using System;
 
-namespace Tests.Remote
+namespace Tests.Remote;
+
+using LinqToDB.Data;
+using LinqToDB.Interceptors;
+using LinqToDB.Mapping;
+using LinqToDB.Remote;
+
+using LinqToDB.Remote.Grpc;
+
+internal class TestGrpcLinqService : GrpcLinqService
 {
-	using LinqToDB.Data;
-	using LinqToDB.Interceptors;
-	using LinqToDB.Mapping;
-	using LinqToDB.Remote;
+	private readonly LinqService    _linqService;
 
-	using LinqToDB.Remote.Grpc;
+	public bool SuppressSequentialAccess { get; set; }
 
-	internal class TestGrpcLinqService : GrpcLinqService
+	public bool AllowUpdates
 	{
-		private readonly LinqService    _linqService;
+		get => _linqService.AllowUpdates;
+		set => _linqService.AllowUpdates = value;
+	}
 
-		public bool SuppressSequentialAccess { get; set; }
+	public MappingSchema? MappingSchema
+	{
+		get => _linqService.MappingSchema;
+		set => _linqService.MappingSchema = value;
+	}
 
-		public bool AllowUpdates
-		{
-			get => _linqService.AllowUpdates;
-			set => _linqService.AllowUpdates = value;
-		}
+	public TestGrpcLinqService(
+		LinqService linqService,
+		IInterceptor? interceptor,
+		bool suppressSequentialAccess)
+		: base(linqService, true)
+	{
+		_linqService             = linqService;
+		_interceptor             = interceptor;
+		SuppressSequentialAccess = suppressSequentialAccess;
 
-		public MappingSchema? MappingSchema
-		{
-			get => _linqService.MappingSchema;
-			set => _linqService.MappingSchema = value;
-		}
+	}
 
-		public TestGrpcLinqService(
-			LinqService linqService,
-			IInterceptor? interceptor,
-			bool suppressSequentialAccess)
-			: base(linqService, true)
-		{
-			_linqService             = linqService;
-			_interceptor             = interceptor;
-			SuppressSequentialAccess = suppressSequentialAccess;
+	public DataConnection CreateDataContext(string? configuration)
+	{
+		var dc = _linqService.CreateDataContext(configuration);
 
-		}
+		if (!SuppressSequentialAccess && configuration?.IsAnyOf(TestProvName.AllSqlServerSequentialAccess) == true)
+			dc.AddInterceptor(SequentialAccessCommandInterceptor.Instance);
 
-		public DataConnection CreateDataContext(string? configuration)
-		{
-			var dc = _linqService.CreateDataContext(configuration);
+		if (_interceptor != null)
+			dc.AddInterceptor(_interceptor);
 
-			if (!SuppressSequentialAccess && configuration?.IsAnyOf(TestProvName.AllSqlServerSequentialAccess) == true)
-				dc.AddInterceptor(SequentialAccessCommandInterceptor.Instance);
+		return dc;
+	}
 
-			if (_interceptor != null)
-				dc.AddInterceptor(_interceptor);
+	// for now we need only one test interceptor
+	private IInterceptor? _interceptor;
 
-			return dc;
-		}
+	public void AddInterceptor(IInterceptor interceptor)
+	{
+		if (_interceptor != null)
+			throw new InvalidOperationException();
 
-		// for now we need only one test interceptor
-		private IInterceptor? _interceptor;
+		_interceptor = interceptor;
+	}
 
-		public void AddInterceptor(IInterceptor interceptor)
-		{
-			if (_interceptor != null)
-				throw new InvalidOperationException();
-
-			_interceptor = interceptor;
-		}
-
-		public void RemoveInterceptor()
-		{
-			if (_interceptor == null)
-				throw new InvalidOperationException();
-			_interceptor = null;
-		}
+	public void RemoveInterceptor()
+	{
+		if (_interceptor == null)
+			throw new InvalidOperationException();
+		_interceptor = null;
 	}
 }
 #endif

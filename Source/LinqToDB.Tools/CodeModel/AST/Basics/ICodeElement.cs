@@ -1,13 +1,12 @@
-﻿namespace LinqToDB.CodeModel
+﻿namespace LinqToDB.CodeModel;
+
+/// <summary>
+/// Base interface, implemented by all AST nodes.
+/// </summary>
+public interface ICodeElement
 {
 	/// <summary>
-	/// Base interface, implemented by all AST nodes.
+	/// Type of node.
 	/// </summary>
-	public interface ICodeElement
-	{
-		/// <summary>
-		/// Type of node.
-		/// </summary>
-		CodeElementType ElementType { get; }
-	}
+	CodeElementType ElementType { get; }
 }

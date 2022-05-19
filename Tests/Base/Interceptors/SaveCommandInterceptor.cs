@@ -4,24 +4,23 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using LinqToDB.Interceptors;
 
-namespace Tests
+namespace Tests;
+
+/// <summary>
+/// Provides access to last command and parameters.
+/// </summary>
+public sealed class SaveCommandInterceptor : CommandInterceptor
 {
-	/// <summary>
-	/// Provides access to last command and parameters.
-	/// </summary>
-	public sealed class SaveCommandInterceptor : CommandInterceptor
+	public DbParameter[] Parameters { get; private set; } = Array.Empty<DbParameter>();
+
+	[MaybeNull]
+	public DbCommand     Command    { get; private set; }
+
+	public override DbCommand CommandInitialized(CommandEventData eventData, DbCommand command)
 	{
-		public DbParameter[] Parameters { get; private set; } = Array.Empty<DbParameter>();
+		Parameters = command.Parameters.Cast<DbParameter>().ToArray();
+		Command    = command;
 
-		[MaybeNull]
-		public DbCommand     Command    { get; private set; }
-
-		public override DbCommand CommandInitialized(CommandEventData eventData, DbCommand command)
-		{
-			Parameters = command.Parameters.Cast<DbParameter>().ToArray();
-			Command    = command;
-
-			return command;
-		}
+		return command;
 	}
 }

@@ -1,10 +1,9 @@
 ﻿using System.Linq.Expressions;
 
-namespace LinqToDB.Tools.Mapper
+namespace LinqToDB.Tools.Mapper;
+
+public class MemberMapperInfo
 {
-	public class MemberMapperInfo
-	{
-		public LambdaExpression ToMember { get; set; } = null!;
-		public LambdaExpression Setter   { get; set; } = null!;
-	}
+	public LambdaExpression ToMember { get; set; } = null!;
+	public LambdaExpression Setter   { get; set; } = null!;
 }

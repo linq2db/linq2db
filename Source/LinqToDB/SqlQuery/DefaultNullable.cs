@@ -1,9 +1,8 @@
-﻿namespace LinqToDB.SqlQuery
+﻿namespace LinqToDB.SqlQuery;
+
+public enum DefaultNullable
 {
-	public enum DefaultNullable
-	{
-		None,
-		Null,
-		NotNull
-	}
+	None,
+	Null,
+	NotNull
 }

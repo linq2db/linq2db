@@ -1,21 +1,20 @@
 ﻿using System;
 using LinqToDB.CommandLine;
 
-namespace LinqToDB.Tools
+namespace LinqToDB.Tools;
+
+internal static class Program
 {
-	internal static class Program
+	private static int Main(string[] args)
 	{
-		private static int Main(string[] args)
+		try
 		{
-			try
-			{
-				return new LinqToDBCliController().Execute(args);
-			}
-			catch (Exception ex)
-			{
-				Console.Error.WriteLine($"Unhandled exception: {ex.Message}{Environment.NewLine}{ex.StackTrace}");
-				return StatusCodes.INTERNAL_ERROR;
-			}
+			return new LinqToDBCliController().Execute(args);
+		}
+		catch (Exception ex)
+		{
+			Console.Error.WriteLine($"Unhandled exception: {ex.Message}{Environment.NewLine}{ex.StackTrace}");
+			return StatusCodes.INTERNAL_ERROR;
 		}
 	}
 }

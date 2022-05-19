@@ -1,26 +1,25 @@
 ﻿using LinqToDB.SqlQuery;
 
-namespace LinqToDB.DataProvider.Sybase
+namespace LinqToDB.DataProvider.Sybase;
+
+partial class SybaseSqlBuilder
 {
-	partial class SybaseSqlBuilder
+	// VALUES(...) syntax not supported
+	protected override bool IsValuesSyntaxSupported => false;
+
+	protected override void BuildMergeTerminator(SqlMergeStatement merge)
 	{
-		// VALUES(...) syntax not supported
-		protected override bool IsValuesSyntaxSupported => false;
+		// for identity column insert - disable explicit insert support
+		if (merge.HasIdentityInsert)
+			BuildIdentityInsert(merge.Target, false);
+	}
 
-		protected override void BuildMergeTerminator(SqlMergeStatement merge)
-		{
-			// for identity column insert - disable explicit insert support
-			if (merge.HasIdentityInsert)
-				BuildIdentityInsert(merge.Target, false);
-		}
+	protected override void BuildMergeStatement(SqlMergeStatement merge)
+	{
+		// for identity column insert - enable explicit insert support
+		if (merge.HasIdentityInsert)
+			BuildIdentityInsert(merge.Target, true);
 
-		protected override void BuildMergeStatement(SqlMergeStatement merge)
-		{
-			// for identity column insert - enable explicit insert support
-			if (merge.HasIdentityInsert)
-				BuildIdentityInsert(merge.Target, true);
-
-			base.BuildMergeStatement(merge);
-		}
+		base.BuildMergeStatement(merge);
 	}
 }

@@ -7,90 +7,89 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
-namespace Tests.UserTests
+namespace Tests.UserTests;
+
+using Model;
+
+[TestFixture]
+public class Issue693Tests : TestBase
 {
-	using Model;
 
-	[TestFixture]
-	public class Issue693Tests : TestBase
+	[Table(Name = "Person")]
+	public class Entity533
 	{
+		[SequenceName(ProviderName.Firebird, "PersonID")]
+		[Column("PersonID"), Identity, PrimaryKey]
+		        public int     ID         { get; set; }
 
-		[Table(Name = "Person")]
-		public class Entity533
+		[Column]public Gender  Gender     { get; set; }
+		[Column]public string  FirstName  { get; set; } = null!;
+		[DataType(DataType.NVarChar, Configuration = ProviderName.Sybase)]
+		[Column]public Test?   MiddleName { get; set; }
+		[Column]public string  LastName   { get; set; } = null!;
+	}
+
+	public enum Test
+	{
+		A
+	}
+
+	[Test]
+	public void Issue693Test([DataSources] string context)
+	{
+		ResetPersonIdentity(context);
+
+		var ms = new MappingSchema();
+
+		ms.SetConverter<Test?, string?>((obj) =>
 		{
-			[SequenceName(ProviderName.Firebird, "PersonID")]
-			[Column("PersonID"), Identity, PrimaryKey]
-			        public int     ID         { get; set; }
+			if (obj != null)
+				return obj.ToString();
+			return null;
+		});
 
-			[Column]public Gender  Gender     { get; set; }
-			[Column]public string  FirstName  { get; set; } = null!;
-			[DataType(DataType.NVarChar, Configuration = ProviderName.Sybase)]
-			[Column]public Test?   MiddleName { get; set; }
-			[Column]public string  LastName   { get; set; } = null!;
-		}
-
-		public enum Test
+		ms.SetConverter<Test?,DataParameter>((obj) =>
 		{
-			A
-		}
+			if (obj != null)
+				return new DataParameter { Value = obj.ToString(), DataType = DataType.NVarChar };
+			return new DataParameter { Value = DBNull.Value };
+		});
 
-		[Test]
-		public void Issue693Test([DataSources] string context)
+		ms.SetConverter<string, Test?>((txt) =>
 		{
-			ResetPersonIdentity(context);
-
-			var ms = new MappingSchema();
-
-			ms.SetConverter<Test?, string?>((obj) =>
-			{
-				if (obj != null)
-					return obj.ToString();
+			if (string.IsNullOrEmpty(txt))
 				return null;
-			});
+			return (Test?)Enum.Parse(typeof(Test), txt, true);
+		});
 
-			ms.SetConverter<Test?,DataParameter>((obj) =>
+		using (var db = GetDataContext(context, ms))
+		using (new DeletePerson(db))
+		{
+			var obj = new Entity533
 			{
-				if (obj != null)
-					return new DataParameter { Value = obj.ToString(), DataType = DataType.NVarChar };
-				return new DataParameter { Value = DBNull.Value };
-			});
+				FirstName  = "a",
+				MiddleName = Test.A,
+				LastName   = "b",
+				Gender     = Gender.Male
+			};
 
-			ms.SetConverter<string, Test?>((txt) =>
+			var id1 = Convert.ToInt32(db.InsertWithIdentity(obj));
+
+			var obj2 = new Entity533
 			{
-				if (string.IsNullOrEmpty(txt))
-					return null;
-				return (Test?)Enum.Parse(typeof(Test), txt, true);
-			});
+				FirstName  = "c",
+				MiddleName = null,
+				LastName   = "d",
+				Gender     = Gender.Male
+			};
 
-			using (var db = GetDataContext(context, ms))
-			using (new DeletePerson(db))
-			{
-				var obj = new Entity533
-				{
-					FirstName  = "a",
-					MiddleName = Test.A,
-					LastName   = "b",
-					Gender     = Gender.Male
-				};
+			var id2 = Convert.ToInt32(db.InsertWithIdentity(obj2));
 
-				var id1 = Convert.ToInt32(db.InsertWithIdentity(obj));
+			var obj3 = db.GetTable<Entity533>().First(_ => _.ID == id1);
+			var obj4 = db.GetTable<Entity533>().First(_ => _.ID == id2);
 
-				var obj2 = new Entity533
-				{
-					FirstName  = "c",
-					MiddleName = null,
-					LastName   = "d",
-					Gender     = Gender.Male
-				};
-
-				var id2 = Convert.ToInt32(db.InsertWithIdentity(obj2));
-
-				var obj3 = db.GetTable<Entity533>().First(_ => _.ID == id1);
-				var obj4 = db.GetTable<Entity533>().First(_ => _.ID == id2);
-
-				Assert.IsNull (obj4.MiddleName);
-				Assert.NotNull(obj3.MiddleName);
-			}
+			Assert.IsNull (obj4.MiddleName);
+			Assert.NotNull(obj3.MiddleName);
 		}
 	}
 }

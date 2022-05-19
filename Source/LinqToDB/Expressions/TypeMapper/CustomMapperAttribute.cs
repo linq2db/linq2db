@@ -1,15 +1,14 @@
 ﻿using System;
 
-namespace LinqToDB.Expressions
-{
-	[AttributeUsage(AttributeTargets.ReturnValue)]
-	public class CustomMapperAttribute : Attribute
-	{
-		public CustomMapperAttribute(Type mapper)
-		{
-			Mapper = mapper;
-		}
+namespace LinqToDB.Expressions;
 
-		internal Type Mapper { get; }
+[AttributeUsage(AttributeTargets.ReturnValue)]
+public class CustomMapperAttribute : Attribute
+{
+	public CustomMapperAttribute(Type mapper)
+	{
+		Mapper = mapper;
 	}
+
+	internal Type Mapper { get; }
 }

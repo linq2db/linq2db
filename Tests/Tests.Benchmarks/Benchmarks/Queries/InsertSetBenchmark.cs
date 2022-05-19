@@ -10,42 +10,41 @@ using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.SqlServer;
 
-namespace LinqToDB.Benchmarks.Queries
+namespace LinqToDB.Benchmarks.Queries;
+
+public class InsertSetBenchmark
 {
-	public class InsertSetBenchmark
+	readonly int            _batchSize = 100;
+	IEnumerable<CreditCard> _data      = null!;
+	QueryResult             _result    = null!;
+	IDataProvider           _provider  = SqlServerTools.GetDataProvider();
+
+	[GlobalSetup]
+	public void Setup()
 	{
-		readonly int            _batchSize = 100;
-		IEnumerable<CreditCard> _data      = null!;
-		QueryResult             _result    = null!;
-		IDataProvider           _provider  = SqlServerTools.GetDataProvider();
-
-		[GlobalSetup]
-		public void Setup()
+		_data = Enumerable.Range(0, 1000).Select(_ => new CreditCard()
 		{
-			_data = Enumerable.Range(0, 1000).Select(_ => new CreditCard()
-			{
-				CreditCardID = _,
-				CardNumber   = $"card #{_}",
-				CardType     = $"card type {_}",
-				ExpMonth     = (byte)(_ % 12),
-				ExpYear      = (short)(_ % 1000),
-				ModifiedDate = DateTime.Now
+			CreditCardID = _,
+			CardNumber   = $"card #{_}",
+			CardType     = $"card type {_}",
+			ExpMonth     = (byte)(_ % 12),
+			ExpYear      = (short)(_ % 1000),
+			ModifiedDate = DateTime.Now
 
-			}).ToArray();
+		}).ToArray();
 
-			_result = new QueryResult()
-			{
-				Return = _batchSize
-			};
-		}
-
-		[Benchmark(Baseline = true)]
-		public BulkCopyRowsCopied Test()
+		_result = new QueryResult()
 		{
-			using (var db = new Db(_provider, _result))
-			{
-				return db.BulkCopy(new BulkCopyOptions { BulkCopyType = BulkCopyType.MultipleRows, MaxBatchSize = _batchSize }, _data);
-			}
+			Return = _batchSize
+		};
+	}
+
+	[Benchmark(Baseline = true)]
+	public BulkCopyRowsCopied Test()
+	{
+		using (var db = new Db(_provider, _result))
+		{
+			return db.BulkCopy(new BulkCopyOptions { BulkCopyType = BulkCopyType.MultipleRows, MaxBatchSize = _batchSize }, _data);
 		}
 	}
 }

@@ -1,30 +1,29 @@
-﻿namespace LinqToDB.Expressions
+﻿namespace LinqToDB.Expressions;
+
+internal class WritableContext<T>
 {
-	internal class WritableContext<T>
+	public T WriteableValue = default!;
+}
+
+internal class WritableContext<TWriteable, TStatic>
+{
+	public WritableContext(TStatic staticValue)
 	{
-		public T WriteableValue = default!;
+		StaticValue = staticValue;
 	}
 
-	internal class WritableContext<TWriteable, TStatic>
+	public readonly TStatic StaticValue;
+
+	public TWriteable WriteableValue = default!;
+}
+
+internal static class WritableContext
+{
+	public static WritableContext<TWriteable, TStatic> Create<TWriteable, TStatic>(TWriteable init, TStatic staticValue)
 	{
-		public WritableContext(TStatic staticValue)
+		return new WritableContext<TWriteable, TStatic>(staticValue)
 		{
-			StaticValue = staticValue;
-		}
-
-		public readonly TStatic StaticValue;
-
-		public TWriteable WriteableValue = default!;
-	}
-
-	internal static class WritableContext
-	{
-		public static WritableContext<TWriteable, TStatic> Create<TWriteable, TStatic>(TWriteable init, TStatic staticValue)
-		{
-			return new WritableContext<TWriteable, TStatic>(staticValue)
-			{
-				WriteableValue = init
-			};
-		}
+			WriteableValue = init
+		};
 	}
 }

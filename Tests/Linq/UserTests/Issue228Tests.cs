@@ -4,32 +4,31 @@ using NUnit.Framework;
 
 using Tests.Model;
 
-namespace Tests.UserTests
+namespace Tests.UserTests;
+
+[TestFixture]
+public class Issue228Tests : TestBase
 {
-	[TestFixture]
-	public class Issue228Tests : TestBase
+	[Test]
+	public void Test([DataSources(false)] string context)
 	{
-		[Test]
-		public void Test([DataSources(false)] string context)
+		using (var db = GetDataConnection(context))
 		{
-			using (var db = GetDataConnection(context))
+			var cnt = db.DataProvider.SqlProviderFlags.MaxInListValuesCount;
+
+			try
 			{
-				var cnt = db.DataProvider.SqlProviderFlags.MaxInListValuesCount;
+				db.DataProvider.SqlProviderFlags.MaxInListValuesCount = 1;
 
-				try
-				{
-					db.DataProvider.SqlProviderFlags.MaxInListValuesCount = 1;
+				var ids = new[] {1, 2};
+				AreEqual(
+					GetTypes(context).Where(_ => !ids.Contains(_.ID)),
+					db.Types.         Where(_ => !ids.Contains(_.ID)));
 
-					var ids = new[] {1, 2};
-					AreEqual(
-						GetTypes(context).Where(_ => !ids.Contains(_.ID)),
-						db.Types.         Where(_ => !ids.Contains(_.ID)));
-
-				}
-				finally
-				{
-					db.DataProvider.SqlProviderFlags.MaxInListValuesCount = cnt;
-				}
+			}
+			finally
+			{
+				db.DataProvider.SqlProviderFlags.MaxInListValuesCount = cnt;
 			}
 		}
 	}

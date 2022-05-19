@@ -4,116 +4,115 @@ using System.Reflection;
 
 using NUnit.Framework;
 
-namespace Tests.UserTests
+namespace Tests.UserTests;
+
+using LinqToDB;
+using LinqToDB.Data;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+
+[TestFixture]
+public class Issue773Tests : TestBase
 {
-	using LinqToDB;
-	using LinqToDB.Data;
-	using LinqToDB.Mapping;
-	using LinqToDB.SqlQuery;
-
-	[TestFixture]
-	public class Issue773Tests : TestBase
+	public static class SqlLite
 	{
-		public static class SqlLite
+		class MatchBuilder : Sql.IExtensionCallBuilder
 		{
-			class MatchBuilder : Sql.IExtensionCallBuilder
+			public void Build(Sql.ISqExtensionBuilder builder)
 			{
-				public void Build(Sql.ISqExtensionBuilder builder)
-				{
-					var method = (MethodInfo) builder.Member;
-					var arg = method.GetGenericArguments().Single();
+				var method = (MethodInfo) builder.Member;
+				var arg = method.GetGenericArguments().Single();
 
-					builder.AddParameter("table_field", new SqlTable(builder.Mapping, arg));
-				}
-			}
-
-			// ReSharper disable once UnusedTypeParameter
-			[Sql.Extension("{table_field} match {match}", BuilderType = typeof(MatchBuilder), IsPredicate = true)]
-			public static bool MatchFts<TEntity>([ExprParameter]string match)
-			{
-				throw new InvalidOperationException();
+				builder.AddParameter("table_field", new SqlTable(builder.Mapping, arg));
 			}
 		}
 
-		[Table("dataFTS")]
-		public partial class DtaFts
+		// ReSharper disable once UnusedTypeParameter
+		[Sql.Extension("{table_field} match {match}", BuilderType = typeof(MatchBuilder), IsPredicate = true)]
+		public static bool MatchFts<TEntity>([ExprParameter]string match)
 		{
-			[Column] public long    Id        { get; set; }
-			[Column] public string? FirstName { get; set; }
-			[Column] public string? LastName  { get; set; }
-			[Column] public string? MidName   { get; set; }
+			throw new InvalidOperationException();
 		}
+	}
 
-		[Test]
-		public void TestAnonymous([IncludeDataSources(TestProvName.AllSQLite)] string context)
+	[Table("dataFTS")]
+	public partial class DtaFts
+	{
+		[Column] public long    Id        { get; set; }
+		[Column] public string? FirstName { get; set; }
+		[Column] public string? LastName  { get; set; }
+		[Column] public string? MidName   { get; set; }
+	}
+
+	[Test]
+	public void TestAnonymous([IncludeDataSources(TestProvName.AllSQLite)] string context)
+	{
+		using (var db = GetDataConnection(context))
 		{
-			using (var db = GetDataConnection(context))
-			{
-				db.Execute(@"
+			db.Execute(@"
 DROP TABLE IF EXISTS dataFTS;
 CREATE VIRTUAL TABLE dataFTS USING fts4(`ID` INTEGER, `FirstName` TEXT, `LastName` TEXT, `MidName` TEXT )");
 
-				try
-				{
-					var data = db.GetTable<DtaFts>()
-						.Select(result =>
-						new
-						{
-							result.FirstName,
-							result.MidName,
-							result.LastName,
-						});
+			try
+			{
+				var data = db.GetTable<DtaFts>()
+					.Select(result =>
+					new
+					{
+						result.FirstName,
+						result.MidName,
+						result.LastName,
+					});
 
-					var query = data.Where(arg => SqlLite.MatchFts<DtaFts>("John*"));
-					TestContext.WriteLine(query.ToString());
-					var _ = query.ToList();
-				}
-				finally
-				{
-					// cleanup
-					db.Execute("DROP TABLE dataFTS");
-				}
+				var query = data.Where(arg => SqlLite.MatchFts<DtaFts>("John*"));
+				TestContext.WriteLine(query.ToString());
+				var _ = query.ToList();
+			}
+			finally
+			{
+				// cleanup
+				db.Execute("DROP TABLE dataFTS");
 			}
 		}
+	}
 
-		[Test]
-		public void TestDirect([IncludeDataSources(TestProvName.AllSQLite)] string context)
+	[Test]
+	public void TestDirect([IncludeDataSources(TestProvName.AllSQLite)] string context)
+	{
+		using (var db = GetDataConnection(context))
 		{
-			using (var db = GetDataConnection(context))
-			{
-				db.Execute(@"
+			db.Execute(@"
 DROP TABLE IF EXISTS dataFTS;
 CREATE VIRTUAL TABLE dataFTS USING fts4(`ID` INTEGER, `FirstName` TEXT, `LastName` TEXT, `MidName` TEXT )");
 
-				try
-				{
-					var data = db.GetTable<DtaFts>()
-						.Where(arg => SqlLite.MatchFts<DtaFts>("John*"))
-						.Select(result =>
-						new
-						{
-							result.FirstName,
-							result.MidName,
-							result.LastName,
-						});
+			try
+			{
+				var data = db.GetTable<DtaFts>()
+					.Where(arg => SqlLite.MatchFts<DtaFts>("John*"))
+					.Select(result =>
+					new
+					{
+						result.FirstName,
+						result.MidName,
+						result.LastName,
+					});
 
-					var list = data.ToList(); // <=THROWS EXCEPTION
+				var list = data.ToList(); // <=THROWS EXCEPTION
 
-					Assert.AreEqual(0, list.Count);
+				Assert.AreEqual(0, list.Count);
 
-					db.GetTable<DtaFts>().Insert(() => new DtaFts { FirstName = "JohnTheRipper" });
-					db.GetTable<DtaFts>().Insert(() => new DtaFts { FirstName = "DoeJohn"       });
+				db.GetTable<DtaFts>().Insert(() => new DtaFts { FirstName = "JohnTheRipper" });
+				db.GetTable<DtaFts>().Insert(() => new DtaFts { FirstName = "DoeJohn"       });
 
-					list = data.ToList(); // <=THROWS EXCEPTION
+				list = data.ToList(); // <=THROWS EXCEPTION
 
-					Assert.AreEqual(1, list.Count);
-					Assert.AreEqual("JohnTheRipper", list[0].FirstName);
-				}
-				finally
-				{
-					// cleanup
-					db.Execute("DROP TABLE dataFTS");
-				}
+				Assert.AreEqual(1, list.Count);
+				Assert.AreEqual("JohnTheRipper", list[0].FirstName);
+			}
+			finally
+			{
+				// cleanup
+				db.Execute("DROP TABLE dataFTS");
 			}
 		}
 	}

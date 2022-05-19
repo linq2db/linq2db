@@ -3,165 +3,164 @@ using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
-namespace Tests.UserTests
+namespace Tests.UserTests;
+
+[TestFixture]
+public class Issue2816Tests : TestBase
 {
-	[TestFixture]
-	public class Issue2816Tests : TestBase
+	/*
+	 * IsNullOrWhiteSpace takes into account non-surrogate codepoints from unicode with White_Space property
+	 * Per latest Unicode 13 version those are (https://www.unicode.org/Public/13.0.0/ucd/PropList.txt):
+	 */
+	// use int for readable test name
+	private static readonly int[] WhiteSpaceChars = new int[]
 	{
-		/*
-		 * IsNullOrWhiteSpace takes into account non-surrogate codepoints from unicode with White_Space property
-		 * Per latest Unicode 13 version those are (https://www.unicode.org/Public/13.0.0/ucd/PropList.txt):
-		 */
-		// use int for readable test name
-		private static readonly int[] WhiteSpaceChars = new int[]
+		0x09,
+		0x0A,
+		0x0B,
+		0x0C,
+		0x0D,
+		0x20,
+		0x85,
+		0xA0,
+		0x1680,
+		0x2000,
+		0x2001,
+		0x2002,
+		0x2003,
+		0x2004,
+		0x2005,
+		0x2006,
+		0x2007,
+		0x2008,
+		0x2009,
+		0x200A,
+		0x2028,
+		0x2029,
+		0x205F,
+		0x3000,
+	};
+
+	[Table("Issue2816Table")]
+	class TestClass
+	{
+		[PrimaryKey]
+		public int Id { get; set; }
+		[Column]
+		public string? Text { get; set; }
+	}
+
+	[Test]
+	public void BasicTestCases([DataSources] string context)
+	{
+		var cnt = 0;
+
+		var testData = new[]
 		{
-			0x09,
-			0x0A,
-			0x0B,
-			0x0C,
-			0x0D,
-			0x20,
-			0x85,
-			0xA0,
-			0x1680,
-			0x2000,
-			0x2001,
-			0x2002,
-			0x2003,
-			0x2004,
-			0x2005,
-			0x2006,
-			0x2007,
-			0x2008,
-			0x2009,
-			0x200A,
-			0x2028,
-			0x2029,
-			0x205F,
-			0x3000,
+			new TestClass() { Id = cnt++, Text = "" },
+			new TestClass() { Id = cnt++, Text = "a" },
+			new TestClass() { Id = cnt++, Text = " m " },
+			new TestClass() { Id = cnt++, Text = " " },
+			new TestClass() { Id = cnt++, Text = "  " },
+			new TestClass() { Id = cnt++, Text = null }
 		};
 
-		[Table("Issue2816Table")]
-		class TestClass
+		using (var db = GetDataContext(context))
 		{
-			[PrimaryKey]
-			public int Id { get; set; }
-			[Column]
-			public string? Text { get; set; }
-		}
-
-		[Test]
-		public void BasicTestCases([DataSources] string context)
-		{
-			var cnt = 0;
-
-			var testData = new[]
+			using (var table = db.CreateLocalTable(testData))
 			{
-				new TestClass() { Id = cnt++, Text = "" },
-				new TestClass() { Id = cnt++, Text = "a" },
-				new TestClass() { Id = cnt++, Text = " m " },
-				new TestClass() { Id = cnt++, Text = " " },
-				new TestClass() { Id = cnt++, Text = "  " },
-				new TestClass() { Id = cnt++, Text = null }
-			};
+				var query = from p in table
+							where string.IsNullOrWhiteSpace(p.Text)
+							select p;
 
-			using (var db = GetDataContext(context))
-			{
-				using (var table = db.CreateLocalTable(testData))
-				{
-					var query = from p in table
-								where string.IsNullOrWhiteSpace(p.Text)
-								select p;
-
-					AssertQuery(query);
-				}
+				AssertQuery(query);
 			}
 		}
+	}
 
-		[Test]
-		public void FullWhiteSpaceTest([DataSources] string context, [ValueSource(nameof(WhiteSpaceChars))] int character)
+	[Test]
+	public void FullWhiteSpaceTest([DataSources] string context, [ValueSource(nameof(WhiteSpaceChars))] int character)
+	{
+		if (!string.IsNullOrWhiteSpace(((char)character).ToString()))
+			Assert.Inconclusive($"Character {(char)character} not supported by runtime");
+
+		var testData = GetTestCase((char)character, GetProviderName(context, out var isRemoteContext), out var supported);
+		if (!supported)
+			Assert.Inconclusive($"Character {(char)character} not supported by database");
+
+		using (var db = GetDataContext(context))
 		{
-			if (!string.IsNullOrWhiteSpace(((char)character).ToString()))
-				Assert.Inconclusive($"Character {(char)character} not supported by runtime");
-
-			var testData = GetTestCase((char)character, GetProviderName(context, out var isRemoteContext), out var supported);
-			if (!supported)
-				Assert.Inconclusive($"Character {(char)character} not supported by database");
-
-			using (var db = GetDataContext(context))
-			{
 #if AZURE
-				// CI use docker image with non-utf8 database
-				// for some reason it cannot handle 8xxx characters in parameters
-				// for both managed and unmanaged providers, but can handle them in literals...
-				if (context.IsAnyOf(TestProvName.AllSybase) && isRemoteContext)
-				{
-					db.InlineParameters = true;
-				}
+			// CI use docker image with non-utf8 database
+			// for some reason it cannot handle 8xxx characters in parameters
+			// for both managed and unmanaged providers, but can handle them in literals...
+			if (context.IsAnyOf(TestProvName.AllSybase) && isRemoteContext)
+			{
+				db.InlineParameters = true;
+			}
 #endif
-				using (var table = db.CreateLocalTable(testData))
-				{
-					var query = (from p in table
-								 where !string.IsNullOrWhiteSpace(p.Text)
-								 select p).ToArray();
+			using (var table = db.CreateLocalTable(testData))
+			{
+				var query = (from p in table
+							 where !string.IsNullOrWhiteSpace(p.Text)
+							 select p).ToArray();
 
-					if (supported)
-					{
-						Assert.AreEqual(1, query.Length);
-						Assert.AreEqual(3, query[0].Id);
-					}
-					else
-					{
-						Assert.AreEqual(3, query.Length);
-					}
+				if (supported)
+				{
+					Assert.AreEqual(1, query.Length);
+					Assert.AreEqual(3, query[0].Id);
+				}
+				else
+				{
+					Assert.AreEqual(3, query.Length);
 				}
 			}
 		}
+	}
 
-		private static TestClass[] GetTestCase(char character, string providerName, out bool supported)
+	private static TestClass[] GetTestCase(char character, string providerName, out bool supported)
+	{
+		supported = IsSupported(character, providerName);
+
+		return new[]
 		{
-			supported = IsSupported(character, providerName);
-
-			return new[]
+			new TestClass()
 			{
-				new TestClass()
-				{
-					Id = 1,
-					Text = $"{character}"
-				},
-				new TestClass()
-				{
-					Id = 2,
-					Text = $" {character} "
-				},
-				new TestClass()
-				{
-					Id = 3,
-					Text = $" {character}x "
-				}
-			};
-		}
+				Id = 1,
+				Text = $"{character}"
+			},
+			new TestClass()
+			{
+				Id = 2,
+				Text = $" {character} "
+			},
+			new TestClass()
+			{
+				Id = 3,
+				Text = $" {character}x "
+			}
+		};
+	}
 
-		private static bool IsSupported(char character, string providerName)
+	private static bool IsSupported(char character, string providerName)
+	{
+		switch (providerName)
 		{
-			switch (providerName)
-			{
-				case string when providerName.IsAnyOf(TestProvName.AllAccess):
-					// only 4 characters including space supported
-					return character == 0x20
-						|| character == 0x1680
-						|| character == 0x205F
-						|| character == 0x3000;
+			case string when providerName.IsAnyOf(TestProvName.AllAccess):
+				// only 4 characters including space supported
+				return character == 0x20
+					|| character == 0x1680
+					|| character == 0x205F
+					|| character == 0x3000;
 #if AZURE
-				case ProviderName.InformixDB2:
-					// TODO: fix azure instance locale
-					// currently fails on test data insert with
-					// ERROR [IX000] [IBM][IDS/UNIX64] Code-set conversion function failed due to illegal sequence or invalid value.
-					return character <= 0xA0;
+			case ProviderName.InformixDB2:
+				// TODO: fix azure instance locale
+				// currently fails on test data insert with
+				// ERROR [IX000] [IBM][IDS/UNIX64] Code-set conversion function failed due to illegal sequence or invalid value.
+				return character <= 0xA0;
 #endif
-			}
-
-			return true;
 		}
+
+		return true;
 	}
 }

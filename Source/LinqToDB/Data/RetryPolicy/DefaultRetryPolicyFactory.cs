@@ -1,15 +1,14 @@
-﻿namespace LinqToDB.Data.RetryPolicy
+﻿namespace LinqToDB.Data.RetryPolicy;
+
+using DataProvider.SqlServer;
+
+static class DefaultRetryPolicyFactory
 {
-	using DataProvider.SqlServer;
-
-	static class DefaultRetryPolicyFactory
+	public static IRetryPolicy? GetRetryPolicy(DataConnection dataContext)
 	{
-		public static IRetryPolicy? GetRetryPolicy(DataConnection dataContext)
-		{
-			if (dataContext.DataProvider is SqlServerDataProvider)
-				return new SqlServerRetryPolicy();
+		if (dataContext.DataProvider is SqlServerDataProvider)
+			return new SqlServerRetryPolicy();
 
-			return null;
-		}
+		return null;
 	}
 }

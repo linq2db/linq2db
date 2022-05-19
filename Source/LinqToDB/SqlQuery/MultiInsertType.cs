@@ -1,9 +1,8 @@
-namespace LinqToDB.SqlQuery
+namespace LinqToDB.SqlQuery;
+
+public enum MultiInsertType
 {
-	public enum MultiInsertType
-	{
-		Unconditional,
-		All,
-		First,
-	}
+	Unconditional,
+	All,
+	First,
 }

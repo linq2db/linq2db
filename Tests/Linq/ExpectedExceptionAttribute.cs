@@ -4,77 +4,77 @@ using NUnit.Framework.Interfaces;
 using NUnit.Framework.Internal;
 using NUnit.Framework.Internal.Commands;
 
-namespace Tests
+namespace Tests;
+
+[AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = false)]
+public class ExpectedExceptionAttribute : NUnitAttribute, IWrapTestMethod
 {
-	[AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = false)]
-	public class ExpectedExceptionAttribute : NUnitAttribute, IWrapTestMethod
+	readonly Type _expectedExceptionType;
+
+	public ExpectedExceptionAttribute(Type type)
 	{
-		readonly Type _expectedExceptionType;
+		_expectedExceptionType = type;
+	}
 
-		public ExpectedExceptionAttribute(Type type)
+	public TestCommand Wrap(TestCommand command)
+	{
+		return new ExpectedExceptionCommand(command, _expectedExceptionType, ExpectedMessage);
+	}
+
+	public string? ExpectedMessage;
+
+	class ExpectedExceptionCommand : DelegatingTestCommand
+	{
+		readonly Type    _expectedType;
+		readonly string? _expectedMessage;
+
+		public ExpectedExceptionCommand(TestCommand innerCommand, Type expectedType, string? expectedMessage)
+			: base(innerCommand)
 		{
-			_expectedExceptionType = type;
+			_expectedType    = expectedType;
+			_expectedMessage = expectedMessage;
 		}
 
-		public TestCommand Wrap(TestCommand command)
+		public override TestResult Execute(TestExecutionContext context)
 		{
-			return new ExpectedExceptionCommand(command, _expectedExceptionType, ExpectedMessage);
-		}
+			Type?      caughtType = null;
+			Exception? exception  = null;
 
-		public string? ExpectedMessage;
-
-		class ExpectedExceptionCommand : DelegatingTestCommand
-		{
-			readonly Type    _expectedType;
-			readonly string? _expectedMessage;
-
-			public ExpectedExceptionCommand(TestCommand innerCommand, Type expectedType, string? expectedMessage)
-				: base(innerCommand)
+			try
 			{
-				_expectedType    = expectedType;
-				_expectedMessage = expectedMessage;
+				innerCommand.Execute(context);
+			}
+			catch (Exception ex)
+			{
+				exception = ex;
+
+				if (exception is NUnitException && ex.InnerException != null)
+					exception = ex.InnerException;
+
+				caughtType = exception.GetType();
 			}
 
-			public override TestResult Execute(TestExecutionContext context)
+			if (caughtType == _expectedType)
 			{
-				Type?      caughtType = null;
-				Exception? exception  = null;
-
-				try
-				{
-					innerCommand.Execute(context);
-				}
-				catch (Exception ex)
-				{
-					exception = ex;
-
-					if (exception is NUnitException && ex.InnerException != null)
-						exception = ex.InnerException;
-
-					caughtType = exception.GetType();
-				}
-
-				if (caughtType == _expectedType)
-				{
-					if (_expectedMessage == null || _expectedMessage == exception!.Message)
-						context.CurrentResult.SetResult(ResultState.Success);
-					else
-						context.CurrentResult.SetResult(ResultState.Failure,
-							$"Expected {_expectedMessage} but got {exception.Message}");
-
-				}
-				else if (caughtType != null)
-				{
-					context.CurrentResult.SetResult(ResultState.Failure,
-						$"Expected {_expectedType.Name} but got {caughtType.Name}");
-				}
+				if (_expectedMessage == null || _expectedMessage == exception!.Message)
+					context.CurrentResult.SetResult(ResultState.Success);
 				else
-				{
 					context.CurrentResult.SetResult(ResultState.Failure,
-						$"Expected {_expectedType.Name} but no exception was thrown");
-				}
+						$"Expected {_expectedMessage} but got {exception.Message}");
 
-				return context.CurrentResult;
 			}
+			else if (caughtType != null)
+			{
+				context.CurrentResult.SetResult(ResultState.Failure,
+					$"Expected {_expectedType.Name} but got {caughtType.Name}");
+			}
+			else
+			{
+				context.CurrentResult.SetResult(ResultState.Failure,
+					$"Expected {_expectedType.Name} but no exception was thrown");
+			}
+
+			return context.CurrentResult;
 		}
-	}}
+	}
+}

@@ -1,10 +1,9 @@
-﻿namespace LinqToDB.Schema
+﻿namespace LinqToDB.Schema;
+
+/// <summary>
+/// Void return type descriptor.
+/// </summary>
+public sealed record VoidResult() : Result(ResultKind.Void)
 {
-	/// <summary>
-	/// Void return type descriptor.
-	/// </summary>
-	public sealed record VoidResult() : Result(ResultKind.Void)
-	{
-		public override string ToString() => "void";
-	}
+	public override string ToString() => "void";
 }

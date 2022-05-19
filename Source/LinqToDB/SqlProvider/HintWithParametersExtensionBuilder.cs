@@ -1,50 +1,49 @@
 ﻿using System;
 using System.Text;
 
-namespace LinqToDB.SqlProvider
+namespace LinqToDB.SqlProvider;
+
+using SqlQuery;
+
+class HintWithParametersExtensionBuilder : ISqlQueryExtensionBuilder
 {
-	using SqlQuery;
-
-	class HintWithParametersExtensionBuilder : ISqlQueryExtensionBuilder
+	void ISqlQueryExtensionBuilder.Build(ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension)
 	{
-		void ISqlQueryExtensionBuilder.Build(ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension)
+		var args  = sqlQueryExtension.Arguments;
+		var hint  = ((SqlValue)     args["hint"]).                Value;
+		var count = (int)((SqlValue)args["hintParameters.Count"]).Value!;
+
+		var firstDelimiter = args.TryGetValue(".ExtensionArguments.0", out var extArg0) && extArg0 is SqlValue { Value : string val0 } ? val0 : ", ";
+		var nextDelimiter  = args.TryGetValue(".ExtensionArguments.1", out var extArg1) && extArg1 is SqlValue { Value : string val1 } ? val1 : null;
+
+		stringBuilder.Append(hint);
+
+		if (count > 0)
 		{
-			var args  = sqlQueryExtension.Arguments;
-			var hint  = ((SqlValue)     args["hint"]).                Value;
-			var count = (int)((SqlValue)args["hintParameters.Count"]).Value!;
+			stringBuilder.Append('(');
 
-			var firstDelimiter = args.TryGetValue(".ExtensionArguments.0", out var extArg0) && extArg0 is SqlValue { Value : string val0 } ? val0 : ", ";
-			var nextDelimiter  = args.TryGetValue(".ExtensionArguments.1", out var extArg1) && extArg1 is SqlValue { Value : string val1 } ? val1 : null;
+			var delimiter = string.Empty;
 
-			stringBuilder.Append(hint);
-
-			if (count > 0)
+			for (var i = 0; i < count; i++)
 			{
-				stringBuilder.Append('(');
+				if (i == 1)
+					delimiter = firstDelimiter;
+				else if (i > 0)
+					delimiter = nextDelimiter ?? firstDelimiter;
 
-				var delimiter = string.Empty;
+				stringBuilder
+					.Append(delimiter);
 
-				for (var i = 0; i < count; i++)
-				{
-					if (i == 1)
-						delimiter = firstDelimiter;
-					else if (i > 0)
-						delimiter = nextDelimiter ?? firstDelimiter;
-
-					stringBuilder
-						.Append(delimiter);
-
-					var value = GetValue((SqlValue)args[$"hintParameters.{i}"]);
-					stringBuilder.Append(value);
-				}
-
-				stringBuilder.Append(')');
+				var value = GetValue((SqlValue)args[$"hintParameters.{i}"]);
+				stringBuilder.Append(value);
 			}
 
-			object? GetValue(SqlValue value)
-			{
-				return value.Value is Sql.SqlID id ? sqlBuilder.BuildSqlID(id) : value.Value;
-			}
+			stringBuilder.Append(')');
+		}
+
+		object? GetValue(SqlValue value)
+		{
+			return value.Value is Sql.SqlID id ? sqlBuilder.BuildSqlID(id) : value.Value;
 		}
 	}
 }

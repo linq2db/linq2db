@@ -1,27 +1,26 @@
 ﻿using System;
 
-namespace LinqToDB.Mapping
+namespace LinqToDB.Mapping;
+
+/// <summary>
+/// Defines relationship types for associations.
+/// See <see cref="AssociationAttribute.Relationship"/> for more details.
+/// </summary>
+[Obsolete("This enum is not used by linq2db and will be removed in future")]
+public enum Relationship
 {
 	/// <summary>
-	/// Defines relationship types for associations.
-	/// See <see cref="AssociationAttribute.Relationship"/> for more details.
+	/// One-to-one relationship.
 	/// </summary>
-	[Obsolete("This enum is not used by linq2db and will be removed in future")]
-	public enum Relationship
-	{
-		/// <summary>
-		/// One-to-one relationship.
-		/// </summary>
-		OneToOne,
+	OneToOne,
 
-		/// <summary>
-		/// One-to-many relationship.
-		/// </summary>
-		OneToMany,
+	/// <summary>
+	/// One-to-many relationship.
+	/// </summary>
+	OneToMany,
 
-		/// <summary>
-		/// Many-to-one relationship.
-		/// </summary>
-		ManyToOne,
-	}
+	/// <summary>
+	/// Many-to-one relationship.
+	/// </summary>
+	ManyToOne,
 }

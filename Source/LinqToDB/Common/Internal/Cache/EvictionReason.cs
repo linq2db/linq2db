@@ -1,35 +1,34 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-namespace LinqToDB.Common.Internal.Cache
+namespace LinqToDB.Common.Internal.Cache;
+
+public enum EvictionReason
 {
-	public enum EvictionReason
-	{
-		None,
+	None,
 
-		/// <summary>
-		/// Manually
-		/// </summary>
-		Removed,
+	/// <summary>
+	/// Manually
+	/// </summary>
+	Removed,
 
-		/// <summary>
-		/// Overwritten
-		/// </summary>
-		Replaced,
+	/// <summary>
+	/// Overwritten
+	/// </summary>
+	Replaced,
 
-		/// <summary>
-		/// Timed out
-		/// </summary>
-		Expired,
+	/// <summary>
+	/// Timed out
+	/// </summary>
+	Expired,
 
-		/// <summary>
-		/// Event
-		/// </summary>
-		TokenExpired,
+	/// <summary>
+	/// Event
+	/// </summary>
+	TokenExpired,
 
-		/// <summary>
-		/// Overflow
-		/// </summary>
-		Capacity,
-	}
+	/// <summary>
+	/// Overflow
+	/// </summary>
+	Capacity,
 }

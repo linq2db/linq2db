@@ -5,205 +5,204 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
-namespace Tests.Linq
+namespace Tests.Linq;
+
+using Model;
+
+[TestFixture]
+public class AK107Tests : TestBase
 {
-	using Model;
-
-	[TestFixture]
-	public class AK107Tests : TestBase
+	[Table(Name = "t_test_user")]
+	public sealed class User
 	{
-		[Table(Name = "t_test_user")]
-		public sealed class User
-		{
-			[Column("user_id"), PrimaryKey, Identity]
-			[SequenceName("sq_test_user", Schema = "c##sequence_schema")]
-			public long Id { get; set; }
+		[Column("user_id"), PrimaryKey, Identity]
+		[SequenceName("sq_test_user", Schema = "c##sequence_schema")]
+		public long Id { get; set; }
 
-			[Column("name", SkipOnUpdate=true), NotNull]
-			public string Name { get; set; } = null!;
+		[Column("name", SkipOnUpdate=true), NotNull]
+		public string Name { get; set; } = null!;
+	}
+
+	[Table(Name = "t_test_user_contract")]
+	public sealed class Contract
+	{
+		[Column("user_contract_id", IsIdentity=true), PrimaryKey]
+		[SequenceName("sq_test_user_contract")]
+		public long Id { get; set; }
+
+		[Column("user_id", SkipOnUpdate = true, CanBeNull = false)]
+		public long UserId { get; set; }
+
+		[Association(ThisKey = "UserId", OtherKey = "Id", CanBeNull = false)]
+		public User User { get; set; } = null!;
+
+		[Column("contract_no", SkipOnUpdate = true, CanBeNull = false)]
+		public long ContractNo { get; set; }
+
+		[Column("name"), NotNull]
+		public string Name { get; set; } = null!;
+	}
+
+	[Test]
+	public void UserInsert([IncludeDataSources(TestProvName.AllOracle)] string context)
+	{
+		using (var db = GetDataContext(context))
+		{
+			db.BeginTransaction();
+			db.Insert(new User { Name = "user" });
 		}
+	}
 
-		[Table(Name = "t_test_user_contract")]
-		public sealed class Contract
+	[Test]
+	public void UserInsertWithIdentity([IncludeDataSources(TestProvName.AllOracle)]
+		string context)
+	{
+		using (var db = GetDataContext(context))
 		{
-			[Column("user_contract_id", IsIdentity=true), PrimaryKey]
-			[SequenceName("sq_test_user_contract")]
-			public long Id { get; set; }
-
-			[Column("user_id", SkipOnUpdate = true, CanBeNull = false)]
-			public long UserId { get; set; }
-
-			[Association(ThisKey = "UserId", OtherKey = "Id", CanBeNull = false)]
-			public User User { get; set; } = null!;
-
-			[Column("contract_no", SkipOnUpdate = true, CanBeNull = false)]
-			public long ContractNo { get; set; }
-
-			[Column("name"), NotNull]
-			public string Name { get; set; } = null!;
+			db.BeginTransaction();
+			db.InsertWithIdentity(new User { Name = "user" });
 		}
+	}
 
-		[Test]
-		public void UserInsert([IncludeDataSources(TestProvName.AllOracle)] string context)
+	[Test]
+	public void UserLinqInsert([IncludeDataSources(TestProvName.AllOracle)]
+		string context)
+	{
+		using (var db = GetDataContext(context))
 		{
-			using (var db = GetDataContext(context))
+			db.BeginTransaction();
+			db.GetTable<User>().Insert(() => new User { Name = "user" });
+		}
+	}
+
+	[Test]
+	public void UserLinqInsertWithIdentity([IncludeDataSources(TestProvName.AllOracle)]
+		string context)
+	{
+		using (var db = GetDataContext(context))
+		{
+			db.BeginTransaction();
+			db.GetTable<User>().InsertWithIdentity(() => new User { Name = "user" });
+		}
+	}
+
+	[Test]
+	public void ContractInsert([IncludeDataSources(TestProvName.AllOracle)]
+		string context)
+	{
+		using (var db = GetDataContext(context))
+		{
+			db.BeginTransaction();
+
+			var user = new User { Name = "user" };
+			user.Id = Convert.ToInt64(db.InsertWithIdentity(user));
+
+			db.Insert(new Contract { UserId = user.Id, ContractNo = 1, Name = "contract1" });
+		}
+	}
+
+	[Test]
+	public void ContractInsertWithIdentity([IncludeDataSources(TestProvName.AllOracle)]
+		string context)
+	{
+		using (var db = GetDataContext(context))
+		{
+			db.BeginTransaction();
+
+			var user = new User { Name = "user" };
+			user.Id = Convert.ToInt64(db.InsertWithIdentity(user));
+
+			db.InsertWithIdentity(new Contract { UserId = user.Id, ContractNo = 1, Name = "contract" });
+		}
+	}
+
+	[Sql.Expression("sq_test_user_contract.nextval")]
+	static long ContractSequence { get; set;  }
+
+	[Test]
+	public void ContractLinqInsert([IncludeDataSources(TestProvName.AllOracle)]
+		string context)
+	{
+		using (var db = GetDataContext(context))
+		{
+			db.BeginTransaction();
+
+			var user = new User { Name = "user" };
+			user.Id = Convert.ToInt64(db.InsertWithIdentity(user));
+
+			db.GetTable<Contract>().Insert(() => new Contract
 			{
-				db.BeginTransaction();
-				db.Insert(new User { Name = "user" });
-			}
+				Id         = ContractSequence,
+				UserId     = user.Id,
+				ContractNo = 1,
+				Name       = "contract"
+			});
 		}
+	}
 
-		[Test]
-		public void UserInsertWithIdentity([IncludeDataSources(TestProvName.AllOracle)]
-			string context)
+	[Test]
+	public void ContractLinqInsertWithIdentity([IncludeDataSources(TestProvName.AllOracle)]
+		string context)
+	{
+		using (var db = GetDataContext(context))
 		{
-			using (var db = GetDataContext(context))
-			{
-				db.BeginTransaction();
-				db.InsertWithIdentity(new User { Name = "user" });
-			}
+			db.BeginTransaction();
+
+			var user = new User { Name = "user" };
+			user.Id = Convert.ToInt64(db.InsertWithIdentity(user));
+
+			db.GetTable<Contract>().InsertWithIdentity(() => new Contract { UserId = user.Id, ContractNo = 1, Name = "contract" });
 		}
+	}
 
-		[Test]
-		public void UserLinqInsert([IncludeDataSources(TestProvName.AllOracle)]
-			string context)
+	[Test]
+	public void ContractLinqManyInsert([IncludeDataSources(TestProvName.AllOracle)]
+		string context)
+	{
+		using (var db = GetDataContext(context))
 		{
-			using (var db = GetDataContext(context))
-			{
-				db.BeginTransaction();
-				db.GetTable<User>().Insert(() => new User { Name = "user" });
-			}
+			db.BeginTransaction();
+
+			var user = new User { Name = "user" };
+			user.Id = Convert.ToInt64(db.InsertWithIdentity(user));
+
+			db.GetTable<User>().Insert(db.GetTable<Contract>(), x => new Contract { UserId = x.Id, ContractNo = 1, Name = "contract" });
 		}
+	}
 
-		[Test]
-		public void UserLinqInsertWithIdentity([IncludeDataSources(TestProvName.AllOracle)]
-			string context)
+	//[Test]
+	public void ContractLinqManyInsertWithIdentity()
+	{
+		using (var db = GetDataContext("Oracle"))
 		{
-			using (var db = GetDataContext(context))
+			db.BeginTransaction();
+
+			var user = new User { Name = "user" };
+			user.Id = Convert.ToInt64(db.InsertWithIdentity(user));
+
+			db.GetTable<User>().InsertWithIdentity(db.GetTable<Contract>(), x => new Contract
 			{
-				db.BeginTransaction();
-				db.GetTable<User>().InsertWithIdentity(() => new User { Name = "user" });
-			}
+				UserId = x.Id, ContractNo = 1, Name = "contract"
+			});
 		}
+	}
 
-		[Test]
-		public void ContractInsert([IncludeDataSources(TestProvName.AllOracle)]
-			string context)
+	[Test]
+	public void SequenceNameTest([IncludeDataSources(false, TestProvName.AllOracle)]
+		string context)
+	{
+		using (var db = GetDataConnection(context))
 		{
-			using (var db = GetDataContext(context))
-			{
-				db.BeginTransaction();
+			db.BeginTransaction();
 
-				var user = new User { Name = "user" };
-				user.Id = Convert.ToInt64(db.InsertWithIdentity(user));
+			var user = new User { Name = "user" };
+			user.Id = Convert.ToInt64(db.InsertWithIdentity(user));
 
-				db.Insert(new Contract { UserId = user.Id, ContractNo = 1, Name = "contract1" });
-			}
-		}
+			Assert.True(db.LastQuery?.Contains("\"c##sequence_schema\".\"sq_test_user\".nextval"));
 
-		[Test]
-		public void ContractInsertWithIdentity([IncludeDataSources(TestProvName.AllOracle)]
-			string context)
-		{
-			using (var db = GetDataContext(context))
-			{
-				db.BeginTransaction();
+			db.Insert(new Contract { UserId = user.Id, ContractNo = 1, Name = "contract1" });
 
-				var user = new User { Name = "user" };
-				user.Id = Convert.ToInt64(db.InsertWithIdentity(user));
-
-				db.InsertWithIdentity(new Contract { UserId = user.Id, ContractNo = 1, Name = "contract" });
-			}
-		}
-
-		[Sql.Expression("sq_test_user_contract.nextval")]
-		static long ContractSequence { get; set;  }
-
-		[Test]
-		public void ContractLinqInsert([IncludeDataSources(TestProvName.AllOracle)]
-			string context)
-		{
-			using (var db = GetDataContext(context))
-			{
-				db.BeginTransaction();
-
-				var user = new User { Name = "user" };
-				user.Id = Convert.ToInt64(db.InsertWithIdentity(user));
-
-				db.GetTable<Contract>().Insert(() => new Contract
-				{
-					Id         = ContractSequence,
-					UserId     = user.Id,
-					ContractNo = 1,
-					Name       = "contract"
-				});
-			}
-		}
-
-		[Test]
-		public void ContractLinqInsertWithIdentity([IncludeDataSources(TestProvName.AllOracle)]
-			string context)
-		{
-			using (var db = GetDataContext(context))
-			{
-				db.BeginTransaction();
-
-				var user = new User { Name = "user" };
-				user.Id = Convert.ToInt64(db.InsertWithIdentity(user));
-
-				db.GetTable<Contract>().InsertWithIdentity(() => new Contract { UserId = user.Id, ContractNo = 1, Name = "contract" });
-			}
-		}
-
-		[Test]
-		public void ContractLinqManyInsert([IncludeDataSources(TestProvName.AllOracle)]
-			string context)
-		{
-			using (var db = GetDataContext(context))
-			{
-				db.BeginTransaction();
-
-				var user = new User { Name = "user" };
-				user.Id = Convert.ToInt64(db.InsertWithIdentity(user));
-
-				db.GetTable<User>().Insert(db.GetTable<Contract>(), x => new Contract { UserId = x.Id, ContractNo = 1, Name = "contract" });
-			}
-		}
-
-		//[Test]
-		public void ContractLinqManyInsertWithIdentity()
-		{
-			using (var db = GetDataContext("Oracle"))
-			{
-				db.BeginTransaction();
-
-				var user = new User { Name = "user" };
-				user.Id = Convert.ToInt64(db.InsertWithIdentity(user));
-
-				db.GetTable<User>().InsertWithIdentity(db.GetTable<Contract>(), x => new Contract
-				{
-					UserId = x.Id, ContractNo = 1, Name = "contract"
-				});
-			}
-		}
-
-		[Test]
-		public void SequenceNameTest([IncludeDataSources(false, TestProvName.AllOracle)]
-			string context)
-		{
-			using (var db = GetDataConnection(context))
-			{
-				db.BeginTransaction();
-
-				var user = new User { Name = "user" };
-				user.Id = Convert.ToInt64(db.InsertWithIdentity(user));
-
-				Assert.True(db.LastQuery?.Contains("\"c##sequence_schema\".\"sq_test_user\".nextval"));
-
-				db.Insert(new Contract { UserId = user.Id, ContractNo = 1, Name = "contract1" });
-
-				Assert.True(db.LastQuery?.Contains("\t\"sq_test_user_contract\".nextval"));
-			}
+			Assert.True(db.LastQuery?.Contains("\t\"sq_test_user_contract\".nextval"));
 		}
 	}
 }

@@ -2,13 +2,12 @@
 
 // ReSharper disable CheckNamespace
 
-namespace LinqToDB
+namespace LinqToDB;
+
+partial class Sql
 {
-	partial class Sql
+	[AttributeUsage(AttributeTargets.Enum, AllowMultiple = false, Inherited = false)]
+	public class EnumAttribute : Attribute
 	{
-		[AttributeUsage(AttributeTargets.Enum, AllowMultiple = false, Inherited = false)]
-		public class EnumAttribute : Attribute
-		{
-		}
 	}
 }

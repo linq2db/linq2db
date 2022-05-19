@@ -2,146 +2,145 @@
 using System.ServiceModel;
 using System.Threading.Tasks;
 
-namespace LinqToDB.Remote.Wcf
+namespace LinqToDB.Remote.Wcf;
+
+[ServiceBehavior(InstanceContextMode = InstanceContextMode.Single, ConcurrencyMode = ConcurrencyMode.Multiple)]
+public class WcfLinqService : IWcfLinqService
 {
-	[ServiceBehavior(InstanceContextMode = InstanceContextMode.Single, ConcurrencyMode = ConcurrencyMode.Multiple)]
-	public class WcfLinqService : IWcfLinqService
+	private readonly ILinqService _linqService;
+	private readonly bool         _transferInternalExceptionToClient;
+
+	public WcfLinqService(
+		ILinqService linqService,
+		bool transferInternalExceptionToClient
+		)
 	{
-		private readonly ILinqService _linqService;
-		private readonly bool         _transferInternalExceptionToClient;
+		_linqService = linqService ?? throw new ArgumentNullException(nameof(linqService));
+		_transferInternalExceptionToClient = transferInternalExceptionToClient;
+	}
 
-		public WcfLinqService(
-			ILinqService linqService,
-			bool transferInternalExceptionToClient
-			)
+	LinqServiceInfo IWcfLinqService.GetInfo(string? configuration)
+	{
+		try
 		{
-			_linqService = linqService ?? throw new ArgumentNullException(nameof(linqService));
-			_transferInternalExceptionToClient = transferInternalExceptionToClient;
+			return _linqService.GetInfo(configuration);
 		}
-
-		LinqServiceInfo IWcfLinqService.GetInfo(string? configuration)
+		catch (Exception exception) when (_transferInternalExceptionToClient)
 		{
-			try
-			{
-				return _linqService.GetInfo(configuration);
-			}
-			catch (Exception exception) when (_transferInternalExceptionToClient)
-			{
-				throw new FaultException(exception.ToString());
-			}
+			throw new FaultException(exception.ToString());
 		}
+	}
 
-		int IWcfLinqService.ExecuteBatch(string? configuration, string queryData)
+	int IWcfLinqService.ExecuteBatch(string? configuration, string queryData)
+	{
+		try
 		{
-			try
-			{
-				return _linqService.ExecuteBatch(configuration, queryData);
-			}
-			catch (Exception exception) when (_transferInternalExceptionToClient)
-			{
-				throw new FaultException(exception.ToString());
-			}
+			return _linqService.ExecuteBatch(configuration, queryData);
 		}
-
-		int IWcfLinqService.ExecuteNonQuery(string? configuration, string queryData)
+		catch (Exception exception) when (_transferInternalExceptionToClient)
 		{
-			try
-			{
-				return _linqService.ExecuteNonQuery(configuration, queryData);
-			}
-			catch (Exception exception) when (_transferInternalExceptionToClient)
-			{
-				throw new FaultException(exception.ToString());
-			}
+			throw new FaultException(exception.ToString());
 		}
+	}
 
-		string IWcfLinqService.ExecuteReader(string? configuration, string queryData)
+	int IWcfLinqService.ExecuteNonQuery(string? configuration, string queryData)
+	{
+		try
 		{
-			try
-			{
-				return _linqService.ExecuteReader(configuration, queryData);
-			}
-			catch (Exception exception) when (_transferInternalExceptionToClient)
-			{
-				throw new FaultException(exception.ToString());
-			}
+			return _linqService.ExecuteNonQuery(configuration, queryData);
 		}
-
-		string? IWcfLinqService.ExecuteScalar(string? configuration, string queryData)
+		catch (Exception exception) when (_transferInternalExceptionToClient)
 		{
-			try
-			{
-				return _linqService.ExecuteScalar(configuration, queryData);
-			}
-			catch (Exception exception) when (_transferInternalExceptionToClient)
-			{
-				throw new FaultException(exception.ToString());
-			}
+			throw new FaultException(exception.ToString());
 		}
+	}
 
-		async Task<LinqServiceInfo> IWcfLinqService.GetInfoAsync(string? configuration)
+	string IWcfLinqService.ExecuteReader(string? configuration, string queryData)
+	{
+		try
 		{
-			try
-			{
-				return await _linqService.GetInfoAsync(configuration)
-					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext); ;
-			}
-			catch (Exception exception) when (_transferInternalExceptionToClient)
-			{
-				throw new FaultException(exception.ToString());
-			}
+			return _linqService.ExecuteReader(configuration, queryData);
 		}
-
-		async Task<int> IWcfLinqService.ExecuteBatchAsync(string? configuration, string queryData)
+		catch (Exception exception) when (_transferInternalExceptionToClient)
 		{
-			try
-			{
-				return await _linqService.ExecuteBatchAsync(configuration, queryData)
-					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext); ;
-			}
-			catch (Exception exception) when (_transferInternalExceptionToClient)
-			{
-				throw new FaultException(exception.ToString());
-			}
+			throw new FaultException(exception.ToString());
 		}
+	}
 
-		async Task<int> IWcfLinqService.ExecuteNonQueryAsync(string? configuration, string queryData)
+	string? IWcfLinqService.ExecuteScalar(string? configuration, string queryData)
+	{
+		try
 		{
-			try
-			{
-				return await _linqService.ExecuteNonQueryAsync(configuration, queryData)
-					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext); ;
-			}
-			catch (Exception exception) when (_transferInternalExceptionToClient)
-			{
-				throw new FaultException(exception.ToString());
-			}
+			return _linqService.ExecuteScalar(configuration, queryData);
 		}
-
-		async Task<string> IWcfLinqService.ExecuteReaderAsync(string? configuration, string queryData)
+		catch (Exception exception) when (_transferInternalExceptionToClient)
 		{
-			try
-			{
-				return await _linqService.ExecuteReaderAsync(configuration, queryData)
-					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext); ;
-			}
-			catch (Exception exception) when (_transferInternalExceptionToClient)
-			{
-				throw new FaultException(exception.ToString());
-			}
+			throw new FaultException(exception.ToString());
 		}
+	}
 
-		async Task<string?> IWcfLinqService.ExecuteScalarAsync(string? configuration, string queryData)
+	async Task<LinqServiceInfo> IWcfLinqService.GetInfoAsync(string? configuration)
+	{
+		try
 		{
-			try
-			{
-				return await _linqService.ExecuteScalarAsync(configuration, queryData)
-					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext); ;
-			}
-			catch (Exception exception) when (_transferInternalExceptionToClient)
-			{
-				throw new FaultException(exception.ToString());
-			}
+			return await _linqService.GetInfoAsync(configuration)
+				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext); ;
+		}
+		catch (Exception exception) when (_transferInternalExceptionToClient)
+		{
+			throw new FaultException(exception.ToString());
+		}
+	}
+
+	async Task<int> IWcfLinqService.ExecuteBatchAsync(string? configuration, string queryData)
+	{
+		try
+		{
+			return await _linqService.ExecuteBatchAsync(configuration, queryData)
+				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext); ;
+		}
+		catch (Exception exception) when (_transferInternalExceptionToClient)
+		{
+			throw new FaultException(exception.ToString());
+		}
+	}
+
+	async Task<int> IWcfLinqService.ExecuteNonQueryAsync(string? configuration, string queryData)
+	{
+		try
+		{
+			return await _linqService.ExecuteNonQueryAsync(configuration, queryData)
+				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext); ;
+		}
+		catch (Exception exception) when (_transferInternalExceptionToClient)
+		{
+			throw new FaultException(exception.ToString());
+		}
+	}
+
+	async Task<string> IWcfLinqService.ExecuteReaderAsync(string? configuration, string queryData)
+	{
+		try
+		{
+			return await _linqService.ExecuteReaderAsync(configuration, queryData)
+				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext); ;
+		}
+		catch (Exception exception) when (_transferInternalExceptionToClient)
+		{
+			throw new FaultException(exception.ToString());
+		}
+	}
+
+	async Task<string?> IWcfLinqService.ExecuteScalarAsync(string? configuration, string queryData)
+	{
+		try
+		{
+			return await _linqService.ExecuteScalarAsync(configuration, queryData)
+				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext); ;
+		}
+		catch (Exception exception) when (_transferInternalExceptionToClient)
+		{
+			throw new FaultException(exception.ToString());
 		}
 	}
 }

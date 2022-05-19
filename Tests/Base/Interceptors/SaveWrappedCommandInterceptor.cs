@@ -4,31 +4,30 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using LinqToDB.Interceptors;
 
-namespace Tests
+namespace Tests;
+
+/// <summary>
+/// Provides access to last command and parameters for command wrapped into miniprofiler wrapper.
+/// </summary>
+public sealed class SaveWrappedCommandInterceptor : CommandInterceptor
 {
-	/// <summary>
-	/// Provides access to last command and parameters for command wrapped into miniprofiler wrapper.
-	/// </summary>
-	public sealed class SaveWrappedCommandInterceptor : CommandInterceptor
+	public DbParameter[] Parameters { get; private set; } = Array.Empty<DbParameter>();
+
+	[MaybeNull]
+	public DbCommand     Command    { get; private set; }
+
+	private readonly bool _unwrap;
+
+	public SaveWrappedCommandInterceptor(bool unwrap)
 	{
-		public DbParameter[] Parameters { get; private set; } = Array.Empty<DbParameter>();
+		_unwrap = unwrap;
+	}
 
-		[MaybeNull]
-		public DbCommand     Command    { get; private set; }
+	public override DbCommand CommandInitialized(CommandEventData eventData, DbCommand command)
+	{
+		Parameters = command.Parameters.Cast<DbParameter>().ToArray();
+		Command    = _unwrap ? (DbCommand)((dynamic)command).InternalCommand : command;
 
-		private readonly bool _unwrap;
-
-		public SaveWrappedCommandInterceptor(bool unwrap)
-		{
-			_unwrap = unwrap;
-		}
-
-		public override DbCommand CommandInitialized(CommandEventData eventData, DbCommand command)
-		{
-			Parameters = command.Parameters.Cast<DbParameter>().ToArray();
-			Command    = _unwrap ? (DbCommand)((dynamic)command).InternalCommand : command;
-
-			return command;
-		}
+		return command;
 	}
 }

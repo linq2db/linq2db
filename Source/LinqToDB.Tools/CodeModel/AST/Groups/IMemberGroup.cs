@@ -1,13 +1,12 @@
-﻿namespace LinqToDB.CodeModel
+﻿namespace LinqToDB.CodeModel;
+
+/// <summary>
+/// Non-generic interface for member groups.
+/// </summary>
+public interface IMemberGroup : ICodeElement
 {
 	/// <summary>
-	/// Non-generic interface for member groups.
+	/// Empty group flag.
 	/// </summary>
-	public interface IMemberGroup : ICodeElement
-	{
-		/// <summary>
-		/// Empty group flag.
-		/// </summary>
-		bool IsEmpty { get; }
-	}
+	bool IsEmpty { get; }
 }

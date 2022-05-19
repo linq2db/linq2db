@@ -1,16 +1,15 @@
 ﻿using JetBrains.Annotations;
 
-namespace LinqToDB.DataProvider.SqlCe
-{
-	using System.Collections.Generic;
-	using Configuration;
+namespace LinqToDB.DataProvider.SqlCe;
 
-	[UsedImplicitly]
-	class SqlCeFactory : IDataProviderFactory
+using System.Collections.Generic;
+using Configuration;
+
+[UsedImplicitly]
+class SqlCeFactory : IDataProviderFactory
+{
+	IDataProvider IDataProviderFactory.GetDataProvider(IEnumerable<NamedValue> attributes)
 	{
-		IDataProvider IDataProviderFactory.GetDataProvider(IEnumerable<NamedValue> attributes)
-		{
-			return SqlCeTools.GetDataProvider();
-		}
+		return SqlCeTools.GetDataProvider();
 	}
 }

@@ -1,11 +1,10 @@
-﻿namespace LinqToDB.DataProvider.SqlServer
-{
-	using SqlProvider;
+﻿namespace LinqToDB.DataProvider.SqlServer;
 
-	class SqlServer2016SqlOptimizer : SqlServer2012SqlOptimizer
+using SqlProvider;
+
+class SqlServer2016SqlOptimizer : SqlServer2012SqlOptimizer
+{
+	public SqlServer2016SqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags, SqlServerVersion.v2016)
 	{
-		public SqlServer2016SqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags, SqlServerVersion.v2016)
-		{
-		}
 	}
 }

@@ -1,26 +1,25 @@
 ﻿using System;
 using System.Data.Common;
 
-namespace LinqToDB.Interceptors
+namespace LinqToDB.Interceptors;
+
+internal sealed class OneTimeCommandInterceptor : CommandInterceptor
 {
-	internal sealed class OneTimeCommandInterceptor : CommandInterceptor
+	readonly Func<CommandEventData,DbCommand,DbCommand>? _onCommandInitialized;
+
+	public OneTimeCommandInterceptor(Func<CommandEventData, DbCommand, DbCommand> onCommandInitialized)
 	{
-		readonly Func<CommandEventData,DbCommand,DbCommand>? _onCommandInitialized;
+		_onCommandInitialized = onCommandInitialized;
+	}
 
-		public OneTimeCommandInterceptor(Func<CommandEventData, DbCommand, DbCommand> onCommandInitialized)
+	public override DbCommand CommandInitialized(CommandEventData eventData, DbCommand command)
+	{
+		if (_onCommandInitialized != null)
 		{
-			_onCommandInitialized = onCommandInitialized;
+			command = _onCommandInitialized(eventData, command);
+			eventData.DataConnection.RemoveInterceptor(this);
 		}
 
-		public override DbCommand CommandInitialized(CommandEventData eventData, DbCommand command)
-		{
-			if (_onCommandInitialized != null)
-			{
-				command = _onCommandInitialized(eventData, command);
-				eventData.DataConnection.RemoveInterceptor(this);
-			}
-
-			return command;
-		}
+		return command;
 	}
 }

@@ -3,36 +3,35 @@ using LinqToDB;
 
 using NUnit.Framework;
 
-namespace Tests.xUpdate
-{
+namespace Tests.xUpdate;
+
 #if NET472
-	using System.ServiceModel;
+using System.ServiceModel;
 #endif
 
-	public partial class MergeTests
+public partial class MergeTests
+{
+	[Test]
+	public void NotSupportedProviders([DataSources(
+		ProviderName.DB2, TestProvName.AllFirebird,
+		TestProvName.AllOracle,
+		TestProvName.AllSybase,
+		TestProvName.AllSqlServer,
+		TestProvName.AllInformix,
+		TestProvName.AllSapHana)]
+		string context)
 	{
-		[Test]
-		public void NotSupportedProviders([DataSources(
-			ProviderName.DB2, TestProvName.AllFirebird,
-			TestProvName.AllOracle,
-			TestProvName.AllSybase,
-			TestProvName.AllSqlServer,
-			TestProvName.AllInformix,
-			TestProvName.AllSapHana)]
-			string context)
+		using (var db = GetDataContext(context, testLinqService : false))
 		{
-			using (var db = GetDataContext(context, testLinqService : false))
-			{
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				GetProviderName(context, out var isLinq);
-				if (!isLinq)
-					Assert.Throws<LinqToDBException>(() => table.Merge().Using(GetSource1(db)).OnTargetKey().InsertWhenNotMatched().Merge());
+			GetProviderName(context, out var isLinq);
+			if (!isLinq)
+				Assert.Throws<LinqToDBException>(() => table.Merge().Using(GetSource1(db)).OnTargetKey().InsertWhenNotMatched().Merge());
 #if NETFRAMEWORK
-					else
-						Assert.Throws<FaultException>(() => table.Merge().Using(GetSource1(db)).OnTargetKey().InsertWhenNotMatched().Merge());
+				else
+					Assert.Throws<FaultException>(() => table.Merge().Using(GetSource1(db)).OnTargetKey().InsertWhenNotMatched().Merge());
 #endif
-			}
 		}
 	}
 }

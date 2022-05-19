@@ -1,18 +1,17 @@
 ﻿using System;
 
-namespace LinqToDB
+namespace LinqToDB;
+
+public partial class Sql
 {
-	public partial class Sql
+	public enum QueryExtensionScope
 	{
-		public enum QueryExtensionScope
-		{
-			None,
-			TableHint,
-			TablesInScopeHint,
-			IndexHint,
-			JoinHint,
-			SubQueryHint,
-			QueryHint
-		}
+		None,
+		TableHint,
+		TablesInScopeHint,
+		IndexHint,
+		JoinHint,
+		SubQueryHint,
+		QueryHint
 	}
 }

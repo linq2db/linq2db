@@ -8,64 +8,63 @@ using LinqToDB.Mapping;
 using NUnit.Framework;
 using Tests.Model;
 
-namespace Tests.UserTests
+namespace Tests.UserTests;
+
+[TestFixture]
+public class SQLiteDateTime : TestBase
 {
-	[TestFixture]
-	public class SQLiteDateTime : TestBase
+	[Table]
+	class A
 	{
-		[Table]
-		class A
-		{
-			[PrimaryKey, Identity] public int       ID       { get; set; }
-			[Column,     NotNull ] public string    Value    { get; set; } = null!;
-			[Column,     NotNull ] public DateTime  DateTime { get; set; }
-		}
+		[PrimaryKey, Identity] public int       ID       { get; set; }
+		[Column,     NotNull ] public string    Value    { get; set; } = null!;
+		[Column,     NotNull ] public DateTime  DateTime { get; set; }
+	}
 
-		class B
-		{
-			public int     ID;
-			public string? Name;
-		}
+	class B
+	{
+		public int     ID;
+		public string? Name;
+	}
 
-		static IQueryable<B> GenerateQuery(ITestDataContext db, DateTime? asOfDate = null)
-		{
-			var q =
-				from identifier in db.GetTable<A>()
-				where identifier.DateTime <= asOfDate
-				select identifier;
+	static IQueryable<B> GenerateQuery(ITestDataContext db, DateTime? asOfDate = null)
+	{
+		var q =
+			from identifier in db.GetTable<A>()
+			where identifier.DateTime <= asOfDate
+			select identifier;
 
-			return
-				from a in db.GetTable<A>()
-				select new B
-				{
-					ID   = a.ID,
-					Name = q.Select(identifier => identifier.Value).FirstOrDefault()
-				};
-		}
-
-		string GetSql(string context)
-		{
-			using (var db = GetDataContext(context))
+		return
+			from a in db.GetTable<A>()
+			select new B
 			{
-				var matchSymbolIds = new List<int>();
+				ID   = a.ID,
+				Name = q.Select(identifier => identifier.Value).FirstOrDefault()
+			};
+	}
 
-				var queryable = GenerateQuery(db, new DateTime(2010, 3, 5)).Where(x => matchSymbolIds.Contains(x.ID));
-				return queryable.ToString()!;
-			}
-		}
-
-		[Test]
-		public void TestSql([IncludeDataSources(TestProvName.AllSQLiteClassic)] string context)
+	string GetSql(string context)
+	{
+		using (var db = GetDataContext(context))
 		{
-			var query1 = GetSql(context);
-			var query2 = GetSql(context);
-			var query3 = GetSql(context);
+			var matchSymbolIds = new List<int>();
 
-			TestContext.WriteLine(query1);
-			TestContext.WriteLine(query2);
-			TestContext.WriteLine(query3);
-
-			Assert.AreEqual(query1, query2);
+			var queryable = GenerateQuery(db, new DateTime(2010, 3, 5)).Where(x => matchSymbolIds.Contains(x.ID));
+			return queryable.ToString()!;
 		}
+	}
+
+	[Test]
+	public void TestSql([IncludeDataSources(TestProvName.AllSQLiteClassic)] string context)
+	{
+		var query1 = GetSql(context);
+		var query2 = GetSql(context);
+		var query3 = GetSql(context);
+
+		TestContext.WriteLine(query1);
+		TestContext.WriteLine(query2);
+		TestContext.WriteLine(query3);
+
+		Assert.AreEqual(query1, query2);
 	}
 }

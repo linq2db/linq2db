@@ -6,88 +6,87 @@ using LinqToDB.Async;
 using LinqToDB.Common;
 using NUnit.Framework;
 
-namespace Tests.Common
+namespace Tests.Common;
+
+[TestFixture]
+public class EnumerableHelperTest
 {
-	[TestFixture]
-	public class EnumerableHelperTest
+	[Test]
+	public void BatchTest()
 	{
-		[Test]
-		public void BatchTest()
+		var countTo10   = Enumerable.Range(0, 10);
+		var enumerables = EnumerableHelper.Batch(countTo10, 3);
+		var finalList   = new List<List<int>>();
+
+		foreach (var enumerable2 in enumerables) 
 		{
-			var countTo10   = Enumerable.Range(0, 10);
-			var enumerables = EnumerableHelper.Batch(countTo10, 3);
-			var finalList   = new List<List<int>>();
-
-			foreach (var enumerable2 in enumerables) 
-			{
-				finalList.Add(enumerable2.ToList());
-			}
-			Assert.AreEqual(new int[][] { new[] { 0, 1, 2 }, new[] { 3, 4, 5 }, new[] { 6, 7, 8 }, new[] { 9 } }, finalList);
+			finalList.Add(enumerable2.ToList());
 		}
+		Assert.AreEqual(new int[][] { new[] { 0, 1, 2 }, new[] { 3, 4, 5 }, new[] { 6, 7, 8 }, new[] { 9 } }, finalList);
+	}
 
-		[Test]
-		public void BatchThrowsWhenEnumerating2ndTimeTest()
+	[Test]
+	public void BatchThrowsWhenEnumerating2ndTimeTest()
+	{
+		var countTo10   = Enumerable.Range(0, 10);
+		var enumerables = EnumerableHelper.Batch(countTo10, 3);
+
+		foreach (var enumerable2 in enumerables)
 		{
-			var countTo10   = Enumerable.Range(0, 10);
-			var enumerables = EnumerableHelper.Batch(countTo10, 3);
-
-			foreach (var enumerable2 in enumerables)
+			var array1 = enumerable2.ToList();
+			Assert.AreEqual(new int[] { 0, 1, 2 }, array1);
+			Assert.Throws<InvalidOperationException>(() =>
 			{
-				var array1 = enumerable2.ToList();
-				Assert.AreEqual(new int[] { 0, 1, 2 }, array1);
-				Assert.Throws<InvalidOperationException>(() =>
-				{
-					var array2 = enumerable2.ToList();
-				});
-				return;
-			}
+				var array2 = enumerable2.ToList();
+			});
+			return;
 		}
+	}
 
-		[Test]
-		public async Task BatchAsyncTest()
+	[Test]
+	public async Task BatchAsyncTest()
+	{
+		var countTo10   = AsyncEnumerableRange(10);
+		var enumerables = EnumerableHelper.Batch(countTo10, 3);
+		var finalList   = new List<List<int>>();
+
+		await foreach (var enumerable2 in enumerables)
 		{
-			var countTo10   = AsyncEnumerableRange(10);
-			var enumerables = EnumerableHelper.Batch(countTo10, 3);
-			var finalList   = new List<List<int>>();
-
-			await foreach (var enumerable2 in enumerables)
-			{
-				var array1 = new List<int>();
-				await foreach (var elem in enumerable2)
-					array1.Add(elem);
-				finalList.Add(array1);
-			}
-			Assert.AreEqual(new int[][] { new[] { 0, 1, 2 }, new[] { 3, 4, 5 }, new[] { 6, 7, 8 }, new[] { 9 } }, finalList);
+			var array1 = new List<int>();
+			await foreach (var elem in enumerable2)
+				array1.Add(elem);
+			finalList.Add(array1);
 		}
+		Assert.AreEqual(new int[][] { new[] { 0, 1, 2 }, new[] { 3, 4, 5 }, new[] { 6, 7, 8 }, new[] { 9 } }, finalList);
+	}
 
-		[Test]
-		public async Task BatchAsyncThrowsWhenEnumerating2ndTimeTest()
+	[Test]
+	public async Task BatchAsyncThrowsWhenEnumerating2ndTimeTest()
+	{
+		var countTo10   = AsyncEnumerableRange(10);
+		var enumerables = EnumerableHelper.Batch(countTo10, 3);
+
+		await foreach (var enumerable2 in enumerables)
 		{
-			var countTo10   = AsyncEnumerableRange(10);
-			var enumerables = EnumerableHelper.Batch(countTo10, 3);
-
-			await foreach (var enumerable2 in enumerables)
+			var array1 = new List<int>();
+			await foreach (var elem in enumerable2)
+				array1.Add(elem);
+			Assert.AreEqual(new int[] { 0, 1, 2 }, array1);
+			Assert.ThrowsAsync<InvalidOperationException>(async () =>
 			{
-				var array1 = new List<int>();
-				await foreach (var elem in enumerable2)
-					array1.Add(elem);
-				Assert.AreEqual(new int[] { 0, 1, 2 }, array1);
-				Assert.ThrowsAsync<InvalidOperationException>(async () =>
-				{
-					await foreach (var _ in enumerable2) { }
-				});
-				return;
-			}
+				await foreach (var _ in enumerable2) { }
+			});
+			return;
 		}
+	}
 
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
-		private async IAsyncEnumerable<int> AsyncEnumerableRange(int count)
+	private async IAsyncEnumerable<int> AsyncEnumerableRange(int count)
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
+	{
+		for (var i = 0; i < count; i++)
 		{
-			for (var i = 0; i < count; i++)
-			{
-				yield return i;
-			}
+			yield return i;
 		}
 	}
 }

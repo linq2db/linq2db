@@ -10,518 +10,517 @@ using System.Threading;
 using System.Threading.Tasks;
 using LinqToDB.Expressions;
 
-namespace LinqToDB.DataProvider.SqlServer
+namespace LinqToDB.DataProvider.SqlServer;
+
+// old System.Data.SqlClient versions for .net core (< 4.5.0)
+// miss UDT and BulkCopy support
+// We don't take it into account, as there is no reason to use such old provider versions
+public class SqlServerProviderAdapter : IDynamicProviderAdapter
 {
-	// old System.Data.SqlClient versions for .net core (< 4.5.0)
-	// miss UDT and BulkCopy support
-	// We don't take it into account, as there is no reason to use such old provider versions
-	public class SqlServerProviderAdapter : IDynamicProviderAdapter
+	private static readonly object _sysSyncRoot = new ();
+	private static readonly object _msSyncRoot  = new ();
+
+	private static SqlServerProviderAdapter? _systemAdapter;
+	private static SqlServerProviderAdapter? _microsoftAdapter;
+
+	public const string SystemAssemblyName           = "System.Data.SqlClient";
+	public const string SystemClientNamespace        = "System.Data.SqlClient";
+	public const string SystemProviderFactoryName    = "System.Data.SqlClient";
+
+	public const string MicrosoftAssemblyName        = "Microsoft.Data.SqlClient";
+	public const string MicrosoftClientNamespace     = "Microsoft.Data.SqlClient";
+	public const string MicrosoftProviderFactoryName = "Microsoft.Data.SqlClient";
+
+	private SqlServerProviderAdapter(
+		Type connectionType,
+		Type dataReaderType,
+		Type parameterType,
+		Type commandType,
+		Type transactionType,
+		Type sqlDataRecordType,
+		Type sqlExceptionType,
+
+		Action<DbParameter, SqlDbType> dbTypeSetter,
+		Func  <DbParameter, SqlDbType> dbTypeGetter,
+		Action<DbParameter, string> udtTypeNameSetter,
+		Func  <DbParameter, string> udtTypeNameGetter,
+		Action<DbParameter, string> typeNameSetter,
+		Func  <DbParameter, string> typeNameGetter,
+
+		Func<string, SqlConnectionStringBuilder> createConnectionStringBuilder,
+		Func<string, SqlConnection>              createConnection,
+
+		Func<DbConnection, SqlBulkCopyOptions, DbTransaction?, SqlBulkCopy> createBulkCopy,
+		Func<int, string, SqlBulkCopyColumnMapping>                         createBulkCopyColumnMapping)
 	{
-		private static readonly object _sysSyncRoot = new ();
-		private static readonly object _msSyncRoot  = new ();
+		ConnectionType  = connectionType;
+		DataReaderType  = dataReaderType;
+		ParameterType   = parameterType;
+		CommandType     = commandType;
+		TransactionType = transactionType;
 
-		private static SqlServerProviderAdapter? _systemAdapter;
-		private static SqlServerProviderAdapter? _microsoftAdapter;
+		SqlDataRecordType = sqlDataRecordType;
+		SqlExceptionType  = sqlExceptionType;
 
-		public const string SystemAssemblyName           = "System.Data.SqlClient";
-		public const string SystemClientNamespace        = "System.Data.SqlClient";
-		public const string SystemProviderFactoryName    = "System.Data.SqlClient";
+		SetDbType      = dbTypeSetter;
+		GetDbType      = dbTypeGetter;
+		SetUdtTypeName = udtTypeNameSetter;
+		GetUdtTypeName = udtTypeNameGetter;
+		SetTypeName    = typeNameSetter;
+		GetTypeName    = typeNameGetter;
 
-		public const string MicrosoftAssemblyName        = "Microsoft.Data.SqlClient";
-		public const string MicrosoftClientNamespace     = "Microsoft.Data.SqlClient";
-		public const string MicrosoftProviderFactoryName = "Microsoft.Data.SqlClient";
+		_createConnectionStringBuilder = createConnectionStringBuilder;
+		_createConnection              = createConnection;
 
-		private SqlServerProviderAdapter(
-			Type connectionType,
-			Type dataReaderType,
-			Type parameterType,
-			Type commandType,
-			Type transactionType,
-			Type sqlDataRecordType,
-			Type sqlExceptionType,
+		_createBulkCopy              = createBulkCopy;
+		_createBulkCopyColumnMapping = createBulkCopyColumnMapping;
+	}
 
-			Action<DbParameter, SqlDbType> dbTypeSetter,
-			Func  <DbParameter, SqlDbType> dbTypeGetter,
-			Action<DbParameter, string> udtTypeNameSetter,
-			Func  <DbParameter, string> udtTypeNameGetter,
-			Action<DbParameter, string> typeNameSetter,
-			Func  <DbParameter, string> typeNameGetter,
+	public Type ConnectionType  { get; }
+	public Type DataReaderType  { get; }
+	public Type ParameterType   { get; }
+	public Type CommandType     { get; }
+	public Type TransactionType { get; }
 
-			Func<string, SqlConnectionStringBuilder> createConnectionStringBuilder,
-			Func<string, SqlConnection>              createConnection,
+	public Type SqlDataRecordType { get; }
+	public Type SqlExceptionType  { get; }
 
-			Func<DbConnection, SqlBulkCopyOptions, DbTransaction?, SqlBulkCopy> createBulkCopy,
-			Func<int, string, SqlBulkCopyColumnMapping>                         createBulkCopyColumnMapping)
+	public string GetSqlXmlReaderMethod         => "GetSqlXml";
+	public string GetDateTimeOffsetReaderMethod => "GetDateTimeOffset";
+	public string GetTimeSpanReaderMethod       => "GetTimeSpan";
+
+	private readonly Func<string, SqlConnectionStringBuilder> _createConnectionStringBuilder;
+	public SqlConnectionStringBuilder CreateConnectionStringBuilder(string connectionString) => _createConnectionStringBuilder(connectionString);
+
+	private readonly Func<DbConnection, SqlBulkCopyOptions, DbTransaction?, SqlBulkCopy> _createBulkCopy;
+	public SqlBulkCopy CreateBulkCopy(DbConnection connection, SqlBulkCopyOptions options, DbTransaction? transaction)
+		=> _createBulkCopy(connection, options, transaction);
+
+	private readonly Func<int, string, SqlBulkCopyColumnMapping> _createBulkCopyColumnMapping;
+	public SqlBulkCopyColumnMapping CreateBulkCopyColumnMapping(int source, string destination)
+		=> _createBulkCopyColumnMapping(source, destination);
+
+	public Action<DbParameter, SqlDbType> SetDbType { get; }
+	public Func  <DbParameter, SqlDbType> GetDbType { get; }
+
+	public Action<DbParameter, string> SetUdtTypeName { get; }
+	public Func  <DbParameter, string> GetUdtTypeName { get; }
+
+	public Action<DbParameter, string> SetTypeName { get; }
+	public Func  <DbParameter, string> GetTypeName { get; }
+
+	private readonly Func<string, SqlConnection> _createConnection;
+	public SqlConnection CreateConnection(string connectionString) => _createConnection(connectionString);
+
+	public static SqlServerProviderAdapter GetInstance(SqlServerProvider provider)
+	{
+		if (provider == SqlServerProvider.SystemDataSqlClient)
 		{
-			ConnectionType  = connectionType;
-			DataReaderType  = dataReaderType;
-			ParameterType   = parameterType;
-			CommandType     = commandType;
-			TransactionType = transactionType;
+			if (_systemAdapter == null)
+				lock (_sysSyncRoot)
+					if (_systemAdapter == null)
+						_systemAdapter = CreateAdapter(SystemAssemblyName, SystemClientNamespace, SystemProviderFactoryName);
 
-			SqlDataRecordType = sqlDataRecordType;
-			SqlExceptionType  = sqlExceptionType;
-
-			SetDbType      = dbTypeSetter;
-			GetDbType      = dbTypeGetter;
-			SetUdtTypeName = udtTypeNameSetter;
-			GetUdtTypeName = udtTypeNameGetter;
-			SetTypeName    = typeNameSetter;
-			GetTypeName    = typeNameGetter;
-
-			_createConnectionStringBuilder = createConnectionStringBuilder;
-			_createConnection              = createConnection;
-
-			_createBulkCopy              = createBulkCopy;
-			_createBulkCopyColumnMapping = createBulkCopyColumnMapping;
+			return _systemAdapter;
 		}
-
-		public Type ConnectionType  { get; }
-		public Type DataReaderType  { get; }
-		public Type ParameterType   { get; }
-		public Type CommandType     { get; }
-		public Type TransactionType { get; }
-
-		public Type SqlDataRecordType { get; }
-		public Type SqlExceptionType  { get; }
-
-		public string GetSqlXmlReaderMethod         => "GetSqlXml";
-		public string GetDateTimeOffsetReaderMethod => "GetDateTimeOffset";
-		public string GetTimeSpanReaderMethod       => "GetTimeSpan";
-
-		private readonly Func<string, SqlConnectionStringBuilder> _createConnectionStringBuilder;
-		public SqlConnectionStringBuilder CreateConnectionStringBuilder(string connectionString) => _createConnectionStringBuilder(connectionString);
-
-		private readonly Func<DbConnection, SqlBulkCopyOptions, DbTransaction?, SqlBulkCopy> _createBulkCopy;
-		public SqlBulkCopy CreateBulkCopy(DbConnection connection, SqlBulkCopyOptions options, DbTransaction? transaction)
-			=> _createBulkCopy(connection, options, transaction);
-
-		private readonly Func<int, string, SqlBulkCopyColumnMapping> _createBulkCopyColumnMapping;
-		public SqlBulkCopyColumnMapping CreateBulkCopyColumnMapping(int source, string destination)
-			=> _createBulkCopyColumnMapping(source, destination);
-
-		public Action<DbParameter, SqlDbType> SetDbType { get; }
-		public Func  <DbParameter, SqlDbType> GetDbType { get; }
-
-		public Action<DbParameter, string> SetUdtTypeName { get; }
-		public Func  <DbParameter, string> GetUdtTypeName { get; }
-
-		public Action<DbParameter, string> SetTypeName { get; }
-		public Func  <DbParameter, string> GetTypeName { get; }
-
-		private readonly Func<string, SqlConnection> _createConnection;
-		public SqlConnection CreateConnection(string connectionString) => _createConnection(connectionString);
-
-		public static SqlServerProviderAdapter GetInstance(SqlServerProvider provider)
+		else
 		{
-			if (provider == SqlServerProvider.SystemDataSqlClient)
-			{
-				if (_systemAdapter == null)
-					lock (_sysSyncRoot)
-						if (_systemAdapter == null)
-							_systemAdapter = CreateAdapter(SystemAssemblyName, SystemClientNamespace, SystemProviderFactoryName);
+			if (_microsoftAdapter == null)
+				lock (_msSyncRoot)
+					if (_microsoftAdapter == null)
+						_microsoftAdapter = CreateAdapter(MicrosoftAssemblyName, MicrosoftClientNamespace, MicrosoftProviderFactoryName);
 
-				return _systemAdapter;
-			}
-			else
-			{
-				if (_microsoftAdapter == null)
-					lock (_msSyncRoot)
-						if (_microsoftAdapter == null)
-							_microsoftAdapter = CreateAdapter(MicrosoftAssemblyName, MicrosoftClientNamespace, MicrosoftProviderFactoryName);
-
-				return _microsoftAdapter;
-			}
+			return _microsoftAdapter;
 		}
+	}
 
-		private static SqlServerProviderAdapter CreateAdapter(string assemblyName, string clientNamespace, string factoryName)
-		{
-			var isSystem = assemblyName == SystemAssemblyName;
+	private static SqlServerProviderAdapter CreateAdapter(string assemblyName, string clientNamespace, string factoryName)
+	{
+		var isSystem = assemblyName == SystemAssemblyName;
 
-			Assembly? assembly;
+		Assembly? assembly;
 #if NETFRAMEWORK
-			if (isSystem)
-			{
-				assembly = typeof(System.Data.SqlClient.SqlConnection).Assembly;
-			}
-			else
+		if (isSystem)
+		{
+			assembly = typeof(System.Data.SqlClient.SqlConnection).Assembly;
+		}
+		else
 #endif
-			{
-				assembly = Common.Tools.TryLoadAssembly(assemblyName, factoryName);
-			}
-
-			if (assembly == null)
-				throw new InvalidOperationException($"Cannot load assembly {assemblyName}");
-
-			var connectionType                 = assembly.GetType($"{clientNamespace}.SqlConnection"             , true)!;
-			var parameterType                  = assembly.GetType($"{clientNamespace}.SqlParameter"              , true)!;
-			var dataReaderType                 = assembly.GetType($"{clientNamespace}.SqlDataReader"             , true)!;
-			var transactionType                = assembly.GetType($"{clientNamespace}.SqlTransaction"            , true)!;
-			var commandType                    = assembly.GetType($"{clientNamespace}.SqlCommand"                , true)!;
-			var sqlCommandBuilderType          = assembly.GetType($"{clientNamespace}.SqlCommandBuilder"         , true)!;
-			var sqlConnectionStringBuilderType = assembly.GetType($"{clientNamespace}.SqlConnectionStringBuilder", true)!;
-			var sqlExceptionType               = assembly.GetType($"{clientNamespace}.SqlException"              , true)!;
-			var sqlErrorCollectionType         = assembly.GetType($"{clientNamespace}.SqlErrorCollection"        , true)!;
-			var sqlErrorType                   = assembly.GetType($"{clientNamespace}.SqlError"                  , true)!;
-
-			var sqlDataRecordType = connectionType.Assembly.GetType(
-				isSystem
-					? "Microsoft.SqlServer.Server.SqlDataRecord"
-					: "Microsoft.Data.SqlClient.Server.SqlDataRecord",
-				true)!;
-
-			var bulkCopyType                        = assembly.GetType($"{clientNamespace}.SqlBulkCopy"                       , true)!;
-			var bulkCopyOptionsType                 = assembly.GetType($"{clientNamespace}.SqlBulkCopyOptions"                , true)!;
-			var bulkRowsCopiedEventHandlerType      = assembly.GetType($"{clientNamespace}.SqlRowsCopiedEventHandler"         , true)!;
-			var bulkCopyColumnMappingType           = assembly.GetType($"{clientNamespace}.SqlBulkCopyColumnMapping"          , true)!;
-			var bulkCopyColumnMappingCollectionType = assembly.GetType($"{clientNamespace}.SqlBulkCopyColumnMappingCollection", true)!;
-			var rowsCopiedEventArgsType             = assembly.GetType($"{clientNamespace}.SqlRowsCopiedEventArgs"            , true)!;
-
-			var typeMapper = new TypeMapper();
-
-			typeMapper.RegisterTypeWrapper<SqlConnection>(connectionType);
-			typeMapper.RegisterTypeWrapper<SqlParameter>(parameterType);
-			typeMapper.RegisterTypeWrapper<SqlTransaction>(transactionType);
-			typeMapper.RegisterTypeWrapper<SqlErrorCollection>(sqlErrorCollectionType);
-			typeMapper.RegisterTypeWrapper<SqlException>(sqlExceptionType);
-			typeMapper.RegisterTypeWrapper<SqlError>(sqlErrorType);
-			typeMapper.RegisterTypeWrapper<SqlConnectionStringBuilder>(sqlConnectionStringBuilderType);
-
-			// bulk copy types
-			typeMapper.RegisterTypeWrapper<SqlBulkCopy>(bulkCopyType);
-			typeMapper.RegisterTypeWrapper<SqlBulkCopyOptions>(bulkCopyOptionsType);
-			typeMapper.RegisterTypeWrapper<SqlRowsCopiedEventHandler>(bulkRowsCopiedEventHandlerType);
-			typeMapper.RegisterTypeWrapper<SqlBulkCopyColumnMapping>(bulkCopyColumnMappingType);
-			typeMapper.RegisterTypeWrapper<SqlBulkCopyColumnMappingCollection>(bulkCopyColumnMappingCollectionType);
-			typeMapper.RegisterTypeWrapper<SqlRowsCopiedEventArgs>(rowsCopiedEventArgsType);
-			typeMapper.FinalizeMappings();
-
-			var paramMapper        = typeMapper.Type<SqlParameter>();
-			var dbTypeBuilder      = paramMapper.Member(p => p.SqlDbType);
-			var udtTypeNameBuilder = paramMapper.Member(p => p.UdtTypeName);
-			var typeNameBuilder    = paramMapper.Member(p => p.TypeName);
-
-			SqlServerTransientExceptionDetector.RegisterExceptionType(sqlExceptionType, exceptionErrorsGettter);
-
-			return new SqlServerProviderAdapter(
-				connectionType,
-				dataReaderType,
-				parameterType,
-				commandType,
-				transactionType,
-				sqlDataRecordType,
-				sqlExceptionType,
-
-				dbTypeBuilder.BuildSetter<DbParameter>(),
-				dbTypeBuilder.BuildGetter<DbParameter>(),
-				udtTypeNameBuilder.BuildSetter<DbParameter>(),
-				udtTypeNameBuilder.BuildGetter<DbParameter>(),
-				typeNameBuilder.BuildSetter<DbParameter>(),
-				typeNameBuilder.BuildGetter<DbParameter>(),
-
-				typeMapper.BuildWrappedFactory((string connectionString) => new SqlConnectionStringBuilder(connectionString)),
-				typeMapper.BuildWrappedFactory((string connectionString) => new SqlConnection(connectionString)),
-
-				typeMapper.BuildWrappedFactory((DbConnection connection, SqlBulkCopyOptions options, DbTransaction? transaction) => new SqlBulkCopy((SqlConnection)(object)connection, options, (SqlTransaction?)(object?)transaction)),
-				typeMapper.BuildWrappedFactory((int source, string destination) => new SqlBulkCopyColumnMapping(source, destination)));
-
-			IEnumerable<int> exceptionErrorsGettter(Exception ex) => typeMapper.Wrap<SqlException>(ex).Errors.Errors.Select(err => err.Number);
-		}
-
-		#region Wrappers
-
-		#region SqlException
-		[Wrapper]
-		internal class SqlException : TypeWrapper
 		{
-			private static LambdaExpression[] Wrappers { get; }
-				= new LambdaExpression[]
-			{
-				// [0]: get Errors
-				(Expression<Func<SqlException, SqlErrorCollection>>)((SqlException this_) => this_.Errors),
-			};
-
-			public SqlException(object instance, Delegate[] wrappers) : base(instance, wrappers)
-			{
-			}
-
-			public SqlErrorCollection Errors => ((Func<SqlException, SqlErrorCollection>)CompiledWrappers[0])(this);
+			assembly = Common.Tools.TryLoadAssembly(assemblyName, factoryName);
 		}
 
-		[Wrapper]
-		internal class SqlErrorCollection : TypeWrapper
+		if (assembly == null)
+			throw new InvalidOperationException($"Cannot load assembly {assemblyName}");
+
+		var connectionType                 = assembly.GetType($"{clientNamespace}.SqlConnection"             , true)!;
+		var parameterType                  = assembly.GetType($"{clientNamespace}.SqlParameter"              , true)!;
+		var dataReaderType                 = assembly.GetType($"{clientNamespace}.SqlDataReader"             , true)!;
+		var transactionType                = assembly.GetType($"{clientNamespace}.SqlTransaction"            , true)!;
+		var commandType                    = assembly.GetType($"{clientNamespace}.SqlCommand"                , true)!;
+		var sqlCommandBuilderType          = assembly.GetType($"{clientNamespace}.SqlCommandBuilder"         , true)!;
+		var sqlConnectionStringBuilderType = assembly.GetType($"{clientNamespace}.SqlConnectionStringBuilder", true)!;
+		var sqlExceptionType               = assembly.GetType($"{clientNamespace}.SqlException"              , true)!;
+		var sqlErrorCollectionType         = assembly.GetType($"{clientNamespace}.SqlErrorCollection"        , true)!;
+		var sqlErrorType                   = assembly.GetType($"{clientNamespace}.SqlError"                  , true)!;
+
+		var sqlDataRecordType = connectionType.Assembly.GetType(
+			isSystem
+				? "Microsoft.SqlServer.Server.SqlDataRecord"
+				: "Microsoft.Data.SqlClient.Server.SqlDataRecord",
+			true)!;
+
+		var bulkCopyType                        = assembly.GetType($"{clientNamespace}.SqlBulkCopy"                       , true)!;
+		var bulkCopyOptionsType                 = assembly.GetType($"{clientNamespace}.SqlBulkCopyOptions"                , true)!;
+		var bulkRowsCopiedEventHandlerType      = assembly.GetType($"{clientNamespace}.SqlRowsCopiedEventHandler"         , true)!;
+		var bulkCopyColumnMappingType           = assembly.GetType($"{clientNamespace}.SqlBulkCopyColumnMapping"          , true)!;
+		var bulkCopyColumnMappingCollectionType = assembly.GetType($"{clientNamespace}.SqlBulkCopyColumnMappingCollection", true)!;
+		var rowsCopiedEventArgsType             = assembly.GetType($"{clientNamespace}.SqlRowsCopiedEventArgs"            , true)!;
+
+		var typeMapper = new TypeMapper();
+
+		typeMapper.RegisterTypeWrapper<SqlConnection>(connectionType);
+		typeMapper.RegisterTypeWrapper<SqlParameter>(parameterType);
+		typeMapper.RegisterTypeWrapper<SqlTransaction>(transactionType);
+		typeMapper.RegisterTypeWrapper<SqlErrorCollection>(sqlErrorCollectionType);
+		typeMapper.RegisterTypeWrapper<SqlException>(sqlExceptionType);
+		typeMapper.RegisterTypeWrapper<SqlError>(sqlErrorType);
+		typeMapper.RegisterTypeWrapper<SqlConnectionStringBuilder>(sqlConnectionStringBuilderType);
+
+		// bulk copy types
+		typeMapper.RegisterTypeWrapper<SqlBulkCopy>(bulkCopyType);
+		typeMapper.RegisterTypeWrapper<SqlBulkCopyOptions>(bulkCopyOptionsType);
+		typeMapper.RegisterTypeWrapper<SqlRowsCopiedEventHandler>(bulkRowsCopiedEventHandlerType);
+		typeMapper.RegisterTypeWrapper<SqlBulkCopyColumnMapping>(bulkCopyColumnMappingType);
+		typeMapper.RegisterTypeWrapper<SqlBulkCopyColumnMappingCollection>(bulkCopyColumnMappingCollectionType);
+		typeMapper.RegisterTypeWrapper<SqlRowsCopiedEventArgs>(rowsCopiedEventArgsType);
+		typeMapper.FinalizeMappings();
+
+		var paramMapper        = typeMapper.Type<SqlParameter>();
+		var dbTypeBuilder      = paramMapper.Member(p => p.SqlDbType);
+		var udtTypeNameBuilder = paramMapper.Member(p => p.UdtTypeName);
+		var typeNameBuilder    = paramMapper.Member(p => p.TypeName);
+
+		SqlServerTransientExceptionDetector.RegisterExceptionType(sqlExceptionType, exceptionErrorsGettter);
+
+		return new SqlServerProviderAdapter(
+			connectionType,
+			dataReaderType,
+			parameterType,
+			commandType,
+			transactionType,
+			sqlDataRecordType,
+			sqlExceptionType,
+
+			dbTypeBuilder.BuildSetter<DbParameter>(),
+			dbTypeBuilder.BuildGetter<DbParameter>(),
+			udtTypeNameBuilder.BuildSetter<DbParameter>(),
+			udtTypeNameBuilder.BuildGetter<DbParameter>(),
+			typeNameBuilder.BuildSetter<DbParameter>(),
+			typeNameBuilder.BuildGetter<DbParameter>(),
+
+			typeMapper.BuildWrappedFactory((string connectionString) => new SqlConnectionStringBuilder(connectionString)),
+			typeMapper.BuildWrappedFactory((string connectionString) => new SqlConnection(connectionString)),
+
+			typeMapper.BuildWrappedFactory((DbConnection connection, SqlBulkCopyOptions options, DbTransaction? transaction) => new SqlBulkCopy((SqlConnection)(object)connection, options, (SqlTransaction?)(object?)transaction)),
+			typeMapper.BuildWrappedFactory((int source, string destination) => new SqlBulkCopyColumnMapping(source, destination)));
+
+		IEnumerable<int> exceptionErrorsGettter(Exception ex) => typeMapper.Wrap<SqlException>(ex).Errors.Errors.Select(err => err.Number);
+	}
+
+	#region Wrappers
+
+	#region SqlException
+	[Wrapper]
+	internal class SqlException : TypeWrapper
+	{
+		private static LambdaExpression[] Wrappers { get; }
+			= new LambdaExpression[]
 		{
-			private static LambdaExpression[] Wrappers { get; }
-				= new LambdaExpression[]
-			{
-				// [0]: GetEnumerator
-				(Expression<Func<SqlErrorCollection, IEnumerator>>)((SqlErrorCollection this_) => this_.GetEnumerator()),
-				// [1]: SqlError wrapper
-				(Expression<Func<object, SqlError>>               )((object error            ) => (SqlError)error),
-			};
+			// [0]: get Errors
+			(Expression<Func<SqlException, SqlErrorCollection>>)((SqlException this_) => this_.Errors),
+		};
 
-			public SqlErrorCollection(object instance, Delegate[] wrappers) : base(instance, wrappers)
-			{
-			}
-
-			public IEnumerator GetEnumerator() => ((Func<SqlErrorCollection, IEnumerator>)CompiledWrappers[0])(this);
-
-			public IEnumerable<SqlError> Errors
-			{
-				get
-				{
-					var wrapper = (Func<object, SqlError>)CompiledWrappers[1];
-					var e = GetEnumerator();
-
-					while (e.MoveNext())
-						yield return wrapper(e.Current!);
-				}
-			}
-		}
-
-		[Wrapper]
-		internal class SqlError : TypeWrapper
-		{
-			private static LambdaExpression[] Wrappers { get; }
-				= new LambdaExpression[]
-			{
-				// [0]: get Number
-				(Expression<Func<SqlError, int>>)((SqlError this_) => this_.Number),
-			};
-
-			public SqlError(object instance, Delegate[] wrappers) : base(instance, wrappers)
-			{
-			}
-
-			public int Number => ((Func<SqlError, int>)CompiledWrappers[0])(this);
-		}
-		#endregion
-
-		[Wrapper]
-		private class SqlParameter
-		{
-			// string return type is correct, TypeName and UdtTypeName return empty string instead of null
-			public string    UdtTypeName { get; set; } = null!;
-			public string    TypeName    { get; set; } = null!;
-			public SqlDbType SqlDbType   { get; set; }
-		}
-
-		[Wrapper]
-		public class SqlConnectionStringBuilder : TypeWrapper
-		{
-			private static LambdaExpression[] Wrappers { get; }
-				= new LambdaExpression[]
-			{
-				// [0]: get MultipleActiveResultSets
-				(Expression<Func<SqlConnectionStringBuilder, bool>>)((SqlConnectionStringBuilder this_) => this_.MultipleActiveResultSets),
-				// [1]: set MultipleActiveResultSets
-				PropertySetter((SqlConnectionStringBuilder this_) => this_.MultipleActiveResultSets),
-			};
-
-			public SqlConnectionStringBuilder(object instance, Delegate[] wrappers) : base(instance, wrappers)
-			{
-			}
-
-			public SqlConnectionStringBuilder(string connectionString) => throw new NotImplementedException();
-
-			public bool MultipleActiveResultSets
-			{
-				get => ((Func  <SqlConnectionStringBuilder, bool>)CompiledWrappers[0])(this);
-				set => ((Action<SqlConnectionStringBuilder, bool>)CompiledWrappers[1])(this, value);
-			}
-		}
-
-		[Wrapper]
-		public class SqlConnection : TypeWrapper, IDisposable
-		{
-			private static LambdaExpression[] Wrappers { get; }
-				= new LambdaExpression[]
-			{
-				// [0]: get ServerVersion
-				(Expression<Func<SqlConnection, string>>   )((SqlConnection this_) => this_.ServerVersion),
-				// [1]: CreateCommand
-				(Expression<Func<SqlConnection, DbCommand>>)((SqlConnection this_) => this_.CreateCommand()),
-				// [2]: Open
-				(Expression<Action<SqlConnection>>         )((SqlConnection this_) => this_.Open()),
-				// [3]: Dispose
-				(Expression<Action<SqlConnection>>         )((SqlConnection this_) => this_.Dispose()),
-			};
-
-			public SqlConnection(object instance, Delegate[] wrappers) : base(instance, wrappers)
-			{
-			}
-
-			public SqlConnection(string connectionString) => throw new NotImplementedException();
-
-			public string    ServerVersion   => ((Func<SqlConnection, string>)CompiledWrappers[0])(this);
-			public DbCommand CreateCommand() => ((Func<SqlConnection, DbCommand>)CompiledWrappers[1])(this);
-			public void      Open()          => ((Action<SqlConnection>)CompiledWrappers[2])(this);
-			public void      Dispose()       => ((Action<SqlConnection>)CompiledWrappers[3])(this);
-		}
-
-		[Wrapper]
-		public class SqlTransaction
+		public SqlException(object instance, Delegate[] wrappers) : base(instance, wrappers)
 		{
 		}
 
-		#region BulkCopy
-		[Wrapper]
-		public class SqlBulkCopy : TypeWrapper, IDisposable
+		public SqlErrorCollection Errors => ((Func<SqlException, SqlErrorCollection>)CompiledWrappers[0])(this);
+	}
+
+	[Wrapper]
+	internal class SqlErrorCollection : TypeWrapper
+	{
+		private static LambdaExpression[] Wrappers { get; }
+			= new LambdaExpression[]
 		{
-			private static LambdaExpression[] Wrappers { get; }
-				= new LambdaExpression[]
-			{
-				// [0]: Dispose
-				(Expression<Action<SqlBulkCopy>>                                  )((SqlBulkCopy this_                    ) => ((IDisposable)this_).Dispose()),
-				// [1]: WriteToServer
-				(Expression<Action<SqlBulkCopy, IDataReader>>                     )((SqlBulkCopy this_, IDataReader reader) => this_.WriteToServer(reader)),
-				// [2]: get NotifyAfter
-				(Expression<Func<SqlBulkCopy, int>>                               )((SqlBulkCopy this_                    ) => this_.NotifyAfter),
-				// [3]: get BatchSize
-				(Expression<Func<SqlBulkCopy, int>>                               )((SqlBulkCopy this_                    ) => this_.BatchSize),
-				// [4]: get BulkCopyTimeout
-				(Expression<Func<SqlBulkCopy, int>>                               )((SqlBulkCopy this_                    ) => this_.BulkCopyTimeout),
-				// [5]: get DestinationTableName
-				(Expression<Func<SqlBulkCopy, string?>>                           )((SqlBulkCopy this_                    ) => this_.DestinationTableName),
-				// [6]: get ColumnMappings
-				(Expression<Func<SqlBulkCopy, SqlBulkCopyColumnMappingCollection>>)((SqlBulkCopy this_                    ) => this_.ColumnMappings),
-				// [7]: set NotifyAfter
-				PropertySetter((SqlBulkCopy this_) => this_.NotifyAfter),
-				// [8]: set BatchSize
-				PropertySetter((SqlBulkCopy this_) => this_.BatchSize),
-				// [9]: set BulkCopyTimeout
-				PropertySetter((SqlBulkCopy this_) => this_.BulkCopyTimeout),
-				// [10]: set DestinationTableName
-				PropertySetter((SqlBulkCopy this_) => this_.DestinationTableName),
-				// [11]: WriteToServerAsync
-				(Expression<Func<SqlBulkCopy, IDataReader, CancellationToken, Task>>)((SqlBulkCopy this_, IDataReader reader, CancellationToken token)
-					=> this_.WriteToServerAsync(reader, token)),
-			};
+			// [0]: GetEnumerator
+			(Expression<Func<SqlErrorCollection, IEnumerator>>)((SqlErrorCollection this_) => this_.GetEnumerator()),
+			// [1]: SqlError wrapper
+			(Expression<Func<object, SqlError>>               )((object error            ) => (SqlError)error),
+		};
 
-			private static string[] Events { get; }
-				= new[]
-			{
-				nameof(SqlRowsCopied)
-			};
+		public SqlErrorCollection(object instance, Delegate[] wrappers) : base(instance, wrappers)
+		{
+		}
 
-			public SqlBulkCopy(object instance, Delegate[] wrappers) : base(instance, wrappers)
+		public IEnumerator GetEnumerator() => ((Func<SqlErrorCollection, IEnumerator>)CompiledWrappers[0])(this);
+
+		public IEnumerable<SqlError> Errors
+		{
+			get
 			{
+				var wrapper = (Func<object, SqlError>)CompiledWrappers[1];
+				var e = GetEnumerator();
+
+				while (e.MoveNext())
+					yield return wrapper(e.Current!);
 			}
+		}
+	}
 
-			public SqlBulkCopy(SqlConnection connection, SqlBulkCopyOptions options, SqlTransaction? transaction) => throw new NotImplementedException();
+	[Wrapper]
+	internal class SqlError : TypeWrapper
+	{
+		private static LambdaExpression[] Wrappers { get; }
+			= new LambdaExpression[]
+		{
+			// [0]: get Number
+			(Expression<Func<SqlError, int>>)((SqlError this_) => this_.Number),
+		};
 
-			void IDisposable.Dispose()                        => ((Action<SqlBulkCopy>)CompiledWrappers[0])(this);
+		public SqlError(object instance, Delegate[] wrappers) : base(instance, wrappers)
+		{
+		}
+
+		public int Number => ((Func<SqlError, int>)CompiledWrappers[0])(this);
+	}
+	#endregion
+
+	[Wrapper]
+	private class SqlParameter
+	{
+		// string return type is correct, TypeName and UdtTypeName return empty string instead of null
+		public string    UdtTypeName { get; set; } = null!;
+		public string    TypeName    { get; set; } = null!;
+		public SqlDbType SqlDbType   { get; set; }
+	}
+
+	[Wrapper]
+	public class SqlConnectionStringBuilder : TypeWrapper
+	{
+		private static LambdaExpression[] Wrappers { get; }
+			= new LambdaExpression[]
+		{
+			// [0]: get MultipleActiveResultSets
+			(Expression<Func<SqlConnectionStringBuilder, bool>>)((SqlConnectionStringBuilder this_) => this_.MultipleActiveResultSets),
+			// [1]: set MultipleActiveResultSets
+			PropertySetter((SqlConnectionStringBuilder this_) => this_.MultipleActiveResultSets),
+		};
+
+		public SqlConnectionStringBuilder(object instance, Delegate[] wrappers) : base(instance, wrappers)
+		{
+		}
+
+		public SqlConnectionStringBuilder(string connectionString) => throw new NotImplementedException();
+
+		public bool MultipleActiveResultSets
+		{
+			get => ((Func  <SqlConnectionStringBuilder, bool>)CompiledWrappers[0])(this);
+			set => ((Action<SqlConnectionStringBuilder, bool>)CompiledWrappers[1])(this, value);
+		}
+	}
+
+	[Wrapper]
+	public class SqlConnection : TypeWrapper, IDisposable
+	{
+		private static LambdaExpression[] Wrappers { get; }
+			= new LambdaExpression[]
+		{
+			// [0]: get ServerVersion
+			(Expression<Func<SqlConnection, string>>   )((SqlConnection this_) => this_.ServerVersion),
+			// [1]: CreateCommand
+			(Expression<Func<SqlConnection, DbCommand>>)((SqlConnection this_) => this_.CreateCommand()),
+			// [2]: Open
+			(Expression<Action<SqlConnection>>         )((SqlConnection this_) => this_.Open()),
+			// [3]: Dispose
+			(Expression<Action<SqlConnection>>         )((SqlConnection this_) => this_.Dispose()),
+		};
+
+		public SqlConnection(object instance, Delegate[] wrappers) : base(instance, wrappers)
+		{
+		}
+
+		public SqlConnection(string connectionString) => throw new NotImplementedException();
+
+		public string    ServerVersion   => ((Func<SqlConnection, string>)CompiledWrappers[0])(this);
+		public DbCommand CreateCommand() => ((Func<SqlConnection, DbCommand>)CompiledWrappers[1])(this);
+		public void      Open()          => ((Action<SqlConnection>)CompiledWrappers[2])(this);
+		public void      Dispose()       => ((Action<SqlConnection>)CompiledWrappers[3])(this);
+	}
+
+	[Wrapper]
+	public class SqlTransaction
+	{
+	}
+
+	#region BulkCopy
+	[Wrapper]
+	public class SqlBulkCopy : TypeWrapper, IDisposable
+	{
+		private static LambdaExpression[] Wrappers { get; }
+			= new LambdaExpression[]
+		{
+			// [0]: Dispose
+			(Expression<Action<SqlBulkCopy>>                                  )((SqlBulkCopy this_                    ) => ((IDisposable)this_).Dispose()),
+			// [1]: WriteToServer
+			(Expression<Action<SqlBulkCopy, IDataReader>>                     )((SqlBulkCopy this_, IDataReader reader) => this_.WriteToServer(reader)),
+			// [2]: get NotifyAfter
+			(Expression<Func<SqlBulkCopy, int>>                               )((SqlBulkCopy this_                    ) => this_.NotifyAfter),
+			// [3]: get BatchSize
+			(Expression<Func<SqlBulkCopy, int>>                               )((SqlBulkCopy this_                    ) => this_.BatchSize),
+			// [4]: get BulkCopyTimeout
+			(Expression<Func<SqlBulkCopy, int>>                               )((SqlBulkCopy this_                    ) => this_.BulkCopyTimeout),
+			// [5]: get DestinationTableName
+			(Expression<Func<SqlBulkCopy, string?>>                           )((SqlBulkCopy this_                    ) => this_.DestinationTableName),
+			// [6]: get ColumnMappings
+			(Expression<Func<SqlBulkCopy, SqlBulkCopyColumnMappingCollection>>)((SqlBulkCopy this_                    ) => this_.ColumnMappings),
+			// [7]: set NotifyAfter
+			PropertySetter((SqlBulkCopy this_) => this_.NotifyAfter),
+			// [8]: set BatchSize
+			PropertySetter((SqlBulkCopy this_) => this_.BatchSize),
+			// [9]: set BulkCopyTimeout
+			PropertySetter((SqlBulkCopy this_) => this_.BulkCopyTimeout),
+			// [10]: set DestinationTableName
+			PropertySetter((SqlBulkCopy this_) => this_.DestinationTableName),
+			// [11]: WriteToServerAsync
+			(Expression<Func<SqlBulkCopy, IDataReader, CancellationToken, Task>>)((SqlBulkCopy this_, IDataReader reader, CancellationToken token)
+				=> this_.WriteToServerAsync(reader, token)),
+		};
+
+		private static string[] Events { get; }
+			= new[]
+		{
+			nameof(SqlRowsCopied)
+		};
+
+		public SqlBulkCopy(object instance, Delegate[] wrappers) : base(instance, wrappers)
+		{
+		}
+
+		public SqlBulkCopy(SqlConnection connection, SqlBulkCopyOptions options, SqlTransaction? transaction) => throw new NotImplementedException();
+
+		void IDisposable.Dispose()                        => ((Action<SqlBulkCopy>)CompiledWrappers[0])(this);
 #pragma warning disable RS0030 // API mapping must preserve type
-			public void WriteToServer(IDataReader dataReader) => ((Action<SqlBulkCopy, IDataReader>)CompiledWrappers[1])(this, dataReader);
-			public Task WriteToServerAsync(IDataReader dataReader, CancellationToken cancellationToken)
-				=> ((Func<SqlBulkCopy, IDataReader, CancellationToken, Task>)CompiledWrappers[11])(this, dataReader, cancellationToken);
+		public void WriteToServer(IDataReader dataReader) => ((Action<SqlBulkCopy, IDataReader>)CompiledWrappers[1])(this, dataReader);
+		public Task WriteToServerAsync(IDataReader dataReader, CancellationToken cancellationToken)
+			=> ((Func<SqlBulkCopy, IDataReader, CancellationToken, Task>)CompiledWrappers[11])(this, dataReader, cancellationToken);
 #pragma warning restore RS0030 //  API mapping must preserve type
 
-			public int NotifyAfter
-			{
-				get => ((Func  <SqlBulkCopy, int>)CompiledWrappers[2])(this);
-				set => ((Action<SqlBulkCopy, int>)CompiledWrappers[7])(this, value);
-			}
-
-			public int BatchSize
-			{
-				get => ((Func  <SqlBulkCopy, int>)CompiledWrappers[3])(this);
-				set => ((Action<SqlBulkCopy, int>)CompiledWrappers[8])(this, value);
-			}
-
-			public int BulkCopyTimeout
-			{
-				get => ((Func  <SqlBulkCopy, int>)CompiledWrappers[4])(this);
-				set => ((Action<SqlBulkCopy, int>)CompiledWrappers[9])(this, value);
-			}
-
-			public string? DestinationTableName
-			{
-				get => ((Func  <SqlBulkCopy, string?>)CompiledWrappers[5] )(this);
-				set => ((Action<SqlBulkCopy, string?>)CompiledWrappers[10])(this, value);
-			}
-
-			public SqlBulkCopyColumnMappingCollection ColumnMappings => ((Func<SqlBulkCopy, SqlBulkCopyColumnMappingCollection>) CompiledWrappers[6])(this);
-
-			private      SqlRowsCopiedEventHandler? _SqlRowsCopied;
-			public event SqlRowsCopiedEventHandler?  SqlRowsCopied
-			{
-				add    => _SqlRowsCopied = (SqlRowsCopiedEventHandler?)Delegate.Combine(_SqlRowsCopied, value);
-				remove => _SqlRowsCopied = (SqlRowsCopiedEventHandler?)Delegate.Remove (_SqlRowsCopied, value);
-			}
-		}
-
-		[Wrapper]
-		public class SqlRowsCopiedEventArgs : TypeWrapper
+		public int NotifyAfter
 		{
-			private static LambdaExpression[] Wrappers { get; }
-				= new LambdaExpression[]
-			{
-				// [0]: get RowsCopied
-				(Expression<Func<SqlRowsCopiedEventArgs, long>>)((SqlRowsCopiedEventArgs this_) => this_.RowsCopied),
-				// [1]: get Abort
-				(Expression<Func<SqlRowsCopiedEventArgs, bool>>)((SqlRowsCopiedEventArgs this_) => this_.Abort),
-				// [2]: set Abort
-				PropertySetter((SqlRowsCopiedEventArgs this_) => this_.Abort),
-			};
-
-			public SqlRowsCopiedEventArgs(object instance, Delegate[] wrappers) : base(instance, wrappers)
-			{
-			}
-
-			public long RowsCopied => ((Func<SqlRowsCopiedEventArgs, long>)CompiledWrappers[0])(this);
-
-			public bool Abort
-			{
-				get => ((Func  <SqlRowsCopiedEventArgs, bool>)CompiledWrappers[1])(this);
-				set => ((Action<SqlRowsCopiedEventArgs, bool>)CompiledWrappers[2])(this, value);
-			}
+			get => ((Func  <SqlBulkCopy, int>)CompiledWrappers[2])(this);
+			set => ((Action<SqlBulkCopy, int>)CompiledWrappers[7])(this, value);
 		}
 
-		[Wrapper]
-		public delegate void SqlRowsCopiedEventHandler(object sender, SqlRowsCopiedEventArgs e);
-
-		[Wrapper]
-		public class SqlBulkCopyColumnMappingCollection : TypeWrapper
+		public int BatchSize
 		{
-			private static LambdaExpression[] Wrappers { get; }
-				= new LambdaExpression[]
-			{
-				// [0]: Add
-				(Expression<Func<SqlBulkCopyColumnMappingCollection, SqlBulkCopyColumnMapping, SqlBulkCopyColumnMapping>>)((SqlBulkCopyColumnMappingCollection this_, SqlBulkCopyColumnMapping column) => this_.Add(column)),
-			};
-
-			public SqlBulkCopyColumnMappingCollection(object instance, Delegate[] wrappers) : base(instance, wrappers)
-			{
-			}
-
-			public SqlBulkCopyColumnMapping Add(SqlBulkCopyColumnMapping bulkCopyColumnMapping) => ((Func<SqlBulkCopyColumnMappingCollection, SqlBulkCopyColumnMapping, SqlBulkCopyColumnMapping>)CompiledWrappers[0])(this, bulkCopyColumnMapping);
+			get => ((Func  <SqlBulkCopy, int>)CompiledWrappers[3])(this);
+			set => ((Action<SqlBulkCopy, int>)CompiledWrappers[8])(this, value);
 		}
 
-		[Wrapper, Flags]
-		public enum SqlBulkCopyOptions
+		public int BulkCopyTimeout
 		{
-			Default                          = 0,
-			KeepIdentity                     = 1,
-			CheckConstraints                 = 2,
-			TableLock                        = 4,
-			KeepNulls                        = 8,
-			FireTriggers                     = 16,
-			UseInternalTransaction           = 32,
-			AllowEncryptedValueModifications = 64
+			get => ((Func  <SqlBulkCopy, int>)CompiledWrappers[4])(this);
+			set => ((Action<SqlBulkCopy, int>)CompiledWrappers[9])(this, value);
 		}
 
-		[Wrapper]
-		public class SqlBulkCopyColumnMapping : TypeWrapper
+		public string? DestinationTableName
 		{
-			public SqlBulkCopyColumnMapping(object instance) : base(instance, null)
-			{
-			}
-
-			public SqlBulkCopyColumnMapping(int source, string destination) => throw new NotImplementedException();
+			get => ((Func  <SqlBulkCopy, string?>)CompiledWrappers[5] )(this);
+			set => ((Action<SqlBulkCopy, string?>)CompiledWrappers[10])(this, value);
 		}
 
-		#endregion
-		#endregion
+		public SqlBulkCopyColumnMappingCollection ColumnMappings => ((Func<SqlBulkCopy, SqlBulkCopyColumnMappingCollection>) CompiledWrappers[6])(this);
+
+		private      SqlRowsCopiedEventHandler? _SqlRowsCopied;
+		public event SqlRowsCopiedEventHandler?  SqlRowsCopied
+		{
+			add    => _SqlRowsCopied = (SqlRowsCopiedEventHandler?)Delegate.Combine(_SqlRowsCopied, value);
+			remove => _SqlRowsCopied = (SqlRowsCopiedEventHandler?)Delegate.Remove (_SqlRowsCopied, value);
+		}
 	}
+
+	[Wrapper]
+	public class SqlRowsCopiedEventArgs : TypeWrapper
+	{
+		private static LambdaExpression[] Wrappers { get; }
+			= new LambdaExpression[]
+		{
+			// [0]: get RowsCopied
+			(Expression<Func<SqlRowsCopiedEventArgs, long>>)((SqlRowsCopiedEventArgs this_) => this_.RowsCopied),
+			// [1]: get Abort
+			(Expression<Func<SqlRowsCopiedEventArgs, bool>>)((SqlRowsCopiedEventArgs this_) => this_.Abort),
+			// [2]: set Abort
+			PropertySetter((SqlRowsCopiedEventArgs this_) => this_.Abort),
+		};
+
+		public SqlRowsCopiedEventArgs(object instance, Delegate[] wrappers) : base(instance, wrappers)
+		{
+		}
+
+		public long RowsCopied => ((Func<SqlRowsCopiedEventArgs, long>)CompiledWrappers[0])(this);
+
+		public bool Abort
+		{
+			get => ((Func  <SqlRowsCopiedEventArgs, bool>)CompiledWrappers[1])(this);
+			set => ((Action<SqlRowsCopiedEventArgs, bool>)CompiledWrappers[2])(this, value);
+		}
+	}
+
+	[Wrapper]
+	public delegate void SqlRowsCopiedEventHandler(object sender, SqlRowsCopiedEventArgs e);
+
+	[Wrapper]
+	public class SqlBulkCopyColumnMappingCollection : TypeWrapper
+	{
+		private static LambdaExpression[] Wrappers { get; }
+			= new LambdaExpression[]
+		{
+			// [0]: Add
+			(Expression<Func<SqlBulkCopyColumnMappingCollection, SqlBulkCopyColumnMapping, SqlBulkCopyColumnMapping>>)((SqlBulkCopyColumnMappingCollection this_, SqlBulkCopyColumnMapping column) => this_.Add(column)),
+		};
+
+		public SqlBulkCopyColumnMappingCollection(object instance, Delegate[] wrappers) : base(instance, wrappers)
+		{
+		}
+
+		public SqlBulkCopyColumnMapping Add(SqlBulkCopyColumnMapping bulkCopyColumnMapping) => ((Func<SqlBulkCopyColumnMappingCollection, SqlBulkCopyColumnMapping, SqlBulkCopyColumnMapping>)CompiledWrappers[0])(this, bulkCopyColumnMapping);
+	}
+
+	[Wrapper, Flags]
+	public enum SqlBulkCopyOptions
+	{
+		Default                          = 0,
+		KeepIdentity                     = 1,
+		CheckConstraints                 = 2,
+		TableLock                        = 4,
+		KeepNulls                        = 8,
+		FireTriggers                     = 16,
+		UseInternalTransaction           = 32,
+		AllowEncryptedValueModifications = 64
+	}
+
+	[Wrapper]
+	public class SqlBulkCopyColumnMapping : TypeWrapper
+	{
+		public SqlBulkCopyColumnMapping(object instance) : base(instance, null)
+		{
+		}
+
+		public SqlBulkCopyColumnMapping(int source, string destination) => throw new NotImplementedException();
+	}
+
+	#endregion
+	#endregion
 }

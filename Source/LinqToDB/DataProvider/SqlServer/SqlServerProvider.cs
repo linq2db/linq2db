@@ -1,8 +1,7 @@
-﻿namespace LinqToDB.DataProvider.SqlServer
+﻿namespace LinqToDB.DataProvider.SqlServer;
+
+public enum SqlServerProvider
 {
-	public enum SqlServerProvider
-	{
-		SystemDataSqlClient,
-		MicrosoftDataSqlClient
-	}
+	SystemDataSqlClient,
+	MicrosoftDataSqlClient
 }

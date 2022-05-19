@@ -4,239 +4,238 @@ using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace LinqToDB.DataProvider.DB2
+namespace LinqToDB.DataProvider.DB2;
+
+using Common;
+using Data;
+using Mapping;
+using SchemaProvider;
+using SqlProvider;
+
+class DB2LUWDataProvider : DB2DataProvider { public DB2LUWDataProvider() : base(ProviderName.DB2LUW, DB2Version.LUW) {} }
+class DB2zOSDataProvider : DB2DataProvider { public DB2zOSDataProvider() : base(ProviderName.DB2zOS, DB2Version.zOS) {} }
+
+public abstract class DB2DataProvider : DynamicDataProviderBase<DB2ProviderAdapter>
 {
-	using Common;
-	using Data;
-	using Mapping;
-	using SchemaProvider;
-	using SqlProvider;
-
-	class DB2LUWDataProvider : DB2DataProvider { public DB2LUWDataProvider() : base(ProviderName.DB2LUW, DB2Version.LUW) {} }
-	class DB2zOSDataProvider : DB2DataProvider { public DB2zOSDataProvider() : base(ProviderName.DB2zOS, DB2Version.zOS) {} }
-
-	public abstract class DB2DataProvider : DynamicDataProviderBase<DB2ProviderAdapter>
+	protected DB2DataProvider(string name, DB2Version version)
+		: base(name, GetMappingSchema(version), DB2ProviderAdapter.Instance)
 	{
-		protected DB2DataProvider(string name, DB2Version version)
-			: base(name, GetMappingSchema(version), DB2ProviderAdapter.Instance)
+		Version = version;
+
+		SqlProviderFlags.AcceptsTakeAsParameter            = false;
+		SqlProviderFlags.AcceptsTakeAsParameterIfSkip      = true;
+		SqlProviderFlags.IsDistinctOrderBySupported        = false;
+		SqlProviderFlags.IsCommonTableExpressionsSupported = true;
+		SqlProviderFlags.IsUpdateFromSupported             = false;
+
+		SqlProviderFlags.RowConstructorSupport = RowFeature.Equality | RowFeature.Comparisons | RowFeature.Update |
+		                                         RowFeature.UpdateLiteral | RowFeature.Overlaps | RowFeature.Between;
+
+		SetCharFieldToType<char>("CHAR", DataTools.GetCharExpression);
+		SetCharField            ("CHAR", (r, i) => r.GetString(i).TrimEnd(' '));
+
+		_sqlOptimizer = new DB2SqlOptimizer(SqlProviderFlags);
+
+		SetProviderField(Adapter.DB2Int64Type       , typeof(long)    , Adapter.GetDB2Int64ReaderMethod       , dataReaderType: Adapter.DataReaderType);
+		SetProviderField(Adapter.DB2Int32Type       , typeof(int)     , Adapter.GetDB2Int32ReaderMethod       , dataReaderType: Adapter.DataReaderType);
+		SetProviderField(Adapter.DB2Int16Type       , typeof(short)   , Adapter.GetDB2Int16ReaderMethod       , dataReaderType: Adapter.DataReaderType);
+		SetProviderField(Adapter.DB2DecimalType     , typeof(decimal) , Adapter.GetDB2DecimalReaderMethod     , dataReaderType: Adapter.DataReaderType);
+		SetProviderField(Adapter.DB2DecimalFloatType, typeof(decimal) , Adapter.GetDB2DecimalFloatReaderMethod, dataReaderType: Adapter.DataReaderType);
+		SetProviderField(Adapter.DB2RealType        , typeof(float)   , Adapter.GetDB2RealReaderMethod        , dataReaderType: Adapter.DataReaderType);
+		SetProviderField(Adapter.DB2Real370Type     , typeof(float)   , Adapter.GetDB2Real370ReaderMethod     , dataReaderType: Adapter.DataReaderType);
+		SetProviderField(Adapter.DB2DoubleType      , typeof(double)  , Adapter.GetDB2DoubleReaderMethod      , dataReaderType: Adapter.DataReaderType);
+		SetProviderField(Adapter.DB2StringType      , typeof(string)  , Adapter.GetDB2StringReaderMethod      , dataReaderType: Adapter.DataReaderType);
+		SetProviderField(Adapter.DB2ClobType        , typeof(string)  , Adapter.GetDB2ClobReaderMethod        , dataReaderType: Adapter.DataReaderType);
+		SetProviderField(Adapter.DB2BinaryType      , typeof(byte[])  , Adapter.GetDB2BinaryReaderMethod      , dataReaderType: Adapter.DataReaderType);
+		SetProviderField(Adapter.DB2BlobType        , typeof(byte[])  , Adapter.GetDB2BlobReaderMethod        , dataReaderType: Adapter.DataReaderType);
+		SetProviderField(Adapter.DB2DateType        , typeof(DateTime), Adapter.GetDB2DateReaderMethod        , dataReaderType: Adapter.DataReaderType);
+		SetProviderField(Adapter.DB2TimeType        , typeof(TimeSpan), Adapter.GetDB2TimeReaderMethod        , dataReaderType: Adapter.DataReaderType);
+		SetProviderField(Adapter.DB2TimeStampType   , typeof(DateTime), Adapter.GetDB2TimeStampReaderMethod   , dataReaderType: Adapter.DataReaderType);
+		SetProviderField(Adapter.DB2XmlType         , typeof(string)  , Adapter.GetDB2XmlReaderMethod         , dataReaderType: Adapter.DataReaderType);
+		SetProviderField(Adapter.DB2RowIdType       , typeof(byte[])  , Adapter.GetDB2RowIdReaderMethod       , dataReaderType: Adapter.DataReaderType);
+
+		if (Adapter.DB2DateTimeType != null)
+			SetProviderField(Adapter.DB2DateTimeType, typeof(DateTime), Adapter.GetDB2DateTimeReaderMethod!   , dataReaderType: Adapter.DataReaderType);
+	}
+
+	public DB2Version Version { get; }
+
+	private static MappingSchema GetMappingSchema(DB2Version version)
+	{
+		return version switch
 		{
-			Version = version;
+			DB2Version.zOS => new DB2MappingSchema.DB2zOSMappingSchema(),
+			_              => new DB2MappingSchema.DB2LUWMappingSchema(),
+		};
+	}
 
-			SqlProviderFlags.AcceptsTakeAsParameter            = false;
-			SqlProviderFlags.AcceptsTakeAsParameterIfSkip      = true;
-			SqlProviderFlags.IsDistinctOrderBySupported        = false;
-			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
-			SqlProviderFlags.IsUpdateFromSupported             = false;
+	public override ISchemaProvider GetSchemaProvider()
+	{
+		return Version == DB2Version.zOS  ?
+			new DB2zOSSchemaProvider(this):
+			new DB2LUWSchemaProvider(this);
+	}
 
-			SqlProviderFlags.RowConstructorSupport = RowFeature.Equality | RowFeature.Comparisons | RowFeature.Update |
-			                                         RowFeature.UpdateLiteral | RowFeature.Overlaps | RowFeature.Between;
+	public override TableOptions SupportedTableOptions =>
+		TableOptions.IsTemporary                |
+		TableOptions.IsLocalTemporaryStructure  |
+		TableOptions.IsGlobalTemporaryStructure |
+		TableOptions.IsLocalTemporaryData       |
+		TableOptions.CreateIfNotExists          |
+		TableOptions.DropIfExists;
 
-			SetCharFieldToType<char>("CHAR", DataTools.GetCharExpression);
-			SetCharField            ("CHAR", (r, i) => r.GetString(i).TrimEnd(' '));
+	public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
+	{
+		return Version == DB2Version.zOS ?
+			new DB2zOSSqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags) :
+			new DB2LUWSqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
+	}
 
-			_sqlOptimizer = new DB2SqlOptimizer(SqlProviderFlags);
+	readonly DB2SqlOptimizer _sqlOptimizer;
 
-			SetProviderField(Adapter.DB2Int64Type       , typeof(long)    , Adapter.GetDB2Int64ReaderMethod       , dataReaderType: Adapter.DataReaderType);
-			SetProviderField(Adapter.DB2Int32Type       , typeof(int)     , Adapter.GetDB2Int32ReaderMethod       , dataReaderType: Adapter.DataReaderType);
-			SetProviderField(Adapter.DB2Int16Type       , typeof(short)   , Adapter.GetDB2Int16ReaderMethod       , dataReaderType: Adapter.DataReaderType);
-			SetProviderField(Adapter.DB2DecimalType     , typeof(decimal) , Adapter.GetDB2DecimalReaderMethod     , dataReaderType: Adapter.DataReaderType);
-			SetProviderField(Adapter.DB2DecimalFloatType, typeof(decimal) , Adapter.GetDB2DecimalFloatReaderMethod, dataReaderType: Adapter.DataReaderType);
-			SetProviderField(Adapter.DB2RealType        , typeof(float)   , Adapter.GetDB2RealReaderMethod        , dataReaderType: Adapter.DataReaderType);
-			SetProviderField(Adapter.DB2Real370Type     , typeof(float)   , Adapter.GetDB2Real370ReaderMethod     , dataReaderType: Adapter.DataReaderType);
-			SetProviderField(Adapter.DB2DoubleType      , typeof(double)  , Adapter.GetDB2DoubleReaderMethod      , dataReaderType: Adapter.DataReaderType);
-			SetProviderField(Adapter.DB2StringType      , typeof(string)  , Adapter.GetDB2StringReaderMethod      , dataReaderType: Adapter.DataReaderType);
-			SetProviderField(Adapter.DB2ClobType        , typeof(string)  , Adapter.GetDB2ClobReaderMethod        , dataReaderType: Adapter.DataReaderType);
-			SetProviderField(Adapter.DB2BinaryType      , typeof(byte[])  , Adapter.GetDB2BinaryReaderMethod      , dataReaderType: Adapter.DataReaderType);
-			SetProviderField(Adapter.DB2BlobType        , typeof(byte[])  , Adapter.GetDB2BlobReaderMethod        , dataReaderType: Adapter.DataReaderType);
-			SetProviderField(Adapter.DB2DateType        , typeof(DateTime), Adapter.GetDB2DateReaderMethod        , dataReaderType: Adapter.DataReaderType);
-			SetProviderField(Adapter.DB2TimeType        , typeof(TimeSpan), Adapter.GetDB2TimeReaderMethod        , dataReaderType: Adapter.DataReaderType);
-			SetProviderField(Adapter.DB2TimeStampType   , typeof(DateTime), Adapter.GetDB2TimeStampReaderMethod   , dataReaderType: Adapter.DataReaderType);
-			SetProviderField(Adapter.DB2XmlType         , typeof(string)  , Adapter.GetDB2XmlReaderMethod         , dataReaderType: Adapter.DataReaderType);
-			SetProviderField(Adapter.DB2RowIdType       , typeof(byte[])  , Adapter.GetDB2RowIdReaderMethod       , dataReaderType: Adapter.DataReaderType);
+	public override ISqlOptimizer GetSqlOptimizer()
+	{
+		return _sqlOptimizer;
+	}
 
-			if (Adapter.DB2DateTimeType != null)
-				SetProviderField(Adapter.DB2DateTimeType, typeof(DateTime), Adapter.GetDB2DateTimeReaderMethod!   , dataReaderType: Adapter.DataReaderType);
+	public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
+	{
+		if (value is sbyte sb)
+		{
+			value    = (short)sb;
+			dataType = dataType.WithDataType(DataType.Int16);
 		}
-
-		public DB2Version Version { get; }
-
-		private static MappingSchema GetMappingSchema(DB2Version version)
+		else if (value is byte b)
 		{
-			return version switch
-			{
-				DB2Version.zOS => new DB2MappingSchema.DB2zOSMappingSchema(),
-				_              => new DB2MappingSchema.DB2LUWMappingSchema(),
-			};
+			value    = (short)b;
+			dataType = dataType.WithDataType(DataType.Int16);
 		}
-
-		public override ISchemaProvider GetSchemaProvider()
-		{
-			return Version == DB2Version.zOS  ?
-				new DB2zOSSchemaProvider(this):
-				new DB2LUWSchemaProvider(this);
-		}
-
-		public override TableOptions SupportedTableOptions =>
-			TableOptions.IsTemporary                |
-			TableOptions.IsLocalTemporaryStructure  |
-			TableOptions.IsGlobalTemporaryStructure |
-			TableOptions.IsLocalTemporaryData       |
-			TableOptions.CreateIfNotExists          |
-			TableOptions.DropIfExists;
-
-		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
-		{
-			return Version == DB2Version.zOS ?
-				new DB2zOSSqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags) :
-				new DB2LUWSqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
-		}
-
-		readonly DB2SqlOptimizer _sqlOptimizer;
-
-		public override ISqlOptimizer GetSqlOptimizer()
-		{
-			return _sqlOptimizer;
-		}
-
-		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
-		{
-			if (value is sbyte sb)
-			{
-				value    = (short)sb;
-				dataType = dataType.WithDataType(DataType.Int16);
-			}
-			else if (value is byte b)
-			{
-				value    = (short)b;
-				dataType = dataType.WithDataType(DataType.Int16);
-			}
 #if NET6_0_OR_GREATER
-			else if (value is DateOnly d)
-			{
-				value    = d.ToDateTime(TimeOnly.MinValue);
-			}
+		else if (value is DateOnly d)
+		{
+			value    = d.ToDateTime(TimeOnly.MinValue);
+		}
 #endif
 
-			switch (dataType.DataType)
-			{
-				case DataType.UInt16     : dataType = dataType.WithDataType(DataType.Int32);    break;
-				case DataType.UInt32     : dataType = dataType.WithDataType(DataType.Int64);    break;
-				case DataType.UInt64     : dataType = dataType.WithDataType(DataType.Decimal);  break;
-				case DataType.VarNumeric : dataType = dataType.WithDataType(DataType.Decimal);  break;
-				case DataType.DateTime2  : dataType = dataType.WithDataType(DataType.DateTime); break;
-				case DataType.Char       :
-				case DataType.VarChar    :
-				case DataType.NChar      :
-				case DataType.NVarChar   :
-					{
-							 if (value is Guid g) value = g.ToString();
-						else if (value is bool b) value = ConvertTo<char>.From(b);
-						break;
-					}
-				case DataType.Boolean    :
-				case DataType.Int16      :
-					{
-						if (value is bool b)
-						{
-							value    = b ? 1 : 0;
-							dataType = dataType.WithDataType(DataType.Int16);
-						}
-						break;
-					}
-				case DataType.Guid       :
-					{
-						if (value is Guid g)
-						{
-							value    = g.ToByteArray();
-							dataType = dataType.WithDataType(DataType.VarBinary);
-						}
-						if (value == null)
-							dataType = dataType.WithDataType(DataType.VarBinary);
-						break;
-					}
-				case DataType.Binary     :
-				case DataType.VarBinary  :
-					{
-						if (value is Guid g) value = g.ToByteArray();
-						else if (parameter.Size == 0 && value != null
-							&& value.GetType() == Adapter.DB2BinaryType
-							&& Adapter.IsDB2BinaryNull(value))
-							value = DBNull.Value;
-						break;
-					}
-			}
-
-			base.SetParameter(dataConnection, parameter, name, dataType, value);
-		}
-
-		protected override void SetParameterType(DataConnection dataConnection, DbParameter parameter, DbDataType dataType)
+		switch (dataType.DataType)
 		{
-			DB2ProviderAdapter.DB2Type? type = null;
-			switch (dataType.DataType)
-			{
-				case DataType.Blob: type = DB2ProviderAdapter.DB2Type.Blob; break;
-			}
-
-			if (type != null)
-			{
-				var param = TryGetProviderParameter(dataConnection, parameter);
-				if (param != null)
+			case DataType.UInt16     : dataType = dataType.WithDataType(DataType.Int32);    break;
+			case DataType.UInt32     : dataType = dataType.WithDataType(DataType.Int64);    break;
+			case DataType.UInt64     : dataType = dataType.WithDataType(DataType.Decimal);  break;
+			case DataType.VarNumeric : dataType = dataType.WithDataType(DataType.Decimal);  break;
+			case DataType.DateTime2  : dataType = dataType.WithDataType(DataType.DateTime); break;
+			case DataType.Char       :
+			case DataType.VarChar    :
+			case DataType.NChar      :
+			case DataType.NVarChar   :
 				{
-					Adapter.SetDbType(param, type.Value);
-					return;
+						 if (value is Guid g) value = g.ToString();
+					else if (value is bool b) value = ConvertTo<char>.From(b);
+					break;
 				}
-			}
-
-			base.SetParameterType(dataConnection, parameter, dataType);
+			case DataType.Boolean    :
+			case DataType.Int16      :
+				{
+					if (value is bool b)
+					{
+						value    = b ? 1 : 0;
+						dataType = dataType.WithDataType(DataType.Int16);
+					}
+					break;
+				}
+			case DataType.Guid       :
+				{
+					if (value is Guid g)
+					{
+						value    = g.ToByteArray();
+						dataType = dataType.WithDataType(DataType.VarBinary);
+					}
+					if (value == null)
+						dataType = dataType.WithDataType(DataType.VarBinary);
+					break;
+				}
+			case DataType.Binary     :
+			case DataType.VarBinary  :
+				{
+					if (value is Guid g) value = g.ToByteArray();
+					else if (parameter.Size == 0 && value != null
+						&& value.GetType() == Adapter.DB2BinaryType
+						&& Adapter.IsDB2BinaryNull(value))
+						value = DBNull.Value;
+					break;
+				}
 		}
+
+		base.SetParameter(dataConnection, parameter, name, dataType, value);
+	}
+
+	protected override void SetParameterType(DataConnection dataConnection, DbParameter parameter, DbDataType dataType)
+	{
+		DB2ProviderAdapter.DB2Type? type = null;
+		switch (dataType.DataType)
+		{
+			case DataType.Blob: type = DB2ProviderAdapter.DB2Type.Blob; break;
+		}
+
+		if (type != null)
+		{
+			var param = TryGetProviderParameter(dataConnection, parameter);
+			if (param != null)
+			{
+				Adapter.SetDbType(param, type.Value);
+				return;
+			}
+		}
+
+		base.SetParameterType(dataConnection, parameter, dataType);
+	}
 
 #region BulkCopy
 
-		DB2BulkCopy? _bulkCopy;
+	DB2BulkCopy? _bulkCopy;
 
-		public override BulkCopyRowsCopied BulkCopy<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
-		{
-			if (_bulkCopy == null)
-				_bulkCopy = new DB2BulkCopy(this);
+	public override BulkCopyRowsCopied BulkCopy<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+	{
+		if (_bulkCopy == null)
+			_bulkCopy = new DB2BulkCopy(this);
 
-			return _bulkCopy.BulkCopy(
-				options.BulkCopyType == BulkCopyType.Default ? DB2Tools.DefaultBulkCopyType : options.BulkCopyType,
-				table,
-				options,
-				source);
-		}
+		return _bulkCopy.BulkCopy(
+			options.BulkCopyType == BulkCopyType.Default ? DB2Tools.DefaultBulkCopyType : options.BulkCopyType,
+			table,
+			options,
+			source);
+	}
 
-		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
-			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
-		{
-			if (_bulkCopy == null)
-				_bulkCopy = new DB2BulkCopy(this);
+	public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
+		ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
+	{
+		if (_bulkCopy == null)
+			_bulkCopy = new DB2BulkCopy(this);
 
-			return _bulkCopy.BulkCopyAsync(
-				options.BulkCopyType == BulkCopyType.Default ? DB2Tools.DefaultBulkCopyType : options.BulkCopyType,
-				table,
-				options,
-				source,
-				cancellationToken);
-		}
+		return _bulkCopy.BulkCopyAsync(
+			options.BulkCopyType == BulkCopyType.Default ? DB2Tools.DefaultBulkCopyType : options.BulkCopyType,
+			table,
+			options,
+			source,
+			cancellationToken);
+	}
 
 #if NATIVE_ASYNC
-		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
-			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
-		{
-			if (_bulkCopy == null)
-				_bulkCopy = new DB2BulkCopy(this);
+	public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
+		ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
+	{
+		if (_bulkCopy == null)
+			_bulkCopy = new DB2BulkCopy(this);
 
-			return _bulkCopy.BulkCopyAsync(
-				options.BulkCopyType == BulkCopyType.Default ? DB2Tools.DefaultBulkCopyType : options.BulkCopyType,
-				table,
-				options,
-				source,
-				cancellationToken);
-		}
+		return _bulkCopy.BulkCopyAsync(
+			options.BulkCopyType == BulkCopyType.Default ? DB2Tools.DefaultBulkCopyType : options.BulkCopyType,
+			table,
+			options,
+			source,
+			cancellationToken);
+	}
 #endif
 
 #endregion
 
-	}
 }

@@ -1,9 +1,8 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 
-namespace LinqToDB.SqlQuery
+namespace LinqToDB.SqlQuery;
+
+public interface IReadOnlyParameterValues
 {
-	public interface IReadOnlyParameterValues
-	{
-		bool TryGetValue(SqlParameter parameter, [NotNullWhen(true)] out SqlParameterValue? value);
-	}
+	bool TryGetValue(SqlParameter parameter, [NotNullWhen(true)] out SqlParameterValue? value);
 }

@@ -3,85 +3,84 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace LinqToDB.Linq
+namespace LinqToDB.Linq;
+
+using LinqToDB.Expressions;
+using SqlQuery;
+
+static partial class QueryRunner
 {
-	using LinqToDB.Expressions;
-	using SqlQuery;
-
-	static partial class QueryRunner
+	public static class DropTable<T>
 	{
-		public static class DropTable<T>
+		public static void Query(
+			IDataContext dataContext,
+			string?      tableName,
+			string?      serverName,
+			string?      databaseName,
+			string?      schemaName,
+			bool?        ifExists,
+			TableOptions tableOptions)
 		{
-			public static void Query(
-				IDataContext dataContext,
-				string?      tableName,
-				string?      serverName,
-				string?      databaseName,
-				string?      schemaName,
-				bool?        ifExists,
-				TableOptions tableOptions)
+			var sqlTable  = new SqlTable<T>(dataContext.MappingSchema);
+			var dropTable = new SqlDropTableStatement(sqlTable);
+
+			if (tableName != null || schemaName != null || databaseName != null || databaseName != null)
 			{
-				var sqlTable  = new SqlTable<T>(dataContext.MappingSchema);
-				var dropTable = new SqlDropTableStatement(sqlTable);
-
-				if (tableName != null || schemaName != null || databaseName != null || databaseName != null)
-				{
-					sqlTable.TableName = new(
-						          tableName    ?? sqlTable.TableName.Name,
-						Server  : serverName   ?? sqlTable.TableName.Server,
-						Database: databaseName ?? sqlTable.TableName.Database,
-						Schema  : schemaName   ?? sqlTable.TableName.Schema);
-				}
-
-				if (tableOptions.IsSet()) sqlTable.TableOptions = tableOptions;
-
-				sqlTable.Set(ifExists, TableOptions.DropIfExists);
-
-				var query = new Query<int>(dataContext, null)
-				{
-					Queries = { new QueryInfo { Statement = dropTable } }
-				};
-
-				SetNonQueryQuery(query);
-
-				query.GetElement(dataContext, ExpressionInstances.UntypedNull, null, null);
+				sqlTable.TableName = new(
+					          tableName    ?? sqlTable.TableName.Name,
+					Server  : serverName   ?? sqlTable.TableName.Server,
+					Database: databaseName ?? sqlTable.TableName.Database,
+					Schema  : schemaName   ?? sqlTable.TableName.Schema);
 			}
 
-			public static async Task QueryAsync(
-				IDataContext      dataContext,
-				string?           tableName,
-				string?           serverName,
-				string?           databaseName,
-				string?           schemaName,
-				bool?             ifExists,
-				TableOptions      tableOptions,
-				CancellationToken token)
+			if (tableOptions.IsSet()) sqlTable.TableOptions = tableOptions;
+
+			sqlTable.Set(ifExists, TableOptions.DropIfExists);
+
+			var query = new Query<int>(dataContext, null)
 			{
-				var sqlTable  = new SqlTable<T>(dataContext.MappingSchema);
-				var dropTable = new SqlDropTableStatement(sqlTable);
+				Queries = { new QueryInfo { Statement = dropTable } }
+			};
 
-				if (tableName != null || schemaName != null || databaseName != null || databaseName != null)
-				{
-					sqlTable.TableName = new(
-						          tableName    ?? sqlTable.TableName.Name,
-						Server  : serverName   ?? sqlTable.TableName.Server,
-						Database: databaseName ?? sqlTable.TableName.Database,
-						Schema  : schemaName   ?? sqlTable.TableName.Schema);
-				}
+			SetNonQueryQuery(query);
 
-				if (tableOptions.IsSet()) sqlTable.TableOptions = tableOptions;
+			query.GetElement(dataContext, ExpressionInstances.UntypedNull, null, null);
+		}
 
-				sqlTable.Set(ifExists, TableOptions.DropIfExists);
+		public static async Task QueryAsync(
+			IDataContext      dataContext,
+			string?           tableName,
+			string?           serverName,
+			string?           databaseName,
+			string?           schemaName,
+			bool?             ifExists,
+			TableOptions      tableOptions,
+			CancellationToken token)
+		{
+			var sqlTable  = new SqlTable<T>(dataContext.MappingSchema);
+			var dropTable = new SqlDropTableStatement(sqlTable);
 
-				var query = new Query<int>(dataContext, null)
-				{
-					Queries = { new QueryInfo { Statement = dropTable, } }
-				};
-
-				SetNonQueryQuery(query);
-
-				await query.GetElementAsync(dataContext, ExpressionInstances.UntypedNull, null, null, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			if (tableName != null || schemaName != null || databaseName != null || databaseName != null)
+			{
+				sqlTable.TableName = new(
+					          tableName    ?? sqlTable.TableName.Name,
+					Server  : serverName   ?? sqlTable.TableName.Server,
+					Database: databaseName ?? sqlTable.TableName.Database,
+					Schema  : schemaName   ?? sqlTable.TableName.Schema);
 			}
+
+			if (tableOptions.IsSet()) sqlTable.TableOptions = tableOptions;
+
+			sqlTable.Set(ifExists, TableOptions.DropIfExists);
+
+			var query = new Query<int>(dataContext, null)
+			{
+				Queries = { new QueryInfo { Statement = dropTable, } }
+			};
+
+			SetNonQueryQuery(query);
+
+			await query.GetElementAsync(dataContext, ExpressionInstances.UntypedNull, null, null, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 	}
 }

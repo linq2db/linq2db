@@ -2,16 +2,15 @@
 using LinqToDB.SqlQuery;
 using NUnit.Framework;
 
-namespace Tests.AST
-{
-	[TestFixture]
-	public class SqlDataTypeTests : TestBase
-	{
+namespace Tests.AST;
 
-		[Test]
-		public void TestSystemType()
-		{
-			Assert.AreEqual(typeof(bool), SqlDataType.GetDataType(DataType.Boolean).SystemType);
-		}
+[TestFixture]
+public class SqlDataTypeTests : TestBase
+{
+
+	[Test]
+	public void TestSystemType()
+	{
+		Assert.AreEqual(typeof(bool), SqlDataType.GetDataType(DataType.Boolean).SystemType);
 	}
 }

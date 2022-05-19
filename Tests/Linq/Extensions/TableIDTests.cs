@@ -5,43 +5,42 @@ using LinqToDB;
 
 using NUnit.Framework;
 
-namespace Tests.Extensions
+namespace Tests.Extensions;
+
+[TestFixture]
+public class TableIDTests : TestBase
 {
-	[TestFixture]
-	public class TableIDTests : TestBase
+	[Sql.Expression("'*** {0} ***'", ServerSideOnly = true, CanBeNull = false)]
+	static string PrintSqlID(Sql.SqlID id)
 	{
-		[Sql.Expression("'*** {0} ***'", ServerSideOnly = true, CanBeNull = false)]
-		static string PrintSqlID(Sql.SqlID id)
-		{
-			throw new NotImplementedException();
-		}
+		throw new NotImplementedException();
+	}
 
-		[Test]
-		public void TableTest([DataSources(TestProvName.AllAccess)] string context)
-		{
-			using var db = GetDataContext(context);
+	[Test]
+	public void TableTest([DataSources(TestProvName.AllAccess)] string context)
+	{
+		using var db = GetDataContext(context);
 
-			var q =
-				from c in db.Child
-				join p in db.Parent.TableID("pp").AsSubQuery() on c.ParentID equals p.ParentID
-				where PrintSqlID(Sql.TableAlias("pp")) == PrintSqlID(new (Sql.SqlIDType.TableName, "pp"))
-				select new
-				{
-					alias2 = PrintSqlID(new (Sql.SqlIDType.TableAlias, "pp")) + "4",
-					alias1 = PrintSqlID(Sql.TableAlias("pp")),
-					alias3 = PrintSqlID(Sql.TableName ("pp")),
-					alias4 = PrintSqlID(Sql.TableSpec ("pp")),
-				};
+		var q =
+			from c in db.Child
+			join p in db.Parent.TableID("pp").AsSubQuery() on c.ParentID equals p.ParentID
+			where PrintSqlID(Sql.TableAlias("pp")) == PrintSqlID(new (Sql.SqlIDType.TableName, "pp"))
+			select new
+			{
+				alias2 = PrintSqlID(new (Sql.SqlIDType.TableAlias, "pp")) + "4",
+				alias1 = PrintSqlID(Sql.TableAlias("pp")),
+				alias3 = PrintSqlID(Sql.TableName ("pp")),
+				alias4 = PrintSqlID(Sql.TableSpec ("pp")),
+			};
 
-			_ = q.ToList();
+		_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring("*** t1 ***"));
-			Assert.That(LastQuery, Contains.Substring("*** p.t1 ***"));
-			Assert.That(LastQuery,
-				Contains.Substring("*** \"Parent\" ***")
-					.Or.Contains("*** Parent ***")
-					.Or.Contains("*** `Parent` ***")
-					.Or.Contains("*** [Parent] ***"));
-		}
+		Assert.That(LastQuery, Contains.Substring("*** t1 ***"));
+		Assert.That(LastQuery, Contains.Substring("*** p.t1 ***"));
+		Assert.That(LastQuery,
+			Contains.Substring("*** \"Parent\" ***")
+				.Or.Contains("*** Parent ***")
+				.Or.Contains("*** `Parent` ***")
+				.Or.Contains("*** [Parent] ***"));
 	}
 }

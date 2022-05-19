@@ -2,105 +2,105 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace LinqToDB.DataProvider.Informix
+namespace LinqToDB.DataProvider.Informix;
+
+using Common;
+using Data;
+using SchemaProvider;
+
+class InformixSchemaProvider : SchemaProviderBase
 {
-	using Common;
-	using Data;
-	using SchemaProvider;
+	private readonly InformixDataProvider _provider;
 
-	class InformixSchemaProvider : SchemaProviderBase
+	public InformixSchemaProvider(InformixDataProvider provider)
 	{
-		private readonly InformixDataProvider _provider;
+		_provider = provider;
+	}
 
-		public InformixSchemaProvider(InformixDataProvider provider)
+	protected override List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
+	{
+		return new[]
 		{
-			_provider = provider;
-		}
+			new DataTypeInfo { TypeName = "CHAR",       DataType = typeof(string).  FullName!, CreateFormat = "CHAR({0})",        CreateParameters = "length" },
+			new DataTypeInfo { TypeName = "SMALLINT",   DataType = typeof(short).   FullName! },
+			new DataTypeInfo { TypeName = "INTEGER",    DataType = typeof(int).     FullName! },
+			new DataTypeInfo { TypeName = "FLOAT",      DataType = typeof(double).  FullName! },
+			new DataTypeInfo { TypeName = "SMALLFLOAT", DataType = typeof(float).   FullName! },
+			new DataTypeInfo { TypeName = "DECIMAL",    DataType = typeof(decimal). FullName!, CreateFormat = "DECIMAL({0},{1})", CreateParameters = "precision,scale" },
+			new DataTypeInfo { TypeName = "SERIAL",     DataType = typeof(int).     FullName! },
+			new DataTypeInfo { TypeName = "DATE",       DataType = typeof(DateTime).FullName! },
+			new DataTypeInfo { TypeName = "MONEY",      DataType = typeof(decimal). FullName!, CreateFormat = "MONEY({0},{1})",   CreateParameters = "precision,scale" },
+			new DataTypeInfo { TypeName = "DATETIME",   DataType = typeof(DateTime).FullName! },
+			new DataTypeInfo { TypeName = "BYTE",       DataType = typeof(byte[]).  FullName! },
+			new DataTypeInfo { TypeName = "TEXT",       DataType = typeof(string).  FullName! },
+			new DataTypeInfo { TypeName = "VARCHAR",    DataType = typeof(string).  FullName!, CreateFormat = "VARCHAR({0})",     CreateParameters = "length" },
+			new DataTypeInfo { TypeName = "INTERVAL",   DataType = typeof(TimeSpan).FullName! },
+			new DataTypeInfo { TypeName = "NCHAR",      DataType = typeof(string).  FullName!, CreateFormat = "NCHAR({0})",       CreateParameters = "length" },
+			new DataTypeInfo { TypeName = "NVARCHAR",   DataType = typeof(string).  FullName!, CreateFormat = "NVARCHAR({0})",    CreateParameters = "length" },
+			new DataTypeInfo { TypeName = "INT8",       DataType = typeof(long).    FullName! },
+			new DataTypeInfo { TypeName = "SERIAL8",    DataType = typeof(long).    FullName! },
+			new DataTypeInfo { TypeName = "LVARCHAR",   DataType = typeof(string).  FullName!, CreateFormat = "LVARCHAR({0})",    CreateParameters = "length" },
+			new DataTypeInfo { TypeName = "BOOLEAN",    DataType = typeof(bool).    FullName! },
+			new DataTypeInfo { TypeName = "BIGINT",     DataType = typeof(long).    FullName! },
+			new DataTypeInfo { TypeName = "BIGSERIAL",  DataType = typeof(long).    FullName! },
+			//new DataTypeInfo { TypeName = "SET",        DataType = typeof(object).  FullName },
+			//new DataTypeInfo { TypeName = "MULTISET",   DataType = typeof(object).  FullName },
+			//new DataTypeInfo { TypeName = "LIST",       DataType = typeof(object).  FullName },
+			//new DataTypeInfo { TypeName = "ROW",        DataType = typeof(object).  FullName },
+			//new DataTypeInfo { TypeName = "COLLECTION", DataType = typeof(object).  FullName },
+		}.ToList();
+	}
 
-		protected override List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
+	protected override DataType GetDataType(string? dataType, string? columnType, int? length, int? prec, int? scale)
+	{
+		return dataType switch
 		{
-			return new[]
-			{
-				new DataTypeInfo { TypeName = "CHAR",       DataType = typeof(string).  FullName!, CreateFormat = "CHAR({0})",        CreateParameters = "length" },
-				new DataTypeInfo { TypeName = "SMALLINT",   DataType = typeof(short).   FullName! },
-				new DataTypeInfo { TypeName = "INTEGER",    DataType = typeof(int).     FullName! },
-				new DataTypeInfo { TypeName = "FLOAT",      DataType = typeof(double).  FullName! },
-				new DataTypeInfo { TypeName = "SMALLFLOAT", DataType = typeof(float).   FullName! },
-				new DataTypeInfo { TypeName = "DECIMAL",    DataType = typeof(decimal). FullName!, CreateFormat = "DECIMAL({0},{1})", CreateParameters = "precision,scale" },
-				new DataTypeInfo { TypeName = "SERIAL",     DataType = typeof(int).     FullName! },
-				new DataTypeInfo { TypeName = "DATE",       DataType = typeof(DateTime).FullName! },
-				new DataTypeInfo { TypeName = "MONEY",      DataType = typeof(decimal). FullName!, CreateFormat = "MONEY({0},{1})",   CreateParameters = "precision,scale" },
-				new DataTypeInfo { TypeName = "DATETIME",   DataType = typeof(DateTime).FullName! },
-				new DataTypeInfo { TypeName = "BYTE",       DataType = typeof(byte[]).  FullName! },
-				new DataTypeInfo { TypeName = "TEXT",       DataType = typeof(string).  FullName! },
-				new DataTypeInfo { TypeName = "VARCHAR",    DataType = typeof(string).  FullName!, CreateFormat = "VARCHAR({0})",     CreateParameters = "length" },
-				new DataTypeInfo { TypeName = "INTERVAL",   DataType = typeof(TimeSpan).FullName! },
-				new DataTypeInfo { TypeName = "NCHAR",      DataType = typeof(string).  FullName!, CreateFormat = "NCHAR({0})",       CreateParameters = "length" },
-				new DataTypeInfo { TypeName = "NVARCHAR",   DataType = typeof(string).  FullName!, CreateFormat = "NVARCHAR({0})",    CreateParameters = "length" },
-				new DataTypeInfo { TypeName = "INT8",       DataType = typeof(long).    FullName! },
-				new DataTypeInfo { TypeName = "SERIAL8",    DataType = typeof(long).    FullName! },
-				new DataTypeInfo { TypeName = "LVARCHAR",   DataType = typeof(string).  FullName!, CreateFormat = "LVARCHAR({0})",    CreateParameters = "length" },
-				new DataTypeInfo { TypeName = "BOOLEAN",    DataType = typeof(bool).    FullName! },
-				new DataTypeInfo { TypeName = "BIGINT",     DataType = typeof(long).    FullName! },
-				new DataTypeInfo { TypeName = "BIGSERIAL",  DataType = typeof(long).    FullName! },
-				//new DataTypeInfo { TypeName = "SET",        DataType = typeof(object).  FullName },
-				//new DataTypeInfo { TypeName = "MULTISET",   DataType = typeof(object).  FullName },
-				//new DataTypeInfo { TypeName = "LIST",       DataType = typeof(object).  FullName },
-				//new DataTypeInfo { TypeName = "ROW",        DataType = typeof(object).  FullName },
-				//new DataTypeInfo { TypeName = "COLLECTION", DataType = typeof(object).  FullName },
-			}.ToList();
-		}
+			"CHAR"       => DataType.Char,
+			"SMALLINT"   => DataType.Int16,
+			"INTEGER"    => DataType.Int32,
+			"FLOAT"      => DataType.Double,
+			"SMALLFLOAT" => DataType.Single,
+			"DECIMAL"    => DataType.Decimal,
+			"SERIAL"     => DataType.Int32,
+			"DATE"       => DataType.DateTime,
+			"MONEY"      => DataType.Decimal,
+			"DATETIME"   => DataType.DateTime,
+			"BYTE"       => DataType.Binary,
+			"TEXT"       => DataType.Text,
+			"VARCHAR"    => DataType.VarChar,
+			"INTERVAL"   => DataType.Time,
+			"NCHAR"      => DataType.NChar,
+			"NVARCHAR"   => DataType.NVarChar,
+			"INT8"       => DataType.Int64,
+			"SERIAL8"    => DataType.Int64,
+			"LVARCHAR"   => DataType.VarChar,
+			"BOOLEAN"    => DataType.Boolean,
+			"BIGINT"     => DataType.Int64,
+			"BIGSERIAL"  => DataType.Int64,
+			_            => DataType.Undefined,
+		};
+	}
 
-		protected override DataType GetDataType(string? dataType, string? columnType, int? length, int? prec, int? scale)
+
+	protected override string GetProviderSpecificTypeNamespace()
+	{
+		return _provider.Adapter.ProviderTypesNamespace;
+	}
+
+	protected override string? GetProviderSpecificType(string? dataType)
+	{
+		return dataType switch
 		{
-			return dataType switch
-			{
-				"CHAR"       => DataType.Char,
-				"SMALLINT"   => DataType.Int16,
-				"INTEGER"    => DataType.Int32,
-				"FLOAT"      => DataType.Double,
-				"SMALLFLOAT" => DataType.Single,
-				"DECIMAL"    => DataType.Decimal,
-				"SERIAL"     => DataType.Int32,
-				"DATE"       => DataType.DateTime,
-				"MONEY"      => DataType.Decimal,
-				"DATETIME"   => DataType.DateTime,
-				"BYTE"       => DataType.Binary,
-				"TEXT"       => DataType.Text,
-				"VARCHAR"    => DataType.VarChar,
-				"INTERVAL"   => DataType.Time,
-				"NCHAR"      => DataType.NChar,
-				"NVARCHAR"   => DataType.NVarChar,
-				"INT8"       => DataType.Int64,
-				"SERIAL8"    => DataType.Int64,
-				"LVARCHAR"   => DataType.VarChar,
-				"BOOLEAN"    => DataType.Boolean,
-				"BIGINT"     => DataType.Int64,
-				"BIGSERIAL"  => DataType.Int64,
-				_            => DataType.Undefined,
-			};
-		}
+			"DATETIME" => _provider.Adapter.DateTimeType?.Name,
+			"INTERVAL" => _provider.Adapter.TimeSpanType?.Name,
+			"DECIMAL"  => _provider.Adapter.DecimalType?.Name,
+			_          => base.GetProviderSpecificType(dataType),
+		};
+	}
 
-
-		protected override string GetProviderSpecificTypeNamespace()
-		{
-			return _provider.Adapter.ProviderTypesNamespace;
-		}
-
-		protected override string? GetProviderSpecificType(string? dataType)
-		{
-			return dataType switch
-			{
-				"DATETIME" => _provider.Adapter.DateTimeType?.Name,
-				"INTERVAL" => _provider.Adapter.TimeSpanType?.Name,
-				"DECIMAL"  => _provider.Adapter.DecimalType?.Name,
-				_          => base.GetProviderSpecificType(dataType),
-			};
-		}
-
-		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
-		{
-			return dataConnection.Query<TableInfo>(@"
+	protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
+	{
+		return dataConnection.Query<TableInfo>(@"
 				SELECT
 					tabid              as TableID,
 					tabname            as TableName,
@@ -111,36 +111,36 @@ namespace LinqToDB.DataProvider.Informix
 					systables
 				WHERE
 					tabid >= 100")
-				.ToList();
-		}
+			.ToList();
+	}
 
-		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection,
-			IEnumerable<TableSchema> tables, GetSchemaOptions options)
-		{
-			return
-			(
-				from pk in dataConnection.Query(
-					rd =>
+	protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection,
+		IEnumerable<TableSchema> tables, GetSchemaOptions options)
+	{
+		return
+		(
+			from pk in dataConnection.Query(
+				rd =>
+				{
+					// IMPORTANT: reader calls must be ordered to support SequentialAccess
+					var tableId = rd[0].ToString();
+					var pkName  = (string)rd[1];
+
+					var arr = new string?[16];
+
+					for (var i = 0; i < arr.Length; i++)
 					{
-						// IMPORTANT: reader calls must be ordered to support SequentialAccess
-						var tableId = rd[0].ToString();
-						var pkName  = (string)rd[1];
+						var value = rd["col" + (i + 1)];
+						arr[i] = value is DBNull ? null : (string)value;
+					}
 
-						var arr = new string?[16];
-
-						for (var i = 0; i < arr.Length; i++)
-						{
-							var value = rd["col" + (i + 1)];
-							arr[i] = value is DBNull ? null : (string)value;
-						}
-
-						return new
-						{
-							TableID        = tableId,
-							PrimaryKeyName = pkName,
-							arr
-						};
-					}, @"
+					return new
+					{
+						TableID        = tableId,
+						PrimaryKeyName = pkName,
+						arr
+					};
+				}, @"
 						SELECT
 							t.tabid,
 							x.idxname,
@@ -163,103 +163,103 @@ namespace LinqToDB.DataProvider.Informix
 						FROM systables t
 							JOIN sysindexes x ON t.tabid = x.tabid
 						WHERE t.tabid >= 100 AND x.idxtype = 'U'")
-				group pk by pk.TableID into gr
-				select gr.First() into pk
-				from c in pk.arr.Select((c,i) => new { c, i })
-				where c.c != null
-				select new PrimaryKeyInfo
-				{
-					TableID        = pk.TableID,
-					PrimaryKeyName = pk.PrimaryKeyName,
-					ColumnName     = c.c,
-					Ordinal        = c.i
-				}
-			).ToList();
-		}
-
-		static void SetDate(ColumnInfo c, int num)
-		{
-			var arr = new[]
+			group pk by pk.TableID into gr
+			select gr.First() into pk
+			from c in pk.arr.Select((c,i) => new { c, i })
+			where c.c != null
+			select new PrimaryKeyInfo
 			{
-				new { datetype = "",            start_point =  0, end_point =  0 },
-				new { datetype = "YEAR",        start_point =  1, end_point =  5 },
-				new { datetype = "",            start_point =  0, end_point =  0 },
-				new { datetype = "MONTH",       start_point =  5, end_point =  7 },
-				new { datetype = "",            start_point =  0, end_point =  0 },
-				new { datetype = "DAY",         start_point =  7, end_point =  9 },
-				new { datetype = "",            start_point =  0, end_point =  0 },
-				new { datetype = "HOUR",        start_point =  9, end_point = 11 },
-				new { datetype = "",            start_point =  0, end_point =  0 },
-				new { datetype = "MINUTE",      start_point = 11, end_point = 13 },
-				new { datetype = "",            start_point =  0, end_point =  0 },
-				new { datetype = "SECOND",      start_point = 13, end_point = 15 },
-				new { datetype = "FRACTION(1)", start_point = 15, end_point = 16 },
-				new { datetype = "FRACTION(2)", start_point = 16, end_point = 17 },
-				new { datetype = "FRACTION(3)", start_point = 17, end_point = 18 },
-				new { datetype = "FRACTION(4)", start_point = 18, end_point = 19 },
-				new { datetype = "FRACTION(5)", start_point = 19, end_point = 20 },
-			};
-
-			var i = num % 16 + 1;       // offset again
-			var j = num % 256 / 16 + 1; // offset again
-			var k = num / 256;          // length of value
-
-			/*
-				If this is an interval then life gets interesting, 'k' is
-				the length of the entire string.  So a YEAR TO DAY is
-				YYYYMMDD or 8.  A DAY(3) TO MINUTE is DDDHHMM or 7.
-				We don't know how long the first one is, but
-				we can work it out by computing the 'should
-				be length' of the string and then adding/subtracting
-				the result from the 'should be length' of
-				the major element.
-
-				Keep in mind --->    YYYYMMDDHHMMSSFFFFF
-				    vs.         j =    1  2 3 4 5 678901
-
-				I was just working an algorithm to do this, 4
-				notepads, 90 minutes, and 50 lines into it I realized
-				that I was creating something impossible to test or
-				maintain.  Therefore I am opting for something a lot simpler.
-
-				In the globals I have created an ARRAY of RECORD with
-				start and end points for the major and minor pieces.
-				By subtracting the START point of the
-				major element from the END point of the minor element
-				I get the 'should be length'
-			*/
-
-			var len = arr[i].end_point - arr[j].start_point;
-
-			/*
-				len should match k. e.g.:
-					DAY(5)  TO MINUTE ==> k =  9, len =  6
-					YEAR(6) TO HOUR   ==> k = 12, len = 14
-			*/
-
-			len = k - len; // add len to the major
-
-			if (len == 0 || j > 11) // is the default 12 on have the precision already coded
-			{
-				c.ColumnType = c.DataType + " " + arr[j].datetype + " TO " + arr[i].datetype;
+				TableID        = pk.TableID,
+				PrimaryKeyName = pk.PrimaryKeyName,
+				ColumnName     = c.c,
+				Ordinal        = c.i
 			}
-			else // # isn't the default
-			{
-				// uh-oh, how long IS the default major?
-				k = arr[j].end_point - arr[j].start_point;
+		).ToList();
+	}
 
-				// add in the extra
-				k += len;
-
-				c.ColumnType = c.DataType + " " + arr[j].datetype + " (" + k + ") TO " + arr[i].datetype;
-				c.Precision = 5;
-			}
-		}
-
-		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
+	static void SetDate(ColumnInfo c, int num)
+	{
+		var arr = new[]
 		{
-			return dataConnection
-				.Query<ColumnInfo>(@"
+			new { datetype = "",            start_point =  0, end_point =  0 },
+			new { datetype = "YEAR",        start_point =  1, end_point =  5 },
+			new { datetype = "",            start_point =  0, end_point =  0 },
+			new { datetype = "MONTH",       start_point =  5, end_point =  7 },
+			new { datetype = "",            start_point =  0, end_point =  0 },
+			new { datetype = "DAY",         start_point =  7, end_point =  9 },
+			new { datetype = "",            start_point =  0, end_point =  0 },
+			new { datetype = "HOUR",        start_point =  9, end_point = 11 },
+			new { datetype = "",            start_point =  0, end_point =  0 },
+			new { datetype = "MINUTE",      start_point = 11, end_point = 13 },
+			new { datetype = "",            start_point =  0, end_point =  0 },
+			new { datetype = "SECOND",      start_point = 13, end_point = 15 },
+			new { datetype = "FRACTION(1)", start_point = 15, end_point = 16 },
+			new { datetype = "FRACTION(2)", start_point = 16, end_point = 17 },
+			new { datetype = "FRACTION(3)", start_point = 17, end_point = 18 },
+			new { datetype = "FRACTION(4)", start_point = 18, end_point = 19 },
+			new { datetype = "FRACTION(5)", start_point = 19, end_point = 20 },
+		};
+
+		var i = num % 16 + 1;       // offset again
+		var j = num % 256 / 16 + 1; // offset again
+		var k = num / 256;          // length of value
+
+		/*
+			If this is an interval then life gets interesting, 'k' is
+			the length of the entire string.  So a YEAR TO DAY is
+			YYYYMMDD or 8.  A DAY(3) TO MINUTE is DDDHHMM or 7.
+			We don't know how long the first one is, but
+			we can work it out by computing the 'should
+			be length' of the string and then adding/subtracting
+			the result from the 'should be length' of
+			the major element.
+
+			Keep in mind --->    YYYYMMDDHHMMSSFFFFF
+			    vs.         j =    1  2 3 4 5 678901
+
+			I was just working an algorithm to do this, 4
+			notepads, 90 minutes, and 50 lines into it I realized
+			that I was creating something impossible to test or
+			maintain.  Therefore I am opting for something a lot simpler.
+
+			In the globals I have created an ARRAY of RECORD with
+			start and end points for the major and minor pieces.
+			By subtracting the START point of the
+			major element from the END point of the minor element
+			I get the 'should be length'
+		*/
+
+		var len = arr[i].end_point - arr[j].start_point;
+
+		/*
+			len should match k. e.g.:
+				DAY(5)  TO MINUTE ==> k =  9, len =  6
+				YEAR(6) TO HOUR   ==> k = 12, len = 14
+		*/
+
+		len = k - len; // add len to the major
+
+		if (len == 0 || j > 11) // is the default 12 on have the precision already coded
+		{
+			c.ColumnType = c.DataType + " " + arr[j].datetype + " TO " + arr[i].datetype;
+		}
+		else // # isn't the default
+		{
+			// uh-oh, how long IS the default major?
+			k = arr[j].end_point - arr[j].start_point;
+
+			// add in the extra
+			k += len;
+
+			c.ColumnType = c.DataType + " " + arr[j].datetype + " (" + k + ") TO " + arr[i].datetype;
+			c.Precision = 5;
+		}
+	}
+
+	protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
+	{
+		return dataConnection
+			.Query<ColumnInfo>(@"
 					SELECT
 						c.tabid     as TableID,
 						c.colname   as Name,
@@ -269,152 +269,152 @@ namespace LinqToDB.DataProvider.Informix
 					FROM systables t
 						JOIN syscolumns c ON t.tabid = c.tabid
 					WHERE t.tabid >= 100")
-				.Select(c =>
+			.Select(c =>
+			{
+				var typeid = ConvertTo<int>.From(c.DataType);
+				var len    = c.Length;
+
+				c.Length     = 0;
+				c.IsNullable = (typeid & 0x100) != 0x100;
+
+				switch (typeid & 0xFF)
 				{
-					var typeid = ConvertTo<int>.From(c.DataType);
-					var len    = c.Length;
+					case    0 :
+						c.DataType = "CHAR";
+						c.Length = len;
+						break;
+					case    1 : c.DataType = "SMALLINT";         break;
+					case    2 : c.DataType = "INTEGER";          break;
+					case    3 : c.DataType = "FLOAT";            break;
+					case    4 : c.DataType = "SMALLFLOAT";       break;
+					case    5 :
+						c.DataType  = "DECIMAL";
+						c.Precision = (int)(len! / 256);
+						if (c.Precision >= len % 256)
+							c.Scale = (int)(len! % 256);
+						break;
+					case    6 :
+						c.DataType   = "SERIAL";
+						c.IsIdentity = c.SkipOnInsert = c.SkipOnUpdate = true;
+						break;
+					case    7 : c.DataType = "DATE";             break;
+					case    8 :
+						c.DataType  = "MONEY";
+						c.Precision = (int)(len! / 256);
+						if (c.Precision >= len % 256)
+							c.Scale = (int)(len! % 256);
+						break;
+					case    9 : c.DataType = "NULL";             break;
+					case   10 :
+						c.DataType = "DATETIME";
+						SetDate(c, (int)len!);
+						break;
+					case   11 : c.DataType = "BYTE";             break;
+					case   12 : c.DataType = "TEXT";             break;
+					case   13 :
+						c.DataType = "VARCHAR";
+						c.Length   = len;
+						break;
+					case   14 :
+						c.DataType = "INTERVAL";
+						SetDate(c, (int)len!);
+						break;
+					case   15 :
+						c.DataType = "NCHAR";
+						c.Length   = len;
+						break;
+					case   16 :
+						c.DataType = "NVARCHAR";
+						c.Length   = len;
+						break;
+					case   17 : c.DataType = "INT8";             break;
+					case   18 : c.DataType = "SERIAL8";          break;
+					case   19 : c.DataType = "SET";              break;
+					case   20 : c.DataType = "MULTISET";         break;
+					case   21 : c.DataType = "LIST";             break;
+					case   22 : c.DataType = "ROW";              break;
+					case   23 : c.DataType = "COLLECTION";       break;
+					case   40 : // Variable-length opaque type
+						c.DataType = "LVARCHAR";
+						c.Length   = len;
+						break;
+					case   41 : c.DataType = "BOOLEAN";          break; // Fixed-length opaque type
+					case   43 :
+						c.DataType = "LVARCHAR";
+						c.Length   = len;
+						break;
+					case   45 : c.DataType = "BOOLEAN";          break;
+					case   52 : c.DataType = "BIGINT";           break;
+					case   53 :
+						c.DataType   = "BIGSERIAL";
+						c.IsIdentity = c.SkipOnInsert = c.SkipOnUpdate = true;
+						break;
+					case 2061 : c.DataType = "IDSSECURITYLABEL"; break;
+					case 4118 : c.DataType = "ROW";              break;
+				}
 
-					c.Length     = 0;
-					c.IsNullable = (typeid & 0x100) != 0x100;
+				return c;
+			})
+			.ToList();
+	}
 
-					switch (typeid & 0xFF)
+	protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection,
+		IEnumerable<TableSchema> tables, GetSchemaOptions options)
+	{
+		var names = new HashSet<string>();
+
+		return
+		(
+			from fk in dataConnection.Query(
+				rd =>
+				{
+					// IMPORTANT: reader calls must be ordered to support SequentialAccess
+					var id           = rd["ID"].ToString();
+					var name         = rd["Name"].ToString()!;
+					var thisTableID  = rd["ThisTableID"]. ToString();
+					var otherTableID = rd["OtherTableID"].ToString();
+
+					var arr = new string?[16][];
+
+					for (var i = 0; i < arr.Length; i++)
 					{
-						case    0 :
-							c.DataType = "CHAR";
-							c.Length = len;
-							break;
-						case    1 : c.DataType = "SMALLINT";         break;
-						case    2 : c.DataType = "INTEGER";          break;
-						case    3 : c.DataType = "FLOAT";            break;
-						case    4 : c.DataType = "SMALLFLOAT";       break;
-						case    5 :
-							c.DataType  = "DECIMAL";
-							c.Precision = (int)(len! / 256);
-							if (c.Precision >= len % 256)
-								c.Scale = (int)(len! % 256);
-							break;
-						case    6 :
-							c.DataType   = "SERIAL";
-							c.IsIdentity = c.SkipOnInsert = c.SkipOnUpdate = true;
-							break;
-						case    7 : c.DataType = "DATE";             break;
-						case    8 :
-							c.DataType  = "MONEY";
-							c.Precision = (int)(len! / 256);
-							if (c.Precision >= len % 256)
-								c.Scale = (int)(len! % 256);
-							break;
-						case    9 : c.DataType = "NULL";             break;
-						case   10 :
-							c.DataType = "DATETIME";
-							SetDate(c, (int)len!);
-							break;
-						case   11 : c.DataType = "BYTE";             break;
-						case   12 : c.DataType = "TEXT";             break;
-						case   13 :
-							c.DataType = "VARCHAR";
-							c.Length   = len;
-							break;
-						case   14 :
-							c.DataType = "INTERVAL";
-							SetDate(c, (int)len!);
-							break;
-						case   15 :
-							c.DataType = "NCHAR";
-							c.Length   = len;
-							break;
-						case   16 :
-							c.DataType = "NVARCHAR";
-							c.Length   = len;
-							break;
-						case   17 : c.DataType = "INT8";             break;
-						case   18 : c.DataType = "SERIAL8";          break;
-						case   19 : c.DataType = "SET";              break;
-						case   20 : c.DataType = "MULTISET";         break;
-						case   21 : c.DataType = "LIST";             break;
-						case   22 : c.DataType = "ROW";              break;
-						case   23 : c.DataType = "COLLECTION";       break;
-						case   40 : // Variable-length opaque type
-							c.DataType = "LVARCHAR";
-							c.Length   = len;
-							break;
-						case   41 : c.DataType = "BOOLEAN";          break; // Fixed-length opaque type
-						case   43 :
-							c.DataType = "LVARCHAR";
-							c.Length   = len;
-							break;
-						case   45 : c.DataType = "BOOLEAN";          break;
-						case   52 : c.DataType = "BIGINT";           break;
-						case   53 :
-							c.DataType   = "BIGSERIAL";
-							c.IsIdentity = c.SkipOnInsert = c.SkipOnUpdate = true;
-							break;
-						case 2061 : c.DataType = "IDSSECURITYLABEL"; break;
-						case 4118 : c.DataType = "ROW";              break;
+						var value1 = rd["ThisCol"  + (i + 1)];
+						var value2 = rd["OtherCol" + (i + 1)];
+
+						arr[i] = new[]
+						{
+							value1 is DBNull ? null : (string)value1,
+							value2 is DBNull ? null : (string)value2
+						};
 					}
 
-					return c;
-				})
-				.ToList();
-		}
 
-		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection,
-			IEnumerable<TableSchema> tables, GetSchemaOptions options)
-		{
-			var names = new HashSet<string>();
-
-			return
-			(
-				from fk in dataConnection.Query(
-					rd =>
+					if (name.StartsWith("r"))
 					{
-						// IMPORTANT: reader calls must be ordered to support SequentialAccess
-						var id           = rd["ID"].ToString();
-						var name         = rd["Name"].ToString()!;
-						var thisTableID  = rd["ThisTableID"]. ToString();
-						var otherTableID = rd["OtherTableID"].ToString();
+						var ns = name.Substring(1).Split('_');
 
-						var arr = new string?[16][];
-
-						for (var i = 0; i < arr.Length; i++)
+						if (ns.Length == 2 && ns[0] == thisTableID && ns[1] == id)
 						{
-							var value1 = rd["ThisCol"  + (i + 1)];
-							var value2 = rd["OtherCol" + (i + 1)];
+							name = "FK_" + rd["ThisTableName"] + "_" + rd["OtherTableName"];
 
-							arr[i] = new[]
-							{
-								value1 is DBNull ? null : (string)value1,
-								value2 is DBNull ? null : (string)value2
-							};
+							var origName = name;
+							var n        = 0;
+
+							while (names.Contains(name))
+								name = origName + "_" + ++n;
+
+							names.Add(name);
 						}
+					}
 
-
-						if (name.StartsWith("r"))
-						{
-							var ns = name.Substring(1).Split('_');
-
-							if (ns.Length == 2 && ns[0] == thisTableID && ns[1] == id)
-							{
-								name = "FK_" + rd["ThisTableName"] + "_" + rd["OtherTableName"];
-
-								var origName = name;
-								var n        = 0;
-
-								while (names.Contains(name))
-									name = origName + "_" + ++n;
-
-								names.Add(name);
-							}
-						}
-
-						return new
-						{
-							Name         = name,
-							ThisTableID  = thisTableID,
-							OtherTableID = otherTableID,
-							arr
-						};
-					}, @"
+					return new
+					{
+						Name         = name,
+						ThisTableID  = thisTableID,
+						OtherTableID = otherTableID,
+						arr
+					};
+				}, @"
 						SELECT
 							r.constrid    as ID,
 							tc.constrname as Name,
@@ -462,18 +462,17 @@ namespace LinqToDB.DataProvider.Informix
 								JOIN sysconstraints oc ON r.primary  = oc.constrid
 									JOIN sysindexes ox ON oc.tabid   = ox.tabid AND oc.idxname = ox.idxname
 									JOIN systables  ot ON oc.tabid   = ot.tabid")
-				from c in fk.arr.Select((c,i) => new { c, i })
-				where c.c[0] != null
-				select new ForeignKeyInfo
-				{
-					Name         = fk.Name.Trim(),
-					ThisTableID  = fk.ThisTableID,
-					ThisColumn   = c.c[0],
-					OtherTableID = fk.OtherTableID,
-					OtherColumn  = c.c[1],
-					Ordinal      = c.i
-				}
-			).ToList();
-		}
+			from c in fk.arr.Select((c,i) => new { c, i })
+			where c.c[0] != null
+			select new ForeignKeyInfo
+			{
+				Name         = fk.Name.Trim(),
+				ThisTableID  = fk.ThisTableID,
+				ThisColumn   = c.c[0],
+				OtherTableID = fk.OtherTableID,
+				OtherColumn  = c.c[1],
+				Ordinal      = c.i
+			}
+		).ToList();
 	}
 }

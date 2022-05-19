@@ -3,441 +3,440 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 
-namespace LinqToDB.Expressions
+namespace LinqToDB.Expressions;
+
+using LinqToDB.Extensions;
+
+readonly struct TransformInfoVisitor<TContext>
 {
-	using LinqToDB.Extensions;
+	private readonly TContext?                                  _context;
+	private readonly Func<TContext, Expression, TransformInfo>? _func;
+	private readonly Func<Expression, TransformInfo>?           _staticFunc;
 
-	readonly struct TransformInfoVisitor<TContext>
+	public TransformInfoVisitor(TContext context, Func<TContext, Expression, TransformInfo> func)
 	{
-		private readonly TContext?                                  _context;
-		private readonly Func<TContext, Expression, TransformInfo>? _func;
-		private readonly Func<Expression, TransformInfo>?           _staticFunc;
+		_context    = context;
+		_func       = func;
+		_staticFunc = null;
+	}
 
-		public TransformInfoVisitor(TContext context, Func<TContext, Expression, TransformInfo> func)
+	public TransformInfoVisitor(Func<Expression, TransformInfo> func)
+	{
+		_context    = default;
+		_func       = null;
+		_staticFunc = func;
+	}
+
+	/// <summary>
+	/// Creates reusable static visitor.
+	/// </summary>
+	public static TransformInfoVisitor<object?> Create(Func<Expression, TransformInfo> func)
+	{
+		return new TransformInfoVisitor<object?>(func);
+	}
+
+	/// <summary>
+	/// Creates reusable visitor with static context.
+	/// </summary>
+	public static TransformInfoVisitor<TContext> Create(TContext context, Func<TContext, Expression, TransformInfo> func)
+	{
+		return new TransformInfoVisitor<TContext>(context, func);
+	}
+
+	[return: NotNullIfNotNull("expr")]
+	public Expression? Transform(Expression? expr)
+	{
+		if (expr == null)
+			return null;
+
+		TransformInfo ti;
+
+		do
 		{
-			_context    = context;
-			_func       = func;
-			_staticFunc = null;
-		}
+			ti = _staticFunc != null ? _staticFunc(expr) : _func!(_context!, expr);
+			if (ti.Stop || !ti.Continue && ti.Expression != expr)
+				return ti.Expression;
+			if (expr == ti.Expression)
+				break;
+			expr = ti.Expression;
+		} while (true);
 
-		public TransformInfoVisitor(Func<Expression, TransformInfo> func)
+		switch (expr.NodeType)
 		{
-			_context    = default;
-			_func       = null;
-			_staticFunc = func;
-		}
-
-		/// <summary>
-		/// Creates reusable static visitor.
-		/// </summary>
-		public static TransformInfoVisitor<object?> Create(Func<Expression, TransformInfo> func)
-		{
-			return new TransformInfoVisitor<object?>(func);
-		}
-
-		/// <summary>
-		/// Creates reusable visitor with static context.
-		/// </summary>
-		public static TransformInfoVisitor<TContext> Create(TContext context, Func<TContext, Expression, TransformInfo> func)
-		{
-			return new TransformInfoVisitor<TContext>(context, func);
-		}
-
-		[return: NotNullIfNotNull("expr")]
-		public Expression? Transform(Expression? expr)
-		{
-			if (expr == null)
-				return null;
-
-			TransformInfo ti;
-
-			do
+			case ExpressionType.Add                  :
+			case ExpressionType.AddChecked           :
+			case ExpressionType.And                  :
+			case ExpressionType.AndAlso              :
+			case ExpressionType.ArrayIndex           :
+			case ExpressionType.Assign               :
+			case ExpressionType.Coalesce             :
+			case ExpressionType.Divide               :
+			case ExpressionType.Equal                :
+			case ExpressionType.ExclusiveOr          :
+			case ExpressionType.GreaterThan          :
+			case ExpressionType.GreaterThanOrEqual   :
+			case ExpressionType.LeftShift            :
+			case ExpressionType.LessThan             :
+			case ExpressionType.LessThanOrEqual      :
+			case ExpressionType.Modulo               :
+			case ExpressionType.Multiply             :
+			case ExpressionType.MultiplyChecked      :
+			case ExpressionType.NotEqual             :
+			case ExpressionType.Or                   :
+			case ExpressionType.OrElse               :
+			case ExpressionType.Power                :
+			case ExpressionType.RightShift           :
+			case ExpressionType.Subtract             :
+			case ExpressionType.SubtractChecked      :
+			case ExpressionType.AddAssign            :
+			case ExpressionType.AndAssign            :
+			case ExpressionType.DivideAssign         :
+			case ExpressionType.ExclusiveOrAssign    :
+			case ExpressionType.LeftShiftAssign      :
+			case ExpressionType.ModuloAssign         :
+			case ExpressionType.MultiplyAssign       :
+			case ExpressionType.OrAssign             :
+			case ExpressionType.PowerAssign          :
+			case ExpressionType.RightShiftAssign     :
+			case ExpressionType.SubtractAssign       :
+			case ExpressionType.AddAssignChecked     :
+			case ExpressionType.MultiplyAssignChecked:
+			case ExpressionType.SubtractAssignChecked:
 			{
-				ti = _staticFunc != null ? _staticFunc(expr) : _func!(_context!, expr);
-				if (ti.Stop || !ti.Continue && ti.Expression != expr)
-					return ti.Expression;
-				if (expr == ti.Expression)
-					break;
-				expr = ti.Expression;
-			} while (true);
+				var e = (BinaryExpression)expr;
+				var c = Transform(e.Conversion);
+				var l = Transform(e.Left);
+				var r = Transform(e.Right);
 
-			switch (expr.NodeType)
+				return e.Update(l, (LambdaExpression?)c, r);
+			}
+
+			case ExpressionType.ArrayLength        :
+			case ExpressionType.Convert            :
+			case ExpressionType.ConvertChecked     :
+			case ExpressionType.Negate             :
+			case ExpressionType.NegateChecked      :
+			case ExpressionType.Not                :
+			case ExpressionType.Quote              :
+			case ExpressionType.TypeAs             :
+			case ExpressionType.UnaryPlus          :
+			case ExpressionType.Decrement          :
+			case ExpressionType.Increment          :
+			case ExpressionType.IsFalse            :
+			case ExpressionType.IsTrue             :
+			case ExpressionType.Throw              :
+			case ExpressionType.Unbox              :
+			case ExpressionType.PreIncrementAssign :
+			case ExpressionType.PreDecrementAssign :
+			case ExpressionType.PostIncrementAssign:
+			case ExpressionType.PostDecrementAssign:
+			case ExpressionType.OnesComplement     :
 			{
-				case ExpressionType.Add                  :
-				case ExpressionType.AddChecked           :
-				case ExpressionType.And                  :
-				case ExpressionType.AndAlso              :
-				case ExpressionType.ArrayIndex           :
-				case ExpressionType.Assign               :
-				case ExpressionType.Coalesce             :
-				case ExpressionType.Divide               :
-				case ExpressionType.Equal                :
-				case ExpressionType.ExclusiveOr          :
-				case ExpressionType.GreaterThan          :
-				case ExpressionType.GreaterThanOrEqual   :
-				case ExpressionType.LeftShift            :
-				case ExpressionType.LessThan             :
-				case ExpressionType.LessThanOrEqual      :
-				case ExpressionType.Modulo               :
-				case ExpressionType.Multiply             :
-				case ExpressionType.MultiplyChecked      :
-				case ExpressionType.NotEqual             :
-				case ExpressionType.Or                   :
-				case ExpressionType.OrElse               :
-				case ExpressionType.Power                :
-				case ExpressionType.RightShift           :
-				case ExpressionType.Subtract             :
-				case ExpressionType.SubtractChecked      :
-				case ExpressionType.AddAssign            :
-				case ExpressionType.AndAssign            :
-				case ExpressionType.DivideAssign         :
-				case ExpressionType.ExclusiveOrAssign    :
-				case ExpressionType.LeftShiftAssign      :
-				case ExpressionType.ModuloAssign         :
-				case ExpressionType.MultiplyAssign       :
-				case ExpressionType.OrAssign             :
-				case ExpressionType.PowerAssign          :
-				case ExpressionType.RightShiftAssign     :
-				case ExpressionType.SubtractAssign       :
-				case ExpressionType.AddAssignChecked     :
-				case ExpressionType.MultiplyAssignChecked:
-				case ExpressionType.SubtractAssignChecked:
-				{
-					var e = (BinaryExpression)expr;
-					var c = Transform(e.Conversion);
-					var l = Transform(e.Left);
-					var r = Transform(e.Right);
+				var e = (UnaryExpression)expr;
 
-					return e.Update(l, (LambdaExpression?)c, r);
-				}
+				return e.Update(Transform(e.Operand));
+			}
 
-				case ExpressionType.ArrayLength        :
-				case ExpressionType.Convert            :
-				case ExpressionType.ConvertChecked     :
-				case ExpressionType.Negate             :
-				case ExpressionType.NegateChecked      :
-				case ExpressionType.Not                :
-				case ExpressionType.Quote              :
-				case ExpressionType.TypeAs             :
-				case ExpressionType.UnaryPlus          :
-				case ExpressionType.Decrement          :
-				case ExpressionType.Increment          :
-				case ExpressionType.IsFalse            :
-				case ExpressionType.IsTrue             :
-				case ExpressionType.Throw              :
-				case ExpressionType.Unbox              :
-				case ExpressionType.PreIncrementAssign :
-				case ExpressionType.PreDecrementAssign :
-				case ExpressionType.PostIncrementAssign:
-				case ExpressionType.PostDecrementAssign:
-				case ExpressionType.OnesComplement     :
-				{
-					var e = (UnaryExpression)expr;
+			case ExpressionType.Call:
+			{
+				var e = (MethodCallExpression)expr;
+				var o = Transform(e.Object);
+				var a = Transform(e.Arguments);
 
-					return e.Update(Transform(e.Operand));
-				}
+				return e.Update(o, a);
+			}
 
-				case ExpressionType.Call:
-				{
-					var e = (MethodCallExpression)expr;
-					var o = Transform(e.Object);
-					var a = Transform(e.Arguments);
+			case ExpressionType.Conditional:
+			{
+				var e = (ConditionalExpression)expr;
+				var s = Transform(e.Test);
+				var t = Transform(e.IfTrue);
+				var f = Transform(e.IfFalse);
 
-					return e.Update(o, a);
-				}
+				return e.Update(s, t, f);
+			}
 
-				case ExpressionType.Conditional:
-				{
-					var e = (ConditionalExpression)expr;
-					var s = Transform(e.Test);
-					var t = Transform(e.IfTrue);
-					var f = Transform(e.IfFalse);
+			case ExpressionType.Invoke:
+			{
+				var e  = (InvocationExpression)expr;
+				var ex = Transform(e.Expression);
+				var a  = Transform(e.Arguments);
 
-					return e.Update(s, t, f);
-				}
+				return e.Update(ex, a);
+			}
 
-				case ExpressionType.Invoke:
-				{
-					var e  = (InvocationExpression)expr;
-					var ex = Transform(e.Expression);
-					var a  = Transform(e.Arguments);
+			case ExpressionType.Lambda:
+			{
+				var e = (LambdaExpression)expr;
+				var b = Transform(e.Body);
+				var p = Transform(e.Parameters);
 
-					return e.Update(ex, a);
-				}
+				return b != e.Body || p != e.Parameters ? Expression.Lambda(ti.Expression.Type, b, p) : expr;
+			}
 
-				case ExpressionType.Lambda:
-				{
-					var e = (LambdaExpression)expr;
-					var b = Transform(e.Body);
-					var p = Transform(e.Parameters);
+			case ExpressionType.ListInit:
+			{
+				var e = (ListInitExpression)expr;
+				var n = Transform(e.NewExpression)!;
+				var i = Transform(e.Initializers,  TransformElementInit);
 
-					return b != e.Body || p != e.Parameters ? Expression.Lambda(ti.Expression.Type, b, p) : expr;
-				}
+				return e.Update((NewExpression)n, i);
+			}
 
-				case ExpressionType.ListInit:
-				{
-					var e = (ListInitExpression)expr;
-					var n = Transform(e.NewExpression)!;
-					var i = Transform(e.Initializers,  TransformElementInit);
+			case ExpressionType.MemberAccess:
+			{
+				var e  = (MemberExpression)expr;
+				var ex = Transform(e.Expression);
 
-					return e.Update((NewExpression)n, i);
-				}
+				return e.Update(ex);
+			}
 
-				case ExpressionType.MemberAccess:
-				{
-					var e  = (MemberExpression)expr;
-					var ex = Transform(e.Expression);
+			case ExpressionType.MemberInit:
+			{
+				var e  = (MemberInitExpression)expr;
+				var ne = Transform(e.NewExpression)!;
+				var bb = Transform(e.Bindings, TransformMemberBinding);
 
-					return e.Update(ex);
-				}
+				return e.Update((NewExpression)ne, bb);
+			}
 
-				case ExpressionType.MemberInit:
-				{
-					var e  = (MemberInitExpression)expr;
-					var ne = Transform(e.NewExpression)!;
-					var bb = Transform(e.Bindings, TransformMemberBinding);
+			case ExpressionType.New:
+			{
+				var e = (NewExpression)expr;
+				var a = Transform(e.Arguments);
 
-					return e.Update((NewExpression)ne, bb);
-				}
+				return e.Update(a);
+			}
 
-				case ExpressionType.New:
-				{
-					var e = (NewExpression)expr;
-					var a = Transform(e.Arguments);
+			case ExpressionType.NewArrayBounds:
+			{
+				var e  = (NewArrayExpression)expr;
+				var ex = Transform(e.Expressions);
 
-					return e.Update(a);
-				}
+				return e.Update(ex);
+			}
 
-				case ExpressionType.NewArrayBounds:
-				{
-					var e  = (NewArrayExpression)expr;
-					var ex = Transform(e.Expressions);
+			case ExpressionType.NewArrayInit:
+			{
+				var e  = (NewArrayExpression)expr;
+				var ex = Transform(e.Expressions);
 
-					return e.Update(ex);
-				}
+				return e.Update(ex);
+			}
 
-				case ExpressionType.NewArrayInit:
-				{
-					var e  = (NewArrayExpression)expr;
-					var ex = Transform(e.Expressions);
+			case ExpressionType.TypeEqual:
+			case ExpressionType.TypeIs:
+			{
+				var e  = (TypeBinaryExpression)expr;
+				var ex = Transform(e.Expression);
 
-					return e.Update(ex);
-				}
+				return e.Update(ex);
+			}
 
-				case ExpressionType.TypeEqual:
-				case ExpressionType.TypeIs:
-				{
-					var e  = (TypeBinaryExpression)expr;
-					var ex = Transform(e.Expression);
+			case ExpressionType.Block:
+			{
+				var e  = (BlockExpression)expr;
+				var ex = Transform(e.Expressions);
+				var v  = Transform(e.Variables);
 
-					return e.Update(ex);
-				}
+				return e.Update(v, ex);
+			}
 
-				case ExpressionType.Block:
-				{
-					var e  = (BlockExpression)expr;
-					var ex = Transform(e.Expressions);
-					var v  = Transform(e.Variables);
+			case ExpressionType.DebugInfo:
+			case ExpressionType.Default  :
+			case ExpressionType.Constant :
+			case ExpressionType.Parameter: return ti.Expression;
 
-					return e.Update(v, ex);
-				}
+			case ChangeTypeExpression.ChangeTypeType:
+			{
+				var e  = (ChangeTypeExpression)expr;
+				var ex = Transform(e.Expression)!;
 
-				case ExpressionType.DebugInfo:
-				case ExpressionType.Default  :
-				case ExpressionType.Constant :
-				case ExpressionType.Parameter: return ti.Expression;
-
-				case ChangeTypeExpression.ChangeTypeType:
-				{
-					var e  = (ChangeTypeExpression)expr;
-					var ex = Transform(e.Expression)!;
-
-					if (ex == e.Expression)
-						return expr;
-
-					if (ex.Type == e.Type)
-						return ex;
-
-					return new ChangeTypeExpression(ex, e.Type);
-				}
-
-				case ExpressionType.Dynamic:
-				{
-					var e    = (DynamicExpression)expr;
-					var args = Transform(e.Arguments);
-
-					return e.Update(args);
-				}
-
-				case ExpressionType.Goto:
-				{
-					var e = (GotoExpression)expr;
-					var v = Transform(e.Value);
-
-					return e.Update(e.Target, v);
-				}
-
-				case ExpressionType.Index:
-				{
-					var e = (IndexExpression)expr;
-					var o = Transform(e.Object!);
-					var a = Transform(e.Arguments);
-
-					return e.Update(o, a);
-				}
-
-				case ExpressionType.Label:
-				{
-					var e = (LabelExpression)expr;
-					var v = Transform(e.DefaultValue);
-
-					return e.Update(e.Target, v);
-				}
-
-				case ExpressionType.RuntimeVariables:
-				{
-					var e = (RuntimeVariablesExpression)expr;
-					var v = Transform(e.Variables);
-
-					return e.Update(v);
-				}
-
-				case ExpressionType.Loop:
-				{
-					var e = (LoopExpression)expr;
-					var b = Transform(e.Body);
-
-					return e.Update(e.BreakLabel, e.ContinueLabel, b);
-				}
-
-				case ExpressionType.Switch:
-				{
-					var e = (SwitchExpression)expr;
-					var s = Transform(e.SwitchValue);
-					var c = Transform(e.Cases, TransformSwitchCase);
-					var d = Transform(e.DefaultBody);
-
-					return e.Update(s, c, d);
-				}
-
-				case ExpressionType.Try:
-				{
-					var e = (TryExpression)expr;
-					var b = Transform(e.Body);
-					var c = Transform(e.Handlers, TransformCatchBlock);
-					var f = Transform(e.Finally);
-					var t = Transform(e.Fault);
-
-					return e.Update(b, c, f, t);
-				}
-
-				case ExpressionType.Extension:
+				if (ex == e.Expression)
 					return expr;
 
-				default:
-					throw new NotImplementedException($"Unhandled expression type: {expr.NodeType}");
-			}
-		}
+				if (ex.Type == e.Type)
+					return ex;
 
-		private CatchBlock TransformCatchBlock(CatchBlock h)
-		{
-			return h.Update(
-				(ParameterExpression?)Transform(h.Variable),
-				Transform(h.Filter),
-				Transform(h.Body));
-		}
-
-		private SwitchCase TransformSwitchCase(SwitchCase cs)
-		{
-			return cs.Update(
-				Transform(cs.TestValues),
-				Transform(cs.Body));
-		}
-
-		IEnumerable<T> Transform<T>(IList<T> source, Func<T, T> func)
-			where T : class
-		{
-			List<T>? list = null;
-
-			for (var i = 0; i < source.Count; i++)
-			{
-				var item = source[i];
-				var e    = func(item);
-
-				if (e != item)
-					(list ??= new(source))[i] = e;
+				return new ChangeTypeExpression(ex, e.Type);
 			}
 
-			return list ?? source;
-		}
-
-		IEnumerable<T> Transform<T>(IList<T> source)
-			where T : Expression
-		{
-			List<T>? list = null;
-
-			for (var i = 0; i < source.Count; i++)
+			case ExpressionType.Dynamic:
 			{
-				var item = source[i];
-				var e    = (T)Transform(item)!;
+				var e    = (DynamicExpression)expr;
+				var args = Transform(e.Arguments);
 
-				if (e != item)
-					(list ??= new(source))[i] = e;
+				return e.Update(args);
 			}
 
-			return list ?? source;
-		}
-
-		ElementInit TransformElementInit(ElementInit p)
-		{
-			var args = Transform(p.Arguments);
-			return args != p.Arguments ? Expression.ElementInit(p.AddMethod, args) : p;
-		}
-
-		MemberBinding TransformMemberBinding(MemberBinding b)
-		{
-			switch (b.BindingType)
+			case ExpressionType.Goto:
 			{
-				case MemberBindingType.Assignment:
+				var e = (GotoExpression)expr;
+				var v = Transform(e.Value);
+
+				return e.Update(e.Target, v);
+			}
+
+			case ExpressionType.Index:
+			{
+				var e = (IndexExpression)expr;
+				var o = Transform(e.Object!);
+				var a = Transform(e.Arguments);
+
+				return e.Update(o, a);
+			}
+
+			case ExpressionType.Label:
+			{
+				var e = (LabelExpression)expr;
+				var v = Transform(e.DefaultValue);
+
+				return e.Update(e.Target, v);
+			}
+
+			case ExpressionType.RuntimeVariables:
+			{
+				var e = (RuntimeVariablesExpression)expr;
+				var v = Transform(e.Variables);
+
+				return e.Update(v);
+			}
+
+			case ExpressionType.Loop:
+			{
+				var e = (LoopExpression)expr;
+				var b = Transform(e.Body);
+
+				return e.Update(e.BreakLabel, e.ContinueLabel, b);
+			}
+
+			case ExpressionType.Switch:
+			{
+				var e = (SwitchExpression)expr;
+				var s = Transform(e.SwitchValue);
+				var c = Transform(e.Cases, TransformSwitchCase);
+				var d = Transform(e.DefaultBody);
+
+				return e.Update(s, c, d);
+			}
+
+			case ExpressionType.Try:
+			{
+				var e = (TryExpression)expr;
+				var b = Transform(e.Body);
+				var c = Transform(e.Handlers, TransformCatchBlock);
+				var f = Transform(e.Finally);
+				var t = Transform(e.Fault);
+
+				return e.Update(b, c, f, t);
+			}
+
+			case ExpressionType.Extension:
+				return expr;
+
+			default:
+				throw new NotImplementedException($"Unhandled expression type: {expr.NodeType}");
+		}
+	}
+
+	private CatchBlock TransformCatchBlock(CatchBlock h)
+	{
+		return h.Update(
+			(ParameterExpression?)Transform(h.Variable),
+			Transform(h.Filter),
+			Transform(h.Body));
+	}
+
+	private SwitchCase TransformSwitchCase(SwitchCase cs)
+	{
+		return cs.Update(
+			Transform(cs.TestValues),
+			Transform(cs.Body));
+	}
+
+	IEnumerable<T> Transform<T>(IList<T> source, Func<T, T> func)
+		where T : class
+	{
+		List<T>? list = null;
+
+		for (var i = 0; i < source.Count; i++)
+		{
+			var item = source[i];
+			var e    = func(item);
+
+			if (e != item)
+				(list ??= new(source))[i] = e;
+		}
+
+		return list ?? source;
+	}
+
+	IEnumerable<T> Transform<T>(IList<T> source)
+		where T : Expression
+	{
+		List<T>? list = null;
+
+		for (var i = 0; i < source.Count; i++)
+		{
+			var item = source[i];
+			var e    = (T)Transform(item)!;
+
+			if (e != item)
+				(list ??= new(source))[i] = e;
+		}
+
+		return list ?? source;
+	}
+
+	ElementInit TransformElementInit(ElementInit p)
+	{
+		var args = Transform(p.Arguments);
+		return args != p.Arguments ? Expression.ElementInit(p.AddMethod, args) : p;
+	}
+
+	MemberBinding TransformMemberBinding(MemberBinding b)
+	{
+		switch (b.BindingType)
+		{
+			case MemberBindingType.Assignment:
+			{
+				var ma = (MemberAssignment)b;
+				var ex = Transform(ma.Expression)!;
+
+				if (ex != ma.Expression)
 				{
-					var ma = (MemberAssignment)b;
-					var ex = Transform(ma.Expression)!;
-
-					if (ex != ma.Expression)
-					{
-						var memberType = ma.Member.GetMemberType();
-						if (ex.Type != memberType)
-							ex = Expression.Convert(ex, memberType);
-						ma = Expression.Bind(ma.Member, ex);
-					}
-
-					return ma;
+					var memberType = ma.Member.GetMemberType();
+					if (ex.Type != memberType)
+						ex = Expression.Convert(ex, memberType);
+					ma = Expression.Bind(ma.Member, ex);
 				}
 
-				case MemberBindingType.ListBinding:
-				{
-					var ml = (MemberListBinding)b;
-					var i  = Transform(ml.Initializers, TransformElementInit);
-
-					if (i != ml.Initializers)
-						ml = Expression.ListBind(ml.Member, i);
-
-					return ml;
-				}
-
-				case MemberBindingType.MemberBinding:
-				{
-					var mm = (MemberMemberBinding)b;
-					var bs = Transform(mm.Bindings, TransformMemberBinding);
-
-					if (bs != mm.Bindings)
-						mm = Expression.MemberBind(mm.Member);
-
-					return mm;
-				}
+				return ma;
 			}
 
-			return b;
+			case MemberBindingType.ListBinding:
+			{
+				var ml = (MemberListBinding)b;
+				var i  = Transform(ml.Initializers, TransformElementInit);
+
+				if (i != ml.Initializers)
+					ml = Expression.ListBind(ml.Member, i);
+
+				return ml;
+			}
+
+			case MemberBindingType.MemberBinding:
+			{
+				var mm = (MemberMemberBinding)b;
+				var bs = Transform(mm.Bindings, TransformMemberBinding);
+
+				if (bs != mm.Bindings)
+					mm = Expression.MemberBind(mm.Member);
+
+				return mm;
+			}
 		}
+
+		return b;
 	}
 }

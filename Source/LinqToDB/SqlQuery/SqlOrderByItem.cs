@@ -2,51 +2,50 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace LinqToDB.SqlQuery
+namespace LinqToDB.SqlQuery;
+
+public class SqlOrderByItem : IQueryElement
 {
-	public class SqlOrderByItem : IQueryElement
+	public SqlOrderByItem(ISqlExpression expression, bool isDescending)
 	{
-		public SqlOrderByItem(ISqlExpression expression, bool isDescending)
-		{
-			Expression   = expression;
-			IsDescending = isDescending;
-		}
+		Expression   = expression;
+		IsDescending = isDescending;
+	}
 
-		public ISqlExpression Expression   { get; internal set; }
-		public bool           IsDescending { get; }
+	public ISqlExpression Expression   { get; internal set; }
+	public bool           IsDescending { get; }
 
-		internal void Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-		{
-			Expression = Expression.Walk(options, context, func)!;
-		}
+	internal void Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
+	{
+		Expression = Expression.Walk(options, context, func)!;
+	}
 
-		#region Overrides
+	#region Overrides
 
 #if OVERRIDETOSTRING
 
-		public override string ToString()
-		{
-			return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
-		}
+	public override string ToString()
+	{
+		return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
+	}
 
 #endif
 
-		#endregion
+	#endregion
 
-		#region IQueryElement Members
+	#region IQueryElement Members
 
-		public QueryElementType ElementType => QueryElementType.OrderByItem;
+	public QueryElementType ElementType => QueryElementType.OrderByItem;
 
-		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
-		{
-			Expression.ToString(sb, dic);
+	StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
+	{
+		Expression.ToString(sb, dic);
 
-			if (IsDescending)
-				sb.Append(" DESC");
+		if (IsDescending)
+			sb.Append(" DESC");
 
-			return sb;
-		}
-
-		#endregion
+		return sb;
 	}
+
+	#endregion
 }

@@ -3,111 +3,110 @@ using System.Data.Linq;
 using System.Globalization;
 using System.Text;
 
-namespace LinqToDB.DataProvider.SQLite
+namespace LinqToDB.DataProvider.SQLite;
+
+using Common;
+using Mapping;
+using SqlQuery;
+
+public class SQLiteMappingSchema : LockedMappingSchema
 {
-	using Common;
-	using Mapping;
-	using SqlQuery;
+	internal const string DATE_FORMAT_RAW  = "yyyy-MM-dd";
+	private  const string DATE_FORMAT      = "'{0:yyyy-MM-dd}'";
+	private  const string DATETIME0_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss}'";
+	private  const string DATETIME1_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.f}'";
+	private  const string DATETIME2_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.ff}'";
+	private  const string DATETIME3_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.fff}'";
 
-	public class SQLiteMappingSchema : LockedMappingSchema
+	SQLiteMappingSchema() : base(ProviderName.SQLite)
 	{
-		internal const string DATE_FORMAT_RAW  = "yyyy-MM-dd";
-		private  const string DATE_FORMAT      = "'{0:yyyy-MM-dd}'";
-		private  const string DATETIME0_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss}'";
-		private  const string DATETIME1_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.f}'";
-		private  const string DATETIME2_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.ff}'";
-		private  const string DATETIME3_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.fff}'";
+		SetConvertExpression<string,TimeSpan>(s => DateTime.Parse(s, null, DateTimeStyles.NoCurrentDateDefault).TimeOfDay);
 
-		SQLiteMappingSchema() : base(ProviderName.SQLite)
-		{
-			SetConvertExpression<string,TimeSpan>(s => DateTime.Parse(s, null, DateTimeStyles.NoCurrentDateDefault).TimeOfDay);
-
-			SetValueToSqlConverter(typeof(Guid),     (sb,dt,v) => ConvertBinaryToSql  (sb, ((Guid)  v).ToByteArray()));
-			SetValueToSqlConverter(typeof(DateTime), (sb,dt,v) => ConvertDateTimeToSql(sb, (DateTime)v));
-			SetValueToSqlConverter(typeof(string),   (sb,dt,v) => ConvertStringToSql  (sb, v.ToString()!));
-			SetValueToSqlConverter(typeof(char),     (sb,dt,v) => ConvertCharToSql    (sb, (char)v));
-			SetValueToSqlConverter(typeof(byte[]),   (sb,dt,v) => ConvertBinaryToSql  (sb, (byte[])v));
-			SetValueToSqlConverter(typeof(Binary),   (sb,dt,v) => ConvertBinaryToSql  (sb, ((Binary)v).ToArray()));
+		SetValueToSqlConverter(typeof(Guid),     (sb,dt,v) => ConvertBinaryToSql  (sb, ((Guid)  v).ToByteArray()));
+		SetValueToSqlConverter(typeof(DateTime), (sb,dt,v) => ConvertDateTimeToSql(sb, (DateTime)v));
+		SetValueToSqlConverter(typeof(string),   (sb,dt,v) => ConvertStringToSql  (sb, v.ToString()!));
+		SetValueToSqlConverter(typeof(char),     (sb,dt,v) => ConvertCharToSql    (sb, (char)v));
+		SetValueToSqlConverter(typeof(byte[]),   (sb,dt,v) => ConvertBinaryToSql  (sb, (byte[])v));
+		SetValueToSqlConverter(typeof(Binary),   (sb,dt,v) => ConvertBinaryToSql  (sb, ((Binary)v).ToArray()));
 
 #if NET6_0_OR_GREATER
-			SetValueToSqlConverter(typeof(DateOnly), (sb,dt,v) => ConvertDateOnlyToSql(sb, (DateOnly)v));
+		SetValueToSqlConverter(typeof(DateOnly), (sb,dt,v) => ConvertDateOnlyToSql(sb, (DateOnly)v));
 #endif
 
-			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
-		}
+		SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
+	}
 
-		static void ConvertBinaryToSql(StringBuilder stringBuilder, byte[] value)
+	static void ConvertBinaryToSql(StringBuilder stringBuilder, byte[] value)
+	{
+		stringBuilder
+			.Append("X'")
+			.AppendByteArrayAsHexViaLookup32(value)
+			.Append('\'');
+	}
+
+	static void ConvertDateTimeToSql(StringBuilder stringBuilder, DateTime value)
+	{
+		string format;
+		if (value.Millisecond == 0)
 		{
-			stringBuilder
-				.Append("X'")
-				.AppendByteArrayAsHexViaLookup32(value)
-				.Append('\'');
+			format = value.Hour == 0 && value.Minute == 0 && value.Second == 0 ?
+				DATE_FORMAT :
+				DATETIME0_FORMAT;
 		}
+		// TODO: code below should be gone after we implement proper date/time support for sqlite
+		// This actually doesn't make sense and exists only for our tests to work in cases where literals
+		// compared as strings
+		// E.g. see DateTimeArray2/DateTimeArray3 tests
+		else if (value.Millisecond % 100 == 0)
+			format = DATETIME1_FORMAT;
+		else if (value.Millisecond % 10 == 0)
+			format = DATETIME2_FORMAT;
+		else
+			format = DATETIME3_FORMAT;
 
-		static void ConvertDateTimeToSql(StringBuilder stringBuilder, DateTime value)
-		{
-			string format;
-			if (value.Millisecond == 0)
-			{
-				format = value.Hour == 0 && value.Minute == 0 && value.Second == 0 ?
-					DATE_FORMAT :
-					DATETIME0_FORMAT;
-			}
-			// TODO: code below should be gone after we implement proper date/time support for sqlite
-			// This actually doesn't make sense and exists only for our tests to work in cases where literals
-			// compared as strings
-			// E.g. see DateTimeArray2/DateTimeArray3 tests
-			else if (value.Millisecond % 100 == 0)
-				format = DATETIME1_FORMAT;
-			else if (value.Millisecond % 10 == 0)
-				format = DATETIME2_FORMAT;
-			else
-				format = DATETIME3_FORMAT;
-
-			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, value);
-		}
+		stringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, value);
+	}
 
 #if NET6_0_OR_GREATER
-		static void ConvertDateOnlyToSql(StringBuilder stringBuilder, DateOnly value)
-		{
-			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATE_FORMAT, value);
-		}
+	static void ConvertDateOnlyToSql(StringBuilder stringBuilder, DateOnly value)
+	{
+		stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATE_FORMAT, value);
+	}
 #endif
 
-		static readonly Action<StringBuilder, int> AppendConversionAction = AppendConversion;
-		static void AppendConversion(StringBuilder stringBuilder, int value)
+	static readonly Action<StringBuilder, int> AppendConversionAction = AppendConversion;
+	static void AppendConversion(StringBuilder stringBuilder, int value)
+	{
+		stringBuilder
+			.Append("char(")
+			.Append(value)
+			.Append(')')
+			;
+	}
+
+	static void ConvertStringToSql(StringBuilder stringBuilder, string value)
+	{
+		DataTools.ConvertStringToSql(stringBuilder, "+", null, AppendConversionAction, value, null);
+	}
+
+	static void ConvertCharToSql(StringBuilder stringBuilder, char value)
+	{
+		DataTools.ConvertCharToSql(stringBuilder, "'", AppendConversionAction, value);
+	}
+
+	internal static readonly SQLiteMappingSchema Instance = new ();
+
+	public class ClassicMappingSchema : LockedMappingSchema
+	{
+		public ClassicMappingSchema() : base(ProviderName.SQLiteClassic, Instance)
 		{
-			stringBuilder
-				.Append("char(")
-				.Append(value)
-				.Append(')')
-				;
 		}
+	}
 
-		static void ConvertStringToSql(StringBuilder stringBuilder, string value)
+	public class MicrosoftMappingSchema : LockedMappingSchema
+	{
+		public MicrosoftMappingSchema() : base(ProviderName.SQLiteMS, Instance)
 		{
-			DataTools.ConvertStringToSql(stringBuilder, "+", null, AppendConversionAction, value, null);
-		}
-
-		static void ConvertCharToSql(StringBuilder stringBuilder, char value)
-		{
-			DataTools.ConvertCharToSql(stringBuilder, "'", AppendConversionAction, value);
-		}
-
-		internal static readonly SQLiteMappingSchema Instance = new ();
-
-		public class ClassicMappingSchema : LockedMappingSchema
-		{
-			public ClassicMappingSchema() : base(ProviderName.SQLiteClassic, Instance)
-			{
-			}
-		}
-
-		public class MicrosoftMappingSchema : LockedMappingSchema
-		{
-			public MicrosoftMappingSchema() : base(ProviderName.SQLiteMS, Instance)
-			{
-			}
 		}
 	}
 }

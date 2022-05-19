@@ -1,14 +1,13 @@
 ﻿using System.Runtime.Serialization;
 
-namespace LinqToDB.Remote.Grpc.Dto
-{
-	[DataContract]
-	public class GrpcInt
-	{
-		[DataMember(Order = 1)]
-		public int Value { get; set; }
+namespace LinqToDB.Remote.Grpc.Dto;
 
-		public static implicit operator int(GrpcInt a) => a.Value;
-		public static implicit operator GrpcInt(int a) => new() { Value = a };
-	}
+[DataContract]
+public class GrpcInt
+{
+	[DataMember(Order = 1)]
+	public int Value { get; set; }
+
+	public static implicit operator int(GrpcInt a) => a.Value;
+	public static implicit operator GrpcInt(int a) => new() { Value = a };
 }

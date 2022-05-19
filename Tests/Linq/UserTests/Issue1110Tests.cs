@@ -5,29 +5,28 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
-namespace Tests.UserTests
+namespace Tests.UserTests;
+
+public class Issue1110Tests : TestBase
 {
-	public class Issue1110Tests : TestBase
+	[Table(Name = "Issue1110TB")]
+	class Issue1110TestsClass
 	{
-		[Table(Name = "Issue1110TB")]
-		class Issue1110TestsClass
-		{
-			[Column(IsPrimaryKey = true)]
-			public int Id { get; set; }
+		[Column(IsPrimaryKey = true)]
+		public int Id { get; set; }
 
-			[Column(IsDiscriminator = true)]
-			public DateTime TimeStamp { get; set; }
-		}
+		[Column(IsDiscriminator = true)]
+		public DateTime TimeStamp { get; set; }
+	}
 
-		[Test]
-		public void Test([DataSources] string configuration)
+	[Test]
+	public void Test([DataSources] string configuration)
+	{
+		using (var db = GetDataContext(configuration))
 		{
-			using (var db = GetDataContext(configuration))
+			using (db.CreateLocalTable<Issue1110TestsClass>())
 			{
-				using (db.CreateLocalTable<Issue1110TestsClass>())
-				{
-					db.Insert(new Issue1110TestsClass() { Id = 10, TimeStamp = TestData.DateTime });
-				}
+				db.Insert(new Issue1110TestsClass() { Id = 10, TimeStamp = TestData.DateTime });
 			}
 		}
 	}

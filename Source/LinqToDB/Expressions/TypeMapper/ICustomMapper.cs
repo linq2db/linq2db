@@ -1,10 +1,9 @@
 ﻿using System.Linq.Expressions;
 
-namespace LinqToDB.Expressions
+namespace LinqToDB.Expressions;
+
+public interface ICustomMapper
 {
-	public interface ICustomMapper
-	{
-		bool CanMap(Expression expression);
-		Expression Map(Expression expression);
-	}
+	bool CanMap(Expression expression);
+	Expression Map(Expression expression);
 }

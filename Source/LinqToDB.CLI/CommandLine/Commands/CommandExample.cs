@@ -1,9 +1,8 @@
-﻿namespace LinqToDB.CommandLine
-{
-	/// <summary>
-	/// Command use example.
-	/// </summary>
-	/// <param name="Command">Sample command.</param>
-	/// <param name="Help">Example description text.</param>
-	internal sealed record CommandExample(string Command, string Help);
-}
+﻿namespace LinqToDB.CommandLine;
+
+/// <summary>
+/// Command use example.
+/// </summary>
+/// <param name="Command">Sample command.</param>
+/// <param name="Help">Example description text.</param>
+internal sealed record CommandExample(string Command, string Help);

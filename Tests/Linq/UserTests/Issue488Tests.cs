@@ -10,63 +10,62 @@ using LinqToDB.Mapping;
 using NUnit.Framework;
 using Tests.Model;
 
-namespace Tests.UserTests
+namespace Tests.UserTests;
+
+[TestFixture]
+public class Issue488Tests : TestBase
 {
-	[TestFixture]
-	public class Issue488Tests : TestBase
+	public class LinqDataTypes
 	{
-		public class LinqDataTypes
+		public int ID;
+		public decimal MoneyValue;
+		[Column(DataType = DataType.Date)]public DateTime DateTimeValue;
+		public bool BoolValue;
+		public Guid GuidValue;
+		public Binary? BinaryValue;
+		public short SmallIntValue;
+	}
+
+	[Test]
+	public void Test1([IncludeDataSources(TestProvName.AllSQLite)] string context)
+	{
+		using (var db = GetDataConnection(context))
 		{
-			public int ID;
-			public decimal MoneyValue;
-			[Column(DataType = DataType.Date)]public DateTime DateTimeValue;
-			public bool BoolValue;
-			public Guid GuidValue;
-			public Binary? BinaryValue;
-			public short SmallIntValue;
+			var commandInterceptor = new SaveCommandInterceptor();
+			db.AddInterceptor(commandInterceptor);
+
+			var date = TestData.Date;
+			var q = (from t1 in db.GetTable<LinqDataTypes>()
+				join t2 in db.GetTable<LinqDataTypes>() on t1.ID equals t2.ID
+				where t2.DateTimeValue == date
+				select t2);
+
+			var _ = q.FirstOrDefault();
+
+			var dc = (DataConnection)db;
+			Assert.AreEqual(2, commandInterceptor.Parameters.Length);
+			Assert.AreEqual(1, commandInterceptor.Parameters.Count(p => p.DbType == DbType.Date));
 		}
+	}
 
-		[Test]
-		public void Test1([IncludeDataSources(TestProvName.AllSQLite)] string context)
+	[Test]
+	public void Test2([IncludeDataSources(TestProvName.AllSQLite)] string context)
+	{
+		using (var db = GetDataConnection(context))
 		{
-			using (var db = GetDataConnection(context))
-			{
-				var commandInterceptor = new SaveCommandInterceptor();
-				db.AddInterceptor(commandInterceptor);
+			var commandInterceptor = new SaveCommandInterceptor();
+			db.AddInterceptor(commandInterceptor);
 
-				var date = TestData.Date;
-				var q = (from t1 in db.GetTable<LinqDataTypes>()
-					join t2 in db.GetTable<LinqDataTypes>() on t1.ID equals t2.ID
-					where t2.DateTimeValue == date
-					select t2);
+			var date = TestData.Date;
+			var q = (from t1 in db.GetTable<LinqDataTypes>()
+				where t1.DateTimeValue == date
+				select t1);
 
-				var _ = q.FirstOrDefault();
+			var _ = q.FirstOrDefault();
 
-				var dc = (DataConnection)db;
-				Assert.AreEqual(2, commandInterceptor.Parameters.Length);
-				Assert.AreEqual(1, commandInterceptor.Parameters.Count(p => p.DbType == DbType.Date));
-			}
-		}
-
-		[Test]
-		public void Test2([IncludeDataSources(TestProvName.AllSQLite)] string context)
-		{
-			using (var db = GetDataConnection(context))
-			{
-				var commandInterceptor = new SaveCommandInterceptor();
-				db.AddInterceptor(commandInterceptor);
-
-				var date = TestData.Date;
-				var q = (from t1 in db.GetTable<LinqDataTypes>()
-					where t1.DateTimeValue == date
-					select t1);
-
-				var _ = q.FirstOrDefault();
-
-				var dc = (DataConnection)db;
-				Assert.AreEqual(2, commandInterceptor.Parameters.Length);
-				Assert.AreEqual(1, commandInterceptor.Parameters.Count(p => p.DbType == DbType.Date));
-			}
+			var dc = (DataConnection)db;
+			Assert.AreEqual(2, commandInterceptor.Parameters.Length);
+			Assert.AreEqual(1, commandInterceptor.Parameters.Count(p => p.DbType == DbType.Date));
 		}
 	}
 }

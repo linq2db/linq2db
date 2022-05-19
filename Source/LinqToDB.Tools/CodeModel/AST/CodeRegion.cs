@@ -1,59 +1,58 @@
 ﻿using System.Collections.Generic;
 using LinqToDB.Common;
 
-namespace LinqToDB.CodeModel
+namespace LinqToDB.CodeModel;
+
+/// <summary>
+/// Code region.
+/// </summary>
+public sealed class CodeRegion : ITopLevelElement, IGroupElement
 {
-	/// <summary>
-	/// Code region.
-	/// </summary>
-	public sealed class CodeRegion : ITopLevelElement, IGroupElement
+	private readonly List<IMemberGroup> _members;
+
+	internal CodeRegion(CodeClass ownerType, string name, IEnumerable<IMemberGroup>? members)
 	{
-		private readonly List<IMemberGroup> _members;
+		Type     = ownerType;
+		Name     = name;
+		_members = new (members ?? Array<IMemberGroup>.Empty);
+	}
 
-		internal CodeRegion(CodeClass ownerType, string name, IEnumerable<IMemberGroup>? members)
+	public CodeRegion(CodeClass ownerType, string name)
+		: this(ownerType, name, null)
+	{
+	}
+
+	/// <summary>
+	/// Region name.
+	/// </summary>
+	public string                      Name    { get; }
+	/// <summary>
+	/// Owner class in which region is declared.
+	/// </summary>
+	public CodeClass                   Type    { get; }
+	/// <summary>
+	/// Region members (in groups).
+	/// </summary>
+	public IReadOnlyList<IMemberGroup> Members => _members;
+
+	CodeElementType ICodeElement.ElementType => CodeElementType.Region;
+
+	/// <summary>
+	/// Returns true if region is empty.
+	/// </summary>
+	public bool IsEmpty()
+	{
+		foreach (var group in Members)
 		{
-			Type     = ownerType;
-			Name     = name;
-			_members = new (members ?? Array<IMemberGroup>.Empty);
+			if (!group.IsEmpty)
+				return false;
 		}
 
-		public CodeRegion(CodeClass ownerType, string name)
-			: this(ownerType, name, null)
-		{
-		}
+		return true;
+	}
 
-		/// <summary>
-		/// Region name.
-		/// </summary>
-		public string                      Name    { get; }
-		/// <summary>
-		/// Owner class in which region is declared.
-		/// </summary>
-		public CodeClass                   Type    { get; }
-		/// <summary>
-		/// Region members (in groups).
-		/// </summary>
-		public IReadOnlyList<IMemberGroup> Members => _members;
-
-		CodeElementType ICodeElement.ElementType => CodeElementType.Region;
-
-		/// <summary>
-		/// Returns true if region is empty.
-		/// </summary>
-		public bool IsEmpty()
-		{
-			foreach (var group in Members)
-			{
-				if (!group.IsEmpty)
-					return false;
-			}
-
-			return true;
-		}
-
-		internal void Add(IMemberGroup group)
-		{
-			_members.Add(group);
-		}
+	internal void Add(IMemberGroup group)
+	{
+		_members.Add(group);
 	}
 }

@@ -2,76 +2,75 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace LinqToDB.SqlQuery
+namespace LinqToDB.SqlQuery;
+
+public class SqlWhereClause : ClauseBase<SqlWhereClause,SqlWhereClause.Next>, IQueryElement, ISqlExpressionWalkable
 {
-	public class SqlWhereClause : ClauseBase<SqlWhereClause,SqlWhereClause.Next>, IQueryElement, ISqlExpressionWalkable
+	public class Next : ClauseBase
 	{
-		public class Next : ClauseBase
+		internal Next(SqlWhereClause parent) : base(parent.SelectQuery)
 		{
-			internal Next(SqlWhereClause parent) : base(parent.SelectQuery)
-			{
-				_parent = parent;
-			}
-
-			readonly SqlWhereClause _parent;
-
-			public SqlWhereClause Or  => _parent.SetOr(true);
-			public SqlWhereClause And => _parent.SetOr(false);
+			_parent = parent;
 		}
 
-		internal SqlWhereClause(SelectQuery selectQuery) : base(selectQuery)
-		{
-			SearchCondition = new SqlSearchCondition();
-		}
+		readonly SqlWhereClause _parent;
 
-		internal SqlWhereClause(SqlSearchCondition searchCondition) : base(null)
-		{
-			SearchCondition = searchCondition;
-		}
+		public SqlWhereClause Or  => _parent.SetOr(true);
+		public SqlWhereClause And => _parent.SetOr(false);
+	}
 
-		public SqlSearchCondition SearchCondition { get; internal set; }
+	internal SqlWhereClause(SelectQuery selectQuery) : base(selectQuery)
+	{
+		SearchCondition = new SqlSearchCondition();
+	}
 
-		public bool IsEmpty => SearchCondition.Conditions.Count == 0;
+	internal SqlWhereClause(SqlSearchCondition searchCondition) : base(null)
+	{
+		SearchCondition = searchCondition;
+	}
 
-		protected override SqlSearchCondition Search => SearchCondition;
+	public SqlSearchCondition SearchCondition { get; internal set; }
 
-		protected override Next GetNext()
-		{
-			return new Next(this);
-		}
+	public bool IsEmpty => SearchCondition.Conditions.Count == 0;
+
+	protected override SqlSearchCondition Search => SearchCondition;
+
+	protected override Next GetNext()
+	{
+		return new Next(this);
+	}
 
 #if OVERRIDETOSTRING
 
-		public override string ToString()
-		{
-			return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
-		}
+	public override string ToString()
+	{
+		return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
+	}
 
 #endif
 
-		#region ISqlExpressionWalkable Members
+	#region ISqlExpressionWalkable Members
 
-		ISqlExpression? ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-		{
-			SearchCondition = (SqlSearchCondition)((ISqlExpressionWalkable)SearchCondition).Walk(options, context, func)!;
-			return null;
-		}
-
-		#endregion
-
-		#region IQueryElement Members
-
-		public QueryElementType ElementType => QueryElementType.WhereClause;
-
-		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
-		{
-			if (Search.Conditions.Count == 0)
-				return sb;
-
-			sb.Append("\nWHERE\n\t");
-			return ((IQueryElement)Search).ToString(sb, dic);
-		}
-
-		#endregion
+	ISqlExpression? ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
+	{
+		SearchCondition = (SqlSearchCondition)((ISqlExpressionWalkable)SearchCondition).Walk(options, context, func)!;
+		return null;
 	}
+
+	#endregion
+
+	#region IQueryElement Members
+
+	public QueryElementType ElementType => QueryElementType.WhereClause;
+
+	StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
+	{
+		if (Search.Conditions.Count == 0)
+			return sb;
+
+		sb.Append("\nWHERE\n\t");
+		return ((IQueryElement)Search).ToString(sb, dic);
+	}
+
+	#endregion
 }

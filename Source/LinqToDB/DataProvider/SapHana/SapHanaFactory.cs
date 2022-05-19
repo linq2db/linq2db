@@ -1,18 +1,17 @@
 ﻿using JetBrains.Annotations;
 
-namespace LinqToDB.DataProvider.SapHana
-{
-	using System.Collections.Generic;
-	using System.Linq;
-	using Configuration;
+namespace LinqToDB.DataProvider.SapHana;
 
-	[UsedImplicitly]
-	class SapHanaFactory : IDataProviderFactory
+using System.Collections.Generic;
+using System.Linq;
+using Configuration;
+
+[UsedImplicitly]
+class SapHanaFactory : IDataProviderFactory
+{
+	IDataProvider IDataProviderFactory.GetDataProvider(IEnumerable<NamedValue> attributes)
 	{
-		IDataProvider IDataProviderFactory.GetDataProvider(IEnumerable<NamedValue> attributes)
-		{
-			var assemblyName = attributes.FirstOrDefault(_ => _.Name == "assemblyName");
-			return SapHanaTools.GetDataProvider(null, assemblyName?.Value);
-		}
+		var assemblyName = attributes.FirstOrDefault(_ => _.Name == "assemblyName");
+		return SapHanaTools.GetDataProvider(null, assemblyName?.Value);
 	}
 }

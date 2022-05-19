@@ -1,17 +1,16 @@
-namespace LinqToDB.Configuration
+namespace LinqToDB.Configuration;
+
+/// <summary>
+/// Name-value pair.
+/// </summary>
+public class NamedValue
 {
 	/// <summary>
-	/// Name-value pair.
+	/// Gets or sets name for value.
 	/// </summary>
-	public class NamedValue
-	{
-		/// <summary>
-		/// Gets or sets name for value.
-		/// </summary>
-		public string Name  { get; set; } = null!;
-		/// <summary>
-		/// Gets ot sets value.
-		/// </summary>
-		public string Value { get; set; } = null!;
-	}
+	public string Name  { get; set; } = null!;
+	/// <summary>
+	/// Gets ot sets value.
+	/// </summary>
+	public string Value { get; set; } = null!;
 }

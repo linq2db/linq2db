@@ -5,82 +5,81 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
-namespace Tests.UserTests
+namespace Tests.UserTests;
+
+using System.Linq;
+
+using LinqToDB.DataProvider.Firebird;
+
+[TestFixture]
+public class Issue464Tests : TestBase
 {
-	using System.Linq;
 
-	using LinqToDB.DataProvider.Firebird;
-
-	[TestFixture]
-	public class Issue464Tests : TestBase
+	[Test]
+	public void Test([DataSources(false)] string context)
 	{
+		var schema = new MappingSchema();
 
-		[Test]
-		public void Test([DataSources(false)] string context)
+		schema.SetDataType(typeof(MyInt), DataType.Int32);
+
+		schema.SetConvertExpression<MyInt,   int>          (x => x.Value);
+		schema.SetConvertExpression<int,     MyInt>        (x => new MyInt { Value = x });
+		schema.SetConvertExpression<long,    MyInt>        (x => new MyInt { Value = (int)x }); //SQLite
+		schema.SetConvertExpression<decimal, MyInt>        (x => new MyInt { Value = (int)x }); //Oracle
+		schema.SetConvertExpression<MyInt,   DataParameter>(x => new DataParameter { DataType = DataType.Int32, Value = x.Value });
+
+		schema.GetFluentMappingBuilder()
+			  .Entity<Entity>()
+			  .HasTableName("Issue464")
+			  .HasColumn(x => x.Id)
+			  .HasColumn(x => x.Value);
+
+		using (var db = new  DataConnection(context).AddMappingSchema(schema))
+		using (new FirebirdQuoteMode(FirebirdIdentifierQuoteMode.Auto))
 		{
-			var schema = new MappingSchema();
-
-			schema.SetDataType(typeof(MyInt), DataType.Int32);
-
-			schema.SetConvertExpression<MyInt,   int>          (x => x.Value);
-			schema.SetConvertExpression<int,     MyInt>        (x => new MyInt { Value = x });
-			schema.SetConvertExpression<long,    MyInt>        (x => new MyInt { Value = (int)x }); //SQLite
-			schema.SetConvertExpression<decimal, MyInt>        (x => new MyInt { Value = (int)x }); //Oracle
-			schema.SetConvertExpression<MyInt,   DataParameter>(x => new DataParameter { DataType = DataType.Int32, Value = x.Value });
-
-			schema.GetFluentMappingBuilder()
-				  .Entity<Entity>()
-				  .HasTableName("Issue464")
-				  .HasColumn(x => x.Id)
-				  .HasColumn(x => x.Value);
-
-			using (var db = new  DataConnection(context).AddMappingSchema(schema))
-			using (new FirebirdQuoteMode(FirebirdIdentifierQuoteMode.Auto))
+			try
 			{
-				try
+				var temptable = db.CreateTable<Entity>();
+
+				var data = new[]
 				{
-					var temptable = db.CreateTable<Entity>();
+					new Entity {Id = 1, Value = new MyInt {Value = 1}},
+					new Entity {Id = 2, Value = new MyInt {Value = 2}},
+					new Entity {Id = 3, Value = new MyInt {Value = 3}}
+				};
 
-					var data = new[]
-					{
-						new Entity {Id = 1, Value = new MyInt {Value = 1}},
-						new Entity {Id = 2, Value = new MyInt {Value = 2}},
-						new Entity {Id = 3, Value = new MyInt {Value = 3}}
-					};
+				temptable.BulkCopy(data);
 
-					temptable.BulkCopy(data);
-
-					AreEqual(data, temptable.ToList());
-				}
-				finally
-				{
-					db.DropTable<Entity>();
-				}
-
+				AreEqual(data, temptable.ToList());
 			}
-		}
-
-		public class Entity
-		{
-			public int    Id    { get; set; }
-			public MyInt? Value { get; set; }
-
-			public override bool Equals(object? obj)
+			finally
 			{
-				return obj is Entity e
-					&& Id == e.Id
-					&& Value!.Value == Id;
+				db.DropTable<Entity>();
 			}
 
-			public override int GetHashCode()
-			{
-				return Id;
-			}
 		}
+	}
 
-		public class MyInt
+	public class Entity
+	{
+		public int    Id    { get; set; }
+		public MyInt? Value { get; set; }
+
+		public override bool Equals(object? obj)
 		{
-			public int Value { get; set; }
+			return obj is Entity e
+				&& Id == e.Id
+				&& Value!.Value == Id;
 		}
+
+		public override int GetHashCode()
+		{
+			return Id;
+		}
+	}
+
+	public class MyInt
+	{
+		public int Value { get; set; }
 	}
 }

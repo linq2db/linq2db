@@ -1,34 +1,33 @@
-﻿namespace Tests
+﻿namespace Tests;
+
+using NUnit.Framework.Interfaces;
+
+internal static class NUnitUtils
 {
-	using NUnit.Framework.Interfaces;
-
-	internal static class NUnitUtils
+	public static (string? context, bool isLinqService) GetContext(ITest test)
 	{
-		public static (string? context, bool isLinqService) GetContext(ITest test)
+		if (test.Arguments.Length > 0)
 		{
-			if (test.Arguments.Length > 0)
+			var parameters = test.Method!.GetParameters();
+
+			for (var i = 0; i < parameters.Length; i++)
 			{
-				var parameters = test.Method!.GetParameters();
+				var attr = parameters[i].GetCustomAttributes<DataSourcesBaseAttribute>(true);
 
-				for (var i = 0; i < parameters.Length; i++)
+				if (attr.Length != 0)
 				{
-					var attr = parameters[i].GetCustomAttributes<DataSourcesBaseAttribute>(true);
+					var context = (string)test.Arguments[i]!;
 
-					if (attr.Length != 0)
+					if (context.EndsWith(".LinqService"))
 					{
-						var context = (string)test.Arguments[i]!;
-
-						if (context.EndsWith(".LinqService"))
-						{
-							return (context.Replace(".LinqService", ""), true);
-						}
-
-						return (context, false);
+						return (context.Replace(".LinqService", ""), true);
 					}
+
+					return (context, false);
 				}
 			}
-
-			return default;
 		}
+
+		return default;
 	}
 }

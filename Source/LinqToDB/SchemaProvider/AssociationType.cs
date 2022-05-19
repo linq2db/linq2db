@@ -1,10 +1,9 @@
-﻿namespace LinqToDB.SchemaProvider
+﻿namespace LinqToDB.SchemaProvider;
+
+public enum AssociationType
 {
-	public enum AssociationType
-	{
-		Auto,
-		OneToOne,
-		OneToMany,
-		ManyToOne,
-	}
+	Auto,
+	OneToOne,
+	OneToMany,
+	ManyToOne,
 }

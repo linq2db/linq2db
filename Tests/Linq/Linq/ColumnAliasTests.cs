@@ -6,152 +6,151 @@ using LinqToDB.Mapping;
 using NUnit.Framework;
 
 
-namespace Tests.Linq
+namespace Tests.Linq;
+
+using Model;
+
+[TestFixture]
+public class ColumnAliasTests : TestBase
 {
-	using Model;
-
-	[TestFixture]
-	public class ColumnAliasTests : TestBase
+	public enum TestValue
 	{
-		public enum TestValue
+		Value1 = 1,
+	}
+
+	[Table("Parent")]
+	class TestParent
+	{
+		[Column] public int       ParentID;
+		[Column] public TestValue Value1;
+
+		[ColumnAlias("ParentID")] public int ID;
+	}
+
+	[Test]
+	public void AliasTest1()
+	{
+		using (var db = new TestDataConnection())
 		{
-			Value1 = 1,
+			var _ = db.GetTable<TestParent>().Count(t => t.ID > 0);
 		}
+	}
 
-		[Table("Parent")]
-		class TestParent
+	[Test]
+	public void AliasTest2()
+	{
+		using (var db = new TestDataConnection())
 		{
-			[Column] public int       ParentID;
-			[Column] public TestValue Value1;
-
-			[ColumnAlias("ParentID")] public int ID;
+			db.GetTable<TestParent>()
+				.Where(t => t.ID < 0 && t.ID > 0)
+				.Update(t => new TestParent
+				{
+					ID = t.ID - 1
+				});
 		}
+	}
 
-		[Test]
-		public void AliasTest1()
+	[Test]
+	public void ProjectionTest1([DataSources] string context)
+	{
+		using (var db = GetDataContext(context))
 		{
-			using (var db = new TestDataConnection())
-			{
-				var _ = db.GetTable<TestParent>().Count(t => t.ID > 0);
-			}
+			var q =
+				from p in db.GetTable<TestParent>()
+				select new TestParent
+				{
+					ID     = p.ID,
+					Value1 = p.Value1,
+				} into p
+				where p.ParentID > 1
+				select p;
+
+			var count = q.Count();
+
+			Assert.That(count, Is.GreaterThan(0));
 		}
+	}
 
-		[Test]
-		public void AliasTest2()
+	[Test]
+	public void ProjectionTest2([DataSources] string context)
+	{
+		using (var db = GetDataContext(context))
 		{
-			using (var db = new TestDataConnection())
-			{
-				db.GetTable<TestParent>()
-					.Where(t => t.ID < 0 && t.ID > 0)
-					.Update(t => new TestParent
-					{
-						ID = t.ID - 1
-					});
-			}
+			var q =
+				from p in db.GetTable<TestParent>()
+				select new TestParent
+				{
+					ParentID = p.ParentID,
+					Value1   = p.Value1,
+				} into p
+				where p.ID > 1
+				select p;
+
+			var count = q.Count();
+
+			Assert.That(count, Is.GreaterThan(0));
 		}
+	}
 
-		[Test]
-		public void ProjectionTest1([DataSources] string context)
+	[Test]
+	public void UnionTest1([DataSources] string context)
+	{
+		using (var db = GetDataContext(context))
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q =
-					from p in db.GetTable<TestParent>()
-					select new TestParent
-					{
-						ID     = p.ID,
-						Value1 = p.Value1,
-					} into p
-					where p.ParentID > 1
-					select p;
+			var q =
+			(
+				from p in db.GetTable<TestParent>()
+				where p.ID > 2
+				select new
+				{
+					p.ID
+				}
+			).Union(
+				from p in db.GetTable<TestParent>()
+				where p.ID > 2
+				select new
+				{
+					p.ID
+				}
+			);
 
-				var count = q.Count();
+			var count = q.Count();
 
-				Assert.That(count, Is.GreaterThan(0));
-			}
+			Assert.That(count, Is.GreaterThan(0));
 		}
+	}
 
-		[Test]
-		public void ProjectionTest2([DataSources] string context)
+	[Test]
+	public void UnionTest2([DataSources] string context)
+	{
+		using (var db = GetDataContext(context))
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q =
-					from p in db.GetTable<TestParent>()
-					select new TestParent
-					{
-						ParentID = p.ParentID,
-						Value1   = p.Value1,
-					} into p
-					where p.ID > 1
-					select p;
+			var q =
+				from p in db.GetTable<TestParent>().Union(db.GetTable<TestParent>())
+				where p.ID > 1
+				select p;
 
-				var count = q.Count();
+			var count = q.Count();
 
-				Assert.That(count, Is.GreaterThan(0));
-			}
+			Assert.That(count, Is.GreaterThan(0));
 		}
+	}
 
-		[Test]
-		public void UnionTest1([DataSources] string context)
+	[Test]
+	public void UnionTest3([DataSources] string context)
+	{
+		using (var db = GetDataContext(context))
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q =
-				(
-					from p in db.GetTable<TestParent>()
-					where p.ID > 2
-					select new
-					{
-						p.ID
-					}
-				).Union(
-					from p in db.GetTable<TestParent>()
-					where p.ID > 2
-					select new
-					{
-						p.ID
-					}
-				);
+			var q =
+				from p in db.GetTable<TestParent>().Union(db.GetTable<TestParent>())
+				select new
+				{
+					p.ID
+				};
 
-				var count = q.Count();
+			var count = q.ToList().Count;
 
-				Assert.That(count, Is.GreaterThan(0));
-			}
-		}
-
-		[Test]
-		public void UnionTest2([DataSources] string context)
-		{
-			using (var db = GetDataContext(context))
-			{
-				var q =
-					from p in db.GetTable<TestParent>().Union(db.GetTable<TestParent>())
-					where p.ID > 1
-					select p;
-
-				var count = q.Count();
-
-				Assert.That(count, Is.GreaterThan(0));
-			}
-		}
-
-		[Test]
-		public void UnionTest3([DataSources] string context)
-		{
-			using (var db = GetDataContext(context))
-			{
-				var q =
-					from p in db.GetTable<TestParent>().Union(db.GetTable<TestParent>())
-					select new
-					{
-						p.ID
-					};
-
-				var count = q.ToList().Count;
-
-				Assert.That(count, Is.GreaterThan(0));
-			}
+			Assert.That(count, Is.GreaterThan(0));
 		}
 	}
 }

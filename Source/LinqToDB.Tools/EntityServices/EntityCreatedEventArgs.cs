@@ -1,21 +1,20 @@
-﻿namespace LinqToDB
+﻿namespace LinqToDB;
+
+public class EntityCreatedEventArgs
 {
-	public class EntityCreatedEventArgs
+	internal EntityCreatedEventArgs(IDataContext context, object entity)
 	{
-		internal EntityCreatedEventArgs(IDataContext context, object entity)
-		{
-			DataContext = context;
-			Entity      = entity;
-		}
-
-		/// <summary>
-		/// Get or sets the entity that created.
-		/// </summary>
-		public object Entity { get; set; }
-
-		/// <summary>
-		/// DataContext that created a new entity.
-		/// </summary>
-		public IDataContext DataContext { get; }
+		DataContext = context;
+		Entity      = entity;
 	}
+
+	/// <summary>
+	/// Get or sets the entity that created.
+	/// </summary>
+	public object Entity { get; set; }
+
+	/// <summary>
+	/// DataContext that created a new entity.
+	/// </summary>
+	public IDataContext DataContext { get; }
 }

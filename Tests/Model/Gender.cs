@@ -1,12 +1,11 @@
 ﻿using LinqToDB.Mapping;
 
-namespace Tests.Model
+namespace Tests.Model;
+
+public enum Gender
 {
-	public enum Gender
-	{
-		[MapValue("M")] Male,
-		[MapValue("F")] Female,
-		[MapValue("U")] Unknown,
-		[MapValue("O")] Other,
-	}
+	[MapValue("M")] Male,
+	[MapValue("F")] Female,
+	[MapValue("U")] Unknown,
+	[MapValue("O")] Other,
 }

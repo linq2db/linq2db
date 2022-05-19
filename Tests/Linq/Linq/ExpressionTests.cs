@@ -6,107 +6,105 @@ using LinqToDB.Data;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
-namespace Tests.Linq
+namespace Tests.Linq;
+
+[TestFixture]
+public class ExpressionTests : TestBase
 {
-
-	[TestFixture]
-	public class ExpressionTests : TestBase
+	public static class Functions
 	{
-		public static class Functions
+		[Sql.Expression("DATE()", ServerSideOnly = true)]
+		public static DateTime DateExpr(DataConnection db, ExpressionTestsFakeType fake)
 		{
-			[Sql.Expression("DATE()", ServerSideOnly = true)]
-			public static DateTime DateExpr(DataConnection db, ExpressionTestsFakeType fake)
-			{
-				throw new NotImplementedException();
-			}
-
-			[Sql.Expression("DATE({1})", ServerSideOnly = true)]
-			public static DateTime DateExprKind(DataConnection db, string kind, ExpressionTestsFakeType fake)
-			{
-				throw new NotImplementedException();
-			}
-
-			[Sql.Function("DATE", ArgIndices = new[] { 1 }, ServerSideOnly = true)]
-			public static DateTime DateFuncKind(DataConnection db, string kind, ExpressionTestsFakeType fake)
-			{
-				throw new NotImplementedException();
-			}
-
-			[Sql.Function("DATE", ServerSideOnly = true)]
-			public static DateTime DateFuncFail(DataConnection db, ExpressionTestsFakeType fake)
-			{
-				throw new NotImplementedException();
-			}
-
-			[Sql.Expression("DATE({2})", ServerSideOnly = true)]
-			public static DateTime DateExprKindFail(DataConnection db, string kind, ExpressionTestsFakeType fake)
-			{
-				throw new NotImplementedException();
-			}
+			throw new NotImplementedException();
 		}
 
-		public class ExpressionTestsFakeType
+		[Sql.Expression("DATE({1})", ServerSideOnly = true)]
+		public static DateTime DateExprKind(DataConnection db, string kind, ExpressionTestsFakeType fake)
 		{
-
+			throw new NotImplementedException();
 		}
 
-		[Table]
-		private class ExpressionTestClass
+		[Sql.Function("DATE", ArgIndices = new[] { 1 }, ServerSideOnly = true)]
+		public static DateTime DateFuncKind(DataConnection db, string kind, ExpressionTestsFakeType fake)
 		{
-			[Column]
-			public int Id { get; set; }
-
-			[Column]
-			public int Value { get; set; }
+			throw new NotImplementedException();
 		}
 
-		[Test]
-		public void PostiveTest([IncludeDataSources(TestProvName.AllSQLite)]
-			string context)
+		[Sql.Function("DATE", ServerSideOnly = true)]
+		public static DateTime DateFuncFail(DataConnection db, ExpressionTestsFakeType fake)
 		{
-			using (var db = (DataConnection)GetDataContext(context))
-			using (db.CreateLocalTable<ExpressionTestClass>())
-			{
-				_ = db.Select(() => new
-				{
-					Date1 = Functions.DateExpr(db, new ExpressionTestsFakeType()),
-					Date2 = Functions.DateExprKind(db, "now", new ExpressionTestsFakeType()),
-					Date3 = Functions.DateFuncKind(db, "now", new ExpressionTestsFakeType()),
-				});
-			}
+			throw new NotImplementedException();
 		}
 
-		[Test]
-		public void FailTest([IncludeDataSources(ProviderName.SQLiteMS)]
-			string context)
+		[Sql.Expression("DATE({2})", ServerSideOnly = true)]
+		public static DateTime DateExprKindFail(DataConnection db, string kind, ExpressionTestsFakeType fake)
 		{
-			using (var db = (DataConnection)GetDataContext(context))
-			using (db.CreateLocalTable<ExpressionTestClass>())
-			{
-				Assert.Throws<InvalidOperationException>(() => _ = db.Select(() => Functions.DateFuncFail(db, new ExpressionTestsFakeType())));
-				Assert.Throws<InvalidOperationException>(() => _ = db.Select(() => Functions.DateExprKindFail(db, "now", new ExpressionTestsFakeType())));
-			}
+			throw new NotImplementedException();
 		}
+	}
 
-		class MyContext : DataConnection
-		{
-			public MyContext(string configurationString) : base(configurationString)
-			{
-			}
-
-			[Sql.Expression("10", ServerSideOnly = true)]
-			public int SomeValue 
-				=> this.SelectQuery(() => SomeValue).AsEnumerable().First();
-		}
-
-		[Test]
-		public void TestAsProperty([DataSources(false)] string context)
-		{
-			using (var db = new MyContext(context))
-			{
-				db.SomeValue.Should().Be(10);
-			}
-		}
+	public class ExpressionTestsFakeType
+	{
 
 	}
+
+	[Table]
+	private class ExpressionTestClass
+	{
+		[Column]
+		public int Id { get; set; }
+
+		[Column]
+		public int Value { get; set; }
+	}
+
+	[Test]
+	public void PostiveTest([IncludeDataSources(TestProvName.AllSQLite)]
+		string context)
+	{
+		using (var db = (DataConnection)GetDataContext(context))
+		using (db.CreateLocalTable<ExpressionTestClass>())
+		{
+			_ = db.Select(() => new
+			{
+				Date1 = Functions.DateExpr(db, new ExpressionTestsFakeType()),
+				Date2 = Functions.DateExprKind(db, "now", new ExpressionTestsFakeType()),
+				Date3 = Functions.DateFuncKind(db, "now", new ExpressionTestsFakeType()),
+			});
+		}
+	}
+
+	[Test]
+	public void FailTest([IncludeDataSources(ProviderName.SQLiteMS)]
+		string context)
+	{
+		using (var db = (DataConnection)GetDataContext(context))
+		using (db.CreateLocalTable<ExpressionTestClass>())
+		{
+			Assert.Throws<InvalidOperationException>(() => _ = db.Select(() => Functions.DateFuncFail(db, new ExpressionTestsFakeType())));
+			Assert.Throws<InvalidOperationException>(() => _ = db.Select(() => Functions.DateExprKindFail(db, "now", new ExpressionTestsFakeType())));
+		}
+	}
+
+	class MyContext : DataConnection
+	{
+		public MyContext(string configurationString) : base(configurationString)
+		{
+		}
+
+		[Sql.Expression("10", ServerSideOnly = true)]
+		public int SomeValue 
+			=> this.SelectQuery(() => SomeValue).AsEnumerable().First();
+	}
+
+	[Test]
+	public void TestAsProperty([DataSources(false)] string context)
+	{
+		using (var db = new MyContext(context))
+		{
+			db.SomeValue.Should().Be(10);
+		}
+	}
+
 }

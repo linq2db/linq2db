@@ -21,44 +21,43 @@
 */
 #endregion
 
-namespace System.Threading
+namespace System.Threading;
+
+using System.Security;
+using System.Runtime.Remoting.Messaging;
+
+internal sealed class AsyncLocal<T>
 {
-	using System.Security;
-	using System.Runtime.Remoting.Messaging;
+	private readonly string _key = Guid.NewGuid().ToString("N").Substring(0, 12);
 
-	internal sealed class AsyncLocal<T>
+	public T? Value
 	{
-		private readonly string _key = Guid.NewGuid().ToString("N").Substring(0, 12);
-
-		public T? Value
+		[SecuritySafeCritical]
+		get
 		{
-			[SecuritySafeCritical]
-			get
-			{
-				var wrapper = (AsyncScopeWrapper?)CallContext.LogicalGetData(_key);
+			var wrapper = (AsyncScopeWrapper?)CallContext.LogicalGetData(_key);
 
-				return wrapper != null ? wrapper.Value : default;
-			}
-			[SecuritySafeCritical]
-			set
-			{
-				var wrapper = value == null ? null : new AsyncScopeWrapper(value);
-
-				CallContext.LogicalSetData(_key, wrapper);
-
-			}
+			return wrapper != null ? wrapper.Value : default;
 		}
-
-		[Serializable]
-		internal sealed class AsyncScopeWrapper : MarshalByRefObject
+		[SecuritySafeCritical]
+		set
 		{
-			[NonSerialized]
-			internal readonly T Value;
+			var wrapper = value == null ? null : new AsyncScopeWrapper(value);
 
-			internal AsyncScopeWrapper(T value)
-			{
-				Value = value;
-			}
+			CallContext.LogicalSetData(_key, wrapper);
+
+		}
+	}
+
+	[Serializable]
+	internal sealed class AsyncScopeWrapper : MarshalByRefObject
+	{
+		[NonSerialized]
+		internal readonly T Value;
+
+		internal AsyncScopeWrapper(T value)
+		{
+			Value = value;
 		}
 	}
 }

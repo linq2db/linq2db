@@ -6,41 +6,40 @@ using NUnit.Framework;
 
 using Tests.FSharp.Models;
 
-namespace Tests.Linq
+namespace Tests.Linq;
+
+[TestFixture]
+public partial class ParameterTests : TestBase
 {
-	[TestFixture]
-	public partial class ParameterTests : TestBase
+	[Test]
+	public void SqlStringParameter([DataSources(false)] string context)
 	{
-		[Test]
-		public void SqlStringParameter([DataSources(false)] string context)
+		using (var db = GetDataConnection(context))
 		{
-			using (var db = GetDataConnection(context))
-			{
-				var p = "John";
-				var person1 = db.GetTable<Person>().Where(t => t.FirstName == p).Single();
+			var p = "John";
+			var person1 = db.GetTable<Person>().Where(t => t.FirstName == p).Single();
 
-				p = "Tester";
-				var person2 = db.GetTable<Person>().Where(t => t.FirstName == p).Single();
+			p = "Tester";
+			var person2 = db.GetTable<Person>().Where(t => t.FirstName == p).Single();
 
-				Assert.That(person1.FirstName, Is.EqualTo("John"));
-				Assert.That(person2.FirstName, Is.EqualTo("Tester"));
-			}
+			Assert.That(person1.FirstName, Is.EqualTo("John"));
+			Assert.That(person2.FirstName, Is.EqualTo("Tester"));
 		}
+	}
 
-		// Excluded providers inline such parameter
-		[Test]
-		public void ExposeSqlStringParameter([DataSources(false, ProviderName.DB2, TestProvName.AllInformix)]
-			string context)
+	// Excluded providers inline such parameter
+	[Test]
+	public void ExposeSqlStringParameter([DataSources(false, ProviderName.DB2, TestProvName.AllInformix)]
+		string context)
+	{
+		using (var db = GetDataConnection(context))
 		{
-			using (var db = GetDataConnection(context))
-			{
-				var p   = "abc";
-				var sql = db.GetTable<Person>().Where(t => t.FirstName == p).ToString();
+			var p   = "abc";
+			var sql = db.GetTable<Person>().Where(t => t.FirstName == p).ToString();
 
-				TestContext.WriteLine(sql);
+			TestContext.WriteLine(sql);
 
-				Assert.That(sql, Contains.Substring("(3)").Or.Contains("(4000)"));
-			}
+			Assert.That(sql, Contains.Substring("(3)").Or.Contains("(4000)"));
 		}
 	}
 }

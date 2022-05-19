@@ -1,82 +1,81 @@
-﻿namespace LinqToDB.DataProvider.SqlServer
+﻿namespace LinqToDB.DataProvider.SqlServer;
+
+using SqlQuery;
+
+partial class SqlServer2012SqlBuilder
 {
-	using SqlQuery;
-
-	partial class SqlServer2012SqlBuilder
+	// TODO: both 2008 and 2012 builders inherit from same base class which leads to duplicate builder logic
+	// I think we should have single builder with versioning support as inheritance definitely suck for this case
+	protected override void BuildMergeInto(SqlMergeStatement merge)
 	{
-		// TODO: both 2008 and 2012 builders inherit from same base class which leads to duplicate builder logic
-		// I think we should have single builder with versioning support as inheritance definitely suck for this case
-		protected override void BuildMergeInto(SqlMergeStatement merge)
+		StringBuilder
+			.Append("MERGE INTO ");
+
+		BuildTableName(merge.Target, true, false);
+
+		StringBuilder.Append(' ');
+
+		if (merge.Hint != null)
 		{
 			StringBuilder
-				.Append("MERGE INTO ");
-
-			BuildTableName(merge.Target, true, false);
-
-			StringBuilder.Append(' ');
-
-			if (merge.Hint != null)
-			{
-				StringBuilder
-					.Append("WITH(")
-					.Append(merge.Hint)
-					.Append(") ");
-			}
-
-			BuildTableName(merge.Target, false, true);
-			StringBuilder.AppendLine();
+				.Append("WITH(")
+				.Append(merge.Hint)
+				.Append(") ");
 		}
 
-		protected override void BuildMergeOperationDeleteBySource(SqlMergeOperationClause operation)
+		BuildTableName(merge.Target, false, true);
+		StringBuilder.AppendLine();
+	}
+
+	protected override void BuildMergeOperationDeleteBySource(SqlMergeOperationClause operation)
+	{
+		StringBuilder
+			.Append("WHEN NOT MATCHED BY SOURCE");
+
+		if (operation.Where != null)
 		{
-			StringBuilder
-				.Append("WHEN NOT MATCHED BY SOURCE");
-
-			if (operation.Where != null)
-			{
-				StringBuilder.Append(" AND ");
-				BuildSearchCondition(Precedence.Unknown, operation.Where, wrapCondition: true);
-			}
-
-			StringBuilder.AppendLine(" THEN DELETE");
+			StringBuilder.Append(" AND ");
+			BuildSearchCondition(Precedence.Unknown, operation.Where, wrapCondition: true);
 		}
 
-		protected override void BuildMergeTerminator(SqlMergeStatement merge)
+		StringBuilder.AppendLine(" THEN DELETE");
+	}
+
+	protected override void BuildMergeTerminator(SqlMergeStatement merge)
+	{
+		// merge command must be terminated with semicolon
+		StringBuilder.AppendLine(";");
+
+		// for identity column insert - disable explicit insert support
+		if (merge.HasIdentityInsert)
+			BuildIdentityInsert(merge.Target, false);
+	}
+
+	protected override void BuildMergeOperationUpdateBySource(SqlMergeOperationClause operation)
+	{
+		StringBuilder
+			.AppendLine()
+			.Append("WHEN NOT MATCHED By Source");
+
+		if (operation.Where != null)
 		{
-			// merge command must be terminated with semicolon
-			StringBuilder.AppendLine(";");
-
-			// for identity column insert - disable explicit insert support
-			if (merge.HasIdentityInsert)
-				BuildIdentityInsert(merge.Target, false);
+			StringBuilder.Append(" AND ");
+			BuildSearchCondition(Precedence.Unknown, operation.Where, wrapCondition: true);
 		}
 
-		protected override void BuildMergeOperationUpdateBySource(SqlMergeOperationClause operation)
-		{
-			StringBuilder
-				.AppendLine()
-				.Append("WHEN NOT MATCHED By Source");
+		StringBuilder.AppendLine(" THEN UPDATE");
 
-			if (operation.Where != null)
-			{
-				StringBuilder.Append(" AND ");
-				BuildSearchCondition(Precedence.Unknown, operation.Where, wrapCondition: true);
-			}
+		var update = new SqlUpdateClause();
+		update.Items.AddRange(operation.Items);
+		BuildUpdateSet(null, update);
+	}
 
-			StringBuilder.AppendLine(" THEN UPDATE");
+	protected override void BuildMergeStatement(SqlMergeStatement merge)
+	{
+		// for identity column insert - enable explicit insert support
+		if (merge.HasIdentityInsert)
+			BuildIdentityInsert(merge.Target, true);
 
-			var update = new SqlUpdateClause();
-			update.Items.AddRange(operation.Items);
-			BuildUpdateSet(null, update);
-		}
-
-		protected override void BuildMergeStatement(SqlMergeStatement merge)
-		{
-			// for identity column insert - enable explicit insert support
-			if (merge.HasIdentityInsert)
-				BuildIdentityInsert(merge.Target, true);
-
-			base.BuildMergeStatement(merge);
-		}
+		base.BuildMergeStatement(merge);
 	}
 }

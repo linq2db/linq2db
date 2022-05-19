@@ -12,71 +12,70 @@ using LinqToDB.Common;
 
 using NUnit.Framework;
 
-namespace Tests.Linq
+namespace Tests.Linq;
+
+using Model;
+
+#if NET472
+[Table(Name = "Person")]
+#else
+[Table("Person")]
+#endif
+public class L2SPersons
 {
-	using Model;
+	private int _personID;
 
 #if NET472
-	[Table(Name = "Person")]
+	[Column(
+		Storage       = "_personID",
+		Name          = "PersonID",
+		DbType        = "integer(32,0)",
+		IsPrimaryKey  = true,
+		IsDbGenerated = true,
+		AutoSync      = AutoSync.Never,
+		CanBeNull     = false)]
 #else
-	[Table("Person")]
+	[Column("PersonID",
+		TypeName      = "integer(32,0)")]
 #endif
-	public class L2SPersons
+	public int PersonID
 	{
-		private int _personID;
-
-#if NET472
-		[Column(
-			Storage       = "_personID",
-			Name          = "PersonID",
-			DbType        = "integer(32,0)",
-			IsPrimaryKey  = true,
-			IsDbGenerated = true,
-			AutoSync      = AutoSync.Never,
-			CanBeNull     = false)]
-#else
-		[Column("PersonID",
-			TypeName      = "integer(32,0)")]
-#endif
-		public int PersonID
-		{
-			get { return _personID;  }
-			set { _personID = value; }
-		}
-		[Column]
-		public string FirstName { get; set; } = null!;
-
-		[Column]
-		public string LastName = null!;
-
-		[Column]
-		public string? MiddleName;
-
-		[Column]
-		public string Gender = null!;
+		get { return _personID;  }
+		set { _personID = value; }
 	}
+	[Column]
+	public string FirstName { get; set; } = null!;
 
-	[TestFixture]
-	public class L2SAttributeTests : TestBase
+	[Column]
+	public string LastName = null!;
+
+	[Column]
+	public string? MiddleName;
+
+	[Column]
+	public string Gender = null!;
+}
+
+[TestFixture]
+public class L2SAttributeTests : TestBase
+{
+	[Test]
+	public void IsDbGeneratedTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
 	{
-		[Test]
-		public void IsDbGeneratedTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		ResetPersonIdentity(context);
+
+		using (var db = GetDataContext(context))
 		{
-			ResetPersonIdentity(context);
+			db.BeginTransaction();
 
-			using (var db = GetDataContext(context))
+			var id = db.InsertWithIdentity(new L2SPersons
 			{
-				db.BeginTransaction();
+				FirstName = "Test",
+				LastName  = "Test",
+				Gender    = "M"
+			});
 
-				var id = db.InsertWithIdentity(new L2SPersons
-				{
-					FirstName = "Test",
-					LastName  = "Test",
-					Gender    = "M"
-				});
-
-				db.GetTable<L2SPersons>().Delete(p => p.PersonID == ConvertTo<int>.From(id));
-			}
+			db.GetTable<L2SPersons>().Delete(p => p.PersonID == ConvertTo<int>.From(id));
 		}
 	}
 }

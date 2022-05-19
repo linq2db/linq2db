@@ -2,50 +2,49 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace LinqToDB.SqlQuery
+namespace LinqToDB.SqlQuery;
+
+using Common;
+
+public class AliasesContext
 {
-	using Common;
+	readonly HashSet<IQueryElement> _aliasesSet = new (Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default);
 
-	public class AliasesContext
+	public void RegisterAliased(IQueryElement element)
 	{
-		readonly HashSet<IQueryElement> _aliasesSet = new (Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default);
+		_aliasesSet.Add(element);
+	}
 
-		public void RegisterAliased(IQueryElement element)
-		{
-			_aliasesSet.Add(element);
-		}
+	public void RegisterAliased(IReadOnlyCollection<IQueryElement> elements)
+	{
+		_aliasesSet.AddRange(elements);
+	}
 
-		public void RegisterAliased(IReadOnlyCollection<IQueryElement> elements)
-		{
-			_aliasesSet.AddRange(elements);
-		}
-
-		public bool IsAliased(IQueryElement element)
-		{
-			return _aliasesSet.Contains(element);
-		}
+	public bool IsAliased(IQueryElement element)
+	{
+		return _aliasesSet.Contains(element);
+	}
 
 #if NET45
-		public ICollection<IQueryElement> GetAliased()
+	public ICollection<IQueryElement> GetAliased()
 #else
-		public IReadOnlyCollection<IQueryElement> GetAliased()
+	public IReadOnlyCollection<IQueryElement> GetAliased()
 #endif
-		{
-			return _aliasesSet;
-		}
+	{
+		return _aliasesSet;
+	}
 
-		public HashSet<string> GetUsedTableAliases()
-		{
-			return new(_aliasesSet.Where(e => e.ElementType == QueryElementType.TableSource)
-					.Select(e => ((SqlTableSource)e).Alias!),
-				StringComparer.OrdinalIgnoreCase);
+	public HashSet<string> GetUsedTableAliases()
+	{
+		return new(_aliasesSet.Where(e => e.ElementType == QueryElementType.TableSource)
+				.Select(e => ((SqlTableSource)e).Alias!),
+			StringComparer.OrdinalIgnoreCase);
 
-		}
+	}
 
-		public SqlParameter[] GetParameters()
-		{
-			return _aliasesSet.Where(e => e.ElementType == QueryElementType.SqlParameter)
-				.Select(e => (SqlParameter)e).ToArray();
-		}
+	public SqlParameter[] GetParameters()
+	{
+		return _aliasesSet.Where(e => e.ElementType == QueryElementType.SqlParameter)
+			.Select(e => (SqlParameter)e).ToArray();
 	}
 }

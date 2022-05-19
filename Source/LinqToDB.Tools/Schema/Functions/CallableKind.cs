@@ -1,25 +1,24 @@
-﻿namespace LinqToDB.Schema
+﻿namespace LinqToDB.Schema;
+
+/// <summary>
+/// Kind of callable object.
+/// </summary>
+public enum CallableKind
 {
 	/// <summary>
-	/// Kind of callable object.
+	/// Scalar function.
 	/// </summary>
-	public enum CallableKind
-	{
-		/// <summary>
-		/// Scalar function.
-		/// </summary>
-		ScalarFunction,
-		/// <summary>
-		/// Aggregate function.
-		/// </summary>
-		AggregateFunction,
-		/// <summary>
-		/// Table function.
-		/// </summary>
-		TableFunction,
-		/// <summary>
-		/// Stored procedure.
-		/// </summary>
-		StoredProcedure
-	}
+	ScalarFunction,
+	/// <summary>
+	/// Aggregate function.
+	/// </summary>
+	AggregateFunction,
+	/// <summary>
+	/// Table function.
+	/// </summary>
+	TableFunction,
+	/// <summary>
+	/// Stored procedure.
+	/// </summary>
+	StoredProcedure
 }

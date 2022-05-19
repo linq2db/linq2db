@@ -2,89 +2,88 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace LinqToDB.SqlQuery
+namespace LinqToDB.SqlQuery;
+
+public class SqlOrderByClause : ClauseBase, IQueryElement, ISqlExpressionWalkable
 {
-	public class SqlOrderByClause : ClauseBase, IQueryElement, ISqlExpressionWalkable
+	internal SqlOrderByClause(SelectQuery selectQuery) : base(selectQuery)
 	{
-		internal SqlOrderByClause(SelectQuery selectQuery) : base(selectQuery)
-		{
-		}
+	}
 
-		internal SqlOrderByClause(IEnumerable<SqlOrderByItem> items) : base(null)
-		{
-			Items.AddRange(items);
-		}
+	internal SqlOrderByClause(IEnumerable<SqlOrderByItem> items) : base(null)
+	{
+		Items.AddRange(items);
+	}
 
-		public SqlOrderByClause Expr(ISqlExpression expr, bool isDescending)
-		{
-			Add(expr, isDescending);
-			return this;
-		}
+	public SqlOrderByClause Expr(ISqlExpression expr, bool isDescending)
+	{
+		Add(expr, isDescending);
+		return this;
+	}
 
-		public SqlOrderByClause Expr     (ISqlExpression expr)               { return Expr(expr,  false);        }
-		public SqlOrderByClause ExprAsc  (ISqlExpression expr)               { return Expr(expr,  false);        }
-		public SqlOrderByClause ExprDesc (ISqlExpression expr)               { return Expr(expr,  true);         }
-		public SqlOrderByClause Field    (SqlField field, bool isDescending) { return Expr(field, isDescending); }
-		public SqlOrderByClause Field    (SqlField field)                    { return Expr(field, false);        }
-		public SqlOrderByClause FieldAsc (SqlField field)                    { return Expr(field, false);        }
-		public SqlOrderByClause FieldDesc(SqlField field)                    { return Expr(field, true);         }
+	public SqlOrderByClause Expr     (ISqlExpression expr)               { return Expr(expr,  false);        }
+	public SqlOrderByClause ExprAsc  (ISqlExpression expr)               { return Expr(expr,  false);        }
+	public SqlOrderByClause ExprDesc (ISqlExpression expr)               { return Expr(expr,  true);         }
+	public SqlOrderByClause Field    (SqlField field, bool isDescending) { return Expr(field, isDescending); }
+	public SqlOrderByClause Field    (SqlField field)                    { return Expr(field, false);        }
+	public SqlOrderByClause FieldAsc (SqlField field)                    { return Expr(field, false);        }
+	public SqlOrderByClause FieldDesc(SqlField field)                    { return Expr(field, true);         }
 
-		void Add(ISqlExpression expr, bool isDescending)
-		{
-			foreach (var item in Items)
-				if (item.Expression.Equals(expr, (x, y) => !(x is SqlColumn col) || !col.Parent!.HasSetOperators || x == y))
-					return;
+	void Add(ISqlExpression expr, bool isDescending)
+	{
+		foreach (var item in Items)
+			if (item.Expression.Equals(expr, (x, y) => !(x is SqlColumn col) || !col.Parent!.HasSetOperators || x == y))
+				return;
 
-			Items.Add(new SqlOrderByItem(expr, isDescending));
-		}
+		Items.Add(new SqlOrderByItem(expr, isDescending));
+	}
 
-		public List<SqlOrderByItem>  Items { get; } = new List<SqlOrderByItem>();
+	public List<SqlOrderByItem>  Items { get; } = new List<SqlOrderByItem>();
 
-		public bool IsEmpty => Items.Count == 0;
+	public bool IsEmpty => Items.Count == 0;
 
 #if OVERRIDETOSTRING
 
-		public override string ToString()
-		{
-			return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
-		}
+	public override string ToString()
+	{
+		return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
+	}
 
 #endif
 
-		#region ISqlExpressionWalkable Members
+	#region ISqlExpressionWalkable Members
 
-		ISqlExpression? ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-		{
-			foreach (var t in Items)
-				t.Walk(options, context, func);
-			return null;
-		}
-
-		#endregion
-
-		#region IQueryElement Members
-
-		public QueryElementType ElementType => QueryElementType.OrderByClause;
-
-		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
-		{
-			if (Items.Count == 0)
-				return sb;
-
-			sb.Append(" \nORDER BY \n");
-
-			foreach (IQueryElement item in Items)
-			{
-				sb.Append('\t');
-				item.ToString(sb, dic);
-				sb.Append(", ");
-			}
-
-			sb.Length -= 2;
-
-			return sb;
-		}
-
-		#endregion
+	ISqlExpression? ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
+	{
+		foreach (var t in Items)
+			t.Walk(options, context, func);
+		return null;
 	}
+
+	#endregion
+
+	#region IQueryElement Members
+
+	public QueryElementType ElementType => QueryElementType.OrderByClause;
+
+	StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
+	{
+		if (Items.Count == 0)
+			return sb;
+
+		sb.Append(" \nORDER BY \n");
+
+		foreach (IQueryElement item in Items)
+		{
+			sb.Append('\t');
+			item.ToString(sb, dic);
+			sb.Append(", ");
+		}
+
+		sb.Length -= 2;
+
+		return sb;
+	}
+
+	#endregion
 }

@@ -1,33 +1,32 @@
 ﻿using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 
-namespace LinqToDB.AspNet.Logging
+namespace LinqToDB.AspNet.Logging;
+
+using Data;
+
+public class LinqToDBLoggerFactoryAdapter
 {
-	using Data;
+	private readonly ILoggerFactory          _loggerFactory;
+	private readonly ILogger<DataConnection> _logger;
 
-	public class LinqToDBLoggerFactoryAdapter
+	public LinqToDBLoggerFactoryAdapter(ILoggerFactory loggerFactory)
 	{
-		private readonly ILoggerFactory          _loggerFactory;
-		private readonly ILogger<DataConnection> _logger;
+		_loggerFactory = loggerFactory;
+		_logger        = _loggerFactory.CreateLogger<DataConnection>();
+	}
 
-		public LinqToDBLoggerFactoryAdapter(ILoggerFactory loggerFactory)
+	public void OnTrace(string? message, string? category, TraceLevel level)
+	{
+		var logLevel = level switch
 		{
-			_loggerFactory = loggerFactory;
-			_logger        = _loggerFactory.CreateLogger<DataConnection>();
-		}
+			TraceLevel.Error   => LogLevel.Error,
+			TraceLevel.Info    => LogLevel.Information,
+			TraceLevel.Verbose => LogLevel.Trace,
+			TraceLevel.Warning => LogLevel.Warning,
+			_                  => LogLevel.None,
+		};
 
-		public void OnTrace(string? message, string? category, TraceLevel level)
-		{
-			var logLevel = level switch
-			{
-				TraceLevel.Error   => LogLevel.Error,
-				TraceLevel.Info    => LogLevel.Information,
-				TraceLevel.Verbose => LogLevel.Trace,
-				TraceLevel.Warning => LogLevel.Warning,
-				_                  => LogLevel.None,
-			};
-
-			_logger.Log(logLevel, 0, message, null, (s, exception) => s ?? string.Empty);
-		}
+		_logger.Log(logLevel, 0, message, null, (s, exception) => s ?? string.Empty);
 	}
 }

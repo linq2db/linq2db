@@ -1,10 +1,9 @@
-﻿namespace LinqToDB.DataProvider.PostgreSQL
+﻿namespace LinqToDB.DataProvider.PostgreSQL;
+
+public enum PostgreSQLIdentifierQuoteMode
 {
-	public enum PostgreSQLIdentifierQuoteMode
-	{
-		None,
-		Quote,
-		Needed,
-		Auto
-	}
+	None,
+	Quote,
+	Needed,
+	Auto
 }

@@ -1,8 +1,7 @@
-﻿namespace LinqToDB.DataProvider.Oracle
+﻿namespace LinqToDB.DataProvider.Oracle;
+
+public enum OracleVersion
 {
-	public enum OracleVersion
-	{
-		v11 = 11,
-		v12 = 12
-	}
+	v11 = 11,
+	v12 = 12
 }

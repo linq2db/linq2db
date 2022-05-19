@@ -2,16 +2,15 @@
 
 using JetBrains.Annotations;
 
-namespace LinqToDB.DataProvider.PostgreSQL
-{
-	using Configuration;
+namespace LinqToDB.DataProvider.PostgreSQL;
 
-	[UsedImplicitly]
-	class PostgreSQLFactory : IDataProviderFactory
+using Configuration;
+
+[UsedImplicitly]
+class PostgreSQLFactory : IDataProviderFactory
+{
+	IDataProvider IDataProviderFactory.GetDataProvider(IEnumerable<NamedValue> attributes)
 	{
-		IDataProvider IDataProviderFactory.GetDataProvider(IEnumerable<NamedValue> attributes)
-		{
-			return PostgreSQLTools.GetDataProvider();
-		}
+		return PostgreSQLTools.GetDataProvider();
 	}
 }

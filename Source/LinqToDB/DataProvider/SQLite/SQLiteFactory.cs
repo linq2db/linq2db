@@ -1,16 +1,15 @@
 ﻿using JetBrains.Annotations;
 using System.Collections.Generic;
 
-namespace LinqToDB.DataProvider.SQLite
-{
-	using Configuration;
+namespace LinqToDB.DataProvider.SQLite;
 
-	[UsedImplicitly]
-	class SQLiteFactory: IDataProviderFactory
+using Configuration;
+
+[UsedImplicitly]
+class SQLiteFactory: IDataProviderFactory
+{
+	IDataProvider IDataProviderFactory.GetDataProvider(IEnumerable<NamedValue> attributes)
 	{
-		IDataProvider IDataProviderFactory.GetDataProvider(IEnumerable<NamedValue> attributes)
-		{
-			return SQLiteTools.GetDataProvider();
-		}
+		return SQLiteTools.GetDataProvider();
 	}
 }

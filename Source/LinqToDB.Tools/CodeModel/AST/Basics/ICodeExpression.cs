@@ -1,13 +1,12 @@
-﻿namespace LinqToDB.CodeModel
+﻿namespace LinqToDB.CodeModel;
+
+/// <summary>
+/// Marker interface for expression nodes.
+/// </summary>
+public interface ICodeExpression : ICodeElement
 {
 	/// <summary>
-	/// Marker interface for expression nodes.
+	/// Expression type.
 	/// </summary>
-	public interface ICodeExpression : ICodeElement
-	{
-		/// <summary>
-		/// Expression type.
-		/// </summary>
-		IType Type { get; }
-	}
+	IType Type { get; }
 }

@@ -1,8 +1,7 @@
 ﻿using System;
 
-namespace LinqToDB.Linq
+namespace LinqToDB.Linq;
+
+interface ITable
 {
-	interface ITable
-	{
-	}
 }

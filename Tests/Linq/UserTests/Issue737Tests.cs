@@ -6,45 +6,44 @@ using NUnit.Framework;
 
 using Tests.Model;
 
-namespace Tests.UserTests
+namespace Tests.UserTests;
+
+[TestFixture]
+public class Issue737Tests : TestBase
 {
-	[TestFixture]
-	public class Issue737Tests : TestBase
+	[Test]
+	public void Test([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 	{
-		[Test]
-		public void Test([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		using (var db = GetDataConnection(context))
 		{
-			using (var db = GetDataConnection(context))
-			{
-				var one = new QueryOne(db).Query().ToArray();
-				var two = new QueryTwo(db).Query().ToArray();
-			}
+			var one = new QueryOne(db).Query().ToArray();
+			var two = new QueryTwo(db).Query().ToArray();
+		}
+	}
+
+	class QueryOne
+	{
+		readonly DataConnection _db;
+
+		public QueryOne(DataConnection db)
+		{
+			_db = db;
 		}
 
-		class QueryOne
+		public IQueryable<Person> Query()
+			=> _db.GetTable<Person>().SelectMany(x => _db.GetTable<Person>().Where(y => false), (x, y) => x);
+	}
+
+	class QueryTwo
+	{
+		readonly DataConnection _db;
+
+		public QueryTwo(DataConnection db)
 		{
-			readonly DataConnection _db;
-
-			public QueryOne(DataConnection db)
-			{
-				_db = db;
-			}
-
-			public IQueryable<Person> Query()
-				=> _db.GetTable<Person>().SelectMany(x => _db.GetTable<Person>().Where(y => false), (x, y) => x);
+			_db = db;
 		}
 
-		class QueryTwo
-		{
-			readonly DataConnection _db;
-
-			public QueryTwo(DataConnection db)
-			{
-				_db = db;
-			}
-
-			public IQueryable<Person> Query()
-				=> _db.GetTable<Person>().SelectMany(x => _db.GetTable<Person>().Where(y => false), (x, y) => x);
-		}
+		public IQueryable<Person> Query()
+			=> _db.GetTable<Person>().SelectMany(x => _db.GetTable<Person>().Where(y => false), (x, y) => x);
 	}
 }

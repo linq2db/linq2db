@@ -6,11 +6,11 @@ using System.Linq;
 using System.Text.Json;
 using NUnit.Framework;
 
-namespace Tests.Tools
+namespace Tests.Tools;
+
+public class TestSettingsTests
 {
-	public class TestSettingsTests
-	{
-		static string _defaultData = @"
+	static string _defaultData = @"
 {
 	""Default"":
 	{
@@ -46,7 +46,7 @@ namespace Tests.Tools
 	}
 }";
 
-		static string _userData = @"
+	static string _userData = @"
 {
 	""Default"":
 	{
@@ -68,83 +68,82 @@ namespace Tests.Tools
 	}
 }";
 
-		public static IEnumerable TestData
+	public static IEnumerable TestData
+	{
+		get
 		{
-			get
-			{
-				yield return new TestCaseData("Default", "Default", _defaultData, null)
-					.SetName("Tests.Tools.Default")
-					.Returns(new[]
-					{
-						new { Key = "Con 1", ConnectionString = "AAA", Provider = "SqlServer" },
-						new { Key = "Con 2", ConnectionString = "BBB", Provider = "SqlServer" },
-					});
+			yield return new TestCaseData("Default", "Default", _defaultData, null)
+				.SetName("Tests.Tools.Default")
+				.Returns(new[]
+				{
+					new { Key = "Con 1", ConnectionString = "AAA", Provider = "SqlServer" },
+					new { Key = "Con 2", ConnectionString = "BBB", Provider = "SqlServer" },
+				});
 
-				yield return new TestCaseData("Core 1", "CORE1", _defaultData, null)
-					.SetName("Tests.Tools.Core1")
-					.Returns(new[]
-					{
-						new { Key = "Con 1", ConnectionString = "AAA", Provider = "SqlServer" },
-						new { Key = "Con 2", ConnectionString = "AAA", Provider = "SqlServer" },
-						new { Key = "Con 3", ConnectionString = "CCC", Provider = "SqlServer" },
-					});
+			yield return new TestCaseData("Core 1", "CORE1", _defaultData, null)
+				.SetName("Tests.Tools.Core1")
+				.Returns(new[]
+				{
+					new { Key = "Con 1", ConnectionString = "AAA", Provider = "SqlServer" },
+					new { Key = "Con 2", ConnectionString = "AAA", Provider = "SqlServer" },
+					new { Key = "Con 3", ConnectionString = "CCC", Provider = "SqlServer" },
+				});
 
-				yield return new TestCaseData("Core 2.1", "CORE21", _defaultData, null)
-					.SetName("Tests.Tools.Core2")
-					.Returns(new[]
-					{
-						new { Key = "Con 1", ConnectionString = "AAA", Provider = "SqlServer" },
-						new { Key = "Con 2", ConnectionString = "AAA", Provider = "SqlServer" },
-						new { Key = "Con 3", ConnectionString = "CCC", Provider = "SqlServer" },
-					});
+			yield return new TestCaseData("Core 2.1", "CORE21", _defaultData, null)
+				.SetName("Tests.Tools.Core2")
+				.Returns(new[]
+				{
+					new { Key = "Con 1", ConnectionString = "AAA", Provider = "SqlServer" },
+					new { Key = "Con 2", ConnectionString = "AAA", Provider = "SqlServer" },
+					new { Key = "Con 3", ConnectionString = "CCC", Provider = "SqlServer" },
+				});
 
-				yield return new TestCaseData("User Default", "Default", _defaultData, _userData)
-					.SetName("Tests.Tools.UserDefault")
-					.Returns(new[]
-					{
-						new { Key = "Con 1", ConnectionString = "DDD", Provider = "SqlServer" },
-						new { Key = "Con 2", ConnectionString = "BBB", Provider = "SqlServer" },
-						new { Key = "Con 4", ConnectionString = "FFF", Provider = "SqlServer" },
-					});
+			yield return new TestCaseData("User Default", "Default", _defaultData, _userData)
+				.SetName("Tests.Tools.UserDefault")
+				.Returns(new[]
+				{
+					new { Key = "Con 1", ConnectionString = "DDD", Provider = "SqlServer" },
+					new { Key = "Con 2", ConnectionString = "BBB", Provider = "SqlServer" },
+					new { Key = "Con 4", ConnectionString = "FFF", Provider = "SqlServer" },
+				});
 
-				yield return new TestCaseData("User Core 1", "CORE1", _defaultData, _userData)
-					.SetName("Tests.Tools.UserCore1")
-					.Returns(new[]
-					{
-						new { Key = "Con 1", ConnectionString = "DDD", Provider = "SqlServer" },
-						new { Key = "Con 2", ConnectionString = "AAA", Provider = "SqlServer" },
-						new { Key = "Con 3", ConnectionString = "CCC", Provider = "SqlServer" },
-						new { Key = "Con 4", ConnectionString = "FFF", Provider = "SqlServer" },
-					});
+			yield return new TestCaseData("User Core 1", "CORE1", _defaultData, _userData)
+				.SetName("Tests.Tools.UserCore1")
+				.Returns(new[]
+				{
+					new { Key = "Con 1", ConnectionString = "DDD", Provider = "SqlServer" },
+					new { Key = "Con 2", ConnectionString = "AAA", Provider = "SqlServer" },
+					new { Key = "Con 3", ConnectionString = "CCC", Provider = "SqlServer" },
+					new { Key = "Con 4", ConnectionString = "FFF", Provider = "SqlServer" },
+				});
 
-				yield return new TestCaseData("User Core 2.1", "CORE21", _defaultData, _userData)
-					.SetName("Tests.Tools.UserCore2")
-					.Returns(new[]
-					{
-						new { Key = "Con 1", ConnectionString = "DDD", Provider = "SqlServer" },
-						new { Key = "Con 2", ConnectionString = "WWW", Provider = "SqlServer" },
-						new { Key = "Con 3", ConnectionString = "CCC", Provider = "SqlServer" },
-						new { Key = "Con 4", ConnectionString = "FFF", Provider = "SqlServer" },
-						new { Key = "Con 5", ConnectionString = "EEE", Provider = "SqlServer" },
-					});
-			}
+			yield return new TestCaseData("User Core 2.1", "CORE21", _defaultData, _userData)
+				.SetName("Tests.Tools.UserCore2")
+				.Returns(new[]
+				{
+					new { Key = "Con 1", ConnectionString = "DDD", Provider = "SqlServer" },
+					new { Key = "Con 2", ConnectionString = "WWW", Provider = "SqlServer" },
+					new { Key = "Con 3", ConnectionString = "CCC", Provider = "SqlServer" },
+					new { Key = "Con 4", ConnectionString = "FFF", Provider = "SqlServer" },
+					new { Key = "Con 5", ConnectionString = "EEE", Provider = "SqlServer" },
+				});
 		}
+	}
 
-		[Test, TestCaseSource(nameof(TestData))]
-		public IEnumerable DeserializeTest(string name, string config, string defaultJson, string userJson)
-		{
-			var settings = SettingsReader.Deserialize(config, defaultJson, userJson);
-			settings.Connections ??= new();
+	[Test, TestCaseSource(nameof(TestData))]
+	public IEnumerable DeserializeTest(string name, string config, string defaultJson, string userJson)
+	{
+		var settings = SettingsReader.Deserialize(config, defaultJson, userJson);
+		settings.Connections ??= new();
 
-			return settings.Connections
-				.Select (c => new { c.Key, c.Value.ConnectionString, c.Value.Provider })
-				.OrderBy(c => c.Key);
-		}
+		return settings.Connections
+			.Select (c => new { c.Key, c.Value.ConnectionString, c.Value.Provider })
+			.OrderBy(c => c.Key);
+	}
 
-		[Test]
-		public void SerializeTest()
-		{
-			SettingsReader.Serialize();
-		}
+	[Test]
+	public void SerializeTest()
+	{
+		SettingsReader.Serialize();
 	}
 }

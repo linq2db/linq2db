@@ -4,33 +4,32 @@ using LinqToDB;
 
 using NUnit.Framework;
 
-namespace Tests.UserTests
+namespace Tests.UserTests;
+
+[TestFixture]
+public class Issue175Tests : TestBase
 {
-	[TestFixture]
-	public class Issue175Tests : TestBase
+	new public class Parent
 	{
-		new public class Parent
-		{
-			public int? ParentID;
-		}
+		public int? ParentID;
+	}
 
-		new public class Child
-		{
-			public int? ParentID;
-			public int? ChildID;
-		}
+	new public class Child
+	{
+		public int? ParentID;
+		public int? ChildID;
+	}
 
-		[Test]
-		public void Test([DataSources] string context)
+	[Test]
+	public void Test([DataSources] string context)
+	{
+		using (var db = GetDataContext(context))
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q = from c in db.GetTable<Child>()
-						join p in db.GetTable<Parent>() on c.ParentID equals p.ParentID
-						select c;
+			var q = from c in db.GetTable<Child>()
+					join p in db.GetTable<Parent>() on c.ParentID equals p.ParentID
+					select c;
 
-				Assert.IsNotEmpty(q);
-			}
+			Assert.IsNotEmpty(q);
 		}
 	}
 }

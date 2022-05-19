@@ -1,8 +1,7 @@
-﻿namespace Tests.Model
+﻿namespace Tests.Model;
+
+public class Doctor
 {
-	public class Doctor
-	{
-		public int    PersonID;
-		public string Taxonomy = null!;
-	}
+	public int    PersonID;
+	public string Taxonomy = null!;
 }
