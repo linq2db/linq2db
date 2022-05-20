@@ -12,6 +12,7 @@
 <#@ import namespace="LinqToDB.CodeModel"         #>
 <#@ import namespace="LinqToDB.Schema"            #>
 <#@ import namespace="LinqToDB.Scaffold"          #>
+<#@ import namespace="LinqToDB.DataModel"         #>
 
 /*
 
@@ -120,13 +121,13 @@ public class Interceptors : ScaffoldInterceptors
 	/// <param name="typeParser">Type parser to create value for <see cref="TypeMapping.CLRType"/> property from <see cref="Type"/> instance or type name string.</param>
 	/// <param name="defaultMapping">Default type mapping for specified <paramref name="databaseType"/>.</param>
 	/// <returns>Type mapping information for specified <paramref name="databaseType"/>.</returns>
-	public override TypeMapping? GetTypeMapping(DatabaseType databaseType, ITypeParser typeParser, TypeMapping? defaultMapping)
+	public override TypeMapping GetTypeMapping(DatabaseType databaseType, ITypeParser typeParser, TypeMapping defaultMapping)
 	{
 		return defaultMapping;
 	}
 	#endregion
 
-	region Data Model/Code Generation
+	#region Data Model/Code Generation
 	/// <summary>
 	/// Using this method user could modify entity code generation options:
 	/// <list type="bullet">
