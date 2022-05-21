@@ -525,7 +525,7 @@ namespace LinqToDB.SqlQuery
 
 			if (condition.IsNot && condition.Predicate is IInvertibleElement invertibleElement && invertibleElement.CanInvert())
 			{
-				return new SqlCondition(false, (ISqlPredicate)invertibleElement.Invert(), condition.IsOr);
+				return new SqlCondition(false, invertibleElement.Invert(), condition.IsOr);
 			}
 
 			return condition;
@@ -595,7 +595,7 @@ namespace LinqToDB.SqlQuery
 						else if (expr.Expr1 is SqlSearchCondition expCond && expCond.Conditions.Count == 1)
 						{
 							if (expCond.Conditions[0].Predicate is IInvertibleElement invertible && invertible.CanInvert())
-								newCond = new SqlCondition(false, (ISqlPredicate)invertible.Invert(), newCond.IsOr);
+								newCond = new SqlCondition(false, invertible.Invert(), newCond.IsOr);
 						}
 					}
 				}
@@ -692,7 +692,7 @@ namespace LinqToDB.SqlQuery
 						var predicate = sc.Conditions[0].Predicate;
 						if (isNot && predicate is IInvertibleElement invertible && invertible.CanInvert())
 						{
-							predicate = (ISqlPredicate)invertible.Invert();
+							predicate = invertible.Invert();
 							isNot = !isNot;
 						}
 

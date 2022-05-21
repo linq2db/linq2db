@@ -1151,7 +1151,7 @@ namespace LinqToDB.SqlProvider
 						{
 							if (c1.Conditions[0].Predicate is SqlPredicate.ExprExpr ee)
 							{
-								return (ISqlPredicate)ee.Invert();
+								return ee.Invert();
 							}
 
 							var sc = new SqlSearchCondition();

@@ -3,6 +3,6 @@
 	public interface IInvertibleElement
 	{
 		bool CanInvert();
-		IQueryElement Invert();
+		ISqlPredicate Invert();
 	}
 }

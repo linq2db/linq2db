@@ -99,7 +99,7 @@ namespace LinqToDB.SqlQuery
 			return Conditions.Count > 0 && Conditions.Count(c => c.IsNot) > Conditions.Count / 2;
 		}
 
-		public IQueryElement Invert()
+		public ISqlPredicate Invert()
 		{
 			if (Conditions.Count == 0)
 			{
@@ -107,12 +107,7 @@ namespace LinqToDB.SqlQuery
 					new SqlPredicate.ExprExpr(new SqlValue(1), SqlPredicate.Operator.Equal, new SqlValue(0), null)));
 			}
 
-			var newConditions = Conditions.Select(c =>
-			{
-				var condition = new SqlCondition(!c.IsNot, c.Predicate, !c.IsOr);
-				return condition;
-			});
-
+			var newConditions = Conditions.Select(c => new SqlCondition(!c.IsNot, c.Predicate, !c.IsOr));
 			return new SqlSearchCondition(newConditions);
 		}
 
