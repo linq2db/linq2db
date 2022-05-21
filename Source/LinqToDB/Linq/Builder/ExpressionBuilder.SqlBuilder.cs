@@ -3048,7 +3048,7 @@ namespace LinqToDB.Linq.Builder
 											getSql(getSqlContext, m.DiscriminatorName),
 											SqlPredicate.Operator.NotEqual,
 											MappingSchema.GetSqlValue(m.Discriminator.MemberType, m.Code, m.Discriminator.GetDbDataType(true)),
-											DataOptions.LinqOptions.CompareNullsAsValues ? true : null)
+											withNull: true)
 									)
 								);
 							}
@@ -3066,7 +3066,7 @@ namespace LinqToDB.Linq.Builder
 												getSql(getSqlContext, m.DiscriminatorName),
 												SqlPredicate.Operator.Equal,
 												MappingSchema.GetSqlValue(m.Discriminator.MemberType, m.Code, m.Discriminator.GetDbDataType(true)),
-												DataOptions.LinqOptions.CompareNullsAsValues ? true : null)
+												withNull: true)
 										)
 									);
 								}
@@ -3088,7 +3088,7 @@ namespace LinqToDB.Linq.Builder
 							discriminatorSql,
 							SqlPredicate.Operator.Equal,
 							sqlValue,
-							DataOptions.LinqOptions.CompareNullsAsValues ? true : null)
+							withNull: true)
 					);
 				}
 				default:
@@ -3102,7 +3102,7 @@ namespace LinqToDB.Linq.Builder
 									getSql(getSqlContext, m.DiscriminatorName),
 									SqlPredicate.Operator.Equal,
 									MappingSchema.GetSqlValue(m.Discriminator.MemberType, m.Code, m.Discriminator.GetDbDataType(true)),
-									DataOptions.LinqOptions.CompareNullsAsValues ? true : null));
+									withNull: true));
 						}
 
 						return cond;
