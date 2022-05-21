@@ -249,10 +249,7 @@ namespace LinqToDB.SqlQuery
 									search.Conditions.Add(new SqlCondition(false, predicate, true));
 
 									search.Conditions.Add(new SqlCondition(false, new IsNull(Expr1, false), false));
-									search.Conditions.Add(new SqlCondition(false, new IsNull(Expr2, true), true));
-
-									search.Conditions.Add(new SqlCondition(false, new IsNull(Expr1, true), false));
-									search.Conditions.Add(new SqlCondition(false, new IsNull(Expr2, false), false));
+									search.Conditions.Add(new SqlCondition(false, new IsNull(Expr2, false), true));
 								}
 								else if (Operator == Operator.NotEqual)
 								{
@@ -273,7 +270,7 @@ namespace LinqToDB.SqlQuery
 								else 
 								{
 									search.Conditions.Add(new SqlCondition(false, predicate, true));
-									search.Conditions.Add(new SqlCondition(false, new IsNull(Expr1, false), false));
+									search.Conditions.Add(new SqlCondition(false, new IsNull(Expr1, false), true));
 									search.Conditions.Add(new SqlCondition(false, new IsNull(Expr2, false), false));
 								}
 							}
