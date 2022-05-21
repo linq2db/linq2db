@@ -1359,14 +1359,8 @@ namespace LinqToDB.SqlProvider
 							if (cond.IsNot)
 								return cond.Predicate;
 
-							if (cond.Predicate is SqlPredicate.ExprExpr ee)
-							{
-								if (ee.Operator == SqlPredicate.Operator.Equal)
-									return new SqlPredicate.ExprExpr(ee.Expr1, SqlPredicate.Operator.NotEqual, ee.Expr2, Configuration.Linq.CompareNullsAsValues ? true : null);
-
-								if (ee.Operator == SqlPredicate.Operator.NotEqual)
-									return new SqlPredicate.ExprExpr(ee.Expr1, SqlPredicate.Operator.Equal, ee.Expr2, Configuration.Linq.CompareNullsAsValues ? true : null);
-							}
+							if (cond.Predicate is IInvertibleElement inv && inv.CanInvert())
+								return inv.Invert();
 						}
 					}
 
