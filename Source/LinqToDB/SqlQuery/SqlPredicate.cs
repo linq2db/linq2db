@@ -290,6 +290,9 @@ namespace LinqToDB.SqlQuery
 					return new ExprExpr(Expr1, Operator, Expr2, null);
 				}
 
+				if (WithNull == null)
+					return this;
+					
 				if (Operator == Operator.Equal || Operator == Operator.NotEqual)
 				{
 					if (Expr1.TryEvaluateExpression(context, out var value1))
