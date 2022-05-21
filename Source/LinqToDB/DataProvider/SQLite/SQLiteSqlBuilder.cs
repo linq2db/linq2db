@@ -9,21 +9,17 @@ namespace LinqToDB.DataProvider.SQLite
 	using Mapping;
 	using LinqToDB.Extensions;
 
-	public class SQLiteSqlBuilder : BasicSqlBuilder
+	public class SQLiteSqlBuilder : BasicSqlBuilder<SQLiteDataProvider>
 	{
-		public SQLiteSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+		public SQLiteSqlBuilder(SQLiteDataProvider provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
-		{
-		}
+		{ }
 
-		SQLiteSqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
-		{
-		}
+		SQLiteSqlBuilder(SQLiteSqlBuilder parentBuilder) : base(parentBuilder)
+		{ }
 
-		protected override ISqlBuilder CreateSqlBuilder()
-		{
-			return new SQLiteSqlBuilder(this);
-		}
+		protected override BasicSqlBuilder<SQLiteDataProvider> CreateSqlBuilder()
+			=> new SQLiteSqlBuilder(this);
 
 		protected override bool SupportsColumnAliasesInSource => false;
 
@@ -47,15 +43,9 @@ namespace LinqToDB.DataProvider.SQLite
 			}
 		}
 
-		protected override string LimitFormat(SelectQuery selectQuery)
-		{
-			return "LIMIT {0}";
-		}
+		protected override string LimitFormat(SelectQuery selectQuery) => "LIMIT {0}";
 
-		protected override string OffsetFormat(SelectQuery selectQuery)
-		{
-			return "OFFSET {0}";
-		}
+		protected override string OffsetFormat(SelectQuery selectQuery) => "OFFSET {0}";
 
 		public override bool IsNestedJoinSupported => false;
 

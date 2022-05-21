@@ -302,14 +302,13 @@ namespace Tests
 		public override TableOptions    SupportedTableOptions => TableOptions.None;
 	}
 
-	internal class TestNoopSqlBuilder : BasicSqlBuilder
+	internal class TestNoopSqlBuilder : BasicSqlBuilder<TestNoopProvider>
 	{
-		public TestNoopSqlBuilder(IDataProvider provider, MappingSchema mappingSchema)
+		public TestNoopSqlBuilder(TestNoopProvider provider, MappingSchema mappingSchema)
 			: base(provider, mappingSchema, TestNoopSqlOptimizer.Instance, new SqlProviderFlags())
-		{
-		}
+		{ }
 
-		protected override ISqlBuilder CreateSqlBuilder() => throw new NotImplementedException();
+		protected override BasicSqlBuilder<TestNoopProvider> CreateSqlBuilder() => throw new NotImplementedException();
 
 		protected override void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)
 		{

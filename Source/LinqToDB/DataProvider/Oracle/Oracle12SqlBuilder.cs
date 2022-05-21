@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LinqToDB.DataProvider.Oracle
+﻿namespace LinqToDB.DataProvider.Oracle
 {
 	using Mapping;
 	using SqlProvider;
@@ -8,19 +6,15 @@ namespace LinqToDB.DataProvider.Oracle
 
 	class Oracle12SqlBuilder : OracleSqlBuilderBase
 	{
-		public Oracle12SqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+		public Oracle12SqlBuilder(OracleDataProvider provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
-		{
-		}
+		{ }
 
-		Oracle12SqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
-		{
-		}
+		Oracle12SqlBuilder(Oracle12SqlBuilder parentBuilder) : base(parentBuilder)
+		{ }
 
-		protected override ISqlBuilder CreateSqlBuilder()
-		{
-			return new Oracle12SqlBuilder(this) { HintBuilder = HintBuilder };
-		}
+		protected override BasicSqlBuilder<OracleDataProvider> CreateSqlBuilder()
+			=> new Oracle12SqlBuilder(this) { HintBuilder = HintBuilder };
 
 		protected override bool CanSkipRootAliases(SqlStatement statement)
 		{
@@ -40,15 +34,9 @@ namespace LinqToDB.DataProvider.Oracle
 			return condition.Conditions.Count != 0;
 		}
 
-		protected override string? LimitFormat(SelectQuery selectQuery)
-		{
-			return "FETCH NEXT {0} ROWS ONLY";
-		}
+		protected override string? LimitFormat(SelectQuery selectQuery) => "FETCH NEXT {0} ROWS ONLY";
 
-		protected override string OffsetFormat(SelectQuery selectQuery)
-		{
-			return "OFFSET {0} ROWS";
-		}
+		protected override string OffsetFormat(SelectQuery selectQuery) => "OFFSET {0} ROWS";
 
 		protected override bool OffsetFirst => true;
 	}

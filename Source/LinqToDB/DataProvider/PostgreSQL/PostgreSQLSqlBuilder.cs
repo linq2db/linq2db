@@ -16,21 +16,17 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	using Extensions;
 	using Mapping;
 
-	public class PostgreSQLSqlBuilder : BasicSqlBuilder
+	public class PostgreSQLSqlBuilder : BasicSqlBuilder<PostgreSQLDataProvider>
 	{
-		public PostgreSQLSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+		public PostgreSQLSqlBuilder(PostgreSQLDataProvider provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
-		{
-		}
+		{ }
 
-		PostgreSQLSqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
-		{
-		}
+		PostgreSQLSqlBuilder(PostgreSQLSqlBuilder parentBuilder) : base(parentBuilder)
+		{ }
 
-		protected override ISqlBuilder CreateSqlBuilder()
-		{
-			return new PostgreSQLSqlBuilder(this);
-		}
+		protected override BasicSqlBuilder<PostgreSQLDataProvider> CreateSqlBuilder()
+			=> new PostgreSQLSqlBuilder(this);
 
 		protected override bool IsRecursiveCteKeywordRequired => true;
 		protected override bool SupportsNullInColumn          => false;
@@ -114,18 +110,16 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				case DataType.Udt            :
 					var udtType = type.Type.SystemType.ToNullableUnderlying();
 
-					var provider = DataProvider as PostgreSQLDataProvider;
-
-					     if (udtType == provider?.Adapter.NpgsqlPointType   ) StringBuilder.Append("point");
-					else if (udtType == provider?.Adapter.NpgsqlLineType    ) StringBuilder.Append("line");
-					else if (udtType == provider?.Adapter.NpgsqlBoxType     ) StringBuilder.Append("box");
-					else if (udtType == provider?.Adapter.NpgsqlLSegType    ) StringBuilder.Append("lseg");
-					else if (udtType == provider?.Adapter.NpgsqlCircleType  ) StringBuilder.Append("circle");
-					else if (udtType == provider?.Adapter.NpgsqlPolygonType ) StringBuilder.Append("polygon");
-					else if (udtType == provider?.Adapter.NpgsqlPathType    ) StringBuilder.Append("path");
-					else if (udtType == provider?.Adapter.NpgsqlDateType    ) StringBuilder.Append("date");
-					else if (udtType == provider?.Adapter.NpgsqlDateTimeType) StringBuilder.Append("timestamp");
-					else if (udtType == typeof(PhysicalAddress) && provider != null && !provider.HasMacAddr8) StringBuilder.Append("macaddr");
+					     if (udtType == DataProvider.Adapter.NpgsqlPointType   ) StringBuilder.Append("point");
+					else if (udtType == DataProvider.Adapter.NpgsqlLineType    ) StringBuilder.Append("line");
+					else if (udtType == DataProvider.Adapter.NpgsqlBoxType     ) StringBuilder.Append("box");
+					else if (udtType == DataProvider.Adapter.NpgsqlLSegType    ) StringBuilder.Append("lseg");
+					else if (udtType == DataProvider.Adapter.NpgsqlCircleType  ) StringBuilder.Append("circle");
+					else if (udtType == DataProvider.Adapter.NpgsqlPolygonType ) StringBuilder.Append("polygon");
+					else if (udtType == DataProvider.Adapter.NpgsqlPathType    ) StringBuilder.Append("path");
+					else if (udtType == DataProvider.Adapter.NpgsqlDateType    ) StringBuilder.Append("date");
+					else if (udtType == DataProvider.Adapter.NpgsqlDateTimeType) StringBuilder.Append("timestamp");
+					else if (udtType == typeof(PhysicalAddress) && !DataProvider.HasMacAddr8) StringBuilder.Append("macaddr");
 					else if (udtType == typeof(IPAddress)) StringBuilder.Append("inet");
 					else base.BuildDataTypeFromDataType(type, forCreateTable);
 
@@ -309,27 +303,23 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		protected override string? GetProviderTypeName(IDataContext dataContext, DbParameter parameter)
 		{
-			if (DataProvider is PostgreSQLDataProvider provider)
+			var param = DataProvider.TryGetProviderParameter(dataContext, parameter);
+			if (param != null)
 			{
-				var param = provider.TryGetProviderParameter(dataContext, parameter);
-				if (param != null)
+				try
 				{
-					try
-					{
-						// fast Enum detection path
-						if (param.DbType == DbType.Object && param.Value?.GetType().IsEnum == true)
-							return "Enum";
+					// fast Enum detection path
+					if (param.DbType == DbType.Object && param.Value?.GetType().IsEnum == true)
+						return "Enum";
 
-						return provider.Adapter.GetDbType(param).ToString();
-					}
-					catch (NotSupportedException)
-					{
-						// Hadling Npgsql mapping exception
-						// Exception is thrown when using PostgreSQL Enums
-					}
+					return DataProvider.Adapter.GetDbType(param).ToString();
+				}
+				catch (NotSupportedException)
+				{
+					// Hadling Npgsql mapping exception
+					// Exception is thrown when using PostgreSQL Enums
 				}
 			}
-
 			return base.GetProviderTypeName(dataContext, parameter);
 		}
 

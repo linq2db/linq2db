@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LinqToDB.DataProvider.SqlServer
+﻿namespace LinqToDB.DataProvider.SqlServer
 {
 	using SqlQuery;
 	using SqlProvider;
@@ -8,19 +6,15 @@ namespace LinqToDB.DataProvider.SqlServer
 
 	class SqlServer2005SqlBuilder : SqlServerSqlBuilder
 	{
-		public SqlServer2005SqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+		public SqlServer2005SqlBuilder(SqlServerDataProvider provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
-		{
-		}
+		{ }
 
-		SqlServer2005SqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
-		{
-		}
+		SqlServer2005SqlBuilder(SqlServer2005SqlBuilder parentBuilder) : base(parentBuilder)
+		{ }
 
-		protected override ISqlBuilder CreateSqlBuilder()
-		{
-			return new SqlServer2005SqlBuilder(this);
-		}
+		protected override BasicSqlBuilder<SqlServerDataProvider> CreateSqlBuilder()
+			=> new SqlServer2005SqlBuilder(this);
 
 		protected override bool IsValuesSyntaxSupported => false;
 

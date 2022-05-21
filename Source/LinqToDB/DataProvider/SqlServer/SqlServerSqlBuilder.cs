@@ -11,16 +11,14 @@ namespace LinqToDB.DataProvider.SqlServer
 	using SqlQuery;
 	using SqlProvider;
 
-	abstract class SqlServerSqlBuilder : BasicSqlBuilder
+	abstract class SqlServerSqlBuilder : BasicSqlBuilder<SqlServerDataProvider>
 	{
-		protected SqlServerSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+		protected SqlServerSqlBuilder(SqlServerDataProvider provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
-		{
-		}
+		{ }
 
-		protected SqlServerSqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
-		{
-		}
+		protected SqlServerSqlBuilder(SqlServerSqlBuilder parentBuilder) : base(parentBuilder)
+		{ }
 
 		protected override string? FirstFormat(SelectQuery selectQuery)
 		{
@@ -346,38 +344,26 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		protected override string? GetTypeName(IDataContext dataContext, DbParameter parameter)
 		{
-			if (DataProvider is SqlServerDataProvider provider)
-			{
-				var param = provider.TryGetProviderParameter(dataContext, parameter);
-				if (param != null)
-					return provider.Adapter.GetTypeName(param);
-			}
-
-			return base.GetTypeName(dataContext, parameter);
+			var param = DataProvider.TryGetProviderParameter(dataContext, parameter);
+			return param != null
+				? DataProvider.Adapter.GetTypeName(param)
+				: base.GetTypeName(dataContext, parameter);
 		}
 
 		protected override string? GetUdtTypeName(IDataContext dataContext, DbParameter parameter)
 		{
-			if (DataProvider is SqlServerDataProvider provider)
-			{
-				var param = provider.TryGetProviderParameter(dataContext, parameter);
-				if (param != null)
-					return provider.Adapter.GetUdtTypeName(param);
-			}
-
-			return base.GetUdtTypeName(dataContext, parameter);
+			var param = DataProvider.TryGetProviderParameter(dataContext, parameter);
+			return param != null
+				? DataProvider.Adapter.GetUdtTypeName(param)
+				: base.GetUdtTypeName(dataContext, parameter);
 		}
 
 		protected override string? GetProviderTypeName(IDataContext dataContext, DbParameter parameter)
 		{
-			if (DataProvider is SqlServerDataProvider provider)
-			{
-				var param = provider.TryGetProviderParameter(dataContext, parameter);
-				if (param != null)
-					return provider.Adapter.GetDbType(param).ToString();
-			}
-
-			return base.GetProviderTypeName(dataContext, parameter);
+			var param = DataProvider.TryGetProviderParameter(dataContext, parameter);
+			return param != null
+				? DataProvider.Adapter.GetDbType(param).ToString()
+				: base.GetProviderTypeName(dataContext, parameter);
 		}
 
 		protected override void BuildTruncateTable(SqlTruncateTableStatement truncateTable)

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Data;
 using System.Linq;
 
 namespace LinqToDB.DataProvider.Oracle
@@ -11,16 +10,14 @@ namespace LinqToDB.DataProvider.Oracle
 	using Mapping;
 	using System.Data.Common;
 
-	abstract partial class OracleSqlBuilderBase : BasicSqlBuilder
+	abstract partial class OracleSqlBuilderBase : BasicSqlBuilder<OracleDataProvider>
 	{
-		public OracleSqlBuilderBase(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+		public OracleSqlBuilderBase(OracleDataProvider provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
-		{
-		}
+		{ }
 
-		protected OracleSqlBuilderBase(BasicSqlBuilder parentBuilder) : base(parentBuilder)
-		{
-		}
+		protected OracleSqlBuilderBase(OracleSqlBuilderBase parentBuilder) : base(parentBuilder)
+		{ }
 
 		protected override void BuildSelectClause(SelectQuery selectQuery)
 		{
@@ -548,14 +545,10 @@ END;",
 
 		protected override string? GetProviderTypeName(IDataContext dataContext, DbParameter parameter)
 		{
-			if (DataProvider is OracleDataProvider provider)
-			{
-				var param = provider.TryGetProviderParameter(dataContext, parameter);
-				if (param != null)
-					return provider.Adapter.GetDbType(param).ToString();
-			}
-
-			return base.GetProviderTypeName(dataContext, parameter);
+			var param = DataProvider.TryGetProviderParameter(dataContext, parameter);
+			return param != null
+				? DataProvider.Adapter.GetDbType(param).ToString()
+				: base.GetProviderTypeName(dataContext, parameter);
 		}
 
 		protected override void BuildCreateTableCommand(SqlTable table)

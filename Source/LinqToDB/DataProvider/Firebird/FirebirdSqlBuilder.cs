@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Data;
 using System.Linq;
 using System.Text;
 
@@ -16,21 +15,17 @@ namespace LinqToDB.DataProvider.Firebird
 	using SqlProvider;
 	using System.Data.Common;
 
-	public partial class FirebirdSqlBuilder : BasicSqlBuilder
+	public partial class FirebirdSqlBuilder : BasicSqlBuilder<FirebirdDataProvider>
 	{
-		public FirebirdSqlBuilder(IDataProvider provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+		public FirebirdSqlBuilder(FirebirdDataProvider provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
-		{
-		}
+		{ }
 
-		FirebirdSqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
-		{
-		}
+		FirebirdSqlBuilder(FirebirdSqlBuilder parentBuilder) : base(parentBuilder)
+		{ }
 
-		protected override ISqlBuilder CreateSqlBuilder()
-		{
-			return new FirebirdSqlBuilder(this);
-		}
+		protected override BasicSqlBuilder<FirebirdDataProvider> CreateSqlBuilder()
+			=> new FirebirdSqlBuilder(this);
 
 		protected override void BuildSelectClause(SelectQuery selectQuery)
 		{
@@ -317,14 +312,10 @@ namespace LinqToDB.DataProvider.Firebird
 
 		protected override string? GetProviderTypeName(IDataContext dataContext, DbParameter parameter)
 		{
-			if (DataProvider is FirebirdDataProvider provider)
-			{
-				var param = provider.TryGetProviderParameter(dataContext, parameter);
-				if (param != null)
-					return provider.Adapter.GetDbType(param).ToString();
-			}
-
-			return base.GetProviderTypeName(dataContext, parameter);
+			var param = DataProvider.TryGetProviderParameter(dataContext, parameter);
+			return param != null
+				? DataProvider.Adapter.GetDbType(param).ToString()
+				: base.GetProviderTypeName(dataContext, parameter);
 		}
 
 		protected override void BuildDeleteQuery(SqlDeleteStatement deleteStatement)

@@ -9,16 +9,14 @@ namespace LinqToDB.DataProvider.Access
 	using SqlProvider;
 	using SqlQuery;
 
-	abstract class AccessSqlBuilderBase : BasicSqlBuilder
+	abstract class AccessSqlBuilderBase<P> : BasicSqlBuilder<P> where P : IDataProvider
 	{
-		protected AccessSqlBuilderBase(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+		protected AccessSqlBuilderBase(P provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
-		{
-		}
+		{ }
 
-		protected AccessSqlBuilderBase(BasicSqlBuilder parentBuilder) : base(parentBuilder)
-		{
-		}
+		protected AccessSqlBuilderBase(BasicSqlBuilder<P> parentBuilder) : base(parentBuilder)
+		{ }
 
 		public override int CommandCount(SqlStatement statement)
 		{

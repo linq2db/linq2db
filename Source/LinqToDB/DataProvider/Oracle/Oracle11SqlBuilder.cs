@@ -1,31 +1,20 @@
-﻿using System;
-using System.Data;
-using System.Linq;
-
-namespace LinqToDB.DataProvider.Oracle
+﻿namespace LinqToDB.DataProvider.Oracle
 {
-	using Common;
 	using SqlQuery;
 	using SqlProvider;
-	using System.Text;
 	using Mapping;
-	using System.Data.Common;
 
 	partial class Oracle11SqlBuilder : OracleSqlBuilderBase
 	{
-		public Oracle11SqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+		public Oracle11SqlBuilder(OracleDataProvider provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
-		{
-		}
+		{ }
 
-		protected Oracle11SqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
-		{
-		}
+		protected Oracle11SqlBuilder(Oracle11SqlBuilder parentBuilder) : base(parentBuilder)
+		{ }
 
-		protected override ISqlBuilder CreateSqlBuilder()
-		{
-			return new Oracle11SqlBuilder(this) { HintBuilder = HintBuilder };
-		}
+		protected override BasicSqlBuilder<OracleDataProvider> CreateSqlBuilder()
+			=> new Oracle11SqlBuilder(this) { HintBuilder = HintBuilder };
 
 		protected override string GetPhysicalTableName(ISqlTableSource table, string? alias, bool ignoreTableExpression = false, string? defaultDatabaseName = null)
 		{

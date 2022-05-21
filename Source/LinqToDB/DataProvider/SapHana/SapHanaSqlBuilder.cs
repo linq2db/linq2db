@@ -8,26 +8,20 @@ namespace LinqToDB.DataProvider.SapHana
 	using SqlProvider;
 	using Mapping;
 
-	partial class SapHanaSqlBuilder : BasicSqlBuilder
+	partial class SapHanaSqlBuilder : BasicSqlBuilder<IDataProvider>
 	{
-		public SapHanaSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+		public SapHanaSqlBuilder(IDataProvider provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
-		{
-		}
+		{ }
 
-		protected SapHanaSqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
-		{
-		}
+		protected SapHanaSqlBuilder(SapHanaSqlBuilder parentBuilder) : base(parentBuilder)
+		{ }
 
-		protected override ISqlBuilder CreateSqlBuilder()
-		{
-			return new SapHanaSqlBuilder(this);
-		}
+		protected override BasicSqlBuilder<IDataProvider> CreateSqlBuilder()
+			=> new SapHanaSqlBuilder(this);
 
 		public override int CommandCount(SqlStatement statement)
-		{
-			return statement.NeedsIdentity() ? 2 : 1;
-		}
+			=> statement.NeedsIdentity() ? 2 : 1;
 
 		protected override void BuildCommand(SqlStatement statement, int commandNumber)
 		{
@@ -44,10 +38,7 @@ namespace LinqToDB.DataProvider.SapHana
 			}
 		}
 
-		protected override string LimitFormat(SelectQuery selectQuery)
-		{
-			return "LIMIT {0}";
-		}
+		protected override string LimitFormat(SelectQuery selectQuery) => "LIMIT {0}";
 
 		protected override string OffsetFormat(SelectQuery selectQuery)
 		{

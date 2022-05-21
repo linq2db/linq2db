@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Text;
 using System.Data.Common;
 
@@ -10,21 +9,17 @@ namespace LinqToDB.DataProvider.Sybase
 	using SqlProvider;
 	using Mapping;
 
-	partial class SybaseSqlBuilder : BasicSqlBuilder
+	partial class SybaseSqlBuilder : BasicSqlBuilder<SybaseDataProvider>
 	{
-		public SybaseSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+		public SybaseSqlBuilder(SybaseDataProvider provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
-		{
-		}
+		{ }
 
-		SybaseSqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
-		{
-		}
+		SybaseSqlBuilder(SybaseSqlBuilder parentBuilder) : base(parentBuilder)
+		{ }
 
-		protected override ISqlBuilder CreateSqlBuilder()
-		{
-			return new SybaseSqlBuilder(this) { _skipAliases = _isSelect };
-		}
+		protected override BasicSqlBuilder<SybaseDataProvider> CreateSqlBuilder()
+			=> new SybaseSqlBuilder(this) { _skipAliases = _isSelect };
 
 		protected override void BuildGetIdentity(SqlInsertClause insertClause)
 		{
@@ -35,10 +30,7 @@ namespace LinqToDB.DataProvider.Sybase
 
 		protected override bool SupportsColumnAliasesInSource => true;
 
-		protected override string FirstFormat(SelectQuery selectQuery)
-		{
-			return "TOP {0}";
-		}
+		protected override string FirstFormat(SelectQuery selectQuery) => "TOP {0}";
 
 		bool _isSelect;
 		bool _skipAliases;
@@ -197,14 +189,10 @@ namespace LinqToDB.DataProvider.Sybase
 
 		protected override string? GetProviderTypeName(IDataContext dataContext, DbParameter parameter)
 		{
-			if (DataProvider is SybaseDataProvider provider)
-			{
-				var param = provider.TryGetProviderParameter(dataContext, parameter);
-				if (param != null)
-					return provider.Adapter.GetDbType(param).ToString();
-			}
-
-			return base.GetProviderTypeName(dataContext, parameter);
+			var param = DataProvider.TryGetProviderParameter(dataContext, parameter);
+			return param != null
+				? DataProvider.Adapter.GetDbType(param).ToString()
+				: base.GetProviderTypeName(dataContext, parameter);
 		}
 
 		protected override void BuildTruncateTable(SqlTruncateTableStatement truncateTable)

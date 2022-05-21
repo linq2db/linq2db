@@ -1,5 +1,4 @@
-﻿using System;
-using System.Data.Common;
+﻿using System.Data.Common;
 using System.Text;
 
 namespace LinqToDB.DataProvider.SqlCe
@@ -8,21 +7,17 @@ namespace LinqToDB.DataProvider.SqlCe
 	using SqlProvider;
 	using Mapping;
 
-	class SqlCeSqlBuilder : BasicSqlBuilder
+	class SqlCeSqlBuilder : BasicSqlBuilder<SqlCeDataProvider>
 	{
-		public SqlCeSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+		public SqlCeSqlBuilder(SqlCeDataProvider provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
-		{
-		}
+		{ }
 
-		SqlCeSqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
-		{
-		}
+		SqlCeSqlBuilder(SqlCeSqlBuilder parentBuilder) : base(parentBuilder)
+		{ }
 
-		protected override ISqlBuilder CreateSqlBuilder()
-		{
-			return new SqlCeSqlBuilder(this);
-		}
+		protected override BasicSqlBuilder<SqlCeDataProvider> CreateSqlBuilder()
+			=> new SqlCeSqlBuilder(this);
 
 		protected override string? FirstFormat(SelectQuery selectQuery)
 		{
@@ -146,14 +141,10 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		protected override string? GetProviderTypeName(IDataContext dataContext, DbParameter parameter)
 		{
-			if (DataProvider is SqlCeDataProvider provider)
-			{
-				var param = provider.TryGetProviderParameter(dataContext, parameter);
-				if (param != null)
-					return provider.Adapter.GetDbType(param).ToString();
-			}
-
-			return base.GetProviderTypeName(dataContext, parameter);
+			var param = DataProvider.TryGetProviderParameter(dataContext, parameter);
+			return param != null
+				? DataProvider.Adapter.GetDbType(param).ToString()
+				: base.GetProviderTypeName(dataContext, parameter);
 		}
 
 		protected override void BuildMergeStatement(SqlMergeStatement merge)

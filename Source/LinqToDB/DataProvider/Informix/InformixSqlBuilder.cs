@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 using System.Text;
 
@@ -12,21 +11,17 @@ namespace LinqToDB.DataProvider.Informix
 	using Mapping;
 	using System.Data.Common;
 
-	partial class InformixSqlBuilder : BasicSqlBuilder
+	partial class InformixSqlBuilder : BasicSqlBuilder<InformixDataProvider>
 	{
-		public InformixSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+		public InformixSqlBuilder(InformixDataProvider provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
-		{
-		}
+		{ }
 
-		InformixSqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
-		{
-		}
+		InformixSqlBuilder(InformixSqlBuilder parentBuilder) : base(parentBuilder)
+		{ }
 
-		protected override ISqlBuilder CreateSqlBuilder()
-		{
-			return new InformixSqlBuilder(this);
-		}
+		protected override BasicSqlBuilder<InformixDataProvider> CreateSqlBuilder()
+			=> new InformixSqlBuilder(this);
 
 		protected override bool SupportsNullInColumn => false;
 
@@ -268,16 +263,12 @@ namespace LinqToDB.DataProvider.Informix
 
 		protected override string? GetProviderTypeName(IDataContext dataContext, DbParameter parameter)
 		{
-			if (DataProvider is InformixDataProvider provider)
+			var param = DataProvider.TryGetProviderParameter(dataContext, parameter);
+			if (param != null)
 			{
-				var param = provider.TryGetProviderParameter(dataContext, parameter);
-				if (param != null)
-					if (provider.Adapter.GetIfxType != null)
-						return provider.Adapter.GetIfxType(param).ToString();
-					else
-						return provider.Adapter.GetDB2Type!(param).ToString();
+				return DataProvider.Adapter.GetIfxType?.Invoke(param).ToString()
+					?? DataProvider.Adapter.GetDB2Type!(param).ToString();
 			}
-
 			return base.GetProviderTypeName(dataContext, parameter);
 		}
 

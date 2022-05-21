@@ -13,16 +13,14 @@ namespace LinqToDB.DataProvider.DB2
 	using SqlQuery;
 	using SqlProvider;
 
-	abstract partial class DB2SqlBuilderBase : BasicSqlBuilder
+	abstract partial class DB2SqlBuilderBase : BasicSqlBuilder<DB2DataProvider>
 	{
-		protected DB2SqlBuilderBase(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
-		{
-		}
+		protected DB2SqlBuilderBase(DB2DataProvider provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider,mappingSchema, sqlOptimizer, sqlProviderFlags)
+		{ }
 
-		protected DB2SqlBuilderBase(BasicSqlBuilder parentBuilder) : base(parentBuilder)
-		{
-		}
+		protected DB2SqlBuilderBase(DB2SqlBuilderBase parentBuilder) : base(parentBuilder)
+		{ }
 
 		SqlField? _identityField;
 
@@ -263,14 +261,10 @@ namespace LinqToDB.DataProvider.DB2
 				return string.Format("({0}{1}{2})", d.Precision.ToString(CultureInfo.InvariantCulture), InlineComma, d.Scale.ToString(CultureInfo.InvariantCulture));
 			}
 
-			if (DataProvider is DB2DataProvider provider)
-			{
-				var param = provider.TryGetProviderParameter(dataContext, parameter);
-				if (param != null)
-					return provider.Adapter.GetDbType(param).ToString();
-			}
-
-			return base.GetProviderTypeName(dataContext, parameter);
+			var param = DataProvider.TryGetProviderParameter(dataContext, parameter);
+			return param != null
+				? DataProvider.Adapter.GetDbType(param).ToString()
+				: base.GetProviderTypeName(dataContext, parameter);
 		}
 
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
