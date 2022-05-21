@@ -70,11 +70,11 @@ Legend:
 |SQLite [3.37.0](https://www.sqlite.org/draft/releaselog/current.html)<br>[System.Data.SQLite](https://www.nuget.org/packages/System.Data.SQLite.Core/) 1.0.115.5<br>with [MiniProfiler](https://www.nuget.org/packages/MiniProfiler.Shared/) 4.2.22<br>without mappings to underlying provider|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
 |SQLite [3.37.0](https://www.sqlite.org/draft/releaselog/current.html)<br>[System.Data.SQLite](https://www.nuget.org/packages/System.Data.SQLite.Core/) 1.0.115.5<br>with [MiniProfiler](https://www.nuget.org/packages/MiniProfiler.Shared/) 4.2.22<br>with mappings to underlying provider|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
 |MySQL 5.6<br>[MySql.Data](https://www.nuget.org/packages/MySql.Data/) 8.0.29|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
-|MySQL 5.6<br>[MySqlConnector](https://www.nuget.org/packages/MySqlConnector/) 0.69.10/1.3.14/2.1.8|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
+|MySQL 5.6<br>[MySqlConnector](https://www.nuget.org/packages/MySqlConnector/) 0.69.10/1.3.14/2.1.9|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |MySQL (latest)<br>[MySql.Data](https://www.nuget.org/packages/MySql.Data/) 8.0.29|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
-|MySQL (latest)<br>[MySqlConnector](https://www.nuget.org/packages/MySqlConnector/) 0.69.10/1.3.14/2.1.8|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
+|MySQL (latest)<br>[MySqlConnector](https://www.nuget.org/packages/MySqlConnector/) 0.69.10/1.3.14/2.1.9|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |MariaDB (latest)<br>[MySql.Data](https://www.nuget.org/packages/MySql.Data/) 8.0.29|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
-|MariaDB (latest)<br>[MySqlConnector](https://www.nuget.org/packages/MySqlConnector/) 0.69.10/1.3.14/2.1.8|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
+|MariaDB (latest)<br>[MySqlConnector](https://www.nuget.org/packages/MySqlConnector/) 0.69.10/1.3.14/2.1.9|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |PostgreSQL 10<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 6.0.4 |:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |PostgreSQL 11<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 6.0.4 |:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |PostgreSQL 12<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 6.0.4 |:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
