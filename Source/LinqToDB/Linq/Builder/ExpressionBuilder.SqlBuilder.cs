@@ -1624,8 +1624,7 @@ namespace LinqToDB.Linq.Builder
 				};
 			}
 
-			ISqlPredicate? predicate = null;
-			if (op == SqlPredicate.Operator.Equal || op == SqlPredicate.Operator.NotEqual)
+			if (op is SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual)
 			{
 				bool?           value      = null;
 				ISqlExpression? expression = null;
@@ -1660,13 +1659,18 @@ namespace LinqToDB.Linq.Builder
 										(isNullable || NeedNullCheck(expression))
 						? withNull
 						: (bool?)null;
-					predicate = new SqlPredicate.IsTrue(expression, trueValue, falseValue, withNullValue, isNot);
+					return new SqlPredicate.IsTrue(expression, trueValue, falseValue, withNullValue, isNot);
 				}
+
+				// Mandatory shortcut when CompareNullsAsValues == false 
+				// as ExprExpr will not sniff the nullability of its values
+				if (right.IsNullValue())
+					return new SqlPredicate.IsNull(l, op == SqlPredicate.Operator.NotEqual);
+				if (left.IsNullValue())
+					return new SqlPredicate.IsNull(r, op == SqlPredicate.Operator.NotEqual);
 			}
 
-			if (predicate == null)
-				predicate = new SqlPredicate.ExprExpr(l, op, r, Configuration.Linq.CompareNullsAsValues ? true : null);
-			return predicate;
+			return new SqlPredicate.ExprExpr(l, op, r, Configuration.Linq.CompareNullsAsValues ? true : null);
 		}
 
 		private static bool IsBooleanConstant(Expression expr, out bool? value)
