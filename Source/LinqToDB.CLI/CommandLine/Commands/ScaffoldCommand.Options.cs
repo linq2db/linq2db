@@ -311,6 +311,20 @@ Customization using compiled assembly has several requirements:
 					!_t4ModeOptions.CodeGeneration.ClassPerFile);
 
 			/// <summary>
+			/// Single-file generation mode option.
+			/// </summary>
+			public static readonly CliOption AddGeneratedFileSuffix = new BooleanCliOption(
+					"generated-suffix",
+					null,
+					false,
+					"adds \".generated.<extension>\" suffix to generated files",
+					null,
+					null,
+					null,
+					_defaultOptions.CodeGeneration.AddGeneratedFileSuffix,
+					_t4ModeOptions.CodeGeneration.AddGeneratedFileSuffix);
+
+			/// <summary>
 			/// List of external conflicting identifiers option.
 			/// </summary>
 			public static readonly CliOption ConflictingIdentifiers = new StringCliOption(
