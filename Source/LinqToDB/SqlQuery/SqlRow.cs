@@ -6,7 +6,7 @@ using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlRow : ISqlExpression
+	public sealed class SqlRow : ISqlExpression
 	{
 		public SqlRow(ISqlExpression[] values)
 		{

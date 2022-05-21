@@ -1275,6 +1275,17 @@ namespace LinqToDB.SqlProvider
 					break;
 				}
 
+				case QueryElementType.IsNullPredicate:
+				{
+					var isNull = (SqlPredicate.IsNull) predicate;
+					if (isNull.Expr1 is SqlRow row && 
+						!SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.IsNull))
+					{
+						return RowIsNullFallback(row, isNull.IsNot);
+					}
+					break;
+				}
+
 				case QueryElementType.BetweenPredicate:
 				{
 					var between = (SqlPredicate.Between)predicate;
