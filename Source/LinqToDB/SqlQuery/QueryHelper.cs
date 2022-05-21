@@ -911,11 +911,8 @@ namespace LinqToDB.SqlQuery
 
 		public static SqlCondition GenerateEquality(ISqlExpression field1, ISqlExpression field2)
 		{
-			var compare = new SqlCondition(false,
-				new SqlPredicate.ExprExpr(field1, SqlPredicate.Operator.Equal, field2,
-					Configuration.Linq.CompareNullsAsValues ? true : null));
-
-			return compare;
+			return new SqlCondition(false,
+				new SqlPredicate.ExprExpr(field1, SqlPredicate.Operator.Equal, field2, withNull: true));
 		}
 
 		/// <summary>

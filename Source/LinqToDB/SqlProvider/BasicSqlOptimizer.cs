@@ -2406,7 +2406,7 @@ namespace LinqToDB.SqlProvider
 									//TODO: review
 									var cond = sqlValue.Value == null ?
 										new SqlCondition(false, new SqlPredicate.IsNull  (field, false)) :
-										new SqlCondition(false, new SqlPredicate.ExprExpr(field, SqlPredicate.Operator.Equal, sqlValue, null));
+										new SqlCondition(false, new SqlPredicate.ExprExpr(field, SqlPredicate.Operator.Equal, sqlValue, withNull: true));
 
 									itemCond.Conditions.Add(cond);
 								}
@@ -2452,7 +2452,7 @@ namespace LinqToDB.SqlProvider
 								var value = expr.GetSqlValue(item!, i);
 								var cond  = value == null ?
 									new SqlCondition(false, new SqlPredicate.IsNull  (sql, false)) :
-									new SqlCondition(false, new SqlPredicate.ExprExpr(sql, SqlPredicate.Operator.Equal, value, null));
+									new SqlCondition(false, new SqlPredicate.ExprExpr(sql, SqlPredicate.Operator.Equal, value, withNull: true));
 
 								itemCond.Conditions.Add(cond);
 							}
@@ -2616,7 +2616,7 @@ namespace LinqToDB.SqlProvider
 					{
 						sc2.Conditions.Add(new SqlCondition(
 							false,
-							new SqlPredicate.ExprExpr(copyKeys[i], SqlPredicate.Operator.Equal, tableKeys[i], Configuration.Linq.CompareNullsAsValues ? true : null)));
+							new SqlPredicate.ExprExpr(copyKeys[i], SqlPredicate.Operator.Equal, tableKeys[i], withNull: true)));
 					}
 
 					deleteStatement.SelectQuery.Where.SearchCondition.Conditions.Clear();

@@ -2045,7 +2045,7 @@ namespace LinqToDB.Linq.Builder
 				var predicate = new SqlPredicate.ExprExpr(
 					lcol.Sql,
 					nodeType == ExpressionType.Equal ? SqlPredicate.Operator.Equal : SqlPredicate.Operator.NotEqual,
-					rex, Configuration.Linq.CompareNullsAsValues ? true : null);
+					rex, withNull: true);
 
 				condition.Conditions.Add(new SqlCondition(false, predicate));
 			}
@@ -2090,7 +2090,7 @@ namespace LinqToDB.Linq.Builder
 					new SqlPredicate.ExprExpr(
 						lex,
 						nodeType == ExpressionType.Equal ? SqlPredicate.Operator.Equal : SqlPredicate.Operator.NotEqual,
-						rex, Configuration.Linq.CompareNullsAsValues ? true : null);
+						rex, withNull: true);
 
 				condition.Conditions.Add(new SqlCondition(false, predicate));
 			}
@@ -2431,7 +2431,7 @@ namespace LinqToDB.Linq.Builder
 											new SqlPredicate.ExprExpr(
 												getSql(getSqlContext, m.DiscriminatorName),
 												SqlPredicate.Operator.NotEqual,
-												MappingSchema.GetSqlValue(m.Discriminator.MemberType, m.Code), Configuration.Linq.CompareNullsAsValues ? true : null)));
+												MappingSchema.GetSqlValue(m.Discriminator.MemberType, m.Code), withNull: true)));
 							}
 						}
 						else
@@ -2446,7 +2446,7 @@ namespace LinqToDB.Linq.Builder
 												new SqlPredicate.ExprExpr(
 													getSql(getSqlContext, m.DiscriminatorName),
 													SqlPredicate.Operator.Equal,
-													MappingSchema.GetSqlValue(m.Discriminator.MemberType, m.Code), Configuration.Linq.CompareNullsAsValues ? true : null),
+													MappingSchema.GetSqlValue(m.Discriminator.MemberType, m.Code), withNull: true),
 											true));
 								}
 							}
@@ -2459,7 +2459,7 @@ namespace LinqToDB.Linq.Builder
 					return new SqlPredicate.ExprExpr(
 							getSql(getSqlContext, mapping[0].DiscriminatorName),
 							SqlPredicate.Operator.Equal,
-							MappingSchema.GetSqlValue(mapping[0].Discriminator.MemberType, mapping[0].Code), Configuration.Linq.CompareNullsAsValues ? true : null);
+							MappingSchema.GetSqlValue(mapping[0].Discriminator.MemberType, mapping[0].Code), withNull: true);
 
 				default:
 					{
@@ -2473,7 +2473,7 @@ namespace LinqToDB.Linq.Builder
 										new SqlPredicate.ExprExpr(
 											getSql(getSqlContext, m.DiscriminatorName),
 											SqlPredicate.Operator.Equal,
-											MappingSchema.GetSqlValue(m.Discriminator.MemberType, m.Code), Configuration.Linq.CompareNullsAsValues ? true : null),
+											MappingSchema.GetSqlValue(m.Discriminator.MemberType, m.Code), withNull: true),
 									true));
 						}
 

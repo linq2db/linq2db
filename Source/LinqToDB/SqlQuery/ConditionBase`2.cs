@@ -38,14 +38,16 @@
 			{
 				internal Op_(Expr_ expr, SqlPredicate.Operator op)
 				{
-					_expr = expr;
-					_op   = op;
+					_expr     = expr;
+					_op       = op;
+					_withNull = op == SqlPredicate.Operator.Equal ? true : null;
 				}
 
-				readonly Expr_              _expr;
+				readonly Expr_                 _expr;
 				readonly SqlPredicate.Operator _op;
+				readonly bool?                 _withNull;
 
-				public T2 Expr    (ISqlExpression expr)       { return _expr.Add(new SqlPredicate.ExprExpr(_expr._expr, _op, expr, null)); }
+				public T2 Expr    (ISqlExpression expr)       { return _expr.Add(new SqlPredicate.ExprExpr(_expr._expr, _op, expr, _withNull)); }
 				public T2 Field   (SqlField      field)       { return Expr(field);               }
 				public T2 SubQuery(SelectQuery   selectQuery) { return Expr(selectQuery);         }
 				public T2 Value   (object        value)       { return Expr(new SqlValue(value)); }
