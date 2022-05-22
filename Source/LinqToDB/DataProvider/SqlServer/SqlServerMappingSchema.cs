@@ -249,9 +249,19 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		static void ConvertTimeSpanToSql(StringBuilder stringBuilder, SqlDataType sqlDataType, TimeSpan value, bool supportsTime, bool supportsFromParts)
 		{
-			if (!supportsTime || sqlDataType.Type.DataType == DataType.Int64)
+			if (sqlDataType.Type.DataType == DataType.Int64)
 			{
 				stringBuilder.Append(value.Ticks);
+			}
+			else if (!supportsTime
+				|| sqlDataType.Type.DataType == DataType.NVarChar
+				|| sqlDataType.Type.DataType == DataType.VarChar
+				|| sqlDataType.Type.DataType == DataType.Char
+				|| sqlDataType.Type.DataType == DataType.NChar
+				|| sqlDataType.Type.DataType == DataType.Text
+				|| sqlDataType.Type.DataType == DataType.NText)
+			{
+				stringBuilder.Append(value.ToString("c"));
 			}
 			else
 			{
