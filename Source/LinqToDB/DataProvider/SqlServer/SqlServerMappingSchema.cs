@@ -69,14 +69,14 @@ namespace LinqToDB.DataProvider.SqlServer
 		private const string DaTETIMEOFFSET_FROMPARTS_FORMAT    = "DATETIMEOFFSETFROMPARTS({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9})";
 		private static readonly string[] DATETIMEOFFSET_FORMATS = new[]
 		{
-			"CAST('{0:yyyy-MM-ddTHH:mm:ss zzz}' AS DATETIMEOFFSET(0))",
-			"CAST('{0:yyyy-MM-ddTHH:mm:ss.f zzz}' AS DATETIMEOFFSET(1))",
-			"CAST('{0:yyyy-MM-ddTHH:mm:ss.ff zzz}' AS DATETIMEOFFSET(2))",
-			"CAST('{0:yyyy-MM-ddTHH:mm:ss.fff zzz}' AS DATETIMEOFFSET(3))",
-			"CAST('{0:yyyy-MM-ddTHH:mm:ss.ffff zzz}' AS DATETIMEOFFSET(4))",
-			"CAST('{0:yyyy-MM-ddTHH:mm:ss.fffff zzz}' AS DATETIMEOFFSET(5))",
-			"CAST('{0:yyyy-MM-ddTHH:mm:ss.ffffff zzz}' AS DATETIMEOFFSET(6))",
-			"CAST('{0:yyyy-MM-ddTHH:mm:ss.fffffff zzz}' AS DATETIMEOFFSET)",
+			"CAST('{0:yyyy-MM-ddTHH:mm:sszzz}' AS DATETIMEOFFSET(0))",
+			"CAST('{0:yyyy-MM-ddTHH:mm:ss.fzzz}' AS DATETIMEOFFSET(1))",
+			"CAST('{0:yyyy-MM-ddTHH:mm:ss.ffzzz}' AS DATETIMEOFFSET(2))",
+			"CAST('{0:yyyy-MM-ddTHH:mm:ss.fffzzz}' AS DATETIMEOFFSET(3))",
+			"CAST('{0:yyyy-MM-ddTHH:mm:ss.ffffzzz}' AS DATETIMEOFFSET(4))",
+			"CAST('{0:yyyy-MM-ddTHH:mm:ss.fffffzzz}' AS DATETIMEOFFSET(5))",
+			"CAST('{0:yyyy-MM-ddTHH:mm:ss.ffffffzzz}' AS DATETIMEOFFSET(6))",
+			"CAST('{0:yyyy-MM-ddTHH:mm:ss.fffffffzzz}' AS DATETIMEOFFSET)",
 		};
 
 		SqlServerMappingSchema() : base(ProviderName.SqlServer)
