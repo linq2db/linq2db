@@ -29,11 +29,11 @@ namespace LinqToDB.CodeModel
 		}
 
 		/// <summary>
-		/// File name.
+		/// File name. Assigned value ignored if <see cref="NameSource"/> set.
 		/// </summary>
 		public string FileName
 		{
-			get => _name;
+			get => NameSource?.Name ?? _name;
 			[MemberNotNull(nameof(_name))]
 			set => _name = NormalizeFileName(value);
 		}
@@ -46,6 +46,11 @@ namespace LinqToDB.CodeModel
 		/// File imports.
 		/// </summary>
 		public IReadOnlyList<CodeImport> Imports => _imports;
+
+		/// <summary>
+		/// Get or set optional reference to identifier used for name generation.
+		/// </summary>
+		public CodeIdentifier?           NameSource { get; set; }
 
 		CodeElementType ICodeElement.ElementType => CodeElementType.File;
 

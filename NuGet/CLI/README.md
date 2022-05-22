@@ -314,7 +314,7 @@ This interceptor allows user to specify which .NET type should be used for speci
 ```cs
 // IMPORTANT: this method called only once for each database type
 // ITypeParser inte
-TypeMapping GetTypeMapping(DatabaseType databaseType, ITypeParser typeParser, TypeMapping defaultMapping);
+TypeMapping? GetTypeMapping(DatabaseType databaseType, ITypeParser typeParser, TypeMapping? defaultMapping);
 
 // IType is internal .NET type abstraction created only using ITypeParser interface methods
 // DataType is LinqToDB.DataType mapping enum

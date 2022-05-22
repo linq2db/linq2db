@@ -161,7 +161,7 @@ namespace LinqToDB.Scaffold
 
 			var results = new SourceCodeFile[files.Length];
 			for (var i = 0; i < results.Length; i++)
-				results[i] = new SourceCodeFile($"{files[i].FileName}.{Language.FileExtension}", sources[i]);
+				results[i] = new SourceCodeFile($"{files[i].FileName}{(_options.CodeGeneration.AddGeneratedFileSuffix ? ".generated" : null)}.{Language.FileExtension}", sources[i]);
 
 			return results;
 		}
