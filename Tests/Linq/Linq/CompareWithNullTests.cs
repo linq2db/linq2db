@@ -28,9 +28,11 @@ namespace Tests.Linq
 			var entity = db.GetFluentMappingBuilder().Entity<Src>();
 			entity.Property(e => e.CEnumA)
 				.HasDataType(DataType.VarChar)
+				.HasLength(20)
 				.HasConversion(v => $"___{v}___", v => (CE)Enum.Parse(typeof(CE), v.Substring(3, v.Length - 6)));
 			entity.Property(e => e.CEnumB)
 				.HasDataType(DataType.VarChar)
+				.HasLength(20)
 				.HasConversion(v => $"___{v}___", v => (CE)Enum.Parse(typeof(CE), v.Substring(3, v.Length - 6)));
 
 			return db.CreateLocalTable(Data);
