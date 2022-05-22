@@ -28,82 +28,90 @@ namespace Tests.Linq
 			var entity = db.GetFluentMappingBuilder().Entity<Src>();
 			entity.Property(e => e.CEnumA)
 				.HasDataType(DataType.VarChar)
+				.HasLength(20)
 				.HasConversion(v => $"___{v}___", v => (CE)Enum.Parse(typeof(CE), v.Substring(3, v.Length - 6)));
 			entity.Property(e => e.CEnumB)
 				.HasDataType(DataType.VarChar)
+				.HasLength(20)
 				.HasConversion(v => $"___{v}___", v => (CE)Enum.Parse(typeof(CE), v.Substring(3, v.Length - 6)));
 
 			return db.CreateLocalTable(Data);
 		}
 
-		public static IEnumerable<(Expression<Func<Src, bool>> where, int[] withoutNulls, int[] withNulls)> Conditions()
+		private static readonly (Expression<Func<Src, bool>> where, int[] withoutNulls, int[] withNulls)[] _conditions 
+			= new (Expression<Func<Src, bool>> where, int[] withoutNulls, int[] withNulls)[]
 		{
-			yield return (x => x.A == x.B, new[] { 111 },      new[] { 100, 111 });
-			yield return (x => x.A != x.B, new[] { 112, 121 }, new[] { 101, 110, 112, 121 });
-			yield return (x => x.A >= x.B, new[] { 111, 121 }, new[] { 111, 121 });
-			yield return (x => x.A >  x.B, new[] { 121 },      new[] { 121 });
-			yield return (x => x.A <= x.B, new[] { 111, 112 }, new[] { 111, 112 });
-			yield return (x => x.A <  x.B, new[] { 112 },      new[] { 112 });
+			(x => x.A == x.B, new[] { 111 },      new[] { 100, 111 }),
+			(x => x.A != x.B, new[] { 112, 121 }, new[] { 101, 110, 112, 121 }),
+			(x => x.A >= x.B, new[] { 111, 121 }, new[] { 111, 121 }),
+			(x => x.A >  x.B, new[] { 121 },      new[] { 121 }),
+			(x => x.A <= x.B, new[] { 111, 112 }, new[] { 111, 112 }),
+			(x => x.A <  x.B, new[] { 112 },      new[] { 112 }),
 
-			yield return (x => !(x.A == x.B), new[] { 112, 121 }, new[] { 101, 110, 112, 121 });
-			yield return (x => !(x.A != x.B), new[] { 111 },      new[] { 100, 111 });
-			yield return (x => !(x.A >= x.B), new[] { 112 },      new[] { 100, 101, 110, 112 });
-			yield return (x => !(x.A >  x.B), new[] { 111, 112 }, new[] { 100, 101, 110, 111, 112 });
-			yield return (x => !(x.A <= x.B), new[] { 121 },      new[] { 100, 101, 110, 121 });
-			yield return (x => !(x.A <  x.B), new[] { 111, 121 }, new[] { 100, 101, 110, 111, 121 });
+			(x => !(x.A == x.B), new[] { 112, 121 }, new[] { 101, 110, 112, 121 }),
+			(x => !(x.A != x.B), new[] { 111 },      new[] { 100, 111 }),
+			(x => !(x.A >= x.B), new[] { 112 },      new[] { 100, 101, 110, 112 }),
+			(x => !(x.A >  x.B), new[] { 111, 112 }, new[] { 100, 101, 110, 111, 112 }),
+			(x => !(x.A <= x.B), new[] { 121 },      new[] { 100, 101, 110, 121 }),
+			(x => !(x.A <  x.B), new[] { 111, 121 }, new[] { 100, 101, 110, 111, 121 }),
 
-			yield return (x => x.EnumA == x.EnumB, new[] { 111 },      new[] { 100, 111 });
-			yield return (x => x.EnumA != x.EnumB, new[] { 112, 121 }, new[] { 101, 110, 112, 121 });
-			yield return (x => x.EnumA >= x.EnumB, new[] { 111, 121 }, new[] { 111, 121 });
-			yield return (x => x.EnumA >  x.EnumB, new[] { 121 },      new[] { 121 });
-			yield return (x => x.EnumA <= x.EnumB, new[] { 111, 112 }, new[] { 111, 112 });
-			yield return (x => x.EnumA <  x.EnumB, new[] { 112 },      new[] { 112 });
+			(x => x.EnumA == x.EnumB, new[] { 111 },      new[] { 100, 111 }),
+			(x => x.EnumA != x.EnumB, new[] { 112, 121 }, new[] { 101, 110, 112, 121 }),
+			(x => x.EnumA >= x.EnumB, new[] { 111, 121 }, new[] { 111, 121 }),
+			(x => x.EnumA >  x.EnumB, new[] { 121 },      new[] { 121 }),
+			(x => x.EnumA <= x.EnumB, new[] { 111, 112 }, new[] { 111, 112 }),
+			(x => x.EnumA <  x.EnumB, new[] { 112 },      new[] { 112 }),
 
-			yield return (x => !(x.EnumA == x.EnumB), new[] { 112, 121 }, new[] { 101, 110, 112, 121 });
-			yield return (x => !(x.EnumA != x.EnumB), new[] { 111 },      new[] { 100, 111 });
-			yield return (x => !(x.EnumA >= x.EnumB), new[] { 112 },      new[] { 100, 101, 110, 112 });
-			yield return (x => !(x.EnumA >  x.EnumB), new[] { 111, 112 }, new[] { 100, 101, 110, 111, 112 });
-			yield return (x => !(x.EnumA <= x.EnumB), new[] { 121 },      new[] { 100, 101, 110, 121 });
-			yield return (x => !(x.EnumA <  x.EnumB), new[] { 111, 121 }, new[] { 100, 101, 110, 111, 121 });
+			(x => !(x.EnumA == x.EnumB), new[] { 112, 121 }, new[] { 101, 110, 112, 121 }),
+			(x => !(x.EnumA != x.EnumB), new[] { 111 },      new[] { 100, 111 }),
+			(x => !(x.EnumA >= x.EnumB), new[] { 112 },      new[] { 100, 101, 110, 112 }),
+			(x => !(x.EnumA >  x.EnumB), new[] { 111, 112 }, new[] { 100, 101, 110, 111, 112 }),
+			(x => !(x.EnumA <= x.EnumB), new[] { 121 },      new[] { 100, 101, 110, 121 }),
+			(x => !(x.EnumA <  x.EnumB), new[] { 111, 121 }, new[] { 100, 101, 110, 111, 121 }),
 
-			yield return (x => x.CEnumA == x.CEnumB, new[] { 111 },      new[] { 100, 111 });
-			yield return (x => x.CEnumA != x.CEnumB, new[] { 112, 121 }, new[] { 101, 110, 112, 121 });
-			yield return (x => x.CEnumA >= x.CEnumB, new[] { 111, 121 }, new[] { 111, 121 });
-			yield return (x => x.CEnumA >  x.CEnumB, new[] { 121 },      new[] { 121 });
-			yield return (x => x.CEnumA <= x.CEnumB, new[] { 111, 112 }, new[] { 111, 112 });
-			yield return (x => x.CEnumA <  x.CEnumB, new[] { 112 },      new[] { 112 });
+			(x => x.CEnumA == x.CEnumB, new[] { 111 },      new[] { 100, 111 }),
+			(x => x.CEnumA != x.CEnumB, new[] { 112, 121 }, new[] { 101, 110, 112, 121 }),
+			(x => x.CEnumA >= x.CEnumB, new[] { 111, 121 }, new[] { 111, 121 }),
+			(x => x.CEnumA >  x.CEnumB, new[] { 121 },      new[] { 121 }),
+			(x => x.CEnumA <= x.CEnumB, new[] { 111, 112 }, new[] { 111, 112 }),
+			(x => x.CEnumA <  x.CEnumB, new[] { 112 },      new[] { 112 }),
 
-			yield return (x => !(x.CEnumA == x.CEnumB), new[] { 112, 121 }, new[] { 101, 110, 112, 121 });
-			yield return (x => !(x.CEnumA != x.CEnumB), new[] { 111 },      new[] { 100, 111 });
-			yield return (x => !(x.CEnumA >= x.CEnumB), new[] { 112 },      new[] { 100, 101, 110, 112 });
-			yield return (x => !(x.CEnumA >  x.CEnumB), new[] { 111, 112 }, new[] { 100, 101, 110, 111, 112 });
-			yield return (x => !(x.CEnumA <= x.CEnumB), new[] { 121 },      new[] { 100, 101, 110, 121 });
-			yield return (x => !(x.CEnumA <  x.CEnumB), new[] { 111, 121 }, new[] { 100, 101, 110, 111, 121 });
-		}
+			(x => !(x.CEnumA == x.CEnumB), new[] { 112, 121 }, new[] { 101, 110, 112, 121 }),
+			(x => !(x.CEnumA != x.CEnumB), new[] { 111 },      new[] { 100, 111 }),
+			(x => !(x.CEnumA >= x.CEnumB), new[] { 112 },      new[] { 100, 101, 110, 112 }),
+			(x => !(x.CEnumA >  x.CEnumB), new[] { 111, 112 }, new[] { 100, 101, 110, 111, 112 }),
+			(x => !(x.CEnumA <= x.CEnumB), new[] { 121 },      new[] { 100, 101, 110, 121 }),
+			(x => !(x.CEnumA <  x.CEnumB), new[] { 111, 121 }, new[] { 100, 101, 110, 111, 121 }),
+		};
 
 		[Test]
 		public void Functional(
 			[DataSources] string context,
 			[Values]      bool   withNullCompares,
-			[ValueSource(nameof(Conditions))] (Expression<Func<Src, bool>> where, int[] withoutNulls, int[] withNulls) data)
+			// Use an indirect index into the test case data instead of [ValuesSource].
+			// The parameter (tuple including expression) is serialized into the test name
+			// when creating baseline file and this would result in path names too long for Windows to handle.
+			[Range(0, 35)] int index)
 		{
 			using var _   = new CompareNullsAsValuesOption(withNullCompares);
 			using var db  = GetDataContext(context);
 			using var src = SetupSrcTable(db);
 
+			var (where, withoutNulls, withNulls) = _conditions[index];
+
 			var result = src
-				.Where(data.where)
+				.Where(where)
 				.OrderBy(x => x.Id)
 				.Select(x => x.Id)
 				.ToList();
 
-			result.Should().Equal(withNullCompares ? data.withNulls : data.withoutNulls);
+			result.Should().Equal(withNullCompares ? withNulls : withoutNulls);
 
 			// CompareWithNullValues should behave exactly like C#
 			if (withNullCompares)
 			{
 				var linqResult = Data
-					.Where(data.where.Compile())
+					.Where(where.Compile())
 					.Select(x => x.Id)
 					.ToList();
 
