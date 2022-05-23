@@ -1636,7 +1636,10 @@ namespace Tests.Linq
 					.Concat(
 						from t3 in table.Where(x => x.Id == 3) select t3);
 
-				var zz = query.ToArray();
+				var result = query.ToList();
+				result[0].Should().BeOfType<SetEntityA>();
+				result[1].Should().BeOfType<SetEntityB>();
+				result[2].Should().BeOfType<SetEntityC>();
 			}
 		}
 	}

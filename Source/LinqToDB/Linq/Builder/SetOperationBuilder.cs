@@ -276,8 +276,8 @@ namespace LinqToDB.Linq.Builder
 
 			void Init()
 			{
-				var ref1 = new ContextRefExpression(_type, _sequence1);
-				var ref2 = new ContextRefExpression(_type, _sequence2);
+				var ref1 = new ContextRefExpression(_type, _sequence1.SubQuery);
+				var ref2 = new ContextRefExpression(_type, _sequence2.SubQuery);
 
 				var expr1 = Builder.ConvertToSqlExpr(_sequence1.SubQuery, ref1);
 				var expr2 = Builder.ConvertToSqlExpr(_sequence2.SubQuery, ref2);
@@ -357,15 +357,25 @@ namespace LinqToDB.Linq.Builder
 					return path;
 				}
 
-				if (SequenceHelper.IsSameContext(path, this) && flags.HasFlag(ProjectFlags.Expression))
+				if (SequenceHelper.IsSameContext(path, this))
 				{
-					if (_body != null)
+					if (flags.HasFlag(ProjectFlags.Expression))
 					{
-						var constructed = Builder.TryConstruct(_body, this, flags);
+						if (_body != null)
+						{
+							var constructed = Builder.TryConstruct(_body, this, flags);
 
-						return constructed;
+							return constructed;
+						}
+
+						throw new NotImplementedException("Scalar handling not implemented");
 					}
 
+					if (_body != null)
+					{
+						return _body;
+					}						
+						
 					throw new NotImplementedException("Scalar handling not implemented");
 				}
 
@@ -378,6 +388,9 @@ namespace LinqToDB.Linq.Builder
 							return placeholderExpression;
 						return Builder.CreateSqlError(this, projected);
 					}
+
+					if (projected is SqlPlaceholderExpression)
+						return projected;
 
 					return path;
 				}
