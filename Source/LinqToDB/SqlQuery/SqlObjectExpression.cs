@@ -26,9 +26,10 @@ namespace LinqToDB.SqlQuery
 
 			if (p.ColumnDescriptor != null)
 			{
-				value = p.ColumnDescriptor.GetProviderValue(obj);
+				return MappingSchema.GetSqlValueFromObject(p.ColumnDescriptor, obj);
 			}
-			else if (p.GetValueFunc != null)
+
+			if (p.GetValueFunc != null)
 			{
 				value = p.GetValueFunc(obj);
 			}

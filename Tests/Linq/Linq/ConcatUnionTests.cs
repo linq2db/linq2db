@@ -1575,7 +1575,9 @@ namespace Tests.Linq
 						}, 
 					});
 
-				var zz = query.Select(x => new {x.IntValue, x.Entity.Id}).Where(x => x.IntValue == null).ToArray();
+				var zz = query
+					.Where(x => x.IntValue == null)
+					.ToArray();
 
 				//AssertQuery(query);
 			}
