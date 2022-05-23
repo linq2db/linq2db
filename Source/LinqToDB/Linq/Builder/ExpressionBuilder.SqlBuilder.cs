@@ -1243,18 +1243,6 @@ namespace LinqToDB.Linq.Builder
 						return newConstructor;
 					}
 
-					/*var ctx = GetContext(context, expression);
-
-					if (ctx != null)
-					{
-						if (!TryConvertToSqlExpr(ctx, expression, out var sql, out var sError))
-							return sError;
-
-						if (!ReferenceEquals(sql, expression))
-							sql = ConvertToSqlExpr(ctx, sql, flags.HasFlag(ProjectFlags.Test), unwrap, columnDescriptor, isPureExpression);
-						return sql;
-					}*/
-
 					break;
 				}
 

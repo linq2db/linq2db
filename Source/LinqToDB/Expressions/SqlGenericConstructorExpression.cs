@@ -4,7 +4,6 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using LinqToDB.Linq.Builder;
 
 namespace LinqToDB.Expressions
 {
@@ -169,24 +168,6 @@ namespace LinqToDB.Expressions
 			}
 
 			return createExpression;
-		}
-
-		public Expression? TryConstruct(IBuildContext context, ProjectFlags flags)
-		{
-			/*if (ConstructType == CreateType.Full)
-			{
-				var expr = context.Builder.BuildEntityExpression(context, ObjectType, flags);
-
-				return expr;
-			}
-
-			if (ConstructType == CreateType.New)
-			{
-				if (context.Builder.BuildEntityExpression(this, _body.ObjectType, flags)
-			}
-
-			if (builder.BuildEntityExpression(this, _body.ObjectType, flags)*/
-			throw new NotImplementedException();
 		}
 	}
 }

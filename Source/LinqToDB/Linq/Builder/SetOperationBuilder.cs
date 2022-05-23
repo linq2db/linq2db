@@ -357,38 +357,31 @@ namespace LinqToDB.Linq.Builder
 					return path;
 				}
 
-				if (flags.HasFlag(ProjectFlags.SQL))
+				if (SequenceHelper.IsSameContext(path, this) && flags.HasFlag(ProjectFlags.Expression))
 				{
 					if (_body != null)
 					{
-						var projected = Builder.Project(this, path, null, -1, flags, _body);
-						if (projected is MemberExpression)
-						{
-							if (_createdSQL.TryGetValue(projected, out var placeholderExpression))
-								return placeholderExpression;
-							return Builder.CreateSqlError(this, projected);
-						}
-						return projected;
-					}
-				}
-				else if (SequenceHelper.IsSameContext(path, this) && flags.HasFlag(ProjectFlags.Expression))
-				{
-					if (_body != null)
-					{
-						if (_body.ConstructType == SqlGenericConstructorExpression.CreateType.Full)
-						{
-							var expr = Builder.BuildEntityExpression(this, _body.ObjectType, flags);
+						var constructed = Builder.TryConstruct(_body, this, flags);
 
-							return expr;
-						}
-
-						//_body.TryConstruct()
-
-						throw new NotImplementedException($"Handle other CreateTypes: {_body.ConstructType}");
+						return constructed;
 					}
 
 					throw new NotImplementedException("Scalar handling not implemented");
 				}
+
+				if (_body != null)
+				{
+					var projected = Builder.Project(this, path, null, -1, flags, _body);
+					if (projected is MemberExpression)
+					{
+						if (_createdSQL.TryGetValue(projected, out var placeholderExpression))
+							return placeholderExpression;
+						return Builder.CreateSqlError(this, projected);
+					}
+
+					return path;
+				}
+
 
 				return base.MakeExpression(path, flags);
 			}

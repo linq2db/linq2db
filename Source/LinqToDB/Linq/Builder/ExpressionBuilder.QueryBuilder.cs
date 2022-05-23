@@ -436,7 +436,7 @@ namespace LinqToDB.Linq.Builder
 							}
 
 						case ExpressionType.MemberAccess:
-								{
+							{
 								var ma = (MemberExpression)expr;
 
 								if (context.builder.IsServerSideOnly(ma) || context.builder.PreferServerSide(ma, false) && !context.builder.HasNoneSqlMember(ma))
@@ -458,10 +458,10 @@ namespace LinqToDB.Linq.Builder
 									return new TransformInfo(newExpr, false, true);
 
 								break;
-								}
+							}
 
 						case ExpressionType.Call:
-								{
+							{
 								var newExpr = context.builder.MakeExpression(expr, context.flags);
 
 								if (!ReferenceEquals(newExpr, expr))
@@ -564,35 +564,44 @@ namespace LinqToDB.Linq.Builder
 								if (buildExpr.Type != expr.Type)
 								{
 									buildExpr = Expression.Convert(buildExpr, expr.Type);
-					}
+								}
 
 								if (!ReferenceEquals(buildExpr, contextRef))
-					{
+								{
 									buildExpr = context.builder.BuildSqlExpression(context.translated, context.context,
 										buildExpr,
 										context.flags, context.alias);
 								}
 								else
-						{
+								{
 									//TODO: maybe remove
 									throw new NotImplementedException();
 									var info = new BuildInfo(context.context, contextRef, new SelectQuery {ParentSelect = context.context.SelectQuery});
 
 									if (context.builder.IsSequence(info))
-							{
+									{
 										return new TransformInfo(
 											context.builder.GetSubQueryExpression(context.context, contextRef, false,
 												context.alias, context.flags.HasFlag(ProjectFlags.Test)), false, true);
-							}
-						}
+									}
+								}
 
 								context.translated[expr] = buildExpr;
 
 								return new TransformInfo(buildExpr);
-					}
+							}
 
-					return new TransformInfo(expr);
-		}
+							if (expr is SqlGenericConstructorExpression constructorExpression)
+							{
+								if (context.flags.HasFlag(ProjectFlags.Expression))
+								{
+									var constructed = context.builder.TryConstruct(constructorExpression, context.context, context.flags);
+									return new TransformInfo(constructed, false, true);
+								}
+							}
+
+							return new TransformInfo(expr);
+						}
 
 
 						/*

@@ -1575,11 +1575,7 @@ namespace Tests.Linq
 						}, 
 					});
 
-				var zz = query
-					.Where(x => x.IntValue == null)
-					.ToArray();
-
-				//AssertQuery(query);
+				AssertQuery(query);
 			}
 		}
 

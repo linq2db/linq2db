@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -10,12 +11,13 @@ namespace LinqToDB.Linq.Builder
 	using Extensions;
 	using Mapping;
 	using LinqToDB.Expressions;
+	using LinqToDB.Reflection;
 
 	partial class ExpressionBuilder
 	{
 		#region Entity Construction
 
-		public Type GetTypeForInstantiation(Type entityType)
+		public static Type GetTypeForInstantiation(Type entityType)
 		{
 			// choosing type that can be instantiated
 			if ((entityType.IsInterface || entityType.IsAbstract) && !(entityType.IsInterface || entityType.IsAbstract))
@@ -399,6 +401,151 @@ namespace LinqToDB.Linq.Builder
 
 		#region Generic Entity Construction
 
+		public static int FindIndex<T>(ReadOnlyCollection<T> collection, Func<T, bool> predicate)
+		{
+			for (int i = 0; i < collection.Count; i++)
+			{
+				if (predicate(collection[i]))
+					return i;
+			}
+
+			return -1;
+		}
+
+		private static int MatchParameter(ParameterInfo parameter, ReadOnlyCollection<SqlGenericConstructorExpression.Assignment> members)
+		{
+			var found = FindIndex(members, x =>
+				x.MemberInfo.GetMemberType() == parameter.ParameterType &&
+				x.MemberInfo.Name            == parameter.Name);
+
+			if (found < 0)
+			{
+				found = FindIndex(members, x =>
+					x.MemberInfo.GetMemberType() == parameter.ParameterType &&
+					x.MemberInfo.Name.Equals(parameter.Name,
+						StringComparison.InvariantCultureIgnoreCase));
+			}
+
+			return found;
+		}
+
+
+		private Expression? TryWithConstructor(
+			TypeAccessor                                      typeAccessor,
+			ConstructorInfo                                   constructorInfo,
+			SqlGenericConstructorExpression                   constructorExpression, 
+			List<SqlGenericConstructorExpression.Assignment>? missed)
+		{
+			NewExpression newExpression;
+
+			var loadedColumns = new HashSet<int>();
+			var parameters    = constructorInfo.GetParameters();
+
+			if (parameters.Length <= 0)
+			{
+				newExpression = Expression.New(constructorInfo);
+			}
+			else
+			{
+				var parameterValues = new List<Expression>();
+
+				foreach (var parameterInfo in parameters)
+				{
+					var idx = MatchParameter(parameterInfo, constructorExpression.Assignments);
+
+					if (idx >= 0)
+					{
+						var ai = constructorExpression.Assignments[idx];
+						parameterValues.Add(ai.Expression);
+
+						loadedColumns.Add(idx);
+					}
+					else
+					{
+						parameterValues.Add(Expression.Constant(
+							MappingSchema.GetDefaultValue(parameterInfo.ParameterType), parameterInfo.ParameterType));
+					}
+				}
+
+				newExpression = Expression.New(constructorInfo, parameterValues);
+			}
+
+
+			if (loadedColumns.Count == constructorExpression.Assignments.Count)
+			{
+				// Everything is fit into parameters
+				return newExpression;
+			}
+
+			var bindings = new List<MemberBinding>(constructorExpression.Assignments.Count - loadedColumns.Count);
+
+			for (int i = 0; i < constructorExpression.Assignments.Count; i++)
+			{
+				if (loadedColumns.Contains(i))
+					continue;
+
+				var assignment     = constructorExpression.Assignments[i];
+				var memberAccessor = typeAccessor[assignment.MemberInfo.Name];
+
+				if (!memberAccessor.HasSetter)
+				{
+					missed?.Add(assignment);
+				}
+				else
+				{
+					bindings.Add(Expression.Bind(assignment.MemberInfo, assignment.Expression));
+				}
+			}
+
+			if (loadedColumns.Count + bindings.Count != constructorExpression.Assignments.Count)
+				return null;
+
+			return Expression.MemberInit(newExpression, bindings);
+		}
+
+		public Expression TryConstruct(SqlGenericConstructorExpression constructorExpression, IBuildContext context,  ProjectFlags flags)
+		{
+			switch (constructorExpression.ConstructType)
+			{
+				case SqlGenericConstructorExpression.CreateType.Full:
+				{
+					var expr = BuildEntityExpression(context, constructorExpression.ObjectType, flags);
+
+					return expr;
+				}
+				case SqlGenericConstructorExpression.CreateType.Unknown:
+				{
+					var instantiationType = GetTypeForInstantiation(constructorExpression.ObjectType);
+
+					var typeAccessor = TypeAccessor.GetAccessor(instantiationType);
+
+					var constructors = instantiationType.GetConstructors();
+
+					for (int i = 0; i < constructors.Length; i++)
+					{
+						var constructor = constructors[i];
+						var instantiation = TryWithConstructor(typeAccessor, constructor, constructorExpression, null);
+						if (instantiation != null)
+							return instantiation;
+					}
+
+					throw new NotImplementedException();
+
+					for (int i = 0; i < constructors.Length; i++)
+					{
+						var constructor   = constructors[i];
+
+						var missed = new List<SqlGenericConstructorExpression.Assignment>();
+
+						var instantiation = TryWithConstructor(typeAccessor, constructor, constructorExpression, missed);
+						if (instantiation != null)
+							return instantiation;
+					}
+				}
+				default:
+					throw new NotImplementedException();
+			}
+		}
 		
 
 		#endregion

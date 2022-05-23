@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
 
 namespace LinqToDB.Expressions
 {
@@ -332,7 +334,7 @@ namespace LinqToDB.Expressions
 				}
 
 				case ExpressionType.Extension:
-					return expr;
+					return TransformXE(expr);
 
 				default:
 					throw new NotImplementedException($"Unhandled expression type: {expr.NodeType}");
@@ -438,6 +440,49 @@ namespace LinqToDB.Expressions
 			}
 
 			return b;
+		}
+
+		// ReSharper disable once InconsistentNaming
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private Expression TransformXE(Expression expr)
+		{
+			if (expr is ContextConstructionExpression construct)
+			{
+				var inner       = Transform(construct.InnerExpression);
+				var postProcess = construct.PostProcess == null ? null : Transform(construct.PostProcess);
+
+				return construct.Update(construct.BuildContext, inner, postProcess as List<LambdaExpression>);
+			}
+
+			if (expr is SqlGenericConstructorExpression generic)
+			{
+				var assignments = Transform(generic.Assignments, TransformAssignments);
+
+				if (!ReferenceEquals(assignments, generic.Assignments))
+				{
+					return generic.ReplaceAssignments(assignments.ToList());
+				}
+
+				return expr;
+			}
+
+			if (expr is SqlReaderIsNullExpression isNullExpression)
+			{
+				return isNullExpression.Update((SqlPlaceholderExpression)Transform(isNullExpression.Placeholder));
+			}
+
+			return expr;
+		}
+
+		private SqlGenericConstructorExpression.Assignment TransformAssignments(SqlGenericConstructorExpression.Assignment a)
+		{
+			var aExpr = Transform(a.Expression);
+			if (aExpr != a.Expression)
+			{
+				return new SqlGenericConstructorExpression.Assignment(a.MemberInfo, aExpr);
+			}
+
+			return a;
 		}
 	}
 }
