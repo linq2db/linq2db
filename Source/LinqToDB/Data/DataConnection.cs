@@ -31,7 +31,7 @@ namespace LinqToDB.Data
 		/// <summary>
 		/// Creates database connection object that uses default connection configuration from <see cref="DefaultConfiguration"/> property.
 		/// </summary>
-		public DataConnection() : this(new DataOptions(DefaultConnectionOptions))
+		public DataConnection() : this(DefaultDataOptions)
 		{
 		}
 
@@ -41,9 +41,9 @@ namespace LinqToDB.Data
 		/// <param name="configurationString">Name of database connection configuration to use with this connection.
 		/// In case of <c>null</c>, configuration from <see cref="DefaultConfiguration"/> property will be used.</param>
 		public DataConnection(string? configurationString)
-			: this(new DataOptions(configurationString == null
-				? DefaultConnectionOptions
-				: ConnectionOptionsByConfigurationString.GetOrAdd(configurationString, _ => new(configurationString))))
+			: this(configurationString == null
+				? DefaultDataOptions
+				: ConnectionOptionsByConfigurationString.GetOrAdd(configurationString, _ => new(new(configurationString))))
 		{
 		}
 

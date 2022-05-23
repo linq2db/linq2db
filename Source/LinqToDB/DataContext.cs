@@ -31,7 +31,7 @@ namespace LinqToDB
 		/// Creates data context using default database configuration.
 		/// <see cref="DataConnection.DefaultConfiguration"/> for more details.
 		/// </summary>
-		public DataContext() : this(new DataOptions(DataConnection.DefaultConnectionOptions))
+		public DataContext() : this(DataConnection.DefaultDataOptions)
 		{
 		}
 
@@ -43,9 +43,9 @@ namespace LinqToDB
 		/// <see cref="DataConnection.DefaultConfiguration"/> for more details.
 		/// </param>
 		public DataContext(string? configurationString)
-			: this(new DataOptions(configurationString == null
-				? DataConnection.DefaultConnectionOptions
-				: DataConnection.ConnectionOptionsByConfigurationString.GetOrAdd(configurationString, _ => new(configurationString))))
+			: this(configurationString == null
+				? DataConnection.DefaultDataOptions
+				: DataConnection.ConnectionOptionsByConfigurationString.GetOrAdd(configurationString, _ => new(new(configurationString))))
 		{
 		}
 

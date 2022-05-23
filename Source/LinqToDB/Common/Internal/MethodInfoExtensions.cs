@@ -30,6 +30,6 @@ namespace LinqToDB.Common.Internal
 			}
 
 			return $"{returnType} {methodInfo.Name}{genericArgs}({pms})";
-		}		
+		}
 	}
 }

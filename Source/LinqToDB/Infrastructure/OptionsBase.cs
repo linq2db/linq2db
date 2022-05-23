@@ -6,16 +6,37 @@ namespace LinqToDB.Infrastructure
 	public abstract class OptionsBase<T> : IOptions
 		where T : OptionsBase<T>
 	{
+		protected OptionsBase()
+		{
+		}
+
+		protected OptionsBase(OptionsBase<T> options)
+		{
+			if (options._sets != null)
+				_sets = new(options._sets);
+		}
+
+		protected abstract T Clone();
+
 		public virtual T WithOptions(IOptionSet options)
 		{
-			(_sets ??= new())[options.GetType()] = options;
-			return (T)this;
+			var o = Clone();
+
+			if (o._sets == null)
+				o._sets = new() { { options.GetType(), options } };
+			else
+				o._sets[options.GetType()] = options;
+
+			return o;
 		}
 
 		public T WithOptions<TSet>(Func<TSet,TSet> optionSetter)
 			where TSet : class, IOptionSet, new()
 		{
-			return WithOptions(optionSetter(Get<TSet>()));
+			var original = Get<TSet>();
+			var options  = optionSetter(original);
+
+			return ReferenceEquals(original, options) ? (T)this : WithOptions(options);
 		}
 
 		Dictionary<Type,IOptionSet>? _sets;

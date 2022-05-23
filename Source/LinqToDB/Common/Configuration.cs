@@ -132,7 +132,12 @@ namespace LinqToDB.Common
 			public  static LinqOptions Options
 			{
 				get => _options;
-				set => _options = value;
+				set
+				{
+					_options = value;
+					DataConnection.ResetDefaultOptions();
+					DataConnection.ConnectionOptionsByConfigurationString.Clear();
+				}
 			}
 
 			/// <summary>

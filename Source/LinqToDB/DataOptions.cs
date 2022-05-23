@@ -18,17 +18,27 @@ namespace LinqToDB
 			_connectionOptions = connectionOptions;
 		}
 
+		DataOptions(DataOptions options) : base(options)
+		{
+			_linqOptions        = options._linqOptions;
+			_connectionOptions  = options._connectionOptions;
+			_dataContextOptions = options._dataContextOptions;
+		}
+
+		protected override DataOptions Clone()
+		{
+			return new(this);
+		}
+
 		public override DataOptions WithOptions(IOptionSet options)
 		{
 			switch (options)
 			{
-				case LinqOptions        lo  : _linqOptions        = lo;  break;
-				case ConnectionOptions  co  : _connectionOptions  = co;  break;
-				case DataContextOptions dco : _dataContextOptions = dco; break;
-				default                     :  return base.WithOptions(options);
+				case LinqOptions        lo  : return ReferenceEquals(_linqOptions,        lo)  ? this : new(this) { _linqOptions        = lo  };
+				case ConnectionOptions  co  : return ReferenceEquals(_connectionOptions,  co)  ? this : new(this) { _connectionOptions  = co  };
+				case DataContextOptions dco : return ReferenceEquals(_dataContextOptions, dco) ? this : new(this) { _dataContextOptions = dco };
+				default                     : return base.WithOptions(options);
 			}
-
-			return this;
 		}
 
 		LinqOptions?        _linqOptions;
@@ -36,7 +46,7 @@ namespace LinqToDB
 		DataContextOptions? _dataContextOptions;
 
 		public LinqOptions        LinqOptions        => _linqOptions        ??= Common.Configuration.Linq.Options;
-		public ConnectionOptions  ConnectionOptions  => _connectionOptions  ??= DataConnection.DefaultConnectionOptions;
+		public ConnectionOptions  ConnectionOptions  => _connectionOptions  ??= DataConnection.DefaultDataOptions.ConnectionOptions;
 		public DataContextOptions DataContextOptions => _dataContextOptions ??= DataContextOptions.Empty;
 
 		public override IEnumerable<IOptionSet> OptionSets

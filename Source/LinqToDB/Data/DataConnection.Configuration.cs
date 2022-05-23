@@ -43,8 +43,8 @@ namespace LinqToDB.Data
 #endif
 			set
 			{
-				_defaultSettings          = value;
-				_defaultConnectionOptions = null;
+				_defaultSettings    = value;
+				_defaultDataOptions = null;
 			}
 		}
 
@@ -65,10 +65,15 @@ namespace LinqToDB.Data
 			}
 		}
 
-		private  static ConnectionOptions? _defaultConnectionOptions;
-		internal static ConnectionOptions   DefaultConnectionOptions => _defaultConnectionOptions ??= new();
+		private  static DataOptions? _defaultDataOptions;
+		internal static DataOptions   DefaultDataOptions => _defaultDataOptions ??= new(new());
 
-		internal static ConcurrentDictionary<string,ConnectionOptions> ConnectionOptionsByConfigurationString = new();
+		internal static void ResetDefaultOptions()
+		{
+			_defaultDataOptions = null;
+		}
+
+		internal static ConcurrentDictionary<string,DataOptions> ConnectionOptionsByConfigurationString = new();
 
 		internal class ConfigurationInfo
 		{
@@ -444,8 +449,8 @@ namespace LinqToDB.Data
 			get => _defaultConfiguration;
 			set
 			{
-				_defaultConfiguration     = value;
-				_defaultConnectionOptions = null;
+				_defaultConfiguration = value;
+				_defaultDataOptions   = null;
 			}
 		}
 
@@ -459,8 +464,8 @@ namespace LinqToDB.Data
 			get => _defaultDataProvider;
 			set
 			{
-				_defaultDataProvider      = value;
-				_defaultConnectionOptions = null;
+				_defaultDataProvider = value;
+				_defaultDataOptions  = null;
 			}
 		}
 
