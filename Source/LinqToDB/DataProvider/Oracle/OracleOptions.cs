@@ -27,8 +27,8 @@ namespace LinqToDB.DataProvider.Oracle
 
 		OracleOptions(OracleOptions original)
 		{
-			BulkCopyType        = BulkCopyType;
-			AlternativeBulkCopy = AlternativeBulkCopy;
+			BulkCopyType        = original.BulkCopyType;
+			AlternativeBulkCopy = original.AlternativeBulkCopy;
 		}
 
 		int? _configurationID;
