@@ -401,7 +401,7 @@ namespace Tests
 			return _serverContainer.Prepare(ms, interceptor, suppressSequentialAccess, str);
 		}
 
-		protected ITestDataContext GetDataContext(string configuration, Action<DataOptions> dbOptionsBuilder)
+		protected ITestDataContext GetDataContext(string configuration, Func<DataOptions,DataOptions> dbOptionsBuilder)
 		{
 			if (!configuration.EndsWith(LinqServiceSuffix))
 			{
@@ -414,7 +414,7 @@ namespace Tests
 			return _serverContainer.Prepare(ms, interceptor, suppressSequentialAccess, str);*/
 		}
 
-		protected TestDataConnection GetDataConnection(string configuration, Action<DataOptions> dbOptionsBuilder)
+		protected TestDataConnection GetDataConnection(string configuration, Func<DataOptions,DataOptions> dbOptionsBuilder)
 		{
 			if (configuration.EndsWith(LinqServiceSuffix))
 			{
@@ -425,7 +425,7 @@ namespace Tests
 
 			var builder = new DataOptions().UseConfigurationString(configuration);
 
-			dbOptionsBuilder(builder);
+			builder = dbOptionsBuilder(builder);
 
 			var res = new TestDataConnection(builder);
 

@@ -176,15 +176,13 @@ namespace Tests.Data
 		{
 			using (new GuardGrouping(false))
 			using (new PreloadGroups(false))
+			using (var dc = new DataContext(context))
 			{
-				using (var dc = new DataContext(context))
-				{
-					var dictionary = dc.GetTable<Person>()
-						.GroupBy(p => p.FirstName)
-						.ToDictionary(p => p.Key);
+				var dictionary = dc.GetTable<Person>()
+					.GroupBy(p => p.FirstName)
+					.ToDictionary(p => p.Key);
 
-					var tables = dictionary.ToDictionary(p => p.Key, p => p.Value.ToList());
-				}
+				var tables = dictionary.ToDictionary(p => p.Key, p => p.Value.ToList());
 			}
 		}
 

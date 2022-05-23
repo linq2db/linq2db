@@ -94,8 +94,10 @@ namespace Tests.Common
 			var builder  = new DataOptions();
 			var factory  = new TestLoggerFactory();
 			var services = new ServiceCollection();
+
 			services.AddSingleton<ILoggerFactory>(factory);
-			builder.UseDefaultLogging(services.BuildServiceProvider());
+
+			builder = builder.UseDefaultLogging(services.BuildServiceProvider());
 
 			var extension = builder.Find<DataTraceOptions>();
 			Assert.NotNull(extension?.WriteTrace);

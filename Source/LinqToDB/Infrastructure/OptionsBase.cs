@@ -71,7 +71,7 @@ namespace LinqToDB.Infrastructure
 			return set;
 		}
 
-		public void Apply<TA>(TA obj)
+		protected void Apply<TA>(TA obj)
 		{
 			if (_sets != null)
 				foreach (var item in _sets.Values)

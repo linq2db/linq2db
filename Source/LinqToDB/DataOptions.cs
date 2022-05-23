@@ -86,6 +86,16 @@ namespace LinqToDB
 			base.Apply(dataConnection);
 		}
 
+		public void Apply(DataContext dataContext)
+		{
+			((IApplicable<DataContext>)ConnectionOptions).Apply(dataContext);
+
+			if (_dataContextOptions is IApplicable<DataContext> a)
+				a.Apply(dataContext);
+
+			base.Apply(dataContext);
+		}
+
 		int? _configurationID;
 		int IConfigurationID.ConfigurationID => _configurationID ??= new IdentifierBuilder()
 			.Add(LinqOptions)
