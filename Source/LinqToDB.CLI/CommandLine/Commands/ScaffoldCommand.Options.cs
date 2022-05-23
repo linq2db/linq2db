@@ -16,6 +16,7 @@ namespace LinqToDB.CommandLine
 		private static readonly OptionCategory _dataModelOptions      = new (3, "Data Model"     , "data model configuration", "dataModel");
 		private static readonly OptionCategory _codeGenerationOptions = new (4, "Code Generation", "code-generation options" , "code"     );
 		private static readonly ScaffoldOptions _defaultOptions       = ScaffoldOptions.Default();
+		private static readonly ScaffoldOptions _t4ModeOptions        = ScaffoldOptions.T4();
 
 		/// <summary>
 		/// Provides access to general scaffold options definitions.
@@ -57,6 +58,7 @@ JSON file example:
 					"If folder doesn't exists, it will be created. When not specified, current folder used.",
 					null,
 					null,
+					null,
 					null);
 
 			/// <summary>
@@ -70,6 +72,7 @@ JSON file example:
 					null,
 					null,
 					null,
+					false,
 					false);
 
 			/// <summary>
@@ -85,18 +88,18 @@ JSON file example:
 					null,
 					null,
 					false,
-					new (false, DatabaseType.Access    .ToString(), "MS Access (requires OLE DB or/and ODBC provider installed)"),
-					new (false, DatabaseType.DB2       .ToString(), "IBM DB2 LUW or z/OS"                                       ),
-					new (false, DatabaseType.Firebird  .ToString(), "Firebird"                                                  ),
-					new (false, DatabaseType.Informix  .ToString(), "IBM Informix"                                              ),
-					new (false, DatabaseType.SQLServer .ToString(), "MS SQL Server (including Azure SQL Server)"                ),
-					new (false, DatabaseType.MySQL     .ToString(), "MySQL/MariaDB"                                             ),
-					new (false, DatabaseType.Oracle    .ToString(), "Oracle Database"                                           ),
-					new (false, DatabaseType.PostgreSQL.ToString(), "PostgreSQL"                                                ),
-					new (false, DatabaseType.SqlCe     .ToString(), "MS SQL Server Compact"                                     ),
-					new (false, DatabaseType.SQLite    .ToString(), "SQLite"                                                    ),
-					new (false, DatabaseType.Sybase    .ToString(), "SAP/Sybase ASE"                                            ),
-					new (false, DatabaseType.SapHana   .ToString(), "SAP HANA"                                                  ));
+					new (false, false, DatabaseType.Access    .ToString(), "MS Access (requires OLE DB or/and ODBC provider installed)"),
+					new (false, false, DatabaseType.DB2       .ToString(), "IBM DB2 LUW or z/OS"                                       ),
+					new (false, false, DatabaseType.Firebird  .ToString(), "Firebird"                                                  ),
+					new (false, false, DatabaseType.Informix  .ToString(), "IBM Informix"                                              ),
+					new (false, false, DatabaseType.SQLServer .ToString(), "MS SQL Server (including Azure SQL Server)"                ),
+					new (false, false, DatabaseType.MySQL     .ToString(), "MySQL/MariaDB"                                             ),
+					new (false, false, DatabaseType.Oracle    .ToString(), "Oracle Database"                                           ),
+					new (false, false, DatabaseType.PostgreSQL.ToString(), "PostgreSQL"                                                ),
+					new (false, false, DatabaseType.SqlCe     .ToString(), "MS SQL Server Compact"                                     ),
+					new (false, false, DatabaseType.SQLite    .ToString(), "SQLite"                                                    ),
+					new (false, false, DatabaseType.Sybase    .ToString(), "SAP/Sybase ASE"                                            ),
+					new (false, false, DatabaseType.SapHana   .ToString(), "SAP HANA"                                                  ));
 
 			/// <summary>
 			/// Database provider location option.
@@ -114,6 +117,7 @@ Supported databases:
 - IBM DB2 and Informix       : value is a full path to IBM.Data.DB2.Core.dll assembly in DB2 provider folder",
 					null,
 					null,
+					null,
 					null);
 
 			/// <summary>
@@ -125,6 +129,7 @@ Supported databases:
 					true,
 					false,
 					"database connection string",
+					null,
 					null,
 					null,
 					null,
@@ -150,6 +155,7 @@ List of known issues, solved this way:
 - ODBC doesn't show some procedures in schema (no logic traced)",
 					null,
 					null,
+					null,
 					null);
 
 			/// <summary>
@@ -169,8 +175,8 @@ Example of platform-specific providers:
 					null,
 					null,
 					false,
-					new (false, "x86", "x86 architecture"),
-					new (false, "x64", "x64 architecture"));
+					new (false, false, "x86", "x86 architecture"),
+					new (false, false, "x64", "x64 architecture"));
 
 			/// <summary>
 			/// Base options template option.
@@ -185,8 +191,8 @@ Example of platform-specific providers:
 					null,
 					null,
 					false,
-					new (true , "default", "set of parameters, used by default (as specified in option help)"),
-					new (false, "t4"     , "set of parameters, similar to T4 defaults (compat. option)"      ));
+					new (true , true , "default", "set of parameters, used by default (as specified in option help)"),
+					new (false, false, "t4"     , "set of parameters, similar to T4 defaults (compat. option)"      ));
 
 			/// <summary>
 			/// T4 template or custom assembly path option.
@@ -208,6 +214,7 @@ Customization using compiled assembly has several requirements:
 - linq2db.Tools version should match tool's version to avoid possible compatibility issues/errors.",
 					null,
 					null,
+					null,
 					null);
 		}
 
@@ -227,7 +234,8 @@ Customization using compiled assembly has several requirements:
 					null,
 					null,
 					null,
-					_defaultOptions.CodeGeneration.EnableNullableReferenceTypes);
+					_defaultOptions.CodeGeneration.EnableNullableReferenceTypes,
+					_t4ModeOptions.CodeGeneration.EnableNullableReferenceTypes);
 
 			/// <summary>
 			/// Code indent string option.
@@ -241,6 +249,7 @@ Customization using compiled assembly has several requirements:
 					null,
 					null,
 					null,
+					new[] { "\\t" },
 					new[] { "\\t" });
 
 			/// <summary>
@@ -254,7 +263,9 @@ Customization using compiled assembly has several requirements:
 					"new line sequence, used by generated code",
 					"it is recommended to use json for this option, as passing new line characters in command line could be tricky",
 					new[] { "--new-line \"/*I'm newline*/\"" },
-					new[] { @"{ ""code"": { ""new-line"": ""\r\n"" }" },
+					/*lang=json,strict*/
+					new[] { @"{ ""code"": { ""new-line"": ""\r\n"" } }" },
+					new[] { "value of Environment.NewLine" },
 					new[] { "value of Environment.NewLine" });
 
 			/// <summary>
@@ -268,7 +279,8 @@ Customization using compiled assembly has several requirements:
 					null,
 					null,
 					null,
-					_defaultOptions.CodeGeneration.SuppressMissingXmlDocWarnings);
+					_defaultOptions.CodeGeneration.SuppressMissingXmlDocWarnings,
+					_t4ModeOptions.CodeGeneration.SuppressMissingXmlDocWarnings);
 
 			/// <summary>
 			/// Auto-generated code marker option.
@@ -281,7 +293,8 @@ Customization using compiled assembly has several requirements:
 					null,
 					null,
 					null,
-					_defaultOptions.CodeGeneration.MarkAsAutoGenerated);
+					_defaultOptions.CodeGeneration.MarkAsAutoGenerated,
+					_t4ModeOptions.CodeGeneration.MarkAsAutoGenerated);
 
 			/// <summary>
 			/// Single-file generation mode option.
@@ -294,7 +307,22 @@ Customization using compiled assembly has several requirements:
 					null,
 					null,
 					null,
-					!_defaultOptions.CodeGeneration.ClassPerFile);
+					!_defaultOptions.CodeGeneration.ClassPerFile,
+					!_t4ModeOptions.CodeGeneration.ClassPerFile);
+
+			/// <summary>
+			/// Single-file generation mode option.
+			/// </summary>
+			public static readonly CliOption AddGeneratedFileSuffix = new BooleanCliOption(
+					"generated-suffix",
+					null,
+					false,
+					"adds \".generated.<extension>\" suffix to generated files",
+					null,
+					null,
+					null,
+					_defaultOptions.CodeGeneration.AddGeneratedFileSuffix,
+					_t4ModeOptions.CodeGeneration.AddGeneratedFileSuffix);
 
 			/// <summary>
 			/// List of external conflicting identifiers option.
@@ -307,7 +335,9 @@ Customization using compiled assembly has several requirements:
 					"specify namespaces and/or types that conflict with generated code",
 					@"If generated code has name conflict with other namespaces or types you define or reference in your code, you can pass those names to this method. Code generator will use this information to generate non-conflicting names.",
 					new[] { "--conflicts My.Namespace.SomeType+ConflictingNestedType,Some.ConflictingNamespace.Or.Type" },
-					new[] { @"{ ""code"": { ""conflicts"": [""My.Namespace.SomeType+ConflictingNestedType"", ""Some.ConflictingNamespace.Or.Type""] }" },
+					/*lang=json,strict*/
+					new[] { @"{ ""code"": { ""conflicts"": [""My.Namespace.SomeType+ConflictingNestedType"", ""Some.ConflictingNamespace.Or.Type""] } }" },
+					null,
 					null);
 
 			/// <summary>
@@ -320,6 +350,7 @@ Customization using compiled assembly has several requirements:
 					false,
 					"specify custom text for <auto-generated /> file header comment (when enabled)",
 					@"When not specified, uses default linq2db header text.",
+					null,
 					null,
 					null,
 					null);
@@ -336,7 +367,8 @@ Customization using compiled assembly has several requirements:
 					null,
 					null,
 					null,
-					_defaultOptions.CodeGeneration.Namespace != null ? new[] { _defaultOptions.CodeGeneration.Namespace } : null);
+					_defaultOptions.CodeGeneration.Namespace != null ? new[] { _defaultOptions.CodeGeneration.Namespace } : null,
+					_t4ModeOptions .CodeGeneration.Namespace != null ? new[] { _t4ModeOptions .CodeGeneration.Namespace } : null);
 		}
 
 		/// <summary>
@@ -372,10 +404,13 @@ Naming options is an object with following properties:
 - ignore_all_caps                  : bool    : when set, casing not applied to names that contain only uppercase letters
 ";
 
+			/*lang=json,strict*/
 			/// <summary>
 			/// Naming option example template.
 			/// </summary>
-			private const string NAMING_EXAMPLE_TEMPLATE = @"
+			private const string NAMING_EXAMPLE_TEMPLATE =
+#pragma warning disable JSON001 // Invalid JSON pattern
+ @"
 {{
   ""dataModel"":
   {{
@@ -387,6 +422,7 @@ Naming options is an object with following properties:
     }}
   }}
 }}";
+#pragma warning restore JSON001 // Invalid JSON pattern
 
 			/// <summary>
 			/// Generate database name in mappings option.
@@ -399,7 +435,8 @@ Naming options is an object with following properties:
 					null,
 					null,
 					null,
-					_defaultOptions.DataModel.IncludeDatabaseName);
+					_defaultOptions.DataModel.IncludeDatabaseName,
+					_t4ModeOptions.DataModel.IncludeDatabaseName);
 
 			/// <summary>
 			/// Generate schema name for default schemas in mappings option.
@@ -412,7 +449,8 @@ Naming options is an object with following properties:
 					null,
 					null,
 					null,
-					_defaultOptions.DataModel.GenerateDefaultSchema);
+					_defaultOptions.DataModel.GenerateDefaultSchema,
+					_t4ModeOptions.DataModel.GenerateDefaultSchema);
 
 			/// <summary>
 			/// Base entity class option.
@@ -431,9 +469,12 @@ Naming options is an object with following properties:
 					},
 					new[]
 					{
+						/*lang=json,strict*/
 						"{ \"dataModel\": { \"base-entity\": \"My.Namespace.MyBaseEntity\" } }",
+						/*lang=json,strict*/
 						"{ \"dataModel\": { \"base-entity\": \"My.Namespace.ParentClass+MyBaseNestedEntity\" } }",
 					},
+					null,
 					null);
 
 			/// <summary>
@@ -447,7 +488,8 @@ Naming options is an object with following properties:
 					null,
 					null,
 					null,
-					_defaultOptions.DataModel.EntityClassIsPartial);
+					_defaultOptions.DataModel.EntityClassIsPartial,
+					_t4ModeOptions.DataModel.EntityClassIsPartial);
 
 			/// <summary>
 			/// Generate <see cref="DataType"/> values on entity columns mappings option.
@@ -460,7 +502,8 @@ Naming options is an object with following properties:
 					null,
 					null,
 					null,
-					_defaultOptions.DataModel.GenerateDataType);
+					_defaultOptions.DataModel.GenerateDataType,
+					_t4ModeOptions.DataModel.GenerateDataType);
 
 			/// <summary>
 			/// Generate database type name on entity columns mappings option.
@@ -473,7 +516,8 @@ Naming options is an object with following properties:
 					null,
 					null,
 					null,
-					_defaultOptions.DataModel.GenerateDbType);
+					_defaultOptions.DataModel.GenerateDbType,
+					_t4ModeOptions.DataModel.GenerateDbType);
 
 			/// <summary>
 			/// Generate database type length/size on entity columns mappings option.
@@ -486,7 +530,8 @@ Naming options is an object with following properties:
 					null,
 					null,
 					null,
-					_defaultOptions.DataModel.GenerateLength);
+					_defaultOptions.DataModel.GenerateLength,
+					_t4ModeOptions.DataModel.GenerateLength);
 
 			/// <summary>
 			/// Generate database type precision on entity columns mappings option.
@@ -499,7 +544,8 @@ Naming options is an object with following properties:
 					null,
 					null,
 					null,
-					_defaultOptions.DataModel.GeneratePrecision);
+					_defaultOptions.DataModel.GeneratePrecision,
+					_t4ModeOptions.DataModel.GeneratePrecision);
 
 			/// <summary>
 			/// Generate database type scale on entity columns mappings option.
@@ -512,7 +558,8 @@ Naming options is an object with following properties:
 					null,
 					null,
 					null,
-					_defaultOptions.DataModel.GenerateScale);
+					_defaultOptions.DataModel.GenerateScale,
+					_t4ModeOptions.DataModel.GenerateScale);
 
 			/// <summary>
 			/// Generate database information comment on data context class option.
@@ -525,7 +572,8 @@ Naming options is an object with following properties:
 					"Information includes database name, data source and server version (when database provider expose this information).",
 					null,
 					null,
-					_defaultOptions.DataModel.IncludeDatabaseInfo);
+					_defaultOptions.DataModel.IncludeDatabaseInfo,
+					_t4ModeOptions.DataModel.IncludeDatabaseInfo);
 
 			/// <summary>
 			/// Default data context contructor generation option.
@@ -538,7 +586,8 @@ Naming options is an object with following properties:
 					null,
 					null,
 					null,
-					_defaultOptions.DataModel.HasDefaultConstructor);
+					_defaultOptions.DataModel.HasDefaultConstructor,
+					_t4ModeOptions.DataModel.HasDefaultConstructor);
 
 			/// <summary>
 			/// Data context contructor with configuration parameter generation option.
@@ -551,7 +600,8 @@ Naming options is an object with following properties:
 					"Constructor example: public MyDataContext(string context) { ... }",
 					null,
 					null,
-					_defaultOptions.DataModel.HasConfigurationConstructor);
+					_defaultOptions.DataModel.HasConfigurationConstructor,
+					_t4ModeOptions.DataModel.HasConfigurationConstructor);
 
 			/// <summary>
 			/// Data context contructor with non-generic options parameter generation option.
@@ -564,7 +614,8 @@ Naming options is an object with following properties:
 					$"Constructor example: public MyDataContext({nameof(DataOptions)} options) {{ ... }}",
 					null,
 					null,
-					_defaultOptions.DataModel.HasUntypedOptionsConstructor);
+					_defaultOptions.DataModel.HasUntypedOptionsConstructor,
+					_t4ModeOptions.DataModel.HasUntypedOptionsConstructor);
 
 			/// <summary>
 			/// Data context contructor with generic options parameter generation option.
@@ -577,7 +628,8 @@ Naming options is an object with following properties:
 					$"Constructor example: public MyDataContext({nameof(DataOptions)}<MyDataContext> options) {{ ... }}",
 					null,
 					null,
-					_defaultOptions.DataModel.HasTypedOptionsConstructor);
+					_defaultOptions.DataModel.HasTypedOptionsConstructor,
+					_t4ModeOptions.DataModel.HasTypedOptionsConstructor);
 
 			/// <summary>
 			/// Data context class name option.
@@ -591,6 +643,7 @@ Naming options is an object with following properties:
 					"When not specified, database name used. When database name not available, \"MyDataContext\" used",
 					null,
 					null,
+					new[] { "MyDataContext" },
 					new[] { "MyDataContext" });
 
 			/// <summary>
@@ -609,8 +662,10 @@ Naming options is an object with following properties:
 					},
 					new[]
 					{
+						/*lang=json,strict*/
 						"{ \"dataModel\": { \"base-context\": \"LinqToDB.DataContext\" } }"
 					},
+					new[] { "LinqToDB.Data.DataConnection" },
 					new[] { "LinqToDB.Data.DataConnection" });
 
 			/// <summary>
@@ -624,7 +679,8 @@ Naming options is an object with following properties:
 					null,
 					null,
 					null,
-					_defaultOptions.DataModel.GenerateAssociations);
+					_defaultOptions.DataModel.GenerateAssociations,
+					_t4ModeOptions.DataModel.GenerateAssociations);
 
 			/// <summary>
 			/// Generation of association extension methods for entity option.
@@ -637,7 +693,8 @@ Naming options is an object with following properties:
 					null,
 					null,
 					null,
-					_defaultOptions.DataModel.GenerateAssociationExtensions);
+					_defaultOptions.DataModel.GenerateAssociationExtensions,
+					_t4ModeOptions.DataModel.GenerateAssociationExtensions);
 
 			/// <summary>
 			/// Type of association return type for association back reference with many cardinality option.
@@ -656,9 +713,12 @@ Naming options is an object with following properties:
 					},
 					new[]
 					{
+						/*lang=json,strict*/
 						"{ \"dataModel\": { \"association-collection\": \"[]\" } }",
+						/*lang=json,strict*/
 						"{ \"dataModel\": { \"association-collection\": \"System.Collections.Generic.List<>\" } }",
 					},
+					new[] { "System.Collections.Generic.IEnumerable<>" },
 					new[] { "System.Collections.Generic.IEnumerable<>" });
 
 			/// <summary>
@@ -672,7 +732,8 @@ Naming options is an object with following properties:
 					"When procedure/function schema has same columns (by name, type and nullability) as known table/view entity, this option allows to use entity mapping for procedure/function return type. Otherwise separate mapping class will be generated for specific procedure/function.",
 					null,
 					null,
-					_defaultOptions.DataModel.MapProcedureResultToEntity);
+					_defaultOptions.DataModel.MapProcedureResultToEntity,
+					_t4ModeOptions.DataModel.MapProcedureResultToEntity);
 
 			/// <summary>
 			/// Return <see cref="ITable{T}"/> for table function instead of <see cref="IQueryable{T}"/> option.
@@ -685,7 +746,8 @@ Naming options is an object with following properties:
 					null,
 					null,
 					null,
-					_defaultOptions.DataModel.TableFunctionReturnsTable);
+					_defaultOptions.DataModel.TableFunctionReturnsTable,
+					_t4ModeOptions.DataModel.TableFunctionReturnsTable);
 
 			/// <summary>
 			/// Emit compilation error pragma for stored procedures/table functions with schema load errors option.
@@ -698,7 +760,8 @@ Naming options is an object with following properties:
 					null,
 					null,
 					null,
-					_defaultOptions.DataModel.GenerateProceduresSchemaError);
+					_defaultOptions.DataModel.GenerateProceduresSchemaError,
+					_t4ModeOptions.DataModel.GenerateProceduresSchemaError);
 
 			/// <summary>
 			/// Skip mapping generation for stored procedure with schema load error option.
@@ -711,7 +774,8 @@ Naming options is an object with following properties:
 					null,
 					null,
 					null,
-					_defaultOptions.DataModel.SkipProceduresWithSchemaErrors);
+					_defaultOptions.DataModel.SkipProceduresWithSchemaErrors,
+					_t4ModeOptions.DataModel.SkipProceduresWithSchemaErrors);
 
 			/// <summary>
 			/// Use <see cref="List{T}"/> over <see cref="IEnumerable{T}"/> as return type for stored procedure with result set option.
@@ -724,7 +788,8 @@ Naming options is an object with following properties:
 					null,
 					null,
 					null,
-					_defaultOptions.DataModel.GenerateProcedureResultAsList);
+					_defaultOptions.DataModel.GenerateProcedureResultAsList,
+					_t4ModeOptions.DataModel.GenerateProcedureResultAsList);
 
 			/// <summary>
 			/// Specify stored procedure sync/async mapping generation option.
@@ -739,8 +804,8 @@ Naming options is an object with following properties:
 					null,
 					null,
 					false,
-					new StringEnumOption(_defaultOptions.DataModel.GenerateProcedureSync , "sync" , "generate sync stored procedure call mappings" ),
-					new StringEnumOption(_defaultOptions.DataModel.GenerateProcedureAsync, "async", "generate async stored procedure call mappings"));
+					new StringEnumOption(_defaultOptions.DataModel.GenerateProcedureSync , _t4ModeOptions.DataModel.GenerateProcedureSync , "sync" , "generate sync stored procedure call mappings" ),
+					new StringEnumOption(_defaultOptions.DataModel.GenerateProcedureAsync, _t4ModeOptions.DataModel.GenerateProcedureAsync, "async", "generate async stored procedure call mappings"));
 
 			/// <summary>
 			/// Emit database type name for stored procedure parameters option.
@@ -753,7 +818,8 @@ Naming options is an object with following properties:
 					null,
 					null,
 					null,
-					_defaultOptions.DataModel.GenerateProcedureParameterDbType);
+					_defaultOptions.DataModel.GenerateProcedureParameterDbType,
+					_t4ModeOptions.DataModel.GenerateProcedureParameterDbType);
 
 			/// <summary>
 			/// Emit separate context-like classes for non-default schemas option.
@@ -766,7 +832,8 @@ Naming options is an object with following properties:
 					null,
 					null,
 					null,
-					_defaultOptions.DataModel.GenerateSchemaAsType);
+					_defaultOptions.DataModel.GenerateSchemaAsType,
+					_t4ModeOptions.DataModel.GenerateSchemaAsType);
 
 			/// <summary>
 			/// Generates <see cref="IEquatable{T}"/> interface implementation on entity class for entity with primary key columns.
@@ -779,7 +846,8 @@ Naming options is an object with following properties:
 					null,
 					null,
 					null,
-					_defaultOptions.DataModel.GenerateIEquatable);
+					_defaultOptions.DataModel.GenerateIEquatable,
+					_t4ModeOptions.DataModel.GenerateIEquatable);
 
 			/// <summary>
 			/// Generate Find extension method for entity option.
@@ -794,18 +862,18 @@ Naming options is an object with following properties:
 					null,
 					null,
 					false,
-					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindByPkOnTable           ) != 0, "sync-pk-table"       , "generate sync entity load extension on table object with primary key parameters: Entity?            Find     (this ITable<Entity> table, pk_fields)"),
-					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindAsyncByPkOnTable      ) != 0, "async-pk-table"      , "generate sync entity load extension on table object with primary key parameters: Task<Entity?>      FindAsync(this ITable<Entity> table, pk_fields, CancellationToken)"),
-					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindQueryByPkOnTable      ) != 0, "query-pk-table"      , "generate entity query extension on table object with primary key parameters    : IQueryable<Entity> FindQuery(this ITable<Entity> table, pk_fields)"),
-					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindByPkOnContext         ) != 0, "sync-pk-context"     , "generate sync entity load extension on table object with primary key parameters: Entity?            Find     (this DataContext    db   , pk_fields)"),
-					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindAsyncByPkOnContext    ) != 0, "async-pk-context"    , "generate sync entity load extension on table object with primary key parameters: Task<Entity?>      FindAsync(this DataContext    db   , pk_fields, CancellationToken)"),
-					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindAsyncByPkOnContext    ) != 0, "query-pk-context"    , "generate entity query extension on table object with primary key parameters    : IQueryable<Entity> FindQuery(this DataContext    db   , pk_fields)"),
-					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindByRecordOnTable       ) != 0, "sync-entity-table"   , "generate sync entity load extension on table object with entity parameter      : Entity?            Find     (this ITable<Entity> table, Entity row)"),
-					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindAsyncByRecordOnTable  ) != 0, "async-entity-table"  , "generate sync entity load extension on table object with entity parameter      : Task<Entity?>      FindAsync(this ITable<Entity> table, Entity row, CancellationToken)"),
-					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindQueryByRecordOnTable  ) != 0, "query-entity-table"  , "generate entity query extension on table object with entity parameter          : IQueryable<Entity> FindQuery(this ITable<Entity> table, Entity row)"),
-					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindByRecordOnContext     ) != 0, "sync-entity-context" , "generate sync entity load extension on generated context with entity parameter : Entity?            Find     (this DataContext>   db   , Entity row)"),
-					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindAsyncByRecordOnContext) != 0, "async-entity-context", "generate sync entity load extension on generated context with entity parameter : Task<Entity?>      FindAsync(this DataContext    db   , Entity row, CancellationToken)"),
-					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindQueryByRecordOnContext) != 0, "query-entity-context", "generate entity query extension on generated context with entity parameter     : IQueryable<Entity> FindQuery(this DataContext    db   , Entity row)"));
+					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindByPkOnTable           ) != 0, (_t4ModeOptions.DataModel.GenerateFindExtensions & FindTypes.FindByPkOnTable           ) != 0, "sync-pk-table"       , "generate sync entity load extension on table object with primary key parameters: Entity?            Find     (this ITable<Entity> table, pk_fields)"),
+					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindAsyncByPkOnTable      ) != 0, (_t4ModeOptions.DataModel.GenerateFindExtensions & FindTypes.FindAsyncByPkOnTable      ) != 0, "async-pk-table"      , "generate sync entity load extension on table object with primary key parameters: Task<Entity?>      FindAsync(this ITable<Entity> table, pk_fields, CancellationToken)"),
+					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindQueryByPkOnTable      ) != 0, (_t4ModeOptions.DataModel.GenerateFindExtensions & FindTypes.FindQueryByPkOnTable      ) != 0, "query-pk-table"      , "generate entity query extension on table object with primary key parameters    : IQueryable<Entity> FindQuery(this ITable<Entity> table, pk_fields)"),
+					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindByPkOnContext         ) != 0, (_t4ModeOptions.DataModel.GenerateFindExtensions & FindTypes.FindByPkOnContext         ) != 0, "sync-pk-context"     , "generate sync entity load extension on table object with primary key parameters: Entity?            Find     (this DataContext    db   , pk_fields)"),
+					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindAsyncByPkOnContext    ) != 0, (_t4ModeOptions.DataModel.GenerateFindExtensions & FindTypes.FindAsyncByPkOnContext    ) != 0, "async-pk-context"    , "generate sync entity load extension on table object with primary key parameters: Task<Entity?>      FindAsync(this DataContext    db   , pk_fields, CancellationToken)"),
+					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindAsyncByPkOnContext    ) != 0, (_t4ModeOptions.DataModel.GenerateFindExtensions & FindTypes.FindAsyncByPkOnContext    ) != 0, "query-pk-context"    , "generate entity query extension on table object with primary key parameters    : IQueryable<Entity> FindQuery(this DataContext    db   , pk_fields)"),
+					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindByRecordOnTable       ) != 0, (_t4ModeOptions.DataModel.GenerateFindExtensions & FindTypes.FindByRecordOnTable       ) != 0, "sync-entity-table"   , "generate sync entity load extension on table object with entity parameter      : Entity?            Find     (this ITable<Entity> table, Entity row)"),
+					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindAsyncByRecordOnTable  ) != 0, (_t4ModeOptions.DataModel.GenerateFindExtensions & FindTypes.FindAsyncByRecordOnTable  ) != 0, "async-entity-table"  , "generate sync entity load extension on table object with entity parameter      : Task<Entity?>      FindAsync(this ITable<Entity> table, Entity row, CancellationToken)"),
+					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindQueryByRecordOnTable  ) != 0, (_t4ModeOptions.DataModel.GenerateFindExtensions & FindTypes.FindQueryByRecordOnTable  ) != 0, "query-entity-table"  , "generate entity query extension on table object with entity parameter          : IQueryable<Entity> FindQuery(this ITable<Entity> table, Entity row)"),
+					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindByRecordOnContext     ) != 0, (_t4ModeOptions.DataModel.GenerateFindExtensions & FindTypes.FindByRecordOnContext     ) != 0, "sync-entity-context" , "generate sync entity load extension on generated context with entity parameter : Entity?            Find     (this DataContext>   db   , Entity row)"),
+					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindAsyncByRecordOnContext) != 0, (_t4ModeOptions.DataModel.GenerateFindExtensions & FindTypes.FindAsyncByRecordOnContext) != 0, "async-entity-context", "generate sync entity load extension on generated context with entity parameter : Task<Entity?>      FindAsync(this DataContext    db   , Entity row, CancellationToken)"),
+					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindQueryByRecordOnContext) != 0, (_t4ModeOptions.DataModel.GenerateFindExtensions & FindTypes.FindQueryByRecordOnContext) != 0, "query-entity-context", "generate entity query extension on generated context with entity parameter     : IQueryable<Entity> FindQuery(this DataContext    db   , Entity row)"));
 
 			/// <summary>
 			/// Order Find extension method parameters by primary key column ordinal instead of order by parameter name option.
@@ -818,7 +886,8 @@ Naming options is an object with following properties:
 					null,
 					null,
 					null,
-					_defaultOptions.DataModel.OrderFindParametersByColumnOrdinal);
+					_defaultOptions.DataModel.OrderFindParametersByColumnOrdinal,
+					_t4ModeOptions.DataModel.OrderFindParametersByColumnOrdinal);
 
 			/// <summary>
 			/// Non-default schema name to use for schema class option.
@@ -830,7 +899,8 @@ Naming options is an object with following properties:
 					"provides schema context class/property names for non-default schemas (appliable only if schema-as-type option enabled)",
 					"Without this option schema name will be used as base name to generate schema context/property names. Specifying this option in command line has limitations and it is recommended to use JSON for it instead because names in CLI cannot contain comma (,) or equality (=) characters, as they used as separators.",
 					new[] { "--schema-class-names schema1=SchemaOne,schema2=SpecialSchema" },
-					new[] { "{ \"dataModel\": { \"schema1\": \"SchemaOne\", \"schema2\": \"SpecialSchema\" } } }" });
+					/*lang=json,strict*/
+					new[] { "{ \"dataModel\": { \"schema1\": \"SchemaOne\", \"schema2\": \"SpecialSchema\" } }" });
 
 			/// <summary>
 			/// Data context class naming option (for autogenerated names only).
@@ -838,7 +908,8 @@ Naming options is an object with following properties:
 			public static readonly CliOption DataContextClassNaming = DefineNamingOption(
 				"data-context-class-name",
 				"data context class naming options (for auto-generated names only)",
-				_defaultOptions.DataModel.DataContextClassNameOptions);
+				_defaultOptions.DataModel.DataContextClassNameOptions,
+				_t4ModeOptions.DataModel.DataContextClassNameOptions);
 
 			/// <summary>
 			/// Entity class naming option.
@@ -846,7 +917,8 @@ Naming options is an object with following properties:
 			public static readonly CliOption EntityClassNaming = DefineNamingOption(
 				"entity-class-name",
 				"entity class naming options",
-				_defaultOptions.DataModel.EntityClassNameOptions);
+				_defaultOptions.DataModel.EntityClassNameOptions,
+				_t4ModeOptions.DataModel.EntityClassNameOptions);
 
 			/// <summary>
 			/// Entity column property naming option.
@@ -854,7 +926,8 @@ Naming options is an object with following properties:
 			public static readonly CliOption EntityColumnPropertyNaming = DefineNamingOption(
 				"entity-column-property-name",
 				"entity column properties naming options",
-				_defaultOptions.DataModel.EntityColumnPropertyNameOptions);
+				_defaultOptions.DataModel.EntityColumnPropertyNameOptions,
+				_t4ModeOptions.DataModel.EntityColumnPropertyNameOptions);
 
 			/// <summary>
 			/// Entity data context property naming option.
@@ -862,7 +935,8 @@ Naming options is an object with following properties:
 			public static readonly CliOption EntityContextPropertyNaming = DefineNamingOption(
 				"entity-context-property-name",
 				"entity table access data context property naming options",
-				_defaultOptions.DataModel.EntityContextPropertyNameOptions);
+				_defaultOptions.DataModel.EntityContextPropertyNameOptions,
+				_t4ModeOptions.DataModel.EntityContextPropertyNameOptions);
 
 			/// <summary>
 			/// Association direct reference property/method naming option.
@@ -870,7 +944,8 @@ Naming options is an object with following properties:
 			public static readonly CliOption AssociationNaming = DefineNamingOption(
 				"association-name",
 				"association property or extension method naming options",
-				_defaultOptions.DataModel.SourceAssociationPropertyNameOptions);
+				_defaultOptions.DataModel.SourceAssociationPropertyNameOptions,
+				_t4ModeOptions.DataModel.SourceAssociationPropertyNameOptions);
 
 			/// <summary>
 			/// Association back reference property/method naming option for non-many cardinality association.
@@ -878,7 +953,8 @@ Naming options is an object with following properties:
 			public static readonly CliOption AssocationBackReferenceSingleNaming = DefineNamingOption(
 				"association-single-backreference-name",
 				"association backreference property or extension method naming options for single-record cardinality",
-				_defaultOptions.DataModel.TargetSingularAssociationPropertyNameOptions);
+				_defaultOptions.DataModel.TargetSingularAssociationPropertyNameOptions,
+				_t4ModeOptions.DataModel.TargetSingularAssociationPropertyNameOptions);
 
 			/// <summary>
 			/// Association back reference property/method naming option for many cardinality association.
@@ -886,7 +962,8 @@ Naming options is an object with following properties:
 			public static readonly CliOption AssocationBackReferenceManyNaming = DefineNamingOption(
 				"association-multi-backreference-name",
 				"association backreference property or extension method naming options for multi-record cardinality",
-				_defaultOptions.DataModel.TargetMultipleAssociationPropertyNameOptions);
+				_defaultOptions.DataModel.TargetMultipleAssociationPropertyNameOptions,
+				_t4ModeOptions.DataModel.TargetMultipleAssociationPropertyNameOptions);
 
 			/// <summary>
 			/// Stored procedure or function mapping method naming option.
@@ -894,7 +971,8 @@ Naming options is an object with following properties:
 			public static readonly CliOption ProcOrFuncMethodNaming = DefineNamingOption(
 				"proc-or-func-method-name",
 				"procedure or function method naming options",
-				_defaultOptions.DataModel.ProcedureNameOptions);
+				_defaultOptions.DataModel.ProcedureNameOptions,
+				_t4ModeOptions.DataModel.ProcedureNameOptions);
 
 			/// <summary>
 			/// Stored procedure or function mapping method parameters naming option.
@@ -902,7 +980,8 @@ Naming options is an object with following properties:
 			public static readonly CliOption ProcOrFuncParameterNaming = DefineNamingOption(
 				"proc-or-func-param-name",
 				"procedure or function method parameters naming options",
-				_defaultOptions.DataModel.ProcedureParameterNameOptions);
+				_defaultOptions.DataModel.ProcedureParameterNameOptions,
+				_t4ModeOptions.DataModel.ProcedureParameterNameOptions);
 
 			/// <summary>
 			/// Stored procedure or table function result-set record class naming option.
@@ -910,7 +989,8 @@ Naming options is an object with following properties:
 			public static readonly CliOption ProcOrFuncResultClassNaming = DefineNamingOption(
 				"proc-or-func-result-class-name",
 				"procedure or table function custom result record mapping class naming options",
-				_defaultOptions.DataModel.ProcedureResultClassNameOptions);
+				_defaultOptions.DataModel.ProcedureResultClassNameOptions,
+				_t4ModeOptions.DataModel.ProcedureResultClassNameOptions);
 
 			/// <summary>
 			/// Stored procedure async results wrapper class naming option.
@@ -920,7 +1000,8 @@ Naming options is an object with following properties:
 				@"results wrapper/holder class naming options for async signature of stored procedure with multiple results. E.g.
 - procedure with one or more return, out or in-out parameters and rowcount value;
 - procedure with one or more return, out or in-out parameters and result table.",
-				_defaultOptions.DataModel.AsyncProcedureResultClassNameOptions);
+				_defaultOptions.DataModel.AsyncProcedureResultClassNameOptions,
+				_t4ModeOptions.DataModel.AsyncProcedureResultClassNameOptions);
 
 			/// <summary>
 			/// Stored procedure async results wrapper class properties naming option.
@@ -930,7 +1011,8 @@ Naming options is an object with following properties:
 				@"results wrapper/holder class properties naming options for async signature of stored procedure with multiple results. E.g.
 - procedure with one or more return, out or in-out parameters and rowcount value;
 - procedure with one or more return, out or in-out parameters and result table.",
-				_defaultOptions.DataModel.AsyncProcedureResultClassPropertiesNameOptions);
+				_defaultOptions.DataModel.AsyncProcedureResultClassPropertiesNameOptions,
+				_t4ModeOptions.DataModel.AsyncProcedureResultClassPropertiesNameOptions);
 
 			/// <summary>
 			/// Stored procedure or table function result-set record column property naming option.
@@ -938,7 +1020,8 @@ Naming options is an object with following properties:
 			public static readonly CliOption ProcOrFuncResultColumnPropertyNaming = DefineNamingOption(
 				"proc-or-func-result-property-name",
 				"procedure or table function custom result record column property naming options. You probably don't want to specify this option, as it used for field with private visibility.",
-				_defaultOptions.DataModel.ProcedureResultColumnPropertyNameOptions);
+				_defaultOptions.DataModel.ProcedureResultColumnPropertyNameOptions,
+				_t4ModeOptions.DataModel.ProcedureResultColumnPropertyNameOptions);
 
 			/// <summary>
 			/// Table function <see cref="MethodInfo"/> field naming option.
@@ -946,7 +1029,8 @@ Naming options is an object with following properties:
 			public static readonly CliOption TableFunctionMethodInfoNaming = DefineNamingOption(
 				"table-function-methodinfo-field-name",
 				"table function FieldInfo field naming options",
-				_defaultOptions.DataModel.TableFunctionMethodInfoFieldNameOptions);
+				_defaultOptions.DataModel.TableFunctionMethodInfoFieldNameOptions,
+				_t4ModeOptions.DataModel.TableFunctionMethodInfoFieldNameOptions);
 
 			/// <summary>
 			/// Scalar function with tuple return type tuple mapping class naming option.
@@ -954,7 +1038,8 @@ Naming options is an object with following properties:
 			public static readonly CliOption FunctionTupleClassNaming = DefineNamingOption(
 				"function-tuple-class-name",
 				"tuple class naming options for scalar function with tuple return type",
-				_defaultOptions.DataModel.FunctionTupleResultClassNameOptions);
+				_defaultOptions.DataModel.FunctionTupleResultClassNameOptions,
+				_t4ModeOptions.DataModel.FunctionTupleResultClassNameOptions);
 
 			/// <summary>
 			/// Scalar function with tuple return type tuple field property naming option.
@@ -962,7 +1047,8 @@ Naming options is an object with following properties:
 			public static readonly CliOption FunctionTupleFieldPropertyNaming = DefineNamingOption(
 				"function-tuple-class-field-name",
 				"tuple class field naming options for scalar function with tuple return type",
-				_defaultOptions.DataModel.FunctionTupleResultPropertyNameOptions);
+				_defaultOptions.DataModel.FunctionTupleResultPropertyNameOptions,
+				_t4ModeOptions.DataModel.FunctionTupleResultPropertyNameOptions);
 
 			/// <summary>
 			/// Non-default schema wrapper class naming option.
@@ -970,7 +1056,8 @@ Naming options is an object with following properties:
 			public static readonly CliOption SchemaWrapperClassNaming = DefineNamingOption(
 				"schema-class-name",
 				"non-default schema wrapper class naming options",
-				_defaultOptions.DataModel.SchemaClassNameOptions);
+				_defaultOptions.DataModel.SchemaClassNameOptions,
+				_t4ModeOptions.DataModel.SchemaClassNameOptions);
 
 			/// <summary>
 			/// Non-default schema data context property naming option.
@@ -978,7 +1065,8 @@ Naming options is an object with following properties:
 			public static readonly CliOption SchemaContextPropertyNaming = DefineNamingOption(
 				"schema-context-property-name",
 				"non-default schema context property in main context naming options",
-				_defaultOptions.DataModel.SchemaPropertyNameOptions);
+				_defaultOptions.DataModel.SchemaPropertyNameOptions,
+				_t4ModeOptions.DataModel.SchemaPropertyNameOptions);
 
 			/// <summary>
 			/// Find extension method parameters naming option.
@@ -986,16 +1074,18 @@ Naming options is an object with following properties:
 			public static readonly CliOption FindParameterNaming = DefineNamingOption(
 				"find-parameter-name",
 				"Find extension method parameters naming options",
-				_defaultOptions.DataModel.FindParameterNameOptions);
+				_defaultOptions.DataModel.FindParameterNameOptions,
+				_t4ModeOptions.DataModel.FindParameterNameOptions);
 
-			private static NamingCliOption DefineNamingOption(string option, string help, NormalizationOptions? defaults)
+			private static NamingCliOption DefineNamingOption(string option, string help, NormalizationOptions? defaults, NormalizationOptions? t4defaults)
 			{
 				return new NamingCliOption(
 					option,
 					help,
 					NAMING_HELP,
 					new[] { string.Format(NAMING_EXAMPLE_TEMPLATE, option) },
-					defaults);
+					defaults,
+					t4defaults);
 			}
 		}
 
@@ -1015,15 +1105,16 @@ Naming options is an object with following properties:
 					"schema objects to load",
 					null,
 					new[] { "--objects table,stored-procedure,table-function" },
+					/*lang=json,strict*/
 					new[] { "{ \"schema\": { \"objects\": [\"table\", \"view\", \"table-function\"] } }" },
 					false,
-					new ((_defaultOptions.Schema.LoadedObjects & Schema.SchemaObjects.Table            ) != 0, "table"             , "load tables"                    ),
-					new ((_defaultOptions.Schema.LoadedObjects & Schema.SchemaObjects.View             ) != 0, "view"              , "load views"                     ),
-					new ((_defaultOptions.Schema.LoadedObjects & Schema.SchemaObjects.ForeignKey       ) != 0, "foreign-key"       , "load foreign key constrains"    ),
-					new ((_defaultOptions.Schema.LoadedObjects & Schema.SchemaObjects.StoredProcedure  ) != 0, "stored-procedure"  , "load stored procedures"         ),
-					new ((_defaultOptions.Schema.LoadedObjects & Schema.SchemaObjects.ScalarFunction   ) != 0, "scalar-function"   , "load scalar functions"          ),
-					new ((_defaultOptions.Schema.LoadedObjects & Schema.SchemaObjects.TableFunction    ) != 0, "table-function"    , "load table functions"           ),
-					new ((_defaultOptions.Schema.LoadedObjects & Schema.SchemaObjects.AggregateFunction) != 0, "aggregate-function", "load aggregate/window functions"));
+					new ((_defaultOptions.Schema.LoadedObjects & Schema.SchemaObjects.Table            ) != 0, (_t4ModeOptions.Schema.LoadedObjects & Schema.SchemaObjects.Table            ) != 0, "table"             , "load tables"                    ),
+					new ((_defaultOptions.Schema.LoadedObjects & Schema.SchemaObjects.View             ) != 0, (_t4ModeOptions.Schema.LoadedObjects & Schema.SchemaObjects.View             ) != 0, "view"              , "load views"                     ),
+					new ((_defaultOptions.Schema.LoadedObjects & Schema.SchemaObjects.ForeignKey       ) != 0, (_t4ModeOptions.Schema.LoadedObjects & Schema.SchemaObjects.ForeignKey       ) != 0, "foreign-key"       , "load foreign key constrains"    ),
+					new ((_defaultOptions.Schema.LoadedObjects & Schema.SchemaObjects.StoredProcedure  ) != 0, (_t4ModeOptions.Schema.LoadedObjects & Schema.SchemaObjects.StoredProcedure  ) != 0, "stored-procedure"  , "load stored procedures"         ),
+					new ((_defaultOptions.Schema.LoadedObjects & Schema.SchemaObjects.ScalarFunction   ) != 0, (_t4ModeOptions.Schema.LoadedObjects & Schema.SchemaObjects.ScalarFunction   ) != 0, "scalar-function"   , "load scalar functions"          ),
+					new ((_defaultOptions.Schema.LoadedObjects & Schema.SchemaObjects.TableFunction    ) != 0, (_t4ModeOptions.Schema.LoadedObjects & Schema.SchemaObjects.TableFunction    ) != 0, "table-function"    , "load table functions"           ),
+					new ((_defaultOptions.Schema.LoadedObjects & Schema.SchemaObjects.AggregateFunction) != 0, (_t4ModeOptions.Schema.LoadedObjects & Schema.SchemaObjects.AggregateFunction) != 0, "aggregate-function", "load aggregate/window functions"));
 
 			/// <summary>
 			/// Prefer provider-specific types over general .net types for columns and parameters option.
@@ -1036,7 +1127,8 @@ Naming options is an object with following properties:
 					"Database provider could have db-specific .net types to better mapping handling to database types. E.g. MySqlGeometry, NpgsqlInet or OracleTimeStampLTZ types, provided by corresponding providers.",
 					null,
 					null,
-					_defaultOptions.Schema.PreferProviderSpecificTypes);
+					_defaultOptions.Schema.PreferProviderSpecificTypes,
+					_t4ModeOptions.Schema.PreferProviderSpecificTypes);
 
 			/// <summary>
 			/// Skip load (and association generation) for duplicate foreign keys with same set of column option.
@@ -1049,7 +1141,8 @@ Naming options is an object with following properties:
 					null,
 					null,
 					null,
-					_defaultOptions.Schema.IgnoreDuplicateForeignKeys);
+					_defaultOptions.Schema.IgnoreDuplicateForeignKeys,
+					_t4ModeOptions.Schema.IgnoreDuplicateForeignKeys);
 
 			/// <summary>
 			/// Explicit list of schemas to load option.
@@ -1060,6 +1153,7 @@ Naming options is an object with following properties:
 					false,
 					true,
 					"load only specified database schemas",
+					null,
 					null,
 					null,
 					null,
@@ -1077,6 +1171,7 @@ Naming options is an object with following properties:
 					null,
 					null,
 					null,
+					null,
 					null);
 
 			/// <summary>
@@ -1088,6 +1183,7 @@ Naming options is an object with following properties:
 					false,
 					true,
 					"load only specified database schemas",
+					null,
 					null,
 					null,
 					null,
@@ -1105,6 +1201,7 @@ Naming options is an object with following properties:
 					null,
 					null,
 					null,
+					null,
 					null);
 
 			/// <summary>
@@ -1118,7 +1215,8 @@ Naming options is an object with following properties:
 					@"Don't use CommandBehavior.SchemaOnly execution mode to load stored procedure or table function schema as it is not safe if them contain non-transactional code.",
 					null,
 					null,
-					_defaultOptions.Schema.UseSafeSchemaLoad);
+					_defaultOptions.Schema.UseSafeSchemaLoad,
+					_t4ModeOptions.Schema.UseSafeSchemaLoad);
 
 			/// <summary>
 			/// Load result-set schema for stored procedures option.
@@ -1131,7 +1229,8 @@ Naming options is an object with following properties:
 					@"When not set, procedures and their parameters will be loaded, but not result-set schema.",
 					null,
 					null,
-					_defaultOptions.Schema.LoadProceduresSchema);
+					_defaultOptions.Schema.LoadProceduresSchema,
+					_t4ModeOptions.Schema.LoadProceduresSchema);
 
 			/// <summary>
 			/// Load result-set schema for stored procedures option.
@@ -1144,7 +1243,8 @@ Naming options is an object with following properties:
 					null,
 					null,
 					null,
-					_defaultOptions.Schema.EnableSqlServerReturnValue);
+					_defaultOptions.Schema.EnableSqlServerReturnValue,
+					_t4ModeOptions.Schema.EnableSqlServerReturnValue);
 
 			/// <summary>
 			/// Table load filter option.
@@ -1177,7 +1277,9 @@ string // also you can put table name as string directly to list
 					new[] { "--include-tables Users,Roles,Permissions" },
 					new[]
 					{
+						/*lang=json*/
 						"{ \"schema\": { \"include-tables\": [ \"Users\", { \"name\": \"Roles\", \"schema\": \"dbo\" } ] } } // Users and dbo.Roles tables",
+						/*lang=json*/
 						"{ \"schema\": { \"include-tables\": [ { \"regex\": \"^audit_.$+\", \"schema\": \"dbo\" } ] } } // all tables starting from audit_ prefix"
 					});
 
@@ -1212,7 +1314,9 @@ string // also you can put table name as string directly to list
 					new[] { "--exclude-tables Users,Roles,Permissions" },
 					new[]
 					{
+						/*lang=json*/
 						"{ \"schema\": { \"exclude-tables\": [ \"Users\", { \"name\": \"Roles\", \"schema\": \"dbo\" } ] } } // Users and dbo.Roles tables ignored",
+						/*lang=json*/
 						"{ \"schema\": { \"exclude-tables\": [ { \"regex\": \"^audit_.$+\", \"schema\": \"dbo\" } ] } } // all tables starting from audit_ prefix ignored"
 					});
 
@@ -1247,7 +1351,9 @@ string // also you can put view name as string directly to list
 					new[] { "--include-views Users,Roles,Permissions" },
 					new[]
 					{
+						/*lang=json*/
 						"{ \"schema\": { \"include-views\": [ \"Users\", { \"name\": \"Roles\", \"schema\": \"dbo\" } ] } } // Users and dbo.Roles views",
+						/*lang=json*/
 						"{ \"schema\": { \"include-views\": [ { \"regex\": \"^audit_.$+\", \"schema\": \"dbo\" } ] } } // all views starting from audit_ prefix"
 					});
 
@@ -1282,7 +1388,9 @@ string // also you can put view name as string directly to list
 					new[] { "--exclude-views Users,Roles,Permissions" },
 					new[]
 					{
+						/*lang=json*/
 						"{ \"schema\": { \"exclude-views\": [ \"Users\", { \"name\": \"Roles\", \"schema\": \"dbo\" } ] } } // Users and dbo.Roles views ignored",
+						/*lang=json*/
 						"{ \"schema\": { \"exclude-views\": [ { \"regex\": \"^audit_.$+\", \"schema\": \"dbo\" } ] } } // all views starting from audit_ prefix ignored"
 					});
 
@@ -1317,7 +1425,9 @@ string // also you can put procedure name as string directly to list
 					new[] { "--procedures-with-schema GetUsers,GetRoles,LoadPermissions" },
 					new[]
 					{
+						/*lang=json*/
 						"{ \"schema\": { \"procedures-with-schema\": [ \"GetUsers\", { \"name\": \"LoadPermissions\", \"schema\": \"dbo\" } ] } } // GetUsers and dbo.LoadPermissions procedures",
+						/*lang=json*/
 						"{ \"schema\": { \"procedures-with-schema\": [ { \"regex\": \"^Load.$+\", \"schema\": \"dbo\" } ] } } // all procedures starting from Load prefix"
 					});
 
@@ -1352,7 +1462,9 @@ string // also you can put procedure name as string directly to list
 					new[] { "--procedures-without-schema FormatAllDrives,DropAllTables" },
 					new[]
 					{
+						/*lang=json*/
 						"{ \"schema\": { \"procedures-without-schema\": [ \"DropAllTables\", { \"name\": \"FormatAllDrives\", \"schema\": \"dbo\" } ] } } // DropAllTables and dbo.FormatAllDrives procedures schema not loaded",
+						/*lang=json*/
 						"{ \"schema\": { \"procedures-without-schema\": [ { \"regex\": \"^Delete.$+\", \"schema\": \"dbo\" } ] } } // all procedures starting from Delete prefix"
 					});
 
@@ -1387,7 +1499,9 @@ string // also you can put table function name as string directly to list
 					new[] { "--include-table-functions GetUsers,GetRoles,LoadPermissions" },
 					new[]
 					{
+						/*lang=json*/
 						"{ \"schema\": { \"include-table-functions\": [ \"ActiveUsers\", { \"name\": \"InactiveUsers\", \"schema\": \"dbo\" } ] } } // ActiveUsers and dbo.InactiveUsers functions",
+						/*lang=json*/
 						"{ \"schema\": { \"include-table-functions\": [ { \"regex\": \"^Query.$+\", \"schema\": \"dbo\" } ] } } // all table functions starting from Query prefix"
 					});
 
@@ -1422,7 +1536,9 @@ string // also you can put table function name as string directly to list
 					new[] { "--exclude-table-functions GetUsers,GetRoles,LoadPermissions" },
 					new[]
 					{
+						/*lang=json*/
 						"{ \"schema\": { \"exclude-table-functions\": [ \"TestFunction\", { \"name\": \"CheckDb\", \"schema\": \"dbo\" } ] } } // TestFunction and dbo.CheckDb functions ignored",
+						/*lang=json*/
 						"{ \"schema\": { \"exclude-table-functions\": [ { \"regex\": \"^Audit.$+\", \"schema\": \"dbo\" } ] } } // all table functions starting from Audit prefix ignored"
 					});
 		}
