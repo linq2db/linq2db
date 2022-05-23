@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.Common;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -137,9 +136,9 @@ namespace LinqToDB.DataProvider.Firebird
 
 		#region BulkCopy
 
-		public override BulkCopyRowsCopied BulkCopy<T>(DataContextOptions options, ITable<T> table,
-			BulkCopyOptions                                               bulkCopyOptions,
-			IEnumerable<T>                                                source)
+		public override BulkCopyRowsCopied BulkCopy<T>(DataOptions options, ITable<T> table,
+			BulkCopyOptions                                        bulkCopyOptions,
+			IEnumerable<T>                                         source)
 		{
 			return new FirebirdBulkCopy().BulkCopy(
 				bulkCopyOptions.BulkCopyType == BulkCopyType.Default ? FirebirdTools.DefaultBulkCopyType : bulkCopyOptions.BulkCopyType,
@@ -148,7 +147,7 @@ namespace LinqToDB.DataProvider.Firebird
 				source);
 		}
 
-		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataContextOptions options, ITable<T> table,
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
 			BulkCopyOptions bulkCopyOptions,
 			IEnumerable<T> source, CancellationToken cancellationToken)
 		{
@@ -161,7 +160,7 @@ namespace LinqToDB.DataProvider.Firebird
 		}
 
 #if NATIVE_ASYNC
-		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataContextOptions options, ITable<T> table,
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
 			BulkCopyOptions bulkCopyOptions,
 			IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{

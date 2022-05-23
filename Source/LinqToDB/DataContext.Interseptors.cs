@@ -51,6 +51,14 @@ namespace LinqToDB
 		/// <inheritdoc cref="IDataContext.AddInterceptor(IInterceptor)"/>
 		public void AddInterceptor(IInterceptor interceptor)
 		{
+			AddInterceptor(interceptor, true);
+		}
+
+		void AddInterceptor(IInterceptor interceptor, bool addToOptions)
+		{
+			if (addToOptions)
+				Options = Options.UseInterceptor(interceptor);
+
 			switch (interceptor)
 			{
 				case ICommandInterceptor          cm : Add(ref _commandInterceptor,          cm); break;
@@ -72,9 +80,6 @@ namespace LinqToDB
 
 					aggregator = new();
 					aggregator.Interceptors.AddRange(ai.Interceptors);
-
-					_prebuiltCoreExtension = _prebuiltCoreExtension.WithInterceptor(aggregator);
-					_prebuiltOptions       = _prebuiltOptions.WithExtension(_prebuiltCoreExtension);
 				}
 				else
 				{
@@ -82,9 +87,6 @@ namespace LinqToDB
 					{
 						aggregator = new();
 						_dataConnection?.AddInterceptor(aggregator);
-
-						_prebuiltCoreExtension = _prebuiltCoreExtension.WithInterceptor(aggregator);
-						_prebuiltOptions       = _prebuiltOptions.WithExtension(_prebuiltCoreExtension);
 					}
 
 					aggregator.Interceptors.Add(intercept);

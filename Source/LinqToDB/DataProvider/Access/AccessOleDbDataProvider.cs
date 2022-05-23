@@ -1,16 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
+
 using OleDbType = LinqToDB.DataProvider.OleDbProviderAdapter.OleDbType;
 
 namespace LinqToDB.DataProvider.Access
 {
-	using Infrastructure;
-	using System.Data.Common;
 	using Common;
 	using Data;
+	using Infrastructure;
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
@@ -93,7 +94,7 @@ namespace LinqToDB.DataProvider.Access
 			switch (dataType.DataType)
 			{
 				// "Data type mismatch in criteria expression" fix for culture-aware number decimal separator
-				// unfortunatelly, regular fix using ExecuteScope=>InvariantCultureRegion
+				// unfortunately, regular fix using ExecuteScope=>InvariantCultureRegion
 				// doesn't work for all situations
 				case DataType.Decimal   :
 				case DataType.VarNumeric: parameter.DbType = DbType.AnsiString; return;
@@ -110,11 +111,10 @@ namespace LinqToDB.DataProvider.Access
 
 		#region BulkCopy
 
-		public override BulkCopyRowsCopied BulkCopy<T>(DataContextOptions options, ITable<T> table,
-			BulkCopyOptions                                               bulkCopyOptions,
-			IEnumerable<T>                                                source)
+		public override BulkCopyRowsCopied BulkCopy<T>(DataOptions options, ITable<T> table,
+			BulkCopyOptions                                        bulkCopyOptions,
+			IEnumerable<T>                                         source)
 		{
-
 			return new AccessBulkCopy().BulkCopy(
 				bulkCopyOptions.BulkCopyType == BulkCopyType.Default ? AccessTools.DefaultBulkCopyType : bulkCopyOptions.BulkCopyType,
 				table,
@@ -122,11 +122,10 @@ namespace LinqToDB.DataProvider.Access
 				source);
 		}
 
-		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataContextOptions options, ITable<T> table,
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
 			BulkCopyOptions bulkCopyOptions,
 			IEnumerable<T> source, CancellationToken cancellationToken)
 		{
-
 			return new AccessBulkCopy().BulkCopyAsync(
 				bulkCopyOptions.BulkCopyType == BulkCopyType.Default ? AccessTools.DefaultBulkCopyType : bulkCopyOptions.BulkCopyType,
 				table,
@@ -136,7 +135,7 @@ namespace LinqToDB.DataProvider.Access
 		}
 
 #if NATIVE_ASYNC
-		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataContextOptions options, ITable<T> table,
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
 			BulkCopyOptions bulkCopyOptions,
 			IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{

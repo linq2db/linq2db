@@ -9,9 +9,9 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
-	using Infrastructure;
 	using Common;
 	using Data;
+	using Infrastructure;
 	using Mapping;
 	using SqlProvider;
 
@@ -325,9 +325,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		#region BulkCopy
 
-		public override BulkCopyRowsCopied BulkCopy<T>(DataContextOptions options, ITable<T> table,
-			BulkCopyOptions                                               bulkCopyOptions,
-			IEnumerable<T>                                                source)
+		public override BulkCopyRowsCopied BulkCopy<T>(DataOptions options, ITable<T> table,
+			BulkCopyOptions                                        bulkCopyOptions,
+			IEnumerable<T>                                         source)
 		{
 			return new PostgreSQLBulkCopy(this).BulkCopy(
 				bulkCopyOptions.BulkCopyType == BulkCopyType.Default ? PostgreSQLTools.DefaultBulkCopyType : bulkCopyOptions.BulkCopyType,
@@ -336,7 +336,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				source);
 		}
 
-		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataContextOptions options, ITable<T> table,
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
 			BulkCopyOptions bulkCopyOptions,
 			IEnumerable<T> source, CancellationToken cancellationToken)
 		{
@@ -349,7 +349,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		}
 
 #if NATIVE_ASYNC
-		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataContextOptions options, ITable<T> table,
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
 			BulkCopyOptions bulkCopyOptions,
 			IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{

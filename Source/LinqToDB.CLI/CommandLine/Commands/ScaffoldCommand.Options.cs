@@ -561,7 +561,7 @@ Naming options is an object with following properties:
 					null,
 					false,
 					"generate data context contructor with options parameter",
-					$"Constructor example: public MyDataContext({nameof(DataContextOptions)} options) {{ ... }}",
+					$"Constructor example: public MyDataContext({nameof(DataOptions)} options) {{ ... }}",
 					null,
 					null,
 					_defaultOptions.DataModel.HasUntypedOptionsConstructor);
@@ -574,7 +574,7 @@ Naming options is an object with following properties:
 					null,
 					false,
 					"generate data context contructor with generic options parameter",
-					$"Constructor example: public MyDataContext({nameof(DataContextOptions)}<MyDataContext> options) {{ ... }}",
+					$"Constructor example: public MyDataContext({nameof(DataOptions)}<MyDataContext> options) {{ ... }}",
 					null,
 					null,
 					_defaultOptions.DataModel.HasTypedOptionsConstructor);
@@ -847,7 +847,7 @@ Naming options is an object with following properties:
 				"entity-class-name",
 				"entity class naming options",
 				_defaultOptions.DataModel.EntityClassNameOptions);
-			
+
 			/// <summary>
 			/// Entity column property naming option.
 			/// </summary>
@@ -855,7 +855,7 @@ Naming options is an object with following properties:
 				"entity-column-property-name",
 				"entity column properties naming options",
 				_defaultOptions.DataModel.EntityColumnPropertyNameOptions);
-			
+
 			/// <summary>
 			/// Entity data context property naming option.
 			/// </summary>
@@ -871,7 +871,7 @@ Naming options is an object with following properties:
 				"association-name",
 				"association property or extension method naming options",
 				_defaultOptions.DataModel.SourceAssociationPropertyNameOptions);
-			
+
 			/// <summary>
 			/// Association back reference property/method naming option for non-many cardinality association.
 			/// </summary>
@@ -895,7 +895,7 @@ Naming options is an object with following properties:
 				"proc-or-func-method-name",
 				"procedure or function method naming options",
 				_defaultOptions.DataModel.ProcedureNameOptions);
-			
+
 			/// <summary>
 			/// Stored procedure or function mapping method parameters naming option.
 			/// </summary>
@@ -903,7 +903,7 @@ Naming options is an object with following properties:
 				"proc-or-func-param-name",
 				"procedure or function method parameters naming options",
 				_defaultOptions.DataModel.ProcedureParameterNameOptions);
-			
+
 			/// <summary>
 			/// Stored procedure or table function result-set record class naming option.
 			/// </summary>
@@ -939,7 +939,7 @@ Naming options is an object with following properties:
 				"proc-or-func-result-property-name",
 				"procedure or table function custom result record column property naming options. You probably don't want to specify this option, as it used for field with private visibility.",
 				_defaultOptions.DataModel.ProcedureResultColumnPropertyNameOptions);
-			
+
 			/// <summary>
 			/// Table function <see cref="MethodInfo"/> field naming option.
 			/// </summary>
@@ -947,7 +947,7 @@ Naming options is an object with following properties:
 				"table-function-methodinfo-field-name",
 				"table function FieldInfo field naming options",
 				_defaultOptions.DataModel.TableFunctionMethodInfoFieldNameOptions);
-			
+
 			/// <summary>
 			/// Scalar function with tuple return type tuple mapping class naming option.
 			/// </summary>
@@ -971,7 +971,7 @@ Naming options is an object with following properties:
 				"schema-class-name",
 				"non-default schema wrapper class naming options",
 				_defaultOptions.DataModel.SchemaClassNameOptions);
-			
+
 			/// <summary>
 			/// Non-default schema data context property naming option.
 			/// </summary>

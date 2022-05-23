@@ -52,8 +52,7 @@ private static IEnumerable<Method> GetConstructorsImpl(string defaultConfigurati
 
 	if (GenerateLinqToDBConnectionOptionsConstructors)
 	{
-		yield return new Method(null, name, new Func<string>[] { () => "LinqToDBConnectionOptions options" }) { AfterSignature = { ": base(options)" } };
-		yield return new Method(null, name, new Func<string>[] { () => string.Format("LinqToDBConnectionOptions<{0}> options", name) }) { AfterSignature = { ": base(options)" } };
+		yield return new Method(null, name, new Func<string>[] { () => "DataOptions options" }) { AfterSignature = { ": base(options)" } };
 	}
 }
 

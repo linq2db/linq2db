@@ -132,7 +132,8 @@ namespace LinqToDB.Infrastructure
 	/// which means that you do not need to create additional MappingSchema object to define FluentMapping.
 	/// You can use <c>context.MappingSchema.GetFluentMappingBuilder()</c>.
 	/// </param>
-	public sealed record LinqOptions(
+	public sealed record LinqOptions
+	(
 		bool     PreloadGroups,
 		bool     IgnoreEmptyUpdate,
 		bool     GenerateExpressionTest,
@@ -146,8 +147,8 @@ namespace LinqToDB.Infrastructure
 		bool     PreferApply,
 		bool     KeepDistinctOrdered,
 		bool     ParameterizeTakeSkip,
-		bool     EnableAutoFluentMapping)
-		: IOptionSet, IApplicable<DataConnection>, IDataContextOptionsExtension
+		bool     EnableAutoFluentMapping
+	) : IOptionSet
 	{
 		public LinqOptions() : this(
 			PreloadGroups           : false,
@@ -184,21 +185,6 @@ namespace LinqToDB.Infrastructure
 			.Add(ParameterizeTakeSkip)
 			.Add(EnableAutoFluentMapping)
 			.CreateID();
-
-		DataContextOptionsExtensionInfo IDataContextOptionsExtension.Info => throw new NotImplementedException();
-
-		void IDataContextOptionsExtension.ApplyServices()
-		{
-		}
-
-		void IDataContextOptionsExtension.Validate(IDataContextOptions options)
-		{
-		}
-
-		void IApplicable<DataConnection>.Apply(DataConnection dataConnection)
-		{
-			DataConnection.ConfigurationApplier.Apply(dataConnection, this);
-		}
 
 		#region IEquatable implementation
 

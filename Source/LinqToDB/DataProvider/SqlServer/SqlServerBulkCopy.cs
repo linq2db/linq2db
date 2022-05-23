@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using System.Data;
-	using System.Threading;
 	using Data;
 	using SqlProvider;
 
@@ -126,7 +125,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			var transaction    = providerConnections.ProviderTransaction;
 			var ed             = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T));
 			var columns        = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
-			var sb             = _provider.CreateSqlBuilder(table.DataContext.MappingSchema, dataConnection.LinqOptions);
+			var sb             = _provider.CreateSqlBuilder(table.DataContext.MappingSchema, dataConnection.Options.LinqOptions);
 			var rd             = createDataReader(columns);
 			var sqlopt         = SqlServerProviderAdapter.SqlBulkCopyOptions.Default;
 			var rc             = new BulkCopyRowsCopied();
@@ -144,7 +143,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				{
 					bc.NotifyAfter = options.NotifyAfter;
 
-					bc.SqlRowsCopied += (sender, args) =>
+					bc.SqlRowsCopied += (_, args) =>
 					{
 						rc.RowsCopied = args.RowsCopied;
 						options.RowsCopiedCallback(rc);
@@ -171,7 +170,8 @@ namespace LinqToDB.DataProvider.SqlServer
 				await TraceActionAsync(
 					dataConnection,
 					() => "INSERT ASYNC BULK " + tableName + "(" + string.Join(", ", columns.Select(x => x.ColumnName)) + ")" + Environment.NewLine,
-					async () => {
+					async () =>
+					{
 						await bc.WriteToServerAsync(rd, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 						return rd.Count;
 					}).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
@@ -200,7 +200,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			var transaction    = providerConnections.ProviderTransaction;
 			var ed             = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T));
 			var columns        = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
-			var sb             = _provider.CreateSqlBuilder(table.DataContext.MappingSchema, dataConnection.LinqOptions);
+			var sb             = _provider.CreateSqlBuilder(table.DataContext.MappingSchema, dataConnection.Options.LinqOptions);
 			var rd             = createDataReader(columns);
 			var sqlopt         = SqlServerProviderAdapter.SqlBulkCopyOptions.Default;
 			var rc             = new BulkCopyRowsCopied();
@@ -218,7 +218,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				{
 					bc.NotifyAfter = options.NotifyAfter;
 
-					bc.SqlRowsCopied += (sender, args) =>
+					bc.SqlRowsCopied += (_, args) =>
 					{
 						rc.RowsCopied = args.RowsCopied;
 						options.RowsCopiedCallback(rc);
@@ -245,7 +245,8 @@ namespace LinqToDB.DataProvider.SqlServer
 				TraceAction(
 					dataConnection,
 					() => "INSERT BULK " + tableName + "(" + string.Join(", ", columns.Select(x => x.ColumnName)) + ")" + Environment.NewLine,
-					() => {
+					() =>
+					{
 						bc.WriteToServer(rd);
 						return rd.Count;
 					});

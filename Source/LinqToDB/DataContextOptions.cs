@@ -6,78 +6,62 @@ namespace LinqToDB
 	using Common.Internal;
 	using Data;
 	using Infrastructure;
+	using Interceptors;
+	using Mapping;
 
-	/// <summary>
-	/// The options to be used by a <see cref="DataConnection" />.
-	/// </summary>
-	public abstract class DataContextOptions : IDataContextOptions
+	/// <param name="MappingSchema">
+	/// Gets <see cref="MappingSchema"/> instance to use with <see cref="DataConnection"/> instance.
+	/// </param>
+	/// <param name="CommandTimeout">
+	/// The command timeout, or <c>null</c> if none has been set.
+	/// </param>
+	/// <param name="Interceptors">
+	/// Gets Interceptors to use with <see cref="DataConnection"/> instance.
+	/// </param>
+	public sealed record DataContextOptions
+	(
+		MappingSchema?               MappingSchema,
+		int?                         CommandTimeout = default,
+		IReadOnlyList<IInterceptor>? Interceptors   = default
+	) : IOptionSet, IApplicable<DataConnection>, IApplicable<DataContext>
 	{
-		/// <summary>
-		/// Initializes a new instance of the <see cref="DataContextOptions" /> class. You normally use a <see cref="DataContextOptionsBuilder" />
-		/// to create instances of this class and it is not designed to be directly constructed in your application code.
-		/// </summary>
-		/// <param name="extensions"> The extensions that store the configured options. </param>
-		protected DataContextOptions(IReadOnlyDictionary<Type,IDataContextOptionsExtension> extensions)
+		public DataContextOptions() : this((MappingSchema?)null)
 		{
-			_extensions = extensions ?? throw new ArgumentNullException(nameof(extensions));
 		}
 
-		readonly IReadOnlyDictionary<Type,IDataContextOptionsExtension> _extensions;
+		int? _configurationID;
+		int IOptionSet.ConfigurationID => _configurationID ??= new IdentifierBuilder()
+			.Add(MappingSchema)
+			.Add(CommandTimeout)
+			.CreateID();
 
-		/// <summary>
-		/// Gets the extensions that store the configured options.
-		/// </summary>
-		public virtual IEnumerable<IDataContextOptionsExtension> Extensions => _extensions.Values;
+		public static readonly DataContextOptions Empty = new();
 
-		/// <summary>
-		/// Gets the extension of the specified type. Returns null if no extension of the specified type is configured.
-		/// </summary>
-		/// <typeparam name="TExtension"> The type of the extension to get. </typeparam>
-		/// <returns> The extension, or null if none was found. </returns>
-		public virtual TExtension? FindExtension<TExtension>()
-			where TExtension : class, IDataContextOptionsExtension
+		void IApplicable<DataConnection>.Apply(DataConnection obj)
 		{
-			return _extensions.TryGetValue(typeof(TExtension), out var extension) ? (TExtension?)extension : null;
+			DataConnection.ConfigurationApplier.Apply(obj, this);
 		}
 
-		/// <summary>
-		/// Gets the extension of the specified type. Throws if no extension of the specified type is configured.
-		/// </summary>
-		/// <typeparam name="TExtension"> The type of the extension to get. </typeparam>
-		/// <returns> The extension. </returns>
-		public virtual TExtension GetExtension<TExtension>()
-			where TExtension : class, IDataContextOptionsExtension
+		void IApplicable<DataContext>.Apply(DataContext obj)
 		{
-			var extension = FindExtension<TExtension>();
-			return extension ?? throw new InvalidOperationException($"Options extension of type '{typeof(TExtension).ShortDisplayName()}' not found.");
+			DataContext.ConfigurationApplier.Apply(obj, this);
 		}
 
-		/// <summary>
-		/// Adds the given extension to the underlying options and creates a new
-		/// <see cref="DataContextOptions" /> with the extension added.
-		/// </summary>
-		/// <typeparam name="TExtension"> The type of extension to be added. </typeparam>
-		/// <param name="extension"> The extension to be added. </param>
-		/// <returns> The new options instance with the given extension added. </returns>
-		public abstract DataContextOptions WithExtension<TExtension>(TExtension extension)
-			where TExtension : class, IDataContextOptionsExtension;
+		#region IEquatable implementation
 
-		/// <summary>
-		/// The type of context that these options are for. Will return <see cref="IDataContext" /> if the
-		/// options are not built for a specific derived context.
-		/// </summary>
-		public abstract Type ContextType { get; }
+		public bool Equals(DataContextOptions? other)
+		{
+			if (ReferenceEquals(null, other)) return false;
+			if (ReferenceEquals(this, other)) return true;
 
-		/// <summary>
-		/// Specifies that no further configuration of this options object should occur.
-		/// </summary>
-		public virtual void Freeze() => IsFrozen = true;
+			return ((IOptionSet)this).ConfigurationID == ((IOptionSet)other).ConfigurationID;
+		}
 
-		/// <summary>
-		/// Returns true if <see cref="Freeze" />. has been called.
-		/// </summary>
-		public virtual bool IsFrozen { get; private set; }
+		public override int GetHashCode()
+		{
+			return ((IOptionSet)this).ConfigurationID;
+		}
 
-		public abstract bool IsValidForDataContext(Type contextType);
+		#endregion
 	}
 }

@@ -4,8 +4,8 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.Access
 {
-	using Infrastructure;
 	using Extensions;
+	using Infrastructure;
 	using Mapping;
 	using SqlProvider;
 	using SqlQuery;

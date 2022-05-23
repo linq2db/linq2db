@@ -1,9 +1,10 @@
-﻿using LinqToDB.Infrastructure;
-using LinqToDB.Linq;
-using LinqToDB.Mapping;
+﻿using System;
 
 namespace LinqToDB.DataProvider.Access
 {
+	using Infrastructure;
+	using Linq;
+	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
 
@@ -42,7 +43,7 @@ namespace LinqToDB.DataProvider.Access
 			return statement.QueryType switch
 			{
 				QueryType.Delete => GetAlternativeDelete((SqlDeleteStatement)statement, linqOptions),
-				QueryType.Update => CorrectAccessUpdate((SqlUpdateStatement)statement),
+				QueryType.Update => CorrectAccessUpdate ((SqlUpdateStatement)statement),
 				_                => statement,
 			};
 		}

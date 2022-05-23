@@ -12,7 +12,7 @@ namespace LinqToDB.Remote.Wcf
 		#region Init
 
 		// clone constructor
-		private WcfDataContext() : base(new DataContextOptions<WcfDataContext>())
+		WcfDataContext() : base(new DataOptions())
 		{
 		}
 
@@ -45,9 +45,9 @@ namespace LinqToDB.Remote.Wcf
 
 		public Binding? Binding { get; private set; }
 
-#endregion
+		#endregion
 
-#region Overrides
+		#region Overrides
 
 		protected override ILinqService GetClient()
 		{
@@ -78,6 +78,6 @@ namespace LinqToDB.Remote.Wcf
 
 		protected override string ContextIDPrefix => "WcfRemoteLinqService";
 
-#endregion
+		#endregion
 	}
 }

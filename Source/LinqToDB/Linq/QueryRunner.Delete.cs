@@ -80,7 +80,7 @@ namespace LinqToDB.Linq
 					return 0;
 
 				var type        = GetType<T>(obj!, dataContext);
-				var linqOptions = dataContext.GetLinqOptions();
+				var linqOptions = dataContext.Options.LinqOptions;
 
 				var ei = linqOptions.DisableQueryCache
 					? CreateQuery(dataContext, tableName, serverName, databaseName, schemaName, tableOptions, type)
@@ -122,7 +122,7 @@ namespace LinqToDB.Linq
 					return 0;
 
 				var type        = GetType<T>(obj!, dataContext);
-				var linqOptions = dataContext.GetLinqOptions();
+				var linqOptions = dataContext.Options.LinqOptions;
 
 				var ei   = linqOptions.DisableQueryCache
 					? CreateQuery(dataContext, tableName, serverName, databaseName, schemaName, tableOptions, type)

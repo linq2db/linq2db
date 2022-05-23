@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data.Common;
 using System.Linq;
 using System.Text;
 
@@ -9,12 +10,11 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.Firebird
 {
-	using Infrastructure;
 	using Common;
+	using Infrastructure;
 	using Mapping;
 	using SqlQuery;
 	using SqlProvider;
-	using System.Data.Common;
 
 	public partial class FirebirdSqlBuilder : BasicSqlBuilder
 	{
@@ -96,11 +96,11 @@ namespace LinqToDB.DataProvider.Firebird
 					StringBuilder.Append("DECFLOAT");
 					if (type.Type.Precision != null && type.Type.Precision <= 16)
 						StringBuilder.Append("(16)");
-					                                                                                      break;
+					break;
 
 				case DataType.Decimal       :
 					base.BuildDataTypeFromDataType(type.Type.Precision > 18 ? new SqlDataType(type.Type.DataType, type.Type.SystemType, null, 18, type.Type.Scale, type.Type.DbType) : type, forCreateTable);
-					                                                                                      break;
+					break;
 				case DataType.SByte         :
 				case DataType.Byte          : StringBuilder.Append("SmallInt");                           break;
 				case DataType.Money         : StringBuilder.AppendFormat("Decimal(18{0}4)", InlineComma); break;

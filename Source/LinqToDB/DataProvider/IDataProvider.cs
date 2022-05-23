@@ -1,15 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 using System.Threading;
 
 namespace LinqToDB.DataProvider
 {
-	using Infrastructure;
-	using System.Data.Common;
 	using Common;
+	using Infrastructure;
 	using Data;
 	using Mapping;
 	using SchemaProvider;
@@ -25,8 +25,8 @@ namespace LinqToDB.DataProvider
 		SqlProviderFlags SqlProviderFlags      { get; }
 		TableOptions     SupportedTableOptions { get; }
 		void             InitContext           (IDataContext dataContext);
-		DbConnection     CreateConnection      (string       connectionString);
-		ISqlBuilder      CreateSqlBuilder(MappingSchema      mappingSchema, LinqOptions linqOptions);
+		DbConnection     CreateConnection      (string connectionString);
+		ISqlBuilder      CreateSqlBuilder      (MappingSchema mappingSchema, LinqOptions linqOptions);
 		ISqlOptimizer    GetSqlOptimizer       ();
 		/// <summary>
 		/// Initializes <see cref="DataConnection"/> command object.
@@ -63,23 +63,23 @@ namespace LinqToDB.DataProvider
 		ISchemaProvider    GetSchemaProvider     ();
 
 		BulkCopyRowsCopied BulkCopy<T>(
-			DataContextOptions options,
-			ITable<T>          table,
-			BulkCopyOptions    bulkCopyOptions,
-			IEnumerable<T>     source)
+			DataOptions     options,
+			ITable<T>       table,
+			BulkCopyOptions bulkCopyOptions,
+			IEnumerable<T>  source)
 		where T : notnull;
 
 		Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
-			DataContextOptions options,
-			ITable<T>          table,
-			BulkCopyOptions    bulkCopyOptions,
-			IEnumerable<T>     source,
-			CancellationToken  cancellationToken)
+			DataOptions       options,
+			ITable<T>         table,
+			BulkCopyOptions   bulkCopyOptions,
+			IEnumerable<T>    source,
+			CancellationToken cancellationToken)
 		where T : notnull;
 
 #if NATIVE_ASYNC
 		Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
-			DataContextOptions  options,
+			DataOptions         options,
 			ITable<T>           table,
 			BulkCopyOptions     bulkCopyOptions,
 			IAsyncEnumerable<T> source,

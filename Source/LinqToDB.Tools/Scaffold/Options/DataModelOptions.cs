@@ -179,7 +179,7 @@ namespace LinqToDB.Scaffold
 		public bool HasConfigurationConstructor { get; set; } = true;
 
 		/// <summary>
-		/// Enables generation of data context constructor with non-generic <c>(<see cref="DataContextOptions"/> options)</c> parameter.
+		/// Enables generation of data context constructor with non-generic <c>(<see cref="DataOptions"/> options)</c> parameter.
 		/// <list type="bullet">
 		/// <item>Default: <c>false</c></item>
 		/// <item>In T4 compability mode: <c>true</c></item>
@@ -188,7 +188,7 @@ namespace LinqToDB.Scaffold
 		public bool HasUntypedOptionsConstructor { get; set; }
 
 		/// <summary>
-		/// Enables generation of data context constructor with generic <c>(<see cref="DataContextOptions{T}"/> options)</c> parameter,
+		/// Enables generation of data context constructor with generic <c>(<see cref="DataOptions"/> options)</c> parameter,
 		/// where <c>T</c> is generated data context class.
 		/// <list type="bullet">
 		/// <item>Default: <c>true</c></item>
@@ -490,7 +490,7 @@ namespace LinqToDB.Scaffold
 		/// <item>In T4 compability mode: <c>false</c></item>
 		/// </list>
 		/// </summary>
-		public bool GenerateIEquatable { get; set; } 
+		public bool GenerateIEquatable { get; set; }
 
 		/// <summary>
 		/// Provides base names for schema wrapper class and main data context property for additional schemas (when <see cref="GenerateSchemaAsType"/> option set).

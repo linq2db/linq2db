@@ -1012,10 +1012,10 @@ namespace Tests.DataProvider
 		void BulkCopyLinqTypes(string context, BulkCopyType bulkCopyType, AlternativeBulkCopy alternativeBulkCopy)
 		{
 			var cs = DataConnection.GetConnectionString(context);
-			var builder = new DataContextOptionsBuilder().UseOracle(cs,
-				o => o.AutoDetectServerVersion().UseAlternativeBulkCopy(alternativeBulkCopy));
+			var builder = new DataOptions()
+				.UseOracle(cs, o => o with { AlternativeBulkCopy = alternativeBulkCopy });
 
-			using (var db = new TestDataConnection(builder.Options))
+			using (var db = new TestDataConnection(builder))
 			{
 				if (bulkCopyType == BulkCopyType.ProviderSpecific)
 				{
@@ -1113,11 +1113,10 @@ namespace Tests.DataProvider
 
 		async Task BulkCopyLinqTypesAsync(string context, BulkCopyType bulkCopyType, AlternativeBulkCopy alternativeBulkCopy)
 		{
-			var cs = DataConnection.GetConnectionString(context);
-			var builder = new DataContextOptionsBuilder().UseOracle(cs,
-				o => o.AutoDetectServerVersion().UseAlternativeBulkCopy(alternativeBulkCopy));
+			var cs      = DataConnection.GetConnectionString(context);
+			var builder = new DataOptions().UseOracle(cs, o => o with { AlternativeBulkCopy = alternativeBulkCopy });
 
-			using (var db = new TestDataConnection(builder.Options))
+			using (var db = new TestDataConnection(builder))
 			{
 				if (bulkCopyType == BulkCopyType.ProviderSpecific)
 				{
@@ -1379,11 +1378,10 @@ namespace Tests.DataProvider
 				new OracleSpecific.SequenceTest { Value = "Value"},
 			};
 
-			var cs = DataConnection.GetConnectionString(context);
-			var builder = new DataContextOptionsBuilder().UseOracle(cs,
-				o => o.AutoDetectServerVersion().UseAlternativeBulkCopy(alternativeBulkCopy));
+			var cs      = DataConnection.GetConnectionString(context);
+			var builder = new DataOptions().UseOracle(cs, o => o with { AlternativeBulkCopy = alternativeBulkCopy });
 
-			using (var db = new TestDataConnection(builder.Options))
+			using (var db = new TestDataConnection(builder))
 			{
 				db.GetTable<OracleSpecific.SequenceTest>().Where(_ => _.Value == "SeqValue").Delete();
 
@@ -1453,11 +1451,10 @@ namespace Tests.DataProvider
 				new OracleSpecific.SequenceTest { Value = "Value"},
 			};
 
-			var cs = DataConnection.GetConnectionString(context);
-			var builder = new DataContextOptionsBuilder().UseOracle(cs,
-				o => o.AutoDetectServerVersion().UseAlternativeBulkCopy(alternativeBulkCopy));
+			var cs      = DataConnection.GetConnectionString(context);
+			var builder = new DataOptions().UseOracle(cs, o => o with { AlternativeBulkCopy = alternativeBulkCopy });
 
-			using (var db = new TestDataConnection(builder.Options))
+			using (var db = new TestDataConnection(builder))
 			{
 				db.GetTable<OracleSpecific.SequenceTest>().Where(_ => _.Value == "SeqValue").Delete();
 
@@ -3821,7 +3818,7 @@ CREATE TABLE ""TABLE_A""(
 					).Select(x => x.ID).ToArray();
 			}
 		}
-	
+
 		[Table("LinqDataTypes", IsColumnAttributeRequired = false)]
 		class LinqDataTypesBlobs
 		{
@@ -3832,7 +3829,7 @@ CREATE TABLE ""TABLE_A""(
 			[Column("BinaryValue", DataType = DataType.Blob)]
 			public OracleBlob? Blob { get; set; }
 		}
-		
+
 		[Test]
 		public void TestBlob([IncludeDataSources(TestProvName.AllOracleManaged)] string context)
 		{

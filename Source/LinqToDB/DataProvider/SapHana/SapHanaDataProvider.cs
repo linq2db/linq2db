@@ -7,10 +7,10 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.SapHana
 {
-	using Infrastructure;
 	using Common;
 	using Data;
 	using Extensions;
+	using Infrastructure;
 	using Mapping;
 	using SqlProvider;
 
@@ -147,9 +147,9 @@ namespace LinqToDB.DataProvider.SapHana
 			base.SetParameterType(dataConnection, parameter, dataType);
 		}
 
-		public override BulkCopyRowsCopied BulkCopy<T>(DataContextOptions options, ITable<T> table,
-			BulkCopyOptions                                               bulkCopyOptions,
-			IEnumerable<T>                                                source)
+		public override BulkCopyRowsCopied BulkCopy<T>(DataOptions options, ITable<T> table,
+			BulkCopyOptions                                        bulkCopyOptions,
+			IEnumerable<T>                                         source)
 		{
 			return new SapHanaBulkCopy(this).BulkCopy(
 				bulkCopyOptions.BulkCopyType == BulkCopyType.Default ? SapHanaTools.DefaultBulkCopyType : bulkCopyOptions.BulkCopyType,
@@ -158,7 +158,7 @@ namespace LinqToDB.DataProvider.SapHana
 				source);
 		}
 
-		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataContextOptions options, ITable<T> table,
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
 			BulkCopyOptions bulkCopyOptions,
 			IEnumerable<T> source, CancellationToken cancellationToken)
 		{
@@ -171,7 +171,7 @@ namespace LinqToDB.DataProvider.SapHana
 		}
 
 #if NATIVE_ASYNC
-		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataContextOptions options, ITable<T> table,
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
 			BulkCopyOptions bulkCopyOptions,
 			IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{

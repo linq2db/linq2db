@@ -428,9 +428,9 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		SqlServerBulkCopy? _bulkCopy;
 
-		public override BulkCopyRowsCopied BulkCopy<T>(DataContextOptions options, ITable<T> table,
-			BulkCopyOptions                                               bulkCopyOptions,
-			IEnumerable<T>                                                source)
+		public override BulkCopyRowsCopied BulkCopy<T>(DataOptions options, ITable<T> table,
+			BulkCopyOptions                                        bulkCopyOptions,
+			IEnumerable<T>                                         source)
 		{
 			_bulkCopy ??= new SqlServerBulkCopy(this);
 
@@ -441,7 +441,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				source);
 		}
 
-		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataContextOptions options, ITable<T> table,
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
 			BulkCopyOptions bulkCopyOptions,
 			IEnumerable<T> source, CancellationToken cancellationToken)
 		{
@@ -456,7 +456,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 #if NATIVE_ASYNC
-		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataContextOptions options, ITable<T> table,
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
 			BulkCopyOptions bulkCopyOptions,
 			IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{

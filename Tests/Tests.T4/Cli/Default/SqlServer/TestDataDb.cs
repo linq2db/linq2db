@@ -43,7 +43,7 @@ namespace Cli.Default.SqlServer
 			InitDataContext();
 		}
 
-		public TestDataDB(DataContextOptions<TestDataDB> options)
+		public TestDataDB(DataOptions options)
 			: base(options)
 		{
 			InitSchemas();

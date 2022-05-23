@@ -10,14 +10,14 @@ namespace LinqToDB.SqlProvider
 {
 	using Infrastructure;
 	using Common;
+	using Common.Internal;
+	using Expressions;
 	using Extensions;
 	using Linq;
-	using SqlQuery;
 	using Tools;
 	using Mapping;
 	using DataProvider;
-	using Common.Internal;
-	using Expressions;
+	using SqlQuery;
 
 	public class BasicSqlOptimizer : ISqlOptimizer
 	{
@@ -38,7 +38,7 @@ namespace LinqToDB.SqlProvider
 		{
 			FixRootSelect (statement);
 			FixEmptySelect(statement);
-			FinalizeCte(statement);
+			FinalizeCte   (statement);
 
 			var evaluationContext = new EvaluationContext(null);
 
@@ -72,8 +72,8 @@ namespace LinqToDB.SqlProvider
 					(SqlProviderFlags, linqOptions, statement),
 					static (context, selectQuery) =>
 					{
-						new SelectQueryOptimizer(context.SqlProviderFlags, context.linqOptions, context.statement, selectQuery, 0).FinalizeAndValidate(
-							context.SqlProviderFlags.IsApplyJoinSupported);
+						new SelectQueryOptimizer(context.SqlProviderFlags, context.linqOptions, context.statement, selectQuery, 0)
+							.FinalizeAndValidate(context.SqlProviderFlags.IsApplyJoinSupported);
 
 						return selectQuery;
 					}
@@ -127,7 +127,7 @@ namespace LinqToDB.SqlProvider
 								currentQuery.OrderBy.Items.Clear();
 							}
 						}
-						else 
+						else
 						{
 							if (!prevQuery.OrderBy.IsEmpty)
 							{
@@ -489,7 +489,7 @@ namespace LinqToDB.SqlProvider
 					//
 					subQuery.Where.SearchCondition = (SqlSearchCondition)OptimizeElement(
 						null,
-						linqOptions, 
+						linqOptions,
 						subQuery.Where.SearchCondition,
 						new OptimizationContext(context, new AliasesContext(), false),
 						false)!;
@@ -2033,7 +2033,7 @@ namespace LinqToDB.SqlProvider
 			public readonly BasicSqlOptimizer    Optimizer;
 			public readonly bool                 Register;
 			public readonly MappingSchema?       MappingSchema;
-			public readonly LinqOptions LinqOptions;
+			public readonly LinqOptions          LinqOptions;
 
 			public readonly Func<ConvertVisitor<RunOptimizationContext>, IQueryElement, IQueryElement> Func;
 		}
@@ -2598,7 +2598,7 @@ namespace LinqToDB.SqlProvider
 				deleteStatement.SelectQuery.From.Tables[0].Source is SqlTable table)
 			{
 				if (deleteStatement.Output != null)
-					throw new NotImplementedException($"GetAlternativeDelete not implemented for delete with output");
+					throw new NotImplementedException("GetAlternativeDelete not implemented for delete with output");
 
 				var sql = new SelectQuery { IsParameterDependent = deleteStatement.IsParameterDependent };
 

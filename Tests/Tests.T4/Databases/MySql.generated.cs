@@ -60,14 +60,7 @@ namespace MySqlDataContext
 			InitMappingSchema();
 		}
 
-		public TestdbDB(DataContextOptions options)
-			: base(options)
-		{
-			InitDataContext();
-			InitMappingSchema();
-		}
-
-		public TestdbDB(DataContextOptions<TestdbDB> options)
+		public TestdbDB(DataOptions options)
 			: base(options)
 		{
 			InitDataContext();

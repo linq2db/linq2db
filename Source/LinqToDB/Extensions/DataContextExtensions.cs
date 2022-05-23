@@ -8,7 +8,7 @@ namespace LinqToDB
 	/// <summary>
 	/// Internal data context helpers.
 	/// </summary>
-	internal static class DataContextExtensions
+	static class DataContextExtensions
 	{
 		public static IReadOnlyCollection<string>? GetNextCommandHints(this IDataContext context, bool clearNextHints)
 		{
@@ -34,8 +34,7 @@ namespace LinqToDB
 
 		public static LinqOptions GetLinqOptions(this IDataContext context)
 		{
-			return context.Options.GetExtension<LinqOptions>();
+			return context.Options.LinqOptions;
 		}
-
 	}
 }

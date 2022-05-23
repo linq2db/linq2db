@@ -30,7 +30,7 @@ namespace Cli.Default.SapHana
 			InitDataContext();
 		}
 
-		public TestDataDB(DataContextOptions<TestDataDB> options)
+		public TestDataDB(DataOptions options)
 			: base(options)
 		{
 			InitDataContext();

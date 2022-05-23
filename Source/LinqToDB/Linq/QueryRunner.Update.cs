@@ -70,7 +70,7 @@ namespace LinqToDB.Linq
 
 				if (fieldCount == 0)
 				{
-					if (dataContext.GetLinqOptions().IgnoreEmptyUpdate)
+					if (dataContext.Options.LinqOptions.IgnoreEmptyUpdate)
 						return null;
 
 					throw new LinqException(
@@ -111,7 +111,7 @@ namespace LinqToDB.Linq
 
 				var type             = GetType<T>(obj!, dataContext);
 				var entityDescriptor = dataContext.MappingSchema.GetEntityDescriptor(type);
-				var linqOptions      = dataContext.GetLinqOptions();
+				var linqOptions      = dataContext.Options.LinqOptions;
 
 				var ei = linqOptions.DisableQueryCache || entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Update) || columnFilter != null
 					? CreateQuery(dataContext, entityDescriptor, obj, columnFilter, tableName, serverName, databaseName, schemaName, tableOptions, type)
@@ -155,7 +155,7 @@ namespace LinqToDB.Linq
 
 				var type             = GetType<T>(obj!, dataContext);
 				var entityDescriptor = dataContext.MappingSchema.GetEntityDescriptor(type);
-				var linqOptions      = dataContext.GetLinqOptions();
+				var linqOptions      = dataContext.Options.LinqOptions;
 
 				var ei = linqOptions.DisableQueryCache || entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Update) || columnFilter != null
 					? CreateQuery(dataContext, entityDescriptor, obj, columnFilter, tableName, serverName, databaseName, schemaName, tableOptions, type)

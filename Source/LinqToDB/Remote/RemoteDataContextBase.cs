@@ -4,15 +4,15 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 
 using JetBrains.Annotations;
-using LinqToDB.Common.Internal;
 
 namespace LinqToDB.Remote
 {
-	using System.Threading;
 	using Common;
+	using Common.Internal;
 	using DataProvider;
 	using Expressions;
 	using Extensions;
@@ -24,14 +24,9 @@ namespace LinqToDB.Remote
 	[PublicAPI]
 	public abstract partial class RemoteDataContextBase : IDataContext
 	{
-		protected RemoteDataContextBase(DataContextOptions options)
+		protected RemoteDataContextBase(DataOptions options)
 		{
-			// Initialize default
-			var linqExtension = options.FindExtension<LinqOptions>();
-			if (linqExtension == null)
-				options = options.WithExtension(Common.Configuration.Linq.Options);
-
-			_options = options;
+			Options = options;
 		}
 
 		public string? Configuration { get; set; }
@@ -138,10 +133,10 @@ namespace LinqToDB.Remote
 
 
 		private List<string>? _queryHints;
-		public  List<string>   QueryHints => _queryHints ??= new List<string>();
+		public  List<string>   QueryHints => _queryHints ??= new();
 
 		private List<string>? _nextQueryHints;
-		public  List<string>   NextQueryHints => _nextQueryHints ??= new List<string>();
+		public  List<string>   NextQueryHints => _nextQueryHints ??= new();
 
 		private        Type? _sqlProviderType;
 		public virtual Type   SqlProviderType
@@ -177,12 +172,10 @@ namespace LinqToDB.Remote
 			set => _sqlOptimizerType = value;
 		}
 
-
-		DataContextOptions _options;
 		/// <summary>
 		/// Current DataContext LINQ options
 		/// </summary>
-		public DataContextOptions Options => _options;
+		public DataOptions Options { get; }
 
 		SqlProviderFlags IDataContext.SqlProviderFlags      => GetConfigurationInfo().LinqServiceInfo.SqlProviderFlags;
 		TableOptions     IDataContext.SupportedTableOptions => GetConfigurationInfo().LinqServiceInfo.SupportedTableOptions;
@@ -240,8 +233,8 @@ namespace LinqToDB.Remote
 			{
 				if (_createSqlProvider == null)
 				{
-					var linqOptions = this.GetLinqOptions();
-					var key  = Tuple.Create(SqlProviderType, MappingSchema, SqlOptimizerType, ((IDataContext)this).SqlProviderFlags, linqOptions);
+					var linqOptions = Options.LinqOptions;
+					var key         = Tuple.Create(SqlProviderType, MappingSchema, SqlOptimizerType, ((IDataContext)this).SqlProviderFlags, linqOptions);
 
 #if NET45 || NET46 || NETSTANDARD2_0
 					_createSqlProvider = _sqlBuilders.GetOrAdd(

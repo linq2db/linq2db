@@ -4,6 +4,8 @@ using System.Data.Common;
 using System.Reflection;
 using System.Text;
 
+using JetBrains.Annotations;
+
 namespace LinqToDB.DataProvider.SqlServer
 {
 	using Common;
@@ -11,11 +13,12 @@ namespace LinqToDB.DataProvider.SqlServer
 	using Configuration;
 	using Data;
 
+	[PublicAPI]
 	public static partial class SqlServerTools
 	{
 		#region Init
 
-		public static SqlServerProvider Provider = SqlServerProvider.MicrosoftDataSqlClient;
+		public  static SqlServerProvider Provider = SqlServerProvider.MicrosoftDataSqlClient;
 		private static readonly ConcurrentQueue<SqlServerDataProvider> _providers = new();
 
 		private static readonly MemoryCache<(SqlServerProvider provider, string connectionString)> _providerCache = new(new ());
@@ -78,12 +81,12 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		internal static IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)
 		{
-			var provider = Provider;
-
-			if (css.ProviderName      == SqlServerProviderAdapter.MicrosoftClientNamespace)
-				provider = SqlServerProvider.MicrosoftDataSqlClient;
-			else if (css.ProviderName == SqlServerProviderAdapter.SystemClientNamespace)
-				provider = SqlServerProvider.SystemDataSqlClient;
+			var provider = css.ProviderName switch
+			{
+				SqlServerProviderAdapter.MicrosoftClientNamespace => SqlServerProvider.MicrosoftDataSqlClient,
+				SqlServerProviderAdapter.SystemClientNamespace    => SqlServerProvider.SystemDataSqlClient,
+				_ => Provider
+			};
 
 			switch (css.ProviderName)
 			{
@@ -183,36 +186,28 @@ namespace LinqToDB.DataProvider.SqlServer
 				cmd.CommandText = "SELECT compatibility_level FROM sys.databases WHERE name = db_name()";
 				var level = Converter.ChangeTypeTo<int>(cmd.ExecuteScalar());
 
-				if (level >= 150)
-					return SqlServerVersion.v2019;
-				if (level >= 140)
-					return SqlServerVersion.v2017;
-				if (level >= 130)
-					return SqlServerVersion.v2016;
-				if (level >= 120)
-					return SqlServerVersion.v2014;
-				if (level >= 110)
-					return SqlServerVersion.v2012;
-				if (level >= 100)
-					return SqlServerVersion.v2008;
-				if (level >= 90)
-					return SqlServerVersion.v2005;
-				if (level < 90)
-					// sql server <= 2000
-					return null;
-
-				switch (version)
+				return level switch
 				{
-					// versions below 9 handled above already
-					case  9 : return SqlServerVersion.v2005;
-					case 10 : return SqlServerVersion.v2008;
-					case 11 : return SqlServerVersion.v2012;
-					case 12 : return SqlServerVersion.v2014;
-					case 13 : return SqlServerVersion.v2016;
-					case 14 : return SqlServerVersion.v2017;
-					//case 15 : // v2019 : no own dialect yet
-					default : return SqlServerVersion.v2019;
-				}
+					>= 150 => SqlServerVersion.v2019,
+					>= 140 => SqlServerVersion.v2017,
+					>= 130 => SqlServerVersion.v2016,
+					>= 120 => SqlServerVersion.v2014,
+					>= 110 => SqlServerVersion.v2012,
+					>= 100 => SqlServerVersion.v2008,
+					>= 90  => SqlServerVersion.v2005,
+					_      => version switch
+					{
+						// versions below 9 handled above already
+						9  => SqlServerVersion.v2005,
+						10 => SqlServerVersion.v2008,
+						11 => SqlServerVersion.v2012,
+						12 => SqlServerVersion.v2014,
+						13 => SqlServerVersion.v2016,
+						14 => SqlServerVersion.v2017,
+						//case 15 : // v2019 : no own dialect yet
+						_  =>  SqlServerVersion.v2019
+					}
+				};
 			}
 		}
 
@@ -221,7 +216,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		#region Public Members
 
 		public static IDataProvider GetDataProvider(
-			SqlServerVersion version   = SqlServerVersion.v2008,
+			SqlServerVersion  version  = SqlServerVersion.v2008,
 			SqlServerProvider provider = SqlServerProvider.SystemDataSqlClient)
 		{
 			return (provider, version) switch
@@ -240,7 +235,8 @@ namespace LinqToDB.DataProvider.SqlServer
 				(SqlServerProvider.MicrosoftDataSqlClient, SqlServerVersion.v2017) => _sqlServerDataProvider2017mdc.Value,
 				(SqlServerProvider.MicrosoftDataSqlClient, SqlServerVersion.v2019) => _sqlServerDataProvider2019mdc.Value,
 				(SqlServerProvider.MicrosoftDataSqlClient, _                     ) => _sqlServerDataProvider2008mdc.Value,
-				_ => _sqlServerDataProvider2008sdc.Value,
+				_ when Provider == SqlServerProvider.MicrosoftDataSqlClient        => _sqlServerDataProvider2008mdc.Value,
+				_                                                                  => _sqlServerDataProvider2008sdc.Value,
 			};
 		}
 
@@ -253,7 +249,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			if (path == null) throw new ArgumentNullException(nameof(path));
 
-			new AssemblyResolver(path, SqlServerTypes.AssemblyName);
+			_ = new AssemblyResolver(path, SqlServerTypes.AssemblyName);
 
 			if (SqlServerTypes.UpdateTypes())
 				foreach (var provider in _providers)

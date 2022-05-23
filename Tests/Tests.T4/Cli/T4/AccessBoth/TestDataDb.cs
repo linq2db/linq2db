@@ -31,13 +31,7 @@ namespace Cli.T4.Access.Both
 			InitDataContext();
 		}
 
-		public TestDataDB(DataContextOptions options)
-			: base(options)
-		{
-			InitDataContext();
-		}
-
-		public TestDataDB(DataContextOptions<TestDataDB> options)
+		public TestDataDB(DataOptions options)
 			: base(options)
 		{
 			InitDataContext();

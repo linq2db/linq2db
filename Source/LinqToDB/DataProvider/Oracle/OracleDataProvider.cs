@@ -7,11 +7,10 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.Oracle
 {
-	using Infrastructure;
-	using Infrastructure.Internal;
 	using Common;
 	using Data;
 	using Extensions;
+	using Infrastructure;
 	using Mapping;
 	using SqlProvider;
 
@@ -135,7 +134,7 @@ namespace LinqToDB.DataProvider.Oracle
 				// binding disabled for native provider without parameters to reduce chances to fail when SQL contains
 				// parameter-like token.
 				// This is mostly issue with triggers creation, because they can have record tokens like :NEW
-				// incorectly identified by native provider as parameter
+				// incorrectly identified by native provider as parameter
 				var bind = !Adapter.BindingByNameEnabled || parameters?.Length > 0 || withParameters;
 				Adapter.SetBindByName(rawCommand, bind);
 
@@ -325,36 +324,36 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 		}
 
-#region BulkCopy
+		#region BulkCopy
 
 		public override BulkCopyRowsCopied BulkCopy<T>(
-			DataContextOptions options,
-			ITable<T>          table,
-			BulkCopyOptions    bulkCopyOptions,
-			IEnumerable<T>     source)
+			DataOptions     options,
+			ITable<T>       table,
+			BulkCopyOptions bulkCopyOptions,
+			IEnumerable<T>  source)
 		{
-			var extension = options.FindExtension<OracleOptionsExtension>() ?? OracleTools.Options;
-			var bulkCopy  = new OracleBulkCopy(this, extension.AlternativeBulkCopy);
+			var oracleOptions = options.Find<OracleOptions>() ?? OracleOptions.Default;
+			var bulkCopy      = new OracleBulkCopy(this, oracleOptions.AlternativeBulkCopy);
 
 			return bulkCopy.BulkCopy(
-				bulkCopyOptions.BulkCopyType == BulkCopyType.Default ? extension.DefaultBulkCopyType : bulkCopyOptions.BulkCopyType,
+				bulkCopyOptions.BulkCopyType == BulkCopyType.Default ? oracleOptions.BulkCopyType : bulkCopyOptions.BulkCopyType,
 				table,
 				bulkCopyOptions,
 				source);
 		}
 
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
-			DataContextOptions options,
-			ITable<T>          table,
-			BulkCopyOptions    bulkCopyOptions,
-			IEnumerable<T>     source,
-			CancellationToken  cancellationToken)
+			DataOptions       options,
+			ITable<T>         table,
+			BulkCopyOptions   bulkCopyOptions,
+			IEnumerable<T>    source,
+			CancellationToken cancellationToken)
 		{
-			var extension = options.FindExtension<OracleOptionsExtension>() ?? OracleTools.Options;
-			var bulkCopy  = new OracleBulkCopy(this, extension.AlternativeBulkCopy);
+			var oracleOptions = options.Find<OracleOptions>() ?? OracleOptions.Default;
+			var bulkCopy      = new OracleBulkCopy(this, oracleOptions.AlternativeBulkCopy);
 
 			return bulkCopy.BulkCopyAsync(
-				bulkCopyOptions.BulkCopyType == BulkCopyType.Default ? extension.DefaultBulkCopyType : bulkCopyOptions.BulkCopyType,
+				bulkCopyOptions.BulkCopyType == BulkCopyType.Default ? oracleOptions.BulkCopyType : bulkCopyOptions.BulkCopyType,
 				table,
 				bulkCopyOptions,
 				source,
@@ -363,17 +362,17 @@ namespace LinqToDB.DataProvider.Oracle
 
 #if NATIVE_ASYNC
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
-			DataContextOptions  options,
+			DataOptions         options,
 			ITable<T>           table,
 			BulkCopyOptions     bulkCopyOptions,
 			IAsyncEnumerable<T> source,
 			CancellationToken cancellationToken)
 		{
-			var extension = options.FindExtension<OracleOptionsExtension>() ?? OracleTools.Options;
+			var extension = options.Find<OracleOptions>() ?? OracleOptions.Default;
 			var bulkCopy  = new OracleBulkCopy(this, extension.AlternativeBulkCopy);
 
 			return bulkCopy.BulkCopyAsync(
-				bulkCopyOptions.BulkCopyType == BulkCopyType.Default ? extension.DefaultBulkCopyType : bulkCopyOptions.BulkCopyType,
+				bulkCopyOptions.BulkCopyType == BulkCopyType.Default ? extension.BulkCopyType : bulkCopyOptions.BulkCopyType,
 				table,
 				bulkCopyOptions,
 				source,
@@ -381,6 +380,6 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 #endif
 
-#endregion
+		#endregion
 	}
 }

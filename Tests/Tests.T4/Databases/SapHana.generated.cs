@@ -61,14 +61,7 @@ namespace SapHanaDataContext
 			InitMappingSchema();
 		}
 
-		public SYSTEMDBDB(DataContextOptions options)
-			: base(options)
-		{
-			InitDataContext();
-			InitMappingSchema();
-		}
-
-		public SYSTEMDBDB(DataContextOptions<SYSTEMDBDB> options)
+		public SYSTEMDBDB(DataOptions options)
 			: base(options)
 		{
 			InitDataContext();

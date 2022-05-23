@@ -162,7 +162,7 @@ namespace LinqToDB.Linq
 
 				var type             = GetType<T>(obj!, dataContext);
 				var entityDescriptor = dataContext.MappingSchema.GetEntityDescriptor(type);
-				var linqOptions      = dataContext.GetLinqOptions();
+				var linqOptions      = dataContext.Options.LinqOptions;
 
 				var cacheDisabled =
 					linqOptions.DisableQueryCache                                           ||
@@ -212,7 +212,7 @@ namespace LinqToDB.Linq
 
 				var type             = GetType<T>(obj!, dataContext);
 				var entityDescriptor = dataContext.MappingSchema.GetEntityDescriptor(type);
-				var linqOptions      = dataContext.GetLinqOptions();
+				var linqOptions      = dataContext.Options.LinqOptions;
 
 				var cacheDisabled =
 					linqOptions.DisableQueryCache                                           ||

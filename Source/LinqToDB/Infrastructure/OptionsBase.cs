@@ -15,7 +15,7 @@ namespace LinqToDB.Infrastructure
 		public T WithOptions<TSet>(Func<TSet,TSet> optionSetter)
 			where TSet : class, IOptionSet, new()
 		{
-			return WithOptions(optionSetter(Find<TSet>() ?? new TSet()));
+			return WithOptions(optionSetter(Get<TSet>()));
 		}
 
 		Dictionary<Type,IOptionSet>? _sets;
@@ -37,6 +37,17 @@ namespace LinqToDB.Infrastructure
 				return (TSet?)set;
 
 			return null;
+		}
+
+		public virtual TSet Get<TSet>()
+			where TSet : class, IOptionSet, new()
+		{
+			if (Find<TSet>() is {} set)
+				return set;
+
+			(_sets ??= new())[typeof(TSet)] = set = new();
+
+			return set;
 		}
 
 		public void Apply<TA>(TA obj)

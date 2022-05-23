@@ -5,13 +5,12 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Data.Common;
-using System.Globalization;
 
 namespace LinqToDB.DataProvider.SQLite
 {
-	using Infrastructure;
 	using Common;
 	using Data;
+	using Infrastructure;
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
@@ -238,7 +237,7 @@ namespace LinqToDB.DataProvider.SQLite
 				value     = d.ToDateTime(TimeOnly.MinValue);
 				if (dataType.DataType == DataType.Date)
 				{
-					value = ((DateTime)value).ToString(SQLiteMappingSchema.DATE_FORMAT_RAW, CultureInfo.InvariantCulture);
+					value = ((DateTime)value).ToString(SQLiteMappingSchema.DATE_FORMAT_RAW, System.Globalization.CultureInfo.InvariantCulture);
 					if (Name == ProviderName.SQLiteClassic)
 						dataType = dataType.WithDataType(DataType.VarChar);
 				}
@@ -262,9 +261,9 @@ namespace LinqToDB.DataProvider.SQLite
 
 		#region BulkCopy
 
-		public override BulkCopyRowsCopied BulkCopy<T>(DataContextOptions options, ITable<T> table,
-			BulkCopyOptions                                               bulkCopyOptions,
-			IEnumerable<T>                                                source)
+		public override BulkCopyRowsCopied BulkCopy<T>(DataOptions options, ITable<T> table,
+			BulkCopyOptions                                        bulkCopyOptions,
+			IEnumerable<T>                                         source)
 		{
 			return new SQLiteBulkCopy().BulkCopy(
 				bulkCopyOptions.BulkCopyType == BulkCopyType.Default ? SQLiteTools.DefaultBulkCopyType : bulkCopyOptions.BulkCopyType,
@@ -273,7 +272,7 @@ namespace LinqToDB.DataProvider.SQLite
 				source);
 		}
 
-		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataContextOptions options, ITable<T> table,
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
 			BulkCopyOptions bulkCopyOptions,
 			IEnumerable<T> source, CancellationToken cancellationToken)
 		{
@@ -286,7 +285,7 @@ namespace LinqToDB.DataProvider.SQLite
 		}
 
 #if NATIVE_ASYNC
-		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataContextOptions options, ITable<T> table,
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
 			BulkCopyOptions bulkCopyOptions,
 			IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{

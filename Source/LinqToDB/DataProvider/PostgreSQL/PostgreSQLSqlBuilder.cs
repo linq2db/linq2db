@@ -10,8 +10,8 @@ using System.Net.NetworkInformation;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
-	using Infrastructure;
 	using Common;
+	using Infrastructure;
 	using SqlQuery;
 	using SqlProvider;
 	using Extensions;
@@ -417,7 +417,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return $"SELECT nextval('{ConvertInline(sequenceName, ConvertType.SequenceName)}') FROM generate_series(1, {count.ToString(CultureInfo.InvariantCulture)})";
 		}
 
-		
+
 		protected override bool IsSqlValuesTableValueTypeRequired(SqlValuesTable source,
 			IReadOnlyList<ISqlExpression[]> rows, int row, int column)
 		{

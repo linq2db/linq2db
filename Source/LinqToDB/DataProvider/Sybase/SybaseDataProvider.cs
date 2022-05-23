@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Xml;
 using System.Xml.Linq;
 using System.Threading.Tasks;
@@ -8,14 +9,13 @@ using System.Threading;
 
 namespace LinqToDB.DataProvider.Sybase
 {
-	using Infrastructure;
-	using Data;
-	using Mapping;
 	using Common;
+	using Data;
+	using Infrastructure;
+	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
 	using Extensions;
-	using System.Data.Common;
 
 	class SybaseDataProviderNative  : SybaseDataProvider { public SybaseDataProviderNative()  : base(ProviderName.Sybase)        {} }
 	class SybaseDataProviderManaged : SybaseDataProvider { public SybaseDataProviderManaged() : base(ProviderName.SybaseManaged) {} }
@@ -218,9 +218,9 @@ namespace LinqToDB.DataProvider.Sybase
 
 		SybaseBulkCopy? _bulkCopy;
 
-		public override BulkCopyRowsCopied BulkCopy<T>(DataContextOptions options, ITable<T> table,
-			BulkCopyOptions                                               bulkCopyOptions,
-			IEnumerable<T>                                                source)
+		public override BulkCopyRowsCopied BulkCopy<T>(DataOptions options, ITable<T> table,
+			BulkCopyOptions                                        bulkCopyOptions,
+			IEnumerable<T>                                         source)
 		{
 			if (_bulkCopy == null)
 				_bulkCopy = new SybaseBulkCopy(this);
@@ -232,7 +232,7 @@ namespace LinqToDB.DataProvider.Sybase
 				source);
 		}
 
-		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataContextOptions options, ITable<T> table,
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
 			BulkCopyOptions bulkCopyOptions,
 			IEnumerable<T> source, CancellationToken cancellationToken)
 		{
@@ -248,7 +248,7 @@ namespace LinqToDB.DataProvider.Sybase
 		}
 
 #if NATIVE_ASYNC
-		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataContextOptions options, ITable<T> table,
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
 			BulkCopyOptions bulkCopyOptions,
 			IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{

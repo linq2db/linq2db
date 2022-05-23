@@ -207,7 +207,7 @@ namespace LinqToDB.Linq.Builder
 
 				//TODO: Why it is not handled by main optimizer
 				var sqlFlags    = builder.DataContext.SqlProviderFlags;
-				var linqOptions = builder.DataContext.GetLinqOptions();
+				var linqOptions = builder.DataContext.Options.LinqOptions;
 				new SelectQueryOptimizer(sqlFlags, linqOptions, query, query, 0, statement)
 					.FinalizeAndValidate(sqlFlags.IsApplyJoinSupported);
 				

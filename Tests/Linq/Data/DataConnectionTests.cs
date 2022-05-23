@@ -348,14 +348,14 @@ namespace Tests.Data
 
 		public class DbConnection1 : DataConnection
 		{
-			public DbConnection1(DataContextOptions options) : base(options)
+			public DbConnection1(DataOptions options) : base(options)
 			{
 			}
 		}
 
 		public class DbConnection2 : DataConnection
 		{
-			public DbConnection2(DataContextOptions<DbConnection2> options) : base(options)
+			public DbConnection2(DataOptions options) : base(options)
 			{
 			}
 		}
@@ -365,7 +365,7 @@ namespace Tests.Data
 		{
 			var collection = new ServiceCollection();
 			collection.AddLinqToDBContext<DbConnection1>((provider, options) => options.UseConfigurationString(context));
-			collection.AddLinqToDBContext<DbConnection2>((provider, options) => {});
+			collection.AddLinqToDBContext<DbConnection2>((provider, options) => options);
 
 			var serviceProvider = collection.BuildServiceProvider();
 			var c1 = serviceProvider.GetService<DbConnection1>()!;
@@ -377,7 +377,7 @@ namespace Tests.Data
 		[Test]
 		public void TestConstructorThrowsWhenGivenInvalidSettings()
 		{
-			Assert.Throws<LinqToDBException>(() => new DbConnection1(new DataContextOptionsBuilder<DbConnection2>().Options));
+			Assert.Throws<LinqToDBException>(() => new DbConnection1(new DataOptions()));
 		}
 
 		// informix connection limits interfere with test

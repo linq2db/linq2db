@@ -17,7 +17,7 @@ namespace LinqToDB.DataProvider.Access
 
 	public class AccessODBCDataProvider : DynamicDataProviderBase<OdbcProviderAdapter>
 	{
-		public AccessODBCDataProvider() : base(ProviderName.AccessOdbc, MappingSchemaInstance, OdbcProviderAdapter.GetInstance())
+		public AccessODBCDataProvider() : base(ProviderName.AccessOdbc, _mappingSchemaInstance, OdbcProviderAdapter.GetInstance())
 		{
 			SqlProviderFlags.AcceptsTakeAsParameter           = false;
 			SqlProviderFlags.IsSkipSupported                  = false;
@@ -135,13 +135,11 @@ namespace LinqToDB.DataProvider.Access
 			base.SetParameterType(dataConnection, parameter, dataType);
 		}
 
-		private static readonly MappingSchema MappingSchemaInstance = new AccessMappingSchema.OdbcMappingSchema();
+		static readonly MappingSchema _mappingSchemaInstance = new AccessMappingSchema.OdbcMappingSchema();
 
 		#region BulkCopy
 
-		public override BulkCopyRowsCopied BulkCopy<T>(DataContextOptions options, ITable<T> table,
-			BulkCopyOptions                                               bulkCopyOptions,
-			IEnumerable<T>                                                source)
+		public override BulkCopyRowsCopied BulkCopy<T>(DataOptions options, ITable<T> table, BulkCopyOptions bulkCopyOptions, IEnumerable<T> source)
 		{
 
 			return new AccessBulkCopy().BulkCopy(
@@ -151,9 +149,10 @@ namespace LinqToDB.DataProvider.Access
 				source);
 		}
 
-		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataContextOptions options, ITable<T> table,
-			BulkCopyOptions bulkCopyOptions,
-			IEnumerable<T> source, CancellationToken cancellationToken)
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
+			BulkCopyOptions   bulkCopyOptions,
+			IEnumerable<T>    source,
+			CancellationToken cancellationToken)
 		{
 
 			return new AccessBulkCopy().BulkCopyAsync(
@@ -165,7 +164,7 @@ namespace LinqToDB.DataProvider.Access
 		}
 
 #if NATIVE_ASYNC
-		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataContextOptions options, ITable<T> table,
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
 			BulkCopyOptions bulkCopyOptions,
 			IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{

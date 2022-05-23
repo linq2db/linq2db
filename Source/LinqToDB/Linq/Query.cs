@@ -48,7 +48,7 @@ namespace LinqToDB.Linq
 			ConfigurationID         = ((IConfigurationID)dataContext.MappingSchema).ConfigurationID;
 			SqlOptimizer            = dataContext.GetSqlOptimizer();
 			SqlProviderFlags        = dataContext.SqlProviderFlags;
-			LinqOptions             = dataContext.GetLinqOptions();
+			LinqOptions             = dataContext.Options.LinqOptions;
 			InlineParameters        = dataContext.InlineParameters;
 			IsEntityServiceProvided = dataContext is IInterceptable<IEntityServiceInterceptor> { Interceptor: {} };
 		}
@@ -491,7 +491,7 @@ namespace LinqToDB.Linq
 			if (dataContext is IExpressionPreprocessor preprocessor)
 				expr = preprocessor.ProcessExpression(expr);
 
-			var linqOptions = dataContext.GetLinqOptions();
+			var linqOptions = dataContext.Options.LinqOptions;
 
 			if (linqOptions.DisableQueryCache)
 				return CreateQuery(optimizationContext, new ParametersContext(expr, optimizationContext, dataContext), dataContext, expr);
@@ -512,7 +512,7 @@ namespace LinqToDB.Linq
 
 		internal static Query<T> CreateQuery(ExpressionTreeOptimizationContext optimizationContext, ParametersContext parametersContext, IDataContext dataContext, Expression expr)
 		{
-			var linqOptions = optimizationContext.DataContext.GetLinqOptions();
+			var linqOptions = optimizationContext.DataContext.Options.LinqOptions;
 			if (linqOptions.GenerateExpressionTest)
 			{
 				var testFile = new ExpressionTestGenerator().GenerateSource(expr);

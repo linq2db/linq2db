@@ -90,7 +90,7 @@ namespace LinqToDB.DataProvider.Firebird
 					}
 
 					return ConvertSearchStringPredicateViaLike(predicate, visitor);
-				}	
+				}
 				case SqlPredicate.SearchString.SearchKind.StartsWith:
 				{
 					expr = new SqlExpression(typeof(bool),
@@ -108,7 +108,7 @@ namespace LinqToDB.DataProvider.Firebird
 								? new SqlFunction(typeof(string), "$ToLower$", predicate.Expr2)
 								: predicate.Expr2, visitor.Context.OptimizationContext.Context)) {CanBeNull = false};
 					break;
-				}	
+				}
 				case SqlPredicate.SearchString.SearchKind.Contains:
 				{
 					if (caseSensitive == false)
@@ -134,7 +134,7 @@ namespace LinqToDB.DataProvider.Firebird
 						return ConvertSearchStringPredicateViaLike(predicate, visitor);
 					}
 					break;
-				}	
+				}
 				default:
 					throw new InvalidOperationException($"Unexpected predicate: {predicate.Kind}");
 			}
@@ -227,12 +227,11 @@ namespace LinqToDB.DataProvider.Firebird
 		protected override ISqlExpression ConvertFunction(SqlFunction func)
 		{
 			func = ConvertFunctionParameters(func, false);
-			
+
 			return base.ConvertFunction(func);
 		}
 
-		public override SqlStatement FinalizeStatement(SqlStatement statement, EvaluationContext context,
-			LinqOptions                                    linqOptions)
+		public override SqlStatement FinalizeStatement(SqlStatement statement, EvaluationContext context, LinqOptions linqOptions)
 		{
 			statement = base.FinalizeStatement(statement, context, linqOptions);
 			statement = WrapParameters(statement, context);

@@ -126,7 +126,7 @@ namespace LinqToDB.DataProvider.MySql
 			var transaction    = providerConnections.ProviderTransaction;
 			var ed             = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T));
 			var columns        = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
-			var sb             = _provider.CreateSqlBuilder(table.DataContext.MappingSchema, dataConnection.LinqOptions);
+			var sb             = _provider.CreateSqlBuilder(table.DataContext.MappingSchema, dataConnection.Options.LinqOptions);
 			var rc             = new BulkCopyRowsCopied();
 
 			var bc = _provider.Adapter.BulkCopy!.Create(connection, transaction);
@@ -195,7 +195,7 @@ namespace LinqToDB.DataProvider.MySql
 			var transaction    = providerConnections.ProviderTransaction;
 			var ed             = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T));
 			var columns        = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
-			var sb             = _provider.CreateSqlBuilder(table.DataContext.MappingSchema, dataConnection.LinqOptions);
+			var sb             = _provider.CreateSqlBuilder(table.DataContext.MappingSchema, dataConnection.Options.LinqOptions);
 			var rc             = new BulkCopyRowsCopied();
 
 			var bc = _provider.Adapter.BulkCopy!.Create(connection, transaction);
@@ -262,7 +262,7 @@ namespace LinqToDB.DataProvider.MySql
 			var transaction    = providerConnections.ProviderTransaction;
 			var ed             = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T));
 			var columns        = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
-			var sb             = _provider.CreateSqlBuilder(table.DataContext.MappingSchema, dataConnection.LinqOptions);
+			var sb             = _provider.CreateSqlBuilder(table.DataContext.MappingSchema, dataConnection.Options.LinqOptions);
 			var rc             = new BulkCopyRowsCopied();
 
 			var bc = _provider.Adapter.BulkCopy!.Create(connection, transaction);

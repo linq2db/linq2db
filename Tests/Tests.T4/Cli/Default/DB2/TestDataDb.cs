@@ -37,7 +37,7 @@ namespace Cli.Default.DB2
 			InitDataContext();
 		}
 
-		public TestDataDB(DataContextOptions<TestDataDB> options)
+		public TestDataDB(DataOptions options)
 			: base(options)
 		{
 			InitSchemas();

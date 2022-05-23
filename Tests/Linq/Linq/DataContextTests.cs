@@ -161,7 +161,7 @@ namespace Tests.Linq
 
 			public DataConnection? DataConnection { get; private set; }
 
-			protected override DataConnection CreateDataConnection(DataContextOptions options)
+			protected override DataConnection CreateDataConnection(DataOptions options)
 			{
 				return DataConnection = base.CreateDataConnection(options);
 			}
@@ -241,13 +241,13 @@ namespace Tests.Linq
 			public int CreateCalled;
 			public int CloneCalled;
 
-			protected override DataConnection CreateDataConnection(DataContextOptions options)
+			protected override DataConnection CreateDataConnection(DataOptions options)
 			{
 				CreateCalled++;
 				return base.CreateDataConnection(options);
 			}
 
-			protected override DataConnection CloneDataConnection(DataConnection currentConnection, DataContextOptions options)
+			protected override DataConnection CloneDataConnection(DataConnection currentConnection, DataOptions options)
 			{
 				CloneCalled++;
 				return base.CloneDataConnection(currentConnection, options);

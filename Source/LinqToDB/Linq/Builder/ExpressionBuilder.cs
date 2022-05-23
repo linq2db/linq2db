@@ -134,7 +134,7 @@ namespace LinqToDB.Linq.Builder
 
 			CompiledParameters = compiledParameters;
 			DataContext        = dataContext;
-			LinqOptions        = dataContext.GetLinqOptions();
+			LinqOptions        = dataContext.Options.LinqOptions;
 			OriginalExpression = expression;
 
 			_optimizationContext = optimizationContext;

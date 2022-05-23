@@ -97,16 +97,6 @@
 			<AutoGen>True</AutoGen>
 			<DependentUpon>MutableTuple.tt</DependentUpon>
 		</Compile>
-
-		<None Update="Extensions\OptionsExtensions.tt">
-			<LastGenOutput>OptionsExtensions.generated.cs</LastGenOutput>
-			<Generator>TextTemplatingFileGenerator</Generator>
-		</None>
-		<Compile Update="Extensions\OptionsExtensions.generated.cs">
-			<DependentUpon>OptionsExtensions.tt</DependentUpon>
-			<DesignTime>True</DesignTime>
-			<AutoGen>True</AutoGen>
-		</Compile>
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net46' OR '$(TargetFramework)' == 'net472' ">

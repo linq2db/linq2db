@@ -55,14 +55,7 @@ namespace SybaseDataActionDataContext
 			InitMappingSchema();
 		}
 
-		public TestDataCoreDB(DataContextOptions options)
-			: base(options)
-		{
-			InitDataContext();
-			InitMappingSchema();
-		}
-
-		public TestDataCoreDB(DataContextOptions<TestDataCoreDB> options)
+		public TestDataCoreDB(DataOptions options)
 			: base(options)
 		{
 			InitDataContext();

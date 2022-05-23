@@ -382,22 +382,18 @@ namespace LinqToDB.Common
 		[PublicAPI]
 		public static class RetryPolicy
 		{
-			private static volatile RetryPolicyOptionsExtension _options;
+			static volatile RetryPolicyOptions _options = new(
+				null,
+				MaxRetryCount   : 5,
+				MaxDelay        : TimeSpan.FromSeconds(30),
+				RandomFactor    : 1.1,
+				ExponentialBase : 2,
+				Coefficient     : TimeSpan.FromSeconds(1));
 
-			public static  RetryPolicyOptionsExtension Options
+			public static  RetryPolicyOptions Options
 			{
 				get => _options;
 				set => _options = value;
-			}
-
-			static RetryPolicy()
-			{
-				_options = new RetryPolicyOptionsExtension()
-					.WithMaxRetryCount(5)
-					.WithMaxDelay(TimeSpan.FromSeconds(30))
-					.WithRandomFactor(1.1)
-					.WithExponentialBase(2)
-					.WithCoefficient(TimeSpan.FromSeconds(1));
 			}
 
 			/// <summary>
@@ -408,7 +404,7 @@ namespace LinqToDB.Common
 			public static Func<DataConnection,IRetryPolicy?>? Factory
 			{
 				get => Options.Factory;
-				set => Options = Options.WithFactory(value);
+				set => Options = Options with { Factory = value };
 			}
 
 			/// <summary>
@@ -429,7 +425,7 @@ namespace LinqToDB.Common
 			public static int DefaultMaxRetryCount
 			{
 				get => Options.MaxRetryCount;
-				set => Options = Options.WithMaxRetryCount(value);
+				set => Options = Options with { MaxRetryCount = value };
 			}
 
 			/// <summary>
@@ -439,7 +435,7 @@ namespace LinqToDB.Common
 			public static TimeSpan DefaultMaxDelay
 			{
 				get => Options.MaxDelay;
-				set => Options = Options.WithMaxDelay(value);
+				set => Options = Options with { MaxDelay = value };
 			}
 
 			/// <summary>
@@ -449,7 +445,7 @@ namespace LinqToDB.Common
 			public static double DefaultRandomFactor
 			{
 				get => Options.RandomFactor;
-				set => Options = Options.WithRandomFactor(value);
+				set => Options = Options with { RandomFactor = value };
 			}
 
 			/// <summary>
@@ -459,7 +455,7 @@ namespace LinqToDB.Common
 			public static double DefaultExponentialBase
 			{
 				get => Options.ExponentialBase;
-				set => Options = Options.WithExponentialBase(value);
+				set => Options = Options with { ExponentialBase = value };
 			}
 
 			/// <summary>
@@ -469,7 +465,7 @@ namespace LinqToDB.Common
 			public static TimeSpan DefaultCoefficient
 			{
 				get => Options.Coefficient;
-				set => Options = Options.WithCoefficient(value);
+				set => Options = Options with { Coefficient = value };
 			}
 		}
 

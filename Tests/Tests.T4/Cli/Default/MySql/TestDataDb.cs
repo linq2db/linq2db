@@ -30,7 +30,7 @@ namespace Cli.Default.MySql
 			InitDataContext();
 		}
 
-		public TestDataDB(DataContextOptions<TestDataDB> options)
+		public TestDataDB(DataOptions options)
 			: base(options)
 		{
 			InitDataContext();

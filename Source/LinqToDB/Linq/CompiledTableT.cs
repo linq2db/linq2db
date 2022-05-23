@@ -24,17 +24,17 @@ namespace LinqToDB.Linq
 		{
 			var contextID   = dataContext.ContextID;
 			var contextType = dataContext.GetType();
-			var linqOptions = dataContext.GetLinqOptions();
+			var linqOptions = dataContext.Options.LinqOptions;
 
 			var result = QueryRunner.Cache<T>.QueryCache.GetOrCreate(
 				(
 					operation: "CT",
 					contextID,
 					contextType,
-					mappingSchemaID: ((IConfigurationID)dataContext.MappingSchema).ConfigurationID,
-					expression: _expression,
-					queryFlags: dataContext.GetQueryFlags(),
-					LinqOptions: linqOptions
+					mappingSchemaID : ((IConfigurationID)dataContext.MappingSchema).ConfigurationID,
+					expression      : _expression,
+					queryFlags      : dataContext.GetQueryFlags(),
+					LinqOptions     : linqOptions
 				),
 				(dataContext, lambda: _lambda, linqOptions),
 				static (o, key, ctx) =>

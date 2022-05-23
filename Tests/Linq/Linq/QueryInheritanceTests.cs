@@ -27,7 +27,7 @@ namespace Tests.Linq
 
 			var connection = (DataConnection) dataContext;
 
-			var sqlBuilder = connection.DataProvider.CreateSqlBuilder(connection.MappingSchema, connection.LinqOptions);
+			var sqlBuilder = connection.DataProvider.CreateSqlBuilder(connection.MappingSchema, connection.Options.LinqOptions);
 			var sb         = new StringBuilder();
 			sqlBuilder.BuildSql(0, query, sb, new OptimizationContext(new EvaluationContext(), new AliasesContext(), false));
 

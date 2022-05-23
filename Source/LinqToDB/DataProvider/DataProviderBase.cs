@@ -13,11 +13,11 @@ using System.Xml.Linq;
 
 namespace LinqToDB.DataProvider
 {
-	using Infrastructure;
 	using Common;
 	using Common.Internal;
 	using Data;
 	using Expressions;
+	using Infrastructure;
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
@@ -441,15 +441,13 @@ namespace LinqToDB.DataProvider
 
 		#region BulkCopy
 
-		public virtual BulkCopyRowsCopied BulkCopy<T>(DataContextOptions options, ITable<T> table,
-			BulkCopyOptions                                              bulkCopyOptions,
-			IEnumerable<T>                                               source)
+		public virtual BulkCopyRowsCopied BulkCopy<T>(DataOptions options, ITable<T> table, BulkCopyOptions bulkCopyOptions, IEnumerable<T> source)
 			where T : notnull
 		{
 			return new BasicBulkCopy().BulkCopy(bulkCopyOptions.BulkCopyType, table, bulkCopyOptions, source);
 		}
 
-		public virtual Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataContextOptions options, ITable<T> table,
+		public virtual Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
 			BulkCopyOptions bulkCopyOptions,
 			IEnumerable<T> source, CancellationToken cancellationToken)
 			where T : notnull
@@ -458,7 +456,7 @@ namespace LinqToDB.DataProvider
 		}
 
 #if NATIVE_ASYNC
-		public virtual Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataContextOptions options, ITable<T> table,
+		public virtual Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
 			BulkCopyOptions bulkCopyOptions,
 			IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 			where T: notnull

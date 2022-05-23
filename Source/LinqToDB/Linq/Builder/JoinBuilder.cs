@@ -370,7 +370,7 @@ namespace LinqToDB.Linq.Builder
 						MemberHelper.MethodOf(() => GetGrouping(null!, null!, null!, default!, null!)),
 						new[]
 						{
-							Expression.Constant(context.Builder.DataContext.GetLinqOptions()),
+							Expression.Constant(context.Builder.DataContext.Options.LinqOptions),
 							ExpressionBuilder.QueryRunnerParam,
 							Expression.Constant(context.Builder.ParametersContext.CurrentSqlParameters),
 							outerKey,

@@ -1,13 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Data;
 using System.Data.Common;
 using System.IO;
 using System.Reflection;
 
 namespace LinqToDB.DataProvider.Oracle
 {
-	using Infrastructure.Internal;
 	using Common.Internal.Cache;
 	using Common;
 	using Configuration;
@@ -151,7 +148,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 			var version = _providerCache.GetOrCreate(cacheKey, entry =>
 			{
-				entry.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
+				entry.SlidingExpiration = Configuration.Linq.CacheSlidingExpiration;
 				return DetectServerVersion(entry.Key.connectionString, entry.Key.managed);
 			});
 
@@ -296,31 +293,12 @@ namespace LinqToDB.DataProvider.Oracle
 
 		#endregion
 
-		#region Options
-
-		static volatile OracleOptionsExtension _options;
-
-		static OracleTools()
-		{
-			_options = new OracleOptionsExtension()
-				.WithDefaultBulkCopyType(BulkCopyType.MultipleRows)
-				.WithAlternativeBulkCopy(AlternativeBulkCopy.InsertAll);
-		}
-
-		public static OracleOptionsExtension Options
-		{
-			get => _options;
-			set => _options = value;
-		}
-
-		#endregion
-
 		#region BulkCopy
 
 		public  static BulkCopyType  DefaultBulkCopyType
 		{
-			get => Options.DefaultBulkCopyType;
-			set => Options = Options.WithDefaultBulkCopyType(value);
+			get => OracleOptions.Default.BulkCopyType;
+			set => OracleOptions.Default = OracleOptions.Default with { BulkCopyType = value };
 		}
 
 #endregion
@@ -331,8 +309,8 @@ namespace LinqToDB.DataProvider.Oracle
 		/// </summary>
 		public static AlternativeBulkCopy UseAlternativeBulkCopy
 		{
-			get => Options.AlternativeBulkCopy;
-			set => Options = Options.WithAlternativeBulkCopy(value);
+			get => OracleOptions.Default.AlternativeBulkCopy;
+			set => OracleOptions.Default = OracleOptions.Default with { AlternativeBulkCopy = value };
 		}
 
 		/// <summary>

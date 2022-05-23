@@ -1349,10 +1349,10 @@ namespace LinqToDB.Data
 		{
 			foreach (var dataParameter in Parameters!)
 			{
-				if (dataParameter.Direction.HasValue &&
-					(dataParameter.Direction == ParameterDirection.Output || dataParameter.Direction == ParameterDirection.InputOutput || dataParameter.Direction == ParameterDirection.ReturnValue))
+				if (dataParameter.Direction is ParameterDirection.Output or ParameterDirection.InputOutput or ParameterDirection.ReturnValue)
 				{
-					var dbParameter      = command.Parameters[dataParameter.Name!];
+					var dbParameter = command.Parameters[dataParameter.Name!];
+
 					dataParameter.Output = dbParameter;
 
 					if (!Equals(dataParameter.Value, dbParameter.Value))
@@ -1380,7 +1380,7 @@ namespace LinqToDB.Data
 				case DataParameter   dataParameter  : return new[] { dataParameter };
 			}
 
-			var linqOptions = dataConnection.GetLinqOptions();
+			var linqOptions = dataConnection.Options.LinqOptions;
 
 			var func = _parameterReaders.GetOrCreate(
 				(type: parameters.GetType(), ((IConfigurationID)dataConnection).ConfigurationID),
@@ -1516,7 +1516,7 @@ namespace LinqToDB.Data
 		{
 			var sb = new StringBuilder();
 
-			for (int i = 0; i < dataReader.FieldCount; i++)
+			for (var i = 0; i < dataReader.FieldCount; i++)
 			{
 				sb.Append(dataReader.GetName(i))
 					.Append(',')
@@ -1527,10 +1527,9 @@ namespace LinqToDB.Data
 			return sb.ToString();
 		}
 
-		static Func<DbDataReader, T> GetObjectReader<T>(DataConnection dataConnection, DbDataReader dataReader,
-			string sql, string? additionalKey)
+		static Func<DbDataReader, T> GetObjectReader<T>(DataConnection dataConnection, DbDataReader dataReader, string sql, string? additionalKey)
 		{
-			var linqOptions = dataConnection.GetLinqOptions();
+			var linqOptions = dataConnection.Options.LinqOptions;
 
 			var func = _objectReaders.GetOrCreate(
 				new QueryKey(typeof(T), dataReader.GetType(), ((IConfigurationID)dataConnection).ConfigurationID, sql, additionalKey, dataReader.FieldCount <= 1),
@@ -1558,7 +1557,7 @@ namespace LinqToDB.Data
 		static Func<DbDataReader, T> GetObjectReader2<T>(DataConnection dataConnection, DbDataReader dataReader,
 			string sql, string? additionalKey)
 		{
-			var linqOptions = dataConnection.GetLinqOptions();
+			var linqOptions = dataConnection.Options.LinqOptions;
 
 			var key = (typeof(T), dataReader.GetType(), ((IConfigurationID)dataConnection).ConfigurationID, sql, additionalKey, dataReader.FieldCount <= 1);
 
@@ -1587,7 +1586,7 @@ namespace LinqToDB.Data
 			DbDataReader   dataReader,
 			Func<DataConnection, DbDataReader, Type, int,Expression,Expression> getMemberExpression)
 		{
-			var linqOptions    = dataConnection.GetLinqOptions();
+			var linqOptions    = dataConnection.Options.LinqOptions;
 			var parameter      = Expression.Parameter(typeof(DbDataReader));
 			var dataReaderExpr = (Expression)Expression.Convert(parameter, dataReader.GetType());
 			var readerType     = dataReader.GetType();
@@ -1716,14 +1715,15 @@ namespace LinqToDB.Data
 		{
 			var parameter      = Expression.Parameter(typeof(DbDataReader));
 			var dataReaderExpr = (Expression)Expression.Convert(parameter, dataReader.GetType());
+			var readerType     = dataReader.GetType();
 
-			var readerType = dataReader.GetType();
 			LambdaExpression? converterExpr = null;
+
 			if (dataConnection.DataProvider.DataReaderType != readerType)
 			{
-				var linqOptions = dataConnection.GetLinqOptions();
+				var linqOptions = dataConnection.Options.LinqOptions;
 
-				converterExpr    = _dataReaderConverter.GetOrCreate(
+				converterExpr = _dataReaderConverter.GetOrCreate(
 					(readerType, dataConnection.DataProvider.DataReaderType),
 					(dataConnection, linqOptions),
 					static (o, ctx) =>

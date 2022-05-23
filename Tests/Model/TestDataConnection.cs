@@ -1,13 +1,9 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
 
 using LinqToDB;
 using LinqToDB.Data;
-using LinqToDB.Infrastructure;
-using LinqToDB.SqlProvider;
-using LinqToDB.SqlQuery;
 
 namespace Tests.Model
 {
@@ -15,7 +11,7 @@ namespace Tests.Model
 	{
 		//static int _counter;
 
-		public TestDataConnection(DataContextOptions options) : base(options)
+		public TestDataConnection(DataOptions options) : base(options)
 		{
 		}
 

@@ -1,4 +1,4 @@
-﻿using LinqToDB.Infrastructure;
+﻿using System;
 
 namespace LinqToDB.Data.RetryPolicy
 {
@@ -10,8 +10,7 @@ namespace LinqToDB.Data.RetryPolicy
 		{
 			if (dataContext.DataProvider is SqlServerDataProvider)
 			{
-				var retryOptions = dataContext.Options.FindExtension<RetryPolicyOptionsExtension>() ??
-				                   Common.Configuration.RetryPolicy.Options;
+				var retryOptions = dataContext.Options.Find<RetryPolicyOptions>() ?? Common.Configuration.RetryPolicy.Options;
 
 				return new SqlServerRetryPolicy(retryOptions.MaxRetryCount, retryOptions.MaxDelay,
 					retryOptions.RandomFactor, retryOptions.ExponentialBase, retryOptions.Coefficient, null);

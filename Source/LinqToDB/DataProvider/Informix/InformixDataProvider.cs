@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.Informix
 {
-	using Infrastructure;
 	using Common;
 	using Data;
+	using Infrastructure;
 	using Linq.Internal;
 	using Mapping;
 	using SqlProvider;
@@ -200,9 +200,9 @@ namespace LinqToDB.DataProvider.Informix
 
 		#region BulkCopy
 
-		public override BulkCopyRowsCopied BulkCopy<T>(DataContextOptions options, ITable<T> table,
-			BulkCopyOptions                                               bulkCopyOptions,
-			IEnumerable<T>                                                source)
+		public override BulkCopyRowsCopied BulkCopy<T>(DataOptions options, ITable<T> table,
+			BulkCopyOptions                                        bulkCopyOptions,
+			IEnumerable<T>                                         source)
 		{
 			return new InformixBulkCopy(this).BulkCopy(
 				bulkCopyOptions.BulkCopyType == BulkCopyType.Default ? InformixTools.DefaultBulkCopyType : bulkCopyOptions.BulkCopyType,
@@ -211,7 +211,7 @@ namespace LinqToDB.DataProvider.Informix
 				source);
 		}
 
-		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataContextOptions options, ITable<T> table,
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
 			BulkCopyOptions bulkCopyOptions,
 			IEnumerable<T> source, CancellationToken cancellationToken)
 		{
@@ -224,7 +224,7 @@ namespace LinqToDB.DataProvider.Informix
 		}
 
 #if NATIVE_ASYNC
-		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataContextOptions options, ITable<T> table,
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
 			BulkCopyOptions bulkCopyOptions,
 			IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{

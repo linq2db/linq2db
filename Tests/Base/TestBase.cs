@@ -401,9 +401,7 @@ namespace Tests
 			return _serverContainer.Prepare(ms, interceptor, suppressSequentialAccess, str);
 		}
 
-		protected ITestDataContext GetDataContext(
-			string                            configuration,
-			Action<DataContextOptionsBuilder> dbOptionsBuilder)
+		protected ITestDataContext GetDataContext(string configuration, Action<DataOptions> dbOptionsBuilder)
 		{
 			if (!configuration.EndsWith(LinqServiceSuffix))
 			{
@@ -416,9 +414,7 @@ namespace Tests
 			return _serverContainer.Prepare(ms, interceptor, suppressSequentialAccess, str);*/
 		}
 
-		protected TestDataConnection GetDataConnection(
-			string                            configuration,
-			Action<DataContextOptionsBuilder> dbOptionsBuilder)
+		protected TestDataConnection GetDataConnection(string configuration, Action<DataOptions> dbOptionsBuilder)
 		{
 			if (configuration.EndsWith(LinqServiceSuffix))
 			{
@@ -427,12 +423,11 @@ namespace Tests
 
 			Debug.WriteLine(configuration, "Provider ");
 
-			var builder = new DataContextOptionsBuilder<TestDataConnection>()
-				.UseConfigurationString(configuration);
+			var builder = new DataOptions().UseConfigurationString(configuration);
 
-			dbOptionsBuilder.Invoke(builder);
+			dbOptionsBuilder(builder);
 
-			var res = new TestDataConnection(builder.Options);
+			var res = new TestDataConnection(builder);
 
 			/*
 			// add extra mapping schema to not share mappers with other sql2017/2019 providers

@@ -53,14 +53,7 @@ namespace EquatableDataContext
 			InitMappingSchema();
 		}
 
-		public EquatableDB(DataContextOptions options)
-			: base(options)
-		{
-			InitDataContext();
-			InitMappingSchema();
-		}
-
-		public EquatableDB(DataContextOptions<EquatableDB> options)
+		public EquatableDB(DataOptions options)
 			: base(options)
 		{
 			InitDataContext();

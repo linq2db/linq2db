@@ -52,14 +52,7 @@ namespace SQLiteDataContext
 			InitMappingSchema();
 		}
 
-		public TestDataDB(DataContextOptions options)
-			: base(options)
-		{
-			InitDataContext();
-			InitMappingSchema();
-		}
-
-		public TestDataDB(DataContextOptions<TestDataDB> options)
+		public TestDataDB(DataOptions options)
 			: base(options)
 		{
 			InitDataContext();

@@ -385,7 +385,7 @@ namespace LinqToDB.Linq.Builder
 						MemberHelper.MethodOf(() => GetGrouping(null!, null!, null!, default!, null!)),
 						new Expression[]
 						{
-							Expression.Constant(context.Builder.DataContext.GetLinqOptions()),
+							Expression.Constant(context.Builder.DataContext.Options.LinqOptions),
 							ExpressionBuilder.QueryRunnerParam,
 							Expression.Constant(context.Builder.ParametersContext.CurrentSqlParameters),
 							keyExpr,
@@ -396,7 +396,7 @@ namespace LinqToDB.Linq.Builder
 				public LinqOptions LinqOptions { get; set; } = null!;
 
 				static IGrouping<TKey,TElement> GetGrouping(
-					LinqOptions                                    linqOptions,
+					LinqOptions                                             linqOptions,
 					IQueryRunner                                            runner,
 					List<ParameterAccessor>                                 parameterAccessor,
 					TKey                                                    key,
@@ -418,7 +418,8 @@ namespace LinqToDB.Linq.Builder
 				Builder.IsBlockDisable = true;
 
 				var helper = (IGroupByHelper)Activator.CreateInstance(gtype)!;
-				helper.LinqOptions = Builder.DataContext.GetLinqOptions();
+
+				helper.LinqOptions = Builder.DataContext.Options.LinqOptions;
 
 				var expr = helper.GetGrouping(this);
 

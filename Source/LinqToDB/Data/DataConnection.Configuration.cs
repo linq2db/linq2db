@@ -1,15 +1,17 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace LinqToDB.Data
 {
+	using Async;
 	using Common.Internal;
 	using Configuration;
 	using DataProvider;
-	using Infrastructure;
+	using RetryPolicy;
 
 	public partial class DataConnection : IConfigurationID
 	{
@@ -41,8 +43,8 @@ namespace LinqToDB.Data
 #endif
 			set
 			{
-				_defaultSettings              = value;
-				_defaultDataConnectionOptions = null;
+				_defaultSettings          = value;
+				_defaultConnectionOptions = null;
 			}
 		}
 
@@ -63,10 +65,12 @@ namespace LinqToDB.Data
 			}
 		}
 
-		private  static DataConnectionOptions? _defaultDataConnectionOptions;
-		internal static DataConnectionOptions   DefaultDataConnectionOptions => _defaultDataConnectionOptions ??= new();
+		private  static ConnectionOptions? _defaultConnectionOptions;
+		internal static ConnectionOptions   DefaultConnectionOptions => _defaultConnectionOptions ??= new();
 
-		class ConfigurationInfo
+		internal static ConcurrentDictionary<string,ConnectionOptions> ConnectionOptionsByConfigurationString = new();
+
+		internal class ConfigurationInfo
 		{
 			readonly bool    _dataProviderSet;
 			readonly string? _configurationString;
@@ -228,7 +232,15 @@ namespace LinqToDB.Data
 			_providerDetectors.Insert(0, providerDetector);
 		}
 
-		static readonly ConcurrentDictionary<string,IDataProvider> _dataProviders = new ();
+		static readonly ConcurrentDictionary<string,IDataProvider> _dataProviders = new();
+
+		internal static IDataProvider GetDataProviderEx(string providerName, string connectionString)
+		{
+			if (!_dataProviders.TryGetValue(providerName, out var dataProvider))
+				dataProvider = DataConnection.GetDataProvider(providerName, connectionString);
+
+			return  dataProvider ?? throw new LinqToDBException($"DataProvider '{providerName}' not found.");
+		}
 
 		/// <summary>
 		/// Registers database provider implementation by provided unique name.
@@ -310,7 +322,7 @@ namespace LinqToDB.Data
 		public static IReadOnlyDictionary<string, IDataProvider> GetRegisteredProviders() =>
 			_dataProviders.ToDictionary(p => p.Key, p => p.Value);
 
-		static ConfigurationInfo GetConfigurationInfo(string? configurationString)
+		internal static ConfigurationInfo GetConfigurationInfo(string? configurationString)
 		{
 			var key = configurationString ?? DefaultConfiguration;
 
@@ -377,7 +389,7 @@ namespace LinqToDB.Data
 			var info = new ConfigurationInfo(
 				new ConnectionStringSettings(configuration, connectionString, dataProvider));
 
-			Configuration.Info.AddOrUpdate(configuration, info, (s, i) => info);
+			Configuration.Info.AddOrUpdate(configuration, info, (_,_) => info);
 		}
 
 		/// <summary>
@@ -432,8 +444,8 @@ namespace LinqToDB.Data
 			get => _defaultConfiguration;
 			set
 			{
-				_defaultConfiguration         = value;
-				_defaultDataConnectionOptions = null;
+				_defaultConfiguration     = value;
+				_defaultConnectionOptions = null;
 			}
 		}
 
@@ -447,8 +459,8 @@ namespace LinqToDB.Data
 			get => _defaultDataProvider;
 			set
 			{
-				_defaultDataProvider          = value;
-				_defaultDataConnectionOptions = null;
+				_defaultDataProvider      = value;
+				_defaultConnectionOptions = null;
 			}
 		}
 
@@ -473,12 +485,7 @@ namespace LinqToDB.Data
 
 		internal static class ConfigurationApplier
 		{
-			public static void Apply(DataConnection dataConnection, LinqOptions options)
-			{
-				dataConnection.LinqOptions = options;
-			}
-
-			public static void Apply(DataConnection dataConnection, DataConnectionOptions options)
+			public static void Apply(DataConnection dataConnection, ConnectionOptions options)
 			{
 				if (options.SavedDataProvider != null)
 				{
@@ -489,39 +496,79 @@ namespace LinqToDB.Data
 					return;
 				}
 
+				var doSave = true;
+
 				switch (
 				          options.ConfigurationString,
 				                           options.ConnectionString,
 				                                                options.DataProvider,
-				                                                                 options.ProviderName)
+				                                                             options.ProviderName,
+				                                                                              options.DbConnection,
+				                                                                                             options.DbTransaction,
+				                                                                                                             options.ConnectionFactory)
 				{
-					case (_,               {} connectionString, {} dataProvider, _) :
+					case (_,               {} connectionString, {} provider, _,               _,             _,              _) :
 					{
-						dataConnection.DataProvider     = dataProvider;
+						dataConnection.DataProvider     = provider;
 						dataConnection.ConnectionString = connectionString;
-						dataConnection.MappingSchema    = dataProvider.MappingSchema;
+						dataConnection.MappingSchema    = provider.MappingSchema;
 
 						break;
 					}
-					case (_,               {} connectionString, _,               {} providerName) :
+					case (_,               {} connectionString, _,           {} providerName, _,             _,              _) :
 					{
-						if (!_dataProviders.TryGetValue(providerName, out var dataProvider))
-							dataProvider = GetDataProvider(providerName, connectionString);
-
-						if (dataProvider == null)
-							throw new LinqToDBException($"DataProvider '{options.ProviderName}' not found.");
-
-						dataConnection.DataProvider     = dataProvider;
+						dataConnection.DataProvider     = GetDataProviderEx(providerName, connectionString);
 						dataConnection.ConnectionString = connectionString;
-						dataConnection.MappingSchema    = dataProvider.MappingSchema;
+						dataConnection.MappingSchema    = dataConnection.DataProvider.MappingSchema;
 
 						break;
 					}
-					case (_,               {},                  _,               _) :
+					case (_,               {},                  _,           _,               _,             _,              _) :
+					case (_,               _,                   null,        _,               {},            _,              _) :
+					case (_,               _,                   null,        _,               _,             {},             _) :
+					case (_,               _,                   null,        _,               _,             _,              {}) :
 					{
 						throw new LinqToDBException("DataProvider was not specified");
 					}
-					case ({} configString, _,                   _,               _) :
+					case (_,               _,                   {} provider, _,               {} connection, _,              _) :
+					{
+						dataConnection._connection        = WrapConnection(connection);
+						dataConnection._disposeConnection = options.DisposeConnection;
+
+						dataConnection.DataProvider  = provider;
+						dataConnection.MappingSchema = provider.MappingSchema;
+
+						doSave = false;
+
+						break;
+					}
+					case (_,               _,                   {} provider, _,               _,             {} transaction, _) :
+					{
+						dataConnection._connection        = WrapConnection(transaction.Connection!);
+						dataConnection._closeTransaction  = false;
+						dataConnection._closeConnection   = false;
+						dataConnection._disposeConnection = false;
+
+						dataConnection.TransactionAsync = AsyncFactory.Create(transaction);
+						dataConnection.DataProvider     = provider;
+						dataConnection.MappingSchema    = provider.MappingSchema;
+
+						doSave = false;
+
+						break;
+					}
+					case (_,               _,                   {} provider, _,               _,             _,              {} factory) :
+					{
+						dataConnection._connectionFactory = factory;
+
+						dataConnection.DataProvider  = provider;
+						dataConnection.MappingSchema = provider.MappingSchema;
+
+						doSave = false;
+
+						break;
+					}
+					case ({} configString, _,                   _,           _,               _,             _,              _) :
 					{
 						dataConnection.ConfigurationString = configString;
 
@@ -533,7 +580,8 @@ namespace LinqToDB.Data
 
 						break;
 					}
-					case (null,            _,                   _,                _) when DefaultConfiguration != null :
+					case (null,            _,                   _,           _,               _,             _,              _)
+						when DefaultConfiguration != null :
 					{
 						dataConnection.ConfigurationString = DefaultConfiguration;
 
@@ -549,8 +597,49 @@ namespace LinqToDB.Data
 						throw new LinqToDBException("Invalid configuration. Configuration string is not provided.");
 				}
 
-				options.SavedDataProvider     = dataConnection.DataProvider;
-				options.SavedConnectionString = dataConnection.ConnectionString;
+				if (doSave)
+				{
+					options.SavedDataProvider     = dataConnection.DataProvider;
+					options.SavedConnectionString = dataConnection.ConnectionString;
+				}
+
+				IAsyncDbConnection WrapConnection(DbConnection connection)
+				{
+					// TODO: IT Look into.
+					return connection is IAsyncDbConnection asyncDbConnection
+						? asyncDbConnection
+						: AsyncFactory.Create(connection);
+				}
+			}
+
+			public static void Apply(DataConnection dataConnection, RetryPolicyOptions options)
+			{
+				dataConnection.RetryPolicy = options.RetryPolicy ?? options.Factory?.Invoke(dataConnection);
+			}
+
+			public static void Apply(DataConnection dataConnection, DataContextOptions options)
+			{
+				if (options.MappingSchema != null)
+				{
+					dataConnection.AddMappingSchema(options.MappingSchema);
+				}
+				else if (dataConnection.Options.LinqOptions.EnableAutoFluentMapping)
+				{
+					dataConnection.MappingSchema = new (dataConnection.MappingSchema);
+				}
+
+				dataConnection._commandTimeout = options.CommandTimeout;
+
+				if (options.Interceptors != null)
+					foreach (var interceptor in options.Interceptors)
+						dataConnection.AddInterceptor(interceptor);
+			}
+
+			public static void Apply(DataConnection dataConnection, DataTraceOptions options)
+			{
+				if (options.OnTrace    != null) dataConnection.OnTraceConnection        = options.OnTrace;
+				if (options.TraceLevel != null) dataConnection.TraceSwitchConnection    = new("DataConnection", "DataConnection trace switch") {Level = options.TraceLevel.Value};
+				if (options.WriteTrace != null) dataConnection.WriteTraceLineConnection = options.WriteTrace;
 			}
 		}
 	}

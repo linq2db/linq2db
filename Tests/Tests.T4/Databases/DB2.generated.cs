@@ -56,14 +56,7 @@ namespace DB2DataContext
 			InitMappingSchema();
 		}
 
-		public TESTDATADB(DataContextOptions options)
-			: base(options)
-		{
-			InitDataContext();
-			InitMappingSchema();
-		}
-
-		public TESTDATADB(DataContextOptions<TESTDATADB> options)
+		public TESTDATADB(DataOptions options)
 			: base(options)
 		{
 			InitDataContext();

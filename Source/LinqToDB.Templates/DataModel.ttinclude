@@ -113,7 +113,7 @@ static Func<DataConnection,GetSchemaOptions,DatabaseSchema> LoadDatabaseSchema =
 
 void LoadServerMetadata(DataConnection dataConnection)
 {
-	SqlBuilder = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema);
+	SqlBuilder = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema, dataConnection.Options.LinqOptions);
 
 	var db = LoadDatabaseSchema(dataConnection, GetSchemaOptions);
 

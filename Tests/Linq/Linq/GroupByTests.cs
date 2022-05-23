@@ -2,6 +2,7 @@
 using System.Linq;
 using FluentAssertions;
 using LinqToDB;
+using LinqToDB.Infrastructure;
 using LinqToDB.SqlQuery;
 using NUnit.Framework;
 
@@ -1979,7 +1980,7 @@ namespace Tests.Linq
 		[Test]
 		public void GroupByGuardCheckOptions([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool guard)
 		{
-			using (var db = GetDataContext(context, b => b.WithOptions(o => o.WithGuardGrouping(guard))))
+			using (var db = GetDataContext(context, b => b.WithOptions<LinqOptions>(o => o with { GuardGrouping = guard })))
 			{
 				// group on client
 				var query = db.Person

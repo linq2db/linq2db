@@ -1,8 +1,10 @@
-﻿using System.Collections.Generic;
-using LinqToDB.CodeModel;
+﻿using System;
+using System.Collections.Generic;
 
 namespace LinqToDB.DataModel
 {
+	using CodeModel;
+
 	// contains generation logic for data context class supplementary code like constructors
 	partial class DataModelGenerator
 	{
@@ -29,6 +31,7 @@ namespace LinqToDB.DataModel
 
 			if (_dataModel.DataContext.HasDefaultConstructor)
 				ctors.Add(constructors.New().SetModifiers(Modifiers.Public).Body());
+
 			if (_dataModel.DataContext.HasConfigurationConstructor)
 			{
 				var configurationParam = AST.Parameter(
@@ -43,10 +46,11 @@ namespace LinqToDB.DataModel
 						.Base(configurationParam.Reference)
 						.Body());
 			}
+
 			if (_dataModel.DataContext.HasUntypedOptionsConstructor)
 			{
 				var optionsParam = AST.Parameter(
-					WellKnownTypes.LinqToDB.Configuration.DataContextOptions,
+					WellKnownTypes.LinqToDB.Configuration.DataOptions,
 					AST.Name(CONTEXT_CONSTRUCTOR_OPTIONS_PARAMETER),
 					CodeParameterDirection.In);
 
@@ -55,20 +59,6 @@ namespace LinqToDB.DataModel
 						.Parameter(optionsParam)
 						.SetModifiers(Modifiers.Public)
 						.Base(optionsParam.Reference)
-						.Body());
-			}
-			if (_dataModel.DataContext.HasTypedOptionsConstructor)
-			{
-				var typedOptionsParam = AST.Parameter(
-					WellKnownTypes.LinqToDB.Configuration.DataContextOptionsWithType(contextBuilder.Type.Type),
-					AST.Name(CONTEXT_CONSTRUCTOR_OPTIONS_PARAMETER),
-					CodeParameterDirection.In);
-
-				ctors.Add(constructors
-					.New()
-						.Parameter(typedOptionsParam)
-						.SetModifiers(Modifiers.Public)
-						.Base(typedOptionsParam.Reference)
 						.Body());
 			}
 

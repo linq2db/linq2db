@@ -49,8 +49,7 @@ namespace LinqToDB.Data
 				{
 					_mapperExpression = value;
 
-					if (value != null && DataContext.GetLinqOptions().TraceMapperExpression &&
-					    _dataConnection.TraceSwitchConnection.TraceInfo)
+					if (value != null && DataContext.Options.LinqOptions.TraceMapperExpression && _dataConnection.TraceSwitchConnection.TraceInfo)
 					{
 						_dataConnection.OnTraceConnection(new TraceInfo(_dataConnection, TraceInfoStep.MapperCreated, TraceOperation.BuildMapping, _isAsync)
 						{
@@ -67,7 +66,7 @@ namespace LinqToDB.Data
 			{
 				SetCommand(true);
 
-				var sqlProvider = _dataConnection.DataProvider.CreateSqlBuilder(_dataConnection.MappingSchema, _dataConnection.LinqOptions);
+				var sqlProvider = _dataConnection.DataProvider.CreateSqlBuilder(_dataConnection.MappingSchema, _dataConnection.Options.LinqOptions);
 
 				var sb = new StringBuilder();
 
@@ -101,7 +100,7 @@ namespace LinqToDB.Data
 
 						var sql = sb.ToString();
 
-						var sqlBuilder = _dataConnection.DataProvider.CreateSqlBuilder(_dataConnection.MappingSchema, _dataConnection.LinqOptions);
+						var sqlBuilder = _dataConnection.DataProvider.CreateSqlBuilder(_dataConnection.MappingSchema, _dataConnection.Options.LinqOptions);
 						sql = sqlBuilder.ApplyQueryHints(sql, _executionQuery.PreparedQuery.QueryHints);
 
 						sb = new StringBuilder(sql);
@@ -241,7 +240,7 @@ namespace LinqToDB.Data
 					sql.IsParameterDependent = true;
 				}
 
-				var sqlBuilder   = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema, dataConnection.LinqOptions);
+				var sqlBuilder   = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema, dataConnection.Options.LinqOptions);
 				var sqlOptimizer = dataConnection.DataProvider.GetSqlOptimizer();
 
 				var cc = sqlBuilder.CommandCount(sql);

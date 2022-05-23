@@ -71,16 +71,17 @@ namespace Tests.Common
 		[Test]
 		public void CanUseWithLoggingFromFactory()
 		{
-			var builder = new DataContextOptionsBuilder();
+			var builder = new DataOptions();
 			var factory = new TestLoggerFactory();
+
 			builder.UseLoggerFactory(factory);
 
-			var extension = builder.Options.GetExtension<DataContextOptionsExtensionOld>();
+			var extension = builder.Find<DataTraceOptions>();
 
-			Assert.NotNull(extension.WriteTrace);
+			Assert.NotNull(extension?.WriteTrace);
 
 			var expectedMessage = "this is a test log";
-			extension.WriteTrace!(expectedMessage, "some category", TraceLevel.Info);
+			extension?.WriteTrace!(expectedMessage, "some category", TraceLevel.Info);
 
 			Assert.That(factory.Loggers, Has.One.Items);
 			var testLogger = factory.Loggers.Single();
@@ -90,17 +91,17 @@ namespace Tests.Common
 		[Test]
 		public void CanUseLoggingFactoryFromIoc()
 		{
-			var builder  = new DataContextOptionsBuilder();
+			var builder  = new DataOptions();
 			var factory  = new TestLoggerFactory();
 			var services = new ServiceCollection();
 			services.AddSingleton<ILoggerFactory>(factory);
 			builder.UseDefaultLogging(services.BuildServiceProvider());
 
-			var extension = builder.Options.GetExtension<DataContextOptionsExtensionOld>();
-			Assert.NotNull(extension.WriteTrace);
+			var extension = builder.Find<DataTraceOptions>();
+			Assert.NotNull(extension?.WriteTrace);
 
 			var expectedMessage = "this is a test log";
-			extension.WriteTrace!(expectedMessage, "some category", TraceLevel.Info);
+			extension!.WriteTrace!(expectedMessage, "some category", TraceLevel.Info);
 
 			Assert.That(factory.Loggers, Has.One.Items);
 			var testLogger = factory.Loggers.Single();
@@ -114,10 +115,9 @@ namespace Tests.Common
 			var cs = DataConnection.GetConnectionString(context);
 
 			var builder =
-				new DataContextOptionsBuilder().UseSqlServer(cs,
-					o => o.UseProvider(provider).AutodetectServerVersion());
+				new DataOptions().UseSqlServer(cs, provider);
 
-			using var dc = new DataConnection(builder.Options);
+			using var dc = new DataConnection(builder);
 			_ = dc.GetTable<Parent>().First();
 		}
 	}

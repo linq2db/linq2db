@@ -63,7 +63,7 @@ namespace LinqToDB.Data
 		string IDataContext.ContextName => DataProvider.Name;
 		int    IDataContext.ContextID   => DataProvider.ID;
 
-		Func<ISqlBuilder> IDataContext.CreateSqlProvider => () => DataProvider.CreateSqlBuilder(MappingSchema, LinqOptions);
+		Func<ISqlBuilder> IDataContext.CreateSqlProvider => () => DataProvider.CreateSqlBuilder(MappingSchema, Options.LinqOptions);
 
 		static Func<ISqlOptimizer> GetGetSqlOptimizer(IDataProvider dp)
 		{

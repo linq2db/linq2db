@@ -13,9 +13,9 @@ using System.Text.RegularExpressions;
 
 namespace LinqToDB.SqlProvider
 {
-	using Infrastructure;
 	using Common;
 	using DataProvider;
+	using Infrastructure;
 	using Mapping;
 	using SqlQuery;
 	using Extensions;
@@ -49,7 +49,7 @@ namespace LinqToDB.SqlProvider
 		public MappingSchema       MappingSchema       { get;                }
 		public StringBuilder       StringBuilder       { get; set;           } = null!;
 		public SqlProviderFlags    SqlProviderFlags    { get;                }
-		public LinqOptions       LinqOptions         { get;                }
+		public LinqOptions         LinqOptions         { get;                }
 
 		protected IDataProvider?      DataProvider;
 		protected ValueToSqlConverter ValueToSqlConverter => MappingSchema.ValueToSqlConverter;

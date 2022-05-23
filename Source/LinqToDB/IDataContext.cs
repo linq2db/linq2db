@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 
 using JetBrains.Annotations;
-using LinqToDB.Infrastructure;
 
 namespace LinqToDB
 {
@@ -75,7 +74,7 @@ namespace LinqToDB
 		/// <summary>
 		/// Current DataContext LINQ options
 		/// </summary>
-		DataContextOptions  Options               { get; }
+		DataOptions         Options               { get; }
 
 		/// <summary>
 		/// Returns column value reader expression.

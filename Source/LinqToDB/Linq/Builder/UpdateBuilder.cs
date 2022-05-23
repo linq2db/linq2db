@@ -131,8 +131,10 @@ namespace LinqToDB.Linq.Builder
 					}
 
 					sequence.ConvertToIndex(null, 0, ConvertFlags.All);
-					new SelectQueryOptimizer(builder.DataContext.SqlProviderFlags, builder.DataContext.GetLinqOptions(), updateStatement, updateStatement.SelectQuery, 0)
+
+					new SelectQueryOptimizer(builder.DataContext.SqlProviderFlags, builder.DataContext.Options.LinqOptions, updateStatement, updateStatement.SelectQuery, 0)
 						.ResolveWeakJoins();
+
 					updateStatement.SelectQuery.Select.Columns.Clear();
 
 					BuildSetter(
