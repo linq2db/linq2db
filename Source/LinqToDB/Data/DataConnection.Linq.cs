@@ -2,6 +2,7 @@
 using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
+using LinqToDB.Common.Internal;
 
 namespace LinqToDB.Data
 {
@@ -61,7 +62,7 @@ namespace LinqToDB.Data
 		}
 
 		string IDataContext.ContextName => DataProvider.Name;
-		int    IDataContext.ContextID   => DataProvider.ID;
+		int    IDataContext.ContextID   => ((IConfigurationID)this).ConfigurationID;
 
 		Func<ISqlBuilder> IDataContext.CreateSqlProvider => () => DataProvider.CreateSqlBuilder(MappingSchema, Options.LinqOptions);
 

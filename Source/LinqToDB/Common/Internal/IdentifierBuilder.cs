@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -74,12 +75,28 @@ namespace LinqToDB.Common.Internal
 			return this;
 		}
 
+		public IdentifierBuilder Add(int? data)
+		{
+			_stringBuilder
+				.Append('.')
+				.Append(data == null ? string.Empty : GetIntID(data.Value))
+				;
+			return this;
+		}
+
 		public IdentifierBuilder Add(string format, object? data)
 		{
 			_stringBuilder
 				.Append('.')
 				.AppendFormat(format, data)
 				;
+			return this;
+		}
+
+		public IdentifierBuilder AddRange(IEnumerable items)
+		{
+			foreach (var item in items)
+				Add(GetObjectID(item));
 			return this;
 		}
 
@@ -128,9 +145,11 @@ namespace LinqToDB.Common.Internal
 		{
 			return obj switch
 			{
-				Type t => GetObjectID(t),
-				null   => string.Empty,
-				_      => GetOrAddObject(obj)
+				IConfigurationID c => c.ConfigurationID.ToString(),
+				Type t             => GetObjectID(t),
+				int  i             => GetIntID(i),
+				null               => string.Empty,
+				_                  => GetOrAddObject(obj)
 			};
 
 			static string GetOrAddObject(object o)
@@ -161,5 +180,19 @@ namespace LinqToDB.Common.Internal
 		}
 
 		static readonly List<(object? obj,object id)> _buggyObjects = new ();
+		static readonly string?[]                     _intToString  = new string?[300];
+
+		static string GetIntID(int id)
+		{
+			if (id >= 0 && id < _intToString.Length)
+			{
+				var value = _intToString[id];
+				if (value == null)
+					_intToString[id] = value = id.ToString();
+				return value;
+			}
+
+			return id.ToString();
+		}
 	}
 }

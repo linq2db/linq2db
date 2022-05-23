@@ -42,8 +42,20 @@ namespace LinqToDB.Data
 		{
 		}
 
+		ConnectionOptions(ConnectionOptions original)
+		{
+			ConfigurationString = original.ConfigurationString;
+			ConnectionString    = original.ConnectionString;
+			DataProvider        = original.DataProvider;
+			ProviderName        = original.ProviderName;
+			DbConnection        = original.DbConnection;
+			DbTransaction       = original.DbTransaction;
+			DisposeConnection   = original.DisposeConnection;
+			ConnectionFactory   = original.ConnectionFactory;
+		}
+
 		int? _configurationID;
-		int IOptionSet.ConfigurationID => _configurationID ??= new IdentifierBuilder()
+		int IConfigurationID.ConfigurationID => _configurationID ??= new IdentifierBuilder()
 			.Add(ConfigurationString)
 			.Add(ConnectionString)
 			.Add(DataProvider?.ID)

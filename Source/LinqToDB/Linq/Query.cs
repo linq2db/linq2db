@@ -57,16 +57,16 @@ namespace LinqToDB.Linq
 
 		#region Compare
 
-		internal readonly int                  ContextID;
-		internal readonly Type                 ContextType;
-		internal readonly Expression?          Expression;
-		internal readonly MappingSchema        MappingSchema;
-		internal readonly int                  ConfigurationID;
-		internal readonly bool                 InlineParameters;
-		internal readonly ISqlOptimizer        SqlOptimizer;
-		internal readonly SqlProviderFlags     SqlProviderFlags;
-		internal readonly LinqOptions LinqOptions;
-		internal readonly bool                 IsEntityServiceProvided;
+		internal readonly int              ContextID;
+		internal readonly Type             ContextType;
+		internal readonly Expression?      Expression;
+		internal readonly MappingSchema    MappingSchema;
+		internal readonly int              ConfigurationID;
+		internal readonly bool             InlineParameters;
+		internal readonly ISqlOptimizer    SqlOptimizer;
+		internal readonly SqlProviderFlags SqlProviderFlags;
+		internal readonly LinqOptions      LinqOptions;
+		internal readonly bool             IsEntityServiceProvided;
 
 		protected bool Compare(IDataContext dataContext, Expression expr)
 		{

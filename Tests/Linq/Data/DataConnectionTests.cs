@@ -374,12 +374,6 @@ namespace Tests.Data
 			Assert.That(c2.ConfigurationString, Is.EqualTo(DataConnection.DefaultConfiguration));
 		}
 
-		[Test]
-		public void TestConstructorThrowsWhenGivenInvalidSettings()
-		{
-			Assert.Throws<LinqToDBException>(() => new DbConnection1(new DataOptions()));
-		}
-
 		// informix connection limits interfere with test
 		[Test]
 		[ActiveIssue("Fails due to connection limit for development version when run with nonmanaged provider", Configuration = ProviderName.SybaseManaged)]

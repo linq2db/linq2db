@@ -2,7 +2,7 @@
 
 namespace LinqToDB.Common.Internal
 {
-	interface IConfigurationID
+	public interface IConfigurationID
 	{
 		int ConfigurationID { get; }
 	}

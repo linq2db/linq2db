@@ -111,8 +111,11 @@ namespace LinqToDB.Remote
 		string?            _contextName;
 		string IDataContext.ContextName => _contextName ??= GetConfigurationInfo().MappingSchema.ConfigurationList[0];
 
-		int?               _contextID;
-		int    IDataContext.ContextID   => _contextID   ??= new IdentifierBuilder(((IDataContext)this).ContextName).CreateID();
+		int? _contextID;
+		int IDataContext.ContextID => _contextID ??= new IdentifierBuilder()
+			.Add(((IDataContext)this).ContextName)
+			.Add(Options)
+			.CreateID();
 
 		private MappingSchema? _mappingSchema;
 		public  MappingSchema   MappingSchema

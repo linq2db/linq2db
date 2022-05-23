@@ -29,8 +29,15 @@ namespace LinqToDB
 		{
 		}
 
+		DataContextOptions(DataContextOptions original)
+		{
+			MappingSchema  = original.MappingSchema;
+			CommandTimeout = original.CommandTimeout;
+			Interceptors   = original.Interceptors;
+		}
+
 		int? _configurationID;
-		int IOptionSet.ConfigurationID => _configurationID ??= new IdentifierBuilder()
+		int IConfigurationID.ConfigurationID => _configurationID ??= new IdentifierBuilder()
 			.Add(MappingSchema)
 			.Add(CommandTimeout)
 			.CreateID();

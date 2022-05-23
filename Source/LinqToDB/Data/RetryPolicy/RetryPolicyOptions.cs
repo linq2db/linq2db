@@ -43,8 +43,19 @@ namespace LinqToDB.Data.RetryPolicy
 		{
 		}
 
+		public RetryPolicyOptions(RetryPolicyOptions original)
+		{
+			RetryPolicy     = original.RetryPolicy;
+			Factory         = original.Factory;
+			MaxRetryCount   = original.MaxRetryCount;
+			MaxDelay        = original.MaxDelay;
+			RandomFactor    = original.RandomFactor;
+			ExponentialBase = original.ExponentialBase;
+			Coefficient     = original.Coefficient;
+		}
+
 		int? _configurationID;
-		int IOptionSet.ConfigurationID => _configurationID ??= new IdentifierBuilder()
+		int IConfigurationID.ConfigurationID => _configurationID ??= new IdentifierBuilder()
 			.Add(RetryPolicy?.GetType())
 			.Add(Factory)
 			.Add(MaxRetryCount)

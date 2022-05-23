@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Infrastructure
@@ -168,8 +169,25 @@ namespace LinqToDB.Infrastructure
 		{
 		}
 
-		int? _configurationID;
-		int IOptionSet.ConfigurationID => _configurationID ??= new IdentifierBuilder()
+		LinqOptions(LinqOptions original)
+		{
+			PreloadGroups           = original.PreloadGroups;
+			IgnoreEmptyUpdate       = original.IgnoreEmptyUpdate;
+			GenerateExpressionTest  = original.GenerateExpressionTest;
+			TraceMapperExpression   = original.TraceMapperExpression;
+			DoNotClearOrderBys      = original.DoNotClearOrderBys;
+			OptimizeJoins           = original.OptimizeJoins;
+			CompareNullsAsValues    = original.CompareNullsAsValues;
+			GuardGrouping           = original.GuardGrouping;
+			DisableQueryCache       = original.DisableQueryCache;
+			CacheSlidingExpiration  = original.CacheSlidingExpiration;
+			PreferApply             = original.PreferApply;
+			KeepDistinctOrdered     = original.KeepDistinctOrdered;
+			ParameterizeTakeSkip    = original.ParameterizeTakeSkip;
+			EnableAutoFluentMapping = original.EnableAutoFluentMapping;
+		}
+
+		int IConfigurationID.ConfigurationID => ((int?)new IdentifierBuilder()
 			.Add(PreloadGroups)
 			.Add(IgnoreEmptyUpdate)
 			.Add(GenerateExpressionTest)
@@ -184,7 +202,7 @@ namespace LinqToDB.Infrastructure
 			.Add(KeepDistinctOrdered)
 			.Add(ParameterizeTakeSkip)
 			.Add(EnableAutoFluentMapping)
-			.CreateID();
+			.CreateID()).Value;
 
 		#region IEquatable implementation
 

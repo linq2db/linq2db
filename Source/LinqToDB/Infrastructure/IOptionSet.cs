@@ -2,6 +2,8 @@
 
 namespace LinqToDB.Infrastructure
 {
+	using Common.Internal;
+
 	/// <summary>
 	/// <para>
 	/// Interface for extensions that are stored in <see cref="IOptions.OptionSets" />.
@@ -11,8 +13,7 @@ namespace LinqToDB.Infrastructure
 	/// It is generally not used in application code.
 	/// </para>
 	/// </summary>
-	public interface IOptionSet
+	public interface IOptionSet : IConfigurationID
 	{
-		int ConfigurationID { get; }
 	}
 }

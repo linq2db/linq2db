@@ -2267,6 +2267,7 @@ namespace Tests.Linq
 		public void Issue2306Test2([DataSources] string context)
 		{
 			Query.ClearCaches();
+
 			using (new GuardGrouping(false))
 			using (var db = GetDataContext(context))
 			{
@@ -2284,6 +2285,7 @@ namespace Tests.Linq
 			{
 				db.Person.GroupBy(p => p.ID).DisableGuard().ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList());
 			}
+
 			Query.ClearCaches();
 		}
 

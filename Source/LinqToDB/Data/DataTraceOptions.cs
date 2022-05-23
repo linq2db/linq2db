@@ -26,8 +26,15 @@ namespace LinqToDB.Data
 		{
 		}
 
+		public DataTraceOptions(DataTraceOptions original)
+		{
+			TraceLevel = original.TraceLevel;
+			OnTrace    = original.OnTrace;
+			WriteTrace = original.WriteTrace;
+		}
+
 		int? _configurationID;
-		int IOptionSet.ConfigurationID => _configurationID ??= new IdentifierBuilder()
+		int IConfigurationID.ConfigurationID => _configurationID ??= new IdentifierBuilder()
 			.Add(TraceLevel)
 			.Add(OnTrace)
 			.Add(WriteTrace)

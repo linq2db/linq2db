@@ -3,10 +3,11 @@ using System.Collections.Generic;
 
 namespace LinqToDB
 {
+	using Common.Internal;
 	using Data;
 	using Infrastructure;
 
-	public class DataOptions : OptionsBase<DataOptions>
+	public class DataOptions : OptionsBase<DataOptions>, IConfigurationID
 	{
 		public DataOptions()
 		{
@@ -74,5 +75,13 @@ namespace LinqToDB
 
 			base.Apply(dataConnection);
 		}
+
+		int? _configurationID;
+		int IConfigurationID.ConfigurationID => _configurationID ??= new IdentifierBuilder()
+			.Add(LinqOptions)
+			.Add(ConnectionOptions)
+			.Add(DataContextOptions)
+			.AddRange(base.OptionSets)
+			.CreateID();
 	}
 }

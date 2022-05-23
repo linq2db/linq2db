@@ -471,11 +471,12 @@ namespace LinqToDB.Data
 		{
 			get
 			{
-				if (!_configurationID.HasValue || _msID != ((IConfigurationID)MappingSchema).ConfigurationID)
+				if (_configurationID == null || _msID != ((IConfigurationID)MappingSchema).ConfigurationID)
 				{
 					_configurationID = new IdentifierBuilder()
 						.Add(_msID = ((IConfigurationID)MappingSchema).ConfigurationID)
 						.Add(ConfigurationString ?? ConnectionString ?? Connection.ConnectionString)
+						.Add(Options)
 						.CreateID();
 				}
 

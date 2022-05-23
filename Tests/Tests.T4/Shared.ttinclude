@@ -10,10 +10,12 @@
 <#+
 	string GetConnectionString(string config)
 	{
+		var path = System.IO.Path.GetFullPath(Host.ResolvePath(@"..\.."));
+
 		var settings = Tests.Tools.SettingsReader.Deserialize(
 			"NET472",
-			System.IO.File.ReadAllText(Host.ResolvePath(@"..\..\DataProviders.json")),
-			System.IO.File.ReadAllText(Host.ResolvePath(@"..\..\UserDataProviders.json")));
+			System.IO.File.ReadAllText(System.IO.Path.Combine(path, "DataProviders.json")),
+			System.IO.File.ReadAllText(System.IO.Path.Combine(path, "UserDataProviders.json")));
 
 		return settings.Connections[config].ConnectionString;
 	}

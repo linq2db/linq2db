@@ -25,8 +25,14 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 		}
 
+		OracleOptions(OracleOptions original)
+		{
+			BulkCopyType        = BulkCopyType;
+			AlternativeBulkCopy = AlternativeBulkCopy;
+		}
+
 		int? _configurationID;
-		int IOptionSet.ConfigurationID => _configurationID ??= new IdentifierBuilder()
+		int IConfigurationID.ConfigurationID => _configurationID ??= new IdentifierBuilder()
 			.Add(BulkCopyType)
 			.Add(AlternativeBulkCopy)
 			.CreateID();
