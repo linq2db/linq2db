@@ -5,6 +5,7 @@ namespace LinqToDB
 {
 	using Common.Internal;
 	using Data;
+	using Data.RetryPolicy;
 	using Infrastructure;
 
 	public class DataOptions : OptionsBase<DataOptions>, IConfigurationID
@@ -21,6 +22,7 @@ namespace LinqToDB
 		DataOptions(DataOptions options) : base(options)
 		{
 			_linqOptions        = options._linqOptions;
+			_retryPolicyOptions = options._retryPolicyOptions;
 			_connectionOptions  = options._connectionOptions;
 			_dataContextOptions = options._dataContextOptions;
 		}
@@ -35,6 +37,7 @@ namespace LinqToDB
 			switch (options)
 			{
 				case LinqOptions        lo  : return ReferenceEquals(_linqOptions,        lo)  ? this : new(this) { _linqOptions        = lo  };
+				case RetryPolicyOptions rp  : return ReferenceEquals(_retryPolicyOptions, rp)  ? this : new(this) { _retryPolicyOptions = rp  };
 				case ConnectionOptions  co  : return ReferenceEquals(_connectionOptions,  co)  ? this : new(this) { _connectionOptions  = co  };
 				case DataContextOptions dco : return ReferenceEquals(_dataContextOptions, dco) ? this : new(this) { _dataContextOptions = dco };
 				default                     : return base.WithOptions(options);
@@ -42,10 +45,12 @@ namespace LinqToDB
 		}
 
 		LinqOptions?        _linqOptions;
+		RetryPolicyOptions? _retryPolicyOptions;
 		ConnectionOptions?  _connectionOptions;
 		DataContextOptions? _dataContextOptions;
 
 		public LinqOptions        LinqOptions        => _linqOptions        ??= Common.Configuration.Linq.Options;
+		public RetryPolicyOptions RetryPolicyOptions => _retryPolicyOptions ??= Common.Configuration.RetryPolicy.Options;
 		public ConnectionOptions  ConnectionOptions  => _connectionOptions  ??= DataConnection.DefaultDataOptions.ConnectionOptions;
 		public DataContextOptions DataContextOptions => _dataContextOptions ??= DataContextOptions.Empty;
 
@@ -54,6 +59,7 @@ namespace LinqToDB
 			get
 			{
 				yield return LinqOptions;
+				yield return RetryPolicyOptions;
 				yield return ConnectionOptions;
 
 				if (_dataContextOptions != null)
@@ -70,6 +76,7 @@ namespace LinqToDB
 			var type = typeof(TSet);
 
 			if (type == typeof(LinqOptions))        return (TSet?)(IOptionSet?)LinqOptions;
+			if (type == typeof(RetryPolicyOptions)) return (TSet?)(IOptionSet?)RetryPolicyOptions;
 			if (type == typeof(ConnectionOptions))  return (TSet?)(IOptionSet?)ConnectionOptions;
 			if (type == typeof(DataContextOptions)) return (TSet?)(IOptionSet?)_dataContextOptions;
 
@@ -78,7 +85,8 @@ namespace LinqToDB
 
 		public void Apply(DataConnection dataConnection)
 		{
-			((IApplicable<DataConnection>)ConnectionOptions).Apply(dataConnection);
+			((IApplicable<DataConnection>)ConnectionOptions). Apply(dataConnection);
+			((IApplicable<DataConnection>)RetryPolicyOptions).Apply(dataConnection);
 
 			if (_dataContextOptions is IApplicable<DataConnection> a)
 				a.Apply(dataConnection);
@@ -99,6 +107,7 @@ namespace LinqToDB
 		int? _configurationID;
 		int IConfigurationID.ConfigurationID => _configurationID ??= new IdentifierBuilder()
 			.Add(LinqOptions)
+			.Add(RetryPolicyOptions)
 			.Add(ConnectionOptions)
 			.Add(DataContextOptions)
 			.AddRange(base.OptionSets)

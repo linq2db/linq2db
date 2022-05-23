@@ -10,10 +10,15 @@ namespace LinqToDB.Data.RetryPolicy
 		{
 			if (dataContext.DataProvider is SqlServerDataProvider)
 			{
-				var retryOptions = dataContext.Options.Find<RetryPolicyOptions>() ?? Common.Configuration.RetryPolicy.Options;
+				var retryOptions = dataContext.Options.RetryPolicyOptions;
 
-				return new SqlServerRetryPolicy(retryOptions.MaxRetryCount, retryOptions.MaxDelay,
-					retryOptions.RandomFactor, retryOptions.ExponentialBase, retryOptions.Coefficient, null);
+				return new SqlServerRetryPolicy(
+					retryOptions.MaxRetryCount,
+					retryOptions.MaxDelay,
+					retryOptions.RandomFactor,
+					retryOptions.ExponentialBase,
+					retryOptions.Coefficient,
+					null);
 			}
 
 			return null;

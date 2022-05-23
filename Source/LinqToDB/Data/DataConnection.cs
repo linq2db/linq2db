@@ -171,7 +171,6 @@ namespace LinqToDB.Data
 			DbConnection  connection)
 			: this(dataProvider, connection, false)
 		{
-
 		}
 
 		/// <summary>

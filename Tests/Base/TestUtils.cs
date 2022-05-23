@@ -37,7 +37,7 @@ namespace Tests
 			return Interlocked.Increment(ref _cnt);
 		}
 
-		public const string NO_SCHEMA_NAME = "UNUSED_SCHEMA";
+		public const string NO_SCHEMA_NAME   = "UNUSED_SCHEMA";
 		public const string NO_DATABASE_NAME = "UNUSED_DB";
 		public const string NO_SERVER_NAME   = "UNUSED_SERVER";
 
@@ -142,7 +142,7 @@ namespace Tests
 
 		private static string GetContextName(IDataContext db)
 		{
-#if NETFRAMEWORK 
+#if NETFRAMEWORK
 			if (db is TestWcfDataContext linqDb)
 #else
 			if (db is TestGrpcDataContext linqDb)
