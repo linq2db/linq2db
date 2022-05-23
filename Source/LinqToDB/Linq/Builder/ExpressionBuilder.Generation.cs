@@ -27,7 +27,7 @@ namespace LinqToDB.Linq.Builder
 
 		class AssignmentInfo
 		{
-			public AssignmentInfo(ColumnDescriptor? column, Expression expression)
+			public AssignmentInfo(ColumnDescriptor column, Expression expression)
 			{
 				Column     = column;
 				Member     = column.MemberInfo;

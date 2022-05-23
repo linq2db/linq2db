@@ -155,16 +155,16 @@ namespace LinqToDB.SqlProvider
 		}
 
 		protected virtual SqlStatement FixSetOperationNulls(SqlStatement statement)
-							{
-			statement.VisitParentFirst(static e =>
-								{
-				if (e.ElementType == QueryElementType.SqlQuery)
 		{
+			statement.VisitParentFirst(static e =>
+			{
+				if (e.ElementType == QueryElementType.SqlQuery)
+				{
 					var query = (SelectQuery)e;
 					if (query.HasSetOperators)
-			{
+					{
 						for (int i = 0; i < query.Select.Columns.Count; i++)
-				{
+						{
 							var column     = query.Select.Columns[i];
 							var columnExpr = column.Expression;
 
@@ -177,7 +177,7 @@ namespace LinqToDB.SqlProvider
 								CorrelateNullValueTypes(ref otherExpr, columnExpr);
 
 								otherColumn.Expression = otherExpr;
-								}
+							}
 
 							column.Expression = columnExpr;
 						}

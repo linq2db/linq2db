@@ -9,8 +9,13 @@ namespace LinqToDB.Expressions
 
 	class SqlPlaceholderExpression : Expression
 	{
-		public SqlPlaceholderExpression(SelectQuery selectQuery, ISqlExpression sql, Expression path, Type? convertType = null, string? alias = null, int? index = null, Expression? trackingPath = null)
+		public SqlPlaceholderExpression(SelectQuery? selectQuery, ISqlExpression sql, Expression path, Type? convertType = null, string? alias = null, int? index = null, Expression? trackingPath = null)
 		{
+			#if DEBUG
+			if (sql is SqlColumn column && column.Parent == selectQuery)
+				throw new InvalidOperationException();
+			#endif
+
 			SelectQuery  = selectQuery;
 			Path         = path;
 			ConvertType  = convertType;
@@ -20,7 +25,7 @@ namespace LinqToDB.Expressions
 			TrackingPath = trackingPath;
 		}
 
-		public SelectQuery    SelectQuery  { get; }
+		public SelectQuery?   SelectQuery  { get; }
 		public Expression     Path         { get; }
 		public Expression?    TrackingPath { get; }
 		public int?           Index        { get; }
@@ -73,14 +78,16 @@ namespace LinqToDB.Expressions
 
 		public override string ToString()
 		{
+			var sourceId = SelectQuery?.SourceID ?? ((SqlColumn)Sql).Parent!.SourceID;
+
 			if (Index != null)
-				return $"SQL[{Index}]({SelectQuery.SourceID}): {{{Sql}}}";
-			return $"SQL({SelectQuery.SourceID}): {{{Sql}}}";
+				return $"SQL[{Index}]({sourceId}): {{{Sql}}}";
+			return $"SQL({sourceId}): {{{Sql}}}";
 		}
 
 		protected bool Equals(SqlPlaceholderExpression other)
 		{
-			return SelectQuery.Equals(other.SelectQuery)                        &&
+			return Equals(SelectQuery, other.SelectQuery)                        &&
 			       ExpressionEqualityComparer.Instance.Equals(Path, other.Path) &&
 			       Index       == other.Index                                   &&
 			       ConvertType == other.ConvertType;
@@ -110,7 +117,7 @@ namespace LinqToDB.Expressions
 		{
 			unchecked
 			{
-				var hashCode = SelectQuery.GetHashCode();
+				var hashCode = SelectQuery != null ? SelectQuery.GetHashCode() : 0;
 				hashCode = (hashCode * 397) ^ ExpressionEqualityComparer.Instance.GetHashCode(Path);
 				hashCode = (hashCode * 397) ^ Index.GetHashCode();
 				hashCode = (hashCode * 397) ^ (ConvertType != null ? ConvertType.GetHashCode() : 0);

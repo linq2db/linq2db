@@ -21,6 +21,13 @@ namespace LinqToDB.Expressions
 			public MemberInfo MemberInfo { get;  }
 			public Expression Expression { get; }
 
+			public Assignment WithExpression(Expression expression)
+			{
+				if (expression == Expression)
+					return this;
+				return new Assignment(MemberInfo, expression);
+			}
+
 			public override string ToString()
 			{
 				return $"{MemberInfo.Name} = {Expression}";
@@ -124,6 +131,16 @@ namespace LinqToDB.Expressions
 
 		public SqlGenericConstructorExpression ReplaceAssignments(List<Assignment> assignment)
 		{
+			var createNew = assignment.Count != Assignments.Count;
+
+			if (!createNew)
+			{
+				createNew = !Assignments.SequenceEqual(assignment);
+			}
+
+			if (!createNew)
+				return this;
+
 			var result = new SqlGenericConstructorExpression
 			{
 				Assignments   = new ReadOnlyCollection<Assignment>(assignment),

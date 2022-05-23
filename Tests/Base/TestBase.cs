@@ -1335,16 +1335,38 @@ namespace Tests
 		public T[] AssertQuery<T>(IQueryable<T> query)
 		{
 			var expr   = query.Expression;
-			var loaded = new Dictionary<Type, Expression>();
 			var actual = query.ToArray();
-			var newExpr = expr.Transform(loaded, static (loaded, e) =>
+
+			var loaded = new Dictionary<Type, Expression>();
+
+			Expression RegisterLoaded(Type eType, Expression tableExpression)
+			{
+				if (!loaded.TryGetValue(eType, out var itemsExpression))
+				{
+					var newCall = LinqToDB.Common.TypeHelper.MakeMethodCall(Methods.Queryable.ToArray, tableExpression);
+					using (new DisableLogging())
+					{
+						var items = newCall.EvaluateExpression();
+						itemsExpression = Expression.Constant(items, eType.MakeArrayType());
+						loaded.Add(eType, itemsExpression);
+					}
+				}
+
+				var queryCall =
+					LinqToDB.Common.TypeHelper.MakeMethodCall(Methods.Enumerable.AsQueryable,
+						itemsExpression);
+
+				return queryCall;
+			}
+
+			var newExpr = expr.Transform(e =>
 			{
 				if (e.NodeType == ExpressionType.Call)
 				{
 					var mc = (MethodCallExpression)e;
 
-					if (mc.Method.IsGenericMethod && mc.Method.GetGenericMethodDefinition() == Methods.LinqToDB.AsSubQuery)
-						return mc.Arguments[0];
+					if (mc.Method.Name == nameof(Methods.LinqToDB.AsSubQuery))
+						return new TransformInfo(mc.Arguments[0], false, true);
 
 					if (typeof(ITable<>).IsSameOrParentOf(mc.Type))
 					{
@@ -1352,29 +1374,36 @@ namespace Tests
 
 						if (entityType != null)
 						{
-							if (!loaded.TryGetValue(entityType, out var itemsExpression))
-							{
-								var newCall = LinqToDB.Common.TypeHelper.MakeMethodCall(Methods.Queryable.ToArray, mc);
-								using (new DisableLogging())
-								using (new DisableBaseline("test infrastructure"))
-								{
-									var items = newCall.EvaluateExpression();
-									itemsExpression = Expression.Constant(items, entityType.MakeArrayType());
-									loaded.Add(entityType, itemsExpression);
-								}
-							}
-							var queryCall =
-								LinqToDB.Common.TypeHelper.MakeMethodCall(Methods.Enumerable.AsQueryable,
-									itemsExpression);
-							return queryCall;
+							var itemsExpression = RegisterLoaded(entityType, mc);
+							return new TransformInfo(itemsExpression);
 						}
+					}
+
+					if (mc.Method.Name == nameof(LinqExtensions.InnerJoin))
+					{
+						mc = TypeHelper.MakeMethodCall(Methods.Queryable.Where, mc.Arguments.ToArray());
+					}
+
+					return new TransformInfo(mc, false, true);
+					//return mc.Update(CheckForNull(mc.Object), mc.Arguments.Select(CheckForNull));
+				}
+				else if (e.NodeType == ExpressionType.MemberAccess)
+				{
+					if (typeof(ITable<>).IsSameOrParentOf(e.Type))
+					{
+						var entityType = e.Type.GetGenericArguments()[0];
+						var items = RegisterLoaded(entityType, e);
+						return new TransformInfo(items);
 					}
 				}
 
-				return e;
+				return new TransformInfo(e);
 			})!;
 
-			var  empty = LinqToDB.Common.Tools.CreateEmptyQuery<T>();
+
+			newExpr = ApplyNullCheck(newExpr);
+
+			var empty = LinqToDB.Common.Tools.CreateEmptyQuery<T>();
 			T[]? expected;
 
 			expected = empty.Provider.CreateQuery<T>(newExpr).ToArray();

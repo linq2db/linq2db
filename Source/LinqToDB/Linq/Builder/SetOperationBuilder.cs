@@ -152,7 +152,7 @@ namespace LinqToDB.Linq.Builder
 				return alias;
 			}
 
-			SqlGenericConstructorExpression MatchSequences(Expression root, Expression leftExpr,  Expression rightExpr, IBuildContext leftSequence, IBuildContext rightSequence)
+			SqlGenericConstructorExpression MatchSequences(Expression root, Expression leftExpr, Expression rightExpr, IBuildContext leftSequence, IBuildContext rightSequence, ref List<Expression>? mismatches)
 			{
 				if (leftExpr is SqlGenericConstructorExpression leftGenericPrep &&
 				    rightExpr is not SqlGenericConstructorExpression)
@@ -204,7 +204,7 @@ namespace LinqToDB.Linq.Builder
 							if (MemberInfoComparer.Instance.Equals(left.MemberInfo, right.MemberInfo))
 							{
 								if (left.Expression is SqlGenericConstructorExpression || right.Expression is SqlGenericConstructorExpression)
-									assignmentExpr = MatchSequences(assignmentExpr, left.Expression, right.Expression, leftSequence, rightSequence);
+									assignmentExpr = MatchSequences(assignmentExpr, left.Expression, right.Expression, leftSequence, rightSequence, ref mismatches);
 								else
 									_matchedPairs.Add(ma, (_matchedPairs.Count, left, right));
 
@@ -279,34 +279,39 @@ namespace LinqToDB.Linq.Builder
 				var ref1 = new ContextRefExpression(_type, _sequence1);
 				var ref2 = new ContextRefExpression(_type, _sequence2);
 
-				var expr1 = SqlGenericConstructorExpression.Parse(Builder.ConvertToSqlExpr(_sequence1, ref1));
-				var expr2 = SqlGenericConstructorExpression.Parse(Builder.ConvertToSqlExpr(_sequence2, ref2));
+				var expr1 = Builder.ConvertToSqlExpr(_sequence1.SubQuery, ref1);
+				var expr2 = Builder.ConvertToSqlExpr(_sequence2.SubQuery, ref2);
 
 				var root = new ContextRefExpression(_type, this);
 
-				_body = MatchSequences(root, expr1, expr2, _sequence1, _sequence2);
+				List<Expression>? mismatches = null;
+				_body = MatchSequences(root, expr1, expr2, _sequence1, _sequence2, ref mismatches);
 
 				foreach (var matchedPair in _matchedPairs.OrderBy(x => x.Value.idx))
 				{
 					var alias = GenerateColumnAlias(matchedPair.Key);
 
-					var leftExpression = Builder.ConvertToSqlExpr(this, matchedPair.Value.left.Expression);
-					if (leftExpression is SqlPlaceholderExpression placehoderLeft)
+					var leftExpression = Builder.ConvertToSqlExpr(_sequence1.SubQuery, matchedPair.Value.left.Expression);
+					if (leftExpression is SqlPlaceholderExpression placeholderLeft)
 					{
 						if (alias != null)
-							placehoderLeft.Alias = alias;
+							placeholderLeft.Alias = alias;
 
-						var leftColumn = Builder.MakeColumn(SelectQuery, placehoderLeft);
+						var leftColumn = Builder.MakeColumn(_sequence1.SelectQuery, placeholderLeft, asNew: true);
+						
+						leftColumn = Builder.MakeColumn(SelectQuery, leftColumn, asNew: true);
+
 						_createdSQL.Add(matchedPair.Key, leftColumn);
 
-						var rightExpression = Builder.ConvertToSqlExpr(this, matchedPair.Value.right.Expression);
-						if (rightExpression is not SqlPlaceholderExpression placehoderRight)
+						var rightExpression = Builder.ConvertToSqlExpr(_sequence2.SubQuery, matchedPair.Value.right.Expression);
+						if (rightExpression is not SqlPlaceholderExpression placeholderRight)
 							throw new InvalidOperationException();
 
 						if (alias != null)
-							placehoderRight.Alias = alias;
+							placeholderRight.Alias = alias;
 
-						var rightColumn = Builder.MakeColumn(_sequence2.SelectQuery, placehoderRight);
+						var rightColumn = Builder.MakeColumn(_sequence2.SelectQuery, placeholderRight, asNew: true);
+						rightColumn = Builder.MakeColumn(SelectQuery, rightColumn, asNew: true);
 					}
 				}
 			}

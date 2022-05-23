@@ -768,19 +768,21 @@ namespace LinqToDB.Linq.Builder
 			public static IEqualityComparer<SqlCacheKey> SqlCacheKeyComparer { get; } = new SqlCacheKeyEqualityComparer();
 		}
 
-		[DebuggerDisplay("S: {SelectQuery?.SourceID} F: {Flags}, E: {Expression}, C: {Context}")]
+		[DebuggerDisplay("S: {SelectQuery?.SourceID}, E: {Expression}")]
 		struct ColumnCacheKey
 		{
-			public ColumnCacheKey(Expression? expression, Type resultType, SelectQuery? selectQuery)
+			public ColumnCacheKey(Expression? expression, Type resultType, SelectQuery selectQuery, SelectQuery? parentQuery)
 			{
-				Expression      = expression;
-				ResultType = resultType;
-				SelectQuery     = selectQuery;
+				Expression  = expression;
+				ResultType  = resultType;
+				SelectQuery = selectQuery;
+				ParentQuery = parentQuery;
 			}
 
 			public Expression?  Expression  { get; }
 			public Type         ResultType  { get; }
-			public SelectQuery? SelectQuery { get; }
+			public SelectQuery  SelectQuery { get; }
+			public SelectQuery? ParentQuery { get; }
 
 			private sealed class ColumnCacheKeyEqualityComparer : IEqualityComparer<ColumnCacheKey>
 			{
@@ -788,7 +790,8 @@ namespace LinqToDB.Linq.Builder
 				{
 					return x.ResultType == y.ResultType                                           &&
 					       ExpressionEqualityComparer.Instance.Equals(x.Expression, y.Expression) &&
-					       Equals(x.SelectQuery, y.SelectQuery);
+					       ReferenceEquals(x.SelectQuery, y.SelectQuery) &&
+					       ReferenceEquals(x.ParentQuery, y.ParentQuery);
 				}
 
 				public int GetHashCode(ColumnCacheKey obj)
@@ -797,11 +800,12 @@ namespace LinqToDB.Linq.Builder
 					{
 						var hashCode = obj.ResultType.GetHashCode();
 						hashCode = (hashCode * 397) ^ (obj.Expression != null ? ExpressionEqualityComparer.Instance.GetHashCode(obj.Expression) : 0);
-						hashCode = (hashCode * 397) ^ (obj.SelectQuery      != null ? obj.SelectQuery.GetHashCode() : 0);
+						hashCode = (hashCode * 397) ^ obj.SelectQuery.GetHashCode();
+						hashCode = (hashCode * 397) ^ (obj.ParentQuery != null ? obj.ParentQuery.GetHashCode() : 0);
 						return hashCode;
 					}
 				}
-		}
+			}
 
 			public static IEqualityComparer<ColumnCacheKey> ColumnCacheKeyComparer { get; } = new ColumnCacheKeyEqualityComparer();
 		}
@@ -847,12 +851,11 @@ namespace LinqToDB.Linq.Builder
 		/// </summary>
 		/// <param name="context"></param>
 		/// <param name="expression"></param>
-		/// <param name="flags1"></param>
+		/// <param name="flags"></param>
 		/// <param name="unwrap"></param>
 		/// <param name="columnDescriptor"></param>
 		/// <param name="isPureExpression"></param>
 		/// <param name="alias"></param>
-		/// <param name="isAggregation"></param>
 		/// <returns></returns>
 		public Expression ConvertToSqlExpr(IBuildContext context, Expression expression, ProjectFlags flags = ProjectFlags.SQL,
 			bool unwrap = false, ColumnDescriptor? columnDescriptor = null, bool isPureExpression = false,
@@ -892,13 +895,13 @@ namespace LinqToDB.Linq.Builder
 
 			if (sql == null)
 			{
-			if (!PreferServerSide(expression, false))
-			{
-				if (columnDescriptor?.ValueConverter == null && CanBeConstant(expression))
+				if (!PreferServerSide(expression, false))
+				{
+					if (columnDescriptor?.ValueConverter == null && CanBeConstant(expression))
 						sql = BuildConstant(expression, columnDescriptor);
 					else
-						if (CanBeCompiled(expression))
-							sql = ParametersContext.BuildParameter(expression, columnDescriptor).SqlParameter;
+					if (CanBeCompiled(expression))
+						sql = ParametersContext.BuildParameter(expression, columnDescriptor).SqlParameter;
 				}
 			}
 
@@ -1231,6 +1234,15 @@ namespace LinqToDB.Linq.Builder
 						}
 					}
 
+					if (expression is SqlGenericConstructorExpression genericConstructor)
+					{
+						var newConstructor = genericConstructor.ReplaceAssignments(genericConstructor.Assignments.Select(a =>
+							a.WithExpression(ConvertToSqlExpr(context, a.Expression, flags, unwrap, columnDescriptor,
+								isPureExpression, alias))).ToList());
+
+						return newConstructor;
+					}
+
 					/*var ctx = GetContext(context, expression);
 
 					if (ctx != null)
@@ -1366,6 +1378,18 @@ namespace LinqToDB.Linq.Builder
 					var cnt = (ConstantExpression)expression;
 					if (cnt.Value is ISqlExpression sql)
 						return CreatePlaceholder(context, sql, expression, alias: alias);
+					break;
+				}
+
+				case ExpressionType.New:
+				case ExpressionType.MemberInit:
+				{
+					if (SqlGenericConstructorExpression.Parse(expression) is SqlGenericConstructorExpression transformed)
+					{
+						return ConvertToSqlExpr(context, transformed, flags, unwrap, columnDescriptor, isPureExpression,
+							alias);
+					}
+
 					break;
 				}
 
@@ -3862,11 +3886,11 @@ namespace LinqToDB.Linq.Builder
 			return expression;
 		}
 
-		public SqlPlaceholderExpression MakeColumn(SelectQuery? parentQuery, SqlPlaceholderExpression sqlPlaceholder)
+		public SqlPlaceholderExpression MakeColumn(SelectQuery? parentQuery, SqlPlaceholderExpression sqlPlaceholder, bool asNew = false)
 		{
-			var key = new ColumnCacheKey(sqlPlaceholder.Path, sqlPlaceholder.Type, sqlPlaceholder.SelectQuery);
+			var key = new ColumnCacheKey(sqlPlaceholder.Path, sqlPlaceholder.Type, sqlPlaceholder.SelectQuery, parentQuery);
 
-			if (_columnCache.TryGetValue(key, out var placeholder))
+			if (!asNew && _columnCache.TryGetValue(key, out var placeholder))
 				return placeholder;
 
 			var alias = sqlPlaceholder.Alias;
@@ -3875,7 +3899,10 @@ namespace LinqToDB.Linq.Builder
 				alias = me.Member.Name;
 			}
 
-			var idx    = sqlPlaceholder.SelectQuery.Select.Add(sqlPlaceholder.Sql);
+			var idx = asNew
+				? sqlPlaceholder.SelectQuery.Select.AddNew(sqlPlaceholder.Sql)
+				: sqlPlaceholder.SelectQuery.Select.Add(sqlPlaceholder.Sql);
+
 			var column = sqlPlaceholder.SelectQuery.Select.Columns[idx];
 
 			if (!string.IsNullOrEmpty(alias))
