@@ -55,8 +55,8 @@ namespace LinqToDB.DataProvider.Firebird
 				base.BuildSelectClause(selectQuery);
 		}
 
-		protected override bool   SkipFirst  => false;
-		protected override string SkipFormat => "SKIP {0}";
+		protected override bool   SkipFirst                     => false;
+		protected override string SkipFormat                    => "SKIP {0}";
 		protected override bool   IsRecursiveCteKeywordRequired => true;
 
 		protected override string FirstFormat(SelectQuery selectQuery)
@@ -69,7 +69,7 @@ namespace LinqToDB.DataProvider.Firebird
 			var identityField = insertClause.Into!.GetIdentityField();
 
 			if (identityField == null)
-				throw new SqlException("Identity field must be defined for '{0}'.", insertClause.Into.Name);
+				throw new SqlException("Identity field must be defined for '{0}'.", insertClause.Into.NameForLogging);
 
 			AppendIndent().AppendLine("RETURNING");
 			AppendIndent().Append('\t');
@@ -169,6 +169,8 @@ namespace LinqToDB.DataProvider.Firebird
 				case ConvertType.NameToQueryTableAlias :
 				case ConvertType.NameToQueryField      :
 				case ConvertType.NameToQueryTable      :
+				case ConvertType.NameToProcedure       :
+				case ConvertType.NameToPackage         :
 				case ConvertType.SequenceName          :
 					if (FirebirdConfiguration.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Quote ||
 					   (FirebirdConfiguration.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Auto && !IsValidIdentifier(value)))
@@ -237,11 +239,11 @@ namespace LinqToDB.DataProvider.Firebird
 
 			if (identityField != null)
 			{
-				BuildDropWithSchemaCheck("TRIGGER"  , "rdb$triggers"  , "rdb$trigger_name"  , "TIDENTITY_" + dropTable.Table.PhysicalName);
-				BuildDropWithSchemaCheck("GENERATOR", "rdb$generators", "rdb$generator_name", "GIDENTITY_" + dropTable.Table.PhysicalName);
+				BuildDropWithSchemaCheck("TRIGGER"  , "rdb$triggers"  , "rdb$trigger_name"  , "TIDENTITY_" + dropTable.Table.TableName.Name);
+				BuildDropWithSchemaCheck("GENERATOR", "rdb$generators", "rdb$generator_name", "GIDENTITY_" + dropTable.Table.TableName.Name);
 			}
 
-			BuildDropWithSchemaCheck("TABLE", "rdb$relations", "rdb$relation_name", dropTable.Table.PhysicalName!);
+			BuildDropWithSchemaCheck("TABLE", "rdb$relations", "rdb$relation_name", dropTable.Table.TableName.Name);
 
 			Indent--;
 
@@ -296,15 +298,21 @@ namespace LinqToDB.DataProvider.Firebird
 			{
 				case SqlTruncateTableStatement truncate:
 					StringBuilder.Append("SET GENERATOR ");
-					Convert(StringBuilder, "GIDENTITY_" + truncate.Table!.PhysicalName, ConvertType.NameToQueryTable);
+					Convert(StringBuilder, "GIDENTITY_" + truncate.Table!.TableName.Name, ConvertType.NameToQueryTable);
 					StringBuilder.AppendLine(" TO 0");
 					break;
 			}
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table, TableOptions tableOptions)
+		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions)
 		{
-			return sb.Append(table);
+			if (name.Package != null)
+			{
+				(escape ? Convert(sb, name.Package, ConvertType.NameToPackage) : sb.Append(name.Package))
+					.Append('.');
+			}
+
+			return escape ? Convert(sb, name.Name, objectType) : sb.Append(name.Name);
 		}
 
 		protected override string? GetProviderTypeName(IDataContext dataContext, DbParameter parameter)
@@ -393,7 +401,7 @@ namespace LinqToDB.DataProvider.Firebird
 					{
 						AppendIndent().Append("IF (NOT EXISTS(SELECT 1 FROM rdb$relations WHERE rdb$relation_name = ");
 
-						var identifierValue = createTable.Table.PhysicalName!;
+						var identifierValue = createTable.Table.TableName.Name;
 
 						// if identifier is not quoted, it must be converted to upper case to match record in rdb$relation_name
 						if (FirebirdConfiguration.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.None ||
@@ -436,7 +444,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 				if (_identityField != null || checkExistence)
 				{
-					var identifierValue = createTable.Table.PhysicalName!;
+					var identifierValue = createTable.Table.TableName.Name;
 
 					// if identifier is not quoted, it must be converted to upper case to match record in rdb$relation_name
 					if (FirebirdConfiguration.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.None ||
@@ -494,7 +502,7 @@ namespace LinqToDB.DataProvider.Firebird
 							Indent++;
 
 							AppendIndent().Append("CREATE GENERATOR ");
-							Convert(StringBuilder, "GIDENTITY_" + createTable.Table!.PhysicalName, ConvertType.NameToQueryTable);
+							Convert(StringBuilder, "GIDENTITY_" + createTable.Table!.TableName.Name, ConvertType.NameToQueryTable);
 							StringBuilder.AppendLine();
 
 							Indent--;
@@ -510,16 +518,16 @@ namespace LinqToDB.DataProvider.Firebird
 							Indent++;
 
 							AppendIndent().Append("CREATE TRIGGER ");
-							Convert(StringBuilder, "TIDENTITY_" + createTable.Table!.PhysicalName, ConvertType.NameToQueryTable);
+							Convert(StringBuilder, "TIDENTITY_" + createTable.Table!.TableName.Name, ConvertType.NameToQueryTable);
 							StringBuilder .Append(" FOR ");
-							Convert(StringBuilder, createTable.Table.PhysicalName!, ConvertType.NameToQueryTable);
+							Convert(StringBuilder, createTable.Table.TableName.Name, ConvertType.NameToQueryTable);
 							StringBuilder .AppendLine();
 							AppendIndent().AppendLine("BEFORE INSERT POSITION 0");
 							AppendIndent().AppendLine("AS BEGIN");
 							AppendIndent().Append("\tNEW.");
 							Convert(StringBuilder, _identityField!.PhysicalName, ConvertType.NameToQueryField);
 							StringBuilder. Append(" = GEN_ID(");
-							Convert(StringBuilder, "GIDENTITY_" + createTable.Table.PhysicalName, ConvertType.NameToQueryTable);
+							Convert(StringBuilder, "GIDENTITY_" + createTable.Table.TableName.Name, ConvertType.NameToQueryTable);
 							StringBuilder. AppendLine(", 1);");
 							AppendIndent().AppendLine("END");
 

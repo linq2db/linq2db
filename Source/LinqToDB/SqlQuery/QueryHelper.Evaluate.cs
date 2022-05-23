@@ -76,7 +76,12 @@ namespace LinqToDB.SqlQuery
 			errorMessage = null;
 			switch (expr.ElementType)
 			{
-				case QueryElementType.SqlValue           : result = ((SqlValue)expr).Value; return true;
+				case QueryElementType.SqlValue           :
+				{
+					var sqlValue = (SqlValue)expr;
+					result = sqlValue.Value;
+					return true;
+				}
 				case QueryElementType.SqlParameter       :
 				{
 					var sqlParameter = (SqlParameter)expr;
@@ -87,7 +92,9 @@ namespace LinqToDB.SqlQuery
 						return false;
 					}
 
-					result = sqlParameter.GetParameterValue(context.ParameterValues).Value;
+					var parameterValue = sqlParameter.GetParameterValue(context.ParameterValues);
+
+					result = parameterValue.ProviderValue;
 					return true;
 				}
 				case QueryElementType.IsNullPredicate:
@@ -108,6 +115,15 @@ namespace LinqToDB.SqlQuery
 					if (!exprExpr.Expr1.TryEvaluateExpression(context, out var value1, out errorMessage) ||
 					    !exprExpr.Expr2.TryEvaluateExpression(context, out var value2, out errorMessage))
 						return false;
+
+					if (value1 != null && value2 != null)
+					{
+						if (value1.GetType().IsEnum != value2.GetType().IsEnum)
+						{
+							errorMessage = "Types mismatch";
+							return false;
+						}
+					}
 
 					switch (exprExpr.Operator)
 					{

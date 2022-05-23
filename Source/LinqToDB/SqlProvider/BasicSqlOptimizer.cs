@@ -1959,10 +1959,10 @@ namespace LinqToDB.SqlProvider
 			{
 				var paramValue = parameter.GetParameterValue(context.ParameterValues);
 
-				if (paramValue.Value == null)
+				if (paramValue.ProviderValue == null)
 					return new SqlPredicate.Expr(new SqlValue(p.IsNot));
 
-				if (paramValue.Value is IEnumerable items)
+				if (paramValue.ProviderValue is IEnumerable items)
 				{
 					if (p.Expr1 is ISqlTableSource table)
 					{
@@ -1979,8 +1979,7 @@ namespace LinqToDB.SqlProvider
 
 							foreach (var item in items)
 							{
-								var value = cd.MemberAccessor.GetValue(item!);
-								values.Add(mappingSchema.GetSqlValue(cd.MemberType, value));
+								values.Add(mappingSchema.GetSqlValueFromObject(cd, item!));
 							}
 
 							if (values.Count == 0)
@@ -1998,13 +1997,13 @@ namespace LinqToDB.SqlProvider
 
 								foreach (var key in keys)
 								{
-									var field = ExpectsUnderlyingField(key);
-									var cd    = field.ColumnDescriptor;
-									var value = cd.MemberAccessor.GetValue(item!);
+									var field    = ExpectsUnderlyingField(key);
+									var cd       = field.ColumnDescriptor;
+									var sqlValue = mappingSchema.GetSqlValueFromObject(cd, item!);
 									//TODO: review
-									var cond  = value == null ?
+									var cond = sqlValue.Value == null ?
 										new SqlCondition(false, new SqlPredicate.IsNull  (field, false)) :
-										new SqlCondition(false, new SqlPredicate.ExprExpr(field, SqlPredicate.Operator.Equal, mappingSchema.GetSqlValue(value), null));
+										new SqlCondition(false, new SqlPredicate.ExprExpr(field, SqlPredicate.Operator.Equal, sqlValue, null));
 
 									itemCond.Conditions.Add(cond);
 								}
@@ -2782,7 +2781,7 @@ namespace LinqToDB.SqlProvider
 				var keys2 = tableToCompare.GetKeys(true);
 
 				if (keys1.Count == 0)
-					throw new LinqToDBException($"Table {tableToUpdate.Name} do not have primary key. Update transformation is not available.");
+					throw new LinqToDBException($"Table {tableToUpdate.NameForLogging} do not have primary key. Update transformation is not available.");
 
 				for (int i = 0; i < keys1.Count; i++)
 				{

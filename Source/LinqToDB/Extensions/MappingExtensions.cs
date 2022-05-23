@@ -10,15 +10,14 @@ namespace LinqToDB.Extensions
 
 	static class MappingExtensions
 	{
-		public static SqlValue GetSqlValue(this MappingSchema mappingSchema, object value)
+		public static SqlValue GetSqlValueFromObject(this MappingSchema mappingSchema, ColumnDescriptor columnDescriptor, object obj)
 		{
-			if (value == null)
-				throw new InvalidOperationException();
+			var providerValue = columnDescriptor.GetProviderValue(obj);
 
-			return GetSqlValue(mappingSchema, value.GetType(), value);
+			return new SqlValue(columnDescriptor.GetDbDataType(true), providerValue);
 		}
 
-		public static SqlValue GetSqlValue(this MappingSchema mappingSchema, Type systemType, object? value)
+		public static SqlValue GetSqlValue(this MappingSchema mappingSchema, Type systemType, object? originalValue)
 		{
 			var underlyingType = systemType.ToNullableUnderlying();
 
@@ -26,23 +25,23 @@ namespace LinqToDB.Extensions
 			{
 				if (underlyingType.IsEnum && mappingSchema.GetAttribute<Sql.EnumAttribute>(underlyingType) == null)
 				{
-					if (value != null || systemType == underlyingType)
+					if (originalValue != null || systemType == underlyingType)
 					{
 						var type = Converter.GetDefaultMappingFromEnumType(mappingSchema, systemType)!;
 
 						if (Configuration.UseEnumValueNameForStringColumns && type == typeof(string) &&
 						    mappingSchema.GetMapValues(underlyingType)             == null)
-							return new SqlValue(type, value!.ToString());
+							return new SqlValue(type, originalValue!.ToString());
 
-						return new SqlValue(type, Converter.ChangeType(value, type, mappingSchema));
+						return new SqlValue(type, Converter.ChangeType(originalValue, type, mappingSchema));
 					}
 				}
 			}
 
-			if (systemType == typeof(object) && value != null)
-				systemType = value.GetType();
+			if (systemType == typeof(object) && originalValue != null)
+				systemType = originalValue.GetType();
 
-			return new SqlValue(systemType, value);
+			return new SqlValue(systemType, originalValue);
 		}
 
 		public static bool TryConvertToSql(this MappingSchema mappingSchema, StringBuilder stringBuilder, SqlDataType? dataType, object? value)

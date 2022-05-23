@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Schema
 {
@@ -11,7 +12,7 @@ namespace LinqToDB.Schema
 	/// <param name="Parameters">Ordered list of parameters. Doesn't include return value parameter (when object supports it).</param>
 	public abstract record CallableObject(
 		CallableKind                   Kind,
-		ObjectName                     Name,
+		SqlObjectName                  Name,
 		string?                        Description,
 		IReadOnlyCollection<Parameter> Parameters)
 	{

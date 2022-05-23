@@ -4,34 +4,26 @@ using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
+	using System.Diagnostics.CodeAnalysis;
 	using Mapping;
 
 	public class SqlCteTable : SqlTable
 	{
-		public          CteClause? Cte  { get; private set; }
+		[DisallowNull]
+		public CteClause? Cte { get; set; }
 
-		public override string?    Name
+		public override SqlObjectName TableName
 		{
-			get => Cte?.Name ?? base.Name;
-			set => base.Name = value;
+			get => new SqlObjectName(Cte?.Name ?? string.Empty);
+			set { }
 		}
-
-		public override string?    PhysicalName
-		{
-			get => Cte?.Name ?? base.PhysicalName;
-			set => base.PhysicalName = value;
-		}
-
-		// required by Clone :-/
-		internal string? BaseName         => base.Name;
-		internal string? BasePhysicalName => base.PhysicalName;
 
 		public SqlCteTable(
 			MappingSchema mappingSchema,
 			CteClause     cte)
 			: base(mappingSchema, cte.ObjectType, cte.Name)
 		{
-			Cte = cte ?? throw new ArgumentNullException(nameof(cte));
+			Cte = cte;
 
 			// CTE has it's own names even there is mapping
 			foreach (var field in Fields)
@@ -39,35 +31,27 @@ namespace LinqToDB.SqlQuery
 		}
 
 		internal SqlCteTable(int id, string alias, SqlField[] fields, CteClause cte)
-			: base(id, cte.Name, alias, string.Empty, string.Empty, string.Empty, cte.Name, cte.ObjectType, null, fields, SqlTableType.Cte, null, TableOptions.NotSet, null)
+			: base(id, null, alias, new(string.Empty), cte.ObjectType, null, fields, SqlTableType.Cte, null, TableOptions.NotSet, null)
 		{
-			Cte = cte ?? throw new ArgumentNullException(nameof(cte));
+			Cte = cte;
 		}
 
 		internal SqlCteTable(int id, string alias, SqlField[] fields)
-			: base(id, null, alias, string.Empty, string.Empty, string.Empty, null, null!, null, fields, SqlTableType.Cte, null, TableOptions.NotSet, null)
+			: base(id, null, alias, new(string.Empty), null!, null, fields, SqlTableType.Cte, null, TableOptions.NotSet, null)
 		{
 		}
 
 		internal void SetDelayedCteObject(CteClause cte)
 		{
-			Cte          = cte ?? throw new ArgumentNullException(nameof(cte));
-			Name         = cte.Name;
-			PhysicalName = cte.Name;
-			ObjectType   = cte.ObjectType;
+			Cte        = cte;
+			ObjectType = cte.ObjectType;
 		}
 
 		public SqlCteTable(SqlCteTable table, IEnumerable<SqlField> fields, CteClause cte)
-			: base(table.ObjectType, null)
+			: base(table.ObjectType, null, table.TableName)
 		{
 			Alias              = table.Alias;
-			Server             = table.Server;
-			Database           = table.Database;
-			Schema             = table.Schema;
-
-			PhysicalName       = table.PhysicalName;
 			SequenceAttributes = table.SequenceAttributes;
-
 			Cte                = cte;
 
 			AddRange(fields);

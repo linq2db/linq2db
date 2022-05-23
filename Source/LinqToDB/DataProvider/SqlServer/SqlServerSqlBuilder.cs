@@ -29,8 +29,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		StringBuilder AppendOutputTableVariable(SqlTable table)
 		{
-			StringBuilder.Append('@').Append(table.PhysicalName).Append("Output");
-			return StringBuilder;
+			return Convert(StringBuilder, table.TableName.Name + "Output", ConvertType.NameToQueryParameter);
 		}
 
 		protected override void BuildInsertQuery(SqlStatement statement, SqlInsertClause insertClause, bool addAlias)
@@ -167,80 +166,61 @@ namespace LinqToDB.DataProvider.SqlServer
 				Convert(StringBuilder, GetTableAlias(table)!, ConvertType.NameToQueryTableAlias);
 		}
 
-		public override string? GetTableDatabaseName(SqlTable table)
+		private string GetTablePhysicalName(string tableName, TableOptions tableOptions)
 		{
-			if (table.PhysicalName!.StartsWith("#") || table.TableOptions.IsTemporaryOptionSet())
-				return null;
+			if (tableName.StartsWith("#") || !tableOptions.IsTemporaryOptionSet())
+				return tableName;
 
-			return base.GetTableDatabaseName(table);
-		}
-
-		public override string? GetTablePhysicalName(SqlTable table)
-		{
-			if (table.PhysicalName == null)
-				return null;
-
-			var physicalName = table.PhysicalName.StartsWith("#") ? table.PhysicalName : GetName();
-
-			string GetName()
+			switch (tableOptions & TableOptions.IsTemporaryOptionSet)
 			{
-				if (table.TableOptions.IsTemporaryOptionSet())
-				{
-					switch (table.TableOptions & TableOptions.IsTemporaryOptionSet)
-					{
-						case TableOptions.IsTemporary                                                                              :
-						case TableOptions.IsTemporary |                                          TableOptions.IsLocalTemporaryData :
-						case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                     :
-						case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData :
-						case                                                                     TableOptions.IsLocalTemporaryData :
-						case                            TableOptions.IsLocalTemporaryStructure                                     :
-						case                            TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData :
-							return $"#{table.PhysicalName}";
-						case TableOptions.IsGlobalTemporaryStructure                                                               :
-						case TableOptions.IsGlobalTemporaryStructure | TableOptions.IsGlobalTemporaryData                          :
-							return $"##{table.PhysicalName}";
-						case var value :
-							throw new InvalidOperationException($"Incompatible table options '{value}'");
-					}
-				}
-				else
-				{
-					return table.PhysicalName;
-				}
+				case TableOptions.IsTemporary                                                                              :
+				case TableOptions.IsTemporary |                                          TableOptions.IsLocalTemporaryData :
+				case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                     :
+				case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData :
+				case                                                                     TableOptions.IsLocalTemporaryData :
+				case                            TableOptions.IsLocalTemporaryStructure                                     :
+				case                            TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData :
+					return $"#{tableName}";
+				case TableOptions.IsGlobalTemporaryStructure                                                               :
+				case TableOptions.IsGlobalTemporaryStructure | TableOptions.IsGlobalTemporaryData                          :
+					return $"##{tableName}";
+				case var value :
+					throw new InvalidOperationException($"Incompatible table options '{value}'");
 			}
-
-			return Convert(new StringBuilder(), physicalName, ConvertType.NameToQueryTable).ToString();
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb,
-			string?      server,
-			string?      database,
-			string?      schema,
-			string       table,
-			TableOptions tableOptions)
+		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions)
 		{
-			if (table == null) throw new ArgumentNullException(nameof(table));
+			var databaseName = name.Database;
 
-			if (server   != null && server  .Length == 0) server   = null;
-			if (database != null && database.Length == 0) database = null;
-			if (schema   != null && schema.  Length == 0) schema   = null;
+			// remove database name, which could be inherited from non-temporary table mapping
+			// except explicit use of tempdb, needed in some cases at least for sql server 2014
+			if ((name.Name.StartsWith("#") || tableOptions.IsTemporaryOptionSet()) && databaseName != "tempdb")
+				databaseName = "tempdb";
 
-			if (server != null)
-			{
+			if (name.Server != null && (databaseName == null || name.Schema == null))
 				// all components required for linked-server syntax by SQL server
-				if (database == null || schema == null)
-					throw new LinqToDBException("You must specify both schema and database names explicitly for linked server query");
-
-				sb.Append(server).Append('.').Append(database).Append('.').Append(schema).Append('.');
-			}
-			else if (database != null)
+				throw new LinqToDBException("You must specify both schema and database names explicitly for linked server query");
+			
+			if (name.Server != null)
 			{
-				if (schema == null) sb.Append(database).Append("..");
-				else sb.Append(database).Append('.').Append(schema).Append('.');
+				(escape ? Convert(sb, name.Server, ConvertType.NameToServer) : sb.Append(name.Server))
+					.Append('.');
 			}
-			else if (schema != null) sb.Append(schema).Append('.');
 
-			return sb.Append(table);
+			if (databaseName != null)
+			{
+				(escape ? Convert(sb, databaseName, ConvertType.NameToDatabase) : sb.Append(databaseName))
+					.Append('.');
+			}
+
+			if (name.Schema != null)
+				(escape ? Convert(sb, name.Schema, ConvertType.NameToSchema) : sb.Append(name.Schema)).Append('.');
+			else if (databaseName != null)
+				sb.Append('.');
+
+			var tableName = GetTablePhysicalName(name.Name, tableOptions);
+			return escape ? Convert(sb, tableName, objectType) : sb.Append(tableName);
 		}
 
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
@@ -263,10 +243,11 @@ namespace LinqToDB.DataProvider.SqlServer
 
 					return SqlServerTools.QuoteIdentifier(sb, value);
 
-				case ConvertType.NameToServer:
-				case ConvertType.NameToDatabase:
-				case ConvertType.NameToSchema:
+				case ConvertType.NameToServer    :
+				case ConvertType.NameToDatabase  :
+				case ConvertType.NameToSchema    :
 				case ConvertType.NameToQueryTable:
+				case ConvertType.NameToProcedure :
 					if (value.Length > 0 && value[0] == '[')
 						return sb.Append(value);
 
@@ -296,7 +277,10 @@ namespace LinqToDB.DataProvider.SqlServer
 			AppendIndent();
 
 			if (!pkName.StartsWith("[PK_#") && !createTable.Table.TableOptions.IsTemporaryOptionSet())
-				StringBuilder.Append("CONSTRAINT ").Append(pkName).Append(' ');
+			{
+				StringBuilder.Append("CONSTRAINT ");
+				Convert(StringBuilder, pkName, ConvertType.NameToQueryTable).Append(' ');
+			}
 
 			StringBuilder.Append("PRIMARY KEY CLUSTERED (");
 			StringBuilder.Append(string.Join(InlineComma, fieldNames));
@@ -312,8 +296,8 @@ namespace LinqToDB.DataProvider.SqlServer
 			if (dropTable.Table.TableOptions.HasDropIfExists())
 			{
 				var defaultDatabaseName =
-					table.PhysicalName!.StartsWith("#") || table.TableOptions.IsTemporaryOptionSet() ?
-						"[tempdb]" : null;
+					table.TableName.Name.StartsWith("#") || table.TableOptions.IsTemporaryOptionSet() ?
+						"tempdb" : null;
 
 				StringBuilder.Append("IF (OBJECT_ID(N'");
 				BuildPhysicalTable(table, alias: null, defaultDatabaseName: defaultDatabaseName);
@@ -431,8 +415,8 @@ namespace LinqToDB.DataProvider.SqlServer
 				var table = createTable.Table;
 
 				var defaultDatabaseName =
-					table.PhysicalName!.StartsWith("#") || table.TableOptions.IsTemporaryOptionSet() ?
-						"[tempdb]" : null;
+					table.TableName.Name.StartsWith("#") || table.TableOptions.IsTemporaryOptionSet() ?
+						"tempdb" : null;
 
 				StringBuilder.Append("IF (OBJECT_ID(N'");
 				BuildPhysicalTable(table, null, defaultDatabaseName : defaultDatabaseName);

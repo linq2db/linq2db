@@ -237,6 +237,22 @@ namespace Cli.T4.MariaDB
 		}
 		#endregion
 
+		#region TestProcedure
+		public static IEnumerable<TestProcedureResult1> TestProcedure(this TestDataDB dataConnection, int? i)
+		{
+			var parameters = new []
+			{
+				new DataParameter("i", i, DataType.Int32)
+			};
+			return dataConnection.QueryProc<TestProcedureResult1>("`TEST_PROCEDURE`", parameters);
+		}
+
+		public partial class TestProcedureResult1
+		{
+			[Column("i + 3")] public long? i3 { get; set; }
+		}
+		#endregion
+
 		#region Issue2313Parameters
 		public static IEnumerable<Issue2313ParametersResult> Issue2313Parameters(this TestDataDB dataConnection, string? varChar255, char? varChar1, string? char255, char? char1, byte[]? varBinary255, byte[]? binary255, byte[]? tinyBlob, byte[]? blob, byte[]? mediumBlob, byte[]? longBlob, string? tinyText, string? text, string? mediumText, string? longText, DateTime? date, DateTime? dateTime, DateTime? timeStamp, TimeSpan? time, string? json, bool? tinyInt, bool? tinyIntUnsigned, short? smallInt, short? smallIntUnsigned, int? mediumInt, int? mediumIntUnsigned, int? @int, int? intUnsigned, long? bigInt, long? bigIntUnsigned, decimal? @decimal, float? @float, double? @double, bool? boolean, bool? bit1, bool? bit8, bool? bit10, bool? bit16, bool? bit32, bool? bit64, string? @enum, string? @set, int? year, byte[]? geometry, byte[]? point, byte[]? lineString, byte[]? polygon, byte[]? multiPoint, byte[]? multiLineString, byte[]? multiPolygon, byte[]? geometryCollection)
 		{
@@ -551,6 +567,14 @@ namespace Cli.T4.MariaDB
 		#region TestFunction
 		[Sql.Function("`TestFunction`", ServerSideOnly = true)]
 		public static string? TestFunction(int? param)
+		{
+			throw new InvalidOperationException("Scalar function cannot be called outside of query");
+		}
+		#endregion
+
+		#region TestFunction
+		[Sql.Function("`TEST_FUNCTION`", ServerSideOnly = true)]
+		public static int? TestFunction1(int? i)
 		{
 			throw new InvalidOperationException("Scalar function cannot be called outside of query");
 		}

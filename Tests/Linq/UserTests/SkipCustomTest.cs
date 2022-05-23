@@ -18,7 +18,7 @@ namespace Tests.UserTests
 			{
 				if (obj != null)
 				{
-					var value = columnDescriptor.GetValue(obj);
+					var value = columnDescriptor.GetProviderValue(obj);
 					if (value is int i)
 					{
 						return i % 2 == 0;

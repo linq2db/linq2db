@@ -64,7 +64,7 @@ namespace Tests.Linq
 			{
 				return new SqlTable(typeof(T))
 				{
-					PhysicalName = _table.TableName
+					TableName = new (_table.TableName)
 				};
 			}
 		}

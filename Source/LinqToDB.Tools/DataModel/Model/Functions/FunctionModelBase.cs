@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using LinqToDB.Schema;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataModel
 {
@@ -8,7 +9,7 @@ namespace LinqToDB.DataModel
 	/// </summary>
 	public abstract class FunctionModelBase
 	{
-		protected FunctionModelBase(ObjectName name, MethodModel method)
+		protected FunctionModelBase(SqlObjectName name, MethodModel method)
 		{
 			Method = method;
 		}

@@ -446,6 +446,25 @@ namespace MariaDBDataContext
 
 		#endregion
 
+		#region TestProcedure
+
+		public static IEnumerable<TestPROCEDUREResult> TestProcedure0(this TestdbDB dataConnection, int? i)
+		{
+			var parameters = new []
+			{
+				new DataParameter("i", i, LinqToDB.DataType.Int32)
+			};
+
+			return dataConnection.QueryProc<TestPROCEDUREResult>("`TEST_PROCEDURE`", parameters);
+		}
+
+		public partial class TestPROCEDUREResult
+		{
+			[Column("i + 3")] public long? IPlus3 { get; set; }
+		}
+
+		#endregion
+
 		#region Issue2313Parameters
 
 		public static IEnumerable<Issue2313ParametersResult> Issue2313Parameters(this TestdbDB dataConnection, string? VarChar255, char? VarChar1, string? Char255, char? Char1, byte[]? VarBinary255, byte[]? Binary255, byte[]? TinyBlob, byte[]? Blob, byte[]? MediumBlob, byte[]? LongBlob, string? TinyText, string? Text, string? MediumText, string? LongText, DateTime? Date, DateTime? DateTime, DateTime? TimeStamp, TimeSpan? Time, string? Json, sbyte? TinyInt, byte? TinyIntUnsigned, short? SmallInt, ushort? SmallIntUnsigned, int? MediumInt, uint? MediumIntUnsigned, int? Int, uint? IntUnsigned, long? BigInt, ulong? BigIntUnsigned, decimal? Decimal, float? Float, double? Double, bool? Boolean, bool? Bit1, byte? Bit8, ushort? Bit10, ushort? Bit16, uint? Bit32, ulong? Bit64, string? Enum, string? Set, int? Year, byte[]? Geometry, byte[]? Point, byte[]? LineString, byte[]? Polygon, byte[]? MultiPoint, byte[]? MultiLineString, byte[]? MultiPolygon, byte[]? GeometryCollection)
@@ -766,8 +785,18 @@ namespace MariaDBDataContext
 	{
 		#region TestFunction
 
-		[Sql.Function(Name="TestFunction", ServerSideOnly=true)]
+		[Sql.Function(Name="`TestFunction`", ServerSideOnly=true)]
 		public static string? TestFunction(int? param)
+		{
+			throw new InvalidOperationException();
+		}
+
+		#endregion
+
+		#region TestFunction
+
+		[Sql.Function(Name="`TEST_FUNCTION`", ServerSideOnly=true)]
+		public static int? TestFunction0(int? i)
 		{
 			throw new InvalidOperationException();
 		}

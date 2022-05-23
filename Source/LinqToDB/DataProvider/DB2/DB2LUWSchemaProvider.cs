@@ -10,6 +10,8 @@ namespace LinqToDB.DataProvider.DB2
 	using Data;
 	using SchemaProvider;
 
+	// Known Issues:
+	// - CommandBehavior.SchemaOnly doesn't return schema for stored procedures
 	class DB2LUWSchemaProvider : SchemaProviderBase
 	{
 		private readonly DB2DataProvider _provider;
@@ -33,11 +35,12 @@ namespace LinqToDB.DataProvider.DB2
 					TypeName         = t.Field<string>("SQL_TYPE_NAME")!,
 					DataType         = t.Field<string>("FRAMEWORK_TYPE")!,
 					CreateParameters = t.Field<string>("CREATE_PARAMS"),
+					ProviderDbType   = t.Field<int   >("PROVIDER_TYPE"),
 				})
 				.Union(
 				new[]
 				{
-					new DataTypeInfo { TypeName = "CHARACTER", CreateParameters = "LENGTH", DataType = "System.String" }
+					new DataTypeInfo { TypeName = "CHARACTER", CreateParameters = "LENGTH", DataType = "System.String", ProviderDbType = 12 }
 				})
 				.ToList();
 		}
@@ -401,33 +404,71 @@ WHERE
 			LoadCurrentSchema(dataConnection);
 
 			var sql = @"
-SELECT
-	PROCSCHEMA,
-	PROCNAME
-FROM
-	SYSCAT.PROCEDURES
-WHERE
-	" + GetSchemaFilter("PROCSCHEMA");
+SELECT * FROM (
+	SELECT
+		p.SPECIFICNAME,
+		p.PROCSCHEMA,
+		p.PROCNAME,
+		p.TEXT,
+		p.REMARKS,
+		'P' AS IS_PROCEDURE,
+		o.OBJECTMODULENAME,
+		CASE WHEN CURRENT SCHEMA = p.PROCSCHEMA THEN 1 ELSE 0 END,
+		p.PARM_COUNT
+	FROM
+		SYSCAT.PROCEDURES p
+		LEFT JOIN SYSCAT.MODULEOBJECTS o ON p.SPECIFICNAME = o.SPECIFICNAME
+	WHERE " + GetSchemaFilter("p.PROCSCHEMA")
+	+ (IncludedSchemas.Count == 0 ? " AND p.PROCSCHEMA NOT IN ('SYSPROC', 'SYSIBMADM', 'SQLJ', 'SYSIBM')" : null)
+	+ @"
+	UNION ALL
+	SELECT
+		f.SPECIFICNAME,
+		f.FUNCSCHEMA,
+		f.FUNCNAME,
+		f.BODY,
+		f.REMARKS,
+		f.TYPE,
+		o.OBJECTMODULENAME,
+		CASE WHEN CURRENT SCHEMA = f.FUNCSCHEMA THEN 1 ELSE 0 END,
+		f.PARM_COUNT
+	FROM
+		SYSCAT.FUNCTIONS f
+		LEFT JOIN SYSCAT.MODULEOBJECTS o ON f.SPECIFICNAME = o.SPECIFICNAME
+		WHERE " + GetSchemaFilter("f.FUNCSCHEMA")
+	+ (IncludedSchemas.Count == 0 ? " AND f.FUNCSCHEMA NOT IN ('SYSPROC', 'SYSIBMADM', 'SQLJ', 'SYSIBM')" : null);
 
 			if (IncludedSchemas.Count == 0)
-				sql += " AND PROCSCHEMA NOT IN ('SYSPROC', 'SYSIBMADM', 'SQLJ', 'SYSIBM')";
+				sql += " AND f.FUNCSCHEMA NOT IN ('SYSPROC', 'SYSIBMADM', 'SQLJ', 'SYSIBM')";
 
-			sql += @"
-ORDER BY PROCSCHEMA, PROCNAME";
+			sql += @")
+ORDER BY OBJECTMODULENAME, PROCSCHEMA, PROCNAME, PARM_COUNT";
 
 			return dataConnection
 				.Query(rd =>
 					{
 						// IMPORTANT: reader calls must be ordered to support SequentialAccess
-						var schema = rd.ToString(0);
-						var name   = rd.ToString(1)!;
+						var id        = rd.ToString(0)!;
+						var schema    = rd.ToString(1)!;
+						var name      = rd.ToString(2)!;
+						var source    = rd.ToString(3);
+						var desc      = rd.ToString(4);
+						// P: procedure, S: scalar function, T: table function
+						var type      = rd.ToString(5)!;
+						var module    = rd.ToString(6);
+						var isDefault = rd.GetInt32(7) == 1;
 
-						return new ProcedureInfo
+						return new ProcedureInfo()
 						{
-							ProcedureID   = dataConnection.Connection.Database + "." + schema + "." + name,
-							CatalogName   = dataConnection.Connection.Database,
-							SchemaName    = schema,
-							ProcedureName = name,
+							ProcedureID         = $"{schema}.{name}({id})",
+							SchemaName          = schema,
+							PackageName         = module,
+							ProcedureName       = name,
+							IsFunction          = type != "P",
+							IsTableFunction     = type == "T",
+							ProcedureDefinition = source,
+							Description         = desc,
+							IsDefaultSchema     = isDefault
 						};
 					},
 					sql)
@@ -441,25 +482,28 @@ ORDER BY PROCSCHEMA, PROCNAME";
 				.Query(rd =>
 				{
 					// IMPORTANT: reader calls must be ordered to support SequentialAccess
-					var schema   = rd.ToString(0);
-					var procname = rd.ToString(1);
-					var pName    = rd.ToString(2);
-					var dataType = rd.ToString(3);
-					var mode     = ConvertTo<string>.From(rd[4]);
-					var ordinal  = ConvertTo<int>   .From(rd[5]);
-					var length   = ConvertTo<int?>  .From(rd[6]);
-					var scale    = ConvertTo<int?>  .From(rd[7]);
+					var id         = rd.ToString(0)!;
+					var schema     = rd.ToString(1)!;
+					var procname   = rd.ToString(2)!;
+					var pName      = rd.ToString(3);
+					var dataType   = rd.ToString(4)!;
+					// IN OUT INOUT RET
+					var mode       = rd.ToString(5)!;
+					var ordinal    = ConvertTo<int>.From(rd[6]);
+					var length     = ConvertTo<int>.From(rd[7]);
+					var scale      = ConvertTo<int>.From(rd[8]);
+					var isNullable = rd.ToString(9) == "Y";
 
-					var ppi = new ProcedureParameterInfo
+					var ppi = new ProcedureParameterInfo()
 					{
-						ProcedureID   = dataConnection.Connection.Database + "." + schema + "." + procname,
+						ProcedureID   = $"{schema}.{procname}({id})",
 						ParameterName = pName,
 						DataType      = dataType,
 						Ordinal       = ordinal,
 						IsIn          = mode.Contains("IN"),
 						IsOut         = mode.Contains("OUT"),
-						IsResult      = false,
-						IsNullable    = true
+						IsResult      = mode == "RET",
+						IsNullable    = isNullable
 					};
 
 					var ci = new ColumnInfo { DataType = ppi.DataType };
@@ -471,8 +515,9 @@ ORDER BY PROCSCHEMA, PROCNAME";
 					ppi.Scale     = ci.Scale;
 
 					return ppi;
-				},@"
+				}, @"
 SELECT
+	SPECIFICNAME,
 	PROCSCHEMA,
 	PROCNAME,
 	PARMNAME,
@@ -480,11 +525,26 @@ SELECT
 	PARM_MODE,
 	ORDINAL,
 	LENGTH,
-	SCALE
+	SCALE,
+	NULLS
 FROM
 	SYSCAT.PROCPARMS
-WHERE
-	" + GetSchemaFilter("PROCSCHEMA"))
+WHERE " + GetSchemaFilter("PROCSCHEMA") + @"
+UNION ALL
+SELECT
+	SPECIFICNAME,
+	FUNCSCHEMA,
+	FUNCNAME,
+	PARMNAME,
+	TYPENAME,
+	CASE WHEN ORDINAL = 0 THEN 'RET' ELSE 'IN' END,
+	ORDINAL,
+	LENGTH,
+	SCALE,
+	'Y'
+FROM
+	SYSCAT.FUNCPARMS
+	WHERE ROWTYPE <> 'R' AND " + GetSchemaFilter("FUNCSCHEMA"))
 				.ToList();
 		}
 
@@ -509,6 +569,56 @@ WHERE
 			}
 
 			return $"{schemaNameField} = '{CurrentSchema}'";
+		}
+
+		protected override string BuildTableFunctionLoadTableSchemaCommand(ProcedureSchema procedure, string commandText)
+		{
+			if (procedure.IsTableFunction)
+			{
+				commandText = "SELECT * FROM TABLE(" + commandText + "(";
+
+				for (var i = 0; i < procedure.Parameters.Count; i++)
+				{
+					if (i != 0)
+						commandText += ",";
+					commandText += "NULL";
+				}
+
+				commandText += "))";
+
+				return commandText;
+			}
+
+			return base.BuildTableFunctionLoadTableSchemaCommand(procedure, commandText);
+		}
+
+		protected override List<ColumnSchema> GetProcedureResultColumns(DataTable resultTable, GetSchemaOptions options)
+		{
+			return
+			(
+				from r in resultTable.AsEnumerable()
+
+				let dt          = GetDataTypeByProviderDbType(r.Field<int>("ProviderType"), options)
+				let columnName = r.Field<string>("ColumnName")
+				let isNullable = r.Field<bool>  ("AllowDBNull")
+				let length     = r.Field<int?>  ("ColumnSize")
+				let precision  = Converter.ChangeTypeTo<int>(r["NumericPrecision"])
+				let scale      = Converter.ChangeTypeTo<int>(r["NumericScale"])
+				let columnType = GetDbType(options, null, dt, length, precision, scale, null, null, null)
+				let systemType = GetSystemType(columnType, null, dt, length, precision, scale, options)
+
+				select new ColumnSchema()
+				{
+					ColumnName           = columnName,
+					ColumnType           = GetDbType(options, columnType, dt, length, precision, scale, null, null, null),
+					IsNullable           = isNullable,
+					MemberName           = ToValidName(columnName),
+					MemberType           = ToTypeName(systemType, isNullable),
+					SystemType           = systemType,
+					DataType             = GetDataType(columnType, null, length, precision, scale),
+					ProviderSpecificType = GetProviderSpecificType(columnType),
+				}
+			).ToList();
 		}
 	}
 

@@ -18,36 +18,30 @@ using System.Threading.Tasks;
 
 namespace Cli.Default.DB2
 {
-	public static partial class Db2AdminSchema
+	public static partial class Db2Inst1Schema
 	{
 		public partial class DataContext
 		{
 			private readonly IDataContext _dataContext;
 
-			public ITable<Alltype>                Alltypes                => _dataContext.GetTable<Alltype>();
-			public ITable<Child>                  Children                => _dataContext.GetTable<Child>();
-			public ITable<CollatedTable>          CollatedTables          => _dataContext.GetTable<CollatedTable>();
-			public ITable<CreateIfNotExistsTable> CreateIfNotExistsTables => _dataContext.GetTable<CreateIfNotExistsTable>();
-			public ITable<Doctor>                 Doctors                 => _dataContext.GetTable<Doctor>();
-			public ITable<GrandChild>             GrandChildren           => _dataContext.GetTable<GrandChild>();
-			public ITable<InheritanceChild>       InheritanceChildren     => _dataContext.GetTable<InheritanceChild>();
-			public ITable<InheritanceParent>      InheritanceParents      => _dataContext.GetTable<InheritanceParent>();
-			public ITable<Int>                    Ints                    => _dataContext.GetTable<Int>();
-			public ITable<KeepIdentityTest>       KeepIdentityTests       => _dataContext.GetTable<KeepIdentityTest>();
-			public ITable<LinqDataType>           LinqDataTypes           => _dataContext.GetTable<LinqDataType>();
-			public ITable<Mastertable>            Mastertables            => _dataContext.GetTable<Mastertable>();
-			public ITable<Parent>                 Parents                 => _dataContext.GetTable<Parent>();
-			public ITable<Patient>                Patients                => _dataContext.GetTable<Patient>();
-			public ITable<Person>                 People                  => _dataContext.GetTable<Person>();
-			public ITable<Slavetable>             Slavetables             => _dataContext.GetTable<Slavetable>();
-			public ITable<TagTestTable>           TagTestTables           => _dataContext.GetTable<TagTestTable>();
-			public ITable<Test>                   Tests                   => _dataContext.GetTable<Test>();
-			public ITable<TestIdentity>           TestIdentities          => _dataContext.GetTable<TestIdentity>();
-			public ITable<TestMerge1>             TestMerge1              => _dataContext.GetTable<TestMerge1>();
-			public ITable<TestMerge2>             TestMerge2              => _dataContext.GetTable<TestMerge2>();
-			public ITable<Testmerge1>             Testmerge1              => _dataContext.GetTable<Testmerge1>();
-			public ITable<Testmerge2>             Testmerge2              => _dataContext.GetTable<Testmerge2>();
-			public ITable<Personview>             Personviews             => _dataContext.GetTable<Personview>();
+			public ITable<Alltype>           Alltypes            => _dataContext.GetTable<Alltype>();
+			public ITable<Child>             Children            => _dataContext.GetTable<Child>();
+			public ITable<CollatedTable>     CollatedTables      => _dataContext.GetTable<CollatedTable>();
+			public ITable<Doctor>            Doctors             => _dataContext.GetTable<Doctor>();
+			public ITable<GrandChild>        GrandChildren       => _dataContext.GetTable<GrandChild>();
+			public ITable<InheritanceChild>  InheritanceChildren => _dataContext.GetTable<InheritanceChild>();
+			public ITable<InheritanceParent> InheritanceParents  => _dataContext.GetTable<InheritanceParent>();
+			public ITable<KeepIdentityTest>  KeepIdentityTests   => _dataContext.GetTable<KeepIdentityTest>();
+			public ITable<LinqDataType>      LinqDataTypes       => _dataContext.GetTable<LinqDataType>();
+			public ITable<Mastertable>       Mastertables        => _dataContext.GetTable<Mastertable>();
+			public ITable<Parent>            Parents             => _dataContext.GetTable<Parent>();
+			public ITable<Patient>           Patients            => _dataContext.GetTable<Patient>();
+			public ITable<Person>            People              => _dataContext.GetTable<Person>();
+			public ITable<Slavetable>        Slavetables         => _dataContext.GetTable<Slavetable>();
+			public ITable<TestIdentity>      TestIdentities      => _dataContext.GetTable<TestIdentity>();
+			public ITable<TestMerge1>        TestMerge1          => _dataContext.GetTable<TestMerge1>();
+			public ITable<TestMerge2>        TestMerge2          => _dataContext.GetTable<TestMerge2>();
+			public ITable<Personview>        Personviews         => _dataContext.GetTable<Personview>();
 
 			public DataContext(IDataContext dataContext)
 			{
@@ -165,29 +159,9 @@ namespace Cli.Default.DB2
 		{
 			return table.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
 		}
-
-		public static Testmerge1? Find(this ITable<Testmerge1> table, int id)
-		{
-			return table.FirstOrDefault(e => e.Id == id);
-		}
-
-		public static Task<Testmerge1?> FindAsync(this ITable<Testmerge1> table, int id, CancellationToken cancellationToken = default)
-		{
-			return table.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
-		}
-
-		public static Testmerge2? Find(this ITable<Testmerge2> table, int id)
-		{
-			return table.FirstOrDefault(e => e.Id == id);
-		}
-
-		public static Task<Testmerge2?> FindAsync(this ITable<Testmerge2> table, int id, CancellationToken cancellationToken = default)
-		{
-			return table.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
-		}
 		#endregion
 
-		[Table("ALLTYPES", Schema = "DB2ADMIN")]
+		[Table("ALLTYPES", Schema = "DB2INST1")]
 		public class Alltype
 		{
 			[Column("ID"               , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int       Id                { get; set; } // INTEGER
@@ -213,14 +187,14 @@ namespace Cli.Default.DB2
 			[Column("XMLDATATYPE"                                                                                        )] public string?   Xmldatatype       { get; set; } // XML
 		}
 
-		[Table("Child", Schema = "DB2ADMIN")]
+		[Table("Child", Schema = "DB2INST1")]
 		public class Child
 		{
 			[Column("ParentID")] public int? ParentId { get; set; } // INTEGER
 			[Column("ChildID" )] public int? ChildId  { get; set; } // INTEGER
 		}
 
-		[Table("CollatedTable", Schema = "DB2ADMIN")]
+		[Table("CollatedTable", Schema = "DB2INST1")]
 		public class CollatedTable
 		{
 			[Column("Id"                                )] public int    Id              { get; set; } // INTEGER
@@ -228,14 +202,7 @@ namespace Cli.Default.DB2
 			[Column("CaseInsensitive", CanBeNull = false)] public string CaseInsensitive { get; set; } = null!; // VARCHAR(80)
 		}
 
-		[Table("CreateIfNotExistsTable", Schema = "DB2ADMIN")]
-		public class CreateIfNotExistsTable
-		{
-			[Column("Id"   )] public int Id    { get; set; } // INTEGER
-			[Column("Value")] public int Value { get; set; } // INTEGER
-		}
-
-		[Table("Doctor", Schema = "DB2ADMIN")]
+		[Table("Doctor", Schema = "DB2INST1")]
 		public class Doctor
 		{
 			[Column("PersonID", IsPrimaryKey = true )] public int    PersonId { get; set; } // INTEGER
@@ -245,12 +212,12 @@ namespace Cli.Default.DB2
 			/// <summary>
 			/// FK_Doctor_Person
 			/// </summary>
-			[Association(CanBeNull = false, ThisKey = nameof(PersonId), OtherKey = nameof(Db2AdminSchema.Person.PersonId))]
+			[Association(CanBeNull = false, ThisKey = nameof(PersonId), OtherKey = nameof(Db2Inst1Schema.Person.PersonId))]
 			public Person Person { get; set; } = null!;
 			#endregion
 		}
 
-		[Table("GrandChild", Schema = "DB2ADMIN")]
+		[Table("GrandChild", Schema = "DB2INST1")]
 		public class GrandChild
 		{
 			[Column("ParentID"    )] public int? ParentId     { get; set; } // INTEGER
@@ -258,7 +225,7 @@ namespace Cli.Default.DB2
 			[Column("GrandChildID")] public int? GrandChildId { get; set; } // INTEGER
 		}
 
-		[Table("InheritanceChild", Schema = "DB2ADMIN")]
+		[Table("InheritanceChild", Schema = "DB2INST1")]
 		public class InheritanceChild
 		{
 			[Column("InheritanceChildId" , IsPrimaryKey = true)] public int     InheritanceChildId  { get; set; } // INTEGER
@@ -267,7 +234,7 @@ namespace Cli.Default.DB2
 			[Column("Name"                                    )] public string? Name                { get; set; } // VARCHAR(50)
 		}
 
-		[Table("InheritanceParent", Schema = "DB2ADMIN")]
+		[Table("InheritanceParent", Schema = "DB2INST1")]
 		public class InheritanceParent
 		{
 			[Column("InheritanceParentId", IsPrimaryKey = true)] public int     InheritanceParentId { get; set; } // INTEGER
@@ -275,25 +242,14 @@ namespace Cli.Default.DB2
 			[Column("Name"                                    )] public string? Name                { get; set; } // VARCHAR(50)
 		}
 
-		[Table("Ints", Schema = "DB2ADMIN")]
-		public class Int
-		{
-			[Column("One"  )] public int  One   { get; set; } // INTEGER
-			[Column("Two"  )] public int  Two   { get; set; } // INTEGER
-			[Column("Three")] public int  Three { get; set; } // INTEGER
-			[Column("Four" )] public int  Four  { get; set; } // INTEGER
-			[Column("Five" )] public int  Five  { get; set; } // INTEGER
-			[Column("Nil"  )] public int? Nil   { get; set; } // INTEGER
-		}
-
-		[Table("KeepIdentityTest", Schema = "DB2ADMIN")]
+		[Table("KeepIdentityTest", Schema = "DB2INST1")]
 		public class KeepIdentityTest
 		{
 			[Column("ID"   , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int  Id    { get; set; } // INTEGER
 			[Column("Value"                                                                                  )] public int? Value { get; set; } // INTEGER
 		}
 
-		[Table("LinqDataTypes", Schema = "DB2ADMIN")]
+		[Table("LinqDataTypes", Schema = "DB2INST1")]
 		public class LinqDataType
 		{
 			[Column("ID"            )] public int?      Id             { get; set; } // INTEGER
@@ -309,7 +265,7 @@ namespace Cli.Default.DB2
 			[Column("StringValue"   )] public string?   StringValue    { get; set; } // VARCHAR(50)
 		}
 
-		[Table("MASTERTABLE", Schema = "DB2ADMIN")]
+		[Table("MASTERTABLE", Schema = "DB2INST1")]
 		public class Mastertable
 		{
 			[Column("ID1", IsPrimaryKey = true, PrimaryKeyOrder = 0)] public int Id1 { get; set; } // INTEGER
@@ -324,14 +280,14 @@ namespace Cli.Default.DB2
 			#endregion
 		}
 
-		[Table("Parent", Schema = "DB2ADMIN")]
+		[Table("Parent", Schema = "DB2INST1")]
 		public class Parent
 		{
 			[Column("ParentID")] public int? ParentId { get; set; } // INTEGER
 			[Column("Value1"  )] public int? Value1   { get; set; } // INTEGER
 		}
 
-		[Table("Patient", Schema = "DB2ADMIN")]
+		[Table("Patient", Schema = "DB2INST1")]
 		public class Patient
 		{
 			[Column("PersonID" , IsPrimaryKey = true )] public int    PersonId  { get; set; } // INTEGER
@@ -341,12 +297,12 @@ namespace Cli.Default.DB2
 			/// <summary>
 			/// FK_Patient_Person
 			/// </summary>
-			[Association(CanBeNull = false, ThisKey = nameof(PersonId), OtherKey = nameof(Db2AdminSchema.Person.PersonId))]
+			[Association(CanBeNull = false, ThisKey = nameof(PersonId), OtherKey = nameof(Db2Inst1Schema.Person.PersonId))]
 			public Person Person { get; set; } = null!;
 			#endregion
 		}
 
-		[Table("Person", Schema = "DB2ADMIN")]
+		[Table("Person", Schema = "DB2INST1")]
 		public class Person
 		{
 			[Column("PersonID"  , IsPrimaryKey = true , IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int     PersonId   { get; set; } // INTEGER
@@ -359,18 +315,18 @@ namespace Cli.Default.DB2
 			/// <summary>
 			/// FK_Doctor_Person backreference
 			/// </summary>
-			[Association(ThisKey = nameof(PersonId), OtherKey = nameof(Db2AdminSchema.Doctor.PersonId))]
+			[Association(ThisKey = nameof(PersonId), OtherKey = nameof(Db2Inst1Schema.Doctor.PersonId))]
 			public Doctor? Doctor { get; set; }
 
 			/// <summary>
 			/// FK_Patient_Person backreference
 			/// </summary>
-			[Association(ThisKey = nameof(PersonId), OtherKey = nameof(Db2AdminSchema.Patient.PersonId))]
+			[Association(ThisKey = nameof(PersonId), OtherKey = nameof(Db2Inst1Schema.Patient.PersonId))]
 			public Patient? Patient { get; set; }
 			#endregion
 		}
 
-		[Table("SLAVETABLE", Schema = "DB2ADMIN")]
+		[Table("SLAVETABLE", Schema = "DB2INST1")]
 		public class Slavetable
 		{
 			[Column("ID1"                          )] public int Id1                        { get; set; } // INTEGER
@@ -381,32 +337,18 @@ namespace Cli.Default.DB2
 			/// <summary>
 			/// FK_SLAVETABLE_MASTERTABLE
 			/// </summary>
-			[Association(CanBeNull = false, ThisKey = nameof(Id222222222222222222222222) + "," + nameof(Id222222222222222222222222), OtherKey = nameof(Db2AdminSchema.Mastertable.Id1) + "," + nameof(Id222222222222222222222222))]
+			[Association(CanBeNull = false, ThisKey = nameof(Id222222222222222222222222) + "," + nameof(Id222222222222222222222222), OtherKey = nameof(Db2Inst1Schema.Mastertable.Id1) + "," + nameof(Id222222222222222222222222))]
 			public Mastertable Mastertable { get; set; } = null!;
 			#endregion
 		}
 
-		[Table("TagTestTable", Schema = "DB2ADMIN")]
-		public class TagTestTable
-		{
-			[Column("ID"  )] public int     Id   { get; set; } // INTEGER
-			[Column("Name")] public string? Name { get; set; } // VARCHAR(1020)
-		}
-
-		[Table("Test", Schema = "DB2ADMIN")]
-		public class Test
-		{
-			[Column("Id"          )] public int  Id           { get; set; } // INTEGER
-			[Column("TestAnimalId")] public int? TestAnimalId { get; set; } // INTEGER
-		}
-
-		[Table("TestIdentity", Schema = "DB2ADMIN")]
+		[Table("TestIdentity", Schema = "DB2INST1")]
 		public class TestIdentity
 		{
 			[Column("ID", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int Id { get; set; } // INTEGER
 		}
 
-		[Table("TestMerge1", Schema = "DB2ADMIN")]
+		[Table("TestMerge1", Schema = "DB2INST1")]
 		public class TestMerge1
 		{
 			[Column("Id"             , IsPrimaryKey = true)] public int       Id              { get; set; } // INTEGER
@@ -433,7 +375,7 @@ namespace Cli.Default.DB2
 			[Column("FieldEnumNumber"                     )] public int?      FieldEnumNumber { get; set; } // INTEGER
 		}
 
-		[Table("TestMerge2", Schema = "DB2ADMIN")]
+		[Table("TestMerge2", Schema = "DB2INST1")]
 		public class TestMerge2
 		{
 			[Column("Id"             , IsPrimaryKey = true)] public int       Id              { get; set; } // INTEGER
@@ -460,29 +402,7 @@ namespace Cli.Default.DB2
 			[Column("FieldEnumNumber"                     )] public int?      FieldEnumNumber { get; set; } // INTEGER
 		}
 
-		[Table("testmerge1", Schema = "DB2ADMIN")]
-		public class Testmerge1
-		{
-			[Column("id"    , IsPrimaryKey = true)] public int  Id     { get; set; } // INTEGER
-			[Column("field1"                     )] public int? Field1 { get; set; } // INTEGER
-			[Column("field2"                     )] public int? Field2 { get; set; } // INTEGER
-			[Column("field3"                     )] public int? Field3 { get; set; } // INTEGER
-			[Column("field4"                     )] public int? Field4 { get; set; } // INTEGER
-			[Column("field5"                     )] public int? Field5 { get; set; } // INTEGER
-		}
-
-		[Table("testmerge2", Schema = "DB2ADMIN")]
-		public class Testmerge2
-		{
-			[Column("id"    , IsPrimaryKey = true)] public int  Id     { get; set; } // INTEGER
-			[Column("field1"                     )] public int? Field1 { get; set; } // INTEGER
-			[Column("field2"                     )] public int? Field2 { get; set; } // INTEGER
-			[Column("field3"                     )] public int? Field3 { get; set; } // INTEGER
-			[Column("field4"                     )] public int? Field4 { get; set; } // INTEGER
-			[Column("field5"                     )] public int? Field5 { get; set; } // INTEGER
-		}
-
-		[Table("PERSONVIEW", Schema = "DB2ADMIN", IsView = true)]
+		[Table("PERSONVIEW", Schema = "DB2INST1", IsView = true)]
 		public class Personview
 		{
 			[Column("PersonID"                     )] public int     PersonId   { get; set; } // INTEGER

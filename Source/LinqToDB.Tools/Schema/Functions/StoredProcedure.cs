@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Schema
 {
@@ -13,7 +14,7 @@ namespace LinqToDB.Schema
 	/// <param name="ResultSets">Result sets schema or <c>null</c> if schema load failed.</param>
 	/// <param name="Result">Procedure scalar return value descriptor.</param>
 	public sealed record StoredProcedure(
-		ObjectName                                  Name,
+		SqlObjectName                               Name,
 		string?                                     Description,
 		IReadOnlyCollection<Parameter>              Parameters,
 		Exception?                                  SchemaError,

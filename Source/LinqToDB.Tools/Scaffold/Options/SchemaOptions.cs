@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using LinqToDB.Schema;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Scaffold
 {
@@ -37,7 +38,7 @@ namespace LinqToDB.Scaffold
 		/// <item>In T4 compability mode: all tables and views allowed.</item>
 		/// </list>
 		/// </summary>
-		public Func<ObjectName, bool, bool> LoadTableOrView { get; set; } = (_, _) => true;
+		public Func<SqlObjectName, bool, bool> LoadTableOrView { get; set; } = (_, _) => true;
 		#endregion
 
 		#region Foreign Keys
@@ -118,7 +119,7 @@ namespace LinqToDB.Scaffold
 		/// <item>In T4 compability mode: all procedures allowed</item>
 		/// </list>
 		/// </summary>
-		public Func<ObjectName, bool> LoadProcedureSchema { get; set; } = _ => true;
+		public Func<SqlObjectName, bool> LoadProcedureSchema { get; set; } = _ => true;
 		/// <summary>
 		/// Delegate to filter loaded table functions by database name (only name and schema provided). Returns <c>true</c>, if table function should be loaded.
 		/// <list type="bullet">
@@ -126,7 +127,7 @@ namespace LinqToDB.Scaffold
 		/// <item>In T4 compability mode: all table functions allowed</item>
 		/// </list>
 		/// </summary>
-		public Func<ObjectName, bool> LoadTableFunction { get; set; } = _ => true;
+		public Func<SqlObjectName, bool> LoadTableFunction { get; set; } = _ => true;
 
 		/// <summary>
 		/// Generate RETURN_VALUE stored procedure parameter for SQL Server.

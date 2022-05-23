@@ -293,63 +293,51 @@ WHERE
 
 		protected override List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
 		{
-			List<DataTypeInfo>? dataTypes = null;
+			// native provider actually supports GetSchema("DataTypes") call, but it return less types than sybase knowns
+			// so we will use manually defined type list for native provider too
 
-			try
+			// ProviderDbType values copied from values, returned by native prover, but they doesn't make sense to
+			// me as they doesn't match AseDbType enum
+			return new List<DataTypeInfo>()
 			{
-				dataTypes = base.GetDataTypes(dataConnection);
-			}
-			catch (NotSupportedException)
-			{
-			}
+				new DataTypeInfo { TypeName = "smallint"        , DataType = typeof(short)   .FullName!, CreateFormat = "smallint"         , ProviderDbType = 16                                                                   },
+				new DataTypeInfo { TypeName = "int"             , DataType = typeof(int)     .FullName!, CreateFormat = "int"              , ProviderDbType = 8                                                                    },
+				new DataTypeInfo { TypeName = "real"            , DataType = typeof(float)   .FullName!, CreateFormat = "real"             , ProviderDbType = 13                                                                   },
+				new DataTypeInfo { TypeName = "float"           , DataType = typeof(double)  .FullName!, CreateFormat = "float({0})"       , ProviderDbType = 6   , CreateParameters = "number of bits used to store the mantissa" },
+				new DataTypeInfo { TypeName = "money"           , DataType = typeof(decimal) .FullName!, CreateFormat = "money"            , ProviderDbType = 9                                                                    },
+				new DataTypeInfo { TypeName = "smallmoney"      , DataType = typeof(decimal) .FullName!, CreateFormat = "smallmoney"       , ProviderDbType = 17                                                                   },
+				new DataTypeInfo { TypeName = "bit"             , DataType = typeof(bool)    .FullName!, CreateFormat = "bit"              , ProviderDbType = 2                                                                    },
+				new DataTypeInfo { TypeName = "tinyint"         , DataType = typeof(sbyte)   .FullName!, CreateFormat = "tinyint"          , ProviderDbType = 20                                                                   },
+				new DataTypeInfo { TypeName = "bigint"          , DataType = typeof(long)    .FullName!, CreateFormat = "bigint"           , ProviderDbType = 0                                                                    },
+				new DataTypeInfo { TypeName = "timestamp"       , DataType = typeof(byte[])  .FullName!, CreateFormat = "timestamp"        , ProviderDbType = 19                                                                   },
+				new DataTypeInfo { TypeName = "binary"          , DataType = typeof(byte[])  .FullName!, CreateFormat = "binary({0})"      , ProviderDbType = 1   , CreateParameters = "length"                                    },
+				new DataTypeInfo { TypeName = "image"           , DataType = typeof(byte[])  .FullName!, CreateFormat = "image"            , ProviderDbType = 7                                                                    },
+				new DataTypeInfo { TypeName = "text"            , DataType = typeof(string)  .FullName!, CreateFormat = "text"             , ProviderDbType = 18                                                                   },
+				new DataTypeInfo { TypeName = "ntext"           , DataType = typeof(string)  .FullName!, CreateFormat = "ntext"            , ProviderDbType = 11                                                                   },
+				new DataTypeInfo { TypeName = "decimal"         , DataType = typeof(decimal) .FullName!, CreateFormat = "decimal({0}, {1})", ProviderDbType = 5   , CreateParameters = "precision,scale"                           },
+				new DataTypeInfo { TypeName = "numeric"         , DataType = typeof(decimal) .FullName!, CreateFormat = "numeric({0}, {1})", ProviderDbType = 5   , CreateParameters = "precision,scale"                           },
+				new DataTypeInfo { TypeName = "datetime"        , DataType = typeof(DateTime).FullName!, CreateFormat = "datetime"         , ProviderDbType = 4                                                                    },
+				new DataTypeInfo { TypeName = "smalldatetime"   , DataType = typeof(DateTime).FullName!, CreateFormat = "smalldatetime"    , ProviderDbType = 15                                                                   },
+				new DataTypeInfo { TypeName = "sql_variant"     , DataType = typeof(object)  .FullName!, CreateFormat = "sql_variant"      , ProviderDbType = 23                                                                   },
+				new DataTypeInfo { TypeName = "xml"             , DataType = typeof(string)  .FullName!, CreateFormat = "xml"              , ProviderDbType = 25                                                                   },
+				new DataTypeInfo { TypeName = "varchar"         , DataType = typeof(string)  .FullName!, CreateFormat = "varchar({0})"     , ProviderDbType = 22  , CreateParameters = "max length"                                },
+				new DataTypeInfo { TypeName = "char"            , DataType = typeof(string)  .FullName!, CreateFormat = "char({0})"        , ProviderDbType = 3   , CreateParameters = "length"                                    },
+				new DataTypeInfo { TypeName = "nchar"           , DataType = typeof(string)  .FullName!, CreateFormat = "nchar({0})"       , ProviderDbType = 10  , CreateParameters = "length"                                    },
+				new DataTypeInfo { TypeName = "nvarchar"        , DataType = typeof(string)  .FullName!, CreateFormat = "nvarchar({0})"    , ProviderDbType = 12  , CreateParameters = "max length"                                },
+				new DataTypeInfo { TypeName = "varbinary"       , DataType = typeof(byte[])  .FullName!, CreateFormat = "varbinary({0})"   , ProviderDbType = 21  , CreateParameters = "max length"                                },
+				new DataTypeInfo { TypeName = "uniqueidentifier", DataType = typeof(Guid)    .FullName!, CreateFormat = "uniqueidentifier" , ProviderDbType = 14                                                                   },
 
-			if (dataTypes == null || dataTypes.Count == 0)
-			{
-				// ProviderDbType values copied from values, returned by native prover, but they doesn't make sense to
-				// me as they doesn't match AseDbType enum
-				return new List<DataTypeInfo>()
-				{
-					new DataTypeInfo { TypeName = "smallint"        , DataType = typeof(short)   .FullName!, CreateFormat = "smallint"         , ProviderDbType = 16                                                                   },
-					new DataTypeInfo { TypeName = "int"             , DataType = typeof(int)     .FullName!, CreateFormat = "int"              , ProviderDbType = 8                                                                    },
-					new DataTypeInfo { TypeName = "real"            , DataType = typeof(float)   .FullName!, CreateFormat = "real"             , ProviderDbType = 13                                                                   },
-					new DataTypeInfo { TypeName = "float"           , DataType = typeof(double)  .FullName!, CreateFormat = "float({0})"       , ProviderDbType = 6   , CreateParameters = "number of bits used to store the mantissa" },
-					new DataTypeInfo { TypeName = "money"           , DataType = typeof(decimal) .FullName!, CreateFormat = "money"            , ProviderDbType = 9                                                                    },
-					new DataTypeInfo { TypeName = "smallmoney"      , DataType = typeof(decimal) .FullName!, CreateFormat = "smallmoney"       , ProviderDbType = 17                                                                   },
-					new DataTypeInfo { TypeName = "bit"             , DataType = typeof(bool)    .FullName!, CreateFormat = "bit"              , ProviderDbType = 2                                                                    },
-					new DataTypeInfo { TypeName = "tinyint"         , DataType = typeof(sbyte)   .FullName!, CreateFormat = "tinyint"          , ProviderDbType = 20                                                                   },
-					new DataTypeInfo { TypeName = "bigint"          , DataType = typeof(long)    .FullName!, CreateFormat = "bigint"           , ProviderDbType = 0                                                                    },
-					new DataTypeInfo { TypeName = "timestamp"       , DataType = typeof(byte[])  .FullName!, CreateFormat = "timestamp"        , ProviderDbType = 19                                                                   },
-					new DataTypeInfo { TypeName = "binary"          , DataType = typeof(byte[])  .FullName!, CreateFormat = "binary({0})"      , ProviderDbType = 1   , CreateParameters = "length"                                    },
-					new DataTypeInfo { TypeName = "image"           , DataType = typeof(byte[])  .FullName!, CreateFormat = "image"            , ProviderDbType = 7                                                                    },
-					new DataTypeInfo { TypeName = "text"            , DataType = typeof(string)  .FullName!, CreateFormat = "text"             , ProviderDbType = 18                                                                   },
-					new DataTypeInfo { TypeName = "ntext"           , DataType = typeof(string)  .FullName!, CreateFormat = "ntext"            , ProviderDbType = 11                                                                   },
-					new DataTypeInfo { TypeName = "decimal"         , DataType = typeof(decimal) .FullName!, CreateFormat = "decimal({0}, {1})", ProviderDbType = 5   , CreateParameters = "precision,scale"                           },
-					new DataTypeInfo { TypeName = "numeric"         , DataType = typeof(decimal) .FullName!, CreateFormat = "numeric({0}, {1})", ProviderDbType = 5   , CreateParameters = "precision,scale"                           },
-					new DataTypeInfo { TypeName = "datetime"        , DataType = typeof(DateTime).FullName!, CreateFormat = "datetime"         , ProviderDbType = 4                                                                    },
-					new DataTypeInfo { TypeName = "smalldatetime"   , DataType = typeof(DateTime).FullName!, CreateFormat = "smalldatetime"    , ProviderDbType = 15                                                                   },
-					new DataTypeInfo { TypeName = "sql_variant"     , DataType = typeof(object)  .FullName!, CreateFormat = "sql_variant"      , ProviderDbType = 23                                                                   },
-					new DataTypeInfo { TypeName = "xml"             , DataType = typeof(string)  .FullName!, CreateFormat = "xml"              , ProviderDbType = 25                                                                   },
-					new DataTypeInfo { TypeName = "varchar"         , DataType = typeof(string)  .FullName!, CreateFormat = "varchar({0})"     , ProviderDbType = 22  , CreateParameters = "max length"                                },
-					new DataTypeInfo { TypeName = "char"            , DataType = typeof(string)  .FullName!, CreateFormat = "char({0})"        , ProviderDbType = 3   , CreateParameters = "length"                                    },
-					new DataTypeInfo { TypeName = "nchar"           , DataType = typeof(string)  .FullName!, CreateFormat = "nchar({0})"       , ProviderDbType = 10  , CreateParameters = "length"                                    },
-					new DataTypeInfo { TypeName = "nvarchar"        , DataType = typeof(string)  .FullName!, CreateFormat = "nvarchar({0})"    , ProviderDbType = 12  , CreateParameters = "max length"                                },
-					new DataTypeInfo { TypeName = "varbinary"       , DataType = typeof(byte[])  .FullName!, CreateFormat = "varbinary({0})"   , ProviderDbType = 21  , CreateParameters = "max length"                                },
-					new DataTypeInfo { TypeName = "uniqueidentifier", DataType = typeof(Guid)    .FullName!, CreateFormat = "uniqueidentifier" , ProviderDbType = 14                                                                   },
-
-					new DataTypeInfo { TypeName = "usmallint"       , DataType = typeof(ushort)  .FullName!, CreateFormat = "usmallint"        , ProviderDbType = -1                                                                   },
-					new DataTypeInfo { TypeName = "uint"            , DataType = typeof(uint)    .FullName!, CreateFormat = "uint"             , ProviderDbType = -1                                                                   },
-					new DataTypeInfo { TypeName = "ubigint"         , DataType = typeof(ulong)   .FullName!, CreateFormat = "ubigint"          , ProviderDbType = -1                                                                   },
-					new DataTypeInfo { TypeName = "bigdatetime"     , DataType = typeof(DateTime).FullName!, CreateFormat = "bigdatetime"      , ProviderDbType = -1                                                                   },
-					new DataTypeInfo { TypeName = "date"            , DataType = typeof(DateTime).FullName!, CreateFormat = "date"             , ProviderDbType = -1                                                                   },
-					new DataTypeInfo { TypeName = "time"            , DataType = typeof(TimeSpan).FullName!, CreateFormat = "time"             , ProviderDbType = -1                                                                   },
-					new DataTypeInfo { TypeName = "bigtime"         , DataType = typeof(TimeSpan).FullName!, CreateFormat = "bigtime"          , ProviderDbType = -1                                                                   },
-					new DataTypeInfo { TypeName = "unitext"         , DataType = typeof(string)  .FullName!, CreateFormat = "unitext"          , ProviderDbType = -1                                                                   },
-					new DataTypeInfo { TypeName = "unichar"         , DataType = typeof(string)  .FullName!, CreateFormat = "unichar"          , ProviderDbType = -1                                                                   },
-					new DataTypeInfo { TypeName = "univarchar"      , DataType = typeof(string)  .FullName!, CreateFormat = "univarchar"       , ProviderDbType = -1                                                                   },
-				};
-			}
-
-			return dataTypes;
+				new DataTypeInfo { TypeName = "usmallint"       , DataType = typeof(ushort)  .FullName!, CreateFormat = "usmallint"        , ProviderDbType = -1                                                                   },
+				new DataTypeInfo { TypeName = "uint"            , DataType = typeof(uint)    .FullName!, CreateFormat = "uint"             , ProviderDbType = -1                                                                   },
+				new DataTypeInfo { TypeName = "ubigint"         , DataType = typeof(ulong)   .FullName!, CreateFormat = "ubigint"          , ProviderDbType = -1                                                                   },
+				new DataTypeInfo { TypeName = "bigdatetime"     , DataType = typeof(DateTime).FullName!, CreateFormat = "bigdatetime"      , ProviderDbType = -1                                                                   },
+				new DataTypeInfo { TypeName = "date"            , DataType = typeof(DateTime).FullName!, CreateFormat = "date"             , ProviderDbType = -1                                                                   },
+				new DataTypeInfo { TypeName = "time"            , DataType = typeof(TimeSpan).FullName!, CreateFormat = "time"             , ProviderDbType = -1                                                                   },
+				new DataTypeInfo { TypeName = "bigtime"         , DataType = typeof(TimeSpan).FullName!, CreateFormat = "bigtime"          , ProviderDbType = -1                                                                   },
+				new DataTypeInfo { TypeName = "unitext"         , DataType = typeof(string)  .FullName!, CreateFormat = "unitext"          , ProviderDbType = -1                                                                   },
+				new DataTypeInfo { TypeName = "unichar"         , DataType = typeof(string)  .FullName!, CreateFormat = "unichar"          , ProviderDbType = -1                                                                   },
+				new DataTypeInfo { TypeName = "univarchar"      , DataType = typeof(string)  .FullName!, CreateFormat = "univarchar"       , ProviderDbType = -1                                                                   },
+			};
 		}
 	}
 }

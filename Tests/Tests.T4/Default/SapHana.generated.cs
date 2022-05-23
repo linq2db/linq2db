@@ -91,6 +91,22 @@ namespace Default.SapHana
 
 		#endregion
 
+		#region TestTableFunction
+
+		[Sql.TableFunction(Schema="TESTDB", Name="TEST_TABLE_FUNCTION")]
+		public ITable<TestTableFUNCTIONResult> TestTableFunction(int? I)
+		{
+			return this.GetTable<TestTableFUNCTIONResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
+				I);
+		}
+
+		public partial class TestTableFUNCTIONResult
+		{
+			public int? O { get; set; }
+		}
+
+		#endregion
+
 		#endregion
 	}
 
@@ -910,6 +926,35 @@ namespace Default.SapHana
 
 		#endregion
 
+		#region TestProcedure
+
+		public static IEnumerable<TestPROCEDUREResult> TestProcedure(this TestDataDB dataConnection, int? I)
+		{
+			var parameters = new []
+			{
+				new DataParameter("I", I, LinqToDB.DataType.Int32)
+				{
+					Size = 10
+				}
+			};
+
+			var ms = dataConnection.MappingSchema;
+
+			return dataConnection.QueryProc(dataReader =>
+				new TestPROCEDUREResult
+				{
+					Column1 = Converter.ChangeTypeTo<int?>(dataReader.GetValue(0), ms),
+				},
+				"\"TESTDB\".\"TEST_PROCEDURE\"", parameters);
+		}
+
+		public partial class TestPROCEDUREResult
+		{
+			[Column("")] public int? Column1 { get; set; }
+		}
+
+		#endregion
+
 		#region PrdGlobalEccCvMARAproc
 
 		public static IEnumerable<PrdGlobalEccCvMARAprocResult> PrdGlobalEccCvMARAproc(this TestDataDB dataConnection)
@@ -929,6 +974,19 @@ namespace Default.SapHana
 		{
 			               public int?    id      { get; set; }
 			[Column("id")] public string? Column2 { get; set; }
+		}
+
+		#endregion
+	}
+
+	public static partial class SqlFunctions
+	{
+		#region TestFunction
+
+		[Sql.Function(Name="\"TESTDB\".\"TEST_FUNCTION\"", ServerSideOnly=true)]
+		public static int? TestFunction(int? I)
+		{
+			throw new InvalidOperationException();
 		}
 
 		#endregion

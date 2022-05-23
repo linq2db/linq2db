@@ -7,6 +7,7 @@ using LinqToDB.DataModel;
 using LinqToDB.Metadata;
 using LinqToDB.Naming;
 using LinqToDB.Schema;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Scaffold
 {
@@ -280,8 +281,8 @@ namespace LinqToDB.Scaffold
 		/// <param name="defaultSchemas">List of default database schema names.</param>
 		/// <returns>Property/method name for association.</returns>
 		private string GenerateAssociationName(
-			ObjectName           thisTable,
-			ObjectName           otherTable,
+			SqlObjectName        thisTable,
+			SqlObjectName        otherTable,
 			string?              firstFromColumnName,
 			string               fkName,
 			NormalizationOptions settings,

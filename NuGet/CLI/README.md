@@ -189,7 +189,7 @@ public override IEnumerable<Table> GetTables(IEnumerable<Table> tables)
 
     // add new table record, not returned by schema API
     yield return new Table(
-        new ObjectName(null, null, null, "my_table_name"),
+        new SqlObjectName("my_table_name"),
         null,
         new[] { new Column("pk", null, new DatabaseType("BIGINT", null, null, null), false, false, false) },
         new Identity("pk", null),
@@ -204,20 +204,20 @@ public override IEnumerable<Table> GetTables(IEnumerable<Table> tables)
 
 ```cs
 // generic descriptors
-public sealed record ObjectName(string? Server, string? Database, string? Schema, string Name);
+public readonly record struct SqlObjectName(string Name, string? Server = null, string? Database = null, string? Schema = null, string? Package = null);
 
 public sealed record DatabaseType(string? Name, long? Length, int? Precision, int? Scale);
 
 // table/view descriptors
 public sealed record Table(
-    ObjectName                  Name,
+    SqlObjectName               Name,
     string?                     Description,
     IReadOnlyCollection<Column> Columns,
     Identity?                   Identity,
     PrimaryKey?                 PrimaryKey);
 
 public sealed record View(
-    ObjectName                  Name,
+    SqlObjectName               Name,
     string?                     Description,
     IReadOnlyCollection<Column> Columns,
     Identity?                   Identity,
@@ -225,15 +225,15 @@ public sealed record View(
 
 public sealed record ForeignKey(
     string                                 Name,
-    ObjectName                             Source,
-    ObjectName                             Target,
+    SqlObjectName                          Source,
+    SqlObjectName                          Target,
     IReadOnlyList<ForeignKeyColumnMapping> Relation);
 
 public sealed record Column(string Name, string? Description, DatabaseType Type, bool Nullable, bool Insertable, bool Updatable);
 
 public sealed record Identity(string Column, Sequence? Sequence);
 
-public sealed record Sequence(ObjectName? Name);
+public sealed record Sequence(SqlObjectName? Name);
 
 public sealed record PrimaryKey(string? Name, IReadOnlyCollection<string> Columns);
 
@@ -241,7 +241,7 @@ public sealed record ForeignKeyColumnMapping(string SourceColumn, string TargetC
 
 // procedures and functions descriptors
 public sealed record StoredProcedure(
-    ObjectName                                  Name,
+    SqlObjectName                               Name,
     string?                                     Description,
     IReadOnlyCollection<Parameter>              Parameters,
     Exception?                                  SchemaError,
@@ -249,20 +249,20 @@ public sealed record StoredProcedure(
     Result                                      Result);
 
 public sealed record TableFunction(
-    ObjectName                         Name,
+    SqlObjectName                      Name,
     string?                            Description,
     IReadOnlyCollection<Parameter>     Parameters,
     Exception?                         SchemaError,
     IReadOnlyCollection<ResultColumn>? Result);
 
 public sealed record AggregateFunction(
-    ObjectName                     Name,
+    SqlObjectName                  Name,
     string?                        Description,
     IReadOnlyCollection<Parameter> Parameters,
     ScalarResult                   Result);
 
 public sealed record ScalarFunction(
-    ObjectName                     Name,
+    SqlObjectName                  Name,
     string?                        Description,
     IReadOnlyCollection<Parameter> Parameters,
     Result                         Result);
@@ -314,7 +314,7 @@ This interceptor allows user to specify which .NET type should be used for speci
 ```cs
 // IMPORTANT: this method called only once for each database type
 // ITypeParser inte
-TypeMapping GetTypeMapping(DatabaseType databaseType, ITypeParser typeParser, TypeMapping defaultMapping);
+TypeMapping? GetTypeMapping(DatabaseType databaseType, ITypeParser typeParser, TypeMapping? defaultMapping);
 
 // IType is internal .NET type abstraction created only using ITypeParser interface methods
 // DataType is LinqToDB.DataType mapping enum
@@ -515,8 +515,8 @@ public sealed class AggregateFunctionModel : ScalarFunctionModelBase
 
 public abstract class TableFunctionModelBase : FunctionModelBase
 {
-    public ObjectName Name  { get; set; }
-    public string?    Error { get; set; }
+    public SqlObjectName Name  { get; set; }
+    public string?       Error { get; set; }
 }
 
 public abstract class ScalarFunctionModelBase : FunctionModelBase
@@ -674,12 +674,12 @@ public enum CodeParameterDirection
  ```cs
 public sealed class EntityMetadata
 {
-    public ObjectName?  Name                      { get; set; }
-    public bool         IsView                    { get; set; }
-    public string?      Configuration             { get; set; }
-    public bool         IsColumnAttributeRequired { get; set; } = true;
-    public bool         IsTemporary               { get; set; }
-    public TableOptions TableOptions              { get; set; }
+    public SqlObjectName? Name                      { get; set; }
+    public bool           IsView                    { get; set; }
+    public string?        Configuration             { get; set; }
+    public bool           IsColumnAttributeRequired { get; set; } = true;
+    public bool           IsTemporary               { get; set; }
+    public TableOptions   TableOptions              { get; set; }
 }
 
 public sealed class ColumnMetadata
@@ -706,15 +706,15 @@ public sealed class ColumnMetadata
 // table function/stored procedure
 public sealed class TableFunctionMetadata
 {
-    public ObjectName? Name          { get; set; }
-    public string?     Configuration { get; set; }
-    public int[]?      ArgIndices    { get; set; }
+    public SqlObjectName? Name          { get; set; }
+    public string?        Configuration { get; set; }
+    public int[]?         ArgIndices    { get; set; }
 }
 
 // scalar/aggregate function
 public sealed class FunctionMetadata
 {
-    public ObjectName?         Name             { get; set; }
+    public SqlObjectName?      Name             { get; set; }
     public int[]?              ArgIndices       { get; set; }
     public string?             Configuration    { get; set; }
     public bool?               ServerSideOnly   { get; set; }

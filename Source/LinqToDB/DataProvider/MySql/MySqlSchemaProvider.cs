@@ -262,15 +262,13 @@ SELECT
 					{
 						ProcedureID         = catalog + "." + name,
 						CatalogName         = catalog,
-						SchemaName          = null,
 						ProcedureName       = name,
 						IsFunction          = Converter.ChangeTypeTo<string>(rd[2]) == "FUNCTION",
-						IsTableFunction     = false,
-						IsAggregateFunction = false,
 						IsDefaultSchema     = true,
-						ProcedureDefinition = Converter.ChangeTypeTo<string>(rd[3])
-				};
-				}, "SELECT ROUTINE_SCHEMA, ROUTINE_NAME, ROUTINE_TYPE, ROUTINE_DEFINITION FROM INFORMATION_SCHEMA.routines WHERE ROUTINE_SCHEMA = database()")
+						ProcedureDefinition = Converter.ChangeTypeTo<string>(rd[3]),
+						Description         = Converter.ChangeTypeTo<string>(rd[4]),
+					};
+				}, "SELECT ROUTINE_SCHEMA, ROUTINE_NAME, ROUTINE_TYPE, ROUTINE_DEFINITION, ROUTINE_COMMENT FROM INFORMATION_SCHEMA.routines WHERE ROUTINE_TYPE IN ('PROCEDURE', 'FUNCTION') AND ROUTINE_SCHEMA = database()")
 				.ToList();
 		}
 

@@ -247,9 +247,9 @@ namespace LinqToDB.Linq
 
 			foreach (var p in queryContext.ParameterAccessors)
 			{
-				var value = p.ValueAccessor(expression, parametersContext, parameters);
+				var providerValue = p.ValueAccessor(expression, parametersContext, parameters);
 
-				if (value is IEnumerable vs)
+				if (providerValue is IEnumerable vs)
 				{
 					var type  = vs.GetType();
 					var etype = type.GetItemType();
@@ -262,26 +262,26 @@ namespace LinqToDB.Linq
 
 						foreach (var v in vs)
 						{
-							value = v;
+							providerValue = v;
 
 							if (v != null)
 							{
 								var valueType = v.GetType();
 
 								if (valueType.ToNullableUnderlying().IsEnum)
-									value = query.GetConvertedEnum(valueType, v);
+									providerValue = query.GetConvertedEnum(valueType, v);
 							}
 
-							values.Add(value);
+							values.Add(providerValue);
 						}
 
-						value = values;
+						providerValue = values;
 					}
 				}
 
 				var dbDataType = p.DbDataTypeAccessor(expression, parametersContext, parameters);
 
-				parameterValues.AddValue(p.SqlParameter, value, p.SqlParameter.Type.WithSetValues(dbDataType));
+				parameterValues.AddValue(p.SqlParameter, providerValue, p.SqlParameter.Type.WithSetValues(dbDataType));
 			}
 		}
 

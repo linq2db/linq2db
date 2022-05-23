@@ -408,6 +408,8 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		public IValueConverter? ValueConverter  { get; }
 
+		LambdaExpression?    _getOriginalValueLambda;
+
 		LambdaExpression?    _getDbValueLambda;
 		Expression?          _getDefaultDbValueExpression;
 		LambdaExpression?    _getDbParamLambda;
@@ -514,6 +516,22 @@ namespace LinqToDB.Mapping
 				dataType = mappingSchema.GetUnderlyingDataType(systemType, out var _).Type.DataType;
 
 			return dataType;
+		}
+
+		/// <summary>
+		/// Returns Lambda for extracting original column value from entity object.
+		/// </summary>
+		/// <returns>Returns Lambda which extracts member value.</returns>
+		public LambdaExpression GetOriginalValueLambda()
+		{
+			if (_getOriginalValueLambda != null)
+				return _getOriginalValueLambda;
+
+			var objParam   = Expression.Parameter(MemberAccessor.TypeAccessor.Type, "obj");
+			var getterExpr = MemberAccessor.GetterExpression.GetBody(objParam);
+
+			_getOriginalValueLambda = Expression.Lambda(getterExpr, objParam);
+			return _getOriginalValueLambda;
 		}
 
 		/// <summary>
@@ -731,7 +749,7 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		/// <param name="obj">Entity object to extract column value from.</param>
 		/// <returns>Returns column value, converted to database type.</returns>
-		public virtual object? GetValue(object obj)
+		public virtual object? GetProviderValue(object obj)
 		{
 			if (_getter == null)
 			{
