@@ -26,7 +26,7 @@ namespace LinqToDB.SqlQuery
 
 			if (p.ColumnDescriptor != null)
 			{
-				value = p.ColumnDescriptor.GetValue(obj);
+				value = p.ColumnDescriptor.GetProviderValue(obj);
 			}
 			else if (p.GetValueFunc != null)
 			{
