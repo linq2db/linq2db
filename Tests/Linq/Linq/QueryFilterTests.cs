@@ -40,7 +40,7 @@ namespace Tests.Linq
 			[Column] public int     Id    { get; set; }
 			[Column] public string? Value { get; set; }
 			[Column] public bool    IsDeleted { get; set; }
-			
+
 			[Column] public int? MasterId { get; set; }
 		}
 
@@ -51,7 +51,7 @@ namespace Tests.Linq
 			[Column] public int     Id    { get; set; }
 			[Column] public string? Value { get; set; }
 			[Column] public bool    IsDeleted { get; set; }
-			
+
 			[Column] public int? MasterId { get; set; }
 		}
 
@@ -108,7 +108,7 @@ namespace Tests.Linq
 		{
 			public MyDataContext(string configuration, MappingSchema mappingSchema) : base(configuration, mappingSchema)
 			{
-				
+
 			}
 
 			public bool IsSoftDeleteFilterEnabled { get; set; } = true;
@@ -183,10 +183,10 @@ namespace Tests.Linq
 			using (var db = new MyDataContext(context, _filterMappingSchema))
 			using (db.CreateLocalTable(testData.Item1))
 			{
-
 				var currentMissCount = Query<MasterClass>.CacheMissCount;
 
-				var query = from m in db.GetTable<MasterClass>()
+				var query =
+					from m in db.GetTable<MasterClass>()
 					select m;
 
 				((DcParams)db.Params).IsSoftDeleteFilterEnabled = filtered;

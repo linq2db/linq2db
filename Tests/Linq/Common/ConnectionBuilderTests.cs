@@ -74,9 +74,9 @@ namespace Tests.Common
 			var builder = new DataOptions();
 			var factory = new TestLoggerFactory();
 
-			builder.UseLoggerFactory(factory);
+			builder = builder.UseLoggerFactory(factory);
 
-			var extension = builder.Find<DataTraceOptions>();
+			var extension = builder.Find<QueryTraceOptions>();
 
 			Assert.NotNull(extension?.WriteTrace);
 
@@ -99,7 +99,7 @@ namespace Tests.Common
 
 			builder = builder.UseDefaultLogging(services.BuildServiceProvider());
 
-			var extension = builder.Find<DataTraceOptions>();
+			var extension = builder.Find<QueryTraceOptions>();
 			Assert.NotNull(extension?.WriteTrace);
 
 			var expectedMessage = "this is a test log";

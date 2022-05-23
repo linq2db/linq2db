@@ -36,7 +36,8 @@ namespace LinqToDB.Data
 		DbTransaction?      DbTransaction       = default,
 		bool                DisposeConnection   = default,
 		Func<DbConnection>? ConnectionFactory   = default
-	) : IOptionSet, IApplicable<DataConnection>, IApplicable<DataContext>
+	)
+		: IOptionSet, IApplicable<DataConnection>, IApplicable<DataContext>
 	{
 		public ConnectionOptions() : this((string?)null)
 		{
@@ -64,8 +65,9 @@ namespace LinqToDB.Data
 			.Add(DbTransaction?.Connection?.ConnectionString)
 			.CreateID();
 
-		public IDataProvider? SavedDataProvider     { get; set; }
-		public string?        SavedConnectionString { get; set; }
+		public IDataProvider? SavedDataProvider        { get; set; }
+		public string?        SavedConnectionString    { get; set; }
+		public string?        SavedConfigurationString { get; set; }
 
 		void IApplicable<DataConnection>.Apply(DataConnection obj)
 		{

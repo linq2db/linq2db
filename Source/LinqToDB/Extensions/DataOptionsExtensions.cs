@@ -410,7 +410,7 @@ namespace LinqToDB
 		/// <returns>The builder instance so calls can be chained.</returns>
 		public static DataOptions UseTraceLevel(this DataOptions options, TraceLevel traceLevel)
 		{
-			return options.WithOptions<DataTraceOptions>(o => o with { TraceLevel = traceLevel });
+			return options.WithOptions<QueryTraceOptions>(o => o with { TraceLevel = traceLevel });
 		}
 
 		/// <summary>
@@ -420,7 +420,7 @@ namespace LinqToDB
 		/// <returns>The builder instance so calls can be chained.</returns>
 		public static DataOptions UseTracing(this DataOptions options, Action<TraceInfo> onTrace)
 		{
-			return options.WithOptions<DataTraceOptions>(o => o with { OnTrace = onTrace });
+			return options.WithOptions<QueryTraceOptions>(o => o with { OnTrace = onTrace });
 		}
 
 		/// <summary>
@@ -431,7 +431,7 @@ namespace LinqToDB
 		/// <returns>The builder instance so calls can be chained.</returns>
 		public static DataOptions UseTracing(this DataOptions options, TraceLevel traceLevel, Action<TraceInfo> onTrace)
 		{
-			return options.WithOptions<DataTraceOptions>(o => o with { OnTrace = onTrace, TraceLevel = traceLevel });
+			return options.WithOptions<QueryTraceOptions>(o => o with { OnTrace = onTrace, TraceLevel = traceLevel });
 		}
 
 		/// <summary>
@@ -441,7 +441,7 @@ namespace LinqToDB
 		/// <returns>The builder instance so calls can be chained.</returns>
 		public static DataOptions UseTraceWith(this DataOptions options, Action<string?,string?,TraceLevel> write)
 		{
-			return options.WithOptions<DataTraceOptions>(o => o with { WriteTrace = write });
+			return options.WithOptions<QueryTraceOptions>(o => o with { WriteTrace = write });
 		}
 
 		#endregion

@@ -19,7 +19,8 @@ namespace LinqToDB.DataProvider.Oracle
 	(
 		BulkCopyType        BulkCopyType,
 		AlternativeBulkCopy AlternativeBulkCopy
-	) : IOptionSet
+	)
+		: IOptionSet
 	{
 		public OracleOptions() : this(BulkCopyType.MultipleRows, AlternativeBulkCopy.InsertAll)
 		{

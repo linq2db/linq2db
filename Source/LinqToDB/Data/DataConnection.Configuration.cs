@@ -495,9 +495,10 @@ namespace LinqToDB.Data
 			{
 				if (options.SavedDataProvider != null)
 				{
-					dataConnection.DataProvider     = options.SavedDataProvider;
-					dataConnection.ConnectionString = options.SavedConnectionString;
-					dataConnection.MappingSchema    = options.SavedDataProvider.MappingSchema;
+					dataConnection.DataProvider        = options.SavedDataProvider;
+					dataConnection.ConnectionString    = options.SavedConnectionString;
+					dataConnection.MappingSchema       = options.SavedDataProvider.MappingSchema;
+					dataConnection.ConfigurationString = options.ConfigurationString;
 
 					return;
 				}
@@ -605,8 +606,9 @@ namespace LinqToDB.Data
 
 				if (doSave)
 				{
-					options.SavedDataProvider     = dataConnection.DataProvider;
-					options.SavedConnectionString = dataConnection.ConnectionString;
+					options.SavedDataProvider        = dataConnection.DataProvider;
+					options.SavedConnectionString    = dataConnection.ConnectionString;
+					options.SavedConfigurationString = dataConnection.ConfigurationString;
 				}
 
 				IAsyncDbConnection WrapConnection(DbConnection connection)
@@ -641,7 +643,7 @@ namespace LinqToDB.Data
 						dataConnection.AddInterceptor(interceptor);
 			}
 
-			public static void Apply(DataConnection dataConnection, DataTraceOptions options)
+			public static void Apply(DataConnection dataConnection, QueryTraceOptions options)
 			{
 				if (options.OnTrace    != null) dataConnection.OnTraceConnection        = options.OnTrace;
 				if (options.TraceLevel != null) dataConnection.TraceSwitchConnection    = new("DataConnection", "DataConnection trace switch") {Level = options.TraceLevel.Value};

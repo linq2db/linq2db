@@ -149,7 +149,8 @@ namespace LinqToDB.Infrastructure
 		bool     KeepDistinctOrdered,
 		bool     ParameterizeTakeSkip,
 		bool     EnableAutoFluentMapping
-	) : IOptionSet
+	)
+		: IOptionSet
 	{
 		public LinqOptions() : this(
 			PreloadGroups           : false,

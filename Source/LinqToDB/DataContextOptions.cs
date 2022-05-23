@@ -23,7 +23,8 @@ namespace LinqToDB
 		MappingSchema?               MappingSchema,
 		int?                         CommandTimeout = default,
 		IReadOnlyList<IInterceptor>? Interceptors   = default
-	) : IOptionSet, IApplicable<DataConnection>, IApplicable<DataContext>
+	)
+		: IOptionSet, IApplicable<DataConnection>, IApplicable<DataContext>
 	{
 		public DataContextOptions() : this((MappingSchema?)null)
 		{

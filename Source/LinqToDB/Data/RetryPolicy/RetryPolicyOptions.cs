@@ -37,7 +37,8 @@ namespace LinqToDB.Data.RetryPolicy
 		double                              RandomFactor    = default,
 		double                              ExponentialBase = default,
 		TimeSpan                            Coefficient     = default
-	) : IOptionSet, IApplicable<DataConnection>
+	)
+		: IOptionSet, IApplicable<DataConnection>
 	{
 		public RetryPolicyOptions() : this((IRetryPolicy?)null)
 		{
