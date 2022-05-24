@@ -64,8 +64,7 @@ namespace LinqToDB.Data
 			((IInterceptable<IEntityServiceInterceptor>)   this).RemoveInterceptor(interceptor);
 			((IInterceptable<IUnwrapDataObjectInterceptor>)this).RemoveInterceptor(interceptor);
 
-			if (OnRemoveInterceptor != null)
-				OnRemoveInterceptor(interceptor);
+			OnRemoveInterceptor?.Invoke(interceptor);
 		}
 	}
 }
