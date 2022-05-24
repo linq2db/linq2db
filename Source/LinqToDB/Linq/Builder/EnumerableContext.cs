@@ -156,18 +156,18 @@ namespace LinqToDB.Linq.Builder
 
 		public Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 		{
-			if (Builder.MappingSchema.IsScalarType(_elementType))
+			if (expression != null || Builder.MappingSchema.IsScalarType(_elementType))
 			{
 				var info  = ConvertToIndex(expression, level, ConvertFlags.Field)[0];
 				var index = info.Index;
 				if (Parent != null)
 					index = ConvertToParentIndex(index, Parent);
 
-
-				return Builder.BuildSql(_elementType, index, info.Sql);
+				var elementType = info.Sql.SystemType ?? _elementType;
+				return Builder.BuildSql(elementType, index, info.Sql);
 			}
 
-			var sqlInfos  = ConvertToIndex(expression, level, ConvertFlags.All);
+			var sqlInfos = ConvertToIndex(null, level, ConvertFlags.All);
 			if (Parent != null)
 				for (var i = 0; i < sqlInfos.Length; i++)
 				{
