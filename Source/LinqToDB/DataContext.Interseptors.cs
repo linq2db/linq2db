@@ -93,5 +93,16 @@ namespace LinqToDB
 				}
 			}
 		}
+
+		public void RemoveInterceptor(IInterceptor interceptor)
+		{
+			Options = Options.RemoveInterceptor(interceptor);
+
+			((IInterceptable<ICommandInterceptor>)         this).RemoveInterceptor(interceptor);
+			((IInterceptable<IConnectionInterceptor>)      this).RemoveInterceptor(interceptor);
+			((IInterceptable<IDataContextInterceptor>)     this).RemoveInterceptor(interceptor);
+			((IInterceptable<IEntityServiceInterceptor>)   this).RemoveInterceptor(interceptor);
+			((IInterceptable<IUnwrapDataObjectInterceptor>)this).RemoveInterceptor(interceptor);
+		}
 	}
 }

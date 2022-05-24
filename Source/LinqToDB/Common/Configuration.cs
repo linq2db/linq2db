@@ -149,7 +149,11 @@ namespace LinqToDB.Common
 			public static bool PreloadGroups
 			{
 				get => Options.PreloadGroups;
-				set => Options = Options with { PreloadGroups = value };
+				set
+				{
+					if (Options.PreloadGroups != value)
+						Options = Options with { PreloadGroups = value };
+				}
 			}
 
 			/// <summary>
@@ -161,7 +165,11 @@ namespace LinqToDB.Common
 			public static bool IgnoreEmptyUpdate
 			{
 				get => Options.IgnoreEmptyUpdate;
-				set => Options = Options with { IgnoreEmptyUpdate = value };
+				set
+				{
+					if (Options.IgnoreEmptyUpdate != value)
+						Options = Options with { IgnoreEmptyUpdate = value };
+				}
 			}
 
 			/// <summary>
@@ -175,7 +183,11 @@ namespace LinqToDB.Common
 			public static bool GenerateExpressionTest
 			{
 				get => Options.GenerateExpressionTest;
-				set => Options = Options with { GenerateExpressionTest = value };
+				set
+				{
+					if (Options.GenerateExpressionTest != value)
+						Options = Options with { GenerateExpressionTest = value };
+				}
 			}
 
 			/// <summary>
@@ -186,7 +198,11 @@ namespace LinqToDB.Common
 			public static bool TraceMapperExpression
 			{
 				get => Options.TraceMapperExpression;
-				set => Options = Options with { TraceMapperExpression = value };
+				set
+				{
+					if (Options.TraceMapperExpression != value)
+						Options = Options with { TraceMapperExpression = value };
+				}
 			}
 
 			/// <summary>
@@ -198,7 +214,11 @@ namespace LinqToDB.Common
 			public static bool DoNotClearOrderBys
 			{
 				get => Options.DoNotClearOrderBys;
-				set => Options = Options with { DoNotClearOrderBys = value };
+				set
+				{
+					if (Options.DoNotClearOrderBys != value)
+						Options = Options with { DoNotClearOrderBys = value };
+				}
 			}
 
 			/// <summary>
@@ -212,7 +232,11 @@ namespace LinqToDB.Common
 			public static bool OptimizeJoins
 			{
 				get => Options.OptimizeJoins;
-				set => Options = Options with { OptimizeJoins = value };
+				set
+				{
+					if (Options.OptimizeJoins != value)
+						Options = Options with { OptimizeJoins = value };
+				}
 			}
 
 			/// <summary>
@@ -251,7 +275,11 @@ namespace LinqToDB.Common
 			public static bool CompareNullsAsValues
 			{
 				get => Options.CompareNullsAsValues;
-				set => Options = Options with { CompareNullsAsValues = value };
+				set
+				{
+					if (Options.CompareNullsAsValues != value)
+						Options = Options with { CompareNullsAsValues = value };
+				}
 			}
 
 			/// <summary>
@@ -266,7 +294,11 @@ namespace LinqToDB.Common
 			public static bool GuardGrouping
 			{
 				get => Options.GuardGrouping;
-				set => Options = Options with { GuardGrouping = value };
+				set
+				{
+					if (Options.GuardGrouping != value)
+						Options = Options with { GuardGrouping = value };
+				}
 			}
 
 			/// <summary>
@@ -287,7 +319,11 @@ namespace LinqToDB.Common
 			public static bool DisableQueryCache
 			{
 				get => Options.DisableQueryCache;
-				set => Options = Options with { DisableQueryCache = value };
+				set
+				{
+					if (Options.DisableQueryCache != value)
+						Options = Options with { DisableQueryCache = value };
+				}
 			}
 
 			/// <summary>
@@ -297,7 +333,11 @@ namespace LinqToDB.Common
 			public static TimeSpan CacheSlidingExpiration
 			{
 				get => Options.CacheSlidingExpiration;
-				set => Options = Options with { CacheSlidingExpiration = value };
+				set
+				{
+					if (Options.CacheSlidingExpiration != value)
+						Options = Options with { CacheSlidingExpiration = value };
+				}
 			}
 
 			/// <summary>
@@ -307,7 +347,11 @@ namespace LinqToDB.Common
 			public static bool PreferApply
 			{
 				get => Options.PreferApply;
-				set => Options = Options with { PreferApply = value };
+				set
+				{
+					if (Options.PreferApply != value)
+						Options = Options with { PreferApply = value };
+				}
 			}
 
 			/// <summary>
@@ -319,7 +363,11 @@ namespace LinqToDB.Common
 			public static bool KeepDistinctOrdered
 			{
 				get => Options.KeepDistinctOrdered;
-				set => Options = Options with { KeepDistinctOrdered = value };
+				set
+				{
+					if (Options.KeepDistinctOrdered != value)
+						Options = Options with { KeepDistinctOrdered = value };
+				}
 			}
 
 			/// <summary>
@@ -329,7 +377,11 @@ namespace LinqToDB.Common
 			public static bool ParameterizeTakeSkip
 			{
 				get => Options.ParameterizeTakeSkip;
-				set => Options = Options with { ParameterizeTakeSkip = value };
+				set
+				{
+					if (Options.ParameterizeTakeSkip != value)
+						Options = Options with { ParameterizeTakeSkip = value };
+				}
 			}
 
 			/// <summary>
@@ -340,7 +392,11 @@ namespace LinqToDB.Common
 			public static bool EnableAutoFluentMapping
 			{
 				get => Options.EnableAutoFluentMapping;
-				set => Options = Options with { EnableAutoFluentMapping = value };
+				set
+				{
+					if (Options.EnableAutoFluentMapping != value)
+						Options = Options with { EnableAutoFluentMapping = value };
+				}
 			}
 		}
 

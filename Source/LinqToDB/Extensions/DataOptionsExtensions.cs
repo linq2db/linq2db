@@ -400,6 +400,21 @@ namespace LinqToDB
 			});
 		}
 
+		public static DataOptions RemoveInterceptor(this DataOptions options, IInterceptor interceptor)
+		{
+			return options.WithOptions<DataContextOptions>(o =>
+			{
+				var list = new List<IInterceptor>();
+
+				if (o.Interceptors != null)
+					foreach (var i in o.Interceptors)
+						if (i != interceptor)
+							list.Add(i);
+
+				return o with { Interceptors = list };
+			});
+		}
+
 		#endregion
 
 		#region DataTraceOptions

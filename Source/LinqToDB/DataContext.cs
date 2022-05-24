@@ -278,6 +278,8 @@ namespace LinqToDB
 
 				if (OnTraceConnection != null)
 					_dataConnection.OnTraceConnection = OnTraceConnection;
+
+				_dataConnection.OnRemoveInterceptor += RemoveInterceptor;
 			}
 
 			return _dataConnection;
@@ -306,6 +308,7 @@ namespace LinqToDB
 					if (_dataConnection.QueryHints.    Count > 0) (_queryHints     ??= new()).AddRange(_dataConnection.QueryHints);
 					if (_dataConnection.NextQueryHints.Count > 0) (_nextQueryHints ??= new()).AddRange(_dataConnection.NextQueryHints);
 
+					_dataConnection.OnRemoveInterceptor -= RemoveInterceptor;
 					_dataConnection.Dispose();
 					_dataConnection = null;
 				}

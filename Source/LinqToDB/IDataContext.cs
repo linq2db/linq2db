@@ -126,6 +126,12 @@ namespace LinqToDB
 		/// <param name="interceptor">Interceptor.</param>
 		void AddInterceptor(IInterceptor interceptor);
 
+		/// <summary>
+		/// Removes interceptor instance from context.
+		/// </summary>
+		/// <param name="interceptor">Interceptor.</param>
+		void RemoveInterceptor(IInterceptor interceptor);
+
 		IUnwrapDataObjectInterceptor? UnwrapDataObjectInterceptor { get; }
 
 		FluentMappingBuilder GetFluentMappingBuilder();

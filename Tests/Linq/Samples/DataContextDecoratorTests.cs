@@ -94,7 +94,8 @@ namespace Tests.Samples
 				return _context.IsDBNullAllowed(reader, idx);
 			}
 
-			public void AddInterceptor(IInterceptor interceptor) => _context.AddInterceptor(interceptor);
+			public void AddInterceptor   (IInterceptor interceptor) => _context.AddInterceptor(interceptor);
+			public void RemoveInterceptor(IInterceptor interceptor) => _context.RemoveInterceptor(interceptor);
 
 			public IUnwrapDataObjectInterceptor? UnwrapDataObjectInterceptor { get; }
 			public FluentMappingBuilder          GetFluentMappingBuilder()
