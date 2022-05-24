@@ -163,8 +163,8 @@ namespace LinqToDB.AspNet
 		{
 			var hasTypedConstructor = HasTypedContextConstructor<TContextImplementation>();
 			serviceCollection.TryAdd(new ServiceDescriptor(typeof(TContext), typeof(TContextImplementation), lifetime));
-			serviceCollection.TryAdd(new ServiceDescriptor(typeof(DataOptions),
-				provider => configure(provider, new DataOptions()),
+			serviceCollection.TryAdd(new ServiceDescriptor(typeof(DataOptions<TContext>),
+				provider => new DataOptions<TContext>(configure(provider, new DataOptions())),
 				lifetime));
 
 			if (!hasTypedConstructor)
@@ -179,11 +179,11 @@ namespace LinqToDB.AspNet
 			var typedConstructorInfo   = typeof(TContext).GetConstructor(
 				BindingFlags.Public | BindingFlags.Instance | BindingFlags.ExactBinding,
 				null,
-				new[] {typeof(DataOptions)},
+				new[] { typeof(DataOptions<TContext>) },
 				null);
 
 			var untypedConstructorInfo = typedConstructorInfo == null
-				? typeof(TContext).GetConstructor(new[] { typeof(DataOptions) })
+				? typeof(TContext).GetConstructor(new[] { typeof(DataOptions<TContext>) })
 				: null;
 
 			if (typedConstructorInfo == null && untypedConstructorInfo == null)

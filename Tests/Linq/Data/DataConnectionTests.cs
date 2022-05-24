@@ -33,7 +33,7 @@ namespace Tests.Data
 		public void UsingDataProvider([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			var connectionString = DataConnection.GetConnectionString(context);
-			var dataProvider = DataConnection.GetDataProvider(context);
+			var dataProvider     = DataConnection.GetDataProvider(context);
 
 			using (var conn = new DataConnection(dataProvider, connectionString))
 			{
@@ -348,14 +348,14 @@ namespace Tests.Data
 
 		public class DbConnection1 : DataConnection
 		{
-			public DbConnection1(DataOptions options) : base(options)
+			public DbConnection1(DataOptions<DbConnection1> options) : base(options.Options)
 			{
 			}
 		}
 
 		public class DbConnection2 : DataConnection
 		{
-			public DbConnection2(DataOptions options) : base(options)
+			public DbConnection2(DataOptions<DbConnection2> options) : base(options.Options)
 			{
 			}
 		}

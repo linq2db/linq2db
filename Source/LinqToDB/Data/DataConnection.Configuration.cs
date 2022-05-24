@@ -369,6 +369,9 @@ namespace LinqToDB.Data
 				dataProvider);
 
 			Configuration.Info.AddOrUpdate(configuration, info, (_, _) => info);
+
+			_defaultDataOptions = null;
+			ConnectionOptionsByConfigurationString.Clear();
 		}
 
 		internal static Lazy<IDataProvider> CreateDataProvider<T>()
@@ -498,7 +501,7 @@ namespace LinqToDB.Data
 					dataConnection.DataProvider        = options.SavedDataProvider;
 					dataConnection.ConnectionString    = options.SavedConnectionString;
 					dataConnection.MappingSchema       = options.SavedDataProvider.MappingSchema;
-					dataConnection.ConfigurationString = options.ConfigurationString;
+					dataConnection.ConfigurationString = options.SavedConfigurationString;
 
 					return;
 				}
