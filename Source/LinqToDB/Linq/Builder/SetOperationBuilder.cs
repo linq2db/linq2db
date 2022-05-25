@@ -152,7 +152,7 @@ namespace LinqToDB.Linq.Builder
 				return alias;
 			}
 
-			SqlGenericConstructorExpression MatchSequences(Expression root, Expression leftExpr, Expression rightExpr, IBuildContext leftSequence, IBuildContext rightSequence, ref List<Expression>? mismatches)
+			SqlGenericConstructorExpression? MatchSequences(Expression root, Expression leftExpr, Expression rightExpr, IBuildContext leftSequence, IBuildContext rightSequence, ref List<Expression>? mismatches)
 			{
 				if (leftExpr is SqlGenericConstructorExpression leftGenericPrep &&
 				    rightExpr is not SqlGenericConstructorExpression)
@@ -259,19 +259,21 @@ namespace LinqToDB.Linq.Builder
 						newAssignments.Add(new SqlGenericConstructorExpression.Assignment(left.MemberInfo, ma));
 					}
 
-					// Shortcut, we can result object from any side
+					// Shortcut, we can reuse object from any side
 					//
-					if (leftGeneric.ConstructType  == SqlGenericConstructorExpression.CreateType.Full &&
+					if (root is ContextRefExpression                                                  &&
+					    leftGeneric.ConstructType  == SqlGenericConstructorExpression.CreateType.Full &&
 					    rightGeneric.ConstructType == SqlGenericConstructorExpression.CreateType.Full)
 					{
 						return leftGeneric;
-					};
+					}
 
 					//TODO: try to merge with constructor
 					return new SqlGenericConstructorExpression(false, leftGeneric.ObjectType, newAssignments);
 				}
 
-				throw new NotImplementedException();
+				// Scalar
+				return null;
 			}
 
 			void Init()
@@ -287,31 +289,54 @@ namespace LinqToDB.Linq.Builder
 				List<Expression>? mismatches = null;
 				_body = MatchSequences(root, expr1, expr2, _sequence1, _sequence2, ref mismatches);
 
-				foreach (var matchedPair in _matchedPairs.OrderBy(x => x.Value.idx))
+				if (_body == null)
 				{
-					var alias = GenerateColumnAlias(matchedPair.Key);
-
-					var leftExpression = Builder.ConvertToSqlExpr(_sequence1.SubQuery, matchedPair.Value.left.Expression);
-					if (leftExpression is SqlPlaceholderExpression placeholderLeft)
+					if (expr1 is SqlPlaceholderExpression placeholderLeft && expr2 is SqlPlaceholderExpression placeholderRight)
 					{
-						if (alias != null)
-							placeholderLeft.Alias = alias;
-
 						var leftColumn = Builder.MakeColumn(_sequence1.SelectQuery, placeholderLeft, asNew: true);
 						
 						leftColumn = Builder.MakeColumn(SelectQuery, leftColumn, asNew: true);
+						leftColumn = leftColumn.WithPath(root);
 
-						_createdSQL.Add(matchedPair.Key, leftColumn);
-
-						var rightExpression = Builder.ConvertToSqlExpr(_sequence2.SubQuery, matchedPair.Value.right.Expression);
-						if (rightExpression is not SqlPlaceholderExpression placeholderRight)
-							throw new InvalidOperationException();
-
-						if (alias != null)
-							placeholderRight.Alias = alias;
+						_createdSQL.Add(root, leftColumn);
 
 						var rightColumn = Builder.MakeColumn(_sequence2.SelectQuery, placeholderRight, asNew: true);
 						rightColumn = Builder.MakeColumn(SelectQuery, rightColumn, asNew: true);
+					}
+					else
+					{
+						throw new LinqException($"Set operation over {expr1} and {expr2} is not supported.");
+					}
+				}
+				else
+				{
+					foreach (var matchedPair in _matchedPairs.OrderBy(x => x.Value.idx))
+					{
+						var alias = GenerateColumnAlias(matchedPair.Key);
+
+						var leftExpression = Builder.ConvertToSqlExpr(_sequence1.SubQuery, matchedPair.Value.left.Expression);
+						if (leftExpression is SqlPlaceholderExpression placeholderLeft)
+						{
+							if (alias != null)
+								placeholderLeft.Alias = alias;
+
+							var leftColumn = Builder.MakeColumn(_sequence1.SelectQuery, placeholderLeft, asNew: true);
+						
+							leftColumn = Builder.MakeColumn(SelectQuery, leftColumn, asNew: true);
+							leftColumn = leftColumn.WithPath(matchedPair.Key);
+
+							_createdSQL.Add(matchedPair.Key, leftColumn);
+
+							var rightExpression = Builder.ConvertToSqlExpr(_sequence2.SubQuery, matchedPair.Value.right.Expression);
+							if (rightExpression is not SqlPlaceholderExpression placeholderRight)
+								throw new InvalidOperationException();
+
+							if (alias != null)
+								placeholderRight.Alias = alias;
+
+							var rightColumn = Builder.MakeColumn(_sequence2.SelectQuery, placeholderRight, asNew: true);
+							rightColumn = Builder.MakeColumn(SelectQuery, rightColumn, asNew: true);
+						}
 					}
 				}
 			}
@@ -359,26 +384,24 @@ namespace LinqToDB.Linq.Builder
 
 				if (SequenceHelper.IsSameContext(path, this))
 				{
-					if (flags.HasFlag(ProjectFlags.Expression))
+					if (_body == null)
 					{
-						if (_body != null)
-						{
-							var constructed = Builder.TryConstruct(_body, this, flags);
-
-							return constructed;
-						}
-
-						throw new NotImplementedException("Scalar handling not implemented");
+						return _createdSQL.Values.Single();
 					}
 
-					if (_body != null)
+					if (flags.HasFlag(ProjectFlags.Expression))
 					{
-						return _body;
-					}						
-						
-					throw new NotImplementedException("Scalar handling not implemented");
+						var constructed = Builder.TryConstruct(_body, this, flags);
+
+						return constructed;
+					}
+
+					return _body;
 				}
 
+				if (flags.HasFlag(ProjectFlags.Root))
+					return path;
+				
 				if (_body != null)
 				{
 					var projected = Builder.Project(this, path, null, -1, flags, _body);
@@ -389,10 +412,7 @@ namespace LinqToDB.Linq.Builder
 						return Builder.CreateSqlError(this, projected);
 					}
 
-					if (projected is SqlPlaceholderExpression)
-						return projected;
-
-					return path;
+					return projected;
 				}
 
 

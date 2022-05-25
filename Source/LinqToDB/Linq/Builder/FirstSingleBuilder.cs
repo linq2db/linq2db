@@ -353,7 +353,6 @@ namespace LinqToDB.Linq.Builder
 							{
 								if (flags.HasFlag(ProjectFlags.Expression))
 									return new SqlEagerLoadExpression(this, path, Builder.GetSequenceExpression(this));
-								return new SqlErrorExpression(this, path);
 							}
 						}
 

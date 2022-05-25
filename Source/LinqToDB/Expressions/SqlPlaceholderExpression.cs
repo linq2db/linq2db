@@ -78,11 +78,13 @@ namespace LinqToDB.Expressions
 
 		public override string ToString()
 		{
-			var sourceId = SelectQuery?.SourceID ?? ((SqlColumn)Sql).Parent!.SourceID;
-
-			if (Index != null)
+			if (SelectQuery == null)
+			{
+				var sourceId = ((SqlColumn)Sql).Parent!.SourceID;
 				return $"SQL[{Index}]({sourceId}): {{{Sql}}}";
-			return $"SQL({sourceId}): {{{Sql}}}";
+			}
+
+			return $"SQL({SelectQuery.SourceID}): {{{Sql}}}";
 		}
 
 		protected bool Equals(SqlPlaceholderExpression other)

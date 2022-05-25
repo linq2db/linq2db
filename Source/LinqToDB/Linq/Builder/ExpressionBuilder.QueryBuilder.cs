@@ -245,7 +245,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							do
 							{
-								var parent = context.info.GetParentQuery(placeholder.SelectQuery);
+								var parent = context.info.GetParentQuery(placeholder.SelectQuery!);
 
 								placeholder = context.builder.MakeColumn(parent, placeholder);
 

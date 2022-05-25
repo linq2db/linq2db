@@ -669,6 +669,8 @@ namespace Tests.Linq
 
 				var fullJoinSql = fullJoin.ToString(); // BLToolkit.Data.Linq.LinqException : Types in Concat are constructed incompatibly.
 				Assert.IsNotNull(fullJoinSql);
+
+				TestContext.Write(fullJoinSql);
 			}
 		}
 
