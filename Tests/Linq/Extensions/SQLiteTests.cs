@@ -2,8 +2,9 @@
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Data;
 using LinqToDB.DataProvider.SQLite;
-
+using LinqToDB.Mapping;
 using NUnit.Framework;
 
 namespace Tests.Extensions
@@ -101,5 +102,35 @@ namespace Tests.Extensions
 
 			Assert.That(LastQuery, Contains.Substring("[Person] INDEXED BY IX_PersonDesc"));
 		}
+
+		class GuidMapping
+		{
+			[Column]
+			public Guid BlobGuid { get; set; }
+
+			[Column(DbType = "TEXT")]
+			public Guid TextGuid { get; set; }
+		}
+
+		[Test]
+		public void GuidMappingTest([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			using var table = db.CreateLocalTable<GuidMapping>();
+
+			var data = new []
+			{
+				new GuidMapping{BlobGuid = TestData.Guid1, TextGuid = TestData.Guid1}, 
+				new GuidMapping{BlobGuid = TestData.Guid2, TextGuid = TestData.Guid2}, 
+			};
+			table.BulkCopy(data);
+
+			var result = table.ToArray();
+
+			AreEqual(data, result);
+		}
+
+
 	}
 }
