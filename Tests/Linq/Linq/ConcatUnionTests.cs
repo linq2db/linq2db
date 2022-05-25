@@ -672,7 +672,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("Associations with Concat/Union or other Set operations are not supported.")]
 		[Test]
 		public void AssociationUnion1([DataSources] string context)
 		{
@@ -686,7 +685,6 @@ namespace Tests.Linq
 					select p.ParentID);
 		}
 
-		[ActiveIssue("Associations with Concat/Union or other Set operations are not supported.")]
 		[Test]
 		public void AssociationUnion2([DataSources] string context)
 		{
@@ -698,7 +696,6 @@ namespace Tests.Linq
 					select c.Parent!.ParentID);
 		}
 
-		[ActiveIssue("Associations with Concat/Union or other Set operations are not supported.")]
 		[Test]
 		public void AssociationConcat2([DataSources] string context)
 		{
