@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq.Expressions;
 using System.Text;
 using System.Xml;
+using System.Runtime.CompilerServices;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
@@ -14,23 +15,12 @@ namespace LinqToDB.DataProvider.SqlServer
 	using Metadata;
 	using Mapping;
 	using SqlQuery;
-	using System.Runtime.CompilerServices;
+	using Extensions;
 
 	sealed class SqlServerMappingSchema : LockedMappingSchema
 	{
-		private static readonly int[] TICKS_DIVIDERS = new[]
-		{
-			10000000,
-			1000000,
-			100000,
-			10000,
-			1000,
-			100,
-			10,
-			1
-		};
-
 		// TIME(p)
+		private const string TIME_TICKS_FORMAT                        = "CAST({0} AS BIGINT)";
 		private const string TIME_FROMPARTS_FORMAT                    = "TIMEFROMPARTS({0}, {1}, {2}, {3}, {4})";
 		private static readonly string[] TIME_TYPED_FORMATS           = new[]
 		{
@@ -43,17 +33,41 @@ namespace LinqToDB.DataProvider.SqlServer
 			"CAST('{0:hh\\:mm\\:ss\\.ffffff}' AS TIME(6))",
 			"CAST('{0:hh\\:mm\\:ss\\.fffffff}' AS TIME)"
 		};
+		private static readonly string[] TIME_RAW_FORMATS            = new[]
+		{
+			"hh\\:mm\\:ss",
+			"hh\\:mm\\:ss\\.f",
+			"hh\\:mm\\:ss\\.ff",
+			"hh\\:mm\\:ss\\.fff",
+			"hh\\:mm\\:ss\\.ffff",
+			"hh\\:mm\\:ss\\.fffff",
+			"hh\\:mm\\:ss\\.ffffff",
+			"hh\\:mm\\:ss\\.fffffff"
+		};
 		// DATE
-		private const string DATE_FROMPARTS_FORMAT                     = "DATEFROMPARTS({0}, {1}, {2})";
-		private const string DATE_FORMAT                               = "'{0:yyyy-MM-dd}'";
-		private const string DATE_TYPED_FORMAT                         = "CAST('{0:yyyy-MM-dd}' AS DATE)";
+		private const string DATE_FROMPARTS_FORMAT                       = "DATEFROMPARTS({0}, {1}, {2})";
+		private const string DATE_FORMAT                                 = "'{0:yyyy-MM-dd}'";
+		private const string DATE_TYPED_FORMAT                           = "CAST('{0:yyyy-MM-dd}' AS DATE)";
+		private const string DATE_AS_DATETIME_TYPED_FORMAT               = "CAST('{0:yyyy-MM-dd}' AS DATETIME)";
 		// SMALLDATETIME
-		private const string SMALLDATETIME_FROMPARTS_FORMAT            = "SMALLDATETIMEFROMPARTS({0}, {1}, {2}, {3}, {4})";
-		private const string SMALLDATETIME_TYPED_FORMAT                = "CAST('{0:yyyy-MM-ddTHH:mm:ss}' AS SMALLDATETIME)";
+		private const string SMALLDATETIME_TYPED_FORMAT                  = "CAST('{0:yyyy-MM-ddTHH:mm:ss.fff}' AS SMALLDATETIME)";
 		// DATETIME
-		private const string DATETIME_FROMPARTS_FORMAT                 = "DATETIMEFROMPARTS({0}, {1}, {2}, {3}, {4}, {5}, {6})";
-		private const string DATETIME_FORMAT                           = "'{0:yyyy-MM-ddTHH:mm:ss.fffffff}'";
-		private const string DATETIME_TYPED_FORMAT                     = "CAST('{0:yyyy-MM-ddTHH:mm:ss.fff}' AS DATETIME)";
+		private const string DATETIME_FROMPARTS_FORMAT                   = "DATETIMEFROMPARTS({0}, {1}, {2}, {3}, {4}, {5}, {6})";
+		// precision=3 to match SqlClient behavior for parameters
+		// alternative option will be to generate parameter value explicitly
+		private const string DATETIME_FORMAT                             = "'{0:yyyy-MM-ddTHH:mm:ss.fff}'";
+		private const string DATETIME_TYPED_FORMAT                       = "CAST('{0:yyyy-MM-ddTHH:mm:ss.fff}' AS DATETIME)";
+		private static readonly string[] DATETIME_WITH_PRECISION_FORMATS = new[]
+		{
+			"CAST('{0:yyyy-MM-ddTHH:mm:ss}' AS DATETIME)",
+			"CAST('{0:yyyy-MM-ddTHH:mm:ss.f}' AS DATETIME)",
+			"CAST('{0:yyyy-MM-ddTHH:mm:ss.ff}' AS DATETIME)",
+			"CAST('{0:yyyy-MM-ddTHH:mm:ss.fff}' AS DATETIME)",
+			"CAST('{0:yyyy-MM-ddTHH:mm:ss.fff}' AS DATETIME)",
+			"CAST('{0:yyyy-MM-ddTHH:mm:ss.fff}' AS DATETIME)",
+			"CAST('{0:yyyy-MM-ddTHH:mm:ss.fff}' AS DATETIME)",
+			"CAST('{0:yyyy-MM-ddTHH:mm:ss.fff}' AS DATETIME)"
+		};
 		// DATETIME2(p)
 		private const string DaTETIME2_FROMPARTS_FORMAT                = "DATETIME2FROMPARTS({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7})";
 		private static readonly string[] DATETIME2_TYPED_FORMATS       = new[]
@@ -80,6 +94,17 @@ namespace LinqToDB.DataProvider.SqlServer
 			"'{0:yyyy-MM-ddTHH:mm:ss.ffffffzzz}'",
 			"'{0:yyyy-MM-ddTHH:mm:ss.fffffffzzz}'",
 		};
+		private static readonly string[] DATETIMEOFFSET_RAW_FORMATS   = new[]
+		{
+			"yyyy-MM-ddTHH:mm:sszzz",
+			"yyyy-MM-ddTHH:mm:ss.fzzz",
+			"yyyy-MM-ddTHH:mm:ss.ffzzz",
+			"yyyy-MM-ddTHH:mm:ss.fffzzz",
+			"yyyy-MM-ddTHH:mm:ss.ffffzzz",
+			"yyyy-MM-ddTHH:mm:ss.fffffzzz",
+			"yyyy-MM-ddTHH:mm:ss.ffffffzzz",
+			"yyyy-MM-ddTHH:mm:ss.fffffffzzz",
+		};
 		private static readonly string[] DATETIMEOFFSET_TYPED_FORMATS = new[]
 		{
 			"CAST('{0:yyyy-MM-ddTHH:mm:sszzz}' AS DATETIMEOFFSET(0))",
@@ -87,9 +112,20 @@ namespace LinqToDB.DataProvider.SqlServer
 			"CAST('{0:yyyy-MM-ddTHH:mm:ss.ffzzz}' AS DATETIMEOFFSET(2))",
 			"CAST('{0:yyyy-MM-ddTHH:mm:ss.fffzzz}' AS DATETIMEOFFSET(3))",
 			"CAST('{0:yyyy-MM-ddTHH:mm:ss.ffffzzz}' AS DATETIMEOFFSET(4))",
-			"CAST('{0:yyyy-MM-ddTHH:mm:ss.fffffzzz}'} AS DATETIMEOFFSET(5))",
+			"CAST('{0:yyyy-MM-ddTHH:mm:ss.fffffzzz}' AS DATETIMEOFFSET(5))",
 			"CAST('{0:yyyy-MM-ddTHH:mm:ss.ffffffzzz}' AS DATETIMEOFFSET(6))",
 			"CAST('{0:yyyy-MM-ddTHH:mm:ss.fffffffzzz}' AS DATETIMEOFFSET)"
+		};
+		private static readonly string[] DATETIMEOFFSET_AS_DATETIME_TYPED_FORMATS = new[]
+		{
+			"CAST('{0:yyyy-MM-ddTHH:mm:ss}' AS DATETIME)",
+			"CAST('{0:yyyy-MM-ddTHH:mm:ss.f}' AS DATETIME)",
+			"CAST('{0:yyyy-MM-ddTHH:mm:ss.ff}' AS DATETIME)",
+			"CAST('{0:yyyy-MM-ddTHH:mm:ss.fff}' AS DATETIME)",
+			"CAST('{0:yyyy-MM-ddTHH:mm:ss.fff}' AS DATETIME)",
+			"CAST('{0:yyyy-MM-ddTHH:mm:ss.fff}' AS DATETIME)",
+			"CAST('{0:yyyy-MM-ddTHH:mm:ss.fff}' AS DATETIME)",
+			"CAST('{0:yyyy-MM-ddTHH:mm:ss.fff}' AS DATETIME)",
 		};
 
 		SqlServerMappingSchema() : base(ProviderName.SqlServer)
@@ -130,8 +166,8 @@ namespace LinqToDB.DataProvider.SqlServer
 			AddScalarType(typeof(SqlString?),   SqlString.  Null, true, DataType.NVarChar);
 			AddScalarType(typeof(SqlXml),       SqlXml.     Null, true, DataType.Xml);
 
-			AddScalarType(typeof(DateTime),  DataType.DateTime);
-			AddScalarType(typeof(DateTime?), DataType.DateTime);
+			AddScalarType(typeof(DateTime),  DataType.DateTime2);
+			AddScalarType(typeof(DateTime?), DataType.DateTime2);
 
 			SqlServerTypes.Configure(this);
 
@@ -230,11 +266,8 @@ namespace LinqToDB.DataProvider.SqlServer
 					stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATETIME_FORMAT, value);
 					break;
 
-				case (DataType.SmallDateTime, _, true):
-					// SMALLDATETIMEFROMPARTS ( year, month, day, hour, minute )
-					stringBuilder.AppendFormat(CultureInfo.InvariantCulture, SMALLDATETIME_FROMPARTS_FORMAT, value.Year, value.Month, value.Day, value.Hour, value.Minute, value.Second);
-					break;
-				case (DataType.SmallDateTime, _, false):
+				case (DataType.SmallDateTime, _, _):
+					// don't use SMALLDATETIMEFROMPARTS as it doesn't accept seconds/milliseconds, which used for rounding
 					stringBuilder.AppendFormat(CultureInfo.InvariantCulture, SMALLDATETIME_TYPED_FORMAT, value);
 					break;
 
@@ -244,6 +277,9 @@ namespace LinqToDB.DataProvider.SqlServer
 					break;
 				case (DataType.Date, true, false):
 					stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATE_TYPED_FORMAT, value);
+					break;
+				case (DataType.Date, false, _):
+					stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATE_AS_DATETIME_TYPED_FORMAT, value);
 					break;
 
 				case (DataType.DateTime2, true, true):
@@ -265,6 +301,15 @@ namespace LinqToDB.DataProvider.SqlServer
 					stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATETIME2_TYPED_FORMATS[precision], value);
 					break;
 				}
+				case (DataType.DateTime2, false, _):
+				{
+					var precision = dt.Type.Precision ?? 7;
+					if (precision < 0 || precision > 7)
+						throw new InvalidOperationException($"DATETIME2 type precision is out-of-bounds: {precision}");
+
+					stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATETIME_WITH_PRECISION_FORMATS[precision], value);
+					break;
+				}
 
 				default:
 					// default: DATETIME
@@ -277,19 +322,59 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 		}
 
+		internal static string ConvertTimeSpanToString(TimeSpan value, int precision)
+		{
+			if (precision < 0 || precision > 7)
+				throw new InvalidOperationException($"TIME type precision is out-of-bounds: {precision}");
+
+			return value.ToString(TIME_RAW_FORMATS[precision]);
+		}
+
+		internal static string ConvertDateTimeOffsetToString(DateTimeOffset value, int precision)
+		{
+			if (precision < 0 || precision > 7)
+				throw new InvalidOperationException($"DATETIMEOFFSET type precision is out-of-bounds: {precision}");
+
+			return value.ToString(DATETIMEOFFSET_RAW_FORMATS[precision]);
+		}
+
 		static void ConvertTimeSpanToSql(StringBuilder stringBuilder, SqlDataType sqlDataType, TimeSpan value, bool supportsTime, bool supportsFromParts)
 		{
 			switch (sqlDataType.Type.DataType, supportsTime, supportsFromParts)
 			{
 				case (DataType.Int64, _, _):
-					stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "{0}", value.Ticks);
+				{
+					var precision = sqlDataType.Type.Precision ?? 7;
+					if (precision < 0 || precision > 7)
+						throw new InvalidOperationException($"TIME type precision is out-of-bounds: {precision}");
+
+					var ticks = value.Ticks - (value.Ticks % ValueExtensions.TICKS_DIVIDERS[precision]);
+
+					stringBuilder.AppendFormat(CultureInfo.InvariantCulture, TIME_TICKS_FORMAT, ticks);
 					break;
+				}
 				case (DataType.Text, _, _) or (DataType.Char, _, _) or (DataType.VarChar, _, _):
-					stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "'{0:c}'", value);
+				{
+					var precision = sqlDataType.Type.Precision ?? 7;
+					if (precision < 0 || precision > 7)
+						throw new InvalidOperationException($"TIME type precision is out-of-bounds: {precision}");
+
+					var ticks = value.Ticks - (value.Ticks % ValueExtensions.TICKS_DIVIDERS[precision]);
+
+					stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "'{0:c}'", TimeSpan.FromTicks(ticks));
 					break;
+				}
 				case (DataType.NText, _, _) or (DataType.NChar, _, _) or (DataType.NVarChar, _, _) or (_, false, _):
-					stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "N'{0:c}'", value);
+				{
+					var precision = sqlDataType.Type.Precision ?? 7;
+					if (precision < 0 || precision > 7)
+						throw new InvalidOperationException($"TIME type precision is out-of-bounds: {precision}");
+
+					var ticks = value.Ticks - (value.Ticks % ValueExtensions.TICKS_DIVIDERS[precision]);
+
+					stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "N'{0:c}'", TimeSpan.FromTicks(ticks));
 					break;
+				}
 				default:
 				{
 					if (value < TimeSpan.Zero || value >= TimeSpan.FromDays(1))
@@ -311,7 +396,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static long GetFractionalSecondFromTicks(long ticks, int precision) => (ticks % TICKS_DIVIDERS[0]) / TICKS_DIVIDERS[precision];
+		private static long GetFractionalSecondFromTicks(long ticks, int precision) => (ticks % ValueExtensions.TICKS_DIVIDERS[0]) / ValueExtensions.TICKS_DIVIDERS[precision];
 
 #if NET6_0_OR_GREATER
 		static void ConvertDateToSql(StringBuilder stringBuilder, SqlDataType sqlDataType, DateOnly value, bool v2008plus, bool supportsFromParts)
@@ -367,9 +452,19 @@ namespace LinqToDB.DataProvider.SqlServer
 					break;
 				}
 
-				case (_, false, _) or (DataType.Date, _, _) or (DataType.DateTime, _, _) or (DataType.DateTime2, _, _) or (DataType.SmallDateTime, _, _):
-					ConvertDateTimeToSql(stringBuilder, sqlDataType, value.DateTime, v2008plus, supportsFromParts);
+				case (DataType.Date, _, _) or (DataType.DateTime, _, _) or (DataType.DateTime2, _, _) or (DataType.SmallDateTime, _, _):
+					ConvertDateTimeToSql(stringBuilder, sqlDataType, value.LocalDateTime, v2008plus, supportsFromParts);
 					return;
+
+				case (_, false, _):
+				{
+					var precision = sqlDataType.Type.Precision ?? 7;
+					if (precision < 0 || precision > 7)
+						throw new InvalidOperationException($"DATETIMEOFFSET type precision is out-of-bounds: {precision}");
+
+					stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATETIMEOFFSET_AS_DATETIME_TYPED_FORMATS[precision], value.LocalDateTime);
+					break;
+				}
 
 				default:
 				{
@@ -398,6 +493,9 @@ namespace LinqToDB.DataProvider.SqlServer
 			public SqlServer2005MappingSchema() : base(ProviderName.SqlServer2005, Instance)
 			{
 				ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
+
+				AddScalarType(typeof(DateTime) , DataType.DateTime);
+				AddScalarType(typeof(DateTime?), DataType.DateTime);
 
 				SetValueToSqlConverter(typeof(TimeSpan)      , (sb, dt, v) => ConvertTimeSpanToSql      (sb, dt, (TimeSpan)v             , false, false));
 				SetValueToSqlConverter(typeof(SqlDateTime)   , (sb, dt, v) => ConvertDateTimeToSql      (sb, dt, (DateTime)(SqlDateTime)v, false, false));
