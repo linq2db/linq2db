@@ -21,7 +21,7 @@ namespace LinqToDB.Expressions
 
 		public override string ToString()
 		{
-			return $"Ref({BuildContextDebuggingHelper.GetContextInfo(BuildContext)})";
+			return $"Ref({BuildContextDebuggingHelper.GetContextInfo(BuildContext)}):{Type.Name}";
 		}
 
 		public override bool CanReduce => false;

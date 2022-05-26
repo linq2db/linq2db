@@ -122,7 +122,7 @@ namespace LinqToDB.Linq.Builder
 			if (flags.HasFlag(ProjectFlags.SQL) || flags.HasFlag(ProjectFlags.Test))
 			{
 				var assignments = members
-					.Select(x => new SqlGenericConstructorExpression.Assignment(x.Member, x.Expression)).ToList();
+					.Select(x => new SqlGenericConstructorExpression.Assignment(x.Member, x.Expression, x.Column.MemberAccessor.HasSetter)).ToList();
 
 				return new SqlGenericConstructorExpression(true, entityType, assignments);
 			}
@@ -401,6 +401,40 @@ namespace LinqToDB.Linq.Builder
 
 		#region Generic Entity Construction
 
+		public SqlGenericConstructorExpression BuildFullEntityExpression(IBuildContext context, Type entityType, ProjectFlags flags)
+		{
+			entityType = GetTypeForInstantiation(entityType);
+
+			var entityDescriptor = MappingSchema.GetEntityDescriptor(entityType);
+
+			var members = BuildMembers(context, entityDescriptor, flags);
+
+			var assignments = members
+				.Select(x => new SqlGenericConstructorExpression.Assignment(x.Member, x.Expression, x.Column?.MemberAccessor.HasSetter == true))
+				.ToList();
+
+			if (!flags.HasFlag(ProjectFlags.Keys))
+				BuildCalculatedColumns(context, entityDescriptor, entityType, assignments);
+
+			return new SqlGenericConstructorExpression(true, entityType, assignments);
+		}
+
+		void BuildCalculatedColumns(IBuildContext context, EntityDescriptor entityDescriptor, Type objectType, List<SqlGenericConstructorExpression.Assignment> assignments)
+		{
+			if (!entityDescriptor.HasCalculatedMembers)
+				return;
+
+			var contextRef = new ContextRefExpression(objectType, context);
+
+			foreach (var member in entityDescriptor.CalculatedMembers!)
+			{
+				var assignment = new SqlGenericConstructorExpression.Assignment(member.MemberInfo,
+					Expression.MakeMemberAccess(contextRef, member.MemberInfo), true);
+
+				assignments.Add(assignment);
+			}
+		}
+
 		public static int FindIndex<T>(ReadOnlyCollection<T> collection, Func<T, bool> predicate)
 		{
 			for (int i = 0; i < collection.Count; i++)
@@ -478,6 +512,7 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			var bindings = new List<MemberBinding>(constructorExpression.Assignments.Count - loadedColumns.Count);
+			var ignored  = 0;
 
 			for (int i = 0; i < constructorExpression.Assignments.Count; i++)
 			{
@@ -485,22 +520,138 @@ namespace LinqToDB.Linq.Builder
 					continue;
 
 				var assignment     = constructorExpression.Assignments[i];
-				var memberAccessor = typeAccessor[assignment.MemberInfo.Name];
 
-				if (!memberAccessor.HasSetter)
+				// handling inheritance
+				if (assignment.MemberInfo.DeclaringType?.IsAssignableFrom(typeAccessor.Type) == true)
 				{
-					missed?.Add(assignment);
+					var memberAccessor = typeAccessor[assignment.MemberInfo.Name];
+
+					if (!memberAccessor.HasSetter)
+					{
+						if (assignment.IsMandatory)
+							missed?.Add(assignment);
+						else
+							++ignored;
+					}
+					else
+					{
+						bindings.Add(Expression.Bind(assignment.MemberInfo, assignment.Expression));
+					}
 				}
 				else
 				{
-					bindings.Add(Expression.Bind(assignment.MemberInfo, assignment.Expression));
+					++ignored;
 				}
 			}
 
-			if (loadedColumns.Count + bindings.Count != constructorExpression.Assignments.Count)
+			if (loadedColumns.Count + bindings.Count + ignored != constructorExpression.Assignments.Count)
 				return null;
 
 			return Expression.MemberInit(newExpression, bindings);
+		}
+
+		public Expression TryConstructFullEntity(IBuildContext context, SqlGenericConstructorExpression constructorExpression, ProjectFlags flags, bool checkInheritance = true)
+		{
+			var entityType       = constructorExpression.ObjectType;
+			var entityDescriptor = MappingSchema.GetEntityDescriptor(entityType);
+
+			if (checkInheritance && flags.HasFlag(ProjectFlags.Expression))
+			{
+				var inheritanceMappings = entityDescriptor.InheritanceMapping;
+				if (inheritanceMappings.Count > 0)
+				{
+					var defaultDescriptor = inheritanceMappings.FirstOrDefault(x => x.IsDefault);
+
+					Expression defaultExpression;
+					if (defaultDescriptor != null)
+					{
+						defaultExpression = TryConstructFullEntity(context, constructorExpression, flags, false);
+					}
+					else
+					{
+						var firstMapping = inheritanceMappings[0];
+
+						var onType = firstMapping.Discriminator.MemberInfo.ReflectedType;
+						if (onType == null)
+						{
+							throw new LinqToDBException("Could not get discriminator ReflectedType.");
+						}
+
+						var generator    = new ExpressionGenerator();
+
+						Expression<Func<object, Type, Exception>> throwExpr = (code, et) =>
+							new LinqException(
+								"Inheritance mapping is not defined for discriminator value '{0}' in the '{1}' hierarchy.",
+								code, et);
+
+						var access = Expression.MakeMemberAccess(
+							new ContextRefExpression(onType, context), firstMapping.Discriminator.MemberInfo);
+
+						var codeExpr = Expression.Convert(access, typeof(object));
+
+						generator.Throw(throwExpr.GetBody(codeExpr, Expression.Constant(onType, typeof(Type))));
+						generator.AddExpression(new DefaultValueExpression(MappingSchema, entityType));
+
+						defaultExpression = generator.Build();
+					}
+
+					var current = defaultExpression;
+
+					for (int i = 0; i < inheritanceMappings.Count; i++)
+					{
+						var inheritance = inheritanceMappings[i];
+						if (inheritance.IsDefault)
+							continue;
+
+						var contextRef = new ContextRefExpression(inheritance.Type, context);
+
+						var test = Equal(
+							MappingSchema,
+							Expression.MakeMemberAccess(contextRef, inheritance.Discriminator.MemberInfo),
+							Expression.Constant(inheritance.Code));
+
+						var subConstructor = BuildFullEntityExpression(context, inheritance.Type, flags);
+
+						var tableExpr = Expression.Convert(TryConstructFullEntity(context, subConstructor, flags, false), current.Type);
+
+						current = Expression.Condition(test, tableExpr, current);
+					}
+
+					return current;
+				}
+			}
+
+			return ConstructObject(constructorExpression);
+		}
+
+		public Expression ConstructObject(SqlGenericConstructorExpression constructorExpression)
+		{
+			var typeAccessor = TypeAccessor.GetAccessor(constructorExpression.ObjectType);
+
+			var constructors = constructorExpression.ObjectType.GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+
+			for (int i = 0; i < constructors.Length; i++)
+			{
+				var constructor   = constructors[i];
+				var instantiation = TryWithConstructor(typeAccessor, constructor, constructorExpression, null);
+				if (instantiation != null)
+					return instantiation;
+			}
+
+			throw new NotImplementedException("ConstructObject all code paths");
+
+			/*
+			for (int i = 0; i < constructors.Length; i++)
+			{
+				var constructor = constructors[i];
+
+				var missed = new List<SqlGenericConstructorExpression.Assignment>();
+
+				var instantiation = TryWithConstructor(typeAccessor, constructor, constructorExpression, missed);
+				if (instantiation != null)
+					return instantiation;
+			}
+		*/
 		}
 
 		public Expression TryConstruct(SqlGenericConstructorExpression constructorExpression, IBuildContext context,  ProjectFlags flags)
@@ -509,38 +660,13 @@ namespace LinqToDB.Linq.Builder
 			{
 				case SqlGenericConstructorExpression.CreateType.Full:
 				{
-					var expr = BuildEntityExpression(context, constructorExpression.ObjectType, flags);
+					var expr = TryConstructFullEntity(context, constructorExpression, flags);
 
 					return expr;
 				}
 				case SqlGenericConstructorExpression.CreateType.Unknown:
 				{
-					var instantiationType = GetTypeForInstantiation(constructorExpression.ObjectType);
-
-					var typeAccessor = TypeAccessor.GetAccessor(instantiationType);
-
-					var constructors = instantiationType.GetConstructors();
-
-					for (int i = 0; i < constructors.Length; i++)
-					{
-						var constructor = constructors[i];
-						var instantiation = TryWithConstructor(typeAccessor, constructor, constructorExpression, null);
-						if (instantiation != null)
-							return instantiation;
-					}
-
-					throw new NotImplementedException();
-
-					for (int i = 0; i < constructors.Length; i++)
-					{
-						var constructor   = constructors[i];
-
-						var missed = new List<SqlGenericConstructorExpression.Assignment>();
-
-						var instantiation = TryWithConstructor(typeAccessor, constructor, constructorExpression, missed);
-						if (instantiation != null)
-							return instantiation;
-					}
+					return ConstructObject(constructorExpression);
 				}
 				default:
 					throw new NotImplementedException();

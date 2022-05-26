@@ -1470,7 +1470,6 @@ namespace Tests.Linq
 			Assert.AreEqual("Hallucination with Paranoid Bugs' Delirium of Persecution", pat.Patient!.Diagnosis);
 		}
 
-		[ActiveIssue(2511)]
 		[Test(Description = "Associations with Concat/Union or other Set operations are not supported")]
 		public void Issue2511_Query2([DataSources] string context)
 		{

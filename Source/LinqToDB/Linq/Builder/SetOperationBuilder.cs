@@ -222,12 +222,12 @@ namespace LinqToDB.Linq.Builder
 							var dbType = QueryHelper.GetDbDataType(leftPlaceholder.Sql);
 							var right = new SqlGenericConstructorExpression.Assignment(left.MemberInfo,
 								ExpressionBuilder.CreatePlaceholder(rightSequence, new SqlValue(dbType, null),
-									Expression.MakeMemberAccess(rightGeneric, left.MemberInfo)));
+									Expression.MakeMemberAccess(rightGeneric, left.MemberInfo)), left.IsMandatory);
 
 							_matchedPairs.Add(ma, (_matchedPairs.Count, left, right));
 						}
 
-						newAssignments.Add(new SqlGenericConstructorExpression.Assignment(left.MemberInfo, assignmentExpr));
+						newAssignments.Add(new SqlGenericConstructorExpression.Assignment(left.MemberInfo, assignmentExpr, left.IsMandatory));
 
 						matched.Add(left.MemberInfo);
 
@@ -246,30 +246,24 @@ namespace LinqToDB.Linq.Builder
 							throw new NotImplementedException();
 
 						var ma = Expression.MakeMemberAccess(root, right.MemberInfo);
-						newAssignments.Add(new SqlGenericConstructorExpression.Assignment(right.MemberInfo, ma));
+						newAssignments.Add(new SqlGenericConstructorExpression.Assignment(right.MemberInfo, ma, right.IsMandatory));
 
 						// generate NULL value
 						var dbType = QueryHelper.GetDbDataType(rightPlaceholder.Sql);
 						var left = new SqlGenericConstructorExpression.Assignment(right.MemberInfo,
 							ExpressionBuilder.CreatePlaceholder(leftSequence, new SqlValue(dbType, null),
-								Expression.MakeMemberAccess(rightGeneric, right.MemberInfo)));
+								Expression.MakeMemberAccess(rightGeneric, right.MemberInfo)), right.IsMandatory);
 
 						_matchedPairs.Add(ma, (_matchedPairs.Count, left, right));
 
-						newAssignments.Add(new SqlGenericConstructorExpression.Assignment(left.MemberInfo, ma));
+						newAssignments.Add(new SqlGenericConstructorExpression.Assignment(left.MemberInfo, ma, right.IsMandatory));
 					}
 
-					// Shortcut, we can reuse object from any side
-					//
-					if (root is ContextRefExpression                                                  &&
-					    leftGeneric.ConstructType  == SqlGenericConstructorExpression.CreateType.Full &&
-					    rightGeneric.ConstructType == SqlGenericConstructorExpression.CreateType.Full)
-					{
-						return leftGeneric;
-					}
+					var isFull = leftGeneric.ConstructType  == SqlGenericConstructorExpression.CreateType.Full &&
+					             rightGeneric.ConstructType == SqlGenericConstructorExpression.CreateType.Full;
 
 					//TODO: try to merge with constructor
-					return new SqlGenericConstructorExpression(false, leftGeneric.ObjectType, newAssignments);
+					return new SqlGenericConstructorExpression(isFull, leftGeneric.ObjectType, newAssignments);
 				}
 
 				// Scalar

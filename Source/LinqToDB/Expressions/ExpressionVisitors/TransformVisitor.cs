@@ -226,7 +226,7 @@ namespace LinqToDB.Expressions
 			var aExpr = Transform(a.Expression);
 			if (aExpr != a.Expression)
 			{
-				return new SqlGenericConstructorExpression.Assignment(a.MemberInfo, aExpr);
+				return new SqlGenericConstructorExpression.Assignment(a.MemberInfo, aExpr, a.IsMandatory);
 			}
 
 			return a;

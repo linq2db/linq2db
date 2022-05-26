@@ -52,7 +52,7 @@ namespace LinqToDB.Linq.Builder
 
 			var path  = selector.Body.Unwrap();
 
-			var contextRef   = new ContextRefExpression(methodCall.Arguments[0].Type, sequence);
+			var contextRef   = new ContextRefExpression(methodCall.Arguments[0].Type.GetGenericArguments()[0], sequence);
 			var rootSequence = builder.MakeExpression(contextRef, ProjectFlags.Root) as ContextRefExpression;
 
 			if (rootSequence == null)

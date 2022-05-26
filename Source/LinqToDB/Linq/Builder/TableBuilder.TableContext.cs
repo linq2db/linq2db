@@ -201,14 +201,14 @@ namespace LinqToDB.Linq.Builder
 			public virtual SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 			{
 				throw new NotImplementedException();
-									}
+			}
 
 			#endregion
 
 			#region ConvertToIndex
 
 			public virtual SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
-							{
+			{
 				throw new NotImplementedException();
 			}
 
@@ -223,8 +223,8 @@ namespace LinqToDB.Linq.Builder
 					if (path.Type != ObjectType && flags.HasFlag(ProjectFlags.Expression))
 						return new SqlEagerLoadExpression(this, path, Builder.GetSequenceExpression(this));
 
-					return Builder.BuildEntityExpression(this, ObjectType, flags);
-			}
+					return Builder.BuildFullEntityExpression(this, ObjectType, flags);
+				}
 
 				if (path is not MemberExpression member)
 					return Builder.CreateSqlError(this, path);
@@ -251,8 +251,8 @@ namespace LinqToDB.Linq.Builder
 
 			#region GetContext
 
-			public IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)
-					{
+			public IBuildContext GetContext(Expression? expression, int level, BuildInfo buildInfo)
+			{
 				if (!buildInfo.CreateSubQuery)
 					return this;
 

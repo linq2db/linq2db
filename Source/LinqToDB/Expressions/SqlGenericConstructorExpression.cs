@@ -11,20 +11,22 @@ namespace LinqToDB.Expressions
 	{
 		public class Assignment
 		{
-			public Assignment(MemberInfo memberInfo, Expression expression)
+			public Assignment(MemberInfo memberInfo, Expression expression, bool isMandatory)
 			{
-				MemberInfo = memberInfo;
-				Expression = expression;
+				MemberInfo  = memberInfo;
+				Expression  = expression;
+				IsMandatory = isMandatory;
 			}
 
-			public MemberInfo MemberInfo { get;  }
-			public Expression Expression { get; }
+			public MemberInfo MemberInfo  { get;  }
+			public Expression Expression  { get; }
+			public bool       IsMandatory { get; }
 
 			public Assignment WithExpression(Expression expression)
 			{
 				if (expression == Expression)
 					return this;
-				return new Assignment(MemberInfo, expression);
+				return new Assignment(MemberInfo, expression, IsMandatory);
 			}
 
 			public override string ToString()
@@ -49,7 +51,7 @@ namespace LinqToDB.Expressions
 				for (var i = 0; i < newExpression.Members.Count; i++)
 				{
 					var member = newExpression.Members[i];
-					items.Add(new Assignment(member, Parse(newExpression.Arguments[i])));
+					items.Add(new Assignment(member, Parse(newExpression.Arguments[i]), true));
 				}
 			}
 
@@ -71,7 +73,7 @@ namespace LinqToDB.Expressions
 					case MemberBindingType.Assignment:
 					{
 						var a = (MemberAssignment)binding;
-						items.Add(new Assignment(a.Member, Parse(a.Expression)));
+						items.Add(new Assignment(a.Member, Parse(a.Expression), true));
 						break;
 					}
 
