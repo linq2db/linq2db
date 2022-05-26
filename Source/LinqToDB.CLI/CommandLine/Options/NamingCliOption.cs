@@ -17,7 +17,8 @@ namespace LinqToDB.CommandLine
 		string                Help,
 		string?               DetailedHelp,
 		string[]?             JsonExamples,
-		NormalizationOptions? Default)
+		NormalizationOptions? Default,
+		NormalizationOptions? T4Default)
 		: CliOption(
 			Name,
 			null,

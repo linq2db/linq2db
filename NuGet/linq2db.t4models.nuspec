@@ -38,6 +38,8 @@
 		<file src="..\Tests\Linq\bin\Azure\net472\System.Memory.dll"                       target="tools"                                                        />
 		<file src="..\Tests\Linq\bin\Azure\net472\System.Diagnostics.DiagnosticSource.dll" target="tools"                                                        />
 		<file src="..\Tests\Linq\bin\Azure\net472\Microsoft.Bcl.AsyncInterfaces.dll"       target="tools"                                                        />
+		<file src="..\Tests\Linq\bin\Azure\net472\System.Threading.Channels.dll"           target="tools"                                                        />
+		<file src="..\Tests\Linq\bin\Azure\net472\Microsoft.Bcl.HashCode.dll"              target="tools"                                                        />
 
 		<file src="..\NuGet\t4models\linq2db.t4models.props"                               target="build"                                                        />
 

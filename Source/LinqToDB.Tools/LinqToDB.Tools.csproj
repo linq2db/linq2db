@@ -16,7 +16,7 @@
 
 		<PackageReference Include="Humanizer.Core" />
 
-    <None Update="DataProvider\SqlServer\Schemas\Schemas.tt">
+		<None Update="DataProvider\SqlServer\Schemas\Schemas.tt">
 			<Generator>TextTemplatingFileGenerator</Generator>
 			<LastGenOutput>Schemas.generated.cs</LastGenOutput>
 		</None>
@@ -26,5 +26,5 @@
 			<DependentUpon>Schemas.tt</DependentUpon>
 		</Compile>
 
-   </ItemGroup>
+	</ItemGroup>
 </Project>

@@ -12,6 +12,7 @@
 <#@ import namespace="LinqToDB.CodeModel"         #>
 <#@ import namespace="LinqToDB.Schema"            #>
 <#@ import namespace="LinqToDB.Scaffold"          #>
+<#@ import namespace="LinqToDB.DataModel"         #>
 
 /*
 
@@ -126,7 +127,7 @@ public class Interceptors : ScaffoldInterceptors
 	}
 	#endregion
 
-	region Data Model/Code Generation
+	#region Data Model/Code Generation
 	/// <summary>
 	/// Using this method user could modify entity code generation options:
 	/// <list type="bullet">
