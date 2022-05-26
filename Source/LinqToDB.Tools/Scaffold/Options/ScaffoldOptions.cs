@@ -42,6 +42,7 @@ namespace LinqToDB.Scaffold
 			options.Schema.IncludeSchemas              = true;
 			options.Schema.IncludeCatalogs             = true;
 			options.Schema.UseSafeSchemaLoad           = false;
+			options.Schema.LoadDatabaseName            = false;
 			options.Schema.LoadProceduresSchema        = true;
 			options.Schema.LoadProcedureSchema         = _ => true;
 			options.Schema.LoadTableFunction           = _ => true;

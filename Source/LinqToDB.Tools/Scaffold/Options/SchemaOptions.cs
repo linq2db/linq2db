@@ -105,6 +105,14 @@ namespace LinqToDB.Scaffold
 		/// </summary>
 		public bool UseSafeSchemaLoad { get; set; } = true;
 		/// <summary>
+		/// Include database name component into db object name in schema.
+		/// <list type="bullet">
+		/// <item>Default: <c>false</c></item>
+		/// <item>In T4 compability mode: <c>false</c></item>
+		/// </list>
+		/// </summary>
+		public bool LoadDatabaseName { get; set; }
+		/// <summary>
 		/// Specify stored procedures schema load mode: with result schema or without.
 		/// <list type="bullet">
 		/// <item>Default: <c>false</c></item>
