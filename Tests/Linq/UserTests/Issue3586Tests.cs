@@ -142,7 +142,10 @@ namespace Tests.UserTests
 						InfeedAdvicePosition = infeed.InfeedAdvicePosition
 					};
 
+				//check query does work
+				var res = qry.ToList();
 
+				//update will throw
 				db.GetTable<InventoryResourceDTO>().Where(x => qry.Any(y => y.InventoryResource == x)).Set(x => x.Status, Status.Active).Update();
 			}
 		}
