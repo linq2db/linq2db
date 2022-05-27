@@ -111,7 +111,7 @@ namespace Default.SqlServerNorthwind
 		#region Associations
 
 		/// <summary>
-		/// FK_Products_Categories_BackReference (TestDataNorthwind.dbo.Products)
+		/// FK_Products_Categories_BackReference (dbo.Products)
 		/// </summary>
 		[Association(ThisKey="CategoryID", OtherKey="CategoryID", CanBeNull=true)]
 		public IEnumerable<Product> Products { get; set; } = null!;
@@ -151,13 +151,13 @@ namespace Default.SqlServerNorthwind
 		#region Associations
 
 		/// <summary>
-		/// FK_CustomerCustomerDemo_Customers_BackReference (TestDataNorthwind.dbo.CustomerCustomerDemo)
+		/// FK_CustomerCustomerDemo_Customers_BackReference (dbo.CustomerCustomerDemo)
 		/// </summary>
 		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true)]
 		public IEnumerable<CustomerCustomerDemo> CustomerCustomerDemoes { get; set; } = null!;
 
 		/// <summary>
-		/// FK_Orders_Customers_BackReference (TestDataNorthwind.dbo.Orders)
+		/// FK_Orders_Customers_BackReference (dbo.Orders)
 		/// </summary>
 		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true)]
 		public IEnumerable<Order> Orders { get; set; } = null!;
@@ -183,13 +183,13 @@ namespace Default.SqlServerNorthwind
 		#region Associations
 
 		/// <summary>
-		/// FK_CustomerCustomerDemo_Customers (TestDataNorthwind.dbo.Customers)
+		/// FK_CustomerCustomerDemo_Customers (dbo.Customers)
 		/// </summary>
 		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=false)]
 		public Customer Customer { get; set; } = null!;
 
 		/// <summary>
-		/// FK_CustomerCustomerDemo (TestDataNorthwind.dbo.CustomerDemographics)
+		/// FK_CustomerCustomerDemo (dbo.CustomerDemographics)
 		/// </summary>
 		[Association(ThisKey="CustomerTypeID", OtherKey="CustomerTypeID", CanBeNull=false)]
 		public CustomerDemographic CustomerType { get; set; } = null!;
@@ -206,7 +206,7 @@ namespace Default.SqlServerNorthwind
 		#region Associations
 
 		/// <summary>
-		/// FK_CustomerCustomerDemo_BackReference (TestDataNorthwind.dbo.CustomerCustomerDemo)
+		/// FK_CustomerCustomerDemo_BackReference (dbo.CustomerCustomerDemo)
 		/// </summary>
 		[Association(ThisKey="CustomerTypeID", OtherKey="CustomerTypeID", CanBeNull=true)]
 		public IEnumerable<CustomerCustomerDemo> CustomerCustomerDemoes { get; set; } = null!;
@@ -239,25 +239,25 @@ namespace Default.SqlServerNorthwind
 		#region Associations
 
 		/// <summary>
-		/// FK_EmployeeTerritories_Employees_BackReference (TestDataNorthwind.dbo.EmployeeTerritories)
+		/// FK_EmployeeTerritories_Employees_BackReference (dbo.EmployeeTerritories)
 		/// </summary>
 		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true)]
 		public IEnumerable<EmployeeTerritory> EmployeeTerritories { get; set; } = null!;
 
 		/// <summary>
-		/// FK_Employees_Employees (TestDataNorthwind.dbo.Employees)
+		/// FK_Employees_Employees (dbo.Employees)
 		/// </summary>
 		[Association(ThisKey="ReportsTo", OtherKey="EmployeeID", CanBeNull=true)]
 		public Employee? FkEmployeesEmployee { get; set; }
 
 		/// <summary>
-		/// FK_Employees_Employees_BackReference (TestDataNorthwind.dbo.Employees)
+		/// FK_Employees_Employees_BackReference (dbo.Employees)
 		/// </summary>
 		[Association(ThisKey="EmployeeID", OtherKey="ReportsTo", CanBeNull=true)]
 		public IEnumerable<Employee> FkEmployeesEmployeesBackReferences { get; set; } = null!;
 
 		/// <summary>
-		/// FK_Orders_Employees_BackReference (TestDataNorthwind.dbo.Orders)
+		/// FK_Orders_Employees_BackReference (dbo.Orders)
 		/// </summary>
 		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true)]
 		public IEnumerable<Order> Orders { get; set; } = null!;
@@ -274,13 +274,13 @@ namespace Default.SqlServerNorthwind
 		#region Associations
 
 		/// <summary>
-		/// FK_EmployeeTerritories_Employees (TestDataNorthwind.dbo.Employees)
+		/// FK_EmployeeTerritories_Employees (dbo.Employees)
 		/// </summary>
 		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=false)]
 		public Employee Employee { get; set; } = null!;
 
 		/// <summary>
-		/// FK_EmployeeTerritories_Territories (TestDataNorthwind.dbo.Territories)
+		/// FK_EmployeeTerritories_Territories (dbo.Territories)
 		/// </summary>
 		[Association(ThisKey="TerritoryID", OtherKey="TerritoryID", CanBeNull=false)]
 		public Territory Territory { get; set; } = null!;
@@ -340,25 +340,25 @@ namespace Default.SqlServerNorthwind
 		#region Associations
 
 		/// <summary>
-		/// FK_Orders_Customers (TestDataNorthwind.dbo.Customers)
+		/// FK_Orders_Customers (dbo.Customers)
 		/// </summary>
 		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true)]
 		public Customer? Customer { get; set; }
 
 		/// <summary>
-		/// FK_Orders_Employees (TestDataNorthwind.dbo.Employees)
+		/// FK_Orders_Employees (dbo.Employees)
 		/// </summary>
 		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true)]
 		public Employee? Employee { get; set; }
 
 		/// <summary>
-		/// FK_Order_Details_Orders_BackReference (TestDataNorthwind.dbo.Order Details)
+		/// FK_Order_Details_Orders_BackReference (dbo.Order Details)
 		/// </summary>
 		[Association(ThisKey="OrderID", OtherKey="OrderID", CanBeNull=true)]
 		public IEnumerable<OrderDetail> OrderDetails { get; set; } = null!;
 
 		/// <summary>
-		/// FK_Orders_Shippers (TestDataNorthwind.dbo.Shippers)
+		/// FK_Orders_Shippers (dbo.Shippers)
 		/// </summary>
 		[Association(ThisKey="ShipVia", OtherKey="ShipperID", CanBeNull=true)]
 		public Shipper? Shipper { get; set; }
@@ -378,13 +378,13 @@ namespace Default.SqlServerNorthwind
 		#region Associations
 
 		/// <summary>
-		/// FK_Order_Details_Orders (TestDataNorthwind.dbo.Orders)
+		/// FK_Order_Details_Orders (dbo.Orders)
 		/// </summary>
 		[Association(ThisKey="OrderID", OtherKey="OrderID", CanBeNull=false)]
 		public Order Order { get; set; } = null!;
 
 		/// <summary>
-		/// FK_Order_Details_Products (TestDataNorthwind.dbo.Products)
+		/// FK_Order_Details_Products (dbo.Products)
 		/// </summary>
 		[Association(ThisKey="ProductID", OtherKey="ProductID", CanBeNull=false)]
 		public Product Product { get; set; } = null!;
@@ -453,19 +453,19 @@ namespace Default.SqlServerNorthwind
 		#region Associations
 
 		/// <summary>
-		/// FK_Products_Categories (TestDataNorthwind.dbo.Categories)
+		/// FK_Products_Categories (dbo.Categories)
 		/// </summary>
 		[Association(ThisKey="CategoryID", OtherKey="CategoryID", CanBeNull=true)]
 		public Category? Category { get; set; }
 
 		/// <summary>
-		/// FK_Order_Details_Products_BackReference (TestDataNorthwind.dbo.Order Details)
+		/// FK_Order_Details_Products_BackReference (dbo.Order Details)
 		/// </summary>
 		[Association(ThisKey="ProductID", OtherKey="ProductID", CanBeNull=true)]
 		public IEnumerable<OrderDetail> OrderDetails { get; set; } = null!;
 
 		/// <summary>
-		/// FK_Products_Suppliers (TestDataNorthwind.dbo.Suppliers)
+		/// FK_Products_Suppliers (dbo.Suppliers)
 		/// </summary>
 		[Association(ThisKey="SupplierID", OtherKey="SupplierID", CanBeNull=true)]
 		public Supplier? Supplier { get; set; }
@@ -516,7 +516,7 @@ namespace Default.SqlServerNorthwind
 		#region Associations
 
 		/// <summary>
-		/// FK_Territories_Region_BackReference (TestDataNorthwind.dbo.Territories)
+		/// FK_Territories_Region_BackReference (dbo.Territories)
 		/// </summary>
 		[Association(ThisKey="RegionID", OtherKey="RegionID", CanBeNull=true)]
 		public IEnumerable<Territory> Territories { get; set; } = null!;
@@ -552,7 +552,7 @@ namespace Default.SqlServerNorthwind
 		#region Associations
 
 		/// <summary>
-		/// FK_Orders_Shippers_BackReference (TestDataNorthwind.dbo.Orders)
+		/// FK_Orders_Shippers_BackReference (dbo.Orders)
 		/// </summary>
 		[Association(ThisKey="ShipperID", OtherKey="ShipVia", CanBeNull=true)]
 		public IEnumerable<Order> Orders { get; set; } = null!;
@@ -595,7 +595,7 @@ namespace Default.SqlServerNorthwind
 		#region Associations
 
 		/// <summary>
-		/// FK_Products_Suppliers_BackReference (TestDataNorthwind.dbo.Products)
+		/// FK_Products_Suppliers_BackReference (dbo.Products)
 		/// </summary>
 		[Association(ThisKey="SupplierID", OtherKey="SupplierID", CanBeNull=true)]
 		public IEnumerable<Product> Products { get; set; } = null!;
@@ -613,13 +613,13 @@ namespace Default.SqlServerNorthwind
 		#region Associations
 
 		/// <summary>
-		/// FK_EmployeeTerritories_Territories_BackReference (TestDataNorthwind.dbo.EmployeeTerritories)
+		/// FK_EmployeeTerritories_Territories_BackReference (dbo.EmployeeTerritories)
 		/// </summary>
 		[Association(ThisKey="TerritoryID", OtherKey="TerritoryID", CanBeNull=true)]
 		public IEnumerable<EmployeeTerritory> EmployeeTerritories { get; set; } = null!;
 
 		/// <summary>
-		/// FK_Territories_Region (TestDataNorthwind.dbo.Region)
+		/// FK_Territories_Region (dbo.Region)
 		/// </summary>
 		[Association(ThisKey="RegionID", OtherKey="RegionID", CanBeNull=false)]
 		public Region Region { get; set; } = null!;
