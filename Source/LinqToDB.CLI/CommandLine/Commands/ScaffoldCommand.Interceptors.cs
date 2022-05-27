@@ -308,7 +308,7 @@ namespace LinqToDB.CommandLine
 			compiledCode.Add(CSharpSyntaxTree.ParseText(sourceCode, parseOptions));
 
 			// create compilation unit
-			var compilationOptions = new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, nullableContextOptions: NullableContextOptions.Warnings);
+			var compilationOptions = new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, nullableContextOptions: NullableContextOptions.Enable);
 			var compilation        = CSharpCompilation.Create(assemblyName, compiledCode, references, compilationOptions);
 
 			// compile into memory

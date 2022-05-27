@@ -40,6 +40,8 @@
 		<file src="..\Tests\Linq\bin\Azure\net472\System.Threading.Tasks.Extensions.dll" target="tools"                                                                                              />
 		<file src="..\Tests\Linq\bin\Azure\net472\Microsoft.Bcl.AsyncInterfaces.dll"     target="tools"                                                                                              />
 		<file src="..\Tests\Linq\bin\Azure\net472\System.Text.Json.dll"                  target="tools"                                                                                              />
+		<file src="..\Tests\Linq\bin\Azure\net472\System.Threading.Channels.dll"         target="tools"                                                                                              />
+		<file src="..\Tests\Linq\bin\Azure\net472\Microsoft.Bcl.HashCode.dll"            target="tools"                                                                                              />
 
 		<file src="..\NuGet\PostgreSQL\linq2db.PostgreSQL.props"                         target="build"                                                                                              />
 

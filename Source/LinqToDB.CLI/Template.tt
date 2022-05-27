@@ -9,9 +9,12 @@
 // additional namespace imports (usings)
 <#@ import namespace="System"                     #>
 <#@ import namespace="System.Collections.Generic" #>
+<#@ import namespace="System.Linq"                #>
 <#@ import namespace="LinqToDB.CodeModel"         #>
+<#@ import namespace="LinqToDB.DataModel"         #>
 <#@ import namespace="LinqToDB.Schema"            #>
 <#@ import namespace="LinqToDB.Scaffold"          #>
+<#@ import namespace="LinqToDB.SqlQuery"          #>
 
 /*
 
@@ -126,7 +129,7 @@ public class Interceptors : ScaffoldInterceptors
 	}
 	#endregion
 
-	region Data Model/Code Generation
+	#region Data Model/Code Generation
 	/// <summary>
 	/// Using this method user could modify entity code generation options:
 	/// <list type="bullet">

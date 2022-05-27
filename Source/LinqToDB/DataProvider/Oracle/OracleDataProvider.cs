@@ -179,7 +179,7 @@ namespace LinqToDB.DataProvider.Oracle
 				case DataType.DateTimeOffset:
 					if (value is DateTimeOffset dto)
 					{
-						dto      = DataTools.AdjustPrecision(dto, (byte?)dataType.Precision ?? 6);
+						dto      = dto.WithPrecision(dataType.Precision ?? 6);
 						var zone = (dto.Offset < TimeSpan.Zero ? "-" : "+") + dto.Offset.ToString("hh\\:mm");
 						value    = Adapter.CreateOracleTimeStampTZ(dto, zone);
 					}
@@ -215,14 +215,14 @@ namespace LinqToDB.DataProvider.Oracle
 				case DataType.DateTime :
 				{
 					if (value is DateTime dt)
-						value = DataTools.AdjustPrecision(dt, 0);
+						value = dt.WithPrecision(0);
 					break;
 				}
 
 				case DataType.DateTime2:
 				{
 					if (value is DateTime dt)
-						value = DataTools.AdjustPrecision(dt, (byte?)dataType.Precision ?? 6);
+						value = dt.WithPrecision(dataType.Precision ?? 6);
 					break;
 				}
 

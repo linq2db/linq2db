@@ -67,6 +67,15 @@ namespace LinqToDB.Scaffold
 		public bool ClassPerFile { get; set; } = true;
 
 		/// <summary>
+		/// Adds '.generated' suffix to files before extension.
+		/// <list type="bullet">
+		/// <item>Default: <c>false</c></item>
+		/// <item>In T4 compability mode: <c>false</c></item>
+		/// </list>
+		/// </summary>
+		public bool AddGeneratedFileSuffix { get; set; }
+
+		/// <summary>
 		/// List of type and/or namespace names that conflict with generated code. Used to adjust code-generation to resolve conflicts.
 		/// Name should include both namespace and type name (for types) with dot as namespace separator and plus as nested class separator.
 		/// E.g. <c>My.Namespace.SomeType+NestedType</c>.
