@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Linq;
-using System.Threading.Tasks;
-using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
-using Npgsql;
 using NUnit.Framework;
 
 namespace Tests.UserTests
@@ -95,8 +92,9 @@ namespace Tests.UserTests
 			[Column] public Guid ResourcePointID { get; set; }
 		}
 
+		[ActiveIssue("Reservations field causes error")]
 		[Test]
-		public void ComplexWhereWithUpdate([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void ComplexWhereWithAny([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var db = (DataConnection)GetDataContext(context))
 			using (db.CreateLocalTable<InventoryResourceDTO>())
@@ -142,11 +140,8 @@ namespace Tests.UserTests
 						InfeedAdvicePosition = infeed.InfeedAdvicePosition
 					};
 
-				//check query does work
-				var res = qry.ToList();
-
-				//update will throw
-				db.GetTable<InventoryResourceDTO>().Where(x => qry.Any(y => y.InventoryResource == x)).Set(x => x.Status, Status.Active).Update();
+				var anyTest = db.GetTable<InventoryResourceDTO>().Where(x => qry.Any(y => y.InventoryResource!.Id == x.Id))
+					.ToArray();
 			}
 		}
 	}
