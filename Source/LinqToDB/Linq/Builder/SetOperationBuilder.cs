@@ -222,7 +222,7 @@ namespace LinqToDB.Linq.Builder
 							var dbType = QueryHelper.GetDbDataType(leftPlaceholder.Sql);
 							var right = new SqlGenericConstructorExpression.Assignment(left.MemberInfo,
 								ExpressionBuilder.CreatePlaceholder(rightSequence, new SqlValue(dbType, null),
-									Expression.MakeMemberAccess(rightGeneric, left.MemberInfo)), left.IsMandatory);
+									Expression.Constant(null)), left.IsMandatory);
 
 							_matchedPairs.Add(ma, (_matchedPairs.Count, left, right));
 						}

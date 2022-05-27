@@ -1640,5 +1640,36 @@ namespace Tests.Linq
 				result[2].Should().BeOfType<SetEntityC>();
 			}
 		}
+
+		[Test]
+		public void ConcatBrokenInheritance([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var items = new SetEntityBase[]
+			{
+				new SetEntityA{Id = 1, IntValue    = 11},
+				new SetEntityB{Id = 2, StrValue    = "Str22" },
+				new SetEntityC{Id = 3, DoubleValue = 33.33 }
+			};
+
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(items))
+			{
+				var query =
+					(from t1 in table.Where(x => x.Id == 1) select t1)
+					.Concat(
+						from t2 in table.Where(x => x.Id == 2) select t2)
+					.Concat(
+						from t3 in table.Where(x => x.Id == 3) select new SetEntityC
+						{
+							Id = t3.Id,
+							DoubleValue = 4.44
+						});
+
+				var result = query.ToList();
+				result[0].Should().BeOfType<SetEntityA>();
+				result[1].Should().BeOfType<SetEntityB>();
+				result[2].Should().BeOfType<SetEntityC>();
+			}
+		}
 	}
 }

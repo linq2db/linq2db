@@ -37,9 +37,9 @@ namespace LinqToDB.Expressions
 
 		public SqlGenericConstructorExpression(bool isFull, Type objectType, IList<Assignment> assignments)
 		{
-			ObjectType    = objectType;
-			ConstructType = isFull ? CreateType.Full : CreateType.Unknown;
-			Assignments   = new ReadOnlyCollection<Assignment>(assignments);
+			ObjectType     = objectType;
+			ConstructType  = isFull ? CreateType.Full : CreateType.Unknown;
+			Assignments    = new ReadOnlyCollection<Assignment>(assignments);
 		}
 
 		public SqlGenericConstructorExpression(NewExpression newExpression)
@@ -88,10 +88,10 @@ namespace LinqToDB.Expressions
 			Assignments   = new ReadOnlyCollection<Assignment>(items);
 		}
 
-		public Expression?      NewExpression { get; private set; }
-		public ConstructorInfo? Constructor   { get; private set; }
-		public CreateType       ConstructType { get; private set; }
-		public Type             ObjectType    { get; private set; }
+		public Expression?      NewExpression  { get; private set; }
+		public ConstructorInfo? Constructor    { get; private set; }
+		public CreateType       ConstructType  { get; private set; }
+		public Type             ObjectType     { get; private set; }
 
 		public ReadOnlyCollection<Assignment> Assignments { get; private set; }
 
