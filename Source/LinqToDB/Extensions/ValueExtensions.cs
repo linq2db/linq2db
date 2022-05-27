@@ -27,22 +27,22 @@ namespace LinqToDB.Extensions
 
 		public static long GetTicks(this TimeSpan ts, int precision)
 		{
-			if (precision == 7)
+			if (precision >= 7)
 				return ts.Ticks;
 
-			if (precision < 0 || precision > 7)
-				throw new InvalidOperationException($"Precision must be in [0, 7] range: {precision}");
+			if (precision < 0)
+				throw new InvalidOperationException($"Precision must be >= 0: {precision}");
 
 			return ts.Ticks - (ts.Ticks % TICKS_DIVIDERS[precision]);
 		}
 
 		public static DateTimeOffset WithPrecision(this DateTimeOffset dto, int precision)
 		{
-			if (precision == 7)
+			if (precision >= 7)
 				return dto;
 
-			if (precision < 0 || precision > 7)
-				throw new InvalidOperationException($"Precision must be in [0, 7] range: {precision}");
+			if (precision < 0)
+				throw new InvalidOperationException($"Precision must be >= 0: {precision}");
 
 			var delta = dto.Ticks % TICKS_DIVIDERS[precision];
 			return delta == 0 ? dto : dto.AddTicks(-delta);
@@ -50,11 +50,11 @@ namespace LinqToDB.Extensions
 
 		public static DateTime WithPrecision(this DateTime dt, int precision)
 		{
-			if (precision == 7)
+			if (precision >= 7)
 				return dt;
 
-			if (precision < 0 || precision > 7)
-				throw new InvalidOperationException($"Precision must be in [0, 7] range: {precision}");
+			if (precision < 0)
+				throw new InvalidOperationException($"Precision must be >= 0: {precision}");
 
 			var delta = dt.Ticks % TICKS_DIVIDERS[precision];
 			return delta == 0 ? dt : dt.AddTicks(-delta);

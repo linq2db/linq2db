@@ -219,9 +219,11 @@ namespace LinqToDB.DataProvider.SqlServer
 				{
 					var precision = dataType.Precision ?? 7;
 					if (Version == SqlServerVersion.v2005 && precision > 3)
+					{
 						precision = 3;
+					}
 
-					value = dto.WithPrecision(precision).LocalDateTime;
+					value = dto.WithPrecision(precision);
 					break;
 				}
 
