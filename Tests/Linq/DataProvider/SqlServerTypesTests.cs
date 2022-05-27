@@ -343,5 +343,142 @@ namespace Tests.DataProvider
 #endif
 			}
 		}
+
+		public class LiteralsTestTable<TValue>
+		{
+			public TValue Value { get; set; } = default!;
+		}
+
+		[Test]
+		public void TestLiteralsAndParameters([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var interceptor = new SaveCommandInterceptor();
+
+			// DateTime
+			Test<DateTime>(DataType.Text         , -1, TestData.DateTime, TestData.DateTime.TrimPrecision(3));
+			Test<DateTime>(DataType.NText        , -1, TestData.DateTime, TestData.DateTime.TrimPrecision(3));
+			Test<DateTime>(DataType.Char         , -1, TestData.DateTime, TestData.DateTime.TrimPrecision(3));
+			Test<DateTime>(DataType.NChar        , -1, TestData.DateTime, TestData.DateTime.TrimPrecision(3));
+			Test<DateTime>(DataType.VarChar      , -1, TestData.DateTime, TestData.DateTime.TrimPrecision(3));
+			Test<DateTime>(DataType.NVarChar     , -1, TestData.DateTime, TestData.DateTime.TrimPrecision(3));
+			Test<DateTime>(DataType.SmallDateTime, -1, TestData.DateTime, TestData.DateTime.TrimSeconds(1));
+			Test<DateTime>(DataType.Date         , -1, TestData.DateTime, TestData.DateTime.Date);
+			Test<DateTime>(DataType.DateTime     , -1, TestData.DateTime, TestData.DateTime.TrimPrecision(3));
+
+			if (context.IsAnyOf(TestProvName.AllSqlServer2005))
+				Test<DateTime>(DataType.Undefined    , -1, TestData.DateTime, TestData.DateTime.TrimPrecision(3));
+
+			for (var i = 0; i <= 7; i++)
+			{
+				if (context.IsAnyOf(TestProvName.AllSqlServer2005))
+					Test<DateTime>(DataType.DateTime2, i, TestData.DateTime, TestData.DateTime.TrimPrecision(Math.Min(3, i)));
+				else
+				{
+					Test<DateTime>(DataType.DateTime2, i, TestData.DateTime, TestData.DateTime.TrimPrecision(i));
+					Test<DateTime>(DataType.Undefined, i, TestData.DateTime, TestData.DateTime.TrimPrecision(i));
+				}
+			}
+
+			// SqlDateTime as DateTime
+			var sqlDateTime = new SqlDateTime(TestData.DateTime);
+			Test<SqlDateTime>(DataType.Text         , -1, sqlDateTime, sqlDateTime);
+			Test<SqlDateTime>(DataType.NText        , -1, sqlDateTime, sqlDateTime);
+			Test<SqlDateTime>(DataType.Char         , -1, sqlDateTime, sqlDateTime);
+			Test<SqlDateTime>(DataType.NChar        , -1, sqlDateTime, sqlDateTime);
+			Test<SqlDateTime>(DataType.VarChar      , -1, sqlDateTime, sqlDateTime);
+			Test<SqlDateTime>(DataType.NVarChar     , -1, sqlDateTime, sqlDateTime);
+			Test<SqlDateTime>(DataType.SmallDateTime, -1, sqlDateTime, sqlDateTime.TrimSeconds(1));
+			Test<SqlDateTime>(DataType.Date         , -1, sqlDateTime, (SqlDateTime)(((DateTime)sqlDateTime).Date));
+			Test<SqlDateTime>(DataType.DateTime     , -1, sqlDateTime, sqlDateTime.TrimPrecision(3));
+			Test<SqlDateTime>(DataType.Undefined    , -1, sqlDateTime, sqlDateTime.TrimPrecision(3));
+			for (var i = 0; i <= 7; i++)
+			{
+				if (context.IsAnyOf(TestProvName.AllSqlServer2005))
+					Test<SqlDateTime>(DataType.DateTime2, i, sqlDateTime, sqlDateTime.TrimPrecision(Math.Min(3, i)));
+				else
+					Test<SqlDateTime>(DataType.DateTime2, i, sqlDateTime, sqlDateTime.TrimPrecision(i));
+			}
+
+			// TimeSpan
+			for (var i = 0; i <= 7; i++)
+			{
+				Test<TimeSpan>(DataType.Int64    , i, TestData.TimeOfDay, TestData.TimeOfDay.TrimPrecision(i));
+				Test<TimeSpan>(DataType.Text     , i, TestData.TimeOfDay, TestData.TimeOfDay.TrimPrecision(i));
+				Test<TimeSpan>(DataType.NText    , i, TestData.TimeOfDay, TestData.TimeOfDay.TrimPrecision(i));
+				Test<TimeSpan>(DataType.Char     , i, TestData.TimeOfDay, TestData.TimeOfDay.TrimPrecision(i));
+				Test<TimeSpan>(DataType.NChar    , i, TestData.TimeOfDay, TestData.TimeOfDay.TrimPrecision(i));
+				Test<TimeSpan>(DataType.VarChar  , i, TestData.TimeOfDay, TestData.TimeOfDay.TrimPrecision(i));
+				Test<TimeSpan>(DataType.NVarChar , i, TestData.TimeOfDay, TestData.TimeOfDay.TrimPrecision(i));
+				Test<TimeSpan>(DataType.Time     , i, TestData.TimeOfDay, TestData.TimeOfDay.TrimPrecision(i));
+				Test<TimeSpan>(DataType.Undefined, i, TestData.TimeOfDay, TestData.TimeOfDay.TrimPrecision(i));
+			}
+
+			// DateTimeOffset
+			Test<DateTimeOffset>(DataType.Date          , -1, TestData.DateTimeOffset, TestData.DateTimeOffset.Date);
+			Test<DateTimeOffset>(DataType.DateTime      , -1, TestData.DateTimeOffset, TestData.DateTimeOffset.TrimPrecision(3));
+			Test<DateTimeOffset>(DataType.SmallDateTime , -1, TestData.DateTimeOffset, TestData.DateTimeOffset.TrimSeconds(1));
+			for (var i = 0; i <= 7; i++)
+			{
+				Test<DateTimeOffset>(DataType.Text          , i, TestData.DateTimeOffset, TestData.DateTimeOffset.TrimPrecision(i));
+				Test<DateTimeOffset>(DataType.NText         , i, TestData.DateTimeOffset, TestData.DateTimeOffset.TrimPrecision(i));
+				Test<DateTimeOffset>(DataType.Char          , i, TestData.DateTimeOffset, TestData.DateTimeOffset.TrimPrecision(i));
+				Test<DateTimeOffset>(DataType.NChar         , i, TestData.DateTimeOffset, TestData.DateTimeOffset.TrimPrecision(i));
+				Test<DateTimeOffset>(DataType.VarChar       , i, TestData.DateTimeOffset, TestData.DateTimeOffset.TrimPrecision(i));
+				Test<DateTimeOffset>(DataType.NVarChar      , i, TestData.DateTimeOffset, TestData.DateTimeOffset.TrimPrecision(i));
+
+				if (context.IsAnyOf(TestProvName.AllSqlServer2005))
+				{
+					Test<DateTimeOffset>(DataType.DateTime2, i, TestData.DateTimeOffset, TestData.DateTimeOffset.TrimPrecision(Math.Min(3, i)));
+					Test<DateTimeOffset>(DataType.DateTimeOffset, i, TestData.DateTimeOffset, TestData.DateTimeOffset.TrimPrecision(Math.Min(3, i)));
+					Test<DateTimeOffset>(DataType.Undefined, i, TestData.DateTimeOffset, TestData.DateTimeOffset.TrimPrecision(Math.Min(3, i)));
+				}
+				else
+				{
+					Test<DateTimeOffset>(DataType.DateTime2, i, TestData.DateTimeOffset, TestData.DateTimeOffset.TrimPrecision(i));
+					Test<DateTimeOffset>(DataType.DateTimeOffset, i, TestData.DateTimeOffset, TestData.DateTimeOffset.TrimPrecision(i));
+					Test<DateTimeOffset>(DataType.Undefined, i, TestData.DateTimeOffset, TestData.DateTimeOffset.TrimPrecision(i));
+				}
+			}
+
+#if NET6_0_OR_GREATER
+			// DateOnly
+			Test<DateOnly>(DataType.Text     , -1, TestData.DateOnly, TestData.DateOnly);
+			Test<DateOnly>(DataType.NText    , -1, TestData.DateOnly, TestData.DateOnly);
+			Test<DateOnly>(DataType.Char     , -1, TestData.DateOnly, TestData.DateOnly);
+			Test<DateOnly>(DataType.NChar    , -1, TestData.DateOnly, TestData.DateOnly);
+			Test<DateOnly>(DataType.VarChar  , -1, TestData.DateOnly, TestData.DateOnly);
+			Test<DateOnly>(DataType.NVarChar , -1, TestData.DateOnly, TestData.DateOnly);
+			Test<DateOnly>(DataType.Date     , -1, TestData.DateOnly, TestData.DateOnly);
+			Test<DateOnly>(DataType.Undefined, -1, TestData.DateOnly, TestData.DateOnly);
+#endif
+
+			void Test<TValue>(DataType dataType, int precision, TValue value, TValue expected)
+			{
+				using var db = GetDataContext(context);
+
+				var prop = db.GetFluentMappingBuilder()
+					.Entity<LiteralsTestTable<TValue>>()
+					.Property(e => e.Value)
+					.HasDataType(dataType)
+					.HasPrecision(precision);
+
+				db.AddInterceptor(interceptor);
+				
+				db.InlineParameters = true;
+
+				var data = new LiteralsTestTable<TValue>[] { new() { Value = value } }.AsQueryable(db).ToArray();
+				Assert.AreEqual(expected, data[0].Value);
+				Assert.AreEqual(0, interceptor.Parameters.Length);
+
+				db.InlineParameters = false;
+
+				data = (from x in db.FromSqlScalar<int>($"select 1 as one")
+					   from y in new LiteralsTestTable<TValue>[] { new() { Value = value } }
+					   select y).ToArray();
+
+				Assert.AreEqual(expected, data[0].Value);
+				Assert.AreEqual(1, interceptor.Parameters.Length);
+			}
+		}
 	}
 }
