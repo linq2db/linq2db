@@ -138,13 +138,13 @@ namespace DataModel
 		#region Associations
 
 		/// <summary>
-		/// FK_CustomerCustomerDemo_Customers_BackReference (TestDataNorthwind.dbo.CustomerCustomerDemo)
+		/// FK_CustomerCustomerDemo_Customers_BackReference (dbo.CustomerCustomerDemo)
 		/// </summary>
 		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true)]
 		public List<CustomerCustomerDemo> CustomerCustomerDemoes { get; set; } = null!;
 
 		/// <summary>
-		/// FK_Orders_Customers_BackReference (TestDataNorthwind.dbo.Orders)
+		/// FK_Orders_Customers_BackReference (dbo.Orders)
 		/// </summary>
 		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true)]
 		public List<Order> Orders { get; set; } = null!;
@@ -170,13 +170,13 @@ namespace DataModel
 		#region Associations
 
 		/// <summary>
-		/// FK_CustomerCustomerDemo_Customers (TestDataNorthwind.dbo.Customers)
+		/// FK_CustomerCustomerDemo_Customers (dbo.Customers)
 		/// </summary>
 		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=false)]
 		public Customer Customer { get; set; } = null!;
 
 		/// <summary>
-		/// FK_CustomerCustomerDemo (TestDataNorthwind.dbo.CustomerDemographics)
+		/// FK_CustomerCustomerDemo (dbo.CustomerDemographics)
 		/// </summary>
 		[Association(ThisKey="CustomerTypeID", OtherKey="CustomerTypeID", CanBeNull=false)]
 		public CustomerDemographic CustomerType { get; set; } = null!;
@@ -193,7 +193,7 @@ namespace DataModel
 		#region Associations
 
 		/// <summary>
-		/// FK_CustomerCustomerDemo_BackReference (TestDataNorthwind.dbo.CustomerCustomerDemo)
+		/// FK_CustomerCustomerDemo_BackReference (dbo.CustomerCustomerDemo)
 		/// </summary>
 		[Association(ThisKey="CustomerTypeID", OtherKey="CustomerTypeID", CanBeNull=true)]
 		public List<CustomerCustomerDemo> CustomerCustomerDemoes { get; set; } = null!;
@@ -226,25 +226,25 @@ namespace DataModel
 		#region Associations
 
 		/// <summary>
-		/// FK_EmployeeTerritories_Employees_BackReference (TestDataNorthwind.dbo.EmployeeTerritories)
+		/// FK_EmployeeTerritories_Employees_BackReference (dbo.EmployeeTerritories)
 		/// </summary>
 		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true)]
 		public List<EmployeeTerritory> EmployeeTerritories { get; set; } = null!;
 
 		/// <summary>
-		/// FK_Employees_Employees (TestDataNorthwind.dbo.Employees)
+		/// FK_Employees_Employees (dbo.Employees)
 		/// </summary>
 		[Association(ThisKey="ReportsTo", OtherKey="EmployeeID", CanBeNull=true)]
 		public Employee? FkEmployeesEmployee { get; set; }
 
 		/// <summary>
-		/// FK_Employees_Employees_BackReference (TestDataNorthwind.dbo.Employees)
+		/// FK_Employees_Employees_BackReference (dbo.Employees)
 		/// </summary>
 		[Association(ThisKey="EmployeeID", OtherKey="ReportsTo", CanBeNull=true)]
 		public List<Employee> FkEmployeesEmployeesBackReferences { get; set; } = null!;
 
 		/// <summary>
-		/// FK_Orders_Employees_BackReference (TestDataNorthwind.dbo.Orders)
+		/// FK_Orders_Employees_BackReference (dbo.Orders)
 		/// </summary>
 		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true)]
 		public List<Order> Orders { get; set; } = null!;
@@ -261,13 +261,13 @@ namespace DataModel
 		#region Associations
 
 		/// <summary>
-		/// FK_EmployeeTerritories_Employees (TestDataNorthwind.dbo.Employees)
+		/// FK_EmployeeTerritories_Employees (dbo.Employees)
 		/// </summary>
 		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=false)]
 		public Employee Employee { get; set; } = null!;
 
 		/// <summary>
-		/// FK_EmployeeTerritories_Territories (TestDataNorthwind.dbo.Territories)
+		/// FK_EmployeeTerritories_Territories (dbo.Territories)
 		/// </summary>
 		[Association(ThisKey="TerritoryID", OtherKey="TerritoryID", CanBeNull=false)]
 		public Territory Territory { get; set; } = null!;
@@ -327,25 +327,25 @@ namespace DataModel
 		#region Associations
 
 		/// <summary>
-		/// FK_Orders_Customers (TestDataNorthwind.dbo.Customers)
+		/// FK_Orders_Customers (dbo.Customers)
 		/// </summary>
 		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true)]
 		public Customer? Customer { get; set; }
 
 		/// <summary>
-		/// FK_Orders_Employees (TestDataNorthwind.dbo.Employees)
+		/// FK_Orders_Employees (dbo.Employees)
 		/// </summary>
 		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true)]
 		public Employee? Employee { get; set; }
 
 		/// <summary>
-		/// FK_Order_Details_Orders_BackReference (TestDataNorthwind.dbo.Order Details)
+		/// FK_Order_Details_Orders_BackReference (dbo.Order Details)
 		/// </summary>
 		[Association(ThisKey="OrderID", OtherKey="ID", CanBeNull=true)]
 		public List<OrderDetail> OrderDetails { get; set; } = null!;
 
 		/// <summary>
-		/// FK_Orders_Shippers (TestDataNorthwind.dbo.Shippers)
+		/// FK_Orders_Shippers (dbo.Shippers)
 		/// </summary>
 		[Association(ThisKey="ShipVia", OtherKey="ShipperID", CanBeNull=true)]
 		public Shipper? Shipper { get; set; }
@@ -365,7 +365,7 @@ namespace DataModel
 		#region Associations
 
 		/// <summary>
-		/// FK_Order_Details_Orders (TestDataNorthwind.dbo.Orders)
+		/// FK_Order_Details_Orders (dbo.Orders)
 		/// </summary>
 		[Association(ThisKey="ID", OtherKey="OrderID", CanBeNull=false)]
 		public Order Order { get; set; } = null!;
@@ -465,7 +465,7 @@ namespace DataModel
 		#region Associations
 
 		/// <summary>
-		/// FK_Territories_Region_BackReference (TestDataNorthwind.dbo.Territories)
+		/// FK_Territories_Region_BackReference (dbo.Territories)
 		/// </summary>
 		[Association(ThisKey="RegionID", OtherKey="RegionID", CanBeNull=true)]
 		public List<Territory> Territories { get; set; } = null!;
@@ -501,7 +501,7 @@ namespace DataModel
 		#region Associations
 
 		/// <summary>
-		/// FK_Orders_Shippers_BackReference (TestDataNorthwind.dbo.Orders)
+		/// FK_Orders_Shippers_BackReference (dbo.Orders)
 		/// </summary>
 		[Association(ThisKey="ShipperID", OtherKey="ShipVia", CanBeNull=true)]
 		public List<Order> Orders { get; set; } = null!;
@@ -552,13 +552,13 @@ namespace DataModel
 		#region Associations
 
 		/// <summary>
-		/// FK_EmployeeTerritories_Territories_BackReference (TestDataNorthwind.dbo.EmployeeTerritories)
+		/// FK_EmployeeTerritories_Territories_BackReference (dbo.EmployeeTerritories)
 		/// </summary>
 		[Association(ThisKey="TerritoryID", OtherKey="TerritoryID", CanBeNull=true)]
 		public List<EmployeeTerritory> EmployeeTerritories { get; set; } = null!;
 
 		/// <summary>
-		/// FK_Territories_Region (TestDataNorthwind.dbo.Region)
+		/// FK_Territories_Region (dbo.Region)
 		/// </summary>
 		[Association(ThisKey="RegionID", OtherKey="RegionID", CanBeNull=false)]
 		public Region Region { get; set; } = null!;
@@ -1128,7 +1128,6 @@ namespace DataModel
 		public ITable<AllTypes2>               AllTypes2                { get { return this.GetTable<AllTypes2>(); } }
 		public ITable<Child>                   Children                 { get { return this.GetTable<Child>(); } }
 		public ITable<CollatedTable>           CollatedTables           { get { return this.GetTable<CollatedTable>(); } }
-		public ITable<CreateIfNotExistsTable>  CreateIfNotExistsTables  { get { return this.GetTable<CreateIfNotExistsTable>(); } }
 		public ITable<DataType>                DataTypes                { get { return this.GetTable<DataType>(); } }
 		public ITable<DecimalOverflow>         DecimalOverflows         { get { return this.GetTable<DecimalOverflow>(); } }
 		public ITable<Doctor>                  Doctors                  { get { return this.GetTable<Doctor>(); } }
@@ -1299,13 +1298,6 @@ namespace DataModel
 		[Column(DbType="nvarchar(20)", DataType=LinqToDB.DataType.NVarChar, Length=20), NotNull] public string CaseInsensitive { get; set; } = null!; // nvarchar(20)
 	}
 
-	[Table("CreateIfNotExistsTable")]
-	public partial class CreateIfNotExistsTable
-	{
-		[Column(DbType="int", DataType=LinqToDB.DataType.Int32), NotNull] public int Id    { get; set; } // int
-		[Column(DbType="int", DataType=LinqToDB.DataType.Int32), NotNull] public int Value { get; set; } // int
-	}
-
 	[Table("DataType")]
 	public partial class DataType
 	{
@@ -1362,7 +1354,7 @@ namespace DataModel
 		#region Associations
 
 		/// <summary>
-		/// FK_Patient2_IndexTable_BackReference (TestData2014.dbo.IndexTable2)
+		/// FK_Patient2_IndexTable_BackReference (dbo.IndexTable2)
 		/// </summary>
 		[Association(ThisKey="PKField2, PKField1", OtherKey="PKField2, PKField1", CanBeNull=true)]
 		public IndexTable2? Patient { get; set; }
@@ -1379,7 +1371,7 @@ namespace DataModel
 		#region Associations
 
 		/// <summary>
-		/// FK_Patient2_IndexTable (TestData2014.dbo.IndexTable)
+		/// FK_Patient2_IndexTable (dbo.IndexTable)
 		/// </summary>
 		[Association(ThisKey="PKField2, PKField1", OtherKey="PKField2, PKField1", CanBeNull=false)]
 		public IndexTable Patient2IndexTable { get; set; } = null!;
@@ -1573,19 +1565,19 @@ namespace DataModel
 		#region Associations
 
 		/// <summary>
-		/// FK_TestSchemaY_TestSchemaX_BackReference (TestData2014.dbo.TestSchemaY)
+		/// FK_TestSchemaY_TestSchemaX_BackReference (dbo.TestSchemaY)
 		/// </summary>
 		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=true)]
 		public List<TestSchemaY> TestSchemaY { get; set; } = null!;
 
 		/// <summary>
-		/// FK_TestSchemaY_OtherID_BackReference (TestData2014.dbo.TestSchemaY)
+		/// FK_TestSchemaY_OtherID_BackReference (dbo.TestSchemaY)
 		/// </summary>
 		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=true)]
 		public List<TestSchemaY> TestSchemaYOtherIds { get; set; } = null!;
 
 		/// <summary>
-		/// FK_TestSchemaY_ParentTestSchemaX_BackReference (TestData2014.dbo.TestSchemaY)
+		/// FK_TestSchemaY_ParentTestSchemaX_BackReference (dbo.TestSchemaY)
 		/// </summary>
 		[Association(ThisKey="TestSchemaXID", OtherKey="ParentTestSchemaXID", CanBeNull=true)]
 		public List<TestSchemaY> TestSchemaYParentTestSchemaX { get; set; } = null!;
@@ -1603,19 +1595,19 @@ namespace DataModel
 		#region Associations
 
 		/// <summary>
-		/// FK_TestSchemaY_OtherID (TestData2014.dbo.TestSchemaX)
+		/// FK_TestSchemaY_OtherID (dbo.TestSchemaX)
 		/// </summary>
 		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false)]
 		public TestSchemaX FkTestSchemaYOtherID { get; set; } = null!;
 
 		/// <summary>
-		/// FK_TestSchemaY_ParentTestSchemaX (TestData2014.dbo.TestSchemaX)
+		/// FK_TestSchemaY_ParentTestSchemaX (dbo.TestSchemaX)
 		/// </summary>
 		[Association(ThisKey="ParentTestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false)]
 		public TestSchemaX ParentTestSchemaX { get; set; } = null!;
 
 		/// <summary>
-		/// FK_TestSchemaY_TestSchemaX (TestData2014.dbo.TestSchemaX)
+		/// FK_TestSchemaY_TestSchemaX (dbo.TestSchemaX)
 		/// </summary>
 		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false)]
 		public TestSchemaX TestSchemaX { get; set; } = null!;
@@ -2663,19 +2655,19 @@ namespace DataModel
 			#region Associations
 
 			/// <summary>
-			/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA2_BackReference (TestData2014.TestSchema.TestSchemaB)
+			/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA2_BackReference (TestSchema.TestSchemaB)
 			/// </summary>
 			[Association(ThisKey="TestSchemaAID", OtherKey="TargetTestSchemaAId", CanBeNull=true)]
 			public List<MySchemaSchema.TestSchemaB> FkTestSchemaTestSchemaBYTargetTestSchemaA2BackReferences { get; set; } = null!;
 
 			/// <summary>
-			/// FK_TestSchema_TestSchemaBY_OriginTestSchemaA_BackReference (TestData2014.TestSchema.TestSchemaB)
+			/// FK_TestSchema_TestSchemaBY_OriginTestSchemaA_BackReference (TestSchema.TestSchemaB)
 			/// </summary>
 			[Association(ThisKey="TestSchemaAID", OtherKey="OriginTestSchemaAID", CanBeNull=true)]
 			public List<MySchemaSchema.TestSchemaB> TestSchemaBYOriginTestSchemaA { get; set; } = null!;
 
 			/// <summary>
-			/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA_BackReference (TestData2014.TestSchema.TestSchemaB)
+			/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA_BackReference (TestSchema.TestSchemaB)
 			/// </summary>
 			[Association(ThisKey="TestSchemaAID", OtherKey="TargetTestSchemaAID", CanBeNull=true)]
 			public List<MySchemaSchema.TestSchemaB> TestSchemaBYTargetTestSchemaA { get; set; } = null!;
@@ -2694,19 +2686,19 @@ namespace DataModel
 			#region Associations
 
 			/// <summary>
-			/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA (TestData2014.TestSchema.TestSchemaA)
+			/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA (TestSchema.TestSchemaA)
 			/// </summary>
 			[Association(ThisKey="TargetTestSchemaAID", OtherKey="TestSchemaAID", CanBeNull=false)]
 			public MySchemaSchema.TestSchemaA FKTargetTestSchemaA { get; set; } = null!;
 
 			/// <summary>
-			/// FK_TestSchema_TestSchemaBY_OriginTestSchemaA (TestData2014.TestSchema.TestSchemaA)
+			/// FK_TestSchema_TestSchemaBY_OriginTestSchemaA (TestSchema.TestSchemaA)
 			/// </summary>
 			[Association(ThisKey="OriginTestSchemaAID", OtherKey="TestSchemaAID", CanBeNull=false)]
 			public MySchemaSchema.TestSchemaA OriginTestSchemaA { get; set; } = null!;
 
 			/// <summary>
-			/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA2 (TestData2014.TestSchema.TestSchemaA)
+			/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA2 (TestSchema.TestSchemaA)
 			/// </summary>
 			[Association(ThisKey="TargetTestSchemaAId", OtherKey="TestSchemaAID", CanBeNull=false)]
 			public MySchemaSchema.TestSchemaA TargetTestSchemaA { get; set; } = null!;
