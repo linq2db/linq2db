@@ -5,7 +5,7 @@ namespace Tests
 	public static class TestProvName
 	{
 		#region SQLite
-		public const string Default           = "SQLite.Default";
+		public const string Default                           = "SQLite.Default";
 		public const string NorthwindSQLite                   = "Northwind.SQLite";
 		public const string NorthwindSQLiteMS                 = "Northwind.SQLite.MS";
 		public const string AllSQLiteNorthwind                = $"{NorthwindSQLite},{NorthwindSQLiteMS}";
@@ -133,9 +133,11 @@ namespace Tests
 		public const string SqlServerSequentialAccessMS  = "SqlServer.SA.MS";
 		public const string AllSqlServerSequentialAccess = $"{SqlServerSequentialAccess},{SqlServerSequentialAccessMS}";
 
-		public const string SqlServerContained                  = "SqlServer.Contained";
+		public const string SqlServerContained           = "SqlServer.Contained";
 		public const string SqlServerContainedMS         = "SqlServer.Contained.MS";
 		public const string AllSqlServerContained        = $"{SqlServerContained},{SqlServerContainedMS}";
+
+		public const string SqlServerInvalid             = "SqlServer.Invalid";
 
 		/// <summary>
 		/// Case-sensitive database.

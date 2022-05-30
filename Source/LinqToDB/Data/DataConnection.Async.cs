@@ -156,7 +156,7 @@ namespace LinqToDB.Data
 						});
 					}
 
-					throw;
+					throw new LinqToDBException("Unable to open connection to database", ex);
 				}
 			}
 		}

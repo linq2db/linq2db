@@ -61,6 +61,60 @@ namespace Tests.Data
 		}
 
 		[Test]
+		public void TraceInfoErrorsAreReportedForInvalidConnectionString([IncludeDataSources(TestProvName.SqlServerInvalid)] string context)
+		{
+			var events   = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
+			var counters = GetEnumValues((TraceInfoStep s) => 0);
+
+			using (var db = GetDataConnection(context))
+			{
+				db.OnTraceConnection = e =>
+				{
+					events[e.TraceInfoStep] = e;
+					counters[e.TraceInfoStep]++;
+				};
+
+				Assert.Throws<LinqToDBException>(() => db.GetTable<Northwind.Category>().ToList());
+
+				// steps called once
+				Assert.AreEqual(1, counters[TraceInfoStep.Error]);
+				Assert.AreEqual(1, counters[TraceInfoStep.Completed]);
+
+				// steps never called
+				Assert.AreEqual(0, counters[TraceInfoStep.BeforeExecute]);
+				Assert.AreEqual(0, counters[TraceInfoStep.AfterExecute]);
+				Assert.AreEqual(0, counters[TraceInfoStep.MapperCreated]);
+			}
+		}
+
+		[Test]
+		public void TraceInfoErrorsAreReportedForInvalidConnectionStringAsync([IncludeDataSources(TestProvName.SqlServerInvalid)] string context)
+		{
+			var events   = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
+			var counters = GetEnumValues((TraceInfoStep s) => 0);
+
+			using (var db = GetDataConnection(context))
+			{
+				db.OnTraceConnection = e =>
+				{
+					events[e.TraceInfoStep] = e;
+					counters[e.TraceInfoStep]++;
+				};
+
+				Assert.ThrowsAsync<LinqToDBException>(() => db.GetTable<Northwind.Category>().ToListAsync());
+
+				// steps called once
+				Assert.AreEqual(1, counters[TraceInfoStep.Error]);
+				Assert.AreEqual(1, counters[TraceInfoStep.Completed]);
+
+				// steps never called
+				Assert.AreEqual(0, counters[TraceInfoStep.BeforeExecute]);
+				Assert.AreEqual(0, counters[TraceInfoStep.AfterExecute]);
+				Assert.AreEqual(0, counters[TraceInfoStep.MapperCreated]);
+			}
+		}
+
+		[Test]
 		public void TraceInfoStepsAreReportedForLinqQuery([NorthwindDataContext] string context)
 		{
 			var events   = GetEnumValues((TraceInfoStep s) => default(TraceInfo));

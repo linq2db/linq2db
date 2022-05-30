@@ -1116,13 +1116,31 @@ namespace LinqToDB.Data
 
 			if (connect && _connection.State == ConnectionState.Closed)
 			{
-				_connectionInterceptor?.ConnectionOpening(new (this), _connection.Connection);
+				try
+				{
+					_connectionInterceptor?.ConnectionOpening(new(this), _connection.Connection);
 
-				_connection.Open();
-				_closeConnection = true;
+					_connection.Open();
+					_closeConnection = true;
 
-				_connectionInterceptor?.ConnectionOpened(new (this), _connection.Connection);
+					_connectionInterceptor?.ConnectionOpened(new(this), _connection.Connection);
+				}
+				catch (Exception ex)
+				{
+					if (TraceSwitchConnection.TraceError)
+					{
+						OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error, TraceOperation.Open, false)
+						{
+							TraceLevel = TraceLevel.Error,
+							StartTime = DateTime.UtcNow,
+							Exception = ex,
+						});
+					}
+
+					throw new LinqToDBException("Unable to open connection to database", ex);
+				}
 			}
+
 
 			return _connection;
 		}
