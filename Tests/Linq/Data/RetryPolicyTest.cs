@@ -149,7 +149,7 @@ namespace Tests.Data
 			}
 			catch (LinqToDBException ex)
 			{
-				Assert.AreEqual("Execute", ex.InnerException.Message);
+				Assert.AreEqual("Execute", ex.InnerException!.Message);
 			}
 			finally
 			{
@@ -173,7 +173,7 @@ namespace Tests.Data
 				}
 				catch (LinqToDBException ex)
 				{
-					Assert.AreEqual("ExecuteT", ex.InnerException.Message);
+					Assert.AreEqual("ExecuteT", ex.InnerException!.Message);
 				}
 				finally
 				{
