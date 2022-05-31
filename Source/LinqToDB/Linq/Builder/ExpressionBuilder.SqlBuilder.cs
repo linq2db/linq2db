@@ -3423,41 +3423,6 @@ namespace LinqToDB.Linq.Builder
 
 		#region Projection
 
-		static MemberInfo? FindMember(Type inType, ParameterInfo parameter)
-		{
-			var found = FindMember(TypeAccessor.GetAccessor(inType).Members, parameter);
-			return found;
-		}
-
-
-		static MemberInfo? FindMember(IReadOnlyCollection<MemberAccessor> members, ParameterInfo parameter)
-		{
-			MemberInfo? exactMatch   = null;
-			MemberInfo? nonCaseMatch = null;
-
-			foreach (var member in members)
-			{
-				if (member.Type == parameter.ParameterType)
-				{
-					if (member.Name == parameter.Name)
-					{
-						exactMatch = member.MemberInfo;
-						break;
-					}
-
-					if (member.Name.Equals(parameter.Name, StringComparison.InvariantCultureIgnoreCase))
-					{
-						nonCaseMatch = member.MemberInfo;
-						break;
-					}
-
-				}
-			}
-
-			return exactMatch ?? nonCaseMatch;
-		}
-
-
 		public Expression Project(IBuildContext context, Expression? path, List<Expression>? nextPath, int nextIndex, ProjectFlags flags, Expression body)
 		{
 			MemberInfo? member = null;
@@ -3617,7 +3582,7 @@ namespace LinqToDB.Linq.Builder
 						for (var i = 0; i < parameters.Length; i++)
 						{
 							var parameter     = parameters[i];
-							var memberByParam = FindMember(ne.Constructor.DeclaringType, parameter);
+							var memberByParam = SqlGenericConstructorExpression.FindMember(ne.Constructor.DeclaringType, parameter);
 
 							if (memberByParam != null &&
 							    MemberInfoEqualityComparer.Default.Equals(memberByParam, member))
@@ -3723,7 +3688,7 @@ namespace LinqToDB.Linq.Builder
 						for (var i = 0; i < parameters.Length; i++)
 						{
 							var parameter     = parameters[i];
-							var memberByParam = FindMember(mc.Method.ReturnType, parameter);
+							var memberByParam = SqlGenericConstructorExpression.FindMember(mc.Method.ReturnType, parameter);
 
 							if (memberByParam != null &&
 							    MemberInfoEqualityComparer.Default.Equals(memberByParam, member))

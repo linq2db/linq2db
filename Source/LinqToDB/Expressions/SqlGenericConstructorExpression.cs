@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using LinqToDB.Reflection;
 
 namespace LinqToDB.Expressions
 {
@@ -11,6 +12,8 @@ namespace LinqToDB.Expressions
 	{
 		public class Assignment
 		{
+			public static ReadOnlyCollection<Assignment> EmptyCollection = new (new List<Assignment>());
+
 			public Assignment(MemberInfo memberInfo, Expression expression, bool isMandatory)
 			{
 				MemberInfo  = memberInfo;
@@ -35,11 +38,43 @@ namespace LinqToDB.Expressions
 			}
 		}
 
-		public SqlGenericConstructorExpression(bool isFull, Type objectType, IList<Assignment> assignments)
+		public class Parameter
 		{
-			ObjectType     = objectType;
-			ConstructType  = isFull ? CreateType.Full : CreateType.Unknown;
-			Assignments    = new ReadOnlyCollection<Assignment>(assignments);
+			public static ReadOnlyCollection<Parameter> EmptyCollection = new (new List<Parameter>());
+
+			public Parameter(Expression expression, MemberInfo? memberInfo)
+			{
+				MemberInfo  = memberInfo;
+				Expression  = expression;
+			}
+
+			public Parameter(Expression expression)
+			{
+				Expression = expression;
+			}
+
+			public MemberInfo? MemberInfo { get; }
+			public Expression  Expression { get; }
+
+			public Parameter WithExpression(Expression expression)
+			{
+				if (expression == Expression)
+					return this;
+				return new Parameter(expression, MemberInfo);
+			}
+
+			public override string ToString()
+			{
+				return $"{Expression}";
+			}
+		}
+
+		public SqlGenericConstructorExpression(bool isFull, Type objectType, IList<Parameter> parameters, IList<Assignment> assignments)
+		{
+			ObjectType    = objectType;
+			ConstructType = isFull ? CreateType.Full : CreateType.Unknown;
+			Parameters    = new ReadOnlyCollection<Parameter>(parameters);
+			Assignments   = new ReadOnlyCollection<Assignment>(assignments);
 		}
 
 		public SqlGenericConstructorExpression(NewExpression newExpression)
@@ -58,11 +93,66 @@ namespace LinqToDB.Expressions
 			Constructor   = newExpression.Constructor;
 			ConstructType = CreateType.New;
 			ObjectType    = newExpression.Type;
+			Parameters    = Parameter.EmptyCollection;
 			Assignments   = new ReadOnlyCollection<Assignment>(items);
+		}
+
+		public static MemberInfo? FindMember(Type inType, ParameterInfo parameter)
+		{
+			var found = FindMember(TypeAccessor.GetAccessor(inType).Members, parameter);
+			return found;
+		}
+
+		public static MemberInfo? FindMember(IReadOnlyCollection<MemberAccessor> members, ParameterInfo parameter)
+		{
+			MemberInfo? exactMatch   = null;
+			MemberInfo? nonCaseMatch = null;
+
+			foreach (var member in members)
+			{
+				if (member.Type == parameter.ParameterType)
+				{
+					if (member.Name == parameter.Name)
+					{
+						exactMatch = member.MemberInfo;
+						break;
+					}
+
+					if (member.Name.Equals(parameter.Name, StringComparison.InvariantCultureIgnoreCase))
+					{
+						nonCaseMatch = member.MemberInfo;
+						break;
+					}
+
+				}
+			}
+
+			return exactMatch ?? nonCaseMatch;
 		}
 
 		public SqlGenericConstructorExpression(MemberInitExpression memberInitExpression)
 		{
+			if (memberInitExpression.NewExpression.Members != null)
+				throw new NotImplementedException();
+
+			var arguments = memberInitExpression.NewExpression.Arguments;
+			if (arguments.Count == 0)
+			{
+				Parameters = Parameter.EmptyCollection;
+			}
+			else
+			{
+				var constructorParameters = memberInitExpression.NewExpression.Constructor.GetParameters();
+				var parameters = new List<Parameter>(arguments.Count);
+				for (int i = 0; i < arguments.Count; i++)
+				{
+					parameters.Add(new Parameter(arguments[0],
+						FindMember(memberInitExpression.Type, constructorParameters[i])));
+				}
+
+				Parameters = new ReadOnlyCollection<Parameter>(parameters);
+			}
+			
 			var items = new List<Assignment>(memberInitExpression.Bindings.Count);
 
 			for (var i = 0; i < memberInitExpression.Bindings.Count; i++)
@@ -82,7 +172,7 @@ namespace LinqToDB.Expressions
 				}
 			}
 
-			NewExpression = Parse(memberInitExpression.NewExpression);
+			NewExpression = memberInitExpression.NewExpression;
 			ConstructType = CreateType.MemberInit;
 			ObjectType    = memberInitExpression.Type;
 			Assignments   = new ReadOnlyCollection<Assignment>(items);
@@ -93,6 +183,7 @@ namespace LinqToDB.Expressions
 		public CreateType       ConstructType  { get; private set; }
 		public Type             ObjectType     { get; private set; }
 
+		public ReadOnlyCollection<Parameter>  Parameters  { get; private set; }
 		public ReadOnlyCollection<Assignment> Assignments { get; private set; }
 
 		public override ExpressionType NodeType => ExpressionType.Extension;
@@ -117,6 +208,7 @@ namespace LinqToDB.Expressions
 
 		SqlGenericConstructorExpression()
 		{
+			Parameters  = null!;
 			Assignments = null!;
 			ObjectType  = null!;
 		}
@@ -145,6 +237,7 @@ namespace LinqToDB.Expressions
 			var result = new SqlGenericConstructorExpression
 			{
 				Assignments   = new ReadOnlyCollection<Assignment>(assignment),
+				Parameters    = Parameters,
 				ObjectType    = ObjectType,
 				Constructor   = Constructor,
 				ConstructType = ConstructType,
