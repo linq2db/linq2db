@@ -38,7 +38,8 @@ namespace Tests.Linq
 			return db.CreateLocalTable(Data);
 		}
 
-		private static readonly (Expression<Func<Src, bool>> where, int[] withoutNulls, int[] withNulls)[] _conditions = new[]
+		private static readonly (Expression<Func<Src, bool>> where, int[] withoutNulls, int[] withNulls)[] _conditions 
+			= new (Expression<Func<Src, bool>> where, int[] withoutNulls, int[] withNulls)[]
 		{
 			(x => x.A == x.B, new[] { 111 },      new[] { 100, 111 }),
 			(x => x.A != x.B, new[] { 112, 121 }, new[] { 101, 110, 112, 121 }),
