@@ -120,7 +120,7 @@ namespace LinqToDB
 			else if (options.ConnectionFactory   != null) _optionsBuilder.UseConnectionFactory  (dataProvider, options.ConnectionFactory);
 			else if (options.ConfigurationString != null) _optionsBuilder.UseConfigurationString(options.ConfigurationString);
 			else if (options.DbConnection        != null) _optionsBuilder.UseConnection         (dataProvider, options.DbConnection, options.DisposeConnection);
-			else if (options.ConnectionString    != null) _optionsBuilder.UseConnectionString   (options.ProviderName!, options.ConnectionString);
+			else if (options.ConnectionString    != null) _optionsBuilder.UseConnectionString   (dataProvider, options.ConnectionString);
 
 			// interceptors magic
 			// as we need to aggregate interceptors, we don't pass them as-is from options to builder but manage separately
