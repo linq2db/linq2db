@@ -114,23 +114,23 @@ namespace LinqToDB.Data
 		{
 			CheckAndThrowOnDisposed();
 
-			if (_connection == null)
+			try
 			{
-				DbConnection connection;
-				if (_connectionFactory != null)
-					connection = _connectionFactory();
-				else
-					connection = DataProvider.CreateConnection(ConnectionString!);
+				if (_connection == null)
+				{
+					DbConnection connection;
+					if (_connectionFactory != null)
+						connection = _connectionFactory();
+					else
+						connection = DataProvider.CreateConnection(ConnectionString!);
 
-				_connection = AsyncFactory.Create(connection);
+					_connection = AsyncFactory.Create(connection);
 
-				if (RetryPolicy != null)
-					_connection = new RetryingDbConnection(this, _connection, RetryPolicy);
-			}
+					if (RetryPolicy != null)
+						_connection = new RetryingDbConnection(this, _connection, RetryPolicy);
+				}
 
-			if (_connection.State == ConnectionState.Closed)
-			{
-				try
+				if (_connection.State == ConnectionState.Closed)
 				{
 					if (_connectionInterceptor != null)
 						await _connectionInterceptor.ConnectionOpeningAsync(new (this), _connection.Connection, cancellationToken)
@@ -144,24 +144,24 @@ namespace LinqToDB.Data
 						await _connectionInterceptor.ConnectionOpenedAsync(new (this), _connection.Connection, cancellationToken)
 							.ConfigureAwait(Configuration.ContinueOnCapturedContext);
 				}
-				catch (Exception ex)
+			}
+			catch (Exception ex)
+			{
+				if (TraceSwitchConnection.TraceError)
 				{
-					if (TraceSwitchConnection.TraceError)
+					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error, TraceOperation.Open, true)
 					{
-						OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error, TraceOperation.Open, true)
-						{
-							TraceLevel = TraceLevel.Error,
-							StartTime  = DateTime.UtcNow,
-							Exception  = ex,
-						});
-					}
-
-					// OCE should always be re-thrown instead of encapsulated
-					if (ex is OperationCanceledException)
-						throw;
-
-					throw new LinqToDBException("Unable to open connection to database", ex);
+						TraceLevel = TraceLevel.Error,
+						StartTime  = DateTime.UtcNow,
+						Exception  = ex,
+					});
 				}
+
+				// OCE should always be re-thrown instead of encapsulated
+				if (ex is OperationCanceledException)
+					throw;
+
+				throw new LinqToDBException("Unable to open connection to database", ex);
 			}
 		}
 
