@@ -79,12 +79,13 @@ namespace Tests.Linq
 
 		}
 		[Test]
+		[ActiveIssue("SQLite.Classic doesn't parse the connection string until open", Configuration = ProviderName.SQLiteClassic)]
 		public void ProviderConnectionStringConstructorTest2([DataSources(false)] string context)
 		{
 			using (var db = (TestDataConnection)GetDataContext(context))
 			using (var db1 = new DataContext(db.DataProvider.Name, "BAD"))
 			{
-				Assert.Throws<LinqToDBException>(() => db1.GetTable<Child>().ToList());
+				Assert.Throws<ArgumentException>(() => db1.GetTable<Child>().ToList());
 			}
 		}
 

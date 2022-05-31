@@ -1137,6 +1137,10 @@ namespace LinqToDB.Data
 						});
 					}
 
+					// OCE should always be re-thrown instead of encapsulated
+					if (ex is OperationCanceledException)
+						throw;
+
 					throw new LinqToDBException("Unable to open connection to database", ex);
 				}
 			}
