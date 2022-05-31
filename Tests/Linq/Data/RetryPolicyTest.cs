@@ -147,9 +147,9 @@ namespace Tests.Data
 					Assert.Fail("Exception expected");
 				}
 			}
-			catch (NotImplementedException ex)
+			catch (LinqToDBException ex)
 			{
-				Assert.AreEqual("Execute", ex.Message);
+				Assert.AreEqual("Execute", ex.InnerException.Message);
 			}
 			finally
 			{
@@ -171,9 +171,9 @@ namespace Tests.Data
 						Assert.Fail("Exception expected");
 					}
 				}
-				catch (NotImplementedException ex)
+				catch (LinqToDBException ex)
 				{
-					Assert.AreEqual("ExecuteT", ex.Message);
+					Assert.AreEqual("ExecuteT", ex.InnerException.Message);
 				}
 				finally
 				{

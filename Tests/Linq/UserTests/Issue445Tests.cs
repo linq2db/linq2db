@@ -122,7 +122,7 @@ namespace Tests.UserTests
 		{
 			using (new DisableBaseline("Output depends on pool size"))
 			{
-				Assert.Throws<InvalidOperationException>(() =>
+				Assert.Throws<LinqToDBException>(() =>
 				{
 					for (var i = 0; i < 1000; i++)
 					{

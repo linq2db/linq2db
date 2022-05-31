@@ -74,7 +74,7 @@ namespace Tests.Linq
 		{
 			using (var db = (TestDataConnection)GetDataContext(context))
 			{
-				Assert.Throws(typeof(LinqToDBException), () => new DataContext("BAD", db.ConnectionString!));
+				Assert.Throws<LinqToDBException>(() => new DataContext("BAD", db.ConnectionString!));
 			}
 
 		}
@@ -84,7 +84,7 @@ namespace Tests.Linq
 			using (var db = (TestDataConnection)GetDataContext(context))
 			using (var db1 = new DataContext(db.DataProvider.Name, "BAD"))
 			{
-				Assert.Throws(typeof(ArgumentException), () => db1.GetTable<Child>().ToList());
+				Assert.Throws<LinqToDBException>(() => db1.GetTable<Child>().ToList());
 			}
 		}
 
