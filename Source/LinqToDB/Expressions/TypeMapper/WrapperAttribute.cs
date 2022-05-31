@@ -9,7 +9,7 @@ namespace LinqToDB.Expressions
 
 		public WrapperAttribute(string typeName)
 		{
-			TypeName = TypeName;
+			TypeName = typeName;
 		}
 
 		public string? TypeName { get; }
