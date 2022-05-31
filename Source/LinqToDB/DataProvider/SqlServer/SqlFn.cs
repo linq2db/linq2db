@@ -7,6 +7,7 @@ using JetBrains.Annotations;
 namespace LinqToDB.DataProvider.SqlServer
 {
 	using Expressions;
+	using Mapping;
 	using SqlQuery;
 
 	[PublicAPI]
@@ -1629,7 +1630,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <param name="expression">The string to test.</param>
 		/// <returns>Returns 1 if the string contains valid JSON; otherwise, returns 0. Returns null if expression is null.</returns>
 		/// <exception cref="InvalidOperationException" />
-		[Sql.Function(ProviderName.SqlServer, "ISJSON", ServerSideOnly=true)]
+		[Sql.Function(ProviderName.SqlServer, "ISJSON", ServerSideOnly = true)]
 		[return: NotNullIfNotNull("expression")]
 		public static bool? IsJson(string? expression)
 		{
@@ -1646,7 +1647,6 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// The collation of the returned value is the same as the collation of the input expression.</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Function(ProviderName.SqlServer, "JSON_VALUE", ServerSideOnly=true)]
-		[return: NotNullIfNotNull("expression")]
 		public static string? JsonValue(string? expression, string path)
 		{
 			throw new InvalidOperationException($"'{nameof(JsonValue)}' is a server side only function.");
@@ -1662,7 +1662,6 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// The collation of the returned value is the same as the collation of the input expression.</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Function(ProviderName.SqlServer, "JSON_QUERY", ServerSideOnly=true)]
-		[return: NotNullIfNotNull("expression")]
 		public static string? JsonQuery(string? expression, string path)
 		{
 			throw new InvalidOperationException($"'{nameof(JsonQuery)}' is a server side only function.");
@@ -1682,6 +1681,42 @@ namespace LinqToDB.DataProvider.SqlServer
 		public static string? JsonModify(string? expression, string path, string newValue)
 		{
 			throw new InvalidOperationException($"'{nameof(JsonModify)}' is a server side only function.");
+		}
+
+		public record JsonData
+		{
+			[Column("key")]   public string? Key   { get; set; }
+			[Column("value")] public string? Value { get; set; }
+			[Column("type")]  public int?    Type  { get; set; }
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/OPENJSON-transact-sql">OPENJSON (Transact-SQL)</see></b></para>
+		/// <para>A table-valued function that parses JSON text and returns objects and properties from the JSON input as rows and columns.</para>
+		/// </summary>
+		/// <param name="json">An expression. Typically the name of a variable or a column that contains JSON text.</param>
+		/// <returns>Returns a rowset view over the elements of a JSON object or array.</returns>
+		/// <exception cref="InvalidOperationException" />
+		/// <remarks>Only available on SQL Server 2016 or later, and compatibility mode for the database must be set to 130 or higher</remarks>
+		[Sql.TableExpression("OPENJSON({2}) {1}")]
+		public static ITable<JsonData> OpenJson(string? json)
+		{
+			throw new InvalidOperationException($"'{nameof(OpenJson)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/OPENJSON-transact-sql">OPENJSON (Transact-SQL)</see></b></para>
+		/// <para>A table-valued function that parses JSON text and returns objects and properties from the JSON input as rows and columns.</para>
+		/// </summary>
+		/// <param name="json">An expression. Typically the name of a variable or a column that contains JSON text.</param>
+		/// <param name="path">A JSON path expression that specifies the property to query.</param>
+		/// <returns>Returns a rowset view over the elements of a JSON object or array.</returns>
+		/// <exception cref="InvalidOperationException" />
+		/// <remarks>Only available on SQL Server 2016 or later, and compatibility mode for the database must be set to 130 or higher</remarks>
+		[Sql.TableExpression("OPENJSON({2}, {3}) {1}")]
+		public static ITable<JsonData> OpenJson(string? json, string path)
+		{
+			throw new InvalidOperationException($"'{nameof(OpenJson)}' is a server side only function.");
 		}
 
 		#endregion
