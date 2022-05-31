@@ -97,21 +97,21 @@ namespace Tests.Linq
 			using var db  = GetDataContext(context);
 			using var src = SetupSrcTable(db);
 
-			var data = _conditions[index];
+			var (where, withoutNulls, withNulls) = _conditions[index];
 
 			var result = src
-				.Where(data.where)
+				.Where(where)
 				.OrderBy(x => x.Id)
 				.Select(x => x.Id)
 				.ToList();
 
-			result.Should().Equal(withNullCompares ? data.withNulls : data.withoutNulls);
+			result.Should().Equal(withNullCompares ? withNulls : withoutNulls);
 
 			// CompareWithNullValues should behave exactly like C#
 			if (withNullCompares)
 			{
 				var linqResult = Data
-					.Where(data.where.Compile())
+					.Where(where.Compile())
 					.Select(x => x.Id)
 					.ToList();
 
