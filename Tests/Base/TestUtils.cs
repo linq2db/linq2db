@@ -62,21 +62,21 @@ namespace Tests
 			throw new InvalidOperationException();
 		}
 
-		[Sql.Expression("user"          , ServerSideOnly = true, Configuration = ProviderName.Informix)]
-		[Sql.Expression("user"          , ServerSideOnly = true, Configuration = ProviderName.Oracle)]
-		[Sql.Expression("current schema", ServerSideOnly = true, Configuration = ProviderName.DB2)]
-		[Sql.Function("current_schema"  , ServerSideOnly = true, Configuration = ProviderName.PostgreSQL)]
-		[Sql.Function("USER_NAME"       , ServerSideOnly = true, Configuration = ProviderName.Sybase)]
-		[Sql.Expression("current_schema", ServerSideOnly = true, Configuration = ProviderName.SapHana)]
-		[Sql.Function("SCHEMA_NAME"     , ServerSideOnly = true)]
+		[Sql.Expression("user"                                    , ServerSideOnly = true, Configuration = ProviderName.Informix)]
+		[Sql.Expression("sys_context('userenv', 'current_schema')", ServerSideOnly = true, Configuration = ProviderName.Oracle)]
+		[Sql.Expression("current schema"                          , ServerSideOnly = true, Configuration = ProviderName.DB2)]
+		[Sql.Function("current_schema"                            , ServerSideOnly = true, Configuration = ProviderName.PostgreSQL)]
+		[Sql.Function("USER_NAME"                                 , ServerSideOnly = true, Configuration = ProviderName.Sybase)]
+		[Sql.Expression("current_schema"                          , ServerSideOnly = true, Configuration = ProviderName.SapHana)]
+		[Sql.Function("SCHEMA_NAME"                               , ServerSideOnly = true)]
 		private static string SchemaName()
 		{
 			throw new InvalidOperationException();
 		}
 
 		[Sql.Expression("sys_context('userenv','service_name')", ServerSideOnly = true, Configuration = ProviderName.Oracle)]
-		[Sql.Expression("DBSERVERNAME", ServerSideOnly = true, Configuration = ProviderName.Informix)]
-		[Sql.Expression("@@SERVERNAME", ServerSideOnly = true)]
+		[Sql.Expression("DBSERVERNAME"                         , ServerSideOnly = true, Configuration = ProviderName.Informix)]
+		[Sql.Expression("@@SERVERNAME"                         , ServerSideOnly = true)]
 		private static string ServerName()
 		{
 			throw new InvalidOperationException();

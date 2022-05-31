@@ -375,6 +375,7 @@ namespace Tests
 			ProviderName.InformixDB2,
 			TestProvName.AllSQLite,
 			TestProvName.AllOracleManaged,
+			TestProvName.AllOracleDevart,
 			ProviderName.SybaseManaged,
 			TestProvName.AllFirebird,
 			TestProvName.AllSqlServer,

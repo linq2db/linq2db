@@ -42,7 +42,7 @@ namespace LinqToDB.DataProvider.Oracle
 			if (connection == null)
 				return string.Empty;
 
-			return _provider.Adapter.GetHostName(connection);
+			return _provider.Adapter.GetHostName?.Invoke(connection) ?? connection.DataSource;
 		}
 
 		protected override string GetDatabaseName(DataConnection dbConnection)
@@ -51,7 +51,7 @@ namespace LinqToDB.DataProvider.Oracle
 			if (connection == null)
 				return string.Empty;
 
-			return _provider.Adapter.GetDatabaseName(connection);
+			return _provider.Adapter.GetDatabaseName?.Invoke(connection) ?? connection.Database;
 		}
 
 		private string? _currentUser;
@@ -584,11 +584,11 @@ WHERE SEQUENCE > 0 AND DATA_LEVEL = 0 AND OWNER = USER
 				case "NCHAR"                          :
 				case "LONG"                           :
 				case "ROWID"                          :
-				case "CHAR"                           : return _provider.Adapter.OracleStringType      .Name;
-				case "TIMESTAMP"                      : return _provider.Adapter.OracleTimeStampType   .Name;
-				case "TIMESTAMP WITH LOCAL TIME ZONE" : return _provider.Adapter.OracleTimeStampLTZType.Name;
-				case "TIMESTAMP WITH TIME ZONE"       : return _provider.Adapter.OracleTimeStampTZType .Name;
-				case "XMLTYPE"                        : return _provider.Adapter.OracleXmlTypeType     .Name;
+				case "CHAR"                           : return _provider.Adapter.OracleStringType       .Name;
+				case "TIMESTAMP"                      : return _provider.Adapter.OracleTimeStampType    .Name;
+				case "TIMESTAMP WITH LOCAL TIME ZONE" : return _provider.Adapter.OracleTimeStampLTZType?.Name ?? _provider.Adapter.OracleTimeStampType.Name;
+				case "TIMESTAMP WITH TIME ZONE"       : return _provider.Adapter.OracleTimeStampTZType? .Name ?? _provider.Adapter.OracleTimeStampType.Name;
+				case "XMLTYPE"                        : return _provider.Adapter.OracleXmlTypeType      .Name;
 			}
 
 			return base.GetProviderSpecificType(dataType);

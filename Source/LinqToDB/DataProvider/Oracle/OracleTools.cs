@@ -11,44 +11,6 @@ namespace LinqToDB.DataProvider.Oracle
 	using Configuration;
 	using Data;
 
-	/// <summary>
-	/// Defines type of multi-row INSERT operation to generate for <see cref="BulkCopyType.RowByRow"/> bulk copy mode.
-	/// </summary>
-	public enum AlternativeBulkCopy
-	{
-		/// <summary>
-		/// This mode generates INSERT ALL statement.
-		/// Note that INSERT ALL doesn't support sequences and will use single generated value for all rows.
-		/// <code>
-		/// INSERT ALL
-		///     INTO target_table VALUES(/*row data*/)
-		///     ...
-		///     INTO target_table VALUES(/*row data*/)
-		/// </code>
-		/// </summary>
-		InsertAll,
-		/// <summary>
-		/// This mode performs regular INSERT INTO query with array of values for each column.
-		/// <code>
-		/// INSERT INTO target_table(/*columns*/)
-		///     VALUES(:column1ArrayParameter, ..., :columnXArrayParameter)
-		/// </code>
-		/// </summary>
-		InsertInto,
-		/// <summary>
-		/// This mode generates INSERT ... SELECT statement.
-		/// <code>
-		/// INSERT INTO target_table(/*columns*/)
-		///     SELECT /*row data*/ FROM DUAL
-		///     UNION ALL
-		///     ...
-		///     UNION ALL
-		///     SELECT /*row data*/ FROM DUAL
-		/// </code>
-		/// </summary>
-		InsertDual
-	}
-
 	public static partial class OracleTools
 	{
 #if NETFRAMEWORK
@@ -59,25 +21,36 @@ namespace LinqToDB.DataProvider.Oracle
 		static readonly Lazy<IDataProvider> _oracleManagedDataProvider11 = DataConnection.CreateDataProvider<OracleDataProviderManaged11>();
 		static readonly Lazy<IDataProvider> _oracleManagedDataProvider12 = DataConnection.CreateDataProvider<OracleDataProviderManaged12>();
 
-		public static bool AutoDetectProvider { get; set; } = true;
+		static readonly Lazy<IDataProvider> _oracleDevartDataProvider11 = DataConnection.CreateDataProvider<OracleDataProviderDevart11>();
+		static readonly Lazy<IDataProvider> _oracleDevartDataProvider12 = DataConnection.CreateDataProvider<OracleDataProviderDevart12>();
+
+		public static bool          AutoDetectProvider { get; set; } = true;
+		public static OracleVersion DefaultVersion = OracleVersion.v12;
 
 		internal static IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)
 		{
-			bool? managed = null;
+			OracleProvider? provider = null;
 			switch (css.ProviderName)
 			{
 #if NETFRAMEWORK
 				case OracleProviderAdapter.NativeAssemblyName    :
 				case OracleProviderAdapter.NativeClientNamespace :
 				case ProviderName.OracleNative                   :
-					managed = false;
+				case ProviderName.Oracle11Native                 :
+					provider = OracleProvider.Native;
 					goto case ProviderName.Oracle;
 #endif
+				case OracleProviderAdapter.DevartAssemblyName    :
+				case ProviderName.OracleDevart                   :
+				case ProviderName.Oracle11Devart                 :
+					provider = OracleProvider.Devart;
+					goto case ProviderName.Oracle;
 				case OracleProviderAdapter.ManagedAssemblyName   :
 				case OracleProviderAdapter.ManagedClientNamespace:
 				case "Oracle.ManagedDataAccess.Core"             :
 				case ProviderName.OracleManaged                  :
-					managed = true;
+				case ProviderName.Oracle11Managed                :
+					provider = OracleProvider.Managed;
 					goto case ProviderName.Oracle;
 				case ""                                          :
 				case null                                        :
@@ -86,46 +59,39 @@ namespace LinqToDB.DataProvider.Oracle
 						goto case ProviderName.Oracle;
 					break;
 				case ProviderName.Oracle                         :
-#if NETFRAMEWORK
-					if (css.Name.Contains("Native") || managed == false)
+					if (provider == null)
 					{
-						if (css.Name.Contains("11"))
-							return _oracleNativeDataProvider11.Value;
-						if (css.Name.Contains("12"))
-							return _oracleNativeDataProvider12.Value;
-						return GetDataProvider(css, connectionString, false);
-					}
-#endif
-
-					if (css.Name.Contains("Managed") || managed == true)
-					{
-						if (css.Name.Contains("11"))
-							return _oracleManagedDataProvider11.Value;
-						if (css.Name.Contains("12"))
-							return _oracleManagedDataProvider12.Value;
-						return GetDataProvider(css, connectionString, true);
+						if (css.Name.Contains("Native") || css.ProviderName?.Contains("Native") == true)
+							provider = OracleProvider.Native;
+						if (css.Name.Contains("Devart") || css.ProviderName?.Contains("Devart") == true)
+							provider = OracleProvider.Devart;
+						else
+							provider = OracleProvider.Managed;
 					}
 
-					return GetDataProvider();
+					if (css.Name.Contains("11") || css.ProviderName?.Contains("11") == true) return GetDataProvider(OracleVersion.v11, provider.Value);
+					if (css.Name.Contains("12") || css.ProviderName?.Contains("12") == true) return GetDataProvider(OracleVersion.v12, provider.Value);
+					if (css.Name.Contains("18") || css.ProviderName?.Contains("18") == true) return GetDataProvider(OracleVersion.v12, provider.Value);
+					if (css.Name.Contains("19") || css.ProviderName?.Contains("19") == true) return GetDataProvider(OracleVersion.v12, provider.Value);
+					if (css.Name.Contains("21") || css.ProviderName?.Contains("21") == true) return GetDataProvider(OracleVersion.v12, provider.Value);
+
+					var version = DefaultVersion;
+					if (AutoDetectProvider)
+						version = DetectProviderVersion(css, connectionString, provider.Value);
+
+					return GetDataProvider(version, provider.Value);
 			}
 
 			return null;
 		}
 
-		private static OracleVersion DetectProviderVersion(IConnectionStringSettings css, string connectionString, bool managed)
+		private static OracleVersion DetectProviderVersion(IConnectionStringSettings css, string connectionString, OracleProvider provider)
 		{
 			try
 			{
 				var cs = string.IsNullOrWhiteSpace(connectionString) ? css.ConnectionString : connectionString;
 
-				OracleProviderAdapter providerAdapter;
-
-#if NETFRAMEWORK
-				if (!managed)
-					providerAdapter = OracleProviderAdapter.GetInstance(ProviderName.OracleNative);
-				else
-#endif
-					providerAdapter = OracleProviderAdapter.GetInstance(ProviderName.OracleManaged);
+				var providerAdapter = OracleProviderAdapter.GetInstance(provider);
 
 				using (var conn = providerAdapter.CreateConnection(cs))
 				{
@@ -152,41 +118,113 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 		}
 
-		public static OracleVersion DefaultVersion = OracleVersion.v12;
-
-		static string? _detectedProviderName;
-
-		private static IDataProvider GetDataProvider(IConnectionStringSettings css, string connectionString, bool managed)
+		public static IDataProvider GetDataProvider(
+			OracleVersion version   = OracleVersion.v12,
+			OracleProvider provider = OracleProvider.Managed)
 		{
-			var version = DefaultVersion;
-			if (AutoDetectProvider)
-				version = DetectProviderVersion(css, connectionString, managed);
-
-			return GetVersionedDataProvider(version, managed);
-		}
-
-		private static IDataProvider GetVersionedDataProvider(OracleVersion version, bool managed)
-		{
+			return (provider, version) switch
+			{
 #if NETFRAMEWORK
-			if (!managed)
-			{
-				return version switch
-				{
-					OracleVersion.v11 => _oracleNativeDataProvider11.Value,
-					_                 => _oracleNativeDataProvider12.Value,
-				};
-			}
+				(OracleProvider.Native , OracleVersion.v11) => _oracleNativeDataProvider11 .Value,
+				(OracleProvider.Native , OracleVersion.v12) => _oracleNativeDataProvider12 .Value,
 #endif
-			return version switch
-			{
-				OracleVersion.v11 => _oracleManagedDataProvider11.Value,
-				_                 => _oracleManagedDataProvider12.Value,
+				(OracleProvider.Managed, OracleVersion.v11) => _oracleManagedDataProvider11.Value,
+				(OracleProvider.Managed, OracleVersion.v12) => _oracleManagedDataProvider12.Value,
+				(OracleProvider.Devart , OracleVersion.v11) => _oracleDevartDataProvider11 .Value,
+				(OracleProvider.Devart , OracleVersion.v12) => _oracleDevartDataProvider12 .Value,
+				_                                           => _oracleManagedDataProvider12.Value,
 			};
 		}
 
-		public static string  DetectedProviderName =>
-			_detectedProviderName ??= DetectProviderName();
+		#region CreateDataConnection
 
+		public static DataConnection CreateDataConnection(
+			string connectionString,
+			OracleVersion version   = OracleVersion.v12,
+			OracleProvider provider = OracleProvider.Managed)
+		{
+			return new DataConnection(GetDataProvider(version, provider), connectionString);
+		}
+
+		public static DataConnection CreateDataConnection(
+			DbConnection connection,
+			OracleVersion version   = OracleVersion.v12,
+			OracleProvider provider = OracleProvider.Managed)
+		{
+			return new DataConnection(GetDataProvider(version, provider), connection);
+		}
+
+		public static DataConnection CreateDataConnection(
+			DbTransaction transaction,
+			OracleVersion version   = OracleVersion.v12,
+			OracleProvider provider = OracleProvider.Managed)
+		{
+			return new DataConnection(GetDataProvider(version, provider), transaction);
+		}
+
+		#region Obsoleted (V5 remove)
+		[Obsolete("This API will be removed in v5")]
+		static string? _detectedProviderName;
+		[Obsolete("This API will be removed in v5")]
+		public static string DetectedProviderName => _detectedProviderName ??= DetectProviderName();
+
+		[Obsolete("Use GetDataProvider(OracleVersion, OracleProvider) overload")]
+		public static IDataProvider GetDataProvider(string? providerName = null, string? assemblyName = null, OracleVersion? version = null)
+		{
+			version ??= DefaultVersion;
+
+#if NETFRAMEWORK
+			if (assemblyName == OracleProviderAdapter.NativeAssemblyName) return GetVersionedDataProvider(version.Value, false);
+			if (assemblyName == OracleProviderAdapter.ManagedAssemblyName) return GetVersionedDataProvider(version.Value, true);
+
+			return providerName switch
+			{
+				ProviderName.OracleNative => GetVersionedDataProvider(version.Value, false),
+				ProviderName.OracleManaged => GetVersionedDataProvider(version.Value, true),
+				_ =>
+					DetectedProviderName == ProviderName.OracleNative
+					? GetVersionedDataProvider(version.Value, false)
+					: GetVersionedDataProvider(version.Value, true),
+			};
+#else
+			return GetVersionedDataProvider(version.Value, true);
+#endif
+		}
+
+		[Obsolete("This API will be removed in v5")]
+		public static void ResolveOracle(string path) => new AssemblyResolver(
+			path,
+#if NETFRAMEWORK
+			DetectedProviderName == ProviderName.OracleManaged
+				? OracleProviderAdapter.ManagedAssemblyName
+				: OracleProviderAdapter.NativeAssemblyName
+#else
+			OracleProviderAdapter.ManagedAssemblyName
+#endif
+			);
+
+		[Obsolete("This API will be removed in v5")]
+		public static void ResolveOracle(Assembly assembly) => new AssemblyResolver(assembly, assembly.FullName!);
+
+		[Obsolete("Use CreateDataConnection(string, OracleVersion, OracleProvider) overload")]
+		public static DataConnection CreateDataConnection(string connectionString, string? providerName = null)
+		{
+			return new DataConnection(GetDataProvider(providerName), connectionString);
+		}
+
+		[Obsolete("Use CreateDataConnection(DbConnection, OracleVersion, OracleProvider) overload")]
+		public static DataConnection CreateDataConnection(DbConnection connection, string? providerName = null)
+		{
+			return new DataConnection(GetDataProvider(providerName), connection);
+		}
+
+		[Obsolete("Use CreateDataConnection(DbTransaction, OracleVersion, OracleProvider) overload")]
+		public static DataConnection CreateDataConnection(DbTransaction transaction, string? providerName = null)
+		{
+			return new DataConnection(GetDataProvider(providerName), transaction);
+		}
+
+		[Obsolete("This API will be removed in v5")]
 		private static string DetectProviderName()
 		{
 #if NETFRAMEWORK
@@ -207,65 +245,32 @@ namespace LinqToDB.DataProvider.Oracle
 #endif
 		}
 
-		public static IDataProvider GetDataProvider(string? providerName = null, string? assemblyName = null, OracleVersion? version = null)
+		[Obsolete("This API will be removed in v5")]
+		private static IDataProvider GetVersionedDataProvider(OracleVersion version, bool managed)
 		{
-			version ??= DefaultVersion;
-
 #if NETFRAMEWORK
-			if (assemblyName == OracleProviderAdapter.NativeAssemblyName ) return GetVersionedDataProvider(version.Value, false);
-			if (assemblyName == OracleProviderAdapter.ManagedAssemblyName) return GetVersionedDataProvider(version.Value, true);
-
-			return providerName switch
+			if (!managed)
 			{
-				ProviderName.OracleNative  => GetVersionedDataProvider(version.Value, false),
-				ProviderName.OracleManaged => GetVersionedDataProvider(version.Value, true),
-				_						   =>
-					DetectedProviderName == ProviderName.OracleNative
-					? GetVersionedDataProvider(version.Value, false)
-					: GetVersionedDataProvider(version.Value, true),
+				return version switch
+				{
+					OracleVersion.v11 => _oracleNativeDataProvider11.Value,
+					_ => _oracleNativeDataProvider12.Value,
+				};
+			}
+#endif
+			return version switch
+			{
+				OracleVersion.v11 => _oracleManagedDataProvider11.Value,
+				_ => _oracleManagedDataProvider12.Value,
 			};
-#else
-			return GetVersionedDataProvider(version.Value, true);
-#endif
 		}
-
-		public static void ResolveOracle(string path)       => new AssemblyResolver(
-			path,
-#if NETFRAMEWORK
-			DetectedProviderName == ProviderName.OracleManaged
-				? OracleProviderAdapter.ManagedAssemblyName
-				: OracleProviderAdapter.NativeAssemblyName
-#else
-			OracleProviderAdapter.ManagedAssemblyName
-#endif
-			);
-
-		public static void ResolveOracle(Assembly assembly) => new AssemblyResolver(assembly, assembly.FullName!);
-
-		#region CreateDataConnection
-
-		public static DataConnection CreateDataConnection(string connectionString, string? providerName = null)
-		{
-			return new DataConnection(GetDataProvider(providerName), connectionString);
-		}
-
-		public static DataConnection CreateDataConnection(DbConnection connection, string? providerName = null)
-		{
-			return new DataConnection(GetDataProvider(providerName), connection);
-		}
-
-		public static DataConnection CreateDataConnection(DbTransaction transaction, string? providerName = null)
-		{
-			return new DataConnection(GetDataProvider(providerName), transaction);
-		}
+		#endregion
 
 		#endregion
 
 		#region BulkCopy
-
-		public  static BulkCopyType  DefaultBulkCopyType { get; set; } = BulkCopyType.MultipleRows;
-
-#endregion
+		public static BulkCopyType  DefaultBulkCopyType { get; set; } = BulkCopyType.MultipleRows;
+		#endregion
 
 		/// <summary>
 		/// Specifies type of multi-row INSERT operation to generate for <see cref="BulkCopyType.RowByRow"/> bulk copy mode.

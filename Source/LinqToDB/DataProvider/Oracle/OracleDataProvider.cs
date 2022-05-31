@@ -13,20 +13,31 @@ namespace LinqToDB.DataProvider.Oracle
 	using Mapping;
 	using SqlProvider;
 
-	class OracleDataProviderNative11  : OracleDataProvider { public OracleDataProviderNative11()  : base(ProviderName.Oracle11Native , OracleVersion.v11) {} }
-	class OracleDataProviderNative12  : OracleDataProvider { public OracleDataProviderNative12()  : base(ProviderName.OracleNative   , OracleVersion.v12) {} }
-	class OracleDataProviderManaged11 : OracleDataProvider { public OracleDataProviderManaged11() : base(ProviderName.Oracle11Managed, OracleVersion.v11) {} }
-	class OracleDataProviderManaged12 : OracleDataProvider { public OracleDataProviderManaged12() : base(ProviderName.OracleManaged  , OracleVersion.v12) {} }
+	class OracleDataProviderNative11  : OracleDataProvider { public OracleDataProviderNative11()  : base(ProviderName.Oracle11Native , OracleProvider.Native,  OracleVersion.v11) {} }
+	class OracleDataProviderNative12  : OracleDataProvider { public OracleDataProviderNative12()  : base(ProviderName.OracleNative   , OracleProvider.Native,  OracleVersion.v12) {} }
+	class OracleDataProviderDevart11  : OracleDataProvider { public OracleDataProviderDevart11()  : base(ProviderName.Oracle11Devart , OracleProvider.Devart,  OracleVersion.v11) {} }
+	class OracleDataProviderDevart12  : OracleDataProvider { public OracleDataProviderDevart12()  : base(ProviderName.OracleDevart   , OracleProvider.Devart,  OracleVersion.v12) {} }
+	class OracleDataProviderManaged11 : OracleDataProvider { public OracleDataProviderManaged11() : base(ProviderName.Oracle11Managed, OracleProvider.Managed, OracleVersion.v11) {} }
+	class OracleDataProviderManaged12 : OracleDataProvider { public OracleDataProviderManaged12() : base(ProviderName.OracleManaged  , OracleProvider.Managed, OracleVersion.v12) {} }
 
 	public abstract class OracleDataProvider : DynamicDataProviderBase<OracleProviderAdapter>
 	{
-		protected OracleDataProvider(string name) : this(name, OracleVersion.v12)
-		{}
+		[Obsolete("Use .ctor(string name, OracleProvider provider, OracleVersion version)")]
+		protected OracleDataProvider(string name)
+			: this(name, OracleProvider.Managed, OracleVersion.v12)
+		{ }
 
+		[Obsolete("Use .ctor(string name, OracleProvider provider, OracleVersion version)")]
 		protected OracleDataProvider(string name, OracleVersion version)
-			: base(name, GetMappingSchema(name), OracleProviderAdapter.GetInstance(name))
+			: this(name, OracleProvider.Managed, version)
 		{
-			Version = version;
+		}
+
+		protected OracleDataProvider(string name, OracleProvider provider, OracleVersion version)
+			: base(name, GetMappingSchema(provider, version), OracleProviderAdapter.GetInstance(provider))
+		{
+			Provider = provider;
+			Version  = version;
 
 			//SqlProviderFlags.IsCountSubQuerySupported        = false;
 			SqlProviderFlags.IsIdentityParameterRequired       = true;
@@ -57,36 +68,34 @@ namespace LinqToDB.DataProvider.Oracle
 			else
 				_sqlOptimizer = new Oracle12SqlOptimizer(SqlProviderFlags);
 
-			SetProviderField(Adapter.OracleBFileType       , Adapter.OracleBFileType       , Adapter.GetOracleBFileReaderMethod       , dataReaderType: Adapter.DataReaderType);
-			SetProviderField(Adapter.OracleBinaryType      , Adapter.OracleBinaryType      , Adapter.GetOracleBinaryReaderMethod      , dataReaderType: Adapter.DataReaderType);
-			SetProviderField(Adapter.OracleBlobType        , Adapter.OracleBlobType        , Adapter.GetOracleBlobReaderMethod        , dataReaderType: Adapter.DataReaderType);
-			SetProviderField(Adapter.OracleClobType        , Adapter.OracleClobType        , Adapter.GetOracleClobReaderMethod        , dataReaderType: Adapter.DataReaderType);
-			SetProviderField(Adapter.OracleDateType        , Adapter.OracleDateType        , Adapter.GetOracleDateReaderMethod        , dataReaderType: Adapter.DataReaderType);
-			SetProviderField(Adapter.OracleDecimalType     , Adapter.OracleDecimalType     , Adapter.GetOracleDecimalReaderMethod     , dataReaderType: Adapter.DataReaderType);
-			SetProviderField(Adapter.OracleIntervalDSType  , Adapter.OracleIntervalDSType  , Adapter.GetOracleIntervalDSReaderMethod  , dataReaderType: Adapter.DataReaderType);
-			SetProviderField(Adapter.OracleIntervalYMType  , Adapter.OracleIntervalYMType  , Adapter.GetOracleIntervalYMReaderMethod  , dataReaderType: Adapter.DataReaderType);
-			SetProviderField(Adapter.OracleStringType      , Adapter.OracleStringType      , Adapter.GetOracleStringReaderMethod      , dataReaderType: Adapter.DataReaderType);
-			SetProviderField(Adapter.OracleTimeStampType   , Adapter.OracleTimeStampType   , Adapter.GetOracleTimeStampReaderMethod   , dataReaderType: Adapter.DataReaderType);
-			SetProviderField(Adapter.OracleTimeStampLTZType, Adapter.OracleTimeStampLTZType, Adapter.GetOracleTimeStampLTZReaderMethod, dataReaderType: Adapter.DataReaderType);
-			SetProviderField(Adapter.OracleTimeStampTZType , Adapter.OracleTimeStampTZType , Adapter.GetOracleTimeStampTZReaderMethod , dataReaderType: Adapter.DataReaderType);
-			SetProviderField(Adapter.OracleXmlTypeType     , Adapter.OracleXmlTypeType     , Adapter.GetOracleXmlTypeReaderMethod     , dataReaderType: Adapter.DataReaderType);
+			foreach (var (type, method) in Adapter.CustomReaders)
+				SetProviderField(type, type, method, dataReaderType: Adapter.DataReaderType);
 
-			// native provider only
-			if (Adapter.OracleRefType != null)
-				SetProviderField(Adapter.OracleRefType     , Adapter.OracleRefType         , Adapter.GetOracleRefReaderMethod!        , dataReaderType: Adapter.DataReaderType);
+			if (Adapter.OracleTimeStampTZType != null)
+				ReaderExpressions[new ReaderInfo { ToType = typeof(DateTimeOffset), ProviderFieldType = Adapter.OracleTimeStampTZType, DataReaderType = Adapter.DataReaderType }] = Adapter.ReadDateTimeOffsetFromOracleTimeStampTZ;
+			else
+				ReaderExpressions[new ReaderInfo { ToType = typeof(DateTimeOffset), ProviderFieldType = Adapter.OracleTimeStampType, DataReaderType = Adapter.DataReaderType, DataTypeName = "TIMESTAMP WITH TIME ZONE" }] = Adapter.ReadDateTimeOffsetFromOracleTimeStampTZ;
 
-			ReaderExpressions[new ReaderInfo { ToType = typeof(DateTimeOffset), ProviderFieldType = Adapter.OracleTimeStampTZType, DataReaderType = Adapter.DataReaderType }]
-				= Adapter.ReadDateTimeOffsetFromOracleTimeStampTZ;
+			if (Adapter.ReadDateTimeOffsetFromOracleTimeStamp != null)
+				ReaderExpressions[new ReaderInfo { ToType = typeof(DateTimeOffset), ProviderFieldType = Adapter.OracleTimeStampType, DataReaderType = Adapter.DataReaderType, DataTypeName = "TIMESTAMP" }] = Adapter.ReadDateTimeOffsetFromOracleTimeStamp;
 
-			ReaderExpressions[new ReaderInfo { ToType = typeof(decimal),        ProviderFieldType = Adapter.OracleDecimalType,      DataReaderType = Adapter.DataReaderType }] = Adapter.ReadOracleDecimalToDecimalAdv;
-			ReaderExpressions[new ReaderInfo { ToType = typeof(decimal),        FieldType = typeof(decimal),                        DataReaderType = Adapter.DataReaderType }] = Adapter.ReadOracleDecimalToDecimalAdv;
-			ReaderExpressions[new ReaderInfo { ToType = typeof(int),            FieldType = typeof(decimal),                        DataReaderType = Adapter.DataReaderType }] = Adapter.ReadOracleDecimalToInt;
-			ReaderExpressions[new ReaderInfo { ToType = typeof(long),           FieldType = typeof(decimal),                        DataReaderType = Adapter.DataReaderType }] = Adapter.ReadOracleDecimalToLong;
-			ReaderExpressions[new ReaderInfo {                                  FieldType = typeof(decimal),                        DataReaderType = Adapter.DataReaderType }] = Adapter.ReadOracleDecimalToDecimal;
-			ReaderExpressions[new ReaderInfo { ToType = typeof(DateTimeOffset), ProviderFieldType = Adapter.OracleTimeStampLTZType, DataReaderType = Adapter.DataReaderType }] = Adapter.ReadDateTimeOffsetFromOracleTimeStampLTZ;
+			if (Adapter.ReadOracleDecimalToDecimalAdv != null)
+			{
+				ReaderExpressions[new ReaderInfo { ToType = typeof(decimal), ProviderFieldType = Adapter.OracleDecimalType, DataReaderType = Adapter.DataReaderType }] = Adapter.ReadOracleDecimalToDecimalAdv;
+				ReaderExpressions[new ReaderInfo { ToType = typeof(decimal), FieldType = typeof(decimal), DataReaderType = Adapter.DataReaderType }] = Adapter.ReadOracleDecimalToDecimalAdv;
+			}
+			if (Adapter.ReadOracleDecimalToInt != null)
+				ReaderExpressions[new ReaderInfo { ToType = typeof(int),            FieldType = typeof(decimal),                        DataReaderType = Adapter.DataReaderType }] = Adapter.ReadOracleDecimalToInt;
+			if (Adapter.ReadOracleDecimalToLong != null)
+				ReaderExpressions[new ReaderInfo { ToType = typeof(long),           FieldType = typeof(decimal),                        DataReaderType = Adapter.DataReaderType }] = Adapter.ReadOracleDecimalToLong;
+			if (Adapter.ReadOracleDecimalToDecimal != null)
+				ReaderExpressions[new ReaderInfo {                                  FieldType = typeof(decimal),                        DataReaderType = Adapter.DataReaderType }] = Adapter.ReadOracleDecimalToDecimal;
+			if (Adapter.ReadDateTimeOffsetFromOracleTimeStampLTZ != null)
+				ReaderExpressions[new ReaderInfo { ToType = typeof(DateTimeOffset), ProviderFieldType = Adapter.OracleTimeStampLTZType, DataReaderType = Adapter.DataReaderType }] = Adapter.ReadDateTimeOffsetFromOracleTimeStampLTZ;
 		}
 
-		public OracleVersion Version { get; }
+		public OracleProvider Provider { get; }
+		public OracleVersion  Version  { get; }
 
 		public override TableOptions SupportedTableOptions =>
 			TableOptions.IsTemporary                |
@@ -105,14 +114,16 @@ namespace LinqToDB.DataProvider.Oracle
 			};
 		}
 
-		private static MappingSchema GetMappingSchema(string name)
+		private static MappingSchema GetMappingSchema(OracleProvider provider, OracleVersion version)
 		{
-			return name switch
+			return (provider, version) switch
 			{
-				ProviderName.Oracle11Native  => new OracleMappingSchema.Native11MappingSchema(),
-				ProviderName.Oracle11Managed => new OracleMappingSchema.Managed11MappingSchema(),
-				ProviderName.OracleNative    => new OracleMappingSchema.NativeMappingSchema(),
-				_                            => new OracleMappingSchema.ManagedMappingSchema(),
+				(OracleProvider.Native, OracleVersion.v11)  => new OracleMappingSchema.Native11MappingSchema(),
+				(OracleProvider.Native, OracleVersion.v12)  => new OracleMappingSchema.NativeMappingSchema(),
+				(OracleProvider.Devart, OracleVersion.v11)  => new OracleMappingSchema.Devart11MappingSchema(),
+				(OracleProvider.Devart, OracleVersion.v12)  => new OracleMappingSchema.DevartMappingSchema(),
+				(OracleProvider.Managed, OracleVersion.v11) => new OracleMappingSchema.Managed11MappingSchema(),
+				_                                           => new OracleMappingSchema.ManagedMappingSchema(),
 			};
 		}
 
@@ -139,9 +150,9 @@ namespace LinqToDB.DataProvider.Oracle
 
 				// https://docs.oracle.com/cd/B19306_01/win.102/b14307/featData.htm
 				// For LONG data type fetching initialization
-				Adapter.SetInitialLONGFetchSize(rawCommand, -1);
+				Adapter.SetInitialLONGFetchSize?.Invoke(rawCommand, -1);
 
-				if (parameters != null)
+				if (parameters != null && Adapter.SetArrayBindCount != null)
 					foreach (var parameter in parameters)
 					{
 						if (parameter.IsArray
@@ -249,10 +260,10 @@ namespace LinqToDB.DataProvider.Oracle
 
 			switch (dataType.DataType)
 			{
-				case DataType.DateTimeOffset : if (type == typeof(DateTimeOffset)) return Adapter.OracleTimeStampTZType; break;
-				case DataType.Boolean        : if (type == typeof(bool))           return typeof(byte);                  break;
-				case DataType.Guid           : if (type == typeof(Guid))           return typeof(byte[]);                break;
-				case DataType.Int16          : if (type == typeof(bool))           return typeof(short);                 break;
+				case DataType.DateTimeOffset : if (type == typeof(DateTimeOffset)) return Adapter.OracleTimeStampTZType ?? Adapter.OracleTimeStampType; break;
+				case DataType.Boolean        : if (type == typeof(bool))           return typeof(byte);                                                 break;
+				case DataType.Guid           : if (type == typeof(Guid))           return typeof(byte[]);                                               break;
+				case DataType.Int16          : if (type == typeof(bool))           return typeof(short);                                                break;
 			}
 
 			return base.ConvertParameterType(type, dataType);
@@ -274,14 +285,18 @@ namespace LinqToDB.DataProvider.Oracle
 				case DataType.Text     : type = OracleProviderAdapter.OracleDbType.Clob        ; break;
 				case DataType.NText    : type = OracleProviderAdapter.OracleDbType.NClob       ; break;
 				case DataType.Image    :
+				case DataType.Blob     : type = OracleProviderAdapter.OracleDbType.Blob        ; break;
 				case DataType.Binary   :
-				case DataType.Blob     :
-				case DataType.VarBinary: type = OracleProviderAdapter.OracleDbType.Blob        ; break;
+				case DataType.VarBinary: type = (dataType.Length ?? 0) == 0
+						? OracleProviderAdapter.OracleDbType.Blob
+						: OracleProviderAdapter.OracleDbType.Raw;
+					break;
 				case DataType.Cursor   : type = OracleProviderAdapter.OracleDbType.RefCursor   ; break;
 				case DataType.NVarChar : type = OracleProviderAdapter.OracleDbType.NVarchar2   ; break;
 				case DataType.Long     : type = OracleProviderAdapter.OracleDbType.Long        ; break;
 				case DataType.LongRaw  : type = OracleProviderAdapter.OracleDbType.LongRaw     ; break;
 				case DataType.Json     : type = OracleProviderAdapter.OracleDbType.Json        ; break;
+				case DataType.Guid     : type = OracleProviderAdapter.OracleDbType.Raw         ; break;
 			}
 
 			if (type != null)

@@ -117,6 +117,8 @@ namespace Tests.xUpdate
 			[MapValue("\b", Configuration = ProviderName.Sybase)]
 			[MapValue("\b", Configuration = ProviderName.SapHana)]
 			[MapValue("\b", Configuration = ProviderName.DB2)]
+			[MapValue("\b", Configuration = ProviderName.OracleDevart)]
+			[MapValue("\b", Configuration = ProviderName.Oracle11Devart)]
 			[MapValue("\0")]
 			Value2,
 			[MapValue("_", Configuration = ProviderName.Oracle)]
