@@ -1751,7 +1751,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <param name="path">A JSON path expression that specifies the property to query.</param>
 		/// <returns>Returns a rowset view over the elements of a JSON object or array.</returns>
 		/// <exception cref="InvalidOperationException" />
-		/// <remarks>Only available on SQL Server 2016 or later, and compatibility mode for the database must be set to 130 or higher</remarks>
+		/// <remarks>Only available on SQL Server 2017 or later, and compatibility mode for the database must be set to 140 or higher</remarks>
 		[ExpressionMethod(nameof(GenerateOpenJsonStringStringImpl))]
 		public static IQueryable<JsonData> OpenJson(this IDataContext dc, [ExprParameter] string? json, [ExprParameter] string path)
 		{

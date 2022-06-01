@@ -1203,8 +1203,9 @@ namespace Tests.DataProvider
 			AreEqual(expected, result);
 		}
 
+		// SQL Server 2016 doesn't support @var for path
 		[Test]
-		public void OpenJson4([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
+		public void OpenJson4([IncludeDataSources(TestProvName.AllSqlServer2017Plus)] string context)
 		{
 			using var db = new SystemDB(context);
 			var result = db.OpenJson("{ \"test\" : [ 10, 20 ] }", "$.test").ToArray();
