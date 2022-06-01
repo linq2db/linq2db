@@ -143,10 +143,8 @@ namespace Tests.DataProvider
 				TestType(conn, "\"ntextDataType\"",          "111");
 
 				TestType(conn, "\"binaryDataType\"",         new byte[] { 0, 170 });
-#if !AZURE
 				// TODO: configure test file in docker image
 				TestType(conn, "\"bfileDataType\"",          new byte[] { 49, 50, 51, 52, 53 });
-#endif
 
 				var res = "<root><element strattr=\"strvalue\" intattr=\"12345\"/></root>";
 
@@ -2373,6 +2371,9 @@ namespace Tests.DataProvider
 			public string? StringValue;
 		}
 
+		// if this test fails with "ORA-12828: Can't start parallel transaction at a remote site"
+		// for devart provider in oci mode, add this to connection string:
+		// Enlist=false;Transaction Scope Local=true;
 		[Test]
 		public void Issue723Test1([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
@@ -2793,12 +2794,12 @@ namespace Tests.DataProvider
 				finally
 				{
 					OracleTools.DontEscapeLowercaseIdentifiers = initial;
+					Query.ClearCaches();
 				}
 			}
 		}
 
 		// this is a sad test which shows that we need better support for parameter value bindings
-		[SkipCI("TODO: BFile field requires configuration on CI")]
 		[Test]
 		public void ProcedureOutParameters([IncludeDataSources(false, TestProvName.AllOracle)] string context)
 		{
@@ -3397,7 +3398,7 @@ namespace Tests.DataProvider
 			using var db    = GetDataConnection(context);
 			using var table = db.CreateLocalTable<BulkCopyTable>();
 			{
-				var schemaName = TestUtils.GetSchemaName(db);
+				var schemaName = TestUtils.GetSchemaName(db, context);
 
 				var trace = string.Empty;
 				db.OnTraceConnection += ti =>
@@ -3424,7 +3425,7 @@ namespace Tests.DataProvider
 			using var db    = GetDataConnection(context);
 			using var table = db.CreateLocalTable<BulkCopyTable>();
 			{
-				var serverName = TestUtils.GetServerName(db);
+				var serverName = TestUtils.GetServerName(db, context);
 
 				var trace = string.Empty;
 				db.OnTraceConnection += ti =>
@@ -3451,7 +3452,7 @@ namespace Tests.DataProvider
 			using var db    = GetDataConnection(context);
 			using var table = db.CreateLocalTable<BulkCopyTable2>();
 			{
-				var serverName = TestUtils.GetServerName(db);
+				var serverName = TestUtils.GetServerName(db, context);
 
 				var trace = string.Empty;
 				db.OnTraceConnection += ti =>

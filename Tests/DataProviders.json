@@ -270,11 +270,11 @@
 			},
 			"Oracle.12.Devart.OCI": {
 				"Provider": "Devart.Data.Oracle",
-				"ConnectionString": "Server=localhot:1521/ORC12;User ID=DEVART_OCI; Password=devart_oci;Unicode=true;Trim Fixed Char=false;Direct=false;"
+				"ConnectionString": "Server=localhot:1521/ORC12;User ID=DEVART_OCI; Password=devart_oci;Unicode=true;Trim Fixed Char=false;Direct=false;Enlist=false;Transaction Scope Local=true;"
 			},
 			"Oracle.12.Devart.Direct": {
 				"Provider": "Devart.Data.Oracle",
-				"ConnectionString": "Server=localhot:1521/ORC12;User ID=DEVART_DIRECT; Password=devart_direct;Unicode=true;Trim Fixed Char=false;Direct=true;"
+				"ConnectionString": "Server=localhot:1521/ORC12;User ID=DEVART_DIRECT; Password=devart_direct;Unicode=true;Trim Fixed Char=false;Direct=true;Enlist=false;Transaction Scope Local=true;"
 			},
 			"Sybase": {
 				"Provider": "Sybase.Data.AseClient",

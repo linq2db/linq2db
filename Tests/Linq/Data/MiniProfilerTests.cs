@@ -1304,7 +1304,7 @@ namespace Tests.Data
 
 				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
 				// ToLower, because native prodiver returns it lowercased
-				Assert.AreEqual(unmapped ? string.Empty : TestUtils.GetServerName(db).ToLower(), schema.Database);
+				Assert.AreEqual(unmapped ? string.Empty : TestUtils.GetServerName(db, context).ToLower(), schema.Database);
 				//schema.DataSource not asserted, as it returns db hostname
 
 				// dbcommand properties
@@ -1403,7 +1403,7 @@ namespace Tests.Data
 				TestBulkCopy();
 
 				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
-				Assert.AreEqual(unmapped ? string.Empty : TestUtils.GetServerName(db), schema.Database);
+				Assert.AreEqual(unmapped ? string.Empty : TestUtils.GetServerName(db, context), schema.Database);
 				//schema.DataSource not asserted, as it returns db hostname
 
 				// dbcommand properties

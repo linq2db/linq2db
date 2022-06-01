@@ -1441,7 +1441,7 @@ namespace Tests.DataProvider
 		{
 			using (var db = (DataConnection)GetDataContext(context))
 			{
-				var dbName = TestUtils.GetDatabaseName(db);
+				var dbName = TestUtils.GetDatabaseName(db, context);
 
 				var par = new
 				{
@@ -1463,7 +1463,7 @@ namespace Tests.DataProvider
 		{
 			using (var db = (DataConnection)GetDataContext(context))
 			{
-				var dbName = TestUtils.GetDatabaseName(db);
+				var dbName = TestUtils.GetDatabaseName(db, context);
 
 				var par = new
 				{
@@ -1485,7 +1485,7 @@ namespace Tests.DataProvider
 		{
 			using (var db = (DataConnection)GetDataContext(context))
 			{
-				var dbName = TestUtils.GetDatabaseName(db);
+				var dbName = TestUtils.GetDatabaseName(db, context);
 
 				var par = new
 				{
@@ -1507,7 +1507,7 @@ namespace Tests.DataProvider
 		{
 			using (var db = (DataConnection)GetDataContext(context))
 			{
-				var dbName = TestUtils.GetDatabaseName(db);
+				var dbName = TestUtils.GetDatabaseName(db, context);
 
 				var par = new
 				{
@@ -1529,7 +1529,7 @@ namespace Tests.DataProvider
 		{
 			using (var db = (DataConnection)GetDataContext(context))
 			{
-				var dbName            = TestUtils.GetDatabaseName(db);
+				var dbName            = TestUtils.GetDatabaseName(db, context);
 				var    inputID        = 1234;
 				var    inputStr       = "InputStr";
 				int?   outputID       = 5678;
@@ -1566,7 +1566,7 @@ namespace Tests.DataProvider
 		{
 			using (var db = (DataConnection)GetDataContext(context))
 			{
-				var dbName            = TestUtils.GetDatabaseName(db);
+				var dbName            = TestUtils.GetDatabaseName(db, context);
 				var    inputID        = 1234;
 				var    inputStr       = "InputStr";
 				int?   outputID       = 5678;

@@ -20,4 +20,7 @@ until docker logs oracle | grep -q 'DATABASE IS READY TO USE!'; do
     fi;
 done
 
+echo '12345' > bfile.txt
+docker cp bfile.txt oracle:/home/oracle/bfile.txt
+
 docker logs oracle
