@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 
 using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
+	using Common;
 	using Expressions;
 	using Mapping;
 	using SqlQuery;
@@ -1718,6 +1721,49 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			throw new InvalidOperationException($"'{nameof(OpenJson)}' is a server side only function.");
 		}
+
+#if !NET45
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/OPENJSON-transact-sql">OPENJSON (Transact-SQL)</see></b></para>
+		/// <para>A table-valued function that parses JSON text and returns objects and properties from the JSON input as rows and columns.</para>
+		/// </summary>
+		/// <param name="json">An expression. Typically the name of a variable or a column that contains JSON text.</param>
+		/// <returns>Returns a rowset view over the elements of a JSON object or array.</returns>
+		/// <exception cref="InvalidOperationException" />
+		/// <remarks>Only available on SQL Server 2016 or later, and compatibility mode for the database must be set to 130 or higher</remarks>
+		[ExpressionMethod(nameof(GenerateOpenJsonStringImpl))]
+		public static IQueryable<JsonData> OpenJson(this IDataContext dc, [ExprParameter] string? json)
+		{
+			return (_generateOpenJsonStringImpl ??= GenerateOpenJsonStringImpl().CompileExpression())(dc, json);
+		}
+
+		private static Func<IDataContext, string?, IQueryable<JsonData>>? _generateOpenJsonStringImpl;
+		private static Expression<Func<IDataContext, string?, IQueryable<JsonData>>> GenerateOpenJsonStringImpl()
+		{
+			return (dc, json) => dc.FromSql<JsonData>($"OPENJSON({json})");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/OPENJSON-transact-sql">OPENJSON (Transact-SQL)</see></b></para>
+		/// <para>A table-valued function that parses JSON text and returns objects and properties from the JSON input as rows and columns.</para>
+		/// </summary>
+		/// <param name="json">An expression. Typically the name of a variable or a column that contains JSON text.</param>
+		/// <param name="path">A JSON path expression that specifies the property to query.</param>
+		/// <returns>Returns a rowset view over the elements of a JSON object or array.</returns>
+		/// <exception cref="InvalidOperationException" />
+		/// <remarks>Only available on SQL Server 2016 or later, and compatibility mode for the database must be set to 130 or higher</remarks>
+		[ExpressionMethod(nameof(GenerateOpenJsonStringStringImpl))]
+		public static IQueryable<JsonData> OpenJson(this IDataContext dc, [ExprParameter] string? json, [ExprParameter] string path)
+		{
+			return (_generateOpenJsonStringStringImpl ??= GenerateOpenJsonStringStringImpl().CompileExpression())(dc, json, path);
+		}
+
+		private static Func<IDataContext, string?, string, IQueryable<JsonData>>? _generateOpenJsonStringStringImpl;
+		private static Expression<Func<IDataContext, string?, string, IQueryable<JsonData>>> GenerateOpenJsonStringStringImpl()
+		{
+			return (dc, json, path) => dc.FromSql<JsonData>($"OPENJSON({json}, {path})");
+		}
+#endif
 
 		#endregion
 

@@ -1187,6 +1187,38 @@ namespace Tests.DataProvider
 			AreEqual(expected, result);
 		}
 
+#if !NET45
+		[Test]
+		public void OpenJson3([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.OpenJson("{ \"test\" : 1 }").ToArray();
+			Console.WriteLine(result);
+
+			var expected = new[]
+			{
+				new SqlFn.JsonData { Key = "test", Value = "1", Type = 2, },
+			};
+
+			AreEqual(expected, result);
+		}
+
+		[Test]
+		public void OpenJson4([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.OpenJson("{ \"test\" : [ 10, 20 ] }", "$.test").ToArray();
+			Console.WriteLine(result);
+
+			var expected = new[]
+			{
+				new SqlFn.JsonData { Key = "0", Value = "10", Type = 2, },
+				new SqlFn.JsonData { Key = "1", Value = "20", Type = 2, },
+			};
+
+			AreEqual(expected, result);
+		}
+#endif
 		#endregion
 
 		#region Mathematical
