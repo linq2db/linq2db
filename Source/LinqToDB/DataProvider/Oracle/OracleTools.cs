@@ -98,8 +98,7 @@ namespace LinqToDB.DataProvider.Oracle
 					conn.Open();
 
 					var command = conn.CreateCommand();
-					command.CommandText =
-						"select VERSION from PRODUCT_COMPONENT_VERSION where PRODUCT like 'PL/SQL%'";
+					command.CommandText = "SELECT  VERSION from PRODUCT_COMPONENT_VERSION WHERE ROWNUM = 1";
 					if (command.ExecuteScalar() is string result)
 					{
 						var version = int.Parse(result.Split('.')[0]);

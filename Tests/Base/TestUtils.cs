@@ -288,14 +288,14 @@ namespace Tests
 		{
 			return providerName switch
 			{
-				string when providerName.IsAnyOf(TestProvName.AllOracle12)   => "latin_AI",
-				string when providerName.IsAnyOf(ProviderName.DB2)           => "SYSTEM_923_DE",
-				string when providerName.IsAnyOf(TestProvName.AllPostgreSQL) => "POSIX",
-				string when providerName.IsAnyOf(TestProvName.AllSQLite)     => "NOCASE",
-				string when providerName.IsAnyOf(TestProvName.AllFirebird)   => "UNICODE_FSS",
-				string when providerName.IsAnyOf(TestProvName.AllMySql)      => "utf8_bin",
-				string when providerName.IsAnyOf(TestProvName.AllSqlServer)  => "Albanian_CI_AS",
-				_                                                            => "whatever"
+				string when providerName.IsAnyOf(TestProvName.AllOracle12Plus) => "latin_AI",
+				string when providerName.IsAnyOf(ProviderName.DB2)             => "SYSTEM_923_DE",
+				string when providerName.IsAnyOf(TestProvName.AllPostgreSQL)   => "POSIX",
+				string when providerName.IsAnyOf(TestProvName.AllSQLite)       => "NOCASE",
+				string when providerName.IsAnyOf(TestProvName.AllFirebird)     => "UNICODE_FSS",
+				string when providerName.IsAnyOf(TestProvName.AllMySql)        => "utf8_bin",
+				string when providerName.IsAnyOf(TestProvName.AllSqlServer)    => "Albanian_CI_AS",
+				_                                                              => "whatever"
 			};
 		}
 

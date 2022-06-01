@@ -3124,7 +3124,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestIdentityColumnRead([IncludeDataSources(false, TestProvName.AllOracle12)] string context)
+		public void TestIdentityColumnRead([IncludeDataSources(false, TestProvName.AllOracle12Plus)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable<ItentityColumnTable>())
@@ -3809,7 +3809,7 @@ CREATE TABLE ""TABLE_A""(
 
 		[Test]
 		public void TestNativeIdentityBulkCopy(
-			[IncludeDataSources(TestProvName.AllOracle12)] string context,
+			[IncludeDataSources(TestProvName.AllOracle12Plus)] string context,
 			[Values] BulkCopyType        copyType,
 			[Values] bool                keepIdentity,
 			[Values] AlternativeBulkCopy multipeRowsMode)

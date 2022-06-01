@@ -407,7 +407,7 @@ public class a_CreateData : TestBase
 		{
 			// if file is not configured under windows we assume
 			// oracle is run from linux docker image
-			// and test file created at /bfile.txt location
+			// and test file created at /home/oracle/bfile.txt location
 			if (0 == conn.Execute<int>(@"select dbms_lob.fileexists(bfilename('DATA_DIR', 'bfile.txt')) from dual"))
 			{
 				conn.Execute("CREATE OR REPLACE DIRECTORY DATA_DIR AS '/home/oracle'");

@@ -31,7 +31,7 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			var defaultSchema = dataConnection.Execute<string>("SELECT USER FROM DUAL");
 			SchemasFilter     = BuildSchemaFilter(options, defaultSchema, OracleMappingSchema.ConvertStringToSql);
-			_majorVersion     = int.Parse(dataConnection.Execute<string>("select VERSION from PRODUCT_COMPONENT_VERSION where PRODUCT like 'PL/SQL%'").Split('.')[0]);
+			_majorVersion     = int.Parse(dataConnection.Execute<string>("SELECT  VERSION from PRODUCT_COMPONENT_VERSION WHERE ROWNUM = 1").Split('.')[0]);
 
 			return base.GetSchema(dataConnection, options);
 		}
@@ -160,7 +160,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		private int GetMajorVersion(DataConnection dataConnection)
 		{
-			var version = dataConnection.Query<string>("SELECT VERSION FROM PRODUCT_COMPONENT_VERSION WHERE PRODUCT LIKE 'PL/SQL%'").FirstOrDefault();
+			var version = dataConnection.Query<string>("SELECT  VERSION from PRODUCT_COMPONENT_VERSION WHERE ROWNUM = 1").FirstOrDefault();
 			if (version != null)
 			{
 				try
