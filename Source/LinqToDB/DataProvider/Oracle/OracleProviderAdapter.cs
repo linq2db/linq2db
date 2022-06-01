@@ -647,7 +647,7 @@ namespace LinqToDB.DataProvider.Oracle
 				p => OracleWrappers.ConvertDbType(dbTypeGetter(p)),
 
 				connectionMapper.Member(c => c.HostName).BuildGetter<DbConnection>(),
-				connectionMapper.Member(c => c.DatabaseName).BuildGetter<DbConnection>(),
+				connectionMapper.Member(c => c.ServiceName).BuildGetter<DbConnection>(),
 
 				commandMapper.Member(p => p.BindByName).BuildSetter<DbCommand>(),
 				commandMapper.Member(p => p.ArrayBindCount).BuildSetter<DbCommand>(),
@@ -1498,6 +1498,7 @@ namespace LinqToDB.DataProvider.Oracle
 				// not called using wrapper
 				public string HostName     => throw new NotImplementedException();
 				public string DatabaseName => throw new NotImplementedException();
+				public string ServiceName  => throw new NotImplementedException();
 
 				public void      Open         () => ((Action<OracleConnection>         )CompiledWrappers[0])(this);
 				public DbCommand CreateCommand() => ((Func<OracleConnection, DbCommand>)CompiledWrappers[1])(this);

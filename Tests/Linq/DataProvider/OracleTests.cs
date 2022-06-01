@@ -1459,6 +1459,9 @@ namespace Tests.DataProvider
 				await BulkCopy21Async(context, BulkCopyType.MultipleRows);
 		}
 
+		// provider bug (as it works with v12 server)
+		// ORA-38910: BATCH ERROR mode is not supported for this operation
+		[ActiveIssue(Configuration = TestProvName.Oracle18DevartOCI)]
 		[Test]
 		public void BulkCopy21ProviderSpecific(
 			[IncludeDataSources(TestProvName.AllOracle)] string context,
@@ -1468,6 +1471,9 @@ namespace Tests.DataProvider
 				BulkCopy21(context, BulkCopyType.ProviderSpecific);
 		}
 
+		// provider bug (as it works with v12 server)
+		// ORA-38910: BATCH ERROR mode is not supported for this operation
+		[ActiveIssue(Configuration = TestProvName.Oracle18DevartOCI)]
 		[Test]
 		public async Task BulkCopy21ProviderSpecificAsync(
 			[IncludeDataSources(TestProvName.AllOracle)] string context,
