@@ -29,6 +29,7 @@ EOL
 docker cp setup.sql oracle:/setup.sql
 docker exec oracle sqlplus sys/oracle@localhost as sysdba @/setup.sql
 
+docker exec oracle mkdir /home/oracle
 echo -n 12345 > bfile.txt
 docker cp bfile.txt oracle:/home/oracle/bfile.txt
 

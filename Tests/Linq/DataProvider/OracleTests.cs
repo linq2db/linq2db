@@ -73,7 +73,7 @@ namespace Tests.DataProvider
 		static void TestType<T>(
 			DataConnection   connection,
 			string           dataTypeName,
-			T              value,
+			T                value,
 			string           tableName       = "\"AllTypes\"",
 			bool             convertToString = false,
 			bool             throwException  = false)
@@ -90,6 +90,10 @@ namespace Tests.DataProvider
 				actualValue   = actualValue.  ToString()!;
 				expectedValue = expectedValue.ToString()!;
 			}
+
+			// fix version-specific formatting
+			if (dataTypeName.Contains("xmlDataType") && actualValue is string strVal)
+				actualValue = strVal.Replace("\n", string.Empty).Replace(">  <", "><");
 
 			if (throwException)
 			{
@@ -1461,7 +1465,7 @@ namespace Tests.DataProvider
 
 		// provider bug (as it works with v12 server)
 		// ORA-38910: BATCH ERROR mode is not supported for this operation
-		[ActiveIssue(Configuration = TestProvName.Oracle18DevartOCI)]
+		[ActiveIssue(Configurations = new[] { TestProvName.Oracle18DevartOCI, TestProvName.Oracle21DevartOCI })]
 		[Test]
 		public void BulkCopy21ProviderSpecific(
 			[IncludeDataSources(TestProvName.AllOracle)] string context,
@@ -1473,7 +1477,7 @@ namespace Tests.DataProvider
 
 		// provider bug (as it works with v12 server)
 		// ORA-38910: BATCH ERROR mode is not supported for this operation
-		[ActiveIssue(Configuration = TestProvName.Oracle18DevartOCI)]
+		[ActiveIssue(Configurations = new[] { TestProvName.Oracle18DevartOCI, TestProvName.Oracle21DevartOCI })]
 		[Test]
 		public async Task BulkCopy21ProviderSpecificAsync(
 			[IncludeDataSources(TestProvName.AllOracle)] string context,
