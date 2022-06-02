@@ -1,9 +1,9 @@
 ﻿using JetBrains.Annotations;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace LinqToDB.DataProvider.Oracle
 {
-	using System.Collections.Generic;
-	using System.Linq;
 	using Configuration;
 
 	[UsedImplicitly]
@@ -21,10 +21,8 @@ namespace LinqToDB.DataProvider.Oracle
 			var provider = OracleProvider.Managed;
 			if (assemblyName == OracleProviderAdapter.DevartAssemblyName)
 				provider = OracleProvider.Devart;
-#if NETFRAMEWORK
 			else if (assemblyName == OracleProviderAdapter.NativeAssemblyName)
 				provider = OracleProvider.Native;
-#endif
 
 			return OracleTools.GetDataProvider(dialect, provider);
 		}

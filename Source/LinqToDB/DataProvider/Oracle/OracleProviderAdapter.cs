@@ -1,17 +1,17 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
-using System.Linq.Expressions;
-using System.Xml;
-using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
+using System.Xml;
 
 namespace LinqToDB.DataProvider.Oracle
 {
 	using Common;
-	using Expressions;
 	using Data;
+	using Expressions;
 	using Mapping;
 
 	public class OracleProviderAdapter : IDynamicProviderAdapter
@@ -178,9 +178,9 @@ namespace LinqToDB.DataProvider.Oracle
 		public Type? OracleTimeStampLTZType { get; }
 		public Type? OracleTimeStampTZType  { get; }
 		public Type  OracleXmlTypeType      { get; }
+		public Type  OracleRefCursorType    { get; }
 
 		private Type? OracleXmlStreamType   { get; }
-		private Type  OracleRefCursorType   { get; }
 		private Type? OracleRefType         { get; }
 
 		public string ProviderTypesNamespace { get; }

@@ -52,9 +52,7 @@ namespace LinqToDB.DataProvider.Oracle
 			                                         RowFeature.Update   | RowFeature.Overlaps;
 
 			if (version >= OracleVersion.v12)
-			{
 				SqlProviderFlags.IsApplyJoinSupported          = true;
-			}
 
 			SqlProviderFlags.MaxInListValuesCount              = 1000;
 
@@ -246,9 +244,7 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 
 			if (dataType.DataType == DataType.Undefined && value is string @string && @string.Length >= 4000)
-			{
 				dataType = dataType.WithDataType(DataType.NText);
-			}
 
 			base.SetParameter(dataConnection, parameter, name, dataType, value);
 		}

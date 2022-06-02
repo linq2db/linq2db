@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Data;
 using System.Data.Common;
 using System.IO;
 using System.Reflection;
@@ -13,10 +11,8 @@ namespace LinqToDB.DataProvider.Oracle
 
 	public static partial class OracleTools
 	{
-#if NETFRAMEWORK
 		static readonly Lazy<IDataProvider> _oracleNativeDataProvider11 = DataConnection.CreateDataProvider<OracleDataProviderNative11>();
 		static readonly Lazy<IDataProvider> _oracleNativeDataProvider12 = DataConnection.CreateDataProvider<OracleDataProviderNative12>();
-#endif
 
 		static readonly Lazy<IDataProvider> _oracleManagedDataProvider11 = DataConnection.CreateDataProvider<OracleDataProviderManaged11>();
 		static readonly Lazy<IDataProvider> _oracleManagedDataProvider12 = DataConnection.CreateDataProvider<OracleDataProviderManaged12>();
@@ -32,14 +28,12 @@ namespace LinqToDB.DataProvider.Oracle
 			OracleProvider? provider = null;
 			switch (css.ProviderName)
 			{
-#if NETFRAMEWORK
 				case OracleProviderAdapter.NativeAssemblyName    :
 				case OracleProviderAdapter.NativeClientNamespace :
 				case ProviderName.OracleNative                   :
 				case ProviderName.Oracle11Native                 :
 					provider = OracleProvider.Native;
 					goto case ProviderName.Oracle;
-#endif
 				case OracleProviderAdapter.DevartAssemblyName    :
 				case ProviderName.OracleDevart                   :
 				case ProviderName.Oracle11Devart                 :
@@ -123,10 +117,8 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			return (provider, version) switch
 			{
-#if NETFRAMEWORK
 				(OracleProvider.Native , OracleVersion.v11) => _oracleNativeDataProvider11 .Value,
 				(OracleProvider.Native , OracleVersion.v12) => _oracleNativeDataProvider12 .Value,
-#endif
 				(OracleProvider.Managed, OracleVersion.v11) => _oracleManagedDataProvider11.Value,
 				(OracleProvider.Managed, OracleVersion.v12) => _oracleManagedDataProvider12.Value,
 				(OracleProvider.Devart , OracleVersion.v11) => _oracleDevartDataProvider11 .Value,
@@ -172,7 +164,6 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			version ??= DefaultVersion;
 
-#if NETFRAMEWORK
 			if (assemblyName == OracleProviderAdapter.NativeAssemblyName) return GetVersionedDataProvider(version.Value, false);
 			if (assemblyName == OracleProviderAdapter.ManagedAssemblyName) return GetVersionedDataProvider(version.Value, true);
 
@@ -185,22 +176,14 @@ namespace LinqToDB.DataProvider.Oracle
 					? GetVersionedDataProvider(version.Value, false)
 					: GetVersionedDataProvider(version.Value, true),
 			};
-#else
-			return GetVersionedDataProvider(version.Value, true);
-#endif
 		}
 
 		[Obsolete("This API will be removed in v5")]
 		public static void ResolveOracle(string path) => new AssemblyResolver(
 			path,
-#if NETFRAMEWORK
 			DetectedProviderName == ProviderName.OracleManaged
 				? OracleProviderAdapter.ManagedAssemblyName
-				: OracleProviderAdapter.NativeAssemblyName
-#else
-			OracleProviderAdapter.ManagedAssemblyName
-#endif
-			);
+				: OracleProviderAdapter.NativeAssemblyName);
 
 		[Obsolete("This API will be removed in v5")]
 		public static void ResolveOracle(Assembly assembly) => new AssemblyResolver(assembly, assembly.FullName!);
@@ -226,7 +209,6 @@ namespace LinqToDB.DataProvider.Oracle
 		[Obsolete("This API will be removed in v5")]
 		private static string DetectProviderName()
 		{
-#if NETFRAMEWORK
 			try
 			{
 				var path = typeof(OracleTools).Assembly.GetPath();
@@ -239,15 +221,11 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 
 			return ProviderName.OracleNative;
-#else
-			return ProviderName.OracleManaged;
-#endif
 		}
 
 		[Obsolete("This API will be removed in v5")]
 		private static IDataProvider GetVersionedDataProvider(OracleVersion version, bool managed)
 		{
-#if NETFRAMEWORK
 			if (!managed)
 			{
 				return version switch
@@ -256,7 +234,7 @@ namespace LinqToDB.DataProvider.Oracle
 					_ => _oracleNativeDataProvider12.Value,
 				};
 			}
-#endif
+
 			return version switch
 			{
 				OracleVersion.v11 => _oracleManagedDataProvider11.Value,

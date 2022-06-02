@@ -9,6 +9,6 @@
 		/// <summary>
 		/// Oracle 12c+ dialect.
 		/// </summary>
-		v12 = 12
+		v12 = 12,
 	}
 }

@@ -27,6 +27,7 @@ namespace LinqToDB.DataProvider.Oracle
 		protected override int                MaxParameters => _maxParameters;
 		protected override int                MaxSqlLength  => _maxSqlLength;
 		private readonly   OracleDataProvider _provider;
+
 		public OracleBulkCopy(OracleDataProvider provider)
 		{
 			_provider = provider;
