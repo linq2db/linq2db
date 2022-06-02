@@ -350,7 +350,10 @@ namespace LinqToDB.DataProvider.Oracle
 				});
 			}
 
-			return helper.Execute(_provider.Adapter.ExecuteArray != null ? (cn, sql, ps) => ExecuteArray(cn, sql, ps, list.Count) : null);
+			if (_provider.Adapter.ExecuteArray != null)
+				return helper.ExecuteCustom((cn, sql, ps) => ExecuteArray(cn, sql, ps, list.Count));
+
+			return helper.Execute();
 		}
 
 		int ExecuteArray(DataConnection connection, string sql, DataParameter[] parameters, int iters)
@@ -383,7 +386,7 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 
 			if (_provider.Adapter.ExecuteArray != null)
-				return Task.FromResult(helper.Execute((cn, sql, ps) => ExecuteArray(cn, sql, ps, list.Count)));
+				return Task.FromResult(helper.ExecuteCustom((cn, sql, ps) => ExecuteArray(cn, sql, ps, list.Count)));
 
 			return helper.ExecuteAsync(cancellationToken);
 		}

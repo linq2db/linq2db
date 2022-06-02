@@ -1268,10 +1268,10 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Hour, t.DateTimeValue, t.DateTimeValue.AddHours(100))));
 		}
 
-		// Devart: returns 100 as 99.999...
+		[ActiveIssue("Devart returns 100 as 99.999...", Configuration = TestProvName.AllOracleDevart)]
 		[Test]
 		public void SubDateMinute(
-			[DataSources(TestProvName.AllInformix, TestProvName.AllOracleDevart)]
+			[DataSources(TestProvName.AllInformix)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1280,10 +1280,10 @@ namespace Tests.Linq
 					from t in db.Types select (int)Sql.AsSql((t.DateTimeValue.AddMinutes(100) - t.DateTimeValue).TotalMinutes));
 		}
 
-		// Devart: returns 100 as 99.999...
+		[ActiveIssue("Devart returns 100 as 99.999...", Configuration = TestProvName.AllOracleDevart)]
 		[Test]
 		public void DateDiffMinute(
-			[DataSources(TestProvName.AllInformix, TestProvName.AllOracleDevart)]
+			[DataSources(TestProvName.AllInformix)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1292,10 +1292,10 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Minute, t.DateTimeValue, t.DateTimeValue.AddMinutes(100))));
 		}
 
-		// Devart: returns 6000 as 5999.999...
+		[ActiveIssue("Devart returns 6000 as 5999.999...", Configuration = TestProvName.AllOracleDevart)]
 		[Test]
 		public void SubDateSecond(
-			[DataSources(TestProvName.AllInformix, TestProvName.AllOracleDevart)]
+			[DataSources(TestProvName.AllInformix)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1304,10 +1304,10 @@ namespace Tests.Linq
 					from t in db.Types select (int)Sql.AsSql((t.DateTimeValue.AddMinutes(100) - t.DateTimeValue).TotalSeconds));
 		}
 
-		// Devart: returns 6000 as 5999.999...
+		[ActiveIssue("Devart returns 6000 as 5999.999...", Configuration = TestProvName.AllOracleDevart)]
 		[Test]
 		public void DateDiffSecond(
-			[DataSources(TestProvName.AllInformix, TestProvName.AllOracleDevart)]
+			[DataSources(TestProvName.AllInformix)]
 			string context)
 		{
 			using (var db = GetDataContext(context))

@@ -1449,6 +1449,7 @@ namespace Tests.Data
 			}
 		}
 
+		[ActiveIssue(Configuration = TestProvName.Oracle21DevartDirect)]
 		[Test]
 		public void TestOracleDevart([IncludeDataSources(TestProvName.AllOracleDevart)] string context, [Values] ConnectionType type)
 		{

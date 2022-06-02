@@ -115,6 +115,7 @@ namespace Tests.DataProvider
 			(of course only if it is Windows machine)
 
 		*/
+		[ActiveIssue(Configuration = TestProvName.Oracle21DevartDirect)]
 		[Test]
 		public void TestDataTypes([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
@@ -298,6 +299,7 @@ namespace Tests.DataProvider
 			}
 		}
 
+		[ActiveIssue(Configuration = TestProvName.Oracle21DevartDirect)]
 		[Test]
 		public void TestDateTimeOffset([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
@@ -1463,9 +1465,8 @@ namespace Tests.DataProvider
 				await BulkCopy21Async(context, BulkCopyType.MultipleRows);
 		}
 
-		// provider bug (as it works with v12 server)
 		// ORA-38910: BATCH ERROR mode is not supported for this operation
-		[ActiveIssue(Configurations = new[] { TestProvName.Oracle18DevartOCI, TestProvName.Oracle21DevartOCI })]
+		[ActiveIssue(Configuration = TestProvName.AllOracleDevartOCI)]
 		[Test]
 		public void BulkCopy21ProviderSpecific(
 			[IncludeDataSources(TestProvName.AllOracle)] string context,
@@ -1475,9 +1476,8 @@ namespace Tests.DataProvider
 				BulkCopy21(context, BulkCopyType.ProviderSpecific);
 		}
 
-		// provider bug (as it works with v12 server)
 		// ORA-38910: BATCH ERROR mode is not supported for this operation
-		[ActiveIssue(Configurations = new[] { TestProvName.Oracle18DevartOCI, TestProvName.Oracle21DevartOCI })]
+		[ActiveIssue(Configuration = TestProvName.AllOracleDevartOCI)]
 		[Test]
 		public async Task BulkCopy21ProviderSpecificAsync(
 			[IncludeDataSources(TestProvName.AllOracle)] string context,
@@ -2240,6 +2240,7 @@ namespace Tests.DataProvider
 			public DateTimeOffset DateTimeOffsetValue;
 		}
 
+		[ActiveIssue(Configuration = TestProvName.Oracle21DevartDirect)]
 		[Test]
 		public void Issue515Test([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
@@ -2257,9 +2258,9 @@ namespace Tests.DataProvider
 					db.DropTable<DateTimeOffsetTable>();
 				}
 			}
-
 		}
 
+		[ActiveIssue(Configuration = TestProvName.Oracle21DevartDirect)]
 		[Test]
 		public void Issue612Test([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
@@ -2286,6 +2287,7 @@ namespace Tests.DataProvider
 
 		}
 
+		[ActiveIssue(Configuration = TestProvName.Oracle21DevartDirect)]
 		[Test]
 		public void Issue612TestDefaultTSTZPrecisonCanDiffersOfUpTo9Ticks([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
@@ -2810,6 +2812,7 @@ namespace Tests.DataProvider
 		}
 
 		// this is a sad test which shows that we need better support for parameter value bindings
+		[ActiveIssue(Configuration = TestProvName.Oracle21DevartDirect)]
 		[Test]
 		public void ProcedureOutParameters([IncludeDataSources(false, TestProvName.AllOracle)] string context)
 		{
@@ -3193,6 +3196,8 @@ namespace Tests.DataProvider
 			};
 		}
 
+		// ActiveIssue: provider reads TimeStampTZ incorrectly (offset applied twice)
+		[ActiveIssue(Configuration = TestProvName.Oracle21DevartDirect)]
 		[Test]
 		public void TestDateTimeRoundtrip([IncludeDataSources(true, TestProvName.AllOracle)] string context, [Values] bool inlineParameters)
 		{
@@ -3240,6 +3245,8 @@ namespace Tests.DataProvider
 			}
 		}
 
+		// ActiveIssue: provider reads TimeStampTZ incorrectly (offset applied twice)
+		[ActiveIssue(Configuration = TestProvName.Oracle21DevartDirect)]
 		[Test]
 		public void TestDateTimeSQL([IncludeDataSources(false, TestProvName.AllOracle)] string context, [Values] bool inlineParameters)
 		{

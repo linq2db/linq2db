@@ -16,6 +16,6 @@
 		/// <summary>
 		/// Devart.Data.Oracle provider.
 		/// </summary>
-		Devart
+		Devart,
 	}
 }

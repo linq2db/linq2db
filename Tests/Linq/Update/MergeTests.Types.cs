@@ -338,6 +338,7 @@ namespace Tests.xUpdate
 
 		[ActiveIssue(Configurations = new[]
 		{
+			TestProvName.Oracle21DevartDirect,
 			ProviderName.SapHanaNative
 #if AZURE
 			,TestProvName.AllSybase

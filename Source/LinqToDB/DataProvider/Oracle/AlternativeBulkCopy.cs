@@ -37,6 +37,6 @@
 		///     SELECT /*row data*/ FROM DUAL
 		/// </code>
 		/// </summary>
-		InsertDual
+		InsertDual,
 	}
 }

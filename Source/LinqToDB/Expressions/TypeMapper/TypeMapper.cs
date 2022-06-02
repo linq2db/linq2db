@@ -53,12 +53,14 @@ namespace LinqToDB.Expressions
 
 			if ((wrapperAttr?.TypeName ?? wrapperType.Name) != originalType.Name)
 				throw new LinqToDBException($"Original and wraped types should have same type name. {wrapperType.Name} != {originalType.Name}");
-			if (_types.ContainsKey(originalType.FullName ?? originalType.Name))
-				throw new LinqToDBException($"Type with name {originalType.FullName} already registered in mapper");
 
-			_types                  .Add(originalType.FullName ?? originalType.Name, originalType);
-			_typeMappingCache       .Add(wrapperType                               , originalType);
-			_typeMappingReverseCache.Add(originalType                              , wrapperType);
+			var typeName = originalType.FullName ?? originalType.Name;
+			if (_types.ContainsKey(typeName))
+				throw new LinqToDBException($"Type with name {typeName} already registered in mapper");
+
+			_types                  .Add(typeName    , originalType);
+			_typeMappingCache       .Add(wrapperType , originalType);
+			_typeMappingReverseCache.Add(originalType, wrapperType);
 
 			if (typeof(TypeWrapper).IsSameOrParentOf(wrapperType))
 			{
