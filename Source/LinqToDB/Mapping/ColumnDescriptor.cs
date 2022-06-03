@@ -93,25 +93,6 @@ namespace LinqToDB.Mapping
 				StorageInfo = expr.Member;
 			}
 
-			var defaultCanBeNull = false;
-
-			if (columnAttribute.HasCanBeNull())
-				CanBeNull = columnAttribute.CanBeNull;
-			else
-			{
-				var na = mappingSchema.GetAttribute<NullableAttribute>(MemberAccessor.TypeAccessor.Type, MemberInfo, attr => attr.Configuration);
-
-				if (na != null)
-				{
-					CanBeNull = na.CanBeNull;
-				}
-				else
-				{
-					CanBeNull        = mappingSchema.GetCanBeNull(MemberType);
-					defaultCanBeNull = true;
-				}
-			}
-
 			if (columnAttribute.HasIsIdentity())
 			{
 				IsIdentity = columnAttribute.IsIdentity;
@@ -130,9 +111,8 @@ namespace LinqToDB.Mapping
 
 			SkipOnInsert = columnAttribute.HasSkipOnInsert() ? columnAttribute.SkipOnInsert : IsIdentity;
 			SkipOnUpdate = columnAttribute.HasSkipOnUpdate() ? columnAttribute.SkipOnUpdate : IsIdentity;
-
-			if (defaultCanBeNull && IsIdentity)
-				CanBeNull = false;
+			
+			CanBeNull = AnalyzeCanBeNull(columnAttribute);
 
 			if (columnAttribute.HasIsPrimaryKey())
 				IsPrimaryKey = columnAttribute.IsPrimaryKey;
@@ -173,6 +153,39 @@ namespace LinqToDB.Mapping
 				SkipBaseAttributes    = skipValueAttributes;
 				SkipModificationFlags = SkipBaseAttributes.Aggregate(SkipModification.None, (s, c) => s | c.Affects);
 			}
+		}
+
+		private bool AnalyzeCanBeNull(ColumnAttribute columnAttribute)
+		{
+			if (columnAttribute.HasCanBeNull())
+				return columnAttribute.CanBeNull;
+			
+			var na = MappingSchema.GetAttribute<NullableAttribute>(
+				MemberAccessor.TypeAccessor.Type, 
+				MemberInfo, 
+				attr => attr.Configuration);
+			if (na != null)
+				return na.CanBeNull;
+				
+#if NET6_0_OR_GREATER
+			// Extract info from C# Nullable Reference Types if available.
+			// Note that this should also handle Nullable Value Types.
+			var context = new NullabilityInfoContext();
+			var nullability = MemberInfo switch 
+			{
+				PropertyInfo p => context.Create(p).ReadState,
+				FieldInfo    f => context.Create(f).ReadState,
+				             _ => NullabilityState.Unknown,
+			};
+			
+			if (nullability != NullabilityState.Unknown)
+				return nullability == NullabilityState.Nullable;
+#endif
+
+			if (IsIdentity) 
+				return false;
+
+			return MappingSchema.GetCanBeNull(MemberType);
 		}
 
 		/// <summary>
