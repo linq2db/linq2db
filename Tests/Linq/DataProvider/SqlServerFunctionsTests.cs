@@ -1156,6 +1156,102 @@ namespace Tests.DataProvider
 			Assert.That(result, Is.EqualTo("{ \"test\" : \"2\" }"));
 		}
 
+		[Test]
+		public void OpenJson1([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.GetTable<SqlFn.JsonData>(null, LinqToDB.Linq.MethodHelper.GetMethodInfo(SqlFn.OpenJson, string.Empty), "{ \"test\" : 1 }").ToArray();
+			Console.WriteLine(result);
+
+			var expected = new[]
+			{
+				new SqlFn.JsonData { Key = "test", Value = "1", Type = 2, },
+			};
+
+			AreEqual(expected, result);
+		}
+
+		[Test]
+		public void OpenJson2([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.GetTable<SqlFn.JsonData>(null, LinqToDB.Linq.MethodHelper.GetMethodInfo(SqlFn.OpenJson, string.Empty, string.Empty), "{ \"test\" : [ 10, 20 ] }", "$.test").ToArray();
+			Console.WriteLine(result);
+
+			var expected = new[]
+			{
+				new SqlFn.JsonData { Key = "0", Value = "10", Type = 2, },
+				new SqlFn.JsonData { Key = "1", Value = "20", Type = 2, },
+			};
+
+			AreEqual(expected, result);
+		}
+
+		[Test]
+		public void OpenJson3([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.GetTable<SqlFn.JsonData>(null, LinqToDB.Linq.MethodHelper.GetMethodInfo(SqlFn.OpenJson, string.Empty), "[ 10, 20, 30, 40, 50, 60, 70 ]")
+				.Where(jd => jd.Key != "2")
+				.Where(jd => jd.Value != "60")
+				.Select(jd => jd.Value)
+				.ToArray();
+			Console.WriteLine(result);
+
+			var expected = new[] { "10", "20", "40", "50", "70" };
+
+			AreEqual(expected, result);
+		}
+
+#if !NET45
+		[Test]
+		public void OpenJson4([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.OpenJson("{ \"test\" : 1 }").ToArray();
+			Console.WriteLine(result);
+
+			var expected = new[]
+			{
+				new SqlFn.JsonData { Key = "test", Value = "1", Type = 2, },
+			};
+
+			AreEqual(expected, result);
+		}
+
+		// SQL Server 2016 doesn't support @var for path
+		[Test]
+		public void OpenJson5([IncludeDataSources(TestProvName.AllSqlServer2017Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.OpenJson("{ \"test\" : [ 10, 20 ] }", "$.test").ToArray();
+			Console.WriteLine(result);
+
+			var expected = new[]
+			{
+				new SqlFn.JsonData { Key = "0", Value = "10", Type = 2, },
+				new SqlFn.JsonData { Key = "1", Value = "20", Type = 2, },
+			};
+
+			AreEqual(expected, result);
+		}
+
+		[Test]
+		public void OpenJson6([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.OpenJson("[ 10, 20, 30, 40, 50, 60, 70 ]")
+				.Where(jd => jd.Key != "2")
+				.Where(jd => jd.Value != "60")
+				.Select(jd => jd.Value)
+				.ToArray();
+			Console.WriteLine(result);
+
+			var expected = new[] { "10", "20", "40", "50", "70" };
+
+			AreEqual(expected, result);
+		}
+#endif
 		#endregion
 
 		#region Mathematical
