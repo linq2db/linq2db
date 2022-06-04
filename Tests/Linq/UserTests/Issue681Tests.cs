@@ -76,9 +76,9 @@ namespace Tests.UserTests
 
 				using (new DisableLogging())
 				{
-					serverName = withServer   ? TestUtils.GetServerName(db)   : null;
-					dbName     = withDatabase ? TestUtils.GetDatabaseName(db) : null;
-					schemaName = withSchema   ? TestUtils.GetSchemaName(db)   : null;
+					serverName = withServer   ? TestUtils.GetServerName(db, context)   : null;
+					dbName     = withDatabase ? TestUtils.GetDatabaseName(db, context) : null;
+					schemaName = withSchema   ? TestUtils.GetSchemaName(db, context)   : null;
 				}
 
 				var table = db.GetTable<TestTable>();

@@ -13,7 +13,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		IDataProvider IDataProviderFactory.GetDataProvider(IEnumerable<NamedValue> attributes)
 		{
 			var provider     = SqlServerProvider.SystemDataSqlClient;
-			var version      = attributes.FirstOrDefault(_ => _.Name == "version");
+			var version      = attributes.FirstOrDefault(_ => _.Name == "version")?.Value;
 			var assemblyName = attributes.FirstOrDefault(_ => _.Name == "assemblyName")?.Value;
 
 			if (assemblyName == SqlServerProviderAdapter.MicrosoftAssemblyName)
@@ -21,7 +21,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				provider = SqlServerProvider.MicrosoftDataSqlClient;
 			}
 
-			return version?.Value switch
+			return version switch
 			{
 				"2005" => SqlServerTools.GetDataProvider(SqlServerVersion.v2005, provider),
 				"2012" => SqlServerTools.GetDataProvider(SqlServerVersion.v2012, provider),

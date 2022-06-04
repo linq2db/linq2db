@@ -1,7 +1,8 @@
-﻿namespace LinqToDB.DataProvider.Oracle
+﻿using System.Text;
+
+namespace LinqToDB.DataProvider.Oracle
 {
 	using SqlQuery;
-	using System.Text;
 
 	abstract partial class OracleSqlBuilderBase
 	{

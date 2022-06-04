@@ -1328,6 +1328,76 @@ namespace LinqToDB.Data
 			}
 		}
 
+		internal int ExecuteNonQueryCustom(DbCommand command, Func<DbCommand, int> customExecute)
+		{
+			if (_commandInterceptor == null)
+				return customExecute(command);
+
+			// remove?
+			var result = _commandInterceptor.ExecuteNonQuery(new (this), command, Option<int>.None);
+
+			return result.HasValue
+				? result.Value
+				: customExecute(command);
+		}
+
+		internal int ExecuteNonQueryCustom(Func<DbCommand, int> customExecute)
+		{
+			if (TraceSwitchConnection.Level == TraceLevel.Off)
+				using (DataProvider.ExecuteScope(this))
+					return ExecuteNonQueryCustom(CurrentCommand!, customExecute);
+
+			var now = DateTime.UtcNow;
+			var sw  = Stopwatch.StartNew();
+
+			if (TraceSwitchConnection.TraceInfo)
+			{
+				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute, TraceOperation.ExecuteNonQuery, false)
+				{
+					TraceLevel = TraceLevel.Info,
+					Command = CurrentCommand,
+					StartTime = now,
+				});
+			}
+
+			try
+			{
+				int ret;
+				using (DataProvider.ExecuteScope(this))
+					ret = ExecuteNonQueryCustom(CurrentCommand!, customExecute);
+
+				if (TraceSwitchConnection.TraceInfo)
+				{
+					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute, TraceOperation.ExecuteNonQuery, false)
+					{
+						TraceLevel = TraceLevel.Info,
+						Command = CurrentCommand,
+						StartTime = now,
+						ExecutionTime = sw.Elapsed,
+						RecordsAffected = ret,
+					});
+				}
+
+				return ret;
+			}
+			catch (Exception ex)
+			{
+				if (TraceSwitchConnection.TraceError)
+				{
+					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error, TraceOperation.ExecuteNonQuery, false)
+					{
+						TraceLevel = TraceLevel.Error,
+						Command = CurrentCommand,
+						StartTime = now,
+						ExecutionTime = sw.Elapsed,
+						Exception = ex,
+					});
+				}
+
+				throw;
+			}
+		}
+
 		#endregion
 
 		#region ExecuteScalar

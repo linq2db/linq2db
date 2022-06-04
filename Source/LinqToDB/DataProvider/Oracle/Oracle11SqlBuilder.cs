@@ -1,15 +1,8 @@
-﻿using System;
-using System.Data;
-using System.Linq;
-
-namespace LinqToDB.DataProvider.Oracle
+﻿namespace LinqToDB.DataProvider.Oracle
 {
-	using Common;
-	using SqlQuery;
-	using SqlProvider;
-	using System.Text;
 	using Mapping;
-	using System.Data.Common;
+	using SqlProvider;
+	using SqlQuery;
 
 	partial class Oracle11SqlBuilder : OracleSqlBuilderBase
 	{
