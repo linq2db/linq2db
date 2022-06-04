@@ -73,15 +73,13 @@ namespace Tests.Tools
 		/// langword="null"/> when inside a multiple assert block.
 		/// </summary>
 		/// <param name="code">A TestDelegate</param>
-		/// <param name="message">The message that will be displayed on failure</param>
-		/// <param name="args">Arguments to be used in formatting the message</param>
 		public static async Task<Exception?> ThrowsAnyAsync(AsyncTestDelegate code, params Type?[]? exceptions)
 		{
 			try
 			{
 				await code();
 
-				Assert.Fail(message ?? "Expected code to throw an exception, but it ran without exceptions.", args);
+				Assert.Fail("Expected code to throw an exception, but it ran without exceptions.");
 
 				// above does not return, but we need to satisfy the flow-analyzer
 				return default;

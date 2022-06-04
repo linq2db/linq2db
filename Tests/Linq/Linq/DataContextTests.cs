@@ -7,11 +7,11 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
-	using Async;
-	using Configuration;
-	using Data;
+	using LinqToDB.Async;
+	using LinqToDB.Configuration;
+	using LinqToDB.Data;
 	using Model;
-	using Tests.Tools;
+	using Tools;
 
 	[TestFixture]
 	public class DataContextTests : TestBase
