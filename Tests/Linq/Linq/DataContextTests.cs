@@ -84,7 +84,10 @@ namespace Tests.Linq
 			using (var db = (TestDataConnection)GetDataContext(context))
 			using (var db1 = new DataContext(db.DataProvider.Name, "BAD"))
 			{
-				Assert.Throws<LinqToDBException>(() => db1.GetTable<Child>().ToList());
+				if (context.IsAnyOf(TestProvName.AllOracleDevart))
+					Assert.Throws(typeof(InvalidOperationException), () => db1.GetTable<Child>().ToList());
+				else
+					Assert.Throws(typeof(ArgumentException), () => db1.GetTable<Child>().ToList());
 			}
 		}
 

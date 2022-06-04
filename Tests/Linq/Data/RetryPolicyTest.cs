@@ -147,9 +147,9 @@ namespace Tests.Data
 					Assert.Fail("Exception expected");
 				}
 			}
-			catch (LinqToDBException ex)
+			catch (NotImplementedException ex)
 			{
-				Assert.AreEqual("Execute", ex.InnerException!.Message);
+				Assert.AreEqual("Execute", ex.Message);
 			}
 			finally
 			{
