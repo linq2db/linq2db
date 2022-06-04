@@ -3,7 +3,7 @@ using System.Data;
 using System.Data.Common;
 using System.IO;
 using System.Linq;
-
+using System.Runtime.InteropServices;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.Access;
@@ -253,7 +253,7 @@ public class a_CreateData : TestBase
 			case string when context.IsAnyOf(TestProvName.AllSQLiteBase) : RunScript(context,          "\nGO\n",  "SQLite",   SQLiteAction);
 			                                                               RunScript(context+ ".Data", "\nGO\n",  "SQLite",   SQLiteAction);      break;
 			case string when context.IsAnyOf(TestProvName.AllSQLiteMP)   : RunScript(context,          "\nGO\n",  "SQLite",   SQLiteAction);      break;
-			case string when context.IsAnyOf(TestProvName.AllOracle)     : RunScript(context,          "\n/\n",   "Oracle");                      break;
+			case string when context.IsAnyOf(TestProvName.AllOracle)     : RunScript(context,          "\n/\n",   "Oracle",   OracleAction);      break;
 			case string when context.IsAnyOf(TestProvName.AllSybase)     : RunScript(context,          "\nGO\n",  "Sybase");                      break;
 			case ProviderName.Informix                                   : RunScript(context,          "\nGO\n",  "Informix", InformixAction);    break;
 			case ProviderName.InformixDB2                                : RunScript(context,          "\nGO\n",  "Informix", InformixDB2Action); break;
@@ -398,6 +398,21 @@ public class a_CreateData : TestBase
 					imageDataType            = new byte[] { 0, 0, 0, 3 },
 					uniqueidentifierDataType = new Guid("{6F9619FF-8B86-D011-B42D-00C04FC964FF}"),
 				});
+		}
+	}
+
+	static void OracleAction(DbConnection connection)
+	{
+		using (var conn = LinqToDB.DataProvider.Oracle.OracleTools.CreateDataConnection(connection, LinqToDB.DataProvider.Oracle.OracleVersion.v11, LinqToDB.DataProvider.Oracle.OracleProvider.Managed))
+		{
+			// if file is not configured under windows we assume
+			// oracle is run from linux docker image
+			// and test file created at /home/oracle/bfile.txt location
+			if (0 == conn.Execute<int>(@"select dbms_lob.fileexists(bfilename('DATA_DIR', 'bfile.txt')) from dual"))
+			{
+				conn.Execute("CREATE OR REPLACE DIRECTORY DATA_DIR AS '/home/oracle'");
+				conn.Execute("UPDATE \"AllTypes\" SET \"bfileDataType\" = bfilename('DATA_DIR', 'bfile.txt') WHERE \"ID\" = 2");
+			}
 		}
 	}
 

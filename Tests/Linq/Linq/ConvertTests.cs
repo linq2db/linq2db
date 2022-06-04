@@ -1287,7 +1287,7 @@ namespace Tests.Linq
 		// and we need custom reference type that wraps something like int for test
 		[Test]
 		public void TryConvertConvertedStruct([IncludeDataSources(true,
-			TestProvName.AllOracle12,
+			TestProvName.AllOracle12Plus,
 			TestProvName.AllSqlServer2012Plus
 			)] string context)
 		{
@@ -1299,7 +1299,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void TryConvertNotConvertedStruct([IncludeDataSources(true,
-			TestProvName.AllOracle12,
+			TestProvName.AllOracle12Plus,
 			TestProvName.AllSqlServer2012Plus
 			)] string context)
 		{
@@ -1319,7 +1319,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TryConvertOrDefaultConvertedStruct([IncludeDataSources(true, TestProvName.AllOracle12)] string context)
+		public void TryConvertOrDefaultConvertedStruct([IncludeDataSources(true, TestProvName.AllOracle12Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1328,7 +1328,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TryConvertOrDefaultNotConvertedStruct([IncludeDataSources(true, TestProvName.AllOracle12)] string context)
+		public void TryConvertOrDefaultNotConvertedStruct([IncludeDataSources(true, TestProvName.AllOracle12Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

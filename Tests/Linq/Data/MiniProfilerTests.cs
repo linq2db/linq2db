@@ -1263,7 +1263,12 @@ namespace Tests.Data
 		{
 			var wrapped   = type == ConnectionType.MiniProfilerNoMappings || type == ConnectionType.MiniProfiler;
 			var unmapped  = type == ConnectionType.MiniProfilerNoMappings;
-			using (var db = CreateDataConnection(new OracleTests.TestOracleDataProvider(ProviderName.OracleNative), context, type, "Oracle.DataAccess.Client.OracleConnection, Oracle.DataAccess"))
+
+			OracleDataProvider provider;
+			using (var db = GetDataConnection(context))
+				provider = new OracleTests.TestOracleDataProvider(db.DataProvider.Name, ((OracleDataProvider)db.DataProvider).Provider, ((OracleDataProvider)db.DataProvider).Version);
+
+			using (var db = CreateDataConnection(provider, context, type, "Oracle.DataAccess.Client.OracleConnection, Oracle.DataAccess"))
 			{
 				var trace = string.Empty;
 				db.OnTraceConnection += (TraceInfo ti) =>
@@ -1299,7 +1304,7 @@ namespace Tests.Data
 
 				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
 				// ToLower, because native prodiver returns it lowercased
-				Assert.AreEqual(unmapped ? string.Empty : TestUtils.GetServerName(db).ToLower(), schema.Database);
+				Assert.AreEqual(unmapped ? string.Empty : TestUtils.GetServerName(db, context).ToUpperInvariant(), schema.Database.ToUpperInvariant());
 				//schema.DataSource not asserted, as it returns db hostname
 
 				// dbcommand properties
@@ -1351,7 +1356,12 @@ namespace Tests.Data
 		{
 			var wrapped   = type == ConnectionType.MiniProfilerNoMappings || type == ConnectionType.MiniProfiler;
 			var unmapped  = type == ConnectionType.MiniProfilerNoMappings;
-			using (var db = CreateDataConnection(new OracleTests.TestOracleDataProvider(ProviderName.OracleManaged), context, type, "Oracle.ManagedDataAccess.Client.OracleConnection, Oracle.ManagedDataAccess"))
+
+			OracleDataProvider provider;
+			using (var db = GetDataConnection(context))
+				provider = new OracleTests.TestOracleDataProvider(db.DataProvider.Name, ((OracleDataProvider)db.DataProvider).Provider, ((OracleDataProvider)db.DataProvider).Version);
+
+			using (var db = CreateDataConnection(provider, context, type, "Oracle.ManagedDataAccess.Client.OracleConnection, Oracle.ManagedDataAccess"))
 			{
 				var trace = string.Empty;
 				db.OnTraceConnection += (TraceInfo ti) =>
@@ -1393,7 +1403,7 @@ namespace Tests.Data
 				TestBulkCopy();
 
 				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
-				Assert.AreEqual(unmapped ? string.Empty : TestUtils.GetServerName(db), schema.Database);
+				Assert.AreEqual(unmapped ? string.Empty : TestUtils.GetServerName(db, context).ToUpperInvariant(), schema.Database.ToUpperInvariant());
 				//schema.DataSource not asserted, as it returns db hostname
 
 				// dbcommand properties
@@ -1414,6 +1424,91 @@ namespace Tests.Data
 					Assert.AreEqual(-1, cmd.InitialLONGFetchSize);
 					Assert.AreEqual(0, cmd.ArrayBindCount);
 				}
+
+				void TestBulkCopy()
+				{
+					using (db.CreateLocalTable<OracleBulkCopyTable>())
+					{
+						long copied = 0;
+						var options = new BulkCopyOptions()
+						{
+							BulkCopyType       = BulkCopyType.ProviderSpecific,
+							NotifyAfter        = 500,
+							RowsCopiedCallback = arg => copied = arg.RowsCopied,
+							KeepIdentity       = true
+						};
+
+						db.BulkCopy(
+							options,
+							Enumerable.Range(0, 1000).Select(n => new OracleBulkCopyTable() { ID = 2000 + n }));
+
+						Assert.AreEqual(!unmapped, trace.Contains("INSERT BULK"));
+						Assert.AreEqual(1000, copied);
+					}
+				}
+			}
+		}
+
+		[ActiveIssue(Configuration = TestProvName.Oracle21DevartDirect)]
+		[Test]
+		public void TestOracleDevart([IncludeDataSources(TestProvName.AllOracleDevart)] string context, [Values] ConnectionType type)
+		{
+			var wrapped   = type == ConnectionType.MiniProfilerNoMappings || type == ConnectionType.MiniProfiler;
+			var unmapped  = type == ConnectionType.MiniProfilerNoMappings;
+
+			OracleDataProvider provider;
+			using (var db = GetDataConnection(context))
+				provider = new OracleTests.TestOracleDataProvider(db.DataProvider.Name, ((OracleDataProvider)db.DataProvider).Provider, ((OracleDataProvider)db.DataProvider).Version);
+
+			using (var db = CreateDataConnection(provider, context, type, "Devart.Data.Oracle.OracleConnection, Devart.Data.Oracle"))
+			{
+				var trace = string.Empty;
+				db.OnTraceConnection += (TraceInfo ti) =>
+				{
+					if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
+						trace = ti.SqlText;
+				};
+
+				var commandInterceptor = new SaveWrappedCommandInterceptor(wrapped);
+				db.AddInterceptor(commandInterceptor);
+
+				var ntextValue = "тест";
+				Assert.AreEqual(ntextValue, db.Execute<string>("SELECT :p FROM SYS.DUAL", new DataParameter("p", ntextValue, DataType.NText)));
+				Assert.True(trace.Contains("DECLARE @p NClob(4) "));
+
+				// provider-specific type classes and readers
+				var decValue = 123.45m;
+				var decimalValue = db.Execute<Devart.Data.Oracle.OracleNumber>("SELECT :p FROM SYS.DUAL", new DataParameter("p", decValue, DataType.Decimal));
+				Assert.AreEqual(decValue, (decimal)decimalValue);
+				var rawValue = db.Execute<object>("SELECT :p FROM SYS.DUAL", new DataParameter("p", decValue, DataType.Decimal));
+				Assert.True    (rawValue is decimal);
+				Assert.AreEqual(decValue, (decimal)rawValue);
+
+				// OracleTimeStampTZ parameter creation and conversion to DateTimeOffset
+				var dtoVal = TestData.DateTimeOffset;
+
+				// it is possible to define working reader expression for unmapped wrapper (at least for MiniProfiler)
+				// but it doesn't make sense to do it righ now without user request
+				// especially taking into account that more proper way is to define mappings
+				if (!unmapped)
+				{
+					var dtoValue = db.Execute<DateTimeOffset>("SELECT :p FROM SYS.DUAL", new DataParameter("p", dtoVal, DataType.DateTimeOffset) { Precision = 6 });
+					dtoVal = dtoVal.AddTicks(-1 * (dtoVal.Ticks % 10));
+					Assert.AreEqual(dtoVal, dtoValue);
+					Assert.AreEqual(((OracleDataProvider)db.DataProvider).Adapter.OracleTimeStampType, commandInterceptor.Parameters[0].Value!.GetType()!);
+				}
+
+				TestBulkCopy();
+				using (var tr = db.BeginTransaction())
+					TestBulkCopy();
+
+				// dbcommand properties
+				db.DisposeCommand();
+
+				db.Execute<DateTimeOffset>("SELECT :p FROM SYS.DUAL", new DataParameter("p", dtoVal, DataType.DateTimeOffset));
+
+				dynamic cmd = commandInterceptor.Command!;
+				Assert.AreEqual(!unmapped, cmd.PassParametersByName);
 
 				void TestBulkCopy()
 				{
@@ -1473,7 +1568,7 @@ namespace Tests.Data
 						trace = ti.SqlText;
 				};
 
-				var jsonValue = "{ \"x\": 1 }";
+				var jsonValue = /*lang=json,strict*/ "{ \"x\": 1 }";
 				Assert.AreEqual(jsonValue, db.Execute<string>("SELECT @p", new DataParameter("@p", jsonValue, DataType.Json)));
 				Assert.True    (trace.Contains("DECLARE @p Json"));
 

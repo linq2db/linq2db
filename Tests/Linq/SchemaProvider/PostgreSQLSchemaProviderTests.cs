@@ -279,7 +279,7 @@ namespace Tests.SchemaProvider
 			using (var db = (DataConnection)GetDataContext(context))
 			{
 				var expectedProc = testCase.Schema;
-				expectedProc.CatalogName = TestUtils.GetDatabaseName(db);
+				expectedProc.CatalogName = TestUtils.GetDatabaseName(db, context);
 
 				// schema load takes too long if system schema included
 				// added SchemaProceduresLoadedTest to test system schema

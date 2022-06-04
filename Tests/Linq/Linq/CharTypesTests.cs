@@ -118,7 +118,7 @@ namespace Tests.Linq
 					{
 						if (!SkipChar(context))
 						{
-							if (context.IsAnyOf(TestProvName.AllSybase))
+							if (context.IsAnyOf(TestProvName.AllSybase, TestProvName.AllOracleDevartOCI))
 								Assert.AreEqual(testData[i].String?.TrimEnd(' ')?.TrimEnd('\0'), records[i].String);
 							else
 								Assert.AreEqual(testData[i].String?.TrimEnd(' '), records[i].String);
@@ -126,7 +126,7 @@ namespace Tests.Linq
 
 						if (!context.IsAnyOf(TestProvName.AllFirebird))
 						{
-							if (context.IsAnyOf(TestProvName.AllSybase))
+							if (context.IsAnyOf(TestProvName.AllSybase, TestProvName.AllOracleDevartOCI))
 								Assert.AreEqual(testData[i].NString?.TrimEnd(' ')?.TrimEnd('\0'), records[i].NString);
 							else
 								Assert.AreEqual(testData[i].NString?.TrimEnd(' '), records[i].NString);

@@ -96,5 +96,38 @@ namespace LinqToDB.Expressions
 
 			throw new InvalidOperationException($"Instance property or field with name {name} not found on type {obj.Type}");
 		}
+
+		/// <summary>
+		/// Compared to <see cref="Expression.PropertyOrField(Expression, string)"/>, performs case-sensitive member search.
+		/// </summary>
+		public static MemberExpression PropertyOrField(Type type, string name, bool allowInherited = true)
+		{
+			var flags = BindingFlags.Static | BindingFlags.Public;
+			if (allowInherited)
+				flags |= BindingFlags.FlattenHierarchy;
+
+			var pi = type.GetProperty(name, flags);
+
+			if (pi != null)
+				return Expression.Property(null, pi);
+
+			var fi = type.GetField(name, flags);
+			if (fi != null)
+				return Expression.Field(null, fi);
+
+			flags = BindingFlags.Static | BindingFlags.NonPublic;
+			if (allowInherited)
+				flags |= BindingFlags.FlattenHierarchy;
+
+			pi = type.GetProperty(name, flags);
+			if (pi != null)
+				return Expression.Property(null, pi);
+
+			fi = type.GetField(name, flags);
+			if (fi != null)
+				return Expression.Field(null, fi);
+
+			throw new InvalidOperationException($"Static property or field with name {name} not found on type {type}");
+		}
 	}
 }

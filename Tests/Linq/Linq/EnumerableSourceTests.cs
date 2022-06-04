@@ -16,7 +16,7 @@ namespace Tests.Linq
 		[Test]
 		public void ApplyJoinArray(
 			[IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL93Plus,
-				TestProvName.AllOracle12)]
+				TestProvName.AllOracle12Plus)]
 			string context, [Values(1, 2)] int iteration)
 		{
 			var doe = "Doe";
@@ -265,7 +265,7 @@ namespace Tests.Linq
 		[Test]
 		public void ApplyJoinAnonymousClassArray(
 			[IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL93Plus,
-				TestProvName.AllOracle12)]
+				TestProvName.AllOracle12Plus)]
 			string context, [Values(1, 2)] int iteration)
 		{
 			using (var db = GetDataContext(context))
@@ -302,7 +302,7 @@ namespace Tests.Linq
 		[Test]
 		public void ApplyJoinAnonymousClassArray2(
 			[IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL93Plus,
-				TestProvName.AllOracle12)]
+				TestProvName.AllOracle12Plus)]
 			string context, [Values(1, 2)] int iteration)
 		{
 			using (var db = GetDataContext(context))
@@ -339,7 +339,7 @@ namespace Tests.Linq
 		[Test]
 		public void ApplyJoinClassArray(
 			[IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL93Plus,
-				TestProvName.AllOracle12)]
+				TestProvName.AllOracle12Plus)]
 			string context, [Values(1, 2)] int iteration)
 		{
 			using (var db = GetDataContext(context))

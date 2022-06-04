@@ -15,6 +15,7 @@
 		<PackageReference Include="System.Data.SqlClient" />
 		<PackageReference Include="Microsoft.Data.SqlClient" />
 		<PackageReference Include="Microsoft.Data.SQLite" />
+		<PackageReference Include="Devart.Data.Oracle" />
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net472' ">
@@ -27,12 +28,19 @@
 		<Reference Include="Oracle.DataAccess">
 			<HintPath>$(MSBuildThisFileDirectory)\..\Redist\Oracle\Oracle.DataAccess.dll</HintPath>
 		</Reference>
+		<!--<Reference Include="Devart.Data.Oracle">
+			<HintPath>$(MSBuildThisFileDirectory)\..\Redist\Devart\Devart.Data.Oracle.dll</HintPath>
+		</Reference>
+		<Reference Include="Devart.Data">
+			<HintPath>$(MSBuildThisFileDirectory)\..\Redist\Devart\Devart.Data.dll</HintPath>
+		</Reference>-->
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' != 'net472' ">
 		<PackageReference Include="System.Data.Odbc" />
 		<PackageReference Include="System.Data.OleDb" />
 		<PackageReference Include="Oracle.ManagedDataAccess.Core" />
+		<!--<PackageReference Include="Devart.Data.Oracle" />-->
 
 		<!--nuget doesn't have strong name, so we use local self-signed copy-->
 		<!--<PackageReference Include="dotMorten.Microsoft.SqlServer.Types" />-->
