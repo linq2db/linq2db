@@ -7,10 +7,11 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
-	using LinqToDB.Async;
-	using LinqToDB.Configuration;
-	using LinqToDB.Data;
+	using Async;
+	using Configuration;
+	using Data;
 	using Model;
+	using Tests.Tools;
 
 	[TestFixture]
 	public class DataContextTests : TestBase
@@ -84,10 +85,7 @@ namespace Tests.Linq
 			using (var db = (TestDataConnection)GetDataContext(context))
 			using (var db1 = new DataContext(db.DataProvider.Name, "BAD"))
 			{
-				if (context.IsAnyOf(TestProvName.AllOracleDevart))
-					Assert.Throws(typeof(InvalidOperationException), () => db1.GetTable<Child>().ToList());
-				else
-					Assert.Throws(typeof(ArgumentException), () => db1.GetTable<Child>().ToList());
+				NUnitAssert.ThrowsAny(() => db1.GetTable<Child>().ToList(), typeof(ArgumentException), typeof(InvalidOperationException));
 			}
 		}
 

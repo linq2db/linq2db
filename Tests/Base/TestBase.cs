@@ -382,7 +382,6 @@ namespace Tests
 			TestProvName.AllPostgreSQL,
 			TestProvName.AllMySql,
 			TestProvName.AllSapHana,
-			TestProvName.SqlServerInvalid,
 		}.SplitAll()).ToList();
 
 		private const string LinqServiceSuffix = ".LinqService";

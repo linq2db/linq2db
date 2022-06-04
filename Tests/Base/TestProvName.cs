@@ -137,8 +137,6 @@ namespace Tests
 		public const string SqlServerContainedMS         = "SqlServer.Contained.MS";
 		public const string AllSqlServerContained        = $"{SqlServerContained},{SqlServerContainedMS}";
 
-		public const string SqlServerInvalid             = "SqlServer.Invalid";
-
 		/// <summary>
 		/// Case-sensitive database.
 		/// </summary>

@@ -13,6 +13,7 @@ namespace Tests.Data
 {
 	using System.Data;
 	using Model;
+	using Tests.Tools;
 
 	[TestFixture]
 	public class TraceTests : TestBase
@@ -61,12 +62,13 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void TraceInfoErrorsAreReportedForInvalidConnectionString([IncludeDataSources(TestProvName.SqlServerInvalid)] string context)
+		public void TraceInfoErrorsAreReportedForInvalidConnectionString([DataSources(false)] string context)
 		{
 			var events   = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
 			var counters = GetEnumValues((TraceInfoStep s) => 0);
 
-			using (var db = GetDataConnection(context))
+			using (var db0 = (TestDataConnection)GetDataContext(context))
+			using (var db  = new DataContext(db0.DataProvider.Name, "BAD"))
 			{
 				db.OnTraceConnection = e =>
 				{
@@ -74,7 +76,7 @@ namespace Tests.Data
 					counters[e.TraceInfoStep]++;
 				};
 
-				Assert.Throws<LinqToDBException>(() => db.GetTable<Northwind.Category>().ToList());
+				NUnitAssert.ThrowsAny(() => db.GetTable<Child>().ToList(), typeof(ArgumentException), typeof(InvalidOperationException));
 
 				// steps called once
 				Assert.AreEqual(1, counters[TraceInfoStep.Error]);
@@ -88,12 +90,13 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void TraceInfoErrorsAreReportedForInvalidConnectionStringAsync([IncludeDataSources(TestProvName.SqlServerInvalid)] string context)
+		public async Task TraceInfoErrorsAreReportedForInvalidConnectionStringAsync([DataSources(false)] string context)
 		{
 			var events   = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
 			var counters = GetEnumValues((TraceInfoStep s) => 0);
 
-			using (var db = GetDataConnection(context))
+			using (var db0 = (TestDataConnection)GetDataContext(context))
+			using (var db  = new DataContext(db0.DataProvider.Name, "BAD"))
 			{
 				db.OnTraceConnection = e =>
 				{
@@ -101,7 +104,7 @@ namespace Tests.Data
 					counters[e.TraceInfoStep]++;
 				};
 
-				Assert.ThrowsAsync<LinqToDBException>(() => db.GetTable<Northwind.Category>().ToListAsync());
+				await NUnitAssert.ThrowsAnyAsync(() => db.GetTable<Child>().ToListAsync(), typeof(ArgumentException), typeof(InvalidOperationException));
 
 				// steps called once
 				Assert.AreEqual(1, counters[TraceInfoStep.Error]);

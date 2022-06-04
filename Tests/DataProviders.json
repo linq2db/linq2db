@@ -188,10 +188,6 @@
 				"Provider": "Microsoft.Data.SqlClient",
 				"ConnectionString": "Server=tcp:aiae6kk6yl.database.windows.net,1433;Database=TestData;User ID=TestUser@aiae6kk6yl;Password=;Trusted_Connection=False;Encrypt=True;"
 			},
-			"SqlServer.Invalid": {
-				"Provider": "Microsoft.Data.SqlClient",
-				"ConnectionString": "Server=DBHost\\SQLSERVER2012;Database=Invalid;User Id=sa;Password=TestPassword;Encrypt=true;TrustServerCertificate=true"
-			},
 
 			"DB2": {
 				"Provider": "IBM.Data.DB2",
