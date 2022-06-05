@@ -1098,31 +1098,49 @@ namespace LinqToDB.Data
 		{
 			CheckAndThrowOnDisposed();
 
-			if (_connection == null)
+			try
 			{
-				DbConnection connection;
-				if (_connectionFactory != null)
-					connection = _connectionFactory();
-				else
-					connection = DataProvider.CreateConnection(ConnectionString!);
+				if (_connection == null)
+				{
+					DbConnection connection;
+					if (_connectionFactory != null)
+						connection = _connectionFactory();
+					else
+						connection = DataProvider.CreateConnection(ConnectionString!);
 
-				_connection = AsyncFactory.Create(connection);
+					_connection = AsyncFactory.Create(connection);
 
-				if (RetryPolicy != null)
+					if (RetryPolicy != null)
+						_connection = new RetryingDbConnection(this, _connection, RetryPolicy);
+				}
+				else if (RetryPolicy != null && _connection is not RetryingDbConnection)
 					_connection = new RetryingDbConnection(this, _connection, RetryPolicy);
-			}
-			else if (RetryPolicy != null && _connection is not RetryingDbConnection)
-				_connection = new RetryingDbConnection(this, _connection, RetryPolicy);
 
-			if (connect && _connection.State == ConnectionState.Closed)
+				if (connect && _connection.State == ConnectionState.Closed)
+				{
+					_connectionInterceptor?.ConnectionOpening(new(this), _connection.Connection);
+
+					_connection.Open();
+					_closeConnection = true;
+
+					_connectionInterceptor?.ConnectionOpened(new(this), _connection.Connection);
+				}
+			}
+			catch (Exception ex)
 			{
-				_connectionInterceptor?.ConnectionOpening(new (this), _connection.Connection);
+				if (TraceSwitchConnection.TraceError)
+				{
+					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error, TraceOperation.Open, false)
+					{
+						TraceLevel = TraceLevel.Error,
+						StartTime = DateTime.UtcNow,
+						Exception = ex,
+					});
+				}
 
-				_connection.Open();
-				_closeConnection = true;
-
-				_connectionInterceptor?.ConnectionOpened(new (this), _connection.Connection);
+				throw;
 			}
+
 
 			return _connection;
 		}
