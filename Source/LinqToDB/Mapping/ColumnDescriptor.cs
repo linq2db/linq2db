@@ -155,6 +155,32 @@ namespace LinqToDB.Mapping
 			}
 		}
 
+#if NETSTANDARD2_0_OR_GREATER
+		private static bool _useNullableReflection = ProbeNullableReflectionSupport();
+		
+		private static bool ProbeNullableReflectionSupport()
+		{
+			try
+			{
+				var propInfo = typeof(ColumnDescriptor).GetProperty(nameof(SequenceName));
+				var context  = new NullabilityInfoContext();
+				// Create() throws InvalidOperationException if feature flag NullabilityInfoContextSupport is false.
+				// This happens when build is configured to aggressively trim C# nullability attributes,
+				// which is the default for MAUI and Blazor targets.
+				// Linq2db still works and users have two choices:
+				// 1. Rely on good old [Column] or [NotNullable] attributes instead;
+				// 2. Prevent aggressive trimming by adding the following property to csproj:
+				//    <NullabilityInfoContextSupport>true</NullabilityInfoContextSupport>
+				context.Create(propInfo);
+				return true;
+			}
+			catch (InvalidOperationException)
+			{
+				return false;
+			}
+		}
+#endif
+
 		private bool AnalyzeCanBeNull(ColumnAttribute columnAttribute)
 		{
 			if (columnAttribute.HasCanBeNull())
@@ -168,18 +194,21 @@ namespace LinqToDB.Mapping
 				return na.CanBeNull;
 				
 #if NETSTANDARD2_0_OR_GREATER
-			// Extract info from C# Nullable Reference Types if available.
-			// Note that this should also handle Nullable Value Types.
-			var context = new NullabilityInfoContext();
-			var nullability = MemberInfo switch 
+			if (_useNullableReflection)
 			{
-				PropertyInfo p => context.Create(p).ReadState,
-				FieldInfo    f => context.Create(f).ReadState,
-				             _ => NullabilityState.Unknown,
-			};
-			
-			if (nullability != NullabilityState.Unknown)
-				return nullability == NullabilityState.Nullable;
+				// Extract info from C# Nullable Reference Types if available.
+				// Note that this should also handle Nullable Value Types.
+				var context = new NullabilityInfoContext();
+				var nullability = MemberInfo switch 
+				{
+					PropertyInfo p => context.Create(p).ReadState,
+					FieldInfo    f => context.Create(f).ReadState,
+								_ => NullabilityState.Unknown,
+				};
+				
+				if (nullability != NullabilityState.Unknown)
+					return nullability == NullabilityState.Nullable;				
+			}
 #endif
 
 			if (IsIdentity) 
