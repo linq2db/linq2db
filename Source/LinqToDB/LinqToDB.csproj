@@ -110,6 +110,10 @@
 		<Reference Include="System.ComponentModel.DataAnnotations" />
 	</ItemGroup>
 
+	<ItemGroup>
+		<PackageReference Include="Nullability.Source" PrivateAssets="All" IncludeAssets="contentfiles" />
+	</ItemGroup>
+
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
 		<PackageReference Include="System.Data.DataSetExtensions" />
 	</ItemGroup>

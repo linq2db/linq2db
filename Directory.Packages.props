@@ -13,6 +13,8 @@
 		<PackageVersion Include="Microsoft.CSharp"                                      Version="4.7.0"         />
 		<PackageVersion Include="Microsoft.Bcl.AsyncInterfaces"                         Version="6.0.0"         />
 		<PackageVersion Include="System.ComponentModel.Annotations"                     Version="5.0.0"         />
+		<!--Source of NullabilityInfoContext for runtimes before .net 6-->
+		<PackageVersion Include="Nullability.Source"                                    Version="2.0.0"         />
 		<!--build support-->
 		<PackageVersion Include="Microsoft.CodeAnalysis.BannedApiAnalyzers"             Version="3.3.3"         />
 		<PackageVersion Include="Microsoft.CodeAnalysis.NetAnalyzers"                   Version="6.0.0"         />

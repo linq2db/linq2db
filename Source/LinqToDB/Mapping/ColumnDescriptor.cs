@@ -167,7 +167,7 @@ namespace LinqToDB.Mapping
 			if (na != null)
 				return na.CanBeNull;
 				
-#if NET6_0_OR_GREATER
+#if NETSTANDARD2_0_OR_GREATER
 			// Extract info from C# Nullable Reference Types if available.
 			// Note that this should also handle Nullable Value Types.
 			var context = new NullabilityInfoContext();
@@ -420,7 +420,7 @@ namespace LinqToDB.Mapping
 		/// Gets value converter for specific column.
 		/// </summary>
 		public IValueConverter? ValueConverter  { get; }
-
+		
 		LambdaExpression?    _getOriginalValueLambda;
 
 		LambdaExpression?    _getDbValueLambda;
