@@ -115,7 +115,7 @@ namespace Default.SQLite
 		#region Associations
 
 		/// <summary>
-		/// FK_Doctor_0_0 (main.Person)
+		/// FK_Doctor_0_0 (Person)
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
 		public Person Person { get; set; } = null!;
@@ -147,7 +147,7 @@ namespace Default.SQLite
 		#region Associations
 
 		/// <summary>
-		/// FK_ForeignKeyTable_0_0 (main.PrimaryKeyTable)
+		/// FK_ForeignKeyTable_0_0 (PrimaryKeyTable)
 		/// </summary>
 		[Association(ThisKey="PrimaryKeyTableID", OtherKey="ID", CanBeNull=false)]
 		public PrimaryKeyTable PrimaryKeyTable { get; set; } = null!;
@@ -212,7 +212,7 @@ namespace Default.SQLite
 		#region Associations
 
 		/// <summary>
-		/// FK_Patient_0_0 (main.Person)
+		/// FK_Patient_0_0 (Person)
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
 		public Person Person { get; set; } = null!;
@@ -232,13 +232,13 @@ namespace Default.SQLite
 		#region Associations
 
 		/// <summary>
-		/// FK_Doctor_0_0_BackReference (main.Doctor)
+		/// FK_Doctor_0_0_BackReference (Doctor)
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
 		public Doctor? Doctor { get; set; }
 
 		/// <summary>
-		/// FK_Patient_0_0_BackReference (main.Patient)
+		/// FK_Patient_0_0_BackReference (Patient)
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
 		public Patient? Patient { get; set; }
@@ -255,7 +255,7 @@ namespace Default.SQLite
 		#region Associations
 
 		/// <summary>
-		/// FK_ForeignKeyTable_0_0_BackReference (main.ForeignKeyTable)
+		/// FK_ForeignKeyTable_0_0_BackReference (ForeignKeyTable)
 		/// </summary>
 		[Association(ThisKey="ID", OtherKey="PrimaryKeyTableID", CanBeNull=true)]
 		public IEnumerable<ForeignKeyTable> ForeignKeyTables { get; set; } = null!;

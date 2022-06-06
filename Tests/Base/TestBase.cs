@@ -377,12 +377,13 @@ namespace Tests
 			ProviderName.InformixDB2,
 			TestProvName.AllSQLite,
 			TestProvName.AllOracleManaged,
+			TestProvName.AllOracleDevart,
 			ProviderName.SybaseManaged,
 			TestProvName.AllFirebird,
 			TestProvName.AllSqlServer,
 			TestProvName.AllPostgreSQL,
 			TestProvName.AllMySql,
-			TestProvName.AllSapHana
+			TestProvName.AllSapHana,
 		}.SplitAll()).ToList();
 
 		private const string LinqServiceSuffix = ".LinqService";

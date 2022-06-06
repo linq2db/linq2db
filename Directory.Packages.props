@@ -31,6 +31,7 @@
 		<!--3.21 provider currently contains bug which leads to test failures with oracle 12-->
 		<PackageVersion Include="Oracle.ManagedDataAccess.Core"                         Version="2.19.140"      />
 		<!--<PackageVersion Include="Oracle.ManagedDataAccess.Core"                         Version="3.21.61"       />-->
+		<PackageVersion Include="Devart.Data.Oracle"                                    Version="9.16.1434"     />
 		<PackageVersion Include="FirebirdSql.Data.FirebirdClient"                       Version="9.0.1"         />
 		<PackageVersion Include="System.Data.SQLite.Core"                               Version="1.0.115.5"     />
 		<PackageVersion Include="IBM.Data.DB.Provider"                                  Version="11.5.5010.4"   />

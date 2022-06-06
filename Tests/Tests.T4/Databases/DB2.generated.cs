@@ -24,24 +24,30 @@ namespace DB2DataContext
 {
 	public partial class TESTDATADB : LinqToDB.Data.DataConnection
 	{
-		public ITable<DB2INST1_ALLTYPE>           ALLTYPES            { get { return this.GetTable<DB2INST1_ALLTYPE>(); } }
-		public ITable<DB2INST1_Child>             Children            { get { return this.GetTable<DB2INST1_Child>(); } }
-		public ITable<DB2INST1_CollatedTable>     CollatedTables      { get { return this.GetTable<DB2INST1_CollatedTable>(); } }
-		public ITable<DB2INST1_Doctor>            Doctors             { get { return this.GetTable<DB2INST1_Doctor>(); } }
-		public ITable<DB2INST1_GrandChild>        GrandChildren       { get { return this.GetTable<DB2INST1_GrandChild>(); } }
-		public ITable<DB2INST1_InheritanceChild>  InheritanceChildren { get { return this.GetTable<DB2INST1_InheritanceChild>(); } }
-		public ITable<DB2INST1_InheritanceParent> InheritanceParents  { get { return this.GetTable<DB2INST1_InheritanceParent>(); } }
-		public ITable<DB2INST1_KeepIdentityTest>  KeepIdentityTests   { get { return this.GetTable<DB2INST1_KeepIdentityTest>(); } }
-		public ITable<DB2INST1_LinqDataType>      LinqDataTypes       { get { return this.GetTable<DB2INST1_LinqDataType>(); } }
-		public ITable<DB2INST1_MASTERTABLE>       Mastertables        { get { return this.GetTable<DB2INST1_MASTERTABLE>(); } }
-		public ITable<DB2INST1_Parent>            Parents             { get { return this.GetTable<DB2INST1_Parent>(); } }
-		public ITable<DB2INST1_Patient>           Patients            { get { return this.GetTable<DB2INST1_Patient>(); } }
-		public ITable<DB2INST1_Person>            People              { get { return this.GetTable<DB2INST1_Person>(); } }
-		public ITable<DB2INST1_PERSONVIEW>        Personviews         { get { return this.GetTable<DB2INST1_PERSONVIEW>(); } }
-		public ITable<DB2INST1_SLAVETABLE>        Slavetables         { get { return this.GetTable<DB2INST1_SLAVETABLE>(); } }
-		public ITable<DB2INST1_TestIdentity>      TestIdentities      { get { return this.GetTable<DB2INST1_TestIdentity>(); } }
-		public ITable<DB2INST1_TestMerge1>        TestMerge1          { get { return this.GetTable<DB2INST1_TestMerge1>(); } }
-		public ITable<DB2INST1_TestMerge2>        TestMerge2          { get { return this.GetTable<DB2INST1_TestMerge2>(); } }
+		public ITable<DB2ADMIN_ALLTYPE>                ALLTYPES                { get { return this.GetTable<DB2ADMIN_ALLTYPE>(); } }
+		public ITable<DB2ADMIN_Child>                  Children                { get { return this.GetTable<DB2ADMIN_Child>(); } }
+		public ITable<DB2ADMIN_CollatedTable>          CollatedTables          { get { return this.GetTable<DB2ADMIN_CollatedTable>(); } }
+		public ITable<DB2ADMIN_CreateIfNotExistsTable> CreateIfNotExistsTables { get { return this.GetTable<DB2ADMIN_CreateIfNotExistsTable>(); } }
+		public ITable<DB2ADMIN_Doctor>                 Doctors                 { get { return this.GetTable<DB2ADMIN_Doctor>(); } }
+		public ITable<DB2ADMIN_GrandChild>             GrandChildren           { get { return this.GetTable<DB2ADMIN_GrandChild>(); } }
+		public ITable<DB2ADMIN_InheritanceChild>       InheritanceChildren     { get { return this.GetTable<DB2ADMIN_InheritanceChild>(); } }
+		public ITable<DB2ADMIN_InheritanceParent>      InheritanceParents      { get { return this.GetTable<DB2ADMIN_InheritanceParent>(); } }
+		public ITable<DB2ADMIN_Int>                    Ints                    { get { return this.GetTable<DB2ADMIN_Int>(); } }
+		public ITable<DB2ADMIN_KeepIdentityTest>       KeepIdentityTests       { get { return this.GetTable<DB2ADMIN_KeepIdentityTest>(); } }
+		public ITable<DB2ADMIN_LinqDataType>           LinqDataTypes           { get { return this.GetTable<DB2ADMIN_LinqDataType>(); } }
+		public ITable<DB2ADMIN_MASTERTABLE>            Mastertables            { get { return this.GetTable<DB2ADMIN_MASTERTABLE>(); } }
+		public ITable<DB2ADMIN_Parent>                 Parents                 { get { return this.GetTable<DB2ADMIN_Parent>(); } }
+		public ITable<DB2ADMIN_Patient>                Patients                { get { return this.GetTable<DB2ADMIN_Patient>(); } }
+		public ITable<DB2ADMIN_Person>                 People                  { get { return this.GetTable<DB2ADMIN_Person>(); } }
+		public ITable<DB2ADMIN_PERSONVIEW>             Personviews             { get { return this.GetTable<DB2ADMIN_PERSONVIEW>(); } }
+		public ITable<DB2ADMIN_SLAVETABLE>             Slavetables             { get { return this.GetTable<DB2ADMIN_SLAVETABLE>(); } }
+		public ITable<DB2ADMIN_TagTestTable>           TagTestTables           { get { return this.GetTable<DB2ADMIN_TagTestTable>(); } }
+		public ITable<DB2ADMIN_Test>                   Tests                   { get { return this.GetTable<DB2ADMIN_Test>(); } }
+		public ITable<DB2ADMIN_TestIdentity>           TestIdentities          { get { return this.GetTable<DB2ADMIN_TestIdentity>(); } }
+		public ITable<DB2ADMIN_Testmerge1>             Testmerge1              { get { return this.GetTable<DB2ADMIN_Testmerge1>(); } }
+		public ITable<DB2ADMIN_TestMerge1>             TestMerge1              { get { return this.GetTable<DB2ADMIN_TestMerge1>(); } }
+		public ITable<DB2ADMIN_Testmerge2>             Testmerge2              { get { return this.GetTable<DB2ADMIN_Testmerge2>(); } }
+		public ITable<DB2ADMIN_TestMerge2>             TestMerge2              { get { return this.GetTable<DB2ADMIN_TestMerge2>(); } }
 
 		public TESTDATADB()
 		{
@@ -75,10 +81,10 @@ namespace DB2DataContext
 
 		#region Table Functions
 
-		#region TestMODULE1TestTableFunction
+		#region TestTableFunction
 
-		[Sql.TableFunction(Schema="DB2INST1", Package="TEST_MODULE1", Name="TEST_TABLE_FUNCTION")]
-		public ITable<TestTableFUNCTIONResult> TestMODULE1TestTableFunction(int? I)
+		[Sql.TableFunction(Schema="DB2ADMIN", Name="TEST_TABLE_FUNCTION")]
+		public ITable<TestTableFUNCTIONResult> TestTableFunction(int? I)
 		{
 			return this.GetTable<TestTableFUNCTIONResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				I);
@@ -91,43 +97,11 @@ namespace DB2DataContext
 
 		#endregion
 
-		#region TestMODULE2TestTableFunction
-
-		[Sql.TableFunction(Schema="DB2INST1", Package="TEST_MODULE2", Name="TEST_TABLE_FUNCTION")]
-		public ITable<TestTableFUNCTIONResult0> TestMODULE2TestTableFunction(int? I)
-		{
-			return this.GetTable<TestTableFUNCTIONResult0>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				I);
-		}
-
-		public partial class TestTableFUNCTIONResult0
-		{
-			public int? O { get; set; }
-		}
-
-		#endregion
-
-		#region TestTableFunction
-
-		[Sql.TableFunction(Schema="DB2INST1", Name="TEST_TABLE_FUNCTION")]
-		public ITable<TestTableFUNCTIONResult1> TestTableFunction(int? I)
-		{
-			return this.GetTable<TestTableFUNCTIONResult1>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				I);
-		}
-
-		public partial class TestTableFUNCTIONResult1
-		{
-			public int? O { get; set; }
-		}
-
-		#endregion
-
 		#endregion
 	}
 
-	[Table(Schema="DB2INST1", Name="ALLTYPES")]
-	public partial class DB2INST1_ALLTYPE
+	[Table(Schema="DB2ADMIN", Name="ALLTYPES")]
+	public partial class DB2ADMIN_ALLTYPE
 	{
 		[Column(DbType="INTEGER",                  DataType=LinqToDB.DataType.Int32),                     PrimaryKey, Identity] public int       ID                { get; set; } // INTEGER
 		[Column(DbType="BIGINT",                   DataType=LinqToDB.DataType.Int64),                     Nullable            ] public long?     BIGINTDATATYPE    { get; set; } // BIGINT
@@ -152,23 +126,30 @@ namespace DB2DataContext
 		[Column(DbType="XML",                      DataType=LinqToDB.DataType.Xml),                       Nullable            ] public string?   XMLDATATYPE       { get; set; } // XML
 	}
 
-	[Table(Schema="DB2INST1", Name="Child")]
-	public partial class DB2INST1_Child
+	[Table(Schema="DB2ADMIN", Name="Child")]
+	public partial class DB2ADMIN_Child
 	{
 		[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), Nullable] public int? ParentID { get; set; } // INTEGER
 		[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), Nullable] public int? ChildID  { get; set; } // INTEGER
 	}
 
-	[Table(Schema="DB2INST1", Name="CollatedTable")]
-	public partial class DB2INST1_CollatedTable
+	[Table(Schema="DB2ADMIN", Name="CollatedTable")]
+	public partial class DB2ADMIN_CollatedTable
 	{
 		[Column(DbType="INTEGER",     DataType=LinqToDB.DataType.Int32),              NotNull] public int    Id              { get; set; } // INTEGER
 		[Column(DbType="VARCHAR(80)", DataType=LinqToDB.DataType.VarChar, Length=80), NotNull] public string CaseSensitive   { get; set; } = null!; // VARCHAR(80)
 		[Column(DbType="VARCHAR(80)", DataType=LinqToDB.DataType.VarChar, Length=80), NotNull] public string CaseInsensitive { get; set; } = null!; // VARCHAR(80)
 	}
 
-	[Table(Schema="DB2INST1", Name="Doctor")]
-	public partial class DB2INST1_Doctor
+	[Table(Schema="DB2ADMIN", Name="CreateIfNotExistsTable")]
+	public partial class DB2ADMIN_CreateIfNotExistsTable
+	{
+		[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), NotNull] public int Id    { get; set; } // INTEGER
+		[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), NotNull] public int Value { get; set; } // INTEGER
+	}
+
+	[Table(Schema="DB2ADMIN", Name="Doctor")]
+	public partial class DB2ADMIN_Doctor
 	{
 		[Column(DbType="INTEGER",     DataType=LinqToDB.DataType.Int32),              PrimaryKey, NotNull] public int    PersonID { get; set; } // INTEGER
 		[Column(DbType="VARCHAR(50)", DataType=LinqToDB.DataType.VarChar, Length=50),             NotNull] public string Taxonomy { get; set; } = null!; // VARCHAR(50)
@@ -176,24 +157,24 @@ namespace DB2DataContext
 		#region Associations
 
 		/// <summary>
-		/// FK_Doctor_Person (TESTDB.DB2INST1.Person)
+		/// FK_Doctor_Person (DB2ADMIN.Person)
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
-		public DB2INST1_Person Person { get; set; } = null!;
+		public DB2ADMIN_Person Person { get; set; } = null!;
 
 		#endregion
 	}
 
-	[Table(Schema="DB2INST1", Name="GrandChild")]
-	public partial class DB2INST1_GrandChild
+	[Table(Schema="DB2ADMIN", Name="GrandChild")]
+	public partial class DB2ADMIN_GrandChild
 	{
 		[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), Nullable] public int? ParentID     { get; set; } // INTEGER
 		[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), Nullable] public int? ChildID      { get; set; } // INTEGER
 		[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), Nullable] public int? GrandChildID { get; set; } // INTEGER
 	}
 
-	[Table(Schema="DB2INST1", Name="InheritanceChild")]
-	public partial class DB2INST1_InheritanceChild
+	[Table(Schema="DB2ADMIN", Name="InheritanceChild")]
+	public partial class DB2ADMIN_InheritanceChild
 	{
 		[Column(DbType="INTEGER",     DataType=LinqToDB.DataType.Int32),              PrimaryKey,  NotNull] public int     InheritanceChildId  { get; set; } // INTEGER
 		[Column(DbType="INTEGER",     DataType=LinqToDB.DataType.Int32),                           NotNull] public int     InheritanceParentId { get; set; } // INTEGER
@@ -201,23 +182,34 @@ namespace DB2DataContext
 		[Column(DbType="VARCHAR(50)", DataType=LinqToDB.DataType.VarChar, Length=50),    Nullable         ] public string? Name                { get; set; } // VARCHAR(50)
 	}
 
-	[Table(Schema="DB2INST1", Name="InheritanceParent")]
-	public partial class DB2INST1_InheritanceParent
+	[Table(Schema="DB2ADMIN", Name="InheritanceParent")]
+	public partial class DB2ADMIN_InheritanceParent
 	{
 		[Column(DbType="INTEGER",     DataType=LinqToDB.DataType.Int32),              PrimaryKey,  NotNull] public int     InheritanceParentId { get; set; } // INTEGER
 		[Column(DbType="INTEGER",     DataType=LinqToDB.DataType.Int32),                 Nullable         ] public int?    TypeDiscriminator   { get; set; } // INTEGER
 		[Column(DbType="VARCHAR(50)", DataType=LinqToDB.DataType.VarChar, Length=50),    Nullable         ] public string? Name                { get; set; } // VARCHAR(50)
 	}
 
-	[Table(Schema="DB2INST1", Name="KeepIdentityTest")]
-	public partial class DB2INST1_KeepIdentityTest
+	[Table(Schema="DB2ADMIN", Name="Ints")]
+	public partial class DB2ADMIN_Int
+	{
+		[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), NotNull    ] public int  One   { get; set; } // INTEGER
+		[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), NotNull    ] public int  Two   { get; set; } // INTEGER
+		[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), NotNull    ] public int  Three { get; set; } // INTEGER
+		[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), NotNull    ] public int  Four  { get; set; } // INTEGER
+		[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), NotNull    ] public int  Five  { get; set; } // INTEGER
+		[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32),    Nullable] public int? Nil   { get; set; } // INTEGER
+	}
+
+	[Table(Schema="DB2ADMIN", Name="KeepIdentityTest")]
+	public partial class DB2ADMIN_KeepIdentityTest
 	{
 		[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), PrimaryKey, Identity] public int  ID    { get; set; } // INTEGER
 		[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), Nullable            ] public int? Value { get; set; } // INTEGER
 	}
 
-	[Table(Schema="DB2INST1", Name="LinqDataTypes")]
-	public partial class DB2INST1_LinqDataType
+	[Table(Schema="DB2ADMIN", Name="LinqDataTypes")]
+	public partial class DB2ADMIN_LinqDataType
 	{
 		[Column(DbType="INTEGER",                DataType=LinqToDB.DataType.Int32),                            Nullable] public int?      ID             { get; set; } // INTEGER
 		[Column(DbType="DECIMAL(10,4)",          DataType=LinqToDB.DataType.Decimal,   Precision=10, Scale=4), Nullable] public decimal?  MoneyValue     { get; set; } // DECIMAL(10,4)
@@ -232,8 +224,8 @@ namespace DB2DataContext
 		[Column(DbType="VARCHAR(50)",            DataType=LinqToDB.DataType.VarChar,   Length=50),             Nullable] public string?   StringValue    { get; set; } // VARCHAR(50)
 	}
 
-	[Table(Schema="DB2INST1", Name="MASTERTABLE")]
-	public partial class DB2INST1_MASTERTABLE
+	[Table(Schema="DB2ADMIN", Name="MASTERTABLE")]
+	public partial class DB2ADMIN_MASTERTABLE
 	{
 		[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), PrimaryKey(0), NotNull] public int ID1 { get; set; } // INTEGER
 		[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), PrimaryKey(1), NotNull] public int ID2 { get; set; } // INTEGER
@@ -241,23 +233,23 @@ namespace DB2DataContext
 		#region Associations
 
 		/// <summary>
-		/// FK_SLAVETABLE_MASTERTABLE_BackReference (TESTDB.DB2INST1.SLAVETABLE)
+		/// FK_SLAVETABLE_MASTERTABLE_BackReference (DB2ADMIN.SLAVETABLE)
 		/// </summary>
 		[Association(ThisKey="ID1, ID2", OtherKey="ID222222222222222222222222, ID1", CanBeNull=true)]
-		public IEnumerable<DB2INST1_SLAVETABLE> Slavetables { get; set; } = null!;
+		public IEnumerable<DB2ADMIN_SLAVETABLE> Slavetables { get; set; } = null!;
 
 		#endregion
 	}
 
-	[Table(Schema="DB2INST1", Name="Parent")]
-	public partial class DB2INST1_Parent
+	[Table(Schema="DB2ADMIN", Name="Parent")]
+	public partial class DB2ADMIN_Parent
 	{
 		[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), Nullable] public int? ParentID { get; set; } // INTEGER
 		[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), Nullable] public int? Value1   { get; set; } // INTEGER
 	}
 
-	[Table(Schema="DB2INST1", Name="Patient")]
-	public partial class DB2INST1_Patient
+	[Table(Schema="DB2ADMIN", Name="Patient")]
+	public partial class DB2ADMIN_Patient
 	{
 		[Column(DbType="INTEGER",      DataType=LinqToDB.DataType.Int32),               PrimaryKey, NotNull] public int    PersonID  { get; set; } // INTEGER
 		[Column(DbType="VARCHAR(256)", DataType=LinqToDB.DataType.VarChar, Length=256),             NotNull] public string Diagnosis { get; set; } = null!; // VARCHAR(256)
@@ -265,16 +257,16 @@ namespace DB2DataContext
 		#region Associations
 
 		/// <summary>
-		/// FK_Patient_Person (TESTDB.DB2INST1.Person)
+		/// FK_Patient_Person (DB2ADMIN.Person)
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
-		public DB2INST1_Person Person { get; set; } = null!;
+		public DB2ADMIN_Person Person { get; set; } = null!;
 
 		#endregion
 	}
 
-	[Table(Schema="DB2INST1", Name="Person")]
-	public partial class DB2INST1_Person
+	[Table(Schema="DB2ADMIN", Name="Person")]
+	public partial class DB2ADMIN_Person
 	{
 		[Column(DbType="INTEGER",      DataType=LinqToDB.DataType.Int32),              PrimaryKey,  Identity] public int     PersonID   { get; set; } // INTEGER
 		[Column(DbType="VARCHAR(50)",  DataType=LinqToDB.DataType.VarChar, Length=50), NotNull              ] public string  FirstName  { get; set; } = null!; // VARCHAR(50)
@@ -285,22 +277,22 @@ namespace DB2DataContext
 		#region Associations
 
 		/// <summary>
-		/// FK_Doctor_Person_BackReference (TESTDB.DB2INST1.Doctor)
+		/// FK_Doctor_Person_BackReference (DB2ADMIN.Doctor)
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
-		public DB2INST1_Doctor? Doctor { get; set; }
+		public DB2ADMIN_Doctor? Doctor { get; set; }
 
 		/// <summary>
-		/// FK_Patient_Person_BackReference (TESTDB.DB2INST1.Patient)
+		/// FK_Patient_Person_BackReference (DB2ADMIN.Patient)
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
-		public DB2INST1_Patient? Patient { get; set; }
+		public DB2ADMIN_Patient? Patient { get; set; }
 
 		#endregion
 	}
 
-	[Table(Schema="DB2INST1", Name="PERSONVIEW", IsView=true)]
-	public partial class DB2INST1_PERSONVIEW
+	[Table(Schema="DB2ADMIN", Name="PERSONVIEW", IsView=true)]
+	public partial class DB2ADMIN_PERSONVIEW
 	{
 		[Column(DbType="INTEGER",      DataType=LinqToDB.DataType.Int32),              NotNull    ] public int     PersonID   { get; set; } // INTEGER
 		[Column(DbType="VARCHAR(50)",  DataType=LinqToDB.DataType.VarChar, Length=50), NotNull    ] public string  FirstName  { get; set; } = null!; // VARCHAR(50)
@@ -309,8 +301,8 @@ namespace DB2DataContext
 		[Column(DbType="CHARACTER(1)", DataType=LinqToDB.DataType.Char,    Length=1),  NotNull    ] public char    Gender     { get; set; } // CHARACTER(1)
 	}
 
-	[Table(Schema="DB2INST1", Name="SLAVETABLE")]
-	public partial class DB2INST1_SLAVETABLE
+	[Table(Schema="DB2ADMIN", Name="SLAVETABLE")]
+	public partial class DB2ADMIN_SLAVETABLE
 	{
 		[Column(                                 DbType="INTEGER", DataType=LinqToDB.DataType.Int32), NotNull] public int ID1                        { get; set; } // INTEGER
 		[Column("ID 2222222222222222222222  22", DbType="INTEGER", DataType=LinqToDB.DataType.Int32), NotNull] public int ID222222222222222222222222 { get; set; } // INTEGER
@@ -319,22 +311,47 @@ namespace DB2DataContext
 		#region Associations
 
 		/// <summary>
-		/// FK_SLAVETABLE_MASTERTABLE (TESTDB.DB2INST1.MASTERTABLE)
+		/// FK_SLAVETABLE_MASTERTABLE (DB2ADMIN.MASTERTABLE)
 		/// </summary>
 		[Association(ThisKey="ID222222222222222222222222, ID1", OtherKey="ID1, ID2", CanBeNull=false)]
-		public DB2INST1_MASTERTABLE MASTERTABLE { get; set; } = null!;
+		public DB2ADMIN_MASTERTABLE MASTERTABLE { get; set; } = null!;
 
 		#endregion
 	}
 
-	[Table(Schema="DB2INST1", Name="TestIdentity")]
-	public partial class DB2INST1_TestIdentity
+	[Table(Schema="DB2ADMIN", Name="TagTestTable")]
+	public partial class DB2ADMIN_TagTestTable
+	{
+		[Column(DbType="INTEGER",       DataType=LinqToDB.DataType.Int32),                NotNull    ] public int     ID   { get; set; } // INTEGER
+		[Column(DbType="VARCHAR(1020)", DataType=LinqToDB.DataType.VarChar, Length=1020),    Nullable] public string? Name { get; set; } // VARCHAR(1020)
+	}
+
+	[Table(Schema="DB2ADMIN", Name="Test")]
+	public partial class DB2ADMIN_Test
+	{
+		[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), NotNull    ] public int  Id           { get; set; } // INTEGER
+		[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32),    Nullable] public int? TestAnimalId { get; set; } // INTEGER
+	}
+
+	[Table(Schema="DB2ADMIN", Name="TestIdentity")]
+	public partial class DB2ADMIN_TestIdentity
 	{
 		[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), PrimaryKey, Identity] public int ID { get; set; } // INTEGER
 	}
 
-	[Table(Schema="DB2INST1", Name="TestMerge1")]
-	public partial class DB2INST1_TestMerge1
+	[Table(Schema="DB2ADMIN", Name="testmerge1")]
+	public partial class DB2ADMIN_Testmerge1
+	{
+		[Column("id",     DbType="INTEGER", DataType=LinqToDB.DataType.Int32), PrimaryKey,  NotNull] public int  Id     { get; set; } // INTEGER
+		[Column("field1", DbType="INTEGER", DataType=LinqToDB.DataType.Int32),    Nullable         ] public int? Field1 { get; set; } // INTEGER
+		[Column("field2", DbType="INTEGER", DataType=LinqToDB.DataType.Int32),    Nullable         ] public int? Field2 { get; set; } // INTEGER
+		[Column("field3", DbType="INTEGER", DataType=LinqToDB.DataType.Int32),    Nullable         ] public int? Field3 { get; set; } // INTEGER
+		[Column("field4", DbType="INTEGER", DataType=LinqToDB.DataType.Int32),    Nullable         ] public int? Field4 { get; set; } // INTEGER
+		[Column("field5", DbType="INTEGER", DataType=LinqToDB.DataType.Int32),    Nullable         ] public int? Field5 { get; set; } // INTEGER
+	}
+
+	[Table(Schema="DB2ADMIN", Name="TestMerge1")]
+	public partial class DB2ADMIN_TestMerge1
 	{
 		[Column(DbType="INTEGER",                   DataType=LinqToDB.DataType.Int32),                             PrimaryKey,  NotNull] public int       Id              { get; set; } // INTEGER
 		[Column(DbType="INTEGER",                   DataType=LinqToDB.DataType.Int32),                                Nullable         ] public int?      Field1          { get; set; } // INTEGER
@@ -360,8 +377,19 @@ namespace DB2DataContext
 		[Column(DbType="INTEGER",                   DataType=LinqToDB.DataType.Int32),                                Nullable         ] public int?      FieldEnumNumber { get; set; } // INTEGER
 	}
 
-	[Table(Schema="DB2INST1", Name="TestMerge2")]
-	public partial class DB2INST1_TestMerge2
+	[Table(Schema="DB2ADMIN", Name="testmerge2")]
+	public partial class DB2ADMIN_Testmerge2
+	{
+		[Column("id",     DbType="INTEGER", DataType=LinqToDB.DataType.Int32), PrimaryKey,  NotNull] public int  Id     { get; set; } // INTEGER
+		[Column("field1", DbType="INTEGER", DataType=LinqToDB.DataType.Int32),    Nullable         ] public int? Field1 { get; set; } // INTEGER
+		[Column("field2", DbType="INTEGER", DataType=LinqToDB.DataType.Int32),    Nullable         ] public int? Field2 { get; set; } // INTEGER
+		[Column("field3", DbType="INTEGER", DataType=LinqToDB.DataType.Int32),    Nullable         ] public int? Field3 { get; set; } // INTEGER
+		[Column("field4", DbType="INTEGER", DataType=LinqToDB.DataType.Int32),    Nullable         ] public int? Field4 { get; set; } // INTEGER
+		[Column("field5", DbType="INTEGER", DataType=LinqToDB.DataType.Int32),    Nullable         ] public int? Field5 { get; set; } // INTEGER
+	}
+
+	[Table(Schema="DB2ADMIN", Name="TestMerge2")]
+	public partial class DB2ADMIN_TestMerge2
 	{
 		[Column(DbType="INTEGER",                   DataType=LinqToDB.DataType.Int32),                             PrimaryKey,  NotNull] public int       Id              { get; set; } // INTEGER
 		[Column(DbType="INTEGER",                   DataType=LinqToDB.DataType.Int32),                                Nullable         ] public int?      Field1          { get; set; } // INTEGER
@@ -398,7 +426,7 @@ namespace DB2DataContext
 				new DataParameter("I", I, LinqToDB.DataType.Int32)
 			};
 
-			return dataConnection.ExecuteProc("DB2INST1.TEST_MODULE1.TEST_PROCEDURE", parameters);
+			return dataConnection.ExecuteProc("DB2ADMIN.TEST_MODULE1.TEST_PROCEDURE", parameters);
 		}
 
 		#endregion
@@ -412,7 +440,7 @@ namespace DB2DataContext
 				new DataParameter("I", I, LinqToDB.DataType.Int32)
 			};
 
-			return dataConnection.ExecuteProc("DB2INST1.TEST_MODULE2.TEST_PROCEDURE", parameters);
+			return dataConnection.ExecuteProc("DB2ADMIN.TEST_MODULE2.TEST_PROCEDURE", parameters);
 		}
 
 		#endregion
@@ -421,7 +449,7 @@ namespace DB2DataContext
 
 		public static int ADDISSUE792RECORD(this TESTDATADB dataConnection)
 		{
-			return dataConnection.ExecuteProc("DB2INST1.ADDISSUE792RECORD");
+			return dataConnection.ExecuteProc("DB2ADMIN.ADDISSUE792RECORD");
 		}
 
 		#endregion
@@ -435,7 +463,7 @@ namespace DB2DataContext
 				new DataParameter("ID", ID, LinqToDB.DataType.Int32)
 			};
 
-			return dataConnection.ExecuteProc("DB2INST1.PERSON_SELECTBYKEY", parameters);
+			return dataConnection.ExecuteProc("DB2ADMIN.PERSON_SELECTBYKEY", parameters);
 		}
 
 		#endregion
@@ -449,7 +477,7 @@ namespace DB2DataContext
 				new DataParameter("I", I, LinqToDB.DataType.Int32)
 			};
 
-			return dataConnection.ExecuteProc("DB2INST1.TEST_PROCEDURE", parameters);
+			return dataConnection.ExecuteProc("DB2ADMIN.TEST_PROCEDURE", parameters);
 		}
 
 		#endregion
@@ -459,7 +487,7 @@ namespace DB2DataContext
 	{
 		#region TestMODULE1TestFunction
 
-		[Sql.Function(Name="DB2INST1.TEST_MODULE1.TEST_FUNCTION", ServerSideOnly=true)]
+		[Sql.Function(Name="DB2ADMIN.TEST_MODULE1.TEST_FUNCTION", ServerSideOnly=true)]
 		public static int? TestMODULE1TestFunction(int? I)
 		{
 			throw new InvalidOperationException();
@@ -469,7 +497,7 @@ namespace DB2DataContext
 
 		#region TestMODULE2TestFunction
 
-		[Sql.Function(Name="DB2INST1.TEST_MODULE2.TEST_FUNCTION", ServerSideOnly=true)]
+		[Sql.Function(Name="DB2ADMIN.TEST_MODULE2.TEST_FUNCTION", ServerSideOnly=true)]
 		public static int? TestMODULE2TestFunction(int? I)
 		{
 			throw new InvalidOperationException();
@@ -479,7 +507,7 @@ namespace DB2DataContext
 
 		#region TestFunction
 
-		[Sql.Function(Name="DB2INST1.TEST_FUNCTION", ServerSideOnly=true)]
+		[Sql.Function(Name="DB2ADMIN.TEST_FUNCTION", ServerSideOnly=true)]
 		public static int? TestFunction(int? I)
 		{
 			throw new InvalidOperationException();
@@ -490,68 +518,80 @@ namespace DB2DataContext
 
 	public static partial class TableExtensions
 	{
-		public static DB2INST1_ALLTYPE? Find(this ITable<DB2INST1_ALLTYPE> table, int ID)
+		public static DB2ADMIN_ALLTYPE? Find(this ITable<DB2ADMIN_ALLTYPE> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
 		}
 
-		public static DB2INST1_Doctor? Find(this ITable<DB2INST1_Doctor> table, int PersonID)
+		public static DB2ADMIN_Doctor? Find(this ITable<DB2ADMIN_Doctor> table, int PersonID)
 		{
 			return table.FirstOrDefault(t =>
 				t.PersonID == PersonID);
 		}
 
-		public static DB2INST1_InheritanceChild? Find(this ITable<DB2INST1_InheritanceChild> table, int InheritanceChildId)
+		public static DB2ADMIN_InheritanceChild? Find(this ITable<DB2ADMIN_InheritanceChild> table, int InheritanceChildId)
 		{
 			return table.FirstOrDefault(t =>
 				t.InheritanceChildId == InheritanceChildId);
 		}
 
-		public static DB2INST1_InheritanceParent? Find(this ITable<DB2INST1_InheritanceParent> table, int InheritanceParentId)
+		public static DB2ADMIN_InheritanceParent? Find(this ITable<DB2ADMIN_InheritanceParent> table, int InheritanceParentId)
 		{
 			return table.FirstOrDefault(t =>
 				t.InheritanceParentId == InheritanceParentId);
 		}
 
-		public static DB2INST1_KeepIdentityTest? Find(this ITable<DB2INST1_KeepIdentityTest> table, int ID)
+		public static DB2ADMIN_KeepIdentityTest? Find(this ITable<DB2ADMIN_KeepIdentityTest> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
 		}
 
-		public static DB2INST1_MASTERTABLE? Find(this ITable<DB2INST1_MASTERTABLE> table, int ID1, int ID2)
+		public static DB2ADMIN_MASTERTABLE? Find(this ITable<DB2ADMIN_MASTERTABLE> table, int ID1, int ID2)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID1 == ID1 &&
 				t.ID2 == ID2);
 		}
 
-		public static DB2INST1_Patient? Find(this ITable<DB2INST1_Patient> table, int PersonID)
+		public static DB2ADMIN_Patient? Find(this ITable<DB2ADMIN_Patient> table, int PersonID)
 		{
 			return table.FirstOrDefault(t =>
 				t.PersonID == PersonID);
 		}
 
-		public static DB2INST1_Person? Find(this ITable<DB2INST1_Person> table, int PersonID)
+		public static DB2ADMIN_Person? Find(this ITable<DB2ADMIN_Person> table, int PersonID)
 		{
 			return table.FirstOrDefault(t =>
 				t.PersonID == PersonID);
 		}
 
-		public static DB2INST1_TestIdentity? Find(this ITable<DB2INST1_TestIdentity> table, int ID)
+		public static DB2ADMIN_TestIdentity? Find(this ITable<DB2ADMIN_TestIdentity> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
 		}
 
-		public static DB2INST1_TestMerge1? Find(this ITable<DB2INST1_TestMerge1> table, int Id)
+		public static DB2ADMIN_Testmerge1? Find(this ITable<DB2ADMIN_Testmerge1> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);
 		}
 
-		public static DB2INST1_TestMerge2? Find(this ITable<DB2INST1_TestMerge2> table, int Id)
+		public static DB2ADMIN_TestMerge1? Find(this ITable<DB2ADMIN_TestMerge1> table, int Id)
+		{
+			return table.FirstOrDefault(t =>
+				t.Id == Id);
+		}
+
+		public static DB2ADMIN_Testmerge2? Find(this ITable<DB2ADMIN_Testmerge2> table, int Id)
+		{
+			return table.FirstOrDefault(t =>
+				t.Id == Id);
+		}
+
+		public static DB2ADMIN_TestMerge2? Find(this ITable<DB2ADMIN_TestMerge2> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);

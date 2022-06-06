@@ -194,7 +194,7 @@ namespace Default.MySql
 		#region Associations
 
 		/// <summary>
-		/// FK_Doctor_Person (testdbconnector..person)
+		/// FK_Doctor_Person (person)
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
 		public Person Person { get; set; } = null!;
@@ -274,7 +274,7 @@ namespace Default.MySql
 		#region Associations
 
 		/// <summary>
-		/// FK_Patient_Person (testdbconnector..person)
+		/// FK_Patient_Person (person)
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
 		public Person Person { get; set; } = null!;
@@ -294,13 +294,13 @@ namespace Default.MySql
 		#region Associations
 
 		/// <summary>
-		/// FK_Doctor_Person_BackReference (testdbconnector..doctor)
+		/// FK_Doctor_Person_BackReference (doctor)
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
 		public Doctor? DoctorPerson { get; set; }
 
 		/// <summary>
-		/// FK_Patient_Person_BackReference (testdbconnector..patient)
+		/// FK_Patient_Person_BackReference (patient)
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
 		public Patient? PatientPerson { get; set; }

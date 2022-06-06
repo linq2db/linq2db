@@ -27,6 +27,7 @@ namespace LinqToDB.DataProvider.Oracle
 		protected override int                MaxParameters => _maxParameters;
 		protected override int                MaxSqlLength  => _maxSqlLength;
 		private readonly   OracleDataProvider _provider;
+
 		public OracleBulkCopy(OracleDataProvider provider)
 		{
 			_provider = provider;
@@ -70,53 +71,41 @@ namespace LinqToDB.DataProvider.Oracle
 					if (supported)
 					{
 						var rd         = new BulkCopyReader<T>(dataConnection, columns, source);
-						var sqlopt     = OracleProviderAdapter.OracleBulkCopyOptions.Default;
+						var sqlopt     = OracleProviderAdapter.BulkCopyOptions.Default;
 						var rc         = new BulkCopyRowsCopied();
 
-						var tableName   = sb.ConvertInline(options.TableName  ?? table.TableName , ConvertType.NameToQueryTable);
+						var tableName   = sb.ConvertInline(options.TableName ?? table.TableName, ConvertType.NameToQueryTable);
 						var schemaName  = options.SchemaName ?? table.SchemaName;
 						if (schemaName != null)
 							schemaName  = sb.ConvertInline(schemaName, ConvertType.NameToSchema);
 
-						if (options.UseInternalTransaction == true) sqlopt |= OracleProviderAdapter.OracleBulkCopyOptions.UseInternalTransaction;
+						if (options.UseInternalTransaction == true) sqlopt |= OracleProviderAdapter.BulkCopyOptions.UseInternalTransaction;
+						if (options.CheckConstraints       == true) sqlopt |= OracleProviderAdapter.BulkCopyOptions.KeepConstraints;
+						if (options.FireTriggers           != true) sqlopt |= OracleProviderAdapter.BulkCopyOptions.DisableTriggers;
 
-						using (var bc = _provider.Adapter.BulkCopy.Create(connection, sqlopt))
-						{
-							var notifyAfter = options.NotifyAfter == 0 && options.MaxBatchSize.HasValue
+						var notifyAfter = options.NotifyAfter == 0 && options.MaxBatchSize.HasValue
 							? options.MaxBatchSize.Value
 							: options.NotifyAfter;
 
-							if (notifyAfter != 0 && options.RowsCopiedCallback != null)
-							{
-								bc.NotifyAfter = options.NotifyAfter;
-
-								bc.OracleRowsCopied += (sender, args) =>
-								{
-									rc.RowsCopied = args.RowsCopied;
-									options.RowsCopiedCallback(rc);
-									if (rc.Abort)
-										args.Abort = true;
-								};
-							}
-
-							if (options.MaxBatchSize.HasValue)
-								bc.BatchSize = options.MaxBatchSize.Value;
-
-							if (options.BulkCopyTimeout.HasValue)
-								bc.BulkCopyTimeout = options.BulkCopyTimeout.Value;
-							else if (Configuration.Data.BulkCopyUseConnectionCommandTimeout)
-								bc.BulkCopyTimeout = connection.ConnectionTimeout;
-
-							bc.DestinationTableName  = tableName;
-							bc.DestinationSchemaName = schemaName;
-
+						using (var bc = _provider.Adapter.BulkCopy.Create(
+							connection,
+							sqlopt,
+							tableName,
+							schemaName,
+							notifyAfter != 0 && options.RowsCopiedCallback != null ? notifyAfter : null,
+							options.RowsCopiedCallback,
+							rc,
+							options.MaxBatchSize,
+							options.BulkCopyTimeout ?? (Configuration.Data.BulkCopyUseConnectionCommandTimeout ? connection.ConnectionTimeout : null)))
+						{
 							for (var i = 0; i < columns.Count; i++)
-								bc.ColumnMappings.Add(_provider.Adapter.BulkCopy.CreateColumnMapping(i, columns[i].ColumnName));
+								bc.AddColumn(i, columns[i]);
+								//
 
 							TraceAction(
 								dataConnection,
 								() => "INSERT BULK " + (schemaName == null ? tableName : schemaName + "." + tableName) + "(" + string.Join(", ", columns.Select(x => x.ColumnName)) + ")" + Environment.NewLine,
-								() => { bc.WriteToServer(rd); return rd.Count; });
+								() => { bc.Execute(rd); return rd.Count; });
 						}
 
 						if (rc.RowsCopied != rd.Count)
@@ -258,7 +247,7 @@ namespace LinqToDB.DataProvider.Oracle
 			return new List<object>(31);
 		}
 
-		static BulkCopyRowsCopied OracleMultipleRowsCopy2(MultipleRowsHelper helper, IEnumerable source)
+		BulkCopyRowsCopied OracleMultipleRowsCopy2(MultipleRowsHelper helper, IEnumerable source)
 		{
 			var list = OracleMultipleRowsCopy2Prep(helper);
 
@@ -284,7 +273,7 @@ namespace LinqToDB.DataProvider.Oracle
 			return helper.RowsCopied;
 		}
 
-		static async Task<BulkCopyRowsCopied> OracleMultipleRowsCopy2Async(MultipleRowsHelper helper, IEnumerable source, CancellationToken cancellationToken)
+		async Task<BulkCopyRowsCopied> OracleMultipleRowsCopy2Async(MultipleRowsHelper helper, IEnumerable source, CancellationToken cancellationToken)
 		{
 			var list = OracleMultipleRowsCopy2Prep(helper);
 
@@ -313,7 +302,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 #if NATIVE_ASYNC
-		static async Task<BulkCopyRowsCopied> OracleMultipleRowsCopy2Async<T>(MultipleRowsHelper helper, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
+		async Task<BulkCopyRowsCopied> OracleMultipleRowsCopy2Async<T>(MultipleRowsHelper helper, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			var list = OracleMultipleRowsCopy2Prep(helper);
 
@@ -342,7 +331,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 #endif
 
-		static bool Execute(MultipleRowsHelper helper, List<object> list)
+		bool Execute(MultipleRowsHelper helper, List<object> list)
 		{
 			for (var i = 0; i < helper.Columns.Length; i++)
 			{
@@ -361,11 +350,23 @@ namespace LinqToDB.DataProvider.Oracle
 					IsArray   = true,
 				});
 			}
+
+			if (_provider.Adapter.ExecuteArray != null)
+				return helper.ExecuteCustom((cn, sql, ps) => ExecuteArray(cn, sql, ps, list.Count));
 
 			return helper.Execute();
 		}
 
-		static Task<bool> ExecuteAsync(MultipleRowsHelper helper, List<object> list, CancellationToken cancellationToken)
+		int ExecuteArray(DataConnection connection, string sql, DataParameter[] parameters, int iters)
+		{
+			return new CommandInfo(connection, sql, parameters)
+				.ExecuteCustom(cmd => _provider.Adapter.ExecuteArray!(
+					_provider.TryGetProviderCommand(connection, cmd)
+						?? throw new LinqToDBException($"AlternativeBulkCopy.InsertInto BulkCopy mode cannot be used with {cmd.GetType()} type. Use OracleTools.UseAlternativeBulkCopy to change mode."),
+					iters));
+		}
+
+		Task<bool> ExecuteAsync(MultipleRowsHelper helper, List<object> list, CancellationToken cancellationToken)
 		{
 			for (var i = 0; i < helper.Columns.Length; i++)
 			{
@@ -384,6 +385,9 @@ namespace LinqToDB.DataProvider.Oracle
 					IsArray   = true,
 				});
 			}
+
+			if (_provider.Adapter.ExecuteArray != null)
+				return Task.FromResult(helper.ExecuteCustom((cn, sql, ps) => ExecuteArray(cn, sql, ps, list.Count)));
 
 			return helper.ExecuteAsync(cancellationToken);
 		}

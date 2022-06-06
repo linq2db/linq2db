@@ -495,7 +495,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MultipleUse([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllPostgreSQL93Plus, TestProvName.AllOracle12)] string context)
+		public void MultipleUse([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllPostgreSQL93Plus, TestProvName.AllOracle12Plus)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
