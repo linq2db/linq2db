@@ -69,12 +69,12 @@ namespace LinqToDB.Expressions
 			}
 		}
 
-		public SqlGenericConstructorExpression(bool isFull, Type objectType, IList<Parameter> parameters, IList<Assignment> assignments)
+		public SqlGenericConstructorExpression(bool isFull, Type objectType, ReadOnlyCollection<Parameter>? parameters, ReadOnlyCollection<Assignment>? assignments)
 		{
 			ObjectType    = objectType;
 			ConstructType = isFull ? CreateType.Full : CreateType.Unknown;
-			Parameters    = new ReadOnlyCollection<Parameter>(parameters);
-			Assignments   = new ReadOnlyCollection<Assignment>(assignments);
+			Parameters    = parameters  ?? Parameter.EmptyCollection;
+			Assignments   = assignments ?? Assignment.EmptyCollection;
 		}
 
 		public SqlGenericConstructorExpression(NewExpression newExpression)

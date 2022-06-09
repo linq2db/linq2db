@@ -122,9 +122,10 @@ namespace LinqToDB.Linq.Builder
 			if (flags.HasFlag(ProjectFlags.SQL) || flags.HasFlag(ProjectFlags.Test))
 			{
 				var assignments = members
-					.Select(x => new SqlGenericConstructorExpression.Assignment(x.Member, x.Expression, x.Column.MemberAccessor.HasSetter)).ToList();
+					.Select(x => new SqlGenericConstructorExpression.Assignment(x.Member, x.Expression, x.Column.MemberAccessor.HasSetter))
+					.ToList();
 
-				return new SqlGenericConstructorExpression(true, entityType, assignments);
+				return new SqlGenericConstructorExpression(true, entityType, null, new ReadOnlyCollection<SqlGenericConstructorExpression.Assignment>(assignments));
 			}
 
 			//if (flags.HasFlag(ProjectFlags.Expression))
@@ -416,7 +417,7 @@ namespace LinqToDB.Linq.Builder
 			if (!flags.HasFlag(ProjectFlags.Keys))
 				BuildCalculatedColumns(context, entityDescriptor, entityType, assignments);
 
-			return new SqlGenericConstructorExpression(true, entityType, assignments);
+			return new SqlGenericConstructorExpression(true, entityType, null, new ReadOnlyCollection<SqlGenericConstructorExpression.Assignment>(assignments));
 		}
 
 		void BuildCalculatedColumns(IBuildContext context, EntityDescriptor entityDescriptor, Type objectType, List<SqlGenericConstructorExpression.Assignment> assignments)

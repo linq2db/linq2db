@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -263,7 +264,7 @@ namespace LinqToDB.Linq.Builder
 					             rightGeneric.ConstructType == SqlGenericConstructorExpression.CreateType.Full;
 
 					//TODO: try to merge with constructor
-					return new SqlGenericConstructorExpression(isFull, leftGeneric.ObjectType, newAssignments);
+					return new SqlGenericConstructorExpression(isFull, leftGeneric.ObjectType, null, new ReadOnlyCollection<SqlGenericConstructorExpression.Assignment>(newAssignments));
 				}
 
 				// Scalar
