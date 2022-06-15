@@ -1309,7 +1309,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue3557Case1([DataSources] string context)
+		public void Issue3557Case1([DataSources(TestProvName.AllSapHana, TestProvName.AllSybase, TestProvName.AllInformix)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var data = db.CreateLocalTable(Data.Records);
@@ -1336,7 +1336,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue3557Case2([DataSources] string context)
+		public void Issue3557Case2([DataSources(TestProvName.AllSapHana, TestProvName.AllSybase, TestProvName.AllInformix)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var data = db.CreateLocalTable(Data.Records);
@@ -1363,7 +1363,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue3557Case3([DataSources] string context)
+		public void Issue3557Case3([DataSources(TestProvName.AllSapHana, TestProvName.AllSybase, TestProvName.AllInformix)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var data = db.CreateLocalTable(Data.Records);
