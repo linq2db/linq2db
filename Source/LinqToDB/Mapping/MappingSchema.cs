@@ -43,9 +43,9 @@ namespace LinqToDB.Mapping
 		}
 
 		/// <summary>
-		/// Creates mapping schema, derived from other mapping schemas.
+		/// Creates mapping schema, derived from other mapping schemata.
 		/// </summary>
-		/// <param name="schemas">Base mapping schemas.</param>
+		/// <param name="schemas">Base mapping schemata.</param>
 		public MappingSchema(params MappingSchema[] schemas)
 			: this(null, schemas)
 		{
@@ -76,8 +76,6 @@ namespace LinqToDB.Mapping
 		/// mappings for same type.</remarks>
 		public MappingSchema(string? configuration, params MappingSchema[]? schemas)
 		{
-			_reduceDefaultValueTransformer = TransformVisitor<MappingSchema>.Create(this, static (ctx, e) => ctx.ReduceDefaultValueTransformer(e));
-
 			if (string.IsNullOrEmpty(configuration))
 				configuration = string.Empty;
 
@@ -831,12 +829,14 @@ namespace LinqToDB.Mapping
 			return null;
 		}
 
+		TransformVisitor<MappingSchema>? _reduceDefaultValueTransformer;
+
 		Expression ReduceDefaultValue(Expression expr)
 		{
-			return _reduceDefaultValueTransformer.Transform(expr);
+			return (_reduceDefaultValueTransformer ??= TransformVisitor<MappingSchema>.Create(this, static (ctx, e) => ctx.ReduceDefaultValueTransformer(e)))
+				.Transform(expr);
 		}
 
-		private readonly TransformVisitor<MappingSchema> _reduceDefaultValueTransformer;
 		private Expression ReduceDefaultValueTransformer(Expression e)
 		{
 			return Converter.IsDefaultValuePlaceHolder(e) ?
@@ -1273,6 +1273,10 @@ namespace LinqToDB.Mapping
 		internal void ResetID()
 		{
 #if DEBUG
+			if (!IsLockable)
+			{
+			}
+
 			if (_configurationID != null)
 				Debug.WriteLine($"ResetID => '{DisplayID}'");
 #endif

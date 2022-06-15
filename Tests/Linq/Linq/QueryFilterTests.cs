@@ -172,7 +172,6 @@ namespace Tests.Linq
 			AreEqualWithComparer(resultNotFiltered1, resultNotFiltered2);
 
 			Assert.That(currentMissCount, Is.EqualTo(Query<T>.CacheMissCount), () => "Caching is wrong.");
-
 		}
 
 		[Test]

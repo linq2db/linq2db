@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 
@@ -136,6 +137,14 @@ namespace LinqToDB.Common.Internal
 			var key = ex.GetDebugView();
 
 			return _expressions.GetOrAdd(key, static _ => Interlocked.Increment(ref _expressionCounter));
+		}
+
+		static          int                                  _methodCounter;
+		static readonly ConcurrentDictionary<MethodInfo,int> _methods = new ();
+
+		public static string GetObjectID(MethodInfo? m)
+		{
+			return GetIntID(m == null ? 0 : _methods.GetOrAdd(m, static _ => Interlocked.Increment(ref _methodCounter)));
 		}
 
 		static          int                                 _objectCounter;
