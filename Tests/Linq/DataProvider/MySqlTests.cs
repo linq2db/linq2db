@@ -1257,7 +1257,7 @@ namespace Tests.DataProvider
 			{
 
 				var expectedProc = testCase.Schema;
-				expectedProc.CatalogName = TestUtils.GetDatabaseName(db);
+				expectedProc.CatalogName = TestUtils.GetDatabaseName(db, context);
 
 				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
 

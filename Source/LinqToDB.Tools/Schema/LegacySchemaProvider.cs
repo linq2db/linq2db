@@ -121,9 +121,9 @@ namespace LinqToDB.Schema
 
 			var dbName = new SqlObjectName(
 				proc.ProcedureName,
-				Database: string.IsNullOrWhiteSpace(proc.CatalogName)     ? null : proc.CatalogName,
-				Schema  : string.IsNullOrWhiteSpace(proc.SchemaName )     ? null : proc.SchemaName,
-				Package : string.IsNullOrWhiteSpace(proc.PackageName )    ? null : proc.PackageName);
+				Database: !_options.LoadDatabaseName || string.IsNullOrWhiteSpace(proc.CatalogName) ? null : proc.CatalogName,
+				Schema  :                               string.IsNullOrWhiteSpace(proc.SchemaName ) ? null : proc.SchemaName,
+				Package :                               string.IsNullOrWhiteSpace(proc.PackageName) ? null : proc.PackageName);
 
 			var description = string.IsNullOrWhiteSpace(proc.Description) ? null : proc.Description;
 
@@ -417,11 +417,11 @@ namespace LinqToDB.Schema
 		/// </summary>
 		/// <param name="table">Table model.</param>
 		/// <returns>Table name.</returns>
-		private static SqlObjectName GetTableName(TableSchema table)
+		private SqlObjectName GetTableName(TableSchema table)
 		{
 			return new SqlObjectName(
 				table.TableName!,
-				Database: string.IsNullOrWhiteSpace(table.CatalogName) ? null : table.CatalogName,
+				Database: !_options.LoadDatabaseName || string.IsNullOrWhiteSpace(table.CatalogName) ? null : table.CatalogName,
 				Schema  : string.IsNullOrWhiteSpace(table.SchemaName ) ? null : table.SchemaName);
 		}
 

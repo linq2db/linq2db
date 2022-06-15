@@ -22,7 +22,7 @@ namespace LinqToDB.DataProvider.SQLite
 		{
 			SetConvertExpression<string,TimeSpan>(s => DateTime.Parse(s, null, DateTimeStyles.NoCurrentDateDefault).TimeOfDay);
 
-			SetValueToSqlConverter(typeof(Guid),     (sb,dt,v) => ConvertBinaryToSql  (sb, ((Guid)  v).ToByteArray()));
+			SetValueToSqlConverter(typeof(Guid),     (sb,dt,v) => ConvertGuidToSql    (sb, dt, (Guid)v));
 			SetValueToSqlConverter(typeof(DateTime), (sb,dt,v) => ConvertDateTimeToSql(sb, (DateTime)v));
 			SetValueToSqlConverter(typeof(string),   (sb,dt,v) => ConvertStringToSql  (sb, v.ToString()!));
 			SetValueToSqlConverter(typeof(char),     (sb,dt,v) => ConvertCharToSql    (sb, (char)v));
@@ -34,6 +34,25 @@ namespace LinqToDB.DataProvider.SQLite
 #endif
 
 			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
+		}
+
+		static void ConvertGuidToSql(StringBuilder stringBuilder, SqlDataType dt, Guid value)
+		{
+			// keep in sync with provider's SetParameter method
+			switch (dt.Type.DataType, dt.Type.DbType)
+			{
+				case (DataType.NChar, _) or (DataType.NVarChar, _) or (DataType.NText, _)
+					or (DataType.Char, _) or (DataType.VarChar, _) or (DataType.Text, _)
+					// we can add more types on request later
+					or (_, "TEXT"):
+					stringBuilder
+						// ToUpperInvariant to match Microsoft.Data.SQLite behavior
+						.AppendFormat("'{0}'", value.ToString().ToUpperInvariant());
+					break;
+				default:
+					ConvertBinaryToSql(stringBuilder, value.ToByteArray());
+					break;
+			}
 		}
 
 		static void ConvertBinaryToSql(StringBuilder stringBuilder, byte[] value)

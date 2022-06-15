@@ -61,7 +61,6 @@ namespace LinqToDB.DataProvider.MySql
 						//
 						TableID            = catalog.ToLower() + ".." + name,
 						CatalogName        = catalog,
-						SchemaName         = string.Empty,
 						TableName          = name,
 						IsDefaultSchema    = true,
 						IsView             = type == "VIEW" || type == "SYSTEM VIEW",

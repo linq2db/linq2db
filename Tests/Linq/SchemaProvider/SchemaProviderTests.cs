@@ -41,7 +41,7 @@ namespace Tests.SchemaProvider
 			using (var conn = GetDataConnection(context))
 			{
 				var sp         = conn.DataProvider.GetSchemaProvider();
-				var schemaName = TestUtils.GetSchemaName(conn);
+				var schemaName = TestUtils.GetSchemaName(conn, context);
 				var dbSchema   = sp.GetSchema(conn, new GetSchemaOptions()
 				{
 					IncludedSchemas = schemaName != TestUtils.NO_SCHEMA_NAME ?new[] { schemaName } : null
@@ -330,7 +330,7 @@ namespace Tests.SchemaProvider
 			using (var db = GetDataConnection(context))
 			{
 				var p = db.DataProvider.GetSchemaProvider();
-				var schemaName = TestUtils.GetSchemaName(db);
+				var schemaName = TestUtils.GetSchemaName(db, context);
 				var s = p.GetSchema(db, new GetSchemaOptions()
 				{
 					IncludedSchemas = schemaName != TestUtils.NO_SCHEMA_NAME ? new[] { schemaName } : null

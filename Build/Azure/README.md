@@ -70,11 +70,11 @@ Legend:
 |SQLite [3.37.0](https://www.sqlite.org/draft/releaselog/current.html)<br>[System.Data.SQLite](https://www.nuget.org/packages/System.Data.SQLite.Core/) 1.0.115.5<br>with [MiniProfiler](https://www.nuget.org/packages/MiniProfiler.Shared/) 4.2.22<br>without mappings to underlying provider|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
 |SQLite [3.37.0](https://www.sqlite.org/draft/releaselog/current.html)<br>[System.Data.SQLite](https://www.nuget.org/packages/System.Data.SQLite.Core/) 1.0.115.5<br>with [MiniProfiler](https://www.nuget.org/packages/MiniProfiler.Shared/) 4.2.22<br>with mappings to underlying provider|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
 |MySQL 5.6<br>[MySql.Data](https://www.nuget.org/packages/MySql.Data/) 8.0.29|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
-|MySQL 5.6<br>[MySqlConnector](https://www.nuget.org/packages/MySqlConnector/) 0.69.10/1.3.14/2.1.8|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
+|MySQL 5.6<br>[MySqlConnector](https://www.nuget.org/packages/MySqlConnector/) 0.69.10/1.3.14/2.1.9|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |MySQL (latest)<br>[MySql.Data](https://www.nuget.org/packages/MySql.Data/) 8.0.29|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
-|MySQL (latest)<br>[MySqlConnector](https://www.nuget.org/packages/MySqlConnector/) 0.69.10/1.3.14/2.1.8|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
+|MySQL (latest)<br>[MySqlConnector](https://www.nuget.org/packages/MySqlConnector/) 0.69.10/1.3.14/2.1.9|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |MariaDB (latest)<br>[MySql.Data](https://www.nuget.org/packages/MySql.Data/) 8.0.29|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
-|MariaDB (latest)<br>[MySqlConnector](https://www.nuget.org/packages/MySqlConnector/) 0.69.10/1.3.14/2.1.8|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
+|MariaDB (latest)<br>[MySqlConnector](https://www.nuget.org/packages/MySqlConnector/) 0.69.10/1.3.14/2.1.9|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |PostgreSQL 10<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 6.0.4 |:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |PostgreSQL 11<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 6.0.4 |:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |PostgreSQL 12<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 6.0.4 |:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
@@ -102,6 +102,8 @@ Legend:
 |Informix 14.10<br>[IBM.Data.DB2](https://www.nuget.org/packages/IBM.Data.DB.Provider/) IDS 11.5.5010.4 (netfx)<br>[IBM.Data.DB2.Core](https://www.nuget.org/packages/IBM.Data.DB2.Core/) 3.1.0.600 ([osx](https://www.nuget.org/packages/IBM.Data.DB2.Core-osx/) 2.0.0.100, [lin](https://www.nuget.org/packages/IBM.Data.DB2.Core-lnx/) 3.1.0.500) (core)|:x:|:x:|:x:|:x:|
 |Oracle 11.2g XE<br>[Oracle.ManagedDataAccess](https://www.nuget.org/packages/Oracle.ManagedDataAccess/) 21.6.1 (netfx)<br>[Oracle.ManagedDataAccess.Core](https://www.nuget.org/packages/Oracle.ManagedDataAccess.Core/) 3.21.61 (core)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |Oracle 12.2c<br>[Oracle.ManagedDataAccess](https://www.nuget.org/packages/Oracle.ManagedDataAccess/) 21.6.1 (netfx)<br>[Oracle.ManagedDataAccess.Core](https://www.nuget.org/packages/Oracle.ManagedDataAccess.Core/) 3.21.61 (core)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
+|Oracle 18c<br>[Oracle.ManagedDataAccess](https://www.nuget.org/packages/Oracle.ManagedDataAccess/) 21.6.1 (netfx)<br>[Oracle.ManagedDataAccess.Core](https://www.nuget.org/packages/Oracle.ManagedDataAccess.Core/) 3.21.61 (core)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
+|Oracle 21c<br>[Oracle.ManagedDataAccess](https://www.nuget.org/packages/Oracle.ManagedDataAccess/) 21.6.1 (netfx)<br>[Oracle.ManagedDataAccess.Core](https://www.nuget.org/packages/Oracle.ManagedDataAccess.Core/) 3.21.61 (core)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |SAP HANA 2.0 SPS 05r57<br>ODBC Provider|:x:|:x:|:heavy_check_mark:|:x:|
 
 ###### Notes:
@@ -162,9 +164,21 @@ Legend:
 |`ProviderName.AccessOdbc`|Tests against Access using ODBC MDB or MDB+ACCDB provider||
 |`ProviderName.DB2`|DB2 LUW 11.5||
 |`ProviderName.InformixDB2`|Informix 14.10 (IDS using IBM.Data.DB2)||
-|`ProviderName.OracleNative`|Oracle 12c using native provider||
-|`ProviderName.OracleManaged`|Oracle 12c using managed provider (core version for .net core)||
 |`TestProvName.Oracle11Native`|Oracle 11g using native provider||
 |`TestProvName.Oracle11Managed`|Oracle 11g using managed provider (core version for .net core)||
+|`ProviderName.Oracle11DevartDirect`|Oracle 11g using Devart.Data.Oracle provider (Direct connect)||
+|`ProviderName.Oracle11DevartOCI`|Oracle 11g using Devart.Data.Oracle provider (Oracle client)||
+|`TestProvName.Oracle12Native`|Oracle 12c using native provider||
+|`TestProvName.Oracle12Managed`|Oracle 12c using managed provider (core version for .net core)||
+|`ProviderName.Oracle12DevartDirect`|Oracle 12c using Devart.Data.Oracle provider (Direct connect)||
+|`ProviderName.Oracle12DevartOCI`|Oracle 12c using Devart.Data.Oracle provider (Oracle client)||
+|`TestProvName.Oracle18Native`|Oracle 18c using native provider||
+|`TestProvName.Oracle18Managed`|Oracle 18c using managed provider (core version for .net core)||
+|`ProviderName.Oracle18DevartDirect`|Oracle 18c using Devart.Data.Oracle provider (Direct connect)||
+|`ProviderName.Oracle18DevartOCI`|Oracle 18c using Devart.Data.Oracle provider (Oracle client)||
+|`TestProvName.Oracle21Native`|Oracle 21c using native provider||
+|`TestProvName.Oracle21Managed`|Oracle 21c using managed provider (core version for .net core)||
+|`ProviderName.Oracle21DevartDirect`|Oracle 21c using Devart.Data.Oracle provider (Direct connect)||
+|`ProviderName.Oracle21DevartOCI`|Oracle 21c using Devart.Data.Oracle provider (Oracle client)||
 |`ProviderName.SapHanaNative`|SAP HANA 2 using native provider||
 |`ProviderName.SapHanaOdbc`|SAP HANA 2 using ODBC provider||

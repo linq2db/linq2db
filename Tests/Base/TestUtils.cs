@@ -62,21 +62,21 @@ namespace Tests
 			throw new InvalidOperationException();
 		}
 
-		[Sql.Expression("user"          , ServerSideOnly = true, Configuration = ProviderName.Informix)]
-		[Sql.Expression("user"          , ServerSideOnly = true, Configuration = ProviderName.Oracle)]
-		[Sql.Expression("current schema", ServerSideOnly = true, Configuration = ProviderName.DB2)]
-		[Sql.Function("current_schema"  , ServerSideOnly = true, Configuration = ProviderName.PostgreSQL)]
-		[Sql.Function("USER_NAME"       , ServerSideOnly = true, Configuration = ProviderName.Sybase)]
-		[Sql.Expression("current_schema", ServerSideOnly = true, Configuration = ProviderName.SapHana)]
-		[Sql.Function("SCHEMA_NAME"     , ServerSideOnly = true)]
+		[Sql.Expression("user"                                    , ServerSideOnly = true, Configuration = ProviderName.Informix)]
+		[Sql.Expression("sys_context('userenv', 'current_schema')", ServerSideOnly = true, Configuration = ProviderName.Oracle)]
+		[Sql.Expression("current schema"                          , ServerSideOnly = true, Configuration = ProviderName.DB2)]
+		[Sql.Function("current_schema"                            , ServerSideOnly = true, Configuration = ProviderName.PostgreSQL)]
+		[Sql.Function("USER_NAME"                                 , ServerSideOnly = true, Configuration = ProviderName.Sybase)]
+		[Sql.Expression("current_schema"                          , ServerSideOnly = true, Configuration = ProviderName.SapHana)]
+		[Sql.Function("SCHEMA_NAME"                               , ServerSideOnly = true)]
 		private static string SchemaName()
 		{
 			throw new InvalidOperationException();
 		}
 
 		[Sql.Expression("sys_context('userenv','service_name')", ServerSideOnly = true, Configuration = ProviderName.Oracle)]
-		[Sql.Expression("DBSERVERNAME", ServerSideOnly = true, Configuration = ProviderName.Informix)]
-		[Sql.Expression("@@SERVERNAME", ServerSideOnly = true)]
+		[Sql.Expression("DBSERVERNAME"                         , ServerSideOnly = true, Configuration = ProviderName.Informix)]
+		[Sql.Expression("@@SERVERNAME"                         , ServerSideOnly = true)]
 		private static string ServerName()
 		{
 			throw new InvalidOperationException();
@@ -86,19 +86,17 @@ namespace Tests
 		/// Returns schema name for provided connection.
 		/// Returns UNUSED_SCHEMA if fully-qualified table name doesn't support database name.
 		/// </summary>
-		public static string GetSchemaName(IDataContext db)
+		public static string GetSchemaName(IDataContext db, string context)
 		{
-			var provider = GetContextName(db);
-
-			switch (provider)
+			switch (context)
 			{
-				case string when provider.IsAnyOf(TestProvName.AllInformix)  :
-				case string when provider.IsAnyOf(TestProvName.AllOracle)    :
-				case string when provider.IsAnyOf(TestProvName.AllPostgreSQL):
-				case string when provider.IsAnyOf(TestProvName.AllSybase)    :
-				case string when provider.IsAnyOf(TestProvName.AllSqlServer) :
-				case string when provider.IsAnyOf(TestProvName.AllSapHana)   :
-				case string when provider.IsAnyOf(ProviderName.DB2)          :
+				case string when context.IsAnyOf(TestProvName.AllInformix)  :
+				case string when context.IsAnyOf(TestProvName.AllOracle)    :
+				case string when context.IsAnyOf(TestProvName.AllPostgreSQL):
+				case string when context.IsAnyOf(TestProvName.AllSybase)    :
+				case string when context.IsAnyOf(TestProvName.AllSqlServer) :
+				case string when context.IsAnyOf(TestProvName.AllSapHana)   :
+				case string when context.IsAnyOf(ProviderName.DB2)          :
 					return db.GetTable<LinqDataTypes>().Select(_ => SchemaName()).First();
 			}
 
@@ -109,17 +107,16 @@ namespace Tests
 		/// Returns server name for provided connection.
 		/// Returns UNUSED_SERVER if fully-qualified table name doesn't support server name.
 		/// </summary>
-		public static string GetServerName(IDataContext db)
+		public static string GetServerName(IDataContext db, string context)
 		{
-			var provider = GetContextName(db);
-			switch (provider)
+			switch (context)
 			{
-				case String when provider.IsAnyOf(TestProvName.AllSybase)   :
-				case String when provider.IsAnyOf(TestProvName.AllSqlServer):
-				case String when provider.IsAnyOf(TestProvName.AllOracle)   :
-				case String when provider.IsAnyOf(TestProvName.AllInformix) :
+				case string when context.IsAnyOf(TestProvName.AllSybase)   :
+				case string when context.IsAnyOf(TestProvName.AllSqlServer):
+				case string when context.IsAnyOf(TestProvName.AllOracle)   :
+				case string when context.IsAnyOf(TestProvName.AllInformix) :
 					return db.Select(() => ServerName());
-				case String when provider.IsAnyOf(TestProvName.AllSapHana)  :
+				case string when context.IsAnyOf(TestProvName.AllSapHana)  :
 					/* SAP HANA should be configured for linked server queries
 					 This will help to configure (especially second link):
 					 https://www.linkedin.com/pulse/cross-database-queries-thing-past-how-use-sap-hana-your-nandan
@@ -140,28 +137,12 @@ namespace Tests
 			return NO_SCHEMA_NAME;
 		}
 
-		private static string GetContextName(IDataContext db)
-		{
-#if NETFRAMEWORK 
-			if (db is TestWcfDataContext linqDb)
-#else
-			if (db is TestGrpcDataContext linqDb)
-#endif
-				return linqDb.Configuration!;
-
-			if (db is TestDataConnection testDb)
-				return testDb.ConfigurationString!;
-
-			return db.ContextName;
-		}
-
 		/// <summary>
 		/// Returns database name for provided connection.
 		/// Returns UNUSED_DB if fully-qualified table name doesn't support database name.
 		/// </summary>
-		public static string GetDatabaseName(IDataContext db)
+		public static string GetDatabaseName(IDataContext db, string context)
 		{
-			var context = GetContextName(db);
 			return context switch
 			{
 				string when context.IsAnyOf(TestProvName.AllSQLite)   => "main",
@@ -307,14 +288,14 @@ namespace Tests
 		{
 			return providerName switch
 			{
-				string when providerName.IsAnyOf(TestProvName.AllOracle12)   => "latin_AI",
-				string when providerName.IsAnyOf(ProviderName.DB2)           => "SYSTEM_923_DE",
-				string when providerName.IsAnyOf(TestProvName.AllPostgreSQL) => "POSIX",
-				string when providerName.IsAnyOf(TestProvName.AllSQLite)     => "NOCASE",
-				string when providerName.IsAnyOf(TestProvName.AllFirebird)   => "UNICODE_FSS",
-				string when providerName.IsAnyOf(TestProvName.AllMySql)      => "utf8_bin",
-				string when providerName.IsAnyOf(TestProvName.AllSqlServer)  => "Albanian_CI_AS",
-				_                                                            => "whatever"
+				string when providerName.IsAnyOf(TestProvName.AllOracle12Plus) => "latin_AI",
+				string when providerName.IsAnyOf(ProviderName.DB2)             => "SYSTEM_923_DE",
+				string when providerName.IsAnyOf(TestProvName.AllPostgreSQL)   => "POSIX",
+				string when providerName.IsAnyOf(TestProvName.AllSQLite)       => "NOCASE",
+				string when providerName.IsAnyOf(TestProvName.AllFirebird)     => "UNICODE_FSS",
+				string when providerName.IsAnyOf(TestProvName.AllMySql)        => "utf8_bin",
+				string when providerName.IsAnyOf(TestProvName.AllSqlServer)    => "Albanian_CI_AS",
+				_                                                              => "whatever"
 			};
 		}
 

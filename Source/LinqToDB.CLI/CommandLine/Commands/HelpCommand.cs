@@ -186,6 +186,14 @@ namespace LinqToDB.CommandLine
 
 		private void WriteOptionHelp(CliCommand command, int maxOptionNameWidth, string indent, OptionCategory? category, CliOption option)
 		{
+			// workaround for https://github.com/linq2db/linq2db/issues/3612
+			var consoleWidth = 80;
+			try
+			{
+				consoleWidth = Console.BufferWidth;
+			}
+			catch { };
+
 			Console.Out.WriteLine();
 			Console.Out.Write("   ");
 
@@ -240,6 +248,7 @@ namespace LinqToDB.CommandLine
 				if (option is BooleanCliOption booleanOption)
 				{
 					Console.Out.WriteLine("{0}   default: {1}", indent, booleanOption.Default ? "true" : "false");
+					Console.Out.WriteLine("{0}   default (T4 mode): {1}", indent, booleanOption.T4Default ? "true" : "false");
 				}
 				if (option is StringCliOption stringOption)
 				{
@@ -250,71 +259,31 @@ namespace LinqToDB.CommandLine
 						else
 							Console.Out.WriteLine("{0}   default: {1}", indent, string.Join(",", stringOption.Default));
 					}
+
+					if (stringOption.T4Default != null)
+					{
+						if (!stringOption.AllowMultiple)
+							Console.Out.WriteLine("{0}   default (T4 mode): {1}", indent, stringOption.T4Default[0]);
+						else
+							Console.Out.WriteLine("{0}   default (T4 mode): {1}", indent, string.Join(",", stringOption.T4Default));
+					}
 				}
 				else if (option is StringEnumCliOption enumOption)
 				{
 					var defaults = enumOption.Values.Where(o => o.Default).Select(o => o.Value).ToArray();
 					if (defaults.Length > 0)
 						Console.Out.WriteLine("{0}   default: {1}", indent, string.Join(", ", defaults));
+
+					defaults = enumOption.Values.Where(o => o.T4Default).Select(o => o.Value).ToArray();
+					if (defaults.Length > 0)
+						Console.Out.WriteLine("{0}   default (T4 mode): {1}", indent, string.Join(", ", defaults));
 				}
 				else if (option is NamingCliOption namingOption)
 				{
 					if (namingOption.Default != null)
-					{
-						Console.Out.WriteLine("{0}   default: {{", indent);
-
-						string value;
-
-						switch (namingOption.Default.Casing)
-						{
-							case NameCasing.None                 : value = "\"none\"";          break;
-							case NameCasing.Pascal               : value = "\"pascal_case\"";   break;
-							case NameCasing.CamelCase            : value = "\"camel_case\"";    break;
-							case NameCasing.SnakeCase            : value = "\"snake_case\"";    break;
-							case NameCasing.LowerCase            : value = "\"lower_case\"";    break;
-							case NameCasing.UpperCase            : value = "\"upper_case\"";    break;
-							case NameCasing.T4CompatPluralized   : value = "\"t4_pluralized\""; break;
-							case NameCasing.T4CompatNonPluralized: value = "\"t4\"";            break;
-							default                              :
-								throw new InvalidOperationException($"Unknown casing option: {namingOption.Default.Casing}");
-						}
-						printJsonProperty(indent, "case", value);
-
-						switch (namingOption.Default.Pluralization)
-						{
-							case Pluralization.None                 : value = "\"none\"";                       break;
-							case Pluralization.Singular             : value = "\"singular\"";                   break;
-							case Pluralization.Plural               : value = "\"plural\"";                     break;
-							case Pluralization.PluralIfLongerThanOne: value = "\"plural_multiple_characters\""; break;
-							default                                 :
-								throw new InvalidOperationException($"Unknown pluralization option: {namingOption.Default.Pluralization}");
-						}
-						printJsonProperty(indent, "pluralization", value);
-
-						printJsonProperty(indent, "prefix", namingOption.Default.Prefix == null ? "null" : $"\"{namingOption.Default.Prefix}\"");
-						printJsonProperty(indent, "suffix", namingOption.Default.Suffix == null ? "null" : $"\"{namingOption.Default.Suffix}\"");
-
-						switch (namingOption.Default.Transformation)
-						{
-							case NameTransformation.SplitByUnderscore: value = "\"split_by_underscore\""; break;
-							case NameTransformation.Association      : value = "\"association\"";         break;
-							default                                  :
-								throw new InvalidOperationException($"Unknown transformation option: {namingOption.Default.Transformation}");
-						}
-						printJsonProperty(indent, "transformation", value);
-
-						printJsonProperty(indent, "pluralize_if_ends_with_word_only", namingOption.Default.PluralizeOnlyIfLastWordIsText ? "true" : "false");
-						printJsonProperty(indent, "ignore_all_caps", namingOption.Default.DontCaseAllCaps ? "true" : "false");
-						if (namingOption.Default.MaxUpperCaseWordLength > 1)
-							printJsonProperty(indent, "max_uppercase_word_length", namingOption.Default.MaxUpperCaseWordLength.ToString(CultureInfo.InvariantCulture));
-
-						Console.Out.WriteLine("{0}            }}", indent);
-
-						static void printJsonProperty(string padding, string optionName, string value)
-						{
-							Console.Out.WriteLine("{0}                \"{1}\"{3}: {2},", padding, optionName, value, new string(' ', "pluralize_if_ends_with_word_only".Length - optionName.Length));
-						}
-					}
+						PrintNamingOptionDefaults(indent, "default", namingOption.Default);
+					if (namingOption.T4Default != null)
+						PrintNamingOptionDefaults(indent, "default (T4 mode)", namingOption.T4Default);
 				}
 			}
 
@@ -354,7 +323,7 @@ namespace LinqToDB.CommandLine
 				{
 					var line = lines[i];
 
-					var lineWidth            = Console.BufferWidth - indent.Length - 1;
+					var lineWidth            = consoleWidth - indent.Length - 1;
 					var incompleteLineLength = line.Length % lineWidth;
 					var partsCount           = line.Length / lineWidth + (incompleteLineLength > 0 ? 1 : 0);
 
@@ -368,6 +337,63 @@ namespace LinqToDB.CommandLine
 						Console.Out.WriteLine(part);
 					}
 				}
+			}
+		}
+
+		private static void PrintNamingOptionDefaults(string indent, string mode, NormalizationOptions options)
+		{
+			Console.Out.WriteLine("{0}   {1}: {{", indent, mode);
+
+			string value;
+
+			switch (options.Casing)
+			{
+				case NameCasing.None                 : value = "\"none\""         ; break;
+				case NameCasing.Pascal               : value = "\"pascal_case\""  ; break;
+				case NameCasing.CamelCase            : value = "\"camel_case\""   ; break;
+				case NameCasing.SnakeCase            : value = "\"snake_case\""   ; break;
+				case NameCasing.LowerCase            : value = "\"lower_case\""   ; break;
+				case NameCasing.UpperCase            : value = "\"upper_case\""   ; break;
+				case NameCasing.T4CompatPluralized   : value = "\"t4_pluralized\""; break;
+				case NameCasing.T4CompatNonPluralized: value = "\"t4\""           ; break;
+				default                              :
+					throw new InvalidOperationException($"Unknown casing option: {options.Casing}");
+			}
+			printJsonProperty(indent, "case", value);
+
+			switch (options.Pluralization)
+			{
+				case Pluralization.None                 : value = "\"none\""                      ; break;
+				case Pluralization.Singular             : value = "\"singular\""                  ; break;
+				case Pluralization.Plural               : value = "\"plural\""                    ; break;
+				case Pluralization.PluralIfLongerThanOne: value = "\"plural_multiple_characters\""; break;
+				default                                 :
+					throw new InvalidOperationException($"Unknown pluralization option: {options.Pluralization}");
+			}
+			printJsonProperty(indent, "pluralization", value);
+
+			printJsonProperty(indent, "prefix", options.Prefix == null ? "null" : $"\"{options.Prefix}\"");
+			printJsonProperty(indent, "suffix", options.Suffix == null ? "null" : $"\"{options.Suffix}\"");
+
+			switch (options.Transformation)
+			{
+				case NameTransformation.SplitByUnderscore: value = "\"split_by_underscore\""; break;
+				case NameTransformation.Association      : value = "\"association\""        ; break;
+				default:
+					throw new InvalidOperationException($"Unknown transformation option: {options.Transformation}");
+			}
+			printJsonProperty(indent, "transformation", value);
+
+			printJsonProperty(indent, "pluralize_if_ends_with_word_only", options.PluralizeOnlyIfLastWordIsText ? "true" : "false");
+			printJsonProperty(indent, "ignore_all_caps", options.DontCaseAllCaps ? "true" : "false");
+			if (options.MaxUpperCaseWordLength > 1)
+				printJsonProperty(indent, "max_uppercase_word_length", options.MaxUpperCaseWordLength.ToString(CultureInfo.InvariantCulture));
+
+			Console.Out.WriteLine("{0}            }}", indent);
+
+			static void printJsonProperty(string padding, string optionName, string value)
+			{
+				Console.Out.WriteLine("{0}                \"{1}\"{3}: {2},", padding, optionName, value, new string(' ', "pluralize_if_ends_with_word_only".Length - optionName.Length));
 			}
 		}
 

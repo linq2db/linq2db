@@ -23,6 +23,7 @@ namespace LinqToDB.CommandLine
 			"If target folder doesn't exists, it will be created.",
 			null,
 			null,
+			null,
 			null);
 
 		public static CliCommand Instance { get; } = new TemplateCommand();
