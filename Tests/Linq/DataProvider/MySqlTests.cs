@@ -2141,6 +2141,26 @@ namespace Tests.DataProvider
 				}
 			}
 		}
+
+		class Issue3611Table
+		{
+			[Column(Length = 2000, DataType = DataType.VarChar)]   public string? VarChar   { get; set; }
+			[Column(Length = 2000, DataType = DataType.VarBinary)] public byte[]? VarBinary { get; set; }
+		}
+		[Test]
+		public void Issue3611([IncludeDataSources(false, TestProvName.AllMySql)] string context)
+		{
+			using (var db = GetDataConnection(context))
+			using (db.CreateLocalTable<Issue3611Table>())
+			{
+				// VARCHAR/VARBINARY max length depends on many factors:
+				// 1. MySQL version: 255 prior to 5.0.3 and 65535 for 5.0.3+
+				// 2. column encoding: for utf8 it will be 21844
+				// 3. other columns. total row size is limited to 64K
+				Assert.True(db.LastQuery!.Contains("VARCHAR(2000)"));
+				Assert.True(db.LastQuery!.Contains("VARBINARY(2000)"));
+			}
+		}
 	}
 
 	static class MariaDBModuleFunctions

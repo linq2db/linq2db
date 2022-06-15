@@ -224,7 +224,7 @@ namespace LinqToDB.DataProvider.MySql
 				(DataType.Char    or
 				 DataType.NChar,          _,                  _,                   _                   ) => $"CHAR({type.Type.Length})",
 				(DataType.VarChar or
-				 DataType.NVarChar,       _,                  _,                   null or > 255 or < 0) => "VARCHAR(255)",
+				 DataType.NVarChar,       _,                  _,                   null or > 65535 or < 0) => "VARCHAR(255)",
 				(DataType.VarChar or
 				 DataType.NVarChar,       _,                  _,                   _                   ) => $"VARCHAR({type.Type.Length})",
 				(DataType.Binary,         _,                  _,                   null or < 0         ) => "BINARY(255)",
