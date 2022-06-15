@@ -1513,13 +1513,13 @@ namespace Tests.xUpdate
 		[Table("gt_s_one")]
 		class UpdateFromJoin
 		{
-			[PrimaryKey] public int id  { get; set; }
-			[Column] public string? col1 { get; set; }
-			[Column] public string? col2 { get; set; }
-			[Column] public string? col3 { get; set; }
-			[Column] public string? col4 { get; set; }
-			[Column] public string? col5 { get; set; }
-			[Column] public string? col6 { get; set; }
+			[PrimaryKey          ] public int     id   { get; set; }
+			[Column(Length = 100)] public string? col1 { get; set; }
+			[Column(Length = 100)] public string? col2 { get; set; }
+			[Column(Length = 100)] public string? col3 { get; set; }
+			[Column(Length = 100)] public string? col4 { get; set; }
+			[Column(Length = 100)] public string? col5 { get; set; }
+			[Column(Length = 100)] public string? col6 { get; set; }
 
 			public static UpdateFromJoin[] Data = Array<UpdateFromJoin>.Empty;
 		}

@@ -728,13 +728,13 @@ namespace Tests.Linq
 		[Table]
 		class Commercial_Property
 		{
-			[Column] public int Commercial_Property_Id { get; set; }
-			[Column] public string? Street_Number { get; set; }
-			[Column] public string? Street_Name { get; set; }
-			[Column] public string? State { get; set; }
-			[Column] public string? Zip_Code { get; set; }
-			[Column] public string? Zip_Plus_4 { get; set; }
-			[Column] public string? City_Code { get; set; }
+			[Column              ] public int     Commercial_Property_Id { get; set; }
+			[Column(Length = 100)] public string? Street_Number          { get; set; }
+			[Column(Length = 100)] public string? Street_Name            { get; set; }
+			[Column(Length = 100)] public string? State                  { get; set; }
+			[Column(Length = 100)] public string? Zip_Code               { get; set; }
+			[Column(Length = 100)] public string? Zip_Plus_4             { get; set; }
+			[Column(Length = 100)] public string? City_Code              { get; set; }
 
 			public static readonly Commercial_Property[] Data = new[]
 			{
