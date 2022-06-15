@@ -234,7 +234,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LoadWith8([DataSources] string context)
+		public void LoadWith8([DataSources(TestProvName.AllAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
