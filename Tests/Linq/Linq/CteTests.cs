@@ -1163,10 +1163,10 @@ namespace Tests.Linq
 		{
 			[Column("HANDLE"), NotNull             ] public string    Handle           { get; set; } = null!; // NVARCHAR2(1236)
 			[Column("CHANGE_STAMP"), Nullable      ] public decimal?  ChangeStamp      { get; set; } // NUMBER (38,0)
-			[Column("SITE"), Nullable              ] public string?   Site             { get; set; } // NVARCHAR2(18)
-			[Column("NC_CODE"), Nullable           ] public string?   NcCodeColumn     { get; set; } // NVARCHAR2(48)
-			[Column("DESCRIPTION"), Nullable       ] public string?   Description      { get; set; } // NVARCHAR2(120)
-			[Column("STATUS_BO"), Nullable         ] public string?   StatusBo         { get; set; } // NVARCHAR2(1236)
+			[Column("SITE", Length = 18),          ] public string?   Site             { get; set; } // NVARCHAR2(18)
+			[Column("NC_CODE", Length = 48),       ] public string?   NcCodeColumn     { get; set; } // NVARCHAR2(48)
+			[Column("DESCRIPTION", Length = 120)   ] public string?   Description      { get; set; } // NVARCHAR2(120)
+			[Column("STATUS_BO")                   ] public string?   StatusBo         { get; set; } // NVARCHAR2(1236)
 			[Column("CREATED_DATE_TIME"), Nullable ] public DateTime? CreatedDateTime  { get; set; } // DATE
 			[Column("MODIFIED_DATE_TIME"), Nullable] public DateTime? ModifiedDateTime { get; set; } // DATE
 			[Column("NC_CATEGORY"), Nullable       ] public string?   NcCategory       { get; set; } // NVARCHAR2(60)
