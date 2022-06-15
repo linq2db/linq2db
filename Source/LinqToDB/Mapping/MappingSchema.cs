@@ -76,10 +76,9 @@ namespace LinqToDB.Mapping
 		/// mappings for same type.</remarks>
 		public MappingSchema(string? configuration, params MappingSchema[]? schemas)
 		{
-			if (string.IsNullOrEmpty(configuration))
-				configuration = string.Empty;
+			configuration ??= string.Empty;
 
-			var schemaInfo = CreateMappingSchemaInfo(configuration!, this);
+			var schemaInfo = CreateMappingSchemaInfo(configuration, this);
 
 			if (schemas == null || schemas.Length == 0)
 			{

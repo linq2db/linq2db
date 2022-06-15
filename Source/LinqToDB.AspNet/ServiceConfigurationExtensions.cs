@@ -162,6 +162,7 @@ namespace LinqToDB.AspNet
 			ServiceLifetime lifetime  = ServiceLifetime.Scoped) where TContextImplementation : TContext, IDataContext
 		{
 			var hasTypedConstructor = HasTypedContextConstructor<TContextImplementation>();
+
 			serviceCollection.TryAdd(new ServiceDescriptor(typeof(TContext), typeof(TContextImplementation), lifetime));
 			serviceCollection.TryAdd(new ServiceDescriptor(typeof(DataOptions<TContext>),
 				provider => new DataOptions<TContext>(configure(provider, new DataOptions())),
@@ -174,7 +175,7 @@ namespace LinqToDB.AspNet
 			return serviceCollection;
 		}
 
-		private static bool HasTypedContextConstructor<TContext>() where TContext : IDataContext
+		static bool HasTypedContextConstructor<TContext>() where TContext : IDataContext
 		{
 			var typedConstructorInfo   = typeof(TContext).GetConstructor(
 				BindingFlags.Public | BindingFlags.Instance | BindingFlags.ExactBinding,
@@ -187,8 +188,7 @@ namespace LinqToDB.AspNet
 				: null;
 
 			if (typedConstructorInfo == null && untypedConstructorInfo == null)
-				throw new ArgumentException($"Missing constructor accepting '{nameof(DataOptions)}' on type "
-											+ typeof(TContext).Name);
+				throw new ArgumentException($"Missing constructor accepting '{nameof(DataOptions)}' on type {typeof(TContext).Name}");
 
 			return typedConstructorInfo != null;
 		}
