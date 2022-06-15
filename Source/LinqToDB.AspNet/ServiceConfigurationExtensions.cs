@@ -170,7 +170,7 @@ namespace LinqToDB.AspNet
 
 			if (!hasTypedConstructor)
 				serviceCollection.TryAdd(new ServiceDescriptor(typeof(DataOptions),
-					provider => provider.GetRequiredService(typeof(DataOptions)), lifetime));
+					provider => configure(provider, new DataOptions()), lifetime));
 
 			return serviceCollection;
 		}
@@ -184,7 +184,7 @@ namespace LinqToDB.AspNet
 				null);
 
 			var untypedConstructorInfo = typedConstructorInfo == null
-				? typeof(TContext).GetConstructor(new[] { typeof(DataOptions<TContext>) })
+				? typeof(TContext).GetConstructor(new[] { typeof(DataOptions) })
 				: null;
 
 			if (typedConstructorInfo == null && untypedConstructorInfo == null)
