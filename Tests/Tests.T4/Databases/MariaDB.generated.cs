@@ -187,7 +187,7 @@ namespace MariaDBDataContext
 		#region Associations
 
 		/// <summary>
-		/// FK_Doctor_Person (testdb..person)
+		/// FK_Doctor_Person (person)
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
 		public Person Person { get; set; } = null!;
@@ -267,7 +267,7 @@ namespace MariaDBDataContext
 		#region Associations
 
 		/// <summary>
-		/// FK_Patient_Person (testdb..person)
+		/// FK_Patient_Person (person)
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
 		public Person Person { get; set; } = null!;
@@ -287,13 +287,13 @@ namespace MariaDBDataContext
 		#region Associations
 
 		/// <summary>
-		/// FK_Doctor_Person_BackReference (testdb..doctor)
+		/// FK_Doctor_Person_BackReference (doctor)
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
 		public Doctor? DoctorPerson { get; set; }
 
 		/// <summary>
-		/// FK_Patient_Person_BackReference (testdb..patient)
+		/// FK_Patient_Person_BackReference (patient)
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
 		public Patient? PatientPerson { get; set; }

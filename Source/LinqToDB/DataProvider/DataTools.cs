@@ -246,45 +246,5 @@ namespace LinqToDB.DataProvider
 			}
 		}
 		#endregion
-
-		internal static DateTime AdjustPrecision(DateTime value, byte precision)
-		{
-			if (precision > 6)
-				return value;
-
-			var delta = value.Ticks % 10000000;
-
-			switch (precision)
-			{
-				case 1: delta %= 1000000; break;
-				case 2: delta %= 100000 ; break;
-				case 3: delta %= 10000  ; break;
-				case 4: delta %= 1000   ; break;
-				case 5: delta %= 100    ; break;
-				case 6: delta %= 10     ; break;
-			}
-
-			return delta != 0 ? value.AddTicks(-delta) : value;
-		}
-
-		internal static DateTimeOffset AdjustPrecision(DateTimeOffset value, byte precision)
-		{
-			if (precision > 6)
-				return value;
-
-			var delta = value.Ticks % 10000000;
-
-			switch (precision)
-			{
-				case 1: delta %= 1000000; break;
-				case 2: delta %= 100000 ; break;
-				case 3: delta %= 10000  ; break;
-				case 4: delta %= 1000   ; break;
-				case 5: delta %= 100    ; break;
-				case 6: delta %= 10     ; break;
-			}
-
-			return delta != 0 ? value.AddTicks(-delta) : value;
-		}
 	}
 }

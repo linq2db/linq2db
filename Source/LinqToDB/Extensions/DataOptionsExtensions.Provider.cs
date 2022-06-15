@@ -99,7 +99,7 @@ namespace LinqToDB
 		/// <item>otherwise <see cref="OracleTools.DefaultVersion"/> (default: <see cref="OracleVersion.v12"/>) will be used as default dialect.</item>
 		/// </list>
 		/// </para>
-		/// For more fine-grained configuration see <see cref="UseOracle(DataOptions, string, OracleVersion)"/> overload.
+		/// For more fine-grained configuration see <see cref="UseOracle(DataOptions, string, OracleVersion, OracleProvider)"/> overload.
 		/// </remarks>
 		public static DataOptions UseOracle(this DataOptions options, string connectionString)
 		{
@@ -118,6 +118,7 @@ namespace LinqToDB
 		/// By default LinqToDB tries to load managed version of Oracle provider.
 		/// </para>
 		/// </remarks>
+		[Obsolete("Use UseOracle(this LinqToDBConnectionOptionsBuilder builder, string connectionString, OracleVersion dialect, OracleProvider provider) overload")]
 		public static DataOptions UseOracle(this DataOptions options, string connectionString, OracleVersion dialect)
 		{
 			return options.UseConnectionString(OracleTools.GetDataProvider(ProviderName.Oracle, null, dialect), connectionString);
@@ -137,7 +138,11 @@ namespace LinqToDB
 		public static DataOptions UseOracle(this DataOptions options, string connectionString, Func<OracleOptions,OracleOptions> optionSetter)
 		{
 			return options
-				.UseConnectionString(OracleTools.GetDataProvider(ProviderName.Oracle), connectionString)
+				.UseConnectionString(
+					OracleTools.GetDataProvider(
+						version  : OracleTools.DefaultVersion,
+						provider : OracleProvider.Managed),
+					connectionString)
 				.WithOptions(optionSetter);
 		}
 
@@ -151,6 +156,7 @@ namespace LinqToDB
 		/// <param name="dialect">Oracle dialect support level.</param>
 		/// <param name="useNativeProvider">if <c>true</c>, <c>Oracle.DataAccess</c> provider will be used; otherwise managed <c>Oracle.ManagedDataAccess</c>.</param>
 		/// <returns>The builder instance so calls can be chained.</returns>
+		[Obsolete("Use UseOracle(this LinqToDBConnectionOptionsBuilder builder, string connectionString, OracleVersion dialect, OracleProvider provider) overload")]
 		public static DataOptions UseOracle(this DataOptions options, string connectionString, OracleVersion dialect, bool useNativeProvider)
 		{
 			return options.UseConnectionString(
@@ -163,6 +169,20 @@ namespace LinqToDB
 
 #endif
 
+		/// <summary>
+		/// Configure connection to use specific Oracle provider, dialect and connection string.
+		/// </summary>
+		/// <param name="builder">Instance of <see cref="DataOptions"/>.</param>
+		/// <param name="connectionString">Oracle connection string.</param>
+		/// <param name="dialect">Oracle dialect support level.</param>
+		/// <param name="provider">ADO.NET provider to use.</param>
+		/// <returns>The builder instance so calls can be chained.</returns>
+		public static DataOptions UseOracle(this DataOptions builder, string connectionString, OracleVersion dialect, OracleProvider provider)
+		{
+			return builder.UseConnectionString(
+				OracleTools.GetDataProvider(dialect, provider),
+				connectionString);
+		}
 		#endregion
 
 		#region UsePostgreSQL

@@ -1205,6 +1205,20 @@ Naming options is an object with following properties:
 					null);
 
 			/// <summary>
+			/// Load database name component for schema objects.
+			/// </summary>
+			public static readonly CliOption LoadDatabaseName = new BooleanCliOption(
+					"database-in-name",
+					null,
+					false,
+					"include database name in name of db object in database schema",
+					null,
+					null,
+					null,
+					_defaultOptions.Schema.LoadDatabaseName,
+					_t4ModeOptions.Schema.LoadDatabaseName);
+
+			/// <summary>
 			/// Use only safe schema load methods to load table function and store procedure result-set schema option.
 			/// </summary>
 			public static readonly CliOption UseSafeSchemaLoadOnly = new BooleanCliOption(

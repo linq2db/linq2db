@@ -69,100 +69,42 @@ namespace FirebirdDataContext
 
 		#region Table Functions
 
-		#region PersonSelectByKey
+		#region OutRefEnumTest
 
-		[Sql.TableFunction(Name="Person_SelectByKey")]
-		public ITable<PersonSelectByKeyResult> PersonSelectByKey(int? ID)
+		[Sql.TableFunction(Name="OutRefEnumTest")]
+		public ITable<OutRefEnumTestResult> OutRefEnumTest(string? STR, string? IN_INPUTOUTPUTSTR)
 		{
-			return this.GetTable<PersonSelectByKeyResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				ID);
+			return this.GetTable<OutRefEnumTestResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
+				STR,
+				IN_INPUTOUTPUTSTR);
 		}
 
-		public partial class PersonSelectByKeyResult
+		public partial class OutRefEnumTestResult
 		{
-			public int?    PERSONID   { get; set; }
-			public string? FIRSTNAME  { get; set; }
-			public string? LASTNAME   { get; set; }
-			public string? MIDDLENAME { get; set; }
-			public string? GENDER     { get; set; }
-		}
-
-		#endregion
-
-		#region PersonSelectAll
-
-		[Sql.TableFunction(Name="Person_SelectAll")]
-		public ITable<PersonSelectAllResult> PersonSelectAll()
-		{
-			return this.GetTable<PersonSelectAllResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
-		}
-
-		public partial class PersonSelectAllResult
-		{
-			public int?    PERSONID   { get; set; }
-			public string? FIRSTNAME  { get; set; }
-			public string? LASTNAME   { get; set; }
-			public string? MIDDLENAME { get; set; }
-			public string? GENDER     { get; set; }
+			public string? INPUTOUTPUTSTR { get; set; }
+			public string? OUTPUTSTR      { get; set; }
 		}
 
 		#endregion
 
-		#region PersonSelectByName
+		#region OutRefTest
 
-		[Sql.TableFunction(Name="Person_SelectByName")]
-		public ITable<PersonSelectByNameResult> PersonSelectByName(string? IN_FIRSTNAME, string? IN_LASTNAME)
+		[Sql.TableFunction(Name="OutRefTest")]
+		public ITable<OutRefTestResult> OutRefTest(int? ID, int? IN_INPUTOUTPUTID, string? STR, string? IN_INPUTOUTPUTSTR)
 		{
-			return this.GetTable<PersonSelectByNameResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				IN_FIRSTNAME,
-				IN_LASTNAME);
+			return this.GetTable<OutRefTestResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
+				ID,
+				IN_INPUTOUTPUTID,
+				STR,
+				IN_INPUTOUTPUTSTR);
 		}
 
-		public partial class PersonSelectByNameResult
+		public partial class OutRefTestResult
 		{
-			public int?    PERSONID   { get; set; }
-			public string? FIRSTNAME  { get; set; }
-			public string? LASTNAME   { get; set; }
-			public string? MIDDLENAME { get; set; }
-			public string? GENDER     { get; set; }
-		}
-
-		#endregion
-
-		#region PersonInsert
-
-		[Sql.TableFunction(Name="Person_Insert")]
-		public ITable<PersonInsertResult> PersonInsert(string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER)
-		{
-			return this.GetTable<PersonInsertResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				FIRSTNAME,
-				LASTNAME,
-				MIDDLENAME,
-				GENDER);
-		}
-
-		public partial class PersonInsertResult
-		{
-			public int? PERSONID { get; set; }
-		}
-
-		#endregion
-
-		#region PersonInsertOutputParameter
-
-		[Sql.TableFunction(Name="Person_Insert_OutputParameter")]
-		public ITable<PersonInsertOutputParameterResult> PersonInsertOutputParameter(string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER)
-		{
-			return this.GetTable<PersonInsertOutputParameterResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				FIRSTNAME,
-				LASTNAME,
-				MIDDLENAME,
-				GENDER);
-		}
-
-		public partial class PersonInsertOutputParameterResult
-		{
-			public int? PERSONID { get; set; }
+			public int?    INPUTOUTPUTID  { get; set; }
+			public string? INPUTOUTPUTSTR { get; set; }
+			public int?    OUTPUTID       { get; set; }
+			public string? OUTPUTSTR      { get; set; }
 		}
 
 		#endregion
@@ -207,42 +149,100 @@ namespace FirebirdDataContext
 
 		#endregion
 
-		#region OutRefTest
+		#region PersonInsert
 
-		[Sql.TableFunction(Name="OutRefTest")]
-		public ITable<OutRefTestResult> OutRefTest(int? ID, int? IN_INPUTOUTPUTID, string? STR, string? IN_INPUTOUTPUTSTR)
+		[Sql.TableFunction(Name="Person_Insert")]
+		public ITable<PersonInsertResult> PersonInsert(string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER)
 		{
-			return this.GetTable<OutRefTestResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				ID,
-				IN_INPUTOUTPUTID,
-				STR,
-				IN_INPUTOUTPUTSTR);
+			return this.GetTable<PersonInsertResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
+				FIRSTNAME,
+				LASTNAME,
+				MIDDLENAME,
+				GENDER);
 		}
 
-		public partial class OutRefTestResult
+		public partial class PersonInsertResult
 		{
-			public int?    INPUTOUTPUTID  { get; set; }
-			public string? INPUTOUTPUTSTR { get; set; }
-			public int?    OUTPUTID       { get; set; }
-			public string? OUTPUTSTR      { get; set; }
+			public int? PERSONID { get; set; }
 		}
 
 		#endregion
 
-		#region OutRefEnumTest
+		#region PersonInsertOutputParameter
 
-		[Sql.TableFunction(Name="OutRefEnumTest")]
-		public ITable<OutRefEnumTestResult> OutRefEnumTest(string? STR, string? IN_INPUTOUTPUTSTR)
+		[Sql.TableFunction(Name="Person_Insert_OutputParameter")]
+		public ITable<PersonInsertOutputParameterResult> PersonInsertOutputParameter(string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER)
 		{
-			return this.GetTable<OutRefEnumTestResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				STR,
-				IN_INPUTOUTPUTSTR);
+			return this.GetTable<PersonInsertOutputParameterResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
+				FIRSTNAME,
+				LASTNAME,
+				MIDDLENAME,
+				GENDER);
 		}
 
-		public partial class OutRefEnumTestResult
+		public partial class PersonInsertOutputParameterResult
 		{
-			public string? INPUTOUTPUTSTR { get; set; }
-			public string? OUTPUTSTR      { get; set; }
+			public int? PERSONID { get; set; }
+		}
+
+		#endregion
+
+		#region PersonSelectAll
+
+		[Sql.TableFunction(Name="Person_SelectAll")]
+		public ITable<PersonSelectAllResult> PersonSelectAll()
+		{
+			return this.GetTable<PersonSelectAllResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
+		}
+
+		public partial class PersonSelectAllResult
+		{
+			public int?    PERSONID   { get; set; }
+			public string? FIRSTNAME  { get; set; }
+			public string? LASTNAME   { get; set; }
+			public string? MIDDLENAME { get; set; }
+			public string? GENDER     { get; set; }
+		}
+
+		#endregion
+
+		#region PersonSelectByKey
+
+		[Sql.TableFunction(Name="Person_SelectByKey")]
+		public ITable<PersonSelectByKeyResult> PersonSelectByKey(int? ID)
+		{
+			return this.GetTable<PersonSelectByKeyResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
+				ID);
+		}
+
+		public partial class PersonSelectByKeyResult
+		{
+			public int?    PERSONID   { get; set; }
+			public string? FIRSTNAME  { get; set; }
+			public string? LASTNAME   { get; set; }
+			public string? MIDDLENAME { get; set; }
+			public string? GENDER     { get; set; }
+		}
+
+		#endregion
+
+		#region PersonSelectByName
+
+		[Sql.TableFunction(Name="Person_SelectByName")]
+		public ITable<PersonSelectByNameResult> PersonSelectByName(string? IN_FIRSTNAME, string? IN_LASTNAME)
+		{
+			return this.GetTable<PersonSelectByNameResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
+				IN_FIRSTNAME,
+				IN_LASTNAME);
+		}
+
+		public partial class PersonSelectByNameResult
+		{
+			public int?    PERSONID   { get; set; }
+			public string? FIRSTNAME  { get; set; }
+			public string? LASTNAME   { get; set; }
+			public string? MIDDLENAME { get; set; }
+			public string? GENDER     { get; set; }
 		}
 
 		#endregion
@@ -451,7 +451,7 @@ namespace FirebirdDataContext
 		#region Associations
 
 		/// <summary>
-		/// INTEG_9435 (SYSDBA.Person)
+		/// INTEG_9478 (SYSDBA.Person)
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
 		public Person Person { get; set; } = null!;
@@ -477,7 +477,7 @@ namespace FirebirdDataContext
 		public Doctor? Doctor { get; set; }
 
 		/// <summary>
-		/// INTEG_9435_BackReference (SYSDBA.Patient)
+		/// INTEG_9478_BackReference (SYSDBA.Patient)
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
 		public Patient? INTEG { get; set; }
@@ -564,6 +564,32 @@ namespace FirebirdDataContext
 
 	public static partial class TESTDB25DBStoredProcedures
 	{
+		#region AddIssue792Record
+
+		public static int AddIssue792Record(this TESTDB25DB dataConnection)
+		{
+			return dataConnection.ExecuteProc("\"AddIssue792Record\"");
+		}
+
+		#endregion
+
+		#region PersonDelete
+
+		public static int PersonDelete(this TESTDB25DB dataConnection, int? PERSONID)
+		{
+			var parameters = new []
+			{
+				new DataParameter("PERSONID", PERSONID, LinqToDB.DataType.Int32)
+				{
+					Size = 4
+				}
+			};
+
+			return dataConnection.ExecuteProc("\"Person_Delete\"", parameters);
+		}
+
+		#endregion
+
 		#region PersonUpdate
 
 		public static int PersonUpdate(this TESTDB25DB dataConnection, int? PERSONID, string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER)
@@ -593,32 +619,6 @@ namespace FirebirdDataContext
 			};
 
 			return dataConnection.ExecuteProc("\"Person_Update\"", parameters);
-		}
-
-		#endregion
-
-		#region PersonDelete
-
-		public static int PersonDelete(this TESTDB25DB dataConnection, int? PERSONID)
-		{
-			var parameters = new []
-			{
-				new DataParameter("PERSONID", PERSONID, LinqToDB.DataType.Int32)
-				{
-					Size = 4
-				}
-			};
-
-			return dataConnection.ExecuteProc("\"Person_Delete\"", parameters);
-		}
-
-		#endregion
-
-		#region AddIssue792Record
-
-		public static int AddIssue792Record(this TESTDB25DB dataConnection)
-		{
-			return dataConnection.ExecuteProc("\"AddIssue792Record\"");
 		}
 
 		#endregion

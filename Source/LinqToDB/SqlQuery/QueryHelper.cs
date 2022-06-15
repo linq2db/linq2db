@@ -187,6 +187,15 @@ namespace LinqToDB.SqlQuery
 					var binary = (SqlBinaryExpression)expr;
 					return GetColumnDescriptor(binary.Expr1) ?? GetColumnDescriptor(binary.Expr2);
 				}
+				case QueryElementType.SqlFunction:
+				{
+					var function = (SqlFunction)expr;
+					if (function.Name == "Coalesce" && function.Parameters.Length == 2)
+					{
+						return GetColumnDescriptor(function.Parameters[0]);
+					}
+					break;
+				}
 			}
 			return null;
 		}

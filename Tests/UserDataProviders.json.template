@@ -83,8 +83,20 @@
 			// Oracle 11 and 12+
 			//"Oracle.11.Managed",
 			//"Oracle.11.Native",
-			//"Oracle.Managed",
-			//"Oracle.Native",
+			//"Oracle.11.Devart.Direct",
+			//"Oracle.11.Devart.OCI",
+			//"Oracle.12.Managed",
+			//"Oracle.12.Native",
+			//"Oracle.12.Devart.Direct",
+			//"Oracle.12.Devart.OCI",
+			//"Oracle.18.Managed",
+			//"Oracle.18.Native",
+			//"Oracle.18.Devart.Direct",
+			//"Oracle.18.Devart.OCI",
+			//"Oracle.21.Managed",
+			//"Oracle.21.Native",
+			//"Oracle.21.Devart.Direct",
+			//"Oracle.21.Devart.OCI",
 
 			// SAP HANA 2
 			//"SapHana.Odbc",
@@ -174,9 +186,17 @@
 
 			// Oracle 11 and 12+
 			//"Oracle.11.Managed",
-			//"Oracle.11.Native",
-			//"Oracle.Managed",
-			//"Oracle.Native",
+			//"Oracle.11.Devart.Direct",
+			//"Oracle.11.Devart.OCI",
+			//"Oracle.12.Managed",
+			//"Oracle.12.Devart.Direct",
+			//"Oracle.12.Devart.OCI",
+			//"Oracle.18.Managed",
+			//"Oracle.18.Devart.Direct",
+			//"Oracle.18.Devart.OCI",
+			//"Oracle.21.Managed",
+			//"Oracle.21.Devart.Direct",
+			//"Oracle.21.Devart.OCI",
 
 			// SAP HANA 2
 			//"SapHana.Odbc",
@@ -266,9 +286,17 @@
 
 			// Oracle 11 and 12+
 			//"Oracle.11.Managed",
-			//"Oracle.11.Native",
-			//"Oracle.Managed",
-			//"Oracle.Native",
+			//"Oracle.11.Devart.Direct",
+			//"Oracle.11.Devart.OCI",
+			//"Oracle.12.Managed",
+			//"Oracle.12.Devart.Direct",
+			//"Oracle.12.Devart.OCI",
+			//"Oracle.18.Managed",
+			//"Oracle.18.Devart.Direct",
+			//"Oracle.18.Devart.OCI",
+			//"Oracle.21.Managed",
+			//"Oracle.21.Devart.Direct",
+			//"Oracle.21.Devart.OCI",
 
 			// SAP HANA 2
 			//"SapHana.Odbc",
@@ -415,20 +443,68 @@
 				"Provider": "MySqlConnector",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
-			"Oracle.Native": {
-				"Provider": "Oracle.DataAccess.Client",
-				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
-			},
-			"Oracle.Managed": {
-				"Provider": "Oracle.ManagedDataAccess.Client",
-				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
-			},
 			"Oracle.11.Native": {
 				"Provider": "Oracle.DataAccess.Client",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
 			"Oracle.11.Managed": {
 				"Provider": "Oracle.ManagedDataAccess.Client",
+				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+			},
+			"Oracle.11.Devart.Direct": {
+				"Provider": "Devart.Data.Oracle",
+				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+			},
+			"Oracle.11.Devart.OCI": {
+				"Provider": "Devart.Data.Oracle",
+				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+			},
+			"Oracle.12.Native": {
+				"Provider": "Oracle.DataAccess.Client",
+				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+			},
+			"Oracle.12.Managed": {
+				"Provider": "Oracle.ManagedDataAccess.Client",
+				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+			},
+			"Oracle.12.Devart.Direct": {
+				"Provider": "Devart.Data.Oracle",
+				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+			},
+			"Oracle.12.Devart.OCI": {
+				"Provider": "Devart.Data.Oracle",
+				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+			},
+			"Oracle.18.Native": {
+				"Provider": "Oracle.DataAccess.Client",
+				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+			},
+			"Oracle.18.Managed": {
+				"Provider": "Oracle.ManagedDataAccess.Client",
+				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+			},
+			"Oracle.18.Devart.Direct": {
+				"Provider": "Devart.Data.Oracle",
+				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+			},
+			"Oracle.18.Devart.OCI": {
+				"Provider": "Devart.Data.Oracle",
+				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+			},
+			"Oracle.21.Native": {
+				"Provider": "Oracle.DataAccess.Client",
+				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+			},
+			"Oracle.21.Managed": {
+				"Provider": "Oracle.ManagedDataAccess.Client",
+				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+			},
+			"Oracle.21.Devart.Direct": {
+				"Provider": "Devart.Data.Oracle",
+				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+			},
+			"Oracle.21.Devart.OCI": {
+				"Provider": "Devart.Data.Oracle",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
 			"PostgreSQL.9.2": {

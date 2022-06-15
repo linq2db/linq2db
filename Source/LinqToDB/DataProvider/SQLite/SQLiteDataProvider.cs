@@ -125,8 +125,8 @@ namespace LinqToDB.DataProvider.SQLite
 				SetSqliteField((r, i) => (byte[])r.GetValue(i), new[] { typeof(byte[]), typeof(string) },
 					"BLOB", "BINARY", "GENERAL", "IMAGE", "OLEOBJECT", "RAW", "VARBINARY");
 
-				SetSqliteField((r, i) => r.GetGuid(i), new[] { typeof(string), typeof(byte[]) },
-					"GUID", "UNIQUEIDENTIFIER");
+				ReaderExpressions[new ReaderInfo { ToType = typeof(Guid), FieldType = typeof(byte[]) }] = (Expression<Func<DbDataReader, int, Guid>>)((r, i) => r.GetGuid(i));
+				ReaderExpressions[new ReaderInfo { ToType = typeof(Guid), FieldType = typeof(string) }] = (Expression<Func<DbDataReader, int, Guid>>)((r, i) => r.GetGuid(i));
 
 				SetSqliteField((r, i) => r.GetBoolean(i), new[] { typeof(long), typeof(string), typeof(double) },
 					"BIT", "BOOL", "BOOLEAN", "LOGICAL", "YESNO");
@@ -135,9 +135,13 @@ namespace LinqToDB.DataProvider.SQLite
 					"DATETIME", "DATETIME2", "DATE", "SMALLDATE", "SMALLDATETIME", "TIME", "TIMESTAMP", "DATETIMEOFFSET");
 
 				// also specify explicit converter for non-integer numerics, repored as integer by provider
-				SetToType<DbDataReader, float  , long>((r, i) => r.GetFloat(i));
-				SetToType<DbDataReader, double , long>((r, i) => r.GetDouble(i));
+				SetToType<DbDataReader, float, long>((r, i) => r.GetFloat(i));
+				SetToType<DbDataReader, double, long>((r, i) => r.GetDouble(i));
 				SetToType<DbDataReader, decimal, long>((r, i) => r.GetDecimal(i));
+			}
+			else
+			{
+				ReaderExpressions[new ReaderInfo { ToType = typeof(Guid) }] = (Expression<Func<DbDataReader, int, Guid>>)((r, i) => r.GetGuid(i));
 			}
 
 			SetCharField("char",  (r,i) => r.GetString(i).TrimEnd(' '));
@@ -222,13 +226,32 @@ namespace LinqToDB.DataProvider.SQLite
 			if (Name == ProviderName.SQLiteMS && value is char)
 				value = value.ToString();
 
-			// reverting compatibility breaking change in Microsoft.Data.Sqlite 3.0.0
-			// https://github.com/aspnet/EntityFrameworkCore/issues/15078
-			// pre-3.0 and System.Data.Sqlite uses binary type for Guid values, there is no reason to replace it with string value
-			// we can allow strings later if there will be request for it
-			if (Name == ProviderName.SQLiteMS && value is Guid guid)
+			if (value is Guid guid)
 			{
-				value = guid.ToByteArray();
+				// keep in sync with ConvertGuidToSql in mapping schema
+				switch (dataType.DataType, dataType.DbType)
+				{
+					case (DataType.NChar, _) or (DataType.NVarChar, _) or (DataType.NText, _)
+						or (DataType.Char, _) or (DataType.VarChar, _) or (DataType.Text, _)
+						or (_, "TEXT"):
+
+						value = guid.ToString().ToUpperInvariant();
+
+						if (Name == ProviderName.SQLiteClassic)
+							dataType = dataType.WithDataType(DataType.Text);
+
+						break;
+					default:
+						if (Name == ProviderName.SQLiteMS)
+						{
+							// reverting compatibility breaking change in Microsoft.Data.Sqlite 3.0.0
+							// https://github.com/aspnet/EntityFrameworkCore/issues/15078
+							// pre-3.0 and System.Data.Sqlite uses binary type for Guid values, there is no reason to replace it with string value
+							// we can allow strings later if there will be request for it
+							value = guid.ToByteArray();
+						}
+						break;
+				}
 			}
 
 #if NET6_0_OR_GREATER

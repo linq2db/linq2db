@@ -34,7 +34,6 @@ namespace PostreSQL11DataContext
 		public ITable<AllType>                        AllTypes                  { get { return this.GetTable<AllType>(); } }
 		public ITable<Child>                          Children                  { get { return this.GetTable<Child>(); } }
 		public ITable<CollatedTable>                  CollatedTables            { get { return this.GetTable<CollatedTable>(); } }
-		public ITable<CreateIfNotExistsTable>         CreateIfNotExistsTables   { get { return this.GetTable<CreateIfNotExistsTable>(); } }
 		public ITable<DestinationTable>               DestinationTables         { get { return this.GetTable<DestinationTable>(); } }
 		public ITable<Doctor>                         Doctors                   { get { return this.GetTable<Doctor>(); } }
 		public ITable<Entity>                         Entities                  { get { return this.GetTable<Entity>(); } }
@@ -293,13 +292,6 @@ namespace PostreSQL11DataContext
 		[Column(DataType=LinqToDB.DataType.NVarChar, Length=20),             NotNull] public string CaseInsensitive { get; set; } = null!; // character varying(20)
 	}
 
-	[Table(Schema="public", Name="CreateIfNotExistsTable")]
-	public partial class CreateIfNotExistsTable
-	{
-		[Column(DataType=LinqToDB.DataType.Int32, Precision=32, Scale=0), NotNull] public int Id    { get; set; } // integer
-		[Column(DataType=LinqToDB.DataType.Int32, Precision=32, Scale=0), NotNull] public int Value { get; set; } // integer
-	}
-
 	[Table(Schema="public", Name="DestinationTable")]
 	public partial class DestinationTable
 	{
@@ -317,7 +309,7 @@ namespace PostreSQL11DataContext
 		#region Associations
 
 		/// <summary>
-		/// Doctor_PersonID_fkey (testdb.public.Person)
+		/// Doctor_PersonID_fkey (public.Person)
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
 		public Person Person { get; set; } = null!;
@@ -447,7 +439,7 @@ namespace PostreSQL11DataContext
 		#region Associations
 
 		/// <summary>
-		/// Patient_PersonID_fkey (testdb.public.Person)
+		/// Patient_PersonID_fkey (public.Person)
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
 		public Person Person { get; set; } = null!;
@@ -473,13 +465,13 @@ namespace PostreSQL11DataContext
 		#region Associations
 
 		/// <summary>
-		/// Doctor_PersonID_fkey_BackReference (testdb.public.Doctor)
+		/// Doctor_PersonID_fkey_BackReference (public.Doctor)
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
 		public Doctor? DoctorPersonIDfkey { get; set; }
 
 		/// <summary>
-		/// Patient_PersonID_fkey_BackReference (testdb.public.Patient)
+		/// Patient_PersonID_fkey_BackReference (public.Patient)
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
 		public Patient? PatientPersonIDfkey { get; set; }
@@ -495,13 +487,13 @@ namespace PostreSQL11DataContext
 		#region Associations
 
 		/// <summary>
-		/// same_name_BackReference (testdb.public.same_name2)
+		/// same_name_BackReference (public.same_name2)
 		/// </summary>
 		[Association(ThisKey="Id", OtherKey="SameName", CanBeNull=true)]
 		public IEnumerable<SameName2> SameNameBackReferences { get; set; } = null!;
 
 		/// <summary>
-		/// same_name_BackReference (testdb.public.same_name1)
+		/// same_name_BackReference (public.same_name1)
 		/// </summary>
 		[Association(ThisKey="Id", OtherKey="SameName", CanBeNull=true)]
 		public IEnumerable<SameName1> Samenames { get; set; } = null!;
@@ -518,7 +510,7 @@ namespace PostreSQL11DataContext
 		#region Associations
 
 		/// <summary>
-		/// same_name (testdb.public.same_name)
+		/// same_name (public.same_name)
 		/// </summary>
 		[Association(ThisKey="SameName", OtherKey="Id", CanBeNull=true)]
 		public SameName? Samename { get; set; }
@@ -535,7 +527,7 @@ namespace PostreSQL11DataContext
 		#region Associations
 
 		/// <summary>
-		/// same_name (testdb.public.same_name)
+		/// same_name (public.same_name)
 		/// </summary>
 		[Association(ThisKey="SameName", OtherKey="Id", CanBeNull=true)]
 		public SameName? Samename { get; set; }
@@ -691,7 +683,7 @@ namespace PostreSQL11DataContext
 	{
 		#region AddIfNotExists
 
-		[Sql.Function(Name="add_if_not_exists", ServerSideOnly=true)]
+		[Sql.Function(Name="\"public\".add_if_not_exists", ServerSideOnly=true)]
 		public static object? AddIfNotExists(string? p_name)
 		{
 			throw new InvalidOperationException();
@@ -701,7 +693,7 @@ namespace PostreSQL11DataContext
 
 		#region Addissue792record
 
-		[Sql.Function(Name="addissue792record", ServerSideOnly=true)]
+		[Sql.Function(Name="\"public\".addissue792record", ServerSideOnly=true)]
 		public static object? Addissue792record()
 		{
 			throw new InvalidOperationException();
@@ -711,7 +703,7 @@ namespace PostreSQL11DataContext
 
 		#region Bool
 
-		[Sql.Function(Name="bool", ServerSideOnly=true)]
+		[Sql.Function(Name="\"public\".bool", ServerSideOnly=true)]
 		public static string? Bool(int? param)
 		{
 			throw new InvalidOperationException();
@@ -721,7 +713,7 @@ namespace PostreSQL11DataContext
 
 		#region Floatrange
 
-		[Sql.Function(Name="floatrange", ServerSideOnly=true)]
+		[Sql.Function(Name="\"public\".floatrange", ServerSideOnly=true)]
 		public static object? Floatrange(double? par6, double? par7, string? par8)
 		{
 			throw new InvalidOperationException();
@@ -731,7 +723,7 @@ namespace PostreSQL11DataContext
 
 		#region FnTest
 
-		[Sql.Function(Name="\"fnTest\"", ServerSideOnly=true)]
+		[Sql.Function(Name="\"SchemaName\".\"fnTest\"", ServerSideOnly=true)]
 		public static string? FnTest(int? param)
 		{
 			throw new InvalidOperationException();
@@ -741,7 +733,7 @@ namespace PostreSQL11DataContext
 
 		#region Issue1742Date
 
-		[Sql.Function(Name="issue_1742_date", ServerSideOnly=true)]
+		[Sql.Function(Name="\"public\".issue_1742_date", ServerSideOnly=true)]
 		public static int? Issue1742Date(DateTime? p1)
 		{
 			throw new InvalidOperationException();
@@ -751,7 +743,7 @@ namespace PostreSQL11DataContext
 
 		#region Issue1742Ts
 
-		[Sql.Function(Name="issue_1742_ts", ServerSideOnly=true)]
+		[Sql.Function(Name="\"public\".issue_1742_ts", ServerSideOnly=true)]
 		public static int? Issue1742Ts(DateTime? p1)
 		{
 			throw new InvalidOperationException();
@@ -761,7 +753,7 @@ namespace PostreSQL11DataContext
 
 		#region Issue1742Tstz
 
-		[Sql.Function(Name="issue_1742_tstz", ServerSideOnly=true)]
+		[Sql.Function(Name="\"public\".issue_1742_tstz", ServerSideOnly=true)]
 		public static int? Issue1742Tstz(DateTimeOffset? p1)
 		{
 			throw new InvalidOperationException();
@@ -771,7 +763,7 @@ namespace PostreSQL11DataContext
 
 		#region Reverse
 
-		[Sql.Function(Name="reverse", ServerSideOnly=true)]
+		[Sql.Function(Name="\"public\".reverse", ServerSideOnly=true)]
 		public static string? Reverse(string? par14)
 		{
 			throw new InvalidOperationException();
@@ -781,7 +773,7 @@ namespace PostreSQL11DataContext
 
 		#region TestAvg
 
-		[Sql.Function(Name="test_avg", ServerSideOnly=true, IsAggregate = true, ArgIndices = new[] { 0 })]
+		[Sql.Function(Name="\"public\".test_avg", ServerSideOnly=true, IsAggregate = true, ArgIndices = new[] { 0 })]
 		public static double? TestAvg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, double?>> par16)
 		{
 			throw new InvalidOperationException();
@@ -791,7 +783,7 @@ namespace PostreSQL11DataContext
 
 		#region TestParameterTyping
 
-		[Sql.Function(Name="test_parameter_typing", ServerSideOnly=true)]
+		[Sql.Function(Name="\"public\".test_parameter_typing", ServerSideOnly=true)]
 		public static short? TestParameterTyping(short? psmallint, int? pint, long? pbigint, decimal? pdecimal, float? pfloat, double? pdouble)
 		{
 			throw new InvalidOperationException();
@@ -801,7 +793,7 @@ namespace PostreSQL11DataContext
 
 		#region TestFunctionParameters
 
-		[Sql.Function(Name="\"TestFunctionParameters\"", ServerSideOnly=true)]
+		[Sql.Function(Name="\"public\".\"TestFunctionParameters\"", ServerSideOnly=true)]
 		public static TestFunctionParametersResult? TestFunctionParameters(int? param1, int? param2)
 		{
 			throw new InvalidOperationException();
@@ -811,7 +803,7 @@ namespace PostreSQL11DataContext
 
 		#region TestScalarFunction
 
-		[Sql.Function(Name="\"TestScalarFunction\"", ServerSideOnly=true)]
+		[Sql.Function(Name="\"public\".\"TestScalarFunction\"", ServerSideOnly=true)]
 		public static string? TestScalarFunction(int? param)
 		{
 			throw new InvalidOperationException();
@@ -821,7 +813,7 @@ namespace PostreSQL11DataContext
 
 		#region TestSingleOutParameterFunction
 
-		[Sql.Function(Name="\"TestSingleOutParameterFunction\"", ServerSideOnly=true)]
+		[Sql.Function(Name="\"public\".\"TestSingleOutParameterFunction\"", ServerSideOnly=true)]
 		public static int? TestSingleOutParameterFunction(int? param1)
 		{
 			throw new InvalidOperationException();

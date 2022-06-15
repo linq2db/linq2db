@@ -7,9 +7,9 @@ namespace LinqToDB.DataProvider.Oracle
 {
 	using Common;
 	using Infrastructure;
-	using SqlQuery;
-	using SqlProvider;
 	using Mapping;
+	using SqlProvider;
+	using SqlQuery;
 
 	abstract partial class OracleSqlBuilderBase : BasicSqlBuilder
 	{

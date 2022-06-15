@@ -124,7 +124,7 @@ namespace Default.Sybase
 		#region Associations
 
 		/// <summary>
-		/// FK_Doctor_Person (TestDataCore.dbo.Person)
+		/// FK_Doctor_Person (dbo.Person)
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
 		public Person Person { get; set; } = null!;
@@ -196,7 +196,7 @@ namespace Default.Sybase
 		#region Associations
 
 		/// <summary>
-		/// FK_Patient_Person (TestDataCore.dbo.Person)
+		/// FK_Patient_Person (dbo.Person)
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
 		public Person Person { get; set; } = null!;
@@ -216,13 +216,13 @@ namespace Default.Sybase
 		#region Associations
 
 		/// <summary>
-		/// FK_Doctor_Person_BackReference (TestDataCore.dbo.Doctor)
+		/// FK_Doctor_Person_BackReference (dbo.Doctor)
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
 		public Doctor? Doctor { get; set; }
 
 		/// <summary>
-		/// FK_Patient_Person_BackReference (TestDataCore.dbo.Patient)
+		/// FK_Patient_Person_BackReference (dbo.Patient)
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
 		public Patient? Patient { get; set; }

@@ -1259,19 +1259,20 @@ namespace Tests.Data
 		public void TestDisposeFlagCloning962Test2([DataSources(false)] string context, [Values] bool withScope)
 		{
 			if (withScope && (
-				context == ProviderName.DB2                 ||
-				context == ProviderName.InformixDB2         ||
-				context == ProviderName.SapHanaOdbc         ||
-				context == ProviderName.SqlCe               ||
-				context == ProviderName.Sybase              ||
+				context == ProviderName.DB2                    ||
+				context == ProviderName.InformixDB2            ||
+				context == ProviderName.SapHanaOdbc            ||
+				context == ProviderName.SqlCe                  ||
+				context == ProviderName.Sybase                 ||
 #if !NET472
-				context.IsAnyOf(TestProvName.AllOracleManaged)              ||
-				context.IsAnyOf(ProviderName.SapHanaNative)                 ||
+				context.IsAnyOf(TestProvName.AllOracleManaged) ||
+				context.IsAnyOf(TestProvName.AllOracleDevart)  ||
+				context.IsAnyOf(ProviderName.SapHanaNative)    ||
 #endif
-				context.IsAnyOf(TestProvName.AllMySqlData)                  ||
-				context.IsAnyOf(TestProvName.AllAccess)                     ||
-				context.IsAnyOf(TestProvName.AllSqlServer)                  ||
-				context.IsAnyOf(TestProvName.AllPostgreSQL)                 ||
+				context.IsAnyOf(TestProvName.AllMySqlData)     ||
+				context.IsAnyOf(TestProvName.AllAccess)        ||
+				context.IsAnyOf(TestProvName.AllSqlServer)     ||
+				context.IsAnyOf(TestProvName.AllPostgreSQL)    ||
 				context.IsAnyOf(TestProvName.AllSQLiteClassic)
 				))
 			{

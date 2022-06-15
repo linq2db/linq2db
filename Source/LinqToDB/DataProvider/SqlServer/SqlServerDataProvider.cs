@@ -197,26 +197,58 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
 		{
+			// SqlClient supports less DbType's for SqlDateTime than for DateTime
+			// SqlDateTime is designer for DATETIME type only
+			if (value is SqlDateTime sdt && !sdt.IsNull)
+				value = (DateTime)sdt;
+
 			var param = TryGetProviderParameter(dataConnection, parameter);
 
 			switch (dataType.DataType)
 			{
+				case DataType.SmallDateTime or DataType.DateTime
+						when value is DateTimeOffset dto:
+					value = dto.LocalDateTime;
+					break;
+
+				case DataType.DateTime2
+						when value is DateTimeOffset dto:
+					value = dto.WithPrecision(dataType.Precision ?? 7).LocalDateTime;
+					break;
+
+				case DataType.DateTimeOffset when value is DateTimeOffset dto:
+				{
+					var precision = dataType.Precision ?? 7;
+					if (Version == SqlServerVersion.v2005 && precision > 3)
+					{
+						precision = 3;
+					}
+
+					value = dto.WithPrecision(precision);
+					break;
+				}
+
+				case DataType.Date when value is DateTimeOffset dto:
+					value = dto.LocalDateTime.Date;
+					break;
+
 #if NET6_0_OR_GREATER
 				case DataType.Date when value is DateOnly d:
 					value = d.ToDateTime(TimeOnly.MinValue);
 					break;
 
-				case DataType.NText when value is DateOnly d:
+				case DataType.Text or DataType.Char or DataType.VarChar
+					or DataType.NText or DataType.NChar or DataType.NVarChar
+						when value is DateOnly d:
 					value = d.ToString("yyyy-MM-dd");
 					break;
 #endif
 
 				case DataType.DateTime2 when value is DateTime dt:
-					value = DataTools.AdjustPrecision(dt, (byte)(dataType.Precision ?? 7));
+					value = dt.WithPrecision(dataType.Precision ?? 7);
 					break;
 
 				case DataType.Udt:
-				{
 					if (param != null
 						&& value != null
 						&& _udtTypeNames.TryGetValue(value.GetType(), out var typeName))
@@ -224,33 +256,33 @@ namespace LinqToDB.DataProvider.SqlServer
 						Adapter.SetUdtTypeName(param, typeName);
 					}
 					break;
-				}
-
-				case DataType.NText when value is DateTimeOffset dto:
-					value = dto.ToString("yyyy-MM-ddTHH:mm:ss.ffffff zzz");
-					break;
 
 				case DataType.NText when value is DateTime dt:
-				{
 					value = dt.ToString(
 						dt.Millisecond == 0
 							? "yyyy-MM-ddTHH:mm:ss"
 							: "yyyy-MM-ddTHH:mm:ss.fff");
 					break;
-				}
 
-				case DataType.NText when value is TimeSpan ts:
-				{
-					value = ts.ToString(
-						ts.Days > 0
-							? ts.Milliseconds > 0
-								? "d\\.hh\\:mm\\:ss\\.fff"
-								: "d\\.hh\\:mm\\:ss"
-							: ts.Milliseconds > 0
-								? "hh\\:mm\\:ss\\.fff"
-								: "hh\\:mm\\:ss");
+				case DataType.Text or DataType.Char or DataType.VarChar
+					or DataType.NText or DataType.NChar or DataType.NVarChar
+						when value is DateTimeOffset dto:
+					// SqlClient doesn't generate last digit for precision=6 ¯\_(ツ)_/¯
+					value = SqlServerMappingSchema.ConvertDateTimeOffsetToString(dto, dataType.Precision ?? 7);
 					break;
-				}
+
+				case DataType.Text or DataType.Char or DataType.VarChar
+					or DataType.NText or DataType.NChar or DataType.NVarChar
+						when value is TimeSpan ts:
+					value = SqlServerMappingSchema.ConvertTimeSpanToString(ts, dataType.Precision ?? 7);
+					break;
+
+				case DataType.Int64 when value is TimeSpan ts:
+					value = ts.GetTicks(dataType.Precision ?? 7);
+					break;
+				case DataType.Time when value is TimeSpan ts:
+					value = TimeSpan.FromTicks(ts.GetTicks(dataType.Precision ?? 7));
+					break;
 
 				case DataType.Undefined:
 					if (value != null
@@ -372,7 +404,6 @@ namespace LinqToDB.DataProvider.SqlServer
 				case DataType.UInt32        : parameter.DbType = DbType.Int64;       break;
 				case DataType.UInt64        :
 				case DataType.VarNumeric    : parameter.DbType = DbType.Decimal;     break;
-				case DataType.DateTime      :
 				case DataType.DateTime2     :
 					parameter.DbType =
 						Version == SqlServerVersion.v2005 ?

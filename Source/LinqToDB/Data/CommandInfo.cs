@@ -900,6 +900,38 @@ namespace LinqToDB.Data
 			return commandResult;
 		}
 
+		/// <summary>
+		/// Executes command using custom execute method and returns number of affected records.
+		/// </summary>
+		/// <param name="customExecute">Custom execute method.</param>
+		/// <returns>Number of records, affected by command execution.</returns>
+		internal int ExecuteCustom(Func<DbCommand, int> customExecute)
+		{
+			var startedOn     = DateTime.UtcNow;
+			var stopwatch     = Stopwatch.StartNew();
+			InitCommand();
+
+			var commandResult = DataConnection.ExecuteNonQueryCustom(customExecute);
+
+			stopwatch.Stop();
+			if (DataConnection.TraceSwitchConnection.TraceInfo)
+			{
+				DataConnection.OnTraceConnection(new TraceInfo(DataConnection, TraceInfoStep.Completed, TraceOperation.DisposeQuery, isAsync: false)
+				{
+					TraceLevel      = TraceLevel.Info,
+					Command         = DataConnection.CurrentCommand,
+					StartTime       = startedOn,
+					ExecutionTime   = stopwatch.Elapsed,
+					RecordsAffected = commandResult,
+				});
+			}
+
+			if (DataConnection.CurrentCommand?.Parameters.Count > 0 && Parameters?.Length > 0)
+				RebindParameters(DataConnection.CurrentCommand);
+
+			return commandResult;
+		}
+
 		#endregion
 
 		#region Execute async

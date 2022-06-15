@@ -7,7 +7,6 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using LinqToDB.Common.Internal;
 
 // ReSharper disable StaticMemberInGenericType
 
@@ -19,6 +18,7 @@ namespace LinqToDB.Linq
 	using Infrastructure;
 	using Builder;
 	using Common;
+	using Common.Internal;
 	using Common.Logging;
 	using Interceptors;
 	using LinqToDB.Expressions;
@@ -340,7 +340,7 @@ namespace LinqToDB.Linq
 			const int CacheSize = 100;
 
 			/// <summary>
-			/// Empties LINQ query cache for <typeparamref name="T"/> entity type.
+			/// Empties LINQ query cache.
 			/// </summary>
 			public void Clear()
 			{
@@ -376,6 +376,7 @@ namespace LinqToDB.Linq
 
 				lock (_syncCache)
 				{
+					// TODO : IT : check
 					var priorities   = _indexes;
 					var versionsDiff = _version - version;
 

@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections;
-using System.Linq;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 
 // ReSharper disable InconsistentNaming
 
@@ -11,12 +11,12 @@ namespace LinqToDB.SqlProvider
 	using Infrastructure;
 	using Common;
 	using Common.Internal;
+	using DataProvider;
 	using Expressions;
 	using Extensions;
 	using Linq;
-	using Tools;
 	using Mapping;
-	using DataProvider;
+	using Tools;
 	using SqlQuery;
 
 	public class BasicSqlOptimizer : ISqlOptimizer

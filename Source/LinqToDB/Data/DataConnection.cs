@@ -467,31 +467,49 @@ namespace LinqToDB.Data
 		{
 			CheckAndThrowOnDisposed();
 
-			if (_connection == null)
+			try
 			{
-				DbConnection connection;
-				if (_connectionFactory != null)
-					connection = _connectionFactory();
-				else
-					connection = DataProvider.CreateConnection(ConnectionString!);
+				if (_connection == null)
+				{
+					DbConnection connection;
+					if (_connectionFactory != null)
+						connection = _connectionFactory();
+					else
+						connection = DataProvider.CreateConnection(ConnectionString!);
 
-				_connection = AsyncFactory.Create(connection);
+					_connection = AsyncFactory.Create(connection);
 
-				if (RetryPolicy != null)
+					if (RetryPolicy != null)
+						_connection = new RetryingDbConnection(this, _connection, RetryPolicy);
+				}
+				else if (RetryPolicy != null && _connection is not RetryingDbConnection)
 					_connection = new RetryingDbConnection(this, _connection, RetryPolicy);
-			}
-			else if (RetryPolicy != null && _connection is not RetryingDbConnection)
-				_connection = new RetryingDbConnection(this, _connection, RetryPolicy);
 
-			if (connect && _connection.State == ConnectionState.Closed)
+				if (connect && _connection.State == ConnectionState.Closed)
+				{
+					_connectionInterceptor?.ConnectionOpening(new(this), _connection.Connection);
+
+					_connection.Open();
+					_closeConnection = true;
+
+					_connectionInterceptor?.ConnectionOpened(new(this), _connection.Connection);
+				}
+			}
+			catch (Exception ex)
 			{
-				_connectionInterceptor?.ConnectionOpening(new (this), _connection.Connection);
+				if (TraceSwitchConnection.TraceError)
+				{
+					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error, TraceOperation.Open, false)
+					{
+						TraceLevel = TraceLevel.Error,
+						StartTime = DateTime.UtcNow,
+						Exception = ex,
+					});
+				}
 
-				_connection.Open();
-				_closeConnection = true;
-
-				_connectionInterceptor?.ConnectionOpened(new (this), _connection.Connection);
+				throw;
 			}
+
 
 			return _connection;
 		}
@@ -690,6 +708,76 @@ namespace LinqToDB.Data
 						StartTime      = now,
 						ExecutionTime  = sw.Elapsed,
 						Exception      = ex,
+					});
+				}
+
+				throw;
+			}
+		}
+
+		internal int ExecuteNonQueryCustom(DbCommand command, Func<DbCommand, int> customExecute)
+		{
+			if (_commandInterceptor == null)
+				return customExecute(command);
+
+			// remove?
+			var result = _commandInterceptor.ExecuteNonQuery(new (this), command, Option<int>.None);
+
+			return result.HasValue
+				? result.Value
+				: customExecute(command);
+		}
+
+		internal int ExecuteNonQueryCustom(Func<DbCommand, int> customExecute)
+		{
+			if (TraceSwitchConnection.Level == TraceLevel.Off)
+				using (DataProvider.ExecuteScope(this))
+					return ExecuteNonQueryCustom(CurrentCommand!, customExecute);
+
+			var now = DateTime.UtcNow;
+			var sw  = Stopwatch.StartNew();
+
+			if (TraceSwitchConnection.TraceInfo)
+			{
+				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute, TraceOperation.ExecuteNonQuery, false)
+				{
+					TraceLevel = TraceLevel.Info,
+					Command = CurrentCommand,
+					StartTime = now,
+				});
+			}
+
+			try
+			{
+				int ret;
+				using (DataProvider.ExecuteScope(this))
+					ret = ExecuteNonQueryCustom(CurrentCommand!, customExecute);
+
+				if (TraceSwitchConnection.TraceInfo)
+				{
+					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute, TraceOperation.ExecuteNonQuery, false)
+					{
+						TraceLevel = TraceLevel.Info,
+						Command = CurrentCommand,
+						StartTime = now,
+						ExecutionTime = sw.Elapsed,
+						RecordsAffected = ret,
+					});
+				}
+
+				return ret;
+			}
+			catch (Exception ex)
+			{
+				if (TraceSwitchConnection.TraceError)
+				{
+					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error, TraceOperation.ExecuteNonQuery, false)
+					{
+						TraceLevel = TraceLevel.Error,
+						Command = CurrentCommand,
+						StartTime = now,
+						ExecutionTime = sw.Elapsed,
+						Exception = ex,
 					});
 				}
 

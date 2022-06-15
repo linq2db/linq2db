@@ -112,6 +112,7 @@ namespace LinqToDB.CommandLine
 			AddOption(_schemaOptions, SchemaOptions.PreferProviderTypes);
 			AddOption(_schemaOptions, SchemaOptions.IgnoreDuplicateFKs);
 			AddOption(_schemaOptions, SchemaOptions.UseSafeSchemaLoadOnly);
+			AddOption(_schemaOptions, SchemaOptions.LoadDatabaseName);
 			AddOption(_schemaOptions, SchemaOptions.LoadProcedureSchema);
 			AddOption(_schemaOptions, SchemaOptions.EnableSqlServerReturnValue);
 			//defaultOptions.Schema.IncludeSchemas + defaultOptions.Schema.Schemas

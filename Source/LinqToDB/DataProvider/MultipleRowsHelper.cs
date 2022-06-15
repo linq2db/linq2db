@@ -138,7 +138,35 @@ namespace LinqToDB.DataProvider
 
 		public bool Execute()
 		{
-			DataConnection.Execute(StringBuilder.AppendLine().ToString(), Parameters.ToArray());
+			var commandSql = StringBuilder.AppendLine().ToString();
+			var parameters = Parameters.ToArray();
+
+			DataConnection.Execute(commandSql, parameters);
+
+			if (Options.RowsCopiedCallback != null)
+			{
+				Options.RowsCopiedCallback(RowsCopied);
+
+				if (RowsCopied.Abort)
+					return false;
+			}
+
+			Parameters.Clear();
+			ParameterIndex        = 0;
+			CurrentCount          = 0;
+			LastRowParameterIndex = 0;
+			LastRowStringIndex    = HeaderSize;
+			StringBuilder.Length  = HeaderSize;
+
+			return true;
+		}
+
+		internal bool ExecuteCustom(Func<DataConnection, string, DataParameter[], int> customExecute)
+		{
+			var commandSql = StringBuilder.AppendLine().ToString();
+			var parameters = Parameters.ToArray();
+
+			customExecute(DataConnection, commandSql, parameters);
 
 			if (Options.RowsCopiedCallback != null)
 			{

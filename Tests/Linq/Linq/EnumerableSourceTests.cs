@@ -16,7 +16,7 @@ namespace Tests.Linq
 		[Test]
 		public void ApplyJoinArray(
 			[IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL93Plus,
-				TestProvName.AllOracle12)]
+				TestProvName.AllOracle12Plus)]
 			string context, [Values(1, 2)] int iteration)
 		{
 			var doe = "Doe";
@@ -265,7 +265,7 @@ namespace Tests.Linq
 		[Test]
 		public void ApplyJoinAnonymousClassArray(
 			[IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL93Plus,
-				TestProvName.AllOracle12)]
+				TestProvName.AllOracle12Plus)]
 			string context, [Values(1, 2)] int iteration)
 		{
 			using (var db = GetDataContext(context))
@@ -300,9 +300,46 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void ApplyJoinAnonymousClassArray2(
+			[IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL93Plus,
+				TestProvName.AllOracle12Plus)]
+			string context, [Values(1, 2)] int iteration)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var cacheMiss = Query<Person>.CacheMissCount;
+
+				var q =
+					from p in db.Person
+					from n in (new[]
+					{
+						new { ID = 1, Name = "Janet", Sub = p.LastName },
+						new { ID = 1, Name = "Doe", Sub   = p.LastName },
+					}).Where(n => p.LastName == n.Name)
+					select n.Name;
+
+				var result = q.ToList();
+
+				if (iteration > 1)
+					Query<Person>.CacheMissCount.Should().Be(cacheMiss);
+
+				var expected =
+					from p in Person
+					from n in (new[]
+					{
+						new { ID = 1, Name = "Janet", Sub = p.LastName },
+						new { ID = 1, Name = "Doe", Sub   = p.LastName },
+					}).Where(n => p.LastName == n.Name)
+					select n.Name;
+
+				AreEqual(expected, result);
+			}
+		}
+
+		[Test]
 		public void ApplyJoinClassArray(
 			[IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL93Plus,
-				TestProvName.AllOracle12)]
+				TestProvName.AllOracle12Plus)]
 			string context, [Values(1, 2)] int iteration)
 		{
 			using (var db = GetDataContext(context))
