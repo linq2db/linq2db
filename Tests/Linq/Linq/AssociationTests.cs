@@ -495,7 +495,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MultipleUse([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllPostgreSQL93Plus, TestProvName.AllOracle12)] string context)
+		public void MultipleUse([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllPostgreSQL93Plus, TestProvName.AllOracle12Plus)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -1262,6 +1262,133 @@ namespace Tests.Linq
 
 			db.Patient.Concat(db.Patient).Select(r => new { r.Diagnosis, r.Person.FirstName }).ToArray();
 		}
+
+		#region issue 3557
+		[Table]
+		public class SubData2
+		{
+			[Column] public int     Id     { get; set; }
+			[Column] public string? Reason { get; set; }
+
+			public static readonly SubData2[] Records = new[]
+			{
+				new SubData2() { Id = 3, Reason = "прст1" },
+				new SubData2() { Id = 3, Reason = "прст2" },
+			};
+		}
+
+		[Table]
+		public class SubData1
+		{
+			[Column] public int Id { get; set; }
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(SubData2.Id))]
+			public IEnumerable<SubData2> SubDatas { get; } = null!;
+
+			public static readonly SubData1[] Records = new[]
+			{
+				new SubData1() { Id = 2 },
+				new SubData1() { Id = 3 },
+			};
+		}
+
+		[Table]
+		public class Data
+		{
+			[Column] public int Id { get; set; }
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(SubData1.Id), CanBeNull = true)]
+			public SubData1? SubData { get; }
+
+			public static readonly Data[] Records = new[]
+			{
+				new Data() { Id = 1 },
+				new Data() { Id = 2 },
+				new Data() { Id = 3 },
+			};
+		}
+
+		[Test]
+		public void Issue3557Case1([DataSources(TestProvName.AllSapHana, TestProvName.AllSybase, TestProvName.AllInformix)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var data = db.CreateLocalTable(Data.Records);
+			using var subData1 = db.CreateLocalTable(SubData1.Records);
+			using var subData2 = db.CreateLocalTable(SubData2.Records);
+
+			var result = data
+				.Select(
+				i => new
+				{
+					Id     = i.Id,
+					Reason = i.SubData == null ? null : i.SubData.SubDatas.Select(s => s.Reason).FirstOrDefault(),
+				})
+				.OrderBy(r => r.Id)
+				.ToList();
+
+			Assert.AreEqual(3, result.Count);
+			Assert.AreEqual(1, result[0].Id);
+			Assert.AreEqual(2, result[1].Id);
+			Assert.AreEqual(3, result[2].Id);
+			Assert.IsNull(null, result[0].Reason);
+			Assert.IsNull(null, result[1].Reason);
+			Assert.True(result[2].Reason == "прст1" || result[2].Reason == "прст2");
+		}
+
+		[Test]
+		public void Issue3557Case2([DataSources(TestProvName.AllSapHana, TestProvName.AllSybase, TestProvName.AllInformix)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var data = db.CreateLocalTable(Data.Records);
+			using var subData1 = db.CreateLocalTable(SubData1.Records);
+			using var subData2 = db.CreateLocalTable(SubData2.Records);
+
+			var result = data
+				.Select(
+				i => new
+				{
+					Id     = i.Id,
+					Reason = i.SubData!.SubDatas.Select(s => s.Reason).FirstOrDefault() ?? string.Empty,
+				})
+				.OrderBy(r => r.Id)
+				.ToList();
+
+			Assert.AreEqual(3, result.Count);
+			Assert.AreEqual(1, result[0].Id);
+			Assert.AreEqual(2, result[1].Id);
+			Assert.AreEqual(3, result[2].Id);
+			Assert.AreEqual(string.Empty, result[0].Reason);
+			Assert.AreEqual(string.Empty, result[1].Reason);
+			Assert.True(result[2].Reason == "прст1" || result[2].Reason == "прст2");
+		}
+
+		[Test]
+		public void Issue3557Case3([DataSources(TestProvName.AllSapHana, TestProvName.AllSybase, TestProvName.AllInformix)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var data = db.CreateLocalTable(Data.Records);
+			using var subData1 = db.CreateLocalTable(SubData1.Records);
+			using var subData2 = db.CreateLocalTable(SubData2.Records);
+
+			var result = data
+				.Select(
+				i => new
+				{
+					Id     = i.Id,
+					Reason = i.SubData!.SubDatas.Select(s => s.Reason).FirstOrDefault(),
+				})
+				.OrderBy(r => r.Id)
+				.ToList();
+
+			Assert.AreEqual(3, result.Count);
+			Assert.AreEqual(1, result[0].Id);
+			Assert.AreEqual(2, result[1].Id);
+			Assert.AreEqual(3, result[2].Id);
+			Assert.IsNull(null, result[0].Reason);
+			Assert.IsNull(null, result[1].Reason);
+			Assert.True(result[2].Reason == "прст1" || result[2].Reason == "прст2");
+		}
+		#endregion
 	}
 
 	public static class AssociationExtension

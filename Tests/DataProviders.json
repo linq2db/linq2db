@@ -260,13 +260,21 @@
 			"Firebird3": { "ConnectionString": "DataSource=dbhost;Database=C:\\Data\\TestData3.fdb;User Id=SYSDBA;Password=masterkey" },
 			"Firebird4": { "ConnectionString": "DataSource=dbhost;Database=C:\\Data\\TestData4.fdb;User Id=SYSDBA;Password=masterkey" },
 
-			"Oracle.Native": {
+			"Oracle.12.Native": {
 				"Provider": "Oracle.DataAccess.Client",
 				"ConnectionString": "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=localhost)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=ORC12)));User Id=system;Password=oracle;"
 			},
-			"Oracle.Managed": {
+			"Oracle.12.Managed": {
 				"Provider": "Oracle.ManagedDataAccess.Client",
 				"ConnectionString": "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=localhost)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=ORC12)));User Id=system;Password=oracle;"
+			},
+			"Oracle.12.Devart.OCI": {
+				"Provider": "Devart.Data.Oracle",
+				"ConnectionString": "Server=localhot:1521/ORC12;User ID=DEVART_OCI; Password=devart_oci;Unicode=true;Trim Fixed Char=false;Direct=false;Enlist=false;Transaction Scope Local=true;"
+			},
+			"Oracle.12.Devart.Direct": {
+				"Provider": "Devart.Data.Oracle",
+				"ConnectionString": "Server=localhot:1521/ORC12;User ID=DEVART_DIRECT; Password=devart_direct;Unicode=true;Trim Fixed Char=false;Direct=true;Enlist=false;Transaction Scope Local=true;"
 			},
 			"Sybase": {
 				"Provider": "Sybase.Data.AseClient",
@@ -328,8 +336,10 @@
 
 			"Sybase.Managed": { "Provider": "AdoNetCore.AseClient", "ConnectionString": "Data Source=127.0.0.1;Port=5000;Database=TestDataCore;Uid=sa;Password=myPassword;ConnectionTimeout=300;EnableBulkLoad=1;MinPoolSize=100;MaxPoolSize=200;AnsiNull=1;" },
 
-			"Oracle.Managed"   : { "Provider": "Oracle.ManagedDataAccess.Client", "ConnectionString": "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=localhost)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=ORC12)));User Id=system;Password=oracle;" },
-			"Oracle.11.Managed": { "Provider": "Oracle.ManagedDataAccess.Client", "ConnectionString": "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=localhost)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=XE)));User Id=test;Password=test;"    },
+			"Oracle.11.Managed": { "Provider": "Oracle.ManagedDataAccess.Client", "ConnectionString": "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=localhost)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=XE)));User Id=test;Password=test;"  },
+			"Oracle.12.Managed": { "Provider": "Oracle.ManagedDataAccess.Client", "ConnectionString": "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=localhost)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=ORC12)));User Id=system;Password=oracle;" },
+			"Oracle.18.Managed": { "Provider": "Oracle.ManagedDataAccess.Client", "ConnectionString": "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=localhost)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=XE)));User Id=system;Password=oracle;" },
+			"Oracle.21.Managed": { "Provider": "Oracle.ManagedDataAccess.Client", "ConnectionString": "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=localhost)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=XE)));User Id=system;Password=oracle;" },
 
 			"Informix"    : { "Provider": "Informix", "ConnectionString": "Server=localhost:9089;Database=testdb;userid=informix;password=in4mix" },
 			"Informix.DB2": { "ConnectionString": "Server=localhost:9089;Database=testdb;userid=informix;password=in4mix"                         },
@@ -395,10 +405,22 @@
 			"DB2",
 			"Informix",
 			"Informix.DB2",
+			"Oracle.11.Devart.OCI",
+			"Oracle.11.Devart.Direct",
 			"Oracle.11.Native",
 			"Oracle.11.Managed",
-			"Oracle.Native",
-			"Oracle.Managed",
+			"Oracle.12.Devart.OCI",
+			"Oracle.12.Devart.Direct",
+			"Oracle.12.Native",
+			"Oracle.12.Managed",
+			"Oracle.18.Devart.OCI",
+			"Oracle.18.Devart.Direct",
+			"Oracle.18.Native",
+			"Oracle.18.Managed",
+			"Oracle.21.Devart.OCI",
+			"Oracle.21.Devart.Direct",
+			"Oracle.21.Native",
+			"Oracle.21.Managed",
 			"Sybase",
 			"Sybase.Managed",
 			"SapHana.Native",

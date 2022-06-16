@@ -28,7 +28,7 @@ namespace Tests.Linq
 		public void DatabaseName([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
-				db.GetTable<Parent>().DatabaseName(TestUtils.GetDatabaseName(db)).ToList();
+				db.GetTable<Parent>().DatabaseName(TestUtils.GetDatabaseName(db, context)).ToList();
 		}
 
 		[Test]
@@ -43,7 +43,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				db.GetTable<ParenTable>()
-					.DatabaseName(TestUtils.GetDatabaseName(db))
+					.DatabaseName(TestUtils.GetDatabaseName(db, context))
 					.SchemaName("dbo")
 					.TableName("Parent")
 					.ToList();

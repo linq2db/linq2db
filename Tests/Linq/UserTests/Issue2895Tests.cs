@@ -143,7 +143,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void EagerLoadingTest([DataSources] string context)
+		public void EagerLoadingTest([DataSources(TestProvName.AllAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<InternalEmail>(new[] { new InternalEmail { Id = 10, UserId = 1, RequestId = 1 } }))

@@ -54,7 +54,7 @@ namespace Tests.UserTests
 
 				try
 				{
-					var schemaName = TestUtils.GetSchemaName(db);
+					var schemaName = TestUtils.GetSchemaName(db, context);
 					var schema     = sp.GetSchema(db, new GetSchemaOptions()
 					{
 						GetTables       = false,
@@ -99,7 +99,7 @@ namespace Tests.UserTests
 
 				var sp = db.DataProvider.GetSchemaProvider();
 
-				var schemaName = TestUtils.GetSchemaName(db);
+				var schemaName = TestUtils.GetSchemaName(db, context);
 				var schema     = sp.GetSchema(db, new GetSchemaOptions()
 				{
 					GetTables       = false,

@@ -2,7 +2,13 @@
 {
 	public enum OracleVersion
 	{
+		/// <summary>
+		/// Oracle 11g dialect.
+		/// </summary>
 		v11 = 11,
-		v12 = 12
+		/// <summary>
+		/// Oracle 12c+ dialect.
+		/// </summary>
+		v12 = 12,
 	}
 }

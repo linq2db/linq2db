@@ -393,6 +393,27 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void CoalesceTest([DataSources(false)] string context)
+		{
+			var ms = CreateMappingSchema();
+
+			var testData = MainClass.TestData();
+			using (var db = GetDataContext(context, ms))
+			using (var table = db.CreateLocalTable(testData))
+			{
+				var query = from t1 in table
+					select new
+					{
+						Converted = t1.EnumNullable ?? t1.Enum,
+					};
+
+				var selectResult = query.ToArray();
+
+				selectResult.Should().HaveCount(10);
+			}
+		}
+
+		[Test]
 		public void BoolJoinTest([DataSources(false)] string context)
 		{
 			var ms = CreateMappingSchema();
