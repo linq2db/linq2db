@@ -109,8 +109,8 @@ namespace LinqToDB.Mapping
 			}
 			else
 			{
-				var schemaList     = new Dictionary<MappingSchemaInfo,   int>(schemas.Length);
-				var baseConverters = new Dictionary<ValueToSqlConverter, int>(10);
+				var schemaList     = new Dictionary<MappingSchemaInfo,  int>(schemas.Length);
+				var baseConverters = new Dictionary<ValueToSqlConverter,int>(10);
 
 				var i = 0;
 				var j = 0;
@@ -832,11 +832,8 @@ namespace LinqToDB.Mapping
 
 		Expression ReduceDefaultValue(Expression expr)
 		{
-			if (_reduceDefaultValueTransformer == null)
-				lock (this)
-					_reduceDefaultValueTransformer ??= TransformVisitor<MappingSchema>.Create(this, static (ctx, e) => ctx.ReduceDefaultValueTransformer(e));
-
-			return ((TransformVisitor<MappingSchema>)_reduceDefaultValueTransformer).Transform(expr);
+			_reduceDefaultValueTransformer ??= TransformVisitor<MappingSchema>.Create(this, static (ctx, e) => ctx.ReduceDefaultValueTransformer(e));
+			return _reduceDefaultValueTransformer.Transform(expr);
 		}
 
 		private Expression ReduceDefaultValueTransformer(Expression e)
