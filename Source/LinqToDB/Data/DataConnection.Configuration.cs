@@ -500,7 +500,7 @@ namespace LinqToDB.Data
 				{
 					dataConnection.DataProvider        = options.SavedDataProvider;
 					dataConnection.ConnectionString    = options.SavedConnectionString;
-					dataConnection.MappingSchema       = options.SavedDataProvider.MappingSchema;
+					dataConnection.MappingSchema       = options.SavedMappingSchema!;
 					dataConnection.ConfigurationString = options.SavedConfigurationString;
 
 					if (options.SavedEnableAutoFluentMapping)
