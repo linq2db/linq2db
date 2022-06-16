@@ -2,13 +2,12 @@
 using System.Data;
 using System.Data.Linq;
 using System.Linq;
-using FluentAssertions;
+
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
-using Tests.Model;
 
 namespace Tests.UserTests
 {
@@ -17,13 +16,14 @@ namespace Tests.UserTests
 	{
 		public class LinqDataTypes
 		{
-			public int ID;
-			public decimal MoneyValue;
-			[Column(DataType = DataType.Date)]public DateTime DateTimeValue;
-			public bool BoolValue;
-			public Guid GuidValue;
-			public Binary? BinaryValue;
-			public short SmallIntValue;
+			public int      ID;
+			public decimal  MoneyValue;
+			[Column(DataType = DataType.Date)]
+			public DateTime DateTimeValue;
+			public bool     BoolValue;
+			public Guid     GuidValue;
+			public Binary?  BinaryValue;
+			public short    SmallIntValue;
 		}
 
 		[Test]
@@ -43,8 +43,8 @@ namespace Tests.UserTests
 				var _ = q.FirstOrDefault();
 
 				var dc = (DataConnection)db;
-				commandInterceptor.Parameters.Should().HaveCount(1);
-				commandInterceptor.Parameters.Where(p => p.DbType == DbType.Date).Should().HaveCount(1);
+				Assert.AreEqual(2, commandInterceptor.Parameters.Length);
+				Assert.AreEqual(1, commandInterceptor.Parameters.Count(p => p.DbType == DbType.Date));
 			}
 		}
 
@@ -64,8 +64,8 @@ namespace Tests.UserTests
 				var _ = q.FirstOrDefault();
 
 				var dc = (DataConnection)db;
-				commandInterceptor.Parameters.Should().HaveCount(1);
-				commandInterceptor.Parameters.Where(p => p.DbType == DbType.Date).Should().HaveCount(1);
+				Assert.AreEqual(2, commandInterceptor.Parameters.Length);
+				Assert.AreEqual(1, commandInterceptor.Parameters.Count(p => p.DbType == DbType.Date));
 			}
 		}
 	}
