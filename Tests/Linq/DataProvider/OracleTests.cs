@@ -904,7 +904,7 @@ namespace Tests.DataProvider
 							where a.datetimeDataType == date
 							select a;
 
-				query.FirstOrDefault();
+				_ = query.FirstOrDefault();
 
 				Assert.That(parameters.Length, Is.EqualTo(2));
 
@@ -934,7 +934,7 @@ namespace Tests.DataProvider
 							where a.datetimeDataType == date
 							select a;
 
-				query.FirstOrDefault();
+				_ = query.FirstOrDefault();
 
 				Assert.That(parameters.Length, Is.EqualTo(2));
 
