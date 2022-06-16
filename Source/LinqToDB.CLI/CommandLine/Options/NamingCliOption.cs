@@ -95,10 +95,10 @@ namespace LinqToDB.CommandLine
 						var pluralizationValue = property.Value.GetString()!;
 						switch (pluralizationValue.ToLowerInvariant())
 						{
-							case "none"                      : options.Pluralization =Pluralization.None                 ; break;
-							case "plural"                    : options.Pluralization =Pluralization.Plural               ; break;
-							case "plural_multiple_characters": options.Pluralization =Pluralization.PluralIfLongerThanOne; break;
-							case "singular"                  : options.Pluralization =Pluralization.Singular             ; break;
+							case "none"                      : options.Pluralization = Pluralization.None                 ; break;
+							case "plural"                    : options.Pluralization = Pluralization.Plural               ; break;
+							case "plural_multiple_characters": options.Pluralization = Pluralization.PluralIfLongerThanOne; break;
+							case "singular"                  : options.Pluralization = Pluralization.Singular             ; break;
 							default                          :
 								errorDetails = $"pluralization : unknown value: '{pluralizationValue}'";
 								return null;

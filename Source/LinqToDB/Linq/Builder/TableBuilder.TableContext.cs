@@ -21,7 +21,7 @@ namespace LinqToDB.Linq.Builder
 
 #if DEBUG
 			public string SqlQueryText => SelectQuery == null ? "" : SelectQuery.SqlText;
-			public string Path         => this.GetPath();
+			public string Path => this.GetPath();
 			public int    ContextId    { get; private set; }
 #endif
 
@@ -53,10 +53,10 @@ namespace LinqToDB.Linq.Builder
 
 			public TableContext(ExpressionBuilder builder, BuildInfo buildInfo, Type originalType)
 			{
-				Builder                  = builder;
-				Parent                   = buildInfo.Parent;
-				Expression               = buildInfo.Expression;
-				SelectQuery              = buildInfo.SelectQuery;
+				Builder          = builder;
+				Parent           = buildInfo.Parent;
+				Expression       = buildInfo.Expression;
+				SelectQuery      = buildInfo.SelectQuery;
 				AssociationsToSubQueries = buildInfo.AssociationsAsSubQueries;
 				IsSubQuery               = buildInfo.IsSubQuery;
 
@@ -72,10 +72,10 @@ namespace LinqToDB.Linq.Builder
 
 			public TableContext(ExpressionBuilder builder, BuildInfo buildInfo, SqlTable table)
 			{
-				Builder                  = builder;
-				Parent                   = buildInfo.Parent;
-				Expression               = buildInfo.Expression;
-				SelectQuery              = buildInfo.SelectQuery;
+				Builder          = builder;
+				Parent           = buildInfo.Parent;
+				Expression       = buildInfo.Expression;
+				SelectQuery      = buildInfo.SelectQuery;
 				AssociationsToSubQueries = buildInfo.AssociationsAsSubQueries;
 				IsSubQuery               = buildInfo.IsSubQuery;
 
@@ -92,10 +92,10 @@ namespace LinqToDB.Linq.Builder
 
 			internal TableContext(ExpressionBuilder builder, SelectQuery selectQuery, SqlTable table)
 			{
-				Builder     = builder;
-				Parent      = null;
-				Expression  = null;
-				SelectQuery = selectQuery;
+				Builder          = builder;
+				Parent           = null;
+				Expression       = null;
+				SelectQuery      = selectQuery;
 				IsSubQuery  = false;
 
 				OriginalType     = table.ObjectType;
@@ -111,10 +111,10 @@ namespace LinqToDB.Linq.Builder
 
 			public TableContext(ExpressionBuilder builder, BuildInfo buildInfo)
 			{
-				Builder                  = builder;
-				Parent                   = buildInfo.Parent;
-				Expression               = buildInfo.Expression;
-				SelectQuery              = buildInfo.SelectQuery;
+				Builder     = builder;
+				Parent      = buildInfo.Parent;
+				Expression  = buildInfo.Expression;
+				SelectQuery = buildInfo.SelectQuery;
 				AssociationsToSubQueries = buildInfo.AssociationsAsSubQueries;
 				IsSubQuery               = buildInfo.IsSubQuery;
 
@@ -201,14 +201,14 @@ namespace LinqToDB.Linq.Builder
 			public virtual SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 			{
 				throw new NotImplementedException();
-			}
+								}
 
 			#endregion
 
 			#region ConvertToIndex
 
 			public virtual SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
-			{
+									{
 				throw new NotImplementedException();
 			}
 
@@ -224,7 +224,7 @@ namespace LinqToDB.Linq.Builder
 						return new SqlEagerLoadExpression(this, path, Builder.GetSequenceExpression(this));
 
 					return Builder.BuildFullEntityExpression(this, ObjectType, flags);
-				}
+			}
 
 				if (path is not MemberExpression member)
 					return Builder.CreateSqlError(this, path);
