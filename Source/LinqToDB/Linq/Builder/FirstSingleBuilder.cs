@@ -53,7 +53,12 @@ namespace LinqToDB.Linq.Builder
 
 			if (take != 0)
 			{
-				var takeExpression = new SqlValue(take);
+				var takeExpression = builder.LinqOptions.ParameterizeTakeSkip
+					? (ISqlExpression)new SqlParameter(new (typeof(int)), "take", take)
+					{
+						IsQueryParameter = !builder.DataContext.InlineParameters
+					}
+					: new SqlValue(take);
 				builder.BuildTake(sequence, takeExpression, null);
 			}
 

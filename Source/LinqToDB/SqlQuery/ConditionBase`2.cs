@@ -94,19 +94,19 @@
 			public T2 In   (SelectQuery subQuery) { return Add(new SqlPredicate.InSubQuery(_expr, false, subQuery)); }
 			public T2 NotIn(SelectQuery subQuery) { return Add(new SqlPredicate.InSubQuery(_expr, true,  subQuery)); }
 
-			SqlPredicate.InList CreateInList(bool isNot, object[] exprs)
+			SqlPredicate.InList CreateInList(bool isNot, object[]? exprs)
 			{
 				var list = new SqlPredicate.InList(_expr, Common.Configuration.Linq.CompareNullsAsValues ? false : null, isNot);
 
-				if (exprs != null && exprs.Length > 0)
+				if (exprs?.Length > 0)
 				{
 					foreach (var item in exprs)
 					{
-						if (item == null || item is SqlValue && ((SqlValue)item).Value == null)
+						if (item == null || item is SqlValue { Value : null })
 							continue;
 
-						if (item is ISqlExpression)
-							list.Values.Add((ISqlExpression)item);
+						if (item is ISqlExpression expression)
+							list.Values.Add(expression);
 						else
 							list.Values.Add(new SqlValue(item));
 					}
