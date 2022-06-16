@@ -64,12 +64,13 @@ namespace LinqToDB.CommandLine
 						filter.AddName(null, element.GetString()!);
 					else if (element.ValueKind == JsonValueKind.Object)
 					{
+						var hasSchema  = false;
+						string? name   = null;
+						string? regex  = null;
+						string? schema = null;
+
 						foreach (var property in element.EnumerateObject())
 						{
-							var hasSchema  = false;
-							string? name   = null;
-							string? regex  = null;
-							string? schema = null;
 							switch (property.Name)
 							{
 								case "name":
@@ -134,16 +135,16 @@ namespace LinqToDB.CommandLine
 									errorDetails = $"unknown property '{property.Name}'";
 									return null;
 							}
+						}
 
-							if (name != null)
-								filter.AddName(schema, name);
-							else if (regex != null)
-								filter.AddRegularExpression(schema, regex);
-							else
-							{
-								errorDetails = $"'name' or 'regex' property required";
-								return null;
-							}
+						if (name != null)
+							filter.AddName(schema, name);
+						else if (regex != null)
+							filter.AddRegularExpression(schema, regex);
+						else
+						{
+							errorDetails = $"'name' or 'regex' property required";
+							return null;
 						}
 					}
 					else

@@ -186,6 +186,14 @@ namespace LinqToDB.CommandLine
 
 		private void WriteOptionHelp(CliCommand command, int maxOptionNameWidth, string indent, OptionCategory? category, CliOption option)
 		{
+			// workaround for https://github.com/linq2db/linq2db/issues/3612
+			var consoleWidth = 80;
+			try
+			{
+				consoleWidth = Console.BufferWidth;
+			}
+			catch { };
+
 			Console.Out.WriteLine();
 			Console.Out.Write("   ");
 
@@ -315,7 +323,7 @@ namespace LinqToDB.CommandLine
 				{
 					var line = lines[i];
 
-					var lineWidth            = Console.BufferWidth - indent.Length - 1;
+					var lineWidth            = consoleWidth - indent.Length - 1;
 					var incompleteLineLength = line.Length % lineWidth;
 					var partsCount           = line.Length / lineWidth + (incompleteLineLength > 0 ? 1 : 0);
 

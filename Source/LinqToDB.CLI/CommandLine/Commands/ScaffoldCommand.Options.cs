@@ -379,8 +379,7 @@ Customization using compiled assembly has several requirements:
 			/// <summary>
 			/// Naming option help text.
 			/// </summary>
-			private const string NAMING_HELP = @"(naming options could be specified only in JSON file)
-Naming options is an object with following properties:
+			private const string NAMING_HELP = @"Naming options could be specified only in JSON file and defined as object with following properties:
 - case                             : string  : specify name casing (see values below)
     + ""none""          : no casing applied to identifier
     + ""pascal_case""   : identifier cased using PascalCase
@@ -402,6 +401,7 @@ Naming options is an object with following properties:
     + ""t4""                  : emulation of identifier generation logic for association name used by T4 templates (compat. option)
 - pluralize_if_ends_with_word_only : bool    : when set, pluralization not applied if name ends with non-word (e.g. with digit)
 - ignore_all_caps                  : bool    : when set, casing not applied to names that contain only uppercase letters
+If you don't specify some property, CLI will use default value for current option. This allows you to override only some properties without need to specify all properties.
 ";
 
 			/*lang=json,strict*/
