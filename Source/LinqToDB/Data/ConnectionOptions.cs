@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data.Common;
+using LinqToDB.Mapping;
 
 namespace LinqToDB.Data
 {
@@ -15,6 +16,9 @@ namespace LinqToDB.Data
 	/// </param>
 	/// <param name="ProviderName">
 	/// Gets provider name to use with <see cref="DataConnection"/> instance.
+	/// </param>
+	/// <param name="MappingSchema">
+	/// Gets <see cref="MappingSchema"/> instance to use with <see cref="DataConnection"/> instance.
 	/// </param>
 	/// <param name="DbConnection">
 	/// Gets <see cref="DbConnection"/> instance to use with <see cref="DataConnection"/> instance.
@@ -32,6 +36,7 @@ namespace LinqToDB.Data
 		string?             ConnectionString    = default,
 		IDataProvider?      DataProvider        = default,
 		string?             ProviderName        = default,
+		MappingSchema?      MappingSchema       = default,
 		DbConnection?       DbConnection        = default,
 		DbTransaction?      DbTransaction       = default,
 		bool                DisposeConnection   = default,
@@ -49,6 +54,7 @@ namespace LinqToDB.Data
 			ConnectionString    = original.ConnectionString;
 			DataProvider        = original.DataProvider;
 			ProviderName        = original.ProviderName;
+			MappingSchema       = original.MappingSchema;
 			DbConnection        = original.DbConnection;
 			DbTransaction       = original.DbTransaction;
 			DisposeConnection   = original.DisposeConnection;
@@ -61,13 +67,16 @@ namespace LinqToDB.Data
 			.Add(ConnectionString)
 			.Add(DataProvider?.ID)
 			.Add(ProviderName)
+			.Add(MappingSchema)
 			.Add(DbConnection?.ConnectionString)
 			.Add(DbTransaction?.Connection?.ConnectionString)
 			.CreateID();
 
-		public IDataProvider? SavedDataProvider        { get; set; }
-		public string?        SavedConnectionString    { get; set; }
-		public string?        SavedConfigurationString { get; set; }
+		internal IDataProvider? SavedDataProvider;
+		internal MappingSchema? SavedMappingSchema;
+		internal string?        SavedConnectionString;
+		internal string?        SavedConfigurationString;
+		internal bool           SavedEnableAutoFluentMapping;
 
 		void IApplicable<DataConnection>.Apply(DataConnection obj)
 		{

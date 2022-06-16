@@ -665,10 +665,7 @@ namespace LinqToDB
 					default :
 						throw new LinqToDBException("Invalid configuration. Configuration string or DataProvider is not provided.");
 				}
-			}
 
-			public static void Apply(DataContext dataContext, DataContextOptions options)
-			{
 				if (options.MappingSchema != null)
 				{
 					dataContext.MappingSchema = options.MappingSchema;
@@ -677,7 +674,10 @@ namespace LinqToDB
 				{
 					dataContext.MappingSchema = new (dataContext.MappingSchema);
 				}
+			}
 
+			public static void Apply(DataContext dataContext, DataContextOptions options)
+			{
 				dataContext._commandTimeout = options.CommandTimeout;
 
 				if (options.Interceptors != null)

@@ -7,11 +7,7 @@ namespace LinqToDB
 	using Data;
 	using Infrastructure;
 	using Interceptors;
-	using Mapping;
 
-	/// <param name="MappingSchema">
-	/// Gets <see cref="MappingSchema"/> instance to use with <see cref="DataConnection"/> instance.
-	/// </param>
 	/// <param name="CommandTimeout">
 	/// The command timeout, or <c>null</c> if none has been set.
 	/// </param>
@@ -20,27 +16,25 @@ namespace LinqToDB
 	/// </param>
 	public sealed record DataContextOptions
 	(
-		MappingSchema?               MappingSchema,
 		int?                         CommandTimeout = default,
 		IReadOnlyList<IInterceptor>? Interceptors   = default
 	)
 		: IOptionSet, IApplicable<DataConnection>, IApplicable<DataContext>
 	{
-		public DataContextOptions() : this((MappingSchema?)null)
+		public DataContextOptions() : this((int?)default)
 		{
 		}
 
 		DataContextOptions(DataContextOptions original)
 		{
-			MappingSchema  = original.MappingSchema;
 			CommandTimeout = original.CommandTimeout;
 			Interceptors   = original.Interceptors;
 		}
 
 		int? _configurationID;
 		int IConfigurationID.ConfigurationID => _configurationID ??= new IdentifierBuilder()
-			.Add(MappingSchema)
 			.Add(CommandTimeout)
+			.AddTypes(Interceptors)
 			.CreateID();
 
 		public static readonly DataContextOptions Empty = new();

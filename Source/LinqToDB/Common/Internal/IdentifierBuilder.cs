@@ -101,6 +101,17 @@ namespace LinqToDB.Common.Internal
 			return this;
 		}
 
+		public IdentifierBuilder AddTypes(IEnumerable? items)
+		{
+			if (items == null)
+				Add(string.Empty);
+			else
+				foreach (var item in items)
+					Add(GetObjectID(item?.GetType()));
+
+			return this;
+		}
+
 		static          int                              _identifierCounter;
 		static readonly ConcurrentDictionary<string,int> _identifiers = new ();
 

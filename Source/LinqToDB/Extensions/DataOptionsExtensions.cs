@@ -242,8 +242,7 @@ namespace LinqToDB
 		public static DataOptions UseConfigurationString(this DataOptions options, string configurationString, MappingSchema mappingSchema)
 		{
 			return options
-				.WithOptions<ConnectionOptions> (o => o with { ConfigurationString = configurationString })
-				.WithOptions<DataContextOptions>(o => o with { MappingSchema       = mappingSchema       });
+				.WithOptions<ConnectionOptions> (o => o with { ConfigurationString = configurationString, MappingSchema = mappingSchema });
 		}
 
 		public static DataOptions UseConnection(this DataOptions options, DbConnection connection)
@@ -273,7 +272,7 @@ namespace LinqToDB
 
 		public static DataOptions UseMappingSchema(this DataOptions options, MappingSchema mappingSchema)
 		{
-			return options.WithOptions<DataContextOptions>(o => o with { MappingSchema = mappingSchema });
+			return options.WithOptions<ConnectionOptions>(o => o with { MappingSchema = mappingSchema });
 		}
 
 		public static DataOptions UseConnectionFactory(this DataOptions options, Func<DbConnection> connectionFactory)

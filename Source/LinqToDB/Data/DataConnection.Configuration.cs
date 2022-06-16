@@ -503,6 +503,9 @@ namespace LinqToDB.Data
 					dataConnection.MappingSchema       = options.SavedDataProvider.MappingSchema;
 					dataConnection.ConfigurationString = options.SavedConfigurationString;
 
+					if (options.SavedEnableAutoFluentMapping)
+						dataConnection.MappingSchema = new(dataConnection.MappingSchema);
+
 					return;
 				}
 
@@ -607,11 +610,26 @@ namespace LinqToDB.Data
 						throw new LinqToDBException("Invalid configuration. Configuration string is not provided.");
 				}
 
+				if (options.MappingSchema != null)
+				{
+					dataConnection.AddMappingSchema(options.MappingSchema);
+				}
+				else if (dataConnection.Options.LinqOptions.EnableAutoFluentMapping)
+				{
+					options.SavedEnableAutoFluentMapping = true;
+				}
+
 				if (doSave)
 				{
 					options.SavedDataProvider        = dataConnection.DataProvider;
+					options.SavedMappingSchema       = dataConnection.MappingSchema;
 					options.SavedConnectionString    = dataConnection.ConnectionString;
 					options.SavedConfigurationString = dataConnection.ConfigurationString;
+				}
+
+				if (options.SavedEnableAutoFluentMapping)
+				{
+					dataConnection.MappingSchema = new (dataConnection.MappingSchema);
 				}
 
 				IAsyncDbConnection WrapConnection(DbConnection connection)
@@ -630,15 +648,6 @@ namespace LinqToDB.Data
 
 			public static void Apply(DataConnection dataConnection, DataContextOptions options)
 			{
-				if (options.MappingSchema != null)
-				{
-					dataConnection.AddMappingSchema(options.MappingSchema);
-				}
-				else if (dataConnection.Options.LinqOptions.EnableAutoFluentMapping)
-				{
-					dataConnection.MappingSchema = new (dataConnection.MappingSchema);
-				}
-
 				dataConnection._commandTimeout = options.CommandTimeout;
 
 				if (options.Interceptors != null)
