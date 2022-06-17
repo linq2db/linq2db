@@ -222,7 +222,7 @@ namespace LinqToDB.Linq.Builder
 					builder.ConvertToSql(outerKeyContext, outerKeySelector),
 					SqlPredicate.Operator.Equal,
 					builder.ConvertToSql(innerKeyContext, innerKeySelector),
-					builder.LinqOptions.CompareNullsAsValues ? true : null);
+					builder.DataOptions.LinqOptions.CompareNullsAsValues ? true : null);
 			}
 
 			condition.Conditions.Add(new SqlCondition(false, predicate));
@@ -245,7 +245,7 @@ namespace LinqToDB.Linq.Builder
 					builder.ConvertToSql(outerKeyContext, outerKeySelector),
 					SqlPredicate.Operator.Equal,
 					builder.ConvertToSql(subQueryKeyContext, innerKeySelector),
-					builder.LinqOptions.CompareNullsAsValues ? true : null);
+					builder.DataOptions.LinqOptions.CompareNullsAsValues ? true : null);
 			}
 
 			subQuerySelect.Where.SearchCondition.Conditions.Add(new SqlCondition(false, predicate));
@@ -369,7 +369,7 @@ namespace LinqToDB.Linq.Builder
 						MemberHelper.MethodOf(() => GetGrouping(null!, null!, null!, default!, null!)),
 						new[]
 						{
-							Expression.Constant(context.Builder.DataContext.Options.LinqOptions),
+							Expression.Constant(context.Builder.DataContext.Options),
 							ExpressionBuilder.QueryRunnerParam,
 							Expression.Constant(context.Builder.ParametersContext.CurrentSqlParameters),
 							outerKey,
@@ -378,13 +378,13 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				static IEnumerable<TElement> GetGrouping(
-					LinqOptions     linqOptions,
-					IQueryRunner             runner,
-					List<ParameterAccessor>  parameterAccessor,
-					TKey                     key,
+					DataOptions                                             dataOptions,
+					IQueryRunner                                            runner,
+					List<ParameterAccessor>                                 parameterAccessor,
+					TKey                                                    key,
 					Func<IDataContext,TKey,object?[]?,IQueryable<TElement>> itemReader)
 				{
-					return new GroupByBuilder.GroupByContext.Grouping<TKey,TElement>(linqOptions, key, runner, parameterAccessor, itemReader);
+					return new GroupByBuilder.GroupByContext.Grouping<TKey,TElement>(dataOptions, key, runner, parameterAccessor, itemReader);
 				}
 			}
 

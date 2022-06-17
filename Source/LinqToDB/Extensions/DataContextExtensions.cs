@@ -30,10 +30,5 @@ namespace LinqToDB
 
 			return null;
 		}
-
-		public static LinqOptions GetLinqOptions(this IDataContext context)
-		{
-			return context.Options.LinqOptions;
-		}
 	}
 }

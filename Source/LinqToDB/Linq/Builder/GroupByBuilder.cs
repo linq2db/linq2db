@@ -244,10 +244,10 @@ namespace LinqToDB.Linq.Builder
 			internal class Grouping<TKey,TElement> : IGrouping<TKey,TElement>
 			{
 				public Grouping(
-					LinqOptions    linqOptions,
-					TKey                    key,
-					IQueryRunner            queryRunner,
-					List<ParameterAccessor> parameters,
+					DataOptions                                             dataOptions,
+					TKey                                                    key,
+					IQueryRunner                                            queryRunner,
+					List<ParameterAccessor>                                 parameters,
 					Func<IDataContext,TKey,object?[]?,IQueryable<TElement>> itemReader)
 				{
 					Key = key;
@@ -258,7 +258,7 @@ namespace LinqToDB.Linq.Builder
 					_parameters      = parameters;
 					_itemReader      = itemReader;
 
-					if (linqOptions.PreloadGroups)
+					if (dataOptions.LinqOptions.PreloadGroups)
 					{
 						_items = GetItems();
 					}
@@ -302,15 +302,15 @@ namespace LinqToDB.Linq.Builder
 
 			interface IGroupByHelper
 			{
-				Expression           GetGrouping(GroupByContext context);
-				LinqOptions LinqOptions { get; set; }
+				Expression  GetGrouping(GroupByContext context);
+				DataOptions DataOptions { get; set; }
 			}
 
 			class GroupByHelper<TKey,TElement,TSource> : IGroupByHelper
 			{
 				public Expression GetGrouping(GroupByContext context)
 				{
-					if (LinqOptions.GuardGrouping && !context._isGroupingGuardDisabled)
+					if (DataOptions.LinqOptions.GuardGrouping && !context._isGroupingGuardDisabled)
 					{
 						if (context.Element.Lambda.Parameters.Count == 1 &&
 							context.Element.Body == context.Element.Lambda.Parameters[0])
@@ -383,7 +383,7 @@ namespace LinqToDB.Linq.Builder
 						MemberHelper.MethodOf(() => GetGrouping(null!, null!, null!, default!, null!)),
 						new Expression[]
 						{
-							Expression.Constant(context.Builder.DataContext.Options.LinqOptions),
+							Expression.Constant(context.Builder.DataContext.Options),
 							ExpressionBuilder.QueryRunnerParam,
 							Expression.Constant(context.Builder.ParametersContext.CurrentSqlParameters),
 							keyExpr,
@@ -391,16 +391,16 @@ namespace LinqToDB.Linq.Builder
 						});
 				}
 
-				public LinqOptions LinqOptions { get; set; } = null!;
+				public DataOptions DataOptions { get; set; } = null!;
 
 				static IGrouping<TKey,TElement> GetGrouping(
-					LinqOptions                                             linqOptions,
+					DataOptions                                             dataOptions,
 					IQueryRunner                                            runner,
 					List<ParameterAccessor>                                 parameterAccessor,
 					TKey                                                    key,
 					Func<IDataContext,TKey,object?[]?,IQueryable<TElement>> itemReader)
 				{
-					return new Grouping<TKey,TElement>(linqOptions, key, runner, parameterAccessor, itemReader);
+					return new Grouping<TKey,TElement>(dataOptions, key, runner, parameterAccessor, itemReader);
 				}
 			}
 
@@ -417,7 +417,7 @@ namespace LinqToDB.Linq.Builder
 
 				var helper = (IGroupByHelper)Activator.CreateInstance(gtype)!;
 
-				helper.LinqOptions = Builder.DataContext.Options.LinqOptions;
+				helper.DataOptions = Builder.DataContext.Options;
 
 				var expr = helper.GetGrouping(this);
 

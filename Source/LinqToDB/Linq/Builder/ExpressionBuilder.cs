@@ -116,7 +116,7 @@ namespace LinqToDB.Linq.Builder
 		public List<SqlQueryExtension>?         SqlQueryExtensions;
 		public List<TableBuilder.TableContext>? TablesInScope;
 
-		public readonly LinqOptions LinqOptions;
+		public readonly DataOptions DataOptions;
 
 		public ExpressionBuilder(
 			Query                             query,
@@ -132,7 +132,7 @@ namespace LinqToDB.Linq.Builder
 
 			CompiledParameters = compiledParameters;
 			DataContext        = dataContext;
-			LinqOptions        = dataContext.Options.LinqOptions;
+			DataOptions        = dataContext.Options;
 			OriginalExpression = expression;
 
 			_optimizationContext = optimizationContext;
@@ -520,7 +520,7 @@ namespace LinqToDB.Linq.Builder
 
 									mc = mc.Update(mc.Object, args);
 									return new TransformInfo(mc, true);
-								};
+								}
 							}
 						}
 
