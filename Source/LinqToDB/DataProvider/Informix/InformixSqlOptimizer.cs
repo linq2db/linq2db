@@ -78,7 +78,7 @@ namespace LinqToDB.DataProvider.Informix
 				p.IsQueryParameter = false;
 		}
 
-		public override SqlStatement Finalize(SqlStatement statement, LinqOptions linqOptions)
+		public override SqlStatement Finalize(SqlStatement statement, DataOptions dataOptions)
 		{
 			CheckAliases(statement, int.MaxValue);
 
@@ -94,22 +94,22 @@ namespace LinqToDB.DataProvider.Informix
 						select.VisitAll(ClearQueryParameter);
 				});
 
-			return base.Finalize(statement, linqOptions);
+			return base.Finalize(statement, dataOptions);
 		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement, LinqOptions linqOptions)
+		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions)
 		{
 			switch (statement.QueryType)
 			{
 				case QueryType.Delete:
-					var deleteStatement = GetAlternativeDelete((SqlDeleteStatement)statement, linqOptions);
+					var deleteStatement = GetAlternativeDelete((SqlDeleteStatement)statement, dataOptions);
 					statement = deleteStatement;
 					if (deleteStatement.SelectQuery != null)
 						deleteStatement.SelectQuery.From.Tables[0].Alias = "$";
 					break;
 
 				case QueryType.Update:
-					statement = GetAlternativeUpdate((SqlUpdateStatement)statement, linqOptions);
+					statement = GetAlternativeUpdate((SqlUpdateStatement)statement, dataOptions);
 					break;
 			}
 
@@ -165,7 +165,7 @@ namespace LinqToDB.DataProvider.Informix
 
 								case TypeCode.Boolean  :
 								{
-									var ex = AlternativeConvertToBoolean(func, visitor.Context.LinqOptions, 1);
+									var ex = AlternativeConvertToBoolean(func, visitor.Context.DataOptions, 1);
 									if (ex != null)
 										return ex;
 									break;

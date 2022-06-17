@@ -13,11 +13,11 @@ namespace LinqToDB.DataProvider.Firebird
 		{
 		}
 
-		public override SqlStatement Finalize(SqlStatement statement, LinqOptions linqOptions)
+		public override SqlStatement Finalize(SqlStatement statement, DataOptions dataOptions)
 		{
 			CheckAliases(statement, int.MaxValue);
 
-			statement = base.Finalize(statement, linqOptions);
+			statement = base.Finalize(statement, dataOptions);
 
 			return statement;
 		}
@@ -141,12 +141,12 @@ namespace LinqToDB.DataProvider.Firebird
 			return new SqlSearchCondition(new SqlCondition(false, new SqlPredicate.Expr(expr)));
 		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement, LinqOptions linqOptions)
+		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions)
 		{
 			return statement.QueryType switch
 			{
-				QueryType.Delete => GetAlternativeDelete((SqlDeleteStatement)statement, linqOptions),
-				QueryType.Update => GetAlternativeUpdate((SqlUpdateStatement)statement, linqOptions),
+				QueryType.Delete => GetAlternativeDelete((SqlDeleteStatement)statement, dataOptions),
+				QueryType.Update => GetAlternativeUpdate((SqlUpdateStatement)statement, dataOptions),
 				_                => statement,
 			};
 		}
@@ -167,7 +167,7 @@ namespace LinqToDB.DataProvider.Firebird
 						{
 							if (func.SystemType.ToUnderlying() == typeof(bool))
 							{
-								var ex = AlternativeConvertToBoolean(func, convertVisitor.Context.LinqOptions, 1);
+								var ex = AlternativeConvertToBoolean(func, convertVisitor.Context.DataOptions, 1);
 								if (ex != null)
 									return ex;
 							}
@@ -177,7 +177,7 @@ namespace LinqToDB.DataProvider.Firebird
 						{
 							if (func.SystemType.ToUnderlying() == typeof(bool))
 							{
-								var ex = AlternativeConvertToBoolean(func, convertVisitor.Context.LinqOptions, 2);
+								var ex = AlternativeConvertToBoolean(func, convertVisitor.Context.DataOptions, 2);
 								if (ex != null)
 									return ex;
 							}
@@ -230,9 +230,9 @@ namespace LinqToDB.DataProvider.Firebird
 			return base.ConvertFunction(func);
 		}
 
-		public override SqlStatement FinalizeStatement(SqlStatement statement, EvaluationContext context, LinqOptions linqOptions)
+		public override SqlStatement FinalizeStatement(SqlStatement statement, EvaluationContext context, DataOptions dataOptions)
 		{
-			statement = base.FinalizeStatement(statement, context, linqOptions);
+			statement = base.FinalizeStatement(statement, context, dataOptions);
 			statement = WrapParameters(statement, context);
 			return statement;
 		}

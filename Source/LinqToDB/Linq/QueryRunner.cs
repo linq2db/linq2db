@@ -211,7 +211,7 @@ namespace LinqToDB.Linq
 		{
 			foreach (var sql in query.Queries)
 			{
-				sql.Statement = query.SqlOptimizer.Finalize(sql.Statement, query.LinqOptions);
+				sql.Statement = query.SqlOptimizer.Finalize(sql.Statement, query.DataOptions);
 
 				SqlStatement.PrepareQueryAndAliases(sql.Statement, null, out var aliasesContext);
 

@@ -16,13 +16,13 @@ namespace LinqToDB.DataProvider.SQLite
 
 		public override bool CanCompareSearchConditions => true;
 
-		public override SqlStatement TransformStatement(SqlStatement statement, LinqOptions linqOptions)
+		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions)
 		{
 			switch (statement.QueryType)
 			{
 				case QueryType.Delete :
 				{
-					statement = GetAlternativeDelete((SqlDeleteStatement)statement, linqOptions);
+					statement = GetAlternativeDelete((SqlDeleteStatement)statement, dataOptions);
 					statement.SelectQuery!.From.Tables[0].Alias = "$";
 					break;
 				}
@@ -31,11 +31,11 @@ namespace LinqToDB.DataProvider.SQLite
 				{
 					if (SqlProviderFlags.IsUpdateFromSupported)
 					{
-						statement = GetAlternativeUpdatePostgreSqlite((SqlUpdateStatement)statement, linqOptions);
+						statement = GetAlternativeUpdatePostgreSqlite((SqlUpdateStatement)statement, dataOptions);
 					}
 					else
 					{
-						statement = GetAlternativeUpdate((SqlUpdateStatement)statement, linqOptions);
+						statement = GetAlternativeUpdate((SqlUpdateStatement)statement, dataOptions);
 					}
 
 					break;
@@ -135,7 +135,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 						if (ftype == typeof(bool))
 						{
-							var ex = AlternativeConvertToBoolean(func, visitor.Context.LinqOptions, 1);
+							var ex = AlternativeConvertToBoolean(func, visitor.Context.DataOptions, 1);
 							if (ex != null)
 								return ex;
 						}

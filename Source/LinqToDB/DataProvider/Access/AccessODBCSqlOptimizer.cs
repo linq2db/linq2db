@@ -11,9 +11,9 @@ namespace LinqToDB.DataProvider.Access
 		{
 		}
 
-		public override SqlStatement Finalize(SqlStatement statement, LinqOptions linqOptions)
+		public override SqlStatement Finalize(SqlStatement statement, DataOptions dataOptions)
 		{
-			statement = base.Finalize(statement, linqOptions);
+			statement = base.Finalize(statement, dataOptions);
 
 			statement = WrapParameters(statement);
 

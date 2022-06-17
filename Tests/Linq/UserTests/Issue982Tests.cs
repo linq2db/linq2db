@@ -20,9 +20,9 @@ namespace Tests.UserTests
 			{
 			}
 
-			public override SqlStatement Finalize(SqlStatement statement, LinqOptions linqOptions)
+			public override SqlStatement Finalize(SqlStatement statement, DataOptions dataOptions)
 			{
-				statement = base.Finalize(statement, linqOptions);
+				statement = base.Finalize(statement, dataOptions);
 
 				AddConditions(statement);
 

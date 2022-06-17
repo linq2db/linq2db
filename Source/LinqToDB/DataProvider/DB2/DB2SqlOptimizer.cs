@@ -12,7 +12,7 @@ namespace LinqToDB.DataProvider.DB2
 		{
 		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement, LinqOptions linqOptions)
+		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions)
 		{
 			// DB2 LUW 9/10 supports only FETCH, v11 adds OFFSET, but for that we need to introduce versions into DB2 provider first
 			statement = SeparateDistinctFromPagination(statement, q => q.Select.SkipValue != null);
@@ -22,8 +22,8 @@ namespace LinqToDB.DataProvider.DB2
 			// This is mutable part
 			return statement.QueryType switch
 			{
-				QueryType.Delete => GetAlternativeDelete((SqlDeleteStatement)statement, linqOptions),
-				QueryType.Update => GetAlternativeUpdate((SqlUpdateStatement)statement, linqOptions),
+				QueryType.Delete => GetAlternativeDelete((SqlDeleteStatement)statement, dataOptions),
+				QueryType.Update => GetAlternativeUpdate((SqlUpdateStatement)statement, dataOptions),
 				_                => statement,
 			};
 		}
@@ -71,7 +71,7 @@ namespace LinqToDB.DataProvider.DB2
 
 						if (func.SystemType.ToUnderlying() == typeof(bool))
 						{
-							var ex = AlternativeConvertToBoolean(func, visitor.Context.LinqOptions, 1);
+							var ex = AlternativeConvertToBoolean(func, visitor.Context.DataOptions, 1);
 							if (ex != null)
 								return ex;
 						}

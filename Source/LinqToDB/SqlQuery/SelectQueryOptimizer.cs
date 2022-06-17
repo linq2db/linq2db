@@ -9,10 +9,10 @@ namespace LinqToDB.SqlQuery
 
 	class SelectQueryOptimizer
 	{
-		public SelectQueryOptimizer(SqlProviderFlags flags, LinqOptions linqOptions, IQueryElement rootElement, SelectQuery selectQuery, int level, params IQueryElement[] dependencies)
+		public SelectQueryOptimizer(SqlProviderFlags flags, DataOptions dataOptions, IQueryElement rootElement, SelectQuery selectQuery, int level, params IQueryElement[] dependencies)
 		{
 			_flags        = flags;
-			_linqOptions  = linqOptions;
+			_dataOptions  = dataOptions;
 			_selectQuery  = selectQuery;
 			_rootElement  = rootElement;
 			_level        = level;
@@ -20,7 +20,7 @@ namespace LinqToDB.SqlQuery
 		}
 
 		readonly SqlProviderFlags _flags;
-		readonly LinqOptions      _linqOptions;
+		readonly DataOptions      _dataOptions;
 		readonly SelectQuery      _selectQuery;
 		readonly IQueryElement    _rootElement;
 		readonly int              _level;
@@ -448,7 +448,7 @@ namespace LinqToDB.SqlQuery
 				if (e is SelectQuery sql && sql != context.optimizer._selectQuery)
 				{
 					sql.ParentSelect = context.optimizer._selectQuery;
-					new SelectQueryOptimizer(context.optimizer._flags, context.optimizer._linqOptions,
+					new SelectQueryOptimizer(context.optimizer._flags, context.optimizer._dataOptions,
 							context.optimizer._rootElement, sql, context.optimizer._level + 1,
 							context.optimizer._dependencies)
 						.FinalizeAndValidateInternal(context.isApplySupported);
@@ -1352,7 +1352,7 @@ namespace LinqToDB.SqlQuery
 
 								if (contains)
 								{
-									if (isApplySupported && _linqOptions.PreferApply)
+									if (isApplySupported && _dataOptions.LinqOptions.PreferApply)
 										return;
 
 									searchCondition.Insert(0, condition);
@@ -1640,7 +1640,7 @@ namespace LinqToDB.SqlQuery
 					if (_flags.IsDistinctOrderBySupported)
 						continue;
 
-					if (_linqOptions.KeepDistinctOrdered)
+					if (_dataOptions.LinqOptions.KeepDistinctOrdered)
 					{
 						// trying to convert to GROUP BY quivalent
 						QueryHelper.TryConvertOrderedDistinctToGroupBy(query, _flags);

@@ -12,21 +12,21 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 		}
 
-		public override SqlStatement Finalize(SqlStatement statement, LinqOptions linqOptions)
+		public override SqlStatement Finalize(SqlStatement statement, DataOptions dataOptions)
 		{
 			CheckAliases(statement, 30);
 
-			return base.Finalize(statement, linqOptions);
+			return base.Finalize(statement, dataOptions);
 		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement, LinqOptions linqOptions)
+		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions)
 		{
 			statement = ReplaceTakeSkipWithRowNum(statement, false);
 
 			switch (statement.QueryType)
 			{
-				case QueryType.Delete : statement = GetAlternativeDelete((SqlDeleteStatement) statement, linqOptions); break;
-				case QueryType.Update : statement = GetAlternativeUpdate((SqlUpdateStatement) statement, linqOptions); break;
+				case QueryType.Delete : statement = GetAlternativeDelete((SqlDeleteStatement) statement, dataOptions); break;
+				case QueryType.Update : statement = GetAlternativeUpdate((SqlUpdateStatement) statement, dataOptions); break;
 			}
 
 			return statement;
@@ -153,7 +153,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 						if (ftype == typeof(bool))
 						{
-							var ex = AlternativeConvertToBoolean(func, visitor.Context.LinqOptions, 1);
+							var ex = AlternativeConvertToBoolean(func, visitor.Context.DataOptions, 1);
 							if (ex != null)
 								return ex;
 						}

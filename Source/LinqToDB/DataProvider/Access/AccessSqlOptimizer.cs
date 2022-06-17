@@ -37,11 +37,11 @@ namespace LinqToDB.DataProvider.Access
 			throw new LinqException("Access does not support `Replace` function which is required for such query.");
 		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement, LinqOptions linqOptions)
+		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions)
 		{
 			return statement.QueryType switch
 			{
-				QueryType.Delete => GetAlternativeDelete((SqlDeleteStatement)statement, linqOptions),
+				QueryType.Delete => GetAlternativeDelete((SqlDeleteStatement)statement, dataOptions),
 				QueryType.Update => CorrectAccessUpdate ((SqlUpdateStatement)statement),
 				_                => statement,
 			};

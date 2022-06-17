@@ -47,7 +47,7 @@ namespace LinqToDB.Linq
 			ConfigurationID         = ((IConfigurationID)dataContext.MappingSchema).ConfigurationID;
 			SqlOptimizer            = dataContext.GetSqlOptimizer();
 			SqlProviderFlags        = dataContext.SqlProviderFlags;
-			LinqOptions             = dataContext.Options.LinqOptions;
+			DataOptions             = dataContext.Options;
 			InlineParameters        = dataContext.InlineParameters;
 			IsEntityServiceProvided = dataContext is IInterceptable<IEntityServiceInterceptor> { Interceptor: {} };
 		}
@@ -64,7 +64,7 @@ namespace LinqToDB.Linq
 		internal readonly bool             InlineParameters;
 		internal readonly ISqlOptimizer    SqlOptimizer;
 		internal readonly SqlProviderFlags SqlProviderFlags;
-		internal readonly LinqOptions      LinqOptions;
+		internal readonly DataOptions      DataOptions;
 		internal readonly bool             IsEntityServiceProvided;
 
 		protected bool Compare(IDataContext dataContext, Expression expr)

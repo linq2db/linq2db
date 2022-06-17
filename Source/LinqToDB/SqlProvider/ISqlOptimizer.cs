@@ -13,7 +13,7 @@ namespace LinqToDB.SqlProvider
 		/// </summary>
 		/// <param name="statement"></param>
 		/// <returns>Query which is ready for optimization.</returns>
-		SqlStatement Finalize(SqlStatement statement, LinqOptions linqOptions);
+		SqlStatement Finalize(SqlStatement statement, DataOptions dataOptions);
 
 		/// <summary>
 		/// Examine query for parameter dependency.

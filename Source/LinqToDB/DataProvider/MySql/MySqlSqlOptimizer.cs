@@ -17,12 +17,12 @@ namespace LinqToDB.DataProvider.MySql
 
 		public override bool CanCompareSearchConditions => true;
 
-		public override SqlStatement TransformStatement(SqlStatement statement, LinqOptions linqOptions)
+		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions)
 		{
 			return statement.QueryType switch
 			{
 				QueryType.Update => CorrectMySqlUpdate((SqlUpdateStatement)statement),
-				QueryType.Delete => PrepareDelete((SqlDeleteStatement)statement),
+				QueryType.Delete => PrepareDelete     ((SqlDeleteStatement)statement),
 				_                => statement,
 			};
 		}
@@ -103,7 +103,7 @@ namespace LinqToDB.DataProvider.MySql
 
 						if (ftype == typeof(bool))
 						{
-							var ex = AlternativeConvertToBoolean(func, visitor.Context.LinqOptions, 1);
+							var ex = AlternativeConvertToBoolean(func, visitor.Context.DataOptions, 1);
 							if (ex != null)
 								return ex;
 						}
