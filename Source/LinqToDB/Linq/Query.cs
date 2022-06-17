@@ -309,10 +309,7 @@ namespace LinqToDB.Linq
 				// accepts components to avoid QueryCacheEntry allocation for cached query
 				public bool Compare(IDataContext context, Expression queryExpression, QueryFlags queryFlags, DataOptions dataOptions)
 				{
-					return
-						QueryFlags == queryFlags &&
-						DataOptions.ConfigurationID == dataOptions.ConfigurationID &&
-						Query.Compare(context, queryExpression);
+					return QueryFlags == queryFlags && DataOptions == dataOptions && Query.Compare(context, queryExpression);
 				}
 			}
 

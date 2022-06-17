@@ -153,38 +153,38 @@ namespace LinqToDB
 		: IOptionSet
 	{
 		public LinqOptions() : this(
-			PreloadGroups: false,
-			IgnoreEmptyUpdate: false,
-			GenerateExpressionTest: false,
-			TraceMapperExpression: false,
-			DoNotClearOrderBys: false,
-			OptimizeJoins: true,
-			CompareNullsAsValues: true,
-			GuardGrouping: true,
-			DisableQueryCache: false,
-			CacheSlidingExpiration: TimeSpan.FromHours(1),
-			PreferApply: true,
-			KeepDistinctOrdered: true,
-			ParameterizeTakeSkip: true,
-			EnableAutoFluentMapping: true)
+			PreloadGroups           : false,
+			IgnoreEmptyUpdate       : false,
+			GenerateExpressionTest  : false,
+			TraceMapperExpression   : false,
+			DoNotClearOrderBys      : false,
+			OptimizeJoins           : true,
+			CompareNullsAsValues    : true,
+			GuardGrouping           : true,
+			DisableQueryCache       : false,
+			CacheSlidingExpiration  : TimeSpan.FromHours(1),
+			PreferApply             : true,
+			KeepDistinctOrdered     : true,
+			ParameterizeTakeSkip    : true,
+			EnableAutoFluentMapping : true)
 		{
 		}
 
 		LinqOptions(LinqOptions original)
 		{
-			PreloadGroups = original.PreloadGroups;
-			IgnoreEmptyUpdate = original.IgnoreEmptyUpdate;
-			GenerateExpressionTest = original.GenerateExpressionTest;
-			TraceMapperExpression = original.TraceMapperExpression;
-			DoNotClearOrderBys = original.DoNotClearOrderBys;
-			OptimizeJoins = original.OptimizeJoins;
-			CompareNullsAsValues = original.CompareNullsAsValues;
-			GuardGrouping = original.GuardGrouping;
-			DisableQueryCache = original.DisableQueryCache;
-			CacheSlidingExpiration = original.CacheSlidingExpiration;
-			PreferApply = original.PreferApply;
-			KeepDistinctOrdered = original.KeepDistinctOrdered;
-			ParameterizeTakeSkip = original.ParameterizeTakeSkip;
+			PreloadGroups           = original.PreloadGroups;
+			IgnoreEmptyUpdate       = original.IgnoreEmptyUpdate;
+			GenerateExpressionTest  = original.GenerateExpressionTest;
+			TraceMapperExpression   = original.TraceMapperExpression;
+			DoNotClearOrderBys      = original.DoNotClearOrderBys;
+			OptimizeJoins           = original.OptimizeJoins;
+			CompareNullsAsValues    = original.CompareNullsAsValues;
+			GuardGrouping           = original.GuardGrouping;
+			DisableQueryCache       = original.DisableQueryCache;
+			CacheSlidingExpiration  = original.CacheSlidingExpiration;
+			PreferApply             = original.PreferApply;
+			KeepDistinctOrdered     = original.KeepDistinctOrdered;
+			ParameterizeTakeSkip    = original.ParameterizeTakeSkip;
 			EnableAutoFluentMapping = original.EnableAutoFluentMapping;
 		}
 

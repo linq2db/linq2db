@@ -8,7 +8,7 @@ namespace LinqToDB
 	using Data;
 	using Data.RetryPolicy;
 
-	public class DataOptions : OptionsContainer<DataOptions>, IConfigurationID
+	public sealed class DataOptions : OptionsContainer<DataOptions>, IConfigurationID, IEquatable<DataOptions>, ICloneable
 	{
 		public DataOptions()
 		{
@@ -30,6 +30,11 @@ namespace LinqToDB
 		protected override DataOptions Clone()
 		{
 			return new(this);
+		}
+
+		object ICloneable.Clone()
+		{
+			return Clone();
 		}
 
 		public override DataOptions WithOptions(IOptionSet options)
@@ -105,12 +110,40 @@ namespace LinqToDB
 		}
 
 		int? _configurationID;
-		public int ConfigurationID => _configurationID ??= new IdentifierBuilder()
+		int IConfigurationID.ConfigurationID => _configurationID ??= new IdentifierBuilder()
 			.Add(LinqOptions)
 			.Add(RetryPolicyOptions)
 			.Add(ConnectionOptions)
 			.Add(DataContextOptions)
 			.AddRange(base.OptionSets)
 			.CreateID();
+
+		public bool Equals(DataOptions? other)
+		{
+			if (ReferenceEquals(null, other)) return false;
+			if (ReferenceEquals(this, other)) return true;
+
+			return ((IConfigurationID)this).ConfigurationID == ((IConfigurationID)other).ConfigurationID;
+		}
+
+		public override bool Equals(object? other)
+		{
+			return other is DataOptions o && Equals(o);
+		}
+
+		public override int GetHashCode()
+		{
+			return ((IConfigurationID)this).ConfigurationID;
+		}
+
+		public static bool operator ==(DataOptions t1, DataOptions t2)
+		{
+			return t1.Equals(t2);
+		}
+
+		public static bool operator !=(DataOptions t1, DataOptions t2)
+		{
+			return !t1.Equals(t2);
+		}
 	}
 }
