@@ -2,7 +2,6 @@
 
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using Infrastructure;
 	using SqlQuery;
 	using SqlProvider;
 
@@ -88,6 +87,5 @@ namespace LinqToDB.DataProvider.SqlServer
 				parameters[start + 1],
 				ConvertCase(canBeNull, systemType, parameters, start + 2)) { CanBeNull = canBeNull };
 		}
-
 	}
 }

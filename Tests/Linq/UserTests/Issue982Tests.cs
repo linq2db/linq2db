@@ -1,12 +1,13 @@
-﻿using LinqToDB;
+﻿using System;
+using System.Linq;
+
+using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.Firebird;
 using LinqToDB.SqlProvider;
 using LinqToDB.SqlQuery;
+
 using NUnit.Framework;
-using System;
-using System.Linq;
-using LinqToDB.Infrastructure;
 
 namespace Tests.UserTests
 {

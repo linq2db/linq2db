@@ -6,7 +6,6 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using Infrastructure;
 	using Common;
 	using Mapping;
 	using SqlQuery;

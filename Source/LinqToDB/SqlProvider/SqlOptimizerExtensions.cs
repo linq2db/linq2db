@@ -1,6 +1,7 @@
-﻿namespace LinqToDB.SqlProvider
+﻿using System;
+
+namespace LinqToDB.SqlProvider
 {
-	using Infrastructure;
 	using Mapping;
 	using SqlQuery;
 
@@ -23,6 +24,5 @@
 
 			return newStatement;
 		}
-
 	}
 }

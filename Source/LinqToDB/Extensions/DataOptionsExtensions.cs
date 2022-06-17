@@ -12,7 +12,6 @@ namespace LinqToDB
 	using Data;
 	using Data.RetryPolicy;
 	using DataProvider;
-	using Infrastructure;
 	using Interceptors;
 	using Mapping;
 

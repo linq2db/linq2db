@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.DB2
 {
-	using Infrastructure;
 	using Common;
 	using Data;
 	using Mapping;

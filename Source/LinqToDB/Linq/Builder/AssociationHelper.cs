@@ -3,15 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using LinqToDB.Common;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Builder
 {
+	using Common;
 	using Extensions;
 	using LinqToDB.Expressions;
 	using Mapping;
 	using Reflection;
+	using SqlQuery;
 
 	static class AssociationHelper
 	{

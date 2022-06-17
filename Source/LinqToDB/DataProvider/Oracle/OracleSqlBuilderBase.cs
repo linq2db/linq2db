@@ -6,7 +6,6 @@ using System.Text;
 namespace LinqToDB.DataProvider.Oracle
 {
 	using Common;
-	using Infrastructure;
 	using Mapping;
 	using SqlProvider;
 	using SqlQuery;

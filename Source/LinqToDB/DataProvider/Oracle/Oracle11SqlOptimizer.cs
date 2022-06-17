@@ -2,7 +2,6 @@
 
 namespace LinqToDB.DataProvider.Oracle
 {
-	using Infrastructure;
 	using Extensions;
 	using SqlProvider;
 	using SqlQuery;
@@ -266,7 +265,7 @@ namespace LinqToDB.DataProvider.Oracle
 						query.Select.Take(null, null);
 						return 0;
 					}
-						
+
 					return 1;
 				},
 				static (_, queries) =>

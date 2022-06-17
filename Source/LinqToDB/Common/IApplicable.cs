@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace LinqToDB.Infrastructure
+namespace LinqToDB.Common
 {
 	interface IApplicable<in T>
 	{

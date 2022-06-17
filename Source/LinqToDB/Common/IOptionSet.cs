@@ -1,12 +1,12 @@
 ﻿using System;
 
-namespace LinqToDB.Infrastructure
+namespace LinqToDB.Common
 {
-	using Common.Internal;
+	using Internal;
 
 	/// <summary>
 	/// <para>
-	/// Interface for extensions that are stored in <see cref="IOptions.OptionSets" />.
+	/// Interface for extensions that are stored in <see cref="IOptionsContainer.OptionSets" />.
 	/// </para>
 	/// <para>
 	/// This interface is typically used by database providers (and other extensions).

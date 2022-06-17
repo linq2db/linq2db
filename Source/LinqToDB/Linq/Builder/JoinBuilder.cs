@@ -5,7 +5,6 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Infrastructure;
 	using LinqToDB.Expressions;
 	using SqlQuery;
 

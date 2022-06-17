@@ -11,7 +11,6 @@ namespace LinqToDB.DataProvider.Sybase
 {
 	using Common;
 	using Data;
-	using Infrastructure;
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;

@@ -5,7 +5,6 @@ using System.Text;
 namespace LinqToDB.DataProvider.SQLite
 {
 	using Extensions;
-	using Infrastructure;
 	using Mapping;
 	using SqlQuery;
 	using SqlProvider;

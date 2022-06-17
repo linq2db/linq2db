@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Data.Common;
-using LinqToDB.Mapping;
 
 namespace LinqToDB.Data
 {
+	using Common;
 	using Common.Internal;
 	using DataProvider;
-	using Infrastructure;
+	using Mapping;
 
 	/// <param name="ConfigurationString">
 	/// Gets configuration string name to use with <see cref="DataConnection"/> instance.

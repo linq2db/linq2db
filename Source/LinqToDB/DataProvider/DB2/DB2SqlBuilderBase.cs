@@ -9,7 +9,6 @@ using System.Globalization;
 
 namespace LinqToDB.DataProvider.DB2
 {
-	using Infrastructure;
 	using Mapping;
 	using SqlQuery;
 	using SqlProvider;

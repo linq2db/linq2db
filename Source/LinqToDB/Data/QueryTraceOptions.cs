@@ -3,8 +3,8 @@ using System.Diagnostics;
 
 namespace LinqToDB.Data
 {
+	using Common;
 	using Common.Internal;
-	using Infrastructure;
 
 	/// <param name="OnTrace">
 	/// Gets custom trace method to use with <see cref="DataConnection"/> instance.

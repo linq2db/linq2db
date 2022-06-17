@@ -3,7 +3,6 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.DB2
 {
-	using Infrastructure;
 	using Mapping;
 	using SqlProvider;
 	using SqlQuery;

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 
 namespace LinqToDB.DataProvider.MySql
 {
-	using Infrastructure;
 	using Extensions;
 	using SqlProvider;
 	using SqlQuery;

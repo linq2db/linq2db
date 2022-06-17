@@ -1,15 +1,17 @@
 ﻿using System;
 using System.Linq;
+
 using FluentAssertions;
+
 using LinqToDB;
-using LinqToDB.Infrastructure;
+using LinqToDB.Linq;
+using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
+
 using NUnit.Framework;
 
 namespace Tests.Linq
 {
-	using LinqToDB.Linq;
-	using LinqToDB.Mapping;
 	using Model;
 
 	[TestFixture]

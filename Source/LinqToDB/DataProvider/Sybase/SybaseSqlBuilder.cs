@@ -5,7 +5,6 @@ using System.Data.Common;
 
 namespace LinqToDB.DataProvider.Sybase
 {
-	using Infrastructure;
 	using SqlQuery;
 	using SqlProvider;
 	using Mapping;

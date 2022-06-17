@@ -1,16 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace LinqToDB.Infrastructure
+namespace LinqToDB.Common
 {
-	public abstract class OptionsBase<T> : IOptions
-		where T : OptionsBase<T>
+	public abstract class OptionsContainer<T> : IOptionsContainer
+		where T : OptionsContainer<T>
 	{
-		protected OptionsBase()
+		protected OptionsContainer()
 		{
 		}
 
-		protected OptionsBase(OptionsBase<T> options)
+		protected OptionsContainer(OptionsContainer<T> options)
 		{
 			if (options._sets != null)
 				_sets = new(options._sets);
@@ -30,7 +30,7 @@ namespace LinqToDB.Infrastructure
 			return o;
 		}
 
-		public T WithOptions<TSet>(Func<TSet,TSet> optionSetter)
+		public T WithOptions<TSet>(Func<TSet, TSet> optionSetter)
 			where TSet : class, IOptionSet, new()
 		{
 			var original = Get<TSet>();
@@ -63,7 +63,7 @@ namespace LinqToDB.Infrastructure
 		public virtual TSet Get<TSet>()
 			where TSet : class, IOptionSet, new()
 		{
-			if (Find<TSet>() is {} set)
+			if (Find<TSet>() is { } set)
 				return set;
 
 			(_sets ??= new())[typeof(TSet)] = set = new();

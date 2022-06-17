@@ -1,13 +1,10 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
-	using Infrastructure;
 	using Extensions;
 	using SqlProvider;
 	using SqlQuery;
-	using Linq;
 
 	class PostgreSQLSqlOptimizer : BasicSqlOptimizer
 	{

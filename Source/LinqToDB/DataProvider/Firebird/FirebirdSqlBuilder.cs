@@ -11,7 +11,6 @@ using System.Text;
 namespace LinqToDB.DataProvider.Firebird
 {
 	using Common;
-	using Infrastructure;
 	using Mapping;
 	using SqlQuery;
 	using SqlProvider;

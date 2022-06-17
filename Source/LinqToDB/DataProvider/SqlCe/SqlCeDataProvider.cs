@@ -12,7 +12,6 @@ namespace LinqToDB.DataProvider.SqlCe
 {
 	using Common;
 	using Data;
-	using Infrastructure;
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;

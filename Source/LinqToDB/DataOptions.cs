@@ -3,12 +3,12 @@ using System.Collections.Generic;
 
 namespace LinqToDB
 {
+	using Common;
 	using Common.Internal;
 	using Data;
 	using Data.RetryPolicy;
-	using Infrastructure;
 
-	public class DataOptions : OptionsBase<DataOptions>, IConfigurationID
+	public class DataOptions : OptionsContainer<DataOptions>, IConfigurationID
 	{
 		public DataOptions()
 		{

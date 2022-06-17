@@ -2,7 +2,6 @@
 
 namespace LinqToDB.DataProvider.SapHana
 {
-	using Infrastructure;
 	using Extensions;
 	using SqlProvider;
 	using SqlQuery;
@@ -95,7 +94,7 @@ namespace LinqToDB.DataProvider.SapHana
 				}
 				return new SqlFunction(systemType, name, cond, parameters[start + 1], parameters[start + 2]);
 			}
-			
+
 			return new SqlFunction(systemType, name,
 				cond,
 				parameters[start + 1],

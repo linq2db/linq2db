@@ -8,7 +8,6 @@ namespace LinqToDB.DataProvider.Informix
 {
 	using Common;
 	using Data;
-	using Infrastructure;
 	using Linq.Internal;
 	using Mapping;
 	using SqlProvider;

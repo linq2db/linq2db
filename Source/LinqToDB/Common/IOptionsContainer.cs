@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace LinqToDB.Infrastructure
+namespace LinqToDB.Common
 {
 	/// <summary>
 	/// <para>
@@ -13,7 +13,7 @@ namespace LinqToDB.Infrastructure
 	/// The implementation does not need to be thread-safe.
 	/// </para>
 	/// </summary>
-	interface IOptions
+	interface IOptionsContainer
 	{
 		/// <summary>
 		/// Gets the extensions that store the configured options.

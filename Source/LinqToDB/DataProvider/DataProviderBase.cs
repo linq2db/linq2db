@@ -17,7 +17,6 @@ namespace LinqToDB.DataProvider
 	using Common.Internal;
 	using Data;
 	using Expressions;
-	using Infrastructure;
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;

@@ -4,10 +4,9 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.Access
 {
-	using Infrastructure;
-	using SqlQuery;
 	using Mapping;
 	using SqlProvider;
+	using SqlQuery;
 
 	class AccessODBCSqlBuilder : AccessSqlBuilderBase
 	{

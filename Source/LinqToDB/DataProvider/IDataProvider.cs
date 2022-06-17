@@ -9,7 +9,6 @@ using System.Threading;
 namespace LinqToDB.DataProvider
 {
 	using Common;
-	using Infrastructure;
 	using Data;
 	using Mapping;
 	using SchemaProvider;

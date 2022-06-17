@@ -4,7 +4,6 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.SapHana
 {
-	using Infrastructure;
 	using Mapping;
 	using SqlQuery;
 	using SqlProvider;

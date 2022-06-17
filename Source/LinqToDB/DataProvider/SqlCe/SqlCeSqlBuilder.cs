@@ -4,10 +4,9 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.SqlCe
 {
-	using Infrastructure;
+	using Mapping;
 	using SqlQuery;
 	using SqlProvider;
-	using Mapping;
 
 	class SqlCeSqlBuilder : BasicSqlBuilder
 	{

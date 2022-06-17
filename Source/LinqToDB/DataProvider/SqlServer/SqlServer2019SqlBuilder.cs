@@ -2,7 +2,6 @@
 
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using Infrastructure;
 	using Mapping;
 	using SqlProvider;
 

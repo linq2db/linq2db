@@ -1,17 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
+using System.Reflection;
 
 using JetBrains.Annotations;
 
 namespace LinqToDB.Expressions
 {
-	using LinqToDB.Common;
+	using Common;
 	using LinqToDB.Extensions;
-	using LinqToDB.Mapping;
-	using LinqToDB.Reflection;
-	using System.Diagnostics.CodeAnalysis;
-	using System.Reflection;
+	using Mapping;
+	using Reflection;
 
 	public static class Extensions
 	{

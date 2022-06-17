@@ -9,7 +9,6 @@ namespace LinqToDB.DataProvider.MySql
 {
 	using Common;
 	using Data;
-	using Infrastructure;
 	using Mapping;
 	using SqlProvider;
 

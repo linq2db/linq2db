@@ -1,6 +1,7 @@
-﻿namespace LinqToDB.DataProvider.Oracle
+﻿using System;
+
+namespace LinqToDB.DataProvider.Oracle
 {
-	using Infrastructure;
 	using SqlProvider;
 	using SqlQuery;
 
@@ -20,7 +21,7 @@
 				case QueryType.Delete : statement = GetAlternativeDelete((SqlDeleteStatement) statement, linqOptions); break;
 				case QueryType.Update : statement = GetAlternativeUpdate((SqlUpdateStatement) statement, linqOptions); break;
 			}
-			
+
 			return statement;
 		}
 	}

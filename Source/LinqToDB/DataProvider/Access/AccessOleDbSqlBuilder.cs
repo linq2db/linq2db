@@ -1,9 +1,8 @@
-﻿﻿using System;
+﻿using System;
 using System.Data.Common;
 
 namespace LinqToDB.DataProvider.Access
 {
-	using Infrastructure;
 	using Mapping;
 	using SqlProvider;
 

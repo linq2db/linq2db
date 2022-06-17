@@ -4,7 +4,6 @@ using System.Linq;
 
 namespace LinqToDB.SqlQuery
 {
-	using Infrastructure;
 	using Common;
 	using SqlProvider;
 
@@ -20,12 +19,12 @@ namespace LinqToDB.SqlQuery
 			_dependencies = dependencies;
 		}
 
-		readonly SqlProviderFlags     _flags;
-		readonly LinqOptions _linqOptions;
-		readonly SelectQuery          _selectQuery;
-		readonly IQueryElement        _rootElement;
-		readonly int                  _level;
-		readonly IQueryElement[]      _dependencies;
+		readonly SqlProviderFlags _flags;
+		readonly LinqOptions      _linqOptions;
+		readonly SelectQuery      _selectQuery;
+		readonly IQueryElement    _rootElement;
+		readonly int              _level;
+		readonly IQueryElement[]  _dependencies;
 
 		public void FinalizeAndValidate(bool isApplySupported)
 		{

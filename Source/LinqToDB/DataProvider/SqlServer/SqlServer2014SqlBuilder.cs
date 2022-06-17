@@ -2,9 +2,8 @@
 
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using Infrastructure;
-	using SqlProvider;
 	using Mapping;
+	using SqlProvider;
 
 	class SqlServer2014SqlBuilder : SqlServer2012SqlBuilder
 	{
@@ -22,6 +21,6 @@ namespace LinqToDB.DataProvider.SqlServer
 			return new SqlServer2014SqlBuilder(this);
 		}
 
-		public override string  Name => ProviderName.SqlServer2014;
+		public override string Name => ProviderName.SqlServer2014;
 	}
 }

@@ -15,7 +15,6 @@ namespace LinqToDB.Linq
 #if !NATIVE_ASYNC
 	using Async;
 #endif
-	using Infrastructure;
 	using Builder;
 	using Common;
 	using Common.Internal;

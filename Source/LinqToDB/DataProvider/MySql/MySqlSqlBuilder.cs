@@ -7,7 +7,6 @@ using System.Data.Common;
 namespace LinqToDB.DataProvider.MySql
 {
 	using Extensions;
-	using Infrastructure;
 	using Mapping;
 	using SqlProvider;
 	using SqlQuery;

@@ -2,20 +2,21 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+
 using LinqToDB;
 using LinqToDB.AspNet.Logging;
-using LinqToDB.Configuration;
 using LinqToDB.Data;
-using LinqToDB.DataProvider.SqlCe;
 using LinqToDB.DataProvider.SqlServer;
-using LinqToDB.Infrastructure;
+
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+
 using NUnit.Framework;
-using Tests.Model;
 
 namespace Tests.Common
 {
+	using Model;
+
 	[TestFixture]
 	public class ConnectionBuilderTests : TestBase
 	{

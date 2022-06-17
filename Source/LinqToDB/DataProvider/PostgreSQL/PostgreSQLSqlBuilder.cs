@@ -11,7 +11,6 @@ using System.Net.NetworkInformation;
 namespace LinqToDB.DataProvider.PostgreSQL
 {
 	using Common;
-	using Infrastructure;
 	using SqlQuery;
 	using SqlProvider;
 	using Extensions;

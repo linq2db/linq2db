@@ -3,9 +3,9 @@ using System.Collections.Generic;
 
 namespace LinqToDB
 {
+	using Common;
 	using Common.Internal;
 	using Data;
-	using Infrastructure;
 	using Interceptors;
 
 	/// <param name="CommandTimeout">

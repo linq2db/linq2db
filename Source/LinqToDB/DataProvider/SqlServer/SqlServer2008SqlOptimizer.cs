@@ -1,6 +1,7 @@
-﻿namespace LinqToDB.DataProvider.SqlServer
+﻿using System;
+
+namespace LinqToDB.DataProvider.SqlServer
 {
-	using Infrastructure;
 	using SqlProvider;
 	using SqlQuery;
 
@@ -21,12 +22,10 @@
 			return statement;
 		}
 
-
 		protected override ISqlExpression ConvertFunction(SqlFunction func)
 		{
 			func = ConvertFunctionParameters(func, false);
 			return base.ConvertFunction(func);
 		}
-
 	}
 }

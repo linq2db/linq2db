@@ -10,7 +10,6 @@ namespace LinqToDB.DataProvider.SapHana
 	using Common;
 	using Data;
 	using Extensions;
-	using Infrastructure;
 	using Mapping;
 	using SqlProvider;
 

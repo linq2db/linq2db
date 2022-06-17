@@ -1,9 +1,8 @@
 ﻿using System;
+using System.Linq;
 
 namespace LinqToDB.DataProvider.Firebird
 {
-	using Infrastructure;
-	using System.Linq;
 	using Extensions;
 	using SqlQuery;
 	using SqlProvider;

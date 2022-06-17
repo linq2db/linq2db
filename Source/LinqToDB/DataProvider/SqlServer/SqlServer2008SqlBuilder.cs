@@ -2,10 +2,9 @@
 
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using Infrastructure;
+	using Mapping;
 	using SqlQuery;
 	using SqlProvider;
-	using Mapping;
 
 	partial class SqlServer2008SqlBuilder : SqlServerSqlBuilder
 	{

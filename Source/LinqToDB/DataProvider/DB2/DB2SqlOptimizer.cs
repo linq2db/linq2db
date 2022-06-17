@@ -3,7 +3,6 @@
 namespace LinqToDB.DataProvider.DB2
 {
 	using Extensions;
-	using Infrastructure;
 	using SqlProvider;
 	using SqlQuery;
 

@@ -8,7 +8,6 @@ using System.Linq;
 
 namespace LinqToDB.SqlProvider
 {
-	using Infrastructure;
 	using Common;
 	using Common.Internal;
 	using DataProvider;

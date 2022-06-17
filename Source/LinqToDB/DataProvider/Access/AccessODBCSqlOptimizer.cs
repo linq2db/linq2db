@@ -2,7 +2,6 @@
 
 namespace LinqToDB.DataProvider.Access
 {
-	using Infrastructure;
 	using SqlProvider;
 	using SqlQuery;
 

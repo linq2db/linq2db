@@ -2,9 +2,9 @@
 
 namespace LinqToDB.DataProvider.Oracle
 {
+	using Common;
 	using Common.Internal;
 	using Data;
-	using Infrastructure;
 
 	/// <summary>
 	/// This is internal API and is not intended for use by LinqToDB applications.

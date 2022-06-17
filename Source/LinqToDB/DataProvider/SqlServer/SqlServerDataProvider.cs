@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using Infrastructure;
 	using Common;
 	using Data;
 	using Extensions;

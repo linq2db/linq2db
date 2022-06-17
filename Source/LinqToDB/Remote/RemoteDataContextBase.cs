@@ -19,7 +19,6 @@ namespace LinqToDB.Remote
 	using Interceptors;
 	using Mapping;
 	using SqlProvider;
-	using Infrastructure;
 
 	[PublicAPI]
 	public abstract partial class RemoteDataContextBase : IDataContext

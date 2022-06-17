@@ -1,19 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
+using System.Threading;
+using System.Threading.Tasks;
+
 using OdbcType = LinqToDB.DataProvider.OdbcProviderAdapter.OdbcType;
 
 namespace LinqToDB.DataProvider.Access
 {
-	using Infrastructure;
 	using Common;
 	using Data;
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
-	using System.Data.Common;
-	using System.Threading;
-	using System.Threading.Tasks;
 
 	public class AccessODBCDataProvider : DynamicDataProviderBase<OdbcProviderAdapter>
 	{

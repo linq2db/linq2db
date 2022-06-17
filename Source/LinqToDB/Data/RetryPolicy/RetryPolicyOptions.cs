@@ -2,9 +2,9 @@
 
 namespace LinqToDB.Data.RetryPolicy
 {
+	using Common;
 	using Common.Internal;
 	using Data;
-	using Infrastructure;
 
 	/// <param name="RetryPolicy">
 	/// Retry policy for new <see cref="DataConnection"/> instance.

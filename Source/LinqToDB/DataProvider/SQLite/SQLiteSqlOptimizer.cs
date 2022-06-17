@@ -2,11 +2,10 @@
 
 namespace LinqToDB.DataProvider.SQLite
 {
-	using Infrastructure;
+	using Common;
 	using Extensions;
 	using SqlProvider;
 	using SqlQuery;
-	using Common;
 
 	class SQLiteSqlOptimizer : BasicSqlOptimizer
 	{
@@ -180,7 +179,7 @@ namespace LinqToDB.DataProvider.SQLite
 						};
 						exprExpr = new SqlPredicate.ExprExpr(left, exprExpr.Operator, exprExpr.Expr2, null);
 					}
-					
+
 					if (!(exprExpr.Expr2 is SqlFunction func2 && (func2.Name == "$Convert$" || func2.Name == "DateTime")))
 					{
 						var right = new SqlFunction(rightType.SystemType, "$Convert$", new SqlDataType(rightType),

@@ -15,10 +15,9 @@ namespace LinqToDB.SqlProvider
 {
 	using Common;
 	using DataProvider;
-	using Infrastructure;
+	using Extensions;
 	using Mapping;
 	using SqlQuery;
-	using Extensions;
 
 	public abstract partial class BasicSqlBuilder : ISqlBuilder
 	{

@@ -3,7 +3,6 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace LinqToDB.SqlProvider
 {
-	using Infrastructure;
 	using Mapping;
 	using SqlQuery;
 

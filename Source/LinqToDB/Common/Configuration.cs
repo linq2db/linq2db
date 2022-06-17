@@ -7,7 +7,6 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.Common
 {
-	using Infrastructure;
 	using Data;
 	using Data.RetryPolicy;
 	using Linq;

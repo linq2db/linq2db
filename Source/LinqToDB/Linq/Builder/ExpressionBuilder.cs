@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Data;
 using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -12,13 +11,12 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Infrastructure;
 	using Common;
 	using Extensions;
 	using Mapping;
-	using SqlQuery;
 	using LinqToDB.Expressions;
-	using LinqToDB.Reflection;
+	using Reflection;
+	using SqlQuery;
 
 	partial class ExpressionBuilder
 	{

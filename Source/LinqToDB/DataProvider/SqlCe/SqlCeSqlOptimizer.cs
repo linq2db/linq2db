@@ -2,7 +2,6 @@
 
 namespace LinqToDB.DataProvider.SqlCe
 {
-	using Infrastructure;
 	using Extensions;
 	using SqlQuery;
 	using SqlProvider;

@@ -2,7 +2,6 @@
 
 namespace LinqToDB.DataProvider.Informix
 {
-	using Infrastructure;
 	using Extensions;
 	using SqlProvider;
 	using SqlQuery;

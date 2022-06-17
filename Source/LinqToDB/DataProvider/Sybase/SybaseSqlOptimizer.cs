@@ -4,11 +4,9 @@ using System.Linq;
 
 namespace LinqToDB.DataProvider.Sybase
 {
-	using Infrastructure;
 	using Extensions;
 	using SqlProvider;
 	using SqlQuery;
-	using Mapping;
 
 	class SybaseSqlOptimizer : BasicSqlOptimizer
 	{
