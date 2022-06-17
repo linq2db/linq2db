@@ -7,7 +7,6 @@ using System.Reflection;
 
 namespace LinqToDB.Common.Internal
 {
-
 	public class ValueComparer<T> : ValueComparer, IEqualityComparer<T>
 	{
 		private Func<T?, T?, bool>? _equals;

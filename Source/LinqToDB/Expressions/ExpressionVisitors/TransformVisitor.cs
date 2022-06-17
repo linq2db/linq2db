@@ -49,11 +49,6 @@ namespace LinqToDB.Expressions
 			if (expr == null)
 				return null;
 
-			if (_func == null && _staticFunc == null)
-			{
-				Debugger.Launch();
-			}
-
 			var ex = _staticFunc != null ? _staticFunc(expr) : _func!(_context!, expr);
 			if (ex != expr)
 				return ex;
