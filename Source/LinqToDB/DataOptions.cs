@@ -105,7 +105,7 @@ namespace LinqToDB
 		}
 
 		int? _configurationID;
-		int IConfigurationID.ConfigurationID => _configurationID ??= new IdentifierBuilder()
+		public int ConfigurationID => _configurationID ??= new IdentifierBuilder()
 			.Add(LinqOptions)
 			.Add(RetryPolicyOptions)
 			.Add(ConnectionOptions)

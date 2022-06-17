@@ -294,22 +294,25 @@ namespace LinqToDB.Linq
 		{
 			class QueryCacheEntry
 			{
-				public QueryCacheEntry(Query<T> query, QueryFlags queryFlags, LinqOptions linqOptions)
+				public QueryCacheEntry(Query<T> query, QueryFlags queryFlags, DataOptions dataOptions)
 				{
 					// query doesn't have GetHashCode now, so we cannot precalculate hashcode to speed-up search
 					Query       = query;
-					LinqOptions = linqOptions;
+					DataOptions = dataOptions;
 					QueryFlags  = queryFlags;
 				}
 
-				public Query<T>             Query       { get; }
-				public LinqOptions LinqOptions { get; }
-				public QueryFlags           QueryFlags  { get; }
+				public Query<T>    Query       { get; }
+				public DataOptions DataOptions { get; }
+				public QueryFlags  QueryFlags  { get; }
 
 				// accepts components to avoid QueryCacheEntry allocation for cached query
-				public bool Compare(IDataContext context, Expression queryExpression, QueryFlags queryFlags, LinqOptions linqOptions)
+				public bool Compare(IDataContext context, Expression queryExpression, QueryFlags queryFlags, DataOptions dataOptions)
 				{
-					return QueryFlags == queryFlags && LinqOptions == linqOptions && Query.Compare(context, queryExpression);
+					return
+						QueryFlags == queryFlags &&
+						DataOptions.ConfigurationID == dataOptions.ConfigurationID &&
+						Query.Compare(context, queryExpression);
 				}
 			}
 
@@ -356,7 +359,7 @@ namespace LinqToDB.Linq
 			/// <summary>
 			/// Adds query to cache if it is not cached already.
 			/// </summary>
-			public void TryAdd(IDataContext dataContext, Query<T> query, QueryFlags queryFlags, LinqOptions linqOptions)
+			public void TryAdd(IDataContext dataContext, Query<T> query, QueryFlags queryFlags, DataOptions dataOptions)
 			{
 				// because Add is less frequent operation than Find, it is fine to have put bigger locks here
 				QueryCacheEntry[] cache;
@@ -369,7 +372,7 @@ namespace LinqToDB.Linq
 				}
 
 				for (var i = 0; i < cache.Length; i++)
-					if (cache[i].Compare(dataContext, query.Expression!, queryFlags, linqOptions))
+					if (cache[i].Compare(dataContext, query.Expression!, queryFlags, dataOptions))
 						// already added by another thread
 						return;
 
@@ -386,7 +389,7 @@ namespace LinqToDB.Linq
 						// check only added queries, each version could add 1 query to first position, so we
 						// test only first N queries
 						for (var i = 0; i < cache.Length && i < versionsDiff; i++)
-							if (cache[i].Compare(dataContext, query.Expression!, queryFlags, linqOptions))
+							if (cache[i].Compare(dataContext, query.Expression!, queryFlags, dataOptions))
 								// already added by another thread
 								return;
 					}
@@ -396,7 +399,7 @@ namespace LinqToDB.Linq
 					var newCache      = new QueryCacheEntry[cache.Length == CacheSize ? CacheSize : cache.Length + 1];
 					var newPriorities = new int[newCache.Length];
 
-					newCache[0]      = new QueryCacheEntry(query, queryFlags, linqOptions);
+					newCache[0]      = new QueryCacheEntry(query, queryFlags, dataOptions);
 					newPriorities[0] = 0;
 
 					for (var i = 1; i < newCache.Length; i++)
@@ -414,7 +417,7 @@ namespace LinqToDB.Linq
 			/// <summary>
 			/// Search for query in cache and of found, try to move it to better position in cache.
 			/// </summary>
-			public Query<T>? Find(IDataContext dataContext, Expression expr, QueryFlags queryFlags, LinqOptions linqOptions)
+			public Query<T>? Find(IDataContext dataContext, Expression expr, QueryFlags queryFlags, DataOptions dataOptions)
 			{
 				QueryCacheEntry[] cache;
 				int[]             indexes;
@@ -436,7 +439,7 @@ namespace LinqToDB.Linq
 						// if we have reordering lock, we can enumerate queries in priority order
 						var idx = allowReordering ? indexes[i] : i;
 
-						if (cache[idx].Compare(dataContext, expr, queryFlags, linqOptions))
+						if (cache[idx].Compare(dataContext, expr, queryFlags, dataOptions))
 						{
 							// do reorder only if it is not blocked and cache wasn't replaced by new one
 							if (i > 0 && version == _version && allowReordering)
@@ -492,20 +495,20 @@ namespace LinqToDB.Linq
 			if (dataContext is IExpressionPreprocessor preprocessor)
 				expr = preprocessor.ProcessExpression(expr);
 
-			var linqOptions = dataContext.Options.LinqOptions;
+			var dataOptions = dataContext.Options;
 
-			if (linqOptions.DisableQueryCache)
+			if (dataOptions.LinqOptions.DisableQueryCache)
 				return CreateQuery(optimizationContext, new ParametersContext(expr, optimizationContext, dataContext), dataContext, expr);
 
 			var queryFlags = dataContext.GetQueryFlags();
-			var query      = _queryCache.Find(dataContext, expr, queryFlags, linqOptions);
+			var query      = _queryCache.Find(dataContext, expr, queryFlags, dataOptions);
 
 			if (query == null)
 			{
 				query = CreateQuery(optimizationContext, new ParametersContext(expr, optimizationContext, dataContext), dataContext, expr);
 
 				if (!query.DoNotCache)
-					_queryCache.TryAdd(dataContext, query, queryFlags, linqOptions);
+					_queryCache.TryAdd(dataContext, query, queryFlags, dataOptions);
 			}
 
 			return query;
