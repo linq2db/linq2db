@@ -225,7 +225,7 @@ namespace LinqToDB.Remote
 			return null;
 		}
 
-		static readonly ConcurrentDictionary<Tuple<Type, MappingSchema, Type, SqlProviderFlags, LinqOptions>, Func<ISqlBuilder>> _sqlBuilders = new ();
+		static readonly ConcurrentDictionary<Tuple<Type,MappingSchema,Type,SqlProviderFlags,DataOptions>,Func<ISqlBuilder>> _sqlBuilders = new ();
 
 		Func<ISqlBuilder>? _createSqlProvider;
 
@@ -235,8 +235,7 @@ namespace LinqToDB.Remote
 			{
 				if (_createSqlProvider == null)
 				{
-					var linqOptions = Options.LinqOptions;
-					var key         = Tuple.Create(SqlProviderType, MappingSchema, SqlOptimizerType, ((IDataContext)this).SqlProviderFlags, linqOptions);
+					var key = Tuple.Create(SqlProviderType, MappingSchema, SqlOptimizerType, ((IDataContext)this).SqlProviderFlags, Options);
 
 #if NET45 || NET46 || NETSTANDARD2_0
 					_createSqlProvider = _sqlBuilders.GetOrAdd(
@@ -258,7 +257,7 @@ namespace LinqToDB.Remote
 								{
 									typeof(IDataProvider),
 									typeof(MappingSchema),
-									typeof(LinqOptions),
+									typeof(DataOptions),
 									typeof(ISqlOptimizer),
 									typeof(SqlProviderFlags)
 								}) ?? throw new InvalidOperationException($"Constructor for type '{key.Item1.Name}' not found."),
