@@ -11,10 +11,6 @@ namespace LinqToDB.Linq.Builder
 	[DebuggerDisplay("{BuildContextDebuggingHelper.GetContextInfo(this)}")]
 	class SubQueryContext : PassThroughContext
 	{
-#if DEBUG
-		public string? SqlQueryText => SelectQuery.SqlText;
-#endif
-
 		public SubQueryContext(IBuildContext subQuery, SelectQuery selectQuery, bool addToSql)
 			: base(subQuery)
 		{

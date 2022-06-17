@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Linq.Expressions;
-using System.Runtime.CompilerServices;
-using LinqToDB.Linq.Builder;
 
 namespace LinqToDB.Expressions
 {
-	class ContextRefExpression : Expression
+	using Linq.Builder;
+
+	class ContextRefExpression : Expression, IEquatable<ContextRefExpression>
 	{
 		public ContextRefExpression(Type elementType, IBuildContext buildContext)
 		{
@@ -26,22 +26,7 @@ namespace LinqToDB.Expressions
 
 		public override bool CanReduce => false;
 
-		#region Equality members
-
-		protected bool Equals(ContextRefExpression other)
-		{
-			return ElementType == other.ElementType && ReferenceEquals(BuildContext, other.BuildContext);
-		}
-
-		public override bool Equals(object? obj)
-		{
-			if (ReferenceEquals(null, obj)) return false;
-			if (ReferenceEquals(this, obj)) return true;
-			if (obj.GetType() != GetType()) return false;
-			return Equals((ContextRefExpression)obj);
-		}
-
-		public ContextRefExpression UpdateType(Type type)
+		public ContextRefExpression WithType(Type type)
 		{
 			if (type == Type)
 				return this;
@@ -49,13 +34,61 @@ namespace LinqToDB.Expressions
 			return new ContextRefExpression(type, BuildContext);
 		}
 
+		#region Equality members
+
+		public bool Equals(ContextRefExpression? other)
+		{
+			if (ReferenceEquals(null, other))
+			{
+				return false;
+			}
+
+			if (ReferenceEquals(this, other))
+			{
+				return true;
+			}
+
+			return ElementType.Equals(other.ElementType) && BuildContext.Equals(other.BuildContext);
+		}
+
+		public override bool Equals(object? obj)
+		{
+			if (ReferenceEquals(null, obj))
+			{
+				return false;
+			}
+
+			if (ReferenceEquals(this, obj))
+			{
+				return true;
+			}
+
+			if (obj.GetType() != GetType())
+			{
+				return false;
+			}
+
+			return Equals((ContextRefExpression)obj);
+		}
+
 		public override int GetHashCode()
 		{
 			unchecked
 			{
-				return ((ElementType != null ? ElementType.GetHashCode() : 0) * 397) ^
-				       RuntimeHelpers.GetHashCode(BuildContext);
+				var hashCode = ElementType.GetHashCode();
+				hashCode = (hashCode * 397) ^ BuildContext.GetHashCode();
+				return hashCode;
 			}
+		}
+
+		public static bool operator ==(ContextRefExpression? left, ContextRefExpression? right)
+		{
+			return Equals(left, right);
+		}
+
+		public static bool operator !=(ContextRefExpression? left, ContextRefExpression? right)
+		{
+			return !Equals(left, right);
 		}
 
 		#endregion

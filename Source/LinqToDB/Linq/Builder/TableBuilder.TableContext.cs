@@ -224,7 +224,7 @@ namespace LinqToDB.Linq.Builder
 						return new SqlEagerLoadExpression(this, path, Builder.GetSequenceExpression(this));
 
 					return Builder.BuildFullEntityExpression(this, ObjectType, flags);
-			}
+				}
 
 				if (path is not MemberExpression member)
 					return Builder.CreateSqlError(this, path);

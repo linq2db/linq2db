@@ -8,6 +8,7 @@ using System.Reflection;
 namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
+	using Extensions;
 	using SqlQuery;
 	using Common;
 
@@ -133,13 +134,13 @@ namespace LinqToDB.Linq.Builder
 					{
 						// updating type for Inheritance mapping
 						//
-						return bodyRef.UpdateType(path.Type);
+						return bodyRef.WithType(path.Type);
 					}
 
 					return path;
 				}
 
-				if (path.Type != Body.Type && flags.HasFlag(ProjectFlags.Expression))
+				if (!path.Type.IsSameOrParentOf(Body.Type) && flags.HasFlag(ProjectFlags.Expression))
 					return new SqlEagerLoadExpression(this, path, GetEagerLoadExpression(path));
 
 				result = Body;

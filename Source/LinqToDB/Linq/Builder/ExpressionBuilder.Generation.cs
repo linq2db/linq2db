@@ -125,7 +125,7 @@ namespace LinqToDB.Linq.Builder
 					.Select(x => new SqlGenericConstructorExpression.Assignment(x.Member, x.Expression, x.Column.MemberAccessor.HasSetter))
 					.ToList();
 
-				return new SqlGenericConstructorExpression(true, entityType, null, new ReadOnlyCollection<SqlGenericConstructorExpression.Assignment>(assignments));
+				return new SqlGenericConstructorExpression(SqlGenericConstructorExpression.CreateType.Full, entityType, null, new ReadOnlyCollection<SqlGenericConstructorExpression.Assignment>(assignments));
 			}
 
 			//if (flags.HasFlag(ProjectFlags.Expression))
@@ -417,7 +417,7 @@ namespace LinqToDB.Linq.Builder
 			if (!flags.HasFlag(ProjectFlags.Keys))
 				BuildCalculatedColumns(context, entityDescriptor, entityType, assignments);
 
-			return new SqlGenericConstructorExpression(true, entityType, null, new ReadOnlyCollection<SqlGenericConstructorExpression.Assignment>(assignments));
+			return new SqlGenericConstructorExpression(SqlGenericConstructorExpression.CreateType.Full, entityType, null, new ReadOnlyCollection<SqlGenericConstructorExpression.Assignment>(assignments));
 		}
 
 		void BuildCalculatedColumns(IBuildContext context, EntityDescriptor entityDescriptor, Type objectType, List<SqlGenericConstructorExpression.Assignment> assignments)
@@ -665,7 +665,8 @@ namespace LinqToDB.Linq.Builder
 
 					return expr;
 				}
-				case SqlGenericConstructorExpression.CreateType.Unknown:
+				case SqlGenericConstructorExpression.CreateType.MemberInit:
+				case SqlGenericConstructorExpression.CreateType.Auto:
 				{
 					return ConstructObject(constructorExpression);
 				}

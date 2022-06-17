@@ -38,7 +38,7 @@ namespace LinqToDB.Expressions
 			}
 		}
 
-		public class Parameter
+		public new class Parameter
 		{
 			public static ReadOnlyCollection<Parameter> EmptyCollection = new (new List<Parameter>());
 
@@ -69,10 +69,10 @@ namespace LinqToDB.Expressions
 			}
 		}
 
-		public SqlGenericConstructorExpression(bool isFull, Type objectType, ReadOnlyCollection<Parameter>? parameters, ReadOnlyCollection<Assignment>? assignments)
+		public SqlGenericConstructorExpression(CreateType createType, Type objectType, ReadOnlyCollection<Parameter>? parameters, ReadOnlyCollection<Assignment>? assignments)
 		{
 			ObjectType    = objectType;
-			ConstructType = isFull ? CreateType.Full : CreateType.Unknown;
+			ConstructType = createType;
 			Parameters    = parameters  ?? Parameter.EmptyCollection;
 			Assignments   = assignments ?? Assignment.EmptyCollection;
 		}
@@ -200,7 +200,8 @@ namespace LinqToDB.Expressions
 
 		public enum CreateType
 		{
-			Unknown,
+			Incompatible,
+			Auto,
 			Full,
 			New,
 			MemberInit,
@@ -259,6 +260,11 @@ namespace LinqToDB.Expressions
 				case ExpressionType.MemberInit:
 				{
 					return new SqlGenericConstructorExpression((MemberInitExpression)createExpression);
+				}
+
+				case ExpressionType.Call:
+				{
+					throw new NotImplementedException("Parsing 'SqlGenericConstructorExpression' for Methods not yet implemented.");
 				}
 			}
 
