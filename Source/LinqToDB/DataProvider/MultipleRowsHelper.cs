@@ -35,7 +35,7 @@ namespace LinqToDB.DataProvider
 
 			MappingSchema = dataConnection.MappingSchema;
 			Options       = options;
-			SqlBuilder    = DataConnection.DataProvider.CreateSqlBuilder(MappingSchema, DataConnection.Options.LinqOptions);
+			SqlBuilder    = DataConnection.DataProvider.CreateSqlBuilder(MappingSchema, DataConnection.Options);
 			Descriptor    = MappingSchema.GetEntityDescriptor(entityType);
 			Columns        = Descriptor.Columns
 				.Where(c => !c.SkipOnInsert || c.IsIdentity && options.KeepIdentity == true)

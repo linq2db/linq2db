@@ -18,8 +18,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 	public class PostgreSQLSqlBuilder : BasicSqlBuilder
 	{
-		public PostgreSQLSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, LinqOptions linqOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(provider, mappingSchema, linqOptions, sqlOptimizer, sqlProviderFlags)
+		public PostgreSQLSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 

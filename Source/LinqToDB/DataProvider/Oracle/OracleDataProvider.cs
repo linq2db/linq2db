@@ -103,12 +103,12 @@ namespace LinqToDB.DataProvider.Oracle
 			TableOptions.CreateIfNotExists          |
 			TableOptions.DropIfExists;
 
-		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, LinqOptions linqOptions)
+		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
 		{
 			return Version switch
 			{
-				OracleVersion.v11 => new Oracle11SqlBuilder(this, mappingSchema, linqOptions, GetSqlOptimizer(), SqlProviderFlags),
-				_                 => new Oracle12SqlBuilder(this, mappingSchema, linqOptions, GetSqlOptimizer(), SqlProviderFlags),
+				OracleVersion.v11 => new Oracle11SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(), SqlProviderFlags),
+				_                 => new Oracle12SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(), SqlProviderFlags),
 			};
 		}
 

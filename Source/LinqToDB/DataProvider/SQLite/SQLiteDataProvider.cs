@@ -188,9 +188,9 @@ namespace LinqToDB.DataProvider.SQLite
 			TableOptions.CreateIfNotExists         |
 			TableOptions.DropIfExists;
 
-		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, LinqOptions linqOptions)
+		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
 		{
-			return new SQLiteSqlBuilder(this, mappingSchema, linqOptions, GetSqlOptimizer(), SqlProviderFlags);
+			return new SQLiteSqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(), SqlProviderFlags);
 		}
 
 		static class MappingSchemaInstance

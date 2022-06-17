@@ -10,8 +10,8 @@ namespace LinqToDB.DataProvider.Access
 
 	class AccessODBCSqlBuilder : AccessSqlBuilderBase
 	{
-		public AccessODBCSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, LinqOptions linqOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(provider, mappingSchema, linqOptions, sqlOptimizer, sqlProviderFlags)
+		public AccessODBCSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 

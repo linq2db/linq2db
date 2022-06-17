@@ -1902,9 +1902,9 @@ namespace LinqToDB.SqlProvider
 		#region Conversion
 
 		[return: NotNullIfNotNull("element")]
-		public virtual IQueryElement? ConvertElement(MappingSchema mappingSchema, LinqOptions linqOptions, IQueryElement? element, OptimizationContext context)
+		public virtual IQueryElement? ConvertElement(MappingSchema mappingSchema, DataOptions dataOptions, IQueryElement? element, OptimizationContext context)
 		{
-			return OptimizeElement(mappingSchema, linqOptions, element, context, true);
+			return OptimizeElement(mappingSchema, dataOptions.LinqOptions, element, context, true);
 		}
 
 		public virtual ISqlExpression ConvertExpressionImpl(ISqlExpression expression, ConvertVisitor<RunOptimizationContext> visitor)
@@ -3594,13 +3594,13 @@ namespace LinqToDB.SqlProvider
 			return newStatement;
 		}
 
-		public virtual void ConvertSkipTake(MappingSchema mappingSchema, LinqOptions linqOptions, SelectQuery selectQuery,
+		public virtual void ConvertSkipTake(MappingSchema mappingSchema, DataOptions dataOptions, SelectQuery selectQuery,
 			OptimizationContext optimizationContext, out ISqlExpression? takeExpr, out ISqlExpression? skipExpr)
 		{
 			// make skip take as parameters or evaluate otherwise
 
-			takeExpr = ConvertElement(mappingSchema, linqOptions, selectQuery.Select.TakeValue, optimizationContext) as ISqlExpression;
-			skipExpr = ConvertElement(mappingSchema, linqOptions, selectQuery.Select.SkipValue, optimizationContext) as ISqlExpression;
+			takeExpr = ConvertElement(mappingSchema, dataOptions, selectQuery.Select.TakeValue, optimizationContext) as ISqlExpression;
+			skipExpr = ConvertElement(mappingSchema, dataOptions, selectQuery.Select.SkipValue, optimizationContext) as ISqlExpression;
 
 			if (takeExpr != null)
 			{

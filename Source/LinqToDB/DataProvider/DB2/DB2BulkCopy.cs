@@ -117,7 +117,7 @@ namespace LinqToDB.DataProvider.DB2
 			var columns    = descriptor.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
 			var rd         = new BulkCopyReader<T>(dataConnection, columns, source);
 			var rc         = new BulkCopyRowsCopied();
-			var sqlBuilder = dataConnection.DataProvider.CreateSqlBuilder(table.DataContext.MappingSchema, dataConnection.Options.LinqOptions);
+			var sqlBuilder = dataConnection.DataProvider.CreateSqlBuilder(table.DataContext.MappingSchema, dataConnection.Options);
 			var tableName  = GetTableName(sqlBuilder, options, table);
 
 			var bcOptions = DB2BulkCopyOptions.Default;

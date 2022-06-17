@@ -11,8 +11,8 @@ namespace LinqToDB.DataProvider.SQLite
 
 	public class SQLiteSqlBuilder : BasicSqlBuilder
 	{
-		public SQLiteSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, LinqOptions linqOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(provider, mappingSchema, linqOptions, sqlOptimizer, sqlProviderFlags)
+		public SQLiteSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 

@@ -13,8 +13,8 @@ namespace LinqToDB.DataProvider.Informix
 
 	partial class InformixSqlBuilder : BasicSqlBuilder
 	{
-		public InformixSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, LinqOptions linqOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(provider, mappingSchema, linqOptions, sqlOptimizer, sqlProviderFlags)
+		public InformixSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 

@@ -84,11 +84,11 @@ namespace LinqToDB.DataProvider.DB2
 			TableOptions.CreateIfNotExists          |
 			TableOptions.DropIfExists;
 
-		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, LinqOptions linqOptions)
+		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
 		{
 			return Version == DB2Version.zOS ?
-				new DB2zOSSqlBuilder(this, mappingSchema, linqOptions, GetSqlOptimizer(), SqlProviderFlags) :
-				new DB2LUWSqlBuilder(this, mappingSchema, linqOptions, GetSqlOptimizer(), SqlProviderFlags);
+				new DB2zOSSqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(), SqlProviderFlags) :
+				new DB2LUWSqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(), SqlProviderFlags);
 		}
 
 		readonly DB2SqlOptimizer _sqlOptimizer;

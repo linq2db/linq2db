@@ -25,7 +25,7 @@ namespace LinqToDB.DataProvider
 		TableOptions     SupportedTableOptions { get; }
 		void             InitContext           (IDataContext dataContext);
 		DbConnection     CreateConnection      (string connectionString);
-		ISqlBuilder      CreateSqlBuilder      (MappingSchema mappingSchema, LinqOptions linqOptions);
+		ISqlBuilder      CreateSqlBuilder      (MappingSchema mappingSchema, DataOptions dataOptions);
 		ISqlOptimizer    GetSqlOptimizer       ();
 		/// <summary>
 		/// Initializes <see cref="DataConnection"/> command object.

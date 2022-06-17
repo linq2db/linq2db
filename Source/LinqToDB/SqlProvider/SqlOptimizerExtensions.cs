@@ -8,19 +8,19 @@ namespace LinqToDB.SqlProvider
 	internal static class SqlOptimizerExtensions
 	{
 		public static SqlStatement PrepareStatementForRemoting(this ISqlOptimizer optimizer, SqlStatement statement,
-			MappingSchema mappingSchema, LinqOptions linqOptions, AliasesContext aliases, EvaluationContext context)
+			MappingSchema mappingSchema, DataOptions dataOptions, AliasesContext aliases, EvaluationContext context)
 		{
 			var optimizationContext = new OptimizationContext(context, aliases, false);
 
-			var newStatement = (SqlStatement)optimizer.ConvertElement(mappingSchema, linqOptions, statement, optimizationContext);
+			var newStatement = (SqlStatement)optimizer.ConvertElement(mappingSchema, dataOptions, statement, optimizationContext);
 
 			return newStatement;
 		}
 
 		public static SqlStatement PrepareStatementForSql(this ISqlOptimizer optimizer, SqlStatement statement,
-			MappingSchema mappingSchema, LinqOptions linqOptions, OptimizationContext optimizationContext)
+			MappingSchema mappingSchema, DataOptions dataOptions, OptimizationContext optimizationContext)
 		{
-			var newStatement = (SqlStatement)optimizer.ConvertElement(mappingSchema, linqOptions, statement, optimizationContext);
+			var newStatement = (SqlStatement)optimizer.ConvertElement(mappingSchema, dataOptions, statement, optimizationContext);
 
 			return newStatement;
 		}

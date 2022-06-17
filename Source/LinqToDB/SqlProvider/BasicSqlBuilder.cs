@@ -23,11 +23,11 @@ namespace LinqToDB.SqlProvider
 	{
 		#region Init
 
-		protected BasicSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, LinqOptions linqOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+		protected BasicSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 		{
 			DataProvider     = provider;
 			MappingSchema    = mappingSchema;
-			LinqOptions      = linqOptions;
+			DataOptions      = dataOptions;
 			SqlOptimizer     = sqlOptimizer;
 			SqlProviderFlags = sqlProviderFlags;
 		}
@@ -36,7 +36,7 @@ namespace LinqToDB.SqlProvider
 		{
 			DataProvider     = parentBuilder.DataProvider;
 			MappingSchema    = parentBuilder.MappingSchema;
-			LinqOptions      = parentBuilder.LinqOptions;
+			DataOptions      = parentBuilder.DataOptions;
 			SqlOptimizer     = parentBuilder.SqlOptimizer;
 			SqlProviderFlags = parentBuilder.SqlProviderFlags;
 			TablePath        = parentBuilder.TablePath;
@@ -48,7 +48,7 @@ namespace LinqToDB.SqlProvider
 		public MappingSchema       MappingSchema       { get;                }
 		public StringBuilder       StringBuilder       { get; set;           } = null!;
 		public SqlProviderFlags    SqlProviderFlags    { get;                }
-		public LinqOptions         LinqOptions         { get;                }
+		public DataOptions         DataOptions         { get;                }
 
 		protected IDataProvider?      DataProvider;
 		protected ValueToSqlConverter ValueToSqlConverter => MappingSchema.ValueToSqlConverter;
@@ -122,7 +122,7 @@ namespace LinqToDB.SqlProvider
 		public T? ConvertElement<T>(T? element)
 			where T : class, IQueryElement
 		{
-			return (T?)SqlOptimizer.ConvertElement(MappingSchema, LinqOptions, element, OptimizationContext);
+			return (T?)SqlOptimizer.ConvertElement(MappingSchema, DataOptions, element, OptimizationContext);
 		}
 
 		#endregion
@@ -203,7 +203,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildSqlBuilder(SelectQuery selectQuery, int indent, bool skipAlias)
 		{
-			SqlOptimizer.ConvertSkipTake(MappingSchema, LinqOptions, selectQuery, OptimizationContext, out var takeExpr, out var skipExpr);
+			SqlOptimizer.ConvertSkipTake(MappingSchema, DataOptions, selectQuery, OptimizationContext, out var takeExpr, out var skipExpr);
 
 			if (!SqlProviderFlags.GetIsSkipSupportedFlag(takeExpr, skipExpr)
 				&& skipExpr != null)
@@ -2147,7 +2147,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildSkipFirst(SelectQuery selectQuery)
 		{
-			SqlOptimizer.ConvertSkipTake(MappingSchema, LinqOptions, selectQuery, OptimizationContext, out var takeExpr, out var skipExpr);
+			SqlOptimizer.ConvertSkipTake(MappingSchema, DataOptions, selectQuery, OptimizationContext, out var takeExpr, out var skipExpr);
 
 			if (SkipFirst && NeedSkip(takeExpr, skipExpr) && SkipFormat != null)
 				StringBuilder.Append(' ').AppendFormat(
@@ -2180,7 +2180,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildOffsetLimit(SelectQuery selectQuery)
 		{
-			SqlOptimizer.ConvertSkipTake(MappingSchema, LinqOptions, selectQuery, OptimizationContext, out var takeExpr, out var skipExpr);
+			SqlOptimizer.ConvertSkipTake(MappingSchema, DataOptions, selectQuery, OptimizationContext, out var takeExpr, out var skipExpr);
 
 			var doSkip = NeedSkip(takeExpr, skipExpr) && OffsetFormat(selectQuery) != null;
 			var doTake = NeedTake(takeExpr)           && LimitFormat(selectQuery)  != null;

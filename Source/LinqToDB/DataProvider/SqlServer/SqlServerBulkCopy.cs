@@ -125,7 +125,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			var transaction    = providerConnections.ProviderTransaction;
 			var ed             = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T));
 			var columns        = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
-			var sb             = _provider.CreateSqlBuilder(table.DataContext.MappingSchema, dataConnection.Options.LinqOptions);
+			var sb             = _provider.CreateSqlBuilder(table.DataContext.MappingSchema, dataConnection.Options);
 			var rd             = createDataReader(columns);
 			var sqlopt         = SqlServerProviderAdapter.SqlBulkCopyOptions.Default;
 			var rc             = new BulkCopyRowsCopied();
@@ -200,7 +200,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			var transaction    = providerConnections.ProviderTransaction;
 			var ed             = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T));
 			var columns        = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
-			var sb             = _provider.CreateSqlBuilder(table.DataContext.MappingSchema, dataConnection.Options.LinqOptions);
+			var sb             = _provider.CreateSqlBuilder(table.DataContext.MappingSchema, dataConnection.Options);
 			var rd             = createDataReader(columns);
 			var sqlopt         = SqlServerProviderAdapter.SqlBulkCopyOptions.Default;
 			var rc             = new BulkCopyRowsCopied();

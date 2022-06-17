@@ -49,7 +49,7 @@ namespace LinqToDB.Tools
 					if (sourceList.Count == 0)
 						return sourceList;
 
-					var sqlBuilder = context.DataProvider.CreateSqlBuilder(context.MappingSchema, context.Options.LinqOptions);
+					var sqlBuilder = context.DataProvider.CreateSqlBuilder(context.MappingSchema, context.Options);
 
 					var sequenceName = useSequenceName && column.SequenceName != null ? column.SequenceName.SequenceName : null;
 

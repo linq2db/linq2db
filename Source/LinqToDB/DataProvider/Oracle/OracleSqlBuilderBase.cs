@@ -12,8 +12,8 @@ namespace LinqToDB.DataProvider.Oracle
 
 	abstract partial class OracleSqlBuilderBase : BasicSqlBuilder
 	{
-		protected OracleSqlBuilderBase(IDataProvider? provider, MappingSchema mappingSchema, LinqOptions linqOptionSet, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(provider, mappingSchema, linqOptionSet, sqlOptimizer, sqlProviderFlags)
+		protected OracleSqlBuilderBase(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
@@ -67,7 +67,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override bool BuildWhere(SelectQuery selectQuery)
 		{
-			SqlOptimizer.ConvertSkipTake(MappingSchema, LinqOptions, selectQuery, OptimizationContext, out var takeExpr, out var skipEpr);
+			SqlOptimizer.ConvertSkipTake(MappingSchema, DataOptions, selectQuery, OptimizationContext, out var takeExpr, out var skipEpr);
 
 			return
 				base.BuildWhere(selectQuery) ||
