@@ -30,7 +30,7 @@ namespace LinqToDB.Common
 			return o;
 		}
 
-		public T WithOptions<TSet>(Func<TSet, TSet> optionSetter)
+		public T WithOptions<TSet>(Func<TSet,TSet> optionSetter)
 			where TSet : class, IOptionSet, new()
 		{
 			var original = Get<TSet>();

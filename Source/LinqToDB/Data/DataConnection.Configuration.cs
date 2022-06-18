@@ -485,6 +485,7 @@ namespace LinqToDB.Data
 						.Add(_msID = ((IConfigurationID)MappingSchema).ConfigurationID)
 						.Add(ConfigurationString ?? ConnectionString ?? Connection.ConnectionString)
 						.Add(Options)
+						.Add(GetType())
 						.CreateID();
 				}
 

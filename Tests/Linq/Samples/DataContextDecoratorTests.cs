@@ -34,7 +34,7 @@ namespace Tests.Samples
 			}
 
 			public string              ContextName           => _context.ContextName;
-			public int                 ContextID             => _context.ContextID;
+			public int                 ConfigurationID       => _context.ConfigurationID;
 			public Func<ISqlOptimizer> GetSqlOptimizer       => _context.GetSqlOptimizer;
 			public Type                DataReaderType        => _context.DataReaderType;
 			public Func<ISqlBuilder>   CreateSqlProvider     => _context.CreateSqlProvider;

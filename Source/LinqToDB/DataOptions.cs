@@ -126,9 +126,9 @@ namespace LinqToDB
 			return ((IConfigurationID)this).ConfigurationID == ((IConfigurationID)other).ConfigurationID;
 		}
 
-		public override bool Equals(object? other)
+		public override bool Equals(object? obj)
 		{
-			return other is DataOptions o && Equals(o);
+			return obj is DataOptions o && Equals(o);
 		}
 
 		public override int GetHashCode()

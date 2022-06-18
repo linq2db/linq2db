@@ -3,12 +3,12 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
-using LinqToDB.Common.Internal;
 
 namespace LinqToDB.Linq
 {
-	using SqlQuery;
+	using Common.Internal;
 	using Common.Internal.Cache;
+	using SqlQuery;
 
 	static partial class QueryRunner
 	{
@@ -80,29 +80,27 @@ namespace LinqToDB.Linq
 					return 0;
 
 				var type        = GetType<T>(obj!, dataContext);
-				var linqOptions = dataContext.Options.LinqOptions;
+				var dataOptions = dataContext.Options;
 
-				var ei = linqOptions.DisableQueryCache
+				var ei = dataOptions.LinqOptions.DisableQueryCache
 					? CreateQuery(dataContext, tableName, serverName, databaseName, schemaName, tableOptions, type)
 					: Cache<T>.QueryCache.GetOrCreate(
 						(
 							operation: 'D',
-							((IConfigurationID)dataContext.MappingSchema).ConfigurationID,
-							dataContext.ContextID,
+							dataContext.ConfigurationID,
 							tableName,
 							schemaName,
 							databaseName,
 							serverName,
 							tableOptions,
 							type,
-							queryFlags: dataContext.GetQueryFlags(),
-							LinqOptions: linqOptions
+							queryFlags: dataContext.GetQueryFlags()
 						),
-						(dataContext, linqOptions),
+						dataContext,
 						static (entry, key, context) =>
 						{
-							entry.SlidingExpiration = context.linqOptions.CacheSlidingExpiration;
-							return CreateQuery(context.dataContext, key.tableName, key.serverName, key.databaseName, key.schemaName, key.tableOptions, key.type);
+							entry.SlidingExpiration = context.Options.LinqOptions.CacheSlidingExpiration;
+							return CreateQuery(context, key.tableName, key.serverName, key.databaseName, key.schemaName, key.tableOptions, key.type);
 						});
 
 				return (int)ei.GetElement(dataContext, Expression.Constant(obj), null, null)!;
@@ -121,30 +119,26 @@ namespace LinqToDB.Linq
 				if (Equals(default(T), obj))
 					return 0;
 
-				var type        = GetType<T>(obj!, dataContext);
-				var linqOptions = dataContext.Options.LinqOptions;
-
-				var ei   = linqOptions.DisableQueryCache
+				var type = GetType<T>(obj!, dataContext);
+				var ei   = dataContext.Options.LinqOptions.DisableQueryCache
 					? CreateQuery(dataContext, tableName, serverName, databaseName, schemaName, tableOptions, type)
 					: Cache<T>.QueryCache.GetOrCreate(
 						(
 							operation: 'D',
-							((IConfigurationID)dataContext.MappingSchema).ConfigurationID,
-							dataContext.ContextID,
+							dataContext.ConfigurationID,
 							tableName,
 							schemaName,
 							databaseName,
 							serverName,
 							tableOptions,
 							type,
-							queryFlags: dataContext.GetQueryFlags(),
-							LinqOptions: linqOptions
+							queryFlags: dataContext.GetQueryFlags()
 						),
-						(dataContext, linqOptions),
+						dataContext,
 						static (entry, key, context) =>
 						{
-							entry.SlidingExpiration = context.linqOptions.CacheSlidingExpiration;
-							return CreateQuery(context.dataContext, key.tableName, key.serverName, key.databaseName, key.schemaName, key.tableOptions, key.type);
+							entry.SlidingExpiration = context.Options.LinqOptions.CacheSlidingExpiration;
+							return CreateQuery(context, key.tableName, key.serverName, key.databaseName, key.schemaName, key.tableOptions, key.type);
 						});
 
 				var result = await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, null, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);

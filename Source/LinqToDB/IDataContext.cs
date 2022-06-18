@@ -1,15 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Linq.Expressions;
+using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
 namespace LinqToDB
 {
-	using System.Data.Common;
-	using System.Threading.Tasks;
-	using Linq;
+	using Common.Internal;
 	using Interceptors;
+	using Linq;
 	using Mapping;
 	using SqlProvider;
 
@@ -17,7 +18,7 @@ namespace LinqToDB
 	/// Database connection abstraction interface.
 	/// </summary>
 	[PublicAPI]
-	public interface IDataContext : IDisposable
+	public interface IDataContext : IConfigurationID, IDisposable
 #if NATIVE_ASYNC
 		, IAsyncDisposable
 #else
@@ -28,7 +29,6 @@ namespace LinqToDB
 		/// Provider identifier.
 		/// </summary>
 		string              ContextName           { get; }
-		int                 ContextID             { get; }
 		/// <summary>
 		/// Gets SQL builder service factory method for current context data provider.
 		/// </summary>

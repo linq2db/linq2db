@@ -110,7 +110,7 @@ namespace LinqToDB
 		/// <summary>
 		/// Gets or sets ContextID.
 		/// </summary>
-		public int           ContextID           => DataProvider.ID;
+		public int           ConfigurationID     => DataProvider.ID;
 
 		/// <summary>
 		/// Gets or sets mapping schema. Uses provider's mapping schema by default.

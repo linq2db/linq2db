@@ -86,28 +86,25 @@ namespace LinqToDB.Linq
 
 				var type             = GetType<T>(obj!, dataContext);
 				var entityDescriptor = dataContext.MappingSchema.GetEntityDescriptor(type);
-				var linqOptions      = dataContext.Options.LinqOptions;
 
-				var ei = linqOptions.DisableQueryCache || entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Insert) || columnFilter != null
+				var ei = dataContext.Options.LinqOptions.DisableQueryCache || entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Insert) || columnFilter != null
 					? CreateQuery(dataContext, entityDescriptor, obj, columnFilter, tableName, serverName, databaseName, schemaName, tableOptions, type)
 					: Cache<T>.QueryCache.GetOrCreate(
 						(
 							operation: 'I',
-							((IConfigurationID)dataContext.MappingSchema).ConfigurationID,
-							dataContext.ContextID,
+							dataContext.ConfigurationID,
 							tableName,
 							serverName,
 							databaseName,
 							schemaName,
 							tableOptions,
 							type,
-							queryFlags: dataContext.GetQueryFlags(),
-							LinqOptions: linqOptions
+							queryFlags: dataContext.GetQueryFlags()
 						),
-						( dataContext, entityDescriptor, obj, linqOptions ),
+						(dataContext, entityDescriptor, obj),
 						static (entry, key, context) =>
 						{
-							entry.SlidingExpiration = context.linqOptions.CacheSlidingExpiration;
+							entry.SlidingExpiration = context.dataContext.Options.LinqOptions.CacheSlidingExpiration;
 							return CreateQuery(context.dataContext, context.entityDescriptor, context.obj, null, key.tableName, key.serverName, key.databaseName, key.schemaName, key.tableOptions, key.type);
 						});
 
@@ -130,28 +127,25 @@ namespace LinqToDB.Linq
 
 				var type             = GetType<T>(obj!, dataContext);
 				var entityDescriptor = dataContext.MappingSchema.GetEntityDescriptor(type);
-				var linqOptions      = dataContext.Options.LinqOptions;
 
-				var ei               = linqOptions.DisableQueryCache || entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Insert) || columnFilter != null
+				var ei = dataContext.Options.LinqOptions.DisableQueryCache || entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Insert) || columnFilter != null
 					? CreateQuery(dataContext, entityDescriptor, obj, columnFilter, tableName, serverName, databaseName, schemaName, tableOptions, type)
 					: Cache<T>.QueryCache.GetOrCreate(
 						(
 							operation: 'I',
-							((IConfigurationID)dataContext.MappingSchema).ConfigurationID,
-							dataContext.ContextID,
+							dataContext.ConfigurationID,
 							tableName,
 							serverName,
 							databaseName,
 							schemaName,
 							tableOptions,
 							type,
-							queryFlags: dataContext.GetQueryFlags(),
-							LinqOptions: linqOptions
+							queryFlags: dataContext.GetQueryFlags()
 						),
-						( dataContext, entityDescriptor, obj, linqOptions ),
+						(dataContext, entityDescriptor, obj),
 						static (entry, key, context) =>
 						{
-							entry.SlidingExpiration = context.linqOptions.CacheSlidingExpiration;
+							entry.SlidingExpiration = context.dataContext.Options.LinqOptions.CacheSlidingExpiration;
 							return CreateQuery(context.dataContext, context.entityDescriptor, context.obj, null, key.tableName, key.serverName, key.databaseName, key.schemaName, key.tableOptions, key.type);
 						});
 

@@ -40,11 +40,10 @@ namespace LinqToDB.Linq
 
 		internal Query(IDataContext dataContext, Expression? expression)
 		{
-			ContextID               = dataContext.ContextID;
+			ConfigurationID         = dataContext.ConfigurationID;
 			ContextType             = dataContext.GetType();
 			Expression              = expression;
 			MappingSchema           = dataContext.MappingSchema;
-			ConfigurationID         = ((IConfigurationID)dataContext.MappingSchema).ConfigurationID;
 			SqlOptimizer            = dataContext.GetSqlOptimizer();
 			SqlProviderFlags        = dataContext.SqlProviderFlags;
 			DataOptions             = dataContext.Options;
@@ -56,11 +55,10 @@ namespace LinqToDB.Linq
 
 		#region Compare
 
-		internal readonly int              ContextID;
+		internal readonly int              ConfigurationID;
 		internal readonly Type             ContextType;
 		internal readonly Expression?      Expression;
 		internal readonly MappingSchema    MappingSchema;
-		internal readonly int              ConfigurationID;
 		internal readonly bool             InlineParameters;
 		internal readonly ISqlOptimizer    SqlOptimizer;
 		internal readonly SqlProviderFlags SqlProviderFlags;
@@ -70,8 +68,7 @@ namespace LinqToDB.Linq
 		protected bool Compare(IDataContext dataContext, Expression expr)
 		{
 			return
-				ContextID               == dataContext.ContextID                                                        &&
-				ConfigurationID         == ((IConfigurationID)dataContext.MappingSchema).ConfigurationID                &&
+				ConfigurationID         == dataContext.ConfigurationID                                                  &&
 				InlineParameters        == dataContext.InlineParameters                                                 &&
 				ContextType             == dataContext.GetType()                                                        &&
 				IsEntityServiceProvided == dataContext is IInterceptable<IEntityServiceInterceptor> { Interceptor: {} } &&
@@ -309,7 +306,7 @@ namespace LinqToDB.Linq
 				// accepts components to avoid QueryCacheEntry allocation for cached query
 				public bool Compare(IDataContext context, Expression queryExpression, QueryFlags queryFlags, DataOptions dataOptions)
 				{
-					return QueryFlags == queryFlags && DataOptions == dataOptions && Query.Compare(context, queryExpression);
+					return QueryFlags == queryFlags /*&& DataOptions == dataOptions*/ && Query.Compare(context, queryExpression);
 				}
 			}
 
@@ -482,10 +479,10 @@ namespace LinqToDB.Linq
 		{
 			var optimizationContext = new ExpressionTreeOptimizationContext(dataContext);
 
-			expr = optimizationContext.ExpandExpression(expr);
-			// we need this call for correct processing parameters in ExpressionMethod
-			// TODO: IT breaks performance. All these operations must be cached.
-			expr = optimizationContext.ExposeExpression(expr);
+//			expr = optimizationContext.ExpandExpression(expr);
+//			// we need this call for correct processing parameters in ExpressionMethod
+//			// TODO: IT breaks performance. All these operations must be cached.
+//			expr = optimizationContext.ExposeExpression(expr);
 
 			dependsOnParameters = optimizationContext.IsDependsOnParameters();
 

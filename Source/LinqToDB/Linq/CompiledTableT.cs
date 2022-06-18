@@ -22,24 +22,20 @@ namespace LinqToDB.Linq
 
 		Query<T> GetInfo(IDataContext dataContext)
 		{
-			var contextID   = dataContext.ContextID;
-			var contextType = dataContext.GetType();
-			var linqOptions = dataContext.Options.LinqOptions;
+			var configurationID = dataContext.ConfigurationID;
+			var dataOptions     = dataContext.Options;
 
 			var result = QueryRunner.Cache<T>.QueryCache.GetOrCreate(
 				(
 					operation: "CT",
-					contextID,
-					contextType,
-					mappingSchemaID : ((IConfigurationID)dataContext.MappingSchema).ConfigurationID,
-					expression      : _expression,
-					queryFlags      : dataContext.GetQueryFlags(),
-					LinqOptions     : linqOptions
+					configurationID,
+					expression : _expression,
+					queryFlags : dataContext.GetQueryFlags()
 				),
-				(dataContext, lambda: _lambda, linqOptions),
+				(dataContext, lambda: _lambda, dataOptions),
 				static (o, key, ctx) =>
 				{
-					o.SlidingExpiration = ctx.linqOptions.CacheSlidingExpiration;
+					o.SlidingExpiration = ctx.dataOptions.LinqOptions.CacheSlidingExpiration;
 
 					var query = new Query<T>(ctx.dataContext, key.expression);
 
