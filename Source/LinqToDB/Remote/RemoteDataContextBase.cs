@@ -110,12 +110,24 @@ namespace LinqToDB.Remote
 		string?            _contextName;
 		string IDataContext.ContextName => _contextName ??= GetConfigurationInfo().MappingSchema.ConfigurationList[0];
 
+		int  _msID;
 		int? _configurationID;
-		int IConfigurationID.ConfigurationID => _configurationID ??= new IdentifierBuilder()
-			.Add(((IDataContext)this).ContextName)
-			.Add(Options)
-			.Add(GetType())
-			.CreateID();
+		int IConfigurationID.ConfigurationID
+		{
+			get
+			{
+				if (_configurationID == null || _msID != ((IConfigurationID)MappingSchema).ConfigurationID)
+				{
+					_configurationID = new IdentifierBuilder()
+						.Add(_msID = ((IConfigurationID)MappingSchema).ConfigurationID)
+						.Add(Options)
+						.Add(GetType())
+						.CreateID();
+				}
+
+				return _configurationID.Value;
+			}
+		}
 
 		private MappingSchema? _mappingSchema;
 		public  MappingSchema   MappingSchema
