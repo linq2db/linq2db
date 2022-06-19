@@ -567,11 +567,11 @@ namespace LinqToDB.Linq
 	class ParameterAccessor
 	{
 		public ParameterAccessor(
-			Expression                             expression,
+			Expression                                           expression,
 			Func<Expression,IDataContext?,object?[]?,object?>    valueAccessor,
 			Func<Expression,IDataContext?,object?[]?,object?>    originalAccessor,
 			Func<Expression,IDataContext?,object?[]?,DbDataType> dbDataTypeAccessor,
-			SqlParameter                           sqlParameter)
+			SqlParameter                                         sqlParameter)
 		{
 			Expression         = expression;
 			ValueAccessor      = valueAccessor;
@@ -580,11 +580,11 @@ namespace LinqToDB.Linq
 			SqlParameter       = sqlParameter;
 		}
 
-		public          Expression                                           Expression;
-		public readonly Func<Expression,IDataContext?,object?[]?,object?>    ValueAccessor;
-		public readonly Func<Expression,IDataContext?,object?[]?,object?>    OriginalAccessor;
-		public readonly Func<Expression,IDataContext?,object?[]?,DbDataType> DbDataTypeAccessor;
-		public readonly SqlParameter                                         SqlParameter;
+		public          Expression                                            Expression;
+		public readonly Func<Expression,IDataContext?,object?[]?,object?>     ValueAccessor;
+		public readonly Func<Expression,IDataContext?,object?[]?,object?>     OriginalAccessor;
+		public readonly Func<Expression,IDataContext?,object?[]?,DbDataType>  DbDataTypeAccessor;
+		public readonly SqlParameter                                          SqlParameter;
 #if DEBUG
 		public Expression<Func<Expression,IDataContext?,object?[]?,object?>>? AccessorExpr;
 #endif
