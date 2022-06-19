@@ -479,10 +479,10 @@ namespace LinqToDB.Linq
 		{
 			var optimizationContext = new ExpressionTreeOptimizationContext(dataContext);
 
-//			expr = optimizationContext.ExpandExpression(expr);
+			expr = optimizationContext.ExpandExpression(expr);
 //			// we need this call for correct processing parameters in ExpressionMethod
 //			// TODO: IT breaks performance. All these operations must be cached.
-//			expr = optimizationContext.ExposeExpression(expr);
+			expr = optimizationContext.ExposeExpression(expr);
 
 			dependsOnParameters = optimizationContext.IsDependsOnParameters();
 
