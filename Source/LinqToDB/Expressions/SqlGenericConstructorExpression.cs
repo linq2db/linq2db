@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using LinqToDB.Extensions;
 using LinqToDB.Reflection;
 
 namespace LinqToDB.Expressions
@@ -75,6 +76,16 @@ namespace LinqToDB.Expressions
 			ConstructType = createType;
 			Parameters    = parameters  ?? Parameter.EmptyCollection;
 			Assignments   = assignments ?? Assignment.EmptyCollection;
+		}
+
+		public SqlGenericConstructorExpression(Type objectType, ReadOnlyCollection<MemberBinding> bindings)
+		{
+			ObjectType    = objectType;
+			ConstructType = CreateType.Auto;
+			Parameters    = Parameter.EmptyCollection;
+
+			var assignments = GetBindingsAssignments(bindings);
+			Assignments = new ReadOnlyCollection<Assignment>(assignments);
 		}
 
 		public SqlGenericConstructorExpression(NewExpression newExpression)
@@ -153,11 +164,21 @@ namespace LinqToDB.Expressions
 				Parameters = new ReadOnlyCollection<Parameter>(parameters);
 			}
 			
-			var items = new List<Assignment>(memberInitExpression.Bindings.Count);
+			var items = GetBindingsAssignments(memberInitExpression.Bindings);
 
-			for (var i = 0; i < memberInitExpression.Bindings.Count; i++)
+			NewExpression = memberInitExpression.NewExpression;
+			ConstructType = CreateType.MemberInit;
+			ObjectType    = memberInitExpression.Type;
+			Assignments   = new ReadOnlyCollection<Assignment>(items);
+		}
+
+		private static List<Assignment> GetBindingsAssignments(IList<MemberBinding> bindings)
+		{
+			var items = new List<Assignment>(bindings.Count);
+
+			for (var i = 0; i < bindings.Count; i++)
 			{
-				var binding = memberInitExpression.Bindings[i];
+				var binding = bindings[i];
 				switch (binding.BindingType)
 				{
 					case MemberBindingType.Assignment:
@@ -167,15 +188,21 @@ namespace LinqToDB.Expressions
 						break;
 					}
 
+					case MemberBindingType.MemberBinding:
+					{
+						var memberMemberBinding = (MemberMemberBinding)binding;
+						items.Add(new Assignment(memberMemberBinding.Member,
+							new SqlGenericConstructorExpression(memberMemberBinding.Member.GetMemberType(),
+								memberMemberBinding.Bindings), true));
+						break;
+					}
+
 					default:
 						throw new NotImplementedException();
 				}
 			}
 
-			NewExpression = memberInitExpression.NewExpression;
-			ConstructType = CreateType.MemberInit;
-			ObjectType    = memberInitExpression.Type;
-			Assignments   = new ReadOnlyCollection<Assignment>(items);
+			return items;
 		}
 
 		public Expression?      NewExpression  { get; private set; }
@@ -264,6 +291,11 @@ namespace LinqToDB.Expressions
 
 				case ExpressionType.Call:
 				{
+					//TODO: Do we still need Alias?
+					var mc = (MethodCallExpression)createExpression;
+					if (mc.IsSameGenericMethod(Methods.LinqToDB.SqlExt.Alias))
+						return Parse(mc.Arguments[0]);
+
 					throw new NotImplementedException("Parsing 'SqlGenericConstructorExpression' for Methods not yet implemented.");
 				}
 			}

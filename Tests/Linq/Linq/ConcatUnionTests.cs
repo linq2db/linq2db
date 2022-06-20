@@ -1297,7 +1297,6 @@ namespace Tests.Linq
 			query1.Union(query2).ToArray();
 		}
 
-		[ActiveIssue(3346)]
 		[Test(Description = "composite columns in union (also tests create table)")]
 		public void Issue3346_Count([DataSources] string context)
 		{
@@ -1343,24 +1342,27 @@ namespace Tests.Linq
 			public T    Model { get; set; } = default!;
 		}
 
-		[ActiveIssue(2948)]
 		[Test(Description = "InvalidCastException : Unable to cast object of type 'System.Linq.Expressions.MemberMemberBinding' to type 'System.Linq.Expressions.MemberAssignment'.")]
 		public void Issue2948([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 
 			var main = (from p in db.Person
-						select new Issue2948RankData<Issue2948MyModel>()
-						{
-							Model = { Id = p.ID, Name = p.FirstName },
-							Rank  = Sql.Ext.RowNumber().Over().PartitionBy(p.ID).OrderBy(p.ID).ToValue()
-						}).Where(x => x.Rank == 1).Select(x => x.Model).AsSubQuery();
+				select new Issue2948RankData<Issue2948MyModel>()
+				{
+					Model = { Id = p.ID, Name = p.FirstName },
+					Rank  = Sql.Ext.RowNumber().Over().PartitionBy(p.ID).OrderBy(p.ID).ToValue()
+				}).Where(x => x.Rank == 1).Select(x => x.Model).AsSubQuery();
 
 			var first  = main.Where(x => x.Id != 2);
 			var second = main.Where(x => x.Id == 2).OrderByDescending(x => x.Name).Take(1);
 			var third  = main.Where(x => x.Id != 3).OrderBy(x => x.Name).Take(1);
 
 			var res = first.Concat(second).Concat(third).ToList();
+
+			res.Should().HaveCount(5);
+			res[0].Id.Should().Be(1);
+			res[0].Name.Should().Be("John");
 		}
 
 		[ActiveIssue(2932)]

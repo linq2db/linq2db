@@ -105,11 +105,11 @@ namespace LinqToDB.Linq.Builder
 					return path;
 				}
 
-				if (SequenceHelper.IsSameContext(path, this))
+				/*if (SequenceHelper.IsSameContext(path, this))
 				{
 					var result = GetGroupJoinCall();
 					return result;
-				}
+				}*/
 
 				return path;
 			}

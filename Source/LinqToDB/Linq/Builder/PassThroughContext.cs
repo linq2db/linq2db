@@ -22,9 +22,9 @@ namespace LinqToDB.Linq.Builder
 		public IBuildContext Context { get; set; }
 
 #if DEBUG
-		public string? SqlQueryText => Context.SqlQueryText;
-		public string  Path         => this.GetPath();
-		public int     ContextId    { get; }
+		public virtual string? SqlQueryText => Context.SqlQueryText;
+		public         string  Path         => this.GetPath();
+		public         int     ContextId    { get; }
 #endif
 
 		public virtual ExpressionBuilder Builder     => Context.Builder;

@@ -63,7 +63,7 @@ namespace LinqToDB.Linq.Builder
 		public IBuildContext BuildWhere(IBuildContext? parent, IBuildContext sequence, LambdaExpression condition,
 			bool checkForSubQuery, bool enforceHaving, bool isTest)
 		{
-			if (sequence is not SubQueryContext subquery)
+			if (sequence is not SubQueryContext)
 			{
 				sequence = new SubQueryContext(sequence);
 			}
@@ -3637,9 +3637,17 @@ namespace LinqToDB.Linq.Builder
 								break;
 							}	
 							case MemberBindingType.MemberBinding:
+							{
+								var memberMemberBinding = (MemberMemberBinding)binding;
+								if (MemberInfoEqualityComparer.Default.Equals(memberMemberBinding.Member, member))
+								{
+									return Project(context, path, nextPath, nextIndex - 1, flags,
+										new SqlGenericConstructorExpression(memberMemberBinding.Member.GetMemberType(), memberMemberBinding.Bindings));
+								}
 								break;
+							}	
 							case MemberBindingType.ListBinding:
-								break;
+								throw new NotImplementedException();
 							default:
 								throw new NotImplementedException();
 						}

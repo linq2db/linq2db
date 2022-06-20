@@ -206,31 +206,7 @@ namespace LinqToDB.Expressions
 						var memberInitExpression = (MemberInitExpression)obj;
 
 						hashCode += (hashCode * 397) ^ GetHashCode(memberInitExpression.NewExpression);
-
-						for (var i = 0; i < memberInitExpression.Bindings.Count; i++)
-						{
-							var memberBinding = memberInitExpression.Bindings[i];
-
-							hashCode += (hashCode * 397) ^ memberBinding.Member.GetHashCode();
-							hashCode += (hashCode * 397) ^ (int)memberBinding.BindingType;
-
-							switch (memberBinding.BindingType)
-							{
-								case MemberBindingType.Assignment:
-									var memberAssignment = (MemberAssignment)memberBinding;
-									hashCode += (hashCode * 397) ^ GetHashCode(memberAssignment.Expression);
-									break;
-								case MemberBindingType.ListBinding:
-									var memberListBinding = (MemberListBinding)memberBinding;
-									for (var j = 0; j < memberListBinding.Initializers.Count; j++)
-									{
-										hashCode += (hashCode * 397) ^ GetHashCode(memberListBinding.Initializers[j].Arguments);
-									}
-									break;
-								default:
-									throw new NotImplementedException();
-							}
-						}
+						hashCode += (hashCode * 397) ^ GetHashCode(memberInitExpression.Bindings);
 
 						break;
 					}
@@ -293,6 +269,51 @@ namespace LinqToDB.Expressions
 
 				return hashCode;
 			}
+		}
+
+		private int GetHashCode(IList<MemberBinding> bindings)
+		{
+			var hashCode = 0;
+			for (var i = 0; i < bindings.Count; i++)
+			{
+				var memberBinding = bindings[i];
+
+				hashCode += (hashCode * 397) ^ memberBinding.Member.GetHashCode();
+				hashCode += (hashCode * 397) ^ (int)memberBinding.BindingType;
+
+				switch (memberBinding.BindingType)
+				{
+					case MemberBindingType.Assignment:
+					{
+						var memberAssignment = (MemberAssignment)memberBinding;
+						hashCode += (hashCode * 397) ^ GetHashCode(memberAssignment.Expression);
+						break;
+					}	
+					case MemberBindingType.ListBinding:
+					{
+						var memberListBinding = (MemberListBinding)memberBinding;
+						for (var j = 0; j < memberListBinding.Initializers.Count; j++)
+						{
+							hashCode += (hashCode * 397) ^
+							            GetHashCode(memberListBinding.Initializers[j].Arguments);
+						}
+
+						break;
+					}
+					case MemberBindingType.MemberBinding:
+					{
+						var memberMemberBinding = (MemberMemberBinding)memberBinding;
+
+						hashCode += (hashCode * 397) ^ GetHashCode(memberMemberBinding.Bindings);
+
+						break;
+					}
+					default:
+						throw new NotImplementedException();
+				}
+			}
+
+			return hashCode;
 		}
 
 		private int GetHashCode<T>(IList<T> expressions)

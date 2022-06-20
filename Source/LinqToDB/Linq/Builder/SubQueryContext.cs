@@ -11,6 +11,10 @@ namespace LinqToDB.Linq.Builder
 	[DebuggerDisplay("{BuildContextDebuggingHelper.GetContextInfo(this)}")]
 	class SubQueryContext : PassThroughContext
 	{
+#if DEBUG
+		public override string? SqlQueryText => SelectQuery.ToString();
+#endif
+
 		public SubQueryContext(IBuildContext subQuery, SelectQuery selectQuery, bool addToSql)
 			: base(subQuery)
 		{
@@ -88,7 +92,15 @@ namespace LinqToDB.Linq.Builder
 
 		public override Expression MakeExpression(Expression path, ProjectFlags flags)
 		{
+			if (flags.HasFlag(ProjectFlags.Root) && SequenceHelper.IsSameContext(path, this))
+				return path;
+
 			var result = base.MakeExpression(path, flags);
+
+			if (flags.HasFlag(ProjectFlags.SQL))
+			{
+				result = Builder.ConvertToSqlExpr(SubQuery, result, flags);
+			}
 
 			// in this case all complex expressions become columns
 			result = Builder.UpdateNesting(this, result);

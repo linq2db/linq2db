@@ -421,7 +421,7 @@ namespace LinqToDB.Expressions
 					var ml = (MemberListBinding)b;
 					var i  = Transform(ml.Initializers, TransformElementInit);
 
-					if (i != ml.Initializers)
+					if (!ReferenceEquals(i, ml.Initializers))
 						ml = Expression.ListBind(ml.Member, i);
 
 					return ml;
@@ -432,8 +432,8 @@ namespace LinqToDB.Expressions
 					var mm = (MemberMemberBinding)b;
 					var bs = Transform(mm.Bindings, TransformMemberBinding);
 
-					if (bs != mm.Bindings)
-						mm = Expression.MemberBind(mm.Member);
+					if (!ReferenceEquals(bs, mm.Bindings))
+						mm = Expression.MemberBind(mm.Member, bs);
 
 					return mm;
 				}
