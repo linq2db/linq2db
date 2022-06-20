@@ -167,12 +167,29 @@ namespace LinqToDB.Linq.Builder
 				if (leftExpr is SqlGenericConstructorExpression leftGenericPrep &&
 				    rightExpr is not SqlGenericConstructorExpression)
 				{
+					if (rightExpr is SqlPlaceholderExpression paceholder && paceholder.Sql is SqlValue value && value.Value == null)
+					{
+						return MatchSequences(root, leftExpr,
+							new SqlGenericConstructorExpression(SqlGenericConstructorExpression.CreateType.Incompatible,
+								leftExpr.Type, null, null),
+							leftSequence, rightSequence, ref mismatches);
+					}
+
 					throw new NotImplementedException();
 				}
 
 				if (rightExpr is SqlGenericConstructorExpression rightGenericPrep &&
-				    rightExpr is not SqlGenericConstructorExpression)
+				    leftExpr is not SqlGenericConstructorExpression)
 				{
+					if (leftExpr is SqlPlaceholderExpression paceholder && paceholder.Sql is SqlValue value && value.Value == null)
+					{
+						return MatchSequences(root,
+							new SqlGenericConstructorExpression(SqlGenericConstructorExpression.CreateType.Incompatible,
+								rightExpr.Type, null, null),
+							rightExpr,
+							leftSequence, rightSequence, ref mismatches);
+					}
+
 					throw new NotImplementedException();
 				}
 
@@ -292,6 +309,8 @@ namespace LinqToDB.Linq.Builder
 				var createType = (hasInheritance, left, right) switch
 				{
 					(_, SqlGenericConstructorExpression.CreateType.Full, SqlGenericConstructorExpression.CreateType.Full) => SqlGenericConstructorExpression.CreateType.Full,
+					(_, _, SqlGenericConstructorExpression.CreateType.Incompatible ) => SqlGenericConstructorExpression.CreateType.Incompatible,
+					(_, SqlGenericConstructorExpression.CreateType.Incompatible, _ ) => SqlGenericConstructorExpression.CreateType.Incompatible,
 					(false, SqlGenericConstructorExpression.CreateType.Full, _) => SqlGenericConstructorExpression.CreateType.Auto,
 					(false, _, SqlGenericConstructorExpression.CreateType.Full) => SqlGenericConstructorExpression.CreateType.Auto,
 					(true, SqlGenericConstructorExpression.CreateType.Full,  _) => SqlGenericConstructorExpression.CreateType.Incompatible,
@@ -361,10 +380,25 @@ namespace LinqToDB.Linq.Builder
 				if (_type == null)
 					throw new InvalidOperationException();
 
-				if (_leftSqlExpr is not SqlGenericConstructorExpression genericLeft)
-					throw new InvalidOperationException();
-				if (_rightSqlExpr is not SqlGenericConstructorExpression genericRight)
-					throw new InvalidOperationException();
+				var leftExpression = _leftSqlExpr;
+
+				if (_leftSqlExpr is not SqlGenericConstructorExpression)
+				{
+					if (leftExpression is SqlPlaceholderExpression placeholder && placeholder.Sql is SqlValue value && value.Value == null)
+						leftExpression = Expression.Default(leftExpression.Type);
+					else
+						throw new InvalidOperationException();
+				}
+
+				var rightExpression = _rightSqlExpr;
+
+				if (rightExpression is not SqlGenericConstructorExpression)
+				{
+					if (rightExpression is SqlPlaceholderExpression placeholder && placeholder.Sql is SqlValue value && value.Value == null)
+						rightExpression = Expression.Default(rightExpression.Type);
+					else
+						throw new InvalidOperationException();
+				}
 
 				var sqlValueLeft  = new SqlValue(_sequence1.SubQuery.SelectQuery.SourceID);
 				var sqlValueRight = new SqlValue(_sequence2.SubQuery.SelectQuery.SourceID);
@@ -385,8 +419,11 @@ namespace LinqToDB.Linq.Builder
 				rightIdPlaceholder = Builder.MakeColumn(_sequence2.SelectQuery, rightIdPlaceholder, asNew: true);
 				rightIdPlaceholder = Builder.MakeColumn(SelectQuery, rightIdPlaceholder, asNew: true);
 
-				var leftExpression  = CorrectAssignments(thisRef.WithType(genericLeft.Type), genericLeft);
-				var rightExpression = CorrectAssignments(thisRef.WithType(genericRight.Type), genericRight);
+				if (leftExpression is SqlGenericConstructorExpression genericLeft)
+					leftExpression  = CorrectAssignments(thisRef.WithType(genericLeft.Type), genericLeft);
+
+				if (rightExpression is SqlGenericConstructorExpression genericRight)
+					rightExpression = CorrectAssignments(thisRef.WithType(genericRight.Type), genericRight);
 
 				if (leftExpression.Type != _type)
 				{

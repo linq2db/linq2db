@@ -47,8 +47,10 @@ namespace LinqToDB.Linq.Builder
 			_convertedExpressions.Remove(ex);
 		}
 
-		Expression ConvertAssignmentArgument(Dictionary<Expression, Expression> translated, IBuildContext context, Expression pathExpr, Expression expr, MemberInfo? memberInfo, ProjectFlags flags,
-			string? alias)
+		Expression ConvertAssignmentArgument(Dictionary<Expression, Expression> translated, IBuildContext context, Expression pathExpr, Expression expr, 
+			MemberInfo? memberInfo, 
+			Type memberType, 
+			ProjectFlags flags, string? alias)
 		{
 			var resultExpr = TryConvertToSqlExpr(context, expr, flags);
 
@@ -84,7 +86,7 @@ namespace LinqToDB.Linq.Builder
 						column.RawAlias = alias;
 				}
 
-				if (memberInfo?.GetMemberType().IsNullable() == false && placeholder.Type.IsNullable())
+				if (!memberType.IsNullable() && placeholder.Type.IsNullable())
 				{
 					resultExpr = placeholder.MakeNotNullable();
 				}
@@ -99,9 +101,9 @@ namespace LinqToDB.Linq.Builder
 			if (resultExpr.NodeType == ExpressionType.Convert || resultExpr.NodeType == ExpressionType.ConvertChecked)
 			{
 				var conv = (UnaryExpression)resultExpr;
-				if (memberInfo?.GetMemberType().IsNullable() == true
-					&& conv.Operand is SqlPlaceholderExpression readerExpression
-					&& !readerExpression.Type.IsNullable())
+				if (memberType.IsNullable() == true
+				    && conv.Operand is SqlPlaceholderExpression readerExpression
+				    && !readerExpression.Type.IsNullable())
 				{
 					resultExpr = readerExpression.MakeNullable();
 				}
@@ -109,13 +111,12 @@ namespace LinqToDB.Linq.Builder
 			else if (resultExpr.NodeType == ExpressionType.Extension &&
 					 resultExpr is SqlPlaceholderExpression readerExpression)
 			{
-				if (memberInfo?.GetMemberType().IsNullable() == true &&
+				if (memberType.IsNullable() &&
 					!readerExpression.Type.IsNullable())
 				{
 					resultExpr = readerExpression.MakeNullable();
 				}
-				else if (memberInfo?.GetMemberType().IsNullable() == false &&
-					readerExpression.Type.IsNullable())
+				else if (!memberType.IsNullable() && readerExpression.Type.IsNullable())
 				{
 					resultExpr = readerExpression.MakeNotNullable();
 				}
@@ -497,11 +498,16 @@ namespace LinqToDB.Linq.Builder
 
 								List<Expression>? arguments = null;
 
+								var parameters = ne.Constructor.GetParameters();
+
 								for (var i = 0; i < ne.Arguments.Count; i++)
 								{
 									var argument    = ne.Arguments[i];
-									var memberAlias = ne.Members?[i].Name;
-									var newArgument = context.builder.ConvertAssignmentArgument(context.translated, context.context, ne, argument, ne.Members?[i], context.flags, memberAlias);
+									var memberInfo  = ne.Members?[i];
+									var memberAlias = memberInfo?.Name            ?? parameters[i].Name;
+									var memberType  = memberInfo?.GetMemberType() ?? parameters[i].ParameterType;
+
+									var newArgument = context.builder.ConvertAssignmentArgument(context.translated, context.context, ne, argument, memberInfo, memberType, context.flags, memberAlias);
 									if (newArgument != argument)
 									{
 										if (arguments == null)
@@ -533,7 +539,7 @@ namespace LinqToDB.Linq.Builder
 									if (binding is MemberAssignment assignment)
 									{
 										var argument = context.builder.ConvertAssignmentArgument(context.translated, context.context, mi, assignment.Expression,
-											assignment.Member, context.flags, assignment.Member.Name);
+											assignment.Member, assignment.Member.GetMemberType(), context.flags, assignment.Member.Name);
 										if (argument != assignment.Expression)
 										{
 											newBinding = Expression.Bind(assignment.Member, argument);

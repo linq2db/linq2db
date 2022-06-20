@@ -284,15 +284,15 @@ namespace LinqToDB.Linq.Builder
 			public GroupByContext GroupByContext { get; set; } = null!;
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
-					{
+			{
 				if (flags.HasFlag(ProjectFlags.Root))
-						{
+				{
 					if (SequenceHelper.IsSameContext(path, this))
 						return path;
 
 					var root = base.MakeExpression(path, flags);
 					return root;
-					}
+				}
 
 				var newFlags = flags;
 				if (newFlags.HasFlag(ProjectFlags.Expression))
@@ -303,7 +303,7 @@ namespace LinqToDB.Linq.Builder
 				var result = base.MakeExpression(path, newFlags);
 
 				if (newFlags.HasFlag(ProjectFlags.SQL))
-						{
+				{
 					result = Builder.ConvertToSqlExpr(this, result, newFlags);
 					// appending missing keys
 					AppendGroupBy(Builder, GroupByContext.CurrentPlaceholders, GroupByContext.SubQuery.SelectQuery, result);
@@ -313,8 +313,8 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				return result;
-				}
 			}
+		}
 
 		#endregion
 

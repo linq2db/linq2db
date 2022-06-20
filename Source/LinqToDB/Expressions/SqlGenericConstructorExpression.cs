@@ -296,6 +296,9 @@ namespace LinqToDB.Expressions
 					if (mc.IsSameGenericMethod(Methods.LinqToDB.SqlExt.Alias))
 						return Parse(mc.Arguments[0]);
 
+					if (mc.IsQueryable())
+						return mc;
+
 					throw new NotImplementedException("Parsing 'SqlGenericConstructorExpression' for Methods not yet implemented.");
 				}
 			}

@@ -518,7 +518,7 @@ namespace Tests.Linq
 					(from p2 in db.Parent select new Parent { Value1   = p2.Value1   })));
 		}
 
-		//[Test]
+		[Test]
 		public void Union54([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -529,7 +529,7 @@ namespace Tests.Linq
 					(from p2 in db.Parent select new { ParentID = p2.Value1 ?? 0, p = (Parent?)null, ch = p2.Children.First() })));
 		}
 
-		//[Test]
+		[Test]
 		public void Union541([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -554,15 +554,27 @@ namespace Tests.Linq
 					(from p2 in db.Parent where p2.ParentID <= 3 select p2)));
 		}
 
-		//////[Test]
-		public void ObjectUnion2([DataSources] string context)
+		[Test]
+		public void ObjectConcatWithNull([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					(from p1 in    Parent where p1.ParentID >  3 select p1).Union(
+					(from p1 in    Parent where p1.ParentID >  3 select p1).Concat(
 					(from p2 in    Parent where p2.ParentID <= 3 select (Parent?)null)),
-					(from p1 in db.Parent where p1.ParentID >  3 select p1).Union(
+					(from p1 in db.Parent where p1.ParentID >  3 select p1).Concat(
 					(from p2 in db.Parent where p2.ParentID <= 3 select (Parent?)null)));
+		}
+
+		[Test]
+		public void ObjectUnionWithNull([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var failingQuery = 
+				(from p1 in db.Parent where p1.ParentID > 3 select p1).Union(
+					(from p2 in db.Parent where p2.ParentID <= 3 select (Parent?)null));
+
+			FluentActions.Enumerating(() => failingQuery).Should().Throw<LinqToDBException>();
 		}
 
 		[Test]
@@ -576,7 +588,7 @@ namespace Tests.Linq
 					(from p2 in db.Parent where p2.ParentID <= 3 select new { p = p2 })));
 		}
 
-		//////[Test]
+		[Test]
 		public void ObjectUnion4([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -587,7 +599,7 @@ namespace Tests.Linq
 					(from p2 in db.Parent where p2.ParentID <= 3 select new { p = new { p = p2, p2.ParentID } })));
 		}
 
-		//////[Test]
+		[Test]
 		public void ObjectUnion5([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))

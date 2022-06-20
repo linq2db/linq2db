@@ -899,7 +899,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					if (columnDescriptor?.ValueConverter == null && CanBeConstant(expression))
 						sql = BuildConstant(expression, columnDescriptor);
-					else if (CanBeCompiled(expression))
+					else if (expression.NodeType != ExpressionType.MemberInit && expression.NodeType != ExpressionType.New && CanBeCompiled(expression))
 						sql = ParametersContext.BuildParameter(expression, columnDescriptor).SqlParameter;
 				}
 			}
