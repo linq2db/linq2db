@@ -181,9 +181,6 @@ namespace LinqToDB.Linq.Builder
 				{
 					var newAssignments = new List<SqlGenericConstructorExpression.Assignment>(leftGeneric.Assignments.Count);
 
-					var leftAssignments = new List<SqlGenericConstructorExpression.Assignment>(leftGeneric.Assignments.Count);
-					var rightAssignments = new List<SqlGenericConstructorExpression.Assignment>(rightGeneric.Assignments.Count);
-
 					var matched = new HashSet<MemberInfo>(MemberInfoComparer.Instance);
 
 					for (int l = 0; l < leftGeneric.Assignments.Count; l++)

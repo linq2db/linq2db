@@ -3840,6 +3840,9 @@ namespace LinqToDB.Linq.Builder
 
 		public SqlPlaceholderExpression MakeColumn(SelectQuery? parentQuery, SqlPlaceholderExpression sqlPlaceholder, bool asNew = false)
 		{
+			if (parentQuery == sqlPlaceholder.SelectQuery)
+				throw new InvalidOperationException();
+
 			var key = new ColumnCacheKey(sqlPlaceholder.Path, sqlPlaceholder.Type, sqlPlaceholder.SelectQuery, parentQuery);
 
 			if (!asNew && _columnCache.TryGetValue(key, out var placeholder))
