@@ -1412,19 +1412,17 @@ namespace LinqToDB.Data
 				case DataParameter   dataParameter  : return new[] { dataParameter };
 			}
 
-			var linqOptions = dataConnection.Options.LinqOptions;
-
 			var func = _parameterReaders.GetOrCreate(
 				(type: parameters.GetType(), ((IConfigurationID)dataConnection).ConfigurationID),
-				(dataConnection, linqOptions),
+				dataConnection,
 				static (o, ctx) =>
 			{
-					var type = o.Key.type;
-				o.SlidingExpiration = ctx.linqOptions.CacheSlidingExpiration;
+				o.SlidingExpiration = ctx.Options.LinqOptions.CacheSlidingExpiration;
 
-				var td  = ctx.dataConnection.MappingSchema.GetEntityDescriptor(type);
-				var p   = Expression.Parameter(typeof(object), "p");
-				var obj = Expression.Parameter(type, "obj");
+				var type = o.Key.type;
+				var td   = ctx.MappingSchema.GetEntityDescriptor(type);
+				var p    = Expression.Parameter(typeof(object), "p");
+				var obj  = Expression.Parameter(type,           "obj");
 
 				var expr = Expression.Lambda<Func<object,DataParameter[]>>(
 					Expression.Block(
@@ -1465,7 +1463,7 @@ namespace LinqToDB.Data
 
 									var memberType  = column.MemberType.ToNullableUnderlying();
 									var valueGetter = ExpressionHelper.PropertyOrField(obj, column.MemberName) as Expression;
-									var mapper      = ctx.dataConnection.MappingSchema.GetConvertExpression(memberType, typeof(DataParameter), createDefault : false);
+									var mapper      = ctx.MappingSchema.GetConvertExpression(memberType, typeof(DataParameter), createDefault : false);
 
 									if (mapper != null)
 									{
@@ -1477,8 +1475,8 @@ namespace LinqToDB.Data
 
 									if (memberType.IsEnum)
 									{
-										var mapType  = ConvertBuilder.GetDefaultMappingFromEnumType(ctx.dataConnection.MappingSchema, memberType)!;
-										var convExpr = ctx.dataConnection.MappingSchema.GetConvertExpression(column.MemberType, mapType)!;
+										var mapType  = ConvertBuilder.GetDefaultMappingFromEnumType(ctx.MappingSchema, memberType)!;
+										var convExpr = ctx.MappingSchema.GetConvertExpression(column.MemberType, mapType)!;
 
 										memberType  = mapType;
 										valueGetter = convExpr.GetBody(valueGetter);
@@ -1486,7 +1484,7 @@ namespace LinqToDB.Data
 
 									var columnDbDataType = new DbDataType(memberType, column.DataType, column.DbType, column.Length, column.Precision, column.Scale);
 									if (columnDbDataType.DataType == DataType.Undefined)
-										columnDbDataType = columnDbDataType.WithDataType(ctx.dataConnection.MappingSchema.GetDataType(memberType).Type.DataType);
+										columnDbDataType = columnDbDataType.WithDataType(ctx.MappingSchema.GetDataType(memberType).Type.DataType);
 
 									return (Expression)Expression.MemberInit(
 										Expression.New(typeof(DataParameter)),
@@ -1561,14 +1559,12 @@ namespace LinqToDB.Data
 
 		static Func<DbDataReader, T> GetObjectReader<T>(DataConnection dataConnection, DbDataReader dataReader, string sql, string? additionalKey)
 		{
-			var linqOptions = dataConnection.Options.LinqOptions;
-
 			var func = _objectReaders.GetOrCreate(
 				new QueryKey(typeof(T), dataReader.GetType(), ((IConfigurationID)dataConnection).ConfigurationID, sql, additionalKey, dataReader.FieldCount <= 1),
-				(dataConnection, dataReader, linqOptions),
+				(dataConnection, dataReader),
 				static (e, context) =>
 			{
-				e.SlidingExpiration = context.linqOptions.CacheSlidingExpiration;
+				e.SlidingExpiration = context.dataConnection.Options.LinqOptions.CacheSlidingExpiration;
 
 				if (!e.Key.Item6 && IsDynamicType(typeof(T)))
 				{
@@ -1586,14 +1582,13 @@ namespace LinqToDB.Data
 			return func;
 		}
 
-		static Func<DbDataReader, T> GetObjectReader2<T>(DataConnection dataConnection, DbDataReader dataReader,
+		static Func<DbDataReader,T> GetObjectReader2<T>(DataConnection dataConnection, DbDataReader dataReader,
 			string sql, string? additionalKey)
 		{
-			var linqOptions = dataConnection.Options.LinqOptions;
-
 			var key = (typeof(T), dataReader.GetType(), ((IConfigurationID)dataConnection).ConfigurationID, sql, additionalKey, dataReader.FieldCount <= 1);
 
 			Delegate func;
+
 			if (!key.Item6 && IsDynamicType(typeof(T)))
 			{
 				// dynamic case
@@ -1608,7 +1603,7 @@ namespace LinqToDB.Data
 			}
 
 			_objectReaders.Set(key, func,
-				new MemoryCacheEntryOptions<QueryKey>() {SlidingExpiration = linqOptions.CacheSlidingExpiration});
+				new MemoryCacheEntryOptions<QueryKey> { SlidingExpiration = dataConnection.Options.LinqOptions.CacheSlidingExpiration });
 
 			return (Func<DbDataReader, T>)func;
 		}
@@ -1618,7 +1613,6 @@ namespace LinqToDB.Data
 			DbDataReader   dataReader,
 			Func<DataConnection, DbDataReader, Type, int,Expression,Expression> getMemberExpression)
 		{
-			var linqOptions    = dataConnection.Options.LinqOptions;
 			var parameter      = Expression.Parameter(typeof(DbDataReader));
 			var dataReaderExpr = (Expression)Expression.Convert(parameter, dataReader.GetType());
 			var readerType     = dataReader.GetType();
@@ -1628,19 +1622,19 @@ namespace LinqToDB.Data
 
 			if (dataConnection.DataProvider.DataReaderType != readerType)
 			{
-				converterExpr    = _dataReaderConverter.GetOrCreate(
+				converterExpr = _dataReaderConverter.GetOrCreate(
 					(readerType, dataConnection.DataProvider.DataReaderType),
-					(dataConnection, linqOptions),
+					dataConnection,
 					static (o, ctx) =>
 				{
-					o.SlidingExpiration = ctx.linqOptions.CacheSlidingExpiration;
+					o.SlidingExpiration = ctx.Options.LinqOptions.CacheSlidingExpiration;
 
-					var expr = ctx.dataConnection.MappingSchema.GetConvertExpression(o.Key.readerType, typeof(DbDataReader), false, false);
+					var expr = ctx.MappingSchema.GetConvertExpression(o.Key.readerType, typeof(DbDataReader), false, false);
 
 					///// !!!!!
 					if (expr != null)
 					{
-						expr      = Expression.Lambda(Expression.Convert(expr.Body, ctx.dataConnection.DataProvider.DataReaderType), expr.Parameters);
+						expr = Expression.Lambda(Expression.Convert(expr.Body, ctx.DataProvider.DataReaderType), expr.Parameters);
 					}
 
 					return expr;
@@ -1753,20 +1747,18 @@ namespace LinqToDB.Data
 
 			if (dataConnection.DataProvider.DataReaderType != readerType)
 			{
-				var linqOptions = dataConnection.Options.LinqOptions;
-
 				converterExpr = _dataReaderConverter.GetOrCreate(
 					(readerType, dataConnection.DataProvider.DataReaderType),
-					(dataConnection, linqOptions),
+					dataConnection,
 					static (o, ctx) =>
 				{
-					o.SlidingExpiration = ctx.linqOptions.CacheSlidingExpiration;
+					o.SlidingExpiration = ctx.Options.LinqOptions.CacheSlidingExpiration;
 
-					var expr = ctx.dataConnection.MappingSchema.GetConvertExpression(o.Key.readerType, typeof(DbDataReader), false, false);
+					var expr = ctx.MappingSchema.GetConvertExpression(o.Key.readerType, typeof(DbDataReader), false, false);
 
 					if (expr != null)
 					{
-						expr = Expression.Lambda(Expression.Convert(expr.Body, ctx.dataConnection.DataProvider.DataReaderType), expr.Parameters);
+						expr = Expression.Lambda(Expression.Convert(expr.Body, ctx.DataProvider.DataReaderType), expr.Parameters);
 					}
 
 					return expr;
