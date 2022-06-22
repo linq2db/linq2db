@@ -16,42 +16,51 @@ namespace LinqToDB.DataProvider.SqlServer
 	using SchemaProvider;
 	using SqlProvider;
 
-	public class SqlServerDataProvider : DynamicDataProviderBase<SqlServerProviderAdapter>
+	class SqlServerDataProvider2005SystemDataSqlClient    : SqlServerDataProvider { public SqlServerDataProvider2005SystemDataSqlClient   () : base(ProviderName.SqlServer2005, SqlServerVersion.v2005, SqlServerProvider.SystemDataSqlClient)    {} }
+	class SqlServerDataProvider2008SystemDataSqlClient    : SqlServerDataProvider { public SqlServerDataProvider2008SystemDataSqlClient   () : base(ProviderName.SqlServer2008, SqlServerVersion.v2008, SqlServerProvider.SystemDataSqlClient)    {} }
+	class SqlServerDataProvider2012SystemDataSqlClient    : SqlServerDataProvider { public SqlServerDataProvider2012SystemDataSqlClient   () : base(ProviderName.SqlServer2012, SqlServerVersion.v2012, SqlServerProvider.SystemDataSqlClient)    {} }
+	class SqlServerDataProvider2014SystemDataSqlClient    : SqlServerDataProvider { public SqlServerDataProvider2014SystemDataSqlClient   () : base(ProviderName.SqlServer2014, SqlServerVersion.v2014, SqlServerProvider.SystemDataSqlClient)    {} }
+	class SqlServerDataProvider2016SystemDataSqlClient    : SqlServerDataProvider { public SqlServerDataProvider2016SystemDataSqlClient   () : base(ProviderName.SqlServer2016, SqlServerVersion.v2016, SqlServerProvider.SystemDataSqlClient)    {} }
+	class SqlServerDataProvider2017SystemDataSqlClient    : SqlServerDataProvider { public SqlServerDataProvider2017SystemDataSqlClient   () : base(ProviderName.SqlServer2017, SqlServerVersion.v2017, SqlServerProvider.SystemDataSqlClient)    {} }
+	class SqlServerDataProvider2019SystemDataSqlClient    : SqlServerDataProvider { public SqlServerDataProvider2019SystemDataSqlClient   () : base(ProviderName.SqlServer2019, SqlServerVersion.v2019, SqlServerProvider.SystemDataSqlClient)    {} }
+	class SqlServerDataProvider2005MicrosoftDataSqlClient : SqlServerDataProvider { public SqlServerDataProvider2005MicrosoftDataSqlClient() : base(ProviderName.SqlServer2005, SqlServerVersion.v2005, SqlServerProvider.MicrosoftDataSqlClient) {} }
+	class SqlServerDataProvider2008MicrosoftDataSqlClient : SqlServerDataProvider { public SqlServerDataProvider2008MicrosoftDataSqlClient() : base(ProviderName.SqlServer2008, SqlServerVersion.v2008, SqlServerProvider.MicrosoftDataSqlClient) {} }
+	class SqlServerDataProvider2012MicrosoftDataSqlClient : SqlServerDataProvider { public SqlServerDataProvider2012MicrosoftDataSqlClient() : base(ProviderName.SqlServer2012, SqlServerVersion.v2012, SqlServerProvider.MicrosoftDataSqlClient) {} }
+	class SqlServerDataProvider2014MicrosoftDataSqlClient : SqlServerDataProvider { public SqlServerDataProvider2014MicrosoftDataSqlClient() : base(ProviderName.SqlServer2014, SqlServerVersion.v2014, SqlServerProvider.MicrosoftDataSqlClient) {} }
+	class SqlServerDataProvider2016MicrosoftDataSqlClient : SqlServerDataProvider { public SqlServerDataProvider2016MicrosoftDataSqlClient() : base(ProviderName.SqlServer2016, SqlServerVersion.v2016, SqlServerProvider.MicrosoftDataSqlClient) {} }
+	class SqlServerDataProvider2017MicrosoftDataSqlClient : SqlServerDataProvider { public SqlServerDataProvider2017MicrosoftDataSqlClient() : base(ProviderName.SqlServer2017, SqlServerVersion.v2017, SqlServerProvider.MicrosoftDataSqlClient) {} }
+	class SqlServerDataProvider2019MicrosoftDataSqlClient : SqlServerDataProvider { public SqlServerDataProvider2019MicrosoftDataSqlClient() : base(ProviderName.SqlServer2019, SqlServerVersion.v2019, SqlServerProvider.MicrosoftDataSqlClient) {} }
+
+	public abstract class SqlServerDataProvider : DynamicDataProviderBase<SqlServerProviderAdapter>
 	{
 		#region Init
 
-		public SqlServerDataProvider(string name, SqlServerVersion version)
+		protected SqlServerDataProvider(string name, SqlServerVersion version)
 			: this(name, version, SqlServerProvider.MicrosoftDataSqlClient)
 		{
 		}
 
-		public SqlServerDataProvider(string name, SqlServerVersion version, SqlServerProvider provider)
+		protected SqlServerDataProvider(string name, SqlServerVersion version, SqlServerProvider provider)
 			: base(
-				  name,
-				  MappingSchemaInstance.Get(version),
-				  SqlServerProviderAdapter.GetInstance(provider))
+				name,
+				MappingSchemaInstance.Get(version),
+				SqlServerProviderAdapter.GetInstance(provider))
 		{
 			Version  = version;
 			Provider = provider;
 
-			SqlProviderFlags.IsDistinctOrderBySupported       = false;
-			SqlProviderFlags.IsSubQueryOrderBySupported       = false;
-			SqlProviderFlags.IsDistinctSetOperationsSupported = true;
-			SqlProviderFlags.IsCountDistinctSupported         = true;
-			SqlProviderFlags.IsUpdateFromSupported            = true;
-
-			if (version == SqlServerVersion.v2000)
-			{
-				SqlProviderFlags.AcceptsTakeAsParameter   = false;
-				SqlProviderFlags.IsSkipSupported          = false;
-				SqlProviderFlags.IsCountSubQuerySupported = false;
-			}
-			else
-			{
-				SqlProviderFlags.IsApplyJoinSupported              = true;
-				SqlProviderFlags.TakeHintsSupported                = TakeHints.Percent | TakeHints.WithTies;
-				SqlProviderFlags.IsCommonTableExpressionsSupported = version >= SqlServerVersion.v2008;
-			}
+			SqlProviderFlags.IsDistinctOrderBySupported        = false;
+			SqlProviderFlags.IsSubQueryOrderBySupported        = false;
+			SqlProviderFlags.IsDistinctSetOperationsSupported  = true;
+			SqlProviderFlags.IsCountDistinctSupported          = true;
+			SqlProviderFlags.IsUpdateFromSupported             = true;
+			SqlProviderFlags.AcceptsOuterExpressionInAggregate = false;
+			SqlProviderFlags.OutputDeleteUseSpecialTable       = true;
+			SqlProviderFlags.OutputInsertUseSpecialTable       = true;
+			SqlProviderFlags.OutputUpdateUseSpecialTables      = true;
+			SqlProviderFlags.IsApplyJoinSupported              = true;
+			SqlProviderFlags.TakeHintsSupported                = TakeHints.Percent | TakeHints.WithTies;
+			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 
 			SetCharField("char" , (r, i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("nchar", (r, i) => r.GetString(i).TrimEnd(' '));
@@ -60,11 +69,12 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			_sqlOptimizer = version switch
 			{
-				SqlServerVersion.v2000 => new SqlServer2000SqlOptimizer(SqlProviderFlags),
 				SqlServerVersion.v2005 => new SqlServer2005SqlOptimizer(SqlProviderFlags),
 				SqlServerVersion.v2012 => new SqlServer2012SqlOptimizer(SqlProviderFlags),
+				SqlServerVersion.v2014 => new SqlServer2014SqlOptimizer(SqlProviderFlags),
 				SqlServerVersion.v2016 => new SqlServer2016SqlOptimizer(SqlProviderFlags),
 				SqlServerVersion.v2017 => new SqlServer2017SqlOptimizer(SqlProviderFlags),
+				SqlServerVersion.v2019 => new SqlServer2019SqlOptimizer(SqlProviderFlags),
 				_                      => new SqlServer2008SqlOptimizer(SqlProviderFlags),
 			};
 
@@ -90,7 +100,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			SetProviderField<TimeSpan>      (Adapter.GetTimeSpanReaderMethod              , dataReaderType: Adapter.DataReaderType);
 
 			// non-specific fallback
-			SetProviderField<IDataReader, SqlString, SqlString>((r, i) => r.GetString(i));
+			SetProviderField<DbDataReader, SqlString, SqlString>((r, i) => r.GetString(i));
 
 			SqlServerTypes.Configure(this);
 		}
@@ -109,23 +119,17 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		static class MappingSchemaInstance
 		{
-			public static readonly MappingSchema SqlServer2000MappingSchema = new SqlServer2000MappingSchema();
-			public static readonly MappingSchema SqlServer2005MappingSchema = new SqlServer2005MappingSchema();
-			public static readonly MappingSchema SqlServer2008MappingSchema = new SqlServer2008MappingSchema();
-			public static readonly MappingSchema SqlServer2012MappingSchema = new SqlServer2012MappingSchema();
-			public static readonly MappingSchema SqlServer2016MappingSchema = new SqlServer2016MappingSchema();
-			public static readonly MappingSchema SqlServer2017MappingSchema = new SqlServer2017MappingSchema();
-
 			public static MappingSchema Get(SqlServerVersion version)
 			{
 				return version switch
 				{
-					SqlServerVersion.v2000 => SqlServer2000MappingSchema,
-					SqlServerVersion.v2005 => SqlServer2005MappingSchema,
-					SqlServerVersion.v2012 => SqlServer2012MappingSchema,
-					SqlServerVersion.v2016 => SqlServer2016MappingSchema,
-					SqlServerVersion.v2017 => SqlServer2017MappingSchema,
-					_                      => SqlServer2008MappingSchema,
+					SqlServerVersion.v2005 => new SqlServerMappingSchema.SqlServer2005MappingSchema(),
+					SqlServerVersion.v2012 => new SqlServerMappingSchema.SqlServer2012MappingSchema(),
+					SqlServerVersion.v2014 => new SqlServerMappingSchema.SqlServer2014MappingSchema(),
+					SqlServerVersion.v2016 => new SqlServerMappingSchema.SqlServer2016MappingSchema(),
+					SqlServerVersion.v2017 => new SqlServerMappingSchema.SqlServer2017MappingSchema(),
+					SqlServerVersion.v2019 => new SqlServerMappingSchema.SqlServer2019MappingSchema(),
+					_                      => new SqlServerMappingSchema.SqlServer2008MappingSchema(),
 				};
 			}
 		}
@@ -143,12 +147,13 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			return Version switch
 			{
-				SqlServerVersion.v2000 => new SqlServer2000SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags),
 				SqlServerVersion.v2005 => new SqlServer2005SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags),
 				SqlServerVersion.v2008 => new SqlServer2008SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags),
 				SqlServerVersion.v2012 => new SqlServer2012SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags),
+				SqlServerVersion.v2014 => new SqlServer2014SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags),
 				SqlServerVersion.v2016 => new SqlServer2016SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags),
 				SqlServerVersion.v2017 => new SqlServer2017SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags),
+				SqlServerVersion.v2019 => new SqlServer2019SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags),
 				_                      => throw new InvalidOperationException(),
 			};
 		}
@@ -159,10 +164,10 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		public override ISchemaProvider GetSchemaProvider()
 		{
-			return Version == SqlServerVersion.v2000 ? new SqlServer2000SchemaProvider(this) : new SqlServerSchemaProvider(this);
+			return new SqlServerSchemaProvider(this);
 		}
 
-		static readonly ConcurrentDictionary<string,bool> _marsFlags = new ConcurrentDictionary<string,bool>();
+		static readonly ConcurrentDictionary<string,bool> _marsFlags = new ();
 
 		public override object? GetConnectionInfo(DataConnection dataConnection, string parameterName)
 		{
@@ -189,47 +194,93 @@ namespace LinqToDB.DataProvider.SqlServer
 			return null;
 		}
 
-		public override void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object? value)
+		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
 		{
-			var param = TryGetProviderParameter(parameter, MappingSchema);
+			// SqlClient supports less DbType's for SqlDateTime than for DateTime
+			// SqlDateTime is designer for DATETIME type only
+			if (value is SqlDateTime sdt && !sdt.IsNull)
+				value = (DateTime)sdt;
+
+			var param = TryGetProviderParameter(dataConnection, parameter);
 
 			switch (dataType.DataType)
 			{
-				case DataType.DateTime2  :
+				case DataType.SmallDateTime or DataType.DateTime
+						when value is DateTimeOffset dto:
+					value = dto.LocalDateTime;
+					break;
+
+				case DataType.DateTime2
+						when value is DateTimeOffset dto:
+					value = dto.WithPrecision(dataType.Precision ?? 7).LocalDateTime;
+					break;
+
+				case DataType.DateTimeOffset when value is DateTimeOffset dto:
+				{
+					var precision = dataType.Precision ?? 7;
+					if (Version == SqlServerVersion.v2005 && precision > 3)
 					{
-						if (value is DateTime dt)
-							value = DataTools.AdjustPrecision(dt, (byte)(dataType.Precision ?? 7));
-						break;
-					}
-				case DataType.Udt        :
-					{
-						if (param    != null
-							&& value != null
-							&& _udtTypeNames.TryGetValue(value.GetType(), out var typeName))
-							Adapter.SetUdtTypeName(param, typeName);
+						precision = 3;
 					}
 
+					value = dto.WithPrecision(precision);
 					break;
-				case DataType.NText:
-					     if (value is DateTimeOffset dto) value = dto.ToString("yyyy-MM-ddTHH:mm:ss.ffffff zzz");
-					else if (value is DateTime dt)
+				}
+
+				case DataType.Date when value is DateTimeOffset dto:
+					value = dto.LocalDateTime.Date;
+					break;
+
+#if NET6_0_OR_GREATER
+				case DataType.Date when value is DateOnly d:
+					value = d.ToDateTime(TimeOnly.MinValue);
+					break;
+
+				case DataType.Text or DataType.Char or DataType.VarChar
+					or DataType.NText or DataType.NChar or DataType.NVarChar
+						when value is DateOnly d:
+					value = d.ToString("yyyy-MM-dd");
+					break;
+#endif
+
+				case DataType.DateTime2 when value is DateTime dt:
+					value = dt.WithPrecision(dataType.Precision ?? 7);
+					break;
+
+				case DataType.Udt:
+					if (param != null
+						&& value != null
+						&& _udtTypeNames.TryGetValue(value.GetType(), out var typeName))
 					{
-						value = dt.ToString(
-							dt.Millisecond == 0
-								? "yyyy-MM-ddTHH:mm:ss"
-								: "yyyy-MM-ddTHH:mm:ss.fff");
+						Adapter.SetUdtTypeName(param, typeName);
 					}
-					else if (value is TimeSpan ts)
-					{
-						value = ts.ToString(
-							ts.Days > 0
-								? ts.Milliseconds > 0
-									? "d\\.hh\\:mm\\:ss\\.fff"
-									: "d\\.hh\\:mm\\:ss"
-								: ts.Milliseconds > 0
-									? "hh\\:mm\\:ss\\.fff"
-									: "hh\\:mm\\:ss");
-					}
+					break;
+
+				case DataType.NText when value is DateTime dt:
+					value = dt.ToString(
+						dt.Millisecond == 0
+							? "yyyy-MM-ddTHH:mm:ss"
+							: "yyyy-MM-ddTHH:mm:ss.fff");
+					break;
+
+				case DataType.Text or DataType.Char or DataType.VarChar
+					or DataType.NText or DataType.NChar or DataType.NVarChar
+						when value is DateTimeOffset dto:
+					// SqlClient doesn't generate last digit for precision=6 ¯\_(ツ)_/¯
+					value = SqlServerMappingSchema.ConvertDateTimeOffsetToString(dto, dataType.Precision ?? 7);
+					break;
+
+				case DataType.Text or DataType.Char or DataType.VarChar
+					or DataType.NText or DataType.NChar or DataType.NVarChar
+						when value is TimeSpan ts:
+					value = SqlServerMappingSchema.ConvertTimeSpanToString(ts, dataType.Precision ?? 7);
+					break;
+
+				case DataType.Int64 when value is TimeSpan ts:
+					value = ts.GetTicks(dataType.Precision ?? 7);
+					break;
+				case DataType.Time when value is TimeSpan ts:
+					value = TimeSpan.FromTicks(ts.GetTicks(dataType.Precision ?? 7));
 					break;
 
 				case DataType.Undefined:
@@ -254,8 +305,8 @@ namespace LinqToDB.DataProvider.SqlServer
 				{
 					case SqlDbType.Structured:
 						{
-							if (!dataType.DbType.IsNullOrEmpty())
-								Adapter.SetTypeName(param, dataType.DbType);
+							if (!string.IsNullOrEmpty(dataType.DbType))
+								Adapter.SetTypeName(param, dataType.DbType!);
 
 							// TVP doesn't support DBNull
 							if (parameter.Value is DBNull)
@@ -303,7 +354,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 		}
 
-		protected override void SetParameterType(DataConnection dataConnection, IDbDataParameter parameter, DbDataType dataType)
+		protected override void SetParameterType(DataConnection dataConnection, DbParameter parameter, DbDataType dataType)
 		{
 			if (parameter is BulkCopyReader.Parameter)
 				return;
@@ -326,7 +377,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			if (type != null)
 			{
-				var param = TryGetProviderParameter(parameter, dataConnection.MappingSchema);
+				var param = TryGetProviderParameter(dataConnection, parameter);
 				if (param != null)
 				{
 					Adapter.SetDbType(param, type.Value);
@@ -352,10 +403,9 @@ namespace LinqToDB.DataProvider.SqlServer
 				case DataType.UInt32        : parameter.DbType = DbType.Int64;       break;
 				case DataType.UInt64        :
 				case DataType.VarNumeric    : parameter.DbType = DbType.Decimal;     break;
-				case DataType.DateTime      :
 				case DataType.DateTime2     :
 					parameter.DbType =
-						Version == SqlServerVersion.v2000 || Version == SqlServerVersion.v2005 ?
+						Version == SqlServerVersion.v2005 ?
 							DbType.DateTime :
 							DbType.DateTime2;
 					break;
@@ -367,8 +417,8 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		#region UDT support
 
-		private readonly ConcurrentDictionary<Type, string> _udtTypeNames = new ConcurrentDictionary<Type, string>();
-		private readonly ConcurrentDictionary<string, Type> _udtTypes     = new ConcurrentDictionary<string, Type>();
+		private readonly ConcurrentDictionary<Type, string> _udtTypeNames = new ();
+		private readonly ConcurrentDictionary<string, Type> _udtTypes     = new ();
 
 		public void AddUdtType(Type type, string udtName)
 		{

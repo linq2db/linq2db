@@ -297,7 +297,6 @@ namespace Tests.Linq
 			ProviderName.DB2,
 			TestProvName.AllOracle,
 			TestProvName.AllMySql,
-			ProviderName.SqlServer2000,
 			TestProvName.AllSybase,
 			TestProvName.AllInformix,
 			TestProvName.AllSapHana)]
@@ -654,7 +653,7 @@ namespace Tests.Linq
 		[Test, ActiveIssue(1601)]
 		public void Issue1601([DataSources(false)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var query = from q in db.Types
 							let datePlus2 = q.DateTimeValue.AddDays(2)
@@ -729,13 +728,13 @@ namespace Tests.Linq
 		[Table]
 		class Commercial_Property
 		{
-			[Column] public int Commercial_Property_Id { get; set; }
-			[Column] public string? Street_Number { get; set; }
-			[Column] public string? Street_Name { get; set; }
-			[Column] public string? State { get; set; }
-			[Column] public string? Zip_Code { get; set; }
-			[Column] public string? Zip_Plus_4 { get; set; }
-			[Column] public string? City_Code { get; set; }
+			[Column              ] public int     Commercial_Property_Id { get; set; }
+			[Column(Length = 100)] public string? Street_Number          { get; set; }
+			[Column(Length = 100)] public string? Street_Name            { get; set; }
+			[Column(Length = 100)] public string? State                  { get; set; }
+			[Column(Length = 100)] public string? Zip_Code               { get; set; }
+			[Column(Length = 100)] public string? Zip_Plus_4             { get; set; }
+			[Column(Length = 100)] public string? City_Code              { get; set; }
 
 			public static readonly Commercial_Property[] Data = new[]
 			{

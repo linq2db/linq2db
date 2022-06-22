@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -11,26 +13,21 @@ namespace LinqToDB.DataProvider.MySql
 	using Mapping;
 	using SqlProvider;
 
-	public class MySqlDataProvider : DynamicDataProviderBase<MySqlProviderAdapter>
-	{
-		public MySqlDataProvider(string name)
-			: this(name, null)
-		{
-		}
+	class MySqlDataProviderMySqlOfficial  : MySqlDataProvider { public MySqlDataProviderMySqlOfficial()  : base(ProviderName.MySqlOfficial)  {} }
+	class MySqlDataProviderMySqlConnector : MySqlDataProvider { public MySqlDataProviderMySqlConnector() : base(ProviderName.MySqlConnector) {} }
 
-		protected MySqlDataProvider(string name, MappingSchema? mappingSchema)
-			: base(
-				  name,
-				  mappingSchema != null
-					? new MappingSchema(mappingSchema, MySqlProviderAdapter.GetInstance(name).MappingSchema)
-					: GetMappingSchema(name, MySqlProviderAdapter.GetInstance(name).MappingSchema),
-				  MySqlProviderAdapter.GetInstance(name))
+	public abstract class MySqlDataProvider : DynamicDataProviderBase<MySqlProviderAdapter>
+	{
+		protected MySqlDataProvider(string name)
+			: base(name, GetMappingSchema(name), MySqlProviderAdapter.GetInstance(name))
 		{
 			SqlProviderFlags.IsDistinctOrderBySupported        = false;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 			SqlProviderFlags.IsDistinctSetOperationsSupported  = false;
 			SqlProviderFlags.IsUpdateFromSupported             = false;
+			SqlProviderFlags.IsNamingQueryBlockSupported       = true;
+			SqlProviderFlags.RowConstructorSupport             = RowFeature.Equality | RowFeature.Comparisons | RowFeature.CompareToSelect | RowFeature.In;
 
 			_sqlOptimizer = new MySqlSqlOptimizer(SqlProviderFlags);
 
@@ -68,12 +65,12 @@ namespace LinqToDB.DataProvider.MySql
 			return new MySqlSqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
 		}
 
-		private static MappingSchema GetMappingSchema(string name, MappingSchema providerSchema)
+		private static MappingSchema GetMappingSchema(string name)
 		{
 			return name switch
 			{
-				ProviderName.MySqlConnector => new MySqlMappingSchema.MySqlConnectorMappingSchema(providerSchema),
-				_                           => new MySqlMappingSchema.MySqlOfficialMappingSchema(providerSchema),
+				ProviderName.MySqlConnector => new MySqlMappingSchema.MySqlConnectorMappingSchema(),
+				_                           => new MySqlMappingSchema.MySqlOfficialMappingSchema(),
 			};
 		}
 
@@ -84,28 +81,29 @@ namespace LinqToDB.DataProvider.MySql
 			return _sqlOptimizer;
 		}
 
-#if !NETFRAMEWORK
-		public override bool? IsDBNullAllowed(IDataReader reader, int idx)
+		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
 		{
-			return true;
-		}
-#endif
-
-		public override void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object? value)
-		{
-			switch (dataType.DataType)
+			// mysql.data bugs workaround
+			if (Adapter.MySqlDecimalType != null && Adapter.MySqlDecimalGetter != null && value?.GetType() == Adapter.MySqlDecimalType)
 			{
-				case DataType.Decimal   :
-				case DataType.VarNumeric:
-					if (Adapter.MySqlDecimalGetter != null && value != null && value.GetType() == Adapter.MySqlDecimalType)
-						value = Adapter.MySqlDecimalGetter(value);
-					break;
+				value    = Adapter.MySqlDecimalGetter(value);
+				// yep, MySql.Data just crash here on large decimals even for string value as it tries to convert it back
+				// to decimal for DataType.Decimal just to convert it back to string ¯\_(ツ)_/¯
+				// https://github.com/mysql/mysql-connector-net/blob/8.0/MySQL.Data/src/Types/MySqlDecimal.cs#L103
+				dataType = dataType.WithDataType(DataType.VarChar);
 			}
+
+#if NET6_0_OR_GREATER
+			if (!Adapter.IsDateOnlySupported && value is DateOnly d)
+			{
+				value = d.ToDateTime(TimeOnly.MinValue);
+			}
+#endif
 
 			base.SetParameter(dataConnection, parameter, name, dataType, value);
 		}
 
-		protected override void SetParameterType(DataConnection dataConnection, IDbDataParameter parameter, DbDataType dataType)
+		protected override void SetParameterType(DataConnection dataConnection, DbParameter parameter, DbDataType dataType)
 		{
 			// VarNumeric - mysql.data trims fractional part
 			// Date/DateTime2 - mysql.data trims time part

@@ -1,7 +1,7 @@
-﻿#if NETFRAMEWORK || NETCOREAPP
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -15,17 +15,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 	public class SapHanaDataProvider : DynamicDataProviderBase<SapHanaProviderAdapter>
 	{
-		public SapHanaDataProvider()
-			: this(ProviderName.SapHanaNative)
-		{
-		}
-
-		public SapHanaDataProvider(string name)
-			: this(name, MappingSchemaInstance)
-		{
-		}
-		protected SapHanaDataProvider(string name, MappingSchema mappingSchema)
-			: base(name, mappingSchema, SapHanaProviderAdapter.GetInstance())
+		public SapHanaDataProvider() : base(ProviderName.SapHanaNative, MappingSchemaInstance, SapHanaProviderAdapter.GetInstance())
 		{
 			SqlProviderFlags.IsParameterOrderDependent = true;
 
@@ -47,6 +37,7 @@ namespace LinqToDB.DataProvider.SapHana
 			SqlProviderFlags.IsApplyJoinSupported      = false;
 			SqlProviderFlags.IsInsertOrUpdateSupported = false;
 			SqlProviderFlags.IsUpdateFromSupported     = false;
+			SqlProviderFlags.AcceptsOuterExpressionInAggregate = false;
 
 			_sqlOptimizer = new SapHanaNativeSqlOptimizer(SqlProviderFlags);
 		}
@@ -64,7 +55,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{
-			return new SapHanaSqlBuilder(mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
+			return new SapHanaSqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;
@@ -78,6 +69,10 @@ namespace LinqToDB.DataProvider.SapHana
 		{
 			if (type.IsNullable())
 				type = type.ToUnderlying();
+#if NET6_0_OR_GREATER
+			if (type == typeof(DateOnly))
+				type = typeof(DateTime);
+#endif
 
 			switch (dataType.DataType)
 			{
@@ -92,8 +87,12 @@ namespace LinqToDB.DataProvider.SapHana
 			return base.ConvertParameterType(type, dataType);
 		}
 
-		public override void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object? value)
+		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
 		{
+#if NET6_0_OR_GREATER
+			if (value is DateOnly d)
+				value = d.ToDateTime(TimeOnly.MinValue);
+#endif
 			switch (dataType.DataType)
 			{
 				case DataType.Boolean:
@@ -112,7 +111,7 @@ namespace LinqToDB.DataProvider.SapHana
 			base.SetParameter(dataConnection, parameter, name, dataType, value);
 		}
 
-		protected override void SetParameterType(DataConnection dataConnection, IDbDataParameter parameter, DbDataType dataType)
+		protected override void SetParameterType(DataConnection dataConnection, DbParameter parameter, DbDataType dataType)
 		{
 			if (parameter is BulkCopyReader.Parameter)
 				return;
@@ -126,7 +125,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 			if (type != null)
 			{
-				var param = TryGetProviderParameter(parameter, dataConnection.MappingSchema);
+				var param = TryGetProviderParameter(dataConnection, parameter);
 				if (param != null)
 				{
 					Adapter.SetDbType(param, type.Value);
@@ -181,7 +180,7 @@ namespace LinqToDB.DataProvider.SapHana
 		}
 #endif
 
-		public override bool? IsDBNullAllowed(IDataReader reader, int idx)
+		public override bool? IsDBNullAllowed(DbDataReader reader, int idx)
 		{
 			// provider fails to set AllowDBNull for some results
 			return true;
@@ -190,4 +189,3 @@ namespace LinqToDB.DataProvider.SapHana
 		private static readonly MappingSchema MappingSchemaInstance = new SapHanaMappingSchema.NativeMappingSchema();
 	}
 }
-#endif

@@ -46,11 +46,10 @@ namespace LinqToDB
 
 			public override void SetTable<TContext>(TContext context, ISqlBuilder sqlBuilder, MappingSchema mappingSchema, SqlTable table, MethodCallExpression methodCall, Func<TContext, Expression, ColumnDescriptor?, ISqlExpression> converter)
 			{
-				table.SqlTableType   = SqlTableType.Expression;
-				table.Name           = Expression ?? methodCall.Method.Name;
+				table.SqlTableType = SqlTableType.Expression;
+				var expressionStr  = table.Expression = Expression ?? methodCall.Method.Name!;
 
-				var expressionStr = table.Name;
-				ExpressionAttribute.PrepareParameterValues(methodCall, ref expressionStr, false, out var knownExpressions, out var genericTypes);
+				ExpressionAttribute.PrepareParameterValues(methodCall, ref expressionStr, false, out var knownExpressions, false, out var genericTypes);
 
 				if (string.IsNullOrEmpty(expressionStr))
 					throw new LinqToDBException($"Cannot retrieve Table Expression body from expression '{methodCall}'.");
@@ -59,11 +58,15 @@ namespace LinqToDB
 				knownExpressions.Insert(0, null);
 				knownExpressions.Insert(0, null);
 
-				table.TableArguments = ExpressionAttribute.PrepareArguments(context, expressionStr!, ArgIndices, addDefault: false, knownExpressions, genericTypes, converter).Skip(2).ToArray();
+				if (Schema != null || Database != null || Server != null || Package != null)
+					table.TableName = new SqlObjectName(
+						table.TableName.Name,
+						Schema  : Schema   ?? table.TableName.Schema,
+						Database: Database ?? table.TableName.Database,
+						Server  : Server   ?? table.TableName.Server,
+						Package : Package  ?? table.TableName.Package);
 
-				if (Schema   != null) table.Schema   = Schema;
-				if (Database != null) table.Database = Database;
-				if (Server   != null) table.Server   = Server;
+				table.TableArguments = ExpressionAttribute.PrepareArguments(context, expressionStr!, ArgIndices, false, knownExpressions, genericTypes, converter).Skip(2).ToArray();
 			}
 		}
 	}

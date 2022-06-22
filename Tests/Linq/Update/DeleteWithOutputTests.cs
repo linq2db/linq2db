@@ -1,8 +1,11 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
+
 using LinqToDB;
 using LinqToDB.Mapping;
 using LinqToDB.Tools.Comparers;
+
 using NUnit.Framework;
 
 namespace Tests.xUpdate
@@ -10,6 +13,10 @@ namespace Tests.xUpdate
 	[TestFixture]
 	public class DeleteWithOutputTests : TestBase
 	{
+		private const string FeatureDeleteOutputMultiple = $"{TestProvName.AllSqlServer},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLiteClassic}";
+		private const string FeatureDeleteOutputSingle   = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLiteClassic}";
+		private const string FeatureDeleteOutputInto     = TestProvName.AllSqlServer;
+
 		[Table]
 		class TableWithData
 		{
@@ -42,7 +49,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void DeleteWithOutputTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context, [Values(100, 200)] int param)
+		public void DeleteWithOutputTest([IncludeDataSources(true, FeatureDeleteOutputMultiple)] string context, [Values(100, 200)] int param)
 		{
 			var sourceData    = GetSourceData();
 			using (var db     = GetDataContext(context))
@@ -65,18 +72,55 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public async Task DeleteWithOutputAsyncTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context, [Values(100, 200)] int param)
+		public void DeleteWithOutputTestSingleRecord([IncludeDataSources(true, FeatureDeleteOutputSingle)] string context, [Values(100, 200)] int param)
 		{
 			var sourceData    = GetSourceData();
 			using (var db     = GetDataContext(context))
 			using (var source = db.CreateLocalTable(sourceData))
 			{
 				var expected = source
-					.Where(s => s.Id > 3)
+					.Where(s => s.Id == 3)
+					.ToArray();
+
+				var output = source
+					.Where(s => s.Id == 3)
+					.DeleteWithOutput()
+					.ToArray();
+
+				AreEqual(
+					expected,
+					output,
+					ComparerBuilder.GetEqualityComparer<TableWithData>());
+			}
+		}
+
+		[Test]
+		public async Task DeleteWithOutputAsyncTest([IncludeDataSources(true, FeatureDeleteOutputMultiple)] string context, [Values(100, 200)] int param)
+		{
+			var sourceData = GetSourceData();
+
+			await using var db     = GetDataContext(context);
+			await using var source = db.CreateLocalTable(sourceData);
+
+			AreEqual(
+				source.Where(s => s.Id > 3).ToList(),
+				await source.Where(s => s.Id > 3).DeleteWithOutputAsync(),
+				ComparerBuilder.GetEqualityComparer<TableWithData>());
+		}
+
+		[Test]
+		public async Task DeleteWithOutputAsyncTestSingleRecord([IncludeDataSources(true, FeatureDeleteOutputSingle)] string context, [Values(100, 200)] int param)
+		{
+			var sourceData    = GetSourceData();
+			using (var db = GetDataContext(context))
+			using (var source = db.CreateLocalTable(sourceData))
+			{
+				var expected = source
+					.Where(s => s.Id == 3)
 					.ToArray();
 
 				var output = await source
-					.Where(s => s.Id > 3)
+					.Where(s => s.Id == 3)
 					.DeleteWithOutputAsync();
 
 				AreEqual(
@@ -87,7 +131,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void DeleteWithOutputProjectionFromQueryTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context, [Values(100, 200)] int param)
+		public void DeleteWithOutputProjectionFromQueryTest([IncludeDataSources(true, FeatureDeleteOutputMultiple)] string context, [Values(100, 200)] int param)
 		{
 			var sourceData    = GetSourceData();
 			using (var db     = GetDataContext(context))
@@ -119,7 +163,39 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public async Task DeleteWithOutputProjectionFromQueryAsyncTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context, [Values(100, 200)] int param)
+		public void DeleteWithOutputProjectionFromQueryTestSingleRecord([IncludeDataSources(true, FeatureDeleteOutputSingle)] string context, [Values(100, 200)] int param)
+		{
+			var sourceData    = GetSourceData();
+			using (var db     = GetDataContext(context))
+			using (var source = db.CreateLocalTable(sourceData))
+			{
+				var expected = source
+					.Where(s => s.Id == 3)
+					.ToArray();
+
+				var output = source
+					.Where(s => s.Id == 3)
+					.DeleteWithOutput(
+						deleted => new
+						{
+							Id       = Sql.AsSql(deleted.Id       + 1),
+							ValueStr = Sql.AsSql(deleted.ValueStr + 1),
+						})
+					.ToArray();
+
+				AreEqual(
+					expected
+						.Select(t => new
+						{
+							Id       = t.Id       + 1,
+							ValueStr = t.ValueStr + 1,
+						}),
+					output);
+			}
+		}
+
+		[Test]
+		public async Task DeleteWithOutputProjectionFromQueryAsyncTest([IncludeDataSources(true, FeatureDeleteOutputMultiple)] string context, [Values(100, 200)] int param)
 		{
 			var sourceData    = GetSourceData();
 			using (var db     = GetDataContext(context))
@@ -150,7 +226,38 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void DeleteWithOutputFromQueryTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context, [Values(100, 200)] int param)
+		public async Task DeleteWithOutputProjectionFromQueryAsyncTestSingleRecord([IncludeDataSources(true, FeatureDeleteOutputSingle)] string context, [Values(100, 200)] int param)
+		{
+			var sourceData    = GetSourceData();
+			using (var db     = GetDataContext(context))
+			using (var source = db.CreateLocalTable(sourceData))
+			{
+				var expected = source
+					.Where(s => s.Id == 3)
+					.ToArray();
+
+				var output = await source
+					.Where(s => s.Id == 3)
+					.DeleteWithOutputAsync(
+						deleted => new
+						{
+							Id       = Sql.AsSql(deleted.Id       + 1),
+							ValueStr = Sql.AsSql(deleted.ValueStr + 1),
+						});
+
+				AreEqual(
+					expected
+						.Select(t => new
+						{
+							Id       = t.Id       + 1,
+							ValueStr = t.ValueStr + 1,
+						}),
+					output);
+			}
+		}
+
+		[Test]
+		public void DeleteWithOutputFromQueryTest([IncludeDataSources(true, FeatureDeleteOutputMultiple)] string context, [Values(100, 200)] int param)
 		{
 			var sourceData    = GetSourceData();
 			using (var db     = GetDataContext(context))
@@ -185,7 +292,42 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public async Task DeleteWithOutputFromQueryAsyncTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context, [Values(100, 200)] int param)
+		public void DeleteWithOutputFromQueryTestSingleRecord([IncludeDataSources(true, FeatureDeleteOutputSingle)] string context, [Values(100, 200)] int param)
+		{
+			var sourceData    = GetSourceData();
+			using (var db     = GetDataContext(context))
+			using (var source = db.CreateLocalTable(sourceData))
+			{
+				var expected = source
+					.Where(s => s.Id == 3)
+					.ToArray();
+
+				var output = source
+					.Where(s => s.Id == 3)
+					.DeleteWithOutput(
+						s => new DestinationTable
+						{
+							Id       = s.Id       + param,
+							Value    = s.Value    + param,
+							ValueStr = s.ValueStr + param
+						})
+					.ToArray();
+
+				AreEqual(
+					expected
+						.Select(s => new DestinationTable
+						{
+							Id       = s.Id       + param,
+							Value    = s.Value    + param,
+							ValueStr = s.ValueStr + param,
+						}),
+					output,
+					ComparerBuilder.GetEqualityComparer<DestinationTable>());
+			}
+		}
+
+		[Test]
+		public async Task DeleteWithOutputFromQueryAsyncTest([IncludeDataSources(true, FeatureDeleteOutputMultiple)] string context, [Values(100, 200)] int param)
 		{
 			var sourceData    = GetSourceData();
 			using (var db     = GetDataContext(context))
@@ -219,7 +361,41 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void DeleteWithOutputIntoFromQueryTest([IncludeDataSources(false, TestProvName.AllSqlServer2008Plus)] string context, [Values(100, 200)] int param)
+		public async Task DeleteWithOutputFromQueryAsyncTestSingleRecord([IncludeDataSources(true, FeatureDeleteOutputSingle)] string context, [Values(100, 200)] int param)
+		{
+			var sourceData    = GetSourceData();
+			using (var db = GetDataContext(context))
+			using (var source = db.CreateLocalTable(sourceData))
+			{
+				var expected = source
+					.Where(s => s.Id == 3)
+					.ToArray();
+
+				var output = await source
+					.Where(s => s.Id == 3)
+					.DeleteWithOutputAsync(
+						s => new DestinationTable
+						{
+							Id       = s.Id       + param,
+							Value    = s.Value    + param,
+							ValueStr = s.ValueStr + param
+						});
+
+				AreEqual(
+					expected
+						.Select(s => new DestinationTable
+						{
+							Id       = s.Id + param,
+							Value    = s.Value + param,
+							ValueStr = s.ValueStr + param,
+						}),
+					output,
+					ComparerBuilder.GetEqualityComparer<DestinationTable>());
+			}
+		}
+
+		[Test]
+		public void DeleteWithOutputIntoFromQueryTest([IncludeDataSources(true, FeatureDeleteOutputInto)] string context, [Values(100, 200)] int param)
 		{
 			var sourceData    = GetSourceData();
 			using (var db     = GetDataContext(context))
@@ -249,13 +425,13 @@ namespace Tests.xUpdate
 							Value    = s.Value    + param,
 							ValueStr = s.ValueStr + param,
 						}),
-					target.ToArray(), 
+					target.ToArray(),
 					ComparerBuilder.GetEqualityComparer<DestinationTable>());
 			}
 		}
 
 		[Test]
-		public async Task DeleteWithOutputIntoFromQueryAsyncTest([IncludeDataSources(false, TestProvName.AllSqlServer2008Plus)] string context, [Values(100, 200)] int param)
+		public async Task DeleteWithOutputIntoFromQueryAsyncTest([IncludeDataSources(true, FeatureDeleteOutputInto)] string context, [Values(100, 200)] int param)
 		{
 			var sourceData    = GetSourceData();
 			using (var db     = GetDataContext(context))
@@ -285,7 +461,7 @@ namespace Tests.xUpdate
 							Value    = s.Value    + param,
 							ValueStr = s.ValueStr + param,
 						}),
-					target.ToArray(), 
+					target.ToArray(),
 					ComparerBuilder.GetEqualityComparer<DestinationTable>());
 			}
 		}

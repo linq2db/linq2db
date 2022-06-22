@@ -115,7 +115,7 @@ namespace Tests.Metadata
 		}
 
 		[Test]
-		public void SmokeSelect([IncludeDataSources(TestProvName.Northwind)] string context)
+		public void SmokeSelect([IncludeDataSources(TestProvName.AllNorthwind)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

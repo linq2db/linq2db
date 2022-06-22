@@ -68,7 +68,7 @@ namespace Tests.Linq
 
 		async Task TestExecute1Impl(string context)
 		{
-			using (var conn = new TestDataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				conn.InlineParameters = true;
 
@@ -85,7 +85,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestExecute2([DataSources(false)] string context)
 		{
-			using (var conn = new TestDataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				conn.InlineParameters = true;
 
@@ -107,7 +107,7 @@ namespace Tests.Linq
 
 		async Task TestQueryToArrayImpl(string context)
 		{
-			using (var conn = new TestDataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				conn.InlineParameters = true;
 
@@ -225,20 +225,19 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void CancelableAsyncEnumerableTest([DataSources] string context)
+		public void CancellableAsyncEnumerableTest([DataSources] string context)
 		{
 			using var cts = new CancellationTokenSource();
 			var cancellationToken = cts.Token;
 			cts.Cancel();
 			using var db = GetDataContext(context);
 			var resultQuery = db.Parent.AsAsyncEnumerable().WithCancellation(cancellationToken);
-			var list = new List<Parent>();
 			Assert.ThrowsAsync<OperationCanceledException>(async () =>
 			{
 				try
 				{
 					await foreach (var row in resultQuery)
-						list.Add(row);
+					{ }
 				}
 				catch (OperationCanceledException)
 				{

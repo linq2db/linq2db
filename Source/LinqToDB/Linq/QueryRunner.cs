@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Data;
+using System.Data.Common;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
@@ -22,6 +22,7 @@ namespace LinqToDB.Linq
 	using Data;
 	using Extensions;
 	using LinqToDB.Expressions;
+	using Reflection;
 	using SqlQuery;
 
 	static partial class QueryRunner
@@ -41,32 +42,71 @@ namespace LinqToDB.Linq
 			internal static MemoryCache<IStructuralEquatable> QueryCache { get; } = new (new ());
 		}
 
-#region Mapper
+		#region Mapper
 
 		class Mapper<T>
 		{
-			public Mapper(Expression<Func<IQueryRunner,IDataReader,T>> mapperExpression)
+			public Mapper(Expression<Func<IQueryRunner, DbDataReader, T>> mapperExpression)
 			{
 				_expression = mapperExpression;
 			}
 
-			readonly Expression<Func<IQueryRunner,IDataReader,T>> _expression;
-			readonly ConcurrentDictionary<Type, ReaderMapperInfo> _mappers = new ();
+			readonly Expression<Func<IQueryRunner,DbDataReader,T>> _expression;
+			readonly ConcurrentDictionary<Type,ReaderMapperInfo>   _mappers = new ();
 
-
-			class ReaderMapperInfo
+			public class ReaderMapperInfo
 			{
-				public Expression<Func<IQueryRunner, IDataReader, T>> MapperExpression = null!;
-				public Func<IQueryRunner, IDataReader, T>             Mapper = null!;
-				public bool                                           IsFaulted;
+				public Expression<Func<IQueryRunner,DbDataReader,T>> MapperExpression = null!;
+				public Func<IQueryRunner,DbDataReader,T>             Mapper = null!;
+				public bool                                          IsFaulted;
 			}
 
-			public T Map(IDataContext context, IQueryRunner queryRunner, IDataReader dataReader)
+			public T Map(IDataContext context, IQueryRunner queryRunner, DbDataReader dataReader, ref ReaderMapperInfo mapperInfo)
 			{
-				// unwrap early
-				// https://github.com/linq2db/linq2db/issues/2499
-				dataReader = DataReaderWrapCache.TryUnwrapDataReader(context.MappingSchema, dataReader);
+				try
+				{
+					return mapperInfo.Mapper(queryRunner, dataReader);
+				}
+				// SqlNullValueException: MySqlData
+				// OracleNullValueException: managed and native oracle providers
+				catch (Exception ex) when (ex is FormatException or InvalidCastException or LinqToDBConvertException || ex.GetType().Name.Contains("NullValueException"))
+				{
+					// TODO: debug cases when our tests go into slow-mode (e.g. sqlite.ms)
+					if (mapperInfo.IsFaulted)
+						throw;
 
+					return ReMapOnException(context, queryRunner, dataReader, ref mapperInfo, ex);
+				}
+			}
+
+			public T ReMapOnException(IDataContext context, IQueryRunner queryRunner, DbDataReader dataReader, ref ReaderMapperInfo mapperInfo, Exception ex)
+			{
+				if (context.GetTraceSwitch().TraceInfo)
+					context.WriteTraceLine(
+						$"Mapper has switched to slow mode. Mapping exception: {ex.Message}",
+						context.GetTraceSwitch().DisplayName,
+						TraceLevel.Error);
+
+				queryRunner.MapperExpression = mapperInfo.MapperExpression;
+
+				var dataReaderType = dataReader.GetType();
+				var expression     = TransformMapperExpression(context, dataReader, dataReaderType, true);
+				var expr           = mapperInfo.MapperExpression; // create new instance to avoid race conditions without locks
+
+				mapperInfo = new ReaderMapperInfo()
+				{
+					MapperExpression = expr,
+					Mapper           = expression.CompileExpression(),
+					IsFaulted        = true
+				};
+
+				_mappers[dataReaderType] = mapperInfo;
+
+				return mapperInfo.Mapper(queryRunner, dataReader);
+			}
+
+			public ReaderMapperInfo GetMapperInfo(IDataContext context, IQueryRunner queryRunner, DbDataReader dataReader)
+			{
 				var dataReaderType = dataReader.GetType();
 
 				if (!_mappers.TryGetValue(dataReaderType, out var mapperInfo))
@@ -76,51 +116,19 @@ namespace LinqToDB.Linq
 					queryRunner.MapperExpression = mapperExpression;
 
 					var mapper = mapperExpression.CompileExpression();
-					mapperInfo = new ReaderMapperInfo() { MapperExpression = mapperExpression, Mapper = mapper };
+
+					mapperInfo = new() { MapperExpression = mapperExpression, Mapper = mapper };
+
 					_mappers.TryAdd(dataReaderType, mapperInfo);
 				}
 
-				try
-				{
-					return mapperInfo.Mapper(queryRunner, dataReader);
-				}
-				// SqlNullValueException: MySqlData
-				// OracleNullValueException: managed and native oracle providers
-				catch (Exception ex) when (ex is FormatException || ex is InvalidCastException || ex is LinqToDBConvertException || ex.GetType().Name.Contains("NullValueException"))
-				{
-					// TODO: debug cases when our tests go into slow-mode (e.g. sqlite.ms)
-					if (mapperInfo.IsFaulted)
-						throw;
-
-					if (context.GetTraceSwitch().TraceInfo)
-						context.WriteTraceLine(
-							$"Mapper has switched to slow mode. Mapping exception: {ex.Message}",
-							context.GetTraceSwitch().DisplayName,
-							TraceLevel.Error);
-
-					queryRunner.MapperExpression = mapperInfo.MapperExpression;
-
-					var expression = TransformMapperExpression(context, dataReader, dataReaderType, true);
-
-					// create new instance to avoid race conditions without locks
-					var expr   = mapperInfo.MapperExpression;
-					mapperInfo = new ReaderMapperInfo()
-					{
-						MapperExpression = expr,
-						Mapper           = expression.CompileExpression(),
-						IsFaulted        = true
-					};
-
-					_mappers[dataReaderType] = mapperInfo;
-
-					return mapperInfo.Mapper(queryRunner, dataReader);
-				}
+				return mapperInfo;
 			}
 
 			// transform extracted to separate method to avoid closures allocation on mapper cache hit
-			private Expression<Func<IQueryRunner, IDataReader, T>> TransformMapperExpression(
+			private Expression<Func<IQueryRunner, DbDataReader, T>> TransformMapperExpression(
 				IDataContext context,
-				IDataReader  dataReader,
+				DbDataReader dataReader,
 				Type         dataReaderType,
 				bool         slowMode)
 			{
@@ -154,24 +162,22 @@ namespace LinqToDB.Linq
 				if (Configuration.OptimizeForSequentialAccess)
 					expression = SequentialAccessHelper.OptimizeMappingExpressionForSequentialAccess(expression, dataReader.FieldCount, reduce: false);
 
-				return (Expression<Func<IQueryRunner, IDataReader, T>>)expression;
+				return (Expression<Func<IQueryRunner, DbDataReader, T>>)expression;
 			}
 
 			static Expression ReplaceVariable(TransformMapperExpressionContext context, Expression e)
 			{
-				if (e is ParameterExpression vex && vex.Name == "ldr")
+				if (e is ParameterExpression { Name: "ldr" } vex)
 				{
 					context.OldVariable = vex;
 					return context.NewVariable ??= Expression.Variable(context.DataReader.GetType(), "ldr");
 				}
 
-				if (e is BinaryExpression bex
-					&& bex.NodeType == ExpressionType.Assign
-					&& bex.Left     == context.OldVariable)
+				if (e is BinaryExpression { NodeType: ExpressionType.Assign } bex && bex.Left == context.OldVariable)
 				{
-					Expression dataReaderExpression = Expression.Convert(context.Expression.Parameters[1], context.DataReaderType);
+					var dataReaderExpression = Expression.Convert(context.Expression.Parameters[1], context.DataReaderType);
 
-					return Expression.Assign(context.NewVariable, dataReaderExpression);
+					return Expression.Assign(context.NewVariable!, dataReaderExpression);
 				}
 
 				return e;
@@ -179,7 +185,7 @@ namespace LinqToDB.Linq
 
 			class TransformMapperExpressionContext
 			{
-				public TransformMapperExpressionContext(Expression<Func<IQueryRunner, IDataReader, T>> expression, IDataContext context, IDataReader dataReader, Type dataReaderType)
+				public TransformMapperExpressionContext(Expression<Func<IQueryRunner, DbDataReader, T>> expression, IDataContext context, DbDataReader dataReader, Type dataReaderType)
 				{
 					Expression     = expression;
 					Context        = context;
@@ -187,19 +193,19 @@ namespace LinqToDB.Linq
 					DataReaderType = dataReaderType;
 				}
 
-				public Expression<Func<IQueryRunner,IDataReader,T>> Expression;
-				public readonly IDataContext                        Context;
-				public readonly IDataReader                         DataReader;
-				public readonly Type                                DataReaderType;
+				public Expression<Func<IQueryRunner,DbDataReader,T>> Expression;
+				public readonly IDataContext                         Context;
+				public readonly DbDataReader                         DataReader;
+				public readonly Type                                 DataReaderType;
 
 				public ParameterExpression? OldVariable;
 				public ParameterExpression? NewVariable;
 			}
 		}
 
-#endregion
+		#endregion
 
-#region Helpers
+		#region Helpers
 
 		static void FinalizeQuery(Query query)
 		{
@@ -223,9 +229,8 @@ namespace LinqToDB.Linq
 #endif
 		}
 
-		static int EvaluateTakeSkipValue(Query query, Expression expr, IDataContext? db, object?[]? ps, int qn,
-			ISqlExpression sqlExpr)
-				{
+		static int EvaluateTakeSkipValue(Query query, Expression expr, IDataContext? db, object?[]? ps, int qn, ISqlExpression sqlExpr)
+		{
 			var parameterValues = new SqlParameterValues();
 			SetParameters(query, expr, db, ps, qn, parameterValues);
 
@@ -242,41 +247,41 @@ namespace LinqToDB.Linq
 
 			foreach (var p in queryContext.ParameterAccessors)
 			{
-				var value = p.ValueAccessor(expression, parametersContext, parameters);
+				var providerValue = p.ValueAccessor(expression, parametersContext, parameters);
 
-				if (value is IEnumerable vs)
+				if (providerValue is IEnumerable vs)
 				{
-					var type = vs.GetType();
+					var type  = vs.GetType();
 					var etype = type.GetItemType();
 
 					if (etype == null || etype == typeof(object) || etype.IsEnum ||
-						type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>) &&
+						type.IsNullable() &&
 						etype.GetGenericArguments()[0].IsEnum)
 					{
 						var values = new List<object?>();
 
 						foreach (var v in vs)
 						{
-							value = v;
+							providerValue = v;
 
 							if (v != null)
 							{
 								var valueType = v.GetType();
 
 								if (valueType.ToNullableUnderlying().IsEnum)
-									value = query.GetConvertedEnum(valueType, v);
+									providerValue = query.GetConvertedEnum(valueType, v);
 							}
 
-							values.Add(value);
+							values.Add(providerValue);
 						}
 
-						value = values;
+						providerValue = values;
 					}
 				}
 
 				var dbDataType = p.DbDataTypeAccessor(expression, parametersContext, parameters);
 
-				parameterValues.AddValue(p.SqlParameter, value, p.SqlParameter.Type.WithSetValues(dbDataType));
+				parameterValues.AddValue(p.SqlParameter, providerValue, p.SqlParameter.Type.WithSetValues(dbDataType));
 			}
 		}
 
@@ -291,17 +296,16 @@ namespace LinqToDB.Linq
 			var descriptor    = field.ColumnDescriptor;
 			var dbValueLambda = descriptor.GetDbParamLambda();
 
-			Expression? valueGetter;
 			Expression? dbDataTypeExpression;
 
-			valueGetter = InternalExtensions.ApplyLambdaToExpression(dbValueLambda, getter);
+			var valueGetter = InternalExtensions.ApplyLambdaToExpression(dbValueLambda, getter);
 
 			if (typeof(DataParameter).IsSameOrParentOf(valueGetter.Type))
 			{
 				dbDataTypeExpression = Expression.Call(Expression.Constant(field.ColumnDescriptor.GetDbDataType(false)),
 					DbDataType.WithSetValuesMethodInfo,
-					Expression.PropertyOrField(valueGetter, nameof(DataParameter.DbDataType)));
-				valueGetter          = Expression.PropertyOrField(valueGetter, nameof(DataParameter.Value));
+					Expression.Property(valueGetter, Methods.LinqToDB.DataParameter.DbDataType));
+				valueGetter          = Expression.Property(valueGetter, Methods.LinqToDB.DataParameter.Value);
 			}
 			else
 			{
@@ -315,20 +319,20 @@ namespace LinqToDB.Linq
 			return param;
 		}
 
-		private static Type GetType<T>(T obj, IDataContext db)
+		static Type GetType<T>(T obj, IDataContext db)
 			//=> typeof(T);
 			//=> obj.GetType();
 			=> db.MappingSchema.GetEntityDescriptor(typeof(T)).InheritanceMapping?.Count > 0 ? obj!.GetType() : typeof(T);
 
-#endregion
+		#endregion
 
-#region SetRunQuery
+		#region SetRunQuery
 
 		public delegate int TakeSkipDelegate(
-			Query                    query,
-			Expression               expression,
-			IDataContext?            dataContext,
-			object?[]?               ps);
+			Query         query,
+			Expression    expression,
+			IDataContext? dataContext,
+			object?[]?    ps);
 
 		static Tuple<
 			Func<Query,IDataContext,Mapper<T>,Expression,object?[]?,object?[]?,int,IEnumerable<T>>,
@@ -376,30 +380,52 @@ namespace LinqToDB.Linq
 			object?[]?   preambles,
 			int          queryNumber)
 		{
-			using (var runner = dataContext.GetQueryRunner(query, queryNumber, expression, ps, preambles))
-			using (var dr     = runner.ExecuteReader())
+			using var runner = dataContext.GetQueryRunner(query, queryNumber, expression, ps, preambles);
+			using var dr     = runner.ExecuteReader();
+
+			var dataReader = dr.DataReader!;
+
+			if (dataReader.Read())
 			{
-				while (dr.Read())
+				var origDataReader = dataContext.UnwrapDataObjectInterceptor?.UnwrapDataReader(dataContext, dataReader) ?? dataReader;
+				var mapperInfo     = mapper.GetMapperInfo(dataContext, runner, origDataReader);
+
+				do
 				{
-					var value = mapper.Map(dataContext, runner, dr);
-					runner.RowsCount++;
-					yield return value;
+					T res;
+
+					try
+					{
+						res = mapperInfo.Mapper(runner, origDataReader);
+						runner.RowsCount++;
+					}
+					catch (Exception ex) when (ex is FormatException or InvalidCastException or LinqToDBConvertException || ex.GetType().Name.Contains("NullValueException"))
+					{
+						// TODO: debug cases when our tests go into slow-mode (e.g. sqlite.ms)
+						if (mapperInfo.IsFaulted)
+							throw;
+
+						res = mapper.ReMapOnException(dataContext, runner, origDataReader, ref mapperInfo, ex);
+					}
+
+					yield return res;
 				}
+				while (dataReader.Read());
 			}
 		}
 
 		static async Task ExecuteQueryAsync<T>(
-			Query                         query,
-			IDataContext                  dataContext,
-			Mapper<T>                     mapper,
-			Expression                    expression,
-			object?[]?                    ps,
-			object?[]?                    preambles,
-			int                           queryNumber,
-			Func<T,bool>                  func,
-			TakeSkipDelegate?        skipAction,
-			TakeSkipDelegate?        takeAction,
-			CancellationToken             cancellationToken)
+			Query             query,
+			IDataContext      dataContext,
+			Mapper<T>         mapper,
+			Expression        expression,
+			object?[]?        ps,
+			object?[]?        preambles,
+			int               queryNumber,
+			Func<T,bool>      func,
+			TakeSkipDelegate? skipAction,
+			TakeSkipDelegate? takeAction,
+			CancellationToken cancellationToken)
 		{
 			var runner = dataContext.GetQueryRunner(query, queryNumber, expression, ps, preambles);
 #if NATIVE_ASYNC
@@ -422,11 +448,18 @@ namespace LinqToDB.Linq
 
 					var take = takeAction?.Invoke(query, expression, dataContext, ps) ?? int.MaxValue;
 
-					while (take-- > 0 && await dr.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+					if (take-- > 0 && await dr.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 					{
-						runner.RowsCount++;
-						if (!func(mapper.Map(dataContext, runner, dr.DataReader)))
-							break;
+						var dataReader = dataContext.UnwrapDataObjectInterceptor?.UnwrapDataReader(dataContext, dr.DataReader) ?? dr.DataReader;
+						var mapperInfo = mapper.GetMapperInfo(dataContext, runner, dataReader);
+
+						do
+						{
+							if (!func(mapper.Map(dataContext, runner, dataReader, ref mapperInfo)))
+								break;
+							runner.RowsCount++;
+						}
+						while (take-- > 0 && await dr.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext));
 					}
 				}
 			}
@@ -447,7 +480,7 @@ namespace LinqToDB.Linq
 
 			IQueryRunner?     _queryRunner;
 			IDataReaderAsync? _dataReader;
-			int              _take;
+			int               _take;
 
 			public AsyncEnumeratorImpl(
 				Query             query,
@@ -484,8 +517,7 @@ namespace LinqToDB.Linq
 				if (_queryRunner == null)
 				{
 					_queryRunner = _dataContext.GetQueryRunner(_query, _queryNumber, _expression, _ps, _preambles);
-
-					_dataReader = await _queryRunner.ExecuteReaderAsync(_cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+					_dataReader  = await _queryRunner.ExecuteReaderAsync(_cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 					var skip = _skipAction?.Invoke(_query, _expression, _dataContext, _ps) ?? 0;
 
@@ -500,9 +532,12 @@ namespace LinqToDB.Linq
 
 				if (_take-- > 0 && await _dataReader!.ReadAsync(_cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 				{
-					_queryRunner.RowsCount++;
+					var dataReader = _dataContext.UnwrapDataObjectInterceptor?.UnwrapDataReader(_dataContext, _dataReader.DataReader) ?? _dataReader.DataReader;
+					var mapperInfo = _mapper.GetMapperInfo(_dataContext, _queryRunner, dataReader);
 
-					Current = _mapper.Map(_dataContext, _queryRunner, _dataReader.DataReader);
+					Current = _mapper.Map(_dataContext, _queryRunner, dataReader, ref mapperInfo);
+
+					_queryRunner.RowsCount++;
 
 					return true;
 				}
@@ -516,6 +551,7 @@ namespace LinqToDB.Linq
 				_dataReader ?.Dispose();
 
 				_queryRunner = null;
+				_dataReader  = null;
 			}
 
 #if !NATIVE_ASYNC
@@ -527,10 +563,11 @@ namespace LinqToDB.Linq
 				if (_queryRunner != null)
 					await _queryRunner.DisposeAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
-				if (_dataReader != null) 
+				if (_dataReader != null)
 					await _dataReader.DisposeAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 				_queryRunner = null;
+				_dataReader  = null;
 			}
 		}
 
@@ -592,7 +629,7 @@ namespace LinqToDB.Linq
 
 		static void SetRunQuery<T>(
 			Query<T> query,
-			Expression<Func<IQueryRunner,IDataReader,T>> expression)
+			Expression<Func<IQueryRunner, DbDataReader, T>> expression)
 		{
 			var executeQuery = GetExecuteQuery<T>(query, ExecuteQuery);
 
@@ -613,70 +650,76 @@ namespace LinqToDB.Linq
 				ExecuteQueryAsync(query, db, mapper, expr, ps, preambles, 0, skipAction, takeAction);
 		}
 
-		static readonly PropertyInfo _dataContextInfo = MemberHelper.PropertyOf<IQueryRunner>( p => p.DataContext);
-		static readonly PropertyInfo _expressionInfo  = MemberHelper.PropertyOf<IQueryRunner>( p => p.Expression);
-		static readonly PropertyInfo _parametersInfo  = MemberHelper.PropertyOf<IQueryRunner>( p => p.Parameters);
-		static readonly PropertyInfo _preamblesInfo   = MemberHelper.PropertyOf<IQueryRunner>( p => p.Preambles);
-		static readonly PropertyInfo _rowsCountInfo   = MemberHelper.PropertyOf<IQueryRunner>( p => p.RowsCount);
+		static readonly PropertyInfo _dataContextInfo = MemberHelper.PropertyOf<IQueryRunner>(p => p.DataContext);
+		static readonly PropertyInfo _expressionInfo  = MemberHelper.PropertyOf<IQueryRunner>(p => p.Expression);
+		static readonly PropertyInfo _parametersInfo  = MemberHelper.PropertyOf<IQueryRunner>(p => p.Parameters);
+		static readonly PropertyInfo _preamblesInfo   = MemberHelper.PropertyOf<IQueryRunner>(p => p.Preambles);
+		static readonly PropertyInfo _rowsCountInfo   = MemberHelper.PropertyOf<IQueryRunner>(p => p.RowsCount);
 
-		static Expression<Func<IQueryRunner,IDataReader,T>> WrapMapper<T>(
-			Expression<Func<IQueryRunner,IDataContext,IDataReader,Expression,object?[]?,object?[]?,T>> expression)
+		static Expression<Func<IQueryRunner, DbDataReader, T>> WrapMapper<T>(
+			Expression<Func<IQueryRunner,IDataContext, DbDataReader, Expression,object?[]?,object?[]?,T>> expression)
 		{
 			var queryRunnerParam = expression.Parameters[0];
 			var dataReaderParam  = expression.Parameters[2];
 
-			var dataContextVar = expression.Parameters[1];
-			var expressionVar  = expression.Parameters[3];
-			var parametersVar  = expression.Parameters[4];
-			var preamblesVar   = expression.Parameters[5];
+			var dataContextVar   = expression.Parameters[1];
+			var expressionVar    = expression.Parameters[3];
+			var parametersVar    = expression.Parameters[4];
+			var preamblesVar     = expression.Parameters[5];
+
+			var locals = new List<ParameterExpression>();
+			var exprs  = new List<Expression>();
+
+			SetLocal(dataContextVar, _dataContextInfo);
+			SetLocal(expressionVar,  _expressionInfo);
+			SetLocal(parametersVar,  _parametersInfo);
+			SetLocal(preamblesVar,   _preamblesInfo);
+
+			void SetLocal(ParameterExpression local, PropertyInfo prop)
+			{
+				if (expression.Body.Find(local) != null)
+				{
+					locals.Add(local);
+					exprs. Add(Expression.Assign(local, Expression.Property(queryRunnerParam, prop)));
+				}
+			}
 
 			// we can safely assume it is block expression
 			if (expression.Body is not BlockExpression block)
 				throw new LinqException("BlockExpression missing for mapper");
+
 			return
-				Expression.Lambda<Func<IQueryRunner,IDataReader,T>>(
+				Expression.Lambda<Func<IQueryRunner, DbDataReader, T>>(
 					block.Update(
-						new[]
-						{
-							dataContextVar,
-							expressionVar,
-							parametersVar,
-							preamblesVar
-						}.Concat(block.Variables),
-						new[]
-						{
-							Expression.Assign(dataContextVar, Expression.Property(queryRunnerParam, _dataContextInfo)),
-							Expression.Assign(expressionVar , Expression.Property(queryRunnerParam, _expressionInfo)),
-							Expression.Assign(parametersVar , Expression.Property(queryRunnerParam, _parametersInfo)),
-							Expression.Assign(preamblesVar  , Expression.Property(queryRunnerParam, _preamblesInfo))
-						}.Concat(block.Expressions)),
+						locals.Concat(block.Variables),
+						exprs.Concat(block.Expressions)),
 					queryRunnerParam,
 					dataReaderParam);
 		}
 
-#endregion
+		#endregion
 
-#region SetRunQuery / Cast, Concat, Union, OfType, ScalarSelect, Select, SequenceContext, Table
+		#region SetRunQuery / Cast, Concat, Union, OfType, ScalarSelect, Select, SequenceContext, Table
 
 		public static void SetRunQuery<T>(
 			Query<T> query,
-			Expression<Func<IQueryRunner,IDataContext,IDataReader,Expression,object?[]?,object?[]?,T>> expression)
+			Expression<Func<IQueryRunner,IDataContext, DbDataReader, Expression,object?[]?,object?[]?,T>> expression)
 		{
 			var l = WrapMapper(expression);
 
 			SetRunQuery(query, l);
 		}
 
-#endregion
+		#endregion
 
-#region SetRunQuery / Select 2
+		#region SetRunQuery / Select 2
 
 		public static void SetRunQuery<T>(
 			Query<T> query,
-			Expression<Func<IQueryRunner,IDataContext,IDataReader,Expression,object?[]?,object?[]?,int,T>> expression)
+			Expression<Func<IQueryRunner,IDataContext,DbDataReader,Expression,object?[]?,object?[]?,int,T>> expression)
 		{
 			var queryRunnerParam = Expression.Parameter(typeof(IQueryRunner), "qr");
-			var dataReaderParam  = Expression.Parameter(typeof(IDataReader),  "dr");
+			var dataReaderParam  = Expression.Parameter(typeof(DbDataReader), "dr");
 
 			var dataContextVar = expression.Parameters[1];
 			var expressionVar  = expression.Parameters[3];
@@ -686,37 +729,37 @@ namespace LinqToDB.Linq
 
 			// we can safely assume it is block expression
 			var block = (BlockExpression)expression.Body;
-			var l     = Expression.Lambda<Func<IQueryRunner, IDataReader, T>>(
-					block.Update(
-						new[]
-						{
-							dataContextVar,
-							expressionVar,
-							parametersVar,
-							preamblesVar,
-							rowsCountVar
-						}.Concat(block.Variables),
-						new[]
-						{
-							Expression.Assign(dataContextVar, Expression.Property(queryRunnerParam, _dataContextInfo)),
-							Expression.Assign(expressionVar , Expression.Property(queryRunnerParam, _expressionInfo)),
-							Expression.Assign(parametersVar , Expression.Property(queryRunnerParam, _parametersInfo)),
-							Expression.Assign(preamblesVar  , Expression.Property(queryRunnerParam, _preamblesInfo)),
-							Expression.Assign(rowsCountVar  , Expression.Property(queryRunnerParam, _rowsCountInfo))
-						}.Concat(block.Expressions)),
-					queryRunnerParam,
-					dataReaderParam);
+			var l     = Expression.Lambda<Func<IQueryRunner,DbDataReader,T>>(
+				block.Update(
+					new[]
+					{
+						dataContextVar,
+						expressionVar,
+						parametersVar,
+						preamblesVar,
+						rowsCountVar
+					}.Concat(block.Variables),
+					new[]
+					{
+						Expression.Assign(dataContextVar, Expression.Property(queryRunnerParam, _dataContextInfo)),
+						Expression.Assign(expressionVar , Expression.Property(queryRunnerParam, _expressionInfo)),
+						Expression.Assign(parametersVar , Expression.Property(queryRunnerParam, _parametersInfo)),
+						Expression.Assign(preamblesVar  , Expression.Property(queryRunnerParam, _preamblesInfo)),
+						Expression.Assign(rowsCountVar  , Expression.Property(queryRunnerParam, _rowsCountInfo))
+					}.Concat(block.Expressions)),
+				queryRunnerParam,
+				dataReaderParam);
 
 			SetRunQuery(query, l);
 		}
 
-#endregion
+		#endregion
 
-#region SetRunQuery / Aggregation, All, Any, Contains, Count
+		#region SetRunQuery / Aggregation, All, Any, Contains, Count
 
 		public static void SetRunQuery<T>(
 			Query<T> query,
-			Expression<Func<IQueryRunner,IDataContext,IDataReader,Expression,object?[]?,object?[]?,object>> expression)
+			Expression<Func<IQueryRunner,IDataContext, DbDataReader, Expression,object?[]?,object?[]?,object>> expression)
 		{
 			FinalizeQuery(query);
 
@@ -740,20 +783,20 @@ namespace LinqToDB.Linq
 			object?[]?     ps,
 			object?[]?     preambles)
 		{
-			using (var runner = dataContext.GetQueryRunner(query, 0, expression, ps, preambles))
-			{
-				using (var dr = runner.ExecuteReader())
-				{
-					while (dr.Read())
-					{
-						var value = mapper.Map(dataContext, runner, dr);
-						runner.RowsCount++;
-						return value;
-					}
-				}
+			using var runner = dataContext.GetQueryRunner(query, 0, expression, ps, preambles);
+			using var dr     = runner.ExecuteReader();
 
-				return Array<T>.Empty.First();
+			var dataReader = dataContext.UnwrapDataObjectInterceptor?.UnwrapDataReader(dataContext, dr.DataReader!) ?? dr.DataReader!;
+			var mapperInfo = mapper.GetMapperInfo(dataContext, runner, dataReader);
+
+			if (dr.DataReader!.Read())
+			{
+				var ret = mapper.Map(dataContext, runner, dataReader, ref mapperInfo);
+				runner.RowsCount++;
+				return ret;
 			}
+
+			return Array<T>.Empty.First();
 		}
 
 		static async Task<T> ExecuteElementAsync<T>(
@@ -781,11 +824,13 @@ namespace LinqToDB.Linq
 				{
 					if (await dr.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 					{
+						var dataReader = dataContext.UnwrapDataObjectInterceptor?.UnwrapDataReader(dataContext, dr.DataReader) ?? dr.DataReader;
+						var mapperInfo = mapper.GetMapperInfo(dataContext, runner, dataReader);
+						var item       = mapper.Map(dataContext, runner, dataReader, ref mapperInfo);
+
+						var ret = dataContext.MappingSchema.ChangeTypeTo<T>(item);
 						runner.RowsCount++;
-
-						var item = mapper.Map(dataContext, runner, dr.DataReader);
-
-						return dataContext.MappingSchema.ChangeTypeTo<T>(item);
+						return ret;
 					}
 
 					return Array<T>.Empty.First();
@@ -793,9 +838,9 @@ namespace LinqToDB.Linq
 			}
 		}
 
-#endregion
+		#endregion
 
-#region ScalarQuery
+		#region ScalarQuery
 
 		public static void SetScalarQuery(Query query)
 		{
@@ -833,9 +878,9 @@ namespace LinqToDB.Linq
 				return await runner.ExecuteScalarAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 		}
 
-#endregion
+		#endregion
 
-#region NonQueryQuery
+		#region NonQueryQuery
 
 		public static void SetNonQueryQuery(Query query)
 		{
@@ -873,9 +918,9 @@ namespace LinqToDB.Linq
 				return await runner.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 		}
 
-#endregion
+		#endregion
 
-#region NonQueryQuery2
+		#region NonQueryQuery2
 
 		public static void SetNonQueryQuery2(Query query)
 		{
@@ -931,9 +976,9 @@ namespace LinqToDB.Linq
 			}
 		}
 
-#endregion
+		#endregion
 
-#region QueryQuery2
+		#region QueryQuery2
 
 		public static void SetQueryQuery2(Query query)
 		{
@@ -989,9 +1034,9 @@ namespace LinqToDB.Linq
 			}
 		}
 
-#endregion
+		#endregion
 
-#region GetSqlText
+		#region GetSqlText
 
 		public static string GetSqlText(Query query, IDataContext dataContext, Expression expr, object?[]? parameters, object?[]? preambles)
 		{
@@ -999,6 +1044,6 @@ namespace LinqToDB.Linq
 				return runner.GetSqlText();
 		}
 
-#endregion
+		#endregion
 	}
 }

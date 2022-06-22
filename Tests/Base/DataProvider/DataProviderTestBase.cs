@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Linq;
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.Extensions;
 using LinqToDB.SqlProvider;
 using NUnit.Framework;
 
@@ -33,8 +34,7 @@ namespace Tests.DataProvider
 			bool     skipDefault       = false,
 			bool     skipUndefined     = false)
 		{
-			var type = typeof(T).IsGenericType && typeof(T).GetGenericTypeDefinition() == typeof(Nullable<>) ?
-				typeof(T).GetGenericArguments()[0] : typeof(T);
+			var type = typeof(T).IsNullable() ? typeof(T).GetGenericArguments()[0] : typeof(T);
 
 			// Get NULL value.
 			//
@@ -58,7 +58,7 @@ namespace Tests.DataProvider
 					// Get NULL ID with dataType.
 					//
 					Debug.WriteLine("{0} {1}:{2} -> NULL ID with dataType", fieldName, type.Name, dataType);
-					var parameters = Enumerable.Range(0, paramCount).Select(_ => new DataParameter("p", value, dataType)).ToArray();
+					var parameters = Enumerable.Range(0, paramCount).Select((_, i) => new DataParameter(paramCount == 1 ? "p" : $"p{i}", value, dataType)).ToArray();
 					id = conn.Execute<int?>(sql, parameters);
 					Assert.That(id, Is.EqualTo(1));
 				}
@@ -77,7 +77,7 @@ namespace Tests.DataProvider
 					// Get NULL ID without dataType.
 					//
 					Debug.WriteLine("{0} {1}:{2} -> NULL ID without dataType", fieldName, type.Name, dataType);
-					var parameters = Enumerable.Range(0, paramCount).Select(_ => new DataParameter("p", value)).ToArray();
+					var parameters = Enumerable.Range(0, paramCount).Select((_, i) => new DataParameter(paramCount == 1 ? "p" : $"p{i}", value)).ToArray();
 					id = conn.Execute<int?>(sql, parameters);
 					Assert.That(id, Is.EqualTo(1));
 				}

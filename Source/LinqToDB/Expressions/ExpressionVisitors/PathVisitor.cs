@@ -48,7 +48,7 @@ namespace LinqToDB.Expressions
 			}
 		}
 
-		private void Path(Expression expr, PropertyInfo property)
+		private void Path(Expression? expr, PropertyInfo property)
 		{
 			_path = Expression.Property(_path, property);
 			Path(expr);
@@ -235,6 +235,7 @@ namespace LinqToDB.Expressions
 					}
 
 				case ExpressionType.Parameter: path = ConvertPathTo(typeof(ParameterExpression)); break;
+				case ExpressionType.Default  : path = ConvertPathTo(typeof(DefaultExpression  )); break;
 
 				case ExpressionType.Extension:
 					{

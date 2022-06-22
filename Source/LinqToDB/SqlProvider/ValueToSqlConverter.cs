@@ -28,7 +28,7 @@ namespace LinqToDB.SqlProvider
 		{
 			type = type.ToNullableUnderlying();
 
-			if (_converters.ContainsKey(type))
+			if (_converters?.ContainsKey(type) == true)
 				return true;
 
 			for (var i = 0; i < BaseConverters.Length; i++)
@@ -70,11 +70,15 @@ namespace LinqToDB.SqlProvider
 			SetConverter(typeof(SqlString),  (sb,dt,v) => BuildString  (sb, v.ToString()!));
 			SetConverter(typeof(SqlChars),   (sb,dt,v) => BuildString  (sb, ((SqlChars)v).ToSqlString().ToString()));
 			SetConverter(typeof(SqlGuid),    (sb,dt,v) => sb.Append('\'').Append(v).Append('\''));
+
+#if NET6_0_OR_GREATER
+			SetConverter(typeof(DateOnly),   (sb,dt,v) => BuildDateOnly(sb, (DateOnly)v));
+#endif
 		}
 
 		internal readonly ValueToSqlConverter[] BaseConverters;
 
-		readonly Dictionary<Type,ConverterType> _converters = new ();
+		Dictionary<Type,ConverterType>? _converters;
 
 		ConverterType? _booleanConverter;
 		ConverterType? _charConverter;
@@ -153,7 +157,21 @@ namespace LinqToDB.SqlProvider
 			stringBuilder.AppendFormat(format, value);
 		}
 
+#if NET6_0_OR_GREATER
+		static void BuildDateOnly(StringBuilder stringBuilder, DateOnly value)
+		{
+			var format = "'{0:yyyy-MM-dd}'";
+
+			stringBuilder.AppendFormat(format, value);
+		}
+#endif
+
 		public bool TryConvert(StringBuilder stringBuilder, object? value)
+		{
+			return TryConvert(stringBuilder, null, value);
+		}
+
+		public bool TryConvert(StringBuilder stringBuilder, SqlDataType? dataType, object? value)
 		{
 			if (value == null || value is INullable nullable && nullable.IsNull)
 			{
@@ -161,12 +179,7 @@ namespace LinqToDB.SqlProvider
 				return true;
 			}
 
-			return TryConvertImpl(stringBuilder, new SqlDataType(value.GetType()), value, true);
-		}
-
-		public bool TryConvert(StringBuilder stringBuilder, SqlDataType dataType, object? value)
-		{
-			return TryConvertImpl(stringBuilder, dataType, value, true);
+			return TryConvertImpl(stringBuilder, dataType ?? new SqlDataType(value.GetType()), value, true);
 		}
 
 		public bool CanConvert(SqlDataType dataType, object? value)
@@ -186,7 +199,7 @@ namespace LinqToDB.SqlProvider
 
 			ConverterType? converter = null;
 
-			if (_converters.Count > 0)
+			if (_converters?.Count > 0)
 			{
 				if (!_converters.TryGetValue(type, out converter))
 				{
@@ -229,13 +242,10 @@ namespace LinqToDB.SqlProvider
 
 		public StringBuilder Convert(StringBuilder stringBuilder, object? value)
 		{
-			if (!TryConvert(stringBuilder, value))
-				throw new LinqToDBException($"Cannot convert value of type {value?.GetType()} to SQL");
-
-			return stringBuilder;
+			return Convert(stringBuilder, null, value);
 		}
 
-		public StringBuilder Convert(StringBuilder stringBuilder, SqlDataType dataType, object? value)
+		public StringBuilder Convert(StringBuilder stringBuilder, SqlDataType? dataType, object? value)
 		{
 			if (!TryConvert(stringBuilder, dataType, value))
 				throw new LinqToDBException($"Cannot convert value of type {value?.GetType()} to SQL");
@@ -247,12 +257,12 @@ namespace LinqToDB.SqlProvider
 		{
 			if (converter == null)
 			{
-				if (_converters.ContainsKey(type))
+				if (_converters?.ContainsKey(type) == true)
 					_converters.Remove(type);
 			}
 			else
 			{
-				_converters[type] = converter;
+				(_converters ??= new())[type] = converter;
 
 				if (!type.IsEnum)
 				{

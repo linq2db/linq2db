@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.Data;
 using System.Threading;
 using System.Threading.Tasks;
+
 using OleDbType = LinqToDB.DataProvider.OleDbProviderAdapter.OleDbType;
 
 namespace LinqToDB.DataProvider.Access
 {
+	using System.Data.Common;
 	using Common;
 	using Data;
 	using Mapping;
@@ -15,13 +17,7 @@ namespace LinqToDB.DataProvider.Access
 
 	public class AccessOleDbDataProvider : DynamicDataProviderBase<OleDbProviderAdapter>
 	{
-		public AccessOleDbDataProvider()
-			: this(ProviderName.Access, MappingSchemaInstance)
-		{
-		}
-
-		protected AccessOleDbDataProvider(string name, MappingSchema mappingSchema)
-			: base(name, mappingSchema, OleDbProviderAdapter.GetInstance())
+		public AccessOleDbDataProvider() : base(ProviderName.Access, MappingSchemaInstance, OleDbProviderAdapter.GetInstance())
 		{
 			SqlProviderFlags.AcceptsTakeAsParameter           = false;
 			SqlProviderFlags.IsSkipSupported                  = false;
@@ -39,7 +35,7 @@ namespace LinqToDB.DataProvider.Access
 			SetCharField            ("DBTYPE_WCHAR", (r, i) => r.GetString(i).TrimEnd(' '));
 			SetCharFieldToType<char>("DBTYPE_WCHAR", DataTools.GetCharExpression);
 
-			SetProviderField<IDataReader, TimeSpan, DateTime>((r, i) => r.GetDateTime(i) - new DateTime(1899, 12, 30));
+			SetProviderField<DbDataReader, TimeSpan, DateTime>((r, i) => r.GetDateTime(i) - new DateTime(1899, 12, 30));
 
 			_sqlOptimizer = new AccessSqlOptimizer(SqlProviderFlags);
 		}
@@ -63,7 +59,17 @@ namespace LinqToDB.DataProvider.Access
 			return new AccessOleDbSchemaProvider(this);
 		}
 
-		protected override void SetParameterType(DataConnection dataConnection, IDbDataParameter parameter, DbDataType dataType)
+#if NET6_0_OR_GREATER
+		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
+		{
+			if (value is DateOnly d)
+				value = d.ToDateTime(TimeOnly.MinValue);
+
+			base.SetParameter(dataConnection, parameter, name, dataType, value);
+		}
+#endif
+
+		protected override void SetParameterType(DataConnection dataConnection, DbParameter parameter, DbDataType dataType)
 		{
 			OleDbType? type = null;
 			switch (dataType.DataType)
@@ -76,7 +82,7 @@ namespace LinqToDB.DataProvider.Access
 
 			if (type != null)
 			{
-				var param = TryGetProviderParameter(parameter, dataConnection.MappingSchema);
+				var param = TryGetProviderParameter(dataConnection, parameter);
 				if (param != null)
 				{
 					Adapter.SetDbType(param, type.Value);
@@ -100,7 +106,7 @@ namespace LinqToDB.DataProvider.Access
 			base.SetParameterType(dataConnection, parameter, dataType);
 		}
 
-		private static readonly MappingSchema MappingSchemaInstance = new AccessMappingSchema.OleDbMappingSchema();
+		static readonly MappingSchema MappingSchemaInstance = new AccessMappingSchema.OleDbMappingSchema();
 
 		#region BulkCopy
 

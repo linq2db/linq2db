@@ -28,7 +28,7 @@ namespace Tests.UserTests
 			[Column("dtSynchDate"),      Nullable] public DateTime? DtSynchDate   { get; set; } // datetime
 			[Column("stGUID"),        NotNull]     public string    StGUID        { get; set; } = null!;// varchar(255)
 
-			[Association(ThisKey = "InIdTypeRel", OtherKey = "InId", CanBeNull = false, Relationship = Relationship.ManyToOne, KeyName = "FK_stLinks_inIdTypeRel_rlTypesAndTypes")]
+			[Association(ThisKey = "InIdTypeRel", OtherKey = "InId", CanBeNull = false)]
 			public RlTypesAndType RlTypesAndType { get; set; } = null!;
 		}
 

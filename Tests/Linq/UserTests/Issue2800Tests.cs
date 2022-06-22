@@ -30,7 +30,6 @@ namespace Tests.UserTests
 			}
 		}
 
-		[ActiveIssue(2839, Configuration = TestProvName.AllFirebird)]
 		[Test]
 		public void TestExpressionMethod([DataSources] string context)
 		{

@@ -29,10 +29,15 @@ namespace LinqToDB.Linq
 			{
 				var sqlTable = new SqlTable<T>(dataContext.MappingSchema);
 
-				if (tableName    != null) sqlTable.PhysicalName = tableName;
-				if (serverName   != null) sqlTable.Server       = serverName;
-				if (databaseName != null) sqlTable.Database     = databaseName;
-				if (schemaName   != null) sqlTable.Schema       = schemaName;
+				if (tableName != null || schemaName != null || databaseName != null || databaseName != null)
+				{
+					sqlTable.TableName = new(
+						          tableName    ?? sqlTable.TableName.Name,
+						Server  : serverName   ?? sqlTable.TableName.Server,
+						Database: databaseName ?? sqlTable.TableName.Database,
+						Schema  : schemaName   ?? sqlTable.TableName.Schema);
+				}
+
 				if (tableOptions.IsSet()) sqlTable.TableOptions = tableOptions;
 
 				var sqlQuery = new SelectQuery();
@@ -69,8 +74,8 @@ namespace LinqToDB.Linq
 
 					throw new LinqException(
 						keys.Count == sqlTable.Fields.Count ?
-							$"There are no fields to update in the type '{sqlTable.Name}'. No PK is defined or all fields are keys." :
-							$"There are no fields to update in the type '{sqlTable.Name}'.");
+							$"There are no fields to update in the type '{sqlTable.NameForLogging}'. No PK is defined or all fields are keys." :
+							$"There are no fields to update in the type '{sqlTable.NameForLogging}'.");
 				}
 
 				foreach (var field in keys)
@@ -108,7 +113,7 @@ namespace LinqToDB.Linq
 				var ei               = Configuration.Linq.DisableQueryCache || entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Update) || columnFilter != null
 					? CreateQuery(dataContext, entityDescriptor, obj, columnFilter, tableName, serverName, databaseName, schemaName, tableOptions, type)
 					: Cache<T>.QueryCache.GetOrCreate(
-						(operation: 'U', dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, columnFilter, tableName, schemaName, databaseName, serverName, tableOptions, type),
+						(operation: 'U', dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, columnFilter, tableName, schemaName, databaseName, serverName, tableOptions, type, dataContext.GetQueryFlags()),
 						new { dataContext, entityDescriptor, obj},
 						static (entry, key, context) =>
 						{
@@ -138,7 +143,7 @@ namespace LinqToDB.Linq
 				var ei               = Configuration.Linq.DisableQueryCache || entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Update) || columnFilter != null
 					? CreateQuery(dataContext, entityDescriptor, obj, columnFilter, tableName, serverName, databaseName, schemaName, tableOptions, type)
 					: Cache<T>.QueryCache.GetOrCreate(
-						(operation: 'U', dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, columnFilter, tableName, schemaName, databaseName, serverName, tableOptions, type),
+						(operation: 'U', dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, columnFilter, tableName, schemaName, databaseName, serverName, tableOptions, type, dataContext.GetQueryFlags()),
 						new { dataContext, entityDescriptor, obj },
 						static (entry, key, context) =>
 						{

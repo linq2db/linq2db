@@ -38,7 +38,7 @@ namespace LinqToDB.Linq.Builder
 		public bool                 IsSubQuery => Parent != null;
 
 		private bool _isAssociationBuilt;
-		public  bool  IsAssociationBuilt
+		public bool   IsAssociationBuilt
 		{
 			get => _isAssociationBuilt;
 			set

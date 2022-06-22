@@ -10,7 +10,7 @@
 	public class Issue447Tests : TestBase
 	{
 		[Test]
-		public void TestLinq2DbComplexQuery2([DataSources] string context)
+		public void TestLinqToDBComplexQuery2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -43,7 +43,7 @@
 		}
 
 		[Test]
-		public void TestLinq2DbComplexQueryCache([DataSources] string context)
+		public void TestLinqToDBComplexQueryCache([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -82,7 +82,7 @@
 		}
 
 		[Test]
-		public void TestLinq2DbComplexQueryWithParameters([DataSources] string context)
+		public void TestLinqToDBComplexQueryWithParameters([DataSources] string context)
 		{
 			var value = true;
 

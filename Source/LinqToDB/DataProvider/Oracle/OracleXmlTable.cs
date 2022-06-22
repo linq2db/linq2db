@@ -8,7 +8,7 @@ using System.Text;
 namespace LinqToDB.DataProvider.Oracle
 {
 	using Expressions;
-	using LinqToDB.SqlProvider;
+	using SqlProvider;
 	using Mapping;
 	using SqlQuery;
 
@@ -77,7 +77,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 			internal static Func<object,string> GetXmlConverter(MappingSchema mappingSchema, SqlTable sqlTable)
 			{
-				var ed  = mappingSchema.GetEntityDescriptor(sqlTable.ObjectType!);
+				var ed  = mappingSchema.GetEntityDescriptor(sqlTable.ObjectType);
 
 				var converters = new Action<StringBuilder,object>[ed.Columns.Count];
 				for (var i = 0; i < ed.Columns.Count; i++)
@@ -87,7 +87,7 @@ namespace LinqToDB.DataProvider.Oracle
 					var conv = mappingSchema.ValueToSqlConverter;
 					converters[i] = (sb, obj) =>
 					{
-						var value = c.GetValue(obj);
+						var value = c.GetProviderValue(obj);
 
 						if (value is string && c.MemberType == typeof(string))
 						{
@@ -112,7 +112,7 @@ namespace LinqToDB.DataProvider.Oracle
 			{
 				var exp = methodCall.Arguments[1];
 				var arg = converter(context, exp, null);
-				var ed  = mappingSchema.GetEntityDescriptor(table.ObjectType!);
+				var ed  = mappingSchema.GetEntityDescriptor(table.ObjectType);
 
 				if (arg is SqlParameter p)
 				{
@@ -157,7 +157,7 @@ namespace LinqToDB.DataProvider.Oracle
 				}
 
 				table.SqlTableType   = SqlTableType.Expression;
-				table.Name           = $"XmlTable(\'/t/r\' PASSING XmlType({{2}}) COLUMNS {columns}) {{1}}";
+				table.Expression     = $"XmlTable(\'/t/r\' PASSING XmlType({{2}}) COLUMNS {columns}) {{1}}";
 				table.TableArguments = new[] { arg };
 			}
 		}

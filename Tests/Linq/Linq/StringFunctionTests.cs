@@ -9,7 +9,7 @@ using System.Linq;
 using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Mapping;
-
+using LinqToDB.SqlQuery;
 using NUnit.Framework;
 
 namespace Tests.Linq
@@ -255,7 +255,7 @@ namespace Tests.Linq
 			}
 		}
 
-#if NETSTANDARD2_1PLUS
+#if NETCOREAPP3_1_OR_GREATER
 		[Test]
 		public void ContainsConstantWithCase1([DataSources(ProviderName.SqlCe)] string context)
 		{
@@ -477,7 +477,7 @@ namespace Tests.Linq
 						break;
 				}
 
-				db.Person.Count(p => p.FirstName.StartsWith(nameToCheck, comparison)  && p.ID == 1).Should().Be(1);
+				db.Person.Count(p =>  p.FirstName.StartsWith(nameToCheck, comparison) && p.ID == 1).Should().Be(1);
 				db.Person.Count(p => !p.FirstName.StartsWith(nameToCheck, comparison) && p.ID == 1).Should().Be(0);
 
 				switch (comparison)
@@ -489,7 +489,7 @@ namespace Tests.Linq
 						nameToCheck = firstName.Substring(0, 3);
 						nameToCheck = nameToCheck.ToUpper();
 
-						db.Person.Count(p => p.FirstName.StartsWith(nameToCheck, comparison)  && p.ID == 1).Should().Be(0);
+						db.Person.Count(p =>  p.FirstName.StartsWith(nameToCheck, comparison) && p.ID == 1).Should().Be(0);
 						db.Person.Count(p => !p.FirstName.StartsWith(nameToCheck, comparison) && p.ID == 1).Should().Be(1);
 
 						break;
@@ -513,17 +513,17 @@ namespace Tests.Linq
 		public void StartsWith1IgnoreCase([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-			{
+				{
 				db.Person.Count(p => p.FirstName.StartsWith("joH", StringComparison.OrdinalIgnoreCase) && p.ID == 1).Should().Be(1);
 				db.Person.Count(p => !p.FirstName.StartsWith("joH", StringComparison.OrdinalIgnoreCase) && p.ID == 1).Should().Be(0);
-			}
-		}
+				}
+				}
 
 		[Test]
 		public void StartsWith1Case([DataSources] string context)
-		{
+				{
 			using (var db = GetDataContext(context))
-			{
+				{
 				db.Person.Count(p => p.FirstName.StartsWith("Jo", StringComparison.Ordinal) && p.ID == 1).Should().Be(1);
 				db.Person.Count(p => p.FirstName.StartsWith("jo", StringComparison.Ordinal) && p.ID == 1).Should().Be(0);
 
@@ -589,6 +589,156 @@ namespace Tests.Linq
 			{
 				db.Person.Count(p => p.FirstName.EndsWith("JOHN") && p.ID == 1).Should().Be(IsCaseSensitiveComparison(context) ? 0 : 1);
 				db.Person.Count(p => !p.FirstName.EndsWith("JOHN") && p.ID == 1).Should().Be(IsCaseSensitiveComparison(context) ? 1 : 0);
+			}
+		}
+
+		[Table]
+		class StringTypesTable
+		{
+			[Column]                                                              public int    Id             { get; set; }
+			[Column(Length = 50, CanBeNull = true, DataType = DataType.Char)]     public string CharColumn     { get; set; } = null!;
+			[Column(Length = 50, CanBeNull = true, DataType = DataType.NChar)]    public string NCharColumn    { get; set; } = null!;
+			[Column(Length = 50, CanBeNull = true, DataType = DataType.VarChar)]  public string VarCharColumn  { get; set; } = null!;
+			[Column(Length = 50, CanBeNull = true, DataType = DataType.NVarChar)] public string NVarCharColumn { get; set; } = null!;
+		}
+
+		[Test]
+		public void StartsWithDataType1([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var str   = "some";
+				var table = db.GetTable<StringTypesTable>();
+				var sqlExpr = table.Where(t => t.VarCharColumn.StartsWith(str)).GetSelectQuery()
+					.Find(e => e.ElementType == QueryElementType.SqlParameter);
+
+				sqlExpr.Should().NotBeNull();
+
+				var param = (SqlParameter)sqlExpr!;
+
+				param.Type.DataType.Should().Be(DataType.VarChar);
+			}
+		}
+
+		[Test]
+		public void StartsWithDataType2([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var str   = "some";
+				var table = db.GetTable<StringTypesTable>();
+				var sqlExpr = table.Where(t => t.NVarCharColumn.StartsWith(str)).GetSelectQuery()
+					.Find(e => e.ElementType == QueryElementType.SqlParameter);
+
+				sqlExpr.Should().NotBeNull();
+
+				var param = (SqlParameter)sqlExpr!;
+
+				param.Type.DataType.Should().Be(DataType.NVarChar);
+			}
+		}
+
+		[Test]
+		public void StartsWithDataType3([DataSources(TestProvName.AllAccess)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var str   = "some";
+				var table = db.GetTable<StringTypesTable>();
+				var sqlExpr = table.Where(t => str.StartsWith(t.NVarCharColumn)).GetSelectQuery()
+					.Find(e => e.ElementType == QueryElementType.SqlParameter);
+
+				sqlExpr.Should().NotBeNull();
+
+				var param = (SqlParameter)sqlExpr!;
+
+				param.Type.DataType.Should().Be(DataType.NVarChar);
+			}
+		}
+
+		[Test]
+		public void LikeWithDataType1([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var str   = "some";
+				var table = db.GetTable<StringTypesTable>();
+				var sqlExpr = table.Where(t => Sql.Like(t.VarCharColumn, str)).GetSelectQuery()
+					.Find(e => e.ElementType == QueryElementType.SqlParameter);
+
+				sqlExpr.Should().NotBeNull();
+
+				var param = (SqlParameter)sqlExpr!;
+
+				param.Type.DataType.Should().Be(DataType.VarChar);
+			}
+		}
+
+		[Test]
+		public void LikeWithDataType2([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var str   = "some";
+				var table = db.GetTable<StringTypesTable>();
+				var sqlExpr = table.Where(t => Sql.Like(t.NVarCharColumn, str)).GetSelectQuery()
+					.Find(e => e.ElementType == QueryElementType.SqlParameter);
+
+				sqlExpr.Should().NotBeNull();
+
+				var param = (SqlParameter)sqlExpr!;
+
+				param.Type.DataType.Should().Be(DataType.NVarChar);
+			}
+		}
+
+		[Test]
+		public void LikeWithDataType3([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var str   = "some";
+				var table = db.GetTable<StringTypesTable>();
+				var sqlExpr = table.Where(t => Sql.Like(str, t.NVarCharColumn)).GetSelectQuery()
+					.Find(e => e.ElementType == QueryElementType.SqlParameter);
+
+				sqlExpr.Should().NotBeNull();
+
+				var param = (SqlParameter)sqlExpr!;
+
+				param.Type.DataType.Should().Be(DataType.NVarChar);
+			}
+		}
+
+		[Test]
+		public void StartWithByTypes([DataSources] string context)
+		{
+			var dataStr = "someString";
+			var data = new StringTypesTable[]
+			{
+				new()
+				{
+					Id             = 1,
+					CharColumn     = dataStr,
+					NCharColumn    = dataStr,
+					NVarCharColumn = dataStr,
+					VarCharColumn  = dataStr,
+				}
+			};
+
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(data))
+			{
+				var str   = "some";
+				
+				var result = table.Where(t => 
+						t.CharColumn.StartsWith(str)  && 
+						t.NCharColumn.StartsWith(str) &&
+						t.VarCharColumn.StartsWith(str) &&
+						t.NVarCharColumn.StartsWith(str)
+					);
+
+				result.Should().HaveCount(1);
 			}
 		}
 
@@ -1260,7 +1410,7 @@ namespace Tests.Linq
 			public static readonly CollatedTable TestData = new () { Id = 1, CaseSensitive = "TestString", CaseInsensitive = "TestString" };
 		}
 
-#if NETSTANDARD2_1PLUS
+#if NETCOREAPP3_1_OR_GREATER
 		[Test]
 		public void ExplicitOrdinalIgnoreCase_Contains([DataSources] string context)
 		{
@@ -1280,6 +1430,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(3444, Configuration = ProviderName.SqlCe)]
 		[Test]
 		public void ExplicitOrdinal_Contains([DataSources] string context)
 		{
@@ -1299,6 +1450,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(3444, Configuration = ProviderName.SqlCe)]
 		[Test]
 		public void Explicit_Contains([DataSources] string context)
 		{
@@ -1588,8 +1740,7 @@ namespace Tests.Linq
 			// providers doesn't support IConvertible parameter coercion
 			ProviderName.SQLiteMS,
 			ProviderName.DB2,
-			ProviderName.MySqlConnector,
-			TestProvName.MariaDB,
+			TestProvName.AllMySqlConnector,
 			TestProvName.AllPostgreSQL,
 			TestProvName.AllInformix,
 			TestProvName.AllSybase)] string context)

@@ -28,10 +28,10 @@ namespace Tests.UserTests
 			[PrimaryKey, Identity, Column("ParentID")]
 			public int Id { get; set; }
 
-			[Association(ThisKey = "Id", OtherKey = "ParentId", CanBeNull = true, IsBackReference = true)]
+			[Association(ThisKey = "Id", OtherKey = "ParentId", CanBeNull = true)]
 			public IList<ParentPermission> ParentPermissions { get; set; } = null!;
 
-			[Association(ThisKey = "Id", OtherKey = "ParentId", CanBeNull = true, IsBackReference = true)]
+			[Association(ThisKey = "Id", OtherKey = "ParentId", CanBeNull = true)]
 			public IList<Child825> Childs { get; set; } = null!;
 		}
 

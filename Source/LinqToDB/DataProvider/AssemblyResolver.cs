@@ -17,9 +17,6 @@ namespace LinqToDB.DataProvider
 			_path        = path        ?? throw new ArgumentNullException(nameof(path));
 			_resolveName = resolveName ?? throw new ArgumentNullException(nameof(resolveName));
 
-			if (_path.StartsWith("file://"))
-				_path = _path.GetPathFromUri();
-
 			SetResolver();
 		}
 
@@ -40,7 +37,7 @@ namespace LinqToDB.DataProvider
 			// System.MethodAccessException : Attempt by security transparent method 'LinqToDB.DataProvider.AssemblyResolver.SetResolver()' to access security critical method 'System.AppDomain.add_AssemblyResolve(System.ResolveEventHandler)'
 			var l = Expression.Lambda<Action>(Expression.Call(
 				Expression.Constant(AppDomain.CurrentDomain),
-				typeof(AppDomain).GetEvent("AssemblyResolve")!.GetAddMethod(),
+				typeof(AppDomain).GetEvent("AssemblyResolve")!.GetAddMethod()!,
 				Expression.Constant(resolver)));
 
 			l.CompileExpression()();

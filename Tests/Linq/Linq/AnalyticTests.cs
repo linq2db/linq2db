@@ -649,8 +649,8 @@ namespace Tests.Linq
 					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
-						Median1   = Sql.Ext.Median(p.Value1).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
-						Median2   = Sql.Ext.Median(p.Value1).Over().ToValue(),
+						Median1 = Sql.Ext.Median(p.Value1).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
+						Median2 = Sql.Ext.Median(p.Value1).Over().ToValue(),
 					};
 				var res = q.ToArray();
 				Assert.IsNotEmpty(res);
@@ -1314,7 +1314,6 @@ namespace Tests.Linq
 			};
 		}
 
-		[ActiveIssue("Old SQLite version", Configuration = ProviderName.SQLiteMS)]
 		[Test]
 		public void Issue1732Lag([DataSources(
 			TestProvName.AllSqlServer2008Minus,
@@ -1322,9 +1321,9 @@ namespace Tests.Linq
 			ProviderName.SqlCe,
 			TestProvName.AllAccess,
 			ProviderName.Firebird,
-			TestProvName.MySql55,
+			TestProvName.AllMySql55,
 			// doesn't support LAG with 3 parameters
-			TestProvName.MariaDB)] string context)
+			TestProvName.AllMariaDB)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(Position.TestData))
@@ -1358,7 +1357,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("Old SQLite version", Configuration = ProviderName.SQLiteMS)]
 		[Test]
 		public void Issue1732Lead([DataSources(
 			TestProvName.AllSqlServer2008Minus,
@@ -1366,9 +1364,9 @@ namespace Tests.Linq
 			ProviderName.SqlCe,
 			TestProvName.AllAccess,
 			ProviderName.Firebird,
-			TestProvName.MySql55,
+			TestProvName.AllMySql55,
 			// doesn't support 3-rd parameter for LEAD
-			TestProvName.MariaDB)] string context)
+			TestProvName.AllMariaDB)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(Position.TestData))
@@ -1400,7 +1398,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("Old SQLite version", Configuration = ProviderName.SQLiteMS)]
 		[Test]
 		public void Issue1732FirstValue([DataSources(
 			TestProvName.AllSqlServer2008Minus,
@@ -1408,7 +1405,7 @@ namespace Tests.Linq
 			ProviderName.SqlCe,
 			TestProvName.AllAccess,
 			ProviderName.Firebird,
-			TestProvName.MySql55)] string context)
+			TestProvName.AllMySql55)] string context)
 		{
 			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(Position.TestData))
@@ -1440,7 +1437,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("Old SQLite version", Configuration = ProviderName.SQLiteMS)]
 		[Test]
 		public void Issue1732LastValue([DataSources(
 			TestProvName.AllSqlServer2008Minus,
@@ -1448,7 +1444,7 @@ namespace Tests.Linq
 			ProviderName.SqlCe,
 			TestProvName.AllAccess,
 			ProviderName.Firebird,
-			TestProvName.MySql55)] string context)
+			TestProvName.AllMySql55)] string context)
 		{
 			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(Position.TestData))
@@ -1491,8 +1487,8 @@ namespace Tests.Linq
 			ProviderName.Firebird,
 			TestProvName.AllSQLite,
 			TestProvName.AllSapHana,
-			TestProvName.MySql55,
-			TestProvName.MariaDB)] string context)
+			TestProvName.AllMySql55,
+			TestProvName.AllMariaDB)] string context)
 		{
 			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(Position.TestData))
@@ -1546,7 +1542,6 @@ namespace Tests.Linq
 			[Column] public string? ProcessName { get; set; }
 		}
 
-		[ActiveIssue("Old SQLite version", Configuration = ProviderName.SQLiteMS)]
 		[Test]
 		public void Issue1799Test1([DataSources(
 			TestProvName.AllSqlServer2008Minus,
@@ -1556,7 +1551,7 @@ namespace Tests.Linq
 			ProviderName.Firebird,
 			TestProvName.AllInformix,
 			TestProvName.AllOracle,
-			TestProvName.MySql55)] string context)
+			TestProvName.AllMySql55)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<Issue1799Table1>())
@@ -1601,7 +1596,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("Old SQLite version", Configuration = ProviderName.SQLiteMS)]
 		[Test]
 		public void Issue1799Test2([DataSources(
 			TestProvName.AllSqlServer2008Minus,
@@ -1611,7 +1605,7 @@ namespace Tests.Linq
 			ProviderName.Firebird,
 			TestProvName.AllInformix,
 			TestProvName.AllOracle,
-			TestProvName.MySql55)] string context)
+			TestProvName.AllMySql55)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<Issue1799Table1>())
@@ -1654,6 +1648,86 @@ namespace Tests.Linq
 				finalQuery
 					.Take(10)
 					.ToList();
+			}
+		}
+
+		[Test]
+		public void LeadLagWithStringDefault([DataSources(
+			TestProvName.AllSqlServer2008Minus,
+			TestProvName.AllSybase,
+			ProviderName.SqlCe,
+			TestProvName.AllAccess,
+			ProviderName.Firebird,
+			TestProvName.AllMySql55,
+			// doesn't support 3-rd parameter for LEAD
+			TestProvName.AllMariaDB)] string context)
+		{
+			// #3423: LEAD and LAG `default` parameter can be a type other than int.
+			var data = new Issue1799Table3[]
+			{
+				new() { ProcessID = 1, ProcessName = "One" },
+				new() { ProcessID = 2, ProcessName = "Two" },
+			};
+			using (var db    = GetDataContext(context))
+			using (var table = db.CreateLocalTable(data))
+			{
+				var leads = table.Select(p => Sql.Ext.Lead(p.ProcessName, 1, "None")
+												 	 .Over().OrderBy(p.ProcessID).ToValue())
+								 .ToArray();
+
+				CollectionAssert.AreEqual(new[] { "Two", "None" }, leads);
+
+
+				var lags = table.Select(p => Sql.Ext.Lag(p.ProcessName, 1, "None")
+												 	.Over().OrderBy(p.ProcessID).ToValue())
+								.ToArray();
+
+				CollectionAssert.AreEqual(new[] { "None", "One" }, lags);
+			}
+		}
+
+		[Test]
+		public void LeadLagOverloads([DataSources(
+			TestProvName.AllSqlServer2008Minus,
+			TestProvName.AllSybase,
+			ProviderName.SqlCe,
+			TestProvName.AllAccess,
+			ProviderName.Firebird,
+			TestProvName.AllMySql55)] string context)
+		{
+			var data = new Issue1799Table3[]
+			{
+				new() { ProcessID = 1, ProcessName = "One" },
+				new() { ProcessID = 2, ProcessName = "Two" },
+				new() { ProcessID = 3, ProcessName = "Three" },
+				new() { ProcessID = 4, ProcessName = "Four" },
+			};
+			using (var db    = GetDataContext(context))
+			using (var table = db.CreateLocalTable(data))
+			{
+				var leads = table.Select(p => Sql.Ext.Lead(p.ProcessName, 2)
+												 	 .Over().OrderBy(p.ProcessID).ToValue())
+								 .ToArray();
+
+				CollectionAssert.AreEqual(new string?[] { "Three", "Four", null, null }, leads);
+
+				leads = table.Select(p => Sql.Ext.Lead(p.ProcessName)
+											 	 .Over().OrderBy(p.ProcessID).ToValue())
+							 .ToArray();
+
+				CollectionAssert.AreEqual(new string?[] { "Two", "Three", "Four", null }, leads);
+
+				var lags = table.Select(p => Sql.Ext.Lag(p.ProcessName, 2)
+												 	.Over().OrderBy(p.ProcessID).ToValue())
+								.ToArray();
+
+				CollectionAssert.AreEqual(new string?[] { null, null, "One", "Two" }, lags);
+
+				lags = table.Select(p => Sql.Ext.Lag(p.ProcessName)
+										 	.Over().OrderBy(p.ProcessID).ToValue())
+							.ToArray();
+
+				CollectionAssert.AreEqual(new string?[] { null, "One", "Two", "Three" }, lags);
 			}
 		}
 	}

@@ -75,7 +75,7 @@ namespace LinqToDB.Linq.Builder
 
 						for (var i = 0; i < mi1.Bindings.Count; i++)
 						{
-							var binding2 = (MemberAssignment)mi2.Bindings.Where(b => b.Member == mi1.Bindings[i].Member).FirstOrDefault();
+							var binding2 = (MemberAssignment?)mi2.Bindings.FirstOrDefault(b => b.Member == mi1.Bindings[i].Member);
 							if (binding2 == null)
 								throw new LinqException($"List of member inits does not match for entity type '{targetKeySelector.Type}'.");
 
@@ -125,12 +125,6 @@ namespace LinqToDB.Linq.Builder
 
 				mergeContext.SourceContext.MatchBuilt();
 				return mergeContext;
-			}
-
-			protected override SequenceConvertInfo? Convert(
-				ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-			{
-				return null;
 			}
 		}
 	}

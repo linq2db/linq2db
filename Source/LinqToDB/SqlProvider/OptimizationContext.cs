@@ -114,10 +114,10 @@ namespace LinqToDB.SqlProvider
 				_staticParameters = Aliases.GetParameters();
 
 				if (_staticParameters == null)
-					_usedParameterNames = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+					_usedParameterNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 				else
 					_usedParameterNames = new HashSet<string>(_staticParameters.Select(p => p.Name!),
-						StringComparer.InvariantCultureIgnoreCase);
+						StringComparer.OrdinalIgnoreCase);
 			}
 
 			if (!(_staticParameters?.Contains(parameter) == true) 
@@ -125,9 +125,9 @@ namespace LinqToDB.SqlProvider
 			{
 				Utils.MakeUniqueNames(new[] {parameter}, _usedParameterNames, p => p.Name,
 					(p, v, s) => p.Name = v,
-					p => p.Name.IsNullOrEmpty() ? "p_1" :
-						char.IsDigit(p.Name[p.Name.Length - 1]) ? p.Name : p.Name + "_1",
-					StringComparer.InvariantCultureIgnoreCase);
+					p => string.IsNullOrEmpty(p.Name) ? "p_1" :
+						char.IsDigit(p.Name![p.Name.Length - 1]) ? p.Name : p.Name + "_1",
+					StringComparer.OrdinalIgnoreCase);
 
 			}
 

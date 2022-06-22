@@ -1,11 +1,5 @@
 variables:
-  - template: templates/test-vars.yml
-  - name: solution
-    value: linq2db.sln
-  - name: build_configuration
-    value: Azure
-  - name: assemblyVersion
-    value: 3.0.0
+  - template: templates/build-vars.yml
 
 trigger: none
 pr:
@@ -23,6 +17,7 @@ stages:
   - template: templates/build-job.yml
     parameters:
       for_nuget: false
+      for_tests: true
 
 #############
 # TEST JOBS #
@@ -65,4 +60,3 @@ stages:
         db_filter: '[sybase.ase.all]'
       ${{ if ne(variables['Build.DefinitionName'], 'test-all') }}:
         mac_enabled: true
-

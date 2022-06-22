@@ -272,21 +272,28 @@ namespace LinqToDB.Linq.Builder
 				return _checkNullIndex;
 			}
 
-
 			static bool HasSubQuery(IBuildContext context)
 			{
-				//TODO: candidate for refactor. We need better way for detecting such cases.
-
-				Expression? expressionToCheck = null;
-
 				var ctx = context;
 
 				while (true)
 				{
 					if (ctx is SelectContext sc)
 					{
-						expressionToCheck = sc.Body;
-						break;
+						foreach (var member in sc.Members.Values)
+						{
+							var found = null != member.Find(ctx, static(c, e) =>
+							{
+								if (e is MethodCallExpression mc && c.Builder.IsSubQuery(c, mc))
+									return true;
+								return false;
+							});
+
+							if (found)
+								return true;
+						}
+
+						return false;
 					}
 
 					if (ctx is SubQueryContext sub)
@@ -302,17 +309,6 @@ namespace LinqToDB.Linq.Builder
 						break;
 					}
 				}
-				if (expressionToCheck != null)
-				{
-					var found = null != expressionToCheck.Find(ctx, static(c, e) =>
-					{
-						if (e is MethodCallExpression mc && c.Builder.IsSubQuery(c, mc))
-							return true;
-						return false;
-					});
-
-					return found;
-				}
 
 				return false;
 			}
@@ -322,9 +318,9 @@ namespace LinqToDB.Linq.Builder
 				if (expression == null || level == 0)
 				{
 					if (Builder.DataContext.SqlProviderFlags.IsApplyJoinSupported &&
-					    Parent!.SelectQuery.GroupBy.IsEmpty                       &&
-					    Parent.SelectQuery.From.Tables.Count > 0                  &&
-					    !HasSubQuery(Sequence))
+						Parent!.SelectQuery.GroupBy.IsEmpty &&
+						Parent.SelectQuery.From.Tables.Count > 0 &&
+						!HasSubQuery(Sequence))
 					{
 						CreateJoin();
 
@@ -354,14 +350,14 @@ namespace LinqToDB.Linq.Builder
 
 					if (expression == null)
 					{
-						if (   !Builder.DataContext.SqlProviderFlags.IsSubQueryColumnSupported 
-						       || Sequence.IsExpression(null, level, RequestFor.Object).Result)
+						if (   !Builder.DataContext.SqlProviderFlags.IsSubQueryColumnSupported
+						    || Sequence.IsExpression(null, level, RequestFor.Object).Result)
 						{
 							return Builder.BuildMultipleQuery(Parent!, _methodCall, enforceServerSide);
 						}
 
 						var idx = Parent!.SelectQuery.Select.Add(SelectQuery);
-						idx = Parent.ConvertToParentIndex(idx, Parent);
+						    idx = Parent.ConvertToParentIndex(idx, Parent);
 						return Builder.BuildSql(_methodCall.Type, idx, SelectQuery);
 					}
 

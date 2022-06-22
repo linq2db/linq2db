@@ -2,9 +2,13 @@
   "solution": {
     "path": "linq2db.sln",
     "projects": [
+      "Source\\LinqToDB.AspNet\\LinqToDB.AspNet.csproj",
+      "Source\\LinqToDB.Remote.Grpc\\LinqToDB.Remote.Grpc.csproj",
+      "Source\\LinqToDB.Remote.Wcf\\LinqToDB.Remote.Wcf.csproj",
       "Source\\LinqToDB.Tools\\LinqToDB.Tools.csproj",
       "Source\\LinqToDB\\LinqToDB.csproj",
       "Tests\\Base\\Tests.Base.csproj",
+      "Tests\\FSharp\\Tests.FSharp.fsproj",
       "Tests\\Model\\Tests.Model.csproj",
       "Tests\\Tests.Playground\\Tests.Playground.csproj",
       "Tests\\VisualBasic\\Tests.VisualBasic.vbproj"

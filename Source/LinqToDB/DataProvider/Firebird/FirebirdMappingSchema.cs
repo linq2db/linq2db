@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Data.Linq;
+using System.Globalization;
+using System.Numerics;
 using System.Text;
 
 namespace LinqToDB.DataProvider.Firebird
@@ -6,21 +9,14 @@ namespace LinqToDB.DataProvider.Firebird
 	using Common;
 	using Mapping;
 	using SqlQuery;
-	using System.Data.Linq;
-	using System.Globalization;
-	using System.Numerics;
 
-	public class FirebirdMappingSchema : MappingSchema
+	sealed class FirebirdMappingSchema : LockedMappingSchema
 	{
 		private const string DATE_FORMAT      = "CAST('{0:yyyy-MM-dd}' AS {1})";
 		private const string DATETIME_FORMAT  = "CAST('{0:yyyy-MM-dd HH:mm:ss}' AS {1})";
 		private const string TIMESTAMP_FORMAT = "CAST('{0:yyyy-MM-dd HH:mm:ss.fff}' AS {1})";
 
-		public FirebirdMappingSchema() : this(ProviderName.Firebird)
-		{
-		}
-
-		protected FirebirdMappingSchema(string configuration) : base(configuration)
+		FirebirdMappingSchema() : base(ProviderName.Firebird)
 		{
 			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 
@@ -32,6 +28,11 @@ namespace LinqToDB.DataProvider.Firebird
 			SetValueToSqlConverter(typeof(byte[])  , (sb, dt, v) => ConvertBinaryToSql(sb, (byte[])v));
 			SetValueToSqlConverter(typeof(Binary)  , (sb, dt, v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
 			SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => BuildDateTime(sb, dt, (DateTime)v));
+			SetValueToSqlConverter(typeof(Guid)    , (sb, dt, v) => ConvertGuidToSql(sb, dt, (Guid)v));
+
+#if NET6_0_OR_GREATER
+			SetValueToSqlConverter(typeof(DateOnly), (sb, dt, v) => BuildDateOnly(sb, dt, (DateOnly)v));
+#endif
 
 			SetDataType(typeof(BigInteger), new SqlDataType(DataType.Int128, typeof(BigInteger), "INT128"));
 			SetValueToSqlConverter(typeof(BigInteger), (sb, dt, v) => sb.Append(((BigInteger)v).ToString(CultureInfo.InvariantCulture)));
@@ -53,6 +54,7 @@ namespace LinqToDB.DataProvider.Firebird
 				else
 					sb.AppendFormat(CultureInfo.InvariantCulture, "{0:G9}", f);
 			});
+
 			SetValueToSqlConverter(typeof(double), (sb, dt, v) =>
 			{
 				var d = (double)v;
@@ -69,7 +71,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 		static void BuildDateTime(StringBuilder stringBuilder, SqlDataType dt, DateTime value)
 		{
-			var dbType = dt.Type.DbType ?? "timestamp";
+			var dbType = dt.Type.DbType ?? (dt.Type.DataType == DataType.Date ? "date" : "timestamp");
 			var format = TIMESTAMP_FORMAT;
 
 			if (value.Millisecond == 0)
@@ -80,13 +82,46 @@ namespace LinqToDB.DataProvider.Firebird
 			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, value, dbType);
 		}
 
+#if NET6_0_OR_GREATER
+		static void BuildDateOnly(StringBuilder stringBuilder, SqlDataType dt, DateOnly value)
+		{
+			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATE_FORMAT, value, dt.Type.DbType ?? "date");
+		}
+#endif
+
+		static void ConvertGuidToSql(StringBuilder sb, SqlDataType dataType, Guid value)
+		{
+			if (dataType.Type.DataType is DataType.Char or DataType.NChar or DataType.VarChar or DataType.NVarChar)
+			{
+				sb
+					.Append('\'')
+					.Append(value.ToString())
+					.Append('\'');
+			}
+			else
+			{
+				var bytes = value.ToByteArray();
+
+				if (BitConverter.IsLittleEndian)
+				{
+					Array.Reverse(bytes, 0, 4);
+					Array.Reverse(bytes, 4, 2);
+					Array.Reverse(bytes, 6, 2);
+				}
+
+				sb
+					.Append("X'")
+					.AppendByteArrayAsHexViaLookup32(bytes)
+					.Append('\'');
+			}
+		}
+
 		static void ConvertBinaryToSql(StringBuilder stringBuilder, byte[] value)
 		{
-			stringBuilder.Append("X'");
-
-			stringBuilder.AppendByteArrayAsHexViaLookup32(value);
-
-			stringBuilder.Append('\'');
+			stringBuilder
+				.Append("X'")
+				.AppendByteArrayAsHexViaLookup32(value)
+				.Append('\'');
 		}
 
 		static void ConvertStringToSql(StringBuilder stringBuilder, string value)
@@ -97,12 +132,10 @@ namespace LinqToDB.DataProvider.Firebird
 				if (FirebirdConfiguration.IsLiteralEncodingSupported && NeedsEncoding(value))
 					MakeUtf8Literal(stringBuilder, Encoding.UTF8.GetBytes(value));
 				else
-				{
 					stringBuilder
 						.Append('\'')
 						.Append(value.Replace("'", "''"))
 						.Append('\'');
-				}
 		}
 
 		static bool NeedsEncoding(string str)
@@ -124,15 +157,13 @@ namespace LinqToDB.DataProvider.Firebird
 			if (FirebirdConfiguration.IsLiteralEncodingSupported && NeedsEncoding(value))
 				MakeUtf8Literal(stringBuilder, Encoding.UTF8.GetBytes(new[] {value}));
 			else
-			{
 				stringBuilder
 					.Append('\'')
 					.Append(value == '\'' ? '\'' : value)
 					.Append('\'');
-			}
 		}
 
-		private static void MakeUtf8Literal(StringBuilder stringBuilder, byte[] bytes)
+		static void MakeUtf8Literal(StringBuilder stringBuilder, byte[] bytes)
 		{
 			stringBuilder.Append("_utf8 x'");
 
@@ -143,19 +174,13 @@ namespace LinqToDB.DataProvider.Firebird
 		}
 
 		internal static MappingSchema Instance { get; } = new FirebirdMappingSchema();
-	}
 
-	// internal as it will be replaced with versioned schemas in v4
-	internal class FirebirdProviderMappingSchema : MappingSchema
-	{
-		public FirebirdProviderMappingSchema()
-			: base(ProviderName.Firebird, FirebirdMappingSchema.Instance)
+		// internal as it will be replaced with versioned schemas in v4
+		public sealed class FirebirdProviderMappingSchema : LockedMappingSchema
 		{
-		}
-
-		public FirebirdProviderMappingSchema(params MappingSchema[] schemas)
-				: base(ProviderName.Firebird, Array<MappingSchema>.Append(schemas, FirebirdMappingSchema.Instance))
-		{
+			public FirebirdProviderMappingSchema() : base(ProviderName.Firebird, FirebirdProviderAdapter.Instance.MappingSchema, Instance)
+			{
+			}
 		}
 	}
 }

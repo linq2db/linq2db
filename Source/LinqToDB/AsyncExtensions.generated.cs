@@ -34,7 +34,7 @@ namespace LinqToDB
 			if (LinqExtensions.ExtensionsAdapter != null)
 				return LinqExtensions.ExtensionsAdapter.FirstAsync<TSource>(source, token);
 
-			return GetTask(source.First, token);
+			return GetTask<TSource>(source.First, token);
 		}
 
 		#endregion
@@ -61,7 +61,7 @@ namespace LinqToDB
 			if (LinqExtensions.ExtensionsAdapter != null)
 				return LinqExtensions.ExtensionsAdapter.FirstAsync<TSource>(source, predicate, token);
 
-			return GetTask(() => source.First(predicate), token);
+			return GetTask<TSource>(() => source.First(predicate), token);
 		}
 
 		#endregion
@@ -88,7 +88,7 @@ namespace LinqToDB
 			if (LinqExtensions.ExtensionsAdapter != null)
 				return LinqExtensions.ExtensionsAdapter.FirstOrDefaultAsync<TSource>(source, token);
 
-			return GetTask(source.FirstOrDefault, token);
+			return GetTask<TSource?>(source.FirstOrDefault, token);
 		}
 
 		#endregion
@@ -115,7 +115,7 @@ namespace LinqToDB
 			if (LinqExtensions.ExtensionsAdapter != null)
 				return LinqExtensions.ExtensionsAdapter.FirstOrDefaultAsync<TSource>(source, predicate, token);
 
-			return GetTask(() => (TSource?)source.FirstOrDefault(predicate), token);
+			return GetTask<TSource?>(() => (TSource?)source.FirstOrDefault(predicate), token);
 		}
 
 		#endregion
@@ -142,7 +142,7 @@ namespace LinqToDB
 			if (LinqExtensions.ExtensionsAdapter != null)
 				return LinqExtensions.ExtensionsAdapter.SingleAsync<TSource>(source, token);
 
-			return GetTask(source.Single, token);
+			return GetTask<TSource>(source.Single, token);
 		}
 
 		#endregion
@@ -169,7 +169,7 @@ namespace LinqToDB
 			if (LinqExtensions.ExtensionsAdapter != null)
 				return LinqExtensions.ExtensionsAdapter.SingleAsync<TSource>(source, predicate, token);
 
-			return GetTask(() => source.Single(predicate), token);
+			return GetTask<TSource>(() => source.Single(predicate), token);
 		}
 
 		#endregion
@@ -196,7 +196,7 @@ namespace LinqToDB
 			if (LinqExtensions.ExtensionsAdapter != null)
 				return LinqExtensions.ExtensionsAdapter.SingleOrDefaultAsync<TSource>(source, token);
 
-			return GetTask(source.SingleOrDefault, token);
+			return GetTask<TSource?>(source.SingleOrDefault, token);
 		}
 
 		#endregion
@@ -223,7 +223,7 @@ namespace LinqToDB
 			if (LinqExtensions.ExtensionsAdapter != null)
 				return LinqExtensions.ExtensionsAdapter.SingleOrDefaultAsync<TSource>(source, predicate, token);
 
-			return GetTask(() => (TSource?)source.SingleOrDefault(predicate), token);
+			return GetTask<TSource?>(() => (TSource?)source.SingleOrDefault(predicate), token);
 		}
 
 		#endregion
@@ -250,7 +250,7 @@ namespace LinqToDB
 			if (LinqExtensions.ExtensionsAdapter != null)
 				return LinqExtensions.ExtensionsAdapter.ContainsAsync<TSource>(source, item, token);
 
-			return GetTask(() => source.Contains(item), token);
+			return GetTask<bool>(() => source.Contains(item), token);
 		}
 
 		#endregion
@@ -277,7 +277,7 @@ namespace LinqToDB
 			if (LinqExtensions.ExtensionsAdapter != null)
 				return LinqExtensions.ExtensionsAdapter.AnyAsync<TSource>(source, token);
 
-			return GetTask(source.Any, token);
+			return GetTask<bool>(source.Any, token);
 		}
 
 		#endregion
@@ -304,7 +304,7 @@ namespace LinqToDB
 			if (LinqExtensions.ExtensionsAdapter != null)
 				return LinqExtensions.ExtensionsAdapter.AnyAsync<TSource>(source, predicate, token);
 
-			return GetTask(() => source.Any(predicate), token);
+			return GetTask<bool>(() => source.Any(predicate), token);
 		}
 
 		#endregion
@@ -331,7 +331,7 @@ namespace LinqToDB
 			if (LinqExtensions.ExtensionsAdapter != null)
 				return LinqExtensions.ExtensionsAdapter.AllAsync<TSource>(source, predicate, token);
 
-			return GetTask(() => source.All(predicate), token);
+			return GetTask<bool>(() => source.All(predicate), token);
 		}
 
 		#endregion
@@ -358,7 +358,7 @@ namespace LinqToDB
 			if (LinqExtensions.ExtensionsAdapter != null)
 				return LinqExtensions.ExtensionsAdapter.CountAsync<TSource>(source, token);
 
-			return GetTask(source.Count, token);
+			return GetTask<int>(source.Count, token);
 		}
 
 		#endregion
@@ -385,7 +385,7 @@ namespace LinqToDB
 			if (LinqExtensions.ExtensionsAdapter != null)
 				return LinqExtensions.ExtensionsAdapter.CountAsync<TSource>(source, predicate, token);
 
-			return GetTask(() => source.Count(predicate), token);
+			return GetTask<int>(() => source.Count(predicate), token);
 		}
 
 		#endregion
@@ -412,7 +412,7 @@ namespace LinqToDB
 			if (LinqExtensions.ExtensionsAdapter != null)
 				return LinqExtensions.ExtensionsAdapter.LongCountAsync<TSource>(source, token);
 
-			return GetTask(source.LongCount, token);
+			return GetTask<long>(source.LongCount, token);
 		}
 
 		#endregion
@@ -439,7 +439,7 @@ namespace LinqToDB
 			if (LinqExtensions.ExtensionsAdapter != null)
 				return LinqExtensions.ExtensionsAdapter.LongCountAsync<TSource>(source, predicate, token);
 
-			return GetTask(() => source.LongCount(predicate), token);
+			return GetTask<long>(() => source.LongCount(predicate), token);
 		}
 
 		#endregion
@@ -447,7 +447,7 @@ namespace LinqToDB
 		#region MinAsync<TSource>
 
 		[ElementAsync]
-		public static Task<TSource> MinAsync<TSource>(
+		public static Task<TSource?> MinAsync<TSource>(
 			this IQueryable<TSource> source,
 			CancellationToken token = default)
 		{
@@ -455,10 +455,10 @@ namespace LinqToDB
 
 			if (provider != null)
 			{
-				return provider.ExecuteAsync<TSource>(
+				return provider.ExecuteAsync<TSource?>(
 					Expression.Call(
 						null,
-						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>,TSource>(Queryable.Min), source),
+						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>,TSource?>(Queryable.Min), source),
 						source.Expression) as Expression,
 					token);
 			}
@@ -466,7 +466,7 @@ namespace LinqToDB
 			if (LinqExtensions.ExtensionsAdapter != null)
 				return LinqExtensions.ExtensionsAdapter.MinAsync<TSource>(source, token);
 
-			return GetTask(source.Min, token);
+			return GetTask<TSource?>(source.Min, token);
 		}
 
 		#endregion
@@ -474,7 +474,7 @@ namespace LinqToDB
 		#region MinAsync<TSource, selector>
 
 		[ElementAsync]
-		public static Task<TResult> MinAsync<TSource,TResult>(
+		public static Task<TResult?> MinAsync<TSource,TResult>(
 			this IQueryable<TSource> source, Expression<Func<TSource,TResult>> selector,
 			CancellationToken token = default)
 		{
@@ -482,10 +482,10 @@ namespace LinqToDB
 
 			if (provider != null)
 			{
-				return provider.ExecuteAsync<TResult>(
+				return provider.ExecuteAsync<TResult?>(
 					Expression.Call(
 						null,
-						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,TResult>>,TResult>(Queryable.Min), source, selector),
+						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,TResult>>,TResult?>(Queryable.Min), source, selector),
 						source.Expression, Expression.Quote(selector)) as Expression,
 					token);
 			}
@@ -493,7 +493,7 @@ namespace LinqToDB
 			if (LinqExtensions.ExtensionsAdapter != null)
 				return LinqExtensions.ExtensionsAdapter.MinAsync<TSource,TResult>(source, selector, token);
 
-			return GetTask(() => source.Min(selector), token);
+			return GetTask<TResult?>(() => source.Min(selector), token);
 		}
 
 		#endregion
@@ -501,7 +501,7 @@ namespace LinqToDB
 		#region MaxAsync<TSource>
 
 		[ElementAsync]
-		public static Task<TSource> MaxAsync<TSource>(
+		public static Task<TSource?> MaxAsync<TSource>(
 			this IQueryable<TSource> source,
 			CancellationToken token = default)
 		{
@@ -509,10 +509,10 @@ namespace LinqToDB
 
 			if (provider != null)
 			{
-				return provider.ExecuteAsync<TSource>(
+				return provider.ExecuteAsync<TSource?>(
 					Expression.Call(
 						null,
-						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>,TSource>(Queryable.Max), source),
+						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>,TSource?>(Queryable.Max), source),
 						source.Expression) as Expression,
 					token);
 			}
@@ -520,7 +520,7 @@ namespace LinqToDB
 			if (LinqExtensions.ExtensionsAdapter != null)
 				return LinqExtensions.ExtensionsAdapter.MaxAsync<TSource>(source, token);
 
-			return GetTask(source.Max, token);
+			return GetTask<TSource?>(source.Max, token);
 		}
 
 		#endregion
@@ -528,7 +528,7 @@ namespace LinqToDB
 		#region MaxAsync<TSource, selector>
 
 		[ElementAsync]
-		public static Task<TResult> MaxAsync<TSource,TResult>(
+		public static Task<TResult?> MaxAsync<TSource,TResult>(
 			this IQueryable<TSource> source, Expression<Func<TSource,TResult>> selector,
 			CancellationToken token = default)
 		{
@@ -536,10 +536,10 @@ namespace LinqToDB
 
 			if (provider != null)
 			{
-				return provider.ExecuteAsync<TResult>(
+				return provider.ExecuteAsync<TResult?>(
 					Expression.Call(
 						null,
-						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,TResult>>,TResult>(Queryable.Max), source, selector),
+						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,TResult>>,TResult?>(Queryable.Max), source, selector),
 						source.Expression, Expression.Quote(selector)) as Expression,
 					token);
 			}
@@ -547,7 +547,7 @@ namespace LinqToDB
 			if (LinqExtensions.ExtensionsAdapter != null)
 				return LinqExtensions.ExtensionsAdapter.MaxAsync<TSource,TResult>(source, selector, token);
 
-			return GetTask(() => source.Max(selector), token);
+			return GetTask<TResult?>(() => source.Max(selector), token);
 		}
 
 		#endregion
@@ -574,7 +574,7 @@ namespace LinqToDB
 			if (LinqExtensions.ExtensionsAdapter != null)
 				return LinqExtensions.ExtensionsAdapter.SumAsync(source, token);
 
-			return GetTask(source.Sum, token);
+			return GetTask<int>(source.Sum, token);
 		}
 
 		#endregion
@@ -601,7 +601,7 @@ namespace LinqToDB
 			if (LinqExtensions.ExtensionsAdapter != null)
 				return LinqExtensions.ExtensionsAdapter.SumAsync(source, token);
 
-			return GetTask(source.Sum, token);
+			return GetTask<int?>(source.Sum, token);
 		}
 
 		#endregion
@@ -628,7 +628,7 @@ namespace LinqToDB
 			if (LinqExtensions.ExtensionsAdapter != null)
 				return LinqExtensions.ExtensionsAdapter.SumAsync(source, token);
 
-			return GetTask(source.Sum, token);
+			return GetTask<long>(source.Sum, token);
 		}
 
 		#endregion
@@ -655,7 +655,7 @@ namespace LinqToDB
 			if (LinqExtensions.ExtensionsAdapter != null)
 				return LinqExtensions.ExtensionsAdapter.SumAsync(source, token);
 
-			return GetTask(source.Sum, token);
+			return GetTask<long?>(source.Sum, token);
 		}
 
 		#endregion
@@ -682,7 +682,7 @@ namespace LinqToDB
 			if (LinqExtensions.ExtensionsAdapter != null)
 				return LinqExtensions.ExtensionsAdapter.SumAsync(source, token);
 
-			return GetTask(source.Sum, token);
+			return GetTask<float>(source.Sum, token);
 		}
 
 		#endregion
@@ -709,7 +709,7 @@ namespace LinqToDB
 			if (LinqExtensions.ExtensionsAdapter != null)
 				return LinqExtensions.ExtensionsAdapter.SumAsync(source, token);
 
-			return GetTask(source.Sum, token);
+			return GetTask<float?>(source.Sum, token);
 		}
 
 		#endregion
@@ -736,7 +736,7 @@ namespace LinqToDB
 			if (LinqExtensions.ExtensionsAdapter != null)
 				return LinqExtensions.ExtensionsAdapter.SumAsync(source, token);
 
-			return GetTask(source.Sum, token);
+			return GetTask<double>(source.Sum, token);
 		}
 
 		#endregion
@@ -763,7 +763,7 @@ namespace LinqToDB
 			if (LinqExtensions.ExtensionsAdapter != null)
 				return LinqExtensions.ExtensionsAdapter.SumAsync(source, token);
 
-			return GetTask(source.Sum, token);
+			return GetTask<double?>(source.Sum, token);
 		}
 
 		#endregion
@@ -790,7 +790,7 @@ namespace LinqToDB
 			if (LinqExtensions.ExtensionsAdapter != null)
 				return LinqExtensions.ExtensionsAdapter.SumAsync(source, token);
 
-			return GetTask(source.Sum, token);
+			return GetTask<decimal>(source.Sum, token);
 		}
 
 		#endregion
@@ -817,7 +817,7 @@ namespace LinqToDB
 			if (LinqExtensions.ExtensionsAdapter != null)
 				return LinqExtensions.ExtensionsAdapter.SumAsync(source, token);
 
-			return GetTask(source.Sum, token);
+			return GetTask<decimal?>(source.Sum, token);
 		}
 
 		#endregion
@@ -844,7 +844,7 @@ namespace LinqToDB
 			if (LinqExtensions.ExtensionsAdapter != null)
 				return LinqExtensions.ExtensionsAdapter.SumAsync<TSource>(source, selector, token);
 
-			return GetTask(() => source.Sum(selector), token);
+			return GetTask<int>(() => source.Sum(selector), token);
 		}
 
 		#endregion
@@ -871,7 +871,7 @@ namespace LinqToDB
 			if (LinqExtensions.ExtensionsAdapter != null)
 				return LinqExtensions.ExtensionsAdapter.SumAsync<TSource>(source, selector, token);
 
-			return GetTask(() => source.Sum(selector), token);
+			return GetTask<int?>(() => source.Sum(selector), token);
 		}
 
 		#endregion
@@ -898,7 +898,7 @@ namespace LinqToDB
 			if (LinqExtensions.ExtensionsAdapter != null)
 				return LinqExtensions.ExtensionsAdapter.SumAsync<TSource>(source, selector, token);
 
-			return GetTask(() => source.Sum(selector), token);
+			return GetTask<long>(() => source.Sum(selector), token);
 		}
 
 		#endregion
@@ -925,7 +925,7 @@ namespace LinqToDB
 			if (LinqExtensions.ExtensionsAdapter != null)
 				return LinqExtensions.ExtensionsAdapter.SumAsync<TSource>(source, selector, token);
 
-			return GetTask(() => source.Sum(selector), token);
+			return GetTask<long?>(() => source.Sum(selector), token);
 		}
 
 		#endregion
@@ -952,7 +952,7 @@ namespace LinqToDB
 			if (LinqExtensions.ExtensionsAdapter != null)
 				return LinqExtensions.ExtensionsAdapter.SumAsync<TSource>(source, selector, token);
 
-			return GetTask(() => source.Sum(selector), token);
+			return GetTask<float>(() => source.Sum(selector), token);
 		}
 
 		#endregion
@@ -979,7 +979,7 @@ namespace LinqToDB
 			if (LinqExtensions.ExtensionsAdapter != null)
 				return LinqExtensions.ExtensionsAdapter.SumAsync<TSource>(source, selector, token);
 
-			return GetTask(() => source.Sum(selector), token);
+			return GetTask<float?>(() => source.Sum(selector), token);
 		}
 
 		#endregion
@@ -1006,7 +1006,7 @@ namespace LinqToDB
 			if (LinqExtensions.ExtensionsAdapter != null)
 				return LinqExtensions.ExtensionsAdapter.SumAsync<TSource>(source, selector, token);
 
-			return GetTask(() => source.Sum(selector), token);
+			return GetTask<double>(() => source.Sum(selector), token);
 		}
 
 		#endregion
@@ -1033,7 +1033,7 @@ namespace LinqToDB
 			if (LinqExtensions.ExtensionsAdapter != null)
 				return LinqExtensions.ExtensionsAdapter.SumAsync<TSource>(source, selector, token);
 
-			return GetTask(() => source.Sum(selector), token);
+			return GetTask<double?>(() => source.Sum(selector), token);
 		}
 
 		#endregion
@@ -1060,7 +1060,7 @@ namespace LinqToDB
 			if (LinqExtensions.ExtensionsAdapter != null)
 				return LinqExtensions.ExtensionsAdapter.SumAsync<TSource>(source, selector, token);
 
-			return GetTask(() => source.Sum(selector), token);
+			return GetTask<decimal>(() => source.Sum(selector), token);
 		}
 
 		#endregion
@@ -1087,7 +1087,7 @@ namespace LinqToDB
 			if (LinqExtensions.ExtensionsAdapter != null)
 				return LinqExtensions.ExtensionsAdapter.SumAsync<TSource>(source, selector, token);
 
-			return GetTask(() => source.Sum(selector), token);
+			return GetTask<decimal?>(() => source.Sum(selector), token);
 		}
 
 		#endregion
@@ -1114,7 +1114,7 @@ namespace LinqToDB
 			if (LinqExtensions.ExtensionsAdapter != null)
 				return LinqExtensions.ExtensionsAdapter.AverageAsync(source, token);
 
-			return GetTask(source.Average, token);
+			return GetTask<double>(source.Average, token);
 		}
 
 		#endregion
@@ -1141,7 +1141,7 @@ namespace LinqToDB
 			if (LinqExtensions.ExtensionsAdapter != null)
 				return LinqExtensions.ExtensionsAdapter.AverageAsync(source, token);
 
-			return GetTask(source.Average, token);
+			return GetTask<double?>(source.Average, token);
 		}
 
 		#endregion
@@ -1168,7 +1168,7 @@ namespace LinqToDB
 			if (LinqExtensions.ExtensionsAdapter != null)
 				return LinqExtensions.ExtensionsAdapter.AverageAsync(source, token);
 
-			return GetTask(source.Average, token);
+			return GetTask<double>(source.Average, token);
 		}
 
 		#endregion
@@ -1195,7 +1195,7 @@ namespace LinqToDB
 			if (LinqExtensions.ExtensionsAdapter != null)
 				return LinqExtensions.ExtensionsAdapter.AverageAsync(source, token);
 
-			return GetTask(source.Average, token);
+			return GetTask<double?>(source.Average, token);
 		}
 
 		#endregion
@@ -1222,7 +1222,7 @@ namespace LinqToDB
 			if (LinqExtensions.ExtensionsAdapter != null)
 				return LinqExtensions.ExtensionsAdapter.AverageAsync(source, token);
 
-			return GetTask(source.Average, token);
+			return GetTask<float>(source.Average, token);
 		}
 
 		#endregion
@@ -1249,7 +1249,7 @@ namespace LinqToDB
 			if (LinqExtensions.ExtensionsAdapter != null)
 				return LinqExtensions.ExtensionsAdapter.AverageAsync(source, token);
 
-			return GetTask(source.Average, token);
+			return GetTask<float?>(source.Average, token);
 		}
 
 		#endregion
@@ -1276,7 +1276,7 @@ namespace LinqToDB
 			if (LinqExtensions.ExtensionsAdapter != null)
 				return LinqExtensions.ExtensionsAdapter.AverageAsync(source, token);
 
-			return GetTask(source.Average, token);
+			return GetTask<double>(source.Average, token);
 		}
 
 		#endregion
@@ -1303,7 +1303,7 @@ namespace LinqToDB
 			if (LinqExtensions.ExtensionsAdapter != null)
 				return LinqExtensions.ExtensionsAdapter.AverageAsync(source, token);
 
-			return GetTask(source.Average, token);
+			return GetTask<double?>(source.Average, token);
 		}
 
 		#endregion
@@ -1330,7 +1330,7 @@ namespace LinqToDB
 			if (LinqExtensions.ExtensionsAdapter != null)
 				return LinqExtensions.ExtensionsAdapter.AverageAsync(source, token);
 
-			return GetTask(source.Average, token);
+			return GetTask<decimal>(source.Average, token);
 		}
 
 		#endregion
@@ -1357,7 +1357,7 @@ namespace LinqToDB
 			if (LinqExtensions.ExtensionsAdapter != null)
 				return LinqExtensions.ExtensionsAdapter.AverageAsync(source, token);
 
-			return GetTask(source.Average, token);
+			return GetTask<decimal?>(source.Average, token);
 		}
 
 		#endregion
@@ -1384,7 +1384,7 @@ namespace LinqToDB
 			if (LinqExtensions.ExtensionsAdapter != null)
 				return LinqExtensions.ExtensionsAdapter.AverageAsync<TSource>(source, selector, token);
 
-			return GetTask(() => source.Average(selector), token);
+			return GetTask<double>(() => source.Average(selector), token);
 		}
 
 		#endregion
@@ -1411,7 +1411,7 @@ namespace LinqToDB
 			if (LinqExtensions.ExtensionsAdapter != null)
 				return LinqExtensions.ExtensionsAdapter.AverageAsync<TSource>(source, selector, token);
 
-			return GetTask(() => source.Average(selector), token);
+			return GetTask<double?>(() => source.Average(selector), token);
 		}
 
 		#endregion
@@ -1438,7 +1438,7 @@ namespace LinqToDB
 			if (LinqExtensions.ExtensionsAdapter != null)
 				return LinqExtensions.ExtensionsAdapter.AverageAsync<TSource>(source, selector, token);
 
-			return GetTask(() => source.Average(selector), token);
+			return GetTask<double>(() => source.Average(selector), token);
 		}
 
 		#endregion
@@ -1465,7 +1465,7 @@ namespace LinqToDB
 			if (LinqExtensions.ExtensionsAdapter != null)
 				return LinqExtensions.ExtensionsAdapter.AverageAsync<TSource>(source, selector, token);
 
-			return GetTask(() => source.Average(selector), token);
+			return GetTask<double?>(() => source.Average(selector), token);
 		}
 
 		#endregion
@@ -1492,7 +1492,7 @@ namespace LinqToDB
 			if (LinqExtensions.ExtensionsAdapter != null)
 				return LinqExtensions.ExtensionsAdapter.AverageAsync<TSource>(source, selector, token);
 
-			return GetTask(() => source.Average(selector), token);
+			return GetTask<float>(() => source.Average(selector), token);
 		}
 
 		#endregion
@@ -1519,7 +1519,7 @@ namespace LinqToDB
 			if (LinqExtensions.ExtensionsAdapter != null)
 				return LinqExtensions.ExtensionsAdapter.AverageAsync<TSource>(source, selector, token);
 
-			return GetTask(() => source.Average(selector), token);
+			return GetTask<float?>(() => source.Average(selector), token);
 		}
 
 		#endregion
@@ -1546,7 +1546,7 @@ namespace LinqToDB
 			if (LinqExtensions.ExtensionsAdapter != null)
 				return LinqExtensions.ExtensionsAdapter.AverageAsync<TSource>(source, selector, token);
 
-			return GetTask(() => source.Average(selector), token);
+			return GetTask<double>(() => source.Average(selector), token);
 		}
 
 		#endregion
@@ -1573,7 +1573,7 @@ namespace LinqToDB
 			if (LinqExtensions.ExtensionsAdapter != null)
 				return LinqExtensions.ExtensionsAdapter.AverageAsync<TSource>(source, selector, token);
 
-			return GetTask(() => source.Average(selector), token);
+			return GetTask<double?>(() => source.Average(selector), token);
 		}
 
 		#endregion
@@ -1600,7 +1600,7 @@ namespace LinqToDB
 			if (LinqExtensions.ExtensionsAdapter != null)
 				return LinqExtensions.ExtensionsAdapter.AverageAsync<TSource>(source, selector, token);
 
-			return GetTask(() => source.Average(selector), token);
+			return GetTask<decimal>(() => source.Average(selector), token);
 		}
 
 		#endregion
@@ -1627,7 +1627,7 @@ namespace LinqToDB
 			if (LinqExtensions.ExtensionsAdapter != null)
 				return LinqExtensions.ExtensionsAdapter.AverageAsync<TSource>(source, selector, token);
 
-			return GetTask(() => source.Average(selector), token);
+			return GetTask<decimal?>(() => source.Average(selector), token);
 		}
 
 		#endregion

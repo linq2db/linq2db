@@ -1,25 +1,29 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Diagnostics;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider
 {
 	using Data;
+	using LinqToDB.Mapping;
 	using SqlProvider;
-	using System.Data;
-	using System.Threading;
-	using System.Threading.Tasks;
 
 	public class BasicBulkCopy
 	{
 		protected virtual int MaxParameters => 999;
-		protected virtual int MaxSqlLength => 100000;
+		protected virtual int MaxSqlLength  => 100000;
 
-		protected virtual bool CastOnUnionAll         => false;
-		protected virtual bool TypeAllUnionParameters => false;
+		protected virtual bool CastFirstRowLiteralOnUnionAll    => false;
+		protected virtual bool CastFirstRowParametersOnUnionAll => false;
+		protected virtual bool CastAllRowsParametersOnUnionAll  => false;
+
+		protected virtual bool CastLiteral(ColumnDescriptor column) => false;
 
 		public virtual BulkCopyRowsCopied BulkCopy<T>(BulkCopyType bulkCopyType, ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 			where T : notnull
@@ -211,32 +215,27 @@ namespace LinqToDB.DataProvider
 		protected internal static string GetTableName<T>(ISqlBuilder sqlBuilder, BulkCopyOptions options, ITable<T> table, bool escaped = true)
 			where T : notnull
 		{
-			var sqlTable = new SqlTable
+			var tableName = new SqlObjectName(
+				           options.TableName    ?? table.TableName,
+				Server   : options.ServerName   ?? table.ServerName,
+				Database : options.DatabaseName ?? table.DatabaseName,
+				Schema   : options.SchemaName   ?? table.SchemaName);
+
+			var sqlTable = new SqlTable(typeof(T), null, tableName)
 			{
-				ObjectType   = typeof(T),
-				Server       = options.ServerName   ?? table.ServerName,
-				Database     = options.DatabaseName ?? table.DatabaseName,
-				Schema       = options.SchemaName   ?? table.SchemaName,
-				PhysicalName = options.TableName    ?? table.TableName,
 				TableOptions = options.TableOptions.Or(table.TableOptions)
 			};
 
 			return sqlBuilder
-				.BuildTableName(
-					new StringBuilder(),
-					escaped ? sqlBuilder.GetTableServerName  (sqlTable)  : sqlTable.Server,
-					escaped ? sqlBuilder.GetTableDatabaseName(sqlTable)  : sqlTable.Database,
-					escaped ? sqlBuilder.GetTableSchemaName  (sqlTable)  : sqlTable.Schema,
-					escaped ? sqlBuilder.GetTablePhysicalName(sqlTable)! : sqlTable.PhysicalName,
-					sqlTable.TableOptions)
+				.BuildObjectName(new (), sqlTable.TableName, escape: escaped, tableOptions: sqlTable.TableOptions)
 				.ToString();
 		}
 
 		protected struct ProviderConnections
 		{
-			public DataConnection  DataConnection;
-			public IDbConnection   ProviderConnection;
-			public IDbTransaction? ProviderTransaction;
+			public DataConnection DataConnection;
+			public DbConnection   ProviderConnection;
+			public DbTransaction? ProviderTransaction;
 		}
 
 		#region ProviderSpecific Support
@@ -353,7 +352,11 @@ namespace LinqToDB.DataProvider
 			int                                       maxParameters,
 			int                                       maxSqlLength)
 		{
-			var adjustedBatchSize = helper.Options.UseParameters ?  Math.Min(helper.BatchSize, helper.Options.MaxParametersForBatch.GetValueOrDefault(maxParameters) / helper.Columns.Length): helper.BatchSize;
+			var adjustedBatchSize = helper.Options.UseParameters
+				? Math.Min(helper.BatchSize,
+					helper.Options.MaxParametersForBatch.GetValueOrDefault(maxParameters) / helper.Columns.Length)
+				: helper.BatchSize;
+
 			prepFunction(helper);
 
 			foreach (var item in source)
@@ -613,7 +616,7 @@ namespace LinqToDB.DataProvider
 			helper.StringBuilder
 				.AppendLine()
 				.Append("SELECT ");
-			helper.BuildColumns(item, castParameters: CastOnUnionAll, castAllRows: TypeAllUnionParameters);
+			helper.BuildColumns(item, castParameters: CastFirstRowParametersOnUnionAll, castAllRows: CastAllRowsParametersOnUnionAll, castFirstRowLiteralOnUnionAll: CastFirstRowLiteralOnUnionAll, castLiteral: CastLiteral);
 			helper.StringBuilder.Append(from);
 			helper.StringBuilder.Append(" UNION ALL");
 
@@ -668,7 +671,7 @@ namespace LinqToDB.DataProvider
 			helper.StringBuilder
 				.AppendLine()
 				.Append("\tSELECT ");
-			helper.BuildColumns(item, castParameters: CastOnUnionAll, castAllRows : TypeAllUnionParameters);
+			helper.BuildColumns(item, castParameters: CastFirstRowParametersOnUnionAll, castAllRows : CastAllRowsParametersOnUnionAll, castFirstRowLiteralOnUnionAll: CastFirstRowLiteralOnUnionAll, castLiteral: CastLiteral);
 			helper.StringBuilder.Append(from);
 			helper.StringBuilder.Append(" UNION ALL");
 

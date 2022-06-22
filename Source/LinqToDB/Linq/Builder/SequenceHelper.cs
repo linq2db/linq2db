@@ -31,10 +31,10 @@ namespace LinqToDB.Linq.Builder
 
 			if (table != null)
 				return table;
-			
+
 			if (context is LoadWithBuilder.LoadWithContext lwCtx)
 				return lwCtx.TableContext;
-			
+
 			if (table == null)
 			{
 				var isTableResult = context.IsExpression(null, 0, RequestFor.Table);
@@ -47,6 +47,16 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			return null;
+		}
+
+		public static IBuildContext UnwrapSubqueryContext(IBuildContext context)
+		{
+			while (context is SubQueryContext sc)
+			{
+				context = sc.SubQuery;
+			}
+
+			return context;
 		}
 
 	}

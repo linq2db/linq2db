@@ -98,7 +98,7 @@ namespace LinqToDB.Linq.Builder
 
 			var newExpression  = Expression.New(constructor);
 			var initExpression = Expression.MemberInit(newExpression,
-				arguments.Select((a, i) => Expression.Bind(concreteType.GetProperty("Item" + (i + 1)), a)));
+				arguments.Select((a, i) => Expression.Bind(concreteType.GetProperty("Item" + (i + 1))!, a)));
 			return initExpression;
 		}
 
@@ -166,9 +166,9 @@ namespace LinqToDB.Linq.Builder
 				{
 					var methodInfo = (MethodInfo)memberInfo.MemberInfo;
 					if (methodInfo.IsStatic)
-						result = Expression.Call(methodInfo, memberInfo.Arguments.ToArray());
+						result = Expression.Call(methodInfo, memberInfo.Arguments!.ToArray());
 					else
-						result = Expression.Call(result, methodInfo, memberInfo.Arguments.ToArray());
+						result = Expression.Call(result, methodInfo, memberInfo.Arguments!.ToArray());
 				}
 				else
 					result = Expression.MakeMemberAccess(result, memberInfo.MemberInfo);
@@ -478,7 +478,7 @@ namespace LinqToDB.Linq.Builder
 				if (typeof(ITable<>).IsSameOrParentOf(desiredType))
 				{
 					var tableType   = typeof(PersistentTable<>).MakeGenericType(elementType);
-					result = Expression.New(tableType.GetConstructor(new[] { result.Type }),
+					result = Expression.New(tableType.GetConstructor(new[] { result.Type })!,
 						result);
 				}
 			}
@@ -950,8 +950,8 @@ namespace LinqToDB.Linq.Builder
 						context.dependencies.Add(e);
 						while (ma.Expression.Unwrap()?.NodeType == ExpressionType.MemberAccess)
 						{
-							context.ignore.Add(ma.Expression);
-							ma = (MemberExpression) ma.Expression.Unwrap();
+							context.ignore.Add(ma.Expression!);
+							ma = (MemberExpression) ma.Expression!.Unwrap();
 						}
 					}
 				}
@@ -1166,7 +1166,7 @@ namespace LinqToDB.Linq.Builder
 				var equalityBody = GenerateEquals(mappingSchema,
 						groupJoin.InnerKeyLambda.GetBody(param_d).Unwrap(),
 						groupJoin.OuterKeyLambda.GetBody(detailLambda.Parameters[0]).Unwrap())
-					.Aggregate((Expression?)null, (a, e) => a == null ? e : Expression.AndAlso(a, e));
+					.Aggregate((Expression?)null, (a, e) => a == null ? e : Expression.AndAlso(a, e))!;
 
 				var methodInfo  = Methods.Queryable.Where.MakeGenericMethod(param_d.Type);
 				var filteredQueryableDetail = Expression.Call(methodInfo, detailQuery,
@@ -1186,7 +1186,7 @@ namespace LinqToDB.Linq.Builder
 						break;
 
 					if (searchExpression.NodeType == ExpressionType.MemberAccess)
-						searchExpression = ((MemberExpression)searchExpression).Expression;
+						searchExpression = ((MemberExpression)searchExpression).Expression!;
 					else
 						throw new NotImplementedException();
 				}
@@ -1533,7 +1533,7 @@ namespace LinqToDB.Linq.Builder
 
 		public static LambdaExpression CorrectLambdaType(LambdaExpression before, LambdaExpression after, MappingSchema mappingSchema)
 		{
-			if (IsEnumerableType(before.ReturnType, mappingSchema) && before.ReturnType.IsGenericType)
+			if (IsEnumerableType(before.ReturnType, mappingSchema) && before.ReturnType.IsGenericType && before.ReturnType.GenericTypeArguments.Length == 1)
 			{
 				var generic     = before.ReturnType.GetGenericTypeDefinition();
 				var elementType = GetEnumerableElementType(after.ReturnType, mappingSchema);
@@ -1563,12 +1563,12 @@ namespace LinqToDB.Linq.Builder
 		internal static Expression CreateKDH(Expression key, Expression data)
 		{
 			var genericType   = typeof(KDH<,>).MakeGenericType(key.Type, data.Type);
-			var constructor   = genericType.GetConstructor(Array<Type>.Empty);
+			var constructor   = genericType.GetConstructor(Array<Type>.Empty)!;
 			var newExpression = Expression.New(constructor);
 
 			var memberInit    = Expression.MemberInit(newExpression, 
-				Expression.Bind(genericType.GetProperty("Key"), key),
-				Expression.Bind(genericType.GetProperty("Data"), data));
+				Expression.Bind(genericType.GetProperty(nameof(KDH<object,object>.Key))!, key),
+				Expression.Bind(genericType.GetProperty(nameof(KDH<object,object>.Data))!, data));
 
 			return memberInit;
 		}
@@ -1604,6 +1604,11 @@ namespace LinqToDB.Linq.Builder
 					});
 
 				newBody = MakeExpressionCopy(newBody);
+
+				// The following conversion is needed because compiler can create Lambda with specific ReturnType but in runtime we cannot specify that.
+				//
+				if (newBody.Type != lambda.ReturnType)
+					newBody = Expression.Convert(newBody, lambda.ReturnType);
 
 				return Expression.Lambda(newBody, newParameters);
 			}
@@ -1654,7 +1659,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							var prm = context.after[idx];
 							if (prm != ma.Expression)
-								return Expression.MakeMemberAccess(prm, GetMemberForType(prm.Type, ma.Member));
+								return Expression.MakeMemberAccess(prm, GetMemberForType(prm.Type, ma.Member)!);
 						}
 					}
 				}
@@ -1711,7 +1716,7 @@ namespace LinqToDB.Linq.Builder
 								var newAssignments = mi.Bindings.Cast<MemberAssignment>().Select(a =>
 									{
 										var finalized = FinalizeExpressionKeys(stable, a.Expression);
-										return Expression.Bind(GetMemberForType(newType, a.Member), finalized);
+										return Expression.Bind(GetMemberForType(newType, a.Member)!, finalized);
 									})
 									.ToArray();
 
@@ -1769,10 +1774,10 @@ namespace LinqToDB.Linq.Builder
 					case ExpressionType.MemberAccess:
 						{
 							var ma     = (MemberExpression)e;
-							var newObj = FinalizeExpressionKeys(stable, ma.Expression);
+							var newObj = FinalizeExpressionKeys(stable, ma.Expression!);
 							if (newObj != ma.Expression)
 							{
-								return Expression.MakeMemberAccess(newObj, GetMemberForType(newObj.Type, ma.Member));
+								return Expression.MakeMemberAccess(newObj, GetMemberForType(newObj.Type, ma.Member)!);
 							}
 							break;
 						}

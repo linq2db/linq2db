@@ -6,10 +6,25 @@
 		<RootNamespace>LinqToDB.Tools</RootNamespace>
 
 		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\linq2db.Tools.xml</DocumentationFile>
-		<TargetFrameworks>net45;net46;netstandard2.0</TargetFrameworks>
+		<TargetFrameworks>net45;net46;netstandard2.0;net6.0</TargetFrameworks>
 	</PropertyGroup>
 
 	<ItemGroup>
+		<Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+
 		<ProjectReference Include="..\LinqToDB\LinqToDB.csproj" />
+
+		<PackageReference Include="Humanizer.Core" />
+
+		<None Update="DataProvider\SqlServer\Schemas\Schemas.tt">
+			<Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>Schemas.generated.cs</LastGenOutput>
+		</None>
+		<Compile Update="DataProvider\SqlServer\Schemas\Schemas.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>Schemas.tt</DependentUpon>
+		</Compile>
+
 	</ItemGroup>
 </Project>

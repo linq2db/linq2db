@@ -3,6 +3,7 @@ using System.Data;
 
 namespace LinqToDB.DataProvider.SqlCe
 {
+	using System.Data.Common;
 	using System.Linq.Expressions;
 	using LinqToDB.Expressions;
 
@@ -21,8 +22,8 @@ namespace LinqToDB.DataProvider.SqlCe
 			Type parameterType,
 			Type commandType,
 			Type transactionType,
-			Action<IDbDataParameter, SqlDbType>   dbTypeSetter,
-			Func  <IDbDataParameter, SqlDbType>   dbTypeGetter,
+			Action<DbParameter, SqlDbType>   dbTypeSetter,
+			Func  <DbParameter, SqlDbType>   dbTypeGetter,
 			Func  <string,           SqlCeEngine> sqlCeEngineCreator)
 		{
 			ConnectionType  = connectionType;
@@ -43,8 +44,8 @@ namespace LinqToDB.DataProvider.SqlCe
 		public Type CommandType     { get; }
 		public Type TransactionType { get; }
 
-		public Action<IDbDataParameter, SqlDbType> SetDbType { get; }
-		public Func  <IDbDataParameter, SqlDbType> GetDbType { get; }
+		public Action<DbParameter, SqlDbType> SetDbType { get; }
+		public Func  <DbParameter, SqlDbType> GetDbType { get; }
 
 		public Func<string, SqlCeEngine> CreateSqlCeEngine { get; }
 
@@ -71,8 +72,8 @@ namespace LinqToDB.DataProvider.SqlCe
 						typeMapper.FinalizeMappings();
 
 						var dbTypeBuilder = typeMapper.Type<SqlCeParameter>().Member(p => p.SqlDbType);
-						var typeSetter    = dbTypeBuilder.BuildSetter<IDbDataParameter>();
-						var typeGetter    = dbTypeBuilder.BuildGetter<IDbDataParameter>();
+						var typeSetter    = dbTypeBuilder.BuildSetter<DbParameter>();
+						var typeGetter    = dbTypeBuilder.BuildGetter<DbParameter>();
 
 						_instance = new SqlCeProviderAdapter(
 							connectionType,

@@ -17,9 +17,8 @@ namespace LinqToDB.SqlQuery
 
 		public static bool TryEvaluateExpression(this IQueryElement expr, EvaluationContext context, out object? result)
 		{
-			var info = expr.TryEvaluateExpression(context);
-			result = info.value;
-			return info.error == null;
+			(result, var error) = expr.TryEvaluateExpression(context);
+			return error == null;
 		}
 
 		public static bool IsMutable(this IQueryElement expr)
@@ -77,7 +76,12 @@ namespace LinqToDB.SqlQuery
 			errorMessage = null;
 			switch (expr.ElementType)
 			{
-				case QueryElementType.SqlValue           : result = ((SqlValue)expr).Value; return true;
+				case QueryElementType.SqlValue           :
+				{
+					var sqlValue = (SqlValue)expr;
+					result = sqlValue.Value;
+					return true;
+				}
 				case QueryElementType.SqlParameter       :
 				{
 					var sqlParameter = (SqlParameter)expr;
@@ -88,7 +92,9 @@ namespace LinqToDB.SqlQuery
 						return false;
 					}
 
-					result = sqlParameter.GetParameterValue(context.ParameterValues).Value;
+					var parameterValue = sqlParameter.GetParameterValue(context.ParameterValues);
+
+					result = parameterValue.ProviderValue;
 					return true;
 				}
 				case QueryElementType.IsNullPredicate:
@@ -109,6 +115,15 @@ namespace LinqToDB.SqlQuery
 					if (!exprExpr.Expr1.TryEvaluateExpression(context, out var value1, out errorMessage) ||
 					    !exprExpr.Expr2.TryEvaluateExpression(context, out var value2, out errorMessage))
 						return false;
+
+					if (value1 != null && value2 != null)
+					{
+						if (value1.GetType().IsEnum != value2.GetType().IsEnum)
+						{
+							errorMessage = "Types mismatch";
+							return false;
+						}
+					}
 
 					switch (exprExpr.Operator)
 					{
@@ -319,6 +334,70 @@ namespace LinqToDB.SqlQuery
 							errorMessage = $"Unknown function '{function.Name}'.";
 							return false;
 					}
+				}
+
+				case QueryElementType.SearchCondition    :
+				{
+					var cond     = (SqlSearchCondition)expr;
+					errorMessage = null;
+
+					if (cond.Conditions.Count == 0)
+					{
+						result = true;
+						return true;
+					}
+
+					for (var i = 0; i < cond.Conditions.Count; i++)
+					{
+						var condition = cond.Conditions[i];
+						if (condition.TryEvaluateExpression(context, out var evaluated, out errorMessage))
+						{
+							if (evaluated is bool boolValue)
+							{
+								if (i == cond.Conditions.Count - 1 || condition.IsOr == boolValue)
+								{
+									result = boolValue;
+									return true;
+								}
+							}
+							else if (!condition.IsOr)
+							{
+								errorMessage = $"Non-boolean condition value '{evaluated}'.";
+								return false;
+							}
+						}
+					}
+
+					errorMessage ??= "Cannot evaluate search condition";
+					return false;
+				}
+				case QueryElementType.ExprPredicate      :
+				{
+					var predicate = (SqlPredicate.Expr)expr;
+					if (!predicate.Expr1.TryEvaluateExpression(context, out var value, out errorMessage))
+						return false;
+
+					result = value;
+					return true;
+				}
+				case QueryElementType.Condition          :
+				{
+					var cond = (SqlCondition)expr;
+					if (cond.Predicate.TryEvaluateExpression(context, out var evaluated, out errorMessage))
+					{
+						if (evaluated is bool boolValue)
+						{
+							result = cond.IsNot ? !boolValue : boolValue;
+							return true;
+						}
+						else
+						{
+							errorMessage = $"Non-boolean condition value '{evaluated}'.";
+							return false;
+						}
+					}
+
+					return false;
 				}
 
 				default:

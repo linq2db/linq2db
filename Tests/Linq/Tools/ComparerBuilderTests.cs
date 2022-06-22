@@ -121,10 +121,19 @@ namespace Tests.Tools
 		class TestClass
 		{
 			public int     Field1;
+			public int?    Field2;
 			public string? Prop2 { get; set; }
 
 			static int _n;
 			       int _field = ++_n;
+		}
+
+		[UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
+		struct TestStruct
+		{
+			public int     Field1;
+			public int?    Field2;
+			public string? Prop2 { get; set; }
 		}
 
 		[Test]
@@ -146,6 +155,21 @@ namespace Tests.Tools
 			Assert.That(eq.Equals(null, new TestClass()), Is.False);
 			Assert.That(eq.Equals(new TestClass(), null), Is.False);
 			Assert.That(eq.Equals(new TestClass(), new TestClass { Field1 = 1 }), Is.False);
+		}
+
+		[Test]
+		public void StructEqualsTest()
+		{
+			var eq = ComparerBuilder.GetEqualityComparer<TestStruct?>();
+
+			Assert.That(eq.Equals(new TestStruct(), new TestStruct()), Is.True);
+			Assert.That(eq.Equals(null, null), Is.True);
+			Assert.That(eq.Equals(null, new TestStruct()), Is.False);
+			Assert.That(eq.Equals(new TestStruct(), null), Is.False);
+			Assert.That(eq.Equals(new TestStruct(), new TestStruct { Field1 = 1 }), Is.False);
+			Assert.That(eq.Equals(new TestStruct() { Field1 = 1 }, new TestStruct { Field1 = 1 }), Is.True);
+			Assert.That(eq.Equals(new TestStruct() { Field2 = 1 }, new TestStruct { Field2 = 2 }), Is.False);
+			Assert.That(eq.Equals(new TestStruct() { Field2 = 1 }, new TestStruct { Field2 = 1 }), Is.True);
 		}
 
 		class NoMemberClass

@@ -490,8 +490,7 @@ namespace Tests.Common
 		{
 			public decimal? Amount;
 
-			public static explicit operator CustomMoneyType(decimal? amount) =>
-				new CustomMoneyType() { Amount = amount };
+			public static explicit operator CustomMoneyType(decimal? amount) => new () { Amount = amount };
 		}
 	}
 }

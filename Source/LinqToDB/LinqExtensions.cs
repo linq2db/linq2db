@@ -11,10 +11,12 @@ using JetBrains.Annotations;
 namespace LinqToDB
 {
 	using Async;
+	using DataProvider;
 	using Expressions;
 	using Linq;
 	using Linq.Builder;
-	using LinqToDB.Reflection;
+	using Reflection;
+	using SqlProvider;
 
 	/// <summary>
 	/// Contains extension methods for LINQ queries.
@@ -23,6 +25,24 @@ namespace LinqToDB
 	public static partial class LinqExtensions
 	{
 		#region Table Helpers
+
+		/// <summary>
+		/// Assigns table id.
+		/// </summary>
+		/// <typeparam name="T">Table record mapping class.</typeparam>
+		/// <param name="table">Table-like query source.</param>
+		/// <param name="id">Table ID.</param>
+		/// <returns>Table-like query source with new name.</returns>
+		[LinqTunnel]
+		[Pure]
+		public static ITable<T> TableID<T>(this ITable<T> table, [SqlQueryDependent] string? id)
+			where T : notnull
+		{
+			if (table == null) throw new ArgumentNullException(nameof(table));
+
+			var result = ((ITableMutable<T>)table).ChangeTableID(id);
+			return result;
+		}
 
 		/// <summary>
 		/// Overrides table or view name with new name for current query.
@@ -132,31 +152,462 @@ namespace LinqToDB
 			return table;
 		}
 
-		/// <summary>
-		/// Adds table hints to a table in generated query.
-		/// Also see <see cref="WithTableExpression{T}(ITable{T}, string)"/> method.
-		/// <code>
-		/// // will produce following SQL code in generated query: table tablealias with(UpdLock)
-		/// var tableWithHint = db.Table.With("UpdLock");
-		/// </code>
-		/// </summary>
-		/// <typeparam name="T">Table record mapping class.</typeparam>
-		/// <param name="table">Table-like query source.</param>
-		/// <param name="args">SQL text, added to WITH({0}) after table name in generated query.</param>
-		/// <returns>Table-like query source with table hints.</returns>
-		[LinqTunnel]
-		[Pure]
-		public static ITable<T> With<T>(this ITable<T> table, [SqlQueryDependent] string args)
-			where T : notnull
-		{
-			if (args == null) throw new ArgumentNullException(nameof(args));
+		#endregion
 
+		#region TableHint
+
+		/// <summary>
+		/// Adds a table hint to a table in generated query.
+		/// </summary>
+		/// <typeparam name="TSource">Table record mapping class.</typeparam>
+		/// <param name="table">Table-like query source.</param>
+		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
+		/// <returns>Table-like query source with table hints.</returns>
+		[LinqTunnel, Pure]
+		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TableHint, typeof(TableSpecHintExtensionBuilder))]
+		[Sql.QueryExtension(ProviderName.MySql,  Sql.QueryExtensionScope.TableHint, typeof(TableSpecHintExtensionBuilder))]
+		[Sql.QueryExtension(null,                Sql.QueryExtensionScope.TableHint, typeof(HintExtensionBuilder))]
+		public static ITable<TSource> With<TSource>(this ITable<TSource> table, [SqlQueryDependent] string hint)
+			where TSource : notnull
+		{
 			table.Expression = Expression.Call(
 				null,
-				Methods.LinqToDB.Table.With.MakeGenericMethod(typeof(T)),
-				table.Expression, Expression.Constant(args));
+				MethodHelper.GetMethodInfo(TableHint, table, hint),
+				table.Expression, Expression.Constant(hint));
 
 			return table;
+		}
+
+		/// <summary>
+		/// Adds a table hint to a table in generated query.
+		/// </summary>
+		/// <typeparam name="TSource">Table record mapping class.</typeparam>
+		/// <param name="table">Table-like query source.</param>
+		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
+		/// <returns>Table-like query source with table hints.</returns>
+		[LinqTunnel, Pure]
+		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TableHint, typeof(TableSpecHintExtensionBuilder))]
+		[Sql.QueryExtension(ProviderName.MySql,  Sql.QueryExtensionScope.TableHint, typeof(TableSpecHintExtensionBuilder))]
+		[Sql.QueryExtension(null,                Sql.QueryExtensionScope.TableHint, typeof(HintExtensionBuilder))]
+		public static ITable<TSource> TableHint<TSource>(this ITable<TSource> table, [SqlQueryDependent] string hint)
+			where TSource : notnull
+		{
+			table.Expression = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(TableHint, table, hint),
+				table.Expression, Expression.Constant(hint));
+
+			return table;
+		}
+
+		/// <summary>
+		/// Adds a table hint to a table in generated query.
+		/// </summary>
+		/// <typeparam name="TSource">Table record mapping class.</typeparam>
+		/// <typeparam name="TParam">Table hint parameter type.</typeparam>
+		/// <param name="table">Table-like query source.</param>
+		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
+		/// <param name="hintParameter">Table hint parameter.</param>
+		/// <returns>Table-like query source with table hints.</returns>
+		[LinqTunnel, Pure]
+		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TableHint, typeof(TableSpecHintExtensionBuilder))]
+		[Sql.QueryExtension(ProviderName.MySql,  Sql.QueryExtensionScope.TableHint, typeof(TableSpecHintExtensionBuilder))]
+		[Sql.QueryExtension(null,                Sql.QueryExtensionScope.TableHint, typeof(HintWithParameterExtensionBuilder))]
+		public static ITable<TSource> TableHint<TSource,TParam>(
+			this ITable<TSource>       table,
+			[SqlQueryDependent] string hint,
+			[SqlQueryDependent] TParam hintParameter)
+			where TSource : notnull
+		{
+			table.Expression = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(TableHint, table, hint, hintParameter),
+				table.Expression, Expression.Constant(hint), Expression.Constant(hintParameter));
+
+			return table;
+		}
+
+		/// <summary>
+		/// Adds a table hint to a table in generated query.
+		/// </summary>
+		/// <typeparam name="TSource">Table record mapping class.</typeparam>
+		/// <typeparam name="TParam">Table hint parameter type.</typeparam>
+		/// <param name="table">Table-like query source.</param>
+		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
+		/// <param name="hintParameters">Table hint parameters.</param>
+		/// <returns>Table-like query source with table hints.</returns>
+		[LinqTunnel, Pure]
+		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TableHint, typeof(TableSpecHintExtensionBuilder), " ", " ")]
+		[Sql.QueryExtension(ProviderName.MySql,  Sql.QueryExtensionScope.TableHint, typeof(TableSpecHintExtensionBuilder), " ", ", ")]
+		[Sql.QueryExtension(null,                Sql.QueryExtensionScope.TableHint, typeof(HintWithParametersExtensionBuilder))]
+		public static ITable<TSource> TableHint<TSource,TParam>(
+			this ITable<TSource>                table,
+			[SqlQueryDependent] string          hint,
+			[SqlQueryDependent] params TParam[] hintParameters)
+			where TSource : notnull
+		{
+			table.Expression = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(TableHint, table, hint, hintParameters),
+				table.Expression,
+				Expression.Constant(hint),
+				Expression.NewArrayInit(typeof(TParam), hintParameters.Select(p => Expression.Constant(p, typeof(TParam)))));
+
+			return table;
+		}
+
+		#endregion
+
+		#region TablesInScopeHint
+
+		/// <summary>
+		/// Adds a table hint to all the tables in the method scope.
+		/// </summary>
+		/// <typeparam name="TSource">Table record mapping class.</typeparam>
+		/// <param name="source">Query source.</param>
+		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
+		/// <returns>Query source with table hints.</returns>
+		[LinqTunnel, Pure]
+		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TablesInScopeHint, typeof(TableSpecHintExtensionBuilder))]
+		[Sql.QueryExtension(ProviderName.MySql,  Sql.QueryExtensionScope.TablesInScopeHint, typeof(TableSpecHintExtensionBuilder))]
+		[Sql.QueryExtension(null,                Sql.QueryExtensionScope.TablesInScopeHint, typeof(HintExtensionBuilder))]
+		public static IQueryable<TSource> TablesInScopeHint<TSource>(this IQueryable<TSource> source, [SqlQueryDependent] string hint)
+			where TSource : notnull
+		{
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+
+			return currentSource.Provider.CreateQuery<TSource>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(TablesInScopeHint, source, hint),
+					currentSource.Expression, Expression.Constant(hint)));
+		}
+
+		/// <summary>
+		/// Adds a table hint to all the tables in the method scope.
+		/// </summary>
+		/// <typeparam name="TSource">Table record mapping class.</typeparam>
+		/// <typeparam name="TParam">Table hint parameter type.</typeparam>
+		/// <param name="source">Query source.</param>
+		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
+		/// <param name="hintParameter">Table hint parameter.</param>
+		/// <returns>Query source with table hints.</returns>
+		[LinqTunnel, Pure]
+		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TablesInScopeHint, typeof(TableSpecHintExtensionBuilder))]
+		[Sql.QueryExtension(ProviderName.MySql,  Sql.QueryExtensionScope.TablesInScopeHint, typeof(TableSpecHintExtensionBuilder))]
+		[Sql.QueryExtension(null,                Sql.QueryExtensionScope.TablesInScopeHint, typeof(HintWithParameterExtensionBuilder))]
+		public static IQueryable<TSource> TablesInScopeHint<TSource,TParam>(
+			this IQueryable<TSource> source,
+			[SqlQueryDependent] string hint,
+			[SqlQueryDependent] TParam hintParameter)
+			where TSource : notnull
+		{
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+
+			return currentSource.Provider.CreateQuery<TSource>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(TablesInScopeHint, source, hint, hintParameter),
+					currentSource.Expression, Expression.Constant(hint), Expression.Constant(hintParameter)));
+		}
+
+		/// <summary>
+		/// Adds a table hint to all the tables in the method scope.
+		/// </summary>
+		/// <typeparam name="TSource">Table record mapping class.</typeparam>
+		/// <param name="source">Query source.</param>
+		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
+		/// <param name="hintParameters">Table hint parameters.</param>
+		/// <returns>Query source with table hints.</returns>
+		[LinqTunnel, Pure]
+		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TablesInScopeHint, typeof(TableSpecHintExtensionBuilder), " ", " ")]
+		[Sql.QueryExtension(ProviderName.MySql,  Sql.QueryExtensionScope.TablesInScopeHint, typeof(TableSpecHintExtensionBuilder), " ", ", ")]
+		[Sql.QueryExtension(null,                Sql.QueryExtensionScope.TablesInScopeHint, typeof(HintWithParametersExtensionBuilder))]
+		public static IQueryable<TSource> TablesInScopeHint<TSource>(
+			this IQueryable<TSource> source,
+			[SqlQueryDependent] string hint,
+			[SqlQueryDependent] params object[] hintParameters)
+			where TSource : notnull
+		{
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+
+			return currentSource.Provider.CreateQuery<TSource>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(TablesInScopeHint, source, hint, hintParameters),
+					currentSource.Expression,
+					Expression.Constant(hint),
+					Expression.NewArrayInit(typeof(object), hintParameters.Select(Expression.Constant))));
+		}
+
+		#endregion
+
+		#region IndexHint
+
+		/// <summary>
+		/// Adds an index hint to a table in generated query.
+		/// </summary>
+		/// <typeparam name="TSource">Table record mapping class.</typeparam>
+		/// <param name="table">Table-like query source.</param>
+		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
+		/// <returns>Table-like query source with index hints.</returns>
+		[LinqTunnel, Pure]
+		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.IndexHint, typeof(TableSpecHintExtensionBuilder))]
+		[Sql.QueryExtension(ProviderName.MySql,  Sql.QueryExtensionScope.IndexHint, typeof(HintExtensionBuilder))]
+		[Sql.QueryExtension(null,                Sql.QueryExtensionScope.IndexHint, typeof(HintExtensionBuilder))]
+		public static ITable<TSource> IndexHint<TSource>(this ITable<TSource> table, [SqlQueryDependent] string hint)
+			where TSource : notnull
+		{
+			table.Expression = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(IndexHint, table, hint),
+				table.Expression, Expression.Constant(hint));
+
+			return table;
+		}
+
+		/// <summary>
+		/// Adds an index hint to a table in generated query.
+		/// </summary>
+		/// <typeparam name="TSource">Table record mapping class.</typeparam>
+		/// <typeparam name="TParam">Table hint parameter type.</typeparam>
+		/// <param name="table">Table-like query source.</param>
+		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
+		/// <param name="hintParameter">Table hint parameter.</param>
+		/// <returns>Table-like query source with index hints.</returns>
+		[LinqTunnel, Pure]
+		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.IndexHint, typeof(TableSpecHintExtensionBuilder))]
+		[Sql.QueryExtension(ProviderName.MySql,  Sql.QueryExtensionScope.IndexHint, typeof(HintWithParameterExtensionBuilder))]
+		[Sql.QueryExtension(null,                Sql.QueryExtensionScope.IndexHint, typeof(HintWithParameterExtensionBuilder))]
+		public static ITable<TSource> IndexHint<TSource,TParam>(
+			this ITable<TSource>       table,
+			[SqlQueryDependent] string hint,
+			[SqlQueryDependent] TParam hintParameter)
+			where TSource : notnull
+		{
+			table.Expression = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(IndexHint, table, hint, hintParameter),
+				table.Expression, Expression.Constant(hint), Expression.Constant(hintParameter));
+
+			return table;
+		}
+
+		/// <summary>
+		/// Adds an index hint to a table in generated query.
+		/// </summary>
+		/// <typeparam name="TSource">Table record mapping class.</typeparam>
+		/// <typeparam name="TParam">Table hint parameter type.</typeparam>
+		/// <param name="table">Table-like query source.</param>
+		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
+		/// <param name="hintParameters">Table hint parameters.</param>
+		/// <returns>Table-like query source with index hints.</returns>
+		[LinqTunnel, Pure]
+		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.IndexHint, typeof(TableSpecHintExtensionBuilder), " ", " ")]
+		[Sql.QueryExtension(ProviderName.MySql,  Sql.QueryExtensionScope.IndexHint, typeof(HintWithParametersExtensionBuilder))]
+		[Sql.QueryExtension(null,                Sql.QueryExtensionScope.IndexHint, typeof(HintWithParametersExtensionBuilder))]
+		public static ITable<TSource> IndexHint<TSource,TParam>(
+			this ITable<TSource>                table,
+			[SqlQueryDependent] string          hint,
+			[SqlQueryDependent] params TParam[] hintParameters)
+			where TSource : notnull
+		{
+			table.Expression = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(IndexHint, table, hint, hintParameters),
+				table.Expression,
+				Expression.Constant(hint),
+				Expression.NewArrayInit(typeof(TParam), hintParameters.Select(p => Expression.Constant(p, typeof(TParam)))));
+
+			return table;
+		}
+
+		#endregion
+
+		#region JoinHint
+
+		/// <summary>
+		/// Adds a join hint to a generated query.
+		/// </summary>
+		/// <typeparam name="TSource">Table record mapping class.</typeparam>
+		/// <param name="source">Query source.</param>
+		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
+		/// <returns>Query source with join hints.</returns>
+		[LinqTunnel, Pure]
+		[Sql.QueryExtension(Sql.QueryExtensionScope.JoinHint, typeof(NoneExtensionBuilder))]
+		public static IQueryable<TSource> JoinHint<TSource>(this IQueryable<TSource> source, [SqlQueryDependent] string hint)
+			where TSource : notnull
+		{
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+
+			return currentSource.Provider.CreateQuery<TSource>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(JoinHint, source, hint),
+					currentSource.Expression, Expression.Constant(hint)));
+		}
+
+		#endregion
+
+		#region SubQueryHint
+
+		/// <summary>
+		/// Adds a query hint to a generated query.
+		/// </summary>
+		/// <typeparam name="TSource">Table record mapping class.</typeparam>
+		/// <param name="source">Query source.</param>
+		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
+		/// <returns>Query source with hints.</returns>
+		[LinqTunnel, Pure]
+		[Sql.QueryExtension(null, Sql.QueryExtensionScope.SubQueryHint, typeof(HintExtensionBuilder))]
+		public static IQueryable<TSource> SubQueryHint<TSource>(this IQueryable<TSource> source, [SqlQueryDependent] string hint)
+			where TSource : notnull
+		{
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+
+			return currentSource.Provider.CreateQuery<TSource>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(SubQueryHint, source, hint),
+					currentSource.Expression, Expression.Constant(hint)));
+		}
+
+		/// <summary>
+		/// Adds a query hint to the generated query.
+		/// </summary>
+		/// <typeparam name="TSource">Table record mapping class.</typeparam>
+		/// <typeparam name="TParam">Hint parameter type</typeparam>
+		/// <param name="source">Query source.</param>
+		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
+		/// <param name="hintParameter">Hint parameter.</param>
+		/// <returns>Query source with hints.</returns>
+		[LinqTunnel, Pure]
+		[Sql.QueryExtension(null, Sql.QueryExtensionScope.SubQueryHint, typeof(HintWithParameterExtensionBuilder))]
+		public static IQueryable<TSource> SubQueryHint<TSource,TParam>(
+			this IQueryable<TSource>   source,
+			[SqlQueryDependent] string hint,
+			[SqlQueryDependent] TParam hintParameter)
+			where TSource : notnull
+		{
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+
+			return currentSource.Provider.CreateQuery<TSource>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(SubQueryHint, source, hint, hintParameter),
+					currentSource.Expression,
+					Expression.Constant(hint),
+					Expression.Constant(hintParameter)));
+		}
+
+		/// <summary>
+		/// Adds a query hint to the generated query.
+		/// </summary>
+		/// <typeparam name="TSource">Table record mapping class.</typeparam>
+		/// <typeparam name="TParam">Table hint parameter type.</typeparam>
+		/// <param name="source">Query source.</param>
+		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
+		/// <param name="hintParameters">Table hint parameters.</param>
+		/// <returns>Table-like query source with hints.</returns>
+		[LinqTunnel, Pure]
+		[Sql.QueryExtension(null, Sql.QueryExtensionScope.SubQueryHint, typeof(HintWithParametersExtensionBuilder))]
+		public static IQueryable<TSource> SubQueryHint<TSource, TParam>(
+			this IQueryable<TSource>   source,
+			[SqlQueryDependent] string hint,
+			[SqlQueryDependent] params TParam[] hintParameters)
+			where TSource : notnull
+		{
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+
+			return currentSource.Provider.CreateQuery<TSource>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(SubQueryHint, source, hint, hintParameters),
+					currentSource.Expression,
+					Expression.Constant(hint),
+					Expression.NewArrayInit(typeof(TParam), hintParameters.Select(p => Expression.Constant(p)))));
+		}
+
+		#endregion
+
+		#region QueryHint
+
+		/// <summary>
+		/// Adds a query hint to a generated query.
+		/// </summary>
+		/// <typeparam name="TSource">Table record mapping class.</typeparam>
+		/// <param name="source">Query source.</param>
+		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
+		/// <returns>Query source with hints.</returns>
+		[LinqTunnel, Pure]
+		[Sql.QueryExtension(null, Sql.QueryExtensionScope.QueryHint, typeof(HintExtensionBuilder))]
+		public static IQueryable<TSource> QueryHint<TSource>(this IQueryable<TSource> source, [SqlQueryDependent] string hint)
+			where TSource : notnull
+		{
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+
+			return currentSource.Provider.CreateQuery<TSource>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(QueryHint, source, hint),
+					currentSource.Expression, Expression.Constant(hint)));
+		}
+
+		/// <summary>
+		/// Adds a query hint to the generated query.
+		/// </summary>
+		/// <typeparam name="TSource">Table record mapping class.</typeparam>
+		/// <typeparam name="TParam">Hint parameter type</typeparam>
+		/// <param name="source">Query source.</param>
+		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
+		/// <param name="hintParameter">Hint parameter.</param>
+		/// <returns>Query source with hints.</returns>
+		[LinqTunnel, Pure]
+		[Sql.QueryExtension(null, Sql.QueryExtensionScope.QueryHint, typeof(HintWithParameterExtensionBuilder))]
+		public static IQueryable<TSource> QueryHint<TSource,TParam>(
+			this IQueryable<TSource> source,
+			[SqlQueryDependent] string hint,
+			[SqlQueryDependent] TParam hintParameter)
+			where TSource : notnull
+		{
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+
+			return currentSource.Provider.CreateQuery<TSource>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(QueryHint, source, hint, hintParameter),
+					currentSource.Expression,
+					Expression.Constant(hint),
+					Expression.Constant(hintParameter)));
+		}
+
+		/// <summary>
+		/// Adds a query hint to the generated query.
+		/// </summary>
+		/// <typeparam name="TSource">Table record mapping class.</typeparam>
+		/// <typeparam name="TParam">Table hint parameter type.</typeparam>
+		/// <param name="source">Query source.</param>
+		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
+		/// <param name="hintParameters">Table hint parameters.</param>
+		/// <returns>Table-like query source with hints.</returns>
+		[LinqTunnel, Pure]
+		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.QueryHint, typeof(HintWithParametersExtensionBuilder), " ")]
+		[Sql.QueryExtension(null,                Sql.QueryExtensionScope.QueryHint, typeof(HintWithParametersExtensionBuilder))]
+		public static IQueryable<TSource> QueryHint<TSource, TParam>(
+			this IQueryable<TSource> source,
+			[SqlQueryDependent] string hint,
+			[SqlQueryDependent] params TParam[] hintParameters)
+			where TSource : notnull
+		{
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+
+			return currentSource.Provider.CreateQuery<TSource>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(QueryHint, source, hint, hintParameters),
+					currentSource.Expression,
+					Expression.Constant(hint),
+					Expression.NewArrayInit(typeof(TParam), hintParameters.Select(p => Expression.Constant(p)))));
 		}
 
 		#endregion
@@ -265,7 +716,7 @@ namespace LinqToDB
 			if (currentSource is IQueryProviderAsync query)
 				return await query.ExecuteAsync<int>(expr, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-			return await TaskEx.Run(() => currentSource.Provider.Execute<int>(expr), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			return await Task.Run(() => currentSource.Provider.Execute<int>(expr), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
 		/// <summary>
@@ -317,7 +768,7 @@ namespace LinqToDB
 			if (currentSource is IQueryProviderAsync query)
 				return await query.ExecuteAsync<int>(expr, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-			return await TaskEx.Run(() => currentSource.Provider.Execute<int>(expr), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			return await Task.Run(() => currentSource.Provider.Execute<int>(expr), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
 		#endregion
@@ -383,7 +834,7 @@ namespace LinqToDB
 			if (currentSource is IQueryProviderAsync query)
 				return await query.ExecuteAsync<int>(expr, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-			return await TaskEx.Run(() => currentSource.Provider.Execute<int>(expr), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			return await Task.Run(() => currentSource.Provider.Execute<int>(expr), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
 		/// <summary>
@@ -433,7 +884,7 @@ namespace LinqToDB
 			if (currentSource is IQueryProviderAsync query)
 				return await query.ExecuteAsync<int>(expr, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-			return await TaskEx.Run(() => currentSource.Provider.Execute<int>(expr), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			return await Task.Run(() => currentSource.Provider.Execute<int>(expr), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
 		/// <summary>
@@ -491,7 +942,7 @@ namespace LinqToDB
 			if (currentSource is IQueryProviderAsync query)
 				return await query.ExecuteAsync<int>(expr, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-			return await TaskEx.Run(() => currentSource.Provider.Execute<int>(expr), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			return await Task.Run(() => currentSource.Provider.Execute<int>(expr), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
 		/// <summary>
@@ -538,7 +989,7 @@ namespace LinqToDB
 			if (currentQuery is IQueryProviderAsync query)
 				return await query.ExecuteAsync<int>(expr, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-			return await TaskEx.Run(() => currentQuery.Provider.Execute<int>(expr), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			return await Task.Run(() => currentQuery.Provider.Execute<int>(expr), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
 		/// <summary>
@@ -600,7 +1051,7 @@ namespace LinqToDB
 			if (currentSource is IQueryProviderAsync query)
 				return await query.ExecuteAsync<int>(expr, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-			return await TaskEx.Run(() => currentSource.Provider.Execute<int>(expr), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			return await Task.Run(() => currentSource.Provider.Execute<int>(expr), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
 		internal class Updatable<T> : IUpdatable<T>
@@ -953,7 +1404,7 @@ namespace LinqToDB
 			if (currentSource is IQueryProviderAsync query)
 				return await query.ExecuteAsync<int>(expr, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-			return await TaskEx.Run(() => currentSource.Provider.Execute<int>(expr), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			return await Task.Run(() => currentSource.Provider.Execute<int>(expr), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
 		/// <summary>
@@ -1056,7 +1507,7 @@ namespace LinqToDB
 			if (currentSource is IQueryProviderAsync query)
 				return await query.ExecuteAsync<object>(expr, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-			return await TaskEx.Run(() => currentSource.Provider.Execute<object>(expr), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			return await Task.Run(() => currentSource.Provider.Execute<object>(expr), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
 		/// <summary>
@@ -1150,6 +1601,28 @@ namespace LinqToDB
 					Expression.Constant(null, typeof(IDataContext)), query.Expression));
 
 			return new ValueInsertable<T>(q);
+		}
+
+		/// <summary>
+		/// Starts insert operation LINQ query definition.
+		/// </summary>
+		/// <typeparam name="T">Target table mapping class.</typeparam>
+		/// <param name="source">Target table.</param>
+		/// <returns>Insertable source query.</returns>
+		public static IValueInsertable<T> AsValueInsertable<T>(this ITable<T> source)
+			where T : notnull
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+
+			var query = currentSource.Provider.CreateQuery<T>(
+				Expression.Call(
+					null,
+					Methods.LinqToDB.Insert.T.AsValueInsertable.MakeGenericMethod(typeof(T)),
+					currentSource.Expression));
+
+			return new ValueInsertable<T>(query);
 		}
 
 		/// <summary>
@@ -1320,7 +1793,7 @@ namespace LinqToDB
 			if (currentQueryable is IQueryProviderAsync query)
 				return await query.ExecuteAsync<int>(expr, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-			return await TaskEx.Run(() => currentQueryable.Provider.Execute<int>(expr), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			return await Task.Run(() => currentQueryable.Provider.Execute<int>(expr), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
 		/// <summary>
@@ -1408,7 +1881,7 @@ namespace LinqToDB
 			if (currentQueryable is IQueryProviderAsync query)
 				return await query.ExecuteAsync<object>(expr, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-			return await TaskEx.Run(() => currentQueryable.Provider.Execute<object>(expr), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			return await Task.Run(() => currentQueryable.Provider.Execute<object>(expr), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
 		/// <summary>
@@ -1524,7 +1997,7 @@ namespace LinqToDB
 			if (currentSource is IQueryProviderAsync query)
 				return await query.ExecuteAsync<int>(expr, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-			return await TaskEx.Run(() => currentSource.Provider.Execute<int>(expr), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			return await Task.Run(() => currentSource.Provider.Execute<int>(expr), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
 		/// <summary>
@@ -1667,7 +2140,7 @@ namespace LinqToDB
 			if (currentSource is IQueryProviderAsync query)
 				return await query.ExecuteAsync<object>(expr, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-			return await TaskEx.Run(() => currentSource.Provider.Execute<object>(expr), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			return await Task.Run(() => currentSource.Provider.Execute<object>(expr), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
 		/// <summary>
@@ -1940,7 +2413,7 @@ namespace LinqToDB
 			if (currentQueryable is IQueryProviderAsync query)
 				return await query.ExecuteAsync<int>(expr, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-			return await TaskEx.Run(() => currentQueryable.Provider.Execute<int>(expr), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			return await Task.Run(() => currentQueryable.Provider.Execute<int>(expr), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
 		/// <summary>
@@ -2035,7 +2508,7 @@ namespace LinqToDB
 			if (currentQueryable is IQueryProviderAsync query)
 				return await query.ExecuteAsync<object>(expr, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-			return await TaskEx.Run(() => currentQueryable.Provider.Execute<object>(expr), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			return await Task.Run(() => currentQueryable.Provider.Execute<object>(expr), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
 		/// <summary>
@@ -2167,7 +2640,7 @@ namespace LinqToDB
 			if (currentSource is IQueryProviderAsync query)
 				return await query.ExecuteAsync<int>(expr, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-			return await TaskEx.Run(() => currentSource.Provider.Execute<int>(expr), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			return await Task.Run(() => currentSource.Provider.Execute<int>(expr), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
 		static readonly MethodInfo _insertOrUpdateMethodInfo2 =
@@ -2256,7 +2729,7 @@ namespace LinqToDB
 			if (currentSource is IQueryProviderAsync query)
 				return await query.ExecuteAsync<int>(expr, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-			return await TaskEx.Run(() => currentSource.Provider.Execute<int>(expr), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			return await Task.Run(() => currentSource.Provider.Execute<int>(expr), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
 		#endregion
@@ -2340,7 +2813,7 @@ namespace LinqToDB
 				if (query != null)
 					return await query.ExecuteAsync<int>(expr, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-				return await TaskEx.Run(() => currentSource.Provider.Execute<int>(expr), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				return await Task.Run(() => currentSource.Provider.Execute<int>(expr), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			}
 
 			try
@@ -2348,7 +2821,7 @@ namespace LinqToDB
 				if (query != null)
 					return await query.ExecuteAsync<int>(expr, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-				return await TaskEx.Run(() => currentSource.Provider.Execute<int>(expr), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				return await Task.Run(() => currentSource.Provider.Execute<int>(expr), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			}
 			catch
 			{
@@ -2415,7 +2888,7 @@ namespace LinqToDB
 			if (currentSource is IQueryProviderAsync query)
 				return await query.ExecuteAsync<int>(expr, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-			return await TaskEx.Run(() => currentSource.Provider.Execute<int>(expr), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			return await Task.Run(() => currentSource.Provider.Execute<int>(expr), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
 		#endregion
@@ -2593,7 +3066,7 @@ namespace LinqToDB
 			if (currentSource is IQueryProviderAsync query)
 				return await query.ExecuteAsync<TSource>(expr, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-			return await TaskEx.Run(() => currentSource.Provider.Execute<TSource>(expr), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			return await Task.Run(() => currentSource.Provider.Execute<TSource>(expr), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
 		static readonly MethodInfo _elementAtOrDefaultMethodInfo = MemberHelper.MethodOf(() => ElementAtOrDefault<int>(null!,null!)).GetGenericMethodDefinition();
@@ -2650,7 +3123,7 @@ namespace LinqToDB
 			if (currentSource is IQueryProviderAsync query)
 				return await query.ExecuteAsync<TSource>(expr, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-			return await TaskEx.Run(() => currentSource.Provider.Execute<TSource>(expr), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			return await Task.Run(() => currentSource.Provider.Execute<TSource>(expr), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
 		#endregion
@@ -3151,11 +3624,11 @@ namespace LinqToDB
 		#region AsSubQuery
 
 		/// <summary>
-		/// Defines that sub-query is mandatory for <paramref name="source"/> query.
+		/// Defines that sub-query is mandatory for <paramref name="source"/> query and cannot be removed during the query optimization.
 		/// </summary>
 		/// <typeparam name="TSource">Source query record type.</typeparam>
 		/// <param name="source">Source data query.</param>
-		/// <returns>Query covered in sub-query.</returns>
+		/// <returns>Query converted into sub-query.</returns>
 		[Pure]
 		[LinqTunnel]
 		public static IQueryable<TSource> AsSubQuery<TSource>(this IQueryable<TSource> source)
@@ -3169,15 +3642,15 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Defines that sub-query is mandatory for <paramref name="grouping"/> query.
+		/// Defines that sub-query is mandatory for <paramref name="grouping"/> query and cannot be removed during the query optimization.
 		/// </summary>
 		/// <typeparam name="TKey">The type of the key of the <see cref="IGrouping{TKey, TElement}" />.</typeparam>
 		/// <typeparam name="TElement">The type of the values in the <see cref="IGrouping{TKey, TElement}" />.</typeparam>
 		/// <param name="grouping">Source data query.</param>
-		/// <returns>Query covered in sub-query.</returns>
+		/// <returns>Query converted into sub-query.</returns>
 		[Pure]
 		[LinqTunnel]
-		public static IQueryable<TKey> AsSubQuery<TKey, TElement>(this IQueryable<IGrouping<TKey, TElement>> grouping)
+		public static IQueryable<TKey> AsSubQuery<TKey, TElement>(this IQueryable<IGrouping<TKey,TElement>> grouping)
 		{
 			if (grouping == null) throw new ArgumentNullException(nameof(grouping));
 
@@ -3185,6 +3658,88 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(AsSubQuery, grouping), grouping.Expression));
+		}
+
+		/// <summary>
+		/// Defines that sub-query is mandatory for <paramref name="source"/> query and cannot be removed during the query optimization.
+		/// </summary>
+		/// <typeparam name="TSource">Source query record type.</typeparam>
+		/// <param name="source">Source data query.</param>
+		/// <param name="queryName">Query name.</param>
+		/// <returns>Query converted into sub-query.</returns>
+		[Pure]
+		[LinqTunnel]
+		public static IQueryable<TSource> AsSubQuery<TSource>(this IQueryable<TSource> source, [SqlQueryDependent] string queryName)
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+
+			return source.Provider.CreateQuery<TSource>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(AsSubQuery, source, queryName), source.Expression, Expression.Constant(queryName)));
+		}
+
+		/// <summary>
+		/// Defines that sub-query is mandatory for <paramref name="grouping"/> query and cannot be removed during the query optimization.
+		/// </summary>
+		/// <typeparam name="TKey">The type of the key of the <see cref="IGrouping{TKey, TElement}" />.</typeparam>
+		/// <typeparam name="TElement">The type of the values in the <see cref="IGrouping{TKey, TElement}" />.</typeparam>
+		/// <param name="grouping">Source data query.</param>
+		/// <param name="queryName">Query name.</param>
+		/// <returns>Query converted into sub-query.</returns>
+		[Pure]
+		[LinqTunnel]
+		public static IQueryable<TKey> AsSubQuery<TKey, TElement>(this IQueryable<IGrouping<TKey,TElement>> grouping, [SqlQueryDependent] string queryName)
+		{
+			if (grouping == null) throw new ArgumentNullException(nameof(grouping));
+
+			return grouping.Provider.CreateQuery<TKey>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(AsSubQuery, grouping, queryName), grouping.Expression, Expression.Constant(queryName)));
+		}
+
+		#endregion
+
+		#region QueryName
+
+		/// <summary>
+		/// Defines query name for specified sub-query. The query cannot be removed during the query optimization.
+		/// </summary>
+		/// <typeparam name="TSource">Source query record type.</typeparam>
+		/// <param name="source">Source data query.</param>
+		/// <param name="queryName">Query name.</param>
+		/// <returns>Query converted into sub-query.</returns>
+		[Pure]
+		[LinqTunnel]
+		public static IQueryable<TSource> QueryName<TSource>(this IQueryable<TSource> source, [SqlQueryDependent] string queryName)
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+
+			return source.Provider.CreateQuery<TSource>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(QueryName, source, queryName), source.Expression, Expression.Constant(queryName)));
+		}
+
+		/// <summary>
+		/// Defines query name for specified sub-query. The query cannot be removed during the query optimization.
+		/// </summary>
+		/// <typeparam name="TKey">The type of the key of the <see cref="IGrouping{TKey, TElement}" />.</typeparam>
+		/// <typeparam name="TElement">The type of the values in the <see cref="IGrouping{TKey, TElement}" />.</typeparam>
+		/// <param name="grouping">Source data query.</param>
+		/// <param name="queryName">Query name.</param>
+		/// <returns>Query converted into sub-query.</returns>
+		[Pure]
+		[LinqTunnel]
+		public static IQueryable<TKey> QueryName<TKey,TElement>(this IQueryable<IGrouping<TKey,TElement>> grouping, [SqlQueryDependent] string queryName)
+		{
+			if (grouping == null) throw new ArgumentNullException(nameof(grouping));
+
+			return grouping.Provider.CreateQuery<TKey>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(QueryName, grouping, queryName), grouping.Expression, Expression.Constant(queryName)));
 		}
 
 		#endregion
@@ -3246,7 +3801,7 @@ namespace LinqToDB
 		/// <typeparam name="TKey">Key type.</typeparam>
 		/// <param name="source">Source data query.</param>
 		/// <param name="keySelector">A function to specify which fields are unique.</param>
-		/// <returns>Query covered in sub-query.</returns>
+		/// <returns>Query converted into sub-query.</returns>
 		[Pure]
 		[LinqTunnel]
 		public static IQueryable<TSource> HasUniqueKey<TSource, TKey>(
@@ -3384,7 +3939,7 @@ namespace LinqToDB
 		/// Gets or sets callback for preprocessing query before execution.
 		/// Useful for intercepting queries.
 		/// </summary>
-		public static Func<IQueryable, IQueryable>? ProcessSourceQueryable { get; set; }
+		public static Func<IQueryable,IQueryable>? ProcessSourceQueryable { get; set; }
 
 		public static IExtensionsAdapter? ExtensionsAdapter { get; set; }
 

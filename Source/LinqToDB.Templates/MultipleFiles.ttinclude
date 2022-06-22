@@ -1,5 +1,4 @@
 <#@ assembly name="System.Core"                   #>
-<#@ assembly name="EnvDTE"                        #>
 <#@ import namespace="System.Collections.Generic" #>
 <#@ import namespace="System.IO"                  #>
 <#@ import namespace="System.Linq"                #>

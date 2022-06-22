@@ -1,35 +1,24 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Data;
+using System.Data.Common;
 using System.Reflection;
 
 using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.Firebird
 {
+	using Configuration;
 	using Data;
-	using LinqToDB.Configuration;
 
 	[PublicAPI]
 	public static class FirebirdTools
 	{
-		private static readonly Lazy<IDataProvider> _firebirdDataProvider = new Lazy<IDataProvider>(() =>
-		{
-			var provider = new FirebirdDataProvider();
-
-			DataConnection.AddDataProvider(provider);
-
-			return provider;
-		}, true);
+		static readonly Lazy<IDataProvider> _firebirdDataProvider = DataConnection.CreateDataProvider<FirebirdDataProvider>();
 
 		internal static IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)
 		{
-			if (css.ProviderName == ProviderName.Firebird
-				|| css.ProviderName == FirebirdProviderAdapter.ClientNamespace
-				|| css.Name.Contains("Firebird"))
-			{
+			if (css.ProviderName is ProviderName.Firebird or FirebirdProviderAdapter.ClientNamespace ||
+			    css.Name.Contains("Firebird"))
 				return _firebirdDataProvider.Value;
-			}
 
 			return null;
 		}
@@ -42,13 +31,13 @@ namespace LinqToDB.DataProvider.Firebird
 		public static void ResolveFirebird(string path)
 		{
 			if (path == null) throw new ArgumentNullException(nameof(path));
-			new AssemblyResolver(path, FirebirdProviderAdapter.AssemblyName);
+			_ = new AssemblyResolver(path, FirebirdProviderAdapter.AssemblyName);
 		}
 
 		public static void ResolveFirebird(Assembly assembly)
 		{
 			if (assembly == null) throw new ArgumentNullException(nameof(assembly));
-			new AssemblyResolver(assembly, FirebirdProviderAdapter.AssemblyName);
+			_ = new AssemblyResolver(assembly, FirebirdProviderAdapter.AssemblyName);
 		}
 
 		#region CreateDataConnection
@@ -58,12 +47,12 @@ namespace LinqToDB.DataProvider.Firebird
 			return new DataConnection(_firebirdDataProvider.Value, connectionString);
 		}
 
-		public static DataConnection CreateDataConnection(IDbConnection connection)
+		public static DataConnection CreateDataConnection(DbConnection connection)
 		{
 			return new DataConnection(_firebirdDataProvider.Value, connection);
 		}
 
-		public static DataConnection CreateDataConnection(IDbTransaction transaction)
+		public static DataConnection CreateDataConnection(DbTransaction transaction)
 		{
 			return new DataConnection(_firebirdDataProvider.Value, transaction);
 		}
@@ -74,28 +63,11 @@ namespace LinqToDB.DataProvider.Firebird
 
 		public  static BulkCopyType  DefaultBulkCopyType { get; set; } = BulkCopyType.MultipleRows;
 
-		[Obsolete("Please use the BulkCopy extension methods within DataConnectionExtensions")]
-		public static BulkCopyRowsCopied MultipleRowsCopy<T>(
-			DataConnection              dataConnection,
-			IEnumerable<T>              source,
-			int                         maxBatchSize       = 1000,
-			Action<BulkCopyRowsCopied>? rowsCopiedCallback = null)
-			where T : class
-		{
-			return dataConnection.BulkCopy(
-				new BulkCopyOptions
-				{
-					BulkCopyType       = BulkCopyType.MultipleRows,
-					MaxBatchSize       = maxBatchSize,
-					RowsCopiedCallback = rowsCopiedCallback,
-				}, source);
-		}
-
 		#endregion
 
 		#region ClearAllPools
 
-		public static void ClearAllPools() => FirebirdProviderAdapter.GetInstance().ClearAllPools();
+		public static void ClearAllPools() => FirebirdProviderAdapter.Instance.ClearAllPools();
 
 		#endregion
 	}

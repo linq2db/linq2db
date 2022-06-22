@@ -10,20 +10,17 @@ using System.Text;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.Data.DbCommandProcessor;
+using LinqToDB.Data.RetryPolicy;
 using LinqToDB.DataProvider.Informix;
 using LinqToDB.Expressions;
 using LinqToDB.Extensions;
+using LinqToDB.Interceptors;
 using LinqToDB.Mapping;
 using LinqToDB.Reflection;
 using LinqToDB.Tools;
 using LinqToDB.Tools.Comparers;
 
-#if NET472
-using System.ServiceModel;
-using System.ServiceModel.Description;
-using LinqToDB.ServiceModel;
-#endif
+using Tests.Remote.ServerContainer;
 
 using NUnit.Framework;
 using NUnit.Framework.Internal;
@@ -44,11 +41,19 @@ namespace Tests
 			public static readonly DateTime DateTimeUtc                   = new DateTime(2020, 2, 29, 17, 54, 55, 123, DateTimeKind.Utc).AddTicks(1234);
 			public static readonly DateTime DateTime4Utc                  = new DateTime(2020, 2, 29, 17, 54, 55, 123, DateTimeKind.Utc).AddTicks(1000);
 			public static readonly DateTime Date                          = new (2020, 2, 29);
+			public static readonly DateTime DateAmbiguous                 = new (2020, 8, 9);
+#if NET6_0_OR_GREATER
+			public static readonly DateOnly DateOnly                      = new (2020, 2, 29);
+			public static readonly DateOnly DateOnlyAmbiguous             = new (2020, 8, 9);
+#endif
 			public static readonly TimeSpan TimeOfDay                     = new TimeSpan(0, 17, 54, 55, 123).Add(TimeSpan.FromTicks(1234));
 			public static readonly TimeSpan TimeOfDay4                    = new TimeSpan(0, 17, 54, 55, 123).Add(TimeSpan.FromTicks(1000));
 			public static readonly Guid     Guid1                         = new ("bc7b663d-0fde-4327-8f92-5d8cc3a11d11");
 			public static readonly Guid     Guid2                         = new ("a948600d-de21-4f74-8ac2-9516b287076e");
 			public static readonly Guid     Guid3                         = new ("bd3973a5-4323-4dd8-9f4f-df9f93e2a627");
+			public static readonly Guid     Guid4                         = new("76b1c875-2287-4b82-a23b-7967c5eafed8");
+			public static readonly Guid     Guid5                         = new("656606a4-6e36-4431-add6-85f886a1c7c2");
+			public static readonly Guid     Guid6                         = new("66aa9df9-260f-4a2b-ac50-9ca8ce7ad725");
 
 			public static byte[] Binary(int size)
 			{
@@ -66,6 +71,8 @@ namespace Tests
 
 		private static string? _baselinesPath;
 
+		protected static string? LastQuery;
+
 		static TestBase()
 		{
 			TestContext.WriteLine("Tests started in {0}...", Environment.CurrentDirectory);
@@ -77,6 +84,9 @@ namespace Tests
 			DataConnection.TurnTraceSwitchOn();
 			DataConnection.WriteTraceLine = (message, name, level) =>
 			{
+				if (message?.StartsWith("BeforeExecute") == true)
+					LastQuery = message;
+
 				var ctx   = CustomTestContext.Get();
 
 				if (ctx.Get<bool>(CustomTestContext.BASELINE_DISABLED) != true)
@@ -102,7 +112,8 @@ namespace Tests
 						ctx.Set(CustomTestContext.TRACE, trace);
 					}
 
-					trace.AppendLine($"{name}: {message}");
+					lock (trace)
+						trace.AppendLine($"{name}: {message}");
 
 					if (traceCount < TRACES_LIMIT || level == TraceLevel.Error)
 					{
@@ -115,13 +126,12 @@ namespace Tests
 				}
 			};
 
-			// Configuration.RetryPolicy.Factory = db => new Retry();
-
 			Configuration.Linq.TraceMapperExpression = false;
 			// Configuration.Linq.GenerateExpressionTest  = true;
-			var assemblyPath = typeof(TestBase).Assembly.GetPath()!;
+			var assemblyPath = Path.GetDirectoryName(typeof(TestBase).Assembly.Location)!;
 
 #if NET472
+			// this is needed for machine without GAC-ed sql types (e.g. machine without SQL Server installed or CI)
 			try
 			{
 				SqlServerTypes.Utilities.LoadNativeAssemblies(assemblyPath);
@@ -146,16 +156,13 @@ namespace Tests
 			var userDataProvidersJson =
 				File.Exists(userDataProvidersJsonFile) ? File.ReadAllText(userDataProvidersJsonFile) : null;
 
-#if NETCOREAPP2_1
-			var configName = "CORE21";
-#elif NETCOREAPP3_1
+#if NETCOREAPP3_1
 			var configName = "CORE31";
-#elif NET5_0
-			var configName = "NET50";
+#elif NET6_0
+			var configName = "NET60";
 #elif NET472
 			var configName = "NET472";
 #else
-			var configName = "";
 #error Unknown framework
 #endif
 
@@ -163,7 +170,15 @@ namespace Tests
 			TestContext.WriteLine("Azure configuration detected.");
 			configName += ".Azure";
 #endif
+
+#if !DEBUG
+			Console.WriteLine("UserDataProviders.json:");
+			Console.WriteLine(userDataProvidersJson);
+#endif
+
 			var testSettings = SettingsReader.Deserialize(configName, dataProvidersJson, userDataProvidersJson);
+
+			testSettings.Connections ??= new();
 
 			CopyDatabases();
 
@@ -207,10 +222,13 @@ namespace Tests
 				TestContext.WriteLine(str);
 				TestExternals.Log(str);
 
-				DataConnection.AddOrSetConfiguration(
-					provider.Key,
-					provider.Value.ConnectionString,
-					provider.Value.Provider ?? "");
+				if (provider.Value.ConnectionString != null)
+				{
+					DataConnection.AddOrSetConfiguration(
+						provider.Key,
+						provider.Value.ConnectionString,
+						provider.Value.Provider ?? "");
+				}
 			}
 #endif
 
@@ -225,7 +243,7 @@ namespace Tests
 
 			DefaultProvider = testSettings.DefaultConfiguration;
 
-			if (!DefaultProvider.IsNullOrEmpty())
+			if (!string.IsNullOrEmpty(DefaultProvider))
 			{
 				DataConnection.DefaultConfiguration = DefaultProvider;
 #if !NET472
@@ -234,7 +252,7 @@ namespace Tests
 			}
 
 #if NET472
-			LinqService.TypeResolver = str =>
+			LinqToDB.Remote.LinqService.TypeResolver = str =>
 			{
 				return str switch
 				{
@@ -314,6 +332,7 @@ namespace Tests
 			var fileName = Path.GetFullPath(Path.Combine(basePath, findFileName));
 
 			string? path = basePath;
+
 			while (!File.Exists(fileName))
 			{
 				TestContext.WriteLine($"File not found: {fileName}");
@@ -331,136 +350,68 @@ namespace Tests
 			return fileName;
 		}
 
-#if NET472
-		const           int          IP = 22654;
-		static          bool         _isHostOpen;
-		static          LinqService? _service;
-		static readonly object       _syncRoot = new ();
+#if NETFRAMEWORK
+		public static          IServerContainer  _serverContainer  = new WcfServerContainer();
+#else
+		public static          IServerContainer  _serverContainer = new GrpcServerContainer();
 #endif
-
-		static void OpenHost(MappingSchema? ms)
-		{
-#if NET472
-			if (_isHostOpen)
-			{
-				_service!.MappingSchema = ms;
-				return;
-			}
-
-			ServiceHost host;
-
-			lock (_syncRoot)
-			{
-				if (_isHostOpen)
-				{
-					_service!.MappingSchema = ms;
-					return;
-				}
-
-				host        = new ServiceHost(_service = new LinqService(ms) { AllowUpdates = true }, new Uri("net.tcp://localhost:" + (IP + TestExternals.RunID)));
-				_isHostOpen = true;
-			}
-
-			host.Description.Behaviors.Add(new ServiceMetadataBehavior());
-			host.Description.Behaviors.Find<ServiceDebugBehavior>().IncludeExceptionDetailInFaults = true;
-			host.AddServiceEndpoint(typeof(IMetadataExchange), MetadataExchangeBindings.CreateMexTcpBinding(), "mex");
-			host.AddServiceEndpoint(
-				typeof(ILinqService),
-				new NetTcpBinding(SecurityMode.None)
-				{
-					MaxReceivedMessageSize = 10000000,
-					MaxBufferPoolSize      = 10000000,
-					MaxBufferSize          = 10000000,
-					CloseTimeout           = new TimeSpan(00, 01, 00),
-					OpenTimeout            = new TimeSpan(00, 01, 00),
-					ReceiveTimeout         = new TimeSpan(00, 10, 00),
-					SendTimeout            = new TimeSpan(00, 10, 00),
-				},
-				"LinqOverWCF");
-
-			host.Open();
-
-			TestExternals.Log($"host opened, Address : {host.BaseAddresses[0]}");
-#endif
-		}
 
 		public static readonly HashSet<string> UserProviders;
 		public static readonly string?         DefaultProvider;
 		public static readonly HashSet<string> SkipCategories;
 
-		public static readonly List<string> Providers = CustomizationSupport.Interceptor.GetSupportedProviders(new List<string>
+		public static readonly IReadOnlyList<string> Providers = CustomizationSupport.Interceptor.GetSupportedProviders(new List<string>
 		{
 #if NET472
+			// test providers with .net framework provider only
 			ProviderName.Sybase,
-			ProviderName.OracleNative,
-			TestProvName.Oracle11Native,
+			TestProvName.AllOracleNative,
 			ProviderName.Informix,
 #endif
+			// multi-tfm providers
 			ProviderName.SqlCe,
-			ProviderName.Access,
-			ProviderName.AccessOdbc,
+			TestProvName.AllAccess,
 			ProviderName.DB2,
 			ProviderName.InformixDB2,
-			ProviderName.SQLiteClassic,
-			TestProvName.SQLiteClassicMiniProfilerMapped,
-			TestProvName.SQLiteClassicMiniProfilerUnmapped,
+			TestProvName.AllSQLite,
+			TestProvName.AllOracleManaged,
+			TestProvName.AllOracleDevart,
 			ProviderName.SybaseManaged,
-			ProviderName.OracleManaged,
-			TestProvName.Oracle11Managed,
-			ProviderName.Firebird,
-			TestProvName.Firebird3,
-			TestProvName.Firebird4,
-			ProviderName.SqlServer2008,
-			ProviderName.SqlServer2012,
-			ProviderName.SqlServer2014,
-			ProviderName.SqlServer2016,
-			ProviderName.SqlServer2017,
-			TestProvName.SqlServer2019,
-			TestProvName.SqlServer2019SequentialAccess,
-			TestProvName.SqlServer2019FastExpressionCompiler,
-			TestProvName.SqlServerContained,
-			ProviderName.SqlServer2000,
-			ProviderName.SqlServer2005,
-			TestProvName.SqlAzure,
-			ProviderName.PostgreSQL,
-			ProviderName.PostgreSQL92,
-			ProviderName.PostgreSQL93,
-			ProviderName.PostgreSQL95,
-			TestProvName.PostgreSQL10,
-			TestProvName.PostgreSQL11,
-			TestProvName.PostgreSQL12,
-			TestProvName.PostgreSQL13,
-			ProviderName.MySql,
-			ProviderName.MySqlConnector,
-			TestProvName.MySql55,
-			TestProvName.MariaDB,
-			ProviderName.SQLiteMS,
-			ProviderName.SapHanaNative,
-			ProviderName.SapHanaOdbc
-		}).ToList();
+			TestProvName.AllFirebird,
+			TestProvName.AllSqlServer,
+			TestProvName.AllPostgreSQL,
+			TestProvName.AllMySql,
+			TestProvName.AllSapHana,
+		}.SplitAll()).ToList();
 
-		protected ITestDataContext GetDataContext(string configuration, MappingSchema? ms = null, bool testLinqService = true)
+		private const string LinqServiceSuffix = ".LinqService";
+
+		protected ITestDataContext GetDataContext(
+			string         configuration,
+			MappingSchema? ms                       = null,
+			bool           testLinqService          = true,
+			IInterceptor?  interceptor              = null,
+			bool           suppressSequentialAccess = false)
+		{
+			if (!configuration.EndsWith(LinqServiceSuffix))
+			{
+				return GetDataConnection(configuration, ms, interceptor, suppressSequentialAccess: suppressSequentialAccess);
+			}
+
+			var str = configuration.Substring(0, configuration.Length - LinqServiceSuffix.Length);
+			return _serverContainer.Prepare(ms, interceptor, suppressSequentialAccess, str);
+		}
+
+		protected TestDataConnection GetDataConnection(
+			string         configuration,
+			MappingSchema? ms                       = null,
+			IInterceptor?  interceptor              = null,
+			IRetryPolicy?  retryPolicy              = null,
+			bool           suppressSequentialAccess = false)
 		{
 			if (configuration.EndsWith(".LinqService"))
 			{
-#if NET472
-				OpenHost(ms);
-
-				var str = configuration.Substring(0, configuration.Length - ".LinqService".Length);
-
-				var dx  = testLinqService
-					? new ServiceModel.TestLinqServiceDataContext(new LinqService(ms) { AllowUpdates = true }) { Configuration = str }
-					: new TestServiceModelDataContext(IP + TestExternals.RunID) { Configuration = str } as RemoteDataContextBase;
-
-				Debug.WriteLine(((IDataContext)dx).ContextID, "Provider ");
-
-				if (ms != null)
-					dx.MappingSchema = MappingSchema.CombineSchemas(dx.MappingSchema, ms);
-
-				return (ITestDataContext)dx;
-#else
-				configuration = configuration.Substring(0, configuration.Length - ".LinqService".Length);
-#endif
+				throw new InvalidOperationException($"Call {nameof(GetDataContext)} for remote context creation");
 			}
 
 			Debug.WriteLine(configuration, "Provider ");
@@ -471,10 +422,21 @@ namespace Tests
 
 			// add extra mapping schema to not share mappers with other sql2017/2019 providers
 			// use same schema to use cache within test provider scope
-			if (configuration == TestProvName.SqlServer2019SequentialAccess)
+			if (configuration.IsAnyOf(TestProvName.AllSqlServerSequentialAccess))
+			{
+				if (!suppressSequentialAccess)
+					res.AddInterceptor(SequentialAccessCommandInterceptor.Instance);
+
 				res.AddMappingSchema(_sequentialAccessSchema);
-			else if (configuration == TestProvName.SqlServer2019FastExpressionCompiler)
-				res.AddMappingSchema(_fecSchema);
+			}
+			//else if (configuration == TestProvName.SqlServer2019FastExpressionCompiler)
+			//	res.AddMappingSchema(_fecSchema);
+
+			if (interceptor != null)
+				res.AddInterceptor(interceptor);
+
+			if (retryPolicy != null)
+				res.RetryPolicy = retryPolicy;
 
 			return res;
 		}
@@ -492,10 +454,7 @@ namespace Tests
 				case ProviderName.Informix:
 					token = '?'; break;
 				case ProviderName.SapHanaNative:
-				case TestProvName.Oracle11Managed:
-				case TestProvName.Oracle11Native:
-				case ProviderName.OracleManaged:
-				case ProviderName.OracleNative:
+				case string when context.IsAnyOf(TestProvName.AllOracle):
 					token = ':'; break;
 			}
 
@@ -539,6 +498,7 @@ namespace Tests
 			{
 				if (_types == null)
 					using (new DisableLogging())
+					using (new DisableBaseline("Default Database"))
 					using (var db = new TestDataConnection())
 						_types = db.Types.ToList();
 
@@ -553,6 +513,7 @@ namespace Tests
 			{
 				if (_types2 == null)
 					using (new DisableLogging())
+					using (new DisableBaseline("Default Database"))
 					using (var db = new TestDataConnection())
 						_types2 = db.Types2.ToList();
 
@@ -570,6 +531,7 @@ namespace Tests
 				if (_person == null)
 				{
 					using (new DisableLogging())
+					using (new DisableBaseline("Default Database"))
 					using (var db = new TestDataConnection())
 						_person = db.Person.ToList();
 
@@ -589,6 +551,7 @@ namespace Tests
 				if (_patient == null)
 				{
 					using (new DisableLogging())
+					using (new DisableBaseline("Default Database"))
 					using (var db = new TestDataConnection())
 						_patient = db.Patient.ToList();
 
@@ -608,6 +571,7 @@ namespace Tests
 				if (_doctor == null)
 				{
 					using (new DisableLogging())
+					using (new DisableBaseline("Default Database"))
 					using (var db = new TestDataConnection())
 						_doctor = db.Doctor.ToList();
 				}
@@ -625,6 +589,7 @@ namespace Tests
 			{
 				if (_parent == null)
 					using (new DisableLogging())
+					using (new DisableBaseline("Default Database"))
 					using (var db = new TestDataConnection())
 					{
 						_parent = db.Parent.ToList();
@@ -716,6 +681,7 @@ namespace Tests
 			{
 				if (_child == null)
 					using (new DisableLogging())
+					using (new DisableBaseline("Default Database"))
 					using (var db = new TestDataConnection())
 					{
 						db.Child.Delete(c => c.ParentID >= 1000);
@@ -743,6 +709,7 @@ namespace Tests
 			{
 				if (_grandChild == null)
 					using (new DisableLogging())
+					using (new DisableBaseline("Default Database"))
 					using (var db = new TestDataConnection())
 					{
 						_grandChild = db.GrandChild.ToList();
@@ -763,6 +730,7 @@ namespace Tests
 			{
 				if (_grandChild1 == null)
 					using (new DisableLogging())
+					using (new DisableBaseline("Default Database"))
 					using (var db = new TestDataConnection())
 					{
 						_grandChild1 = db.GrandChild1.ToList();
@@ -790,6 +758,7 @@ namespace Tests
 				if (_inheritanceParent == null)
 				{
 					using (new DisableLogging())
+					using (new DisableBaseline("Default Database"))
 					using (var db = new TestDataConnection())
 						_inheritanceParent = db.InheritanceParent.ToList();
 				}
@@ -806,6 +775,7 @@ namespace Tests
 				if (_inheritanceChild == null)
 				{
 					using (new DisableLogging())
+					using (new DisableBaseline("Default Database"))
 					using (var db = new TestDataConnection())
 						_inheritanceChild = db.InheritanceChild.LoadWith(_ => _.Parent).ToList();
 				}
@@ -839,6 +809,7 @@ namespace Tests
 				{
 					if (_category == null)
 						using (new DisableLogging())
+						using (new DisableBaseline("Default Database"))
 						using (var db = new NorthwindDB(_context))
 							_category = db.Category.ToList();
 					return _category;
@@ -853,6 +824,7 @@ namespace Tests
 					if (_customer == null)
 					{
 						using (new DisableLogging())
+						using (new DisableBaseline("Default Database"))
 						using (var db = new NorthwindDB(_context))
 							_customer = db.Customer.ToList();
 
@@ -872,6 +844,7 @@ namespace Tests
 					if (_employee == null)
 					{
 						using (new DisableLogging())
+						using (new DisableBaseline("Default Database"))
 						using (var db = new NorthwindDB(_context))
 						{
 							_employee = db.Employee.ToList();
@@ -895,6 +868,7 @@ namespace Tests
 				{
 					if (_employeeTerritory == null)
 						using (new DisableLogging())
+						using (new DisableBaseline("Default Database"))
 						using (var db = new NorthwindDB(_context))
 							_employeeTerritory = db.EmployeeTerritory.ToList();
 					return _employeeTerritory;
@@ -908,6 +882,7 @@ namespace Tests
 				{
 					if (_orderDetail == null)
 						using (new DisableLogging())
+						using (new DisableBaseline("Default Database"))
 						using (var db = new NorthwindDB(_context))
 							_orderDetail = db.OrderDetail.ToList();
 					return _orderDetail;
@@ -922,6 +897,7 @@ namespace Tests
 					if (_order == null)
 					{
 						using (new DisableLogging())
+						using (new DisableBaseline("Default Database"))
 						using (var db = new NorthwindDB(_context))
 							_order = db.Order.ToList();
 
@@ -943,6 +919,7 @@ namespace Tests
 				{
 					if (_product == null)
 						using (new DisableLogging())
+						using (new DisableBaseline("Default Database"))
 						using (var db = new NorthwindDB(_context))
 							_product = db.Product.ToList();
 
@@ -963,6 +940,7 @@ namespace Tests
 				{
 					if (_region == null)
 						using (new DisableLogging())
+						using (new DisableBaseline("Default Database"))
 						using (var db = new NorthwindDB(_context))
 							_region = db.Region.ToList();
 					return _region;
@@ -976,6 +954,7 @@ namespace Tests
 				{
 					if (_shipper == null)
 						using (new DisableLogging())
+						using (new DisableBaseline("Default Database"))
 						using (var db = new NorthwindDB(_context))
 							_shipper = db.Shipper.ToList();
 					return _shipper;
@@ -989,6 +968,7 @@ namespace Tests
 				{
 					if (_supplier == null)
 						using (new DisableLogging())
+						using (new DisableBaseline("Default Database"))
 						using (var db = new NorthwindDB(_context))
 							_supplier = db.Supplier.ToList();
 					return _supplier;
@@ -1002,6 +982,7 @@ namespace Tests
 				{
 					if (_territory == null)
 						using (new DisableLogging())
+						using (new DisableBaseline("Default Database"))
 						using (var db = new NorthwindDB(_context))
 							_territory = db.Territory.ToList();
 					return _territory;
@@ -1013,7 +994,7 @@ namespace Tests
 
 		protected IEnumerable<LinqDataTypes2> AdjustExpectedData(ITestDataContext db, IEnumerable<LinqDataTypes2> data)
 		{
-			if (db.ProviderNeedsTimeFix(db.ContextID))
+			if (db.ProviderNeedsTimeFix(db.ContextName))
 			{
 				var adjusted = new List<LinqDataTypes2>();
 				foreach (var record in data)
@@ -1053,7 +1034,11 @@ namespace Tests
 			// on CI we test two configurations:
 			// linux/mac: db is case sensitive, catalog is case insensitive
 			// windows: both db and catalog are case sensitive
-			return GetProviderName(context, out var _) == TestProvName.SqlServer2019;
+			var provider = GetProviderName(context, out var _);
+
+			return provider.IsAnyOf(TestProvName.AllSqlServerCS)
+				|| CustomizationSupport.Interceptor.IsCaseSensitiveDB(provider)
+				;
 		}
 
 		/// <summary>
@@ -1069,14 +1054,15 @@ namespace Tests
 			// on CI we test two configurations:
 			// linux/mac: db is case sensitive, catalog is case insensitive
 			// windows: both db and catalog are case sensitive
-			return provider == TestProvName.SqlServer2019
-				|| provider == ProviderName.DB2
-				|| provider.StartsWith(ProviderName.Firebird)
-				|| provider.StartsWith(ProviderName.Informix)
-				|| provider.StartsWith(ProviderName.Oracle)
-				|| provider.StartsWith(ProviderName.PostgreSQL)
-				|| provider.StartsWith(ProviderName.SapHana)
-				|| provider.StartsWith(ProviderName.Sybase)
+			return provider.IsAnyOf(TestProvName.AllSqlServerCS)
+				|| provider.IsAnyOf(ProviderName.DB2)
+				|| provider.IsAnyOf(TestProvName.AllFirebird)
+				|| provider.IsAnyOf(TestProvName.AllInformix)
+				|| provider.IsAnyOf(TestProvName.AllOracle)
+				|| provider.IsAnyOf(TestProvName.AllPostgreSQL)
+				|| provider.IsAnyOf(TestProvName.AllSapHana)
+				|| provider.IsAnyOf(TestProvName.AllSybase)
+				|| CustomizationSupport.Interceptor.IsCaseSensitiveComparison(provider)
 				;
 		}
 
@@ -1097,14 +1083,12 @@ namespace Tests
 			// SAP HANA
 			// SQL CE
 			// Sybase ASE
-			return provider == TestProvName.SqlAzure
-				|| provider == TestProvName.MariaDB
-				|| provider == TestProvName.AllOracleNative
-				|| provider.StartsWith(ProviderName.SqlServer)
-				|| provider.StartsWith(ProviderName.Firebird)
-				|| provider.StartsWith(ProviderName.MySql)
+			return provider.IsAnyOf(TestProvName.AllSqlServer)
+				|| provider.IsAnyOf(TestProvName.AllFirebird)
+				|| provider.IsAnyOf(TestProvName.AllMySql)
 				// while it is configured, LIKE in SQLite is case-insensitive (for ASCII only though)
 				//|| provider.StartsWith(ProviderName.SQLite)
+				|| CustomizationSupport.Interceptor.IsCollatedTableConfigured(provider)
 				;
 		}
 
@@ -1240,7 +1224,7 @@ namespace Tests
 				{
 					var mc = (MethodCallExpression)e;
 
-					if (mc.IsSameGenericMethod(Methods.LinqToDB.AsSubQuery))
+					if (mc.Method.IsGenericMethod && mc.Method.GetGenericMethodDefinition() == Methods.LinqToDB.AsSubQuery)
 						return mc.Arguments[0];
 
 					if (typeof(ITable<>).IsSameOrParentOf(mc.Type))
@@ -1253,6 +1237,7 @@ namespace Tests
 							{
 								var newCall = LinqToDB.Common.TypeHelper.MakeMethodCall(Methods.Queryable.ToArray, mc);
 								using (new DisableLogging())
+								using (new DisableBaseline("test infrastructure"))
 								{
 									var items = newCall.EvaluateExpression();
 									itemsExpression = Expression.Constant(items, entityType.MakeArrayType());
@@ -1306,21 +1291,9 @@ namespace Tests
 		public static string GetTempTableName(string tableName, string context)
 		{
 			var finalTableName = tableName;
-			switch (GetProviderName(context, out var _))
+			switch (context)
 			{
-				case TestProvName.SqlAzure                           :
-				case ProviderName.SqlServer                          :
-				case ProviderName.SqlServer2000                      :
-				case ProviderName.SqlServer2005                      :
-				case ProviderName.SqlServer2008                      :
-				case ProviderName.SqlServer2012                      :
-				case ProviderName.SqlServer2014                      :
-				case ProviderName.SqlServer2016                      :
-				case ProviderName.SqlServer2017                      :
-				case TestProvName.SqlServer2019                      :
-				case TestProvName.SqlServer2019SequentialAccess      :
-				case TestProvName.SqlServer2019FastExpressionCompiler:
-				case TestProvName.SqlServerContained                 :
+				case string when context.IsAnyOf(TestProvName.AllSqlServer):
 					{
 					if (!tableName.StartsWith("#"))
 						finalTableName = "#" + tableName;
@@ -1344,12 +1317,11 @@ namespace Tests
 		{
 			// SequentialAccess-enabled provider setup
 			var (provider, _) = NUnitUtils.GetContext(TestExecutionContext.CurrentContext.CurrentTest);
-			if (provider == TestProvName.SqlServer2019SequentialAccess)
+			if (provider?.IsAnyOf(TestProvName.AllSqlServerSequentialAccess) == true)
 			{
 				Configuration.OptimizeForSequentialAccess = true;
-				DbCommandProcessorExtensions.Instance = new SequentialAccessCommandProcessor();
 			}
-			else if (provider == TestProvName.SqlServer2019FastExpressionCompiler)
+			//else if (provider == TestProvName.SqlServer2019FastExpressionCompiler)
 			{
 				//Compilation.SetExpressionCompiler(_ => ExpressionCompiler.CompileFast(_, true));
 			}
@@ -1360,17 +1332,16 @@ namespace Tests
 		{
 			// SequentialAccess-enabled provider cleanup
 			var (provider, _) = NUnitUtils.GetContext(TestExecutionContext.CurrentContext.CurrentTest);
-			if (provider == TestProvName.SqlServer2019SequentialAccess)
+			if (provider?.IsAnyOf(TestProvName.AllSqlServerSequentialAccess) == true)
 			{
 				Configuration.OptimizeForSequentialAccess = false;
-				DbCommandProcessorExtensions.Instance = null;
 			}
-			if (provider == TestProvName.SqlServer2019FastExpressionCompiler)
+			//if (provider == TestProvName.SqlServer2019FastExpressionCompiler)
 			{
 				//Compilation.SetExpressionCompiler(null);
 			}
 
-			if (provider?.Contains("SapHana") == true)
+			if (provider?.IsAnyOf(TestProvName.AllSapHana) == true)
 			{
 				using (new DisableLogging())
 				using (new DisableBaseline("isn't baseline query"))
@@ -1412,7 +1383,7 @@ namespace Tests
 
 		protected static bool IsIDSProvider(string context)
 		{
-			if (!context.Contains("Informix"))
+			if (!context.IsAnyOf(TestProvName.AllInformix))
 				return false;
 			var providerName = GetProviderName(context, out var _);
 			if (providerName == ProviderName.InformixDB2)
@@ -1436,7 +1407,7 @@ namespace Tests
 				if (!_dic.TryGetValue(context, out var list))
 				{
 					using (new DisableLogging())
-					using (new DisableLogging())
+					using (new DisableBaseline("Test Cache"))
 					using (var db = new DataConnection(context))
 					{
 						list = db.GetTable<T>().ToList();

@@ -13,7 +13,7 @@ namespace LinqToDB.DataProvider.MySql
 	{
 		/// <summary>
 		/// Settings based on https://www.jooq.org/doc/3.12/manual/sql-building/dsl-context/custom-settings/settings-inline-threshold/
-		/// MySQL supports more but realistically this might be too much already for practical cases. 
+		/// MySQL supports more but realistically this might be too much already for practical cases.
 		/// </summary>
 		protected override int               MaxParameters => 32767;
 		/// <summary>
@@ -94,11 +94,11 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			if (table.TryGetDataConnection(out var dataConnection) && _provider.Adapter.BulkCopy != null)
 			{
-				var connection = _provider.TryGetProviderConnection(dataConnection.Connection, table.DataContext.MappingSchema);
-
+				var connection  = _provider.TryGetProviderConnection(dataConnection, dataConnection.Connection);
 				var transaction = dataConnection.Transaction;
+
 				if (connection != null && transaction != null)
-					transaction = _provider.TryGetProviderTransaction(transaction, table.DataContext.MappingSchema);
+					transaction = _provider.TryGetProviderTransaction(dataConnection, transaction);
 
 				if (connection != null && (dataConnection.Transaction == null || transaction != null))
 				{
@@ -164,23 +164,13 @@ namespace LinqToDB.DataProvider.MySql
 				await TraceActionAsync(
 					dataConnection,
 					() =>
-					((
-#if !NETFRAMEWORK
-							bc.CanWriteToServerAsync2 ||
-#endif
-							bc.CanWriteToServerAsync)
-					? "INSERT ASYNC BULK " : "INSERT BULK ")
+					(bc.HasWriteToServerAsync ? "INSERT ASYNC BULK " : "INSERT BULK ")
 					+ tableName + "(" + string.Join(", ", columns.Select(x => x.ColumnName)) + Environment.NewLine,
 					async () => {
-#if !NETFRAMEWORK
-						if (bc.CanWriteToServerAsync2)
-							await bc.WriteToServerAsync2(rd, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+						if (bc.HasWriteToServerAsync)
+							await bc.WriteToServerAsync(rd, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 						else
-#endif
-							if (bc.CanWriteToServerAsync)
-								await bc.WriteToServerAsync(rd, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-							else
-								bc.WriteToServer(rd);
+							bc.WriteToServer(rd);
 						return rd.Count;
 					}).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
@@ -307,15 +297,12 @@ namespace LinqToDB.DataProvider.MySql
 
 				await TraceActionAsync(
 					dataConnection,
-					() => (bc.CanWriteToServerAsync2 || bc.CanWriteToServerAsync ? "INSERT ASYNC BULK " : "INSERT BULK ") + tableName + "(" + string.Join(", ", columns.Select(x => x.ColumnName)) + Environment.NewLine,
+					() => (bc.HasWriteToServerAsync ? "INSERT ASYNC BULK " : "INSERT BULK ") + tableName + "(" + string.Join(", ", columns.Select(x => x.ColumnName)) + Environment.NewLine,
 					async () => {
-						if (bc.CanWriteToServerAsync2)
-							await bc.WriteToServerAsync2(rd, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+						if (bc.HasWriteToServerAsync)
+							await bc.WriteToServerAsync(rd, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 						else
-							if (bc.CanWriteToServerAsync)
-								await bc.WriteToServerAsync(rd, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-							else
-								bc.WriteToServer(rd);
+							bc.WriteToServer(rd);
 						return rd.Count;
 					}).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 

@@ -10,7 +10,7 @@ namespace LinqToDB.Linq.Builder
 	class SubQueryContext : PassThroughContext
 	{
 #if DEBUG
-		public string? _sqlQueryText => SelectQuery.SqlText;
+		public string? SqlQueryText => SelectQuery.SqlText;
 #endif
 
 		public SubQueryContext(IBuildContext subQuery, SelectQuery selectQuery, bool addToSql)
@@ -93,7 +93,7 @@ namespace LinqToDB.Linq.Builder
 			return Parent?.ConvertToParentIndex(idx, this) ?? idx;
 		}
 
-		public override void SetAlias(string alias)
+		public override void SetAlias(string? alias)
 		{
 			if (alias == null)
 				return;

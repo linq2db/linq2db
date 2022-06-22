@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
-using LinqToDB.Linq;
 
 namespace LinqToDB.SqlQuery
 {
@@ -32,7 +31,7 @@ namespace LinqToDB.SqlQuery
 #endif
 
 		ISqlExpression _expression;
-		
+
 		public ISqlExpression Expression
 		{
 			get => _expression;
@@ -40,13 +39,15 @@ namespace LinqToDB.SqlQuery
 			{
 				if (_expression == value)
 					return;
+				if (value == this)
+					throw new InvalidOperationException();
 				_expression = value;
 				_hashCode   = null;
 			}
 		}
 
 		SelectQuery? _parent;
-		
+
 		public SelectQuery? Parent
 		{
 			get => _parent;
@@ -225,8 +226,7 @@ namespace LinqToDB.SqlQuery
 
 		public ISqlExpression Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
-			if (!(options.SkipColumns && Expression is SqlColumn))
-				Expression = Expression.Walk(options, context, func)!;
+			Expression = Expression.Walk(options, context, func)!;
 
 			if (options.ProcessParent)
 				Parent = (SelectQuery)func(context, Parent!);

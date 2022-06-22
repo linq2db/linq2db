@@ -43,9 +43,17 @@ namespace LinqToDB.Common
 			SetConverter<byte[],         string>     (v => Convert.ToBase64String(v));
 			SetConverter<TimeSpan,       DateTime>   (v => DateTime.MinValue + v);
 			SetConverter<DateTime,       TimeSpan>   (v => v - DateTime.MinValue);
-			SetConverter<string,         DateTime>   (v => DateTime.Parse(v, null, DateTimeStyles.NoCurrentDateDefault));
+			SetConverter<string,         DateTime>   (v => DateTime.Parse(v, CultureInfo.InvariantCulture, DateTimeStyles.NoCurrentDateDefault));
 			SetConverter<char,           bool>       (v => ToBoolean(v));
 			SetConverter<string,         bool>       (v => v.Length == 1 ? ToBoolean(v[0]) : bool.Parse(v));
+
+#if NET6_0_OR_GREATER
+			SetConverter<DateTime,       DateOnly>   (v => DateOnly.FromDateTime(v));
+			SetConverter<DateOnly,       DateTime>   (v => v.ToDateTime(TimeOnly.MinValue));
+
+			// use DateTime.Parse() because db processing may return strings that are full date/time.
+			SetConverter<string,         DateOnly>   (v => DateOnly.FromDateTime(DateTime.Parse(v, CultureInfo.InvariantCulture, DateTimeStyles.None)));
+#endif
 
 			SetConverter<byte  , BitArray>(v => new BitArray(new byte[] { v }));
 			SetConverter<sbyte , BitArray>(v => new BitArray(new byte[] { unchecked((byte)v) }));

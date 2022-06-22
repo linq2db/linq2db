@@ -2,13 +2,16 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 
 namespace LinqToDB.Common
 {
-	using System.Diagnostics.CodeAnalysis;
+	using Data;
+	using Linq;
+	using Mapping;
 	using Reflection;
 
 	/// <summary>
@@ -27,34 +30,14 @@ namespace LinqToDB.Common
 		}
 
 		/// <summary>
-		/// Shortcut extension method for <see cref="string.IsNullOrEmpty(string)"/> method.
-		/// </summary>
-		/// <param name="str">String value to check.</param>
-		/// <returns><c>true</c> if string is null or empty, <c>false</c> otherwise.</returns>
-		public static bool IsNullOrEmpty([NotNullWhen(false)] this string? str)
-		{
-			return string.IsNullOrEmpty(str);
-		}
-
-		// another reason to use those shortcuts - nullability annotations not available for string methods
-		/// <summary>
-		/// Shortcut extension method for <see cref="string.IsNullOrWhiteSpace(string)"/> method.
-		/// </summary>
-		/// <param name="str">String value to check.</param>
-		/// <returns><c>true</c> if string is null or contains only whitespace characters, <c>false</c> otherwise.</returns>
-		public static bool IsNullOrWhiteSpace([NotNullWhen(false)] this string? str)
-		{
-			return string.IsNullOrWhiteSpace(str);
-		}
-
-		/// <summary>
 		/// Returns path to original directory with provided assembly.
 		/// </summary>
 		/// <param name="assembly">Assembly.</param>
 		/// <returns>Assembly directory path.</returns>
-		public static string GetPath(this Assembly assembly)
+		internal static string GetPath(this Assembly assembly)
 		{
-			return Path.GetDirectoryName(assembly.GetFileName())!;
+			return Path.GetDirectoryName(assembly.GetFileName())
+				?? throw new InvalidOperationException($"Cannot get path to {assembly.GetFileName()}");
 		}
 
 		/// <summary>
@@ -62,38 +45,9 @@ namespace LinqToDB.Common
 		/// </summary>
 		/// <param name="assembly">Assembly.</param>
 		/// <returns>Assembly file path.</returns>
-		public static string GetFileName(this Assembly assembly)
+		internal static string GetFileName(this Assembly assembly)
 		{
-			return assembly.CodeBase!.GetPathFromUri();
-		}
-
-		/// <summary>
-		/// Converts file path in URI format to absolute path.
-		/// </summary>
-		/// <param name="uriString">File path in URI format.</param>
-		/// <returns>Absolute file path.</returns>
-		public static string GetPathFromUri(this string uriString)
-		{
-			try
-			{
-				var uri = new Uri(Uri.EscapeUriString(uriString));
-
-				var path = string.Empty;
-
-				if (uri.Host != string.Empty)
-					path = Path.DirectorySeparatorChar + uriString.Substring(uriString.ToLowerInvariant().IndexOf(uri.Host), uri.Host.Length);
-
-				path +=
-					  Uri.UnescapeDataString(uri.AbsolutePath)
-					+ Uri.UnescapeDataString(uri.Query)
-					+ Uri.UnescapeDataString(uri.Fragment);
-
-				return Path.GetFullPath(path);
-			}
-			catch (Exception ex)
-			{
-				throw new LinqToDBException("Error while trying to extract path from " + uriString + " " + ex.Message, ex);
-			}
+			return assembly.Location;
 		}
 
 		public static string ToDebugDisplay(string str)
@@ -123,10 +77,11 @@ namespace LinqToDB.Common
 			return str.Trim();
 		}
 
-		internal static void AddRange<T>(this HashSet<T> hashSet, IEnumerable<T> items)
+		internal static HashSet<T> AddRange<T>(this HashSet<T> hashSet, IEnumerable<T> items)
 		{
-			foreach (var item in items) 
+			foreach (var item in items)
 				hashSet.Add(item);
+			return hashSet;
 		}
 
 		public static IQueryable<T> CreateEmptyQuery<T>()
@@ -154,12 +109,23 @@ namespace LinqToDB.Common
 #if !NETSTANDARD2_0
 			try
 			{
-				return DbProviderFactories.GetFactory(providerFactory).GetType().Assembly;
+				if (providerFactory != null)
+					return DbProviderFactories.GetFactory(providerFactory).GetType().Assembly;
 			}
 			catch {}
 #endif
 
 			return null;
+		}
+
+		/// <summary>
+		/// Clears all linq2db caches.
+		/// </summary>
+		public static void ClearAllCaches()
+		{
+			Query.ClearCaches();
+			MappingSchema.ClearCache();
+			DataConnection.ClearObjectReaderCache();
 		}
 	}
 }

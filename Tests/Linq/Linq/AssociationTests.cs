@@ -495,9 +495,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MultipleUse([IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllPostgreSQL93Plus, TestProvName.AllOracle12)] string context)
+		public void MultipleUse([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllPostgreSQL93Plus, TestProvName.AllOracle12Plus)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var q = db.Child
 					.Select(g => new
@@ -662,8 +662,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestGenericAssociationRuntime([DataSources(TestProvName.AllAccess, TestProvName.AllSQLite)]
-			string context)
+		public void TestGenericAssociationRuntime([DataSources(TestProvName.AllAccess, TestProvName.AllSQLite)] string context)
 		{
 			var ids = new[] { 1, 5 };
 
@@ -985,11 +984,7 @@ namespace Tests.Linq
 			public int  AssociatedObjectId { get; set; }
 			public int? AssociationTypeId  { get; set; }
 
-			[Association(
-				ThisKey      = nameof(AssociationTypeId),
-				OtherKey     = nameof(Lookup.Id),
-				CanBeNull    = true,
-				Relationship = Relationship.ManyToOne)]
+			[Association(ThisKey   = nameof(AssociationTypeId), OtherKey  = nameof(Lookup.Id), CanBeNull = true)]
 			public Lookup? AssociationTypeCode { get; set; }
 
 			public static Expression<Func<Resource, IDataContext, IQueryable<User>>> UserExpression =>
@@ -1038,7 +1033,7 @@ namespace Tests.Linq
 		[Test]
 		public void Issue845Test([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllSQLite)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable<Employee>())
 			using (db.CreateLocalTable<Department>())
 			{
@@ -1052,7 +1047,7 @@ namespace Tests.Linq
 		}
 
 		class Entity1711
-		{ 
+		{
 			public long Id { get; set; }
 		}
 
@@ -1170,7 +1165,7 @@ namespace Tests.Linq
 			/// <summary>
 			/// Owner.
 			/// </summary>
-			[Association(ExpressionPredicate = nameof(OwnerPredicate), CanBeNull = true, Relationship = Relationship.ManyToOne, IsBackReference = false)]
+			[Association(ExpressionPredicate = nameof(OwnerPredicate), CanBeNull = true)]
 			public Issue2981OwnerEntity? Owner { get; set; }
 
 			public static Expression<Func<T, Issue2981OwnerEntity, bool>> OwnerPredicate { get; set; } = (T entity, Issue2981OwnerEntity owner) => entity.OwnerId == owner.Id;
@@ -1195,7 +1190,7 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 			using var t1 = db.CreateLocalTable<Issue2981Entity>(new[]
 			{
-				new Issue2981Entity {OwnerId = 1}, 
+				new Issue2981Entity {OwnerId = 1},
 				new Issue2981Entity {OwnerId = 2}
 			});
 			using var t2 = db.CreateLocalTable<Issue2981OwnerEntity>(new[] {new Issue2981OwnerEntity {Id = 1}});
@@ -1212,6 +1207,187 @@ namespace Tests.Linq
 			res[1].Id.Should().BeNull();
 		}
 
+		#endregion
+
+		#region issue 3260
+
+		[Table]
+		public class LeaveRequest
+		{
+			[Column] public virtual int                       Id                      { get; set; }
+			[Column] public virtual int                       EmployeeId              { get; set; }
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(LeaveRequestDateEntry.LeaveRequestId))]
+			public virtual ICollection<LeaveRequestDateEntry> LeaveRequestDateEntries { get; set; } = null!;
+		}
+
+		public class LeaveRequestDateEntry
+		{
+			public virtual int      Id             { get; set; }
+			public virtual decimal? EndHour        { get; set; }
+			public virtual decimal? StartHour      { get; set; }
+			public virtual int      LeaveRequestId { get; set; }
+		}
+
+		public class TestDto
+		{
+			public decimal? Result { get; set; }
+		}
+
+		[Test]
+		public void Issue3260Test([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var t1 = db.CreateLocalTable<LeaveRequest>())
+			using (var t2 = db.CreateLocalTable<LeaveRequestDateEntry>())
+			{
+				db.GetTable<LeaveRequest>()
+					.Select(x => new TestDto()
+					{
+						Result = x
+							.LeaveRequestDateEntries
+							.Select(e => e.StartHour)
+							.DefaultIfEmpty(0)
+							.Sum()
+					}).ToList();
+			}
+		}
+
+		#endregion
+
+		[ActiveIssue(2966)]
+		[Test(Description = "association over set query")]
+		public void Issue2966([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			db.Patient.Concat(db.Patient).Select(r => new { r.Diagnosis, r.Person.FirstName }).ToArray();
+		}
+
+		#region issue 3557
+		[Table]
+		public class SubData2
+		{
+			[Column] public int     Id     { get; set; }
+			[Column] public string? Reason { get; set; }
+
+			public static readonly SubData2[] Records = new[]
+			{
+				new SubData2() { Id = 3, Reason = "прст1" },
+				new SubData2() { Id = 3, Reason = "прст2" },
+			};
+		}
+
+		[Table]
+		public class SubData1
+		{
+			[Column] public int Id { get; set; }
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(SubData2.Id))]
+			public IEnumerable<SubData2> SubDatas { get; } = null!;
+
+			public static readonly SubData1[] Records = new[]
+			{
+				new SubData1() { Id = 2 },
+				new SubData1() { Id = 3 },
+			};
+		}
+
+		[Table]
+		public class Data
+		{
+			[Column] public int Id { get; set; }
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(SubData1.Id), CanBeNull = true)]
+			public SubData1? SubData { get; }
+
+			public static readonly Data[] Records = new[]
+			{
+				new Data() { Id = 1 },
+				new Data() { Id = 2 },
+				new Data() { Id = 3 },
+			};
+		}
+
+		[Test]
+		public void Issue3557Case1([DataSources(TestProvName.AllSapHana, TestProvName.AllSybase, TestProvName.AllInformix)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var data = db.CreateLocalTable(Data.Records);
+			using var subData1 = db.CreateLocalTable(SubData1.Records);
+			using var subData2 = db.CreateLocalTable(SubData2.Records);
+
+			var result = data
+				.Select(
+				i => new
+				{
+					Id     = i.Id,
+					Reason = i.SubData == null ? null : i.SubData.SubDatas.Select(s => s.Reason).FirstOrDefault(),
+				})
+				.OrderBy(r => r.Id)
+				.ToList();
+
+			Assert.AreEqual(3, result.Count);
+			Assert.AreEqual(1, result[0].Id);
+			Assert.AreEqual(2, result[1].Id);
+			Assert.AreEqual(3, result[2].Id);
+			Assert.IsNull(null, result[0].Reason);
+			Assert.IsNull(null, result[1].Reason);
+			Assert.True(result[2].Reason == "прст1" || result[2].Reason == "прст2");
+		}
+
+		[Test]
+		public void Issue3557Case2([DataSources(TestProvName.AllSapHana, TestProvName.AllSybase, TestProvName.AllInformix)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var data = db.CreateLocalTable(Data.Records);
+			using var subData1 = db.CreateLocalTable(SubData1.Records);
+			using var subData2 = db.CreateLocalTable(SubData2.Records);
+
+			var result = data
+				.Select(
+				i => new
+				{
+					Id     = i.Id,
+					Reason = i.SubData!.SubDatas.Select(s => s.Reason).FirstOrDefault() ?? string.Empty,
+				})
+				.OrderBy(r => r.Id)
+				.ToList();
+
+			Assert.AreEqual(3, result.Count);
+			Assert.AreEqual(1, result[0].Id);
+			Assert.AreEqual(2, result[1].Id);
+			Assert.AreEqual(3, result[2].Id);
+			Assert.AreEqual(string.Empty, result[0].Reason);
+			Assert.AreEqual(string.Empty, result[1].Reason);
+			Assert.True(result[2].Reason == "прст1" || result[2].Reason == "прст2");
+		}
+
+		[Test]
+		public void Issue3557Case3([DataSources(TestProvName.AllSapHana, TestProvName.AllSybase, TestProvName.AllInformix)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var data = db.CreateLocalTable(Data.Records);
+			using var subData1 = db.CreateLocalTable(SubData1.Records);
+			using var subData2 = db.CreateLocalTable(SubData2.Records);
+
+			var result = data
+				.Select(
+				i => new
+				{
+					Id     = i.Id,
+					Reason = i.SubData!.SubDatas.Select(s => s.Reason).FirstOrDefault(),
+				})
+				.OrderBy(r => r.Id)
+				.ToList();
+
+			Assert.AreEqual(3, result.Count);
+			Assert.AreEqual(1, result[0].Id);
+			Assert.AreEqual(2, result[1].Id);
+			Assert.AreEqual(3, result[2].Id);
+			Assert.IsNull(null, result[0].Reason);
+			Assert.IsNull(null, result[1].Reason);
+			Assert.True(result[2].Reason == "прст1" || result[2].Reason == "прст2");
+		}
 		#endregion
 	}
 

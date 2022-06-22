@@ -102,7 +102,7 @@ namespace Tests.Linq
 		[Test]
 		public void CurrentTimestampUtc(
 			[DataSources(ProviderName.Access, TestProvName.AllFirebird, ProviderName.SqlCe,
-				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
+				TestProvName.AllSqlServer2005)]
 			string context)
 		{
 			using (new DisableBaseline("Server-side date generation test"))
@@ -259,7 +259,7 @@ namespace Tests.Linq
 		[Test]
 		public void DatePartWeekNumberingType([DataSources(false)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var dates = new[]
 				{
@@ -655,7 +655,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from t in    Types select           Sql.DateAdd(Sql.DateParts.Hour, 1, t.DateTimeValue)!. Value.Hour,
-					from t in db.Types select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Hour, 1, t.DateTimeValue))!.Value.Hour);
+					from t in db.Types select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Hour, 1, t.DateTimeValue)!.Value.Hour));
 		}
 
 		[Test]
@@ -719,7 +719,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from t in    Types select           t.DateTimeValue.AddHours(22). Hour,
-					from t in db.Types select Sql.AsSql(t.DateTimeValue.AddHours(22)).Hour);
+					from t in db.Types select Sql.AsSql(t.DateTimeValue.AddHours(22).Hour));
 		}
 
 		[Test]
@@ -963,7 +963,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from t in Types select Sql.DateAdd(Sql.DateParts.Hour, 1, t.DateTimeValue)!.Value.Hour,
-					from t in db.Types select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Hour, part2 - part1, t.DateTimeValue))!.Value.Hour);
+					from t in db.Types select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Hour, part2 - part1, t.DateTimeValue)!.Value.Hour));
 		}
 
 		[Test]
@@ -1048,7 +1048,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from t in Types select t.DateTimeValue.AddHours(22).Hour,
-					from t in db.Types select Sql.AsSql(t.DateTimeValue.AddHours(part1 + part2)).Hour);
+					from t in db.Types select Sql.AsSql(t.DateTimeValue.AddHours(part1 + part2).Hour));
 		}
 
 		[Test]
@@ -1268,6 +1268,7 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Hour, t.DateTimeValue, t.DateTimeValue.AddHours(100))));
 		}
 
+		[ActiveIssue("Devart returns 100 as 99.999...", Configuration = TestProvName.AllOracleDevart)]
 		[Test]
 		public void SubDateMinute(
 			[DataSources(TestProvName.AllInformix)]
@@ -1279,6 +1280,7 @@ namespace Tests.Linq
 					from t in db.Types select (int)Sql.AsSql((t.DateTimeValue.AddMinutes(100) - t.DateTimeValue).TotalMinutes));
 		}
 
+		[ActiveIssue("Devart returns 100 as 99.999...", Configuration = TestProvName.AllOracleDevart)]
 		[Test]
 		public void DateDiffMinute(
 			[DataSources(TestProvName.AllInformix)]
@@ -1290,6 +1292,7 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Minute, t.DateTimeValue, t.DateTimeValue.AddMinutes(100))));
 		}
 
+		[ActiveIssue("Devart returns 6000 as 5999.999...", Configuration = TestProvName.AllOracleDevart)]
 		[Test]
 		public void SubDateSecond(
 			[DataSources(TestProvName.AllInformix)]
@@ -1301,6 +1304,7 @@ namespace Tests.Linq
 					from t in db.Types select (int)Sql.AsSql((t.DateTimeValue.AddMinutes(100) - t.DateTimeValue).TotalSeconds));
 		}
 
+		[ActiveIssue("Devart returns 6000 as 5999.999...", Configuration = TestProvName.AllOracleDevart)]
 		[Test]
 		public void DateDiffSecond(
 			[DataSources(TestProvName.AllInformix)]
@@ -1338,7 +1342,9 @@ namespace Tests.Linq
 						new CustomIntComparer(1));
 				}
 				// used type has precision == 1/300 of second
-				else if (context.Contains("Sybase") || context.Contains("SqlCe") || context.Contains("SqlServer") || context.Contains("Azure"))
+				else if (context.IsAnyOf(TestProvName.AllSybase)
+					|| context.IsAnyOf(ProviderName.SqlCe)
+					|| context.IsAnyOf(TestProvName.AllSqlServer))
 				{
 					AreEqual(
 						from t in Types select (int)(t.DateTimeValue.AddMilliseconds(2023456789) - t.DateTimeValue).TotalMilliseconds,
@@ -1365,7 +1371,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				if(context.Contains(ProviderName.SQLiteMS))
+				if(context.IsAnyOf(ProviderName.SQLiteMS))
 				{
 					AreEqual(
 						from t in Types select Sql.DateDiff(Sql.DateParts.Millisecond, t.DateTimeValue, t.DateTimeValue.AddMilliseconds(2023456789)),
@@ -1373,7 +1379,9 @@ namespace Tests.Linq
 						new CustomNullableIntComparer(1));
 				}
 				// used type has precision == 1/300 of second
-				else if (context.Contains("Sybase") || context.Contains("SqlCe") || context.Contains("SqlServer") || context.Contains("Azure"))
+				else if (context.IsAnyOf(TestProvName.AllSybase)
+					|| context.IsAnyOf(ProviderName.SqlCe)
+					|| context.IsAnyOf(TestProvName.AllSqlServer))
 				{
 					AreEqual(
 						from t in Types select Sql.DateDiff(Sql.DateParts.Millisecond, t.DateTimeValue, t.DateTimeValue.AddMilliseconds(2023456789)),
@@ -1477,7 +1485,7 @@ namespace Tests.Linq
 
 #endregion
 
-		[ActiveIssue("SQL0418N", Configuration = ProviderName.DB2)]
+		[ActiveIssue("SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null value.", Configuration = ProviderName.DB2)]
 		[Test]
 		public void GetDateTest1([DataSources] string context)
 		{

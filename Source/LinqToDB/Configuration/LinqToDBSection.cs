@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
 using System.Security;
+using CSS = System.Configuration.ConnectionStringSettings;
 
 namespace LinqToDB.Configuration
 {
@@ -69,7 +70,7 @@ namespace LinqToDB.Configuration
 		{
 			get
 			{
-				foreach (ConnectionStringSettings css in ConfigurationManager.ConnectionStrings)
+				foreach (CSS css in ConfigurationManager.ConnectionStrings)
 					yield return new ConnectionStringEx(css);
 			}
 		}
@@ -78,9 +79,9 @@ namespace LinqToDB.Configuration
 
 		class ConnectionStringEx : IConnectionStringSettings
 		{
-			private readonly ConnectionStringSettings _css;
+			private readonly CSS _css;
 
-			public ConnectionStringEx(ConnectionStringSettings css)
+			public ConnectionStringEx(CSS css)
 			{
 				_css = css;
 			}
@@ -91,7 +92,7 @@ namespace LinqToDB.Configuration
 			public bool   IsGlobal         => IsMachineConfig(_css);
 		}
 
-		internal static bool IsMachineConfig(ConnectionStringSettings css)
+		internal static bool IsMachineConfig(CSS css)
 		{
 			string? source;
 			bool   isPresent;

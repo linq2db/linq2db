@@ -53,9 +53,9 @@ namespace Tests.UserTests
 			var ed3 = ms.GetEntityDescriptor(typeof(AttributeBase));
 			var ed4 = ms.GetEntityDescriptor(typeof(AttributeBase));
 
-			Assert.AreEqual(ed1.TableName, ed2.TableName);
-			Assert.AreEqual(ed3.TableName, ed4.TableName);
-			Assert.AreEqual(ed1.TableName, ed4.TableName);
+			Assert.AreEqual(ed1.Name.Name, ed2.Name.Name);
+			Assert.AreEqual(ed3.Name.Name, ed4.Name.Name);
+			Assert.AreEqual(ed1.Name.Name, ed4.Name.Name);
 		}
 
 		[Test]

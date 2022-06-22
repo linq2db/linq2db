@@ -181,12 +181,15 @@ namespace LinqToDB.DataProvider.Firebird
 								if (ex != null)
 									return ex;
 							}
+							else  if (func.SystemType.ToUnderlying() == typeof(string) && func.Parameters[2].SystemType?.ToUnderlying() == typeof(Guid))
+								return new SqlFunction(func.SystemType, "UUID_TO_CHAR", func.Parameters[2]);
+							else if (func.SystemType.ToUnderlying() == typeof(Guid) && func.Parameters[2].SystemType?.ToUnderlying() == typeof(string))
+								return new SqlFunction(func.SystemType, "CHAR_TO_UUID", func.Parameters[2]);
 							break;
 						}
 					}
 
 					break;
-
 				}
 			}
 
@@ -276,6 +279,13 @@ namespace LinqToDB.DataProvider.Firebird
 							break;
 						}
 
+						// part of output clause
+						if (visitor.Stack[i] is SqlOutputClause)
+						{
+							replace = true;
+							break;
+						}
+
 						// insert or update keys used in merge source select query
 						if (visitor.Stack[i] is SqlSetExpression set
 							&& i == 2
@@ -308,6 +318,10 @@ namespace LinqToDB.DataProvider.Firebird
 					}
 
 					if (!replace)
+						return e;
+
+					// TODO: temporary guard against cast to unknown type (Variant)
+					if (paramValue.DbDataType.DataType == DataType.Undefined && paramValue.DbDataType.SystemType == typeof(object))
 						return e;
 
 					return new SqlExpression(paramValue.DbDataType.SystemType, CASTEXPR, Precedence.Primary, p, new SqlDataType(paramValue.DbDataType));

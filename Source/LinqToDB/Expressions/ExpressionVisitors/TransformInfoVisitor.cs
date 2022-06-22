@@ -2,11 +2,12 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
-using LinqToDB.Extensions;
 
 namespace LinqToDB.Expressions
 {
-	internal readonly struct TransformInfoVisitor<TContext>
+	using LinqToDB.Extensions;
+
+	readonly struct TransformInfoVisitor<TContext>
 	{
 		private readonly TContext?                                  _context;
 		private readonly Func<TContext, Expression, TransformInfo>? _func;
@@ -279,7 +280,7 @@ namespace LinqToDB.Expressions
 				case ExpressionType.Index:
 				{
 					var e = (IndexExpression)expr;
-					var o = Transform(e.Object);
+					var o = Transform(e.Object!);
 					var a = Transform(e.Arguments);
 
 					return e.Update(o, a);
@@ -364,11 +365,7 @@ namespace LinqToDB.Expressions
 				var e    = func(item);
 
 				if (e != item)
-				{
-					if (list == null)
-						list = new List<T>(source);
-					list[i] = e;
-				}
+					(list ??= new(source))[i] = e;
 			}
 
 			return list ?? source;
@@ -385,11 +382,7 @@ namespace LinqToDB.Expressions
 				var e    = (T)Transform(item)!;
 
 				if (e != item)
-				{
-					if (list == null)
-						list = new List<T>(source);
-					list[i] = e;
-				}
+					(list ??= new(source))[i] = e;
 			}
 
 			return list ?? source;

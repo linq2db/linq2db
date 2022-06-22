@@ -3,6 +3,7 @@
 namespace LinqToDB.DataProvider.Firebird
 {
 	using Data;
+	using LinqToDB.Mapping;
 	using System.Threading;
 	using System.Threading.Tasks;
 
@@ -11,7 +12,7 @@ namespace LinqToDB.DataProvider.Firebird
 		
 		/// <remarks>
 		/// Number based on http://www.firebirdfaq.org/faq197/
-		/// TODO: Add Compat Switch. Firebird 2.5 has 64k limit, Firebird 3.0+ 10MB. 
+		/// TODO: Add Compat Switch. Firebird 2.5 has 64k limit, Firebird 3.0+ 10MB.
 		/// </remarks>
 		protected override int MaxSqlLength => 65535;
 
@@ -21,8 +22,19 @@ namespace LinqToDB.DataProvider.Firebird
 		/// </remarks>
 		protected override int MaxParameters => 32767;
 
-		protected override bool CastOnUnionAll         => true;
-		protected override bool TypeAllUnionParameters => true;
+		protected override bool CastFirstRowLiteralOnUnionAll    => true;
+		protected override bool CastFirstRowParametersOnUnionAll => true;
+		protected override bool CastAllRowsParametersOnUnionAll  => true;
+
+		protected override bool CastLiteral(ColumnDescriptor column)
+		{
+			// if union column is not typed as varchar, it will use char(max_literal_length) type with values padded with spaces
+			var dataType = column.DataType;
+			if (dataType == DataType.Undefined)
+				dataType = column.GetConvertedDbDataType().DataType;
+
+			return dataType is DataType.VarChar or DataType.NVarChar;
+		}
 
 		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(
 			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)

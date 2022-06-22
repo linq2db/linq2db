@@ -724,7 +724,7 @@ namespace Tests.xUpdate
 				}
 			}
 		}
-		
+
 		[Test]
 		public void UpdateComplex2([DataSources] string context)
 		{
@@ -970,7 +970,7 @@ namespace Tests.xUpdate
 				TestProvName.AllSapHana)]
 			string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var ids = new[] { 10000, 20000 };
 
@@ -981,7 +981,7 @@ namespace Tests.xUpdate
 					.Set(y => y.BoolValue, y => y.Tables2.All(x => x.Value1 == 1))
 					.Update();
 
-				if (!context.StartsWith(ProviderName.Sybase))
+				if (!context.IsAnyOf(TestProvName.AllSybase))
 				{
 					var idx = db.LastQuery!.IndexOf("INNER JOIN");
 
@@ -1094,7 +1094,6 @@ namespace Tests.xUpdate
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,
 				ProviderName.SqlCe,
-				ProviderName.SqlServer2000,
 				TestProvName.AllSapHana)]
 			string context)
 		{
@@ -1132,7 +1131,6 @@ namespace Tests.xUpdate
 				ProviderName.DB2,
 				TestProvName.AllInformix,
 				ProviderName.SqlCe,
-				ProviderName.SqlServer2000,
 				TestProvName.AllSapHana,
 				TestProvName.AllFirebird,
 				TestProvName.AllSQLite,
@@ -1178,7 +1176,6 @@ namespace Tests.xUpdate
 				ProviderName.DB2,
 				TestProvName.AllInformix,
 				ProviderName.SqlCe,
-				ProviderName.SqlServer2000,
 				TestProvName.AllSapHana,
 				TestProvName.AllFirebird,
 				TestProvName.AllSQLite,
@@ -1229,7 +1226,6 @@ namespace Tests.xUpdate
 				TestProvName.AllFirebird,
 				TestProvName.AllSQLite,
 				ProviderName.SqlCe,
-				ProviderName.SqlServer2000,
 				TestProvName.AllSapHana)]
 			string context)
 		{
@@ -1430,7 +1426,7 @@ namespace Tests.xUpdate
 
 			using (var db = GetDataContext(context))
 			{
-				db.DropTable<Patient>(tableName, schemaName: schemaName, throwExceptionIfNotExists: false);
+				db.DropTable<Person>(tableName, schemaName: schemaName, throwExceptionIfNotExists: false);
 			}
 
 			using (var db = GetDataContext(context))
@@ -1461,6 +1457,9 @@ namespace Tests.xUpdate
 				var updatedPerson = table.Single();
 				Assert.AreEqual("None", updatedPerson.MiddleName);
 
+				if (db is DataConnection { Connection: FirebirdSql.Data.FirebirdClient.FbConnection })
+					db.Close();
+
 				table.Drop();
 			}
 		}
@@ -1473,7 +1472,7 @@ namespace Tests.xUpdate
 
 			using (var db = GetDataContext(context))
 			{
-				await db.DropTableAsync<Patient>(tableName, schemaName: schemaName, throwExceptionIfNotExists: false);
+				await db.DropTableAsync<Person>(tableName, schemaName: schemaName, throwExceptionIfNotExists: false);
 			}
 
 			using (var db = GetDataContext(context))
@@ -1504,6 +1503,9 @@ namespace Tests.xUpdate
 				var updatedPerson = await table.SingleAsync();
 				Assert.AreEqual("None", updatedPerson.MiddleName);
 
+				//if (db is DataConnection { Connection: FirebirdSql.Data.FirebirdClient.FbConnection })
+					await db.CloseAsync();
+
 				await table.DropAsync();
 			}
 		}
@@ -1511,13 +1513,13 @@ namespace Tests.xUpdate
 		[Table("gt_s_one")]
 		class UpdateFromJoin
 		{
-			[PrimaryKey] public int id  { get; set; }
-			[Column] public string? col1 { get; set; }
-			[Column] public string? col2 { get; set; }
-			[Column] public string? col3 { get; set; }
-			[Column] public string? col4 { get; set; }
-			[Column] public string? col5 { get; set; }
-			[Column] public string? col6 { get; set; }
+			[PrimaryKey          ] public int     id   { get; set; }
+			[Column(Length = 100)] public string? col1 { get; set; }
+			[Column(Length = 100)] public string? col2 { get; set; }
+			[Column(Length = 100)] public string? col3 { get; set; }
+			[Column(Length = 100)] public string? col4 { get; set; }
+			[Column(Length = 100)] public string? col5 { get; set; }
+			[Column(Length = 100)] public string? col6 { get; set; }
 
 			public static UpdateFromJoin[] Data = Array<UpdateFromJoin>.Empty;
 		}
@@ -1999,5 +2001,16 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[Test]
+		public void AsUpdatableEmptyTest([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query = db.Person.AsUpdatable();
+
+				var ex = Assert.Throws<LinqToDBException>(() => query.Update())!;
+				Assert.AreEqual("Update query has no setters defined.", ex.Message);
+			}
+		}
 	}
 }

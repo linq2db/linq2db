@@ -14,14 +14,14 @@ namespace LinqToDB.DataProvider.SapHana
 	{
 		protected override List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
 		{
-			var dts = ((DbConnection)dataConnection.Connection).GetSchema("DataTypes");
+			var dts = dataConnection.Connection.GetSchema("DataTypes");
 
 			var dt = dts.AsEnumerable()
 				.Where(x=> x["ProviderDbType"] != DBNull.Value)
 				.Select(t => new DataTypeInfo
 				{
-					TypeName         = t.Field<string>("TypeName"),
-					DataType         = t.Field<string>("DataType"),
+					TypeName         = t.Field<string>("TypeName")!,
+					DataType         = t.Field<string>("DataType")!,
 					CreateFormat     = t.Field<string>("CreateFormat"),
 					CreateParameters = t.Field<string>("CreateParameters"),
 					ProviderDbType   = Converter.ChangeTypeTo<int>(t["ProviderDbType"]),

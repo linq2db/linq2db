@@ -10,9 +10,10 @@ namespace LinqToDB.Common
 {
 	using Expressions;
 	using Extensions;
+	using LinqToDB.Common.Internal;
 	using Mapping;
 
-	static class ConvertBuilder
+	public static class ConvertBuilder
 	{
 		static readonly MethodInfo _defaultConverter = MemberHelper.MethodOf(() => ConvertDefault(null!, typeof(int)));
 
@@ -342,7 +343,7 @@ namespace LinqToDB.Common
 					if (toTypeFields.All(f => f.Attrs != null))
 					{
 						var cases = toTypeFields.Select(f => Expression.SwitchCase(
-							Expression.Constant(f.Attrs.Value ?? mappingSchema.GetDefaultValue(to), to),
+							Expression.Constant(f.Attrs!.Value ?? mappingSchema.GetDefaultValue(to), to),
 							Expression.Constant(Enum.Parse(from, f.Field.Name, false))));
 
 						var expr = Expression.Switch(
@@ -399,7 +400,8 @@ namespace LinqToDB.Common
 						{
 							var fattrs =
 								from f in fromAttrs
-								select new {
+								select new
+								{
 									f,
 									a = f.Attrs.First(a => a.Value?.Equals(toAttr.Value) ?? toAttr.Value == null)
 								} into fa
@@ -670,8 +672,8 @@ namespace LinqToDB.Common
 					?? mappingSchema.GetDefaultFromEnumType(typeof(Enum))
 					?? Enum.GetUnderlyingType(type);
 
-			if ((enumType.IsNullable() || hasNullValue) && defaultType.IsValueType && !defaultType.IsNullable())
-				defaultType = typeof(Nullable<>).MakeGenericType(defaultType);
+			if ((enumType.IsNullable() || hasNullValue) && !defaultType.IsNullableType())
+				defaultType = defaultType.AsNullable();
 
 			return defaultType;
 		}

@@ -3,21 +3,25 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using LinqToDB.Extensions;
+using System.Text;
 
 namespace LinqToDB.Metadata
 {
 	using Common;
+	using Common.Internal;
+	using Extensions;
+	using Mapping;
 
 	public class FluentMetadataReader : IMetadataReader
 	{
 		// don't forget to put lock on List<Attribute> when access it
-		readonly ConcurrentDictionary<Type,List<Attribute>>                            _types          = new ConcurrentDictionary<Type,List<Attribute>>();
+		readonly ConcurrentDictionary<Type,List<MappingAttribute>>               _types          = new();
+		readonly ConcurrentDictionary<MemberInfo,List<MappingAttribute>>         _members        = new ();
 		// set used to guarantee uniqueness
 		// list used to guarantee same order for columns in select queries
-		readonly ConcurrentDictionary<Type,Tuple<ISet<MemberInfo>, IList<MemberInfo>>> _dynamicColumns = new ConcurrentDictionary<Type,Tuple<ISet<MemberInfo>, IList<MemberInfo>>>();
+		readonly ConcurrentDictionary<Type,(ISet<MemberInfo>,IList<MemberInfo>)> _dynamicColumns = new();
 
-		private static bool IsSystemOrNullType(Type? type)
+		static bool IsSystemOrNullType(Type? type)
 			=> type == null || type == typeof(object) || type == typeof(ValueType) || type == typeof(Enum);
 
 		public T[] GetAttributes<T>(Type type, bool inherit = true)
@@ -44,15 +48,13 @@ namespace LinqToDB.Metadata
 			return Array<T>.Empty;
 		}
 
-		public void AddAttribute(Type type, Attribute attribute)
+		public void AddAttribute(Type type, MappingAttribute attribute)
 		{
-			var attrs = _types.GetOrAdd(type, t => new List<Attribute>());
+			var attrs = _types.GetOrAdd(type, static _ => new ());
 
 			lock (attrs)
 				attrs.Add(attribute);
 		}
-
-		readonly ConcurrentDictionary<MemberInfo,List<Attribute>> _members = new ConcurrentDictionary<MemberInfo,List<Attribute>>();
 
 		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo, bool inherit = true)
 			where T : Attribute
@@ -82,27 +84,27 @@ namespace LinqToDB.Metadata
 			return Array<T>.Empty;
 		}
 
-		public void AddAttribute(MemberInfo memberInfo, Attribute attribute)
+		public void AddAttribute(MemberInfo memberInfo, MappingAttribute attribute)
 		{
 			if (memberInfo.IsDynamicColumnPropertyEx())
 			{
-				var dynamicColumns = _dynamicColumns.GetOrAdd(memberInfo.DeclaringType!, new Tuple<ISet<MemberInfo>, IList<MemberInfo>>(new HashSet<MemberInfo>(), new List<MemberInfo>()));
+				var dynamicColumns = _dynamicColumns.GetOrAdd(memberInfo.DeclaringType!, (new HashSet<MemberInfo>(), new List<MemberInfo>()));
 
-				lock (dynamicColumns)
+				lock (dynamicColumns.Item1)
 					if (dynamicColumns.Item1.Add(memberInfo))
 						dynamicColumns.Item2.Add(memberInfo);
 			}
 
-			_members.GetOrAdd(memberInfo, t => new List<Attribute>()).Add(attribute);
+			_members.GetOrAdd(memberInfo, static _ => new ()).Add(attribute);
 		}
 
 		/// <inheritdoc cref="IMetadataReader.GetDynamicColumns"/>
 		public MemberInfo[] GetDynamicColumns(Type type)
 		{
 			if (_dynamicColumns.TryGetValue(type, out var dynamicColumns))
-				lock (dynamicColumns)
+				lock (dynamicColumns.Item1)
 					return dynamicColumns.Item2.ToArray();
-			
+
 			return Array<MemberInfo>.Empty;
 		}
 
@@ -117,6 +119,41 @@ namespace LinqToDB.Metadata
 			// CD.Keys is probably thread-safe for enumeration (but it is not documented behavior)
 			// https://stackoverflow.com/questions/10479867
 			return _types.Keys.ToArray();
+		}
+
+		public IEnumerable<string> GetObjectIDs()
+		{
+			foreach (var type in _types)
+			{
+				var sb = new StringBuilder(".")
+					.Append(IdentifierBuilder.GetObjectID(type.Key))
+					.Append('.')
+					.Append(type.Value.Count)
+					.Append('.')
+					;
+
+				foreach (var a in type.Value)
+					sb.Append(a.GetObjectID()).Append('.');
+
+				yield return sb.ToString();
+			}
+
+			foreach (var member in _members)
+			{
+				var sb = new StringBuilder(".")
+					.Append(IdentifierBuilder.GetObjectID(member.Key.DeclaringType))
+					.Append('.')
+					.Append(member.Key.Name)
+					.Append('.')
+					.Append(member.Value.Count)
+					.Append('.')
+					;
+
+				foreach (var a in member.Value)
+					sb.Append(a.GetObjectID()).Append('.');
+
+				yield return sb.ToString();
+			}
 		}
 	}
 }

@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using LinqToDB.Linq;
 
 namespace LinqToDB.DataProvider.SQLite
 {
@@ -21,13 +24,25 @@ namespace LinqToDB.DataProvider.SQLite
 			switch (statement.QueryType)
 			{
 				case QueryType.Delete :
+				{
 					statement = GetAlternativeDelete((SqlDeleteStatement)statement);
 					statement.SelectQuery!.From.Tables[0].Alias = "$";
 					break;
+				}
 
 				case QueryType.Update :
-					statement = GetAlternativeUpdate((SqlUpdateStatement)statement);
+				{
+					if (SqlProviderFlags.IsUpdateFromSupported)
+					{
+						statement = GetAlternativeUpdatePostgreSqlite((SqlUpdateStatement)statement);
+					}
+					else
+					{
+						statement = GetAlternativeUpdate((SqlUpdateStatement)statement);
+					}
+
 					break;
+				}
 			}
 
 			return statement;
@@ -128,7 +143,11 @@ namespace LinqToDB.DataProvider.SQLite
 								return ex;
 						}
 
-						if (ftype == typeof(DateTime) || ftype == typeof(DateTimeOffset))
+						if (ftype == typeof(DateTime) || ftype == typeof(DateTimeOffset)
+#if NET6_0_OR_GREATER
+							|| ftype == typeof(DateOnly)
+#endif
+							)
 						{
 							if (IsDateDataType(func.Parameters[0], "Date"))
 								return new SqlFunction(func.SystemType, "Date", func.Parameters[1]);
@@ -157,14 +176,20 @@ namespace LinqToDB.DataProvider.SQLite
 					if (!(exprExpr.Expr1 is SqlFunction func1 && (func1.Name == "$Convert$" || func1.Name == "DateTime")))
 					{
 						var left = new SqlFunction(leftType.SystemType, "$Convert$", SqlDataType.GetDataType(leftType.SystemType),
-							new SqlDataType(leftType), exprExpr.Expr1);
+							new SqlDataType(leftType), exprExpr.Expr1)
+						{
+							CanBeNull = exprExpr.Expr1.CanBeNull
+						};
 						exprExpr = new SqlPredicate.ExprExpr(left, exprExpr.Operator, exprExpr.Expr2, null);
 					}
 					
 					if (!(exprExpr.Expr2 is SqlFunction func2 && (func2.Name == "$Convert$" || func2.Name == "DateTime")))
 					{
 						var right = new SqlFunction(rightType.SystemType, "$Convert$", new SqlDataType(rightType),
-							new SqlDataType(rightType), exprExpr.Expr2);
+							new SqlDataType(rightType), exprExpr.Expr2)
+						{
+							CanBeNull = exprExpr.Expr2.CanBeNull
+						};
 						exprExpr = new SqlPredicate.ExprExpr(exprExpr.Expr1, exprExpr.Operator, right, null);
 					}
 

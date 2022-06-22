@@ -48,25 +48,27 @@ namespace LinqToDB
 			public string? Schema        { get; set; }
 			public string? Database      { get; set; }
 			public string? Server        { get; set; }
+			public string? Package       { get; set; }
 			public int[]?  ArgIndices    { get; set; }
 
 			public virtual void SetTable<TContext>(TContext context, ISqlBuilder sqlBuilder, MappingSchema mappingSchema, SqlTable table, MethodCallExpression methodCall, Func<TContext, Expression, ColumnDescriptor?, ISqlExpression> converter)
 			{
-				table.SqlTableType   = SqlTableType.Function;
-				table.Name           = Name ?? methodCall.Method.Name;
-				table.PhysicalName   = Name ?? methodCall.Method.Name;
+				table.SqlTableType = SqlTableType.Function;
+				var expressionStr  = table.Expression = Name ?? methodCall.Method.Name!;
 
-				var expressionStr = table.Name;
-				ExpressionAttribute.PrepareParameterValues(methodCall, ref expressionStr, false, out var knownExpressions, out var genericTypes);
+				ExpressionAttribute.PrepareParameterValues(methodCall, ref expressionStr, false, out var knownExpressions, false, out var genericTypes);
 
 				if (string.IsNullOrEmpty(expressionStr))
 					throw new LinqToDBException($"Cannot retrieve Table Function body from expression '{methodCall}'.");
 
-				table.TableArguments = ExpressionAttribute.PrepareArguments(context, string.Empty, ArgIndices, addDefault: true, knownExpressions, genericTypes, converter);
+				table.TableName = new SqlObjectName(
+					expressionStr!,
+					Schema  : Schema   ?? table.TableName.Schema,
+					Database: Database ?? table.TableName.Database,
+					Server  : Server   ?? table.TableName.Server,
+					Package : Package  ?? table.TableName.Package);
 
-				if (Schema   != null) table.Schema   = Schema;
-				if (Database != null) table.Database = Database;
-				if (Server   != null) table.Server   = Server;
+				table.TableArguments = ExpressionAttribute.PrepareArguments(context, string.Empty, ArgIndices, true, knownExpressions, genericTypes, converter);
 			}
 		}
 	}

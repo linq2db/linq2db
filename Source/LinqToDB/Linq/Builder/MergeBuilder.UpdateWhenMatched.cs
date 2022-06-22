@@ -28,7 +28,7 @@ namespace LinqToDB.Linq.Builder
 				var predicate = methodCall.Arguments[1];
 				var setter    = methodCall.Arguments[2];
 
-				if (!(setter is ConstantExpression constSetter) || constSetter.Value != null)
+				if (!setter.IsNullValue())
 				{
 					var setterExpression = (LambdaExpression)setter.Unwrap();
 					UpdateBuilder.BuildSetterWithContext(
@@ -62,7 +62,7 @@ namespace LinqToDB.Linq.Builder
 
 				statement.Operations.Add(operation);
 
-				if (!(predicate is ConstantExpression constPredicate) || constPredicate.Value != null)
+				if (!predicate.IsNullValue())
 				{
 					var condition     = (LambdaExpression)predicate.Unwrap();
 
@@ -70,12 +70,6 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				return mergeContext;
-			}
-
-			protected override SequenceConvertInfo? Convert(
-				ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-			{
-				return null;
 			}
 		}
 	}

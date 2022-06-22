@@ -1,16 +1,23 @@
 parameters:
   for_nuget: false
+  for_tests: false
 
 jobs:
 - job: build_job
   pool:
-    vmImage: 'windows-2019'
+    vmImage: 'windows-2022'
   displayName: 'Build'
 
   steps:
 
   # mitigate https://status.dev.azure.com/_event/182998791
   - task: NuGetToolInstaller@1
+
+  - task: UseDotNet@2
+    displayName: 'Install .net 6'
+    inputs:
+      packageType: sdk
+      version: 6.x
 
   - task: PowerShell@2
     inputs:
@@ -21,169 +28,123 @@ jobs:
 
   - task: MSBuild@1
     inputs:
+      solution: 'Examples/Examples.sln'
+      configuration: 'Debug'
+      msbuildArguments: '/t:Restore;Rebuild -m'
+    displayName: Build Examples (verify)
+
+  - task: MSBuild@1
+    inputs:
       solution: '$(solution)'
       configuration: '$(build_configuration)'
       msbuildArguments: '/t:Restore;Rebuild -m /p:ContinuousIntegrationBuild=true'
     displayName: Build Solution
 
-  - task: DotNetCoreCLI@2
-    inputs:
-      command: 'publish'
-      projects: '**/Tests/Linq/Tests.csproj'
-      publishWebProjects: false
-      zipAfterPublish: false
-      arguments: -f netcoreapp2.1 -c $(build_configuration)
-      nobuild: true
-    displayName: Publish Test Project for netcore 2.1
-
-  - task: DotNetCoreCLI@2
-    inputs:
-      command: 'publish'
-      projects: '**/Tests/Linq/Tests.csproj'
-      publishWebProjects: false
-      zipAfterPublish: false
-      arguments: -f netcoreapp3.1 -c $(build_configuration)
-      nobuild: true
-    displayName: Publish Test Project for netcore 3.1
-
-  - task: DotNetCoreCLI@2
-    inputs:
-      command: 'publish'
-      projects: '**/Tests/Linq/Tests.csproj'
-      publishWebProjects: false
-      zipAfterPublish: false
-      arguments: -f net5.0 -c $(build_configuration)
-      nobuild: true
-    displayName: Publish Test Project for net 5.0
-
-  - task: CopyFiles@2
-    inputs:
-      targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net472'
-      sourceFolder: '$(Build.SourcesDirectory)/Tests'
-      contents: 'DataProviders.json'
-    displayName: Copy test settings for NETFX472
-
-  - task: CopyFiles@2
-    inputs:
-      targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/netcoreapp2.1/publish'
-      sourceFolder: '$(Build.SourcesDirectory)/Tests'
-      contents: 'DataProviders.json'
-    displayName: Copy test settings for NETCOREAPP2.1
-
-  - task: CopyFiles@2
-    inputs:
-      targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/netcoreapp3.1/publish'
-      sourceFolder: '$(Build.SourcesDirectory)/Tests'
-      contents: 'DataProviders.json'
-    displayName: Copy test settings for NETCOREAPP3.1
-
-  - task: CopyFiles@2
-    inputs:
-      targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net5.0/publish'
-      sourceFolder: '$(Build.SourcesDirectory)/Tests'
-      contents: 'DataProviders.json'
-    displayName: Copy test settings for NET 5.0
-
-  - task: CopyFiles@2
-    inputs:
-      targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net472/configs'
-      sourceFolder: '$(Build.SourcesDirectory)/Build/Azure/net472'
-    displayName: Copy test configs for NETFX472
-
-  - task: CopyFiles@2
-    inputs:
-      targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/netcoreapp2.1/publish/configs'
-      sourceFolder: '$(Build.SourcesDirectory)/Build/Azure/netcoreapp21'
-    displayName: Copy test configs for NETCOREAPP2.1
-
-  - task: CopyFiles@2
-    inputs:
-      targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/netcoreapp3.1/publish/configs'
-      sourceFolder: '$(Build.SourcesDirectory)/Build/Azure/netcoreapp31'
-    displayName: Copy test configs for NETCOREAPP3.1
-
-  - task: CopyFiles@2
-    inputs:
-      targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net5.0/publish/configs'
-      sourceFolder: '$(Build.SourcesDirectory)/Build/Azure/net50'
-    displayName: Copy test configs for NET 5.0
-
   - task: CmdLine@2
     inputs:
-      script: 'copy "$(System.DefaultWorkingDirectory)\Data\Create Scripts\Northwind.sql" $(Build.SourcesDirectory)\Build\Azure\scripts\northwind.sql'
-    displayName: Copy northwind.sql to scripts
-
-  - task: CopyFiles@2
-    inputs:
-      targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/netcoreapp2.1/publish/scripts'
-      sourceFolder: '$(Build.SourcesDirectory)/Build/Azure/scripts'
-    displayName: Copy test scripts for NETCOREAPP2.1
-
-  - task: CopyFiles@2
-    inputs:
-      targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/netcoreapp3.1/publish/scripts'
-      sourceFolder: '$(Build.SourcesDirectory)/Build/Azure/scripts'
-    displayName: Copy test scripts for NETCOREAPP3.1
-
-  - task: CopyFiles@2
-    inputs:
-      targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net5.0/publish/scripts'
-      sourceFolder: '$(Build.SourcesDirectory)/Build/Azure/scripts'
-    displayName: Copy test scripts for NET5.0
-
-  - task: CopyFiles@2
-    inputs:
-      targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net472/scripts'
-      sourceFolder: '$(Build.SourcesDirectory)/Build/Azure/scripts'
-    displayName: Copy test scripts for NETFX472
+      script: |
+        dotnet publish Tests\Linq\Tests.csproj -f netcoreapp3.1 -c $(build_configuration)
+        if %errorlevel% neq 0 exit
+        dotnet publish Tests\Linq\Tests.csproj -f net6.0 -c $(build_configuration)
+        if %errorlevel% neq 0 exit
+        dotnet publish Tests\Linq\Tests.csproj -f net472 -c $(build_configuration) -a x64 /p:X86=SET -o Tests\Linq\bin\$(build_configuration)\net472\publishx64
+        if %errorlevel% neq 0 exit
+        dotnet publish Tests\Linq\Tests.csproj -f netcoreapp3.1 -c $(build_configuration) -a x86 /p:X86=SET -o Tests\Linq\bin\$(build_configuration)\netcoreapp3.1\publishx86
+        if %errorlevel% neq 0 exit
+        dotnet publish Tests\Linq\Tests.csproj -f net6.0 -c $(build_configuration) -a x86 /p:X86=SET -o Tests\Linq\bin\$(build_configuration)\net6.0\publishx86
+        if %errorlevel% neq 0 exit
+        mkdir testing
+        if %errorlevel% neq 0 exit
+        xcopy /i /s Tests\Linq\bin\$(build_configuration)\net472 testing\net472
+        if %errorlevel% neq 0 exit
+        xcopy /i /s Tests\Linq\bin\$(build_configuration)\netcoreapp3.1\publish testing\netcore31
+        if %errorlevel% neq 0 exit
+        xcopy /i /s Tests\Linq\bin\$(build_configuration)\net6.0\publish testing\net60
+        if %errorlevel% neq 0 exit
+        xcopy /i /s Tests\Linq\bin\$(build_configuration)\net472\publishx64 testing\net472x64
+        if %errorlevel% neq 0 exit
+        xcopy /i /s testing\net472\runtimes testing\net472x64\runtimes
+        if %errorlevel% neq 0 exit
+        xcopy /i /s /y testing\net472\x64 testing\net472x64\x64
+        if %errorlevel% neq 0 exit
+        xcopy /i /s Tests\Linq\bin\$(build_configuration)\netcoreapp3.1\publishx86 testing\netcore31x86
+        if %errorlevel% neq 0 exit
+        xcopy /i /s Tests\Linq\bin\$(build_configuration)\net6.0\publishx86 testing\net60x86
+        if %errorlevel% neq 0 exit
+        copy Tests\DataProviders.json testing\net472
+        if %errorlevel% neq 0 exit
+        copy Tests\DataProviders.json testing\netcore31
+        if %errorlevel% neq 0 exit
+        copy Tests\DataProviders.json testing\net60
+        if %errorlevel% neq 0 exit
+        copy Tests\DataProviders.json testing\netcore31x86
+        if %errorlevel% neq 0 exit
+        copy Tests\DataProviders.json testing\net60x86
+        if %errorlevel% neq 0 exit
+        xcopy /i Build\$(build_configuration)\net472 testing\configs\net472
+        if %errorlevel% neq 0 exit
+        xcopy /i Build\$(build_configuration)\netcoreapp31 testing\configs\netcore31
+        if %errorlevel% neq 0 exit
+        xcopy /i Build\$(build_configuration)\net60 testing\configs\net60
+        if %errorlevel% neq 0 exit
+        xcopy /i Build\$(build_configuration)\scripts testing\scripts
+        if %errorlevel% neq 0 exit
+        copy "Data\Create Scripts\Northwind.sql" testing\scripts\northwind.sql
+        if %errorlevel% neq 0 exit
+    condition: and(succeeded(), ${{ parameters.for_tests }})
+    displayName: Build Test Artifacts
 
   - task: PublishPipelineArtifact@1
     inputs:
-      path: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net472'
-      artifact: '$(netfx472_tests)'
-    displayName: Publish test artifacts for NETFX472
-
-  - task: PublishPipelineArtifact@1
-    inputs:
-      path: '$(Build.SourcesDirectory)/Tests/Tests.T4/bin/$(build_configuration)/net472'
-      artifact: '$(netfx472_tests_t4)'
-    displayName: Publish T4 test artifacts for NETFX472
-
-  - task: PublishPipelineArtifact@1
-    inputs:
-      path: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/netcoreapp2.1/publish'
-      artifact: '$(netcore21_tests)'
-    displayName: Publish test artifacts for NETCOREAPP2.1
-
-  - task: PublishPipelineArtifact@1
-    inputs:
-      path: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/netcoreapp3.1/publish'
-      artifact: '$(netcore31_tests)'
-    displayName: Publish test artifacts for NETCOREAPP3.1
-
-  - task: PublishPipelineArtifact@1
-    inputs:
-      path: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net5.0/publish'
-      artifact: '$(net50_tests)'
-    displayName: Publish test artifacts for NET 5.0
+      path: '$(Build.SourcesDirectory)/testing'
+      artifact: test_artifacts
+    condition: and(succeeded(), ${{ parameters.for_tests }})
 
   - task: PublishPipelineArtifact@1
     inputs:
       path: '$(Build.SourcesDirectory)/Source/LinqToDB/bin/Release'
       artifact: '$(artifact_linq2db_binaries)'
     displayName: Publish linq2db build results
-    condition: ${{ parameters.for_nuget }}
+    condition: and(succeeded(), ${{ parameters.for_nuget }})
 
   - task: PublishPipelineArtifact@1
     inputs:
       path: '$(Build.SourcesDirectory)/Source/LinqToDB.Tools/bin/Release'
       artifact: '$(artifact_linq2db_tools_binaries)'
     displayName: Publish linq2db.Tools build results
-    condition: ${{ parameters.for_nuget }}
+    condition: and(succeeded(), ${{ parameters.for_nuget }})
 
   - task: PublishPipelineArtifact@1
     inputs:
       path: '$(Build.SourcesDirectory)/Source/LinqToDB.AspNet/bin/Release'
       artifact: '$(artifact_linq2db_aspnet_binaries)'
     displayName: Publish linq2db.AspNet build results
-    condition: ${{ parameters.for_nuget }}
+    condition: and(succeeded(), ${{ parameters.for_nuget }})
+
+  - task: PublishPipelineArtifact@1
+    inputs:
+      path: '$(Build.SourcesDirectory)/Source/LinqToDB.Remote.Wcf/bin/Release'
+      artifact: '$(artifact_linq2db_remote_wcf_binaries)'
+    displayName: Publish linq2db.remote.Wcf build results
+    condition: and(succeeded(), ${{ parameters.for_nuget }})
+
+  - task: PublishPipelineArtifact@1
+    inputs:
+      path: '$(Build.SourcesDirectory)/Source/LinqToDB.Remote.Grpc/bin/Release'
+      artifact: '$(artifact_linq2db_remote_grpc_binaries)'
+    displayName: Publish linq2db.remote.Grpc build results
+    condition: and(succeeded(), ${{ parameters.for_nuget }})
+
+  - task: PublishPipelineArtifact@1
+    inputs:
+      path: '$(Build.SourcesDirectory)/Source/LinqToDB.CLI/bin/Release'
+      artifact: '$(artifact_linq2db_cli_binaries)'
+    displayName: Publish linq2db.CLI build results
+    condition: and(succeeded(), ${{ parameters.for_nuget }})
+
+  - task: PublishPipelineArtifact@1
+    inputs:
+      path: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net472'
+      artifact: '$(netfx472_tests)'
+    displayName: Publish nuget artifacts part 1
+    condition: and(succeeded(), ${{ parameters.for_nuget }})

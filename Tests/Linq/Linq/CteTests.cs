@@ -11,6 +11,7 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
+	using FluentAssertions;
 	using LinqToDB.Linq;
 	using Model;
 
@@ -18,7 +19,7 @@ namespace Tests.Linq
 	{
 		public static string[] CteSupportedProviders = new[]
 		{
-			TestProvName.AllSqlServer2008Plus,
+			TestProvName.AllSqlServer,
 			TestProvName.AllFirebird,
 			TestProvName.AllPostgreSQL,
 			ProviderName.DB2,
@@ -559,7 +560,7 @@ namespace Tests.Linq
 
 		// MariaDB support expected in v10.6 : https://jira.mariadb.org/browse/MDEV-18511
 		[Test]
-		public void TestDelete([CteContextSource(TestProvName.AllFirebird, ProviderName.DB2, TestProvName.MariaDB)] string context)
+		public void TestDelete([CteContextSource(TestProvName.AllFirebird, ProviderName.DB2, TestProvName.AllMariaDB)] string context)
 		{
 			using (var db  = GetDataContext(context))
 			using (var tmp = db.CreateLocalTable("CteChild",
@@ -581,7 +582,7 @@ namespace Tests.Linq
 		[ActiveIssue(Configuration = TestProvName.AllOracle, Details = "Oracle needs special syntax for CTE + UPDATE")]
 		[Test]
 		public void TestUpdate(
-			[CteContextSource(TestProvName.AllFirebird, ProviderName.DB2, TestProvName.AllOracle, TestProvName.MariaDB)]
+			[CteContextSource(TestProvName.AllFirebird, ProviderName.DB2, TestProvName.AllOracle, TestProvName.AllMariaDB)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -989,9 +990,9 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("Scalar recursive CTE are not working")]
+		[ActiveIssue("Scalar recursive CTE are not working: SQL logic error near *: syntax error")]
 		[Test]
-		public void TestRecursiveScalar([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestRecursiveScalar([CteContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1026,7 +1027,7 @@ namespace Tests.Linq
 			public string? GroupName { get; set; }
 		}
 
-		[ActiveIssue(1644)]
+		[ActiveIssue(1644, Details = "Expression 'parent.OrgGroup' is not a Field.")]
 		[Test]
 		public void TestRecursiveObjects([CteContextSource] string context)
 		{
@@ -1162,10 +1163,10 @@ namespace Tests.Linq
 		{
 			[Column("HANDLE"), NotNull             ] public string    Handle           { get; set; } = null!; // NVARCHAR2(1236)
 			[Column("CHANGE_STAMP"), Nullable      ] public decimal?  ChangeStamp      { get; set; } // NUMBER (38,0)
-			[Column("SITE"), Nullable              ] public string?   Site             { get; set; } // NVARCHAR2(18)
-			[Column("NC_CODE"), Nullable           ] public string?   NcCodeColumn     { get; set; } // NVARCHAR2(48)
-			[Column("DESCRIPTION"), Nullable       ] public string?   Description      { get; set; } // NVARCHAR2(120)
-			[Column("STATUS_BO"), Nullable         ] public string?   StatusBo         { get; set; } // NVARCHAR2(1236)
+			[Column("SITE", Length = 18),          ] public string?   Site             { get; set; } // NVARCHAR2(18)
+			[Column("NC_CODE", Length = 48),       ] public string?   NcCodeColumn     { get; set; } // NVARCHAR2(48)
+			[Column("DESCRIPTION", Length = 120)   ] public string?   Description      { get; set; } // NVARCHAR2(120)
+			[Column("STATUS_BO")                   ] public string?   StatusBo         { get; set; } // NVARCHAR2(1236)
 			[Column("CREATED_DATE_TIME"), Nullable ] public DateTime? CreatedDateTime  { get; set; } // DATE
 			[Column("MODIFIED_DATE_TIME"), Nullable] public DateTime? ModifiedDateTime { get; set; } // DATE
 			[Column("NC_CATEGORY"), Nullable       ] public string?   NcCategory       { get; set; } // NVARCHAR2(60)
@@ -1181,5 +1182,204 @@ namespace Tests.Linq
 		}
 		#endregion
 
+		private class Issue3359Projection
+		{
+			public string FirstName { get; set; } = null!;
+			public string LastName  { get; set; } = null!;
+		}
+
+		[Test(Description = "Test that we generate plain UNION without sub-queries (or query will be invalid)")]
+		public void Issue3359_MultipleSets([CteContextSource(
+			TestProvName.AllOracle, // too many unions (ORA-32041: UNION ALL operation in recursive WITH clause must have only two branches)
+			TestProvName.AllPostgreSQL, // too many joins? (42P19: recursive reference to query "cte" must not appear within its non-recursive term)
+			ProviderName.DB2 // joins (SQL0345N  The fullselect of the recursive common table expression "cte" must be the UNION of two or more fullselects and cannot include column functions, GROUP BY clause, HAVING clause, ORDER BY clause, or an explicit join including an ON clause.)
+			)] string context)
+		{
+			if (context.IsAnyOf(TestProvName.AllSQLite))
+			{
+				using var dc = (TestDataConnection)GetDataContext(context.Replace(".LinqService", string.Empty));
+				if (TestUtils.GetSqliteVersion(dc) < new Version(3, 34))
+				{
+					// SQLite Error 1: 'circular reference: cte'.
+					Assert.Inconclusive("SQLite version 3.34.0 or greater required");
+				}
+			}
+
+			using var db = GetDataContext(context);
+
+			var query = db.GetCte<Issue3359Projection>(cte =>
+			{
+				return db.Person.Select(p => new Issue3359Projection() { FirstName = p.FirstName, LastName = p.LastName })
+				.Concat(
+					from p in cte
+					join d in db.Doctor on p.FirstName equals d.Taxonomy
+					select new Issue3359Projection() { FirstName = p.FirstName, LastName = p.LastName }
+					)
+				.Concat(
+					from p in cte
+					join pat in db.Patient on p.FirstName equals pat.Diagnosis
+					select new Issue3359Projection() { FirstName = p.FirstName, LastName = p.LastName }
+					);
+			});
+
+			query.ToArray();
+
+			if (db is TestDataConnection cn)
+				cn.LastQuery!.Should().Contain("SELECT", Exactly.Times(4));
+		}
+
+
+
+		public record class  Issue3357RecordClass (int Id, string FirstName, string LastName);
+		public class Issue3357RecordLike
+		{
+			public Issue3357RecordLike(int Id, string FirstName, string LastName)
+			{
+				this.Id        = Id;
+				this.FirstName = FirstName;
+				this.LastName  = LastName;
+			}
+
+			public int    Id        { get; }
+			public string FirstName { get; }
+			public string LastName  { get; }
+		}
+
+		[Test(Description = "record type support")]
+		public void Issue3357_RecordClass([CteContextSource(ProviderName.DB2)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.GetCte<Issue3357RecordClass>(cte =>
+			{
+				return db.Person.Select(p => new Issue3357RecordClass(p.ID, p.FirstName, p.LastName))
+				.Concat(
+					from p in cte
+					join r in db.Person on p.FirstName equals r.LastName
+					select new Issue3357RecordClass(r.ID, r.FirstName, r.LastName)
+					);
+			});
+
+			AreEqual(
+				Person.Select(p => new Issue3357RecordClass(p.ID, p.FirstName, p.LastName)),
+				query.ToArray());
+		}
+
+		[Test(Description = "record type support")]
+		public void Issue3357_RecordClass_DB2([IncludeDataSources(true, ProviderName.DB2)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.GetCte<Issue3357RecordClass>(cte =>
+			{
+				return db.Person.Select(p => new Issue3357RecordClass(p.ID, p.FirstName, p.LastName))
+				.Concat(
+					from p in cte
+					from r in db.Person
+					where p.FirstName == r.LastName
+					select new Issue3357RecordClass(r.ID, r.FirstName, r.LastName)
+					);
+			});
+
+			AreEqual(
+				Person.Select(p => new Issue3357RecordClass(p.ID, p.FirstName, p.LastName)),
+				query.ToArray());
+		}
+
+		[Test(Description = "record type support")]
+		public void Issue3357_RecordLikeClass([CteContextSource(ProviderName.DB2)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.GetCte<Issue3357RecordLike>(cte =>
+			{
+				return db.Person.Select(p => new Issue3357RecordLike(p.ID, p.FirstName, p.LastName))
+				.Concat(
+					from p in cte
+					join r in db.Person on p.FirstName equals r.LastName
+					select new Issue3357RecordLike(r.ID, r.FirstName, r.LastName)
+					);
+			});
+
+			AreEqualWithComparer(
+				Person.Select(p => new Issue3357RecordLike(p.ID, p.FirstName, p.LastName)),
+				query.ToArray());
+		}
+
+		[Test(Description = "record type support")]
+		public void Issue3357_RecordLikeClass_DB2([IncludeDataSources(true, ProviderName.DB2)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.GetCte<Issue3357RecordLike>(cte =>
+			{
+				return db.Person.Select(p => new Issue3357RecordLike(p.ID, p.FirstName, p.LastName))
+				.Concat(
+					from p in cte
+					from r in db.Person
+					where p.FirstName == r.LastName
+					select new Issue3357RecordLike(r.ID, r.FirstName, r.LastName)
+					);
+			});
+
+			AreEqualWithComparer(
+				Person.Select(p => new Issue3357RecordLike(p.ID, p.FirstName, p.LastName)),
+				query.ToArray());
+		}
+
+		class CteEntity<TEntity> where TEntity : class
+		{
+			public TEntity Entity   { get; set; } = null!;
+			public Guid    Id       { get; set; }
+			public Guid?   ParentId { get; set; }
+			public int     Level    { get; set; }
+			public string? Label    { get; set; }
+		}
+
+		[Table]
+		class TestFolder
+		{
+			[Column] public Guid        Id       { get; set; }
+			[Column] public string?     Label    { get; set; }
+			[Column] public Guid?       ParentId { get; set; }
+
+			[Association(ThisKey = nameof(ParentId), OtherKey = nameof(Id))]
+			public TestFolder? Parent { get; set; }
+		}
+
+		[ActiveIssue(2264)]
+		[Test(Description = "Recursive common table expression 'CTE' does not contain a top-level UNION ALL operator.")]
+		public void Issue2264([CteContextSource] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<TestFolder>();
+
+			var query = db.GetCte<CteEntity<TestFolder>>("CTE", cte =>
+			{
+				return (tb
+					.Where(c => c.ParentId == null)
+					.Select(c =>
+						new CteEntity<TestFolder>()
+						{
+							Level     = 0,
+							Id        = c.Id,
+							ParentId  = c.ParentId,
+							Label     = c.Label,
+							Entity    = c
+						}))
+				.Concat(tb
+					.SelectMany(c => cte.InnerJoin(r => c.ParentId == r.Id),
+						(c, r)    => new CteEntity<TestFolder>
+						{
+							Level    = r.Level + 1,
+							Id       = c.Id,
+							ParentId = c.ParentId,
+							Label    = r.Label + '/' + c.Label,
+							Entity   = c
+						}));
+			});
+
+			query.ToArray();
+		}
 	}
 }

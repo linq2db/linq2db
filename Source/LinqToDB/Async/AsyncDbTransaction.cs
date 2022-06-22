@@ -1,61 +1,58 @@
 ﻿using System;
-using System.Data;
+using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
-#if NETSTANDARD2_1PLUS
-using System.Data.Common;
-#endif
 
 using JetBrains.Annotations;
 
 namespace LinqToDB.Async
 {
 	/// <summary>
-	/// Asynchronous version of the <see cref="IDbTransaction"/> interface, allowing asynchronous operations,
-	/// missing from <see cref="IDbTransaction"/>.
-	/// Providers with async operations support could override its methods with asynchronous implementations.
+	/// Basic <see cref="IAsyncDbTransaction"/> implementation with fallback to synchronous operations if corresponding functionality
+	/// missing from <see cref="DbTransaction"/>.
 	/// </summary>
 	[PublicAPI]
 	public class AsyncDbTransaction : IAsyncDbTransaction
 	{
-		internal protected AsyncDbTransaction(IDbTransaction transaction)
+		internal protected AsyncDbTransaction(DbTransaction transaction)
 		{
 			Transaction = transaction ?? throw new ArgumentNullException(nameof(transaction));
 		}
 
-		public virtual IDbConnection Connection      => Transaction.Connection;
+		public DbTransaction Transaction { get; }
 
-		public virtual IsolationLevel IsolationLevel => Transaction.IsolationLevel;
+		public virtual void Commit  () => Transaction.Commit();
+		public virtual void Rollback() => Transaction.Rollback();
 
-		public IDbTransaction Transaction { get; }
-
-		public virtual void Commit()
-		{
-			Transaction.Commit();
-		}
-
-		public virtual Task CommitAsync(CancellationToken cancellationToken = default)
+		public virtual Task CommitAsync(CancellationToken cancellationToken)
 		{
 #if NETSTANDARD2_1PLUS
-			if (Transaction is DbTransaction dbTransaction)
-				return dbTransaction.CommitAsync(cancellationToken);
-#endif
-
+			return Transaction.CommitAsync(cancellationToken);
+#else
 			Commit();
-
 			return TaskEx.CompletedTask;
+#endif
 		}
 
-		public virtual void Dispose()
+		public virtual Task RollbackAsync(CancellationToken cancellationToken)
 		{
-			Transaction.Dispose();
+#if NETSTANDARD2_1PLUS
+			return Transaction.RollbackAsync(cancellationToken);
+#else
+			Rollback();
+			return TaskEx.CompletedTask;
+#endif
 		}
 
+		#region IDisposable
+		public virtual void Dispose() => Transaction.Dispose();
+		#endregion
+
+		#region IAsyncDisposable
 #if !NATIVE_ASYNC
 		public virtual Task DisposeAsync()
 		{
 			Dispose();
-
 			return TaskEx.CompletedTask;
 		}
 #else
@@ -68,22 +65,6 @@ namespace LinqToDB.Async
 			return default;
 		}
 #endif
-
-		public virtual void Rollback()
-		{
-			Transaction.Rollback();
-		}
-
-		public virtual Task RollbackAsync(CancellationToken cancellationToken = default)
-		{
-#if NETSTANDARD2_1PLUS
-			if (Transaction is DbTransaction dbTransaction)
-				return dbTransaction.RollbackAsync(cancellationToken);
-#endif
-
-			Rollback();
-
-			return TaskEx.CompletedTask;
-		}
+		#endregion
 	}
 }

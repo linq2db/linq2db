@@ -18,8 +18,8 @@ namespace LinqToDB.Linq.Builder
 		}
 
 #if DEBUG
-		public string _sqlQueryText => SelectQuery?.SqlText ?? "";
-		public string Path          => this.GetPath();
+		public string SqlQueryText => SelectQuery?.SqlText ?? "";
+		public string Path         => this.GetPath();
 #endif
 
 		public IBuildContext?     Parent        { get; set; }
@@ -96,7 +96,7 @@ namespace LinqToDB.Linq.Builder
 			return Parent?.ConvertToParentIndex(index, this) ?? index;
 		}
 
-		public virtual void SetAlias(string alias)
+		public virtual void SetAlias(string? alias)
 		{
 		}
 

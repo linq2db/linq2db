@@ -1,7 +1,6 @@
 #!/bin/bash
 
-docker run -d --name hana2 -p 39017:39017 store/saplabs/hanaexpress:2.00.045.00.20200121.1 --agree-to-sap-license --passwords-url file:///hana/password.json
-
+docker run -d --name hana2 -p 39017:39017 store/saplabs/hanaexpress:2.00.057.00.20220119.1 --agree-to-sap-license --passwords-url file:///hana/password.json
 #echo Generate password file
 cat <<-EOJSON > hana_password.json
 {"master_password": "Passw0rd"}
@@ -43,7 +42,7 @@ hxehost=$(docker logs hana2 | grep -oP "(?<=New host: ).*")
 ~/linq2db_ci/providers/saphana/linux/HDBSQL/hdbsql -n localhost:39017 -u SYSTEM -p Passw0rd 'ALTER SYSTEM ALTER CONFIGURATION ('"'"'daemon.ini'"'"','"'"'host'"'"','${hxehost}') UNSET ('"'"'diserver'"'"','"'"'instances'"'"') WITH RECONFIGURE'
 ~/linq2db_ci/providers/saphana/linux/HDBSQL/hdbsql -n localhost:39017 -u SYSTEM -p Passw0rd 'ALTER SYSTEM ALTER CONFIGURATION ('"'"'daemon.ini'"'"','"'"'host'"'"','${hxehost}') SET ('"'"'webdispatcher'"'"','"'"'instances'"'"') = '"'"'0'"'"' WITH RECONFIGURE'
 
-cat <<-EOJSON > UserDataProviders.json
+cat <<-EOJSON > HanaDataProviders.json
 {
     "BASE.Azure": {
         "BasedOn": "AzureConnectionStrings",
@@ -55,19 +54,13 @@ cat <<-EOJSON > UserDataProviders.json
             }
         }
     },
-    "CORE21.Azure": {
-        "BasedOn": "BASE.Azure",
-        "Providers": [
-            "SapHana.Odbc"
-        ]
-    },
     "CORE31.Azure": {
         "BasedOn": "BASE.Azure",
         "Providers": [
             "SapHana.Odbc"
         ]
     },
-    "NET50.Azure": {
+    "NET60.Azure": {
         "BasedOn": "BASE.Azure",
         "Providers": [
             "SapHana.Odbc"

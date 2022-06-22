@@ -49,7 +49,7 @@ namespace LinqToDB.Linq.Builder
 			}
 
 #if DEBUG
-			public string _sqlQueryText => SelectQuery == null ? "" : SelectQuery.SqlText;
+			public string SqlQueryText => SelectQuery == null ? "" : SelectQuery.SqlText;
 			public string Path => this.GetPath();
 #endif
 
@@ -125,7 +125,7 @@ namespace LinqToDB.Linq.Builder
 				return Parent?.ConvertToParentIndex(index, context) ?? index;
 			}
 
-			public void SetAlias(string alias)
+			public void SetAlias(string? alias)
 			{
 			}
 

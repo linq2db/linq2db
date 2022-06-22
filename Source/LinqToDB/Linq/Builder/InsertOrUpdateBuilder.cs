@@ -32,7 +32,7 @@ namespace LinqToDB.Linq.Builder
 				sequence);
 
 			var updateExpr = methodCall.Arguments[2].Unwrap();
-			if (!(updateExpr is ConstantExpression constant && constant.Value == null))
+			if (!updateExpr.IsNullValue())
 				UpdateBuilder.BuildSetter(
 					builder,
 					buildInfo,
@@ -52,7 +52,7 @@ namespace LinqToDB.Linq.Builder
 				var keys  = table.GetKeys(false);
 
 				if (keys.Count == 0)
-					throw new LinqException("InsertOrUpdate method requires the '{0}' table to have a primary key.", table.Name);
+					throw new LinqException("InsertOrUpdate method requires the '{0}' table to have a primary key.", table.NameForLogging);
 
 				var q =
 				(
@@ -65,7 +65,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (missedKey != null)
 					throw new LinqException("InsertOrUpdate method requires the '{0}.{1}' field to be included in the insert setter.",
-						table.Name,
+						table.NameForLogging,
 						((SqlField)missedKey).Name);
 
 				insertOrUpdateStatement.Update.Keys.AddRange(q.Select(i => i.i));
@@ -82,12 +82,6 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			return new InsertOrUpdateContext(buildInfo.Parent, sequence);
-		}
-
-		protected override SequenceConvertInfo? Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-		{
-			return null;
 		}
 
 		#endregion

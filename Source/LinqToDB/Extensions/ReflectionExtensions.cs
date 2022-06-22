@@ -17,6 +17,7 @@ namespace LinqToDB.Extensions
 	using System.Diagnostics.CodeAnalysis;
 	using Expressions;
 	using LinqToDB.Common;
+	using LinqToDB.Reflection;
 
 	[PublicAPI]
 	public static class ReflectionExtensions
@@ -29,12 +30,6 @@ namespace LinqToDB.Extensions
 
 		public static MemberInfo[] GetPublicInstanceValueMembers(this Type type)
 		{
-			if (type.IsAnonymous())
-			{
-				type.GetConstructors().Single()
-					.GetParameters().Select((p, i) => new { p.Name, i }).ToDictionary(_ => _.Name, _ => _.i);
-			}
-
 			var members = type.GetMembers(BindingFlags.Instance | BindingFlags.Public)
 				.Where(m => m.IsFieldEx() || m.IsPropertyEx() && ((PropertyInfo)m).GetIndexParameters().Length == 0);
 
@@ -215,8 +210,6 @@ namespace LinqToDB.Extensions
 			return memberInfo.MemberType == MemberTypes.Method;
 		}
 
-		private static readonly MemberInfo SQLPropertyMethod = MemberHelper.MethodOf(() => Sql.Property<string>(null!, null!)).GetGenericMethodDefinition();
-
 		/// <summary>
 		/// Determines whether member info represent a Sql.Property method.
 		/// </summary>
@@ -227,7 +220,7 @@ namespace LinqToDB.Extensions
 		public static bool IsSqlPropertyMethodEx(this MemberInfo memberInfo)
 		{
 			return memberInfo is MethodInfo methodCall && methodCall.IsGenericMethod &&
-			       methodCall.GetGenericMethodDefinition() == SQLPropertyMethod;
+			       methodCall.GetGenericMethodDefinition() == Methods.LinqToDB.SqlExt.Property;
 		}
 
 		/// <summary>
@@ -417,12 +410,11 @@ namespace LinqToDB.Extensions
 		}
 
 		/// <summary>
-		/// Gets a value indicating whether a type (or type's element type)
-		/// instance can be null in the underlying data store.
+		/// Returns true, if type is <see cref="Nullable{T}"/> type.
 		/// </summary>
 		/// <param name="type">A <see cref="Type"/> instance. </param>
-		/// <returns> True, if the type parameter is a closed generic nullable type; otherwise, False.</returns>
-		/// <remarks>Arrays of Nullable types are treated as Nullable types.</remarks>
+		/// <returns><c>true</c>, if <paramref name="type"/> represents <see cref="Nullable{T}"/> type; otherwise, <c>false</c>.</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsNullable(this Type type)
 		{
 			return type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>);
@@ -459,12 +451,14 @@ namespace LinqToDB.Extensions
 		/// <summary>
 		/// Wraps type into <see cref="Nullable{T}"/> class.
 		/// </summary>
-		/// <param name="type">Value type to wrap.</param>
+		/// <param name="type">Value type to wrap. Must be value type (except <see cref="Nullable{T}"/> itself).</param>
 		/// <returns>Type, wrapped by <see cref="Nullable{T}"/>.</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Type AsNullable(this Type type)
 		{
-			if (type == null)          throw new ArgumentNullException(nameof(type));
+			if (type == null)      throw new ArgumentNullException(nameof(type));
 			if (!type.IsValueType) throw new ArgumentException($"{type} is not a value type");
+			if (type.IsNullable()) throw new ArgumentException($"{type} is nullable type already");
 
 			return typeof(Nullable<>).MakeGenericType(type);
 		}
@@ -558,7 +552,7 @@ namespace LinqToDB.Extensions
 		/// true if the <paramref name="type"/> derives from <paramref name="check"/>; otherwise, false.
 		/// </returns>
 		[Pure]
-		internal static bool IsSubClassOf(this Type type, Type check)
+		public static bool IsSubClassOf(this Type type, Type check)
 		{
 			if (type  == null) throw new ArgumentNullException(nameof(type));
 			if (check == null) throw new ArgumentNullException(nameof(check));
@@ -953,24 +947,21 @@ namespace LinqToDB.Extensions
 		{
 			return
 				member.Name == "Value" &&
-				member.DeclaringType!.IsGenericType &&
-				member.DeclaringType.GetGenericTypeDefinition() == typeof(Nullable<>);
+				member.DeclaringType!.IsNullable();
 		}
 
 		public static bool IsNullableHasValueMember(this MemberInfo member)
 		{
 			return
 				member.Name == "HasValue" &&
-				member.DeclaringType!.IsGenericType &&
-				member.DeclaringType.GetGenericTypeDefinition() == typeof(Nullable<>);
+				member.DeclaringType!.IsNullable();
 		}
 
 		public static bool IsNullableGetValueOrDefault(this MemberInfo member)
 		{
 			return
 				member.Name == "GetValueOrDefault" &&
-				member.DeclaringType!.IsGenericType &&
-				member.DeclaringType.GetGenericTypeDefinition() == typeof(Nullable<>);
+				member.DeclaringType!.IsNullable();
 		}
 
 		static readonly Dictionary<Type,HashSet<Type>> _castDic = new ()
@@ -1091,9 +1082,11 @@ namespace LinqToDB.Extensions
 			return
 				!type.IsPublic &&
 				 type.IsGenericType &&
+				// C# anonymous type name prefix
 				(type.Name.StartsWith("<>f__AnonymousType", StringComparison.Ordinal) ||
+				 // VB.NET anonymous type name prefix
 				 type.Name.StartsWith("VB$AnonymousType", StringComparison.Ordinal)) &&
-				type.GetCustomAttributes(typeof(CompilerGeneratedAttribute), true).Any();
+				type.GetCustomAttribute(typeof(CompilerGeneratedAttribute), false) != null;
 		}
 
 		internal static MemberInfo GetMemberOverride(this Type type, MemberInfo mi)

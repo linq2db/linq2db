@@ -169,7 +169,7 @@ namespace LinqToDB.Expressions
 
 				case ExpressionType.Index:
 					return ((IndexExpression)expr).Update(
-						Transform(((IndexExpression)expr).Object),
+						Transform(((IndexExpression)expr).Object!),
 						Transform(((IndexExpression)expr).Arguments));
 
 				case ExpressionType.Label:
@@ -233,7 +233,7 @@ namespace LinqToDB.Expressions
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private Expression TransformX(ChangeTypeExpression e)
 		{
-			var ex = Transform(e.Expression)!;
+			var ex = Transform(e.Expression);
 
 			if (ex == e.Expression)
 				return e;
@@ -249,7 +249,7 @@ namespace LinqToDB.Expressions
 		{
 			var ex = Transform(e.Expressions);
 
-			return ex != e.Expressions ? Expression.NewArrayInit(e.Type.GetElementType(), ex) : e;
+			return ex != e.Expressions ? Expression.NewArrayInit(e.Type.GetElementType()!, ex) : e;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -264,7 +264,7 @@ namespace LinqToDB.Expressions
 		private Expression TransformX(MemberInitExpression e)
 		{
 			return e.Update(
-				(NewExpression)Transform(e.NewExpression)!,
+				(NewExpression)Transform(e.NewExpression),
 				Transform(e.Bindings, Modify));
 		}
 
@@ -279,7 +279,7 @@ namespace LinqToDB.Expressions
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private Expression TransformX(ListInitExpression e)
 		{
-			var n = Transform(e.NewExpression)!;
+			var n = Transform(e.NewExpression);
 			var i = Transform(e.Initializers, TransformElementInit);
 
 			return n != e.NewExpression || i != e.Initializers ? Expression.ListInit((NewExpression)n, i) : e;
@@ -358,7 +358,7 @@ namespace LinqToDB.Expressions
 			for (var i = 0; i < source.Count; i++)
 			{
 				var item = source[i];
-				var e    = (T)Transform(item)!;
+				var e    = (T)Transform(item);
 
 				if (e != item)
 				{
@@ -395,7 +395,7 @@ namespace LinqToDB.Expressions
 				case MemberBindingType.MemberBinding:
 				{
 					var mm = (MemberMemberBinding) b;
-					var bs = Transform<MemberBinding>(mm.Bindings, Modify);
+					var bs = Transform(mm.Bindings, Modify);
 
 					if (bs != mm.Bindings)
 						mm = Expression.MemberBind(mm.Member);

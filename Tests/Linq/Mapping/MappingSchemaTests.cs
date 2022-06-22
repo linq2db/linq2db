@@ -3,6 +3,7 @@ using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Linq;
+using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Common;
@@ -118,63 +119,6 @@ namespace Tests.Mapping
 		}
 
 		[Test]
-		public void BaseSchema3()
-		{
-			var ms1 = new MappingSchema();
-
-			Assert.That(ms1.Schemas.Length, Is.EqualTo(2));
-			Assert.That(ms1.Schemas[0].GetHashCode(), Is.EqualTo(ms1.Schemas[0].GetHashCode()));
-			Assert.That(ms1.Schemas[1].GetHashCode(), Is.EqualTo(MappingSchema.Default.Schemas[0].GetHashCode()));
-
-			var converter = ms1.ValueToSqlConverter;
-
-			Assert.That(converter.BaseConverters.Length, Is.EqualTo(1));
-			Assert.That(converter.BaseConverters[0].GetHashCode(), Is.EqualTo(MappingSchema.Default.ValueToSqlConverter.GetHashCode()));
-		}
-
-		[Test]
-		public void BaseSchema4()
-		{
-			var ms1 = new MappingSchema();
-			var ms2 = new MappingSchema(ms1);
-
-			Assert.That(ms2.Schemas.Length, Is.EqualTo(3));
-			Assert.That(ms2.Schemas[0].GetHashCode(), Is.EqualTo(ms2.Schemas[0].GetHashCode()));
-			Assert.That(ms2.Schemas[1].GetHashCode(), Is.EqualTo(ms1.Schemas[0].GetHashCode()));
-			Assert.That(ms2.Schemas[2].GetHashCode(), Is.EqualTo(MappingSchema.Default.Schemas[0].GetHashCode()));
-
-			var converter = ms2.ValueToSqlConverter;
-
-			Assert.That(converter.BaseConverters.Length, Is.EqualTo(2));
-			Assert.That(converter.BaseConverters[0].GetHashCode(), Is.EqualTo(ms1.ValueToSqlConverter.GetHashCode()));
-			Assert.That(converter.BaseConverters[1].GetHashCode(), Is.EqualTo(MappingSchema.Default.ValueToSqlConverter.GetHashCode()));
-		}
-
-		[Test]
-		public void BaseSchema5()
-		{
-			var ms1 = new MappingSchema();
-			var ms2 = new MappingSchema(ms1);
-			var ms3 = new MappingSchema(ms1);
-			var ms4 = new MappingSchema(ms2, ms3);
-
-			Assert.That(ms4.Schemas.Length, Is.EqualTo(5));
-			Assert.That(ms4.Schemas[0].GetHashCode(), Is.EqualTo(ms4.Schemas[0].GetHashCode()));
-			Assert.That(ms4.Schemas[1].GetHashCode(), Is.EqualTo(ms2.Schemas[0].GetHashCode()));
-			Assert.That(ms4.Schemas[2].GetHashCode(), Is.EqualTo(ms3.Schemas[0].GetHashCode()));
-			Assert.That(ms4.Schemas[3].GetHashCode(), Is.EqualTo(ms1.Schemas[0].GetHashCode()));
-			Assert.That(ms4.Schemas[4].GetHashCode(), Is.EqualTo(MappingSchema.Default.Schemas[0].GetHashCode()));
-
-			var converter = ms4.ValueToSqlConverter;
-
-			Assert.That(converter.BaseConverters.Length, Is.EqualTo(4));
-			Assert.That(converter.BaseConverters[0].GetHashCode(), Is.EqualTo(ms2.ValueToSqlConverter.GetHashCode()));
-			Assert.That(converter.BaseConverters[1].GetHashCode(), Is.EqualTo(ms3.ValueToSqlConverter.GetHashCode()));
-			Assert.That(converter.BaseConverters[2].GetHashCode(), Is.EqualTo(ms1.ValueToSqlConverter.GetHashCode()));
-			Assert.That(converter.BaseConverters[3].GetHashCode(), Is.EqualTo(MappingSchema.Default.ValueToSqlConverter.GetHashCode()));
-		}
-
-		[Test]
 		public void CultureInfo()
 		{
 			var ms = new MappingSchema();
@@ -196,7 +140,6 @@ namespace Tests.Mapping
 			Assert.AreEqual("100000,999",                          ms.GetConverter<double,string>  ()!(100000.999));
 			Assert.AreEqual(100000.999,                            ms.GetConverter<string,double>  ()!("100000,999"));
 		}
-
 
 		class AttrTest
 		{
@@ -409,7 +352,20 @@ namespace Tests.Mapping
 			Assert.False(c.IsPrimaryKey);
 			Assert.False(c.IsIdentity);
 			Assert.AreEqual(DataType.DateTime, c.DataType);
+		}
 
+		[Repeat(100)]
+		[Test]
+		public void TestIssue3312()
+		{
+			var ms = new MappingSchema();
+
+			var tasks = new Task[10];
+
+			for (var i = 0; i < tasks.Length; i++)
+				tasks[i] = Task.Run(() => ms.GetConvertExpression(typeof(string), typeof(int)));
+
+			Task.WaitAll(tasks);
 		}
 	}
 }

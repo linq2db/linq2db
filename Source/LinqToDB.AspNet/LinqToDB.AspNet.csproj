@@ -5,14 +5,14 @@
 
 		<AssemblyName>linq2db.AspNet</AssemblyName>
 		<RootNamespace>LinqToDB.AspNet</RootNamespace>
-		<TargetFrameworks>net45;netstandard2.0</TargetFrameworks>
+		<TargetFrameworks>net45;netstandard2.0;net6.0</TargetFrameworks>
 
 		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\linq2db.AspNet.xml</DocumentationFile>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\LinqToDB\LinqToDB.csproj" />
-		
+
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
 	</ItemGroup>

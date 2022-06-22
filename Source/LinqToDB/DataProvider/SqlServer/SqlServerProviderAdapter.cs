@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -16,8 +17,8 @@ namespace LinqToDB.DataProvider.SqlServer
 	// We don't take it into account, as there is no reason to use such old provider versions
 	public class SqlServerProviderAdapter : IDynamicProviderAdapter
 	{
-		private static readonly object _sysSyncRoot = new object();
-		private static readonly object _msSyncRoot  = new object();
+		private static readonly object _sysSyncRoot = new ();
+		private static readonly object _msSyncRoot  = new ();
 
 		private static SqlServerProviderAdapter? _systemAdapter;
 		private static SqlServerProviderAdapter? _microsoftAdapter;
@@ -39,18 +40,18 @@ namespace LinqToDB.DataProvider.SqlServer
 			Type sqlDataRecordType,
 			Type sqlExceptionType,
 
-			Action<IDbDataParameter, SqlDbType> dbTypeSetter,
-			Func  <IDbDataParameter, SqlDbType> dbTypeGetter,
-			Action<IDbDataParameter, string> udtTypeNameSetter,
-			Func  <IDbDataParameter, string> udtTypeNameGetter,
-			Action<IDbDataParameter, string> typeNameSetter,
-			Func  <IDbDataParameter, string> typeNameGetter,
+			Action<DbParameter, SqlDbType> dbTypeSetter,
+			Func  <DbParameter, SqlDbType> dbTypeGetter,
+			Action<DbParameter, string> udtTypeNameSetter,
+			Func  <DbParameter, string> udtTypeNameGetter,
+			Action<DbParameter, string> typeNameSetter,
+			Func  <DbParameter, string> typeNameGetter,
 
 			Func<string, SqlConnectionStringBuilder> createConnectionStringBuilder,
 			Func<string, SqlConnection>              createConnection,
 
-			Func<IDbConnection, SqlBulkCopyOptions, IDbTransaction?, SqlBulkCopy> createBulkCopy,
-			Func<int, string, SqlBulkCopyColumnMapping>                           createBulkCopyColumnMapping)
+			Func<DbConnection, SqlBulkCopyOptions, DbTransaction?, SqlBulkCopy> createBulkCopy,
+			Func<int, string, SqlBulkCopyColumnMapping>                         createBulkCopyColumnMapping)
 		{
 			ConnectionType  = connectionType;
 			DataReaderType  = dataReaderType;
@@ -91,22 +92,22 @@ namespace LinqToDB.DataProvider.SqlServer
 		private readonly Func<string, SqlConnectionStringBuilder> _createConnectionStringBuilder;
 		public SqlConnectionStringBuilder CreateConnectionStringBuilder(string connectionString) => _createConnectionStringBuilder(connectionString);
 
-		private readonly Func<IDbConnection, SqlBulkCopyOptions, IDbTransaction?, SqlBulkCopy> _createBulkCopy;
-		public SqlBulkCopy CreateBulkCopy(IDbConnection connection, SqlBulkCopyOptions options, IDbTransaction? transaction)
+		private readonly Func<DbConnection, SqlBulkCopyOptions, DbTransaction?, SqlBulkCopy> _createBulkCopy;
+		public SqlBulkCopy CreateBulkCopy(DbConnection connection, SqlBulkCopyOptions options, DbTransaction? transaction)
 			=> _createBulkCopy(connection, options, transaction);
 
 		private readonly Func<int, string, SqlBulkCopyColumnMapping> _createBulkCopyColumnMapping;
 		public SqlBulkCopyColumnMapping CreateBulkCopyColumnMapping(int source, string destination)
 			=> _createBulkCopyColumnMapping(source, destination);
 
-		public Action<IDbDataParameter, SqlDbType> SetDbType { get; }
-		public Func  <IDbDataParameter, SqlDbType> GetDbType { get; }
+		public Action<DbParameter, SqlDbType> SetDbType { get; }
+		public Func  <DbParameter, SqlDbType> GetDbType { get; }
 
-		public Action<IDbDataParameter, string> SetUdtTypeName { get; }
-		public Func  <IDbDataParameter, string> GetUdtTypeName { get; }
+		public Action<DbParameter, string> SetUdtTypeName { get; }
+		public Func  <DbParameter, string> GetUdtTypeName { get; }
 
-		public Action<IDbDataParameter, string> SetTypeName { get; }
-		public Func  <IDbDataParameter, string> GetTypeName { get; }
+		public Action<DbParameter, string> SetTypeName { get; }
+		public Func  <DbParameter, string> GetTypeName { get; }
 
 		private readonly Func<string, SqlConnection> _createConnection;
 		public SqlConnection CreateConnection(string connectionString) => _createConnection(connectionString);
@@ -211,17 +212,17 @@ namespace LinqToDB.DataProvider.SqlServer
 				sqlDataRecordType,
 				sqlExceptionType,
 
-				dbTypeBuilder.BuildSetter<IDbDataParameter>(),
-				dbTypeBuilder.BuildGetter<IDbDataParameter>(),
-				udtTypeNameBuilder.BuildSetter<IDbDataParameter>(),
-				udtTypeNameBuilder.BuildGetter<IDbDataParameter>(),
-				typeNameBuilder.BuildSetter<IDbDataParameter>(),
-				typeNameBuilder.BuildGetter<IDbDataParameter>(),
+				dbTypeBuilder.BuildSetter<DbParameter>(),
+				dbTypeBuilder.BuildGetter<DbParameter>(),
+				udtTypeNameBuilder.BuildSetter<DbParameter>(),
+				udtTypeNameBuilder.BuildGetter<DbParameter>(),
+				typeNameBuilder.BuildSetter<DbParameter>(),
+				typeNameBuilder.BuildGetter<DbParameter>(),
 
 				typeMapper.BuildWrappedFactory((string connectionString) => new SqlConnectionStringBuilder(connectionString)),
 				typeMapper.BuildWrappedFactory((string connectionString) => new SqlConnection(connectionString)),
 
-				typeMapper.BuildWrappedFactory((IDbConnection connection, SqlBulkCopyOptions options, IDbTransaction? transaction) => new SqlBulkCopy((SqlConnection)connection, options, (SqlTransaction?)transaction)),
+				typeMapper.BuildWrappedFactory((DbConnection connection, SqlBulkCopyOptions options, DbTransaction? transaction) => new SqlBulkCopy((SqlConnection)(object)connection, options, (SqlTransaction?)(object?)transaction)),
 				typeMapper.BuildWrappedFactory((int source, string destination) => new SqlBulkCopyColumnMapping(source, destination)));
 
 			IEnumerable<int> exceptionErrorsGettter(Exception ex) => typeMapper.Wrap<SqlException>(ex).Errors.Errors.Select(err => err.Number);
@@ -337,13 +338,13 @@ namespace LinqToDB.DataProvider.SqlServer
 				= new LambdaExpression[]
 			{
 				// [0]: get ServerVersion
-				(Expression<Func<SqlConnection, string>>    )((SqlConnection this_) => this_.ServerVersion),
+				(Expression<Func<SqlConnection, string>>   )((SqlConnection this_) => this_.ServerVersion),
 				// [1]: CreateCommand
-				(Expression<Func<SqlConnection, IDbCommand>>)((SqlConnection this_) => this_.CreateCommand()),
+				(Expression<Func<SqlConnection, DbCommand>>)((SqlConnection this_) => this_.CreateCommand()),
 				// [2]: Open
-				(Expression<Action<SqlConnection>>          )((SqlConnection this_) => this_.Open()),
+				(Expression<Action<SqlConnection>>         )((SqlConnection this_) => this_.Open()),
 				// [3]: Dispose
-				(Expression<Action<SqlConnection>>          )((SqlConnection this_) => this_.Dispose()),
+				(Expression<Action<SqlConnection>>         )((SqlConnection this_) => this_.Dispose()),
 			};
 
 			public SqlConnection(object instance, Delegate[] wrappers) : base(instance, wrappers)
@@ -352,10 +353,10 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			public SqlConnection(string connectionString) => throw new NotImplementedException();
 
-			public string     ServerVersion   => ((Func<SqlConnection, string>)CompiledWrappers[0])(this);
-			public IDbCommand CreateCommand() => ((Func<SqlConnection, IDbCommand>)CompiledWrappers[1])(this);
-			public void       Open()          => ((Action<SqlConnection>)CompiledWrappers[2])(this);
-			public void       Dispose()       => ((Action<SqlConnection>)CompiledWrappers[3])(this);
+			public string    ServerVersion   => ((Func<SqlConnection, string>)CompiledWrappers[0])(this);
+			public DbCommand CreateCommand() => ((Func<SqlConnection, DbCommand>)CompiledWrappers[1])(this);
+			public void      Open()          => ((Action<SqlConnection>)CompiledWrappers[2])(this);
+			public void      Dispose()       => ((Action<SqlConnection>)CompiledWrappers[3])(this);
 		}
 
 		[Wrapper]
@@ -393,7 +394,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				// [10]: set DestinationTableName
 				PropertySetter((SqlBulkCopy this_) => this_.DestinationTableName),
 				// [11]: WriteToServerAsync
-				(Expression<Func<SqlBulkCopy, IDataReader, CancellationToken, Task>>)((SqlBulkCopy this_, IDataReader reader, CancellationToken token) 
+				(Expression<Func<SqlBulkCopy, IDataReader, CancellationToken, Task>>)((SqlBulkCopy this_, IDataReader reader, CancellationToken token)
 					=> this_.WriteToServerAsync(reader, token)),
 			};
 
@@ -410,9 +411,11 @@ namespace LinqToDB.DataProvider.SqlServer
 			public SqlBulkCopy(SqlConnection connection, SqlBulkCopyOptions options, SqlTransaction? transaction) => throw new NotImplementedException();
 
 			void IDisposable.Dispose()                        => ((Action<SqlBulkCopy>)CompiledWrappers[0])(this);
+#pragma warning disable RS0030 // API mapping must preserve type
 			public void WriteToServer(IDataReader dataReader) => ((Action<SqlBulkCopy, IDataReader>)CompiledWrappers[1])(this, dataReader);
 			public Task WriteToServerAsync(IDataReader dataReader, CancellationToken cancellationToken)
 				=> ((Func<SqlBulkCopy, IDataReader, CancellationToken, Task>)CompiledWrappers[11])(this, dataReader, cancellationToken);
+#pragma warning restore RS0030 //  API mapping must preserve type
 
 			public int NotifyAfter
 			{

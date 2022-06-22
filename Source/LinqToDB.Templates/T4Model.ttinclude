@@ -27,7 +27,7 @@ public void GenerateModel()
 	WriteComment(this, "---------------------------------------------------------------------------------------------------");
 
 	WriteLine("");
-	WriteLine("#pragma warning disable 1591");
+	WriteLine("#pragma warning disable 1573, 1591");
 	if (EnableNullableReferenceTypes)
 		WriteLine("#nullable enable");
 	WriteLine("");
@@ -35,9 +35,6 @@ public void GenerateModel()
 	BeforeGenerateModel();
 
 	Model.Render(this);
-
-	WriteLine("");
-	WriteLine("#pragma warning restore 1591");
 }
 
 void Trim()

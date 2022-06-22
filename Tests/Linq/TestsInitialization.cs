@@ -2,10 +2,7 @@
 using System.Data.Common;
 using System.Reflection;
 using NUnit.Framework;
-
-#if !NET472
 using System.IO;
-#endif
 
 using Tests;
 
@@ -25,6 +22,7 @@ public class TestsInitialization
 
 		// netcoreapp2.1 adds DbProviderFactories support, but providers should be registered by application itself
 		// this code allows to load assembly using factory without adding explicit reference to project
+		CopySQLiteRuntime();
 		RegisterSapHanaFactory();
 		RegisterSqlCEFactory();
 
@@ -56,6 +54,25 @@ public class TestsInitialization
 		//LinqToDB.Common.Compilation.SetExpressionCompiler(_ => FastExpressionCompiler.ExpressionCompiler.CompileFast(_, true));
 	}
 
+	// workaround for
+	// https://github.com/ericsink/SQLitePCL.raw/issues/389
+	// https://github.com/dotnet/efcore/issues/19396
+	private void CopySQLiteRuntime()
+	{
+#if NET472
+		const string runtimeFile = "e_sqlite3.dll";
+		var destPath             = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, runtimeFile);
+		var sourcePath           = Path.Combine(
+			AppDomain.CurrentDomain.BaseDirectory,
+			"runtimes",
+			IntPtr.Size == 4 ? "win-x86" : "win-x64",
+			"native",
+			runtimeFile);
+
+		File.Copy(sourcePath, destPath, true);
+#endif
+	}
+
 	private void RegisterSapHanaFactory()
 	{
 #if !NET472
@@ -63,7 +80,7 @@ public class TestsInitialization
 		{
 			// woo-hoo, hardcoded pathes! default install location on x64 system
 			var srcPath = @"c:\Program Files (x86)\sap\hdbclient\dotnetcore\v2.1\Sap.Data.Hana.Core.v2.1.dll";
-			var targetPath = Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory!, Path.GetFileName(srcPath));
+			var targetPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory!, Path.GetFileName(srcPath));
 			if (File.Exists(srcPath))
 			{
 				// original path contains spaces which breaks broken native dlls discovery logic in SAP provider

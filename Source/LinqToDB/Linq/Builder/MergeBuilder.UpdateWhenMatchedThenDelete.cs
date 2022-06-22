@@ -30,7 +30,7 @@ namespace LinqToDB.Linq.Builder
 				var setter          = methodCall.Arguments[2];
 				var deletePredicate = methodCall.Arguments[3];
 
-				if (!(setter is ConstantExpression constSetter) || constSetter.Value != null)
+				if (!setter.IsNullValue())
 				{
 					var setterExpression = (LambdaExpression)setter.Unwrap();
 					UpdateBuilder.BuildSetterWithContext(
@@ -58,27 +58,21 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-				if (!(predicate is ConstantExpression constPredicate) || constPredicate.Value != null)
+				if (!predicate.IsNullValue())
 				{
 					var predicateCondition = (LambdaExpression)predicate.Unwrap();
 
 					operation.Where = BuildSearchCondition(builder, statement, mergeContext.TargetContext, mergeContext.SourceContext, predicateCondition);
 				}
 
-				if (!(deletePredicate is ConstantExpression constDeletePredicate) || constDeletePredicate.Value != null)
+				if (!deletePredicate.IsNullValue())
 				{
 					var deleteCondition = (LambdaExpression)deletePredicate.Unwrap();
-	
+
 					operation.WhereDelete = BuildSearchCondition(builder, statement, mergeContext.TargetContext, mergeContext.SourceContext, deleteCondition);;
 				}
 
 				return mergeContext;
-			}
-
-			protected override SequenceConvertInfo? Convert(
-				ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-			{
-				return null;
 			}
 		}
 	}

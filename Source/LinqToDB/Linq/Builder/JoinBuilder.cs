@@ -18,7 +18,7 @@ namespace LinqToDB.Linq.Builder
 				return false;
 
 			// other overload for Join
-			if (!(methodCall.Arguments[2].Unwrap() is LambdaExpression lambda))
+			if (methodCall.Arguments[2].Unwrap() is not LambdaExpression lambda)
 				return false;
 
 			var body = lambda.Body.Unwrap();
@@ -46,6 +46,14 @@ namespace LinqToDB.Linq.Builder
 			var outerContext = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0], buildInfo.SelectQuery));
 			var innerContext = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery()));
 
+			List<SqlQueryExtension>? extensions = null;
+
+			if (innerContext is QueryExtensionBuilder.JoinHintContext jhc)
+			{
+				innerContext = jhc.Context;
+				extensions   = jhc.Extensions;
+			}
+
 			var context  = new SubQueryContext(outerContext);
 			innerContext = isGroup ? new GroupJoinSubQueryContext(innerContext) : new SubQueryContext(innerContext);
 
@@ -53,6 +61,9 @@ namespace LinqToDB.Linq.Builder
 			var sql  = context.SelectQuery;
 
 			sql.From.Tables[0].Joins.Add(join.JoinedTable);
+
+			if (extensions != null)
+				join.JoinedTable.SqlQueryExtensions = extensions;
 
 			var selector = (LambdaExpression)methodCall.Arguments[4].Unwrap();
 
@@ -194,12 +205,6 @@ namespace LinqToDB.Linq.Builder
 			return subQueryContext;
 		}
 
-		protected override SequenceConvertInfo? Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-		{
-			return null;
-		}
-
 		internal static void BuildJoin(
 			ExpressionBuilder builder,
 			SqlSearchCondition condition,
@@ -216,7 +221,7 @@ namespace LinqToDB.Linq.Builder
 				predicate = new SqlPredicate.ExprExpr(
 					builder.ConvertToSql(outerKeyContext, outerKeySelector),
 					SqlPredicate.Operator.Equal,
-					builder.ConvertToSql(innerKeyContext, innerKeySelector), 
+					builder.ConvertToSql(innerKeyContext, innerKeySelector),
 					Common.Configuration.Linq.CompareNullsAsValues ? true : null);
 			}
 
@@ -298,10 +303,11 @@ namespace LinqToDB.Linq.Builder
 				innerContext.GroupJoin = this;
 			}
 
-			readonly Expression       _innerExpression;
+			readonly Expression        _innerExpression;
+			private  Expression?       _groupExpression;
+
 			public   LambdaExpression  OuterKeyLambda { get; }
 			public   LambdaExpression  InnerKeyLambda { get; }
-			private  Expression?       _groupExpression;
 
 			interface IGroupJoinHelper
 			{
@@ -344,7 +350,7 @@ namespace LinqToDB.Linq.Builder
 					//
 					var expr = Expression.Call(
 						null,
-						MemberHelper.MethodOf(() => Queryable.Where(null, (Expression<Func<TElement,bool>>)null!)),
+						MemberHelper.MethodOf(() => Queryable.Where(null!, (Expression<Func<TElement,bool>>)null!)),
 						context._innerExpression,
 						Expression.Lambda<Func<TElement,bool>>(
 							ExpressionBuilder.Equal(context.Builder.MappingSchema, innerKey, outerParam),
@@ -391,7 +397,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					var expr = Expression.Call(
 						null,
-						MemberHelper.MethodOf(() => Queryable.Where(null, (Expression<Func<T,bool>>)null!)),
+						MemberHelper.MethodOf(() => Queryable.Where(null!, (Expression<Func<T,bool>>)null!)),
 						context._innerExpression,
 						Expression.Lambda<Func<T,bool>>(
 							ExpressionBuilder.Equal(
@@ -466,7 +472,6 @@ namespace LinqToDB.Linq.Builder
 		internal class GroupJoinSubQueryContext : SubQueryContext
 		{
 			public SqlJoinedTable?      Join;
-			public SelectQuery?         CounterSelect;
 			public GroupJoinContext?    GroupJoin;
 			public Func<IBuildContext>? GetSubQueryContext;
 

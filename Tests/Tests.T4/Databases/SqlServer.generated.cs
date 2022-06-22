@@ -5,7 +5,7 @@
 // </auto-generated>
 //---------------------------------------------------------------------------------------------------
 
-#pragma warning disable 1591
+#pragma warning disable 1573, 1591
 #nullable enable
 
 using System;
@@ -27,7 +27,7 @@ using Microsoft.SqlServer.Types;
 
 namespace DataModel
 {
-	public partial class NorthwindDB : LinqToDB.Data.DataConnection
+	public partial class TestDataNorthwindDB : LinqToDB.Data.DataConnection
 	{
 		public ITable<AlphabeticalListOfProduct>  AlphabeticalListOfProducts   { get { return this.GetTable<AlphabeticalListOfProduct>(); } }
 		public ITable<Category>                   Categories                   { get { return this.GetTable<Category>(); } }
@@ -62,14 +62,6 @@ namespace DataModel
 
 		[Obsolete("Use Categories instead.")  ] public ITable<Category>    CATEG         { get { return Categories; } }
 		[Obsolete("Use OrderDetails instead.")] public ITable<OrderDetail> Order_Details { get { return OrderDetails; } }
-
-		#endregion
-
-		#region Table Functions
-
-		#region Issue449
-
-		#endregion
 
 		#endregion
 
@@ -146,15 +138,15 @@ namespace DataModel
 		#region Associations
 
 		/// <summary>
-		/// FK_CustomerCustomerDemo_Customers_BackReference
+		/// FK_CustomerCustomerDemo_Customers_BackReference (dbo.CustomerCustomerDemo)
 		/// </summary>
-		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true)]
 		public List<CustomerCustomerDemo> CustomerCustomerDemoes { get; set; } = null!;
 
 		/// <summary>
-		/// FK_Orders_Customers_BackReference
+		/// FK_Orders_Customers_BackReference (dbo.Orders)
 		/// </summary>
-		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true)]
 		public List<Order> Orders { get; set; } = null!;
 
 		#endregion
@@ -178,15 +170,15 @@ namespace DataModel
 		#region Associations
 
 		/// <summary>
-		/// FK_CustomerCustomerDemo_Customers
+		/// FK_CustomerCustomerDemo_Customers (dbo.Customers)
 		/// </summary>
-		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_CustomerCustomerDemo_Customers", BackReferenceName="CustomerCustomerDemoes")]
+		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=false)]
 		public Customer Customer { get; set; } = null!;
 
 		/// <summary>
-		/// FK_CustomerCustomerDemo
+		/// FK_CustomerCustomerDemo (dbo.CustomerDemographics)
 		/// </summary>
-		[Association(ThisKey="CustomerTypeID", OtherKey="CustomerTypeID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_CustomerCustomerDemo", BackReferenceName="CustomerCustomerDemoes")]
+		[Association(ThisKey="CustomerTypeID", OtherKey="CustomerTypeID", CanBeNull=false)]
 		public CustomerDemographic CustomerType { get; set; } = null!;
 
 		#endregion
@@ -201,9 +193,9 @@ namespace DataModel
 		#region Associations
 
 		/// <summary>
-		/// FK_CustomerCustomerDemo_BackReference
+		/// FK_CustomerCustomerDemo_BackReference (dbo.CustomerCustomerDemo)
 		/// </summary>
-		[Association(ThisKey="CustomerTypeID", OtherKey="CustomerTypeID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+		[Association(ThisKey="CustomerTypeID", OtherKey="CustomerTypeID", CanBeNull=true)]
 		public List<CustomerCustomerDemo> CustomerCustomerDemoes { get; set; } = null!;
 
 		#endregion
@@ -234,27 +226,27 @@ namespace DataModel
 		#region Associations
 
 		/// <summary>
-		/// FK_EmployeeTerritories_Employees_BackReference
+		/// FK_EmployeeTerritories_Employees_BackReference (dbo.EmployeeTerritories)
 		/// </summary>
-		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true)]
 		public List<EmployeeTerritory> EmployeeTerritories { get; set; } = null!;
 
 		/// <summary>
-		/// FK_Employees_Employees
+		/// FK_Employees_Employees (dbo.Employees)
 		/// </summary>
-		[Association(ThisKey="ReportsTo", OtherKey="EmployeeID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_Employees_Employees", BackReferenceName="FkEmployeesEmployeesBackReferences")]
+		[Association(ThisKey="ReportsTo", OtherKey="EmployeeID", CanBeNull=true)]
 		public Employee? FkEmployeesEmployee { get; set; }
 
 		/// <summary>
-		/// FK_Employees_Employees_BackReference
+		/// FK_Employees_Employees_BackReference (dbo.Employees)
 		/// </summary>
-		[Association(ThisKey="EmployeeID", OtherKey="ReportsTo", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+		[Association(ThisKey="EmployeeID", OtherKey="ReportsTo", CanBeNull=true)]
 		public List<Employee> FkEmployeesEmployeesBackReferences { get; set; } = null!;
 
 		/// <summary>
-		/// FK_Orders_Employees_BackReference
+		/// FK_Orders_Employees_BackReference (dbo.Orders)
 		/// </summary>
-		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true)]
 		public List<Order> Orders { get; set; } = null!;
 
 		#endregion
@@ -269,15 +261,15 @@ namespace DataModel
 		#region Associations
 
 		/// <summary>
-		/// FK_EmployeeTerritories_Employees
+		/// FK_EmployeeTerritories_Employees (dbo.Employees)
 		/// </summary>
-		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_EmployeeTerritories_Employees", BackReferenceName="EmployeeTerritories")]
+		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=false)]
 		public Employee Employee { get; set; } = null!;
 
 		/// <summary>
-		/// FK_EmployeeTerritories_Territories
+		/// FK_EmployeeTerritories_Territories (dbo.Territories)
 		/// </summary>
-		[Association(ThisKey="TerritoryID", OtherKey="TerritoryID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_EmployeeTerritories_Territories", BackReferenceName="EmployeeTerritories")]
+		[Association(ThisKey="TerritoryID", OtherKey="TerritoryID", CanBeNull=false)]
 		public Territory Territory { get; set; } = null!;
 
 		#endregion
@@ -335,27 +327,27 @@ namespace DataModel
 		#region Associations
 
 		/// <summary>
-		/// FK_Orders_Customers
+		/// FK_Orders_Customers (dbo.Customers)
 		/// </summary>
-		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_Orders_Customers", BackReferenceName="Orders")]
+		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true)]
 		public Customer? Customer { get; set; }
 
 		/// <summary>
-		/// FK_Orders_Employees
+		/// FK_Orders_Employees (dbo.Employees)
 		/// </summary>
-		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_Orders_Employees", BackReferenceName="Orders")]
+		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true)]
 		public Employee? Employee { get; set; }
 
 		/// <summary>
-		/// FK_Order_Details_Orders_BackReference
+		/// FK_Order_Details_Orders_BackReference (dbo.Order Details)
 		/// </summary>
-		[Association(ThisKey="OrderID", OtherKey="ID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+		[Association(ThisKey="OrderID", OtherKey="ID", CanBeNull=true)]
 		public List<OrderDetail> OrderDetails { get; set; } = null!;
 
 		/// <summary>
-		/// FK_Orders_Shippers
+		/// FK_Orders_Shippers (dbo.Shippers)
 		/// </summary>
-		[Association(ThisKey="ShipVia", OtherKey="ShipperID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_Orders_Shippers", BackReferenceName="Orders")]
+		[Association(ThisKey="ShipVia", OtherKey="ShipperID", CanBeNull=true)]
 		public Shipper? Shipper { get; set; }
 
 		#endregion
@@ -373,9 +365,9 @@ namespace DataModel
 		#region Associations
 
 		/// <summary>
-		/// FK_Order_Details_Orders
+		/// FK_Order_Details_Orders (dbo.Orders)
 		/// </summary>
-		[Association(ThisKey="ID", OtherKey="OrderID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_Order_Details_Orders", BackReferenceName="OrderDetails")]
+		[Association(ThisKey="ID", OtherKey="OrderID", CanBeNull=false)]
 		public Order Order { get; set; } = null!;
 
 		#endregion
@@ -473,9 +465,9 @@ namespace DataModel
 		#region Associations
 
 		/// <summary>
-		/// FK_Territories_Region_BackReference
+		/// FK_Territories_Region_BackReference (dbo.Territories)
 		/// </summary>
-		[Association(ThisKey="RegionID", OtherKey="RegionID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+		[Association(ThisKey="RegionID", OtherKey="RegionID", CanBeNull=true)]
 		public List<Territory> Territories { get; set; } = null!;
 
 		#endregion
@@ -509,9 +501,9 @@ namespace DataModel
 		#region Associations
 
 		/// <summary>
-		/// FK_Orders_Shippers_BackReference
+		/// FK_Orders_Shippers_BackReference (dbo.Orders)
 		/// </summary>
-		[Association(ThisKey="ShipperID", OtherKey="ShipVia", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+		[Association(ThisKey="ShipperID", OtherKey="ShipVia", CanBeNull=true)]
 		public List<Order> Orders { get; set; } = null!;
 
 		#endregion
@@ -560,28 +552,35 @@ namespace DataModel
 		#region Associations
 
 		/// <summary>
-		/// FK_EmployeeTerritories_Territories_BackReference
+		/// FK_EmployeeTerritories_Territories_BackReference (dbo.EmployeeTerritories)
 		/// </summary>
-		[Association(ThisKey="TerritoryID", OtherKey="TerritoryID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+		[Association(ThisKey="TerritoryID", OtherKey="TerritoryID", CanBeNull=true)]
 		public List<EmployeeTerritory> EmployeeTerritories { get; set; } = null!;
 
 		/// <summary>
-		/// FK_Territories_Region
+		/// FK_Territories_Region (dbo.Region)
 		/// </summary>
-		[Association(ThisKey="RegionID", OtherKey="RegionID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_Territories_Region", BackReferenceName="Territories")]
+		[Association(ThisKey="RegionID", OtherKey="RegionID", CanBeNull=false)]
 		public Region Region { get; set; } = null!;
 
 		#endregion
 	}
 
-	public static partial class NorthwindDBStoredProcedures
+	public static partial class TestDataNorthwindDBStoredProcedures
 	{
 		#region CustOrderHist
 
-		public static List<CustOrderHistResult> CustOrderHist(this NorthwindDB dataConnection, string? @CustomerID)
+		public static List<CustOrderHistResult> CustOrderHist(this TestDataNorthwindDB dataConnection, string? @CustomerID)
 		{
-			return dataConnection.QueryProc<CustOrderHistResult>("[CustOrderHist]",
-				new DataParameter("@CustomerID", @CustomerID, LinqToDB.DataType.NChar)).ToList();
+			var parameters = new []
+			{
+				new DataParameter("@CustomerID", @CustomerID, LinqToDB.DataType.NChar)
+				{
+					Size = 5
+				}
+			};
+
+			return dataConnection.QueryProc<CustOrderHistResult>("[CustOrderHist]", parameters).ToList();
 		}
 
 		public partial class CustOrderHistResult
@@ -594,10 +593,14 @@ namespace DataModel
 
 		#region CustOrdersDetail
 
-		public static List<CustOrdersDetailResult> CustOrdersDetail(this NorthwindDB dataConnection, int? @OrderID)
+		public static List<CustOrdersDetailResult> CustOrdersDetail(this TestDataNorthwindDB dataConnection, int? @OrderID)
 		{
-			return dataConnection.QueryProc<CustOrdersDetailResult>("[CustOrdersDetail]",
-				new DataParameter("@OrderID", @OrderID, LinqToDB.DataType.Int32)).ToList();
+			var parameters = new []
+			{
+				new DataParameter("@OrderID", @OrderID, LinqToDB.DataType.Int32)
+			};
+
+			return dataConnection.QueryProc<CustOrdersDetailResult>("[CustOrdersDetail]", parameters).ToList();
 		}
 
 		public partial class CustOrdersDetailResult
@@ -613,10 +616,17 @@ namespace DataModel
 
 		#region CustOrdersOrders
 
-		public static List<CustOrdersOrdersResult> CustOrdersOrders(this NorthwindDB dataConnection, string? @CustomerID)
+		public static List<CustOrdersOrdersResult> CustOrdersOrders(this TestDataNorthwindDB dataConnection, string? @CustomerID)
 		{
-			return dataConnection.QueryProc<CustOrdersOrdersResult>("[CustOrdersOrders]",
-				new DataParameter("@CustomerID", @CustomerID, LinqToDB.DataType.NChar)).ToList();
+			var parameters = new []
+			{
+				new DataParameter("@CustomerID", @CustomerID, LinqToDB.DataType.NChar)
+				{
+					Size = 5
+				}
+			};
+
+			return dataConnection.QueryProc<CustOrdersOrdersResult>("[CustOrdersOrders]", parameters).ToList();
 		}
 
 		public partial class CustOrdersOrdersResult
@@ -631,11 +641,15 @@ namespace DataModel
 
 		#region EmployeeSalesByCountry
 
-		public static List<EmployeeSalesByCountryResult> EmployeeSalesByCountry(this NorthwindDB dataConnection, DateTime? @Beginning_Date, DateTime? @Ending_Date)
+		public static List<EmployeeSalesByCountryResult> EmployeeSalesByCountry(this TestDataNorthwindDB dataConnection, DateTime? @Beginning_Date, DateTime? @Ending_Date)
 		{
-			return dataConnection.QueryProc<EmployeeSalesByCountryResult>("[Employee Sales by Country]",
+			var parameters = new []
+			{
 				new DataParameter("@Beginning_Date", @Beginning_Date, LinqToDB.DataType.DateTime),
-				new DataParameter("@Ending_Date",    @Ending_Date,    LinqToDB.DataType.DateTime)).ToList();
+				new DataParameter("@Ending_Date",    @Ending_Date,    LinqToDB.DataType.DateTime)
+			};
+
+			return dataConnection.QueryProc<EmployeeSalesByCountryResult>("[Employee Sales by Country]", parameters).ToList();
 		}
 
 		public partial class EmployeeSalesByCountryResult
@@ -652,11 +666,15 @@ namespace DataModel
 
 		#region SalesByYear
 
-		public static List<SalesByYearResult> SalesByYear(this NorthwindDB dataConnection, DateTime? @Beginning_Date, DateTime? @Ending_Date)
+		public static List<SalesByYearResult> SalesByYear(this TestDataNorthwindDB dataConnection, DateTime? @Beginning_Date, DateTime? @Ending_Date)
 		{
-			return dataConnection.QueryProc<SalesByYearResult>("[Sales by Year]",
+			var parameters = new []
+			{
 				new DataParameter("@Beginning_Date", @Beginning_Date, LinqToDB.DataType.DateTime),
-				new DataParameter("@Ending_Date",    @Ending_Date,    LinqToDB.DataType.DateTime)).ToList();
+				new DataParameter("@Ending_Date",    @Ending_Date,    LinqToDB.DataType.DateTime)
+			};
+
+			return dataConnection.QueryProc<SalesByYearResult>("[Sales by Year]", parameters).ToList();
 		}
 
 		public partial class SalesByYearResult
@@ -671,11 +689,21 @@ namespace DataModel
 
 		#region SalesByCategory
 
-		public static List<SalesByCategoryResult> SalesByCategory(this NorthwindDB dataConnection, string? @CategoryName, string? @OrdYear)
+		public static List<SalesByCategoryResult> SalesByCategory(this TestDataNorthwindDB dataConnection, string? @CategoryName, string? @OrdYear)
 		{
-			return dataConnection.QueryProc<SalesByCategoryResult>("[SalesByCategory]",
-				new DataParameter("@CategoryName", @CategoryName, LinqToDB.DataType.NVarChar),
-				new DataParameter("@OrdYear",      @OrdYear,      LinqToDB.DataType.NVarChar)).ToList();
+			var parameters = new []
+			{
+				new DataParameter("@CategoryName", @CategoryName, LinqToDB.DataType.NVarChar)
+				{
+					Size = 15
+				},
+				new DataParameter("@OrdYear",      @OrdYear,      LinqToDB.DataType.NVarChar)
+				{
+					Size = 4
+				}
+			};
+
+			return dataConnection.QueryProc<SalesByCategoryResult>("[SalesByCategory]", parameters).ToList();
 		}
 
 		public partial class SalesByCategoryResult
@@ -688,7 +716,7 @@ namespace DataModel
 
 		#region TenMostExpensiveProducts
 
-		public static List<TenMostExpensiveProductsResult> TenMostExpensiveProducts(this NorthwindDB dataConnection)
+		public static List<TenMostExpensiveProductsResult> TenMostExpensiveProducts(this TestDataNorthwindDB dataConnection)
 		{
 			return dataConnection.QueryProc<TenMostExpensiveProductsResult>("[Ten Most Expensive Products]").ToList();
 		}
@@ -786,7 +814,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_CustomerCustomerDemo_Customers_BackReference
 		/// </summary>
-		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true)]
 		public static IQueryable<CustomerCustomerDemo> CustomerCustomerDemoes(this Customer obj, IDataContext db)
 		{
 			return db.GetTable<CustomerCustomerDemo>().Where(c => c.CustomerID == obj.CustomerID);
@@ -795,7 +823,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Orders_Customers_BackReference
 		/// </summary>
-		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true)]
 		public static IQueryable<Order> Orders(this Customer obj, IDataContext db)
 		{
 			return db.GetTable<Order>().Where(c => c.CustomerID == obj.CustomerID);
@@ -808,7 +836,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_CustomerCustomerDemo_Customers
 		/// </summary>
-		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_CustomerCustomerDemo_Customers", BackReferenceName="CustomerCustomerDemoes")]
+		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=false)]
 		public static IQueryable<Customer> Customers(this CustomerCustomerDemo obj, IDataContext db)
 		{
 			return db.GetTable<Customer>().Where(c => c.CustomerID == obj.CustomerID);
@@ -817,7 +845,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_CustomerCustomerDemo_Customers
 		/// </summary>
-		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_CustomerCustomerDemo_Customers", BackReferenceName="CustomerCustomerDemoes")]
+		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=false)]
 		public static CustomerCustomerDemo Customer(this Customer obj, IDataContext db)
 		{
 			return db.GetTable<CustomerCustomerDemo>().Where(c => c.CustomerID == obj.CustomerID).First();
@@ -826,7 +854,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_CustomerCustomerDemo
 		/// </summary>
-		[Association(ThisKey="CustomerTypeID", OtherKey="CustomerTypeID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_CustomerCustomerDemo", BackReferenceName="CustomerCustomerDemoes")]
+		[Association(ThisKey="CustomerTypeID", OtherKey="CustomerTypeID", CanBeNull=false)]
 		public static IQueryable<CustomerDemographic> CustomerTypes(this CustomerCustomerDemo obj, IDataContext db)
 		{
 			return db.GetTable<CustomerDemographic>().Where(c => c.CustomerTypeID == obj.CustomerTypeID);
@@ -835,7 +863,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_CustomerCustomerDemo
 		/// </summary>
-		[Association(ThisKey="CustomerTypeID", OtherKey="CustomerTypeID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_CustomerCustomerDemo", BackReferenceName="CustomerCustomerDemoes")]
+		[Association(ThisKey="CustomerTypeID", OtherKey="CustomerTypeID", CanBeNull=false)]
 		public static CustomerCustomerDemo CustomerType(this CustomerDemographic obj, IDataContext db)
 		{
 			return db.GetTable<CustomerCustomerDemo>().Where(c => c.CustomerTypeID == obj.CustomerTypeID).First();
@@ -848,7 +876,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_CustomerCustomerDemo_BackReference
 		/// </summary>
-		[Association(ThisKey="CustomerTypeID", OtherKey="CustomerTypeID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+		[Association(ThisKey="CustomerTypeID", OtherKey="CustomerTypeID", CanBeNull=true)]
 		public static IQueryable<CustomerCustomerDemo> CustomerCustomerDemoes0(this CustomerDemographic obj, IDataContext db)
 		{
 			return db.GetTable<CustomerCustomerDemo>().Where(c => c.CustomerTypeID == obj.CustomerTypeID);
@@ -861,7 +889,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_EmployeeTerritories_Employees_BackReference
 		/// </summary>
-		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true)]
 		public static IQueryable<EmployeeTerritory> EmployeeTerritories(this Employee obj, IDataContext db)
 		{
 			return db.GetTable<EmployeeTerritory>().Where(c => c.EmployeeID == obj.EmployeeID);
@@ -870,7 +898,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Employees_Employees
 		/// </summary>
-		[Association(ThisKey="ReportsTo", OtherKey="EmployeeID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_Employees_Employees", BackReferenceName="FkEmployeesEmployeesBackReferences")]
+		[Association(ThisKey="ReportsTo", OtherKey="EmployeeID", CanBeNull=true)]
 		public static IQueryable<Employee> FkEmployeesEmployees(this Employee obj, IDataContext db)
 		{
 			return db.GetTable<Employee>().Where(c => c.EmployeeID == obj.ReportsTo);
@@ -879,7 +907,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Employees_Employees
 		/// </summary>
-		[Association(ThisKey="ReportsTo", OtherKey="EmployeeID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_Employees_Employees", BackReferenceName="FkEmployeesEmployeesBackReferences")]
+		[Association(ThisKey="ReportsTo", OtherKey="EmployeeID", CanBeNull=true)]
 		public static Employee? FkEmployeesEmployee(this Employee obj, IDataContext db)
 		{
 			return db.GetTable<Employee>().Where(c => c.ReportsTo == obj.EmployeeID).FirstOrDefault();
@@ -888,7 +916,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Employees_Employees_BackReference
 		/// </summary>
-		[Association(ThisKey="EmployeeID", OtherKey="ReportsTo", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+		[Association(ThisKey="EmployeeID", OtherKey="ReportsTo", CanBeNull=true)]
 		public static IQueryable<Employee> FkEmployeesEmployeesBackReferences(this Employee obj, IDataContext db)
 		{
 			return db.GetTable<Employee>().Where(c => c.ReportsTo == obj.EmployeeID);
@@ -897,7 +925,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Orders_Employees_BackReference
 		/// </summary>
-		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true)]
 		public static IQueryable<Order> Orders0(this Employee obj, IDataContext db)
 		{
 			return db.GetTable<Order>().Where(c => c.EmployeeID == obj.EmployeeID);
@@ -910,7 +938,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_EmployeeTerritories_Employees
 		/// </summary>
-		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_EmployeeTerritories_Employees", BackReferenceName="EmployeeTerritories")]
+		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=false)]
 		public static IQueryable<Employee> Employees(this EmployeeTerritory obj, IDataContext db)
 		{
 			return db.GetTable<Employee>().Where(c => c.EmployeeID == obj.EmployeeID);
@@ -919,7 +947,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_EmployeeTerritories_Employees
 		/// </summary>
-		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_EmployeeTerritories_Employees", BackReferenceName="EmployeeTerritories")]
+		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=false)]
 		public static EmployeeTerritory Employee(this Employee obj, IDataContext db)
 		{
 			return db.GetTable<EmployeeTerritory>().Where(c => c.EmployeeID == obj.EmployeeID).First();
@@ -928,7 +956,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_EmployeeTerritories_Territories
 		/// </summary>
-		[Association(ThisKey="TerritoryID", OtherKey="TerritoryID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_EmployeeTerritories_Territories", BackReferenceName="EmployeeTerritories")]
+		[Association(ThisKey="TerritoryID", OtherKey="TerritoryID", CanBeNull=false)]
 		public static IQueryable<Territory> Territories(this EmployeeTerritory obj, IDataContext db)
 		{
 			return db.GetTable<Territory>().Where(c => c.TerritoryID == obj.TerritoryID);
@@ -937,7 +965,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_EmployeeTerritories_Territories
 		/// </summary>
-		[Association(ThisKey="TerritoryID", OtherKey="TerritoryID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_EmployeeTerritories_Territories", BackReferenceName="EmployeeTerritories")]
+		[Association(ThisKey="TerritoryID", OtherKey="TerritoryID", CanBeNull=false)]
 		public static EmployeeTerritory Territory(this Territory obj, IDataContext db)
 		{
 			return db.GetTable<EmployeeTerritory>().Where(c => c.TerritoryID == obj.TerritoryID).First();
@@ -950,7 +978,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Orders_Customers
 		/// </summary>
-		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_Orders_Customers", BackReferenceName="Orders")]
+		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true)]
 		public static IQueryable<Customer> Customers0(this Order obj, IDataContext db)
 		{
 			return db.GetTable<Customer>().Where(c => c.CustomerID == obj.CustomerID);
@@ -959,7 +987,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Orders_Customers
 		/// </summary>
-		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_Orders_Customers", BackReferenceName="Orders")]
+		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true)]
 		public static Order? Customer0(this Customer obj, IDataContext db)
 		{
 			return db.GetTable<Order>().Where(c => c.CustomerID == obj.CustomerID).FirstOrDefault();
@@ -968,7 +996,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Orders_Employees
 		/// </summary>
-		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_Orders_Employees", BackReferenceName="Orders")]
+		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true)]
 		public static IQueryable<Employee> Employees0(this Order obj, IDataContext db)
 		{
 			return db.GetTable<Employee>().Where(c => c.EmployeeID == obj.EmployeeID);
@@ -977,7 +1005,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Orders_Employees
 		/// </summary>
-		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_Orders_Employees", BackReferenceName="Orders")]
+		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true)]
 		public static Order? Employee0(this Employee obj, IDataContext db)
 		{
 			return db.GetTable<Order>().Where(c => c.EmployeeID == obj.EmployeeID).FirstOrDefault();
@@ -986,7 +1014,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Order_Details_Orders_BackReference
 		/// </summary>
-		[Association(ThisKey="OrderID", OtherKey="ID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+		[Association(ThisKey="OrderID", OtherKey="ID", CanBeNull=true)]
 		public static IQueryable<OrderDetail> OrderDetails(this Order obj, IDataContext db)
 		{
 			return db.GetTable<OrderDetail>().Where(c => c.ID == obj.OrderID);
@@ -995,7 +1023,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Orders_Shippers
 		/// </summary>
-		[Association(ThisKey="ShipVia", OtherKey="ShipperID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_Orders_Shippers", BackReferenceName="Orders")]
+		[Association(ThisKey="ShipVia", OtherKey="ShipperID", CanBeNull=true)]
 		public static IQueryable<Shipper> Shippers(this Order obj, IDataContext db)
 		{
 			return db.GetTable<Shipper>().Where(c => c.ShipperID == obj.ShipVia);
@@ -1004,7 +1032,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Orders_Shippers
 		/// </summary>
-		[Association(ThisKey="ShipVia", OtherKey="ShipperID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_Orders_Shippers", BackReferenceName="Orders")]
+		[Association(ThisKey="ShipVia", OtherKey="ShipperID", CanBeNull=true)]
 		public static Order? Shipper(this Shipper obj, IDataContext db)
 		{
 			return db.GetTable<Order>().Where(c => c.ShipVia == obj.ShipperID).FirstOrDefault();
@@ -1017,7 +1045,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Order_Details_Orders
 		/// </summary>
-		[Association(ThisKey="ID", OtherKey="OrderID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_Order_Details_Orders", BackReferenceName="OrderDetails")]
+		[Association(ThisKey="ID", OtherKey="OrderID", CanBeNull=false)]
 		public static IQueryable<Order> Orders1(this OrderDetail obj, IDataContext db)
 		{
 			return db.GetTable<Order>().Where(c => c.OrderID == obj.ID);
@@ -1026,7 +1054,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Order_Details_Orders
 		/// </summary>
-		[Association(ThisKey="ID", OtherKey="OrderID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_Order_Details_Orders", BackReferenceName="OrderDetails")]
+		[Association(ThisKey="ID", OtherKey="OrderID", CanBeNull=false)]
 		public static OrderDetail Order(this Order obj, IDataContext db)
 		{
 			return db.GetTable<OrderDetail>().Where(c => c.ID == obj.OrderID).First();
@@ -1039,7 +1067,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Territories_Region_BackReference
 		/// </summary>
-		[Association(ThisKey="RegionID", OtherKey="RegionID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+		[Association(ThisKey="RegionID", OtherKey="RegionID", CanBeNull=true)]
 		public static IQueryable<Territory> Territories0(this Region obj, IDataContext db)
 		{
 			return db.GetTable<Territory>().Where(c => c.RegionID == obj.RegionID);
@@ -1052,7 +1080,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Orders_Shippers_BackReference
 		/// </summary>
-		[Association(ThisKey="ShipperID", OtherKey="ShipVia", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+		[Association(ThisKey="ShipperID", OtherKey="ShipVia", CanBeNull=true)]
 		public static IQueryable<Order> Orders2(this Shipper obj, IDataContext db)
 		{
 			return db.GetTable<Order>().Where(c => c.ShipVia == obj.ShipperID);
@@ -1065,7 +1093,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_EmployeeTerritories_Territories_BackReference
 		/// </summary>
-		[Association(ThisKey="TerritoryID", OtherKey="TerritoryID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+		[Association(ThisKey="TerritoryID", OtherKey="TerritoryID", CanBeNull=true)]
 		public static IQueryable<EmployeeTerritory> EmployeeTerritories0(this Territory obj, IDataContext db)
 		{
 			return db.GetTable<EmployeeTerritory>().Where(c => c.TerritoryID == obj.TerritoryID);
@@ -1074,7 +1102,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Territories_Region
 		/// </summary>
-		[Association(ThisKey="RegionID", OtherKey="RegionID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_Territories_Region", BackReferenceName="Territories")]
+		[Association(ThisKey="RegionID", OtherKey="RegionID", CanBeNull=false)]
 		public static IQueryable<Region> Regions(this Territory obj, IDataContext db)
 		{
 			return db.GetTable<Region>().Where(c => c.RegionID == obj.RegionID);
@@ -1083,7 +1111,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Territories_Region
 		/// </summary>
-		[Association(ThisKey="RegionID", OtherKey="RegionID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_Territories_Region", BackReferenceName="Territories")]
+		[Association(ThisKey="RegionID", OtherKey="RegionID", CanBeNull=false)]
 		public static Territory Region(this Region obj, IDataContext db)
 		{
 			return db.GetTable<Territory>().Where(c => c.RegionID == obj.RegionID).First();
@@ -1099,7 +1127,7 @@ namespace DataModel
 		public ITable<AllType>                 AllTypes                 { get { return this.GetTable<AllType>(); } }
 		public ITable<AllTypes2>               AllTypes2                { get { return this.GetTable<AllTypes2>(); } }
 		public ITable<Child>                   Children                 { get { return this.GetTable<Child>(); } }
-		public ITable<Customer0>               Customers                { get { return this.GetTable<Customer0>(); } }
+		public ITable<CollatedTable>           CollatedTables           { get { return this.GetTable<CollatedTable>(); } }
 		public ITable<DataType>                DataTypes                { get { return this.GetTable<DataType>(); } }
 		public ITable<DecimalOverflow>         DecimalOverflows         { get { return this.GetTable<DecimalOverflow>(); } }
 		public ITable<Doctor>                  Doctors                  { get { return this.GetTable<Doctor>(); } }
@@ -1121,10 +1149,8 @@ namespace DataModel
 		public ITable<ParentChildView>         ParentChildViews         { get { return this.GetTable<ParentChildView>(); } }
 		public ITable<ParentView>              ParentViews              { get { return this.GetTable<ParentView>(); } }
 		public ITable<Patient>                 Patients                 { get { return this.GetTable<Patient>(); } }
-		public ITable<Ref>                     Refs                     { get { return this.GetTable<Ref>(); } }
 		public ITable<SameTableName>           SameTableNames           { get { return this.GetTable<SameTableName>(); } }
 		public ITable<SqlType>                 SqlTypes                 { get { return this.GetTable<SqlType>(); } }
-		public ITable<TestDecimal>             TestDecimals             { get { return this.GetTable<TestDecimal>(); } }
 		public ITable<TestIdentity>            TestIdentities           { get { return this.GetTable<TestIdentity>(); } }
 		public ITable<TestMerge1>              TestMerge1               { get { return this.GetTable<TestMerge1>(); } }
 		public ITable<TestMerge2>              TestMerge2               { get { return this.GetTable<TestMerge2>(); } }
@@ -1151,7 +1177,7 @@ namespace DataModel
 		/// <summary>
 		/// This is &lt;test&gt; table function!
 		/// </summary>
-		/// <param name="@id">
+		/// <param name="id">
 		/// This is &lt;test&gt; table function parameter!
 		/// </param>
 		[Sql.TableFunction(Name="GetParentByID")]
@@ -1159,23 +1185,6 @@ namespace DataModel
 		{
 			return this.GetTable<Parent>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				@id);
-		}
-
-		#endregion
-
-		#region Issue1294
-
-		[Sql.TableFunction(Name="Issue1294")]
-		public ITable<Issue1294Result> Issue1294(int? @p1, int? @p2)
-		{
-			return this.GetTable<Issue1294Result>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				@p1,
-				@p2);
-		}
-
-		public partial class Issue1294Result
-		{
-			public int? Id { get; set; }
 		}
 
 		#endregion
@@ -1281,14 +1290,12 @@ namespace DataModel
 		[Column("_ID", DbType="int", DataType=LinqToDB.DataType.Int32), PrimaryKey, Identity] public int  Id       { get; set; } // int
 	}
 
-	[Table("Customer")]
-	public partial class Customer0
+	[Table("CollatedTable")]
+	public partial class CollatedTable
 	{
-		[Column(           DbType="int",           DataType=LinqToDB.DataType.Int32),                PrimaryKey, NotNull] public int      ID            { get; set; } // int
-		[Column(           DbType="nvarchar(255)", DataType=LinqToDB.DataType.NVarChar, Length=255),             NotNull] public string   Name          { get; set; } = null!; // nvarchar(255)
-		[Column("Ref_ID",  DbType="int",           DataType=LinqToDB.DataType.Int32),                            NotNull] public int      RefId         { get; set; } // int
-		[Column(           DbType="datetime",      DataType=LinqToDB.DataType.DateTime),                         NotNull] public DateTime InsertUTCDate { get; set; } // datetime
-		[Column("Ref_ID2", DbType="int",           DataType=LinqToDB.DataType.Int32),                            NotNull] public int      RefID2        { get; set; } // int
+		[Column(DbType="int",          DataType=LinqToDB.DataType.Int32),               NotNull] public int    Id              { get; set; } // int
+		[Column(DbType="nvarchar(20)", DataType=LinqToDB.DataType.NVarChar, Length=20), NotNull] public string CaseSensitive   { get; set; } = null!; // nvarchar(20)
+		[Column(DbType="nvarchar(20)", DataType=LinqToDB.DataType.NVarChar, Length=20), NotNull] public string CaseInsensitive { get; set; } = null!; // nvarchar(20)
 	}
 
 	[Table("DataType")]
@@ -1347,9 +1354,9 @@ namespace DataModel
 		#region Associations
 
 		/// <summary>
-		/// FK_Patient2_IndexTable_BackReference
+		/// FK_Patient2_IndexTable_BackReference (dbo.IndexTable2)
 		/// </summary>
-		[Association(ThisKey="PKField2, PKField1", OtherKey="PKField2, PKField1", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
+		[Association(ThisKey="PKField2, PKField1", OtherKey="PKField2, PKField1", CanBeNull=true)]
 		public IndexTable2? Patient { get; set; }
 
 		#endregion
@@ -1364,9 +1371,9 @@ namespace DataModel
 		#region Associations
 
 		/// <summary>
-		/// FK_Patient2_IndexTable
+		/// FK_Patient2_IndexTable (dbo.IndexTable)
 		/// </summary>
-		[Association(ThisKey="PKField2, PKField1", OtherKey="PKField2, PKField1", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="FK_Patient2_IndexTable", BackReferenceName="Patient")]
+		[Association(ThisKey="PKField2, PKField1", OtherKey="PKField2, PKField1", CanBeNull=false)]
 		public IndexTable Patient2IndexTable { get; set; } = null!;
 
 		#endregion
@@ -1461,15 +1468,6 @@ namespace DataModel
 		[Column(DbType="nvarchar(256)", DataType=LinqToDB.DataType.NVarChar, Length=256),             NotNull] public string Diagnosis { get; set; } = null!; // nvarchar(256)
 	}
 
-	[Table("Ref")]
-	public partial class Ref
-	{
-		[Column(DbType="int",           DataType=LinqToDB.DataType.Int32),                PrimaryKey, NotNull] public int      ID            { get; set; } // int
-		[Column(DbType="int",           DataType=LinqToDB.DataType.Int32),                            NotNull] public int      ID2           { get; set; } // int
-		[Column(DbType="nvarchar(255)", DataType=LinqToDB.DataType.NVarChar, Length=255),             NotNull] public string   Name          { get; set; } = null!; // nvarchar(255)
-		[Column(DbType="datetime",      DataType=LinqToDB.DataType.DateTime),                         NotNull] public DateTime InsertUTCDate { get; set; } // datetime
-	}
-
 	[Table("SameTableName")]
 	public partial class SameTableName
 	{
@@ -1481,15 +1479,6 @@ namespace DataModel
 	{
 		[Column(DbType="int",         DataType=LinqToDB.DataType.Int32), PrimaryKey,  NotNull] public int             ID  { get; set; } // int
 		[Column(DbType="hierarchyid", DataType=LinqToDB.DataType.Udt),      Nullable         ] public SqlHierarchyId? HID { get; set; } // hierarchyid
-	}
-
-	[Table("TestDecimal")]
-	public partial class TestDecimal
-	{
-		[Column("asint",   DbType="decimal(5, 0)", DataType=LinqToDB.DataType.Decimal, Precision=5, Scale=0), NotNull    ] public decimal  Asint   { get; set; } // decimal(5, 0)
-		[Column("aslong",  DbType="decimal(9, 0)", DataType=LinqToDB.DataType.Decimal, Precision=9, Scale=0), NotNull    ] public decimal  Aslong  { get; set; } // decimal(9, 0)
-		[Column("asintn",  DbType="decimal(5, 0)", DataType=LinqToDB.DataType.Decimal, Precision=5, Scale=0),    Nullable] public decimal? Asintn  { get; set; } // decimal(5, 0)
-		[Column("aslongn", DbType="decimal(9, 0)", DataType=LinqToDB.DataType.Decimal, Precision=9, Scale=0),    Nullable] public decimal? Aslongn { get; set; } // decimal(9, 0)
 	}
 
 	[Table("TestIdentity")]
@@ -1576,21 +1565,21 @@ namespace DataModel
 		#region Associations
 
 		/// <summary>
-		/// FK_TestSchemaY_TestSchemaX_BackReference
+		/// FK_TestSchemaY_TestSchemaX_BackReference (dbo.TestSchemaY)
 		/// </summary>
-		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=true)]
 		public List<TestSchemaY> TestSchemaY { get; set; } = null!;
 
 		/// <summary>
-		/// FK_TestSchemaY_OtherID_BackReference
+		/// FK_TestSchemaY_OtherID_BackReference (dbo.TestSchemaY)
 		/// </summary>
-		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=true)]
 		public List<TestSchemaY> TestSchemaYOtherIds { get; set; } = null!;
 
 		/// <summary>
-		/// FK_TestSchemaY_ParentTestSchemaX_BackReference
+		/// FK_TestSchemaY_ParentTestSchemaX_BackReference (dbo.TestSchemaY)
 		/// </summary>
-		[Association(ThisKey="TestSchemaXID", OtherKey="ParentTestSchemaXID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+		[Association(ThisKey="TestSchemaXID", OtherKey="ParentTestSchemaXID", CanBeNull=true)]
 		public List<TestSchemaY> TestSchemaYParentTestSchemaX { get; set; } = null!;
 
 		#endregion
@@ -1606,21 +1595,21 @@ namespace DataModel
 		#region Associations
 
 		/// <summary>
-		/// FK_TestSchemaY_OtherID
+		/// FK_TestSchemaY_OtherID (dbo.TestSchemaX)
 		/// </summary>
-		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_TestSchemaY_OtherID", BackReferenceName="TestSchemaYOtherIds")]
+		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false)]
 		public TestSchemaX FkTestSchemaYOtherID { get; set; } = null!;
 
 		/// <summary>
-		/// FK_TestSchemaY_ParentTestSchemaX
+		/// FK_TestSchemaY_ParentTestSchemaX (dbo.TestSchemaX)
 		/// </summary>
-		[Association(ThisKey="ParentTestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_TestSchemaY_ParentTestSchemaX", BackReferenceName="TestSchemaYParentTestSchemaX")]
+		[Association(ThisKey="ParentTestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false)]
 		public TestSchemaX ParentTestSchemaX { get; set; } = null!;
 
 		/// <summary>
-		/// FK_TestSchemaY_TestSchemaX
+		/// FK_TestSchemaY_TestSchemaX (dbo.TestSchemaX)
 		/// </summary>
-		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_TestSchemaY_TestSchemaX", BackReferenceName="TestSchemaY")]
+		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false)]
 		public TestSchemaX TestSchemaX { get; set; } = null!;
 
 		#endregion
@@ -1664,11 +1653,18 @@ namespace DataModel
 
 		public static int ExecuteProcIntParameters(this TestData2014DB dataConnection, int? @input, ref int? @output)
 		{
-			var ret = dataConnection.ExecuteProc("[ExecuteProcIntParameters]",
+			var parameters = new []
+			{
 				new DataParameter("@input",  @input,  LinqToDB.DataType.Int32),
-				new DataParameter("@output", @output, LinqToDB.DataType.Int32) { Direction = ParameterDirection.InputOutput });
+				new DataParameter("@output", @output, LinqToDB.DataType.Int32)
+				{
+					Direction = ParameterDirection.InputOutput
+				}
+			};
 
-			@output = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["@output"]).Value);
+			var ret = dataConnection.ExecuteProc("[ExecuteProcIntParameters]", parameters);
+
+			@output = Converter.ChangeTypeTo<int?>(parameters[1].Value);
 
 			return ret;
 		}
@@ -1680,11 +1676,20 @@ namespace DataModel
 		/// <summary>
 		/// This is &lt;test&gt; procedure!
 		/// </summary>
-		/// <param name="@input">
+		/// <param name="input">
 		/// This is &lt;test&gt; procedure parameter!
 		/// </param>
 		public static List<ExecuteProcStringParametersResult> ExecuteProcStringParameters(this TestData2014DB dataConnection, int? @input, ref int? @output)
 		{
+			var parameters = new []
+			{
+				new DataParameter("@input",  @input,  LinqToDB.DataType.Int32),
+				new DataParameter("@output", @output, LinqToDB.DataType.Int32)
+				{
+					Direction = ParameterDirection.InputOutput
+				}
+			};
+
 			var ms = dataConnection.MappingSchema;
 
 			var ret = dataConnection.QueryProc(dataReader =>
@@ -1692,11 +1697,9 @@ namespace DataModel
 				{
 					Column1 = Converter.ChangeTypeTo<string>(dataReader.GetValue(0), ms),
 				},
-				"[ExecuteProcStringParameters]",
-				new DataParameter("@input",  @input,  LinqToDB.DataType.Int32),
-				new DataParameter("@output", @output, LinqToDB.DataType.Int32) { Direction = ParameterDirection.InputOutput }).ToList();
+				"[ExecuteProcStringParameters]", parameters).ToList();
 
-			@output = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["@output"]).Value);
+			@output = Converter.ChangeTypeTo<int?>(parameters[1].Value);
 
 			return ret;
 		}
@@ -1712,10 +1715,17 @@ namespace DataModel
 
 		public static int Issue1897(this TestData2014DB dataConnection, out int @return)
 		{
-			var ret = dataConnection.ExecuteProc("[Issue1897]",
-				new DataParameter("@return", null, LinqToDB.DataType.Int32) { Direction = ParameterDirection.ReturnValue });
+			var parameters = new []
+			{
+				new DataParameter("@return", null, LinqToDB.DataType.Int32)
+				{
+					Direction = ParameterDirection.ReturnValue
+				}
+			};
 
-			@return = Converter.ChangeTypeTo<int>(((IDbDataParameter)dataConnection.Command.Parameters["@return"]).Value);
+			var ret = dataConnection.ExecuteProc("[Issue1897]", parameters);
+
+			@return = Converter.ChangeTypeTo<int>(parameters[0].Value);
 
 			return ret;
 		}
@@ -1726,13 +1736,28 @@ namespace DataModel
 
 		public static int OutRefEnumTest(this TestData2014DB dataConnection, string? @str, ref string? @outputStr, ref string? @inputOutputStr)
 		{
-			var ret = dataConnection.ExecuteProc("[OutRefEnumTest]",
-				new DataParameter("@str",            @str,            LinqToDB.DataType.VarChar),
-				new DataParameter("@outputStr",      @outputStr,      LinqToDB.DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 },
-				new DataParameter("@inputOutputStr", @inputOutputStr, LinqToDB.DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 });
+			var parameters = new []
+			{
+				new DataParameter("@str",            @str,            LinqToDB.DataType.VarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("@outputStr",      @outputStr,      LinqToDB.DataType.VarChar)
+				{
+					Direction = ParameterDirection.InputOutput,
+					Size      = 50
+				},
+				new DataParameter("@inputOutputStr", @inputOutputStr, LinqToDB.DataType.VarChar)
+				{
+					Direction = ParameterDirection.InputOutput,
+					Size      = 50
+				}
+			};
 
-			@outputStr      = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["@outputStr"]).     Value);
-			@inputOutputStr = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["@inputOutputStr"]).Value);
+			var ret = dataConnection.ExecuteProc("[OutRefEnumTest]", parameters);
+
+			@outputStr      = Converter.ChangeTypeTo<string?>(parameters[1].Value);
+			@inputOutputStr = Converter.ChangeTypeTo<string?>(parameters[2].Value);
 
 			return ret;
 		}
@@ -1743,18 +1768,39 @@ namespace DataModel
 
 		public static int OutRefTest(this TestData2014DB dataConnection, int? @ID, ref int? @outputID, ref int? @inputOutputID, string? @str, ref string? @outputStr, ref string? @inputOutputStr)
 		{
-			var ret = dataConnection.ExecuteProc("[OutRefTest]",
+			var parameters = new []
+			{
 				new DataParameter("@ID",             @ID,             LinqToDB.DataType.Int32),
-				new DataParameter("@outputID",       @outputID,       LinqToDB.DataType.Int32) { Direction = ParameterDirection.InputOutput },
-				new DataParameter("@inputOutputID",  @inputOutputID,  LinqToDB.DataType.Int32) { Direction = ParameterDirection.InputOutput },
-				new DataParameter("@str",            @str,            LinqToDB.DataType.VarChar),
-				new DataParameter("@outputStr",      @outputStr,      LinqToDB.DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 },
-				new DataParameter("@inputOutputStr", @inputOutputStr, LinqToDB.DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 });
+				new DataParameter("@outputID",       @outputID,       LinqToDB.DataType.Int32)
+				{
+					Direction = ParameterDirection.InputOutput
+				},
+				new DataParameter("@inputOutputID",  @inputOutputID,  LinqToDB.DataType.Int32)
+				{
+					Direction = ParameterDirection.InputOutput
+				},
+				new DataParameter("@str",            @str,            LinqToDB.DataType.VarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("@outputStr",      @outputStr,      LinqToDB.DataType.VarChar)
+				{
+					Direction = ParameterDirection.InputOutput,
+					Size      = 50
+				},
+				new DataParameter("@inputOutputStr", @inputOutputStr, LinqToDB.DataType.VarChar)
+				{
+					Direction = ParameterDirection.InputOutput,
+					Size      = 50
+				}
+			};
 
-			@outputID       = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["@outputID"]).      Value);
-			@inputOutputID  = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["@inputOutputID"]). Value);
-			@outputStr      = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["@outputStr"]).     Value);
-			@inputOutputStr = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["@inputOutputStr"]).Value);
+			var ret = dataConnection.ExecuteProc("[OutRefTest]", parameters);
+
+			@outputID       = Converter.ChangeTypeTo<int?>   (parameters[1].Value);
+			@inputOutputID  = Converter.ChangeTypeTo<int?>   (parameters[2].Value);
+			@outputStr      = Converter.ChangeTypeTo<string?>(parameters[4].Value);
+			@inputOutputStr = Converter.ChangeTypeTo<string?>(parameters[5].Value);
 
 			return ret;
 		}
@@ -1784,9 +1830,19 @@ namespace DataModel
 
 		public static List<PatientSelectByNameResult> PatientSelectByName(this TestData2014DB dataConnection, string? @firstName, string? @lastName)
 		{
-			return dataConnection.QueryProc<PatientSelectByNameResult>("[Patient_SelectByName]",
-				new DataParameter("@firstName", @firstName, LinqToDB.DataType.NVarChar),
-				new DataParameter("@lastName",  @lastName,  LinqToDB.DataType.NVarChar)).ToList();
+			var parameters = new []
+			{
+				new DataParameter("@firstName", @firstName, LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("@lastName",  @lastName,  LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				}
+			};
+
+			return dataConnection.QueryProc<PatientSelectByNameResult>("[Patient_SelectByName]", parameters).ToList();
 		}
 
 		public partial class PatientSelectByNameResult
@@ -1805,8 +1861,12 @@ namespace DataModel
 
 		public static int PersonDelete(this TestData2014DB dataConnection, int? @PersonID)
 		{
-			return dataConnection.ExecuteProc("[Person_Delete]",
-				new DataParameter("@PersonID", @PersonID, LinqToDB.DataType.Int32));
+			var parameters = new []
+			{
+				new DataParameter("@PersonID", @PersonID, LinqToDB.DataType.Int32)
+			};
+
+			return dataConnection.ExecuteProc("[Person_Delete]", parameters);
 		}
 
 		#endregion
@@ -1815,11 +1875,27 @@ namespace DataModel
 
 		public static List<PersonInsertResult> PersonInsert(this TestData2014DB dataConnection, string? @FirstName, string? @LastName, string? @MiddleName, char? @Gender)
 		{
-			return dataConnection.QueryProc<PersonInsertResult>("[Person_Insert]",
-				new DataParameter("@FirstName",  @FirstName,  LinqToDB.DataType.NVarChar),
-				new DataParameter("@LastName",   @LastName,   LinqToDB.DataType.NVarChar),
-				new DataParameter("@MiddleName", @MiddleName, LinqToDB.DataType.NVarChar),
-				new DataParameter("@Gender",     @Gender,     LinqToDB.DataType.Char)).ToList();
+			var parameters = new []
+			{
+				new DataParameter("@FirstName",  @FirstName,  LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("@LastName",   @LastName,   LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("@MiddleName", @MiddleName, LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("@Gender",     @Gender,     LinqToDB.DataType.Char)
+				{
+					Size = 1
+				}
+			};
+
+			return dataConnection.QueryProc<PersonInsertResult>("[Person_Insert]", parameters).ToList();
 		}
 
 		public partial class PersonInsertResult
@@ -1833,14 +1909,33 @@ namespace DataModel
 
 		public static int PersonInsertOutputParameter(this TestData2014DB dataConnection, string? @FirstName, string? @LastName, string? @MiddleName, char? @Gender, ref int? @PersonID)
 		{
-			var ret = dataConnection.ExecuteProc("[Person_Insert_OutputParameter]",
-				new DataParameter("@FirstName", @FirstName, LinqToDB.DataType.NVarChar),
-				new DataParameter("@LastName", @LastName, LinqToDB.DataType.NVarChar),
-				new DataParameter("@MiddleName", @MiddleName, LinqToDB.DataType.NVarChar),
-				new DataParameter("@Gender",   @Gender,   LinqToDB.DataType.Char),
-				new DataParameter("@PersonID", @PersonID, LinqToDB.DataType.Int32) { Direction = ParameterDirection.InputOutput });
+			var parameters = new []
+			{
+				new DataParameter("@FirstName", @FirstName, LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("@LastName", @LastName, LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("@MiddleName", @MiddleName, LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("@Gender",   @Gender,   LinqToDB.DataType.Char)
+				{
+					Size = 1
+				},
+				new DataParameter("@PersonID", @PersonID, LinqToDB.DataType.Int32)
+				{
+					Direction = ParameterDirection.InputOutput
+				}
+			};
 
-			@PersonID = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["@PersonID"]).Value);
+			var ret = dataConnection.ExecuteProc("[Person_Insert_OutputParameter]", parameters);
+
+			@PersonID = Converter.ChangeTypeTo<int?>(parameters[4].Value);
 
 			return ret;
 		}
@@ -1869,8 +1964,12 @@ namespace DataModel
 
 		public static List<PersonSelectByKeyResult> PersonSelectByKey(this TestData2014DB dataConnection, int? @id)
 		{
-			return dataConnection.QueryProc<PersonSelectByKeyResult>("[Person_SelectByKey]",
-				new DataParameter("@id", @id, LinqToDB.DataType.Int32)).ToList();
+			var parameters = new []
+			{
+				new DataParameter("@id", @id, LinqToDB.DataType.Int32)
+			};
+
+			return dataConnection.QueryProc<PersonSelectByKeyResult>("[Person_SelectByKey]", parameters).ToList();
 		}
 
 		public partial class PersonSelectByKeyResult
@@ -1888,8 +1987,12 @@ namespace DataModel
 
 		public static List<PersonSelectByKeyLowercaseResult> PersonSelectByKeyLowercase(this TestData2014DB dataConnection, int? @id)
 		{
-			return dataConnection.QueryProc<PersonSelectByKeyLowercaseResult>("[Person_SelectByKeyLowercase]",
-				new DataParameter("@id", @id, LinqToDB.DataType.Int32)).ToList();
+			var parameters = new []
+			{
+				new DataParameter("@id", @id, LinqToDB.DataType.Int32)
+			};
+
+			return dataConnection.QueryProc<PersonSelectByKeyLowercaseResult>("[Person_SelectByKeyLowercase]", parameters).ToList();
 		}
 
 		public partial class PersonSelectByKeyLowercaseResult
@@ -1904,9 +2007,19 @@ namespace DataModel
 
 		public static List<PersonSelectByNameResult> PersonSelectByName(this TestData2014DB dataConnection, string? @firstName, string? @lastName)
 		{
-			return dataConnection.QueryProc<PersonSelectByNameResult>("[Person_SelectByName]",
-				new DataParameter("@firstName", @firstName, LinqToDB.DataType.NVarChar),
-				new DataParameter("@lastName",  @lastName,  LinqToDB.DataType.NVarChar)).ToList();
+			var parameters = new []
+			{
+				new DataParameter("@firstName", @firstName, LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("@lastName",  @lastName,  LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				}
+			};
+
+			return dataConnection.QueryProc<PersonSelectByNameResult>("[Person_SelectByName]", parameters).ToList();
 		}
 
 		public partial class PersonSelectByNameResult
@@ -1924,9 +2037,19 @@ namespace DataModel
 
 		public static List<PersonSelectListByNameResult> PersonSelectListByName(this TestData2014DB dataConnection, string? @firstName, string? @lastName)
 		{
-			return dataConnection.QueryProc<PersonSelectListByNameResult>("[Person_SelectListByName]",
-				new DataParameter("@firstName", @firstName, LinqToDB.DataType.NVarChar),
-				new DataParameter("@lastName",  @lastName,  LinqToDB.DataType.NVarChar)).ToList();
+			var parameters = new []
+			{
+				new DataParameter("@firstName", @firstName, LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("@lastName",  @lastName,  LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				}
+			};
+
+			return dataConnection.QueryProc<PersonSelectListByNameResult>("[Person_SelectListByName]", parameters).ToList();
 		}
 
 		public partial class PersonSelectListByNameResult
@@ -1944,12 +2067,28 @@ namespace DataModel
 
 		public static int PersonUpdate(this TestData2014DB dataConnection, int? @PersonID, string? @FirstName, string? @LastName, string? @MiddleName, char? @Gender)
 		{
-			return dataConnection.ExecuteProc("[Person_Update]",
+			var parameters = new []
+			{
 				new DataParameter("@PersonID",   @PersonID,   LinqToDB.DataType.Int32),
-				new DataParameter("@FirstName",  @FirstName,  LinqToDB.DataType.NVarChar),
-				new DataParameter("@LastName",   @LastName,   LinqToDB.DataType.NVarChar),
-				new DataParameter("@MiddleName", @MiddleName, LinqToDB.DataType.NVarChar),
-				new DataParameter("@Gender",     @Gender,     LinqToDB.DataType.Char));
+				new DataParameter("@FirstName",  @FirstName,  LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("@LastName",   @LastName,   LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("@MiddleName", @MiddleName, LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("@Gender",     @Gender,     LinqToDB.DataType.Char)
+				{
+					Size = 1
+				}
+			};
+
+			return dataConnection.ExecuteProc("[Person_Update]", parameters);
 		}
 
 		#endregion
@@ -1958,15 +2097,28 @@ namespace DataModel
 
 		public static List<QueryProcMultipleParametersResult> QueryProcMultipleParameters(this TestData2014DB dataConnection, int? @input, ref int? @output1, ref int? @output2, ref int? @output3)
 		{
-			var ret = dataConnection.QueryProc<QueryProcMultipleParametersResult>("[QueryProcMultipleParameters]",
+			var parameters = new []
+			{
 				new DataParameter("@input",   @input,   LinqToDB.DataType.Int32),
-				new DataParameter("@output1", @output1, LinqToDB.DataType.Int32) { Direction = ParameterDirection.InputOutput },
-				new DataParameter("@output2", @output2, LinqToDB.DataType.Int32) { Direction = ParameterDirection.InputOutput },
-				new DataParameter("@output3", @output3, LinqToDB.DataType.Int32) { Direction = ParameterDirection.InputOutput }).ToList();
+				new DataParameter("@output1", @output1, LinqToDB.DataType.Int32)
+				{
+					Direction = ParameterDirection.InputOutput
+				},
+				new DataParameter("@output2", @output2, LinqToDB.DataType.Int32)
+				{
+					Direction = ParameterDirection.InputOutput
+				},
+				new DataParameter("@output3", @output3, LinqToDB.DataType.Int32)
+				{
+					Direction = ParameterDirection.InputOutput
+				}
+			};
 
-			@output1 = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["@output1"]).Value);
-			@output2 = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["@output2"]).Value);
-			@output3 = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["@output3"]).Value);
+			var ret = dataConnection.QueryProc<QueryProcMultipleParametersResult>("[QueryProcMultipleParameters]", parameters).ToList();
+
+			@output1 = Converter.ChangeTypeTo<int?>(parameters[1].Value);
+			@output2 = Converter.ChangeTypeTo<int?>(parameters[2].Value);
+			@output3 = Converter.ChangeTypeTo<int?>(parameters[3].Value);
 
 			return ret;
 		}
@@ -1986,13 +2138,23 @@ namespace DataModel
 
 		public static List<QueryProcParametersResult> QueryProcParameters(this TestData2014DB dataConnection, int? @input, ref int? @output1, ref int? @output2)
 		{
-			var ret = dataConnection.QueryProc<QueryProcParametersResult>("[QueryProcParameters]",
+			var parameters = new []
+			{
 				new DataParameter("@input",   @input,   LinqToDB.DataType.Int32),
-				new DataParameter("@output1", @output1, LinqToDB.DataType.Int32) { Direction = ParameterDirection.InputOutput },
-				new DataParameter("@output2", @output2, LinqToDB.DataType.Int32) { Direction = ParameterDirection.InputOutput }).ToList();
+				new DataParameter("@output1", @output1, LinqToDB.DataType.Int32)
+				{
+					Direction = ParameterDirection.InputOutput
+				},
+				new DataParameter("@output2", @output2, LinqToDB.DataType.Int32)
+				{
+					Direction = ParameterDirection.InputOutput
+				}
+			};
 
-			@output1 = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["@output1"]).Value);
-			@output2 = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["@output2"]).Value);
+			var ret = dataConnection.QueryProc<QueryProcParametersResult>("[QueryProcParameters]", parameters).ToList();
+
+			@output1 = Converter.ChangeTypeTo<int?>(parameters[1].Value);
+			@output2 = Converter.ChangeTypeTo<int?>(parameters[2].Value);
 
 			return ret;
 		}
@@ -2033,8 +2195,15 @@ namespace DataModel
 
 		public static List<TableTypeTestProcResult> TableTypeTestProc(this TestData2014DB dataConnection, DataTable? @table)
 		{
-			return dataConnection.QueryProc<TableTypeTestProcResult>("[TableTypeTestProc]",
-				new DataParameter("@table", @table, LinqToDB.DataType.Structured){ DbType = "[dbo].[TestTableType]" }).ToList();
+			var parameters = new []
+			{
+				new DataParameter("@table", @table, LinqToDB.DataType.Structured)
+				{
+					DbType = "[dbo].[TestTableType]"
+				}
+			};
+
+			return dataConnection.QueryProc<TableTypeTestProcResult>("[TableTypeTestProc]", parameters).ToList();
 		}
 
 		public partial class TableTypeTestProcResult
@@ -2049,8 +2218,12 @@ namespace DataModel
 
 		public static List<VariableResultsResult> VariableResults(this TestData2014DB dataConnection, bool? @ReturnFullRow)
 		{
-			return dataConnection.QueryProc<VariableResultsResult>("[VariableResults]",
-				new DataParameter("@ReturnFullRow", @ReturnFullRow, LinqToDB.DataType.Boolean)).ToList();
+			var parameters = new []
+			{
+				new DataParameter("@ReturnFullRow", @ReturnFullRow, LinqToDB.DataType.Boolean)
+			};
+
+			return dataConnection.QueryProc<VariableResultsResult>("[VariableResults]", parameters).ToList();
 		}
 
 		public partial class VariableResultsResult
@@ -2070,10 +2243,10 @@ namespace DataModel
 		/// <summary>
 		/// This is &lt;test&gt; scalar function!
 		/// </summary>
-		/// <param name="@value">
+		/// <param name="value">
 		/// This is &lt;test&gt; scalar function parameter!
 		/// </param>
-		[Sql.Function(Name="ScalarFunction", ServerSideOnly=true)]
+		[Sql.Function(Name="[ScalarFunction]", ServerSideOnly=true)]
 		public static int? ScalarFunction(int? @value)
 		{
 			throw new InvalidOperationException();
@@ -2100,12 +2273,6 @@ namespace DataModel
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);
-		}
-
-		public static Customer0? Find(this ITable<Customer0> table, int ID)
-		{
-			return table.FirstOrDefault(t =>
-				t.ID == ID);
 		}
 
 		public static DecimalOverflow? Find(this ITable<DecimalOverflow> table, decimal Decimal1)
@@ -2194,12 +2361,6 @@ namespace DataModel
 				t.PersonID == PersonID);
 		}
 
-		public static Ref? Find(this ITable<Ref> table, int ID)
-		{
-			return table.FirstOrDefault(t =>
-				t.ID == ID);
-		}
-
 		public static SqlType? Find(this ITable<SqlType> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
@@ -2243,7 +2404,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Patient2_IndexTable_BackReference
 		/// </summary>
-		[Association(ThisKey="PKField2, PKField1", OtherKey="PKField2, PKField1", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
+		[Association(ThisKey="PKField2, PKField1", OtherKey="PKField2, PKField1", CanBeNull=true)]
 		public static IQueryable<IndexTable2> Patients(this IndexTable obj, IDataContext db)
 		{
 			return db.GetTable<IndexTable2>().Where(c => c.PKField2 == obj.PKField2 && c.PKField1 == obj.PKField1);
@@ -2252,7 +2413,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Patient2_IndexTable_BackReference
 		/// </summary>
-		[Association(ThisKey="PKField2, PKField1", OtherKey="PKField2, PKField1", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
+		[Association(ThisKey="PKField2, PKField1", OtherKey="PKField2, PKField1", CanBeNull=true)]
 		public static IndexTable? Patient(this IndexTable2 obj, IDataContext db)
 		{
 			return db.GetTable<IndexTable>().Where(c => c.PKField2 == obj.PKField2 && c.PKField1 == obj.PKField1).FirstOrDefault();
@@ -2265,7 +2426,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Patient2_IndexTable
 		/// </summary>
-		[Association(ThisKey="PKField2, PKField1", OtherKey="PKField2, PKField1", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="FK_Patient2_IndexTable", BackReferenceName="Patient")]
+		[Association(ThisKey="PKField2, PKField1", OtherKey="PKField2, PKField1", CanBeNull=false)]
 		public static IQueryable<IndexTable> Patient2IndexTables(this IndexTable2 obj, IDataContext db)
 		{
 			return db.GetTable<IndexTable>().Where(c => c.PKField2 == obj.PKField2 && c.PKField1 == obj.PKField1);
@@ -2274,7 +2435,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Patient2_IndexTable
 		/// </summary>
-		[Association(ThisKey="PKField2, PKField1", OtherKey="PKField2, PKField1", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="FK_Patient2_IndexTable", BackReferenceName="Patient")]
+		[Association(ThisKey="PKField2, PKField1", OtherKey="PKField2, PKField1", CanBeNull=false)]
 		public static IndexTable2 Patient2IndexTable(this IndexTable obj, IDataContext db)
 		{
 			return db.GetTable<IndexTable2>().Where(c => c.PKField2 == obj.PKField2 && c.PKField1 == obj.PKField1).First();
@@ -2287,7 +2448,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA2_BackReference
 		/// </summary>
-		[Association(ThisKey="TestSchemaAID", OtherKey="TargetTestSchemaAId", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+		[Association(ThisKey="TestSchemaAID", OtherKey="TargetTestSchemaAId", CanBeNull=true)]
 		public static IQueryable<MySchemaSchema.TestSchemaB> FkTestSchemaTestSchemaBYTargetTestSchemaA2BackReferences(this MySchemaSchema.TestSchemaA obj, IDataContext db)
 		{
 			return db.GetTable<MySchemaSchema.TestSchemaB>().Where(c => c.TargetTestSchemaAId == obj.TestSchemaAID);
@@ -2296,7 +2457,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_TestSchema_TestSchemaBY_OriginTestSchemaA_BackReference
 		/// </summary>
-		[Association(ThisKey="TestSchemaAID", OtherKey="OriginTestSchemaAID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+		[Association(ThisKey="TestSchemaAID", OtherKey="OriginTestSchemaAID", CanBeNull=true)]
 		public static IQueryable<MySchemaSchema.TestSchemaB> TestSchemaBYOriginTestSchemaA(this MySchemaSchema.TestSchemaA obj, IDataContext db)
 		{
 			return db.GetTable<MySchemaSchema.TestSchemaB>().Where(c => c.OriginTestSchemaAID == obj.TestSchemaAID);
@@ -2305,7 +2466,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA_BackReference
 		/// </summary>
-		[Association(ThisKey="TestSchemaAID", OtherKey="TargetTestSchemaAID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+		[Association(ThisKey="TestSchemaAID", OtherKey="TargetTestSchemaAID", CanBeNull=true)]
 		public static IQueryable<MySchemaSchema.TestSchemaB> TestSchemaBYTargetTestSchemaA(this MySchemaSchema.TestSchemaA obj, IDataContext db)
 		{
 			return db.GetTable<MySchemaSchema.TestSchemaB>().Where(c => c.TargetTestSchemaAID == obj.TestSchemaAID);
@@ -2318,7 +2479,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA
 		/// </summary>
-		[Association(ThisKey="TargetTestSchemaAID", OtherKey="TestSchemaAID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_TestSchema_TestSchemaBY_TargetTestSchemaA", BackReferenceName="TestSchemaBYTargetTestSchemaA")]
+		[Association(ThisKey="TargetTestSchemaAID", OtherKey="TestSchemaAID", CanBeNull=false)]
 		public static IQueryable<MySchemaSchema.TestSchemaA> FKTargetTestSchemaA(this MySchemaSchema.TestSchemaB obj, IDataContext db)
 		{
 			return db.GetTable<MySchemaSchema.TestSchemaA>().Where(c => c.TestSchemaAID == obj.TargetTestSchemaAID);
@@ -2327,7 +2488,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA
 		/// </summary>
-		[Association(ThisKey="TargetTestSchemaAID", OtherKey="TestSchemaAID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_TestSchema_TestSchemaBY_TargetTestSchemaA", BackReferenceName="TestSchemaBYTargetTestSchemaA")]
+		[Association(ThisKey="TargetTestSchemaAID", OtherKey="TestSchemaAID", CanBeNull=false)]
 		public static MySchemaSchema.TestSchemaB FKTargetTestSchemaA0(this MySchemaSchema.TestSchemaA obj, IDataContext db)
 		{
 			return db.GetTable<MySchemaSchema.TestSchemaB>().Where(c => c.TargetTestSchemaAID == obj.TestSchemaAID).First();
@@ -2336,7 +2497,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_TestSchema_TestSchemaBY_OriginTestSchemaA
 		/// </summary>
-		[Association(ThisKey="OriginTestSchemaAID", OtherKey="TestSchemaAID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_TestSchema_TestSchemaBY_OriginTestSchemaA", BackReferenceName="TestSchemaBYOriginTestSchemaA")]
+		[Association(ThisKey="OriginTestSchemaAID", OtherKey="TestSchemaAID", CanBeNull=false)]
 		public static IQueryable<MySchemaSchema.TestSchemaA> OriginTestSchemaA(this MySchemaSchema.TestSchemaB obj, IDataContext db)
 		{
 			return db.GetTable<MySchemaSchema.TestSchemaA>().Where(c => c.TestSchemaAID == obj.OriginTestSchemaAID);
@@ -2345,7 +2506,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_TestSchema_TestSchemaBY_OriginTestSchemaA
 		/// </summary>
-		[Association(ThisKey="OriginTestSchemaAID", OtherKey="TestSchemaAID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_TestSchema_TestSchemaBY_OriginTestSchemaA", BackReferenceName="TestSchemaBYOriginTestSchemaA")]
+		[Association(ThisKey="OriginTestSchemaAID", OtherKey="TestSchemaAID", CanBeNull=false)]
 		public static MySchemaSchema.TestSchemaB OriginTestSchemaA0(this MySchemaSchema.TestSchemaA obj, IDataContext db)
 		{
 			return db.GetTable<MySchemaSchema.TestSchemaB>().Where(c => c.OriginTestSchemaAID == obj.TestSchemaAID).First();
@@ -2354,7 +2515,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA2
 		/// </summary>
-		[Association(ThisKey="TargetTestSchemaAId", OtherKey="TestSchemaAID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_TestSchema_TestSchemaBY_TargetTestSchemaA2", BackReferenceName="FkTestSchemaTestSchemaBYTargetTestSchemaA2BackReferences")]
+		[Association(ThisKey="TargetTestSchemaAId", OtherKey="TestSchemaAID", CanBeNull=false)]
 		public static IQueryable<MySchemaSchema.TestSchemaA> TargetTestSchemaA(this MySchemaSchema.TestSchemaB obj, IDataContext db)
 		{
 			return db.GetTable<MySchemaSchema.TestSchemaA>().Where(c => c.TestSchemaAID == obj.TargetTestSchemaAId);
@@ -2363,7 +2524,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA2
 		/// </summary>
-		[Association(ThisKey="TargetTestSchemaAId", OtherKey="TestSchemaAID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_TestSchema_TestSchemaBY_TargetTestSchemaA2", BackReferenceName="FkTestSchemaTestSchemaBYTargetTestSchemaA2BackReferences")]
+		[Association(ThisKey="TargetTestSchemaAId", OtherKey="TestSchemaAID", CanBeNull=false)]
 		public static MySchemaSchema.TestSchemaB TargetTestSchemaA0(this MySchemaSchema.TestSchemaA obj, IDataContext db)
 		{
 			return db.GetTable<MySchemaSchema.TestSchemaB>().Where(c => c.TargetTestSchemaAId == obj.TestSchemaAID).First();
@@ -2376,7 +2537,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_TestSchemaY_TestSchemaX_BackReference
 		/// </summary>
-		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=true)]
 		public static IQueryable<TestSchemaY> TestSchemaY(this TestSchemaX obj, IDataContext db)
 		{
 			return db.GetTable<TestSchemaY>().Where(c => c.TestSchemaXID == obj.TestSchemaXID);
@@ -2385,7 +2546,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_TestSchemaY_OtherID_BackReference
 		/// </summary>
-		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=true)]
 		public static IQueryable<TestSchemaY> TestSchemaYOtherIds(this TestSchemaX obj, IDataContext db)
 		{
 			return db.GetTable<TestSchemaY>().Where(c => c.TestSchemaXID == obj.TestSchemaXID);
@@ -2394,7 +2555,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_TestSchemaY_ParentTestSchemaX_BackReference
 		/// </summary>
-		[Association(ThisKey="TestSchemaXID", OtherKey="ParentTestSchemaXID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+		[Association(ThisKey="TestSchemaXID", OtherKey="ParentTestSchemaXID", CanBeNull=true)]
 		public static IQueryable<TestSchemaY> TestSchemaYParentTestSchemaX(this TestSchemaX obj, IDataContext db)
 		{
 			return db.GetTable<TestSchemaY>().Where(c => c.ParentTestSchemaXID == obj.TestSchemaXID);
@@ -2407,7 +2568,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_TestSchemaY_OtherID
 		/// </summary>
-		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_TestSchemaY_OtherID", BackReferenceName="TestSchemaYOtherIds")]
+		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false)]
 		public static IQueryable<TestSchemaX> FkTestSchemaYOtherIds(this TestSchemaY obj, IDataContext db)
 		{
 			return db.GetTable<TestSchemaX>().Where(c => c.TestSchemaXID == obj.TestSchemaXID);
@@ -2416,7 +2577,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_TestSchemaY_OtherID
 		/// </summary>
-		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_TestSchemaY_OtherID", BackReferenceName="TestSchemaYOtherIds")]
+		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false)]
 		public static TestSchemaY FkTestSchemaYOtherID(this TestSchemaX obj, IDataContext db)
 		{
 			return db.GetTable<TestSchemaY>().Where(c => c.TestSchemaXID == obj.TestSchemaXID).First();
@@ -2425,7 +2586,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_TestSchemaY_ParentTestSchemaX
 		/// </summary>
-		[Association(ThisKey="ParentTestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_TestSchemaY_ParentTestSchemaX", BackReferenceName="TestSchemaYParentTestSchemaX")]
+		[Association(ThisKey="ParentTestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false)]
 		public static IQueryable<TestSchemaX> ParentTestSchemaX(this TestSchemaY obj, IDataContext db)
 		{
 			return db.GetTable<TestSchemaX>().Where(c => c.TestSchemaXID == obj.ParentTestSchemaXID);
@@ -2434,7 +2595,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_TestSchemaY_ParentTestSchemaX
 		/// </summary>
-		[Association(ThisKey="ParentTestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_TestSchemaY_ParentTestSchemaX", BackReferenceName="TestSchemaYParentTestSchemaX")]
+		[Association(ThisKey="ParentTestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false)]
 		public static TestSchemaY ParentTestSchemaX0(this TestSchemaX obj, IDataContext db)
 		{
 			return db.GetTable<TestSchemaY>().Where(c => c.ParentTestSchemaXID == obj.TestSchemaXID).First();
@@ -2443,7 +2604,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_TestSchemaY_TestSchemaX
 		/// </summary>
-		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_TestSchemaY_TestSchemaX", BackReferenceName="TestSchemaY")]
+		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false)]
 		public static IQueryable<TestSchemaX> TestSchemaX(this TestSchemaY obj, IDataContext db)
 		{
 			return db.GetTable<TestSchemaX>().Where(c => c.TestSchemaXID == obj.TestSchemaXID);
@@ -2452,7 +2613,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_TestSchemaY_TestSchemaX
 		/// </summary>
-		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_TestSchemaY_TestSchemaX", BackReferenceName="TestSchemaY")]
+		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false)]
 		public static TestSchemaY TestSchemaX0(this TestSchemaX obj, IDataContext db)
 		{
 			return db.GetTable<TestSchemaY>().Where(c => c.TestSchemaXID == obj.TestSchemaXID).First();
@@ -2494,21 +2655,21 @@ namespace DataModel
 			#region Associations
 
 			/// <summary>
-			/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA2_BackReference
+			/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA2_BackReference (TestSchema.TestSchemaB)
 			/// </summary>
-			[Association(ThisKey="TestSchemaAID", OtherKey="TargetTestSchemaAId", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="TestSchemaAID", OtherKey="TargetTestSchemaAId", CanBeNull=true)]
 			public List<MySchemaSchema.TestSchemaB> FkTestSchemaTestSchemaBYTargetTestSchemaA2BackReferences { get; set; } = null!;
 
 			/// <summary>
-			/// FK_TestSchema_TestSchemaBY_OriginTestSchemaA_BackReference
+			/// FK_TestSchema_TestSchemaBY_OriginTestSchemaA_BackReference (TestSchema.TestSchemaB)
 			/// </summary>
-			[Association(ThisKey="TestSchemaAID", OtherKey="OriginTestSchemaAID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="TestSchemaAID", OtherKey="OriginTestSchemaAID", CanBeNull=true)]
 			public List<MySchemaSchema.TestSchemaB> TestSchemaBYOriginTestSchemaA { get; set; } = null!;
 
 			/// <summary>
-			/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA_BackReference
+			/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA_BackReference (TestSchema.TestSchemaB)
 			/// </summary>
-			[Association(ThisKey="TestSchemaAID", OtherKey="TargetTestSchemaAID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			[Association(ThisKey="TestSchemaAID", OtherKey="TargetTestSchemaAID", CanBeNull=true)]
 			public List<MySchemaSchema.TestSchemaB> TestSchemaBYTargetTestSchemaA { get; set; } = null!;
 
 			#endregion
@@ -2525,21 +2686,21 @@ namespace DataModel
 			#region Associations
 
 			/// <summary>
-			/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA
+			/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA (TestSchema.TestSchemaA)
 			/// </summary>
-			[Association(ThisKey="TargetTestSchemaAID", OtherKey="TestSchemaAID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_TestSchema_TestSchemaBY_TargetTestSchemaA", BackReferenceName="TestSchemaBYTargetTestSchemaA")]
+			[Association(ThisKey="TargetTestSchemaAID", OtherKey="TestSchemaAID", CanBeNull=false)]
 			public MySchemaSchema.TestSchemaA FKTargetTestSchemaA { get; set; } = null!;
 
 			/// <summary>
-			/// FK_TestSchema_TestSchemaBY_OriginTestSchemaA
+			/// FK_TestSchema_TestSchemaBY_OriginTestSchemaA (TestSchema.TestSchemaA)
 			/// </summary>
-			[Association(ThisKey="OriginTestSchemaAID", OtherKey="TestSchemaAID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_TestSchema_TestSchemaBY_OriginTestSchemaA", BackReferenceName="TestSchemaBYOriginTestSchemaA")]
+			[Association(ThisKey="OriginTestSchemaAID", OtherKey="TestSchemaAID", CanBeNull=false)]
 			public MySchemaSchema.TestSchemaA OriginTestSchemaA { get; set; } = null!;
 
 			/// <summary>
-			/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA2
+			/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA2 (TestSchema.TestSchemaA)
 			/// </summary>
-			[Association(ThisKey="TargetTestSchemaAId", OtherKey="TestSchemaAID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_TestSchema_TestSchemaBY_TargetTestSchemaA2", BackReferenceName="FkTestSchemaTestSchemaBYTargetTestSchemaA2BackReferences")]
+			[Association(ThisKey="TargetTestSchemaAId", OtherKey="TestSchemaAID", CanBeNull=false)]
 			public MySchemaSchema.TestSchemaA TargetTestSchemaA { get; set; } = null!;
 
 			#endregion
@@ -2586,5 +2747,3 @@ namespace DataModel
 		#endregion
 	}
 }
-
-#pragma warning restore 1591

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Data.Linq;
 using System.Data.SqlTypes;
 using System.Diagnostics;
@@ -31,19 +32,10 @@ namespace Tests.DataProvider
 	[TestFixture]
 	public class SqlServerTests : DataProviderTestBase
 	{
-		[OneTimeSetUp]
-		protected void InitializeFixture()
-		{
-			// load spatial types support
-			//Utilities.LoadNativeAssemblies(AppDomain.CurrentDomain.BaseDirectory);
-		}
-
 		[Test]
 		public void TestParameters([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			// mapping fails and fallbacks to slow-mapper
-			using (new CustomCommandProcessor(null))
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context, suppressSequentialAccess: true))
 			{
 				Assert.That(conn.Execute<string>("SELECT @p",        new { p =  1  }), Is.EqualTo("1"));
 				Assert.That(conn.Execute<string>("SELECT @p",        new { p = "1" }), Is.EqualTo("1"));
@@ -57,19 +49,17 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestDataTypes([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(TestType<long?>    (conn, "bigintDataType",           DataType.Int64),         Is.EqualTo(1000000L));
 				Assert.That(TestType<decimal?> (conn, "numericDataType",          DataType.Decimal),       Is.EqualTo(9999999m));
 				Assert.That(TestType<bool?>    (conn, "bitDataType",              DataType.Boolean),       Is.EqualTo(true));
 				Assert.That(TestType<short?>   (conn, "smallintDataType",         DataType.Int16),         Is.EqualTo(25555));
 				Assert.That(TestType<decimal?> (conn, "decimalDataType",          DataType.Decimal),       Is.EqualTo(2222222m));
-				Assert.That(TestType<decimal?> (conn, "smallmoneyDataType",       DataType.SmallMoney,
-					skipUndefinedNull : context == ProviderName.SqlServer2000),                            Is.EqualTo(100000m));
+				Assert.That(TestType<decimal?> (conn, "smallmoneyDataType",       DataType.SmallMoney),    Is.EqualTo(100000m));
 				Assert.That(TestType<int?>     (conn, "intDataType",              DataType.Int32),         Is.EqualTo(7777777));
 				Assert.That(TestType<sbyte?>   (conn, "tinyintDataType",          DataType.SByte),         Is.EqualTo(100));
-				Assert.That(TestType<decimal?> (conn, "moneyDataType",            DataType.Money,
-					skipUndefinedNull : context == ProviderName.SqlServer2000),                            Is.EqualTo(100000m));
+				Assert.That(TestType<decimal?> (conn, "moneyDataType",            DataType.Money),         Is.EqualTo(100000m));
 				Assert.That(TestType<double?>  (conn, "floatDataType",            DataType.Double),        Is.EqualTo(20.31d));
 				Assert.That(TestType<float?>   (conn, "realDataType",             DataType.Single),        Is.EqualTo(16.2f));
 
@@ -95,9 +85,7 @@ namespace Tests.DataProvider
 				Assert.That(TestType<byte[]>   (conn, "varbinary_max_DataType",   DataType.VarBinary),              Is.EqualTo(new byte[] { 0, 0, 9, 41 }));
 
 				Assert.That(TestType<string>   (conn, "xmlDataType",              DataType.Xml, skipPass:true),
-					Is.EqualTo(context == ProviderName.SqlServer2000 ?
-						"<root><element strattr=\"strvalue\" intattr=\"12345\"/></root>" :
-						"<root><element strattr=\"strvalue\" intattr=\"12345\" /></root>"));
+					Is.EqualTo("<root><element strattr=\"strvalue\" intattr=\"12345\" /></root>"));
 
 				Assert.That(conn.Execute<byte[]>("SELECT timestampDataType FROM AllTypes WHERE ID = 1").Length, Is.EqualTo(8));
 			}
@@ -107,7 +95,7 @@ namespace Tests.DataProvider
 		public void TestDataTypes2([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (new DisableBaseline("Provider-specific output", IsMsProvider(context)))
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(TestType<DateTime?>      (conn, "dateDataType",           DataType.Date,           "AllTypes2"), Is.EqualTo(new DateTime(2012, 12, 12)));
 				Assert.That(TestType<DateTimeOffset?>(conn, "datetimeoffsetDataType", DataType.DateTimeOffset, "AllTypes2"), Is.EqualTo(new DateTimeOffset(2012, 12, 12, 12, 12, 12, 12, new TimeSpan(5, 0, 0))));
@@ -173,7 +161,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestNumerics([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				TestSimple<bool>   (conn, true, DataType.Boolean);
 				TestSimple<sbyte>  (conn, 1,    DataType.SByte);
@@ -223,7 +211,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestDate([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				var dateTime = new DateTime(2012, 12, 12);
 
@@ -237,7 +225,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestSmallDateTime([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				var dateTime = new DateTime(2012, 12, 12, 12, 12, 00);
 
@@ -252,7 +240,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestDateTime([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				var dateTime = new DateTime(2012, 12, 12, 12, 12, 12);
 
@@ -268,7 +256,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestDateTime2([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				var dateTime2 = new DateTime(2012, 12, 12, 12, 12, 12, 12).AddTicks(1);
 
@@ -329,7 +317,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestDateTime2Precision([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context, [Values] bool inline)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (var tb = db.CreateLocalTable(DateTime2Table.Data))
 			{
 				db.InlineParameters = inline;
@@ -362,7 +350,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestDateTimeOffset([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				var dto = new DateTimeOffset(2012, 12, 12, 12, 12, 12, 12, new TimeSpan( 5, 0, 0));
 				var lto = new DateTimeOffset(2012, 12, 12, 13, 12, 12, 12, new TimeSpan(-4, 0, 0));
@@ -409,7 +397,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestTimeSpan([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				var time = new TimeSpan(12, 12, 12);
 
@@ -426,7 +414,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestChar([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<char> ("SELECT Cast('1' as char)"),         Is.EqualTo('1'));
 				Assert.That(conn.Execute<char?>("SELECT Cast('1' as char)"),         Is.EqualTo('1'));
@@ -472,7 +460,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestString([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<string>("SELECT Cast('12345' as char)"),          Is.EqualTo("12345"));
 				Assert.That(conn.Execute<string>("SELECT Cast('12345' as char(20))"),      Is.EqualTo("12345"));
@@ -482,15 +470,7 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<string>("SELECT Cast('12345' as varchar(20))"),   Is.EqualTo("12345"));
 				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as varchar(20))"),   Is.Null);
 
-				bool isScCollation; 
-				if (context == ProviderName.SqlServer2000)
-				{
-					isScCollation = false;
-				}
-				else
-				{
-					isScCollation = conn.Execute<int>("SELECT COUNT(*) FROM sys.databases WHERE database_id = DB_ID() AND collation_name LIKE '%_SC'") > 0;
-				}
+				var isScCollation = conn.Execute<int>("SELECT COUNT(*) FROM sys.databases WHERE database_id = DB_ID() AND collation_name LIKE '%_SC'") > 0;
 				if (isScCollation)
 				{
 					// explicit collation set for legacy text types as they doesn't support *_SC collations
@@ -499,15 +479,12 @@ namespace Tests.DataProvider
 				}
 				else
 				{
-					Assert.That(conn.Execute<string>("SELECT Cast('12345' as text)"),     Is.EqualTo("12345"));
-					Assert.That(conn.Execute<string>("SELECT Cast(NULL    as text)"),     Is.Null);
+					Assert.That(conn.Execute<string>("SELECT Cast('12345' as text)"),      Is.EqualTo("12345"));
+					Assert.That(conn.Execute<string>("SELECT Cast(NULL    as text)"),      Is.Null);
 				}
 
-				if (context != ProviderName.SqlServer2000)
-				{
-					Assert.That(conn.Execute<string>("SELECT Cast('12345' as varchar(max))"),  Is.EqualTo("12345"));
-					Assert.That(conn.Execute<string>("SELECT Cast(NULL    as varchar(max))"),  Is.Null);
-				}
+				Assert.That(conn.Execute<string>("SELECT Cast('12345' as varchar(max))"),  Is.EqualTo("12345"));
+				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as varchar(max))"),  Is.Null);
 
 				Assert.That(conn.Execute<string>("SELECT Cast('12345' as nchar)"),         Is.EqualTo("12345"));
 				Assert.That(conn.Execute<string>("SELECT Cast('12345' as nchar(20))"),     Is.EqualTo("12345"));
@@ -529,11 +506,8 @@ namespace Tests.DataProvider
 					Assert.That(conn.Execute<string>("SELECT Cast(NULL    as ntext)"), Is.Null);
 				}
 
-				if (context != ProviderName.SqlServer2000)
-				{
-					Assert.That(conn.Execute<string>("SELECT Cast('12345' as nvarchar(max))"), Is.EqualTo("12345"));
-					Assert.That(conn.Execute<string>("SELECT Cast(NULL    as nvarchar(max))"), Is.Null);
-				}
+				Assert.That(conn.Execute<string>("SELECT Cast('12345' as nvarchar(max))"), Is.EqualTo("12345"));
+				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as nvarchar(max))"), Is.Null);
 
 				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.Char    ("p", "123")), Is.EqualTo("123"));
 				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.VarChar ("p", "123")), Is.EqualTo("123"));
@@ -554,19 +528,17 @@ namespace Tests.DataProvider
 			var arr1 = new byte[] {       48, 57 };
 			var arr2 = new byte[] { 0, 0, 48, 57 };
 
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
-				Assert.That(conn.Execute<byte[]>("SELECT Cast(12345 as binary(2))"),    Is.EqualTo(           arr1));
-				Assert.That(conn.Execute<Binary>("SELECT Cast(12345 as binary(4))"),    Is.EqualTo(new Binary(arr2)));
+				Assert.That(conn.Execute<byte[]>("SELECT Cast(12345 as binary(2))"),      Is.EqualTo(           arr1));
+				Assert.That(conn.Execute<Binary>("SELECT Cast(12345 as binary(4))"),      Is.EqualTo(new Binary(arr2)));
 
-				Assert.That(conn.Execute<byte[]>("SELECT Cast(12345 as varbinary(2))"), Is.EqualTo(           arr1));
-				Assert.That(conn.Execute<Binary>("SELECT Cast(12345 as varbinary(4))"), Is.EqualTo(new Binary(arr2)));
+				Assert.That(conn.Execute<byte[]>("SELECT Cast(12345 as varbinary(2))"),   Is.EqualTo(           arr1));
+				Assert.That(conn.Execute<Binary>("SELECT Cast(12345 as varbinary(4))"),   Is.EqualTo(new Binary(arr2)));
 
-				Assert.That(conn.Execute<byte[]>("SELECT Cast(NULL as image)"),         Is.EqualTo(null));
+				Assert.That(conn.Execute<byte[]>("SELECT Cast(NULL as image)"),           Is.EqualTo(null));
 
-				Assert.That(conn.Execute<byte[]>(
-					context == ProviderName.SqlServer2000 ? "SELECT Cast(12345 as varbinary(4000))" : "SELECT Cast(12345 as varbinary(max))"),
-					Is.EqualTo(arr2));
+				Assert.That(conn.Execute<byte[]>("SELECT Cast(12345 as varbinary(max))"), Is.EqualTo(arr2));
 
 				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Binary   ("p", arr1)), Is.EqualTo(arr1));
 				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.VarBinary("p", arr1)), Is.EqualTo(arr1));
@@ -585,7 +557,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestSqlTypes([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				var arr = new byte[] { 48, 57 };
 
@@ -601,8 +573,7 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<SqlSingle> ("SELECT Cast(1        as real)").     Value, Is.EqualTo((float)1));
 				Assert.That(conn.Execute<SqlString> ("SELECT Cast('12345'  as char(6))").  Value, Is.EqualTo("12345 "));
 
-				if (context != ProviderName.SqlServer2000)
-					Assert.That(conn.Execute<SqlXml>("SELECT Cast('<xml/>' as xml)").      Value, Is.EqualTo("<xml />"));
+				Assert.That(conn.Execute<SqlXml>("SELECT Cast('<xml/>' as xml)").      Value, Is.EqualTo("<xml />"));
 
 				Assert.That(
 					conn.Execute<SqlDateTime>("SELECT Cast('2012-12-12 12:12:12' as datetime)").Value,
@@ -618,20 +589,17 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<SqlBoolean>("SELECT @p", new DataParameter("p", true)).                  Value, Is.EqualTo(true));
 				Assert.That(conn.Execute<SqlBoolean>("SELECT @p", new DataParameter("p", true, DataType.Boolean)).Value, Is.EqualTo(true));
 
-				if (context != ProviderName.SqlServer2000)
-				{
-					var conv = conn.MappingSchema.GetConverter<string,SqlXml>()!;
+				var conv = conn.MappingSchema.GetConverter<string,SqlXml>()!;
 
-					Assert.That(conn.Execute<SqlXml>("SELECT @p", new DataParameter("p", conv("<xml/>"))).              Value, Is.EqualTo("<xml />"));
-					Assert.That(conn.Execute<SqlXml>("SELECT @p", new DataParameter("p", conv("<xml/>"), DataType.Xml)).Value, Is.EqualTo("<xml />"));
-				}
+				Assert.That(conn.Execute<SqlXml>("SELECT @p", new DataParameter("p", conv("<xml/>"))).              Value, Is.EqualTo("<xml />"));
+				Assert.That(conn.Execute<SqlXml>("SELECT @p", new DataParameter("p", conv("<xml/>"), DataType.Xml)).Value, Is.EqualTo("<xml />"));
 			}
 		}
 
 		[Test]
 		public void TestGuid([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(
 					conn.Execute<Guid>("SELECT Cast('6F9619FF-8B86-D011-B42D-00C04FC964FF' as uniqueidentifier)"),
@@ -651,7 +619,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestTimestamp([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				var arr = new byte[] { 0, 0, 0, 0, 0, 0, 0, 1 };
 
@@ -666,7 +634,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestSqlVariant([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<object>("SELECT Cast(1 as sql_variant)"), Is.EqualTo(1));
 				Assert.That(conn.Execute<int>   ("SELECT Cast(1 as sql_variant)"), Is.EqualTo(1));
@@ -683,7 +651,7 @@ namespace Tests.DataProvider
 			if (IsMsProvider(context))
 				Assert.Inconclusive("Spatial types test disabled for Microsoft.Data.SqlClient");
 
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				var id = SqlHierarchyId.Parse("/1/3/");
 
@@ -702,7 +670,7 @@ namespace Tests.DataProvider
 			if (IsMsProvider(context))
 				Assert.Inconclusive("Spatial types test disabled for Microsoft.Data.SqlClient");
 
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				var id = SqlGeometry.Parse("LINESTRING (100 100, 20 180, 180 180)");
 
@@ -724,7 +692,7 @@ namespace Tests.DataProvider
 			if (IsMsProvider(context))
 				Assert.Inconclusive("Spatial types test disabled for Microsoft.Data.SqlClient");
 
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				var id = SqlGeography.Parse("LINESTRING (-122.36 47.656, -122.343 47.656)");
 
@@ -741,16 +709,13 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestXml([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestXml([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
-				if (context != ProviderName.SqlServer2000)
-				{
-					Assert.That(conn.Execute<string>     ("SELECT Cast('<xml/>' as xml)"),            Is.EqualTo("<xml/>").Or.EqualTo("<xml />"));
-					Assert.That(conn.Execute<XDocument>  ("SELECT Cast('<xml/>' as xml)").ToString(), Is.EqualTo("<xml/>").Or.EqualTo("<xml />"));
-					Assert.That(conn.Execute<XmlDocument>("SELECT Cast('<xml/>' as xml)").InnerXml,   Is.EqualTo("<xml/>").Or.EqualTo("<xml />"));
-				}
+				Assert.That(conn.Execute<string>     ("SELECT Cast('<xml/>' as xml)"),            Is.EqualTo("<xml/>").Or.EqualTo("<xml />"));
+				Assert.That(conn.Execute<XDocument>  ("SELECT Cast('<xml/>' as xml)").ToString(), Is.EqualTo("<xml/>").Or.EqualTo("<xml />"));
+				Assert.That(conn.Execute<XmlDocument>("SELECT Cast('<xml/>' as xml)").InnerXml,   Is.EqualTo("<xml/>").Or.EqualTo("<xml />"));
 
 				var xdoc = XDocument.Parse("<xml/>");
 				var xml  = Convert<string,XmlDocument>.Lambda("<xml/>");
@@ -773,12 +738,12 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestEnum1([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<TestEnum> ("SELECT 'A'"), Is.EqualTo(TestEnum.AA));
 				Assert.That(conn.Execute<TestEnum?>("SELECT 'A'"), Is.EqualTo(TestEnum.AA));
 
-				var sql = context == ProviderName.SqlServer2008 ? "SELECT 'C'" : "SELECT 'B'";
+				var sql = context.IsAnyOf(TestProvName.AllSqlServer2008) ? "SELECT 'C'" : "SELECT 'B'";
 
 				Assert.That(conn.Execute<TestEnum> (sql), Is.EqualTo(TestEnum.BB));
 				Assert.That(conn.Execute<TestEnum?>(sql), Is.EqualTo(TestEnum.BB));
@@ -788,11 +753,11 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestEnum2([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<string>("SELECT @p", new { p = TestEnum.AA }), Is.EqualTo("A"));
 				Assert.That(conn.Execute<string>("SELECT @p", new { p = (TestEnum?)TestEnum.BB }),
-					Is.EqualTo(context == ProviderName.SqlServer2008 ? "C" : "B"));
+					Is.EqualTo(context.IsAnyOf(TestProvName.AllSqlServer2008) ? "C" : "B"));
 
 				Assert.That(conn.Execute<string>("SELECT @p", new { p = ConvertTo<string>.From((TestEnum?)TestEnum.AA) }), Is.EqualTo("A"));
 				Assert.That(conn.Execute<string>("SELECT @p", new { p = ConvertTo<string>.From(TestEnum.AA) }), Is.EqualTo("A"));
@@ -815,7 +780,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void BulkCopyLinqTypesMultipleRows([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				try
 				{
@@ -847,7 +812,7 @@ namespace Tests.DataProvider
 		[Test]
 		public async Task BulkCopyLinqTypesMultipleRowsAsync([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				try
 				{
@@ -879,7 +844,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void BulkCopyLinqTypesProviderSpecific([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				try
 				{
@@ -911,7 +876,7 @@ namespace Tests.DataProvider
 		[Test]
 		public async Task BulkCopyLinqTypesProviderSpecificAsync([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				try
 				{
@@ -975,40 +940,28 @@ namespace Tests.DataProvider
 			[Column(DataType=DataType.VarChar,   Length=int.MaxValue), Nullable] public string?         varchar_max_DataType     { get; set; }
 			[Column(DataType=DataType.VarBinary, Length=int.MaxValue), Nullable] public byte[]?         varbinary_max_DataType   { get; set; }
 			[Column(DataType=DataType.Xml),                            Nullable] public string?         xmlDataType              { get; set; }
-			[Column(Configuration=ProviderName.SqlServer2000, DataType=DataType.VarChar)]
 			[Column(Configuration=ProviderName.SqlServer2005, DataType=DataType.VarChar)]
 			[Column(DataType=DataType.DateTime2),                      Nullable] public DateTime?       datetime2DataType        { get; set; }
-			[Column(Configuration=ProviderName.SqlServer2000, DataType=DataType.VarChar)]
 			[Column(Configuration=ProviderName.SqlServer2005, DataType=DataType.VarChar)]
 			[Column(DataType=DataType.DateTimeOffset),                 Nullable] public DateTimeOffset? datetimeoffsetDataType   { get; set; }
-			[Column(Configuration=ProviderName.SqlServer2000, DataType=DataType.VarChar)]
 			[Column(Configuration=ProviderName.SqlServer2005, DataType=DataType.VarChar)]
 			[Column(DataType=DataType.DateTimeOffset,Scale=0),         Nullable] public DateTimeOffset? datetimeoffset0DataType   { get; set; }
-			[Column(Configuration=ProviderName.SqlServer2000, DataType=DataType.VarChar)]
 			[Column(Configuration=ProviderName.SqlServer2005, DataType=DataType.VarChar)]
 			[Column(DataType=DataType.DateTimeOffset,Scale=1),         Nullable] public DateTimeOffset? datetimeoffset1DataType   { get; set; }
-			[Column(Configuration=ProviderName.SqlServer2000, DataType=DataType.VarChar)]
 			[Column(Configuration=ProviderName.SqlServer2005, DataType=DataType.VarChar)]
 			[Column(DataType=DataType.DateTimeOffset,Scale=2),         Nullable] public DateTimeOffset? datetimeoffset2DataType   { get; set; }
-			[Column(Configuration=ProviderName.SqlServer2000, DataType=DataType.VarChar)]
 			[Column(Configuration=ProviderName.SqlServer2005, DataType=DataType.VarChar)]
 			[Column(DataType=DataType.DateTimeOffset,Scale=3),         Nullable] public DateTimeOffset? datetimeoffset3DataType   { get; set; }
-			[Column(Configuration=ProviderName.SqlServer2000, DataType=DataType.VarChar)]
 			[Column(Configuration=ProviderName.SqlServer2005, DataType=DataType.VarChar)]
 			[Column(DataType=DataType.DateTimeOffset,Scale=4),         Nullable] public DateTimeOffset? datetimeoffset4DataType   { get; set; }
-			[Column(Configuration=ProviderName.SqlServer2000, DataType=DataType.VarChar)]
 			[Column(Configuration=ProviderName.SqlServer2005, DataType=DataType.VarChar)]
 			[Column(DataType=DataType.DateTimeOffset,Scale=5),         Nullable] public DateTimeOffset? datetimeoffset5DataType   { get; set; }
-			[Column(Configuration=ProviderName.SqlServer2000, DataType=DataType.VarChar)]
 			[Column(Configuration=ProviderName.SqlServer2005, DataType=DataType.VarChar)]
 			[Column(DataType=DataType.DateTimeOffset,Scale=6),         Nullable] public DateTimeOffset? datetimeoffset6DataType   { get; set; }
-			[Column(Configuration=ProviderName.SqlServer2000, DataType=DataType.VarChar)]
 			[Column(Configuration=ProviderName.SqlServer2005, DataType=DataType.VarChar)]
 			[Column(DataType=DataType.DateTimeOffset,Scale=7),         Nullable] public DateTimeOffset? datetimeoffset7DataType   { get; set; }
-			[Column(Configuration=ProviderName.SqlServer2000, DataType=DataType.VarChar)]
 			[Column(Configuration=ProviderName.SqlServer2005, DataType=DataType.VarChar)]
 			[Column(DataType=DataType.Date),                           Nullable] public DateTime?       dateDataType             { get; set; }
-			[Column(Configuration=ProviderName.SqlServer2000, DataType=DataType.VarChar)]
 			[Column(Configuration=ProviderName.SqlServer2005, DataType=DataType.VarChar)]
 			[Column(DataType=DataType.Time),                           Nullable] public TimeSpan?       timeDataType             { get; set; }
 		}
@@ -1069,7 +1022,7 @@ namespace Tests.DataProvider
 
 		void BulkCopyAllTypes(string context, BulkCopyType bulkCopyType)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				db.CommandTimeout = 60;
 
@@ -1104,7 +1057,7 @@ namespace Tests.DataProvider
 
 		async Task BulkCopyAllTypesAsync(string context, BulkCopyType bulkCopyType)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				db.CommandTimeout = 60;
 
@@ -1168,8 +1121,8 @@ namespace Tests.DataProvider
 
 			foreach (var column in ed.Columns)
 			{
-				var actualValue = column.GetValue(actual);
-				var testValue   = column.GetValue(test);
+				var actualValue = column.GetProviderValue(actual);
+				var testValue   = column.GetProviderValue(test);
 
 				// timestampDataType autogenerated
 				if (column.MemberName == "timestampDataType")
@@ -1234,7 +1187,7 @@ namespace Tests.DataProvider
 			if (IsMsProvider(context))
 				Assert.Inconclusive("Spatial types test disabled for Microsoft.Data.SqlClient");
 
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				db.CommandTimeout = 60;
 
@@ -1264,7 +1217,7 @@ namespace Tests.DataProvider
 			if (IsMsProvider(context))
 				Assert.Inconclusive("Spatial types test disabled for Microsoft.Data.SqlClient");
 
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				db.CommandTimeout = 60;
 
@@ -1322,36 +1275,27 @@ namespace Tests.DataProvider
 		[Test]
 		public void CreateAllTypes([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = new DataConnection(context))
-			{
-				var ms = new MappingSchema();
+			using var db = GetDataConnection(context);
+			var       ms = new MappingSchema();
 
-				db.AddMappingSchema(ms);
+			db.AddMappingSchema(ms);
 
-				ms.GetFluentMappingBuilder()
-					.Entity<AllTypes>()
-						.HasTableName("AllTypeCreateTest");
+			ms.GetFluentMappingBuilder()
+				.Entity<AllTypes>()
+					.HasTableName("AllTypeCreateTest");
 
-				try
-				{
-					db.DropTable<AllTypes>();
-				}
-				catch
-				{
-				}
+			db.DropTable<AllTypes>(tableOptions:TableOptions.DropIfExists);
 
-				var table = db.CreateTable<AllTypes>();
+			var table = db.CreateTable<AllTypes>();
+			var list  = table.ToList();
 
-				var list = table.ToList();
-
-				db.DropTable<AllTypes>();
-			}
+			db.DropTable<AllTypes>();
 		}
 
 		[Test]
 		public void CreateAllTypes2([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var ms = new MappingSchema();
 
@@ -1385,7 +1329,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void CreateTempTable([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				db.CreateTable<TempTable>();
 				db.DropTable<TempTable>();
@@ -1396,8 +1340,8 @@ namespace Tests.DataProvider
 		[Test]
 		public void CreateTempTable2([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db1 = new DataConnection(context))
-			using (var db2 = new DataConnection(context))
+			using (var db1 = GetDataConnection(context))
+			using (var db2 = GetDataConnection(context))
 			{
 				db1.CreateTable<TempTable>();
 				db2.CreateTable<TempTable>();
@@ -1412,17 +1356,25 @@ namespace Tests.DataProvider
 			[Column] public decimal Decimal3;
 		}
 
+		internal class TestSqlServerDataProvider : SqlServerDataProvider
+		{
+			public TestSqlServerDataProvider(string providerName, SqlServerVersion version, SqlServerProvider provider)
+				: base(providerName, version, provider)
+			{
+			}
+		}
+
 		[Test]
 		public void OverflowTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			SqlServerDataProvider provider;
 
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
-				provider = new SqlServerDataProvider(db.DataProvider.Name, ((SqlServerDataProvider)db.DataProvider).Version, ((SqlServerDataProvider)db.DataProvider).Provider);
+				provider = new TestSqlServerDataProvider(db.DataProvider.Name, ((SqlServerDataProvider)db.DataProvider).Version, ((SqlServerDataProvider)db.DataProvider).Provider);
 			}
 
-			provider.ReaderExpressions[new ReaderInfo { FieldType = typeof(decimal) }] = (Expression<Func<IDataReader, int, decimal>>)((r, i) => GetDecimal(r, i));
+			provider.ReaderExpressions[new ReaderInfo { FieldType = typeof(decimal) }] = (Expression<Func<DbDataReader, int, decimal>>)((r, i) => GetDecimal(r, i));
 
 			using (var db = new DataConnection(provider, DataConnection.GetConnectionString(context)))
 			{
@@ -1433,7 +1385,7 @@ namespace Tests.DataProvider
 		const int ClrPrecision = 29;
 
 		[ColumnReader(1)]
-		static decimal GetDecimal(IDataReader rd, int idx)
+		static decimal GetDecimal(DbDataReader rd, int idx)
 		{
 			SqlDecimal value = ((dynamic)rd).GetSqlDecimal(idx);
 
@@ -1459,7 +1411,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void OverflowTest2([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var list = db.GetTable<DecimalOverflow2>().ToList();
 			}
@@ -1489,7 +1441,7 @@ namespace Tests.DataProvider
 		{
 			using (var db = (DataConnection)GetDataContext(context))
 			{
-				var dbName = TestUtils.GetDatabaseName(db);
+				var dbName = TestUtils.GetDatabaseName(db, context);
 
 				var par = new
 				{
@@ -1498,10 +1450,10 @@ namespace Tests.DataProvider
 					MiddleName = "X",
 					Gender     = "M"
 				};
-				
+
 				var ret = db.ExecuteProc($"[{dbName}]..[Person_Insert]", par);
 				db.GetTable<Person>().Delete(p => p.FirstName == par.FirstName);
-				
+
 				Assert.That(ret, Is.GreaterThan(0));
 			}
 		}
@@ -1511,7 +1463,7 @@ namespace Tests.DataProvider
 		{
 			using (var db = (DataConnection)GetDataContext(context))
 			{
-				var dbName = TestUtils.GetDatabaseName(db);
+				var dbName = TestUtils.GetDatabaseName(db, context);
 
 				var par = new
 				{
@@ -1533,7 +1485,7 @@ namespace Tests.DataProvider
 		{
 			using (var db = (DataConnection)GetDataContext(context))
 			{
-				var dbName = TestUtils.GetDatabaseName(db);
+				var dbName = TestUtils.GetDatabaseName(db, context);
 
 				var par = new
 				{
@@ -1542,10 +1494,10 @@ namespace Tests.DataProvider
 					MiddleName = "X",
 					Gender     = "M"
 				};
-				
+
 				var ret = db.ExecuteProc<int>($"[{dbName}]..[Person_Insert]", par);
 				db.GetTable<Person>().Delete(p => p.FirstName == par.FirstName);
-				
+
 				Assert.That(ret, Is.GreaterThan(0));
 			}
 		}
@@ -1555,7 +1507,7 @@ namespace Tests.DataProvider
 		{
 			using (var db = (DataConnection)GetDataContext(context))
 			{
-				var dbName = TestUtils.GetDatabaseName(db);
+				var dbName = TestUtils.GetDatabaseName(db, context);
 
 				var par = new
 				{
@@ -1567,7 +1519,7 @@ namespace Tests.DataProvider
 
 				var ret = await db.ExecuteProcAsync($"[{dbName}]..[Person_Insert]", par);
 				db.GetTable<Person>().Delete(p => p.FirstName == par.FirstName);
-			
+
 				Assert.That(ret, Is.GreaterThan(0));
 			}
 		}
@@ -1577,7 +1529,7 @@ namespace Tests.DataProvider
 		{
 			using (var db = (DataConnection)GetDataContext(context))
 			{
-				var dbName            = TestUtils.GetDatabaseName(db);
+				var dbName            = TestUtils.GetDatabaseName(db, context);
 				var    inputID        = 1234;
 				var    inputStr       = "InputStr";
 				int?   outputID       = 5678;
@@ -1614,7 +1566,7 @@ namespace Tests.DataProvider
 		{
 			using (var db = (DataConnection)GetDataContext(context))
 			{
-				var dbName            = TestUtils.GetDatabaseName(db);
+				var dbName            = TestUtils.GetDatabaseName(db, context);
 				var    inputID        = 1234;
 				var    inputStr       = "InputStr";
 				int?   outputID       = 5678;
@@ -1647,7 +1599,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestIssue1144([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestIssue1144([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = (DataConnection)GetDataContext(context))
 			{
@@ -1662,7 +1614,7 @@ namespace Tests.DataProvider
 		[Table("Issue1613")]
 		private class Issue1613Table
 		{
-			[Column("dt"), Nullable] 
+			[Column("dt"), Nullable]
 			public DateTimeOffset? DateTimeOffset { get; set; }
 		}
 
@@ -1684,7 +1636,7 @@ namespace Tests.DataProvider
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(GenerateData()))
-			{ 
+			{
 
 				var query1 = table.GroupBy(x => x.DateTimeOffset).Select(g => g.Key).ToList();
 				var query2 = table.Select(r => r.DateTimeOffset).ToList();
@@ -1694,13 +1646,13 @@ namespace Tests.DataProvider
 				Assert.AreEqual(query1, query2);
 			}
 		}
-		
+
 		[Test]
 		public void Issue1613Test2([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(GenerateData()))
-			{ 
+			{
 
 				var query1 = table.GroupBy(x => x.DateTimeOffset!.Value.Date).Select(g => g.Key).ToList();
 				var query2 = table.Select(r => r.DateTimeOffset!.Value.Date).ToList();
@@ -1726,10 +1678,17 @@ namespace Tests.DataProvider
 
 		public static int Issue1897(DataConnection dataConnection, out int @return)
 		{
-			var ret = dataConnection.ExecuteProc("[Issue1897]",
-				new DataParameter("@return", null, DataType.Int32) { Direction = ParameterDirection.ReturnValue });
+			var parameters = new []
+			{
+				new DataParameter("@return", null, DataType.Int32)
+				{
+					Direction = ParameterDirection.ReturnValue
+				}
+			};
 
-			@return = Converter.ChangeTypeTo<int>(((IDbDataParameter)dataConnection.Command.Parameters["@return"]).Value);
+			var ret = dataConnection.ExecuteProc("[Issue1897]", parameters);
+
+			@return = Converter.ChangeTypeTo<int>(parameters[0].Value);
 
 			return ret;
 		}
@@ -1751,7 +1710,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void Issue1921Test([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		public void Issue1921Test([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = (DataConnection)GetDataContext(context))
 			{
@@ -1778,9 +1737,9 @@ namespace Tests.DataProvider
 
 		[Test]
 		[ActiveIssue(449)]
-		public void Issue449Test([IncludeDataSources(false, TestProvName.Northwind)] string context)
+		public void Issue449Test([IncludeDataSources(false, TestProvName.AllNorthwind)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				db.Execute(@"
 IF EXISTS (SELECT * FROM sys.objects WHERE type = 'IF' AND name = 'Issue449')
@@ -1826,7 +1785,7 @@ AS
 		{
 			var methodInfo = GetType().GetMethod(nameof(GetPermissions), new[] { typeof(int), typeof(int) })!;
 
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable<Issue1294Table>())
 			{
 				db.Execute(@"
@@ -1865,7 +1824,7 @@ AS
 		[ActiveIssue(1468)]
 		public void Issue1468Test([IncludeDataSources(false, TestProvName.AllSqlServer)] string context, [Values] bool useFmtOnly)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var options = new GetSchemaOptions();
 				options.GetTables     = false;
@@ -1883,9 +1842,9 @@ AS
 		}
 
 		[Test]
-		public void TestDescriptions([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestDescriptions([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var options = new GetSchemaOptions();
 				options.GetTables = false;
@@ -1918,7 +1877,7 @@ AS
 		}
 
 		[Test]
-		public void TestRetrieveIdentity([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context, [Values] bool useIdentity)
+		public void TestRetrieveIdentity([IncludeDataSources(false, TestProvName.AllSqlServer)] string context, [Values] bool useIdentity)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -1976,7 +1935,7 @@ AS
 		}
 
 		[Test]
-		public void TestTableFunctionAndTableExpression([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context, [Values] bool useIdentity)
+		public void TestTableFunctionAndTableExpression([IncludeDataSources(false, TestProvName.AllSqlServer)] string context, [Values] bool useIdentity)
 		{
 			using (var db = new TestDataConnection(context))
 			{

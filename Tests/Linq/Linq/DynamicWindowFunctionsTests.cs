@@ -15,7 +15,7 @@ namespace Tests.Linq
 	{
 		#region Helpers
 
-		static Expression? Unwrap(Expression? ex)
+		static Expression? Unwrap(this Expression? ex)
 		{
 			if (ex == null)
 				return null;
@@ -200,13 +200,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SampleSelectTest([IncludeDataSources(
-#if NET472 // SQLite.MS for NETFX use old sqlite version without window functions
-		TestProvName.AllSQLiteClassic
-#else
-			TestProvName.AllSQLite
-#endif
-			)] string context)
+		public void SampleSelectTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable<SampleClass>())

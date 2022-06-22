@@ -84,12 +84,21 @@ namespace Tests.UserTests
 			if (!string.IsNullOrWhiteSpace(((char)character).ToString()))
 				Assert.Inconclusive($"Character {(char)character} not supported by runtime");
 
-			var testData = GetTestCase((char)character, GetProviderName(context, out _), out var supported);
+			var testData = GetTestCase((char)character, GetProviderName(context, out var isRemoteContext), out var supported);
 			if (!supported)
 				Assert.Inconclusive($"Character {(char)character} not supported by database");
 
 			using (var db = GetDataContext(context))
 			{
+#if AZURE
+				// CI use docker image with non-utf8 database
+				// for some reason it cannot handle 8xxx characters in parameters
+				// for both managed and unmanaged providers, but can handle them in literals...
+				if (context.IsAnyOf(TestProvName.AllSybase) && isRemoteContext)
+				{
+					db.InlineParameters = true;
+				}
+#endif
 				using (var table = db.CreateLocalTable(testData))
 				{
 					var query = (from p in table
@@ -137,8 +146,7 @@ namespace Tests.UserTests
 		{
 			switch (providerName)
 			{
-				case ProviderName.Access:
-				case ProviderName.AccessOdbc:
+				case string when providerName.IsAnyOf(TestProvName.AllAccess):
 					// only 4 characters including space supported
 					return character == 0x20
 						|| character == 0x1680

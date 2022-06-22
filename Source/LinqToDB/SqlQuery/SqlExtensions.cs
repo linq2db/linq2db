@@ -1,4 +1,8 @@
-﻿namespace LinqToDB.SqlQuery
+﻿using System;
+using System.Collections.ObjectModel;
+using System.Linq.Expressions;
+
+namespace LinqToDB.SqlQuery
 {
 	/// <summary>
 	/// This is internal API and is not intended for use by Linq To DB applications.
@@ -6,7 +10,6 @@
 	/// </summary>
 	public static class SqlExtensions
 	{
-
 		/// <summary>
 		/// This is internal API and is not intended for use by Linq To DB applications.
 		/// It may change or be removed without further notice.
@@ -140,7 +143,20 @@
 			var selectQuery = statement.SelectQuery;
 			if (selectQuery == null)
 				throw new LinqToDBException("Sqlect Query required");
-				return selectQuery;
+			return selectQuery;
+		}
+
+		internal static bool IsSqlRow(this Expression expression)
+			=> expression.Type.IsSqlRow();
+
+		private static bool IsSqlRow(this Type type)
+			=> type.IsGenericType == true && type.GetGenericTypeDefinition() == typeof(Sql.SqlRow<,>);
+
+		internal static ReadOnlyCollection<Expression> GetSqlRowValues(this Expression expr)
+		{
+			return expr is MethodCallExpression { Method.Name: "Row" } call
+				? call.Arguments
+				: throw new LinqToDBException("Calls to Sql.Row() are the only valid expressions of type SqlRow.");
 		}
 	}
 }

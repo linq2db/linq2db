@@ -20,10 +20,10 @@ namespace LinqToDB.Linq.Builder
 		// Returns
 		// (ParentType p) => dc.GetTable<ObjectType>().Where(...)
 		// (ParentType p) => dc.GetTable<ObjectType>().Where(...).DefaultIfEmpty
-		public static LambdaExpression CreateAssociationQueryLambda(ExpressionBuilder builder, AccessorMember onMember, AssociationDescriptor association, 
+		public static LambdaExpression CreateAssociationQueryLambda(ExpressionBuilder builder, AccessorMember onMember, AssociationDescriptor association,
 			Type parentOriginalType,
-			Type parentType, 
-			Type objectType, bool inline, bool enforceDefault, 
+			Type parentType,
+			Type objectType, bool inline, bool enforceDefault,
 			List<LoadWithInfo[]>? loadWith, out bool isLeft)
 		{
 			var dataContextConstant = Expression.Constant(builder.DataContext, builder.DataContext.GetType());
@@ -126,7 +126,7 @@ namespace LinqToDB.Linq.Builder
 
 					predicate = predicate == null ? replacedBody : Expression.AndAlso(predicate, replacedBody);
 				}
-				
+
 				if (predicate == null)
 					throw new LinqException("Can not generate Association predicate");
 
@@ -170,7 +170,7 @@ namespace LinqToDB.Linq.Builder
 					var optimizationContext = new ExpressionTreeOptimizationContext(dc);
 					var optimizedExpr       = optimizationContext.ExposeExpression(closureExpr);
 					    optimizedExpr       = optimizationContext.ExpandQueryableMethods(optimizedExpr);
-					    optimizedExpr       = optimizedExpr.OptimizeExpression()!;
+					    optimizedExpr       = optimizedExpr.OptimizeExpression(dc.MappingSchema)!;
 					return optimizedExpr;
 				});
 			}
@@ -197,7 +197,7 @@ namespace LinqToDB.Linq.Builder
 					}
 
 					var loadWithFunc = associationLoadWith.Info.FilterFunc;
-						
+
 					if (loadWithFunc != null)
 					{
 						loadWithFunc = loadWithFunc.Unwrap();
@@ -214,7 +214,7 @@ namespace LinqToDB.Linq.Builder
 							// check for fake argument q => q
 							if (argumentType.IsSameOrParentOf(objectType))
 							{
-								
+
 								var query = ExpressionQueryImpl.CreateQuery(objectType, builder.DataContext, body);
 								var filtered = (IQueryable)filterDelegate.DynamicInvoke(query)!;
 								body = filtered.Expression;
@@ -246,7 +246,7 @@ namespace LinqToDB.Linq.Builder
 						var filterLambda = Expression.Lambda(ExpressionBuilder.Equal(builder.MappingSchema,
 							Expression.MakeMemberAccess(definedQueryMethod.Parameters[0], inheritanceMapping.Discriminator.MemberInfo),
 							Expression.Constant(inheritanceMapping.Code)), objParam);
-						
+
 						var body = definedQueryMethod.Body.Unwrap();
 						body = Expression.Call(Methods.Queryable.Where.MakeGenericMethod(objectType),
 							body, filterLambda);
@@ -272,17 +272,17 @@ namespace LinqToDB.Linq.Builder
 
 			definedQueryMethod = (LambdaExpression)builder.ConvertExpressionTree(definedQueryMethod);
 			definedQueryMethod = (LambdaExpression)builder.ConvertExpression(definedQueryMethod);
-			definedQueryMethod = (LambdaExpression)definedQueryMethod.OptimizeExpression()!;
+			definedQueryMethod = (LambdaExpression)definedQueryMethod.OptimizeExpression(builder.MappingSchema)!;
 
 			return definedQueryMethod;
 		}
 
-		public static IBuildContext BuildAssociationInline(ExpressionBuilder builder, BuildInfo buildInfo, TableBuilder.TableContext tableContext, 
+		public static IBuildContext BuildAssociationInline(ExpressionBuilder builder, BuildInfo buildInfo, TableBuilder.TableContext tableContext,
 			AccessorMember onMember, AssociationDescriptor descriptor, bool inline, ref bool isOuter)
 		{
 			var elementType     = descriptor.GetElementType(builder.MappingSchema);
 			var parentExactType = descriptor.GetParentElementType();
-			
+
 			var queryMethod = CreateAssociationQueryLambda(
 				builder, onMember, descriptor, tableContext.OriginalType, parentExactType, elementType,
 				inline, isOuter, tableContext.LoadWith, out isOuter);
@@ -297,11 +297,11 @@ namespace LinqToDB.Linq.Builder
 				descriptor.GenerateAlias(), true, null);
 
 			tableSource.Joins.Add(join.JoinedTable);
-			
+
 			return new AssociationContext(builder, descriptor, tableContext, context, join.JoinedTable);
 		}
 
-		public static IBuildContext BuildAssociationSelectMany(ExpressionBuilder builder, BuildInfo buildInfo, TableBuilder.TableContext tableContext, 
+		public static IBuildContext BuildAssociationSelectMany(ExpressionBuilder builder, BuildInfo buildInfo, TableBuilder.TableContext tableContext,
 			AccessorMember onMember, AssociationDescriptor descriptor, ref bool isOuter)
 		{
 			var elementType = descriptor.GetElementType(builder.MappingSchema);
@@ -360,7 +360,7 @@ namespace LinqToDB.Linq.Builder
 					var isEnumerableMember =
 						EagerLoading.IsEnumerableType(memberType, mappingSchema);
 
-					var desiredType = member.MemberInfo.IsMethodEx() ? currentEntityType : member.MemberInfo.DeclaringType;
+					var desiredType = member.MemberInfo.IsMethodEx() ? currentEntityType : member.MemberInfo.DeclaringType!;
 
 					var entityParam = Expression.Parameter(currentEntityType, "e");
 					var loadBody    = desiredType == currentEntityType
@@ -428,12 +428,12 @@ namespace LinqToDB.Linq.Builder
 						if (hasFilterFunc && isEnumerableMember)
 						{
 							propType = EagerLoading.GetEnumerableElementType(propType, mappingSchema);
-						}						
+						}
 						method = method.MakeGenericMethod(entityType, prevMemberType, propType);
 					}
 
 					currentObj = Expression.Call(method, args);
-					
+
 					isPrevEnumerable  = isEnumerableMember && !hasFilterFunc;
 
 					if (isEnumerableMember)

@@ -234,9 +234,11 @@ namespace Tests.UserTests
 				using (db.CreateLocalTable<Topic>())
 				using (db.CreateLocalTable<Message>())
 				{
-					db.Insert(new Topic() { Id = 6, Title = "title", Text = "text" });
-					db.Insert(new Message() { Id = 60, Text = "message", TopicId = 6});
-					db.Insert(new Message() { Id = 61, Text = "message", TopicId = 7});
+					var topic = new Topic { Id = 6, Text = "text", Title = "title" };
+
+					db.Insert(topic);
+					db.Insert(new Message { Id = 60, Text = "message", TopicId = 6});
+					db.Insert(new Message { Id = 61, Text = "message", TopicId = 7});
 
 					var result = db.GetTable<Topic>()
 						.Where(x => x.Id == 6)
@@ -247,11 +249,13 @@ namespace Tests.UserTests
 							MessagesIds = x.MessagesF3.Select(t => t.Id).ToList()
 						}).FirstOrDefault()!;
 
-					Assert.IsNotNull(result);
-					Assert.AreEqual(60, result.MessagesIds.Single());
+					Assert.That(result,           Is.Not.Null);
+					Assert.That(topic.Id,         Is.EqualTo(result.Topic.Id));
+					Assert.That(topic.Text,       Is.EqualTo(result.Topic.Text));
+					Assert.That(topic.Title,      Is.EqualTo(result.Topic.Title));
+					Assert.That(new[] { 60 }, Is.EqualTo(result.MessagesIds));
 				}
 			}
 		}
-
 	}
 }

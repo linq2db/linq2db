@@ -36,7 +36,7 @@ namespace LinqToDB.Linq.Builder
 					operation.Items,
 					mergeContext);
 
-				if (!(predicate is ConstantExpression constPredicate) || constPredicate.Value != null)
+				if (!predicate.IsNullValue())
 				{
 					var condition = (LambdaExpression)predicate.Unwrap();
 
@@ -44,12 +44,6 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				return mergeContext;
-			}
-
-			protected override SequenceConvertInfo? Convert(
-				ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-			{
-				return null;
 			}
 		}
 	}

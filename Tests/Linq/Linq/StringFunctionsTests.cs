@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using LinqToDB;
+using LinqToDB.Data;
 using LinqToDB.Mapping;
 using NUnit.Framework;
+using Tests.Model;
 
 namespace Tests.Linq
 {
@@ -29,12 +31,11 @@ namespace Tests.Linq
 		[Table]
 		class SampleClass
 		{
-			[Column] public int Id    { get; set; }
-			[Column(Length = 50, CanBeNull = true)] public string? Value1 { get; set; }
-			[Column(Length = 50, CanBeNull = true)] public string? Value2 { get; set; }
-			[Column(Length = 50, CanBeNull = true)] public string? Value3 { get; set; }
-			[Column(Length = 50, CanBeNull = true, DataType = DataType.VarChar)]
-			                                        public string? Value4 { get; set; }
+			[Column]                                                              public int     Id     { get; set; }
+			[Column(Length = 50, CanBeNull = true)]                               public string? Value1 { get; set; }
+			[Column(Length = 50, CanBeNull = true)]                               public string? Value2 { get; set; }
+			[Column(Length = 50, CanBeNull = true, DataType = DataType.VarChar)]  public string? Value3 { get; set; }
+			[Column(Length = 50, CanBeNull = true, DataType = DataType.NVarChar)] public string? Value4 { get; set; }
 		}
 
 		public class StringTestSourcesAttribute : IncludeDataSourcesAttribute
@@ -312,11 +313,19 @@ namespace Tests.Linq
 					select new
 					{
 						Count = table.CountExt(e => e.Value1, Sql.AggregateModifier.Distinct),
-						Aggregated = table.AsQueryable().StringAggregate(" -> ", t => t.Value1).ToValue()
+						Aggregated = table.StringAggregate(" -> ", x => x.Value1).ToValue()
 					};
-				
-				
-				var result = query.ToArray();
+
+
+				var expected = from t in data
+					select new
+					{
+						Count      = data.Count(x => x.Value1 != null),
+						Aggregated = string.Join(" -> ", data.Where(x => x.Value1 != null).Select(x => x.Value1))
+					};
+
+
+				AreEqual(expected, query);
 			}
 		}
 
@@ -515,6 +524,20 @@ namespace Tests.Linq
 
 				AreEqual(expected, actual);
 			}
+		}
+
+		[Test]
+		public void MySqlConcatStringsTest([IncludeDataSources(TestProvName.AllMySql)] string context)
+		{
+			using var db = (TestDataConnection)GetDataContext(context);
+
+			_ = (from p in db.Person where p.FirstName == ("A" + "B") select p).ToList();
+			Assert.That(db.LastQuery, Contains.Substring("AB"));
+
+			//var str = "C";
+
+			_ = (from p in db.Person where p.FirstName == "A" + p.FirstName + "B" select p).ToList();
+			Assert.That(db.LastQuery, Contains.Substring("Concat('A', `p`.`FirstName`, 'B')"));
 		}
 	}
 }

@@ -1,0 +1,9 @@
+﻿{
+	"NET60.Azure": {
+		"Providers": [
+			// MariaDB latest
+			"MariaDB",
+			"MariaDBConnector"
+		]
+	}
+}

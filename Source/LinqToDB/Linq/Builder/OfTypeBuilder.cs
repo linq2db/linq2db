@@ -19,7 +19,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
-			if (sequence is TableBuilder.TableContext table 
+			if (sequence is TableBuilder.TableContext table
 				&& table.InheritanceMapping.Count > 0)
 			{
 				var objectType = methodCall.Type.GetGenericArguments()[0];
@@ -70,17 +70,11 @@ namespace LinqToDB.Linq.Builder
 				{
 					var field  = context.table[name] ?? throw new LinqException($"Field {name} not found in table {context.table}");
 					var member = field.ColumnDescriptor.MemberInfo;
-					var expr   = Expression.MakeMemberAccess(Expression.Parameter(member.DeclaringType, "p"), member);
+					var expr   = Expression.MakeMemberAccess(Expression.Parameter(member.DeclaringType!, "p"), member);
 					var sql    = context.context.ConvertToSql(expr, 1, ConvertFlags.Field)[0].Sql;
 
 					return sql;
 				});
-		}
-
-		protected override SequenceConvertInfo? Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-		{
-			return null;
 		}
 
 		#region OfTypeContext
@@ -93,7 +87,7 @@ namespace LinqToDB.Linq.Builder
 				_methodCall = methodCall;
 			}
 
-			private readonly MethodCallExpression _methodCall;
+			readonly MethodCallExpression _methodCall;
 
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{

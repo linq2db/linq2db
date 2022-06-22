@@ -1057,7 +1057,7 @@ namespace Tests.OrmBattle
 		}
 
 		[Test]
-		public void NestedFirstOrDefaultTest([IncludeDataSources(TestProvName.Northwind)] string context)
+		public void NestedFirstOrDefaultTest([IncludeDataSources(TestProvName.AllNorthwind)] string context)
 		{
 			Setup(context);
 			var result =
@@ -1076,7 +1076,7 @@ namespace Tests.OrmBattle
 		}
 
 		[Test]
-		public void FirstOrDefaultEntitySetTest([IncludeDataSources(TestProvName.Northwind)] string context)
+		public void FirstOrDefaultEntitySetTest([IncludeDataSources(TestProvName.AllNorthwind)] string context)
 		{
 			Setup(context);
 			var customersCount = Customers.Count;
@@ -1086,7 +1086,7 @@ namespace Tests.OrmBattle
 		}
 
 		[Test]
-		public void NestedSingleOrDefaultTest([IncludeDataSources(TestProvName.Northwind)] string context)
+		public void NestedSingleOrDefaultTest([IncludeDataSources(TestProvName.AllNorthwind)] string context)
 		{
 			Setup(context);
 			var customersCount = Customers.Count;
@@ -1096,7 +1096,7 @@ namespace Tests.OrmBattle
 		}
 
 		[Test]
-		public void NestedSingleTest([IncludeDataSources(TestProvName.Northwind)] string context)
+		public void NestedSingleTest([IncludeDataSources(TestProvName.AllNorthwind)] string context)
 		{
 			Setup(context);
 			var result = db.Customer.Where(c => c.Orders.Count() > 0).Select(c => c.Orders.Take(1).Single());
@@ -1114,7 +1114,7 @@ namespace Tests.OrmBattle
 		}
 
 		[Test]
-		public void NestedElementAtTest([IncludeDataSources(TestProvName.Northwind)] string context)
+		public void NestedElementAtTest([IncludeDataSources(TestProvName.AllNorthwind)] string context)
 		{
 			Setup(context);
 			var result =
@@ -1205,10 +1205,9 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(10, result.ToList().Count);
 		}
 
-		[Test, ActiveIssue(573)]
+		[Test]
 		public void AnyParameterizedTest([NorthwindDataContext] string context)
 		{
-			//TODO: sdanyliv: It may take many efforts to implement. And I don't see any benefits.
 			Setup(context);
 			var ids = new[] {"ABCDE", "ALFKI"};
 			var result = db.Customer.Where(c => ids.Any(id => c.CustomerID == id));
@@ -1426,7 +1425,7 @@ namespace Tests.OrmBattle
 			}
 		}
 
-		[Test, ActiveIssue(573)]
+		[Test, ActiveIssue(573, Details = "'k.CompanyName' cannot be converted to SQL.")]
 		public void ComplexTest2([NorthwindDataContext] string context)
 		{
 			Setup(context);

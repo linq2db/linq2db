@@ -7,7 +7,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
-using LinqToDB.Mapping;
+using System.Threading;
 
 using JetBrains.Annotations;
 
@@ -16,6 +16,7 @@ namespace LinqToDB
 	using Common;
 	using Expressions;
 	using Extensions;
+	using Mapping;
 	using SqlQuery;
 
 	[AttributeUsage(AttributeTargets.Parameter)]
@@ -34,7 +35,7 @@ namespace LinqToDB
 		}
 	}
 
-	public static class ExtensionlBuilderExtensions
+	public static class ExtensionBuilderExtensions
 	{
 		public static Sql.SqlExtensionParam AddParameter(this Sql.ISqExtensionBuilder builder, string name, string value)
 		{
@@ -148,8 +149,10 @@ namespace LinqToDB
 			string          Expression       { get; set; }
 			Expression[]    Arguments        { get; }
 
-			T GetValue<T>(int index);
-			T GetValue<T>(string argName);
+			T      GetValue<T>   (int    index);
+			T      GetValue<T>   (string argName);
+			object GetObjectValue(int    index);
+			object GetObjectValue(string argName);
 
 			ISqlExpression GetExpression(int index, bool unwrap = false);
 			ISqlExpression GetExpression(string argName, bool unwrap = false);
@@ -166,12 +169,12 @@ namespace LinqToDB
 
 			public int ChainPrecedence { get; set; }
 
-			public SqlExtension(Type? systemType, string expr, int precedence, int chainPrecedence, 
-				bool isAggregate, 
+			public SqlExtension(Type? systemType, string expr, int precedence, int chainPrecedence,
+				bool isAggregate,
 				bool isWindowFunction,
-				bool isPure, 
+				bool isPure,
 				bool isPredicate,
-				bool? canBeNull, 
+				bool? canBeNull,
 				params SqlExtensionParam[] parameters)
 			{
 				if (parameters == null) throw new ArgumentNullException(nameof(parameters));
@@ -369,13 +372,30 @@ namespace LinqToDB
 					if (Method != null)
 					{
 						var parameters = Method.GetParameters();
-						for (int i = 0; i < parameters.Length; i++)
-						{
+
+						for (var i = 0; i < parameters.Length; i++)
 							if (parameters[i].Name == argName)
-							{
 								return GetValue<T>(i);
-							}
-						}
+					}
+
+					throw new InvalidOperationException(string.Format("Argument '{0}' not found", argName));
+				}
+
+				public object GetObjectValue(int index)
+				{
+					var lambda = System.Linq.Expressions.Expression.Lambda<Func<object>>(Arguments[index]);
+					return lambda.CompileExpression()();
+				}
+
+				public object GetObjectValue(string argName)
+				{
+					if (Method != null)
+					{
+						var parameters = Method.GetParameters();
+
+						for (var i = 0; i < parameters.Length; i++)
+							if (parameters[i].Name == argName)
+								return GetObjectValue(i);
 					}
 
 					throw new InvalidOperationException(string.Format("Argument '{0}' not found", argName));
@@ -413,8 +433,8 @@ namespace LinqToDB
 					return BuildSqlExpression(Extension, Extension.SystemType, precedence,
 						(Extension.IsAggregate      ? SqlFlags.IsAggregate      : SqlFlags.None) |
 						(Extension.IsPure           ? SqlFlags.IsPure           : SqlFlags.None) |
-						(Extension.IsPredicate      ? SqlFlags.IsPredicate      : SqlFlags.None) | 
-						(Extension.IsWindowFunction ? SqlFlags.IsWindowFunction : SqlFlags.None), 
+						(Extension.IsPredicate      ? SqlFlags.IsPredicate      : SqlFlags.None) |
+						(Extension.IsWindowFunction ? SqlFlags.IsWindowFunction : SqlFlags.None),
 						Extension.CanBeNull, IsNullableType.Undefined);
 				}
 
@@ -492,7 +512,7 @@ namespace LinqToDB
 					// notify if there is method that has no defined attribute for specific configuration
 					attributes = mapping.GetAttributes<ExtensionAttribute>(memberInfo.ReflectedType!, memberInfo);
 					if (attributes.Length > 0)
-						throw new LinqToDBException($"Expression {expression}, unsupported for configuration(s) '{string.Join(", ", mapping.ConfigurationList)}'.");
+						throw new LinqToDBException($"Member {memberInfo.Name}, unsupported for configuration(s) '{string.Join(", ", mapping.ConfigurationList)}'.");
 				}
 
 				return attributes;
@@ -514,7 +534,7 @@ namespace LinqToDB
 						case ExpressionType.MemberAccess :
 							{
 								var memberExpr = (MemberExpression)current;
-								current        = memberExpr.Expression;
+								current        = memberExpr.Expression!;
 
 								break;
 							}
@@ -531,7 +551,7 @@ namespace LinqToDB
 										return current;
 								}
 								else
-									current = call.Object;
+									current = call.Object!;
 
 								break;
 							}
@@ -759,7 +779,7 @@ namespace LinqToDB
 				var newParams      = new List<ISqlExpression>();
 
 				Func<object?, string, string?, string?>? valueProvider = null;
-				Stack<SqlExtension> current                   = new Stack<SqlExtension>();
+				Stack<SqlExtension>                      current       = new Stack<SqlExtension>();
 
 				// TODO: implement context
 				valueProvider = (_, name, delimiter) =>
@@ -915,7 +935,7 @@ namespace LinqToDB
 							var e = c.UnderName[i];
 							mainExtension.AddParameter(e);
 						}
-					}	
+					}
 					else
 					{
 						var firstPrecedence = first.Extension.ChainPrecedence;
@@ -933,7 +953,7 @@ namespace LinqToDB
 				}
 
 				//TODO: Precedence calculation
-				var res = BuildSqlExpression(mainExtension, mainExtension.SystemType, 
+				var res = BuildSqlExpression(mainExtension, mainExtension.SystemType,
 					mainExtension.Precedence,
 					(isAggregate  ? SqlFlags.IsAggregate      : SqlFlags.None) |
 					(isPure       ? SqlFlags.IsPure           : SqlFlags.None) |

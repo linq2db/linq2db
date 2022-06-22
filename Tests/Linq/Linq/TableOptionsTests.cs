@@ -111,8 +111,8 @@ namespace Tests.Linq
 		public void IsGlobalTemporaryTest([IncludeDataSources(
 			ProviderName.DB2,
 			ProviderName.Firebird,
-			ProviderName.Oracle,
-			TestProvName.AllSqlServer2005Plus,
+			TestProvName.AllOracle,
+			TestProvName.AllSqlServer,
 			TestProvName.AllSybase)] string context,
 			[Values(true)] bool firstCall)
 		{
@@ -122,6 +122,7 @@ namespace Tests.Linq
 		}
 
 		[Table(TableOptions = TableOptions.CreateIfNotExists)]
+		[Table(TableOptions = TableOptions.CreateIfNotExists | TableOptions.IsTemporary, Configuration = ProviderName.Informix)]
 		[Table(TableOptions = TableOptions.CreateIfNotExists | TableOptions.IsTemporary, Configuration = ProviderName.SqlServer2008)]
 		[Table("##temp_table", TableOptions = TableOptions.CreateIfNotExists, Configuration = ProviderName.SqlServer2012)]
 		[UsedImplicitly]
@@ -135,16 +136,16 @@ namespace Tests.Linq
 		public void CreateIfNotExistsTest([IncludeDataSources(
 			true,
 			ProviderName.DB2,
-			ProviderName.Informix,
-			ProviderName.Firebird,
+			TestProvName.AllInformix,
+			TestProvName.AllFirebird,
 			TestProvName.AllMySql,
 			TestProvName.AllOracle,
-			ProviderName.PostgreSQL,
+			TestProvName.AllPostgreSQL,
 			TestProvName.AllSQLite,
-			TestProvName.AllSqlServer2005Plus,
+			TestProvName.AllSqlServer,
 			TestProvName.AllSybase)] string context)
 		{
-			if (context.StartsWith("SqlServer.20") && context.EndsWith(".LinqService"))
+			if (context.IsAnyOf(TestProvName.AllSqlServer) && context.EndsWith(".LinqService"))
 				return;
 
 			using var db = GetDataContext(context);
@@ -163,16 +164,16 @@ namespace Tests.Linq
 		public void CreateTempIfNotExistsTest([IncludeDataSources(
 			false,
 			ProviderName.DB2,
-			ProviderName.Informix,
-			ProviderName.Firebird,
+			TestProvName.AllInformix,
+			TestProvName.AllFirebird,
 			TestProvName.AllMySql,
 			TestProvName.AllOracle,
-			ProviderName.PostgreSQL,
+			TestProvName.AllPostgreSQL,
 			TestProvName.AllSQLite,
-			TestProvName.AllSqlServer2005Plus,
+			TestProvName.AllSqlServer,
 			TestProvName.AllSybase)] string context)
 		{
-			if (context.StartsWith("SqlServer.20") && context.EndsWith(".LinqService"))
+			if (context.IsAnyOf(TestProvName.AllSqlServer) && context.EndsWith(".LinqService"))
 				return;
 
 			using var db = GetDataContext(context);

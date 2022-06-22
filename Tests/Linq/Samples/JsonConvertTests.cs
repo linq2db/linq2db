@@ -92,7 +92,7 @@ namespace Tests.Samples
 			AddMappingSchema(_convertorSchema);
 		}
 
-		public ITable<SampleClass> SampleClass => GetTable<SampleClass>();
+		public ITable<SampleClass> SampleClass => this.GetTable<SampleClass>();
 	}
 
 	[Table]

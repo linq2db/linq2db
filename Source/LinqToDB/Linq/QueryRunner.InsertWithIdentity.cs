@@ -28,10 +28,15 @@ namespace LinqToDB.Linq
 			{
 				var sqlTable = new SqlTable(dataContext.MappingSchema, type);
 
-				if (tableName    != null) sqlTable.PhysicalName = tableName;
-				if (serverName   != null) sqlTable.Server       = serverName;
-				if (databaseName != null) sqlTable.Database     = databaseName;
-				if (schemaName   != null) sqlTable.Schema       = schemaName;
+				if (tableName != null || schemaName != null || databaseName != null || databaseName != null)
+				{
+					sqlTable.TableName = new(
+						          tableName    ?? sqlTable.TableName.Name,
+						Server  : serverName   ?? sqlTable.TableName.Server,
+						Database: databaseName ?? sqlTable.TableName.Database,
+						Schema  : schemaName   ?? sqlTable.TableName.Schema);
+				}
+
 				if (tableOptions.IsSet()) sqlTable.TableOptions = tableOptions;
 
 				var sqlQuery        = new SelectQuery();
@@ -87,7 +92,7 @@ namespace LinqToDB.Linq
 				var ei               = Common.Configuration.Linq.DisableQueryCache || entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Insert) || columnFilter != null
 					? CreateQuery(dataContext, entityDescriptor, obj!, columnFilter, tableName, serverName, databaseName, schemaName, tableOptions, type)
 					: Cache<T>.QueryCache.GetOrCreate(
-						(operation: "II", dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schemaName, databaseName, serverName, tableOptions, type),
+						(operation: "II", dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schemaName, databaseName, serverName, tableOptions, type, dataContext.GetQueryFlags()),
 						new { dataContext, entityDescriptor, obj },
 						static (entry, key, context) =>
 						{
@@ -117,7 +122,7 @@ namespace LinqToDB.Linq
 				var ei               = Common.Configuration.Linq.DisableQueryCache || entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Insert) || columnFilter != null
 					? CreateQuery(dataContext, entityDescriptor, obj!, columnFilter, tableName, serverName, databaseName, schemaName, tableOptions, type)
 					: Cache<T>.QueryCache.GetOrCreate(
-						(operation: "II", dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schemaName, databaseName, serverName, tableOptions, type),
+						(operation: "II", dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schemaName, databaseName, serverName, tableOptions, type, dataContext.GetQueryFlags()),
 						new { dataContext, entityDescriptor, obj },
 						static (entry, key, context) =>
 						{

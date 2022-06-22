@@ -182,9 +182,9 @@ namespace LinqToDB
 			token);
 		}
 
-#endregion
+		#endregion
 
-#region ToListAsync
+		#region ToListAsync
 
 		/// <summary>
 		/// Asynchronously loads data from query to a list.
@@ -210,9 +210,9 @@ namespace LinqToDB
 			return await GetTask(() => source.AsEnumerable().TakeWhile(_ => !token.IsCancellationRequested).ToList(), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
-#endregion
+		#endregion
 
-#region ToArrayAsync
+		#region ToArrayAsync
 
 		/// <summary>
 		/// Asynchronously loads data from query to an array.
@@ -246,9 +246,9 @@ namespace LinqToDB
 			return await GetTask(() => source.AsEnumerable().TakeWhile(_ => !token.IsCancellationRequested).ToArray(), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
-#endregion
+		#endregion
 
-#region ToDictionaryAsync
+		#region ToDictionaryAsync
 
 		/// <summary>
 		/// Asynchronously loads data from query to a dictionary.
@@ -372,7 +372,7 @@ namespace LinqToDB
 			return await GetTask(() => source.AsEnumerable().TakeWhile(_ => !token.IsCancellationRequested).ToDictionary(keySelector, elementSelector, comparer), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
-#endregion
+		#endregion
 
 	}
 }

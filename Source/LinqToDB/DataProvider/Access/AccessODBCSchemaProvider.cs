@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Data;
-using System.Data.Common;
 using System.Linq;
 
 
@@ -31,9 +30,9 @@ namespace LinqToDB.DataProvider.Access
 		{
 			// tables and views has same schema, only difference in TABLE_TYPE
 			// views also include SELECT procedures, including procedures with parameters(!)
-			var tables = ((DbConnection)dataConnection.Connection).GetSchema("Tables");
-			var views  = ((DbConnection)dataConnection.Connection).GetSchema("Views");
-			var procs  = ((DbConnection)dataConnection.Connection).GetSchema("Procedures");
+			var tables = dataConnection.Connection.GetSchema("Tables");
+			var views  = dataConnection.Connection.GetSchema("Views");
+			var procs  = dataConnection.Connection.GetSchema("Procedures");
 
 			var procIds = new HashSet<string>(
 				procs.AsEnumerable().Select(p => $"{p.Field<string>("PROCEDURE_CAT")}.{p.Field<string>("PROCEDURE_SCHEM")}.{p.Field<string>("PROCEDURE_NAME")}"));
@@ -56,7 +55,7 @@ namespace LinqToDB.DataProvider.Access
 					CatalogName        = null,
 					SchemaName         = schema,
 					TableName          = name,
-					IsDefaultSchema    = schema.IsNullOrEmpty(),
+					IsDefaultSchema    = string.IsNullOrEmpty(schema),
 					IsView             = t.Field<string>("TABLE_TYPE") == "VIEW",
 					IsProviderSpecific = system,
 					Description        = t.Field<string>("REMARKS")
@@ -73,19 +72,19 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			var cs = ((DbConnection)dataConnection.Connection).GetSchema("Columns");
+			var cs = dataConnection.Connection.GetSchema("Columns");
 
 			return
 			(
 				from c in cs.AsEnumerable()
 				let typeName = c.Field<string>("TYPE_NAME")
-				let dt       = GetDataType(typeName, options)
+				let dt       = GetDataType(typeName, null, options)
 				let size     = Converter.ChangeTypeTo<int?>(c["COLUMN_SIZE"])
 				let scale    = Converter.ChangeTypeTo<int?>(c["DECIMAL_DIGITS"])
 				select new ColumnInfo
 				{
 					TableID     = c.Field<string>("TABLE_CAT") + "." + c.Field<string>("TABLE_SCHEM") + "." + c.Field<string>("TABLE_NAME"),
-					Name        = c.Field<string>("COLUMN_NAME"),
+					Name        = c.Field<string>("COLUMN_NAME")!,
 					IsNullable  = c.Field<short> ("NULLABLE") == 1,
 					Ordinal     = Converter.ChangeTypeTo<int>(c["ORDINAL_POSITION"]),
 					DataType    = dt?.TypeName,
@@ -100,7 +99,7 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override List<ProcedureInfo>? GetProcedures(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			var ps = ((DbConnection)dataConnection.Connection).GetSchema("Procedures");
+			var ps = dataConnection.Connection.GetSchema("Procedures");
 
 			return
 			(
@@ -114,14 +113,14 @@ namespace LinqToDB.DataProvider.Access
 					CatalogName         = null,
 					SchemaName          = schema,
 					ProcedureName       = name,
-					IsDefaultSchema     = schema.IsNullOrEmpty()
+					IsDefaultSchema     = string.IsNullOrEmpty(schema)
 				}
 			).ToList();
 		}
 
 		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection, IEnumerable<ProcedureInfo> procedures, GetSchemaOptions options)
 		{
-			var ps = ((DbConnection)dataConnection.Connection).GetSchema("ProcedureParameters");
+			var ps = dataConnection.Connection.GetSchema("ProcedureParameters");
 			return
 			(
 				from p in ps.AsEnumerable()
@@ -130,11 +129,11 @@ namespace LinqToDB.DataProvider.Access
 				let name     = p.Field<string>("PROCEDURE_NAME")
 				let size     = p.Field<int?>("COLUMN_SIZE")
 				let typeName = p.Field<string>("TYPE_NAME")
-				let dt       = GetDataType(typeName, options)
+				let dt       = GetDataType(typeName, null, options)
 				select new ProcedureParameterInfo()
 				{
 					ProcedureID   = catalog + "." + schema + "." + name,
-					ParameterName = p.Field<string>("COLUMN_NAME").TrimStart('[').TrimEnd(']'),
+					ParameterName = p.Field<string>("COLUMN_NAME")!.TrimStart('[').TrimEnd(']'),
 					IsIn          = true,
 					IsOut         = false,
 					Length        = dt.CreateParameters != null && dt.CreateParameters.Contains("length")    ? size : null,
@@ -150,20 +149,20 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override DataTable? GetProcedureSchema(DataConnection dataConnection, string commandText, CommandType commandType, DataParameter[] parameters, GetSchemaOptions options)
 		{
-			return ((DbConnection)dataConnection.Connection).GetSchema("ProcedureColumns", new[] { null, null, commandText.TrimStart('[').TrimEnd(']') });
+			return dataConnection.Connection.GetSchema("ProcedureColumns", new[] { null, null, commandText.TrimStart('[').TrimEnd(']') });
 		}
 
-		protected override string? GetDbType(GetSchemaOptions options, string? columnType, DataTypeInfo? dataType, long? length, int? precision, int? scale, string? udtCatalog, string? udtSchema, string? udtName)
+		protected override string? GetDbType(GetSchemaOptions options, string? columnType, DataTypeInfo? dataType, int? length, int? precision, int? scale, string? udtCatalog, string? udtSchema, string? udtName)
 		{
-			var dbType = columnType;
+			var dbType = columnType ?? dataType?.TypeName;
 
 			if (dataType != null)
 			{
 				var parms = dataType.CreateParameters;
 
-				if (!parms.IsNullOrWhiteSpace())
+				if (!string.IsNullOrWhiteSpace(parms))
 				{
-					var paramNames = parms.Split(',');
+					var paramNames = parms!.Split(',');
 					var paramValues = new object?[paramNames.Length];
 
 					for (var i = 0; i < paramNames.Length; i++)
@@ -214,7 +213,7 @@ namespace LinqToDB.DataProvider.Access
 				let columnType = r.Field<string>("TYPE_NAME")
 				let columnName = r.Field<string>("COLUMN_NAME")
 				let isNullable = r.Field<short> ("NULLABLE") == 1
-				let dt         = GetDataType(columnType, options)
+				let dt         = GetDataType(columnType, null, options)
 				let length     = r.Field<int?>  ("COLUMN_SIZE")
 				let precision  = length
 				let scale      = Converter.ChangeTypeTo<int>(r["DECIMAL_DIGITS"])
@@ -227,7 +226,7 @@ namespace LinqToDB.DataProvider.Access
 					IsNullable           = isNullable,
 					MemberName           = ToValidName(columnName),
 					MemberType           = ToTypeName(systemType, isNullable),
-					SystemType           = systemType ?? typeof(object),
+					SystemType           = systemType,
 					DataType             = GetDataType(columnType, null, length, precision, scale),
 					ProviderSpecificType = GetProviderSpecificType(columnType),
 					IsIdentity           = columnType == "COUNTER",

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.Common;
 using System.Linq;
 using System.Text.RegularExpressions;
 
@@ -41,7 +40,7 @@ namespace LinqToDB.DataProvider.Access
 		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection,
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
-			var connection = _provider.TryGetProviderConnection(dataConnection.Connection, dataConnection.MappingSchema);
+			var connection = _provider.TryGetProviderConnection(dataConnection, dataConnection.Connection);
 			if (connection == null)
 				return Array<ForeignKeyInfo>.Empty;
 
@@ -51,22 +50,22 @@ namespace LinqToDB.DataProvider.Access
 			var data = _provider.Adapter.GetOleDbSchemaTable(connection, OleDbProviderAdapter.OleDbSchemaGuid.Foreign_Keys, null);
 
 			var q = from fk in data.AsEnumerable()
-					select new ForeignKeyInfo
-					{
-						Name         = fk.Field<string>("FK_NAME"),
-						ThisColumn   = fk.Field<string>("FK_COLUMN_NAME"),
-						OtherColumn  = fk.Field<string>("PK_COLUMN_NAME"),
-						ThisTableID  = fk.Field<string>("FK_TABLE_CATALOG") + "." + fk.Field<string>("FK_TABLE_SCHEMA") + "." + fk.Field<string>("FK_TABLE_NAME"),
-						OtherTableID = fk.Field<string>("PK_TABLE_CATALOG") + "." + fk.Field<string>("PK_TABLE_SCHEMA") + "." + fk.Field<string>("PK_TABLE_NAME"),
-						Ordinal      = ConvertTo<int>.From(fk.Field<long>("ORDINAL")),
-					};
+				select new ForeignKeyInfo
+				{
+					Name         = fk.Field<string>("FK_NAME")!,
+					ThisColumn   = fk.Field<string>("FK_COLUMN_NAME")!,
+					OtherColumn  = fk.Field<string>("PK_COLUMN_NAME")!,
+					ThisTableID  = fk.Field<string>("FK_TABLE_CATALOG") + "." + fk.Field<string>("FK_TABLE_SCHEMA") + "." + fk.Field<string>("FK_TABLE_NAME"),
+					OtherTableID = fk.Field<string>("PK_TABLE_CATALOG") + "." + fk.Field<string>("PK_TABLE_SCHEMA") + "." + fk.Field<string>("PK_TABLE_NAME"),
+					Ordinal      = ConvertTo<int>.From(fk.Field<long>("ORDINAL")),
+				};
 
 			return q.ToList();
 		}
 
 		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			var tables = ExecuteOnNewConnection(dataConnection, cn => ((DbConnection)cn.Connection).GetSchema("Tables"));
+			var tables = ExecuteOnNewConnection(dataConnection, cn => cn.Connection.GetSchema("Tables"));
 
 			return
 			(
@@ -82,7 +81,7 @@ namespace LinqToDB.DataProvider.Access
 					CatalogName        = catalog,
 					SchemaName         = schema,
 					TableName          = name,
-					IsDefaultSchema    = schema.IsNullOrEmpty(),
+					IsDefaultSchema    = string.IsNullOrEmpty(schema),
 					IsView             = t.Field<string>("TABLE_TYPE") == "VIEW",
 					IsProviderSpecific = system,
 					Description        = t.Field<string>("DESCRIPTION")
@@ -93,7 +92,7 @@ namespace LinqToDB.DataProvider.Access
 		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection,
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
-			var idxs = ExecuteOnNewConnection(dataConnection, cn => ((DbConnection)cn.Connection).GetSchema("Indexes"));
+			var idxs = ExecuteOnNewConnection(dataConnection, cn => cn.Connection.GetSchema("Indexes"));
 
 			return
 			(
@@ -102,8 +101,8 @@ namespace LinqToDB.DataProvider.Access
 				select new PrimaryKeyInfo
 				{
 					TableID        = idx.Field<string>("TABLE_CATALOG") + "." + idx.Field<string>("TABLE_SCHEMA") + "." + idx.Field<string>("TABLE_NAME"),
-					PrimaryKeyName = idx.Field<string>("INDEX_NAME"),
-					ColumnName     = idx.Field<string>("COLUMN_NAME"),
+					PrimaryKeyName = idx.Field<string>("INDEX_NAME")!,
+					ColumnName     = idx.Field<string>("COLUMN_NAME")!,
 					Ordinal        = ConvertTo<int>.From(idx["ORDINAL_POSITION"]),
 				}
 			).ToList();
@@ -111,7 +110,7 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			var cs = ExecuteOnNewConnection(dataConnection, cn => ((DbConnection)cn.Connection).GetSchema("Columns"));
+			var cs = ExecuteOnNewConnection(dataConnection, cn => cn.Connection.GetSchema("Columns"));
 
 			return
 			(
@@ -122,13 +121,13 @@ namespace LinqToDB.DataProvider.Access
 				select new ColumnInfo
 				{
 					TableID     = c.Field<string>("TABLE_CATALOG") + "." + c.Field<string>("TABLE_SCHEMA") + "." + c.Field<string>("TABLE_NAME"),
-					Name        = c.Field<string>("COLUMN_NAME"),
+					Name        = c.Field<string>("COLUMN_NAME")!,
 					IsNullable  = c.Field<bool>  ("IS_NULLABLE"),
 					Ordinal     = Converter.ChangeTypeTo<int>(c["ORDINAL_POSITION"]),
 					DataType    = dt?.TypeName,
-					Length      = dt?.CreateParameters != null && dt.CreateParameters.Contains("max length") ? Converter.ChangeTypeTo<long?>(c["CHARACTER_MAXIMUM_LENGTH"]) : null,
-					Precision   = dt?.CreateParameters != null && dt.CreateParameters.Contains("precision")  ? Converter.ChangeTypeTo<int?>(c["NUMERIC_PRECISION"])         : null,
-					Scale       = dt?.CreateParameters != null && dt.CreateParameters.Contains("scale")      ? Converter.ChangeTypeTo<int?>(c["NUMERIC_SCALE"])             : null,
+					Length      = dt?.CreateParameters != null && dt.CreateParameters.Contains("max length") ? Converter.ChangeTypeTo<int?>(c["CHARACTER_MAXIMUM_LENGTH"]) : null,
+					Precision   = dt?.CreateParameters != null && dt.CreateParameters.Contains("precision")  ? Converter.ChangeTypeTo<int?>(c["NUMERIC_PRECISION"])        : null,
+					Scale       = dt?.CreateParameters != null && dt.CreateParameters.Contains("scale")      ? Converter.ChangeTypeTo<int?>(c["NUMERIC_SCALE"])            : null,
 					// ole db provider returns incorrect flags (reports INT NOT NULL columns as identity)
 					// https://github.com/linq2db/linq2db/issues/3149
 					//IsIdentity  = dt?.ProviderDbType == 3 && flags == COUNTER_OR_BIT,
@@ -163,7 +162,7 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override List<ProcedureInfo>? GetProcedures(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			var ps = ExecuteOnNewConnection(dataConnection, cn => ((DbConnection)cn.Connection).GetSchema("Procedures"));
+			var ps = ExecuteOnNewConnection(dataConnection, cn => cn.Connection.GetSchema("Procedures"));
 
 			return
 			(
@@ -177,19 +176,22 @@ namespace LinqToDB.DataProvider.Access
 					CatalogName         = catalog,
 					SchemaName          = schema,
 					ProcedureName       = name,
-					IsDefaultSchema     = schema.IsNullOrEmpty(),
+					IsDefaultSchema     = string.IsNullOrEmpty(schema),
 					ProcedureDefinition = p.Field<string>("PROCEDURE_DEFINITION")
 				}
 			).ToList();
 		}
 
-		static readonly Regex _paramsExp = new Regex(@"PARAMETERS ((\[(?<name>[^\]]+)\]|(?<name>[^\s]+))\s(?<type>[^,;\s]+(\s\([^\)]+\))?)[,;]\s)*", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
+		static readonly Regex _paramsExp = new (@"PARAMETERS ((\[(?<name>[^\]]+)\]|(?<name>[^\s]+))\s(?<type>[^,;\s]+(\s\([^\)]+\))?)[,;]\s)*", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
 		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection, IEnumerable<ProcedureInfo> procedures, GetSchemaOptions options)
 		{
 			var list = new List<ProcedureParameterInfo>();
 
 			foreach (var procedure in procedures)
 			{
+				if (procedure.ProcedureDefinition == null)
+					continue;
+
 				var match      = _paramsExp.Match(procedure.ProcedureDefinition);
 				var names      = match.Groups["name"].Captures;
 				var types      = match.Groups["type"].Captures;
@@ -197,12 +199,12 @@ namespace LinqToDB.DataProvider.Access
 
 				for (var i = 0; i < names.Count; ++i)
 				{
-					var   paramName = names[i].Value;
-					var   rawType   = types[i].Value.Split(separators, StringSplitOptions.RemoveEmptyEntries);
-					var   dataType  = rawType[0];
-					long? size      = null;
-					int?  precision = null;
-					int?  scale     = null;
+					var  paramName = names[i].Value;
+					var  rawType   = types[i].Value.Split(separators, StringSplitOptions.RemoveEmptyEntries);
+					var  dataType  = rawType[0];
+					int? size      = null;
+					int? precision = null;
+					int? scale     = null;
 
 					if (rawType.Length > 2)
 					{
@@ -211,7 +213,7 @@ namespace LinqToDB.DataProvider.Access
 					}
 					else if (rawType.Length > 1)
 					{
-						size      = ConvertTo<long?>.From(rawType[1]);
+						size      = ConvertTo<int?>.From(rawType[1]);
 					}
 
 					list.Add(new ProcedureParameterInfo
@@ -272,7 +274,7 @@ namespace LinqToDB.DataProvider.Access
 			return dts;
 		}
 
-		protected override string? GetDbType(GetSchemaOptions options, string? columnType, DataTypeInfo? dataType, long? length, int? precision, int? scale, string? udtCatalog, string? udtSchema, string? udtName)
+		protected override string? GetDbType(GetSchemaOptions options, string? columnType, DataTypeInfo? dataType, int? length, int? precision, int? scale, string? udtCatalog, string? udtSchema, string? udtName)
 		{
 			var dbType = columnType ?? dataType?.TypeName;
 
@@ -280,18 +282,18 @@ namespace LinqToDB.DataProvider.Access
 			{
 				var parms = dataType.CreateParameters;
 
-				if (!parms.IsNullOrWhiteSpace())
+				if (!string.IsNullOrWhiteSpace(parms))
 				{
-					var paramNames  = parms.Split(',');
+					var paramNames  = parms!.Split(',');
 					var paramValues = new object?[paramNames.Length];
 
 					for (var i = 0; i < paramNames.Length; i++)
 					{
 						switch (paramNames[i].Trim().ToLower())
 						{
-							case "max length": paramValues[i] = length; break;
+							case "max length": paramValues[i] = length;    break;
 							case "precision" : paramValues[i] = precision; break;
-							case "scale"     : paramValues[i] = scale; break;
+							case "scale"     : paramValues[i] = scale;     break;
 						}
 					}
 
@@ -336,7 +338,7 @@ namespace LinqToDB.DataProvider.Access
 					IsNullable           = isNullable,
 					MemberName           = ToValidName(columnName),
 					MemberType           = ToTypeName(systemType, isNullable),
-					SystemType           = GetSystemType(columnType, null, dt, length, precision, scale, options) ?? systemType ?? typeof(object),
+					SystemType           = GetSystemType(columnType, null, dt, length, precision, scale, options) ?? systemType,
 					DataType             = GetDataType(dt?.TypeName, columnType, length, precision, scale),
 					ProviderSpecificType = GetProviderSpecificType(columnType),
 					IsIdentity           = r.Field<bool>("IsAutoIncrement"),

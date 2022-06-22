@@ -32,21 +32,17 @@ namespace LinqToDB.SqlQuery
 			SqlField[]       fields,
 			string           sql,
 			ISqlExpression[] parameters)
-			: base(id, string.Empty, alias, null, null, null, string.Empty, objectType, null, fields, SqlTableType.RawSql, null, TableOptions.NotSet)
+			: base(id, string.Empty, alias, new (string.Empty), objectType, null, fields, SqlTableType.RawSql, null, TableOptions.NotSet, null)
 		{
 			SQL        = sql;
 			Parameters = parameters;
 		}
 
 		public SqlRawSqlTable(SqlRawSqlTable table, ISqlExpression[] parameters)
+			: base(table.ObjectType, null, table.TableName)
 		{
 			Alias              = table.Alias;
-			Server             = table.Server;
-			Database           = table.Database;
-			Schema             = table.Schema;
 
-			PhysicalName       = table.PhysicalName;
-			ObjectType         = table.ObjectType;
 			SequenceAttributes = table.SequenceAttributes;
 
 			SQL                = table.SQL;

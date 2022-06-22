@@ -14,11 +14,11 @@ namespace Tests.UserTests
 				Affects = SkipModification.Insert;
 			}
 
-			public override bool ShouldSkip(object obj, EntityDescriptor entityDescriptor, ColumnDescriptor columnDescriptor)
+			public override bool ShouldSkip(object? obj, EntityDescriptor entityDescriptor, ColumnDescriptor columnDescriptor)
 			{
 				if (obj != null)
 				{
-					var value = columnDescriptor.GetValue(obj);
+					var value = columnDescriptor.GetProviderValue(obj);
 					if (value is int i)
 					{
 						return i % 2 == 0;

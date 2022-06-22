@@ -57,7 +57,7 @@ namespace Tests.UserTests
 		}
 
 		[Table]
-		class components
+		class Components
 		{
 			[Column(IsPrimaryKey = true, Length = 100, CanBeNull = false)]
 			public string id { get; set; } = null!;
@@ -71,25 +71,25 @@ namespace Tests.UserTests
 			[Column(CanBeNull = false)] 
 			public bool is_deleted { get; set; }
 
-			public static components[] TestData()
+			public static Components[] TestData()
 			{
 				return new []
 				{
-					new components{ id = "TestProcessComponent1", category_id = "TestProcessCategory1", service_id = "TestProcessService" },
-					new components{ id = "TestProcessComponent2", category_id = "TestProcessCategory2", service_id = "TestProcessService" },
-					new components{ id = "TestElementComponent1", category_id = "TestElementCategory1", service_id = "TestElementService" },
-					new components{ id = "TestElementComponent2", category_id = "TestElementCategory2", service_id = "TestElementService" },
+					new Components{ id = "TestProcessComponent1", category_id = "TestProcessCategory1", service_id = "TestProcessService" },
+					new Components{ id = "TestProcessComponent2", category_id = "TestProcessCategory2", service_id = "TestProcessService" },
+					new Components{ id = "TestElementComponent1", category_id = "TestElementCategory1", service_id = "TestElementService" },
+					new Components{ id = "TestElementComponent2", category_id = "TestElementCategory2", service_id = "TestElementService" },
 				};
 			}
 		}
 
 		[Test]
-		public void UpdateWhenTableSecond([DataSources] string context)
+		public void UpdateWhenTableSecond([DataSources(TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(element_services.TestData()))
 			using (db.CreateLocalTable(component_categories.TestData()))
-			using (db.CreateLocalTable(components.TestData()))
+			using (db.CreateLocalTable(Components.TestData()))
 			{
 				var query = db.GetTable<element_services>()
 					.Where(ie => ie.id == "TestProcessService")
@@ -97,7 +97,7 @@ namespace Tests.UserTests
 						(sr, ctg) => sr.id == ctg.service_id,
 						(sr, ctg) => ctg);
 
-				query.InnerJoin(db.GetTable<components>(),
+				query.InnerJoin(db.GetTable<Components>(),
 						(ct, cm) => ct.id == cm.category_id && !cm.is_deleted,
 						(ct, cm) => ct
 					).Set(r => r.is_deleted, true)
@@ -109,12 +109,12 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void UpdateWhenTableFirst([DataSources] string context)
+		public void UpdateWhenTableFirst([DataSources(TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(element_services.TestData()))
 			using (db.CreateLocalTable(component_categories.TestData()))
-			using (db.CreateLocalTable(components.TestData()))
+			using (db.CreateLocalTable(Components.TestData()))
 			{
 				var query = db.GetTable<component_categories>()
 					.InnerJoin(db.GetTable<element_services>()
@@ -122,7 +122,7 @@ namespace Tests.UserTests
 						(ctg, sr) => sr.id == ctg.service_id,
 						(ctg, sr) => ctg);
 
-				query.InnerJoin(db.GetTable<components>(),
+				query.InnerJoin(db.GetTable<Components>(),
 						(ct, cm) => ct.id == cm.category_id && !cm.is_deleted,
 						(ct, cm) => ct
 					).Set(r => r.is_deleted, true)
@@ -134,12 +134,12 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void UpdateWhenTableFirstWithLeftJoin([DataSources] string context)
+		public void UpdateWhenTableFirstWithLeftJoin([DataSources(TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(element_services.TestData()))
 			using (db.CreateLocalTable(component_categories.TestData()))
-			using (db.CreateLocalTable(components.TestData()))
+			using (db.CreateLocalTable(Components.TestData()))
 			{
 				var query = db.GetTable<component_categories>()
 					.InnerJoin(db.GetTable<element_services>()
@@ -147,7 +147,7 @@ namespace Tests.UserTests
 						(ctg, sr) => sr.id == ctg.service_id,
 						(ctg, sr) => ctg);
 
-				query.LeftJoin(db.GetTable<components>(),
+				query.LeftJoin(db.GetTable<Components>(),
 						(ct, cm) => ct.id == cm.category_id && !cm.is_deleted,
 						(ct, cm) => ct
 					).Set(r => r.is_deleted, true)

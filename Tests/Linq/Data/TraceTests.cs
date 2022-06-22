@@ -11,10 +11,12 @@ using LinqToDB.Data;
 
 namespace Tests.Data
 {
+	using System.Data;
 	using Model;
+	using Tests.Tools;
 
 	[TestFixture]
-	public class TraceTests
+	public class TraceTests : TestBase
 	{
 		private TraceLevel                           OriginalTraceLevel { get; set; }
 		private Action<TraceInfo>                    OriginalOnTrace    { get; set; } = null!;
@@ -39,7 +41,9 @@ namespace Tests.Data
 		public void RestoreOriginalTraceLevel()
 		{
 			DataConnection.TraceSwitch.Level = OriginalTraceLevel;
+#pragma warning disable CS0618 // Type or member is obsolete
 			DataConnection.OnTrace           = OriginalOnTrace;
+#pragma warning restore CS0618 // Type or member is obsolete
 			DataConnection.WriteTraceLine    = OriginalWrite;
 		}
 
@@ -58,12 +62,68 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void TraceInfoStepsAreReportedForLinqQuery([NorthwindDataContext] string context)
+		public void TraceInfoErrorsAreReportedForInvalidConnectionString([DataSources(false)] string context)
 		{
-			var events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
+			var events   = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
 			var counters = GetEnumValues((TraceInfoStep s) => 0);
 
-			using (var db = new DataConnection(context))
+			using (var db0 = (TestDataConnection)GetDataContext(context))
+			using (var db  = new DataContext(db0.DataProvider.Name, "BAD"))
+			{
+				db.OnTraceConnection = e =>
+				{
+					events[e.TraceInfoStep] = e;
+					counters[e.TraceInfoStep]++;
+				};
+
+				NUnitAssert.ThrowsAny(() => db.GetTable<Child>().ToList(), typeof(ArgumentException), typeof(InvalidOperationException));
+
+				// steps called once
+				Assert.AreEqual(1, counters[TraceInfoStep.Error]);
+				Assert.AreEqual(1, counters[TraceInfoStep.Completed]);
+
+				// steps never called
+				Assert.AreEqual(0, counters[TraceInfoStep.BeforeExecute]);
+				Assert.AreEqual(0, counters[TraceInfoStep.AfterExecute]);
+				Assert.AreEqual(0, counters[TraceInfoStep.MapperCreated]);
+			}
+		}
+
+		[Test]
+		public async Task TraceInfoErrorsAreReportedForInvalidConnectionStringAsync([DataSources(false)] string context)
+		{
+			var events   = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
+			var counters = GetEnumValues((TraceInfoStep s) => 0);
+
+			using (var db0 = (TestDataConnection)GetDataContext(context))
+			using (var db  = new DataContext(db0.DataProvider.Name, "BAD"))
+			{
+				db.OnTraceConnection = e =>
+				{
+					events[e.TraceInfoStep] = e;
+					counters[e.TraceInfoStep]++;
+				};
+
+				await NUnitAssert.ThrowsAnyAsync(() => db.GetTable<Child>().ToListAsync(), typeof(ArgumentException), typeof(InvalidOperationException));
+
+				// steps called once
+				Assert.AreEqual(1, counters[TraceInfoStep.Error]);
+				Assert.AreEqual(1, counters[TraceInfoStep.Completed]);
+
+				// steps never called
+				Assert.AreEqual(0, counters[TraceInfoStep.BeforeExecute]);
+				Assert.AreEqual(0, counters[TraceInfoStep.AfterExecute]);
+				Assert.AreEqual(0, counters[TraceInfoStep.MapperCreated]);
+			}
+		}
+
+		[Test]
+		public void TraceInfoStepsAreReportedForLinqQuery([NorthwindDataContext] string context)
+		{
+			var events   = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
+			var counters = GetEnumValues((TraceInfoStep s) => 0);
+
+			using (var db = GetDataConnection(context))
 			{
 				db.OnTraceConnection = e =>
 				{
@@ -93,10 +153,10 @@ namespace Tests.Data
 		[Test]
 		public void TraceInfoStepsAreReportedForDataReader([NorthwindDataContext] string context)
 		{
-			var events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
+			var events   = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
 			var counters = GetEnumValues((TraceInfoStep s) => 0);
 
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var sql = db.GetTable<Northwind.Category>().SqlText;
 				db.OnTraceConnection = e =>
@@ -130,10 +190,10 @@ namespace Tests.Data
 		[Test]
 		public async Task TraceInfoStepsAreReportedForDataReaderAsync([NorthwindDataContext] string context)
 		{
-			var events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
+			var events   = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
 			var counters = GetEnumValues((TraceInfoStep s) => 0);
 
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var sql = db.GetTable<Northwind.Category>().SqlText;
 				db.OnTraceConnection = e =>
@@ -417,10 +477,263 @@ namespace Tests.Data
 		}
 
 		[Test]
+		public void TraceInfoStepsAreReportedForCommitedTransaction([NorthwindDataContext] string context)
+		{
+			var events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
+			var counters = GetEnumValues((TraceInfoStep s) => 0);
+
+			using (var db = new DataConnection(context))
+			{
+				db.OnTraceConnection = e =>
+				{
+					events[e.TraceInfoStep] = e;
+					counters[e.TraceInfoStep]++;
+				};
+				using (db.BeginTransaction())
+				{
+					// Begin transaction command is reported on each step
+					Assert.AreEqual("BeginTransaction", events[TraceInfoStep.BeforeExecute]!.CommandText);
+					Assert.AreEqual("BeginTransaction", events[TraceInfoStep.AfterExecute]!.CommandText);
+					
+					db.SetCommand(@"UPDATE Categories SET CategoryName = CategoryName WHERE 1=2").Execute();
+					db.CommitTransaction();
+
+					// Commit transaction command is reported on each step
+					Assert.AreEqual("CommitTransaction", events[TraceInfoStep.BeforeExecute]!.CommandText);
+					Assert.AreEqual("CommitTransaction", events[TraceInfoStep.AfterExecute]!.CommandText);
+					
+					// steps called once for BeginTransaction once for Update and once for CommitTransaction
+					Assert.AreEqual(3, counters[TraceInfoStep.BeforeExecute]);
+					Assert.AreEqual(3, counters[TraceInfoStep.AfterExecute]);
+
+					// step called once for Update
+					Assert.AreEqual(1, counters[TraceInfoStep.Completed]);
+
+					// steps never called
+					Assert.AreEqual(0, counters[TraceInfoStep.MapperCreated]);
+					Assert.AreEqual(0, counters[TraceInfoStep.Error]);
+				}
+			}
+			
+		}
+
+		[Test]
+		public async Task TraceInfoStepsAreReportedForCommitedTransactionAsync([NorthwindDataContext] string context)
+		{
+			var events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
+			var counters = GetEnumValues((TraceInfoStep s) => 0);
+
+			using (var db = new DataConnection(context))
+			{
+				db.OnTraceConnection = e =>
+				{
+					events[e.TraceInfoStep] = e;
+					counters[e.TraceInfoStep]++;
+				};
+				using (await db.BeginTransactionAsync())
+				{
+					// Begin transaction command is reported on each step
+					Assert.AreEqual("BeginTransactionAsync", events[TraceInfoStep.BeforeExecute]!.CommandText);
+					Assert.AreEqual("BeginTransactionAsync", events[TraceInfoStep.AfterExecute]!.CommandText);
+
+					db.SetCommand(@"UPDATE Categories SET CategoryName = CategoryName WHERE 1=2").Execute();
+					await db.CommitTransactionAsync();
+
+					// Commit transaction command is reported on each step
+					Assert.AreEqual("CommitTransactionAsync", events[TraceInfoStep.BeforeExecute]!.CommandText);
+					Assert.AreEqual("CommitTransactionAsync", events[TraceInfoStep.AfterExecute]!.CommandText);
+
+					// steps called once for BeginTransaction once for Update and once for CommitTransaction
+					Assert.AreEqual(3, counters[TraceInfoStep.BeforeExecute]);
+					Assert.AreEqual(3, counters[TraceInfoStep.AfterExecute]);
+
+					// step called once for Update
+					Assert.AreEqual(1, counters[TraceInfoStep.Completed]);
+
+					// steps never called
+					Assert.AreEqual(0, counters[TraceInfoStep.MapperCreated]);
+					Assert.AreEqual(0, counters[TraceInfoStep.Error]);
+				}
+			}
+		}
+
+		[Test]
+		public void TraceInfoStepsAreReportedForRolledbackTransaction([NorthwindDataContext] string context)
+		{
+			var events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
+			var counters = GetEnumValues((TraceInfoStep s) => 0);
+
+			using (var db = new DataConnection(context))
+			{
+				db.OnTraceConnection = e =>
+				{
+					events[e.TraceInfoStep] = e;
+					counters[e.TraceInfoStep]++;
+				};
+				using (db.BeginTransaction())
+				{
+					// Begin transaction command is reported on each step
+					Assert.AreEqual("BeginTransaction", events[TraceInfoStep.BeforeExecute]!.CommandText);
+					Assert.AreEqual("BeginTransaction", events[TraceInfoStep.AfterExecute]!.CommandText);
+
+					db.SetCommand(@"UPDATE Categories SET CategoryName = CategoryName WHERE 1=2").Execute();
+					db.RollbackTransaction();
+
+					// Commit transaction command is reported on each step
+					Assert.AreEqual("RollbackTransaction", events[TraceInfoStep.BeforeExecute]!.CommandText);
+					Assert.AreEqual("RollbackTransaction", events[TraceInfoStep.AfterExecute]!.CommandText);
+
+					// steps called once for BeginTransaction once for Update and once for CommitTransaction
+					Assert.AreEqual(3, counters[TraceInfoStep.BeforeExecute]);
+					Assert.AreEqual(3, counters[TraceInfoStep.AfterExecute]);
+
+					// step called once for Update
+					Assert.AreEqual(1, counters[TraceInfoStep.Completed]);
+
+					// steps never called
+					Assert.AreEqual(0, counters[TraceInfoStep.MapperCreated]);
+					Assert.AreEqual(0, counters[TraceInfoStep.Error]);
+				}
+			}
+
+		}
+
+		[Test]
+		public async Task TraceInfoStepsAreReportedForRolledbackTransactionAsync([NorthwindDataContext] string context)
+		{
+			var events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
+			var counters = GetEnumValues((TraceInfoStep s) => 0);
+
+			using (var db = new DataConnection(context))
+			{
+				db.OnTraceConnection = e =>
+				{
+					events[e.TraceInfoStep] = e;
+					counters[e.TraceInfoStep]++;
+				};
+				using (await db.BeginTransactionAsync())
+				{
+					// Begin transaction command is reported on each step
+					Assert.AreEqual("BeginTransactionAsync", events[TraceInfoStep.BeforeExecute]!.CommandText);
+					Assert.AreEqual("BeginTransactionAsync", events[TraceInfoStep.AfterExecute]!.CommandText);
+
+					db.SetCommand(@"UPDATE Categories SET CategoryName = CategoryName WHERE 1=2").Execute();
+					await db.RollbackTransactionAsync();
+
+					// Commit transaction command is reported on each step
+					Assert.AreEqual("RollbackTransactionAsync", events[TraceInfoStep.BeforeExecute]!.CommandText);
+					Assert.AreEqual("RollbackTransactionAsync", events[TraceInfoStep.AfterExecute]!.CommandText);
+
+					// steps called once for BeginTransaction once for Update and once for CommitTransaction
+					Assert.AreEqual(3, counters[TraceInfoStep.BeforeExecute]);
+					Assert.AreEqual(3, counters[TraceInfoStep.AfterExecute]);
+
+					// step called once for Update
+					Assert.AreEqual(1, counters[TraceInfoStep.Completed]);
+
+					// steps never called
+					Assert.AreEqual(0, counters[TraceInfoStep.MapperCreated]);
+					Assert.AreEqual(0, counters[TraceInfoStep.Error]);
+				}
+			}
+		}
+
+		[Test]
+		public void TraceInfoStepsAreReportedForBeginTransactionIlosationLevel([NorthwindDataContext(
+#if NETFRAMEWORK
+			excludeSqlite: false, excludeSqliteMs: true
+#endif
+			)] string context)
+		{
+			var events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
+			var counters = GetEnumValues((TraceInfoStep s) => 0);
+
+			using (var db = new DataConnection(context))
+			{
+				db.OnTraceConnection = e =>
+				{
+					events[e.TraceInfoStep] = e;
+					counters[e.TraceInfoStep]++;
+				};
+				using (db.BeginTransaction(IsolationLevel.ReadCommitted))
+				{
+					// Begin transaction command is reported on each step
+					Assert.AreEqual("BeginTransaction(ReadCommitted)", events[TraceInfoStep.BeforeExecute]!.CommandText);
+					Assert.AreEqual("BeginTransaction(ReadCommitted)", events[TraceInfoStep.AfterExecute]!.CommandText);
+
+					db.SetCommand(@"UPDATE Categories SET CategoryName = CategoryName WHERE 1=2").Execute();
+					db.CommitTransaction();
+
+					// Commit transaction command is reported on each step
+					Assert.AreEqual("CommitTransaction", events[TraceInfoStep.BeforeExecute]!.CommandText);
+					Assert.AreEqual("CommitTransaction", events[TraceInfoStep.AfterExecute]!.CommandText);
+
+					// steps called once for BeginTransaction once for Update and once for CommitTransaction
+					Assert.AreEqual(3, counters[TraceInfoStep.BeforeExecute]);
+					Assert.AreEqual(3, counters[TraceInfoStep.AfterExecute]);
+
+					// step called once for Update
+					Assert.AreEqual(1, counters[TraceInfoStep.Completed]);
+
+					// steps never called
+					Assert.AreEqual(0, counters[TraceInfoStep.MapperCreated]);
+					Assert.AreEqual(0, counters[TraceInfoStep.Error]);
+				}
+			}
+
+		}
+
+		[Test]
+		public async Task TraceInfoStepsAreReportedForBeginTransactionIlosationLevelAsync([NorthwindDataContext(
+#if NETFRAMEWORK
+			excludeSqlite: false, excludeSqliteMs: true
+#endif
+			)] string context)
+		{
+			var events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
+			var counters = GetEnumValues((TraceInfoStep s) => 0);
+
+			using (var db = new DataConnection(context))
+			{
+				db.OnTraceConnection = e =>
+				{
+					events[e.TraceInfoStep] = e;
+					counters[e.TraceInfoStep]++;
+				};
+				using (await db.BeginTransactionAsync(IsolationLevel.ReadCommitted))
+				{
+					// Begin transaction command is reported on each step
+					Assert.AreEqual("BeginTransactionAsync(ReadCommitted)", events[TraceInfoStep.BeforeExecute]!.CommandText);
+					Assert.AreEqual("BeginTransactionAsync(ReadCommitted)", events[TraceInfoStep.AfterExecute]!.CommandText);
+
+					db.SetCommand(@"UPDATE Categories SET CategoryName = CategoryName WHERE 1=2").Execute();
+					await db.CommitTransactionAsync();
+
+					// Commit transaction command is reported on each step
+					Assert.AreEqual("CommitTransactionAsync", events[TraceInfoStep.BeforeExecute]!.CommandText);
+					Assert.AreEqual("CommitTransactionAsync", events[TraceInfoStep.AfterExecute]!.CommandText);
+
+					// steps called once for BeginTransaction once for Update and once for CommitTransaction
+					Assert.AreEqual(3, counters[TraceInfoStep.BeforeExecute]);
+					Assert.AreEqual(3, counters[TraceInfoStep.AfterExecute]);
+
+					// step called once for Update
+					Assert.AreEqual(1, counters[TraceInfoStep.Completed]);
+
+					// steps never called
+					Assert.AreEqual(0, counters[TraceInfoStep.MapperCreated]);
+					Assert.AreEqual(0, counters[TraceInfoStep.Error]);
+				}
+			}
+		}
+
+		[Test]
 		public void OnTraceConnectionShouldUseStatic()
 		{
 			bool traceCalled = false;
+#pragma warning disable CS0618 // Type or member is obsolete
 			DataConnection.OnTrace = info => traceCalled = true;
+#pragma warning restore CS0618 // Type or member is obsolete
 
 			using (var db = new DataConnection())
 			{
@@ -433,10 +746,12 @@ namespace Tests.Data
 		public void OnTraceConnectionShouldUseFromBuilder()
 		{
 			bool defaultTraceCalled = false;
+#pragma warning disable CS0618 // Type or member is obsolete
 			DataConnection.OnTrace = info => defaultTraceCalled = true;
+#pragma warning restore CS0618 // Type or member is obsolete
 
 			bool builderTraceCalled = false;
-			var builder = new LinqToDbConnectionOptionsBuilder().WithTracing(info => builderTraceCalled = true);
+			var builder = new LinqToDBConnectionOptionsBuilder().WithTracing(info => builderTraceCalled = true);
 
 			using (var db = new DataConnection(builder.Build()))
 			{
@@ -463,7 +778,7 @@ namespace Tests.Data
 		{
 			var staticTraceLevel = DataConnection.TraceSwitch.Level;
 			var builderTraceLevel = staticTraceLevel + 1;
-			var builder = new LinqToDbConnectionOptionsBuilder().WithTraceLevel(builderTraceLevel);
+			var builder = new LinqToDBConnectionOptionsBuilder().WithTraceLevel(builderTraceLevel);
 
 			using (var db = new DataConnection(builder.Build()))
 			{
@@ -493,7 +808,7 @@ namespace Tests.Data
 			DataConnection.WriteTraceLine = (s, s1, arg3) => staticWriteCalled = true;
 
 			var builderWriteCalled = false;
-			var builder = new LinqToDbConnectionOptionsBuilder()
+			var builder = new LinqToDBConnectionOptionsBuilder()
 				.WriteTraceWith((s, s1, a3) => builderWriteCalled = true);
 
 			using (var db = new DataConnection(builder.Build()))

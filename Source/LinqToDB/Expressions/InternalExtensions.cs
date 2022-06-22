@@ -8,13 +8,17 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace LinqToDB.Expressions
 {
+	using Common;
+	using Common.Internal;
 	using LinqToDB.Extensions;
-	using Reflection;
 	using Linq;
 	using Linq.Builder;
 	using Mapping;
-	using LinqToDB.Common;
+	using Reflection;
 
+	/// <summary>
+	/// Internal API.
+	/// </summary>
 	static class InternalExtensions
 	{
 		#region IsConstant
@@ -47,6 +51,9 @@ namespace LinqToDB.Expressions
 
 			if (includingArrays && type.IsArray)
 				return type.GetElementType()!.IsConstantable(includingArrays);
+
+			if (type == typeof(Sql.SqlID))
+				return true;
 
 			return false;
 		}
@@ -195,10 +202,10 @@ namespace LinqToDB.Expressions
 
 							switch (ue.Operand.NodeType)
 							{
-								case ExpressionType.Call           :
-								case ExpressionType.MemberAccess   :
-								case ExpressionType.New            :
-								case ExpressionType.Constant       :
+								case ExpressionType.Call        :
+								case ExpressionType.MemberAccess:
+								case ExpressionType.New         :
+								case ExpressionType.Constant    :
 
 									accessors.Add(e, p);
 									break;
@@ -528,92 +535,35 @@ namespace LinqToDB.Expressions
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T? EvaluateExpression<T>(this Expression? expr)
-			where T : class
+		public static bool IsNullValue(this Expression expr)
 		{
-			return expr.EvaluateExpression() as T;
-		}
-
-		public static object? EvaluateExpression(this Expression? expr)
-		{
-			if (expr == null)
-				return null;
-
-			switch (expr.NodeType)
-			{
-				case ExpressionType.Constant:
-					return ((ConstantExpression)expr).Value;
-
-				case ExpressionType.Convert:
-				case ExpressionType.ConvertChecked:
-					{
-						var unary = (UnaryExpression)expr;
-						var operand = unary.Operand.EvaluateExpression();
-						if (operand == null)
-							return null;
-						break;
-					}
-
-				case ExpressionType.MemberAccess:
-					{
-						var member = (MemberExpression) expr;
-
-						if (member.Member.IsFieldEx())
-							return ((FieldInfo)member.Member).GetValue(member.Expression.EvaluateExpression());
-
-						if (member.Member is PropertyInfo propertyInfo)
-						{
-							var obj = member.Expression.EvaluateExpression();
-							if (obj == null)
-							{
-								if (propertyInfo.IsNullableValueMember())
-									return null;
-								if (propertyInfo.IsNullableHasValueMember())
-									return false;
-							}
-							return propertyInfo.GetValue(obj, null);
-						}
-						
-						break;
-					}
-				case ExpressionType.Call:
-					{
-						var mc = (MethodCallExpression)expr;
-						var arguments = mc.Arguments.Select(EvaluateExpression).ToArray();
-						var instance  = mc.Object.EvaluateExpression();
-
-						if (instance == null && mc.Method.IsNullableGetValueOrDefault())
-							return null;
-						
-						return mc.Method.Invoke(instance, arguments);
-					}
-			}
-
-			var value = Expression.Lambda(expr).CompileExpression().DynamicInvoke();
-			return value;
+			return (expr is ConstantExpression c && c.Value == null)
+				|| (expr is DefaultExpression && expr.Type.IsNullableType());
 		}
 
 		public static Expression? GetArgumentByName(this MethodCallExpression methodCall, string parameterName)
 		{
 			var arguments = methodCall.Arguments;
 			var parameters = methodCall.Method.GetParameters();
-			for (int i = 0; i < parameters.Length; i++)
+
+			for (var i = 0; i < parameters.Length; i++)
 				if (parameters[i].Name == parameterName)
 					return arguments[i];
+
 			return default;
 		}
 
 		#endregion
 
-
-		public static bool IsEvaluable(Expression? expression)
+		public static bool IsEvaluable(this Expression? expression, MappingSchema mappingSchema)
 		{
 			return expression?.NodeType switch
 			{
 				null                        => true,
-				ExpressionType.Convert      => IsEvaluable(((UnaryExpression)expression).Operand),
+				ExpressionType.Convert      => IsEvaluable(((UnaryExpression)expression).Operand, mappingSchema),
+				ExpressionType.Default      => true,
 				ExpressionType.Constant     => true,
-				ExpressionType.MemberAccess => IsEvaluable(((MemberExpression)expression).Expression),
+				ExpressionType.MemberAccess => ((MemberExpression)expression).Member.GetExpressionAttribute(mappingSchema)?.ServerSideOnly != true && IsEvaluable(((MemberExpression)expression).Expression, mappingSchema),
 				_                           => false,
 			};
 		}
@@ -623,20 +573,19 @@ namespace LinqToDB.Expressions
 		/// </summary>
 		/// <param name="expression">Expression to optimize.</param>
 		/// <returns>Optimized expression.</returns>
-		public static Expression? OptimizeExpression(this Expression? expression)
+		[return: NotNullIfNotNull("expression")]
+		public static Expression? OptimizeExpression(this Expression? expression, MappingSchema mappingSchema)
 		{
-			return _optimizeExpressionVisitor.Transform(expression);
+			return TransformInfoVisitor<MappingSchema>.Create(mappingSchema, OptimizeExpressionTransformer).Transform(expression);
 		}
 
-		private static readonly TransformInfoVisitor<object?> _optimizeExpressionVisitor = TransformInfoVisitor<object?>.Create(OptimizeExpressionTransformer);
-
-		private static TransformInfo OptimizeExpressionTransformer(Expression e)
+		private static TransformInfo OptimizeExpressionTransformer(MappingSchema mappingSchema, Expression e)
 		{
 			var newExpr = e;
 			if (e is BinaryExpression binary)
 			{
-				var left  = OptimizeExpression(binary.Left)!;
-				var right = OptimizeExpression(binary.Right)!;
+				var left  = OptimizeExpression(binary.Left, mappingSchema)!;
+				var right = OptimizeExpression(binary.Right, mappingSchema)!;
 
 				if (left.Type != binary.Left.Type)
 					left = Expression.Convert(left, binary.Left.Type);
@@ -644,11 +593,11 @@ namespace LinqToDB.Expressions
 				if (right.Type != binary.Right.Type)
 					right = Expression.Convert(right, binary.Right.Type);
 
-				newExpr = binary.Update(left, OptimizeExpression(binary.Conversion) as LambdaExpression, right);
+				newExpr = binary.Update(left, OptimizeExpression(binary.Conversion, mappingSchema) as LambdaExpression, right);
 			}
 			else if (e is UnaryExpression unaryExpression)
 			{
-				newExpr = unaryExpression.Update(OptimizeExpression(unaryExpression.Operand));
+				newExpr = unaryExpression.Update(OptimizeExpression(unaryExpression.Operand, mappingSchema));
 				if (newExpr.NodeType == ExpressionType.Convert && ((UnaryExpression)newExpr).Operand.NodeType == ExpressionType.Convert)
 				{
 					// remove double convert
@@ -657,11 +606,11 @@ namespace LinqToDB.Expressions
 				}
 			}
 
-			if (IsEvaluable(newExpr))
+			if (IsEvaluable(newExpr, mappingSchema))
 			{
 				newExpr = newExpr.NodeType == ExpressionType.Constant
 					? newExpr
-					: Expression.Constant(EvaluateExpression(newExpr));
+					: Expression.Constant(newExpr.EvaluateExpression());
 			}
 			else
 			{
@@ -671,34 +620,34 @@ namespace LinqToDB.Expressions
 					{
 						return new TransformInfo(newExpr, true);
 					}
-					case UnaryExpression unary when IsEvaluable(unary.Operand):
+					case UnaryExpression unary when IsEvaluable(unary.Operand, mappingSchema):
 					{
-						newExpr = Expression.Constant(EvaluateExpression(unary));
+						newExpr = Expression.Constant(unary.EvaluateExpression());
 						break;
 					}
-					case MemberExpression me when me.Expression?.NodeType == ExpressionType.Constant:
+					case MemberExpression { Expression.NodeType: ExpressionType.Constant } me:
 					{
-						newExpr = Expression.Constant(EvaluateExpression(me));
+						newExpr = Expression.Constant(me.EvaluateExpression());
 						break;
 					}
-					case BinaryExpression be when IsEvaluable(be.Left) && IsEvaluable(be.Right):
+					case BinaryExpression be when IsEvaluable(be.Left, mappingSchema) && IsEvaluable(be.Right, mappingSchema):
 					{
-						newExpr = Expression.Constant(EvaluateExpression(be));
+						newExpr = Expression.Constant(be.EvaluateExpression());
 						break;
 					}
-					case BinaryExpression be when be.NodeType == ExpressionType.AndAlso:
+					case BinaryExpression { NodeType: ExpressionType.AndAlso } be:
 					{
-						if (IsEvaluable(be.Left))
+						if (IsEvaluable(be.Left, mappingSchema))
 						{
-							var leftBool = EvaluateExpression(be.Left) as bool?;
+							var leftBool = be.Left.EvaluateExpression() as bool?;
 							if (leftBool == true)
 								e = be.Right;
 							else if (leftBool == false)
 								newExpr = ExpressionInstances.False;
 						}
-						else if (IsEvaluable(be.Right))
+						else if (IsEvaluable(be.Right, mappingSchema))
 						{
-							var rightBool = EvaluateExpression(be.Right) as bool?;
+							var rightBool = be.Right.EvaluateExpression() as bool?;
 							if (rightBool == true)
 								newExpr = be.Left;
 							else if (rightBool == false)
@@ -707,19 +656,19 @@ namespace LinqToDB.Expressions
 
 						break;
 					}
-					case BinaryExpression be when be.NodeType == ExpressionType.OrElse:
+					case BinaryExpression { NodeType: ExpressionType.OrElse } be:
 					{
-						if (IsEvaluable(be.Left))
+						if (IsEvaluable(be.Left, mappingSchema))
 						{
-							var leftBool = EvaluateExpression(be.Left) as bool?;
+							var leftBool = be.Left.EvaluateExpression() as bool?;
 							if (leftBool == false)
 								newExpr = be.Right;
 							else if (leftBool == true)
 								newExpr = ExpressionInstances.True;
 						}
-						else if (IsEvaluable(be.Right))
+						else if (IsEvaluable(be.Right, mappingSchema))
 						{
-							var rightBool = EvaluateExpression(be.Right) as bool?;
+							var rightBool = be.Right.EvaluateExpression() as bool?;
 							if (rightBool == false)
 								newExpr = be.Left;
 							else if (rightBool == true)

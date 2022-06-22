@@ -25,7 +25,7 @@ namespace LinqToDB.SqlQuery
 			: this(systemType, name, isAggregate, true, precedence, parameters)
 		{
 		}
-		
+
 		public SqlFunction(Type systemType, string name, bool isAggregate, bool isPure, int precedence, params ISqlExpression[] parameters)
 		{
 			//_sourceID = Interlocked.Increment(ref SqlQuery.SourceIDCounter);
@@ -134,7 +134,7 @@ namespace LinqToDB.SqlQuery
 				return true;
 
 
-			if (!(other is SqlFunction func) || Name != func.Name || Parameters.Length != func.Parameters.Length && SystemType != func.SystemType)
+			if (!(other is SqlFunction func) || Name != func.Name || Parameters.Length != func.Parameters.Length || SystemType != func.SystemType)
 				return false;
 
 			for (var i = 0; i < Parameters.Length; i++)
@@ -169,5 +169,16 @@ namespace LinqToDB.SqlQuery
 		}
 
 		#endregion
+
+		public void Deconstruct(out Type systemType, out string name)
+		{
+			systemType = SystemType;
+			name       = Name;
+		}
+
+		public void Deconstruct(out string name)
+		{
+			name = Name;
+		}
 	}
 }

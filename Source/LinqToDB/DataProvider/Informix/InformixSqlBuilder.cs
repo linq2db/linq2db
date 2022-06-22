@@ -10,28 +10,22 @@ namespace LinqToDB.DataProvider.Informix
 	using SqlProvider;
 	using System.Globalization;
 	using Mapping;
+	using System.Data.Common;
 
 	partial class InformixSqlBuilder : BasicSqlBuilder
 	{
-		private readonly InformixDataProvider? _provider;
-
-		public InformixSqlBuilder(
-			InformixDataProvider? provider,
-			MappingSchema         mappingSchema,
-			ISqlOptimizer         sqlOptimizer,
-			SqlProviderFlags      sqlProviderFlags)
-			: this(mappingSchema, sqlOptimizer, sqlProviderFlags)
+		public InformixSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
-			_provider = provider;
 		}
 
-		// remote context
-		public InformixSqlBuilder(
-			MappingSchema    mappingSchema,
-			ISqlOptimizer    sqlOptimizer,
-			SqlProviderFlags sqlProviderFlags)
-			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
+		InformixSqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
 		{
+		}
+
+		protected override ISqlBuilder CreateSqlBuilder()
+		{
+			return new InformixSqlBuilder(this);
 		}
 
 		protected override bool SupportsNullInColumn => false;
@@ -50,7 +44,7 @@ namespace LinqToDB.DataProvider.Informix
 				var field = trun.Table!.IdentityFields[commandNumber - 1];
 
 				StringBuilder.Append("ALTER TABLE ");
-				ConvertTableName(StringBuilder, trun.Table.Server, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName!, trun.Table.TableOptions);
+				BuildObjectName(StringBuilder, trun.Table.TableName, ConvertType.NameToQueryTable, true, trun.Table.TableOptions);
 				StringBuilder.Append(" MODIFY ");
 				Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
 				StringBuilder.AppendLine(" SERIAL(1)");
@@ -64,11 +58,6 @@ namespace LinqToDB.DataProvider.Informix
 		protected override void BuildTruncateTable(SqlTruncateTableStatement truncateTable)
 		{
 			StringBuilder.Append("TRUNCATE TABLE ");
-		}
-
-		protected override ISqlBuilder CreateSqlBuilder()
-		{
-			return new InformixSqlBuilder(_provider, MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}
 
 		protected override void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, OptimizationContext optimizationContext, int indent, bool skipAlias)
@@ -128,6 +117,7 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			switch (type.Type.DataType)
 			{
+				case DataType.Guid       : StringBuilder.Append("VARCHAR(36)");               return;
 				case DataType.VarBinary  : StringBuilder.Append("BYTE");                      return;
 				case DataType.Boolean    : StringBuilder.Append("BOOLEAN");                   return;
 				case DataType.DateTime   : StringBuilder.Append("datetime year to second");   return;
@@ -187,8 +177,12 @@ namespace LinqToDB.DataProvider.Informix
 			switch (convertType)
 			{
 				case ConvertType.NameToQueryFieldAlias:
-				case ConvertType.NameToQueryField:
-				case ConvertType.NameToQueryTable:
+				case ConvertType.NameToQueryField     :
+				case ConvertType.NameToQueryTable     :
+				case ConvertType.NameToProcedure      :
+				case ConvertType.NameToServer         :
+				case ConvertType.NameToDatabase       :
+				case ConvertType.NameToSchema         :
 					if (value.Length > 0 && !IsValidIdentifier(value))
 						// I wonder what to do if identifier has " in name?
 						return sb.Append('"').Append(value).Append('"');
@@ -238,43 +232,53 @@ namespace LinqToDB.DataProvider.Informix
 		}
 
 		// https://www.ibm.com/support/knowledgecenter/en/SSGU8G_12.1.0/com.ibm.sqls.doc/ids_sqs_1652.htm
-		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table, TableOptions tableOptions)
+		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions)
 		{
-			if (server   != null && server  .Length == 0) server   = null;
-			if (database != null && database.Length == 0) database = null;
-			if (schema   != null && schema.  Length == 0) schema   = null;
-
-			if (server != null && database == null)
+			if (name.Server != null && name.Database == null)
 				throw new LinqToDBException("You must specify database for linked server query");
 
-			if (database != null)
-				sb.Append(database);
-
-			if (server != null)
-				sb.Append('@').Append(server);
-
-			if (database != null)
-				sb.Append(':');
-
-			if (schema != null)
-				sb.Append(schema).Append('.');
-
-			return sb.Append(table);
-		}
-
-		protected override string? GetProviderTypeName(IDbDataParameter parameter)
-		{
-			if (_provider != null)
+			if (name.Database != null)
 			{
-				var param = _provider.TryGetProviderParameter(parameter, MappingSchema);
-				if (param != null)
-					if (_provider.Adapter.GetIfxType != null)
-						return _provider.Adapter.GetIfxType(param).ToString();
-					else
-						return _provider.Adapter.GetDB2Type!(param).ToString();
+				if (escape)
+					Convert(sb, name.Database, ConvertType.NameToDatabase);
+				else
+					sb.Append(name.Database);
 			}
 
-			return base.GetProviderTypeName(parameter);
+			if (name.Server != null)
+			{
+				sb.Append('@');
+				if (escape)
+					Convert(sb, name.Server, ConvertType.NameToServer);
+				else
+					sb.Append(name.Server);
+			}
+
+			if (name.Database != null)
+				sb.Append(':');
+
+			if (name.Schema != null)
+			{
+				(escape ? Convert(sb, name.Schema, ConvertType.NameToSchema) : sb.Append(name.Schema))
+					.Append('.');
+			}
+
+			return escape ? Convert(sb, name.Name, objectType) : sb.Append(name.Name);
+		}
+
+		protected override string? GetProviderTypeName(IDataContext dataContext, DbParameter parameter)
+		{
+			if (DataProvider is InformixDataProvider provider)
+			{
+				var param = provider.TryGetProviderParameter(dataContext, parameter);
+				if (param != null)
+					if (provider.Adapter.GetIfxType != null)
+						return provider.Adapter.GetIfxType(param).ToString();
+					else
+						return provider.Adapter.GetDB2Type!(param).ToString();
+			}
+
+			return base.GetProviderTypeName(dataContext, parameter);
 		}
 
 		protected override void BuildTypedExpression(SqlDataType dataType, ISqlExpression value)
@@ -321,6 +325,19 @@ namespace LinqToDB.DataProvider.Informix
 			BuildDropTableStatementIfExists(dropTable);
 		}
 
+		protected override void BuildSqlRow(SqlRow expr, bool buildTableName, bool checkParentheses, bool throwExceptionIfTableNotFound)
+		{
+			// Informix needs ROW(1,2) syntax instead of BasicSqlBuilder default (1,2)
+			StringBuilder.Append("ROW (");
+			foreach (var value in expr.Values)
+			{
+				BuildExpression(value, buildTableName, checkParentheses, throwExceptionIfTableNotFound);
+				StringBuilder.Append(InlineComma);
+			}
+			StringBuilder.Length -= InlineComma.Length; // Note that SqlRow are never empty
+			StringBuilder.Append(')');
+		}
+
 		protected override ISqlExpression WrapBooleanExpression(ISqlExpression expr)
 		{
 			var newExpr = base.WrapBooleanExpression(expr);
@@ -333,5 +350,9 @@ namespace LinqToDB.DataProvider.Informix
 			return newExpr;
 		}
 
+		protected override bool IsReserved(string word)
+		{
+			return ReservedWords.IsReserved(word, ProviderName.Informix);
+		}
 	}
 }

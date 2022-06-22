@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.Common;
 using System.IO;
 using System.Linq;
 
@@ -42,7 +41,7 @@ namespace LinqToDB.DataProvider.SqlCe
 	{
 		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			var tables = ((DbConnection)dataConnection.Connection).GetSchema("Tables");
+			var tables = dataConnection.Connection.GetSchema("Tables");
 
 			return
 			(
@@ -57,7 +56,7 @@ namespace LinqToDB.DataProvider.SqlCe
 					CatalogName     = catalog,
 					SchemaName      = schema,
 					TableName       = name,
-					IsDefaultSchema = schema.IsNullOrEmpty(),
+					IsDefaultSchema = string.IsNullOrEmpty(schema),
 					IsView          = t.Field<string>("TABLE_TYPE") == "VIEW"
 				}
 			).ToList();
@@ -81,19 +80,20 @@ WHERE PRIMARY_KEY = 1");
 
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			var cs = ((DbConnection)dataConnection.Connection).GetSchema("Columns");
+			var cs = dataConnection.Connection.GetSchema("Columns");
 
 			return
 			(
 				from c in cs.AsEnumerable()
+				let length = Converter.ChangeTypeTo<long>(c["CHARACTER_MAXIMUM_LENGTH"])
 				select new ColumnInfo
 				{
 					TableID    = c.Field<string>("TABLE_CATALOG") + "." + c.Field<string>("TABLE_SCHEMA") + "." + c.Field<string>("TABLE_NAME"),
-					Name       = c.Field<string>("COLUMN_NAME"),
+					Name       = c.Field<string>("COLUMN_NAME")!,
 					IsNullable = c.Field<string>("IS_NULLABLE") == "YES",
 					Ordinal    = Converter.ChangeTypeTo<int> (c["ORDINAL_POSITION"]),
 					DataType   = c.Field<string>("DATA_TYPE"),
-					Length     = Converter.ChangeTypeTo<long>(c["CHARACTER_MAXIMUM_LENGTH"]),
+					Length     = length > int.MaxValue ? null : (int?)length,
 					Precision  = Converter.ChangeTypeTo<int> (c["NUMERIC_PRECISION"]),
 					Scale      = Converter.ChangeTypeTo<int> (c["NUMERIC_SCALE"]),
 					IsIdentity = false,
@@ -121,10 +121,10 @@ INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE oc ON oc.CONSTRAINT_NAME = rc.UNI
 
 		protected override string GetDatabaseName(DataConnection dbConnection)
 		{
-			return Path.GetFileNameWithoutExtension(((DbConnection)dbConnection.Connection).Database);
+			return Path.GetFileNameWithoutExtension(dbConnection.Connection.Database);
 		}
 
-		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, long? length, int? precision, int? scale, GetSchemaOptions options)
+		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, int? length, int? precision, int? scale, GetSchemaOptions options)
 		{
 			return (dataType?.ToLower()) switch
 			{
@@ -133,7 +133,7 @@ INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE oc ON oc.CONSTRAINT_NAME = rc.UNI
 			};
 		}
 
-		protected override DataType GetDataType(string? dataType, string? columnType, long? length, int? prec, int? scale)
+		protected override DataType GetDataType(string? dataType, string? columnType, int? length, int? prec, int? scale)
 		{
 			return dataType?.ToLower() switch
 			{

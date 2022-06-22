@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data;
+using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
@@ -192,18 +193,7 @@ namespace LinqToDB.DataProvider
 			}
 		}
 
-		[Obsolete("Use expression-based " + nameof(GetCharExpression) + " for mapping")]
-		public static Func<IDataReader, int, string> GetChar = (dr, i) =>
-		{
-			var str = dr.GetString(i);
-
-			if (str.Length > 0)
-				return str[0].ToString();
-
-			return string.Empty;
-		};
-
-		public static Expression<Func<IDataReader, int, string>> GetCharExpression = (dr, i) => GetCharFromString(dr.GetString(i));
+		public static Expression<Func<DbDataReader, int, string>> GetCharExpression = (dr, i) => GetCharFromString(dr.GetString(i));
 
 		private static string GetCharFromString(string str)
 		{
@@ -256,45 +246,5 @@ namespace LinqToDB.DataProvider
 			}
 		}
 		#endregion
-
-		internal static DateTime AdjustPrecision(DateTime value, byte precision)
-		{
-			if (precision > 6)
-				return value;
-
-			var delta = value.Ticks % 10000000;
-
-			switch (precision)
-			{
-				case 1: delta %= 1000000; break;
-				case 2: delta %= 100000 ; break;
-				case 3: delta %= 10000  ; break;
-				case 4: delta %= 1000   ; break;
-				case 5: delta %= 100    ; break;
-				case 6: delta %= 10     ; break;
-			}
-
-			return delta != 0 ? value.AddTicks(-delta) : value;
-		}
-
-		internal static DateTimeOffset AdjustPrecision(DateTimeOffset value, byte precision)
-		{
-			if (precision > 6)
-				return value;
-
-			var delta = value.Ticks % 10000000;
-
-			switch (precision)
-			{
-				case 1: delta %= 1000000; break;
-				case 2: delta %= 100000 ; break;
-				case 3: delta %= 10000  ; break;
-				case 4: delta %= 1000   ; break;
-				case 5: delta %= 100    ; break;
-				case 6: delta %= 10     ; break;
-			}
-
-			return delta != 0 ? value.AddTicks(-delta) : value;
-		}
 	}
 }

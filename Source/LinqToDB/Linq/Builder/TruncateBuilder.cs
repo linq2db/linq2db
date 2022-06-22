@@ -22,18 +22,12 @@ namespace LinqToDB.Linq.Builder
 			var reset = true;
 			var arg   = methodCall.Arguments[1].Unwrap();
 
-			if (arg is ConstantExpression c)
-				reset = (bool)c.Value;
+			if (arg.Type == typeof(bool))
+				reset = (bool)arg.EvaluateExpression()!;
 
 			sequence.Statement = new SqlTruncateTableStatement { Table = sequence.SqlTable, ResetIdentity = reset };
 
 			return new TruncateContext(buildInfo.Parent, sequence);
-		}
-
-		protected override SequenceConvertInfo? Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-		{
-			return null;
 		}
 
 		#endregion

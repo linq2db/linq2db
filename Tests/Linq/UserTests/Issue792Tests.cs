@@ -46,7 +46,7 @@ namespace Tests.UserTests
 			TestProvName.AllInformix)]
 			string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var recordsBefore = db.GetTable<AllTypes>().Count();
 
@@ -54,7 +54,7 @@ namespace Tests.UserTests
 
 				try
 				{
-					var schemaName = TestUtils.GetSchemaName(db);
+					var schemaName = TestUtils.GetSchemaName(db, context);
 					var schema     = sp.GetSchema(db, new GetSchemaOptions()
 					{
 						GetTables       = false,
@@ -88,17 +88,18 @@ namespace Tests.UserTests
 			ProviderName.DB2,
 			ProviderName.Access,
 			TestProvName.AllMySql,
+			TestProvName.AllOracle,
 			TestProvName.AllSqlServer)]
 			string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				var recordsBefore = db.GetTable<AllTypes>().Count();
 
 				var sp = db.DataProvider.GetSchemaProvider();
 
-				var schemaName = TestUtils.GetSchemaName(db);
+				var schemaName = TestUtils.GetSchemaName(db, context);
 				var schema     = sp.GetSchema(db, new GetSchemaOptions()
 				{
 					GetTables       = false,
@@ -121,7 +122,7 @@ namespace Tests.UserTests
 			TestProvName.AllSqlServer)]
 			string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				var recordsBefore = db.GetTable<AllTypes>().Count();
@@ -134,14 +135,17 @@ namespace Tests.UserTests
 				}))!;
 
 				Assert.IsInstanceOf<InvalidOperationException>(ex);
-				Assert.IsTrue(ex.Message.Contains("requires the command to have a transaction"));
+				Assert.IsTrue(
+					ex.Message.Contains("requires the command to have a transaction")
+					|| ex.Message.Contains("команда имела транзакцию") //for those who accidentally installed a russian localization of Sql Server :)
+					);
 			}
 		}
 
 		[Test]
 		public void TestWithTransactionThrowsFromLinqToDB([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				var recordsBefore = db.GetTable<AllTypes>().Count();

@@ -3,16 +3,17 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data.SqlTypes;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
-	using System.Numerics;
 	using Common;
+	using Common.Internal;
 	using LinqToDB.Extensions;
-	using LinqToDB.Mapping;
+	using Mapping;
 
-	public class SqlDataType : ISqlExpression
+	public class SqlDataType : ISqlExpression, IEquatable<SqlDataType>
 	{
 		#region Init
 
@@ -205,7 +206,7 @@ namespace LinqToDB.SqlQuery
 		{
 			var underlyingType = type;
 
-			if (underlyingType.IsGenericType && underlyingType.GetGenericTypeDefinition() == typeof(Nullable<>))
+			if (underlyingType.IsNullable())
 				underlyingType = underlyingType.GetGenericArguments()[0];
 
 			if (underlyingType.IsEnum)
@@ -235,6 +236,9 @@ namespace LinqToDB.SqlQuery
 					if (underlyingType == typeof(char[]))         return CharArray;
 					if (underlyingType == typeof(DateTimeOffset)) return DateTimeOffset;
 					if (underlyingType == typeof(TimeSpan))       return TimeSpan;
+#if NET6_0_OR_GREATER
+					if (underlyingType == typeof(DateOnly))       return DbDate;
+#endif
 					break;
 
 				case TypeCode.DBNull   :
@@ -313,8 +317,7 @@ namespace LinqToDB.SqlQuery
 
 		public static bool TypeCanBeNull(Type type)
 		{
-			if (type.IsValueType == false ||
-				type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>) ||
+			if (type.IsNullableType() ||
 				typeof(INullable).IsSameOrParentOf(type))
 				return true;
 
@@ -470,8 +473,6 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
-		public override int GetHashCode() => Type.GetHashCode();
-
 		#region ISqlExpression Members
 
 		public bool CanBeNull => false;
@@ -500,6 +501,32 @@ namespace LinqToDB.SqlQuery
 				sb.Append('(').Append(Type.Precision).Append(',').Append(Type.Scale).Append(')');
 
 			return sb;
+		}
+
+		#endregion
+
+		#region IEquatable<SqlDataType>
+
+		public override int GetHashCode()
+		{
+			return Type.GetHashCode();
+		}
+
+		public bool Equals(SqlDataType? other)
+		{
+			if (ReferenceEquals(null, other)) return false;
+			if (ReferenceEquals(this, other)) return true;
+
+			return Type.Equals(other.Type);
+		}
+
+		public override bool Equals(object? obj)
+		{
+			if (ReferenceEquals(null, obj)) return false;
+			if (ReferenceEquals(this, obj)) return true;
+			if (obj.GetType() != GetType()) return false;
+
+			return Equals((SqlDataType)obj);
 		}
 
 		#endregion

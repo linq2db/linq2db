@@ -3,12 +3,15 @@
 	<Import Project="linq2db.Default.props" />
 
 	<PropertyGroup>
-		<TargetFrameworks>net472;netcoreapp2.1;netcoreapp3.1;net5.0</TargetFrameworks>
+		<!--net472 must be last. I know it doesn't make any sense, but it helps VS to discover .net core tests-->
+		<TargetFrameworks>netcoreapp3.1;net6.0;net472</TargetFrameworks>
 		<Configurations>Debug;Release;Azure</Configurations>
+		<DefineConstants>$(DefineConstants)</DefineConstants>
+		<DefineConstants Condition="$(X86) != ''">$(DefineConstants);X86</DefineConstants>
 	</PropertyGroup>
 
 	<PropertyGroup Condition=" '$(Configuration)' == 'Azure' ">
-		<DefineConstants>AZURE</DefineConstants>
+		<DefineConstants>$(DefineConstants);AZURE</DefineConstants>
 		<DebugSymbols>false</DebugSymbols>
 		<Optimize>true</Optimize>
 	</PropertyGroup>
@@ -18,17 +21,8 @@
 		<ProjectReference Include="..\..\Source\LinqToDB.Tools\LinqToDB.Tools.csproj" />
 	</ItemGroup>
 
-	<ItemGroup>
-		<PackageReference Include="NUnit" />
-		<PackageReference Include="Newtonsoft.Json" />
-		<PackageReference Include="FluentAssertions"/>
-	</ItemGroup>
-
 	<ItemGroup Condition="'$(TargetFramework)' == 'net472' ">
 		<Reference Include="System.Data.Linq" />
-		<Reference Include="System.ServiceModel" />
-
-		<PackageReference Include="System.Collections.Immutable" />
 	</ItemGroup>
 
 </Project>

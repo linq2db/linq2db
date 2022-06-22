@@ -5,14 +5,25 @@ using System.Linq;
 using System.Text;
 using System.Xml;
 using System.Xml.Linq;
+using System.Collections.Generic;
+using System.Data;
+using System.Globalization;
+using System.Reflection;
+using System.Threading.Tasks;
+using System.Linq.Expressions;
 
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
+using LinqToDB.Linq;
 using LinqToDB.Mapping;
+using LinqToDB.SchemaProvider;
+using LinqToDB.Tools.Comparers;
 
 #if NET472
 using IBM.Data.DB2;
+#elif NET6_0_OR_GREATER
+using IBM.Data.Db2;
 #else
 using IBM.Data.DB2.Core;
 #endif
@@ -23,11 +34,6 @@ using NUnit.Framework;
 
 namespace Tests.DataProvider
 {
-	using System.Collections.Generic;
-	using System.Globalization;
-	using System.Threading.Tasks;
-	using LinqToDB.SchemaProvider;
-	using LinqToDB.Tools.Comparers;
 	using Model;
 
 	[TestFixture]
@@ -38,7 +44,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestParameters([IncludeDataSources(CurrentProvider)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<string>("SELECT Cast(@p  as int)  FROM SYSIBM.SYSDUMMY1",                   new { p =  1  }), Is.EqualTo("1"));
 				Assert.That(conn.Execute<string>("SELECT Cast(@p  as char) FROM SYSIBM.SYSDUMMY1",                   new { p = "1" }), Is.EqualTo("1"));
@@ -52,7 +58,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestDataTypes([IncludeDataSources(CurrentProvider)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(TestType<long?>        (conn, "bigintDataType",    DataType.Int64  , "ALLTYPES"),   Is.EqualTo(1000000L));
 				Assert.That(TestType<DB2Int64?>    (conn, "bigintDataType",    DataType.Int64  , "ALLTYPES"),   Is.EqualTo(new DB2Int64(1000000L)));
@@ -147,7 +153,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestNumerics([IncludeDataSources(CurrentProvider)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				TestSimple<sbyte>  (conn, 1,   DataType.SByte);
 				TestSimple<short>  (conn, 1,   DataType.Int16);
@@ -196,7 +202,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestDate([IncludeDataSources(CurrentProvider)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				var dateTime = new DateTime(2012, 12, 12);
 
@@ -210,7 +216,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestDateTime([IncludeDataSources(CurrentProvider)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				var dateTime = new DateTime(2012, 12, 12, 12, 12, 12);
 
@@ -226,7 +232,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestTimeSpan([IncludeDataSources(CurrentProvider)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				var time = new TimeSpan(12, 12, 12);
 
@@ -243,7 +249,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestChar([IncludeDataSources(CurrentProvider)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<char> ("SELECT Cast('1' as char) FROM SYSIBM.SYSDUMMY1"),         Is.EqualTo('1'));
 				Assert.That(conn.Execute<char?>("SELECT Cast('1' as char) FROM SYSIBM.SYSDUMMY1"),         Is.EqualTo('1'));
@@ -280,7 +286,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestString([IncludeDataSources(CurrentProvider)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<string>("SELECT Cast('12345' as char(5)) FROM SYSIBM.SYSDUMMY1"),     Is.EqualTo("12345"));
 				Assert.That(conn.Execute<string>("SELECT Cast('12345' as char(20)) FROM SYSIBM.SYSDUMMY1"),    Is.EqualTo("12345"));
@@ -312,7 +318,7 @@ namespace Tests.DataProvider
 			var arr1 = new byte[] {         49, 50 };
 			var arr2 = new byte[] { 49, 50, 51, 52 };
 
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<byte[]>("SELECT Cast('12' as char(2) for bit data) FROM SYSIBM.SYSDUMMY1"),      Is.EqualTo(           arr1));
 				Assert.That(conn.Execute<Binary>("SELECT Cast('1234' as char(4) for bit data) FROM SYSIBM.SYSDUMMY1"),    Is.EqualTo(new Binary(arr2)));
@@ -325,7 +331,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestGuid([IncludeDataSources(CurrentProvider)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(
 					conn.Execute<Guid>("SELECT Cast('6F9619FF-8B86-D011-B42D-00C04FC964FF' as varchar(38))  FROM SYSIBM.SYSDUMMY1"),
@@ -345,7 +351,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestXml([IncludeDataSources(CurrentProvider)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<string>     ("SELECT Cast('<xml/>' as char(10)) FROM SYSIBM.SYSDUMMY1"),            Is.EqualTo("<xml/>"));
 				Assert.That(conn.Execute<XDocument>  ("SELECT Cast('<xml/>' as char(10)) FROM SYSIBM.SYSDUMMY1").ToString(), Is.EqualTo("<xml />"));
@@ -371,7 +377,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestEnum1([IncludeDataSources(CurrentProvider)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<TestEnum> ("SELECT 'A' FROM SYSIBM.SYSDUMMY1"), Is.EqualTo(TestEnum.AA));
 				Assert.That(conn.Execute<TestEnum?>("SELECT 'A' FROM SYSIBM.SYSDUMMY1"), Is.EqualTo(TestEnum.AA));
@@ -383,7 +389,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestEnum2([IncludeDataSources(CurrentProvider)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<string>("SELECT Cast(@p as char) FROM SYSIBM.SYSDUMMY1", new { p = TestEnum.AA }), Is.EqualTo("A"));
 				Assert.That(conn.Execute<string>("SELECT Cast(@p as char) FROM SYSIBM.SYSDUMMY1", new { p = (TestEnum?)TestEnum.BB }), Is.EqualTo("B"));
@@ -395,7 +401,7 @@ namespace Tests.DataProvider
 
 		void BulkCopyTest(string context, BulkCopyType bulkCopyType, int maxSize, int batchSize)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				try
 				{
@@ -442,7 +448,7 @@ namespace Tests.DataProvider
 
 		async Task BulkCopyTestAsync(string context, BulkCopyType bulkCopyType, int maxSize, int batchSize)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				try
 				{
@@ -515,7 +521,7 @@ namespace Tests.DataProvider
 		{
 			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
 			{
-				using (var db = new DataConnection(context))
+				using (var db = GetDataConnection(context))
 				{
 					try
 					{
@@ -546,7 +552,7 @@ namespace Tests.DataProvider
 		{
 			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
 			{
-				using (var db = new DataConnection(context))
+				using (var db = GetDataConnection(context))
 				{
 					try
 					{
@@ -575,7 +581,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestBinarySize([IncludeDataSources(CurrentProvider)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				try
 				{
@@ -604,7 +610,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestClobSize([IncludeDataSources(CurrentProvider)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				try
 				{
@@ -646,7 +652,7 @@ namespace Tests.DataProvider
 			var int32Value = new DB2Int32(2);
 			var int16Value = new DB2Int16(3);
 
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				conn.Select(() => 1);
 
@@ -885,7 +891,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestParametersUsed([IncludeDataSources(CurrentProvider)] string context)
 		{
-			using (var db    = new DataConnection(context))
+			using (var db    = GetDataConnection(context))
 			using (var table = db.CreateLocalTable<TestParametersTable>())
 			{
 				var newText = new TestParametersTable() { Id = 12, Text = "Hallo Welt!" };
@@ -902,7 +908,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void Issue2763Test([IncludeDataSources(CurrentProvider)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				// DB2 SYSCAT.COLUMNS.TABSCHEMA column is padded with spaces to max(schema.length) length despite it being of varchar type
 				var schemas = db.Query<string>("SELECT SCHEMANAME FROM SYSCAT.SCHEMATA").AsEnumerable().Select(_ => _.TrimEnd(' ')).ToArray();
@@ -922,6 +928,78 @@ namespace Tests.DataProvider
 				}
 
 				Assert.True(usedSchemas.Select(_ => _.Length).Distinct().Count() > 1);
+			}
+		}
+
+		[Test]
+		public void TestModule([IncludeDataSources(false, ProviderName.DB2)] string context)
+		{
+			using (var db = GetDataConnection(context))
+			{
+				var parameters = new []
+				{
+					new DataParameter("I", 1, DataType.Int32),
+					new DataParameter("O", null, DataType.Int32)
+					{
+						Direction = ParameterDirection.Output
+					}
+				};
+
+				Assert.AreEqual(4, db.QueryProc<int>("TEST_PROCEDURE", new { i = 1 }).First());
+				Assert.AreEqual(2, db.QueryProc<int>("TEST_MODULE1.TEST_PROCEDURE", new { i = 1 }).First());
+				Assert.AreEqual(3, db.QueryProc<int>("TEST_MODULE2.TEST_PROCEDURE", new { i = 1 }).First());
+
+				Assert.AreEqual(4, db.Person.Select(p => DB2ModuleFunctions.TestFunction(1)).First());
+				Assert.AreEqual(2, db.Person.Select(p => DB2ModuleFunctions.TestFunctionP1(1)).First());
+				Assert.AreEqual(3, db.Person.Select(p => DB2ModuleFunctions.TestFunctionP2(1)).First());
+
+				Assert.AreEqual(4, DB2ModuleFunctions.TestTableFunction(db, 1).Select(r => r.O).First());
+				Assert.AreEqual(2, DB2ModuleFunctions.TestTableFunctionP1(db, 1).Select(r => r.O).First());
+				Assert.AreEqual(3, DB2ModuleFunctions.TestTableFunctionP2(db, 1).Select(r => r.O).First());
+			}
+		}
+
+		static class DB2ModuleFunctions
+		{
+			[Sql.Function("TEST_FUNCTION", ServerSideOnly = true)]
+			public static int TestFunction(int param)
+			{
+				throw new InvalidOperationException("Scalar function cannot be called outside of query");
+			}
+
+			[Sql.Function("TEST_MODULE1.TEST_FUNCTION", ServerSideOnly = true)]
+			public static int TestFunctionP1(int param)
+			{
+				throw new InvalidOperationException("Scalar function cannot be called outside of query");
+			}
+
+			[Sql.Function("TEST_MODULE2.TEST_FUNCTION", ServerSideOnly = true)]
+			public static int TestFunctionP2(int param)
+			{
+				throw new InvalidOperationException("Scalar function cannot be called outside of query");
+			}
+
+			[Sql.TableFunction("TEST_TABLE_FUNCTION", argIndices: new[] { 1 })]
+			public static LinqToDB.ITable<Record> TestTableFunction(IDataContext db, int param1)
+			{
+				return db.GetTable<Record>(null, (MethodInfo)MethodBase.GetCurrentMethod()!, db, param1);
+			}
+
+			[Sql.TableFunction("TEST_TABLE_FUNCTION", argIndices: new[] { 1 }, Package = "TEST_MODULE1")]
+			public static LinqToDB.ITable<Record> TestTableFunctionP1(IDataContext db, int param1)
+			{
+				return db.GetTable<Record>(null, (MethodInfo)MethodBase.GetCurrentMethod()!, db, param1);
+			}
+
+			[Sql.TableFunction("TEST_TABLE_FUNCTION", argIndices: new[] { 1 }, Package = "TEST_MODULE2")]
+			public static LinqToDB.ITable<Record> TestTableFunctionP2(IDataContext db, int param1)
+			{
+				return db.GetTable<Record>(null, (MethodInfo)MethodBase.GetCurrentMethod()!, db, param1);
+			}
+
+			public class Record
+			{
+				public int O { get; set; }
 			}
 		}
 	}

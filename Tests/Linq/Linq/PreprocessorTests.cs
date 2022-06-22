@@ -9,6 +9,7 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
+	using LinqToDB;
 	using Model;
 
 	[TestFixture]

@@ -479,8 +479,8 @@ namespace LinqToDB
 					}
 					else
 					{
-						ctor    = nctor.Constructor;
-						members = nctor.Members
+						ctor    = nctor.Constructor!;
+						members = nctor.Members!
 							.Select(m => m is MethodInfo info ? info.GetPropertyInfo()! : m)
 							.ToArray();
 					}
@@ -508,11 +508,7 @@ namespace LinqToDB
 		public string?      SchemaName   => _table.SchemaName;
 		public string       TableName    => _table.TableName;
 		public TableOptions TableOptions => _table.TableOptions;
-
-		public string GetTableName()
-		{
-			return _table.GetTableName();
-		}
+		public string?      TableID      => _table.TableID;
 
 		#endregion
 
@@ -523,6 +519,7 @@ namespace LinqToDB
 		ITable<T> ITableMutable<T>.ChangeSchemaName  (string? schemaName)   => ((ITableMutable<T>)_table).ChangeSchemaName  (schemaName);
 		ITable<T> ITableMutable<T>.ChangeTableName   (string tableName)     => ((ITableMutable<T>)_table).ChangeTableName   (tableName);
 		ITable<T> ITableMutable<T>.ChangeTableOptions(TableOptions options) => ((ITableMutable<T>)_table).ChangeTableOptions(options);
+		ITable<T> ITableMutable<T>.ChangeTableID     (string? tableID)      => ((ITableMutable<T>)_table).ChangeTableID     (tableID);
 
 		#endregion
 
@@ -538,7 +535,7 @@ namespace LinqToDB
 			return _table.CreateQuery<TElement>(expression);
 		}
 
-		object IQueryProvider.Execute(Expression expression)
+		object? IQueryProvider.Execute(Expression expression)
 		{
 			return _table.Execute(expression);
 		}
@@ -768,7 +765,7 @@ namespace LinqToDB
 		{
 			if (setTable == null) throw new ArgumentNullException(nameof(setTable));
 
-			setTable(db.MappingSchema.GetFluentMappingBuilder().Entity<T>());
+			setTable(db.GetFluentMappingBuilder().Entity<T>());
 
 			return new TempTable<T>(db, items, tableName, databaseName, schemaName, action, serverName, tableOptions);
 		}
@@ -829,7 +826,7 @@ namespace LinqToDB
 		{
 			if (setTable == null) throw new ArgumentNullException(nameof(setTable));
 
-			setTable(db.MappingSchema.GetFluentMappingBuilder().Entity<T>());
+			setTable(db.GetFluentMappingBuilder().Entity<T>());
 
 			return new TempTable<T>(db, tableName, items, databaseName, schemaName, action, serverName, tableOptions);
 		}
@@ -977,7 +974,7 @@ namespace LinqToDB
 		{
 			if (setTable == null) throw new ArgumentNullException(nameof(setTable));
 
-			setTable(db.MappingSchema.GetFluentMappingBuilder().Entity<T>());
+			setTable(db.GetFluentMappingBuilder().Entity<T>());
 
 			return TempTable<T>.CreateAsync(db, items, tableName, databaseName, schemaName, action, serverName, tableOptions, cancellationToken);
 		}
@@ -1042,7 +1039,7 @@ namespace LinqToDB
 		{
 			if (setTable == null) throw new ArgumentNullException(nameof(setTable));
 
-			setTable(db.MappingSchema.GetFluentMappingBuilder().Entity<T>());
+			setTable(db.GetFluentMappingBuilder().Entity<T>());
 
 			return TempTable<T>.CreateAsync(db, tableName, items, databaseName, schemaName, action, serverName, tableOptions, cancellationToken);
 		}
@@ -1104,7 +1101,7 @@ namespace LinqToDB
 		{
 			if (items is IExpressionQuery eq)
 			{
-				setTable?.Invoke(eq.DataContext.MappingSchema.GetFluentMappingBuilder().Entity<T>());
+				setTable?.Invoke(eq.DataContext.GetFluentMappingBuilder().Entity<T>());
 				return new TempTable<T>(eq.DataContext, items, tableName, databaseName, schemaName, action, serverName, tableOptions);
 			}
 
@@ -1169,7 +1166,7 @@ namespace LinqToDB
 		{
 			if (items is IExpressionQuery eq)
 			{
-				setTable?.Invoke(eq.DataContext.MappingSchema.GetFluentMappingBuilder().Entity<T>());
+				setTable?.Invoke(eq.DataContext.GetFluentMappingBuilder().Entity<T>());
 				return TempTable<T>.CreateAsync(eq.DataContext, items, tableName, databaseName, schemaName, action, serverName, tableOptions, cancellationToken);
 			}
 

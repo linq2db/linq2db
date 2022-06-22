@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider
 {
@@ -9,8 +11,7 @@ namespace LinqToDB.DataProvider
 	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
-	using System.Threading;
-	using System.Threading.Tasks;
+	using Extensions;
 
 	public class MultipleRowsHelper<T> : MultipleRowsHelper
 		where T : notnull
@@ -35,7 +36,6 @@ namespace LinqToDB.DataProvider
 			MappingSchema  = dataConnection.MappingSchema;
 			Options        = options;
 			SqlBuilder     = DataConnection.DataProvider.CreateSqlBuilder(MappingSchema);
-			ValueConverter = MappingSchema.ValueToSqlConverter;
 			Descriptor     = MappingSchema.GetEntityDescriptor(entityType);
 			Columns        = Descriptor.Columns
 				.Where(c => !c.SkipOnInsert || c.IsIdentity && options.KeepIdentity == true)
@@ -48,7 +48,6 @@ namespace LinqToDB.DataProvider
 		public readonly DataConnection      DataConnection;
 		public readonly MappingSchema       MappingSchema;
 		public readonly BulkCopyOptions     Options;
-		public readonly ValueToSqlConverter ValueConverter;
 		public readonly EntityDescriptor    Descriptor;
 		public readonly ColumnDescriptor[]  Columns;
 		public readonly SqlDataType[]       ColumnTypes;
@@ -75,28 +74,32 @@ namespace LinqToDB.DataProvider
 
 		public virtual void BuildColumns(
 			object                        item,
-			Func<ColumnDescriptor, bool>? skipConvert    = null,
-			bool                          castParameters = false,
-			bool                          castAllRows    = false)
+			Func<ColumnDescriptor, bool>? skipConvert                   = null,
+			bool                          castParameters                = false,
+			bool                          castAllRows                   = false,
+			bool                          castFirstRowLiteralOnUnionAll = false,
+			Func<ColumnDescriptor, bool>? castLiteral                   = null)
 		{
 			skipConvert ??= defaultSkipConvert;
 
 			for (var i = 0; i < Columns.Length; i++)
 			{
 				var column = Columns[i];
-				var value  = column.GetValue(item);
+				var value  = column.GetProviderValue(item);
 
-				if (Options.UseParameters || skipConvert(column) || !ValueConverter.TryConvert(StringBuilder, ColumnTypes[i], value))
+				var position = StringBuilder.Length;
+
+				if (Options.UseParameters || skipConvert(column) || !MappingSchema.TryConvertToSql(StringBuilder, ColumnTypes[i], value))
 				{
 					var name = ParameterName == "?" ? ParameterName : ParameterName + ++ParameterIndex;
 
 					if (castParameters && (CurrentCount == 0 || castAllRows))
 					{
-						AddParameterCasted(name, ColumnTypes[i]);
+						AddValueCasted(name, ColumnTypes[i]);
 					}
 					else
 					{
-						StringBuilder.Append(name);	
+						StringBuilder.Append(name);
 					}
 					
 
@@ -111,6 +114,12 @@ namespace LinqToDB.DataProvider
 						Scale     = column.Scale
 					});
 				}
+				else if (castFirstRowLiteralOnUnionAll && CurrentCount == 0 && castLiteral?.Invoke(Columns[i]) != false)
+				{
+					var literal          = StringBuilder.ToString(position, StringBuilder.Length - position);
+					StringBuilder.Length = position;
+					AddValueCasted(literal, ColumnTypes[i]);
+				}
 
 				StringBuilder.Append(',');
 			}
@@ -118,10 +127,10 @@ namespace LinqToDB.DataProvider
 			StringBuilder.Length--;
 		}
 
-		private void AddParameterCasted(string name, SqlDataType type)
+		private void AddValueCasted(string sql, SqlDataType type)
 		{
 			StringBuilder.Append("CAST(");
-			StringBuilder.Append(name);
+			StringBuilder.Append(sql);
 			StringBuilder.Append(" AS ");
 			SqlBuilder.BuildDataType(StringBuilder, type);
 			StringBuilder.Append(')');
@@ -129,7 +138,35 @@ namespace LinqToDB.DataProvider
 
 		public bool Execute()
 		{
-			DataConnection.Execute(StringBuilder.AppendLine().ToString(), Parameters.ToArray());
+			var commandSql = StringBuilder.AppendLine().ToString();
+			var parameters = Parameters.ToArray();
+
+			DataConnection.Execute(commandSql, parameters);
+
+			if (Options.RowsCopiedCallback != null)
+			{
+				Options.RowsCopiedCallback(RowsCopied);
+
+				if (RowsCopied.Abort)
+					return false;
+			}
+
+			Parameters.Clear();
+			ParameterIndex        = 0;
+			CurrentCount          = 0;
+			LastRowParameterIndex = 0;
+			LastRowStringIndex    = HeaderSize;
+			StringBuilder.Length  = HeaderSize;
+
+			return true;
+		}
+
+		internal bool ExecuteCustom(Func<DataConnection, string, DataParameter[], int> customExecute)
+		{
+			var commandSql = StringBuilder.AppendLine().ToString();
+			var parameters = Parameters.ToArray();
+
+			customExecute(DataConnection, commandSql, parameters);
 
 			if (Options.RowsCopiedCallback != null)
 			{

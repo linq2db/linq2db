@@ -992,7 +992,7 @@ namespace Tests.Linq
 
 		[Test, Explicit]
 		public void StackOverflow([IncludeDataSources(
-			ProviderName.SqlServer2008, ProviderName.SqlServer2012/*, ProviderName.SqlServer2014*/)]
+			TestProvName.AllSqlServer2008, TestProvName.AllSqlServer2012)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1100,7 +1100,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void JoinSubQueryCount([DataSources(
-			TestProvName.AllAccess, ProviderName.SqlCe, ProviderName.SqlServer2000)]
+			TestProvName.AllAccess, ProviderName.SqlCe)]
 			string context)
 		{
 			var n = 1;
@@ -1164,7 +1164,7 @@ namespace Tests.Linq
 		public class AllJoinsSourceAttribute : IncludeDataSourcesAttribute
 		{
 			public AllJoinsSourceAttribute() : base(
-				TestProvName.AllSqlServer2005Plus,
+				TestProvName.AllSqlServer,
 				TestProvName.AllOracle,
 				TestProvName.AllFirebird,
 				TestProvName.AllPostgreSQL)
@@ -2135,7 +2135,7 @@ namespace Tests.Linq
 		{
 			[PrimaryKey] public int Id { get; set; }
 
-			[Association(ThisKey = "Id", OtherKey = "FactId", CanBeNull = true, Relationship = Relationship.OneToMany, IsBackReference = true)]
+			[Association(ThisKey = "Id", OtherKey = "FactId", CanBeNull = true)]
 			public IEnumerable<Tag> TagFactIdIds { get; set; } = null!;
 
 			public static readonly Fact[] Data = new[]
@@ -2668,7 +2668,7 @@ namespace Tests.Linq
 			[Column("inId"), PrimaryKey] public int InId { get; set; }
 			[Column("inIdMain")]         public int InIdMain { get; set; }
 
-			[Association(ThisKey = "InIdMain", OtherKey = "InId", CanBeNull = false, Relationship = Relationship.ManyToOne)]
+			[Association(ThisKey = "InIdMain", OtherKey = "InId", CanBeNull = false)]
 			public StMain Main { get; set; } = null!;
 
 			public static StVersion[] Data = Array<StVersion>.Empty;
@@ -2887,7 +2887,7 @@ namespace Tests.Linq
 		#endregion
 
 
-		[ActiveIssue(1224, Configurations = new[] 
+		[ActiveIssue(1224, Configurations = new[]
 		{
 			TestProvName.AllSQLite,
 			TestProvName.AllAccess,

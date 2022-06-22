@@ -1,17 +1,19 @@
 ﻿using System;
 using System.Data;
+using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Collections.Generic;
 
 namespace LinqToDB.Linq
 {
-	using System.Collections.Generic;
 	using Extensions;
 	using Common;
 	using LinqToDB.Expressions;
 	using Internal;
 	using Reflection;
+	using LinqToDB.Common.Internal;
 
 	internal static class SequentialAccessHelper
 	{
@@ -70,7 +72,7 @@ namespace LinqToDB.Linq
 					if (columnIndex != null)
 					{
 						// test IsDBNull method by-name to support overrides
-						if (call.Object != null && typeof(IDataReader).IsAssignableFrom(call.Object.Type) && call.Method.Name == nameof(IDataReader.IsDBNull))
+						if (call.Object != null && typeof(DbDataReader).IsAssignableFrom(call.Object.Type) && call.Method.Name == nameof(DbDataReader.IsDBNull))
 						{
 							var index = columnIndex.Value * 2;
 							if (context.NewVariables[index] == null)
@@ -101,10 +103,10 @@ namespace LinqToDB.Linq
 								}
 								else
 								{
-									var isNullable = type.IsValueType && !type.IsNullable();
+									var isNullable = !type.IsNullableType();
 									if (isNullable)
 									{
-										type                                        = typeof(Nullable<>).MakeGenericType(type);
+										type                                        = type.AsNullable();
 										context.IsNullableStruct[columnIndex.Value] = true;
 									}
 
@@ -112,7 +114,7 @@ namespace LinqToDB.Linq
 									context.InsertedExpressions[index] = Expression.Assign(
 										variable,
 										Expression.Condition(
-											context.NewVariables[index - 1],
+											context.NewVariables[index - 1]!,
 											Expression.Constant(null, type),
 											isNullable ? Expression.Convert(call, type) : call));
 								}
@@ -155,15 +157,15 @@ namespace LinqToDB.Linq
 						// replacement expression build later when we know all types
 						return call.Update(
 							call.Object,
-							call.Arguments.Take(2).Select(a => a.Transform(context, TranformFunc)).Concat(new[] { context.NewVariables[index] }));
+							call.Arguments.Take(2).Select(a => a.Transform(context, TranformFunc)).Concat(new[] { context.NewVariables[index]! }));
 					}
 
 					foreach (var arg in call.Arguments)
 					{
 						// unknown method call with data reader parameter
-						if (typeof(IDataReader).IsAssignableFrom(arg.Unwrap().Type))
+						if (typeof(DbDataReader).IsAssignableFrom(arg.Unwrap().Type))
 						{
-							context.FailMessage = $"Method {call.Method.DeclaringType?.Name}.{call.Method.Name} with {nameof(IDataReader)} parameter not supported";
+							context.FailMessage = $"Method {call.Method.DeclaringType?.Name}.{call.Method.Name} with {nameof(DbDataReader)} parameter not supported";
 						}
 					}
 				}
@@ -172,9 +174,9 @@ namespace LinqToDB.Linq
 					foreach (var arg in invoke.Arguments)
 					{
 						// invoke call with data reader parameter
-						if (typeof(IDataReader).IsAssignableFrom(arg.Unwrap().Type))
+						if (typeof(DbDataReader).IsAssignableFrom(arg.Unwrap().Type))
 						{
-							context.FailMessage = $"Method invoke with {nameof(IDataReader)} parameter not supported";
+							context.FailMessage = $"Method invoke with {nameof(DbDataReader)} parameter not supported";
 						}
 					}
 				}
@@ -183,9 +185,9 @@ namespace LinqToDB.Linq
 					foreach (var arg in newExpr.Arguments)
 					{
 						// unknown constructor call with data reader parameter
-						if (typeof(IDataReader).IsAssignableFrom(arg.Unwrap().Type))
+						if (typeof(DbDataReader).IsAssignableFrom(arg.Unwrap().Type))
 						{
-							context.FailMessage = $"{newExpr.Type} constructor with {nameof(IDataReader)} parameter not supported";
+							context.FailMessage = $"{newExpr.Type} constructor with {nameof(DbDataReader)} parameter not supported";
 						}
 					}
 				}
@@ -249,8 +251,8 @@ namespace LinqToDB.Linq
 
 					// first N expressions init context variables
 					return block.Update(
-						block.Variables.Concat(context.NewVariables.Where(v => v != null)),
-						block.Expressions.Take(skip + 1).Concat(context.InsertedExpressions.Where(e => e != null)).Concat(block.Expressions.Skip(skip + 1)));
+						block.Variables.Concat(context.NewVariables.Where(v => v != null))!,
+						block.Expressions.Take(skip + 1).Concat(context.InsertedExpressions.Where(e => e != null)).Concat(block.Expressions.Skip(skip + 1))!);
 				}
 
 				return e;
@@ -264,14 +266,14 @@ namespace LinqToDB.Linq
 			// ColumnReaderAttribute method
 			var attr = call.Method.GetCustomAttribute<ColumnReaderAttribute>();
 			if (attr != null && call.Arguments[attr.IndexParameterIndex] is ConstantExpression c1 && c1.Type == typeof(int))
-				return (int)c1.Value;
+				return (int)c1.Value!;
 
 			// instance method of data reader
 			// check that method accept single integer constant as parameter
 			// this is currently how we detect method that we must process
-			if (attr == null && !call.Method.IsStatic && typeof(IDataReader).IsAssignableFrom(call.Object.Type)
+			if (attr == null && !call.Method.IsStatic && typeof(DbDataReader).IsAssignableFrom(call.Object!.Type)
 				&& call.Arguments.Count == 1 && call.Arguments[0] is ConstantExpression c2 && c2.Type == typeof(int))
-				return (int)c2.Value;
+				return (int)c2.Value!;
 
 			return null;
 		}
@@ -326,9 +328,9 @@ namespace LinqToDB.Linq
 					foreach (var arg in call.Arguments)
 					{
 						// unknown method or constructor call with data reader parameter
-						if (typeof(IDataReader).IsAssignableFrom(arg.Unwrap().Type))
+						if (typeof(DbDataReader).IsAssignableFrom(arg.Unwrap().Type))
 						{
-							context.FailMessage = $"Method {call.Method.DeclaringType?.Name}.{call.Method.Name} with {nameof(IDataReader)} not supported";
+							context.FailMessage = $"Method {call.Method.DeclaringType?.Name}.{call.Method.Name} with {nameof(DbDataReader)} not supported";
 						}
 					}
 				}
@@ -377,7 +379,7 @@ namespace LinqToDB.Linq
 							return;
 						}
 
-						if (call.Method.Name != nameof(IDataReader.IsDBNull))
+						if (call.Method.Name != nameof(DbDataReader.IsDBNull))
 						{
 							if (context.RawCall == null)
 								context.RawCall = call;
