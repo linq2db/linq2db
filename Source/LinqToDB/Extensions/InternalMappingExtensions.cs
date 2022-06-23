@@ -8,7 +8,7 @@ namespace LinqToDB.Extensions
 	using Mapping;
 	using SqlQuery;
 
-	static class MappingExtensions
+	static class InternalMappingExtensions
 	{
 		public static SqlValue GetSqlValueFromObject(this MappingSchema mappingSchema, ColumnDescriptor columnDescriptor, object obj)
 		{
