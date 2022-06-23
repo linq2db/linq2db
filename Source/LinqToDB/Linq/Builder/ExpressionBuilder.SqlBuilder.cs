@@ -1239,6 +1239,10 @@ namespace LinqToDB.Linq.Builder
 							a.WithExpression(ConvertToSqlExpr(context, a.Expression, flags, unwrap, columnDescriptor,
 								isPureExpression, alias))).ToList());
 
+						newConstructor = newConstructor.ReplaceParameters(genericConstructor.Parameters.Select(p =>
+							p.WithExpression(ConvertToSqlExpr(context, p.Expression, flags, unwrap, columnDescriptor,
+								isPureExpression, alias))).ToList());
+
 						return newConstructor;
 					}
 
@@ -3443,6 +3447,21 @@ namespace LinqToDB.Linq.Builder
 				return Project(context, null, nextPath, nextPath.Count - 1, flags, body);
 			}
 
+			if (path is SqlGenericParamAccessExpression accessExpression)
+			{
+				nextPath ??= new();
+				nextPath.Add(accessExpression);
+
+				if (accessExpression.Constructor is SqlGenericParamAccessExpression ae)
+				{
+					// going deeper
+					return Project(context, ae, nextPath, nextPath.Count - 1, flags, body);
+				}
+
+				// make path projection
+				return Project(context, null, nextPath, nextPath.Count - 1, flags, body);
+			}
+
 			if (path == null)
 			{
 				if (nextPath == null || nextIndex < 0)
@@ -3458,6 +3477,10 @@ namespace LinqToDB.Linq.Builder
 				if (next is MemberExpression me)
 				{
 					member = me.Member;
+				}
+				else if (next is SqlGenericParamAccessExpression)
+				{
+					// nothing to do right now
 				}
 				else
 				{
@@ -3527,6 +3550,26 @@ namespace LinqToDB.Linq.Builder
 
 							return new DefaultValueExpression(null, nextPath[0].Type);
 						}
+					}
+
+					if (next is SqlGenericParamAccessExpression paramAccessExpression)
+					{
+
+						/*
+						var projected = Project(context, path, nextPath, nextIndex - 1, flags,
+							paramAccessExpression);
+
+						return projected;
+						*/
+
+						if (body is SqlGenericConstructorExpression constructorExpression)
+						{
+							var projected = Project(context, path, nextPath, nextIndex - 1, flags,
+								constructorExpression.Parameters[paramAccessExpression.ParamIndex].Expression);
+							return projected;
+						}
+
+						//throw new InvalidOperationException();
 					}
 
 					return body;
@@ -3820,6 +3863,19 @@ namespace LinqToDB.Linq.Builder
 			else if (path is ContextRefExpression contextRef)
 			{
 				rootContext = contextRef;
+			}
+			else if (path is SqlGenericParamAccessExpression paramAccessExpression)
+			{
+				var root = paramAccessExpression.Constructor;
+				while (root is SqlGenericParamAccessExpression pa)
+				{
+					root = pa.Constructor;
+				}
+
+				if (root is ContextRefExpression contextRefExpression)
+				{
+					rootContext = contextRefExpression;
+				}
 			}
 
 			if (expression == null)

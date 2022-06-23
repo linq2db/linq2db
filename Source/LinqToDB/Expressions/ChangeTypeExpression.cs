@@ -22,7 +22,7 @@ namespace LinqToDB.Expressions
 
 		public override string ToString()
 		{
-			return "(" + Type + ")" + Expression;
+			return "(" +  "(" + Type + ")" + Expression + ")";
 		}
 
 		protected bool Equals(ChangeTypeExpression other)

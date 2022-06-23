@@ -606,6 +606,11 @@ namespace LinqToDB.Linq.Builder
 								}
 							}
 
+							if (expr is SqlGenericParamAccessExpression paramAccessExpression)
+							{
+								return new TransformInfo(context.builder.MakeExpression(paramAccessExpression, context.flags), false, true);
+							}
+
 							return new TransformInfo(expr);
 						}
 

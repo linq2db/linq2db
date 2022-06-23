@@ -457,6 +457,19 @@ namespace LinqToDB.Expressions
 
 						break;
 					}
+				case ExpressionType.Extension:
+				{
+					if (expression is SqlGenericParamAccessExpression e)
+					{
+						var expr = FindLevel(e.Constructor.UnwrapWithAs(), mapping, level, ref current);
+						if (level == current)
+							return expr;
+
+						current++;
+					}
+
+					break;
+				}
 			}
 
 			return expression;

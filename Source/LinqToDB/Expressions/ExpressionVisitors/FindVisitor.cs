@@ -258,11 +258,18 @@ namespace LinqToDB.Expressions
 				}
 
 				case ExpressionType.Extension:
+				{
+					if (expr is SqlGenericConstructorExpression generic)
+					{
+						return Find(generic.Parameters, p => p.Expression) ??
+						       Find(generic.Assignments, a => a.Expression);
+					}
+
 					if (expr.CanReduce)
 						return Find(expr.Reduce());
 
 					break;
-
+				}
 					// final expressions
 				case ExpressionType.Parameter:
 				case ExpressionType.Default  :

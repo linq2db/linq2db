@@ -376,7 +376,7 @@ namespace LinqToDB.Linq.Builder
 
 					case ExpressionType.Extension:
 					{
-						if (expr is ContextRefExpression)
+						if (expr is ContextRefExpression || expr is SqlGenericConstructorExpression || expr is SqlGenericParamAccessExpression)
 							result = true;
 						break;
 					}
@@ -517,6 +517,8 @@ namespace LinqToDB.Linq.Builder
 					if (ex is SqlErrorExpression)
 						return true;
 					if (ex is SqlPlaceholderExpression)
+						return true;
+					if (ex is SqlGenericParamAccessExpression)
 						return true;
 					return !ex.CanReduce;
 				}

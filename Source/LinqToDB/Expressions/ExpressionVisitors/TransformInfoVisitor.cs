@@ -460,10 +460,22 @@ namespace LinqToDB.Expressions
 
 				if (!ReferenceEquals(assignments, generic.Assignments))
 				{
-					return generic.ReplaceAssignments(assignments.ToList());
+					generic = generic.ReplaceAssignments(assignments.ToList());
 				}
 
-				return expr;
+				var parameters = Transform(generic.Parameters, TransformParameters);
+
+				if (!ReferenceEquals(parameters, generic.Parameters))
+				{
+					generic = generic.ReplaceParameters(parameters.ToList());
+				}
+
+				return generic;
+			}
+
+			if (expr is SqlGenericParamAccessExpression paramAccess)
+			{
+				return paramAccess.Update(Transform(paramAccess.Constructor));
 			}
 
 			if (expr is SqlReaderIsNullExpression isNullExpression)
@@ -477,12 +489,13 @@ namespace LinqToDB.Expressions
 		private SqlGenericConstructorExpression.Assignment TransformAssignments(SqlGenericConstructorExpression.Assignment a)
 		{
 			var aExpr = Transform(a.Expression);
-			if (aExpr != a.Expression)
-			{
-				return new SqlGenericConstructorExpression.Assignment(a.MemberInfo, aExpr, a.IsMandatory);
-			}
+			return a.WithExpression(aExpr);
+		}
 
-			return a;
+		private SqlGenericConstructorExpression.Parameter TransformParameters(SqlGenericConstructorExpression.Parameter p)
+		{
+			var aExpr = Transform(p.Expression);
+			return p.WithExpression(aExpr);
 		}
 	}
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
@@ -523,9 +524,9 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					(from p1 in    Parent select new { ParentID = p1.ParentID,    p = p1,            ch = (Child?)null }).Union(
+					(from p1 in    Parent select new { ParentID = p1.ParentID,    p = p1,            ch = (Child?)null }).Concat(
 					(from p2 in    Parent select new { ParentID = p2.Value1 ?? 0, p = (Parent?)null, ch = p2.Children.First() })),
-					(from p1 in db.Parent select new { ParentID = p1.ParentID,    p = p1,            ch = (Child?)null }).Union(
+					(from p1 in db.Parent select new { ParentID = p1.ParentID,    p = p1,            ch = (Child?)null }).Concat(
 					(from p2 in db.Parent select new { ParentID = p2.Value1 ?? 0, p = (Parent?)null, ch = p2.Children.First() })));
 		}
 
@@ -1137,10 +1138,11 @@ namespace Tests.Linq
 			Assert.Less(i4, i5);
 		}
 
-		public record class  Issue3357RecordClass (int Id, string FirstName, string LastName);
-		public class Issue3357RecordLike
+		public record class RecordClass (int Id, string FirstName, string LastName);
+
+		public class RecordLikeClass
 		{
-			public Issue3357RecordLike(int Id, string FirstName, string LastName)
+			public RecordLikeClass(int Id, string FirstName, string LastName)
 			{
 				this.Id        = Id;
 				this.FirstName = FirstName;
@@ -1152,30 +1154,44 @@ namespace Tests.Linq
 			public string LastName  { get; }
 		}
 
+		public record class NameRecord (string FirstName, string LastName);
+
+		public record class RecordClassWithNestedRecord (int Id, NameRecord Name);
+
 		[Test(Description = "record type support")]
-		public void Issue3357_RecordClass([DataSources] string context)
+		public void ConcatRecordClass([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
-			AreEqual(
-				Person.Select(p => new Issue3357RecordClass(p.ID, p.FirstName, p.LastName))
-				.Concat(Person.Select(p => new Issue3357RecordClass(p.ID, p.FirstName, p.LastName))),
+			var query = 
+				db.Person.Select(p => new RecordClass(p.ID, p.FirstName, p.LastName))
+				.Concat(db.Person.Select(p => new RecordClass(p.ID, p.FirstName, p.LastName)));
 
-				db.Person.Select(p => new Issue3357RecordClass(p.ID, p.FirstName, p.LastName))
-				.Concat(db.Person.Select(p => new Issue3357RecordClass(p.ID, p.FirstName, p.LastName))));
+			AssertQuery(query);
 		}
 
 		[Test(Description = "record type support")]
-		public void Issue3357_RecordLikeClass([DataSources] string context)
+		public void ConcatRecordClassNested([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Person.Select(p => new RecordClassWithNestedRecord(p.ID, new NameRecord(p.FirstName, p.LastName)))
+				.Concat(db.Person.Select(p => new RecordClassWithNestedRecord(p.ID, new NameRecord(p.LastName, p.FirstName))));
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "record type support")]
+		public void ConcatRecordLikeClass([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
 			AreEqualWithComparer(
-				Person.Select(p => new Issue3357RecordLike(p.ID, p.FirstName, p.LastName))
-				.Concat(Person.Select(p => new Issue3357RecordLike(p.ID, p.FirstName, p.LastName))),
+				Person.Select(p => new RecordLikeClass(p.ID, p.FirstName, p.LastName))
+				.Concat(Person.Select(p => new RecordLikeClass(p.ID, p.FirstName, p.LastName))),
 
-				db.Person.Select(p => new Issue3357RecordLike(p.ID, p.FirstName, p.LastName))
-				.Concat(db.Person.Select(p => new Issue3357RecordLike(p.ID, p.FirstName, p.LastName))));
+				db.Person.Select(p => new RecordLikeClass(p.ID, p.FirstName, p.LastName))
+				.Concat(db.Person.Select(p => new RecordLikeClass(p.ID, p.FirstName, p.LastName))));
 		}
 
 		[Table]
@@ -1291,7 +1307,6 @@ namespace Tests.Linq
 			public string? LastName  { get; set; }
 		}
 
-		[ActiveIssue(3346)]
 		[Test(Description = "composite columns in union (also tests create table)")]
 		public void Issue3346_ProjectionBuild([DataSources] string context)
 		{

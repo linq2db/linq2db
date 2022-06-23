@@ -484,35 +484,51 @@ namespace LinqToDB.Linq.Builder
 			{
 				var parameterValues = new List<Expression>();
 
-				foreach (var parameterInfo in parameters)
+				if (constructorExpression.Parameters.Count == parameters.Length)
 				{
-					var idx = MatchParameter(parameterInfo, constructorExpression.Assignments);
-
-					if (idx >= 0)
+					for (int i = 0; i < parameters.Length; i++)
 					{
-						var ai = constructorExpression.Assignments[idx];
-						parameterValues.Add(ai.Expression);
+						var parameterInfo = parameters[i];
+						var param         = constructorExpression.Parameters[i];
+						parameterValues.Add(param.Expression);
 
-						loadedColumns.Add(idx);
-					}
-					else
-					{
-						parameterValues.Add(Expression.Constant(
-							MappingSchema.GetDefaultValue(parameterInfo.ParameterType), parameterInfo.ParameterType));
+						var idx = MatchParameter(parameterInfo, constructorExpression.Assignments);
+						if (idx >= 0)
+							loadedColumns.Add(i);
 					}
 				}
+				else
+				{
+					foreach (var parameterInfo in parameters)
+					{
+						var idx = MatchParameter(parameterInfo, constructorExpression.Assignments);
 
+						if (idx >= 0)
+						{
+							var ai = constructorExpression.Assignments[idx];
+							parameterValues.Add(ai.Expression);
+
+							loadedColumns.Add(idx);
+						}
+						else
+						{
+							parameterValues.Add(Expression.Constant(
+								MappingSchema.GetDefaultValue(parameterInfo.ParameterType),
+								parameterInfo.ParameterType));
+						}
+					}
+				}
 				newExpression = Expression.New(constructorInfo, parameterValues);
 			}
 
 
-			if (loadedColumns.Count == constructorExpression.Assignments.Count)
+			if (constructorExpression.Assignments.Count == 0 || loadedColumns.Count == constructorExpression.Assignments.Count)
 			{
 				// Everything is fit into parameters
 				return newExpression;
 			}
 
-			var bindings = new List<MemberBinding>(constructorExpression.Assignments.Count - loadedColumns.Count);
+			var bindings = new List<MemberBinding>(Math.Max(0, constructorExpression.Assignments.Count - loadedColumns.Count));
 			var ignored  = 0;
 
 			for (int i = 0; i < constructorExpression.Assignments.Count; i++)
@@ -629,6 +645,13 @@ namespace LinqToDB.Linq.Builder
 		{
 			var typeAccessor = TypeAccessor.GetAccessor(constructorExpression.ObjectType);
 
+			if (constructorExpression.Constructor != null)
+			{
+				var instantiation = TryWithConstructor(typeAccessor, constructorExpression.Constructor, constructorExpression, null);
+				if (instantiation != null)
+					return instantiation;
+			}
+
 			var constructors = constructorExpression.ObjectType.GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
 
 			for (int i = 0; i < constructors.Length; i++)
@@ -667,6 +690,7 @@ namespace LinqToDB.Linq.Builder
 				}
 				case SqlGenericConstructorExpression.CreateType.MemberInit:
 				case SqlGenericConstructorExpression.CreateType.Auto:
+				case SqlGenericConstructorExpression.CreateType.New:
 				{
 					return ConstructObject(constructorExpression);
 				}
