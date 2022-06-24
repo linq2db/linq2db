@@ -126,7 +126,7 @@ namespace LinqToDB.SqlProvider
 								currentQuery.OrderBy.Items.Clear();
 							}
 						}
-						else 
+						else
 						{
 							if (!prevQuery.OrderBy.IsEmpty)
 							{
@@ -168,6 +168,7 @@ namespace LinqToDB.SqlProvider
 				if (value.Value == null)
 				{
 					var suggested = QueryHelper.SuggestDbDataType(reference);
+
 					if (suggested != null)
 					{
 						toCorrect = new SqlValue(suggested.Value, null);
@@ -181,12 +182,12 @@ namespace LinqToDB.SqlProvider
 			statement.VisitParentFirst(static e =>
 								{
 				if (e.ElementType == QueryElementType.SqlQuery)
-		{
+				{
 					var query = (SelectQuery)e;
 					if (query.HasSetOperators)
-			{
+					{
 						for (int i = 0; i < query.Select.Columns.Count; i++)
-				{
+						{
 							var column     = query.Select.Columns[i];
 							var columnExpr = column.Expression;
 
@@ -199,7 +200,7 @@ namespace LinqToDB.SqlProvider
 								CorrelateNullValueTypes(ref otherExpr, columnExpr);
 
 								otherColumn.Expression = otherExpr;
-								}
+							}
 
 							column.Expression = columnExpr;
 						}

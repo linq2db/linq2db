@@ -26,9 +26,7 @@ namespace LinqToDB
 
 				try
 				{
-					var ass = Assembly.LoadFile(path);
-
-					type = ass.GetType("NodaTime.LocalDateTime", false);
+					type = Type.GetType("NodaTime.LocalDateTime, NodaTime", false);
 				}
 				catch
 				{
