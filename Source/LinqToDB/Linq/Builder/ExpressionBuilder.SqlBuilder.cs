@@ -904,9 +904,16 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			var result = sql != null
-				? CreatePlaceholder(context.SelectQuery, sql, expression, alias: alias)
-				: ConvertToSqlInternal(context, expression, flags, unwrap: unwrap, columnDescriptor: columnDescriptor, isPureExpression: isPureExpression, alias: alias);
+			Expression result;
+			if (sql != null)
+			{
+				result = CreatePlaceholder(context.SelectQuery, sql, expression, alias: alias);
+			}
+			else
+			{
+				var newExpr = expression/*MakeExpression(expression, flags)*/;
+				result = ConvertToSqlInternal(context, newExpr, flags, unwrap: unwrap, columnDescriptor: columnDescriptor, isPureExpression: isPureExpression, alias: alias);
+			}
 
 			if (!flags.HasFlag(ProjectFlags.Test))
 			{
@@ -3801,6 +3808,19 @@ namespace LinqToDB.Linq.Builder
 				if (memberExpression.Member.IsNullableValueMember())
 				{
 					return MakeExpression(memberExpression.Expression, flags);
+				}
+
+				//TODO: why i cannot do that without GetLevelExpression ???
+				rootContext = memberExpression.GetLevelExpression(MappingSchema, 0) as ContextRefExpression;
+				if (rootContext != null)
+				{
+					// SetOperationContext can know how to process such path without preparing
+
+					var corrected = rootContext.BuildContext.MakeExpression(path, flags);
+					if (!ReferenceEquals(corrected, path))
+					{
+						return MakeExpression(corrected, flags);
+					}
 				}
 
 				var root = MakeExpression(memberExpression.Expression, ProjectFlags.Root);

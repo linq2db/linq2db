@@ -36,15 +36,17 @@ namespace LinqToDB.Linq.Builder
 				Expression = expression;
 			}
 
-			public AssignmentInfo(MemberInfo member, Expression expression)
+			public AssignmentInfo(MemberInfo member, Expression expression, bool isLoaded)
 			{
-				Member     = member;
+				Member = member;
 				Expression = expression;
+				IsLoaded = isLoaded;
 			}
 
 			public ColumnDescriptor? Column     { get; }
 			public MemberInfo        Member     { get; }
 			public Expression        Expression { get; }
+			public bool              IsLoaded   { get; }
 		}
 
 		public Expression BuildEntityExpression(IBuildContext context, Type entityType, ProjectFlags flags, bool checkInheritance = true)
@@ -122,7 +124,7 @@ namespace LinqToDB.Linq.Builder
 			if (flags.HasFlag(ProjectFlags.SQL) || flags.HasFlag(ProjectFlags.Test))
 			{
 				var assignments = members
-					.Select(x => new SqlGenericConstructorExpression.Assignment(x.Member, x.Expression, x.Column.MemberAccessor.HasSetter))
+					.Select(x => new SqlGenericConstructorExpression.Assignment(x.Member, x.Expression, x.Column.MemberAccessor.HasSetter, x.IsLoaded))
 					.ToList();
 
 				return new SqlGenericConstructorExpression(SqlGenericConstructorExpression.CreateType.Full, entityType, null, new ReadOnlyCollection<SqlGenericConstructorExpression.Assignment>(assignments));
@@ -246,7 +248,7 @@ namespace LinqToDB.Linq.Builder
 								BindingFlags.NonPublic).SingleOrDefault();
 						}
 					}
-					members.Add(new AssignmentInfo(memberInfo, expression));
+					members.Add(new AssignmentInfo(memberInfo, expression, true));
 				}
 			}
 
@@ -411,7 +413,7 @@ namespace LinqToDB.Linq.Builder
 			var members = BuildMembers(context, entityDescriptor, flags);
 
 			var assignments = members
-				.Select(x => new SqlGenericConstructorExpression.Assignment(x.Member, x.Expression, x.Column?.MemberAccessor.HasSetter == true))
+				.Select(x => new SqlGenericConstructorExpression.Assignment(x.Member, x.Expression, x.Column?.MemberAccessor.HasSetter == true, x.IsLoaded))
 				.ToList();
 
 			if (!flags.HasFlag(ProjectFlags.Keys))
@@ -430,7 +432,7 @@ namespace LinqToDB.Linq.Builder
 			foreach (var member in entityDescriptor.CalculatedMembers!)
 			{
 				var assignment = new SqlGenericConstructorExpression.Assignment(member.MemberInfo,
-					Expression.MakeMemberAccess(contextRef, member.MemberInfo), true);
+					Expression.MakeMemberAccess(contextRef, member.MemberInfo), true, false);
 
 				assignments.Add(assignment);
 			}

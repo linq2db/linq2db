@@ -269,12 +269,12 @@ namespace LinqToDB.Linq.Builder
 							var dbType = QueryHelper.GetDbDataType(leftPlaceholder.Sql);
 							var right = new SqlGenericConstructorExpression.Assignment(left.MemberInfo,
 								ExpressionBuilder.CreatePlaceholder(rightSequence, new SqlValue(dbType, null),
-									Expression.Constant(null)), left.IsMandatory);
+									Expression.Constant(null)), left.IsMandatory, left.IsLoaded);
 
 							_matchedPairs.Add(ma, (_matchedPairs.Count, left, right));
 						}
 
-						newAssignments.Add(new SqlGenericConstructorExpression.Assignment(left.MemberInfo, assignmentExpr, left.IsMandatory));
+						newAssignments.Add(new SqlGenericConstructorExpression.Assignment(left.MemberInfo, assignmentExpr, left.IsMandatory, left.IsLoaded));
 
 						matched.Add(left.MemberInfo);
 
@@ -289,21 +289,32 @@ namespace LinqToDB.Linq.Builder
 						if (matched.Contains(right.MemberInfo))
 							continue;
 
-						if (right.Expression is not SqlPlaceholderExpression rightPlaceholder)
-							throw new NotImplementedException();
+						var assignmentExpr = (Expression)Expression.MakeMemberAccess(root, right.MemberInfo);
 
-						var ma = Expression.MakeMemberAccess(root, right.MemberInfo);
-						newAssignments.Add(new SqlGenericConstructorExpression.Assignment(right.MemberInfo, ma, right.IsMandatory));
+						if (right.Expression is SqlGenericConstructorExpression genericRight)
+						{
+							assignmentExpr = MatchSequences(assignmentExpr, new SqlGenericConstructorExpression(
+									SqlGenericConstructorExpression.CreateType.Incompatible,
+									genericRight.Type, null, null), right.Expression,
+								leftSequence, rightSequence, ref mismatches);
+						}
+						else
+						{
+							if (right.Expression is not SqlPlaceholderExpression rightPlaceholder)
+							{
+								throw new NotImplementedException();
+							}
 
-						// generate NULL value
-						var dbType = QueryHelper.GetDbDataType(rightPlaceholder.Sql);
-						var left = new SqlGenericConstructorExpression.Assignment(right.MemberInfo,
-							ExpressionBuilder.CreatePlaceholder(leftSequence, new SqlValue(dbType, null),
-								Expression.MakeMemberAccess(rightGeneric, right.MemberInfo)), right.IsMandatory);
+							// generate NULL value
+							var dbType = QueryHelper.GetDbDataType(rightPlaceholder.Sql);
+							var left = new SqlGenericConstructorExpression.Assignment(right.MemberInfo,
+								ExpressionBuilder.CreatePlaceholder(leftSequence, new SqlValue(dbType, null),
+									Expression.MakeMemberAccess(rightGeneric, right.MemberInfo)), right.IsMandatory, right.IsLoaded);
 
-						_matchedPairs.Add(ma, (_matchedPairs.Count, left, right));
+							_matchedPairs.Add(assignmentExpr, (_matchedPairs.Count, left, right));
+						}
 
-						newAssignments.Add(new SqlGenericConstructorExpression.Assignment(left.MemberInfo, ma, right.IsMandatory));
+						newAssignments.Add(new SqlGenericConstructorExpression.Assignment(right.MemberInfo, assignmentExpr, right.IsMandatory, right.IsLoaded));
 					}
 
 					var createType = SuggestCreateType(leftExpr.Type, leftGeneric.ConstructType,
@@ -447,28 +458,37 @@ namespace LinqToDB.Linq.Builder
 
 			Expression CorrectAssignments(Expression root, SqlGenericConstructorExpression constructorExpression)
 			{
-				if (constructorExpression.ConstructType == SqlGenericConstructorExpression.CreateType.Full)
-				{
-					return Builder.TryConstruct(constructorExpression, this, ProjectFlags.Expression);
-				}
-
 				if (constructorExpression.Assignments.Count > 0)
 				{
 					var newAssignments = new List<SqlGenericConstructorExpression.Assignment>(constructorExpression.Assignments.Count);
 					foreach (var assignment in constructorExpression.Assignments)
 					{
-						Expression newExpression = Expression.MakeMemberAccess(root, assignment.MemberInfo);
-						if (assignment.Expression is SqlGenericConstructorExpression assignmentGeneric)
+						/*
+						if (assignment.IsLoaded)
 						{
-							newExpression = CorrectAssignments(newExpression, assignmentGeneric);
+							// do not touch LoadWith
+							newAssignments.Add(assignment);
 						}
+						else
+						*/
+						{
+							Expression newExpression = Expression.MakeMemberAccess(root, assignment.MemberInfo);
+							if (assignment.Expression is SqlGenericConstructorExpression assignmentGeneric)
+							{
+								newExpression = CorrectAssignments(newExpression, assignmentGeneric);
+							}
 
-						newAssignments.Add(assignment.WithExpression(newExpression));
+							newAssignments.Add(assignment.WithExpression(newExpression));
+						}
 					}
 
 					constructorExpression = constructorExpression.ReplaceAssignments(newAssignments);
 				}
 
+				if (constructorExpression.ConstructType == SqlGenericConstructorExpression.CreateType.Full)
+				{
+					return Builder.TryConstruct(constructorExpression, this, ProjectFlags.Expression);
+				}
 
 				/*
 				if (constructorExpression.Parameters.Count > 0)
@@ -756,10 +776,13 @@ namespace LinqToDB.Linq.Builder
 				{
 					var projected = Builder.Project(this, path, null, -1, flags, _body);
 
-					if (projected is SqlGenericConstructorExpression generic)
+					if (flags.HasFlag(ProjectFlags.Expression))
 					{
-						if (IsIncompatible(generic))
-							throw new NotImplementedException("Handling Incompatible from other root");
+						if (projected is SqlGenericConstructorExpression generic)
+						{
+							if (IsIncompatible(generic))
+								throw new NotImplementedException("Handling Incompatible from other root");
+						}
 					}
 
 					if (projected is MemberExpression || projected is SqlGenericParamAccessExpression)

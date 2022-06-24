@@ -1392,7 +1392,6 @@ namespace Tests.Linq
 			res[0].Name.Should().Be("John");
 		}
 
-		[ActiveIssue(2932)]
 		[Test(Description = "invalid SQL for Any() subquery")]
 		public void Issue2932_Broken([DataSources] string context)
 		{
@@ -1517,12 +1516,15 @@ namespace Tests.Linq
 				.Concat(db.Person.LoadWith(p => p.Patient))
 				.ToArray();
 
-			Assert.AreEqual(6, res.Length);
+			res.Should().HaveCount(6);
+
 			var pat = res.Where(r => r.ID == 2).First();
-			Assert.IsNull(pat.Patient);
+			pat.Patient.Should().NotBeNull();
+
 			pat = res.Where(r => r.ID == 2).Skip(1).Single();
-			Assert.IsNotNull(pat.Patient);
-			Assert.AreEqual("Hallucination with Paranoid Bugs' Delirium of Persecution", pat.Patient!.Diagnosis);
+			pat.Patient.Should().NotBeNull();
+
+			pat.Patient!.Diagnosis.Should().Be("Hallucination with Paranoid Bugs' Delirium of Persecution");
 		}
 
 		[Test(Description = "Working version of Issue2511_Query2")]
@@ -1542,11 +1544,13 @@ namespace Tests.Linq
 				.Concat(db.Person.LoadWith(p => p.Patient))
 				.ToArray();
 
-			Assert.AreEqual(6, res.Length);
+			res.Should().HaveCount(6);
+
 			var pat = res.Where(r => r.ID == 2).First();
-			Assert.IsNull(pat.Patient);
+			pat.Patient.Should().BeNull();
+
 			pat = res.Where(r => r.ID == 2).Skip(1).Single();
-			Assert.IsNull(pat.Patient);
+			pat.Patient.Should().NotBeNull();
 		}
 
 		[Test]

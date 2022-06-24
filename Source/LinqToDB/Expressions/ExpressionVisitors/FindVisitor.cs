@@ -261,8 +261,8 @@ namespace LinqToDB.Expressions
 				{
 					if (expr is SqlGenericConstructorExpression generic)
 					{
-						return Find(generic.Parameters, p => p.Expression) ??
-						       Find(generic.Assignments, a => a.Expression);
+						return Find(generic.Parameters, ParameterFind) ??
+						       Find(generic.Assignments, AssignmentFind);
 					}
 
 					if (expr.CanReduce)
@@ -302,6 +302,16 @@ namespace LinqToDB.Expressions
 				MemberBindingType.MemberBinding => Find(((MemberMemberBinding)b).Bindings,     MemberBindingFind),
 				_                               => null,
 			};
+		}
+
+		private Expression? AssignmentFind(SqlGenericConstructorExpression.Assignment assignment)
+		{
+			return Find(assignment.Expression);
+		}
+
+		private Expression? ParameterFind(SqlGenericConstructorExpression.Parameter parameter)
+		{
+			return Find(parameter.Expression);
 		}
 
 		Expression? ElementInitFind(ElementInit ei)

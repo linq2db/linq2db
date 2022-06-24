@@ -15,22 +15,24 @@ namespace LinqToDB.Expressions
 		{
 			public static ReadOnlyCollection<Assignment> EmptyCollection = new (new List<Assignment>());
 
-			public Assignment(MemberInfo memberInfo, Expression expression, bool isMandatory)
+			public Assignment(MemberInfo memberInfo, Expression expression, bool isMandatory, bool isLoaded)
 			{
-				MemberInfo  = memberInfo;
-				Expression  = expression;
+				MemberInfo = memberInfo;
+				Expression = expression;
 				IsMandatory = isMandatory;
+				IsLoaded = isLoaded;
 			}
 
 			public MemberInfo MemberInfo  { get;  }
 			public Expression Expression  { get; }
 			public bool       IsMandatory { get; }
+			public bool       IsLoaded    { get; }
 
 			public Assignment WithExpression(Expression expression)
 			{
 				if (expression == Expression)
 					return this;
-				return new Assignment(MemberInfo, expression, IsMandatory);
+				return new Assignment(MemberInfo, expression, IsMandatory, IsLoaded);
 			}
 
 			public override string ToString()
@@ -96,7 +98,7 @@ namespace LinqToDB.Expressions
 				for (var i = 0; i < newExpression.Members.Count; i++)
 				{
 					var member = newExpression.Members[i];
-					items.Add(new Assignment(member, Parse(newExpression.Arguments[i]), true));
+					items.Add(new Assignment(member, Parse(newExpression.Arguments[i]), true, false));
 				}
 
 				Parameters = Parameter.EmptyCollection;
@@ -199,7 +201,7 @@ namespace LinqToDB.Expressions
 					case MemberBindingType.Assignment:
 					{
 						var a = (MemberAssignment)binding;
-						items.Add(new Assignment(a.Member, Parse(a.Expression), true));
+						items.Add(new Assignment(a.Member, Parse(a.Expression), true, false));
 						break;
 					}
 
@@ -208,7 +210,7 @@ namespace LinqToDB.Expressions
 						var memberMemberBinding = (MemberMemberBinding)binding;
 						items.Add(new Assignment(memberMemberBinding.Member,
 							new SqlGenericConstructorExpression(memberMemberBinding.Member.GetMemberType(),
-								memberMemberBinding.Bindings), true));
+								memberMemberBinding.Bindings), true, false));
 						break;
 					}
 
@@ -248,7 +250,7 @@ namespace LinqToDB.Expressions
 				parameters = "(" + parameters + ")";
 			}
 
-			var result = $"!!! new {Type.Name}[{ConstructType}]{parameters}\n{{\n{assignments}\n}} !!!";
+			var result = $"construct {Type.Name}[{ConstructType}]{parameters}\n{{\n{assignments}\n}}";
 
 			return result;
 		}
