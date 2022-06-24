@@ -17,27 +17,10 @@ namespace LinqToDB
 	{
 		public static bool UseNodaTime(this MappingSchema mappingSchema)
 		{
-			var loc  = typeof(MappingExtensions).Assembly.Location;
-			var path = Path.Combine(Path.GetDirectoryName(loc)!, "NodaTime.dll");
-
-			if (File.Exists(path))
+			if (Type.GetType("NodaTime.LocalDateTime, NodaTime", false) is {} type)
 			{
-				Type? type;
-
-				try
-				{
-					type = Type.GetType("NodaTime.LocalDateTime, NodaTime", false);
-				}
-				catch
-				{
-					type = null;
-				}
-
-				if (type != null)
-				{
-					UseNodaTime(mappingSchema, type);
-					return true;
-				}
+				UseNodaTime(mappingSchema, type);
+				return true;
 			}
 
 			return false;
