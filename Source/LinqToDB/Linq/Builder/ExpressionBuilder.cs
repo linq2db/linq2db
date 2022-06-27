@@ -1527,6 +1527,24 @@ namespace LinqToDB.Linq.Builder
 
 		#endregion
 
+		#region Set Context Helpers
+
+		private Dictionary<int, int>? _generatedSetIds;
+
+		public int GenerateSetId(int sourceId)
+		{
+			_generatedSetIds ??= new ();
+
+			if (_generatedSetIds.TryGetValue(sourceId, out var setId))
+				return setId;
+
+			setId = _generatedSetIds.Count;
+			_generatedSetIds.Add(sourceId, setId);
+			return setId;
+		}
+
+		#endregion
+
 		#region Helpers
 
 #if DEBUG
@@ -1537,7 +1555,6 @@ namespace LinqToDB.Linq.Builder
 			var nextId = ++_contextCounter;
 			return nextId;
 		}
-			
 #endif
 
 		MethodInfo GetQueryableMethodInfo<TContext>(TContext context, MethodCallExpression method, [InstantHandle] Func<TContext,MethodInfo, bool,bool> predicate)

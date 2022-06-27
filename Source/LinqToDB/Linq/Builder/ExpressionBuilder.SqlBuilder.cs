@@ -3817,7 +3817,7 @@ namespace LinqToDB.Linq.Builder
 					// SetOperationContext can know how to process such path without preparing
 
 					var corrected = rootContext.BuildContext.MakeExpression(path, flags);
-					if (!ReferenceEquals(corrected, path))
+					if (!ReferenceEquals(corrected, path) && corrected is not DefaultValueExpression)
 					{
 						return MakeExpression(corrected, flags);
 					}

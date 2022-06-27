@@ -531,6 +531,20 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void ConcatWithDifferentProjections([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+					(from p1 in db.Parent select new { ParentID = p1.ParentID, p = p1 })
+				.Concat(
+					(from p2 in db.Parent select new { ParentID = p2.Value1 ?? 0, p = (Parent?)null })
+					);
+
+			AssertQuery(query);
+		}
+
+		[Test]
 		public void Union541([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
