@@ -184,29 +184,19 @@ namespace LinqToDB.AspNet
 			var constructors = typeof(TContext)
 				.GetConstructors(BindingFlags.Public | BindingFlags.Instance);
 
-			var typedConstructor = constructors
-				.Where(c => c.GetParameters()
-					.Where(p => p.ParameterType == typeof(LinqToDBConnectionOptions<TContext>))
-					.Count() == 1)
-				.ToList();
-
-			if (typedConstructor.Count == 1)
+			if (constructors
+					.Any(c => c.GetParameters()
+						.Where(p => p.ParameterType == typeof(LinqToDBConnectionOptions<TContext>))
+						.Any()))
 				return true;
-			if (typedConstructor.Count > 1)
-				throw new ArgumentException($"There is more than one constructor accepting '{nameof(LinqToDBConnectionOptions)}<{typeof(TContext).Name}>' on type {typeof(TContext).Name}.");
 
-			var untypedConstructorInfo = constructors
-				.Where(c => c.GetParameters()
-					.Where(p => p.ParameterType == typeof(LinqToDBConnectionOptions))
-					.Count() == 1)
-				.ToList();
+			if (constructors
+					.Any(c => c.GetParameters()
+						.Where(p => p.ParameterType == typeof(LinqToDBConnectionOptions))
+						.Any()))
+				return false;
 
-			return untypedConstructorInfo.Count switch
-			{
-				0 => throw new ArgumentException($"Missing constructor accepting '{nameof(LinqToDBConnectionOptions)}' on type {typeof(TContext).Name}."),
-				1 => false,
-				_ => throw new ArgumentException($"There is more than one constructor accepting '{nameof(LinqToDBConnectionOptions)}' on type {typeof(TContext).Name}."),
-			};
+			throw new ArgumentException($"Missing constructor accepting '{nameof(LinqToDBConnectionOptions)}' on type {typeof(TContext).Name}.");
 		}
 	}
 }
