@@ -3534,6 +3534,19 @@ namespace LinqToDB.Linq.Builder
 
 							if (bodyExpresion == null)
 							{
+								for (int i = 0; i < genericConstructor.Parameters.Count; i++)
+								{
+									var parameter = genericConstructor.Parameters[i];
+									if (MemberInfoEqualityComparer.Default.Equals(parameter.MemberInfo, member))
+									{
+										bodyExpresion = parameter.Expression;
+										break;
+									}
+								}
+							}
+
+							if (bodyExpresion == null)
+							{
 								// search in base class
 								for (int i = 0; i < genericConstructor.Assignments.Count; i++)
 								{
@@ -3817,7 +3830,7 @@ namespace LinqToDB.Linq.Builder
 					// SetOperationContext can know how to process such path without preparing
 
 					var corrected = rootContext.BuildContext.MakeExpression(path, flags);
-					if (!ReferenceEquals(corrected, path) && corrected is not DefaultValueExpression)
+					if (!ReferenceEquals(corrected, path) && corrected is not DefaultValueExpression && corrected is not SqlErrorExpression)
 					{
 						return MakeExpression(corrected, flags);
 					}

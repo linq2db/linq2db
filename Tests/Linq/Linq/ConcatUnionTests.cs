@@ -615,6 +615,48 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void TupleUnion([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = 
+					(from p1 in db.Parent where p1.ParentID > 3 select Tuple.Create(p1.ParentID, p1.Value1))
+				.Union(
+					from p2 in db.Parent where p2.ParentID <= 3 select Tuple.Create(p2.ParentID, p2.Value1));
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void TupleUnionProjection([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				(from p1 in db.Parent where p1.ParentID > 3 select Tuple.Create((int?)p1.ParentID, p1.Value1))
+				.Union(
+					from p2 in db.Parent where p2.ParentID <= 3 select Tuple.Create(p2.Value1, (int?)p2.ParentID))
+				.Select(x => new { x.Item2, x.Item1 });
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void TupleConcatIncompatibleProjection([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				(from p1 in db.Parent where p1.ParentID > 3 select Tuple.Create((int?)p1.ParentID, p1.Value1))
+				.Concat(
+					from p2 in db.Parent where p2.ParentID <= 3 select default(Tuple<int?, int?>))
+				.Select(x => new { x.Item2, x.Item1 });
+
+			AssertQuery(query);
+		}
+
+
+		[Test]
 		public void ObjectUnion5([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))

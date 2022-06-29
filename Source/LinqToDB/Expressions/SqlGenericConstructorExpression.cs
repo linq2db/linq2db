@@ -79,6 +79,16 @@ namespace LinqToDB.Expressions
 			Assignments   = assignments ?? Assignment.EmptyCollection;
 		}
 
+		public SqlGenericConstructorExpression(SqlGenericConstructorExpression basedOn)
+		{
+			ObjectType        = basedOn.ObjectType;
+			ConstructType     = CreateType.Incompatible;
+			Constructor       = basedOn.Constructor;
+			ConstructorMethod = basedOn.ConstructorMethod;
+			Parameters        = Parameter.EmptyCollection;
+			Assignments       = Assignment.EmptyCollection;
+		}
+
 		public SqlGenericConstructorExpression(Type objectType, ReadOnlyCollection<MemberBinding> bindings)
 		{
 			ObjectType    = objectType;
@@ -356,6 +366,9 @@ namespace LinqToDB.Expressions
 
 					if (mc.IsQueryable())
 						return mc;
+
+					if (!mc.Method.IsStatic)
+						break;
 
 					return new SqlGenericConstructorExpression(mc);
 				}
