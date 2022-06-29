@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace LinqToDB.AspNet
 {
+	using System.Linq;
 	using System.Reflection;
 	using Configuration;
 	using Data;
@@ -180,21 +181,32 @@ namespace LinqToDB.AspNet
 
 		private static bool HasTypedContextConstructor<TContext>()
 		{
-			var typedConstructorInfo   = typeof(TContext).GetConstructor(
-				BindingFlags.Public | BindingFlags.Instance | BindingFlags.ExactBinding,
-				null,
-				new[] {typeof(LinqToDBConnectionOptions<TContext>)},
-				null);
+			var constructors = typeof(TContext)
+				.GetConstructors(BindingFlags.Public | BindingFlags.Instance);
 
-			var untypedConstructorInfo = typedConstructorInfo == null
-				? typeof(TContext).GetConstructor(new[] {typeof(LinqToDBConnectionOptions) })
-				: null;
+			var typedConstructor = constructors
+				.Where(c => c.GetParameters()
+					.Where(p => p.ParameterType == typeof(LinqToDBConnectionOptions<TContext>))
+					.Count() == 1)
+				.ToList();
 
-			if (typedConstructorInfo == null && untypedConstructorInfo == null)
-				throw new ArgumentException($"Missing constructor accepting '{nameof(LinqToDBConnectionOptions)}' on type "
-											+ typeof(TContext).Name);
+			if (typedConstructor.Count == 1)
+				return true;
+			if (typedConstructor.Count > 1)
+				throw new ArgumentException($"There is more than one constructor accepting '{nameof(LinqToDBConnectionOptions)}<{typeof(TContext).Name}>' on type {typeof(TContext).Name}.");
 
-			return typedConstructorInfo != null;
+			var untypedConstructorInfo = constructors
+				.Where(c => c.GetParameters()
+					.Where(p => p.ParameterType == typeof(LinqToDBConnectionOptions))
+					.Count() == 1)
+				.ToList();
+
+			return untypedConstructorInfo.Count switch
+			{
+				0 => throw new ArgumentException($"Missing constructor accepting '{nameof(LinqToDBConnectionOptions)}' on type {typeof(TContext).Name}."),
+				1 => false,
+				_ => throw new ArgumentException($"There is more than one constructor accepting '{nameof(LinqToDBConnectionOptions)}' on type {typeof(TContext).Name}."),
+			};
 		}
 	}
 }
