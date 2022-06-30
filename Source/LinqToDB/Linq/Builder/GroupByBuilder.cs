@@ -368,6 +368,11 @@ namespace LinqToDB.Linq.Builder
 					return result;
 				}
 
+				if (SequenceHelper.IsSameContext(path, this) && flags.HasFlag(ProjectFlags.Expression))
+				{
+					throw new NotImplementedException("Materializing grouping not supported yet");
+				}
+
 				if (path is MemberExpression me && me.Expression is ContextRefExpression && me.Member.Name == "Key")
 				{
 					var keyPath = new ContextRefExpression(me.Type, _key);

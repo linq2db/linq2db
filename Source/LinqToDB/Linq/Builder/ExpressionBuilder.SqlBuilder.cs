@@ -1754,31 +1754,43 @@ namespace LinqToDB.Linq.Builder
 				return searchCondition;
 			}
 
-			SqlSearchCondition? GenerateObjectComparison(List<SqlPlaceholderExpression> placeholders, Expression paramExpr)
+			SqlSearchCondition GenerateObjectComparison(SqlGenericConstructorExpression genericConstructor, Expression paramExpr)
 			{
-				if (placeholders.Count == 0)
-					return null;
-
 				var searchCondition = new SqlSearchCondition();
-				foreach (var placeholder in placeholders)
-				{
-					var accessLambda = BuildMemberPathLambda(placeholder.TrackingPath ?? placeholder.Path);
-
-					var paramExpression = InternalExtensions.ApplyLambdaToExpression(accessLambda, paramExpr);
-
-					var paramSql = ConvertToSql(context, paramExpression,
-						columnDescriptor: QueryHelper.GetColumnDescriptor(placeholder.Sql));
-
-					var predicate =
-						new SqlPredicate.ExprExpr(
-							placeholder.Sql,
-							nodeType == ExpressionType.Equal ? SqlPredicate.Operator.Equal : SqlPredicate.Operator.NotEqual,
-							paramSql, Configuration.Linq.CompareNullsAsValues ? true : null);
-
-					searchCondition.Conditions.Add(new SqlCondition(false, predicate, nodeType == ExpressionType.NotEqual));
-				}
-
+				GenerateObjectComparisonRecursive(searchCondition, genericConstructor, paramExpr);
 				return searchCondition;
+			}
+
+			void GenerateObjectComparisonRecursive(SqlSearchCondition searchCondition, SqlGenericConstructorExpression genericConstructor, Expression paramExpr)
+			{
+				foreach (var assignment in genericConstructor.Assignments)
+				{
+					var accessExpression = Expression.MakeMemberAccess(paramExpr, assignment.MemberInfo);
+
+					if (assignment.Expression is SqlGenericConstructorExpression subGeneric)
+					{
+						GenerateObjectComparisonRecursive(searchCondition, subGeneric, accessExpression);
+					}
+					else if (assignment.Expression is SqlPlaceholderExpression placeholder)
+					{
+						var paramSql = ConvertToSql(context, accessExpression,
+							columnDescriptor: QueryHelper.GetColumnDescriptor(placeholder.Sql));
+
+						var predicate =
+							new SqlPredicate.ExprExpr(
+								placeholder.Sql,
+								nodeType == ExpressionType.Equal ? SqlPredicate.Operator.Equal : SqlPredicate.Operator.NotEqual,
+								paramSql, Configuration.Linq.CompareNullsAsValues ? true : null);
+
+						searchCondition.Conditions.Add(new SqlCondition(false, predicate, nodeType == ExpressionType.NotEqual));
+					}
+					else
+					{
+						throw new InvalidOperationException(
+							$"Expression '{assignment.Expression}' cannot be used for comparison.");
+					}
+
+				}
 			}
 
 			if (!RestoreCompare(ref left, ref right))
@@ -1827,14 +1839,14 @@ namespace LinqToDB.Linq.Builder
 						return GenerateNullComaprison(leftPlaceholders, isNot);
 					}
 
-					if (rightPlaceholders.Count > 0 && l is SqlParameter lParam)
+					if (rightExpr is SqlGenericConstructorExpression rightGeneric && l is SqlParameter lParam)
 					{
-						return GenerateObjectComparison(rightPlaceholders, left);
+						return GenerateObjectComparison(rightGeneric , left);
 					}
 
-					if (leftPlaceholders.Count > 0 && r is SqlParameter rParam)
+					if (leftExpr is SqlGenericConstructorExpression leftGeneric && r is SqlParameter rParam)
 					{
-						return GenerateObjectComparison(leftPlaceholders, right);
+						return GenerateObjectComparison(leftGeneric, right);
 					}
 
 					if (leftPlaceholders.Count == 0 || rightPlaceholders.Count == 0)
@@ -3516,7 +3528,8 @@ namespace LinqToDB.Linq.Builder
 							var ma      = Expression.MakeMemberAccess(contextRef, member);
 							var newPath = nextPath![0].Replace(next!, ma);
 
-							return context.Builder.MakeExpression(newPath, flags);
+							return newPath;
+							//return context.Builder.MakeExpression(newPath, flags);
 						}
 
 						if (body is SqlGenericConstructorExpression genericConstructor)
@@ -3603,13 +3616,11 @@ namespace LinqToDB.Linq.Builder
 //						var neMember = Expression.MakeMemberAccess(ma.Expression, member);
 
 
-
 						//var newExpr = Project(context, nextPath[nextIndex], null, -1, flags, ma.Expression);
 
-						
 						var newMember = ((MemberExpression)nextPath[nextIndex]).Update(body);
 
-						return newMember;
+						return Project(context, null, nextPath, nextIndex - 1, flags, newMember);
 
 						//					return Project(context, null, nextPath, nextIndex - 1, flags, neMember);
 					}
