@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace LinqToDB.AspNet
 {
+	using System.Linq;
 	using System.Reflection;
 	using Configuration;
 	using Data;
@@ -180,21 +181,22 @@ namespace LinqToDB.AspNet
 
 		private static bool HasTypedContextConstructor<TContext>()
 		{
-			var typedConstructorInfo   = typeof(TContext).GetConstructor(
-				BindingFlags.Public | BindingFlags.Instance | BindingFlags.ExactBinding,
-				null,
-				new[] {typeof(LinqToDBConnectionOptions<TContext>)},
-				null);
+			var constructors = typeof(TContext)
+				.GetConstructors(BindingFlags.Public | BindingFlags.Instance);
 
-			var untypedConstructorInfo = typedConstructorInfo == null
-				? typeof(TContext).GetConstructor(new[] {typeof(LinqToDBConnectionOptions) })
-				: null;
+			if (constructors
+					.Any(c => c.GetParameters()
+						.Where(p => p.ParameterType == typeof(LinqToDBConnectionOptions<TContext>))
+						.Any()))
+				return true;
 
-			if (typedConstructorInfo == null && untypedConstructorInfo == null)
-				throw new ArgumentException($"Missing constructor accepting '{nameof(LinqToDBConnectionOptions)}' on type "
-											+ typeof(TContext).Name);
+			if (constructors
+					.Any(c => c.GetParameters()
+						.Where(p => p.ParameterType == typeof(LinqToDBConnectionOptions))
+						.Any()))
+				return false;
 
-			return typedConstructorInfo != null;
+			throw new ArgumentException($"Missing constructor accepting '{nameof(LinqToDBConnectionOptions)}' on type {typeof(TContext).Name}.");
 		}
 	}
 }
