@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
@@ -1397,7 +1396,6 @@ namespace Tests.Linq
 			query1.Union(query2).Count();
 		}
 
-		[ActiveIssue(3150)]
 		[Test(Description = "preserve constant columns")]
 		public void Issue3150([DataSources] string context)
 		{
@@ -1408,9 +1406,9 @@ namespace Tests.Linq
 
 			var result = query1.Concat(query2).ToArray();
 
-			Assert.AreEqual(2, result.Length);
-			Assert.AreEqual(1, result.Select(r => r.Name.Marker == "id=1").Count());
-			Assert.AreEqual(1, result.Select(r => r.Name.Marker == "id=2").Count());
+			result.Should().HaveCount(2);
+			result[0].Name.Marker.Should().Be("id=1");
+			result[1].Name.Marker.Should().Be("id=2");
 		}
 
 		public class Issue2948MyModel
