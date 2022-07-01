@@ -330,7 +330,7 @@ namespace LinqToDB.Linq.Builder
 
 					var parameters = context.Builder.ParametersContext.CurrentSqlParameters
 						.Select((p, i) => (p, i))
-						.ToDictionary(_ => _.p.Expression, _ => _.i);
+						.ToDictionary(_ => _.p.Expression, _ => _.i, ExpressionEqualityComparer.Instance);
 					var paramArray = Expression.Parameter(typeof(object[]), "ps");
 
 					var groupExpression = context._sequenceExpr.Transform(
