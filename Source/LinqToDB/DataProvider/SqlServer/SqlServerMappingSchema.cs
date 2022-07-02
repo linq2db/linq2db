@@ -178,7 +178,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string)));
 
-			AddMetadataReader(new SystemDataSqlServerAttributeReader());
+			AddMetadataReader(SystemDataSqlServerAttributeReader.Instance);
 		}
 
 		static SqlServerMappingSchema Instance = new ();
