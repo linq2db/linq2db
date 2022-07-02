@@ -18,14 +18,13 @@ namespace LinqToDB.Metadata
 	/// </summary>
 	public class SystemDataSqlServerAttributeReader : IMetadataReader
 	{
-		readonly AttributeReader _reader = new AttributeReader();
+		static readonly ConcurrentDictionary<MemberInfo,object> _cache  = new ();
+		static readonly AttributeReader                         _reader = new ();
+		static readonly Type[]                                  _sqlMethodAttributes;
+		static readonly Type[]                                  _sqlUserDefinedTypeAttributes;
 
-		private readonly Type[] _sqlMethodAttributes;
-		private readonly Type[] _sqlUserDefinedTypeAttributes;
-
-		public static readonly SystemDataSqlServerAttributeReader Instance = new ();
-
-		private SystemDataSqlServerAttributeReader()
+		// TODO: v5 convert to Instance field
+		static SystemDataSqlServerAttributeReader()
 		{
 			// try/catch applied as Type.GetType(throwOnError: false) still can throw for sfx builds
 			// see https://github.com/linq2db/linq2db/issues/3630
@@ -71,7 +70,7 @@ namespace LinqToDB.Metadata
 				methodAttr2,
 				methodAttr3,
 #if NETFRAMEWORK
-				typeof(Microsoft.SqlServer.Server.SqlMethodAttribute)
+				typeof(Microsoft.SqlServer.Server.SqlMethodAttribute),
 #endif
 			}.Where(t => t != null).Distinct().ToArray()!;
 
@@ -81,7 +80,7 @@ namespace LinqToDB.Metadata
 				typeAttr2,
 				typeAttr3,
 #if NETFRAMEWORK
-				typeof(Microsoft.SqlServer.Server.SqlUserDefinedTypeAttribute)
+				typeof(Microsoft.SqlServer.Server.SqlUserDefinedTypeAttribute),
 #endif
 			}.Where(t => t != null).Distinct().ToArray()!;
 		}
@@ -91,8 +90,6 @@ namespace LinqToDB.Metadata
 		{
 			return Array<T>.Empty;
 		}
-
-		readonly ConcurrentDictionary<MemberInfo,object> _cache = new ConcurrentDictionary<MemberInfo,object>();
 
 		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo, bool inherit)
 			where T : Attribute
