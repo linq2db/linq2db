@@ -821,5 +821,37 @@ namespace Tests.xUpdate
 			}
 		}
 		#endregion
+
+		#region issue 3644
+		[Table]
+		private class Issue3644Table
+		{
+			[PrimaryKey                                          ] public Guid      Id   { get; set; }
+			[Column(DataType = DataType.DateTime2, Precision = 0)] public DateTime? Date { get; set; }
+		}
+
+		[Test]
+		public void TestIssue3644([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using var db       = GetDataContext(context);
+			using var tmpTable = db.CreateTempTable<Issue3644Table>();
+
+			var items = new[]
+			{
+				new Issue3644Table()
+				{
+					Id   = Guid.NewGuid(),
+					Date = DateTime.Now
+				}
+			};
+
+			tmpTable.Merge()
+				.Using(items)
+				.OnTargetKey()
+				.InsertWhenNotMatched()
+				.UpdateWhenMatched()
+				.Merge();
+		}
+		#endregion
 	}
 }
