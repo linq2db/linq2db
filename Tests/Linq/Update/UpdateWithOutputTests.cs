@@ -2315,6 +2315,34 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[Test]
+		public async Task UpdateWithOutputIntoTempTable([IncludeDataSources(FeatureUpdateOutputInto)] string context)
+		{
+			var sourceData        = GetSourceData();
+			using var db          = GetDataContext(context);
+			using var source      = db.CreateLocalTable(sourceData);
+			using var destination = db.CreateLocalTable<DestinationTable>("destination", tableOptions: TableOptions.IsTemporary);
+
+			var expected = sourceData
+				.Where(s => s.Id > 3)
+				.Select(s => new DestinationTable { Id = s.Id, Value = s.Value, ValueStr = s.ValueStr + "Upd", })
+				.ToArray();
+
+			await source
+				.Where(s => s.Id > 3)
+				.AsUpdatable()
+				.Set(s => s.Value, s => s.Value + 1)
+				.Set(s => s.ValueStr, s => s.ValueStr + "Upd")
+				.UpdateWithOutputIntoAsync(
+					destination,
+					(deleted, inserted) => new DestinationTable { Id = inserted.Id, Value = deleted.Value, ValueStr = inserted.ValueStr, });
+
+			AreEqual(
+				expected,
+				destination.ToArray(),
+				ComparerBuilder.GetEqualityComparer<DestinationTable>());
+		}
+
 		#endregion
 
 		#region Issues

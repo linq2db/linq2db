@@ -190,9 +190,18 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.SqlFunction:
 				{
 					var function = (SqlFunction)expr;
+
+					//TODO: unify function names and put in common constant storage
+					//For example it should be "$COALESCE$" and "$CASE$" do do not mix with user defined extension
+
 					if (function.Name == "Coalesce" && function.Parameters.Length == 2)
 					{
 						return GetColumnDescriptor(function.Parameters[0]);
+					}
+					if (function.Name == "CASE" && function.Parameters.Length == 3)
+					{
+						return GetColumnDescriptor(function.Parameters[1]) ??
+						       GetColumnDescriptor(function.Parameters[2]);
 					}
 					break;
 				}

@@ -601,6 +601,57 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		public void InsertWithOutputIntoTempTable([IncludeDataSources(FeatureInsertOutputInto)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				const int idsLimit = 1000;
+
+				try
+				{
+					var id = idsLimit + 1;
+
+					db.Child.Delete(c => c.ChildID > idsLimit);
+
+					var param = 10050;
+					using var t = db.CreateLocalTable<Child>("TInserted", tableOptions: TableOptions.IsTemporary);
+					var output =
+						db.Child
+							.Where(c => c.ChildID == 11)
+							.InsertWithOutputInto(
+								db.Child,
+								c => new Child()
+								{
+									ParentID = c.ParentID,
+									ChildID  = id + Sql.AsSql(param)
+								},
+								t);
+
+					Assert.AreEqual(1, output);
+
+					AreEqual(db.Child.Where(c => c.ChildID > idsLimit)
+						.Select(
+						c => new Child()
+						{
+							ParentID = c.ParentID,
+							ChildID  = c.ChildID
+						}),
+						t.Select(c => new Child()
+						{
+							ParentID = c.ParentID,
+							ChildID  = c.ChildID
+						}
+						)
+					);
+				}
+				finally
+				{
+					db.Child.Delete(c => c.ChildID > idsLimit);
+				}
+			}
+		}
+
+		[Test]
 		public void InsertWithOutputWithSchema([IncludeDataSources(true, FeatureInsertOutputWithSchema)] string context, [Values(1, 2)] int value)
 		{
 			using (var db     = GetDataContext(context))

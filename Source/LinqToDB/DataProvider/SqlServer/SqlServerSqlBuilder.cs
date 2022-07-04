@@ -78,8 +78,8 @@ namespace LinqToDB.DataProvider.SqlServer
 			else
 			{
 				BuildOutputSubclause(statement.GetOutputClause());
-				}
-				}
+			}
+		}
 
 		protected override string OutputKeyword       => "OUTPUT";
 		protected override string DeletedOutputTable  => "DELETED";

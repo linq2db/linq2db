@@ -347,6 +347,17 @@ namespace Tests.Data
 			Assert.That(con.ConfigurationString, Is.EqualTo(context));
 		}
 
+		[Test]
+		public void TestServiceCollection3([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var collection = new ServiceCollection();
+			collection.AddTransient<DummyService>();
+			collection.AddLinqToDBContext<DbConnection3>((serviceProvider, options) => options.UseConfigurationString(context));
+			var provider = collection.BuildServiceProvider();
+			var con = provider.GetService<DbConnection3>()!;
+			Assert.That(con.ConfigurationString, Is.EqualTo(context));
+		}
+
 		public class DbConnection1 : DataConnection
 		{
 			public DbConnection1(LinqToDBConnectionOptions options) : base(options)
@@ -357,6 +368,15 @@ namespace Tests.Data
 		public class DbConnection2 : DataConnection
 		{
 			public DbConnection2(LinqToDBConnectionOptions<DbConnection2> options) : base(options)
+			{
+			}
+		}
+
+		public class DummyService { }
+
+		public class DbConnection3 : DataConnection
+		{
+			public DbConnection3(DummyService service, LinqToDBConnectionOptions<DbConnection3> options) : base(options)
 			{
 			}
 		}
