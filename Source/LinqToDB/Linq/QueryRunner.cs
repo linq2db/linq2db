@@ -371,6 +371,176 @@ namespace LinqToDB.Linq
 			return Tuple.Create(queryFunc, skip, take);
 		}
 
+		static Func<Query,IDataContext,Mapper<T>,Expression,object?[]?,object?[]?,int, IResultEnumerable<T>> GetExecuteQuery2<T>(
+				Query                                                                                         query,
+				Func<Query,IDataContext,Mapper<T>,Expression,object?[]?,object?[]?,int, IResultEnumerable<T>> queryFunc)
+		{
+			FinalizeQuery(query);
+
+			if (query.Queries.Count != 1)
+				throw new InvalidOperationException();
+
+			var selectQuery = query.Queries[0].Statement.SelectQuery!;
+			var select      = selectQuery.Select;
+
+			if (select.SkipValue != null && !query.SqlProviderFlags.GetIsSkipSupportedFlag(select.TakeValue, select.SkipValue))
+			{
+				var skipValue = select.SkipValue;
+
+				var q = queryFunc;	
+
+				queryFunc = (qq, db, mapper, expr, ps, preambles, qn) =>
+					new LimitResultEnumerable<T>(q(qq, db, mapper, expr, ps, preambles, qn),
+						EvaluateTakeSkipValue(qq, expr, db, ps, qn, skipValue), null);
+			}
+
+			if (select.TakeValue != null && !query.SqlProviderFlags.IsTakeSupported)
+			{
+				var takeValue = select.TakeValue;
+
+				var q = queryFunc;
+
+				queryFunc = (qq, db, mapper, expr, ps, preambles, qn) =>
+					new LimitResultEnumerable<T>(q(qq, db, mapper, expr, ps, preambles, qn),
+						null, EvaluateTakeSkipValue(qq, expr, db, ps, qn, takeValue));
+			}
+
+			return queryFunc;
+		}
+
+
+		class BasicResultEnumerable<T> : IResultEnumerable<T>
+		{
+			readonly IDataContext      _dataContext;
+			readonly Expression        _expression;
+			readonly Query             _query;
+			readonly object?[]?        _parameters;
+			readonly object?[]?        _preambles;
+			readonly int               _queryNumber;
+			readonly Mapper<T>         _mapper;
+
+
+			public BasicResultEnumerable(
+				IDataContext      dataContext,
+				Expression        expression,
+				Query             query,
+				object?[]?        parameters,
+				object?[]?        preambles,
+				int               queryNumber,
+				Mapper<T> mapper)
+			{
+				_dataContext = dataContext;
+				_expression  = expression;
+				_query       = query;
+				_parameters  = parameters;
+				_preambles   = preambles;
+				_queryNumber = queryNumber;
+				_mapper      = mapper;
+			}
+
+			public IEnumerator<T> GetEnumerator()
+			{
+				using var runner = _dataContext.GetQueryRunner(_query, _queryNumber, _expression, _parameters, _preambles);
+				using var dr     = runner.ExecuteReader();
+
+				var dataReader = dr.DataReader!;
+
+				if (dataReader.Read())
+				{
+					var origDataReader = _dataContext.UnwrapDataObjectInterceptor?.UnwrapDataReader(_dataContext, dataReader) ?? dataReader;
+					var mapperInfo     = _mapper.GetMapperInfo(_dataContext, runner, origDataReader);
+
+					do
+					{
+						T res;
+
+						try
+						{
+							res = mapperInfo.Mapper(runner, origDataReader);
+							runner.RowsCount++;
+						}
+						catch (Exception ex) when (ex is FormatException or InvalidCastException or LinqToDBConvertException || ex.GetType().Name.Contains("NullValueException"))
+						{
+							// TODO: debug cases when our tests go into slow-mode (e.g. sqlite.ms)
+							if (mapperInfo.IsFaulted)
+								throw;
+
+							res = _mapper.ReMapOnException(_dataContext, runner, origDataReader, ref mapperInfo, ex);
+						}
+
+						yield return res;
+					}
+					while (dataReader.Read());
+				}
+			}
+
+			IEnumerator IEnumerable.GetEnumerator()
+			{
+				return GetEnumerator();
+			}
+
+#if !NATIVE_ASYNC
+			public IAsyncEnumerable<T> GetAsyncEnumerable(CancellationToken cancellationToken = default)
+			{
+				throw new NotImplementedException();
+			}
+#else
+			public async IAsyncEnumerable<T> GetAsyncEnumerable(CancellationToken cancellationToken = default)
+			{
+				using var runner = _dataContext.GetQueryRunner(_query, _queryNumber, _expression, _parameters, _preambles);
+				using var dr     = runner.ExecuteReader();
+
+				var dataReader = dr.DataReader!;
+
+				if (await dataReader.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+				{
+					var origDataReader = _dataContext.UnwrapDataObjectInterceptor?.UnwrapDataReader(_dataContext, dataReader) ?? dataReader;
+					var mapperInfo     = _mapper.GetMapperInfo(_dataContext, runner, origDataReader);
+
+					do
+					{
+						T res;
+
+						try
+						{
+							res = mapperInfo.Mapper(runner, origDataReader);
+							runner.RowsCount++;
+						}
+						catch (Exception ex) when (ex is FormatException or InvalidCastException or LinqToDBConvertException || ex.GetType().Name.Contains("NullValueException"))
+						{
+							// TODO: debug cases when our tests go into slow-mode (e.g. sqlite.ms)
+							if (mapperInfo.IsFaulted)
+								throw;
+
+							res = _mapper.ReMapOnException(_dataContext, runner, origDataReader, ref mapperInfo, ex);
+						}
+
+						yield return res;
+					}
+					while (await dataReader.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext));
+				}
+			}
+#endif
+
+			public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = default)
+			{
+				return GetAsyncEnumerable(cancellationToken).GetAsyncEnumerator(cancellationToken);
+			}
+		}
+
+		static IResultEnumerable<T> ExecuteQuery2<T>(
+			Query        query,
+			IDataContext dataContext,
+			Mapper<T>    mapper,
+			Expression   expression,
+			object?[]?   ps,
+			object?[]?   preambles,
+			int          queryNumber
+		)
+		{
+			return new BasicResultEnumerable<T>(dataContext, expression, query, ps, preambles, queryNumber, mapper);
+		}
+
 		static IEnumerable<T> ExecuteQuery<T>(
 			Query        query,
 			IDataContext dataContext,
@@ -631,23 +801,14 @@ namespace LinqToDB.Linq
 			Query<T> query,
 			Expression<Func<IQueryRunner, DbDataReader, T>> expression)
 		{
-			var executeQuery = GetExecuteQuery<T>(query, ExecuteQuery);
+			var executeQuery = GetExecuteQuery2<T>(query, ExecuteQuery2);
 
 			ClearParameters(query);
 
 			var mapper   = new Mapper<T>(expression);
-			var runQuery = executeQuery.Item1;
 
-			query.GetIEnumerable = (db, expr, ps, preambles) => runQuery(query, db, mapper, expr, ps, preambles, 0);
-
-			var skipAction = executeQuery.Item2;
-			var takeAction = executeQuery.Item3;
-
-			query.GetForEachAsync = (db, expr, ps, preambles, action, token) =>
-				ExecuteQueryAsync(query, db, mapper, expr, ps, preambles, 0, action, skipAction, takeAction, token);
-
-			query.GetIAsyncEnumerable = (db, expr, ps, preambles) =>
-				ExecuteQueryAsync(query, db, mapper, expr, ps, preambles, 0, skipAction, takeAction);
+			query.GetResultEnumerable =
+				(db, expr, ps, preambles) => executeQuery(query, db, mapper, expr, ps, preambles, 0);
 		}
 
 		static readonly PropertyInfo _dataContextInfo = MemberHelper.PropertyOf<IQueryRunner>(p => p.DataContext);
