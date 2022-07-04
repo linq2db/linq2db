@@ -279,9 +279,6 @@ namespace LinqToDB.Linq
 
 		internal bool DoNotCache;
 
-		internal Func<IDataContext,Expression,object?[]?,object?[]?,IEnumerable<T>>                      GetIEnumerable      = null!;
-		internal Func<IDataContext,Expression,object?[]?,object?[]?,IAsyncEnumerable<T>>                 GetIAsyncEnumerable = null!;
-		internal Func<IDataContext,Expression,object?[]?,object?[]?,Func<T,bool>,CancellationToken,Task> GetForEachAsync     = null!;
 		internal Func<IDataContext,Expression,object?[]?,object?[]?,IResultEnumerable<T>>                GetResultEnumerable = null!;
 
 		#endregion

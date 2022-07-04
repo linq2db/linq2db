@@ -164,7 +164,7 @@ namespace LinqToDB.Linq
 					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 				return Query<TResult>.GetQuery(DataContext, ref expression, out _)
-					.GetIAsyncEnumerable(DataContext, expression, Parameters, Preambles);
+					.GetResultEnumerable(DataContext, expression, Parameters, Preambles);
 			}
 		}
 
@@ -181,16 +181,17 @@ namespace LinqToDB.Linq
 				Preambles = await query.InitPreamblesAsync(DataContext, expression, Parameters, cancellationToken)
 					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-				await query
-					.GetForEachAsync(DataContext, expression, Parameters, Preambles, r =>
-					{
-						action(r);
-						return true;
-					}, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				var enumerable = (IAsyncEnumerable<T>)query.GetResultEnumerable(DataContext, expression, Parameters, Preambles);
+				var enumerator = enumerable.GetAsyncEnumerator(cancellationToken);
+
+				while (await enumerator.MoveNextAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+				{
+					action(enumerator.Current);
+				}
 			}
 		}
 
-		public Task GetForEachUntilAsync(Func<T,bool> func, CancellationToken cancellationToken)
+		public async Task GetForEachUntilAsync(Func<T,bool> func, CancellationToken cancellationToken)
 		{
 			var expression = Expression;
 			var query      = GetQuery(ref expression, true, out var dependsOnParameters);
@@ -198,7 +199,14 @@ namespace LinqToDB.Linq
 			if (!dependsOnParameters)
 				Expression = expression;
 
-			return query.GetForEachAsync(DataContext, expression, Parameters, Preambles, func, cancellationToken);
+			var enumerable = (IAsyncEnumerable<T>)query.GetResultEnumerable(DataContext, expression, Parameters, Preambles);
+			var enumerator = enumerable.GetAsyncEnumerator(cancellationToken);
+
+			while (await enumerator.MoveNextAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+			{
+				if (func(enumerator.Current))
+					break;
+			}
 		}
 
 		public IAsyncEnumerable<T> GetAsyncEnumerable()
@@ -226,7 +234,7 @@ namespace LinqToDB.Linq
 #else
 					return Tuple.Create<IAsyncEnumerator<T>, IAsyncDisposable?>(
 #endif
-						query.GetIAsyncEnumerable(DataContext, expression, Parameters, Preambles)
+						query.GetResultEnumerable(DataContext, expression, Parameters, Preambles)
 						.GetAsyncEnumerator(cancellationToken), tr);
 				}
 				catch
@@ -322,7 +330,7 @@ namespace LinqToDB.Linq
 			{
 				Preambles = query.InitPreambles(DataContext, expression, Parameters);
 
-				return query.GetIEnumerable(DataContext, expression, Parameters, Preambles).GetEnumerator();
+				return query.GetResultEnumerable(DataContext, expression, Parameters, Preambles).GetEnumerator();
 			}
 		}
 
@@ -338,7 +346,7 @@ namespace LinqToDB.Linq
 			{
 				Preambles = query.InitPreambles(DataContext, expression, Parameters);
 
-				return query.GetIEnumerable(DataContext, expression, Parameters, Preambles).GetEnumerator();
+				return query.GetResultEnumerable(DataContext, expression, Parameters, Preambles).GetEnumerator();
 			}
 		}
 

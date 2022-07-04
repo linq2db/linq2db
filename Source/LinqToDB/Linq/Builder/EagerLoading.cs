@@ -1457,7 +1457,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					var query      = (Query<TD>)data!;
 					var preambles  = query.InitPreambles(dc, expr, ps);
-					var enumerable = query.GetIEnumerable(dc, expr, ps, preambles);
+					var enumerable = query.GetResultEnumerable(dc, expr, ps, preambles);
 
 					var details = enumerable.ToList();
 					return details;
@@ -1466,7 +1466,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					var query      = (Query<TD>)data!;
 					var preambles  = await query.InitPreamblesAsync(dc, expr, ps, ct).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-					var enumerable = query.GetIAsyncEnumerable(dc, expr, ps, preambles);
+					var enumerable = query.GetResultEnumerable(dc, expr, ps, preambles);
 
 					return await enumerable.ToListAsync(ct).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 				}
@@ -1492,7 +1492,7 @@ namespace LinqToDB.Linq.Builder
 					var query       = (Query<KeyDetailEnvelope<TKey, TD>>)data!;
 
 					var preambles = query.InitPreambles(dc, expr, ps);
-					var enumerable = query.GetIEnumerable(dc, expr, ps, preambles);
+					var enumerable = query.GetResultEnumerable(dc, expr, ps, preambles);
 
 					var eagerLoadingContext = new EagerLoadingContext<TD, TKey>();
 
@@ -1508,7 +1508,7 @@ namespace LinqToDB.Linq.Builder
 					var query = (Query<KeyDetailEnvelope<TKey, TD>>)data!;
 
 					var preambles  = await query.InitPreamblesAsync(dc, expr, ps, ct).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-					var enumerable = query.GetIAsyncEnumerable(dc, expr, ps, preambles)!;
+					var enumerable = query.GetResultEnumerable(dc, expr, ps, preambles)!;
 
 					var eagerLoadingContext = new EagerLoadingContext<TD, TKey>();
 #if NATIVE_ASYNC

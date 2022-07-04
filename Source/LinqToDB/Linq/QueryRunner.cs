@@ -334,44 +334,7 @@ namespace LinqToDB.Linq
 			IDataContext? dataContext,
 			object?[]?    ps);
 
-		static Tuple<
-			Func<Query,IDataContext,Mapper<T>,Expression,object?[]?,object?[]?,int,IEnumerable<T>>,
-			TakeSkipDelegate?,
-			TakeSkipDelegate?>
-			GetExecuteQuery<T>(
-				Query query,
-				Func<Query,IDataContext,Mapper<T>,Expression,object?[]?,object?[]?,int,IEnumerable<T>> queryFunc)
-		{
-			FinalizeQuery(query);
-
-			if (query.Queries.Count != 1)
-				throw new InvalidOperationException();
-
-			TakeSkipDelegate? skip = null, take = null;
-
-			var selectQuery = query.Queries[0].Statement.SelectQuery!;
-			var select      = selectQuery.Select;
-
-			if (select.SkipValue != null && !query.SqlProviderFlags.GetIsSkipSupportedFlag(select.TakeValue, select.SkipValue))
-			{
-				var q = queryFunc;
-
-				queryFunc = (qq, db, mapper, expr, ps, preambles, qn) => q(qq, db, mapper, expr, ps, preambles, qn).Skip(EvaluateTakeSkipValue(qq, expr, db, ps, qn, select.SkipValue));
-				skip      = (qq, expr, pc, ps) => EvaluateTakeSkipValue(qq, expr, pc, ps, 0, select.SkipValue);
-			}
-
-			if (select.TakeValue != null && !query.SqlProviderFlags.IsTakeSupported)
-			{
-				var q = queryFunc;
-
-				queryFunc = (qq, db, mapper, expr, ps, preambles, qn) => q(qq, db, mapper, expr, ps, preambles, qn).Take(EvaluateTakeSkipValue(qq, expr, db, ps, qn, select.TakeValue));
-				take      = (qq, expr, pc, ps) => EvaluateTakeSkipValue(qq, expr, pc, ps, 0, select.TakeValue);
-			}
-
-			return Tuple.Create(queryFunc, skip, take);
-		}
-
-		static Func<Query,IDataContext,Mapper<T>,Expression,object?[]?,object?[]?,int, IResultEnumerable<T>> GetExecuteQuery2<T>(
+		static Func<Query,IDataContext,Mapper<T>,Expression,object?[]?,object?[]?,int, IResultEnumerable<T>> GetExecuteQuery<T>(
 				Query                                                                                         query,
 				Func<Query,IDataContext,Mapper<T>,Expression,object?[]?,object?[]?,int, IResultEnumerable<T>> queryFunc)
 		{
@@ -528,7 +491,7 @@ namespace LinqToDB.Linq
 			}
 		}
 
-		static IResultEnumerable<T> ExecuteQuery2<T>(
+		static IResultEnumerable<T> ExecuteQuery<T>(
 			Query        query,
 			IDataContext dataContext,
 			Mapper<T>    mapper,
@@ -539,100 +502,6 @@ namespace LinqToDB.Linq
 		)
 		{
 			return new BasicResultEnumerable<T>(dataContext, expression, query, ps, preambles, queryNumber, mapper);
-		}
-
-		static IEnumerable<T> ExecuteQuery<T>(
-			Query        query,
-			IDataContext dataContext,
-			Mapper<T>    mapper,
-			Expression   expression,
-			object?[]?   ps,
-			object?[]?   preambles,
-			int          queryNumber)
-		{
-			using var runner = dataContext.GetQueryRunner(query, queryNumber, expression, ps, preambles);
-			using var dr     = runner.ExecuteReader();
-
-			var dataReader = dr.DataReader!;
-
-			if (dataReader.Read())
-			{
-				var origDataReader = dataContext.UnwrapDataObjectInterceptor?.UnwrapDataReader(dataContext, dataReader) ?? dataReader;
-				var mapperInfo     = mapper.GetMapperInfo(dataContext, runner, origDataReader);
-
-				do
-				{
-					T res;
-
-					try
-					{
-						res = mapperInfo.Mapper(runner, origDataReader);
-						runner.RowsCount++;
-					}
-					catch (Exception ex) when (ex is FormatException or InvalidCastException or LinqToDBConvertException || ex.GetType().Name.Contains("NullValueException"))
-					{
-						// TODO: debug cases when our tests go into slow-mode (e.g. sqlite.ms)
-						if (mapperInfo.IsFaulted)
-							throw;
-
-						res = mapper.ReMapOnException(dataContext, runner, origDataReader, ref mapperInfo, ex);
-					}
-
-					yield return res;
-				}
-				while (dataReader.Read());
-			}
-		}
-
-		static async Task ExecuteQueryAsync<T>(
-			Query             query,
-			IDataContext      dataContext,
-			Mapper<T>         mapper,
-			Expression        expression,
-			object?[]?        ps,
-			object?[]?        preambles,
-			int               queryNumber,
-			Func<T,bool>      func,
-			TakeSkipDelegate? skipAction,
-			TakeSkipDelegate? takeAction,
-			CancellationToken cancellationToken)
-		{
-			var runner = dataContext.GetQueryRunner(query, queryNumber, expression, ps, preambles);
-#if NATIVE_ASYNC
-			await using (runner.ConfigureAwait(Configuration.ContinueOnCapturedContext))
-#else
-			await using (runner)
-#endif
-			{
-				var dr = await runner.ExecuteReaderAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-#if NATIVE_ASYNC
-				await using (dr.ConfigureAwait(Configuration.ContinueOnCapturedContext))
-#else
-				await using (dr)
-#endif
-				{
-					var skip = skipAction?.Invoke(query, expression, dataContext, ps) ?? 0;
-
-					while (skip-- > 0 && await dr.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
-					{}
-
-					var take = takeAction?.Invoke(query, expression, dataContext, ps) ?? int.MaxValue;
-
-					if (take-- > 0 && await dr.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
-					{
-						var dataReader = dataContext.UnwrapDataObjectInterceptor?.UnwrapDataReader(dataContext, dr.DataReader) ?? dr.DataReader;
-						var mapperInfo = mapper.GetMapperInfo(dataContext, runner, dataReader);
-
-						do
-						{
-							if (!func(mapper.Map(dataContext, runner, dataReader, ref mapperInfo)))
-								break;
-							runner.RowsCount++;
-						}
-						while (take-- > 0 && await dr.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext));
-					}
-				}
-			}
 		}
 
 		class AsyncEnumeratorImpl<T> : IAsyncEnumerator<T>
@@ -741,67 +610,11 @@ namespace LinqToDB.Linq
 			}
 		}
 
-		class AsyncEnumerableImpl<T> : IAsyncEnumerable<T>
-		{
-			readonly Query             _query;
-			readonly IDataContext      _dataContext;
-			readonly Mapper<T>         _mapper;
-			readonly Expression        _expression;
-			readonly object?[]?        _ps;
-			readonly object?[]?        _preambles;
-			readonly int               _queryNumber;
-			readonly TakeSkipDelegate? _skipAction;
-			readonly TakeSkipDelegate? _takeAction;
-
-			public AsyncEnumerableImpl(
-				Query             query,
-				IDataContext      dataContext,
-				Mapper<T>         mapper,
-				Expression        expression,
-				object?[]?        ps,
-				object?[]?        preambles,
-				int               queryNumber,
-				TakeSkipDelegate? skipAction,
-				TakeSkipDelegate? takeAction)
-			{
-				_query       = query;
-				_dataContext = dataContext;
-				_mapper      = mapper;
-				_expression  = expression;
-				_ps          = ps;
-				_preambles   = preambles;
-				_queryNumber = queryNumber;
-				_skipAction  = skipAction;
-				_takeAction  = takeAction;
-			}
-
-			public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken)
-			{
-				return new AsyncEnumeratorImpl<T>(
-					_query, _dataContext, _mapper, _expression, _ps, _preambles, _queryNumber, _skipAction, _takeAction, cancellationToken);
-			}
-		}
-
-		static IAsyncEnumerable<T> ExecuteQueryAsync<T>(
-			Query             query,
-			IDataContext      dataContext,
-			Mapper<T>         mapper,
-			Expression        expression,
-			object?[]?        ps,
-			object?[]?        preambles,
-			int               queryNumber,
-			TakeSkipDelegate? skipAction,
-			TakeSkipDelegate? takeAction)
-		{
-			return new AsyncEnumerableImpl<T>(
-				query, dataContext, mapper, expression, ps, preambles, queryNumber, skipAction, takeAction);
-		}
-
 		static void SetRunQuery<T>(
 			Query<T> query,
 			Expression<Func<IQueryRunner, DbDataReader, T>> expression)
 		{
-			var executeQuery = GetExecuteQuery2<T>(query, ExecuteQuery2);
+			var executeQuery = GetExecuteQuery<T>(query, ExecuteQuery);
 
 			ClearParameters(query);
 

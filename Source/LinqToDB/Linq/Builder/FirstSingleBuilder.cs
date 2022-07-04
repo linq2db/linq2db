@@ -8,6 +8,7 @@ namespace LinqToDB.Linq.Builder
 	using Extensions;
 	using SqlQuery;
 	using Common;
+	using Async;
 
 	class FirstSingleBuilder : MethodCallBuilder
 	{
@@ -110,77 +111,38 @@ namespace LinqToDB.Linq.Builder
 
 			static void GetFirstElement<T>(Query<T> query)
 			{
-				query.GetElement      = (db, expr, ps, preambles) => query.GetIEnumerable(db, expr, ps, preambles).First();
+				query.GetElement      = (db, expr, ps, preambles) => query.GetResultEnumerable(db, expr, ps, preambles).First();
 
-				query.GetElementAsync = async (db, expr, ps, preambles, token) =>
-				{
-					var count = 0;
-					var obj   = default(T)!;
-
-					await query.GetForEachAsync(db, expr, ps, preambles,
-						r => { obj = r; count++; return false; }, token).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-
-					return count > 0 ? obj : Array<T>.Empty.First();
-				};
+				query.GetElementAsync = query.GetElementAsync = async (db, expr, ps, preambles, token) =>
+					await query.GetResultEnumerable(db, expr, ps, preambles)
+						.FirstAsync(token).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 			}
 
 			static void GetFirstOrDefaultElement<T>(Query<T> query)
 			{
-				query.GetElement      = (db, expr, ps, preambles) => query.GetIEnumerable(db, expr, ps, preambles).FirstOrDefault();
+				query.GetElement      = (db, expr, ps, preambles) => query.GetResultEnumerable(db, expr, ps, preambles).FirstOrDefault();
 
-				query.GetElementAsync = async (db, expr, ps, preambles, token) =>
-				{
-					var count = 0;
-					var obj   = default(T)!;
-
-					await query.GetForEachAsync(db, expr, ps, preambles, r => { obj = r; count++; return false; }, token).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-
-					return count > 0 ? obj : Array<T>.Empty.FirstOrDefault();
-				};
+				query.GetElementAsync = query.GetElementAsync = async (db, expr, ps, preambles, token) =>
+					await query.GetResultEnumerable(db, expr, ps, preambles)
+						.FirstOrDefaultAsync(token).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 			}
 
 			static void GetSingleElement<T>(Query<T> query)
 			{
-				query.GetElement      = (db, expr, ps, preambles) => query.GetIEnumerable(db, expr, ps, preambles).Single();
+				query.GetElement      = (db, expr, ps, preambles) => query.GetResultEnumerable(db, expr, ps, preambles).Single();
 
 				query.GetElementAsync = async (db, expr, ps, preambles, token) =>
-				{
-					var count = 0;
-					var obj   = default(T)!;
-
-					await query.GetForEachAsync(db, expr, ps, preambles,
-						r =>
-						{
-							if (count == 0)
-								obj = r;
-							count++;
-							return count == 1;
-						}, token).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-
-					return count == 1 ? obj : new T[count].Single();
-				};
+					await query.GetResultEnumerable(db, expr, ps, preambles)
+						.SingleAsync(token).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 			}
 
 			static void GetSingleOrDefaultElement<T>(Query<T> query)
 			{
-				query.GetElement      = (db, expr, ps, preambles) => query.GetIEnumerable(db, expr, ps, preambles).SingleOrDefault();
+				query.GetElement      = (db, expr, ps, preambles) => query.GetResultEnumerable(db, expr, ps, preambles).SingleOrDefault();
 
 				query.GetElementAsync = async (db, expr, ps, preambles, token) =>
-				{
-					var count = 0;
-					var obj   = default(T)!;
-
-					await query.GetForEachAsync(db, expr, ps, preambles,
-						r =>
-						{
-							if (count == 0)
-								obj = r;
-							count++;
-							return count == 1;
-						}, token).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-
-					return count == 1 ? obj : new T[count].SingleOrDefault();
-				};
+					await query.GetResultEnumerable(db, expr, ps, preambles)
+						.SingleOrDefaultAsync(token).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 			}
 
 			static object SequenceException()
