@@ -455,6 +455,8 @@ namespace LinqToDB.Linq
 
 				var dataReader = dr.DataReader!;
 
+				cancellationToken.ThrowIfCancellationRequested();
+
 				if (await dataReader.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 				{
 					var origDataReader = _dataContext.UnwrapDataObjectInterceptor?.UnwrapDataReader(_dataContext, dataReader) ?? dataReader;
@@ -479,6 +481,7 @@ namespace LinqToDB.Linq
 						}
 
 						yield return res;
+						cancellationToken.ThrowIfCancellationRequested();
 					}
 					while (await dataReader.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext));
 				}
