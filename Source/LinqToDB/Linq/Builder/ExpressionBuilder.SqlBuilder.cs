@@ -3831,7 +3831,12 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (memberExpression.Member.IsNullableValueMember())
 				{
-					return MakeExpression(memberExpression.Expression, flags);
+					var corrected = MakeExpression(memberExpression.Expression, flags);
+					if (corrected.Type != path.Type)
+					{
+						corrected = Expression.Convert(corrected, path.Type);
+					}
+					return MakeExpression(corrected, flags);
 				}
 
 				//TODO: why i cannot do that without GetLevelExpression ???

@@ -1,18 +1,23 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using LinqToDB.Extensions;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace LinqToDB.Linq.Builder
 {
 	using Common;
 	using LinqToDB.Expressions;
+	using LinqToDB.Common.Internal;
 	using Mapping;
 	using SqlQuery;
 	using Reflection;
+	using Async;
+	using Extensions;
 
 	class GroupByBuilder : MethodCallBuilder
 	{
@@ -370,7 +375,25 @@ namespace LinqToDB.Linq.Builder
 
 				if (SequenceHelper.IsSameContext(path, this) && flags.HasFlag(ProjectFlags.Expression))
 				{
-					throw new NotImplementedException("Materializing grouping not supported yet");
+					//TODO: recheck
+					var groupingType = typeof(Grouping<,>).MakeGenericType(
+						_key.Body.Type, Element.Body.Type);
+
+					var assignments = new List<SqlGenericConstructorExpression.Assignment>(2);
+
+					assignments.Add(new SqlGenericConstructorExpression.Assignment(
+						groupingType.GetProperty(nameof(Grouping<int, int>.Key)),
+						Expression.Property(path, nameof(IGrouping<int, int>.Key)), true, false));
+
+					var eagerLoadingExpression = MakeSubQueryExpression(new ContextRefExpression(groupingType, this));
+
+					assignments.Add(new SqlGenericConstructorExpression.Assignment(
+						groupingType.GetProperty(nameof(Grouping<int, int>.Items)),
+						new SqlEagerLoadExpression(this, eagerLoadingExpression,
+							Builder.GetSequenceExpression(this)), true, false));
+					
+					return new SqlGenericConstructorExpression(SqlGenericConstructorExpression.CreateType.Auto,
+						groupingType, null, assignments.AsReadOnly());
 				}
 
 				if (path is MemberExpression me && me.Expression is ContextRefExpression && me.Member.Name == "Key")
@@ -380,10 +403,14 @@ namespace LinqToDB.Linq.Builder
 					return keyPath;
 				}
 
-				var root = Builder.GetRootObject(path);
-				if (root is ContextRefExpression contextRef && typeof(IGrouping<,>).IsSameOrParentOf(contextRef.Type))
+				if (!SequenceHelper.IsSameContext(path, this) || !flags.HasFlag(ProjectFlags.SQL))
 				{
-					return path;
+					var root = Builder.GetRootObject(path);
+					if (root is ContextRefExpression contextRef &&
+					    typeof(IGrouping<,>).IsSameOrParentOf(contextRef.Type))
+					{
+						return path;
+					}
 				}
 
 				var newPath = SequenceHelper.CorrectExpression(path, this, Element);
@@ -463,11 +490,153 @@ namespace LinqToDB.Linq.Builder
 
 				var ctx = Builder.BuildSequence(new BuildInfo(buildInfo, expr) { IsAggregation = false});
 
-					return ctx;
+				return ctx;
+			}
+
+			internal class Grouping<TKey,TElement> : IGrouping<TKey,TElement>
+			{
+				public Grouping()
+				{
+				}
+
+				public TKey                   Key   { get; set; } = default!;
+				public IEnumerable<TElement>? Items { get; set; } = default!;
+
+				public IEnumerator<TElement> GetEnumerator()
+				{
+					if (Items == null)
+						return Enumerable.Empty<TElement>().GetEnumerator();
+
+					return Items.GetEnumerator();
+				}
+
+				IEnumerator IEnumerable.GetEnumerator()
+				{
+					return GetEnumerator();
+				}
+			}
+
+			static MethodInfo _wrapSubQuery = MemberHelper.MethodOfGeneric(() =>
+				((GroupByContext)null!).WrapSubQuery<int, int>(null!, null!));
+
+			class GroupingEnumerable<TKey, TElement> : IResultEnumerable<IGrouping<TKey, TElement>>
+			{
+				readonly IResultEnumerable<TElement> _elements;
+				readonly Func<TElement, TKey>        _groupingKey;
+
+				public GroupingEnumerable(IResultEnumerable<TElement> elements, Func<TElement, TKey> groupingKey)
+				{
+					_elements    = elements;
+					_groupingKey = groupingKey;
+				}
+
+				public IEnumerator<IGrouping<TKey, TElement>> GetEnumerator()
+				{
+					return _elements.GroupBy(_groupingKey).GetEnumerator();
+				}
+
+				IEnumerator IEnumerable.GetEnumerator()
+				{
+					return GetEnumerator();
+				}
+
+				public IAsyncEnumerator<IGrouping<TKey, TElement>> GetAsyncEnumerator(CancellationToken cancellationToken = default)
+				{
+					return new GroupingAsyncEnumerator(_elements, _groupingKey, cancellationToken);
+				}
+
+				class GroupingAsyncEnumerator : IAsyncEnumerator<IGrouping<TKey, TElement>>
+				{
+					readonly IResultEnumerable<TElement> _elements;
+					readonly Func<TElement, TKey>        _groupingKey;
+					readonly CancellationToken           _cancellationToken;
+
+					IEnumerator<IGrouping<TKey, TElement>>? _grouped;
+					IGrouping<TKey, TElement>?              _current;
+
+					public GroupingAsyncEnumerator(IResultEnumerable<TElement> elements, Func<TElement, TKey> groupingKey, CancellationToken cancellationToken)
+					{
+						_elements          = elements;
+						_groupingKey       = groupingKey;
+						_cancellationToken = cancellationToken;
+					}
+
+#if !NATIVE_ASYNC
+					public Task DisposeAsync()
+					{
+						_grouped?.Dispose();
+						return TaskCache.CompletedTask;
+					}
+#else
+					public ValueTask DisposeAsync()
+					{
+						_grouped?.Dispose();
+						return new ValueTask();
+					}
+#endif
+					public IGrouping<TKey, TElement> Current
+					{
+						get
+						{
+							if (_grouped == null)
+								throw new InvalidOperationException("Enumeration not started.");
+
+							if (_current == null)
+								throw new InvalidOperationException("Enumeration returned no result.");
+
+							return _current;
+						}
+					}
+
+#if !NATIVE_ASYNC
+					public async Task<bool> MoveNextAsync()
+#else
+					public async ValueTask<bool> MoveNextAsync()
+#endif
+					{
+						if (_grouped == null)
+						{
+							_grouped = (await _elements.ToListAsync(_cancellationToken)
+								.ConfigureAwait(Configuration.ContinueOnCapturedContext))
+								.GroupBy(_groupingKey)
+								.GetEnumerator();
+						}
+
+						if (_grouped.MoveNext())
+						{
+							_current = _grouped.Current;
+							return true;
+						}
+
+						_current = null;
+						return false;
+					}
+				}
+			}
+
+			void WrapSubQuery<TKey, TElement>(Query<IGrouping<TKey, TElement>> destQuery, ParameterExpression queryParameter)
+			{
+				var subqQuery = new Query<TElement>(Builder.DataContext, Builder.Expression);
+				subqQuery.Queries.Add(new QueryInfo(){Statement = Element.GetResultStatement()});
+
+				Element.BuildQuery(subqQuery, queryParameter);
+
+				var keyFunc = (Func<TElement, TKey>)_key.Lambda.Compile();
+				QueryRunner.WrapRunQuery(subqQuery, destQuery, e => new GroupingEnumerable<TKey, TElement>(e, keyFunc));
 			}
 
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
+				// if we can compile Key - we can do grouping on the client side
+				if (Builder.CanBeCompiled(_key.Lambda))
+				{
+					var method = _wrapSubQuery.MakeGenericMethod(_key.Body.Type, Element.Body.Type);
+
+					method.Invoke(this, new object? []{query, queryParameter});
+
+					return;
+				}
+
 				var expr = Builder.FinalizeProjection(this,
 					Builder.MakeExpression(new ContextRefExpression(typeof(T), this), ProjectFlags.Expression));
 

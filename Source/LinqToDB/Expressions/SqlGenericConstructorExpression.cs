@@ -17,6 +17,9 @@ namespace LinqToDB.Expressions
 
 			public Assignment(MemberInfo memberInfo, Expression expression, bool isMandatory, bool isLoaded)
 			{
+				if (!memberInfo.GetMemberType().IsAssignableFrom(expression.Type))
+					throw new InvalidOperationException($"Member '{memberInfo.Name}:{memberInfo.GetMemberType().Name}' cannot accept Expression Type '{expression.Type}'.");
+
 				MemberInfo = memberInfo;
 				Expression = expression;
 				IsMandatory = isMandatory;

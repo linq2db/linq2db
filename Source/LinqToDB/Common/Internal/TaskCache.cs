@@ -1,4 +1,4 @@
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using LinqToDB.Data;
 
 namespace LinqToDB.Common.Internal
@@ -12,6 +12,11 @@ namespace LinqToDB.Common.Internal
 		public static readonly Task<int> Zero     = Task.FromResult(0);
 		public static readonly Task<int> MinusOne = Task.FromResult(-1);
 
+#if !NATIVE_ASYNC
+		public static readonly Task CompletedTask = True;
+#else
+		public static readonly Task CompletedTask = Task.CompletedTask;
+#endif
 		public static readonly Task<DataConnectionTransaction?> CompletedTransaction = Task.FromResult<DataConnectionTransaction?>(null);
 	}
 }

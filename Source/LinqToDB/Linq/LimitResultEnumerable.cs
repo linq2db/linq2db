@@ -3,10 +3,13 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using LinqToDB.Async;
+using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
+	using Async;
+	using LinqToDB.Common.Internal;
+
 	class LimitResultEnumerable<T> : IResultEnumerable<T>
 	{
 		readonly IResultEnumerable<T> _source;
@@ -22,34 +25,12 @@ namespace LinqToDB.Linq
 
 		public IEnumerator<T> GetEnumerator()
 		{
-			if (_skip == null && _take == null)
-				return _source.GetEnumerator();
-
-			return GetLimitedEnumeration().GetEnumerator();
-		}
-
-		IEnumerable<T> GetLimitedEnumeration()
-		{
-			var enumerator = _source.GetEnumerator();
+			IEnumerable<T> source = _source;
 			if (_skip != null)
-			{
-				for (var i = _skip.Value; i > 0; --i)
-				{
-					if (!enumerator.MoveNext())
-						yield break;
-				}
-			}
-
+				source = source.Skip(_skip.Value);
 			if (_take != null)
-			{
-				for (var i = _take.Value; i > 0; --i)
-				{
-					if (!enumerator.MoveNext())
-						yield break;
-
-					yield return enumerator.Current;
-				}
-			}
+				source = source.Take(_take.Value);
+			return source.GetEnumerator();
 		}
 
 		IEnumerator IEnumerable.GetEnumerator()
@@ -57,9 +38,116 @@ namespace LinqToDB.Linq
 			return GetEnumerator();
 		}
 
-		public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = default(CancellationToken))
+		class LimitAsyncEnumerator : IAsyncEnumerator<T>
 		{
-			throw new NotImplementedException();
+			readonly IAsyncEnumerable<T> _enumerable;
+			readonly int?                _skip;
+			readonly int?                _take;
+			readonly CancellationToken   _cancellationToken;
+
+			IAsyncEnumerator<T>? _enumerator;
+			int                  _skipped;
+			int                  _taken;
+			bool                 _finished;
+
+			public LimitAsyncEnumerator(IAsyncEnumerable<T> enumerable, int? skip, int? take, CancellationToken cancellationToken)
+			{
+				_enumerable        = enumerable;
+				_skip              = skip;
+				_take              = take;
+				_cancellationToken = cancellationToken;
+			}
+
+#if !NATIVE_ASYNC
+			public Task DisposeAsync()
+			{
+				if (_enumerator == null)
+					return TaskCache.CompletedTask;
+
+				return _enumerator.DisposeAsync();
+			}
+#else
+			public ValueTask DisposeAsync()
+			{
+				if (_enumerator == null)
+					return new ValueTask();
+
+				return _enumerator.DisposeAsync();
+			}
+#endif
+			public T Current
+			{
+				get
+				{
+					if (_enumerator == null)
+						throw new InvalidOperationException("Enumeration not started.");
+
+					return _enumerator.Current;
+				}
+			}
+
+#if !NATIVE_ASYNC
+			public async Task<bool> MoveNextAsync()
+#else
+			public async ValueTask<bool> MoveNextAsync()
+#endif
+			{
+				if (_enumerator == null)
+				{
+					_enumerator = _enumerable.GetAsyncEnumerator(_cancellationToken);
+					_finished   = false;
+					_skipped    = 0;
+					_taken      = 0;
+				}
+
+				if (_finished)
+					return false;
+
+				if (_skip != null)
+				{
+					while (_skipped < _skip.Value)
+					{
+						if (!await _enumerator.MoveNextAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+						{
+							_finished = true;
+							return false;
+						}
+
+						++_skipped;
+					}
+				}
+
+				if (_take != null)
+				{
+					if (_taken >= _take.Value)
+					{
+						_finished = true;
+						return false;
+					}
+
+					if (!await _enumerator.MoveNextAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+					{
+						_finished = true;
+						return false;
+					}
+
+					++_taken;
+					return true;
+				}
+
+				if (!await _enumerator.MoveNextAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+				{
+					_finished = true;
+					return false;
+				}
+
+				return true;
+			}
+		}
+
+		public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = default)
+		{
+			return new LimitAsyncEnumerator(_source, _skip, _take, cancellationToken);
 		}
 	}
 }

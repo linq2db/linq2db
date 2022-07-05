@@ -610,6 +610,15 @@ namespace LinqToDB.Linq
 			}
 		}
 
+		public static void WrapRunQuery<TSource, TResult>(
+			Query<TSource>                                               query, 
+			Query<TResult>                                               destQuery, 
+			Func<IResultEnumerable<TSource>, IResultEnumerable<TResult>> wrapper)
+		{
+			var executeQuery = query.GetResultEnumerable;
+			destQuery.GetResultEnumerable = (db, expr, ps, preambles) => wrapper(executeQuery(db, expr, ps, preambles));
+		}
+
 		static void SetRunQuery<T>(
 			Query<T> query,
 			Expression<Func<IQueryRunner, DbDataReader, T>> expression)
