@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Reflection;
 
 using Microsoft.Extensions.DependencyInjection;
@@ -180,37 +181,13 @@ namespace LinqToDB.AspNet
 			var constructors = typeof(TContext)
 				.GetConstructors(BindingFlags.Public | BindingFlags.Instance);
 
-			if (constructors
-					.Any(c => c.GetParameters()
-						.Where(p => p.ParameterType == typeof(LinqToDBConnectionOptions<TContext>))
-						.Any()))
+			if (constructors.Any(c => c.GetParameters().Any(p => p.ParameterType == typeof(DataOptions<TContext>))))
 				return true;
 
-			if (constructors
-					.Any(c => c.GetParameters()
-						.Where(p => p.ParameterType == typeof(LinqToDBConnectionOptions))
-						.Any()))
+			if (constructors.Any(c => c.GetParameters().Any(p => p.ParameterType == typeof(DataOptions))))
 				return false;
 
-			throw new ArgumentException($"Missing constructor accepting '{nameof(LinqToDBConnectionOptions)}' on type {typeof(TContext).Name}.");
-		}
-
-		static bool HasTypedContextConstructor<TContext>() where TContext : IDataContext
-		{
-			var typedConstructorInfo   = typeof(TContext).GetConstructor(
-				BindingFlags.Public | BindingFlags.Instance | BindingFlags.ExactBinding,
-				null,
-				new[] { typeof(DataOptions<TContext>) },
-				null);
-
-			var untypedConstructorInfo = typedConstructorInfo == null
-				? typeof(TContext).GetConstructor(new[] { typeof(DataOptions) })
-				: null;
-
-			if (typedConstructorInfo == null && untypedConstructorInfo == null)
-				throw new ArgumentException($"Missing constructor accepting '{nameof(DataOptions)}' on type {typeof(TContext).Name}");
-
-			return typedConstructorInfo != null;
+			throw new ArgumentException($"Missing constructor accepting '{nameof(DataOptions)}' on type {typeof(TContext).Name}.");
 		}
 	}
 }
