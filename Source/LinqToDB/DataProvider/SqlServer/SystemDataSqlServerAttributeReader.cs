@@ -7,6 +7,7 @@ namespace LinqToDB.Metadata
 {
 	using Common;
 	using Extensions;
+	using LinqToDB.DataProvider.SqlServer;
 	using Mapping;
 
 	/// <summary>
@@ -17,30 +18,71 @@ namespace LinqToDB.Metadata
 	/// </summary>
 	public class SystemDataSqlServerAttributeReader : IMetadataReader
 	{
-		readonly AttributeReader _reader = new AttributeReader();
+		static readonly ConcurrentDictionary<MemberInfo,object> _cache  = new ();
+		static readonly AttributeReader                         _reader = new ();
+		static readonly Type[]                                  _sqlMethodAttributes;
+		static readonly Type[]                                  _sqlUserDefinedTypeAttributes;
 
-		private static readonly Type[] _sqlMethodAttributes;
-		private static readonly Type[] _sqlUserDefinedTypeAttributes;
-
+		// TODO: v5 convert to Instance field
 		static SystemDataSqlServerAttributeReader()
 		{
+			// try/catch applied as Type.GetType(throwOnError: false) still can throw for sfx builds
+			// see https://github.com/linq2db/linq2db/issues/3630
+
+			Type? methodAttr1 = null;
+			Type? methodAttr2 = null;
+			Type? methodAttr3 = null;
+			Type? typeAttr1   = null;
+			Type? typeAttr2   = null;
+			Type? typeAttr3   = null;
+
+			try
+			{
+				methodAttr1 = Type.GetType("Microsoft.SqlServer.Server.SqlMethodAttribute, System.Data.SqlClient"         , false);
+				typeAttr1   = Type.GetType("Microsoft.SqlServer.Server.SqlUserDefinedTypeAttribute, System.Data.SqlClient", false);
+			}
+			catch
+			{
+			}
+
+			try
+			{
+				methodAttr2 = Type.GetType("Microsoft.Data.SqlClient.Server.SqlMethodAttribute, Microsoft.Data.SqlClient"         , false);
+				typeAttr2   = Type.GetType("Microsoft.Data.SqlClient.Server.SqlUserDefinedTypeAttribute, Microsoft.Data.SqlClient", false);
+			}
+			catch
+			{
+			}
+
+			// added since https://github.com/dotnet/SqlClient/releases/tag/v5.0.0-preview3
+			try
+			{
+				methodAttr3 = Type.GetType("Microsoft.SqlServer.Server.SqlMethodAttribute, Microsoft.SqlServer.Server"         , false);
+				typeAttr3   = Type.GetType("Microsoft.SqlServer.Server.SqlUserDefinedTypeAttribute, Microsoft.SqlServer.Server", false);
+			}
+			catch
+			{
+			}
+
 			_sqlMethodAttributes = new[]
 			{
+				methodAttr1,
+				methodAttr2,
+				methodAttr3,
 #if NETFRAMEWORK
 				typeof(Microsoft.SqlServer.Server.SqlMethodAttribute),
 #endif
-				Type.GetType("Microsoft.SqlServer.Server.SqlMethodAttribute, System.Data.SqlClient", false),
-				Type.GetType("Microsoft.Data.SqlClient.Server.SqlMethodAttribute, Microsoft.Data.SqlClient", false)
-			}.Where(_ => _ != null).Distinct().ToArray()!;
+			}.Where(t => t != null).Distinct().ToArray()!;
 
 			_sqlUserDefinedTypeAttributes = new[]
 			{
+				typeAttr1,
+				typeAttr2,
+				typeAttr3,
 #if NETFRAMEWORK
 				typeof(Microsoft.SqlServer.Server.SqlUserDefinedTypeAttribute),
 #endif
-				Type.GetType("Microsoft.SqlServer.Server.SqlUserDefinedTypeAttribute, System.Data.SqlClient", false),
-				Type.GetType("Microsoft.Data.SqlClient.Server.SqlUserDefinedTypeAttribute, Microsoft.Data.SqlClient", false)
-			}.Where(_ => _ != null).Distinct().ToArray()!;
+			}.Where(t => t != null).Distinct().ToArray()!;
 		}
 
 		public T[] GetAttributes<T>(Type type, bool inherit)
@@ -48,8 +90,6 @@ namespace LinqToDB.Metadata
 		{
 			return Array<T>.Empty;
 		}
-
-		static readonly ConcurrentDictionary<MemberInfo,object> _cache = new ConcurrentDictionary<MemberInfo,object>();
 
 		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo, bool inherit)
 			where T : Attribute

@@ -177,6 +177,26 @@ namespace LinqToDB.AspNet
 
 		static bool HasTypedContextConstructor<TContext>() where TContext : IDataContext
 		{
+			var constructors = typeof(TContext)
+				.GetConstructors(BindingFlags.Public | BindingFlags.Instance);
+
+			if (constructors
+					.Any(c => c.GetParameters()
+						.Where(p => p.ParameterType == typeof(LinqToDBConnectionOptions<TContext>))
+						.Any()))
+				return true;
+
+			if (constructors
+					.Any(c => c.GetParameters()
+						.Where(p => p.ParameterType == typeof(LinqToDBConnectionOptions))
+						.Any()))
+				return false;
+
+			throw new ArgumentException($"Missing constructor accepting '{nameof(LinqToDBConnectionOptions)}' on type {typeof(TContext).Name}.");
+		}
+
+		static bool HasTypedContextConstructor<TContext>() where TContext : IDataContext
+		{
 			var typedConstructorInfo   = typeof(TContext).GetConstructor(
 				BindingFlags.Public | BindingFlags.Instance | BindingFlags.ExactBinding,
 				null,

@@ -61,5 +61,11 @@ namespace Tests
 		{
 			return GetSelectQuery(query).From.Tables.Single();
 		}
+
+		public static long GetCacheMissCount<T>(this IQueryable<T> _)
+		{
+			return Query<T>.CacheMissCount;
+		}
+
 	}
 }

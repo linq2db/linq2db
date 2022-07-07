@@ -414,6 +414,50 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void ConditionUnionTest([DataSources(false)] string context)
+		{
+			var ms = CreateMappingSchema();
+
+			var testData = MainClass.TestData();
+			using (var db = GetDataContext(context, ms))
+			using (var table = db.CreateLocalTable(testData))
+			{
+				var query = from t1 in table
+					select new
+					{
+						Converted = t1.EnumNullable != null ? t1.EnumNullable : t1.Enum,
+					};
+
+				var selectResult = query.Concat(query).ToArray();
+
+				selectResult.Should().HaveCount(20);
+			}
+		}
+
+		[Test]
+		public void CoalesceConcatTest([DataSources(false)] string context)
+		{
+			var ms = CreateMappingSchema();
+
+			var testData = MainClass.TestData();
+			using (var db = GetDataContext(context, ms))
+			using (var table = db.CreateLocalTable(testData))
+			{
+				var query = from t1 in table
+					select new
+					{
+						Converted1 = t1.EnumNullable ?? t1.Enum,
+						Converted2 = t1.Value1,
+						Converted3 = t1.EnumNullable ?? t1.Enum,
+					};
+
+				var selectResult = query.Union(query).ToArray();
+
+				selectResult.Should().HaveCount(10);
+			}
+		}
+
+		[Test]
 		public void BoolJoinTest([DataSources(false)] string context)
 		{
 			var ms = CreateMappingSchema();

@@ -860,7 +860,7 @@ namespace LinqToDB.SqlProvider
 				{
 					AppendIndent()
 						.Append("INTO ");
-					BuildObjectName(StringBuilder, new(output.OutputTable.TableName.Name), ConvertType.NameToQueryTable, true, TableOptions.NotSet);
+					BuildObjectName(StringBuilder, new(output.OutputTable.TableName.Name), ConvertType.NameToQueryTable, true, output.OutputTable.TableOptions);
 					StringBuilder
 						.AppendLine();
 
