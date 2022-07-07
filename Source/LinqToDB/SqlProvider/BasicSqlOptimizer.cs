@@ -3003,6 +3003,11 @@ namespace LinqToDB.SqlProvider
 				for (int i = 0; i < statement.SelectQuery.From.Tables.Count; i++)
 				{
 					var ts = statement.SelectQuery.From.Tables[i];
+
+					// We have strange limitation from PostgreSQL, so right now move only if we have one JOIN.
+					if (ts.Joins.Count > 1)
+						continue;
+
 					if (ts.Source is SqlTable table && table == tableToCompare)
 					{
 						if (tableToCompare != tableToUpdate)
