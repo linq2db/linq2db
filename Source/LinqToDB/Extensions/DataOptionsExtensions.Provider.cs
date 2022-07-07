@@ -1,4 +1,5 @@
 ﻿using System;
+using LinqToDB.Data;
 
 // ReSharper disable once CheckNamespace
 namespace LinqToDB
@@ -50,7 +51,23 @@ namespace LinqToDB
 		/// <returns>The builder instance so calls can be chained.</returns>
 		public static DataOptions UseSqlServer(this DataOptions options, string connectionString, SqlServerVersion dialect, SqlServerProvider provider)
 		{
-			return options.UseConnectionString(SqlServerTools.GetDataProvider(dialect, provider), connectionString);
+			if (dialect == SqlServerVersion.AutoDetect)
+			{
+				if (SqlServerTools.TryGetCachedServerVersion(connectionString, out var version))
+					dialect = version ?? SqlServerVersion.v2008;
+				else
+					return options.WithOptions<ConnectionOptions>(o => o with
+					{
+						ConnectionString    = connectionString,
+						DataProviderFactory = () =>
+						{
+							var v = SqlServerTools.DetectServerVersionCached(provider, connectionString);
+							return SqlServerTools.GetDataProvider(v ?? SqlServerVersion.v2008, provider, connectionString);
+						}
+					});
+			}
+
+			return options.UseConnectionString(SqlServerTools.GetDataProvider(dialect, provider, null), connectionString);
 		}
 
 		/// <summary>
@@ -62,8 +79,7 @@ namespace LinqToDB
 		/// <returns>The builder instance so calls can be chained.</returns>
 		public static DataOptions UseSqlServer(this DataOptions options, string connectionString, SqlServerProvider provider)
 		{
-			var version = SqlServerTools.DetectServerVersionCached(provider, connectionString) ?? SqlServerVersion.v2008;
-			return options.UseConnectionString(SqlServerTools.GetDataProvider(version, provider), connectionString);
+			return UseSqlServer(options, connectionString, SqlServerVersion.AutoDetect, provider);
 		}
 
 		/// <summary>
@@ -75,7 +91,7 @@ namespace LinqToDB
 		/// <returns>The builder instance so calls can be chained.</returns>
 		public static DataOptions UseSqlServer(this DataOptions options, string connectionString, SqlServerVersion dialect)
 		{
-			return options.UseConnectionString(SqlServerTools.GetDataProvider(dialect, SqlServerTools.Provider), connectionString);
+			return UseSqlServer(options, connectionString, SqlServerVersion.AutoDetect, SqlServerTools.Provider);
 		}
 
 		#endregion

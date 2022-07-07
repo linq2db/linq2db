@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Data;
 using System.Data.Common;
 using System.Reflection;
 using System.Text;
@@ -18,10 +19,9 @@ namespace LinqToDB.DataProvider.SqlServer
 	{
 		#region Init
 
-		public  static SqlServerProvider Provider = SqlServerProvider.MicrosoftDataSqlClient;
-		private static readonly ConcurrentQueue<SqlServerDataProvider> _providers = new();
-
-		private static readonly MemoryCache<(SqlServerProvider provider, string connectionString)> _providerCache = new(new ());
+		public  static          SqlServerProvider                      Provider       = SqlServerProvider.MicrosoftDataSqlClient;
+		private static readonly ConcurrentQueue<SqlServerDataProvider> _providers     = new();
+		private static readonly MemoryCache<string,SqlServerVersion?>  _providerCache = new(new());
 
 		// System.Data
 		// and/or
@@ -98,13 +98,13 @@ namespace LinqToDB.DataProvider.SqlServer
 					// SqlClient use dot prefix, as SqlClient itself used by some other providers
 				case var providerName when providerName.Contains("SqlServer") || providerName.Contains(".SqlClient"):
 				case ProviderName.SqlServer:
-					if (css.Name.Contains("2005") || css.ProviderName?.Contains("2005") == true) return GetDataProvider(SqlServerVersion.v2005, provider);
-					if (css.Name.Contains("2008") || css.ProviderName?.Contains("2008") == true) return GetDataProvider(SqlServerVersion.v2008, provider);
-					if (css.Name.Contains("2012") || css.ProviderName?.Contains("2012") == true) return GetDataProvider(SqlServerVersion.v2012, provider);
-					if (css.Name.Contains("2014") || css.ProviderName?.Contains("2014") == true) return GetDataProvider(SqlServerVersion.v2014, provider);
-					if (css.Name.Contains("2016") || css.ProviderName?.Contains("2016") == true) return GetDataProvider(SqlServerVersion.v2016, provider);
-					if (css.Name.Contains("2017") || css.ProviderName?.Contains("2017") == true) return GetDataProvider(SqlServerVersion.v2017, provider);
-					if (css.Name.Contains("2019") || css.ProviderName?.Contains("2019") == true) return GetDataProvider(SqlServerVersion.v2019, provider);
+					if (css.Name.Contains("2005") || css.ProviderName?.Contains("2005") == true) return GetDataProvider(SqlServerVersion.v2005, provider, null);
+					if (css.Name.Contains("2008") || css.ProviderName?.Contains("2008") == true) return GetDataProvider(SqlServerVersion.v2008, provider, null);
+					if (css.Name.Contains("2012") || css.ProviderName?.Contains("2012") == true) return GetDataProvider(SqlServerVersion.v2012, provider, null);
+					if (css.Name.Contains("2014") || css.ProviderName?.Contains("2014") == true) return GetDataProvider(SqlServerVersion.v2014, provider, null);
+					if (css.Name.Contains("2016") || css.ProviderName?.Contains("2016") == true) return GetDataProvider(SqlServerVersion.v2016, provider, null);
+					if (css.Name.Contains("2017") || css.ProviderName?.Contains("2017") == true) return GetDataProvider(SqlServerVersion.v2017, provider, null);
+					if (css.Name.Contains("2019") || css.ProviderName?.Contains("2019") == true) return GetDataProvider(SqlServerVersion.v2019, provider, null);
 
 					if (AutoDetectProvider)
 					{
@@ -116,7 +116,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 							if (detectedVersion != null)
 							{
-								return GetDataProvider(detectedVersion.Value, provider);
+								return GetDataProvider(detectedVersion.Value, provider, connectionString);
 							}
 
 							return null;
@@ -127,7 +127,7 @@ namespace LinqToDB.DataProvider.SqlServer
 						}
 					}
 
-					return GetDataProvider(provider: provider);
+					return GetDataProvider(SqlServerVersion.v2008, provider, connectionString);
 			}
 
 			return null;
@@ -150,12 +150,10 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <remarks>Uses cache to avoid unwanted connections to Database.</remarks>
 		public static SqlServerVersion? DetectServerVersionCached(SqlServerProvider provider, string connectionString)
 		{
-			var cacheKey = (provider, connectionString);
-
-			var version = _providerCache.GetOrCreate(cacheKey, entry =>
+			var version = _providerCache.GetOrCreate(connectionString, entry =>
 			{
 				entry.SlidingExpiration = Configuration.Linq.CacheSlidingExpiration;
-				return DetectServerVersion(entry.Key.provider, entry.Key.connectionString);
+				return DetectServerVersion(provider, entry.Key);
 			});
 
 			return version;
@@ -170,45 +168,54 @@ namespace LinqToDB.DataProvider.SqlServer
 		public static SqlServerVersion? DetectServerVersion(SqlServerProvider provider, string connectionString)
 		{
 			using var conn = SqlServerProviderAdapter.GetInstance(provider).CreateConnection(connectionString);
+
 			conn.Open();
 
-			if (!int.TryParse(conn.ServerVersion.Split('.')[0], out var version))
-			{
+			return DetectServerVersion(conn);
+		}
+
+		internal static bool TryGetCachedServerVersion(string connectionString, out SqlServerVersion? version)
+		{
+			return _providerCache.TryGetValue(connectionString, out version);
+		}
+
+		static SqlServerVersion? DetectServerVersion(SqlServerProviderAdapter.SqlConnection connection)
+		{
+			if (!int.TryParse(connection.ServerVersion.Split('.')[0], out var version))
 				return null;
-			}
 
 			if (version <= 8)
 				// sql server <= 2000
 				return null;
 
-			using (var cmd = conn.CreateCommand())
-			{
-				cmd.CommandText = "SELECT compatibility_level FROM sys.databases WHERE name = db_name()";
-				var level = Converter.ChangeTypeTo<int>(cmd.ExecuteScalar());
+			using var cmd = connection.CreateCommand();
 
-				return level switch
+			cmd.CommandText = "SELECT compatibility_level FROM sys.databases WHERE name = db_name()";
+
+			var level = Converter.ChangeTypeTo<int>(cmd.ExecuteScalar());
+
+			return level switch
+			{
+				>= 150 => SqlServerVersion.v2019,
+				>= 140 => SqlServerVersion.v2017,
+				>= 130 => SqlServerVersion.v2016,
+				>= 120 => SqlServerVersion.v2014,
+				>= 110 => SqlServerVersion.v2012,
+				>= 100 => SqlServerVersion.v2008,
+				>= 90  => SqlServerVersion.v2005,
+				_      => version switch
 				{
-					>= 150 => SqlServerVersion.v2019,
-					>= 140 => SqlServerVersion.v2017,
-					>= 130 => SqlServerVersion.v2016,
-					>= 120 => SqlServerVersion.v2014,
-					>= 110 => SqlServerVersion.v2012,
-					>= 100 => SqlServerVersion.v2008,
-					>= 90  => SqlServerVersion.v2005,
-					_      => version switch
-					{
-						// versions below 9 handled above already
-						9  => SqlServerVersion.v2005,
-						10 => SqlServerVersion.v2008,
-						11 => SqlServerVersion.v2012,
-						12 => SqlServerVersion.v2014,
-						13 => SqlServerVersion.v2016,
-						14 => SqlServerVersion.v2017,
-						//case 15 : // v2019 : no own dialect yet
-						_  =>  SqlServerVersion.v2019
-					}
-				};
-			}
+					// versions below 9 handled above already
+					9  => SqlServerVersion.v2005,
+					10 => SqlServerVersion.v2008,
+					11 => SqlServerVersion.v2012,
+					12 => SqlServerVersion.v2014,
+					13 => SqlServerVersion.v2016,
+					14 => SqlServerVersion.v2017,
+					//case 15 : // v2019 : no own dialect yet
+					_  =>  SqlServerVersion.v2019
+				}
+			};
 		}
 
 		#endregion
@@ -216,28 +223,37 @@ namespace LinqToDB.DataProvider.SqlServer
 		#region Public Members
 
 		public static IDataProvider GetDataProvider(
-			SqlServerVersion  version  = SqlServerVersion.v2008,
-			SqlServerProvider provider = SqlServerProvider.SystemDataSqlClient)
+			SqlServerVersion  version          = SqlServerVersion.v2008,
+			SqlServerProvider provider         = SqlServerProvider.SystemDataSqlClient,
+			string?           connectionString = null)
 		{
 			return (provider, version) switch
 			{
-				(SqlServerProvider.SystemDataSqlClient,    SqlServerVersion.v2005) => _sqlServerDataProvider2005sdc.Value,
-				(SqlServerProvider.SystemDataSqlClient,    SqlServerVersion.v2012) => _sqlServerDataProvider2012sdc.Value,
-				(SqlServerProvider.SystemDataSqlClient,    SqlServerVersion.v2014) => _sqlServerDataProvider2014sdc.Value,
-				(SqlServerProvider.SystemDataSqlClient,    SqlServerVersion.v2016) => _sqlServerDataProvider2016sdc.Value,
-				(SqlServerProvider.SystemDataSqlClient,    SqlServerVersion.v2017) => _sqlServerDataProvider2017sdc.Value,
-				(SqlServerProvider.SystemDataSqlClient,    SqlServerVersion.v2019) => _sqlServerDataProvider2019sdc.Value,
-				(SqlServerProvider.SystemDataSqlClient,    _                     ) => _sqlServerDataProvider2008sdc.Value,
-				(SqlServerProvider.MicrosoftDataSqlClient, SqlServerVersion.v2005) => _sqlServerDataProvider2005mdc.Value,
-				(SqlServerProvider.MicrosoftDataSqlClient, SqlServerVersion.v2012) => _sqlServerDataProvider2012mdc.Value,
-				(SqlServerProvider.MicrosoftDataSqlClient, SqlServerVersion.v2014) => _sqlServerDataProvider2014mdc.Value,
-				(SqlServerProvider.MicrosoftDataSqlClient, SqlServerVersion.v2016) => _sqlServerDataProvider2016mdc.Value,
-				(SqlServerProvider.MicrosoftDataSqlClient, SqlServerVersion.v2017) => _sqlServerDataProvider2017mdc.Value,
-				(SqlServerProvider.MicrosoftDataSqlClient, SqlServerVersion.v2019) => _sqlServerDataProvider2019mdc.Value,
-				(SqlServerProvider.MicrosoftDataSqlClient, _                     ) => _sqlServerDataProvider2008mdc.Value,
-				_ when Provider == SqlServerProvider.MicrosoftDataSqlClient        => _sqlServerDataProvider2008mdc.Value,
-				_                                                                  => _sqlServerDataProvider2008sdc.Value,
+				(_,                                        SqlServerVersion.AutoDetect) => DetectProvider(),
+				(SqlServerProvider.SystemDataSqlClient,    SqlServerVersion.v2005)      => _sqlServerDataProvider2005sdc.Value,
+				(SqlServerProvider.SystemDataSqlClient,    SqlServerVersion.v2008)      => _sqlServerDataProvider2008sdc.Value,
+				(SqlServerProvider.SystemDataSqlClient,    SqlServerVersion.v2012)      => _sqlServerDataProvider2012sdc.Value,
+				(SqlServerProvider.SystemDataSqlClient,    SqlServerVersion.v2014)      => _sqlServerDataProvider2014sdc.Value,
+				(SqlServerProvider.SystemDataSqlClient,    SqlServerVersion.v2016)      => _sqlServerDataProvider2016sdc.Value,
+				(SqlServerProvider.SystemDataSqlClient,    SqlServerVersion.v2017)      => _sqlServerDataProvider2017sdc.Value,
+				(SqlServerProvider.SystemDataSqlClient,    SqlServerVersion.v2019)      => _sqlServerDataProvider2019sdc.Value,
+				(SqlServerProvider.MicrosoftDataSqlClient, SqlServerVersion.v2005)      => _sqlServerDataProvider2005mdc.Value,
+				(SqlServerProvider.MicrosoftDataSqlClient, SqlServerVersion.v2008)      => _sqlServerDataProvider2008mdc.Value,
+				(SqlServerProvider.MicrosoftDataSqlClient, SqlServerVersion.v2012)      => _sqlServerDataProvider2012mdc.Value,
+				(SqlServerProvider.MicrosoftDataSqlClient, SqlServerVersion.v2014)      => _sqlServerDataProvider2014mdc.Value,
+				(SqlServerProvider.MicrosoftDataSqlClient, SqlServerVersion.v2016)      => _sqlServerDataProvider2016mdc.Value,
+				(SqlServerProvider.MicrosoftDataSqlClient, SqlServerVersion.v2017)      => _sqlServerDataProvider2017mdc.Value,
+				(SqlServerProvider.MicrosoftDataSqlClient, SqlServerVersion.v2019)      => _sqlServerDataProvider2019mdc.Value,
+				_                                                                       => _sqlServerDataProvider2008sdc.Value,
 			};
+
+			IDataProvider DetectProvider()
+			{
+				if (connectionString == null)
+					throw new InvalidOperationException("Connection string is not provided.");
+
+				return GetDataProvider(DetectServerVersionCached(provider, connectionString) ?? SqlServerVersion.v2008, provider, null);
+			}
 		}
 
 		/// <summary>
@@ -274,26 +290,34 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		public static DataConnection CreateDataConnection(
 			string            connectionString,
-			SqlServerVersion  version  = SqlServerVersion.v2008,
+			SqlServerVersion  version  = SqlServerVersion.AutoDetect,
 			SqlServerProvider provider = SqlServerProvider.SystemDataSqlClient)
 		{
-			return new DataConnection(GetDataProvider(version, provider), connectionString);
+			return new DataConnection(GetDataProvider(version, provider, connectionString), connectionString);
 		}
 
 		public static DataConnection CreateDataConnection(
 			DbConnection      connection,
-			SqlServerVersion  version  = SqlServerVersion.v2008,
+			SqlServerVersion  version  = SqlServerVersion.AutoDetect,
 			SqlServerProvider provider = SqlServerProvider.SystemDataSqlClient)
 		{
-			return new DataConnection(GetDataProvider(version, provider), connection);
+			if (version is SqlServerVersion.AutoDetect)
+				version = DetectServerVersion((SqlServerProviderAdapter.SqlConnection)(IDbConnection)connection) ?? SqlServerVersion.v2008;
+
+			return new DataConnection(GetDataProvider(version, provider, null), connection);
 		}
 
 		public static DataConnection CreateDataConnection(
 			DbTransaction     transaction,
-			SqlServerVersion  version  = SqlServerVersion.v2008,
+			SqlServerVersion  version  = SqlServerVersion.AutoDetect,
 			SqlServerProvider provider = SqlServerProvider.SystemDataSqlClient)
 		{
-			return new DataConnection(GetDataProvider(version, provider), transaction);
+			if (version is SqlServerVersion.AutoDetect)
+			{
+				version = DetectServerVersion((SqlServerProviderAdapter.SqlConnection)(IDbConnection)transaction.Connection!) ?? SqlServerVersion.v2008;
+			}
+
+			return new DataConnection(GetDataProvider(version, provider, null), transaction);
 		}
 
 		#endregion

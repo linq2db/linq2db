@@ -510,12 +510,13 @@ namespace LinqToDB.Data
 					return;
 				}
 
-				var doSave = true;
+				var dataProvider = options.DataProviderFactory == null ? options.DataProvider : options.DataProviderFactory();
+				var doSave       = true;
 
 				switch (
 				          options.ConfigurationString,
 				                           options.ConnectionString,
-				                                                options.DataProvider,
+				                                                dataProvider,
 				                                                             options.ProviderName,
 				                                                                              options.DbConnection,
 				                                                                                             options.DbTransaction,

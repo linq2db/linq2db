@@ -93,7 +93,7 @@ namespace LinqToDB.Linq
 
 				var ei = dataContext.Options.LinqOptions.DisableQueryCache || entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Insert) || columnFilter != null
 					? CreateQuery(dataContext, entityDescriptor, obj!, columnFilter, tableName, serverName, databaseName, schemaName, tableOptions, type)
-					: Cache<T>.QueryCache.GetOrCreate(
+					: Cache<T,object>.QueryCache.GetOrCreate(
 						(
 							operation: "II",
 							dataContext.ConfigurationID,
@@ -134,7 +134,7 @@ namespace LinqToDB.Linq
 
 				var ei = dataContext.Options.LinqOptions.DisableQueryCache || entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Insert) || columnFilter != null
 					? CreateQuery(dataContext, entityDescriptor, obj!, columnFilter, tableName, serverName, databaseName, schemaName, tableOptions, type)
-					: Cache<T>.QueryCache.GetOrCreate(
+					: Cache<T,object>.QueryCache.GetOrCreate(
 						(
 							operation: "II",
 							dataContext.ConfigurationID,

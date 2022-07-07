@@ -170,7 +170,7 @@ namespace LinqToDB.Linq
 
 				var ei = cacheDisabled
 					? CreateQuery(dataContext, entityDescriptor, obj, columnFilter, tableName, serverName, databaseName, schema, tableOptions, type)
-					: Cache<T>.QueryCache.GetOrCreate(
+					: Cache<T,int>.QueryCache.GetOrCreate(
 					(
 						operation: "IR",
 						dataContext.ConfigurationID,
@@ -217,7 +217,7 @@ namespace LinqToDB.Linq
 
 				var ei = cacheDisabled
 					? CreateQuery(dataContext, entityDescriptor, obj, columnFilter, tableName, serverName, databaseName, schema, tableOptions, type)
-					: Cache<T>.QueryCache.GetOrCreate(
+					: Cache<T,int>.QueryCache.GetOrCreate(
 					(
 						operation: "IR",
 						dataContext.ConfigurationID,

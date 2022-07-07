@@ -84,7 +84,7 @@ namespace LinqToDB.Linq
 
 				var ei = dataOptions.LinqOptions.DisableQueryCache
 					? CreateQuery(dataContext, tableName, serverName, databaseName, schemaName, tableOptions, type)
-					: Cache<T>.QueryCache.GetOrCreate(
+					: Cache<T,int>.QueryCache.GetOrCreate(
 						(
 							operation: 'D',
 							dataContext.ConfigurationID,
@@ -122,7 +122,7 @@ namespace LinqToDB.Linq
 				var type = GetType<T>(obj!, dataContext);
 				var ei   = dataContext.Options.LinqOptions.DisableQueryCache
 					? CreateQuery(dataContext, tableName, serverName, databaseName, schemaName, tableOptions, type)
-					: Cache<T>.QueryCache.GetOrCreate(
+					: Cache<T,int>.QueryCache.GetOrCreate(
 						(
 							operation: 'D',
 							dataContext.ConfigurationID,

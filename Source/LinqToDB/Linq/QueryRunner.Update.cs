@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
@@ -15,6 +16,21 @@ namespace LinqToDB.Linq
 	{
 		public static class Update<T>
 		{
+			public static class Cache
+			{
+				static Cache()
+				{
+					Linq.Query.CacheCleaners.Enqueue(ClearCache);
+				}
+
+				public static void ClearCache()
+				{
+					QueryCache.Clear();
+				}
+
+				internal static MemoryCache<IStructuralEquatable,Query<int>?> QueryCache { get; } = new(new());
+			}
+
 			static Query<int>? CreateQuery(
 				IDataContext           dataContext,
 				EntityDescriptor       descriptor,
@@ -113,11 +129,11 @@ namespace LinqToDB.Linq
 
 				var ei = dataContext.Options.LinqOptions.DisableQueryCache || entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Update) || columnFilter != null
 					? CreateQuery(dataContext, entityDescriptor, obj, columnFilter, tableName, serverName, databaseName, schemaName, tableOptions, type)
-					: Cache<T>.QueryCache.GetOrCreate(
+					: Cache.QueryCache.GetOrCreate(
 						(
-							operation: 'U',
 							dataContext.ConfigurationID,
-							columnFilter, tableName,
+							columnFilter,
+							tableName,
 							schemaName,
 							databaseName,
 							serverName,
@@ -154,9 +170,8 @@ namespace LinqToDB.Linq
 
 				var ei = dataContext.Options.LinqOptions.DisableQueryCache || entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Update) || columnFilter != null
 					? CreateQuery(dataContext, entityDescriptor, obj, columnFilter, tableName, serverName, databaseName, schemaName, tableOptions, type)
-					: Cache<T>.QueryCache.GetOrCreate(
+					: Cache.QueryCache.GetOrCreate(
 						(
-							operation: 'U',
 							dataContext.ConfigurationID,
 							columnFilter,
 							tableName,

@@ -18,7 +18,7 @@ namespace LinqToDB.DataProvider.Oracle
 		static readonly Lazy<IDataProvider> _oracleManagedDataProvider11 = DataConnection.CreateDataProvider<OracleDataProviderManaged11>();
 		static readonly Lazy<IDataProvider> _oracleManagedDataProvider12 = DataConnection.CreateDataProvider<OracleDataProviderManaged12>();
 
-		static readonly MemoryCache<(bool managed, string connectionString)> _providerCache = new(new ());
+//		static readonly MemoryCache<(bool managed, string connectionString)> _providerCache = new(new ());
 
 		static readonly Lazy<IDataProvider> _oracleDevartDataProvider11 = DataConnection.CreateDataProvider<OracleDataProviderDevart11>();
 		static readonly Lazy<IDataProvider> _oracleDevartDataProvider12 = DataConnection.CreateDataProvider<OracleDataProviderDevart12>();

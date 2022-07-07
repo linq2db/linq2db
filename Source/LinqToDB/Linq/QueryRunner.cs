@@ -39,7 +39,22 @@ namespace LinqToDB.Linq
 				QueryCache.Clear();
 			}
 
-			internal static MemoryCache<IStructuralEquatable> QueryCache { get; } = new (new ());
+			internal static MemoryCache<IStructuralEquatable,Query<T>> QueryCache { get; } = new(new());
+		}
+
+		public static class Cache<T,TR>
+		{
+			static Cache()
+			{
+				Query.CacheCleaners.Enqueue(ClearCache);
+			}
+
+			public static void ClearCache()
+			{
+				QueryCache.Clear();
+			}
+
+			internal static MemoryCache<IStructuralEquatable,Query<TR>> QueryCache { get; } = new(new());
 		}
 
 		#region Mapper

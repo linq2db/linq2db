@@ -4,6 +4,7 @@ namespace LinqToDB.DataProvider.SqlServer
 {
 	public enum SqlServerVersion
 	{
+		AutoDetect,
 		v2005,
 		v2008,
 		v2012,

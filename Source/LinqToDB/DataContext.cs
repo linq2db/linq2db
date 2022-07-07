@@ -609,10 +609,12 @@ namespace LinqToDB
 		{
 			public static void Apply(DataContext dataContext, ConnectionOptions options)
 			{
+				var dataProvider = options.DataProviderFactory == null ? options.DataProvider : options.DataProviderFactory();
+
 				switch (
 				          options.ConfigurationString,
 				                           options.ConnectionString,
-				                                                options.DataProvider,
+				                                                dataProvider,
 				                                                             options.ProviderName)
 				{
 					case (_,               {} connectionString, {} provider, _) :

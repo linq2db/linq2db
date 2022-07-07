@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 namespace LinqToDB.Linq
 {
 	using Builder;
-	using Common.Internal;
 	using Common.Internal.Cache;
 
 	class CompiledTable<T>
@@ -47,7 +46,7 @@ namespace LinqToDB.Linq
 
 					query.ClearMemberQueryableInfo();
 					return query;
-				});
+				})!;
 
 
 			return result;

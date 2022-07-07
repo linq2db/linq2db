@@ -76,6 +76,15 @@ namespace LinqToDB.Common.Internal
 			return this;
 		}
 
+		public IdentifierBuilder Add(Delegate? data)
+		{
+			_stringBuilder
+				.Append('.')
+				.Append(data?.Method)
+				;
+			return this;
+		}
+
 		public IdentifierBuilder Add(int? data)
 		{
 			_stringBuilder

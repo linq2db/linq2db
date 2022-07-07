@@ -16,9 +16,9 @@ namespace LinqToDB.Remote
 	/// </summary>
 	class SerializationConverter
 	{
-		static readonly Type _stringType = typeof(string);
-		static readonly MemoryCache<(Type from, int schemaId)> _serializeConverters   = new (new ());
-		static readonly MemoryCache<(Type to  , int schemaId)> _deserializeConverters = new (new ());
+		static readonly Type                                                       _stringType            = typeof(string);
+		static readonly MemoryCache<(Type from, int schemaId),Func<object,string>> _serializeConverters   = new (new ());
+		static readonly MemoryCache<(Type to  , int schemaId),Func<string,object>> _deserializeConverters = new (new ());
 
 		public static void ClearCaches()
 		{
@@ -43,15 +43,15 @@ namespace LinqToDB.Remote
 
 					Type? enumType = null;
 
-					var li = ms.GetConverter(new DbDataType(from), new DbDataType(_stringType), false);
+					var li = ms.GetConverter(new(from), new(_stringType), false);
+
 					if (li == null && from.IsEnum)
 					{
 						enumType = from;
 						from     = Enum.GetUnderlyingType(from);
 					}
 
-					if (li == null)
-						li = ms.GetConverter(new DbDataType(from), new DbDataType(_stringType), true)!;
+					li ??= ms.GetConverter(new(from), new(_stringType), true)!;
 
 					var b  = li.CheckNullLambda.Body;
 					var ps = li.CheckNullLambda.Parameters;

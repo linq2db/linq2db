@@ -32,15 +32,16 @@ namespace LinqToDB.Data
 	/// </param>
 	public sealed record ConnectionOptions
 	(
-		string?             ConfigurationString,
-		string?             ConnectionString    = default,
-		IDataProvider?      DataProvider        = default,
-		string?             ProviderName        = default,
-		MappingSchema?      MappingSchema       = default,
-		DbConnection?       DbConnection        = default,
-		DbTransaction?      DbTransaction       = default,
-		bool                DisposeConnection   = default,
-		Func<DbConnection>? ConnectionFactory   = default
+		string?              ConfigurationString,
+		string?              ConnectionString    = default,
+		IDataProvider?       DataProvider        = default,
+		string?              ProviderName        = default,
+		MappingSchema?       MappingSchema       = default,
+		DbConnection?        DbConnection        = default,
+		DbTransaction?       DbTransaction       = default,
+		bool                 DisposeConnection   = default,
+		Func<DbConnection>?  ConnectionFactory   = default,
+		Func<IDataProvider>? DataProviderFactory = default
 	)
 		: IOptionSet, IApplicable<DataConnection>, IApplicable<DataContext>
 	{
@@ -59,6 +60,7 @@ namespace LinqToDB.Data
 			DbTransaction       = original.DbTransaction;
 			DisposeConnection   = original.DisposeConnection;
 			ConnectionFactory   = original.ConnectionFactory;
+			DataProviderFactory = original.DataProviderFactory;
 		}
 
 		int? _configurationID;
@@ -70,6 +72,7 @@ namespace LinqToDB.Data
 			.Add(MappingSchema)
 			.Add(DbConnection?.ConnectionString)
 			.Add(DbTransaction?.Connection?.ConnectionString)
+			.Add(DataProviderFactory)
 			.CreateID();
 
 		internal IDataProvider? SavedDataProvider;
