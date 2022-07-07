@@ -375,7 +375,7 @@ namespace Tests.Data
 
 		public class DbConnection3 : DataConnection
 		{
-			public DbConnection3(DummyService service, LinqToDBConnectionOptions<DbConnection3> options) : base(options)
+			public DbConnection3(DummyService service, DataOptions options) : base(options)
 			{
 			}
 		}
