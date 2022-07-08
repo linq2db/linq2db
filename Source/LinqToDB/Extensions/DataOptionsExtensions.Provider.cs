@@ -25,7 +25,7 @@ namespace LinqToDB
 		/// <returns>The builder instance so calls can be chained.</returns>
 		/// <remarks>
 		/// <para>
-		/// Default provider configured using <see cref="SqlServerTools.Provider"/> option and set to <see cref="SqlServerProvider.SystemDataSqlClient"/> by default.
+		/// Default provider configured using <see cref="SqlServerTools.DefaultProvider"/> option and set to <see cref="SqlServerProvider.SystemDataSqlClient"/> by default.
 		/// </para>
 		/// <para>
 		/// SQL Server dialect will be chosen automatically:
@@ -53,7 +53,7 @@ namespace LinqToDB
 		{
 			if (dialect == SqlServerVersion.AutoDetect)
 			{
-				if (SqlServerTools.TryGetCachedServerVersion(connectionString, out var version))
+				if (SqlServerTools.ProviderDetector.TryGetCachedServerVersion(connectionString, out var version))
 					dialect = version ?? SqlServerVersion.v2008;
 				else
 					return options.WithOptions<ConnectionOptions>(o => o with
@@ -61,7 +61,7 @@ namespace LinqToDB
 						ConnectionString    = connectionString,
 						DataProviderFactory = () =>
 						{
-							var v = SqlServerTools.DetectServerVersionCached(provider, connectionString);
+							var v = SqlServerTools.ProviderDetector.DetectServerVersion(provider, connectionString);
 							return SqlServerTools.GetDataProvider(v ?? SqlServerVersion.v2008, provider, connectionString);
 						}
 					});
@@ -91,7 +91,7 @@ namespace LinqToDB
 		/// <returns>The builder instance so calls can be chained.</returns>
 		public static DataOptions UseSqlServer(this DataOptions options, string connectionString, SqlServerVersion dialect)
 		{
-			return UseSqlServer(options, connectionString, SqlServerVersion.AutoDetect, SqlServerTools.Provider);
+			return UseSqlServer(options, connectionString, dialect, SqlServerTools.DefaultProvider);
 		}
 
 		#endregion
@@ -233,7 +233,9 @@ namespace LinqToDB
 		/// <returns>The builder instance so calls can be chained.</returns>
 		public static DataOptions UsePostgreSQL(this DataOptions options, string connectionString, PostgreSQLVersion dialect)
 		{
-			return options.UseConnectionString(PostgreSQLTools.GetDataProvider(dialect), connectionString);
+			if (dialect == PostgreSQLVersion.AutoDetect)
+				return options.UseConnectionString(ProviderName.PostgreSQL, connectionString);
+			return options.UseConnectionString(PostgreSQLTools.GetDataProvider(dialect, connectionString), connectionString);
 		}
 
 		#endregion

@@ -192,7 +192,7 @@ namespace LinqToDB.Data
 			AddProviderDetector(LinqToDB.DataProvider.SapHana   .SapHanaTools   .ProviderDetector);
 			AddProviderDetector(LinqToDB.DataProvider.SqlCe     .SqlCeTools     .ProviderDetector);
 			AddProviderDetector(LinqToDB.DataProvider.SQLite    .SQLiteTools    .ProviderDetector);
-			AddProviderDetector(LinqToDB.DataProvider.SqlServer .SqlServerTools .ProviderDetector);
+			AddProviderDetector(LinqToDB.DataProvider.SqlServer .SqlServerTools .ProviderDetector.DetectProvider);
 			AddProviderDetector(LinqToDB.DataProvider.Sybase    .SybaseTools    .ProviderDetector);
 
 			var section = DefaultSettings;

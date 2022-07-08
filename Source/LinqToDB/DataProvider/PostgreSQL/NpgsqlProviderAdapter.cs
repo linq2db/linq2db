@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Net;
@@ -16,7 +15,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	using Expressions;
 	using Extensions;
 	using Mapping;
-	using SqlQuery;
 
 	public class NpgsqlProviderAdapter : IDynamicProviderAdapter
 	{

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Data.Common;
 using System.Reflection;
 
@@ -8,6 +7,7 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
+	using Common.Internal.Cache;
 	using Configuration;
 	using Data;
 
@@ -63,21 +63,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						try
 						{
 							var cs = string.IsNullOrWhiteSpace(connectionString) ? css.ConnectionString : connectionString;
+							var dv = DetectServerVersionCached(cs);
 
-							using (var conn = NpgsqlProviderAdapter.GetInstance().CreateConnection(cs))
-							{
-								conn.Open();
-
-								var postgreSqlVersion = conn.PostgreSqlVersion;
-
-								if (postgreSqlVersion.Major > 9 || postgreSqlVersion.Major == 9 && postgreSqlVersion.Minor > 4)
-									return _postgreSQLDataProvider95.Value;
-
-								if (postgreSqlVersion.Major == 9 && postgreSqlVersion.Minor > 2)
-									return _postgreSQLDataProvider93.Value;
-
-								return _postgreSQLDataProvider92.Value;
-							}
+							return dv != null ? GetDataProvider(dv.Value, connectionString) : null;
 						}
 						catch
 						{
@@ -91,24 +79,92 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return null;
 		}
 
-		public static IDataProvider GetDataProvider(PostgreSQLVersion version = PostgreSQLVersion.v92)
+		public static IDataProvider GetDataProvider(PostgreSQLVersion version = PostgreSQLVersion.v92, string? connectionString = null)
 		{
 			return version switch
 			{
-				PostgreSQLVersion.v95 => _postgreSQLDataProvider95.Value,
-				PostgreSQLVersion.v93 => _postgreSQLDataProvider93.Value,
-				_                     => _postgreSQLDataProvider92.Value,
+				PostgreSQLVersion.AutoDetect => DetectProvider(),
+				PostgreSQLVersion.v95        => _postgreSQLDataProvider95.Value,
+				PostgreSQLVersion.v93        => _postgreSQLDataProvider93.Value,
+				_                            => _postgreSQLDataProvider92.Value,
 			};
+
+			IDataProvider DetectProvider()
+			{
+				if (connectionString == null)
+					throw new InvalidOperationException("Connection string is not provided.");
+
+				return GetDataProvider(DetectServerVersionCached(connectionString) ?? PostgreSQLVersion.v92);
+			}
+		}
+
+		static readonly MemoryCache<string,PostgreSQLVersion?> _providerCache = new(new());
+
+		/// <summary>
+		/// Clears provider version cache.
+		/// </summary>
+		public static void ClearCache()
+		{
+			_providerCache.Clear();
+		}
+
+		/// <summary>
+		/// Connects to PostgreSQL and parses version information.
+		/// </summary>
+		/// <param name="connectionString"></param>
+		/// <returns>Detected PostgreSQL version.</returns>
+		/// <remarks>Uses cache to avoid unwanted connections to Database.</remarks>
+		public static PostgreSQLVersion? DetectServerVersionCached(string connectionString)
+		{
+			var version = _providerCache.GetOrCreate(connectionString, entry =>
+			{
+				entry.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
+				return DetectServerVersion(entry.Key);
+			});
+
+			return version;
+		}
+
+		/// <summary>
+		/// Connects to SQL Server Database and parses version information.
+		/// </summary>
+		/// <param name="connectionString"></param>
+		/// <returns>Detected SQL Server version.</returns>
+		public static PostgreSQLVersion? DetectServerVersion(string connectionString)
+		{
+			using var conn = NpgsqlProviderAdapter.GetInstance().CreateConnection(connectionString);
+
+			conn.Open();
+
+			return DetectServerVersion(conn);
+		}
+
+		internal static bool TryGetCachedServerVersion(string connectionString, out PostgreSQLVersion? version)
+		{
+			return _providerCache.TryGetValue(connectionString, out version);
+		}
+
+		static PostgreSQLVersion? DetectServerVersion(NpgsqlProviderAdapter.NpgsqlConnection connection)
+		{
+			var postgreSqlVersion = connection.PostgreSqlVersion;
+
+			if (postgreSqlVersion.Major > 9 || postgreSqlVersion.Major == 9 && postgreSqlVersion.Minor > 4)
+				return PostgreSQLVersion.v95;
+
+			if (postgreSqlVersion.Major == 9 && postgreSqlVersion.Minor > 2)
+				return PostgreSQLVersion.v93;
+
+			return PostgreSQLVersion.v92;
 		}
 
 		public static void ResolvePostgreSQL(string path)
 		{
-			new AssemblyResolver(path, NpgsqlProviderAdapter.AssemblyName);
+			_ = new AssemblyResolver(path, NpgsqlProviderAdapter.AssemblyName);
 		}
 
 		public static void ResolvePostgreSQL(Assembly assembly)
 		{
-			new AssemblyResolver(assembly, assembly.FullName!);
+			_ = new AssemblyResolver(assembly, assembly.FullName!);
 		}
 
 		#region CreateDataConnection

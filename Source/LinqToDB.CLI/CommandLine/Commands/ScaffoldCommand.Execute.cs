@@ -177,7 +177,7 @@ namespace LinqToDB.CommandLine
 					break;
 				case ProviderName.SqlServer:
 					SqlServerTools.AutoDetectProvider = true;
-					SqlServerTools.Provider = SqlServerProvider.MicrosoftDataSqlClient;
+					SqlServerTools.DefaultProvider = SqlServerProvider.MicrosoftDataSqlClient;
 					break;
 				case ProviderName.Firebird:
 					// TODO: don't forget to add versioning here after Firebird versioning feature merged

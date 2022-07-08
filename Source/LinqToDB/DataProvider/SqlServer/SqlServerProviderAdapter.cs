@@ -333,7 +333,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		[Wrapper]
-		public class SqlConnection : TypeWrapper, IDisposable
+		public class SqlConnection : TypeWrapper, IConnectionWrapper
 		{
 			private static LambdaExpression[] Wrappers { get; }
 				= new LambdaExpression[]

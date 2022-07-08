@@ -30,6 +30,7 @@ namespace LinqToDB.DataProvider.Oracle
 		internal static IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)
 		{
 			OracleProvider? provider = null;
+
 			switch (css.ProviderName)
 			{
 				case OracleProviderAdapter.NativeAssemblyName    :
@@ -61,7 +62,7 @@ namespace LinqToDB.DataProvider.Oracle
 					{
 						if (css.Name.Contains("Native") || css.ProviderName?.Contains("Native") == true)
 							provider = OracleProvider.Native;
-						if (css.Name.Contains("Devart") || css.ProviderName?.Contains("Devart") == true)
+						else if (css.Name.Contains("Devart") || css.ProviderName?.Contains("Devart") == true)
 							provider = OracleProvider.Devart;
 						else
 							provider = OracleProvider.Managed;
@@ -73,9 +74,7 @@ namespace LinqToDB.DataProvider.Oracle
 					if (css.Name.Contains("19") || css.ProviderName?.Contains("19") == true) return GetDataProvider(OracleVersion.v12, provider.Value);
 					if (css.Name.Contains("21") || css.ProviderName?.Contains("21") == true) return GetDataProvider(OracleVersion.v12, provider.Value);
 
-					var version = DefaultVersion;
-					if (AutoDetectProvider)
-						version = DetectProviderVersion(css, connectionString, provider.Value);
+					var version = AutoDetectProvider ? DetectProviderVersion(css, connectionString, provider.Value) : DefaultVersion;
 
 					return GetDataProvider(version, provider.Value);
 			}
@@ -116,7 +115,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		public static IDataProvider GetDataProvider(
-			OracleVersion version   = OracleVersion.v12,
+			OracleVersion  version  = OracleVersion.v12,
 			OracleProvider provider = OracleProvider.Managed)
 		{
 			return (provider, version) switch
