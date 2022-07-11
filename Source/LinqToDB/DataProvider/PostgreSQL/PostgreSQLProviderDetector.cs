@@ -9,7 +9,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	{
 		internal enum Provider {}
 
-		public static PostgreSQLVersion DefaultVersion = PostgreSQLVersion.v92;
+		public PostgreSQLProviderDetector() : base(PostgreSQLVersion.AutoDetect, PostgreSQLVersion.v92)
+		{
+		}
 
 		static readonly Lazy<IDataProvider> _postgreSQLDataProvider92 = DataConnection.CreateDataProvider<PostgreSQLDataProvider92>();
 		static readonly Lazy<IDataProvider> _postgreSQLDataProvider93 = DataConnection.CreateDataProvider<PostgreSQLDataProvider93>();

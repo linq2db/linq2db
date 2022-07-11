@@ -8,7 +8,9 @@ namespace LinqToDB.DataProvider.Oracle
 
 	class OracleProviderDetector : ProviderDetectorBase<OracleProvider,OracleVersion,DbConnection>
 	{
-		public static OracleVersion DefaultVersion = OracleVersion.v12;
+		public OracleProviderDetector() : base(OracleVersion.AutoDetect, OracleVersion.v12)
+		{
+		}
 
 		static readonly Lazy<IDataProvider> _oracleNativeDataProvider11  = DataConnection.CreateDataProvider<OracleDataProviderNative11>();
 		static readonly Lazy<IDataProvider> _oracleNativeDataProvider12  = DataConnection.CreateDataProvider<OracleDataProviderNative12>();

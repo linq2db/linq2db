@@ -5,13 +5,22 @@ namespace LinqToDB.DataProvider
 {
 	using Common.Internal.Cache;
 	using Configuration;
+	using Data;
 
 	abstract class ProviderDetectorBase<TProvider,TVersion,TConnection>
 		where TProvider   : struct, Enum
 		where TVersion    : struct, Enum
 		where TConnection : IDisposable
 	{
-		public bool AutoDetectProvider { get; set; } = true;
+		protected ProviderDetectorBase(TVersion autoDetectVersion, TVersion defaultVersion)
+		{
+			AutoDetectVersion = autoDetectVersion;
+			DefaultVersion    = defaultVersion;
+		}
+
+		public TVersion AutoDetectVersion  { get; set; }
+		public TVersion DefaultVersion     { get; set; }
+		public bool     AutoDetectProvider { get; set; } = true;
 
 		static readonly MemoryCache<string,TVersion?> _providerCache = new(new());
 
@@ -54,6 +63,27 @@ namespace LinqToDB.DataProvider
 			});
 
 			return version;
+		}
+
+		public DataOptions CreateOptions(DataOptions options, string connectionString, TVersion dialect, TProvider provider)
+		{
+			if (dialect.Equals(AutoDetectVersion))
+			{
+				if (TryGetCachedServerVersion(connectionString, out var version))
+					dialect = version ?? DefaultVersion;
+				else
+					return options.WithOptions<ConnectionOptions>(o => o with
+					{
+						ConnectionString    = connectionString,
+						DataProviderFactory = () =>
+						{
+							var v = DetectServerVersion(provider, connectionString);
+							return GetDataProvider(provider, v ?? DefaultVersion, connectionString);
+						}
+					});
+			}
+
+			return options.UseConnectionString(GetDataProvider(provider, dialect, null), connectionString);
 		}
 
 		public    abstract IDataProvider? DetectProvider     (IConnectionStringSettings css, string connectionString);

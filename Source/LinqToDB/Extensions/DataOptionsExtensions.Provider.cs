@@ -3,8 +3,8 @@
 // ReSharper disable once CheckNamespace
 namespace LinqToDB
 {
-	using DataProvider.Access;
 	using Data;
+	using DataProvider.Access;
 	using DataProvider.DB2;
 	using DataProvider.Informix;
 	using DataProvider.Oracle;
@@ -51,23 +51,7 @@ namespace LinqToDB
 		/// <returns>The builder instance so calls can be chained.</returns>
 		public static DataOptions UseSqlServer(this DataOptions options, string connectionString, SqlServerVersion dialect, SqlServerProvider provider)
 		{
-			if (dialect == SqlServerVersion.AutoDetect)
-			{
-				if (SqlServerTools.ProviderDetector.TryGetCachedServerVersion(connectionString, out var version))
-					dialect = version ?? SqlServerVersion.v2008;
-				else
-					return options.WithOptions<ConnectionOptions>(o => o with
-					{
-						ConnectionString    = connectionString,
-						DataProviderFactory = () =>
-						{
-							var v = SqlServerTools.ProviderDetector.DetectServerVersion(provider, connectionString);
-							return SqlServerTools.GetDataProvider(v ?? SqlServerVersion.v2008, provider, connectionString);
-						}
-					});
-			}
-
-			return options.UseConnectionString(SqlServerTools.GetDataProvider(dialect, provider, null), connectionString);
+			return SqlServerTools.ProviderDetector.CreateOptions(options, connectionString, dialect, provider);
 		}
 
 		/// <summary>
@@ -79,7 +63,7 @@ namespace LinqToDB
 		/// <returns>The builder instance so calls can be chained.</returns>
 		public static DataOptions UseSqlServer(this DataOptions options, string connectionString, SqlServerProvider provider)
 		{
-			return UseSqlServer(options, connectionString, SqlServerVersion.AutoDetect, provider);
+			return SqlServerTools.ProviderDetector.CreateOptions(options, connectionString, SqlServerVersion.AutoDetect, provider);
 		}
 
 		/// <summary>
@@ -91,7 +75,7 @@ namespace LinqToDB
 		/// <returns>The builder instance so calls can be chained.</returns>
 		public static DataOptions UseSqlServer(this DataOptions options, string connectionString, SqlServerVersion dialect)
 		{
-			return UseSqlServer(options, connectionString, dialect, SqlServerTools.DefaultProvider);
+			return SqlServerTools.ProviderDetector.CreateOptions(options, connectionString, dialect, SqlServerTools.DefaultProvider);
 		}
 
 		#endregion
@@ -137,7 +121,7 @@ namespace LinqToDB
 		[Obsolete("Use UseOracle(this LinqToDBConnectionOptionsBuilder builder, string connectionString, OracleVersion dialect, OracleProvider provider) overload")]
 		public static DataOptions UseOracle(this DataOptions options, string connectionString, OracleVersion dialect)
 		{
-			return options.UseConnectionString(OracleTools.GetDataProvider(ProviderName.Oracle, null, dialect), connectionString);
+			return OracleTools.ProviderDetector.CreateOptions(options, connectionString, dialect, OracleProvider.Managed);
 		}
 
 		/// <summary>
@@ -188,17 +172,28 @@ namespace LinqToDB
 		/// <summary>
 		/// Configure connection to use specific Oracle provider, dialect and connection string.
 		/// </summary>
-		/// <param name="builder">Instance of <see cref="DataOptions"/>.</param>
+		/// <param name="options">Instance of <see cref="DataOptions"/>.</param>
 		/// <param name="connectionString">Oracle connection string.</param>
 		/// <param name="dialect">Oracle dialect support level.</param>
 		/// <param name="provider">ADO.NET provider to use.</param>
 		/// <returns>The builder instance so calls can be chained.</returns>
-		public static DataOptions UseOracle(this DataOptions builder, string connectionString, OracleVersion dialect, OracleProvider provider)
+		public static DataOptions UseOracle(this DataOptions options, string connectionString, OracleVersion dialect, OracleProvider provider)
 		{
-			return builder.UseConnectionString(
-				OracleTools.GetDataProvider(dialect, provider),
-				connectionString);
+			return OracleTools.ProviderDetector.CreateOptions(options, connectionString, dialect, provider);
 		}
+
+		/// <summary>
+		/// Configure connection to use specific Oracle provider and connection string.
+		/// </summary>
+		/// <param name="options">Instance of <see cref="DataOptions"/>.</param>
+		/// <param name="connectionString">Oracle connection string.</param>
+		/// <param name="provider">ADO.NET provider to use.</param>
+		/// <returns>The builder instance so calls can be chained.</returns>
+		public static DataOptions UseOracle(this DataOptions options, string connectionString, OracleProvider provider)
+		{
+			return OracleTools.ProviderDetector.CreateOptions(options, connectionString, OracleVersion.AutoDetect, provider);
+		}
+
 		#endregion
 
 		#region UsePostgreSQL
@@ -233,9 +228,7 @@ namespace LinqToDB
 		/// <returns>The builder instance so calls can be chained.</returns>
 		public static DataOptions UsePostgreSQL(this DataOptions options, string connectionString, PostgreSQLVersion dialect)
 		{
-			if (dialect == PostgreSQLVersion.AutoDetect)
-				return options.UseConnectionString(ProviderName.PostgreSQL, connectionString);
-			return options.UseConnectionString(PostgreSQLTools.GetDataProvider(dialect, connectionString), connectionString);
+			return PostgreSQLTools.ProviderDetector.CreateOptions(options, connectionString, dialect, default);
 		}
 
 		#endregion

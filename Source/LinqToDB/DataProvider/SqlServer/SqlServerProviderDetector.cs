@@ -9,9 +9,11 @@ namespace LinqToDB.DataProvider.SqlServer
 
 	class SqlServerProviderDetector : ProviderDetectorBase<SqlServerProvider,SqlServerVersion,SqlServerProviderAdapter.SqlConnection>
 	{
-		public static SqlServerProvider DefaultProvider = SqlServerProvider.MicrosoftDataSqlClient;
-		public static SqlServerVersion  DefaultVersion  = SqlServerVersion.v2008;
+		public SqlServerProviderDetector() : base(SqlServerVersion.AutoDetect, SqlServerVersion.v2008)
+		{
+		}
 
+		public static SqlServerProvider DefaultProvider = SqlServerProvider.MicrosoftDataSqlClient;
 
 		static readonly ConcurrentQueue<SqlServerDataProvider> _providers = new();
 

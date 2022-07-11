@@ -14,8 +14,8 @@ namespace LinqToDB.DataProvider.Oracle
 
 		public static OracleVersion DefaultVersion
 		{
-			get => OracleProviderDetector.DefaultVersion;
-			set => OracleProviderDetector.DefaultVersion = value;
+			get => ProviderDetector.DefaultVersion;
+			set => ProviderDetector.DefaultVersion = value;
 		}
 
 		public static bool AutoDetectProvider
@@ -67,7 +67,7 @@ namespace LinqToDB.DataProvider.Oracle
 		[Obsolete("Use GetDataProvider(OracleVersion, OracleProvider) overload")]
 		public static IDataProvider GetDataProvider(string? providerName, string? assemblyName = null, OracleVersion? version = null)
 		{
-			version ??= OracleProviderDetector.DefaultVersion;
+			version ??= ProviderDetector.DefaultVersion;
 
 			if (assemblyName == OracleProviderAdapter.NativeAssemblyName)  return GetVersionedDataProvider(version.Value, false);
 			if (assemblyName == OracleProviderAdapter.ManagedAssemblyName) return GetVersionedDataProvider(version.Value, true);

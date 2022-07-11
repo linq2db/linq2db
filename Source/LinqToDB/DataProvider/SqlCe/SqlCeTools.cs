@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Data;
 using System.Data.Common;
 using System.Reflection;
 
@@ -28,12 +26,12 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		public static void ResolveSqlCe(string path)
 		{
-			new AssemblyResolver(path, SqlCeProviderAdapter.AssemblyName);
+			_ = new AssemblyResolver(path, SqlCeProviderAdapter.AssemblyName);
 		}
 
 		public static void ResolveSqlCe(Assembly assembly)
 		{
-			new AssemblyResolver(assembly, assembly.FullName!);
+			_ = new AssemblyResolver(assembly, assembly.FullName!);
 		}
 
 		#region CreateDataConnection
