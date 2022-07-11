@@ -2,6 +2,7 @@
 {
 	public enum OracleVersion
 	{
+		AutoDetect,
 		/// <summary>
 		/// Oracle 11g dialect.
 		/// </summary>

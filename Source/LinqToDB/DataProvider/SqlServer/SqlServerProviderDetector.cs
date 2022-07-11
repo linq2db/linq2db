@@ -10,6 +10,8 @@ namespace LinqToDB.DataProvider.SqlServer
 	class SqlServerProviderDetector : ProviderDetectorBase<SqlServerProvider,SqlServerVersion,SqlServerProviderAdapter.SqlConnection>
 	{
 		public static SqlServerProvider DefaultProvider = SqlServerProvider.MicrosoftDataSqlClient;
+		public static SqlServerVersion  DefaultVersion  = SqlServerVersion.v2008;
+
 
 		static readonly ConcurrentQueue<SqlServerDataProvider> _providers = new();
 
@@ -103,7 +105,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					if (css.Name.Contains("2017") || css.ProviderName?.Contains("2017") == true) return GetDataProvider(provider, SqlServerVersion.v2017, null);
 					if (css.Name.Contains("2019") || css.ProviderName?.Contains("2019") == true) return GetDataProvider(provider, SqlServerVersion.v2019, null);
 
-					if (SqlServerTools.AutoDetectProvider)
+					if (AutoDetectProvider)
 					{
 						try
 						{
@@ -118,7 +120,7 @@ namespace LinqToDB.DataProvider.SqlServer
 						}
 					}
 
-					return GetDataProvider(provider, SqlServerVersion.v2008, connectionString);
+					return GetDataProvider(provider, DefaultVersion, connectionString);
 			}
 
 			return null;
@@ -151,7 +153,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				if (connectionString == null)
 					throw new InvalidOperationException("Connection string is not provided.");
 
-				return GetDataProvider(provider, DetectServerVersion(provider, connectionString) ?? SqlServerVersion.v2008, null);
+				return GetDataProvider(provider, DetectServerVersion(provider, connectionString) ?? DefaultVersion, null);
 			}
 		}
 

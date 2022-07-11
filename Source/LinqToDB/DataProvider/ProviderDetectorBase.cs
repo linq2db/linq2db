@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data.Common;
 
 namespace LinqToDB.DataProvider
 {
@@ -8,7 +9,7 @@ namespace LinqToDB.DataProvider
 	abstract class ProviderDetectorBase<TProvider,TVersion,TConnection>
 		where TProvider   : struct, Enum
 		where TVersion    : struct, Enum
-		where TConnection : IConnectionWrapper
+		where TConnection : IDisposable
 	{
 		public bool AutoDetectProvider { get; set; } = true;
 
@@ -42,7 +43,12 @@ namespace LinqToDB.DataProvider
 
 				using var conn = CreateConnection(provider, connectionString);
 
-				conn.Open();
+				switch (conn)
+				{
+					case DbConnection       c : c.Open(); break;
+					case IConnectionWrapper m : m.Open(); break;
+					default                   : throw new InvalidOperationException();
+				}
 
 				return DetectServerVersion(conn);
 			});

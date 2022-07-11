@@ -5,129 +5,31 @@ using System.Reflection;
 
 namespace LinqToDB.DataProvider.Oracle
 {
-	using Common.Internal.Cache;
 	using Common;
-	using Configuration;
 	using Data;
 
 	public static partial class OracleTools
 	{
-		static readonly Lazy<IDataProvider> _oracleNativeDataProvider11 = DataConnection.CreateDataProvider<OracleDataProviderNative11>();
-		static readonly Lazy<IDataProvider> _oracleNativeDataProvider12 = DataConnection.CreateDataProvider<OracleDataProviderNative12>();
+		internal static OracleProviderDetector ProviderDetector = new();
 
-		static readonly Lazy<IDataProvider> _oracleManagedDataProvider11 = DataConnection.CreateDataProvider<OracleDataProviderManaged11>();
-		static readonly Lazy<IDataProvider> _oracleManagedDataProvider12 = DataConnection.CreateDataProvider<OracleDataProviderManaged12>();
-
-//		static readonly MemoryCache<(bool managed, string connectionString)> _providerCache = new(new ());
-
-		static readonly Lazy<IDataProvider> _oracleDevartDataProvider11 = DataConnection.CreateDataProvider<OracleDataProviderDevart11>();
-		static readonly Lazy<IDataProvider> _oracleDevartDataProvider12 = DataConnection.CreateDataProvider<OracleDataProviderDevart12>();
-
-		public static bool          AutoDetectProvider { get; set; } = true;
-
-		public static OracleVersion DefaultVersion = OracleVersion.v12;
-
-		internal static IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)
+		public static OracleVersion DefaultVersion
 		{
-			OracleProvider? provider = null;
-
-			switch (css.ProviderName)
-			{
-				case OracleProviderAdapter.NativeAssemblyName    :
-				case OracleProviderAdapter.NativeClientNamespace :
-				case ProviderName.OracleNative                   :
-				case ProviderName.Oracle11Native                 :
-					provider = OracleProvider.Native;
-					goto case ProviderName.Oracle;
-				case OracleProviderAdapter.DevartAssemblyName    :
-				case ProviderName.OracleDevart                   :
-				case ProviderName.Oracle11Devart                 :
-					provider = OracleProvider.Devart;
-					goto case ProviderName.Oracle;
-				case OracleProviderAdapter.ManagedAssemblyName   :
-				case OracleProviderAdapter.ManagedClientNamespace:
-				case "Oracle.ManagedDataAccess.Core"             :
-				case ProviderName.OracleManaged                  :
-				case ProviderName.Oracle11Managed                :
-					provider = OracleProvider.Managed;
-					goto case ProviderName.Oracle;
-				case ""                                          :
-				case null                                        :
-
-					if (css.Name.Contains("Oracle"))
-						goto case ProviderName.Oracle;
-					break;
-				case ProviderName.Oracle                         :
-					if (provider == null)
-					{
-						if (css.Name.Contains("Native") || css.ProviderName?.Contains("Native") == true)
-							provider = OracleProvider.Native;
-						else if (css.Name.Contains("Devart") || css.ProviderName?.Contains("Devart") == true)
-							provider = OracleProvider.Devart;
-						else
-							provider = OracleProvider.Managed;
-					}
-
-					if (css.Name.Contains("11") || css.ProviderName?.Contains("11") == true) return GetDataProvider(OracleVersion.v11, provider.Value);
-					if (css.Name.Contains("12") || css.ProviderName?.Contains("12") == true) return GetDataProvider(OracleVersion.v12, provider.Value);
-					if (css.Name.Contains("18") || css.ProviderName?.Contains("18") == true) return GetDataProvider(OracleVersion.v12, provider.Value);
-					if (css.Name.Contains("19") || css.ProviderName?.Contains("19") == true) return GetDataProvider(OracleVersion.v12, provider.Value);
-					if (css.Name.Contains("21") || css.ProviderName?.Contains("21") == true) return GetDataProvider(OracleVersion.v12, provider.Value);
-
-					var version = AutoDetectProvider ? DetectProviderVersion(css, connectionString, provider.Value) : DefaultVersion;
-
-					return GetDataProvider(version, provider.Value);
-			}
-
-			return null;
+			get => OracleProviderDetector.DefaultVersion;
+			set => OracleProviderDetector.DefaultVersion = value;
 		}
 
-		private static OracleVersion DetectProviderVersion(IConnectionStringSettings css, string connectionString, OracleProvider provider)
+		public static bool AutoDetectProvider
 		{
-			try
-			{
-				var cs = string.IsNullOrWhiteSpace(connectionString) ? css.ConnectionString : connectionString;
-
-				var providerAdapter = OracleProviderAdapter.GetInstance(provider);
-
-				using (var conn = providerAdapter.CreateConnection(cs))
-				{
-					conn.Open();
-
-					var command = conn.CreateCommand();
-					command.CommandText = "SELECT  VERSION from PRODUCT_COMPONENT_VERSION WHERE ROWNUM = 1";
-					if (command.ExecuteScalar() is string result)
-					{
-						var version = int.Parse(result.Split('.')[0]);
-
-						if (version <= 11)
-							return OracleVersion.v11;
-
-						return OracleVersion.v12;
-					}
-					return DefaultVersion;
-				}
-			}
-			catch
-			{
-				return DefaultVersion;
-			}
+			get => ProviderDetector.AutoDetectProvider;
+			set => ProviderDetector.AutoDetectProvider = value;
 		}
 
 		public static IDataProvider GetDataProvider(
-			OracleVersion  version  = OracleVersion.v12,
-			OracleProvider provider = OracleProvider.Managed)
+			OracleVersion  version          = OracleVersion.v12,
+			OracleProvider provider         = OracleProvider.Managed,
+			string?        connectionString = null)
 		{
-			return (provider, version) switch
-			{
-				(OracleProvider.Native , OracleVersion.v11) => _oracleNativeDataProvider11 .Value,
-				(OracleProvider.Native , OracleVersion.v12) => _oracleNativeDataProvider12 .Value,
-				(OracleProvider.Managed, OracleVersion.v11) => _oracleManagedDataProvider11.Value,
-				(OracleProvider.Managed, OracleVersion.v12) => _oracleManagedDataProvider12.Value,
-				(OracleProvider.Devart , OracleVersion.v11) => _oracleDevartDataProvider11 .Value,
-				(OracleProvider.Devart , OracleVersion.v12) => _oracleDevartDataProvider12 .Value,
-				_                                           => _oracleManagedDataProvider12.Value,
-			};
+			return ProviderDetector.GetDataProvider(provider, version, connectionString);
 		}
 
 		#region CreateDataConnection
@@ -165,7 +67,7 @@ namespace LinqToDB.DataProvider.Oracle
 		[Obsolete("Use GetDataProvider(OracleVersion, OracleProvider) overload")]
 		public static IDataProvider GetDataProvider(string? providerName, string? assemblyName = null, OracleVersion? version = null)
 		{
-			version ??= DefaultVersion;
+			version ??= OracleProviderDetector.DefaultVersion;
 
 			if (assemblyName == OracleProviderAdapter.NativeAssemblyName)  return GetVersionedDataProvider(version.Value, false);
 			if (assemblyName == OracleProviderAdapter.ManagedAssemblyName) return GetVersionedDataProvider(version.Value, true);
@@ -189,7 +91,7 @@ namespace LinqToDB.DataProvider.Oracle
 				: OracleProviderAdapter.NativeAssemblyName);
 
 		[Obsolete("This API will be removed in v5")]
-		public static void ResolveOracle(Assembly assembly) => new AssemblyResolver(assembly, assembly.FullName!);
+		public static void ResolveOracle(Assembly assembly) => _ = new AssemblyResolver(assembly, assembly.FullName!);
 
 		[Obsolete("Use CreateDataConnection(string, OracleVersion, OracleProvider) overload")]
 		public static DataConnection CreateDataConnection(string connectionString, string? providerName = null)
@@ -221,6 +123,7 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 			catch
 			{
+				// ignored
 			}
 
 			return ProviderName.OracleNative;
@@ -229,21 +132,9 @@ namespace LinqToDB.DataProvider.Oracle
 		[Obsolete("This API will be removed in v5")]
 		private static IDataProvider GetVersionedDataProvider(OracleVersion version, bool managed)
 		{
-			if (!managed)
-			{
-				return version switch
-				{
-					OracleVersion.v11 => _oracleNativeDataProvider11.Value,
-					_ => _oracleNativeDataProvider12.Value,
-				};
-			}
-
-			return version switch
-			{
-				OracleVersion.v11 => _oracleManagedDataProvider11.Value,
-				_ => _oracleManagedDataProvider12.Value,
-			};
+			return GetDataProvider(version, managed ? OracleProvider.Managed : OracleProvider.Native);
 		}
+
 		#endregion
 
 		#endregion

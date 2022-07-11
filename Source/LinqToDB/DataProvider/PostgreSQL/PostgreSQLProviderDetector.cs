@@ -9,6 +9,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	{
 		internal enum Provider {}
 
+		public static PostgreSQLVersion DefaultVersion = PostgreSQLVersion.v92;
+
 		static readonly Lazy<IDataProvider> _postgreSQLDataProvider92 = DataConnection.CreateDataProvider<PostgreSQLDataProvider92>();
 		static readonly Lazy<IDataProvider> _postgreSQLDataProvider93 = DataConnection.CreateDataProvider<PostgreSQLDataProvider93>();
 		static readonly Lazy<IDataProvider> _postgreSQLDataProvider95 = DataConnection.CreateDataProvider<PostgreSQLDataProvider95>();
@@ -53,7 +55,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						}
 					}
 
-					return GetDataProvider(default, PostgreSQLVersion.v92, connectionString);
+					return GetDataProvider(default, DefaultVersion, connectionString);
 			}
 
 			return null;
@@ -74,7 +76,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				if (connectionString == null)
 					throw new InvalidOperationException("Connection string is not provided.");
 
-				return GetDataProvider(default, DetectServerVersion(default, connectionString) ?? PostgreSQLVersion.v92, null);
+				return GetDataProvider(default, DetectServerVersion(default, connectionString) ?? DefaultVersion, null);
 			}
 		}
 
@@ -88,7 +90,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			if (postgreSqlVersion.Major == 9 && postgreSqlVersion.Minor > 2)
 				return PostgreSQLVersion.v93;
 
-			return PostgreSQLVersion.v92;
+			return DefaultVersion;
 		}
 
 		protected override NpgsqlProviderAdapter.NpgsqlConnection CreateConnection(Provider provider, string connectionString)
