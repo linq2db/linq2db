@@ -502,10 +502,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		}
 
 		[Wrapper]
-		public class NpgsqlConnection : TypeWrapper, IDisposable
+		public class NpgsqlConnection : TypeWrapper, IConnectionWrapper
 		{
-			private static LambdaExpression[] Wrappers { get; }
-				= new LambdaExpression[]
+			private static LambdaExpression[] Wrappers { get; } =
 			{
 				// [0]: get PostgreSqlVersion
 				(Expression<Func<NpgsqlConnection, Version>>)((NpgsqlConnection this_) => this_.PostgreSqlVersion),

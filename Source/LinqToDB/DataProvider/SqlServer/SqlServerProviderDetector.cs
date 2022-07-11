@@ -7,7 +7,7 @@ namespace LinqToDB.DataProvider.SqlServer
 	using Configuration;
 	using Data;
 
-	class SqlServerProviderDetector : ProviderDetectorBase<SqlServerProvider,SqlServerVersion>
+	class SqlServerProviderDetector : ProviderDetectorBase<SqlServerProvider,SqlServerVersion,SqlServerProviderAdapter.SqlConnection>
 	{
 		public static SqlServerProvider DefaultProvider = SqlServerProvider.MicrosoftDataSqlClient;
 
@@ -155,7 +155,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 		}
 
-		public override SqlServerVersion? DetectServerVersion(IConnectionWrapper connection)
+		public override SqlServerVersion? DetectServerVersion(SqlServerProviderAdapter.SqlConnection connection)
 		{
 			if (!int.TryParse(connection.ServerVersion.Split('.')[0], out var version))
 				return null;
@@ -194,7 +194,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			};
 		}
 
-		protected override IConnectionWrapper CreateConnection(SqlServerProvider provider, string connectionString)
+		protected override SqlServerProviderAdapter.SqlConnection CreateConnection(SqlServerProvider provider, string connectionString)
 		{
 			return SqlServerProviderAdapter.GetInstance(provider).CreateConnection(connectionString);
 		}

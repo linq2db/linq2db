@@ -188,7 +188,7 @@ namespace LinqToDB.Data
 			AddProviderDetector(LinqToDB.DataProvider.Informix  .InformixTools  .ProviderDetector);
 			AddProviderDetector(LinqToDB.DataProvider.MySql     .MySqlTools     .ProviderDetector);
 			AddProviderDetector(LinqToDB.DataProvider.Oracle    .OracleTools    .ProviderDetector);
-			AddProviderDetector(LinqToDB.DataProvider.PostgreSQL.PostgreSQLTools.ProviderDetector);
+			AddProviderDetector(LinqToDB.DataProvider.PostgreSQL.PostgreSQLTools.ProviderDetector.DetectProvider);
 			AddProviderDetector(LinqToDB.DataProvider.SapHana   .SapHanaTools   .ProviderDetector);
 			AddProviderDetector(LinqToDB.DataProvider.SqlCe     .SqlCeTools     .ProviderDetector);
 			AddProviderDetector(LinqToDB.DataProvider.SQLite    .SQLiteTools    .ProviderDetector);

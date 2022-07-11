@@ -1,10 +1,10 @@
 ﻿using System;
-using LinqToDB.Data;
 
 // ReSharper disable once CheckNamespace
 namespace LinqToDB
 {
 	using DataProvider.Access;
+	using Data;
 	using DataProvider.DB2;
 	using DataProvider.Informix;
 	using DataProvider.Oracle;

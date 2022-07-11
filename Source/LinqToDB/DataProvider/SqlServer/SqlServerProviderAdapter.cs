@@ -335,8 +335,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Wrapper]
 		public class SqlConnection : TypeWrapper, IConnectionWrapper
 		{
-			private static LambdaExpression[] Wrappers { get; }
-				= new LambdaExpression[]
+			private static LambdaExpression[] Wrappers { get; } =
 			{
 				// [0]: get ServerVersion
 				(Expression<Func<SqlConnection, string>>   )((SqlConnection this_) => this_.ServerVersion),

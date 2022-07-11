@@ -5,9 +5,10 @@ namespace LinqToDB.DataProvider
 	using Common.Internal.Cache;
 	using Configuration;
 
-	abstract class ProviderDetectorBase<TProvider,TVersion>
-		where TProvider : struct, Enum
-		where TVersion  : struct, Enum
+	abstract class ProviderDetectorBase<TProvider,TVersion,TConnection>
+		where TProvider   : struct, Enum
+		where TVersion    : struct, Enum
+		where TConnection : IConnectionWrapper
 	{
 		public bool AutoDetectProvider { get; set; } = true;
 
@@ -49,9 +50,9 @@ namespace LinqToDB.DataProvider
 			return version;
 		}
 
-		public    abstract IDataProvider?     DetectProvider     (IConnectionStringSettings css, string connectionString);
-		public    abstract IDataProvider      GetDataProvider    (TProvider provider, TVersion version, string? connectionString);
-		public    abstract TVersion?          DetectServerVersion(IConnectionWrapper connection);
-		protected abstract IConnectionWrapper CreateConnection   (TProvider provider, string connectionString);
+		public    abstract IDataProvider? DetectProvider     (IConnectionStringSettings css, string connectionString);
+		public    abstract IDataProvider  GetDataProvider    (TProvider provider, TVersion version, string? connectionString);
+		public    abstract TVersion?      DetectServerVersion(TConnection connection);
+		protected abstract TConnection    CreateConnection   (TProvider provider, string connectionString);
 	}
 }
