@@ -465,5 +465,40 @@ namespace Tests.xUpdate
 					ComparerBuilder.GetEqualityComparer<DestinationTable>());
 			}
 		}
+
+		[Test]
+		public void DeleteWithOutputIntoTempTable([IncludeDataSources(FeatureDeleteOutputInto)] string context)
+		{
+			var sourceData    = GetSourceData();
+			using var db     = GetDataContext(context);
+			using var source = db.CreateLocalTable(sourceData);
+			using var target = db.CreateLocalTable<DestinationTable>(tableOptions: TableOptions.IsTemporary);
+			var expected = source
+				.Where(s => s.Id > 3)
+				.ToArray();
+
+			var param = 100500;
+			var output = source
+				.Where(s => s.Id > 3)
+				.DeleteWithOutputInto(
+					target,
+					s => new DestinationTable()
+					{
+						Id       = s.Id       + param,
+						Value    = s.Value    + param,
+						ValueStr = s.ValueStr + param
+					});
+
+			AreEqual(
+				expected
+					.Select(s => new DestinationTable()
+					{
+						Id       = s.Id       + param,
+						Value    = s.Value    + param,
+						ValueStr = s.ValueStr + param,
+					}),
+				target.ToArray(),
+				ComparerBuilder.GetEqualityComparer<DestinationTable>());
+		}
 	}
 }
