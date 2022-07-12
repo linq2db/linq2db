@@ -3,6 +3,7 @@ using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Mapping;
+using LinqToDB.Tools;
 
 using NodaTime;
 
@@ -21,11 +22,33 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestNodaTimeInsert([DataSources] string context)
+		public void NodaTimeInsertTest1([DataSources] string context)
 		{
 			var ms = new MappingSchema();
 
 			ms.UseNodaTime(/*typeof(LocalDateTime)*/);
+
+			using var db  = GetDataContext(context, ms);
+			using var tmp = db.CreateLocalTable<DataClass>();
+
+			var item = new DataClass
+			{
+				Value = LocalDateTime.FromDateTime(TestData.DateTime),
+			};
+
+			db.Insert(item);
+
+			var list = tmp.ToList();
+
+			Assert.AreEqual(1, list.Count);
+		}
+
+		[Test]
+		public void NodaTimeInsertTest2([DataSources] string context)
+		{
+			var ms = new MappingSchema();
+
+			ms.UseNodaTime(typeof(LocalDateTime));
 
 			using var db  = GetDataContext(context, ms);
 			using var tmp = db.CreateLocalTable<DataClass>();
