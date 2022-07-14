@@ -917,6 +917,48 @@ namespace Tests.Linq
 			}
 		}
 
+		[Table("NotNullParent")]
+		class NotNullParent
+		{
+			[Column]
+			public int ID { get; set; }
+			[Association(ExpressionPredicate = nameof(ChildPredicate), CanBeNull = false)]
+			public NotNullChild Child { get; set; } = null!;
+
+			static Expression<Func<NotNullParent, NotNullChild, bool>> ChildPredicate 
+				=> (p, c) => p.ID == c.ParentID;
+		}
+
+		[Table("NotNullChild")]
+		class NotNullChild
+		{
+			[Column]
+			public int ParentID { get; set; }
+		}
+
+		[Test]
+		public void AssociationExpressionNotNull([DataSources] string context)
+		{
+			var parentData = new[] 
+			{
+				new NotNullParent { ID = 1 },
+				new NotNullParent { ID = 2 },
+			};
+
+			var childData = new[]
+			{
+				new NotNullChild { ParentID = 1 },
+			};
+
+			using (var db = GetDataContext(context))
+			using (var parent = db.CreateLocalTable("NotNullParent", parentData))
+			using (var child = db.CreateLocalTable("NotNullChild", childData))
+			{				
+				var query = parent.Select(p => p.Child.ParentID);	// Should be an INNER JOIN because CanBeNull = false
+				Assert.AreEqual(1, query.Count());
+			}
+		}
+
 		[Test]
 		public void ComplexQueryWithManyToMany([DataSources(TestProvName.AllClickHouse)] string context)
 		{
