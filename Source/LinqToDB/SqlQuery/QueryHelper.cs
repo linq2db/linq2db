@@ -593,8 +593,6 @@ namespace LinqToDB.SqlQuery
 		public static IEnumerable<SqlTable> EnumerateAccessibleTables(SelectQuery selectQuery)
 		{
 			return EnumerateAccessibleSources(selectQuery)
-				.OfType<SqlTableSource>()
-				.Select(static ts => ts.Source)
 				.OfType<SqlTable>();
 		}
 
