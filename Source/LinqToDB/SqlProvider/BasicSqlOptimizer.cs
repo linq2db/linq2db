@@ -2994,7 +2994,6 @@ namespace LinqToDB.SqlProvider
 				isDetachedUpdateTable = !QueryHelper.IsDependsOn(statement.SelectQuery, tableToUpdate);
 			}
 
-
 			// find appropriate first table
 			if (isDetachedUpdateTable)
 			{
@@ -3004,7 +3003,6 @@ namespace LinqToDB.SqlProvider
 
 				tableToCompare = foundTable;
 			}
-
 
 			var comparingIsNeed = true;
 
