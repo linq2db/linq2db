@@ -56,7 +56,7 @@ namespace Tests
 		[Sql.Expression("current server", ServerSideOnly = true, Configuration = ProviderName.DB2)]
 		[Sql.Function("current_database", ServerSideOnly = true, Configuration = ProviderName.PostgreSQL)]
 		[Sql.Function("DATABASE"        , ServerSideOnly = true, Configuration = ProviderName.MySql)]
-		[Sql.Function("DB_NAME"         , ServerSideOnly = true)]
+		[Sql.Function("DB_NAME", ServerSideOnly = true)]
 		private static string DbName()
 		{
 			throw new InvalidOperationException();
@@ -235,7 +235,7 @@ namespace Tests
 			}
 		}
 
-		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, string? tableName = null, TableOptions tableOptions = TableOptions.NotSet)
+		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, string? tableName = null, TableOptions tableOptions = TableOptions.CheckExistence)
 			where T : notnull
 		{
 			try

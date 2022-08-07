@@ -165,15 +165,21 @@ namespace Tests.Linq
 					where m.Id1 >= intParam
 					select new MasterClass
 					{
-						Id1 = m.Id1,
-						Id2 = m.Id2,
-						Value = m.Value,
-						Details = detailRecords.Where(d => d.MasterId == m.Id1).ToList(),
+						Id1          = m.Id1,
+						Id2          = m.Id2,
+						Value        = m.Value,
+						Details      = detailRecords.Where(d => d.MasterId == m.Id1).ToList(),
 						DetailsQuery = detailRecords.Where(d => d.MasterId == m.Id1 && d.MasterId == m.Id2 && d.DetailId % 2 == 0).ToArray(),
 					};
 
 				var result = query.ToList();
 				var expected = expectedQuery.ToList();
+
+				foreach (var item in result.Concat(expected))
+				{
+					item.Details      = item.Details.OrderBy(_ => _.DetailId).ToList();
+					item.DetailsQuery = item.DetailsQuery.OrderBy(_ => _.DetailId).ToArray();
+				}
 
 				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
 			}
@@ -210,6 +216,12 @@ namespace Tests.Linq
 					result.Add(item);
 
 				var expected = expectedQuery.ToList();
+
+				foreach (var item in result.Concat(expected))
+				{
+					item.Details      = item.Details.OrderBy(_ => _.DetailId).ToList();
+					item.DetailsQuery = item.DetailsQuery.OrderBy(_ => _.DetailId).ToArray();
+				}
 
 				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
 			}
@@ -270,6 +282,9 @@ namespace Tests.Linq
 
 				var result = query.ToList();
 				var expected = expectedQuery.ToList();
+
+				foreach (var item in result.Concat(expected))
+					item.Details = item.Details.OrderBy(_ => _.DetailId).ToList();
 
 				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
 			}
@@ -384,6 +399,13 @@ FROM
 
 				var result = query.ToList();
 				var expected = expectedQuery.ToList();
+
+				foreach (var item in result.Concat(expected))
+				{
+					item.Details = item.Details.OrderBy(_ => _.DetailId).ToList();
+					foreach (var subItem in item.Details)
+						subItem.SubDetails = subItem.SubDetails.OrderBy(_ => _.SubDetailId).ToArray();
+				}
 
 				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
 			}
@@ -578,6 +600,9 @@ FROM
 				var result   = masterQuery.ToArray();
 				var expected = expectedQuery.ToArray();
 
+				result   = result  .Select(_ => new { _.Id1, Details = _.Details.Select(_ => new { SubDetails = _.SubDetails.OrderBy(_ => _.SubDetailId).ToArray(), Another = _.Another.OrderBy(_ => _.SubDetailId).ToArray() }).OrderBy(_ => _.SubDetails.First().DetailId).ToArray() }).ToArray();
+				expected = expected.Select(_ => new { _.Id1, Details = _.Details.Select(_ => new { SubDetails = _.SubDetails.OrderBy(_ => _.SubDetailId).ToArray(), Another = _.Another.OrderBy(_ => _.SubDetailId).ToArray() }).OrderBy(_ => _.SubDetails.First().DetailId).ToArray() }).ToArray();
+
 				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
 			}
 		}
@@ -647,6 +672,9 @@ FROM
 				var result   = query.ToArray();
 				var expected = expectedQuery.ToArray();
 
+				result   = result  .Select(_ => new { _.Detail, SubDetails = _.SubDetails.OrderBy(_ => _.SubDetailId).ToArray(), SubDetailsAssocaited = _.SubDetailsAssocaited.OrderBy(_ => _.SubDetailId).ToArray() }).ToArray();
+				expected = expected.Select(_ => new { _.Detail, SubDetails = _.SubDetails.OrderBy(_ => _.SubDetailId).ToArray(), SubDetailsAssocaited = _.SubDetailsAssocaited.OrderBy(_ => _.SubDetailId).ToArray() }).ToArray();
+
 				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(result));
 			}
 		}
@@ -702,6 +730,9 @@ FROM
 
 				var result   = query.ToArray();
 				var expected = expectedQuery.ToArray();
+
+				expected = expected.Select(_ => new { _.Master, Details = _.Details.OrderBy(_ => _.DetailId).ToArray() }).ToArray();
+				result   = result  .Select(_ => new { _.Master, Details = _.Details.OrderBy(_ => _.DetailId).ToArray() }).ToArray();
 
 				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(result));
 			}
@@ -784,7 +815,10 @@ FROM
 
 				var result   = query.ToArray();
 				var expected = expectedQuery.ToArray();
-				
+
+				expected = expected.Select(_ => new { _.Id1, Details = _.Details.OrderBy(_ => _.DetailId).ToArray(), Masters = _.Masters.OrderBy(_ => _.Id2).ToArray() }).ToArray();
+				result   = result  .Select(_ => new { _.Id1, Details = _.Details.OrderBy(_ => _.DetailId).ToArray(), Masters = _.Masters.OrderBy(_ => _.Id2).ToArray() }).ToArray();
+
 				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(result));
 			}
 		}
@@ -825,7 +859,10 @@ FROM
 
 				var result   = query.ToArray();
 				var expected = expectedQuery.ToArray();
-				
+
+				expected = expected.Select(_ => new { _.Id1, Details = _.Details.OrderBy(_ => _.DetailId).ToArray(), _.Master }).ToArray();
+				result   = result  .Select(_ => new { _.Id1, Details = _.Details.OrderBy(_ => _.DetailId).ToArray(), _.Master }).ToArray();
+
 				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(result));
 			}
 		}
@@ -848,7 +885,7 @@ FROM
 				{
 					e.Master,
 					Details = e.Master.Details.Select(d => new { d.DetailId, d.DetailValue }).ToArray()
-				});
+				}).ToArray();
 
 				var expectedQuery = masterRecords.OrderByDescending(m => m.Id2)
 					.Take(20)
@@ -859,8 +896,12 @@ FROM
 				{
 					e.Master,
 					Details = detailRecords.Where(dr => dr.MasterId == e.Master.Id1).Select(d => new { d.DetailId, d.DetailValue }).ToArray()
-				});;
-				
+				}).ToArray();
+
+				result   = result .Select(_ => new { _.Master, Details = _.Details.OrderBy(_ => _.DetailId).ToArray() }).ToArray();
+				expected = expected.Select(_ => new { _.Master, Details = _.Details.OrderBy(_ => _.DetailId).ToArray() }).ToArray();
+
+
 				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(result));
 			}
 		}
@@ -1440,8 +1481,8 @@ FROM
 			using (db.CreateLocalTable<UserIssue3128>())
 			using (db.CreateLocalTable<UserDetailsIssue3128>())
 			{
-				db.InsertWithIdentity(new UserIssue3128 { Id = 10 });
-				db.InsertWithIdentity(new UserDetailsIssue3128 { UserId = 10, Age = 18 });
+				db.Insert(new UserIssue3128 { Id = 10 });
+				db.Insert(new UserDetailsIssue3128 { UserId = 10, Age = 18 });
 
 				var result = db.GetTable<UserIssue3128>()
 					.LoadWithAsTable( _ => _.Details)
@@ -1459,8 +1500,8 @@ FROM
 			using (db.CreateLocalTable<UserIssue3128>())
 			using (db.CreateLocalTable<UserDetailsIssue3128>())
 			{
-				db.InsertWithIdentity(new UserIssue3128 { Id = 10 });
-				db.InsertWithIdentity(new UserDetailsIssue3128 { UserId = 10, Age = 18 });
+				db.Insert(new UserIssue3128 { Id = 10 });
+				db.Insert(new UserDetailsIssue3128 { UserId = 10, Age = 18 });
 
 				var result = db.GetTable<UserIssue3128>()
 					.WithTableExpression($"{{0}} {{1}}")
@@ -1478,8 +1519,8 @@ FROM
 			using (db.CreateLocalTable<UserIssue3128>())
 			using (db.CreateLocalTable<UserDetailsIssue3128>())
 			{
-				db.InsertWithIdentity(new UserIssue3128 { Id = 10 });
-				db.InsertWithIdentity(new UserDetailsIssue3128 { UserId = 10, Age = 18 });
+				db.Insert(new UserIssue3128 { Id = 10 });
+				db.Insert(new UserDetailsIssue3128 { UserId = 10, Age = 18 });
 
 				db.Person.Where(p => db.GetTable<UserIssue3128>()
 					.LoadWithAsTable(_ => _.Details)

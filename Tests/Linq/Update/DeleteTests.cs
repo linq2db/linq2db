@@ -22,22 +22,17 @@ namespace Tests.xUpdate
 		public void Delete1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
+			using (new RestoreBaseTables(db))
 			{
 				var parent = new Parent1 { ParentID = 1001, Value1 = 1001 };
 
 				db.Delete(parent);
 				db.Insert(parent);
 
-				try
-				{
-					Assert.AreEqual(1, db.Parent.Count (p => p.ParentID == parent.ParentID));
-					Assert.AreEqual(1, db.Parent.Delete(p => p.ParentID == parent.ParentID));
-					Assert.AreEqual(0, db.Parent.Count (p => p.ParentID == parent.ParentID));
-				}
-				finally
-				{
-					db.Delete(parent);
-				}
+				Assert.AreEqual(1, db.Parent.Count (p => p.ParentID == parent.ParentID));
+				var cnt = db.Parent.Delete(p => p.ParentID == parent.ParentID);
+					Assert.AreEqual(1, cnt);
+				Assert.AreEqual(0, db.Parent.Count (p => p.ParentID == parent.ParentID));
 			}
 		}
 
@@ -45,22 +40,17 @@ namespace Tests.xUpdate
 		public void Delete2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
+			using (new RestoreBaseTables(db))
 			{
 				var parent = new Parent1 { ParentID = 1001, Value1 = 1001 };
 
 				db.Delete(parent);
 				db.Insert(parent);
 
-				try
-				{
-					Assert.AreEqual(1, db.Parent.Count(p => p.ParentID == parent.ParentID));
-					Assert.AreEqual(1, db.Parent.Where(p => p.ParentID == parent.ParentID).Delete());
-					Assert.AreEqual(0, db.Parent.Count(p => p.ParentID == parent.ParentID));
-				}
-				finally
-				{
-					db.Delete(parent);
-				}
+				Assert.AreEqual(1, db.Parent.Count(p => p.ParentID == parent.ParentID));
+				var cnt = db.Parent.Where(p => p.ParentID == parent.ParentID).Delete();
+					Assert.AreEqual(1, cnt);
+				Assert.AreEqual(0, db.Parent.Count(p => p.ParentID == parent.ParentID));
 			}
 		}
 
@@ -68,22 +58,16 @@ namespace Tests.xUpdate
 		public void Delete3([DataSources(TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
+			using (new RestoreBaseTables(db))
 			{
-				try
-				{
-					db.Child.Delete(c => new[] { 1001, 1002 }.Contains(c.ChildID));
+				db.Child.Delete(c => new[] { 1001, 1002 }.Contains(c.ChildID));
 
-					db.Child.Insert(() => new Child { ParentID = 1, ChildID = 1001 });
-					db.Child.Insert(() => new Child { ParentID = 1, ChildID = 1002 });
+				db.Child.Insert(() => new Child { ParentID = 1, ChildID = 1001 });
+				db.Child.Insert(() => new Child { ParentID = 1, ChildID = 1002 });
 
-					Assert.AreEqual(3, db.Child.Count(c => c.ParentID == 1));
-					Assert.AreEqual(2, db.Child.Where(c => c.Parent!.ParentID == 1 && new[] { 1001, 1002 }.Contains(c.ChildID)).Delete());
-					Assert.AreEqual(1, db.Child.Count(c => c.ParentID == 1));
-				}
-				finally
-				{
-					db.Child.Delete(c => new[] { 1001, 1002 }.Contains(c.ChildID));
-				}
+				Assert.AreEqual(3, db.Child.Count(c => c.ParentID == 1));
+				Assert.AreEqual(2, db.Child.Where(c => c.Parent!.ParentID == 1 && new[] { 1001, 1002 }.Contains(c.ChildID)).Delete());
+				Assert.AreEqual(1, db.Child.Count(c => c.ParentID == 1));
 			}
 		}
 
@@ -91,22 +75,16 @@ namespace Tests.xUpdate
 		public void Delete4([DataSources(TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
+			using (new RestoreBaseTables(db))
 			{
-				try
-				{
-					db.GrandChild1.Delete(gc => new[] { 1001, 1002 }.Contains(gc.GrandChildID!.Value));
+				db.GrandChild1.Delete(gc => new[] { 1001, 1002 }.Contains(gc.GrandChildID!.Value));
 
-					db.GrandChild.Insert(() => new GrandChild { ParentID = 1, ChildID = 1, GrandChildID = 1001 });
-					db.GrandChild.Insert(() => new GrandChild { ParentID = 1, ChildID = 2, GrandChildID = 1002 });
+				db.GrandChild.Insert(() => new GrandChild { ParentID = 1, ChildID = 1, GrandChildID = 1001 });
+				db.GrandChild.Insert(() => new GrandChild { ParentID = 1, ChildID = 2, GrandChildID = 1002 });
 
-					Assert.AreEqual(3, db.GrandChild1.Count(gc => gc.ParentID == 1));
-					Assert.AreEqual(2, db.GrandChild1.Where(gc => gc.Parent!.ParentID == 1 && new[] { 1001, 1002 }.Contains(gc.GrandChildID!.Value)).Delete());
-					Assert.AreEqual(1, db.GrandChild1.Count(gc => gc.ParentID == 1));
-				}
-				finally
-				{
-					db.GrandChild1.Delete(gc => new[] { 1001, 1002 }.Contains(gc.GrandChildID!.Value));
-				}
+				Assert.AreEqual(3, db.GrandChild1.Count(gc => gc.ParentID == 1));
+				Assert.AreEqual(2, db.GrandChild1.Where(gc => gc.Parent!.ParentID == 1 && new[] { 1001, 1002 }.Contains(gc.GrandChildID!.Value)).Delete());
+				Assert.AreEqual(1, db.GrandChild1.Count(gc => gc.ParentID == 1));
 			}
 		}
 
@@ -129,7 +107,8 @@ namespace Tests.xUpdate
 					db.Parent.Insert(() => new Parent { ParentID = values[1], Value1 = 1 });
 
 					Assert.AreEqual(2, db.Parent.Count(_ => _.ParentID > 1000));
-					Assert.AreEqual(2, db.Parent.Delete(_ => values.Contains(_.ParentID)));
+					var cnt = db.Parent.Delete(_ => values.Contains(_.ParentID));
+						Assert.AreEqual(2, cnt);
 					Assert.AreEqual(0, db.Parent.Count(_ => _.ParentID > 1000));
 				}
 			}
@@ -414,29 +393,19 @@ namespace Tests.xUpdate
 		public void ContainsJoin1([DataSources(false, TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataConnection(context))
+			using (new RestoreBaseTables(db))
 			{
-				db.Child. Delete(c => c.ParentID >= 1000);
-				db.Parent.Delete(c => c.ParentID >= 1000);
+				var id = 1000;
 
-				try
-				{
-					var id = 1000;
+				db.Insert(new Parent { ParentID = id });
 
-					db.Insert(new Parent { ParentID = id });
+				for (var i = 0; i < 3; i++)
+					db.Insert(new Child { ParentID = id, ChildID = 1000 + i });
 
-					for (var i = 0; i < 3; i++)
-						db.Insert(new Child { ParentID = id, ChildID = 1000 + i });
+				var sql1 = ContainsJoin1Impl(db, new [] { 1000, 1001 });
+				var sql2 = ContainsJoin1Impl(db, new [] { 1002       });
 
-					var sql1 = ContainsJoin1Impl(db, new [] { 1000, 1001 });
-					var sql2 = ContainsJoin1Impl(db, new [] { 1002       });
-
-					Assert.That(sql1, Is.Not.EqualTo(sql2));
-				}
-				finally
-				{
-					db.Child. Delete(c => c.ParentID >= 1000);
-					db.Parent.Delete(c => c.ParentID >= 1000);
-				}
+				Assert.That(sql1, Is.Not.EqualTo(sql2));
 			}
 		}
 
@@ -455,7 +424,7 @@ namespace Tests.xUpdate
 
 					var ret = db.Parent.Delete(p => list.Contains(p) );
 
-					Assert.That(ret, Is.EqualTo(2));
+						Assert.That(ret, Is.EqualTo(2));
 				}
 				finally
 				{

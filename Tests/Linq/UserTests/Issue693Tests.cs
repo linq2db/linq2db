@@ -19,7 +19,8 @@ namespace Tests.UserTests
 		public class Entity533
 		{
 			[SequenceName(ProviderName.Firebird, "PersonID")]
-			[Column("PersonID"), Identity, PrimaryKey]
+			[Column("PersonID", IsIdentity = true)]
+			[PrimaryKey]
 			        public int     ID         { get; set; }
 
 			[Column]public Gender  Gender     { get; set; }
@@ -63,7 +64,7 @@ namespace Tests.UserTests
 			});
 
 			using (var db = GetDataContext(context, ms))
-			using (new DeletePerson(db))
+			using (new RestoreBaseTables(db))
 			{
 				var obj = new Entity533
 				{
@@ -73,7 +74,8 @@ namespace Tests.UserTests
 					Gender     = Gender.Male
 				};
 
-				var id1 = Convert.ToInt32(db.InsertWithIdentity(obj));
+				int id1;
+					id1 = db.InsertWithInt32Identity(obj);
 
 				var obj2 = new Entity533
 				{
@@ -83,7 +85,8 @@ namespace Tests.UserTests
 					Gender     = Gender.Male
 				};
 
-				var id2 = Convert.ToInt32(db.InsertWithIdentity(obj2));
+				int id2;
+					id2 = db.InsertWithInt32Identity(obj2);
 
 				var obj3 = db.GetTable<Entity533>().First(_ => _.ID == id1);
 				var obj4 = db.GetTable<Entity533>().First(_ => _.ID == id2);

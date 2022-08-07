@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB;
+using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 
@@ -11,8 +13,6 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
-	using System.Collections.Generic;
-	using LinqToDB.Common;
 	using Model;
 
 	[TestFixture]
@@ -46,13 +46,13 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var t1 = db.Types2.First();
+				var t1 = db.Types2.Where(r => r.ID == 1).First();
 
 				t1.BoolValue = !t1.BoolValue;
 
 				db.Update(t1);
 
-				var t2 = db.Types2.First();
+				var t2 = db.Types2.First(r => r.ID == t1.ID);
 
 				Assert.That(t2.BoolValue, Is.EqualTo(t1.BoolValue));
 

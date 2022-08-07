@@ -145,8 +145,8 @@ namespace LinqToDB.Linq.Builder
 						if (alias == null)
 						{
 							alias = baseInfo?.MemberChain.LastOrDefault()?.Name ??
-						                  info.MemberChain.LastOrDefault()?.Name;
-						}	
+						                 info.MemberChain.LastOrDefault()?.Name;
+						}
 						var field    = RegisterCteField(baseInfo?.Sql, info.Sql, info.Index, alias);
 						return new SqlInfo(info.MemberChain, field);
 					})

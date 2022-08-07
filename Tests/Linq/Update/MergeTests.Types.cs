@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Text;
 
 using LinqToDB;
 using LinqToDB.Common;
@@ -237,7 +238,7 @@ namespace Tests.xUpdate
 				FieldBinary     = new byte[] { 255, 200, 100, 50, 20, 0 },
 				FieldGuid       = new Guid("ffffffff-ffff-ffff-ffff-ffffffffffff"),
 				FieldDecimal    = 99999999.9999999999M,
-				FieldDate       = new DateTime(3210, 11, 23),
+				FieldDate       = new DateTime(2110, 11, 23),
 				FieldTime       = TimeSpan.Zero,
 				FieldEnumString = StringEnum.Value3,
 				FieldEnumNumber = NumberEnum.Value2
@@ -263,7 +264,7 @@ namespace Tests.xUpdate
 				FieldBinary     = new byte[] { 255, 200, 100, 50, 20, 0 },
 				FieldGuid       = new Guid("ffffffff-ffff-ffff-FFFF-ffffffffffff"),
 				FieldDecimal    = -0.123M,
-				FieldDate       = new DateTime(3210, 11, 23),
+				FieldDate       = new DateTime(2111, 11, 23),
 				FieldTime       = TimeSpan.FromHours(24).Add(TimeSpan.FromTicks(-1)),
 				FieldEnumString = StringEnum.Value4,
 				FieldEnumNumber = NumberEnum.Value1
@@ -307,7 +308,7 @@ namespace Tests.xUpdate
 				FieldBinary     = new byte[] { 255, 200, 100, 50, 20, 0 },
 				FieldGuid       = new Guid("ffffffff-ffff-ffff-FFFF-ffffffffffff"),
 				FieldDecimal    = -0.123M,
-				FieldDate       = new DateTime(3210, 11, 23),
+				FieldDate       = new DateTime(2010, 11, 23),
 				FieldTime       = TimeSpan.FromHours(24).Add(TimeSpan.FromTicks(-1)),
 				FieldEnumString = StringEnum.Value4,
 				FieldEnumNumber = NumberEnum.Value1

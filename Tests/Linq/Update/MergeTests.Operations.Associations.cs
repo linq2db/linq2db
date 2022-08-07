@@ -1,113 +1,91 @@
-﻿using System;
-using System.Linq;
-
-using Tests.Model;
-
+﻿using System.Linq;
 using LinqToDB;
-using LinqToDB.Mapping;
-
 using NUnit.Framework;
-using System.Linq.Expressions;
+using Tests.Model;
 
 namespace Tests.xUpdate
 {
 	public partial class MergeTests
 	{
-		[Table("Person")]
-		public class TestJoinPerson
-		{
-			[Column("PersonID"), Identity, PrimaryKey] public int ID;
-
-			[Association(ThisKey = "ID", OtherKey = "PersonID", CanBeNull = false)]
-			public TestJoinPatient Patient = null!;
-
-			[Association(QueryExpressionMethod = nameof(Query), CanBeNull = false)]
-			public TestJoinPatient PatientQuery = null!;
-
-			static Expression<Func<TestJoinPerson, IDataContext, IQueryable<TestJoinPatient>>> Query
-				=> (t, ctx) => ctx.GetTable<TestJoinPatient>().Where(p => p.PersonID == t.ID);
-		}
-
-		[Table("Patient")]
-		public class TestJoinPatient
-		{
-			[PrimaryKey] public int    PersonID;
-			[Column]     public string Diagnosis = null!;
-		}
-
 		[Test]
 		public void TargetAssociation([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
+			ResetPersonIdentity(context);
+
 			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
-				PrepareAssociationsData(db);
+				PrepareIdentityData(db, context);
 
-				var rows = db.GetTable<TestJoinPerson>()
+				var rows = db.GetTable<MPerson>()
 					.Merge()
-					.Using(db.GetTable<TestJoinPerson>())
+					.Using(db.GetTable<MPerson>())
 					.On((t, s) => t.ID == s.ID + 10)
 					.DeleteWhenNotMatchedBySourceAnd(t => t.Patient!.Diagnosis.Contains("very"))
 					.Merge();
 
-				var result = db.Person.OrderBy(_ => _.ID).ToList();
+				var result = db.GetTable<MPerson>().OrderBy(_ => _.ID).ToList();
 
 				Assert.AreEqual(1, rows);
 
 				Assert.AreEqual(5, result.Count);
 
-				AssertPerson(AssociationPersons[0], result[0]);
-				AssertPerson(AssociationPersons[1], result[1]);
-				AssertPerson(AssociationPersons[2], result[2]);
-				AssertPerson(AssociationPersons[4], result[3]);
-				AssertPerson(AssociationPersons[5], result[4]);
+				AssertPerson(IdentityPersons[0], result[0]);
+				AssertPerson(IdentityPersons[1], result[1]);
+				AssertPerson(IdentityPersons[2], result[2]);
+				AssertPerson(IdentityPersons[4], result[3]);
+				AssertPerson(IdentityPersons[5], result[4]);
 			}
 		}
 
 		[Test]
 		public void TargetQueryAssociation([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
+			ResetPersonIdentity(context);
+
 			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
-				PrepareAssociationsData(db);
+				PrepareIdentityData(db, context);
 
-				var rows = db.GetTable<TestJoinPerson>()
+				var rows = db.GetTable<MPerson>()
 					.Merge()
-					.Using(db.GetTable<TestJoinPerson>())
+					.Using(db.GetTable<MPerson>())
 					.On((t, s) => t.ID == s.ID + 10)
 					.DeleteWhenNotMatchedBySourceAnd(t => t.PatientQuery.Diagnosis.Contains("very"))
 					.Merge();
 
-				var result = db.Person.OrderBy(_ => _.ID).ToList();
+				var result = db.GetTable<MPerson>().OrderBy(_ => _.ID).ToList();
 
 				Assert.AreEqual(1, rows);
 
 				Assert.AreEqual(5, result.Count);
 
-				AssertPerson(AssociationPersons[0], result[0]);
-				AssertPerson(AssociationPersons[1], result[1]);
-				AssertPerson(AssociationPersons[2], result[2]);
-				AssertPerson(AssociationPersons[4], result[3]);
-				AssertPerson(AssociationPersons[5], result[4]);
+				AssertPerson(IdentityPersons[0], result[0]);
+				AssertPerson(IdentityPersons[1], result[1]);
+				AssertPerson(IdentityPersons[2], result[2]);
+				AssertPerson(IdentityPersons[4], result[3]);
+				AssertPerson(IdentityPersons[5], result[4]);
 			}
 		}
 
 		[Test]
 		public void SourceAssociationAsInnerJoin1([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
+			ResetPersonIdentity(context);
+
 			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
-				PrepareAssociationsData(db);
+				PrepareIdentityData(db, context);
 
-				var parsons = db.Person.ToArray();
-				var patients = db.Patient.ToArray();
+				var parsons = db.GetTable<MPerson>().ToArray();
+				var patients = db.GetTable<MPatient>().ToArray();
 
-				var cnt = db.GetTable<TestJoinPerson>()
+				var cnt = db.GetTable<MPerson>()
 					.Merge()
 					// inner join performed in source
-					.Using(db.GetTable<TestJoinPerson>().Select(p => new { p.ID, p.Patient!.Diagnosis }))
+					.Using(db.GetTable<MPerson>().Select(p => new { p.ID, p.Patient!.Diagnosis }))
 					.On((t, s) => t.ID == s.ID)
 					.DeleteWhenMatchedAnd((t, s) => s.Diagnosis != "sick")
 					.Merge();
@@ -119,17 +97,19 @@ namespace Tests.xUpdate
 		[Test]
 		public void SourceAssociationAsInnerJoin2([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
+			ResetPersonIdentity(context);
+
 			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
-				PrepareAssociationsData(db);
+				PrepareIdentityData(db, context);
 
-				var parsons = db.Person.ToArray();
-				var patients = db.Patient.ToArray();
+				var parsons = db.GetTable<MPerson>().ToArray();
+				var patients = db.GetTable<MPatient>().ToArray();
 
-				var cnt = db.GetTable<TestJoinPerson>()
+				var cnt = db.GetTable<MPerson>()
 					.Merge()
-					.Using(db.GetTable<TestJoinPerson>())
+					.Using(db.GetTable<MPerson>())
 					// inner join still performed in source
 					.On((t, s) => t.ID == s.ID && s.Patient!.Diagnosis != null)
 					.DeleteWhenMatchedAnd((t, s) => s.Patient!.Diagnosis != "sick")
@@ -142,17 +122,19 @@ namespace Tests.xUpdate
 		[Test]
 		public void SourceAssociationAsOuterJoin([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
+			ResetPersonIdentity(context);
+
 			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
-				PrepareAssociationsData(db);
+				PrepareIdentityData(db, context);
 
-				var parsons = db.Person.ToArray();
-				var patients = db.Patient.ToArray();
+				var parsons = db.GetTable<MPerson>().ToArray();
+				var patients = db.GetTable<MPatient>().ToArray();
 
-				var cnt = db.GetTable<TestJoinPerson>()
+				var cnt = db.GetTable<MPerson>()
 					.Merge()
-					.Using(db.GetTable<TestJoinPerson>())
+					.Using(db.GetTable<MPerson>())
 					.On((t, s) => t.ID == s.ID)
 					// // inner join promoted to outer join
 					.DeleteWhenMatchedAnd((t, s) => s.Patient!.Diagnosis != "sick")
@@ -170,26 +152,26 @@ namespace Tests.xUpdate
 			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
-				PrepareAssociationsData(db);
+				PrepareIdentityData(db, context);
 
-				var rows = db.Person
+				var rows = db.GetTable<MPerson>()
 					.Merge()
-					.Using(db.Person)
+					.Using(db.GetTable<MPerson>())
 					.On((t, s) => t.ID == s.ID + 10)
 					.DeleteWhenNotMatchedBySourceAnd(t => t.Patient!.Diagnosis.Contains("very"))
 					.Merge();
 
-				var result = db.Person.OrderBy(_ => _.ID).ToList();
+				var result = db.GetTable<MPerson>().OrderBy(_ => _.ID).ToList();
 
 				Assert.AreEqual(1, rows);
 
 				Assert.AreEqual(5, result.Count);
 
-				AssertPerson(AssociationPersons[0], result[0]);
-				AssertPerson(AssociationPersons[1], result[1]);
-				AssertPerson(AssociationPersons[2], result[2]);
-				AssertPerson(AssociationPersons[4], result[3]);
-				AssertPerson(AssociationPersons[5], result[4]);
+				AssertPerson(IdentityPersons[0], result[0]);
+				AssertPerson(IdentityPersons[1], result[1]);
+				AssertPerson(IdentityPersons[2], result[2]);
+				AssertPerson(IdentityPersons[4], result[3]);
+				AssertPerson(IdentityPersons[5], result[4]);
 			}
 		}
 
@@ -206,23 +188,23 @@ namespace Tests.xUpdate
 			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
-				PrepareAssociationsData(db);
+				PrepareIdentityData(db, context);
 
-				var rows = db.Patient
+				var rows = db.GetTable<MPatient>()
 					.Merge()
-					.Using(db.Patient)
+					.Using(db.GetTable<MPatient>())
 					.On((t, s) => t.PersonID == s.PersonID && s.Diagnosis.Contains("very"))
 					.DeleteWhenMatchedAnd((t, s) => s.Person.FirstName == "first 4" && t.Person.FirstName == "first 4")
 					.Merge();
 
-				var result = db.Patient.OrderBy(_ => _.PersonID).ToList();
+				var result = db.GetTable<MPatient>().OrderBy(_ => _.PersonID).ToList();
 
 				Assert.AreEqual(1, rows);
 
 				Assert.AreEqual(1, result.Count);
 
-				Assert.AreEqual(AssociationPatients[0].PersonID, result[0].PersonID);
-				Assert.AreEqual(AssociationPatients[0].Diagnosis, result[0].Diagnosis);
+				Assert.AreEqual(IdentityPatients[0].PersonID, result[0].PersonID);
+				Assert.AreEqual(IdentityPatients[0].Diagnosis, result[0].Diagnosis);
 			}
 		}
 
@@ -241,13 +223,13 @@ namespace Tests.xUpdate
 			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
-				PrepareAssociationsData(db);
+				PrepareIdentityData(db, context);
 
-				var rows = db.Person
+				var rows = db.GetTable<MPerson>()
 					.Merge()
-					.Using(db.Person)
+					.Using(db.GetTable<MPerson>())
 					.On((t, s) => t.ID == s.ID && t.FirstName != "first 3")
-					.InsertWhenNotMatchedAnd(s => s.Patient!.Diagnosis.Contains("sick"), s => new Person()
+					.InsertWhenNotMatchedAnd(s => s.Patient!.Diagnosis.Contains("sick"), s => new MPerson()
 					{
 						FirstName = s.Patient!.Diagnosis,
 						LastName = "Inserted 2",
@@ -255,20 +237,20 @@ namespace Tests.xUpdate
 					})
 					.Merge();
 
-				var result = db.Person.OrderBy(_ => _.ID).ToList();
+				var result = db.GetTable<MPerson>().OrderBy(_ => _.ID).ToList();
 
 				Assert.AreEqual(1, rows);
 
 				Assert.AreEqual(7, result.Count);
 
-				AssertPerson(AssociationPersons[0], result[0]);
-				AssertPerson(AssociationPersons[1], result[1]);
-				AssertPerson(AssociationPersons[2], result[2]);
-				AssertPerson(AssociationPersons[3], result[3]);
-				AssertPerson(AssociationPersons[4], result[4]);
-				AssertPerson(AssociationPersons[5], result[5]);
+				AssertPerson(IdentityPersons[0], result[0]);
+				AssertPerson(IdentityPersons[1], result[1]);
+				AssertPerson(IdentityPersons[2], result[2]);
+				AssertPerson(IdentityPersons[3], result[3]);
+				AssertPerson(IdentityPersons[4], result[4]);
+				AssertPerson(IdentityPersons[5], result[5]);
 
-				Assert.AreEqual(AssociationPersons[5].ID + 1, result[6].ID);
+				Assert.AreEqual(IdentityPersons[5].ID + 1, result[6].ID);
 				Assert.AreEqual(Gender.Unknown, result[6].Gender);
 				Assert.AreEqual("sick", result[6].FirstName);
 				Assert.AreEqual("Inserted 2", result[6].LastName);
@@ -292,13 +274,13 @@ namespace Tests.xUpdate
 			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
-				PrepareAssociationsData(db);
+				PrepareIdentityData(db, context);
 
-				var rows = db.Person
+				var rows = db.GetTable<MPerson>()
 					.Merge()
-					.Using(db.Person)
+					.Using(db.GetTable<MPerson>())
 					.On((t, s) => t.ID == s.ID && t.FirstName != "first 3")
-					.InsertWhenNotMatched(s => new Person()
+					.InsertWhenNotMatched(s => new MPerson()
 					{
 						FirstName = s.Patient!.Diagnosis,
 						LastName = "Inserted 2",
@@ -306,20 +288,20 @@ namespace Tests.xUpdate
 					})
 					.Merge();
 
-				var result = db.Person.OrderBy(_ => _.ID).ToList();
+				var result = db.GetTable<MPerson>().OrderBy(_ => _.ID).ToList();
 
 				Assert.AreEqual(1, rows);
 
 				Assert.AreEqual(7, result.Count);
 
-				AssertPerson(AssociationPersons[0], result[0]);
-				AssertPerson(AssociationPersons[1], result[1]);
-				AssertPerson(AssociationPersons[2], result[2]);
-				AssertPerson(AssociationPersons[3], result[3]);
-				AssertPerson(AssociationPersons[4], result[4]);
-				AssertPerson(AssociationPersons[5], result[5]);
+				AssertPerson(IdentityPersons[0], result[0]);
+				AssertPerson(IdentityPersons[1], result[1]);
+				AssertPerson(IdentityPersons[2], result[2]);
+				AssertPerson(IdentityPersons[3], result[3]);
+				AssertPerson(IdentityPersons[4], result[4]);
+				AssertPerson(IdentityPersons[5], result[5]);
 
-				Assert.AreEqual(AssociationPersons[5].ID + 1, result[6].ID);
+				Assert.AreEqual(IdentityPersons[5].ID + 1, result[6].ID);
 				Assert.AreEqual(Gender.Unknown, result[6].Gender);
 				Assert.AreEqual("sick", result[6].FirstName);
 				Assert.AreEqual("Inserted 2", result[6].LastName);
@@ -340,13 +322,13 @@ namespace Tests.xUpdate
 			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
-				PrepareAssociationsData(db);
+				PrepareIdentityData(db, context);
 
-				var rows = db.Person
+				var rows = db.GetTable<MPerson>()
 					.Merge()
-					.Using(db.Person)
+					.Using(db.GetTable<MPerson>())
 					.On((t, s) => t.ID == s.ID && t.FirstName != "first 3")
-					.InsertWhenNotMatchedAnd(s => s.Patient!.Diagnosis.Contains("sick"), s => new Person()
+					.InsertWhenNotMatchedAnd(s => s.Patient!.Diagnosis.Contains("sick"), s => new MPerson()
 					{
 						FirstName = "Inserted 1",
 						LastName = "Inserted 2",
@@ -354,20 +336,20 @@ namespace Tests.xUpdate
 					})
 					.Merge();
 
-				var result = db.Person.OrderBy(_ => _.ID).ToList();
+				var result = db.GetTable<MPerson>().OrderBy(_ => _.ID).ToList();
 
 				AssertRowCount(1, rows, context);
 
 				Assert.AreEqual(7, result.Count);
 
-				AssertPerson(AssociationPersons[0], result[0]);
-				AssertPerson(AssociationPersons[1], result[1]);
-				AssertPerson(AssociationPersons[2], result[2]);
-				AssertPerson(AssociationPersons[3], result[3]);
-				AssertPerson(AssociationPersons[4], result[4]);
-				AssertPerson(AssociationPersons[5], result[5]);
+				AssertPerson(IdentityPersons[0], result[0]);
+				AssertPerson(IdentityPersons[1], result[1]);
+				AssertPerson(IdentityPersons[2], result[2]);
+				AssertPerson(IdentityPersons[3], result[3]);
+				AssertPerson(IdentityPersons[4], result[4]);
+				AssertPerson(IdentityPersons[5], result[5]);
 
-				Assert.AreEqual(AssociationPersons[5].ID + 1, result[6].ID);
+				Assert.AreEqual(IdentityPersons[5].ID + 1, result[6].ID);
 				Assert.AreEqual(Gender.Male, result[6].Gender);
 				Assert.AreEqual("Inserted 1", result[6].FirstName);
 				Assert.AreEqual("Inserted 2", result[6].LastName);
@@ -388,38 +370,38 @@ namespace Tests.xUpdate
 			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
-				PrepareAssociationsData(db);
+				PrepareIdentityData(db, context);
 
-				var rows = db.Person
+				var rows = db.GetTable<MPerson>()
 					.Merge()
-					.Using(db.Person)
+					.Using(db.GetTable<MPerson>())
 					.On((t, s) => t.ID == s.ID
 							&& t.Patient!.Diagnosis.Contains("very")
 							&& s.Patient!.Diagnosis.Contains("sick"))
-					.UpdateWhenMatched((t, s) => new Person()
+					.UpdateWhenMatched((t, s) => new MPerson()
 					{
 						MiddleName = "R.I.P."
 					})
 					.Merge();
 
-				var result = db.Person.OrderBy(_ => _.ID).ToList();
+				var result = db.GetTable<MPerson>().OrderBy(_ => _.ID).ToList();
 
 				AssertRowCount(1, rows, context);
 
 				Assert.AreEqual(6, result.Count);
 
-				AssertPerson(AssociationPersons[0], result[0]);
-				AssertPerson(AssociationPersons[1], result[1]);
-				AssertPerson(AssociationPersons[2], result[2]);
+				AssertPerson(IdentityPersons[0], result[0]);
+				AssertPerson(IdentityPersons[1], result[1]);
+				AssertPerson(IdentityPersons[2], result[2]);
 
-				Assert.AreEqual(AssociationPersons[3].ID, result[3].ID);
-				Assert.AreEqual(AssociationPersons[3].Gender, result[3].Gender);
-				Assert.AreEqual(AssociationPersons[3].FirstName, result[3].FirstName);
-				Assert.AreEqual(AssociationPersons[3].LastName, result[3].LastName);
+				Assert.AreEqual(IdentityPersons[3].ID, result[3].ID);
+				Assert.AreEqual(IdentityPersons[3].Gender, result[3].Gender);
+				Assert.AreEqual(IdentityPersons[3].FirstName, result[3].FirstName);
+				Assert.AreEqual(IdentityPersons[3].LastName, result[3].LastName);
 				Assert.AreEqual("R.I.P.", result[3].MiddleName);
 
-				AssertPerson(AssociationPersons[4], result[4]);
-				AssertPerson(AssociationPersons[5], result[5]);
+				AssertPerson(IdentityPersons[4], result[4]);
+				AssertPerson(IdentityPersons[5], result[5]);
 			}
 		}
 
@@ -436,37 +418,37 @@ namespace Tests.xUpdate
 			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
-				PrepareAssociationsData(db);
+				PrepareIdentityData(db, context);
 
-				var rows = db.Person
+				var rows = db.GetTable<MPerson>()
 					.Merge()
-					.Using(db.Person)
+					.Using(db.GetTable<MPerson>())
 					.On((t, s) => t.ID == s.ID && s.FirstName == "first 4")
-					.UpdateWhenMatched((t, s) => new Person()
+					.UpdateWhenMatched((t, s) => new MPerson()
 					{
 						MiddleName = "first " + s.Patient!.Diagnosis,
 						LastName = "last " + t.Patient!.Diagnosis
 					})
 					.Merge();
 
-				var result = db.Person.OrderBy(_ => _.ID).ToList();
+				var result = db.GetTable<MPerson>().OrderBy(_ => _.ID).ToList();
 
 				AssertRowCount(1, rows, context);
 
 				Assert.AreEqual(6, result.Count);
 
-				AssertPerson(AssociationPersons[0], result[0]);
-				AssertPerson(AssociationPersons[1], result[1]);
-				AssertPerson(AssociationPersons[2], result[2]);
+				AssertPerson(IdentityPersons[0], result[0]);
+				AssertPerson(IdentityPersons[1], result[1]);
+				AssertPerson(IdentityPersons[2], result[2]);
 
-				Assert.AreEqual(AssociationPersons[3].ID, result[3].ID);
-				Assert.AreEqual(AssociationPersons[3].Gender, result[3].Gender);
+				Assert.AreEqual(IdentityPersons[3].ID, result[3].ID);
+				Assert.AreEqual(IdentityPersons[3].Gender, result[3].Gender);
 				Assert.AreEqual("first 4", result[3].FirstName);
 				Assert.AreEqual("last very sick", result[3].LastName);
 				Assert.AreEqual("first very sick", result[3].MiddleName);
 
-				AssertPerson(AssociationPersons[4], result[4]);
-				AssertPerson(AssociationPersons[5], result[5]);
+				AssertPerson(IdentityPersons[4], result[4]);
+				AssertPerson(IdentityPersons[5], result[5]);
 			}
 		}
 
@@ -478,38 +460,38 @@ namespace Tests.xUpdate
 			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
-				PrepareAssociationsData(db);
+				PrepareIdentityData(db, context);
 
-				var rows = db.Person
+				var rows = db.GetTable<MPerson>()
 					.Merge()
-					.Using(db.Person)
+					.Using(db.GetTable<MPerson>())
 					.On((t, s) => t.ID == s.ID + 10)
 					.UpdateWhenNotMatchedBySourceAnd(t => t.FirstName == "first 3",
-						t => new Person()
+						t => new MPerson()
 						{
 							FirstName = "Updated",
 							LastName = t.Patient!.Person.Patient!.Diagnosis
 						})
 					.Merge();
 
-				var result = db.Person.OrderBy(_ => _.ID).ToList();
+				var result = db.GetTable<MPerson>().OrderBy(_ => _.ID).ToList();
 
 				Assert.AreEqual(1, rows);
 
 				Assert.AreEqual(6, result.Count);
 
-				AssertPerson(AssociationPersons[0], result[0]);
-				AssertPerson(AssociationPersons[1], result[1]);
+				AssertPerson(IdentityPersons[0], result[0]);
+				AssertPerson(IdentityPersons[1], result[1]);
 
-				Assert.AreEqual(AssociationPersons[2].ID, result[2].ID);
-				Assert.AreEqual(AssociationPersons[2].Gender, result[2].Gender);
+				Assert.AreEqual(IdentityPersons[2].ID, result[2].ID);
+				Assert.AreEqual(IdentityPersons[2].Gender, result[2].Gender);
 				Assert.AreEqual("Updated", result[2].FirstName);
 				Assert.AreEqual("sick", result[2].LastName);
-				Assert.AreEqual(AssociationPersons[2].MiddleName, result[2].MiddleName);
+				Assert.AreEqual(IdentityPersons[2].MiddleName, result[2].MiddleName);
 
-				AssertPerson(AssociationPersons[3], result[3]);
-				AssertPerson(AssociationPersons[4], result[4]);
-				AssertPerson(AssociationPersons[5], result[5]);
+				AssertPerson(IdentityPersons[3], result[3]);
+				AssertPerson(IdentityPersons[4], result[4]);
+				AssertPerson(IdentityPersons[5], result[5]);
 			}
 		}
 
@@ -522,37 +504,37 @@ namespace Tests.xUpdate
 			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
-				PrepareAssociationsData(db);
+				PrepareIdentityData(db, context);
 
-				var rows = db.Person
+				var rows = db.GetTable<MPerson>()
 					.Merge()
-					.Using(db.Person)
+					.Using(db.GetTable<MPerson>())
 					.On((t, s) => t.ID == s.ID + 10)
 					.UpdateWhenNotMatchedBySourceAnd(t => t.Patient!.Diagnosis.Contains("very"),
-						t => new Person()
+						t => new MPerson()
 						{
 							FirstName = "Updated"
 						})
 					.Merge();
 
-				var result = db.Person.OrderBy(_ => _.ID).ToList();
+				var result = db.GetTable<MPerson>().OrderBy(_ => _.ID).ToList();
 
 				Assert.AreEqual(1, rows);
 
 				Assert.AreEqual(6, result.Count);
 
-				AssertPerson(AssociationPersons[0], result[0]);
-				AssertPerson(AssociationPersons[1], result[1]);
-				AssertPerson(AssociationPersons[2], result[2]);
+				AssertPerson(IdentityPersons[0], result[0]);
+				AssertPerson(IdentityPersons[1], result[1]);
+				AssertPerson(IdentityPersons[2], result[2]);
 
-				Assert.AreEqual(AssociationPersons[3].ID, result[3].ID);
-				Assert.AreEqual(AssociationPersons[3].Gender, result[3].Gender);
+				Assert.AreEqual(IdentityPersons[3].ID, result[3].ID);
+				Assert.AreEqual(IdentityPersons[3].Gender, result[3].Gender);
 				Assert.AreEqual("Updated", result[3].FirstName);
-				Assert.AreEqual(AssociationPersons[3].LastName, result[3].LastName);
-				Assert.AreEqual(AssociationPersons[3].MiddleName, result[3].MiddleName);
+				Assert.AreEqual(IdentityPersons[3].LastName, result[3].LastName);
+				Assert.AreEqual(IdentityPersons[3].MiddleName, result[3].MiddleName);
 
-				AssertPerson(AssociationPersons[4], result[4]);
-				AssertPerson(AssociationPersons[5], result[5]);
+				AssertPerson(IdentityPersons[4], result[4]);
+				AssertPerson(IdentityPersons[5], result[5]);
 			}
 		}
 
@@ -569,38 +551,38 @@ namespace Tests.xUpdate
 			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
-				PrepareAssociationsData(db);
+				PrepareIdentityData(db, context);
 
-				var rows = db.Person
+				var rows = db.GetTable<MPerson>()
 					.Merge()
-					.Using(db.Person)
+					.Using(db.GetTable<MPerson>())
 					.On((t, s) => t.ID == s.ID && s.FirstName == "first 4")
 					.UpdateWhenMatchedAnd(
 						(t, s) => s.Patient!.Diagnosis == t.Patient!.Diagnosis && t.Patient!.Diagnosis.Contains("very"),
-						(t, s) => new Person()
+						(t, s) => new MPerson()
 						{
 							LastName = "Updated"
 						})
 					.Merge();
 
-				var result = db.Person.OrderBy(_ => _.ID).ToList();
+				var result = db.GetTable<MPerson>().OrderBy(_ => _.ID).ToList();
 
 				AssertRowCount(1, rows, context);
 
 				Assert.AreEqual(6, result.Count);
 
-				AssertPerson(AssociationPersons[0], result[0]);
-				AssertPerson(AssociationPersons[1], result[1]);
-				AssertPerson(AssociationPersons[2], result[2]);
+				AssertPerson(IdentityPersons[0], result[0]);
+				AssertPerson(IdentityPersons[1], result[1]);
+				AssertPerson(IdentityPersons[2], result[2]);
 
-				Assert.AreEqual(AssociationPersons[3].ID, result[3].ID);
-				Assert.AreEqual(AssociationPersons[3].Gender, result[3].Gender);
+				Assert.AreEqual(IdentityPersons[3].ID, result[3].ID);
+				Assert.AreEqual(IdentityPersons[3].Gender, result[3].Gender);
 				Assert.AreEqual("first 4", result[3].FirstName);
 				Assert.AreEqual("Updated", result[3].LastName);
-				Assert.AreEqual(AssociationPersons[3].MiddleName, result[3].MiddleName);
+				Assert.AreEqual(IdentityPersons[3].MiddleName, result[3].MiddleName);
 
-				AssertPerson(AssociationPersons[4], result[4]);
-				AssertPerson(AssociationPersons[5], result[5]);
+				AssertPerson(IdentityPersons[4], result[4]);
+				AssertPerson(IdentityPersons[5], result[5]);
 			}
 		}
 
@@ -613,26 +595,26 @@ namespace Tests.xUpdate
 			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
-				PrepareAssociationsData(db);
+				PrepareIdentityData(db, context);
 
-				var rows = db.Person
+				var rows = db.GetTable<MPerson>()
 					.Merge()
-					.Using(db.Person)
+					.Using(db.GetTable<MPerson>())
 					.On((t, s) => t.ID == s.ID + 10)
 					.DeleteWhenNotMatchedBySourceAnd(t => t.Patient!.Diagnosis.Contains("very"))
 					.Merge();
 
-				var result = db.Person.OrderBy(_ => _.ID).ToList();
+				var result = db.GetTable<MPerson>().OrderBy(_ => _.ID).ToList();
 
 				Assert.AreEqual(1, rows);
 
 				Assert.AreEqual(5, result.Count);
 
-				AssertPerson(AssociationPersons[0], result[0]);
-				AssertPerson(AssociationPersons[1], result[1]);
-				AssertPerson(AssociationPersons[2], result[2]);
-				AssertPerson(AssociationPersons[4], result[3]);
-				AssertPerson(AssociationPersons[5], result[4]);
+				AssertPerson(IdentityPersons[0], result[0]);
+				AssertPerson(IdentityPersons[1], result[1]);
+				AssertPerson(IdentityPersons[2], result[2]);
+				AssertPerson(IdentityPersons[4], result[3]);
+				AssertPerson(IdentityPersons[5], result[4]);
 			}
 		}
 
@@ -649,23 +631,23 @@ namespace Tests.xUpdate
 			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
-				PrepareAssociationsData(db);
+				PrepareIdentityData(db, context);
 
-				var rows = db.Patient
+				var rows = db.GetTable<MPatient>()
 					.Merge()
-					.Using(db.Patient)
+					.Using(db.GetTable<MPatient>())
 					.On((t, s) => t.PersonID == s.PersonID && s.Diagnosis.Contains("very"))
 					.DeleteWhenMatchedAnd((t, s) => s.Person.FirstName == "first 4" && t.Person.FirstName == "first 4")
 					.Merge();
 
-				var result = db.Patient.OrderBy(_ => _.PersonID).ToList();
+				var result = db.GetTable<MPatient>().OrderBy(_ => _.PersonID).ToList();
 
 				Assert.AreEqual(1, rows);
 
 				Assert.AreEqual(1, result.Count);
 
-				Assert.AreEqual(AssociationPatients[0].PersonID, result[0].PersonID);
-				Assert.AreEqual(AssociationPatients[0].Diagnosis, result[0].Diagnosis);
+				Assert.AreEqual(IdentityPatients[0].PersonID, result[0].PersonID);
+				Assert.AreEqual(IdentityPatients[0].Diagnosis, result[0].Diagnosis);
 			}
 		}
 
@@ -684,15 +666,15 @@ namespace Tests.xUpdate
 			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
-				PrepareAssociationsData(db);
+				PrepareIdentityData(db, context);
 
-				var rows = db.Person
+				var rows = db.GetTable<MPerson>()
 					.Merge()
-					.Using(db.Person)
+					.Using(db.GetTable<MPerson>())
 					.On((t, s) => t.ID == s.ID && t.FirstName != "first 3")
 					.InsertWhenNotMatchedAnd(
 						s => s.Patient!.Diagnosis.Contains("sick"),
-						s => new Person()
+						s => new MPerson()
 						{
 							FirstName = s.Patient!.Diagnosis,
 							LastName = "Inserted 2",
@@ -700,20 +682,20 @@ namespace Tests.xUpdate
 						})
 					.Merge();
 
-				var result = db.Person.OrderBy(_ => _.ID).ToList();
+				var result = db.GetTable<MPerson>().OrderBy(_ => _.ID).ToList();
 
 				Assert.AreEqual(1, rows);
 
 				Assert.AreEqual(7, result.Count);
 
-				AssertPerson(AssociationPersons[0], result[0]);
-				AssertPerson(AssociationPersons[1], result[1]);
-				AssertPerson(AssociationPersons[2], result[2]);
-				AssertPerson(AssociationPersons[3], result[3]);
-				AssertPerson(AssociationPersons[4], result[4]);
-				AssertPerson(AssociationPersons[5], result[5]);
+				AssertPerson(IdentityPersons[0], result[0]);
+				AssertPerson(IdentityPersons[1], result[1]);
+				AssertPerson(IdentityPersons[2], result[2]);
+				AssertPerson(IdentityPersons[3], result[3]);
+				AssertPerson(IdentityPersons[4], result[4]);
+				AssertPerson(IdentityPersons[5], result[5]);
 
-				Assert.AreEqual(AssociationPersons[5].ID + 1, result[6].ID);
+				Assert.AreEqual(IdentityPersons[5].ID + 1, result[6].ID);
 				Assert.AreEqual(Gender.Unknown, result[6].Gender);
 				Assert.AreEqual("sick", result[6].FirstName);
 				Assert.AreEqual("Inserted 2", result[6].LastName);
@@ -737,13 +719,13 @@ namespace Tests.xUpdate
 			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
-				PrepareAssociationsData(db);
+				PrepareIdentityData(db, context);
 
-				var rows = db.Person
+				var rows = db.GetTable<MPerson>()
 					.Merge()
-					.Using(db.Person)
+					.Using(db.GetTable<MPerson>())
 					.On((t, s) => t.ID == s.ID && t.FirstName != "first 3")
-					.InsertWhenNotMatched(s => new Person()
+					.InsertWhenNotMatched(s => new MPerson()
 					{
 						FirstName = s.Patient!.Diagnosis,
 						LastName = "Inserted 2",
@@ -751,20 +733,20 @@ namespace Tests.xUpdate
 					})
 					.Merge();
 
-				var result = db.Person.OrderBy(_ => _.ID).ToList();
+				var result = db.GetTable<MPerson>().OrderBy(_ => _.ID).ToList();
 
 				Assert.AreEqual(1, rows);
 
 				Assert.AreEqual(7, result.Count);
 
-				AssertPerson(AssociationPersons[0], result[0]);
-				AssertPerson(AssociationPersons[1], result[1]);
-				AssertPerson(AssociationPersons[2], result[2]);
-				AssertPerson(AssociationPersons[3], result[3]);
-				AssertPerson(AssociationPersons[4], result[4]);
-				AssertPerson(AssociationPersons[5], result[5]);
+				AssertPerson(IdentityPersons[0], result[0]);
+				AssertPerson(IdentityPersons[1], result[1]);
+				AssertPerson(IdentityPersons[2], result[2]);
+				AssertPerson(IdentityPersons[3], result[3]);
+				AssertPerson(IdentityPersons[4], result[4]);
+				AssertPerson(IdentityPersons[5], result[5]);
 
-				Assert.AreEqual(AssociationPersons[5].ID + 1, result[6].ID);
+				Assert.AreEqual(IdentityPersons[5].ID + 1, result[6].ID);
 				Assert.AreEqual(Gender.Unknown, result[6].Gender);
 				Assert.AreEqual("sick", result[6].FirstName);
 				Assert.AreEqual("Inserted 2", result[6].LastName);
@@ -785,15 +767,15 @@ namespace Tests.xUpdate
 			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
-				PrepareAssociationsData(db);
+				PrepareIdentityData(db, context);
 
-				var rows = db.Person
+				var rows = db.GetTable<MPerson>()
 					.Merge()
-					.Using(db.Person)
+					.Using(db.GetTable<MPerson>())
 					.On((t, s) => t.ID == s.ID && t.FirstName != "first 3")
 					.InsertWhenNotMatchedAnd(
 						s => s.Patient!.Diagnosis.Contains("sick"),
-						s => new Person()
+						s => new MPerson()
 						{
 							FirstName = "Inserted 1",
 							LastName = "Inserted 2",
@@ -801,20 +783,20 @@ namespace Tests.xUpdate
 						})
 					.Merge();
 
-				var result = db.Person.OrderBy(_ => _.ID).ToList();
+				var result = db.GetTable<MPerson>().OrderBy(_ => _.ID).ToList();
 
 				AssertRowCount(1, rows, context);
 
 				Assert.AreEqual(7, result.Count);
 
-				AssertPerson(AssociationPersons[0], result[0]);
-				AssertPerson(AssociationPersons[1], result[1]);
-				AssertPerson(AssociationPersons[2], result[2]);
-				AssertPerson(AssociationPersons[3], result[3]);
-				AssertPerson(AssociationPersons[4], result[4]);
-				AssertPerson(AssociationPersons[5], result[5]);
+				AssertPerson(IdentityPersons[0], result[0]);
+				AssertPerson(IdentityPersons[1], result[1]);
+				AssertPerson(IdentityPersons[2], result[2]);
+				AssertPerson(IdentityPersons[3], result[3]);
+				AssertPerson(IdentityPersons[4], result[4]);
+				AssertPerson(IdentityPersons[5], result[5]);
 
-				Assert.AreEqual(AssociationPersons[5].ID + 1, result[6].ID);
+				Assert.AreEqual(IdentityPersons[5].ID + 1, result[6].ID);
 				Assert.AreEqual(Gender.Male, result[6].Gender);
 				Assert.AreEqual("Inserted 1", result[6].FirstName);
 				Assert.AreEqual("Inserted 2", result[6].LastName);
@@ -835,38 +817,38 @@ namespace Tests.xUpdate
 			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
-				PrepareAssociationsData(db);
+				PrepareIdentityData(db, context);
 
-				var rows = db.Person
+				var rows = db.GetTable<MPerson>()
 					.Merge()
-					.Using(db.Person)
+					.Using(db.GetTable<MPerson>())
 					.On((t, s) => t.ID == s.ID
 							&& t.Patient!.Diagnosis.Contains("very")
 							&& s.Patient!.Diagnosis.Contains("sick"))
-					.UpdateWhenMatched((t, s) => new Person()
+					.UpdateWhenMatched((t, s) => new MPerson()
 					{
 						MiddleName = "R.I.P."
 					})
 					.Merge();
 
-				var result = db.Person.OrderBy(_ => _.ID).ToList();
+				var result = db.GetTable<MPerson>().OrderBy(_ => _.ID).ToList();
 
 				AssertRowCount(1, rows, context);
 
 				Assert.AreEqual(6, result.Count);
 
-				AssertPerson(AssociationPersons[0], result[0]);
-				AssertPerson(AssociationPersons[1], result[1]);
-				AssertPerson(AssociationPersons[2], result[2]);
+				AssertPerson(IdentityPersons[0], result[0]);
+				AssertPerson(IdentityPersons[1], result[1]);
+				AssertPerson(IdentityPersons[2], result[2]);
 
-				Assert.AreEqual(AssociationPersons[3].ID, result[3].ID);
-				Assert.AreEqual(AssociationPersons[3].Gender, result[3].Gender);
-				Assert.AreEqual(AssociationPersons[3].FirstName, result[3].FirstName);
-				Assert.AreEqual(AssociationPersons[3].LastName, result[3].LastName);
+				Assert.AreEqual(IdentityPersons[3].ID, result[3].ID);
+				Assert.AreEqual(IdentityPersons[3].Gender, result[3].Gender);
+				Assert.AreEqual(IdentityPersons[3].FirstName, result[3].FirstName);
+				Assert.AreEqual(IdentityPersons[3].LastName, result[3].LastName);
 				Assert.AreEqual("R.I.P.", result[3].MiddleName);
 
-				AssertPerson(AssociationPersons[4], result[4]);
-				AssertPerson(AssociationPersons[5], result[5]);
+				AssertPerson(IdentityPersons[4], result[4]);
+				AssertPerson(IdentityPersons[5], result[5]);
 			}
 		}
 
@@ -883,79 +865,81 @@ namespace Tests.xUpdate
 			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
-				PrepareAssociationsData(db);
+				PrepareIdentityData(db, context);
 
-				var rows = db.Person
+				var rows = db.GetTable<MPerson>()
 					.Merge()
-					.Using(db.Person)
+					.Using(db.GetTable<MPerson>())
 					.On((t, s) => t.ID == s.ID && s.FirstName == "first 4")
-					.UpdateWhenMatched((t, s) => new Person()
+					.UpdateWhenMatched((t, s) => new MPerson()
 					{
 						MiddleName = "first " + s.Patient!.Diagnosis,
 						LastName = "last " + t.Patient!.Diagnosis
 					})
 					.Merge();
 
-				var result = db.Person.OrderBy(_ => _.ID).ToList();
+				var result = db.GetTable<MPerson>().OrderBy(_ => _.ID).ToList();
 
 				AssertRowCount(1, rows, context);
 
 				Assert.AreEqual(6, result.Count);
 
-				AssertPerson(AssociationPersons[0], result[0]);
-				AssertPerson(AssociationPersons[1], result[1]);
-				AssertPerson(AssociationPersons[2], result[2]);
+				AssertPerson(IdentityPersons[0], result[0]);
+				AssertPerson(IdentityPersons[1], result[1]);
+				AssertPerson(IdentityPersons[2], result[2]);
 
-				Assert.AreEqual(AssociationPersons[3].ID, result[3].ID);
-				Assert.AreEqual(AssociationPersons[3].Gender, result[3].Gender);
+				Assert.AreEqual(IdentityPersons[3].ID, result[3].ID);
+				Assert.AreEqual(IdentityPersons[3].Gender, result[3].Gender);
 				Assert.AreEqual("first 4", result[3].FirstName);
 				Assert.AreEqual("last very sick", result[3].LastName);
 				Assert.AreEqual("first very sick", result[3].MiddleName);
 
-				AssertPerson(AssociationPersons[4], result[4]);
-				AssertPerson(AssociationPersons[5], result[5]);
+				AssertPerson(IdentityPersons[4], result[4]);
+				AssertPerson(IdentityPersons[5], result[5]);
 			}
 		}
 
 		[Test]
 		public void SameSourceAssociationInUpdateBySource([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
+			ResetPersonIdentity(context);
+
 			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
-				PrepareAssociationsData(db);
+				PrepareIdentityData(db, context);
 
-				var rows = db.Person
+				var rows = db.GetTable<MPerson>()
 					.Merge()
-					.Using(db.Person)
+					.Using(db.GetTable<MPerson>())
 					.On((t, s) => t.ID == s.ID + 10)
 					.UpdateWhenNotMatchedBySourceAnd(
 						t => t.FirstName == "first 3",
-						t => new Person()
+						t => new MPerson()
 						{
 							FirstName = "Updated",
 							LastName = t.Patient!.Diagnosis
 						})
 					.Merge();
 
-				var result = db.Person.OrderBy(_ => _.ID).ToList();
+				var result = db.GetTable<MPerson>().OrderBy(_ => _.ID).ToList();
 
 				Assert.AreEqual(1, rows);
 
 				Assert.AreEqual(6, result.Count);
 
-				AssertPerson(AssociationPersons[0], result[0]);
-				AssertPerson(AssociationPersons[1], result[1]);
+				AssertPerson(IdentityPersons[0], result[0]);
+				AssertPerson(IdentityPersons[1], result[1]);
 
-				Assert.AreEqual(AssociationPersons[2].ID, result[2].ID);
-				Assert.AreEqual(AssociationPersons[2].Gender, result[2].Gender);
+				Assert.AreEqual(IdentityPersons[2].ID, result[2].ID);
+				Assert.AreEqual(IdentityPersons[2].Gender, result[2].Gender);
 				Assert.AreEqual("Updated", result[2].FirstName);
 				Assert.AreEqual("sick", result[2].LastName);
-				Assert.AreEqual(AssociationPersons[2].MiddleName, result[2].MiddleName);
+				Assert.AreEqual(IdentityPersons[2].MiddleName, result[2].MiddleName);
 
-				AssertPerson(AssociationPersons[3], result[3]);
-				AssertPerson(AssociationPersons[4], result[4]);
-				AssertPerson(AssociationPersons[5], result[5]);
+				AssertPerson(IdentityPersons[3], result[3]);
+				AssertPerson(IdentityPersons[4], result[4]);
+				AssertPerson(IdentityPersons[5], result[5]);
 			}
 		}
 
@@ -963,41 +947,43 @@ namespace Tests.xUpdate
 		public void SameSourceAssociationInUpdateBySourcePredicate(
 			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
+			ResetPersonIdentity(context);
+
 			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
-				PrepareAssociationsData(db);
+				PrepareIdentityData(db, context);
 
-				var rows = db.Person
+				var rows = db.GetTable<MPerson>()
 					.Merge()
-					.Using(db.Person)
+					.Using(db.GetTable<MPerson>())
 					.On((t, s) => t.ID == s.ID + 10)
 					.UpdateWhenNotMatchedBySourceAnd(
 						t => t.Patient!.Diagnosis.Contains("very"),
-						t => new Person()
+						t => new MPerson()
 						{
 							FirstName = "Updated"
 						})
 					.Merge();
 
-				var result = db.Person.OrderBy(_ => _.ID).ToList();
+				var result = db.GetTable<MPerson>().OrderBy(_ => _.ID).ToList();
 
 				Assert.AreEqual(1, rows);
 
 				Assert.AreEqual(6, result.Count);
 
-				AssertPerson(AssociationPersons[0], result[0]);
-				AssertPerson(AssociationPersons[1], result[1]);
-				AssertPerson(AssociationPersons[2], result[2]);
+				AssertPerson(IdentityPersons[0], result[0]);
+				AssertPerson(IdentityPersons[1], result[1]);
+				AssertPerson(IdentityPersons[2], result[2]);
 
-				Assert.AreEqual(AssociationPersons[3].ID, result[3].ID);
-				Assert.AreEqual(AssociationPersons[3].Gender, result[3].Gender);
+				Assert.AreEqual(IdentityPersons[3].ID, result[3].ID);
+				Assert.AreEqual(IdentityPersons[3].Gender, result[3].Gender);
 				Assert.AreEqual("Updated", result[3].FirstName);
-				Assert.AreEqual(AssociationPersons[3].LastName, result[3].LastName);
-				Assert.AreEqual(AssociationPersons[3].MiddleName, result[3].MiddleName);
+				Assert.AreEqual(IdentityPersons[3].LastName, result[3].LastName);
+				Assert.AreEqual(IdentityPersons[3].MiddleName, result[3].MiddleName);
 
-				AssertPerson(AssociationPersons[4], result[4]);
-				AssertPerson(AssociationPersons[5], result[5]);
+				AssertPerson(IdentityPersons[4], result[4]);
+				AssertPerson(IdentityPersons[5], result[5]);
 			}
 		}
 
@@ -1014,38 +1000,38 @@ namespace Tests.xUpdate
 			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
-				PrepareAssociationsData(db);
+				PrepareIdentityData(db, context);
 
-				var rows = db.Person
+				var rows = db.GetTable<MPerson>()
 					.Merge()
-					.Using(db.Person)
+					.Using(db.GetTable<MPerson>())
 					.On((t, s) => t.ID == s.ID && s.FirstName == "first 4")
 					.UpdateWhenMatchedAnd(
 						(t, s) => s.Patient!.Diagnosis.Contains("very") && t.Patient!.Diagnosis.Contains("very"),
-						(t, s) => new Person()
+						(t, s) => new MPerson()
 						{
 							MiddleName = "Updated"
 						})
 					.Merge();
 
-				var result = db.Person.OrderBy(_ => _.ID).ToList();
+				var result = db.GetTable<MPerson>().OrderBy(_ => _.ID).ToList();
 
 				AssertRowCount(1, rows, context);
 
 				Assert.AreEqual(6, result.Count);
 
-				AssertPerson(AssociationPersons[0], result[0]);
-				AssertPerson(AssociationPersons[1], result[1]);
-				AssertPerson(AssociationPersons[2], result[2]);
+				AssertPerson(IdentityPersons[0], result[0]);
+				AssertPerson(IdentityPersons[1], result[1]);
+				AssertPerson(IdentityPersons[2], result[2]);
 
-				Assert.AreEqual(AssociationPersons[3].ID, result[3].ID);
-				Assert.AreEqual(AssociationPersons[3].Gender, result[3].Gender);
-				Assert.AreEqual(AssociationPersons[3].FirstName, result[3].FirstName);
-				Assert.AreEqual(AssociationPersons[3].LastName, result[3].LastName);
+				Assert.AreEqual(IdentityPersons[3].ID, result[3].ID);
+				Assert.AreEqual(IdentityPersons[3].Gender, result[3].Gender);
+				Assert.AreEqual(IdentityPersons[3].FirstName, result[3].FirstName);
+				Assert.AreEqual(IdentityPersons[3].LastName, result[3].LastName);
 				Assert.AreEqual("Updated", result[3].MiddleName);
 
-				AssertPerson(AssociationPersons[4], result[4]);
-				AssertPerson(AssociationPersons[5], result[5]);
+				AssertPerson(IdentityPersons[4], result[4]);
+				AssertPerson(IdentityPersons[5], result[5]);
 			}
 		}
 
@@ -1057,31 +1043,31 @@ namespace Tests.xUpdate
 			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
-				PrepareAssociationsData(db);
+				PrepareIdentityData(db, context);
 
-				var patients = db.Patient.OrderBy(_ => _.PersonID).ToList();
-				var doctors = db.Doctor.OrderBy(_ => _.PersonID).ToList();
-				var persons = db.Person.OrderBy(_ => _.ID).ToList();
+				var patients = db.GetTable<MPatient>().OrderBy(_ => _.PersonID).ToList();
+				var doctors = db.GetTable<MDoctor>().OrderBy(_ => _.PersonID).ToList();
+				var persons = db.GetTable<MPerson>().OrderBy(_ => _.ID).ToList();
 
-				Assert.AreEqual(AssociationPersons.Length, persons.Count);
-				Assert.AreEqual(AssociationPatients.Length, patients.Count);
-				Assert.AreEqual(AssociationDoctors.Length, doctors.Count);
+				Assert.AreEqual(IdentityPersons.Length, persons.Count);
+				Assert.AreEqual(IdentityPatients.Length, patients.Count);
+				Assert.AreEqual(IdentityDoctors.Length, doctors.Count);
 
 				for (var i = 0; i < persons.Count; i++)
 				{
-					AssertPerson(AssociationPersons[i], persons[i]);
+					AssertPerson(IdentityPersons[i], persons[i]);
 				}
 
 				for (var i = 0; i < patients.Count; i++)
 				{
-					Assert.AreEqual(AssociationPatients[i].PersonID, patients[i].PersonID);
-					Assert.AreEqual(AssociationPatients[i].Diagnosis, patients[i].Diagnosis);
+					Assert.AreEqual(IdentityPatients[i].PersonID, patients[i].PersonID);
+					Assert.AreEqual(IdentityPatients[i].Diagnosis, patients[i].Diagnosis);
 				}
 
 				for (var i = 0; i < doctors.Count; i++)
 				{
-					Assert.AreEqual(AssociationDoctors[i].PersonID, doctors[i].PersonID);
-					Assert.AreEqual(AssociationDoctors[i].Taxonomy, doctors[i].Taxonomy);
+					Assert.AreEqual(IdentityDoctors[i].PersonID, doctors[i].PersonID);
+					Assert.AreEqual(IdentityDoctors[i].Taxonomy, doctors[i].Taxonomy);
 				}
 			}
 		}
@@ -1090,34 +1076,36 @@ namespace Tests.xUpdate
 		public void SameSourceAssociationInUpdateWithDeleteDeletePredicate(
 			[IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
+			ResetPersonIdentity(context);
+
 			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
-				PrepareAssociationsData(db);
+				PrepareIdentityData(db, context);
 
-				var rows = db.Person
+				var rows = db.GetTable<MPerson>()
 					.Merge()
-					.Using(db.Person)
+					.Using(db.GetTable<MPerson>())
 					.On((t, s) => t.ID == s.ID && s.FirstName == "first 4")
 					.UpdateWhenMatchedThenDelete(
-						(t, s) => new Person()
+						(t, s) => new MPerson()
 						{
 							LastName = s.LastName
 						},
 						(t, s) => s.Patient!.Diagnosis == "very sick" && t.Patient!.Diagnosis == "very sick")
 					.Merge();
 
-				var result = db.Person.OrderBy(_ => _.ID).ToList();
+				var result = db.GetTable<MPerson>().OrderBy(_ => _.ID).ToList();
 
 				AssertRowCount(1, rows, context);
 
 				Assert.AreEqual(5, result.Count);
 
-				AssertPerson(AssociationPersons[0], result[0]);
-				AssertPerson(AssociationPersons[1], result[1]);
-				AssertPerson(AssociationPersons[2], result[2]);
-				AssertPerson(AssociationPersons[4], result[3]);
-				AssertPerson(AssociationPersons[5], result[4]);
+				AssertPerson(IdentityPersons[0], result[0]);
+				AssertPerson(IdentityPersons[1], result[1]);
+				AssertPerson(IdentityPersons[2], result[2]);
+				AssertPerson(IdentityPersons[4], result[3]);
+				AssertPerson(IdentityPersons[5], result[4]);
 			}
 		}
 
@@ -1130,99 +1118,36 @@ namespace Tests.xUpdate
 			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
-				PrepareAssociationsData(db);
+				PrepareIdentityData(db, context);
 
-				var rows = db.Person
+				var rows = db.GetTable<MPerson>()
 					.Merge()
-					.Using(db.Person)
+					.Using(db.GetTable<MPerson>())
 					.On((t, s) => t.ID == s.ID && s.FirstName == "first 4")
 					.UpdateWhenMatchedThenDelete(
-						(t, s) => new Person()
+						(t, s) => new MPerson()
 						{
 							LastName = s.FirstName
 						},
 						(t, s) => s.Patient!.Diagnosis == "very sick" && t.Patient!.Diagnosis == "very sick")
 					.Merge();
 
-				var result = db.Person.OrderBy(_ => _.ID).ToList();
+				var result = db.GetTable<MPerson>().OrderBy(_ => _.ID).ToList();
 
 				AssertRowCount(1, rows, context);
 
 				Assert.AreEqual(5, result.Count);
 
-				AssertPerson(AssociationPersons[0], result[0]);
-				AssertPerson(AssociationPersons[1], result[1]);
-				AssertPerson(AssociationPersons[2], result[2]);
-				AssertPerson(AssociationPersons[4], result[3]);
-				AssertPerson(AssociationPersons[5], result[4]);
+				AssertPerson(IdentityPersons[0], result[0]);
+				AssertPerson(IdentityPersons[1], result[1]);
+				AssertPerson(IdentityPersons[2], result[2]);
+				AssertPerson(IdentityPersons[4], result[3]);
+				AssertPerson(IdentityPersons[5], result[4]);
 			}
 		}
 
 		#region Test Data
-		private static readonly Doctor[] AssociationDoctors = new[]
-		{
-			new Doctor() { PersonID = 3, Taxonomy = "Dr. Lector" },
-			new Doctor() { PersonID = 4, Taxonomy = "Dr. who???" },
-		};
-
-		private static readonly Patient[] AssociationPatients = new[]
-		{
-			new Patient() { PersonID = 5, Diagnosis = "sick" },
-			new Patient() { PersonID = 6, Diagnosis = "very sick" },
-		};
-
-		private static readonly Person[] AssociationPersons = new[]
-		{
-			new Person() { ID = 1, Gender = Gender.Female,  FirstName = "first 1",  LastName = "last 1" },
-			new Person() { ID = 2, Gender = Gender.Male,    FirstName = "first 2",  LastName = "last 2" },
-			new Person() { ID = 3, Gender = Gender.Other,   FirstName = "first 3",  LastName = "last 3" },
-			new Person() { ID = 4, Gender = Gender.Unknown, FirstName = "first 4",  LastName = "last 4" },
-			new Person() { ID = 5, Gender = Gender.Female,  FirstName = "first 5",  LastName = "last 5" },
-			new Person() { ID = 6, Gender = Gender.Male,    FirstName = "first 6",  LastName = "last 6" },
-		};
-
-		private static void AssertPerson(Person expected, Person actual)
-		{
-			Assert.AreEqual(expected.ID, actual.ID);
-			Assert.AreEqual(expected.Gender, actual.Gender);
-			Assert.AreEqual(expected.FirstName, actual.FirstName);
-			Assert.AreEqual(expected.LastName, actual.LastName);
-			Assert.AreEqual(expected.MiddleName, actual.MiddleName);
-		}
-
-		private void PrepareAssociationsData(ITestDataContext db)
-		{
-			using (new DisableLogging())
-			{
-				db.Patient.Delete();
-				db.Doctor.Delete();
-				db.Person.Delete();
-
-				var id = 1;
-				foreach (var person in AssociationPersons)
-				{
-					person.ID = id++;
-
-					person.ID = Convert.ToInt32(db.InsertWithIdentity(person));
-				}
-
-				AssociationDoctors[0].PersonID = AssociationPersons[4].ID;
-				AssociationDoctors[1].PersonID = AssociationPersons[5].ID;
-
-				foreach (var doctor in AssociationDoctors)
-				{
-					db.Insert(doctor);
-				}
-
-				AssociationPatients[0].PersonID = AssociationPersons[2].ID;
-				AssociationPatients[1].PersonID = AssociationPersons[3].ID;
-
-				foreach (var patient in AssociationPatients)
-				{
-					db.Insert(patient);
-				}
-			}
-		}
+		
 		#endregion
 	}
 }

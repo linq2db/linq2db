@@ -909,7 +909,7 @@ namespace Tests.Linq
 					join c in cteQuery on p.ParentID equals c.Child!.ParentID
 					select new {p, c};
 
-				Assert.AreEqual(expected, result);
+				Assert.AreEqual(expected.ToList().OrderBy(_ => _.p.ParentID).ThenBy(_ => _.c.Child?.ChildID), result.OrderBy(_ => _.p.ParentID).ThenBy(_ => _.c.Child?.ChildID));
 			}
 		}
 

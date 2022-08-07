@@ -85,7 +85,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			if (connection == null)
 				return MultipleRowsCopy(table, options, source);
 
-			var sqlBuilder = (BasicSqlBuilder)_provider.CreateSqlBuilder(table.DataContext.MappingSchema);
+			var sqlBuilder = (PostgreSQLSqlBuilder)_provider.CreateSqlBuilder(table.DataContext.MappingSchema);
 			var ed         = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T));
 			var tableName  = GetTableName(sqlBuilder, options, table);
 			var columns    = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToArray();
@@ -105,7 +105,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		private (NpgsqlProviderAdapter.NpgsqlDbType?[] npgsqlTypes, string?[] dbTypes, DbDataType[] columnTypes) BuildTypes(
 			NpgsqlProviderAdapter adapter,
-			BasicSqlBuilder       sqlBuilder,
+			PostgreSQLSqlBuilder  sqlBuilder,
 			ColumnDescriptor[]    columns)
 		{
 			var npgsqlTypes = new NpgsqlProviderAdapter.NpgsqlDbType?[columns.Length];
@@ -234,7 +234,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			if (connection == null)
 				return await MultipleRowsCopyAsync(table, options, source, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-			var sqlBuilder  = (BasicSqlBuilder)_provider.CreateSqlBuilder(table.DataContext.MappingSchema);
+			var sqlBuilder  = (PostgreSQLSqlBuilder)_provider.CreateSqlBuilder(table.DataContext.MappingSchema);
 			var ed          = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T));
 			var tableName   = GetTableName(sqlBuilder, options, table);
 			var columns     = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToArray();
@@ -336,7 +336,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			if (connection == null)
 				return await MultipleRowsCopyAsync(table, options, source, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-			var sqlBuilder  = (BasicSqlBuilder)_provider.CreateSqlBuilder(table.DataContext.MappingSchema);
+			var sqlBuilder  = (PostgreSQLSqlBuilder)_provider.CreateSqlBuilder(table.DataContext.MappingSchema);
 			var ed          = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T));
 			var tableName   = GetTableName(sqlBuilder, options, table);
 			var columns     = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToArray();

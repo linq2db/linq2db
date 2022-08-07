@@ -35,7 +35,7 @@ namespace LinqToDB.DataProvider.Access
 			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale, options);
 		}
 
-		protected override DataType GetDataType(string? dataType, string? columnType, int? length, int? prec, int? scale)
+		protected override DataType GetDataType(string? dataType, string? columnType, int? length, int? precision, int? scale)
 		{
 			return dataType?.ToLower() switch
 			{

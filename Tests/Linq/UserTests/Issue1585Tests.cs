@@ -38,7 +38,7 @@ namespace Tests.UserTests
 			{
 				try
 				{
-					db.DropTable<Test1585>();
+					db.DropTable<Test1585>(tableOptions: TableOptions.DropIfExists);
 				}
 				catch
 				{ }

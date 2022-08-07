@@ -222,15 +222,15 @@ namespace LinqToDB.DataProvider.Oracle
 		internal interface IBulkCopyAdapter
 		{
 			IBulkCopyService Create(
-				DbConnection connection,
-				BulkCopyOptions options,
-				string table,
-				string? schema,
-				int? notifyAfter,
+				DbConnection                connection,
+				BulkCopyOptions             options,
+				string                      table,
+				string?                     schema,
+				int?                        notifyAfter,
 				Action<BulkCopyRowsCopied>? rowsCopiedCallback,
-				BulkCopyRowsCopied rowsCopiedArgs,
-				int? batchSize,
-				int? timeout);
+				BulkCopyRowsCopied          rowsCopiedArgs,
+				int?                        batchSize,
+				int?                        timeout);
 		}
 
 		private sealed class OracleBulkCopyAdapter : IBulkCopyAdapter

@@ -960,6 +960,12 @@ namespace LinqToDB.SqlQuery
 								foreach (var column in q.Select.Columns)
 									sc.Columns.Add(column.Clone(q, objTree, static (q, e) => e is SqlColumn c && c.Parent == q));
 							}
+							else
+							{
+								for (var i = 0; i < q.Select.Columns.Count; i++)
+									if (ReferenceEquals(sc.Columns[i], q.Select.Columns[i]))
+										sc.Columns[i] = q.Select.Columns[i].Clone(q, objTree ??= new(), static (q, e) => e is SqlColumn c && c.Parent == q);
+							}
 
 							if (ReferenceEquals(fc, q.From))
 							{

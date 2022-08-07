@@ -29,11 +29,9 @@ namespace LinqToDB.DataProvider.Sybase
 			SqlProviderFlags.AcceptsTakeAsParameter           = false;
 			SqlProviderFlags.IsSkipSupported                  = false;
 			SqlProviderFlags.IsSubQueryTakeSupported          = false;
-			//SqlProviderFlags.IsCountSubQuerySupported       = false;
 			SqlProviderFlags.CanCombineParameters             = false;
 			SqlProviderFlags.IsSybaseBuggyGroupBy             = true;
 			SqlProviderFlags.IsCrossJoinSupported             = false;
-			SqlProviderFlags.IsSubQueryOrderBySupported       = false;
 			SqlProviderFlags.IsDistinctOrderBySupported       = false;
 			SqlProviderFlags.IsDistinctSetOperationsSupported = false;
 

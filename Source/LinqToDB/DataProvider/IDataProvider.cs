@@ -23,6 +23,7 @@ namespace LinqToDB.DataProvider
 		MappingSchema    MappingSchema         { get; }
 		SqlProviderFlags SqlProviderFlags      { get; }
 		TableOptions     SupportedTableOptions { get; }
+		bool             TransactionsSupported { get; }
 		void             InitContext           (IDataContext dataContext);
 		DbConnection     CreateConnection      (string        connectionString);
 		ISqlBuilder      CreateSqlBuilder      (MappingSchema mappingSchema);

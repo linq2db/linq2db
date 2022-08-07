@@ -60,10 +60,9 @@ namespace Tests.UserTests
 		{
 			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
+			using (db.CreateLocalTable<mega_composites>())
+			using (db.CreateLocalTable<Qwerty>())
 			{
-				db.CreateTable<mega_composites>();
-				db.CreateTable<Qwerty>();
-
 				db.Insert(new Qwerty() { Id = 1, asdfgh = "res1" });
 				db.Insert(new Qwerty() { Id = 100500, asdfgh = "res100500" });
 
@@ -118,10 +117,9 @@ namespace Tests.UserTests
 		{
 			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
+			using (db.CreateLocalTable<mega_composites>())
+			using (db.CreateLocalTable<Qwerty>())
 			{
-				db.CreateTable<mega_composites>();
-				db.CreateTable<Qwerty>();
-
 				db.Insert(new Qwerty() { Id = 1, asdfgh = "res1" });
 				db.Insert(new Qwerty() { Id = 100500, asdfgh = "res100500" });
 

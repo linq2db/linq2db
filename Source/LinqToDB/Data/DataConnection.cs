@@ -1604,6 +1604,9 @@ namespace LinqToDB.Data
 		/// <returns>Database transaction object.</returns>
 		public virtual DataConnectionTransaction BeginTransaction()
 		{
+			if (!DataProvider.TransactionsSupported)
+				return new(this);
+
 			// If transaction is open, we dispose it, it will rollback all changes.
 			//
 			TransactionAsync?.Dispose();
@@ -1638,6 +1641,9 @@ namespace LinqToDB.Data
 		/// <returns>Database transaction object.</returns>
 		public virtual DataConnectionTransaction BeginTransaction(IsolationLevel isolationLevel)
 		{
+			if (!DataProvider.TransactionsSupported)
+				return new(this);
+
 			// If transaction is open, we dispose it, it will rollback all changes.
 			//
 			TransactionAsync?.Dispose();

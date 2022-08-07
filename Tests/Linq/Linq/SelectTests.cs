@@ -922,7 +922,7 @@ namespace Tests.Linq
 					InternalStr = t.StringValue
 				});
 
-				var result = query.Where(x => x.InternalStr != "").ToArray();
+				var result = query.Where(x => x.InternalStr != "").OrderBy(_ => _.Int).ToArray();
 				Assert.That(result[0].InternalStr, Is.EqualTo(Types.First().StringValue));
 			}
 		}
@@ -1121,6 +1121,7 @@ namespace Tests.Linq
 					from c in db.GetTable<ChildEntityObject>().LeftJoin(c => c.Id == m.Id)
 					select new
 					{
+						m.Id,
 						Child1 = c,
 						Child2 = c == null ? null : new ChildEntityObject { Id = c.Id, Value = c.Value },
 						Child3 = c != null ? c : new ChildEntityObject { Id = 4, Value = "Generated" },
@@ -1132,7 +1133,7 @@ namespace Tests.Linq
 							: c
 					};
 
-				var result = query.ToArray();
+				var result = query.OrderBy(_ => _.Id).ToArray();
 
 				Assert.NotNull(result[0].Child1);
 				Assert.IsNull (result[1].Child1);

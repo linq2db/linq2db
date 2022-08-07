@@ -270,7 +270,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable<TestTable>())
 			{
-				table.TagQuery(tag).Update(_ => new TestTable() { Id = 1 });
+				table.TagQuery(tag).Update(_ => new TestTable() { Fd = 1 });
 
 				var commandSql = GetCurrentBaselines();
 

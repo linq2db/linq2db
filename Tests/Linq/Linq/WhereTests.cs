@@ -1199,8 +1199,7 @@ namespace Tests.Linq
 					from p in Types
 					select new { Value = Math.Round(p.MoneyValue, 2) } into pp
 					where pp.Value != 0 && pp.Value != 7
-					select pp.Value
-					,
+					select pp.Value,
 					q);
 			}
 		}
@@ -1322,7 +1321,6 @@ namespace Tests.Linq
 			}
 		}
 
-
 		[Test]
 		public void WhereDateTimeTest1([DataSources] string context)
 		{
@@ -1337,7 +1335,6 @@ namespace Tests.Linq
 						.Select(_ => _));
 			}
 		}
-
 
 		[Test]
 		public void WhereDateTimeTest2([DataSources] string context)
@@ -1665,9 +1662,8 @@ namespace Tests.Linq
 		public void ExistsSqlTest1([DataSources(false)] string context)
 		{
 			using (var db = GetDataConnection(context))
-			using (db.BeginTransaction())
 			{
-				db.Parent.Where(p => db.Child.Select(c => c.ParentID).Contains(p.ParentID)).Delete();
+				db.Parent.Where(p => db.Child.Select(c => c.ParentID).Contains(p.ParentID + 100)).Delete();
 
 				Assert.False(db.LastQuery!.ToLower().Contains("iif(exists(") || db.LastQuery!.ToLower().Contains("when exists("));
 			}
@@ -1677,9 +1673,8 @@ namespace Tests.Linq
 		public void ExistsSqlTest2([DataSources(false)] string context)
 		{
 			using (var db = GetDataConnection(context))
-			using (db.BeginTransaction())
 			{
-				db.Parent.Where(p => p.Children.Any()).Delete();
+				db.Parent.Where(p => p.Children.Any() && p.ParentID > 100).Delete();
 
 				Assert.False(db.LastQuery!.ToLower().Contains("iif(exists(") || db.LastQuery!.ToLower().Contains("when exists("));
 			}
@@ -1694,7 +1689,6 @@ namespace Tests.Linq
 		public void OptionalObjectInCondition([DataSources(false)] string context)
 		{
 			using (var db = GetDataConnection(context))
-			using (db.BeginTransaction())
 			{
 				var p  = new Parameter() { Id = 1};
 				db.Person.Where(r => r.FirstName == (p != null ? p.Id.ToString() : null)).ToList();
