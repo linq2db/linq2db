@@ -22,25 +22,18 @@ namespace Tests.xUpdate
 		public void InsertViaSqlProperty([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
+			using (new RestoreBaseTables(db))
 			{
-				try
-				{
-					var id = 1001;
+				var id = 1001;
 
-					db.Child.Delete(c => Sql.Property<int>(c, ChildIDColumn) > 1000);
+				var cnt = db
+					.Into(db.Child)
+					.Value(c => Sql.Property<int>(c, ParentIDColumn), () => 1)
+					.Value(c => Sql.Property<int>(c, ChildIDColumn), () => id)
+					.Insert();
+					Assert.AreEqual(1, cnt);
 
-					Assert.AreEqual(1,
-						db
-							.Into(db.Child)
-							.Value(c => Sql.Property<int>(c, ParentIDColumn), () => 1)
-							.Value(c => Sql.Property<int>(c, ChildIDColumn), () => id)
-							.Insert());
-					Assert.AreEqual(1, db.Child.Count(c => Sql.Property<int>(c, ChildIDColumn) == id));
-				}
-				finally
-				{
-					db.Child.Delete(c => Sql.Property<int>(c, ChildIDColumn) > 1000);
-				}
+				Assert.AreEqual(1, db.Child.Count(c => Sql.Property<int>(c, ChildIDColumn) == id));
 			}
 		}
 
@@ -48,26 +41,20 @@ namespace Tests.xUpdate
 		public void UpdateViaSqlProperty([DataSources(TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
+			using (new RestoreBaseTables(db))
 			{
-				try
-				{
-					var id = 1001;
+				var id = 1001;
 
-					db.Child.Delete(c => Sql.Property<int>(c, ChildIDColumn) > 1000);
-					db.Child.Insert(() => new Child { ParentID = 1, ChildID = id });
+				db.Child.Insert(() => new Child { ParentID = 1, ChildID = id });
 
-					Assert.AreEqual(1, db.Child.Count(c => Sql.Property<int>(c, ChildIDColumn) == id));
-					Assert.AreEqual(1,
-						db.Child
-							.Where(c => Sql.Property<int>(c, ChildIDColumn) == id && Sql.Property<int?>(Sql.Property<Parent>(c, "Parent"), "Value1") == 1)
-							.Set(c => Sql.Property<int>(c, ChildIDColumn), c => Sql.Property<int>(c, ChildIDColumn) + 1)
-							.Update());
-					Assert.AreEqual(1, db.Child.Count(c => Sql.Property<int>(c, ChildIDColumn) == id + 1));
-				}
-				finally
-				{
-					db.Child.Delete(c => Sql.Property<int>(c, ChildIDColumn) > 1000);
-				}
+				Assert.AreEqual(1, db.Child.Count(c => Sql.Property<int>(c, ChildIDColumn) == id));
+				var cnt = db.Child
+						.Where(c => Sql.Property<int>(c, ChildIDColumn) == id && Sql.Property<int?>(Sql.Property<Parent>(c, "Parent"), "Value1") == 1)
+						.Set(c => Sql.Property<int>(c, ChildIDColumn), c => Sql.Property<int>(c, ChildIDColumn) + 1)
+						.Update();
+				Assert.AreEqual(1, cnt);
+
+				Assert.AreEqual(1, db.Child.Count(c => Sql.Property<int>(c, ChildIDColumn) == id + 1));
 			}
 		}
 
@@ -75,26 +62,20 @@ namespace Tests.xUpdate
 		public void UpdateViaSqlPropertyValue([DataSources(TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
+			using (new RestoreBaseTables(db))
 			{
-				try
-				{
-					var id = 1001;
+				var id = 1001;
 
-					db.Child.Delete(c => Sql.Property<int>(c, ChildIDColumn) > 1000);
-					db.Child.Insert(() => new Child { ParentID = 1, ChildID = id });
+				db.Child.Insert(() => new Child { ParentID = 1, ChildID = id });
 
-					Assert.AreEqual(1, db.Child.Count(c => Sql.Property<int>(c, ChildIDColumn) == id));
-					Assert.AreEqual(1,
-						db.Child
-							.Where(c => Sql.Property<int>(c, ChildIDColumn) == id && Sql.Property<int?>(Sql.Property<Parent>(c, "Parent"), "Value1") == 1)
-							.Set(c => Sql.Property<int>(c, ChildIDColumn), 5000)
-							.Update());
-					Assert.AreEqual(1, db.Child.Count(c => Sql.Property<int>(c, ChildIDColumn) == 5000));
-				}
-				finally
-				{
-					db.Child.Delete(c => Sql.Property<int>(c, ChildIDColumn) > 1000);
-				}
+				Assert.AreEqual(1, db.Child.Count(c => Sql.Property<int>(c, ChildIDColumn) == id));
+				var cnt = db.Child
+						.Where(c => Sql.Property<int>(c, ChildIDColumn) == id && Sql.Property<int?>(Sql.Property<Parent>(c, "Parent"), "Value1") == 1)
+						.Set(c => Sql.Property<int>(c, ChildIDColumn), 5000)
+						.Update();
+				Assert.AreEqual(1, cnt);
+
+				Assert.AreEqual(1, db.Child.Count(c => Sql.Property<int>(c, ChildIDColumn) == 5000));
 			}
 		}
 
@@ -103,26 +84,22 @@ namespace Tests.xUpdate
 		{
 			var firstNameColumn = "FirstName";
 			var lastNameColumn  = "LastName";
+
 			using (var db = GetDataContext(context, ConfigureDynamicMyClass()))
+			using (new RestoreBaseTables(db))
 			{
-				try
-				{
-					Assert.AreEqual(1,
-						db
-							.GetTable<MyClass>()
-							.Value(c => Sql.Property<string>(c, firstNameColumn), () => "John")
-							.Value(c => Sql.Property<string>(c, lastNameColumn), () => "The Dynamic")
-							.Value(c => Sql.Property<Gender>(c, "Gender"), () => Gender.Male)
-							.Insert());
-					Assert.AreEqual(1,
-						db.GetTable<MyClass>().Count(c =>
-							Sql.Property<string>(c, firstNameColumn) == "John" &&
-							Sql.Property<string>(c, lastNameColumn) == "The Dynamic"));
-				}
-				finally
-				{
-					db.GetTable<MyClass>().Delete(c => Sql.Property<string>(c, lastNameColumn) == "The Dynamic");
-				}
+				var cnt = db
+					.GetTable<MyClass>()
+					.Value(c => Sql.Property<string>(c, firstNameColumn), () => "John")
+					.Value(c => Sql.Property<string>(c, lastNameColumn), () => "The Dynamic")
+					.Value(c => Sql.Property<Gender>(c, "Gender"), () => Gender.Male)
+					.Insert();
+					Assert.AreEqual(1, cnt);
+
+				Assert.AreEqual(1,
+					db.GetTable<MyClass>().Count(c =>
+						Sql.Property<string>(c, firstNameColumn) == "John" &&
+						Sql.Property<string>(c, lastNameColumn) == "The Dynamic"));
 			}
 		}
 
@@ -130,27 +107,23 @@ namespace Tests.xUpdate
 		public void UpdateDynamicColumn([DataSources(TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context, ConfigureDynamicMyClass()))
+			using (new RestoreBaseTables(db))
 			{
-				try
-				{
-					db.GetTable<MyClass>()
-						.Value(c => Sql.Property<string>(c, "FirstName"), () => "John")
-						.Value(c => Sql.Property<string>(c, "LastName"), () => "Limonadovy")
-						.Value(c => Sql.Property<Gender>(c, "Gender"), () => Gender.Male)
-						.Insert();
+				db.GetTable<MyClass>()
+					.Value(c => Sql.Property<string>(c, "FirstName"), () => "John")
+					.Value(c => Sql.Property<string>(c, "LastName"), () => "Limonadovy")
+					.Value(c => Sql.Property<Gender>(c, "Gender"), () => Gender.Male)
+					.Insert();
 
-					Assert.AreEqual(1, db.GetTable<MyClass>().Count(c => Sql.Property<string>(c, "LastName") == "Limonadovy"));
-					Assert.AreEqual(1,
-						db.GetTable<MyClass>()
-							.Where(c => Sql.Property<string>(c, "LastName") == "Limonadovy")
-							.Set(c => Sql.Property<string>(c, "FirstName"), () => "Johnny")
-							.Update());
-					Assert.AreEqual(1, db.GetTable<MyClass>().Count(c => Sql.Property<string>(c, "FirstName") == "Johnny" && Sql.Property<string>(c, "LastName") == "Limonadovy"));
-				}
-				finally
-				{
-					db.GetTable<MyClass>().Delete(c => Sql.Property<string>(c, "LastName") == "Limonadovy");
-				}
+				Assert.AreEqual(1, db.GetTable<MyClass>().Count(c => Sql.Property<string>(c, "LastName") == "Limonadovy"));
+
+				var cnt = db.GetTable<MyClass>()
+						.Where(c => Sql.Property<string>(c, "LastName") == "Limonadovy")
+						.Set(c => Sql.Property<string>(c, "FirstName"), () => "Johnny")
+						.Update();
+					Assert.AreEqual(1, cnt);
+
+				Assert.AreEqual(1, db.GetTable<MyClass>().Count(c => Sql.Property<string>(c, "FirstName") == "Johnny" && Sql.Property<string>(c, "LastName") == "Limonadovy"));
 			}
 		}
 

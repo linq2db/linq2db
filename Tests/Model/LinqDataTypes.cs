@@ -146,5 +146,22 @@ namespace Tests.Model
 		{
 			return string.Format("{{{0,2}, {1,7}, {2:O}, {3,5}, {4}, {5}, '{6}'}}", ID, MoneyValue, DateTimeValue, BoolValue, GuidValue, SmallIntValue, StringValue);
 		}
+
+		public LinqDataTypes2 Clone()
+		{
+			return new ()
+			{
+				ID             = ID,
+				MoneyValue     = MoneyValue,
+				DateTimeValue  = DateTimeValue,
+				DateTimeValue2 = DateTimeValue2,
+				BoolValue      = BoolValue,
+				GuidValue      = GuidValue,
+				SmallIntValue  = SmallIntValue,
+				IntValue       = IntValue,
+				BigIntValue    = BigIntValue,
+				StringValue    = StringValue,
+			};
+		}
 	}
 }

@@ -89,7 +89,6 @@ namespace Tests.Linq
 			}
 		}
 
-
 		[Test]
 		public void ApplyOrderBy([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{

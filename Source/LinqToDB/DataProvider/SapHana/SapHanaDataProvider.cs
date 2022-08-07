@@ -20,7 +20,6 @@ namespace LinqToDB.DataProvider.SapHana
 			SqlProviderFlags.IsParameterOrderDependent = true;
 
 			//supported flags
-			SqlProviderFlags.IsCountSubQuerySupported  = true;
 
 			//Exception: Sap.Data.Hana.HanaException
 			//Message: single-row query returns more than one row
@@ -29,12 +28,10 @@ namespace LinqToDB.DataProvider.SapHana
 			//instead of replace with left join, in which case returns incorrect data
 			SqlProviderFlags.IsSubQueryColumnSupported  = true;
 
-			SqlProviderFlags.IsTakeSupported            = true;
 			SqlProviderFlags.IsDistinctOrderBySupported = false;
 
 			//not supported flags
 			SqlProviderFlags.IsSubQueryTakeSupported   = false;
-			SqlProviderFlags.IsApplyJoinSupported      = false;
 			SqlProviderFlags.IsInsertOrUpdateSupported = false;
 			SqlProviderFlags.IsUpdateFromSupported     = false;
 			SqlProviderFlags.AcceptsOuterExpressionInAggregate = false;

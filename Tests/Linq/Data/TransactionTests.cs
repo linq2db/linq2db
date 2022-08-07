@@ -1,4 +1,7 @@
-﻿using System.Linq;
+﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Linq;
 
 using LinqToDB;
 
@@ -6,9 +9,6 @@ using NUnit.Framework;
 
 namespace Tests.Data
 {
-	using System;
-	using System.Threading;
-	using System.Threading.Tasks;
 	using Model;
 
 	[TestFixture]
@@ -18,6 +18,7 @@ namespace Tests.Data
 		public async Task DataContextBeginTransactionAsync([DataSources(false)] string context)
 		{
 			using (var db = new DataContext(context))
+			using (new RestoreBaseTables(db))
 			{
 				// ensure connection opened and test results not affected by OpenAsync
 				db.KeepConnectionAlive = true;
@@ -42,6 +43,7 @@ namespace Tests.Data
 			var tid = Environment.CurrentManagedThreadId;
 
 			using (var db = new DataContext(context))
+			using (new RestoreBaseTables(db))
 			using (await db.BeginTransactionAsync())
 			{
 				// perform synchonously to not mess with BeginTransactionAsync testing
@@ -56,6 +58,7 @@ namespace Tests.Data
 		public async Task DataContextCommitTransactionAsync([DataSources(false)] string context)
 		{
 			using (var db = new DataContext(context))
+			using (new RestoreBaseTables(db))
 			using (var tr = await db.BeginTransactionAsync())
 			{
 				int tid;
@@ -82,6 +85,7 @@ namespace Tests.Data
 		public async Task DataContextRollbackTransactionAsync([DataSources(false)] string context)
 		{
 			using (var db = new DataContext(context))
+			using (new RestoreBaseTables(db))
 			using (var tr = await db.BeginTransactionAsync())
 			{
 				await db.InsertAsync(new Parent { ParentID = 1010, Value1 = 1010 });
@@ -101,6 +105,7 @@ namespace Tests.Data
 			var tid = Environment.CurrentManagedThreadId;
 
 			using (var db = GetDataConnection(context))
+			using (new RestoreBaseTables(db))
 			using (await db.BeginTransactionAsync())
 			{
 				// perform synchonously to not mess with BeginTransactionAsync testing
@@ -117,15 +122,14 @@ namespace Tests.Data
 			var tid = Environment.CurrentManagedThreadId;
 
 			using (var db = GetDataConnection(context))
+			using (new RestoreBaseTables(db))
+			await using (db.BeginTransaction())
 			{
-				await using (db.BeginTransaction())
-				{
-					// perform synchonously to not mess with DisposeAsync testing
-					db.Insert(new Parent { ParentID = 1010, Value1 = 1010 });
+				// perform synchonously to not mess with DisposeAsync testing
+				db.Insert(new Parent { ParentID = 1010, Value1 = 1010 });
 
-					if (tid == Environment.CurrentManagedThreadId)
-						Assert.Inconclusive("Executed synchronously due to lack of async support or there were no underlying async operations");
-				}
+				if (tid == Environment.CurrentManagedThreadId)
+					Assert.Inconclusive("Executed synchronously due to lack of async support or there were no underlying async operations");
 			}
 		}
 
@@ -133,6 +137,7 @@ namespace Tests.Data
 		public async Task DataConnectionCommitTransactionAsync([DataSources(false)] string context)
 		{
 			using (var db = GetDataConnection(context))
+			using (new RestoreBaseTables(db))
 			using (await db.BeginTransactionAsync())
 			{
 				int tid;
@@ -159,6 +164,7 @@ namespace Tests.Data
 		public async Task DataConnectionRollbackTransactionAsync([DataSources(false)] string context)
 		{
 			using (var db = GetDataConnection(context))
+			using (new RestoreBaseTables(db))
 			using (await db.BeginTransactionAsync())
 			{
 				// perform synchonously to not mess with BeginTransactionAsync testing
@@ -177,24 +183,18 @@ namespace Tests.Data
 		public void AutoRollbackTransaction([DataSources(false)] string context)
 		{
 			using (var db = GetDataConnection(context))
+			using (new RestoreBaseTables(db))
 			{
 				db.Insert(new Parent { ParentID = 1010, Value1 = 1010 });
 
-				try
+				using (db.BeginTransaction())
 				{
-					using (db.BeginTransaction())
-					{
-						db.Parent.Update(t => t.ParentID == 1010, t => new Parent { Value1 = 1012 });
-					}
-
-					var p = db.Parent.First(t => t.ParentID == 1010);
-
-					Assert.That(p.Value1, Is.Not.EqualTo(1012));
+					db.Parent.Update(t => t.ParentID == 1010, t => new Parent { Value1 = 1012 });
 				}
-				finally
-				{
-					db.Parent.Delete(t => t.ParentID >= 1000);
-				}
+
+				var p = db.Parent.First(t => t.ParentID == 1010);
+
+				Assert.That(p.Value1, Is.Not.EqualTo(1012));
 			}
 		}
 
@@ -202,25 +202,19 @@ namespace Tests.Data
 		public void CommitTransaction([DataSources(false)] string context)
 		{
 			using (var db = GetDataConnection(context))
+			using (new RestoreBaseTables(db))
 			{
 				db.Insert(new Parent { ParentID = 1010, Value1 = 1010 });
 
-				try
+				using (var tr = db.BeginTransaction())
 				{
-					using (var tr = db.BeginTransaction())
-					{
-						db.Parent.Update(t => t.ParentID == 1010, t => new Parent { Value1 = 1011 });
-						tr.Commit();
-					}
-
-					var p = db.Parent.First(t => t.ParentID == 1010);
-
-					Assert.That(p.Value1, Is.EqualTo(1011));
+					db.Parent.Update(t => t.ParentID == 1010, t => new Parent { Value1 = 1011 });
+					tr.Commit();
 				}
-				finally
-				{
-					db.Parent.Delete(t => t.ParentID >= 1000);
-				}
+
+				var p = db.Parent.First(t => t.ParentID == 1010);
+
+				Assert.That(p.Value1, Is.EqualTo(1011));
 			}
 		}
 
@@ -228,25 +222,19 @@ namespace Tests.Data
 		public void RollbackTransaction([DataSources(false)] string context)
 		{
 			using (var db = GetDataConnection(context))
+			using (new RestoreBaseTables(db))
 			{
 				db.Insert(new Parent { ParentID = 1010, Value1 = 1010 });
 
-				try
+				using (var tr = db.BeginTransaction())
 				{
-					using (var tr = db.BeginTransaction())
-					{
-						db.Parent.Update(t => t.ParentID == 1010, t => new Parent {Value1 = 1012});
-						tr.Rollback();
-					}
-
-					var p = db.Parent.First(t => t.ParentID == 1010);
-
-					Assert.That(p.Value1, Is.Not.EqualTo(1012));
+					db.Parent.Update(t => t.ParentID == 1010, t => new Parent { Value1 = 1012 });
+					tr.Rollback();
 				}
-				finally
-				{
-					db.Parent.Delete(t => t.ParentID >= 1000);
-				}
+
+				var p = db.Parent.First(t => t.ParentID == 1010);
+
+				Assert.That(p.Value1, Is.Not.EqualTo(1012));
 			}
 		}
 	}

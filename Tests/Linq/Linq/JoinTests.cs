@@ -482,7 +482,7 @@ namespace Tests.Linq
 				Assert.AreEqual(list1[0].p.ParentID, list2[0].p.ParentID);
 				Assert.AreEqual(list1[0].lj.Count(), list2[0].lj.Count());
 
-				var ch2 = list2[0].lj.ToList();
+				var ch2 = list2[0].lj.OrderBy(_ => _.ChildID).ToList();
 
 				Assert.AreEqual(ch1[0].ParentID, ch2[0].ParentID);
 				Assert.AreEqual(ch1[0].ChildID,  ch2[0].ChildID);
@@ -2185,7 +2185,7 @@ namespace Tests.Linq
 					where fact.Id > 3
 					select new { fact, leftTag };
 
-				var results = t.ToArray();
+				var results = t.OrderBy(_ => _.fact.Id).ToArray();
 
 				Assert.AreEqual(2, results.Length);
 				Assert.AreEqual(4, results[0].fact.Id);
@@ -2208,7 +2208,7 @@ namespace Tests.Linq
 					where fact.Id > 3
 					select new { fact, leftTag };
 
-				var results = t.ToArray();
+				var results = t.OrderBy(_ => _.fact.Id).ToArray();
 
 				Assert.AreEqual(2, results.Length);
 				Assert.AreEqual(4, results[0].fact.Id);
@@ -2231,7 +2231,7 @@ namespace Tests.Linq
 					where fact.Id > 3
 					select new { fact, leftTag };
 
-				var results = t.ToArray();
+				var results = t.OrderBy(_ => _.fact.Id).ToArray();
 
 				Assert.AreEqual(2, results.Length);
 				Assert.AreEqual(4, results[0].fact.Id);
@@ -2254,7 +2254,7 @@ namespace Tests.Linq
 					where fact.Id > 3
 					select new { fact, leftTag = leftTag != null ? leftTag : null };
 
-				var results = t.ToArray();
+				var results = t.OrderBy(_ => _.fact.Id).ToArray();
 
 				Assert.AreEqual(2, results.Length);
 				Assert.AreEqual(4, results[0].fact.Id);
@@ -2276,7 +2276,7 @@ namespace Tests.Linq
 					where ft.fact.Id > 3
 					select ft;
 
-				var results = q.ToArray();
+				var results = q.OrderBy(_ => _.fact.Id).ToArray();
 
 				Assert.AreEqual(2, results.Length);
 				Assert.AreEqual(4, results[0].fact.Id);
@@ -2298,7 +2298,7 @@ namespace Tests.Linq
 					where ft.fact.Id > 3
 					select ft;
 
-				var results = q.ToArray();
+				var results = q.OrderBy(_ => _.fact.Id).ToArray();
 
 				Assert.AreEqual(2, results.Length);
 				Assert.AreEqual(4, results[0].fact.Id);
@@ -2321,7 +2321,7 @@ namespace Tests.Linq
 					where fact.Id > 3
 					select new { fact, leftTag };
 
-				var results = t.ToArray();
+				var results = t.OrderBy(_ => _.fact.Id).ToArray();
 
 				Assert.AreEqual(2, results.Length);
 				Assert.AreEqual(4, results[0].fact.Id);

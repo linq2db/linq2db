@@ -3,7 +3,6 @@
 namespace LinqToDB
 {
 	using SqlQuery;
-	using PN = ProviderName;
 
 	partial class Sql
 	{

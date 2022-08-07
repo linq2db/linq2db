@@ -18,8 +18,7 @@ namespace Tests.Linq
 	using LinqToDB.Data;
 	using Model;
 
-	// TODO: add more base types tests
-	// TODO: and more type test cases
+	// TODO: delete this test when we implement type tests for all databases similar to CLickHouse tests
 	[TestFixture]
 	public class DataTypesTests : TestBase
 	{
@@ -47,7 +46,7 @@ namespace Tests.Linq
 		{
 			using var db = (TestDataConnection)GetDataContext(context);
 
-			TestType<GuidTable, Guid>(db, GuidTable.Data);
+			TestType<GuidTable, Guid>(db, GuidTable.Data, context);
 		}
 		#endregion
 
@@ -67,7 +66,7 @@ namespace Tests.Linq
 		{
 			using var db = (TestDataConnection)GetDataContext(context);
 
-			TestType<ByteTable, byte>(db, ByteTable.Data);
+			TestType<ByteTable, byte>(db, ByteTable.Data, context);
 		}
 		#endregion
 
@@ -78,7 +77,7 @@ namespace Tests.Linq
 		{
 			public static DateOnlyTable[] Data = new[]
 			{
-				new DateOnlyTable() { Id = 1, Column = new DateOnly(1900, 1, 1), ColumnNullable = null },
+				new DateOnlyTable() { Id = 1, Column = new DateOnly(1950, 1, 1), ColumnNullable = null },
 				new DateOnlyTable() { Id = 2, Column = new DateOnly(2020, 2, 29), ColumnNullable = new DateOnly(2200, 1, 1) },
 			};
 		}
@@ -88,7 +87,7 @@ namespace Tests.Linq
 		{
 			using var db = (TestDataConnection)GetDataContext(context);
 
-			TestType<DateOnlyTable, DateOnly>(db, DateOnlyTable.Data);
+			TestType<DateOnlyTable, DateOnly>(db, DateOnlyTable.Data, context);
 		}
 #endif
 		#endregion
@@ -116,7 +115,7 @@ namespace Tests.Linq
 				data = data.Select(r => new BooleanTable() { Id = r.Id, Column = r.Column, ColumnNullable = r.ColumnNullable ?? false }).ToArray();
 			}
 
-			TestType<BooleanTable, bool>(db, data);
+			TestType<BooleanTable, bool>(db, data, context);
 		}
 		#endregion
 
@@ -142,7 +141,7 @@ namespace Tests.Linq
 		{
 			using var db = (TestDataConnection)GetDataContext(context);
 
-			TestType<IntEnumTable, IntEnum>(db, IntEnumTable.Data);
+			TestType<IntEnumTable, IntEnum>(db, IntEnumTable.Data, context);
 		}
 		#endregion
 
@@ -168,7 +167,7 @@ namespace Tests.Linq
 		{
 			using var db = (TestDataConnection)GetDataContext(context);
 
-			TestType<StringEnumTable, StringEnum>(db, StringEnumTable.Data);
+			TestType<StringEnumTable, StringEnum>(db, StringEnumTable.Data, context);
 		}
 		#endregion
 
@@ -176,7 +175,7 @@ namespace Tests.Linq
 		[Sql.Expression("{0} = {1}", IsPredicate = true)]
 		private static bool Equality(object? x, object? y) => throw new NotImplementedException();
 
-		private void TestType<TTable, TType>(DataConnection db, TTable[] data)
+		private void TestType<TTable, TType>(DataConnection db, TTable[] data, string context)
 			where TTable: TypeTable<TType>
 			where TType: struct
 		{

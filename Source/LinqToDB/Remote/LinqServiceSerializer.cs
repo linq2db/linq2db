@@ -109,7 +109,7 @@ namespace LinqToDB.Remote
 							cnt++;
 						}
 
-					Builder.Insert(len, cnt.ToString(CultureInfo.CurrentCulture));
+					Builder.Insert(len, cnt.ToString(CultureInfo.InvariantCulture));
 				}
 			}
 

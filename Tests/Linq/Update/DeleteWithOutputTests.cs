@@ -15,7 +15,7 @@ namespace Tests.xUpdate
 	{
 		private const string FeatureDeleteOutputMultiple = $"{TestProvName.AllSqlServer},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLiteClassic}";
 		private const string FeatureDeleteOutputSingle   = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLiteClassic}";
-		private const string FeatureDeleteOutputInto     = TestProvName.AllSqlServer;
+		private const string FeatureDeleteOutputInto     = $"{TestProvName.AllSqlServer}";
 
 		[Table]
 		class TableWithData

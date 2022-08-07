@@ -579,7 +579,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from t in Types select RoundMilliseconds(Sql.AsSql(t.DateTimeValue.TimeOfDay)),
-					from t in db.Types select TruncMilliseconds(Sql.AsSql(t.DateTimeValue.TimeOfDay)));
+					from t in db.Types select RoundMilliseconds(Sql.AsSql(t.DateTimeValue.TimeOfDay)));
 		}
 
 		#endregion

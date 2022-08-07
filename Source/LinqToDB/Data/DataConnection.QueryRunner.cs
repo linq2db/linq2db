@@ -551,8 +551,8 @@ namespace LinqToDB.Data
 						idParam = dataConnection.CurrentCommand!.CreateParameter();
 
 						idParam.ParameterName = "IDENTITY_PARAMETER";
-						idParam.Direction = ParameterDirection.Output;
-						idParam.DbType = DbType.Decimal;
+						idParam.Direction     = ParameterDirection.Output;
+						idParam.DbType        = DbType.Decimal;
 
 						dataConnection.CurrentCommand!.Parameters.Add(idParam);
 					}

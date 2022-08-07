@@ -39,7 +39,6 @@ namespace LinqToDB.DataProvider.Oracle
 			Provider = provider;
 			Version  = version;
 
-			//SqlProviderFlags.IsCountSubQuerySupported        = false;
 			SqlProviderFlags.IsIdentityParameterRequired       = true;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;

@@ -107,12 +107,14 @@ namespace Tests.Linq
 				var projection = query
 					.Where(c => c.Id > 10)
 					.Select(c => new { c.Value, c.Id })
+					.OrderBy(_ => _.Id)
 					.ToArray();
 
 				var expected = table
 					.Where(t => t.Id >= startId && t.Id < endId)
 					.Where(c => c.Id > 10)
 					.Select(c => new { c.Value, c.Id })
+					.OrderBy(_ => _.Id)
 					.ToArray();
 
 				Assert.AreEqual(expected, projection);
@@ -132,12 +134,14 @@ namespace Tests.Linq
 				var projection = query
 					.Where(c => c.Id > 10)
 					.Select(c => new { c.Value, c.Id })
+					.OrderBy(_ => _.Id)
 					.ToArray();
 
 				var expected = table
 					.Where(t => t.Id >= startId && t.Id < endId)
 					.Where(c => c.Id > 10)
 					.Select(c => new { c.Value, c.Id })
+					.OrderBy(_ => _.Id)
 					.ToArray();
 
 				Assert.AreEqual(expected, projection);
@@ -158,12 +162,13 @@ namespace Tests.Linq
 					.Where(c => c.Id > 10)
 					.Select(c => new { c.Value, c.Id });
 
-				var projection = queryWithProjection.ToArray();
+				var projection = queryWithProjection.OrderBy(_ => _.Id).ToArray();
 
 				var expected = table
 					.Where(t => t.Id >= startId && t.Id < endId)
 					.Where(c => c.Id > 10)
 					.Select(c => new { c.Value, c.Id })
+					.OrderBy(_ => _.Id)
 					.ToArray();
 
 				Assert.AreEqual(expected, projection);
@@ -186,12 +191,14 @@ namespace Tests.Linq
 				var projection = query
 					.Where(c => c.Id > 10)
 					.Select(c => new { c.Value, c.Id })
+					.OrderBy(_ => _.Id)
 					.ToArray();
 
 				var expected = table
 					.Where(t => t.Id >= startId && t.Id < endId)
 					.Where(c => c.Id > 10)
 					.Select(c => new { c.Value, c.Id })
+					.OrderBy(_ => _.Id)
 					.ToArray();
 
 				Assert.AreEqual(expected, projection);
@@ -214,12 +221,14 @@ namespace Tests.Linq
 				var projection = query
 					.Where(c => c.Id > 10)
 					.Select(c => new { c.Value, c.Id })
+					.OrderBy(_ => _.Id)
 					.ToArray();
 
 				var expected = table
 					.Where(t => t.Id >= startId && t.Id < endId)
 					.Where(c => c.Id > 10)
 					.Select(c => new { c.Value, c.Id })
+					.OrderBy(_ => _.Id)
 					.ToArray();
 
 				Assert.AreEqual(expected, projection);
@@ -239,12 +248,14 @@ namespace Tests.Linq
 				var projection = query
 					.Where(c => c.Id > 10)
 					.Select(c => new { c.Value, c.Id })
+					.OrderBy(_ => _.Id)
 					.ToArray();
 
 				var expected = table
 					.Where(t => t.Id >= startId && t.Id < endId)
 					.Where(c => c.Id > 10)
 					.Select(c => new { c.Value, c.Id })
+					.OrderBy(_ => _.Id)
 					.ToArray();
 
 				Assert.AreEqual(expected, projection);
@@ -268,12 +279,14 @@ namespace Tests.Linq
 				var projection = query
 					.Where(c => c.Id > 10)
 					.Select(c => new { c.Value, c.Id })
+					.OrderBy(_ => _.Id)
 					.ToArray();
 
 				var expected = table
 					.Where(t => t.Id >= startId && t.Id < endId)
 					.Where(c => c.Id > 10)
 					.Select(c => new { c.Value, c.Id })
+					.OrderBy(_ => _.Id)
 					.ToArray();
 
 				Assert.AreEqual(expected, projection);
@@ -298,12 +311,14 @@ namespace Tests.Linq
 				var projection = query
 					.Where(c => c.Id > 10)
 					.Select(c => new { c.Value, c.Id })
+					.OrderBy(_ => _.Id)
 					.ToArray();
 
 				var expected = table
 					.Where(t => t.Id >= startId && t.Id < endId)
 					.Where(c => c.Id > 10)
 					.Select(c => new { c.Value, c.Id })
+					.OrderBy(_ => _.Id)
 					.ToArray();
 
 				Assert.AreEqual(expected, projection);

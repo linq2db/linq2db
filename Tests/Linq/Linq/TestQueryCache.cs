@@ -149,7 +149,7 @@ namespace Tests.Linq
 
 			builder.Entity<SampleClass>()
 				.Property(e => e.Id).IsPrimaryKey()
-				.Property(e => e.StrKey).IsPrimaryKey().HasColumnName("Key" + columnName).HasLength(50)
+				.Property(e => e.StrKey).IsNullable(false).IsPrimaryKey().HasColumnName("Key" + columnName).HasLength(50)
 				.Property(e => e.Value).HasColumnName(columnName).HasLength(50);
 
 			builder.Entity<SampleClassWithIdentity>()

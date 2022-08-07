@@ -82,7 +82,7 @@ namespace Tests.Linq
 		public void Insert2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-				FSharp.InsertTest.Insert2(db);
+				FSharp.InsertTest.Insert2(db, 0);
 		}
 
 		[ActiveIssue(417)]

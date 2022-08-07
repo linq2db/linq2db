@@ -175,7 +175,7 @@ namespace Tests.Linq
 			using (var table = db.CreateLocalTable(testData))
 			{
 				// Table Materialization
-				var result = table.ToArray();
+				var result = table.OrderBy(_ => _.Id).ToArray();
 
 				Assert.That(result[0].Value1, Is.Not.Null);
 				Assert.That(result[0].Value2!.Count, Is.GreaterThan(0));
@@ -216,17 +216,17 @@ namespace Tests.Linq
 						t.Value2,
 					};
 
-				var selectResult = query.ToArray();
+				var selectResult = query.OrderBy(_ => _.Id).ToArray();
 
 				Assert.That(selectResult[0].Value1, Is.Not.Null);
 				Assert.That(selectResult[0].Value2!.Count, Is.GreaterThan(0));
 				
-				var subqueryResult = query.AsSubQuery().ToArray();
+				var subqueryResult = query.AsSubQuery().OrderBy(_ => _.Id).ToArray();
 				
 				Assert.That(subqueryResult[0].Value1, Is.Not.Null);
 				Assert.That(subqueryResult[0].Value2!.Count, Is.GreaterThan(0));
 
-				var unionResult = query.Concat(query.AsSubQuery()).ToArray();
+				var unionResult = query.Concat(query.AsSubQuery()).OrderBy(_ => _.Id).ToArray();
 
 				var firstItem = unionResult.First();
 				Assert.That(firstItem.Value1, Is.Not.Null);

@@ -43,7 +43,7 @@ namespace Tests.Mapping
 			{
 				var sql = db.LastQuery!;
 
-				Assert.AreEqual(sql.Replace("\r", ""), @"CREATE TABLE [TestTable]
+				Assert.AreEqual(@"CREATE TABLE IF NOT EXISTS [TestTable]
 (
 	[ID]      INTEGER       NOT NULL,
 	[Field1]  INTEGER       NOT NULL,
@@ -55,7 +55,7 @@ namespace Tests.Mapping
 
 	CONSTRAINT [PK_TestTable] PRIMARY KEY ([ID])
 )
-".Replace("\r", ""));
+".Replace("\r", ""), sql.Replace("\r", ""));
 			}
 		}
 

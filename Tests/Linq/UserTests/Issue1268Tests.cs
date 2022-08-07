@@ -12,7 +12,7 @@ namespace Tests.UserTests
 		[Table("DynamicColumnTable")]
 		class FullClass
 		{
-			[Column, Identity]
+			[Column]
 			         public int     Id        { get; set; }
 			[Column] public string? Name      { get; set; }
 			[Column] public bool    IsDeleted { get; set; }
@@ -21,7 +21,7 @@ namespace Tests.UserTests
 		[Table("DynamicColumnTable")]
 		class RepresentTable
 		{
-			[Column, Identity]
+			[Column]
 			         public int     Id        { get; set; }
 			[Column] public string? Name      { get; set; }
 
@@ -41,12 +41,12 @@ namespace Tests.UserTests
 			using (var db = GetDataContext(context, ms))
 			using (db.CreateLocalTable<FullClass>())
 			{
-				var obj1 = new RepresentTable { Name = "Some1" };
+				var obj1 = new RepresentTable { Id = 1, Name = "Some1" };
 				obj1.Values.Add("IsDeleted", true);
-				db.InsertWithIdentity(obj1);
+				db.Insert(obj1);
 
-				var obj2 = new RepresentTable { Name = "Some2" };
-				db.InsertWithIdentity(obj2);
+				var obj2 = new RepresentTable { Id = 2, Name = "Some2" };
+				db.Insert(obj2);
 
 				var loaded1 = db.GetTable<RepresentTable>().First(e => e.Name == "Some1");
 				Assert.AreEqual(true, loaded1.Values["IsDeleted"]);
@@ -56,6 +56,5 @@ namespace Tests.UserTests
 				Assert.AreEqual(false, loaded2.Values["IsDeleted"]);
 			}
 		}
-
 	}
 }
