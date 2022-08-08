@@ -105,12 +105,12 @@ namespace Tests.xUpdate
 									Value = 300
 								}
 							};
-						if (asyncMode == 0) // synchronous
+						if (asyncMode == 0) // synchronous 
 						{
 							db.BulkCopy(
 								options,
 								values);
-						}
+						} 
 						else if (asyncMode == 1) // asynchronous
 						{
 							await db.BulkCopyAsync(
@@ -267,7 +267,7 @@ namespace Tests.xUpdate
 			return true;
 		}
 
-		// DB2:
+		// DB2: 
 		[Test]
 		public void ReuseOptionTest([DataSources(false, ProviderName.DB2)] string context)
 		{
@@ -283,11 +283,11 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UseParametersTest([DataSources(false)] string context)
+		public void UseParametersTest([DataSources(false, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = new TestDataConnection(context))
-			using (db.BeginTransaction())
-		{
+			using var db = new TestDataConnection(context);
+			using var _ = new RestoreBaseTables(db);
+			using var tr = db.BeginTransaction();
 			var options = new BulkCopyOptions(){ UseParameters = true, MaxBatchSize = 50, BulkCopyType = BulkCopyType.MultipleRows };
 			var start   = 111001;
 
@@ -299,7 +299,6 @@ namespace Tests.xUpdate
 			Assert.AreEqual(rowsToInsert.Count,
 				db.Parent.Where(r =>
 					r.ParentID >= rowsToInsert[0].ParentID && r.ParentID <= rowsToInsert.Last().ParentID).Count());
-		}
 		}
 
 		[Table]
@@ -392,16 +391,16 @@ namespace Tests.xUpdate
 
 			[Column(Length = 50)]
 			public string? Value1 { get; set; }
-		}
-
+		}		
+		
 		class Inherited2 : BaseClass
 		{
 			public override int Discriminator => 2;
 
 			[Column(Length = 50)]
 			public string? Value2 { get; set; }
-		}
-
+		}		
+		
 		class Inherited3 : BaseClass
 		{
 			public override int Discriminator => 3;
@@ -479,14 +478,14 @@ namespace Tests.xUpdate
 		{
 			[Column(Length = 50)]
 			public string? Value1 { get; set; }
-		}
-
+		}		
+		
 		class InheritedDefault2 : BaseDefaultDiscriminator
 		{
 			[Column(Length = 50)]
 			public string? Value2 { get; set; }
-		}
-
+		}		
+		
 		class InheritedDefault3 : BaseDefaultDiscriminator
 		{
 			[Column(Length = 50)]

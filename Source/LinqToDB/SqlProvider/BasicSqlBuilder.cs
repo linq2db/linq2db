@@ -265,17 +265,17 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildDeleteQuery(SqlDeleteStatement deleteStatement)
 		{
-			BuildStep = Step.Tag;             BuildTag(deleteStatement);
-			BuildStep = Step.WithClause;      BuildWithClause(deleteStatement.With);
-			BuildStep = Step.DeleteClause;    BuildDeleteClause(deleteStatement);
+			BuildStep = Step.Tag;               BuildTag(deleteStatement);
+			BuildStep = Step.WithClause;        BuildWithClause(deleteStatement.With);
+			BuildStep = Step.DeleteClause;      BuildDeleteClause(deleteStatement);
 			BuildStep = Step.FromClause;      BuildFromClause(Statement, deleteStatement.SelectQuery);
-			BuildStep = Step.WhereClause;     BuildWhereClause(deleteStatement.SelectQuery);
-			BuildStep = Step.GroupByClause;   BuildGroupByClause(deleteStatement.SelectQuery);
-			BuildStep = Step.HavingClause;    BuildHavingClause(deleteStatement.SelectQuery);
-			BuildStep = Step.OrderByClause;   BuildOrderByClause(deleteStatement.SelectQuery);
-			BuildStep = Step.OffsetLimit;     BuildOffsetLimit(deleteStatement.SelectQuery);
-			BuildStep = Step.Output;          BuildOutputSubclause(deleteStatement.GetOutputClause());
-			BuildStep = Step.QueryExtensions; BuildQueryExtensions(deleteStatement);
+			BuildStep = Step.WhereClause;       BuildWhereClause(deleteStatement.SelectQuery);
+			BuildStep = Step.GroupByClause;     BuildGroupByClause(deleteStatement.SelectQuery);
+			BuildStep = Step.HavingClause;      BuildHavingClause(deleteStatement.SelectQuery);
+			BuildStep = Step.OrderByClause;     BuildOrderByClause(deleteStatement.SelectQuery);
+			BuildStep = Step.OffsetLimit;       BuildOffsetLimit(deleteStatement.SelectQuery);
+			BuildStep = Step.Output;            BuildOutputSubclause(deleteStatement.GetOutputClause());
+			BuildStep = Step.QueryExtensions;   BuildQueryExtensions(deleteStatement);
 		}
 
 		protected void BuildDeleteQuery2(SqlDeleteStatement deleteStatement)
@@ -487,43 +487,43 @@ namespace LinqToDB.SqlProvider
 
 				BuildObjectName(StringBuilder, new (cte.Name!), ConvertType.NameToQueryTable, true, TableOptions.NotSet);
 
-				if (cte.Fields!.Length > 3)
-				{
-					StringBuilder.AppendLine();
-					AppendIndent(); StringBuilder.AppendLine(OpenParens);
-					++Indent;
-
-					var firstField = true;
-					foreach (var field in cte.Fields)
+					if (cte.Fields!.Length > 3)
 					{
-						if (!firstField)
-							StringBuilder.AppendLine(Comma);
-						firstField = false;
-						AppendIndent();
-						Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
+						StringBuilder.AppendLine();
+						AppendIndent(); StringBuilder.AppendLine(OpenParens);
+						++Indent;
+
+						var firstField = true;
+						foreach (var field in cte.Fields)
+						{
+							if (!firstField)
+								StringBuilder.AppendLine(Comma);
+							firstField = false;
+							AppendIndent();
+							Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
+						}
+
+						--Indent;
+						StringBuilder.AppendLine();
+						AppendIndent(); StringBuilder.AppendLine(")");
 					}
-
-					--Indent;
-					StringBuilder.AppendLine();
-					AppendIndent(); StringBuilder.AppendLine(")");
-				}
-				else if (cte.Fields.Length > 0)
-				{
-					StringBuilder.Append(" (");
-
-					var firstField = true;
-					foreach (var field in cte.Fields)
+					else if (cte.Fields.Length > 0)
 					{
-						if (!firstField)
-							StringBuilder.Append(InlineComma);
-						firstField = false;
-						Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
+						StringBuilder.Append(" (");
+
+						var firstField = true;
+						foreach (var field in cte.Fields)
+						{
+							if (!firstField)
+								StringBuilder.Append(InlineComma);
+							firstField = false;
+							Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
+						}
+						StringBuilder.AppendLine(")");
 					}
-					StringBuilder.AppendLine(")");
-				}
-				else
+					else
 				{
-					StringBuilder.Append(' ');
+						StringBuilder.Append(' ');
 				}
 
 				AppendIndent();
@@ -1723,6 +1723,7 @@ namespace LinqToDB.SqlProvider
 					BuildTypedExpression(new SqlDataType(field), new SqlValue(field.Type, null));
 				else
 					BuildExpression(new SqlValue(field.Type, null));
+				StringBuilder.Append(' ');
 				Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
 			}
 
@@ -2128,10 +2129,10 @@ namespace LinqToDB.SqlProvider
 		#region Skip/Take
 
 		protected virtual bool   SkipFirst    => true;
-		protected virtual string? SkipFormat   => null;
-		protected virtual string? FirstFormat  (SelectQuery selectQuery) => null;
-		protected virtual string? LimitFormat  (SelectQuery selectQuery) => null;
-		protected virtual string? OffsetFormat (SelectQuery selectQuery) => null;
+		protected virtual string? SkipFormat  => null;
+		protected virtual string? FirstFormat (SelectQuery selectQuery) => null;
+		protected virtual string? LimitFormat (SelectQuery selectQuery) => null;
+		protected virtual string? OffsetFormat(SelectQuery selectQuery) => null;
 		protected virtual bool   OffsetFirst  => false;
 		protected virtual string TakePercent  => "PERCENT";
 		protected virtual string TakeTies     => "WITH TIES";
@@ -2183,20 +2184,20 @@ namespace LinqToDB.SqlProvider
 			var doTake = NeedTake(takeExpr)           && LimitFormat(selectQuery)  != null;
 
 			if (doSkip || doTake)
-			{
+		{
 				AppendIndent();
 
 				if (doSkip && OffsetFirst)
-				{
+		{
 					StringBuilder.AppendFormat(
 						OffsetFormat(selectQuery)!, WithStringBuilder(new StringBuilder(), () => BuildExpression(skipExpr!)));
 
 					if (doTake)
 						StringBuilder.Append(' ');
-				}
-
+		}
+		
 				if (doTake)
-				{
+		{
 					StringBuilder.AppendFormat(
 						LimitFormat(selectQuery)!, WithStringBuilder(new StringBuilder(), () => BuildExpression(takeExpr!)));
 
@@ -2848,7 +2849,7 @@ namespace LinqToDB.SqlProvider
 							var newParm = OptimizationContext.AddParameter(parm);
 							Convert(StringBuilder, newParm.Name!, ConvertType.NameToQueryParameter);
 						}
-					}
+				}
 
 					break;
 

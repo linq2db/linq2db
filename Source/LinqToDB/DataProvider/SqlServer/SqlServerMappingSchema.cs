@@ -167,7 +167,6 @@ namespace LinqToDB.DataProvider.SqlServer
 			AddScalarType(typeof(SqlXml),       SqlXml.     Null, true, DataType.Xml);
 
 			AddScalarType(typeof(DateTime),  DataType.DateTime2);
-			AddScalarType(typeof(DateTime?), DataType.DateTime2);
 
 			SqlServerTypes.Configure(this);
 
