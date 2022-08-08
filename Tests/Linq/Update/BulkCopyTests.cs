@@ -283,7 +283,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UseParametersTest([DataSources(false, TestProvName.AllClickHouse)] string context)
+		public void UseParametersTest([DataSources(false)] string context)
 		{
 			using var db = new TestDataConnection(context);
 			using var _ = new RestoreBaseTables(db);
