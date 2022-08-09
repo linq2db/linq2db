@@ -3125,7 +3125,7 @@ namespace LinqToDB.SqlProvider
 		{
 			WithStringBuilder(sb, () =>
 			{
-				BuildDataType(dataType, false, false);
+				BuildDataType(dataType, forCreateTable: false, canBeNull: false);
 			});
 			return sb;
 		}
