@@ -37,7 +37,7 @@ namespace LinqToDB.SqlProvider
 		{
 			FixRootSelect (statement);
 			FixEmptySelect(statement);
-			FinalizeCte(statement);
+			FinalizeCte   (statement);
 
 			var evaluationContext = new EvaluationContext(null);
 
@@ -177,16 +177,16 @@ namespace LinqToDB.SqlProvider
 		}
 
 		protected virtual SqlStatement FixSetOperationNulls(SqlStatement statement)
-							{
-			statement.VisitParentFirst(static e =>
-								{
-				if (e.ElementType == QueryElementType.SqlQuery)
 		{
+			statement.VisitParentFirst(static e =>
+			{
+				if (e.ElementType == QueryElementType.SqlQuery)
+				{
 					var query = (SelectQuery)e;
 					if (query.HasSetOperators)
-			{
+					{
 						for (int i = 0; i < query.Select.Columns.Count; i++)
-				{
+						{
 							var column     = query.Select.Columns[i];
 							var columnExpr = column.Expression;
 
@@ -199,7 +199,7 @@ namespace LinqToDB.SqlProvider
 								CorrelateNullValueTypes(ref otherExpr, columnExpr);
 
 								otherColumn.Expression = otherExpr;
-								}
+							}
 
 							column.Expression = columnExpr;
 						}
@@ -1586,18 +1586,18 @@ namespace LinqToDB.SqlProvider
 
 					if (visitor.Context.MappingSchema != null)
 					{
-						// TODO:
-						// this line produce insane amount of allocations
-						// as currently we cannot change ValueConverter signatures, we use pre-created instance of type wrapper
-						//var dataType = new SqlDataType(value.ValueType);
-						_typeWrapper.Type = value.ValueType;
+					// TODO:
+					// this line produce insane amount of allocations
+					// as currently we cannot change ValueConverter signatures, we use pre-created instance of type wrapper
+					//var dataType = new SqlDataType(value.ValueType);
+					_typeWrapper.Type = value.ValueType;
 
-						if (!visitor.Context.MappingSchema.ValueToSqlConverter.CanConvert(_typeWrapper, value.Value))
-						{
-							// we cannot generate SQL literal, so just convert to parameter
-							var param = visitor.Context.OptimizationContext.SuggestDynamicParameter(value.ValueType, "value", value.Value);
-							return param;
-						}
+					if (!visitor.Context.MappingSchema.ValueToSqlConverter.CanConvert(_typeWrapper, value.Value))
+					{
+						// we cannot generate SQL literal, so just convert to parameter
+						var param = visitor.Context.OptimizationContext.SuggestDynamicParameter(value.ValueType, "value", value.Value);
+						return param;
+					}
 					}
 
 					break;
@@ -2186,7 +2186,7 @@ namespace LinqToDB.SqlProvider
 		public virtual bool   LikeIsEscapeSupported       => true;
 
 		protected static  string[] StandardLikeCharactersToEscape = {"%", "_", "?", "*", "#", "[", "]"};
-		public    virtual string[] LikeCharactersToEscape => StandardLikeCharactersToEscape;
+		public virtual string[] LikeCharactersToEscape => StandardLikeCharactersToEscape;
 
 		public virtual string EscapeLikeCharacters(string str, string escape)
 		{
@@ -2227,7 +2227,7 @@ namespace LinqToDB.SqlProvider
 				newStr = newStr.Replace("[", "[[]");
 
 			foreach (var s in toEscape)
-			{
+		{
 				if (s != "[" && s != "]")
 					newStr = newStr.Replace(s, "[" + s + "]");
 			}
@@ -2554,6 +2554,36 @@ namespace LinqToDB.SqlProvider
 				QueryElementType.SqlDataType   => ((SqlDataType)expr).Type.DataType == DataType.Date,
 				QueryElementType.SqlExpression => ((SqlExpression)expr).Expr == dateName,
 				_                              => false,
+			};
+		}
+
+		protected static bool IsSmallDateTimeType(ISqlExpression expr, string typeName)
+		{
+			return expr.ElementType switch
+			{
+				QueryElementType.SqlDataType   => ((SqlDataType)expr).Type.DataType == DataType.SmallDateTime,
+				QueryElementType.SqlExpression => ((SqlExpression)expr).Expr == typeName,
+				_ => false,
+			};
+		}
+
+		protected static bool IsDateTime2Type(ISqlExpression expr, string typeName)
+		{
+			return expr.ElementType switch
+			{
+				QueryElementType.SqlDataType   => ((SqlDataType)expr).Type.DataType == DataType.DateTime2,
+				QueryElementType.SqlExpression => ((SqlExpression)expr).Expr == typeName,
+				_ => false,
+			};
+		}
+
+		protected static bool IsDateTimeType(ISqlExpression expr, string typeName)
+		{
+			return expr.ElementType switch
+			{
+				QueryElementType.SqlDataType   => ((SqlDataType)expr).Type.DataType == DataType.DateTime,
+				QueryElementType.SqlExpression => ((SqlExpression)expr).Expr == typeName,
+				_ => false,
 			};
 		}
 

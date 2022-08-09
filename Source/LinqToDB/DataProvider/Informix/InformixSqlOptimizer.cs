@@ -190,6 +190,12 @@ namespace LinqToDB.DataProvider.Informix
 										return new SqlFunction(func.SystemType, "Date", func.Parameters[1]);
 									}
 
+									if ((IsDateTime2Type(func.Parameters[0], "DateTime2")
+											|| IsDateTimeType(func.Parameters[0], "DateTime")
+											|| IsSmallDateTimeType(func.Parameters[0], "SmallDateTime"))
+										&& func.Parameters[1].SystemType == typeof(string))
+										return new SqlFunction(func.SystemType, "To_Date", func.Parameters[1], new SqlValue("%Y-%m-%d %H:%M:%S"));
+
 									if (IsTimeDataType(func.Parameters[0]))
 										return new SqlExpression(func.SystemType, "Cast(Extend({0}, hour to second) as Char(8))", Precedence.Primary, func.Parameters[1]);
 
