@@ -784,6 +784,10 @@ namespace Tests.Linq
 		[Test]
 		public void TakeSkipJoin([DataSources(TestProvName.AllSybase)] string context, [Values] bool withParameters)
 		{
+			// orderby needed to preserve stable test results
+			// but access returns wrong number of records if orderby applied to subquery with take
+			var orderUnsupported = context.IsAnyOf(TestProvName.AllAccess);
+
 			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			{
@@ -792,6 +796,7 @@ namespace Tests.Linq
 				var q1 = types.Concat(types).Take(15);
 				var q2 = db.Types.Concat(db.Types).Take(15);
 
+				if (!orderUnsupported)
 				{
 					q1 = q1.OrderBy(_ => _.ID);
 					q2 = q2.OrderBy(_ => _.ID);

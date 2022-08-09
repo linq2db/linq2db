@@ -268,16 +268,14 @@ namespace LinqToDB
 		[Function("Convert", 0, 1, ServerSideOnly = true, IsNullable = IsNullableType.SameAsSecondParameter)]
 		public static TTo Convert<TTo,TFrom>(TTo to, TFrom from)
 		{
-			var dt = Common.ConvertTo<TTo>.From(from);
-			return dt;
+			return Common.ConvertTo<TTo>.From(from);
 		}
 
 		[CLSCompliant(false)]
 		[Function("Convert", 0, 1, 2, ServerSideOnly = true, IsNullable = IsNullableType.SameAsSecondParameter)]
 		public static TTo Convert<TTo, TFrom>(TTo to, TFrom from, int format)
 		{
-			var dt = Common.ConvertTo<TTo>.From(from);
-			return dt;
+			return Common.ConvertTo<TTo>.From(from);
 		}
 
 		[CLSCompliant(false)]
@@ -1025,7 +1023,6 @@ namespace LinqToDB
 		[Function(PN.SqlServer, "DataLength",   PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
 		[Function(PN.SqlCe,     "DataLength",   PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
 		[Function(PN.Sybase,    "DataLength",   PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
-		[Function(PN.SQLite,    "Length",       PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
 		public static int? Length(Binary? value)
 		{
 			return value == null ? null : value.Length;
@@ -1041,7 +1038,6 @@ namespace LinqToDB
 		[Function(PN.SqlServer, "DataLength",   PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
 		[Function(PN.SqlCe,     "DataLength",   PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
 		[Function(PN.Sybase,    "DataLength",   PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
-		[Function(PN.SQLite,    "Length",       PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
 		public static int? Length(byte[]? value)
 		{
 			return value == null ? null : value.Length;

@@ -18,12 +18,7 @@ namespace LinqToDB.DataProvider
 	using Data;
 	using Mapping;
 
-	public class BulkCopyReader<T> : BulkCopyReader,
-#if NATIVE_ASYNC
-		IAsyncDisposable
-#else
-		IAsyncDisposable
-#endif
+	public class BulkCopyReader<T> : BulkCopyReader, IAsyncDisposable
 	{
 		readonly IEnumerator<T>?      _enumerator;
 #if NATIVE_ASYNC
