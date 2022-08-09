@@ -1475,7 +1475,7 @@ namespace LinqToDB.SqlProvider
 		internal void BuildTypeName(StringBuilder sb, SqlDataType type)
 		{
 			StringBuilder = sb;
-			BuildDataType(type, true, true);
+			BuildDataType(type, forCreateTable: true, canBeNull: true);
 		}
 
 		protected virtual void BuildCreateTableFieldType(SqlField field)
