@@ -249,12 +249,12 @@ namespace LinqToDB
 
 		#region Guid Functions
 
-		[Function  (PN.Oracle,   "Sys_Guid", ServerSideOnly = true, CanBeNull = false, IsPure = false)]
-		[Function  (PN.Firebird, "Gen_Uuid", ServerSideOnly = true, CanBeNull = false, IsPure = false)]
-		[Function  (PN.MySql,    "Uuid",     ServerSideOnly = true, CanBeNull = false, IsPure = false)]
-		[Expression(PN.Sybase,   "NewID(1)", ServerSideOnly = true, CanBeNull = false, IsPure = false)]
-		[Expression(PN.SapHana,  "SYSUUID",  ServerSideOnly = true, CanBeNull = false, IsPure = false)]
-		[Function  (             "NewID",    ServerSideOnly = true, CanBeNull = false, IsPure = false)]
+		[Function  (PN.Oracle,     "Sys_Guid",       ServerSideOnly = true, CanBeNull = false, IsPure = false)]
+		[Function  (PN.Firebird,   "Gen_Uuid",       ServerSideOnly = true, CanBeNull = false, IsPure = false)]
+		[Function  (PN.MySql,      "Uuid",           ServerSideOnly = true, CanBeNull = false, IsPure = false)]
+		[Expression(PN.Sybase,     "NewID(1)",       ServerSideOnly = true, CanBeNull = false, IsPure = false)]
+		[Expression(PN.SapHana,    "SYSUUID",        ServerSideOnly = true, CanBeNull = false, IsPure = false)]
+		[Function  (               "NewID",          ServerSideOnly = true, CanBeNull = false, IsPure = false)]
 		public static Guid NewGuid()
 		{
 			return Guid.NewGuid();
@@ -268,16 +268,14 @@ namespace LinqToDB
 		[Function("Convert", 0, 1, ServerSideOnly = true, IsNullable = IsNullableType.SameAsSecondParameter)]
 		public static TTo Convert<TTo,TFrom>(TTo to, TFrom from)
 		{
-			var dt = Common.ConvertTo<TTo>.From(from);
-			return dt;
+			return Common.ConvertTo<TTo>.From(from);
 		}
 
 		[CLSCompliant(false)]
 		[Function("Convert", 0, 1, 2, ServerSideOnly = true, IsNullable = IsNullableType.SameAsSecondParameter)]
 		public static TTo Convert<TTo, TFrom>(TTo to, TFrom from, int format)
 		{
-			var dt = Common.ConvertTo<TTo>.From(from);
-			return dt;
+			return Common.ConvertTo<TTo>.From(from);
 		}
 
 		[CLSCompliant(false)]
@@ -381,15 +379,15 @@ namespace LinqToDB
 
 		#region String Functions
 
-		[Function  (                                                   PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
-		[Function  (PN.Access,    "Len",                               PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
-		[Function  (PN.Firebird,  "Char_Length",                       PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
-		[Function  (PN.SqlServer, "Len",                               PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
-		[Function  (PN.SqlCe,     "Len",                               PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
-		[Function  (PN.Sybase,    "Len",                               PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
-		[Function  (PN.MySql,     "Char_Length",                       PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
-		[Function  (PN.Informix,  "CHAR_LENGTH",                       PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
-		[Expression(PN.DB2LUW,    "CHARACTER_LENGTH({0},CODEUNITS32)", PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
+		[Function  (                                                    PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
+		[Function  (PN.Access,     "Len",                               PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
+		[Function  (PN.Firebird,   "Char_Length",                       PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
+		[Function  (PN.SqlServer,  "Len",                               PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
+		[Function  (PN.SqlCe,      "Len",                               PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
+		[Function  (PN.Sybase,     "Len",                               PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
+		[Function  (PN.MySql,      "Char_Length",                       PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
+		[Function  (PN.Informix,   "CHAR_LENGTH",                       PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
+		[Expression(PN.DB2LUW,     "CHARACTER_LENGTH({0},CODEUNITS32)", PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
 		public static int? Length(string? str)
 		{
 			return str?.Length;
@@ -438,11 +436,11 @@ namespace LinqToDB
 		}
 
 		[CLSCompliant(false)]
-		[Function(                             IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Function(PN.DB2,      "Locate",       IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Function(PN.MySql,    "Locate",       IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Function(PN.SapHana,  "Locate", 1, 0, IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Function(PN.Firebird, "Position",     IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(                                     IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(PN.DB2,        "Locate",             IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(PN.MySql,      "Locate",             IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(PN.SapHana,    "Locate",       1, 0, IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(PN.Firebird,   "Position",           IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static int? CharIndex(string? substring, string? str)
 		{
 			if (str == null || substring == null) return null;
@@ -459,11 +457,11 @@ namespace LinqToDB
 			return substring.Length == 0 ? 0 : str.IndexOf(substring) + 1;
 		}
 
-		[Function(                                                           IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Function  (PN.DB2,      "Locate",                                   IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Function  (PN.MySql,    "Locate",                                   IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Function  (PN.Firebird, "Position",                                 IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Expression(PN.SapHana,  "Locate(Substring({1},{2} + 1),{0}) + {2}", IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(                                                             IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function  (PN.DB2,        "Locate",                                   IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function  (PN.MySql,      "Locate",                                   IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function  (PN.Firebird,   "Position",                                 IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Expression(PN.SapHana,    "Locate(Substring({1},{2} + 1),{0}) + {2}", IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static int? CharIndex(string? substring, string? str, int? start)
 		{
 			if (str == null || substring == null || start == null) return null;
@@ -472,13 +470,13 @@ namespace LinqToDB
 			return substring.Length == 0 ? 0 : str.IndexOf(substring, index) + 1;
 		}
 
-		[Function(                             IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Function(PN.DB2,      "Locate",       IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Function(PN.MySql,    "Locate",       IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(                                     IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(PN.DB2,        "Locate",             IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(PN.MySql,      "Locate",             IsNullable = IsNullableType.IfAnyParameterNullable)]
 #pragma warning disable CS3016 // Arrays as attribute arguments is not CLS-compliant
-		[Function(PN.SapHana,  "Locate", 1, 0, IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(PN.SapHana,    "Locate",       1, 0, IsNullable = IsNullableType.IfAnyParameterNullable)]
 #pragma warning restore CS3016 // Arrays as attribute arguments is not CLS-compliant
-		[Function(PN.Firebird, "Position",     IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(PN.Firebird,   "Position",           IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static int? CharIndex(char? value, string? str)
 		{
 			if (value == null || str == null) return null;
@@ -486,13 +484,13 @@ namespace LinqToDB
 			return str.IndexOf(value.Value) + 1;
 		}
 
-		[Function(                                IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Function(PN.DB2,      "Locate",          IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Function(PN.MySql,    "Locate",          IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(                                                          IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(PN.DB2,        "Locate",                                  IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(PN.MySql,      "Locate",                                  IsNullable = IsNullableType.IfAnyParameterNullable)]
 #pragma warning disable CS3016 // Arrays as attribute arguments is not CLS-compliant
-		[Function(PN.SapHana,  "Locate", 1, 0, 2, IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(PN.SapHana,    "Locate",       1, 0, 2,                   IsNullable = IsNullableType.IfAnyParameterNullable)]
 #pragma warning restore CS3016 // Arrays as attribute arguments is not CLS-compliant
-		[Function(PN.Firebird, "Position",        IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(PN.Firebird,   "Position",                                IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static int? CharIndex(char? value, string? str, int? start)
 		{
 			if (str == null || value == null || start == null) return null;
@@ -501,7 +499,7 @@ namespace LinqToDB
 			return str.IndexOf(value.Value, index) + 1;
 		}
 
-		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(                              IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static string? Reverse(string? str)
 		{
 			if (string.IsNullOrEmpty(str)) return str;
@@ -511,8 +509,8 @@ namespace LinqToDB
 			return new string(chars);
 		}
 
-		[Function(                      PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Function(PN.SQLite, "LeftStr", PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(                           PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(PN.SQLite,     "LeftStr",  PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static string? Left(string? str, int? length)
 		{
 			if (length == null || str == null) return null;
@@ -522,8 +520,8 @@ namespace LinqToDB
 			return str.Substring(0, length.Value);
 		}
 
-		[Function(                       PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Function(PN.SQLite, "RightStr", PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(                            PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(PN.SQLite,     "RightStr",  PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static string? Right(string? str, int? length)
 		{
 			if (length == null || str == null) return null;
@@ -552,14 +550,14 @@ namespace LinqToDB
 			throw new NotImplementedException();
 		}
 
-		[Function(                                  IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Expression(PN.SapHana, "Lpad('',{0},' ')", IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(                                                        IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Expression(PN.SapHana,    "Lpad('',{0},' ')",                    IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static string? Space(int? length)
 		{
 			return length == null || length.Value < 0 ? null : "".PadRight(length.Value);
 		}
 
-		[Function(Name = "LPad", IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(               Name = "LPad",                            IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static string? PadLeft(string? str, int? length, char? paddingChar)
 		{
 			if (str == null || length == null || paddingChar == null) return null;
@@ -569,7 +567,7 @@ namespace LinqToDB
 			return str.PadLeft(length.Value, paddingChar.Value);
 		}
 
-		[Function(Name = "RPad", IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(               Name = "RPad",         IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static string? PadRight(string? str, int? length, char? paddingChar)
 		{
 			if (str == null || length == null || paddingChar == null) return null;
@@ -589,8 +587,8 @@ namespace LinqToDB
 			return str.Replace(oldValue, newValue);
 		}
 
-		[Function(                          IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Function(PN.Sybase, "Str_Replace", IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(                              IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(PN.Sybase,     "Str_Replace", IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static string? Replace(string? str, char? oldValue, char? newValue)
 		{
 			if (str == null || oldValue == null || newValue == null) return null;
@@ -601,7 +599,7 @@ namespace LinqToDB
 
 		#region IsNullOrWhiteSpace
 		// set of all White_Space characters per Unicode v13
-		const string WHITESPACES = "\x09\x0A\x0B\x0C\x0D\x20\x85\xA0\x1680\x2000\x2001\x2002\x2003\x2004\x2005\x2006\x2007\x2008\x2009\x200A\x2028\x2029\x205F\x3000";
+		const string WHITESPACES       = "\x09\x0A\x0B\x0C\x0D\x20\x85\xA0\x1680\x2000\x2001\x2002\x2003\x2004\x2005\x2006\x2007\x2008\x2009\x200A\x2028\x2029\x205F\x3000";
 		const string ASCII_WHITESPACES = "\x09\x0A\x0B\x0C\x0D\x20\x85\xA0";
 
 		/*
@@ -621,17 +619,17 @@ namespace LinqToDB
 		 * 2. [Informix} implementation use only ASCII whitespaces which probably will not work in some cases for WS outside of
 		 * ASCII range (currently works in our tests, but it could be that it depends on used encodings)
 		 */
-		[Extension(                  typeof(IsNullOrWhiteSpaceDefaultBuilder),       IsPredicate = true)]
-		[Extension(PN.Oracle,        typeof(IsNullOrWhiteSpaceOracleBuilder),        IsPredicate = true)]
-		[Extension(PN.Informix,      typeof(IsNullOrWhiteSpaceInformixBuilder),      IsPredicate = true)]
-		[Extension(PN.SqlServer,     typeof(IsNullOrWhiteSpaceSqlServerBuilder),     IsPredicate = true)]
-		[Extension(PN.SqlServer2017, typeof(IsNullOrWhiteSpaceSqlServer2017Builder), IsPredicate = true)]
-		[Extension(PN.SqlServer2019, typeof(IsNullOrWhiteSpaceSqlServer2017Builder), IsPredicate = true)]
-		[Extension(PN.Access,        typeof(IsNullOrWhiteSpaceAccessBuilder),        IsPredicate = true)]
-		[Extension(PN.Sybase,        typeof(IsNullOrWhiteSpaceSybaseBuilder),        IsPredicate = true)]
-		[Extension(PN.MySql,         typeof(IsNullOrWhiteSpaceMySqlBuilder),         IsPredicate = true)]
-		[Extension(PN.Firebird,      typeof(IsNullOrWhiteSpaceFirebirdBuilder),      IsPredicate = true)]
-		[Extension(PN.SqlCe,         typeof(IsNullOrWhiteSpaceSqlCeBuilder),         IsPredicate = true)]
+		[Extension(                  typeof(IsNullOrWhiteSpaceDefaultBuilder),                     IsPredicate = true)]
+		[Extension(PN.Oracle,        typeof(IsNullOrWhiteSpaceOracleBuilder),                      IsPredicate = true)]
+		[Extension(PN.Informix,      typeof(IsNullOrWhiteSpaceInformixBuilder),                    IsPredicate = true)]
+		[Extension(PN.SqlServer,     typeof(IsNullOrWhiteSpaceSqlServerBuilder),                   IsPredicate = true)]
+		[Extension(PN.SqlServer2017, typeof(IsNullOrWhiteSpaceSqlServer2017Builder),               IsPredicate = true)]
+		[Extension(PN.SqlServer2019, typeof(IsNullOrWhiteSpaceSqlServer2017Builder),               IsPredicate = true)]
+		[Extension(PN.Access,        typeof(IsNullOrWhiteSpaceAccessBuilder),                      IsPredicate = true)]
+		[Extension(PN.Sybase,        typeof(IsNullOrWhiteSpaceSybaseBuilder),                      IsPredicate = true)]
+		[Extension(PN.MySql,         typeof(IsNullOrWhiteSpaceMySqlBuilder),                       IsPredicate = true)]
+		[Extension(PN.Firebird,      typeof(IsNullOrWhiteSpaceFirebirdBuilder),                    IsPredicate = true)]
+		[Extension(PN.SqlCe,         typeof(IsNullOrWhiteSpaceSqlCeBuilder),                       IsPredicate = true)]
 		internal static bool IsNullOrWhiteSpace(string? str) => string.IsNullOrWhiteSpace(str);
 
 		// str IS NULL OR REPLACE...(str, WHITEPACES, '') == ''
@@ -913,24 +911,24 @@ namespace LinqToDB
 			return str?.TrimEnd();
 		}
 
-		[Function(                                IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Expression(PN.DB2, "Strip({0}, B, {1})", IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(                                            IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Expression(PN.DB2,        "Strip({0}, B, {1})",      IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static string? Trim(string? str, char? ch)
 		{
 			return str == null || ch == null ? null : str.Trim(ch.Value);
 		}
 
-		[Expression(PN.Firebird, "TRIM(LEADING {1} FROM {0})", IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Expression(PN.DB2, "Strip({0}, L, {1})",              IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Function  (        "LTrim",                           IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Expression(PN.Firebird,   "TRIM(LEADING {1} FROM {0})", IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Expression(PN.DB2,        "Strip({0}, L, {1})",         IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function  (               "LTrim",                      IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static string? TrimLeft(string? str, char? ch)
 		{
 			return str == null || ch == null ? null : str.TrimStart(ch.Value);
 		}
 
-		[Expression(PN.Firebird, "TRIM(TRAILING {1} FROM {0})", IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Expression(PN.DB2, "Strip({0}, T, {1})",               IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Function  (        "RTrim",                            IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Expression(PN.Firebird,   "TRIM(TRAILING {1} FROM {0})", IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Expression(PN.DB2,        "Strip({0}, T, {1})",          IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function  (               "RTrim",                       IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static string? TrimRight(string? str, char? ch)
 		{
 			return str == null || ch == null ? null : str.TrimEnd(ch.Value);
@@ -948,11 +946,11 @@ namespace LinqToDB
 			return str?.ToUpper();
 		}
 
-		[Expression("Lpad({0},{1},'0')",                                                    IsNullable = IsNullableType.SameAsFirstParameter)]
-		[Expression(PN.Sybase, "right(replicate('0',{1}) + cast({0} as varchar(255)),{1})", IsNullable = IsNullableType.SameAsFirstParameter)]
-		[Expression(PN.PostgreSQL, "Lpad({0}::text,{1},'0')",                               IsNullable = IsNullableType.SameAsFirstParameter)]
-		[Expression(PN.SqlServer, "format({0}, 'd{1}')",                                    IsNullable = IsNullableType.SameAsFirstParameter)]
-		[Expression(PN.SQLite, "printf('%0{1}d', {0})",                                     IsNullable = IsNullableType.SameAsFirstParameter)]
+		[Expression("Lpad({0},{1},'0')",                                                                            IsNullable = IsNullableType.SameAsFirstParameter)]
+		[Expression(PN.Sybase, "right(replicate('0',{1}) + cast({0} as varchar(255)),{1})",                         IsNullable = IsNullableType.SameAsFirstParameter)]
+		[Expression(PN.PostgreSQL, "Lpad({0}::text,{1},'0')",                                                       IsNullable = IsNullableType.SameAsFirstParameter)]
+		[Expression(PN.SqlServer, "format({0}, 'd{1}')",                                                            IsNullable = IsNullableType.SameAsFirstParameter)]
+		[Expression(PN.SQLite, "printf('%0{1}d', {0})",                                                             IsNullable = IsNullableType.SameAsFirstParameter)]
 		public static string? ZeroPad(int? val, int length)
 		{
 			return val?.ToString("d" + length);
@@ -1023,7 +1021,6 @@ namespace LinqToDB
 		[Function(PN.SqlServer, "DataLength",   PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
 		[Function(PN.SqlCe,     "DataLength",   PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
 		[Function(PN.Sybase,    "DataLength",   PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
-		[Function(PN.SQLite,    "Length",       PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
 		public static int? Length(Binary? value)
 		{
 			return value == null ? null : value.Length;
@@ -1039,7 +1036,6 @@ namespace LinqToDB
 		[Function(PN.SqlServer, "DataLength",   PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
 		[Function(PN.SqlCe,     "DataLength",   PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
 		[Function(PN.Sybase,    "DataLength",   PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
-		[Function(PN.SQLite,    "Length",       PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
 		public static int? Length(byte[]? value)
 		{
 			return value == null ? null : value.Length;
@@ -1049,20 +1045,20 @@ namespace LinqToDB
 
 		#region DateTime Functions
 
-		[Property(             "CURRENT_TIMESTAMP", CanBeNull = false)]
-		[Property(PN.Informix, "CURRENT",           CanBeNull = false)]
-		[Property(PN.Access,   "Now",               CanBeNull = false)]
+		[Property(               "CURRENT_TIMESTAMP", CanBeNull = false)]
+		[Property(PN.Informix,   "CURRENT",           CanBeNull = false)]
+		[Property(PN.Access,     "Now",               CanBeNull = false)]
 		public static DateTime GetDate()
 		{
 			return DateTime.Now;
 		}
 
-		[Property(             "CURRENT_TIMESTAMP", ServerSideOnly = true, CanBeNull = false)]
-		[Property(PN.Firebird, "LOCALTIMESTAMP",    ServerSideOnly = true, CanBeNull = false)]
-		[Property(PN.Informix, "CURRENT",           ServerSideOnly = true, CanBeNull = false)]
-		[Property(PN.Access,   "Now",               ServerSideOnly = true, CanBeNull = false)]
-		[Function(PN.SqlCe,    "GetDate",           ServerSideOnly = true, CanBeNull = false)]
-		[Function(PN.Sybase,   "GetDate",           ServerSideOnly = true, CanBeNull = false)]
+		[Property(               "CURRENT_TIMESTAMP", ServerSideOnly = true, CanBeNull = false)]
+		[Property(PN.Firebird,   "LOCALTIMESTAMP",    ServerSideOnly = true, CanBeNull = false)]
+		[Property(PN.Informix,   "CURRENT",           ServerSideOnly = true, CanBeNull = false)]
+		[Property(PN.Access,     "Now",               ServerSideOnly = true, CanBeNull = false)]
+		[Function(PN.SqlCe,      "GetDate",           ServerSideOnly = true, CanBeNull = false)]
+		[Function(PN.Sybase,     "GetDate",           ServerSideOnly = true, CanBeNull = false)]
 		public static DateTime CurrentTimestamp => throw new LinqException("'CurrentTimestamp' is server side only property.");
 
 		[Function  (PN.SqlServer , "SYSUTCDATETIME"                      , ServerSideOnly = true, CanBeNull = false)]
@@ -1076,11 +1072,11 @@ namespace LinqToDB
 		[Expression(PN.Informix  , "datetime(1970-01-01 00:00:00) year to second + (dbinfo('utc_current')/86400)::int::char(9)::interval day(9) to day + (mod(dbinfo('utc_current'), 86400))::char(5)::interval second(5) to second", ServerSideOnly = true, CanBeNull = false, Precedence = Precedence.Additive)]
 		public static DateTime CurrentTimestampUtc => DateTime.UtcNow;
 
-		[Property(             "CURRENT_TIMESTAMP", CanBeNull = false)]
-		[Property(PN.Informix, "CURRENT",           CanBeNull = false)]
-		[Property(PN.Access,   "Now",               CanBeNull = false)]
-		[Function(PN.SqlCe,    "GetDate",           CanBeNull = false)]
-		[Function(PN.Sybase,   "GetDate",           CanBeNull = false)]
+		[Property(               "CURRENT_TIMESTAMP", CanBeNull = false)]
+		[Property(PN.Informix,   "CURRENT",           CanBeNull = false)]
+		[Property(PN.Access,     "Now",               CanBeNull = false)]
+		[Function(PN.SqlCe,      "GetDate",           CanBeNull = false)]
+		[Function(PN.Sybase,     "GetDate",           CanBeNull = false)]
 		public static DateTime CurrentTimestamp2 => DateTime.Now;
 
 		[Function(PN.SqlServer , "SYSDATETIMEOFFSET", ServerSideOnly = true, CanBeNull = false)]

@@ -15,6 +15,8 @@ namespace LinqToDB.DataProvider.MySql
 
 	public abstract class MySqlProviderAdapter : IDynamicProviderAdapter
 	{
+		private static readonly Type[] _ordinalParameters = new Type[] { typeof(int) };
+
 		private static readonly object _mysqlDataSyncRoot      = new ();
 		private static readonly object _mysqlConnectorSyncRoot = new ();
 
@@ -72,8 +74,15 @@ namespace LinqToDB.DataProvider.MySql
 		/// MySqlConnector-only.
 		/// </summary>
 		public string? GetDateTimeOffsetMethodName { get; protected set; }
-		public string GetMySqlDateTimeMethodName { get;   protected set; } = null!;
-		public string ProviderTypesNamespace     { get;   protected set; } = null!;
+		public string? GetTimeSpanMethodName       { get; protected set; }
+		public string? GetTimeOnlyMethodName       { get; protected set; }
+		public string? GetDateOnlyMethodName       { get; protected set; }
+		public string? GetSByteMethodName          { get; protected set; }
+		public string? GetUInt16MethodName         { get; protected set; }
+		public string? GetUInt32MethodName         { get; protected set; }
+		public string? GetUInt64MethodName         { get; protected set; }
+		public string  GetMySqlDateTimeMethodName  { get; protected set; } = null!;
+		public string  ProviderTypesNamespace      { get; protected set; } = null!;
 
 		/// <summary>
 		/// Returns object, because both providers use different enums and we anyway don't need typed value.
@@ -88,7 +97,7 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			internal BulkCopyAdapter(
 				Func<DbConnection, DbTransaction?, MySqlConnector.MySqlBulkCopy> bulkCopyCreator,
-				Func<int, string, MySqlBulkCopyColumnMapping>                      bulkCopyColumnMappingCreator)
+				Func<int, string, MySqlBulkCopyColumnMapping>                    bulkCopyColumnMappingCreator)
 			{
 				Create              = bulkCopyCreator;
 				CreateColumnMapping = bulkCopyColumnMappingCreator;
@@ -179,6 +188,10 @@ namespace LinqToDB.DataProvider.MySql
 					GetDbType                   = p => dbTypeGetter(p);
 					GetMySqlDecimalMethodName   = "GetMySqlDecimal";
 					GetDateTimeOffsetMethodName = null;
+					GetSByteMethodName          = dataReaderType.GetMethod("GetSByte",  _ordinalParameters)?.Name;
+					GetUInt16MethodName         = dataReaderType.GetMethod("GetUInt16", _ordinalParameters)?.Name;
+					GetUInt32MethodName         = dataReaderType.GetMethod("GetUInt32", _ordinalParameters)?.Name;
+					GetUInt64MethodName         = dataReaderType.GetMethod("GetUInt64", _ordinalParameters)?.Name;
 					GetMySqlDateTimeMethodName  = "GetMySqlDateTime";
 					ProviderTypesNamespace      = MySqlDataTypesNamespace;
 					MappingSchema               = mappingSchema;
@@ -364,6 +377,13 @@ namespace LinqToDB.DataProvider.MySql
 					GetMySqlDecimalMethodName   = mySqlDecimalType != null ? "GetMySqlDecimal" : null;
 					GetDateTimeOffsetMethodName = "GetDateTimeOffset";
 					GetMySqlDateTimeMethodName  = "GetMySqlDateTime";
+					GetTimeSpanMethodName       = dataReaderType.GetMethod("GetTimeSpan", _ordinalParameters)?.Name;
+					GetTimeOnlyMethodName       = dataReaderType.GetMethod("GetTimeOnly", _ordinalParameters)?.Name;
+					GetDateOnlyMethodName       = dataReaderType.GetMethod("GetDateOnly", _ordinalParameters)?.Name;
+					GetSByteMethodName          = dataReaderType.GetMethod("GetSByte", _ordinalParameters)?.Name;
+					GetUInt16MethodName         = dataReaderType.GetMethod("GetUInt16", _ordinalParameters)?.Name;
+					GetUInt32MethodName         = dataReaderType.GetMethod("GetUInt32", _ordinalParameters)?.Name;
+					GetUInt64MethodName         = dataReaderType.GetMethod("GetUInt64", _ordinalParameters)?.Name;
 					ProviderTypesNamespace      = typesNamespace;
 					MappingSchema               = mappingSchema;
 					BulkCopy                    = bulkCopy;

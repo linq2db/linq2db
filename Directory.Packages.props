@@ -101,7 +101,7 @@
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' != 'net472' AND '$(TargetFramework)' != 'netcoreapp3.1' ">
-		<PackageVersion Include="MySqlConnector"                                        Version="2.1.10"        />
+		<PackageVersion Include="MySqlConnector"                                        Version="2.1.11"        />
 	</ItemGroup>
 
 </Project>

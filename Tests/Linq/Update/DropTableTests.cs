@@ -52,7 +52,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void DropCurrentDatabaseTableWIthIdentityTest([DataSources] string context)
+		public void DropCurrentDatabaseTableWithIdentityTest([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
