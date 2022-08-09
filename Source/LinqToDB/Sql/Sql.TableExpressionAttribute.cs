@@ -49,7 +49,7 @@ namespace LinqToDB
 				table.SqlTableType = SqlTableType.Expression;
 				var expressionStr  = table.Expression = Expression ?? methodCall.Method.Name!;
 
-				ExpressionAttribute.PrepareParameterValues(methodCall, ref expressionStr, false, out var knownExpressions, false, out var genericTypes);
+				ExpressionAttribute.PrepareParameterValues(mappingSchema, methodCall, ref expressionStr, false, out var knownExpressions, false, out var genericTypes);
 
 				if (string.IsNullOrEmpty(expressionStr))
 					throw new LinqToDBException($"Cannot retrieve Table Expression body from expression '{methodCall}'.");

@@ -1,11 +1,12 @@
 ﻿using System;
+using System.Linq;
 
 namespace LinqToDB.DataProvider.Firebird
 {
-	using System.Linq;
 	using Extensions;
-	using SqlQuery;
+	using Mapping;
 	using SqlProvider;
+	using SqlQuery;
 
 	public class FirebirdSqlOptimizer : BasicSqlOptimizer
 	{
@@ -13,11 +14,11 @@ namespace LinqToDB.DataProvider.Firebird
 		{
 		}
 
-		public override SqlStatement Finalize(SqlStatement statement)
+		public override SqlStatement Finalize(MappingSchema mappingSchema, SqlStatement statement)
 		{
 			CheckAliases(statement, int.MaxValue);
 
-			statement = base.Finalize(statement);
+			statement = base.Finalize(mappingSchema, statement);
 
 			return statement;
 		}

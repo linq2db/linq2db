@@ -269,6 +269,7 @@ namespace LinqToDB
 			public static readonly SqlExpression UnknownExpression = new ("!!!");
 
 			public static void PrepareParameterValues(
+				MappingSchema             mappingSchema,
 				Expression                expression,
 				ref string?               expressionStr,
 				bool                      includeInstance,
@@ -320,15 +321,15 @@ namespace LinqToDB
 						if (mc.Method.DeclaringType!.IsGenericType)
 						{
 							genericTypes ??= new List<ISqlExpression>();
-							genericTypes.AddRange(mc.Method.DeclaringType.GetGenericArguments()
-								.Select(static t => (ISqlExpression)SqlDataType.GetDataType(t)));
+							foreach (var t in mc.Method.DeclaringType.GetGenericArguments())
+								genericTypes.Add((ISqlExpression)mappingSchema.GetDataType(t));
 						}
 
 						if (mc.Method.IsGenericMethod)
 						{
 							genericTypes ??= new List<ISqlExpression>();
-							genericTypes.AddRange(mc.Method.GetGenericArguments()
-								.Select(static t => (ISqlExpression)SqlDataType.GetDataType(t)));
+							foreach (var t in mc.Method.GetGenericArguments())
+								genericTypes.Add((ISqlExpression)mappingSchema.GetDataType(t));
 						}
 					}
 				}
@@ -462,7 +463,7 @@ namespace LinqToDB
 				Expression expression, Func<TContext, Expression, ColumnDescriptor?, ISqlExpression> converter)
 			{
 				var expressionStr = Expression;
-				PrepareParameterValues(expression, ref expressionStr, true, out var knownExpressions, IgnoreGenericParameters, out var genericTypes);
+				PrepareParameterValues(dataContext.MappingSchema, expression, ref expressionStr, true, out var knownExpressions, IgnoreGenericParameters, out var genericTypes);
 
 				if (string.IsNullOrEmpty(expressionStr))
 					throw new LinqToDBException($"Cannot retrieve SQL Expression body from expression '{expression}'.");

@@ -146,7 +146,7 @@ namespace LinqToDB.DataProvider.Oracle
 						string.IsNullOrEmpty(c.DbType)
 							? GetDataTypeText(
 								new SqlDataType(
-									c.DataType == DataType.Undefined ? SqlDataType.GetDataType(c.MemberType).Type.DataType : c.DataType,
+									c.DataType == DataType.Undefined ? mappingSchema.GetDataType(c.MemberType).Type.DataType : c.DataType,
 									c.MemberType,
 									c.Length,
 									c.Precision,

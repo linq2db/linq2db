@@ -1,12 +1,9 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-
-namespace LinqToDB.DataProvider.PostgreSQL
+﻿namespace LinqToDB.DataProvider.PostgreSQL
 {
 	using Extensions;
+	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
-	using Linq;
 
 	class PostgreSQLSqlOptimizer : BasicSqlOptimizer
 	{
@@ -16,11 +13,11 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		public override bool CanCompareSearchConditions => true;
 
-		public override SqlStatement Finalize(SqlStatement statement)
+		public override SqlStatement Finalize(MappingSchema mappingSchema, SqlStatement statement)
 		{
 			CheckAliases(statement, int.MaxValue);
 
-			return base.Finalize(statement);
+			return base.Finalize(mappingSchema, statement);
 		}
 
 		public override SqlStatement TransformStatement(SqlStatement statement)

@@ -16,6 +16,8 @@ namespace LinqToDB.DataProvider.Access
 
 		AccessMappingSchema() : base(ProviderName.Access)
 		{
+			AddScalarType(typeof(decimal), new SqlDataType(new DbDataType(typeof(decimal), DataType.Decimal, null, null, 28, 10)));
+
 			SetDataType(typeof(DateTime),  DataType.DateTime);
 			SetDataType(typeof(DateTime?), DataType.DateTime);
 

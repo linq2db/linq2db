@@ -56,7 +56,7 @@ namespace LinqToDB
 				table.SqlTableType = SqlTableType.Function;
 				var expressionStr  = table.Expression = Name ?? methodCall.Method.Name!;
 
-				ExpressionAttribute.PrepareParameterValues(methodCall, ref expressionStr, false, out var knownExpressions, false, out var genericTypes);
+				ExpressionAttribute.PrepareParameterValues(mappingSchema, methodCall, ref expressionStr, false, out var knownExpressions, false, out var genericTypes);
 
 				if (string.IsNullOrEmpty(expressionStr))
 					throw new LinqToDBException($"Cannot retrieve Table Function body from expression '{methodCall}'.");

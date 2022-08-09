@@ -513,11 +513,11 @@ namespace LinqToDB.Linq.Builder
 								switch (ma.Member.Name)
 								{
 									case "TotalMilliseconds": datePart = Sql.DateParts.Millisecond; break;
-									case "TotalSeconds": datePart = Sql.DateParts.Second; break;
-									case "TotalMinutes": datePart = Sql.DateParts.Minute; break;
-									case "TotalHours": datePart = Sql.DateParts.Hour; break;
-									case "TotalDays": datePart = Sql.DateParts.Day; break;
-									default: return new TransformInfo(e);
+									case "TotalSeconds"     : datePart = Sql.DateParts.Second;      break;
+									case "TotalMinutes"     : datePart = Sql.DateParts.Minute;      break;
+									case "TotalHours"       : datePart = Sql.DateParts.Hour;        break;
+									case "TotalDays"        : datePart = Sql.DateParts.Day;         break;
+									default                 : return new TransformInfo(e);
 								}
 
 								var ex = (BinaryExpression)ma.Expression;
@@ -924,19 +924,19 @@ namespace LinqToDB.Linq.Builder
 
 					switch (expression.NodeType)
 					{
-						case ExpressionType.Add:
-						case ExpressionType.AddChecked: return new SqlBinaryExpression(t, l, "+", r, Precedence.Additive);
-						case ExpressionType.And: return new SqlBinaryExpression(t, l, "&", r, Precedence.Bitwise);
-						case ExpressionType.Divide: return new SqlBinaryExpression(t, l, "/", r, Precedence.Multiplicative);
-						case ExpressionType.ExclusiveOr: return new SqlBinaryExpression(t, l, "^", r, Precedence.Bitwise);
-						case ExpressionType.Modulo: return new SqlBinaryExpression(t, l, "%", r, Precedence.Multiplicative);
-						case ExpressionType.Multiply:
+						case ExpressionType.Add            :
+						case ExpressionType.AddChecked     : return new SqlBinaryExpression(t, l, "+", r, Precedence.Additive);
+						case ExpressionType.And            : return new SqlBinaryExpression(t, l, "&", r, Precedence.Bitwise);
+						case ExpressionType.Divide         : return new SqlBinaryExpression(t, l, "/", r, Precedence.Multiplicative);
+						case ExpressionType.ExclusiveOr    : return new SqlBinaryExpression(t, l, "^", r, Precedence.Bitwise);
+						case ExpressionType.Modulo         : return new SqlBinaryExpression(t, l, "%", r, Precedence.Multiplicative);
+						case ExpressionType.Multiply       :
 						case ExpressionType.MultiplyChecked: return new SqlBinaryExpression(t, l, "*", r, Precedence.Multiplicative);
-						case ExpressionType.Or: return new SqlBinaryExpression(t, l, "|", r, Precedence.Bitwise);
-						case ExpressionType.Power: return new SqlFunction(t, "Power", l, r);
-						case ExpressionType.Subtract:
+						case ExpressionType.Or             : return new SqlBinaryExpression(t, l, "|", r, Precedence.Bitwise);
+						case ExpressionType.Power          : return new SqlFunction(t, "Power", l, r);
+						case ExpressionType.Subtract       :
 						case ExpressionType.SubtractChecked: return new SqlBinaryExpression(t, l, "-", r, Precedence.Subtraction);
-						case ExpressionType.Coalesce:
+						case ExpressionType.Coalesce       :
 						{
 							if (QueryHelper.UnwrapExpression(r) is SqlFunction c)
 							{
@@ -984,19 +984,22 @@ namespace LinqToDB.Linq.Builder
 
 					var o = ConvertToSql(context, e.Operand);
 
-					if (e.Method == null && e.IsLifted)
+					if (e.Method == null && (e.IsLifted || e.Type == typeof(object)))
 						return o;
 
 					if (e.Type == typeof(bool) && e.Operand.Type == typeof(SqlBoolean))
 						return o;
 
+					if (e.Type == typeof(Enum) && e.Operand.Type.IsEnum)
+						return o;
+
 					var t = e.Operand.Type;
-					var s = SqlDataType.GetDataType(t);
+					var s = MappingSchema.GetDataType(t);
 
 					if (o.SystemType != null && s.Type.SystemType == typeof(object))
 					{
 						t = o.SystemType;
-						s = SqlDataType.GetDataType(t);
+						s = MappingSchema.GetDataType(t);
 					}
 
 					if (e.Type == t ||
