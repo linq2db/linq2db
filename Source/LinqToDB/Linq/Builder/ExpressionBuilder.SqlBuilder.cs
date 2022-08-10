@@ -940,7 +940,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							if (QueryHelper.UnwrapExpression(r) is SqlFunction c)
 							{
-								if (c.Name == "Coalesce")
+								if (c.Name is "Coalesce" or PseudoFunctions.COALESCE)
 								{
 									var parms = new ISqlExpression[c.Parameters.Length + 1];
 

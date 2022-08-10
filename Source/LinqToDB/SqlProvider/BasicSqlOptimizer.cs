@@ -2564,7 +2564,7 @@ namespace LinqToDB.SqlProvider
 
 			return new SqlFunction(func.SystemType, "Convert", false, true, to, func.Parameters[2])
 			{
-				CanBeNull = func.Parameters[2].CanBeNull
+				CanBeNull = func.Parameters[2].CanBeNull,
 			};
 		}
 
@@ -2587,7 +2587,7 @@ namespace LinqToDB.SqlProvider
 
 				return new SqlFunction(func.SystemType, "CASE", false, true, sc, new SqlValue(true), new SqlValue(false))
 				{
-					CanBeNull = false
+					CanBeNull = false,
 				};
 			}
 
@@ -2598,7 +2598,7 @@ namespace LinqToDB.SqlProvider
 		{
 			return new SqlFunction(typeof(bool), "CASE", expression, new SqlValue(true), new SqlValue(false))
 			{
-				CanBeNull = false,
+				CanBeNull     = false,
 				DoNotOptimize = true
 			};
 		}
