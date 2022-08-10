@@ -1475,12 +1475,12 @@ namespace LinqToDB.SqlProvider
 		internal void BuildTypeName(StringBuilder sb, SqlDataType type)
 		{
 			StringBuilder = sb;
-			BuildDataType(type, true);
+			BuildDataType(type, forCreateTable: true, canBeNull: true);
 		}
 
 		protected virtual void BuildCreateTableFieldType(SqlField field)
 		{
-			BuildDataType(new SqlDataType(field), true);
+			BuildDataType(new SqlDataType(field), forCreateTable: true, field.CanBeNull);
 		}
 
 		protected virtual void BuildCreateTableNullAttribute(SqlField field, DefaultNullable defaultNullable)
@@ -2854,7 +2854,7 @@ namespace LinqToDB.SqlProvider
 					break;
 
 				case QueryElementType.SqlDataType:
-					BuildDataType((SqlDataType)expr, false);
+					BuildDataType((SqlDataType)expr, forCreateTable: false, canBeNull: true);
 					break;
 
 				case QueryElementType.SearchCondition:
@@ -2899,6 +2899,7 @@ namespace LinqToDB.SqlProvider
 
 			return StringBuilder;
 		}
+
 
 		void BuildFormatValues(string format, IReadOnlyList<ISqlExpression>? parameters, Func<int> getPrecedence)
 		{
@@ -2975,7 +2976,7 @@ namespace LinqToDB.SqlProvider
 			StringBuilder.Append("CAST(");
 			BuildExpression(value);
 			StringBuilder.Append(" AS ");
-			BuildDataType(dataType, false);
+			BuildDataType(dataType, false, value.CanBeNull);
 			StringBuilder.Append(')');
 		}
 
@@ -3120,16 +3121,17 @@ namespace LinqToDB.SqlProvider
 		/// <param name="sb"></param>
 		/// <param name="dataType"></param>
 		/// <returns>The stringbuilder with the type information appended.</returns>
-		public StringBuilder BuildDataType(StringBuilder sb,
-			SqlDataType dataType)
+		public StringBuilder BuildDataType(StringBuilder sb, SqlDataType dataType)
 		{
 			WithStringBuilder(sb, () =>
 			{
-				BuildDataType(dataType, false);
+				BuildDataType(dataType, forCreateTable: false, canBeNull: false);
 			});
 			return sb;
 		}
-		protected void BuildDataType(SqlDataType type, bool forCreateTable)
+
+		/// <param name="canBeNull">Type could store <c>NULL</c> values (could be used for column table type generation or for databases with explicit typee nullability like ClickHouse).</param>
+		protected void BuildDataType(SqlDataType type, bool forCreateTable, bool canBeNull)
 		{
 			if (!string.IsNullOrEmpty(type.Type.DbType))
 				StringBuilder.Append(type.Type.DbType);
@@ -3148,11 +3150,12 @@ namespace LinqToDB.SqlProvider
 					// give some hint to user that it is expected situation and he need to fix something on his side
 					throw new LinqToDBException("Database type cannot be determined automatically and must be specified explicitly");
 
-				BuildDataTypeFromDataType(type, forCreateTable);
+				BuildDataTypeFromDataType(type, forCreateTable, canBeNull);
 			}
 		}
 
-		protected virtual void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
+		/// <param name="canBeNull">Type could store <c>NULL</c> values (could be used for column table type generation or for databases with explicit typee nullability like ClickHouse).</param>
+		protected virtual void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable, bool canBeNull)
 		{
 			switch (type.Type.DataType)
 			{
