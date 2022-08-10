@@ -84,7 +84,7 @@ namespace LinqToDB.DataProvider.Firebird
 			return base.GetIdentityExpression(table);
 		}
 
-		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
+		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable, bool canBeNull)
 		{
 			switch (type.Type.DataType)
 			{
@@ -99,7 +99,7 @@ namespace LinqToDB.DataProvider.Firebird
 					                                                                                      break;
 
 				case DataType.Decimal       :
-					base.BuildDataTypeFromDataType(type.Type.Precision > 18 ? new SqlDataType(type.Type.DataType, type.Type.SystemType, null, 18, type.Type.Scale, type.Type.DbType) : type, forCreateTable);
+					base.BuildDataTypeFromDataType(type.Type.Precision > 18 ? new SqlDataType(type.Type.DataType, type.Type.SystemType, null, 18, type.Type.Scale, type.Type.DbType) : type, forCreateTable, canBeNull);
 					                                                                                      break;
 				case DataType.SByte         :
 				case DataType.Byte          : StringBuilder.Append("SmallInt");                           break;
@@ -130,14 +130,14 @@ namespace LinqToDB.DataProvider.Firebird
 					if (type.Type.SystemType == typeof(Guid) || type.Type.SystemType == typeof(Guid?))
 						StringBuilder.Append("CHAR(38)");
 					else
-						base.BuildDataTypeFromDataType(type, forCreateTable);
+						base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull);
 					break;
 
 				case DataType.VarBinary     : StringBuilder.Append("BLOB");                               break;
 				// BOOLEAN type available since FB 3.0, but FirebirdDataProvider.SetParameter converts boolean to '1'/'0'
 				// so for now we will use type, compatible with SetParameter by default
 				case DataType.Boolean       : StringBuilder.Append("CHAR");                               break;
-				default: base.BuildDataTypeFromDataType(type, forCreateTable);                            break;
+				default: base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull);                 break;
 			}
 		}
 

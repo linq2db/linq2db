@@ -245,12 +245,12 @@ namespace LinqToDB.DataProvider.Access
 			base.BuildUpdateSet(selectQuery, updateClause);
 		}
 
-		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
+		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable, bool canBeNull)
 		{
 			switch (type.Type.DataType)
 			{
-				case DataType.DateTime2 : StringBuilder.Append("timestamp");                    break;
-				default                 : base.BuildDataTypeFromDataType(type, forCreateTable); break;
+				case DataType.DateTime2 : StringBuilder.Append("timestamp");                               break;
+				default                 : base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull); break;
 			}
 		}
 

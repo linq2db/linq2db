@@ -94,7 +94,7 @@ namespace LinqToDB.DataProvider.MySql
 			}
 		}
 
-		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
+		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable, bool canBeNull)
 		{
 			// mysql has limited support for types in type-CAST expressions
 			if (!forCreateTable)
@@ -158,9 +158,9 @@ namespace LinqToDB.DataProvider.MySql
 					_ => null
 				})
 				{
-					case null        : base.BuildDataTypeFromDataType(type,                forCreateTable); break;
-					case "$decimal$" : base.BuildDataTypeFromDataType(SqlDataType.Decimal, forCreateTable); break;
-					case var t       : StringBuilder.Append(t);                                             break;
+					case null        : base.BuildDataTypeFromDataType(type,                forCreateTable, canBeNull); break;
+					case "$decimal$" : base.BuildDataTypeFromDataType(SqlDataType.Decimal, forCreateTable, canBeNull); break;
+					case var t       : StringBuilder.Append(t);                                                        break;
 				};
 
 				return;
@@ -250,8 +250,8 @@ namespace LinqToDB.DataProvider.MySql
 				_ => null
 			})
 						{
-				case null  : base.BuildDataTypeFromDataType(type, forCreateTable); break;
-				case var t : StringBuilder.Append(t);                              break;
+				case null  : base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull); break;
+				case var t : StringBuilder.Append(t);                                         break;
 			};
 		}
 
