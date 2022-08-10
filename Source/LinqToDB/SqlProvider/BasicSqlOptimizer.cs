@@ -2175,14 +2175,25 @@ namespace LinqToDB.SqlProvider
 			return predicate;
 		}
 
+		/// <summary>
+		/// Escape sequence/character to escape special characters in LIKE predicate (defined by <see cref="LikeCharactersToEscape"/>).
+		/// Default: <c>"~"</c>.
+		/// </summary>
 		public virtual string LikeEscapeCharacter         => "~";
 		public virtual string LikeWildcardCharacter       => "%";
-		public virtual bool   LikeHasCharacterSetSupport  => true;
 		public virtual bool   LikePatternParameterSupport => true;
 		public virtual bool   LikeValueParameterSupport   => true;
+		/// <summary>
+		/// Should be <c>true</c> for provider with <c>LIKE ... ESCAPE</c> modifier support.
+		/// Default: <c>true</c>.
+		/// </summary>
 		public virtual bool   LikeIsEscapeSupported       => true;
 
 		protected static  string[] StandardLikeCharactersToEscape = {"%", "_", "?", "*", "#", "[", "]"};
+		/// <summary>
+		/// Characters with special meaning in LIKE predicate (defined by <see cref="LikeCharactersToEscape"/>) that should be escaped to be used as matched character.
+		/// Default: <c>["%", "_", "?", "*", "#", "[", "]"]</c>.
+		/// </summary>
 		public virtual string[] LikeCharactersToEscape => StandardLikeCharactersToEscape;
 
 		public virtual string EscapeLikeCharacters(string str, string escape)
@@ -2217,19 +2228,18 @@ namespace LinqToDB.SqlProvider
 			return result;
 		}
 
-		protected virtual string EscapeLikeCharactersBrackets(string str, string[] toEscape)
+		/// <summary>
+		/// Implements LIKE pattern escaping logic for provider without ESCAPE clause support (<see cref="LikeIsEscapeSupported"/> is <c>false</c>).
+		/// Default logic prefix characters from <see cref="LikeCharactersToEscape"/> with <see cref="LikeEscapeCharacter"/>.
+		/// </summary>
+		/// <param name="str">Raw pattern value.</param>
+		/// <returns>Escaped pattern value.</returns>
+		protected virtual string EscapeLikePattern(string str)
 		{
-			var newStr = DataTools.EscapeUnterminatedBracket(str);
-			if (newStr == str)
-				newStr = newStr.Replace("[", "[[]");
+			foreach (var s in LikeCharactersToEscape)
+				str = str.Replace(s, LikeEscapeCharacter + s);
 
-			foreach (var s in toEscape)
-		{
-				if (s != "[" && s != "]")
-					newStr = newStr.Replace(s, "[" + s + "]");
-			}
-
-			return newStr;
+			return str;
 		}
 
 		public virtual ISqlExpression EscapeLikeCharacters(ISqlExpression expression, ref ISqlExpression? escape)
@@ -2250,6 +2260,13 @@ namespace LinqToDB.SqlProvider
 			return newExpr;
 		}
 
+		/// <summary>
+		/// LIKE predicate interceptor. Default implementation does nothing.
+		/// </summary>
+		/// <param name="mappingSchema">Current mapping schema.</param>
+		/// <param name="predicate">LIKE predicate.</param>
+		/// <param name="context">Parameters evaluation context for current query.</param>
+		/// <returns>Preprocessed predicate.</returns>
 		public virtual ISqlPredicate ConvertLikePredicate(
 			MappingSchema     mappingSchema,
 			SqlPredicate.Like predicate,
@@ -2270,7 +2287,7 @@ namespace LinqToDB.SqlProvider
 
 				var patternValue = LikeIsEscapeSupported
 					? EscapeLikeCharacters(patternRawValue, LikeEscapeCharacter)
-					: EscapeLikeCharactersBrackets(patternRawValue, LikeCharactersToEscape);
+					: EscapeLikePattern(patternRawValue);
 
 				patternValue = predicate.Kind switch
 				{
@@ -2315,8 +2332,7 @@ namespace LinqToDB.SqlProvider
 
 				patternExpr = OptimizeExpression(patternExpr, visitor);
 
-				return new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, patternExpr,
-					LikeIsEscapeSupported ? escape : null);
+				return new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, patternExpr, LikeIsEscapeSupported ? escape : null);
 			}
 		}
 
