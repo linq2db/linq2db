@@ -1340,7 +1340,7 @@ namespace LinqToDB.Mapping
 			{
 				AddScalarType(typeof(char),            new SqlDataType(DataType.NChar, typeof(char),  1, null, null, null));
 				AddScalarType(typeof(string),          DataType.NVarChar);
-				AddScalarType(typeof(decimal),         new SqlDataType(new DbDataType(typeof(decimal), DataType.Decimal, null, null, 29, 10)));
+				AddScalarType(typeof(decimal),         DataType.Decimal);
 				AddScalarType(typeof(DateTime),        DataType.DateTime2);
 				AddScalarType(typeof(DateTimeOffset),  DataType.DateTimeOffset);
 				AddScalarType(typeof(TimeSpan),        DataType.Time);
