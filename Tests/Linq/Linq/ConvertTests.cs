@@ -644,7 +644,7 @@ namespace Tests.Linq
 		}
 
 		//[CLSCompliant(false)]
-		[Sql.Function("$Convert$", 1, 2, 0, ServerSideOnly = true)]
+		[Sql.Function(PseudoFunctions.CONVERT, 1, 2, 0, ServerSideOnly = true)]
 		public static TTo ServerConvert<TTo, TFrom>(TFrom obj)
 		{
 			throw new NotImplementedException();

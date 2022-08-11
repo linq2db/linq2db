@@ -192,7 +192,9 @@ namespace LinqToDB
 
 		#region NoConvert
 
-		[Function("$Convert_Remover$", ServerSideOnly = true)]
+#pragma warning disable CS3016 // Arrays as attribute arguments is not CLS-compliant
+		[Function(PseudoFunctions.REMOVE_CONVERT, 0, 2, ServerSideOnly = true)]
+#pragma warning restore CS3016 // Arrays as attribute arguments is not CLS-compliant
 		static TR ConvertRemover<T, TR>(T input)
 		{
 			throw new NotImplementedException();
@@ -230,7 +232,7 @@ namespace LinqToDB
 				var sqlExpr = builder.ConvertExpressionToSql(newExpr);
 				sqlExpr     = sqlExpr.Convert(static (v, e) =>
 				{
-					if (e is SqlFunction func && func.Name == "$Convert_Remover$")
+					if (e is SqlFunction func && func.Name == PseudoFunctions.REMOVE_CONVERT)
 						return func.Parameters[0];
 					return e;
 				});
@@ -265,7 +267,7 @@ namespace LinqToDB
 		#region Convert Functions
 
 		[CLSCompliant(false)]
-		[Function("Convert", 0, 1, ServerSideOnly = true, IsNullable = IsNullableType.SameAsSecondParameter)]
+		[Function("Convert", 0, 1, ServerSideOnly = true, IsPure = true, IsNullable = IsNullableType.SameAsSecondParameter)]
 		public static TTo Convert<TTo,TFrom>(TTo to, TFrom from)
 		{
 			return Common.ConvertTo<TTo>.From(from);
@@ -278,15 +280,16 @@ namespace LinqToDB
 			return Common.ConvertTo<TTo>.From(from);
 		}
 
+		// TODO: v5 remove. bltoolkit legacy which duplicates Convert function above (without ServerSideOnly, but it shouldn't matter)
 		[CLSCompliant(false)]
-		[Function("Convert", 0, 1, IsNullable = IsNullableType.SameAsSecondParameter)]
+		[Function("Convert", 0, 1, IsPure = true, IsNullable = IsNullableType.SameAsSecondParameter)]
 		public static TTo Convert2<TTo,TFrom>(TTo to, TFrom from)
 		{
 			return Common.ConvertTo<TTo>.From(from);
 		}
 
 		[CLSCompliant(false)]
-		[Function("$Convert$", 1, 2, 0)]
+		[Function(PseudoFunctions.CONVERT, 1, 2, 0, IsPure = true)]
 		public static TTo Convert<TTo,TFrom>(TFrom obj)
 		{
 			return Common.ConvertTo<TTo>.From(obj);
@@ -295,7 +298,7 @@ namespace LinqToDB
 		public static class ConvertTo<TTo>
 		{
 			[CLSCompliant(false)]
-			[Function("$Convert$", 1, 2, 0)]
+			[Function(PseudoFunctions.CONVERT, 1, 2, 0, IsPure = true)]
 			public static TTo From<TFrom>(TFrom obj)
 			{
 				return Common.ConvertTo<TTo>.From(obj);
@@ -322,8 +325,7 @@ namespace LinqToDB
 		/// <param name="_">Unused. Added to support method overloads.</param>
 		/// <returns>Value, converted to target type or <c>null</c> if conversion failed.</returns>
 		[CLSCompliant(false)]
-		[Expression(PN.Oracle, "CAST({0} AS {3} DEFAULT NULL ON CONVERSION ERROR)", ServerSideOnly = true, IsNullable = IsNullableType.Nullable)]
-		[Function(             "TRY_CONVERT", 3, 0,                                 ServerSideOnly = true, IsNullable = IsNullableType.Nullable)]
+		[Function(PseudoFunctions.TRY_CONVERT, 3, 2, 0, ServerSideOnly = true, IsPure = true, IsNullable = IsNullableType.Nullable)]
 		public static TTo? TryConvert<TFrom, TTo>(TFrom value, TTo? _) where TTo : struct => throw new LinqException($"'{nameof(TryConvert)}' is only server-side method.");
 
 		/// <summary>
@@ -340,8 +342,7 @@ namespace LinqToDB
 		/// <param name="_">Unused. Added to support method overloads.</param>
 		/// <returns>Value, converted to target type or <c>null</c> if conversion failed.</returns>
 		[CLSCompliant(false)]
-		[Expression(PN.Oracle, "CAST({0} AS {3} DEFAULT NULL ON CONVERSION ERROR)", ServerSideOnly = true, IsNullable = IsNullableType.Nullable)]
-		[Function(             "TRY_CONVERT", 3, 0,                                 ServerSideOnly = true, IsNullable = IsNullableType.Nullable)]
+		[Function(PseudoFunctions.TRY_CONVERT, 3, 2, 0, ServerSideOnly = true, IsPure = true, IsNullable = IsNullableType.Nullable)]
 		public static TTo? TryConvert<TFrom, TTo>(TFrom value, TTo? _) where TTo : class => throw new LinqException($"'{nameof(TryConvert)}' is only server-side method.");
 
 		/// <summary>
@@ -357,7 +358,7 @@ namespace LinqToDB
 		/// <param name="defaultValue">Value, returned when conversion failed.</param>
 		/// <returns>Value, converted to target type or <paramref name="defaultValue"/> if conversion failed.</returns>
 		[CLSCompliant(false)]
-		[Expression("CAST({0} AS {3} DEFAULT {1} ON CONVERSION ERROR)", ServerSideOnly = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(PseudoFunctions.TRY_CONVERT_OR_DEFAULT, 3, 2, 0, 1, ServerSideOnly = true, IsPure = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static TTo? TryConvertOrDefault<TFrom, TTo>(TFrom value, TTo? defaultValue) where TTo : struct => throw new LinqException($"'{nameof(TryConvertOrDefault)}' is only server-side method.");
 
 		/// <summary>
@@ -373,7 +374,7 @@ namespace LinqToDB
 		/// <param name="defaultValue">Value, returned when conversion failed.</param>
 		/// <returns>Value, converted to target type or <paramref name="defaultValue"/> if conversion failed.</returns>
 		[CLSCompliant(false)]
-		[Expression("CAST({0} AS {3} DEFAULT {1} ON CONVERSION ERROR)", ServerSideOnly = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(PseudoFunctions.TRY_CONVERT_OR_DEFAULT, 3, 2, 0, 1, ServerSideOnly = true, IsPure = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static TTo? TryConvertOrDefault<TFrom, TTo>(TFrom value, TTo? defaultValue) where TTo : class => throw new LinqException($"'{nameof(TryConvertOrDefault)}' is only server-side method.");
 		#endregion
 
@@ -400,7 +401,6 @@ namespace LinqToDB
 		[Function  (PN.Oracle,   "Substr",                          PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Function  (PN.SQLite,   "Substr",                          PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Expression(PN.Firebird, "Substring({0} from {1} for {2})", PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Function  (PN.SapHana,  "Substring",                       PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static string? Substring(string? str, int? start, int? length)
 		{
 			if (str == null || start == null || length == null) return null;
@@ -577,7 +577,7 @@ namespace LinqToDB
 			return str.PadRight(length.Value, paddingChar.Value);
 		}
 
-		[Function("$Replace$", IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(PseudoFunctions.REPLACE, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static string? Replace(string? str, string? oldValue, string? newValue)
 		{
 			if (str == null || oldValue == null || newValue == null) return null;
@@ -934,13 +934,13 @@ namespace LinqToDB
 			return str == null || ch == null ? null : str.TrimEnd(ch.Value);
 		}
 
-		[Function("$ToLower$", ServerSideOnly = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(PseudoFunctions.TO_LOWER, ServerSideOnly = true, IsPure = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static string? Lower(string? str)
 		{
 			return str?.ToLower();
 		}
 
-		[Function("$ToUpper$", ServerSideOnly = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(PseudoFunctions.TO_UPPER, ServerSideOnly = true, IsPure = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static string? Upper(string? str)
 		{
 			return str?.ToUpper();
@@ -985,7 +985,7 @@ namespace LinqToDB
 							100 :
 							SqlDataType.GetMaxDisplaySize(SqlDataType.GetDataType(arg.SystemType).Type.DataType);
 
-						arr[i] = new SqlFunction(typeof(string), "Convert", new SqlDataType(DataType.VarChar, len), arg);
+						arr[i] = PseudoFunctions.MakeConvert(new SqlDataType(DataType.VarChar, typeof(string), len, null, null, null), new SqlDataType(arg.GetExpressionType()), arg);
 					}
 				}
 

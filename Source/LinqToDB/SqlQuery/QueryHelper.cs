@@ -194,11 +194,11 @@ namespace LinqToDB.SqlQuery
 					//TODO: unify function names and put in common constant storage
 					//For example it should be "$COALESCE$" and "$CASE$" do do not mix with user defined extension
 
-					if (function.Name == "Coalesce" && function.Parameters.Length == 2)
+					if (function.Name is "Coalesce" or PseudoFunctions.COALESCE && function.Parameters.Length == 2)
 					{
 						return GetColumnDescriptor(function.Parameters[0]);
 					}
-					if (function.Name == "CASE" && function.Parameters.Length == 3)
+					else if (function.Name == "CASE" && function.Parameters.Length == 3)
 					{
 						return GetColumnDescriptor(function.Parameters[1]) ??
 						       GetColumnDescriptor(function.Parameters[2]);
@@ -906,7 +906,7 @@ namespace LinqToDB.SqlQuery
 					current = column.Expression;
 				else if (current is SqlFunction func)
 				{
-					if (func.Name == "$Convert$")
+					if (func.Name == PseudoFunctions.CONVERT)
 						current = func.Parameters[2];
 					else
 						break;
