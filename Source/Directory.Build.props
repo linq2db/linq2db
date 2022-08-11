@@ -1,6 +1,6 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-	<Import Project="linq2db.Default.props" />
-
+	<Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+	
 	<PropertyGroup>
 		<Configurations>Debug;Release</Configurations>
 	</PropertyGroup>

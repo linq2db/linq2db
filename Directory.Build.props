@@ -22,7 +22,7 @@
 		<AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 		<SignAssembly>True</SignAssembly>
-		<AssemblyOriginatorKeyFile>..\..\Build\linq2db.snk</AssemblyOriginatorKeyFile>
+		<AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)/Build/linq2db.snk</AssemblyOriginatorKeyFile>
 		<DelaySign>False</DelaySign>
 
 		<GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
@@ -59,7 +59,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" />
-		<AdditionalFiles Include="$(MSBuildThisFileDirectory)/BannedSymbols.txt" />
+		<AdditionalFiles Include="$(MSBuildThisFileDirectory)/Build/BannedSymbols.txt" />
 
 		<PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers">
 			<PrivateAssets>all</PrivateAssets>
@@ -68,7 +68,7 @@
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(Language)'=='C#'">
-		<Compile Include="$(MSBuildThisFileDirectory)/../Source/Shared/*.cs" LinkBase="Compatibility" />
+		<Compile Include="$(MSBuildThisFileDirectory)/Source/Shared/*.cs" LinkBase="Compatibility" />
 	</ItemGroup>
 
 </Project>
