@@ -74,9 +74,9 @@ namespace LinqToDB.DataProvider.Firebird
 					if (caseSensitive == false)
 					{
 						predicate = new SqlPredicate.SearchString(
-							new SqlFunction(typeof(string), "$ToLower$", predicate.Expr1),
+							PseudoFunctions.MakeToLower(predicate.Expr1),
 							predicate.IsNot,
-							new SqlFunction(typeof(string), "$ToLower$", predicate.Expr2), predicate.Kind,
+							PseudoFunctions.MakeToLower(predicate.Expr2), predicate.Kind,
 							predicate.CaseSensitive);
 					}
 					else if (caseSensitive == true)
@@ -98,14 +98,14 @@ namespace LinqToDB.DataProvider.Firebird
 						Precedence.Comparison,
 						TryConvertToValue(
 							caseSensitive == false
-								? new SqlFunction(typeof(string), "$ToLower$", predicate.Expr1)
+								? PseudoFunctions.MakeToLower(predicate.Expr1)
 								: caseSensitive == true
 									? new SqlExpression(typeof(string), "CAST({0} AS BLOB)", Precedence.Primary, predicate.Expr1)
 									: predicate.Expr1,
 							visitor.Context.OptimizationContext.Context),
 						TryConvertToValue(
 							caseSensitive == false
-								? new SqlFunction(typeof(string), "$ToLower$", predicate.Expr2)
+								? PseudoFunctions.MakeToLower(predicate.Expr2)
 								: predicate.Expr2, visitor.Context.OptimizationContext.Context)) {CanBeNull = false};
 					break;
 				}	
@@ -174,7 +174,7 @@ namespace LinqToDB.DataProvider.Firebird
 							}
 							break;
 						}
-						case "$Convert$":
+						case PseudoFunctions.CONVERT:
 						{
 							if (func.SystemType.ToUnderlying() == typeof(bool))
 							{
@@ -183,9 +183,15 @@ namespace LinqToDB.DataProvider.Firebird
 									return ex;
 							}
 							else  if (func.SystemType.ToUnderlying() == typeof(string) && func.Parameters[2].SystemType?.ToUnderlying() == typeof(Guid))
-								return new SqlFunction(func.SystemType, "UUID_TO_CHAR", func.Parameters[2]);
+								return new SqlFunction(func.SystemType, "UUID_TO_CHAR", false, true, func.Parameters[2])
+								{
+									CanBeNull = func.CanBeNull
+								};
 							else if (func.SystemType.ToUnderlying() == typeof(Guid) && func.Parameters[2].SystemType?.ToUnderlying() == typeof(string))
-								return new SqlFunction(func.SystemType, "CHAR_TO_UUID", func.Parameters[2]);
+								return new SqlFunction(func.SystemType, "CHAR_TO_UUID", false, true, func.Parameters[2])
+								{
+									CanBeNull = func.CanBeNull
+								};
 							break;
 						}
 					}
@@ -260,7 +266,7 @@ namespace LinqToDB.DataProvider.Firebird
 					var paramValue = p.GetParameterValue(visitor.Context.ParameterValues);
 
 					// Don't cast in cast
-					if (visitor.ParentElement is SqlFunction convertFunc && convertFunc.Name == "$Convert$")
+					if (visitor.ParentElement is SqlFunction convertFunc && convertFunc.Name == PseudoFunctions.CONVERT)
 						return e;
 
 					if (paramValue.DbDataType.SystemType == typeof(bool) && visitor.ParentElement is SqlFunction func && func.Name == "CASE")
@@ -325,7 +331,10 @@ namespace LinqToDB.DataProvider.Firebird
 					if (paramValue.DbDataType.DataType == DataType.Undefined && paramValue.DbDataType.SystemType == typeof(object))
 						return e;
 
-					return new SqlExpression(paramValue.DbDataType.SystemType, CASTEXPR, Precedence.Primary, p, new SqlDataType(paramValue.DbDataType));
+					return new SqlExpression(paramValue.DbDataType.SystemType, CASTEXPR, Precedence.Primary, p, new SqlDataType(paramValue.DbDataType))
+					{
+						CanBeNull = p.CanBeNull
+					};
 				}
 
 				return e;

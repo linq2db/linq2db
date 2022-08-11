@@ -17,7 +17,7 @@ jobs:
     displayName: 'Install .net 6'
     inputs:
       packageType: sdk
-      version: 6.x
+      version: 6.0.302 # 6.x
 
   - task: PowerShell@2
     inputs:

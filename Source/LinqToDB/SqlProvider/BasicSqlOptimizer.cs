@@ -909,6 +909,27 @@ namespace LinqToDB.SqlProvider
 
 			switch (func.Name)
 			{
+				case PseudoFunctions.COALESCE:
+				{
+					var parms = func.Parameters;
+					if (parms.Length == 2)
+					{
+						if (parms[0] is SqlValue val1 && parms[1] is not SqlValue)
+							return new SqlFunction(func.SystemType, func.Name, func.IsAggregate, func.Precedence, CreateSqlValue(val1.Value, parms[1].GetExpressionType(), parms[0]), parms[1])
+							{
+								DoNotOptimize = true,
+								CanBeNull     = func.CanBeNull
+							};
+						else if (parms[1] is SqlValue val2 && parms[0] is not SqlValue)
+							return new SqlFunction(func.SystemType, func.Name, func.IsAggregate, func.Precedence, parms[0], CreateSqlValue(val2.Value, parms[0].GetExpressionType(), parms[1]))
+							{
+								DoNotOptimize = true,
+								CanBeNull     = func.CanBeNull
+							};
+					}
+
+					break;
+				}
 				case "CASE":
 				{
 					var parms = func.Parameters;
@@ -969,6 +990,19 @@ namespace LinqToDB.SqlProvider
 
 							return parms[0];
 						}
+
+						// TODO: is it correct?
+						// type constant by value from other branch
+						if (parms[1] is SqlValue val1 && parms[2] is not SqlValue)
+							return new SqlFunction(func.SystemType, func.Name, func.IsAggregate, func.Precedence, parms[0], CreateSqlValue(val1.Value, parms[2].GetExpressionType(), parms[1]), parms[2])
+							{
+								DoNotOptimize = true
+							};
+						else if (parms[2] is SqlValue val2 && parms[1] is not SqlValue)
+							return new SqlFunction(func.SystemType, func.Name, func.IsAggregate, func.Precedence, parms[0], parms[1], CreateSqlValue(val2.Value, parms[1].GetExpressionType(), parms[2]))
+							{
+								DoNotOptimize = true
+							};
 					}
 				}
 
@@ -988,11 +1022,11 @@ namespace LinqToDB.SqlProvider
 					break;
 				}
 
-				case "$Convert$":
+				case PseudoFunctions.CONVERT:
 				{
 					var typef = func.SystemType.ToUnderlying();
 
-					if (func.Parameters[2] is SqlFunction from && from.Name == "$Convert$" && from.Parameters[1].SystemType!.ToUnderlying() == typef)
+					if (func.Parameters[2] is SqlFunction from && from.Name == PseudoFunctions.CONVERT && from.Parameters[1].SystemType!.ToUnderlying() == typef)
 						return from.Parameters[2];
 
 					break;
@@ -1938,7 +1972,7 @@ namespace LinqToDB.SqlProvider
 
 								return new SqlBinaryExpression(
 									be.SystemType,
-									ConvertExpressionImpl(new SqlFunction(typeof(string), "Convert", new SqlDataType(DataType.VarChar, len), be.Expr1), visitor),
+									ConvertExpressionImpl(PseudoFunctions.MakeConvert(new SqlDataType(DataType.VarChar, typeof(string), len.Value), new SqlDataType(be.Expr1.GetExpressionType()), be.Expr1), visitor),
 									be.Operation,
 									be.Expr2,
 									be.Precedence);
@@ -1991,14 +2025,13 @@ namespace LinqToDB.SqlProvider
 					break;
 				}
 
-				case "$Convert$":
+				case PseudoFunctions.CONVERT:
 					return ConvertConvertion(func);
 
-
-				case "$ToLower$": return new SqlFunction(func.SystemType, "Lower",   func.IsAggregate, func.IsPure, func.Precedence, func.Parameters);
-				case "$ToUpper$": return new SqlFunction(func.SystemType, "Upper",   func.IsAggregate, func.IsPure, func.Precedence, func.Parameters);
-				case "$Replace$": return new SqlFunction(func.SystemType, "Replace", func.IsAggregate, func.IsPure, func.Precedence, func.Parameters);
-
+				case PseudoFunctions.TO_LOWER: return new SqlFunction(func.SystemType, "Lower",    func.IsAggregate, func.IsPure, func.Precedence, func.Parameters) { CanBeNull = func.CanBeNull };
+				case PseudoFunctions.TO_UPPER: return new SqlFunction(func.SystemType, "Upper",    func.IsAggregate, func.IsPure, func.Precedence, func.Parameters) { CanBeNull = func.CanBeNull };
+				case PseudoFunctions.REPLACE : return new SqlFunction(func.SystemType, "Replace",  func.IsAggregate, func.IsPure, func.Precedence, func.Parameters) { CanBeNull = func.CanBeNull };
+				case PseudoFunctions.COALESCE: return new SqlFunction(func.SystemType, "Coalesce", func.IsAggregate, func.IsPure, func.Precedence, func.Parameters) { CanBeNull = func.CanBeNull };
 			}
 
 			return func;
@@ -2214,14 +2247,15 @@ namespace LinqToDB.SqlProvider
 
 		static ISqlExpression GenerateEscapeReplacement(ISqlExpression expression, ISqlExpression character, ISqlExpression escapeCharacter)
 		{
-			var result = new SqlFunction(typeof(string), "$Replace$", false, true, expression, character,
-				new SqlBinaryExpression(typeof(string), escapeCharacter, "+", character, Precedence.Additive));
+			var result = PseudoFunctions.MakeReplace(expression, character, new SqlBinaryExpression(typeof(string), escapeCharacter, "+", character, Precedence.Additive));
 			return result;
 		}
 
 		public static ISqlExpression GenerateEscapeReplacement(ISqlExpression expression, ISqlExpression character)
 		{
-			var result = new SqlFunction(typeof(string), "$Replace$", false, true, expression, character,
+			var result = PseudoFunctions.MakeReplace(
+				expression,
+				character,
 				new SqlBinaryExpression(typeof(string), new SqlValue("["), "+",
 					new SqlBinaryExpression(typeof(string), character, "+", new SqlValue("]"), Precedence.Additive),
 					Precedence.Additive));
@@ -2343,9 +2377,9 @@ namespace LinqToDB.SqlProvider
 			if (predicate.CaseSensitive.EvaluateBoolExpression(visitor.Context.OptimizationContext.Context) == false)
 			{
 				predicate = new SqlPredicate.SearchString(
-					new SqlFunction(typeof(string), "$ToLower$", predicate.Expr1),
+					PseudoFunctions.MakeToLower(predicate.Expr1),
 					predicate.IsNot,
-					new SqlFunction(typeof(string), "$ToLower$", predicate.Expr2),
+					PseudoFunctions.MakeToLower(predicate.Expr2),
 					predicate.Kind,
 					new SqlValue(false));
 			}
@@ -2503,6 +2537,9 @@ namespace LinqToDB.SqlProvider
 		protected virtual int? GetMaxScale      (SqlDataType type) { return SqlDataType.GetMaxScale      (type.Type.DataType); }
 		protected virtual int? GetMaxDisplaySize(SqlDataType type) { return SqlDataType.GetMaxDisplaySize(type.Type.DataType); }
 
+		/// <summary>
+		/// Implements <see cref="PseudoFunctions.CONVERT"/> function converter.
+		/// </summary>
 		protected virtual ISqlExpression ConvertConvertion(SqlFunction func)
 		{
 			var from = (SqlDataType)func.Parameters[1];
@@ -2522,7 +2559,10 @@ namespace LinqToDB.SqlProvider
 			else if (from.Type.SystemType == typeof(short) && to.Type.SystemType == typeof(int))
 				return func.Parameters[2];
 
-			return new SqlFunction(func.SystemType, "Convert", to, func.Parameters[2]);
+			return new SqlFunction(func.SystemType, "Convert", false, true, to, func.Parameters[2])
+			{
+				CanBeNull = func.Parameters[2].CanBeNull,
+			};
 		}
 
 		#endregion
@@ -2542,7 +2582,7 @@ namespace LinqToDB.SqlProvider
 						new SqlPredicate.ExprExpr(par, SqlPredicate.Operator.NotEqual, new SqlValue(0),
 							Configuration.Linq.CompareNullsAsValues ? false : null)));
 
-				return new SqlFunction(func.SystemType, "CASE", sc, new SqlValue(true), new SqlValue(false))
+				return new SqlFunction(func.SystemType, "CASE", false, true, sc, new SqlValue(true), new SqlValue(false))
 				{
 					CanBeNull = false,
 				};
@@ -2555,7 +2595,7 @@ namespace LinqToDB.SqlProvider
 		{
 			return new SqlFunction(typeof(bool), "CASE", expression, new SqlValue(true), new SqlValue(false))
 			{
-				CanBeNull = false,
+				CanBeNull     = false,
 				DoNotOptimize = true
 			};
 		}

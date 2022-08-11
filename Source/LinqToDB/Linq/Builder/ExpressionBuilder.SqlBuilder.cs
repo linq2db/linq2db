@@ -940,18 +940,18 @@ namespace LinqToDB.Linq.Builder
 						{
 							if (QueryHelper.UnwrapExpression(r) is SqlFunction c)
 							{
-								if (c.Name == "Coalesce")
+								if (c.Name is "Coalesce" or PseudoFunctions.COALESCE)
 								{
 									var parms = new ISqlExpression[c.Parameters.Length + 1];
 
 									parms[0] = l;
 									c.Parameters.CopyTo(parms, 1);
 
-									return new SqlFunction(t, "Coalesce", parms);
+									return PseudoFunctions.MakeCoalesce(t, parms);
 								}
 							}
 
-							return new SqlFunction(t, "Coalesce", l, r);
+							return PseudoFunctions.MakeCoalesce(t, l, r);
 						}
 					}
 
@@ -1007,10 +1007,7 @@ namespace LinqToDB.Linq.Builder
 						e.Type.IsEnum && Enum.GetUnderlyingType(e.Type) == t)
 						return o;
 
-					return new SqlFunction(e.Type, "$Convert$", SqlDataType.GetDataType(e.Type), s, o)
-					{
-						CanBeNull = o.CanBeNull
-					};
+					return PseudoFunctions.MakeConvert(SqlDataType.GetDataType(e.Type), s, o);
 				}
 
 				case ExpressionType.Conditional:
@@ -2217,6 +2214,16 @@ namespace LinqToDB.Linq.Builder
 						context.Scale        = ((SqlValue)e).ValueType.Scale;
 						return true;
 					default:
+						if (e is ISqlExpression expr)
+						{
+							var type = expr.GetExpressionType();
+							context.DataType  = type.DataType;
+							context.DbType    = type.DbType;
+							context.Length    = type.Length;
+							context.Precision = type.Precision;
+							context.Scale     = type.Scale;
+							return true;
+						}
 						return false;
 				}
 			});
