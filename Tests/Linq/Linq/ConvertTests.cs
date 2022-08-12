@@ -286,7 +286,15 @@ namespace Tests.Linq
 		// providers disabled due to change in
 		// https://github.com/linq2db/linq2db/pull/3690
 		[Test]
-		public void ConvertToDecimal([DataSources(TestProvName.AllFirebird)] string context)
+		public void ConvertToDecimal([DataSources(
+			ProviderName.DB2,
+			TestProvName.AllFirebird,
+			TestProvName.AllSqlServer,
+			TestProvName.AllSybase,
+			TestProvName.AllOracle,
+			TestProvName.AllMySql,
+			ProviderName.SqlCe
+			)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -617,7 +625,13 @@ namespace Tests.Linq
 		{
 			// providers disabled due to change in
 			// https://github.com/linq2db/linq2db/pull/3690
-			var scaleLessDecimal = context.IsAnyOf(TestProvName.AllFirebird);
+			var scaleLessDecimal = context.IsAnyOf(
+				TestProvName.AllFirebird,
+				TestProvName.AllSybase,
+				TestProvName.AllOracle,
+				TestProvName.AllMySql,
+				ProviderName.SqlCe,
+				TestProvName.AllSqlServer);
 
 			using (var db = GetDataContext(context))
 			{
