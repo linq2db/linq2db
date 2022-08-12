@@ -283,8 +283,10 @@ namespace Tests.Linq
 					from p in from t in db.Types select (decimal)t.MoneyValue where p > 0 select p);
 		}
 
+		// providers disabled due to change in
+		// https://github.com/linq2db/linq2db/pull/3690
 		[Test]
-		public void ConvertToDecimal([DataSources] string context)
+		public void ConvertToDecimal([DataSources(TestProvName.AllFirebird)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -613,15 +615,22 @@ namespace Tests.Linq
 		[Test]
 		public void ConvertFromOneToAnother([DataSources] string context)
 		{
+			// providers disabled due to change in
+			// https://github.com/linq2db/linq2db/pull/3690
+			var scaleLessDecimal = context.IsAnyOf(TestProvName.AllFirebird);
+
 			using (var db = GetDataContext(context))
 			{
 				var decimalValue = 6579.64648m;
 				var floatValue   = 6579.64648f;
 				var doubleValue  = 6579.64648d;
 
-				AssertConvert(db, decimalValue, decimalValue);
-				AssertConvert(db, decimalValue, floatValue);
-				AssertConvert(db, decimalValue, doubleValue);
+				if (!scaleLessDecimal)
+				{
+					AssertConvert(db, decimalValue, decimalValue);
+					AssertConvert(db, decimalValue, floatValue);
+					AssertConvert(db, decimalValue, doubleValue);
+				}
 
 				AssertConvert(db, floatValue, decimalValue);
 				AssertConvert(db, floatValue, floatValue);
