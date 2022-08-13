@@ -1007,7 +1007,7 @@ namespace LinqToDB.Linq.Builder
 						e.Type.IsEnum && Enum.GetUnderlyingType(e.Type) == t)
 						return o;
 
-					return PseudoFunctions.MakeConvert(SqlDataType.GetDataType(e.Type), s, o);
+					return PseudoFunctions.MakeConvert(MappingSchema.GetDataType(e.Type), s, o);
 				}
 
 				case ExpressionType.Conditional:
