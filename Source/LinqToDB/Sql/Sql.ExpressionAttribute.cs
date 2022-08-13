@@ -192,11 +192,11 @@ namespace LinqToDB
 
 				bool? isNullabeParameters = isNullable switch
 				{
-					IsNullableType.SameAsFirstParameter     => SameAs(0),
-					IsNullableType.SameAsSecondParameter    => SameAs(1),
-					IsNullableType.SameAsThirdParameter     => SameAs(2),
-					IsNullableType.SameAsLastParameter      => SameAs(parameters.Length - 1),
-					IsNullableType.IfAnyParameterNullable   => parameters.Any(static p => p),
+					IsNullableType.SameAsFirstParameter => SameAs(0),
+					IsNullableType.SameAsSecondParameter => SameAs(1),
+					IsNullableType.SameAsThirdParameter  => SameAs(2),
+					IsNullableType.SameAsLastParameter  => SameAs(parameters.Length - 1),
+					IsNullableType.IfAnyParameterNullable  => parameters.Any(static p => p),
 					IsNullableType.IfAllParametersNullable  => parameters.All(static p => p),
 					_ => null
 				};

@@ -1959,7 +1959,7 @@ namespace LinqToDB.SqlProvider
 									be.SystemType,
 									be.Expr1,
 									be.Operation,
-									ConvertExpressionImpl(new SqlFunction(typeof(string), "Convert", new SqlDataType(DataType.VarChar, len), be.Expr2), visitor),
+									ConvertExpressionImpl(PseudoFunctions.MakeConvert(new SqlDataType(DataType.VarChar, typeof(string), len.Value), new SqlDataType(be.Expr2.GetExpressionType()), be.Expr2), visitor),
 									be.Precedence);
 							}
 
@@ -2536,6 +2536,7 @@ namespace LinqToDB.SqlProvider
 		protected virtual int? GetMaxScale      (SqlDataType type) { return SqlDataType.GetMaxScale      (type.Type.DataType); }
 		protected virtual int? GetMaxDisplaySize(SqlDataType type) { return SqlDataType.GetMaxDisplaySize(type.Type.DataType); }
 
+		// TODO v5: rename to ConvertConversion
 		/// <summary>
 		/// Implements <see cref="PseudoFunctions.CONVERT"/> function converter.
 		/// </summary>
@@ -2594,7 +2595,7 @@ namespace LinqToDB.SqlProvider
 		{
 			return new SqlFunction(typeof(bool), "CASE", expression, new SqlValue(true), new SqlValue(false))
 			{
-				CanBeNull     = false,
+				CanBeNull = false,
 				DoNotOptimize = true
 			};
 		}
