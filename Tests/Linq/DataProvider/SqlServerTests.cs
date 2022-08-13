@@ -142,15 +142,12 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<T>(sql), Is.EqualTo(expectedValue));
 			}
 
-			var addPrecision = expectedValue is decimal decValue && decValue is >= 10000000000000000000m or <= -10000000000000000000m;
-
 			Debug.WriteLine("{0} -> DataType.{1}",  typeof(T), dataType);
-			Assert.That(conn.Execute<T>("SELECT @p", new DataParameter { Name = "p", DataType = dataType, Value = expectedValue, Precision = addPrecision ? 38 : null }), Is.EqualTo(expectedValue));
+			Assert.That(conn.Execute<T>("SELECT @p", new DataParameter { Name = "p", DataType = dataType, Value = expectedValue }), Is.EqualTo(expectedValue));
 			Debug.WriteLine("{0} -> auto", typeof(T));
-			Assert.That(conn.Execute<T>("SELECT @p", new DataParameter { Name = "p", Value = expectedValue, Precision = addPrecision ? 38 : null }), Is.EqualTo(expectedValue));
+			Assert.That(conn.Execute<T>("SELECT @p", new DataParameter { Name = "p", Value = expectedValue }), Is.EqualTo(expectedValue));
 			Debug.WriteLine("{0} -> new",  typeof(T));
-			if (!addPrecision)
-				Assert.That(conn.Execute<T>("SELECT @p", new { p = expectedValue }), Is.EqualTo(expectedValue));
+			Assert.That(conn.Execute<T>("SELECT @p", new { p = expectedValue }), Is.EqualTo(expectedValue));
 		}
 
 		static void TestSimple<T>(DataConnection conn, T expectedValue, DataType dataType)
