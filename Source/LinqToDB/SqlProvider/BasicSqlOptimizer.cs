@@ -2536,6 +2536,7 @@ namespace LinqToDB.SqlProvider
 		protected virtual int? GetMaxScale      (SqlDataType type) { return SqlDataType.GetMaxScale      (type.Type.DataType); }
 		protected virtual int? GetMaxDisplaySize(SqlDataType type) { return SqlDataType.GetMaxDisplaySize(type.Type.DataType); }
 
+		// TODO v5: rename to ConvertConversion
 		/// <summary>
 		/// Implements <see cref="PseudoFunctions.CONVERT"/> function converter.
 		/// </summary>

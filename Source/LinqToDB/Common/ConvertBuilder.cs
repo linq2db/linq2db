@@ -134,7 +134,7 @@ namespace LinqToDB.Common
 			}
 		}
 
-		static Expression? GetConvertion(Type from, Type to, Expression p)
+		static Expression? GetConversion(Type from, Type to, Expression p)
 		{
 			if (IsConvertible(from) && IsConvertible(to) && to != typeof(bool) ||
 				from.IsAssignableFrom(to) && to.IsAssignableFrom(from))
@@ -520,7 +520,7 @@ namespace LinqToDB.Common
 				return Tuple.Create(ex, true);
 
 			ex =
-				GetConvertion       (from, to, expr) ??
+				GetConversion       (from, to, expr) ??
 				GetCtor             (from, to, expr) ??
 				GetValueOrDefault   (from, to, expr) ??
 				GetValue            (from, to, expr) ??
