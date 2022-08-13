@@ -1,5 +1,5 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-	<Import Project="$(MSBuildThisFileDirectory)\..\Build\linq2db.Default.props" />
+	<Import Project="$(MSBuildThisFileDirectory)\..\Directory.Build.props" />
 
 	<PropertyGroup>
 		<SignAssembly>False</SignAssembly>
