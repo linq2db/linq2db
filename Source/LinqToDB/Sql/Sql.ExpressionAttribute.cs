@@ -8,8 +8,7 @@ using JetBrains.Annotations;
 
 namespace LinqToDB
 {
-	using LinqToDB.Common;
-	using LinqToDB.Expressions;
+	using Expressions;
 	using Mapping;
 	using SqlQuery;
 

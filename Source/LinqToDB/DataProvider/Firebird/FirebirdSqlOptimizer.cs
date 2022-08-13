@@ -1,9 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace LinqToDB.DataProvider.Firebird
 {
-	using System.Collections.Generic;
 	using Extensions;
 	using Mapping;
 	using SqlProvider;
@@ -316,8 +316,8 @@ namespace LinqToDB.DataProvider.Firebird
 				// insert or update keys used in merge source select query
 				if (parents[i] is SqlSetExpression set
 					&& i == 2
-					&& (parents[i - 1] is SqlInsertClause || parents[i - 1] is SqlUpdateClause)
-					&& parents[i - 2] is SqlInsertOrUpdateStatement insertOrUpdate
+					&& (parents[1] is SqlInsertClause || parents[1] is SqlUpdateClause)
+					&& parents[0] is SqlInsertOrUpdateStatement insertOrUpdate
 					&& insertOrUpdate.Update.Keys.Any(k => k.Expression == set.Expression))
 					return true;
 
