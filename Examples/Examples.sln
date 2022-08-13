@@ -26,7 +26,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{64E5C3A3-6945-4422-91EC-0821E4D76D19}"
 	ProjectSection(SolutionItems) = preProject
 		Compile.cmd = Compile.cmd
-		linq2db.Examples.props = linq2db.Examples.props
+		Directory.Build.props = Directory.Build.props
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Source", "Source", "{03B313B1-C785-4FC9-A3C7-DE58295B7D20}"
