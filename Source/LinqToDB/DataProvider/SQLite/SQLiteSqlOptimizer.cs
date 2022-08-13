@@ -218,5 +218,21 @@ namespace LinqToDB.DataProvider.SQLite
 			          || type == typeof(DateTime?)
 			          || type == typeof(DateTimeOffset?);
 		}
+
+		protected override ISqlExpression ConvertConvertion(SqlFunction func)
+		{
+			if (!func.DoNotOptimize)
+			{
+				var from = (SqlDataType)func.Parameters[1];
+				var to   = (SqlDataType)func.Parameters[0];
+
+				// prevent same-type conversion removal as it is necessary in case of SQLite
+				// to ensure that we get proper type, because converted value could have any type actually
+				if (from.Type.EqualsDbOnly(to.Type))
+					func.DoNotOptimize = true;
+			}
+
+			return base.ConvertConvertion(func);
+		}
 	}
 }
