@@ -984,19 +984,22 @@ namespace LinqToDB.Linq.Builder
 
 					var o = ConvertToSql(context, e.Operand);
 
-					if (e.Method == null && e.IsLifted)
+					if (e.Method == null && (e.IsLifted || e.Type == typeof(object)))
 						return o;
 
 					if (e.Type == typeof(bool) && e.Operand.Type == typeof(SqlBoolean))
 						return o;
 
+					if (e.Type == typeof(Enum) && e.Operand.Type.IsEnum)
+						return o;
+
 					var t = e.Operand.Type;
-					var s = SqlDataType.GetDataType(t);
+					var s = MappingSchema.GetDataType(t);
 
 					if (o.SystemType != null && s.Type.SystemType == typeof(object))
 					{
 						t = o.SystemType;
-						s = SqlDataType.GetDataType(t);
+						s = MappingSchema.GetDataType(t);
 					}
 
 					if (e.Type == t ||

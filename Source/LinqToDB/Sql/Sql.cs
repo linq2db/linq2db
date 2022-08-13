@@ -967,7 +967,7 @@ namespace LinqToDB
 			public override ISqlExpression? GetExpression<TContext>(TContext context, IDataContext dataContext, SelectQuery query, Expression expression, Func<TContext, Expression, ColumnDescriptor?, ISqlExpression> converter)
 			{
 				var expressionStr = Expression;
-				PrepareParameterValues(expression, ref expressionStr, true, out var knownExpressions, true, out _);
+				PrepareParameterValues(context, dataContext.MappingSchema, expression, ref expressionStr, true, out var knownExpressions, true, out _, converter);
 
 				var arr = new ISqlExpression[knownExpressions.Count];
 
@@ -983,7 +983,7 @@ namespace LinqToDB
 					{
 						var len = arg.SystemType == null || arg.SystemType == typeof(object) ?
 							100 :
-							SqlDataType.GetMaxDisplaySize(SqlDataType.GetDataType(arg.SystemType).Type.DataType);
+							SqlDataType.GetMaxDisplaySize(dataContext.MappingSchema.GetDataType(arg.SystemType).Type.DataType);
 
 						arr[i] = PseudoFunctions.MakeConvert(new SqlDataType(DataType.VarChar, typeof(string), len, null, null, null), new SqlDataType(arg.GetExpressionType()), arg);
 					}

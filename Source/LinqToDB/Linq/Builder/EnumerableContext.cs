@@ -519,8 +519,7 @@ namespace LinqToDB.Linq.Builder
 						field = new SqlField(_elementType, "item", true);
 						var param = Expression.Parameter(typeof(object), "record");
 						var body = Expression.New(Methods.LinqToDB.Sql.SqlValueConstructor,
-							Expression.Constant(new DbDataType(_elementType,
-								ColumnDescriptor.CalculateDataType(Builder.MappingSchema, _elementType))),
+							Expression.Constant(ColumnDescriptor.CalculateDbDataType(Builder.MappingSchema, _elementType)),
 							param);
 
 						var getterLambda = Expression.Lambda<Func<object, ISqlExpression>>(body, param);

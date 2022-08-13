@@ -1619,7 +1619,7 @@ namespace LinqToDB.Mapping
 					}
 
 					if (valueType == null)
-						return SqlDataType.Undefined;
+						return SqlDataType.GetDataType(type);
 
 					var dt = GetDataType(valueType);
 

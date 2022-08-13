@@ -33,7 +33,7 @@ namespace LinqToDB.SqlProvider
 
 		#region ISqlOptimizer Members
 
-		public virtual SqlStatement Finalize(SqlStatement statement)
+		public virtual SqlStatement Finalize(MappingSchema mappingSchema, SqlStatement statement)
 		{
 			FixRootSelect (statement);
 			FixEmptySelect(statement);
@@ -55,11 +55,11 @@ namespace LinqToDB.SqlProvider
 			);
 
 			statement.WalkQueries(
-				(context: this, evaluationContext),
+				(context: this, evaluationContext, mappingSchema),
 				static (context, selectQuery) =>
 				{
-					if (!context.context.SqlProviderFlags.IsCountSubQuerySupported)  selectQuery = context.context.MoveCountSubQuery (selectQuery, context.evaluationContext);
-					if (!context.context.SqlProviderFlags.IsSubQueryColumnSupported) selectQuery = context.context.MoveSubQueryColumn(selectQuery, context.evaluationContext);
+					if (!context.context.SqlProviderFlags.IsCountSubQuerySupported)  selectQuery = context.context.MoveCountSubQuery (context.mappingSchema, selectQuery, context.evaluationContext);
+					if (!context.context.SqlProviderFlags.IsSubQueryColumnSupported) selectQuery = context.context.MoveSubQueryColumn(context.mappingSchema, selectQuery, context.evaluationContext);
 
 					return selectQuery;
 				}
@@ -446,13 +446,13 @@ namespace LinqToDB.SqlProvider
 			return result;
 		}
 
-		SelectQuery MoveCountSubQuery(SelectQuery selectQuery, EvaluationContext context)
+		SelectQuery MoveCountSubQuery(MappingSchema mappingSchema, SelectQuery selectQuery, EvaluationContext context)
 		{
-			selectQuery.Visit((context, optimizer: this), static (context, e) => context.optimizer.MoveCountSubQuery(e, context.context));
+			selectQuery.Visit((context, optimizer: this, mappingSchema), static (context, e) => context.optimizer.MoveCountSubQuery(context.mappingSchema, e, context.context));
 			return selectQuery;
 		}
 
-		void MoveCountSubQuery(IQueryElement element, EvaluationContext context)
+		void MoveCountSubQuery(MappingSchema mappingSchema, IQueryElement element, EvaluationContext context)
 		{
 			if (element.ElementType != QueryElementType.SqlQuery)
 				return;
@@ -486,7 +486,7 @@ namespace LinqToDB.SqlProvider
 					// Check if subquery where clause does not have ORs.
 					//
 					subQuery.Where.SearchCondition = (SqlSearchCondition)OptimizeElement(
-						null,
+						mappingSchema,
 						subQuery.Where.SearchCondition,
 						new OptimizationContext(context, new AliasesContext(), false),
 						false)!;
@@ -629,9 +629,9 @@ namespace LinqToDB.SqlProvider
 			return true;
 		}
 
-		SelectQuery MoveSubQueryColumn(SelectQuery selectQuery, EvaluationContext context)
+		SelectQuery MoveSubQueryColumn(MappingSchema mappingSchema, SelectQuery selectQuery, EvaluationContext context)
 		{
-			selectQuery.Visit((context, optimizer: this), static (context, element) =>
+			selectQuery.Visit((context, optimizer: this, mappingSchema), static (context, element) =>
 			{
 				if (element.ElementType != QueryElementType.SqlQuery)
 					return;
@@ -679,7 +679,7 @@ namespace LinqToDB.SqlProvider
 						query.From.Tables[0].Joins.Add(join.JoinedTable);
 
 						subQuery.Where.SearchCondition = (SqlSearchCondition)context.optimizer.OptimizeElement(
-							null,
+							context.mappingSchema,
 							subQuery.Where.SearchCondition,
 							new OptimizationContext(context.context, new AliasesContext(), false),
 							false)!;
@@ -1618,8 +1618,6 @@ namespace LinqToDB.SqlProvider
 					if (value.Value is Sql.SqlID)
 						break;
 
-					if (visitor.Context.MappingSchema != null)
-					{
 					// TODO:
 					// this line produce insane amount of allocations
 					// as currently we cannot change ValueConverter signatures, we use pre-created instance of type wrapper
@@ -1631,7 +1629,6 @@ namespace LinqToDB.SqlProvider
 						// we cannot generate SQL literal, so just convert to parameter
 						var param = visitor.Context.OptimizationContext.SuggestDynamicParameter(value.ValueType, "value", value.Value);
 						return param;
-					}
 					}
 
 					break;
@@ -1953,7 +1950,7 @@ namespace LinqToDB.SqlProvider
 						{
 							if (be.Expr1.SystemType == typeof(string) && be.Expr2.SystemType != typeof(string))
 							{
-								var len = be.Expr2.SystemType == null ? 100 : SqlDataType.GetMaxDisplaySize(SqlDataType.GetDataType(be.Expr2.SystemType).Type.DataType);
+								var len = be.Expr2.SystemType == null ? 100 : SqlDataType.GetMaxDisplaySize(visitor.Context.MappingSchema.GetDataType(be.Expr2.SystemType).Type.DataType);
 
 								if (len == null || len <= 0)
 									len = 100;
@@ -1968,7 +1965,7 @@ namespace LinqToDB.SqlProvider
 
 							if (be.Expr1.SystemType != typeof(string) && be.Expr2.SystemType == typeof(string))
 							{
-								var len = be.Expr1.SystemType == null ? 100 : SqlDataType.GetMaxDisplaySize(SqlDataType.GetDataType(be.Expr1.SystemType).Type.DataType);
+								var len = be.Expr1.SystemType == null ? 100 : SqlDataType.GetMaxDisplaySize(visitor.Context.MappingSchema.GetDataType(be.Expr1.SystemType).Type.DataType);
 
 								if (len == null || len <= 0)
 									len = 100;
@@ -2045,7 +2042,7 @@ namespace LinqToDB.SqlProvider
 			public RunOptimizationContext(
 				OptimizationContext optimizationContext,
 				BasicSqlOptimizer   optimizer,
-				MappingSchema?      mappingSchema,
+				MappingSchema       mappingSchema,
 				bool                register,
 				Func<ConvertVisitor<RunOptimizationContext>, IQueryElement, IQueryElement> func)
 			{
@@ -2059,7 +2056,7 @@ namespace LinqToDB.SqlProvider
 			public readonly OptimizationContext OptimizationContext;
 			public readonly BasicSqlOptimizer   Optimizer;
 			public readonly bool                Register;
-			public readonly MappingSchema?      MappingSchema;
+			public readonly MappingSchema       MappingSchema;
 
 			public readonly Func<ConvertVisitor<RunOptimizationContext>, IQueryElement, IQueryElement> Func;
 		}
@@ -2068,7 +2065,7 @@ namespace LinqToDB.SqlProvider
 			IQueryElement       element,
 			OptimizationContext optimizationContext,
 			BasicSqlOptimizer   optimizer,
-			MappingSchema?      mappingSchema,
+			MappingSchema       mappingSchema,
 			bool                register,
 			Func<ConvertVisitor<RunOptimizationContext>,IQueryElement,IQueryElement> func)
 		{
@@ -2115,7 +2112,7 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
-		public IQueryElement? OptimizeElement(MappingSchema? mappingSchema, IQueryElement? element, OptimizationContext optimizationContext, bool withConversion)
+		public IQueryElement? OptimizeElement(MappingSchema mappingSchema, IQueryElement? element, OptimizationContext optimizationContext, bool withConversion)
 		{
 			if (element == null)
 				return null;
@@ -2202,11 +2199,11 @@ namespace LinqToDB.SqlProvider
 				case QueryElementType.IsTruePredicate:
 					return ((SqlPredicate.IsTrue)predicate).Reduce();
 				case QueryElementType.LikePredicate:
-					return ConvertLikePredicate(visitor.Context.MappingSchema!, (SqlPredicate.Like)predicate, visitor.Context.OptimizationContext.Context);
+					return ConvertLikePredicate(visitor.Context.MappingSchema, (SqlPredicate.Like)predicate, visitor.Context.OptimizationContext.Context);
 				case QueryElementType.SearchStringPredicate:
 					return ConvertSearchStringPredicate((SqlPredicate.SearchString)predicate, visitor);
 				case QueryElementType.InListPredicate:
-					return ConvertInListPredicate(visitor.Context.MappingSchema!, (SqlPredicate.InList)predicate, visitor.Context.OptimizationContext.Context);
+					return ConvertInListPredicate(visitor.Context.MappingSchema, (SqlPredicate.InList)predicate, visitor.Context.OptimizationContext.Context);
 			}
 			return predicate;
 		}
@@ -2283,8 +2280,7 @@ namespace LinqToDB.SqlProvider
 		{
 			var newExpr = expression;
 
-			if (escape == null)
-				escape = new SqlValue(LikeEscapeCharacter);
+			escape ??= new SqlValue(LikeEscapeCharacter);
 
 			newExpr = GenerateEscapeReplacement(newExpr, escape, escape);
 
@@ -2548,7 +2544,7 @@ namespace LinqToDB.SqlProvider
 			var from = (SqlDataType)func.Parameters[1];
 			var to   = (SqlDataType)func.Parameters[0];
 
-			if (to.Type.SystemType == typeof(object))
+			if (!func.DoNotOptimize && (to.Type.SystemType == typeof(object) || from.Type.EqualsDbOnly(to.Type)))
 				return func.Parameters[2];
 
 			if (to.Type.Length > 0)
@@ -2559,7 +2555,7 @@ namespace LinqToDB.SqlProvider
 				if (to.Type.Length != newLength)
 					to = new SqlDataType(to.Type.WithLength(newLength));
 			}
-			else if (from.Type.SystemType == typeof(short) && to.Type.SystemType == typeof(int))
+			else if (!func.DoNotOptimize && from.Type.SystemType == typeof(short) && to.Type.SystemType == typeof(int))
 				return func.Parameters[2];
 
 			return new SqlFunction(func.SystemType, "Convert", false, true, to, func.Parameters[2])

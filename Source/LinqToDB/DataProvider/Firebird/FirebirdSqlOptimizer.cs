@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace LinqToDB.DataProvider.Firebird
@@ -14,19 +15,19 @@ namespace LinqToDB.DataProvider.Firebird
 		{
 		}
 
-		public override SqlStatement Finalize(SqlStatement statement)
+		public override SqlStatement Finalize(MappingSchema mappingSchema, SqlStatement statement)
 		{
 			CheckAliases(statement, int.MaxValue);
 
-			statement = base.Finalize(statement);
+			statement = base.Finalize(mappingSchema, statement);
 
 			return statement;
 		}
 
 		protected static string[] LikeFirebirdEscapeSymbols = { "_", "%" };
 
-		public override string[] LikeCharactersToEscape    => LikeFirebirdEscapeSymbols;
-		public override bool     LikeValueParameterSupport => false;
+		public override string[] LikeCharactersToEscape => LikeFirebirdEscapeSymbols;
+		public override bool LikeValueParameterSupport => false;
 
 
 		public override bool IsParameterDependedElement(IQueryElement element)
@@ -38,22 +39,22 @@ namespace LinqToDB.DataProvider.Firebird
 			switch (element.ElementType)
 			{
 				case QueryElementType.LikePredicate:
-				{
-					var like = (SqlPredicate.Like)element;
-					if (like.Expr1.ElementType != QueryElementType.SqlValue ||
-					    like.Expr2.ElementType != QueryElementType.SqlValue)
-						return true;
-					break;
-				}
+					{
+						var like = (SqlPredicate.Like)element;
+						if (like.Expr1.ElementType != QueryElementType.SqlValue ||
+							like.Expr2.ElementType != QueryElementType.SqlValue)
+							return true;
+						break;
+					}
 
 				case QueryElementType.SearchStringPredicate:
-				{
-					var containsPredicate = (SqlPredicate.SearchString)element;
-					if (containsPredicate.Expr1.ElementType != QueryElementType.SqlValue || containsPredicate.Expr2.ElementType != QueryElementType.SqlValue)
-						return true;
+					{
+						var containsPredicate = (SqlPredicate.SearchString)element;
+						if (containsPredicate.Expr1.ElementType != QueryElementType.SqlValue || containsPredicate.Expr2.ElementType != QueryElementType.SqlValue)
+							return true;
 
-					return false;
-				}
+						return false;
+					}
 
 			}
 
@@ -70,71 +71,71 @@ namespace LinqToDB.DataProvider.Firebird
 			switch (predicate.Kind)
 			{
 				case SqlPredicate.SearchString.SearchKind.EndsWith:
-				{
-					if (caseSensitive == false)
 					{
-						predicate = new SqlPredicate.SearchString(
-							PseudoFunctions.MakeToLower(predicate.Expr1),
-							predicate.IsNot,
-							PseudoFunctions.MakeToLower(predicate.Expr2), predicate.Kind,
-							predicate.CaseSensitive);
-					}
-					else if (caseSensitive == true)
-					{
-						predicate = new SqlPredicate.SearchString(
-							new SqlExpression(typeof(string), "CAST({0} AS BLOB)", Precedence.Primary, predicate.Expr1),
-							predicate.IsNot,
-							predicate.Expr2,
-							predicate.Kind,
-							predicate.CaseSensitive);
-					}
-
-					return ConvertSearchStringPredicateViaLike(predicate, visitor);
-				}	
-				case SqlPredicate.SearchString.SearchKind.StartsWith:
-				{
-					expr = new SqlExpression(typeof(bool),
-						predicate.IsNot ? "{0} NOT STARTING WITH {1}" : "{0} STARTING WITH {1}",
-						Precedence.Comparison,
-						TryConvertToValue(
-							caseSensitive == false
-								? PseudoFunctions.MakeToLower(predicate.Expr1)
-								: caseSensitive == true
-									? new SqlExpression(typeof(string), "CAST({0} AS BLOB)", Precedence.Primary, predicate.Expr1)
-									: predicate.Expr1,
-							visitor.Context.OptimizationContext.Context),
-						TryConvertToValue(
-							caseSensitive == false
-								? PseudoFunctions.MakeToLower(predicate.Expr2)
-								: predicate.Expr2, visitor.Context.OptimizationContext.Context)) {CanBeNull = false};
-					break;
-				}	
-				case SqlPredicate.SearchString.SearchKind.Contains:
-				{
-					if (caseSensitive == false)
-					{
-						expr = new SqlExpression(typeof(bool),
-							predicate.IsNot ? "{0} NOT CONTAINING {1}" : "{0} CONTAINING {1}",
-							Precedence.Comparison,
-							TryConvertToValue(predicate.Expr1, visitor.Context.OptimizationContext.Context),
-							TryConvertToValue(predicate.Expr2, visitor.Context.OptimizationContext.Context)) {CanBeNull = false};
-					}
-					else
-					{
-						if (caseSensitive == true)
+						if (caseSensitive == false)
+						{
+							predicate = new SqlPredicate.SearchString(
+								PseudoFunctions.MakeToLower(predicate.Expr1),
+								predicate.IsNot,
+								PseudoFunctions.MakeToLower(predicate.Expr2), predicate.Kind,
+								predicate.CaseSensitive);
+						}
+						else if (caseSensitive == true)
 						{
 							predicate = new SqlPredicate.SearchString(
 								new SqlExpression(typeof(string), "CAST({0} AS BLOB)", Precedence.Primary, predicate.Expr1),
 								predicate.IsNot,
 								predicate.Expr2,
 								predicate.Kind,
-								new SqlValue(false));
+								predicate.CaseSensitive);
 						}
 
 						return ConvertSearchStringPredicateViaLike(predicate, visitor);
 					}
-					break;
-				}	
+				case SqlPredicate.SearchString.SearchKind.StartsWith:
+					{
+						expr = new SqlExpression(typeof(bool),
+							predicate.IsNot ? "{0} NOT STARTING WITH {1}" : "{0} STARTING WITH {1}",
+							Precedence.Comparison,
+							TryConvertToValue(
+								caseSensitive == false
+									? PseudoFunctions.MakeToLower(predicate.Expr1)
+									: caseSensitive == true
+										? new SqlExpression(typeof(string), "CAST({0} AS BLOB)", Precedence.Primary, predicate.Expr1)
+										: predicate.Expr1,
+								visitor.Context.OptimizationContext.Context),
+							TryConvertToValue(
+								caseSensitive == false
+									? PseudoFunctions.MakeToLower(predicate.Expr2)
+									: predicate.Expr2, visitor.Context.OptimizationContext.Context)) { CanBeNull = false };
+						break;
+					}
+				case SqlPredicate.SearchString.SearchKind.Contains:
+					{
+						if (caseSensitive == false)
+						{
+							expr = new SqlExpression(typeof(bool),
+								predicate.IsNot ? "{0} NOT CONTAINING {1}" : "{0} CONTAINING {1}",
+								Precedence.Comparison,
+								TryConvertToValue(predicate.Expr1, visitor.Context.OptimizationContext.Context),
+								TryConvertToValue(predicate.Expr2, visitor.Context.OptimizationContext.Context)) { CanBeNull = false };
+						}
+						else
+						{
+							if (caseSensitive == true)
+							{
+								predicate = new SqlPredicate.SearchString(
+									new SqlExpression(typeof(string), "CAST({0} AS BLOB)", Precedence.Primary, predicate.Expr1),
+									predicate.IsNot,
+									predicate.Expr2,
+									predicate.Kind,
+									new SqlValue(false));
+							}
+
+							return ConvertSearchStringPredicateViaLike(predicate, visitor);
+						}
+						break;
+					}
 				default:
 					throw new InvalidOperationException($"Unexpected predicate: {predicate.Kind}");
 			}
@@ -148,7 +149,7 @@ namespace LinqToDB.DataProvider.Firebird
 			{
 				QueryType.Delete => GetAlternativeDelete((SqlDeleteStatement)statement),
 				QueryType.Update => GetAlternativeUpdate((SqlUpdateStatement)statement),
-				_                => statement,
+				_ => statement,
 			};
 		}
 
@@ -159,45 +160,45 @@ namespace LinqToDB.DataProvider.Firebird
 			switch (newExpr.ElementType)
 			{
 				case QueryElementType.SqlFunction:
-				{
-					var func = (SqlFunction)newExpr;
-
-					switch (func.Name)
 					{
-						case "Convert":
-						{
-							if (func.SystemType.ToUnderlying() == typeof(bool))
-							{
-								var ex = AlternativeConvertToBoolean(func, 1);
-								if (ex != null)
-									return ex;
-							}
-							break;
-						}
-						case PseudoFunctions.CONVERT:
-						{
-							if (func.SystemType.ToUnderlying() == typeof(bool))
-							{
-								var ex = AlternativeConvertToBoolean(func, 2);
-								if (ex != null)
-									return ex;
-							}
-							else  if (func.SystemType.ToUnderlying() == typeof(string) && func.Parameters[2].SystemType?.ToUnderlying() == typeof(Guid))
-								return new SqlFunction(func.SystemType, "UUID_TO_CHAR", false, true, func.Parameters[2])
-								{
-									CanBeNull = func.CanBeNull
-								};
-							else if (func.SystemType.ToUnderlying() == typeof(Guid) && func.Parameters[2].SystemType?.ToUnderlying() == typeof(string))
-								return new SqlFunction(func.SystemType, "CHAR_TO_UUID", false, true, func.Parameters[2])
-								{
-									CanBeNull = func.CanBeNull
-								};
-							break;
-						}
-					}
+						var func = (SqlFunction)newExpr;
 
-					break;
-				}
+						switch (func.Name)
+						{
+							case "Convert":
+								{
+									if (func.SystemType.ToUnderlying() == typeof(bool))
+									{
+										var ex = AlternativeConvertToBoolean(func, 1);
+										if (ex != null)
+											return ex;
+									}
+									break;
+								}
+							case PseudoFunctions.CONVERT:
+								{
+									if (func.SystemType.ToUnderlying() == typeof(bool))
+									{
+										var ex = AlternativeConvertToBoolean(func, 2);
+										if (ex != null)
+											return ex;
+									}
+									else if (func.SystemType.ToUnderlying() == typeof(string) && func.Parameters[2].SystemType?.ToUnderlying() == typeof(Guid))
+										return new SqlFunction(func.SystemType, "UUID_TO_CHAR", false, true, func.Parameters[2])
+										{
+											CanBeNull = func.CanBeNull
+										};
+									else if (func.SystemType.ToUnderlying() == typeof(Guid) && func.Parameters[2].SystemType?.ToUnderlying() == typeof(string))
+										return new SqlFunction(func.SystemType, "CHAR_TO_UUID", false, true, func.Parameters[2])
+										{
+											CanBeNull = func.CanBeNull
+										};
+									break;
+								}
+						}
+
+						break;
+					}
 			}
 
 			return newExpr;
@@ -222,7 +223,7 @@ namespace LinqToDB.DataProvider.Firebird
 			{
 				switch (func.Name)
 				{
-					case "Convert" :
+					case "Convert":
 						return new SqlExpression(func.SystemType, CASTEXPR, Precedence.Primary, FloorBeforeConvert(func), func.Parameters[0]);
 				}
 			}
@@ -233,7 +234,7 @@ namespace LinqToDB.DataProvider.Firebird
 		protected override ISqlExpression ConvertFunction(SqlFunction func)
 		{
 			func = ConvertFunctionParameters(func, false);
-			
+
 			return base.ConvertFunction(func);
 		}
 
@@ -267,64 +268,17 @@ namespace LinqToDB.DataProvider.Firebird
 
 					// Don't cast in cast
 					if (visitor.ParentElement is SqlFunction convertFunc && convertFunc.Name == PseudoFunctions.CONVERT)
+					{
+						// prevent removal by ConvertConvertion
+						if (!convertFunc.DoNotOptimize)
+							convertFunc.DoNotOptimize = CastRequired(visitor.Stack);
 						return e;
+					}
 
 					if (paramValue.DbDataType.SystemType == typeof(bool) && visitor.ParentElement is SqlFunction func && func.Name == "CASE")
 						return e;
 
-					var replace = false;
-					for (var i = visitor.Stack.Count - 1; i >= 0; i--)
-					{
-						// went outside of subquery, mission abort
-						if (visitor.Stack[i] is SelectQuery)
-							return e;
-
-						// part of select column
-						if (visitor.Stack[i] is SqlColumn)
-						{
-							replace = true;
-							break;
-						}
-
-						// part of output clause
-						if (visitor.Stack[i] is SqlOutputClause)
-						{
-							replace = true;
-							break;
-						}
-
-						// insert or update keys used in merge source select query
-						if (visitor.Stack[i] is SqlSetExpression set
-							&& i == 2
-							&& (visitor.Stack[i - 1] is SqlInsertClause || visitor.Stack[i - 1] is SqlUpdateClause)
-							&& visitor.Stack[i - 2] is SqlInsertOrUpdateStatement insertOrUpdate
-							&& insertOrUpdate.Update.Keys.Any(k => k.Expression == set.Expression))
-						{
-							replace = true;
-							break;
-						}
-
-						// enumerable merge source
-						if (visitor.Stack[i] is SqlValuesTable)
-						{
-							replace = true;
-							break;
-						}
-
-						// complex insert/update statement, including merge
-						if (visitor.Stack[i] is SqlSetExpression
-							&& i >= 2
-							&& i < visitor.Stack.Count - 1 // not just parameter setter
-							&& (visitor.Stack[i - 1] is SqlUpdateClause
-								|| visitor.Stack[i - 1] is SqlInsertClause
-								|| visitor.Stack[i - 1] is SqlMergeOperationClause))
-						{
-							replace = true;
-							break;
-						}
-					}
-
-					if (!replace)
+					if (!CastRequired(visitor.Stack))
 						return e;
 
 					// TODO: temporary guard against cast to unknown type (Variant)
@@ -341,6 +295,47 @@ namespace LinqToDB.DataProvider.Firebird
 			}, withStack: true);
 
 			return statement;
+		}
+
+		private static bool CastRequired(IReadOnlyList<IQueryElement> parents)
+		{
+			for (var i = parents.Count - 1; i >= 0; i--)
+			{
+				// went outside of subquery, mission abort
+				if (parents[i] is SelectQuery)
+					return false;
+
+				// part of select column
+				if (parents[i] is SqlColumn)
+					return true;
+
+				// part of output clause
+				if (parents[i] is SqlOutputClause)
+					return true;
+
+				// insert or update keys used in merge source select query
+				if (parents[i] is SqlSetExpression set
+					&& i == 2
+					&& (parents[1] is SqlInsertClause || parents[1] is SqlUpdateClause)
+					&& parents[0] is SqlInsertOrUpdateStatement insertOrUpdate
+					&& insertOrUpdate.Update.Keys.Any(k => k.Expression == set.Expression))
+					return true;
+
+				// enumerable merge source
+				if (parents[i] is SqlValuesTable)
+					return true;
+
+				// complex insert/update statement, including merge
+				if (parents[i] is SqlSetExpression
+					&& i >= 2
+					&& i < parents.Count - 1 // not just parameter setter
+					&& (parents[i - 1] is SqlUpdateClause
+						|| parents[i - 1] is SqlInsertClause
+						|| parents[i - 1] is SqlMergeOperationClause))
+					return true;
+			}
+
+			return false;
 		}
 
 		private const string CASTEXPR = "Cast({0} as {1})";
