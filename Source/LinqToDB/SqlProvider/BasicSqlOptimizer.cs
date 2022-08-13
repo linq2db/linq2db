@@ -2545,7 +2545,7 @@ namespace LinqToDB.SqlProvider
 			var from = (SqlDataType)func.Parameters[1];
 			var to   = (SqlDataType)func.Parameters[0];
 
-			if (to.Type.SystemType == typeof(object))
+			if (to.Type.SystemType == typeof(object) || from.Type.EqualsDbOnly(to.Type))
 				return func.Parameters[2];
 
 			if (to.Type.Length > 0)

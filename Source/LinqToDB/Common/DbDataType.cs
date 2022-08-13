@@ -110,6 +110,15 @@ namespace LinqToDB.Common
 				&& string.Equals(DbType, other.DbType);
 		}
 
+		public bool EqualsDbOnly(DbDataType other)
+		{
+			return DataType   == other.DataType
+				&& Length     == other.Length
+				&& Precision  == other.Precision
+				&& Scale      == other.Scale
+				&& string.Equals(DbType, other.DbType);
+		}
+
 		public override bool Equals(object? obj)
 		{
 			if (obj is null) return false;
