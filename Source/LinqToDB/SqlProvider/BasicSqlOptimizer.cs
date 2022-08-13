@@ -2280,8 +2280,7 @@ namespace LinqToDB.SqlProvider
 		{
 			var newExpr = expression;
 
-			if (escape == null)
-				escape = new SqlValue(LikeEscapeCharacter);
+			escape ??= new SqlValue(LikeEscapeCharacter);
 
 			newExpr = GenerateEscapeReplacement(newExpr, escape, escape);
 
@@ -2545,7 +2544,7 @@ namespace LinqToDB.SqlProvider
 			var from = (SqlDataType)func.Parameters[1];
 			var to   = (SqlDataType)func.Parameters[0];
 
-			if (to.Type.SystemType == typeof(object) || from.Type.EqualsDbOnly(to.Type))
+			if (!func.DoNotOptimize && (to.Type.SystemType == typeof(object) || from.Type.EqualsDbOnly(to.Type)))
 				return func.Parameters[2];
 
 			if (to.Type.Length > 0)
@@ -2556,7 +2555,7 @@ namespace LinqToDB.SqlProvider
 				if (to.Type.Length != newLength)
 					to = new SqlDataType(to.Type.WithLength(newLength));
 			}
-			else if (from.Type.SystemType == typeof(short) && to.Type.SystemType == typeof(int))
+			else if (!func.DoNotOptimize && from.Type.SystemType == typeof(short) && to.Type.SystemType == typeof(int))
 				return func.Parameters[2];
 
 			return new SqlFunction(func.SystemType, "Convert", false, true, to, func.Parameters[2])
