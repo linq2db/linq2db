@@ -32,6 +32,7 @@ namespace Tests.Linq
 			[Column(IsPrimaryKey = true)]
 			public int Id    { get; set; }
 			[Column] public int Value { get; set; }
+			[Column(DataType = DataType.NVarChar, Configuration = ProviderName.ClickHouse)]
 			[Column(Length = 50, DataType = DataType.Char)]
 			public string StrValue { get; set; } = null!;
 
@@ -170,6 +171,8 @@ namespace Tests.Linq
 		[Test]
 		public void EndsWithTests([DataSources(false, TestProvName.AllSybase)] string context)
 		{
+			var skipTrim = context.IsAnyOf(TestProvName.AllClickHouse);
+
 			using var d1 = new DisableBaseline("Multi-threading");
 			using var d2 = new DisableLogging();
 
@@ -184,7 +187,9 @@ namespace Tests.Linq
 				ConcurrentRunner(db, context, 10,
 					(threadDb, p) =>
 					{
-						var query = threadDb.GetTable<MultiThreadedData>().Where(x => x.StrValue.Trim().EndsWith(p));
+						var query = skipTrim
+							? threadDb.GetTable<MultiThreadedData>().Where(x => x.StrValue.EndsWith(p))
+							: threadDb.GetTable<MultiThreadedData>().Where(x => x.StrValue.Trim().EndsWith(p));
 						return query.Select(q => q.StrValue).ToArray();
 					}, (result, p) =>
 					{

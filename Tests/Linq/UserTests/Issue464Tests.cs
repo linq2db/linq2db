@@ -1,4 +1,5 @@
-﻿
+﻿using System.Globalization;
+
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
@@ -25,6 +26,7 @@ namespace Tests.UserTests
 			schema.SetConvertExpression<MyInt,   int>          (x => x.Value);
 			schema.SetConvertExpression<int,     MyInt>        (x => new MyInt { Value = x });
 			schema.SetConvertExpression<long,    MyInt>        (x => new MyInt { Value = (int)x }); //SQLite
+			schema.SetConvertExpression<string,  MyInt>        (x => new MyInt { Value = int.Parse(x, CultureInfo.InvariantCulture) }); //ClickHouse.MySql
 			schema.SetConvertExpression<decimal, MyInt>        (x => new MyInt { Value = (int)x }); //Oracle
 			schema.SetConvertExpression<MyInt,   DataParameter>(x => new DataParameter { DataType = DataType.Int32, Value = x.Value });
 

@@ -31,6 +31,7 @@ namespace Tests.xUpdate
 					.Value(c => Sql.Property<int>(c, ParentIDColumn), () => 1)
 					.Value(c => Sql.Property<int>(c, ChildIDColumn), () => id)
 					.Insert();
+				if (!context.IsAnyOf(TestProvName.AllClickHouse))
 					Assert.AreEqual(1, cnt);
 
 				Assert.AreEqual(1, db.Child.Count(c => Sql.Property<int>(c, ChildIDColumn) == id));
@@ -38,7 +39,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateViaSqlProperty([DataSources(TestProvName.AllInformix)] string context)
+		public void UpdateViaSqlProperty([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new RestoreBaseTables(db))
@@ -59,7 +60,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateViaSqlPropertyValue([DataSources(TestProvName.AllInformix)] string context)
+		public void UpdateViaSqlPropertyValue([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new RestoreBaseTables(db))
@@ -94,6 +95,7 @@ namespace Tests.xUpdate
 					.Value(c => Sql.Property<string>(c, lastNameColumn), () => "The Dynamic")
 					.Value(c => Sql.Property<Gender>(c, "Gender"), () => Gender.Male)
 					.Insert();
+				if (!context.IsAnyOf(TestProvName.AllClickHouse))
 					Assert.AreEqual(1, cnt);
 
 				Assert.AreEqual(1,
@@ -121,6 +123,7 @@ namespace Tests.xUpdate
 						.Where(c => Sql.Property<string>(c, "LastName") == "Limonadovy")
 						.Set(c => Sql.Property<string>(c, "FirstName"), () => "Johnny")
 						.Update();
+				if (!context.IsAnyOf(TestProvName.AllClickHouse))
 					Assert.AreEqual(1, cnt);
 
 				Assert.AreEqual(1, db.GetTable<MyClass>().Count(c => Sql.Property<string>(c, "FirstName") == "Johnny" && Sql.Property<string>(c, "LastName") == "Limonadovy"));

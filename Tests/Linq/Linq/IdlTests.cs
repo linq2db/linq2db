@@ -18,9 +18,16 @@ namespace Tests.Linq
 		[AttributeUsage(AttributeTargets.Parameter, AllowMultiple = false)]
 		public class IdlProvidersAttribute : IncludeDataSourcesAttribute
 		{
-			public IdlProvidersAttribute()
-				: base(TestProvName.AllMySql, TestProvName.AllSQLite, TestProvName.AllSqlServer,
-					TestProvName.AllAccess)
+			private static readonly string[] Supported = new[]
+			{
+				TestProvName.AllMySql,
+				TestProvName.AllSQLite,
+				TestProvName.AllClickHouse,
+				TestProvName.AllSqlServer,
+				TestProvName.AllAccess
+			};
+			public IdlProvidersAttribute(params string[] except)
+				: base(Split(Supported).Except(Split(except)).ToArray())
 			{
 			}
 		}
@@ -531,13 +538,13 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestUpdateWithTargetByAssociationProperty([IdlProviders] string context)
+		public void TestUpdateWithTargetByAssociationProperty([IdlProviders(TestProvName.AllClickHouse)] string context)
 		{
 			TestUpdateByAssociationProperty(context, true);
 		}
 
 		[Test]
-		public void TestSetUpdateWithoutTargetByAssociationProperty([IdlProviders] string context)
+		public void TestSetUpdateWithoutTargetByAssociationProperty([IdlProviders(TestProvName.AllClickHouse)] string context)
 		{
 			TestUpdateByAssociationProperty(context, false);
 		}

@@ -153,9 +153,12 @@ namespace Tests.Linq
 
 		[Test]
 		public void TakeHint(
-			[IncludeDataSources(TestProvName.AllSqlServer)] string context,
+			[IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context,
 			[Values(TakeHints.Percent, TakeHints.WithTies, TakeHints.Percent | TakeHints.WithTies)] TakeHints takeHint)
 		{
+			if (takeHint.HasFlag(TakeHints.Percent) && context.IsAnyOf(TestProvName.AllClickHouse))
+				Assert.Inconclusive($"ClickHouse doesn't support '{takeHint}' hint");
+
 			using (var db = GetDataContext(context))
 			{
 				var query =

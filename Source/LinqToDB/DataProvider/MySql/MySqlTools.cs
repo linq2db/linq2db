@@ -18,7 +18,8 @@ namespace LinqToDB.DataProvider.MySql
 
 		internal static IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)
 		{
-			if (css.IsGlobal)
+			// ensure ClickHouse configuration over mysql protocol is not detected as mysql
+			if (css.IsGlobal || css.ProviderName?.Contains("ClickHouse") == true || css.Name.Contains("ClickHouse"))
 				return null;
 
 			switch (css.ProviderName)

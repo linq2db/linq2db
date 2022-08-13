@@ -52,7 +52,9 @@ namespace Tests.xUpdate
 			public double? FieldDouble;
 
 			[Column("FieldDateTime", Configuration = ProviderName.Sybase, DataType = DataType.DateTime)]
+			[Column("FieldDateTime", Configuration = ProviderName.ClickHouse, DataType = DataType.DateTime64, Precision = 3)]
 			[Column("FieldDateTime")]
+			[Column(Configuration = ProviderName.ClickHouse, DataType = DataType.DateTime2, Precision = 3)]
 			public DateTime? FieldDateTime;
 
 			[Column(IsColumn = false, Configuration = ProviderName.Sybase)]
@@ -86,8 +88,9 @@ namespace Tests.xUpdate
 			[Column(IsColumn = false, Configuration = ProviderName.SqlServer2005)]
 			[Column(IsColumn = false, Configuration = ProviderName.Oracle)]
 			[Column(IsColumn = false, Configuration = ProviderName.SqlCe)]
-			[Column("FieldDate"     , Configuration = ProviderName.Informix, DataType = DataType.Date)]
-			[Column("FieldDate"     , Configuration = ProviderName.Sybase  , DataType = DataType.Date)]
+			[Column(Configuration = ProviderName.Informix  , DataType = DataType.Date)]
+			[Column(Configuration = ProviderName.Sybase    , DataType = DataType.Date)]
+			[Column(Configuration = ProviderName.ClickHouse, DataType = DataType.Date)]
 			[Column("FieldDate")]
 			public DateTime? FieldDate;
 
@@ -97,7 +100,8 @@ namespace Tests.xUpdate
 			[Column(IsColumn = false, Configuration = ProviderName.Oracle)]
 			[Column(IsColumn = false, Configuration = ProviderName.SqlCe)]
 			[Column(IsColumn = false, Configuration = ProviderName.SQLite)]
-			[Column("FieldTime"     , Configuration = ProviderName.Sybase, DataType = DataType.Time)]
+			[Column(Configuration = ProviderName.Sybase    , DataType = DataType.Time)]
+			[Column(Configuration = ProviderName.ClickHouse, DataType = DataType.Int64)]
 			[Column("FieldTime")]
 			public TimeSpan? FieldTime;
 
@@ -459,6 +463,13 @@ namespace Tests.xUpdate
 
 					 if (expected.Length == 0)
 						expected = new byte[] { 0 };
+				}
+
+				if (provider.IsAnyOf(ProviderName.ClickHouseMySql, ProviderName.ClickHouseClient))
+				{
+					// https://github.com/DarkWanderer/ClickHouse.Client/issues/138
+					// https://github.com/ClickHouse/ClickHouse/issues/38790
+					expected = Encoding.UTF8.GetBytes(Encoding.UTF8.GetString(expected));
 				}
 			}
 

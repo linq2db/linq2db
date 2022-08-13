@@ -15,7 +15,7 @@ namespace Tests.Data
 	public class TransactionTests : TestBase
 	{
 		[Test]
-		public async Task DataContextBeginTransactionAsync([DataSources(false)] string context)
+		public async Task DataContextBeginTransactionAsync([DataSources(false, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = new DataContext(context))
 			using (new RestoreBaseTables(db))
@@ -38,7 +38,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public async Task DataContextOpenOrBeginTransactionAsync([DataSources(false)] string context)
+		public async Task DataContextOpenOrBeginTransactionAsync([DataSources(false, TestProvName.AllClickHouse)] string context)
 		{
 			var tid = Environment.CurrentManagedThreadId;
 
@@ -55,7 +55,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public async Task DataContextCommitTransactionAsync([DataSources(false)] string context)
+		public async Task DataContextCommitTransactionAsync([DataSources(false, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = new DataContext(context))
 			using (new RestoreBaseTables(db))
@@ -82,7 +82,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public async Task DataContextRollbackTransactionAsync([DataSources(false)] string context)
+		public async Task DataContextRollbackTransactionAsync([DataSources(false, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = new DataContext(context))
 			using (new RestoreBaseTables(db))
@@ -100,7 +100,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public async Task DataConnectionBeginTransactionAsync([DataSources(false)] string context)
+		public async Task DataConnectionBeginTransactionAsync([DataSources(false, TestProvName.AllClickHouse)] string context)
 		{
 			var tid = Environment.CurrentManagedThreadId;
 
@@ -117,7 +117,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public async Task DataConnectionDisposeAsyncTransaction([DataSources(false)] string context)
+		public async Task DataConnectionDisposeAsyncTransaction([DataSources(false, TestProvName.AllClickHouse)] string context)
 		{
 			var tid = Environment.CurrentManagedThreadId;
 
@@ -134,7 +134,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public async Task DataConnectionCommitTransactionAsync([DataSources(false)] string context)
+		public async Task DataConnectionCommitTransactionAsync([DataSources(false, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (new RestoreBaseTables(db))
@@ -161,7 +161,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public async Task DataConnectionRollbackTransactionAsync([DataSources(false)] string context)
+		public async Task DataConnectionRollbackTransactionAsync([DataSources(false, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (new RestoreBaseTables(db))
@@ -180,7 +180,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void AutoRollbackTransaction([DataSources(false)] string context)
+		public void AutoRollbackTransaction([DataSources(false, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (new RestoreBaseTables(db))
@@ -199,7 +199,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void CommitTransaction([DataSources(false)] string context)
+		public void CommitTransaction([DataSources(false, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (new RestoreBaseTables(db))
@@ -219,7 +219,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void RollbackTransaction([DataSources(false)] string context)
+		public void RollbackTransaction([DataSources(false, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (new RestoreBaseTables(db))

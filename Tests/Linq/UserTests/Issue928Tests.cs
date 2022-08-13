@@ -11,7 +11,7 @@ namespace Tests.UserTests
 	public class Issue928Tests : TestBase
 	{
 		[Test]
-		public void Test1([DataSources] string context)
+		public void Test1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -31,7 +31,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void Test2([DataSources] string context)
+		public void Test2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -51,7 +51,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void Test3([DataSources] string context)
+		public void Test3([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -71,7 +71,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void Test4([DataSources] string context)
+		public void Test4([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

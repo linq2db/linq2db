@@ -415,7 +415,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ToSqlTime([DataSources(TestProvName.AllSQLite, TestProvName.AllAccess)] string context)
+		public void ToSqlTime([DataSources(TestProvName.AllSQLite, TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -599,6 +599,7 @@ namespace Tests.Linq
 					select t);
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56", Configuration = ProviderName.ClickHouseOctonica)]
 		[Test]
 		public void ConvertToBoolean1([DataSources] string context)
 		{
@@ -608,6 +609,7 @@ namespace Tests.Linq
 					from p in from t in db.Types select Convert.ToBoolean(t.MoneyValue) where p == true select p);
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56", Configuration = ProviderName.ClickHouseOctonica)]
 		[Test]
 		public void ConvertToBoolean2([DataSources] string context)
 		{
@@ -761,7 +763,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNoConvert_Byte([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		public void TestNoConvert_Byte([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -778,7 +780,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNoConvertWithExtension_Byte([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		public void TestNoConvertWithExtension_Byte([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -795,7 +797,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNoConvert_SByte([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		public void TestNoConvert_SByte([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -812,7 +814,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNoConvertWithExtension_SByte([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		public void TestNoConvertWithExtension_SByte([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -829,7 +831,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNoConvert_Int16([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		public void TestNoConvert_Int16([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -846,7 +848,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNoConvertWithExtension_Int16([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		public void TestNoConvertWithExtension_Int16([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -863,7 +865,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNoConvert_UInt16([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		public void TestNoConvert_UInt16([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -880,7 +882,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNoConvertWithExtension_UInt16([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		public void TestNoConvertWithExtension_UInt16([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -897,7 +899,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNoConvert_Int32([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		public void TestNoConvert_Int32([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -914,7 +916,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNoConvertWithExtension_Int32([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		public void TestNoConvertWithExtension_Int32([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -931,7 +933,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNoConvert_UInt32([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		public void TestNoConvert_UInt32([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -948,7 +950,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNoConvertWithExtension_UInt32([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		public void TestNoConvertWithExtension_UInt32([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -965,7 +967,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNoConvert_Int64([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		public void TestNoConvert_Int64([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -982,7 +984,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNoConvertWithExtension_Int64([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		public void TestNoConvertWithExtension_Int64([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -999,7 +1001,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNoConvert_UInt64([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		public void TestNoConvert_UInt64([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -1016,7 +1018,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNoConvertWithExtension_UInt64([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		public void TestNoConvertWithExtension_UInt64([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -1311,6 +1313,7 @@ namespace Tests.Linq
 		// and we need custom reference type that wraps something like int for test
 		[Test]
 		public void TryConvertConvertedStruct([IncludeDataSources(true,
+			TestProvName.AllClickHouse,
 			TestProvName.AllOracle12Plus,
 			TestProvName.AllSqlServer2012Plus
 			)] string context)
@@ -1323,6 +1326,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void TryConvertNotConvertedStruct([IncludeDataSources(true,
+			TestProvName.AllClickHouse,
 			TestProvName.AllOracle12Plus,
 			TestProvName.AllSqlServer2012Plus
 			)] string context)
@@ -1334,7 +1338,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TryConvertConvertedClass([IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context)
+		public void TryConvertConvertedClass([IncludeDataSources(true, TestProvName.AllSqlServer2012Plus, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1343,7 +1347,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TryConvertOrDefaultConvertedStruct([IncludeDataSources(true, TestProvName.AllOracle12Plus)] string context)
+		public void TryConvertOrDefaultConvertedStruct([IncludeDataSources(true, TestProvName.AllOracle12Plus, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1352,7 +1356,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TryConvertOrDefaultNotConvertedStruct([IncludeDataSources(true, TestProvName.AllOracle12Plus)] string context)
+		public void TryConvertOrDefaultNotConvertedStruct([IncludeDataSources(true, TestProvName.AllOracle12Plus, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

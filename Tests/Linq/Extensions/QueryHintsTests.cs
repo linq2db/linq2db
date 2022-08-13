@@ -117,7 +117,7 @@ namespace Tests.Extensions
 
 		[Repeat(100)]
 		[Test]
-		public void Issue3137([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void Issue3137([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using var _ = new DisableBaseline("multi-threading");
 			var rnd = new Random();

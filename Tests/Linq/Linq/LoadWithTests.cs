@@ -96,7 +96,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LoadWith3([DataSources] string context)
+		public void LoadWith3([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -118,7 +118,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LoadWithAsTable3([DataSources] string context)
+		public void LoadWithAsTable3([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -149,7 +149,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LoadWith4([DataSources] string context)
+		public void LoadWith4([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
 			ms.SetGenericConvertProvider(typeof(EnumerableToImmutableListConvertProvider<>));
@@ -171,7 +171,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LoadWith5([DataSources] string context)
+		public void LoadWith5([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -192,7 +192,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LoadWith6([DataSources] string context)
+		public void LoadWith6([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -213,7 +213,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LoadWith7([DataSources] string context)
+		public void LoadWith7([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -234,7 +234,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LoadWith8([DataSources(TestProvName.AllAccess)] string context)
+		public void LoadWith8([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -325,7 +325,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LoadWithFirstOrDefaultParameter([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values(2, 3)] int id)
+		public void LoadWithFirstOrDefaultParameter([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values(2, 3)] int id)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -497,7 +497,7 @@ namespace Tests.Linq
 
 
 		[Test]
-		public void LoadWithAndFilter([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void LoadWithAndFilter([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var testData = GenerateTestData();
 
@@ -572,7 +572,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LoadWithAndFilteredProperty([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void LoadWithAndFilteredProperty([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var testData = GenerateTestData();
 
@@ -632,7 +632,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LoadWithAndQuery([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void LoadWithAndQuery([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var testData = GenerateTestData();
 
@@ -675,7 +675,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LoadWithRecursive([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void LoadWithRecursive([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var testData = GenerateTestData();
 
@@ -708,7 +708,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LoadWithPlain([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void LoadWithPlain([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var testData = GenerateTestData();
 
@@ -766,8 +766,9 @@ namespace Tests.Linq
 			};
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
-		public void LoadWithAssociationPredicateExpression([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void LoadWithAssociationPredicateExpression([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db      = GetDataContext(context))
 			using (var parents = db.CreateLocalTable(ParentRecord.Items))

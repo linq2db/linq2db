@@ -20,6 +20,7 @@ namespace Tests.UserTests
 			{
 			}
 
+			[Column("PersonID", Configuration = ProviderName.ClickHouse)]
 			[Column("PersonID", IsIdentity = true)]
 			[PrimaryKey]
 			public int ID { get; set; }
@@ -60,6 +61,12 @@ namespace Tests.UserTests
 				obj.LastName = "LastName307";
 
 				int id;
+				if (context.IsAnyOf(TestProvName.AllClickHouse))
+				{
+					obj.ID = id = 100;
+					db.Insert(obj);
+				}
+				else
 					id = db.InsertWithInt32Identity(obj);
 
 				var obj2 = db.GetTable<Entity307>().First(_ => _.ID == id);

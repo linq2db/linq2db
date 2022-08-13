@@ -29,7 +29,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void ConditionalTests([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void ConditionalTests([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var invoices = new Invoice[]{new Invoice
 			{

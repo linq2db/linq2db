@@ -464,6 +464,7 @@ namespace Tests.Linq
 				});
 
 				var cnt = db.GetTable<TestTable1>().Delete(r => r.Id == RID && r.TestField == TestEnum1.Value2);
+				if (!context.IsAnyOf(TestProvName.AllClickHouse))
 					Assert.AreEqual(1, cnt);
 			}
 		}
@@ -481,6 +482,7 @@ namespace Tests.Linq
 				});
 
 				var cnt = db.GetTable<TestTable2>().Delete(r => r.Id == RID && r.TestField == TestEnum21.Value2);
+				if (!context.IsAnyOf(TestProvName.AllClickHouse))
 					Assert.AreEqual(1, cnt);
 			}
 		}
@@ -498,6 +500,7 @@ namespace Tests.Linq
 				});
 
 				var cnt = db.GetTable<NullableTestTable1>().Delete(r => r.Id == RID && r.TestField == TestEnum1.Value2);
+				if (!context.IsAnyOf(TestProvName.AllClickHouse))
 					Assert.AreEqual(1, cnt);
 			}
 		}
@@ -515,6 +518,7 @@ namespace Tests.Linq
 				});
 
 				var cnt = db.GetTable<NullableTestTable2>().Delete(r => r.Id == RID && r.TestField == TestEnum21.Value2);
+				if (!context.IsAnyOf(TestProvName.AllClickHouse))
 					Assert.AreEqual(1, cnt);
 			}
 		}
@@ -873,6 +877,7 @@ namespace Tests.Linq
 					})
 					.Insert(db.GetTable<TestTable1>(), r => r);
 
+				if (!context.IsAnyOf(TestProvName.AllClickHouse))
 					Assert.AreEqual(1, result);
 				Assert.AreEqual(1, db.GetTable<RawTable>().Where(r => r.Id == RID && r.TestField == VAL1).Count());
 			}
@@ -901,6 +906,7 @@ namespace Tests.Linq
 					})
 					.Insert(db.GetTable<TestTable2>(), r => r);
 
+				if (!context.IsAnyOf(TestProvName.AllClickHouse))
 					Assert.AreEqual(1, result);
 				Assert.AreEqual(1, db.GetTable<RawTable>().Where(r => r.Id == RID && r.TestField == VAL1).Count());
 			}
@@ -929,6 +935,7 @@ namespace Tests.Linq
 					})
 					.Insert(db.GetTable<NullableTestTable1>(), r => r);
 
+				if (!context.IsAnyOf(TestProvName.AllClickHouse))
 					Assert.AreEqual(1, result);
 				Assert.AreEqual(1, db.GetTable<RawTable>().Where(r => r.Id == RID && r.TestField == VAL1).Count());
 			}
@@ -957,6 +964,7 @@ namespace Tests.Linq
 					})
 					.Insert(db.GetTable<NullableTestTable2>(), r => r);
 
+				if (!context.IsAnyOf(TestProvName.AllClickHouse))
 					Assert.AreEqual(1, result);
 				Assert.AreEqual(1, db.GetTable<RawTable>().Where(r => r.Id == RID && r.TestField == VAL1).Count());
 			}
@@ -975,6 +983,7 @@ namespace Tests.Linq
 				});
 
 				var cnt = db.GetTable<TestTable1>().Delete(r => r.Id == RID && r.TestField.Equals(TestEnum1.Value2));
+				if (!context.IsAnyOf(TestProvName.AllClickHouse))
 					Assert.AreEqual(1, cnt);
 			}
 		}
@@ -992,6 +1001,7 @@ namespace Tests.Linq
 				});
 
 				var cnt = db.GetTable<TestTable2>().Delete(r => r.Id == RID && r.TestField.Equals(TestEnum21.Value2));
+				if (!context.IsAnyOf(TestProvName.AllClickHouse))
 					Assert.AreEqual(1, cnt);
 			}
 		}
@@ -1010,6 +1020,7 @@ namespace Tests.Linq
 
 				var cnt = db.GetTable<NullableTestTable1>().Delete(r => r.Id == RID && r.TestField.Equals(TestEnum1.Value2));
 
+				if (!context.IsAnyOf(TestProvName.AllClickHouse))
 					Assert.AreEqual(1, cnt);
 			}
 		}
@@ -1028,6 +1039,7 @@ namespace Tests.Linq
 
 				var cnt = db.GetTable<NullableTestTable2>().Delete(r => r.Id == RID && r.TestField.Equals(TestEnum21.Value2));
 
+				if (!context.IsAnyOf(TestProvName.AllClickHouse))
 					Assert.AreEqual(1, cnt);
 			}
 		}
@@ -1845,7 +1857,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestCardinalityOperators_Less([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TestCardinalityOperators_Less([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
@@ -1858,7 +1870,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestCardinalityOperators_LessOrEqual([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TestCardinalityOperators_LessOrEqual([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
@@ -1871,7 +1883,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestCardinalityOperators_Greater([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TestCardinalityOperators_Greater([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
@@ -1884,7 +1896,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestCardinalityOperators_GreaterOrEqual([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TestCardinalityOperators_GreaterOrEqual([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
@@ -1897,7 +1909,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestCardinalityOperators_Less_Nullable([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TestCardinalityOperators_Less_Nullable([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
@@ -1910,7 +1922,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestCardinalityOperators_LessOrEqual_Nullable([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TestCardinalityOperators_LessOrEqual_Nullable([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
@@ -1923,7 +1935,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestCardinalityOperators_Greater_Nullable([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TestCardinalityOperators_Greater_Nullable([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
@@ -1936,7 +1948,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestCardinalityOperators_GreaterOrEqual_Nullable([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TestCardinalityOperators_GreaterOrEqual_Nullable([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
@@ -1949,7 +1961,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestCardinalityOperators_Less_Short([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TestCardinalityOperators_Less_Short([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
@@ -1962,7 +1974,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestCardinalityOperators_LessOrEqual_Short([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TestCardinalityOperators_LessOrEqual_Short([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
@@ -1975,7 +1987,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestCardinalityOperators_Greater_Short([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TestCardinalityOperators_Greater_Short([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
@@ -1988,7 +2000,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestCardinalityOperators_GreaterOrEqual_Short([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TestCardinalityOperators_GreaterOrEqual_Short([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
@@ -2001,7 +2013,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestCardinalityOperators_Less_Short_Nullable([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TestCardinalityOperators_Less_Short_Nullable([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
@@ -2014,7 +2026,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestCardinalityOperators_LessOrEqual_Short_Nullable([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TestCardinalityOperators_LessOrEqual_Short_Nullable([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
@@ -2027,7 +2039,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestCardinalityOperators_Greater_Short_Nullable([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TestCardinalityOperators_Greater_Short_Nullable([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
@@ -2040,7 +2052,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestCardinalityOperators_GreaterOrEqual_Short_Nullable([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TestCardinalityOperators_GreaterOrEqual_Short_Nullable([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
@@ -2053,7 +2065,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestCardinalityOperators_Less_Long([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TestCardinalityOperators_Less_Long([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
@@ -2066,7 +2078,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestCardinalityOperators_LessOrEqual_Long([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TestCardinalityOperators_LessOrEqual_Long([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
@@ -2079,7 +2091,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestCardinalityOperators_Greater_Long([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TestCardinalityOperators_Greater_Long([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
@@ -2092,7 +2104,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestCardinalityOperators_GreaterOrEqual_Long([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TestCardinalityOperators_GreaterOrEqual_Long([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
@@ -2105,7 +2117,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestCardinalityOperators_Less_Long_Nullable([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TestCardinalityOperators_Less_Long_Nullable([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
@@ -2118,7 +2130,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestCardinalityOperators_LessOrEqual_Long_Nullable([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TestCardinalityOperators_LessOrEqual_Long_Nullable([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
@@ -2131,7 +2143,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestCardinalityOperators_Greater_Long_Nullable([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TestCardinalityOperators_Greater_Long_Nullable([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
@@ -2144,7 +2156,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestCardinalityOperators_GreaterOrEqual_Long_Nullable([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TestCardinalityOperators_GreaterOrEqual_Long_Nullable([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))

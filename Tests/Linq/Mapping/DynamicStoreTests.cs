@@ -346,7 +346,7 @@ namespace Tests.Mapping
 		}
 
 		[Test]
-		public void TestDynamicColumnStoreFromMetadataReader([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TestDynamicColumnStoreFromMetadataReader([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
 
@@ -374,7 +374,7 @@ namespace Tests.Mapping
 		}
 
 		[Test]
-		public void TestDynamicColumnStoreFluentExtension([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TestDynamicColumnStoreFluentExtension([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
 
@@ -459,7 +459,7 @@ namespace Tests.Mapping
 		}
 
 		[Test]
-		public void DynamicColumnStoreIssue1521([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void DynamicColumnStoreIssue1521([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
 
@@ -486,7 +486,7 @@ namespace Tests.Mapping
 		}
 
 		[Test]
-		public void TestDynamicColumnStoreInstanceAccessors([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TestDynamicColumnStoreInstanceAccessors([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
 
@@ -512,7 +512,7 @@ namespace Tests.Mapping
 		}
 
 		[Test]
-		public void TestDynamicColumnStoreStaticAccessors([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TestDynamicColumnStoreStaticAccessors([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			StaticGetterSetterMethods.InstanceValues.Clear();
 			var ms = new MappingSchema();
@@ -545,7 +545,7 @@ namespace Tests.Mapping
 		}
 
 		[Test]
-		public void TestDynamicColumnStoreInstanceExpressionAccessors([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TestDynamicColumnStoreInstanceExpressionAccessors([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
 
@@ -571,7 +571,7 @@ namespace Tests.Mapping
 		}
 
 		[Test]
-		public void TestDynamicColumnStoreStaticExpressionAccessors([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TestDynamicColumnStoreStaticExpressionAccessors([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			StaticGetterSetterExpressionMethods.InstanceValues.Clear();
 
@@ -683,7 +683,7 @@ namespace Tests.Mapping
 		}
 
 		[Test]
-		public void TestDynamicColumnStoreGetterSetterVsStorageMethodsConflict([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TestDynamicColumnStoreGetterSetterVsStorageMethodsConflict([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
 			ms.GetFluentMappingBuilder()
@@ -702,7 +702,7 @@ namespace Tests.Mapping
 		}
 
 		[Test]
-		public void TestDynamicColumnStoreExpressions([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TestDynamicColumnStoreExpressions([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var storage = new Dictionary<int, Dictionary<string, object>>();
 
@@ -809,7 +809,7 @@ namespace Tests.Mapping
 		}
 
 		[Test]
-		public void TestDynamicColumnStoreMultipleGetterSetters([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TestDynamicColumnStoreMultipleGetterSetters([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
 			ms.GetFluentMappingBuilder()
@@ -828,7 +828,7 @@ namespace Tests.Mapping
 		}
 
 		[Test]
-		public void TestDynamicColumnStoreNoGetterSetters([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TestDynamicColumnStoreNoGetterSetters([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
 			ms.GetFluentMappingBuilder()

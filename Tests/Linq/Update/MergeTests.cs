@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 
+using Tests.Model;
+
 using LinqToDB;
 using LinqToDB.Mapping;
 
@@ -22,6 +24,7 @@ namespace Tests.xUpdate
 				ProviderName.SqlCe,
 				TestProvName.AllSQLite,
 				TestProvName.AllSqlServer2005,
+				TestProvName.AllClickHouse,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllMySql,
 			}.SelectMany(_ => _.Split(',')).ToList();
@@ -43,7 +46,7 @@ namespace Tests.xUpdate
 			static string[] Supported = new[]
 			{
 				TestProvName.AllSybase,
-				TestProvName.AllSqlServer2008Plus
+				TestProvName.AllSqlServer2008Plus,
 			}.SelectMany(_ => _.Split(',')).ToArray();
 
 			public IdentityInsertMergeDataContextSourceAttribute(params string[] except)

@@ -19,6 +19,7 @@ namespace Tests.UserTests
 		public class Entity533
 		{
 			[SequenceName(ProviderName.Firebird, "PersonID")]
+			[Column("PersonID", Configuration = ProviderName.ClickHouse)]
 			[Column("PersonID", IsIdentity = true)]
 			[PrimaryKey]
 			        public int     ID         { get; set; }
@@ -75,6 +76,12 @@ namespace Tests.UserTests
 				};
 
 				int id1;
+				if (context.IsAnyOf(TestProvName.AllClickHouse))
+				{
+					obj.ID = id1 = 100;
+					db.Insert(obj);
+				}
+				else
 					id1 = db.InsertWithInt32Identity(obj);
 
 				var obj2 = new Entity533
@@ -86,6 +93,12 @@ namespace Tests.UserTests
 				};
 
 				int id2;
+				if (context.IsAnyOf(TestProvName.AllClickHouse))
+				{
+					obj2.ID = id2 = 101;
+					db.Insert(obj2);
+				}
+				else
 					id2 = db.InsertWithInt32Identity(obj2);
 
 				var obj3 = db.GetTable<Entity533>().First(_ => _.ID == id1);

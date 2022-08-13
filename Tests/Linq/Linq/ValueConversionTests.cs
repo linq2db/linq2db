@@ -268,7 +268,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ParameterTestsNullable([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		public void ParameterTestsNullable([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = CreateMappingSchema();
 
@@ -458,7 +458,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void BoolJoinTest([DataSources(false)] string context)
+		public void BoolJoinTest([DataSources(false, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = CreateMappingSchema();
 

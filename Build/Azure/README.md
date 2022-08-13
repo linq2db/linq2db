@@ -1,31 +1,36 @@
-﻿This directory contains test configs and setup scripts for test jobs on Azure Pipelines
+﻿#
+
+This directory contains test configs and setup scripts for test jobs on Azure Pipelines.
+
 - `net472` folder stores test job configs for .NET 4.7.2 Windows tests
 - `netcoreapp31` folder stores test job configs for `netcoreapp3.1` test runs for Windows, Linux and MacOS
 - `net60` folder stores test job configs for `net6.0` test runs for Windows, Linux and MacOS
-- `scripts` folder stores test job setup scripts (`*.cmd` for Windows jobs and `*.sh` for Linux and MacOS)
+- `scripts` folder stores test job setup scripts (`*.cmd` for Windows jobs, `*.sh` for Linux and MacOS, `*.ps1` for PowerShell scripts)
 
 ## Azure Pipelines
-All existing pipelines we have listed below. If you need more flexible test runs, you can request more test pipelines. E.g. to run only specific database or framework/OS tests.
 
-#### `default` pipeline
+### `default` pipeline
 
-Automatically runs for:
-- PR to `release` branch: runs all tests for PR commit
-- commit to `master`: runs all tests and publish nugets to [Azure Artifacts feed](https://dev.azure.com/linq2db/linq2db/_packaging?_a=feed&feed=linq2db)
-- commit to `release`: publish nugets to [Nuget.org](https://www.nuget.org/profiles/LinqToDB)
+Performs default maintenance actions. Automatically runs for:
 
-#### `build` pipeline
+- PR to `release` branch: runs all tests for each commit to `master` branch
+- commit to `master`: publish preview nugets to [Azure Artifacts feed](https://dev.azure.com/linq2db/linq2db/_packaging?_a=feed&feed=linq2db)
+- commit to `release`: publish release nugets to [Nuget.org](https://www.nuget.org/profiles/LinqToDB)
 
-Automatically triggered for all PR commits and runs solution build
+### `build` pipeline
 
-#### `test-all` pipeline
+Automatically triggered for all PR commits. Performs build to verify code could be built on CI.
 
-Runs manually using `/azp run test-all` command from PR comment by team member. Currently this pipeline will skip testing targeting macos (you need to use db-specific pipeline for it) due to incredible slowness of docker for macos.
+### `testing` pipeline
 
-#### db-specific test pipelines
+Runs manually using `/azp run test-all` command from PR comment by team member.
 
-Those pipelines used to run tests only for specific databases manually by team member:
+### db-specific test pipelines
+
+Those pipelines used to run tests only for specific databases manually by team member. Currently doesn't support execution from external PRs.
+
 - `/azp run test-access` - MS Access tests
+- `/azp run test-clickhouse` - ClickHouse tests
 - `/azp run test-db2` - IBM DB2 tests
 - `/azp run test-firebird` - Firebird tests
 - `/azp run test-informix` - IBM Informix tests
@@ -39,13 +44,10 @@ Those pipelines used to run tests only for specific databases manually by team m
 - `/azp run test-sqlserver-2019` - SQL Server 2019 tests
 - `/azp run test-sybase` - SAP/SYBASE ASE tests
 
-#### `experimental` pipeline
-Runs manually using `/azp run experimental` command from PR and used for development and testing of new pipelines/test providers.
-Base pipeline template contains only solution build and should be reset to initial state before merge.
-
 ## Test Matrix
 
 Following table contains information about which test jobs are awailable per:
+
 - operating system
 - target framework
 - database
@@ -53,14 +55,15 @@ Following table contains information about which test jobs are awailable per:
 - database provider
 
 Legend:
+
 - :heavy_minus_sign: - test configuration not supported (e.g. db/provider not available for target OS/Framework)
 - :heavy_check_mark: - test job implemented
 - :x: - test job not implemented yet
 - `netfx`: .NET Framework (4.7.2)
 - `netcore`: .NET Core 3.1 OR .NET 6.0
-- :door: - Windows 2022 or 2019 (for docker-images with win2019 dependency)
-- :penguin: - Linux (Ununtu 20.04)
-- :green_apple: - MacOS Catalina 10.15
+- :door: - Windows 2022
+- :penguin: - Linux (Ununtu 22.04)
+- :green_apple: - MacOS 10.15 (MacOS testing currently disabled)
 
 | Database (version): provider \ Target framework (OS) | netfx :door: | netcore :door: | netcore :penguin: | netcore :green_apple: |
 |:---|:---:|:---:|:---:|:---:|
@@ -105,12 +108,17 @@ Legend:
 |Oracle 18c<br>[Oracle.ManagedDataAccess](https://www.nuget.org/packages/Oracle.ManagedDataAccess/) 21.6.1 (netfx)<br>[Oracle.ManagedDataAccess.Core](https://www.nuget.org/packages/Oracle.ManagedDataAccess.Core/) 3.21.61 (core)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |Oracle 21c<br>[Oracle.ManagedDataAccess](https://www.nuget.org/packages/Oracle.ManagedDataAccess/) 21.6.1 (netfx)<br>[Oracle.ManagedDataAccess.Core](https://www.nuget.org/packages/Oracle.ManagedDataAccess.Core/) 3.21.61 (core)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |SAP HANA 2.0 SPS 05r57<br>ODBC Provider|:x:|:x:|:heavy_check_mark:|:x:|
+|ClickHouse (latest)<br>[Octonica.ClickHouseClient](https://www.nuget.org/packages/Octonica.ClickHouseClient/) 2.2.9|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
+|ClickHouse (latest)<br>[ClickHouse.Client](https://www.nuget.org/packages/ClickHouse.Client/) 4.2.2|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
+|ClickHouse (latest)<br>[MySqlConnector](https://www.nuget.org/packages/MySqlConnector/) 0.69.10/1.3.14/2.1.10|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 
-###### Notes:
+### Notes
+
 1. `TestNoopProvider` is a fake test provider to perform tests without database dependencies
 5. Northwind FTS SQL Server tests not enabled yet, as we need SQL Server images with full-text search included
 
-###### Test providers
+### Test providers
+
 | Name | Target Database | Extra Notes |
 |:---|:---:|:---:|
 |`TestProvName.NoopProvider`|fake test provider to perform tests without database dependencies|
@@ -166,19 +174,22 @@ Legend:
 |`ProviderName.InformixDB2`|Informix 14.10 (IDS using IBM.Data.DB2)||
 |`TestProvName.Oracle11Native`|Oracle 11g using native provider||
 |`TestProvName.Oracle11Managed`|Oracle 11g using managed provider (core version for .net core)||
-|`ProviderName.Oracle11DevartDirect`|Oracle 11g using Devart.Data.Oracle provider (Direct connect)||
-|`ProviderName.Oracle11DevartOCI`|Oracle 11g using Devart.Data.Oracle provider (Oracle client)||
+|`ProviderName.Oracle11DevartDirect`|Oracle 11g using Devart.Data.Oracle provider (Direct connect)|Not tested on CI|
+|`ProviderName.Oracle11DevartOCI`|Oracle 11g using Devart.Data.Oracle provider (Oracle client)|Not tested on CI|
 |`TestProvName.Oracle12Native`|Oracle 12c using native provider||
 |`TestProvName.Oracle12Managed`|Oracle 12c using managed provider (core version for .net core)||
-|`ProviderName.Oracle12DevartDirect`|Oracle 12c using Devart.Data.Oracle provider (Direct connect)||
-|`ProviderName.Oracle12DevartOCI`|Oracle 12c using Devart.Data.Oracle provider (Oracle client)||
+|`ProviderName.Oracle12DevartDirect`|Oracle 12c using Devart.Data.Oracle provider (Direct connect)|Not tested on CI|
+|`ProviderName.Oracle12DevartOCI`|Oracle 12c using Devart.Data.Oracle provider (Oracle client)|Not tested on CI|
 |`TestProvName.Oracle18Native`|Oracle 18c using native provider||
 |`TestProvName.Oracle18Managed`|Oracle 18c using managed provider (core version for .net core)||
-|`ProviderName.Oracle18DevartDirect`|Oracle 18c using Devart.Data.Oracle provider (Direct connect)||
-|`ProviderName.Oracle18DevartOCI`|Oracle 18c using Devart.Data.Oracle provider (Oracle client)||
+|`ProviderName.Oracle18DevartDirect`|Oracle 18c using Devart.Data.Oracle provider (Direct connect)|Not tested on CI|
+|`ProviderName.Oracle18DevartOCI`|Oracle 18c using Devart.Data.Oracle provider (Oracle client)|Not tested on CI|
 |`TestProvName.Oracle21Native`|Oracle 21c using native provider||
 |`TestProvName.Oracle21Managed`|Oracle 21c using managed provider (core version for .net core)||
-|`ProviderName.Oracle21DevartDirect`|Oracle 21c using Devart.Data.Oracle provider (Direct connect)||
-|`ProviderName.Oracle21DevartOCI`|Oracle 21c using Devart.Data.Oracle provider (Oracle client)||
+|`ProviderName.Oracle21DevartDirect`|Oracle 21c using Devart.Data.Oracle provider (Direct connect)|Not tested on CI|
+|`ProviderName.Oracle21DevartOCI`|Oracle 21c using Devart.Data.Oracle provider (Oracle client)|Not tested on CI|
 |`ProviderName.SapHanaNative`|SAP HANA 2 using native provider||
 |`ProviderName.SapHanaOdbc`|SAP HANA 2 using ODBC provider||
+|`ProviderName.ClickHouseOctonica`|ClickHouse using `Octonica.ClickHouseClient` provider||
+|`ProviderName.ClickHouseClient`|ClickHouse using `ClickHouse.Client` provider||
+|`ProviderName.ClickHouseMySql`|ClickHouse using `MySqlConnector` provider||

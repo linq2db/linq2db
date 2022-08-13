@@ -56,7 +56,8 @@ namespace Tests
 		[Sql.Expression("current server", ServerSideOnly = true, Configuration = ProviderName.DB2)]
 		[Sql.Function("current_database", ServerSideOnly = true, Configuration = ProviderName.PostgreSQL)]
 		[Sql.Function("DATABASE"        , ServerSideOnly = true, Configuration = ProviderName.MySql)]
-		[Sql.Function("DB_NAME", ServerSideOnly = true)]
+		[Sql.Function("currentDatabase" , ServerSideOnly = true, Configuration = ProviderName.ClickHouse)]
+		[Sql.Function("DB_NAME"         , ServerSideOnly = true)]
 		private static string DbName()
 		{
 			throw new InvalidOperationException();
@@ -149,6 +150,7 @@ namespace Tests
 				string when context.IsAnyOf(TestProvName.AllAccess)   => "Database\\TestData",
 				string when context.IsAnyOf(
 					TestProvName.AllMySql,
+					TestProvName.AllClickHouse,
 					TestProvName.AllPostgreSQL,
 					ProviderName.DB2,
 					TestProvName.AllSybase,

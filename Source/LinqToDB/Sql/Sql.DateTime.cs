@@ -44,6 +44,7 @@ namespace LinqToDB
 			/// <list type="bullet">
 			/// <item>Firebird</item>
 			/// <item>PostgreSQL</item>
+			/// <item>ClickHouse</item>
 			/// </list>
 			/// </item>
 			/// <item>Primitive (each 7 days counted as week) numbering schema:
@@ -410,6 +411,40 @@ namespace LinqToDB
 			}
 		}
 
+		class DatePartBuilderClickHouse : IExtensionCallBuilder
+		{
+			public void Build(ISqExtensionBuilder builder)
+			{
+				string exprStr;
+				var part = builder.GetValue<DateParts>("part");
+
+				switch (part)
+				{
+					case DateParts.Year       : exprStr = "YEAR({date})"                      ; break;
+					case DateParts.Quarter    : exprStr = "QUARTER({date})"                   ; break;
+					case DateParts.Month      : exprStr = "MONTH({date})"                     ; break;
+					case DateParts.DayOfYear  : exprStr = "DAYOFYEAR({date})"                 ; break;
+					case DateParts.Day        : exprStr = "DAY({date})"                       ; break;
+					case DateParts.Week       : exprStr = "toISOWeek(toDateTime64({date}, 0))"; break;
+					case DateParts.Hour       : exprStr = "HOUR({date})"                      ; break;
+					case DateParts.Minute     : exprStr = "MINUTE({date})"                    ; break;
+					case DateParts.Second     : exprStr = "SECOND({date})"                    ; break;
+					case DateParts.WeekDay    :
+						builder.Expression = "DAYOFWEEK(addDays({date}, 1))";
+						builder.Extension.Precedence = Precedence.Additive;
+						return;
+					case DateParts.Millisecond:
+						builder.Expression = "toUnixTimestamp64Milli({date}) % 1000";
+						builder.Extension.Precedence = Precedence.Multiplicative;
+						return;
+					default:
+						throw new InvalidOperationException($"Unexpected datepart: {part}");
+				}
+
+				builder.Expression = exprStr;
+			}
+		}
+
 		[Extension(               "DatePart",                                        ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DatePartBuilder))]
 		[Extension(PN.DB2,        "",                                                ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DatePartBuilderDB2))] // TODO: Not checked
 		[Extension(PN.Informix,   "",                                                ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DatePartBuilderInformix))]
@@ -420,6 +455,7 @@ namespace LinqToDB
 		[Extension(PN.Access,     "DatePart('{part}', {date})",                      ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DatePartBuilderAccess))]
 		[Extension(PN.SapHana,    "",                                                ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DatePartBuilderSapHana))]
 		[Extension(PN.Oracle,     "",                                                ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DatePartBuilderOracle))]
+		[Extension(PN.ClickHouse, "",                                                ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DatePartBuilderClickHouse))]
 		public static int? DatePart([SqlQueryDependent] DateParts part, [ExprParameter] DateTime? date)
 		{
 			if (date == null)
@@ -753,7 +789,43 @@ namespace LinqToDB
 			}
 		}
 
+		class DateAddBuilderClickHouse : IExtensionCallBuilder
+		{
+			public void Build(ISqExtensionBuilder builder)
+			{
+				var part   = builder.GetValue<DateParts>("part");
+				var date   = builder.GetExpression("date");
+				var number = builder.GetExpression("number", true);
 
+				string? function = null;
+				switch (part)
+				{
+					case DateParts.Year       : function = "addYears";    break;
+					case DateParts.Quarter    : function = "addQuarters"; break;
+					case DateParts.Month      : function = "addMonths";   break;
+					case DateParts.DayOfYear  :
+					case DateParts.Day        :
+					case DateParts.WeekDay    : function = "addDays";     break;
+					case DateParts.Week       : function = "addWeeks";    break;
+					case DateParts.Hour       : function = "addHours";    break;
+					case DateParts.Minute     : function = "addMinutes";  break;
+					case DateParts.Second     : function = "addSeconds";  break;
+					case DateParts.Millisecond:
+						builder.ResultExpression = new SqlExpression(
+							typeof(DateTime?),
+							"fromUnixTimestamp64Nano(toInt64(toUnixTimestamp64Nano(toDateTime64({0}, 9)) + toInt64({1}) * 1000000))",
+							Precedence.Primary,
+							date,
+							number);
+						break;
+					default:
+						throw new InvalidOperationException($"Unexpected datepart: {part}");
+				}
+
+				if (function != null)
+					builder.ResultExpression = new SqlFunction(typeof(DateTime?), function, date, number);
+			}
+		}
 
 		[Extension("DateAdd"        , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateAddBuilder))]
 		[Extension(PN.Oracle,     "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateAddBuilderOracle))]
@@ -765,6 +837,7 @@ namespace LinqToDB
 		[Extension(PN.Access,     "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateAddBuilderAccess))]
 		[Extension(PN.SapHana,    "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateAddBuilderSapHana))]
 		[Extension(PN.Firebird,   "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateAddBuilderFirebird))]
+		[Extension(PN.ClickHouse, "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateAddBuilderClickHouse))]
 		public static DateTime? DateAdd([SqlQueryDependent] DateParts part, double? number, DateTime? date)
 		{
 			if (number == null || date == null)
@@ -983,6 +1056,44 @@ namespace LinqToDB
 			}
 		}
 
+		class DateDiffBuilderClickHouse : IExtensionCallBuilder
+		{
+			public void Build(ISqExtensionBuilder builder)
+			{
+				var part       = builder.GetValue<DateParts>(0);
+				var startDate  = builder.GetExpression(1);
+				var endDate    = builder.GetExpression(2);
+
+				string? unit = null;
+				switch (part)
+				{
+					case DateParts.Year   : unit = "year"   ; break;
+					case DateParts.Quarter: unit = "quarter"; break;
+					case DateParts.Month  : unit = "month"  ; break;
+					case DateParts.Week   : unit = "week"   ; break;
+					case DateParts.Day    : unit = "day"    ; break;
+					case DateParts.Hour   : unit = "hour"   ; break;
+					case DateParts.Minute : unit = "minute" ; break;
+					case DateParts.Second : unit = "second" ; break;
+
+					case DateParts.Millisecond:
+						builder.ResultExpression = new SqlExpression(
+							typeof(long?),
+							"toUnixTimestamp64Milli(toDateTime64({1}, 3)) - toUnixTimestamp64Milli(toDateTime64({0}, 3))",
+							Precedence.Subtraction,
+							startDate,
+							endDate);
+						break;
+
+					default:
+						throw new InvalidOperationException($"Unexpected datepart: {part}");
+				}
+
+				if (unit != null)
+					builder.ResultExpression = new SqlFunction(typeof(int), "date_diff", new SqlValue(unit), startDate, endDate);
+			}
+		}
+
 		[CLSCompliant(false)]
 		[Extension(               "DateDiff",      BuilderType = typeof(DateDiffBuilder))]
 		[Extension(PN.MySql,      "TIMESTAMPDIFF", BuilderType = typeof(DateDiffBuilder))]
@@ -992,6 +1103,7 @@ namespace LinqToDB
 		[Extension(PN.Oracle,     "",              BuilderType = typeof(DateDiffBuilderOracle))]
 		[Extension(PN.PostgreSQL, "",              BuilderType = typeof(DateDiffBuilderPostgreSql))]
 		[Extension(PN.Access,     "",              BuilderType = typeof(DateDiffBuilderAccess))]
+		[Extension(PN.ClickHouse, "",              BuilderType = typeof(DateDiffBuilderClickHouse))]
 		public static int? DateDiff(DateParts part, DateTime? startDate, DateTime? endDate)
 		{
 			if (startDate == null || endDate == null)

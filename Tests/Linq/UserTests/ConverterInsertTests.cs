@@ -16,7 +16,9 @@ namespace Tests.UserTests
 		[Table]
 		new class Person
 		{
-			[Identity] public int                       PersonID;
+			[Column(IsIdentity = false, Configuration = ProviderName.ClickHouse)]
+			[Column(IsIdentity = true)]
+			           public int                       PersonID;
 			[Column]   public Dictionary<string,string> FirstName = null!;
 			[Column]   public string                    LastName = null!;
 			[Column]   public string?                   MiddleName;
@@ -32,7 +34,9 @@ namespace Tests.UserTests
 		[Table("Person")]
 		class Person2
 		{
-			[Identity] public int                       PersonID;
+			[Column(IsIdentity = false, Configuration = ProviderName.ClickHouse)]
+			[Column(IsIdentity = true)]
+			           public int                       PersonID;
 			[Column]   public Dictionary<string,string> FirstName = null!;
 			[Column]   public string                    LastName = null!;
 			[Column]   public string?                   MiddleName;
@@ -42,7 +46,9 @@ namespace Tests.UserTests
 		[Table("Person")]
 		class PurePerson
 		{
-			[Identity] public int     PersonID;
+			[Column(IsIdentity = false, Configuration = ProviderName.ClickHouse)]
+			[Column(IsIdentity = true)]
+			           public int     PersonID;
 			[Column]   public string  FirstName = null!;
 			[Column]   public string  LastName  = null!;
 			[Column]   public string? MiddleName;
@@ -70,6 +76,12 @@ namespace Tests.UserTests
 			};
 
 			int id;
+			if (context.IsAnyOf(TestProvName.AllClickHouse))
+			{
+				person.PersonID = id = 100;
+				db.Insert(person);
+			}
+			else
 				id = Convert.ToInt32(db.InsertWithIdentity(person));
 
 			var p1 = db.GetTable<Person>()    .First(t => t.PersonID == id);
@@ -125,6 +137,12 @@ namespace Tests.UserTests
 			};
 
 			int id;
+			if (context.IsAnyOf(TestProvName.AllClickHouse))
+			{
+				person.PersonID = id = 100;
+				db.Insert(person);
+			}
+			else
 				id = Convert.ToInt32(db.InsertWithIdentity(person));
 
 			var p = db.GetTable<PurePerson>().First(t => t.PersonID == id);

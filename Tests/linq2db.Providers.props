@@ -39,6 +39,8 @@
 		<PackageReference Include="System.Data.Odbc" />
 		<PackageReference Include="System.Data.OleDb" />
 		<PackageReference Include="Oracle.ManagedDataAccess.Core" />
+		<PackageReference Include="ClickHouse.Client" />
+		<PackageReference Include="Octonica.ClickHouseClient" />
 		<!--<PackageReference Include="Devart.Data.Oracle" />-->
 
 		<!--nuget doesn't have strong name, so we use local self-signed copy-->

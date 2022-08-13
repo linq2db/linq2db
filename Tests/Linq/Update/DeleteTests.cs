@@ -31,6 +31,7 @@ namespace Tests.xUpdate
 
 				Assert.AreEqual(1, db.Parent.Count (p => p.ParentID == parent.ParentID));
 				var cnt = db.Parent.Delete(p => p.ParentID == parent.ParentID);
+				if (!context.IsAnyOf(TestProvName.AllClickHouse))
 					Assert.AreEqual(1, cnt);
 				Assert.AreEqual(0, db.Parent.Count (p => p.ParentID == parent.ParentID));
 			}
@@ -49,13 +50,14 @@ namespace Tests.xUpdate
 
 				Assert.AreEqual(1, db.Parent.Count(p => p.ParentID == parent.ParentID));
 				var cnt = db.Parent.Where(p => p.ParentID == parent.ParentID).Delete();
+				if (!context.IsAnyOf(TestProvName.AllClickHouse))
 					Assert.AreEqual(1, cnt);
 				Assert.AreEqual(0, db.Parent.Count(p => p.ParentID == parent.ParentID));
 			}
 		}
 
 		[Test]
-		public void Delete3([DataSources(TestProvName.AllInformix)] string context)
+		public void Delete3([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new RestoreBaseTables(db))
@@ -72,7 +74,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void Delete4([DataSources(TestProvName.AllInformix)] string context)
+		public void Delete4([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new RestoreBaseTables(db))
@@ -108,6 +110,7 @@ namespace Tests.xUpdate
 
 					Assert.AreEqual(2, db.Parent.Count(_ => _.ParentID > 1000));
 					var cnt = db.Parent.Delete(_ => values.Contains(_.ParentID));
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
 						Assert.AreEqual(2, cnt);
 					Assert.AreEqual(0, db.Parent.Count(_ => _.ParentID > 1000));
 				}
@@ -115,7 +118,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void AlterDelete([DataSources(false, TestProvName.AllInformix)] string context)
+		public void AlterDelete([DataSources(false, TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -139,6 +142,7 @@ namespace Tests.xUpdate
 		public void DeleteMany1(
 			[DataSources(
 				TestProvName.AllAccess,
+				TestProvName.AllClickHouse,
 				ProviderName.DB2,
 				TestProvName.AllInformix,
 				TestProvName.AllOracle,
@@ -178,6 +182,7 @@ namespace Tests.xUpdate
 		public void DeleteMany2(
 			[DataSources(
 				TestProvName.AllAccess,
+				TestProvName.AllClickHouse,
 				ProviderName.DB2,
 				TestProvName.AllInformix,
 				TestProvName.AllOracle,
@@ -226,6 +231,7 @@ namespace Tests.xUpdate
 		public void DeleteMany3(
 			[DataSources(
 				TestProvName.AllAccess,
+				TestProvName.AllClickHouse,
 				ProviderName.DB2,
 				TestProvName.AllInformix,
 				TestProvName.AllOracle,
@@ -273,6 +279,7 @@ namespace Tests.xUpdate
 		public void DeleteTakeNotOrdered(
 			[DataSources(
 				TestProvName.AllAccess,
+				TestProvName.AllClickHouse,
 				ProviderName.DB2,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,
@@ -390,7 +397,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void ContainsJoin1([DataSources(false, TestProvName.AllInformix)] string context)
+		public void ContainsJoin1([DataSources(false, TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (new RestoreBaseTables(db))
@@ -424,6 +431,7 @@ namespace Tests.xUpdate
 
 					var ret = db.Parent.Delete(p => list.Contains(p) );
 
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
 						Assert.That(ret, Is.EqualTo(2));
 				}
 				finally

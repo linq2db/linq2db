@@ -132,8 +132,10 @@ namespace Tests.UserTests
 			public decimal TM_Value     { get; set; }
 			public Guid    TM_TL        { get; set; }
 		}
+
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56", Configurations = new[] { ProviderName.ClickHouseOctonica })]
 		[Test]
-		public void CteTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void CteTest([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<RateEntry>())

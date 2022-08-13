@@ -44,7 +44,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test2([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void Test2([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

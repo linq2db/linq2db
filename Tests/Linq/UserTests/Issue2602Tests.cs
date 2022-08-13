@@ -73,7 +73,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestParameterCaching([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestParameterCaching([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<Email>())

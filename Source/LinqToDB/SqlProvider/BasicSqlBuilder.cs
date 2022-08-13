@@ -268,7 +268,8 @@ namespace LinqToDB.SqlProvider
 			BuildStep = Step.Tag;               BuildTag(deleteStatement);
 			BuildStep = Step.WithClause;        BuildWithClause(deleteStatement.With);
 			BuildStep = Step.DeleteClause;      BuildDeleteClause(deleteStatement);
-			BuildStep = Step.FromClause;      BuildFromClause(Statement, deleteStatement.SelectQuery);
+			BuildStep = Step.FromClause;        BuildDeleteFromClause(deleteStatement);
+			BuildStep = Step.AlterDeleteClause; BuildAlterDeleteClause(deleteStatement);
 			BuildStep = Step.WhereClause;       BuildWhereClause(deleteStatement.SelectQuery);
 			BuildStep = Step.GroupByClause;     BuildGroupByClause(deleteStatement.SelectQuery);
 			BuildStep = Step.HavingClause;      BuildHavingClause(deleteStatement.SelectQuery);
@@ -313,7 +314,7 @@ namespace LinqToDB.SqlProvider
 				BuildStep = Step.FromClause; BuildFromClause(Statement, selectQuery);
 			}
 
-			BuildStep = Step.WhereClause;     BuildWhereClause(selectQuery);
+			BuildStep = Step.WhereClause;     BuildUpdateWhereClause(selectQuery);
 			BuildStep = Step.GroupByClause;   BuildGroupByClause(selectQuery);
 			BuildStep = Step.HavingClause;    BuildHavingClause(selectQuery);
 			BuildStep = Step.OrderByClause;   BuildOrderByClause(selectQuery);
@@ -459,6 +460,7 @@ namespace LinqToDB.SqlProvider
 		#region Build CTE
 
 		protected virtual bool IsRecursiveCteKeywordRequired => false;
+		protected virtual bool IsCteColumnListSupported      => true;
 
 		protected virtual void BuildWithClause(SqlWithClause? with)
 		{
@@ -487,6 +489,8 @@ namespace LinqToDB.SqlProvider
 
 				BuildObjectName(StringBuilder, new (cte.Name!), ConvertType.NameToQueryTable, true, TableOptions.NotSet);
 
+				if (IsCteColumnListSupported)
+				{
 					if (cte.Fields!.Length > 3)
 					{
 						StringBuilder.AppendLine();
@@ -522,9 +526,10 @@ namespace LinqToDB.SqlProvider
 						StringBuilder.AppendLine(")");
 					}
 					else
-				{
 						StringBuilder.Append(' ');
 				}
+				else
+					StringBuilder.Append(' ');
 
 				AppendIndent();
 				StringBuilder.AppendLine("AS");
@@ -701,6 +706,10 @@ namespace LinqToDB.SqlProvider
 
 		#region Build Delete
 
+		protected virtual void BuildAlterDeleteClause(SqlDeleteStatement deleteStatement)
+		{
+		}
+		
 		protected virtual void BuildDeleteClause(SqlDeleteStatement deleteStatement)
 		{
 			AppendIndent();
@@ -714,6 +723,11 @@ namespace LinqToDB.SqlProvider
 
 		#region Build Update
 
+		protected virtual void BuildUpdateWhereClause(SelectQuery selectQuery)
+		{
+			BuildWhereClause(selectQuery);
+		}
+
 		protected virtual void BuildUpdateClause(SqlStatement statement, SelectQuery selectQuery, SqlUpdateClause updateClause)
 		{
 			BuildUpdateTable(selectQuery, updateClause);
@@ -722,7 +736,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildUpdateTable(SelectQuery selectQuery, SqlUpdateClause updateClause)
 		{
-			AppendIndent().Append("UPDATE");
+			AppendIndent().Append(UpdateKeyword);
 
 			StartStatementQueryExtensions(selectQuery);
 			BuildSkipFirst(selectQuery);
@@ -747,10 +761,13 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
+		protected virtual string UpdateKeyword => "UPDATE";
+		protected virtual string UpdateSetKeyword => "SET";
+
 		protected virtual void BuildUpdateSet(SelectQuery? selectQuery, SqlUpdateClause updateClause)
 		{
 			AppendIndent()
-				.AppendLine("SET");
+				.AppendLine(UpdateSetKeyword);
 
 			Indent++;
 
@@ -1514,6 +1531,11 @@ namespace LinqToDB.SqlProvider
 
 		#region Build From
 
+		protected virtual void BuildDeleteFromClause(SqlDeleteStatement deleteStatement)
+		{
+			BuildFromClause(Statement, deleteStatement.SelectQuery);
+		}
+
 		protected virtual void BuildFromClause(SqlStatement statement, SelectQuery selectQuery)
 		{
 			if (selectQuery.From.Tables.Count == 0 || selectQuery.From.Tables[0].Alias == "$F")
@@ -1895,7 +1917,7 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
-		void BuildJoinTable(SelectQuery selectQuery, SqlJoinedTable join, ref int joinCounter)
+		protected void BuildJoinTable(SelectQuery selectQuery, SqlJoinedTable join, ref int joinCounter)
 		{
 			StringBuilder.AppendLine();
 			Indent++;
@@ -2670,6 +2692,11 @@ namespace LinqToDB.SqlProvider
 
 		#region BuildExpression
 
+		/// <summary>
+		/// Used to disable field table name (alias) generation.
+		/// </summary>
+		protected virtual bool BuildFieldTableAlias(SqlField field) => true;
+
 		protected virtual StringBuilder BuildExpression(
 			ISqlExpression expr,
 			bool           buildTableName,
@@ -2686,7 +2713,7 @@ namespace LinqToDB.SqlProvider
 					{
 						var field = (SqlField)expr;
 
-						if (buildTableName && field.Table != null)
+						if (BuildFieldTableAlias(field) && buildTableName && field.Table != null)
 						{
 							var ts = field.Table.SqlTableType == SqlTableType.SystemTable
 								? field.Table
@@ -2847,7 +2874,7 @@ namespace LinqToDB.SqlProvider
 						if (!inlining)
 						{
 							var newParm = OptimizationContext.AddParameter(parm);
-							Convert(StringBuilder, newParm.Name!, ConvertType.NameToQueryParameter);
+							BuildParameter(newParm);
 						}
 				}
 
@@ -2900,6 +2927,10 @@ namespace LinqToDB.SqlProvider
 			return StringBuilder;
 		}
 
+		protected virtual void BuildParameter(SqlParameter parameter)
+		{
+			Convert(StringBuilder, parameter.Name!, ConvertType.NameToQueryParameter);
+		}
 
 		void BuildFormatValues(string format, IReadOnlyList<ISqlExpression>? parameters, Func<int> getPrecedence)
 		{
@@ -3232,6 +3263,7 @@ namespace LinqToDB.SqlProvider
 			WithClause,
 			SelectClause,
 			DeleteClause,
+			AlterDeleteClause,
 			UpdateClause,
 			InsertClause,
 			FromClause,

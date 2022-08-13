@@ -82,7 +82,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestInstantiation([DataSources] string context)
+		public void TestInstantiation([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(Issue1084Personv3.Data))
@@ -132,7 +132,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestTupleFactoryWithDefaultConstructor([DataSources] string context)
+		public void TestTupleFactoryWithDefaultConstructor([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<Issue1084Personv2>())
@@ -154,7 +154,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestTupleConstructorWithDefaultConstructor([DataSources] string context)
+		public void TestTupleConstructorWithDefaultConstructor([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<Issue1084Personv2>())

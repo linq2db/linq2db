@@ -18,6 +18,7 @@ namespace Tests.Linq
 				true,
 				TestProvName.AllOracle,
 				TestProvName.AllSqlServer2012Plus,
+				TestProvName.AllClickHouse,
 				TestProvName.AllPostgreSQL)]
 			string context)
 		{
@@ -75,6 +76,7 @@ namespace Tests.Linq
 				true,
 				TestProvName.AllOracle,
 				TestProvName.AllSqlServer2012Plus,
+				TestProvName.AllClickHouse,
 				TestProvName.AllPostgreSQL)]
 			string context)
 		{
@@ -100,7 +102,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestAvg([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
+		public void TestAvg([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllOracle, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -207,9 +209,14 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestCorrOracle([IncludeDataSources(true, TestProvName.AllOracle)]
+		public void TestCorrOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse)]
 			string context)
 		{
+#if NETFRAMEWORK
+			if (context.IsAnyOf(ProviderName.ClickHouseMySql))
+				Assert.Inconclusive("MySqlConnector 0.x cannot parse 'nan'");
+#endif
+
 			using (var db = GetDataContext(context))
 			{
 				var q =
@@ -250,7 +257,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestCountOracle([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		public void TestCountOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -279,7 +286,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestCount([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
+		public void TestCount([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllOracle, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -308,7 +315,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestCovarPopOracle([IncludeDataSources(true, TestProvName.AllOracle)]
+		public void TestCovarPopOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -345,9 +352,14 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestCovarSampOracle([IncludeDataSources(true, TestProvName.AllOracle)]
+		public void TestCovarSampOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse)]
 			string context)
 		{
+#if NETFRAMEWORK
+			if (context.IsAnyOf(ProviderName.ClickHouseMySql))
+				Assert.Inconclusive("MySqlConnector 0.x cannot parse 'nan'");
+#endif
+
 			using (var db = GetDataContext(context))
 			{
 				var q =
@@ -454,7 +466,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestRowNumberOracleSorting([IncludeDataSources(false, TestProvName.AllOracle)] string context)
+		public void TestRowNumberOracleSorting([IncludeDataSources(false, TestProvName.AllOracle, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = (TestDataConnection)GetDataContext(context))
 			{
@@ -467,7 +479,12 @@ namespace Tests.Linq
 					};
 				Assert.IsNotEmpty(q.ToArray());
 
-				Assert.That(db.LastQuery, Does.Contain("(ORDER BY p.\"Value1\", c_1.\"ChildID\" DESC, p.\"ParentID\")"));
+				if (context.IsAnyOf(TestProvName.AllOracle))
+					Assert.That(db.LastQuery, Does.Contain("(ORDER BY p.\"Value1\", c_1.\"ChildID\" DESC, p.\"ParentID\")"));
+				else if (context.IsAnyOf(TestProvName.AllClickHouse))
+					Assert.That(db.LastQuery, Does.Contain("ROW_NUMBER() OVER(ORDER BY p.Value1, c_1.ChildID DESC, p.ParentID)"));
+				else
+					Assert.Fail("Missing assertion");
 			}
 		}
 
@@ -575,7 +592,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestMaxOracle([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		public void TestMaxOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -613,7 +630,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestMax([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllSqlServer)] string context)
+		public void TestMax([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -673,7 +690,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestMinOracle([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		public void TestMinOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -701,7 +718,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestMin([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllSqlServer)] string context)
+		public void TestMin([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -879,7 +896,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestRowNumberOracle([IncludeDataSources(true, TestProvName.AllOracle)]
+		public void TestRowNumberOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1008,7 +1025,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestStdDevPopOracle([IncludeDataSources(true, TestProvName.AllOracle)]
+		public void TestStdDevPopOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1080,7 +1097,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestSumOracle([IncludeDataSources(true, TestProvName.AllOracle)]
+		public void TestSumOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1111,7 +1128,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestVarPopOracle([IncludeDataSources(true, TestProvName.AllOracle)]
+		public void TestVarPopOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1147,9 +1164,14 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestVarSampOracle([IncludeDataSources(true, TestProvName.AllOracle)]
+		public void TestVarSampOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse)]
 			string context)
 		{
+#if NETFRAMEWORK
+			if (context.IsAnyOf(ProviderName.ClickHouseMySql))
+				Assert.Inconclusive("MySqlConnector 0.x cannot parse 'nan'");
+#endif
+
 			using (var db = GetDataContext(context))
 			{
 				var q =
@@ -1271,7 +1293,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NestedQueries([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllOracle)]string context)
+		public void NestedQueries([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllOracle, TestProvName.AllClickHouse)]string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1317,6 +1339,7 @@ namespace Tests.Linq
 		[Test]
 		public void Issue1732Lag([DataSources(
 			TestProvName.AllSqlServer2008Minus,
+			TestProvName.AllClickHouse,
 			TestProvName.AllSybase,
 			ProviderName.SqlCe,
 			TestProvName.AllAccess,
@@ -1360,6 +1383,7 @@ namespace Tests.Linq
 		[Test]
 		public void Issue1732Lead([DataSources(
 			TestProvName.AllSqlServer2008Minus,
+			TestProvName.AllClickHouse,
 			TestProvName.AllSybase,
 			ProviderName.SqlCe,
 			TestProvName.AllAccess,
@@ -1398,6 +1422,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37950", Configuration = TestProvName.AllClickHouse)]
 		[Test]
 		public void Issue1732FirstValue([DataSources(
 			TestProvName.AllSqlServer2008Minus,
@@ -1437,6 +1462,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37950", Configuration = TestProvName.AllClickHouse)]
 		[Test]
 		public void Issue1732LastValue([DataSources(
 			TestProvName.AllSqlServer2008Minus,
@@ -1479,6 +1505,7 @@ namespace Tests.Linq
 		[Test]
 		public void Issue1732NthValue([DataSources(
 			TestProvName.AllSqlServer,
+			TestProvName.AllClickHouse,
 			TestProvName.AllSybase,
 			TestProvName.AllPostgreSQL,
 			TestProvName.AllInformix,
@@ -1545,6 +1572,7 @@ namespace Tests.Linq
 		[Test]
 		public void Issue1799Test1([DataSources(
 			TestProvName.AllSqlServer2008Minus,
+			TestProvName.AllClickHouse,
 			TestProvName.AllSybase,
 			ProviderName.SqlCe,
 			TestProvName.AllAccess,
@@ -1599,6 +1627,7 @@ namespace Tests.Linq
 		[Test]
 		public void Issue1799Test2([DataSources(
 			TestProvName.AllSqlServer2008Minus,
+			TestProvName.AllClickHouse,
 			TestProvName.AllSybase,
 			ProviderName.SqlCe,
 			TestProvName.AllAccess,
@@ -1654,6 +1683,7 @@ namespace Tests.Linq
 		[Test]
 		public void LeadLagWithStringDefault([DataSources(
 			TestProvName.AllSqlServer2008Minus,
+			TestProvName.AllClickHouse,
 			TestProvName.AllSybase,
 			ProviderName.SqlCe,
 			TestProvName.AllAccess,
@@ -1689,6 +1719,7 @@ namespace Tests.Linq
 		[Test]
 		public void LeadLagOverloads([DataSources(
 			TestProvName.AllSqlServer2008Minus,
+			TestProvName.AllClickHouse,
 			TestProvName.AllSybase,
 			ProviderName.SqlCe,
 			TestProvName.AllAccess,

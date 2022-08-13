@@ -366,6 +366,12 @@ namespace Tests.Linq
 					ColumnForOtherDB = 100500
 				};
 
+				if (context.IsAnyOf(TestProvName.AllClickHouse))
+				{
+					person.ID = 10500;
+					db.Insert(person);
+				}
+				else
 					person.ID = db.InsertWithInt32Identity(person);
 
 				Validate();

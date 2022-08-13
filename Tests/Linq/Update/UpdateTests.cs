@@ -35,6 +35,7 @@ namespace Tests.xUpdate
 				Assert.AreEqual(1, db.Parent.Count(p => p.ParentID == parent.ParentID));
 
 				var cnt = db.Parent.Update(p => p.ParentID == parent.ParentID, p => new Parent { ParentID = p.ParentID + 1 });
+				if (!context.IsAnyOf(TestProvName.AllClickHouse))
 					Assert.AreEqual(1, cnt);
 
 				Assert.AreEqual(1, db.Parent.Count(p => p.ParentID == parent.ParentID + 1));
@@ -54,6 +55,7 @@ namespace Tests.xUpdate
 				Assert.AreEqual(1, await db.Parent.CountAsync(p => p.ParentID == parent.ParentID));
 
 				var cnt = await db.Parent.UpdateAsync(p => p.ParentID == parent.ParentID, p => new Parent { ParentID = p.ParentID + 1 });
+				if (!context.IsAnyOf(TestProvName.AllClickHouse))
 					Assert.AreEqual(1, cnt);
 
 				Assert.AreEqual(1, await db.Parent.CountAsync(p => p.ParentID == parent.ParentID + 1));
@@ -73,6 +75,7 @@ namespace Tests.xUpdate
 				Assert.AreEqual(1, db.Parent.Count(p => p.ParentID == parent.ParentID));
 
 				var cnt = db.Parent.Where(p => p.ParentID == parent.ParentID).Update(p => new Parent { ParentID = p.ParentID + 1 });
+				if (!context.IsAnyOf(TestProvName.AllClickHouse))
 					Assert.AreEqual(1, cnt);
 
 				Assert.AreEqual(1, db.Parent.Count(p => p.ParentID == parent.ParentID + 1));
@@ -92,6 +95,7 @@ namespace Tests.xUpdate
 				Assert.AreEqual(1, await db.Parent.CountAsync(p => p.ParentID == parent.ParentID));
 
 				var cnt = await db.Parent.Where(p => p.ParentID == parent.ParentID).UpdateAsync(p => new Parent { ParentID = p.ParentID + 1 });
+				if (!context.IsAnyOf(TestProvName.AllClickHouse))
 					Assert.AreEqual(1, cnt);
 
 				Assert.AreEqual(1, await db.Parent.CountAsync(p => p.ParentID == parent.ParentID + 1));
@@ -99,7 +103,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void Update3([DataSources(TestProvName.AllInformix)] string context)
+		public void Update3([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new RestoreBaseTables(db))
@@ -115,7 +119,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void Update4([DataSources(TestProvName.AllInformix)] string context)
+		public void Update4([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new RestoreBaseTables(db))
@@ -135,7 +139,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void Update4String([DataSources(TestProvName.AllInformix)] string context)
+		public void Update4String([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -154,7 +158,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public async Task Update4Async([DataSources(TestProvName.AllInformix)] string context)
+		public async Task Update4Async([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new RestoreBaseTables(db))
@@ -174,7 +178,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void Update5([DataSources(TestProvName.AllInformix)] string context)
+		public void Update5([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new RestoreBaseTables(db))
@@ -209,6 +213,7 @@ namespace Tests.xUpdate
 						.Where(p => p.ParentID == id)
 							.Set(p => p.Value1, () => TypeValue.Value2)
 						.Update();
+				if (!context.IsAnyOf(TestProvName.AllClickHouse))
 					Assert.AreEqual(1, cnt);
 
 				Assert.AreEqual(1, db.Parent4.Count(p => p.ParentID == id && p.Value1 == TypeValue.Value2));
@@ -230,6 +235,7 @@ namespace Tests.xUpdate
 						.Where(p => p.ParentID == id)
 							.Set(p => p.Value1, TypeValue.Value2)
 						.Update();
+				if (!context.IsAnyOf(TestProvName.AllClickHouse))
 					Assert.AreEqual(1, cnt);
 				Assert.AreEqual(1, db.Parent4.Count(p => p.ParentID == id && p.Value1 == TypeValue.Value2));
 
@@ -237,6 +243,7 @@ namespace Tests.xUpdate
 						.Where(p => p.ParentID == id)
 							.Set(p => p.Value1, TypeValue.Value3)
 						.Update();
+				if (!context.IsAnyOf(TestProvName.AllClickHouse))
 					Assert.AreEqual(1, cnt);
 
 				Assert.AreEqual(1, db.Parent4.Count(p => p.ParentID == id && p.Value1 == TypeValue.Value3));
@@ -265,6 +272,7 @@ namespace Tests.xUpdate
 		public void Update9(
 			[DataSources(
 				TestProvName.AllInformix,
+				TestProvName.AllClickHouse,
 				ProviderName.SqlCe,
 				ProviderName.DB2,
 				TestProvName.AllFirebird,
@@ -297,6 +305,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void Update10(
 			[DataSources(
+				TestProvName.AllClickHouse,
 				TestProvName.AllInformix,
 				ProviderName.SqlCe,
 				ProviderName.DB2,
@@ -347,6 +356,7 @@ namespace Tests.xUpdate
 			[DataSources(
 				ProviderName.SqlCe,
 				ProviderName.DB2,
+				TestProvName.AllClickHouse,
 				TestProvName.AllInformix,
 				TestProvName.AllFirebird,
 				TestProvName.AllOracle,
@@ -371,6 +381,7 @@ namespace Tests.xUpdate
 			[DataSources(
 				ProviderName.SqlCe,
 				ProviderName.DB2,
+				TestProvName.AllClickHouse,
 				TestProvName.AllInformix,
 				TestProvName.AllFirebird,
 				TestProvName.AllOracle,
@@ -395,6 +406,7 @@ namespace Tests.xUpdate
 			[DataSources(
 				ProviderName.SqlCe,
 				ProviderName.DB2,
+				TestProvName.AllClickHouse,
 				TestProvName.AllInformix,
 				TestProvName.AllFirebird,
 				TestProvName.AllOracle,
@@ -535,6 +547,12 @@ namespace Tests.xUpdate
 				};
 
 				int id;
+				if (context.IsAnyOf(TestProvName.AllClickHouse))
+				{
+					person.ID = id = 100;
+					db.Insert(person);
+				}
+				else
 					id = db.InsertWithInt32Identity(person);
 
 				var obj = db.GetTable<ComplexPerson2>().First(_ => _.ID == id);
@@ -566,6 +584,12 @@ namespace Tests.xUpdate
 				};
 
 				int id;
+				if (context.IsAnyOf(TestProvName.AllClickHouse))
+				{
+					person.ID = id = 100;
+					db.Insert(person);
+				}
+				else
 					id = db.InsertWithInt32Identity(person);
 
 				var obj = await db.GetTable<ComplexPerson2>().FirstAsync(_ => _.ID == id);
@@ -600,6 +624,12 @@ namespace Tests.xUpdate
 				};
 
 				int id;
+				if (context.IsAnyOf(TestProvName.AllClickHouse))
+				{
+					person.ID = id = 100;
+					db.Insert(person);
+				}
+				else
 					id = db.InsertWithInt32Identity(person);
 
 				var cnt = db.GetTable<ComplexPerson2>()
@@ -607,6 +637,7 @@ namespace Tests.xUpdate
 						.Set(_ => _.Gender, _ => nullableGender.HasValue ? nullableGender.Value : _.Gender)
 						.Update();
 
+				if (!context.IsAnyOf(TestProvName.AllClickHouse))
 					Assert.AreEqual(1, cnt);
 
 				var obj = db.GetTable<ComplexPerson2>()
@@ -634,6 +665,12 @@ namespace Tests.xUpdate
 				};
 
 				int id;
+				if (context.IsAnyOf(TestProvName.AllClickHouse))
+				{
+					person.ID = id = 100;
+					db.Insert(person);
+				}
+				else
 					id = db.InsertWithInt32Identity(person);
 
 				var cnt = db.GetTable<ComplexPerson2>()
@@ -641,6 +678,7 @@ namespace Tests.xUpdate
 						.Set(_ => _.Name.LastName, _ => _.Name.FirstName)
 						.Update();
 
+				if (!context.IsAnyOf(TestProvName.AllClickHouse))
 					Assert.AreEqual(1, cnt);
 
 				var obj = db.GetTable<ComplexPerson2>().First(_ => _.ID == id);
@@ -650,7 +688,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateAssociation1([DataSources(TestProvName.AllSybase, TestProvName.AllInformix)] string context)
+		public void UpdateAssociation1([DataSources(TestProvName.AllSybase, TestProvName.AllClickHouse, TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new RestoreBaseTables(db))
@@ -671,7 +709,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public async Task UpdateAssociation1Async([DataSources(TestProvName.AllSybase, TestProvName.AllInformix)] string context)
+		public async Task UpdateAssociation1Async([DataSources(TestProvName.AllSybase, TestProvName.AllClickHouse, TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new RestoreBaseTables(db))
@@ -692,7 +730,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateAssociation2([DataSources(TestProvName.AllSybase, TestProvName.AllInformix)] string context)
+		public void UpdateAssociation2([DataSources(TestProvName.AllSybase, TestProvName.AllClickHouse, TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new RestoreBaseTables(db))
@@ -713,7 +751,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateAssociation3([DataSources(TestProvName.AllSybase, TestProvName.AllInformix)] string context)
+		public void UpdateAssociation3([DataSources(TestProvName.AllSybase, TestProvName.AllClickHouse, TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new RestoreBaseTables(db))
@@ -734,7 +772,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateAssociation4([DataSources(TestProvName.AllSybase, TestProvName.AllInformix)] string context)
+		public void UpdateAssociation4([DataSources(TestProvName.AllSybase, TestProvName.AllClickHouse, TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new RestoreBaseTables(db))
@@ -795,6 +833,7 @@ namespace Tests.xUpdate
 			[DataSources(
 				false,
 				TestProvName.AllAccess,
+				TestProvName.AllClickHouse,
 				ProviderName.DB2,
 				TestProvName.AllInformix,
 				TestProvName.AllOracle,
@@ -835,7 +874,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void AsUpdatableTest([DataSources(TestProvName.AllInformix)] string context)
+		public void AsUpdatableTest([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new RestoreBaseTables(db))
@@ -858,7 +897,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void AsUpdatableDuplicate([DataSources(TestProvName.AllInformix)] string context)
+		public void AsUpdatableDuplicate([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new RestoreBaseTables(db))
@@ -911,6 +950,7 @@ namespace Tests.xUpdate
 			[DataSources(
 				TestProvName.AllAccess,
 				ProviderName.DB2,
+				TestProvName.AllClickHouse,
 				TestProvName.AllInformix,
 				TestProvName.AllFirebird,
 				TestProvName.AllPostgreSQL,
@@ -943,6 +983,7 @@ namespace Tests.xUpdate
 			[DataSources(
 				ProviderName.Access,
 				ProviderName.DB2,
+				TestProvName.AllClickHouse,
 				TestProvName.AllInformix,
 				ProviderName.SqlCe,
 				TestProvName.AllSapHana,
@@ -980,6 +1021,7 @@ namespace Tests.xUpdate
 		public void TestUpdateSkipTake(
 			[DataSources(
 				TestProvName.AllAccess,
+				TestProvName.AllClickHouse,
 				ProviderName.DB2,
 				TestProvName.AllInformix,
 				ProviderName.SqlCe,
@@ -1021,6 +1063,7 @@ namespace Tests.xUpdate
 		public void TestUpdateTakeNotOrdered(
 			[DataSources(
 				TestProvName.AllAccess,
+				TestProvName.AllClickHouse,
 				ProviderName.DB2,
 				TestProvName.AllInformix,
 				TestProvName.AllFirebird,
@@ -1053,7 +1096,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void UpdateSetSelect([DataSources(
-			TestProvName.AllAccess, TestProvName.AllInformix, ProviderName.SqlCe)]
+			TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllInformix, ProviderName.SqlCe)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1081,6 +1124,7 @@ namespace Tests.xUpdate
 		public void UpdateIssue319Regression(
 			[DataSources(
 				TestProvName.AllAccess,
+				TestProvName.AllClickHouse,
 				TestProvName.AllInformix,
 				TestProvName.AllFirebird,
 				TestProvName.AllSQLite,
@@ -1314,6 +1358,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void TestUpdateFromJoin([DataSources(
 			TestProvName.AllAccess, // access doesn't have Replace mapping
+			TestProvName.AllClickHouse,
 			ProviderName.SqlCe,
 			TestProvName.AllInformix)] string context)
 		{
@@ -1608,7 +1653,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void TestSetValueExpr2(
-			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context, [Values("zz", "yy")] string str)
+			[IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)] string context, [Values("zz", "yy")] string str)
 		{
 			var data = new[]
 			{
@@ -1676,7 +1721,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateByAssociationOptional([DataSources(TestProvName.AllInformix)] string context)
+		public void UpdateByAssociationOptional([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db   = GetDataContext(context))
 			using (var main = db.CreateLocalTable(MainTable.Data))
@@ -1701,7 +1746,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateByAssociationRequired([DataSources(TestProvName.AllInformix)] string context)
+		public void UpdateByAssociationRequired([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var main = db.CreateLocalTable(MainTable.Data))
@@ -1726,7 +1771,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateByAssociation2Optional([DataSources(TestProvName.AllInformix)] string context)
+		public void UpdateByAssociation2Optional([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db         = GetDataContext(context))
 			using (var main       = db.CreateLocalTable(MainTable.Data))
@@ -1751,7 +1796,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateByAssociation2Required([DataSources(TestProvName.AllInformix)] string context)
+		public void UpdateByAssociation2Required([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var main = db.CreateLocalTable(MainTable.Data))
@@ -1776,7 +1821,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void AsUpdatableEmptyTest([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void AsUpdatableEmptyTest([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

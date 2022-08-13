@@ -103,6 +103,7 @@ namespace Tests.Linq
 			};
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void TestBoolean([DataSources(false)] string context)
 		{
@@ -179,13 +180,15 @@ namespace Tests.Linq
 			where TTable: TypeTable<TType>
 			where TType: struct
 		{
+			var supportsParameters = !context.IsAnyOf(TestProvName.AllClickHouse);
+
 			using var table = db.CreateLocalTable(data);
 
 			// test parameter
 			db.InlineParameters = false;
 			db.OnNextCommandInitialized((_, cmd) =>
 			{
-				Assert.AreEqual(2, cmd.Parameters.Count);
+				Assert.AreEqual(supportsParameters ? 2 : 0, cmd.Parameters.Count);
 				return cmd;
 			});
 

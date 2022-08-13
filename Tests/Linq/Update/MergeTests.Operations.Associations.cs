@@ -1036,7 +1036,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void TestAssociationsData([DataSources(false)] string context)
+		public void TestAssociationsData([DataSources(false, TestProvName.AllClickHouse)] string context)
 		{
 			ResetPersonIdentity(context);
 

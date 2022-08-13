@@ -235,6 +235,7 @@ namespace Tests.xUpdate
 		[Table("Person")]
 		public class MPerson
 		{
+			[Column("PersonID", Configuration = ProviderName.ClickHouse)]
 			[Column("PersonID", IsIdentity = true), PrimaryKey]
 														   public int     ID;
 			[Column(CanBeNull = false)                   ] public string  FirstName { get; set; } = null!;
