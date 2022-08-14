@@ -5,7 +5,7 @@
 	</PropertyGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
-		<PackageReference Include="IBM.Data.DB2.Core" Version="2.2.0.100" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' " />
+		<PackageReference Include="IBM.Data.DB2.Core" Version="2.2.0.200" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' " />
 		<PackageReference Include="IBM.Data.DB2.Core-lnx" Version="2.2.0.100" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' " />
 		<PackageReference Include="IBM.Data.DB2.Core-osx" Version="2.0.0.100" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' "/>
 	</ItemGroup>
