@@ -15,15 +15,15 @@
 		<dependencies>
 			<group targetFramework=".NETFramework4.5">
 				<dependency id="linq2db" version="4.0.0"  />
-				<dependency id="Npgsql"  version="4.0.12" />
+				<dependency id="Npgsql"  version="4.0.13" />
 			</group>
 			<group targetFramework=".NETFramework4.6.1">
 				<dependency id="linq2db" version="4.0.0"  />
-				<dependency id="Npgsql"  version="4.1.11" />
+				<dependency id="Npgsql"  version="4.1.12" />
 			</group>
 			<group targetFramework=".NETStandard2.0">
 				<dependency id="linq2db" version="4.0.0"  />
-				<dependency id="Npgsql"  version="6.0.4"  />
+				<dependency id="Npgsql"  version="6.0.6"  />
 			</group>
 		</dependencies>
 		<contentFiles>
