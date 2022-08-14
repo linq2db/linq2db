@@ -41,7 +41,7 @@
 		<PackageVersion Include="Net.IBM.Data.Db2"                                      Version="6.0.0.200"     />
 		<PackageVersion Include="Net.IBM.Data.Db2-lnx"                                  Version="6.0.0.200"     />
 		<PackageVersion Include="Net.IBM.Data.Db2-osx"                                  Version="6.0.0.200"     />
-		<PackageVersion Include="Npgsql"                                                Version="6.0.4"         />
+		<PackageVersion Include="Npgsql"                                                Version="7.0.0-preview.7" />
 		<PackageVersion Include="ClickHouse.Client"                                     Version="5.0.3"         />
 		<PackageVersion Include="Octonica.ClickHouseClient"                             Version="2.2.9"         />
 		<PackageVersion Include="Microsoft.Data.Sqlite"                                 Version="6.0.6"         />
