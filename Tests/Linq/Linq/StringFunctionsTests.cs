@@ -44,6 +44,7 @@ namespace Tests.Linq
 				TestProvName.AllSqlServer2017Plus,
 				TestProvName.AllSQLite,
 				TestProvName.AllPostgreSQL,
+				TestProvName.AllClickHouse,
 				TestProvName.AllSapHana,
 				TestProvName.AllMySql,
 				TestProvName.AllOracle,
@@ -71,6 +72,9 @@ namespace Tests.Linq
 		{
 			var data = GenerateData();
 
+			// https://github.com/ClickHouse/ClickHouse/issues/29978
+			// if it changes, CanBeNull = false should be removed from mappings
+			var nullVal = context.IsAnyOf(TestProvName.AllClickHouse) ? string.Empty : null;
 
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(data))
@@ -92,7 +96,7 @@ namespace Tests.Linq
 					select new
 					{
 						Max = g.Max(),
-						Values = AggregateStrings(" -> ", g),
+						Values = AggregateStrings(" -> ", g) ?? nullVal,
 					};
 
 				AreEqual(expected, actual);
@@ -100,9 +104,13 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void AggregationOrderTest([IncludeDataSources(TestProvName.AllSqlServer2017Plus)] string context)
+		public void AggregationOrderTest([IncludeDataSources(TestProvName.AllSqlServer2017Plus, TestProvName.AllClickHouse)] string context)
 		{
 			var data = GenerateData();
+
+			// https://github.com/ClickHouse/ClickHouse/issues/29978
+			// if it changes, CanBeNull = false should be removed from mappings
+			var nullVal = context.IsAnyOf(TestProvName.AllClickHouse) ? string.Empty : null;
 
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(data))
@@ -124,7 +132,7 @@ namespace Tests.Linq
 					select new
 					{
 						Max = g.Max(),
-						Values = AggregateStrings(" -> ", g.OrderBy(e => e)),
+						Values = AggregateStrings(" -> ", g.OrderBy(e => e)) ?? nullVal,
 					};
 
 				AreEqual(expected, actual);
@@ -167,6 +175,9 @@ namespace Tests.Linq
 		{
 			var data = GenerateData();
 
+			// https://github.com/ClickHouse/ClickHouse/issues/29978
+			// if it changes, CanBeNull = false should be removed from mappings
+			var nullVal = context.IsAnyOf(TestProvName.AllClickHouse) ? string.Empty : null;
 
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(data))
@@ -186,7 +197,7 @@ namespace Tests.Linq
 					orderby g.Key.Id
 					select new
 					{
-						Values = AggregateStrings(" -> ", g.Select(e => e.Value1)),
+						Values = AggregateStrings(" -> ", g.Select(e => e.Value1)) ?? nullVal,
 					};
 
 				AreEqual(expected, actual);
@@ -352,6 +363,7 @@ namespace Tests.Linq
 				TestProvName.AllSqlServer,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllMySql,
+				TestProvName.AllClickHouse,
 				TestProvName.AllSQLite
 			)] string context)
 		{
@@ -462,6 +474,10 @@ namespace Tests.Linq
 		{
 			var data = GenerateData();
 
+			// https://github.com/ClickHouse/ClickHouse/issues/29978
+			// if it changes, CanBeNull = false should be removed from mappings
+			var nullVal = context.IsAnyOf(TestProvName.AllClickHouse) ? string.Empty : null;
+
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(data))
 			{
@@ -482,7 +498,7 @@ namespace Tests.Linq
 							   select new
 							   {
 								   Max = g.Max(),
-								   Values = AggregateStrings(" -> ", g),
+								   Values = AggregateStrings(" -> ", g) ?? nullVal,
 							   };
 
 				AreEqual(expected, actual);
@@ -522,6 +538,10 @@ namespace Tests.Linq
 		{
 			var data = GenerateData();
 
+			// https://github.com/ClickHouse/ClickHouse/issues/29978
+			// if it changes, CanBeNull = false should be removed from mappings
+			var nullVal = context.IsAnyOf(TestProvName.AllClickHouse) ? string.Empty : null;
+
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(data))
 			{
@@ -542,7 +562,7 @@ namespace Tests.Linq
 							   select new
 							   {
 								   Max = g.Max(),
-								   Values = AggregateStrings(separator, g),
+								   Values = AggregateStrings(separator, g) ?? nullVal,
 							   };
 
 				AreEqual(expected, actual);

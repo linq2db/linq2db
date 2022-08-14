@@ -114,7 +114,7 @@ namespace Tests.Linq
 		}
 
 		[Test, Order(100)]
-		public void ConcurrentTest1([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void ConcurrentTest1([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (new DisableBaseline("Multi-threading"))
 			{
@@ -149,7 +149,7 @@ namespace Tests.Linq
 		}
 
 		[Test, Order(100)]
-		public void ConcurrentTestWithOptmization([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void ConcurrentTestWithOptmization([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (new DisableBaseline("Multi-threading"))
 			{
@@ -184,7 +184,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ConcurrentTest2([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void ConcurrentTest2([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (new DisableBaseline("Multi-threading"))
 			{
@@ -214,7 +214,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ConcurrentTest3([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void ConcurrentTest3([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (new DisableBaseline("Multi-threading"))
 			{
@@ -337,6 +337,7 @@ namespace Tests.Linq
 				select x;
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void ContainsTest([DataSources] string context)
 		{
@@ -350,6 +351,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public async Task ContainsTestAsync([DataSources] string context)
 		{
@@ -363,6 +365,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void AnyTest([DataSources] string context)
 		{
@@ -376,6 +379,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public async Task AnyTestAsync([DataSources] string context)
 		{
@@ -389,6 +393,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void AnyTest2([DataSources] string context)
 		{
@@ -402,6 +407,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public async Task AnyTestAsync2([DataSources] string context)
 		{

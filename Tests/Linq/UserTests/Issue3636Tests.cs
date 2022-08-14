@@ -31,7 +31,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void CheckCacheIssue([IncludeDataSources(TestProvName.AllPostgreSQL)] string context, [Values(2, 85)] int myId)
+		public void CheckCacheIssue([IncludeDataSources(TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)] string context, [Values(2, 85)] int myId)
 		{
 			var data1 = new[] { new T1 { ID = 1, ID2 = 2 }, new T1 { ID = 2, ID2 = 2 }, new T1 { ID = 2, ID2 = 85 } };
 			var data2 = new[] { new T2 { ID = 1, ID2 = 2 }, new T2 { ID = 1, ID2 = 2 } };

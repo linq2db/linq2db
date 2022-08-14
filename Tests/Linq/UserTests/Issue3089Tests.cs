@@ -23,7 +23,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestUnion1([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		public void TestUnion1([IncludeDataSources(TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable<TableTime>())
@@ -42,7 +42,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestUnion2([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		public void TestUnion2([IncludeDataSources(TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable<TableTime>())
@@ -62,7 +62,7 @@ namespace Tests.UserTests
 
 		[ActiveIssue(3360)]
 		[Test]
-		public void TestUnion3([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		public void TestUnion3([IncludeDataSources(TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable<TableTime>())
@@ -82,7 +82,7 @@ namespace Tests.UserTests
 
 		[ActiveIssue(3360)]
 		[Test]
-		public void TestUnion4([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		public void TestUnion4([IncludeDataSources(TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable<TableTime>())

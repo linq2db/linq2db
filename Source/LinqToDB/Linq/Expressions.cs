@@ -1550,6 +1550,27 @@ namespace LinqToDB.Linq
 				}},
 
 				#endregion
+
+				#region ClickHouse
+
+				{ ProviderName.ClickHouse, new Dictionary<MemberHelper.MemberInfoWithType,IExpressionInfo> {
+					{ M(() => DateTime.Now.Date      ), N(() => L<DateTime,DateTime>      ((DateTime obj)       => ClickHouseGetDate(obj)!.Value)) },
+					{ M(() => DateTimeOffset.Now.Date), N(() => L<DateTimeOffset,DateTime>((DateTimeOffset obj) => ClickHouseGetDate(obj)!.Value)) },
+
+					{ M(() => DateTimeOffset.Now.TimeOfDay), N(() => L<DateTimeOffset,TimeSpan>((DateTimeOffset obj) => ClickHouseGetTime(obj)!.Value)) },
+					{ M(() => DateTime.Now.TimeOfDay      ), N(() => L<DateTime,TimeSpan>      ((DateTime obj)       => ClickHouseGetTime(obj)!.Value)) },
+
+					// TODO:
+					// we shouldn't have this mapping, but currently Math.Round -> Sql.RoundToEven mapping ignores expression attribute on Sql.RoundToEven
+					// and maps it to expression
+					{ M(() => Sql.RoundToEven(0m)   ), N(() => L<decimal?,decimal?>     ( v   => ClickHouseRoundToEven(v))) },
+					{ M(() => Sql.RoundToEven(0.0)  ), N(() => L<double?, double?>      ( v   => ClickHouseRoundToEven(v))) },
+					{ M(() => Sql.RoundToEven(0m, 0)), N(() => L<decimal?,int?,decimal?>((v,p)=> ClickHouseRoundToEven(v, p))) },
+					{ M(() => Sql.RoundToEven(0.0,0)), N(() => L<double?, int?,double?> ((v,p)=> ClickHouseRoundToEven(v, p))) },
+
+				}},
+
+				#endregion
 			};
 
 #if DEBUG
@@ -1802,6 +1823,28 @@ namespace LinqToDB.Linq
 				(DateTime?)null :
 				new DateTime(year.Value, month.Value, day.Value);
 		}
+
+		// ClickHouse
+		//
+		[Sql.Function("toDate32", ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
+		private static DateTime? ClickHouseGetDate(DateTimeOffset? dto) => throw new InvalidOperationException();
+		[Sql.Function("toDate32", ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
+		private static DateTime? ClickHouseGetDate(DateTime?       dt) => throw new InvalidOperationException();
+
+		// :-/
+		[Sql.Expression("toInt64((toUnixTimestamp64Nano(toDateTime64({0}, 7)) - toUnixTimestamp64Nano(toDateTime64(toDate32({0}), 7))) / 100)", ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable, Precedence = SqlQuery.Precedence.Primary)]
+		private static TimeSpan? ClickHouseGetTime(DateTimeOffset? dto) => throw new InvalidOperationException();
+		[Sql.Expression("toInt64((toUnixTimestamp64Nano(toDateTime64({0}, 7)) - toUnixTimestamp64Nano(toDateTime64(toDate32({0}), 7))) / 100)", ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable, Precedence = SqlQuery.Precedence.Primary)]
+		private static TimeSpan? ClickHouseGetTime(DateTime? dt) => throw new InvalidOperationException();
+
+		[Sql.Function("roundBankers", IsNullable = Sql.IsNullableType.SameAsFirstParameter)]
+		private static decimal? ClickHouseRoundToEven(decimal? value) => throw new InvalidOperationException();
+		[Sql.Function("roundBankers", IsNullable = Sql.IsNullableType.SameAsFirstParameter)]
+		private static double? ClickHouseRoundToEven(double? value) => throw new InvalidOperationException();
+		[Sql.Function("roundBankers", IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
+		private static decimal? ClickHouseRoundToEven(decimal? value, int? precision) => throw new InvalidOperationException();
+		[Sql.Function("roundBankers", IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
+		private static double? ClickHouseRoundToEven(double? value, int? precision) => throw new InvalidOperationException();
 
 		#endregion
 

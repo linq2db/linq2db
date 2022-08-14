@@ -148,7 +148,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestLoadWith([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestLoadWith([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var (masterRecords, detailRecords) = GenerateData();
 			var intParam = 0;
@@ -186,7 +186,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2442")]
-		public async Task TestLoadWithAsyncEnumerator([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public async Task TestLoadWithAsyncEnumerator([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var (masterRecords, detailRecords) = GenerateData();
 			var intParam = 0;
@@ -254,7 +254,7 @@ namespace Tests.Linq
 
 
 		[Test]
-		public void TestLoadWithAndDuplications([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestLoadWithAndDuplications([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var (masterRecords, detailRecords) = GenerateData();
 			
@@ -367,7 +367,7 @@ FROM
 		}
 
 		[Test]
-		public void TestLoadWithDeep([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestLoadWithDeep([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var (masterRecords, detailRecords, subDetailRecords) = GenerateDataWithSubDetail();
 			var intParam = 1;
@@ -412,7 +412,7 @@ FROM
 		}
 
 		[Test]
-		public void TestMethodMappedProjection([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestMethodMappedProjection([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var (masterRecords, detailRecords, subDetailRecords) = GenerateDataWithSubDetail();
 			var intParam = 1;
@@ -444,7 +444,7 @@ FROM
 
 
 		[Test]
-		public void TestSelectProjectionList([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestSelectProjectionList([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var (masterRecords, detailRecords) = GenerateData();
 			var intParam = 0;
@@ -467,7 +467,7 @@ FROM
 		}
 
 		[Test]
-		public async Task TestSelectProjectionListAsync([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public async Task TestSelectProjectionListAsync([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var (masterRecords, detailRecords) = GenerateData();
 			var intParam = 0;
@@ -491,7 +491,7 @@ FROM
 		}
 
 		[Test]
-		public async Task TestSelectAssociationProjectionListAsync([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public async Task TestSelectAssociationProjectionListAsync([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var (masterRecords, detailRecords) = GenerateData();
 			var intParam = 0;
@@ -540,7 +540,7 @@ FROM
 		}
 
 		[Test]
-		public void TestQueryableAssociation([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestQueryableAssociation([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var (masterRecords, detailRecords) = GenerateData();
 
@@ -563,7 +563,7 @@ FROM
 		}
 
 		[Test]
-		public void TestRecursive([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestRecursive([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var (masterRecords, detailRecords, subDetailRecords) = GenerateDataWithSubDetail();
 
@@ -608,7 +608,7 @@ FROM
 		}
 
 		[Test]
-		public void TestWhenMasterIsNotConnected([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestWhenMasterIsNotConnected([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var (masterRecords, detailRecords) = GenerateDataManyId();
 
@@ -642,7 +642,7 @@ FROM
 		}
 
 		[Test]
-		public void TestSelectMany([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestSelectMany([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var (masterRecords, detailRecords, subDetailRecords) = GenerateDataWithSubDetail();
 
@@ -679,8 +679,9 @@ FROM
 			}
 		}
 
+		[ActiveIssue("https://github.com/linq2db/linq2db/issues/3619", Configuration = TestProvName.AllClickHouse)]
 		[Test]
-		public void TestJoin([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestJoin([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var (masterRecords, detailRecords) = GenerateData();
 
@@ -712,7 +713,7 @@ FROM
 		}
 
 		[Test]
-		public void TestPureGroupJoin([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestPureGroupJoin([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var (masterRecords, detailRecords) = GenerateData();
 
@@ -738,8 +739,9 @@ FROM
 			}
 		}
 
+		[ActiveIssue("https://github.com/linq2db/linq2db/issues/3619", Configuration = TestProvName.AllClickHouse)]
 		[Test]
-		public void TestGroupJoin([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestGroupJoin([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var (masterRecords, detailRecords, subDetailRecords) = GenerateDataWithSubDetail();
 
@@ -780,7 +782,7 @@ FROM
 		}
 
 		[Test]
-		public void TestDeepGroupJoin([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestDeepGroupJoin([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var (masterRecords, detailRecords, subDetailRecords) = GenerateDataWithSubDetail();
 
@@ -824,7 +826,7 @@ FROM
 		}
 
 		[Test]
-		public void TestDeepJoin([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestDeepJoin([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var (masterRecords, detailRecords, subDetailRecords) = GenerateDataWithSubDetail();
 
@@ -868,7 +870,7 @@ FROM
 		}
 
 		[Test]
-		public void TestSubSelect([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestSubSelect([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var (masterRecords, detailRecords, subDetailRecords) = GenerateDataWithSubDetail();
 
@@ -906,8 +908,9 @@ FROM
 			}
 		}
 
+		[ActiveIssue("https://github.com/linq2db/linq2db/issues/3619", Configuration = TestProvName.AllClickHouse)]
 		[Test]
-		public void TestSelectGroupBy([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestSelectGroupBy([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var (masterRecords, detailRecords) = GenerateData();
 
@@ -948,7 +951,7 @@ FROM
 		}
 
 		[Test]
-		public void TestTupleQueryingFabric([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestTupleQueryingFabric([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var (masterRecords, detailRecords) = GenerateData();
 
@@ -968,7 +971,7 @@ FROM
 		}
 
 		[Test]
-		public void TestTupleQueryingNew([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestTupleQueryingNew([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var (masterRecords, detailRecords) = GenerateData();
 
@@ -988,7 +991,7 @@ FROM
 		}
 
 		[Test]
-		public void TestCorrectFilteringMembers([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestCorrectFilteringMembers([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var (masterRecords, detailRecords) = GenerateData();
 
@@ -1030,7 +1033,7 @@ FROM
 		public static X InitData<X>(X entity) => entity; // for simplicity
 
 		[Test]
-		public void ProjectionWithExtension([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void ProjectionWithExtension([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var (masterRecords, detailRecords) = GenerateData();
 
@@ -1049,7 +1052,7 @@ FROM
 
 
 		[Test]
-		public void ProjectionWithoutClass([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void ProjectionWithoutClass([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var (masterRecords, detailRecords) = GenerateData();
 
@@ -1076,7 +1079,7 @@ FROM
 		}
 
 		[Test]
-		public void FirstSingleWithFilter([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void FirstSingleWithFilter([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var (masterRecords, detailRecords) = GenerateData();
 
@@ -1097,7 +1100,7 @@ FROM
 		}
 
 		[Test]
-		public async Task FirstSingleWithFilterAsync([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public async Task FirstSingleWithFilterAsync([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var (masterRecords, detailRecords) = GenerateData();
 
@@ -1198,8 +1201,9 @@ FROM
 			};
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
-		public void Issue1862TestProjections([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		public void Issue1862TestProjections([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db      = GetDataContext(context))
 			using (var blog    = db.CreateLocalTable(Blog.Data))
@@ -1360,7 +1364,7 @@ FROM
 		}
 
 		[Test]
-		public void Issue2196([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		public void Issue2196([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(EventScheduleItem.Items))
@@ -1437,7 +1441,7 @@ FROM
 		}
 
 		[Test]
-		public void Issue2307([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		public void Issue2307([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var sheets = db.CreateLocalTable(AttendanceSheet.Items))

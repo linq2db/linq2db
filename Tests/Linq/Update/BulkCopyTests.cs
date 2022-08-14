@@ -24,7 +24,8 @@ namespace Tests.xUpdate
 		[Table("AllTypes")]
 		public class TestTable1
 		{
-			[Identity]
+			[Column(Configuration = ProviderName.ClickHouse)]
+			[Column(IsIdentity = true)]
 			public int ID { get; set; }
 
 			[Column("intDataType")]
@@ -38,7 +39,8 @@ namespace Tests.xUpdate
 		[Table("AllTypes")]
 		public class TestTable2
 		{
-			[Identity, Column(SkipOnInsert = true)]
+			[Column(SkipOnInsert = true, Configuration = ProviderName.ClickHouse)]
+			[Column(SkipOnInsert = true, IsIdentity = true)]
 			public int ID { get; set; }
 
 			[Column("intDataType")]
@@ -49,7 +51,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public async Task KeepIdentity_SkipOnInsertTrue(
-			[DataSources(false)]string context,
+			[DataSources(false, TestProvName.AllClickHouse)] string context,
 			[Values(null, true, false)                     ] bool? keepIdentity,
 			[Values                                        ] BulkCopyType copyType,
 			[Values(0, 1, 2)                               ] int asyncMode) // 0 == sync, 1 == async, 2 == async with IAsyncEnumerable
@@ -135,7 +137,8 @@ namespace Tests.xUpdate
 
 		[Test]
 		public async Task KeepIdentity_SkipOnInsertFalse(
-			[DataSources(false)]        string       context,
+			[DataSources(false, TestProvName.AllClickHouse)]
+		                                string       context,
 			[Values(null, true, false)] bool?        keepIdentity,
 			[Values]                    BulkCopyType copyType,
 			[Values(0, 1, 2)]           int          asyncMode) // 0 == sync, 1 == async, 2 == async with IAsyncEnumerable
@@ -282,8 +285,9 @@ namespace Tests.xUpdate
 			}
 		}
 
+		// ClickHouse: parameters support not implemented (yet?)
 		[Test]
-		public void UseParametersTest([DataSources(false)] string context)
+		public void UseParametersTest([DataSources(false, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = new TestDataConnection(context);
 			using var _ = new RestoreBaseTables(db);
@@ -494,7 +498,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void BulkCopyTPHDefault(
-			[IncludeDataSources(false, TestProvName.AllSQLite)] string context,
+			[IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context,
 			[Values] BulkCopyType copyType)
 		{
 			var data = new BaseDefaultDiscriminator[]

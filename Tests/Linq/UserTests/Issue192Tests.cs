@@ -70,6 +70,9 @@ namespace Tests.UserTests
 
 			ms.SetConvertExpression<bool,   DataParameter>(_ => DataParameter.Char(null, _ ? 'Y' : 'N'));
 			ms.SetConvertExpression<char,   bool>(_ => _ == 'Y');
+			if (context.IsAnyOf(TestProvName.AllClickHouse))
+				ms.SetConvertExpression<string, bool>(_ => _.Trim('\0') == "Y");
+			else
 				ms.SetConvertExpression<string, bool>(_ => _.Trim() == "Y");
 
 			ms.SetConvertExpression<Guid?,  DataParameter>(_ => DataParameter.VarChar(null, _.ToString()));

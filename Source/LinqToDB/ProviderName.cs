@@ -203,6 +203,22 @@ namespace LinqToDB
 		/// SAP HANA ODBC provider.
 		/// Used as configuration name for SAP HANA mapping schema <see cref="DataProvider.SapHana.SapHanaMappingSchema.OdbcMappingSchema"/>.
 		/// </summary>
-		public const string SapHanaOdbc = "SapHana.Odbc";
+		public const string SapHanaOdbc   = "SapHana.Odbc";
+		/// <summary>
+		/// ClickHouse provider base name.
+		/// </summary>
+		public const string ClickHouse        = "ClickHouse";
+		/// <summary>
+		/// ClickHouse provider using Octonica.ClickHouseClient ADO.NET provider.
+		/// </summary>
+		public const string ClickHouseOctonica = "ClickHouse.Octonica";
+		/// <summary>
+		/// ClickHouse provider using ClickHouse.Client ADO.NET provider.
+		/// </summary>
+		public const string ClickHouseClient   = "ClickHouse.Client";
+		/// <summary>
+		/// ClickHouse provider using MySqlConnector ADO.NET provider.
+		/// </summary>
+		public const string ClickHouseMySql   = "ClickHouse.MySql";
 	}
 }

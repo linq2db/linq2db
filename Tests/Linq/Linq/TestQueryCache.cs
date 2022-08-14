@@ -120,7 +120,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestSchema([IncludeDataSources(ProviderName.SQLiteMS)] string context)
+		public void TestSchema([IncludeDataSources(ProviderName.SQLiteMS, TestProvName.AllClickHouse)] string context)
 		{
 			void TestMethod(string columnName, string? schemaName = null)
 			{
@@ -160,7 +160,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestSqlQueryDepended([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestSqlQueryDepended([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<ManyFields>())

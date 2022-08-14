@@ -40,7 +40,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void SampleSelectTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void SampleSelectTest([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<Email>())

@@ -118,6 +118,7 @@ namespace Tests.Linq
 					from t in from p in db.Types select Sql.Degrees((double)p.MoneyValue)!.Value where t != 0.1 select Math.Floor(t));
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void Degrees3([DataSources(ProviderName.SQLiteMS)] string context)
 		{
@@ -254,8 +255,9 @@ namespace Tests.Linq
 					from t in from p in db.Types select Math.Round(p.MoneyValue, MidpointRounding.AwayFromZero) where t != 0 select t);
 		}
 
+		// ClickHouse: AwayFromZero rounding supported only for decimals. Double use bankers rounding (Round5 test)
 		[Test]
-		public void Round6([DataSources] string context)
+		public void Round6([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(

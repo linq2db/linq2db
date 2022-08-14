@@ -63,7 +63,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestCustomType([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestCustomType([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var items = new[]
 			{
@@ -93,7 +93,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestCustomTypeConversion([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestCustomTypeConversion([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var items = new[]
 			{

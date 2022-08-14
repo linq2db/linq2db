@@ -56,6 +56,7 @@ namespace Tests.xUpdate
 							BoolValue = true
 						});
 
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
 						Assert.AreEqual(
 							Types.Select(_ => _.ID / 3).Distinct().Count(),
 							cnt);
@@ -95,6 +96,7 @@ namespace Tests.xUpdate
 							.Value(t => t.BoolValue, t => true)
 						.Insert();
 
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
 						Assert.AreEqual(
 							Types.Select(_ => _.ID / 3).Distinct().Count(),
 							cnt);
@@ -123,6 +125,7 @@ namespace Tests.xUpdate
 							ParentID = 1,
 							ChildID  = id
 						});
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
 						Assert.AreEqual(1, cnt);
 
 					Assert.AreEqual(1, db.Child.Count(c => c.ChildID == id));
@@ -150,6 +153,7 @@ namespace Tests.xUpdate
 								.Value(c => c.ParentID, () => 1)
 								.Value(c => c.ChildID,  () => id)
 							.Insert();
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
 						Assert.AreEqual(1, cnt);
 
 					Assert.AreEqual(1, db.Child.Count(c => c.ChildID == id));
@@ -177,6 +181,7 @@ namespace Tests.xUpdate
 								.Value(c => c.ParentID, () => 1)
 								.Value(c => c.ChildID,  () => id)
 							.InsertAsync();
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
 						Assert.AreEqual(1, cnt);
 
 					Assert.AreEqual(1, await db.Child.CountAsync(c => c.ChildID == id));
@@ -206,6 +211,7 @@ namespace Tests.xUpdate
 								ParentID = c.ParentID,
 								ChildID  = id
 							});
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
 						Assert.AreEqual(1, cnt);
 
 					Assert.AreEqual(1, db.Child.Count(c => c.ChildID == id));
@@ -235,6 +241,7 @@ namespace Tests.xUpdate
 								ParentID = c.ParentID,
 								ChildID  = id
 							});
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
 						Assert.AreEqual(1, cnt);
 
 					Assert.AreEqual(1, await db.Child.CountAsync(c => c.ChildID == id));
@@ -265,6 +272,7 @@ namespace Tests.xUpdate
 							ChildID  = id
 						})
 						.Insert(db.Child, c => c);
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
 						Assert.AreEqual(1, cnt);
 
 					Assert.AreEqual(1, db.Child.Count(c => c.ChildID == id));
@@ -293,6 +301,7 @@ namespace Tests.xUpdate
 								.Value(c => c.ParentID, c  => c.ParentID)
 								.Value(c => c.ChildID,  () => id)
 							.Insert();
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
 						Assert.AreEqual(1, cnt);
 
 					Assert.AreEqual(1, db.Child.Count(c => c.ChildID == id));
@@ -341,6 +350,7 @@ namespace Tests.xUpdate
 								.Value(c => c.ParentID, c  => c.ParentID)
 								.Value(c => c.ChildID,  () => id)
 							.InsertAsync();
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
 						Assert.AreEqual(1, cnt);
 
 					Assert.AreEqual(1, await db.Child.CountAsync(c => c.ChildID == id));
@@ -369,6 +379,7 @@ namespace Tests.xUpdate
 								.Value(c => c.ParentID, c => c.ParentID)
 								.Value(c => c.ChildID,  id)
 							.Insert();
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
 						Assert.AreEqual(1, cnt);
 
 					Assert.AreEqual(1, db.Child.Count(c => c.ChildID == id));
@@ -395,6 +406,7 @@ namespace Tests.xUpdate
 								.Value(p => p.ParentID, c => c.ParentID + 1000)
 								.Value(p => p.Value1,   c => (int?)c.ChildID)
 							.Insert();
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
 						Assert.AreEqual(1, cnt);
 
 					Assert.AreEqual(1, db.Parent.Count(p => p.Value1 == 11));
@@ -417,7 +429,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void Insert6WithSameFields([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void Insert6WithSameFields([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(new []
@@ -434,6 +446,7 @@ namespace Tests.xUpdate
 					.Value(p => p.ModifiedOn, c => Sql.CurrentTimestamp)
 					.Insert();
 
+				if (!context.IsAnyOf(TestProvName.AllClickHouse))
 					Assert.That(affected, Is.EqualTo(2));
 			}
 		}
@@ -454,6 +467,7 @@ namespace Tests.xUpdate
 							.Value(c => c.ChildID,  () => id)
 							.Value(c => c.ParentID, 1)
 						.Insert();
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
 						Assert.AreEqual(1, cnt);
 
 					Assert.AreEqual(1, db.Child.Count(c => c.ChildID == id));
@@ -481,6 +495,7 @@ namespace Tests.xUpdate
 							.Value(c => c.ParentID, 1)
 							.Value(c => c.ChildID,  () => id)
 						.Insert();
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
 						Assert.AreEqual(1, cnt);
 
 					Assert.AreEqual(1, db.Child.Count(c => c.ChildID == id));
@@ -513,6 +528,7 @@ namespace Tests.xUpdate
 							ParentID = p.ParentID,
 							ChildID  = p.ParentID,
 						});
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
 						Assert.AreEqual(1, cnt);
 
 					Assert.AreEqual(1, db.Child.Count(c => c.ParentID == id));
@@ -692,6 +708,7 @@ namespace Tests.xUpdate
 							ParentID = 1001,
 							Value1   = p.Value1
 						});
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
 						Assert.AreEqual(1, cnt);
 
 						Assert.AreEqual(1, db.Parent4.Count(_ => _.ParentID == id && _.Value1 == p.Value1));
@@ -718,6 +735,7 @@ namespace Tests.xUpdate
 							.Value(_ => _.ParentID, id)
 							.Value(_ => _.Value1,   TypeValue.Value1)
 						.Insert();
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
 						Assert.AreEqual(1, cnt);
 
 					Assert.AreEqual(1, db.Parent4.Count(_ => _.ParentID == id));
@@ -744,6 +762,7 @@ namespace Tests.xUpdate
 							.Value(_ => _.ParentID, id)
 							.Value(_ => _.Value1,   () => TypeValue.Value1)
 						.Insert();
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
 						Assert.AreEqual(1, cnt);
 
 					Assert.AreEqual(1, db.Parent4.Count(_ => _.ParentID == id));
@@ -766,6 +785,7 @@ namespace Tests.xUpdate
 						.Value(p => p.ParentID, 1001)
 						.Value(p => p.Value1,   (int?)null)
 					.Insert();
+				if (!context.IsAnyOf(TestProvName.AllClickHouse))
 					Assert.AreEqual(1, cnt);
 
 				Assert.AreEqual(1, db.Parent.Count(p => p.ParentID == 1001));
@@ -773,7 +793,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void InsertWithIdentity1([DataSources] string context)
+		public void InsertWithIdentity1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new DeletePerson(db))
@@ -797,7 +817,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public async Task InsertWithIdentity1Async([DataSources] string context)
+		public async Task InsertWithIdentity1Async([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new DeletePerson(db))
@@ -821,7 +841,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void InsertWithIdentity2([DataSources] string context)
+		public void InsertWithIdentity2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new DeletePerson(db))
@@ -843,7 +863,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public async Task InsertWithIdentity2Async([DataSources] string context)
+		public async Task InsertWithIdentity2Async([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new DeletePerson(db))
@@ -865,7 +885,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void InsertWithIdentity3([DataSources] string context)
+		public void InsertWithIdentity3([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new DeletePerson(db))
@@ -887,7 +907,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void InsertWithIdentity4([DataSources] string context)
+		public void InsertWithIdentity4([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new DeletePerson(db))
@@ -913,7 +933,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public async Task InsertWithIdentity4Async([DataSources] string context)
+		public async Task InsertWithIdentity4Async([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new DeletePerson(db))
@@ -939,7 +959,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void InsertWithIdentity5([DataSources] string context)
+		public void InsertWithIdentity5([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new DeletePerson(db))
@@ -1175,7 +1195,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public async Task InsertOrReplace1Async([DataSources] string context)
+		public async Task InsertOrReplace1Async([InsertOrUpdateDataSources] string context)
 		{
 			ResetPersonIdentity(context);
 
@@ -1390,7 +1410,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void InsertBatch1([IncludeDataSources(TestProvName.AllOracle)]
+		public void InsertBatch1([IncludeDataSources(TestProvName.AllOracle, TestProvName.AllClickHouse)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1399,11 +1419,19 @@ namespace Tests.xUpdate
 
 				try
 				{
-					((DataConnection)db).BulkCopy(1, new[]
+					var data = new[]
 					{
 						new LinqDataTypes2 { ID = 1003, MoneyValue = 0m, DateTimeValue = null, BoolValue = true,  GuidValue = new Guid("ef129165-6ffe-4df9-bb6b-bb16e413c883"), SmallIntValue =  null, IntValue = null },
 						new LinqDataTypes2 { ID = 1004, MoneyValue = 0m, DateTimeValue = null, BoolValue = true,  GuidValue = new Guid("ef129165-6ffe-4df9-bb6b-bb16e413c883"), SmallIntValue =  null, IntValue = null }
-					});
+					};
+
+					// workaround for https://github.com/DarkWanderer/ClickHouse.Client/issues/152
+					var options = new BulkCopyOptions();
+					options.MaxBatchSize = 1;
+					if (context.IsAnyOf(ProviderName.ClickHouseClient))
+						options.WithoutSession = true;
+
+					((DataConnection)db).BulkCopy(options, data);
 				}
 				finally
 				{
@@ -1413,7 +1441,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void InsertBatch2([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void InsertBatch2([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1491,8 +1519,11 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void Insert14([DataSources(
-			ProviderName.SqlCe, TestProvName.AllAccess,
-			TestProvName.AllSqlServer2005, TestProvName.AllSybase)]
+			ProviderName.SqlCe,
+			TestProvName.AllAccess,
+			TestProvName.AllClickHouse,
+			TestProvName.AllSqlServer2005,
+			TestProvName.AllSybase)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1606,7 +1637,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void InsertSingleIdentity([DataSources(
-			TestProvName.AllInformix, ProviderName.SqlCe, TestProvName.AllSapHana)]
+			TestProvName.AllInformix, ProviderName.SqlCe, TestProvName.AllSapHana, TestProvName.AllClickHouse)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1690,7 +1721,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void InsertWith([IncludeDataSources(
-			TestProvName.AllSqlServer2008)]
+			TestProvName.AllSqlServer2008, TestProvName.AllClickHouse)]
 			string context)
 		{
 			var m = null as int?;
@@ -1763,6 +1794,7 @@ namespace Tests.xUpdate
 
 					// insert a row into the table
 					db.Insert(person, tableName: tableName, schemaName: schemaName);
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
 					{
 						var newId1 = db.InsertWithInt32Identity(person, tableName: tableName, schemaName: schemaName);
 						var newId2 = db.InsertWithIdentity(person, tableName: tableName, schemaName: schemaName);
@@ -1809,6 +1841,7 @@ namespace Tests.xUpdate
 
 					// insert a row into the table
 					await db.InsertAsync(person, tableName: tableName, schemaName: schemaName);
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
 					{
 						var newId1 = await db.InsertWithInt32IdentityAsync(person, tableName: tableName, schemaName: schemaName);
 						var newId2 = await db.InsertWithIdentityAsync(person, tableName: tableName, schemaName: schemaName);
@@ -1877,7 +1910,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public async Task InsertOrReplaceByTableNameAsync([DataSources] string context)
+		public async Task InsertOrReplaceByTableNameAsync([InsertOrUpdateDataSources] string context)
 		{
 			const string? schemaName = null;
 			var tableName  = "xxPatient" + (context.IsAnyOf(TestProvName.AllFirebird) ? TestUtils.GetNext().ToString() : string.Empty);
@@ -2041,13 +2074,14 @@ namespace Tests.xUpdate
 				vi = vi.Value(x => x.ID, 123).Value(x => x.FirstName, "John");
 
 				var cnt = vi.Insert();
+				if (!context.IsAnyOf(TestProvName.AllClickHouse))
 					Assert.AreEqual(1, cnt);
 				Assert.AreEqual(1, table.Count(x => x.ID == 123 && x.FirstName == "John"));
 			}
 		}
 
 		[Test]
-		public void AsValueInsertableEmptyTest([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void AsValueInsertableEmptyTest([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

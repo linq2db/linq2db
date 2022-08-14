@@ -87,7 +87,7 @@ namespace Tests.Linq
 
 
 		[Test]
-		public void AsSubQueryTest([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void AsSubQueryTest([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var testData = GenerateTestData();
 
@@ -129,7 +129,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void AsSubQueryGrouping1([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer)] string context)
+		public void AsSubQueryGrouping1([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			var testData = GenerateTestData();
 
@@ -146,7 +146,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void AsSubQueryGrouping2([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer)] string context)
+		public void AsSubQueryGrouping2([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			var testData = GenerateTestData();
 
@@ -168,7 +168,7 @@ namespace Tests.Linq
 
 
 		[Test]
-		public void DistinctOptimization([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void DistinctOptimization([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var testData = GenerateTestData();
 
@@ -196,7 +196,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByOptimization([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void GroupByOptimization([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var testData = GenerateTestData();
 
@@ -237,7 +237,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void PrimaryKeyOptimization([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool opimizerSwitch)
+		public void PrimaryKeyOptimization([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool opimizerSwitch)
 		{
 			var testData = GenerateTestData();
 
@@ -266,7 +266,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void HasKeyProjectionOptimization([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool opimizerSwitch)
+		public void HasKeyProjectionOptimization([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool opimizerSwitch)
 		{
 			var testData = GenerateTestData();
 
@@ -338,7 +338,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void HasKeyJoinOptimization([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool opimizerSwitch)
+		public void HasKeyJoinOptimization([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool opimizerSwitch)
 		{
 			var testData = GenerateTestData();
 
@@ -379,7 +379,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void UniqueKeysPropagation([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool opimizerSwitch)
+		public void UniqueKeysPropagation([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool opimizerSwitch)
 		{
 			var testData = GenerateTestData();
 
@@ -417,7 +417,7 @@ namespace Tests.Linq
 
 
 		[Test]
-		public void UniqueKeysAndSubqueries([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool opimizerSwitch)
+		public void UniqueKeysAndSubqueries([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool opimizerSwitch)
 		{
 			var testData = GenerateTestData();
 

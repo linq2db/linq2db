@@ -101,6 +101,11 @@
 			// SAP HANA 2
 			//"SapHana.Odbc",
 			//"SapHana.Native",
+
+			// ClickHouse
+			//"ClickHouse.Octonica",
+			//"ClickHouse.Client",
+			//"ClickHouse.MySql",
 		]
 	},
 
@@ -201,6 +206,11 @@
 			// SAP HANA 2
 			//"SapHana.Odbc",
 			//"SapHana.Native",
+
+			// ClickHouse
+			//"ClickHouse.Octonica",
+			//"ClickHouse.Client",
+			//"ClickHouse.MySql",
 		]
 	},
 
@@ -301,6 +311,11 @@
 			// SAP HANA 2
 			//"SapHana.Odbc",
 			//"SapHana.Native",
+
+			// ClickHouse
+			//"ClickHouse.Octonica",
+			//"ClickHouse.Client",
+			//"ClickHouse.MySql",
 		]
 	},
 
@@ -552,6 +567,15 @@
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
 			"SapHana.Odbc": {
+				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+			},
+			"ClickHouse.Octonica": {
+				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+			},
+			"ClickHouse.Client": {
+				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+			},
+			"ClickHouse.MySql": {
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			}
 		}

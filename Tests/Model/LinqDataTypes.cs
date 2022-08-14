@@ -8,8 +8,11 @@ namespace Tests.Model
 {
 	public class LinqDataTypes : IEquatable<LinqDataTypes>, IComparable
 	{
+		[PrimaryKey(Configuration = ProviderName.ClickHouse)]
 		public int       ID;
+		[Column(DataType = DataType.Decimal64, Scale = 4, Configuration = ProviderName.ClickHouse)]
 		public decimal   MoneyValue;
+		[Column(Precision = 3, Configuration = ProviderName.ClickHouse)]
 		public DateTime  DateTimeValue;
 		[Column(DataType = DataType.Int16, Configuration = ProviderName.Oracle)]
 		public bool      BoolValue;
@@ -82,6 +85,7 @@ namespace Tests.Model
 		// type it explicitly for sql server, because SQL Server 2005+ provider maps DateTime .Net type to DataType.DateTime2 by default
 		[Column(DataType = DataType.DateTime,  Configuration = ProviderName.SqlServer)]
 		[Column(DataType = DataType.DateTime2, Configuration = ProviderName.Oracle)]
+		[Column(Precision = 3, Configuration = ProviderName.ClickHouse)]
 		[Column]                                        public DateTime? DateTimeValue;
 		[Column]                                        public DateTime? DateTimeValue2;
 		[Column(DataType = DataType.Int16, Configuration = ProviderName.Oracle)]

@@ -382,6 +382,7 @@ namespace Tests
 			TestProvName.AllPostgreSQL,
 			TestProvName.AllMySql,
 			TestProvName.AllSapHana,
+			TestProvName.AllClickHouse
 		}.SplitAll()).ToList();
 
 		private const string LinqServiceSuffix = ".LinqService";
@@ -1056,6 +1057,7 @@ namespace Tests
 			// windows: both db and catalog are case sensitive
 			return provider.IsAnyOf(TestProvName.AllSqlServerCS)
 				|| provider.IsAnyOf(ProviderName.DB2)
+				|| provider.IsAnyOf(TestProvName.AllClickHouse)
 				|| provider.IsAnyOf(TestProvName.AllFirebird)
 				|| provider.IsAnyOf(TestProvName.AllInformix)
 				|| provider.IsAnyOf(TestProvName.AllOracle)
@@ -1076,6 +1078,7 @@ namespace Tests
 
 			// unconfigured providers (some could be configured in theory):
 			// Access : no such concept as collation on column level (db-only)
+			// ClickHouse: collation supported only for order by clause
 			// DB2
 			// Informix
 			// Oracle (in theory v12 has collations, but to enable them you need to complete quite a quest...)

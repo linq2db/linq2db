@@ -61,7 +61,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void CalculatedColumnTest1([DataSources] string context)
+		public void CalculatedColumnTest1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -77,7 +77,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void CalculatedColumnTest2([DataSources] string context)
+		public void CalculatedColumnTest2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -94,7 +94,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void CalculatedColumnTest3([DataSources] string context)
+		public void CalculatedColumnTest3([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -117,7 +117,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void CalculatedColumnTest4([DataSources] string context)
+		public void CalculatedColumnTest4([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -157,7 +157,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void CalculatedColumnExpression1([IncludeDataSources(true, TestProvName.AllFirebird)] string context)
+		public void CalculatedColumnExpression1([IncludeDataSources(true, TestProvName.AllFirebird, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -166,7 +166,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void CalculatedColumnExpression2([IncludeDataSources(true, TestProvName.AllFirebird)] string context)
+		public void CalculatedColumnExpression2([IncludeDataSources(true, TestProvName.AllFirebird, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

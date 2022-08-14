@@ -29,7 +29,7 @@ namespace Tests.Linq
 
 		// Excluded providers inline such parameter
 		[Test]
-		public void ExposeSqlStringParameter([DataSources(false, ProviderName.DB2, TestProvName.AllInformix)]
+		public void ExposeSqlStringParameter([DataSources(false, ProviderName.DB2, TestProvName.AllInformix, TestProvName.AllClickHouse)]
 			string context)
 		{
 			using (var db = GetDataConnection(context))

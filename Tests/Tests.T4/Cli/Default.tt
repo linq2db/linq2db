@@ -19,22 +19,24 @@
 	var db2ProviderLocation = $@"{solutionsPath}Tests\Linq\bin\Debug\netcoreapp3.1\IBM.Data.DB2.Core.dll";
 
 	// to skip scaffold, just comment line for specific database/connection
-
-	RunCliTool("Access"    , null                 , "Cli.Default.Access.Odbc"       , Path.Combine(targetDir, "AccessOdbc")        , mode, connectionString: accessOdbcCN);
-	RunCliTool("Access"    , null                 , "Cli.Default.Access.OleDb"      , Path.Combine(targetDir, "AccessOleDb")       , mode, connectionString: accessOleDbCN);
-	RunCliTool("Access"    , null                 , "Cli.Default.Access.Both"       , Path.Combine(targetDir, "AccessBoth")        , mode, connectionString: accessOleDbCN, additionalConnectionString: accessOdbcCN);
-	RunCliTool("DB2"       , "DB2"                , "Cli.Default.DB2"               , Path.Combine(targetDir, "DB2")               , mode, providerLocation: db2ProviderLocation);
-	RunCliTool("Firebird"  , "Firebird4"          , "Cli.Default.Firebird"          , Path.Combine(targetDir, "Firebird")          , mode);
-	RunCliTool("Informix"  , "Informix"           , "Cli.Default.Informix"          , Path.Combine(targetDir, "Informix")          , mode, providerLocation: db2ProviderLocation);
-	RunCliTool("MySQL"     , "MariaDB"            , "Cli.Default.MariaDB"           , Path.Combine(targetDir, "MariaDB")           , mode);
-	RunCliTool("MySQL"     , "MySqlConnector"     , "Cli.Default.MySql"             , Path.Combine(targetDir, "MySql")             , mode);
-	RunCliTool("Oracle"    , "Oracle.11.Managed"  , "Cli.Default.Oracle"            , Path.Combine(targetDir, "Oracle")            , mode);
-	RunCliTool("PostgreSQL", "PostgreSQL.10"      , "Cli.Default.PostgreSQL"        , Path.Combine(targetDir, "PostgreSQL")        , mode);
-	RunCliTool("SapHana"   , "SapHana.Native"     , "Cli.Default.SapHana"           , Path.Combine(targetDir, "SapHana")           , mode);
-	RunCliTool("SqlCe"     , null                 , "Cli.Default.SqlCe"             , Path.Combine(targetDir, "SqlCe")             , mode, connectionString: sqlceCN, providerLocation: @"c:\Program Files\Microsoft SQL Server Compact Edition\v4.0\Private\System.Data.SqlServerCe.dll");
-	RunCliTool("SQLite"    , null                 , "Cli.Default.SQLiteNorthwind"   , Path.Combine(targetDir, "SQLiteNorthwind")   , mode, connectionString: sqliteNwCN);
-	RunCliTool("SQLite"    , null                 , "Cli.Default.SQLite"            , Path.Combine(targetDir, "SQLite")            , mode, connectionString: sqliteCN);
-	RunCliTool("SQLServer" , "SqlServer.Northwind", "Cli.Default.SqlServerNorthwind", Path.Combine(targetDir, "SqlServerNorthwind"), mode);
-	RunCliTool("SQLServer" , "SqlServer.2017"     , "Cli.Default.SqlServer"         , Path.Combine(targetDir, "SqlServer")         , mode);
-	RunCliTool("Sybase"    , "Sybase.Managed"     , "Cli.Default.Sybase"            , Path.Combine(targetDir, "Sybase")            , mode);
+	RunCliTool("Access"         , null                 , "Cli.Default.Access.Odbc"        , Path.Combine(targetDir, "AccessOdbc")         , mode, connectionString: accessOdbcCN);
+	RunCliTool("Access"         , null                 , "Cli.Default.Access.OleDb"       , Path.Combine(targetDir, "AccessOleDb")        , mode, connectionString: accessOleDbCN);
+	RunCliTool("Access"         , null                 , "Cli.Default.Access.Both"        , Path.Combine(targetDir, "AccessBoth")         , mode, connectionString: accessOleDbCN, additionalConnectionString: accessOdbcCN);
+	RunCliTool("DB2"            , "DB2"                , "Cli.Default.DB2"                , Path.Combine(targetDir, "DB2")                , mode, providerLocation: db2ProviderLocation);
+	RunCliTool("Firebird"       , "Firebird4"          , "Cli.Default.Firebird"           , Path.Combine(targetDir, "Firebird")           , mode);
+	RunCliTool("Informix"       , "Informix"           , "Cli.Default.Informix"           , Path.Combine(targetDir, "Informix")           , mode, providerLocation: db2ProviderLocation);
+	RunCliTool("MySQL"          , "MariaDB"            , "Cli.Default.MariaDB"            , Path.Combine(targetDir, "MariaDB")            , mode);
+	RunCliTool("MySQL"          , "MySqlConnector"     , "Cli.Default.MySql"              , Path.Combine(targetDir, "MySql")              , mode);
+	RunCliTool("Oracle"         , "Oracle.11.Managed"  , "Cli.Default.Oracle"             , Path.Combine(targetDir, "Oracle")             , mode);
+	RunCliTool("PostgreSQL"     , "PostgreSQL.10"      , "Cli.Default.PostgreSQL"         , Path.Combine(targetDir, "PostgreSQL")         , mode);
+	RunCliTool("SapHana"        , "SapHana.Native"     , "Cli.Default.SapHana"            , Path.Combine(targetDir, "SapHana")            , mode);
+	RunCliTool("SqlCe"          , null                 , "Cli.Default.SqlCe"              , Path.Combine(targetDir, "SqlCe")              , mode, connectionString: sqlceCN, providerLocation: @"c:\Program Files\Microsoft SQL Server Compact Edition\v4.0\Private\System.Data.SqlServerCe.dll");
+	RunCliTool("SQLite"         , null                 , "Cli.Default.SQLiteNorthwind"    , Path.Combine(targetDir, "SQLiteNorthwind")    , mode, connectionString: sqliteNwCN);
+	RunCliTool("SQLite"         , null                 , "Cli.Default.SQLite"             , Path.Combine(targetDir, "SQLite")             , mode, connectionString: sqliteCN);
+	RunCliTool("SQLServer"      , "SqlServer.Northwind", "Cli.Default.SqlServerNorthwind" , Path.Combine(targetDir, "SqlServerNorthwind") , mode);
+	RunCliTool("SQLServer"      , "SqlServer.2017"     , "Cli.Default.SqlServer"          , Path.Combine(targetDir, "SqlServer")          , mode);
+	RunCliTool("Sybase"         , "Sybase.Managed"     , "Cli.Default.Sybase"             , Path.Combine(targetDir, "Sybase")             , mode);
+	RunCliTool("ClickHouseMySql", "ClickHouse.MySql"   , "Cli.Default.ClickHouse.MySql"   , Path.Combine(targetDir, "ClickHouse.MySql")   , mode);
+	RunCliTool("ClickHouseHttp" , "ClickHouse.Client"  , "Cli.Default.ClickHouse.Client"  , Path.Combine(targetDir, "ClickHouse.Client")  , mode);
+	RunCliTool("ClickHouseTcp"  , "ClickHouse.Octonica", "Cli.Default.ClickHouse.Octonica", Path.Combine(targetDir, "ClickHouse.Octonica"), mode);
 #>

@@ -27,7 +27,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestEntityDescriptor([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TestEntityDescriptor([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = SetFluentMappings();
 
