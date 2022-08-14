@@ -1661,8 +1661,7 @@ namespace LinqToDB.Mapping
 		{
 			if (type == null) throw new ArgumentNullException(nameof(type));
 
-			if (_mapValues == null)
-				_mapValues = new ConcurrentDictionary<Type,MapValue[]?>();
+			_mapValues ??= new ConcurrentDictionary<Type,MapValue[]?>();
 
 			if (_mapValues.TryGetValue(type, out var mapValues))
 				return mapValues;

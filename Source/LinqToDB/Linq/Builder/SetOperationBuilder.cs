@@ -559,8 +559,7 @@ namespace LinqToDB.Linq.Builder
 							foreach (var s in Sequences)
 							{
 								var res = s.BuildExpression(null, level, enforceServerSide);
-								if (ex == null)
-									ex = res;
+								ex ??= res;
 							}
 
 							return ex!;
@@ -679,16 +678,13 @@ namespace LinqToDB.Linq.Builder
 									if (member == null)
 										throw new LinqToDBException($"Expression '{expression}' is not a field.");
 
-									if (member.SqlQueryInfo == null)
-									{
-										member.SqlQueryInfo = new SqlInfo
+									member.SqlQueryInfo ??= new SqlInfo
 										(
 											member.MemberExpression.Member,
 											SubQuery.SelectQuery.Select.Columns[member.SequenceInfo!.Index],
 											SelectQuery,
 											member.SequenceInfo!.Index
 										);
-									}
 
 									return new[] { member.SqlQueryInfo };
 								}

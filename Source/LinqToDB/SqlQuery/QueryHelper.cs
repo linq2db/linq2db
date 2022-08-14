@@ -1769,12 +1769,9 @@ namespace LinqToDB.SqlQuery
 		{
 			var tableToUpdate = updateStatement.Update.Table;
 
-			if (tableToUpdate == null)
-			{
-				tableToUpdate = EnumerateAccessibleSources(updateStatement.SelectQuery)
-					.OfType<SqlTable>()
-					.FirstOrDefault();
-			}
+			tableToUpdate ??= EnumerateAccessibleSources(updateStatement.SelectQuery)
+				.OfType<SqlTable>()
+				.FirstOrDefault();
 
 			return tableToUpdate;
 		}
@@ -1783,12 +1780,9 @@ namespace LinqToDB.SqlQuery
 		{
 			var tableToDelete = deleteStatement.Table;
 
-			if (tableToDelete == null)
-			{
-				tableToDelete = EnumerateAccessibleSources(deleteStatement.SelectQuery)
-					.OfType<SqlTable>()
-					.FirstOrDefault();
-			}
+			tableToDelete ??= EnumerateAccessibleSources(deleteStatement.SelectQuery)
+				.OfType<SqlTable>()
+				.FirstOrDefault();
 
 			return tableToDelete;
 		}

@@ -113,8 +113,7 @@ namespace LinqToDB.DataProvider.MySql
 			{
 				if (_mysqlConnectorInstance == null)
 					lock (_mysqlConnectorSyncRoot)
-						if (_mysqlConnectorInstance == null)
-							_mysqlConnectorInstance = new MySqlConnector.MySqlConnectorProviderAdapter();
+						_mysqlConnectorInstance ??= new MySqlConnector.MySqlConnectorProviderAdapter();
 
 				return _mysqlConnectorInstance;
 			}
@@ -122,8 +121,7 @@ namespace LinqToDB.DataProvider.MySql
 			{
 				if (_mysqlDataInstance == null)
 					lock (_mysqlDataSyncRoot)
-						if (_mysqlDataInstance == null)
-							_mysqlDataInstance = new MySqlData.MySqlDataProviderAdapter();
+						_mysqlDataInstance ??= new MySqlData.MySqlDataProviderAdapter();
 
 				return _mysqlDataInstance;
 			}

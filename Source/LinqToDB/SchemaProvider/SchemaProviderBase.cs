@@ -86,8 +86,7 @@ namespace LinqToDB.SchemaProvider
 
 		public virtual DatabaseSchema GetSchema(DataConnection dataConnection, GetSchemaOptions? options = null)
 		{
-			if (options == null)
-				options = new GetSchemaOptions();
+			options ??= new GetSchemaOptions();
 
 			IncludedSchemas       = GetHashSet(options.IncludedSchemas,  options.StringComparer);
 			ExcludedSchemas       = GetHashSet(options.ExcludedSchemas,  options.StringComparer);

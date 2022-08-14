@@ -148,8 +148,7 @@ namespace LinqToDB.Tools.EntityServices
 
 			if (_keyComparers == null)
 				lock (this)
-					if (_keyComparers == null)
-						_keyComparers = new ConcurrentDictionary<Type,IKeyComparer>();
+					_keyComparers ??= new ConcurrentDictionary<Type,IKeyComparer>();
 
 			var keyComparer = _keyComparers.GetOrAdd(
 				key.GetType(),

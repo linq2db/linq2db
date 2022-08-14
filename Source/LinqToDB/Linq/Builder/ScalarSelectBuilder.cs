@@ -69,8 +69,7 @@ namespace LinqToDB.Linq.Builder
 
 			public Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 			{
-				if (expression == null)
-					expression = ((LambdaExpression)Expression!).Body.Unwrap();
+				expression ??= ((LambdaExpression)Expression!).Body.Unwrap();
 
 				switch (expression.NodeType)
 				{

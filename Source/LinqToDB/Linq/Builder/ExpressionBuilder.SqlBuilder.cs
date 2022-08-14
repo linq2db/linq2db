@@ -607,8 +607,7 @@ namespace LinqToDB.Linq.Builder
 					lambda = Expressions.ConvertMember(MappingSchema, pi.Object.Type, concreteTypeMemberInfo);
 			}
 
-			if (lambda == null)
-				lambda = Expressions.ConvertMember(MappingSchema, pi.Object?.Type, pi.Method);
+			lambda ??= Expressions.ConvertMember(MappingSchema, pi.Object?.Type, pi.Method);
 
 			return lambda == null ? null : OptimizationContext.ConvertMethod(pi, lambda);
 		}
@@ -1664,8 +1663,7 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			if (predicate == null)
-				predicate = new SqlPredicate.ExprExpr(l, op, r, Configuration.Linq.CompareNullsAsValues ? true : null);
+			predicate ??= new SqlPredicate.ExprExpr(l, op, r, Configuration.Linq.CompareNullsAsValues ? true : null);
 			return predicate;
 		}
 
@@ -3163,8 +3161,7 @@ namespace LinqToDB.Linq.Builder
 
 		public void PushDisabledQueryFilters(Type[] disabledFilters)
 		{
-			if (_disabledFilters == null)
-				_disabledFilters = new Stack<Type[]>();
+			_disabledFilters ??= new Stack<Type[]>();
 			_disabledFilters.Push(disabledFilters);
 		}
 

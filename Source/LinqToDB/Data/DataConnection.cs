@@ -431,8 +431,7 @@ namespace LinqToDB.Data
 		{
 			get
 			{
-				if (_isMarsEnabled == null)
-					_isMarsEnabled = (bool)(DataProvider.GetConnectionInfo(this, "IsMarsEnabled") ?? false);
+				_isMarsEnabled ??= (bool)(DataProvider.GetConnectionInfo(this, "IsMarsEnabled") ?? false);
 
 				return _isMarsEnabled.Value;
 			}

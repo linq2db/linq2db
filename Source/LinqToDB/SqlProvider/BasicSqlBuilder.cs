@@ -3747,8 +3747,7 @@ namespace LinqToDB.SqlProvider
 
 		string GetAlias(string desiredAlias, string defaultAlias)
 		{
-			if (_aliases == null)
-				_aliases = OptimizationContext.Aliases.GetUsedTableAliases();
+			_aliases ??= OptimizationContext.Aliases.GetUsedTableAliases();
 
 			var alias = desiredAlias;
 

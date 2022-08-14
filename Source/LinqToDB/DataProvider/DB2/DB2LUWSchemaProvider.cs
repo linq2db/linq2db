@@ -79,8 +79,7 @@ namespace LinqToDB.DataProvider.DB2
 
 		protected void LoadCurrentSchema(DataConnection dataConnection)
 		{
-			if (CurrentSchema == null)
-				CurrentSchema = dataConnection.Execute<string>("select current_schema from sysibm.sysdummy1");
+			CurrentSchema ??= dataConnection.Execute<string>("select current_schema from sysibm.sysdummy1");
 		}
 
 		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection,

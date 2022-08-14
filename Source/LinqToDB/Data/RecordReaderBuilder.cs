@@ -68,8 +68,7 @@ namespace LinqToDB.Data
 
 		private ParameterExpression BuildVariable(Expression expr, string? name = null)
 		{
-			if (name == null)
-				name = expr.Type.Name + ++_varIndex;
+			name ??= expr.Type.Name + ++_varIndex;
 
 			var variable = Expression.Variable(
 				expr.Type,

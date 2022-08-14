@@ -743,8 +743,7 @@ namespace LinqToDB.Mapping
 			if (ex is UnaryExpression expression)
 				ex = expression.Operand;
 
-			if (existingGetter == null)
-				existingGetter = GetExisting;
+			existingGetter ??= GetExisting;
 
 			void SetAttr(Expression e, bool m)
 			{

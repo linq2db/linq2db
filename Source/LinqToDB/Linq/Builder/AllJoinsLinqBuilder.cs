@@ -141,8 +141,7 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-				if (result == null)
-					result = base.ConvertToSql(expression, level, flags);
+				result ??= base.ConvertToSql(expression, level, flags);
 
 				return result;
 			}

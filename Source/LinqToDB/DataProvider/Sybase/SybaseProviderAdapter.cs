@@ -75,8 +75,7 @@ namespace LinqToDB.DataProvider.Sybase
 			{
 				if (_nativeInstance == null)
 					lock (_nativeSyncRoot)
-						if (_nativeInstance == null)
-							_nativeInstance = CreateAdapter(NativeAssemblyName, NativeClientNamespace, NativeProviderFactoryName, true);
+						_nativeInstance ??= CreateAdapter(NativeAssemblyName, NativeClientNamespace, NativeProviderFactoryName, true);
 
 				return _nativeInstance;
 			}
@@ -84,8 +83,7 @@ namespace LinqToDB.DataProvider.Sybase
 			{
 				if (_managedInstance == null)
 					lock (_managedSyncRoot)
-						if (_managedInstance == null)
-							_managedInstance = CreateAdapter(ManagedAssemblyName, ManagedClientNamespace, null, false);
+						_managedInstance ??= CreateAdapter(ManagedAssemblyName, ManagedClientNamespace, null, false);
 
 				return _managedInstance;
 			}

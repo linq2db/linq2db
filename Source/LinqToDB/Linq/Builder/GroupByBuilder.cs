@@ -288,8 +288,7 @@ namespace LinqToDB.Linq.Builder
 
 				public IEnumerator<TElement> GetEnumerator()
 				{
-					if (_items == null)
-						_items = GetItems();
+					_items ??= GetItems();
 
 					return _items.GetEnumerator();
 				}
