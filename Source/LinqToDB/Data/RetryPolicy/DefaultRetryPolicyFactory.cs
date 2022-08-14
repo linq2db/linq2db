@@ -9,7 +9,7 @@
 		{
 			if (dataContext.DataProvider is SqlServerDataProvider)
 				return new SqlServerRetryPolicy();
-			if (dataContext.DataProvider is ClickHouseDataProvider clickHouseDataProvider && clickHouseDataProvider.Name == ProviderName.ClickHouseOctonica)
+			if (dataContext.DataProvider is ClickHouseDataProvider { Name: ProviderName.ClickHouseOctonica } clickHouseDataProvider)
 				return new ClickHouseRetryPolicy();
 
 			return null;
