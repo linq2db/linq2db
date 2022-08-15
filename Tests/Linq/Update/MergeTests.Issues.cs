@@ -794,7 +794,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void TestNullableParameterInSourceQuery([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public void TestNullableParameterInSourceQuery([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, ProviderName.PostgreSQL15)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var target = db.CreateLocalTable<TestNullableParameterTarget>())

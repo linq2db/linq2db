@@ -93,11 +93,12 @@ namespace Tests
 		public const string PostgreSQL13      = "PostgreSQL.13";
 		public const string PostgreSQL14      = "PostgreSQL.14";
 
-		public const string AllPostgreSQL9      = $"{ProviderName.PostgreSQL92},{ProviderName.PostgreSQL93},{ProviderName.PostgreSQL95}";
-		public const string AllPostgreSQL10Plus = $"{PostgreSQL10},{PostgreSQL11},{PostgreSQL12},{PostgreSQL13},{PostgreSQL14}";
-		public const string AllPostgreSQL95Plus = $"{ProviderName.PostgreSQL95},{AllPostgreSQL10Plus}";
-		public const string AllPostgreSQL93Plus = $"{ProviderName.PostgreSQL93},{AllPostgreSQL95Plus}";
-		public const string AllPostgreSQL       = $"{AllPostgreSQL9},{AllPostgreSQL10Plus}";
+		public const string AllPostgreSQL9       = $"{ProviderName.PostgreSQL92},{ProviderName.PostgreSQL93},{ProviderName.PostgreSQL95}";
+		public const string AllPostgreSQL10Plus  = $"{PostgreSQL10},{PostgreSQL11},{PostgreSQL12},{PostgreSQL13},{PostgreSQL14},{ProviderName.PostgreSQL15}";
+		public const string AllPostgreSQL95Plus  = $"{ProviderName.PostgreSQL95},{AllPostgreSQL10Plus}";
+		public const string AllPostgreSQL93Plus  = $"{ProviderName.PostgreSQL93},{AllPostgreSQL95Plus}";
+		public const string AllPostgreSQL        = $"{AllPostgreSQL9},{AllPostgreSQL10Plus}";
+		public const string AllPostgreSQL14Minus = $"{AllPostgreSQL9},{PostgreSQL10},{PostgreSQL11},{PostgreSQL12},{PostgreSQL13},{PostgreSQL14}";
 		#endregion
 
 		#region Firebird

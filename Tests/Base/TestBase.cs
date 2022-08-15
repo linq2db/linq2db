@@ -455,7 +455,7 @@ namespace Tests
 				case ProviderName.Informix:
 					token = '?'; break;
 				case ProviderName.SapHanaNative:
-				case string when context.IsAnyOf(TestProvName.AllOracle):
+				case string when context.IsAnyOf(TestProvName.AllOracle, TestProvName.AllPostgreSQL):
 					token = ':'; break;
 			}
 

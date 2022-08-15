@@ -83,6 +83,7 @@ Legend:
 |PostgreSQL 12<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 7.0.0-preview.7 |:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |PostgreSQL 13<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 7.0.0-preview.7 |:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |PostgreSQL 14<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 7.0.0-preview.7 |:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
+|PostgreSQL 15 (beta 3)<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 7.0.0-preview.7 |:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |Firebird 2.5<br>[FirebirdSql.Data.FirebirdClient](https://www.nuget.org/packages/FirebirdSql.Data.FirebirdClient/) 9.0.2|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |Firebird 3.0<br>[FirebirdSql.Data.FirebirdClient](https://www.nuget.org/packages/FirebirdSql.Data.FirebirdClient/) 9.0.2|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |Firebird 4.0<br>[FirebirdSql.Data.FirebirdClient](https://www.nuget.org/packages/FirebirdSql.Data.FirebirdClient/) 9.0.2|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
@@ -142,6 +143,7 @@ Legend:
 |`TestProvName.PostgreSQL12`|PostgreSQL 12||
 |`TestProvName.PostgreSQL13`|PostgreSQL 13||
 |`TestProvName.PostgreSQL14`|PostgreSQL 14||
+|`TestProvName.PostgreSQL15`|PostgreSQL 15||
 |`ProviderName.Firebird`|Firebird 2.5||
 |`TestProvName.Firebird3`|Firebird 3.0||
 |`TestProvName.Firebird4`|Firebird 4.0||

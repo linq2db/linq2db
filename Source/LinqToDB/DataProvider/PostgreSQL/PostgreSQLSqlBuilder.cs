@@ -1,29 +1,29 @@
 ﻿using System;
-using System.Data;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.Common;
 using System.Globalization;
 using System.Linq;
-using System.Text;
 using System.Net;
 using System.Net.NetworkInformation;
+using System.Text;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
 	using Common;
-	using SqlQuery;
-	using SqlProvider;
 	using Extensions;
 	using Mapping;
+	using SqlProvider;
+	using SqlQuery;
 
-	public class PostgreSQLSqlBuilder : BasicSqlBuilder
+	public partial class PostgreSQLSqlBuilder : BasicSqlBuilder
 	{
 		public PostgreSQLSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
-		PostgreSQLSqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
+		protected PostgreSQLSqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
 		{
 		}
 
@@ -359,11 +359,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			BuildDropTableStatementIfExists(dropTable);
 		}
 
-		protected override void BuildMergeStatement(SqlMergeStatement merge)
-		{
-			throw new LinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
-		}
-
 		protected override void BuildCreateTableCommand(SqlTable table)
 		{
 			string command;
@@ -415,13 +410,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		public override string GetReserveSequenceValuesSql(int count, string sequenceName)
 		{
 			return $"SELECT nextval('{ConvertInline(sequenceName, ConvertType.SequenceName)}') FROM generate_series(1, {count.ToString(CultureInfo.InvariantCulture)})";
-		}
-
-		
-		protected override bool IsSqlValuesTableValueTypeRequired(SqlValuesTable source,
-			IReadOnlyList<ISqlExpression[]> rows, int row, int column)
-		{
-			return row < 0;
 		}
 
 		protected override void BuildQueryExtensions(SqlStatement statement)

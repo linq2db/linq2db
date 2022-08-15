@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
+using System.Net;
 using System.Net.NetworkInformation;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -11,8 +13,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	using Common;
 	using Data;
 	using SchemaProvider;
-	using System.Data;
-	using System.Net;
 	using SqlQuery;
 
 	public class PostgreSQLSchemaProvider : SchemaProviderBase
