@@ -50,8 +50,7 @@ namespace LinqToDB.Mapping
 		{
 			if (_defaultValues == null)
 				lock (this)
-					if (_defaultValues == null)
-						_defaultValues = new ();
+					_defaultValues ??= new ();
 
 			_defaultValues[type] = value;
 
@@ -76,8 +75,7 @@ namespace LinqToDB.Mapping
 		{
 			if (_canBeNull == null)
 				lock (this)
-					if (_canBeNull == null)
-						_canBeNull = new ();
+					_canBeNull ??= new ();
 
 			_canBeNull[type] = value;
 
@@ -134,8 +132,7 @@ namespace LinqToDB.Mapping
 		{
 			if (_genericConvertProviders == null)
 				lock (this)
-					if (_genericConvertProviders == null)
-						_genericConvertProviders = new Dictionary<Type,List<Type[]>>();
+					_genericConvertProviders ??= new Dictionary<Type,List<Type[]>>();
 
 			if (!_genericConvertProviders.ContainsKey(type))
 				lock (_genericConvertProviders)
@@ -188,8 +185,7 @@ namespace LinqToDB.Mapping
 		{
 			if (_scalarTypes == null)
 				lock (this)
-					if (_scalarTypes == null)
-						_scalarTypes = new ();
+					_scalarTypes ??= new ();
 
 			_scalarTypes[type] = isScalarType;
 
@@ -222,8 +218,7 @@ namespace LinqToDB.Mapping
 		{
 			if (_dataTypes == null)
 				lock (this)
-					if (_dataTypes == null)
-						_dataTypes = new ();
+					_dataTypes ??= new ();
 
 			_dataTypes[type] = dataType;
 
@@ -264,8 +259,7 @@ namespace LinqToDB.Mapping
 		{
 			if (_defaultFromEnumTypes == null)
 				lock (this)
-					if (_defaultFromEnumTypes == null)
-						_defaultFromEnumTypes = new ();
+					_defaultFromEnumTypes ??= new ();
 
 			_defaultFromEnumTypes[enumType] = defaultFromType;
 

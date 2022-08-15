@@ -17,7 +17,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ExtractingDataContext([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void ExtractingDataContext([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable<SampleClass>())
@@ -47,7 +47,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void CreatingQuery([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void CreatingQuery([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable<SampleClass>())

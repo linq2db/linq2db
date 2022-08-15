@@ -407,7 +407,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupJoin52([DataSources] string context)
+		public void GroupJoin52([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -423,7 +423,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupJoin53([DataSources] string context)
+		public void GroupJoin53([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -439,7 +439,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupJoin54([DataSources] string context)
+		public void GroupJoin54([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -482,7 +482,7 @@ namespace Tests.Linq
 				Assert.AreEqual(list1[0].p.ParentID, list2[0].p.ParentID);
 				Assert.AreEqual(list1[0].lj.Count(), list2[0].lj.Count());
 
-				var ch2 = list2[0].lj.ToList();
+				var ch2 = list2[0].lj.OrderBy(_ => _.ChildID).ToList();
 
 				Assert.AreEqual(ch1[0].ParentID, ch2[0].ParentID);
 				Assert.AreEqual(ch1[0].ChildID,  ch2[0].ChildID);
@@ -651,7 +651,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupJoinAny1([DataSources] string context)
+		public void GroupJoinAny1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -664,7 +664,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupJoinAny2([DataSources] string context)
+		public void GroupJoinAny2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -677,7 +677,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupJoinAny3([DataSources] string context)
+		public void GroupJoinAny3([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -690,7 +690,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupJoinAny4([DataSources] string context)
+		public void GroupJoinAny4([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -701,7 +701,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupJoinAny5([DataSources] string context)
+		public void GroupJoinAny5([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -885,7 +885,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ReferenceJoin1([DataSources(TestProvName.AllAccess)] string context)
+		public void ReferenceJoin1([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -907,7 +907,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void JoinByAnonymousTest([DataSources(TestProvName.AllAccess)] string context)
+		public void JoinByAnonymousTest([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -920,7 +920,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void FourTableJoin([DataSources(ProviderName.Access)] string context)
+		public void FourTableJoin([DataSources(ProviderName.Access, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -992,7 +992,7 @@ namespace Tests.Linq
 
 		[Test, Explicit]
 		public void StackOverflow([IncludeDataSources(
-			TestProvName.AllSqlServer2008, TestProvName.AllSqlServer2012)]
+			TestProvName.AllSqlServer2008, TestProvName.AllSqlServer2012, TestProvName.AllClickHouse)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1053,7 +1053,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NullJoin1([DataSources] string context)
+		public void NullJoin1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1067,7 +1067,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NullJoin2([DataSources] string context)
+		public void NullJoin2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1085,7 +1085,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NullWhereJoin([DataSources] string context)
+		public void NullWhereJoin([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1099,7 +1099,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void JoinSubQueryCount([DataSources]
+		public void JoinSubQueryCount([DataSources(TestProvName.AllClickHouse)]
 			string context)
 		{
 			var n = 1;
@@ -1121,7 +1121,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void JoinSubQuerySum([DataSources] string context)
+		public void JoinSubQuerySum([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1162,11 +1162,17 @@ namespace Tests.Linq
 
 		public class AllJoinsSourceAttribute : IncludeDataSourcesAttribute
 		{
-			public AllJoinsSourceAttribute() : base(
+			private static readonly string[] SupportedProviders = new[]
+			{
 				TestProvName.AllSqlServer,
 				TestProvName.AllOracle,
 				TestProvName.AllFirebird,
-				TestProvName.AllPostgreSQL)
+				TestProvName.AllPostgreSQL,
+				TestProvName.AllClickHouse
+			}.SelectMany(_ => _.Split(',')).ToArray();
+
+			public AllJoinsSourceAttribute(params string[] excludedProviders)
+				: base(SupportedProviders.Except(excludedProviders.SelectMany(_ => _.Split(','))).ToArray())
 			{
 			}
 		}
@@ -1246,7 +1252,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlNullWhereJoin([AllJoinsSource] string context, [Values] SqlJoinType joinType)
+		public void SqlNullWhereJoin([AllJoinsSource(TestProvName.AllClickHouse)] string context, [Values] SqlJoinType joinType)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1263,7 +1269,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlNullWhereSubqueryJoin([AllJoinsSource] string context, [Values] SqlJoinType joinType)
+		public void SqlNullWhereSubqueryJoin([AllJoinsSource(TestProvName.AllClickHouse)] string context, [Values] SqlJoinType joinType)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1349,7 +1355,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlLinqNullWhereJoin([AllJoinsSource] string context, [Values] SqlJoinType joinType)
+		public void SqlLinqNullWhereJoin([AllJoinsSource(TestProvName.AllClickHouse)] string context, [Values] SqlJoinType joinType)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1364,7 +1370,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlLinqNullWhereSubqueryJoin([AllJoinsSource] string context, [Values] SqlJoinType joinType)
+		public void SqlLinqNullWhereSubqueryJoin([AllJoinsSource(TestProvName.AllClickHouse)] string context, [Values] SqlJoinType joinType)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -2107,7 +2113,7 @@ namespace Tests.Linq
 		/// </summary>
 		/// <param name="context"></param>
 		[Test]
-		public void JoinBuildersConflicts([IncludeDataSources(TestProvName.AllSQLiteClassic)] string context)
+		public void JoinBuildersConflicts([IncludeDataSources(TestProvName.AllSQLiteClassic, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -2184,7 +2190,7 @@ namespace Tests.Linq
 					where fact.Id > 3
 					select new { fact, leftTag };
 
-				var results = t.ToArray();
+				var results = t.OrderBy(_ => _.fact.Id).ToArray();
 
 				Assert.AreEqual(2, results.Length);
 				Assert.AreEqual(4, results[0].fact.Id);
@@ -2207,7 +2213,7 @@ namespace Tests.Linq
 					where fact.Id > 3
 					select new { fact, leftTag };
 
-				var results = t.ToArray();
+				var results = t.OrderBy(_ => _.fact.Id).ToArray();
 
 				Assert.AreEqual(2, results.Length);
 				Assert.AreEqual(4, results[0].fact.Id);
@@ -2230,7 +2236,7 @@ namespace Tests.Linq
 					where fact.Id > 3
 					select new { fact, leftTag };
 
-				var results = t.ToArray();
+				var results = t.OrderBy(_ => _.fact.Id).ToArray();
 
 				Assert.AreEqual(2, results.Length);
 				Assert.AreEqual(4, results[0].fact.Id);
@@ -2253,7 +2259,7 @@ namespace Tests.Linq
 					where fact.Id > 3
 					select new { fact, leftTag = leftTag != null ? leftTag : null };
 
-				var results = t.ToArray();
+				var results = t.OrderBy(_ => _.fact.Id).ToArray();
 
 				Assert.AreEqual(2, results.Length);
 				Assert.AreEqual(4, results[0].fact.Id);
@@ -2275,7 +2281,7 @@ namespace Tests.Linq
 					where ft.fact.Id > 3
 					select ft;
 
-				var results = q.ToArray();
+				var results = q.OrderBy(_ => _.fact.Id).ToArray();
 
 				Assert.AreEqual(2, results.Length);
 				Assert.AreEqual(4, results[0].fact.Id);
@@ -2297,7 +2303,7 @@ namespace Tests.Linq
 					where ft.fact.Id > 3
 					select ft;
 
-				var results = q.ToArray();
+				var results = q.OrderBy(_ => _.fact.Id).ToArray();
 
 				Assert.AreEqual(2, results.Length);
 				Assert.AreEqual(4, results[0].fact.Id);
@@ -2320,7 +2326,7 @@ namespace Tests.Linq
 					where fact.Id > 3
 					select new { fact, leftTag };
 
-				var results = t.ToArray();
+				var results = t.OrderBy(_ => _.fact.Id).ToArray();
 
 				Assert.AreEqual(2, results.Length);
 				Assert.AreEqual(4, results[0].fact.Id);
@@ -2769,7 +2775,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue1455Test1([DataSources] string context)
+		public void Issue1455Test1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var queryLastUpd = db.CreateLocalTable<Alert>())
@@ -2827,7 +2833,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue1455Test2([DataSources] string context)
+		public void Issue1455Test2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var queryLastUpd = db.CreateLocalTable<Alert>())
@@ -2896,7 +2902,7 @@ namespace Tests.Linq
 		}, Details = "FULL OUTER JOIN support. Also check and enable other tests that do full join on fix")]
 		[Test(Description = "Tests regression in v3.3 when for RightCount generated SQL started to use same field as for LeftCount")]
 		// InformixDB2 disabled due to serious bug in provider: while query returns 3, data reader returns 0 here
-		public void FullJoinCondition_Regression([DataSources(ProviderName.InformixDB2)] string context)
+		public void FullJoinCondition_Regression([DataSources(ProviderName.InformixDB2, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

@@ -86,7 +86,7 @@ namespace Tests.Data
 		{}
 
 		[Test]
-		public void RetryPoliceTest([DataSources(false)] string context)
+		public void TestRetryPolicy([DataSources(false)] string context)
 		{
 			var ret = new Retry();
 			Assert.Throws<TestException>(() =>
@@ -115,7 +115,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void RetryPoliceTestAsync([DataSources(false)] string context)
+		public void RetryPolicyTestAsync([DataSources(false)] string context)
 		{
 			var ret = new Retry();
 

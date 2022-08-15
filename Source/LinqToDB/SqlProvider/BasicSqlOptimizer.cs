@@ -33,11 +33,11 @@ namespace LinqToDB.SqlProvider
 
 		#region ISqlOptimizer Members
 
-		public virtual SqlStatement Finalize(SqlStatement statement)
+		public virtual SqlStatement Finalize(MappingSchema mappingSchema, SqlStatement statement)
 		{
 			FixRootSelect (statement);
 			FixEmptySelect(statement);
-			FinalizeCte(statement);
+			FinalizeCte   (statement);
 
 			var evaluationContext = new EvaluationContext(null);
 
@@ -105,21 +105,21 @@ namespace LinqToDB.SqlProvider
 							}
 						}
 						else 
-					{
-							if (!prevQuery.OrderBy.IsEmpty)
 						{
+							if (!prevQuery.OrderBy.IsEmpty)
+							{
 								wrap.Add(prevQuery);
-						}
+							}
 
 							if (!currentQuery.OrderBy.IsEmpty)
-						{
+							{
 								wrap.Add(currentQuery);
 							}
 						}
 
 						prevQuery = currentOperator.SelectQuery;
-						}
 					}
+				}
 			});
 
 			return QueryHelper.WrapQuery(
@@ -504,6 +504,27 @@ namespace LinqToDB.SqlProvider
 
 			switch (func.Name)
 			{
+				case PseudoFunctions.COALESCE:
+				{
+					var parms = func.Parameters;
+					if (parms.Length == 2)
+					{
+						if (parms[0] is SqlValue val1 && parms[1] is not SqlValue)
+							return new SqlFunction(func.SystemType, func.Name, func.IsAggregate, func.Precedence, CreateSqlValue(val1.Value, parms[1].GetExpressionType(), parms[0]), parms[1])
+							{
+								DoNotOptimize = true,
+								CanBeNull     = func.CanBeNull
+							};
+						else if (parms[1] is SqlValue val2 && parms[0] is not SqlValue)
+							return new SqlFunction(func.SystemType, func.Name, func.IsAggregate, func.Precedence, parms[0], CreateSqlValue(val2.Value, parms[0].GetExpressionType(), parms[1]))
+							{
+								DoNotOptimize = true,
+								CanBeNull     = func.CanBeNull
+							};
+					}
+
+					break;
+				}
 				case "CASE":
 				{
 					var parms = func.Parameters;
@@ -565,12 +586,18 @@ namespace LinqToDB.SqlProvider
 							return parms[0];
 						}
 
-						//Trying to remove not needed null check
-						if (parms[0] is SqlSearchCondition sc && sc.Conditions.Count == 1 && !sc.Conditions[0].IsNot && sc.Conditions[0].Predicate is SqlPredicate.IsNull isnull && isnull.IsNot)
-						{
-							if (parms[1].Equals(isnull.Expr1))
-								return isnull.Expr1;
-						}
+						// TODO: is it correct?
+						// type constant by value from other branch
+						if (parms[1] is SqlValue val1 && parms[2] is not SqlValue)
+							return new SqlFunction(func.SystemType, func.Name, func.IsAggregate, func.Precedence, parms[0], CreateSqlValue(val1.Value, parms[2].GetExpressionType(), parms[1]), parms[2])
+							{
+								DoNotOptimize = true
+							};
+						else if (parms[2] is SqlValue val2 && parms[1] is not SqlValue)
+							return new SqlFunction(func.SystemType, func.Name, func.IsAggregate, func.Precedence, parms[0], parms[1], CreateSqlValue(val2.Value, parms[1].GetExpressionType(), parms[2]))
+							{
+								DoNotOptimize = true
+							};
 					}
 				}
 
@@ -590,11 +617,11 @@ namespace LinqToDB.SqlProvider
 					break;
 				}
 
-				case "$Convert$":
+				case PseudoFunctions.CONVERT:
 				{
 					var typef = func.SystemType.ToUnderlying();
 
-					if (func.Parameters[2] is SqlFunction from && from.Name == "$Convert$" && from.Parameters[1].SystemType!.ToUnderlying() == typef)
+					if (func.Parameters[2] is SqlFunction from && from.Name == PseudoFunctions.CONVERT && from.Parameters[1].SystemType!.ToUnderlying() == typef)
 						return from.Parameters[2];
 
 					break;
@@ -1186,20 +1213,17 @@ namespace LinqToDB.SqlProvider
 					if (value.Value is Sql.SqlID)
 						break;
 
-					if (visitor.Context.MappingSchema != null)
-					{
-						// TODO:
-						// this line produce insane amount of allocations
-						// as currently we cannot change ValueConverter signatures, we use pre-created instance of type wrapper
-						//var dataType = new SqlDataType(value.ValueType);
-						_typeWrapper.Type = value.ValueType;
+					// TODO:
+					// this line produce insane amount of allocations
+					// as currently we cannot change ValueConverter signatures, we use pre-created instance of type wrapper
+					//var dataType = new SqlDataType(value.ValueType);
+					_typeWrapper.Type = value.ValueType;
 
-						if (!visitor.Context.MappingSchema.ValueToSqlConverter.CanConvert(_typeWrapper, value.Value))
-						{
-							// we cannot generate SQL literal, so just convert to parameter
-							var param = visitor.Context.OptimizationContext.SuggestDynamicParameter(value.ValueType, "value", value.Value);
-							return param;
-						}
+					if (!visitor.Context.MappingSchema.ValueToSqlConverter.CanConvert(_typeWrapper, value.Value))
+					{
+						// we cannot generate SQL literal, so just convert to parameter
+						var param = visitor.Context.OptimizationContext.SuggestDynamicParameter(value.ValueType, "value", value.Value);
+						return param;
 					}
 
 					break;
@@ -1521,7 +1545,7 @@ namespace LinqToDB.SqlProvider
 						{
 							if (be.Expr1.SystemType == typeof(string) && be.Expr2.SystemType != typeof(string))
 							{
-								var len = be.Expr2.SystemType == null ? 100 : SqlDataType.GetMaxDisplaySize(SqlDataType.GetDataType(be.Expr2.SystemType).Type.DataType);
+								var len = be.Expr2.SystemType == null ? 100 : SqlDataType.GetMaxDisplaySize(visitor.Context.MappingSchema.GetDataType(be.Expr2.SystemType).Type.DataType);
 
 								if (len == null || len <= 0)
 									len = 100;
@@ -1530,20 +1554,20 @@ namespace LinqToDB.SqlProvider
 									be.SystemType,
 									be.Expr1,
 									be.Operation,
-									ConvertExpressionImpl(new SqlFunction(typeof(string), "Convert", new SqlDataType(DataType.VarChar, len), be.Expr2), visitor),
+									ConvertExpressionImpl(PseudoFunctions.MakeConvert(new SqlDataType(DataType.VarChar, typeof(string), len.Value), new SqlDataType(be.Expr2.GetExpressionType()), be.Expr2), visitor),
 									be.Precedence);
 							}
 
 							if (be.Expr1.SystemType != typeof(string) && be.Expr2.SystemType == typeof(string))
 							{
-								var len = be.Expr1.SystemType == null ? 100 : SqlDataType.GetMaxDisplaySize(SqlDataType.GetDataType(be.Expr1.SystemType).Type.DataType);
+								var len = be.Expr1.SystemType == null ? 100 : SqlDataType.GetMaxDisplaySize(visitor.Context.MappingSchema.GetDataType(be.Expr1.SystemType).Type.DataType);
 
 								if (len == null || len <= 0)
 									len = 100;
 
 								return new SqlBinaryExpression(
 									be.SystemType,
-									ConvertExpressionImpl(new SqlFunction(typeof(string), "Convert", new SqlDataType(DataType.VarChar, len), be.Expr1), visitor),
+									ConvertExpressionImpl(PseudoFunctions.MakeConvert(new SqlDataType(DataType.VarChar, typeof(string), len.Value), new SqlDataType(be.Expr1.GetExpressionType()), be.Expr1), visitor),
 									be.Operation,
 									be.Expr2,
 									be.Precedence);
@@ -1596,14 +1620,13 @@ namespace LinqToDB.SqlProvider
 					break;
 				}
 
-				case "$Convert$":
+				case PseudoFunctions.CONVERT:
 					return ConvertConvertion(func);
 
-
-				case "$ToLower$": return new SqlFunction(func.SystemType, "Lower",   func.IsAggregate, func.IsPure, func.Precedence, func.Parameters);
-				case "$ToUpper$": return new SqlFunction(func.SystemType, "Upper",   func.IsAggregate, func.IsPure, func.Precedence, func.Parameters);
-				case "$Replace$": return new SqlFunction(func.SystemType, "Replace", func.IsAggregate, func.IsPure, func.Precedence, func.Parameters);
-
+				case PseudoFunctions.TO_LOWER: return new SqlFunction(func.SystemType, "Lower",    func.IsAggregate, func.IsPure, func.Precedence, func.Parameters) { CanBeNull = func.CanBeNull };
+				case PseudoFunctions.TO_UPPER: return new SqlFunction(func.SystemType, "Upper",    func.IsAggregate, func.IsPure, func.Precedence, func.Parameters) { CanBeNull = func.CanBeNull };
+				case PseudoFunctions.REPLACE : return new SqlFunction(func.SystemType, "Replace",  func.IsAggregate, func.IsPure, func.Precedence, func.Parameters) { CanBeNull = func.CanBeNull };
+				case PseudoFunctions.COALESCE: return new SqlFunction(func.SystemType, "Coalesce", func.IsAggregate, func.IsPure, func.Precedence, func.Parameters) { CanBeNull = func.CanBeNull };
 			}
 
 			return func;
@@ -1614,7 +1637,7 @@ namespace LinqToDB.SqlProvider
 			public RunOptimizationContext(
 				OptimizationContext optimizationContext,
 				BasicSqlOptimizer   optimizer,
-				MappingSchema?      mappingSchema,
+				MappingSchema       mappingSchema,
 				bool                register,
 				Func<ConvertVisitor<RunOptimizationContext>, IQueryElement, IQueryElement> func)
 			{
@@ -1628,7 +1651,7 @@ namespace LinqToDB.SqlProvider
 			public readonly OptimizationContext OptimizationContext;
 			public readonly BasicSqlOptimizer   Optimizer;
 			public readonly bool                Register;
-			public readonly MappingSchema?      MappingSchema;
+			public readonly MappingSchema       MappingSchema;
 
 			public readonly Func<ConvertVisitor<RunOptimizationContext>, IQueryElement, IQueryElement> Func;
 		}
@@ -1637,7 +1660,7 @@ namespace LinqToDB.SqlProvider
 			IQueryElement       element,
 			OptimizationContext optimizationContext,
 			BasicSqlOptimizer   optimizer,
-			MappingSchema?      mappingSchema,
+			MappingSchema       mappingSchema,
 			bool                register,
 			Func<ConvertVisitor<RunOptimizationContext>,IQueryElement,IQueryElement> func)
 		{
@@ -1684,7 +1707,7 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
-		public IQueryElement? OptimizeElement(MappingSchema? mappingSchema, IQueryElement? element, OptimizationContext optimizationContext, bool withConversion)
+		public IQueryElement? OptimizeElement(MappingSchema mappingSchema, IQueryElement? element, OptimizationContext optimizationContext, bool withConversion)
 		{
 			if (element == null)
 				return null;
@@ -1771,24 +1794,35 @@ namespace LinqToDB.SqlProvider
 				case QueryElementType.IsTruePredicate:
 					return ((SqlPredicate.IsTrue)predicate).Reduce();
 				case QueryElementType.LikePredicate:
-					return ConvertLikePredicate(visitor.Context.MappingSchema!, (SqlPredicate.Like)predicate, visitor.Context.OptimizationContext.Context);
+					return ConvertLikePredicate(visitor.Context.MappingSchema, (SqlPredicate.Like)predicate, visitor.Context.OptimizationContext.Context);
 				case QueryElementType.SearchStringPredicate:
 					return ConvertSearchStringPredicate((SqlPredicate.SearchString)predicate, visitor);
 				case QueryElementType.InListPredicate:
-					return ConvertInListPredicate(visitor.Context.MappingSchema!, (SqlPredicate.InList)predicate, visitor.Context.OptimizationContext.Context);
+					return ConvertInListPredicate(visitor.Context.MappingSchema, (SqlPredicate.InList)predicate, visitor.Context.OptimizationContext.Context);
 			}
 			return predicate;
 		}
 
+		/// <summary>
+		/// Escape sequence/character to escape special characters in LIKE predicate (defined by <see cref="LikeCharactersToEscape"/>).
+		/// Default: <c>"~"</c>.
+		/// </summary>
 		public virtual string LikeEscapeCharacter         => "~";
 		public virtual string LikeWildcardCharacter       => "%";
-		public virtual bool   LikeHasCharacterSetSupport  => true;
 		public virtual bool   LikePatternParameterSupport => true;
 		public virtual bool   LikeValueParameterSupport   => true;
+		/// <summary>
+		/// Should be <c>true</c> for provider with <c>LIKE ... ESCAPE</c> modifier support.
+		/// Default: <c>true</c>.
+		/// </summary>
 		public virtual bool   LikeIsEscapeSupported       => true;
 
 		protected static  string[] StandardLikeCharactersToEscape = {"%", "_", "?", "*", "#", "[", "]"};
-		public    virtual string[] LikeCharactersToEscape => StandardLikeCharactersToEscape;
+		/// <summary>
+		/// Characters with special meaning in LIKE predicate (defined by <see cref="LikeCharactersToEscape"/>) that should be escaped to be used as matched character.
+		/// Default: <c>["%", "_", "?", "*", "#", "[", "]"]</c>.
+		/// </summary>
+		public virtual string[] LikeCharactersToEscape => StandardLikeCharactersToEscape;
 
 		public virtual string EscapeLikeCharacters(string str, string escape)
 		{
@@ -1808,41 +1842,40 @@ namespace LinqToDB.SqlProvider
 
 		static ISqlExpression GenerateEscapeReplacement(ISqlExpression expression, ISqlExpression character, ISqlExpression escapeCharacter)
 		{
-			var result = new SqlFunction(typeof(string), "$Replace$", false, true, expression, character,
-				new SqlBinaryExpression(typeof(string), escapeCharacter, "+", character, Precedence.Additive));
+			var result = PseudoFunctions.MakeReplace(expression, character, new SqlBinaryExpression(typeof(string), escapeCharacter, "+", character, Precedence.Additive));
 			return result;
 		}
 
 		public static ISqlExpression GenerateEscapeReplacement(ISqlExpression expression, ISqlExpression character)
 		{
-			var result = new SqlFunction(typeof(string), "$Replace$", false, true, expression, character,
+			var result = PseudoFunctions.MakeReplace(
+				expression,
+				character,
 				new SqlBinaryExpression(typeof(string), new SqlValue("["), "+",
 					new SqlBinaryExpression(typeof(string), character, "+", new SqlValue("]"), Precedence.Additive),
 					Precedence.Additive));
 			return result;
 		}
 
-		protected virtual string EscapeLikeCharactersBrackets(string str, string[] toEscape)
+		/// <summary>
+		/// Implements LIKE pattern escaping logic for provider without ESCAPE clause support (<see cref="LikeIsEscapeSupported"/> is <c>false</c>).
+		/// Default logic prefix characters from <see cref="LikeCharactersToEscape"/> with <see cref="LikeEscapeCharacter"/>.
+		/// </summary>
+		/// <param name="str">Raw pattern value.</param>
+		/// <returns>Escaped pattern value.</returns>
+		protected virtual string EscapeLikePattern(string str)
 		{
-			var newStr = DataTools.EscapeUnterminatedBracket(str);
-			if (newStr == str)
-				newStr = newStr.Replace("[", "[[]");
+			foreach (var s in LikeCharactersToEscape)
+				str = str.Replace(s, LikeEscapeCharacter + s);
 
-			foreach (var s in toEscape)
-			{
-				if (s != "[" && s != "]")
-					newStr = newStr.Replace(s, "[" + s + "]");
-			}
-
-			return newStr;
+			return str;
 		}
 
 		public virtual ISqlExpression EscapeLikeCharacters(ISqlExpression expression, ref ISqlExpression? escape)
 		{
 			var newExpr = expression;
 
-			if (escape == null)
-				escape = new SqlValue(LikeEscapeCharacter);
+			escape ??= new SqlValue(LikeEscapeCharacter);
 
 			newExpr = GenerateEscapeReplacement(newExpr, escape, escape);
 
@@ -1855,6 +1888,13 @@ namespace LinqToDB.SqlProvider
 			return newExpr;
 		}
 
+		/// <summary>
+		/// LIKE predicate interceptor. Default implementation does nothing.
+		/// </summary>
+		/// <param name="mappingSchema">Current mapping schema.</param>
+		/// <param name="predicate">LIKE predicate.</param>
+		/// <param name="context">Parameters evaluation context for current query.</param>
+		/// <returns>Preprocessed predicate.</returns>
 		public virtual ISqlPredicate ConvertLikePredicate(
 			MappingSchema     mappingSchema,
 			SqlPredicate.Like predicate,
@@ -1875,7 +1915,7 @@ namespace LinqToDB.SqlProvider
 
 				var patternValue = LikeIsEscapeSupported
 					? EscapeLikeCharacters(patternRawValue, LikeEscapeCharacter)
-					: EscapeLikeCharactersBrackets(patternRawValue, LikeCharactersToEscape);
+					: EscapeLikePattern(patternRawValue);
 
 				patternValue = predicate.Kind switch
 				{
@@ -1920,8 +1960,7 @@ namespace LinqToDB.SqlProvider
 
 				patternExpr = OptimizeExpression(patternExpr, visitor);
 
-				return new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, patternExpr,
-					LikeIsEscapeSupported ? escape : null);
+				return new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, patternExpr, LikeIsEscapeSupported ? escape : null);
 			}
 		}
 
@@ -1932,9 +1971,9 @@ namespace LinqToDB.SqlProvider
 			if (predicate.CaseSensitive.EvaluateBoolExpression(visitor.Context.OptimizationContext.Context) == false)
 			{
 				predicate = new SqlPredicate.SearchString(
-					new SqlFunction(typeof(string), "$ToLower$", predicate.Expr1),
+					PseudoFunctions.MakeToLower(predicate.Expr1),
 					predicate.IsNot,
-					new SqlFunction(typeof(string), "$ToLower$", predicate.Expr2),
+					PseudoFunctions.MakeToLower(predicate.Expr2),
 					predicate.Kind,
 					new SqlValue(false));
 			}
@@ -2092,12 +2131,16 @@ namespace LinqToDB.SqlProvider
 		protected virtual int? GetMaxScale      (SqlDataType type) { return SqlDataType.GetMaxScale      (type.Type.DataType); }
 		protected virtual int? GetMaxDisplaySize(SqlDataType type) { return SqlDataType.GetMaxDisplaySize(type.Type.DataType); }
 
+		// TODO v5: rename to ConvertConversion
+		/// <summary>
+		/// Implements <see cref="PseudoFunctions.CONVERT"/> function converter.
+		/// </summary>
 		protected virtual ISqlExpression ConvertConvertion(SqlFunction func)
 		{
 			var from = (SqlDataType)func.Parameters[1];
 			var to   = (SqlDataType)func.Parameters[0];
 
-			if (to.Type.SystemType == typeof(object))
+			if (!func.DoNotOptimize && (to.Type.SystemType == typeof(object) || from.Type.EqualsDbOnly(to.Type)))
 				return func.Parameters[2];
 
 			if (to.Type.Length > 0)
@@ -2108,10 +2151,13 @@ namespace LinqToDB.SqlProvider
 				if (to.Type.Length != newLength)
 					to = new SqlDataType(to.Type.WithLength(newLength));
 			}
-			else if (from.Type.SystemType == typeof(short) && to.Type.SystemType == typeof(int))
+			else if (!func.DoNotOptimize && from.Type.SystemType == typeof(short) && to.Type.SystemType == typeof(int))
 				return func.Parameters[2];
 
-			return new SqlFunction(func.SystemType, "Convert", to, func.Parameters[2]);
+			return new SqlFunction(func.SystemType, "Convert", false, true, to, func.Parameters[2])
+			{
+				CanBeNull = func.Parameters[2].CanBeNull,
+			};
 		}
 
 		#endregion
@@ -2131,7 +2177,7 @@ namespace LinqToDB.SqlProvider
 						new SqlPredicate.ExprExpr(par, SqlPredicate.Operator.NotEqual, new SqlValue(0),
 							Configuration.Linq.CompareNullsAsValues ? false : null)));
 
-				return new SqlFunction(func.SystemType, "CASE", sc, new SqlValue(true), new SqlValue(false))
+				return new SqlFunction(func.SystemType, "CASE", false, true, sc, new SqlValue(true), new SqlValue(false))
 				{
 					CanBeNull = false,
 				};
@@ -2156,6 +2202,36 @@ namespace LinqToDB.SqlProvider
 				QueryElementType.SqlDataType   => ((SqlDataType)expr).Type.DataType == DataType.Date,
 				QueryElementType.SqlExpression => ((SqlExpression)expr).Expr == dateName,
 				_                              => false,
+			};
+		}
+
+		protected static bool IsSmallDateTimeType(ISqlExpression expr, string typeName)
+		{
+			return expr.ElementType switch
+			{
+				QueryElementType.SqlDataType   => ((SqlDataType)expr).Type.DataType == DataType.SmallDateTime,
+				QueryElementType.SqlExpression => ((SqlExpression)expr).Expr == typeName,
+				_ => false,
+			};
+		}
+
+		protected static bool IsDateTime2Type(ISqlExpression expr, string typeName)
+		{
+			return expr.ElementType switch
+			{
+				QueryElementType.SqlDataType   => ((SqlDataType)expr).Type.DataType == DataType.DateTime2,
+				QueryElementType.SqlExpression => ((SqlExpression)expr).Expr == typeName,
+				_ => false,
+			};
+		}
+
+		protected static bool IsDateTimeType(ISqlExpression expr, string typeName)
+		{
+			return expr.ElementType switch
+			{
+				QueryElementType.SqlDataType   => ((SqlDataType)expr).Type.DataType == DataType.DateTime,
+				QueryElementType.SqlExpression => ((SqlExpression)expr).Expr == typeName,
+				_ => false,
 			};
 		}
 
@@ -2526,262 +2602,179 @@ namespace LinqToDB.SqlProvider
 			});
 		}
 
+		protected SqlTable? FindUpdateTable(SelectQuery selectQuery, SqlTable tableToFind)
+		{
+			foreach (var tableSource in selectQuery.From.Tables)
+			{
+				if (tableSource.Source is SqlTable table && QueryHelper.IsEqualTables(table, tableToFind))
+				{
+					return table;
+				}
+			}
+
+			foreach (var tableSource in selectQuery.From.Tables)
+			{
+				foreach (var join in tableSource.Joins)
+				{
+					if (join.Table.Source is SqlTable table)
+					{
+						if (QueryHelper.IsEqualTables(table, tableToFind))
+							return table;
+					}
+					else if (join.Table.Source is SelectQuery query)
+					{
+						var found = FindUpdateTable(query, tableToFind);
+						if (found != null)
+							return found;
+					}
+				}
+			}
+
+			return null;
+		}
+
 		protected SqlStatement GetAlternativeUpdatePostgreSqlite(SqlUpdateStatement statement)
 		{
 			if (statement.SelectQuery.Select.HasModifier)
-				statement = QueryHelper.WrapQuery(statement, statement.SelectQuery, allowMutation: true);
-
-			var tableSource = GetMainTableSource(statement.SelectQuery);
-			if (tableSource == null)
-				throw new LinqToDBException("Invalid query for Update.");
-
-			if (statement.SelectQuery.Select.HasModifier)
-				statement = QueryHelper.WrapQuery(statement, statement.SelectQuery, allowMutation: true);
-
-			SqlTable? tableToUpdate  = statement.Update.Table;
-			SqlTable? tableToCompare = null;
-
-			switch (tableSource.Source)
 			{
-				case SqlTable table:
+				statement = QueryHelper.WrapQuery(statement, statement.SelectQuery, allowMutation: true);
+			}
+
+			var tableToUpdate  = statement.Update.Table;
+			var tableToCompare = tableToUpdate;
+
+			bool isDetachedUpdateTable;
+
+			if (tableToUpdate == null)
+			{
+				var foundTable = QueryHelper.EnumerateAccessibleTables(statement.SelectQuery).FirstOrDefault();
+				if (foundTable == null)
+					throw new LinqToDBException("Invalid query for Update.");
+
+				tableToUpdate  = foundTable;
+				tableToCompare = tableToUpdate;
+
+				isDetachedUpdateTable = false;
+			}
+			else
+			{
+				isDetachedUpdateTable = !QueryHelper.IsDependsOn(statement.SelectQuery, tableToUpdate);
+			}
+
+
+			// find appropriate first table
+			if (isDetachedUpdateTable)
+			{
+				var foundTable = FindUpdateTable(statement.SelectQuery, tableToUpdate);
+				if (foundTable is null)
+					throw new LinqToDBException("Invalid query for Update. Could not find appropriate table in the query.");
+
+				tableToCompare = foundTable;
+			}
+
+
+			var comparingIsNeed = true;
+
+			// trying to detach compared table from the SQL
+			if (tableToCompare != null)
+			{
+				for (int i = 0; i < statement.SelectQuery.From.Tables.Count; i++)
 				{
-					if (tableSource.Joins.Count == 0 && (tableToUpdate == null || QueryHelper.IsEqualTables(table, tableToUpdate)))
+					var ts = statement.SelectQuery.From.Tables[i];
+
+					// We have strange limitation from PostgreSQL, so right now move only if we have one JOIN.
+					if (ts.Joins.Count > 1)
+						continue;
+
+					if (ts.Source is SqlTable table && table == tableToCompare)
 					{
-						// remove table from FROM clause
-						statement.SelectQuery.From.Tables.RemoveAt(0);
-						if (tableToUpdate != null && tableToUpdate != table)
+						if (tableToCompare != tableToUpdate)
 						{
-							ReplaceTable(statement, tableToUpdate, table);
-						}
-						tableToUpdate = table;
-					}
-					else
-					{
-						var processed    = false;
-						var tableToCheck = tableToUpdate ?? table;
-						var onSources    = new HashSet<ISqlTableSource> { tableToCheck };
-
-						if (tableSource.Joins.All(j =>
-							j.JoinType == JoinType.Inner && (j.Table.Source == tableToCheck || !QueryHelper.IsDependsOn(j.Table, onSources))))
-						{
-							// simplify all to FROM
-
-							var tableToUpdateSource = table == tableToUpdate
-								? tableSource
-								: tableSource.Joins.FirstOrDefault(j => j.Table.Source == tableToCheck)?.Table;
-
-							if (tableToUpdateSource != null)
-							{
-								processed = true;
-
-								foreach (var j in tableSource.Joins)
-								{
-									statement.SelectQuery.From.Tables.Add(j.Table);
-									statement.SelectQuery.Where.SearchCondition.EnsureConjunction().Conditions
-										.Add(new SqlCondition(false, j.Condition));
-								}
-
-								statement.SelectQuery.From.Tables.Remove(tableToUpdateSource);
-
-								tableSource.Joins.Clear();
-							}
+							// replace removed source
+							ReplaceTable(statement, tableToCompare, tableToUpdate);
+							tableToCompare = tableToUpdate;
 						}
 
+						statement.SelectQuery.From.Tables.RemoveAt(i);
 
-						if (!processed && (table == tableToUpdate || tableToUpdate == null))
+						if (ts.Joins.Count > 0)
 						{
-							processed = true;
+							// move first joined source to From and append rest joins to this source
 
-							tableToUpdate ??= table;
-							var joins = tableSource.Joins;
+							var firstJoin = ts.Joins[0];
+							statement.SelectQuery.Where.SearchCondition.EnsureConjunction().Conditions
+								.Add(new SqlCondition(false, firstJoin.Condition));
 
-							if (joins.Count > 0)
-							{
-								if (joins.All(j => !QueryHelper.IsDependsOn(j, onSources)))
-								{
-									statement.SelectQuery.From.Tables.RemoveAt(0);
+							statement.SelectQuery.From.Tables.Insert(i, firstJoin.Table);
 
-									var firstJoin = joins[0];
-									statement.SelectQuery.From.Tables.Insert(0, firstJoin.Table);
-									statement.SelectQuery.Where.SearchCondition.EnsureConjunction().Conditions
-										.Add(new SqlCondition(false, firstJoin.Condition));
-
-									firstJoin.Table.Joins.InsertRange(0, joins.Skip(1));
-								}
-								else
-								{
-									// create clone
-									var clonedTable = table.Clone();
-
-									ReplaceTable(statement.Update, table, clonedTable);
-									ReplaceTable(statement.Output, table, clonedTable);
-
-									tableToCompare = table;
-									tableToUpdate  = clonedTable;
-								}
-							}
+							ts.Joins.RemoveAt(0);
+							firstJoin.Table.Joins.AddRange(ts.Joins);
 						}
 
-						if (!processed && tableToUpdate != null)
-						{
-							for (int i = 0; i < tableSource.Joins.Count; i++)
-							{
-								var join = tableSource.Joins[i];
-								if (join.Table.Source == tableToUpdate)
-								{
-									var sources = new HashSet<ISqlTableSource> { join.Table.Source };
-
-									if (tableSource.Joins.Skip(i + 1).Any(j => QueryHelper.IsDependsOn(j, sources)))
-										break;
-
-									processed = true;
-
-									statement.SelectQuery.Where.SearchCondition.EnsureConjunction().Conditions
-										.Add(new SqlCondition(false, join.Condition));
-
-									tableSource.Joins.RemoveAt(i);
-
-									break;
-								}
-							}
-						}
-
-						if (!processed && tableToUpdate != null)
-						{
-							for (int i = 0; i < tableSource.Joins.Count; i++)
-							{
-								var join = tableSource.Joins[i];
-								if (join.Table.Source is SqlTable currentTable &&
-								    QueryHelper.IsEqualTables(currentTable, tableToUpdate))
-								{
-									processed = true;
-
-									var sources = new HashSet<ISqlTableSource> { join.Table.Source };
-
-									if (tableSource.Joins.Skip(i + 1).Any(j => QueryHelper.IsDependsOn(j, sources)))
-									{
-										tableToCompare = currentTable;
-										break;
-									}
-
-									statement.SelectQuery.Where.SearchCondition.EnsureConjunction().Conditions
-										.Add(new SqlCondition(false, join.Condition));
-
-									tableSource.Joins.RemoveAt(i);
-
-									ReplaceTable(statement, tableToUpdate, currentTable);
-
-									tableToUpdate = currentTable;
-
-									break;
-								}
-							}
-						}
-
-						if (!processed)
-						{
-							if (QueryHelper.IsEqualTables(table, tableToCheck))
-							{
-								processed = true;
-
-								var sources = new HashSet<ISqlTableSource> { tableSource.Source };
-
-								if (tableSource.Joins.Any(j => QueryHelper.IsDependsOn(j, sources)))
-								{
-									tableToCompare = table;
-									break;
-								}
-
-								var joins = tableSource.Joins;
-								statement.SelectQuery.From.Tables.RemoveAt(0);
-								if (joins.Count > 0)
-								{
-									var firstJoin = joins[0];
-									statement.SelectQuery.From.Tables.Insert(0, firstJoin.Table);
-									statement.SelectQuery.Where.SearchCondition.EnsureConjunction().Conditions
-										.Add(new SqlCondition(false, firstJoin.Condition));
-
-									firstJoin.Table.Joins.InsertRange(0, joins.Skip(1));
-								}
-
-								ReplaceTable(statement, tableToCheck, table);
-								tableToUpdate = table;
-							}
-						}
-
-						if (!processed)
-							throw new LinqToDBException("Can not decide which table to update");
+						comparingIsNeed = false;
+						break;
 					}
 
-					break;
-				}
-				case SelectQuery query:
-				{
-					if (tableToUpdate == null)
+					for (int j = 0; j < ts.Joins.Count; j++)
 					{
-						tableToUpdate = QueryHelper.EnumerateAccessibleSources(query)
-							.OfType<SqlTable>()
-							.FirstOrDefault();
-
-						if (tableToUpdate == null)
-							throw new LinqToDBException("Can not decide which table to update");
-
-						tableToUpdate = tableToUpdate.Clone();
-
-						foreach (var item in statement.Update.Items)
+						var join = ts.Joins[j];
+						if (join.Table.Source is SqlTable joinTable && joinTable == tableToCompare)
 						{
-							var setField = QueryHelper.GetUnderlyingField(item.Column);
-							if (setField == null)
-								throw new LinqToDBException($"Unexpected element in setter expression: {item.Column}");
+							statement.SelectQuery.Where.SearchCondition.EnsureConjunction().Conditions
+								.Add(new SqlCondition(false, join.Condition));
 
-							item.Column = tableToUpdate[setField.Name] ?? throw new LinqException($"Field {setField.Name} not found in table {tableToUpdate}");
+							if (tableToCompare != tableToUpdate)
+							{
+								// replace removed source
+								ReplaceTable(statement, tableToCompare, tableToUpdate);
+								tableToCompare = tableToUpdate;
+							}
+
+							// table joined, check how we can move it up from query
+							ts.Joins.RemoveAt(j);
+
+							comparingIsNeed = false;
+							break;
 						}
 					}
-
-					// return first matched table
-					tableToCompare = QueryHelper.EnumerateAccessibleSources(query)
-						.OfType<SqlTable>()
-						.FirstOrDefault(t => QueryHelper.IsEqualTables(t, tableToUpdate));
-
-					if (tableToCompare == null)
-						throw new LinqToDBException("Query can't be translated to UPDATE Statement.");
-
-					break;
 				}
 			}
 
-			if (ReferenceEquals(tableToUpdate, tableToCompare))
+			if (comparingIsNeed)
 			{
-				// we have to create clone
-				tableToUpdate = tableToCompare!.Clone();
+				if (tableToCompare == null)
+					throw new InvalidOperationException();
 
-				for (var i = 0; i < statement.Update.Items.Count; i++)
+				if (tableToCompare == tableToUpdate)
 				{
-					var item = statement.Update.Items[i];
-					var newItem = item.Convert((tableToCompare, tableToUpdate), static (v, e) =>
+					// we have to create clone
+					tableToUpdate = tableToCompare.Clone();
+
+					for (var i = 0; i < statement.Update.Items.Count; i++)
 					{
-						if (e is SqlField field && field.Table == v.Context.tableToCompare)
-							return v.Context.tableToUpdate[field.Name] ?? throw new LinqException($"Field {field.Name} not found in table {v.Context.tableToUpdate}");
+						var item = statement.Update.Items[i];
+						var newItem = item.Convert((tableToCompare, tableToUpdate), static (v, e) =>
+						{
+							if (e is SqlField field && field.Table == v.Context.tableToCompare)
+								return v.Context.tableToUpdate[field.Name] ?? throw new LinqException($"Field {field.Name} not found in table {v.Context.tableToUpdate}");
 
-						return e;
-					});
+							return e;
+						});
 
-					var updateField = QueryHelper.GetUnderlyingField(newItem.Column);
-					if (updateField != null)
-						newItem.Column = tableToUpdate[updateField.Name] ?? throw new LinqException($"Field {updateField.Name} not found in table {tableToUpdate}");
+						var updateField = QueryHelper.GetUnderlyingField(newItem.Column);
+						if (updateField != null)
+							newItem.Column = tableToUpdate[updateField.Name] ?? throw new LinqException($"Field {updateField.Name} not found in table {tableToUpdate}");
 
-					statement.Update.Items[i] = newItem;
+						statement.Update.Items[i] = newItem;
+					}
 				}
-			}
 
-			if (statement.SelectQuery.From.Tables.Count > 0 && tableToCompare != null)
-			{
-
-				var keys1 = tableToUpdate!.GetKeys(true);
+				var keys1 = tableToUpdate.GetKeys(true);
 				var keys2 = tableToCompare.GetKeys(true);
 
 				if (keys1.Count == 0)
-					throw new LinqToDBException($"Table {tableToUpdate.NameForLogging} do not have primary key. Update transformation is not available.");
+					throw new LinqToDBException(
+						$"Table {tableToUpdate.NameForLogging} do not have primary key. Update transformation is not available.");
 
 				for (int i = 0; i < keys1.Count; i++)
 				{
@@ -2792,10 +2785,10 @@ namespace LinqToDB.SqlProvider
 					var compare = QueryHelper.GenerateEquality(keys1[i], column);
 					statement.SelectQuery.Where.SearchCondition.Conditions.Add(compare);
 				}
+
 			}
 
-			if (tableToUpdate != null)
-				tableToUpdate.Alias = "$F";
+			tableToUpdate.Alias = "$F";
 
 			statement.Update.Table = tableToUpdate;
 

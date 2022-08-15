@@ -16,7 +16,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestContainerParameter([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestContainerParameter([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
 

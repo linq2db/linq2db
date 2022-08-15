@@ -191,7 +191,7 @@ namespace Tests.OData.Microsoft
 		}
 
 		[Test]
-		public void SelectPure([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
+		public void SelectPure([IncludeDataSources(ProviderName.SQLiteClassic, TestProvName.AllClickHouse)] string context)
 		{
 			var testData = GenerateTestData();
 			using (var db = GetDataContext(context))

@@ -148,7 +148,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestLoadWith([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestLoadWith([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var (masterRecords, detailRecords) = GenerateData();
 			var intParam = 0;
@@ -165,22 +165,28 @@ namespace Tests.Linq
 					where m.Id1 >= intParam
 					select new MasterClass
 					{
-						Id1 = m.Id1,
-						Id2 = m.Id2,
-						Value = m.Value,
-						Details = detailRecords.Where(d => d.MasterId == m.Id1).ToList(),
+						Id1          = m.Id1,
+						Id2          = m.Id2,
+						Value        = m.Value,
+						Details      = detailRecords.Where(d => d.MasterId == m.Id1).ToList(),
 						DetailsQuery = detailRecords.Where(d => d.MasterId == m.Id1 && d.MasterId == m.Id2 && d.DetailId % 2 == 0).ToArray(),
 					};
 
 				var result = query.ToList();
 				var expected = expectedQuery.ToList();
 
+				foreach (var item in result.Concat(expected))
+				{
+					item.Details      = item.Details.OrderBy(_ => _.DetailId).ToList();
+					item.DetailsQuery = item.DetailsQuery.OrderBy(_ => _.DetailId).ToArray();
+				}
+
 				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
 			}
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2442")]
-		public async Task TestLoadWithAsyncEnumerator([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public async Task TestLoadWithAsyncEnumerator([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var (masterRecords, detailRecords) = GenerateData();
 			var intParam = 0;
@@ -210,6 +216,12 @@ namespace Tests.Linq
 					result.Add(item);
 
 				var expected = expectedQuery.ToList();
+
+				foreach (var item in result.Concat(expected))
+				{
+					item.Details      = item.Details.OrderBy(_ => _.DetailId).ToList();
+					item.DetailsQuery = item.DetailsQuery.OrderBy(_ => _.DetailId).ToArray();
+				}
 
 				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
 			}
@@ -242,7 +254,7 @@ namespace Tests.Linq
 
 
 		[Test]
-		public void TestLoadWithAndDuplications([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestLoadWithAndDuplications([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var (masterRecords, detailRecords) = GenerateData();
 			
@@ -270,6 +282,9 @@ namespace Tests.Linq
 
 				var result = query.ToList();
 				var expected = expectedQuery.ToList();
+
+				foreach (var item in result.Concat(expected))
+					item.Details = item.Details.OrderBy(_ => _.DetailId).ToList();
 
 				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
 			}
@@ -352,7 +367,7 @@ FROM
 		}
 
 		[Test]
-		public void TestLoadWithDeep([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestLoadWithDeep([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var (masterRecords, detailRecords, subDetailRecords) = GenerateDataWithSubDetail();
 			var intParam = 1;
@@ -385,12 +400,19 @@ FROM
 				var result = query.ToList();
 				var expected = expectedQuery.ToList();
 
+				foreach (var item in result.Concat(expected))
+				{
+					item.Details = item.Details.OrderBy(_ => _.DetailId).ToList();
+					foreach (var subItem in item.Details)
+						subItem.SubDetails = subItem.SubDetails.OrderBy(_ => _.SubDetailId).ToArray();
+				}
+
 				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
 			}
 		}
 
 		[Test]
-		public void TestMethodMappedProjection([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestMethodMappedProjection([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var (masterRecords, detailRecords, subDetailRecords) = GenerateDataWithSubDetail();
 			var intParam = 1;
@@ -422,7 +444,7 @@ FROM
 
 
 		[Test]
-		public void TestSelectProjectionList([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestSelectProjectionList([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var (masterRecords, detailRecords) = GenerateData();
 			var intParam = 0;
@@ -445,7 +467,7 @@ FROM
 		}
 
 		[Test]
-		public async Task TestSelectProjectionListAsync([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public async Task TestSelectProjectionListAsync([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var (masterRecords, detailRecords) = GenerateData();
 			var intParam = 0;
@@ -469,7 +491,7 @@ FROM
 		}
 
 		[Test]
-		public async Task TestSelectAssociationProjectionListAsync([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public async Task TestSelectAssociationProjectionListAsync([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var (masterRecords, detailRecords) = GenerateData();
 			var intParam = 0;
@@ -518,7 +540,7 @@ FROM
 		}
 
 		[Test]
-		public void TestQueryableAssociation([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestQueryableAssociation([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var (masterRecords, detailRecords) = GenerateData();
 
@@ -541,7 +563,7 @@ FROM
 		}
 
 		[Test]
-		public void TestRecursive([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestRecursive([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var (masterRecords, detailRecords, subDetailRecords) = GenerateDataWithSubDetail();
 
@@ -578,12 +600,15 @@ FROM
 				var result   = masterQuery.ToArray();
 				var expected = expectedQuery.ToArray();
 
+				result   = result  .Select(_ => new { _.Id1, Details = _.Details.Select(_ => new { SubDetails = _.SubDetails.OrderBy(_ => _.SubDetailId).ToArray(), Another = _.Another.OrderBy(_ => _.SubDetailId).ToArray() }).OrderBy(_ => _.SubDetails.First().DetailId).ToArray() }).ToArray();
+				expected = expected.Select(_ => new { _.Id1, Details = _.Details.Select(_ => new { SubDetails = _.SubDetails.OrderBy(_ => _.SubDetailId).ToArray(), Another = _.Another.OrderBy(_ => _.SubDetailId).ToArray() }).OrderBy(_ => _.SubDetails.First().DetailId).ToArray() }).ToArray();
+
 				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
 			}
 		}
 
 		[Test]
-		public void TestWhenMasterIsNotConnected([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestWhenMasterIsNotConnected([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var (masterRecords, detailRecords) = GenerateDataManyId();
 
@@ -617,7 +642,7 @@ FROM
 		}
 
 		[Test]
-		public void TestSelectMany([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestSelectMany([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var (masterRecords, detailRecords, subDetailRecords) = GenerateDataWithSubDetail();
 
@@ -647,12 +672,16 @@ FROM
 				var result   = query.ToArray();
 				var expected = expectedQuery.ToArray();
 
+				result   = result  .Select(_ => new { _.Detail, SubDetails = _.SubDetails.OrderBy(_ => _.SubDetailId).ToArray(), SubDetailsAssocaited = _.SubDetailsAssocaited.OrderBy(_ => _.SubDetailId).ToArray() }).ToArray();
+				expected = expected.Select(_ => new { _.Detail, SubDetails = _.SubDetails.OrderBy(_ => _.SubDetailId).ToArray(), SubDetailsAssocaited = _.SubDetailsAssocaited.OrderBy(_ => _.SubDetailId).ToArray() }).ToArray();
+
 				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(result));
 			}
 		}
 
+		[ActiveIssue("https://github.com/linq2db/linq2db/issues/3619", Configuration = TestProvName.AllClickHouse)]
 		[Test]
-		public void TestJoin([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestJoin([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var (masterRecords, detailRecords) = GenerateData();
 
@@ -684,7 +713,7 @@ FROM
 		}
 
 		[Test]
-		public void TestPureGroupJoin([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestPureGroupJoin([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var (masterRecords, detailRecords) = GenerateData();
 
@@ -703,12 +732,16 @@ FROM
 				var result   = query.ToArray();
 				var expected = expectedQuery.ToArray();
 
+				expected = expected.Select(_ => new { _.Master, Details = _.Details.OrderBy(_ => _.DetailId).ToArray() }).ToArray();
+				result   = result  .Select(_ => new { _.Master, Details = _.Details.OrderBy(_ => _.DetailId).ToArray() }).ToArray();
+
 				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(result));
 			}
 		}
 
+		[ActiveIssue("https://github.com/linq2db/linq2db/issues/3619", Configuration = TestProvName.AllClickHouse)]
 		[Test]
-		public void TestGroupJoin([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestGroupJoin([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var (masterRecords, detailRecords, subDetailRecords) = GenerateDataWithSubDetail();
 
@@ -749,7 +782,7 @@ FROM
 		}
 
 		[Test]
-		public void TestDeepGroupJoin([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestDeepGroupJoin([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var (masterRecords, detailRecords, subDetailRecords) = GenerateDataWithSubDetail();
 
@@ -784,13 +817,16 @@ FROM
 
 				var result   = query.ToArray();
 				var expected = expectedQuery.ToArray();
-				
+
+				expected = expected.Select(_ => new { _.Id1, Details = _.Details.OrderBy(_ => _.DetailId).ToArray(), Masters = _.Masters.OrderBy(_ => _.Id2).ToArray() }).ToArray();
+				result   = result  .Select(_ => new { _.Id1, Details = _.Details.OrderBy(_ => _.DetailId).ToArray(), Masters = _.Masters.OrderBy(_ => _.Id2).ToArray() }).ToArray();
+
 				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(result));
 			}
 		}
 
 		[Test]
-		public void TestDeepJoin([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestDeepJoin([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var (masterRecords, detailRecords, subDetailRecords) = GenerateDataWithSubDetail();
 
@@ -825,13 +861,16 @@ FROM
 
 				var result   = query.ToArray();
 				var expected = expectedQuery.ToArray();
-				
+
+				expected = expected.Select(_ => new { _.Id1, Details = _.Details.OrderBy(_ => _.DetailId).ToArray(), _.Master }).ToArray();
+				result   = result  .Select(_ => new { _.Id1, Details = _.Details.OrderBy(_ => _.DetailId).ToArray(), _.Master }).ToArray();
+
 				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(result));
 			}
 		}
 
 		[Test]
-		public void TestSubSelect([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestSubSelect([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var (masterRecords, detailRecords, subDetailRecords) = GenerateDataWithSubDetail();
 
@@ -848,7 +887,7 @@ FROM
 				{
 					e.Master,
 					Details = e.Master.Details.Select(d => new { d.DetailId, d.DetailValue }).ToArray()
-				});
+				}).ToArray();
 
 				var expectedQuery = masterRecords.OrderByDescending(m => m.Id2)
 					.Take(20)
@@ -859,14 +898,19 @@ FROM
 				{
 					e.Master,
 					Details = detailRecords.Where(dr => dr.MasterId == e.Master.Id1).Select(d => new { d.DetailId, d.DetailValue }).ToArray()
-				});;
-				
+				}).ToArray();
+
+				result   = result .Select(_ => new { _.Master, Details = _.Details.OrderBy(_ => _.DetailId).ToArray() }).ToArray();
+				expected = expected.Select(_ => new { _.Master, Details = _.Details.OrderBy(_ => _.DetailId).ToArray() }).ToArray();
+
+
 				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(result));
 			}
 		}
 
+		[ActiveIssue("https://github.com/linq2db/linq2db/issues/3619", Configuration = TestProvName.AllClickHouse)]
 		[Test]
-		public void TestSelectGroupBy([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestSelectGroupBy([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var (masterRecords, detailRecords) = GenerateData();
 
@@ -907,7 +951,7 @@ FROM
 		}
 
 		[Test]
-		public void TestTupleQueryingFabric([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestTupleQueryingFabric([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var (masterRecords, detailRecords) = GenerateData();
 
@@ -927,7 +971,7 @@ FROM
 		}
 
 		[Test]
-		public void TestTupleQueryingNew([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestTupleQueryingNew([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var (masterRecords, detailRecords) = GenerateData();
 
@@ -947,7 +991,7 @@ FROM
 		}
 
 		[Test]
-		public void TestCorrectFilteringMembers([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestCorrectFilteringMembers([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var (masterRecords, detailRecords) = GenerateData();
 
@@ -989,7 +1033,7 @@ FROM
 		public static X InitData<X>(X entity) => entity; // for simplicity
 
 		[Test]
-		public void ProjectionWithExtension([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void ProjectionWithExtension([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var (masterRecords, detailRecords) = GenerateData();
 
@@ -1008,7 +1052,7 @@ FROM
 
 
 		[Test]
-		public void ProjectionWithoutClass([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void ProjectionWithoutClass([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var (masterRecords, detailRecords) = GenerateData();
 
@@ -1035,7 +1079,7 @@ FROM
 		}
 
 		[Test]
-		public void FirstSingleWithFilter([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void FirstSingleWithFilter([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var (masterRecords, detailRecords) = GenerateData();
 
@@ -1056,7 +1100,7 @@ FROM
 		}
 
 		[Test]
-		public async Task FirstSingleWithFilterAsync([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public async Task FirstSingleWithFilterAsync([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var (masterRecords, detailRecords) = GenerateData();
 
@@ -1157,8 +1201,9 @@ FROM
 			};
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
-		public void Issue1862TestProjections([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		public void Issue1862TestProjections([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db      = GetDataContext(context))
 			using (var blog    = db.CreateLocalTable(Blog.Data))
@@ -1319,7 +1364,7 @@ FROM
 		}
 
 		[Test]
-		public void Issue2196([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		public void Issue2196([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(EventScheduleItem.Items))
@@ -1396,7 +1441,7 @@ FROM
 		}
 
 		[Test]
-		public void Issue2307([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		public void Issue2307([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var sheets = db.CreateLocalTable(AttendanceSheet.Items))
@@ -1440,8 +1485,8 @@ FROM
 			using (db.CreateLocalTable<UserIssue3128>())
 			using (db.CreateLocalTable<UserDetailsIssue3128>())
 			{
-				db.InsertWithIdentity(new UserIssue3128 { Id = 10 });
-				db.InsertWithIdentity(new UserDetailsIssue3128 { UserId = 10, Age = 18 });
+				db.Insert(new UserIssue3128 { Id = 10 });
+				db.Insert(new UserDetailsIssue3128 { UserId = 10, Age = 18 });
 
 				var result = db.GetTable<UserIssue3128>()
 					.LoadWithAsTable( _ => _.Details)
@@ -1459,8 +1504,8 @@ FROM
 			using (db.CreateLocalTable<UserIssue3128>())
 			using (db.CreateLocalTable<UserDetailsIssue3128>())
 			{
-				db.InsertWithIdentity(new UserIssue3128 { Id = 10 });
-				db.InsertWithIdentity(new UserDetailsIssue3128 { UserId = 10, Age = 18 });
+				db.Insert(new UserIssue3128 { Id = 10 });
+				db.Insert(new UserDetailsIssue3128 { UserId = 10, Age = 18 });
 
 				var result = db.GetTable<UserIssue3128>()
 					.WithTableExpression($"{{0}} {{1}}")
@@ -1478,8 +1523,8 @@ FROM
 			using (db.CreateLocalTable<UserIssue3128>())
 			using (db.CreateLocalTable<UserDetailsIssue3128>())
 			{
-				db.InsertWithIdentity(new UserIssue3128 { Id = 10 });
-				db.InsertWithIdentity(new UserDetailsIssue3128 { UserId = 10, Age = 18 });
+				db.Insert(new UserIssue3128 { Id = 10 });
+				db.Insert(new UserDetailsIssue3128 { UserId = 10, Age = 18 });
 
 				db.Person.Where(p => db.GetTable<UserIssue3128>()
 					.LoadWithAsTable(_ => _.Details)

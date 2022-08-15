@@ -3,27 +3,22 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
+using System.Threading.Tasks;
 #if NATIVE_ASYNC
 using System.Threading;
 #endif
 
 namespace LinqToDB.DataProvider
 {
-	using System.Diagnostics.CodeAnalysis;
-	using System.Threading.Tasks;
+	using Async;
 	using Common;
-	using LinqToDB.Async;
-	using LinqToDB.Data;
+	using Data;
 	using Mapping;
 
-	public class BulkCopyReader<T> : BulkCopyReader,
-#if NATIVE_ASYNC
-		IAsyncDisposable
-#else
-		Async.IAsyncDisposable
-#endif
+	public class BulkCopyReader<T> : BulkCopyReader, IAsyncDisposable
 	{
 		readonly IEnumerator<T>?      _enumerator;
 #if NATIVE_ASYNC

@@ -300,8 +300,7 @@ namespace LinqToDB.Remote
 		{
 			_batchCounter++;
 
-			if (_queryBatch == null)
-				_queryBatch = new List<string>();
+			_queryBatch ??= new List<string>();
 		}
 
 		public void CommitBatch()

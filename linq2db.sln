@@ -7,13 +7,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{885042E3
 	ProjectSection(SolutionItems) = preProject
 		Build\BannedSymbols.txt = Build\BannedSymbols.txt
 		Build\BuildNuspecs.ps1 = Build\BuildNuspecs.ps1
+		Directory.Build.props = Directory.Build.props
 		Directory.Packages.props = Directory.Packages.props
-		Build\linq2db.Default.props = Build\linq2db.Default.props
-		Build\linq2db.Providers.props = Build\linq2db.Providers.props
 		Build\linq2db.snk = Build\linq2db.snk
-		Build\linq2db.Source.props = Build\linq2db.Source.props
-		Build\linq2db.TestProjects.props = Build\linq2db.TestProjects.props
-		Build\linq2db.Tests.props = Build\linq2db.Tests.props
 		Build\README.md = Build\README.md
 		Build\SetVersion.ps1 = Build\SetVersion.ps1
 	EndProjectSection
@@ -21,6 +17,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Source", "Source", "{AF93451E-198C-4A94-8EB4-C330D886E102}"
 	ProjectSection(SolutionItems) = preProject
 		Source\.editorconfig = Source\.editorconfig
+		Source\Directory.Build.props = Source\Directory.Build.props
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LinqToDB", "Source\LinqToDB\LinqToDB.csproj", "{0E4E9A56-F285-4067-ADAA-392ACB9CAAA7}"
@@ -29,6 +26,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{DF8DE665
 	ProjectSection(SolutionItems) = preProject
 		Tests\.editorconfig = Tests\.editorconfig
 		Tests\DataProviders.json = Tests\DataProviders.json
+		Tests\Directory.Build.props = Tests\Directory.Build.props
+		Tests\linq2db.Providers.props = Tests\linq2db.Providers.props
+		Tests\linq2db.TestProjects.props = Tests\linq2db.TestProjects.props
 		Tests\UserDataProviders.json = Tests\UserDataProviders.json
 		Tests\UserDataProviders.json.template = Tests\UserDataProviders.json.template
 	EndProjectSection
@@ -288,6 +288,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{49A3
 	ProjectSection(SolutionItems) = preProject
 		Build\Azure\scripts\access.ace.cmd = Build\Azure\scripts\access.ace.cmd
 		Build\Azure\scripts\access.ace.x64.cmd = Build\Azure\scripts\access.ace.x64.cmd
+		Build\Azure\scripts\clickhouse.sh = Build\Azure\scripts\clickhouse.sh
 		Build\Azure\scripts\db2.provider.sh = Build\Azure\scripts\db2.provider.sh
 		Build\Azure\scripts\db2.sh = Build\Azure\scripts\db2.sh
 		Build\Azure\scripts\firebird25.sh = Build\Azure\scripts\firebird25.sh
@@ -358,6 +359,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "netcoreapp31", "netcoreapp3
 		Build\Azure\netcoreapp31\access.ace.json = Build\Azure\netcoreapp31\access.ace.json
 		Build\Azure\netcoreapp31\access.ace.x64.json = Build\Azure\netcoreapp31\access.ace.x64.json
 		Build\Azure\netcoreapp31\access.mdb.json = Build\Azure\netcoreapp31\access.mdb.json
+		Build\Azure\netcoreapp31\clickhouse.json = Build\Azure\netcoreapp31\clickhouse.json
 		Build\Azure\netcoreapp31\db2.json = Build\Azure\netcoreapp31\db2.json
 		Build\Azure\netcoreapp31\firebird25.json = Build\Azure\netcoreapp31\firebird25.json
 		Build\Azure\netcoreapp31\firebird3.json = Build\Azure\netcoreapp31\firebird3.json
@@ -408,6 +410,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "net60", "net60", "{AA850554
 		Build\Azure\net60\access.ace.json = Build\Azure\net60\access.ace.json
 		Build\Azure\net60\access.ace.x64.json = Build\Azure\net60\access.ace.x64.json
 		Build\Azure\net60\access.mdb.json = Build\Azure\net60\access.mdb.json
+		Build\Azure\net60\clickhouse.json = Build\Azure\net60\clickhouse.json
 		Build\Azure\net60\db2.json = Build\Azure\net60\db2.json
 		Build\Azure\net60\firebird25.json = Build\Azure\net60\firebird25.json
 		Build\Azure\net60\firebird3.json = Build\Azure\net60\firebird3.json
@@ -461,6 +464,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "CLI", "CLI", "{6152B55A-E7B
 	ProjectSection(SolutionItems) = preProject
 		NuGet\CLI\DotnetToolSettings.xml = NuGet\CLI\DotnetToolSettings.xml
 		NuGet\CLI\README.md = NuGet\CLI\README.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Local", "Local", "{6CB875B4-1799-4760-A734-091F34888A60}"
+	ProjectSection(SolutionItems) = preProject
+		Data\Setup Scripts\clickhouse.cmd = Data\Setup Scripts\clickhouse.cmd
+		Data\Setup Scripts\readme.md = Data\Setup Scripts\readme.md
 	EndProjectSection
 EndProject
 Global
@@ -599,6 +608,7 @@ Global
 		{CECB0D6C-33BD-4A00-8882-0D8622D4ACEA} = {AF93451E-198C-4A94-8EB4-C330D886E102}
 		{D069A715-29E5-4CFD-9112-63ED5633971F} = {AF93451E-198C-4A94-8EB4-C330D886E102}
 		{6152B55A-E7B0-4E7A-8E26-922FD91C6A95} = {3A081B6E-D3B3-433F-A3CA-EE29CD24C324}
+		{6CB875B4-1799-4760-A734-091F34888A60} = {885042E3-18EA-4927-B1CF-5E0E3DBD1C00}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {15BBD7CE-1C8E-4407-9DCF-674982CEB3F7}

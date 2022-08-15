@@ -523,7 +523,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestConcatWithDynamic([IncludeDataSources(true, TestProvName.AllSQLiteClassic)] string context)
+		public void TestConcatWithDynamic([IncludeDataSources(true, TestProvName.AllSQLiteClassic, TestProvName.AllClickHouse)] string context)
 		{
 			var mappingSchema = new MappingSchema();
 			var builder = mappingSchema.GetFluentMappingBuilder()
@@ -561,7 +561,6 @@ namespace Tests.Linq
 			}
 		}
 
-
 		class BananaTable
 		{
 			public int Id { get; set; }
@@ -570,9 +569,8 @@ namespace Tests.Linq
 
 		[Test]
 		[ActiveIssue("https://stackoverflow.com/questions/61081571", Details = "Expression 't.Id' is not a Field.")]
-		public void DynamicGoesBanana1([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void DynamicGoesBanana1([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<BananaTable>())
 			{
@@ -600,9 +598,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DynamicGoesBanana2([IncludeDataSources(true, TestProvName.AllSQLiteClassic)] string context)
+		public void DynamicGoesBanana2([IncludeDataSources(true, TestProvName.AllSQLiteClassic, TestProvName.AllClickHouse)] string context)
 		{
-
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<BananaTable>())
 			{
@@ -630,9 +627,8 @@ namespace Tests.Linq
 			}
 		}
 
-
 		[Test]
-		public void Issue3158([DataSources] string context)
+		public void Issue3158([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

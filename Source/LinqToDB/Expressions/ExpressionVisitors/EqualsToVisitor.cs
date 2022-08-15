@@ -449,8 +449,7 @@ namespace LinqToDB.Expressions
 						var attr = parameters[i].GetCustomAttribute<SqlQueryDependentAttribute>(false);
 						if (attr != null)
 						{
-							if (attributes == null)
-								attributes = new SqlQueryDependentAttribute[parameters.Length];
+							attributes ??= new SqlQueryDependentAttribute[parameters.Length];
 							attributes[i] = attr;
 						}
 					}

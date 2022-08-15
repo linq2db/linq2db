@@ -1,11 +1,12 @@
-﻿using LinqToDB;
+﻿using System;
+using System.Linq;
+using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.Firebird;
+using LinqToDB.Mapping;
 using LinqToDB.SqlProvider;
 using LinqToDB.SqlQuery;
 using NUnit.Framework;
-using System;
-using System.Linq;
 
 namespace Tests.UserTests
 {
@@ -18,9 +19,9 @@ namespace Tests.UserTests
 			{
 			}
 
-			public override SqlStatement Finalize(SqlStatement statement)
+			public override SqlStatement Finalize(MappingSchema mappingSchema, SqlStatement statement)
 			{
-				statement = base.Finalize(statement);
+				statement = base.Finalize(mappingSchema, statement);
 
 				AddConditions(statement);
 

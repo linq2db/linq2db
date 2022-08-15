@@ -14,7 +14,7 @@ namespace Tests.Linq
 	public class AllAnyTests : TestBase
 	{
 		[Test]
-		public void Any1([DataSources] string context)
+		public void Any1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -23,7 +23,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Any2([DataSources] string context)
+		public void Any2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -32,7 +32,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Any3([DataSources] string context)
+		public void Any3([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -41,7 +41,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Any31([DataSources] string context)
+		public void Any31([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -61,7 +61,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Any32([DataSources] string context)
+		public void Any32([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -70,7 +70,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Any4([DataSources] string context)
+		public void Any4([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -79,7 +79,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Any5([DataSources] string context)
+		public void Any5([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -87,6 +87,7 @@ namespace Tests.Linq
 					db.Parent.Where(p => p.Children.Any(c => c.GrandChildren.Any(g => g.ParentID > 3))));
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void Any6([DataSources] string context)
 		{
@@ -96,6 +97,7 @@ namespace Tests.Linq
 					db.Child.Any(c => c.ParentID > 3));
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void Any7([DataSources] string context)
 		{
@@ -104,7 +106,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Any8([DataSources] string context)
+		public void Any8([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -113,7 +115,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Any9([DataSources] string context)
+		public void Any9([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -134,7 +136,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Any10([DataSources] string context)
+		public void Any10([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -155,7 +157,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Any11([DataSources] string context)
+		public void Any11([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -178,7 +180,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Any12([DataSources] string context)
+		public void Any12([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -187,7 +189,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void All1([DataSources] string context)
+		public void All1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -196,7 +198,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void All2([DataSources] string context)
+		public void All2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -205,7 +207,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void All3([DataSources] string context)
+		public void All3([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -213,6 +215,7 @@ namespace Tests.Linq
 					db.Parent.Where(p => p.Children.All(c => c.GrandChildren.All(g => g.ParentID > 3))));
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void All4([DataSources] string context)
 		{
@@ -220,9 +223,9 @@ namespace Tests.Linq
 				Assert.AreEqual(
 					   Child.All(c => c.ParentID > 3),
 					db.Child.All(c => c.ParentID > 3));
-
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public async Task All4Async([DataSources] string context)
 		{
@@ -232,6 +235,7 @@ namespace Tests.Linq
 					await db.Child.AllAsync(c => c.ParentID > 3));
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void All5([DataSources] string context)
 		{
@@ -244,7 +248,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SubQueryAllAny([DataSources] string context)
+		public void SubQueryAllAny([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -291,6 +295,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void StackOverflowRegressionTest([DataSources] string context)
 		{

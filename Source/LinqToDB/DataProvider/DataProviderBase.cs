@@ -29,28 +29,43 @@ namespace LinqToDB.DataProvider
 		{
 			Name             = name;
 			MappingSchema    = mappingSchema;
-			SqlProviderFlags = new SqlProviderFlags
+			// set default flags values explicitly even for default values
+			SqlProviderFlags = new SqlProviderFlags()
 			{
+				IsSybaseBuggyGroupBy                 = false,
+				IsParameterOrderDependent            = false,
 				AcceptsTakeAsParameter               = true,
+				AcceptsTakeAsParameterIfSkip         = false,
 				IsTakeSupported                      = true,
 				IsSkipSupported                      = true,
+				IsSkipSupportedIfTake                = false,
+				TakeHintsSupported                   = null,
 				IsSubQueryTakeSupported              = true,
 				IsSubQueryColumnSupported            = true,
+				IsSubQueryOrderBySupported           = false,
 				IsCountSubQuerySupported             = true,
+				IsIdentityParameterRequired          = false,
+				IsApplyJoinSupported                 = false,
 				IsInsertOrUpdateSupported            = true,
 				CanCombineParameters                 = true,
 				MaxInListValuesCount                 = int.MaxValue,
-				IsDistinctOrderBySupported           = true,
-				IsSubQueryOrderBySupported           = false,
 				IsUpdateSetTableAliasSupported       = true,
-				TakeHintsSupported                   = null,
+				OutputDeleteUseSpecialTable          = false,
+				OutputInsertUseSpecialTable          = false,
+				OutputUpdateUseSpecialTables         = false,
+				IsGroupByColumnRequred               = false,
 				IsCrossJoinSupported                 = true,
 				IsInnerJoinAsCrossSupported          = true,
+				IsCommonTableExpressionsSupported    = false,
+				IsDistinctOrderBySupported           = true,
 				IsOrderByAggregateFunctionsSupported = true,
 				IsAllSetOperationsSupported          = false,
 				IsDistinctSetOperationsSupported     = true,
-				IsUpdateFromSupported                = true,
+				IsCountDistinctSupported             = false,
 				AcceptsOuterExpressionInAggregate    = true,
+				IsUpdateFromSupported                = true,
+				DefaultMultiQueryIsolationLevel      = IsolationLevel.RepeatableRead,
+				RowConstructorSupport                = RowFeature.None,
 				IsWindowFunctionsSupported           = true,
 			};
 
@@ -79,6 +94,7 @@ namespace LinqToDB.DataProvider
 		public virtual  MappingSchema    MappingSchema         { get; }
 		public          SqlProviderFlags SqlProviderFlags      { get; }
 		public abstract TableOptions     SupportedTableOptions { get; }
+		public virtual  bool             TransactionsSupported => true;
 
 		public static Func<IDataProvider, DbConnection, DbConnection>? OnConnectionCreated { get; set; }
 

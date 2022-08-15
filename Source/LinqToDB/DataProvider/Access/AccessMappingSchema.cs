@@ -32,6 +32,15 @@ namespace LinqToDB.DataProvider.Access
 			SetValueToSqlConverter(typeof(char),     (sb,dt,v) => ConvertCharToSql    (sb, (char)v));
 			SetValueToSqlConverter(typeof(byte[]),   (sb,dt,v) => ConvertBinaryToSql  (sb, (byte[])v));
 			SetValueToSqlConverter(typeof(Binary),   (sb,dt,v) => ConvertBinaryToSql  (sb, ((Binary)v).ToArray()));
+
+			// Why:
+			// 1. Access use culture-specific string format for decimals
+			// 2. we need to use string type for decimal parameters
+			// This leads to issues with database data parsing as ConvertBuilder will generate parse with InvariantCulture
+			// We need to specify culture-specific converter explicitly
+			SetConvertExpression((string v) => decimal.Parse(v));
+			SetConvertExpression((string v) => float.Parse(v));
+			SetConvertExpression((string v) => double.Parse(v));
 		}
 
 		static void ConvertBinaryToSql(StringBuilder stringBuilder, byte[] value)

@@ -11,7 +11,7 @@ namespace Tests.UserTests
 	public class Issue3056Tests : TestBase
 	{
 		[Test]
-		public void DataModelDynamicTableTest2([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		public void DataModelDynamicTableTest2([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var mappingSchema =  new MappingSchema();
 			var fm            =mappingSchema.GetFluentMappingBuilder();

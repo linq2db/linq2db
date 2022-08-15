@@ -169,8 +169,7 @@ namespace LinqToDB.DataProvider.Informix
 			{
 				if (_ifxAdapter == null)
 					lock (_ifxSyncRoot)
-						if (_ifxAdapter == null)
-							_ifxAdapter = CreateIfxAdapter();
+						_ifxAdapter ??= CreateIfxAdapter();
 
 				return _ifxAdapter;
 			}
@@ -178,8 +177,7 @@ namespace LinqToDB.DataProvider.Informix
 			{
 				if (_db2Adapter == null)
 					lock (_db2SyncRoot)
-						if (_db2Adapter == null)
-							_db2Adapter = new (DB2ProviderAdapter.Instance);
+						_db2Adapter ??= new (DB2ProviderAdapter.Instance);
 
 				return _db2Adapter;
 			}

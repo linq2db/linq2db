@@ -21,7 +21,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void OrderBySybqueryTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void OrderBySubqueryTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable<IssueClass>())

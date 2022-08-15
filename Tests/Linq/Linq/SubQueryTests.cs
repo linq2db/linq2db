@@ -15,7 +15,7 @@ namespace Tests.Linq
 	public class SubQueryTests : TestBase
 	{
 		[Test]
-		public void Test1([DataSources] string context)
+		public void Test1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -28,7 +28,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test2([DataSources] string context)
+		public void Test2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -41,7 +41,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test3([DataSources] string context)
+		public void Test3([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -55,7 +55,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test4([DataSources] string context)
+		public void Test4([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -70,7 +70,7 @@ namespace Tests.Linq
 		static int _testValue = 3;
 
 		[Test]
-		public void Test5([DataSources] string context)
+		public void Test5([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -109,7 +109,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test6([DataSources] string context)
+		public void Test6([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -149,7 +149,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test7([DataSources] string context)
+		public void Test7([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -158,7 +158,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test8([DataSources] string context)
+		public void Test8([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -216,6 +216,7 @@ namespace Tests.Linq
 		[Test]
 		public void Contains1([DataSources(
 			TestProvName.AllInformix,
+			TestProvName.AllClickHouse,
 			TestProvName.AllSybase,
 			TestProvName.AllSapHana,
 			TestProvName.AllAccess,
@@ -236,6 +237,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Contains2([DataSources(
+			TestProvName.AllClickHouse,
 			TestProvName.AllInformix,
 			TestProvName.AllMySql,
 			TestProvName.AllSybase,
@@ -291,7 +293,16 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SubSub2([DataSources] string context)
+		public void SubSub2([DataSources(
+			TestProvName.AllAccess,
+			TestProvName.AllClickHouse,
+			ProviderName.DB2,
+			TestProvName.AllOracle,
+			TestProvName.AllMySql,
+			TestProvName.AllSybase,
+			TestProvName.AllInformix,
+			TestProvName.AllSapHana)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -509,7 +520,11 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SubSub22([DataSources] string context)
+		public void SubSub22([DataSources(
+			ProviderName.SqlCe, ProviderName.Access, ProviderName.DB2,
+			TestProvName.AllClickHouse,
+			TestProvName.AllOracle, TestProvName.AllSapHana)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -554,7 +569,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Count1([DataSources(ProviderName.SqlCe)] string context)
+		public void Count1([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -579,7 +594,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Count2([DataSources(ProviderName.SqlCe)] string context)
+		public void Count2([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -604,7 +619,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Count3([DataSources(ProviderName.SqlCe)] string context)
+		public void Count3([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -747,7 +762,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue383Test1([DataSources(false)] string context)
+		public void Issue383Test1([DataSources(false, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(Contract_Distributor_Agent.Data))
@@ -795,7 +810,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue383Test2([DataSources(false)] string context)
+		public void Issue383Test2([DataSources(false, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(Contract_Distributor_Agent.Data))

@@ -50,10 +50,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			Provider = provider;
 
 			SqlProviderFlags.IsDistinctOrderBySupported        = false;
-			SqlProviderFlags.IsSubQueryOrderBySupported        = false;
-			SqlProviderFlags.IsDistinctSetOperationsSupported  = true;
 			SqlProviderFlags.IsCountDistinctSupported          = true;
-			SqlProviderFlags.IsUpdateFromSupported             = true;
 			SqlProviderFlags.AcceptsOuterExpressionInAggregate = false;
 			SqlProviderFlags.OutputDeleteUseSpecialTable       = true;
 			SqlProviderFlags.OutputInsertUseSpecialTable       = true;

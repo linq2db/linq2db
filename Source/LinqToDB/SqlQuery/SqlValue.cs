@@ -140,5 +140,10 @@ namespace LinqToDB.SqlQuery
 		}
 
 		#endregion
+
+		public void Deconstruct(out object? value)
+		{
+			value = Value;
+		}
 	}
 }

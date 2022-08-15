@@ -27,7 +27,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestMappingToInterface([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestMappingToInterface([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
 			ms.SetConverter<ITest1, string>(favs => JsonSerializer.Serialize(favs));

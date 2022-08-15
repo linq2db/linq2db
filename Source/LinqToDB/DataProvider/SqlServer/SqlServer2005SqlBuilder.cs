@@ -24,15 +24,15 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		protected override bool IsValuesSyntaxSupported => false;
 
-		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
+		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable, bool canBeNull)
 		{
 			switch (type.Type.DataType)
 			{
 				case DataType.DateTimeOffset :
 				case DataType.DateTime2      :
 				case DataType.Time           :
-				case DataType.Date           : StringBuilder.Append("DateTime");                     break;
-				default                      : base.BuildDataTypeFromDataType(type, forCreateTable); break;
+				case DataType.Date           : StringBuilder.Append("DateTime");                                break;
+				default                      : base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull); break;
 			}
 		}
 

@@ -312,7 +312,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				Indent--;
 		}
 
-		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
+		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable, bool canBeNull)
 		{
 			switch (type.Type.DataType)
 			{
@@ -354,7 +354,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					return;
 			}
 
-			base.BuildDataTypeFromDataType(type, forCreateTable);
+			base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull);
 		}
 
 		protected override string? GetTypeName(IDataContext dataContext, DbParameter parameter)

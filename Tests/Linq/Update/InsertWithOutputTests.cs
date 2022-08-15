@@ -21,7 +21,7 @@ namespace Tests.xUpdate
 		private const string FeatureInsertOutputSingle     = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLiteClassic}";
 		private const string FeatureInsertOutputMultiple   = $"{TestProvName.AllSqlServer},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLiteClassic}";
 		private const string FeatureInsertOutputWithSchema = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird},{TestProvName.AllMariaDB},{TestProvName.AllSQLiteClassic}";
-		private const string FeatureInsertOutputInto       = TestProvName.AllSqlServer;
+		private const string FeatureInsertOutputInto       = $"{TestProvName.AllSqlServer}";
 
 		[Table]
 		class TableWithData

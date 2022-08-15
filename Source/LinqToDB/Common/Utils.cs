@@ -67,17 +67,14 @@ namespace LinqToDB.Common
 				var name = nameFunc(item);
 				if (!string.IsNullOrEmpty(name) && currentNames?.Contains(name!) != true && validatorFunc(name!, namesParameter))
 				{
-					if (currentNames == null)
-						currentNames = new HashSet<string>(comparer);
+					currentNames ??= new HashSet<string>(comparer);
 					currentNames.Add(name!);
 					nameSetter(item, name!, namesParameter);
 					continue;
 				}
 
-				if (currentNames == null)
-					currentNames = new HashSet<string>(comparer);
-				if (currentCounters == null)
-					currentCounters = new Dictionary<string, int>(comparer);
+				currentNames ??= new HashSet<string>(comparer);
+				currentCounters ??= new Dictionary<string, int>(comparer);
 
 				name = defaultName(item);
 

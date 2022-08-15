@@ -25,6 +25,7 @@ namespace Tests.Linq
 			ProviderName.DB2,
 			TestProvName.AllSQLite,
 			TestProvName.AllOracle,
+			TestProvName.AllClickHouse,
 			TestProvName.AllMySqlWithCTE,
 			// TODO: v14
 			//TestProvName.AllInformix,
@@ -77,7 +78,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test2([CteContextSource] string context)
+		public void Test2([CteContextSource(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -486,6 +487,7 @@ namespace Tests.Linq
 			public int ParentID { get; set; }
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void TestNoColumns([CteContextSource(true, ProviderName.DB2)] string context)
 		{
@@ -560,7 +562,7 @@ namespace Tests.Linq
 
 		// MariaDB support expected in v10.6 : https://jira.mariadb.org/browse/MDEV-18511
 		[Test]
-		public void TestDelete([CteContextSource(TestProvName.AllFirebird, ProviderName.DB2, TestProvName.AllMariaDB)] string context)
+		public void TestDelete([CteContextSource(TestProvName.AllFirebird, ProviderName.DB2, TestProvName.AllMariaDB, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db  = GetDataContext(context))
 			using (var tmp = db.CreateLocalTable("CteChild",
@@ -582,7 +584,7 @@ namespace Tests.Linq
 		[ActiveIssue(Configuration = TestProvName.AllOracle, Details = "Oracle needs special syntax for CTE + UPDATE")]
 		[Test]
 		public void TestUpdate(
-			[CteContextSource(TestProvName.AllFirebird, ProviderName.DB2, TestProvName.AllOracle, TestProvName.AllMariaDB)]
+			[CteContextSource(TestProvName.AllFirebird, ProviderName.DB2, TestProvName.AllClickHouse, TestProvName.AllOracle, TestProvName.AllMariaDB)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -614,7 +616,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void RecursiveTest([CteContextSource(true, ProviderName.DB2)] string context)
+		public void RecursiveTest([CteContextSource(true, ProviderName.DB2, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -736,7 +738,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void RecursiveTest2([CteContextSource(true, ProviderName.DB2)] string context)
+		public void RecursiveTest2([CteContextSource(true, ProviderName.DB2, TestProvName.AllClickHouse)] string context)
 		{
 			var hierarchyData = GeHirarchyData();
 
@@ -753,7 +755,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestDoubleRecursion([CteContextSource(true, ProviderName.DB2)] string context)
+		public void TestDoubleRecursion([CteContextSource(true, ProviderName.DB2, TestProvName.AllClickHouse)] string context)
 		{
 			var hierarchyData = GeHirarchyData();
 
@@ -778,7 +780,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void RecursiveCount([CteContextSource(true, ProviderName.DB2)] string context)
+		public void RecursiveCount([CteContextSource(true, ProviderName.DB2, TestProvName.AllClickHouse)] string context)
 		{
 			var hierarchyData = GeHirarchyData();
 
@@ -793,7 +795,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void RecursiveInsertInto([CteContextSource(true, ProviderName.DB2)] string context)
+		public void RecursiveInsertInto([CteContextSource(true, ProviderName.DB2, TestProvName.AllClickHouse)] string context)
 		{
 			var hierarchyData = GeHirarchyData();
 
@@ -909,7 +911,7 @@ namespace Tests.Linq
 					join c in cteQuery on p.ParentID equals c.Child!.ParentID
 					select new {p, c};
 
-				Assert.AreEqual(expected, result);
+				Assert.AreEqual(expected.ToList().OrderBy(_ => _.p.ParentID).ThenBy(_ => _.c.Child?.ChildID), result.OrderBy(_ => _.p.ParentID).ThenBy(_ => _.c.Child?.ChildID));
 			}
 		}
 
@@ -958,7 +960,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestEmbedded([CteContextSource] string context)
+		public void TestEmbedded([CteContextSource(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -972,7 +974,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestCteOptimization([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestCteOptimization([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1111,7 +1113,7 @@ namespace Tests.Linq
 
 		#region Issue 2029
 		[Test]
-		public void Issue2029Test([CteContextSource] string context)
+		public void Issue2029Test([CteContextSource(TestProvName.AllClickHouse)] string context)
 		{
 			using (new GenerateFinalAliases(true))
 			using (var db = GetDataContext(context))
@@ -1190,6 +1192,7 @@ namespace Tests.Linq
 
 		[Test(Description = "Test that we generate plain UNION without sub-queries (or query will be invalid)")]
 		public void Issue3359_MultipleSets([CteContextSource(
+			TestProvName.AllClickHouse,
 			TestProvName.AllOracle, // too many unions (ORA-32041: UNION ALL operation in recursive WITH clause must have only two branches)
 			TestProvName.AllPostgreSQL, // too many joins? (42P19: recursive reference to query "cte" must not appear within its non-recursive term)
 			ProviderName.DB2 // joins (SQL0345N  The fullselect of the recursive common table expression "cte" must be the UNION of two or more fullselects and cannot include column functions, GROUP BY clause, HAVING clause, ORDER BY clause, or an explicit join including an ON clause.)
@@ -1246,7 +1249,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "record type support")]
-		public void Issue3357_RecordClass([CteContextSource(ProviderName.DB2)] string context)
+		public void Issue3357_RecordClass([CteContextSource(ProviderName.DB2, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1287,7 +1290,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "record type support")]
-		public void Issue3357_RecordLikeClass([CteContextSource(ProviderName.DB2)] string context)
+		public void Issue3357_RecordLikeClass([CteContextSource(ProviderName.DB2, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 

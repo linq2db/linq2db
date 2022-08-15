@@ -7,6 +7,8 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Net;
+using System.Net.Sockets;
 using System.Reflection;
 using System.Text;
 using System.Xml;
@@ -1337,53 +1339,41 @@ namespace LinqToDB.Mapping
 			public DefaultMappingSchema() : base(new DefaultMappingSchemaInfo())
 			{
 				AddScalarType(typeof(char),            new SqlDataType(DataType.NChar, typeof(char),  1, null, null, null));
-				AddScalarType(typeof(char?),           new SqlDataType(DataType.NChar, typeof(char?), 1, null, null, null));
 				AddScalarType(typeof(string),          DataType.NVarChar);
 				AddScalarType(typeof(decimal),         DataType.Decimal);
-				AddScalarType(typeof(decimal?),        DataType.Decimal);
 				AddScalarType(typeof(DateTime),        DataType.DateTime2);
-				AddScalarType(typeof(DateTime?),       DataType.DateTime2);
 				AddScalarType(typeof(DateTimeOffset),  DataType.DateTimeOffset);
-				AddScalarType(typeof(DateTimeOffset?), DataType.DateTimeOffset);
 				AddScalarType(typeof(TimeSpan),        DataType.Time);
-				AddScalarType(typeof(TimeSpan?),       DataType.Time);
 #if NET6_0_OR_GREATER
 				AddScalarType(typeof(DateOnly),        DataType.Date);
-				AddScalarType(typeof(DateOnly?),       DataType.Date);
 #endif
 				AddScalarType(typeof(byte[]),          DataType.VarBinary);
 				AddScalarType(typeof(Binary),          DataType.VarBinary);
 				AddScalarType(typeof(Guid),            DataType.Guid);
-				AddScalarType(typeof(Guid?),           DataType.Guid);
 				AddScalarType(typeof(object),          DataType.Variant);
 				AddScalarType(typeof(XmlDocument),     DataType.Xml);
 				AddScalarType(typeof(XDocument),       DataType.Xml);
 				AddScalarType(typeof(bool),            DataType.Boolean);
-				AddScalarType(typeof(bool?),           DataType.Boolean);
 				AddScalarType(typeof(sbyte),           DataType.SByte);
-				AddScalarType(typeof(sbyte?),          DataType.SByte);
 				AddScalarType(typeof(short),           DataType.Int16);
-				AddScalarType(typeof(short?),          DataType.Int16);
 				AddScalarType(typeof(int),             DataType.Int32);
-				AddScalarType(typeof(int?),            DataType.Int32);
 				AddScalarType(typeof(long),            DataType.Int64);
-				AddScalarType(typeof(long?),           DataType.Int64);
 				AddScalarType(typeof(byte),            DataType.Byte);
-				AddScalarType(typeof(byte?),           DataType.Byte);
 				AddScalarType(typeof(ushort),          DataType.UInt16);
-				AddScalarType(typeof(ushort?),         DataType.UInt16);
 				AddScalarType(typeof(uint),            DataType.UInt32);
-				AddScalarType(typeof(uint?),           DataType.UInt32);
 				AddScalarType(typeof(ulong),           DataType.UInt64);
-				AddScalarType(typeof(ulong?),          DataType.UInt64);
 				AddScalarType(typeof(float),           DataType.Single);
-				AddScalarType(typeof(float?),          DataType.Single);
 				AddScalarType(typeof(double),          DataType.Double);
-				AddScalarType(typeof(double?),         DataType.Double);
 
 				AddScalarType(typeof(BitArray),        DataType.BitArray);
 
 				SetConverter<DBNull, object?>(static _ => null);
+
+				// explicitly specify old ToString client-side conversions for some types after we added support for ToString(InvariantCulture) to conversion generators
+				SetConverter<DateTime, string>(static v => v.ToString("yyyy-MM-dd hh:mm:ss"));
+#if NET6_0_OR_GREATER
+				SetConverter<DateOnly, string>(static v => v.ToString("yyyy-MM-dd"));
+#endif
 
 				ValueToSqlConverter.SetDefaults();
 			}
@@ -1495,12 +1485,16 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		/// <param name="type">Type to configure.</param>
 		/// <param name="dataType">Optional scalar data type.</param>
-		public void AddScalarType(Type type, DataType dataType = DataType.Undefined)
+		/// <param name="withNullable">Also register <see cref="Nullable{T}"/> type.</param>
+		public void AddScalarType(Type type, DataType dataType = DataType.Undefined, bool withNullable = true)
 		{
 			SetScalarType(type);
 
 			if (dataType != DataType.Undefined)
 				SetDataType(type, dataType);
+
+			if (withNullable && type.IsValueType && !type.IsNullable())
+				AddScalarType(type.AsNullable(), dataType, false);
 		}
 
 		/// <summary>
@@ -1508,11 +1502,18 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		/// <param name="type">Type to configure.</param>
 		/// <param name="dataType">Database data type.</param>
-		public void AddScalarType(Type type, SqlDataType dataType)
+		/// <param name="withNullable">Also register <see cref="Nullable{T}"/> type.</param>
+		public void AddScalarType(Type type, SqlDataType dataType, bool withNullable = true)
 		{
 			SetScalarType(type);
 
 			SetDataType(type, dataType);
+
+			if (withNullable && type.IsValueType && !type.IsNullable())
+			{
+				var nullableType = type.AsNullable();
+				AddScalarType(nullableType, new SqlDataType(dataType.Type.WithSystemType(nullableType)), false);
+			}
 		}
 
 		#endregion
@@ -1624,7 +1625,7 @@ namespace LinqToDB.Mapping
 					}
 
 					if (valueType == null)
-						return SqlDataType.Undefined;
+						return SqlDataType.GetDataType(type);
 
 					var dt = GetDataType(valueType);
 
@@ -1660,8 +1661,7 @@ namespace LinqToDB.Mapping
 		{
 			if (type == null) throw new ArgumentNullException(nameof(type));
 
-			if (_mapValues == null)
-				_mapValues = new ConcurrentDictionary<Type,MapValue[]?>();
+			_mapValues ??= new ConcurrentDictionary<Type,MapValue[]?>();
 
 			if (_mapValues.TryGetValue(type, out var mapValues))
 				return mapValues;

@@ -17,13 +17,13 @@ jobs:
     displayName: 'Install .net 6'
     inputs:
       packageType: sdk
-      version: 6.x
+      version: 6.0.302 # 6.x
 
   - task: PowerShell@2
     inputs:
       filePath: '$(Build.SourcesDirectory)/Build/SetVersion.ps1'
       workingDirectory: '$(Build.SourcesDirectory)'
-      arguments: -path $(Build.SourcesDirectory)/Build/linq2db.Default.props -version $(assemblyVersion)
+      arguments: -path $(Build.SourcesDirectory)/Directory.Build.props -version $(assemblyVersion)
     displayName: Update assembly version
 
   - task: MSBuild@1

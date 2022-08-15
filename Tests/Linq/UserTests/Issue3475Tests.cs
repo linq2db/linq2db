@@ -35,7 +35,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void NumberLikeTests([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void NumberLikeTests([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			ParsingConfig.Default.CustomTypeProvider = new LinqToDBDynamicLinqCustomTypeProvider();
 

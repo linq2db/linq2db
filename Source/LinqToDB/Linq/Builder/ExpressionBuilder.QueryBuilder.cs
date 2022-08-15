@@ -511,10 +511,7 @@ namespace LinqToDB.Linq.Builder
 
 									var newArgument = context.builder.ConvertAssignmentArgument(context.translated, context.context, ne, argument, memberInfo, memberType, context.flags, memberAlias);
 									if (newArgument != argument)
-									{
-										if (arguments == null)
-											arguments = ne.Arguments.Take(i).ToList();
-									}
+										arguments ??= ne.Arguments.Take(i).ToList();
 
 									arguments?.Add(newArgument);
 								}
@@ -959,8 +956,7 @@ namespace LinqToDB.Linq.Builder
 
 		public ParameterExpression BuildVariable(Expression expr, string? name = null)
 		{
-			if (name == null)
-				name = expr.Type.Name + Interlocked.Increment(ref VarIndex);
+			name ??= expr.Type.Name + Interlocked.Increment(ref VarIndex);
 
 			var variable = Expression.Variable(
 				expr.Type,
@@ -1205,8 +1201,7 @@ namespace LinqToDB.Linq.Builder
 				     !context.parameters.Contains((ParameterExpression)root) 
 				     || root is ContextRefExpression))
 				{
-					if (context.builder._buildMultipleQueryExpressions == null)
-						context.builder._buildMultipleQueryExpressions = new HashSet<Expression>();
+					context.builder._buildMultipleQueryExpressions ??= new HashSet<Expression>();
 
 					context.builder._buildMultipleQueryExpressions.Add(e);
 

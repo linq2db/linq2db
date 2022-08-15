@@ -220,8 +220,7 @@ namespace LinqToDB.Linq.Builder
 							newArgs?.Add(arg);
 						else
 						{
-							if (newArgs == null)
-								newArgs = new List<Expression>(mc.Arguments.Take(index));
+							newArgs ??= new List<Expression>(mc.Arguments.Take(index));
 							newArgs.Add(newArg);
 						}
 					}

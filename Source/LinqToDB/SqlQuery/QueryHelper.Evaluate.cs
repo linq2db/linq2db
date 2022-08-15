@@ -294,7 +294,7 @@ namespace LinqToDB.SqlQuery
 							return false;
 						}
 
-						case "$ToLower$":
+						case PseudoFunctions.TO_LOWER:
 						{
 							if (function.Parameters[0]
 								.TryEvaluateExpression(context, out var strValue, out errorMessage))
@@ -312,7 +312,7 @@ namespace LinqToDB.SqlQuery
 							return false;
 						}
 
-						case "$ToUpper$":
+						case PseudoFunctions.TO_UPPER:
 						{
 							if (function.Parameters[0]
 								.TryEvaluateExpression(context, out var strValue, out errorMessage))

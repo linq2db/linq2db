@@ -484,8 +484,7 @@ namespace LinqToDB.Linq
 			{
 				if (_members == null)
 					lock (_memberSync)
-						if (_members == null)
-							_members = LoadMembers();
+						_members ??= LoadMembers();
 
 				return _members;
 			}
@@ -669,7 +668,7 @@ namespace LinqToDB.Linq
 			{ M(() => new DateOnly(0, 0, 0)                ), N(() => L<int,int,int, DateOnly>((int y,int m,int d)   => Sql.MakeDateOnly(y, m, d)!.Value                       )) },
 
 			{ M(() => Sql.MakeDateOnly(0, 0, 0)      ), N(() => L<int?,int?,int?,DateOnly?>((int? y,int? m,int? d) => (DateOnly?)Sql.Convert(Sql.Types.DateOnly,
-				y.ToString() + "-" + Sql.ZeroPad(m, 2) + "-" + Sql.ZeroPad(d, 2)))) },
+				Sql.ZeroPad(y, 4) + "-" + Sql.ZeroPad(m, 2) + "-" + Sql.ZeroPad(d, 2)))) },
 
 #endif
 			#endregion
@@ -679,31 +678,31 @@ namespace LinqToDB.Linq
 			{ M(() => Sql.GetDate()                  ), N(() => L<DateTime>                (()                        => Sql.CurrentTimestamp2)) },
 			{ M(() => DateTime.Now                   ), N(() => L<DateTime>                (()                        => Sql.CurrentTimestamp2)) },
 
-			{ M(() => DateTime.Now.Year              ), N(() => L<DateTime,int>            ((DateTime obj)            => Sql.DatePart(Sql.DateParts.Year,        obj)!.Value    )) },
-			{ M(() => DateTime.Now.Month             ), N(() => L<DateTime,int>            ((DateTime obj)            => Sql.DatePart(Sql.DateParts.Month,       obj)!.Value    )) },
-			{ M(() => DateTime.Now.DayOfYear         ), N(() => L<DateTime,int>            ((DateTime obj)            => Sql.DatePart(Sql.DateParts.DayOfYear,   obj)!.Value    )) },
-			{ M(() => DateTime.Now.Day               ), N(() => L<DateTime,int>            ((DateTime obj)            => Sql.DatePart(Sql.DateParts.Day,         obj)!.Value    )) },
-			{ M(() => DateTime.Now.DayOfWeek         ), N(() => L<DateTime,int>            ((DateTime obj)            => Sql.DatePart(Sql.DateParts.WeekDay,     obj)!.Value - 1)) },
-			{ M(() => DateTime.Now.Hour              ), N(() => L<DateTime,int>            ((DateTime obj)            => Sql.DatePart(Sql.DateParts.Hour,        obj)!.Value    )) },
-			{ M(() => DateTime.Now.Minute            ), N(() => L<DateTime,int>            ((DateTime obj)            => Sql.DatePart(Sql.DateParts.Minute,      obj)!.Value    )) },
-			{ M(() => DateTime.Now.Second            ), N(() => L<DateTime,int>            ((DateTime obj)            => Sql.DatePart(Sql.DateParts.Second,      obj)!.Value    )) },
-			{ M(() => DateTime.Now.Millisecond       ), N(() => L<DateTime,int>            ((DateTime obj)            => Sql.DatePart(Sql.DateParts.Millisecond, obj)!.Value    )) },
-			{ M(() => DateTime.Now.Date              ), N(() => L<DateTime,DateTime>       ((DateTime obj)            => Sql.Convert2(Sql.Types.Date,                obj)           )) },
-			{ M(() => DateTime.Now.TimeOfDay         ), N(() => L<DateTime,TimeSpan>       ((DateTime obj)            => Sql.DateToTime(Sql.Convert2(Sql.Types.Time, obj))!.Value   )) },
-			{ M(() => DateTime.Now.AddYears       (0)), N(() => L<DateTime,int,DateTime>   ((DateTime obj,int p0)     => Sql.DateAdd(Sql.DateParts.Year,        p0, obj)!.Value )) },
-			{ M(() => DateTime.Now.AddMonths      (0)), N(() => L<DateTime,int,DateTime>   ((DateTime obj,int p0)     => Sql.DateAdd(Sql.DateParts.Month,       p0, obj)!.Value )) },
-			{ M(() => DateTime.Now.AddDays        (0)), N(() => L<DateTime,double,DateTime>((DateTime obj,double p0)  => Sql.DateAdd(Sql.DateParts.Day,         p0, obj)!.Value )) },
-			{ M(() => DateTime.Now.AddHours       (0)), N(() => L<DateTime,double,DateTime>((DateTime obj,double p0)  => Sql.DateAdd(Sql.DateParts.Hour,        p0, obj)!.Value )) },
-			{ M(() => DateTime.Now.AddMinutes     (0)), N(() => L<DateTime,double,DateTime>((DateTime obj,double p0)  => Sql.DateAdd(Sql.DateParts.Minute,      p0, obj)!.Value )) },
-			{ M(() => DateTime.Now.AddSeconds     (0)), N(() => L<DateTime,double,DateTime>((DateTime obj,double p0)  => Sql.DateAdd(Sql.DateParts.Second,      p0, obj)!.Value )) },
-			{ M(() => DateTime.Now.AddMilliseconds(0)), N(() => L<DateTime,double,DateTime>((DateTime obj,double p0)  => Sql.DateAdd(Sql.DateParts.Millisecond, p0, obj)!.Value )) },
+			{ M(() => DateTime.Now.Year              ), N(() => L<DateTime,int>            ((DateTime obj)            => Sql.DatePart(Sql.DateParts.Year,        obj)!.Value     )) },
+			{ M(() => DateTime.Now.Month             ), N(() => L<DateTime,int>            ((DateTime obj)            => Sql.DatePart(Sql.DateParts.Month,       obj)!.Value     )) },
+			{ M(() => DateTime.Now.DayOfYear         ), N(() => L<DateTime,int>            ((DateTime obj)            => Sql.DatePart(Sql.DateParts.DayOfYear,   obj)!.Value     )) },
+			{ M(() => DateTime.Now.Day               ), N(() => L<DateTime,int>            ((DateTime obj)            => Sql.DatePart(Sql.DateParts.Day,         obj)!.Value     )) },
+			{ M(() => DateTime.Now.DayOfWeek         ), N(() => L<DateTime,int>            ((DateTime obj)            => Sql.DatePart(Sql.DateParts.WeekDay,     obj)!.Value - 1 )) },
+			{ M(() => DateTime.Now.Hour              ), N(() => L<DateTime,int>            ((DateTime obj)            => Sql.DatePart(Sql.DateParts.Hour,        obj)!.Value     )) },
+			{ M(() => DateTime.Now.Minute            ), N(() => L<DateTime,int>            ((DateTime obj)            => Sql.DatePart(Sql.DateParts.Minute,      obj)!.Value     )) },
+			{ M(() => DateTime.Now.Second            ), N(() => L<DateTime,int>            ((DateTime obj)            => Sql.DatePart(Sql.DateParts.Second,      obj)!.Value     )) },
+			{ M(() => DateTime.Now.Millisecond       ), N(() => L<DateTime,int>            ((DateTime obj)            => Sql.DatePart(Sql.DateParts.Millisecond, obj)!.Value     )) },
+			{ M(() => DateTime.Now.Date              ), N(() => L<DateTime,DateTime>       ((DateTime obj)            => Sql.Convert2(Sql.Types.Date,                obj)        )) },
+			{ M(() => DateTime.Now.TimeOfDay         ), N(() => L<DateTime,TimeSpan>       ((DateTime obj)            => Sql.DateToTime(Sql.Convert2(Sql.Types.Time, obj))!.Value)) },
+			{ M(() => DateTime.Now.AddYears       (0)), N(() => L<DateTime,int,DateTime>   ((DateTime obj,int p0)     => Sql.DateAdd(Sql.DateParts.Year,        p0, obj)!.Value  )) },
+			{ M(() => DateTime.Now.AddMonths      (0)), N(() => L<DateTime,int,DateTime>   ((DateTime obj,int p0)     => Sql.DateAdd(Sql.DateParts.Month,       p0, obj)!.Value  )) },
+			{ M(() => DateTime.Now.AddDays        (0)), N(() => L<DateTime,double,DateTime>((DateTime obj,double p0)  => Sql.DateAdd(Sql.DateParts.Day,         p0, obj)!.Value  )) },
+			{ M(() => DateTime.Now.AddHours       (0)), N(() => L<DateTime,double,DateTime>((DateTime obj,double p0)  => Sql.DateAdd(Sql.DateParts.Hour,        p0, obj)!.Value  )) },
+			{ M(() => DateTime.Now.AddMinutes     (0)), N(() => L<DateTime,double,DateTime>((DateTime obj,double p0)  => Sql.DateAdd(Sql.DateParts.Minute,      p0, obj)!.Value  )) },
+			{ M(() => DateTime.Now.AddSeconds     (0)), N(() => L<DateTime,double,DateTime>((DateTime obj,double p0)  => Sql.DateAdd(Sql.DateParts.Second,      p0, obj)!.Value  )) },
+			{ M(() => DateTime.Now.AddMilliseconds(0)), N(() => L<DateTime,double,DateTime>((DateTime obj,double p0)  => Sql.DateAdd(Sql.DateParts.Millisecond, p0, obj)!.Value  )) },
 			{ M(() => new DateTime(0, 0, 0)          ), N(() => L<int,int,int,DateTime>((int y,int m,int d) => Sql.MakeDateTime(y, m, d)!.Value                       )) },
 
-			{ M(() => Sql.MakeDateTime(0, 0, 0)          ), N(() => L<int?,int?,int?,DateTime?>               ((int? y,int? m,int? d)                       => (DateTime?)Sql.Convert(Sql.Types.Date, y.ToString() + "-" + m.ToString() + "-" + d.ToString()))) },
+			{ M(() => Sql.MakeDateTime(0, 0, 0)          ), N(() => L<int?,int?,int?,DateTime?>               ((int? y,int? m,int? d)                       => (DateTime?)Sql.Convert(Sql.Types.Date, Sql.ZeroPad(y, 4) + "-" + Sql.ZeroPad(m, 2) + "-" + Sql.ZeroPad(d, 2)))) },
 			{ M(() => new DateTime    (0, 0, 0, 0, 0, 0) ), N(() => L<int,int,int,int,int,int,DateTime>       ((int  y,int  m,int  d,int  h,int  mm,int s)  => Sql.MakeDateTime(y, m, d, h, mm, s)!.Value )) },
 			{ M(() => Sql.MakeDateTime(0, 0, 0, 0, 0, 0) ), N(() => L<int?,int?,int?,int?,int?,int?,DateTime?>((int? y,int? m,int? d,int? h,int? mm,int? s) => (DateTime?)Sql.Convert(Sql.Types.DateTime2,
-				y.ToString() + "-" + m.ToString() + "-" + d.ToString() + " " +
-				h.ToString() + ":" + mm.ToString() + ":" + s.ToString()))) },
+				Sql.ZeroPad(y, 4) + "-" + Sql.ZeroPad(m, 2) + "-" + Sql.ZeroPad(d, 2) + " " +
+				Sql.ZeroPad(h, 2) + ":" + Sql.ZeroPad(mm, 2) + ":" + Sql.ZeroPad(s, 2)))) },
 
 			#endregion
 
@@ -1231,8 +1230,8 @@ namespace LinqToDB.Linq
 
 				{ ProviderName.SqlServer2005, new Dictionary<MemberHelper.MemberInfoWithType,IExpressionInfo> {
 					{ M(() => Sql.MakeDateTime(0, 0, 0, 0, 0, 0) ), N(() => L<int?,int?,int?,int?,int?,int?,DateTime?>((y,m,d,h,mm,s) => Sql.Convert(Sql.Types.DateTime2,
-						y.ToString() + "-" + m.ToString() + "-" + d.ToString() + " " +
-						h.ToString() + ":" + mm.ToString() + ":" + s.ToString(), 120))) },
+						Sql.ZeroPad(y, 4) + "-" + Sql.ZeroPad(m, 2) + "-" + Sql.ZeroPad(d, 2) + " " +
+						Sql.ZeroPad(h, 2) + ":" + Sql.ZeroPad(mm, 2) + ":" + Sql.ZeroPad(s, 2), 120))) },
 					{ M(() => DateTime.Parse("")), N(() => L<string,DateTime>(p0 => Sql.ConvertTo<DateTime>.From(p0) )) },
 				}},
 
@@ -1410,18 +1409,18 @@ namespace LinqToDB.Linq
 
 #if NET6_0_OR_GREATER
 					{ M(() => Sql.MakeDateOnly(0, 0, 0)), N(() => L<int?,int?,int?,DateOnly?>((y,m,d) => Sql.Convert(Sql.Types.DateOnly,
-						y.ToString() + "-" +
+						Sql.ZeroPad(y, 4) + "-" +
 						Sql.ZeroPad(m, 2) + "-" +
 						Sql.ZeroPad(d, 2)))) },
 #endif
 
 					{ M(() => Sql.MakeDateTime(0, 0, 0)), N(() => L<int?,int?,int?,DateTime?>((y,m,d) => Sql.Convert(Sql.Types.Date,
-						y.ToString() + "-" +
+						Sql.ZeroPad(y, 4) + "-" +
 						Sql.ZeroPad(m, 2) + "-" +
 						Sql.ZeroPad(d, 2)))) },
 
 					{ M(() => Sql.MakeDateTime(0, 0, 0, 0, 0, 0)), N(() => L<int?,int?,int?,int?,int?,int?,DateTime?>((y,m,d,h,i,s) => Sql.Convert(Sql.Types.DateTime2,
-						y.ToString() + "-" +
+						Sql.ZeroPad(y, 4) + "-" +
 						Sql.ZeroPad(m, 2) + "-" +
 						Sql.ZeroPad(d, 2) + " " +
 						Sql.ZeroPad(h, 2) + ":" +
@@ -1547,6 +1546,27 @@ namespace LinqToDB.Linq
 					{ M(() => Sql.RoundToEven(0.0)  ), N(() => L<double?,double?>       ((double? v)          => (double?)Sql.RoundToEven((decimal)v!)))    },
 					{ M(() => Sql.RoundToEven(0.0,0)), N(() => L<double?,int?,double?>((double? v,int? p) => (double?)Sql.RoundToEven((decimal)v!, p))) },
 					{ M(() => Sql.Stuff("",0,0,"")), N(() => L<string?,int?,int?,string?,string?>((string? p0,int? p1,int? p2,string? p3) => AltStuff (p0,  p1, p2, p3)))             },
+				}},
+
+				#endregion
+
+				#region ClickHouse
+
+				{ ProviderName.ClickHouse, new Dictionary<MemberHelper.MemberInfoWithType,IExpressionInfo> {
+					{ M(() => DateTime.Now.Date      ), N(() => L<DateTime,DateTime>      ((DateTime obj)       => ClickHouseGetDate(obj)!.Value)) },
+					{ M(() => DateTimeOffset.Now.Date), N(() => L<DateTimeOffset,DateTime>((DateTimeOffset obj) => ClickHouseGetDate(obj)!.Value)) },
+
+					{ M(() => DateTimeOffset.Now.TimeOfDay), N(() => L<DateTimeOffset,TimeSpan>((DateTimeOffset obj) => ClickHouseGetTime(obj)!.Value)) },
+					{ M(() => DateTime.Now.TimeOfDay      ), N(() => L<DateTime,TimeSpan>      ((DateTime obj)       => ClickHouseGetTime(obj)!.Value)) },
+
+					// TODO:
+					// we shouldn't have this mapping, but currently Math.Round -> Sql.RoundToEven mapping ignores expression attribute on Sql.RoundToEven
+					// and maps it to expression
+					{ M(() => Sql.RoundToEven(0m)   ), N(() => L<decimal?,decimal?>     ( v   => ClickHouseRoundToEven(v))) },
+					{ M(() => Sql.RoundToEven(0.0)  ), N(() => L<double?, double?>      ( v   => ClickHouseRoundToEven(v))) },
+					{ M(() => Sql.RoundToEven(0m, 0)), N(() => L<decimal?,int?,decimal?>((v,p)=> ClickHouseRoundToEven(v, p))) },
+					{ M(() => Sql.RoundToEven(0.0,0)), N(() => L<double?, int?,double?> ((v,p)=> ClickHouseRoundToEven(v, p))) },
+
 				}},
 
 				#endregion
@@ -1802,6 +1822,28 @@ namespace LinqToDB.Linq
 				(DateTime?)null :
 				new DateTime(year.Value, month.Value, day.Value);
 		}
+
+		// ClickHouse
+		//
+		[Sql.Function("toDate32", ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
+		private static DateTime? ClickHouseGetDate(DateTimeOffset? dto) => throw new InvalidOperationException();
+		[Sql.Function("toDate32", ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
+		private static DateTime? ClickHouseGetDate(DateTime?       dt) => throw new InvalidOperationException();
+
+		// :-/
+		[Sql.Expression("toInt64((toUnixTimestamp64Nano(toDateTime64({0}, 7)) - toUnixTimestamp64Nano(toDateTime64(toDate32({0}), 7))) / 100)", ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable, Precedence = SqlQuery.Precedence.Primary)]
+		private static TimeSpan? ClickHouseGetTime(DateTimeOffset? dto) => throw new InvalidOperationException();
+		[Sql.Expression("toInt64((toUnixTimestamp64Nano(toDateTime64({0}, 7)) - toUnixTimestamp64Nano(toDateTime64(toDate32({0}), 7))) / 100)", ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable, Precedence = SqlQuery.Precedence.Primary)]
+		private static TimeSpan? ClickHouseGetTime(DateTime? dt) => throw new InvalidOperationException();
+
+		[Sql.Function("roundBankers", IsNullable = Sql.IsNullableType.SameAsFirstParameter)]
+		private static decimal? ClickHouseRoundToEven(decimal? value) => throw new InvalidOperationException();
+		[Sql.Function("roundBankers", IsNullable = Sql.IsNullableType.SameAsFirstParameter)]
+		private static double? ClickHouseRoundToEven(double? value) => throw new InvalidOperationException();
+		[Sql.Function("roundBankers", IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
+		private static decimal? ClickHouseRoundToEven(decimal? value, int? precision) => throw new InvalidOperationException();
+		[Sql.Function("roundBankers", IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
+		private static double? ClickHouseRoundToEven(double? value, int? precision) => throw new InvalidOperationException();
 
 		#endregion
 

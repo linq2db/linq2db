@@ -16,6 +16,7 @@ using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.Access;
+using LinqToDB.DataProvider.ClickHouse;
 using LinqToDB.DataProvider.DB2;
 using LinqToDB.DataProvider.Firebird;
 using LinqToDB.DataProvider.Informix;
@@ -1573,14 +1574,12 @@ namespace Tests.Data
 				Assert.True    (trace.Contains("DECLARE @p Json"));
 
 				// provider-specific type classes and readers
-				var dateValue = new DateTime(1234, 11, 22);
-#pragma warning disable CS0618 // Type or member is obsolete
-				var ndateValue = db.Execute<NpgsqlTypes.NpgsqlDate>("SELECT @p", new DataParameter("@p", dateValue, DataType.Date));
-#pragma warning restore CS0618 // Type or member is obsolete
-				Assert.AreEqual(dateValue, (DateTime)ndateValue);
-				var rawValue = db.Execute<object>("SELECT @p", new DataParameter("@p", dateValue, DataType.Date));
-				Assert.True    (rawValue is DateTime);
-				Assert.AreEqual(dateValue, (DateTime)rawValue);
+				var interval = TimeSpan.FromSeconds(-1234);
+				var nValue = db.Execute<NpgsqlTypes.NpgsqlInterval>("SELECT @p", new DataParameter("@p", interval, DataType.Interval));
+				Assert.AreEqual(interval, TimeSpan.FromTicks(nValue.Time * 10));
+				var rawValue = db.Execute<object>("SELECT @p", new DataParameter("@p", interval, DataType.Interval));
+				Assert.True    (rawValue is TimeSpan);
+				Assert.AreEqual(interval, (TimeSpan)rawValue);
 
 				// bulk copy without and with transaction
 				TestBulkCopy();
@@ -1596,9 +1595,9 @@ namespace Tests.Data
 				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
 				var allTypes = schema.Tables.Where(t => t.TableName == "AllTypes").SingleOrDefault()!;
 				Assert.NotNull (allTypes);
-				var tsColumn = allTypes.Columns.Where(c => c.ColumnName == "timestampDataType").SingleOrDefault()!;
+				var tsColumn = allTypes.Columns.Where(c => c.ColumnName == "intervalDataType").SingleOrDefault()!;
 				Assert.NotNull (tsColumn);
-				Assert.AreEqual("NpgsqlDateTime", tsColumn.ProviderSpecificType);
+				Assert.AreEqual("NpgsqlInterval", tsColumn.ProviderSpecificType);
 
 				// provider properties
 				Assert.AreEqual(true, provider.HasMacAddr8);
@@ -1683,6 +1682,102 @@ namespace Tests.Data
 		{
 			[Column]
 			public NpgsqlTypes.NpgsqlCircle? Column { get; set; }
+		}
+
+		internal class TestClickHouseDataProvider : ClickHouseDataProvider
+		{
+			public TestClickHouseDataProvider(string providerName, ClickHouseProvider provider)
+				: base(providerName, provider)
+			{
+			}
+		}
+
+		[Table]
+		public class ClickHouseBulkCopyTable
+		{
+			[Column]
+			public int ID { get; set; }
+		}
+
+		[Test]
+		public async ValueTask TestClickHouse([IncludeDataSources(TestProvName.AllClickHouse)] string context, [Values] ConnectionType type)
+		{
+			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
+
+			ClickHouseDataProvider provider;
+			using (var db = GetDataConnection(context))
+				provider = new TestClickHouseDataProvider(db.DataProvider.Name, ((ClickHouseDataProvider)db.DataProvider).Provider);
+
+			// temporary workaround for https://github.com/Octonica/ClickHouseClient/issues/54
+			using (var db = context.IsAnyOf(ProviderName.ClickHouseOctonica)
+				? CreateDataConnection(provider, context, type, cs => (DbConnection)Activator.CreateInstance(provider.Adapter.ConnectionType, cs, null)!)
+				: CreateDataConnection(provider, context, type, provider.Adapter.ConnectionType))
+			{
+				var trace = string.Empty;
+				db.OnTraceConnection += (TraceInfo ti) =>
+				{
+					if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
+						trace = ti.SqlText;
+				};
+
+				// native bulk copy not supported for mysql interface
+				if (!context.IsAnyOf(ProviderName.ClickHouseMySql))
+				{
+					TestBulkCopy();
+					await TestBulkCopyAsync();
+				}
+
+				void TestBulkCopy()
+				{
+					using (db.CreateLocalTable<ClickHouseBulkCopyTable>())
+					{
+						long copied = 0;
+						var options = new BulkCopyOptions()
+						{
+							BulkCopyType       = BulkCopyType.ProviderSpecific,
+							NotifyAfter        = 500,
+							RowsCopiedCallback = arg => copied = arg.RowsCopied,
+							KeepIdentity       = true
+						};
+
+						db.BulkCopy(
+							options,
+							Enumerable.Range(0, 1000).Select(n => new ClickHouseBulkCopyTable() { ID = 2000 + n }));
+
+						// Client provider supports only async API
+						if (context.IsAnyOf(ProviderName.ClickHouseClient))
+							Assert.AreEqual(!unmapped, trace.Contains("INSERT ASYNC BULK"));
+						else
+							Assert.AreEqual(true, trace.Contains("INSERT INTO"));
+						Assert.AreEqual(1000, copied);
+					}
+				}
+
+				async Task TestBulkCopyAsync()
+				{
+					using (db.CreateLocalTable<ClickHouseBulkCopyTable>())
+					{
+						long copied = 0;
+						var options = new BulkCopyOptions()
+						{
+							BulkCopyType       = BulkCopyType.ProviderSpecific,
+							NotifyAfter        = 500,
+							RowsCopiedCallback = arg => copied = arg.RowsCopied,
+							KeepIdentity       = true
+						};
+
+						await db.BulkCopyAsync(
+							options,
+							Enumerable.Range(0, 1000).Select(n => new ClickHouseBulkCopyTable() { ID = 2000 + n }));
+
+						if (context.IsAnyOf(ProviderName.ClickHouseClient))
+							Assert.AreEqual(!unmapped, trace.Contains("INSERT ASYNC BULK"));
+						else
+							Assert.AreEqual(true, trace.Contains("INSERT INTO"));
+						Assert.AreEqual(1000, copied);
+					}
+				}
+			}
 		}
 
 		public enum ConnectionType

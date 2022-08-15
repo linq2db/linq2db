@@ -1,5 +1,4 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-	<Import Project="..\..\Build\linq2db.Tests.props" />
 
 	<PropertyGroup>
 		<AssemblyName>Tests.T4</AssemblyName>

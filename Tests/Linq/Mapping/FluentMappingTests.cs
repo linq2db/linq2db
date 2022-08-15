@@ -328,7 +328,7 @@ namespace Tests.Mapping
 		}
 
 		[Test]
-		public void FluentInheritance([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void FluentInheritance([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
 			var mb = ms.GetFluentMappingBuilder();
@@ -353,7 +353,7 @@ namespace Tests.Mapping
 		}
 
 		[Test]
-		public void FluentInheritance2([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void FluentInheritance2([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
 			var mb = ms.GetFluentMappingBuilder();
@@ -395,7 +395,7 @@ namespace Tests.Mapping
 		}
 
 		[Test]
-		public void FluentInheritanceExpression([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void FluentInheritanceExpression([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
 			var mb = ms.GetFluentMappingBuilder();
@@ -545,7 +545,7 @@ namespace Tests.Mapping
 		}
 
 		[Test]
-		public void Issue291Test2Attr([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void Issue291Test2Attr([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context, new MappingSchema()))
 			{
@@ -587,7 +587,7 @@ namespace Tests.Mapping
 		}
 
 		[Test]
-		public void Issue291Test1Attr([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void Issue291Test1Attr([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context, new MappingSchema()))
 			{

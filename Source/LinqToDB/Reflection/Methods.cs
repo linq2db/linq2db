@@ -27,8 +27,9 @@ namespace LinqToDB.Reflection
 
 		public static class ADONet
 		{
-			public static readonly MethodInfo IsDBNull      = MemberHelper.MethodOf<DbDataReader>(r => r.IsDBNull(0));
-			public static readonly MethodInfo IsDBNullAsync = MemberHelper.MethodOf<DbDataReader>(r => r.IsDBNullAsync(0));
+			public static readonly MethodInfo   IsDBNull         = MemberHelper.MethodOf  <DbDataReader>(r => r.IsDBNull(0));
+			public static readonly MethodInfo   IsDBNullAsync    = MemberHelper.MethodOf  <DbDataReader>(r => r.IsDBNullAsync(0));
+			public static readonly PropertyInfo ConnectionString = MemberHelper.PropertyOf<DbConnection>(c => c.ConnectionString);
 		}
 
 		public static class Enumerable

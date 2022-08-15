@@ -400,11 +400,11 @@ namespace LinqToDB.Linq.Builder
 								switch (ma.Member.Name)
 								{
 									case "TotalMilliseconds": datePart = Sql.DateParts.Millisecond; break;
-									case "TotalSeconds": datePart = Sql.DateParts.Second; break;
-									case "TotalMinutes": datePart = Sql.DateParts.Minute; break;
-									case "TotalHours": datePart = Sql.DateParts.Hour; break;
-									case "TotalDays": datePart = Sql.DateParts.Day; break;
-									default: return new TransformInfo(e);
+									case "TotalSeconds"     : datePart = Sql.DateParts.Second;      break;
+									case "TotalMinutes"     : datePart = Sql.DateParts.Minute;      break;
+									case "TotalHours"       : datePart = Sql.DateParts.Hour;        break;
+									case "TotalDays"        : datePart = Sql.DateParts.Day;         break;
+									default                 : return new TransformInfo(e);
 								}
 
 								var ex = (BinaryExpression)ma.Expression;
@@ -494,8 +494,7 @@ namespace LinqToDB.Linq.Builder
 					lambda = Expressions.ConvertMember(MappingSchema, pi.Object.Type, concreteTypeMemberInfo);
 			}
 
-			if (lambda == null)
-				lambda = Expressions.ConvertMember(MappingSchema, pi.Object?.Type, pi.Method);
+			lambda ??= Expressions.ConvertMember(MappingSchema, pi.Object?.Type, pi.Method);
 
 			return lambda == null ? null : OptimizationContext.ConvertMethod(pi, lambda);
 		}
@@ -1036,18 +1035,18 @@ namespace LinqToDB.Linq.Builder
 						{
 							if (QueryHelper.UnwrapExpression(r) is SqlFunction c)
 							{
-								if (c.Name == "Coalesce")
+								if (c.Name is "Coalesce" or PseudoFunctions.COALESCE)
 								{
 									var parms = new ISqlExpression[c.Parameters.Length + 1];
 
 									parms[0] = l;
 									c.Parameters.CopyTo(parms, 1);
 
-									return CreatePlaceholder(context, new SqlFunction(t, "Coalesce", parms), expression, alias: alias);
+									return CreatePlaceholder(context, PseudoFunctions.MakeCoalesce(t, parms), expression, alias: alias);
 								}
 							}
 
-							return CreatePlaceholder(context, new SqlFunction(t, "Coalesce", l, r), expression, alias: alias);
+							return CreatePlaceholder(context, PseudoFunctions.MakeCoalesce(t, l, r), expression, alias: alias);
 						}
 					}
 
@@ -1081,19 +1080,22 @@ namespace LinqToDB.Linq.Builder
 					if (!TryConvertToSql(context, flags, e.Operand, columnDescriptor, out var o, out var oError))
 						return oError;
 
-					if (e.Method == null && e.IsLifted)
+					if (e.Method == null && (e.IsLifted || e.Type == typeof(object)))
 						return CreatePlaceholder(context, o, expression, alias: alias);
 
 					if (e.Type == typeof(bool) && e.Operand.Type == typeof(SqlBoolean))
 						return CreatePlaceholder(context, o, expression, alias: alias);
 
+					if (e.Type == typeof(Enum) && e.Operand.Type.IsEnum)
+						return CreatePlaceholder(context, o, expression, alias: alias);
+
 					var t = e.Operand.Type;
-					var s = SqlDataType.GetDataType(t);
+					var s = MappingSchema.GetDataType(t);
 
 					if (o.SystemType != null && s.Type.SystemType == typeof(object))
 					{
 						t = o.SystemType;
-						s = SqlDataType.GetDataType(t);
+						s = MappingSchema.GetDataType(t);
 					}
 
 					if (e.Type == t ||
@@ -1103,7 +1105,7 @@ namespace LinqToDB.Linq.Builder
 						return CreatePlaceholder(context, o, expression, alias: alias);
 					}
 
-					return CreatePlaceholder(context, new SqlFunction(e.Type, "$Convert$", SqlDataType.GetDataType(e.Type), s, o), expression, alias: alias);
+					return CreatePlaceholder(context, PseudoFunctions.MakeConvert(MappingSchema.GetDataType(e.Type), s, o), expression, alias: alias);
 				}
 
 				case ExpressionType.Conditional:
@@ -1990,8 +1992,7 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			if (predicate == null)
-				predicate = new SqlPredicate.ExprExpr(l, op, r, Configuration.Linq.CompareNullsAsValues ? true : null);
+			predicate ??= new SqlPredicate.ExprExpr(l, op, r, Configuration.Linq.CompareNullsAsValues ? true : null);
 			return predicate;
 		}
 
@@ -2422,6 +2423,16 @@ namespace LinqToDB.Linq.Builder
 						context.Scale        = ((SqlValue)e).ValueType.Scale;
 						return true;
 					default:
+						if (e is ISqlExpression expr)
+						{
+							var type = expr.GetExpressionType();
+							context.DataType  = type.DataType;
+							context.DbType    = type.DbType;
+							context.Length    = type.Length;
+							context.Precision = type.Precision;
+							context.Scale     = type.Scale;
+							return true;
+						}
 						return false;
 				}
 			});
@@ -3395,8 +3406,7 @@ namespace LinqToDB.Linq.Builder
 
 		public void PushDisabledQueryFilters(Type[] disabledFilters)
 		{
-			if (_disabledFilters == null)
-				_disabledFilters = new Stack<Type[]>();
+			_disabledFilters ??= new Stack<Type[]>();
 			_disabledFilters.Push(disabledFilters);
 		}
 

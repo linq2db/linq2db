@@ -103,7 +103,7 @@ namespace Tests.UserTests
 
 		[Test]
 		public void Issue2468Test(
-			[IncludeDataSources(TestProvName.AllSQLite)]
+			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)]
 			string context)
 		{
 

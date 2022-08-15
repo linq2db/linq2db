@@ -29,7 +29,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestContextProp([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values("key1", "key2")] string currentKey)
+		public void TestContextProp([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values("key1", "key2")] string currentKey)
 		{
 			using (var db = new AdminContext(context))
 			using (var table = db.CreateLocalTable(new SampleClass[]

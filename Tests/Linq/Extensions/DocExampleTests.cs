@@ -21,7 +21,7 @@ namespace Tests.Extensions
 	public class DocExampleTests : TestBase
 	{
 		[Test]
-		public void AccessTest([IncludeDataSources(true, TestProvName.AllAccess)] string context)
+		public void AccessTest([IncludeDataSources(true, TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -36,7 +36,7 @@ namespace Tests.Extensions
 		}
 
 		[Test]
-		public void MySqlTest([IncludeDataSources(true, TestProvName.AllMySql)] string context)
+		public void MySqlTest([IncludeDataSources(true, TestProvName.AllMySql, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -61,7 +61,7 @@ namespace Tests.Extensions
 		}
 
 		[Test]
-		public void OracleTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		public void OracleTest([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -88,7 +88,7 @@ namespace Tests.Extensions
 		}
 
 		[Test]
-		public void PostgreSQLTest([IncludeDataSources(true, TestProvName.AllPostgreSQL95Plus)] string context)
+		public void PostgreSQLTest([IncludeDataSources(true, TestProvName.AllPostgreSQL95Plus, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -117,7 +117,7 @@ namespace Tests.Extensions
 		}
 
 		[Test]
-		public void SqlCeTest([IncludeDataSources(true, ProviderName.SqlCe)] string context)
+		public void SqlCeTest([IncludeDataSources(true, ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -131,7 +131,7 @@ namespace Tests.Extensions
 		}
 
 		[Test]
-		public void SQLiteTest([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void SQLiteTest([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 

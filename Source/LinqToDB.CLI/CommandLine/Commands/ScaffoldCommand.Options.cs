@@ -88,18 +88,21 @@ JSON file example:
 					null,
 					null,
 					false,
-					new (false, false, DatabaseType.Access    .ToString(), "MS Access (requires OLE DB or/and ODBC provider installed)"),
-					new (false, false, DatabaseType.DB2       .ToString(), "IBM DB2 LUW or z/OS"                                       ),
-					new (false, false, DatabaseType.Firebird  .ToString(), "Firebird"                                                  ),
-					new (false, false, DatabaseType.Informix  .ToString(), "IBM Informix"                                              ),
-					new (false, false, DatabaseType.SQLServer .ToString(), "MS SQL Server (including Azure SQL Server)"                ),
-					new (false, false, DatabaseType.MySQL     .ToString(), "MySQL/MariaDB"                                             ),
-					new (false, false, DatabaseType.Oracle    .ToString(), "Oracle Database"                                           ),
-					new (false, false, DatabaseType.PostgreSQL.ToString(), "PostgreSQL"                                                ),
-					new (false, false, DatabaseType.SqlCe     .ToString(), "MS SQL Server Compact"                                     ),
-					new (false, false, DatabaseType.SQLite    .ToString(), "SQLite"                                                    ),
-					new (false, false, DatabaseType.Sybase    .ToString(), "SAP/Sybase ASE"                                            ),
-					new (false, false, DatabaseType.SapHana   .ToString(), "SAP HANA"                                                  ));
+					new (false, false, DatabaseType.Access         .ToString(), "MS Access (requires OLE DB or/and ODBC provider installed)"),
+					new (false, false, DatabaseType.DB2            .ToString(), "IBM DB2 LUW or z/OS"                                       ),
+					new (false, false, DatabaseType.Firebird       .ToString(), "Firebird"                                                  ),
+					new (false, false, DatabaseType.Informix       .ToString(), "IBM Informix"                                              ),
+					new (false, false, DatabaseType.SQLServer      .ToString(), "MS SQL Server (including Azure SQL Server)"                ),
+					new (false, false, DatabaseType.MySQL          .ToString(), "MySQL/MariaDB"                                             ),
+					new (false, false, DatabaseType.Oracle         .ToString(), "Oracle Database"                                           ),
+					new (false, false, DatabaseType.PostgreSQL     .ToString(), "PostgreSQL"                                                ),
+					new (false, false, DatabaseType.SqlCe          .ToString(), "MS SQL Server Compact"                                     ),
+					new (false, false, DatabaseType.SQLite         .ToString(), "SQLite"                                                    ),
+					new (false, false, DatabaseType.Sybase         .ToString(), "SAP/Sybase ASE"                                            ),
+					new (false, false, DatabaseType.SapHana        .ToString(), "SAP HANA"                                                  ),
+					new (false, false, DatabaseType.ClickHouseMySql.ToString(), "ClickHouse (MySql interface)"                              ),
+					new (false, false, DatabaseType.ClickHouseHttp .ToString(), "ClickHouse (HTTP(S) interface)"                            ),
+					new (false, false, DatabaseType.ClickHouseTcp  .ToString(), "ClickHouse (TCP/binary interface)"                         ));
 
 			/// <summary>
 			/// Database provider location option.
@@ -1570,7 +1573,11 @@ string // also you can put table function name as string directly to list
 			SqlCe,
 			SQLite,
 			Sybase,
-			SapHana
+			SapHana,
+			// all three ClickHouse clients used as we don't know which protocol available for user
+			ClickHouseMySql,
+			ClickHouseHttp,
+			ClickHouseTcp,
 		}
 
 		public static CliCommand Instance { get; } = new ScaffoldCommand();
