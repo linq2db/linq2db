@@ -64,6 +64,7 @@
 			//"PostgreSQL.12",
 			//"PostgreSQL.13",
 			//"PostgreSQL.14",
+			//"PostgreSQL.15",
 
 			// OleDB and ODBC MS Access providers
 			//"Access",
@@ -175,6 +176,7 @@
 			//"PostgreSQL.12",
 			//"PostgreSQL.13",
 			//"PostgreSQL.14",
+			//"PostgreSQL.15",
 
 			// OleDB and ODBC MS Access providers
 			//"Access",
@@ -280,6 +282,7 @@
 			//"PostgreSQL.12",
 			//"PostgreSQL.13",
 			//"PostgreSQL.14",
+			//"PostgreSQL.15",
 
 			// OleDB and ODBC MS Access providers
 			//"Access",
@@ -551,6 +554,10 @@
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
 			"PostgreSQL.14": {
+				"Provider": "Npgsql",
+				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+			},
+			"PostgreSQL.15": {
 				"Provider": "Npgsql",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},

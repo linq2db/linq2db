@@ -692,3 +692,11 @@ CREATE TABLE "CollatedTable"
 	"CaseInsensitive"	VARCHAR(20) NOT NULL
 )
 GO
+DROP TABLE "TestMergeIdentity"
+GO
+CREATE TABLE "TestMergeIdentity"
+(
+	"Id"     SERIAL NOT NULL PRIMARY KEY,
+	"Field"  INT NULL
+)
+GO

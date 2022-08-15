@@ -255,6 +255,10 @@
 				"Provider": "Npgsql",
 				"ConnectionString": "Server=DBHost;Port=5433;Database=TestData;User Id=postgres;Password=TestPassword;Pooling=true;MinPoolSize=10;MaxPoolSize=100;"
 			},
+			"PostgreSQL.15": {
+				"Provider": "Npgsql",
+				"ConnectionString": "Server=DBHost;Port=5433;Database=TestData;User Id=postgres;Password=TestPassword;Pooling=true;MinPoolSize=10;MaxPoolSize=100;"
+			},
 
 			"Firebird": { "ConnectionString": "DataSource=dbhost;Database=C:\\Data\\TestData.fdb;User Id=SYSDBA;Password=masterkey" },
 			"Firebird3": { "ConnectionString": "DataSource=dbhost;Database=C:\\Data\\TestData3.fdb;User Id=SYSDBA;Password=masterkey" },
@@ -308,6 +312,7 @@
 			"PostgreSQL.12": { "Provider": "Npgsql", "ConnectionString": "Server=localhost;Port=5432;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100" },
 			"PostgreSQL.13": { "Provider": "Npgsql", "ConnectionString": "Server=localhost;Port=5432;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100" },
 			"PostgreSQL.14": { "Provider": "Npgsql", "ConnectionString": "Server=localhost;Port=5432;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100" },
+			"PostgreSQL.15": { "Provider": "Npgsql", "ConnectionString": "Server=localhost;Port=5415;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100" },
 
 			"Firebird" : { "ConnectionString": "DataSource=localhost;Port=3050;Database=/firebird/data/testdb.fdb;User Id=sysdba;Password=masterkey;charset=UTF8"                    },
 			"Firebird3": { "ConnectionString": "DataSource=localhost;Port=3050;Database=/firebird/data/testdb.fdb;User Id=sysdba;Password=masterkey;charset=UTF8;wirecrypt=disabled" },
@@ -378,6 +383,7 @@
 			"PostgreSQL.12",
 			"PostgreSQL.13",
 			"PostgreSQL.14",
+			"PostgreSQL.15",
 			"Firebird",
 			"Firebird3",
 			"Firebird4",

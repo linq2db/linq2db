@@ -52,7 +52,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 				if (sqlQueryExtension.Arguments.TryGetValue("hint2", out var h) && h is SqlValue { Value: string value })
 				{
-					if (value != SkipLocked || sqlBuilder.MappingSchema.ConfigurationList.Contains(ProviderName.PostgreSQL95))
+					if (value != SkipLocked
+						|| sqlBuilder.MappingSchema.ConfigurationList.Contains(ProviderName.PostgreSQL95)
+						|| sqlBuilder.MappingSchema.ConfigurationList.Contains(ProviderName.PostgreSQL15))
 					{
 						stringBuilder.Append(' ');
 						stringBuilder.Append(value);
