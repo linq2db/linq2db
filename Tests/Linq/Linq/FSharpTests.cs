@@ -127,5 +127,13 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 			FSharp.Issue3357.Union3(db);
 		}
+
+		[ActiveIssue("https://github.com/linq2db/linq2db/issues/3699")]
+		[Test]
+		public void Issue3699_Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.SelectTest.Issue3699Test(db);
+		}
 	}
 }
