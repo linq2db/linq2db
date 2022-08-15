@@ -682,12 +682,14 @@ namespace LinqToDB.Linq.Builder
 
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
-				var expr = Builder.FinalizeProjection(this,
+				throw new NotImplementedException();
+
+				/*var expr = Builder.FinalizeProjection(this,
 					Builder.MakeExpression(new ContextRefExpression(typeof(T), this), ProjectFlags.Expression));
 
 				var mapper = Builder.BuildMapper<T>(expr);
 
-				QueryRunner.SetRunQuery(query, mapper);
+				QueryRunner.SetRunQuery(query, mapper);*/
 			}
 
 			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)

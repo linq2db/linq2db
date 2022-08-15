@@ -915,14 +915,17 @@ namespace LinqToDB.Linq.Builder
 				result = ConvertToSqlInternal(context, newExpr, flags, unwrap: unwrap, columnDescriptor: columnDescriptor, isPureExpression: isPureExpression, alias: alias);
 			}
 
-			if (!flags.HasFlag(ProjectFlags.Test))
+			// nesting for Expressions updated in finalization
+			var updateNesting = !flags.HasFlag(ProjectFlags.Test) && !flags.HasFlag(ProjectFlags.Expression);
+
+			if (updateNesting)
 			{
 				result = UpdateNesting(context, result);
 			}
 
 			if (cache && result is SqlPlaceholderExpression placeholder)
 			{
-				if (!flags.HasFlag(ProjectFlags.Test) && placeholder.SelectQuery != context.SelectQuery && placeholder.Sql is not SqlColumn)
+				if (updateNesting && placeholder.SelectQuery != context.SelectQuery && placeholder.Sql is not SqlColumn)
 				{
 					// recreate placeholder
 					placeholder = CreatePlaceholder(context.SelectQuery, placeholder.Sql, placeholder.Path,
@@ -1108,11 +1111,11 @@ namespace LinqToDB.Linq.Builder
 					var e = (ConditionalExpression)expression;
 
 					if (!TryConvertToSql(context, flags, e.Test, columnDescriptor, out var s, out var sError))
-						return sError;
+						return new SqlErrorExpression(context, e);
 					if (!TryConvertToSql(context, flags, e.IfTrue, columnDescriptor, out var t, out var tError))
-						return tError;
+						return new SqlErrorExpression(context, e);
 					if (!TryConvertToSql(context, flags, e.IfFalse, columnDescriptor, out var f, out var fError))
-						return fError;
+						return new SqlErrorExpression(context, e);
 
 					if (s is SqlSearchCondition sc)
 					{
@@ -3359,11 +3362,6 @@ namespace LinqToDB.Linq.Builder
 
 		#region Eager Loading
 
-		private List<Tuple<
-			object?,
-			Func<object?, IDataContext, Expression, object?[]?, object?>,
-			Func<object?, IDataContext, Expression, object?[]?, CancellationToken, Task<object?>>>>? _preambles;
-
 		public static readonly ParameterExpression PreambleParam =
 			Expression.Parameter(typeof(object[]), "preamble");
 
@@ -3373,7 +3371,9 @@ namespace LinqToDB.Linq.Builder
 			Func<object?, IDataContext, Expression, object?[]?, CancellationToken, Task<T>> funcAsync
 			)
 		{
-			_preambles ??= new();
+			throw new NotImplementedException();
+
+			/*_preambles ??= new();
 			_preambles.Add(
 				Tuple.Create<object?,
 					Func<object?, IDataContext, Expression, object?[]?, object?>,
@@ -3384,7 +3384,7 @@ namespace LinqToDB.Linq.Builder
 					(d, dc, e, ps) => func(d, dc, e, ps),
 					async (d, dc, e, ps, ct) => await funcAsync(d, dc, e, ps, ct).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 				);
-			return _preambles.Count - 1;
+			return _preambles.Count - 1;*/
 		}
 
 		#endregion
@@ -3807,7 +3807,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			path = ExposeExpression(path);
 
-			if (!(flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AggregtionRoot) ||
+			if (!(flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AggregationRoot) ||
 			      flags.HasFlag(ProjectFlags.AssociationRoot)))
 			{
 				// try to find already converted to SQL
@@ -3864,7 +3864,16 @@ namespace LinqToDB.Linq.Builder
 					root = MakeExpression(root, ProjectFlags.AssociationRoot);
 					path = ((MemberExpression)newPath).Update(root);
 					if (root is ContextRefExpression contextRef)
-						expression = TryCreateAssociation(path, contextRef, flags);
+					{
+						if (flags.HasFlag(ProjectFlags.AssociationRoot))
+						{
+							expression = root;
+						}
+						else
+						{
+							expression = TryCreateAssociation(path, contextRef, flags);
+						}
+					}
 				}
 
 				rootContext = root as ContextRefExpression;
@@ -3932,9 +3941,9 @@ namespace LinqToDB.Linq.Builder
 				if (rootContext != null)
 				{
 					expression = rootContext.BuildContext.MakeExpression(path, flags);
-					if (expression is SqlEagerLoadExpression eager && rootContext.BuildContext != eager.BuildContext)
+					if (expression is SqlEagerLoadExpression eager && rootContext.BuildContext != eager.ContextRef.BuildContext)
 					{
-						expression = new SqlEagerLoadExpression(rootContext.BuildContext, path, GetSequenceExpression(rootContext.BuildContext));
+						expression = new SqlEagerLoadExpression(rootContext, path, GetSequenceExpression(rootContext.BuildContext));
 					}
 				}	
 				else

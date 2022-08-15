@@ -116,6 +116,17 @@ namespace LinqToDB.Linq.Builder
 				throw new NotImplementedException();
 			}
 
+			public IBuildContext Clone(CloningContext context)
+			{
+				throw new NotImplementedException();
+			}
+
+			public void SetRunQuery<T>(Query<T> query)
+			{
+			}
+
+			public bool IsExecuteOnly { get; }
+
 			public IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 			{
 				return requestFlag switch

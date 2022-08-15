@@ -68,6 +68,11 @@ namespace LinqToDB.Linq.Builder
 				
 				return base.MakeExpression(path, flags);
 			}
+
+			public override IBuildContext Clone(CloningContext context)
+			{
+				return new DistinctContext(context.CloneContext(Context));
+			}
 		}
 	}
 }

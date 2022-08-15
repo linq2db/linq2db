@@ -50,17 +50,19 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			var path  = selector.Body.Unwrap();
+			var contextRef     = new ContextRefExpression(selector.Parameters[0].Type, sequence);
+			var path           = selector.GetBody(contextRef);
 
-			var contextRef   = new ContextRefExpression(methodCall.Arguments[0].Type.GetGenericArguments()[0], sequence);
-			var rootSequence = builder.MakeExpression(contextRef, ProjectFlags.Root) as ContextRefExpression;
+			var extractResult = ExtractAssociations(builder, path, null);
 
-			if (rootSequence == null)
-				throw new InvalidOperationException("Could not find association root.");
+			if (extractResult == null)
+				throw new LinqToDBException($"Unable to retrieve properties path for LoadWith/ThenLoad. Path: '{selector}'");
 
-			var associations = ExtractAssociations(builder, path, null)
-				.Reverse()
-				.ToArray();
+			var associations = extractResult.Value.info.Length <= 1
+				? extractResult.Value.info
+				: extractResult.Value.info
+					.Reverse()
+					.ToArray();
 
 			if (associations.Length == 0)
 				throw new LinqToDBException($"Unable to retrieve properties path for LoadWith/ThenLoad. Path: '{path}'");
@@ -73,42 +75,14 @@ namespace LinqToDB.Linq.Builder
 				CheckFilterFunc(lastElement.MemberInfo.GetMemberType(), lastElement.FilterFunc!.Type, builder.MappingSchema);
 			}
 
-			builder.RegisterLoadWith(rootSequence.BuildContext, associations, methodCall.Method.Name == "ThenLoad");
+			var registerContext = extractResult.Value.context;
 
-			/*if (methodCall.Method.Name == "ThenLoad")
-			{
-				if (!(table.LoadWith?.Count > 0))
-					throw new LinqToDBException($"ThenLoad function should be followed after LoadWith. Can not find previous property for '{path}'.");
+			if (registerContext is LoadWithContext lwContext)
+				registerContext = lwContext.RegisterContext;
 
-				var lastPath = table.LoadWith[table.LoadWith.Count - 1];
-				associations = Array<LoadWithInfo>.Append(lastPath, associations);
+			builder.RegisterLoadWith(registerContext, associations, methodCall.Method.Name == "ThenLoad");
 
-				if (methodCall.Arguments.Count == 3)
-				{
-					var lastElement = associations[associations.Length - 1];
-					lastElement.FilterFunc = (Expression?)methodCall.Arguments[2];
-					CheckFilterFunc(lastElement.MemberInfo.GetMemberType(), lastElement.FilterFunc!.Type, builder.MappingSchema);
-				}
-
-				// append to the last member chain
-				table.LoadWith[table.LoadWith.Count - 1] = associations;
-			}
-			else
-			{
-				if (table.LoadWith == null)
-					table.LoadWith = new List<LoadWithInfo[]>();
-
-				if (methodCall.Arguments.Count == 3)
-				{
-					var lastElement = associations[associations.Length - 1];
-					lastElement.FilterFunc = (Expression?)methodCall.Arguments[2];
-					CheckFilterFunc(lastElement.MemberInfo.GetMemberType(), lastElement.FilterFunc!.Type, builder.MappingSchema);
-				}
-
-				table.LoadWith.Add(associations);
-			}*/
-
-			var loadWithSequence = sequence as LoadWithContext ?? new LoadWithContext(sequence, rootSequence);
+			var loadWithSequence = sequence as LoadWithContext ?? new LoadWithContext(sequence, registerContext);
 
 			return loadWithSequence;
 		}
@@ -166,7 +140,7 @@ namespace LinqToDB.Linq.Builder
 		}
 		*/
 
-		static IEnumerable<LoadWithInfo> ExtractAssociations(ExpressionBuilder builder, Expression expression, Expression? stopExpression)
+		static (IBuildContext context, LoadWithInfo[] info)? ExtractAssociations(ExpressionBuilder builder, Expression expression, Expression? stopExpression)
 		{
 			var currentExpression = expression;
 
@@ -190,30 +164,41 @@ namespace LinqToDB.Linq.Builder
 				filterExpression = lambda;
 			}
 
-			foreach (var member in GetAssociations(builder, currentExpression, stopExpression))
-			{
-				yield return new LoadWithInfo(member) { MemberFilter = filterExpression };
-				filterExpression = null;
-			}
+			var extractResult = GetAssociations(builder, currentExpression, stopExpression);
+			if (extractResult.context == null)
+				return default;
+
+			var loadWithInfos = extractResult.members
+				.Select((m, i) => new LoadWithInfo(m) { MemberFilter = i == 0 ? filterExpression : null })
+				.ToArray();
+
+			return (extractResult.context, loadWithInfos);
 		}
 
-		static IEnumerable<MemberInfo> GetAssociations(ExpressionBuilder builder, Expression expression, Expression? stopExpression)
+		static (IBuildContext? context, List<MemberInfo> members) GetAssociations(ExpressionBuilder builder, Expression expression, Expression? stopExpression)
 		{
-			MemberInfo? lastMember = null;
+			IBuildContext? context    = null;
+			MemberInfo?    lastMember = null;
+
+			var members = new List<MemberInfo>();
+			var stop    = false;
 
 			for (;;)
 			{
-				if (stopExpression == expression)
+				if (stopExpression == expression || stop)
 				{
-					yield break;
+					break;
 				}
 
 				switch (expression.NodeType)
 				{
 					case ExpressionType.Parameter :
+					{
 						if (lastMember == null)
 							goto default;
-						yield break;
+						stop = true;
+						break;
+					}
 
 					case ExpressionType.Call      :
 						{
@@ -221,10 +206,12 @@ namespace LinqToDB.Linq.Builder
 
 							if (cexpr.Method.IsSqlPropertyMethodEx())
 							{
-								foreach (var assoc in GetAssociations(builder, builder.ConvertExpression(expression), stopExpression))
+								throw new NotImplementedException();
+								
+								/*foreach (var assoc in GetAssociations(builder, builder.ConvertExpression(expression), stopExpression))
 									yield return assoc;
 
-								yield break;
+								yield break;*/
 							}
 
 							if (lastMember == null)
@@ -264,10 +251,17 @@ namespace LinqToDB.Linq.Builder
 								member = mexpr.Expression!.Type.GetMemberEx(member)!;
 								attr = builder.MappingSchema.GetAttribute<AssociationAttribute>(mexpr.Expression.Type, member);
 							}
-							if (attr == null)
-								throw new LinqToDBException($"Member '{expression}' is not an association.");
 
-							yield return member;
+							if (attr == null)
+							{
+								var projected = builder.MakeExpression(expression, ProjectFlags.Expand);
+								if (projected == expression)
+									throw new LinqToDBException($"Member '{expression}' is not an association.");
+								expression = projected;
+								break;
+							}
+
+							members.Add(member);
 
 							expression = mexpr.Expression!;
 
@@ -288,6 +282,22 @@ namespace LinqToDB.Linq.Builder
 								break;
 							}
 
+							if (expression is ContextRefExpression contextRef)
+							{
+								var newExpression = builder.MakeExpression(expression, ProjectFlags.AssociationRoot);
+								if (!ReferenceEquals(newExpression, expression))
+								{
+									expression = newExpression;
+								}
+								else
+								{
+									stop    = true;
+									context = contextRef.BuildContext;
+								}
+
+								break;
+							}
+
 							goto default;
 						}
 
@@ -303,23 +313,37 @@ namespace LinqToDB.Linq.Builder
 						}
 				}
 			}
+
+			return (context, members);
 		}
 
 		internal class LoadWithContext : PassThroughContext
 		{
-			public ContextRefExpression Root { get; }
+			public IBuildContext RegisterContext { get; }
 
-			public LoadWithContext(IBuildContext context, ContextRefExpression root) : base(context)
+			public LoadWithContext(IBuildContext context, IBuildContext registerContext) : base(context)
 			{
-				Root = root;
+				RegisterContext = registerContext;
 			}
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
-				if (flags.HasFlag(ProjectFlags.Root))
-					return Root;
+				if(SequenceHelper.IsSameContext(path, this))
+				{
+					if (flags.HasFlag(ProjectFlags.Root))
+						return path;
+
+					if (flags.HasFlag(ProjectFlags.AssociationRoot))
+						return new ContextRefExpression(path.Type, RegisterContext);
+				}
 				return base.MakeExpression(path, flags);
 			}
+
+			public override IBuildContext Clone(CloningContext context)
+			{
+				return new LoadWithContext(context.CloneContext(Context), context.CloneContext(RegisterContext));
+			}
+
 		}
 	}
 }

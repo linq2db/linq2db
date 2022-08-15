@@ -4,8 +4,11 @@ namespace LinqToDB.Linq.Builder
 {
 	class ScopeContext : PassThroughContext
 	{
-		public ScopeContext(IBuildContext context) : base(context)
+		readonly IBuildContext _upTo;
+
+		public ScopeContext(IBuildContext context, IBuildContext upTo) : base(context)
 		{
+			_upTo = upTo;
 		}
 
 		public override Expression MakeExpression(Expression path, ProjectFlags flags)
@@ -17,10 +20,15 @@ namespace LinqToDB.Linq.Builder
 
 			if (!flags.HasFlag(ProjectFlags.Test))
 			{
-				newExpr = Builder.UpdateNesting(Context, newExpr);
+				newExpr = Builder.UpdateNesting(_upTo, newExpr);
 			}
 
 			return newExpr;
+		}
+
+		public override IBuildContext Clone(CloningContext context)
+		{
+			return new ScopeContext(context.CloneContext(Context), context.CloneContext(_upTo));
 		}
 	}
 }

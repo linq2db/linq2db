@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using LinqToDB.Expressions;
 using LinqToDB.Extensions;
 using LinqToDB.Mapping;
+using LinqToDB.Reflection;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Builder
@@ -169,10 +171,65 @@ namespace LinqToDB.Linq.Builder
 					_isOuterAssociations.Add(root);
 				}
 			}
+			else
+			{
+				if (associationExpression.Type != expression.Type)
+					associationExpression = new SqlAdjustTypeExpression(associationExpression, expression.Type, MappingSchema);
+			}
 
 			_associations[key] = associationExpression;
 
 			return associationExpression;
+		}
+
+		public static Expression AdjustType(Expression expression, Type desiredType, MappingSchema mappingSchema)
+		{
+			if (desiredType.IsSameOrParentOf(expression.Type))
+				return expression;
+
+			var elementType = GetEnumerableElementType(desiredType);
+
+			var result = (Expression?)null;
+
+			if (desiredType.IsArray)
+			{
+				var method = typeof(IQueryable<>).IsSameOrParentOf(expression.Type)
+					? Methods.Queryable.ToArray
+					: Methods.Enumerable.ToArray;
+
+				result = Expression.Call(method.MakeGenericMethod(elementType),
+					expression);
+			}
+			else if (typeof(IOrderedEnumerable<>).IsSameOrParentOf(desiredType))
+			{
+				result = expression;
+			}
+			else if (!typeof(IQueryable<>).IsSameOrParentOf(desiredType) && !desiredType.IsArray)
+			{
+				var convertExpr = mappingSchema.GetConvertExpression(
+					typeof(IEnumerable<>).MakeGenericType(elementType), desiredType);
+				if (convertExpr != null)
+					result = convertExpr.GetBody(expression);
+			}
+
+			if (result == null)
+			{
+				result = expression;
+				if (!typeof(IQueryable<>).IsSameOrParentOf(result.Type))
+				{
+					result = Expression.Call(Methods.Enumerable.AsQueryable.MakeGenericMethod(elementType),
+						expression);
+				}
+
+				if (typeof(ITable<>).IsSameOrParentOf(desiredType))
+				{
+					var tableType = typeof(PersistentTable<>).MakeGenericType(elementType);
+					result = Expression.New(tableType.GetConstructor(new[] { result.Type })!,
+						result);
+				}
+			}
+
+			return result;
 		}
 
 		public Expression CreateCollectionAssociation(Expression expression, ContextRefExpression rootContext)

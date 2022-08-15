@@ -7,7 +7,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Methods = LinqToDB.Reflection.Methods.LinqToDB.MultiInsert;
+	using Methods = Reflection.Methods.LinqToDB.MultiInsert;
 
 	class MultiInsertBuilder : MethodCallBuilder
 	{
@@ -205,6 +205,11 @@ namespace LinqToDB.Linq.Builder
 
 			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 				=> throw new NotImplementedException();
+
+			public override IBuildContext Clone(CloningContext context)
+			{
+				throw new NotImplementedException();
+			}
 
 			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 			{

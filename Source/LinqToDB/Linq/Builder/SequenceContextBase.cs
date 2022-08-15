@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.Linq.Expressions;
 using LinqToDB.Expressions;
 
@@ -49,12 +50,14 @@ namespace LinqToDB.Linq.Builder
 
 		public virtual void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 		{
-			var expr = Builder.FinalizeProjection(this,
+			throw new NotImplementedException();
+
+			/*var expr = Builder.FinalizeProjection(this,
 				Builder.MakeExpression(new ContextRefExpression(typeof(T), this), ProjectFlags.Expression));
 
 			var mapper = Builder.BuildMapper<T>(expr);
 
-			QueryRunner.SetRunQuery(query, mapper);
+			QueryRunner.SetRunQuery(query, mapper);*/
 		}
 
 		public abstract Expression         BuildExpression(Expression? expression, int level, bool enforceServerSide);
@@ -66,6 +69,14 @@ namespace LinqToDB.Linq.Builder
 			path = SequenceHelper.CorrectExpression(path, this, Sequence);
 			return Builder.MakeExpression(path, flags);
 		}
+
+		public abstract IBuildContext Clone(CloningContext    context);
+
+		public virtual void SetRunQuery<T>(Query<T> query)
+		{
+		}
+
+		public virtual bool IsExecuteOnly => false;
 
 		public abstract IsExpressionResult IsExpression   (Expression? expression, int level, RequestFor requestFlag);
 		public abstract IBuildContext?     GetContext     (Expression? expression, int level, BuildInfo buildInfo);

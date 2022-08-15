@@ -11,11 +11,14 @@ namespace LinqToDB.Linq.Builder
 
 		static ProjectFlags GetRootProjectFlags(BuildInfo buildInfo)
 		{
-			return buildInfo.IsAggregation ? ProjectFlags.AggregtionRoot : ProjectFlags.Root;
+			return buildInfo.IsAggregation ? ProjectFlags.AggregationRoot : ProjectFlags.Root;
 		}
 
 		Expression CalcBuildContext(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
+			if (buildInfo.Expression is ContextRefExpression)
+				return buildInfo.Expression;
+
 			var root = builder.MakeExpression(buildInfo.Expression, GetRootProjectFlags(buildInfo));
 			if (ExpressionEqualityComparer.Instance.Equals(root, buildInfo.Expression))
 			{
@@ -48,6 +51,9 @@ namespace LinqToDB.Linq.Builder
 				return builder.BuildSequence(new BuildInfo(buildInfo, root));
 
 			var context = contextRef.BuildContext;
+
+			if (!buildInfo.CreateSubQuery)
+				return context;
 
 			var elementContext = context.GetContext(buildInfo.Expression, 0, buildInfo);
 			if (elementContext != null)

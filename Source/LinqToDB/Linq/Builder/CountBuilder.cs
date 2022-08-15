@@ -192,6 +192,10 @@ namespace LinqToDB.Linq.Builder
 				return Placeholder;
 			}
 
+			public override IBuildContext Clone(CloningContext context)
+			{
+				throw new NotImplementedException();
+			}
 		}
 	}
 }

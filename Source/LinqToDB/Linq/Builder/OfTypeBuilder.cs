@@ -107,6 +107,12 @@ namespace LinqToDB.Linq.Builder
 
 				return expr;
 			}
+
+			public override IBuildContext Clone(CloningContext context)
+			{
+				return new OfTypeContext(context.CloneContext(Context), _methodCall);
+			}
+
 		}
 
 		#endregion

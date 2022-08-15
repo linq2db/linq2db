@@ -84,6 +84,15 @@ namespace LinqToDB.Expressions
 				case ExpressionType.ConvertChecked :
 				case ExpressionType.Convert        :
 					return ((UnaryExpression)ex).Operand.Unwrap();
+				case ExpressionType.Extension:
+				{
+					if (ex is SqlAdjustTypeExpression adjustType) 
+					{
+						return adjustType.Expression.Unwrap();
+					}
+
+					break;
+				}
 			}
 
 			return ex;
@@ -102,6 +111,15 @@ namespace LinqToDB.Expressions
 				{
 					if (((UnaryExpression)ex).Method == null)
 						return ((UnaryExpression)ex).Operand.UnwrapConvert();
+					break;
+				}
+				case ExpressionType.Extension:
+				{
+					if (ex is SqlAdjustTypeExpression adjustType) 
+					{
+						return adjustType.Expression.Unwrap();
+					}
+
 					break;
 				}
 			}

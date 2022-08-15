@@ -135,12 +135,14 @@ namespace LinqToDB.Linq.Builder
 
 		public void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 		{
-			var expr = Builder.FinalizeProjection(this,
+			throw new NotImplementedException();
+
+			/*var expr = Builder.FinalizeProjection(this,
 				Builder.MakeExpression(new ContextRefExpression(typeof(T), this), ProjectFlags.Expression));
 
 			var mapper = Builder.BuildMapper<T>(expr);
 
-			QueryRunner.SetRunQuery(query, mapper);
+			QueryRunner.SetRunQuery(query, mapper);*/
 		}
 
 		public Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
@@ -229,7 +231,7 @@ namespace LinqToDB.Linq.Builder
 
 				// trying to access Queryable variant
 				if (path.Type != _elementType && flags.HasFlag(ProjectFlags.Expression))
-					return new SqlEagerLoadExpression(this, path, Builder.GetSequenceExpression(this));
+					return new SqlEagerLoadExpression((ContextRefExpression)path, path, Builder.GetSequenceExpression(this));
 
 				return Builder.BuildEntityExpression(this, _elementType, flags);
 			}
@@ -245,6 +247,18 @@ namespace LinqToDB.Linq.Builder
 
 			return placeholder;
 		}
+
+		public IBuildContext Clone(CloningContext context)
+		{
+			//TODO: Clone
+			throw new NotImplementedException();
+		}
+
+		public void SetRunQuery<T>(Query<T> query)
+		{
+		}
+
+		public bool IsExecuteOnly => false;
 
 		public IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 		{

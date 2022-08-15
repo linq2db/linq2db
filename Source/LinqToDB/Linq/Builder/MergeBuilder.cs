@@ -198,7 +198,7 @@ namespace LinqToDB.Linq.Builder
 				var subqueryContext = new SubQueryContext(clonedContext);
 				var contextRef      = new ContextRefExpression(typeof(IQueryable<>).MakeGenericType(tableContext.ObjectType), subqueryContext);
 				var whereMethodInfo = Methods.Queryable.Where.MakeGenericMethod(tableContext.ObjectType);
-				var whereCall       = Expression.Call(whereMethodInfo, contextRef, condition);
+				var whereCall       = Expression.Call(whereMethodInfo, contextRef, Expression.Quote(condition));
 
 				var buildSequence = builder.BuildSequence(new BuildInfo((IBuildContext?)null, whereCall, new SelectQuery()));
 

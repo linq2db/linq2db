@@ -306,6 +306,11 @@ namespace LinqToDB.Linq.Builder
 				throw new NotImplementedException();
 			}
 
+			public override IBuildContext Clone(CloningContext context)
+			{
+				return new InsertContext(null, context.CloneContext(Sequence), _insertType, context.Correct(_outputExpression));
+			}
+
 			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 			{
 				throw new NotImplementedException();

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
@@ -172,6 +172,11 @@ namespace LinqToDB.Linq.Builder
 						},
 					_ => throw new InvalidOperationException(),
 				};
+			}
+
+			public override IBuildContext Clone(CloningContext context)
+			{
+				return new ChainContext(null, context.CloneContext(Sequence), context.Correct(MethodCall));
 			}
 
 			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)

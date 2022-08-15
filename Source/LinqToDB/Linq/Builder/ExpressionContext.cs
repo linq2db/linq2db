@@ -94,6 +94,11 @@ namespace LinqToDB.Linq.Builder
 			throw new InvalidOperationException();
 		}
 
+		public override IBuildContext Clone(CloningContext context)
+		{
+			throw new NotImplementedException();
+		}
+
 		public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 		{
 			switch (requestFlag)

@@ -154,6 +154,18 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			public List<SqlQueryExtension> Extensions { get; }
+
+			public override IBuildContext Clone(CloningContext context)
+			{
+				return new JoinHintContext(context.CloneContext(Context),
+					Extensions.Select(e => new SqlQueryExtension
+					{
+						Configuration = e.Configuration,
+						Arguments     = e.Arguments.ToDictionary(a => a.Key, a => context.CloneElement(a.Value)),
+						BuilderType   = e.BuilderType,
+						Scope         = e.Scope
+					}).ToList());
+			}
 		}
 	}
 }

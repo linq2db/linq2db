@@ -79,7 +79,10 @@ namespace LinqToDB.Linq.Builder
 		SqlInfo[]          ConvertToIndex      (Expression? expression, int level, ConvertFlags flags);
 
 
-		Expression MakeExpression(Expression path, ProjectFlags flags);
+		Expression    MakeExpression(Expression path, ProjectFlags flags);
+		IBuildContext Clone(CloningContext      context);
+		void          SetRunQuery<T>(Query<T>   query);
+		bool          IsExecuteOnly { get; }
 
 		/// <summary>
 		/// Returns information about expression according to <paramref name="requestFlag"/>.

@@ -146,6 +146,14 @@ namespace LinqToDB.Linq.Builder
 				return _placeholder;
 			}
 
+			public override IBuildContext Clone(CloningContext context)
+			{
+				var result = new ContainsContext(null, _methodCall, context.CloneContext(Sequence), _buildInStatement);
+				if (_placeholder != null)
+					result._placeholder = context.Correct(_placeholder);
+				return result;
+			}
+
 			private SqlPlaceholderExpression CreatePlaceholder(ProjectFlags flags)
 			{
 				var args  = _methodCall.Method.GetGenericArguments();

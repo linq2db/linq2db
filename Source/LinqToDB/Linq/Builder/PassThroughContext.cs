@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.Linq.Expressions;
 using LinqToDB.Expressions;
 
@@ -61,6 +62,14 @@ namespace LinqToDB.Linq.Builder
 			path = SequenceHelper.CorrectExpression(path, this, Context);
 			return Builder.MakeExpression(path, flags);
 		}
+
+		public abstract IBuildContext Clone(CloningContext    context);
+
+		public void SetRunQuery<T>(Query<T> query)
+		{
+		}
+
+		public bool IsExecuteOnly => Context.IsExecuteOnly;
 
 		public virtual IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 		{

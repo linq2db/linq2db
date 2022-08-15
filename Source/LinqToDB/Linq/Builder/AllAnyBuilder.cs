@@ -198,6 +198,11 @@ namespace LinqToDB.Linq.Builder
 
 				return _innerSql;
 			}
+
+			public override IBuildContext Clone(CloningContext context)
+			{
+				return new AllAnyContext(null, context.Correct(_methodCall), context.CloneContext(Sequence));
+			}
 		}
 	}
 }

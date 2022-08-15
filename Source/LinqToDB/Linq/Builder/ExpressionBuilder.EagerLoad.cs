@@ -1,0 +1,425 @@
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
+using LinqToDB.Async;
+using LinqToDB.Common;
+using LinqToDB.Common.Internal;
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.Reflection;
+
+namespace LinqToDB.Linq.Builder
+{
+	partial class ExpressionBuilder
+	{
+
+		static void CollectDependencies(Expression expression, HashSet<Expression> dependencies)
+		{
+			var toIgnore     = new HashSet<Expression>();
+			expression.Visit((dependencies, toIgnore), static (ctx, e) =>
+			{
+				if (ctx.toIgnore.Contains(e))
+					return;
+
+				if (e.NodeType == ExpressionType.MemberAccess)
+				{
+					var current = e;
+					do
+					{
+						if (current is not MemberExpression me)
+							break;
+
+						current = me.Expression;
+						if (current is ContextRefExpression)
+						{
+							ctx.dependencies.Add(e);
+							// add others in path to ignore
+							var subCurrent = (MemberExpression)e;
+							do
+							{
+								ctx.toIgnore.Add(subCurrent);
+
+								if (subCurrent.Expression is not MemberExpression sm)
+									break;
+
+								subCurrent = sm;
+							} while (true);
+
+							break;
+						}
+					} while (true);
+				}
+				else if (e is BinaryExpression binary)
+				{
+					if (binary.Left is ContextRefExpression)
+						ctx.dependencies.Add(binary.Left);
+					if (binary.Right is ContextRefExpression)
+						ctx.dependencies.Add(binary.Right);
+				}
+			});
+		}
+
+		static Expression GenerateKeyExpression(Expression[] members, int startIndex)
+		{
+			var count = members.Length - startIndex;
+			if (count == 0)
+				throw new ArgumentOutOfRangeException(nameof(startIndex));
+
+			Expression[] arguments;
+
+			if (count > MutableTuple.MaxMemberCount)
+			{
+				count     = MutableTuple.MaxMemberCount;
+				arguments = new Expression[count];
+				Array.Copy(members, startIndex, arguments, 0, count - 1);
+				arguments[count - 1] = GenerateKeyExpression(members, startIndex + count);
+			}
+			else
+			{
+				arguments = new Expression[count];
+				Array.Copy(members, startIndex, arguments, 0, count);
+			}
+
+			var type         = MutableTuple.MTypes[count - 1];
+			var concreteType = type.MakeGenericType(arguments.Select(a => a.Type).ToArray());
+			var constructor = concreteType.GetConstructor(Type.EmptyTypes) ??
+			                  throw new LinqToDBException($"Can not retrieve default constructor for '{type.Name}'");
+
+			var newExpression = Expression.New(constructor);
+			var initExpression = Expression.MemberInit(newExpression,
+				arguments.Select((a, i) => Expression.Bind(concreteType.GetProperty("Item" + (i + 1))!, a)));
+			return initExpression;
+		}
+
+		struct KeyDetailEnvelope<TKey, TDetail>
+			where TKey: notnull
+		{
+			public TKey    Key;
+			public TDetail Detail;
+		}
+
+		public static Type GetEnumerableElementType(Type type)
+		{
+			var genericType = typeof(IEnumerable<>).GetGenericType(type);
+			if (genericType == null)
+				throw new InvalidOperationException($"Type '{type.Name}' do not implement IEnumerable");
+
+			return genericType.GetGenericArguments()[0];
+		}
+
+		Expression ExpandContext(ContextRefExpression contextRef)
+		{
+			if (!typeof(IEnumerable).IsAssignableFrom(contextRef.Type))
+				return contextRef;
+
+			var newExpr = MakeExpression(contextRef, ProjectFlags.Expression);
+			if (newExpr is not SqlGenericConstructorExpression)
+			{
+				if (newExpr.Type != contextRef.Type)
+				{
+					newExpr = new SqlAdjustTypeExpression(newExpr, contextRef.Type, MappingSchema);
+				}
+			}
+
+			return newExpr;
+		}
+
+		Expression ExpandContexts(Expression expression)
+		{
+			var result= expression.Transform(this, static (builder, e) =>
+			{
+				if (e.NodeType == ExpressionType.Extension || e.NodeType == ExpressionType.MemberAccess ||
+				    e.NodeType == ExpressionType.Call)
+				{
+					var newExpr = builder.MakeExpression(e, ProjectFlags.Expand);
+					return new TransformInfo(newExpr, false);
+				}
+
+				return new TransformInfo(e);
+			});
+
+			return result;
+		}
+
+		Expression ProcessEagerLoadingExpression(
+			IBuildContext          buildContext,  
+			SqlEagerLoadExpression eagerLoad,
+			ParameterExpression    queryParameter, 
+			List<Preamble>         preambles,
+			Expression[]           previousKeys)
+		{
+			var cloningContext       = new CloningContext();
+			var clonedParentContext  = cloningContext.CloneContext(buildContext);
+			
+			var dependencies = new HashSet<Expression>(ExpressionEqualityComparer.Instance);
+
+			var sequenceExpression = eagerLoad.SequenceExpression;
+
+			sequenceExpression = ExpandContexts(sequenceExpression);
+
+			var correctedSequence    = cloningContext.Correct(sequenceExpression);
+
+			var clonedMainContextRef = cloningContext.Correct(eagerLoad.ContextRef);
+			CollectDependencies(sequenceExpression, dependencies);
+
+			dependencies.AddRange(previousKeys);
+
+			if (dependencies.Count == 0)
+				throw new NotImplementedException("Detached eager loading not implemented yet.");
+
+			var mainKeys   = new Expression[dependencies.Count];
+			var detailKeys = new Expression[dependencies.Count];
+
+			int i = 0;
+			foreach (var dependency in dependencies)
+			{
+				mainKeys[i]   = dependency;
+				detailKeys[i] = cloningContext.Correct(dependency);
+				++i;
+			}
+
+			cloningContext.UpdateContextParents();
+
+			var mainKeyExpression   = GenerateKeyExpression(mainKeys, 0);
+			var detailKeyExpression = GenerateKeyExpression(detailKeys, 0);
+
+			var mainType   = GetEnumerableElementType(clonedMainContextRef.Type);
+			var detailType = GetEnumerableElementType(eagerLoad.Type);
+
+			var keyDetailType   = typeof(KeyDetailEnvelope<,>).MakeGenericType(mainKeyExpression.Type, detailType);
+			var mainParameter   = Expression.Parameter(mainType, "m");
+			var detailParameter = Expression.Parameter(detailType, "d");
+
+			var keyDetailExpression = Expression.MemberInit(Expression.New(keyDetailType),
+				Expression.Bind(keyDetailType.GetField(nameof(KeyDetailEnvelope<int, int>.Key)), detailKeyExpression),
+				Expression.Bind(keyDetailType.GetField(nameof(KeyDetailEnvelope<int, int>.Detail)), detailParameter));
+
+			var clonedParentContextRef = new ContextRefExpression(clonedMainContextRef.Type, clonedParentContext);
+
+			Expression sourceQuery = clonedParentContextRef;
+
+			if (!typeof(IQueryable<>).IsSameOrParentOf(sourceQuery.Type))
+			{
+				sourceQuery = Expression.Call(Methods.Enumerable.AsQueryable.MakeGenericMethod(mainType), sourceQuery);
+			}
+
+			sourceQuery = Expression.Call(Methods.LinqToDB.SelectDistinct.MakeGenericMethod(mainType), sourceQuery);
+
+			var selector = Expression.Lambda(keyDetailExpression, mainParameter, detailParameter);
+
+			var detailSelectorBody = correctedSequence;
+
+			var detailSelector = (LambdaExpression)_buildSelectManyDetailSelectorInfo
+				.MakeGenericMethod(mainType, detailType).Invoke(null, new object[] { detailSelectorBody, mainParameter });
+
+			var selectManyCall =
+				Expression.Call(
+					Methods.Queryable.SelectManyProjection.MakeGenericMethod(mainType, detailType, keyDetailType),
+					sourceQuery, Expression.Quote(detailSelector), Expression.Quote(selector));
+
+			var detailSequence = BuildSequence(new BuildInfo((IBuildContext?)null, selectManyCall,
+				clonedParentContextRef.BuildContext.SelectQuery));
+
+			var saveExpressionCache = _expressionCache;
+			_expressionCache = new (SqlCacheKey.SqlCacheKeyComparer);
+
+			var parameters = new object[] { detailSequence, mainKeyExpression, selectManyCall, queryParameter, preambles, detailKeys };
+			var resultExpression = (Expression)_buildPreambleQueryAttachedMethodInfo
+				.MakeGenericMethod(mainKeyExpression.Type, detailType)
+				.Invoke(this, parameters);
+
+			_expressionCache = saveExpressionCache;
+
+			resultExpression = AdjustType(resultExpression, eagerLoad.Type, MappingSchema);
+
+			return resultExpression;
+		}
+
+		static MethodInfo _buildSelectManyDetailSelectorInfo =
+			typeof(ExpressionBuilder).GetMethod(nameof(BuildSelectManyDetailSelector), BindingFlags.Static | BindingFlags.NonPublic) ?? throw new InvalidOperationException();
+
+		static LambdaExpression BuildSelectManyDetailSelector<TMain, TDetail>(Expression body, ParameterExpression mainParam)
+		{
+			return Expression.Lambda<Func<TMain, IEnumerable<TDetail>>>(body, mainParam);
+		}
+
+		static MethodInfo _buildPreambleQueryAttachedMethodInfo =
+			typeof(ExpressionBuilder).GetMethod(nameof(BuildPreambleQueryAttached), BindingFlags.Instance | BindingFlags.NonPublic) ?? throw new InvalidOperationException();
+
+		Expression BuildPreambleQueryAttached<TKey, T>(
+			IBuildContext       sequence, 
+			Expression          keyExpression,
+			Expression          queryExpression, 
+			ParameterExpression queryParameter,
+			List<Preamble>      preambles,
+			Expression[]        previousKeys) 
+			where TKey : notnull
+		{
+			var query = new Query<KeyDetailEnvelope<TKey, T>>(DataContext, queryExpression);
+
+			query.Init(sequence, _parametersContext.CurrentSqlParameters);
+
+			BuildQuery(query, sequence, queryParameter, ref preambles!, previousKeys);
+
+			var idx      = preambles.Count;
+			var preamble = new Preamble<TKey, T>(query);
+			preambles.Add(preamble);
+
+			var getListMethod = MemberHelper.MethodOf((PreambleResult<TKey, T> c) => c.GetList(default!));
+
+			var resultExpression =
+				Expression.Call(
+					Expression.Convert(Expression.ArrayIndex(PreambleParam, ExpressionInstances.Int32(idx)),
+						typeof(PreambleResult<TKey, T>)), getListMethod, keyExpression);
+
+
+			return resultExpression;
+		}
+
+		Expression CompleteEagerLoadingExpressions(
+			Expression          expression,     
+			IBuildContext       buildContext,
+			ParameterExpression queryParameter,
+			ref List<Preamble>? preambles,
+			Expression[]        previousKeys)
+		{
+			Dictionary<Expression, Expression>? eagerLoadingCache = null;
+
+			var preamblesLocal = preambles;
+
+			var updatedEagerLoading = expression.Transform(e =>
+			{
+				if (e.NodeType == ExpressionType.Extension && e is SqlEagerLoadExpression eagerLoad)
+				{
+					eagerLoadingCache ??= new Dictionary<Expression, Expression>(ExpressionEqualityComparer.Instance);
+					if (!eagerLoadingCache.TryGetValue(eagerLoad.SequenceExpression, out var preambleExpression))
+					{
+						preamblesLocal     ??= new List<Preamble>();
+
+						preambleExpression = ProcessEagerLoadingExpression(buildContext, eagerLoad, queryParameter, preamblesLocal, previousKeys);
+						eagerLoadingCache.Add(eagerLoad.SequenceExpression, preambleExpression);
+					}
+
+					return preambleExpression;
+				}
+
+				return e;
+			});
+
+			preambles = preamblesLocal;
+
+			return updatedEagerLoading;
+		}
+
+		class DatachedPreamble<T> : Preamble
+		{
+			readonly Query<T> _query;
+
+			public DatachedPreamble(Query<T> query)
+			{
+				_query = query;
+			}
+
+			public override object Execute(IDataContext dataContext, Expression expression, object?[]? parameters, object?[]? preambles)
+			{
+				return _query.GetResultEnumerable(dataContext, expression, preambles, preambles).ToList();
+			}
+
+			public override async Task<object> ExecuteAsync(IDataContext dataContext, Expression expression, object?[]? parameters, object[]? preambles, CancellationToken cancellationToken)
+			{
+				return await _query.GetResultEnumerable(dataContext, expression, preambles, preambles)
+					.ToListAsync(cancellationToken)
+					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			}
+		}
+
+		class Preamble<TKey, T> : Preamble
+			where TKey : notnull
+		{
+			readonly Query<KeyDetailEnvelope<TKey, T>> _query;
+
+			public Preamble(Query<KeyDetailEnvelope<TKey, T>> query)
+			{
+				_query = query;
+			}
+
+			public override object Execute(IDataContext dataContext, Expression expression, object?[]? parameters, object?[]? preambles)
+			{
+				var result = new PreambleResult<TKey, T>();
+				foreach (var e in _query.GetResultEnumerable(dataContext, expression, preambles, preambles))
+				{
+					result.Add(e.Key, e.Detail);
+				}
+
+				return result;
+			}
+
+			public override async Task<object> ExecuteAsync(IDataContext dataContext, Expression expression, object?[]? parameters, object[]? preambles,
+				CancellationToken                                  cancellationToken)
+			{
+				var result = new PreambleResult<TKey, T>();
+
+				var enumerator = _query.GetResultEnumerable(dataContext, expression, preambles, preambles)
+					.GetAsyncEnumerator(cancellationToken);
+
+				while (await enumerator.MoveNextAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+				{
+					var e = enumerator.Current;
+					result.Add(e.Key, e.Detail);
+				}
+
+				return result;
+			}
+		}
+
+		class PreambleResult<TKey, T>
+			where TKey : notnull
+		{
+			Dictionary<TKey, List<T>>? _items;
+			TKey                       _prevKey = default!;
+			List<T>?                   _prevList;
+
+			public void Add(TKey key, T item)
+			{
+				List<T>? list;
+
+				if (_prevList != null && _prevKey!.Equals(key))
+				{
+					list = _prevList;
+				}
+				else
+				{
+					if (_items == null)
+					{
+						_items = new Dictionary<TKey, List<T>>();
+						list   = new List<T>();
+						_items.Add(key, list);
+					}
+					else if (!_items.TryGetValue(key, out list))
+					{
+						list = new List<T>();
+						_items.Add(key, list);
+					}
+
+					_prevKey  = key;
+					_prevList = list;
+				}
+
+				list.Add(item);
+			}
+
+			public List<T> GetList(TKey key)
+			{
+				if (_items == null || !_items.TryGetValue(key, out var list))
+					return new List<T>();
+				return list;
+			}
+		}
+
+	}
+}

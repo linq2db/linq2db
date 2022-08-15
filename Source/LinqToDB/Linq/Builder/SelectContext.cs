@@ -85,12 +85,14 @@ namespace LinqToDB.Linq.Builder
 
 		public virtual void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 		{
-			var expr = Builder.FinalizeProjection(this,
+			throw new NotImplementedException();
+
+			/*var expr = Builder.FinalizeProjection(this,
 				Builder.MakeExpression(new ContextRefExpression(typeof(T), this), ProjectFlags.Expression));
 
 			var mapper = Builder.BuildMapper<T>(expr);
 
-			QueryRunner.SetRunQuery(query, mapper);
+			QueryRunner.SetRunQuery(query, mapper);*/
 		}
 
 		#endregion
@@ -137,11 +139,16 @@ namespace LinqToDB.Linq.Builder
 						return bodyRef.WithType(path.Type);
 					}
 
+					if (Body is MemberExpression me)
+					{
+						return Body;
+					}
+
 					return path;
 				}
 
 				if (!path.Type.IsSameOrParentOf(Body.Type) && flags.HasFlag(ProjectFlags.Expression))
-					return new SqlEagerLoadExpression(this, path, GetEagerLoadExpression(path));
+					return new SqlEagerLoadExpression((ContextRefExpression)path, path, GetEagerLoadExpression(path));
 
 				result = Body;
 			}
@@ -163,10 +170,22 @@ namespace LinqToDB.Linq.Builder
 			return result;
 		}
 
+		public virtual IBuildContext Clone(CloningContext context)
+		{
+			return new SelectContext(null, context.Correct(Lambda), IsSubQuery,
+				Sequence.Select(s => context.CloneContext(s)).ToArray());
+		}
+
+		public void SetRunQuery<T>(Query<T> query)
+		{
+		}
+
+		public bool IsExecuteOnly { get; }
+
 		public virtual Expression GetEagerLoadExpression(Expression path)
-												{
+		{
 			return Builder.GetSequenceExpression(this);
-							}
+		}
 
 		#region IsExpression
 

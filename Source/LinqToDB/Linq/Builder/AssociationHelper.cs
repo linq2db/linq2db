@@ -144,7 +144,7 @@ namespace LinqToDB.Linq.Builder
 
 				var filterLambda = Expression.Lambda(predicate, childParam);
 				Expression body  = Expression.Call(Methods.Queryable.Where.MakeGenericMethod(objectType), queryParam,
-					filterLambda);
+					Expression.Quote(filterLambda));
 
 				definedQueryMethod = Expression.Lambda(body, parentParam);
 			}
@@ -249,7 +249,7 @@ namespace LinqToDB.Linq.Builder
 
 						var body = definedQueryMethod.Body.Unwrap();
 						body = Expression.Call(Methods.Queryable.Where.MakeGenericMethod(objectType),
-							body, filterLambda);
+							body, Expression.Quote(filterLambda));
 						definedQueryMethod = Expression.Lambda(body, definedQueryMethod.Parameters);
 
 						shouldAddDefaultIfEmpty = true;
@@ -279,13 +279,13 @@ namespace LinqToDB.Linq.Builder
 							? Methods.Queryable.DefaultIfEmpty
 							: Methods.Enumerable.DefaultIfEmpty).MakeGenericMethod(objectType), body);
 
-				definedQueryMethod = Expression.Lambda(body, definedQueryMethod.Parameters);
-				isLeft = true;
-			}
-			else
-			{
-				isLeft = false;
-			}
+					definedQueryMethod = Expression.Lambda(body, definedQueryMethod.Parameters);
+					isLeft = true;
+				}
+				else
+				{
+					isLeft = false;
+				}
 			}
 
 			definedQueryMethod = (LambdaExpression)builder.ConvertExpressionTree(definedQueryMethod);

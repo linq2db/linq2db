@@ -46,6 +46,11 @@ namespace LinqToDB.Linq.Builder
 
 				return expr;
 			}
+
+			public override IBuildContext Clone(CloningContext context)
+			{
+				return new CastContext(context.CloneContext(Context), _methodCall);
+			}
 		}
 	}
 }

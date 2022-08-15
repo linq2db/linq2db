@@ -70,6 +70,11 @@ namespace LinqToDB.Linq.Builder
 				return expr;
 			}
 
+			public override IBuildContext Clone(CloningContext context)
+			{
+				return new DefaultIfEmptyContext(null, context.CloneContext(Sequence), context.Correct(DefaultValue));
+			}
+
 			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 			{
 				expression = SequenceHelper.CorrectExpression(expression, this, Sequence);

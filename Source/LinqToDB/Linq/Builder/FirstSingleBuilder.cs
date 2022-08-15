@@ -109,6 +109,17 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
+			public override void SetRunQuery<T>(Query<T> query)
+			{
+				switch (_methodCall.Method.Name.Replace("Async", ""))
+				{
+					case "First"           : GetFirstElement          (query); break;
+					case "FirstOrDefault"  : GetFirstOrDefaultElement (query); break;
+					case "Single"          : GetSingleElement         (query); break;
+					case "SingleOrDefault" : GetSingleOrDefaultElement(query); break;
+				}
+			}
+
 			static void GetFirstElement<T>(Query<T> query)
 			{
 				query.GetElement      = (db, expr, ps, preambles) => query.GetResultEnumerable(db, expr, ps, preambles).First();
@@ -314,7 +325,10 @@ namespace LinqToDB.Linq.Builder
 							if (placeholders.Count > 1)
 							{
 								if (flags.HasFlag(ProjectFlags.Expression))
-									return new SqlEagerLoadExpression(this, path, Builder.GetSequenceExpression(this));
+								{
+									throw new NotImplementedException();
+									return new SqlEagerLoadExpression(null!, path, Builder.GetSequenceExpression(this));
+								}
 							}
 						}
 
@@ -325,6 +339,11 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				return projected;
+			}
+
+			public override IBuildContext Clone(CloningContext context)
+			{
+				return new FirstSingleContext(null, context.CloneContext(Sequence), context.Correct(_methodCall), IsSubQuery, IsAssociation, IsOuter);
 			}
 
 			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)

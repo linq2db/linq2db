@@ -153,16 +153,13 @@ namespace LinqToDB.Linq.Builder
 			return resultExpr;
 		}
 
-		public static void TemporaryCheckEagerLoading(Expression expression)
-		{
-			var found = expression.Find(expression, (c, e) => e is SqlEagerLoadExpression) as SqlEagerLoadExpression;
-			if (found != null)
-			{
-				throw new NotImplementedException($"Eager loading is not implemented yet.\r\n\r\nQuery for Eager Load:\r\n{found.SequenceExpression}\r\n");
-			}
-		}
-
-		public Expression FinalizeProjection(IBuildContext context, Expression expression)
+		Expression FinalizeProjection<T>(
+			Query<T>            query, 
+			IBuildContext       context, 
+			Expression          expression, 
+			ParameterExpression queryParameter, 
+			ref List<Preamble>? preambles,
+			Expression[]        previousKeys)
 		{
 			// going to parent
 
@@ -171,17 +168,22 @@ namespace LinqToDB.Linq.Builder
 				context = context.Parent;
 			}
 
-			// postprocess constuctors
+			// postprocessing constructors
 
 			var globalGenerator = new ExpressionGenerator();
 			var processedMap    = new Dictionary<Expression, Expression>();
 
+			var translatedMap = new Dictionary<Expression, Expression>();
 			// convert all missed references
-			var translatedMap   = new Dictionary<Expression, Expression>();
 			var postProcessed = BuildSqlExpression(translatedMap, context, expression, ProjectFlags.Expression);
 
-			// TODO: temporary call for better exception monitoring
-			TemporaryCheckEagerLoading(postProcessed);
+			// process eager loading queries
+			var correctedEager = CompleteEagerLoadingExpressions(postProcessed, context, queryParameter, ref preambles, previousKeys);
+			if (!ReferenceEquals(correctedEager, postProcessed))
+			{
+				// convert all missed references
+				postProcessed = BuildSqlExpression(translatedMap, context, correctedEager, ProjectFlags.Expression);
+			}
 
 			// Deduplication
 			//
@@ -352,7 +354,7 @@ namespace LinqToDB.Linq.Builder
 
 		public Expression? TryConvertToSqlExpr(IBuildContext context, Expression expression, ProjectFlags flags)
 		{
-			flags = flags & ~ProjectFlags.Expression | ProjectFlags.SQL;
+			flags |= ProjectFlags.SQL;
 
 			//Just test that we can convert
 			var converted = ConvertToSqlExpr(context, expression, flags | ProjectFlags.Test);
@@ -581,7 +583,6 @@ namespace LinqToDB.Linq.Builder
 								else
 								{
 									//TODO: maybe remove
-									throw new NotImplementedException();
 									var info = new BuildInfo(context.context, contextRef, new SelectQuery {ParentSelect = context.context.SelectQuery});
 
 									if (context.builder.IsSequence(info))
@@ -649,16 +650,16 @@ namespace LinqToDB.Linq.Builder
 				}
 
 		public Expression CorrectRoot(Expression expr)
-					{
+		{
 			if (expr is MethodCallExpression mc && mc.IsQueryable())
-						{
+			{
 				var firstArg = CorrectRoot(mc.Arguments[0]);
 				if (!ReferenceEquals(firstArg, mc.Arguments[0]))
-							{
+				{
 					var args = mc.Arguments.ToArray();
 					args[0] = firstArg;
 					return mc.Update(null, args);
-							}
+				}
 
 			}
 			else
@@ -672,20 +673,20 @@ namespace LinqToDB.Linq.Builder
 			if (expression == null)
 				return null;
 
-			expression = MakeExpression(expression, isAggregation ? ProjectFlags.AggregtionRoot : ProjectFlags.Root);
+			expression = MakeExpression(expression, isAggregation ? ProjectFlags.AggregationRoot : ProjectFlags.Root);
 
 			if (expression is MemberExpression memberExpression)
-				{
+			{
 				expression = GetRootContext(memberExpression.Expression, isAggregation);
-				}
+			}
 
 			if (expression is MethodCallExpression mc && mc.IsQueryable())
-				{
+			{
 				expression = GetRootContext(mc.Arguments[0], isAggregation);
-				}
+			}
 
 			return expression as ContextRefExpression;
-			}
+		}
 
 		List<SubQueryContextInfo>? _buildContextCache;
 
@@ -1094,7 +1095,8 @@ namespace LinqToDB.Linq.Builder
 				return GetMultipleQueryExpressionLazy(context, mappingSchema, expression, parameters);
 			}
 
-			valueExpression = EagerLoading.AdjustType(valueExpression, expression.Type, mappingSchema);
+			if (valueExpression.Type != expression.Type)
+				valueExpression = new SqlAdjustTypeExpression(valueExpression, expression.Type, mappingSchema);
 
 			isLazy = false;
 			return valueExpression;

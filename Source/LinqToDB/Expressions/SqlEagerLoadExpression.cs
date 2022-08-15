@@ -6,20 +6,21 @@ namespace LinqToDB.Expressions
 {
 	class SqlEagerLoadExpression: Expression
 	{
-		public IBuildContext BuildContext       { get; }
-		public Expression    Path               { get; }
+		public ContextRefExpression ContextRef { get; }
+		public Expression           Path       { get; }
+
 		public Expression    SequenceExpression { get; }
 
-		public SqlEagerLoadExpression(IBuildContext buildContext, Expression path, Expression sequenceExpression)
+		public SqlEagerLoadExpression(ContextRefExpression contextRef, Expression path, Expression sequenceExpression)
 		{
-			BuildContext       = buildContext;
+			ContextRef         = contextRef;
 			Path               = path;
 			SequenceExpression = sequenceExpression;
 		}
 
 		public override string ToString()
 		{
-			return $"Eager({BuildContextDebuggingHelper.GetContextInfo(BuildContext)})";
+			return $"Eager({BuildContextDebuggingHelper.GetContextInfo(ContextRef.BuildContext)}: {ContextRef.Type.Name})";
 		}
 
 		public override ExpressionType NodeType => ExpressionType.Extension;

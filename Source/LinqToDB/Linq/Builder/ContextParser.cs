@@ -49,6 +49,11 @@ namespace LinqToDB.Linq.Builder
 
 				query.GetElement = (db, expr, ps, preambles) => this;
 			}
+
+			public override IBuildContext Clone(CloningContext context)
+			{
+				return new Context(context.CloneContext(Context));
+			}
 		}
 	}
 }

@@ -21,7 +21,7 @@ namespace LinqToDB.Linq.Builder
 
 	class GroupByBuilder : MethodCallBuilder
 	{
-		private static readonly MethodInfo[] GroupingSetMethods = new [] { Methods.LinqToDB.GroupBy.Rollup, Methods.LinqToDB.GroupBy.Cube, Methods.LinqToDB.GroupBy.GroupingSets };
+		static readonly MethodInfo[] GroupingSetMethods = new [] { Methods.LinqToDB.GroupBy.Rollup, Methods.LinqToDB.GroupBy.Cube, Methods.LinqToDB.GroupBy.GroupingSets };
 
 		#region Builder Methods
 
@@ -195,7 +195,7 @@ namespace LinqToDB.Linq.Builder
 			groupingSubquery.SelectQuery.GroupBy.GroupingType = groupingKind;
 
 			var element = new ElementContext(buildInfo.Parent, elementSelector, buildInfo.IsSubQuery, dataSubquery);
-			var groupBy = new GroupByContext(groupingSubquery, sequenceExpr, groupingType, key, keyRef, currentPlaceholders, element, builder.IsGroupingGuardDisabled);
+			var groupBy = new GroupByContext(groupingSubquery, sequenceExpr, groupingType, key, keyRef, currentPlaceholders, element, builder.IsGroupingGuardDisabled, true);
 
 			// Will be used for eager loading generation
 			element.GroupByContext = groupBy;
@@ -273,6 +273,12 @@ namespace LinqToDB.Linq.Builder
 
 				return newExpr;
 			}
+
+			public override IBuildContext Clone(CloningContext context)
+			{
+				return new ElementContext(null, context.Correct(Lambda), IsSubQuery,
+					Sequence.Select(s => context.CloneContext(s)).ToArray());
+			}
 		}
 
 		#endregion
@@ -319,6 +325,12 @@ namespace LinqToDB.Linq.Builder
 
 				return result;
 			}
+
+			public override IBuildContext Clone(CloningContext context)
+			{
+				return new KeyContext(null, context.Correct(Lambda), IsSubQuery,
+					Sequence.Select(s => context.CloneContext(s)).ToArray());
+			}
 		}
 
 		#endregion
@@ -328,26 +340,43 @@ namespace LinqToDB.Linq.Builder
 		internal class GroupByContext : SubQueryContext
 		{
 			public GroupByContext(
-				IBuildContext  sequence,
-				Expression     sequenceExpr,
-				Type           groupingType,
-				KeyContext     key,
-				ContextRefExpression keyRef,
+				IBuildContext                  sequence,
+				Expression                     sequenceExpr,
+				Type                           groupingType,
+				KeyContext                     key,
+				ContextRefExpression           keyRef,
 				List<SqlPlaceholderExpression> currentPlaceholders,
-				SelectContext  element,
-				bool           isGroupingGuardDisabled)
-				: base(sequence)
+				SelectContext                  element,
+				bool                           isGroupingGuardDisabled,
+				bool                           addToSql)
+				: this(sequence, new SelectQuery { ParentSelect = sequence.SelectQuery.ParentSelect }, sequenceExpr, groupingType, key, keyRef, currentPlaceholders, element, isGroupingGuardDisabled, addToSql)
 			{
-				_sequenceExpr        = sequenceExpr;
-				_key                 = key;
-				_keyRef              = keyRef;
+			}
+
+			public GroupByContext(
+				IBuildContext                  sequence,
+				SelectQuery                    selectQuery,
+				Expression                     sequenceExpr,
+				Type                           groupingType,
+				KeyContext                     key,
+				ContextRefExpression           keyRef,
+				List<SqlPlaceholderExpression> currentPlaceholders,
+				SelectContext                  element,
+				bool                           isGroupingGuardDisabled,
+				bool                           addToSql)
+				: base(sequence, selectQuery, addToSql)
+			{
+				_sequenceExpr       = sequenceExpr;
+				_key                = key;
+				_keyRef             = keyRef;
 				CurrentPlaceholders = currentPlaceholders;
-				Element              = element;
-				_groupingType        = groupingType;
+				Element             = element;
+				_groupingType       = groupingType;
 
 				_isGroupingGuardDisabled = isGroupingGuardDisabled;
 
-				key.Parent = this;
+				key.GroupByContext = this;
+				key.Parent         = this;
 			}
 
 			readonly Expression                     _sequenceExpr;
@@ -362,7 +391,7 @@ namespace LinqToDB.Linq.Builder
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
 				if (SequenceHelper.IsSameContext(path, this) &&
-				    (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AggregtionRoot) || flags.HasFlag(ProjectFlags.Test)))
+				    (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AggregationRoot) || flags.HasFlag(ProjectFlags.Test)))
 				{
 					return path;
 				}
@@ -389,7 +418,7 @@ namespace LinqToDB.Linq.Builder
 
 					assignments.Add(new SqlGenericConstructorExpression.Assignment(
 						groupingType.GetProperty(nameof(Grouping<int, int>.Items)),
-						new SqlEagerLoadExpression(this, eagerLoadingExpression,
+						new SqlEagerLoadExpression((ContextRefExpression)path, eagerLoadingExpression,
 							Builder.GetSequenceExpression(this)), true, false));
 					
 					return new SqlGenericConstructorExpression(SqlGenericConstructorExpression.CreateType.Auto,
@@ -416,6 +445,16 @@ namespace LinqToDB.Linq.Builder
 				var newPath = SequenceHelper.CorrectExpression(path, this, Element);
 
 				return newPath;
+			}
+
+			public override IBuildContext Clone(CloningContext context)
+			{
+				var clone = new GroupByContext(context.CloneContext(SubQuery), context.CloneElement(SelectQuery), _sequenceExpr, _groupingType,
+					context.CloneContext(_key), context.Correct(_keyRef),
+					CurrentPlaceholders.Select(p => context.Correct(p)).ToList(), context.CloneContext(Element),
+					_isGroupingGuardDisabled, false);
+
+				return clone;
 			}
 
 			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
@@ -467,8 +506,6 @@ namespace LinqToDB.Linq.Builder
 					expr = TypeHelper.MakeMethodCall(Methods.Enumerable.Select, expr, Element.Lambda);
 				}
 
-				expr = SequenceHelper.MoveToScopedContext(expr, this);
-
 				return expr;
 			}
 
@@ -487,6 +524,7 @@ namespace LinqToDB.Linq.Builder
 					return null;
 
 				var expr = MakeSubQueryExpression(buildInfo.Expression);
+				expr = SequenceHelper.MoveToScopedContext(expr, this);
 
 				var ctx = Builder.BuildSequence(new BuildInfo(buildInfo, expr) { IsAggregation = false});
 
@@ -627,8 +665,10 @@ namespace LinqToDB.Linq.Builder
 
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
+				throw new NotImplementedException();
+
 				// if we can compile Key - we can do grouping on the client side
-				if (Builder.CanBeCompiled(_key.Lambda))
+				/*if (Builder.CanBeCompiled(_key.Lambda))
 				{
 					var method = _wrapSubQuery.MakeGenericMethod(_key.Body.Type, Element.Body.Type);
 
@@ -642,7 +682,7 @@ namespace LinqToDB.Linq.Builder
 
 				var mapper = Builder.BuildMapper<T>(expr);
 
-				QueryRunner.SetRunQuery(query, mapper);
+				QueryRunner.SetRunQuery(query, mapper);*/
 			}
 		}
 
@@ -655,7 +695,12 @@ namespace LinqToDB.Linq.Builder
 				SelectQuery = new SelectQuery();
 			}
 
-			public override SelectQuery SelectQuery { get; set; }
+			public override SelectQuery   SelectQuery { get; set; }
+
+			public override IBuildContext Clone(CloningContext context)
+			{
+				return new AggregationRoot(context.CloneContext(Context));
+			}
 		}
 	}
 }

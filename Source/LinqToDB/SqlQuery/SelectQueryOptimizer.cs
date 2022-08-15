@@ -787,6 +787,16 @@ namespace LinqToDB.SqlQuery
 				}, new HashSet<SelectQuery>());
 		}
 
+		static bool IsLimitedToOneRecord(SelectQuery query)
+		{
+			if (query.Select.TakeValue is SqlValue value && Equals(value.Value, 1))
+				return true;
+
+			if (query.From.Tables.Count == 1 && query.From.Tables[0].Source is SelectQuery subQuery)
+				return IsLimitedToOneRecord(subQuery);
+
+			return false;
+		}
 
 		static bool IsComplexQuery(SelectQuery query)
 		{
@@ -819,6 +829,13 @@ namespace LinqToDB.SqlQuery
 
 			if (IsComplexQuery(_selectQuery))
 				return;
+
+			if (IsLimitedToOneRecord(_selectQuery))
+			{
+				// we can simplify query if we take only one record
+				_selectQuery.Select.IsDistinct = false;
+				return;
+			}
 
 			var table = _selectQuery.From.Tables[0];
 

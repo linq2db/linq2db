@@ -25,7 +25,11 @@ namespace LinqToDB.Linq.Builder
 
 			sequence = new SubQueryContext(sequence);
 
-			var expr = SequenceHelper.PrepareBody(collectionSelector, new ScopeContext(sequence)).Unwrap();
+			var scopeContext = new ScopeContext(sequence, sequence);
+			var expr         = SequenceHelper.PrepareBody(collectionSelector, scopeContext).Unwrap();
+
+			// correcting query for Eager Loading
+			expr = SequenceHelper.MoveAllToScopedContext(expr, scopeContext);
 
 			var collectionInfo = new BuildInfo(sequence, expr, new SelectQuery()) { CreateSubQuery = true };
 			var collection     = builder.BuildSequence(collectionInfo);

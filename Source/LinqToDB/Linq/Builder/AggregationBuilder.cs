@@ -53,14 +53,14 @@ namespace LinqToDB.Linq.Builder
 				if (methodName == "Count" || methodName == "LongCount")
 				{
 					functionPlaceholder = ExpressionBuilder.CreatePlaceholder(sequence, SqlFunction.CreateCount(returnType, sequence.SelectQuery), buildInfo.Expression);
-					context = new AggregationContext(buildInfo.Parent, sequence, methodCall);
+					context = new AggregationContext(buildInfo.Parent, sequence, methodCall.Method.Name, methodCall.Method.ReturnType);
 				}
 				else
 				{
 					Expression refExpression = new ContextRefExpression(sequenceArgument.Type, sequence);
 
 					var sqlPlaceholder = builder.ConvertToSqlPlaceholder(sequence, refExpression, ProjectFlags.SQL);
-					context = new AggregationContext(buildInfo.Parent,  sequence, methodCall);
+					context = new AggregationContext(buildInfo.Parent, sequence, methodCall.Method.Name, methodCall.Method.ReturnType);
 
 					var sql = sqlPlaceholder.Sql;
 
@@ -147,14 +147,14 @@ namespace LinqToDB.Linq.Builder
 				if (methodName == "Count" || methodName == "LongCount")
 				{
 					functionPlaceholder = ExpressionBuilder.CreatePlaceholder(placeholderSequence, SqlFunction.CreateCount(returnType, placeholderSelect), buildInfo.Expression);
-					context = new AggregationContext(buildInfo.Parent, sequence, methodCall);
+					context = new AggregationContext(buildInfo.Parent, sequence, methodCall.Method.Name, methodCall.Method.ReturnType);
 				}
 				else
 				{
 					Expression refExpression = new ContextRefExpression(sequenceArgument.Type, sequence);
 
 					var sqlPlaceholder = builder.ConvertToSqlPlaceholder(placeholderSequence, refExpression, ProjectFlags.SQL);
-					context = new AggregationContext(buildInfo.Parent,  sequence, methodCall);
+					context = new AggregationContext(buildInfo.Parent, sequence, methodCall.Method.Name, methodCall.Method.ReturnType);
 
 					var sql = sqlPlaceholder.Sql;
 
@@ -187,11 +187,11 @@ namespace LinqToDB.Linq.Builder
 
 		class AggregationContext : SequenceContextBase
 		{
-			public AggregationContext(IBuildContext? parent, IBuildContext sequence, MethodCallExpression methodCall)
+			public AggregationContext(IBuildContext? parent, IBuildContext sequence, string methodName, Type returnType)
 				: base(parent, sequence, null)
 			{
-				_returnType = methodCall.Method.ReturnType;
-				_methodName = methodCall.Method.Name;
+				_returnType = returnType;
+				_methodName = methodName;
 
 				if (_returnType.IsGenericType && _returnType.GetGenericTypeDefinition() == typeof(Task<>))
 				{
@@ -216,12 +216,13 @@ namespace LinqToDB.Linq.Builder
 
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
-				var expr = Builder.FinalizeProjection(this,
+				throw new NotImplementedException();
+				/*var expr = Builder.FinalizeProjection(this,
 					Builder.MakeExpression(new ContextRefExpression(typeof(T), this), ProjectFlags.Expression));
 
 				var mapper = Builder.BuildMapper<object>(expr);
 
-				QueryRunner.SetRunQuery(query, mapper);
+				QueryRunner.SetRunQuery(query, mapper);*/
 			}
 
 			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
@@ -265,6 +266,11 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				return Placeholder;
+			}
+
+			public override IBuildContext Clone(CloningContext context)
+			{
+				return new AggregationContext(null, context.CloneContext(Sequence), _methodName, _returnType);
 			}
 
 			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)

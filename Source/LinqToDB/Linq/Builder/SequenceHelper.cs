@@ -58,10 +58,25 @@ namespace LinqToDB.Linq.Builder
 			return newExpression;
 		}
 
-		public static Expression MoveToScopedContext(Expression expression, IBuildContext current)
+		public static Expression MoveAllToScopedContext(Expression expression, IBuildContext upTo)
 		{
-			var scoped = new ScopeContext(current);
-			var newExpression = ReplaceContext(expression, current, scoped);
+			var newExpression = expression.Transform((expression, upTo), (ctx, e) =>
+			{
+				if (e.NodeType == ExpressionType.Extension && e is ContextRefExpression contextRef)
+				{
+					return contextRef.WithContext(new ScopeContext(contextRef.BuildContext, ctx.upTo));
+				}
+
+				return e;
+			});
+
+			return newExpression;
+		}
+
+		public static Expression MoveToScopedContext(Expression expression, IBuildContext upTo)
+		{
+			var scoped        = new ScopeContext(upTo, upTo);
+			var newExpression = ReplaceContext(expression, upTo, scoped);
 			return newExpression;
 		}
 
@@ -69,7 +84,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			var contextRef = new ContextRefExpression(typeof(object), context);
 
-			var rootContext = context.Builder.MakeExpression(contextRef, ProjectFlags.Root) as ContextRefExpression;
+			var rootContext = context.Builder.MakeExpression(contextRef, ProjectFlags.Expand) as ContextRefExpression;
 
 			var tableContext = rootContext?.BuildContext as TableBuilder.TableContext;
 

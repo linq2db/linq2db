@@ -95,7 +95,9 @@ namespace LinqToDB.Linq.Builder
 
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
-				var expr = Builder.FinalizeProjection(this,
+				throw new NotImplementedException();
+
+				/*var expr = Builder.FinalizeProjection(this,
 					Builder.MakeExpression(new ContextRefExpression(typeof(T), this), ProjectFlags.Expression));
 
 				expr = Builder.ToReadExpression(expr);
@@ -117,7 +119,7 @@ namespace LinqToDB.Linq.Builder
 						_counterParam
 					});
 
-				QueryRunner.SetRunQuery(query, mapper);
+				QueryRunner.SetRunQuery(query, mapper);*/
 			}
 
 			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)

@@ -483,6 +483,11 @@ namespace LinqToDB.Expressions
 				return isNullExpression.Update((SqlPlaceholderExpression)Transform(isNullExpression.Placeholder));
 			}
 
+			if (expr is SqlAdjustTypeExpression adjustType)
+			{
+				return adjustType.Update(Transform(adjustType.Expression));
+			}
+
 			return expr;
 		}
 

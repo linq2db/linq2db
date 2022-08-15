@@ -234,9 +234,15 @@ namespace LinqToDB.Linq.Builder
 			{
 				var contextRef = new ContextRefExpression(objectType, context);
 
+				var assignedMembers = new HashSet<MemberInfo >(MemberInfoComparer.Instance);
+
 				foreach (var info in loadWith)
 				{
 					var memberInfo = info[0].MemberInfo;
+
+					if (!assignedMembers.Add(memberInfo))
+						continue;
+
 					var expression = Expression.MakeMemberAccess(contextRef, memberInfo);
 					var ad         = GetAssociationDescriptor(expression, out var accessorMember);
 					if (ad != null)

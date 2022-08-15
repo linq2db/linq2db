@@ -190,17 +190,9 @@ namespace LinqToDB.Linq
 
 		#region Eager Loading
 
-		private Tuple<
-			object?,
-			Func<object?, IDataContext, Expression, object?[]?, object?>,
-			Func<object?, IDataContext, Expression, object?[]?, CancellationToken,
-				Task<object?>>>[]? _preambles;
+		Preamble[]? _preambles;
 
-		internal void SetPreambles(
-			IEnumerable<Tuple<
-				object?,
-				Func<object?, IDataContext, Expression, object?[]?, object?>,
-				Func<object?, IDataContext, Expression, object?[]?, CancellationToken, Task<object?>>>>? preambles)
+		internal void SetPreambles(List<Preamble>? preambles)
 		{
 			_preambles = preambles?.ToArray();
 		}
@@ -220,10 +212,10 @@ namespace LinqToDB.Linq
 			if (_preambles == null)
 				return null;
 
-			var preambles = new object?[_preambles.Length];
+			var preambles = new object[_preambles.Length];
 			for (var i = 0; i < preambles.Length; i++)
 			{
-				preambles[i] = _preambles[i].Item2(_preambles[i].Item1, dc, rootExpression, ps);
+				preambles[i] = _preambles[i].Execute(dc, rootExpression, ps, preambles);
 			}
 
 			return preambles;
@@ -234,10 +226,10 @@ namespace LinqToDB.Linq
 			if (_preambles == null)
 				return null;
 
-			var preambles = new object?[_preambles.Length];
+			var preambles = new object[_preambles.Length];
 			for (var i = 0; i < preambles.Length; i++)
 			{
-				preambles[i] = await _preambles[i].Item3(_preambles[i].Item1, dc, rootExpression, ps, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				preambles[i] = await _preambles[i].ExecuteAsync(dc, rootExpression, ps, preambles, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 			}
 
 			return preambles;

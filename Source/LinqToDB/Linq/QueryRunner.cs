@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -448,7 +449,7 @@ namespace LinqToDB.Linq
 				throw new NotImplementedException();
 			}
 #else
-			public async IAsyncEnumerable<T> GetAsyncEnumerable(CancellationToken cancellationToken = default)
+			public async IAsyncEnumerable<T> GetAsyncEnumerable([EnumeratorCancellation] CancellationToken cancellationToken = default)
 			{
 				using var runner = _dataContext.GetQueryRunner(_query, _queryNumber, _expression, _parameters, _preambles);
 				using var dr     = runner.ExecuteReader();

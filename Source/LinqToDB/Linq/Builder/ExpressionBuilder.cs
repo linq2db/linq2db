@@ -189,11 +189,46 @@ namespace LinqToDB.Linq.Builder
 
 			var param = Expression.Parameter(typeof(Query<T>), "info");
 
-			sequence.BuildQuery((Query<T>)_query, param);
+			List<Preamble>? preambles = null;
+			BuildQuery((Query<T>)_query, sequence, param, ref preambles, Array<Expression>.Empty);
 
-			_query.SetPreambles(_preambles);
+			_query.SetPreambles(preambles);
 
 			return (Query<T>)_query;
+		}
+
+		void BuildQuery<T>(
+			Query<T>            query, 
+			IBuildContext       sequence, 
+			ParameterExpression queryParameter, 
+			ref List<Preamble>? preambles, 
+			Expression[]        previousKeys)
+		{
+			var expr = MakeExpression(new ContextRefExpression(typeof(T), sequence), ProjectFlags.Expression);
+
+			expr = FinalizeProjection(query, sequence, expr, queryParameter, ref preambles, previousKeys);
+
+			if (sequence.IsExecuteOnly)
+				QueryRunner.SetNonQueryQuery(query);
+			else
+			{
+				if (typeof(T).IsAssignableFrom(expr.Type))
+				{
+					var mapper = BuildMapper<T>(expr);
+
+					QueryRunner.SetRunQuery(query, mapper);
+				}
+				else
+				{
+					// Count, Any, Average, etc.
+					var mapper = BuildMapper<object?>(expr);
+
+					QueryRunner.SetRunQuery(query, mapper);
+				}
+
+				// will apply needed GetElement implementations
+				sequence.SetRunQuery(query);
+			}
 		}
 
 		/// <summary>

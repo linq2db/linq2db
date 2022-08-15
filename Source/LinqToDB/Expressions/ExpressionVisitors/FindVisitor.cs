@@ -265,6 +265,16 @@ namespace LinqToDB.Expressions
 						       Find(generic.Assignments, AssignmentFind);
 					}
 
+					if (expr is SqlErrorExpression error)
+					{
+						return Find(error.Expression);
+					}
+
+					if (expr is SqlAdjustTypeExpression adjustType)
+					{
+						return Find(adjustType.Expression);
+					}
+
 					if (expr.CanReduce)
 						return Find(expr.Reduce());
 

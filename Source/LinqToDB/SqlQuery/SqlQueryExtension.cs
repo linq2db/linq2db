@@ -8,7 +8,7 @@ namespace LinqToDB.SqlQuery
 	{
 		public string?                           Configuration { get; set; }
 		public Sql.QueryExtensionScope           Scope         { get; set; }
-		public Dictionary<string,ISqlExpression> Arguments     { get; } = new();
+		public Dictionary<string,ISqlExpression> Arguments     { get; init; } = new();
 		public Type?                             BuilderType   { get; set; }
 
 		public ISqlExpression? Walk<TContext>(WalkOptions options, TContext context, Func<TContext,ISqlExpression,ISqlExpression> func)

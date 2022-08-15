@@ -21,7 +21,7 @@ namespace LinqToDB.Expressions
 
 		public override string ToString()
 		{
-			return $"Ref({BuildContextDebuggingHelper.GetContextInfo(BuildContext)}):{Type.Name}";
+			return $"Ref({BuildContextDebuggingHelper.GetContextInfo(BuildContext)}::{Type.Name})";
 		}
 
 		public override bool CanReduce => false;
@@ -32,6 +32,14 @@ namespace LinqToDB.Expressions
 				return this;
 
 			return new ContextRefExpression(type, BuildContext);
+		}
+
+		public ContextRefExpression WithContext(IBuildContext buildContext)
+		{
+			if (buildContext == BuildContext)
+				return this;
+
+			return new ContextRefExpression(Type, buildContext);
 		}
 
 		#region Equality members

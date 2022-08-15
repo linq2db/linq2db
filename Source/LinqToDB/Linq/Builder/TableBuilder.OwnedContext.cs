@@ -14,6 +14,10 @@ namespace LinqToDB.Linq.Builder
 				EntityDescriptor = entityDescriptor;
 			}
 
+			public override IBuildContext Clone(CloningContext context)
+			{
+				return new OwnedContext(context.CloneContext(Owner), EntityDescriptor);
+			}
 		}
 	}
 }

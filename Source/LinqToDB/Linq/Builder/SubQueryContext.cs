@@ -90,20 +90,29 @@ namespace LinqToDB.Linq.Builder
 			return Statement ??= new SqlSelectStatement(SelectQuery);
 		}
 
+		public override IBuildContext Clone(CloningContext context)
+		{
+			var selectQuery = context.CloneElement(SelectQuery);
+			return new SubQueryContext(context.CloneContext(SubQuery), selectQuery, false);
+		}
+
 		public override Expression MakeExpression(Expression path, ProjectFlags flags)
 		{
+			/*
 			if (flags.HasFlag(ProjectFlags.Root) && SequenceHelper.IsSameContext(path, this))
 				return path;
+				*/
 
 			var result = base.MakeExpression(path, flags);
 
 			if (flags.HasFlag(ProjectFlags.SQL))
 			{
 				result = Builder.ConvertToSqlExpr(SubQuery, result, flags);
+
+				if (!flags.HasFlag(ProjectFlags.Test) && !flags.HasFlag(ProjectFlags.Expression))
+					result = Builder.UpdateNesting(this, result);
 			}
 
-			// in this case all complex expressions become columns
-			result = Builder.UpdateNesting(this, result);
 			return result;
 		}
 	}

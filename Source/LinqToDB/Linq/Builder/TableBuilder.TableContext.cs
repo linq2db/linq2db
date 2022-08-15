@@ -177,12 +177,14 @@ namespace LinqToDB.Linq.Builder
 
 			public virtual void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
-				var expr = Builder.FinalizeProjection(this,
+				throw new NotImplementedException();
+
+				/*var expr = Builder.FinalizeProjection(this,
 					Builder.MakeExpression(new ContextRefExpression(typeof(T), this), ProjectFlags.Expression));
 
 				var mapper = Builder.BuildMapper<T>(expr);
 
-				QueryRunner.SetRunQuery(query, mapper);
+				QueryRunner.SetRunQuery(query, mapper);*/
 			}
 
 			#endregion
@@ -214,14 +216,14 @@ namespace LinqToDB.Linq.Builder
 
 			public Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
-				if (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AssociationRoot))
+				if (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AssociationRoot) || flags.HasFlag(ProjectFlags.Expand))
 					return path;
 
 				if (SequenceHelper.IsSameContext(path, this))
 				{
 					// trying to access Queryable variant
 					if (path.Type != ObjectType && flags.HasFlag(ProjectFlags.Expression))
-						return new SqlEagerLoadExpression(this, path, Builder.GetSequenceExpression(this));
+						return new SqlEagerLoadExpression((ContextRefExpression)path, path, Builder.GetSequenceExpression(this));
 
 					return Builder.BuildFullEntityExpression(this, ObjectType, flags);
 				}
@@ -237,6 +239,17 @@ namespace LinqToDB.Linq.Builder
 
 				return placeholder;
 			}
+
+			public IBuildContext Clone(CloningContext context)
+			{
+				return new TableContext(Builder, context.CloneElement(SelectQuery), context.CloneElement(SqlTable));
+			}
+
+			public void SetRunQuery<T>(Query<T> query)
+			{
+			}
+
+			public bool IsExecuteOnly => false;
 
 			#endregion
 

@@ -27,7 +27,10 @@ namespace LinqToDB.Linq.Builder
 
 			var outerKey = SequenceHelper.PrepareBody(outerKeyLambda, outerContext);
 
-			var innerContext = new GroupJoinInnerContext(buildInfo.Parent, outerContext.SelectQuery, builder, outerKey,
+			var elementType = ExpressionBuilder.GetEnumerableElementType(resultLambda.Parameters[1].Type);
+			var innerContext = new GroupJoinInnerContext(buildInfo.Parent, outerContext.SelectQuery, builder, 
+				elementType,
+				outerKey,
 				innerKeyLambda, innerExpression);
 
 			var context = new SelectContext(buildInfo.Parent, resultLambda, buildInfo.IsSubQuery, outerContext, innerContext);
@@ -44,15 +47,16 @@ namespace LinqToDB.Linq.Builder
 		[DebuggerDisplay("{BuildContextDebuggingHelper.GetContextInfo(this)}")]
 		class GroupJoinInnerContext : IBuildContext
 		{
-			public GroupJoinInnerContext(IBuildContext? parent, SelectQuery outerQuery, ExpressionBuilder builder,
+			public GroupJoinInnerContext(IBuildContext? parent, SelectQuery outerQuery, ExpressionBuilder builder, Type elementType,
 				Expression outerKey, LambdaExpression innerKeyLambda,
 				Expression innerExpression)
 			{
-				Parent          = parent;
-				Builder         = builder;
-				OuterKey        = outerKey;
-				InnerKeyLambda  = innerKeyLambda;
-				InnerExpression = innerExpression;
+				_elementType = elementType;
+				Parent            = parent;
+				Builder           = builder;
+				OuterKey          = outerKey;
+				InnerKeyLambda    = innerKeyLambda;
+				InnerExpression   = innerExpression;
 
 				SelectQuery = outerQuery;
 
@@ -75,6 +79,8 @@ namespace LinqToDB.Linq.Builder
 			public Expression        InnerExpression { get; }
 			public SelectQuery       SelectQuery     { get; set; }
 			public SqlStatement?     Statement       { get; set; }
+
+			readonly Type _elementType;
 
 			Expression? IBuildContext.Expression    => null;
 
@@ -105,14 +111,26 @@ namespace LinqToDB.Linq.Builder
 					return path;
 				}
 
-				/*if (SequenceHelper.IsSameContext(path, this))
+				if (SequenceHelper.IsSameContext(path, this) && (flags.HasFlag(ProjectFlags.Expression) || flags.HasFlag(ProjectFlags.Expand)) && !path.Type.IsAssignableFrom(_elementType))
 				{
 					var result = GetGroupJoinCall();
 					return result;
-				}*/
+				}
 
 				return path;
 			}
+
+			public IBuildContext Clone(CloningContext context)
+			{
+				return new GroupJoinInnerContext(null, context.CloneElement(SelectQuery), Builder, _elementType,
+					context.Correct(OuterKey), context.Correct(InnerKeyLambda), context.Correct(InnerExpression));
+			}
+
+			public void SetRunQuery<T>(Query<T> query)
+			{
+			}
+
+			public bool IsExecuteOnly { get; }
 
 			public IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 			{
