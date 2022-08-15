@@ -153,8 +153,7 @@ namespace LinqToDB.Mapping
 
 				if (a != null)
 				{
-					if (DbType == null)
-						DbType = a.DbType;
+					DbType ??= a.DbType;
 
 					if (DataType == DataType.Undefined && a.DataType.HasValue)
 						DataType = a.DataType.Value;

@@ -142,11 +142,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						var baseInfo = baseInfos.FirstOrDefault(bi => bi.CompareMembers(info));
 						var alias    = flags == ConvertFlags.Field ? GenerateAlias(expression) : null;
-						if (alias == null)
-						{
-							alias = baseInfo?.MemberChain.LastOrDefault()?.Name ??
-						                 info.MemberChain.LastOrDefault()?.Name;
-						}
+						alias ??= baseInfo?.MemberChain.LastOrDefault()?.Name ?? info.MemberChain.LastOrDefault()?.Name;
 						var field    = RegisterCteField(baseInfo?.Sql, info.Sql, info.Index, alias);
 						return new SqlInfo(info.MemberChain, field);
 					})
@@ -178,8 +174,7 @@ namespace LinqToDB.Linq.Builder
 					alias = field?.Name;
 				}
 
-				if (alias == null)
-					alias = column.Alias;
+				alias ??= column.Alias;
 
 				return alias;
 			}

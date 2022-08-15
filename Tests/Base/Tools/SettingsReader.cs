@@ -41,23 +41,12 @@ namespace Tests.Tools
 					if (!settings1.Connections.ContainsKey(connection.Key))
 						settings1.Connections.Add(connection.Key, connection.Value);
 
-				if (settings1.Providers == null)
-					settings1.Providers = settings2.Providers;
-
-				if (settings1.Skip == null)
-					settings1.Skip = settings2.Skip;
-
-				if (settings1.TraceLevel == null)
-					settings1.TraceLevel = settings2.TraceLevel;
-
-				if (settings1.DefaultConfiguration == null)
-					settings1.DefaultConfiguration = settings2.DefaultConfiguration;
-
-				if (settings1.NoLinqService == null)
-					settings1.NoLinqService = settings2.NoLinqService;
-
-				if (settings1.BaselinesPath == null)
-					settings1.BaselinesPath = settings2.BaselinesPath;
+				settings1.Providers            ??= settings2.Providers;
+				settings1.Skip                 ??= settings2.Skip;
+				settings1.TraceLevel           ??= settings2.TraceLevel;
+				settings1.DefaultConfiguration ??= settings2.DefaultConfiguration;
+				settings1.NoLinqService        ??= settings2.NoLinqService;
+				settings1.BaselinesPath        ??= settings2.BaselinesPath;
 			}
 
 			var defaultSettings = JsonSerializer.Deserialize<Dictionary<string,TestSettings>>(defaultJson, _jsonOptions)!;

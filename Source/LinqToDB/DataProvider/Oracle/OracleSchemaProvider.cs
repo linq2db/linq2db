@@ -404,8 +404,7 @@ ORDER BY
 
 		private void LoadCurrentUser(DataConnection dataConnection)
 		{
-			if (_currentUser == null)
-				_currentUser = dataConnection.Execute<string>("select user from dual");
+			_currentUser ??= dataConnection.Execute<string>("select user from dual");
 		}
 
 		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection, IEnumerable<ProcedureInfo> procedures, GetSchemaOptions options)

@@ -65,8 +65,7 @@ namespace LinqToDB.SqlQuery
 
 		internal void SetTakeConverter(int take)
 		{
-			if (TakeValues == null)
-				TakeValues = new List<int>();
+			TakeValues ??= new List<int>();
 
 			TakeValues.Add(take);
 

@@ -484,8 +484,7 @@ namespace LinqToDB.Linq
 			{
 				if (_members == null)
 					lock (_memberSync)
-						if (_members == null)
-							_members = LoadMembers();
+						_members ??= LoadMembers();
 
 				return _members;
 			}

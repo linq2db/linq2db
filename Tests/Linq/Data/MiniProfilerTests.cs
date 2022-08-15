@@ -1574,14 +1574,12 @@ namespace Tests.Data
 				Assert.True    (trace.Contains("DECLARE @p Json"));
 
 				// provider-specific type classes and readers
-				var dateValue = new DateTime(1234, 11, 22);
-#pragma warning disable CS0618 // Type or member is obsolete
-				var ndateValue = db.Execute<NpgsqlTypes.NpgsqlDate>("SELECT @p", new DataParameter("@p", dateValue, DataType.Date));
-#pragma warning restore CS0618 // Type or member is obsolete
-				Assert.AreEqual(dateValue, (DateTime)ndateValue);
-				var rawValue = db.Execute<object>("SELECT @p", new DataParameter("@p", dateValue, DataType.Date));
-				Assert.True    (rawValue is DateTime);
-				Assert.AreEqual(dateValue, (DateTime)rawValue);
+				var interval = TimeSpan.FromSeconds(-1234);
+				var nValue = db.Execute<NpgsqlTypes.NpgsqlInterval>("SELECT @p", new DataParameter("@p", interval, DataType.Interval));
+				Assert.AreEqual(interval, TimeSpan.FromTicks(nValue.Time * 10));
+				var rawValue = db.Execute<object>("SELECT @p", new DataParameter("@p", interval, DataType.Interval));
+				Assert.True    (rawValue is TimeSpan);
+				Assert.AreEqual(interval, (TimeSpan)rawValue);
 
 				// bulk copy without and with transaction
 				TestBulkCopy();
@@ -1597,9 +1595,9 @@ namespace Tests.Data
 				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
 				var allTypes = schema.Tables.Where(t => t.TableName == "AllTypes").SingleOrDefault()!;
 				Assert.NotNull (allTypes);
-				var tsColumn = allTypes.Columns.Where(c => c.ColumnName == "timestampDataType").SingleOrDefault()!;
+				var tsColumn = allTypes.Columns.Where(c => c.ColumnName == "intervalDataType").SingleOrDefault()!;
 				Assert.NotNull (tsColumn);
-				Assert.AreEqual("NpgsqlDateTime", tsColumn.ProviderSpecificType);
+				Assert.AreEqual("NpgsqlInterval", tsColumn.ProviderSpecificType);
 
 				// provider properties
 				Assert.AreEqual(true, provider.HasMacAddr8);

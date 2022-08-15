@@ -129,8 +129,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 			{
 				if (_octonicaAdapter == null)
 					lock (_octonicaSyncRoot)
-						if (_octonicaAdapter == null)
-							_octonicaAdapter = CreateOctonicaAdapter();
+						_octonicaAdapter ??= CreateOctonicaAdapter();
 
 				return _octonicaAdapter;
 			}
@@ -138,8 +137,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 			{
 				if (_mysqlAdapter == null)
 					lock (_mysqlSyncRoot)
-						if (_mysqlAdapter == null)
-							_mysqlAdapter = new ClickHouseProviderAdapter(MySqlProviderAdapter.GetInstance(ProviderName.MySqlConnector));
+						_mysqlAdapter ??= new ClickHouseProviderAdapter(MySqlProviderAdapter.GetInstance(ProviderName.MySqlConnector));
 
 				return _mysqlAdapter;
 			}
@@ -147,8 +145,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 			{
 				if (_clientAdapter == null)
 					lock (_clientSyncRoot)
-						if (_clientAdapter == null)
-							_clientAdapter = CreateClientAdapter();
+						_clientAdapter ??= CreateClientAdapter();
 
 				return _clientAdapter;
 			}

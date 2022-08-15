@@ -614,8 +614,7 @@ namespace Tests
 		{
 			get
 			{
-				if (_parent1 == null)
-					_parent1 = Parent.Select(p => new Parent1 { ParentID = p.ParentID, Value1 = p.Value1 }).ToList();
+				_parent1 ??= Parent.Select(p => new Parent1 { ParentID = p.ParentID, Value1 = p.Value1 }).ToList();
 
 				return _parent1;
 			}
@@ -646,8 +645,7 @@ namespace Tests
 		{
 			get
 			{
-				if (_parentInheritance == null)
-					_parentInheritance = Parent.Select(p =>
+				_parentInheritance ??= Parent.Select(p =>
 						p.Value1 == null ? new ParentInheritanceNull { ParentID = p.ParentID } :
 						p.Value1.Value == 1 ? new ParentInheritance1 { ParentID = p.ParentID, Value1 = p.Value1.Value } :
 						 (ParentInheritanceBase)new ParentInheritanceValue { ParentID = p.ParentID, Value1 = p.Value1.Value }
@@ -1492,8 +1490,7 @@ namespace Tests
 		{
 			if (LogFilePath != null)
 			{
-				if (_logWriter == null)
-					_logWriter = File.CreateText(LogFilePath);
+				_logWriter ??= File.CreateText(LogFilePath);
 
 				_logWriter.WriteLine(text);
 				_logWriter.Flush();

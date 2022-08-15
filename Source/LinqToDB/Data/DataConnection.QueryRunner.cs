@@ -310,12 +310,9 @@ namespace LinqToDB.Data
 						{
 							var sqlp = command.SqlParameters[i];
 
-							if (dbCommand == null)
-							{
-								dbCommand = forGetSqlText
-									? dataConnection.EnsureConnection(false).CreateCommand()
-									: dataConnection.GetOrCreateCommand();
-							}
+							dbCommand ??= forGetSqlText
+								? dataConnection.EnsureConnection(false).CreateCommand()
+								: dataConnection.GetOrCreateCommand();
 
 							parms[i] = CreateParameter(dataConnection, dbCommand, sqlp, sqlp.GetParameterValue(parameterValues), forGetSqlText);
 						}

@@ -85,8 +85,7 @@ namespace LinqToDB.CodeModel
 
 			_rowsCount++;
 
-			if (_data == null)
-				_data = (ColumnGroupData)header.CreateDataStorage();
+			_data ??= (ColumnGroupData)header.CreateDataStorage();
 
 			_data!.SetCurrentRowIndex(_rowsCount - 1);
 

@@ -341,8 +341,7 @@ namespace LinqToDB.Expressions
 
 				if (e != item)
 				{
-					if (list == null)
-						list = new List<T>(source);
+					list ??= new List<T>(source);
 					list[i] = e;
 				}
 			}
@@ -362,8 +361,7 @@ namespace LinqToDB.Expressions
 
 				if (e != item)
 				{
-					if (list == null)
-						list    = new List<T>(source);
+					list    ??= new List<T>(source);
 					list[i] = e;
 				}
 			}

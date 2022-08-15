@@ -339,8 +339,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		public override BulkCopyRowsCopied BulkCopy<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
-			if (_bulkCopy == null)
-				_bulkCopy = new OracleBulkCopy(this);
+			_bulkCopy ??= new OracleBulkCopy(this);
 
 			return _bulkCopy.BulkCopy(
 				options.BulkCopyType == BulkCopyType.Default ? OracleTools.DefaultBulkCopyType : options.BulkCopyType,
@@ -352,8 +351,7 @@ namespace LinqToDB.DataProvider.Oracle
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
 			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			if (_bulkCopy == null)
-				_bulkCopy = new OracleBulkCopy(this);
+			_bulkCopy ??= new OracleBulkCopy(this);
 
 			return _bulkCopy.BulkCopyAsync(
 				options.BulkCopyType == BulkCopyType.Default ? OracleTools.DefaultBulkCopyType : options.BulkCopyType,
@@ -367,8 +365,7 @@ namespace LinqToDB.DataProvider.Oracle
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
 			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			if (_bulkCopy == null)
-				_bulkCopy = new OracleBulkCopy(this);
+			_bulkCopy ??= new OracleBulkCopy(this);
 
 			return _bulkCopy.BulkCopyAsync(
 				options.BulkCopyType == BulkCopyType.Default ? OracleTools.DefaultBulkCopyType : options.BulkCopyType,

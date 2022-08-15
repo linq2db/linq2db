@@ -571,8 +571,7 @@ namespace LinqToDB.Common
 
 		public static Tuple<LambdaExpression,LambdaExpression?,bool> GetConverter(MappingSchema? mappingSchema, Type from, Type to)
 		{
-			if (mappingSchema == null)
-				mappingSchema = MappingSchema.Default;
+			mappingSchema ??= MappingSchema.Default;
 
 			var p  = Expression.Parameter(from, "p");
 			var ne = null as LambdaExpression;

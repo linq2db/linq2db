@@ -106,8 +106,7 @@ public class a_CreateData : TestBase
 						{
 							TestContext.WriteLine("\nFAILED\n");
 
-							if (exception == null)
-								exception = ex;
+							exception ??= ex;
 						}
 					}
 				}

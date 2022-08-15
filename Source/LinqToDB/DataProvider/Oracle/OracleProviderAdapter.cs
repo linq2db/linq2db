@@ -396,8 +396,7 @@ namespace LinqToDB.DataProvider.Oracle
 			{
 				if (_nativeAdapter == null)
 					lock (_nativeSyncRoot)
-						if (_nativeAdapter == null)
-							_nativeAdapter = CreateAdapter(NativeAssemblyName, NativeClientNamespace, NativeTypesNamespace, NativeProviderFactoryName, new OracleNativeClientAdapterMappingSchema());
+						_nativeAdapter ??= CreateAdapter(NativeAssemblyName, NativeClientNamespace, NativeTypesNamespace, NativeProviderFactoryName, new OracleNativeClientAdapterMappingSchema());
 
 				return _nativeAdapter;
 			}
@@ -405,8 +404,7 @@ namespace LinqToDB.DataProvider.Oracle
 			{
 				if (_devartAdapter == null)
 					lock (_devartSyncRoot)
-						if (_devartAdapter == null)
-							_devartAdapter = CreateDevartAdapter();
+						_devartAdapter ??= CreateDevartAdapter();
 
 				return _devartAdapter;
 			}
@@ -414,8 +412,7 @@ namespace LinqToDB.DataProvider.Oracle
 			{
 				if (_managedAdapter == null)
 					lock (_managedSyncRoot)
-						if (_managedAdapter == null)
-							_managedAdapter = CreateAdapter(ManagedAssemblyName, ManagedClientNamespace, ManagedTypesNamespace, null, new OracleManagedClientAdapterMappingSchema());
+						_managedAdapter ??= CreateAdapter(ManagedAssemblyName, ManagedClientNamespace, ManagedTypesNamespace, null, new OracleManagedClientAdapterMappingSchema());
 
 				return _managedAdapter;
 			}
