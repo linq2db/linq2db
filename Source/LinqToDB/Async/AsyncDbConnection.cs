@@ -19,7 +19,7 @@ namespace LinqToDB.Async
 	{
 		protected internal AsyncDbConnection(DbConnection connection)
 		{
-			Connection = connection ?? throw new ArgumentNullException(nameof(connection));
+			Connection = connection ?? ThrowHelper.ThrowArgumentNullException<DbConnection>(nameof(connection));
 		}
 
 		public virtual DbConnection Connection { get; }

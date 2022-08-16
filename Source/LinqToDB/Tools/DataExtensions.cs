@@ -33,8 +33,8 @@ namespace LinqToDB.Tools
 			bool                useIdentity     = false)
 			where T: notnull
 		{
-			if (source  == null) throw new ArgumentNullException(nameof(source));
-			if (context == null) throw new ArgumentNullException(nameof(context));
+			if (source  == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (context == null) ThrowHelper.ThrowArgumentNullException(nameof(context));
 
 			IList<T>? sourceList = null;
 

@@ -214,7 +214,7 @@ namespace LinqToDB.Linq.Builder
 
 			SqlField RegisterCteField(ISqlExpression? baseExpression, ISqlExpression expression, int index, string? alias)
 			{
-				if (expression == null) throw new ArgumentNullException(nameof(expression));
+				if (expression == null) ThrowHelper.ThrowArgumentNullException(nameof(expression));
 
 				var cteField = _cte.RegisterFieldMapping(index, () =>
 				{

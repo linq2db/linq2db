@@ -433,8 +433,8 @@ namespace LinqToDB
 		[Sql.Extension("AVG({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsWindowFunction = true, ChainPrecedence = 0)]
 		public static double Average<TEntity, TV>(this IQueryable<TEntity> source, [ExprParameter] Expression<Func<TEntity, TV>> expr, [SqlQueryDependent] Sql.AggregateModifier modifier)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (expr   == null) throw new ArgumentNullException(nameof(expr));
+			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (expr   == null) ThrowHelper.ThrowArgumentNullException(nameof(expr));
 
 			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -474,9 +474,9 @@ namespace LinqToDB
 			[ExprParameter] Expression<Func<TEntity, object?>> expr1,
 			[ExprParameter] Expression<Func<TEntity, object?>> expr2)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (expr1  == null) throw new ArgumentNullException(nameof(expr1));
-			if (expr2  == null) throw new ArgumentNullException(nameof(expr2));
+			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (expr1  == null) ThrowHelper.ThrowArgumentNullException(nameof(expr1));
+			if (expr2  == null) ThrowHelper.ThrowArgumentNullException(nameof(expr2));
 
 			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -513,8 +513,8 @@ namespace LinqToDB
 		[Sql.Extension("COUNT({modifier?}{_}{expr})", IsWindowFunction = true, ChainPrecedence = 0)]
 		public static int CountExt<TEntity, TV>(this IQueryable<TEntity> source, [ExprParameter] Expression<Func<TEntity, TV>> expr)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (expr   == null) throw new ArgumentNullException(nameof(expr));
+			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (expr   == null) ThrowHelper.ThrowArgumentNullException(nameof(expr));
 
 			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -529,8 +529,8 @@ namespace LinqToDB
 		[Sql.Extension("COUNT({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsWindowFunction = true, ChainPrecedence = 0)]
 		public static int CountExt<TEntity, TV>(this IQueryable<TEntity> source, [ExprParameter] Expression<Func<TEntity, TV>> expr, [SqlQueryDependent] Sql.AggregateModifier modifier = Sql.AggregateModifier.None)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (expr   == null) throw new ArgumentNullException(nameof(expr));
+			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (expr   == null) ThrowHelper.ThrowArgumentNullException(nameof(expr));
 
 			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -579,8 +579,8 @@ namespace LinqToDB
 		[Sql.Extension("COUNT({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsWindowFunction = true, ChainPrecedence = 0)]
 		public static long LongCountExt<TEntity, TV>(this IQueryable<TEntity> source, [ExprParameter] Expression<Func<TEntity, TV>> expr, [SqlQueryDependent] Sql.AggregateModifier modifier = Sql.AggregateModifier.None)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (expr   == null) throw new ArgumentNullException(nameof(expr));
+			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (expr   == null) ThrowHelper.ThrowArgumentNullException(nameof(expr));
 
 			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -626,9 +626,9 @@ namespace LinqToDB
 			[ExprParameter] Expression<Func<TEntity, object?>> expr1,
 			[ExprParameter] Expression<Func<TEntity, object?>> expr2)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (expr1  == null) throw new ArgumentNullException(nameof(expr1));
-			if (expr2  == null) throw new ArgumentNullException(nameof(expr2));
+			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (expr1  == null) ThrowHelper.ThrowArgumentNullException(nameof(expr1));
+			if (expr2  == null) ThrowHelper.ThrowArgumentNullException(nameof(expr2));
 
 			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -662,9 +662,9 @@ namespace LinqToDB
 			[ExprParameter] Expression<Func<TEntity, object?>> expr1,
 			[ExprParameter] Expression<Func<TEntity, object?>> expr2)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (expr1  == null) throw new ArgumentNullException(nameof(expr1));
-			if (expr2  == null) throw new ArgumentNullException(nameof(expr2));
+			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (expr1  == null) ThrowHelper.ThrowArgumentNullException(nameof(expr1));
+			if (expr2  == null) ThrowHelper.ThrowArgumentNullException(nameof(expr2));
 
 			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -803,8 +803,8 @@ namespace LinqToDB
 		[Sql.Extension("MAX({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsWindowFunction = true, ChainPrecedence = 0)]
 		public static TV Max<TEntity, TV>(this IQueryable<TEntity> source, [ExprParameter] Expression<Func<TEntity, TV>> expr, [SqlQueryDependent] Sql.AggregateModifier modifier)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (expr   == null) throw new ArgumentNullException(nameof(expr));
+			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (expr   == null) ThrowHelper.ThrowArgumentNullException(nameof(expr));
 
 			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -841,8 +841,8 @@ namespace LinqToDB
 		[Sql.Extension("MEDIAN({expr})", IsWindowFunction = true, ChainPrecedence = 0)]
 		public static long Median<TEntity, TV>(this IQueryable<TEntity> source, [ExprParameter] Expression<Func<TEntity, TV>> expr)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (expr   == null) throw new ArgumentNullException(nameof(expr));
+			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (expr   == null) ThrowHelper.ThrowArgumentNullException(nameof(expr));
 
 			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -873,8 +873,8 @@ namespace LinqToDB
 		[Sql.Extension("MIN({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsWindowFunction = true, ChainPrecedence = 0)]
 		public static TV Min<TEntity, TV>(this IQueryable<TEntity> source, [ExprParameter] Expression<Func<TEntity, TV>> expr, [SqlQueryDependent] Sql.AggregateModifier modifier)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (expr   == null) throw new ArgumentNullException(nameof(expr));
+			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (expr   == null) ThrowHelper.ThrowArgumentNullException(nameof(expr));
 
 			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -1047,8 +1047,8 @@ namespace LinqToDB
 		[Sql.Extension(PN.Oracle,    "STDDEV({modifier?}{_}{expr})", TokenName = FunctionToken, BuilderType = typeof(ApplyAggregateModifier), ChainPrecedence = 0, IsWindowFunction = true)]
 		public static double StdDev<TEntity, TV>(this IQueryable<TEntity> source, [ExprParameter] Expression<Func<TEntity, TV>> expr, [SqlQueryDependent] Sql.AggregateModifier modifier = Sql.AggregateModifier.None )
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (expr   == null) throw new ArgumentNullException(nameof(expr));
+			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (expr   == null) ThrowHelper.ThrowArgumentNullException(nameof(expr));
 
 			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -1086,8 +1086,8 @@ namespace LinqToDB
 		[Sql.Extension("STDDEV_POP({expr})", IsWindowFunction = true, ChainPrecedence = 0)]
 		public static decimal StdDevPop<TEntity, TV>(this IQueryable<TEntity> source, [ExprParameter] Expression<Func<TEntity, TV>> expr)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (expr   == null) throw new ArgumentNullException(nameof(expr));
+			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (expr   == null) ThrowHelper.ThrowArgumentNullException(nameof(expr));
 
 			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -1117,8 +1117,8 @@ namespace LinqToDB
 		[Sql.Extension("STDDEV_SAMP({expr})", IsWindowFunction = true, ChainPrecedence = 0)]
 		public static decimal StdDevSamp<TEntity, TV>(this IQueryable<TEntity> source, [ExprParameter] Expression<Func<TEntity, TV>> expr)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (expr   == null) throw new ArgumentNullException(nameof(expr));
+			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (expr   == null) ThrowHelper.ThrowArgumentNullException(nameof(expr));
 
 			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -1160,8 +1160,8 @@ namespace LinqToDB
 		[Sql.Extension("VAR_POP({expr})", IsWindowFunction = true, ChainPrecedence = 0)]
 		public static decimal VarPop<TEntity, TV>(this IQueryable<TEntity> source, [ExprParameter] Expression<Func<TEntity, TV>> expr)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (expr   == null) throw new ArgumentNullException(nameof(expr));
+			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (expr   == null) ThrowHelper.ThrowArgumentNullException(nameof(expr));
 
 			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -1191,8 +1191,8 @@ namespace LinqToDB
 		[Sql.Extension("VAR_SAMP({expr})", IsWindowFunction = true, ChainPrecedence = 0)]
 		public static decimal VarSamp<TEntity, TV>(this IQueryable<TEntity> source, [ExprParameter] Expression<Func<TEntity, TV>> expr)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (expr   == null) throw new ArgumentNullException(nameof(expr));
+			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (expr   == null) ThrowHelper.ThrowArgumentNullException(nameof(expr));
 
 			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -1228,8 +1228,8 @@ namespace LinqToDB
 		[Sql.Extension("VARIANCE({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsWindowFunction = true, ChainPrecedence = 0)]
 		public static TV Variance<TEntity, TV>(this IQueryable<TEntity> source, [ExprParameter] Expression<Func<TEntity, TV>> expr, [SqlQueryDependent] Sql.AggregateModifier modifier = Sql.AggregateModifier.None)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (expr   == null) throw new ArgumentNullException(nameof(expr));
+			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (expr   == null) ThrowHelper.ThrowArgumentNullException(nameof(expr));
 
 			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
 

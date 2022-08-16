@@ -177,10 +177,10 @@ namespace LinqToDB
 				bool? canBeNull,
 				params SqlExtensionParam[] parameters)
 			{
-				if (parameters == null) throw new ArgumentNullException(nameof(parameters));
+				if (parameters == null) ThrowHelper.ThrowArgumentNullException(nameof(parameters));
 
 				foreach (var value in parameters)
-					if (value == null) throw new ArgumentNullException(nameof(parameters));
+					if (value == null) ThrowHelper.ThrowArgumentNullException(nameof(parameters));
 
 				SystemType       = systemType;
 				Expr             = expr;
@@ -324,13 +324,13 @@ namespace LinqToDB
 					_context      = context;
 					Configuration = configuration;
 					BuilderValue  = builderValue;
-					DataContext   = dataContext  ?? throw new ArgumentNullException(nameof(dataContext));
-					Query         = query        ?? throw new ArgumentNullException(nameof(query));
-					Extension     = extension    ?? throw new ArgumentNullException(nameof(extension));
-					_convert      = converter    ?? throw new ArgumentNullException(nameof(converter));
+					DataContext   = dataContext  ?? ThrowHelper.ThrowArgumentNullException<IDataContext>(nameof(dataContext));
+					Query         = query        ?? ThrowHelper.ThrowArgumentNullException<SelectQuery>(nameof(query));
+					Extension     = extension    ?? ThrowHelper.ThrowArgumentNullException<SqlExtension>(nameof(extension));
+					_convert      = converter    ?? ThrowHelper.ThrowArgumentNullException<Func<TContext, Expression, ColumnDescriptor?, ISqlExpression>>(nameof(converter));
 					Member        = member;
 					Method        = member as MethodInfo;
-					Arguments     = arguments    ?? throw new ArgumentNullException(nameof(arguments));
+					Arguments     = arguments    ?? ThrowHelper.ThrowArgumentNullException<Expression[]>(nameof(arguments));
 				}
 
 				public MethodInfo?  Method { get; }

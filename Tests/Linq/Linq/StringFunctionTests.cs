@@ -1643,7 +1643,7 @@ namespace Tests.Linq
 			protected MySpecialBaseClass(string value)
 			{
 				if (value == null)
-					throw new ArgumentNullException(nameof(value));
+					ThrowHelper.ThrowArgumentNullException(nameof(value));
 				Value = value;
 			}
 

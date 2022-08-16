@@ -24,13 +24,13 @@ namespace LinqToDB.SqlQuery
 			public Expr(ISqlExpression exp1, int precedence)
 				: base(precedence)
 			{
-				Expr1 = exp1 ?? throw new ArgumentNullException(nameof(exp1));
+				Expr1 = exp1 ?? ThrowHelper.ThrowArgumentNullException<ISqlExpression>(nameof(exp1));
 			}
 
 			public Expr(ISqlExpression exp1)
 				: base(exp1.Precedence)
 			{
-				Expr1 = exp1 ?? throw new ArgumentNullException(nameof(exp1));
+				Expr1 = exp1 ?? ThrowHelper.ThrowArgumentNullException<ISqlExpression>(nameof(exp1));
 			}
 
 			public ISqlExpression Expr1 { get; set; }

@@ -16,7 +16,7 @@ namespace LinqToDB.Tools.Comparers
 
 		public EnumerableEqualityComparer(IEqualityComparer<T> elementComparer)
 		{
-			_elementComparer = elementComparer ?? throw new ArgumentNullException(nameof(elementComparer));
+			_elementComparer = elementComparer ?? ThrowHelper.ThrowArgumentNullException<IEqualityComparer<T>>(nameof(elementComparer));
 		}
 
 		public override int GetHashCode(IEnumerable<T> obj)

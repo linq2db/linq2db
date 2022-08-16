@@ -29,8 +29,8 @@ namespace LinqToDB.Mapping
 			EntityMappingBuilder<TEntity>       entity,
 			Expression<Func<TEntity,TProperty>> memberGetter)
 		{
-			_entity       = entity       ?? throw new ArgumentNullException(nameof(entity));
-			_memberGetter = memberGetter ?? throw new ArgumentNullException(nameof(memberGetter));
+			_entity       = entity       ?? ThrowHelper.ThrowArgumentNullException<EntityMappingBuilder<TEntity>       >(nameof(entity));
+			_memberGetter = memberGetter ?? ThrowHelper.ThrowArgumentNullException<Expression<Func<TEntity, TProperty>>>(nameof(memberGetter));
 			_memberInfo   = MemberHelper.MemberOf(memberGetter);
 
 			if (_memberInfo.ReflectedType != typeof(TEntity))
@@ -432,7 +432,7 @@ namespace LinqToDB.Mapping
 		/// <returns>Returns current column mapping builder.</returns>
 		public PropertyMappingBuilder<TEntity, TProperty> IsAlias(Expression<Func<TEntity, object>> aliasMember)
 		{
-			if (aliasMember == null) throw new ArgumentNullException(nameof(aliasMember));
+			if (aliasMember == null) ThrowHelper.ThrowArgumentNullException(nameof(aliasMember));
 
 			var memberInfo = MemberHelper.GetMemberInfo(aliasMember);
 
@@ -468,7 +468,7 @@ namespace LinqToDB.Mapping
 		/// <returns>Returns current column mapping builder.</returns>
 		public PropertyMappingBuilder<TEntity, TProperty> IsExpression<TR>(Expression<Func<TEntity, TR>> expression, bool isColumn = false, string? alias = null)
 		{
-			if (expression == null) throw new ArgumentNullException(nameof(expression));
+			if (expression == null) ThrowHelper.ThrowArgumentNullException(nameof(expression));
 
 			return HasAttribute(new ExpressionMethodAttribute(expression) { IsColumn = isColumn, Alias = alias }).IsNotColumn();
 		}

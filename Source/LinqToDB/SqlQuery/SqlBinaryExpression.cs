@@ -10,9 +10,9 @@ namespace LinqToDB.SqlQuery
 	{
 		public SqlBinaryExpression(Type systemType, ISqlExpression expr1, string operation, ISqlExpression expr2, int precedence)
 		{
-			_expr1     = expr1     ?? throw new ArgumentNullException(nameof(expr1));
-			Operation  = operation ?? throw new ArgumentNullException(nameof(operation));
-			_expr2     = expr2     ?? throw new ArgumentNullException(nameof(expr2));
+			_expr1     = expr1     ?? ThrowHelper.ThrowArgumentNullException<ISqlExpression>(nameof(expr1));
+			Operation  = operation ?? ThrowHelper.ThrowArgumentNullException<string        >(nameof(operation));
+			_expr2     = expr2     ?? ThrowHelper.ThrowArgumentNullException<ISqlExpression>(nameof(expr2));
 			SystemType = systemType;
 			Precedence = precedence;
 		}

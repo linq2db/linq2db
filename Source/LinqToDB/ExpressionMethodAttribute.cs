@@ -52,7 +52,7 @@ namespace LinqToDB
 		/// <param name="expression">Substitution expression.</param>
 		public ExpressionMethodAttribute(LambdaExpression expression)
 		{
-			Expression = expression ?? throw new ArgumentNullException(nameof(expression));
+			Expression = expression ?? ThrowHelper.ThrowArgumentNullException<LambdaExpression>(nameof(expression));
 		}
 
 		/// <summary>
@@ -63,7 +63,7 @@ namespace LinqToDB
 		public ExpressionMethodAttribute(string? configuration, string methodName)
 		{
 			Configuration = configuration;
-			MethodName    = methodName ?? throw new ArgumentNullException(nameof(methodName));
+			MethodName    = methodName ?? ThrowHelper.ThrowArgumentNullException<string>(nameof(methodName));
 		}
 
 		/// <summary>

@@ -23,7 +23,7 @@ namespace LinqToDB.Metadata
 		public MetadataReader(params IMetadataReader[] readers)
 		{
 			if (readers == null)
-				throw new ArgumentNullException(nameof(readers));
+				ThrowHelper.ThrowArgumentNullException(nameof(readers));
 			_readers = readers.ToList();
 		}
 

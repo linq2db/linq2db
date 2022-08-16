@@ -11,7 +11,7 @@ namespace LinqToDB.SqlQuery
 		public SqlColumn(SelectQuery? parent, ISqlExpression expression, string? alias)
 		{
 			Parent      = parent;
-			_expression = expression ?? throw new ArgumentNullException(nameof(expression));
+			_expression = expression ?? ThrowHelper.ThrowArgumentNullException<ISqlExpression>(nameof(expression));
 			RawAlias    = alias;
 
 #if DEBUG

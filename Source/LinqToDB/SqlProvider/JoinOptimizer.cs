@@ -1272,7 +1272,7 @@ namespace LinqToDB.SqlProvider
 		{
 			public VirtualField(ISqlExpression expression)
 			{
-				if (expression == null) throw new ArgumentNullException(nameof(expression));
+				if (expression == null) ThrowHelper.ThrowArgumentNullException(nameof(expression));
 
 				if (expression is SqlField field)
 					Field = field;
@@ -1285,12 +1285,12 @@ namespace LinqToDB.SqlProvider
 
 			public VirtualField(SqlField field)
 			{
-				Field = field ?? throw new ArgumentNullException(nameof(field));
+				Field = field ?? ThrowHelper.ThrowArgumentNullException<SqlField>(nameof(field));
 			}
 
 			public VirtualField(SqlColumn column)
 			{
-				Column = column ?? throw new ArgumentNullException(nameof(column));
+				Column = column ?? ThrowHelper.ThrowArgumentNullException<SqlColumn>(nameof(column));
 			}
 
 			public SqlField?  Field  { get; }

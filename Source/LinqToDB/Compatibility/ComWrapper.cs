@@ -41,7 +41,7 @@ namespace LinqToDB
 		public static dynamic Wrap(object instance)
 		{
 			if (instance is null)
-				throw new ArgumentNullException(nameof(instance));
+				ThrowHelper.ThrowArgumentNullException(nameof(instance));
 
 			if (!instance.GetType().IsCOMObject)
 				throw new ArgumentException("Object must be a COM object", nameof(instance));

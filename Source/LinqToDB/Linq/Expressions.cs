@@ -153,10 +153,10 @@ namespace LinqToDB.Linq
 			Type             rightType,
 			LambdaExpression expression)
 		{
-			if (providerName == null) throw new ArgumentNullException(nameof(providerName));
-			if (leftType     == null) throw new ArgumentNullException(nameof(leftType));
-			if (rightType    == null) throw new ArgumentNullException(nameof(rightType));
-			if (expression   == null) throw new ArgumentNullException(nameof(expression));
+			if (providerName == null) ThrowHelper.ThrowArgumentNullException(nameof(providerName));
+			if (leftType     == null) ThrowHelper.ThrowArgumentNullException(nameof(leftType));
+			if (rightType    == null) ThrowHelper.ThrowArgumentNullException(nameof(rightType));
+			if (expression   == null) ThrowHelper.ThrowArgumentNullException(nameof(expression));
 
 			if (!_binaries.Value.TryGetValue(providerName, out var dic))
 				_binaries.Value.Add(providerName, dic = new Dictionary<Tuple<ExpressionType,Type,Type>,IExpressionInfo>());

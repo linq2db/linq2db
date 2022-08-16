@@ -55,7 +55,7 @@ namespace LinqToDB.SqlQuery
 		public SqlTable(MappingSchema mappingSchema, Type objectType, string? physicalName = null)
 			: this(objectType, null, new(String.Empty))
 		{
-			if (mappingSchema == null) throw new ArgumentNullException(nameof(mappingSchema));
+			if (mappingSchema == null) ThrowHelper.ThrowArgumentNullException(nameof(mappingSchema));
 
 			var ed = mappingSchema.GetEntityDescriptor(objectType);
 

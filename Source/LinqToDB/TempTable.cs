@@ -51,7 +51,7 @@ namespace LinqToDB
 			string?      serverName   = default,
 			TableOptions tableOptions = default)
 		{
-			if (db == null) throw new ArgumentNullException(nameof(db));
+			if (db == null) ThrowHelper.ThrowArgumentNullException(nameof(db));
 
 			_table = db.CreateTable<T>(tableName, databaseName, schemaName, serverName: serverName, tableOptions: tableOptions);
 		}
@@ -76,8 +76,8 @@ namespace LinqToDB
 			string?          serverName   = default,
 			TableOptions     tableOptions = default)
 		{
-			if (db    == null) throw new ArgumentNullException(nameof(db));
-			if (items == null) throw new ArgumentNullException(nameof(items));
+			if (db    == null) ThrowHelper.ThrowArgumentNullException(nameof(db));
+			if (items == null) ThrowHelper.ThrowArgumentNullException(nameof(items));
 
 			_table = db.CreateTable<T>(tableName, databaseName, schemaName, serverName: serverName, tableOptions: tableOptions);
 
@@ -143,8 +143,8 @@ namespace LinqToDB
 			string?            serverName   = default,
 			TableOptions       tableOptions = default)
 		{
-			if (db    == null) throw new ArgumentNullException(nameof(db));
-			if (items == null) throw new ArgumentNullException(nameof(items));
+			if (db    == null) ThrowHelper.ThrowArgumentNullException(nameof(db));
+			if (items == null) ThrowHelper.ThrowArgumentNullException(nameof(items));
 
 			_table = db.CreateTable<T>(tableName, databaseName, schemaName, serverName: serverName, tableOptions: tableOptions);
 
@@ -197,7 +197,7 @@ namespace LinqToDB
 		/// <param name="table">Table instance.</param>
 		protected TempTable(ITable<T> table)
 		{
-			_table = table ?? throw new ArgumentNullException(nameof(table));
+			_table = table ?? ThrowHelper.ThrowArgumentNullException<ITable<T>>(nameof(table));
 		}
 
 		/// <summary>
@@ -218,7 +218,7 @@ namespace LinqToDB
 			TableOptions      tableOptions      = default,
 			CancellationToken cancellationToken = default)
 		{
-			if (db == null) throw new ArgumentNullException(nameof(db));
+			if (db == null) ThrowHelper.ThrowArgumentNullException(nameof(db));
 
 			return new TempTable<T>(await db
 				.CreateTableAsync<T>(tableName, databaseName, schemaName, serverName: serverName, tableOptions: tableOptions, token: cancellationToken)
@@ -272,8 +272,8 @@ namespace LinqToDB
 			TableOptions      tableOptions      = default,
 			CancellationToken cancellationToken = default)
 		{
-			if (db    == null) throw new ArgumentNullException(nameof(db));
-			if (items == null) throw new ArgumentNullException(nameof(items));
+			if (db    == null) ThrowHelper.ThrowArgumentNullException(nameof(db));
+			if (items == null) ThrowHelper.ThrowArgumentNullException(nameof(items));
 
 			var table = await CreateAsync(db, tableName, databaseName, schemaName, serverName, tableOptions, cancellationToken)
 				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
@@ -326,8 +326,8 @@ namespace LinqToDB
 			TableOptions          tableOptions      = default,
 			CancellationToken     cancellationToken = default)
 		{
-			if (db    == null) throw new ArgumentNullException(nameof(db));
-			if (items == null) throw new ArgumentNullException(nameof(items));
+			if (db    == null) ThrowHelper.ThrowArgumentNullException(nameof(db));
+			if (items == null) ThrowHelper.ThrowArgumentNullException(nameof(items));
 
 			var table = await CreateAsync(db, tableName, databaseName, schemaName, serverName, tableOptions, cancellationToken)
 				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
@@ -431,7 +431,7 @@ namespace LinqToDB
 		/// <returns>Number of records, inserted into table.</returns>
 		public long Insert(IQueryable<T> items)
 		{
-			var l = GenerateInsertSetter(items ?? throw new ArgumentNullException(nameof(items)));
+			var l = GenerateInsertSetter(items ?? ThrowHelper.ThrowArgumentNullException<IQueryable<T>>(nameof(items)));
 
 			var count = items.Insert(_table, l);
 
@@ -448,7 +448,7 @@ namespace LinqToDB
 		/// <returns>Number of records, inserted into table.</returns>
 		public async Task<long> InsertAsync(IQueryable<T> items, CancellationToken cancellationToken = default)
 		{
-			var l = GenerateInsertSetter(items ?? throw new ArgumentNullException(nameof(items)));
+			var l = GenerateInsertSetter(items ?? ThrowHelper.ThrowArgumentNullException<IQueryable<T>>(nameof(items)));
 
 			var count = await items.InsertAsync(_table, l, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
@@ -763,7 +763,7 @@ namespace LinqToDB
 			TableOptions                    tableOptions = TableOptions.IsTemporary)
 			where T : class
 		{
-			if (setTable == null) throw new ArgumentNullException(nameof(setTable));
+			if (setTable == null) ThrowHelper.ThrowArgumentNullException(nameof(setTable));
 
 			setTable(db.GetFluentMappingBuilder().Entity<T>());
 
@@ -824,7 +824,7 @@ namespace LinqToDB
 			TableOptions                    tableOptions = TableOptions.IsTemporary)
 			where T : class
 		{
-			if (setTable == null) throw new ArgumentNullException(nameof(setTable));
+			if (setTable == null) ThrowHelper.ThrowArgumentNullException(nameof(setTable));
 
 			setTable(db.GetFluentMappingBuilder().Entity<T>());
 
@@ -972,7 +972,7 @@ namespace LinqToDB
 			CancellationToken               cancellationToken = default)
 			where T : class
 		{
-			if (setTable == null) throw new ArgumentNullException(nameof(setTable));
+			if (setTable == null) ThrowHelper.ThrowArgumentNullException(nameof(setTable));
 
 			setTable(db.GetFluentMappingBuilder().Entity<T>());
 
@@ -1037,7 +1037,7 @@ namespace LinqToDB
 			CancellationToken               cancellationToken = default)
 			where T : class
 		{
-			if (setTable == null) throw new ArgumentNullException(nameof(setTable));
+			if (setTable == null) ThrowHelper.ThrowArgumentNullException(nameof(setTable));
 
 			setTable(db.GetFluentMappingBuilder().Entity<T>());
 

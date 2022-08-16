@@ -37,7 +37,7 @@ namespace LinqToDB.Common.Internal.Cache
 		{
 			if (optionsAccessor == null)
 			{
-				throw new ArgumentNullException(nameof(optionsAccessor));
+				ThrowHelper.ThrowArgumentNullException(nameof(optionsAccessor));
 			}
 
 			_options = optionsAccessor;

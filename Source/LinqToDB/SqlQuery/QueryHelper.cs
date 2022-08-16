@@ -737,7 +737,7 @@ namespace LinqToDB.SqlQuery
 		/// <returns></returns>
 		public static bool CanRemoveOrderBy(SelectQuery selectQuery, SqlProviderFlags flags, QueryInformation information)
 		{
-			if (selectQuery == null) throw new ArgumentNullException(nameof(selectQuery));
+			if (selectQuery == null) ThrowHelper.ThrowArgumentNullException(nameof(selectQuery));
 
 			if (selectQuery.OrderBy.IsEmpty || selectQuery.ParentSelect == null)
 				return false;
@@ -791,7 +791,7 @@ namespace LinqToDB.SqlQuery
 		/// <returns></returns>
 		public static bool TryRemoveDistinct(SelectQuery selectQuery, QueryInformation information)
 		{
-			if (selectQuery == null) throw new ArgumentNullException(nameof(selectQuery));
+			if (selectQuery == null) ThrowHelper.ThrowArgumentNullException(nameof(selectQuery));
 
 			if (!selectQuery.Select.IsDistinct)
 				return false;
@@ -941,7 +941,7 @@ namespace LinqToDB.SqlQuery
 		/// <param name="foundSources">Output container for detected sources/</param>
 		public static void GetUsedSources(ISqlExpression root, HashSet<ISqlTableSource> foundSources)
 		{
-			if (foundSources == null) throw new ArgumentNullException(nameof(foundSources));
+			if (foundSources == null) ThrowHelper.ThrowArgumentNullException(nameof(foundSources));
 
 			root.Visit(foundSources, static (foundSources, e) =>
 			{
@@ -1088,9 +1088,9 @@ namespace LinqToDB.SqlQuery
 			bool                                             withStack)
 			where TStatement : SqlStatement
 		{
-			if (statement == null) throw new ArgumentNullException(nameof(statement));
-			if (wrapTest  == null) throw new ArgumentNullException(nameof(wrapTest));
-			if (onWrap    == null) throw new ArgumentNullException(nameof(onWrap));
+			if (statement == null) ThrowHelper.ThrowArgumentNullException(nameof(statement));
+			if (wrapTest  == null) ThrowHelper.ThrowArgumentNullException(nameof(wrapTest));
+			if (onWrap    == null) ThrowHelper.ThrowArgumentNullException(nameof(onWrap));
 
 			var correctedTables = new Dictionary<ISqlTableSource, SelectQuery>();
 			var newStatement = statement.Convert(
@@ -1224,7 +1224,7 @@ namespace LinqToDB.SqlQuery
 			bool        allowMutation)
 			where TStatement : SqlStatement
 		{
-			if (statement == null) throw new ArgumentNullException(nameof(statement));
+			if (statement == null) ThrowHelper.ThrowArgumentNullException(nameof(statement));
 
 			return WrapQuery(queryToWrap, statement, static (queryToWrap, q, _) => q == queryToWrap, null, allowMutation, false);
 		}
@@ -1251,8 +1251,8 @@ namespace LinqToDB.SqlQuery
 			bool                                              withStack)
 			where TStatement : SqlStatement
 		{
-			if (statement == null) throw new ArgumentNullException(nameof(statement));
-			if (wrapTest == null)  throw new ArgumentNullException(nameof(wrapTest));
+			if (statement == null) ThrowHelper.ThrowArgumentNullException(nameof(statement));
+			if (wrapTest == null)  ThrowHelper.ThrowArgumentNullException(nameof(wrapTest));
 
 			return WrapQuery(
 				(context, wrapTest, onWrap),
@@ -1347,8 +1347,8 @@ namespace LinqToDB.SqlQuery
 
 		public static string TransformExpressionIndexes<TContext>(TContext context, string expression, Func<TContext, int, int> transformFunc)
 		{
-			if (expression    == null) throw new ArgumentNullException(nameof(expression));
-			if (transformFunc == null) throw new ArgumentNullException(nameof(transformFunc));
+			if (expression    == null) ThrowHelper.ThrowArgumentNullException(nameof(expression));
+			if (transformFunc == null) ThrowHelper.ThrowArgumentNullException(nameof(transformFunc));
 
 			var str = _paramsRegex.Replace(expression, match =>
 			{
@@ -1374,8 +1374,8 @@ namespace LinqToDB.SqlQuery
 
 		public static ISqlExpression ConvertFormatToConcatenation(string format, IList<ISqlExpression> parameters)
 		{
-			if (format     == null) throw new ArgumentNullException(nameof(format));
-			if (parameters == null) throw new ArgumentNullException(nameof(parameters));
+			if (format     == null) ThrowHelper.ThrowArgumentNullException(nameof(format));
+			if (parameters == null) ThrowHelper.ThrowArgumentNullException(nameof(parameters));
 
 			string StripDoubleQuotes(string str)
 			{

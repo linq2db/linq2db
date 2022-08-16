@@ -226,7 +226,7 @@ namespace LinqToDB.Data
 		public DataConnection(LinqToDBConnectionOptions options)
 		{
 			if (options == null)
-				throw new ArgumentNullException(nameof(options));
+				ThrowHelper.ThrowArgumentNullException(nameof(options));
 
 			if (!options.IsValidConfigForConnectionType(this))
 				throw new LinqToDBException(
@@ -781,8 +781,8 @@ namespace LinqToDB.Data
 			string        providerName,
 			IDataProvider dataProvider)
 		{
-			if (providerName == null) throw new ArgumentNullException(nameof(providerName));
-			if (dataProvider == null) throw new ArgumentNullException(nameof(dataProvider));
+			if (providerName == null) ThrowHelper.ThrowArgumentNullException(nameof(providerName));
+			if (dataProvider == null) ThrowHelper.ThrowArgumentNullException(nameof(dataProvider));
 
 			if (string.IsNullOrEmpty(dataProvider.Name))
 				throw new ArgumentException("dataProvider.Name cannot be empty.", nameof(dataProvider));
@@ -796,7 +796,7 @@ namespace LinqToDB.Data
 		/// <param name="dataProvider">Database provider implementation.</param>
 		public static void AddDataProvider(IDataProvider dataProvider)
 		{
-			if (dataProvider == null) throw new ArgumentNullException(nameof(dataProvider));
+			if (dataProvider == null) ThrowHelper.ThrowArgumentNullException(nameof(dataProvider));
 
 			AddDataProvider(dataProvider.Name, dataProvider);
 		}
@@ -987,8 +987,8 @@ namespace LinqToDB.Data
 			string connectionString,
 			IDataProvider? dataProvider = null)
 		{
-			if (configuration    == null) throw new ArgumentNullException(nameof(configuration));
-			if (connectionString == null) throw new ArgumentNullException(nameof(connectionString));
+			if (configuration    == null) ThrowHelper.ThrowArgumentNullException(nameof(configuration));
+			if (connectionString == null) ThrowHelper.ThrowArgumentNullException(nameof(connectionString));
 
 			if (dataProvider == null)
 			{
@@ -1023,9 +1023,9 @@ namespace LinqToDB.Data
 			string connectionString,
 			string dataProvider)
 		{
-			if (configuration    == null) throw new ArgumentNullException(nameof(configuration));
-			if (connectionString == null) throw new ArgumentNullException(nameof(connectionString));
-			if (dataProvider     == null) throw new ArgumentNullException(nameof(dataProvider));
+			if (configuration    == null) ThrowHelper.ThrowArgumentNullException(nameof(configuration));
+			if (connectionString == null) ThrowHelper.ThrowArgumentNullException(nameof(connectionString));
+			if (dataProvider     == null) ThrowHelper.ThrowArgumentNullException(nameof(dataProvider));
 
 			InitConfig();
 
@@ -1044,8 +1044,8 @@ namespace LinqToDB.Data
 			string configuration,
 			string connectionString)
 		{
-			if (configuration    == null) throw new ArgumentNullException(nameof(configuration));
-			if (connectionString == null) throw new ArgumentNullException(nameof(connectionString));
+			if (configuration    == null) ThrowHelper.ThrowArgumentNullException(nameof(configuration));
+			if (connectionString == null) ThrowHelper.ThrowArgumentNullException(nameof(connectionString));
 
 			InitConfig();
 

@@ -37,17 +37,17 @@ namespace LinqToDB.Common.Internal.Cache
 		{
 			if (key == null)
 			{
-				throw new ArgumentNullException(nameof(key));
+				ThrowHelper.ThrowArgumentNullException(nameof(key));
 			}
 
 			if (notifyCacheEntryCommit == null)
 			{
-				throw new ArgumentNullException(nameof(notifyCacheEntryCommit));
+				ThrowHelper.ThrowArgumentNullException(nameof(notifyCacheEntryCommit));
 			}
 
 			if (notifyCacheOfExpiration == null)
 			{
-				throw new ArgumentNullException(nameof(notifyCacheOfExpiration));
+				ThrowHelper.ThrowArgumentNullException(nameof(notifyCacheOfExpiration));
 			}
 
 			Key = key;

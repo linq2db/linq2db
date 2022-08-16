@@ -22,7 +22,7 @@ namespace LinqToDB.SqlProvider
 		public OptimizationContext(EvaluationContext context, AliasesContext aliases, 
 			bool isParameterOrderDepended)
 		{
-			Aliases = aliases ?? throw new ArgumentNullException(nameof(aliases));
+			Aliases = aliases ?? ThrowHelper.ThrowArgumentNullException<AliasesContext>(nameof(aliases));
 			Context = context;
 			IsParameterOrderDepended = isParameterOrderDepended;
 		}

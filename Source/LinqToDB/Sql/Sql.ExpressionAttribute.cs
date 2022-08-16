@@ -216,8 +216,8 @@ namespace LinqToDB
 
 			public static string ResolveExpressionValues<TContext>(TContext context, string expression, Func<TContext, string, string?, string?> valueProvider)
 			{
-				if (expression    == null) throw new ArgumentNullException(nameof(expression));
-				if (valueProvider == null) throw new ArgumentNullException(nameof(valueProvider));
+				if (expression    == null) ThrowHelper.ThrowArgumentNullException(nameof(expression));
+				if (valueProvider == null) ThrowHelper.ThrowArgumentNullException(nameof(valueProvider));
 
 				int  prevMatch         = -1;
 				int  prevNotEmptyMatch = -1;

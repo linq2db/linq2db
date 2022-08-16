@@ -185,7 +185,7 @@ namespace LinqToDB.Data
 		)
 			where T : class
 		{
-			if (table == null) throw new ArgumentNullException(nameof(table));
+			if (table == null) ThrowHelper.ThrowArgumentNullException(nameof(table));
 
 			var withUpdate = MergeWithUpdate(table);
 			var target     = table;
@@ -240,7 +240,7 @@ namespace LinqToDB.Data
 		)
 			where T : class
 		{
-			if (table == null) throw new ArgumentNullException(nameof(table));
+			if (table == null) ThrowHelper.ThrowArgumentNullException(nameof(table));
 
 			var withUpdate = MergeWithUpdate(table);
 
@@ -299,7 +299,7 @@ namespace LinqToDB.Data
 		)
 			where T : class
 		{
-			if (table == null) throw new ArgumentNullException(nameof(table));
+			if (table == null) ThrowHelper.ThrowArgumentNullException(nameof(table));
 
 			var withUpdate = MergeWithUpdate(table);
 
@@ -353,7 +353,7 @@ namespace LinqToDB.Data
 		)
 			where T : class
 		{
-			if (table == null) throw new ArgumentNullException(nameof(table));
+			if (table == null) ThrowHelper.ThrowArgumentNullException(nameof(table));
 
 			var withUpdate = MergeWithUpdate(table);
 
@@ -544,7 +544,7 @@ namespace LinqToDB.Data
 			CancellationToken        cancellationToken = default)
 			where T : class
 		{
-			if (table == null) throw new ArgumentNullException(nameof(table));
+			if (table == null) ThrowHelper.ThrowArgumentNullException(nameof(table));
 
 			var withUpdate = MergeWithUpdate(table);
 			var target     = table;
@@ -600,7 +600,7 @@ namespace LinqToDB.Data
 			CancellationToken        cancellationToken = default)
 			where T : class
 		{
-			if (table == null) throw new ArgumentNullException(nameof(table));
+			if (table == null) ThrowHelper.ThrowArgumentNullException(nameof(table));
 
 			var withUpdate = MergeWithUpdate(table);
 
@@ -660,7 +660,7 @@ namespace LinqToDB.Data
 			CancellationToken cancellationToken = default)
 			where T : class
 		{
-			if (table == null) throw new ArgumentNullException(nameof(table));
+			if (table == null) ThrowHelper.ThrowArgumentNullException(nameof(table));
 
 			var withUpdate = MergeWithUpdate(table);
 
@@ -715,7 +715,7 @@ namespace LinqToDB.Data
 			CancellationToken cancellationToken = default)
 			where T : class
 		{
-			if (table == null) throw new ArgumentNullException(nameof(table));
+			if (table == null) ThrowHelper.ThrowArgumentNullException(nameof(table));
 
 			var withUpdate = MergeWithUpdate(table);
 

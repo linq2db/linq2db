@@ -55,7 +55,7 @@ namespace LinqToDB.Common.Internal.Cache
 		{
 			if (expirationToken == null)
 			{
-				throw new ArgumentNullException(nameof(expirationToken));
+				ThrowHelper.ThrowArgumentNullException(nameof(expirationToken));
 			}
 
 			options.ExpirationTokens.Add(expirationToken);
@@ -121,7 +121,7 @@ namespace LinqToDB.Common.Internal.Cache
 		{
 			if (callback == null)
 			{
-				throw new ArgumentNullException(nameof(callback));
+				ThrowHelper.ThrowArgumentNullException(nameof(callback));
 			}
 
 			return options.RegisterPostEvictionCallback(callback, state: null);
@@ -142,7 +142,7 @@ namespace LinqToDB.Common.Internal.Cache
 		{
 			if (callback == null)
 			{
-				throw new ArgumentNullException(nameof(callback));
+				ThrowHelper.ThrowArgumentNullException(nameof(callback));
 			}
 
 			options.PostEvictionCallbacks.Add(new PostEvictionCallbackRegistration<TKey>()

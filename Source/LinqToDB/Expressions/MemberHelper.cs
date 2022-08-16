@@ -114,7 +114,7 @@ namespace LinqToDB.Expressions
 				var objectExpr = methodCall.Arguments[0].UnwrapConvert();
 				var memberName = methodCall.Arguments[1].EvaluateExpression() as string
 #pragma warning disable CA2208 // Instantiate argument exceptions correctly
-					?? throw new ArgumentNullException("propertyName");
+					?? ThrowHelper.ThrowArgumentNullException<string>("propertyName");
 #pragma warning restore CA2208 // Instantiate argument exceptions correctly
 
 				// check if member exists on type

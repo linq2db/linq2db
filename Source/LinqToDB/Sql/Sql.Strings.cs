@@ -71,8 +71,8 @@ namespace LinqToDB
 			[ExprParameter] this IQueryable<string?> source,
 			[ExprParameter] string separator)
 		{
-			if (source    == null) throw new ArgumentNullException(nameof(source));
-			if (separator == null) throw new ArgumentNullException(nameof(separator));
+			if (source    == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (separator == null) ThrowHelper.ThrowArgumentNullException(nameof(separator));
 
 			var query = source.Provider.CreateQuery<string>(
 				Expression.Call(
@@ -122,9 +122,9 @@ namespace LinqToDB
 			[ExprParameter] string separator,
 			[ExprParameter] Expression<Func<T, string?>> selector)
 		{
-			if (source    == null) throw new ArgumentNullException(nameof(source));
-			if (separator == null) throw new ArgumentNullException(nameof(separator));
-			if (selector  == null) throw new ArgumentNullException(nameof(selector));
+			if (source    == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (separator == null) ThrowHelper.ThrowArgumentNullException(nameof(separator));
+			if (selector  == null) ThrowHelper.ThrowArgumentNullException(nameof(selector));
 
 			var query = source.Provider.CreateQuery<string>(
 				Expression.Call(

@@ -143,8 +143,8 @@ namespace LinqToDB.Tools.EntityServices
 
 		public T? GetEntity(IDataContext context, object key)
 		{
-			if (context == null) throw new ArgumentNullException(nameof(context));
-			if (key     == null) throw new ArgumentNullException(nameof(key));
+			if (context == null) ThrowHelper.ThrowArgumentNullException(nameof(context));
+			if (key     == null) ThrowHelper.ThrowArgumentNullException(nameof(key));
 
 			if (_keyComparers == null)
 				lock (this)

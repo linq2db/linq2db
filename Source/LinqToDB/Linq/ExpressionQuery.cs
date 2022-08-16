@@ -19,7 +19,7 @@ namespace LinqToDB.Linq
 
 		protected void Init(IDataContext dataContext, Expression? expression)
 		{
-			DataContext = dataContext ?? throw new ArgumentNullException(nameof(dataContext));
+			DataContext = dataContext ?? ThrowHelper.ThrowArgumentNullException<IDataContext>(nameof(dataContext));
 			Expression  = expression  ?? Expression.Constant(this);
 		}
 
@@ -252,7 +252,7 @@ namespace LinqToDB.Linq
 		IQueryable<TElement> IQueryProvider.CreateQuery<TElement>(Expression expression)
 		{
 			if (expression == null)
-				throw new ArgumentNullException(nameof(expression));
+				ThrowHelper.ThrowArgumentNullException(nameof(expression));
 
 			return new ExpressionQueryImpl<TElement>(DataContext, expression);
 		}
@@ -260,7 +260,7 @@ namespace LinqToDB.Linq
 		IQueryable IQueryProvider.CreateQuery(Expression expression)
 		{
 			if (expression == null)
-				throw new ArgumentNullException(nameof(expression));
+				ThrowHelper.ThrowArgumentNullException(nameof(expression));
 
 			var elementType = expression.Type.GetItemType() ?? expression.Type;
 

@@ -19,7 +19,7 @@ namespace LinqToDB.Linq
 
 		public PersistentTable(IQueryable<T> query)
 		{
-			_query = query ?? throw new ArgumentNullException(nameof(query));
+			_query = query ?? ThrowHelper.ThrowArgumentNullException<IQueryable<T>>(nameof(query));
 		}
 
 		public IEnumerator<T> GetEnumerator()
