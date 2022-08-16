@@ -94,7 +94,7 @@ namespace LinqToDB
 			if (table.DataContext is DataContext dataContext)
 				return dataContext.DataProvider;
 
-			throw new ArgumentException($"Data context must be of {nameof(DataConnection)} or {nameof(DataContext)} type.", nameof(table));
+			return ThrowHelper.ThrowArgumentException<IDataProvider>(nameof(table), $"Data context must be of {nameof(DataConnection)} or {nameof(DataContext)} type.");
 		}
 
 		// internal API
@@ -106,7 +106,7 @@ namespace LinqToDB
 			if (table.DataContext is DataContext dataContext)
 				return dataContext.GetDataConnection();
 
-			throw new ArgumentException($"Data context must be of {nameof(DataConnection)} or {nameof(DataContext)} type.", nameof(table));
+			return ThrowHelper.ThrowArgumentException<DataConnection>(nameof(table), $"Data context must be of {nameof(DataConnection)} or {nameof(DataContext)} type.");
 		}
 
 		// internal API

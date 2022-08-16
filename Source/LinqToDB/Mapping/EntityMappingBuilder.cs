@@ -751,7 +751,7 @@ namespace LinqToDB.Mapping
 
 				if (e is MemberExpression && memberInfo.ReflectedType != typeof(TEntity)) memberInfo = typeof(TEntity).GetMemberEx(memberInfo)!;
 
-				if (memberInfo == null) throw new ArgumentException($"'{e}' cant be converted to a class member.");
+				if (memberInfo == null) ThrowHelper.ThrowArgumentException($"'{e}' cant be converted to a class member.");
 
 				var attr = existingGetter!(GetAttributes(memberInfo, configGetter));
 

@@ -31,7 +31,7 @@ namespace LinqToDB.DataProvider
 				? dc
 				: dataConnection is DataContext dx
 					? dx.GetDataConnection()
-					: throw new ArgumentException($"Must be of {nameof(DataConnection)} or {nameof(DataContext)} type but was {dataConnection.GetType()}", nameof(dataConnection));
+					: ThrowHelper.ThrowArgumentException<DataConnection>(nameof(dataConnection), $"Must be of {nameof(DataConnection)} or {nameof(DataContext)} type but was {dataConnection.GetType()}");
 
 			MappingSchema  = dataConnection.MappingSchema;
 			Options        = options;

@@ -785,7 +785,7 @@ namespace LinqToDB.Data
 			if (dataProvider == null) ThrowHelper.ThrowArgumentNullException(nameof(dataProvider));
 
 			if (string.IsNullOrEmpty(dataProvider.Name))
-				throw new ArgumentException("dataProvider.Name cannot be empty.", nameof(dataProvider));
+				ThrowHelper.ThrowArgumentException(nameof(dataProvider), "dataProvider.Name cannot be empty.");
 
 			_dataProviders[providerName] = dataProvider;
 		}

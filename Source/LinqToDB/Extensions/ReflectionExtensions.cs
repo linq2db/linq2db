@@ -457,8 +457,8 @@ namespace LinqToDB.Extensions
 		public static Type AsNullable(this Type type)
 		{
 			if (type == null)      ThrowHelper.ThrowArgumentNullException(nameof(type));
-			if (!type.IsValueType) throw new ArgumentException($"{type} is not a value type");
-			if (type.IsNullable()) throw new ArgumentException($"{type} is nullable type already");
+			if (!type.IsValueType) ThrowHelper.ThrowArgumentException(nameof(type), $"{type} is not a value type");
+			if (type.IsNullable()) ThrowHelper.ThrowArgumentException(nameof(type), $"{type} is nullable type already");
 
 			return typeof(Nullable<>).MakeGenericType(type);
 		}

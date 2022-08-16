@@ -62,7 +62,7 @@ namespace LinqToDB.Common
 			public Batcher(IEnumerable<T> source, int batchSize)
 			{
 				if (batchSize < 1)
-					throw new ArgumentException($"{nameof(batchSize)} must be >= 1");
+					ThrowHelper.ThrowArgumentException(nameof(batchSize), $"{nameof(batchSize)} must be >= 1");
 
 				_batchSize = batchSize;
 				_enumerator = source.GetEnumerator();

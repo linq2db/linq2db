@@ -42,7 +42,7 @@ namespace LinqToDB.SqlQuery
 		public SqlSelectClause SubQuery(SelectQuery subQuery)
 		{
 			if (subQuery.ParentSelect != null && subQuery.ParentSelect != SelectQuery)
-				throw new ArgumentException("SqlQuery already used as subquery");
+				ThrowHelper.ThrowArgumentException("SqlQuery already used as subquery");
 
 			subQuery.ParentSelect = SelectQuery;
 
@@ -53,7 +53,7 @@ namespace LinqToDB.SqlQuery
 		public SqlSelectClause SubQuery(SelectQuery selectQuery, string alias)
 		{
 			if (selectQuery.ParentSelect != null && selectQuery.ParentSelect != SelectQuery)
-				throw new ArgumentException("SqlQuery already used as subquery");
+				ThrowHelper.ThrowArgumentException("SqlQuery already used as subquery");
 
 			selectQuery.ParentSelect = SelectQuery;
 

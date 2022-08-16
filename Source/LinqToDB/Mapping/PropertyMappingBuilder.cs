@@ -437,7 +437,7 @@ namespace LinqToDB.Mapping
 			var memberInfo = MemberHelper.GetMemberInfo(aliasMember);
 
 			if (memberInfo == null)
-				throw new ArgumentException($"Can not deduce MemberInfo from Lambda: '{aliasMember}'");
+				ThrowHelper.ThrowArgumentException(nameof(aliasMember), $"Can not deduce MemberInfo from Lambda: '{aliasMember}'");
 
 			return HasAttribute(new ColumnAliasAttribute(memberInfo.Name));
 		}
@@ -450,11 +450,11 @@ namespace LinqToDB.Mapping
 		public PropertyMappingBuilder<TEntity, TProperty> IsAlias(string aliasMember)
 		{
 			if (string.IsNullOrEmpty(aliasMember))
-				throw new ArgumentException("Value cannot be null or empty.", nameof(aliasMember));
+				ThrowHelper.ThrowArgumentException(nameof(aliasMember), "Value cannot be null or empty.");
 
 			var memberInfo = typeof(TEntity).GetMember(aliasMember);
 			if (memberInfo == null)
-				throw new ArgumentException($"Member '{aliasMember}' not found in type '{typeof(TEntity)}'");
+				ThrowHelper.ThrowArgumentException(nameof(aliasMember), $"Member '{aliasMember}' not found in type '{typeof(TEntity)}'");
 
 			return HasAttribute(new ColumnAliasAttribute(aliasMember));
 		}

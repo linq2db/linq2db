@@ -52,7 +52,7 @@ namespace LinqToDB.Mapping
 					$"Association '{type.Name}.{memberInfo.Name}' does not define keys.");
 
 			if (thisKey.Length != otherKey.Length)
-				throw new ArgumentException(
+				ThrowHelper.ThrowArgumentException(
 					$"Association '{type.Name}.{memberInfo.Name}' has different number of keys for parent and child objects.");
 
 			MemberInfo            = memberInfo;
@@ -191,7 +191,7 @@ namespace LinqToDB.Mapping
 			var type = MemberInfo.DeclaringType;
 
 			if (type == null)
-				throw new ArgumentException($"Member '{MemberInfo.Name}' has no declaring type");
+				ThrowHelper.ThrowArgumentException($"Member '{MemberInfo.Name}' has no declaring type");
 
 			if (!string.IsNullOrEmpty(ExpressionPredicate))
 			{
@@ -285,7 +285,7 @@ namespace LinqToDB.Mapping
 			var type = MemberInfo.DeclaringType;
 
 			if (type == null)
-				throw new ArgumentException($"Member '{MemberInfo.Name}' has no declaring type");
+				ThrowHelper.ThrowArgumentException($"Member '{MemberInfo.Name}' has no declaring type");
 
 			if (!string.IsNullOrEmpty(ExpressionQueryMethod))
 				queryExpression = type.GetExpressionFromExpressionMember<Expression>(ExpressionQueryMethod!);

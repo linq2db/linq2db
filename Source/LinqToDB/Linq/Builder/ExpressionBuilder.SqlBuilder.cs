@@ -439,7 +439,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						// transform Sql.Property into member access
 						if (expr.Arguments[1].Type != typeof(string))
-							throw new ArgumentException("Only strings are allowed for member name in Sql.Property expressions.");
+							ThrowHelper.ThrowArgumentException("Only strings are allowed for member name in Sql.Property expressions.");
 
 						var entity           = ConvertExpression(expr.Arguments[0]);
 						var memberName       = (string)expr.Arguments[1].EvaluateExpression()!;

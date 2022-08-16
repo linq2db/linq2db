@@ -44,7 +44,7 @@ namespace LinqToDB
 				ThrowHelper.ThrowArgumentNullException(nameof(instance));
 
 			if (!instance.GetType().IsCOMObject)
-				throw new ArgumentException("Object must be a COM object", nameof(instance));
+				ThrowHelper.ThrowArgumentException(nameof(instance), "Object must be a COM object");
 
 			return new ComWrapper(instance);
 		}

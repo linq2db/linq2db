@@ -17,8 +17,8 @@ namespace LinqToDB.Data
 		private static bool MergeWithUpdate<T>(ITable<T> table)
 			where T : class
 		{
-			if (!(table.DataContext is DataConnection dataConnection))
-				throw new ArgumentException("DataContext must be of DataConnection type.");
+			if (table.DataContext is not DataConnection dataConnection)
+				return ThrowHelper.ThrowArgumentException<bool>("DataContext must be of DataConnection type.");
 
 			return dataConnection
 				.MappingSchema

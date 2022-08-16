@@ -42,7 +42,7 @@ namespace LinqToDB
 		public ExpressionMethodAttribute(string methodName)
 		{
 			if (string.IsNullOrEmpty(methodName))
-				throw new ArgumentException("Value cannot be null or empty.", nameof(methodName));
+				ThrowHelper.ThrowArgumentException(nameof(methodName), "Value cannot be null or empty.");
 			MethodName = methodName;
 		}
 

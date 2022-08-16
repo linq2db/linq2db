@@ -1105,7 +1105,7 @@ namespace LinqToDB
 				return new TempTable<T>(eq.DataContext, items, tableName, databaseName, schemaName, action, serverName, tableOptions);
 			}
 
-			throw new ArgumentException($"The '{nameof(items)}' argument must be of type 'LinqToDB.Linq.IExpressionQuery'.");
+			return ThrowHelper.ThrowArgumentException<TempTable<T>>(nameof(items), $"The '{nameof(items)}' argument must be of type 'LinqToDB.Linq.IExpressionQuery'.");
 		}
 
 		/// <summary>
@@ -1170,7 +1170,7 @@ namespace LinqToDB
 				return TempTable<T>.CreateAsync(eq.DataContext, items, tableName, databaseName, schemaName, action, serverName, tableOptions, cancellationToken);
 			}
 
-			throw new ArgumentException($"The '{nameof(items)}' argument must be of type 'LinqToDB.Linq.IExpressionQuery'.");
+			return ThrowHelper.ThrowArgumentException<Task<TempTable<T>>>(nameof(items), $"The '{nameof(items)}' argument must be of type 'LinqToDB.Linq.IExpressionQuery'.");
 		}
 
 		#endregion

@@ -595,10 +595,10 @@ namespace LinqToDB.Mapping
 			if (func == null) ThrowHelper.ThrowArgumentNullException(nameof(func));
 
 			if (from.SystemType != typeof(TFrom))
-				throw new ArgumentException($"'{nameof(from)}' parameter expects the same SystemType as in generic definition.", nameof(from));
+				ThrowHelper.ThrowArgumentException(nameof(from), $"'{nameof(from)}' parameter expects the same SystemType as in generic definition.");
 
 			if (to.SystemType != typeof(TTo))
-				throw new ArgumentException($"'{nameof(to)}' parameter expects the same SystemType as in generic definition.", nameof(to));
+				ThrowHelper.ThrowArgumentException(nameof(to), $"'{nameof(to)}' parameter expects the same SystemType as in generic definition.");
 
 			var p  = Expression.Parameter(typeof(TFrom), "p");
 			var ex = Expression.Lambda<Func<TFrom,TTo>>(Expression.Invoke(Expression.Constant(func), p), p);

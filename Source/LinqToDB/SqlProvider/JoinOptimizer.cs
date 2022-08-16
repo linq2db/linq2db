@@ -1279,8 +1279,9 @@ namespace LinqToDB.SqlProvider
 				else if (expression is SqlColumn column)
 					Column = column;
 				else
-					throw new ArgumentException($"Expression '{expression}' is not a Field or Column.",
-						nameof(expression));
+					ThrowHelper.ThrowArgumentException(
+						nameof(expression),
+						$"Expression '{expression}' is not a Field or Column.");
 			}
 
 			public VirtualField(SqlField field)

@@ -308,7 +308,7 @@ namespace LinqToDB.Reflection
 		static readonly MethodInfo _throwOnDynamicStoreMissingMethod = MemberHelper.MethodOf(() => ThrowOnDynamicStoreMissing<int>()).GetGenericMethodDefinition();
 		static T ThrowOnDynamicStoreMissing<T>()
 		{
-			throw new ArgumentException("Tried getting dynamic column value, without setting dynamic column store on type.");
+			return ThrowHelper.ThrowArgumentException<T>("Tried getting dynamic column value, without setting dynamic column store on type.");
 		}
 
 		#region Public Properties

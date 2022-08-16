@@ -354,7 +354,7 @@ namespace LinqToDB.DataProvider.MySql
 
 				case ConvertType.NameToSprocParameter:
 					if(string.IsNullOrEmpty(value))
-							throw new ArgumentException("Argument 'value' must represent parameter name.");
+							ThrowHelper.ThrowArgumentException("Argument 'value' must represent parameter name.");
 
 					if (value[0] == ParameterSymbol)
 						value = value.Substring(1);

@@ -742,7 +742,8 @@ namespace LinqToDB
 							if (Activator.CreateInstance(t)! is IExtensionCallBuilder res)
 								return res;
 
-							throw new ArgumentException(
+							return ThrowHelper.ThrowArgumentException<IExtensionCallBuilder>(
+								nameof(t),
 								$"Type '{t}' does not implement {nameof(IExtensionCallBuilder)} interface.");
 						}
 					);

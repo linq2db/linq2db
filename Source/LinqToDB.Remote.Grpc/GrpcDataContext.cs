@@ -26,7 +26,7 @@ namespace LinqToDB.Remote.Grpc
 		public GrpcDataContext(string address)
 		{
 			if (string.IsNullOrWhiteSpace(address))
-				throw new ArgumentException($"'{nameof(address)}' cannot be null or whitespace.", nameof(address));
+				ThrowHelper.ThrowArgumentException(nameof(address), $"'{nameof(address)}' cannot be null or whitespace.");
 
 			Address = address;
 		}

@@ -134,7 +134,7 @@ namespace LinqToDB.Linq
 			if (expr is BinaryExpression binary)
 				return binary;
 
-			throw new ArgumentException($"Expression '{expr}' is not BinaryExpression node.");
+			return ThrowHelper.ThrowArgumentException<BinaryExpression>(nameof(expr), $"Expression '{expr}' is not BinaryExpression node.");
 		}
 
 		/// <summary>
