@@ -93,7 +93,7 @@ namespace LinqToDB.DataProvider.Sybase
 		{
 			var assembly = Common.Tools.TryLoadAssembly(assemblyName, dbFactoryName);
 			if (assembly == null)
-				throw new InvalidOperationException($"Cannot load assembly {assemblyName}");
+				ThrowHelper.ThrowInvalidOperationException($"Cannot load assembly {assemblyName}");
 
 			var connectionType  = assembly.GetType($"{clientNamespace}.AseConnection" , true)!;
 			var commandType     = assembly.GetType($"{clientNamespace}.AseCommand"    , true)!;

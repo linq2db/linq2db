@@ -130,7 +130,7 @@ namespace LinqToDB.Async
 					return enumerator.Current;
 			}
 
-			throw new InvalidOperationException("The source sequence is empty.");
+			return ThrowHelper.ThrowInvalidOperationException<TSource>("The source sequence is empty.");
 		}
 
 	}

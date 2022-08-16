@@ -1669,7 +1669,8 @@ namespace LinqToDB.SqlProvider
 				}
 
 				default:
-					throw new InvalidOperationException($"Unexpected table type {table.ElementType}");
+					ThrowHelper.ThrowInvalidOperationException($"Unexpected table type {table.ElementType}");
+					break;
 			}
 
 			TablePath = tablePath;
@@ -1988,7 +1989,7 @@ namespace LinqToDB.SqlProvider
 				case JoinType.OuterApply: StringBuilder.Append("OUTER APPLY "); return false;
 				case JoinType.Right     : StringBuilder.Append("RIGHT JOIN ");  return true;
 				case JoinType.Full      : StringBuilder.Append("FULL JOIN ");   return true;
-				default: throw new InvalidOperationException();
+				default: return ThrowHelper.ThrowInvalidOperationException<bool>();
 			}
 		}
 
@@ -2057,7 +2058,8 @@ namespace LinqToDB.SqlProvider
 					StringBuilder.Append(" CUBE");
 					break;
 				default:
-					throw new InvalidOperationException($"Unexpected grouping type: {groupingType}");
+					ThrowHelper.ThrowInvalidOperationException($"Unexpected grouping type: {groupingType}");
+					break;
 			}
 
 			if (groupingType != GroupingType.Default)
@@ -2390,8 +2392,10 @@ namespace LinqToDB.SqlProvider
 					}
 
 					break;
+
 				default:
-					throw new InvalidOperationException($"Unexpected predicate type {predicate.ElementType}");
+					ThrowHelper.ThrowInvalidOperationException($"Unexpected predicate type {predicate.ElementType}");
+					break;
 			}
 		}
 
@@ -2452,7 +2456,7 @@ namespace LinqToDB.SqlProvider
 			{
 				QueryElementType.SqlField => (SqlField)expr,
 				QueryElementType.Column	  => GetUnderlayingField(((SqlColumn)expr).Expression),
-				_                         => throw new InvalidOperationException(),
+				_                         => ThrowHelper.ThrowInvalidOperationException<SqlField>(),
 			};
 		}
 
@@ -2921,7 +2925,8 @@ namespace LinqToDB.SqlProvider
 					break;
 
 				default:
-					throw new InvalidOperationException($"Unexpected expression type {expr.ElementType}");
+					ThrowHelper.ThrowInvalidOperationException($"Unexpected expression type {expr.ElementType}");
+					break;
 			}
 
 			return StringBuilder;
@@ -3389,7 +3394,7 @@ namespace LinqToDB.SqlProvider
 					return null;
 
 				default:
-					throw new InvalidOperationException($"Unexpected table type {table.ElementType}");
+					return ThrowHelper.ThrowInvalidOperationException<string?>($"Unexpected table type {table.ElementType}");
 			}
 		}
 
@@ -3468,7 +3473,7 @@ namespace LinqToDB.SqlProvider
 					return ConvertInline(((SqlTableLikeSource)table).Name, ConvertType.NameToQueryTable);
 
 				default:
-					throw new InvalidOperationException($"Unexpected table type {table.ElementType}");
+					return ThrowHelper.ThrowInvalidOperationException<string>($"Unexpected table type {table.ElementType}");
 			}
 		}
 
@@ -3808,10 +3813,10 @@ namespace LinqToDB.SqlProvider
 					Sql.SqlIDType.TableAlias => path!.TableAlias,
 					Sql.SqlIDType.TableName  => path!.TableName,
 					Sql.SqlIDType.TableSpec  => path!.TableSpec,
-					_ => throw new InvalidOperationException($"Unknown SqlID Type '{id.Type}'.")
+					_ => ThrowHelper.ThrowInvalidOperationException<string>($"Unknown SqlID Type '{id.Type}'.")
 				};
 
-			throw new InvalidOperationException($"Table ID '{id.ID}' is not defined.");
+			return ThrowHelper.ThrowInvalidOperationException<string>($"Table ID '{id.ID}' is not defined.");
 		}
 
 		int _testReplaceNumber;

@@ -136,7 +136,7 @@ namespace LinqToDB.SqlQuery
 		public int Add(ISqlExpression expr)
 		{
 			if (expr is SqlColumn column && column.Parent == SelectQuery)
-				throw new InvalidOperationException();
+				ThrowHelper.ThrowInvalidOperationException();
 
 			return AddOrFindColumn(new SqlColumn(SelectQuery, expr));
 		}
@@ -149,7 +149,7 @@ namespace LinqToDB.SqlQuery
 		public int AddNew(ISqlExpression expr, string? alias = default)
 		{
 			if (expr is SqlColumn column && column.Parent == SelectQuery)
-				throw new InvalidOperationException();
+				ThrowHelper.ThrowInvalidOperationException();
 
 			Columns.Add(new SqlColumn(SelectQuery, expr, alias));
 			return Columns.Count - 1;
@@ -206,7 +206,7 @@ namespace LinqToDB.SqlQuery
 						var table = ((SqlField)col.Expression).Table;
 
 						//if (SqlQuery.From.GetFromTables().Any(_ => _ == table))
-						//	throw new InvalidOperationException("Wrong field usage.");
+						//	ThrowHelper.ThrowInvalidOperationException("Wrong field usage.");
 
 						break;
 					}
@@ -216,7 +216,7 @@ namespace LinqToDB.SqlQuery
 						var query = ((SqlColumn)col.Expression).Parent;
 
 						//if (!SqlQuery.From.GetFromQueries().Any(_ => _ == query))
-						//	throw new InvalidOperationException("Wrong column usage.");
+						//	ThrowHelper.ThrowInvalidOperationException("Wrong column usage.");
 
 						if (SelectQuery.HasSetOperators)
 						{
@@ -232,7 +232,7 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.SqlQuery :
 					{
 						if (col.Expression == SelectQuery)
-							throw new InvalidOperationException("Wrong query usage.");
+							ThrowHelper.ThrowInvalidOperationException("Wrong query usage.");
 						break;
 					}
 			}

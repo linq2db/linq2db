@@ -262,7 +262,7 @@ namespace LinqToDB.SqlQuery
 					var cteTable = (SqlCteTable)(IQueryElement)element;
 
 					if (cteTable.Cte == null)
-						throw new InvalidOperationException("Cte is null");
+						ThrowHelper.ThrowInvalidOperationException("Cte is null");
 
 					// TODO: children Clone called before _objectTree update (original cloning logic)
 					var table = new SqlCteTable(

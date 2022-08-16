@@ -149,7 +149,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 
 			if (assembly == null)
-				throw new InvalidOperationException($"Cannot load assembly {assemblyName}");
+				ThrowHelper.ThrowInvalidOperationException($"Cannot load assembly {assemblyName}");
 
 			var connectionType                 = assembly.GetType($"{clientNamespace}.SqlConnection"             , true)!;
 			var parameterType                  = assembly.GetType($"{clientNamespace}.SqlParameter"              , true)!;

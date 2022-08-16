@@ -151,7 +151,7 @@ namespace LinqToDB.DataProvider
 			return _dataConnection.DataProvider.ConvertParameterType(_columns[ordinal].MemberType, _columnTypes[ordinal]);
 		}
 
-		public override object GetValue(int ordinal) => GetValueInternal(ordinal) ?? throw new InvalidOperationException("Value is NULL");
+		public override object GetValue(int ordinal) => GetValueInternal(ordinal) ?? ThrowHelper.ThrowInvalidOperationException<object>("Value is NULL");
 
 		private object? GetValueInternal(int ordinal)
 		{

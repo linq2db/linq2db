@@ -156,7 +156,8 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				default:
-					throw new InvalidOperationException("Unknown Output Method");
+					objectType = ThrowHelper.ThrowInvalidOperationException<Type>("Unknown Output Method");
+					break;
 			}
 
 			if (updateStatement.Update.Items.Count == 0)
@@ -169,7 +170,7 @@ namespace LinqToDB.Linq.Builder
 			var deletedTable  = SqlTable.Deleted(objectType);
 
 			if (insertedTable == null)
-				throw new InvalidOperationException("Cannot find target table for UPDATE statement");
+				ThrowHelper.ThrowInvalidOperationException("Cannot find target table for UPDATE statement");
 
 			updateStatement.Output = new SqlOutputClause();
 
@@ -394,7 +395,7 @@ namespace LinqToDB.Linq.Builder
 						}
 					}
 					else
-						throw new InvalidOperationException();
+						ThrowHelper.ThrowInvalidOperationException();
 				}
 			}
 
@@ -429,7 +430,7 @@ namespace LinqToDB.Linq.Builder
 						throw new LinqException("Object initializer expected for insert statement.");
 
 					if (info.MemberChain.Length != 1)
-						throw new InvalidOperationException();
+						ThrowHelper.ThrowInvalidOperationException();
 
 					var member = info.MemberChain[0];
 					var pe     = Expression.MakeMemberAccess(bodyPath, member);

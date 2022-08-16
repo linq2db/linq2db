@@ -361,31 +361,23 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		protected override void BuildCreateTableCommand(SqlTable table)
 		{
-			string command;
-
-			if (table.TableOptions.IsTemporaryOptionSet())
+			var command = (table.TableOptions.IsTemporaryOptionSet(), table.TableOptions & TableOptions.IsTemporaryOptionSet) switch
 			{
-				switch (table.TableOptions & TableOptions.IsTemporaryOptionSet)
-				{
-					case TableOptions.IsTemporary                                                                                    :
-					case TableOptions.IsTemporary |                                          TableOptions.IsLocalTemporaryData       :
-					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                           :
-					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData       :
-					case                                                                     TableOptions.IsLocalTemporaryData       :
-					case                                                                     TableOptions.IsTransactionTemporaryData :
-					case                            TableOptions.IsLocalTemporaryStructure                                           :
-					case                            TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData       :
-					case                            TableOptions.IsLocalTemporaryStructure | TableOptions.IsTransactionTemporaryData :
-						command = "CREATE TEMPORARY TABLE ";
-						break;
-					case var value :
-						throw new InvalidOperationException($"Incompatible table options '{value}'");
-				}
-			}
-			else
-			{
-				command = "CREATE TABLE ";
-			}
+				(true, TableOptions.IsTemporary                                                                                   ) or
+				(true, TableOptions.IsTemporary |                                          TableOptions.IsLocalTemporaryData      ) or
+				(true, TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                          ) or
+				(true, TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData      ) or
+				(true,                                                                     TableOptions.IsLocalTemporaryData      ) or
+				(true,                                                                     TableOptions.IsTransactionTemporaryData) or
+				(true,                            TableOptions.IsLocalTemporaryStructure                                          ) or
+				(true,                            TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData      ) or
+				(true,                            TableOptions.IsLocalTemporaryStructure | TableOptions.IsTransactionTemporaryData)
+					=> "CREATE TEMPORARY TABLE ",
+				(true, var value)
+					=> ThrowHelper.ThrowInvalidOperationException<string>($"Incompatible table options '{value}'"),
+				(false, _)
+					=> "CREATE TABLE ",
+			};
 
 			StringBuilder.Append(command);
 

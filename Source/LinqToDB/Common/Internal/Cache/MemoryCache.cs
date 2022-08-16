@@ -91,7 +91,7 @@ namespace LinqToDB.Common.Internal.Cache
 
 			if (_options.SizeLimit.HasValue && !entry.Size.HasValue)
 			{
-				throw new InvalidOperationException($"Cache entry must specify a value for {nameof(entry.Size)} when {nameof(_options.SizeLimit)} is set.");
+				ThrowHelper.ThrowInvalidOperationException($"Cache entry must specify a value for {nameof(entry.Size)} when {nameof(_options.SizeLimit)} is set.");
 			}
 
 			var utcNow = _options.Clock!.UtcNow;

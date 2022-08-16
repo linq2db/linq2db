@@ -1059,18 +1059,18 @@ namespace LinqToDB.SqlProvider
 
 		static SqlPredicate.Operator InvertOperator(SqlPredicate.Operator op, bool preserveEqual)
 		{
-			switch (op)
+			return op switch
 			{
-				case SqlPredicate.Operator.Equal          : return preserveEqual ? op : SqlPredicate.Operator.NotEqual;
-				case SqlPredicate.Operator.NotEqual       : return preserveEqual ? op : SqlPredicate.Operator.Equal;
-				case SqlPredicate.Operator.Greater        : return SqlPredicate.Operator.LessOrEqual;
-				case SqlPredicate.Operator.NotLess        :
-				case SqlPredicate.Operator.GreaterOrEqual : return preserveEqual ? SqlPredicate.Operator.LessOrEqual : SqlPredicate.Operator.Less;
-				case SqlPredicate.Operator.Less           : return SqlPredicate.Operator.GreaterOrEqual;
-				case SqlPredicate.Operator.NotGreater     :
-				case SqlPredicate.Operator.LessOrEqual    : return preserveEqual ? SqlPredicate.Operator.GreaterOrEqual : SqlPredicate.Operator.Greater;
-				default: throw new InvalidOperationException();
-			}
+				SqlPredicate.Operator.Equal          => preserveEqual ? op : SqlPredicate.Operator.NotEqual,
+				SqlPredicate.Operator.NotEqual       => preserveEqual ? op : SqlPredicate.Operator.Equal,
+				SqlPredicate.Operator.Greater        => SqlPredicate.Operator.LessOrEqual,
+				SqlPredicate.Operator.NotLess        or
+				SqlPredicate.Operator.GreaterOrEqual => preserveEqual ? SqlPredicate.Operator.LessOrEqual : SqlPredicate.Operator.Less,
+				SqlPredicate.Operator.Less           => SqlPredicate.Operator.GreaterOrEqual,
+				SqlPredicate.Operator.NotGreater     or
+				SqlPredicate.Operator.LessOrEqual    => preserveEqual ? SqlPredicate.Operator.GreaterOrEqual : SqlPredicate.Operator.Greater,
+				_ => ThrowHelper.ThrowInvalidOperationException<SqlPredicate.Operator>(),
+			};
 		}
 
 		ISqlPredicate OptimizeCase(SqlPredicate.IsTrue isTrue, EvaluationContext context)
@@ -1264,21 +1264,19 @@ namespace LinqToDB.SqlProvider
 
 		static bool Compare(int v1, int v2, SqlPredicate.Operator op)
 		{
-			switch (op)
+			return op switch
 			{
-				case SqlPredicate.Operator.Equal:           return v1 == v2;
-				case SqlPredicate.Operator.NotEqual:        return v1 != v2;
-				case SqlPredicate.Operator.Greater:         return v1 >  v2;
-				case SqlPredicate.Operator.NotLess:
-				case SqlPredicate.Operator.GreaterOrEqual:  return v1 >= v2;
-				case SqlPredicate.Operator.Less:            return v1 <  v2;
-				case SqlPredicate.Operator.NotGreater:
-				case SqlPredicate.Operator.LessOrEqual:     return v1 <= v2;
-			}
-
-			throw new InvalidOperationException();
+				SqlPredicate.Operator.Equal           => v1 == v2,
+				SqlPredicate.Operator.NotEqual        => v1 != v2,
+				SqlPredicate.Operator.Greater         => v1 >  v2,
+				SqlPredicate.Operator.NotLess or
+				SqlPredicate.Operator.GreaterOrEqual  => v1 >= v2,
+				SqlPredicate.Operator.Less            => v1 <  v2,
+				SqlPredicate.Operator.NotGreater or
+				SqlPredicate.Operator.LessOrEqual     => v1 <= v2,
+				_                                     => ThrowHelper.ThrowInvalidOperationException<bool>(),
+			};
 		}
-
 
 		public virtual ISqlPredicate OptimizePredicate(ISqlPredicate predicate, EvaluationContext context)
 		{
@@ -2141,7 +2139,7 @@ namespace LinqToDB.SqlProvider
 			if (withConversion)
 			{
 				if (mappingSchema == null)
-					throw new InvalidOperationException("MappingSchema is required for conversion");
+					ThrowHelper.ThrowInvalidOperationException("MappingSchema is required for conversion");
 
 				newElement = RunOptimization(newElement, optimizationContext, this, mappingSchema, true,
 					static(visitor, e) =>
@@ -2327,7 +2325,7 @@ namespace LinqToDB.SqlProvider
 					SqlPredicate.SearchString.SearchKind.StartsWith => patternValue + LikeWildcardCharacter,
 					SqlPredicate.SearchString.SearchKind.EndsWith   => LikeWildcardCharacter + patternValue,
 					SqlPredicate.SearchString.SearchKind.Contains   => LikeWildcardCharacter + patternValue + LikeWildcardCharacter,
-					_ => throw new InvalidOperationException($"Unexpected predicate kind: {predicate.Kind}")
+					_ => ThrowHelper.ThrowInvalidOperationException<string>($"Unexpected predicate kind: {predicate.Kind}")
 				};
 
 				var patternExpr = LikePatternParameterSupport
@@ -2360,7 +2358,7 @@ namespace LinqToDB.SqlProvider
 					SqlPredicate.SearchString.SearchKind.StartsWith => new SqlBinaryExpression(typeof(string), patternExpr, "+", anyCharacterExpr, Precedence.Additive),
 					SqlPredicate.SearchString.SearchKind.EndsWith   => new SqlBinaryExpression(typeof(string), anyCharacterExpr, "+", patternExpr, Precedence.Additive),
 					SqlPredicate.SearchString.SearchKind.Contains   => new SqlBinaryExpression(typeof(string), new SqlBinaryExpression(typeof(string), anyCharacterExpr, "+", patternExpr, Precedence.Additive), "+", anyCharacterExpr, Precedence.Additive),
-					_ => throw new InvalidOperationException($"Unexpected predicate kind: {predicate.Kind}")
+					_ => ThrowHelper.ThrowInvalidOperationException<ISqlExpression>($"Unexpected predicate kind: {predicate.Kind}")
 				};
 
 				patternExpr = OptimizeExpression(patternExpr, visitor);
@@ -2390,7 +2388,7 @@ namespace LinqToDB.SqlProvider
 		{
 			var result = QueryHelper.GetUnderlyingField(expr);
 			if (result == null)
-				throw new InvalidOperationException($"Cannot retrieve underlying field for '{expr.ToDebugString()}'.");
+				ThrowHelper.ThrowInvalidOperationException($"Cannot retrieve underlying field for '{expr.ToDebugString()}'.");
 			return result;
 		}
 
@@ -2881,7 +2879,7 @@ namespace LinqToDB.SqlProvider
 							var newUpdateExpression = innerQuery.Select.AddNewColumn(remapped);
 
 							if (newUpdateExpression == null)
-								throw new InvalidOperationException(
+								ThrowHelper.ThrowInvalidOperationException(
 									$"Could not create column for expression '{item.Expression}'");
 
 							rows.Add((newColumn, newUpdateExpression));
@@ -3148,7 +3146,7 @@ namespace LinqToDB.SqlProvider
 			if (comparingIsNeed)
 			{
 				if (tableToCompare == null)
-					throw new InvalidOperationException();
+					ThrowHelper.ThrowInvalidOperationException();
 
 				if (tableToCompare == tableToUpdate)
 				{

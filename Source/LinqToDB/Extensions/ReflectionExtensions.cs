@@ -939,7 +939,7 @@ namespace LinqToDB.Extensions
 				MemberTypes.Field       => ((FieldInfo)memberInfo).FieldType,
 				MemberTypes.Method      => ((MethodInfo)memberInfo).ReturnType,
 				MemberTypes.Constructor => memberInfo.DeclaringType!,
-				_                       => throw new InvalidOperationException(),
+				_                       => ThrowHelper.ThrowInvalidOperationException<Type>(),
 			};
 		}
 

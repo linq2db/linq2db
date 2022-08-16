@@ -70,7 +70,7 @@ namespace LinqToDB.Linq.Builder
 				var keys2 = query.   ConvertToSql(null, 0, ConvertFlags.All);
 
 				if (keys1.Length != keys2.Length)
-					throw new InvalidOperationException();
+					ThrowHelper.ThrowInvalidOperationException();
 
 				for (var i = 0; i < keys1.Length; i++)
 				{
@@ -206,7 +206,7 @@ namespace LinqToDB.Linq.Builder
 				foreach (var info in infos)
 				{
 					if (info.MemberChain.Length == 0)
-						throw new InvalidOperationException();
+						ThrowHelper.ThrowInvalidOperationException();
 
 					if (isFirst)
 					{
@@ -693,7 +693,7 @@ namespace LinqToDB.Linq.Builder
 							break;
 					}
 
-					throw new InvalidOperationException();
+					ThrowHelper.ThrowInvalidOperationException();
 				}
 
 				return base.ConvertToSql(expression, level, flags);

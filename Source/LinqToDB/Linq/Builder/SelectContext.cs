@@ -585,7 +585,7 @@ namespace LinqToDB.Linq.Builder
 												idx = ConvertToSql(expression, level, flags);
 
 												if (flags == ConvertFlags.Field && idx.Length != 1)
-													throw new InvalidOperationException();
+													ThrowHelper.ThrowInvalidOperationException();
 
 												for (var i = 0; i < idx.Length; i++)
 												{
@@ -788,7 +788,7 @@ namespace LinqToDB.Linq.Builder
 
 											if (memberExpression == null)
 												return IsExpressionResult.GetResult(requestFlag == RequestFor.Expression);
-											//throw new InvalidOperationException(
+											//ThrowHelper.ThrowInvalidOperationException(
 											//	string.Format("Invalid member '{0}.{1}'", member.DeclaringType, member.Name));
 										}
 

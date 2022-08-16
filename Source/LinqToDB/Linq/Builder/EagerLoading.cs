@@ -741,7 +741,7 @@ namespace LinqToDB.Linq.Builder
 			if (typeof(KeyDetailEnvelope<,>).IsSameOrParentOf(mainQueryElementType))
 			{
 				if (!IsQueryableMethod(mainQuery, "SelectMany", out var mainSelectManyMethod))
-					throw new InvalidOperationException("Unexpected Main Query");
+					ThrowHelper.ThrowInvalidOperationException("Unexpected Main Query");
 
 				var detailProp   = ExpressionHelper.Field(masterParam, nameof(KeyDetailEnvelope<object, object>.Detail));
 
@@ -1250,7 +1250,7 @@ namespace LinqToDB.Linq.Builder
 				if (typeof(KeyDetailEnvelope<,>).IsSameOrParentOf(dataType))
 				{
 					if (!IsQueryableMethod(initialMainQuery, "SelectMany", out var mainSelectManyMethod))
-						throw new InvalidOperationException("Unexpected Main Query");
+						ThrowHelper.ThrowInvalidOperationException("Unexpected Main Query");
 
 					var envelopeCreateLambda = (LambdaExpression)mainSelectManyMethod.Arguments[2].Unwrap();
 					var envelopeCreateMethod = (MemberInitExpression)envelopeCreateLambda.Body;
@@ -1721,8 +1721,10 @@ namespace LinqToDB.Linq.Builder
 									.ToArray();
 
 								var newMemberInit = Expression.MemberInit(
-									Expression.New(newType.GetConstructor(Array<Type>.Empty) ??
-												   throw new InvalidOperationException($"Default constructor not found for type {newType}")), newAssignments);
+									Expression.New(
+										newType.GetConstructor(Array<Type>.Empty) ??
+											ThrowHelper.ThrowInvalidOperationException<ConstructorInfo>($"Default constructor not found for type {newType}")), 
+										newAssignments);
 								return newMemberInit;
 							}
 

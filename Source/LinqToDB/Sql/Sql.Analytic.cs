@@ -69,7 +69,8 @@ namespace LinqToDB
 						builder.Expression += " NULLS LAST";
 						break;
 					default :
-						throw new InvalidOperationException($"Unexpected nulls position: {nulls}");
+						ThrowHelper.ThrowInvalidOperationException($"Unexpected nulls position: {nulls}");
+						break;
 				}
 			}
 		}
@@ -90,7 +91,8 @@ namespace LinqToDB
 						builder.AddExpression("modifier", "ALL");
 						break;
 					default :
-						throw new InvalidOperationException($"Unexpected aggregate modifier: {modifier}");
+						ThrowHelper.ThrowInvalidOperationException($"Unexpected aggregate modifier: {modifier}");
+						break;
 				}
 			}
 		}
@@ -117,7 +119,7 @@ namespace LinqToDB
 				case Sql.Nulls.Ignore :
 					return "IGNORE NULLS";
 				default :
-					throw new InvalidOperationException($"Unexpected nulls: {nulls}");
+					return ThrowHelper.ThrowInvalidOperationException<string>($"Unexpected nulls: {nulls}");
 			}
 		}
 
@@ -132,7 +134,7 @@ namespace LinqToDB
 				case Sql.From.Last :
 					return "FROM LAST";
 				default :
-					throw new InvalidOperationException($"Unexpected from: {from}");
+					return ThrowHelper.ThrowInvalidOperationException<string>($"Unexpected from: {from}");
 			}
 			return string.Empty;
 		}

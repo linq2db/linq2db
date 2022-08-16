@@ -32,7 +32,8 @@ namespace LinqToDB.DataProvider.MySql
 						builder.AddExpression("modifier", " WITH QUERY EXPANSION");
 						break;
 					default:
-						throw new InvalidOperationException($"Unexpected modifier: {modifier}");
+						ThrowHelper.ThrowInvalidOperationException($"Unexpected modifier: {modifier}");
+						break;
 				}
 			}
 		}

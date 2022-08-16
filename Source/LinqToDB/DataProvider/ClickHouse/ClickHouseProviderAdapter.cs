@@ -155,7 +155,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		{
 			var assembly = Common.Tools.TryLoadAssembly(ClientAssemblyName, ClientProviderFactoryName);
 			if (assembly == null)
-				throw new InvalidOperationException($"Cannot load assembly {ClientAssemblyName}");
+				ThrowHelper.ThrowInvalidOperationException($"Cannot load assembly {ClientAssemblyName}");
 
 			var connectionType              = assembly.GetType($"{ClientClientNamespace}.ClickHouseConnection"             , true)!;
 			var commandType                 = assembly.GetType($"{ClientClientNamespace}.ClickHouseCommand"                , true)!;
@@ -200,7 +200,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		{
 			var assembly = Common.Tools.TryLoadAssembly(OctonicaAssemblyName, OctonicaProviderFactoryName);
 			if (assembly == null)
-				throw new InvalidOperationException($"Cannot load assembly {OctonicaAssemblyName}");
+				ThrowHelper.ThrowInvalidOperationException($"Cannot load assembly {OctonicaAssemblyName}");
 
 			var connectionType     = assembly.GetType($"{OctonicaClientNamespace}.ClickHouseConnection"           , true)!;
 			var commandType        = assembly.GetType($"{OctonicaClientNamespace}.ClickHouseCommand"              , true)!;

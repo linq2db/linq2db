@@ -635,7 +635,7 @@ namespace LinqToDB
 			foreach (var item in q)
 				return item;
 
-			throw new InvalidOperationException();
+			return ThrowHelper.ThrowInvalidOperationException<T>();
 		}
 
 		/// <summary>
@@ -669,7 +669,7 @@ namespace LinqToDB
 			if (read)
 				return item;
 
-			throw new InvalidOperationException();
+			return ThrowHelper.ThrowInvalidOperationException<T>();
 		}
 
 		#endregion
@@ -3270,7 +3270,7 @@ namespace LinqToDB
 
 		internal static TOutput AsQueryable<TOutput,TInput>(TInput source)
 		{
-			throw new InvalidOperationException();
+			return ThrowHelper.ThrowInvalidOperationException<TOutput>();
 		}
 
 		#endregion

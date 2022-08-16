@@ -7,7 +7,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Methods = LinqToDB.Reflection.Methods.LinqToDB.MultiInsert;
+	using Methods = Reflection.Methods.LinqToDB.MultiInsert;
 
 	class MultiInsertBuilder : MethodCallBuilder
 	{
@@ -32,7 +32,7 @@ namespace LinqToDB.Linq.Builder
 			var genericMethod = methodCall.Method.GetGenericMethodDefinition();
 			return _methodBuilders.TryGetValue(genericMethod, out var build)
 				? build(builder, methodCall, buildInfo)
-				: throw new InvalidOperationException("Unknown method " + methodCall.Method.Name);
+				: ThrowHelper.ThrowInvalidOperationException<IBuildContext>("Unknown method " + methodCall.Method.Name);
 		}
 
 		private static IBuildContext BuildMultiInsert(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)

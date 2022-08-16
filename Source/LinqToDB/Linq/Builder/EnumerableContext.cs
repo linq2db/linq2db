@@ -311,11 +311,11 @@ namespace LinqToDB.Linq.Builder
 				constructors = objectType.GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic);
 
 				if (constructors.Length == 0)
-					throw new InvalidOperationException($"Type '{objectType.Name}' has no constructors.");
+					ThrowHelper.ThrowInvalidOperationException($"Type '{objectType.Name}' has no constructors.");
 			}
 
 			if (constructors.Length > 1)
-				throw new InvalidOperationException($"Type '{objectType.Name}' has ambiguous constructors.");
+				ThrowHelper.ThrowInvalidOperationException($"Type '{objectType.Name}' has ambiguous constructors.");
 
 			return constructors[0];
 		}
@@ -363,7 +363,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (!argFound)
 			{
-				throw new InvalidOperationException($"Type '{objectType.Name}' has no suitable constructor.");
+				ThrowHelper.ThrowInvalidOperationException($"Type '{objectType.Name}' has no suitable constructor.");
 			}
 
 			var expr = Expression.New(ctor, args);

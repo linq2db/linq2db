@@ -35,7 +35,8 @@ namespace LinqToDB.Linq.Builder
 					isRecursive = true;
 					break;
 				default:
-					throw new InvalidOperationException();
+					bodyExpr = ThrowHelper.ThrowInvalidOperationException<Expression>();
+					break;
 			}
 
 			bodyExpr = builder.ConvertExpression(bodyExpr);

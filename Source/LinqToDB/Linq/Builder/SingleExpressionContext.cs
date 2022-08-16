@@ -41,7 +41,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			var info = ConvertToIndex(null, 0, ConvertFlags.All);
 			if (info.Length != 1)
-				throw new InvalidOperationException();
+				ThrowHelper.ThrowInvalidOperationException();
 
 			var parentIndex = ConvertToParentIndex(info[0].Index, this);
 			return Builder.BuildSql(SqlExpression.SystemType ?? typeof(object), parentIndex, info[0].Sql);

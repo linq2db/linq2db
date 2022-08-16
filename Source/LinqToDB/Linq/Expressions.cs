@@ -1600,12 +1600,12 @@ namespace LinqToDB.Linq
 						pCount = field.IsStatic ? 0 : 1;
 					}
 					else
-						throw new InvalidOperationException($"Unknown member {member.Key}");
+						pCount = ThrowHelper.ThrowInvalidOperationException<int>($"Unknown member {member.Key}");
 
 					var lambda = member.Value.GetExpression(MappingSchema.Default);
 
 					if (pCount != lambda.Parameters.Count)
-						throw new InvalidOperationException(
+						ThrowHelper.ThrowInvalidOperationException(
 							$"Invalid number of parameters for '{member.Key}' and '{lambda}'.");
 				}
 			}

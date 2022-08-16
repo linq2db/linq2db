@@ -246,7 +246,7 @@ namespace LinqToDB.Remote
 									typeof(MappingSchema),
 									typeof(ISqlOptimizer),
 									typeof(SqlProviderFlags)
-								}) ?? throw new InvalidOperationException($"Constructor for type '{key.Item1.Name}' not found."),
+								}) ?? ThrowHelper.ThrowInvalidOperationException<ConstructorInfo>($"Constructor for type '{key.Item1.Name}' not found."),
 								new Expression[]
 								{
 									Expression.Constant(null, typeof(IDataProvider)),
@@ -282,9 +282,9 @@ namespace LinqToDB.Remote
 					_getSqlOptimizer = _sqlOptimizers.GetOrAdd(key, static key =>
 						Expression.Lambda<Func<ISqlOptimizer>>(
 								Expression.New(
-									key.Item1.GetConstructor(new[] {typeof(SqlProviderFlags)}) ??
-									throw new InvalidOperationException(
-										$"Constructor for type '{key.Item1.Name}' not found."),
+									key.Item1.GetConstructor(new[] { typeof(SqlProviderFlags) }) ??
+										ThrowHelper.ThrowInvalidOperationException<ConstructorInfo>(
+											$"Constructor for type '{key.Item1.Name}' not found."),
 									Expression.Constant(key.Item2)))
 							.CompileExpression());
 				}
@@ -306,7 +306,7 @@ namespace LinqToDB.Remote
 		public void CommitBatch()
 		{
 			if (_batchCounter == 0)
-				throw new InvalidOperationException();
+				ThrowHelper.ThrowInvalidOperationException();
 
 			_batchCounter--;
 
@@ -330,7 +330,7 @@ namespace LinqToDB.Remote
 		public async Task CommitBatchAsync()
 		{
 			if (_batchCounter == 0)
-				throw new InvalidOperationException();
+				ThrowHelper.ThrowInvalidOperationException();
 
 			_batchCounter--;
 

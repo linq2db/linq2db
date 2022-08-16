@@ -193,7 +193,7 @@ namespace LinqToDB.Expressions
 			/// This method is used as placeholder, which will be replaced with raw value variable.
 			/// </summary>
 			/// <returns></returns>
-			public static object? RawValuePlaceholder() => throw new InvalidOperationException("Raw value placeholder replacement failed");
+			public static object? RawValuePlaceholder() => ThrowHelper.ThrowInvalidOperationException<object?>("Raw value placeholder replacement failed");
 
 			/*
 			 * We could have column readers for same column with different ColumnType types  which results in different

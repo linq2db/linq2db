@@ -378,7 +378,7 @@ namespace LinqToDB
 								return GetValue<T>(i);
 					}
 
-					throw new InvalidOperationException(string.Format("Argument '{0}' not found", argName));
+					return ThrowHelper.ThrowInvalidOperationException<T>($"Argument '{argName}' not found");
 				}
 
 				public object GetObjectValue(int index)
@@ -398,7 +398,7 @@ namespace LinqToDB
 								return GetObjectValue(i);
 					}
 
-					throw new InvalidOperationException(string.Format("Argument '{0}' not found", argName));
+					return ThrowHelper.ThrowInvalidOperationException<object>($"Argument '{argName}' not found");
 				}
 
 				public ISqlExpression GetExpression(int index, bool unwrap)
@@ -420,7 +420,7 @@ namespace LinqToDB
 						}
 					}
 
-					throw new InvalidOperationException(string.Format("Argument '{0}' not found", argName));
+					return ThrowHelper.ThrowInvalidOperationException<ISqlExpression>(string.Format("Argument '{0}' not found", argName));
 				}
 
 				public ISqlExpression ConvertToSqlExpression()
@@ -798,7 +798,7 @@ namespace LinqToDB
 						else
 						{
 							if (resolving.Contains(p))
-								throw new InvalidOperationException("Circular reference");
+								ThrowHelper.ThrowInvalidOperationException("Circular reference");
 
 							resolving.Add(p);
 							var ext = p.Extension;
@@ -855,7 +855,7 @@ namespace LinqToDB
 				var chain  = BuildFunctionsChain(context, dataContext, query, expression, converter);
 
 				if (chain.Count == 0)
-					throw new InvalidOperationException("No sequence found for expression '{expression}'");
+					ThrowHelper.ThrowInvalidOperationException("No sequence found for expression '{expression}'");
 
 				var ordered = chain
 					.Select(static (c, i) => Tuple.Create(c, i))
@@ -870,9 +870,9 @@ namespace LinqToDB
 				{
 					var replaced = chain.Where(static c => c.Expression != null).ToArray();
 					if (replaced.Length == 0)
-						throw new InvalidOperationException($"Can not find root sequence for expression '{expression}'");
+						ThrowHelper.ThrowInvalidOperationException($"Can not find root sequence for expression '{expression}'");
 					else if (replaced.Length > 1)
-						throw new InvalidOperationException($"Multiple root sequences found for expression '{expression}'");
+						ThrowHelper.ThrowInvalidOperationException($"Multiple root sequences found for expression '{expression}'");
 
 					return replaced[0].Expression!;
 				}

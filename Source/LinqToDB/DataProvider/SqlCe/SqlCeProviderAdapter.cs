@@ -57,7 +57,7 @@ namespace LinqToDB.DataProvider.SqlCe
 					{
 						var assembly = Common.Tools.TryLoadAssembly(AssemblyName, ProviderFactoryName);
 						if (assembly == null)
-							throw new InvalidOperationException($"Cannot load assembly {AssemblyName}");
+							ThrowHelper.ThrowInvalidOperationException($"Cannot load assembly {AssemblyName}");
 
 						var connectionType  = assembly.GetType($"{ClientNamespace}.SqlCeConnection" , true)!;
 						var dataReaderType  = assembly.GetType($"{ClientNamespace}.SqlCeDataReader" , true)!;

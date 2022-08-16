@@ -93,7 +93,8 @@ namespace LinqToDB.SqlProvider
 					BuildMergeOperationUpdateBySource(operation);
 					break;
 				default:
-					throw new InvalidOperationException($"Unknown merge operation type: {operation.OperationType}");
+					ThrowHelper.ThrowInvalidOperationException($"Unknown merge operation type: {operation.OperationType}");
+					break;
 			}
 		}
 

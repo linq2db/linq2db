@@ -20,7 +20,7 @@ namespace LinqToDB.DataProvider.Firebird
 			var assembly = Tools.TryLoadAssembly(AssemblyName, null);
 
 			if (assembly == null)
-				throw new InvalidOperationException($"Cannot load assembly {AssemblyName}");
+				ThrowHelper.ThrowInvalidOperationException($"Cannot load assembly {AssemblyName}");
 
 			ConnectionType      = assembly.GetType($"{ClientNamespace}.FbConnection" , true)!;
 			DataReaderType      = assembly.GetType($"{ClientNamespace}.FbDataReader" , true)!;

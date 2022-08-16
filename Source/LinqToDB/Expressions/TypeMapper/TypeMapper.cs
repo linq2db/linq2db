@@ -281,7 +281,7 @@ namespace LinqToDB.Expressions
 			if (events != null)
 			{
 				if (!TryMapType(wrapperType, out var targetType))
-					throw new InvalidOperationException();
+					ThrowHelper.ThrowInvalidOperationException();
 
 				var subscribeGenerator = new ExpressionGenerator(this);
 				var pWrapper           = Expression.Parameter(wrapperType);
@@ -673,21 +673,17 @@ namespace LinqToDB.Expressions
 									switch (b.BindingType)
 									{
 										case MemberBindingType.Assignment:
-											{
-												var mab = (MemberAssignment)b;
-												return Expression.Bind(ReplaceMember(mab.Member, replacement),
-													context.Mapper.ReplaceTypes(mab.Expression, context)!);
-											}
+										{
+											var mab = (MemberAssignment)b;
+											return Expression.Bind(ReplaceMember(mab.Member, replacement),
+												context.Mapper.ReplaceTypes(mab.Expression, context)!);
+										}
+
 										case MemberBindingType.MemberBinding:
-											{
-												throw new NotImplementedException();
-											}
 										case MemberBindingType.ListBinding:
-											{
-												throw new NotImplementedException();
-											}
+											throw new NotImplementedException();
 										default:
-											throw new InvalidOperationException($"Unexpected binding type: {b.BindingType}");
+											return ThrowHelper.ThrowInvalidOperationException<MemberAssignment>($"Unexpected binding type: {b.BindingType}");
 									}
 								});
 

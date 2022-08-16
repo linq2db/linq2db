@@ -559,31 +559,23 @@ END;",
 
 		protected override void BuildCreateTableCommand(SqlTable table)
 		{
-			string command;
-
-			if (table.TableOptions.IsTemporaryOptionSet())
+			var command = (table.TableOptions.IsTemporaryOptionSet(), table.TableOptions & TableOptions.IsTemporaryOptionSet) switch
 			{
-				switch (table.TableOptions & TableOptions.IsTemporaryOptionSet)
-				{
-					case TableOptions.IsTemporary                                                                                     :
-					case TableOptions.IsTemporary |                                           TableOptions.IsLocalTemporaryData       :
-					case TableOptions.IsTemporary | TableOptions.IsGlobalTemporaryStructure                                           :
-					case TableOptions.IsTemporary | TableOptions.IsGlobalTemporaryStructure | TableOptions.IsLocalTemporaryData       :
-					case                                                                      TableOptions.IsLocalTemporaryData       :
-					case                                                                      TableOptions.IsTransactionTemporaryData :
-					case                            TableOptions.IsGlobalTemporaryStructure                                           :
-					case                            TableOptions.IsGlobalTemporaryStructure | TableOptions.IsLocalTemporaryData       :
-					case                            TableOptions.IsGlobalTemporaryStructure | TableOptions.IsTransactionTemporaryData :
-						command = "CREATE GLOBAL TEMPORARY TABLE ";
-						break;
-					case var value :
-						throw new InvalidOperationException($"Incompatible table options '{value}'");
-				}
-			}
-			else
-			{
-				command = "CREATE TABLE ";
-			}
+				(true, TableOptions.IsTemporary                                                                                    ) or
+				(true, TableOptions.IsTemporary |                                           TableOptions.IsLocalTemporaryData      ) or
+				(true, TableOptions.IsTemporary | TableOptions.IsGlobalTemporaryStructure                                          ) or
+				(true, TableOptions.IsTemporary | TableOptions.IsGlobalTemporaryStructure | TableOptions.IsLocalTemporaryData      ) or
+				(true,                                                                      TableOptions.IsLocalTemporaryData      ) or
+				(true,                                                                      TableOptions.IsTransactionTemporaryData) or
+				(true,                            TableOptions.IsGlobalTemporaryStructure                                          ) or
+				(true,                            TableOptions.IsGlobalTemporaryStructure | TableOptions.IsLocalTemporaryData      ) or
+				(true,                            TableOptions.IsGlobalTemporaryStructure | TableOptions.IsTransactionTemporaryData)
+					=> "CREATE GLOBAL TEMPORARY TABLE ",
+				(true, var value)
+					=> ThrowHelper.ThrowInvalidOperationException<string>($"Incompatible table options '{value}'"),
+				(false, _)
+					=> "CREATE TABLE ",
+			};
 
 			StringBuilder.Append(command);
 		}

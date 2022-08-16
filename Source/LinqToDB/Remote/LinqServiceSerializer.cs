@@ -1480,7 +1480,8 @@ namespace LinqToDB.Remote
 						}
 
 					default:
-						throw new InvalidOperationException($"Serialize not implemented for element {e.ElementType}");
+						ThrowHelper.ThrowInvalidOperationException($"Serialize not implemented for element {e.ElementType}");
+						break;
 				}
 
 				if (e is IQueryExtendible qe)
@@ -2411,7 +2412,8 @@ namespace LinqToDB.Remote
 						}
 
 					default:
-						throw new InvalidOperationException($"Parse not implemented for element {(QueryElementType)type}");
+						ThrowHelper.ThrowInvalidOperationException($"Parse not implemented for element {(QueryElementType)type}");
+						break;
 				}
 
 				if (obj is IQueryExtendible qe)

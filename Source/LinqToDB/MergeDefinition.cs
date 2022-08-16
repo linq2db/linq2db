@@ -179,7 +179,7 @@ namespace LinqToDB
 							return BySourcePredicate != null;
 					}
 
-					throw new InvalidOperationException();
+					return ThrowHelper.ThrowInvalidOperationException<bool>();
 				}
 			}
 

@@ -40,7 +40,7 @@ namespace LinqToDB.SqlQuery
 				Expr1 = Expr1.Walk(options, context, func)!;
 
 				if (Expr1 == null)
-					throw new InvalidOperationException();
+					ThrowHelper.ThrowInvalidOperationException();
 			}
 
 			public override bool CanBeNull => Expr1.CanBeNull;
@@ -131,7 +131,7 @@ namespace LinqToDB.SqlQuery
 					Operator.LessOrEqual    => "<=",
 					Operator.NotLess        => "!<",
 					Operator.Overlaps       => "OVERLAPS",
-					_                       => throw new InvalidOperationException(),
+					_                       => ThrowHelper.ThrowInvalidOperationException<string>(),
 				};
 				sb.Append(' ').Append(op).Append(' ');
 
@@ -140,18 +140,18 @@ namespace LinqToDB.SqlQuery
 
 			static Operator InvertOperator(Operator op)
 			{
-				switch (op)
+				return op switch
 				{
-					case Operator.Equal          : return Operator.NotEqual;
-					case Operator.NotEqual       : return Operator.Equal;
-					case Operator.Greater        : return Operator.LessOrEqual;
-					case Operator.NotLess        :
-					case Operator.GreaterOrEqual : return Operator.Less;
-					case Operator.Less           : return Operator.GreaterOrEqual;
-					case Operator.NotGreater     :
-					case Operator.LessOrEqual    : return Operator.Greater;
-					default: throw new InvalidOperationException();
-				}
+					Operator.Equal          => Operator.NotEqual,
+					Operator.NotEqual       => Operator.Equal,
+					Operator.Greater        => Operator.LessOrEqual,
+					Operator.NotLess        or
+					Operator.GreaterOrEqual => Operator.Less,
+					Operator.Less           => Operator.GreaterOrEqual,
+					Operator.NotGreater     or
+					Operator.LessOrEqual    => Operator.Greater,
+					_ => ThrowHelper.ThrowInvalidOperationException<Operator>(),
+				};
 			}
 
 			public bool CanInvert()
@@ -439,7 +439,8 @@ namespace LinqToDB.SqlQuery
 						sb.Append(" CONTAINS ");
 						break;
 					default:
-						throw new InvalidOperationException($"Unexpected search kind: {Kind}");
+						ThrowHelper.ThrowInvalidOperationException($"Unexpected search kind: {Kind}");
+						break;
 				}
 
 				Expr2.ToString(sb, dic);

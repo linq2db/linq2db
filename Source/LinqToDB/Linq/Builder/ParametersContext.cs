@@ -214,7 +214,7 @@ namespace LinqToDB.Linq.Builder
 				// compiled query case
 				//
 				if (null == arg.Find(ExpressionBuilder.ParametersParam))
-					throw new InvalidOperationException($"Method '{methodCall}' does not have accessor.");
+					ThrowHelper.ThrowInvalidOperationException($"Method '{methodCall}' does not have accessor.");
 				return arg;
 			}
 

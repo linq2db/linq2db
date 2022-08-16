@@ -775,7 +775,7 @@ namespace LinqToDB.SqlQuery
 					case QueryInformation.HierarchyType.InnerQuery:
 						return true;
 					default:
-						throw new InvalidOperationException($"Unexpected hierarchy type: {info.HierarchyType}");
+						return ThrowHelper.ThrowInvalidOperationException<bool>($"Unexpected hierarchy type: {info.HierarchyType}");
 				}
 
 			} while (current != null);

@@ -453,7 +453,7 @@ namespace LinqToDB.Linq.Builder
 								if (a.MemberInfo.Name == memberName)
 								{
 									if (memberInfo != null)
-										throw new InvalidOperationException("Sequence contains more than one element");
+										ThrowHelper.ThrowInvalidOperationException("Sequence contains more than one element");
 									memberInfo = a.MemberInfo;
 								}
 							}
@@ -1051,7 +1051,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							case 0: break;
 							case 1: return sql[0].Sql;
-							default: throw new InvalidOperationException();
+							default: return ThrowHelper.ThrowInvalidOperationException<ISqlExpression>();
 						}
 					}
 
@@ -1059,24 +1059,6 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				case ExpressionType.Parameter:
-				{
-					var ctx = GetContext(context, expression);
-
-					if (ctx != null)
-					{
-						var sql = ctx.ConvertToSql(expression, 0, ConvertFlags.Field);
-
-						switch (sql.Length)
-						{
-							case 0: break;
-							case 1: return sql[0].Sql;
-							default: throw new InvalidOperationException();
-						}
-					}
-
-					break;
-				}
-
 				case ExpressionType.Extension:
 				{
 					var ctx = GetContext(context, expression);
@@ -1089,7 +1071,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							case 0: break;
 							case 1: return sql[0].Sql;
-							default: throw new InvalidOperationException();
+							default: return ThrowHelper.ThrowInvalidOperationException<ISqlExpression>();
 						}
 					}
 
@@ -1127,7 +1109,7 @@ namespace LinqToDB.Linq.Builder
 								var sql = ctx.ConvertToSql(expression, 0, ConvertFlags.Field);
 
 								if (sql.Length != 1)
-									throw new InvalidOperationException();
+									ThrowHelper.ThrowInvalidOperationException();
 
 								return sql[0].Sql;
 							}
@@ -1361,7 +1343,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (arg.NodeType == ExpressionType.Constant || arg.NodeType == ExpressionType.Default)
 				{
-					var comparison = (StringComparison)(arg.EvaluateExpression() ?? throw new InvalidOperationException());
+					var comparison = (StringComparison)(arg.EvaluateExpression() ?? ThrowHelper.ThrowInvalidOperationException<object?>());
 					return new SqlValue(comparison == StringComparison.CurrentCulture   ||
 					                    comparison == StringComparison.InvariantCulture ||
 					                    comparison == StringComparison.Ordinal);
@@ -1555,7 +1537,7 @@ namespace LinqToDB.Linq.Builder
 				ExpressionType.GreaterThanOrEqual => SqlPredicate.Operator.GreaterOrEqual,
 				ExpressionType.LessThan           => SqlPredicate.Operator.Less,
 				ExpressionType.LessThanOrEqual    => SqlPredicate.Operator.LessOrEqual,
-				_                                 => throw new InvalidOperationException(),
+				_                                 => ThrowHelper.ThrowInvalidOperationException<SqlPredicate.Operator>(),
 			};
 			if ((left.NodeType == ExpressionType.Convert || right.NodeType == ExpressionType.Convert) && (op == SqlPredicate.Operator.Equal || op == SqlPredicate.Operator.NotEqual))
 			{
@@ -2015,7 +1997,7 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				if (lcol.MemberChain.Length == 0)
-					throw new InvalidOperationException();
+					ThrowHelper.ThrowInvalidOperationException();
 
 				ISqlExpression? rcol = null;
 
@@ -2666,7 +2648,7 @@ namespace LinqToDB.Linq.Builder
 				if (context.IgnoredMembers != null)
 				{
 					if (pi != context.IgnoredMembers[context.IgnoredMembers.Count - 1])
-						throw new InvalidOperationException();
+						ThrowHelper.ThrowInvalidOperationException();
 
 					if (context.IgnoredMembers.Count == 1)
 						context.IgnoredMembers = null;
@@ -3056,7 +3038,7 @@ namespace LinqToDB.Linq.Builder
 			if (cteExpression == null)
 			{
 				if (_ctesObjectMapping == null)
-					throw new InvalidOperationException();
+					ThrowHelper.ThrowInvalidOperationException();
 				cteExpression = _ctesObjectMapping[queryable!];
 			}
 
@@ -3178,7 +3160,7 @@ namespace LinqToDB.Linq.Builder
 		public void PopDisabledFilter()
 		{
 			if (_disabledFilters == null)
-				throw new InvalidOperationException();
+				ThrowHelper.ThrowInvalidOperationException();
 
 			_ = _disabledFilters.Pop();
 		}
@@ -3197,7 +3179,7 @@ namespace LinqToDB.Linq.Builder
 		public void PopSqlQueryExtension(SqlQueryExtension extension)
 		{
 			if (_sqlQueryExtensionStack == null || _sqlQueryExtensionStack.Count > 0)
-				throw new InvalidOperationException();
+				ThrowHelper.ThrowInvalidOperationException();
 			_sqlQueryExtensionStack.RemoveAt(_sqlQueryExtensionStack.Count - 1);
 		}
 

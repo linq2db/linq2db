@@ -100,7 +100,7 @@ namespace LinqToDB.Linq.Builder
 										groupingKind = GroupingType.Cube;
 									else if (mc.IsSameGenericMethod(Methods.LinqToDB.GroupBy.GroupingSets))
 										groupingKind = GroupingType.GroupBySets;
-									else throw new InvalidOperationException();
+									else ThrowHelper.ThrowInvalidOperationException();
 								}
 							}
 						}
@@ -503,7 +503,7 @@ namespace LinqToDB.Linq.Builder
 				if (CountBuilder.MethodNames.Contains(call.Method.Name))
 				{
 					if (args.Length > 0)
-						throw new InvalidOperationException();
+						ThrowHelper.ThrowInvalidOperationException();
 
 					return SqlFunction.CreateCount(call.Type, SelectQuery);
 				}

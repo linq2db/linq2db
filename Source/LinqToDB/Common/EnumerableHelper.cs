@@ -73,7 +73,7 @@ namespace LinqToDB.Common
 				get
 				{
 					if (_currentBatchEnumerateStarted)
-						throw new InvalidOperationException("Cannot enumerate IBatched.Current multiple times");
+						ThrowHelper.ThrowInvalidOperationException("Cannot enumerate IBatched.Current multiple times");
 
 					_currentBatchEnumerateStarted = true;
 					for (var i = 0; i < _batchSize; i++)
@@ -169,11 +169,11 @@ namespace LinqToDB.Common
 				_batchSize = batchSize;
 			}
 
-			public IAsyncEnumerable<T> Current => _isCurrent ? this : throw new InvalidOperationException();
+			public IAsyncEnumerable<T> Current => _isCurrent ? this : ThrowHelper.ThrowInvalidOperationException<IAsyncEnumerable<T>>();
 
 			IAsyncEnumerator<T> IAsyncEnumerable<T>.GetAsyncEnumerator(CancellationToken cancellationToken)
 			{
-				if (_current == null) throw new InvalidOperationException();
+				if (_current == null) ThrowHelper.ThrowInvalidOperationException();
 
 				var enumerator = _current;
 				_current       = null;

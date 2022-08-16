@@ -48,7 +48,7 @@ namespace LinqToDB.Remote
 		public override long     GetInt64   (int ordinal) => (long    )GetValue(ordinal)!;
 		public override string   GetString  (int ordinal) => (string  )GetValue(ordinal)!;
 
-		public override object GetValue(int ordinal) => GetValueInternal(ordinal) ?? throw new InvalidOperationException("Value is NULL");
+		public override object GetValue(int ordinal) => GetValueInternal(ordinal) ?? ThrowHelper.ThrowInvalidOperationException<object>("Value is NULL");
 
 		private object? GetValueInternal(int ordinal)
 		{

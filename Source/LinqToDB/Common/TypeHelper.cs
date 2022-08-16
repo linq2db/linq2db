@@ -28,7 +28,7 @@ namespace LinqToDB.Common
 				else
 				{
 					if (value != pair.Item2)
-						throw new InvalidOperationException();
+						ThrowHelper.ThrowInvalidOperationException();
 				}
 			}
 		}

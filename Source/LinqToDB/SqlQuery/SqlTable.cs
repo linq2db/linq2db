@@ -239,7 +239,7 @@ namespace LinqToDB.SqlQuery
 
 		public void Add(SqlField field)
 		{
-			if (field.Table != null) throw new InvalidOperationException("Invalid parent table.");
+			if (field.Table != null) ThrowHelper.ThrowInvalidOperationException("Invalid parent table.");
 
 			field.Table = this;
 

@@ -48,7 +48,7 @@ namespace LinqToDB.DataProvider.DB2
 			}
 
 			if (assembly == null)
-				throw new InvalidOperationException($"Cannot load assembly {AssemblyName}");
+				ThrowHelper.ThrowInvalidOperationException($"Cannot load assembly {AssemblyName}");
 
 			ConnectionType  = assembly.GetType($"{clientNamespace}.DB2Connection" , true)!;
 			ParameterType   = assembly.GetType($"{clientNamespace}.DB2Parameter"  , true)!;

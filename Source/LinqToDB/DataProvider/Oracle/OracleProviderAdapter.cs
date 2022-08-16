@@ -445,7 +445,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 			var assembly = Tools.TryLoadAssembly(assemblyName, factoryName);
 			if (assembly == null)
-				throw new InvalidOperationException($"Cannot load assembly {assemblyName}");
+				ThrowHelper.ThrowInvalidOperationException($"Cannot load assembly {assemblyName}");
 
 			var connectionType  = assembly.GetType($"{clientNamespace}.OracleConnection" , true)!;
 			var parameterType   = assembly.GetType($"{clientNamespace}.OracleParameter"  , true)!;
@@ -667,7 +667,7 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			var assembly = Tools.TryLoadAssembly(DevartAssemblyName, DevartFactoryName);
 			if (assembly == null)
-				throw new InvalidOperationException($"Cannot load assembly {DevartAssemblyName}");
+				ThrowHelper.ThrowInvalidOperationException($"Cannot load assembly {DevartAssemblyName}");
 
 			var mappingSchema = new OracleDevartClientAdapterMappingSchema();
 

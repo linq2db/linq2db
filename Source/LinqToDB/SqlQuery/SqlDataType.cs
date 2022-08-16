@@ -312,7 +312,7 @@ namespace LinqToDB.SqlQuery
 				DataType.Int128         => DbInt128,
 				DataType.DecFloat       => DbDecFloat,
 				DataType.TimeTZ         => DbTimeTZ,
-				_                       => throw new InvalidOperationException($"Unexpected type: {type}"),
+				_                       => ThrowHelper.ThrowInvalidOperationException<SqlDataType>($"Unexpected type: {type}"),
 			};
 		}
 

@@ -497,11 +497,11 @@ namespace LinqToDB.Linq.Builder
 					constructors = objectType.GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic);
 
 					if (constructors.Length == 0)
-						throw new InvalidOperationException($"Type '{objectType.Name}' has no constructors.");
+						ThrowHelper.ThrowInvalidOperationException($"Type '{objectType.Name}' has no constructors.");
 				}
 
 				if (constructors.Length > 1)
-					throw new InvalidOperationException($"Type '{objectType.Name}' has ambiguous constructors.");
+					ThrowHelper.ThrowInvalidOperationException($"Type '{objectType.Name}' has ambiguous constructors.");
 
 				return constructors[0];
 			}
@@ -548,7 +548,7 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				if (!argFound)
-					throw new InvalidOperationException($"Type '{objectType.Name}' has no suitable constructor.");
+					ThrowHelper.ThrowInvalidOperationException($"Type '{objectType.Name}' has no suitable constructor.");
 
 				var expr = Expression.New(ctor, args);
 
@@ -808,7 +808,7 @@ namespace LinqToDB.Linq.Builder
 					Expression expr;
 
 					if (contextInfo.CurrentExpression == null)
-						throw new InvalidOperationException("contextInfo.CurrentExpression is null");
+						ThrowHelper.ThrowInvalidOperationException("contextInfo.CurrentExpression is null");
 
 					var maxLevel = contextInfo.CurrentExpression.GetLevel(Builder.MappingSchema);
 
@@ -962,7 +962,7 @@ namespace LinqToDB.Linq.Builder
 							if (contextInfo == null)
 							{
 								if (expression == null)
-									throw new InvalidOperationException();
+									ThrowHelper.ThrowInvalidOperationException();
 
 								var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
 
@@ -1264,7 +1264,7 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-				throw new InvalidOperationException();
+				return ThrowHelper.ThrowInvalidOperationException<IBuildContext>();
 			}
 
 			public virtual SqlStatement GetResultStatement()

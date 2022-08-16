@@ -733,7 +733,7 @@ namespace LinqToDB.SqlProvider
 			{
 				var fields = new VirtualField[v.Count];
 				for (var i = 0; i < v.Count; i++)
-					fields[i] = GetUnderlayingField(v[i]) ?? throw new InvalidOperationException($"Cannot get field for {v[i]}");
+					fields[i] = GetUnderlayingField(v[i]) ?? ThrowHelper.ThrowInvalidOperationException<VirtualField>($"Cannot get field for {v[i]}");
 				result.Add(fields);
 			}
 

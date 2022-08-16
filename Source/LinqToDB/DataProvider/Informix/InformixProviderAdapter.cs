@@ -187,7 +187,7 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			var assembly = Tools.TryLoadAssembly(IfxAssemblyName, IfxProviderFactoryName);
 			if (assembly == null)
-				throw new InvalidOperationException($"Cannot load assembly {IfxAssemblyName}");
+				ThrowHelper.ThrowInvalidOperationException($"Cannot load assembly {IfxAssemblyName}");
 
 			var connectionType  = assembly.GetType($"{IfxClientNamespace}.IfxConnection" , true)!;
 			var parameterType   = assembly.GetType($"{IfxClientNamespace}.IfxParameter"  , true)!;

@@ -30,7 +30,7 @@ namespace LinqToDB
 				var collation = builder.GetValue<string>("collation");
 
 				if (!ValidateCollation(collation))
-					throw new InvalidOperationException($"Invalid collation: {collation}");
+					ThrowHelper.ThrowInvalidOperationException($"Invalid collation: {collation}");
 
 				builder.ResultExpression = new SqlExpression(typeof(string), $"{{0}} COLLATE {collation}", Precedence.Primary, expr);
 			}

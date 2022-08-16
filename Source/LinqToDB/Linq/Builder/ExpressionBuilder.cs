@@ -319,7 +319,7 @@ namespace LinqToDB.Linq.Builder
 							Expression.Lambda(p.Expr, (ParameterExpression)p.Path));
 					}
 
-					throw new InvalidOperationException();
+					ThrowHelper.ThrowInvalidOperationException();
 				}
 
 				return sequence.Expression;
@@ -984,7 +984,7 @@ namespace LinqToDB.Linq.Builder
 					case "TKey"    : typeArgs[1] = argTypes[i]; break;
 					case "TElement": typeArgs[2] = argTypes[i]; break;
 					case "TResult" : typeArgs[3] = argTypes[i]; break;
-					default: throw new InvalidOperationException($"Unexpected GroupBy type parameter: {args[i].Name}");
+					default: return ThrowHelper.ThrowInvalidOperationException<Expression>($"Unexpected GroupBy type parameter: {args[i].Name}");
 				}
 			}
 
@@ -1187,7 +1187,7 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			if (cm == null)
-				throw new InvalidOperationException("Sequence contains no elements");
+				ThrowHelper.ThrowInvalidOperationException("Sequence contains no elements");
 
 			var wm = GetMethodInfo(method, "Where");
 
@@ -1286,7 +1286,7 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 			if (cm == null)
-				throw new InvalidOperationException("Sequence contains no elements");
+				ThrowHelper.ThrowInvalidOperationException("Sequence contains no elements");
 
 			var argType = types[0];
 
@@ -1433,7 +1433,7 @@ namespace LinqToDB.Linq.Builder
 				return qex;
 			}
 
-			throw new InvalidOperationException();
+			return ThrowHelper.ThrowInvalidOperationException<Expression>();
 		}
 
 		#endregion
@@ -1527,7 +1527,7 @@ namespace LinqToDB.Linq.Builder
 						return m;
 			}
 
-			throw new InvalidOperationException("Sequence contains no elements");
+			return ThrowHelper.ThrowInvalidOperationException<MethodInfo>("Sequence contains no elements");
 		}
 
 		MethodInfo GetMethodInfo(MethodCallExpression method, string name)
@@ -1547,7 +1547,7 @@ namespace LinqToDB.Linq.Builder
 						return m;
 			}
 
-			throw new InvalidOperationException("Sequence contains no elements");
+			return ThrowHelper.ThrowInvalidOperationException<MethodInfo>("Sequence contains no elements");
 		}
 
 		static Type[] GetMethodGenericTypes(MethodCallExpression method)

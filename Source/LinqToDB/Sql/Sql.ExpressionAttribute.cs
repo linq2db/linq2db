@@ -241,7 +241,7 @@ namespace LinqToDB
 					var calculated = valueProvider(context, paramName, delimiter);
 
 					if (string.IsNullOrEmpty(calculated) && !canBeOptional)
-						throw new InvalidOperationException($"Non optional parameter '{paramName}' not found");
+						ThrowHelper.ThrowInvalidOperationException($"Non optional parameter '{paramName}' not found");
 
 					var res = calculated;
 					if (spaceNeeded)

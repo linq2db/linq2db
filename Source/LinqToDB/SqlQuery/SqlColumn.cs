@@ -40,7 +40,7 @@ namespace LinqToDB.SqlQuery
 				if (_expression == value)
 					return;
 				if (value == this)
-					throw new InvalidOperationException();
+					ThrowHelper.ThrowInvalidOperationException();
 				_expression = value;
 				_hashCode   = null;
 			}

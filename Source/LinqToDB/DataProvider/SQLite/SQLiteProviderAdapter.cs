@@ -68,7 +68,7 @@ namespace LinqToDB.DataProvider.SQLite
 		{
 			var assembly = Common.Tools.TryLoadAssembly(assemblyName, null);
 			if (assembly == null)
-				throw new InvalidOperationException($"Cannot load assembly {assemblyName}");
+				ThrowHelper.ThrowInvalidOperationException($"Cannot load assembly {assemblyName}");
 
 			var connectionType  = assembly.GetType($"{clientNamespace}.{prefix}Connection" , true)!;
 			var dataReaderType  = assembly.GetType($"{clientNamespace}.{prefix}DataReader" , true)!;

@@ -91,7 +91,7 @@ namespace LinqToDB.Linq.Builder
 					return new[] { new SqlInfo(sql, query) };
 				}
 
-				throw new InvalidOperationException();
+				return ThrowHelper.ThrowInvalidOperationException<SqlInfo[]>();
 			}
 
 			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
@@ -118,13 +118,13 @@ namespace LinqToDB.Linq.Builder
 				return requestFlag switch
 				{
 					RequestFor.Root => IsExpressionResult.False,
-					_               => throw new InvalidOperationException(),
+					_               => ThrowHelper.ThrowInvalidOperationException<IsExpressionResult>(),
 				};
 			}
 
 			public override IBuildContext GetContext(Expression? expression, int level, BuildInfo buildInfo)
 			{
-				throw new InvalidOperationException();
+				return ThrowHelper.ThrowInvalidOperationException<IBuildContext>();
 			}
 
 			ISqlExpression? _subQuerySql;

@@ -321,7 +321,7 @@ namespace LinqToDB.Linq.Builder
 								{
 									var ctx = context.builder.GetContext(context.context, ce);
 									if (ctx == null)
-										throw new InvalidOperationException();
+										ThrowHelper.ThrowInvalidOperationException();
 
 									return new TransformInfo(ctx.BuildExpression(ce, 0, context.enforceServerSide));
 								}

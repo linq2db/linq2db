@@ -37,7 +37,7 @@ namespace LinqToDB.SqlQuery
 				if (e is SelectQuery sql)
 				{
 					if (dic.ContainsKey(sql))
-						throw new InvalidOperationException("SqlQuery circle reference detected.");
+						ThrowHelper.ThrowInvalidOperationException("SqlQuery circle reference detected.");
 
 					dic.Add(sql, sql);
 				}

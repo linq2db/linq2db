@@ -172,7 +172,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				case TableOptions.IsGlobalTemporaryStructure | TableOptions.IsGlobalTemporaryData                          :
 					return $"##{tableName}";
 				case var value :
-					throw new InvalidOperationException($"Incompatible table options '{value}'");
+					return ThrowHelper.ThrowInvalidOperationException<string>($"Incompatible table options '{value}'");
 			}
 		}
 
@@ -450,7 +450,7 @@ namespace LinqToDB.DataProvider.SqlServer
 						case JoinType.Left       : StringBuilder.Append($"LEFT {h} JOIN ");  return true;
 						case JoinType.Right      : StringBuilder.Append($"RIGHT {h} JOIN "); return true;
 						case JoinType.Full       : StringBuilder.Append($"FULL {h} JOIN ");  return true;
-						default                  : throw new InvalidOperationException();
+						default                  : return ThrowHelper.ThrowInvalidOperationException<bool>();
 					}
 				}
 			}

@@ -157,7 +157,7 @@ namespace LinqToDB.SqlProvider
 
 			// temporary(?) guard
 			if (_nestingLevel > 0)
-				throw new InvalidOperationException("Nested optimization detected");
+				ThrowHelper.ThrowInvalidOperationException("Nested optimization detected");
 			_nestingLevel++;
 			var res = (T?)_visitor.ConvertInternal(element) ?? element;
 			_nestingLevel--;

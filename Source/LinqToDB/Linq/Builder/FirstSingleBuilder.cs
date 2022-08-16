@@ -96,7 +96,7 @@ namespace LinqToDB.Linq.Builder
 					var genericType     = typeof(IEnumerable<>).GetGenericType(info.Expression.Type);
 
 					if (genericType == null || prevGenericType == null)
-						throw new InvalidOperationException();
+						ThrowHelper.ThrowInvalidOperationException();
 
 					var newArgument = info.Expression;
 					var elementType = genericType.GetGenericArguments()[0];

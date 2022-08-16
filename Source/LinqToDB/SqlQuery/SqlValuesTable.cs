@@ -32,7 +32,7 @@ namespace LinqToDB.SqlQuery
 
 			foreach (var field in fields)
 			{
-				if (field.Table != null) throw new InvalidOperationException("Invalid parent table.");
+				if (field.Table != null) ThrowHelper.ThrowInvalidOperationException("Invalid parent table.");
 				_fields.Add(field);
 				field.Table = this;
 			}
@@ -50,7 +50,7 @@ namespace LinqToDB.SqlQuery
 
 			foreach (var field in fields)
 			{
-				if (field.Table != null) throw new InvalidOperationException("Invalid parent table.");
+				if (field.Table != null) ThrowHelper.ThrowInvalidOperationException("Invalid parent table.");
 				_fields.Add(field);
 				field.Table = this;
 			}
@@ -90,7 +90,7 @@ namespace LinqToDB.SqlQuery
 
 		internal void Add(SqlField field, MemberInfo? memberInfo, Func<object, ISqlExpression> valueBuilder)
 		{
-			if (field.Table != null) throw new InvalidOperationException("Invalid parent table.");
+			if (field.Table != null) ThrowHelper.ThrowInvalidOperationException("Invalid parent table.");
 
 			field.Table = this;
 			_fields.Add(field);

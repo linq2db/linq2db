@@ -187,7 +187,7 @@ namespace LinqToDB.Linq.Builder
 					var insertedTable = builder.DataContext.SqlProviderFlags.OutputInsertUseSpecialTable ? SqlTable.Inserted(outputExpression.Parameters[0].Type) : insertStatement.Insert.Into;
 
 					if (insertedTable == null)
-						throw new InvalidOperationException("Cannot find target table for INSERT statement");
+						ThrowHelper.ThrowInvalidOperationException("Cannot find target table for INSERT statement");
 
 					outputContext = new TableBuilder.TableContext(builder, new SelectQuery(), insertedTable);
 
@@ -287,7 +287,8 @@ namespace LinqToDB.Linq.Builder
 						QueryRunner.SetNonQueryQuery(query);
 						break;
 					default:
-						throw new InvalidOperationException($"Unexpected insert type: {_insertType}");
+						ThrowHelper.ThrowInvalidOperationException($"Unexpected insert type: {_insertType}");
+						break;
 				}
 			}
 

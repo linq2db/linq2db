@@ -177,7 +177,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					{
 						var assembly = Tools.TryLoadAssembly(AssemblyName, null);
 						if (assembly == null)
-							throw new InvalidOperationException($"Cannot load assembly {AssemblyName}");
+							ThrowHelper.ThrowInvalidOperationException($"Cannot load assembly {AssemblyName}");
 
 						var connectionType     = assembly.GetType($"{ClientNamespace}.NpgsqlConnection"  , true)!;
 						var parameterType      = assembly.GetType($"{ClientNamespace}.NpgsqlParameter"   , true)!;

@@ -66,7 +66,7 @@ namespace LinqToDB.DataProvider.SapHana
 					{
 						var assembly = Common.Tools.TryLoadAssembly(AssemblyName, ProviderFactoryName);
 						if (assembly == null)
-							throw new InvalidOperationException($"Cannot load assembly {AssemblyName}");
+							ThrowHelper.ThrowInvalidOperationException($"Cannot load assembly {AssemblyName}");
 
 						var connectionType  = assembly.GetType($"{ClientNamespace}.HanaConnection" , true)!;
 						var dataReaderType  = assembly.GetType($"{ClientNamespace}.HanaDataReader" , true)!;
