@@ -38,6 +38,8 @@
 			//"SqlServer.2017.MS",
 			//"SqlServer.2019",
 			//"SqlServer.2019.MS",
+			//"SqlServer.2022",
+			//"SqlServer.2022.MS",
 			//"SqlServer.SA",
 			//"SqlServer.SA.MS",
 			//"SqlServer.Contained",
@@ -150,6 +152,8 @@
 			//"SqlServer.2017.MS",
 			//"SqlServer.2019",
 			//"SqlServer.2019.MS",
+			//"SqlServer.2022",
+			//"SqlServer.2022.MS",
 			//"SqlServer.SA",
 			//"SqlServer.SA.MS",
 			//"SqlServer.Contained",
@@ -256,6 +260,8 @@
 			//"SqlServer.2017.MS",
 			//"SqlServer.2019",
 			//"SqlServer.2019.MS",
+			//"SqlServer.2022",
+			//"SqlServer.2022.MS",
 			//"SqlServer.SA",
 			//"SqlServer.SA.MS",
 			//"SqlServer.Contained",
@@ -377,11 +383,19 @@
 				"Provider": "Microsoft.Data.SqlClient",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
-			"SqlServer.2018": {
+			"SqlServer.2019": {
 				"Provider": "System.Data.SqlClient",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
-			"SqlServer.2018.MS": {
+			"SqlServer.2019.MS": {
+				"Provider": "Microsoft.Data.SqlClient",
+				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+			},
+			"SqlServer.2022": {
+				"Provider": "System.Data.SqlClient",
+				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+			},
+			"SqlServer.2022.MS": {
 				"Provider": "Microsoft.Data.SqlClient",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},

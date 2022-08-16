@@ -288,12 +288,10 @@ CREATE TABLE "AllTypes"
 -- SKIP PostgreSQL.9.2 BEGIN
 -- SKIP PostgreSQL.9.3 BEGIN
 -- SKIP PostgreSQL.9.5 BEGIN
--- SKIP PostgreSQL BEGIN
 	"macaddr8DataType"  macaddr8                   NULL,
 -- SKIP PostgreSQL.9.2 END
 -- SKIP PostgreSQL.9.3 END
 -- SKIP PostgreSQL.9.5 END
--- SKIP PostgreSQL END
 
 	"jsonDataType"        json                     NULL,
 -- SKIP PostgreSQL.9.2 BEGIN

@@ -10,3 +10,4 @@ Contains database setup scripts for local testing
 - `pgsql13.cmd` : Windows script to create or update docker container with PostgreSQL 13 instance
 - `pgsql14.cmd` : Windows script to create or update docker container with PostgreSQL 14 instance
 - `pgsql15.cmd` : Windows script to create or update docker container with PostgreSQL 15 instance
+- `sqlserver2022.cmd` : Windows script to create or update docker container with SQL Server 2022 (Linux-based) instance
