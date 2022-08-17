@@ -12,6 +12,7 @@ using LinqToDB.Common.Internal;
 using LinqToDB.Expressions;
 using LinqToDB.Extensions;
 using LinqToDB.Reflection;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -112,31 +113,23 @@ namespace LinqToDB.Linq.Builder
 			return genericType.GetGenericArguments()[0];
 		}
 
-		Expression ExpandContext(ContextRefExpression contextRef)
-		{
-			if (!typeof(IEnumerable).IsAssignableFrom(contextRef.Type))
-				return contextRef;
-
-			var newExpr = MakeExpression(contextRef, ProjectFlags.Expression);
-			if (newExpr is not SqlGenericConstructorExpression)
-			{
-				if (newExpr.Type != contextRef.Type)
-				{
-					newExpr = new SqlAdjustTypeExpression(newExpr, contextRef.Type, MappingSchema);
-				}
-			}
-
-			return newExpr;
-		}
-
 		Expression ExpandContexts(Expression expression)
 		{
-			var result= expression.Transform(this, static (builder, e) =>
+			var result = expression.Transform(this, static (builder, e) =>
 			{
 				if (e.NodeType == ExpressionType.Extension || e.NodeType == ExpressionType.MemberAccess ||
 				    e.NodeType == ExpressionType.Call)
 				{
+					if (e.NodeType == ExpressionType.MemberAccess)
+					{
+						if (null != e.Find(e, (ctx, e) => e.NodeType == ExpressionType.Parameter))
+						{
+							return new TransformInfo(e);
+						}
+					}
+
 					var newExpr = builder.MakeExpression(e, ProjectFlags.Expand);
+
 					return new TransformInfo(newExpr, false);
 				}
 
@@ -169,9 +162,6 @@ namespace LinqToDB.Linq.Builder
 
 			dependencies.AddRange(previousKeys);
 
-			if (dependencies.Count == 0)
-				throw new NotImplementedException("Detached eager loading not implemented yet.");
-
 			var mainKeys   = new Expression[dependencies.Count];
 			var detailKeys = new Expression[dependencies.Count];
 
@@ -185,55 +175,71 @@ namespace LinqToDB.Linq.Builder
 
 			cloningContext.UpdateContextParents();
 
-			var mainKeyExpression   = GenerateKeyExpression(mainKeys, 0);
-			var detailKeyExpression = GenerateKeyExpression(detailKeys, 0);
+			Expression resultExpression;
 
 			var mainType   = GetEnumerableElementType(clonedMainContextRef.Type);
 			var detailType = GetEnumerableElementType(eagerLoad.Type);
 
-			var keyDetailType   = typeof(KeyDetailEnvelope<,>).MakeGenericType(mainKeyExpression.Type, detailType);
-			var mainParameter   = Expression.Parameter(mainType, "m");
-			var detailParameter = Expression.Parameter(detailType, "d");
-
-			var keyDetailExpression = Expression.MemberInit(Expression.New(keyDetailType),
-				Expression.Bind(keyDetailType.GetField(nameof(KeyDetailEnvelope<int, int>.Key)), detailKeyExpression),
-				Expression.Bind(keyDetailType.GetField(nameof(KeyDetailEnvelope<int, int>.Detail)), detailParameter));
-
-			var clonedParentContextRef = new ContextRefExpression(clonedMainContextRef.Type, clonedParentContext);
-
-			Expression sourceQuery = clonedParentContextRef;
-
-			if (!typeof(IQueryable<>).IsSameOrParentOf(sourceQuery.Type))
+			if (dependencies.Count == 0)
 			{
-				sourceQuery = Expression.Call(Methods.Enumerable.AsQueryable.MakeGenericMethod(mainType), sourceQuery);
+				var detailSequence = BuildSequence(new BuildInfo((IBuildContext?)null, correctedSequence, new SelectQuery()));
+
+				var parameters = new object[] { detailSequence, correctedSequence, queryParameter, preambles };
+
+				resultExpression = (Expression)_buildPreambleQueryDetachedMethodInfo
+					.MakeGenericMethod(detailType)
+					.Invoke(this, parameters);
 			}
+			else
+			{
+				var mainKeyExpression   = GenerateKeyExpression(mainKeys, 0);
+				var detailKeyExpression = GenerateKeyExpression(detailKeys, 0);
 
-			sourceQuery = Expression.Call(Methods.LinqToDB.SelectDistinct.MakeGenericMethod(mainType), sourceQuery);
+				var keyDetailType   = typeof(KeyDetailEnvelope<,>).MakeGenericType(mainKeyExpression.Type, detailType);
+				var mainParameter   = Expression.Parameter(mainType, "m");
+				var detailParameter = Expression.Parameter(detailType, "d");
 
-			var selector = Expression.Lambda(keyDetailExpression, mainParameter, detailParameter);
+				var keyDetailExpression = Expression.MemberInit(Expression.New(keyDetailType),
+					Expression.Bind(keyDetailType.GetField(nameof(KeyDetailEnvelope<int, int>.Key)), detailKeyExpression),
+					Expression.Bind(keyDetailType.GetField(nameof(KeyDetailEnvelope<int, int>.Detail)), detailParameter));
 
-			var detailSelectorBody = correctedSequence;
+				var clonedParentContextRef = new ContextRefExpression(clonedMainContextRef.Type, clonedParentContext);
 
-			var detailSelector = (LambdaExpression)_buildSelectManyDetailSelectorInfo
-				.MakeGenericMethod(mainType, detailType).Invoke(null, new object[] { detailSelectorBody, mainParameter });
+				Expression sourceQuery = clonedParentContextRef;
 
-			var selectManyCall =
-				Expression.Call(
-					Methods.Queryable.SelectManyProjection.MakeGenericMethod(mainType, detailType, keyDetailType),
-					sourceQuery, Expression.Quote(detailSelector), Expression.Quote(selector));
+				if (!typeof(IQueryable<>).IsSameOrParentOf(sourceQuery.Type))
+				{
+					sourceQuery = Expression.Call(Methods.Enumerable.AsQueryable.MakeGenericMethod(mainType), sourceQuery);
+				}
 
-			var detailSequence = BuildSequence(new BuildInfo((IBuildContext?)null, selectManyCall,
-				clonedParentContextRef.BuildContext.SelectQuery));
+				sourceQuery = Expression.Call(Methods.LinqToDB.SelectDistinct.MakeGenericMethod(mainType), sourceQuery);
 
-			var saveExpressionCache = _expressionCache;
-			_expressionCache = new (SqlCacheKey.SqlCacheKeyComparer);
+				var selector = Expression.Lambda(keyDetailExpression, mainParameter, detailParameter);
 
-			var parameters = new object[] { detailSequence, mainKeyExpression, selectManyCall, queryParameter, preambles, detailKeys };
-			var resultExpression = (Expression)_buildPreambleQueryAttachedMethodInfo
-				.MakeGenericMethod(mainKeyExpression.Type, detailType)
-				.Invoke(this, parameters);
+				var detailSelectorBody = correctedSequence;
 
-			_expressionCache = saveExpressionCache;
+				var detailSelector = (LambdaExpression)_buildSelectManyDetailSelectorInfo
+					.MakeGenericMethod(mainType, detailType).Invoke(null, new object[] { detailSelectorBody, mainParameter });
+
+				var selectManyCall =
+					Expression.Call(
+						Methods.Queryable.SelectManyProjection.MakeGenericMethod(mainType, detailType, keyDetailType),
+						sourceQuery, Expression.Quote(detailSelector), Expression.Quote(selector));
+
+				var detailSequence = BuildSequence(new BuildInfo((IBuildContext?)null, selectManyCall,
+					clonedParentContextRef.BuildContext.SelectQuery));
+
+				var saveExpressionCache = _expressionCache;
+				_expressionCache = new (SqlCacheKey.SqlCacheKeyComparer);
+
+				var parameters = new object[] { detailSequence, mainKeyExpression, selectManyCall, queryParameter, preambles, detailKeys };
+
+				resultExpression = (Expression)_buildPreambleQueryAttachedMethodInfo
+					.MakeGenericMethod(mainKeyExpression.Type, detailType)
+					.Invoke(this, parameters);
+
+				_expressionCache = saveExpressionCache;
+			}
 
 			resultExpression = AdjustType(resultExpression, eagerLoad.Type, MappingSchema);
 
@@ -277,6 +283,30 @@ namespace LinqToDB.Linq.Builder
 					Expression.Convert(Expression.ArrayIndex(PreambleParam, ExpressionInstances.Int32(idx)),
 						typeof(PreambleResult<TKey, T>)), getListMethod, keyExpression);
 
+
+			return resultExpression;
+		}
+
+		static MethodInfo _buildPreambleQueryDetachedMethodInfo =
+			typeof(ExpressionBuilder).GetMethod(nameof(BuildPreambleQueryDetached), BindingFlags.Instance | BindingFlags.NonPublic) ?? throw new InvalidOperationException();
+
+		Expression BuildPreambleQueryDetached<T>(
+			IBuildContext       sequence, 
+			Expression          queryExpression, 
+			ParameterExpression queryParameter,
+			List<Preamble>      preambles) 
+		{
+			var query = new Query<T>(DataContext, queryExpression);
+
+			query.Init(sequence, _parametersContext.CurrentSqlParameters);
+
+			BuildQuery(query, sequence, queryParameter, ref preambles!, Array<Expression>.Empty);
+
+			var idx      = preambles.Count;
+			var preamble = new DatachedPreamble<T>(query);
+			preambles.Add(preamble);
+
+			var resultExpression = Expression.Convert(Expression.ArrayIndex(PreambleParam, ExpressionInstances.Int32(idx)), typeof(List<T>));
 
 			return resultExpression;
 		}

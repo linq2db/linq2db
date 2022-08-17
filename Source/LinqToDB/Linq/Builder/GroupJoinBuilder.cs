@@ -111,7 +111,8 @@ namespace LinqToDB.Linq.Builder
 					return path;
 				}
 
-				if (SequenceHelper.IsSameContext(path, this) && (flags.HasFlag(ProjectFlags.Expression) || flags.HasFlag(ProjectFlags.Expand)) && !path.Type.IsAssignableFrom(_elementType))
+				if (SequenceHelper.IsSameContext(path, this) && (flags.HasFlag(ProjectFlags.Expression) || flags.HasFlag(ProjectFlags.Expand)) 
+				                                             && !path.Type.IsAssignableFrom(_elementType))
 				{
 					var result = GetGroupJoinCall();
 					return result;

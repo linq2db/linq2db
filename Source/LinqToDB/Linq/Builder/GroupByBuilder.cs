@@ -296,6 +296,11 @@ namespace LinqToDB.Linq.Builder
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
+				if (flags.HasFlag(ProjectFlags.Expand))
+				{
+					return path;
+				}
+
 				if (flags.HasFlag(ProjectFlags.Root))
 				{
 					if (SequenceHelper.IsSameContext(path, this))
@@ -427,6 +432,10 @@ namespace LinqToDB.Linq.Builder
 
 				if (path is MemberExpression me && me.Expression is ContextRefExpression && me.Member.Name == "Key")
 				{
+					// do not expand
+					if (flags.HasFlag(ProjectFlags.Expand))
+						return path;
+
 					var keyPath = new ContextRefExpression(me.Type, _key);
 
 					return keyPath;

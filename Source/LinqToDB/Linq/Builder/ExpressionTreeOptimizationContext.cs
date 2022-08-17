@@ -502,10 +502,20 @@ namespace LinqToDB.Linq.Builder
 					}
 					break;
 				}
+
+				case ExpressionType.MemberAccess:
+				{
+					if (typeof(IDataContext).IsSameOrParentOf(ex.Type) || typeof(IExpressionQuery<>).IsSameOrParentOf(ex.Type))
+						return true;
+					break;
+				}
+
 				case ExpressionType.Constant:
 				{
 					var cnt = (ConstantExpression)ex;
 					if (cnt.Value is ISqlExpression)
+						return true;
+					if (typeof(IDataContext).IsSameOrParentOf(cnt.Type))
 						return true;
 					break;
 				}

@@ -172,9 +172,9 @@ namespace LinqToDB.Linq.Builder
 			functionPlaceholder.Alias = methodName;
 			context.Placeholder       = functionPlaceholder;
 
-			// force ExpressionBuilder to cache Aggregation SQL. It will be used later for BuildWhere.
+			/*// force ExpressionBuilder to cache Aggregation SQL. It will be used later for BuildWhere.
 			_ = builder.ConvertToSqlExpr(context, new ContextRefExpression(methodCall.Method.ReturnType, context),
-				buildInfo.GetFlags());
+				buildInfo.GetFlags());*/
 
 			return context;
 		}

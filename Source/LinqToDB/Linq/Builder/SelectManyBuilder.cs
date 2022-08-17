@@ -28,6 +28,9 @@ namespace LinqToDB.Linq.Builder
 			var scopeContext = new ScopeContext(sequence, sequence);
 			var expr         = SequenceHelper.PrepareBody(collectionSelector, scopeContext).Unwrap();
 
+			// GroupJoin handling
+			expr = builder.MakeExpression(expr, ProjectFlags.Expand);
+
 			// correcting query for Eager Loading
 			expr = SequenceHelper.MoveAllToScopedContext(expr, scopeContext);
 

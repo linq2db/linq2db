@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Async;
+using LinqToDB.Expressions;
 using LinqToDB.Mapping;
 using LinqToDB.Tools;
 using LinqToDB.Tools.Comparers;
