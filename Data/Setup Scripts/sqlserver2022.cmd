@@ -12,6 +12,7 @@ ECHO pause to wait for SQL Server startup completion
 timeout 15
 
 REM create test databases
-docker exec sql2022 /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P Password12! -Q "CREATE DATABASE TestData;"
-docker exec sql2022 /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P Password12! -Q "CREATE DATABASE TestDataMS;"
+REM collation added temporary due to issues with image
+docker exec sql2022 /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P Password12! -Q "CREATE DATABASE TestData  COLLATE SQL_Latin1_General_CP1_CI_AS;"
+docker exec sql2022 /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P Password12! -Q "CREATE DATABASE TestDataMS  COLLATE SQL_Latin1_General_CP1_CI_AS;"
 

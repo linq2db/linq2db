@@ -27,9 +27,9 @@ namespace Tests.Linq
 			[DataSources]        string context,
 			[Values(2, 4, null)] int?   value)
 		{
-			if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && context.IsAnyOf(TestProvName.AllSqlServer2022Plus))
+			if (context.IsAnyOf(TestProvName.AllSqlServer2022Plus))
 			{
-				Assert.Inconclusive("CTP2.1 docker image required");
+				Assert.Inconclusive("Temporary disabled. CTP2.1 docker image required");
 			}
 
 			using var db  = GetDataContext(context);
@@ -55,9 +55,9 @@ namespace Tests.Linq
 			[DataSources(TestProvName.AllAccess)] string context,
 			[Values("abc", "xyz", null)] string? value)
 		{
-			if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && context.IsAnyOf(TestProvName.AllSqlServer2022Plus))
+			if (context.IsAnyOf(TestProvName.AllSqlServer2022Plus))
 			{
-				Assert.Inconclusive("CTP2.1 docker image required");
+				Assert.Inconclusive("Temporary disabled. CTP2.1 docker image required");
 			}
 
 			using var db  = GetDataContext(context);
