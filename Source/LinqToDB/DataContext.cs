@@ -340,7 +340,7 @@ namespace LinqToDB
 		{
 			if (_disposed)
 				// GetType().FullName to support inherited types
-				throw new ObjectDisposedException(GetType().FullName);
+				ThrowHelper.ThrowObjectDisposedException(GetType().FullName);
 		}
 
 		/// <summary>

@@ -201,10 +201,10 @@ namespace LinqToDB.Linq.Builder
 				=> QueryRunner.SetNonQueryQuery(query);
 
 			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
-				=> throw new NotImplementedException();
+				=> ThrowHelper.ThrowNotImplementedException<Expression>();
 
 			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
-				=> throw new NotImplementedException();
+				=> ThrowHelper.ThrowNotImplementedException<SqlInfo[]>();
 
 			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 			{
@@ -241,7 +241,7 @@ namespace LinqToDB.Linq.Builder
 				=> _source.IsExpression(expression, level, requestFlag);
 
 			public override IBuildContext GetContext(Expression? expression, int level, BuildInfo buildInfo)
-				=> throw new NotImplementedException();
+				=> ThrowHelper.ThrowNotImplementedException<IBuildContext>();
 		}
 
 		#endregion

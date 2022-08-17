@@ -2671,7 +2671,7 @@ namespace LinqToDB.SqlProvider
 				deleteStatement.SelectQuery.From.Tables[0].Source is SqlTable table)
 			{
 				if (deleteStatement.Output != null)
-					throw new NotImplementedException($"GetAlternativeDelete not implemented for delete with output");
+					ThrowHelper.ThrowNotImplementedException($"GetAlternativeDelete not implemented for delete with output");
 
 				var sql = new SelectQuery { IsParameterDependent = deleteStatement.IsParameterDependent };
 

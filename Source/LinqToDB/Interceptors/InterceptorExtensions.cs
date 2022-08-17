@@ -74,7 +74,8 @@ namespace LinqToDB
 					wri.Interceptor = new AggregatedUnwrapDataObjectInterceptor { Interceptors = { wri.Interceptor!, wr } };
 					break;
 				default:
-					throw new NotImplementedException($"AddInterceptor for '{typeof(T).Name}' is not implemented.");
+					ThrowHelper.ThrowNotImplementedException($"AddInterceptor for '{typeof(T).Name}' is not implemented.");
+					break;
 			}
 		}
 

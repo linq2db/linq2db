@@ -155,13 +155,13 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpression
 
-		bool ISqlExpression.CanBeNull => throw new NotImplementedException();
+		bool ISqlExpression.CanBeNull => ThrowHelper.ThrowNotImplementedException<bool>();
 
-		int ISqlExpression.Precedence => throw new NotImplementedException();
+		int ISqlExpression.Precedence => ThrowHelper.ThrowNotImplementedException<int>();
 
 		Type ISqlExpression.SystemType => typeof(object);
 
-		bool ISqlExpression.Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer) => throw new NotImplementedException();
+		bool ISqlExpression.Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer) => ThrowHelper.ThrowNotImplementedException<bool>();
 
 		#endregion
 
@@ -221,7 +221,7 @@ namespace LinqToDB.SqlQuery
 		#endregion
 
 		#region IEquatable
-		bool IEquatable<ISqlExpression>.Equals(ISqlExpression? other) => throw new NotImplementedException();
+		bool IEquatable<ISqlExpression>.Equals(ISqlExpression? other) => ThrowHelper.ThrowNotImplementedException<bool>();
 		#endregion
 
 		#region ISqlExpressionWalkable

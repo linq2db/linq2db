@@ -720,7 +720,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (parentExpr == null)
 				{
-					throw new NotImplementedException();
+					ThrowHelper.ThrowNotImplementedException();
 				}
 
 				if (projectionVariant)
@@ -751,7 +751,7 @@ namespace LinqToDB.Linq.Builder
 
 					if (parentExpr == null)
 					{
-						throw new NotImplementedException();
+						ThrowHelper.ThrowNotImplementedException();
 					}
 
 					if (projectionVariant)
@@ -815,7 +815,7 @@ namespace LinqToDB.Linq.Builder
 
 					if (parentExpr == null)
 					{
-						throw new NotImplementedException();
+						ThrowHelper.ThrowNotImplementedException();
 					}
 
 					detailQuery = ConstructMemberPath(associationPath, parentExpr, true)!;
@@ -1188,7 +1188,7 @@ namespace LinqToDB.Linq.Builder
 					if (searchExpression.NodeType == ExpressionType.MemberAccess)
 						searchExpression = ((MemberExpression)searchExpression).Expression!;
 					else
-						throw new NotImplementedException();
+						ThrowHelper.ThrowNotImplementedException();
 				}
 
 				CollectDependencies(mappingSchema, queryableDetail, dependencies, dependencyParameters);
@@ -2011,7 +2011,7 @@ namespace LinqToDB.Linq.Builder
 
 											if (typesMapping.TryGetValue(resultTemplateParam, out var replacedType))
 											{
-												throw new NotImplementedException();
+												ThrowHelper.ThrowNotImplementedException();
 											}
 											else
 											{
@@ -2156,7 +2156,7 @@ namespace LinqToDB.Linq.Builder
 									updated = Expression.Call(methodInfo, updated, Expression.Lambda(body, p));
 								}
 								else
-									throw new NotImplementedException();
+									ThrowHelper.ThrowNotImplementedException();
 							};
 							newExpr = CreateKDH(updated, ne);
 						}

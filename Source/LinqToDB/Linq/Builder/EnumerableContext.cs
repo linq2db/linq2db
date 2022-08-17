@@ -577,7 +577,7 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			throw new NotImplementedException();
+			return ThrowHelper.ThrowNotImplementedException<SqlInfo[]>();
 		}
 
 		private SqlField BuildField(ColumnDescriptor column)
@@ -690,7 +690,7 @@ namespace LinqToDB.Linq.Builder
 
 		public IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)
 		{
-			throw new NotImplementedException();
+			return ThrowHelper.ThrowNotImplementedException<IBuildContext?>();
 		}
 
 		public int ConvertToParentIndex(int index, IBuildContext context)
@@ -709,7 +709,7 @@ namespace LinqToDB.Linq.Builder
 
 		public ISqlExpression GetSubQuery(IBuildContext context)
 		{
-			throw new NotImplementedException();
+			return ThrowHelper.ThrowNotImplementedException<ISqlExpression>();
 		}
 
 		public SqlStatement GetResultStatement()

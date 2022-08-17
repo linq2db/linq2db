@@ -681,7 +681,7 @@ namespace LinqToDB.Expressions
 
 										case MemberBindingType.MemberBinding:
 										case MemberBindingType.ListBinding:
-											throw new NotImplementedException();
+											return ThrowHelper.ThrowNotImplementedException<MemberAssignment>();
 										default:
 											return ThrowHelper.ThrowInvalidOperationException<MemberAssignment>($"Unexpected binding type: {b.BindingType}");
 									}

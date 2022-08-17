@@ -2083,7 +2083,7 @@ namespace LinqToDB.Linq.Builder
 			var ret = _findExpressionVisitor.Find(expr);
 
 			if (ret == null)
-				throw new NotImplementedException();
+				ThrowHelper.ThrowNotImplementedException();
 
 			return ret;
 		}

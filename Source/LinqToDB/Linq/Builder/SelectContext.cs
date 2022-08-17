@@ -261,7 +261,7 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			throw new NotImplementedException();
+			return ThrowHelper.ThrowNotImplementedException<Expression>();
 		}
 
 		#endregion
@@ -325,7 +325,7 @@ namespace LinqToDB.Linq.Builder
 						return list.ToArray();
 					}
 
-					throw new NotImplementedException();
+					ThrowHelper.ThrowNotImplementedException();
 				}
 
 				switch (flags)
@@ -421,7 +421,7 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			throw new NotImplementedException();
+			return ThrowHelper.ThrowNotImplementedException<SqlInfo[]>();
 		}
 
 		SqlInfo[] ConvertMember(MemberInfo member, Expression expression, ConvertFlags flags)
@@ -621,7 +621,7 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			throw new NotImplementedException();
+			return ThrowHelper.ThrowNotImplementedException<SqlInfo[]>();
 		}
 
 		SqlInfo SetInfo(SqlInfo info, MemberInfo? member)
@@ -885,7 +885,8 @@ namespace LinqToDB.Linq.Builder
 					expression,
 					level,
 					static (buildInfo, ctx, ex, l) => ctx!.GetContext(ex, l, buildInfo),
-					static _ => throw new NotImplementedException(), true);
+					static _ => ThrowHelper.ThrowNotImplementedException<IBuildContext>(),
+					throwOnError: true);
 			}
 			else
 			{
@@ -916,7 +917,7 @@ namespace LinqToDB.Linq.Builder
 									ctx.GetContext(ex, l, buildInfo));
 
 							if (context == null)
-								throw new NotImplementedException();
+								ThrowHelper.ThrowNotImplementedException();
 
 							return context;
 						}
@@ -972,7 +973,7 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			throw new NotImplementedException();
+			return ThrowHelper.ThrowNotImplementedException<IBuildContext>();
 		}
 
 		#endregion
@@ -1098,7 +1099,7 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			if (throwOnError)
-				throw new NotImplementedException();
+				ThrowHelper.ThrowNotImplementedException();
 
 			return default!;
 		}

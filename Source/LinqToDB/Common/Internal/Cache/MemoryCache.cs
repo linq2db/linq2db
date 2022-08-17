@@ -403,7 +403,8 @@ namespace LinqToDB.Common.Internal.Cache
 						case CacheItemPriority.NeverRemove:
 							break;
 						default:
-							throw new NotSupportedException("Not implemented: " + entry.Priority);
+							ThrowHelper.ThrowNotSupportedException("Not implemented: " + entry.Priority);
+							break;
 					}
 				}
 			}
@@ -471,7 +472,7 @@ namespace LinqToDB.Common.Internal.Cache
 		{
 			if (_disposed)
 			{
-				throw new ObjectDisposedException(typeof(MemoryCache<TKey>).FullName);
+				ThrowHelper.ThrowObjectDisposedException(typeof(MemoryCache<TKey>).FullName);
 			}
 		}
 	}

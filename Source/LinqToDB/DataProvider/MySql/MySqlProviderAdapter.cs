@@ -208,15 +208,15 @@ namespace LinqToDB.DataProvider.MySql
 			[Wrapper]
 			private class MySqlDateTime
 			{
-				public DateTime GetDateTime() => throw new NotImplementedException();
+				public DateTime GetDateTime() => ThrowHelper.ThrowNotImplementedException<DateTime>();
 			}
 
 			[Wrapper]
 			private class MySqlDecimal
 			{
-				public          decimal Value      => throw new NotImplementedException();
-				public          double  ToDouble() => throw new NotImplementedException();
-				public override string  ToString() => throw new NotImplementedException();
+				public          decimal Value      => ThrowHelper.ThrowNotImplementedException<decimal>();
+				public          double  ToDouble() => ThrowHelper.ThrowNotImplementedException<double >();
+				public override string  ToString() => ThrowHelper.ThrowNotImplementedException<string >();
 			}
 
 			[Wrapper]
@@ -400,15 +400,15 @@ namespace LinqToDB.DataProvider.MySql
 			[Wrapper]
 			private class MySqlDecimal
 			{
-				public          decimal Value      => throw new NotImplementedException();
-				public          double  ToDouble() => throw new NotImplementedException();
-				public override string  ToString() => throw new NotImplementedException();
+				public          decimal Value      => ThrowHelper.ThrowNotImplementedException<decimal>();
+				public          double  ToDouble() => ThrowHelper.ThrowNotImplementedException<double >();
+				public override string  ToString() => ThrowHelper.ThrowNotImplementedException<string >();
 			}
 
 			[Wrapper]
 			private class MySqlDateTime
 			{
-				public DateTime GetDateTime() => throw new NotImplementedException();
+				public DateTime GetDateTime() => ThrowHelper.ThrowNotImplementedException<DateTime>();
 			}
 
 			[Wrapper]
@@ -527,7 +527,7 @@ namespace LinqToDB.DataProvider.MySql
 				{
 				}
 
-				public MySqlBulkCopy(MySqlConnection connection, MySqlTransaction? transaction) => throw new NotImplementedException();
+				public MySqlBulkCopy(MySqlConnection connection, MySqlTransaction? transaction) => ThrowHelper.ThrowNotImplementedException();
 
 #pragma warning disable RS0030 // API mapping must preserve type (IDataReader)
 				[TypeWrapperName("WriteToServer")]
@@ -625,7 +625,7 @@ namespace LinqToDB.DataProvider.MySql
 					remove => _MySqlRowsCopied = (MySqlRowsCopiedEventHandler?)Delegate.Remove (_MySqlRowsCopied, value);
 				}
 
-				private List<MySqlBulkCopyColumnMapping> ColumnMappings => throw new NotImplementedException("Use AddColumnMapping method instead");
+				private List<MySqlBulkCopyColumnMapping> ColumnMappings => ThrowHelper.ThrowNotImplementedException<List<MySqlBulkCopyColumnMapping>>("Use AddColumnMapping method instead");
 
 				// because underlying object use List<T> for column mappings, easiest approch will be to add
 				// non-existing Add method
@@ -637,14 +637,14 @@ namespace LinqToDB.DataProvider.MySql
 			{
 				private static LambdaExpression[] Wrappers { get; }
 					= new LambdaExpression[]
-				{
-					// [0]: get RowsCopied
-					(Expression<Func<MySqlRowsCopiedEventArgs, long>> )((MySqlRowsCopiedEventArgs this_) => this_.RowsCopied),
-					// [1]: get Abort
-					(Expression<Func<MySqlRowsCopiedEventArgs, bool>>)((MySqlRowsCopiedEventArgs this_) => this_.Abort),
-					// [3]: set Abort
-					PropertySetter((MySqlRowsCopiedEventArgs this_) => this_.Abort),
-				};
+					{
+						// [0]: get RowsCopied
+						(Expression<Func<MySqlRowsCopiedEventArgs, long>> )((MySqlRowsCopiedEventArgs this_) => this_.RowsCopied),
+						// [1]: get Abort
+						(Expression<Func<MySqlRowsCopiedEventArgs, bool>>)((MySqlRowsCopiedEventArgs this_) => this_.Abort),
+						// [3]: set Abort
+						PropertySetter((MySqlRowsCopiedEventArgs this_) => this_.Abort),
+					};
 
 				public MySqlRowsCopiedEventArgs(object instance, Delegate[] wrappers) : base(instance, wrappers)
 				{
@@ -676,7 +676,7 @@ namespace LinqToDB.DataProvider.MySql
 			{
 			}
 
-			public MySqlBulkCopyColumnMapping(int sourceOrdinal, string destinationColumn, string? expression = null) => throw new NotImplementedException();
+			public MySqlBulkCopyColumnMapping(int sourceOrdinal, string destinationColumn, string? expression = null) => ThrowHelper.ThrowNotImplementedException();
 		}
 
 		[Wrapper]

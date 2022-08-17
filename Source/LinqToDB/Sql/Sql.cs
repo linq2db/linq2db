@@ -197,7 +197,7 @@ namespace LinqToDB
 #pragma warning restore CS3016 // Arrays as attribute arguments is not CLS-compliant
 		static TR ConvertRemover<T, TR>(T input)
 		{
-			throw new NotImplementedException();
+			return ThrowHelper.ThrowNotImplementedException<TR>();
 		}
 
 		class NoConvertBuilder : IExtensionCallBuilder
@@ -560,7 +560,7 @@ namespace LinqToDB
 		[Expression(PN.ClickHouse, "concat(substringUTF8({0}, 1, {1} - 1), {3}, substringUTF8({0}, {1} + {2}))", PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static string Stuff(IEnumerable<string> characterExpression, int? start, int? length, string replaceWithExpression)
 		{
-			throw new NotImplementedException();
+			return ThrowHelper.ThrowNotImplementedException<string>();
 		}
 
 		[Function(                                                        IsNullable = IsNullableType.IfAnyParameterNullable)]

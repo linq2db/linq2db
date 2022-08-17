@@ -352,7 +352,7 @@ namespace LinqToDB.Remote
 				QueryType.Delete => ((SqlDeleteStatement)query.Statement).Output!.OutputColumns!,
 				QueryType.Update => ((SqlUpdateStatement)query.Statement).Output!.OutputColumns!,
 				QueryType.Merge  => ((SqlMergeStatement )query.Statement).Output!.OutputColumns!,
-				_ => throw new NotImplementedException($"Query type not supported: {query.Statement.QueryType}"),
+				_ => ThrowHelper.ThrowNotImplementedException<List<ISqlExpression>>($"Query type not supported: {query.Statement.QueryType}"),
 			};
 
 			for (var i = 0; i < ret.FieldCount; i++)

@@ -242,7 +242,7 @@ namespace LinqToDB.DataProvider.Sybase
 			{
 			}
 
-			public AseBulkCopy(AseConnection connection, AseBulkCopyOptions options, AseTransaction? transaction) => throw new NotImplementedException();
+			public AseBulkCopy(AseConnection connection, AseBulkCopyOptions options, AseTransaction? transaction) => ThrowHelper.ThrowNotImplementedException();
 
 			void IDisposable.Dispose() => ((Action<AseBulkCopy>)CompiledWrappers[0])(this);
 
@@ -360,7 +360,7 @@ namespace LinqToDB.DataProvider.Sybase
 			{
 			}
 
-			public AseBulkCopyColumnMapping(string source, string destination) => throw new NotImplementedException();
+			public AseBulkCopyColumnMapping(string source, string destination) => ThrowHelper.ThrowNotImplementedException();
 		}
 
 		#endregion

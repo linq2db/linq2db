@@ -320,7 +320,8 @@ namespace LinqToDB.Data
 					break;
 				}
 				default:
-					throw new NotImplementedException($"SetupType: {options.SetupType}");
+					ThrowHelper.ThrowNotImplementedException($"SetupType: {options.SetupType}");
+					break;
 			}
 
 			RetryPolicy = Configuration.RetryPolicy.Factory != null
@@ -1883,7 +1884,7 @@ namespace LinqToDB.Data
 		protected void CheckAndThrowOnDisposed()
 		{
 			if (Disposed && (ThrowOnDisposed ?? Configuration.Data.ThrowOnDisposed))
-				throw new ObjectDisposedException("DataConnection", "IDataContext is disposed, see https://github.com/linq2db/linq2db/wiki/Managing-data-connection");
+				ThrowHelper.ThrowObjectDisposedException("DataConnection", "IDataContext is disposed, see https://github.com/linq2db/linq2db/wiki/Managing-data-connection");
 		}
 
 		/// <summary>

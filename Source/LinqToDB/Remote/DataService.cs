@@ -228,7 +228,7 @@ namespace LinqToDB.Remote
 
 			public ResourceAssociationSet GetResourceAssociationSet(ResourceSet resourceSet, ResourceType resourceType, ResourceProperty resourceProperty)
 			{
-				throw new NotImplementedException();
+				return ThrowHelper.ThrowNotImplementedException<ResourceAssociationSet>();
 			}
 
 			public bool TryResolveResourceType(string name, out ResourceType resourceType)
@@ -303,22 +303,22 @@ namespace LinqToDB.Remote
 
 			public object GetPropertyValue(object target, ResourceProperty resourceProperty)
 			{
-				throw new NotImplementedException();
+				return ThrowHelper.ThrowNotImplementedException<object>();
 			}
 
 			public object GetOpenPropertyValue(object target, string propertyName)
 			{
-				throw new NotImplementedException();
+				return ThrowHelper.ThrowNotImplementedException<object>();
 			}
 
 			public IEnumerable<KeyValuePair<string,object>> GetOpenPropertyValues(object target)
 			{
-				throw new NotImplementedException();
+				return ThrowHelper.ThrowNotImplementedException<IEnumerable<KeyValuePair<string, object>>>();
 			}
 
 			public object InvokeServiceOperation(ServiceOperation serviceOperation, object[] parameters)
 			{
-				throw new NotImplementedException();
+				return ThrowHelper.ThrowNotImplementedException<object>();
 			}
 
 			public object? CurrentDataSource         { get; set; }
@@ -366,12 +366,12 @@ namespace LinqToDB.Remote
 
 			public void SetConcurrencyValues(object resourceCookie, bool? checkForEquality, IEnumerable<KeyValuePair<string,object>> concurrencyValues)
 			{
-				throw new NotImplementedException();
+				ThrowHelper.ThrowNotImplementedException();
 			}
 
 			public void AddReferenceToCollection(object targetResource, string propertyName, object resourceToBeAdded)
 			{
-				throw new NotImplementedException();
+				ThrowHelper.ThrowNotImplementedException();
 			}
 
 			public void ClearChanges()
@@ -418,7 +418,7 @@ namespace LinqToDB.Remote
 
 			public void RemoveReferenceFromCollection(object targetResource, string propertyName, object resourceToBeRemoved)
 			{
-				throw new NotImplementedException();
+				ThrowHelper.ThrowNotImplementedException();
 			}
 
 			public object ResetResource(object resource)
@@ -434,12 +434,12 @@ namespace LinqToDB.Remote
 
 			public void SaveChanges()
 			{
-				throw new NotImplementedException();
+				ThrowHelper.ThrowNotImplementedException();
 			}
 
 			public void SetReference(object targetResource, string propertyName, object? propertyValue)
 			{
-				throw new NotImplementedException();
+				ThrowHelper.ThrowNotImplementedException();
 			}
 
 			public void SetValue(object targetResource, string propertyName, object? propertyValue)

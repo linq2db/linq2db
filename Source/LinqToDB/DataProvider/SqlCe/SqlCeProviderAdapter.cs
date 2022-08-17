@@ -107,7 +107,7 @@ namespace LinqToDB.DataProvider.SqlCe
 			{
 			}
 
-			public SqlCeEngine(string connectionString) => throw new NotImplementedException();
+			public SqlCeEngine(string connectionString) => ThrowHelper.ThrowNotImplementedException();
 
 			public void CreateDatabase() => ((Action<SqlCeEngine>)CompiledWrappers[0])(this);
 			public void Dispose()        => ((Action<SqlCeEngine>)CompiledWrappers[1])(this);

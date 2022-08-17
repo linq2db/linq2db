@@ -1017,7 +1017,7 @@ namespace LinqToDB.Linq.Builder
 						}
 				}
 
-				throw new NotImplementedException();
+				return ThrowHelper.ThrowNotImplementedException<SqlInfo[]>();
 			}
 
 			#endregion
@@ -1070,7 +1070,7 @@ namespace LinqToDB.Linq.Builder
 						return info;
 				}
 
-				throw new NotImplementedException();
+				return ThrowHelper.ThrowNotImplementedException<SqlInfo[]>();
 			}
 
 			#endregion

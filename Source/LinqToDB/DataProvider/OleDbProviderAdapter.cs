@@ -110,7 +110,8 @@ namespace LinqToDB.DataProvider
 		[Wrapper]
 		private class OleDbConnection
 		{
-			public DataTable GetOleDbSchemaTable(Guid schema, object[]? restrictions) => throw new NotImplementedException();
+			public DataTable GetOleDbSchemaTable(Guid schema, object[]? restrictions) 
+				=> ThrowHelper.ThrowNotImplementedException<DataTable>();
 		}
 
 		[Wrapper]

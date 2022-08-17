@@ -70,11 +70,11 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (expression is ParameterExpression)
 				{
-					throw new NotImplementedException();
+					ThrowHelper.ThrowNotImplementedException();
 				}
 			}
 
-			throw new NotImplementedException();
+			return ThrowHelper.ThrowNotImplementedException<IsExpressionResult>();
 		}
 
 		public IBuildContext? GetContext     (Expression? expression, int level, BuildInfo buildInfo)
@@ -84,7 +84,7 @@ namespace LinqToDB.Linq.Builder
 
 		public virtual SqlStatement GetResultStatement()
 		{
-			throw new NotImplementedException();
+			return ThrowHelper.ThrowNotImplementedException<SqlStatement>();
 		}
 
 		public void CompleteColumns()

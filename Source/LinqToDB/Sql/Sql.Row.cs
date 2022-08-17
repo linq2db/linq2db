@@ -14,16 +14,16 @@ namespace LinqToDB
 			private SqlRow() {}
 
 			public static bool operator > (SqlRow<T1, T2> x, SqlRow<T1, T2> y)
-				=> throw new NotImplementedException();
+				=> ThrowHelper.ThrowNotImplementedException<bool>();
 
 			public static bool operator < (SqlRow<T1, T2> x, SqlRow<T1, T2> y)
-				=> throw new NotImplementedException();
+				=> ThrowHelper.ThrowNotImplementedException<bool>();
 
 			public static bool operator >= (SqlRow<T1, T2> x, SqlRow<T1, T2> y)
-				=> throw new NotImplementedException();
+				=> ThrowHelper.ThrowNotImplementedException<bool>();
 
 			public static bool operator <= (SqlRow<T1, T2> x, SqlRow<T1, T2> y)
-				=> throw new NotImplementedException();
+				=> ThrowHelper.ThrowNotImplementedException<bool>();
 
 			public abstract int CompareTo(object? obj);
 		}
@@ -73,7 +73,7 @@ namespace LinqToDB
 		// RDBMS only support OVERLAPS for date(-time) and interval types.		
 		[Extension("",  "", IsPredicate = true, ServerSideOnly = true, Precedence = Precedence.Comparison, BuilderType = typeof(OverlapsBuilder))]
 		public static bool Overlaps<T1, T2, T3, T4>(this SqlRow<T1, T2> thisRow, SqlRow<T3, T4> other)
-			=> throw new NotImplementedException();
+			=> ThrowHelper.ThrowNotImplementedException<bool>();
 
 		private class OverlapsBuilder : IExtensionCallBuilder
 		{

@@ -149,13 +149,13 @@ namespace LinqToDB.DataProvider.SQLite
 		[Wrapper]
 		private class SqliteConnection
 		{
-			public static void ClearAllPools() => throw new NotImplementedException();
+			public static void ClearAllPools() => ThrowHelper.ThrowNotImplementedException();
 		}
 
 		[Wrapper]
 		private class SQLiteConnection
 		{
-			public static void ClearAllPools() => throw new NotImplementedException();
+			public static void ClearAllPools() => ThrowHelper.ThrowNotImplementedException();
 		}
 		#endregion
 	}

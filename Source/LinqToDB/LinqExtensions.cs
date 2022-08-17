@@ -3536,7 +3536,7 @@ namespace LinqToDB
 
 		internal static IQueryable<T> AsCte<T>(IQueryable<T> cteTable, IQueryable<T> cteBody, string? tableName)
 		{
-			throw new NotImplementedException();
+			return ThrowHelper.ThrowNotImplementedException<IQueryable<T>>();
 		}
 
 		/// <summary>

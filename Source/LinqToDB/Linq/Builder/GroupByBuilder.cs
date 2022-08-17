@@ -447,7 +447,7 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-				throw new NotImplementedException();
+				return ThrowHelper.ThrowNotImplementedException<Expression>();
 			}
 
 			ISqlExpression ConvertEnumerable(MethodCallExpression call)
@@ -789,7 +789,7 @@ namespace LinqToDB.Linq.Builder
 					return ctx;
 				}
 
-				throw new NotImplementedException();
+				return ThrowHelper.ThrowNotImplementedException<IBuildContext?>();
 			}
 		}
 

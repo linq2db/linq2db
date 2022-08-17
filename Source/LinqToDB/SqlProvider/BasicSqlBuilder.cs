@@ -3724,7 +3724,7 @@ namespace LinqToDB.SqlProvider
 
 		public virtual string GetReserveSequenceValuesSql(int count, string sequenceName)
 		{
-			throw new NotImplementedException();
+			return ThrowHelper.ThrowNotImplementedException<string>();
 		}
 
 		public virtual string GetMaxValueSql(EntityDescriptor entity, ColumnDescriptor column)

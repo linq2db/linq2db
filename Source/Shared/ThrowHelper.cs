@@ -277,6 +277,39 @@ internal static partial class ThrowHelper
 	}
 
 	/// <summary>
+	/// Throws a new <see cref="InvalidCastException"/>.
+	/// </summary>
+	/// <exception cref="InvalidCastException">Thrown with no parameters.</exception>
+	[DoesNotReturn]
+	public static void ThrowInvalidCastException()
+	{
+		throw new InvalidCastException();
+	}
+
+	/// <summary>
+	/// Throws a new <see cref="InvalidCastException"/>.
+	/// </summary>
+	/// <param name="message">The message to include in the exception.</param>
+	/// <exception cref="InvalidCastException">Thrown with the specified parameter.</exception>
+	[DoesNotReturn]
+	public static void ThrowInvalidCastException(string? message)
+	{
+		throw new InvalidCastException(message);
+	}
+
+	/// <summary>
+	/// Throws a new <see cref="InvalidCastException"/>.
+	/// </summary>
+	/// <param name="message">The message to include in the exception.</param>
+	/// <param name="innerException">The inner <see cref="Exception"/> to include.</param>
+	/// <exception cref="InvalidCastException">Thrown with the specified parameter.</exception>
+	[DoesNotReturn]
+	public static void ThrowInvalidCastException(string? message, Exception? innerException)
+	{
+		throw new InvalidCastException(message, innerException);
+	}
+
+	/// <summary>
 	/// Throws a new <see cref="InvalidDataException"/>.
 	/// </summary>
 	/// <exception cref="InvalidDataException">Thrown with no parameters.</exception>
@@ -508,6 +541,39 @@ internal static partial class ThrowHelper
 	public static void ThrowMissingMethodException(string? className, string? methodName)
 	{
 		throw new MissingMethodException(className, methodName);
+	}
+
+	/// <summary>
+	/// Throws a new <see cref="NotImplementedException"/>.
+	/// </summary>
+	/// <exception cref="NotImplementedException">Thrown with no parameters.</exception>
+	[DoesNotReturn]
+	public static void ThrowNotImplementedException()
+	{
+		throw new NotImplementedException();
+	}
+
+	/// <summary>
+	/// Throws a new <see cref="NotImplementedException"/>.
+	/// </summary>
+	/// <param name="message">The message to include in the exception.</param>
+	/// <exception cref="NotImplementedException">Thrown with the specified parameter.</exception>
+	[DoesNotReturn]
+	public static void ThrowNotImplementedException(string? message)
+	{
+		throw new NotImplementedException(message);
+	}
+
+	/// <summary>
+	/// Throws a new <see cref="NotImplementedException"/>.
+	/// </summary>
+	/// <param name="message">The message to include in the exception.</param>
+	/// <param name="innerException">The inner <see cref="Exception"/> to include.</param>
+	/// <exception cref="NotImplementedException">Thrown with the specified parameter.</exception>
+	[DoesNotReturn]
+	public static void ThrowNotImplementedException(string? message, Exception? innerException)
+	{
+		throw new NotImplementedException(message, innerException);
 	}
 
 	/// <summary>
@@ -1086,6 +1152,45 @@ internal static partial class ThrowHelper
 	}
 
 	/// <summary>
+	/// Throws a new <see cref="InvalidCastException"/>.
+	/// </summary>
+	/// <typeparam name="T">The type of expected result.</typeparam>
+	/// <exception cref="InvalidCastException">Thrown with no parameters.</exception>
+	/// <returns>This method always throws, so it actually never returns a value.</returns>
+	[DoesNotReturn]
+	public static T ThrowInvalidCastException<T>()
+	{
+		throw new InvalidCastException();
+	}
+
+	/// <summary>
+	/// Throws a new <see cref="InvalidCastException"/>.
+	/// </summary>
+	/// <typeparam name="T">The type of expected result.</typeparam>
+	/// <param name="message">The message to include in the exception.</param>
+	/// <exception cref="InvalidCastException">Thrown with the specified parameter.</exception>
+	/// <returns>This method always throws, so it actually never returns a value.</returns>
+	[DoesNotReturn]
+	public static T ThrowInvalidCastException<T>(string? message)
+	{
+		throw new InvalidCastException(message);
+	}
+
+	/// <summary>
+	/// Throws a new <see cref="InvalidCastException"/>.
+	/// </summary>
+	/// <typeparam name="T">The type of expected result.</typeparam>
+	/// <param name="message">The message to include in the exception.</param>
+	/// <param name="innerException">The inner <see cref="Exception"/> to include.</param>
+	/// <exception cref="InvalidCastException">Thrown with the specified parameter.</exception>
+	/// <returns>This method always throws, so it actually never returns a value.</returns>
+	[DoesNotReturn]
+	public static T ThrowInvalidCastException<T>(string? message, Exception? innerException)
+	{
+		throw new InvalidCastException(message, innerException);
+	}
+
+	/// <summary>
 	/// Throws a new <see cref="InvalidDataException"/>.
 	/// </summary>
 	/// <typeparam name="T">The type of expected result.</typeparam>
@@ -1359,6 +1464,45 @@ internal static partial class ThrowHelper
 	public static T ThrowMissingMethodException<T>(string? className, string? methodName)
 	{
 		throw new MissingMethodException(className, methodName);
+	}
+
+	/// <summary>
+	/// Throws a new <see cref="NotImplementedException"/>.
+	/// </summary>
+	/// <typeparam name="T">The type of expected result.</typeparam>
+	/// <exception cref="NotImplementedException">Thrown with no parameters.</exception>
+	/// <returns>This method always throws, so it actually never returns a value.</returns>
+	[DoesNotReturn]
+	public static T ThrowNotImplementedException<T>()
+	{
+		throw new NotImplementedException();
+	}
+
+	/// <summary>
+	/// Throws a new <see cref="NotImplementedException"/>.
+	/// </summary>
+	/// <typeparam name="T">The type of expected result.</typeparam>
+	/// <param name="message">The message to include in the exception.</param>
+	/// <exception cref="NotImplementedException">Thrown with the specified parameter.</exception>
+	/// <returns>This method always throws, so it actually never returns a value.</returns>
+	[DoesNotReturn]
+	public static T ThrowNotImplementedException<T>(string? message)
+	{
+		throw new NotImplementedException(message);
+	}
+
+	/// <summary>
+	/// Throws a new <see cref="NotImplementedException"/>.
+	/// </summary>
+	/// <typeparam name="T">The type of expected result.</typeparam>
+	/// <param name="message">The message to include in the exception.</param>
+	/// <param name="innerException">The inner <see cref="Exception"/> to include.</param>
+	/// <exception cref="NotImplementedException">Thrown with the specified parameter.</exception>
+	/// <returns>This method always throws, so it actually never returns a value.</returns>
+	[DoesNotReturn]
+	public static T ThrowNotImplementedException<T>(string? message, Exception? innerException)
+	{
+		throw new NotImplementedException(message, innerException);
 	}
 
 	/// <summary>

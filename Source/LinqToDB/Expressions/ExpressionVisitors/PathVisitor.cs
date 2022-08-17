@@ -238,16 +238,19 @@ namespace LinqToDB.Expressions
 				case ExpressionType.Default  : path = ConvertPathTo(typeof(DefaultExpression  )); break;
 
 				case ExpressionType.Extension:
-					{
-						path = _path;
-						if (expr.CanReduce)
-							Path(expr.Reduce());
+				{
+					path = _path;
+					if (expr.CanReduce)
+						Path(expr.Reduce());
 
-						break;
-					}
+					break;
+				}
 
 				default:
-					throw new NotImplementedException($"Unhandled expression type: {expr.NodeType}");
+				{
+					path = ThrowHelper.ThrowNotImplementedException<Expression>($"Unhandled expression type: {expr.NodeType}");
+					break;
+				}
 			}
 
 			_func(_context, expr, path);

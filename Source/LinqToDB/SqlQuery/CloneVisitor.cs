@@ -793,7 +793,8 @@ namespace LinqToDB.SqlQuery
 				//case QueryElementType.MultiInsertStatement:
 				//case QueryElementType.MergeSourceTable:
 				default:
-					throw new NotImplementedException($"Unsupported query element type: {element.GetType()} ({element.ElementType})");
+					ThrowHelper.ThrowNotImplementedException($"Unsupported query element type: {element.GetType()} ({element.ElementType})");
+					break;
 			}
 
 			if (element is IQueryExtendible { SqlQueryExtensions: {} } qe)

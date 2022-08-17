@@ -134,7 +134,7 @@ namespace LinqToDB.DataProvider.Firebird
 		[Wrapper]
 		private class FbConnection
 		{
-			public static void ClearAllPools() => throw new NotImplementedException();
+			public static void ClearAllPools() => ThrowHelper.ThrowNotImplementedException();
 		}
 
 		[Wrapper]
