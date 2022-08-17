@@ -211,51 +211,6 @@ internal static partial class ThrowHelper
 	}
 
 	/// <summary>
-	/// Throws a new <see cref="ExternalException"/>.
-	/// </summary>
-	/// <exception cref="ExternalException">Thrown with no parameters.</exception>
-	[DoesNotReturn]
-	public static void ThrowExternalException()
-	{
-		throw new ExternalException();
-	}
-
-	/// <summary>
-	/// Throws a new <see cref="ExternalException"/>.
-	/// </summary>
-	/// <param name="message">The message to include in the exception.</param>
-	/// <exception cref="ExternalException">Thrown with the specified parameter.</exception>
-	[DoesNotReturn]
-	public static void ThrowExternalException(string? message)
-	{
-		throw new ExternalException(message);
-	}
-
-	/// <summary>
-	/// Throws a new <see cref="ExternalException"/>.
-	/// </summary>
-	/// <param name="message">The argument name.</param>
-	/// <param name="innerException">The inner <see cref="Exception"/> to include.</param>
-	/// <exception cref="ExternalException">Thrown with the specified parameters.</exception>
-	[DoesNotReturn]
-	public static void ThrowExternalException(string? message, Exception? innerException)
-	{
-		throw new ExternalException(message, innerException);
-	}
-
-	/// <summary>
-	/// Throws a new <see cref="ExternalException"/>.
-	/// </summary>
-	/// <param name="message">The argument name.</param>
-	/// <param name="error">The HRESULT of the error to include.</param>
-	/// <exception cref="ExternalException">Thrown with the specified parameters.</exception>
-	[DoesNotReturn]
-	public static void ThrowExternalException(string? message, int error)
-	{
-		throw new ExternalException(message, error);
-	}
-
-	/// <summary>
 	/// Throws a new <see cref="FormatException"/>.
 	/// </summary>
 	/// <exception cref="FormatException">Thrown with no parameters.</exception>
@@ -1050,59 +1005,6 @@ internal static partial class ThrowHelper
 	public static T ThrowArgumentOutOfRangeException<T>(string? name, object? value, string? message)
 	{
 		throw new ArgumentOutOfRangeException(name, value, message);
-	}
-
-	/// <summary>
-	/// Throws a new <see cref="ExternalException"/>.
-	/// </summary>
-	/// <typeparam name="T">The type of expected result.</typeparam>
-	/// <exception cref="ExternalException">Thrown with no parameters.</exception>
-	/// <returns>This method always throws, so it actually never returns a value.</returns>
-	[DoesNotReturn]
-	public static T ThrowExternalException<T>()
-	{
-		throw new ExternalException();
-	}
-
-	/// <summary>
-	/// Throws a new <see cref="ExternalException"/>.
-	/// </summary>
-	/// <typeparam name="T">The type of expected result.</typeparam>
-	/// <param name="message">The message to include in the exception.</param>
-	/// <exception cref="ExternalException">Thrown with the specified parameter.</exception>
-	/// <returns>This method always throws, so it actually never returns a value.</returns>
-	[DoesNotReturn]
-	public static T ThrowExternalException<T>(string? message)
-	{
-		throw new ExternalException(message);
-	}
-
-	/// <summary>
-	/// Throws a new <see cref="ExternalException"/>.
-	/// </summary>
-	/// <typeparam name="T">The type of expected result.</typeparam>
-	/// <param name="message">The argument name.</param>
-	/// <param name="innerException">The inner <see cref="Exception"/> to include.</param>
-	/// <exception cref="ExternalException">Thrown with the specified parameters.</exception>
-	/// <returns>This method always throws, so it actually never returns a value.</returns>
-	[DoesNotReturn]
-	public static T ThrowExternalException<T>(string? message, Exception? innerException)
-	{
-		throw new ExternalException(message, innerException);
-	}
-
-	/// <summary>
-	/// Throws a new <see cref="ExternalException"/>.
-	/// </summary>
-	/// <typeparam name="T">The type of expected result.</typeparam>
-	/// <param name="message">The argument name.</param>
-	/// <param name="error">The HRESULT of the error to include.</param>
-	/// <exception cref="ExternalException">Thrown with the specified parameters.</exception>
-	/// <returns>This method always throws, so it actually never returns a value.</returns>
-	[DoesNotReturn]
-	public static T ThrowExternalException<T>(string? message, int error)
-	{
-		throw new ExternalException(message, error);
 	}
 
 	/// <summary>
