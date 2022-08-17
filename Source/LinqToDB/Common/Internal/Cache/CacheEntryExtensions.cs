@@ -161,7 +161,7 @@ namespace LinqToDB.Common.Internal.Cache
 		{
 			if (size < 0)
 			{
-				throw new ArgumentOutOfRangeException(nameof(size), size, $"{nameof(size)} must be non-negative.");
+				ThrowHelper.ThrowArgumentOutOfRangeException(nameof(size), size, $"{nameof(size)} must be non-negative.");
 			}
 
 			entry.Size = size;

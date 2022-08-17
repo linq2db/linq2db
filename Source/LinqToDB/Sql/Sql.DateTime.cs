@@ -1025,7 +1025,7 @@ namespace LinqToDB
 					DateParts.Hour        => "h",
 					DateParts.Minute      => "n",
 					DateParts.Second      => "s",
-					DateParts.Millisecond => throw new ArgumentOutOfRangeException(nameof(part), part, "Access doesn't support milliseconds interval."),
+					DateParts.Millisecond => ThrowHelper.ThrowArgumentOutOfRangeException<string>(nameof(part), part, "Access doesn't support milliseconds interval."),
 					_                     => ThrowHelper.ThrowInvalidOperationException<string>($"Unexpected datepart: {part}"),
 				};
 

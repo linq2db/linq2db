@@ -47,7 +47,7 @@ namespace LinqToDB.Mapping
 			if (otherKey   == null) ThrowHelper.ThrowArgumentNullException(nameof(otherKey));
 
 			if (thisKey.Length == 0 && string.IsNullOrEmpty(expressionPredicate) && predicate == null && string.IsNullOrEmpty(expressionQueryMethod) && expressionQuery == null)
-				throw new ArgumentOutOfRangeException(
+				ThrowHelper.ThrowArgumentOutOfRangeException(
 					nameof(thisKey),
 					$"Association '{type.Name}.{memberInfo.Name}' does not define keys.");
 

@@ -74,7 +74,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			var count = members.Length - startIndex;
 			if (count == 0)
-				throw new ArgumentOutOfRangeException(nameof(startIndex));
+				ThrowHelper.ThrowArgumentOutOfRangeException(nameof(startIndex));
 
 			Expression[] arguments;
 

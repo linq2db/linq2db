@@ -61,7 +61,7 @@ namespace LinqToDB.SqlQuery
 		public SqlDataType(DataType dataType, Type type, int length)
 		{
 			if (type == null) ThrowHelper.ThrowArgumentNullException(nameof(type));
-			if (length <= 0)  throw new ArgumentOutOfRangeException(nameof(length));
+			if (length <= 0)  ThrowHelper.ThrowArgumentOutOfRangeException(nameof(length));
 
 			Type = GetDataType(dataType).Type
 				.WithDataType(dataType)
@@ -72,8 +72,8 @@ namespace LinqToDB.SqlQuery
 		public SqlDataType(DataType dataType, Type type, int precision, int scale)
 		{
 			if (type      == null) ThrowHelper.ThrowArgumentNullException(nameof(type));
-			if (precision <= 0   ) throw new ArgumentOutOfRangeException(nameof(precision));
-			if (scale     <  0   ) throw new ArgumentOutOfRangeException(nameof(scale));
+			if (precision <= 0   ) ThrowHelper.ThrowArgumentOutOfRangeException(nameof(precision));
+			if (scale     <  0   ) ThrowHelper.ThrowArgumentOutOfRangeException(nameof(scale));
 
 			Type = GetDataType(dataType).Type
 				.WithDataType(dataType)

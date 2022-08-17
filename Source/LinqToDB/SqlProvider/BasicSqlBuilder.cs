@@ -133,16 +133,18 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildSetOperation(SetOperation operation, StringBuilder sb)
 		{
-			switch (operation)
+			var op = operation switch
 			{
-				case SetOperation.Union       : sb.Append("UNION");         break;
-				case SetOperation.UnionAll    : sb.Append("UNION ALL");     break;
-				case SetOperation.Except      : sb.Append("EXCEPT");        break;
-				case SetOperation.ExceptAll   : sb.Append("EXCEPT ALL");    break;
-				case SetOperation.Intersect   : sb.Append("INTERSECT");     break;
-				case SetOperation.IntersectAll: sb.Append("INTERSECT ALL"); break;
-				default                       : throw new ArgumentOutOfRangeException(nameof(operation), operation, null);
-			}
+				SetOperation.Union        => "UNION",
+				SetOperation.UnionAll     => "UNION ALL",
+				SetOperation.Except       => "EXCEPT",
+				SetOperation.ExceptAll    => "EXCEPT ALL",
+				SetOperation.Intersect    => "INTERSECT",
+				SetOperation.IntersectAll => "INTERSECT ALL",
+				_ => ThrowHelper.ThrowArgumentOutOfRangeException<string>(nameof(operation), operation, null),
+			};
+
+			sb.Append(op);
 		}
 
 		protected virtual void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, OptimizationContext optimizationContext, int indent, bool skipAlias)

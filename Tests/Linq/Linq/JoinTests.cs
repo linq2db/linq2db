@@ -47,7 +47,7 @@ namespace Tests.Linq
 					var res = firstResult.Concat(secondResult).Select(r => resultSelector(r.First!, r.Second));
 					return res;
 				default:
-					throw new ArgumentOutOfRangeException(nameof(joinType), joinType, null);
+					ThrowHelper.ThrowArgumentOutOfRangeException(nameof(joinType), joinType, null);
 			}
 		}
 
@@ -104,7 +104,7 @@ namespace Tests.Linq
 
 					return res;
 				default:
-					throw new ArgumentOutOfRangeException(nameof(joinType), joinType, null);
+					ThrowHelper.ThrowArgumentOutOfRangeException(nameof(joinType), joinType, null);
 			}
 		}
 	}

@@ -128,9 +128,12 @@ namespace LinqToDB.Common
 		/// <returns>New enumerable of batches.</returns>
 		public static IAsyncEnumerable<IAsyncEnumerable<T>> Batch<T>(IAsyncEnumerable<T> source, int batchSize)
 		{
-			if (batchSize <= 0) throw new ArgumentOutOfRangeException(nameof(batchSize));
-			if (batchSize < Int32.MaxValue) return new AsyncBatchEnumerable<T>(source, batchSize);
-			return BatchSingle(source);
+			return batchSize switch
+			{
+				<= 0 => ThrowHelper.ThrowArgumentOutOfRangeException<IAsyncEnumerable<IAsyncEnumerable<T>>>(nameof(batchSize)),
+				<  int.MaxValue => new AsyncBatchEnumerable<T>(source, batchSize),
+				_               => BatchSingle(source)
+			};
 		}
 
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
