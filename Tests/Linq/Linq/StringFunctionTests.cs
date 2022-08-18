@@ -49,8 +49,8 @@ namespace Tests.Linq
 		public void Like()
 		{
 #if !NETFRAMEWORK
-			Assert.Throws<InvalidOperationException>(() => Sql.Like(null, null));
-			Assert.Throws<InvalidOperationException>(() => Sql.Like(null, null, null));
+			Assert.Throws<LinqException>(() => Sql.Like(null, null));
+			Assert.Throws<LinqException>(() => Sql.Like(null, null, null));
 #else
 			Assert.Pass("We don't test server-side method here.");
 #endif
