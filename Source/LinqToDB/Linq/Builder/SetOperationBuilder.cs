@@ -254,7 +254,7 @@ namespace LinqToDB.Linq.Builder
 							var member = new Member { MemberExpression = Expression.MakeMemberAccess(_unionParameter, info.MemberChain[0]) };
 
 								if (sequence.IsExpression(member.MemberExpression, 1, RequestFor.Object).Result)
-									throw new LinqException("Types in UNION are constructed incompatibly.");
+									ThrowHelper.ThrowLinqException("Types in UNION are constructed incompatibly.");
 
 								_unionMembers.Add(em = new UnionMember(member, info));
 								if (em.Infos.Count < Sequences.Count)
@@ -296,7 +296,7 @@ namespace LinqToDB.Linq.Builder
 						continue;
 
 					//if (sequence.IsExpression(member.Member.MemberExpression, 1, RequestFor.Object).Result)
-					//	throw new LinqException("Types in UNION are constructed incompatibly.");
+					//	ThrowHelper.ThrowLinqException("Types in UNION are constructed incompatibly.");
 
 					var info = member.Infos[0];
 

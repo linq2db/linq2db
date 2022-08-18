@@ -142,7 +142,7 @@ namespace LinqToDB.Linq.Builder
 				var goupingSetBody = groupingKey!.Body;
 				var groupingSets = EnumGroupingSets(goupingSetBody).ToArray();
 				if (groupingSets.Length == 0)
-					throw new LinqException($"Invalid grouping sets expression '{goupingSetBody}'.");
+					ThrowHelper.ThrowLinqException($"Invalid grouping sets expression '{goupingSetBody}'.");
 
 				foreach (var groupingSet in groupingSets)
 				{
@@ -604,48 +604,48 @@ namespace LinqToDB.Linq.Builder
 					switch (expression.NodeType)
 					{
 						case ExpressionType.Call         :
+						{
+							var e = (MethodCallExpression)expression;
+
+							if (e.IsQueryable() || e.IsAggregate(Builder.MappingSchema))
 							{
-								var e = (MethodCallExpression)expression;
-
-								if (e.IsQueryable() || e.IsAggregate(Builder.MappingSchema))
-								{
-									return new[] { new SqlInfo(ConvertEnumerable(e)) };
-								}
-
-								break;
+								return new[] { new SqlInfo(ConvertEnumerable(e)) };
 							}
+
+							break;
+						}
 
 						case ExpressionType.MemberAccess :
+						{
+							var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
+
+							if (levelExpression.NodeType == ExpressionType.MemberAccess)
 							{
-								var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
+								var e = (MemberExpression)levelExpression;
 
-								if (levelExpression.NodeType == ExpressionType.MemberAccess)
+								if (e.Member.Name == "Key")
 								{
-									var e = (MemberExpression)levelExpression;
+									if (_keyProperty == null)
+										_keyProperty = _groupingType.GetProperty("Key");
 
-									if (e.Member.Name == "Key")
+									if (e.Member == _keyProperty)
 									{
-										if (_keyProperty == null)
-											_keyProperty = _groupingType.GetProperty("Key");
+										if (ReferenceEquals(levelExpression, expression))
+											return _key.ConvertToSql(null, 0, flags);
 
-										if (e.Member == _keyProperty)
-										{
-											if (ReferenceEquals(levelExpression, expression))
-												return _key.ConvertToSql(null, 0, flags);
-
-											return _key.ConvertToSql(expression, level + 1, flags);
-										}
+										return _key.ConvertToSql(expression, level + 1, flags);
 									}
-
-									return Sequence.ConvertToSql(expression, level, flags);
 								}
 
-								break;
+								return Sequence.ConvertToSql(expression, level, flags);
 							}
+
+							break;
+						}
 					}
 				}
 
-				throw new LinqException("Expression '{0}' cannot be converted to SQL.", expression);
+				return ThrowHelper.ThrowLinqException<SqlInfo[]>($"Expression '{expression}' cannot be converted to SQL.");
 			}
 
 			readonly Dictionary<Tuple<Expression?,int,ConvertFlags>,SqlInfo[]> _expressionIndex = new ();

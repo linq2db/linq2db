@@ -64,9 +64,8 @@ namespace LinqToDB
 			if (parameters  == null) ThrowHelper.ThrowArgumentNullException(nameof(parameters));
 
 			if (!typeof(IQueryable<>).IsSameOrParentOf(methodInfo.ReturnType))
-				throw new LinqException(
-					"Method '{0}.{1}' must return type 'IQueryable<{2}>'",
-					methodInfo.Name, methodInfo.DeclaringType!.FullName, typeof(T).FullName);
+				ThrowHelper.ThrowLinqException(
+					$"Method '{methodInfo.Name}.{methodInfo.DeclaringType!.FullName}' must return type 'IQueryable<{typeof(T).FullName}>'");
 
 			Expression expr;
 

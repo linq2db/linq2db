@@ -686,7 +686,7 @@ namespace LinqToDB.Linq
 
 			// we can safely assume it is block expression
 			if (expression.Body is not BlockExpression block)
-				throw new LinqException("BlockExpression missing for mapper");
+				return ThrowHelper.ThrowLinqException<Expression<Func<IQueryRunner, DbDataReader, T>>>("BlockExpression missing for mapper");
 
 			return
 				Expression.Lambda<Func<IQueryRunner, DbDataReader, T>>(

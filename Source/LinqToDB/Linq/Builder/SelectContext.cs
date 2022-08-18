@@ -1282,7 +1282,7 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			if (levelExpresion.NodeType != ExpressionType.MemberAccess)
-				throw new LinqException("Invalid expression {0}", levelExpresion);
+				return ThrowHelper.ThrowLinqException<Expression>($"Invalid expression {levelExpresion}");
 
 			var me = (MemberExpression)levelExpresion;
 
@@ -1295,7 +1295,7 @@ namespace LinqToDB.Linq.Builder
 // ReSharper disable ConditionIsAlwaysTrueOrFalse
 // ReSharper disable HeuristicUnreachableCode
 						if (expr.Members == null)
-							throw new LinqException("Invalid expression {0}", expression);
+							return ThrowHelper.ThrowLinqException<Expression>($"Invalid expression {expression}");
 // ReSharper restore HeuristicUnreachableCode
 // ReSharper restore ConditionIsAlwaysTrueOrFalse
 
@@ -1305,7 +1305,7 @@ namespace LinqToDB.Linq.Builder
 									expr.Arguments[i].Unwrap() :
 									GetMemberExpression(expr.Arguments[i].Unwrap(), expression, level + 1);
 
-						throw new LinqException("Invalid expression {0}", expression);
+						return ThrowHelper.ThrowLinqException<Expression>($"Invalid expression {expression}");
 					}
 
 				case ExpressionType.MemberInit:
@@ -1320,7 +1320,7 @@ namespace LinqToDB.Linq.Builder
 									GetMemberExpression(binding.Expression.Unwrap(), expression, level + 1);
 						}
 
-						throw new LinqException("Invalid expression {0}", expression);
+						return ThrowHelper.ThrowLinqException<Expression>($"Invalid expression {expression}");
 					}
 			}
 

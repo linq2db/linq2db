@@ -388,7 +388,7 @@ namespace LinqToDB.Remote
 					return resource;
 				}
 
-				throw new LinqException($"Type '{fullTypeName}' not found");
+				return ThrowHelper.ThrowLinqException<object>($"Type '{fullTypeName}' not found");
 			}
 
 			public void DeleteResource(object targetResource)
@@ -403,7 +403,7 @@ namespace LinqToDB.Remote
 				foreach (var item in query)
 				{
 					if (resource != null)
-						throw new LinqException("Resource not uniquely identified");
+						ThrowHelper.ThrowLinqException("Resource not uniquely identified");
 					resource = item;
 				}
 

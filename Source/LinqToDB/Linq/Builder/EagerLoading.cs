@@ -269,10 +269,10 @@ namespace LinqToDB.Linq.Builder
 				return mainQuery;
 
 			if (mainQuery.NodeType != ExpressionType.Call)
-				throw new LinqException($"Expected Method call but found '{mainQuery.NodeType}'");
+				ThrowHelper.ThrowLinqException($"Expected Method call but found '{mainQuery.NodeType}'");
 			var mc = (MethodCallExpression) mainQuery;
 			if (!mc.IsQueryable() || !FirstSingleMethods.Contains(mc.Method.Name))
-				throw new LinqException($"Unsupported Method call '{mc.Method.Name}'");
+				ThrowHelper.ThrowLinqException($"Unsupported Method call '{mc.Method.Name}'");
 
 			var newExpr = TypeHelper.MakeMethodCall(Methods.Queryable.Take, mc.Arguments[0], ExpressionInstances.Constant1);
 			return newExpr;
@@ -1271,7 +1271,7 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				if (keysInfo.Count == 0)
-					throw new LinqException("Could not retrieve information about unique keys for generating detail query.");
+					ThrowHelper.ThrowLinqException("Could not retrieve information about unique keys for generating detail query.");
 
 				var generateKeyExpression   = GenerateKeyExpression(keysInfo.Select(k => k.ForCompilation).ToArray(), 0);
 				var keySelectExpression     = GenerateKeyExpression(keysInfo.Select(k => k.ForSelect).ToArray(), 0);

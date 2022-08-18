@@ -50,7 +50,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					var isTableResult = res.Context!.IsExpression(null, 0, RequestFor.Table);
 					if (!isTableResult.Result)
-						throw new LinqException("Can not retrieve Table context from association.");
+						ThrowHelper.ThrowLinqException("Can not retrieve Table context from association.");
 
 					var atc = (TableBuilder.TableContext)isTableResult.Context!;
 					deleteStatement.Table = atc.SqlTable;

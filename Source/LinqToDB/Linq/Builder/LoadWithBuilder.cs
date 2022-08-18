@@ -29,7 +29,7 @@ namespace LinqToDB.Linq.Builder
 				filterType.GetGenericArguments()[0].GetGenericArguments()[0].GetGenericArguments()[0] :
 				filterType.GetGenericArguments()[0].GetGenericArguments()[0];
 			if (propType != itemType)
-				throw new LinqException("Invalid filter function usage.");
+				ThrowHelper.ThrowLinqException("Invalid filter function usage.");
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)

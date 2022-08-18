@@ -122,7 +122,7 @@ namespace LinqToDB.Linq.Builder
 				var attr = mc.Method.GetTableFunctionAttribute(builder.MappingSchema)!;
 
 				if (!typeof(IQueryable<>).IsSameOrParentOf(mc.Method.ReturnType))
-					throw new LinqException("Table function has to return IQueryable<T>.");
+					ThrowHelper.ThrowLinqException("Table function has to return IQueryable<T>.");
 
 				OriginalType     = mc.Method.ReturnType.GetGenericArguments()[0];
 				ObjectType       = GetObjectType();
@@ -688,8 +688,8 @@ namespace LinqToDB.Linq.Builder
 				}
 				else
 				{
-					var field           = SqlTable[InheritanceMapping[0].DiscriminatorName] ?? throw new LinqException($"Field {InheritanceMapping[0].DiscriminatorName} not found in table {SqlTable}");
-					var dindex          = ConvertToParentIndex(_indexes[field].Index, this);
+					var field  = SqlTable[InheritanceMapping[0].DiscriminatorName] ?? ThrowHelper.ThrowLinqException<SqlField>($"Field {InheritanceMapping[0].DiscriminatorName} not found in table {SqlTable}");
+					var dindex = ConvertToParentIndex(_indexes[field].Index, this);
 
 					expr = Expression.Convert(
 						Expression.Call(null, Methods.LinqToDB.Exceptions.DefaultInheritanceMappingException,
@@ -703,7 +703,7 @@ namespace LinqToDB.Linq.Builder
 					if (mapping.m == defaultMapping)
 						continue;
 
-					var field  = SqlTable[InheritanceMapping[mapping.i].DiscriminatorName] ?? throw new LinqException($"Field {InheritanceMapping[mapping.i].DiscriminatorName} not found in table {SqlTable}");
+					var field  = SqlTable[InheritanceMapping[mapping.i].DiscriminatorName] ?? ThrowHelper.ThrowLinqException<SqlField>($"Field {InheritanceMapping[mapping.i].DiscriminatorName} not found in table {SqlTable}");
 					var dindex = ConvertToParentIndex(_indexes[field].Index, this);
 
 					Expression testExpr;
@@ -768,7 +768,6 @@ namespace LinqToDB.Linq.Builder
 
 			Expression BuildExpression(Expression? expression, int level, ParameterExpression? parentObject)
 			{
-
 				if (expression == null)
 				{
 					return BuildQuery(OriginalType, this, parentObject);
@@ -800,7 +799,7 @@ namespace LinqToDB.Linq.Builder
 						}
 					}
 
-					throw new LinqException("'{0}' cannot be converted to SQL.", expression);
+					return ThrowHelper.ThrowLinqException<Expression>($"'{expression}' cannot be converted to SQL.");
 				}
 
 				if (contextInfo.Field == null)
@@ -966,7 +965,7 @@ namespace LinqToDB.Linq.Builder
 
 								var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
 
-								throw new LinqException($"Expression '{levelExpression}' is not a Field.");
+								ThrowHelper.ThrowLinqException($"Expression '{levelExpression}' is not a Field.");
 							}
 
 							if (contextInfo.Field != null)
@@ -1258,7 +1257,7 @@ namespace LinqToDB.Linq.Builder
 
 							var result = tableLevel.Context.GetContext(tableLevel.CurrentExpression, tableLevel.CurrentLevel + 1, buildInfo);
 							if (result == null)
-								throw new LinqException($"Can not build association for expression '{tableLevel.CurrentExpression}'");
+								ThrowHelper.ThrowLinqException($"Can not build association for expression '{tableLevel.CurrentExpression}'");
 							return result;
 						}
 					}
@@ -1474,8 +1473,8 @@ namespace LinqToDB.Linq.Builder
 								EntityDescriptor != null &&
 								EntityDescriptor.TypeAccessor.Type == memberExpression.Member.DeclaringType)
 							{
-								throw new LinqException("Member '{0}.{1}' is not a table column.",
-									memberExpression.Member.DeclaringType.Name, memberExpression.Member.Name);
+								ThrowHelper.ThrowLinqException(
+									$"Member '{memberExpression.Member.DeclaringType.Name}.{memberExpression.Member.Name}' is not a table column.");
 							}
 						}
 					}
@@ -1486,43 +1485,43 @@ namespace LinqToDB.Linq.Builder
 
 			private SqlField? GetOrAddDynamicColumn(MemberExpression memberExpression)
 			{
-								if (memberExpression.Member.IsDynamicColumnPropertyEx())
-								{
-									var fieldName = memberExpression.Member.Name;
+				if (memberExpression.Member.IsDynamicColumnPropertyEx())
+				{
+					var fieldName = memberExpression.Member.Name;
 
-									// do not add association columns
-									var flag = true;
-									foreach (var assoc in EntityDescriptor.Associations)
-									{
-										if (assoc.MemberInfo == memberExpression.Member)
-										{
-											flag = false;
-											break;
-										}
-									}
+					// do not add association columns
+					var flag = true;
+					foreach (var assoc in EntityDescriptor.Associations)
+					{
+						if (assoc.MemberInfo == memberExpression.Member)
+						{
+							flag = false;
+							break;
+						}
+					}
 
-									if (flag)
-									{
-										var newField = SqlTable[fieldName];
-										if (newField == null)
-										{
-											newField = new SqlField(
-												new ColumnDescriptor(
-													Builder.MappingSchema,
-													EntityDescriptor,
-													new ColumnAttribute(fieldName),
-													new MemberAccessor(EntityDescriptor.TypeAccessor,
-														memberExpression.Member, EntityDescriptor),
-													InheritanceMapping.Count > 0)
+					if (flag)
+					{
+						var newField = SqlTable[fieldName];
+						if (newField == null)
+						{
+							newField = new SqlField(
+								new ColumnDescriptor(
+									Builder.MappingSchema,
+									EntityDescriptor,
+									new ColumnAttribute(fieldName),
+									new MemberAccessor(EntityDescriptor.TypeAccessor,
+										memberExpression.Member, EntityDescriptor),
+									InheritanceMapping.Count > 0)
 							)
 							{ IsDynamic = true, };
 
-											SqlTable.Add(newField);
-										}
+							SqlTable.Add(newField);
+						}
 
-										return newField;
-									}
-								}
+						return newField;
+					}
+				}
 
 				return null;
 			}
@@ -1666,7 +1665,7 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				if (throwExceptionForNull)
-					throw new LinqException($"Expression '{expression}' ({levelExpression}) is not a table.");
+					ThrowHelper.ThrowLinqException($"Expression '{expression}' ({levelExpression}) is not a table.");
 
 				return null;
 			}

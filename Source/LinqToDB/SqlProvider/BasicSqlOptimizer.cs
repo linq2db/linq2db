@@ -1458,7 +1458,7 @@ namespace LinqToDB.SqlProvider
 				// ROW(a, b) IS [NOT] NULL
 				case SqlValue { Value: null }:
 					if (op is not (SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual))
-						throw new LinqException("Null SqlRow is only allowed in equality comparisons");
+						ThrowHelper.ThrowLinqException("Null SqlRow is only allowed in equality comparisons");
 					if (!SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.IsNull))
 						return RowIsNullFallback((SqlRow)predicate.Expr1, op == SqlPredicate.Operator.NotEqual);
 					break;
@@ -1473,11 +1473,12 @@ namespace LinqToDB.SqlProvider
 				case SelectQuery:
 					if (!SqlProviderFlags.RowConstructorSupport.HasFlag(feature) ||
 						!SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.CompareToSelect))
-						throw new LinqException("SqlRow comparisons to SELECT are not supported by this DB provider");
+						ThrowHelper.ThrowLinqException("SqlRow comparisons to SELECT are not supported by this DB provider");
 					break;
 
 				default:
-					throw new LinqException("Inappropriate SqlRow expression, only Sql.Row() and sub-selects are valid.");
+					ThrowHelper.ThrowLinqException("Inappropriate SqlRow expression, only Sql.Row() and sub-selects are valid.");
+					break;
 			}
 
 			// Default ExprExpr translation is ok
@@ -1570,7 +1571,7 @@ namespace LinqToDB.SqlProvider
 				//TODO: make it working if possible
 				/*
 				if (row1.Values.Length != 2 || row2.Values.Length != 2)
-					throw new LinqException("Unsupported SqlRow conversion from operator: " + op);
+					ThrowHelper.ThrowLinqException("Unsupported SqlRow conversion from operator: " + op);
 
 				rewrite.Conditions.Add(new SqlCondition(false, new SqlPredicate.ExprExpr(row1.Values[0], SqlPredicate.Operator.LessOrEqual, row2.Values[1], withNull: false)));
 				rewrite.Conditions.Add(new SqlCondition(false, new SqlPredicate.ExprExpr(row2.Values[0], SqlPredicate.Operator.LessOrEqual, row1.Values[1], withNull: false)));
@@ -1579,7 +1580,7 @@ namespace LinqToDB.SqlProvider
 				return rewrite;
 			}
 
-			throw new LinqException("Unsupported SqlRow operator: " + op);
+			return ThrowHelper.ThrowLinqException<ISqlPredicate>("Unsupported SqlRow operator: " + op);
 		}
 
 		public virtual ISqlPredicate ConvertBetweenPredicate(SqlPredicate.Between between)
@@ -2844,7 +2845,7 @@ namespace LinqToDB.SqlProvider
 									: expr);
 
 							var newColumn = tableToUpdate[QueryHelper.GetUnderlyingField(item.Column)!.Name]
-							                ?? throw new LinqException(
+							                ?? ThrowHelper.ThrowLinqException<SqlField>(
 								                $"Field {QueryHelper.GetUnderlyingField(item.Column)!.Name} not found in table {tableToUpdate}");
 
 							var remapped = ex.Convert((tableToUpdateMapping, innerQuery, objectTree),
@@ -2876,11 +2877,9 @@ namespace LinqToDB.SqlProvider
 
 
 							//var column = QueryHelper.NeedColumnForExpression(innerQuery, item.Expression!, false);
-							var newUpdateExpression = innerQuery.Select.AddNewColumn(remapped);
-
-							if (newUpdateExpression == null)
-								ThrowHelper.ThrowInvalidOperationException(
-									$"Could not create column for expression '{item.Expression}'");
+							var newUpdateExpression = innerQuery.Select.AddNewColumn(remapped)
+							                          ?? ThrowHelper.ThrowInvalidOperationException<SqlColumn>(
+															$"Could not create column for expression '{item.Expression}'");
 
 							rows.Add((newColumn, newUpdateExpression));
 						}
@@ -2951,7 +2950,7 @@ namespace LinqToDB.SqlProvider
 					}
 
 						item.Column = tableToUpdate[QueryHelper.GetUnderlyingField(item.Column)!.Name]
-						              ?? throw new LinqException(
+						              ?? ThrowHelper.ThrowLinqException<SqlField>(
 							              $"Field {QueryHelper.GetUnderlyingField(item.Column)!.Name} not found in table {tableToUpdate}");
 						item.Expression = ex;
 						newUpdateStatement.Update.Items.Add(item);
@@ -2999,7 +2998,7 @@ namespace LinqToDB.SqlProvider
 			element?.Walk(WalkOptions.Default, (replacing, withTable), static (ctx, e) =>
 			{
 				if (e is SqlField field && field.Table == ctx.replacing)
-					return ctx.withTable[field.Name] ?? throw new LinqException($"Field {field.Name} not found in table {ctx.withTable}");
+					return ctx.withTable[field.Name] ?? ThrowHelper.ThrowLinqException<SqlField>($"Field {field.Name} not found in table {ctx.withTable}");
 
 				return e;
 			});
@@ -3159,14 +3158,14 @@ namespace LinqToDB.SqlProvider
 						var newItem = item.Convert((tableToCompare, tableToUpdate), static (v, e) =>
 						{
 							if (e is SqlField field && field.Table == v.Context.tableToCompare)
-								return v.Context.tableToUpdate[field.Name] ?? throw new LinqException($"Field {field.Name} not found in table {v.Context.tableToUpdate}");
+								return v.Context.tableToUpdate[field.Name] ?? ThrowHelper.ThrowLinqException<SqlField>($"Field {field.Name} not found in table {v.Context.tableToUpdate}");
 
 							return e;
 						});
 
 						var updateField = QueryHelper.GetUnderlyingField(newItem.Column);
 						if (updateField != null)
-							newItem.Column = tableToUpdate[updateField.Name] ?? throw new LinqException($"Field {updateField.Name} not found in table {tableToUpdate}");
+							newItem.Column = tableToUpdate[updateField.Name] ?? ThrowHelper.ThrowLinqException<SqlField>($"Field {updateField.Name} not found in table {tableToUpdate}");
 
 						statement.Update.Items[i] = newItem;
 					}
@@ -3227,7 +3226,7 @@ namespace LinqToDB.SqlProvider
 							{
 								if (exp is SqlField field && field.Table == ctx.updateTable)
 								{
-									return ctx.jt[field.Name] ?? throw new LinqException($"Field {field.Name} not found in table {ctx.jt}");
+									return ctx.jt[field.Name] ?? ThrowHelper.ThrowLinqException<SqlField>($"Field {field.Name} not found in table {ctx.jt}");
 								}
 								return exp;
 							});
@@ -3242,7 +3241,7 @@ namespace LinqToDB.SqlProvider
 					statement.Update = statement.Update.Convert((updateTable, newUpdateTable), static (v, e) =>
 					{
 						if (e is SqlField field && field.Table == v.Context.updateTable)
-							return v.Context.newUpdateTable[field.Name] ?? throw new LinqException($"Field {field.Name} not found in table {v.Context.newUpdateTable}");
+							return v.Context.newUpdateTable[field.Name] ?? ThrowHelper.ThrowLinqException<SqlField>($"Field {field.Name} not found in table {v.Context.newUpdateTable}");
 
 						return e;
 					});

@@ -95,18 +95,12 @@ namespace LinqToDB.Linq.Builder
 				for (var i = 0; i < association.ThisKey.Length; i++)
 				{
 					var parentName   = association.ThisKey[i];
-					var parentMember = parentAccessor.Members.Find(m => m.MemberInfo.Name == parentName);
-
-					if (parentMember == null)
-						throw new LinqException("Association key '{0}' not found for type '{1}.", parentName,
-							parentType);
+					var parentMember = parentAccessor.Members.Find(m => m.MemberInfo.Name == parentName)
+					                   ?? ThrowHelper.ThrowLinqException<MemberAccessor>($"Association key '{parentName}' not found for type '{parentType}.");
 
 					var childName = association.OtherKey[i];
-					var childMember = childAccessor.Members.Find(m => m.MemberInfo.Name == childName);
-
-					if (childMember == null)
-						throw new LinqException("Association key '{0}' not found for type '{1}.", childName,
-							objectType);
+					var childMember = childAccessor.Members.Find(m => m.MemberInfo.Name == childName)
+					                  ?? ThrowHelper.ThrowLinqException<MemberAccessor>($"Association key '{childName}' not found for type '{objectType}.");
 
 					var current = ExpressionBuilder.Equal(builder.MappingSchema,
 						Expression.MakeMemberAccess(parentParam, parentMember.MemberInfo),
@@ -128,7 +122,7 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				if (predicate == null)
-					throw new LinqException("Can not generate Association predicate");
+					ThrowHelper.ThrowLinqException("Can not generate Association predicate");
 
 				if (inline && !shouldAddDefaultIfEmpty)
 				{
@@ -207,8 +201,8 @@ namespace LinqToDB.Linq.Builder
 						}
 						else
 						{
-							var filterDelegate = loadWithFunc.EvaluateExpression<Delegate>() ??
-							                     throw new LinqException($"Cannot convert filter function '{loadWithFunc}' to Delegate.");
+							var filterDelegate = loadWithFunc.EvaluateExpression<Delegate>()
+							                     ?? ThrowHelper.ThrowLinqException<Delegate>($"Cannot convert filter function '{loadWithFunc}' to Delegate.");
 
 							var argumentType = filterDelegate.GetType().GetGenericArguments()[0].GetGenericArguments()[0];
 							// check for fake argument q => q

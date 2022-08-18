@@ -59,7 +59,7 @@ namespace LinqToDB.Remote
 		protected virtual void ValidateQuery(LinqServiceQuery query)
 		{
 			if (AllowUpdates == false && query.Statement.QueryType != QueryType.Select)
-				throw new LinqException("Insert/Update/Delete requests are not allowed by the service policy.");
+				ThrowHelper.ThrowLinqException("Insert/Update/Delete requests are not allowed by the service policy.");
 		}
 
 		protected virtual void HandleException(Exception exception)

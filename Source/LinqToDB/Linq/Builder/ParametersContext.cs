@@ -451,7 +451,7 @@ namespace LinqToDB.Linq.Builder
 						// It can be fixed by adding additional parameter to execution path, but it's may slowdown performance.
 						// So for now decided to throw exception.
 						if (e == context.dataContextParam && !typeof(DataConnection).IsSameOrParentOf(context.dataContext.GetType()))
-							throw new LinqException("Only DataConnection descendants can be used as source of parameters.");
+							ThrowHelper.ThrowLinqException("Only DataConnection descendants can be used as source of parameters.");
 						return e;
 					}
 					case ExpressionType.MemberAccess:

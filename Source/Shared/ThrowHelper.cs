@@ -381,6 +381,39 @@ internal static partial class ThrowHelper
 	}
 
 	/// <summary>
+	/// Throws a new <see cref="LinqException"/>.
+	/// </summary>
+	/// <exception cref="LinqException">Thrown with no parameters.</exception>
+	[DoesNotReturn]
+	public static void ThrowLinqException()
+	{
+		throw new LinqException();
+	}
+
+	/// <summary>
+	/// Throws a new <see cref="LinqException"/>.
+	/// </summary>
+	/// <param name="message">The message to include in the exception.</param>
+	/// <exception cref="LinqException">Thrown with the specified parameter.</exception>
+	[DoesNotReturn]
+	public static void ThrowLinqException(string message)
+	{
+		throw new LinqException(message);
+	}
+
+	/// <summary>
+	/// Throws a new <see cref="LinqException"/>.
+	/// </summary>
+	/// <param name="message">The message to include in the exception.</param>
+	/// <param name="innerException">The inner <see cref="Exception"/> to include.</param>
+	/// <exception cref="LinqException">Thrown with the specified parameter.</exception>
+	[DoesNotReturn]
+	public static void ThrowLinqException(string message, Exception innerException)
+	{
+		throw new LinqException(message, innerException);
+	}
+
+	/// <summary>
 	/// Throws a new <see cref="LinqToDBException"/>.
 	/// </summary>
 	/// <exception cref="LinqToDBException">Thrown with no parameters.</exception>
@@ -1304,6 +1337,39 @@ internal static partial class ThrowHelper
 	public static T ThrowInvalidOperationException<T>(string? message, Exception? innerException)
 	{
 		throw new InvalidOperationException(message, innerException);
+	}
+
+	/// <summary>
+	/// Throws a new <see cref="LinqException"/>.
+	/// </summary>
+	/// <exception cref="LinqException">Thrown with no parameters.</exception>
+	[DoesNotReturn]
+	public static T ThrowLinqException<T>()
+	{
+		throw new LinqException();
+	}
+
+	/// <summary>
+	/// Throws a new <see cref="LinqException"/>.
+	/// </summary>
+	/// <param name="message">The message to include in the exception.</param>
+	/// <exception cref="LinqException">Thrown with the specified parameter.</exception>
+	[DoesNotReturn]
+	public static T ThrowLinqException<T>(string message)
+	{
+		throw new LinqException(message);
+	}
+
+	/// <summary>
+	/// Throws a new <see cref="LinqException"/>.
+	/// </summary>
+	/// <param name="message">The message to include in the exception.</param>
+	/// <param name="innerException">The inner <see cref="Exception"/> to include.</param>
+	/// <exception cref="LinqException">Thrown with the specified parameter.</exception>
+	[DoesNotReturn]
+	public static T ThrowLinqException<T>(string message, Exception innerException)
+	{
+		throw new LinqException(message, innerException);
 	}
 
 	/// <summary>

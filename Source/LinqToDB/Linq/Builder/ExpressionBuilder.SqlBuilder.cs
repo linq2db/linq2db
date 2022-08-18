@@ -1203,7 +1203,7 @@ namespace LinqToDB.Linq.Builder
 					return new SqlSearchCondition(new SqlCondition(false, predicate));
 			}
 
-			throw new LinqException("'{0}' cannot be converted to SQL.", expression);
+			return ThrowHelper.ThrowLinqException<ISqlExpression>($"'{expression}' cannot be converted to SQL.");
 		}
 
 		public ISqlExpression ConvertFormatToSql(IBuildContext? context, MethodCallExpression mc, bool isPureExpression)
@@ -2281,7 +2281,7 @@ namespace LinqToDB.Linq.Builder
 					break;
 			}
 
-			throw new LinqException("'{0}' cannot be converted to SQL.", expression);
+			return ThrowHelper.ThrowLinqException<ISqlPredicate>($"'{expression}' cannot be converted to SQL.");
 		}
 
 		#endregion
@@ -2376,7 +2376,8 @@ namespace LinqToDB.Linq.Builder
 					return new SqlPredicate.Expr(new SqlValue(true));
 			}
 
-			return MakeIsPredicate(table, table, table.InheritanceMapping, typeOperand, static (table, name) => table.SqlTable[name] ?? throw new LinqException($"Field {name} not found in table {table.SqlTable}"));
+			return MakeIsPredicate(table, table, table.InheritanceMapping, typeOperand, static (table, name) 
+				=> table.SqlTable[name] ?? ThrowHelper.ThrowLinqException<SqlField>($"Field {name} not found in table {table.SqlTable}"));
 		}
 
 		public ISqlPredicate MakeIsPredicate<TContext>(
@@ -2516,10 +2517,11 @@ namespace LinqToDB.Linq.Builder
 
 			foreach (var m in mapping)
 			{
-				var field = table.SqlTable[table.InheritanceMapping[m.i].DiscriminatorName] ?? throw new LinqException($"Field {table.InheritanceMapping[m.i].DiscriminatorName} not found in table {table.SqlTable}");
+				var field = table.SqlTable[table.InheritanceMapping[m.i].DiscriminatorName] 
+				            ?? ThrowHelper.ThrowLinqException<SqlField>($"Field {table.InheritanceMapping[m.i].DiscriminatorName} not found in table {table.SqlTable}");
 				var ttype = field.ColumnDescriptor.MemberAccessor.TypeAccessor.Type;
 				var obj   = expression.Expression;
-
+				
 				if (obj.Type != ttype)
 					obj = Expression.Convert(expression.Expression, ttype);
 

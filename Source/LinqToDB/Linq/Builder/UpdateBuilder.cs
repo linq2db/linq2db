@@ -121,7 +121,7 @@ namespace LinqToDB.Linq.Builder
 						var tableInfo = sequence.IsExpression(body, level, RequestFor.Table);
 
 						if (tableInfo.Result == false)
-							throw new LinqException("Expression '{0}' must be a table.", body);
+							ThrowHelper.ThrowLinqException($"Expression '{body}' must be a table.");
 
 						into = tableInfo.Context!;
 					}
@@ -427,7 +427,7 @@ namespace LinqToDB.Linq.Builder
 				foreach (var info in sqlInfo)
 				{
 					if (info.MemberChain.Length == 0)
-						throw new LinqException("Object initializer expected for insert statement.");
+						ThrowHelper.ThrowLinqException("Object initializer expected for insert statement.");
 
 					if (info.MemberChain.Length != 1)
 						ThrowHelper.ThrowInvalidOperationException();
@@ -492,7 +492,7 @@ namespace LinqToDB.Linq.Builder
 				var field = sql.Select(s => QueryHelper.GetUnderlyingField(s.Sql)).FirstOrDefault(f => f != null);
 
 				if (sql.Length != 1)
-					throw new LinqException($"Expression '{extract}' can not be used as Update Field.");
+					ThrowHelper.ThrowLinqException($"Expression '{extract}' can not be used as Update Field.");
 
 				return table != null && field != null ? table[field.Name]! : sql[0].Sql;
 			}
@@ -519,7 +519,7 @@ namespace LinqToDB.Linq.Builder
 				member = body.Member;
 
 				if (!member.IsPropertyEx() && !member.IsFieldEx() || rootObject != extract.Parameters[0])
-					throw new LinqException("Member expression expected for the 'Set' statement.");
+					ThrowHelper.ThrowLinqException("Member expression expected for the 'Set' statement.");
 
 				if (member is MethodInfo info)
 					member = info.GetPropertyInfo();
@@ -528,19 +528,19 @@ namespace LinqToDB.Linq.Builder
 				var column     = select.ConvertToSql(columnExpr, 1, ConvertFlags.Field);
 
 				if (column.Length == 0)
-					throw new LinqException("Member '{0}.{1}' is not a table column.", member.DeclaringType?.Name, member.Name);
+					ThrowHelper.ThrowLinqException($"Member '{member.DeclaringType?.Name}.{member.Name}' is not a table column.");
 				columnSql = column[0].Sql;
 			}
 			else
 			{
 				member = MemberHelper.GetMemberInfo(ext);
 				if (member == null)
-					throw new LinqException("Member expression expected for the 'Set' statement.");
+					ThrowHelper.ThrowLinqException("Member expression expected for the 'Set' statement.");
 
 				var memberExpr = Expression.MakeMemberAccess(rootObject, member);
 				var column     = select.ConvertToSql(memberExpr, 1, ConvertFlags.Field);
 				if (column.Length == 0)
-					throw new LinqException($"Expression '{ext}' is not a table column.");
+					ThrowHelper.ThrowLinqException($"Expression '{ext}' is not a table column.");
 				columnSql = column[0].Sql;
 			}
 

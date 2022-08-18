@@ -83,7 +83,7 @@ namespace LinqToDB.Linq.Builder
 						}
 				}
 
-				throw new LinqException("'{0}' cannot be converted to SQL.", expression);
+				ThrowHelper.ThrowLinqException($"'{expression}' cannot be converted to SQL.");
 			}
 
 			return ThrowHelper.ThrowInvalidOperationException<SqlInfo[]>();

@@ -221,7 +221,7 @@ namespace LinqToDB.Linq.Builder
 				n = builder.BuildCounter;
 			}
 
-			throw new LinqException("Sequence '{0}' cannot be converted to SQL.", buildInfo.Expression);
+			return ThrowHelper.ThrowLinqException<IBuildContext>($"Sequence '{buildInfo.Expression}' cannot be converted to SQL.");
 		}
 
 		public ISequenceBuilder? GetBuilder(BuildInfo buildInfo, bool throwIfNotFound = true)
@@ -233,7 +233,7 @@ namespace LinqToDB.Linq.Builder
 					return builder;
 
 			if (throwIfNotFound)
-				throw new LinqException("Sequence '{0}' cannot be converted to SQL.", buildInfo.Expression);
+				ThrowHelper.ThrowLinqException($"Sequence '{buildInfo.Expression}' cannot be converted to SQL.");
 			return null;
 		}
 
@@ -246,7 +246,7 @@ namespace LinqToDB.Linq.Builder
 					return builder.Convert(this, buildInfo, param);
 
 			if (throwExceptionIfCantConvert)
-				throw new LinqException("Sequence '{0}' cannot be converted to SQL.", buildInfo.Expression);
+				ThrowHelper.ThrowLinqException($"Sequence '{buildInfo.Expression}' cannot be converted to SQL.");
 
 			return null;
 		}

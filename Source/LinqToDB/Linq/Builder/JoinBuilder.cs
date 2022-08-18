@@ -105,7 +105,7 @@ namespace LinqToDB.Linq.Builder
 				for (var i = 0; i < mi1.Bindings.Count; i++)
 				{
 					if (mi1.Bindings[i].Member != mi2.Bindings[i].Member)
-						throw new LinqException($"List of member inits does not match for entity type '{outerKeySelector.Type}'.");
+						ThrowHelper.ThrowLinqException($"List of member inits does not match for entity type '{outerKeySelector.Type}'.");
 
 					var arg1 = ((MemberAssignment)mi1.Bindings[i]).Expression;
 					var arg2 = ((MemberAssignment)mi2.Bindings[i]).Expression;
@@ -184,7 +184,7 @@ namespace LinqToDB.Linq.Builder
 				for (var i = 0; i < mi1.Bindings.Count; i++)
 				{
 					if (mi1.Bindings[i].Member != mi2.Bindings[i].Member)
-						throw new LinqException($"List of member inits does not match for entity type '{outerKeySelector.Type}'.");
+						ThrowHelper.ThrowLinqException($"List of member inits does not match for entity type '{outerKeySelector.Type}'.");
 
 					var arg1 = ((MemberAssignment)mi1.Bindings[i]).Expression;
 					var arg2 = ((MemberAssignment)mi2.Bindings[i]).Expression;

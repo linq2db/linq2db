@@ -182,7 +182,7 @@ namespace LinqToDB.Linq.Builder
 			var refExpression = new ContextRefExpression(typeof(IQueryable<>).MakeGenericType(entityType), tableContext);
 			var replaced = optimized.Replace(fakeQuery.Expression, refExpression);
 			if (replaced == optimized)
-				throw new LinqException("Could not correct query result for processing.");
+				ThrowHelper.ThrowLinqException("Could not correct query result for processing.");
 
 			var context   = builder.BuildSequence(new BuildInfo(buildInfo, replaced));
 			return context;

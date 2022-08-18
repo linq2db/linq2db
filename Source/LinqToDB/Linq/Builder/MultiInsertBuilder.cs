@@ -213,28 +213,28 @@ namespace LinqToDB.Linq.Builder
 					switch (flags)
 					{
 						case ConvertFlags.Field:
+						{
+							var root = Builder.GetRootObject(expression);
+
+							if (root.NodeType == ExpressionType.Parameter)
 							{
-								var root = Builder.GetRootObject(expression);
+								if (_sourceParameters.Contains(root))
+									return _source.ConvertToSql(expression, level, flags);
 
-								if (root.NodeType == ExpressionType.Parameter)
-								{
-									if (_sourceParameters.Contains(root))
-										return _source.ConvertToSql(expression, level, flags);
-
-									return _target!.ConvertToSql(expression, level, flags);
-								}
-
-								if (root is ContextRefExpression contextRef)
-								{
-									return contextRef.BuildContext.ConvertToSql(expression, level, flags);
-								}
-
-								break;
+								return _target!.ConvertToSql(expression, level, flags);
 							}
+
+							if (root is ContextRefExpression contextRef)
+							{
+								return contextRef.BuildContext.ConvertToSql(expression, level, flags);
+							}
+
+							break;
+						}
 					}
 				}
 
-				throw new LinqException("'{0}' cannot be converted to SQL.", expression);
+				return ThrowHelper.ThrowLinqException<SqlInfo[]>($"'{expression}' cannot be converted to SQL.");
 			}
 
 			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
