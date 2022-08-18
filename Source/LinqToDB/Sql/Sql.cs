@@ -62,7 +62,7 @@ namespace LinqToDB
 		[Extension("{array, ', '}", ServerSideOnly = true)]
 		internal static T[] Spread<T>([ExprParameter] T[] array)
 		{
-			throw new InvalidOperationException();
+			throw new LinqException($"'{nameof(Spread)}' is server-side method.");
 		}
 
 		[CLSCompliant(false)]
@@ -421,7 +421,7 @@ namespace LinqToDB
 		public static bool Like(string? matchExpression, string? pattern)
 		{
 #if !NETFRAMEWORK
-			throw new InvalidOperationException();
+			throw new LinqException($"'{nameof(Like)}' is server-side method.");
 #else
 			return matchExpression != null && pattern != null &&
 				System.Data.Linq.SqlClient.SqlMethods.Like(matchExpression, pattern);
@@ -432,7 +432,7 @@ namespace LinqToDB
 		public static bool Like(string? matchExpression, string? pattern, char? escapeCharacter)
 		{
 #if !NETFRAMEWORK
-			throw new InvalidOperationException();
+			throw new LinqException($"'{nameof(Like)}' is server-side method.");
 #else
 			return matchExpression != null && pattern != null && escapeCharacter != null &&
 				System.Data.Linq.SqlClient.SqlMethods.Like(matchExpression, pattern, escapeCharacter.Value);

@@ -18,7 +18,7 @@ namespace LinqToDB
 		[Extension("", ServerSideOnly = true, BuilderType = typeof(PostgreSQLCollationBuilder), Configuration = ProviderName.PostgreSQL)]
 		[Extension("", ServerSideOnly = true, BuilderType = typeof(NamedCollationBuilder))]
 		public static string Collate(this string expr, [SqlQueryDependent] string collation)
-			=> throw new InvalidOperationException($"{nameof(Sql)}.{nameof(Sql.Collate)} is server-side only API.");
+			=> throw new LinqException($"{nameof(Sql)}.{nameof(Sql.Collate)} is server-side only API.");
 
 		internal class NamedCollationBuilder : IExtensionCallBuilder
 		{
