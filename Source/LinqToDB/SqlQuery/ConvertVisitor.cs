@@ -525,7 +525,7 @@ namespace LinqToDB.SqlQuery
 							else if (f is ISqlPredicate predicate)
 								newElement = predicate;
 							else
-								throw new InvalidCastException("Converted FuncLikePredicate expression is not a Predicate expression.");
+								ThrowHelper.ThrowInvalidCastException("Converted FuncLikePredicate expression is not a Predicate expression.");
 						}
 
 						break;

@@ -30,7 +30,7 @@ namespace LinqToDB.Linq.Builder
 					throwExpr = mi.Bindings.Any(b => b.BindingType != MemberBindingType.Assignment);
 
 				if (throwExpr)
-					throw new NotSupportedException($"Explicit construction of entity type '{body.Type}' in order by is not allowed.");
+					ThrowHelper.ThrowNotSupportedException($"Explicit construction of entity type '{body.Type}' in order by is not allowed.");
 			}
 
 			return true;

@@ -158,19 +158,19 @@ namespace LinqToDB.SqlProvider
 		protected virtual void BuildMergeOperationUpdateWithDelete(SqlMergeOperationClause operation)
 		{
 			// Oracle-specific operation
-			throw new NotSupportedException($"Merge operation {operation.OperationType} is not supported by {Name}");
+			ThrowHelper.ThrowNotSupportedException($"Merge operation {operation.OperationType} is not supported by {Name}");
 		}
 
 		protected virtual void BuildMergeOperationDeleteBySource(SqlMergeOperationClause operation)
 		{
 			// SQL Server-specific operation
-			throw new NotSupportedException($"Merge operation {operation.OperationType} is not supported by {Name}");
+			ThrowHelper.ThrowNotSupportedException($"Merge operation {operation.OperationType} is not supported by {Name}");
 		}
 
 		protected virtual void BuildMergeOperationUpdateBySource(SqlMergeOperationClause operation)
 		{
 			// SQL Server-specific operation
-			throw new NotSupportedException($"Merge operation {operation.OperationType} is not supported by {Name}");
+			ThrowHelper.ThrowNotSupportedException($"Merge operation {operation.OperationType} is not supported by {Name}");
 		}
 
 		protected virtual void BuildMergeOn(SqlMergeStatement mergeStatement)

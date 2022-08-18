@@ -15,6 +15,7 @@ namespace LinqToDB;
 
 using Common;
 using Linq;
+using Metadata;
 using SqlQuery;
 
 /// <summary>
@@ -511,6 +512,39 @@ internal static partial class ThrowHelper
 	public static void ThrowLockRecursionException(string? message, Exception? innerException)
 	{
 		throw new LockRecursionException(message, innerException);
+	}
+
+	/// <summary>
+	/// Throws a new <see cref="MetadataException"/>.
+	/// </summary>
+	/// <exception cref="MetadataException">Thrown with no parameters.</exception>
+	[DoesNotReturn]
+	public static void ThrowMetadataException()
+	{
+		throw new MetadataException();
+	}
+
+	/// <summary>
+	/// Throws a new <see cref="MetadataException"/>.
+	/// </summary>
+	/// <param name="message">The message to include in the exception.</param>
+	/// <exception cref="MetadataException">Thrown with the specified parameter.</exception>
+	[DoesNotReturn]
+	public static void ThrowMetadataException(string message)
+	{
+		throw new MetadataException(message);
+	}
+
+	/// <summary>
+	/// Throws a new <see cref="MetadataException"/>.
+	/// </summary>
+	/// <param name="message">The message to include in the exception.</param>
+	/// <param name="innerException">The inner <see cref="Exception"/> to include.</param>
+	/// <exception cref="MetadataException">Thrown with the specified parameter.</exception>
+	[DoesNotReturn]
+	public static void ThrowMetadataException(string message, Exception innerException)
+	{
+		throw new MetadataException(message, innerException);
 	}
 
 	/// <summary>
@@ -1542,6 +1576,45 @@ internal static partial class ThrowHelper
 	public static T ThrowLockRecursionException<T>(string? message, Exception? innerException)
 	{
 		throw new LockRecursionException(message, innerException);
+	}
+
+	/// <summary>
+	/// Throws a new <see cref="MetadataException"/>.
+	/// </summary>
+	/// <typeparam name="T">The type of expected result.</typeparam>
+	/// <exception cref="MetadataException">Thrown with no parameters.</exception>
+	/// <returns>This method always throws, so it actually never returns a value.</returns>
+	[DoesNotReturn]
+	public static T ThrowMetadataException<T>()
+	{
+		throw new MetadataException();
+	}
+
+	/// <summary>
+	/// Throws a new <see cref="MetadataException"/>.
+	/// </summary>
+	/// <typeparam name="T">The type of expected result.</typeparam>
+	/// <param name="message">The message to include in the exception.</param>
+	/// <exception cref="MetadataException">Thrown with the specified parameter.</exception>
+	/// <returns>This method always throws, so it actually never returns a value.</returns>
+	[DoesNotReturn]
+	public static T ThrowMetadataException<T>(string message)
+	{
+		throw new MetadataException(message);
+	}
+
+	/// <summary>
+	/// Throws a new <see cref="MetadataException"/>.
+	/// </summary>
+	/// <typeparam name="T">The type of expected result.</typeparam>
+	/// <param name="message">The message to include in the exception.</param>
+	/// <param name="innerException">The inner <see cref="Exception"/> to include.</param>
+	/// <exception cref="MetadataException">Thrown with the specified parameter.</exception>
+	/// <returns>This method always throws, so it actually never returns a value.</returns>
+	[DoesNotReturn]
+	public static T ThrowMetadataException<T>(string message, Exception innerException)
+	{
+		throw new MetadataException(message, innerException);
 	}
 
 	/// <summary>
