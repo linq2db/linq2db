@@ -490,6 +490,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Local", "Local", "{6CB875B4
 		Data\Setup Scripts\readme.md = Data\Setup Scripts\readme.md
 		Data\Setup Scripts\sqlserver2017.cmd = Data\Setup Scripts\sqlserver2017.cmd
 		Data\Setup Scripts\sqlserver2019.cmd = Data\Setup Scripts\sqlserver2019.cmd
+		Data\Setup Scripts\sqlserver2022-win.cmd = Data\Setup Scripts\sqlserver2022-win.cmd
 		Data\Setup Scripts\sqlserver2022.cmd = Data\Setup Scripts\sqlserver2022.cmd
 	EndProjectSection
 EndProject

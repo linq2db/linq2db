@@ -14,8 +14,8 @@ echo "SQL Server is operational"
 
 docker exec mssql sqlcmd -S localhost -U sa -P Password12! -Q "SELECT @@Version"
 
-docker exec mssql sqlcmd -S localhost -U sa -P Password12! -Q "CREATE DATABASE TestData COLLATE Latin1_General_CS_AS;"
-docker exec mssql sqlcmd -S localhost -U sa -P Password12! -Q "CREATE DATABASE TestDataMS COLLATE Latin1_General_CS_AS;"
+docker exec mssql sqlcmd -S localhost -U sa -P Password12! -Q "CREATE DATABASE TestData;"
+docker exec mssql sqlcmd -S localhost -U sa -P Password12! -Q "CREATE DATABASE TestDataMS;"
 
 REM FTS required
 goto:eof

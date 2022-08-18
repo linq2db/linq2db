@@ -1,5 +1,7 @@
 Contains database setup scripts for local testing
 
+### Linux (WSL2) images
+
 - `clickhouse.cmd` : Windows script to create or update docker container with ClickHouse instance
 - `pgsql92.cmd` : Windows script to create or update docker container with PostgreSQL 9.2 instance
 - `pgsql93.cmd` : Windows script to create or update docker container with PostgreSQL 9.3 instance
@@ -13,3 +15,9 @@ Contains database setup scripts for local testing
 - `sqlserver2017.cmd` : Windows script to create or update docker container with SQL Server 2017 (Linux-based) instance
 - `sqlserver2019.cmd` : Windows script to create or update docker container with SQL Server 2019 (Linux-based) instance (also creates databases for FTS, Contained and SequentialAccess test providers)
 - `sqlserver2022.cmd` : Windows script to create or update docker container with SQL Server 2022 (Linux-based) instance
+
+### Windows images
+
+Use of Windows-based images is not recommended as they probably will not work due to base image mismatch.
+
+- `sqlserver2022-win.cmd` : Windows script to create or update docker container with SQL Server 2022 (Windows-based) instance
