@@ -244,8 +244,7 @@ namespace LinqToDB.Expressions
 				catch (Exception ex)
 				{
 					var name = dataReader.GetName(ColumnIndex);
-					throw new LinqToDBConvertException(
-							$"Mapping of column '{name}' value failed, see inner exception for details", ex)
+					throw new LinqToDBConvertException($"Mapping of column '{name}' value failed, see inner exception for details", ex)
 					{
 						ColumnName = name
 					};
@@ -270,7 +269,7 @@ namespace LinqToDB.Expressions
 						if (rawExpr == null)
 							rawExpr = currentRawExpr;
 						else if (rawExpr.Method != currentRawExpr.Method)
-							throw new LinqToDBConvertException(
+							ThrowHelper.ThrowLinqToDBConvertException(
 								$"Different data reader methods used for same column: '{rawExpr.Method.DeclaringType?.Name}.{rawExpr.Method.Name}' vs '{currentRawExpr.Method.DeclaringType?.Name}.{currentRawExpr.Method.Name}'");
 
 					}
@@ -315,8 +314,7 @@ namespace LinqToDB.Expressions
 				catch (Exception ex)
 				{
 					var name = dataReader.GetName(ColumnIndex);
-					throw new LinqToDBConvertException(
-							$"Mapping of column '{name}' value failed, see inner exception for details", ex)
+					throw new LinqToDBConvertException($"Mapping of column '{name}' value failed, see inner exception for details", ex)
 					{
 						ColumnName = name
 					};

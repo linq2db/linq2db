@@ -447,6 +447,39 @@ internal static partial class ThrowHelper
 	}
 
 	/// <summary>
+	/// Throws a new <see cref="LinqToDBConvertException"/>.
+	/// </summary>
+	/// <exception cref="LinqToDBConvertException">Thrown with no parameters.</exception>
+	[DoesNotReturn]
+	public static void ThrowLinqToDBConvertException()
+	{
+		throw new LinqToDBConvertException();
+	}
+
+	/// <summary>
+	/// Throws a new <see cref="LinqToDBConvertException"/>.
+	/// </summary>
+	/// <param name="message">The message to include in the exception.</param>
+	/// <exception cref="LinqToDBConvertException">Thrown with the specified parameter.</exception>
+	[DoesNotReturn]
+	public static void ThrowLinqToDBConvertException(string message)
+	{
+		throw new LinqToDBConvertException(message);
+	}
+
+	/// <summary>
+	/// Throws a new <see cref="LinqToDBConvertException"/>.
+	/// </summary>
+	/// <param name="message">The message to include in the exception.</param>
+	/// <param name="innerException">The inner <see cref="Exception"/> to include.</param>
+	/// <exception cref="LinqToDBConvertException">Thrown with the specified parameter.</exception>
+	[DoesNotReturn]
+	public static void ThrowLinqToDBConvertException(string message, Exception innerException)
+	{
+		throw new LinqToDBConvertException(message, innerException);
+	}
+
+	/// <summary>
 	/// Throws a new <see cref="LockRecursionException"/>.
 	/// </summary>
 	/// <exception cref="LockRecursionException">Thrown with no parameters.</exception>
@@ -1403,6 +1436,39 @@ internal static partial class ThrowHelper
 	public static T ThrowLinqToDBException<T>(string message, Exception innerException)
 	{
 		throw new LinqToDBException(message, innerException);
+	}
+
+	/// <summary>
+	/// Throws a new <see cref="LinqToDBConvertException"/>.
+	/// </summary>
+	/// <exception cref="LinqToDBConvertException">Thrown with no parameters.</exception>
+	[DoesNotReturn]
+	public static T ThrowLinqToDBConvertException<T>()
+	{
+		throw new LinqToDBConvertException();
+	}
+
+	/// <summary>
+	/// Throws a new <see cref="LinqToDBConvertException"/>.
+	/// </summary>
+	/// <param name="message">The message to include in the exception.</param>
+	/// <exception cref="LinqToDBConvertException">Thrown with the specified parameter.</exception>
+	[DoesNotReturn]
+	public static T ThrowLinqToDBConvertException<T>(string message)
+	{
+		throw new LinqToDBConvertException(message);
+	}
+
+	/// <summary>
+	/// Throws a new <see cref="LinqToDBConvertException"/>.
+	/// </summary>
+	/// <param name="message">The message to include in the exception.</param>
+	/// <param name="innerException">The inner <see cref="Exception"/> to include.</param>
+	/// <exception cref="LinqToDBConvertException">Thrown with the specified parameter.</exception>
+	[DoesNotReturn]
+	public static T ThrowLinqToDBConvertException<T>(string message, Exception innerException)
+	{
+		throw new LinqToDBConvertException(message, innerException);
 	}
 
 	/// <summary>

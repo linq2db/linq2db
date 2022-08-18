@@ -384,7 +384,7 @@ namespace LinqToDB.Linq
 							if (context.RawCall == null)
 								context.RawCall = call;
 							else if (context.RawCall.Method != call.Method)
-								throw new LinqToDBConvertException(
+								ThrowHelper.ThrowLinqToDBConvertException(
 									$"Different data reader methods used for same column: '{context.RawCall.Method.DeclaringType?.Name}.{context.RawCall.Method.Name}' vs '{call.Method.DeclaringType?.Name}.{call.Method.Name}'");
 						}
 					}
