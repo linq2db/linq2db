@@ -8,8 +8,8 @@ namespace LinqToDB.DataProvider.SqlServer
 {
 	using Common;
 	using Mapping;
-	using SqlQuery;
 	using SqlProvider;
+	using SqlQuery;
 
 	abstract class SqlServerSqlBuilder : BasicSqlBuilder
 	{
