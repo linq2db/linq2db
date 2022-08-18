@@ -8,6 +8,7 @@ using System.Data;
 using System.Linq;
 using FluentAssertions;
 using LinqToDB;
+using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 using NUnit.Framework;
