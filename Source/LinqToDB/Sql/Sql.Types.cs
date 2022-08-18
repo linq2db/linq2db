@@ -114,6 +114,7 @@ namespace LinqToDB
 
 			[Property(PN.PostgreSQL,    "TimeStamp",      ServerSideOnly=true, CanBeNull = false)]
 			[Property(PN.Firebird,      "TimeStamp",      ServerSideOnly=true, CanBeNull = false)]
+			[Property(PN.SqlServer2022, "DateTimeOffset", ServerSideOnly=true, CanBeNull = false)]
 			[Property(PN.SqlServer2019, "DateTimeOffset", ServerSideOnly=true, CanBeNull = false)]
 			[Property(PN.SqlServer2017, "DateTimeOffset", ServerSideOnly=true, CanBeNull = false)]
 			[Property(PN.SqlServer2016, "DateTimeOffset", ServerSideOnly=true, CanBeNull = false)]

@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LinqToDB.DataProvider.SqlServer
+﻿namespace LinqToDB.DataProvider.SqlServer
 {
 	using Mapping;
 	using SqlProvider;
@@ -12,7 +10,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 		}
 
-		SqlServer2019SqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
+		protected SqlServer2019SqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
 		{
 		}
 

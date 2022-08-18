@@ -4,18 +4,18 @@ using System.Data.SqlTypes;
 using System.Globalization;
 using System.IO;
 using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Xml;
-using System.Runtime.CompilerServices;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
 	using Common;
 	using Expressions;
-	using Metadata;
-	using Mapping;
-	using SqlQuery;
 	using Extensions;
+	using Mapping;
+	using Metadata;
+	using SqlQuery;
 
 	sealed class SqlServerMappingSchema : LockedMappingSchema
 	{
@@ -624,6 +624,28 @@ namespace LinqToDB.DataProvider.SqlServer
 		public sealed class SqlServer2019MappingSchema : LockedMappingSchema
 		{
 			public SqlServer2019MappingSchema() : base(ProviderName.SqlServer2019, Instance)
+			{
+				ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
+
+				SetValueToSqlConverter(typeof(TimeSpan)      , (sb, dt, v) => ConvertTimeSpanToSql      (sb, dt, (TimeSpan)v             , true, true));
+				SetValueToSqlConverter(typeof(SqlDateTime)   , (sb, dt, v) => ConvertDateTimeToSql      (sb, dt, (DateTime)(SqlDateTime)v, true, true));
+				SetValueToSqlConverter(typeof(DateTime)      , (sb, dt, v) => ConvertDateTimeToSql      (sb, dt, (DateTime)v             , true, true));
+				SetValueToSqlConverter(typeof(DateTimeOffset), (sb, dt, v) => ConvertDateTimeOffsetToSql(sb, dt, (DateTimeOffset)v       , true, true));
+
+#if NET6_0_OR_GREATER
+				SetValueToSqlConverter(typeof(DateOnly)      , (sb, dt, v) => ConvertDateToSql          (sb, dt, (DateOnly)v             , true, true));
+#endif
+			}
+
+			public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
+			{
+				return Instance.TryGetConvertExpression(@from, to);
+			}
+		}
+
+		public sealed class SqlServer2022MappingSchema : LockedMappingSchema
+		{
+			public SqlServer2022MappingSchema() : base(ProviderName.SqlServer2022, Instance)
 			{
 				ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 

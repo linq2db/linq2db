@@ -1422,6 +1422,58 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test]
+		public void FirstLastValueIgnoreNulls([IncludeDataSources(
+			TestProvName.AllSqlServer2022Plus,
+			TestProvName.AllOracle)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(Position.TestData))
+			{
+				var group = 7;
+
+				var q =
+					from p in db.GetTable<Position>()
+					where p.Group == @group
+					select new
+					{
+						Id = p.Id,
+						FirstRespect = (int?)Sql.Ext.FirstValue(p.Id, Sql.Nulls.Respect).Over().OrderByDesc(p.Order).ToValue(),
+						FirstIgnore = (int?)Sql.Ext.FirstValue(p.Id, Sql.Nulls.Ignore).Over().OrderByDesc(p.Order).ToValue(),
+						LastRespect = (int?)Sql.Ext.LastValue(p.Id, Sql.Nulls.Respect).Over().OrderBy(p.Order).ToValue(),
+						LastIgnore = (int?)Sql.Ext.LastValue(p.Id, Sql.Nulls.Ignore).Over().OrderBy(p.Order).ToValue(),
+					};
+
+				var res = q.ToArray();
+
+				Assert.AreEqual(4, res.Length);
+
+				Assert.AreEqual(5, res[0].Id);
+				Assert.IsNull(res[0].FirstRespect);
+				Assert.AreEqual(6, res[0].FirstIgnore);
+				Assert.AreEqual(5, res[0].LastRespect);
+				Assert.AreEqual(5, res[0].LastIgnore);
+
+				Assert.AreEqual(6, res[1].Id);
+				Assert.IsNull(res[1].FirstRespect);
+				Assert.AreEqual(6, res[1].FirstIgnore);
+				Assert.AreEqual(6, res[1].LastRespect);
+				Assert.AreEqual(6, res[1].LastIgnore);
+
+				Assert.IsNull(res[2].Id);
+				Assert.IsNull(res[2].FirstRespect);
+				Assert.IsNull(res[2].FirstIgnore);
+				Assert.IsNull(res[2].LastRespect);
+				Assert.AreEqual(6, res[2].LastIgnore);
+
+				Assert.IsNull(res[3].Id);
+				Assert.IsNull(res[3].FirstRespect);
+				Assert.IsNull(res[3].FirstIgnore);
+				Assert.IsNull(res[3].LastRespect);
+				Assert.AreEqual(6, res[3].LastIgnore);
+			}
+		}
+
 		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37950", Configuration = TestProvName.AllClickHouse)]
 		[Test]
 		public void Issue1732FirstValue([DataSources(
