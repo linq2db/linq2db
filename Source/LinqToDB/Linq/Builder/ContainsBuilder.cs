@@ -150,7 +150,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				var result = new ContainsContext(null, _methodCall, context.CloneContext(Sequence), _buildInStatement);
 				if (_placeholder != null)
-					result._placeholder = context.Correct(_placeholder);
+					result._placeholder = context.CloneExpression(_placeholder);
 				return result;
 			}
 

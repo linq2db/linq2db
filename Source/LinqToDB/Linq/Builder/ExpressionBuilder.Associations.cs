@@ -187,6 +187,12 @@ namespace LinqToDB.Linq.Builder
 			if (desiredType.IsSameOrParentOf(expression.Type))
 				return expression;
 
+			if (typeof(IGrouping<,>).IsSameOrParentOf(desiredType))
+			{
+				if (typeof(IEnumerable<>).IsSameOrParentOf(expression.Type))
+					return expression;
+			}
+
 			var elementType = GetEnumerableElementType(desiredType);
 
 			var result = (Expression?)null;

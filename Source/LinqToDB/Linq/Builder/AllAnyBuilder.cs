@@ -201,7 +201,7 @@ namespace LinqToDB.Linq.Builder
 
 			public override IBuildContext Clone(CloningContext context)
 			{
-				return new AllAnyContext(null, context.Correct(_methodCall), context.CloneContext(Sequence));
+				return new AllAnyContext(null, context.CloneExpression(_methodCall), context.CloneContext(Sequence));
 			}
 		}
 	}

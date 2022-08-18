@@ -155,9 +155,9 @@ namespace LinqToDB.Linq.Builder
 
 			sequenceExpression = ExpandContexts(sequenceExpression);
 
-			var correctedSequence    = cloningContext.Correct(sequenceExpression);
+			var correctedSequence    = cloningContext.CloneExpression(sequenceExpression);
 
-			var clonedMainContextRef = cloningContext.Correct(eagerLoad.ContextRef);
+			var clonedMainContextRef = cloningContext.CloneExpression(eagerLoad.ContextRef);
 			CollectDependencies(sequenceExpression, dependencies);
 
 			dependencies.AddRange(previousKeys);
@@ -169,7 +169,7 @@ namespace LinqToDB.Linq.Builder
 			foreach (var dependency in dependencies)
 			{
 				mainKeys[i]   = dependency;
-				detailKeys[i] = cloningContext.Correct(dependency);
+				detailKeys[i] = cloningContext.CloneExpression(dependency);
 				++i;
 			}
 
@@ -226,11 +226,36 @@ namespace LinqToDB.Linq.Builder
 						Methods.Queryable.SelectManyProjection.MakeGenericMethod(mainType, detailType, keyDetailType),
 						sourceQuery, Expression.Quote(detailSelector), Expression.Quote(selector));
 
+				var saveExpressionCache = _expressionCache;
+
+				_expressionCache = saveExpressionCache.ToDictionary(p =>
+						new SqlCacheKey(
+							cloningContext.CorrectExpression(p.Key.Expression),
+							cloningContext.CorrectContext(p.Key.Context), p.Key.ColumnDescriptor,
+							cloningContext.CorrectElement(p.Key.SelectQuery), p.Key.Flags),
+					p => cloningContext.CorrectExpression(p.Value), SqlCacheKey.SqlCacheKeyComparer);
+
+				var saveColumnsCache = _columnCache;
+
+				_columnCache = _columnCache.ToDictionary(p =>
+						new ColumnCacheKey(
+							cloningContext.CorrectExpression(p.Key.Expression),
+							p.Key.ResultType,
+							cloningContext.CorrectElement(p.Key.SelectQuery),
+							cloningContext.CorrectElement(p.Key.ParentQuery)),
+					p => cloningContext.CorrectExpression(p.Value), ColumnCacheKey.ColumnCacheKeyComparer);
+
+				var saveSqlCache = _cachedSql;
+
+				_cachedSql = _cachedSql.ToDictionary(p =>
+						new SqlCacheKey(
+							cloningContext.CorrectExpression(p.Key.Expression),
+							cloningContext.CorrectContext(p.Key.Context), p.Key.ColumnDescriptor,
+							cloningContext.CorrectElement(p.Key.SelectQuery), p.Key.Flags),
+					p => cloningContext.CorrectExpression(p.Value), SqlCacheKey.SqlCacheKeyComparer);
+
 				var detailSequence = BuildSequence(new BuildInfo((IBuildContext?)null, selectManyCall,
 					clonedParentContextRef.BuildContext.SelectQuery));
-
-				var saveExpressionCache = _expressionCache;
-				_expressionCache = new (SqlCacheKey.SqlCacheKeyComparer);
 
 				var parameters = new object[] { detailSequence, mainKeyExpression, selectManyCall, queryParameter, preambles, detailKeys };
 
@@ -239,6 +264,8 @@ namespace LinqToDB.Linq.Builder
 					.Invoke(this, parameters);
 
 				_expressionCache = saveExpressionCache;
+				_columnCache     = saveColumnsCache;
+				_cachedSql       = saveSqlCache;
 			}
 
 			resultExpression = AdjustType(resultExpression, eagerLoad.Type, MappingSchema);

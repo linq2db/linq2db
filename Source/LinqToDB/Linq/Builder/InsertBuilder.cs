@@ -308,7 +308,7 @@ namespace LinqToDB.Linq.Builder
 
 			public override IBuildContext Clone(CloningContext context)
 			{
-				return new InsertContext(null, context.CloneContext(Sequence), _insertType, context.Correct(_outputExpression));
+				return new InsertContext(null, context.CloneContext(Sequence), _insertType, context.CloneExpression(_outputExpression));
 			}
 
 			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)

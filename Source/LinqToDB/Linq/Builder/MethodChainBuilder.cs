@@ -176,7 +176,7 @@ namespace LinqToDB.Linq.Builder
 
 			public override IBuildContext Clone(CloningContext context)
 			{
-				return new ChainContext(null, context.CloneContext(Sequence), context.Correct(MethodCall));
+				return new ChainContext(null, context.CloneContext(Sequence), context.CloneExpression(MethodCall));
 			}
 
 			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)

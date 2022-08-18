@@ -172,7 +172,7 @@ namespace LinqToDB.Linq.Builder
 
 		public virtual IBuildContext Clone(CloningContext context)
 		{
-			return new SelectContext(null, context.Correct(Lambda), IsSubQuery,
+			return new SelectContext(null, context.CloneExpression(Lambda), IsSubQuery,
 				Sequence.Select(s => context.CloneContext(s)).ToArray());
 		}
 

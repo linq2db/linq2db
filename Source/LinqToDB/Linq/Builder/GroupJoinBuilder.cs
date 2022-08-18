@@ -124,7 +124,7 @@ namespace LinqToDB.Linq.Builder
 			public IBuildContext Clone(CloningContext context)
 			{
 				return new GroupJoinInnerContext(null, context.CloneElement(SelectQuery), Builder, _elementType,
-					context.Correct(OuterKey), context.Correct(InnerKeyLambda), context.Correct(InnerExpression));
+					context.CloneExpression(OuterKey), context.CloneExpression(InnerKeyLambda), context.CloneExpression(InnerExpression));
 			}
 
 			public void SetRunQuery<T>(Query<T> query)

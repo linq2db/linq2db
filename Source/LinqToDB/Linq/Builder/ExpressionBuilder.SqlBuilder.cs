@@ -3967,6 +3967,22 @@ namespace LinqToDB.Linq.Builder
 
 			_expressionCache[key] = expression;
 
+			if (!flags.HasFlag(ProjectFlags.Test))
+			{
+				if ((flags.HasFlag(ProjectFlags.SQL) ||
+				     flags.HasFlag(ProjectFlags.Keys)) && expression is SqlPlaceholderExpression)
+				{
+					var anotherKey = new SqlCacheKey(path, null, null, null, ProjectFlags.Expression);
+					_expressionCache[anotherKey] = expression;
+
+					if (flags.HasFlag(ProjectFlags.Keys))
+					{
+						anotherKey = new SqlCacheKey(path, null, null, null, ProjectFlags.Expression | ProjectFlags.Keys);
+						_expressionCache[anotherKey] = expression;
+					}
+				}
+			}
+
 			return expression;
 		}
 

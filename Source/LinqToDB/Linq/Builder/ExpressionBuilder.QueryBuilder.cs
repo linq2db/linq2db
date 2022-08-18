@@ -277,8 +277,7 @@ namespace LinqToDB.Linq.Builder
 			postProcessed = globalGenerator.Build();
 
 			var withColumns = ToColumns(context, postProcessed);
-			return withColumns;
-		}
+			return withColumns;}
 
 		public Expression ToColumns(IBuildContext rootContext, Expression expression)
 		{
@@ -404,6 +403,7 @@ namespace LinqToDB.Linq.Builder
 		public Expression? TryConvertToSqlExpr(IBuildContext context, Expression expression, ProjectFlags flags)
 		{
 			flags |= ProjectFlags.SQL;
+			flags &= ~ProjectFlags.Expression;
 
 			//Just test that we can convert
 			var converted = ConvertToSqlExpr(context, expression, flags | ProjectFlags.Test);

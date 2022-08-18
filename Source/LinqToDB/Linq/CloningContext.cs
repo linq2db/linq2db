@@ -26,18 +26,92 @@ namespace LinqToDB.Linq
 			return _buildContexts.ContainsKey(buildContext);
 		}
 
+		[return: NotNullIfNotNull("context")]
+		public TContext? CorrectContext<TContext>(TContext? context)
+			where TContext : IBuildContext
+		{
+			if (context == null)
+				return default;
+
+			if (_buildContexts.TryGetValue(context, out var replaced))
+				return (TContext)replaced;
+
+			return context;
+		}
+
+		[return: NotNullIfNotNull("element")]
+		public TElement? CorrectElement<TElement>(TElement? element)
+			where TElement : IQueryElement
+		{
+			if (element == null)
+				return default;
+
+			return (TElement)CorrectRawElement(element);
+		}
+
+		[return: NotNullIfNotNull("element")]
+		IQueryElement? CorrectRawElement(IQueryElement? element)
+		{
+			if (element == null)
+				return default;
+
+			if (_queryElements.TryGetValue(element, out var replacement))
+				return replacement;
+
+			return element;
+		}
+
 		[return: NotNullIfNotNull("expression")]
-		public TExpression? Correct<TExpression>(TExpression? expression)
+		public TExpression? CorrectExpression<TExpression>(TExpression? expression)
 			where TExpression : Expression
 		{
 			if (expression == null)
 				return default;
 
-			return (TExpression)CorrectRaw(expression);
+			return (TExpression)CorrectExpressionRaw(expression);
 		}
 
 		[return: NotNullIfNotNull("expression")]
-		Expression? CorrectRaw(Expression? expression)
+		Expression? CorrectExpressionRaw(Expression? expression)
+		{
+			if (expression == null)
+				return default;
+
+			var newExpression = expression.Transform(e =>
+			{
+				if (e.NodeType == ExpressionType.Extension)
+				{
+					if (e is SqlPlaceholderExpression sqlPlaceholder)
+					{
+						return new SqlPlaceholderExpression(CorrectElement(sqlPlaceholder.SelectQuery),
+							CorrectElement(sqlPlaceholder.Sql), CorrectExpression(sqlPlaceholder.Path), sqlPlaceholder.ConvertType,
+							sqlPlaceholder.Alias, sqlPlaceholder.Index, CorrectExpression(sqlPlaceholder.TrackingPath));
+					}
+
+					if (e is ContextRefExpression contextRef)
+					{
+						return contextRef.WithContext(CorrectContext(contextRef.BuildContext));
+					}
+				}
+
+				return e;
+			});
+
+			return newExpression;
+		}
+
+		[return: NotNullIfNotNull("expression")]
+		public TExpression? CloneExpression<TExpression>(TExpression? expression)
+			where TExpression : Expression
+		{
+			if (expression == null)
+				return default;
+
+			return (TExpression)CloneExpressionRaw(expression);
+		}
+
+		[return: NotNullIfNotNull("expression")]
+		Expression? CloneExpressionRaw(Expression? expression)
 		{
 			if (expression == null)
 				return default;
@@ -49,8 +123,8 @@ namespace LinqToDB.Linq
 					if (e is SqlPlaceholderExpression sqlPlaceholder)
 					{
 						return new SqlPlaceholderExpression(CloneElement(sqlPlaceholder.SelectQuery),
-							CloneElement(sqlPlaceholder.Sql), Correct(sqlPlaceholder.Path), sqlPlaceholder.ConvertType,
-							sqlPlaceholder.Alias, sqlPlaceholder.Index, Correct(sqlPlaceholder.TrackingPath));
+							CloneElement(sqlPlaceholder.Sql), CloneExpression(sqlPlaceholder.Path), sqlPlaceholder.ConvertType,
+							sqlPlaceholder.Alias, sqlPlaceholder.Index, CloneExpression(sqlPlaceholder.TrackingPath));
 					}
 
 					if (e is ContextRefExpression contextRef)

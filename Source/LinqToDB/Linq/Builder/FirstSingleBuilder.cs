@@ -343,7 +343,7 @@ namespace LinqToDB.Linq.Builder
 
 			public override IBuildContext Clone(CloningContext context)
 			{
-				return new FirstSingleContext(null, context.CloneContext(Sequence), context.Correct(_methodCall), IsSubQuery, IsAssociation, IsOuter);
+				return new FirstSingleContext(null, context.CloneContext(Sequence), context.CloneExpression(_methodCall), IsSubQuery, IsAssociation, IsOuter);
 			}
 
 			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
