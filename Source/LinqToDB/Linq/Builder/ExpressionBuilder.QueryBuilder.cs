@@ -153,6 +153,53 @@ namespace LinqToDB.Linq.Builder
 			return resultExpr;
 		}
 
+		Expression Deduplicate(Expression expression)
+		{
+			var visited    = new HashSet<Expression>();
+			var duplicates = new Dictionary<Expression, Expression?>();
+
+			expression.Visit(
+				(builder: this, duplicates, visited),
+				static (ctx, e) =>
+				{
+					if (e is SqlGenericConstructorExpression || e is SqlPlaceholderExpression)
+					{
+						if (!ctx.visited.Add(e))
+						{
+							ctx.duplicates.Add(e, null);
+						}
+					}
+				});
+
+			if (duplicates.Count == 0)
+				return expression;
+
+			var globalGenerator = new ExpressionGenerator();
+
+			foreach (var d in duplicates.Keys.ToList())
+			{
+				var variable = globalGenerator.AssignToVariable(d);
+				duplicates[d] = variable;
+			}
+
+			var corrected = expression.Transform(
+				(builder: this, duplicates),
+				static (ctx, e) =>
+				{
+					if (e.NodeType == ExpressionType.Extension && ctx.duplicates.TryGetValue(e, out var replacement))
+					{
+						return replacement;
+					}
+
+					return e;
+				});
+
+			globalGenerator.AddExpression(corrected);
+
+			var result = globalGenerator.Build();
+			return result;
+		}
+
 		Expression FinalizeProjection<T>(
 			Query<T>            query, 
 			IBuildContext       context, 
@@ -173,22 +220,24 @@ namespace LinqToDB.Linq.Builder
 			var globalGenerator = new ExpressionGenerator();
 			var processedMap    = new Dictionary<Expression, Expression>();
 
-			var translatedMap = new Dictionary<Expression, Expression>();
 			// convert all missed references
-			var postProcessed = BuildSqlExpression(translatedMap, context, expression, ProjectFlags.Expression);
+			var postProcessed = BuildSqlExpression(new Dictionary<Expression, Expression>(), context, expression, ProjectFlags.Expression);
+
+			// deduplicate objects instantiation
+			postProcessed = Deduplicate(postProcessed);
 
 			// process eager loading queries
 			var correctedEager = CompleteEagerLoadingExpressions(postProcessed, context, queryParameter, ref preambles, previousKeys);
 			if (!ReferenceEquals(correctedEager, postProcessed))
 			{
 				// convert all missed references
-				postProcessed = BuildSqlExpression(translatedMap, context, correctedEager, ProjectFlags.Expression);
+				postProcessed = BuildSqlExpression(new Dictionary<Expression, Expression>(), context, correctedEager, ProjectFlags.Expression);
 			}
 
 			// Deduplication
 			//
 			postProcessed = postProcessed.Transform(
-				(builder: this, map: processedMap, translatedMap, generator: globalGenerator),
+				(builder: this, map: processedMap, translatedMap: new Dictionary<Expression, Expression>(), generator: globalGenerator, context),
 				static (ctx, e) =>
 				{
 					if (e is SqlErrorExpression error)
@@ -584,15 +633,15 @@ namespace LinqToDB.Linq.Builder
 
 									if (context.builder.IsSequence(info))
 									{
-										return new TransformInfo(
-											context.builder.GetSubQueryExpression(context.context, contextRef, false,
-												context.alias, context.flags.HasFlag(ProjectFlags.Test)), false, true);
+										buildExpr = context.builder.GetSubQueryExpression(context.context, contextRef,
+											false,
+											context.alias, context.flags.HasFlag(ProjectFlags.Test));
 									}
 								}
 
 								context.translated[expr] = buildExpr;
 
-								return new TransformInfo(buildExpr);
+								return new TransformInfo(buildExpr, false, true);
 							}
 
 							if (expr is SqlGenericConstructorExpression constructorExpression)
@@ -600,6 +649,12 @@ namespace LinqToDB.Linq.Builder
 								if (context.flags.HasFlag(ProjectFlags.Expression))
 								{
 									var constructed = context.builder.TryConstruct(constructorExpression, context.context, context.flags);
+									if (!ReferenceEquals(constructed, constructorExpression))
+									{
+										constructed = context.builder.BuildSqlExpression(context.translated,
+											context.context, constructed, context.flags, context.alias);
+									}
+									context.translated[expr] = constructed;
 									return new TransformInfo(constructed, false, true);
 								}
 							}

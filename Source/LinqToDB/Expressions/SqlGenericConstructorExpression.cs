@@ -20,10 +20,10 @@ namespace LinqToDB.Expressions
 				if (!memberInfo.GetMemberType().IsAssignableFrom(expression.Type))
 					throw new InvalidOperationException($"Member '{memberInfo.Name}:{memberInfo.GetMemberType().Name}' cannot accept Expression Type '{expression.Type}'.");
 
-				MemberInfo = memberInfo;
-				Expression = expression;
+				MemberInfo  = memberInfo;
+				Expression  = expression;
 				IsMandatory = isMandatory;
-				IsLoaded = isLoaded;
+				IsLoaded    = isLoaded;
 			}
 
 			public MemberInfo MemberInfo  { get;  }
@@ -74,7 +74,7 @@ namespace LinqToDB.Expressions
 			}
 		}
 
-		public SqlGenericConstructorExpression(CreateType createType, Type objectType, ReadOnlyCollection<Parameter>? parameters, ReadOnlyCollection<Assignment>? assignments)
+		public SqlGenericConstructorExpression(CreateType createType, Type objectType, ReadOnlyCollection<Parameter>? parameters, ReadOnlyCollection<Assignment>? assignments) : this()
 		{
 			ObjectType    = objectType;
 			ConstructType = createType;
@@ -82,7 +82,7 @@ namespace LinqToDB.Expressions
 			Assignments   = assignments ?? Assignment.EmptyCollection;
 		}
 
-		public SqlGenericConstructorExpression(SqlGenericConstructorExpression basedOn)
+		public SqlGenericConstructorExpression(SqlGenericConstructorExpression basedOn) : this()
 		{
 			ObjectType        = basedOn.ObjectType;
 			ConstructType     = CreateType.Incompatible;
@@ -92,7 +92,7 @@ namespace LinqToDB.Expressions
 			Assignments       = Assignment.EmptyCollection;
 		}
 
-		public SqlGenericConstructorExpression(Type objectType, ReadOnlyCollection<MemberBinding> bindings)
+		public SqlGenericConstructorExpression(Type objectType, ReadOnlyCollection<MemberBinding> bindings) : this()
 		{
 			ObjectType    = objectType;
 			ConstructType = CreateType.Auto;
@@ -102,7 +102,7 @@ namespace LinqToDB.Expressions
 			Assignments = new ReadOnlyCollection<Assignment>(assignments);
 		}
 
-		public SqlGenericConstructorExpression(NewExpression newExpression)
+		public SqlGenericConstructorExpression(NewExpression newExpression) : this()
 		{
 			var items = new List<Assignment>(newExpression.Members?.Count ?? 0);
 
@@ -127,7 +127,7 @@ namespace LinqToDB.Expressions
 			Assignments   = items.AsReadOnly();
 		}
 
-		public SqlGenericConstructorExpression(MethodCallExpression methodCall)
+		public SqlGenericConstructorExpression(MethodCallExpression methodCall) : this()
 		{
 			ConstructorMethod = methodCall.Method;
 			ConstructType     = CreateType.New;

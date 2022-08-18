@@ -214,6 +214,8 @@ namespace LinqToDB.Linq.Builder
 				throw new NotImplementedException();
 			}
 
+			SqlGenericConstructorExpression? _fullEntityExpression;
+
 			public Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
 				if (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AssociationRoot) || flags.HasFlag(ProjectFlags.Expand))
@@ -225,7 +227,12 @@ namespace LinqToDB.Linq.Builder
 					if (path.Type != ObjectType && flags.HasFlag(ProjectFlags.Expression))
 						return new SqlEagerLoadExpression((ContextRefExpression)path, path, Builder.GetSequenceExpression(this));
 
-					return Builder.BuildFullEntityExpression(this, ObjectType, flags);
+					if (_fullEntityExpression == null)
+					{
+						_fullEntityExpression = Builder.BuildFullEntityExpression(this, ObjectType, flags);
+					}
+
+					return _fullEntityExpression;
 				}
 
 				if (path is not MemberExpression member)
