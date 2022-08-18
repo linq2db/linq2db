@@ -229,7 +229,7 @@ namespace LinqToDB.Data
 				ThrowHelper.ThrowArgumentNullException(nameof(options));
 
 			if (!options.IsValidConfigForConnectionType(this))
-				throw new LinqToDBException(
+				ThrowHelper.ThrowLinqToDBException(
 					$"Improper options type used to create DataConnection {GetType()}, try creating a public constructor calling base and accepting type {nameof(LinqToDBConnectionOptions)}<{GetType().Name}>");
 
 			InitConfig();
@@ -245,7 +245,7 @@ namespace LinqToDB.Data
 					ConfigurationString = options.ConfigurationString ?? DefaultConfiguration;
 
 					if (ConfigurationString == null)
-						throw new LinqToDBException("Configuration string is not provided.");
+						ThrowHelper.ThrowLinqToDBException("Configuration string is not provided.");
 
 					var ci = GetConfigurationInfo(ConfigurationString);
 
@@ -258,7 +258,7 @@ namespace LinqToDB.Data
 				case ConnectionSetupType.ConnectionString:
 				{
 					if (options.ProviderName == null && options.DataProvider == null)
-						throw new LinqToDBException("DataProvider was not specified");
+						ThrowHelper.ThrowLinqToDBException("DataProvider was not specified");
 
 					IDataProvider? dataProvider;
 
@@ -268,7 +268,7 @@ namespace LinqToDB.Data
 							dataProvider = GetDataProvider(options.ProviderName, options.ConnectionString!);
 
 						if (dataProvider == null)
-							throw new LinqToDBException($"DataProvider '{options.ProviderName}' not found.");
+							ThrowHelper.ThrowLinqToDBException($"DataProvider '{options.ProviderName}' not found.");
 					}
 					else
 						dataProvider = options.DataProvider!;
@@ -901,7 +901,7 @@ namespace LinqToDB.Data
 					var dataProvider = _dataProvider ??= GetDataProvider(_connectionStringSettings!, ConnectionString);
 
 					if (dataProvider == null)
-						throw new LinqToDBException($"DataProvider is not provided for configuration: {_configurationString}");
+						ThrowHelper.ThrowLinqToDBException($"DataProvider is not provided for configuration: {_configurationString}");
 
 					return dataProvider;
 				}
@@ -950,12 +950,12 @@ namespace LinqToDB.Data
 			var key = configurationString ?? DefaultConfiguration;
 
 			if (key == null)
-				throw new LinqToDBException("Configuration string is not provided.");
+				return ThrowHelper.ThrowLinqToDBException<ConfigurationInfo>("Configuration string is not provided.");
 
 			if (_configurations.TryGetValue(key, out var ci))
 				return ci;
 
-			throw new LinqToDBException($"Configuration '{configurationString}' is not defined.");
+			return ThrowHelper.ThrowLinqToDBException<ConfigurationInfo>($"Configuration '{configurationString}' is not defined.");
 		}
 
 		/// <summary>

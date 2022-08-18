@@ -787,9 +787,9 @@ namespace LinqToDB.SqlProvider
 				if (expr.Column is SqlRow row)
 				{
 					if (!SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.Update))
-						throw new LinqToDBException("This provider does not support SqlRow in UPDATE.");
+						ThrowHelper.ThrowLinqToDBException("This provider does not support SqlRow in UPDATE.");
 					if (!SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.UpdateLiteral) && expr.Expression is not SelectQuery)
-						throw new LinqToDBException("This provider does not support SqlRow literal on the right-hand side of an UPDATE SET.");
+						ThrowHelper.ThrowLinqToDBException("This provider does not support SqlRow literal on the right-hand side of an UPDATE SET.");
 				}
 
 				BuildExpression(expr.Column, SqlProviderFlags.IsUpdateSetTableAliasSupported, true, false);
@@ -1664,7 +1664,7 @@ namespace LinqToDB.SqlProvider
 				case QueryElementType.SqlValuesTable:
 				{
 					if (alias == null)
-						throw new LinqToDBException("Alias required for SqlValuesTable.");
+						ThrowHelper.ThrowLinqToDBException("Alias required for SqlValuesTable.");
 					BuildSqlValuesTable((SqlValuesTable)table, alias, out var aliasBuilt);
 					buildAlias = !aliasBuilt;
 					break;
@@ -1702,7 +1702,7 @@ namespace LinqToDB.SqlProvider
 				StringBuilder.Append(')');
 			}
 			else
-				throw new LinqToDBException($"{Name} doesn't support values with empty source");
+				ThrowHelper.ThrowLinqToDBException($"{Name} doesn't support values with empty source");
 
 			aliasBuilt = IsValuesSyntaxSupported;
 			if (aliasBuilt)
@@ -1846,7 +1846,7 @@ namespace LinqToDB.SqlProvider
 								var inst = Activator.CreateInstance(type);
 
 								if (inst is not ISqlExtensionBuilder builder)
-									throw new LinqToDBException($"Type '{ext.BuilderType.FullName}' must implement the '{typeof(ISqlExtensionBuilder).FullName}' interface.");
+									return ThrowHelper.ThrowLinqToDBException<ISqlExtensionBuilder>($"Type '{ext.BuilderType.FullName}' must implement the '{typeof(ISqlExtensionBuilder).FullName}' interface.");
 
 								return builder;
 							});
@@ -1860,7 +1860,8 @@ namespace LinqToDB.SqlProvider
 								tableExtensionBuilder.Build(this, sb, ext, table, alias);
 								break;
 							default:
-								throw new LinqToDBException($"Type '{ext.BuilderType.FullName}' must implement either '{typeof(ISqlQueryExtensionBuilder).FullName}' or '{typeof(ISqlTableExtensionBuilder).FullName}' interface.");
+								ThrowHelper.ThrowLinqToDBException($"Type '{ext.BuilderType.FullName}' must implement either '{typeof(ISqlQueryExtensionBuilder).FullName}' or '{typeof(ISqlTableExtensionBuilder).FullName}' interface.");
+								break;
 						}
 					}
 
@@ -1895,7 +1896,7 @@ namespace LinqToDB.SqlProvider
 								var inst = Activator.CreateInstance(type);
 
 								if (inst is not ISqlExtensionBuilder builder)
-									throw new LinqToDBException($"Type '{ext.BuilderType.FullName}' must implement the '{typeof(ISqlExtensionBuilder).FullName}' interface.");
+									return ThrowHelper.ThrowLinqToDBException<ISqlExtensionBuilder>($"Type '{ext.BuilderType.FullName}' must implement the '{typeof(ISqlExtensionBuilder).FullName}' interface.");
 
 								return builder;
 							});
@@ -1906,7 +1907,8 @@ namespace LinqToDB.SqlProvider
 								queryExtensionBuilder.Build(this, sb, ext);
 								break;
 							default:
-								throw new LinqToDBException($"Type '{ext.BuilderType.FullName}' must implement either '{typeof(ISqlQueryExtensionBuilder).FullName}' or '{typeof(ISqlTableExtensionBuilder).FullName}' interface.");
+								ThrowHelper.ThrowLinqToDBException($"Type '{ext.BuilderType.FullName}' must implement either '{typeof(ISqlQueryExtensionBuilder).FullName}' or '{typeof(ISqlTableExtensionBuilder).FullName}' interface.");
+								break;
 						}
 					}
 
@@ -3186,7 +3188,7 @@ namespace LinqToDB.SqlProvider
 
 				if (type.Type.DataType == DataType.Undefined)
 					// give some hint to user that it is expected situation and he need to fix something on his side
-					throw new LinqToDBException("Database type cannot be determined automatically and must be specified explicitly");
+					ThrowHelper.ThrowLinqToDBException("Database type cannot be determined automatically and must be specified explicitly");
 
 				BuildDataTypeFromDataType(type, forCreateTable, canBeNull);
 			}

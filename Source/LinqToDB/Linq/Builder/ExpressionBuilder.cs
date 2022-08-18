@@ -1392,8 +1392,8 @@ namespace LinqToDB.Linq.Builder
 								new[] { fakeQuery.Expression }.Concat(callExpression.Arguments.Skip(1)));
 							if (CanBeCompiled(callExpression))
 							{
-								if (!(callExpression.EvaluateExpression() is IQueryable appliedQuery))
-									throw new LinqToDBException($"Method call '{expression}' returned null value.");
+								if (callExpression.EvaluateExpression() is not IQueryable appliedQuery)
+									return ThrowHelper.ThrowLinqToDBException<Expression>($"Method call '{expression}' returned null value.");
 								var newExpression = appliedQuery.Expression.Replace(fakeQuery.Expression, firstArgument);
 								return newExpression;
 							}
@@ -1407,7 +1407,7 @@ namespace LinqToDB.Linq.Builder
 
 				_parametersContext._expressionAccessors.TryGetValue(expression, out var accessor);
 				if (accessor == null)
-					throw new LinqToDBException($"IQueryable value accessor for '{expression}' not found.");
+					ThrowHelper.ThrowLinqToDBException($"IQueryable value accessor for '{expression}' not found.");
 
 				var path =
 					Expression.Call(

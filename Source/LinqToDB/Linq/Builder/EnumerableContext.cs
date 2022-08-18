@@ -545,7 +545,7 @@ namespace LinqToDB.Linq.Builder
 					}
 
 					if (sql.Length == 0)
-						throw new LinqToDBException($"Entity of type '{_elementType.Name}' as no defined columns.");
+						ThrowHelper.ThrowLinqToDBException($"Entity of type '{_elementType.Name}' as no defined columns.");
 				}
 
 				return sql;

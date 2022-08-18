@@ -627,7 +627,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					info = ConvertToIndex(null, 0, ConvertFlags.All);
 					if (info.Length != 1)
-						throw new LinqToDBException($"Invalid scalar type processing for type '{tableType.Name}'.");
+						ThrowHelper.ThrowLinqToDBException($"Invalid scalar type processing for type '{tableType.Name}'.");
 					var parentIndex = ConvertToParentIndex(info[0].Index, this);
 					return Builder.BuildSql(tableType, parentIndex, info[0].Sql);
 				}

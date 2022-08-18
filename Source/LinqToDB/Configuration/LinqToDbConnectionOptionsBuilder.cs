@@ -37,7 +37,7 @@ namespace LinqToDB.Configuration
 		private void CheckAssignSetupType(ConnectionSetupType type)
 		{
 			if (SetupType != ConnectionSetupType.DefaultConfiguration)
-				throw new LinqToDBException(
+				ThrowHelper.ThrowLinqToDBException(
 					$"{nameof(LinqToDBConnectionOptionsBuilder)} already setup using {SetupType}, use Reset first to overwrite");
 			SetupType = type;
 		}

@@ -696,7 +696,7 @@ namespace LinqToDB.SqlQuery
 			if (nonProjecting.Count > 0)
 			{
 				if (!flags.IsOrderByAggregateFunctionsSupported)
-					throw new LinqToDBException("Can not convert sequence to SQL. DISTINCT with ORDER BY not supported.");
+					ThrowHelper.ThrowLinqToDBException("Can not convert sequence to SQL. DISTINCT with ORDER BY not supported.");
 
 				// converting to Group By
 

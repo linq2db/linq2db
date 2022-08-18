@@ -236,7 +236,7 @@ namespace LinqToDB.DataProvider.DB2
 
 			// "db..table" syntax not supported
 			if (name.Database != null && schemaName == null)
-				throw new LinqToDBException("DB2 requires schema name if database name provided.");
+				ThrowHelper.ThrowLinqToDBException("DB2 requires schema name if database name provided.");
 
 			if (name.Database != null)
 			{

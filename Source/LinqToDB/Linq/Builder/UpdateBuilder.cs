@@ -161,7 +161,7 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			if (updateStatement.Update.Items.Count == 0)
-				throw new LinqToDBException("Update query has no setters defined.");
+				ThrowHelper.ThrowLinqToDBException("Update query has no setters defined.");
 
 			if (updateType == UpdateType.Update)
 				return new UpdateContext(buildInfo.Parent, sequence);

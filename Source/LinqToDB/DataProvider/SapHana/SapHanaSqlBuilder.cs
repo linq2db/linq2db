@@ -185,7 +185,7 @@ namespace LinqToDB.DataProvider.SapHana
 		{
 			// <table_name> ::= [[<linked_server_name>.]<schema_name>.][library_name:]<identifier>
 			if (name.Server != null && name.Schema == null)
-				throw new LinqToDBException("You must specify schema name for linked server queries.");
+				ThrowHelper.ThrowLinqToDBException("You must specify schema name for linked server queries.");
 
 			if (name.Server != null)
 			{

@@ -25,7 +25,7 @@ namespace LinqToDB.Linq.Builder
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
-			var table    = SequenceHelper.GetTableContext(sequence) ?? throw new LinqToDBException($"Cannot get table context from {sequence.GetType()}");
+			var table    = SequenceHelper.GetTableContext(sequence) ?? ThrowHelper.ThrowLinqToDBException<TableBuilder.TableContext>($"Cannot get table context from {sequence.GetType()}");
 			var value    = methodCall.Arguments.Count == 1 && methodCall.Method.Name == nameof(TableExtensions.IsTemporary) ?
 				true :
 				methodCall.Arguments[1].EvaluateExpression();

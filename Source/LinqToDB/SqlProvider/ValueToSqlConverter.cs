@@ -248,7 +248,7 @@ namespace LinqToDB.SqlProvider
 		public StringBuilder Convert(StringBuilder stringBuilder, SqlDataType? dataType, object? value)
 		{
 			if (!TryConvert(stringBuilder, dataType, value))
-				throw new LinqToDBException($"Cannot convert value of type {value?.GetType()} to SQL");
+				ThrowHelper.ThrowLinqToDBException($"Cannot convert value of type {value?.GetType()} to SQL");
 
 			return stringBuilder;
 		}

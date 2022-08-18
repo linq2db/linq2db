@@ -235,7 +235,7 @@ namespace LinqToDB.DataProvider.Informix
 		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions)
 		{
 			if (name.Server != null && name.Database == null)
-				throw new LinqToDBException("You must specify database for linked server query");
+				ThrowHelper.ThrowLinqToDBException("You must specify database for linked server query");
 
 			if (name.Database != null)
 			{

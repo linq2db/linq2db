@@ -260,10 +260,10 @@ namespace LinqToDB.Linq
 		public static void SetGenericInfoProvider(Type type)
 		{
 			if (!type.IsGenericTypeDefinition)
-				throw new LinqToDBException($"'{type}' must be a generic type.");
+				ThrowHelper.ThrowLinqToDBException($"'{type}' must be a generic type.");
 
 			if (!typeof(IGenericInfoProvider).IsSameOrParentOf(type))
-				throw new LinqToDBException($"'{type}' must inherit from 'IGenericInfoProvider'.");
+				ThrowHelper.ThrowLinqToDBException($"'{type}' must inherit from 'IGenericInfoProvider'.");
 
 			if (!_genericConvertProviders.ContainsKey(type))
 				lock (_genericConvertProviders)

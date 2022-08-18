@@ -149,7 +149,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 		protected override void BuildMergeStatement(SqlMergeStatement merge)
 		{
-			throw new LinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
+			ThrowHelper.ThrowLinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
 		}
 
 		protected override void BuildCreateTableCommand(SqlTable table)

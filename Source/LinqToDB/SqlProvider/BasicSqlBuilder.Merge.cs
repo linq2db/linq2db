@@ -242,7 +242,7 @@ namespace LinqToDB.SqlProvider
 			else if (IsEmptyValuesSourceSupported)
 				BuildMergeEmptySource(merge);
 			else
-				throw new LinqToDBException($"{Name} doesn't support merge with empty source");
+				ThrowHelper.ThrowLinqToDBException($"{Name} doesn't support merge with empty source");
 
 			BuildMergeAsSourceClause(merge.Source);
 		}

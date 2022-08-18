@@ -355,7 +355,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 						}
 					}
 
-					throw new LinqToDBException($"Missing conversion function definition to type '{toType.Type}'");
+					return ThrowHelper.ThrowLinqToDBException<ISqlExpression>($"Missing conversion function definition to type '{toType.Type}'");
 					
 				}
 			}

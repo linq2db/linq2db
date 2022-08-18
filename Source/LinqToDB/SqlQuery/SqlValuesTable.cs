@@ -111,8 +111,8 @@ namespace LinqToDB.SqlQuery
 
 			// rows pre-build for remote context
 
-			if (!(Source?.EvaluateExpression(context) is IEnumerable source))
-				throw new LinqToDBException($"Source must be enumerable: {Source}");
+			if (Source?.EvaluateExpression(context) is not IEnumerable source)
+				return ThrowHelper.ThrowLinqToDBException<IReadOnlyList<ISqlExpression[]>>($"Source must be enumerable: {Source}");
 
 			var rows = new List<ISqlExpression[]>();
 
@@ -121,7 +121,7 @@ namespace LinqToDB.SqlQuery
 				foreach (var record in source)
 				{
 					if (record == null)
-						throw new LinqToDBException("Merge source cannot hold null records");
+						ThrowHelper.ThrowLinqToDBException("Merge source cannot hold null records");
 
 					var row = new ISqlExpression[ValueBuilders!.Count];
 					var idx = 0;

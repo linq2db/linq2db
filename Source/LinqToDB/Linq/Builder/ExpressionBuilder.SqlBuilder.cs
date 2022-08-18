@@ -1237,7 +1237,7 @@ namespace LinqToDB.Linq.Builder
 				static (context, e, descriptor) => context.this_.ConvertToExtensionSql(context.context, e, descriptor));
 
 			if (sqlExpression == null)
-				throw new LinqToDBException($"Cannot convert to SQL method '{mc}'.");
+				ThrowHelper.ThrowLinqToDBException($"Cannot convert to SQL method '{mc}'.");
 
 			DataContext.InlineParameters = inlineParameters;
 
@@ -1905,7 +1905,7 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			if (ReferenceEquals(result, ob) && throwOnError)
-				throw new LinqToDBException($"Type {result.Type.Name} does not have member {memberPath.Last().Name}.");
+				ThrowHelper.ThrowLinqToDBException($"Type {result.Type.Name} does not have member {memberPath.Last().Name}.");
 
 			return result;
 		}

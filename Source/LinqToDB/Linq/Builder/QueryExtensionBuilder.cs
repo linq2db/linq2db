@@ -112,7 +112,8 @@ namespace LinqToDB.Linq.Builder
 					case Sql.QueryExtensionScope.TableHint:
 					case Sql.QueryExtensionScope.IndexHint:
 					{
-						var table = SequenceHelper.GetTableContext(sequence) ?? throw new LinqToDBException($"Cannot get table context from {sequence.GetType()}");
+						var table = SequenceHelper.GetTableContext(sequence) ?? 
+							ThrowHelper.ThrowLinqToDBException<TableBuilder.TableContext>($"Cannot get table context from {sequence.GetType()}");
 						attr.ExtendTable(table.SqlTable, list);
 						break;
 					}

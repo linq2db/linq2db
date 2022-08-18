@@ -370,7 +370,7 @@ namespace LinqToDB.SqlProvider
 				{
 					// TODO: Ideally if there is no recursive CTEs we can convert them to SubQueries
 					if (!SqlProviderFlags.IsCommonTableExpressionsSupported)
-						throw new LinqToDBException("DataProvider do not supports Common Table Expressions.");
+						ThrowHelper.ThrowLinqToDBException("DataProvider do not supports Common Table Expressions.");
 
 					var ordered = TopoSorting.TopoSort(cteHolder.WriteableValue.Keys, cteHolder, static (cteHolder, i) => cteHolder.WriteableValue![i]).ToList();
 
@@ -2764,7 +2764,7 @@ namespace LinqToDB.SqlProvider
 				var tableToUpdate = updateStatement.GetUpdateTable();
 
 				if (tableToUpdate == null)
-					throw new LinqToDBException("Query can't be translated to UPDATE Statement.");
+					ThrowHelper.ThrowLinqToDBException("Query can't be translated to UPDATE Statement.");
 
 				// we have to ensure that clone do not contain tableToUpdate
 				var objectTree   = new Dictionary<IQueryElement, IQueryElement>();
@@ -2788,7 +2788,7 @@ namespace LinqToDB.SqlProvider
 				}
 
 				if (tableToCompare == null)
-					throw new LinqToDBException("Query can't be translated to UPDATE Statement.");
+					ThrowHelper.ThrowLinqToDBException("Query can't be translated to UPDATE Statement.");
 
 				var compareKeys = tableToCompare.GetKeys(true);
 				var tableKeys   = tableToUpdate.GetKeys(true);
@@ -2798,7 +2798,7 @@ namespace LinqToDB.SqlProvider
 				{
 					var column = QueryHelper.NeedColumnForExpression(clonedQuery, compareKeys[i], false);
 					if (column == null)
-						throw new LinqToDBException($"Can not create query column for expression '{compareKeys[i]}'.");
+						ThrowHelper.ThrowLinqToDBException($"Can not create query column for expression '{compareKeys[i]}'.");
 					var compare = QueryHelper.GenerateEquality(tableKeys[i], column);
 					clonedQuery.Where.SearchCondition.Conditions.Add(compare);
 				}
@@ -3052,7 +3052,7 @@ namespace LinqToDB.SqlProvider
 			{
 				var foundTable = QueryHelper.EnumerateAccessibleTables(statement.SelectQuery).FirstOrDefault();
 				if (foundTable == null)
-					throw new LinqToDBException("Invalid query for Update.");
+					ThrowHelper.ThrowLinqToDBException("Invalid query for Update.");
 
 				tableToUpdate  = foundTable;
 				tableToCompare = tableToUpdate;
@@ -3070,7 +3070,7 @@ namespace LinqToDB.SqlProvider
 			{
 				var foundTable = FindUpdateTable(statement.SelectQuery, tableToUpdate);
 				if (foundTable is null)
-					throw new LinqToDBException("Invalid query for Update. Could not find appropriate table in the query.");
+					ThrowHelper.ThrowLinqToDBException("Invalid query for Update. Could not find appropriate table in the query.");
 
 				tableToCompare = foundTable;
 			}
@@ -3176,14 +3176,14 @@ namespace LinqToDB.SqlProvider
 				var keys2 = tableToCompare.GetKeys(true);
 
 				if (keys1.Count == 0)
-					throw new LinqToDBException(
+					ThrowHelper.ThrowLinqToDBException(
 						$"Table {tableToUpdate.NameForLogging} do not have primary key. Update transformation is not available.");
 
 				for (int i = 0; i < keys1.Count; i++)
 				{
 					var column = QueryHelper.NeedColumnForExpression(statement.SelectQuery, keys2[i], false);
 					if (column == null)
-						throw new LinqToDBException($"Can not create query column for expression '{keys2[i]}'.");
+						ThrowHelper.ThrowLinqToDBException($"Can not create query column for expression '{keys2[i]}'.");
 
 					var compare = QueryHelper.GenerateEquality(keys1[i], column);
 					statement.SelectQuery.Where.SearchCondition.Conditions.Add(compare);

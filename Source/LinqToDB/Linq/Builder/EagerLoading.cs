@@ -94,7 +94,7 @@ namespace LinqToDB.Linq.Builder
 			var type         = MutableTuple.MTypes[count - 1];
 			var concreteType = type.MakeGenericType(arguments.Select(a => a.Type).ToArray());
 			var constructor  = concreteType.GetConstructor(Array<Type>.Empty) ??
-							   throw new LinqToDBException($"Can not retrieve default constructor for '{type.Name}'");
+							   ThrowHelper.ThrowLinqToDBException<ConstructorInfo>($"Can not retrieve default constructor for '{type.Name}'");
 
 			var newExpression  = Expression.New(constructor);
 			var initExpression = Expression.MemberInit(newExpression,
@@ -159,7 +159,7 @@ namespace LinqToDB.Linq.Builder
 				if (result.Type != memberInfo.MemberInfo.DeclaringType)
 				{
 					if (throwOnError)
-						throw new LinqToDBException($"Type {result.Type.Name} does not have member {memberInfo.MemberInfo.Name}.");
+						ThrowHelper.ThrowLinqToDBException($"Type {result.Type.Name} does not have member {memberInfo.MemberInfo.Name}.");
 					return null;
 				}
 				if (memberInfo.MemberInfo.IsMethodEx())
@@ -188,7 +188,7 @@ namespace LinqToDB.Linq.Builder
 				if (!memberInfo.DeclaringType!.IsSameOrParentOf(result.Type))
 				{
 					if (throwOnError)
-						throw new LinqToDBException($"Type {result.Type.Name} does not have member {memberInfo.Name}.");
+						ThrowHelper.ThrowLinqToDBException($"Type {result.Type.Name} does not have member {memberInfo.Name}.");
 					return null;
 				}
 				result = Expression.MakeMemberAccess(result, memberInfo);

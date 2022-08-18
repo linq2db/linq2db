@@ -314,10 +314,10 @@ namespace LinqToDB.Mapping
 		public void SetGenericConvertProvider(Type type)
 		{
 			if (!type.IsGenericTypeDefinition)
-				throw new LinqToDBException($"'{type}' must be a generic type.");
+				ThrowHelper.ThrowLinqToDBException($"'{type}' must be a generic type.");
 
 			if (!typeof(IGenericInfoProvider).IsSameOrParentOf(type))
-				throw new LinqToDBException($"'{type}' must inherit from '{nameof(IGenericInfoProvider)}'.");
+				ThrowHelper.ThrowLinqToDBException($"'{type}' must inherit from '{nameof(IGenericInfoProvider)}'.");
 
 			Schemas[0].SetGenericConvertProvider(type);
 		}
@@ -1248,7 +1248,7 @@ namespace LinqToDB.Mapping
 		{
 			if (!IsLocked)
 				return new (this);
-			throw new LinqToDBException("MappingSchema is locked. Fluent Mapping is not supported.");
+			return ThrowHelper.ThrowLinqToDBException<FluentMappingBuilder>("MappingSchema is locked. Fluent Mapping is not supported.");
 		}
 
 		#endregion

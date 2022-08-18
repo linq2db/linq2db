@@ -113,7 +113,7 @@ namespace LinqToDB.Linq.Builder
 					}
 
 					if (ex == null)
-						throw new LinqToDBException("Method OnTargetKey() needs at least one primary key column");
+						ThrowHelper.ThrowLinqToDBException("Method OnTargetKey() needs at least one primary key column");
 
 					var condition = Expression.Lambda(ex, pTarget, pSource);
 

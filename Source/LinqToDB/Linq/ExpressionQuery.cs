@@ -286,7 +286,7 @@ namespace LinqToDB.Linq
 
 				var getElement = query.GetElement;
 				if (getElement == null)
-					throw new LinqToDBException("GetElement is not assigned by the context.");
+					ThrowHelper.ThrowLinqToDBException("GetElement is not assigned by the context.");
 				return (TResult)getElement(DataContext, expression, Parameters, Preambles)!;
 			}
 		}
@@ -301,7 +301,7 @@ namespace LinqToDB.Linq
 
 				var getElement = query.GetElement;
 				if (getElement == null)
-					throw new LinqToDBException("GetElement is not assigned by the context.");
+					ThrowHelper.ThrowLinqToDBException("GetElement is not assigned by the context.");
 				return getElement(DataContext, expression, Parameters, Preambles);
 			}
 		}

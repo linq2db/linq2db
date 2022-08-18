@@ -1181,7 +1181,7 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			if (throwOnError && memberExpression == null)
-				throw new LinqToDBException($"Member '{memberInfo.Name}' not found in type '{Body?.Type.Name ?? "<Unknown>"}'.");
+				ThrowHelper.ThrowLinqToDBException($"Member '{memberInfo.Name}' not found in type '{Body?.Type.Name ?? "<Unknown>"}'.");
 			return memberExpression;
 		}
 
@@ -1375,7 +1375,7 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-				throw new LinqToDBException($"'{sourceExpression}' cannot be converted to SQL.");
+				ThrowHelper.ThrowLinqToDBException($"'{sourceExpression}' cannot be converted to SQL.");
 			}
 
 			return memberExpression;

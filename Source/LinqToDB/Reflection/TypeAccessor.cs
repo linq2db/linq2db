@@ -25,7 +25,7 @@ namespace LinqToDB.Reflection
 		[DebuggerStepThrough]
 		public virtual object CreateInstance()
 		{
-			throw new LinqToDBException($"The '{Type.Name}' type must have public default or init constructor.");
+			return ThrowHelper.ThrowLinqToDBException<object>($"The '{Type.Name}' type must have public default or init constructor.");
 		}
 
 		[DebuggerStepThrough]

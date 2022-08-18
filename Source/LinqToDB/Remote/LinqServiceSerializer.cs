@@ -613,7 +613,7 @@ namespace LinqToDB.Remote
 						if (type == null)
 						{
 							if (Configuration.LinqService.ThrowUnresolvedTypeException)
-								throw new LinqToDBException(
+								ThrowHelper.ThrowLinqToDBException(
 									$"Type '{str}' cannot be resolved. Use LinqService.TypeResolver to resolve unknown types.");
 
 							UnresolvedTypes.Add(str);
@@ -654,7 +654,7 @@ namespace LinqToDB.Remote
 					static (context, e) => context.serializer.Visit(e, context.evaluationContext));
 
 				if (DelayedObjects.Count > 0)
-					throw new LinqToDBException($"QuerySerializer error. Unknown object '{DelayedObjects.First().Key.GetType()}'.");
+					ThrowHelper.ThrowLinqToDBException($"QuerySerializer error. Unknown object '{DelayedObjects.First().Key.GetType()}'.");
 
 				Builder.AppendLine();
 

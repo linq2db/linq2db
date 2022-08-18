@@ -215,7 +215,7 @@ namespace LinqToDB.Linq.Builder
 			var insert = insertStatement.Insert;
 
 			if (insert.Into == null)
-				throw new LinqToDBException("Insert query has no setters defined.");
+				ThrowHelper.ThrowLinqToDBException("Insert query has no setters defined.");
 
 			var q = insert.Into.IdentityFields
 				.Except(insert.Items.Select(e => e.Column).OfType<SqlField>());

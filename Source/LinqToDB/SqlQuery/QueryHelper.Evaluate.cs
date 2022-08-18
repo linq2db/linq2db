@@ -412,7 +412,7 @@ namespace LinqToDB.SqlQuery
 		{
 			var (value, error) = expr.TryEvaluateExpression(context);
 			if (error != null)
-				throw new LinqToDBException(error);
+				ThrowHelper.ThrowLinqToDBException(error);
 
 			return value;
 		}

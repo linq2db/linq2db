@@ -61,7 +61,7 @@ namespace LinqToDB.DataProvider.Access
 		private SqlUpdateStatement CorrectAccessUpdate(SqlUpdateStatement statement)
 		{
 			if (statement.SelectQuery.Select.HasModifier)
-				throw new LinqToDBException("Access does not support update query limitation");
+				ThrowHelper.ThrowLinqToDBException("Access does not support update query limitation");
 
 			statement = CorrectUpdateTable(statement);
 

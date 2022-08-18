@@ -418,9 +418,9 @@ namespace LinqToDB.Linq.Builder
 							if ((recordType & RecordType.CallConstructorOnRead) != 0)
 							{
 								if (nctor.Members != null)
-									throw new LinqToDBException($"Call to '{nctor.Type}' record constructor cannot have initializers.");
+									expr = ThrowHelper.ThrowLinqToDBException<Expression>($"Call to '{nctor.Type}' record constructor cannot have initializers.");
 								else if (nctor.Arguments.Count == 0)
-									throw new LinqToDBException($"Call to '{nctor.Type}' record constructor requires parameters.");
+									expr = ThrowHelper.ThrowLinqToDBException<Expression>($"Call to '{nctor.Type}' record constructor requires parameters.");
 								else
 								{
 									var ctorParms = nctor.Constructor!.GetParameters();
@@ -438,18 +438,19 @@ namespace LinqToDB.Linq.Builder
 							else
 							{
 								if (nctor.Members == null)
-									throw new LinqToDBException($"Call to '{nctor.Type}' constructor lacks initializers.");
+								{
+									expr = ThrowHelper.ThrowLinqToDBException<Expression>($"Call to '{nctor.Type}' constructor lacks initializers.");
+								}	
 								else
 								{
 									var members = nctor.Members
-								.Select(m => m is MethodInfo info ? info.GetPropertyInfo() : m)
-								.ToList();
+										.Select(m => m is MethodInfo info ? info.GetPropertyInfo() : m)
+										.ToList();
 
-							expr = Expression.New(
-								nctor.Constructor!,
-								members.Select(m => ExpressionHelper.PropertyOrField(_unionParameter!, m.Name)),
-								members);
-
+									expr = Expression.New(
+										nctor.Constructor!,
+										members.Select(m => ExpressionHelper.PropertyOrField(_unionParameter!, m.Name)),
+										members);
 								}
 							}
 
@@ -587,7 +588,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					if (sequence.IsExpression(testExpression, level, RequestFor.Association).Result)
 					{
-						throw new LinqToDBException(
+						ThrowHelper.ThrowLinqToDBException(
 							"Associations with Concat/Union or other Set operations are not supported.");
 					}
 				}
@@ -674,7 +675,7 @@ namespace LinqToDB.Linq.Builder
 									}
 
 									if (member == null)
-										throw new LinqToDBException($"Expression '{expression}' is not a field.");
+										ThrowHelper.ThrowLinqToDBException($"Expression '{expression}' is not a field.");
 
 									member.SqlQueryInfo ??= new SqlInfo
 										(

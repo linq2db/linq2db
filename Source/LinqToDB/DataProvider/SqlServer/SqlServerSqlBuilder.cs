@@ -187,7 +187,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			if (name.Server != null && (databaseName == null || name.Schema == null))
 				// all components required for linked-server syntax by SQL server
-				throw new LinqToDBException("You must specify both schema and database names explicitly for linked server query");
+				ThrowHelper.ThrowLinqToDBException("You must specify both schema and database names explicitly for linked server query");
 			
 			if (name.Server != null)
 			{

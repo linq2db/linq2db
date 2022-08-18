@@ -104,14 +104,14 @@ namespace LinqToDB
 				if (options.ProviderName != null && options.ConnectionString != null)
 				{
 					dataProvider = DataConnection.GetDataProvider(options.ProviderName, options.ConnectionString)
-					  ?? throw new LinqToDBException($"DataProvider '{options.ProviderName}' not found.");
+					  ?? ThrowHelper.ThrowLinqToDBException<IDataProvider>($"DataProvider '{options.ProviderName}' not found.");
 				}
 				else if (options.ConfigurationString != null)
 					dataProvider = DataConnection.GetDataProvider(options.ConfigurationString);
 			}
 
 			if (dataProvider == null)
-				throw new LinqToDBException($"DataProvider not specified.");
+				ThrowHelper.ThrowLinqToDBException($"DataProvider not specified.");
 
 			_optionsBuilder.UseDataProvider (dataProvider);
 			_optionsBuilder.UseMappingSchema(options.MappingSchema ?? dataProvider.MappingSchema);

@@ -9,7 +9,12 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
 
+#pragma warning disable IDE0160 // Convert to block scoped namespace
 namespace LinqToDB;
+#pragma warning restore IDE0160 // Convert to block scoped namespace
+
+using Common;
+using Linq;
 
 /// <summary>
 /// Helper methods to efficiently throw exceptions.
@@ -373,6 +378,39 @@ internal static partial class ThrowHelper
 	public static void ThrowInvalidOperationException(string? message, Exception? innerException)
 	{
 		throw new InvalidOperationException(message, innerException);
+	}
+
+	/// <summary>
+	/// Throws a new <see cref="LinqToDBException"/>.
+	/// </summary>
+	/// <exception cref="LinqToDBException">Thrown with no parameters.</exception>
+	[DoesNotReturn]
+	public static void ThrowLinqToDBException()
+	{
+		throw new LinqToDBException();
+	}
+
+	/// <summary>
+	/// Throws a new <see cref="LinqToDBException"/>.
+	/// </summary>
+	/// <param name="message">The message to include in the exception.</param>
+	/// <exception cref="LinqToDBException">Thrown with the specified parameter.</exception>
+	[DoesNotReturn]
+	public static void ThrowLinqToDBException(string message)
+	{
+		throw new LinqToDBException(message);
+	}
+
+	/// <summary>
+	/// Throws a new <see cref="LinqToDBException"/>.
+	/// </summary>
+	/// <param name="message">The message to include in the exception.</param>
+	/// <param name="innerException">The inner <see cref="Exception"/> to include.</param>
+	/// <exception cref="LinqToDBException">Thrown with the specified parameter.</exception>
+	[DoesNotReturn]
+	public static void ThrowLinqToDBException(string message, Exception innerException)
+	{
+		throw new LinqToDBException(message, innerException);
 	}
 
 	/// <summary>
@@ -1266,6 +1304,39 @@ internal static partial class ThrowHelper
 	public static T ThrowInvalidOperationException<T>(string? message, Exception? innerException)
 	{
 		throw new InvalidOperationException(message, innerException);
+	}
+
+	/// <summary>
+	/// Throws a new <see cref="LinqToDBException"/>.
+	/// </summary>
+	/// <exception cref="LinqToDBException">Thrown with no parameters.</exception>
+	[DoesNotReturn]
+	public static T ThrowLinqToDBException<T>()
+	{
+		throw new LinqToDBException();
+	}
+
+	/// <summary>
+	/// Throws a new <see cref="LinqToDBException"/>.
+	/// </summary>
+	/// <param name="message">The message to include in the exception.</param>
+	/// <exception cref="LinqToDBException">Thrown with the specified parameter.</exception>
+	[DoesNotReturn]
+	public static T ThrowLinqToDBException<T>(string message)
+	{
+		throw new LinqToDBException(message);
+	}
+
+	/// <summary>
+	/// Throws a new <see cref="LinqToDBException"/>.
+	/// </summary>
+	/// <param name="message">The message to include in the exception.</param>
+	/// <param name="innerException">The inner <see cref="Exception"/> to include.</param>
+	/// <exception cref="LinqToDBException">Thrown with the specified parameter.</exception>
+	[DoesNotReturn]
+	public static T ThrowLinqToDBException<T>(string message, Exception innerException)
+	{
+		throw new LinqToDBException(message, innerException);
 	}
 
 	/// <summary>

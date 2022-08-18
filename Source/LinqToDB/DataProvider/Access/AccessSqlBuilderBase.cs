@@ -318,7 +318,7 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override void BuildMergeStatement(SqlMergeStatement merge)
 		{
-			throw new LinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
+			ThrowHelper.ThrowLinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
 		}
 
 		protected override StringBuilder BuildSqlComment(StringBuilder sb, SqlComment comment)
