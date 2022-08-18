@@ -206,10 +206,10 @@ namespace LinqToDB.SqlProvider
 
 			if (!SqlProviderFlags.GetIsSkipSupportedFlag(takeExpr, skipExpr)
 				&& skipExpr != null)
-				throw new SqlException("Skip for subqueries is not supported by the '{0}' provider.", Name);
+				ThrowHelper.ThrowSqlException($"Skip for subqueries is not supported by the '{Name}' provider.");
 
 			if (!SqlProviderFlags.IsTakeSupported && takeExpr != null)
-				throw new SqlException("Take for subqueries is not supported by the '{0}' provider.", Name);
+				ThrowHelper.ThrowSqlException($"Take for subqueries is not supported by the '{Name}' provider.");
 
 			var sqlBuilder = (BasicSqlBuilder)CreateSqlBuilder();
 			sqlBuilder.BuildSql(0,
@@ -419,12 +419,10 @@ namespace LinqToDB.SqlProvider
 		}
 
 		protected virtual void BuildMultiInsertQuery(SqlMultiInsertStatement statement)
-			=> throw new SqlException("This data provider does not support multi-table insert.");
+			=> ThrowHelper.ThrowSqlException("This data provider does not support multi-table insert.");
 
 		protected virtual void BuildUnknownQuery()
-		{
-			throw new SqlException("Unknown query type '{0}'.", Statement.QueryType);
-		}
+			=> ThrowHelper.ThrowSqlException($"Unknown query type '{Statement.QueryType}'.");
 
 		// Default implementation. Doesn't generate linked server and package name components.
 		public virtual StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions)
@@ -1009,7 +1007,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)
 		{
-			throw new SqlException("InsertOrUpdate query type is not supported by {0} provider.", Name);
+			ThrowHelper.ThrowSqlException($"InsertOrUpdate query type is not supported by {Name} provider.");
 		}
 
 		protected virtual void BuildInsertOrUpdateQueryAsMerge(SqlInsertOrUpdateStatement insertOrUpdate, string? fromDummyTable)
@@ -2498,7 +2496,7 @@ namespace LinqToDB.SqlProvider
 			{				
 				var keys = table.GetKeys(true);
 				if (keys is null or { Count: 0 })
-					throw new SqlException("Cannot create IN expression.");
+					ThrowHelper.ThrowSqlException("Cannot create IN expression.");
 
 				var firstValue = true;
 
@@ -2750,7 +2748,7 @@ namespace LinqToDB.SqlProvider
 #endif
 
 									if (throwExceptionIfTableNotFound)
-										throw new SqlException("Table '{0}' not found.", field.Table);
+										ThrowHelper.ThrowSqlException($"Table '{field.Table}' not found.");
 								}
 							}
 							else
@@ -2764,7 +2762,7 @@ namespace LinqToDB.SqlProvider
 									Convert(StringBuilder, table, ConvertType.NameToQueryTableAlias);
 
 								if (len == StringBuilder.Length)
-									throw new SqlException("Table {0} should have an alias.", field.Table);
+									ThrowHelper.ThrowSqlException($"Table '{field.Table}' should have an alias.");
 
 								addAlias = alias != field.PhysicalName;
 
@@ -2807,13 +2805,13 @@ namespace LinqToDB.SqlProvider
 							table = Statement.GetTableSource(column.Parent!);
 #endif
 
-							throw new SqlException("Table not found for '{0}'.", column);
+							ThrowHelper.ThrowSqlException($"Table '{column}' not found.");
 						}
 
 						var tableAlias = GetTableAlias(table) ?? GetPhysicalTableName(column.Parent!, null, true);
 
 						if (string.IsNullOrEmpty(tableAlias))
-							throw new SqlException("Table {0} should have an alias.", column.Parent);
+							ThrowHelper.ThrowSqlException($"Table '{column.Parent}' should have an alias.");
 
 						addAlias = alias != column.Alias;
 
@@ -3335,13 +3333,13 @@ namespace LinqToDB.SqlProvider
 
 			if (identityField == null)
 				if (throwException)
-					throw new SqlException("Identity field must be defined for '{0}'.", table.NameForLogging);
+					ThrowHelper.ThrowSqlException($"Identity field must be defined for '{table.NameForLogging}'.");
 				else
 					return null;
 
 			if (table.ObjectType == null)
 				if (throwException)
-					throw new SqlException("Sequence name can not be retrieved for the '{0}' table.", table.NameForLogging);
+					ThrowHelper.ThrowSqlException($"Sequence name can not be retrieved for the '{table.NameForLogging}' table.");
 				else
 					return null;
 
@@ -3349,7 +3347,7 @@ namespace LinqToDB.SqlProvider
 
 			if (attrs.IsNullOrEmpty())
 				if (throwException)
-					throw new SqlException("Sequence name can not be retrieved for the '{0}' table.", table.NameForLogging);
+					ThrowHelper.ThrowSqlException($"Sequence name can not be retrieved for the '{table.NameForLogging}' table.");
 				else
 					return null;
 

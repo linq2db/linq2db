@@ -37,10 +37,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		protected override void BuildGetIdentity(SqlInsertClause insertClause)
 		{
-			var identityField = insertClause.Into!.GetIdentityField();
-
-			if (identityField == null)
-				throw new SqlException("Identity field must be defined for '{0}'.", insertClause.Into.NameForLogging);
+			var identityField = insertClause.Into!.GetIdentityField()
+			                    ?? ThrowHelper.ThrowSqlException<SqlField>($"Identity field must be defined for '{insertClause.Into.NameForLogging}'.");
 
 			AppendIndent().AppendLine("RETURNING ");
 			AppendIndent().Append('\t');

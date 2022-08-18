@@ -2412,7 +2412,7 @@ namespace LinqToDB.SqlProvider
 						var keys  = table.GetKeys(true);
 
 						if (keys == null || keys.Count == 0)
-							throw new SqlException("Cant create IN expression.");
+							ThrowHelper.ThrowSqlException("Cant create IN expression.");
 
 						if (keys.Count == 1)
 						{

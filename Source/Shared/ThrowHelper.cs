@@ -15,6 +15,7 @@ namespace LinqToDB;
 
 using Common;
 using Linq;
+using SqlQuery;
 
 /// <summary>
 /// Helper methods to efficiently throw exceptions.
@@ -848,6 +849,39 @@ internal static partial class ThrowHelper
 	public static void ThrowPlatformNotSupportedException(string? message, Exception? innerException)
 	{
 		throw new PlatformNotSupportedException(message, innerException);
+	}
+
+	/// <summary>
+	/// Throws a new <see cref="SqlException"/>.
+	/// </summary>
+	/// <exception cref="SqlException">Thrown with no parameters.</exception>
+	[DoesNotReturn]
+	public static void ThrowSqlException()
+	{
+		throw new SqlException();
+	}
+
+	/// <summary>
+	/// Throws a new <see cref="SqlException"/>.
+	/// </summary>
+	/// <param name="message">The message to include in the exception.</param>
+	/// <exception cref="SqlException">Thrown with the specified parameter.</exception>
+	[DoesNotReturn]
+	public static void ThrowSqlException(string message)
+	{
+		throw new SqlException(message);
+	}
+
+	/// <summary>
+	/// Throws a new <see cref="SqlException"/>.
+	/// </summary>
+	/// <param name="message">The message to include in the exception.</param>
+	/// <param name="innerException">The inner <see cref="Exception"/> to include.</param>
+	/// <exception cref="SqlException">Thrown with the specified parameter.</exception>
+	[DoesNotReturn]
+	public static void ThrowSqlException(string message, Exception innerException)
+	{
+		throw new SqlException(message, innerException);
 	}
 
 	/// <summary>
@@ -1906,6 +1940,45 @@ internal static partial class ThrowHelper
 	public static T ThrowPlatformNotSupportedException<T>(string? message, Exception? innerException)
 	{
 		throw new PlatformNotSupportedException(message, innerException);
+	}
+
+	/// <summary>
+	/// Throws a new <see cref="SqlException"/>.
+	/// </summary>
+	/// <typeparam name="T">The type of expected result.</typeparam>
+	/// <exception cref="SqlException">Thrown with no parameters.</exception>
+	/// <returns>This method always throws, so it actually never returns a value.</returns>
+	[DoesNotReturn]
+	public static T ThrowSqlException<T>()
+	{
+		throw new SqlException();
+	}
+
+	/// <summary>
+	/// Throws a new <see cref="SqlException"/>.
+	/// </summary>
+	/// <typeparam name="T">The type of expected result.</typeparam>
+	/// <param name="message">The message to include in the exception.</param>
+	/// <exception cref="SqlException">Thrown with the specified parameter.</exception>
+	/// <returns>This method always throws, so it actually never returns a value.</returns>
+	[DoesNotReturn]
+	public static T ThrowSqlException<T>(string message)
+	{
+		throw new SqlException(message);
+	}
+
+	/// <summary>
+	/// Throws a new <see cref="SqlException"/>.
+	/// </summary>
+	/// <typeparam name="T">The type of expected result.</typeparam>
+	/// <param name="message">The message to include in the exception.</param>
+	/// <param name="innerException">The inner <see cref="Exception"/> to include.</param>
+	/// <exception cref="SqlException">Thrown with the specified parameter.</exception>
+	/// <returns>This method always throws, so it actually never returns a value.</returns>
+	[DoesNotReturn]
+	public static T ThrowSqlException<T>(string message, Exception innerException)
+	{
+		throw new SqlException(message, innerException);
 	}
 
 	/// <summary>
