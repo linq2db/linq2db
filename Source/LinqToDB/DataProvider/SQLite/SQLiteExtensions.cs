@@ -28,9 +28,7 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <remarks>FTS Support: FTS3/4, FTS5.</remarks>
 		[ExpressionMethod(nameof(MatchImpl1))]
 		public static bool Match(this ISQLiteExtensions? ext, object? entityOrColumn, string match)
-		{
-			throw new LinqException($"'{nameof(Match)}' is server-side method.");
-		}
+			=> ThrowHelper.ThrowLinqException<bool>($"'{nameof(Match)}' is server-side method.");
 
 		static Expression<Func<ISQLiteExtensions?, object?, string, bool>> MatchImpl1()
 		{

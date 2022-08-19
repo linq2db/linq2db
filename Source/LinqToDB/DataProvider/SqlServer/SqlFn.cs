@@ -175,9 +175,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Extension(ProviderName.SqlServer, "CAST({expression} as {data_type})", ServerSideOnly=true, BuilderType=typeof(DataTypeBuilder))]
 		[return: NotNullIfNotNull("expression")]
 		public static T Cast<T>([ExprParameter] object? expression, [SqlQueryDependent] SqlType<T> data_type)
-		{
-			throw new LinqException($"'{nameof(Cast)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<T>($"'{nameof(Cast)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/CAST-and-CONVERT-transact-sql">CAST and CONVERT (Transact-SQL)</see></b></para>
@@ -190,9 +188,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Extension(ProviderName.SqlServer, "CAST({expression} as {data_type})", ServerSideOnly=true, BuilderType=typeof(DataTypeBuilder))]
 		[return: NotNullIfNotNull("expression")]
 		public static T Cast<T>([ExprParameter] object? expression, [SqlQueryDependent] Func<SqlType<T>> data_type)
-		{
-			throw new LinqException($"'{nameof(Cast)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<T>($"'{nameof(Cast)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/CAST-and-CONVERT-transact-sql">CAST and CONVERT (Transact-SQL)</see></b></para>
@@ -204,9 +200,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Expression(ProviderName.SqlServer, "CAST({0} as {1})", ServerSideOnly=true)]
 		[return: NotNullIfNotNull("expression")]
 		public static T Cast<T>(object? expression)
-		{
-			throw new LinqException($"'{nameof(Cast)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<T>($"'{nameof(Cast)}' is a server side only function.");
 
 		#endregion
 
@@ -223,9 +217,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Extension(ProviderName.SqlServer, "CONVERT({data_type}, {expression})", ServerSideOnly=true, BuilderType=typeof(DataTypeBuilder))]
 		[return: NotNullIfNotNull("expression")]
 		public static T Convert<T>([SqlQueryDependent] SqlType<T> data_type, [ExprParameter] object? expression)
-		{
-			throw new LinqException($"'{nameof(Convert)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<T>($"'{nameof(Convert)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/CAST-and-CONVERT-transact-sql">CAST and CONVERT (Transact-SQL)</see></b></para>
@@ -238,9 +230,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Extension(ProviderName.SqlServer, "CONVERT({data_type}, {expression})", ServerSideOnly=true, BuilderType=typeof(DataTypeBuilder))]
 		[return: NotNullIfNotNull("expression")]
 		public static T Convert<T>([SqlQueryDependent] Func<SqlType<T>> data_type, [ExprParameter] object? expression)
-		{
-			throw new LinqException($"'{nameof(Convert)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<T>($"'{nameof(Convert)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/CAST-and-CONVERT-transact-sql">CAST and CONVERT (Transact-SQL)</see></b></para>
@@ -252,9 +242,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Expression(ProviderName.SqlServer, "CONVERT({1}, {0})", ServerSideOnly=true)]
 		[return: NotNullIfNotNull("expression")]
 		public static T Convert<T>([ExprParameter] object? expression)
-		{
-			throw new LinqException($"'{nameof(Convert)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<T>($"'{nameof(Convert)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/CAST-and-CONVERT-transact-sql">CAST and CONVERT (Transact-SQL)</see></b></para>
@@ -267,9 +255,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Extension(ProviderName.SqlServer, "CONVERT({data_type}, {expression}, {style})", ServerSideOnly=true, BuilderType=typeof(DataTypeBuilder))]
 		[return: NotNullIfNotNull("expression")]
 		public static T Convert<T>([SqlQueryDependent] SqlType<T> data_type, [ExprParameter] object? expression, [SqlQueryDependent, ExprParameter] int style)
-		{
-			throw new LinqException($"'{nameof(Convert)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<T>($"'{nameof(Convert)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/CAST-and-CONVERT-transact-sql">CAST and CONVERT (Transact-SQL)</see></b></para>
@@ -282,9 +268,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Extension(ProviderName.SqlServer, "CONVERT({data_type}, {expression}, {style})", ServerSideOnly=true, BuilderType=typeof(DataTypeBuilder))]
 		[return: NotNullIfNotNull("expression")]
 		public static T Convert<T>([SqlQueryDependent] Func<SqlType<T>> data_type, [ExprParameter] object? expression, [SqlQueryDependent, ExprParameter] int style)
-		{
-			throw new LinqException($"'{nameof(Convert)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<T>($"'{nameof(Convert)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/CAST-and-CONVERT-transact-sql">CAST and CONVERT (Transact-SQL)</see></b></para>
@@ -296,9 +280,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Expression(ProviderName.SqlServer, "CONVERT({2}, {0}, {1})", ServerSideOnly=true)]
 		[return: NotNullIfNotNull("expression")]
 		public static T Convert<T>([ExprParameter] object? expression, [SqlQueryDependent, ExprParameter] int style)
-		{
-			throw new LinqException($"'{nameof(Convert)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<T>($"'{nameof(Convert)}' is a server side only function.");
 
 		#endregion
 
@@ -314,9 +296,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Extension(ProviderName.SqlServer, "PARSE({string_value} as {data_type})", ServerSideOnly=true, BuilderType=typeof(DataTypeBuilder))]
 		public static T Parse<T>([ExprParameter] string string_value, [SqlQueryDependent] SqlType<T> data_type)
-		{
-			throw new LinqException($"'{nameof(Parse)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<T>($"'{nameof(Parse)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/PARSE-transact-sql">PARSE (Transact-SQL)</see></b></para>
@@ -328,9 +308,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Extension(ProviderName.SqlServer, "PARSE({string_value} as {data_type})", ServerSideOnly=true, BuilderType=typeof(DataTypeBuilder))]
 		public static T Parse<T>([ExprParameter] string string_value, [SqlQueryDependent] Func<SqlType<T>> data_type)
-		{
-			throw new LinqException($"'{nameof(Parse)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<T>($"'{nameof(Parse)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/PARSE-transact-sql">PARSE (Transact-SQL)</see></b></para>
@@ -341,9 +319,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Expression(ProviderName.SqlServer, "PARSE({0} as {1})", ServerSideOnly=true)]
 		public static T Parse<T>([ExprParameter] string string_value)
-		{
-			throw new LinqException($"'{nameof(Parse)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<T>($"'{nameof(Parse)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/PARSE-transact-sql">PARSE (Transact-SQL)</see></b></para>
@@ -356,9 +332,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Extension(ProviderName.SqlServer, "PARSE({string_value} as {data_type} USING {culture})", ServerSideOnly=true, BuilderType=typeof(DataTypeBuilder))]
 		public static T Parse<T>([ExprParameter] string string_value, [SqlQueryDependent] SqlType<T> data_type, [ExprParameter, SqlQueryDependent] string culture)
-		{
-			throw new LinqException($"'{nameof(Parse)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<T>($"'{nameof(Parse)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/PARSE-transact-sql">PARSE (Transact-SQL)</see></b></para>
@@ -371,9 +345,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Extension(ProviderName.SqlServer, "PARSE({string_value} as {data_type} USING {culture})", ServerSideOnly=true, BuilderType=typeof(DataTypeBuilder))]
 		public static T Parse<T>([ExprParameter] string string_value, [SqlQueryDependent] Func<SqlType<T>> data_type, [ExprParameter, SqlQueryDependent] string culture)
-		{
-			throw new LinqException($"'{nameof(Parse)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<T>($"'{nameof(Parse)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/PARSE-transact-sql">PARSE (Transact-SQL)</see></b></para>
@@ -385,9 +357,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Expression(ProviderName.SqlServer, "PARSE({0} as {2} USING {1})", ServerSideOnly=true)]
 		public static T Parse<T>([ExprParameter] string string_value, [ExprParameter, SqlQueryDependent] string culture)
-		{
-			throw new LinqException($"'{nameof(Parse)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<T>($"'{nameof(Parse)}' is a server side only function.");
 
 		#endregion
 
@@ -404,9 +374,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Extension(ProviderName.SqlServer, "TRY_CAST({expression} as {data_type})", ServerSideOnly=true, BuilderType=typeof(DataTypeBuilder))]
 		[return: NotNullIfNotNull("expression")]
 		public static T TryCast<T>([ExprParameter] object? expression, [SqlQueryDependent] SqlType<T> data_type)
-		{
-			throw new LinqException($"'{nameof(TryCast)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<T>($"'{nameof(TryCast)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/TRY-CAST-transact-sql">TRY_CAST (Transact-SQL)</see></b></para>
@@ -419,9 +387,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Extension(ProviderName.SqlServer, "TRY_CAST({expression} as {data_type})", ServerSideOnly=true, BuilderType=typeof(DataTypeBuilder))]
 		[return: NotNullIfNotNull("expression")]
 		public static T TryCast<T>([ExprParameter] object? expression, [SqlQueryDependent] Func<SqlType<T>> data_type)
-		{
-			throw new LinqException($"'{nameof(TryCast)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<T>($"'{nameof(TryCast)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/TRY-CAST-transact-sql">TRY_CAST (Transact-SQL)</see></b></para>
@@ -433,9 +399,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Expression(ProviderName.SqlServer, "TRY_CAST({0} as {1})", ServerSideOnly=true)]
 		[return: NotNullIfNotNull("expression")]
 		public static T TryCast<T>([ExprParameter] object? expression)
-		{
-			throw new LinqException($"'{nameof(TryCast)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<T>($"'{nameof(TryCast)}' is a server side only function.");
 
 		#endregion
 
@@ -452,9 +416,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Extension(ProviderName.SqlServer, "TRY_CONVERT({data_type}, {expression})", ServerSideOnly=true, BuilderType=typeof(DataTypeBuilder))]
 		[return: NotNullIfNotNull("expression")]
 		public static T TryConvert<T>([SqlQueryDependent] SqlType<T> data_type, [ExprParameter] object? expression)
-		{
-			throw new LinqException($"'{nameof(TryConvert)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<T>($"'{nameof(TryConvert)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/TRY-CONVERT-transact-sql">TRY_CONVERT (Transact-SQL)</see></b></para>
@@ -467,9 +429,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Extension(ProviderName.SqlServer, "TRY_CONVERT({data_type}, {expression})", ServerSideOnly=true, BuilderType=typeof(DataTypeBuilder))]
 		[return: NotNullIfNotNull("expression")]
 		public static T TryConvert<T>([SqlQueryDependent] Func<SqlType<T>> data_type, [ExprParameter] object? expression)
-		{
-			throw new LinqException($"'{nameof(TryConvert)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<T>($"'{nameof(TryConvert)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/TRY-CONVERT-transact-sql">TRY_CONVERT (Transact-SQL)</see></b></para>
@@ -481,9 +441,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Expression(ProviderName.SqlServer, "TRY_CONVERT({1}, {0})", ServerSideOnly=true)]
 		[return: NotNullIfNotNull("expression")]
 		public static T TryConvert<T>([ExprParameter] object? expression)
-		{
-			throw new LinqException($"'{nameof(TryConvert)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<T>($"'{nameof(TryConvert)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/TRY-CONVERT-transact-sql">TRY_CONVERT (Transact-SQL)</see></b></para>
@@ -496,9 +454,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Extension(ProviderName.SqlServer, "TRY_CONVERT({data_type}, {expression}, {style})", ServerSideOnly=true, BuilderType=typeof(DataTypeBuilder))]
 		[return: NotNullIfNotNull("expression")]
 		public static T TryConvert<T>([SqlQueryDependent] SqlType<T> data_type, [ExprParameter] object? expression, [SqlQueryDependent, ExprParameter] int style)
-		{
-			throw new LinqException($"'{nameof(TryConvert)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<T>($"'{nameof(TryConvert)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/TRY-CONVERT-transact-sql">TRY_CONVERT (Transact-SQL)</see></b></para>
@@ -511,9 +467,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Extension(ProviderName.SqlServer, "TRY_CONVERT({data_type}, {expression}, {style})", ServerSideOnly=true, BuilderType=typeof(DataTypeBuilder))]
 		[return: NotNullIfNotNull("expression")]
 		public static T TryConvert<T>([SqlQueryDependent] Func<SqlType<T>> data_type, [ExprParameter] object? expression, [SqlQueryDependent, ExprParameter] int style)
-		{
-			throw new LinqException($"'{nameof(TryConvert)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<T>($"'{nameof(TryConvert)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/TRY-CONVERT-transact-sql">TRY_CONVERT (Transact-SQL)</see></b></para>
@@ -525,9 +479,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Expression(ProviderName.SqlServer, "TRY_CONVERT({2}, {0}, {1})", ServerSideOnly=true)]
 		[return: NotNullIfNotNull("expression")]
 		public static T TryConvert<T>([ExprParameter] object? expression, [SqlQueryDependent, ExprParameter] int style)
-		{
-			throw new LinqException($"'{nameof(TryConvert)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<T>($"'{nameof(TryConvert)}' is a server side only function.");
 
 		#endregion
 
@@ -544,9 +496,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Extension(ProviderName.SqlServer, "TRY_PARSE({string_value} as {data_type})", ServerSideOnly=true, BuilderType=typeof(DataTypeBuilder))]
 		[return: NotNullIfNotNull("string_value")]
 		public static T TryParse<T>([ExprParameter] string string_value, [SqlQueryDependent] SqlType<T> data_type)
-		{
-			throw new LinqException($"'{nameof(TryParse)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<T>($"'{nameof(TryParse)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/TRY-PARSE-transact-sql">TRY_PARSE (Transact-SQL)</see></b></para>
@@ -559,9 +509,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Extension(ProviderName.SqlServer, "TRY_PARSE({string_value} as {data_type})", ServerSideOnly=true, BuilderType=typeof(DataTypeBuilder))]
 		[return: NotNullIfNotNull("string_value")]
 		public static T TryParse<T>([ExprParameter] string string_value, [SqlQueryDependent] Func<SqlType<T>> data_type)
-		{
-			throw new LinqException($"'{nameof(TryParse)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<T>($"'{nameof(TryParse)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/TRY-PARSE-transact-sql">TRY_PARSE (Transact-SQL)</see></b></para>
@@ -573,9 +521,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Expression(ProviderName.SqlServer, "TRY_PARSE({0} as {1})", ServerSideOnly=true)]
 		[return: NotNullIfNotNull("string_value")]
 		public static T TryParse<T>([ExprParameter] string string_value)
-		{
-			throw new LinqException($"'{nameof(TryParse)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<T>($"'{nameof(TryParse)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/TRY-PARSE-transact-sql">TRY_PARSE (Transact-SQL)</see></b></para>
@@ -589,9 +535,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Extension(ProviderName.SqlServer, "TRY_PARSE({string_value} as {data_type} USING {culture})", ServerSideOnly=true, BuilderType=typeof(DataTypeBuilder))]
 		[return: NotNullIfNotNull("string_value")]
 		public static T TryParse<T>([ExprParameter] string string_value, [SqlQueryDependent] SqlType<T> data_type, [ExprParameter, SqlQueryDependent] string culture)
-		{
-			throw new LinqException($"'{nameof(TryParse)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<T>($"'{nameof(TryParse)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/TRY-PARSE-transact-sql">TRY_PARSE (Transact-SQL)</see></b></para>
@@ -605,9 +549,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Extension(ProviderName.SqlServer, "TRY_PARSE({string_value} as {data_type} USING {culture})", ServerSideOnly=true, BuilderType=typeof(DataTypeBuilder))]
 		[return: NotNullIfNotNull("string_value")]
 		public static T TryParse<T>([ExprParameter] string string_value, [SqlQueryDependent] Func<SqlType<T>> data_type, [ExprParameter, SqlQueryDependent] string culture)
-		{
-			throw new LinqException($"'{nameof(TryParse)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<T>($"'{nameof(TryParse)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/TRY-PARSE-transact-sql">TRY_PARSE (Transact-SQL)</see></b></para>
@@ -620,9 +562,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Expression(ProviderName.SqlServer, "TRY_PARSE({0} as {2} USING {1})", ServerSideOnly=true)]
 		[return: NotNullIfNotNull("string_value")]
 		public static T TryParse<T>([ExprParameter] string string_value, [ExprParameter, SqlQueryDependent] string culture)
-		{
-			throw new LinqException($"'{nameof(TryParse)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<T>($"'{nameof(TryParse)}' is a server side only function.");
 
 		#endregion
 
@@ -661,9 +601,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[CLSCompliant(false)]
 		[return: NotNullIfNotNull("expression")]
 		public static int? DataLength<T>(T expression)
-		{
-			throw new LinqException($"'{nameof(DataLength)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<int?>($"'{nameof(DataLength)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/datalength-transact-sql">DATALENGTH (Transact-SQL)</see></b></para>
@@ -696,9 +634,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[CLSCompliant(false)]
 		[return: NotNullIfNotNull("expression")]
 		public static long? DataLengthBig<T>(T expression)
-		{
-			throw new LinqException($"'{nameof(DataLengthBig)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<long?>($"'{nameof(DataLengthBig)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/ident-current-transact-sql">IDENT_CURRENT (Transact-SQL)</see></b></para>
@@ -709,9 +645,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "IDENT_CURRENT", ServerSideOnly=true)]
 		public static decimal IdentityCurrent(string table_or_view)
-		{
-			throw new LinqException($"'{nameof(IdentityCurrent)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<decimal>($"'{nameof(IdentityCurrent)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/ident-incr-transact-sql">IDENT_INCR (Transact-SQL)</see></b></para>
@@ -725,9 +659,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "IDENT_INCR", ServerSideOnly=true)]
 		public static decimal IdentityIncrement(string table_or_view)
-		{
-			throw new LinqException($"'{nameof(IdentityIncrement)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<decimal>($"'{nameof(IdentityIncrement)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/ident-seed-transact-sql">IDENT_SEED (Transact-SQL)</see></b></para>
@@ -742,9 +674,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "IDENT_SEED", ServerSideOnly=true)]
 		public static decimal IdentitySeed(string table_or_view)
-		{
-			throw new LinqException($"'{nameof(IdentitySeed)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<decimal>($"'{nameof(IdentitySeed)}' is a server side only function.");
 
 		#endregion
 
@@ -758,7 +688,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>tinyint</returns>
 		/// <exception cref="LinqException" />
 		[Sql.Expression(ProviderName.SqlServer, "@@DATEFIRST", ServerSideOnly=true, IgnoreGenericParameters=true)]
-		public static byte DateFirst => throw new LinqException($"'{nameof(DateFirst)}' is a server side only function.");
+		public static byte DateFirst => ThrowHelper.ThrowLinqException<byte>($"'{nameof(DateFirst)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/CURRENT-TIMESTAMP-transact-sql">CURRENT_TIMESTAMP (Transact-SQL)</see></b></para>
@@ -768,7 +698,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>datetime</returns>
 		/// <exception cref="LinqException" />
 		[Sql.Expression(ProviderName.SqlServer, "CURRENT_TIMESTAMP", ServerSideOnly=true, IgnoreGenericParameters=true)]
-		public static DateTime CurrentTimestamp => throw new LinqException($"'{nameof(CurrentTimestamp)}' is a server side only function.");
+		public static DateTime CurrentTimestamp => ThrowHelper.ThrowLinqException<DateTime>($"'{nameof(CurrentTimestamp)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/CURRENT-TIMEZONE-transact-sql">CURRENT_TIMEZONE (Transact-SQL)</see></b></para>
@@ -779,9 +709,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "CURRENT_TIMEZONE", ServerSideOnly=true, IgnoreGenericParameters=true)]
 		public static string CurrentTimezone()
-		{
-			throw new LinqException($"'{nameof(CurrentTimezone)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<string>($"'{nameof(CurrentTimezone)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/CURRENT-TIMEZONE-ID-transact-sql">CURRENT_TIMEZONE_ID (Transact-SQL)</see></b></para>
@@ -792,9 +720,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "CURRENT_TIMEZONE_ID", ServerSideOnly=true, IgnoreGenericParameters=true)]
 		public static string CurrentTimezoneID()
-		{
-			throw new LinqException($"'{nameof(CurrentTimezoneID)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<string>($"'{nameof(CurrentTimezoneID)}' is a server side only function.");
 
 		[Sql.Enum]
 		public enum DateParts
@@ -838,9 +764,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Extension(ProviderName.SqlServer, "DATEADD({datepart}, {number}, {date})", ServerSideOnly=true, BuilderType=typeof(DatePartBuilder))]
 		[return: NotNullIfNotNull("date")]
 		public static DateTime? DateAdd([SqlQueryDependent] DateParts datepart, [ExprParameter] int? number, [ExprParameter] string? date)
-		{
-			throw new LinqException($"'{nameof(DateAdd)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<DateTime?>($"'{nameof(DateAdd)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/DATEADD-transact-sql">DATEADD (Transact-SQL)</see></b></para>
@@ -855,9 +779,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Extension(ProviderName.SqlServer, "DATEADD({datepart}, {number}, {date})", ServerSideOnly=true, BuilderType=typeof(DatePartBuilder))]
 		[return: NotNullIfNotNull("date")]
 		public static DateTime? DateAdd([SqlQueryDependent] DateParts datepart, [ExprParameter] int? number, [ExprParameter] DateTime? date)
-		{
-			throw new LinqException($"'{nameof(DateAdd)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<DateTime?>($"'{nameof(DateAdd)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/DATEADD-transact-sql">DATEADD (Transact-SQL)</see></b></para>
@@ -872,9 +794,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Extension(ProviderName.SqlServer, "DATEADD({datepart}, {number}, {date})", ServerSideOnly=true, BuilderType=typeof(DatePartBuilder))]
 		[return: NotNullIfNotNull("date")]
 		public static DateTimeOffset? DateAdd([SqlQueryDependent] DateParts datepart, [ExprParameter] int? number, [ExprParameter] DateTimeOffset? date)
-		{
-			throw new LinqException($"'{nameof(DateAdd)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<DateTimeOffset?>($"'{nameof(DateAdd)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/DATEADD-transact-sql">DATEADD (Transact-SQL)</see></b></para>
@@ -889,9 +809,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Extension(ProviderName.SqlServer, "DATEADD({datepart}, {number}, {date})", ServerSideOnly=true, BuilderType=typeof(DatePartBuilder))]
 		[return: NotNullIfNotNull("date")]
 		public static TimeSpan? DateAdd([SqlQueryDependent] DateParts datepart, [ExprParameter] int? number, [ExprParameter] TimeSpan? date)
-		{
-			throw new LinqException($"'{nameof(DateAdd)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<TimeSpan?>($"'{nameof(DateAdd)}' is a server side only function.");
 
 		#endregion
 
@@ -906,9 +824,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Extension(ProviderName.SqlServer, "DATEDIFF({datepart}, {startdate}, {enddate})", ServerSideOnly=true, BuilderType=typeof(DatePartBuilder))]
 		public static int? DateDiff([SqlQueryDependent] DateParts datepart, [ExprParameter] string? startdate, [ExprParameter] string? enddate)
-		{
-			throw new LinqException($"'{nameof(DateDiff)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<int?>($"'{nameof(DateDiff)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/DATEDIFF-transact-sql">DATEDIFF (Transact-SQL)</see></b></para>
@@ -919,9 +835,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Extension(ProviderName.SqlServer, "DATEDIFF({datepart}, {startdate}, {enddate})", ServerSideOnly=true, BuilderType=typeof(DatePartBuilder))]
 		public static int? DateDiff([SqlQueryDependent] DateParts datepart, [ExprParameter] DateTime? startdate, [ExprParameter] DateTime? enddate)
-		{
-			throw new LinqException($"'{nameof(DateDiff)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<int?>($"'{nameof(DateDiff)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/DATEDIFF-transact-sql">DATEDIFF (Transact-SQL)</see></b></para>
@@ -932,9 +846,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Extension(ProviderName.SqlServer, "DATEDIFF({datepart}, {startdate}, {enddate})", ServerSideOnly=true, BuilderType=typeof(DatePartBuilder))]
 		public static int? DateDiff([SqlQueryDependent] DateParts datepart, [ExprParameter] DateTimeOffset? startdate, [ExprParameter] DateTimeOffset? enddate)
-		{
-			throw new LinqException($"'{nameof(DateDiff)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<int?>($"'{nameof(DateDiff)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/DATEDIFF-transact-sql">DATEDIFF (Transact-SQL)</see></b></para>
@@ -945,9 +857,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Extension(ProviderName.SqlServer, "DATEDIFF({datepart}, {startdate}, {enddate})", ServerSideOnly=true, BuilderType=typeof(DatePartBuilder))]
 		public static int? DateDiff([SqlQueryDependent] DateParts datepart, [ExprParameter] TimeSpan? startdate, [ExprParameter] TimeSpan? enddate)
-		{
-			throw new LinqException($"'{nameof(DateDiff)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<int?>($"'{nameof(DateDiff)}' is a server side only function.");
 
 		#endregion
 
@@ -962,9 +872,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Extension(ProviderName.SqlServer, "DATEDIFF_BIG({datepart}, {startdate}, {enddate})", ServerSideOnly=true, BuilderType=typeof(DatePartBuilder))]
 		public static long? DateDiffBig([SqlQueryDependent] DateParts datepart, [ExprParameter] string? startdate, [ExprParameter] string? enddate)
-		{
-			throw new LinqException($"'{nameof(DateDiffBig)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<long?>($"'{nameof(DateDiffBig)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/DATEDIFF-BIG-transact-sql">DATEDIFF_BIG (Transact-SQL)</see></b></para>
@@ -975,9 +883,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Extension(ProviderName.SqlServer, "DATEDIFF_BIG({datepart}, {startdate}, {enddate})", ServerSideOnly=true, BuilderType=typeof(DatePartBuilder))]
 		public static long? DateDiffBig([SqlQueryDependent] DateParts datepart, [ExprParameter] DateTime? startdate, [ExprParameter] DateTime? enddate)
-		{
-			throw new LinqException($"'{nameof(DateDiffBig)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<long?>($"'{nameof(DateDiffBig)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/DATEDIFF-BIG-transact-sql">DATEDIFF_BIG (Transact-SQL)</see></b></para>
@@ -988,9 +894,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Extension(ProviderName.SqlServer, "DATEDIFF_BIG({datepart}, {startdate}, {enddate})", ServerSideOnly=true, BuilderType=typeof(DatePartBuilder))]
 		public static long? DateDiffBig([SqlQueryDependent] DateParts datepart, [ExprParameter] DateTimeOffset? startdate, [ExprParameter] DateTimeOffset? enddate)
-		{
-			throw new LinqException($"'{nameof(DateDiffBig)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<long?>($"'{nameof(DateDiffBig)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/DATEDIFF-BIG-transact-sql">DATEDIFF_BIG (Transact-SQL)</see></b></para>
@@ -1001,9 +905,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Extension(ProviderName.SqlServer, "DATEDIFF_BIG({datepart}, {startdate}, {enddate})", ServerSideOnly=true, BuilderType=typeof(DatePartBuilder))]
 		public static long? DateDiffBig([SqlQueryDependent] DateParts datepart, [ExprParameter] TimeSpan? startdate, [ExprParameter] TimeSpan? enddate)
-		{
-			throw new LinqException($"'{nameof(DateDiffBig)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<long?>($"'{nameof(DateDiffBig)}' is a server side only function.");
 
 		#endregion
 
@@ -1017,9 +919,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "TIMEFROMPARTS", ServerSideOnly=true)]
 		public static TimeSpan? TimeFromParts(int? hour, int? minute, int? seconds, int? fractions, int? precision)
-		{
-			throw new LinqException($"'{nameof(TimeFromParts)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<TimeSpan?>($"'{nameof(TimeFromParts)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/TIMEFROMPARTS-transact-sql">TIMEFROMPARTS (Transact-SQL)</see></b></para>
@@ -1029,9 +929,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Expression(ProviderName.SqlServer, "TIMEFROMPARTS({0}, {1}, {2}, 0, 0)", ServerSideOnly=true)]
 		public static TimeSpan? TimeFromParts(int? hour, int? minute, int? seconds)
-		{
-			throw new LinqException($"'{nameof(TimeFromParts)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<TimeSpan?>($"'{nameof(TimeFromParts)}' is a server side only function.");
 
 		#endregion
 
@@ -1048,9 +946,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "DATEFROMPARTS", ServerSideOnly=true)]
 		public static DateTime? DateFromParts(int? year, int? month, int? day)
-		{
-			throw new LinqException($"'{nameof(DateFromParts)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<DateTime?>($"'{nameof(DateFromParts)}' is a server side only function.");
 
 		#endregion
 
@@ -1064,9 +960,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "SMALLDATETIMEFROMPARTS", ServerSideOnly=true)]
 		public static DateTime? SmallDateTimeFromParts(int? year, int? month, int? day, int? hour, int? minute)
-		{
-			throw new LinqException($"'{nameof(SmallDateTimeFromParts)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<DateTime?>($"'{nameof(SmallDateTimeFromParts)}' is a server side only function.");
 
 		#endregion
 
@@ -1080,9 +974,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "DATETIMEFROMPARTS", ServerSideOnly=true)]
 		public static DateTime? DateTimeFromParts(int? year, int? month, int? day, int? hour, int? minute, int? seconds, int? milliseconds)
-		{
-			throw new LinqException($"'{nameof(DateTimeFromParts)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<DateTime?>($"'{nameof(DateTimeFromParts)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/DATETIMEFROMPARTS-transact-sql">DATETIMEFROMPARTS (Transact-SQL)</see></b></para>
@@ -1092,9 +984,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Expression(ProviderName.SqlServer, "DATETIMEFROMPARTS({0}, {1}, {2}, {3}, {4}, {5}, 0)", ServerSideOnly=true)]
 		public static DateTime? DateTimeFromParts(int? year, int? month, int? day, int? hour, int? minute, int? seconds)
-		{
-			throw new LinqException($"'{nameof(DateTimeFromParts)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<DateTime?>($"'{nameof(DateTimeFromParts)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/DATETIMEFROMPARTS-transact-sql">DATETIMEFROMPARTS (Transact-SQL)</see></b></para>
@@ -1104,9 +994,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Expression(ProviderName.SqlServer, "DATETIMEFROMPARTS({0}, {1}, {2}, 0, 0, 0, 0)", ServerSideOnly=true)]
 		public static DateTime? DateTimeFromParts(int? year, int? month, int? day)
-		{
-			throw new LinqException($"'{nameof(DateTimeFromParts)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<DateTime?>($"'{nameof(DateTimeFromParts)}' is a server side only function.");
 
 		#endregion
 
@@ -1120,9 +1008,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "DATETIME2FROMPARTS", ServerSideOnly=true)]
 		public static DateTime? DateTime2FromParts(int? year, int? month, int? day, int? hour, int? minute, int? seconds, int? fractions, int? precision)
-		{
-			throw new LinqException($"'{nameof(DateTime2FromParts)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<DateTime?>($"'{nameof(DateTime2FromParts)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/DATETIME2FROMPARTS-transact-sql">DATETIME2FROMPARTS (Transact-SQL)</see></b></para>
@@ -1132,9 +1018,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Expression(ProviderName.SqlServer, "DATETIME2FROMPARTS({0}, {1}, {2}, {3}, {4}, {5}, 0, 0)", ServerSideOnly=true)]
 		public static DateTime? DateTime2FromParts(int? year, int? month, int? day, int? hour, int? minute, int? seconds)
-		{
-			throw new LinqException($"'{nameof(DateTime2FromParts)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<DateTime?>($"'{nameof(DateTime2FromParts)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/DATETIME2FROMPARTS-transact-sql">DATETIME2FROMPARTS (Transact-SQL)</see></b></para>
@@ -1144,9 +1028,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Expression(ProviderName.SqlServer, "DATETIME2FROMPARTS({0}, {1}, {2}, 0, 0, 0, 0, 0)", ServerSideOnly=true)]
 		public static DateTime? DateTime2FromParts(int? year, int? month, int? day)
-		{
-			throw new LinqException($"'{nameof(DateTime2FromParts)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<DateTime?>($"'{nameof(DateTime2FromParts)}' is a server side only function.");
 
 		#endregion
 
@@ -1177,9 +1059,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Expression(ProviderName.SqlServer, "DATETIMEOFFSETFROMPARTS({0}, {1}, {2}, {3}, {4}, {5}, 0, 0, 0, 0)", ServerSideOnly=true)]
 		public static DateTimeOffset? DateTimeOffsetFromParts(int? year, int? month, int? day, int? hour, int? minute, int? seconds)
-		{
-			throw new LinqException($"'{nameof(DateTimeOffsetFromParts)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<DateTimeOffset?>($"'{nameof(DateTimeOffsetFromParts)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/DATETIMEOFFSETFROMPARTS-transact-sql">DATETIMEOFFSETFROMPARTS (Transact-SQL)</see></b></para>
@@ -1190,9 +1070,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Expression(ProviderName.SqlServer, "DATETIMEOFFSETFROMPARTS({0}, {1}, {2}, 0, 0, 0, 0, 0, 0, 0)", ServerSideOnly=true)]
 		public static DateTimeOffset? DateTimeOffsetFromParts(int? year, int? month, int? day)
-		{
-			throw new LinqException($"'{nameof(DateTimeOffsetFromParts)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<DateTimeOffset?>($"'{nameof(DateTimeOffsetFromParts)}' is a server side only function.");
 
 		#endregion
 
@@ -1208,9 +1086,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Extension(ProviderName.SqlServer, "DATENAME({datepart}, {date})", ServerSideOnly=true, BuilderType=typeof(DatePartBuilder))]
 		[return: NotNullIfNotNull("date")]
 		public static string? DateName([SqlQueryDependent] DateParts datepart, [ExprParameter] string? date)
-		{
-			throw new LinqException($"'{nameof(DateName)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<string?>($"'{nameof(DateName)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/DATENAME-transact-sql">DATENAME (Transact-SQL)</see></b></para>
@@ -1222,9 +1098,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Extension(ProviderName.SqlServer, "DATENAME({datepart}, {date})", ServerSideOnly=true, BuilderType=typeof(DatePartBuilder))]
 		[return: NotNullIfNotNull("date")]
 		public static string? DateName([SqlQueryDependent] DateParts datepart, [ExprParameter] DateTime? date)
-		{
-			throw new LinqException($"'{nameof(DateName)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<string?>($"'{nameof(DateName)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/DATENAME-transact-sql">DATENAME (Transact-SQL)</see></b></para>
@@ -1236,9 +1110,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Extension(ProviderName.SqlServer, "DATENAME({datepart}, {date})", ServerSideOnly=true, BuilderType=typeof(DatePartBuilder))]
 		[return: NotNullIfNotNull("date")]
 		public static string? DateName([SqlQueryDependent] DateParts datepart, [ExprParameter] DateTimeOffset? date)
-		{
-			throw new LinqException($"'{nameof(DateName)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<string?>($"'{nameof(DateName)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/DATENAME-transact-sql">DATENAME (Transact-SQL)</see></b></para>
@@ -1250,9 +1122,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Extension(ProviderName.SqlServer, "DATENAME({datepart}, {date})", ServerSideOnly=true, BuilderType=typeof(DatePartBuilder))]
 		[return: NotNullIfNotNull("date")]
 		public static string? DateName([SqlQueryDependent] DateParts datepart, [ExprParameter] TimeSpan? date)
-		{
-			throw new LinqException($"'{nameof(DateName)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<string?>($"'{nameof(DateName)}' is a server side only function.");
 
 		#endregion
 
@@ -1268,9 +1138,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Extension(ProviderName.SqlServer, "DATEPART({datepart}, {date})", ServerSideOnly=true, BuilderType=typeof(DatePartBuilder))]
 		[return: NotNullIfNotNull("date")]
 		public static int? DatePart([SqlQueryDependent] DateParts datepart, [ExprParameter] string? date)
-		{
-			throw new LinqException($"'{nameof(DatePart)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<int?>($"'{nameof(DatePart)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/DATEPART-transact-sql">DATEPART (Transact-SQL)</see></b></para>
@@ -1282,9 +1150,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Extension(ProviderName.SqlServer, "DATEPART({datepart}, {date})", ServerSideOnly=true, BuilderType=typeof(DatePartBuilder))]
 		[return: NotNullIfNotNull("date")]
 		public static int? DatePart([SqlQueryDependent] DateParts datepart, [ExprParameter] DateTime? date)
-		{
-			throw new LinqException($"'{nameof(DatePart)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<int?>($"'{nameof(DatePart)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/DATEPART-transact-sql">DATEPART (Transact-SQL)</see></b></para>
@@ -1296,9 +1162,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Extension(ProviderName.SqlServer, "DATEPART({datepart}, {date})", ServerSideOnly=true, BuilderType=typeof(DatePartBuilder))]
 		[return: NotNullIfNotNull("date")]
 		public static int? DatePart([SqlQueryDependent] DateParts datepart, [ExprParameter] DateTimeOffset? date)
-		{
-			throw new LinqException($"'{nameof(DatePart)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<int?>($"'{nameof(DatePart)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/DATEPART-transact-sql">DATEPART (Transact-SQL)</see></b></para>
@@ -1310,9 +1174,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Extension(ProviderName.SqlServer, "DATEPART({datepart}, {date})", ServerSideOnly=true, BuilderType=typeof(DatePartBuilder))]
 		[return: NotNullIfNotNull("date")]
 		public static int? DatePart([SqlQueryDependent] DateParts datepart, [ExprParameter] TimeSpan? date)
-		{
-			throw new LinqException($"'{nameof(DatePart)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<int?>($"'{nameof(DatePart)}' is a server side only function.");
 
 		#endregion
 
@@ -1327,9 +1189,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Function(ProviderName.SqlServer, "DAY", ServerSideOnly=true)]
 		[return: NotNullIfNotNull("date")]
 		public static int? Day(string? date)
-		{
-			throw new LinqException($"'{nameof(Day)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<int?>($"'{nameof(Day)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/DAY-transact-sql">DAY (Transact-SQL)</see></b></para>
@@ -1340,9 +1200,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Function(ProviderName.SqlServer, "DAY", ServerSideOnly=true)]
 		[return: NotNullIfNotNull("date")]
 		public static int? Day(DateTime? date)
-		{
-			throw new LinqException($"'{nameof(Day)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<int?>($"'{nameof(Day)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/DAY-transact-sql">DAY (Transact-SQL)</see></b></para>
@@ -1353,9 +1211,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Function(ProviderName.SqlServer, "DAY", ServerSideOnly=true)]
 		[return: NotNullIfNotNull("date")]
 		public static int? Day(DateTimeOffset? date)
-		{
-			throw new LinqException($"'{nameof(Day)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<int?>($"'{nameof(Day)}' is a server side only function.");
 
 		#endregion
 
@@ -1371,9 +1227,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Function(ProviderName.SqlServer, "EOMONTH", ServerSideOnly=true)]
 		[return: NotNullIfNotNull("start_date")]
 		public static DateTime? EndOfMonth(string? start_date)
-		{
-			throw new LinqException($"'{nameof(EndOfMonth)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<DateTime?>($"'{nameof(EndOfMonth)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/EOMONTH-transact-sql">EOMONTH (Transact-SQL)</see></b></para>
@@ -1386,9 +1240,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Function(ProviderName.SqlServer, "EOMONTH", ServerSideOnly=true)]
 		[return: NotNullIfNotNull("start_date")]
 		public static DateTime? EndOfMonth(string? start_date, int? month_to_add)
-		{
-			throw new LinqException($"'{nameof(EndOfMonth)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<DateTime?>($"'{nameof(EndOfMonth)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/EOMONTH-transact-sql">EOMONTH (Transact-SQL)</see></b></para>
@@ -1400,9 +1252,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Function(ProviderName.SqlServer, "EOMONTH", ServerSideOnly=true)]
 		[return: NotNullIfNotNull("start_date")]
 		public static DateTime? EndOfMonth(DateTime? start_date)
-		{
-			throw new LinqException($"'{nameof(EndOfMonth)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<DateTime?>($"'{nameof(EndOfMonth)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/EOMONTH-transact-sql">EOMONTH (Transact-SQL)</see></b></para>
@@ -1415,9 +1265,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Function(ProviderName.SqlServer, "EOMONTH", ServerSideOnly=true)]
 		[return: NotNullIfNotNull("start_date")]
 		public static DateTime? EndOfMonth(DateTime? start_date, int? month_to_add)
-		{
-			throw new LinqException($"'{nameof(EndOfMonth)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<DateTime?>($"'{nameof(EndOfMonth)}' is a server side only function.");
 
 		#endregion
 
@@ -1431,9 +1279,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "GETDATE", ServerSideOnly=true)]
 		public static DateTime GetDate()
-		{
-			throw new LinqException($"'{nameof(GetDate)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<DateTime>($"'{nameof(GetDate)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/GETUTCDATE-transact-sql">GETUTCDATE (Transact-SQL)</see></b></para>
@@ -1445,9 +1291,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "GETUTCDATE", ServerSideOnly=true)]
 		public static DateTime GetUtcDate()
-		{
-			throw new LinqException($"'{nameof(GetUtcDate)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<DateTime>($"'{nameof(GetUtcDate)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/SYSDATETIME-transact-sql">SYSDATETIME (Transact-SQL)</see></b></para>
@@ -1457,9 +1301,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "SYSDATETIME", ServerSideOnly=true)]
 		public static DateTime SysDatetime()
-		{
-			throw new LinqException($"'{nameof(SysDatetime)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<DateTime>($"'{nameof(SysDatetime)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/SYSDATETIMEOFFSET-transact-sql">SYSDATETIMEOFFSET (Transact-SQL)</see></b></para>
@@ -1470,9 +1312,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "SYSDATETIMEOFFSET", ServerSideOnly=true)]
 		public static DateTimeOffset SysDatetimeOffset()
-		{
-			throw new LinqException($"'{nameof(SysDatetimeOffset)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<DateTimeOffset>($"'{nameof(SysDatetimeOffset)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/SYSUTCDATETIME-transact-sql">SYSUTCDATETIME (Transact-SQL)</see></b></para>
@@ -1484,9 +1324,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "SYSUTCDATETIME", ServerSideOnly=true)]
 		public static DateTime SysUtcDatetime()
-		{
-			throw new LinqException($"'{nameof(SysUtcDatetime)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<DateTime>($"'{nameof(SysUtcDatetime)}' is a server side only function.");
 
 		#endregion
 
@@ -1501,9 +1339,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "ISDATE", ServerSideOnly=true)]
 		public static int IsDate(string expression)
-		{
-			throw new LinqException($"'{nameof(GetDate)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<int>($"'{nameof(GetDate)}' is a server side only function.");
 
 		#endregion
 
@@ -1518,9 +1354,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Function(ProviderName.SqlServer, "MONTH", ServerSideOnly=true)]
 		[return: NotNullIfNotNull("date")]
 		public static int? Month(string? date)
-		{
-			throw new LinqException($"'{nameof(Month)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<int?>($"'{nameof(Month)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/MONTH-transact-sql">MONTH (Transact-SQL)</see></b></para>
@@ -1531,9 +1365,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Function(ProviderName.SqlServer, "MONTH", ServerSideOnly=true)]
 		[return: NotNullIfNotNull("date")]
 		public static int? Month(DateTime? date)
-		{
-			throw new LinqException($"'{nameof(Month)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<int?>($"'{nameof(Month)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/MONTH-transact-sql">MONTH (Transact-SQL)</see></b></para>
@@ -1544,9 +1376,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Function(ProviderName.SqlServer, "MONTH", ServerSideOnly=true)]
 		[return: NotNullIfNotNull("date")]
 		public static int? Month(DateTimeOffset? date)
-		{
-			throw new LinqException($"'{nameof(Month)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<int?>($"'{nameof(Month)}' is a server side only function.");
 
 		#endregion
 
@@ -1561,9 +1391,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Function(ProviderName.SqlServer, "YEAR", ServerSideOnly=true)]
 		[return: NotNullIfNotNull("date")]
 		public static int? Year(string? date)
-		{
-			throw new LinqException($"'{nameof(Year)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<int?>($"'{nameof(Year)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/YEAR-transact-sql">YEAR (Transact-SQL)</see></b></para>
@@ -1574,9 +1402,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Function(ProviderName.SqlServer, "YEAR", ServerSideOnly=true)]
 		[return: NotNullIfNotNull("date")]
 		public static int? Year(DateTime? date)
-		{
-			throw new LinqException($"'{nameof(Year)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<int?>($"'{nameof(Year)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/YEAR-transact-sql">YEAR (Transact-SQL)</see></b></para>
@@ -1587,9 +1413,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Function(ProviderName.SqlServer, "YEAR", ServerSideOnly=true)]
 		[return: NotNullIfNotNull("date")]
 		public static int? Year(DateTimeOffset? date)
-		{
-			throw new LinqException($"'{nameof(Year)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<int?>($"'{nameof(Year)}' is a server side only function.");
 
 		#endregion
 
@@ -1604,9 +1428,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Function(ProviderName.SqlServer, "SWITCHOFFSET", ServerSideOnly=true)]
 		[return: NotNullIfNotNull("datetimeoffset_expression")]
 		public static DateTimeOffset? SwitchOffset(DateTimeOffset? datetimeoffset_expression, string timezoneoffset_expression)
-		{
-			throw new LinqException($"'{nameof(SwitchOffset)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<DateTimeOffset?>($"'{nameof(SwitchOffset)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/TODATETIMEOFFSET-transact-sql">TODATETIMEOFFSET (Transact-SQL)</see></b></para>
@@ -1617,9 +1439,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Function(ProviderName.SqlServer, "TODATETIMEOFFSET", ServerSideOnly=true)]
 		[return: NotNullIfNotNull("datetime_expression")]
 		public static DateTimeOffset? ToDatetimeOffset(DateTimeOffset? datetime_expression, string timezoneoffset_expression)
-		{
-			throw new LinqException($"'{nameof(ToDatetimeOffset)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<DateTimeOffset?>($"'{nameof(ToDatetimeOffset)}' is a server side only function.");
 
 		#endregion
 
@@ -1637,9 +1457,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Function(ProviderName.SqlServer, "ISJSON", ServerSideOnly = true)]
 		[return: NotNullIfNotNull("expression")]
 		public static bool? IsJson(string? expression)
-		{
-			throw new LinqException($"'{nameof(IsJson)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<bool?>($"'{nameof(IsJson)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/JSON-VALUE-transact-sql">JSON_VALUE (Transact-SQL)</see></b></para>
@@ -1652,9 +1470,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "JSON_VALUE", ServerSideOnly=true)]
 		public static string? JsonValue(string? expression, string path)
-		{
-			throw new LinqException($"'{nameof(JsonValue)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<string?>($"'{nameof(JsonValue)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/JSON-QUERY-transact-sql">JSON_QUERY (Transact-SQL)</see></b></para>
@@ -1667,9 +1483,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "JSON_QUERY", ServerSideOnly=true)]
 		public static string? JsonQuery(string? expression, string path)
-		{
-			throw new LinqException($"'{nameof(JsonQuery)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<string?>($"'{nameof(JsonQuery)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/JSON-MODIFY-transact-sql">JSON_MODIFY (Transact-SQL)</see></b></para>
@@ -1683,9 +1497,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Function(ProviderName.SqlServer, "JSON_MODIFY", ServerSideOnly=true)]
 		[return: NotNullIfNotNull("expression")]
 		public static string? JsonModify(string? expression, string path, string newValue)
-		{
-			throw new LinqException($"'{nameof(JsonModify)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<string?>($"'{nameof(JsonModify)}' is a server side only function.");
 
 		public record JsonData
 		{
@@ -1704,9 +1516,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <remarks>Only available on SQL Server 2016 or later, and compatibility mode for the database must be set to 130 or higher</remarks>
 		[Sql.TableExpression("OPENJSON({2}) {1}")]
 		public static IQueryable<JsonData> OpenJson(string? json)
-		{
-			throw new LinqException($"'{nameof(OpenJson)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<IQueryable<JsonData>>($"'{nameof(OpenJson)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/OPENJSON-transact-sql">OPENJSON (Transact-SQL)</see></b></para>
@@ -1719,9 +1529,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <remarks>Only available on SQL Server 2016 or later, and compatibility mode for the database must be set to 130 or higher</remarks>
 		[Sql.TableExpression("OPENJSON({2}, {3}) {1}")]
 		public static IQueryable<JsonData> OpenJson(string? json, string path)
-		{
-			throw new LinqException($"'{nameof(OpenJson)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<IQueryable<JsonData>>($"'{nameof(OpenJson)}' is a server side only function.");
 
 #if !NET45
 		/// <summary>
@@ -1781,9 +1589,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Function(ProviderName.SqlServer, "ABS", ServerSideOnly=true, IgnoreGenericParameters=true)]
 		[return: NotNullIfNotNull("numeric_expression")]
 		public static T Abs<T>(T numeric_expression)
-		{
-			throw new LinqException($"'{nameof(Abs)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<T>($"'{nameof(Abs)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/ACOS-transact-sql">ACOS (Transact-SQL)</see></b></para>
@@ -1797,9 +1603,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Function(ProviderName.SqlServer, "ACOS", ServerSideOnly=true, IgnoreGenericParameters=true)]
 		[return: NotNullIfNotNull("float_expression")]
 		public static T Acos<T>(T float_expression)
-		{
-			throw new LinqException($"'{nameof(Acos)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<T>($"'{nameof(Acos)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/ASIN-transact-sql">ASIN (Transact-SQL)</see></b></para>
@@ -1813,9 +1617,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Function(ProviderName.SqlServer, "ASIN", ServerSideOnly=true, IgnoreGenericParameters=true)]
 		[return: NotNullIfNotNull("float_expression")]
 		public static T Asin<T>(T float_expression)
-		{
-			throw new LinqException($"'{nameof(Asin)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<T>($"'{nameof(Asin)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/ATAN-transact-sql">ATAN (Transact-SQL)</see></b></para>
@@ -1828,9 +1630,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Function(ProviderName.SqlServer, "ATAN", ServerSideOnly=true, IgnoreGenericParameters=true)]
 		[return: NotNullIfNotNull("float_expression")]
 		public static T Atan<T>(T float_expression)
-		{
-			throw new LinqException($"'{nameof(Atan)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<T>($"'{nameof(Atan)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/ATN2-transact-sql">ATN2 (Transact-SQL)</see></b></para>
@@ -1844,9 +1644,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Function(ProviderName.SqlServer, "ATN2", ServerSideOnly=true, IgnoreGenericParameters=true)]
 		[return: NotNullIfNotNull("float_expression")]
 		public static T Atn2<T>(T float_expression, T float_expression2)
-		{
-			throw new LinqException($"'{nameof(Atn2)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<T>($"'{nameof(Atn2)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/CEILING-transact-sql">CEILING (Transact-SQL)</see></b></para>
@@ -1859,9 +1657,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Function(ProviderName.SqlServer, "CEILING", ServerSideOnly=true, IgnoreGenericParameters=true)]
 		[return: NotNullIfNotNull("numeric_expression")]
 		public static T Ceiling<T>(T numeric_expression)
-		{
-			throw new LinqException($"'{nameof(Ceiling)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<T>($"'{nameof(Ceiling)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/COS-transact-sql">COS (Transact-SQL)</see></b></para>
@@ -1874,9 +1670,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Function(ProviderName.SqlServer, "COS", ServerSideOnly=true, IgnoreGenericParameters=true)]
 		[return: NotNullIfNotNull("float_expression")]
 		public static T Cos<T>(T float_expression)
-		{
-			throw new LinqException($"'{nameof(Cos)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<T>($"'{nameof(Cos)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/COT-transact-sql">COT (Transact-SQL)</see></b></para>
@@ -1889,9 +1683,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Function(ProviderName.SqlServer, "COT", ServerSideOnly=true, IgnoreGenericParameters=true)]
 		[return: NotNullIfNotNull("float_expression")]
 		public static T Cot<T>(T float_expression)
-		{
-			throw new LinqException($"'{nameof(Cot)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<T>($"'{nameof(Cot)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/DEGREES-transact-sql">DEGREES (Transact-SQL)</see></b></para>
@@ -1904,9 +1696,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Function(ProviderName.SqlServer, "DEGREES", ServerSideOnly=true, IgnoreGenericParameters=true)]
 		[return: NotNullIfNotNull("numeric_expression")]
 		public static T Degrees<T>(T numeric_expression)
-		{
-			throw new LinqException($"'{nameof(Degrees)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<T>($"'{nameof(Degrees)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/EXP-transact-sql">EXP (Transact-SQL)</see></b></para>
@@ -1919,9 +1709,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Function(ProviderName.SqlServer, "EXP", ServerSideOnly=true, IgnoreGenericParameters=true)]
 		[return: NotNullIfNotNull("float_expression")]
 		public static T Exp<T>(T float_expression)
-		{
-			throw new LinqException($"'{nameof(Exp)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<T>($"'{nameof(Exp)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/FLOOR-transact-sql">FLOOR (Transact-SQL)</see></b></para>
@@ -1934,9 +1722,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Function(ProviderName.SqlServer, "FLOOR", ServerSideOnly=true, IgnoreGenericParameters=true)]
 		[return: NotNullIfNotNull("numeric_expression")]
 		public static T Floor<T>(T numeric_expression)
-		{
-			throw new LinqException($"'{nameof(Floor)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<T>($"'{nameof(Floor)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/LOG-transact-sql">LOG (Transact-SQL)</see></b></para>
@@ -1949,9 +1735,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Function(ProviderName.SqlServer, "LOG", ServerSideOnly=true, IgnoreGenericParameters=true)]
 		[return: NotNullIfNotNull("float_expression")]
 		public static T Log<T>(T float_expression)
-		{
-			throw new LinqException($"'{nameof(Log)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<T>($"'{nameof(Log)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/LOG-transact-sql">LOG (Transact-SQL)</see></b></para>
@@ -1965,9 +1749,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Function(ProviderName.SqlServer, "LOG", ServerSideOnly=true, IgnoreGenericParameters=true)]
 		[return: NotNullIfNotNull("float_expression")]
 		public static T Log<T>(T float_expression, int @base)
-		{
-			throw new LinqException($"'{nameof(Log)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<T>($"'{nameof(Log)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/LOG10-transact-sql">LOG10 (Transact-SQL)</see></b></para>
@@ -1980,9 +1762,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Function(ProviderName.SqlServer, "LOG", ServerSideOnly=true, IgnoreGenericParameters=true)]
 		[return: NotNullIfNotNull("float_expression")]
 		public static T Log10<T>(T float_expression)
-		{
-			throw new LinqException($"'{nameof(Log10)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<T>($"'{nameof(Log10)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/PI-transact-sql">PI (Transact-SQL)</see></b></para>
@@ -1992,9 +1772,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "PI", ServerSideOnly=true)]
 		public static double PI()
-		{
-			throw new LinqException($"'{nameof(Log10)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<double>($"'{nameof(Log10)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/POWER-transact-sql">POWER (Transact-SQL)</see></b></para>
@@ -2009,9 +1787,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Function(ProviderName.SqlServer, "POWER", ServerSideOnly=true, IgnoreGenericParameters=true)]
 		[return: NotNullIfNotNull("float_expression")]
 		public static T Power<T>(T float_expression, T y)
-		{
-			throw new LinqException($"'{nameof(Power)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<T>($"'{nameof(Power)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/SIGN-transact-sql">SIGN (Transact-SQL)</see></b></para>
@@ -2024,9 +1800,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Function(ProviderName.SqlServer, "SIGN", ServerSideOnly=true, IgnoreGenericParameters=true)]
 		[return: NotNullIfNotNull("numeric_expression")]
 		public static T Sign<T>(T numeric_expression)
-		{
-			throw new LinqException($"'{nameof(Sign)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<T>($"'{nameof(Sign)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/RAND-transact-sql">RAND (Transact-SQL)</see></b></para>
@@ -2036,9 +1810,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "RAND", ServerSideOnly=true, IgnoreGenericParameters=true)]
 		public static double Random()
-		{
-			throw new LinqException($"'{nameof(Random)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<double>($"'{nameof(Random)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/RAND-transact-sql">RAND (Transact-SQL)</see></b></para>
@@ -2048,9 +1820,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "RAND", ServerSideOnly=true, IgnoreGenericParameters=true)]
 		public static double Random(int seed)
-		{
-			throw new LinqException($"'{nameof(Random)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<double>($"'{nameof(Random)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/ROUND-transact-sql">ROUND (Transact-SQL)</see></b></para>
@@ -2071,9 +1841,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Function(ProviderName.SqlServer, "ROUND", ServerSideOnly=true, IgnoreGenericParameters=true)]
 		[return: NotNullIfNotNull("numeric_expression")]
 		public static T Round<T>(T numeric_expression, int length, int function)
-		{
-			throw new LinqException($"'{nameof(Round)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<T>($"'{nameof(Round)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/ROUND-transact-sql">ROUND (Transact-SQL)</see></b></para>
@@ -2091,9 +1859,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Function(ProviderName.SqlServer, "ROUND", ServerSideOnly=true, IgnoreGenericParameters=true)]
 		[return: NotNullIfNotNull("numeric_expression")]
 		public static T Round<T>(T numeric_expression, int length)
-		{
-			throw new LinqException($"'{nameof(Round)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<T>($"'{nameof(Round)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/RADIANS-transact-sql">RADIANS (Transact-SQL)</see></b></para>
@@ -2106,9 +1872,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Function(ProviderName.SqlServer, "RADIANS", ServerSideOnly=true, IgnoreGenericParameters=true)]
 		[return: NotNullIfNotNull("numeric_expression")]
 		public static T Radians<T>(T numeric_expression)
-		{
-			throw new LinqException($"'{nameof(Radians)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<T>($"'{nameof(Radians)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/SIN-transact-sql">SIN (Transact-SQL)</see></b></para>
@@ -2121,9 +1885,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Function(ProviderName.SqlServer, "SIN", ServerSideOnly=true, IgnoreGenericParameters=true)]
 		[return: NotNullIfNotNull("float_expression")]
 		public static T Sin<T>(T float_expression, T y)
-		{
-			throw new LinqException($"'{nameof(Sin)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<T>($"'{nameof(Sin)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/SQRT-transact-sql">SQRT (Transact-SQL)</see></b></para>
@@ -2136,9 +1898,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Function(ProviderName.SqlServer, "SQRT", ServerSideOnly=true, IgnoreGenericParameters=true)]
 		[return: NotNullIfNotNull("float_expression")]
 		public static T Sqrt<T>(T float_expression)
-		{
-			throw new LinqException($"'{nameof(Sqrt)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<T>($"'{nameof(Sqrt)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/SQUARE-transact-sql">SQUARE (Transact-SQL)</see></b></para>
@@ -2151,9 +1911,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Function(ProviderName.SqlServer, "SQUARE", ServerSideOnly=true, IgnoreGenericParameters=true)]
 		[return: NotNullIfNotNull("float_expression")]
 		public static T Square<T>(T float_expression)
-		{
-			throw new LinqException($"'{nameof(Square)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<T>($"'{nameof(Square)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/TAN-transact-sql">TAN (Transact-SQL)</see></b></para>
@@ -2166,9 +1924,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Function(ProviderName.SqlServer, "TAN", ServerSideOnly=true, IgnoreGenericParameters=true)]
 		[return: NotNullIfNotNull("float_expression")]
 		public static T Tan<T>(T float_expression)
-		{
-			throw new LinqException($"'{nameof(Tan)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<T>($"'{nameof(Tan)}' is a server side only function.");
 
 		#endregion
 
@@ -2184,9 +1940,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "CHOOSE", ServerSideOnly=true, IgnoreGenericParameters=true)]
 		public static T Choose<T>(int? index, params T[] values)
-		{
-			throw new LinqException($"'{nameof(Choose)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<T>($"'{nameof(Choose)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/logical-functions-IIF-transact-sql">IIF (Transact-SQL)</see></b></para>
@@ -2199,9 +1953,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "IIF", ServerSideOnly=true, IgnoreGenericParameters=true)]
 		public static T Iif<T>(bool? boolean_expression, T true_value, T false_value)
-		{
-			throw new LinqException($"'{nameof(Iif)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<T>($"'{nameof(Iif)}' is a server side only function.");
 
 		#endregion
 
@@ -2215,9 +1967,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "APP_NAME", ServerSideOnly=true)]
 		public static string AppName()
-		{
-			throw new LinqException($"'{nameof(AppName)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<string>($"'{nameof(AppName)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/col-length-transact-sql">COL_LENGTH (Transact-SQL)</see></b></para>
@@ -2229,9 +1979,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "COL_LENGTH", ServerSideOnly=true)]
 		public static short? ColumnLength(string table, string column)
-		{
-			throw new LinqException($"'{nameof(ColumnLength)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<short?>($"'{nameof(ColumnLength)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/col-name-transact-sql">COL_NAME (Transact-SQL)</see></b></para>
@@ -2243,9 +1991,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "COL_NAME", ServerSideOnly=true)]
 		public static string? ColumnName(int? table_id, int column_id)
-		{
-			throw new LinqException($"'{nameof(ColumnName)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<string?>($"'{nameof(ColumnName)}' is a server side only function.");
 
 		public enum ColumnPropertyName
 		{
@@ -2268,9 +2014,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Extension(ProviderName.SqlServer, "COLUMNPROPERTY", ServerSideOnly=true, BuilderType=typeof(PropertyBuilder<ColumnPropertyName>))]
 		public static int? ColumnProperty(int? id, string column, [SqlQueryDependent] ColumnPropertyName property)
-		{
-			throw new LinqException($"'{nameof(ColumnProperty)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<int?>($"'{nameof(ColumnProperty)}' is a server side only function.");
 
 		public enum DatabasePropertyName
 		{
@@ -2296,9 +2040,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Extension(ProviderName.SqlServer, "DATABASEPROPERTYEX", ServerSideOnly=true, BuilderType=typeof(PropertyBuilder<DatabasePropertyName>))]
 		public static object? DatabasePropertyEx(string database, [SqlQueryDependent] DatabasePropertyName property)
-		{
-			throw new LinqException($"'{nameof(DatabasePropertyEx)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<object?>($"'{nameof(DatabasePropertyEx)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/db-id-transact-sql">DB_ID (Transact-SQL)</see></b></para>
@@ -2310,9 +2052,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "DB_ID", ServerSideOnly=true)]
 		public static int? DbID(string database_name)
-		{
-			throw new LinqException($"'{nameof(DbID)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<int?>($"'{nameof(DbID)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/db-id-transact-sql">DB_ID (Transact-SQL)</see></b></para>
@@ -2322,9 +2062,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "DB_ID", ServerSideOnly=true)]
 		public static int DbID()
-		{
-			throw new LinqException($"'{nameof(DbID)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<int>($"'{nameof(DbID)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/db-name-transact-sql">DB_NAME (Transact-SQL)</see></b></para>
@@ -2336,9 +2074,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "DB_NAME", ServerSideOnly=true)]
 		public static string? DbName(int database_id)
-		{
-			throw new LinqException($"'{nameof(DbName)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<string?>($"'{nameof(DbName)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/db-name-transact-sql">DB_NAME (Transact-SQL)</see></b></para>
@@ -2348,9 +2084,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "DB_NAME", ServerSideOnly=true)]
 		public static string DbName()
-		{
-			throw new LinqException($"'{nameof(DbName)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<string>($"'{nameof(DbName)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/file-id-transact-sql">FILE_ID (Transact-SQL)</see></b></para>
@@ -2361,9 +2095,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "FILE_ID", ServerSideOnly=true)]
 		public static short? FileID(string? file_name)
-		{
-			throw new LinqException($"'{nameof(FileID)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<short?>($"'{nameof(FileID)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/file-idex-transact-sql">FILE_IDEX (Transact-SQL)</see></b></para>
@@ -2374,9 +2106,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "FILE_IDEX", ServerSideOnly=true)]
 		public static int? FileIDEx(string? file_name)
-		{
-			throw new LinqException($"'{nameof(FileIDEx)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<int?>($"'{nameof(FileIDEx)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/file-name-transact-sql">FILE_NAME (Transact-SQL)</see></b></para>
@@ -2387,9 +2117,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "FILE_NAME", ServerSideOnly=true)]
 		public static string? FileName(int? file_id)
-		{
-			throw new LinqException($"'{nameof(FileName)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<string?>($"'{nameof(FileName)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/filegroup-id-transact-sql">FILEGROUP_ID (Transact-SQL)</see></b></para>
@@ -2400,9 +2128,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "FILEGROUP_ID", ServerSideOnly=true)]
 		public static int? FileGroupID(string? filegroup_name)
-		{
-			throw new LinqException($"'{nameof(FileGroupID)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<int?>($"'{nameof(FileGroupID)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/filegroup-name-transact-sql">FILEGROUP_NAME (Transact-SQL)</see></b></para>
@@ -2413,9 +2139,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "FILEGROUP_Name", ServerSideOnly=true)]
 		public static string? FileGroupName(short? filegroup_id)
-		{
-			throw new LinqException($"'{nameof(FileGroupName)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<string?>($"'{nameof(FileGroupName)}' is a server side only function.");
 
 		public enum FileGroupPropertyName
 		{
@@ -2433,9 +2157,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Extension(ProviderName.SqlServer, "FILEGROUPPROPERTY", ServerSideOnly=true, BuilderType=typeof(PropertyBuilder<FileGroupPropertyName>))]
 		public static int? FileGroupProperty(string? filegroup_name, [SqlQueryDependent] FileGroupPropertyName property)
-		{
-			throw new LinqException($"'{nameof(FileGroupProperty)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<int?>($"'{nameof(FileGroupProperty)}' is a server side only function.");
 
 		public enum FilePropertyName
 		{
@@ -2455,9 +2177,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Extension(ProviderName.SqlServer, "FILEPROPERTY", ServerSideOnly=true, BuilderType=typeof(PropertyBuilder<FilePropertyName>))]
 		public static int? FileProperty(string? file_name, [SqlQueryDependent] FilePropertyName property)
-		{
-			throw new LinqException($"'{nameof(FileProperty)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<int?>($"'{nameof(FileProperty)}' is a server side only function.");
 
 		public enum FilePropertyExName
 		{
@@ -2478,9 +2198,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Extension(ProviderName.SqlServer, "FILEPROPERTYEX", ServerSideOnly=true, BuilderType=typeof(PropertyBuilder<FilePropertyExName>))]
 		public static object? FilePropertyEx(string? file_name, [SqlQueryDependent] FilePropertyExName property)
-		{
-			throw new LinqException($"'{nameof(FileProperty)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<object?>($"'{nameof(FileProperty)}' is a server side only function.");
 
 		public enum FullTextCatalogPropertyName
 		{
@@ -2499,9 +2217,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Extension(ProviderName.SqlServer, "FULLTEXTCATALOGPROPERTY", ServerSideOnly=true, BuilderType=typeof(PropertyBuilder<FullTextCatalogPropertyName>))]
 		public static int? FullTextCatalogProperty(string? catalog_name, [SqlQueryDependent] FullTextCatalogPropertyName property)
-		{
-			throw new LinqException($"'{nameof(FullTextCatalogProperty)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<int?>($"'{nameof(FullTextCatalogProperty)}' is a server side only function.");
 
 		public enum FullTextServicePropertyName
 		{
@@ -2518,9 +2234,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Extension(ProviderName.SqlServer, "FULLTEXTSERVICEPROPERTY", ServerSideOnly=true, BuilderType=typeof(PropertyBuilder<FullTextServicePropertyName>))]
 		public static int? FullTextServiceProperty([SqlQueryDependent] FullTextServicePropertyName property)
-		{
-			throw new LinqException($"'{nameof(FullTextServiceProperty)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<int?>($"'{nameof(FullTextServiceProperty)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/index-col-transact-sql">INDEX_COL (Transact-SQL)</see></b></para>
@@ -2534,9 +2248,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "INDEX_COL", ServerSideOnly=true)]
 		public static string? IndexColumn(string table_or_view, int index_id, int key_id)
-		{
-			throw new LinqException($"'{nameof(IndexColumn)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<string?>($"'{nameof(IndexColumn)}' is a server side only function.");
 
 		public enum IndexKeyPropertyName
 		{
@@ -2557,9 +2269,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Extension(ProviderName.SqlServer, "INDEXKEY_PROPERTY", ServerSideOnly=true, BuilderType=typeof(PropertyBuilder<IndexKeyPropertyName>))]
 		public static int? IndexKeyProperty(int? object_ID, int? index_ID, int? key_ID, [SqlQueryDependent] IndexKeyPropertyName property)
-		{
-			throw new LinqException($"'{nameof(IndexKeyProperty)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<int?>($"'{nameof(IndexKeyProperty)}' is a server side only function.");
 
 		public enum IndexPropertyName
 		{
@@ -2582,9 +2292,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Extension(ProviderName.SqlServer, "INDEXPROPERTY", ServerSideOnly=true, BuilderType=typeof(PropertyBuilder<IndexPropertyName>))]
 		public static int? IndexProperty(int? object_ID, string? index_or_statistics_name, [SqlQueryDependent] IndexPropertyName property)
-		{
-			throw new LinqException($"'{nameof(IndexProperty)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<int?>($"'{nameof(IndexProperty)}' is a server side only function.");
 
 		class NextValueForBuilder : Sql.IExtensionCallBuilder
 		{
@@ -2603,9 +2311,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Extension(ProviderName.SqlServer, "NEXT VALUE FOR {sequence_name}", ServerSideOnly=true, BuilderType=typeof(NextValueForBuilder))]
 		public static object? NextValueFor([SqlQueryDependent] string sequence_name)
-		{
-			throw new LinqException($"'{nameof(NextValueFor)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<object?>($"'{nameof(NextValueFor)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/NEXT-VALUE-FOR-transact-sql">NEXT VALUE FOR (Transact-SQL)</see></b></para>
@@ -2617,9 +2323,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.Extension(ProviderName.SqlServer, "NEXT VALUE FOR {sequence_name} OVER ({order_by_clause})",
 			ServerSideOnly=true, BuilderType=typeof(NextValueForBuilder), TokenName=AnalyticFunctions.FunctionToken, ChainPrecedence=1, IsWindowFunction=true)]
 		public static AnalyticFunctions.INeedsOrderByOnly<object?> NextValueForOver([SqlQueryDependent] string sequence_name)
-		{
-			throw new LinqException($"'{nameof(NextValueForOver)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<AnalyticFunctions.INeedsOrderByOnly<object?>>($"'{nameof(NextValueForOver)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/OBJECT-DEFINITION-transact-sql">OBJECT_DEFINITION (Transact-SQL)</see></b></para>
@@ -2631,9 +2335,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "OBJECT_DEFINITION", ServerSideOnly=true)]
 		public static string? ObjectDefinition(int? object_id)
-		{
-			throw new LinqException($"'{nameof(ObjectDefinition)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<string?>($"'{nameof(ObjectDefinition)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/object-id-transact-sql">OBJECT_ID (Transact-SQL)</see></b></para>
@@ -2645,9 +2347,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "OBJECT_ID", ServerSideOnly=true)]
 		public static int? ObjectID(string object_name)
-		{
-			throw new LinqException($"'{nameof(ObjectID)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<int?>($"'{nameof(ObjectID)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/object-id-transact-sql">OBJECT_ID (Transact-SQL)</see></b></para>
@@ -2662,9 +2362,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "OBJECT_ID", ServerSideOnly=true)]
 		public static int? ObjectID(string object_name, string object_type)
-		{
-			throw new LinqException($"'{nameof(ObjectID)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<int?>($"'{nameof(ObjectID)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/object-name-transact-sql">OBJECT_NAME (Transact-SQL)</see></b></para>
@@ -2677,9 +2375,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "OBJECT_NAME", ServerSideOnly=true)]
 		public static string? ObjectName(int? object_id)
-		{
-			throw new LinqException($"'{nameof(ObjectName)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<string?>($"'{nameof(ObjectName)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/object-name-transact-sql">OBJECT_NAME (Transact-SQL)</see></b></para>
@@ -2693,9 +2389,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "OBJECT_NAME", ServerSideOnly=true)]
 		public static string? ObjectName(int? object_id, int? database_id)
-		{
-			throw new LinqException($"'{nameof(ObjectName)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<string?>($"'{nameof(ObjectName)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/object-schema-name-transact-sql">OBJECT_SCHEMA_NAME (Transact-SQL)</see></b></para>
@@ -2708,9 +2402,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "OBJECT_SCHEMA_NAME", ServerSideOnly=true)]
 		public static string? ObjectSchemaName(int? object_id)
-		{
-			throw new LinqException($"'{nameof(ObjectName)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<string?>($"'{nameof(ObjectName)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/object-schema-name-transact-sql">OBJECT_SCHEMA_NAME (Transact-SQL)</see></b></para>
@@ -2724,9 +2416,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "OBJECT_SCHEMA_NAME", ServerSideOnly=true)]
 		public static string? ObjectSchemaName(int? object_id, int? database_id)
-		{
-			throw new LinqException($"'{nameof(ObjectName)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<string?>($"'{nameof(ObjectName)}' is a server side only function.");
 
 		public enum ObjectPropertyName
 		{
@@ -2767,9 +2457,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Extension(ProviderName.SqlServer, "OBJECTPROPERTY", ServerSideOnly=true, BuilderType=typeof(PropertyBuilder<ObjectPropertyName>))]
 		public static int? ObjectProperty(int? id, [SqlQueryDependent] ObjectPropertyName property)
-		{
-			throw new LinqException($"'{nameof(ObjectProperty)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<int?>($"'{nameof(ObjectProperty)}' is a server side only function.");
 
 		public enum ObjectPropertyExName
 		{
@@ -2811,9 +2499,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Extension(ProviderName.SqlServer, "OBJECTPROPERTYEX", ServerSideOnly=true, BuilderType=typeof(PropertyBuilder<ObjectPropertyExName>))]
 		public static object? ObjectPropertyEx(int? id, [SqlQueryDependent] ObjectPropertyExName property)
-		{
-			throw new LinqException($"'{nameof(ObjectPropertyEx)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<object?>($"'{nameof(ObjectPropertyEx)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/ORIGINAL-DB-NAME-transact-sql">ORIGINAL_DB_NAME (Transact-SQL)</see></b></para>
@@ -2825,9 +2511,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "ORIGINAL_DB_NAME", ServerSideOnly=true)]
 		public static string? OriginalDbName()
-		{
-			throw new LinqException($"'{nameof(OriginalDbName)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<string?>($"'{nameof(OriginalDbName)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/PARSENAME-transact-sql">PARSENAME (Transact-SQL)</see></b></para>
@@ -2850,9 +2534,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "PARSENAME", ServerSideOnly=true)]
 		public static string? ParseName(string? object_name, int object_piece)
-		{
-			throw new LinqException($"'{nameof(ParseName)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<string?>($"'{nameof(ParseName)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/schema-id-transact-sql">SCHEMA_ID (Transact-SQL)</see></b></para>
@@ -2862,9 +2544,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "SCHEMA_ID", ServerSideOnly=true)]
 		public static int? SchemaID()
-		{
-			throw new LinqException($"'{nameof(SchemaID)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<int?>($"'{nameof(SchemaID)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/schema-id-transact-sql">SCHEMA_ID (Transact-SQL)</see></b></para>
@@ -2876,9 +2556,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "SCHEMA_ID", ServerSideOnly=true)]
 		public static int? SchemaID(string schema_name)
-		{
-			throw new LinqException($"'{nameof(SchemaID)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<int?>($"'{nameof(SchemaID)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/SCHEMA-NAME-transact-sql">SCHEMA_NAME (Transact-SQL)</see></b></para>
@@ -2888,9 +2566,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "SCHEMA_NAME", ServerSideOnly=true)]
 		public static string? SchemaName()
-		{
-			throw new LinqException($"'{nameof(SchemaName)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<string?>($"'{nameof(SchemaName)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/SCHEMA-NAME-transact-sql">SCHEMA_NAME (Transact-SQL)</see></b></para>
@@ -2902,9 +2578,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "SCHEMA_NAME", ServerSideOnly=true)]
 		public static string? SchemaName(int? schema_id)
-		{
-			throw new LinqException($"'{nameof(SchemaName)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<string?>($"'{nameof(SchemaName)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/SCOPE-IDENTITY-transact-sql">SCOPE_IDENTITY (Transact-SQL)</see></b></para>
@@ -2916,9 +2590,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "SCOPE_IDENTITY", ServerSideOnly=true)]
 		public static decimal ScopeIdentity()
-		{
-			throw new LinqException($"'{nameof(ScopeIdentity)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<decimal>($"'{nameof(ScopeIdentity)}' is a server side only function.");
 
 		public enum ServerPropertyName
 		{
@@ -2943,9 +2615,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Extension(ProviderName.SqlServer, "SERVERPROPERTY", ServerSideOnly=true, BuilderType=typeof(PropertyBuilder<ServerPropertyName>))]
 		public static object? ServerProperty([SqlQueryDependent] ServerPropertyName property)
-		{
-			throw new LinqException($"'{nameof(ServerProperty)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<object?>($"'{nameof(ServerProperty)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/STATS-DATE-transact-sql">STATS_DATE (Transact-SQL)</see></b></para>
@@ -2957,9 +2627,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "STATS_DATE", ServerSideOnly=true)]
 		public static DateTime? StatsDate(int? object_id, int? stats_id)
-		{
-			throw new LinqException($"'{nameof(StatsDate)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<DateTime?>($"'{nameof(StatsDate)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/TYPE-ID-transact-sql">TYPE_ID (Transact-SQL)</see></b></para>
@@ -2971,9 +2639,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "TYPE_ID", ServerSideOnly=true)]
 		public static int? TypeID(string type_name)
-		{
-			throw new LinqException($"'{nameof(TypeID)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<int?>($"'{nameof(TypeID)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/TYPE-NAME-transact-sql">TYPE_NAME (Transact-SQL)</see></b></para>
@@ -2985,9 +2651,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "TYPE_NAME", ServerSideOnly=true)]
 		public static string? TypeName(int? type_id)
-		{
-			throw new LinqException($"'{nameof(TypeName)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<string?>($"'{nameof(TypeName)}' is a server side only function.");
 
 		public enum TypePropertyName
 		{
@@ -3004,9 +2668,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Extension(ProviderName.SqlServer, "TYPEPROPERTY", ServerSideOnly=true, BuilderType=typeof(PropertyBuilder<TypePropertyName>))]
 		public static int? TypeProperty(string? type, [SqlQueryDependent] TypePropertyName property)
-		{
-			throw new LinqException($"'{nameof(TypeProperty)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<int?>($"'{nameof(TypeProperty)}' is a server side only function.");
 
 		#endregion
 
@@ -3022,9 +2684,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "PUBLISHINGSERVERNAME", ServerSideOnly=true)]
 		public static string? PublishingServerName()
-		{
-			throw new LinqException($"'{nameof(PublishingServerName)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<string?>($"'{nameof(PublishingServerName)}' is a server side only function.");
 
 		#endregion
 
@@ -3040,9 +2700,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "ASCII", ServerSideOnly=true)]
 		public static int Ascii(char character_expression)
-		{
-			throw new LinqException($"'{nameof(Ascii)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<int>($"'{nameof(Ascii)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/ASCII-transact-sql">ASCII (Transact-SQL)</see></b></para>
@@ -3054,9 +2712,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "ASCII", ServerSideOnly=true)]
 		public static int? Ascii(string? character_expression)
-		{
-			throw new LinqException($"'{nameof(Ascii)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<int?>($"'{nameof(Ascii)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/CHAR-transact-sql">CHAR (Transact-SQL)</see></b></para>
@@ -3070,9 +2726,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "CHAR", ServerSideOnly=true)]
 		public static char? Char(int? integer_expression)
-		{
-			throw new LinqException($"'{nameof(Char)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<char?>($"'{nameof(Char)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/CHARINDEX-transact-sql">CHARINDEX (Transact-SQL)</see></b></para>
@@ -3086,9 +2740,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "CHARINDEX", ServerSideOnly=true)]
 		public static int? CharIndex(string? expressionToFind, string? expressionToSearch)
-		{
-			throw new LinqException($"'{nameof(CharIndex)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<int?>($"'{nameof(CharIndex)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/CHARINDEX-transact-sql">CHARINDEX (Transact-SQL)</see></b></para>
@@ -3102,9 +2754,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "CHARINDEX", ServerSideOnly=true)]
 		public static long? CharIndexBig(string? expressionToFind, string? expressionToSearch)
-		{
-			throw new LinqException($"'{nameof(CharIndexBig)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<long?>($"'{nameof(CharIndexBig)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/CHARINDEX-transact-sql">CHARINDEX (Transact-SQL)</see></b></para>
@@ -3121,9 +2771,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "CHARINDEX", ServerSideOnly=true)]
 		public static int? CharIndex(string? expressionToFind, string? expressionToSearch, int? start_location)
-		{
-			throw new LinqException($"'{nameof(CharIndex)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<int?>($"'{nameof(CharIndex)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/CHARINDEX-transact-sql">CHARINDEX (Transact-SQL)</see></b></para>
@@ -3140,9 +2788,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "CHARINDEX", ServerSideOnly=true)]
 		public static long? CharIndex(string? expressionToFind, string? expressionToSearch, long? start_location)
-		{
-			throw new LinqException($"'{nameof(CharIndex)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<long?>($"'{nameof(CharIndex)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/CHARINDEX-transact-sql">CHARINDEX (Transact-SQL)</see></b></para>
@@ -3159,9 +2805,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "CHARINDEX", ServerSideOnly=true)]
 		public static long? CharIndexBig(string? expressionToFind, string? expressionToSearch, int? start_location)
-		{
-			throw new LinqException($"'{nameof(CharIndexBig)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<long?>($"'{nameof(CharIndexBig)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/CONCAT-transact-sql">CONCAT (Transact-SQL)</see></b></para>
@@ -3173,9 +2817,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "CONCAT", ServerSideOnly=true)]
 		public static string? Concat(params string?[] string_value)
-		{
-			throw new LinqException($"'{nameof(Concat)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<string?>($"'{nameof(Concat)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/CONCAT-WS-transact-sql">CONCAT_WS (Transact-SQL)</see></b></para>
@@ -3189,9 +2831,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "CONCAT_WS", ServerSideOnly=true)]
 		public static string? ConcatWithSeparator(string? separator, params string?[] arguments)
-		{
-			throw new LinqException($"'{nameof(ConcatWithSeparator)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<string?>($"'{nameof(ConcatWithSeparator)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/DIFFERENCE-transact-sql">DIFFERENCE (Transact-SQL)</see></b></para>
@@ -3205,9 +2845,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "DIFFERENCE", ServerSideOnly=true)]
 		public static int? Difference(string? character_expression1, string? character_expression2)
-		{
-			throw new LinqException($"'{nameof(Difference)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<int?>($"'{nameof(Difference)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/FORMAT-transact-sql">FORMAT (Transact-SQL)</see></b></para>
@@ -3219,9 +2857,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "FORMAT", ServerSideOnly=true)]
 		public static string? Format(object? value, string? format)
-		{
-			throw new LinqException($"'{nameof(Format)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<string?>($"'{nameof(Format)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/LEFT-transact-sql">LEFT (Transact-SQL)</see></b></para>
@@ -3242,9 +2878,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "LEFT", ServerSideOnly=true)]
 		public static string? Left(string? character_expression, int? integer_expression)
-		{
-			throw new LinqException($"'{nameof(Left)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<string?>($"'{nameof(Left)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/LEN-transact-sql">LEN (Transact-SQL)</see></b></para>
@@ -3256,9 +2890,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "LEN", ServerSideOnly=true)]
 		public static int? Len(string? character_expression)
-		{
-			throw new LinqException($"'{nameof(Len)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<int?>($"'{nameof(Len)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/LEN-transact-sql">LEN (Transact-SQL)</see></b></para>
@@ -3270,9 +2902,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "LEN", ServerSideOnly=true)]
 		public static long? LenBig(string? character_expression)
-		{
-			throw new LinqException($"'{nameof(LenBig)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<long?>($"'{nameof(LenBig)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/LOWER-transact-sql">LOWER (Transact-SQL)</see></b></para>
@@ -3285,9 +2915,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "LOWER", ServerSideOnly=true)]
 		public static string? Lower(string? character_expression)
-		{
-			throw new LinqException($"'{nameof(Lower)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<string?>($"'{nameof(Lower)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/LTRIM-transact-sql">LTRIM (Transact-SQL)</see></b></para>
@@ -3300,9 +2928,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "LTRIM", ServerSideOnly=true)]
 		public static string? LeftTrim(string? character_expression)
-		{
-			throw new LinqException($"'{nameof(LeftTrim)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<string?>($"'{nameof(LeftTrim)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/NCHAR-transact-sql">NCHAR (Transact-SQL)</see></b></para>
@@ -3315,9 +2941,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "NCHAR", ServerSideOnly=true)]
 		public static char? NChar(int? integer_expression)
-		{
-			throw new LinqException($"'{nameof(NChar)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<char?>($"'{nameof(NChar)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/PATINDEX-transact-sql">PATINDEX (Transact-SQL)</see></b></para>
@@ -3332,9 +2956,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "PATINDEX", ServerSideOnly=true)]
 		public static int? PatIndex(string? pattern, string? expression)
-		{
-			throw new LinqException($"'{nameof(PatIndex)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<int?>($"'{nameof(PatIndex)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/PATINDEX-transact-sql">PATINDEX (Transact-SQL)</see></b></para>
@@ -3350,9 +2972,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "PATINDEX", ServerSideOnly=true)]
 		public static long? PatIndexBig(string? pattern, string? expression)
-		{
-			throw new LinqException($"'{nameof(PatIndexBig)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<long?>($"'{nameof(PatIndexBig)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/QUOTENAME-transact-sql">QUOTENAME (Transact-SQL)</see></b></para>
@@ -3364,9 +2984,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "QUOTENAME", ServerSideOnly=true)]
 		public static string? QuoteName(string? character_string)
-		{
-			throw new LinqException($"'{nameof(QuoteName)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<string?>($"'{nameof(QuoteName)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/QUOTENAME-transact-sql">QUOTENAME (Transact-SQL)</see></b></para>
@@ -3382,9 +3000,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "QUOTENAME", ServerSideOnly=true)]
 		public static string? QuoteName(string? character_string, string? quote_character)
-		{
-			throw new LinqException($"'{nameof(QuoteName)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<string?>($"'{nameof(QuoteName)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/REPLACE-transact-sql">REPLACE (Transact-SQL)</see></b></para>
@@ -3400,9 +3016,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "REPLACE", ServerSideOnly=true)]
 		public static string? Replace(string? string_expression, string? string_pattern, string? string_replacement)
-		{
-			throw new LinqException($"'{nameof(Replace)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<string?>($"'{nameof(Replace)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/REPLICATE-transact-sql">REPLICATE (Transact-SQL)</see></b></para>
@@ -3415,9 +3029,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "REPLICATE", ServerSideOnly=true)]
 		public static string? Replicate(string? string_expression, int? integer_expression)
-		{
-			throw new LinqException($"'{nameof(Replicate)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<string?>($"'{nameof(Replicate)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/REPLICATE-transact-sql">REPLICATE (Transact-SQL)</see></b></para>
@@ -3430,9 +3042,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "REPLICATE", ServerSideOnly=true)]
 		public static string? Replicate(byte[]? string_expression, int? integer_expression)
-		{
-			throw new LinqException($"'{nameof(Replicate)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<string?>($"'{nameof(Replicate)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/REVERSE-transact-sql">REVERSE (Transact-SQL)</see></b></para>
@@ -3444,9 +3054,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "REVERSE", ServerSideOnly=true)]
 		public static string? Reverse(string? string_expression)
-		{
-			throw new LinqException($"'{nameof(Reverse)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<string?>($"'{nameof(Reverse)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/RIGHT-transact-sql">RIGHT (Transact-SQL)</see></b></para>
@@ -3467,9 +3075,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "RIGHT", ServerSideOnly=true)]
 		public static string? Right(string? character_expression, int? integer_expression)
-		{
-			throw new LinqException($"'{nameof(Right)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<string?>($"'{nameof(Right)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/RTRIM-transact-sql">RTRIM (Transact-SQL)</see></b></para>
@@ -3481,9 +3087,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "RTRIM", ServerSideOnly=true)]
 		public static string? RightTrim(string? character_expression)
-		{
-			throw new LinqException($"'{nameof(RightTrim)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<string?>($"'{nameof(RightTrim)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/SOUNDEX-transact-sql">SOUNDEX (Transact-SQL)</see></b></para>
@@ -3494,9 +3098,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "SOUNDEX", ServerSideOnly=true)]
 		public static string? SoundEx(string? character_expression)
-		{
-			throw new LinqException($"'{nameof(SoundEx)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<string?>($"'{nameof(SoundEx)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/SPACE-transact-sql">SPACE (Transact-SQL)</see></b></para>
@@ -3507,9 +3109,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "SPACE", ServerSideOnly=true)]
 		public static string? Space(int? integer_expression)
-		{
-			throw new LinqException($"'{nameof(Space)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<string?>($"'{nameof(Space)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/STR-transact-sql">STR (Transact-SQL)</see></b></para>
@@ -3520,9 +3120,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "STR", ServerSideOnly=true, IgnoreGenericParameters=true)]
 		public static string? Str<T>(T? float_expression)
-		{
-			throw new LinqException($"'{nameof(Str)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<string?>($"'{nameof(Str)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/STR-transact-sql">STR (Transact-SQL)</see></b></para>
@@ -3534,9 +3132,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "STR", ServerSideOnly=true, IgnoreGenericParameters=true)]
 		public static string? Str<T>(T? float_expression, int length)
-		{
-			throw new LinqException($"'{nameof(Str)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<string?>($"'{nameof(Str)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/STR-transact-sql">STR (Transact-SQL)</see></b></para>
@@ -3550,9 +3146,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "STR", ServerSideOnly=true, IgnoreGenericParameters=true)]
 		public static string? Str<T>(T? float_expression, int length, int @decimal)
-		{
-			throw new LinqException($"'{nameof(Str)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<string?>($"'{nameof(Str)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/STRING-ESCAPE-transact-sql">STRING_ESCAPE (Transact-SQL)</see></b></para>
@@ -3564,9 +3158,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "STRING_ESCAPE", ServerSideOnly=true, IgnoreGenericParameters=true)]
 		public static string? StringEscape(string? text, string? type)
-		{
-			throw new LinqException($"'{nameof(Str)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<string?>($"'{nameof(Str)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/STUFF-transact-sql">STUFF (Transact-SQL)</see></b></para>
@@ -3589,9 +3181,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "STUFF", ServerSideOnly=true, IgnoreGenericParameters=true)]
 		public static string? Stuff(string? character_expression, int? start, int? length, string? replaceWith_expression)
-		{
-			throw new LinqException($"'{nameof(Str)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<string?>($"'{nameof(Str)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/SUBSTRING-transact-sql">SUBSTRING (Transact-SQL)</see></b></para>
@@ -3611,9 +3201,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "SUBSTRING", ServerSideOnly=true, IgnoreGenericParameters=true)]
 		public static string? Substring(string? expression, int? start, int? length)
-		{
-			throw new LinqException($"'{nameof(Str)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<string?>($"'{nameof(Str)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/TRANSLATE-transact-sql">TRANSLATE (Transact-SQL)</see></b></para>
@@ -3629,9 +3217,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "TRANSLATE", ServerSideOnly=true, IgnoreGenericParameters=true)]
 		public static string? Translate(string? inputString, string? characters, string? translations)
-		{
-			throw new LinqException($"'{nameof(Translate)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<string?>($"'{nameof(Translate)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/TRIM-transact-sql">TRIM (Transact-SQL)</see></b></para>
@@ -3644,9 +3230,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "TRIM", ServerSideOnly=true)]
 		public static string? Trim(string? @string)
-		{
-			throw new LinqException($"'{nameof(Trim)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<string?>($"'{nameof(Trim)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/TRIM-transact-sql">TRIM (Transact-SQL)</see></b></para>
@@ -3662,9 +3246,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Expression(ProviderName.SqlServer, "TRIM({0} FROM {1})", ServerSideOnly=true)]
 		public static string? Trim(string characters, string? @string)
-		{
-			throw new LinqException($"'{nameof(Trim)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<string?>($"'{nameof(Trim)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/UNICODE-transact-sql">UNICODE (Transact-SQL)</see></b></para>
@@ -3675,9 +3257,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "UNICODE", ServerSideOnly=true)]
 		public static int? Unicode(string ncharacter_expression)
-		{
-			throw new LinqException($"'{nameof(Unicode)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<int?>($"'{nameof(Unicode)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/UPPER-transact-sql">UPPER (Transact-SQL)</see></b></para>
@@ -3690,9 +3270,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "UPPER", ServerSideOnly=true)]
 		public static string? Upper(string? character_expression)
-		{
-			throw new LinqException($"'{nameof(Upper)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<string?>($"'{nameof(Upper)}' is a server side only function.");
 
 		class CollateBuilder : Sql.IExtensionCallBuilder
 		{
@@ -3716,9 +3294,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Extension(ProviderName.SqlServer, "{string} COLLATE {collation_name}", ServerSideOnly=true, BuilderType=typeof(CollateBuilder))]
 		public static string? Collate([ExprParameter] string? @string, [SqlQueryDependent] string collation_name)
-		{
-			throw new LinqException($"'{nameof(Upper)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<string?>($"'{nameof(Upper)}' is a server side only function.");
 
 		#endregion
 
@@ -3865,9 +3441,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Expression(ProviderName.SqlServer, "BINARY_CHECKSUM(*)", ServerSideOnly=true)]
 		public static int BinaryCheckSum()
-		{
-			throw new LinqException($"'{nameof(BinaryCheckSum)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<int>($"'{nameof(BinaryCheckSum)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/BINARY-CHECKSUM-transact-sql">BINARY_CHECKSUM (Transact-SQL)</see></b></para>
@@ -3879,9 +3453,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "BINARY_CHECKSUM", ServerSideOnly=true)]
 		public static int BinaryCheckSum(params object[] expressions)
-		{
-			throw new LinqException($"'{nameof(BinaryCheckSum)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<int>($"'{nameof(BinaryCheckSum)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/CHECKSUM-transact-sql">CHECKSUM (Transact-SQL)</see></b></para>
@@ -3904,9 +3476,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Expression(ProviderName.SqlServer, "CHECKSUM(*)", ServerSideOnly=true)]
 		public static int CheckSum()
-		{
-			throw new LinqException($"'{nameof(CheckSum)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<int>($"'{nameof(CheckSum)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/CHECKSUM-transact-sql">CHECKSUM (Transact-SQL)</see></b></para>
@@ -3919,9 +3489,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "CHECKSUM", ServerSideOnly=true)]
 		public static int CheckSum(params object[] expressions)
-		{
-			throw new LinqException($"'{nameof(CheckSum)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<int>($"'{nameof(CheckSum)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/COMPRESS-transact-sql">COMPRESS (Transact-SQL)</see></b></para>
@@ -3947,9 +3515,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "COMPRESS", ServerSideOnly=true)]
 		public static byte[] Compress(string? expression)
-		{
-			throw new LinqException($"'{nameof(Compress)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<byte[]>($"'{nameof(Compress)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/COMPRESS-transact-sql">COMPRESS (Transact-SQL)</see></b></para>
@@ -3975,9 +3541,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "COMPRESS", ServerSideOnly=true)]
 		public static byte[] Compress(byte[]? expression)
-		{
-			throw new LinqException($"'{nameof(Compress)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<byte[]>($"'{nameof(Compress)}' is a server side only function.");
 
 		public enum ConnectionPropertyName
 		{
@@ -4000,9 +3564,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Extension(ProviderName.SqlServer, "CONNECTIONPROPERTY", ServerSideOnly=true, BuilderType=typeof(PropertyBuilder<ConnectionPropertyName>))]
 		public static object? ConnectionProperty([SqlQueryDependent] ConnectionPropertyName property)
-		{
-			throw new LinqException($"'{nameof(ConnectionProperty)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<object?>($"'{nameof(ConnectionProperty)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/CURRENT-REQUEST-ID-transact-sql">CURRENT_REQUEST_ID (Transact-SQL)</see></b></para>
@@ -4012,9 +3574,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "CURRENT_REQUEST_ID", ServerSideOnly=true)]
 		public static short CurrentRequestID()
-		{
-			throw new LinqException($"'{nameof(CurrentRequestID)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<short>($"'{nameof(CurrentRequestID)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/CURRENT-TRANSACTION-ID-transact-sql">CURRENT_TRANSACTION_ID (Transact-SQL)</see></b></para>
@@ -4024,9 +3584,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "CURRENT_TRANSACTION_ID", ServerSideOnly=true)]
 		public static long CurrentTransactionID()
-		{
-			throw new LinqException($"'{nameof(CurrentTransactionID)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<long>($"'{nameof(CurrentTransactionID)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/DECOMPRESS-transact-sql">DECOMPRESS (Transact-SQL)</see></b></para>
@@ -4038,9 +3596,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "DECOMPRESS", ServerSideOnly=true)]
 		public static byte[] Decompress(byte[] expression)
-		{
-			throw new LinqException($"'{nameof(Decompress)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<byte[]>($"'{nameof(Decompress)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/FORMATMESSAGE-transact-sql">FORMATMESSAGE (Transact-SQL)</see></b></para>
@@ -4054,9 +3610,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "FORMATMESSAGE", ServerSideOnly=true)]
 		public static string? FormatMessage(int msg_number, params object?[] param_values)
-		{
-			throw new LinqException($"'{nameof(FormatMessage)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<string?>($"'{nameof(FormatMessage)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/FORMATMESSAGE-transact-sql">FORMATMESSAGE (Transact-SQL)</see></b></para>
@@ -4074,9 +3628,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "FORMATMESSAGE", ServerSideOnly=true)]
 		public static string? FormatMessage(string msg_string, params object?[] param_values)
-		{
-			throw new LinqException($"'{nameof(FormatMessage)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<string?>($"'{nameof(FormatMessage)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/GETANSINULL-transact-sql">GETANSINULL (Transact-SQL)</see></b></para>
@@ -4088,9 +3640,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "GETANSINULL", ServerSideOnly=true)]
 		public static int? GetAnsiNull(string database)
-		{
-			throw new LinqException($"'{nameof(GetAnsiNull)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<int?>($"'{nameof(GetAnsiNull)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/GETANSINULL-transact-sql">GETANSINULL (Transact-SQL)</see></b></para>
@@ -4100,9 +3650,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "GETANSINULL", ServerSideOnly=true)]
 		public static int? GetAnsiNull()
-		{
-			throw new LinqException($"'{nameof(GetAnsiNull)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<int?>($"'{nameof(GetAnsiNull)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/HOST-ID-transact-sql">HOST_ID (Transact-SQL)</see></b></para>
@@ -4113,9 +3661,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "HOST_ID", ServerSideOnly=true)]
 		public static string HostID()
-		{
-			throw new LinqException($"'{nameof(HostID)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<string>($"'{nameof(HostID)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/HOST-NAME-transact-sql">HOST_NAME (Transact-SQL)</see></b></para>
@@ -4126,9 +3672,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "HOST_NAME", ServerSideOnly=true)]
 		public static string HostName()
-		{
-			throw new LinqException($"'{nameof(HostName)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<string>($"'{nameof(HostName)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/ISNULL-transact-sql">ISNULL (Transact-SQL)</see></b></para>
@@ -4144,9 +3688,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "ISNULL", ServerSideOnly=true, IgnoreGenericParameters=true)]
 		public static T IsNull<T>(T check_expression, T replacement_value)
-		{
-			throw new LinqException($"'{nameof(IsNull)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<T>($"'{nameof(IsNull)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/ISNUMERIC-transact-sql">ISNUMERIC (Transact-SQL)</see></b></para>
@@ -4158,9 +3700,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "ISNUMERIC", ServerSideOnly=true, IgnoreGenericParameters=true)]
 		public static int IsNumeric<T>(T expression)
-		{
-			throw new LinqException($"'{nameof(IsNumeric)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<int>($"'{nameof(IsNumeric)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/MIN-ACTIVE-ROWVERSION-transact-sql">MIN_ACTIVE_ROWVERSION (Transact-SQL)</see></b></para>
@@ -4171,9 +3711,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "MIN_ACTIVE_ROWVERSION", ServerSideOnly=true)]
 		public static byte[] MinActiveRowVersion()
-		{
-			throw new LinqException($"'{nameof(MinActiveRowVersion)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<byte[]>($"'{nameof(MinActiveRowVersion)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/NEWID-transact-sql">NEWID (Transact-SQL)</see></b></para>
@@ -4183,9 +3721,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "NEWID", ServerSideOnly=true)]
 		public static Guid NewID()
-		{
-			throw new LinqException($"'{nameof(NewID)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<Guid>($"'{nameof(NewID)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/ROWCOUNT-transact-sql">@@ROWCOUNT (Transact-SQL)</see></b></para>
@@ -4207,9 +3743,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "ROWCOUNT_BIG", ServerSideOnly=true)]
 		public static long RowCountBig()
-		{
-			throw new LinqException($"'{nameof(RowCountBig)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<long>($"'{nameof(RowCountBig)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/ROWCOUNT-BIG-transact-sql">XACT_STATE (Transact-SQL)</see></b></para>
@@ -4220,9 +3754,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="LinqException" />
 		[Sql.Function(ProviderName.SqlServer, "XACT_STATE", ServerSideOnly=true)]
 		public static short XactState()
-		{
-			throw new LinqException($"'{nameof(XactState)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<short>($"'{nameof(XactState)}' is a server side only function.");
 
 		#endregion
 

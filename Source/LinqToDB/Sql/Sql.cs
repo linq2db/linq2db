@@ -29,9 +29,7 @@ namespace LinqToDB
 		/// <returns></returns>
 		[Expression("*", ServerSideOnly = true, CanBeNull = false, Precedence = Precedence.Primary)]
 		public static object?[] AllColumns()
-		{
-			throw new LinqException("'AllColumns' is only server-side method.");
-		}
+			=> ThrowHelper.ThrowLinqException<object?[]>("'AllColumns' is only server-side method.");
 
 		/// <summary>
 		/// Generates 'DEFAULT' keyword, usable in inserts.
@@ -149,9 +147,7 @@ namespace LinqToDB
 		/// <returns></returns>
 		/// <exception cref="LinqException">'Property' is only server-side method.</exception>
 		public static T Property<T>(object? entity, [SqlQueryDependent] string propertyName)
-		{
-			throw new LinqException("'Property' is only server-side method.");
-		}
+			=> ThrowHelper.ThrowLinqException<T>("'Property' is only server-side method.");
 
 		/// <summary>
 		/// Used internally for keeping Alias information with expression.
