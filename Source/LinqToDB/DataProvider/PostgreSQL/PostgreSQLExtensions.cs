@@ -123,7 +123,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		[ExpressionMethod(nameof(UnnestWithOrdinalityImpl))]
 		public static IQueryable<Ordinality<T>> UnnestWithOrdinality<T>(this IDataContext dc, T[] array)
 			//TODO: can be executable when we finish queryable arrays
-			=> ThrowHelper.ThrowLinqException<IQueryable<T>>($"'{nameof(UnnestWithOrdinality)}' is server-side method.");
+			=> ThrowHelper.ThrowLinqException<IQueryable<Ordinality<T>>>($"'{nameof(UnnestWithOrdinality)}' is server-side method.");
 
 		static Expression<Func<IDataContext, T[], IQueryable<Ordinality<T>>>> UnnestWithOrdinalityImpl<T>()
 		{

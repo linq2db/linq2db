@@ -1046,9 +1046,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			int? year, int? month, int? day,
 			int? hour, int? minute, int? seconds, int? fractions,
 			int? hour_offset, int? minute_offset, int? precision)
-		{
-			ThrowHelper.ThrowLinqException<DateTimeOffset?>($"'{nameof(DateTimeOffsetFromParts)}' is a server side only function.");
-		}
+			=> ThrowHelper.ThrowLinqException<DateTimeOffset?>($"'{nameof(DateTimeOffsetFromParts)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/DATETIMEOFFSETFROMPARTS-transact-sql">DATETIMEOFFSETFROMPARTS (Transact-SQL)</see></b></para>

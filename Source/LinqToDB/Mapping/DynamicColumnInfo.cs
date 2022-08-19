@@ -134,12 +134,12 @@ namespace LinqToDB.Mapping
 
 		/// <inheritdoc cref="PropertyInfo.GetValue(object, BindingFlags, Binder, object[], CultureInfo)"/>
 		public override object GetValue(object? obj, BindingFlags invokeAttr, Binder? binder, object?[]? index, CultureInfo? culture)
-			=> throw new InvalidOperationException("SetValue on dynamic column is not to be called.");
+			=> ThrowHelper.ThrowInvalidOperationException<object>("SetValue on dynamic column is not to be called.");
 		
 		private T DummyGetter<T>()
-			=> throw new InvalidOperationException("Dynamic column getter is not to be called.");
+			=> ThrowHelper.ThrowInvalidOperationException<T>("Dynamic column getter is not to be called.");
 
 		private void DummySetter<T>(T value)
-			=> throw new InvalidOperationException("Dynamic column setter is not to be called.");
+			=> ThrowHelper.ThrowInvalidOperationException("Dynamic column setter is not to be called.");
 	}
 }

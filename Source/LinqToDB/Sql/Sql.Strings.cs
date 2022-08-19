@@ -103,7 +103,7 @@ namespace LinqToDB
 			[ExprParameter] string separator,
 			[ExprParameter] Func<T, string?> selector)
 		{
-			throw new LinqException($"'{nameof(StringAggregate)}' is server-side method.");
+			return ThrowHelper.ThrowLinqException<IAggregateFunctionNotOrdered<T, string>>($"'{nameof(StringAggregate)}' is server-side method.");
 		}
 
 		[Extension(PN.SqlServer2022, "STRING_AGG({selector}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ChainPrecedence = 10, BuilderType = typeof(StringAggSql2017Builder))]
@@ -156,7 +156,7 @@ namespace LinqToDB
 			[ExprParameter] this IEnumerable<string?> source,
 			[ExprParameter] string separator)
 		{
-			throw new LinqException($"'{nameof(StringAggregate)}' is server-side method.");
+			return ThrowHelper.ThrowLinqException<IAggregateFunctionNotOrdered<string?, string>>($"'{nameof(StringAggregate)}' is server-side method.");
 		}
 
 		#endregion
