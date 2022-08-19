@@ -1826,24 +1826,24 @@ namespace LinqToDB.Linq
 		// ClickHouse
 		//
 		[Sql.Function("toDate32", ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
-		private static DateTime? ClickHouseGetDate(DateTimeOffset? dto) => throw new InvalidOperationException();
+		private static DateTime? ClickHouseGetDate(DateTimeOffset? dto) => ThrowHelper.ThrowLinqException<DateTime?>();
 		[Sql.Function("toDate32", ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
-		private static DateTime? ClickHouseGetDate(DateTime?       dt) => throw new InvalidOperationException();
+		private static DateTime? ClickHouseGetDate(DateTime?       dt) => ThrowHelper.ThrowLinqException<DateTime?>();
 
 		// :-/
 		[Sql.Expression("toInt64((toUnixTimestamp64Nano(toDateTime64({0}, 7)) - toUnixTimestamp64Nano(toDateTime64(toDate32({0}), 7))) / 100)", ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable, Precedence = SqlQuery.Precedence.Primary)]
-		private static TimeSpan? ClickHouseGetTime(DateTimeOffset? dto) => throw new InvalidOperationException();
+		private static TimeSpan? ClickHouseGetTime(DateTimeOffset? dto) => ThrowHelper.ThrowLinqException<TimeSpan?>();
 		[Sql.Expression("toInt64((toUnixTimestamp64Nano(toDateTime64({0}, 7)) - toUnixTimestamp64Nano(toDateTime64(toDate32({0}), 7))) / 100)", ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable, Precedence = SqlQuery.Precedence.Primary)]
-		private static TimeSpan? ClickHouseGetTime(DateTime? dt) => throw new InvalidOperationException();
+		private static TimeSpan? ClickHouseGetTime(DateTime? dt) => ThrowHelper.ThrowLinqException<TimeSpan?>();
 
 		[Sql.Function("roundBankers", IsNullable = Sql.IsNullableType.SameAsFirstParameter)]
-		private static decimal? ClickHouseRoundToEven(decimal? value) => throw new InvalidOperationException();
+		private static decimal? ClickHouseRoundToEven(decimal? value) => ThrowHelper.ThrowLinqException<decimal?>();
 		[Sql.Function("roundBankers", IsNullable = Sql.IsNullableType.SameAsFirstParameter)]
-		private static double? ClickHouseRoundToEven(double? value) => throw new InvalidOperationException();
+		private static double? ClickHouseRoundToEven(double? value) => ThrowHelper.ThrowLinqException<double?>();
 		[Sql.Function("roundBankers", IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
-		private static decimal? ClickHouseRoundToEven(decimal? value, int? precision) => throw new InvalidOperationException();
+		private static decimal? ClickHouseRoundToEven(decimal? value, int? precision) => ThrowHelper.ThrowLinqException<decimal?>();
 		[Sql.Function("roundBankers", IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
-		private static double? ClickHouseRoundToEven(double? value, int? precision) => throw new InvalidOperationException();
+		private static double? ClickHouseRoundToEven(double? value, int? precision) => ThrowHelper.ThrowLinqException<double?>();
 
 		#endregion
 

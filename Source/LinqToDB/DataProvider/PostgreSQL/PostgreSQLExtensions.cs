@@ -106,10 +106,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 #if !NET45
 		[ExpressionMethod(nameof(UnnestImpl))]
 		public static IQueryable<T> Unnest<T>(this IDataContext dc, T[] array)
-		{
 			//TODO: can be executable when we finish queryable arrays
-			throw new LinqException($"'{nameof(Unnest)}' is server-side method.");
-		}
+			=> ThrowHelper.ThrowLinqException<IQueryable<T>>($"'{nameof(Unnest)}' is server-side method.");
 
 		static Expression<Func<IDataContext, T[], IQueryable<T>>> UnnestImpl<T>()
 		{
@@ -124,10 +122,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		[ExpressionMethod(nameof(UnnestWithOrdinalityImpl))]
 		public static IQueryable<Ordinality<T>> UnnestWithOrdinality<T>(this IDataContext dc, T[] array)
-		{
 			//TODO: can be executable when we finish queryable arrays
-			throw new LinqException($"'{nameof(UnnestWithOrdinality)}' is server-side method.");
-		}
+			=> ThrowHelper.ThrowLinqException<IQueryable<T>>($"'{nameof(UnnestWithOrdinality)}' is server-side method.");
 
 		static Expression<Func<IDataContext, T[], IQueryable<Ordinality<T>>>> UnnestWithOrdinalityImpl<T>()
 		{
@@ -331,10 +327,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 #if !NET45
 		[ExpressionMethod(nameof(GenerateSubscriptsImpl))]
 		public static IQueryable<int> GenerateSubscripts<T>(this IDataContext dc, T[] array, int dimension)
-		{
 			//TODO: can be executable when we finish queryable arrays
-			throw new LinqException($"'{nameof(GenerateSubscripts)}' is server-side method.");
-		}
+			=> ThrowHelper.ThrowLinqException<IQueryable<int>>($"'{nameof(GenerateSubscripts)}' is server-side method.");
 
 		static Expression<Func<IDataContext, T[], int, IQueryable<int>>> GenerateSubscriptsImpl<T>()
 		{
@@ -343,10 +337,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		[ExpressionMethod(nameof(GenerateSubscriptsReverseImpl))]
 		public static IQueryable<int> GenerateSubscripts<T>(this IDataContext dc, T[] array, int dimension, bool reverse)
-		{
 			//TODO: can be executable when we finish queryable arrays
-			throw new LinqException($"'{nameof(GenerateSubscripts)}' is server-side method.");
-		}
+			=> ThrowHelper.ThrowLinqException<IQueryable<int>>($"'{nameof(GenerateSubscripts)}' is server-side method.");
 
 		static Expression<Func<IDataContext, T[], int, bool, IQueryable<int>>> GenerateSubscriptsReverseImpl<T>()
 		{

@@ -766,6 +766,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <param name="replacementValue">Value to replace.</param>
 		/// <returns>Function returns a replacementValue if the value is NULL.</returns>
 		[Sql.Extension("ISNULL({value}, {replacementValue})", ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAllParametersNullable)]
-		public static T IsNull<T>(this ISqlServerExtensions? ext, [ExprParameter] T? value, [ExprParameter] T? replacementValue) => throw new LinqException($"'{nameof(IsNull)}' is server - side method.");
+		public static T IsNull<T>(this ISqlServerExtensions? ext, [ExprParameter] T? value, [ExprParameter] T? replacementValue) 
+			=> ThrowHelper.ThrowLinqException<T>($"'{nameof(IsNull)}' is server - side method.");
 	}
 }

@@ -416,9 +416,7 @@ namespace LinqToDB
 		[Sql.Extension("{function} FILTER (WHERE {filter})", TokenName = FunctionToken, ChainPrecedence = 2, IsWindowFunction = true)]
 		public static IAnalyticFunctionWithoutWindow<T> Filter<T>(this IAnalyticFunctionWithoutWindow<T> func,
 			[ExprParameter] bool filter)
-		{
-			throw new LinqException($"'{nameof(Filter)}' is server-side method.");
-		}
+			=> ThrowHelper.ThrowLinqException<IAnalyticFunctionWithoutWindow<T>>($"'{nameof(Filter)}' is server-side method.");
 
 		#endregion
 
