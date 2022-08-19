@@ -1940,7 +1940,8 @@ namespace LinqToDB.Linq.Builder
 			{
 				l = new SqlFunction(typeof(bool), "CASE", l, new SqlValue(true), new SqlValue(false))
 				{
-					CanBeNull = false
+					CanBeNull     = false,
+					DoNotOptimize = true
 				};
 			}
 
@@ -1948,7 +1949,8 @@ namespace LinqToDB.Linq.Builder
 			{
 				r = new SqlFunction(typeof(bool), "CASE", r, new SqlValue(true), new SqlValue(false))
 				{
-					CanBeNull = false
+					CanBeNull     = false,
+					DoNotOptimize = true
 				};
 			}
 
