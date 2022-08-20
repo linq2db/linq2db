@@ -562,7 +562,8 @@ namespace LinqToDB.Expressions
 				null                        => true,
 				ExpressionType.Convert      => IsEvaluable(((UnaryExpression)expression).Operand, mappingSchema),
 				ExpressionType.Default      => true,
-				ExpressionType.Constant     => true,
+				// don't return true for closure classes
+				ExpressionType.Constant     => expression is ConstantExpression c && (c.Value == null || c.Value is string || c.Value.GetType().IsValueType),
 				ExpressionType.MemberAccess => ((MemberExpression)expression).Member.GetExpressionAttribute(mappingSchema)?.ServerSideOnly != true && IsEvaluable(((MemberExpression)expression).Expression, mappingSchema),
 				_                           => false,
 			};
@@ -625,7 +626,7 @@ namespace LinqToDB.Expressions
 						newExpr = Expression.Constant(unary.EvaluateExpression());
 						break;
 					}
-					case MemberExpression { Expression.NodeType: ExpressionType.Constant } me:
+					case MemberExpression { Expression.NodeType: ExpressionType.Constant } me when IsEvaluable(me.Expression, mappingSchema):
 					{
 						newExpr = Expression.Constant(me.EvaluateExpression());
 						break;
