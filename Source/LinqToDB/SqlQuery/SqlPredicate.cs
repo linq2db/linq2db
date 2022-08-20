@@ -35,6 +35,13 @@ namespace LinqToDB.SqlQuery
 
 			public ISqlExpression Expr1 { get; set; }
 
+			public override bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer)
+			{
+				return other is Expr expr
+					&& Precedence == expr.Precedence
+					&& Expr1.Equals(expr.Expr1, comparer);
+			}
+
 			protected override void Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 			{
 				Expr1 = Expr1.Walk(options, context, func)!;
@@ -66,6 +73,13 @@ namespace LinqToDB.SqlQuery
 			public bool CanInvert() => true;
 
 			public abstract IQueryElement Invert();
+
+			public override bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer)
+			{
+				return other is BaseNotExpr expr
+					&& IsNot == expr.IsNot
+					&& base.Equals(other, comparer);
+			}
 
 			protected override void ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
 			{
@@ -106,6 +120,15 @@ namespace LinqToDB.SqlQuery
 			public ISqlExpression Expr2    { get; internal set; }
 
 			public bool? WithNull          { get; }
+
+			public override bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer)
+			{
+				return other is ExprExpr expr
+					&& WithNull == expr.WithNull
+					&& Operator == expr.Operator
+					&& Expr2.Equals(expr.Expr2, comparer)
+					&& base.Equals(other, comparer);
+			}
 
 			protected override void Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 			{
@@ -348,9 +371,19 @@ namespace LinqToDB.SqlQuery
 				FunctionName = functionName;
 			}
 
-			public ISqlExpression  Expr2     { get; internal set; }
-			public ISqlExpression? Escape    { get; internal set; }
+			public ISqlExpression  Expr2        { get; internal set; }
+			public ISqlExpression? Escape       { get; internal set; }
 			public string?         FunctionName { get; internal set; }
+
+			public override bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer)
+			{
+				return other is Like expr
+					&& FunctionName == expr.FunctionName
+					&& Expr2.Equals(expr.Expr2, comparer)
+					&& (   (Escape != null && expr.Escape != null && Escape.Equals(expr.Escape, comparer))
+						|| (Escape == null && expr.Escape == null))
+					&& base.Equals(other, comparer);
+			}
 
 			protected override void Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 			{
@@ -409,6 +442,15 @@ namespace LinqToDB.SqlQuery
 			public SearchKind     Kind          { get; }
 			public ISqlExpression CaseSensitive { get; }
 
+			public override bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer)
+			{
+				return other is SearchString expr
+					&& Kind == expr.Kind
+					&& Expr2.Equals(expr.Expr2, comparer)
+					&& CaseSensitive.Equals(expr.CaseSensitive, comparer)
+					&& base.Equals(other, comparer);
+			}
+
 			protected override void Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 			{
 				base.Walk(options, context, func);
@@ -458,6 +500,13 @@ namespace LinqToDB.SqlQuery
 
 			public ISqlExpression Expr2 { get; internal set; }
 
+			public override bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer)
+			{
+				return other is IsDistinct expr
+					&& Expr2.Equals(expr.Expr2, comparer)
+					&& base.Equals(other, comparer);
+			}
+
 			protected override void Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 			{
 				base.Walk(options, context, func);
@@ -490,6 +539,14 @@ namespace LinqToDB.SqlQuery
 
 			public ISqlExpression Expr2 { get; internal set; }
 			public ISqlExpression Expr3 { get; internal set; }
+
+			public override bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer)
+			{
+				return other is Between expr
+					&& Expr2.Equals(expr.Expr2, comparer)
+					&& Expr3.Equals(expr.Expr3, comparer)
+					&& base.Equals(other, comparer);
+			}
 
 			protected override void Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 			{
@@ -529,9 +586,18 @@ namespace LinqToDB.SqlQuery
 			public IsTrue(ISqlExpression exp1, ISqlExpression trueValue, ISqlExpression falseValue, bool? withNull, bool isNot)
 				: base(exp1, isNot, SqlQuery.Precedence.Comparison)
 			{
-				TrueValue    = trueValue;
-				FalseValue   = falseValue;
-				WithNull = withNull;
+				TrueValue  = trueValue;
+				FalseValue = falseValue;
+				WithNull   = withNull;
+			}
+
+			public override bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer)
+			{
+				return other is IsTrue expr
+					&& WithNull == expr.WithNull
+					&& TrueValue.Equals(expr.TrueValue, comparer)
+					&& FalseValue.Equals(expr.FalseValue, comparer)
+					&& base.Equals(other, comparer);
 			}
 
 			protected override void ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
@@ -605,6 +671,13 @@ namespace LinqToDB.SqlQuery
 
 			public SelectQuery SubQuery { get; private set; }
 
+			public override bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer)
+			{
+				return other is InSubQuery expr
+					&& SubQuery.Equals(expr.SubQuery, comparer)
+					&& base.Equals(other, comparer);
+			}
+
 			protected override void Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 			{
 				base.Walk(options, context, func);
@@ -657,6 +730,21 @@ namespace LinqToDB.SqlQuery
 
 			public   List<ISqlExpression>  Values { get; } = new List<ISqlExpression>();
 
+			public override bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer)
+			{
+				if (other is not InList expr
+					|| WithNull != expr.WithNull
+					|| Values.Count != expr.Values.Count
+					|| !base.Equals(other, comparer))
+					return false;
+
+				for (var i = 0; i < Values.Count; i++)
+					if (Values[i].Equals(expr.Values[i], comparer))
+						return false;
+
+				return true;
+			}
+
 			protected override void Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 			{
 				base.Walk(options, context, func);
@@ -706,6 +794,12 @@ namespace LinqToDB.SqlQuery
 
 			public SqlFunction Function { get; private set; }
 
+			public override bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer)
+			{
+				return other is FuncLike expr
+					&& Function.Equals(expr.Function, comparer);
+			}
+
 			protected override void Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 			{
 				Function = (SqlFunction)((ISqlExpression)Function).Walk(options, context, func)!;
@@ -741,10 +835,11 @@ namespace LinqToDB.SqlQuery
 
 		#region IPredicate Members
 
-		public             int               Precedence { get; }
+		public int               Precedence { get; }
 
-		public    abstract bool              CanBeNull  { get; }
-		protected abstract void              Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func);
+		public    abstract bool  CanBeNull  { get; }
+		public abstract bool     Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer);
+		protected abstract void  Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func);
 
 		ISqlExpression? ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
