@@ -244,10 +244,9 @@ namespace LinqToDB.Expressions
 				catch (Exception ex)
 				{
 					var name = dataReader.GetName(ColumnIndex);
-					throw new LinqToDBConvertException($"Mapping of column '{name}' value failed, see inner exception for details", ex)
-					{
-						ColumnName = name
-					};
+					return ThrowHelper.ThrowLinqToDBConvertException<object>(
+						$"Mapping of column '{name}' value failed, see inner exception for details",
+						ex, name);
 				}
 			}
 
@@ -314,10 +313,9 @@ namespace LinqToDB.Expressions
 				catch (Exception ex)
 				{
 					var name = dataReader.GetName(ColumnIndex);
-					throw new LinqToDBConvertException($"Mapping of column '{name}' value failed, see inner exception for details", ex)
-					{
-						ColumnName = name
-					};
+					return ThrowHelper.ThrowLinqToDBConvertException<object>(
+						$"Mapping of column '{name}' value failed, see inner exception for details",
+						ex, name);
 				}
 			}
 

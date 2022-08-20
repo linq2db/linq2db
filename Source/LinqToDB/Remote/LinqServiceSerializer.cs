@@ -471,7 +471,7 @@ namespace LinqToDB.Remote
 					{
 						TypeIndex      => ResolveType(ReadString())!,
 						TypeArrayIndex => GetArrayType(Read<Type>()!),
-						_              => throw new SerializationException(
+						_              => ThrowHelper.ThrowSerializationException<Type>(
 							$"TypeIndex or TypeArrayIndex ({TypeIndex} or {TypeArrayIndex}) expected, but was {typecode}"),
 					};
 					ObjectIndices.Add(idx, type);
@@ -480,7 +480,7 @@ namespace LinqToDB.Remote
 
 					var idx2 = ReadInt();
 					if (idx2 != idx)
-						throw new SerializationException($"Wrong type reading, expected index is {idx} but was {idx2}");
+						ThrowHelper.ThrowSerializationException($"Wrong type reading, expected index is {idx} but was {idx2}");
 				}
 
 				return (Type?) type;

@@ -11,6 +11,8 @@ using System.Threading;
 
 #pragma warning disable IDE0160 // Convert to block scoped namespace
 namespace LinqToDB;
+
+using System.Runtime.Serialization;
 #pragma warning restore IDE0160 // Convert to block scoped namespace
 
 using Common;
@@ -482,6 +484,22 @@ internal static partial class ThrowHelper
 	}
 
 	/// <summary>
+	/// Throws a new <see cref="LinqToDBConvertException"/>.
+	/// </summary>
+	/// <param name="message">The message to include in the exception.</param>
+	/// <param name="innerException">The inner <see cref="Exception"/> to include.</param>
+	/// <param name="columnName">The column which had a conversion issue.</param>
+	/// <exception cref="LinqToDBConvertException">Thrown with the specified parameter.</exception>
+	[DoesNotReturn]
+	public static void ThrowLinqToDBConvertException(string message, Exception innerException, string columnName)
+	{
+		throw new LinqToDBConvertException(message, innerException)
+		{
+			ColumnName = columnName,
+		};
+	}
+
+	/// <summary>
 	/// Throws a new <see cref="LockRecursionException"/>.
 	/// </summary>
 	/// <exception cref="LockRecursionException">Thrown with no parameters.</exception>
@@ -883,6 +901,39 @@ internal static partial class ThrowHelper
 	public static void ThrowPlatformNotSupportedException(string? message, Exception? innerException)
 	{
 		throw new PlatformNotSupportedException(message, innerException);
+	}
+
+	/// <summary>
+	/// Throws a new <see cref="SerializationException"/>.
+	/// </summary>
+	/// <exception cref="SerializationException">Thrown with no parameters.</exception>
+	[DoesNotReturn]
+	public static void ThrowSerializationException()
+	{
+		throw new SerializationException();
+	}
+
+	/// <summary>
+	/// Throws a new <see cref="SerializationException"/>.
+	/// </summary>
+	/// <param name="message">The message to include in the exception.</param>
+	/// <exception cref="SerializationException">Thrown with the specified parameter.</exception>
+	[DoesNotReturn]
+	public static void ThrowSerializationException(string message)
+	{
+		throw new SerializationException(message);
+	}
+
+	/// <summary>
+	/// Throws a new <see cref="SerializationException"/>.
+	/// </summary>
+	/// <param name="message">The message to include in the exception.</param>
+	/// <param name="innerException">The inner <see cref="Exception"/> to include.</param>
+	/// <exception cref="SerializationException">Thrown with the specified parameter.</exception>
+	[DoesNotReturn]
+	public static void ThrowSerializationException(string message, Exception innerException)
+	{
+		throw new SerializationException(message, innerException);
 	}
 
 	/// <summary>
@@ -1540,6 +1591,22 @@ internal static partial class ThrowHelper
 	}
 
 	/// <summary>
+	/// Throws a new <see cref="LinqToDBConvertException"/>.
+	/// </summary>
+	/// <param name="message">The message to include in the exception.</param>
+	/// <param name="innerException">The inner <see cref="Exception"/> to include.</param>
+	/// <param name="columnName">The column which had a conversion issue.</param>
+	/// <exception cref="LinqToDBConvertException">Thrown with the specified parameter.</exception>
+	[DoesNotReturn]
+	public static T ThrowLinqToDBConvertException<T>(string message, Exception innerException, string columnName)
+	{
+		throw new LinqToDBConvertException(message, innerException)
+		{
+			ColumnName = columnName,
+		};
+	}
+
+	/// <summary>
 	/// Throws a new <see cref="LockRecursionException"/>.
 	/// </summary>
 	/// <typeparam name="T">The type of expected result.</typeparam>
@@ -2013,6 +2080,42 @@ internal static partial class ThrowHelper
 	public static T ThrowPlatformNotSupportedException<T>(string? message, Exception? innerException)
 	{
 		throw new PlatformNotSupportedException(message, innerException);
+	}
+
+	/// <summary>
+	/// Throws a new <see cref="SerializationException"/>.
+	/// </summary>
+	/// <typeparam name="T">The type of expected result.</typeparam>
+	/// <exception cref="SerializationException">Thrown with no parameters.</exception>
+	[DoesNotReturn]
+	public static T ThrowSerializationException<T>()
+	{
+		throw new SerializationException();
+	}
+
+	/// <summary>
+	/// Throws a new <see cref="SerializationException"/>.
+	/// </summary>
+	/// <typeparam name="T">The type of expected result.</typeparam>
+	/// <param name="message">The message to include in the exception.</param>
+	/// <exception cref="SerializationException">Thrown with the specified parameter.</exception>
+	[DoesNotReturn]
+	public static T ThrowSerializationException<T>(string message)
+	{
+		throw new SerializationException(message);
+	}
+
+	/// <summary>
+	/// Throws a new <see cref="SerializationException"/>.
+	/// </summary>
+	/// <typeparam name="T">The type of expected result.</typeparam>
+	/// <param name="message">The message to include in the exception.</param>
+	/// <param name="innerException">The inner <see cref="Exception"/> to include.</param>
+	/// <exception cref="SerializationException">Thrown with the specified parameter.</exception>
+	[DoesNotReturn]
+	public static T ThrowSerializationException<T>(string message, Exception innerException)
+	{
+		throw new SerializationException(message, innerException);
 	}
 
 	/// <summary>
