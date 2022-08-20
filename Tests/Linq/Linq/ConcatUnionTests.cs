@@ -1534,6 +1534,9 @@ namespace Tests.Linq
 			Assert.IsNull(pat.Patient);
 		}
 
+		// ClickHouse developers themself doesn't know how their aliases work, so there will be no workaround
+		// from our side. User should use names carefully in queries
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/23194", Configuration = TestProvName.AllClickHouse)]
 		[Test]
 		public void Issue3369Test([DataSources] string context)
 		{
