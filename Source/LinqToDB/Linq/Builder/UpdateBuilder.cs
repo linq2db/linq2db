@@ -620,31 +620,30 @@ namespace LinqToDB.Linq.Builder
 			{
 				var updateStatement = (SqlUpdateStatement)Statement!;
 
-				if (updateStatement.SelectQuery.From.Tables.Count > 0 && updateStatement.SelectQuery.From.Tables[0].Source is SelectQuery)
-				{
-					var expr   = BuildExpression(null, 0, false);
+				var expr   = BuildExpression(null, 0, false);
+				var mapper = Builder.BuildMapper<T>(expr);
 
+				if (updateStatement.SelectQuery.From.Tables.Count > 0
+					&& updateStatement.SelectQuery.From.Tables[0].Source is SelectQuery sourceQuery
+					&& sourceQuery.Select.Columns.Count > 0)
+				{
+					// TODO: better fix?
+					// for "UPDATE qry FROM qry(T)" we must check that output doesn't include missing field from qry
+					// e.g. see Issue3044UpdateOutputWithTake2 test and TableWithData.Value field
 					var setColumns = new HashSet<string>();
 
-					foreach (var item in updateStatement.Update.Items)
-					{
-						switch (item.Column)
-						{
-							case SqlColumn { Expression : SqlField field } :
-								setColumns.Add(field.PhysicalName);
-								break;
-							case SqlField field :
-								setColumns.Add(field.PhysicalName);
-								break;
-						}
-					}
+					foreach (var col in sourceQuery.Select.Columns)
+						setColumns.Add(col.Alias!);
 
 					var columns = new List<ISqlExpression>(Sequence[0].SelectQuery.Select.Columns.Count);
 
 					foreach (var c in Sequence[0].SelectQuery.Select.Columns)
-						columns.Add(c.Expression);
-
-					var mapper = Builder.BuildMapper<T>(expr);
+					{
+						if (c.Expression is SqlField f && !setColumns.Contains(f.PhysicalName))
+							columns.Add(new SqlExpression(c.Expression.SystemType!, $"NULL /* {f.PhysicalName} */"));
+						else
+							columns.Add(c.Expression);
+					}
 
 					updateStatement.Output!.OutputColumns = columns;
 
@@ -652,8 +651,6 @@ namespace LinqToDB.Linq.Builder
 				}
 				else
 				{
-					var expr   = BuildExpression(null, 0, false);
-					var mapper = Builder.BuildMapper<T>(expr);
 
 					var columns = new List<ISqlExpression>(Sequence[0].SelectQuery.Select.Columns.Count);
 
