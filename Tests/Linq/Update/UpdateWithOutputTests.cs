@@ -17,9 +17,9 @@ namespace Tests.xUpdate
 		private const string FeatureUpdateOutputWithOldSingle                      = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird}";
 		private const string FeatureUpdateOutputWithOldSingleNoAlternateRewrite    = $"{TestProvName.AllSqlServer}";
 		private const string FeatureUpdateOutputWithOldMultiple                    = $"{TestProvName.AllSqlServer}";
-		private const string FeatureUpdateOutputWithoutOldSingle                   = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLiteClassic}";
+		private const string FeatureUpdateOutputWithoutOldSingle                   = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite}";
 		private const string FeatureUpdateOutputWithoutOldSingleNoAlternateRewrite = $"{TestProvName.AllSqlServer},{TestProvName.AllPostgreSQL}";
-		private const string FeatureUpdateOutputWithoutOldMultiple                 = $"{TestProvName.AllSqlServer},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLiteClassic}";
+		private const string FeatureUpdateOutputWithoutOldMultiple                 = $"{TestProvName.AllSqlServer},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite}";
 		private const string FeatureUpdateOutputInto                               = $"{TestProvName.AllSqlServer}";
 
 		class UpdateOutputComparer<T> : IEqualityComparer<UpdateOutput<T>>
