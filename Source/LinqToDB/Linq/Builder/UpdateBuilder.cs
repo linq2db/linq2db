@@ -622,7 +622,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (updateStatement.SelectQuery.From.Tables.Count > 0 && updateStatement.SelectQuery.From.Tables[0].Source is SelectQuery)
 				{
-				var expr   = BuildExpression(null, 0, false);
+					var expr   = BuildExpression(null, 0, false);
 
 					var setColumns = new HashSet<string>();
 
@@ -639,17 +639,12 @@ namespace LinqToDB.Linq.Builder
 						}
 					}
 
-					var columns = new List<ISqlExpression>();
+					var columns = new List<ISqlExpression>(Sequence[0].SelectQuery.Select.Columns.Count);
 
 					foreach (var c in Sequence[0].SelectQuery.Select.Columns)
-					{
-						if (c.Expression is SqlField f && !setColumns.Contains(f.PhysicalName))
-							columns.Add(new SqlExpression(c.Expression.SystemType!, $"NULL /* {f.PhysicalName} */"));
-						else
-							columns.Add(c.Expression);
-					}
+						columns.Add(c.Expression);
 
-				var mapper = Builder.BuildMapper<T>(expr);
+					var mapper = Builder.BuildMapper<T>(expr);
 
 					updateStatement.Output!.OutputColumns = columns;
 
@@ -660,11 +655,16 @@ namespace LinqToDB.Linq.Builder
 					var expr   = BuildExpression(null, 0, false);
 					var mapper = Builder.BuildMapper<T>(expr);
 
-					updateStatement.Output!.OutputColumns = Sequence[0].SelectQuery.Select.Columns.Select(c => c.Expression).ToList();
+					var columns = new List<ISqlExpression>(Sequence[0].SelectQuery.Select.Columns.Count);
 
-				QueryRunner.SetRunQuery(query, mapper);
+					foreach (var c in Sequence[0].SelectQuery.Select.Columns)
+						columns.Add(c.Expression);
+
+					updateStatement.Output!.OutputColumns = columns;
+
+					QueryRunner.SetRunQuery(query, mapper);
+				}
 			}
-		}
 		}
 		#endregion
 

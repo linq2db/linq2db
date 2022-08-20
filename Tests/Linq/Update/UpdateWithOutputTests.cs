@@ -2454,6 +2454,46 @@ namespace Tests.xUpdate
 					new UpdateOutputComparer<TableWithData>());
 			}
 		}
+
+		[Table]
+		public class Test3697
+		{
+			[Identity, PrimaryKey] public int Id { get; set; }
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(Test3697Item.TestId))]
+			public List<Test3697Item> Items { get; set; } = null!;
+		}
+
+		[Table]
+		public class Test3697Item
+		{
+			[Identity, PrimaryKey] public int Id     { get; set; }
+			[Column              ] public int Value  { get; set; }
+			[Column              ] public int TestId { get; set; }
+		}
+
+		[Test]
+		public void Issue3697Test([IncludeDataSources(true, FeatureUpdateOutputWithoutOldSingle)] string context)
+		{
+			using var db      = GetDataContext(context);
+			using var records = db.CreateLocalTable<Test3697>();
+			db.Insert(new Test3697() { Id = 1 });
+			using var items   = db.CreateLocalTable(new[] { new Test3697Item() { Id = 2, Value = 3, TestId = 1 } });
+
+			var result = records.SelectMany(a => a.Items)
+				.UpdateWithOutput(a => new Test3697Item() { Value = 1 }, (d, i) => i.Id)
+				.ToArray();
+
+			Assert.AreEqual(1, result.Length);
+			Assert.AreEqual(1, result[0]);
+
+			result = records.InnerJoin(items, (a, b) => a.Id == b.TestId, (a, b) => b)
+				.UpdateWithOutput(a => new Test3697Item() { Value = 1 }, (d, i) => i.Id)
+				.ToArray();
+
+			Assert.AreEqual(1, result.Length);
+			Assert.AreEqual(1, result[0]);
+		}
 		#endregion
 	}
 }
