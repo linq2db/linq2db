@@ -327,9 +327,15 @@ namespace LinqToDB.Linq.Builder
 						}
 					}
 
+					//var parameters = context.Builder.ParametersContext.CurrentSqlParameters
+					//	.Select((p, i) => (p, i))
+					//	.GroupBy(_ => _.p.Expression, ExpressionEqualityComparer.Instance)
+					//	.ToDictionary(_ => _.Key, _ => _.Select(_ => _.i).First(), ExpressionEqualityComparer.Instance);
+
 					var parameters = context.Builder.ParametersContext.CurrentSqlParameters
 						.Select((p, i) => (p, i))
-						.ToDictionary(_ => _.p.Expression, _ => _.i, ExpressionEqualityComparer.Instance);
+						.ToDictionary(_ => _.p.Expression, _ => _.i);
+
 					var paramArray = Expression.Parameter(typeof(object[]), "ps");
 
 					var groupExpression = context._sequenceExpr.Transform(
