@@ -60,8 +60,9 @@
 		<PackageVersion Include="MiniProfiler.Shared"                                   Version="4.2.22"        />
 		<!--don't update due to https://github.com/OData/WebApi/issues/2653-->
 		<PackageVersion Include="Microsoft.AspNet.OData"                                Version="7.5.14"        />
+		<!--don't update due to https://github.com/OData/AspNetCoreOData/issues/420#issuecomment-1219208060-->
 		<PackageVersion Include="Microsoft.AspNetCore.OData"                            Version="8.0.4"         />
-		<PackageVersion Include="NodaTime"                                              Version="3.1.1"         />
+		<PackageVersion Include="NodaTime"                                              Version="3.1.2"         />
 		<PackageVersion Include="Humanizer.Core"                                        Version="2.14.1"        />
 		<PackageVersion Include="System.Linq.Dynamic.Core"                              Version="1.2.19"        />
 		<PackageVersion Include="dotMorten.Microsoft.SqlServer.Types"                    Version="1.5.0"         />
