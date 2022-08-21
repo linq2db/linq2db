@@ -87,7 +87,7 @@ namespace LinqToDB.DataProvider.Access
 					Name        = c.Field<string>("COLUMN_NAME")!,
 					IsNullable  = c.Field<short> ("NULLABLE") == 1,
 					Ordinal     = Converter.ChangeTypeTo<int>(c["ORDINAL_POSITION"]),
-					DataType    = dt?.TypeName,
+					DataType    = dt?.TypeName ?? typeName,
 					Length      = dt?.CreateParameters != null && dt.CreateParameters.Contains("length") && size != 0 ? size  : null,
 					Precision   = dt?.CreateParameters != null && dt.CreateParameters.Contains("precision")           ? size  : null,
 					Scale       = dt?.CreateParameters != null && dt.CreateParameters.Contains("scale")               ? scale : null,
@@ -198,6 +198,17 @@ namespace LinqToDB.DataProvider.Access
 					TypeName         = "BIGBINARY",
 					DataType         = typeof(byte[]).FullName!,
 					ProviderDbType   = 9,
+				});
+			}
+
+			if (dts.All(dt => dt.TypeName != "DECIMAL"))
+			{
+				dts.Add(new DataTypeInfo()
+				{
+					TypeName         = "DECIMAL",
+					DataType         = typeof(decimal).FullName!,
+					CreateParameters = "precision,scale",
+					ProviderDbType   = 7,
 				});
 			}
 

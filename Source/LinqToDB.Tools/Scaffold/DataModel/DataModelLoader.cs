@@ -201,6 +201,7 @@ Changes to this file may cause incorrect behavior and will be lost if the code i
 			mapping = _interceptors.GetTypeMapping(databaseType, _languageProvider.TypeParser, mapping);
 			if (mapping == null)
 			{
+				// TODO: use logger
 				Console.Error.WriteLine($"Database type {databaseType} cannot be mapped to know .NET type and will be mapped to System.Object. You can specify .NET type for this database type manually using {nameof(ScaffoldInterceptors)}.{nameof(ScaffoldInterceptors.GetTypeMapping)} interceptor");
 				mapping = _unmappedType;
 			}

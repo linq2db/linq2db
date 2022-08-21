@@ -459,7 +459,7 @@ namespace LinqToDB.Schema
 		{
 			// debug asserts
 			if (string.IsNullOrWhiteSpace(column.ColumnName))
-				throw new InvalidOperationException($"ColumnName not provided by schema for table {tableName}");
+				throw new InvalidOperationException($"ColumnName not provided by schema for column in table {tableName}");
 			if (string.IsNullOrWhiteSpace(column.ColumnType))
 			{
 				// sqlite schema provider could return column without type
@@ -470,10 +470,11 @@ namespace LinqToDB.Schema
 					column.ColumnType = "NUMERIC";
 				}
 				else
-					throw new InvalidOperationException($"ColumnType not provided by schema for table {tableName}");
+					// TODO: use logger
+					Console.Error.WriteLine($"ColumnType not provided by schema for column {tableName}.{column.ColumnName}");
 			}
 
-			var type = new DatabaseType(column.ColumnType!, column.Length, column.Precision, column.Scale);
+			var type = new DatabaseType(column.ColumnType, column.Length, column.Precision, column.Scale);
 			
 			RegisterType(type, column.DataType, column.SystemType, column.ProviderSpecificType);
 
