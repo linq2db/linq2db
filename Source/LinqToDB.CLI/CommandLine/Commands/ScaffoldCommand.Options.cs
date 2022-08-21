@@ -400,8 +400,9 @@ Customization using compiled assembly has several requirements:
 - prefix                           : string? : optional name prefix
 - suffix                           : string? : optional name suffix
 - transformation                   : string  : base name transformation logic (see values below)
+    + ""none""                : no transformations applied, treat whole identifier as one word
     + ""split_by_underscore"" : split base name, got from database object name, into separate words by underscore (_)
-    + ""t4""                  : emulation of identifier generation logic for association name used by T4 templates (compat. option)
+    + ""association""         : emulation of identifier generation logic for association name used by T4 templates (compat. option)
 - pluralize_if_ends_with_word_only : bool    : when set, pluralization not applied if name ends with non-word (e.g. with digit)
 - ignore_all_caps                  : bool    : when set, casing not applied to names that contain only uppercase letters
 If you don't specify some property, CLI will use default value for current option. This allows you to override only some properties without need to specify all properties.

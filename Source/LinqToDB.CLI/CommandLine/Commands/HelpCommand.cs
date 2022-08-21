@@ -379,6 +379,7 @@ namespace LinqToDB.CommandLine
 			{
 				case NameTransformation.SplitByUnderscore: value = "\"split_by_underscore\""; break;
 				case NameTransformation.Association      : value = "\"association\""        ; break;
+				case NameTransformation.None             : value = "\"none\""               ; break;
 				default:
 					throw new InvalidOperationException($"Unknown transformation option: {options.Transformation}");
 			}
