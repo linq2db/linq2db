@@ -477,7 +477,7 @@ namespace LinqToDB.Expressions
 			var expr    = FindLevel(expression, mapping, level, ref current);
 
 			if (expr == null || current != level)
-				throw new InvalidOperationException();
+				ThrowHelper.ThrowInvalidOperationException();
 
 			return expr;
 		}

@@ -31,7 +31,7 @@ namespace LinqToDB.Linq
 			}
 			else
 			{
-				throw new InvalidOperationException($"Expression '{expression}' cannot be used in association.");
+				ThrowHelper.ThrowInvalidOperationException($"Expression '{expression}' cannot be used in association.");
 			}
 		}
 

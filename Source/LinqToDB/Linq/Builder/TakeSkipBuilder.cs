@@ -87,10 +87,10 @@ namespace LinqToDB.Linq.Builder
 			var sql = sequence.SelectQuery;
 
 			if (hints != null && !builder.DataContext.SqlProviderFlags.GetIsTakeHintsSupported(hints.Value))
-				throw new LinqException($"TakeHints are {hints} not supported by current database");
+				ThrowHelper.ThrowLinqException($"TakeHints are {hints} not supported by current database");
 
 			if (hints != null && sql.Select.SkipValue != null)
-				throw new LinqException("Take with hints could not be applied with Skip");
+				ThrowHelper.ThrowLinqException("Take with hints could not be applied with Skip");
 
 			if (sql.Select.TakeValue != null)
 				expr = new SqlFunction(
@@ -114,7 +114,7 @@ namespace LinqToDB.Linq.Builder
 			var sql = sequence.SelectQuery;
 
 			if (sql.Select.TakeHints != null)
-				throw new LinqException("Skip could not be applied with Take with hints");
+				ThrowHelper.ThrowLinqException("Skip could not be applied with Take with hints");
 
 			if (sql.Select.SkipValue != null)
 				sql.Select.Skip(new SqlBinaryExpression(typeof(int), sql.Select.SkipValue, "+", expr, Precedence.Additive));

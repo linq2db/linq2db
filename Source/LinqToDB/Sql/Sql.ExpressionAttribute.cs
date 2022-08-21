@@ -216,8 +216,8 @@ namespace LinqToDB
 
 			public static string ResolveExpressionValues<TContext>(TContext context, string expression, Func<TContext, string, string?, string?> valueProvider)
 			{
-				if (expression    == null) throw new ArgumentNullException(nameof(expression));
-				if (valueProvider == null) throw new ArgumentNullException(nameof(valueProvider));
+				if (expression    == null) ThrowHelper.ThrowArgumentNullException(nameof(expression));
+				if (valueProvider == null) ThrowHelper.ThrowArgumentNullException(nameof(valueProvider));
 
 				int  prevMatch         = -1;
 				int  prevNotEmptyMatch = -1;
@@ -241,7 +241,7 @@ namespace LinqToDB
 					var calculated = valueProvider(context, paramName, delimiter);
 
 					if (string.IsNullOrEmpty(calculated) && !canBeOptional)
-						throw new InvalidOperationException($"Non optional parameter '{paramName}' not found");
+						ThrowHelper.ThrowInvalidOperationException($"Non optional parameter '{paramName}' not found");
 
 					var res = calculated;
 					if (spaceNeeded)
@@ -404,13 +404,13 @@ namespace LinqToDB
 						if (ctx.StaticValue.argIndices != null)
 						{
 							if (idx < 0 || idx >= ctx.StaticValue.argIndices.Length)
-								throw new LinqToDBException($"Expression '{ctx.StaticValue.expressionStr}' has wrong ArgIndices mapping. Index '{idx}' do not fit in range.");
+								ThrowHelper.ThrowLinqToDBException($"Expression '{ctx.StaticValue.expressionStr}' has wrong ArgIndices mapping. Index '{idx}' do not fit in range.");
 
 							idx = ctx.StaticValue.argIndices[idx];
 						}
 
 						if (idx < 0)
-							throw new LinqToDBException($"Expression '{ctx.StaticValue.expressionStr}' has wrong param index mapping. Index '{idx}' do not fit in range.");
+							ThrowHelper.ThrowLinqToDBException($"Expression '{ctx.StaticValue.expressionStr}' has wrong param index mapping. Index '{idx}' do not fit in range.");
 
 						while (idx >= ctx.StaticValue.parms.Count)
 						{
@@ -425,7 +425,7 @@ namespace LinqToDB
 								var typeIndex = argIdx - ctx.StaticValue.knownExpressions.Count;
 								if (ctx.StaticValue.genericTypes == null || typeIndex >= ctx.StaticValue.genericTypes.Count || typeIndex < 0)
 								{
-									throw new LinqToDBException($"Expression '{ctx.StaticValue.expressionStr}' has wrong param index mapping. Index '{argIdx}' do not fit in parameters range.");
+									ThrowHelper.ThrowLinqToDBException($"Expression '{ctx.StaticValue.expressionStr}' has wrong param index mapping. Index '{argIdx}' do not fit in parameters range.");
 								}
 
 								paramExpr = ctx.StaticValue.genericTypes[typeIndex];
@@ -465,7 +465,7 @@ namespace LinqToDB
 									var typeIndex = argIdx - knownExpressions.Count;
 									if (genericTypes == null || typeIndex >= genericTypes.Count || typeIndex < 0)
 									{
-										throw new LinqToDBException($"Function '{expressionStr}' has wrong param index mapping. Index '{argIdx}' do not fit in parameters range.");
+										ThrowHelper.ThrowLinqToDBException($"Function '{expressionStr}' has wrong param index mapping. Index '{argIdx}' do not fit in parameters range.");
 									}
 
 									paramExpr = genericTypes[typeIndex];
@@ -503,7 +503,7 @@ namespace LinqToDB
 				PrepareParameterValues(context, dataContext.MappingSchema, expression, ref expressionStr, true, out var knownExpressions, IgnoreGenericParameters, out var genericTypes, converter);
 
 				if (string.IsNullOrEmpty(expressionStr))
-					throw new LinqToDBException($"Cannot retrieve SQL Expression body from expression '{expression}'.");
+					ThrowHelper.ThrowLinqToDBException($"Cannot retrieve SQL Expression body from expression '{expression}'.");
 
 				var parameters = PrepareArguments(context, expressionStr!, ArgIndices, false, knownExpressions, genericTypes, converter);
 

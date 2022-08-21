@@ -80,7 +80,7 @@ namespace LinqToDB.Extensions
 			SqlDataType? dataType, object? value)
 		{
 			if (!mappingSchema.TryConvertToSql(stringBuilder, dataType, value))
-				throw new LinqToDBException($"Cannot convert value of type {value?.GetType()} to SQL");
+				ThrowHelper.ThrowLinqToDBException($"Cannot convert value of type {value?.GetType()} to SQL");
 		}
 
 		public static Sql.ExpressionAttribute? GetExpressionAttribute(this MemberInfo member, MappingSchema mappingSchema)

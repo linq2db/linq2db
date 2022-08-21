@@ -182,7 +182,7 @@ namespace LinqToDB.Linq.Builder
 			var refExpression = new ContextRefExpression(typeof(IQueryable<>).MakeGenericType(entityType), tableContext);
 			var replaced = optimized.Replace(fakeQuery.Expression, refExpression);
 			if (replaced == optimized)
-				throw new LinqException("Could not correct query result for processing.");
+				ThrowHelper.ThrowLinqException("Could not correct query result for processing.");
 
 			var context   = builder.BuildSequence(new BuildInfo(buildInfo, replaced));
 			return context;
@@ -193,36 +193,31 @@ namespace LinqToDB.Linq.Builder
 		{
 			var type = FindBuildContext(builder, buildInfo, out var parentContext);
 
-			switch (type)
+			return type switch
 			{
-				case BuildContextType.None                   : return null;
-				case BuildContextType.TableConstant:
-					{
-						return ApplyQueryFilters(builder, buildInfo, null,
-							AddTableInScope(new(builder, buildInfo, ((IQueryable)buildInfo.Expression.EvaluateExpression()!).ElementType)));
-					}
-				case BuildContextType.GetTableMethod         :
-				case BuildContextType.MemberAccess           :
-					{
-						return ApplyQueryFilters(builder, buildInfo, null,
-							AddTableInScope(new(builder, buildInfo,
-								buildInfo.Expression.Type.GetGenericArguments()[0])));
-					}
-				case BuildContextType.Association            : return parentContext!.GetContext(buildInfo.Expression, 0, buildInfo);
-				case BuildContextType.TableFunctionAttribute : return AddTableInScope(new (builder, buildInfo));
-				case BuildContextType.AsCteMethod            : return BuildCteContext     (builder, buildInfo);
-				case BuildContextType.CteConstant            : return BuildCteContextTable(builder, buildInfo);
-				case BuildContextType.FromSqlMethod          : return BuildRawSqlTable(builder, buildInfo, false);
-				case BuildContextType.FromSqlScalarMethod    : return BuildRawSqlTable(builder, buildInfo, true);
-			}
+				BuildContextType.None                   => null,
+				BuildContextType.TableConstant			=>
+					ApplyQueryFilters(builder, buildInfo, null,
+						AddTableInScope(new(builder, buildInfo, ((IQueryable)buildInfo.Expression.EvaluateExpression()!).ElementType))),
+				BuildContextType.GetTableMethod         or
+				BuildContextType.MemberAccess           =>
+					ApplyQueryFilters(builder, buildInfo, null,
+						AddTableInScope(new(builder, buildInfo,
+							buildInfo.Expression.Type.GetGenericArguments()[0]))),
+				BuildContextType.Association            => parentContext!.GetContext(buildInfo.Expression, 0, buildInfo),
+				BuildContextType.TableFunctionAttribute => AddTableInScope(new (builder, buildInfo)),
+				BuildContextType.AsCteMethod            => BuildCteContext     (builder, buildInfo),
+				BuildContextType.CteConstant            => BuildCteContextTable(builder, buildInfo),
+				BuildContextType.FromSqlMethod          => BuildRawSqlTable(builder, buildInfo, false),
+				BuildContextType.FromSqlScalarMethod    => BuildRawSqlTable(builder, buildInfo, true),
+				_ => ThrowHelper.ThrowInvalidOperationException<IBuildContext?>(),
+			};
 
 			TableContext AddTableInScope(TableContext context)
 			{
 				builder.TablesInScope?.Add(context);
 				return context;
 			}
-
-			throw new InvalidOperationException();
 		}
 
 		public SequenceConvertInfo? Convert(ExpressionBuilder builder, BuildInfo buildInfo, ParameterExpression? param)

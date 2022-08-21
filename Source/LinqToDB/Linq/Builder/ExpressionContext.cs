@@ -27,7 +27,7 @@ namespace LinqToDB.Linq.Builder
 
 		public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 		{
-			throw new InvalidOperationException();
+			return ThrowHelper.ThrowInvalidOperationException<Expression>();
 		}
 
 		public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
@@ -83,15 +83,15 @@ namespace LinqToDB.Linq.Builder
 						}
 				}
 
-				throw new LinqException("'{0}' cannot be converted to SQL.", expression);
+				ThrowHelper.ThrowLinqException($"'{expression}' cannot be converted to SQL.");
 			}
 
-			throw new InvalidOperationException();
+			return ThrowHelper.ThrowInvalidOperationException<SqlInfo[]>();
 		}
 
 		public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 		{
-			throw new InvalidOperationException();
+			return ThrowHelper.ThrowInvalidOperationException<SqlInfo[]>();
 		}
 
 		public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)

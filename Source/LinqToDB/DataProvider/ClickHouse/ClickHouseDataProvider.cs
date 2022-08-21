@@ -7,6 +7,7 @@ using System.Linq.Expressions;
 using System.Net;
 using System.Net.Sockets;
 using System.Numerics;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -115,7 +116,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 			var l = Expression.Lambda<Func<string, DbConnection>>(
 				Expression.Convert(
 					Expression.MemberInit(
-						Expression.New(connectionType.GetConstructor(Array<Type>.Empty) ?? throw new InvalidOperationException($"DbConnection type {connectionType} missing constructor with connection string parameter: {connectionType.Name}(string connectionString)")),
+						Expression.New(connectionType.GetConstructor(Array<Type>.Empty) ?? ThrowHelper.ThrowInvalidOperationException<ConstructorInfo>($"DbConnection type {connectionType} missing constructor with connection string parameter: {connectionType.Name}(string connectionString)")),
 						Expression.Bind(Methods.ADONet.ConnectionString, p)),
 					typeof(DbConnection)),
 				p);

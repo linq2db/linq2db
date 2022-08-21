@@ -184,7 +184,7 @@ namespace LinqToDB.Expressions
 						Transform(((LoopExpression)expr).Body));
 
 				default:
-					throw new NotImplementedException($"Unhandled expression type: {expr.NodeType}");
+					return ThrowHelper.ThrowNotImplementedException<Expression>($"Unhandled expression type: {expr.NodeType}");
 			}
 		}
 

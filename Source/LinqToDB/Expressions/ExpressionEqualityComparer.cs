@@ -226,7 +226,8 @@ namespace LinqToDB.Expressions
 									}
 									break;
 								default:
-									throw new NotImplementedException();
+									ThrowHelper.ThrowNotImplementedException();
+									break;
 							}
 						}
 
@@ -280,7 +281,8 @@ namespace LinqToDB.Expressions
 //                        break;
 //                    }
 					default:
-						throw new NotImplementedException();
+						ThrowHelper.ThrowNotImplementedException();
+						break;
 				}
 
 				return hashCode;
@@ -399,7 +401,7 @@ namespace LinqToDB.Expressions
 //                    case ExpressionType.Extension:
 //                        return CompareExtension(a, b);
 					default:
-						throw new NotImplementedException();
+						return ThrowHelper.ThrowNotImplementedException<bool>();
 				}
 			}
 
@@ -681,7 +683,7 @@ namespace LinqToDB.Expressions
 					MemberBindingType.Assignment	=> CompareMemberAssignment((MemberAssignment)a, (MemberAssignment)b),
 					MemberBindingType.ListBinding	=> CompareMemberListBinding((MemberListBinding)a, (MemberListBinding)b),
 					MemberBindingType.MemberBinding => CompareMemberMemberBinding((MemberMemberBinding)a, (MemberMemberBinding)b),
-					_                               => throw new NotImplementedException(),
+					_                               => ThrowHelper.ThrowNotImplementedException<bool>(),
 				};
 			}
 

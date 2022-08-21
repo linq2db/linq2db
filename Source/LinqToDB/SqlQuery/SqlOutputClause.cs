@@ -46,7 +46,7 @@ namespace LinqToDB.SqlQuery
 			{
 				for (var i = 0; i < OutputColumns.Count; i++)
 				{
-					OutputColumns[i] = OutputColumns[i].Walk(options, context, func) ?? throw new InvalidOperationException();
+					OutputColumns[i] = OutputColumns[i].Walk(options, context, func) ?? ThrowHelper.ThrowInvalidOperationException<ISqlExpression>();
 				}
 			}
 

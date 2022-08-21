@@ -19,7 +19,7 @@ namespace LinqToDB.Common.Internal.Cache
 		{
 			if (previous == null)
 			{
-				throw new ArgumentNullException(nameof(previous));
+				ThrowHelper.ThrowArgumentNullException(nameof(previous));
 			}
 
 			_previous = previous;

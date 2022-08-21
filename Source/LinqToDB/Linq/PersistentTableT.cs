@@ -19,7 +19,7 @@ namespace LinqToDB.Linq
 
 		public PersistentTable(IQueryable<T> query)
 		{
-			_query = query ?? throw new ArgumentNullException(nameof(query));
+			_query = query ?? ThrowHelper.ThrowArgumentNullException<IQueryable<T>>(nameof(query));
 		}
 
 		public IEnumerator<T> GetEnumerator()
@@ -36,7 +36,7 @@ namespace LinqToDB.Linq
 		Expression IExpressionQuery<T>.Expression
 		{
 			get => _query.Expression;
-			set => throw new NotImplementedException();
+			set => ThrowHelper.ThrowNotImplementedException();
 		}
 
 		public string         SqlText     { get; } = null!;
@@ -66,12 +66,12 @@ namespace LinqToDB.Linq
 
 		public Task<IAsyncEnumerable<TResult>> ExecuteAsyncEnumerable<TResult>(Expression expression, CancellationToken cancellationToken)
 		{
-			throw new NotImplementedException();
+			return ThrowHelper.ThrowNotImplementedException<Task<IAsyncEnumerable<TResult>>>();
 		}
 
 		public Task<TResult> ExecuteAsync<TResult>(Expression expression, CancellationToken cancellationToken)
 		{
-			throw new NotImplementedException();
+			return ThrowHelper.ThrowNotImplementedException<Task<TResult>>();
 		}
 
 		Expression IExpressionQuery.Expression => Expression;

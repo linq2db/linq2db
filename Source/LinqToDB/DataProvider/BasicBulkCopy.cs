@@ -114,7 +114,7 @@ namespace LinqToDB.DataProvider
 			// This limitation could be lifted later for some providers that supports identity insert if we will get such request
 			// It will require support from DataConnection.Insert
 			if (options.KeepIdentity == true)
-				throw new LinqToDBException($"{nameof(BulkCopyOptions)}.{nameof(BulkCopyOptions.KeepIdentity)} = true is not supported by {nameof(BulkCopyType)}.{nameof(BulkCopyType.RowByRow)} mode");
+				ThrowHelper.ThrowLinqToDBException($"{nameof(BulkCopyOptions)}.{nameof(BulkCopyOptions.KeepIdentity)} = true is not supported by {nameof(BulkCopyType)}.{nameof(BulkCopyType.RowByRow)} mode");
 
 			var rowsCopied = new BulkCopyRowsCopied();
 
@@ -149,7 +149,7 @@ namespace LinqToDB.DataProvider
 			// This limitation could be lifted later for some providers that supports identity insert if we will get such request
 			// It will require support from DataConnection.Insert
 			if (options.KeepIdentity == true)
-				throw new LinqToDBException($"{nameof(BulkCopyOptions)}.{nameof(BulkCopyOptions.KeepIdentity)} = true is not supported by {nameof(BulkCopyType)}.{nameof(BulkCopyType.RowByRow)} mode");
+				ThrowHelper.ThrowLinqToDBException($"{nameof(BulkCopyOptions)}.{nameof(BulkCopyOptions.KeepIdentity)} = true is not supported by {nameof(BulkCopyType)}.{nameof(BulkCopyType.RowByRow)} mode");
 
 			var rowsCopied = new BulkCopyRowsCopied();
 
@@ -188,7 +188,7 @@ namespace LinqToDB.DataProvider
 			// This limitation could be lifted later for some providers that supports identity insert if we will get such request
 			// It will require support from DataConnection.Insert
 			if (options.KeepIdentity == true)
-				throw new LinqToDBException($"{nameof(BulkCopyOptions)}.{nameof(BulkCopyOptions.KeepIdentity)} = true is not supported by {nameof(BulkCopyType)}.{nameof(BulkCopyType.RowByRow)} mode");
+				ThrowHelper.ThrowLinqToDBException($"{nameof(BulkCopyOptions)}.{nameof(BulkCopyOptions.KeepIdentity)} = true is not supported by {nameof(BulkCopyType)}.{nameof(BulkCopyType.RowByRow)} mode");
 
 			var rowsCopied = new BulkCopyRowsCopied();
 

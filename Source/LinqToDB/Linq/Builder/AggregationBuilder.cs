@@ -69,7 +69,7 @@ namespace LinqToDB.Linq.Builder
 			ISqlExpression sqlExpression = new SqlFunction(methodCall.Type, methodName, true, sql);
 
 			if (sqlExpression == null)
-				throw new LinqToDBException("Invalid Aggregate function implementation");
+				ThrowHelper.ThrowLinqToDBException("Invalid Aggregate function implementation");
 
 			context.Sql        = context.SelectQuery;
 			context.FieldIndex = context.SelectQuery.Select.Add(sqlExpression, methodName);
@@ -103,7 +103,7 @@ namespace LinqToDB.Linq.Builder
 			static int CheckNullValue(bool isNull, object context)
 			{
 				if (isNull)
-					throw new InvalidOperationException(
+					ThrowHelper.ThrowInvalidOperationException(
 						$"Function {context} returns non-nullable value, but result is NULL. Use nullable version of the function instead.");
 				return 0;
 			}
@@ -183,13 +183,13 @@ namespace LinqToDB.Linq.Builder
 					case ConvertFlags.Field : return Sequence.ConvertToSql(expression, level + 1, flags);
 				}
 
-				throw new InvalidOperationException();
+				return ThrowHelper.ThrowInvalidOperationException<SqlInfo[]>();
 			}
 
 			public override int ConvertToParentIndex(int index, IBuildContext context)
 			{
 				if (index != FieldIndex)
-					throw new InvalidOperationException();
+					ThrowHelper.ThrowInvalidOperationException();
 
 				if (_parentIndex != null)
 					return _parentIndex.Value;
@@ -223,7 +223,7 @@ namespace LinqToDB.Linq.Builder
 				}
 
 
-				throw new InvalidOperationException();
+				return ThrowHelper.ThrowInvalidOperationException<SqlInfo[]>();
 			}
 
 			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
@@ -238,7 +238,7 @@ namespace LinqToDB.Linq.Builder
 
 			public override IBuildContext GetContext(Expression? expression, int level, BuildInfo buildInfo)
 			{
-				throw new NotImplementedException();
+				return ThrowHelper.ThrowNotImplementedException<IBuildContext>();
 			}
 		}
 	}

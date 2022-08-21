@@ -196,7 +196,7 @@ WHERE
 		{
 			// otherwise GetSchema will throw AseException
 			if (dataConnection.Transaction != null && GetProcedureSchemaExecutesProcedure)
-				throw new LinqToDBException("Cannot read schema with GetSchemaOptions.GetProcedures = true from transaction. Remove transaction or set GetSchemaOptions.GetProcedures to false");
+				ThrowHelper.ThrowLinqToDBException("Cannot read schema with GetSchemaOptions.GetProcedures = true from transaction. Remove transaction or set GetSchemaOptions.GetProcedures to false");
 
 			using (var reader = dataConnection.ExecuteReader(
 				"sp_oledb_getprocedurecolumns",

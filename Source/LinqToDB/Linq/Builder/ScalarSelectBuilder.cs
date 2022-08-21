@@ -97,12 +97,12 @@ namespace LinqToDB.Linq.Builder
 
 			public SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 			{
-				throw new NotImplementedException();
+				return ThrowHelper.ThrowNotImplementedException<SqlInfo[]>();
 			}
 
 			public SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 			{
-				throw new NotImplementedException();
+				return ThrowHelper.ThrowNotImplementedException<SqlInfo[]>();
 			}
 
 			public IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
@@ -116,7 +116,7 @@ namespace LinqToDB.Linq.Builder
 
 			public IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)
 			{
-				throw new NotImplementedException();
+				return ThrowHelper.ThrowNotImplementedException<IBuildContext?>();
 			}
 
 			public int ConvertToParentIndex(int index, IBuildContext context)
