@@ -121,17 +121,15 @@ namespace LinqToDB.Expressions
 				//
 				var expectedType = converter.FromProviderExpression.Parameters[0].Type;
 
+				if (expectedType != ex.Type)
+					ex = ConvertExpressionToType(ex, expectedType, mappingSchema);
+
 				if (converter.HandlesNulls)
 				{
 					ex = Condition(
 						Call(dataReaderExpr, Methods.ADONet.IsDBNull, ExpressionInstances.Int32Array(idx)),
 						Constant(mappingSchema.GetDefaultValue(expectedType), expectedType),
 						ex);
-				}
-
-				if (expectedType != ex.Type)
-				{
-					ex = ConvertExpressionToType(ex, expectedType, mappingSchema);
 				}
 
 				ex = InternalExtensions.ApplyLambdaToExpression(converter.FromProviderExpression, ex);
