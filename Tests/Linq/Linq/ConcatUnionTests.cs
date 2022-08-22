@@ -1533,5 +1533,43 @@ namespace Tests.Linq
 			pat = res.Where(r => r.ID == 2).Skip(1).Single();
 			Assert.IsNull(pat.Patient);
 		}
+
+		// ClickHouse developers themself doesn't know how their aliases work, so there will be no workaround
+		// from our side. User should use names carefully in queries
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/23194", Configuration = TestProvName.AllClickHouse)]
+		[Test]
+		public void Issue3369Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q1 = from x in db.Person
+					 where x.ID == 1
+					 select new
+					 {
+						 x.ID,
+						 FirstName = "A",
+						 OK = x.FirstName == "123" ? "Y" : "N",
+					 };
+			var q2 = from x in db.Person
+					 where x.ID == 2
+					 select new
+					 {
+						 x.ID,
+						 x.FirstName,
+						 OK = "N"
+					 };
+			var query = q1.Union(q2);
+			var q3 = from x in query
+					 from y in db.Person.LeftJoin(t => t.ID == x.ID)
+					 where x.ID == 3
+					 select new
+					 {
+						 x.ID,
+						 x.OK,
+						 FirstName = x.FirstName == "ddd" ? y.FirstName : x.FirstName,
+					 };
+
+			q3.ToList();
+		}
 	}
 }
