@@ -116,6 +116,7 @@ namespace Tests.Linq
 		[Test]
 		public void Simple6([DataSources] string context)
 		{
+			using (new GuardGrouping(false))
 			using (var db = GetDataContext(context))
 			{
 				var q    = db.GrandChild.GroupBy(ch => new { ch.ParentID, ch.ChildID }, ch => ch.GrandChildID);
@@ -143,6 +144,7 @@ namespace Tests.Linq
 		[Test]
 		public void Simple8([DataSources] string context)
 		{
+			using (new GuardGrouping(false))
 			using (var db = GetDataContext(context))
 			{
 				var q = db.GrandChild.GroupBy(ch => new { ch.ParentID, ch.ChildID }, (g,ch) => g.ChildID);
@@ -155,6 +157,7 @@ namespace Tests.Linq
 		[Test]
 		public void Simple9([DataSources] string context)
 		{
+			using (new GuardGrouping(false))
 			using (var db = GetDataContext(context))
 			{
 				var q    = db.GrandChild.GroupBy(ch => new { ch.ParentID, ch.ChildID }, ch => ch.GrandChildID,  (g,ch) => g.ChildID);
@@ -182,6 +185,7 @@ namespace Tests.Linq
 		[Test]
 		public void Simple11([DataSources] string context)
 		{
+			using (new GuardGrouping(false))
 			using (var db = GetDataContext(context))
 			{
 				var q1 = GrandChild
@@ -201,6 +205,7 @@ namespace Tests.Linq
 		[Test]
 		public void Simple12([DataSources] string context)
 		{
+			using (new GuardGrouping(false))
 			using (var db = GetDataContext(context))
 			{
 				var q = db.GrandChild
@@ -214,6 +219,7 @@ namespace Tests.Linq
 		[Test]
 		public void Simple13([DataSources] string context)
 		{
+			using (new GuardGrouping(false))
 			using (var db = GetDataContext(context))
 			{
 				var q = db.GrandChild
@@ -224,7 +230,7 @@ namespace Tests.Linq
 			}
 		}
 
-		//[Test]
+		[Test]
 		public void Simple14([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -508,6 +514,7 @@ namespace Tests.Linq
 		[Test]
 		public void Calculated1([DataSources] string context)
 		{
+			using (new GuardGrouping(false))
 			using (var db = GetDataContext(context))
 			{
 				db.BeginTransaction();

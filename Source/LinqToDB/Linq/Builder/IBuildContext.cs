@@ -81,8 +81,7 @@ namespace LinqToDB.Linq.Builder
 
 		Expression    MakeExpression(Expression path, ProjectFlags flags);
 		IBuildContext Clone(CloningContext      context);
-		void          SetRunQuery<T>(Query<T>   query);
-		bool          IsExecuteOnly { get; }
+		void          SetRunQuery<T>(Query<T>   query, Expression expr);
 
 		/// <summary>
 		/// Returns information about expression according to <paramref name="requestFlag"/>.

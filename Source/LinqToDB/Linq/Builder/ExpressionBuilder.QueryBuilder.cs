@@ -277,7 +277,8 @@ namespace LinqToDB.Linq.Builder
 			postProcessed = globalGenerator.Build();
 
 			var withColumns = ToColumns(context, postProcessed);
-			return withColumns;}
+			return withColumns;
+		}
 
 		public Expression ToColumns(IBuildContext rootContext, Expression expression)
 		{

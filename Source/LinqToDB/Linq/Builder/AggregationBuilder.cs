@@ -225,6 +225,13 @@ namespace LinqToDB.Linq.Builder
 				QueryRunner.SetRunQuery(query, mapper);*/
 			}
 
+			public override void SetRunQuery<T>(Query<T> query, Expression expr)
+			{
+				var mapper = Builder.BuildMapper<object>(expr);
+
+				QueryRunner.SetRunQuery(query, mapper);
+			}
+
 			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 			{
 				throw new NotImplementedException();

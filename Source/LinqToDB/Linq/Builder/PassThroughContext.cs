@@ -65,11 +65,10 @@ namespace LinqToDB.Linq.Builder
 
 		public abstract IBuildContext Clone(CloningContext    context);
 
-		public void SetRunQuery<T>(Query<T> query)
+		public void SetRunQuery<T>(Query<T> query, Expression expr)
 		{
+			Context.SetRunQuery(query, expr);
 		}
-
-		public bool IsExecuteOnly => Context.IsExecuteOnly;
 
 		public virtual IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 		{

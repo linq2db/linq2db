@@ -176,11 +176,12 @@ namespace LinqToDB.Linq.Builder
 				Sequence.Select(s => context.CloneContext(s)).ToArray());
 		}
 
-		public void SetRunQuery<T>(Query<T> query)
+		public void SetRunQuery<T>(Query<T> query, Expression expr)
 		{
-		}
+			var mapper = Builder.BuildMapper<T>(expr);
 
-		public bool IsExecuteOnly { get; }
+			QueryRunner.SetRunQuery(query, mapper);
+		}
 
 		public virtual Expression GetEagerLoadExpression(Expression path)
 		{

@@ -208,27 +208,7 @@ namespace LinqToDB.Linq.Builder
 
 			expr = FinalizeProjection(query, sequence, expr, queryParameter, ref preambles, previousKeys);
 
-			if (sequence.IsExecuteOnly)
-				QueryRunner.SetNonQueryQuery(query);
-			else
-			{
-				if (typeof(T).IsAssignableFrom(expr.Type))
-				{
-					var mapper = BuildMapper<T>(expr);
-
-					QueryRunner.SetRunQuery(query, mapper);
-				}
-				else
-				{
-					// Count, Any, Average, etc.
-					var mapper = BuildMapper<object?>(expr);
-
-					QueryRunner.SetRunQuery(query, mapper);
-				}
-
-				// will apply needed GetElement implementations
-				sequence.SetRunQuery(query);
-			}
+			sequence.SetRunQuery(query, expr);
 		}
 
 		/// <summary>

@@ -115,7 +115,10 @@ namespace LinqToDB.Linq.Builder
 				return new DeleteContext(null, context.CloneContext(Sequence));
 			}
 
-			public override bool          IsExecuteOnly => true;
+			public override void SetRunQuery<T>(Query<T> query, Expression expr)
+			{
+				QueryRunner.SetNonQueryQuery(query);
+			}
 
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{

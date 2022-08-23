@@ -71,7 +71,10 @@ namespace LinqToDB.Linq.Builder
 				return new DropContext(null, context.CloneContext(Sequence));
 			}
 
-			public override bool IsExecuteOnly => true;
+			public override void SetRunQuery<T>(Query<T> query, Expression expr)
+			{
+				QueryRunner.SetNonQueryQuery(query);
+			}
 
 			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 			{

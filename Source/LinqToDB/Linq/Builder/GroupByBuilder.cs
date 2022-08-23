@@ -157,12 +157,25 @@ namespace LinqToDB.Linq.Builder
 
 			var keySequence     = dataSequence;
 
-			var groupingType    = methodCall.Type.GetGenericArguments()[0];
-			var keySelector     = (LambdaExpression)methodCall.Arguments[1].Unwrap()!;
-			LambdaExpression elementSelector;
+			var groupingType = methodCall.Type.GetGenericArguments()[0];
+			var keySelector  = methodCall.Arguments[1].UnwrapLambda();
+
+			LambdaExpression? resultSelector = null;
+			LambdaExpression  elementSelector;
 			if (methodCall.Arguments.Count >= 3)
 			{
-				elementSelector = (LambdaExpression)methodCall.Arguments[2].Unwrap()!;
+				elementSelector = methodCall.Arguments[2].UnwrapLambda();
+				if (elementSelector.Parameters.Count > 1)
+				{
+					resultSelector = elementSelector;
+					var param = Expression.Parameter(groupingType, "selector");
+					elementSelector = Expression.Lambda(param, param);
+				}
+
+				if (methodCall.Arguments.Count == 4)
+				{
+					resultSelector = methodCall.Arguments[3].UnwrapLambda();
+				}
 			}
 			else
 			{
@@ -204,6 +217,16 @@ namespace LinqToDB.Linq.Builder
 			key.GroupByContext = groupBy;
 
 			Debug.WriteLine("BuildMethodCall GroupBy:\n" + groupBy.SelectQuery);
+
+			if (resultSelector != null)
+			{
+				var keyExpr = Expression.PropertyOrField(new ContextRefExpression(groupBy.GetInterfaceGroupingType(), groupBy),
+					nameof(IGrouping<int, int>.Key));
+				var newBody = resultSelector.Body.Replace(resultSelector.Parameters[0], keyExpr);
+				resultSelector = Expression.Lambda(resultSelector.Type, newBody, resultSelector.Parameters);
+				var result  = new SelectContext(buildInfo.Parent, resultSelector, false, groupBy, groupBy);
+				return result;
+			}
 
 			return groupBy;
 		}
@@ -302,7 +325,7 @@ namespace LinqToDB.Linq.Builder
 					return path;
 				}
 
-				if (flags.HasFlag(ProjectFlags.Root))
+				if (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AssociationRoot))
 				{
 					if (SequenceHelper.IsSameContext(path, this))
 						return path;
@@ -428,15 +451,23 @@ namespace LinqToDB.Linq.Builder
 						throw ex;
 					}
 
-					//TODO: recheck
-					var groupingType = typeof(Grouping<,>).MakeGenericType(
-						_key.Body.Type, Element.Body.Type);
+					var groupingType = GetGroupingType();
+
+					var groupingPath = path;
+
+					//TODO: remove
+					/*
+					if (!typeof(IGrouping<,>).IsSameOrParentOf(groupingPath.Type))
+					{
+						groupingPath = new ContextRefExpression(GetInterfaceGroupingType(), this);
+					}
+					*/
 
 					var assignments = new List<SqlGenericConstructorExpression.Assignment>(2);
 
 					assignments.Add(new SqlGenericConstructorExpression.Assignment(
 						groupingType.GetProperty(nameof(Grouping<int, int>.Key))!,
-						Expression.Property(path, nameof(IGrouping<int, int>.Key)), true, false));
+						Expression.Property(groupingPath, nameof(IGrouping<int, int>.Key)), true, false));
 
 					var eagerLoadingExpression = MakeSubQueryExpression(new ContextRefExpression(groupingType, this));
 
@@ -475,6 +506,20 @@ namespace LinqToDB.Linq.Builder
 				var newPath = SequenceHelper.CorrectExpression(path, this, Element);
 
 				return newPath;
+			}
+
+			public Type GetGroupingType()
+			{
+				var groupingType = typeof(Grouping<,>).MakeGenericType(
+					_key.Body.Type, Element.Body.Type);
+				return groupingType;
+			}
+
+			public Type GetInterfaceGroupingType()
+			{
+				var groupingType = typeof(IGrouping<,>).MakeGenericType(
+					_key.Body.Type, Element.Body.Type);
+				return groupingType;
 			}
 
 			public override IBuildContext Clone(CloningContext context)

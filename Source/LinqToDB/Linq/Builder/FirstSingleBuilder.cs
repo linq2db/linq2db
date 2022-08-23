@@ -109,8 +109,12 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			public override void SetRunQuery<T>(Query<T> query)
+			public override void SetRunQuery<T>(Query<T> query, Expression expr)
 			{
+				var mapper = Builder.BuildMapper<T>(expr);
+
+				QueryRunner.SetRunQuery(query, mapper);
+
 				switch (_methodCall.Method.Name.Replace("Async", ""))
 				{
 					case "First"           : GetFirstElement          (query); break;

@@ -127,11 +127,12 @@ namespace LinqToDB.Linq.Builder
 					context.CloneExpression(OuterKey), context.CloneExpression(InnerKeyLambda), context.CloneExpression(InnerExpression));
 			}
 
-			public void SetRunQuery<T>(Query<T> query)
+			public void SetRunQuery<T>(Query<T> query, Expression expr)
 			{
-			}
+				var mapper = Builder.BuildMapper<T>(expr);
 
-			public bool IsExecuteOnly { get; }
+				QueryRunner.SetRunQuery(query, mapper);
+			}
 
 			public IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 			{

@@ -102,11 +102,9 @@ namespace LinqToDB.Linq.Builder
 			throw new NotImplementedException();
 		}
 
-		public void SetRunQuery<T>(Query<T> query)
+		public void SetRunQuery<T>(Query<T> query, Expression expr)
 		{
 		}
-
-		public bool IsExecuteOnly => false;
 
 		public IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 		{

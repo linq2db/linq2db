@@ -252,11 +252,12 @@ namespace LinqToDB.Linq.Builder
 				return new TableContext(Builder, context.CloneElement(SelectQuery), context.CloneElement(SqlTable));
 			}
 
-			public void SetRunQuery<T>(Query<T> query)
+			public void SetRunQuery<T>(Query<T> query, Expression expr)
 			{
-			}
+				var mapper = Builder.BuildMapper<T>(expr);
 
-			public bool IsExecuteOnly => false;
+				QueryRunner.SetRunQuery(query, mapper);
+			}
 
 			#endregion
 
