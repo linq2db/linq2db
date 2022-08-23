@@ -32,7 +32,7 @@ namespace LinqToDB.Async
 			this IAsyncEnumerable<T> source,
 			CancellationToken        cancellationToken = default)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
 
 			var result = new List<T>();
 			var enumerator = source.GetAsyncEnumerator(cancellationToken);
@@ -93,7 +93,7 @@ namespace LinqToDB.Async
 			this IAsyncEnumerable<T> source,
 			CancellationToken        cancellationToken = default)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
 
 			var enumerator = source.GetAsyncEnumerator(cancellationToken);
 #if !NATIVE_ASYNC
@@ -118,7 +118,7 @@ namespace LinqToDB.Async
 		/// <exception cref="InvalidOperationException">The source sequence is empty.</exception>
 		public static async Task<TSource> FirstAsync<TSource>(this IAsyncEnumerable<TSource> source, CancellationToken token = default)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
 
 			var enumerator = source.GetAsyncEnumerator(token);
 #if !NATIVE_ASYNC
@@ -131,7 +131,7 @@ namespace LinqToDB.Async
 					return enumerator.Current;
 			}
 
-			throw new InvalidOperationException("The source sequence is empty.");
+			return ThrowHelper.ThrowInvalidOperationException<TSource>("The source sequence is empty.");
 		}
 
 		/// <summary>

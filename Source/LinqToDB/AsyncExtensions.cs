@@ -82,7 +82,7 @@ namespace LinqToDB
 		/// <returns>A query that can be enumerated asynchronously.</returns>
 		public static IAsyncEnumerable<TSource> AsAsyncEnumerable<TSource>(this IQueryable<TSource> source)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
 
 			if (source is IAsyncEnumerable<TSource> asyncQuery)
 				return asyncQuery;
@@ -99,7 +99,7 @@ namespace LinqToDB
 			private readonly IQueryable<T> _query;
 			public AsyncEnumerableAdapter(IQueryable<T> query)
 			{
-				_query = query ?? throw new ArgumentNullException(nameof(query));
+				_query = query ?? ThrowHelper.ThrowArgumentNullException<IQueryable<T>>(nameof(query));
 			}
 
 #if !NATIVE_ASYNC

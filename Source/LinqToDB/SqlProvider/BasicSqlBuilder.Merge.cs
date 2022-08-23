@@ -93,7 +93,8 @@ namespace LinqToDB.SqlProvider
 					BuildMergeOperationUpdateBySource(operation);
 					break;
 				default:
-					throw new InvalidOperationException($"Unknown merge operation type: {operation.OperationType}");
+					ThrowHelper.ThrowInvalidOperationException($"Unknown merge operation type: {operation.OperationType}");
+					break;
 			}
 		}
 
@@ -157,19 +158,19 @@ namespace LinqToDB.SqlProvider
 		protected virtual void BuildMergeOperationUpdateWithDelete(SqlMergeOperationClause operation)
 		{
 			// Oracle-specific operation
-			throw new NotSupportedException($"Merge operation {operation.OperationType} is not supported by {Name}");
+			ThrowHelper.ThrowNotSupportedException($"Merge operation {operation.OperationType} is not supported by {Name}");
 		}
 
 		protected virtual void BuildMergeOperationDeleteBySource(SqlMergeOperationClause operation)
 		{
 			// SQL Server-specific operation
-			throw new NotSupportedException($"Merge operation {operation.OperationType} is not supported by {Name}");
+			ThrowHelper.ThrowNotSupportedException($"Merge operation {operation.OperationType} is not supported by {Name}");
 		}
 
 		protected virtual void BuildMergeOperationUpdateBySource(SqlMergeOperationClause operation)
 		{
 			// SQL Server-specific operation
-			throw new NotSupportedException($"Merge operation {operation.OperationType} is not supported by {Name}");
+			ThrowHelper.ThrowNotSupportedException($"Merge operation {operation.OperationType} is not supported by {Name}");
 		}
 
 		protected virtual void BuildMergeOn(SqlMergeStatement mergeStatement)
@@ -241,7 +242,7 @@ namespace LinqToDB.SqlProvider
 			else if (IsEmptyValuesSourceSupported)
 				BuildMergeEmptySource(merge);
 			else
-				throw new LinqToDBException($"{Name} doesn't support merge with empty source");
+				ThrowHelper.ThrowLinqToDBException($"{Name} doesn't support merge with empty source");
 
 			BuildMergeAsSourceClause(merge.Source);
 		}

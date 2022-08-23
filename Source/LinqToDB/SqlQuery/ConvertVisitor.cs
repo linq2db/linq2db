@@ -26,7 +26,7 @@ namespace LinqToDB.SqlQuery
 		private Dictionary<IQueryElement, IQueryElement?>? _visitedElements;
 		private List<IQueryElement>?                       _stack;
 
-		public List<IQueryElement> Stack         => _stack ??= (HasStack ? new () : throw new InvalidOperationException("Stack tracking is not enabled for current visitor instance"));
+		public List<IQueryElement> Stack         => _stack ??= (HasStack ? new () : ThrowHelper.ThrowInvalidOperationException<List<IQueryElement>>("Stack tracking is not enabled for current visitor instance"));
 		public IQueryElement?      ParentElement => Stack.Count == 0 ? null : Stack[Stack.Count - 1];
 		public IQueryElement       CurrentElement = null!;
 
@@ -525,7 +525,7 @@ namespace LinqToDB.SqlQuery
 							else if (f is ISqlPredicate predicate)
 								newElement = predicate;
 							else
-								throw new InvalidCastException("Converted FuncLikePredicate expression is not a Predicate expression.");
+								ThrowHelper.ThrowInvalidCastException("Converted FuncLikePredicate expression is not a Predicate expression.");
 						}
 
 						break;
@@ -1382,7 +1382,8 @@ namespace LinqToDB.SqlQuery
 						break;
 
 					default:
-						throw new InvalidOperationException($"Convert visitor not implemented for element {element.ElementType}");
+						ThrowHelper.ThrowInvalidOperationException($"Convert visitor not implemented for element {element.ElementType}");
+						break;
 				}
 
 				if (element != newElement && element is IQueryExtendible { SqlQueryExtensions.Count: > 0 } qe && newElement is IQueryExtendible ne)

@@ -284,7 +284,7 @@ namespace LinqToDB.Linq.Builder
 
 		public ISqlExpression GetSubQuery(IBuildContext context)
 		{
-			throw new NotImplementedException();
+			return ThrowHelper.ThrowNotImplementedException<ISqlExpression>();
 		}
 
 		public SqlStatement GetResultStatement()

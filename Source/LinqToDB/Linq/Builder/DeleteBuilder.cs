@@ -66,7 +66,7 @@ namespace LinqToDB.Linq.Builder
 				var deletedTable = builder.DataContext.SqlProviderFlags.OutputDeleteUseSpecialTable ? SqlTable.Deleted(methodCall.Method.GetGenericArguments()[0]) : deleteStatement.GetDeleteTable();
 
 				if (deletedTable == null)
-					throw new InvalidOperationException("Cannot find target table for DELETE statement");
+					ThrowHelper.ThrowInvalidOperationException("Cannot find target table for DELETE statement");
 
 				outputContext = new TableBuilder.TableContext(builder, new SelectQuery(), deletedTable);
 
@@ -127,27 +127,27 @@ namespace LinqToDB.Linq.Builder
 
 			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 			{
-				throw new NotImplementedException();
+				return ThrowHelper.ThrowNotImplementedException<Expression>();
 			}
 
 			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 			{
-				throw new NotImplementedException();
+				return ThrowHelper.ThrowNotImplementedException<SqlInfo[]>();
 			}
 
 			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 			{
-				throw new NotImplementedException();
+				return ThrowHelper.ThrowNotImplementedException<SqlInfo[]>();
 			}
 
 			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 			{
-				throw new NotImplementedException();
+				return ThrowHelper.ThrowNotImplementedException<IsExpressionResult>();
 			}
 
 			public override IBuildContext GetContext(Expression? expression, int level, BuildInfo buildInfo)
 			{
-				throw new NotImplementedException();
+				return ThrowHelper.ThrowNotImplementedException<IBuildContext>();
 			}
 		}
 

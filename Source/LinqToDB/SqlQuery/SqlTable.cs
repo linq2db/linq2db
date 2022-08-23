@@ -55,7 +55,7 @@ namespace LinqToDB.SqlQuery
 		public SqlTable(MappingSchema mappingSchema, Type objectType, string? physicalName = null)
 			: this(objectType, null, new(String.Empty))
 		{
-			if (mappingSchema == null) throw new ArgumentNullException(nameof(mappingSchema));
+			if (mappingSchema == null) ThrowHelper.ThrowArgumentNullException(nameof(mappingSchema));
 
 			var ed = mappingSchema.GetEntityDescriptor(objectType);
 
@@ -239,7 +239,7 @@ namespace LinqToDB.SqlQuery
 
 		public void Add(SqlField field)
 		{
-			if (field.Table != null) throw new InvalidOperationException("Invalid parent table.");
+			if (field.Table != null) ThrowHelper.ThrowInvalidOperationException("Invalid parent table.");
 
 			field.Table = this;
 

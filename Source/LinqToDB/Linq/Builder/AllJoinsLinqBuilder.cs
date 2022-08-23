@@ -56,7 +56,7 @@ namespace LinqToDB.Linq.Builder
 						SqlJoinType.Left  => JoinType.Left,
 						SqlJoinType.Right => JoinType.Right,
 						SqlJoinType.Full  => JoinType.Full,
-						_                 => throw new InvalidOperationException($"Unexpected join type: {(SqlJoinType)methodCall.Arguments[2].EvaluateExpression()!}")
+						_                 => ThrowHelper.ThrowInvalidOperationException<JoinType>($"Unexpected join type: {(SqlJoinType)methodCall.Arguments[2].EvaluateExpression()!}")
 					};
 					break;
 			}

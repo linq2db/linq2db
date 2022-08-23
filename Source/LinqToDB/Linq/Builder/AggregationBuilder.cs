@@ -209,7 +209,7 @@ namespace LinqToDB.Linq.Builder
 			static int CheckNullValue(bool isNull, object context)
 			{
 				if (isNull)
-					throw new InvalidOperationException(
+					ThrowHelper.ThrowInvalidOperationException(
 						$"Function {context} returns non-nullable value, but result is NULL. Use nullable version of the function instead.");
 				return 0;
 			}
@@ -287,7 +287,7 @@ namespace LinqToDB.Linq.Builder
 
 			public override IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)
 			{
-				throw new NotImplementedException();
+				return ThrowHelper.ThrowNotImplementedException<IBuildContext>();
 			}
 		}
 	}

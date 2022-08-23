@@ -41,7 +41,7 @@ namespace LinqToDB.DataProvider.MySql
 		private SqlUpdateStatement CorrectMySqlUpdate(SqlUpdateStatement statement)
 		{
 			if (statement.SelectQuery.Select.SkipValue != null)
-				throw new LinqToDBException("MySql does not support Skip in update query");
+				ThrowHelper.ThrowLinqToDBException("MySql does not support Skip in update query");
 
 			statement = CorrectUpdateTable(statement);
 

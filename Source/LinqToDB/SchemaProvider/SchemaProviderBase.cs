@@ -324,7 +324,7 @@ namespace LinqToDB.SchemaProvider
 					var isActiveTransaction = dataConnection.Transaction != null;
 
 					if (GetProcedureSchemaExecutesProcedure && isActiveTransaction)
-						throw new LinqToDBException("Cannot read schema with GetSchemaOptions.GetProcedures = true from transaction. Remove transaction or set GetSchemaOptions.GetProcedures to false");
+						ThrowHelper.ThrowLinqToDBException("Cannot read schema with GetSchemaOptions.GetProcedures = true from transaction. Remove transaction or set GetSchemaOptions.GetProcedures to false");
 
 					if (!isActiveTransaction)
 						dataConnection.BeginTransaction();

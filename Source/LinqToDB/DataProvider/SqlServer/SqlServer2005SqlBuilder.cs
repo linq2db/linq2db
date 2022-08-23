@@ -1,10 +1,8 @@
-﻿using System;
-
-namespace LinqToDB.DataProvider.SqlServer
+﻿namespace LinqToDB.DataProvider.SqlServer
 {
-	using SqlQuery;
-	using SqlProvider;
 	using Mapping;
+	using SqlProvider;
+	using SqlQuery;
 
 	class SqlServer2005SqlBuilder : SqlServerSqlBuilder
 	{

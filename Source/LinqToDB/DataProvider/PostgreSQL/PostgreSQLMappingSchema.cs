@@ -28,6 +28,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			SetValueToSqlConverter(typeof(char),     (sb,dt,v) => ConvertCharToSql  (sb, (char)v));
 			SetValueToSqlConverter(typeof(byte[]),   (sb,dt,v) => ConvertBinaryToSql(sb, (byte[])v));
 			SetValueToSqlConverter(typeof(Binary),   (sb,dt,v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
+			SetValueToSqlConverter(typeof(Guid),     (sb,dt,v) => sb.AppendFormat("'{0:D}'::uuid", (Guid)v));
 			SetValueToSqlConverter(typeof(DateTime), (sb,dt,v) => BuildDateTime(sb, dt, (DateTime)v));
 
 			// adds floating point special values support
@@ -109,7 +110,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 			stringBuilder.AppendByteArrayAsHexViaLookup32(value);
 
-			stringBuilder.Append('\'');
+			stringBuilder.Append("'::bytea");
 		}
 
 		static readonly Action<StringBuilder, int> AppendConversionAction = AppendConversion;
@@ -151,6 +152,13 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		public sealed class PostgreSQL95MappingSchema : LockedMappingSchema
 		{
 			public PostgreSQL95MappingSchema() : base(ProviderName.PostgreSQL95, NpgsqlProviderAdapter.GetInstance().MappingSchema, Instance)
+			{
+			}
+		}
+
+		public sealed class PostgreSQL15MappingSchema : LockedMappingSchema
+		{
+			public PostgreSQL15MappingSchema() : base(ProviderName.PostgreSQL15, NpgsqlProviderAdapter.GetInstance().MappingSchema, Instance)
 			{
 			}
 		}

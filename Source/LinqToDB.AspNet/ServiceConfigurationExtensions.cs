@@ -196,7 +196,7 @@ namespace LinqToDB.AspNet
 						.Any()))
 				return false;
 
-			throw new ArgumentException($"Missing constructor accepting '{nameof(LinqToDBConnectionOptions)}' on type {typeof(TContext).Name}.");
+			return ThrowHelper.ThrowArgumentException<bool>($"Missing constructor accepting '{nameof(LinqToDBConnectionOptions)}' on type {typeof(TContext).Name}.");
 		}
 	}
 }

@@ -25,7 +25,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			// get => TableContext.SelectQuery;
 			get => SubqueryContext.SelectQuery;
-			set => throw new NotImplementedException();
+			set => ThrowHelper.ThrowNotImplementedException();
 		}
 
 		public SqlStatement? Statement

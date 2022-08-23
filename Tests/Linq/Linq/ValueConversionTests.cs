@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.SqlTypes;
+using System.Globalization;
 using System.Linq;
 using FluentAssertions;
 using LinqToDB;
@@ -569,7 +571,7 @@ namespace Tests.Linq
 
 				var update2Check = rawTable.First(e => e.Id == 2);
 
-				Assert.That(update2Check.Value1, Is.EqualTo("{\"some\":\"updated2}\"}"));
+				Assert.That(update2Check.Value1, Is.EqualTo(/*lang=json,strict*/ "{\"some\":\"updated2}\"}"));
 				Assert.That(update2Check.Value2, Is.EqualTo(JsonConvert.SerializeObject(new List<ItemClass> { new ItemClass { Value = "updated2" } })));
 				Assert.That(update2Check.EnumWithNull, Is.EqualTo("Value2"));
 				Assert.That(update2Check.EnumWithNullDeclarative, Is.EqualTo("Value2"));
@@ -658,7 +660,7 @@ namespace Tests.Linq
 
 				var insert3Check = rawTable.First(e => e.Id == 3);
 
-				Assert.That(insert3Check.Value1, Is.EqualTo("{\"some\":\"inserted3}\"}"));
+				Assert.That(insert3Check.Value1, Is.EqualTo(/*lang=json,strict*/ "{\"some\":\"inserted3}\"}"));
 				Assert.That(insert3Check.Value2, Is.EqualTo(JsonConvert.SerializeObject(new List<ItemClass> { new ItemClass { Value = "inserted3" } })));
 				Assert.That(insert3Check.Enum,   Is.EqualTo("Value3"));
 				Assert.That(insert3Check.EnumNullable, Is.Null);
@@ -706,6 +708,63 @@ namespace Tests.Linq
 
 			}
 		}
-		
+
+		public class Issue3684DateTimeNullConverter : ValueConverterFunc<DateTime?, System.Data.SqlTypes.SqlDateTime>
+		{
+			public Issue3684DateTimeNullConverter() : base(
+				model =>
+				{
+					if (model == null)
+						return SqlDateTime.Null;
+
+					return new SqlDateTime(model.Value);
+				},
+				provider =>
+				{
+					if (provider.IsNull)
+						return null;
+
+					return provider.Value;
+				}, true)
+			{
+			}
+		}
+
+		[Table]
+		public class Issue3684Table
+		{
+			[PrimaryKey, Identity                                                  ] public int       Id                   { get; set; }
+			[ValueConverter(ConverterType = typeof(Issue3684DateTimeNullConverter))]
+			[Column(DataType = DataType.DateTime2, Precision = 0)                  ] public DateTime? FirstAppointmentTime { get; set; }
+			[ValueConverter(ConverterType = typeof(Issue3684DateTimeNullConverter))]
+			[Column(DataType = DataType.DateTime)                                  ] public DateTime? PassportDateOfIssue  { get; set; }
+		}
+
+		[Test]
+		public void Issue3684Test([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			// remote context serialization for SqlDateTime
+			var ms = new MappingSchema();
+			ms.SetConvertExpression<SqlDateTime, string>(value => ((DateTime)value).ToBinary().ToString(CultureInfo.InvariantCulture));
+			ms.SetConvertExpression<string, SqlDateTime>(value => DateTime.FromBinary(long.Parse(value, CultureInfo.InvariantCulture)));
+
+			using var db    = GetDataContext(context, ms);
+			using var table = db.CreateLocalTable<Issue3684Table>();
+
+			table.Insert(() => new Issue3684Table());
+			table.Insert(() => new Issue3684Table() { FirstAppointmentTime = TestData.DateTime0, PassportDateOfIssue = TestData.DateTime3 });
+
+			var data = table.OrderBy(_ => _.Id).ToArray();
+
+			Assert.AreEqual(2, data.Length);
+
+			Assert.AreEqual(1, data[0].Id);
+			Assert.IsNull(data[0].FirstAppointmentTime);
+			Assert.IsNull(data[0].PassportDateOfIssue);
+
+			Assert.AreEqual(2, data[1].Id);
+			Assert.AreEqual(TestData.DateTime0, data[1].FirstAppointmentTime);
+			Assert.AreEqual(TestData.DateTime3, data[1].PassportDateOfIssue);
+		}
 	}
 }

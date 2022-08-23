@@ -257,11 +257,14 @@ namespace LinqToDB.Expressions
 								Path(expr.Reduce());
 						}
 
-						break;
-					}
+					break;
+				}
 
 				default:
-					throw new NotImplementedException($"Unhandled expression type: {expr.NodeType}");
+				{
+					path = ThrowHelper.ThrowNotImplementedException<Expression>($"Unhandled expression type: {expr.NodeType}");
+					break;
+				}
 			}
 
 			_func(_context, expr, path);

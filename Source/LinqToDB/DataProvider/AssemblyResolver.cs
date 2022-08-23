@@ -14,16 +14,16 @@ namespace LinqToDB.DataProvider
 
 		public AssemblyResolver(string path, string resolveName)
 		{
-			_path        = path        ?? throw new ArgumentNullException(nameof(path));
-			_resolveName = resolveName ?? throw new ArgumentNullException(nameof(resolveName));
+			_path        = path        ?? ThrowHelper.ThrowArgumentNullException<string>(nameof(path));
+			_resolveName = resolveName ?? ThrowHelper.ThrowArgumentNullException<string>(nameof(resolveName));
 
 			SetResolver();
 		}
 
 		public AssemblyResolver(Assembly assembly, string resolveName)
 		{
-			_assembly    = assembly    ?? throw new ArgumentNullException(nameof(assembly));
-			_resolveName = resolveName ?? throw new ArgumentNullException(nameof(resolveName));
+			_assembly    = assembly    ?? ThrowHelper.ThrowArgumentNullException<Assembly>(nameof(assembly));
+			_resolveName = resolveName ?? ThrowHelper.ThrowArgumentNullException<string  >(nameof(resolveName));
 
 			SetResolver();
 		}

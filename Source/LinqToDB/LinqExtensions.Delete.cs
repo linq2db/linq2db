@@ -32,7 +32,7 @@ namespace LinqToDB
 		/// </remarks>
 		public static IEnumerable<TSource> DeleteWithOutput<TSource>(this IQueryable<TSource> source)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -65,7 +65,7 @@ namespace LinqToDB
 			this IQueryable<TSource> source,
 			CancellationToken        token = default)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -101,8 +101,8 @@ namespace LinqToDB
 			this IQueryable<TSource>           source,
 			Expression<Func<TSource, TOutput>> outputExpression)
 		{
-			if (source           == null) throw new ArgumentNullException(nameof(source));
-			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
+			if (source           == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (outputExpression == null) ThrowHelper.ThrowArgumentNullException(nameof(outputExpression));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -140,8 +140,8 @@ namespace LinqToDB
 			Expression<Func<TSource, TOutput>> outputExpression,
 			CancellationToken                  token = default)
 		{
-			if (source           == null) throw new ArgumentNullException(nameof(source));
-			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
+			if (source           == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (outputExpression == null) ThrowHelper.ThrowArgumentNullException(nameof(outputExpression));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -173,8 +173,8 @@ namespace LinqToDB
 			ITable<TOutput>          outputTable)
 			where TOutput : notnull
 		{
-			if (source      == null) throw new ArgumentNullException(nameof(source));
-			if (outputTable == null) throw new ArgumentNullException(nameof(outputTable));
+			if (source      == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (outputTable == null) ThrowHelper.ThrowArgumentNullException(nameof(outputTable));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -207,8 +207,8 @@ namespace LinqToDB
 			CancellationToken        token = default)
 			where TOutput : notnull
 		{
-			if (source      == null) throw new ArgumentNullException(nameof(source));
-			if (outputTable == null) throw new ArgumentNullException(nameof(outputTable));
+			if (source      == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (outputTable == null) ThrowHelper.ThrowArgumentNullException(nameof(outputTable));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -247,9 +247,9 @@ namespace LinqToDB
 			Expression<Func<TSource,TOutput>> outputExpression)
 			where TOutput : notnull
 		{
-			if (source           == null) throw new ArgumentNullException(nameof(source));
-			if (outputTable      == null) throw new ArgumentNullException(nameof(outputTable));
-			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
+			if (source           == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (outputTable      == null) ThrowHelper.ThrowArgumentNullException(nameof(outputTable));
+			if (outputExpression == null) ThrowHelper.ThrowArgumentNullException(nameof(outputExpression));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -286,9 +286,9 @@ namespace LinqToDB
 			CancellationToken                 token = default)
 			where TOutput : notnull
 		{
-			if (source           == null) throw new ArgumentNullException(nameof(source));
-			if (outputTable      == null) throw new ArgumentNullException(nameof(outputTable));
-			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
+			if (source           == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (outputTable      == null) ThrowHelper.ThrowArgumentNullException(nameof(outputTable));
+			if (outputExpression == null) ThrowHelper.ThrowArgumentNullException(nameof(outputExpression));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 

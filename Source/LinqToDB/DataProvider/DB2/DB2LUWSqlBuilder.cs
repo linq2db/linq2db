@@ -38,7 +38,7 @@ namespace LinqToDB.DataProvider.DB2
 		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions)
 		{
 			if (objectType == ConvertType.NameToProcedure && name.Database != null)
-				throw new LinqToDBException("DB2 LUW cannot address functions/procedures with database name specified.");
+				ThrowHelper.ThrowLinqToDBException("DB2 LUW cannot address functions/procedures with database name specified.");
 
 			var schemaName = name.Schema;
 			if (schemaName == null && tableOptions.IsTemporaryOptionSet())
@@ -46,7 +46,7 @@ namespace LinqToDB.DataProvider.DB2
 
 			// "db..table" syntax not supported
 			if (name.Database != null && schemaName == null)
-				throw new LinqToDBException("DB2 requires schema name if database name provided.");
+				ThrowHelper.ThrowLinqToDBException("DB2 requires schema name if database name provided.");
 
 			if (name.Database != null)
 			{

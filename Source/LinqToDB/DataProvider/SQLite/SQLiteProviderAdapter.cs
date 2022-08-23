@@ -68,7 +68,7 @@ namespace LinqToDB.DataProvider.SQLite
 		{
 			var assembly = Common.Tools.TryLoadAssembly(assemblyName, null);
 			if (assembly == null)
-				throw new InvalidOperationException($"Cannot load assembly {assemblyName}");
+				ThrowHelper.ThrowInvalidOperationException($"Cannot load assembly {assemblyName}");
 
 			var connectionType  = assembly.GetType($"{clientNamespace}.{prefix}Connection" , true)!;
 			var dataReaderType  = assembly.GetType($"{clientNamespace}.{prefix}DataReader" , true)!;
@@ -149,13 +149,13 @@ namespace LinqToDB.DataProvider.SQLite
 		[Wrapper]
 		private class SqliteConnection
 		{
-			public static void ClearAllPools() => throw new NotImplementedException();
+			public static void ClearAllPools() => ThrowHelper.ThrowNotImplementedException();
 		}
 
 		[Wrapper]
 		private class SQLiteConnection
 		{
-			public static void ClearAllPools() => throw new NotImplementedException();
+			public static void ClearAllPools() => ThrowHelper.ThrowNotImplementedException();
 		}
 		#endregion
 	}

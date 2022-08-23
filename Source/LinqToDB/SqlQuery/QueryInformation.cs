@@ -20,7 +20,7 @@ namespace LinqToDB.SqlQuery
 		/// </summary>
 		public QueryInformation(SelectQuery rootQuery)
 		{
-			RootQuery = rootQuery ?? throw new ArgumentNullException(nameof(rootQuery));
+			RootQuery = rootQuery ?? ThrowHelper.ThrowArgumentNullException<SelectQuery>(nameof(rootQuery));
 		}
 
 		/// <summary>

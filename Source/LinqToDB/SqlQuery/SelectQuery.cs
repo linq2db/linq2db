@@ -337,7 +337,7 @@ namespace LinqToDB.SqlQuery
 					var ts = query.GetTableSource(f.Table!);
 
 					if (ts == null && f != f.Table!.All)
-						throw new SqlException("Table '{0}' not found.", f.Table);
+						ThrowHelper.ThrowSqlException($"Table '{f.Table}' not found.");
 				}
 			});
 		}

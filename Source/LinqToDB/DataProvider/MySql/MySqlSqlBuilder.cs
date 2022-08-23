@@ -354,7 +354,7 @@ namespace LinqToDB.DataProvider.MySql
 
 				case ConvertType.NameToSprocParameter:
 					if(string.IsNullOrEmpty(value))
-							throw new ArgumentException("Argument 'value' must represent parameter name.");
+							ThrowHelper.ThrowArgumentException("Argument 'value' must represent parameter name.");
 
 					if (value[0] == ParameterSymbol)
 						value = value.Substring(1);
@@ -519,7 +519,7 @@ namespace LinqToDB.DataProvider.MySql
 
 		protected override void BuildMergeStatement(SqlMergeStatement merge)
 		{
-			throw new LinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
+			ThrowHelper.ThrowLinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
 		}
 
 		protected override void BuildGroupByBody(GroupingType groupingType, List<ISqlExpression> items)
@@ -550,44 +550,32 @@ namespace LinqToDB.DataProvider.MySql
 
 			Indent--;
 
-			switch (groupingType)
-			{
-				case GroupingType.Rollup:
-					StringBuilder.Append("WITH ROLLUP");
-					break;
-				case GroupingType.Cube:
-					StringBuilder.Append("WITH CUBE");
-					break;
-				default:
-					throw new InvalidOperationException($"Unexpected grouping type: {groupingType}");
-			}
+			StringBuilder.Append(
+				groupingType switch
+				{
+					GroupingType.Rollup => "WITH ROLLUP",
+					GroupingType.Cube   => "WITH CUBE",
+					_                   => ThrowHelper.ThrowInvalidOperationException<string>($"Unexpected grouping type: {groupingType}"),
+				});
 		}
 
 		protected override void BuildCreateTableCommand(SqlTable table)
 		{
-			string command;
-
-			if (table.TableOptions.IsTemporaryOptionSet())
+			var command = (table.TableOptions.IsTemporaryOptionSet(), table.TableOptions & TableOptions.IsTemporaryOptionSet) switch
 			{
-				switch (table.TableOptions & TableOptions.IsTemporaryOptionSet)
-				{
-					case TableOptions.IsTemporary                                                                              :
-					case TableOptions.IsTemporary |                                          TableOptions.IsLocalTemporaryData :
-					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                     :
-					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData :
-					case                                                                     TableOptions.IsLocalTemporaryData :
-					case                            TableOptions.IsLocalTemporaryStructure                                     :
-					case                            TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData :
-						command = "CREATE TEMPORARY TABLE ";
-						break;
-					case var value :
-						throw new InvalidOperationException($"Incompatible table options '{value}'");
-				}
-			}
-			else
-			{
-				command = "CREATE TABLE ";
-			}
+				(true, TableOptions.IsTemporary                                                                             ) or
+				(true, TableOptions.IsTemporary |                                          TableOptions.IsLocalTemporaryData) or
+				(true, TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                    ) or
+				(true, TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData) or
+				(true,                                                                     TableOptions.IsLocalTemporaryData) or
+				(true,                            TableOptions.IsLocalTemporaryStructure                                    ) or
+				(true,                            TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData)
+					=> "CREATE TEMPORARY TABLE ",
+				(true, var value)
+					=> ThrowHelper.ThrowInvalidOperationException<string>($"Incompatible table options '{value}'"),
+				(false, _)
+					=> "CREATE TABLE ",
+			};
 
 			StringBuilder.Append(command);
 

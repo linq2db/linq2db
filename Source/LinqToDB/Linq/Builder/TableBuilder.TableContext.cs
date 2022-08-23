@@ -122,7 +122,7 @@ namespace LinqToDB.Linq.Builder
 				var attr = mc.Method.GetTableFunctionAttribute(builder.MappingSchema)!;
 
 				if (!typeof(IQueryable<>).IsSameOrParentOf(mc.Method.ReturnType))
-					throw new LinqException("Table function has to return IQueryable<T>.");
+					ThrowHelper.ThrowLinqException("Table function has to return IQueryable<T>.");
 
 				OriginalType     = mc.Method.ReturnType.GetGenericArguments()[0];
 				ObjectType       = GetObjectType();
@@ -469,16 +469,16 @@ namespace LinqToDB.Linq.Builder
 								{
 									var fieldName = memberExpression.Member.Name;
 
-									// do not add association columns
-									var flag = true;
-									foreach (var assoc in EntityDescriptor.Associations)
-									{
-										if (assoc.MemberInfo == memberExpression.Member)
-										{
-											flag = false;
-											break;
-										}
-									}
+					// do not add association columns
+					var flag = true;
+					foreach (var assoc in EntityDescriptor.Associations)
+					{
+						if (assoc.MemberInfo == memberExpression.Member)
+						{
+							flag = false;
+							break;
+						}
+					}
 
 									if (flag)
 									{
@@ -495,8 +495,8 @@ namespace LinqToDB.Linq.Builder
 													InheritanceMapping.Count > 0)
 											) { IsDynamic = true, };
 
-											SqlTable.Add(newField);
-										}
+							SqlTable.Add(newField);
+						}
 
 										return newField;
 									}

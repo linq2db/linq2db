@@ -43,7 +43,7 @@ namespace LinqToDB.Linq.Builder
 					throwExpr = mi.Bindings.Any(b => b.BindingType != MemberBindingType.Assignment);
 
 				if (throwExpr)
-					throw new NotSupportedException($"Explicit construction of entity type '{body.Type}' in group by is not allowed.");
+					ThrowHelper.ThrowNotSupportedException($"Explicit construction of entity type '{body.Type}' in group by is not allowed.");
 			}
 
 			return (methodCall.Arguments[methodCall.Arguments.Count - 1].Unwrap().NodeType == ExpressionType.Lambda);
@@ -136,7 +136,7 @@ namespace LinqToDB.Linq.Builder
 										groupingKind = GroupingType.Cube;
 									else if (mc.IsSameGenericMethod(Methods.LinqToDB.GroupBy.GroupingSets))
 										groupingKind = GroupingType.GroupBySets;
-									else throw new InvalidOperationException();
+									else ThrowHelper.ThrowInvalidOperationException();
 								}
 							}
 						}
@@ -195,7 +195,7 @@ namespace LinqToDB.Linq.Builder
 				var goupingSetBody = groupingKey!.Body;
 				var groupingSets = EnumGroupingSets(goupingSetBody).ToArray();
 				if (groupingSets.Length == 0)
-					throw new LinqException($"Invalid grouping sets expression '{goupingSetBody}'.");
+					ThrowHelper.ThrowLinqException($"Invalid grouping sets expression '{goupingSetBody}'.");
 
 				foreach (var groupingSet in groupingSets)
 				{

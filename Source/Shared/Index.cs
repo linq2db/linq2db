@@ -5,6 +5,7 @@
 
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using LinqToDB;
 
 namespace System
 {
@@ -30,7 +31,7 @@ namespace System
 		public Index(int value, bool fromEnd = false)
 		{
 			if (value < 0)
-				throw new ArgumentOutOfRangeException(nameof(value), value, "Non-negative number required.");
+				ThrowHelper.ThrowArgumentOutOfRangeException(nameof(value), value, "Non-negative number required.");
 
 			if (fromEnd)
 				_value = ~value;
@@ -56,7 +57,7 @@ namespace System
 		public static Index FromStart(int value)
 		{
 			if (value < 0)
-				throw new ArgumentOutOfRangeException(nameof(value), value, "Non-negative number required.");
+				ThrowHelper.ThrowArgumentOutOfRangeException(nameof(value), value, "Non-negative number required.");
 
 			return new Index(value);
 		}
@@ -67,7 +68,7 @@ namespace System
 		public static Index FromEnd(int value)
 		{
 			if (value < 0)
-				throw new ArgumentOutOfRangeException(nameof(value), value, "Non-negative number required.");
+				ThrowHelper.ThrowArgumentOutOfRangeException(nameof(value), value, "Non-negative number required.");
 
 			return new Index(~value);
 		}

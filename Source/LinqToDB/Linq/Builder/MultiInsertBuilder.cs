@@ -32,7 +32,7 @@ namespace LinqToDB.Linq.Builder
 			var genericMethod = methodCall.Method.GetGenericMethodDefinition();
 			return _methodBuilders.TryGetValue(genericMethod, out var build)
 				? build(builder, methodCall, buildInfo)
-				: throw new InvalidOperationException("Unknown method " + methodCall.Method.Name);
+				: ThrowHelper.ThrowInvalidOperationException<IBuildContext>("Unknown method " + methodCall.Method.Name);
 		}
 
 		private static IBuildContext BuildMultiInsert(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
@@ -201,10 +201,10 @@ namespace LinqToDB.Linq.Builder
 				=> QueryRunner.SetNonQueryQuery(query);
 
 			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
-				=> throw new NotImplementedException();
+				=> ThrowHelper.ThrowNotImplementedException<Expression>();
 
 			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
-				=> throw new NotImplementedException();
+				=> ThrowHelper.ThrowNotImplementedException<SqlInfo[]>();
 
 			public override IBuildContext Clone(CloningContext context)
 			{
@@ -218,35 +218,35 @@ namespace LinqToDB.Linq.Builder
 					switch (flags)
 					{
 						case ConvertFlags.Field:
+						{
+							var root = Builder.GetRootObject(expression);
+
+							if (root.NodeType == ExpressionType.Parameter)
 							{
-								var root = Builder.GetRootObject(expression);
+								if (_sourceParameters.Contains(root))
+									return _source.ConvertToSql(expression, level, flags);
 
-								if (root.NodeType == ExpressionType.Parameter)
-								{
-									if (_sourceParameters.Contains(root))
-										return _source.ConvertToSql(expression, level, flags);
-
-									return _target!.ConvertToSql(expression, level, flags);
-								}
-
-								if (root is ContextRefExpression contextRef)
-								{
-									return contextRef.BuildContext.ConvertToSql(expression, level, flags);
-								}
-
-								break;
+								return _target!.ConvertToSql(expression, level, flags);
 							}
+
+							if (root is ContextRefExpression contextRef)
+							{
+								return contextRef.BuildContext.ConvertToSql(expression, level, flags);
+							}
+
+							break;
+						}
 					}
 				}
 
-				throw new LinqException("'{0}' cannot be converted to SQL.", expression);
+				return ThrowHelper.ThrowLinqException<SqlInfo[]>($"'{expression}' cannot be converted to SQL.");
 			}
 
 			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 				=> _source.IsExpression(expression, level, requestFlag);
 
 			public override IBuildContext GetContext(Expression? expression, int level, BuildInfo buildInfo)
-				=> throw new NotImplementedException();
+				=> ThrowHelper.ThrowNotImplementedException<IBuildContext>();
 		}
 
 		#endregion

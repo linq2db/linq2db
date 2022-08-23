@@ -38,7 +38,7 @@ namespace LinqToDB.SqlQuery
 				if (e is SelectQuery sql)
 				{
 					if (dic.ContainsKey(sql))
-						throw new InvalidOperationException("SqlQuery circle reference detected.");
+						ThrowHelper.ThrowInvalidOperationException("SqlQuery circle reference detected.");
 
 					dic.Add(sql, sql);
 				}
@@ -1561,9 +1561,9 @@ namespace LinqToDB.SqlQuery
 				if (c.Expression.ElementType == QueryElementType.SqlRow)
 				{
 					if (_selectQuery.ParentSelect is null)
-						throw new LinqToDBException("SqlRow can not be returned from main SELECT");
+						ThrowHelper.ThrowLinqToDBException("SqlRow can not be returned from main SELECT");
 					if (columns.Count > 1)
-						throw new LinqToDBException("SqlRow expression must be the only result in a SELECT");
+						ThrowHelper.ThrowLinqToDBException("SqlRow expression must be the only result in a SELECT");
 
 					var row = (SqlRow)columns[0].Expression;
 					columns.Clear();

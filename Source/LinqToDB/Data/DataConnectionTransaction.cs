@@ -20,7 +20,7 @@ namespace LinqToDB.Data
 		/// <param name="dataConnection">Data connection instance.</param>
 		public DataConnectionTransaction(DataConnection dataConnection)
 		{
-			DataConnection = dataConnection ?? throw new ArgumentNullException(nameof(dataConnection));
+			DataConnection = dataConnection ?? ThrowHelper.ThrowArgumentNullException<DataConnection>(nameof(dataConnection));
 		}
 
 		/// <summary>

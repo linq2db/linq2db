@@ -40,6 +40,8 @@ namespace Tests
 			public static readonly DateTimeOffset DateTimeOffset          = new DateTimeOffset(2020, 2, 29, 17, 54, 55, 123, TimeSpan.FromMinutes(40)).AddTicks(1234);
 			public static readonly DateTimeOffset DateTimeOffsetUtc       = new DateTimeOffset(2020, 2, 29, 17, 9, 55, 123, TimeSpan.Zero).AddTicks(1234);
 			public static readonly DateTime DateTime                      = new DateTime(2020, 2, 29, 17, 54, 55, 123).AddTicks(1234);
+			public static readonly DateTime DateTime0                     = new DateTime(2020, 2, 29, 17, 54, 55);
+			public static readonly DateTime DateTime3                     = new DateTime(2020, 2, 29, 17, 54, 55, 123);
 			public static readonly DateTime DateTimeUtc                   = new DateTime(2020, 2, 29, 17, 54, 55, 123, DateTimeKind.Utc).AddTicks(1234);
 			public static readonly DateTime DateTime4Utc                  = new DateTime(2020, 2, 29, 17, 54, 55, 123, DateTimeKind.Utc).AddTicks(1000);
 			public static readonly DateTime Date                          = new (2020, 2, 29);
@@ -457,7 +459,7 @@ namespace Tests
 				case ProviderName.Informix:
 					token = '?'; break;
 				case ProviderName.SapHanaNative:
-				case string when context.IsAnyOf(TestProvName.AllOracle):
+				case string when context.IsAnyOf(TestProvName.AllOracle, TestProvName.AllPostgreSQL):
 					token = ':'; break;
 			}
 

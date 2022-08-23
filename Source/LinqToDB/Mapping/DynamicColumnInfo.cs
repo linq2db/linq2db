@@ -45,10 +45,10 @@ namespace LinqToDB.Mapping
 		/// <param name="memberName">Name of the member.</param>
 		public DynamicColumnInfo(Type declaringType, Type columnType, string memberName)
 		{
-			DeclaringType = declaringType ?? throw new ArgumentNullException(nameof(declaringType));
-			PropertyType  = columnType    ?? throw new ArgumentNullException(nameof(columnType));
+			DeclaringType = declaringType ?? ThrowHelper.ThrowArgumentNullException<Type>(nameof(declaringType));
+			PropertyType  = columnType    ?? ThrowHelper.ThrowArgumentNullException<Type>(nameof(columnType));
 
-			Name = !string.IsNullOrEmpty(memberName) ? memberName : throw new ArgumentNullException(nameof(memberName));
+			Name = !string.IsNullOrEmpty(memberName) ? memberName : ThrowHelper.ThrowArgumentNullException<string>(nameof(memberName));
 
 			_typedDummyGetter = _dummyGetter.MakeGenericMethod(declaringType);
 			_typedDummySetter = _dummySetter.MakeGenericMethod(declaringType);
@@ -112,7 +112,7 @@ namespace LinqToDB.Mapping
 
 		/// <inheritdoc cref="PropertyInfo.SetValue(object, object, BindingFlags, Binder, object[], CultureInfo)"/>
 		public override void SetValue(object? obj, object? value, BindingFlags invokeAttr, Binder? binder, object?[]? index, CultureInfo? culture)
-			=> throw new InvalidOperationException("SetValue on dynamic column is not to be called.");
+			=> ThrowHelper.ThrowInvalidOperationException("SetValue on dynamic column is not to be called.");
 
 		/// <inheritdoc cref="PropertyInfo.GetAccessors(bool)"/>
 		public override MethodInfo[] GetAccessors(bool nonPublic)
@@ -134,12 +134,12 @@ namespace LinqToDB.Mapping
 
 		/// <inheritdoc cref="PropertyInfo.GetValue(object, BindingFlags, Binder, object[], CultureInfo)"/>
 		public override object GetValue(object? obj, BindingFlags invokeAttr, Binder? binder, object?[]? index, CultureInfo? culture)
-			=> throw new InvalidOperationException("SetValue on dynamic column is not to be called.");
+			=> ThrowHelper.ThrowInvalidOperationException<object>("SetValue on dynamic column is not to be called.");
 		
 		private T DummyGetter<T>()
-			=> throw new InvalidOperationException("Dynamic column getter is not to be called.");
+			=> ThrowHelper.ThrowInvalidOperationException<T>("Dynamic column getter is not to be called.");
 
 		private void DummySetter<T>(T value)
-			=> throw new InvalidOperationException("Dynamic column setter is not to be called.");
+			=> ThrowHelper.ThrowInvalidOperationException("Dynamic column setter is not to be called.");
 	}
 }

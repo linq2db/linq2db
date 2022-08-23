@@ -74,7 +74,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			var count = members.Length - startIndex;
 			if (count == 0)
-				throw new ArgumentOutOfRangeException(nameof(startIndex));
+				ThrowHelper.ThrowArgumentOutOfRangeException(nameof(startIndex));
 
 			Expression[] arguments;
 
@@ -94,7 +94,7 @@ namespace LinqToDB.Linq.Builder
 			var type         = MutableTuple.MTypes[count - 1];
 			var concreteType = type.MakeGenericType(arguments.Select(a => a.Type).ToArray());
 			var constructor  = concreteType.GetConstructor(Array<Type>.Empty) ??
-							   throw new LinqToDBException($"Can not retrieve default constructor for '{type.Name}'");
+							   ThrowHelper.ThrowLinqToDBException<ConstructorInfo>($"Can not retrieve default constructor for '{type.Name}'");
 
 			var newExpression  = Expression.New(constructor);
 			var initExpression = Expression.MemberInit(newExpression,
@@ -159,7 +159,7 @@ namespace LinqToDB.Linq.Builder
 				if (result.Type != memberInfo.MemberInfo.DeclaringType)
 				{
 					if (throwOnError)
-						throw new LinqToDBException($"Type {result.Type.Name} does not have member {memberInfo.MemberInfo.Name}.");
+						ThrowHelper.ThrowLinqToDBException($"Type {result.Type.Name} does not have member {memberInfo.MemberInfo.Name}.");
 					return null;
 				}
 				if (memberInfo.MemberInfo.IsMethodEx())
@@ -188,7 +188,7 @@ namespace LinqToDB.Linq.Builder
 				if (!memberInfo.DeclaringType!.IsSameOrParentOf(result.Type))
 				{
 					if (throwOnError)
-						throw new LinqToDBException($"Type {result.Type.Name} does not have member {memberInfo.Name}.");
+						ThrowHelper.ThrowLinqToDBException($"Type {result.Type.Name} does not have member {memberInfo.Name}.");
 					return null;
 				}
 				result = Expression.MakeMemberAccess(result, memberInfo);
@@ -269,10 +269,10 @@ namespace LinqToDB.Linq.Builder
 				return mainQuery;
 
 			if (mainQuery.NodeType != ExpressionType.Call)
-				throw new LinqException($"Expected Method call but found '{mainQuery.NodeType}'");
+				ThrowHelper.ThrowLinqException($"Expected Method call but found '{mainQuery.NodeType}'");
 			var mc = (MethodCallExpression) mainQuery;
 			if (!mc.IsQueryable() || !FirstSingleMethods.Contains(mc.Method.Name))
-				throw new LinqException($"Unsupported Method call '{mc.Method.Name}'");
+				ThrowHelper.ThrowLinqException($"Unsupported Method call '{mc.Method.Name}'");
 
 			var newExpr = TypeHelper.MakeMethodCall(Methods.Queryable.Take, mc.Arguments[0], ExpressionInstances.Constant1);
 			return newExpr;
@@ -720,7 +720,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (parentExpr == null)
 				{
-					throw new NotImplementedException();
+					ThrowHelper.ThrowNotImplementedException();
 				}
 
 				if (projectionVariant)
@@ -741,7 +741,7 @@ namespace LinqToDB.Linq.Builder
 			if (typeof(KeyDetailEnvelope<,>).IsSameOrParentOf(mainQueryElementType))
 			{
 				if (!IsQueryableMethod(mainQuery, "SelectMany", out var mainSelectManyMethod))
-					throw new InvalidOperationException("Unexpected Main Query");
+					ThrowHelper.ThrowInvalidOperationException("Unexpected Main Query");
 
 				var detailProp   = ExpressionHelper.Field(masterParam, nameof(KeyDetailEnvelope<object, object>.Detail));
 
@@ -751,7 +751,7 @@ namespace LinqToDB.Linq.Builder
 
 					if (parentExpr == null)
 					{
-						throw new NotImplementedException();
+						ThrowHelper.ThrowNotImplementedException();
 					}
 
 					if (projectionVariant)
@@ -815,7 +815,7 @@ namespace LinqToDB.Linq.Builder
 
 					if (parentExpr == null)
 					{
-						throw new NotImplementedException();
+						ThrowHelper.ThrowNotImplementedException();
 					}
 
 					detailQuery = ConstructMemberPath(associationPath, parentExpr, true)!;
@@ -1189,7 +1189,7 @@ namespace LinqToDB.Linq.Builder
 					if (searchExpression.NodeType == ExpressionType.MemberAccess)
 						searchExpression = ((MemberExpression)searchExpression).Expression!;
 					else
-						throw new NotImplementedException();
+						ThrowHelper.ThrowNotImplementedException();
 				}
 
 				CollectDependencies(mappingSchema, queryableDetail, dependencies, dependencyParameters);
@@ -1251,7 +1251,7 @@ namespace LinqToDB.Linq.Builder
 				if (typeof(KeyDetailEnvelope<,>).IsSameOrParentOf(dataType))
 				{
 					if (!IsQueryableMethod(initialMainQuery, "SelectMany", out var mainSelectManyMethod))
-						throw new InvalidOperationException("Unexpected Main Query");
+						ThrowHelper.ThrowInvalidOperationException("Unexpected Main Query");
 
 					var envelopeCreateLambda = (LambdaExpression)mainSelectManyMethod.Arguments[2].Unwrap();
 					var envelopeCreateMethod = (MemberInitExpression)envelopeCreateLambda.Body;
@@ -1272,7 +1272,7 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				if (keysInfo.Count == 0)
-					throw new LinqException("Could not retrieve information about unique keys for generating detail query.");
+					ThrowHelper.ThrowLinqException("Could not retrieve information about unique keys for generating detail query.");
 
 				var generateKeyExpression   = GenerateKeyExpression(keysInfo.Select(k => k.ForCompilation).ToArray(), 0);
 				var keySelectExpression     = GenerateKeyExpression(keysInfo.Select(k => k.ForSelect).ToArray(), 0);
@@ -1722,8 +1722,10 @@ namespace LinqToDB.Linq.Builder
 									.ToArray();
 
 								var newMemberInit = Expression.MemberInit(
-									Expression.New(newType.GetConstructor(Array<Type>.Empty) ??
-												   throw new InvalidOperationException($"Default constructor not found for type {newType}")), newAssignments);
+									Expression.New(
+										newType.GetConstructor(Array<Type>.Empty) ??
+											ThrowHelper.ThrowInvalidOperationException<ConstructorInfo>($"Default constructor not found for type {newType}")), 
+										newAssignments);
 								return newMemberInit;
 							}
 
@@ -2010,7 +2012,7 @@ namespace LinqToDB.Linq.Builder
 
 											if (typesMapping.TryGetValue(resultTemplateParam, out var replacedType))
 											{
-												throw new NotImplementedException();
+												ThrowHelper.ThrowNotImplementedException();
 											}
 											else
 											{
@@ -2155,7 +2157,7 @@ namespace LinqToDB.Linq.Builder
 									updated = Expression.Call(methodInfo, updated, Expression.Lambda(body, p));
 								}
 								else
-									throw new NotImplementedException();
+									ThrowHelper.ThrowNotImplementedException();
 							};
 							newExpr = CreateKDH(updated, ne);
 						}

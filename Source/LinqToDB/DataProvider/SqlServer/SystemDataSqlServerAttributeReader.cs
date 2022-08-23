@@ -7,7 +7,6 @@ namespace LinqToDB.Metadata
 {
 	using Common;
 	using Extensions;
-	using LinqToDB.DataProvider.SqlServer;
 	using Mapping;
 
 	/// <summary>

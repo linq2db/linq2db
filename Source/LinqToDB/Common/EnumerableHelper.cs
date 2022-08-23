@@ -62,7 +62,7 @@ namespace LinqToDB.Common
 			public Batcher(IEnumerable<T> source, int batchSize)
 			{
 				if (batchSize < 1)
-					throw new ArgumentException($"{nameof(batchSize)} must be >= 1");
+					ThrowHelper.ThrowArgumentException(nameof(batchSize), $"{nameof(batchSize)} must be >= 1");
 
 				_batchSize = batchSize;
 				_enumerator = source.GetEnumerator();
@@ -73,7 +73,7 @@ namespace LinqToDB.Common
 				get
 				{
 					if (_currentBatchEnumerateStarted)
-						throw new InvalidOperationException("Cannot enumerate IBatched.Current multiple times");
+						ThrowHelper.ThrowInvalidOperationException("Cannot enumerate IBatched.Current multiple times");
 
 					_currentBatchEnumerateStarted = true;
 					for (var i = 0; i < _batchSize; i++)
@@ -128,9 +128,12 @@ namespace LinqToDB.Common
 		/// <returns>New enumerable of batches.</returns>
 		public static IAsyncEnumerable<IAsyncEnumerable<T>> Batch<T>(IAsyncEnumerable<T> source, int batchSize)
 		{
-			if (batchSize <= 0) throw new ArgumentOutOfRangeException(nameof(batchSize));
-			if (batchSize < Int32.MaxValue) return new AsyncBatchEnumerable<T>(source, batchSize);
-			return BatchSingle(source);
+			return batchSize switch
+			{
+				<= 0 => ThrowHelper.ThrowArgumentOutOfRangeException<IAsyncEnumerable<IAsyncEnumerable<T>>>(nameof(batchSize)),
+				<  int.MaxValue => new AsyncBatchEnumerable<T>(source, batchSize),
+				_               => BatchSingle(source)
+			};
 		}
 
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
@@ -169,11 +172,11 @@ namespace LinqToDB.Common
 				_batchSize = batchSize;
 			}
 
-			public IAsyncEnumerable<T> Current => _isCurrent ? this : throw new InvalidOperationException();
+			public IAsyncEnumerable<T> Current => _isCurrent ? this : ThrowHelper.ThrowInvalidOperationException<IAsyncEnumerable<T>>();
 
 			IAsyncEnumerator<T> IAsyncEnumerable<T>.GetAsyncEnumerator(CancellationToken cancellationToken)
 			{
-				if (_current == null) throw new InvalidOperationException();
+				if (_current == null) ThrowHelper.ThrowInvalidOperationException();
 
 				var enumerator = _current;
 				_current       = null;

@@ -11,7 +11,7 @@ namespace LinqToDB.Linq
 		public static MethodInfo GetMethodInfo(this Delegate del)
 		{
 			if ((object)del == null)
-				throw new ArgumentNullException(nameof(del));
+				ThrowHelper.ThrowArgumentNullException(nameof(del));
 			return del.Method;
 		}
 

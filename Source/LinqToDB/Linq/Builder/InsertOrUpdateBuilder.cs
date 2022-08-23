@@ -52,7 +52,7 @@ namespace LinqToDB.Linq.Builder
 				var keys  = table.GetKeys(false);
 
 				if (keys.Count == 0)
-					throw new LinqException("InsertOrUpdate method requires the '{0}' table to have a primary key.", table.NameForLogging);
+					ThrowHelper.ThrowLinqException($"InsertOrUpdate method requires the '{table.NameForLogging}' table to have a primary key.");
 
 				var q =
 				(
@@ -64,9 +64,8 @@ namespace LinqToDB.Linq.Builder
 				var missedKey = keys.Except(q.Select(i => i.k)).FirstOrDefault();
 
 				if (missedKey != null)
-					throw new LinqException("InsertOrUpdate method requires the '{0}.{1}' field to be included in the insert setter.",
-						table.NameForLogging,
-						((SqlField)missedKey).Name);
+					ThrowHelper.ThrowLinqException(
+						$"InsertOrUpdate method requires the '{table.NameForLogging}.{((SqlField)missedKey).Name}' field to be included in the insert setter.");
 
 				insertOrUpdateStatement.Update.Keys.AddRange(q.Select(i => i.i));
 			}
@@ -105,17 +104,17 @@ namespace LinqToDB.Linq.Builder
 
 			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 			{
-				throw new NotImplementedException();
+				return ThrowHelper.ThrowNotImplementedException<Expression>();
 			}
 
 			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 			{
-				throw new NotImplementedException();
+				return ThrowHelper.ThrowNotImplementedException<SqlInfo[]>();
 			}
 
 			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 			{
-				throw new NotImplementedException();
+				return ThrowHelper.ThrowNotImplementedException<SqlInfo[]>();
 			}
 
 			public override IBuildContext Clone(CloningContext context)
@@ -125,12 +124,12 @@ namespace LinqToDB.Linq.Builder
 
 			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 			{
-				throw new NotImplementedException();
+				return ThrowHelper.ThrowNotImplementedException<IsExpressionResult>();
 			}
 
 			public override IBuildContext GetContext(Expression? expression, int level, BuildInfo buildInfo)
 			{
-				throw new NotImplementedException();
+				return ThrowHelper.ThrowNotImplementedException<IBuildContext>();
 			}
 		}
 

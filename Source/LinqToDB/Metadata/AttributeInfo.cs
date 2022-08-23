@@ -49,7 +49,7 @@ namespace LinqToDB.Metadata
 				}
 				else
 				{
-					throw new NotImplementedException();
+					ThrowHelper.ThrowNotImplementedException();
 				}
 			}
 

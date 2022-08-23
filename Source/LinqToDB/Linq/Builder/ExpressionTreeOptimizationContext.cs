@@ -801,7 +801,7 @@ namespace LinqToDB.Linq.Builder
 								return ExpressionBuilder.DataContextParam;
 							}
 
-							throw new LinqToDBException($"Can't convert {wpi} to expression.");
+							ThrowHelper.ThrowLinqToDBException($"Can't convert {wpi} to expression.");
 						}
 
 						return wpi;
@@ -881,7 +881,7 @@ namespace LinqToDB.Linq.Builder
 								return ExpressionBuilder.DataContextParam;
 							}
 
-							throw new LinqToDBException($"Can't convert {wpi} to expression.");
+							ThrowHelper.ThrowLinqToDBException($"Can't convert {wpi} to expression.");
 						}
 
 						var result = n < 0 ? context.pi.Object! : context.pi.Arguments[n];

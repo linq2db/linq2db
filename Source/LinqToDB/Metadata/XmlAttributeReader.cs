@@ -20,8 +20,8 @@ namespace LinqToDB.Metadata
 
 		public XmlAttributeReader(string xmlFile, Assembly assembly)
 		{
-			if (xmlFile  == null) throw new ArgumentNullException(nameof(xmlFile));
-			if (assembly == null) throw new ArgumentNullException(nameof(assembly));
+			if (xmlFile  == null) ThrowHelper.ThrowArgumentNullException(nameof(xmlFile));
+			if (assembly == null) ThrowHelper.ThrowArgumentNullException(nameof(assembly));
 
 			StreamReader? streamReader = null;
 
@@ -51,7 +51,7 @@ namespace LinqToDB.Metadata
 				}
 
 				if (stream == null)
-					throw new MetadataException($"Could not find file '{xmlFile}'.");
+					ThrowHelper.ThrowMetadataException($"Could not find file '{xmlFile}'.");
 				else
 					using (stream)
 						_types = LoadStream(stream, xmlFile);
@@ -64,7 +64,7 @@ namespace LinqToDB.Metadata
 
 		public XmlAttributeReader(Stream xmlDocStream)
 		{
-			if (xmlDocStream == null) throw new ArgumentNullException(nameof(xmlDocStream));
+			if (xmlDocStream == null) ThrowHelper.ThrowArgumentNullException(nameof(xmlDocStream));
 
 			_types = LoadStream(xmlDocStream, "");
 		}
@@ -81,7 +81,7 @@ namespace LinqToDB.Metadata
 					var type  = e.Attribute("Type");
 
 					if (value == null)
-						throw new MetadataException(
+						ThrowHelper.ThrowMetadataException(
 							memberName != null ?
 								string.Format(
 									"'{0}': Element <Type Name='{1}'><Member Name='{2}'><'{3}'><{4} /> has to have 'Value' attribute.",
@@ -109,14 +109,14 @@ namespace LinqToDB.Metadata
 			var doc = XDocument.Load(new StreamReader(xmlDocStream));
 
 			if (doc.Root == null)
-				throw new MetadataException($"'{fileName}': Root element missing.");
+				ThrowHelper.ThrowMetadataException($"'{fileName}': Root element missing.");
 
 			return doc.Root.Elements().Where(e => e.Name.LocalName == "Type").Select(t =>
 			{
 				var aname = t.Attribute("Name");
 
 				if (aname == null)
-					throw new MetadataException($"'{fileName}': Element 'Type' has to have 'Name' attribute.");
+					ThrowHelper.ThrowMetadataException($"'{fileName}': Element 'Type' has to have 'Name' attribute.");
 
 				var tname = aname.Value;
 
@@ -125,7 +125,7 @@ namespace LinqToDB.Metadata
 					var maname = m.Attribute("Name");
 
 					if (maname == null)
-						throw new MetadataException($"'{fileName}': Element <Type Name='{tname}'><Member /> has to have 'Name' attribute.");
+						ThrowHelper.ThrowMetadataException($"'{fileName}': Element <Type Name='{tname}'><Member /> has to have 'Name' attribute.");
 
 					var mname = maname.Value;
 

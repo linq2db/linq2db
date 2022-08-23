@@ -1725,8 +1725,8 @@ namespace Tests.xUpdate
 		}
 
 		// same as CrossJoinedSourceWithSingleFieldSelection test but with server-side sort
-		// it returns incorrectly ordered data for DB2 and Oracle for some reason
-		[ActiveIssue(Configurations = new[] { ProviderName.DB2, TestProvName.AllOracle, TestProvName.AllSybase })]
+		// it returns incorrectly ordered data for DB2, PostgreSQL and Oracle for some reason
+		[ActiveIssue(Configurations = new[] { ProviderName.DB2, TestProvName.AllOracle, TestProvName.AllSybase, ProviderName.PostgreSQL15 })]
 		[Test]
 		public void SortedMergeResultsIssue([MergeDataContextSource(false)] string context)
 		{

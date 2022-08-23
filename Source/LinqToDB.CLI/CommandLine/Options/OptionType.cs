@@ -35,7 +35,7 @@
 		/// Language identifier naming options.
 		/// Value is an object with following properties:
 		/// <list type="bullet">
-		/// <item>"transformation": "split_by_underscore" (default) | "t4" - custom transformation, applied to original name.</item>
+		/// <item>"transformation": "split_by_underscore" (default) | "none" | "association" - custom transformation, applied to original name.</item>
 		/// <item>"case": "none" (default) | "pascal_case" | "camel_case" | "snake_case" | "lower_case" | "upper_case" | "t4_pluralized" | "t4"</item>
 		/// <item>"pluralization": "none" (default) | "singular" | "plural" | "plural_multiple_characters"</item>
 		/// <item>"prefix": string?</item>

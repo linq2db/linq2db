@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Runtime.Serialization;
 
 namespace LinqToDB.Common
@@ -80,6 +80,6 @@ namespace LinqToDB.Common
 		/// <summary>
 		/// Gets name of misconfigured column, which caused exception.
 		/// </summary>
-		public string? ColumnName { get; internal set; }
+		public string? ColumnName { get; set; }
 	}
 }

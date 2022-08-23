@@ -29,7 +29,8 @@ namespace LinqToDB.Linq.Builder
 				if (target is not TableBuilder.TableContext tableContext
 					|| !tableContext.SelectQuery.IsSimple)
 				{
-					throw new NotImplementedException("Currently, only CTEs are supported as the target of a merge. You can fix by calling .AsCte() on the parameter before passing into .MergeInto().");
+					return ThrowHelper.ThrowNotImplementedException<IBuildContext>(
+						"Currently, only CTEs are supported as the target of a merge. You can fix by calling .AsCte() on the parameter before passing into .MergeInto().");
 				}
 
 				var targetTable = tableContext.SqlTable;

@@ -326,7 +326,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						// transform Sql.Property into member access
 						if (expr.Arguments[1].Type != typeof(string))
-							throw new ArgumentException("Only strings are allowed for member name in Sql.Property expressions.");
+							ThrowHelper.ThrowArgumentException("Only strings are allowed for member name in Sql.Property expressions.");
 
 						var entity           = ConvertExpression(expr.Arguments[0]);
 						var memberName       = (string)expr.Arguments[1].EvaluateExpression()!;
@@ -340,7 +340,7 @@ namespace LinqToDB.Linq.Builder
 								if (a.MemberInfo.Name == memberName)
 								{
 									if (memberInfo != null)
-										throw new InvalidOperationException("Sequence contains more than one element");
+										ThrowHelper.ThrowInvalidOperationException("Sequence contains more than one element");
 									memberInfo = a.MemberInfo;
 								}
 							}
@@ -1450,7 +1450,7 @@ namespace LinqToDB.Linq.Builder
 					static (context, e, descriptor) => context.this_.ConvertToExtensionSql(context.context, e, descriptor));
 
 			if (sqlExpression == null)
-				throw new LinqToDBException($"Cannot convert to SQL method '{mc}'.");
+				ThrowHelper.ThrowLinqToDBException($"Cannot convert to SQL method '{mc}'.");
 
 			DataContext.InlineParameters = inlineParameters;
 
@@ -1557,7 +1557,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (arg.NodeType == ExpressionType.Constant || arg.NodeType == ExpressionType.Default)
 				{
-					var comparison = (StringComparison)(arg.EvaluateExpression() ?? throw new InvalidOperationException());
+					var comparison = (StringComparison)(arg.EvaluateExpression() ?? ThrowHelper.ThrowInvalidOperationException<object?>());
 					return new SqlValue(comparison == StringComparison.CurrentCulture   ||
 					                    comparison == StringComparison.InvariantCulture ||
 					                    comparison == StringComparison.Ordinal);
@@ -1885,7 +1885,7 @@ namespace LinqToDB.Linq.Builder
 				ExpressionType.GreaterThanOrEqual => SqlPredicate.Operator.GreaterOrEqual,
 				ExpressionType.LessThan           => SqlPredicate.Operator.Less,
 				ExpressionType.LessThanOrEqual    => SqlPredicate.Operator.LessOrEqual,
-				_                                 => throw new InvalidOperationException(),
+				_                                 => ThrowHelper.ThrowInvalidOperationException<SqlPredicate.Operator>(),
 			};
 			if ((left.NodeType == ExpressionType.Convert || right.NodeType == ExpressionType.Convert) && (op == SqlPredicate.Operator.Equal || op == SqlPredicate.Operator.NotEqual))
 			{
@@ -2336,7 +2336,7 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			if (ReferenceEquals(result, ob) && throwOnError)
-				throw new LinqToDBException($"Type {result.Type.Name} does not have member {memberPath.Last().Name}.");
+				ThrowHelper.ThrowLinqToDBException($"Type {result.Type.Name} does not have member {memberPath.Last().Name}.");
 
 			return result;
 		}
@@ -2531,7 +2531,7 @@ namespace LinqToDB.Linq.Builder
 					break;
 			}
 
-			throw new LinqException("'{0}' cannot be converted to SQL.", expression);
+			return ThrowHelper.ThrowLinqException<ISqlPredicate>($"'{expression}' cannot be converted to SQL.");
 		}
 
 		#endregion
@@ -2626,7 +2626,8 @@ namespace LinqToDB.Linq.Builder
 					return new SqlPredicate.Expr(new SqlValue(true));
 			}
 
-			return MakeIsPredicate(table, table, table.InheritanceMapping, typeOperand, static (table, name) => table.SqlTable[name] ?? throw new LinqException($"Field {name} not found in table {table.SqlTable}"));
+			return MakeIsPredicate(table, table, table.InheritanceMapping, typeOperand, static (table, name) 
+				=> table.SqlTable[name] ?? ThrowHelper.ThrowLinqException<SqlField>($"Field {name} not found in table {table.SqlTable}"));
 		}
 
 		public ISqlPredicate MakeIsPredicate<TContext>(
@@ -2766,10 +2767,11 @@ namespace LinqToDB.Linq.Builder
 
 			foreach (var m in mapping)
 			{
-				var field = table.SqlTable[table.InheritanceMapping[m.i].DiscriminatorName] ?? throw new LinqException($"Field {table.InheritanceMapping[m.i].DiscriminatorName} not found in table {table.SqlTable}");
+				var field = table.SqlTable[table.InheritanceMapping[m.i].DiscriminatorName] 
+				            ?? ThrowHelper.ThrowLinqException<SqlField>($"Field {table.InheritanceMapping[m.i].DiscriminatorName} not found in table {table.SqlTable}");
 				var ttype = field.ColumnDescriptor.MemberAccessor.TypeAccessor.Type;
 				var obj   = expression.Expression;
-
+				
 				if (obj.Type != ttype)
 					obj = Expression.Convert(expression.Expression, ttype);
 
@@ -2903,7 +2905,7 @@ namespace LinqToDB.Linq.Builder
 				if (context.IgnoredMembers != null)
 				{
 					if (pi != context.IgnoredMembers[context.IgnoredMembers.Count - 1])
-						throw new InvalidOperationException();
+						ThrowHelper.ThrowInvalidOperationException();
 
 					if (context.IgnoredMembers.Count == 1)
 						context.IgnoredMembers = null;
@@ -3306,7 +3308,7 @@ namespace LinqToDB.Linq.Builder
 			if (cteExpression == null)
 			{
 				if (_ctesObjectMapping == null)
-					throw new InvalidOperationException();
+					ThrowHelper.ThrowInvalidOperationException();
 				cteExpression = _ctesObjectMapping[queryable!];
 			}
 
@@ -3425,7 +3427,7 @@ namespace LinqToDB.Linq.Builder
 		public void PopDisabledFilter()
 		{
 			if (_disabledFilters == null)
-				throw new InvalidOperationException();
+				ThrowHelper.ThrowInvalidOperationException();
 
 			_ = _disabledFilters.Pop();
 		}
@@ -3444,7 +3446,7 @@ namespace LinqToDB.Linq.Builder
 		public void PopSqlQueryExtension(SqlQueryExtension extension)
 		{
 			if (_sqlQueryExtensionStack == null || _sqlQueryExtensionStack.Count > 0)
-				throw new InvalidOperationException();
+				ThrowHelper.ThrowInvalidOperationException();
 			_sqlQueryExtensionStack.RemoveAt(_sqlQueryExtensionStack.Count - 1);
 		}
 

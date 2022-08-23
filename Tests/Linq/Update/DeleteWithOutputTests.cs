@@ -13,8 +13,8 @@ namespace Tests.xUpdate
 	[TestFixture]
 	public class DeleteWithOutputTests : TestBase
 	{
-		private const string FeatureDeleteOutputMultiple = $"{TestProvName.AllSqlServer},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLiteClassic}";
-		private const string FeatureDeleteOutputSingle   = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLiteClassic}";
+		private const string FeatureDeleteOutputMultiple = $"{TestProvName.AllSqlServer},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite}";
+		private const string FeatureDeleteOutputSingle   = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite}";
 		private const string FeatureDeleteOutputInto     = $"{TestProvName.AllSqlServer}";
 
 		[Table]
