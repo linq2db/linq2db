@@ -134,9 +134,7 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			command = base.InitCommand(dataConnection, command, commandType, commandText, parameters, withParameters);
 
-			var rawCommand = TryGetProviderCommand(dataConnection, command);
-
-			if (rawCommand != null)
+			if (TryGetProviderCommand(dataConnection, command) is { } rawCommand)
 			{
 				// binding disabled for native provider without parameters to reduce chances to fail when SQL contains
 				// parameter-like token.
@@ -149,17 +147,15 @@ namespace LinqToDB.DataProvider.Oracle
 				// For LONG data type fetching initialization
 				Adapter.SetInitialLONGFetchSize?.Invoke(rawCommand, -1);
 
-				if (parameters != null && Adapter.SetArrayBindCount != null)
-					foreach (var parameter in parameters)
-					{
-						if (parameter.IsArray
-							&& parameter.Value is object[] value
-							&& value.Length != 0)
-						{
-							Adapter.SetArrayBindCount(rawCommand, value.Length);
-							break;
-						}
-					}
+				// Always reset SetArrayBindCount, in case it was modified by a previous command.
+				// When using array bindings, _all_ parameters must be arrays and have the same length.
+				if (Adapter.SetArrayBindCount != null)
+				{
+					int arrayBindCount = parameters?.Length > 0 && parameters[0] is { IsArray: true, Value: object[] value }
+						? value.Length
+						: 0;
+					Adapter.SetArrayBindCount(rawCommand, arrayBindCount);
+				}
 			}
 
 			return command;
