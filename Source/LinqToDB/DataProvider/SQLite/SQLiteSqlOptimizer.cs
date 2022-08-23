@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using LinqToDB.Linq;
-
-namespace LinqToDB.DataProvider.SQLite
+﻿namespace LinqToDB.DataProvider.SQLite
 {
+	using Common;
 	using Extensions;
 	using SqlProvider;
 	using SqlQuery;
-	using Common;
 
 	class SQLiteSqlOptimizer : BasicSqlOptimizer
 	{

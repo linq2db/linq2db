@@ -1,5 +1,3 @@
-using System;
-
 namespace LinqToDB.Mapping
 {
 	/// <summary>

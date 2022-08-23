@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-using LinqToDB.Async;
-
-namespace LinqToDB.Common
+﻿namespace LinqToDB.Common
 {
+	using Async;
+
 	public class EnumerableHelper
 	{
 #if NATIVE_ASYNC

@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Threading;
-using LinqToDB.Common;
+﻿using System.Reflection;
 
 namespace LinqToDB.Metadata
 {
+	using Common;
+
 	/// <summary>
 	/// Aggregation metadata reader, that just delegates all calls to nested readers.
 	/// </summary>

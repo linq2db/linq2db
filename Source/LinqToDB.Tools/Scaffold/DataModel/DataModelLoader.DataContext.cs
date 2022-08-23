@@ -1,10 +1,11 @@
 ﻿using System.Text;
-using LinqToDB.CodeModel;
-using LinqToDB.DataModel;
-using LinqToDB.Naming;
 
 namespace LinqToDB.Scaffold
 {
+	using CodeModel;
+	using DataModel;
+	using Naming;
+
 	partial class DataModelLoader
 	{
 		/// <summary>

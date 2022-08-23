@@ -1,7 +1,4 @@
-﻿using System;
-using System.Data.Common;
-
-namespace LinqToDB
+﻿namespace LinqToDB
 {
 	using Data;
 	using Interceptors;

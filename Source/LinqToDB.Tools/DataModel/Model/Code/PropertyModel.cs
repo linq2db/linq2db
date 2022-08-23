@@ -1,8 +1,7 @@
-﻿using System.Collections.Generic;
-using LinqToDB.CodeModel;
-
-namespace LinqToDB.DataModel
+﻿namespace LinqToDB.DataModel
 {
+	using CodeModel;
+
 	/// <summary>
 	/// Contains basic class property attributes.
 	/// </summary>

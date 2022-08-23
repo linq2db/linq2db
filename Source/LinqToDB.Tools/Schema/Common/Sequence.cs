@@ -1,7 +1,7 @@
-﻿using LinqToDB.SqlQuery;
-
-namespace LinqToDB.Schema
+﻿namespace LinqToDB.Schema
 {
+	using SqlQuery;
+
 	// TODO: add sequence load to schema API
 	// TODO: add min/max/start/step data
 	/// <summary>

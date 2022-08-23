@@ -1,21 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data.Common;
+﻿using System.Data.Common;
 using System.Data.SqlTypes;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Threading;
-using System.Threading.Tasks;
-using LinqToDB.Common;
-using LinqToDB.Configuration;
-using LinqToDB.Data;
-using LinqToDB.Expressions;
-using LinqToDB.Mapping;
-using LinqToDB.Tools.Comparers;
 
 namespace LinqToDB.CodeModel
 {
+	using Common;
+	using Configuration;
+	using Data;
+	using Expressions;
+	using Mapping;
+	using Tools.Comparers;
+
 	/// <summary>
 	/// This class contains pre-parsed <see cref="IType"/> definitions and member references for well-known system and Linq To DB types,
 	/// used during code generation.

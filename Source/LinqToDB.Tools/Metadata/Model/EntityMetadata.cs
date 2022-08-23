@@ -1,8 +1,7 @@
-﻿using LinqToDB.Schema;
-using LinqToDB.SqlQuery;
-
-namespace LinqToDB.Metadata
+﻿namespace LinqToDB.Metadata
 {
+	using SqlQuery;
+
 	/// <summary>
 	/// Entity mapping attributes for table or view.
 	/// </summary>

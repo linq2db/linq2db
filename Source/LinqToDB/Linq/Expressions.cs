@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data.Linq;
+﻿using System.Data.Linq;
 using System.Data.SqlTypes;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
-
-using JetBrains.Annotations;
+using LinqToDB.Expressions;
 
 #region ReSharper disables
 // ReSharper disable RedundantTypeArgumentsOfMethod
@@ -21,10 +17,9 @@ using JetBrains.Annotations;
 namespace LinqToDB.Linq
 {
 	using Common;
-	using Extensions;
-	using LinqToDB.Common.Internal;
+	using Common.Internal;
 	using DataProvider.Firebird;
-	using LinqToDB.Expressions;
+	using Extensions;
 	using Mapping;
 
 	[PublicAPI]

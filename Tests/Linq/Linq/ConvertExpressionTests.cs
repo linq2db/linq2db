@@ -1,9 +1,6 @@
-﻿using System.Linq;
-
-using LinqToDB;
+﻿using LinqToDB;
 
 using NUnit.Framework;
-using Tests.Model;
 
 namespace Tests.Linq
 {

@@ -1,10 +1,7 @@
-﻿using System;
-using System.Data;
-using System.Data.Common;
-using LinqToDB.Expressions;
-
-namespace LinqToDB.DataProvider
+﻿namespace LinqToDB.DataProvider
 {
+	using Expressions;
+
 	public class OdbcProviderAdapter : IDynamicProviderAdapter
 	{
 		private static readonly object _syncRoot = new object();

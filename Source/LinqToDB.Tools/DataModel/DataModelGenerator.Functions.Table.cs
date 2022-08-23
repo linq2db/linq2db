@@ -1,8 +1,7 @@
-﻿using System;
-using LinqToDB.CodeModel;
-
-namespace LinqToDB.DataModel
+﻿namespace LinqToDB.DataModel
 {
+	using CodeModel;
+
 	// contains generation logic for table function mappings
 	partial class DataModelGenerator
 	{

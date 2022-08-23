@@ -1,14 +1,10 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 
 namespace LinqToDB.Configuration
 {
-	using System.Collections.Generic;
-	using System.Data.Common;
-	using System.Linq;
 	using Data;
 	using DataProvider;
-	using LinqToDB.Interceptors;
+	using Interceptors;
 	using Mapping;
 
 	/// <summary>

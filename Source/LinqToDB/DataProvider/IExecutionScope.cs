@@ -1,6 +1,4 @@
-﻿using System;
-
-public interface IExecutionScope : IDisposable
+﻿public interface IExecutionScope : IDisposable
 #if NATIVE_ASYNC
 	, IAsyncDisposable
 #endif

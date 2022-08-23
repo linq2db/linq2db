@@ -1,8 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using JetBrains.Annotations;
-
-namespace LinqToDB.DataProvider.ClickHouse
+﻿namespace LinqToDB.DataProvider.ClickHouse
 {
 	using Configuration;
 	using MySql;

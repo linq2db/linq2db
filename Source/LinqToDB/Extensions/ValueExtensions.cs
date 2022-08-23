@@ -1,13 +1,5 @@
-﻿using System;
-using System.Text;
-using System.Reflection;
-
-namespace LinqToDB.Extensions
+﻿namespace LinqToDB.Extensions
 {
-	using Common;
-	using Mapping;
-	using SqlQuery;
-
 	/// <summary>
 	/// Contains data manipulation helpers (e.g. for use in query parameters).
 	/// </summary>

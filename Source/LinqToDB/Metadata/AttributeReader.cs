@@ -1,11 +1,11 @@
-﻿using System;
-using System.Reflection;
-using LinqToDB.Common;
-using LinqToDB.Extensions;
+﻿using System.Reflection;
 
 namespace LinqToDB.Metadata
 {
-	// TODO: v4: replace arrays with IEnumerable and use generic GetCustomAttributes API
+	using Common;
+	using Extensions;
+
+	// TODO: v5: replace arrays with IEnumerable and use generic GetCustomAttributes API
 	// cache commented out as we modify attributes, e.g. in ColumnDescriptor and first we should refactor code like that
 	public class AttributeReader : IMetadataReader
 	{

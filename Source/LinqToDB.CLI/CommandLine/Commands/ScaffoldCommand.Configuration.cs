@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using LinqToDB.DataModel;
-using LinqToDB.Naming;
-using LinqToDB.Scaffold;
-using LinqToDB.Schema;
-
-namespace LinqToDB.CommandLine
+﻿namespace LinqToDB.CommandLine
 {
+	using DataModel;
+	using Naming;
+	using Scaffold;
+	using Schema;
+
 	partial class ScaffoldCommand : CliCommand
 	{
 		/// <summary>

@@ -1,12 +1,9 @@
-﻿using System;
-using System.Linq;
-using LinqToDB.Schema;
-using LinqToDB.CodeModel;
-using LinqToDB.Common;
-using System.Collections.Generic;
-
-namespace LinqToDB.DataModel
+﻿namespace LinqToDB.DataModel
 {
+	using Schema;
+	using CodeModel;
+	using Common;
+
 	// contains generation logic for stored procedure mappings
 	partial class DataModelGenerator
 	{

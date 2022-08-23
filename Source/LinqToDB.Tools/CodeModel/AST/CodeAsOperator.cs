@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LinqToDB.CodeModel
+﻿namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// Type convert expression using <c>as</c> operator.

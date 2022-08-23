@@ -1,11 +1,9 @@
-﻿using System;
-using System.Linq;
-using System.Linq.Expressions;
-using LinqToDB.Linq;
-using LinqToDB.Mapping;
+﻿using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
+	using Mapping;
+
 	public interface ISqlServerExtensions
 	{
 	}

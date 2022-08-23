@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace LinqToDB.DataModel
+﻿namespace LinqToDB.DataModel
 {
 	/// <summary>
 	/// Base class for schema model.

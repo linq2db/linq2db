@@ -1,15 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using System.Linq.Expressions;
 
 namespace LinqToDB
 {
-	#if !NATIVE_ASYNC
+#if !NATIVE_ASYNC
 	using Async;
-	#endif
+#endif
 
 	/// <summary>
 	/// Interface to override default implementation of LINQ To DB async operations.
