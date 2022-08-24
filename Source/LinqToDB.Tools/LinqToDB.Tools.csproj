@@ -24,6 +24,10 @@
 			<AutoGen>True</AutoGen>
 			<DependentUpon>Schemas.tt</DependentUpon>
 		</Compile>
-
 	</ItemGroup>
+
+	<ItemGroup>
+		<Using Remove="System.Net.Http" />
+	</ItemGroup>
+
 </Project>
