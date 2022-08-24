@@ -48,7 +48,7 @@ namespace Tests.UserTests
 				into g
 				select g;
 
-			var result      = query.First();
+			var result      = query.OrderBy(x => x.Key).First();
 			var groupResult = result.ToArray();
 
 			groupResult.Select(x => x.s.ID2).Should().AllBeEquivalentTo(myId);

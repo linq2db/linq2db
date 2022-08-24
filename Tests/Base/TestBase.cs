@@ -1437,6 +1437,17 @@ namespace Tests
 			using (DataConnection dc = new TestDataConnection(GetProviderName(context, out var _)))
 				return ((InformixDataProvider)dc.DataProvider).Adapter.IsIDSProvider;
 		}
+
+		protected virtual BulkCopyOptions GetDefaultBulkCopyOptions(string configuration)
+		{
+			var options = new BulkCopyOptions();
+
+			// https://github.com/DarkWanderer/ClickHouse.Client/issues/152
+			if (configuration.IsAnyOf(ProviderName.ClickHouseClient))
+				options.WithoutSession = true;
+
+			return options;
+		}
 	}
 
 	static class DataCache<T>

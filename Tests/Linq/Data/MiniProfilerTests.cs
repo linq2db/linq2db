@@ -1731,14 +1731,11 @@ namespace Tests.Data
 				{
 					using (db.CreateLocalTable<ClickHouseBulkCopyTable>())
 					{
-						long copied = 0;
-						var options = new BulkCopyOptions()
-						{
-							BulkCopyType       = BulkCopyType.ProviderSpecific,
-							NotifyAfter        = 500,
-							RowsCopiedCallback = arg => copied = arg.RowsCopied,
-							KeepIdentity       = true
-						};
+						long copied                = 0;
+						var options                = GetDefaultBulkCopyOptions(context);
+						options.BulkCopyType       = BulkCopyType.ProviderSpecific;
+						options.NotifyAfter        = 500;
+						options.RowsCopiedCallback = arg => copied = arg.RowsCopied;
 
 						db.BulkCopy(
 							options,
@@ -1757,14 +1754,11 @@ namespace Tests.Data
 				{
 					using (db.CreateLocalTable<ClickHouseBulkCopyTable>())
 					{
-						long copied = 0;
-						var options = new BulkCopyOptions()
-						{
-							BulkCopyType       = BulkCopyType.ProviderSpecific,
-							NotifyAfter        = 500,
-							RowsCopiedCallback = arg => copied = arg.RowsCopied,
-							KeepIdentity       = true
-						};
+						long copied                = 0;
+						var options                = GetDefaultBulkCopyOptions(context);
+						options.BulkCopyType       = BulkCopyType.ProviderSpecific;
+						options.NotifyAfter        = 500;
+						options.RowsCopiedCallback = arg => copied = arg.RowsCopied;
 
 						await db.BulkCopyAsync(
 							options,
