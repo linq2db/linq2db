@@ -479,6 +479,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Local", "Local", "{6CB875B4-1799-4760-A734-091F34888A60}"
 	ProjectSection(SolutionItems) = preProject
 		Data\Setup Scripts\clickhouse.cmd = Data\Setup Scripts\clickhouse.cmd
+		Data\Setup Scripts\mariadb.cmd = Data\Setup Scripts\mariadb.cmd
 		Data\Setup Scripts\pgsql10.cmd = Data\Setup Scripts\pgsql10.cmd
 		Data\Setup Scripts\pgsql11.cmd = Data\Setup Scripts\pgsql11.cmd
 		Data\Setup Scripts\pgsql12.cmd = Data\Setup Scripts\pgsql12.cmd

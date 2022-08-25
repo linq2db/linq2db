@@ -1,6 +1,6 @@
 #!/bin/bash
 
-docker run -d --name hana2 -p 39017:39017 store/saplabs/hanaexpress:2.00.057.00.20220119.1 --agree-to-sap-license --passwords-url file:///hana/password.json
+docker run -d --name hana2 -p 39017:39017 store/saplabs/hanaexpress:2.00.061.00.20220519.1 --agree-to-sap-license --passwords-url file:///hana/password.json
 #echo Generate password file
 cat <<-EOJSON > hana_password.json
 {"master_password": "Passw0rd"}
