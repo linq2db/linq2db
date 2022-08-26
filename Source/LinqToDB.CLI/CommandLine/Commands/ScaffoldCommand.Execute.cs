@@ -1,24 +1,22 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data.Common;
+﻿using System.Data.Common;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using LinqToDB.CodeModel;
-using LinqToDB.Data;
-using LinqToDB.DataProvider.DB2;
-using LinqToDB.DataProvider.Oracle;
-using LinqToDB.DataProvider.PostgreSQL;
-using LinqToDB.DataProvider.SqlServer;
-using LinqToDB.Metadata;
-using LinqToDB.Naming;
-using LinqToDB.Scaffold;
-using LinqToDB.Schema;
 
 namespace LinqToDB.CommandLine
 {
+	using CodeModel;
+	using Data;
+	using DataProvider.DB2;
+	using DataProvider.Oracle;
+	using DataProvider.PostgreSQL;
+	using DataProvider.SqlServer;
+	using Metadata;
+	using Naming;
+	using Scaffold;
+	using Schema;
+
 	partial class ScaffoldCommand : CliCommand
 	{
 		public override int Execute(

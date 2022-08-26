@@ -1,8 +1,7 @@
-﻿using System.Collections.Generic;
-using LinqToDB.Common;
-
-namespace LinqToDB.CodeModel
+﻿namespace LinqToDB.CodeModel
 {
+	using Common;
+
 	/// <summary>
 	/// Code region.
 	/// </summary>

@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using LinqToDB.CodeModel;
-using LinqToDB.DataModel;
-using LinqToDB.Metadata;
-using LinqToDB.Schema;
-
-namespace LinqToDB.Scaffold
+﻿namespace LinqToDB.Scaffold
 {
+	using CodeModel;
+	using DataModel;
+	using Schema;
+
 	// list of extension points based on:
 	// - user requests and PRs to old T4 templates (rsdn forum, bltoolkit and linq2db repositories). Both implemented and not
 	// - existing extensibility points in T4 templates that require custom code

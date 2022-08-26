@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-
-namespace LinqToDB.Remote
+﻿namespace LinqToDB.Remote
 {
 	using System.Collections;
 	using System.Data.Common;

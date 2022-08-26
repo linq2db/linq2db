@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Data.Linq;
 using System.Globalization;
 using System.Linq.Expressions;

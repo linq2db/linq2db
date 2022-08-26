@@ -1,8 +1,4 @@
-﻿using System;
-
-using JetBrains.Annotations;
-
-namespace LinqToDB.Common
+﻿namespace LinqToDB.Common
 {
 	/// <summary>
 	/// Value converter to <typeparamref name="TTo"/> type.

@@ -1,14 +1,11 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Tools.EntityServices
 {
 	using Common;
-	using LinqToDB.Expressions;
+	using Expressions;
 	using Mapper;
 	using Mapping;
 	using Reflection;

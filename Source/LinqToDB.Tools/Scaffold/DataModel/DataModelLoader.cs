@@ -1,13 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using LinqToDB.CodeModel;
-using LinqToDB.DataModel;
-using LinqToDB.Naming;
-using LinqToDB.Schema;
-using LinqToDB.SqlQuery;
-
-namespace LinqToDB.Scaffold
+﻿namespace LinqToDB.Scaffold
 {
+	using CodeModel;
+	using DataModel;
+	using Naming;
+	using Schema;
+	using SqlQuery;
+
 	/// <summary>
 	/// Implements database schema load and conversion to data model.
 	/// </summary>

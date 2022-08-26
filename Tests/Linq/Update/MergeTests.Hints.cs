@@ -1,10 +1,8 @@
 ﻿using NUnit.Framework;
-using System.Linq;
 
 namespace Tests.xUpdate
 {
 	using LinqToDB;
-	using Model;
 
 	// tests for query hints
 	public partial class MergeTests

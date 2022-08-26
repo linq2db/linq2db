@@ -1,11 +1,4 @@
-﻿using System;
-using System.Data;
-using System.Data.Common;
-using System.Diagnostics.CodeAnalysis;
-using System.Threading;
-using System.Threading.Tasks;
-
-using JetBrains.Annotations;
+﻿using System.Diagnostics.CodeAnalysis;
 
 namespace LinqToDB.Async
 {

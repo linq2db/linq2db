@@ -1,19 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Data.Common;
-using System.Globalization;
-using System.Linq;
-using System.Net;
-using System.Net.NetworkInformation;
-using System.Text;
-
-namespace LinqToDB.DataProvider.PostgreSQL
+﻿namespace LinqToDB.DataProvider.PostgreSQL
 {
-	using Common;
-	using Extensions;
-	using Mapping;
-	using SqlProvider;
 	using SqlQuery;
 
 	public partial class PostgreSQLSqlBuilder

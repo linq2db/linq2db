@@ -1,8 +1,8 @@
-﻿using LinqToDB.Schema;
-using LinqToDB.Mapping;
-
-namespace LinqToDB.Metadata
+﻿namespace LinqToDB.Metadata
 {
+	using Mapping;
+	using Schema;
+
 	/// <summary>
 	/// Column mapping attributes, used with <see cref="ColumnAttribute"/> mapping attribute.
 	/// </summary>

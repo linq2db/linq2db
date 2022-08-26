@@ -1,9 +1,5 @@
-﻿using System;
-using System.Linq;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using System.Text;
-
-using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {

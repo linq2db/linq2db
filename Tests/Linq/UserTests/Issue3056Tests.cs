@@ -1,9 +1,7 @@
-﻿using System.Collections.Generic;
-using LinqToDB;
+﻿using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 using NUnit.Framework;
-using Tests.Model;
 
 namespace Tests.UserTests
 {

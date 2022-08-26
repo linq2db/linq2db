@@ -1,6 +1,4 @@
-﻿using System.Threading;
-
-namespace LinqToDB.Tools.EntityServices
+﻿namespace LinqToDB.Tools.EntityServices
 {
 	public class EntityMapEntry<T>
 	{

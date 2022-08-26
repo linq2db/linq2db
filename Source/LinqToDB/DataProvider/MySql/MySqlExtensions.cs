@@ -1,9 +1,7 @@
-﻿using LinqToDB.Expressions;
-using LinqToDB.Linq;
-using System;
-
-namespace LinqToDB.DataProvider.MySql
+﻿namespace LinqToDB.DataProvider.MySql
 {
+	using Expressions;
+
 	public interface IMySqlExtensions
 	{
 	}

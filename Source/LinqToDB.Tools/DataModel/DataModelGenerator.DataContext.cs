@@ -1,8 +1,7 @@
-﻿using System.Collections.Generic;
-using LinqToDB.CodeModel;
-
-namespace LinqToDB.DataModel
+﻿namespace LinqToDB.DataModel
 {
+	using CodeModel;
+
 	// contains generation logic for data context class supplementary code like constructors
 	partial class DataModelGenerator
 	{

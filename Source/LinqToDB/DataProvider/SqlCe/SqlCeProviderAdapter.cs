@@ -1,11 +1,8 @@
-﻿using System;
-using System.Data;
+﻿using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider.SqlCe
 {
-	using System.Data.Common;
-	using System.Linq.Expressions;
-	using LinqToDB.Expressions;
+	using Expressions;
 
 	public class SqlCeProviderAdapter : IDynamicProviderAdapter
 	{

@@ -1,7 +1,7 @@
 ﻿#if !NETFRAMEWORK
 using System;
-using System.Text;
 using System.Runtime.Serialization;
+using System.Text;
 using LinqToDB.Common;
 
 namespace System.Data.Linq

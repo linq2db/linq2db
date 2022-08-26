@@ -1,9 +1,8 @@
 ﻿using System.Linq.Expressions;
+using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
-
 	class TableAttributeBuilder : MethodCallBuilder
 	{
 		private static readonly string[] MethodNames = new[]

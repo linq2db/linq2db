@@ -1,9 +1,9 @@
-﻿using System;
-using System.Linq.Expressions;
-using LinqToDB.Linq.Builder;
+﻿using System.Linq.Expressions;
 
 namespace LinqToDB.Expressions
 {
+	using Linq.Builder;
+
 	class ContextRefExpression : Expression
 	{
 		public ContextRefExpression(Type elementType, IBuildContext buildContext)

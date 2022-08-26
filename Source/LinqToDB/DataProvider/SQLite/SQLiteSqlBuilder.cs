@@ -1,13 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Text;
 
 namespace LinqToDB.DataProvider.SQLite
 {
-	using SqlQuery;
-	using SqlProvider;
+	using Extensions;
 	using Mapping;
-	using LinqToDB.Extensions;
+	using SqlProvider;
+	using SqlQuery;
 
 	public class SQLiteSqlBuilder : BasicSqlBuilder
 	{

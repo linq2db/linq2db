@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LinqToDB.Mapping
+﻿namespace LinqToDB.Mapping
 {
 	/// <summary>
 	/// Overrides default scalar detection for target class or structure.

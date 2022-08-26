@@ -1,13 +1,7 @@
-﻿using System;
-using System.Data.Common;
-using System.Linq;
-using FluentAssertions;
+﻿using FluentAssertions;
 using LinqToDB;
-using LinqToDB.Interceptors;
-using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using NUnit.Framework;
-using Tests.Model;
 
 namespace Tests.UserTests
 {

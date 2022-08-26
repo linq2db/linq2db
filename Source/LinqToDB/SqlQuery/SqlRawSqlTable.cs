@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-using LinqToDB.Mapping;
+﻿using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
+	using Mapping;
+
 	//TODO: Investigate how to implement only ISqlTableSource interface
 	public class SqlRawSqlTable : SqlTable, IQueryElement
 	{

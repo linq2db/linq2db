@@ -1,8 +1,4 @@
-﻿using System.Collections.Generic;
-
-using JetBrains.Annotations;
-
-namespace LinqToDB.DataProvider.Access
+﻿namespace LinqToDB.DataProvider.Access
 {
 	using Configuration;
 
