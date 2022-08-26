@@ -930,7 +930,7 @@ jobs:
           enable_fw_netcore31: true
           enable_fw_net60: true
           is_experimental: false
-          docker_login: true
+          docker_login: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[saphana.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[saphana.all]'))) }}:

@@ -554,7 +554,7 @@ namespace Tests.Linq
 					select n;
 
 
-				var result = query.ToArray();
+				var result = query.OrderBy(x => x.ID).ToArray();
 
 				result.Should().HaveCount(2);
 

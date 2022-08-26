@@ -33,15 +33,12 @@ namespace Tests.UserTests
 			using (var db = (DataConnection)GetDataContext(context, mappingSchema))
 			using (db.CreateLocalTable<TestRow>())
 			{
-				
+				var options          = GetDefaultBulkCopyOptions(context);
+				options.TableName    = TestTableName;
+				options.SchemaName   = "dbo";
+				options.MaxBatchSize = 100;
 
-				db.BulkCopy(new BulkCopyOptions
-					{
-						TableName    = TestTableName,
-						SchemaName   = "dbo",
-						MaxBatchSize = 100
-					},
-					rows);
+				db.BulkCopy(options, rows);
 			}
 		}
 

@@ -50,7 +50,7 @@ namespace Tests.UserTests
 						new Entity {Id = 3, Value = new MyInt {Value = 3}}
 					};
 
-					temptable.BulkCopy(data);
+					temptable.BulkCopy(GetDefaultBulkCopyOptions(context), data);
 
 					AreEqual(data, temptable.ToList());
 				}

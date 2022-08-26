@@ -114,7 +114,7 @@ public class a_CreateData : TestBase
 			if (DataConnection.TraceSwitch.TraceInfo)
 				TestContext.WriteLine("\nBulkCopy LinqDataTypes\n");
 
-			var options = new BulkCopyOptions();
+			var options = GetDefaultBulkCopyOptions(configString);
 
 			db.BulkCopy(
 				options,

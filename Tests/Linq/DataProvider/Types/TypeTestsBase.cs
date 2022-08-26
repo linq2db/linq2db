@@ -25,11 +25,6 @@ namespace Tests.DataProvider
 		protected virtual bool TestParameters => true;
 
 		/// <summary>
-		/// Returns default bulk copy options for context.
-		/// </summary>
-		protected virtual BulkCopyOptions GetDefaultBulkCopyOptions(string context) => new();
-
-		/// <summary>
 		/// Performs single type configuration testing:
 		/// <list type="bullet">
 		/// <item>column type generation (CreateTable API)</item>
