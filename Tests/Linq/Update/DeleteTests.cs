@@ -427,7 +427,7 @@ namespace Tests.xUpdate
 				{
 					var list = new[] { new Parent { ParentID = 1000 }, new Parent { ParentID = 1001 } };
 
-					db.BulkCopy(list);
+					db.BulkCopy(GetDefaultBulkCopyOptions(context), list);
 
 					var ret = db.Parent.Delete(p => list.Contains(p) );
 
