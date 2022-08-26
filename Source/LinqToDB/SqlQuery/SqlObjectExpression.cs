@@ -4,9 +4,7 @@ using System.Text;
 namespace LinqToDB.SqlQuery
 {
 	using Extensions;
-	using Linq.Builder;
 	using Mapping;
-	using Reflection;
 
 	public class SqlObjectExpression : ISqlExpression
 	{

@@ -7,7 +7,6 @@ using LinqToDB.Expressions;
 namespace LinqToDB.Linq.Builder
 {
 	using Common;
-	using Common.Internal;
 	using Extensions;
 	using Mapping;
 	using Reflection;

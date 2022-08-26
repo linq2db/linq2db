@@ -1,10 +1,9 @@
-﻿using System;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 
 namespace LinqToDB.Expressions
 {
 	using Common.Internal;
-	using LinqToDB.Extensions;
+	using Extensions;
 	using SqlQuery;
 
 	class SqlPlaceholderExpression : Expression

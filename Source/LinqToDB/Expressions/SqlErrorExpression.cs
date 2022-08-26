@@ -1,10 +1,10 @@
-﻿using System;
-using System.Linq.Expressions;
-using LinqToDB.Linq;
-using LinqToDB.Linq.Builder;
+﻿using System.Linq.Expressions;
 
 namespace LinqToDB.Expressions
 {
+	using Linq;
+	using Linq.Builder;
+
 	class SqlErrorExpression : Expression
 	{
 		public SqlErrorExpression(IBuildContext? buildContext, Expression expression)

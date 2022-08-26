@@ -3,7 +3,6 @@ using System.Runtime.CompilerServices;
 
 namespace LinqToDB.SqlQuery
 {
-	using Linq.Builder;
 	using Remote;
 
 	public class ConvertVisitor<TContext>

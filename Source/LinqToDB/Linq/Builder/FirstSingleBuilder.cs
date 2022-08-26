@@ -6,7 +6,6 @@ namespace LinqToDB.Linq.Builder
 	using Async;
 	using Common;
 	using Extensions;
-	using Reflection;
 	using SqlQuery;
 
 	class FirstSingleBuilder : MethodCallBuilder

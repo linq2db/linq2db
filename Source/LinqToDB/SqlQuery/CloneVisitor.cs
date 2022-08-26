@@ -3,7 +3,6 @@
 namespace LinqToDB.SqlQuery
 {
 	using Common;
-	using Linq.Builder;
 	using Remote;
 
 	public readonly struct CloneVisitor<TContext>

@@ -9,8 +9,8 @@ namespace LinqToDB.Linq.Builder
 	using Common;
 	using Extensions;
 	using Mapping;
-	using SqlQuery;
 	using Reflection;
+	using SqlQuery;
 
 	partial class ExpressionBuilder
 	{

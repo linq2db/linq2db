@@ -4,8 +4,7 @@ using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using SqlQuery;
-	
+
 	static class SequenceHelper
 	{
 		public static Expression PrepareBody(LambdaExpression lambda, params IBuildContext[] sequences)

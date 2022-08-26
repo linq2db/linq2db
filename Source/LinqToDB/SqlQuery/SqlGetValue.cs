@@ -1,9 +1,7 @@
-﻿using System;
-using LinqToDB.Common;
-using LinqToDB.Mapping;
-
-namespace LinqToDB.SqlQuery
+﻿namespace LinqToDB.SqlQuery
 {
+	using Mapping;
+
 	public class SqlGetValue
 	{
 		public SqlGetValue(ISqlExpression sql, Type valueType, ColumnDescriptor? columnDescriptor, Func<object, object>? getValueFunc)

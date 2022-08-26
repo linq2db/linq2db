@@ -3,7 +3,6 @@
 namespace LinqToDB.SqlQuery
 {
 	using System.Diagnostics.CodeAnalysis;
-	using Mapping;
 
 	public class SqlCteTable : SqlTable
 	{

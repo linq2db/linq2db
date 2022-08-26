@@ -7,7 +7,6 @@ namespace LinqToDB.Linq.Builder
 {
 	using Common;
 	using Extensions;
-	using Mapping;
 	using SqlQuery;
 
 	// This class implements double functionality (scalar and member type selects)
