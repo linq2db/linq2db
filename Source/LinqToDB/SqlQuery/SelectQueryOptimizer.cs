@@ -393,21 +393,50 @@ namespace LinqToDB.SqlQuery
 				if (ctx.parentSetType.TryGetValue(sql, out var parentOp) && parentOp != operation)
 					return;
 
+				var newIndexes = new Dictionary<ISqlExpression, int>();
+
 				for (var i = 0; i < sql.Select.Columns.Count; i++)
 				{
-					var scol = sql.  Select.Columns[i];
+					var scol = sql.Select.Columns[i];
+
+					newIndexes[scol.Expression] = i;
+				}
+
+				if (newIndexes.Count != union.Select.Columns.Count)
+					return;
+
+				for (var i = 0; i < union.Select.Columns.Count; i++)
+				{
 					var ucol = union.Select.Columns[i];
 
-					if (scol.Expression != ucol)
+					if (!newIndexes.ContainsKey(ucol))
 						return;
 				}
 
 				ctx.exprs.Add(union, sql);
 
+				for (var i = 0; i < union.Select.Columns.Count; i++)
+				{
+					var ucol = union.Select.Columns[i];
+
+					var newIdx = newIndexes[ucol];
+
+					if (newIdx != i)
+					{
+						// change indexes in SetOperators
+						foreach (var op in union.SetOperators)
+						{
+							var column = op.SelectQuery.Select.Columns[i];
+							op.SelectQuery.Select.Columns.RemoveAt(i);
+							op.SelectQuery.Select.Columns.Insert(newIdx, column);
+						}
+					}
+				}
+
 				for (var i = 0; i < sql.Select.Columns.Count; i++)
 				{
-					var scol = sql.  Select.Columns[i];
-					var ucol = union.Select.Columns[i];
+					var scol = sql.Select.Columns[i];
+					var ucol = (SqlColumn)scol.Expression;
 
 					scol.Expression = ucol.Expression;
 					scol.RawAlias   = ucol.RawAlias;

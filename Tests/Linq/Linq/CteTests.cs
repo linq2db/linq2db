@@ -523,6 +523,9 @@ namespace Tests.Linq
 
 				var query = cte.Where(t => t.ChildID == var3 || var3 == null);
 				var str = query.ToString()!;
+
+				TestContext.WriteLine(str);
+
 				Assert.That(str.Contains("WITH"), Is.EqualTo(true));
 			}
 		}

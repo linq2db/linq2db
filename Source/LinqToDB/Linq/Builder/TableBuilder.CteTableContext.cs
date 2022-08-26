@@ -40,239 +40,208 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			bodyExpr = builder.ConvertExpression(bodyExpr);
-			builder.RegisterCte(query, bodyExpr, () => new CteClause(null, bodyExpr.Type.GetGenericArguments()[0], isRecursive, name));
+			var cteContext = builder.RegisterCte(query, bodyExpr, () => new CteClause(null, bodyExpr.Type.GetGenericArguments()[0], isRecursive, name));
 
-			var cte = builder.BuildCte(bodyExpr,
-				cteClause =>
-				{
-					var info      = new BuildInfo(buildInfo, bodyExpr, new SelectQuery());
-					var sequence  = builder.BuildSequence(info);
-
-					if (cteClause == null)
-						cteClause = new CteClause(sequence.SelectQuery, bodyExpr.Type.GetGenericArguments()[0], isRecursive, name);
-					else
-					{
-						cteClause.Body = sequence.SelectQuery;
-						cteClause.Name = name;
-					}
-
-					return Tuple.Create(cteClause, (IBuildContext?)sequence);
-				}
-			);
-
-			var cteBuildInfo = new BuildInfo(buildInfo, bodyExpr, buildInfo.SelectQuery);
-			var cteContext   = new CteTableContext(builder, cteBuildInfo, cte.Item1, bodyExpr);
+			var objectType      = methodCall.Method.GetGenericArguments()[0];
+			var cteTableContext = new CteTableContext(builder, buildInfo.Parent, objectType, buildInfo.SelectQuery, cteContext);
+			cteTableContext.EnsureInitialized();
 
 			// populate all fields
+			/*
 			if (isRecursive)
-				cteContext.ConvertToSql(null, 0, ConvertFlags.All);
+				_ = builder.MakeExpression(new ContextRefExpression(methodCall.Method.GetGenericArguments()[0], cteContext), ProjectFlags.SQL);
+				*/
 
-			return cteContext;
+			return cteTableContext;
 		}
 
 		static CteTableContext BuildCteContextTable(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
-			var queryable    = (IQueryable)buildInfo.Expression.EvaluateExpression()!;
-			var cteInfo      = builder.RegisterCte(queryable, null, () => new CteClause(null, queryable.ElementType, false, ""));
-			var cteBuildInfo = new BuildInfo(buildInfo, cteInfo.Item3, buildInfo.SelectQuery);
-			var cteContext   = new CteTableContext(builder, cteBuildInfo, cteInfo.Item1, cteInfo.Item3);
+			var queryable = (IQueryable)buildInfo.Expression.EvaluateExpression()!;
+			var cteContext = builder.RegisterCte(queryable, null, () => new CteClause(null, queryable.ElementType, false, ""));
 
-			return cteContext;
+			var cteTableContext = new CteTableContext(builder, buildInfo.Parent, queryable.ElementType, buildInfo.SelectQuery, cteContext);
+			cteTableContext.EnsureInitialized();
+
+			return cteTableContext;
 		}
 
-		class CteTableContext : TableContext
+		class CteTableContext: IBuildContext
 		{
-			private readonly CteClause      _cte;
-			private readonly Expression     _cteExpression;
-			private          IBuildContext? _cteQueryContext;
+#if DEBUG
+			public string SqlQueryText => SelectQuery == null ? "" : SelectQuery.SqlText;
+			public string Path         => this.GetPath();
+			public int    ContextId    { get; private set; }
+#endif
 
-			public CteTableContext(ExpressionBuilder builder, BuildInfo buildInfo, CteClause cte, Expression cteExpression)
-				: base(builder, buildInfo, new SqlCteTable(builder.MappingSchema, cte))
+			CteContext _cteContext;
+
+			public SelectQuery    SelectQuery { get; set; }
+			public SqlStatement?  Statement   { get; set; }
+			public IBuildContext? Parent      { get; set; }
+
+			public ExpressionBuilder Builder    { get; }
+			public Expression?       Expression { get; }
+			public SqlCteTable       CteTable   { get; }
+
+			public CteTableContext(ExpressionBuilder builder, IBuildContext? parent, Type objectType, SelectQuery selectQuery, CteContext cteContext)
 			{
-				_cte             = cte;
-				_cteExpression   = cteExpression;
+				Builder     = builder;
+				Parent      = parent;
+				_cteContext = cteContext;
+				SelectQuery = selectQuery;
+				CteTable    = new SqlCteTable(objectType, _cteContext.CteClause);
+
+				SelectQuery.From.Table(CteTable);
 			}
 
-			IBuildContext? GetQueryContext()
+			public void SetRunQuery<T>(Query<T> query, Expression expr)
 			{
-				return _cteQueryContext ??= Builder.GetCteContext(_cteExpression);
+				var mapper = Builder.BuildMapper<T>(expr);
+
+				QueryRunner.SetRunQuery(query, mapper);
 			}
 
-			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
+			public IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 			{
-				var queryContext = GetQueryContext();
-				if (queryContext == null)
-					return base.IsExpression(expression, level, requestFlag);
-				return queryContext.IsExpression(expression, level, requestFlag);
+				throw new NotImplementedException();
 			}
 
-			static string? GenerateAlias(Expression? expression)
+			public IBuildContext GetContext(Expression? expression, int level, BuildInfo buildInfo)
 			{
-				string? alias = null;
-				var current   = expression;
-				while (current?.NodeType == ExpressionType.MemberAccess)
+				if (!buildInfo.CreateSubQuery)
+					return this;
+
+				var expr    = Builder.GetSequenceExpression(this);
+				var context = Builder.BuildSequence(new BuildInfo(buildInfo, expr));
+
+				return context;
+			}
+
+			public SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
+			{
+				throw new NotImplementedException();
+			}
+
+			public SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
+			{
+				throw new NotImplementedException();
+			}
+
+			Dictionary<SqlPlaceholderExpression, SqlPlaceholderExpression> _fieldsMap = new ();
+
+			public Expression MakeExpression(Expression path, ProjectFlags flags)
+			{
+				if (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AssociationRoot) || flags.HasFlag(ProjectFlags.Expand))
+					return path;
+
+				var ctePath = SequenceHelper.CorrectExpression(path, this, _cteContext);
+				if (!ReferenceEquals(ctePath, path))
 				{
-					var ma = (MemberExpression) current;
-					alias = alias == null ? ma.Member.Name : ma.Member.Name + "_"  + alias;
-					current = ma.Expression;
-				}
+					_cteContext.InitQuery();
 
-				return alias;
-			}
+					var translated = Builder.MakeExpression(ctePath, flags);
 
-			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
-			{
-				var queryContext = GetQueryContext();
-				if (queryContext == null)
-					return base.ConvertToSql(expression, level, flags);
-
-				var baseInfos = base.ConvertToSql(null, 0, ConvertFlags.All);
-
-				if (flags != ConvertFlags.All && _cte.Fields!.Length == 0 && queryContext.SelectQuery.Select.Columns.Count > 0)
-				{
-					// it means that queryContext context already has columns and we need all of them. For example for Distinct.
-					ConvertToSql(null, 0, ConvertFlags.All);
-				}
-
-				expression = SequenceHelper.CorrectExpression(expression, this, queryContext);
-
-				var infos  = queryContext.ConvertToIndex(expression, level, flags);
-
-				var result = infos
-					.Select(info =>
+					if (!flags.HasFlag(ProjectFlags.Test))
 					{
-						var baseInfo = baseInfos.FirstOrDefault(bi => bi.CompareMembers(info));
-						var alias    = flags == ConvertFlags.Field ? GenerateAlias(expression) : null;
-						alias ??= baseInfo?.MemberChain.LastOrDefault()?.Name ?? info.MemberChain.LastOrDefault()?.Name;
-						var field    = RegisterCteField(baseInfo?.Sql, info.Sql, info.Index, alias);
-						return new SqlInfo(info.MemberChain, field);
-					})
-					.ToArray();
-				return result;
-			}
+						var placeholders = ExpressionBuilder.CollectPlaceholders(translated).Where(p =>
+							p.SelectQuery == _cteContext.SubqueryContext?.SelectQuery && p.Index != null)
+							.ToList();
 
-			static string? GetColumnFriendlyAlias(SqlColumn column)
-			{
-				string? alias = null;
-
-				var visited = new HashSet<ISqlExpression>();
-				ISqlExpression current = column;
-				while (current is SqlColumn clmn && !visited.Contains(clmn))
-				{
-					if (clmn.RawAlias != null)
-					{
-						alias = clmn.RawAlias;
-						break;
+						translated = RemapFields(translated, placeholders);
 					}
-					visited.Add(clmn);
-					current = clmn.Expression;
+
+					return translated;
 				}
 
-				if (alias == null)
-				{
-					var field = current as SqlField;
-
-					alias = field?.Name;
-				}
-
-				alias ??= column.Alias;
-
-				return alias;
+				return ctePath;
 			}
 
-			void UpdateMissingFields()
+			Expression RemapFields(Expression expression, List<SqlPlaceholderExpression> placeholders)
 			{
-				// Collecting missed fields which has field in query. Should never happen.
+				if (placeholders.Count == 0)
+					return expression;
 
-				if (_cteQueryContext != null)
+				var newPlaceholders = new SqlPlaceholderExpression[placeholders.Count];
+
+				for (var index = 0; index < placeholders.Count; index++)
 				{
-					for (int i = 0; i < _cte.Fields!.Length; i++)
+					var placeholder = placeholders[index];
+					if (!_fieldsMap.TryGetValue(placeholder, out var newPlaceholder))
 					{
-						if (_cte.Fields[i] == null)
+						var field = (SqlField)placeholder.Sql;
+
+						var newField = new SqlField(field);
+						CteTable.Add(newField);
+
+						newPlaceholder = ExpressionBuilder.CreatePlaceholder(SelectQuery, newField, placeholder.Path, index: placeholder.Index);
+						_fieldsMap[placeholder] = newPlaceholder;
+					}
+
+					newPlaceholders[index] = newPlaceholder;
+				}
+
+				var transformed = expression.Transform((placeholders, newPlaceholders), (ctx, e) =>
+				{
+					if (e.NodeType == ExpressionType.Extension && e is SqlPlaceholderExpression placeholder)
+					{
+						var index = ctx.placeholders.IndexOf(placeholder);
+						if (index >= 0)
 						{
-							var column = _cte.Body!.Select.Columns[i];
-							_cte.Fields[i] = new SqlField(column.Alias!, column.Alias!);
+							return ctx.newPlaceholders[index];
 						}
 					}
-				}
-			}
 
-			public override int ConvertToParentIndex(int index, IBuildContext? context)
-			{
-				if (context == _cteQueryContext)
-				{
-					var queryColumn = context!.SelectQuery.Select.Columns[index];
-					var alias       = GetColumnFriendlyAlias(queryColumn);
-					var field       = RegisterCteField(null, queryColumn, index, alias);
-
-					index = SelectQuery.Select.Add(field);
-
-					UpdateMissingFields();
-				}
-
-				return Parent?.ConvertToParentIndex(index, this) ?? index;
-			}
-
-			SqlField RegisterCteField(ISqlExpression? baseExpression, ISqlExpression expression, int index, string? alias)
-			{
-				if (expression == null) ThrowHelper.ThrowArgumentNullException(nameof(expression));
-
-				var cteField = _cte.RegisterFieldMapping(index, () =>
-				{
-					var f = QueryHelper.GetUnderlyingField(baseExpression ?? expression);
-
-					var newField = f == null
-						? new SqlField(expression.SystemType!, alias, expression.CanBeNull)
-						: new SqlField(f);
-
-					if (alias != null)
-						newField.Name = alias;
-
-					newField.PhysicalName = newField.Name;
-					return newField;
+					return e;
 				});
 
-				var field = SqlTable[cteField.Name!];
-				if (field == null)
-				{
-					field = new SqlField(cteField);
-					SqlTable.Add(field);
-				}
-
-				return field;
+				return transformed;
 			}
 
-			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
+			public IBuildContext Clone(CloningContext context)
 			{
-				var queryContext = GetQueryContext();
-				if (queryContext == null)
-					base.BuildQuery(query, queryParameter);
-				else
-				{
-					queryContext.Parent = this;
-					queryContext.BuildQuery(query, queryParameter);
-				}
+				throw new NotImplementedException();
 			}
 
-			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
+			public int ConvertToParentIndex(int index, IBuildContext? context)
 			{
-				var queryContext = GetQueryContext();
-				if (queryContext == null)
-					return base.BuildExpression(expression, level, enforceServerSide);
-
-				queryContext.Parent = this;
-				return queryContext.BuildExpression(expression, level, true);
+				throw new NotImplementedException();
 			}
 
-			public override SqlStatement GetResultStatement()
+			public void SetAlias(string? alias)
 			{
-				if (_cte.Fields!.Length == 0)
-				{
-					ConvertToSql(null, 0, ConvertFlags.Key);
-				}
-
-				return base.GetResultStatement();
 			}
+
+			public ISqlExpression? GetSubQuery(IBuildContext context)
+			{
+				throw new NotImplementedException();
+			}
+
+			public void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
+			{
+				throw new NotImplementedException();
+			}
+
+			public Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
+			{
+				throw new NotImplementedException();
+			}
+
+			public SqlStatement GetResultStatement()
+			{
+				return Statement ??= new SqlSelectStatement(SelectQuery);
+			}
+
+			public void CompleteColumns()
+			{
+				throw new NotImplementedException();
+			}
+
+			public void EnsureInitialized()
+			{
+				_cteContext.InitQuery();
+			}
+
 		}
 	}
 }

@@ -422,7 +422,7 @@ namespace LinqToDB.Linq.Builder
 			return converted;
 		}
 
-		public SqlErrorExpression CreateSqlError(IBuildContext? context, Expression expression)
+		public static SqlErrorExpression CreateSqlError(IBuildContext? context, Expression expression)
 		{
 			return new SqlErrorExpression(context, expression);
 		}

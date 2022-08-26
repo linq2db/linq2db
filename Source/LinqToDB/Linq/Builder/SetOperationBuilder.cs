@@ -788,7 +788,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						if (_createdSQL.TryGetValue(projected, out var placeholderExpression))
 							return placeholderExpression;
-						return Builder.CreateSqlError(this, projected);
+						return ExpressionBuilder.CreateSqlError(this, projected);
 					}
 
 					return projected;

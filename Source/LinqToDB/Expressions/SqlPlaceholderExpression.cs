@@ -80,8 +80,14 @@ namespace LinqToDB.Expressions
 		{
 			if (SelectQuery == null)
 			{
-				var sourceId = ((SqlColumn)Sql).Parent!.SourceID;
-				return $"SQL[{Index}]({sourceId}): {{{Sql}}}";
+				if (Sql is SqlColumn column)
+				{
+					var sourceId = column.Parent!.SourceID;
+					return $"SQL[{Index}]({sourceId}): {{{Sql}}}";
+				}
+
+				return $"SQL: {{{Sql}}}";
+
 			}
 
 			return $"SQL({SelectQuery.SourceID}): {{{Sql}}}";

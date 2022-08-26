@@ -59,7 +59,7 @@ namespace LinqToDB.Linq.Builder
 				var body = SequenceHelper.PrepareBody(lambda, sequence).Unwrap();
 
 				var sqlExpr = builder.ConvertToSqlExpr(sequence, body);
-				placeholders = builder.CollectDistinctPlaceholders(sqlExpr);
+				placeholders = ExpressionBuilder.CollectDistinctPlaceholders(sqlExpr);
 
 				// Do not create subquery for ThenByExtensions
 				if (wrapped || isContinuousOrder)

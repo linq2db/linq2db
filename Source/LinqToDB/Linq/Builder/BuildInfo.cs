@@ -95,9 +95,14 @@ namespace LinqToDB.Linq.Builder
 
 		public ProjectFlags GetFlags()
 		{
+			return GetFlags(ProjectFlags.SQL);
+		}
+
+		public ProjectFlags GetFlags(ProjectFlags withFlag)
+		{
 			if (IsTest)
-				return ProjectFlags.Test;
-			return ProjectFlags.SQL;
+				return withFlag | ProjectFlags.Test;
+			return withFlag;
 		}
 
 	}

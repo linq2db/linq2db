@@ -337,6 +337,7 @@ namespace LinqToDB.SqlProvider
 							if (e.ElementType == QueryElementType.SqlCteTable)
 							{
 								var cte = ((SqlCteTable)e).Cte!;
+								CorrectEmptyCte(cte);
 								RegisterDependency(cte, foundCte.WriteableValue ??= new());
 							}
 						}
@@ -362,6 +363,14 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
+		static void CorrectEmptyCte(CteClause cte)
+		{
+			if (cte.Fields == null || cte.Fields.Length == 0)
+			{
+				cte.Fields = new[] { new SqlField(typeof(int), "any", false) };
+				cte.Body!.Select.AddNew(new SqlValue(1), "any");
+			}
+		}
 
 		protected static bool HasParameters(ISqlExpression expr)
 		{

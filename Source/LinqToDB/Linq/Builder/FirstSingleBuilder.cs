@@ -324,7 +324,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							var sqlProjected = Builder.MakeExpression(projected, ProjectFlags.Test);
 
-							var placeholders = Builder.CollectDistinctPlaceholders(sqlProjected);
+							var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(sqlProjected);
 
 							if (placeholders.Count > 1)
 							{

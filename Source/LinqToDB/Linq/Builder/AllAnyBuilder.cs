@@ -20,7 +20,7 @@ namespace LinqToDB.Linq.Builder
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]) { /*CopyTable = true, CreateSubQuery = true*/ });
+			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]) { /*CopyTable = true,*/ CreateSubQuery = true, SelectQuery = new SelectQuery()});
 
 			var isAsync = methodCall.Method.DeclaringType == typeof(AsyncExtensions);
 
@@ -41,44 +41,12 @@ namespace LinqToDB.Linq.Builder
 				sequence.SetAlias(condition.Parameters[0].Name);
 			}
 
-			return new AllAnyContext(buildInfo.Parent, methodCall, sequence);
+			return new AllAnyContext(buildInfo.Parent, buildInfo.SelectQuery, methodCall, sequence);
 		}
 
 		protected override SequenceConvertInfo? Convert(
 			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
 		{
-			var isAsync = methodCall.Method.DeclaringType == typeof(AsyncExtensions);
-
-			if (methodCall.Arguments.Count == (isAsync ? 3 : 2))
-			{
-				var predicate = (LambdaExpression)methodCall.Arguments[1].Unwrap();
-				var info      = builder.ConvertSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]), predicate.Parameters[0], true);
-
-				if (info != null)
-				{
-					info.Expression = methodCall.Transform(
-						(methodCall, info, predicate),
-						static (context, ex) => ConvertMethod(context.methodCall, 0, context.info, context.predicate.Parameters[0], ex));
-					info.Parameter  = param;
-
-					return info;
-				}
-			}
-			else
-			{
-				var info = builder.ConvertSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]), null, true);
-
-				if (info != null)
-				{
-					info.Expression = methodCall.Transform(
-						(methodCall, info),
-						static (context, ex) => ConvertMethod(context.methodCall, 0, context.info, null, ex));
-					info.Parameter  = param;
-
-					return info;
-				}
-			}
-
 			return null;
 		}
 
@@ -86,75 +54,37 @@ namespace LinqToDB.Linq.Builder
 		{
 			readonly MethodCallExpression _methodCall;
 
-			public AllAnyContext(IBuildContext? parent, MethodCallExpression methodCall, IBuildContext sequence)
+			public AllAnyContext(IBuildContext? parent,     SelectQuery   selectQuery,
+				MethodCallExpression            methodCall, IBuildContext sequence)
 				: base(parent, sequence, null)
 			{
+				SelectQuery = selectQuery;
 				_methodCall = methodCall;
 			}
 
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
-				var sql = GetSubQuery(null);
-
-				var sq = new SqlSelectStatement();
-				sq.SelectQuery.Select.Add(sql);
-
-				query.Queries[0].Statement = sq;
-
-				var expr   = Builder.BuildSql(typeof(bool), 0, sql);
-				var mapper = Builder.BuildMapper<object>(expr);
-
-				CompleteColumns();
-				QueryRunner.SetRunQuery(query, mapper);
+				throw new NotImplementedException();
 			}
 
 			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 			{
-				var info  = ConvertToIndex(expression, level, ConvertFlags.Field)[0];
-				var index = info.Index;
-				if (Parent != null)
-					index = ConvertToParentIndex(index, Parent);
-				return Builder.BuildSql(typeof(bool), index, info.Sql);
+				throw new NotImplementedException();
 			}
 
 			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 			{
-				if (expression == null)
-				{
-					var sql   = GetSubQuery(null);
-					var query = SelectQuery;
-
-					if (Parent != null)
-						query = Parent.SelectQuery;
-
-					return new[] { new SqlInfo(sql, query) };
-				}
-
-				return ThrowHelper.ThrowNotImplementedException<SqlInfo[]>();
+				throw new NotImplementedException();
 			}
 
 			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 			{
-				var sql = ConvertToSql(expression, level, flags);
-
-				if (sql[0].Index < 0)
-					sql[0] = sql[0].WithIndex(sql[0].Query!.Select.Add(sql[0].Sql));
-
-				return sql;
+				throw new NotImplementedException();
 			}
 
 			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 			{
-				if (expression == null)
-				{
-					switch (requestFlag)
-					{
-						case RequestFor.Expression :
-						case RequestFor.Field      : return IsExpressionResult.False;
-					}
-				}
-
-				return IsExpressionResult.False;
+				throw new NotImplementedException();
 			}
 
 			public override IBuildContext GetContext(Expression? expression, int level, BuildInfo buildInfo)
@@ -162,25 +92,7 @@ namespace LinqToDB.Linq.Builder
 				return ThrowHelper.ThrowNotImplementedException<IBuildContext>();
 			}
 
-			ISqlExpression? _subQuerySql;
-
-			public override ISqlExpression GetSubQuery(IBuildContext? context)
-			{
-				if (_subQuerySql == null)
-				{
-					var cond = new SqlCondition(
-						_methodCall.Method.Name.StartsWith("All"),
-						new SqlPredicate.FuncLike(SqlFunction.CreateExists(SelectQuery)));
-
-					Sequence.CompleteColumns();
-
-					_subQuerySql = new SqlSearchCondition(cond);
-				}
-
-				return _subQuerySql;
-			}
-
-			private SqlPlaceholderExpression? _innerSql;
+			SqlPlaceholderExpression? _innerSql;
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
@@ -191,17 +103,29 @@ namespace LinqToDB.Linq.Builder
 				{ 
 					var cond = new SqlCondition(
 						_methodCall.Method.Name.StartsWith("All"),
-						new SqlPredicate.FuncLike(SqlFunction.CreateExists(SelectQuery)));
+						new SqlPredicate.FuncLike(SqlFunction.CreateExists(Sequence.SelectQuery)));
 
-					_innerSql = ExpressionBuilder.CreatePlaceholder(this, new SqlSearchCondition(cond), path);
+					_innerSql = ExpressionBuilder.CreatePlaceholder(this, new SqlSearchCondition(cond), path, convertType: typeof(bool));
 				}
 
 				return _innerSql;
 			}
 
+			public override SqlStatement GetResultStatement()
+			{
+				return Statement ??= new SqlSelectStatement(SelectQuery);
+			}
+
+			public override void SetRunQuery<T>(Query<T> query, Expression expr)
+			{
+				var mapper = Builder.BuildMapper<object>(expr);
+
+				QueryRunner.SetRunQuery(query, mapper);
+			}
+
 			public override IBuildContext Clone(CloningContext context)
 			{
-				return new AllAnyContext(null, context.CloneExpression(_methodCall), context.CloneContext(Sequence));
+				return new AllAnyContext(null, context.CloneElement(SelectQuery), context.CloneExpression(_methodCall), context.CloneContext(Sequence));
 			}
 		}
 	}

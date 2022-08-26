@@ -2025,7 +2025,7 @@ namespace LinqToDB.Linq.Builder
 			return matched;
 		}
 
-		public List<SqlPlaceholderExpression> CollectPlaceholders(Expression expression)
+		public static List<SqlPlaceholderExpression> CollectPlaceholders(Expression expression)
 		{
 			var result = new List<SqlPlaceholderExpression>();
 
@@ -2040,7 +2040,7 @@ namespace LinqToDB.Linq.Builder
 			return result;
 		}
 
-		public List<SqlPlaceholderExpression> CollectDistinctPlaceholders(Expression expression)
+		public static List<SqlPlaceholderExpression> CollectDistinctPlaceholders(Expression expression)
 		{
 			var result = new List<SqlPlaceholderExpression>();
 
@@ -3293,10 +3293,10 @@ namespace LinqToDB.Linq.Builder
 
 		#region CTE
 
-		List<Tuple<Expression, Tuple<CteClause, IBuildContext?>>>? _ctes;
-		Dictionary<IQueryable, Expression>?                        _ctesObjectMapping;
+		List<Tuple<Expression, CteContext>>? _ctes;
+		Dictionary<IQueryable, Expression>?  _ctesObjectMapping;
 
-		public Tuple<CteClause, IBuildContext?, Expression> RegisterCte(IQueryable? queryable, Expression? cteExpression, Func<CteClause> buildFunc)
+		public CteContext RegisterCte(IQueryable? queryable, Expression? cteExpression, Func<CteClause> buildFunc)
 		{
 			if (cteExpression != null && queryable != null && (_ctesObjectMapping == null || !_ctesObjectMapping.ContainsKey(queryable)))
 			{
@@ -3316,17 +3316,18 @@ namespace LinqToDB.Linq.Builder
 
 			if (value == null)
 			{
-				var cte = buildFunc();
-				value = Tuple.Create<CteClause, IBuildContext?>(cte, null);
+				var cteClause = buildFunc();
 
-				_ctes ??= new List<Tuple<Expression, Tuple<CteClause, IBuildContext?>>>();
+				value = new CteContext(this, null, cteClause, cteExpression);
+
+				_ctes ??= new();
 				_ctes.Add(Tuple.Create(cteExpression, value));
 			}
 
-			return Tuple.Create(value.Item1, value.Item2, cteExpression);
+			return value;
 		}
 
-		Tuple<CteClause, IBuildContext?>? FindRegisteredCteByExpression(Expression cteExpression, out int? idx)
+		CteContext? FindRegisteredCteByExpression(Expression cteExpression, out int? idx)
 		{
 			if (_ctes != null)
 			{
@@ -3346,6 +3347,7 @@ namespace LinqToDB.Linq.Builder
 		}
 
 
+		/*
 		public Tuple<CteClause, IBuildContext?> BuildCte(Expression cteExpression, Func<CteClause?, Tuple<CteClause, IBuildContext?>> buildFunc)
 		{
 			var value = FindRegisteredCteByExpression(cteExpression, out var idx);
@@ -3367,11 +3369,14 @@ namespace LinqToDB.Linq.Builder
 
 			return value;
 		}
+		*/
 
+		/*
 		public IBuildContext? GetCteContext(Expression cteExpression)
 		{
 			return FindRegisteredCteByExpression(cteExpression, out _)?.Item2;
 		}
+		*/
 
 		#endregion
 
@@ -3819,6 +3824,10 @@ namespace LinqToDB.Linq.Builder
 		/// <returns></returns>
 		public Expression MakeExpression(Expression path, ProjectFlags flags)
 		{
+			// nothing to project here
+			if (path.NodeType == ExpressionType.Extension && path is SqlPlaceholderExpression)
+				return path;
+
 			path = ExposeExpression(path);
 
 			if (!(flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AggregationRoot) ||

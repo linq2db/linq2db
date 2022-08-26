@@ -237,11 +237,11 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			if (path is not MemberExpression member)
-				return Builder.CreateSqlError(this, path);
+				return ExpressionBuilder.CreateSqlError(this, path);
 
 			var sql = GetField(member);
 			if (sql == null)
-				return Builder.CreateSqlError(this, path);
+				return ExpressionBuilder.CreateSqlError(this, path);
 
 			var placeholder = ExpressionBuilder.CreatePlaceholder(this, sql, path);
 

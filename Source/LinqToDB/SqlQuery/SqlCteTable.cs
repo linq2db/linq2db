@@ -18,16 +18,11 @@ namespace LinqToDB.SqlQuery
 			set { }
 		}
 
-		public SqlCteTable(
-			MappingSchema mappingSchema,
+		public SqlCteTable(Type objectType,
 			CteClause     cte)
-			: base(mappingSchema, cte.ObjectType, cte.Name)
+			: base(objectType, null, new SqlObjectName(""))
 		{
 			Cte = cte;
-
-			// CTE has it's own names even there is mapping
-			foreach (var field in Fields)
-				field.PhysicalName = field.Name;
 		}
 
 		internal SqlCteTable(int id, string alias, SqlField[] fields, CteClause cte)

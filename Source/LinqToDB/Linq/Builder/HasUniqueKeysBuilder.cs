@@ -17,13 +17,12 @@ namespace LinqToDB.Linq.Builder
 
 			var keySelector = (LambdaExpression) methodCall.Arguments[1].Unwrap();
 			var keyContext  = new SelectContext(buildInfo.Parent, keySelector, false, sequence);
-			var keySql      = builder.ConvertExpressions(keyContext, keySelector.Body.Unwrap(), ConvertFlags.All, null);
 
-			var uniqueKeys  = keySql
-				.Select(info => sequence.SelectQuery.Select.Columns[sequence.SelectQuery.Select.Add(info.Sql)])
-				.ToArray();
+			var keySql = builder.ConvertToSqlExpr(keyContext, new ContextRefExpression(keySelector.Parameters[0].Type, keyContext));
 
-			sequence.SelectQuery.UniqueKeys.Add(uniqueKeys);
+			var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(keySql);
+
+			sequence.SelectQuery.UniqueKeys.Add(placeholders.Select(p => p.Sql).ToArray());
 
 			return new SubQueryContext(sequence);
 		}

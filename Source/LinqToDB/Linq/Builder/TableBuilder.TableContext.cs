@@ -236,7 +236,7 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				if (path is not MemberExpression member)
-					return Builder.CreateSqlError(this, path);
+					return ExpressionBuilder.CreateSqlError(this, path);
 
 				var sql = GetField(member, member.GetLevel(Builder.MappingSchema), false);
 				if (sql == null)

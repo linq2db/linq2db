@@ -98,19 +98,27 @@ namespace LinqToDB.Linq.Builder
 
 		public override Expression MakeExpression(Expression path, ProjectFlags flags)
 		{
-			/*
 			if (flags.HasFlag(ProjectFlags.Root) && SequenceHelper.IsSameContext(path, this))
 				return path;
-				*/
 
 			var result = base.MakeExpression(path, flags);
 
+			/*
 			if (flags.HasFlag(ProjectFlags.SQL))
 			{
 				result = Builder.ConvertToSqlExpr(SubQuery, result, flags);
 
-				if (!flags.HasFlag(ProjectFlags.Test) && !flags.HasFlag(ProjectFlags.Expression))
+				if (!flags.HasFlag(ProjectFlags.Test)/* && !flags.HasFlag(ProjectFlags.Expression)#1#)
 					result = Builder.UpdateNesting(this, result);
+			}
+			*/
+
+			if (!flags.HasFlag(ProjectFlags.Test))
+			{
+				result = Builder.UpdateNesting(this, result);
+
+				// remap back, especially for Recursive CTE
+				result = SequenceHelper.ReplaceContext(result, SubQuery, this);
 			}
 
 			return result;

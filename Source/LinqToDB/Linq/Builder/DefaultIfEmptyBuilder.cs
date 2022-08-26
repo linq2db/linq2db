@@ -51,7 +51,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					expr = Builder.BuildSqlExpression(new Dictionary<Expression, Expression>(), this, expr, flags);
 
-					var placeholders = Builder.CollectDistinctPlaceholders(expr);
+					var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(expr);
 
 					var notNull = placeholders
 						.FirstOrDefault(placeholder => !placeholder.Sql.CanBeNull);
