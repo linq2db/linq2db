@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using LinqToDB.Common;
-using LinqToDB.SqlProvider;
-
-namespace LinqToDB.SqlQuery
+﻿namespace LinqToDB.SqlQuery
 {
+	using Common;
+	using SqlProvider;
+
 	class SelectQueryOptimizer
 	{
 		public SelectQueryOptimizer(SqlProviderFlags flags, EvaluationContext evaluationContext, IQueryElement rootElement, SelectQuery selectQuery, int level, params IQueryElement[] dependencies)
@@ -1144,34 +1141,34 @@ namespace LinqToDB.SqlQuery
 				if (parentJoinedTable.JoinType == JoinType.Full || parentJoinedTable.JoinType == JoinType.Right)
 				{
 					isQueryOK = query.Where.IsEmpty;
-				}
+			}
 				else
+			{
+				var sqlTableSource = query.From.Tables[0];
+				if (sqlTableSource.Joins.Count > 0)
 				{
-					var sqlTableSource = query.From.Tables[0];
-					if (sqlTableSource.Joins.Count > 0)
+					var hasOtherJoin = false;
+					foreach (var join in sqlTableSource.Joins)
 					{
-						var hasOtherJoin = false;
-						foreach (var join in sqlTableSource.Joins)
+						if (join.JoinType != parentJoinedTable.JoinType)
 						{
-							if (join.JoinType != parentJoinedTable.JoinType)
-							{
-								hasOtherJoin = true;
-								break;
-							}
-						}
-
-						if (hasOtherJoin)
-							isQueryOK = false;
-						else
-						{
-							// check that this subquery do not infer with parent join via other joined tables
-							var joinSources =
-								new HashSet<ISqlTableSource>(sqlTableSource.Joins.Select(static j => j.Table.Source));
-							if (QueryHelper.IsDependsOn(parentJoinedTable.Condition, joinSources))
-								isQueryOK = false;
+							hasOtherJoin = true;
+							break;
 						}
 					}
+
+					if (hasOtherJoin)
+						isQueryOK = false;
+					else
+					{
+						// check that this subquery do not infer with parent join via other joined tables
+							var joinSources =
+								new HashSet<ISqlTableSource>(sqlTableSource.Joins.Select(static j => j.Table.Source));
+						if (QueryHelper.IsDependsOn(parentJoinedTable.Condition, joinSources))
+							isQueryOK = false;
+					}
 				}
+			}
 			}
 
 			if (!isQueryOK)
@@ -1351,12 +1348,12 @@ namespace LinqToDB.SqlQuery
 			{
 				var joinSources = new HashSet<ISqlTableSource>(parentTableSources);
 				joinSources.Add(joinTable.Table);
-				foreach (var join in joinSource.Joins)
-				{
+			foreach (var join in joinSource.Joins)
+			{
 					if (join.JoinType == JoinType.CrossApply || join.JoinType == JoinType.OuterApply|| join.JoinType == JoinType.FullApply || join.JoinType == JoinType.RightApply)
 					{
 						OptimizeApply(parentQuery, joinSources, joinSource, join, isApplySupported);
-					}
+			}
 
 					joinSources.AddRange(QueryHelper.EnumerateAccessibleSources(join.Table));
 				}
@@ -1387,25 +1384,25 @@ namespace LinqToDB.SqlQuery
 
 				var searchCondition = new List<SqlCondition>();
 
-				var conditions = sql.Where.SearchCondition.Conditions;
+					var conditions = sql.Where.SearchCondition.Conditions;
 
 				var toIgnore = new HashSet<IQueryElement> { joinTable };
 
-				if (conditions.Count > 0)
-				{
-					for (var i = conditions.Count - 1; i >= 0; i--)
+					if (conditions.Count > 0)
 					{
-						var condition = conditions[i];
+						for (var i = conditions.Count - 1; i >= 0; i--)
+						{
+							var condition = conditions[i];
 
 						var contains = QueryHelper.IsDependsOn(condition, parentTableSources, toIgnore);
 
-						if (contains)
-						{
-							searchCondition.Insert(0, condition);
-							conditions.RemoveAt(i);
+								if (contains)
+								{
+									searchCondition.Insert(0, condition);
+									conditions.RemoveAt(i);
+								}
+							}
 						}
-					}
-				}
 
 				var toCheck = new HashSet<ISqlTableSource>();
 
@@ -1430,15 +1427,15 @@ namespace LinqToDB.SqlQuery
 									}
 
 									return newExpr;
-								}
-							}
 						}
+					}
+				}
 
 						return e;
 					});
 
 					searchCondition[i] = newCond;
-				}
+						}
 
 				var newJoinType = joinTable.JoinType switch
 				{
@@ -1451,8 +1448,8 @@ namespace LinqToDB.SqlQuery
 
 				joinTable.JoinType = newJoinType;
 				joinTable.Condition.Conditions.AddRange(searchCondition);
-			}
-		}
+					}
+				}
 
 		static void ConcatSearchCondition(SqlWhereClause where1, SqlWhereClause where2)
 		{
@@ -1689,8 +1686,8 @@ namespace LinqToDB.SqlQuery
 				if (takeValue is int intValue)
 				{
 					return intValue == 1;
-				}
-			}
+	}
+}
 
 			byTake = false;
 

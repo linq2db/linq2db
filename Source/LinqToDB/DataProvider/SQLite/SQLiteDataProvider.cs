@@ -1,14 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
+﻿using System.Globalization;
 using System.Linq.Expressions;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.SQLite
 {
-	using System.Data.Common;
-	using System.Globalization;
 	using Common;
 	using Data;
 	using Mapping;

@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LinqToDB.Mapping
+﻿namespace LinqToDB.Mapping
 {
 	/// <summary>
 	/// Stores inheritance mapping information for single discriminator value.

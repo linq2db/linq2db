@@ -1,22 +1,17 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections;
 using System.Collections.ObjectModel;
 using System.Data.SqlTypes;
 using System.Diagnostics;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Threading.Tasks;
-using System.Threading;
 using System.Runtime.CompilerServices;
+using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
 	using Common;
 	using Common.Internal;
 	using Data;
-	using LinqToDB.Expressions;
 	using Extensions;
 	using Mapping;
 	using Reflection;
@@ -58,7 +53,7 @@ namespace LinqToDB.Linq.Builder
 			});
 
 			return isHaving;
-		}
+			}
 
 		public IBuildContext BuildWhere(IBuildContext? parent, IBuildContext sequence, LambdaExpression condition,
 			bool checkForSubQuery, bool enforceHaving, bool isTest)
@@ -894,9 +889,9 @@ namespace LinqToDB.Linq.Builder
 
 			if (sql == null)
 			{
-				if (!PreferServerSide(expression, false))
-				{
-					if (columnDescriptor?.ValueConverter == null && CanBeConstant(expression))
+			if (!PreferServerSide(expression, false))
+			{
+				if (columnDescriptor?.ValueConverter == null && CanBeConstant(expression))
 						sql = BuildConstant(expression, columnDescriptor);
 					else if (expression.NodeType != ExpressionType.MemberInit && expression.NodeType != ExpressionType.New && CanBeCompiled(expression))
 						sql = ParametersContext.BuildParameter(expression, columnDescriptor).SqlParameter;
@@ -1008,9 +1003,9 @@ namespace LinqToDB.Linq.Builder
 
 						l = ConvertToSql(context, e.Left, false, columnDescriptor);
 						r = ConvertToSql(context, e.Right, true, columnDescriptor);
-					}
-					else
-					{
+						}
+						else
+						{
 						l = ConvertToSql(context, e.Left, true, columnDescriptor);
 						r = ConvertToSql(context, e.Right, true, null);
 					}*/
@@ -1076,7 +1071,7 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.ConvertChecked:
 				{
 					var e = (UnaryExpression)expression;
-					
+
 					if (!TryConvertToSql(context, flags, e.Operand, columnDescriptor, out var o, out var oError))
 						return oError;
 
@@ -1170,12 +1165,12 @@ namespace LinqToDB.Linq.Builder
 					var buildInfo = new BuildInfo(context, ma, context.SelectQuery);
 
 					if (IsSequence(buildInfo))
-					{
+						{
 						var sequence = BuildSequence(buildInfo);
 
 						newExpr = new ContextRefExpression(ma.Type, sequence);
 						return ConvertToSqlExpr(context, newExpr, flags.HasFlag(ProjectFlags.Test), unwrap, columnDescriptor, isPureExpression);
-					}
+						}
 
 					*/
 
@@ -1190,7 +1185,7 @@ namespace LinqToDB.Linq.Builder
 							newExpr = ma.Update(new ContextRefExpression(ma.Expression.Type, sequence));
 							return ConvertToSqlExpr(context, newExpr, flags, unwrap, columnDescriptor,
 								isPureExpression);
-						}
+					}
 					}
 
 					/*
@@ -1234,7 +1229,7 @@ namespace LinqToDB.Linq.Builder
 					if (expression is SqlPlaceholderExpression placeholder)
 					{
 						return placeholder;
-					}
+				}
 
 					if (expression is ContextRefExpression contextRef)
 					{
@@ -1391,7 +1386,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						return ConvertToSqlExpr(context, transformed, flags, unwrap, columnDescriptor, isPureExpression,
 							alias);
-					}
+			}
 
 					break;
 				}
@@ -1444,10 +1439,10 @@ namespace LinqToDB.Linq.Builder
 
 			var sqlExpression = attr.GetExpression(
 				(this_: this, context),
-					DataContext,
-					context!.SelectQuery,
-					mc,
-					static (context, e, descriptor) => context.this_.ConvertToExtensionSql(context.context, e, descriptor));
+				DataContext,
+				context!.SelectQuery,
+				mc,
+				static (context, e, descriptor) => context.this_.ConvertToExtensionSql(context.context, e, descriptor));
 
 			if (sqlExpression == null)
 				ThrowHelper.ThrowLinqToDBException($"Cannot convert to SQL method '{mc}'.");
@@ -1531,7 +1526,7 @@ namespace LinqToDB.Linq.Builder
 
 			var value = expr.EvaluateExpression();
 
-				sqlValue = MappingSchema.GetSqlValue(expr.Type, value);
+			sqlValue = MappingSchema.GetSqlValue(expr.Type, value);
 
 			_constants.Add(key, sqlValue);
 
@@ -1842,7 +1837,7 @@ namespace LinqToDB.Linq.Builder
 					if (r is SqlValue rv && rv.Value == null)
 					{
 						return GenerateNullComaprison(leftPlaceholders, isNot);
-					}
+			}
 
 					if (rightExpr is SqlGenericConstructorExpression rightGeneric && l is SqlParameter lParam)
 					{
@@ -2493,7 +2488,7 @@ namespace LinqToDB.Linq.Builder
 							var lambda = Expression.Lambda<Func<object, object>>(body, objParam);
 
 							getters[i] = new SqlGetValue(placeholder.Sql, placeholder.Type, null, lambda.Compile());
-						}
+			}
 					}
 
 					expr = new SqlObjectExpression(MappingSchema, getters);
@@ -3068,7 +3063,7 @@ namespace LinqToDB.Linq.Builder
 		Expression RemoveNullPropagation(Expression expr, bool forSearch)
 		{
 			bool IsAcceptableType(Type type)
-		{
+			{
 				if (!forSearch)
 					return type.IsNullableType();
 
@@ -3286,7 +3281,7 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 			}*/
-		}
+			}
 
 
 		#endregion
@@ -3479,11 +3474,11 @@ namespace LinqToDB.Linq.Builder
 				{
 					// going deeper
 					return Project(context, me, nextPath, nextPath.Count - 1, flags, body);
-				}
+	}
 
 				// make path projection
 				return Project(context, null, nextPath, nextPath.Count - 1, flags, body);
-			}
+}
 
 			if (path is SqlGenericParamAccessExpression accessExpression)
 			{

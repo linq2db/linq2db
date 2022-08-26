@@ -1,15 +1,10 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Data.Common;
 using System.Diagnostics;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Threading;
-using System.Threading.Tasks;
+using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq
 {
@@ -22,7 +17,6 @@ namespace LinqToDB.Linq
 	using Common.Logging;
 	using Data;
 	using Extensions;
-	using LinqToDB.Expressions;
 	using Reflection;
 	using SqlQuery;
 
@@ -351,7 +345,7 @@ namespace LinqToDB.Linq
 			{
 				var skipValue = select.SkipValue;
 
-				var q = queryFunc;	
+				var q = queryFunc;
 
 				queryFunc = (qq, db, mapper, expr, ps, preambles, qn) =>
 					new LimitResultEnumerable<T>(q(qq, db, mapper, expr, ps, preambles, qn),
@@ -405,41 +399,41 @@ namespace LinqToDB.Linq
 			public IEnumerator<T> GetEnumerator()
 			{
 				using var runner = _dataContext.GetQueryRunner(_query, _queryNumber, _expression, _parameters, _preambles);
-				using var dr     = runner.ExecuteReader();
+			using var dr     = runner.ExecuteReader();
 
-				var dataReader = dr.DataReader!;
+			var dataReader = dr.DataReader!;
 
-				if (dataReader.Read())
-				{
+			if (dataReader.Read())
+			{
 					var origDataReader = _dataContext.UnwrapDataObjectInterceptor?.UnwrapDataReader(_dataContext, dataReader) ?? dataReader;
 					var mapperInfo     = _mapper.GetMapperInfo(_dataContext, runner, origDataReader);
 
-					do
-					{
-						T res;
+				do
+				{
+					T res;
 
-						try
-						{
-							res = mapperInfo.Mapper(runner, origDataReader);
-							runner.RowsCount++;
-						}
-						catch (Exception ex) when (ex is FormatException or InvalidCastException or LinqToDBConvertException || ex.GetType().Name.Contains("NullValueException"))
-						{
-							// TODO: debug cases when our tests go into slow-mode (e.g. sqlite.ms)
-							if (mapperInfo.IsFaulted)
-								throw;
+					try
+					{
+						res = mapperInfo.Mapper(runner, origDataReader);
+						runner.RowsCount++;
+					}
+					catch (Exception ex) when (ex is FormatException or InvalidCastException or LinqToDBConvertException || ex.GetType().Name.Contains("NullValueException"))
+					{
+						// TODO: debug cases when our tests go into slow-mode (e.g. sqlite.ms)
+						if (mapperInfo.IsFaulted)
+							throw;
 
 							res = _mapper.ReMapOnException(_dataContext, runner, origDataReader, ref mapperInfo, ex);
-						}
-
-						yield return res;
 					}
-					while (dataReader.Read());
+
+					yield return res;
 				}
+				while (dataReader.Read());
 			}
+		}
 
 			IEnumerator IEnumerable.GetEnumerator()
-			{
+		{
 				return GetEnumerator();
 			}
 
@@ -450,7 +444,7 @@ namespace LinqToDB.Linq
 			}
 #else
 			public async IAsyncEnumerable<T> GetAsyncEnumerable([EnumeratorCancellation] CancellationToken cancellationToken = default)
-			{
+				{
 				using var runner = _dataContext.GetQueryRunner(_query, _queryNumber, _expression, _parameters, _preambles);
 				using var dr     = runner.ExecuteReader();
 
@@ -459,12 +453,12 @@ namespace LinqToDB.Linq
 				cancellationToken.ThrowIfCancellationRequested();
 
 				if (await dataReader.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
-				{
+					{
 					var origDataReader = _dataContext.UnwrapDataObjectInterceptor?.UnwrapDataReader(_dataContext, dataReader) ?? dataReader;
 					var mapperInfo     = _mapper.GetMapperInfo(_dataContext, runner, origDataReader);
 
-					do
-					{
+						do
+						{
 						T res;
 
 						try
@@ -479,14 +473,14 @@ namespace LinqToDB.Linq
 								throw;
 
 							res = _mapper.ReMapOnException(_dataContext, runner, origDataReader, ref mapperInfo, ex);
-						}
+					}
 
 						yield return res;
 						cancellationToken.ThrowIfCancellationRequested();
-					}
-					while (await dataReader.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext));
 				}
+					while (await dataReader.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext));
 			}
+		}
 #endif
 
 			public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = default)
@@ -621,7 +615,7 @@ namespace LinqToDB.Linq
 		{
 			var executeQuery = query.GetResultEnumerable;
 			destQuery.GetResultEnumerable = (db, expr, ps, preambles) => wrapper(executeQuery(db, expr, ps, preambles));
-		}
+			}
 
 		static void SetRunQuery<T>(
 			Query<T> query,

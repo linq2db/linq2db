@@ -1,16 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
+﻿using System.Diagnostics;
 using System.Linq.Expressions;
 using System.Reflection;
+using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
-	using Extensions;
-	using SqlQuery;
 	using Common;
+	using Extensions;
+	using Mapping;
+	using SqlQuery;
 
 	// This class implements double functionality (scalar and member type selects)
 	// and could be implemented as two different classes.
@@ -100,7 +98,7 @@ namespace LinqToDB.Linq.Builder
 		#region BuildExpression
 
 		public virtual Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
-				{
+		{
 			throw new NotImplementedException();
 		}
 
@@ -120,7 +118,7 @@ namespace LinqToDB.Linq.Builder
 		public virtual SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 		{
 			throw new NotImplementedException();
-				}
+					}
 
 		#endregion
 
@@ -129,11 +127,11 @@ namespace LinqToDB.Linq.Builder
 			Expression result;
 
 			if (SequenceHelper.IsSameContext(path, this))
-			{
+		{
 				if (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AssociationRoot))
-				{
+			{
 					if (Body is ContextRefExpression bodyRef)
-					{
+				{
 						// updating type for Inheritance mapping
 						//
 						return bodyRef.WithType(path.Type);
@@ -142,58 +140,58 @@ namespace LinqToDB.Linq.Builder
 					if (Body is MemberExpression me)
 					{
 						return Body;
-					}
+						}
 
 					return path;
-				}
+					}
 
 				if (!path.Type.IsSameOrParentOf(Body.Type) && flags.HasFlag(ProjectFlags.Expression))
 					return new SqlEagerLoadExpression((ContextRefExpression)path, path, GetEagerLoadExpression(path));
 
 				result = Body;
-			}
+				}
 			else
 			{
 				result = Builder.Project(this, path, null, 0, flags, Body);
 
 				if (!ReferenceEquals(result, Body))
-				{
+								{
 					if (flags.HasFlag(ProjectFlags.Root) &&
 					    !(result is ContextRefExpression || result is MemberExpression ||
 					      result is MethodCallExpression))
-					{
+									{
 						return path;
-					}
-				}
+									}
+								}
 			}
 
 			return result;
-		}
+							}
 
 		public virtual IBuildContext Clone(CloningContext context)
-		{
+				{
 			return new SelectContext(null, context.CloneExpression(Lambda), IsSubQuery,
 				Sequence.Select(s => context.CloneContext(s)).ToArray());
-		}
+								}
 
 		public void SetRunQuery<T>(Query<T> query, Expression expr)
-		{
+							{
 			var mapper = Builder.BuildMapper<T>(expr);
 
 			QueryRunner.SetRunQuery(query, mapper);
-		}
+												}
 
 		public virtual Expression GetEagerLoadExpression(Expression path)
 		{
 			return Builder.GetSequenceExpression(this);
-		}
+			}
 
 		#region IsExpression
 
 		public virtual IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 		{
 			throw new NotImplementedException();
-		}
+			}
 
 		#endregion
 
@@ -202,7 +200,7 @@ namespace LinqToDB.Linq.Builder
 		public virtual IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)
 		{
 			return null;
-		}
+			}
 
 		#endregion
 
@@ -255,8 +253,8 @@ namespace LinqToDB.Linq.Builder
 
 		IBuildContext? GetSequence(Expression expression, int level)
 		{
-			return null;
-		}
+								return null;
+						}
 
-	}
-}
+						}
+						}

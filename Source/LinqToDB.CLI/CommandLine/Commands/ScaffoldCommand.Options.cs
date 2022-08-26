@@ -1,14 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using LinqToDB.Configuration;
-using LinqToDB.DataModel;
-using LinqToDB.Naming;
-using LinqToDB.Scaffold;
+﻿using System.Reflection;
 
 namespace LinqToDB.CommandLine
 {
+	using Configuration;
+	using DataModel;
+	using Naming;
+	using Scaffold;
+
 	partial class ScaffoldCommand : CliCommand
 	{
 		private static readonly OptionCategory _generalOptions        = new (1, "General"        , "basic options"           , "general"  );

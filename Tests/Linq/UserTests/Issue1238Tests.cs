@@ -1,9 +1,4 @@
-﻿using System;
-using System.Linq;
-
-using NUnit.Framework;
-
-using Tests.Model;
+﻿using NUnit.Framework;
 using Tests.xUpdate;
 
 namespace Tests.UserTests

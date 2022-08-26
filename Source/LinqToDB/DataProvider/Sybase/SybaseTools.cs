@@ -1,15 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Data.Common;
-using System.IO;
-using System.Reflection;
+﻿using System.Reflection;
 
 namespace LinqToDB.DataProvider.Sybase
 {
-	using Data;
 	using Common;
 	using Configuration;
+	using Data;
 
 	public static class SybaseTools
 	{

@@ -1,17 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
+using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
 	using Extensions;
-	using LinqToDB.Expressions;
-	using LinqToDB.Mapping;
+	using Mapping;
 
 	class ExpressionTestGenerator
 	{

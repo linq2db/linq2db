@@ -1,9 +1,6 @@
-﻿using System;
-using System.Linq;
-using FluentAssertions;
+﻿using FluentAssertions;
 using LinqToDB;
 using NUnit.Framework;
-using Tests.Model;
 
 namespace Tests.UserTests
 {

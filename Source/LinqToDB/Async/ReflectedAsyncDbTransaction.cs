@@ -1,9 +1,4 @@
-﻿using System;
-using System.Data.Common;
-using System.Threading;
-using System.Threading.Tasks;
-
-namespace LinqToDB.Async
+﻿namespace LinqToDB.Async
 {
 	/// <summary>
 	/// Asynchronous version of the <see cref="DbTransaction"/> interface, allowing asynchronous operations,

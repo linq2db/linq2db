@@ -1,10 +1,8 @@
-﻿using System;
-
-namespace LinqToDB.DataProvider.SqlCe
+﻿namespace LinqToDB.DataProvider.SqlCe
 {
 	using Extensions;
-	using SqlQuery;
 	using SqlProvider;
+	using SqlQuery;
 
 	class SqlCeSqlOptimizer : BasicSqlOptimizer
 	{

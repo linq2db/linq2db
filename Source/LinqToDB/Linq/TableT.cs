@@ -1,12 +1,11 @@
 ﻿using System.Linq.Expressions;
 using System.Reflection;
-using System.Text;
 
 namespace LinqToDB.Linq
 {
 	using Extensions;
-	using LinqToDB.SqlQuery;
 	using Reflection;
+	using SqlQuery;
 
 	class Table<T> : ExpressionQuery<T>, ITable<T>, ITableMutable<T>, ITable
 		where T : notnull

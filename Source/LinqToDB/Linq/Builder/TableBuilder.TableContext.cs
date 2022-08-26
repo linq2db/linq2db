@@ -1,13 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
+﻿using System.Diagnostics;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using Common;
 	using Extensions;
-	using LinqToDB.Expressions;
 	using Mapping;
 	using Reflection;
 	using SqlQuery;
@@ -203,37 +200,37 @@ namespace LinqToDB.Linq.Builder
 			public virtual SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 			{
 				throw new NotImplementedException();
-								}
+									}
 
 			#endregion
 
 			#region ConvertToIndex
 
 			public virtual SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
-									{
+						{
 				throw new NotImplementedException();
-			}
+									}
 
 			SqlGenericConstructorExpression? _fullEntityExpression;
 
 			public Expression MakeExpression(Expression path, ProjectFlags flags)
-			{
+								{
 				if (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AssociationRoot) || flags.HasFlag(ProjectFlags.Expand))
 					return path;
 
 				if (SequenceHelper.IsSameContext(path, this))
-				{
+								{
 					// trying to access Queryable variant
 					if (path.Type != ObjectType && flags.HasFlag(ProjectFlags.Expression))
 						return new SqlEagerLoadExpression((ContextRefExpression)path, path, Builder.GetSequenceExpression(this));
 
 					if (_fullEntityExpression == null)
-					{
+							{
 						_fullEntityExpression = Builder.BuildFullEntityExpression(this, ObjectType, flags);
-					}
+							}
 
 					return _fullEntityExpression;
-				}
+							}
 
 				if (path is not MemberExpression member)
 					return ExpressionBuilder.CreateSqlError(this, path);
@@ -245,19 +242,19 @@ namespace LinqToDB.Linq.Builder
 				var placeholder = ExpressionBuilder.CreatePlaceholder(this, sql, path);
 
 				return placeholder;
-			}
+								}
 
 			public IBuildContext Clone(CloningContext context)
 			{
 				return new TableContext(Builder, context.CloneElement(SelectQuery), context.CloneElement(SqlTable));
-			}
+				}
 
 			public void SetRunQuery<T>(Query<T> query, Expression expr)
 			{
 				var mapper = Builder.BuildMapper<T>(expr);
 
 				QueryRunner.SetRunQuery(query, mapper);
-			}
+				}
 
 			#endregion
 
@@ -266,7 +263,7 @@ namespace LinqToDB.Linq.Builder
 			public virtual IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 			{
 				throw new NotImplementedException(); 
-			}
+						}
 
 			#endregion
 
@@ -281,7 +278,7 @@ namespace LinqToDB.Linq.Builder
 				var context = Builder.BuildSequence(new BuildInfo(buildInfo, expr));
 
 				return context;
-			}
+										}
 
 			public virtual SqlStatement GetResultStatement()
 			{
@@ -299,7 +296,7 @@ namespace LinqToDB.Linq.Builder
 			public virtual int ConvertToParentIndex(int index, IBuildContext? context)
 			{
 				throw new NotImplementedException(); 
-			}
+				}
 
 			#endregion
 
@@ -465,9 +462,9 @@ namespace LinqToDB.Linq.Builder
 											if (mm.MemberAccessor.MemberInfo.EqualsTo(memberExpression.Member))
 												return field;
 
-								if (memberExpression.Member.IsDynamicColumnPropertyEx())
-								{
-									var fieldName = memberExpression.Member.Name;
+				if (memberExpression.Member.IsDynamicColumnPropertyEx())
+				{
+					var fieldName = memberExpression.Member.Name;
 
 					// do not add association columns
 					var flag = true;
@@ -480,27 +477,27 @@ namespace LinqToDB.Linq.Builder
 						}
 					}
 
-									if (flag)
-									{
-										var newField = SqlTable[fieldName];
-										if (newField == null)
-										{
-											newField = new SqlField(
-												new ColumnDescriptor(
-													Builder.MappingSchema,
-													EntityDescriptor,
-													new ColumnAttribute(fieldName),
-													new MemberAccessor(EntityDescriptor.TypeAccessor,
-														memberExpression.Member, EntityDescriptor),
-													InheritanceMapping.Count > 0)
+					if (flag)
+					{
+						var newField = SqlTable[fieldName];
+						if (newField == null)
+						{
+							newField = new SqlField(
+								new ColumnDescriptor(
+									Builder.MappingSchema,
+									EntityDescriptor,
+									new ColumnAttribute(fieldName),
+									new MemberAccessor(EntityDescriptor.TypeAccessor,
+										memberExpression.Member, EntityDescriptor),
+									InheritanceMapping.Count > 0)
 											) { IsDynamic = true, };
 
 							SqlTable.Add(newField);
 						}
 
-										return newField;
-									}
-								}
+						return newField;
+					}
+				}
 			}
 
 							if (throwException &&
@@ -510,15 +507,15 @@ namespace LinqToDB.Linq.Builder
 								throw new LinqException("Member '{0}.{1}' is not a table column.",
 									memberExpression.Member.DeclaringType.Name, memberExpression.Member.Name);
 				}
-						}
-							}
-						}
+				}
+			}
+				}
 
 				if (throwException)
-										{
+				{
 					throw new LinqException($"Member '{expression}' is not a table column.");
-										}
-					return null;
+						}
+				return null;
 			}
 
 			#endregion

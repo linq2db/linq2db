@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
+﻿using System.Diagnostics;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -10,9 +7,8 @@ namespace LinqToDB.Mapping
 	using Common;
 	using Expressions;
 	using Extensions;
-	using Linq;
-	using LinqToDB.SqlQuery;
 	using Reflection;
+	using SqlQuery;
 
 	/// <summary>
 	/// Stores mapping entity descriptor.

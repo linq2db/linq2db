@@ -1,21 +1,13 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Data;
-using System.Data.Common;
+﻿using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Text;
-using System.Threading;
-
-using JetBrains.Annotations;
-using LinqToDB.Common.Internal;
 
 namespace LinqToDB.Data
 {
 	using Async;
 	using Common;
+	using Common.Internal;
 	using Configuration;
 	using DataProvider;
 	using Expressions;

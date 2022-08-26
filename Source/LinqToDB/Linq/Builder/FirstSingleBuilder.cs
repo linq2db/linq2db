@@ -1,14 +1,13 @@
-﻿using System;
-using System.Linq;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
+using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
-	using Extensions;
-	using SqlQuery;
-	using Common;
 	using Async;
+	using Common;
+	using Extensions;
+	using Reflection;
+	using SqlQuery;
 
 	class FirstSingleBuilder : MethodCallBuilder
 	{
@@ -36,25 +35,25 @@ namespace LinqToDB.Linq.Builder
 
 			var forceOuter = buildInfo.Parent is DefaultIfEmptyBuilder.DefaultIfEmptyContext; 
 
-			switch (methodCall.Method.Name)
-			{
-				case "First"                :
-				case "FirstOrDefault"       :
-				case "FirstAsync"           :
-				case "FirstOrDefaultAsync"  :
-					take = 1;
-					break;
+				switch (methodCall.Method.Name)
+				{
+					case "First"                :
+					case "FirstOrDefault"       :
+					case "FirstAsync"           :
+					case "FirstOrDefaultAsync"  :
+						take = 1;
+						break;
 
-				case "Single"               :
-				case "SingleOrDefault"      :
-				case "SingleAsync"          :
-				case "SingleOrDefaultAsync" :
-					if (!buildInfo.IsSubQuery)
-						if (buildInfo.SelectQuery.Select.TakeValue == null || buildInfo.SelectQuery.Select.TakeValue is SqlValue takeValue && (int)takeValue.Value! >= 2)
-							take = 2;
+					case "Single"               :
+					case "SingleOrDefault"      :
+					case "SingleAsync"          :
+					case "SingleOrDefaultAsync" :
+						if (!buildInfo.IsSubQuery)
+							if (buildInfo.SelectQuery.Select.TakeValue == null || buildInfo.SelectQuery.Select.TakeValue is SqlValue takeValue && (int)takeValue.Value! >= 2)
+								take = 2;
 
-					break;
-			}
+						break;
+				}
 
 			if (take != 0)
 			{
@@ -65,13 +64,13 @@ namespace LinqToDB.Linq.Builder
 			var isOuter = false;
 
 			if (forceOuter || methodCall.Method.Name.Contains("OrDefault"))
-			{
+		{
 				sequence = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, sequence, null);
 				isOuter  = true;
-			}
+				}
 
 			return new FirstSingleContext(buildInfo.Parent, sequence, methodCall, buildInfo.IsSubQuery, buildInfo.IsAssociation, isOuter);
-		}
+					}
 
 		protected override SequenceConvertInfo? Convert(
 			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)

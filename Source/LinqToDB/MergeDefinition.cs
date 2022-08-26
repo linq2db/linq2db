@@ -1,12 +1,10 @@
-﻿using LinqToDB.Common;
-using LinqToDB.Linq;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 
 namespace LinqToDB
 {
+	using Common;
+	using Linq;
+
 	public enum MergeOperationType
 	{
 		Insert,

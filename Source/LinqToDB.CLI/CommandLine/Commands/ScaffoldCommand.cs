@@ -1,7 +1,7 @@
-﻿using LinqToDB.Scaffold;
-
-namespace LinqToDB.CommandLine
+﻿namespace LinqToDB.CommandLine
 {
+	using Scaffold;
+
 	/// <summary>
 	/// Scaffold command implementation.
 	/// </summary>

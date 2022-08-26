@@ -1,7 +1,4 @@
-﻿using System.Data.Common;
-using LinqToDB.Async;
-
-namespace LinqToDB.Data
+﻿namespace LinqToDB.Data
 {
 	/// <summary>
 	/// Type of operation associated with specific trace event.

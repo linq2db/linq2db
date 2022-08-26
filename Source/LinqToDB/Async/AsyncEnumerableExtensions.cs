@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-
-namespace LinqToDB.Async
+﻿namespace LinqToDB.Async
 {
 	// Do not expose to public surface, will conflict with other libraries
 	/// <summary>
@@ -169,9 +163,9 @@ namespace LinqToDB.Async
 					if (await enumerator.MoveNextAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
 						return default!;
 					return first;
-				}	
+	}
 				return default!;
-			}
+}
 		}
 
 		/// <summary>

@@ -1,5 +1,4 @@
 ﻿using System.Linq.Expressions;
-
 using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder

@@ -1,14 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
-using LinqToDB.SqlQuery;
+using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
-
+	using SqlQuery;
+	
 	static class SequenceHelper
 	{
 		public static Expression PrepareBody(LambdaExpression lambda, params IBuildContext[] sequences)
@@ -59,7 +56,7 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		public static Expression MoveAllToScopedContext(Expression expression, IBuildContext upTo)
-		{
+			{
 			var newExpression = expression.Transform((expression, upTo), (ctx, e) =>
 			{
 				if (e.NodeType == ExpressionType.Extension && e is ContextRefExpression contextRef)
@@ -71,7 +68,7 @@ namespace LinqToDB.Linq.Builder
 			});
 
 			return newExpression;
-		}
+			}
 
 		public static Expression MoveToScopedContext(Expression expression, IBuildContext upTo)
 		{
@@ -104,7 +101,7 @@ namespace LinqToDB.Linq.Builder
 		public static bool IsDefaultIfEmpty(IBuildContext context)
 		{
 			return UnwrapSubqueryContext(context) is DefaultIfEmptyBuilder.DefaultIfEmptyContext;
-		}
+	}
 
 		public static Expression RequireSqlExpression(this IBuildContext context, Expression? path)
 		{
@@ -113,6 +110,6 @@ namespace LinqToDB.Linq.Builder
 				throw new LinqException("'{0}' cannot be converted to SQL.", path);
 
 			return sql;
-		}
+}
 	}
 }

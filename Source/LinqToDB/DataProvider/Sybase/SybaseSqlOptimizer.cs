@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-
-namespace LinqToDB.DataProvider.Sybase
+﻿namespace LinqToDB.DataProvider.Sybase
 {
 	using Extensions;
 	using SqlProvider;
 	using SqlQuery;
-	using Mapping;
 
 	class SybaseSqlOptimizer : BasicSqlOptimizer
 	{
