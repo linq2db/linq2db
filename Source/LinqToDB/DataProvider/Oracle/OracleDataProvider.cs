@@ -147,6 +147,7 @@
 					int arrayBindCount = parameters?.Length > 0 && parameters[0] is { IsArray: true, Value: object[] value }
 						? value.Length
 						: 0;
+
 					Adapter.SetArrayBindCount(rawCommand, arrayBindCount);
 				}
 			}
