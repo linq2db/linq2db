@@ -307,8 +307,13 @@ namespace LinqToDB.Scaffold
 
 				newName = fkName;
 
+				// FK side of one-to-one relation by primary keys
+				var isOneToOne = false;
+				if (firstFromColumnName != null && _entities.TryGetValue(otherTable, out var sourceTable))
+					isOneToOne = sourceTable.Entity.Columns.Any(_ => _.Metadata.Name == firstFromColumnName && _.Metadata.IsPrimaryKey);
+
 				// if column name provided - generate association name based on column name
-				if (firstFromColumnName != null && firstFromColumnName.ToLower().EndsWith("id"))
+				if (!isOneToOne && firstFromColumnName != null && firstFromColumnName.ToLower().EndsWith("id"))
 				{
 					// if column name provided and ends with ID suffix
 					// we trim ID part and possible _ connectors before it
