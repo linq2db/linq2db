@@ -1,14 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Text;
-using System.Data.Common;
+﻿using System.Text;
 
 namespace LinqToDB.DataProvider.Sybase
 {
-	using SqlQuery;
-	using SqlProvider;
 	using Mapping;
+	using SqlProvider;
+	using SqlQuery;
 
 	partial class SybaseSqlBuilder : BasicSqlBuilder
 	{
@@ -256,7 +252,7 @@ namespace LinqToDB.DataProvider.Sybase
 				case TableOptions.IsGlobalTemporaryStructure | TableOptions.IsGlobalTemporaryData                          :
 					return $"##{physicalName}";
 				case var value :
-					throw new InvalidOperationException($"Incompatible table options '{value}'");
+					return ThrowHelper.ThrowInvalidOperationException<string>($"Incompatible table options '{value}'");
 			}
 		}
 

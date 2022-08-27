@@ -1,6 +1,4 @@
-﻿using System;
-using System.Linq;
-using System.Data.Linq;
+﻿using System.Data.Linq;
 using System.Globalization;
 using System.Net;
 using System.Net.Sockets;
@@ -142,7 +140,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		{
 			// BitConverter.ToUInt32 uses wrong byte order for this case
 			if (address.AddressFamily == AddressFamily.InterNetworkV6)
-				throw new LinqToDBConvertException("Cannot convert IPv6 address to UInt32");
+				ThrowHelper.ThrowLinqToDBConvertException("Cannot convert IPv6 address to UInt32");
 
 			var bytes = address.GetAddressBytes();
 
@@ -198,7 +196,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 			if (dt.Type.DataType == DataType.IPv6)
 			{
 				if (value.Length != 4 && value.Length != 16)
-					throw new LinqToDBConvertException($"IPv6 address should have 4 or 16 bytes, but got {value.Length}");
+					ThrowHelper.ThrowLinqToDBConvertException($"IPv6 address should have 4 or 16 bytes, but got {value.Length}");
 
 				stringBuilder.Append('\'');
 
@@ -253,7 +251,8 @@ namespace LinqToDB.DataProvider.ClickHouse
 					break;
 				default:
 					// there are so many prehistoric values in AddressFamily nobody would ever use
-					throw new LinqToDBConvertException($"Unsupported AddressFamily/DataType combination: ({address.AddressFamily} + {dt.Type.DataType})");
+					ThrowHelper.ThrowLinqToDBConvertException($"Unsupported AddressFamily/DataType combination: ({address.AddressFamily} + {dt.Type.DataType})");
+					break;
 			}
 		}
 
@@ -294,7 +293,8 @@ namespace LinqToDB.DataProvider.ClickHouse
 				//case DataType.IntervalQuarter:
 				//case DataType.IntervalYear   :
 				default                        :
-					throw new LinqToDBConvertException($"Unsupported TimeSpan type mapping: {dt.Type.DataType}");
+					ThrowHelper.ThrowLinqToDBConvertException($"Unsupported TimeSpan type mapping: {dt.Type.DataType}");
+					break;
 			}
 		}
 
@@ -308,7 +308,8 @@ namespace LinqToDB.DataProvider.ClickHouse
 				case DataType.Undefined :
 				case DataType.DateTime64: BuildDateTime64Literal(sb, value, dt.Type.Precision ?? DEFAULT_DATETIME64_PRECISION); break;
 				default                 :
-					throw new LinqToDBConvertException($"Unsupported DateTime type mapping: {dt.Type.DataType}");
+					ThrowHelper.ThrowLinqToDBConvertException($"Unsupported DateTime type mapping: {dt.Type.DataType}");
+					break;
 			}
 		}
 
@@ -332,7 +333,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 			}
 
 			var format = GetIntervalLiteralFormat(dt.Type.DataType)
-				?? throw new LinqToDBConvertException($"Unsupported Byte type mapping: {dt.Type.DataType}");
+				?? ThrowHelper.ThrowLinqToDBConvertException<string>($"Unsupported Byte type mapping: {dt.Type.DataType}");
 
 			sb.AppendFormat(CultureInfo.InvariantCulture, format, value);
 		}
@@ -358,7 +359,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 			}
 
 			var format = GetIntervalLiteralFormat(dt.Type.DataType)
-				?? throw new LinqToDBConvertException($"Unsupported SByte type mapping: {dt.Type.DataType}");
+				?? ThrowHelper.ThrowLinqToDBConvertException<string>($"Unsupported SByte type mapping: {dt.Type.DataType}");
 
 			sb.AppendFormat(CultureInfo.InvariantCulture, format, value);
 		}
@@ -383,7 +384,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 			}
 
 			var format = GetIntervalLiteralFormat(dt.Type.DataType)
-				?? throw new LinqToDBConvertException($"Unsupported Int16 type mapping: {dt.Type.DataType}");
+				?? ThrowHelper.ThrowLinqToDBConvertException<string>($"Unsupported Int16 type mapping: {dt.Type.DataType}");
 
 			sb.AppendFormat(CultureInfo.InvariantCulture, format, value);
 		}
@@ -408,7 +409,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 			}
 
 			var format = GetIntervalLiteralFormat(dt.Type.DataType)
-				?? throw new LinqToDBConvertException($"Unsupported UInt16 type mapping: {dt.Type.DataType}");
+				?? ThrowHelper.ThrowLinqToDBConvertException<string>($"Unsupported UInt16 type mapping: {dt.Type.DataType}");
 
 			sb.AppendFormat(CultureInfo.InvariantCulture, format, value);
 		}
@@ -433,7 +434,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 			}
 
 			var format = GetIntervalLiteralFormat(dt.Type.DataType)
-				?? throw new LinqToDBConvertException($"Unsupported Int32 type mapping: {dt.Type.DataType}");
+				?? ThrowHelper.ThrowLinqToDBConvertException<string>($"Unsupported Int32 type mapping: {dt.Type.DataType}");
 
 			sb.AppendFormat(CultureInfo.InvariantCulture, format, value);
 		}
@@ -459,7 +460,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 			}
 
 			var format = GetIntervalLiteralFormat(dt.Type.DataType)
-				?? throw new LinqToDBConvertException($"Unsupported UInt32 type mapping: {dt.Type.DataType}");
+				?? ThrowHelper.ThrowLinqToDBConvertException<string>($"Unsupported UInt32 type mapping: {dt.Type.DataType}");
 
 			sb.AppendFormat(CultureInfo.InvariantCulture, format, value);
 		}
@@ -480,17 +481,17 @@ namespace LinqToDB.DataProvider.ClickHouse
 				case DataType.Int128   : BuildInt128Literal(sb, value);                  return;
 				case DataType.UInt128  :
 					if (value < 0)
-						throw new LinqToDBConvertException($"Value {value} cannot be converted to unsigned UInt128 literal");
+						ThrowHelper.ThrowLinqToDBConvertException($"Value {value} cannot be converted to unsigned UInt128 literal");
 					BuildUInt128Literal(sb, value);                                      return;
 				case DataType.Int256   : BuildInt256Literal(sb, value);                  return;
 				case DataType.UInt256  :
 					if (value < 0)
-						throw new LinqToDBConvertException($"Value {value} cannot be converted to unsigned UInt256 literal");
+						ThrowHelper.ThrowLinqToDBConvertException($"Value {value} cannot be converted to unsigned UInt256 literal");
 					BuildUInt256Literal(sb, value);                                      return;
 			}
 
 			var format = GetIntervalLiteralFormat(dt.Type.DataType)
-				?? throw new LinqToDBConvertException($"Unsupported Int64 type mapping: {dt.Type.DataType}");
+				?? ThrowHelper.ThrowLinqToDBConvertException<string>($"Unsupported Int64 type mapping: {dt.Type.DataType}");
 
 			sb.AppendFormat(CultureInfo.InvariantCulture, format, value);
 		}
@@ -516,7 +517,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 			}
 
 			// no interval support as it doesn't accept ulong values
-			throw new LinqToDBConvertException($"Unsupported UInt64 type mapping: {dt.Type.DataType}");
+			ThrowHelper.ThrowLinqToDBConvertException($"Unsupported UInt64 type mapping: {dt.Type.DataType}");
 		}
 
 		private static void ConvertBigInteger(StringBuilder sb, SqlDataType dt, BigInteger value)
@@ -534,17 +535,17 @@ namespace LinqToDB.DataProvider.ClickHouse
 				case DataType.Int128   : BuildInt128Literal(sb, value);                  return;
 				case DataType.UInt128  :
 					if (value < 0)
-						throw new LinqToDBConvertException($"Value {value} cannot be converted to unsigned UInt128 literal");
+						ThrowHelper.ThrowLinqToDBConvertException($"Value {value} cannot be converted to unsigned UInt128 literal");
 					BuildUInt128Literal(sb, value);                                      return;
 				case DataType.Undefined:
 				case DataType.Int256   : BuildInt256Literal(sb, value);                  return;
 				case DataType.UInt256  :
 					if (value < 0)
-						throw new LinqToDBConvertException($"Value {value} cannot be converted to unsigned UInt256 literal");
+						ThrowHelper.ThrowLinqToDBConvertException($"Value {value} cannot be converted to unsigned UInt256 literal");
 					BuildUInt256Literal(sb, value);                                      return;
 			}
 
-			throw new LinqToDBConvertException($"Unsupported BigInteger type mapping: {dt.Type.DataType}");
+			ThrowHelper.ThrowLinqToDBConvertException($"Unsupported BigInteger type mapping: {dt.Type.DataType}");
 		}
 
 		private static void ConvertDateTimeOffset(StringBuilder sb, SqlDataType dt, DateTimeOffset value)
@@ -559,7 +560,9 @@ namespace LinqToDB.DataProvider.ClickHouse
 				case DataType.DateTime64    :
 				case DataType.SmallDateTime :
 				case DataType.DateTimeOffset: BuildDateTime64Literal(sb, value.UtcDateTime, dt.Type.Precision ?? DEFAULT_DATETIME64_PRECISION); break;
-				default                     : throw new LinqToDBConvertException($"Unsupported DateTimeOffset type mapping: {dt.Type.DataType}");
+				default                     : 
+					ThrowHelper.ThrowLinqToDBConvertException($"Unsupported DateTimeOffset type mapping: {dt.Type.DataType}");
+					break;
 			}
 		}
 
@@ -572,7 +575,8 @@ namespace LinqToDB.DataProvider.ClickHouse
 				case DataType.Undefined:
 				case DataType.Date32   : BuildDate32Literal(sb, value.ToDateTime(default)); break;
 				default:
-					throw new LinqToDBConvertException($"Unsupported DateOnly type mapping: {dt.Type.DataType}");
+					ThrowHelper.ThrowLinqToDBConvertException($"Unsupported DateOnly type mapping: {dt.Type.DataType}");
+					break;
 			}
 		}
 #endif
@@ -585,7 +589,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 				case DataType.Single   : BuildFloatLiteral(sb, value); return;
 			}
 
-			throw new LinqToDBConvertException($"Unsupported Float type mapping: {dt.Type.DataType}");
+			ThrowHelper.ThrowLinqToDBConvertException($"Unsupported Float type mapping: {dt.Type.DataType}");
 		}
 
 		private static void ConvertDouble(StringBuilder sb, SqlDataType dt, double value)
@@ -597,7 +601,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 				case DataType.Double   : BuildDoubleLiteral(sb, value); return;
 			}
 
-			throw new LinqToDBConvertException($"Unsupported Double type mapping: {dt.Type.DataType}");
+			ThrowHelper.ThrowLinqToDBConvertException($"Unsupported Double type mapping: {dt.Type.DataType}");
 		}
 
 		private static void ConvertDecimal(StringBuilder sb, SqlDataType dt, decimal value)
@@ -613,7 +617,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 				case DataType.Decimal256: BuildDecimal256Literal(sb, value, scale); return;
 			}
 
-			throw new LinqToDBConvertException($"Unsupported Decimal type mapping: {dt.Type.DataType}");
+			ThrowHelper.ThrowLinqToDBConvertException($"Unsupported Decimal type mapping: {dt.Type.DataType}");
 		}
 
 		private static void ConvertBool(StringBuilder sb, SqlDataType dt, bool value)
@@ -625,7 +629,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 				case DataType.Boolean  : BuildBooleanLiteral(sb, value);                  return;
 			}
 
-			throw new LinqToDBConvertException($"Unsupported Boolean type mapping: {dt.Type.DataType}");
+			ThrowHelper.ThrowLinqToDBConvertException($"Unsupported Boolean type mapping: {dt.Type.DataType}");
 		}
 #endregion
 
@@ -710,7 +714,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		private static void BuildDateTime64Literal(StringBuilder sb, DateTime value, int precision)
 		{
 			if (precision < 0)
-				throw new LinqToDBConvertException($"Invalid DateTime64 precision: {precision}");
+				ThrowHelper.ThrowLinqToDBConvertException($"Invalid DateTime64 precision: {precision}");
 
 			if (precision > 9)
 				precision = 9;

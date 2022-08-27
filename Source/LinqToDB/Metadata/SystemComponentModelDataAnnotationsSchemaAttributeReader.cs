@@ -1,5 +1,4 @@
-﻿using System;
-using System.Reflection;
+﻿using System.Reflection;
 
 namespace LinqToDB.Metadata
 {
@@ -38,9 +37,9 @@ namespace LinqToDB.Metadata
 								attr.Schema = names[1];
 								break;
 							default :
-								throw new MetadataException(string.Format(
-									"Invalid table name '{0}' of type '{1}'",
-									name, type.FullName));
+								ThrowHelper.ThrowMetadataException(
+									$"Invalid table name '{name}' of type '{type.FullName}'");
+								break;
 						}
 					}
 

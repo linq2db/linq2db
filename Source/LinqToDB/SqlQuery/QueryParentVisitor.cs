@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using LinqToDB.Remote;
-
-namespace LinqToDB.SqlQuery
+﻿namespace LinqToDB.SqlQuery
 {
+	using Remote;
+
 	public readonly struct QueryParentVisitor<TContext>
 	{
 		public   readonly Dictionary<IQueryElement,IQueryElement?>  VisitedElements;
@@ -409,7 +407,8 @@ namespace LinqToDB.SqlQuery
 					break;
 
 				default:
-					throw new InvalidOperationException($"Visit visitor not implemented for element {element.ElementType}");
+					ThrowHelper.ThrowInvalidOperationException($"Visit visitor not implemented for element {element.ElementType}");
+					break;
 			}
 
 			if (element is IQueryExtendible { SqlQueryExtensions.Count: > 0 } qe)
@@ -434,7 +433,7 @@ namespace LinqToDB.SqlQuery
 				foreach (var i in q.SetOperators)
 				{
 					if (i.SelectQuery == q)
-						throw new InvalidOperationException();
+						ThrowHelper.ThrowInvalidOperationException();
 
 					Visit(i);
 				}

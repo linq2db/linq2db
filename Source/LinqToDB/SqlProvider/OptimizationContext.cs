@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using LinqToDB.Common;
-using LinqToDB.SqlQuery;
+﻿using System.Diagnostics.CodeAnalysis;
 
 namespace LinqToDB.SqlProvider
 {
+	using Common;
+	using SqlQuery;
+
 	public class OptimizationContext
 	{
 		private SqlParameter[]? _staticParameters;
@@ -22,7 +20,7 @@ namespace LinqToDB.SqlProvider
 		public OptimizationContext(EvaluationContext context, AliasesContext aliases, 
 			bool isParameterOrderDepended)
 		{
-			Aliases = aliases ?? throw new ArgumentNullException(nameof(aliases));
+			Aliases = aliases ?? ThrowHelper.ThrowArgumentNullException<AliasesContext>(nameof(aliases));
 			Context = context;
 			IsParameterOrderDepended = isParameterOrderDepended;
 		}
@@ -157,7 +155,7 @@ namespace LinqToDB.SqlProvider
 
 			// temporary(?) guard
 			if (_nestingLevel > 0)
-				throw new InvalidOperationException("Nested optimization detected");
+				ThrowHelper.ThrowInvalidOperationException("Nested optimization detected");
 			_nestingLevel++;
 			var res = (T?)_visitor.ConvertInternal(element) ?? element;
 			_nestingLevel--;

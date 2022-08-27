@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 
 using PN = LinqToDB.ProviderName;
 
@@ -72,8 +69,8 @@ namespace LinqToDB
 			[ExprParameter] this IQueryable<string?> source,
 			[ExprParameter] string separator)
 		{
-			if (source    == null) throw new ArgumentNullException(nameof(source));
-			if (separator == null) throw new ArgumentNullException(nameof(separator));
+			if (source    == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (separator == null) ThrowHelper.ThrowArgumentNullException(nameof(separator));
 
 			var query = source.Provider.CreateQuery<string>(
 				Expression.Call(
@@ -103,7 +100,7 @@ namespace LinqToDB
 			[ExprParameter] string separator,
 			[ExprParameter] Func<T, string?> selector)
 		{
-			throw new LinqException($"'{nameof(StringAggregate)}' is server-side method.");
+			return ThrowHelper.ThrowLinqException<IAggregateFunctionNotOrdered<T, string>>($"'{nameof(StringAggregate)}' is server-side method.");
 		}
 
 		[Extension(PN.SqlServer2022, "STRING_AGG({selector}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ChainPrecedence = 10, BuilderType = typeof(StringAggSql2017Builder))]
@@ -125,9 +122,9 @@ namespace LinqToDB
 			[ExprParameter] string separator,
 			[ExprParameter] Expression<Func<T, string?>> selector)
 		{
-			if (source    == null) throw new ArgumentNullException(nameof(source));
-			if (separator == null) throw new ArgumentNullException(nameof(separator));
-			if (selector  == null) throw new ArgumentNullException(nameof(selector));
+			if (source    == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (separator == null) ThrowHelper.ThrowArgumentNullException(nameof(separator));
+			if (selector  == null) ThrowHelper.ThrowArgumentNullException(nameof(selector));
 
 			var query = source.Provider.CreateQuery<string>(
 				Expression.Call(
@@ -156,7 +153,7 @@ namespace LinqToDB
 			[ExprParameter] this IEnumerable<string?> source,
 			[ExprParameter] string separator)
 		{
-			throw new LinqException($"'{nameof(StringAggregate)}' is server-side method.");
+			return ThrowHelper.ThrowLinqException<IAggregateFunctionNotOrdered<string?, string>>($"'{nameof(StringAggregate)}' is server-side method.");
 		}
 
 		#endregion

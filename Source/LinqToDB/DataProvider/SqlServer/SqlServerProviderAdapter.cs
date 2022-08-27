@@ -1,17 +1,11 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Data;
-using System.Data.Common;
-using System.Linq;
+﻿using System.Collections;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Threading;
-using System.Threading.Tasks;
-using LinqToDB.Expressions;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
+	using Expressions;
+
 	// old System.Data.SqlClient versions for .net core (< 4.5.0)
 	// miss UDT and BulkCopy support
 	// We don't take it into account, as there is no reason to use such old provider versions
@@ -149,7 +143,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 
 			if (assembly == null)
-				throw new InvalidOperationException($"Cannot load assembly {assemblyName}");
+				ThrowHelper.ThrowInvalidOperationException($"Cannot load assembly {assemblyName}");
 
 			var connectionType                 = assembly.GetType($"{clientNamespace}.SqlConnection"             , true)!;
 			var parameterType                  = assembly.GetType($"{clientNamespace}.SqlParameter"              , true)!;
@@ -320,7 +314,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			{
 			}
 
-			public SqlConnectionStringBuilder(string connectionString) => throw new NotImplementedException();
+			public SqlConnectionStringBuilder(string connectionString) => ThrowHelper.ThrowNotImplementedException();
 
 			public bool MultipleActiveResultSets
 			{
@@ -349,7 +343,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			{
 			}
 
-			public SqlConnection(string connectionString) => throw new NotImplementedException();
+			public SqlConnection(string connectionString) => ThrowHelper.ThrowNotImplementedException();
 
 			public string    ServerVersion   => ((Func<SqlConnection, string>)CompiledWrappers[0])(this);
 			public DbCommand CreateCommand() => ((Func<SqlConnection, DbCommand>)CompiledWrappers[1])(this);
@@ -406,7 +400,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			{
 			}
 
-			public SqlBulkCopy(SqlConnection connection, SqlBulkCopyOptions options, SqlTransaction? transaction) => throw new NotImplementedException();
+			public SqlBulkCopy(SqlConnection connection, SqlBulkCopyOptions options, SqlTransaction? transaction) => ThrowHelper.ThrowNotImplementedException();
 
 			void IDisposable.Dispose()                        => ((Action<SqlBulkCopy>)CompiledWrappers[0])(this);
 #pragma warning disable RS0030 // API mapping must preserve type
@@ -516,7 +510,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			{
 			}
 
-			public SqlBulkCopyColumnMapping(int source, string destination) => throw new NotImplementedException();
+			public SqlBulkCopyColumnMapping(int source, string destination) => ThrowHelper.ThrowNotImplementedException();
 		}
 
 		#endregion

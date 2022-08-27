@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-
-namespace LinqToDB.DataProvider.ClickHouse
+﻿namespace LinqToDB.DataProvider.ClickHouse
 {
 	using Common;
 	using Mapping;
@@ -355,7 +352,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 						}
 					}
 
-					throw new LinqToDBException($"Missing conversion function definition to type '{toType.Type}'");
+					return ThrowHelper.ThrowLinqToDBException<ISqlExpression>($"Missing conversion function definition to type '{toType.Type}'");
 					
 				}
 			}

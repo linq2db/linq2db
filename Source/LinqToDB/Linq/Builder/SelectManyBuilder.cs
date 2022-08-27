@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
+using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
 	using SqlQuery;
 
 	class SelectManyBuilder : MethodCallBuilder
@@ -229,7 +227,7 @@ namespace LinqToDB.Linq.Builder
 				if (Collection == null)
 					base.BuildQuery(query, queryParameter);
 
-				throw new NotImplementedException();
+				ThrowHelper.ThrowNotImplementedException();
 			}
 
 			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)

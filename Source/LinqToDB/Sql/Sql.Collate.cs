@@ -1,10 +1,10 @@
-﻿using System;
-using System.Text.RegularExpressions;
-using LinqToDB.Expressions;
-using LinqToDB.SqlQuery;
+﻿using System.Text.RegularExpressions;
 
 namespace LinqToDB
 {
+	using Expressions;
+	using SqlQuery;
+
 	public static partial class Sql
 	{
 		/// <summary>
@@ -18,7 +18,7 @@ namespace LinqToDB
 		[Extension("", ServerSideOnly = true, BuilderType = typeof(PostgreSQLCollationBuilder), Configuration = ProviderName.PostgreSQL)]
 		[Extension("", ServerSideOnly = true, BuilderType = typeof(NamedCollationBuilder))]
 		public static string Collate(this string expr, [SqlQueryDependent] string collation)
-			=> throw new InvalidOperationException($"{nameof(Sql)}.{nameof(Sql.Collate)} is server-side only API.");
+			=> ThrowHelper.ThrowLinqException<string>($"{nameof(Sql)}.{nameof(Sql.Collate)} is server-side only API.");
 
 		internal class NamedCollationBuilder : IExtensionCallBuilder
 		{
@@ -30,7 +30,7 @@ namespace LinqToDB
 				var collation = builder.GetValue<string>("collation");
 
 				if (!ValidateCollation(collation))
-					throw new InvalidOperationException($"Invalid collation: {collation}");
+					ThrowHelper.ThrowInvalidOperationException($"Invalid collation: {collation}");
 
 				builder.ResultExpression = new SqlExpression(typeof(string), $"{{0}} COLLATE {collation}", Precedence.Primary, expr);
 			}

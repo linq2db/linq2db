@@ -1,5 +1,4 @@
-﻿using System;
-using LinqToDB.Mapping;
+﻿using LinqToDB.Mapping;
 
 namespace LinqToDB.Benchmarks.Mappings
 {

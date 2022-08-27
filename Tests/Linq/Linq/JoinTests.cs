@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-
-using LinqToDB;
+﻿using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
@@ -22,10 +18,10 @@ namespace Tests.Linq
 			where TOuter : class
 			where TInner : class
 		{
-			if (outer          == null) throw new ArgumentNullException(nameof(outer));
-			if (inner          == null) throw new ArgumentNullException(nameof(inner));
-			if (predicate      == null) throw new ArgumentNullException(nameof(predicate));
-			if (resultSelector == null) throw new ArgumentNullException(nameof(resultSelector));
+			if (outer          == null) ThrowHelper.ThrowArgumentNullException(nameof(outer));
+			if (inner          == null) ThrowHelper.ThrowArgumentNullException(nameof(inner));
+			if (predicate      == null) ThrowHelper.ThrowArgumentNullException(nameof(predicate));
+			if (resultSelector == null) ThrowHelper.ThrowArgumentNullException(nameof(resultSelector));
 
 			switch (joinType)
 			{
@@ -47,7 +43,7 @@ namespace Tests.Linq
 					var res = firstResult.Concat(secondResult).Select(r => resultSelector(r.First!, r.Second));
 					return res;
 				default:
-					throw new ArgumentOutOfRangeException(nameof(joinType), joinType, null);
+					return ThrowHelper.ThrowArgumentOutOfRangeException<IEnumerable<TResult>>(nameof(joinType), joinType, null);
 			}
 		}
 
@@ -61,11 +57,11 @@ namespace Tests.Linq
 			where TOuter: class
 			where TInner: class
 		{
-			if (outer            == null) throw new ArgumentNullException(nameof(outer));
-			if (inner            == null) throw new ArgumentNullException(nameof(inner));
-			if (outerKeySelector == null) throw new ArgumentNullException(nameof(outerKeySelector));
-			if (innerKeySelector == null) throw new ArgumentNullException(nameof(innerKeySelector));
-			if (resultSelector   == null) throw new ArgumentNullException(nameof(resultSelector));
+			if (outer            == null) ThrowHelper.ThrowArgumentNullException(nameof(outer));
+			if (inner            == null) ThrowHelper.ThrowArgumentNullException(nameof(inner));
+			if (outerKeySelector == null) ThrowHelper.ThrowArgumentNullException(nameof(outerKeySelector));
+			if (innerKeySelector == null) ThrowHelper.ThrowArgumentNullException(nameof(innerKeySelector));
+			if (resultSelector   == null) ThrowHelper.ThrowArgumentNullException(nameof(resultSelector));
 
 			switch (joinType)
 			{
@@ -104,7 +100,7 @@ namespace Tests.Linq
 
 					return res;
 				default:
-					throw new ArgumentOutOfRangeException(nameof(joinType), joinType, null);
+					return ThrowHelper.ThrowArgumentOutOfRangeException<IEnumerable<TResult>>(nameof(joinType), joinType, null);
 			}
 		}
 	}

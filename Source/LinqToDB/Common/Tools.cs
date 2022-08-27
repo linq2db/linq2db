@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Data.Common;
+﻿using System.Collections;
 using System.Diagnostics.CodeAnalysis;
-using System.IO;
-using System.Linq;
 using System.Reflection;
 
 namespace LinqToDB.Common
@@ -37,7 +32,7 @@ namespace LinqToDB.Common
 		internal static string GetPath(this Assembly assembly)
 		{
 			return Path.GetDirectoryName(assembly.GetFileName())
-				?? throw new InvalidOperationException($"Cannot get path to {assembly.GetFileName()}");
+				?? ThrowHelper.ThrowInvalidOperationException<string>($"Cannot get path to {assembly.GetFileName()}");
 		}
 
 		/// <summary>

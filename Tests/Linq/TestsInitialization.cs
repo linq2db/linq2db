@@ -1,6 +1,4 @@
-﻿using System;
-using System.Data.Common;
-using System.IO;
+﻿using System.Data.Common;
 using System.Reflection;
 using LinqToDB.DataProvider.ClickHouse;
 using NUnit.Framework;

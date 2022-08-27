@@ -1,8 +1,5 @@
-﻿using JetBrains.Annotations;
-
-namespace LinqToDB.DataProvider.SqlCe
+﻿namespace LinqToDB.DataProvider.SqlCe
 {
-	using System.Collections.Generic;
 	using Configuration;
 
 	[UsedImplicitly]

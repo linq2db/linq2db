@@ -1,16 +1,11 @@
-﻿using System;
-using System.Text;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using System.Text;
 
 namespace LinqToDB.DataProvider.ClickHouse
 {
 	using Async;
 	using Common;
 	using Data;
-	using LinqToDB.Extensions;
+	using Extensions;
 	using SqlProvider;
 
 	sealed class ClickHouseBulkCopy : BasicBulkCopy

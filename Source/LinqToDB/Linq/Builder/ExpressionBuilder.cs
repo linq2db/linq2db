@@ -1,14 +1,8 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Data;
-using System.Data.Common;
+﻿using System.Collections;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-
-using JetBrains.Annotations;
+using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -16,8 +10,7 @@ namespace LinqToDB.Linq.Builder
 	using Extensions;
 	using Mapping;
 	using SqlQuery;
-	using LinqToDB.Expressions;
-	using LinqToDB.Reflection;
+	using Reflection;
 
 	partial class ExpressionBuilder
 	{
@@ -221,7 +214,7 @@ namespace LinqToDB.Linq.Builder
 				n = builder.BuildCounter;
 			}
 
-			throw new LinqException("Sequence '{0}' cannot be converted to SQL.", buildInfo.Expression);
+			return ThrowHelper.ThrowLinqException<IBuildContext>($"Sequence '{buildInfo.Expression}' cannot be converted to SQL.");
 		}
 
 		public ISequenceBuilder? GetBuilder(BuildInfo buildInfo, bool throwIfNotFound = true)
@@ -233,7 +226,7 @@ namespace LinqToDB.Linq.Builder
 					return builder;
 
 			if (throwIfNotFound)
-				throw new LinqException("Sequence '{0}' cannot be converted to SQL.", buildInfo.Expression);
+				ThrowHelper.ThrowLinqException($"Sequence '{buildInfo.Expression}' cannot be converted to SQL.");
 			return null;
 		}
 
@@ -246,7 +239,7 @@ namespace LinqToDB.Linq.Builder
 					return builder.Convert(this, buildInfo, param);
 
 			if (throwExceptionIfCantConvert)
-				throw new LinqException("Sequence '{0}' cannot be converted to SQL.", buildInfo.Expression);
+				ThrowHelper.ThrowLinqException($"Sequence '{buildInfo.Expression}' cannot be converted to SQL.");
 
 			return null;
 		}
@@ -319,7 +312,7 @@ namespace LinqToDB.Linq.Builder
 							Expression.Lambda(p.Expr, (ParameterExpression)p.Path));
 					}
 
-					throw new InvalidOperationException();
+					ThrowHelper.ThrowInvalidOperationException();
 				}
 
 				return sequence.Expression;
@@ -984,7 +977,7 @@ namespace LinqToDB.Linq.Builder
 					case "TKey"    : typeArgs[1] = argTypes[i]; break;
 					case "TElement": typeArgs[2] = argTypes[i]; break;
 					case "TResult" : typeArgs[3] = argTypes[i]; break;
-					default: throw new InvalidOperationException($"Unexpected GroupBy type parameter: {args[i].Name}");
+					default: return ThrowHelper.ThrowInvalidOperationException<Expression>($"Unexpected GroupBy type parameter: {args[i].Name}");
 				}
 			}
 
@@ -1187,7 +1180,7 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			if (cm == null)
-				throw new InvalidOperationException("Sequence contains no elements");
+				ThrowHelper.ThrowInvalidOperationException("Sequence contains no elements");
 
 			var wm = GetMethodInfo(method, "Where");
 
@@ -1286,7 +1279,7 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 			if (cm == null)
-				throw new InvalidOperationException("Sequence contains no elements");
+				ThrowHelper.ThrowInvalidOperationException("Sequence contains no elements");
 
 			var argType = types[0];
 
@@ -1392,8 +1385,8 @@ namespace LinqToDB.Linq.Builder
 								new[] { fakeQuery.Expression }.Concat(callExpression.Arguments.Skip(1)));
 							if (CanBeCompiled(callExpression))
 							{
-								if (!(callExpression.EvaluateExpression() is IQueryable appliedQuery))
-									throw new LinqToDBException($"Method call '{expression}' returned null value.");
+								if (callExpression.EvaluateExpression() is not IQueryable appliedQuery)
+									return ThrowHelper.ThrowLinqToDBException<Expression>($"Method call '{expression}' returned null value.");
 								var newExpression = appliedQuery.Expression.Replace(fakeQuery.Expression, firstArgument);
 								return newExpression;
 							}
@@ -1407,7 +1400,7 @@ namespace LinqToDB.Linq.Builder
 
 				_parametersContext._expressionAccessors.TryGetValue(expression, out var accessor);
 				if (accessor == null)
-					throw new LinqToDBException($"IQueryable value accessor for '{expression}' not found.");
+					ThrowHelper.ThrowLinqToDBException($"IQueryable value accessor for '{expression}' not found.");
 
 				var path =
 					Expression.Call(
@@ -1433,7 +1426,7 @@ namespace LinqToDB.Linq.Builder
 				return qex;
 			}
 
-			throw new InvalidOperationException();
+			return ThrowHelper.ThrowInvalidOperationException<Expression>();
 		}
 
 		#endregion
@@ -1527,7 +1520,7 @@ namespace LinqToDB.Linq.Builder
 						return m;
 			}
 
-			throw new InvalidOperationException("Sequence contains no elements");
+			return ThrowHelper.ThrowInvalidOperationException<MethodInfo>("Sequence contains no elements");
 		}
 
 		MethodInfo GetMethodInfo(MethodCallExpression method, string name)
@@ -1547,7 +1540,7 @@ namespace LinqToDB.Linq.Builder
 						return m;
 			}
 
-			throw new InvalidOperationException("Sequence contains no elements");
+			return ThrowHelper.ThrowInvalidOperationException<MethodInfo>("Sequence contains no elements");
 		}
 
 		static Type[] GetMethodGenericTypes(MethodCallExpression method)

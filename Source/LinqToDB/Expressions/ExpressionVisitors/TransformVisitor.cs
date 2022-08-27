@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 
@@ -184,7 +182,7 @@ namespace LinqToDB.Expressions
 						Transform(((LoopExpression)expr).Body));
 
 				default:
-					throw new NotImplementedException($"Unhandled expression type: {expr.NodeType}");
+					return ThrowHelper.ThrowNotImplementedException<Expression>($"Unhandled expression type: {expr.NodeType}");
 			}
 		}
 

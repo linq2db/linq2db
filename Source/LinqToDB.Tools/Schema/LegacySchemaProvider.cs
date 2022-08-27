@@ -1,14 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using LinqToDB.CodeModel;
-using LinqToDB.Data;
-using LinqToDB.Scaffold;
-using LinqToDB.SchemaProvider;
-using LinqToDB.SqlQuery;
-
-namespace LinqToDB.Schema
+﻿namespace LinqToDB.Schema
 {
+	using CodeModel;
+	using Data;
+	using Scaffold;
+	using SchemaProvider;
+	using SqlQuery;
+
 	// Because linq2db schema API is quite an abomination, created to leverage T4 functionality and includes not
 	// only schema but also names generation for generated code and type mapping of database types to .net types.
 	// To not work with this API directly, we introduced schema provider interface and perform conversion of data
@@ -459,7 +456,7 @@ namespace LinqToDB.Schema
 		{
 			// debug asserts
 			if (string.IsNullOrWhiteSpace(column.ColumnName))
-				throw new InvalidOperationException($"ColumnName not provided by schema for table {tableName}");
+				throw new InvalidOperationException($"ColumnName not provided by schema for column in table {tableName}");
 			if (string.IsNullOrWhiteSpace(column.ColumnType))
 			{
 				// sqlite schema provider could return column without type
@@ -470,10 +467,11 @@ namespace LinqToDB.Schema
 					column.ColumnType = "NUMERIC";
 				}
 				else
-					throw new InvalidOperationException($"ColumnType not provided by schema for table {tableName}");
+					// TODO: use logger
+					Console.Error.WriteLine($"ColumnType not provided by schema for column {tableName}.{column.ColumnName}");
 			}
 
-			var type = new DatabaseType(column.ColumnType!, column.Length, column.Precision, column.Scale);
+			var type = new DatabaseType(column.ColumnType, column.Length, column.Precision, column.Scale);
 			
 			RegisterType(type, column.DataType, column.SystemType, column.ProviderSpecificType);
 

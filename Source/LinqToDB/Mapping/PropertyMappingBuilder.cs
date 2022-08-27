@@ -1,8 +1,5 @@
-﻿using System;
-using System.Linq;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using System.Reflection;
-using System.Collections.Generic;
 
 namespace LinqToDB.Mapping
 {
@@ -29,8 +26,8 @@ namespace LinqToDB.Mapping
 			EntityMappingBuilder<TEntity>       entity,
 			Expression<Func<TEntity,TProperty>> memberGetter)
 		{
-			_entity       = entity       ?? throw new ArgumentNullException(nameof(entity));
-			_memberGetter = memberGetter ?? throw new ArgumentNullException(nameof(memberGetter));
+			_entity       = entity       ?? ThrowHelper.ThrowArgumentNullException<EntityMappingBuilder<TEntity>       >(nameof(entity));
+			_memberGetter = memberGetter ?? ThrowHelper.ThrowArgumentNullException<Expression<Func<TEntity, TProperty>>>(nameof(memberGetter));
 			_memberInfo   = MemberHelper.MemberOf(memberGetter);
 
 			if (_memberInfo.ReflectedType != typeof(TEntity))
@@ -432,12 +429,12 @@ namespace LinqToDB.Mapping
 		/// <returns>Returns current column mapping builder.</returns>
 		public PropertyMappingBuilder<TEntity, TProperty> IsAlias(Expression<Func<TEntity, object>> aliasMember)
 		{
-			if (aliasMember == null) throw new ArgumentNullException(nameof(aliasMember));
+			if (aliasMember == null) ThrowHelper.ThrowArgumentNullException(nameof(aliasMember));
 
 			var memberInfo = MemberHelper.GetMemberInfo(aliasMember);
 
 			if (memberInfo == null)
-				throw new ArgumentException($"Can not deduce MemberInfo from Lambda: '{aliasMember}'");
+				ThrowHelper.ThrowArgumentException(nameof(aliasMember), $"Can not deduce MemberInfo from Lambda: '{aliasMember}'");
 
 			return HasAttribute(new ColumnAliasAttribute(memberInfo.Name));
 		}
@@ -450,11 +447,11 @@ namespace LinqToDB.Mapping
 		public PropertyMappingBuilder<TEntity, TProperty> IsAlias(string aliasMember)
 		{
 			if (string.IsNullOrEmpty(aliasMember))
-				throw new ArgumentException("Value cannot be null or empty.", nameof(aliasMember));
+				ThrowHelper.ThrowArgumentException(nameof(aliasMember), "Value cannot be null or empty.");
 
 			var memberInfo = typeof(TEntity).GetMember(aliasMember);
 			if (memberInfo == null)
-				throw new ArgumentException($"Member '{aliasMember}' not found in type '{typeof(TEntity)}'");
+				ThrowHelper.ThrowArgumentException(nameof(aliasMember), $"Member '{aliasMember}' not found in type '{typeof(TEntity)}'");
 
 			return HasAttribute(new ColumnAliasAttribute(aliasMember));
 		}
@@ -468,7 +465,7 @@ namespace LinqToDB.Mapping
 		/// <returns>Returns current column mapping builder.</returns>
 		public PropertyMappingBuilder<TEntity, TProperty> IsExpression<TR>(Expression<Func<TEntity, TR>> expression, bool isColumn = false, string? alias = null)
 		{
-			if (expression == null) throw new ArgumentNullException(nameof(expression));
+			if (expression == null) ThrowHelper.ThrowArgumentNullException(nameof(expression));
 
 			return HasAttribute(new ExpressionMethodAttribute(expression) { IsColumn = isColumn, Alias = alias }).IsNotColumn();
 		}

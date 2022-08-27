@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections;
 using System.Linq.Expressions;
-
-using JetBrains.Annotations;
 
 namespace LinqToDB
 {
@@ -49,7 +44,7 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<T,object?>> selector)
 			where T : notnull
 		{
-			if (table == null) throw new ArgumentNullException(nameof(table));
+			if (table == null) ThrowHelper.ThrowArgumentNullException(nameof(table));
 
 			table.Expression = Expression.Call(
 				null,
@@ -146,8 +141,8 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<TEntity, TProperty>> selector)
 		where TEntity : class
 		{
-			if (source   == null) throw new ArgumentNullException(nameof(source));
-			if (selector == null) throw new ArgumentNullException(nameof(selector));
+			if (source   == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (selector == null) ThrowHelper.ThrowArgumentNullException(nameof(selector));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -235,8 +230,8 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<IQueryable<TProperty>, IQueryable<TProperty>>> loadFunc)
 		where TEntity : class
 		{
-			if (source   == null) throw new ArgumentNullException(nameof(source));
-			if (selector == null) throw new ArgumentNullException(nameof(selector));
+			if (source   == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (selector == null) ThrowHelper.ThrowArgumentNullException(nameof(selector));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -324,8 +319,8 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<IQueryable<TProperty>, IQueryable<TProperty>>> loadFunc)
 		where TEntity : class
 		{
-			if (source   == null) throw new ArgumentNullException(nameof(source));
-			if (selector == null) throw new ArgumentNullException(nameof(selector));
+			if (source   == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (selector == null) ThrowHelper.ThrowArgumentNullException(nameof(selector));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -381,8 +376,8 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<TPreviousProperty, TProperty>> selector)
 		where TEntity : class
 		{
-			if (source   == null) throw new ArgumentNullException(nameof(source));
-			if (selector == null) throw new ArgumentNullException(nameof(selector));
+			if (source   == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (selector == null) ThrowHelper.ThrowArgumentNullException(nameof(selector));
 		
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -438,8 +433,8 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<TPreviousProperty, TProperty>>   selector)
 		where TEntity : class
 		{
-			if (source   == null) throw new ArgumentNullException(nameof(source));
-			if (selector == null) throw new ArgumentNullException(nameof(selector));
+			if (source   == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (selector == null) ThrowHelper.ThrowArgumentNullException(nameof(selector));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -507,8 +502,8 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<IQueryable<TProperty>, IQueryable<TProperty>>> loadFunc)
 			where TEntity : class
 		{
-			if (source   == null) throw new ArgumentNullException(nameof(source));
-			if (selector == null) throw new ArgumentNullException(nameof(selector));
+			if (source   == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (selector == null) ThrowHelper.ThrowArgumentNullException(nameof(selector));
 		
 			var result = source.Provider.CreateQuery<TEntity>(
 				Expression.Call(null,
@@ -573,8 +568,8 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<IQueryable<TProperty>, IQueryable<TProperty>>> loadFunc)
 			where TEntity : class
 		{
-			if (source   == null) throw new ArgumentNullException(nameof(source));
-			if (selector == null) throw new ArgumentNullException(nameof(selector));
+			if (source   == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (selector == null) ThrowHelper.ThrowArgumentNullException(nameof(selector));
 		
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -641,8 +636,8 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<IQueryable<TProperty>, IQueryable<TProperty>>> loadFunc)
 			where TEntity : class
 		{
-			if (source   == null) throw new ArgumentNullException(nameof(source));
-			if (selector == null) throw new ArgumentNullException(nameof(selector));
+			if (source   == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (selector == null) ThrowHelper.ThrowArgumentNullException(nameof(selector));
 		
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -710,8 +705,8 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<IQueryable<TProperty>, IQueryable<TProperty>>> loadFunc)
 		where TEntity : class
 		{
-			if (source   == null) throw new ArgumentNullException(nameof(source));
-			if (selector == null) throw new ArgumentNullException(nameof(selector));
+			if (source   == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (selector == null) ThrowHelper.ThrowArgumentNullException(nameof(selector));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 

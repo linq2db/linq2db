@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Concurrent;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -9,7 +6,7 @@ using System.Runtime.CompilerServices;
 namespace LinqToDB.Expressions
 {
 	using Common;
-	using LinqToDB.Extensions;
+	using Extensions;
 	using Linq;
 	using Reflection;
 
@@ -201,7 +198,7 @@ namespace LinqToDB.Expressions
 						((ChangeTypeExpression)expr1).Expression.EqualsTo(((ChangeTypeExpression)expr2).Expression, info);
 
 				default:
-					throw new NotImplementedException($"Unhandled expression type: {expr1.NodeType}");
+					return ThrowHelper.ThrowNotImplementedException<bool>($"Unhandled expression type: {expr1.NodeType}");
 			}
 		}
 

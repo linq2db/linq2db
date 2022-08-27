@@ -1,9 +1,4 @@
-﻿using System;
-using System.Data;
-using System.Data.SqlTypes;
-using System.Data.Common;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Data.SqlTypes;
 using System.Text;
 using System.Globalization;
 
@@ -236,7 +231,7 @@ namespace LinqToDB.DataProvider.DB2
 
 			// "db..table" syntax not supported
 			if (name.Database != null && schemaName == null)
-				throw new LinqToDBException("DB2 requires schema name if database name provided.");
+				ThrowHelper.ThrowLinqToDBException("DB2 requires schema name if database name provided.");
 
 			if (name.Database != null)
 			{
@@ -298,33 +293,24 @@ END");
 
 		protected override void BuildCreateTableCommand(SqlTable table)
 		{
-			string command;
-
-			if (table.TableOptions.IsTemporaryOptionSet())
+			var command = (table.TableOptions.IsTemporaryOptionSet(), table.TableOptions & TableOptions.IsTemporaryOptionSet) switch
 			{
-				switch (table.TableOptions & TableOptions.IsTemporaryOptionSet)
-				{
-					case TableOptions.IsTemporary                                                                               :
-					case TableOptions.IsTemporary |                                           TableOptions.IsLocalTemporaryData :
-					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                      :
-					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure  | TableOptions.IsLocalTemporaryData :
-					case                                                                      TableOptions.IsLocalTemporaryData :
-					case                            TableOptions.IsLocalTemporaryStructure                                      :
-					case                            TableOptions.IsLocalTemporaryStructure  | TableOptions.IsLocalTemporaryData :
-						command = "DECLARE GLOBAL TEMPORARY TABLE ";
-						break;
-					case                            TableOptions.IsGlobalTemporaryStructure                                     :
-					case                            TableOptions.IsGlobalTemporaryStructure | TableOptions.IsLocalTemporaryData :
-						command = "CREATE GLOBAL TEMPORARY TABLE ";
-						break;
-					case var value :
-						throw new InvalidOperationException($"Incompatible table options '{value}'");
-				}
-			}
-			else
-			{
-				command = "CREATE TABLE ";
-			}
+				(true, TableOptions.IsTemporary                                                                              ) or
+				(true, TableOptions.IsTemporary |                                           TableOptions.IsLocalTemporaryData) or
+				(true, TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                     ) or
+				(true, TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure  | TableOptions.IsLocalTemporaryData) or
+				(true,                                                                      TableOptions.IsLocalTemporaryData) or
+				(true,                            TableOptions.IsLocalTemporaryStructure                                     ) or
+				(true,                            TableOptions.IsLocalTemporaryStructure  | TableOptions.IsLocalTemporaryData)
+					=> "DECLARE GLOBAL TEMPORARY TABLE ",
+				(true,                            TableOptions.IsGlobalTemporaryStructure                                    ) or
+				(true,                            TableOptions.IsGlobalTemporaryStructure | TableOptions.IsLocalTemporaryData) 
+					=> "CREATE GLOBAL TEMPORARY TABLE ",
+				(true, var value)
+					=> ThrowHelper.ThrowInvalidOperationException<string>($"Incompatible table options '{value}'"),
+				(false, _) 
+					=> "CREATE TABLE ",
+			};
 
 			StringBuilder.Append(command);
 		}

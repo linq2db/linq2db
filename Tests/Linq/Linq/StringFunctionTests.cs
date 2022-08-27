@@ -1,13 +1,12 @@
-﻿using System;
-#if NET472
+﻿#if NET472
 using System.Data.Linq.SqlClient;
 #else
 using System.Data;
 #endif
 
-using System.Linq;
 using FluentAssertions;
 using LinqToDB;
+using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 using NUnit.Framework;
@@ -49,8 +48,8 @@ namespace Tests.Linq
 		public void Like()
 		{
 #if !NETFRAMEWORK
-			Assert.Throws<InvalidOperationException>(() => Sql.Like(null, null));
-			Assert.Throws<InvalidOperationException>(() => Sql.Like(null, null, null));
+			Assert.Throws<LinqException>(() => Sql.Like(null, null));
+			Assert.Throws<LinqException>(() => Sql.Like(null, null, null));
 #else
 			Assert.Pass("We don't test server-side method here.");
 #endif
@@ -1643,7 +1642,7 @@ namespace Tests.Linq
 			protected MySpecialBaseClass(string value)
 			{
 				if (value == null)
-					throw new ArgumentNullException(nameof(value));
+					ThrowHelper.ThrowArgumentNullException(nameof(value));
 				Value = value;
 			}
 

@@ -1,11 +1,8 @@
-﻿using System;
-using System.Data;
+﻿using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider.SqlCe
 {
-	using System.Data.Common;
-	using System.Linq.Expressions;
-	using LinqToDB.Expressions;
+	using Expressions;
 
 	public class SqlCeProviderAdapter : IDynamicProviderAdapter
 	{
@@ -57,7 +54,7 @@ namespace LinqToDB.DataProvider.SqlCe
 					{
 						var assembly = Common.Tools.TryLoadAssembly(AssemblyName, ProviderFactoryName);
 						if (assembly == null)
-							throw new InvalidOperationException($"Cannot load assembly {AssemblyName}");
+							ThrowHelper.ThrowInvalidOperationException($"Cannot load assembly {AssemblyName}");
 
 						var connectionType  = assembly.GetType($"{ClientNamespace}.SqlCeConnection" , true)!;
 						var dataReaderType  = assembly.GetType($"{ClientNamespace}.SqlCeDataReader" , true)!;
@@ -107,7 +104,7 @@ namespace LinqToDB.DataProvider.SqlCe
 			{
 			}
 
-			public SqlCeEngine(string connectionString) => throw new NotImplementedException();
+			public SqlCeEngine(string connectionString) => ThrowHelper.ThrowNotImplementedException();
 
 			public void CreateDatabase() => ((Action<SqlCeEngine>)CompiledWrappers[0])(this);
 			public void Dispose()        => ((Action<SqlCeEngine>)CompiledWrappers[1])(this);

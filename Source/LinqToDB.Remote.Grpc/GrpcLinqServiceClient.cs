@@ -1,12 +1,10 @@
-﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
-using Grpc.Net.Client;
-using LinqToDB.Remote.Grpc.Dto;
+﻿using Grpc.Net.Client;
 using ProtoBuf.Grpc.Client;
 
 namespace LinqToDB.Remote.Grpc
 {
+	using Dto;
+
 	/// <summary>
 	/// grpc-base remote data context client.
 	/// </summary>

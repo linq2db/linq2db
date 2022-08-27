@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data.Common;
-using System.Linq;
-using System.Text;
+﻿using System.Text;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
@@ -172,7 +168,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				case TableOptions.IsGlobalTemporaryStructure | TableOptions.IsGlobalTemporaryData                          :
 					return $"##{tableName}";
 				case var value :
-					throw new InvalidOperationException($"Incompatible table options '{value}'");
+					return ThrowHelper.ThrowInvalidOperationException<string>($"Incompatible table options '{value}'");
 			}
 		}
 
@@ -187,7 +183,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			if (name.Server != null && (databaseName == null || name.Schema == null))
 				// all components required for linked-server syntax by SQL server
-				throw new LinqToDBException("You must specify both schema and database names explicitly for linked server query");
+				ThrowHelper.ThrowLinqToDBException("You must specify both schema and database names explicitly for linked server query");
 			
 			if (name.Server != null)
 			{
@@ -450,7 +446,7 @@ namespace LinqToDB.DataProvider.SqlServer
 						case JoinType.Left       : StringBuilder.Append($"LEFT {h} JOIN ");  return true;
 						case JoinType.Right      : StringBuilder.Append($"RIGHT {h} JOIN "); return true;
 						case JoinType.Full       : StringBuilder.Append($"FULL {h} JOIN ");  return true;
-						default                  : throw new InvalidOperationException();
+						default                  : return ThrowHelper.ThrowInvalidOperationException<bool>();
 					}
 				}
 			}

@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
-using LinqToDB;
+﻿using LinqToDB;
 using LinqToDB.Mapping;
 using LinqToDB.Tools.Comparers;
 
@@ -17,9 +12,9 @@ namespace Tests.xUpdate
 		private const string FeatureUpdateOutputWithOldSingle                      = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird}";
 		private const string FeatureUpdateOutputWithOldSingleNoAlternateRewrite    = $"{TestProvName.AllSqlServer}";
 		private const string FeatureUpdateOutputWithOldMultiple                    = $"{TestProvName.AllSqlServer}";
-		private const string FeatureUpdateOutputWithoutOldSingle                   = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLiteClassic}";
+		private const string FeatureUpdateOutputWithoutOldSingle                   = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite}";
 		private const string FeatureUpdateOutputWithoutOldSingleNoAlternateRewrite = $"{TestProvName.AllSqlServer},{TestProvName.AllPostgreSQL}";
-		private const string FeatureUpdateOutputWithoutOldMultiple                 = $"{TestProvName.AllSqlServer},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLiteClassic}";
+		private const string FeatureUpdateOutputWithoutOldMultiple                 = $"{TestProvName.AllSqlServer},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite}";
 		private const string FeatureUpdateOutputInto                               = $"{TestProvName.AllSqlServer}";
 
 		class UpdateOutputComparer<T> : IEqualityComparer<UpdateOutput<T>>
@@ -2453,6 +2448,46 @@ namespace Tests.xUpdate
 					output,
 					new UpdateOutputComparer<TableWithData>());
 			}
+		}
+
+		[Table]
+		public class Test3697
+		{
+			[Identity, PrimaryKey] public int Id { get; set; }
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(Test3697Item.TestId))]
+			public List<Test3697Item> Items { get; set; } = null!;
+		}
+
+		[Table]
+		public class Test3697Item
+		{
+			[Identity, PrimaryKey] public int Id     { get; set; }
+			[Column              ] public int Value  { get; set; }
+			[Column              ] public int TestId { get; set; }
+		}
+
+		[Test]
+		public void Issue3697Test([IncludeDataSources(true, FeatureUpdateOutputWithoutOldSingle)] string context)
+		{
+			using var db      = GetDataContext(context);
+			using var records = db.CreateLocalTable<Test3697>();
+			db.Insert(new Test3697() { Id = 1 });
+			using var items   = db.CreateLocalTable(new[] { new Test3697Item() { Id = 2, Value = 3, TestId = 1 } });
+
+			var result = records.SelectMany(a => a.Items)
+				.UpdateWithOutput(a => new Test3697Item() { Value = 1 }, (d, i) => i.Id)
+				.ToArray();
+
+			Assert.AreEqual(1, result.Length);
+			Assert.AreEqual(1, result[0]);
+
+			result = records.InnerJoin(items, (a, b) => a.Id == b.TestId, (a, b) => b)
+				.UpdateWithOutput(a => new Test3697Item() { Value = 1 }, (d, i) => i.Id)
+				.ToArray();
+
+			Assert.AreEqual(1, result.Length);
+			Assert.AreEqual(1, result[0]);
 		}
 		#endregion
 	}

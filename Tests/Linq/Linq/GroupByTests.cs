@@ -1,7 +1,4 @@
-﻿using System;
-using System.Linq;
-
-using LinqToDB;
+﻿using LinqToDB;
 using LinqToDB.SqlQuery;
 using NUnit.Framework;
 
@@ -2328,6 +2325,28 @@ namespace Tests.Linq
 					.ToList();
 
 				Assert.AreEqual(0, query.Count);
+			}
+		}
+
+		[Test]
+		public void Issue3668Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var id   = 1;
+			var name = "test";
+
+			// use two parameters with different types to ensure fix works with positional parameters
+			var result = db.Person
+				.Where(x => x.ID == id && x.LastName != name || x.FirstName != name && x.ID - 1 == id)
+				.GroupBy(x => x.ID, x => x).DisableGuard()
+				.ToList();
+
+			foreach (var x in result)
+			{
+				foreach (var y in x)
+				{
+				}
 			}
 		}
 	}

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Threading.Tasks;
+﻿using System.Linq.Expressions;
 using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Async;
@@ -1530,6 +1526,54 @@ FROM
 					.LoadWithAsTable(_ => _.Details)
 					.SchemaName(null).Count() > 0).ToList();
 			}
+		}
+		#endregion
+
+		#region Issue 3664
+
+		[Table]
+		public class Test3664
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(Test3664Item.TestId))]
+			public List<Test3664Item> Items { get; set; } = null!;
+		}
+
+		[Table]
+		public class Test3664Item
+		{
+			[PrimaryKey] public int Id     { get; set; }
+			[Column    ] public int TestId { get; set; }
+		}
+
+		[Test]
+		public void Issue3664Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			using var records = db.CreateLocalTable<Test3664>();
+			db.Insert(new Test3664() { Id = 1 });
+			using var items = db.CreateLocalTable(new[]
+			{
+				new Test3664Item() { Id = 11, TestId = 1 },
+				new Test3664Item() { Id = 12, TestId = 1 }
+			});
+
+			var id = 11;
+			var result = records.LoadWith(a => a.Items, a => a.Where(a => a.Id == id)).ToList();
+			Assert.AreEqual(1, result.Count);
+			Assert.AreEqual(1, result[0].Id);
+			Assert.AreEqual(1, result[0].Items.Count);
+			Assert.AreEqual(11, result[0].Items[0].Id);
+
+			id = 12;
+			result = records.LoadWith(a => a.Items, a => a.Where(a => a.Id == id)).ToList();
+
+			Assert.AreEqual(1, result.Count);
+			Assert.AreEqual(1, result[0].Id);
+			Assert.AreEqual(1, result[0].Items.Count);
+			Assert.AreEqual(12, result[0].Items[0].Id);
 		}
 		#endregion
 

@@ -1,14 +1,11 @@
-﻿using System;
-using System.Data;
+﻿using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider.Informix
 {
-	using System.Data.Common;
-	using System.Linq.Expressions;
-	using LinqToDB.Common;
-	using LinqToDB.DataProvider.DB2;
-	using LinqToDB.Expressions;
-	using LinqToDB.Mapping;
+	using Common;
+	using DataProvider.DB2;
+	using Expressions;
+	using Mapping;
 
 	// Note on informix providers: there are actually 3 providers:
 	// - SQLI Provider(IBM.Data.Informix) : netfx only, no bulk copy
@@ -187,7 +184,7 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			var assembly = Tools.TryLoadAssembly(IfxAssemblyName, IfxProviderFactoryName);
 			if (assembly == null)
-				throw new InvalidOperationException($"Cannot load assembly {IfxAssemblyName}");
+				ThrowHelper.ThrowInvalidOperationException($"Cannot load assembly {IfxAssemblyName}");
 
 			var connectionType  = assembly.GetType($"{IfxClientNamespace}.IfxConnection" , true)!;
 			var parameterType   = assembly.GetType($"{IfxClientNamespace}.IfxParameter"  , true)!;
@@ -407,7 +404,7 @@ namespace LinqToDB.DataProvider.Informix
 			{
 			}
 
-			public IfxBulkCopy(IfxConnection connection, IfxBulkCopyOptions options) => throw new NotImplementedException();
+			public IfxBulkCopy(IfxConnection connection, IfxBulkCopyOptions options) => ThrowHelper.ThrowNotImplementedException();
 
 			void IDisposable.Dispose ()                       => ((Action<IfxBulkCopy>)CompiledWrappers[0])(this);
 #pragma warning disable RS0030 // API mapping must preserve type
@@ -509,7 +506,7 @@ namespace LinqToDB.DataProvider.Informix
 			{
 			}
 
-			public IfxBulkCopyColumnMapping(int source, string destination) => throw new NotImplementedException();
+			public IfxBulkCopyColumnMapping(int source, string destination) => ThrowHelper.ThrowNotImplementedException();
 		}
 
 		[Wrapper]
@@ -519,7 +516,7 @@ namespace LinqToDB.DataProvider.Informix
 			{
 			}
 
-			public IfxTimeSpan(TimeSpan timeSpan) => throw new NotImplementedException();
+			public IfxTimeSpan(TimeSpan timeSpan) => ThrowHelper.ThrowNotImplementedException();
 		}
 
 		#endregion

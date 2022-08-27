@@ -1,16 +1,12 @@
-﻿using System;
-using System.Data.Common;
+﻿using System.Globalization;
 using System.Text;
-using System.Linq;
-using System.Globalization;
-using System.Collections.Generic;
 
 namespace LinqToDB.DataProvider.ClickHouse
 {
-	using SqlQuery;
-	using SqlProvider;
-	using Mapping;
 	using Common;
+	using Mapping;
+	using SqlProvider;
+	using SqlQuery;
 
 	sealed class ClickHouseSqlBuilder : BasicSqlBuilder
 	{
@@ -25,8 +21,8 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 		protected override ISqlBuilder CreateSqlBuilder() => new ClickHouseSqlBuilder(this);
 
-		protected override void BuildMergeStatement(SqlMergeStatement merge) => throw new LinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
-		protected override void BuildParameter     (SqlParameter parameter ) => throw new LinqToDBException($"Parameters not supported for {Name} provider");
+		protected override void BuildMergeStatement(SqlMergeStatement merge) => ThrowHelper.ThrowLinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
+		protected override void BuildParameter     (SqlParameter parameter ) => ThrowHelper.ThrowLinqToDBException($"Parameters not supported for {Name} provider");
 
 		#region Identifiers
 
@@ -68,7 +64,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		private static bool IsValidIdentifier(string identifier)
 		{
 			if (identifier.Length == 0)
-				throw new LinqToDBException("Empty identifier");
+				ThrowHelper.ThrowLinqToDBException("Empty identifier");
 
 			// https://clickhouse.com/docs/en/sql-reference/syntax/#identifiers
 			if (identifier[0] is not '_' and not (>= 'a' and <= 'z') and not (>= 'A' and <= 'Z'))
@@ -166,8 +162,12 @@ namespace LinqToDB.DataProvider.ClickHouse
 				case DataType.Json                                              : sb.Append(nullable ? "Object(Nullable('json'))" : "JSON");                                                                                break;
 				// TODO                                                         : implement type generation at some point
 				case DataType.Enum8                                             :
-				case DataType.Enum16                                            : throw new LinqToDBException($"Enum type name generation in not supported yet. Use {nameof(ColumnAttribute.DbType)} property to specify enum type explicitly");
-				default                                                         : throw new LinqToDBException($"Cannot infer type name from {type}. Specify DataType or DbType explicitly");
+				case DataType.Enum16                                            : 
+					ThrowHelper.ThrowLinqToDBException($"Enum type name generation in not supported yet. Use {nameof(ColumnAttribute.DbType)} property to specify enum type explicitly");
+					break;
+				default                                                         : 
+					ThrowHelper.ThrowLinqToDBException($"Cannot infer type name from {type}. Specify DataType or DbType explicitly");
+					break;
 			}
 
 			if (nullable && type.DataType != DataType.Json)
@@ -245,29 +245,21 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 		protected override void BuildCreateTableCommand(SqlTable table)
 		{
-			string command;
-
-			if (table.TableOptions.IsTemporaryOptionSet())
+			var command = (table.TableOptions.IsTemporaryOptionSet(), table.TableOptions & TableOptions.IsTemporaryOptionSet) switch
 			{
-				switch (table.TableOptions & TableOptions.IsTemporaryOptionSet)
-				{
-					case TableOptions.IsTemporary                                                                             :
-					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryData                                         :
-					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                    :
-					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData:
-					case TableOptions.IsLocalTemporaryData                                                                    :
-					case TableOptions.IsLocalTemporaryStructure                                                               :
-					case TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData                           :
-						command = "CREATE TEMPORARY TABLE ";
-						break;
-					case var value                                                                                            :
-						throw new LinqToDBException($"Incompatible table options '{value}'");
-				}
-			}
-			else
-			{
-				command = "CREATE TABLE ";
-			}
+				(true, TableOptions.IsTemporary                                                                             ) or
+				(true, TableOptions.IsTemporary | TableOptions.IsLocalTemporaryData                                         ) or
+				(true, TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                    ) or
+				(true, TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData) or
+				(true, TableOptions.IsLocalTemporaryData                                                                    ) or
+				(true, TableOptions.IsLocalTemporaryStructure                                                               ) or
+				(true, TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData                           )
+					=> "CREATE TEMPORARY TABLE ",
+				(true, var value                                                                                            )
+					=> ThrowHelper.ThrowLinqToDBException<string>($"Incompatible table options '{value}'"),
+				(false, _) 
+					=> "CREATE TABLE ",
+			};
 
 			StringBuilder.Append(command);
 
@@ -308,7 +300,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 			// explicit guard to avoid situations when query produce valid SQL after aliases stripped
 			if (deleteStatement.SelectQuery.From.Tables.Count != 1
 				|| deleteStatement.SelectQuery.From.Tables[0].Joins.Count != 0)
-				throw new LinqToDBException("Correlated DELETE not supported by ClickHouse");
+				ThrowHelper.ThrowLinqToDBException("Correlated DELETE not supported by ClickHouse");
 
 			AppendIndent();
 
@@ -347,7 +339,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 			// explicit guard to avoid situations when query produce valid SQL after aliases stripped
 			if (selectQuery.From.Tables.Count != 1
 				|| selectQuery.From.Tables[0].Joins.Count != 0)
-				throw new LinqToDBException("Correlated UPDATE not supported by ClickHouse");
+				ThrowHelper.ThrowLinqToDBException("Correlated UPDATE not supported by ClickHouse");
 
 			var old = _disableTableAliases;
 			_disableTableAliases = true;
@@ -462,17 +454,19 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 		protected override void BuildSetOperation(SetOperation operation, StringBuilder sb)
 		{
-			switch (operation)
+			var op = operation switch
 			{
-				case SetOperation.Union       : sb.Append("UNION DISTINCT"); break;
-				case SetOperation.UnionAll    : sb.Append("UNION ALL");      break;
-				case SetOperation.Except      : sb.Append("EXCEPT");         break;
-				case SetOperation.Intersect   : sb.Append("INTERSECT");      break;
-					// not supported
-				//case SetOperation.IntersectAll: sb.Append("INTERSECT ALL");  break;
-				//case SetOperation.ExceptAll   : sb.Append("EXCEPT ALL");     break;
-				default                       : throw new LinqToDBException($"SET operation {nameof(operation)} is not supported by ClickHouse");
-			}
+				SetOperation.Union        => "UNION DISTINCT",
+				SetOperation.UnionAll     => "UNION ALL",
+				SetOperation.Except       => "EXCEPT",
+				SetOperation.Intersect    => "INTERSECT",
+				// not supported
+				//SetOperation.IntersectAll => "INTERSECT ALL",
+				//SetOperation.ExceptAll    => "EXCEPT ALL",
+				_ => ThrowHelper.ThrowLinqToDBException<string>($"SET operation {nameof(operation)} is not supported by ClickHouse"),
+			};
+
+			sb.Append(op);
 		}
 
 		protected override void BuildColumnExpression(SelectQuery? selectQuery, ISqlExpression expr, string? alias, ref bool addAlias)

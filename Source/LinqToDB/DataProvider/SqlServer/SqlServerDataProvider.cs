@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Data;
-using System.Data.Common;
+﻿using System.Collections.Concurrent;
 using System.Data.SqlTypes;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
@@ -156,7 +150,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				SqlServerVersion.v2017 => new SqlServer2017SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags),
 				SqlServerVersion.v2019 => new SqlServer2019SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags),
 				SqlServerVersion.v2022 => new SqlServer2022SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags),
-				_                      => throw new InvalidOperationException(),
+				_                      => ThrowHelper.ThrowInvalidOperationException<ISqlBuilder>(),
 			};
 		}
 

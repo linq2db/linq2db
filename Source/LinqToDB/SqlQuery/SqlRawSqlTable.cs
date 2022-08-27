@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-using LinqToDB.Mapping;
+﻿using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
+	using Mapping;
+
 	//TODO: Investigate how to implement only ISqlTableSource interface
 	public class SqlRawSqlTable : SqlTable, IQueryElement
 	{
@@ -20,11 +18,11 @@ namespace LinqToDB.SqlQuery
 			ISqlExpression[] parameters)
 			: base(mappingSchema, objectType)
 		{
-			SQL        = sql        ?? throw new ArgumentNullException(nameof(sql));
-			Parameters = parameters ?? throw new ArgumentNullException(nameof(parameters));
+			SQL        = sql        ?? ThrowHelper.ThrowArgumentNullException<string          >(nameof(sql));
+			Parameters = parameters ?? ThrowHelper.ThrowArgumentNullException<ISqlExpression[]>(nameof(parameters));
 
 			foreach (var value in parameters)
-				if (value == null) throw new ArgumentNullException(nameof(parameters));
+				if (value == null) ThrowHelper.ThrowArgumentNullException(nameof(parameters));
 		}
 
 		internal SqlRawSqlTable(

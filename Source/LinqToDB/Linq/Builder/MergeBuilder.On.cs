@@ -1,11 +1,9 @@
-﻿using System.Linq;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using System.Reflection;
+using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
-
 	using static LinqToDB.Reflection.Methods.LinqToDB.Merge;
 
 	internal partial class MergeBuilder
@@ -71,13 +69,13 @@ namespace LinqToDB.Linq.Builder
 						var mi2 = (MemberInitExpression)sourceKeySelector;
 
 						if (mi1.Bindings.Count != mi2.Bindings.Count)
-							throw new LinqException($"List of member inits does not match for entity type '{targetKeySelector.Type}'.");
+							ThrowHelper.ThrowLinqException($"List of member inits does not match for entity type '{targetKeySelector.Type}'.");
 
 						for (var i = 0; i < mi1.Bindings.Count; i++)
 						{
 							var binding2 = (MemberAssignment?)mi2.Bindings.FirstOrDefault(b => b.Member == mi1.Bindings[i].Member);
 							if (binding2 == null)
-								throw new LinqException($"List of member inits does not match for entity type '{targetKeySelector.Type}'.");
+								ThrowHelper.ThrowLinqException($"List of member inits does not match for entity type '{targetKeySelector.Type}'.");
 
 							var arg1 = ((MemberAssignment)mi1.Bindings[i]).Expression;
 							var arg2 = binding2.Expression;
@@ -113,7 +111,7 @@ namespace LinqToDB.Linq.Builder
 					}
 
 					if (ex == null)
-						throw new LinqToDBException("Method OnTargetKey() needs at least one primary key column");
+						ThrowHelper.ThrowLinqToDBException("Method OnTargetKey() needs at least one primary key column");
 
 					var condition = Expression.Lambda(ex, pTarget, pSource);
 

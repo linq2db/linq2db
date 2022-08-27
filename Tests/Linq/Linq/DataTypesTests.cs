@@ -1,20 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data.Linq;
-using System.Globalization;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Threading;
-
-using LinqToDB;
+﻿using LinqToDB;
 using LinqToDB.Mapping;
-using LinqToDB.Extensions;
 
 using NUnit.Framework;
 
 namespace Tests.Linq
 {
-	using LinqToDB.Common;
 	using LinqToDB.Data;
 	using Model;
 
@@ -218,17 +208,21 @@ namespace Tests.Linq
 			db.InlineParameters = false;
 
 			// test bulk copy
-			TestBulkCopy<TTable, TType>(db, data, table, BulkCopyType.RowByRow);
-			TestBulkCopy<TTable, TType>(db, data, table, BulkCopyType.MultipleRows);
-			TestBulkCopy<TTable, TType>(db, data, table, BulkCopyType.ProviderSpecific);
+			TestBulkCopy<TTable, TType>(db, context, data, table, BulkCopyType.RowByRow);
+			TestBulkCopy<TTable, TType>(db, context, data, table, BulkCopyType.MultipleRows);
+			TestBulkCopy<TTable, TType>(db, context, data, table, BulkCopyType.ProviderSpecific);
 		}
 
-		private static void TestBulkCopy<TTable, TType>(DataConnection db, TTable[] data, TempTable<TTable> table, BulkCopyType bulkCopyType)
+		private void TestBulkCopy<TTable, TType>(DataConnection db, string context, TTable[] data, TempTable<TTable> table, BulkCopyType bulkCopyType)
 			where TTable : TypeTable<TType>
 			where TType : struct
 		{
 			table.Delete();
-			db.BulkCopy(new BulkCopyOptions() { BulkCopyType = bulkCopyType }, data);
+
+			var options          = GetDefaultBulkCopyOptions(context);
+			options.BulkCopyType = bulkCopyType;
+
+			db.BulkCopy(options, data);
 			var records = table.OrderBy(r => r.Id).ToArray();
 			Assert.AreEqual(2, records.Length);
 			Assert.AreEqual(data[0].Id, records[0].Id);

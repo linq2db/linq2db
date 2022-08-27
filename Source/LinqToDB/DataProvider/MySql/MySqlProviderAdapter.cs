@@ -1,11 +1,5 @@
-﻿using System;
-using System.Data;
-using System.Collections.Generic;
-using System.Data.Common;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.MySql
 {
@@ -139,7 +133,7 @@ namespace LinqToDB.DataProvider.MySql
 				{
 					var assembly = Common.Tools.TryLoadAssembly(MySqlDataAssemblyName, null);
 					if (assembly == null)
-						throw new InvalidOperationException($"Cannot load assembly {MySqlDataAssemblyName}");
+						ThrowHelper.ThrowInvalidOperationException($"Cannot load assembly {MySqlDataAssemblyName}");
 
 					var connectionType    = assembly.GetType($"{MySqlDataClientNamespace}.MySqlConnection" , true)!;
 					var dataReaderType    = assembly.GetType($"{MySqlDataClientNamespace}.MySqlDataReader" , true)!;
@@ -208,15 +202,15 @@ namespace LinqToDB.DataProvider.MySql
 			[Wrapper]
 			private class MySqlDateTime
 			{
-				public DateTime GetDateTime() => throw new NotImplementedException();
+				public DateTime GetDateTime() => ThrowHelper.ThrowNotImplementedException<DateTime>();
 			}
 
 			[Wrapper]
 			private class MySqlDecimal
 			{
-				public          decimal Value      => throw new NotImplementedException();
-				public          double  ToDouble() => throw new NotImplementedException();
-				public override string  ToString() => throw new NotImplementedException();
+				public          decimal Value      => ThrowHelper.ThrowNotImplementedException<decimal>();
+				public          double  ToDouble() => ThrowHelper.ThrowNotImplementedException<double >();
+				public override string  ToString() => ThrowHelper.ThrowNotImplementedException<string >();
 			}
 
 			[Wrapper]
@@ -288,7 +282,7 @@ namespace LinqToDB.DataProvider.MySql
 				{
 					var assembly = Common.Tools.TryLoadAssembly(MySqlConnectorAssemblyName, null);
 					if (assembly == null)
-						throw new InvalidOperationException($"Cannot load assembly {MySqlConnectorAssemblyName}");
+						ThrowHelper.ThrowInvalidOperationException($"Cannot load assembly {MySqlConnectorAssemblyName}");
 
 					var hasBulkCopy  = assembly.GetName().Version >= MinBulkCopyVersion;
 					var version1plus = assembly.GetName().Version >= MinModernVersion;
@@ -400,15 +394,15 @@ namespace LinqToDB.DataProvider.MySql
 			[Wrapper]
 			private class MySqlDecimal
 			{
-				public          decimal Value      => throw new NotImplementedException();
-				public          double  ToDouble() => throw new NotImplementedException();
-				public override string  ToString() => throw new NotImplementedException();
+				public          decimal Value      => ThrowHelper.ThrowNotImplementedException<decimal>();
+				public          double  ToDouble() => ThrowHelper.ThrowNotImplementedException<double >();
+				public override string  ToString() => ThrowHelper.ThrowNotImplementedException<string >();
 			}
 
 			[Wrapper]
 			private class MySqlDateTime
 			{
-				public DateTime GetDateTime() => throw new NotImplementedException();
+				public DateTime GetDateTime() => ThrowHelper.ThrowNotImplementedException<DateTime>();
 			}
 
 			[Wrapper]
@@ -527,7 +521,7 @@ namespace LinqToDB.DataProvider.MySql
 				{
 				}
 
-				public MySqlBulkCopy(MySqlConnection connection, MySqlTransaction? transaction) => throw new NotImplementedException();
+				public MySqlBulkCopy(MySqlConnection connection, MySqlTransaction? transaction) => ThrowHelper.ThrowNotImplementedException();
 
 #pragma warning disable RS0030 // API mapping must preserve type (IDataReader)
 				[TypeWrapperName("WriteToServer")]
@@ -539,7 +533,7 @@ namespace LinqToDB.DataProvider.MySql
 				private Task WriteToServerAsync1      (IDataReader dataReader, CancellationToken cancellationToken) => ((Func<MySqlBulkCopy, IDataReader, CancellationToken,      Task>)CompiledWrappers[8])(this, dataReader, cancellationToken);
 				[TypeWrapperName("WriteToServerAsync")]
 				[return: CustomMapper(typeof(GenericTaskToTaskMapper))]
-				private Task<MySqlBulkCopyResult> WriteToServerAsync2(IDataReader dataReader, CancellationToken cancellationToken) => throw new InvalidOperationException();
+				private Task<MySqlBulkCopyResult> WriteToServerAsync2(IDataReader dataReader, CancellationToken cancellationToken) => ThrowHelper.ThrowInvalidOperationException<Task<MySqlBulkCopyResult>>();
 
 				private bool CanWriteToServer1 => CompiledWrappers[0] != null;
 				private bool CanWriteToServer2 => CompiledWrappers[9] != null;
@@ -550,15 +544,15 @@ namespace LinqToDB.DataProvider.MySql
 				private ValueTask WriteToServerAsync3(IDataReader dataReader, CancellationToken cancellationToken) => ((Func<MySqlBulkCopy, IDataReader, CancellationToken, ValueTask>)CompiledWrappers[11])(this, dataReader, cancellationToken);
 				[TypeWrapperName("WriteToServerAsync")]
 				[return: CustomMapper(typeof(GenericTaskToTaskMapper))]
-				private ValueTask<MySqlBulkCopyResult> WriteToServerAsync4(IDataReader dataReader, CancellationToken cancellationToken) => throw new InvalidOperationException();
+				private ValueTask<MySqlBulkCopyResult> WriteToServerAsync4(IDataReader dataReader, CancellationToken cancellationToken) => ThrowHelper.ThrowInvalidOperationException<ValueTask<MySqlBulkCopyResult>>();
 				private bool CanWriteToServerAsync3 => CompiledWrappers[11] != null;
 				private bool CanWriteToServerAsync4 => CompiledWrappers[12] != null;
 #else
 				[TypeWrapperName("WriteToServerAsync")]
-				private Task WriteToServerAsync3(IDataReader dataReader, CancellationToken cancellationToken) => throw new InvalidOperationException();
+				private Task WriteToServerAsync3(IDataReader dataReader, CancellationToken cancellationToken) => ThrowHelper.ThrowInvalidOperationException<Task>();
 				[TypeWrapperName("WriteToServerAsync")]
 				[return: CustomMapper(typeof(GenericTaskToTaskMapper))]
-				private Task<MySqlBulkCopyResult> WriteToServerAsync4(IDataReader dataReader, CancellationToken cancellationToken) => throw new InvalidOperationException();
+				private Task<MySqlBulkCopyResult> WriteToServerAsync4(IDataReader dataReader, CancellationToken cancellationToken) => ThrowHelper.ThrowInvalidOperationException<Task<MySqlBulkCopyResult>>();
 				private bool CanWriteToServerAsync3 => false;
 				private bool CanWriteToServerAsync4 => false;
 #endif
@@ -571,7 +565,7 @@ namespace LinqToDB.DataProvider.MySql
 					else if (CanWriteToServer1)
 						WriteToServer1(dataReader);
 					else
-						throw new InvalidOperationException("BulkCopy.WriteToServer implementation not configured");
+						ThrowHelper.ThrowInvalidOperationException("BulkCopy.WriteToServer implementation not configured");
 				}
 
 				public bool HasWriteToServerAsync => CanWriteToServerAsync1 || CanWriteToServerAsync2 || CanWriteToServerAsync3 || CanWriteToServerAsync4;
@@ -597,7 +591,7 @@ namespace LinqToDB.DataProvider.MySql
 					else if (CanWriteToServerAsync1)
 						await WriteToServerAsync1(dataReader, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 					else
-						throw new InvalidOperationException("BulkCopy.WriteToServerAsync implementation not configured");
+						ThrowHelper.ThrowInvalidOperationException("BulkCopy.WriteToServerAsync implementation not configured");
 				}
 
 				public int NotifyAfter
@@ -625,7 +619,7 @@ namespace LinqToDB.DataProvider.MySql
 					remove => _MySqlRowsCopied = (MySqlRowsCopiedEventHandler?)Delegate.Remove (_MySqlRowsCopied, value);
 				}
 
-				private List<MySqlBulkCopyColumnMapping> ColumnMappings => throw new NotImplementedException("Use AddColumnMapping method instead");
+				private List<MySqlBulkCopyColumnMapping> ColumnMappings => ThrowHelper.ThrowNotImplementedException<List<MySqlBulkCopyColumnMapping>>("Use AddColumnMapping method instead");
 
 				// because underlying object use List<T> for column mappings, easiest approch will be to add
 				// non-existing Add method
@@ -637,14 +631,14 @@ namespace LinqToDB.DataProvider.MySql
 			{
 				private static LambdaExpression[] Wrappers { get; }
 					= new LambdaExpression[]
-				{
-					// [0]: get RowsCopied
-					(Expression<Func<MySqlRowsCopiedEventArgs, long>> )((MySqlRowsCopiedEventArgs this_) => this_.RowsCopied),
-					// [1]: get Abort
-					(Expression<Func<MySqlRowsCopiedEventArgs, bool>>)((MySqlRowsCopiedEventArgs this_) => this_.Abort),
-					// [3]: set Abort
-					PropertySetter((MySqlRowsCopiedEventArgs this_) => this_.Abort),
-				};
+					{
+						// [0]: get RowsCopied
+						(Expression<Func<MySqlRowsCopiedEventArgs, long>> )((MySqlRowsCopiedEventArgs this_) => this_.RowsCopied),
+						// [1]: get Abort
+						(Expression<Func<MySqlRowsCopiedEventArgs, bool>>)((MySqlRowsCopiedEventArgs this_) => this_.Abort),
+						// [3]: set Abort
+						PropertySetter((MySqlRowsCopiedEventArgs this_) => this_.Abort),
+					};
 
 				public MySqlRowsCopiedEventArgs(object instance, Delegate[] wrappers) : base(instance, wrappers)
 				{
@@ -676,7 +670,7 @@ namespace LinqToDB.DataProvider.MySql
 			{
 			}
 
-			public MySqlBulkCopyColumnMapping(int sourceOrdinal, string destinationColumn, string? expression = null) => throw new NotImplementedException();
+			public MySqlBulkCopyColumnMapping(int sourceOrdinal, string destinationColumn, string? expression = null) => ThrowHelper.ThrowNotImplementedException();
 		}
 
 		[Wrapper]

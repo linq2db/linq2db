@@ -1,10 +1,8 @@
-﻿using System;
-using System.Linq;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
+using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
 	using SqlQuery;
 
 	class DeleteBuilder : MethodCallBuilder
@@ -50,7 +48,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					var isTableResult = res.Context!.IsExpression(null, 0, RequestFor.Table);
 					if (!isTableResult.Result)
-						throw new LinqException("Can not retrieve Table context from association.");
+						ThrowHelper.ThrowLinqException("Can not retrieve Table context from association.");
 
 					var atc = (TableBuilder.TableContext)isTableResult.Context!;
 					deleteStatement.Table = atc.SqlTable;
@@ -89,7 +87,7 @@ namespace LinqToDB.Linq.Builder
 				var deletedTable = builder.DataContext.SqlProviderFlags.OutputDeleteUseSpecialTable ? SqlTable.Deleted(methodCall.Method.GetGenericArguments()[0]) : deleteStatement.GetDeleteTable();
 
 				if (deletedTable == null)
-					throw new InvalidOperationException("Cannot find target table for DELETE statement");
+					ThrowHelper.ThrowInvalidOperationException("Cannot find target table for DELETE statement");
 
 				outputContext = new TableBuilder.TableContext(builder, new SelectQuery(), deletedTable);
 
@@ -140,27 +138,27 @@ namespace LinqToDB.Linq.Builder
 
 			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 			{
-				throw new NotImplementedException();
+				return ThrowHelper.ThrowNotImplementedException<Expression>();
 			}
 
 			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 			{
-				throw new NotImplementedException();
+				return ThrowHelper.ThrowNotImplementedException<SqlInfo[]>();
 			}
 
 			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 			{
-				throw new NotImplementedException();
+				return ThrowHelper.ThrowNotImplementedException<SqlInfo[]>();
 			}
 
 			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 			{
-				throw new NotImplementedException();
+				return ThrowHelper.ThrowNotImplementedException<IsExpressionResult>();
 			}
 
 			public override IBuildContext GetContext(Expression? expression, int level, BuildInfo buildInfo)
 			{
-				throw new NotImplementedException();
+				return ThrowHelper.ThrowNotImplementedException<IBuildContext>();
 			}
 		}
 

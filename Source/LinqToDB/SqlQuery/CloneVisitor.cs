@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Threading;
+﻿using System.Diagnostics.CodeAnalysis;
 
 namespace LinqToDB.SqlQuery
 {
@@ -262,7 +258,7 @@ namespace LinqToDB.SqlQuery
 					var cteTable = (SqlCteTable)(IQueryElement)element;
 
 					if (cteTable.Cte == null)
-						throw new InvalidOperationException("Cte is null");
+						ThrowHelper.ThrowInvalidOperationException("Cte is null");
 
 					// TODO: children Clone called before _objectTree update (original cloning logic)
 					var table = new SqlCteTable(
@@ -793,7 +789,8 @@ namespace LinqToDB.SqlQuery
 				//case QueryElementType.MultiInsertStatement:
 				//case QueryElementType.MergeSourceTable:
 				default:
-					throw new NotImplementedException($"Unsupported query element type: {element.GetType()} ({element.ElementType})");
+					ThrowHelper.ThrowNotImplementedException($"Unsupported query element type: {element.GetType()} ({element.ElementType})");
+					break;
 			}
 
 			if (element is IQueryExtendible { SqlQueryExtensions: {} } qe)

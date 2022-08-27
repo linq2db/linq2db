@@ -1,21 +1,13 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Data;
-using System.Data.Common;
+﻿using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Text;
-using System.Threading;
-
-using JetBrains.Annotations;
-using LinqToDB.Common.Internal;
 
 namespace LinqToDB.Data
 {
 	using Async;
 	using Common;
+	using Common.Internal;
 	using Configuration;
 	using DataProvider;
 	using Expressions;
@@ -226,10 +218,10 @@ namespace LinqToDB.Data
 		public DataConnection(LinqToDBConnectionOptions options)
 		{
 			if (options == null)
-				throw new ArgumentNullException(nameof(options));
+				ThrowHelper.ThrowArgumentNullException(nameof(options));
 
 			if (!options.IsValidConfigForConnectionType(this))
-				throw new LinqToDBException(
+				ThrowHelper.ThrowLinqToDBException(
 					$"Improper options type used to create DataConnection {GetType()}, try creating a public constructor calling base and accepting type {nameof(LinqToDBConnectionOptions)}<{GetType().Name}>");
 
 			InitConfig();
@@ -245,7 +237,7 @@ namespace LinqToDB.Data
 					ConfigurationString = options.ConfigurationString ?? DefaultConfiguration;
 
 					if (ConfigurationString == null)
-						throw new LinqToDBException("Configuration string is not provided.");
+						ThrowHelper.ThrowLinqToDBException("Configuration string is not provided.");
 
 					var ci = GetConfigurationInfo(ConfigurationString);
 
@@ -258,7 +250,7 @@ namespace LinqToDB.Data
 				case ConnectionSetupType.ConnectionString:
 				{
 					if (options.ProviderName == null && options.DataProvider == null)
-						throw new LinqToDBException("DataProvider was not specified");
+						ThrowHelper.ThrowLinqToDBException("DataProvider was not specified");
 
 					IDataProvider? dataProvider;
 
@@ -268,7 +260,7 @@ namespace LinqToDB.Data
 							dataProvider = GetDataProvider(options.ProviderName, options.ConnectionString!);
 
 						if (dataProvider == null)
-							throw new LinqToDBException($"DataProvider '{options.ProviderName}' not found.");
+							ThrowHelper.ThrowLinqToDBException($"DataProvider '{options.ProviderName}' not found.");
 					}
 					else
 						dataProvider = options.DataProvider!;
@@ -320,7 +312,8 @@ namespace LinqToDB.Data
 					break;
 				}
 				default:
-					throw new NotImplementedException($"SetupType: {options.SetupType}");
+					ThrowHelper.ThrowNotImplementedException($"SetupType: {options.SetupType}");
+					break;
 			}
 
 			RetryPolicy = Configuration.RetryPolicy.Factory != null
@@ -781,11 +774,11 @@ namespace LinqToDB.Data
 			string        providerName,
 			IDataProvider dataProvider)
 		{
-			if (providerName == null) throw new ArgumentNullException(nameof(providerName));
-			if (dataProvider == null) throw new ArgumentNullException(nameof(dataProvider));
+			if (providerName == null) ThrowHelper.ThrowArgumentNullException(nameof(providerName));
+			if (dataProvider == null) ThrowHelper.ThrowArgumentNullException(nameof(dataProvider));
 
 			if (string.IsNullOrEmpty(dataProvider.Name))
-				throw new ArgumentException("dataProvider.Name cannot be empty.", nameof(dataProvider));
+				ThrowHelper.ThrowArgumentException(nameof(dataProvider), "dataProvider.Name cannot be empty.");
 
 			_dataProviders[providerName] = dataProvider;
 		}
@@ -796,7 +789,7 @@ namespace LinqToDB.Data
 		/// <param name="dataProvider">Database provider implementation.</param>
 		public static void AddDataProvider(IDataProvider dataProvider)
 		{
-			if (dataProvider == null) throw new ArgumentNullException(nameof(dataProvider));
+			if (dataProvider == null) ThrowHelper.ThrowArgumentNullException(nameof(dataProvider));
 
 			AddDataProvider(dataProvider.Name, dataProvider);
 		}
@@ -900,7 +893,7 @@ namespace LinqToDB.Data
 					var dataProvider = _dataProvider ??= GetDataProvider(_connectionStringSettings!, ConnectionString);
 
 					if (dataProvider == null)
-						throw new LinqToDBException($"DataProvider is not provided for configuration: {_configurationString}");
+						ThrowHelper.ThrowLinqToDBException($"DataProvider is not provided for configuration: {_configurationString}");
 
 					return dataProvider;
 				}
@@ -949,12 +942,12 @@ namespace LinqToDB.Data
 			var key = configurationString ?? DefaultConfiguration;
 
 			if (key == null)
-				throw new LinqToDBException("Configuration string is not provided.");
+				return ThrowHelper.ThrowLinqToDBException<ConfigurationInfo>("Configuration string is not provided.");
 
 			if (_configurations.TryGetValue(key, out var ci))
 				return ci;
 
-			throw new LinqToDBException($"Configuration '{configurationString}' is not defined.");
+			return ThrowHelper.ThrowLinqToDBException<ConfigurationInfo>($"Configuration '{configurationString}' is not defined.");
 		}
 
 		/// <summary>
@@ -987,8 +980,8 @@ namespace LinqToDB.Data
 			string connectionString,
 			IDataProvider? dataProvider = null)
 		{
-			if (configuration    == null) throw new ArgumentNullException(nameof(configuration));
-			if (connectionString == null) throw new ArgumentNullException(nameof(connectionString));
+			if (configuration    == null) ThrowHelper.ThrowArgumentNullException(nameof(configuration));
+			if (connectionString == null) ThrowHelper.ThrowArgumentNullException(nameof(connectionString));
 
 			if (dataProvider == null)
 			{
@@ -1023,9 +1016,9 @@ namespace LinqToDB.Data
 			string connectionString,
 			string dataProvider)
 		{
-			if (configuration    == null) throw new ArgumentNullException(nameof(configuration));
-			if (connectionString == null) throw new ArgumentNullException(nameof(connectionString));
-			if (dataProvider     == null) throw new ArgumentNullException(nameof(dataProvider));
+			if (configuration    == null) ThrowHelper.ThrowArgumentNullException(nameof(configuration));
+			if (connectionString == null) ThrowHelper.ThrowArgumentNullException(nameof(connectionString));
+			if (dataProvider     == null) ThrowHelper.ThrowArgumentNullException(nameof(dataProvider));
 
 			InitConfig();
 
@@ -1044,8 +1037,8 @@ namespace LinqToDB.Data
 			string configuration,
 			string connectionString)
 		{
-			if (configuration    == null) throw new ArgumentNullException(nameof(configuration));
-			if (connectionString == null) throw new ArgumentNullException(nameof(connectionString));
+			if (configuration    == null) ThrowHelper.ThrowArgumentNullException(nameof(configuration));
+			if (connectionString == null) ThrowHelper.ThrowArgumentNullException(nameof(connectionString));
 
 			InitConfig();
 
@@ -1883,7 +1876,7 @@ namespace LinqToDB.Data
 		protected void CheckAndThrowOnDisposed()
 		{
 			if (Disposed && (ThrowOnDisposed ?? Configuration.Data.ThrowOnDisposed))
-				throw new ObjectDisposedException("DataConnection", "IDataContext is disposed, see https://github.com/linq2db/linq2db/wiki/Managing-data-connection");
+				ThrowHelper.ThrowObjectDisposedException("DataConnection", "IDataContext is disposed, see https://github.com/linq2db/linq2db/wiki/Managing-data-connection");
 		}
 
 		/// <summary>

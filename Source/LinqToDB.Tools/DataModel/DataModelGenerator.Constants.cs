@@ -1,6 +1,4 @@
-﻿using System;
-using System.Reflection;
-using System.Threading;
+﻿using System.Reflection;
 
 namespace LinqToDB.DataModel
 {

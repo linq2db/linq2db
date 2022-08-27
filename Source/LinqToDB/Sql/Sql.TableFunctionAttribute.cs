@@ -1,12 +1,11 @@
-﻿using System;
-using System.Linq.Expressions;
-using LinqToDB.Mapping;
+﻿using System.Linq.Expressions;
 
 // ReSharper disable CheckNamespace
 
 namespace LinqToDB
 {
-	using LinqToDB.SqlProvider;
+	using Mapping;
+	using SqlProvider;
 	using SqlQuery;
 
 	partial class Sql
@@ -59,7 +58,7 @@ namespace LinqToDB
 				ExpressionAttribute.PrepareParameterValues(context, mappingSchema, methodCall, ref expressionStr, false, out var knownExpressions, false, out var genericTypes, converter);
 
 				if (string.IsNullOrEmpty(expressionStr))
-					throw new LinqToDBException($"Cannot retrieve Table Function body from expression '{methodCall}'.");
+					ThrowHelper.ThrowLinqToDBException($"Cannot retrieve Table Function body from expression '{methodCall}'.");
 
 				table.TableName = new SqlObjectName(
 					expressionStr!,

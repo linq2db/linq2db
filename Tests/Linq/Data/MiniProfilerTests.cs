@@ -1,15 +1,11 @@
 ﻿extern alias MySqlConnector;
 extern alias MySqlData;
-
-using System;
 using System.Data;
 using System.Data.Common;
 using System.Data.SqlClient;
 using System.Data.SqlTypes;
 using System.Globalization;
-using System.Linq;
 using System.Numerics;
-using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Common;
@@ -28,7 +24,6 @@ using LinqToDB.DataProvider.SqlCe;
 using LinqToDB.DataProvider.SQLite;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.DataProvider.Sybase;
-using LinqToDB.Interceptors;
 using LinqToDB.Mapping;
 
 using FirebirdSql.Data.Types;
@@ -44,12 +39,12 @@ using IBM.Data.Informix;
 #endif
 
 #if NETFRAMEWORK
-using MySqlConnectorDateTime   = MySqlConnector::MySql.Data.Types.MySqlDateTime;
+using MySqlConnectorDateTime = MySqlConnector::MySql.Data.Types.MySqlDateTime;
 #else
-using MySqlConnectorDateTime   = MySqlConnector::MySqlConnector.MySqlDateTime;
+using MySqlConnectorDateTime = MySqlConnector::MySqlConnector.MySqlDateTime;
 #endif
-using MySqlDataDateTime        = MySqlData::MySql.Data.Types.MySqlDateTime;
-using MySqlDataDecimal         = MySqlData::MySql.Data.Types.MySqlDecimal;
+using MySqlDataDateTime = MySqlData::MySql.Data.Types.MySqlDateTime;
+using MySqlDataDecimal = MySqlData::MySql.Data.Types.MySqlDecimal;
 using MySqlDataMySqlConnection = MySqlData::MySql.Data.MySqlClient.MySqlConnection;
 
 namespace Tests.Data
@@ -1731,14 +1726,11 @@ namespace Tests.Data
 				{
 					using (db.CreateLocalTable<ClickHouseBulkCopyTable>())
 					{
-						long copied = 0;
-						var options = new BulkCopyOptions()
-						{
-							BulkCopyType       = BulkCopyType.ProviderSpecific,
-							NotifyAfter        = 500,
-							RowsCopiedCallback = arg => copied = arg.RowsCopied,
-							KeepIdentity       = true
-						};
+						long copied                = 0;
+						var options                = GetDefaultBulkCopyOptions(context);
+						options.BulkCopyType       = BulkCopyType.ProviderSpecific;
+						options.NotifyAfter        = 500;
+						options.RowsCopiedCallback = arg => copied = arg.RowsCopied;
 
 						db.BulkCopy(
 							options,
@@ -1757,14 +1749,11 @@ namespace Tests.Data
 				{
 					using (db.CreateLocalTable<ClickHouseBulkCopyTable>())
 					{
-						long copied = 0;
-						var options = new BulkCopyOptions()
-						{
-							BulkCopyType       = BulkCopyType.ProviderSpecific,
-							NotifyAfter        = 500,
-							RowsCopiedCallback = arg => copied = arg.RowsCopied,
-							KeepIdentity       = true
-						};
+						long copied                = 0;
+						var options                = GetDefaultBulkCopyOptions(context);
+						options.BulkCopyType       = BulkCopyType.ProviderSpecific;
+						options.NotifyAfter        = 500;
+						options.RowsCopiedCallback = arg => copied = arg.RowsCopied;
 
 						await db.BulkCopyAsync(
 							options,

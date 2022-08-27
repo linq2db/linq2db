@@ -1,7 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
-
-namespace LinqToDB.Async
+﻿namespace LinqToDB.Async
 {
 	/// <summary>
 	/// Provides deadlock-free task await helpers.

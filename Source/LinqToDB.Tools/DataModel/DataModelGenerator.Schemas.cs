@@ -1,7 +1,7 @@
-﻿using LinqToDB.CodeModel;
-
-namespace LinqToDB.DataModel
+﻿namespace LinqToDB.DataModel
 {
+	using CodeModel;
+
 	// additional schema generation logic
 	// except functionality shared with main context (entities, functions, etc)
 	partial class DataModelGenerator

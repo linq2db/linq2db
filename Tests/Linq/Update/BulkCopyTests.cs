@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using FluentAssertions;
+﻿using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.Informix;
@@ -278,7 +274,7 @@ namespace Tests.xUpdate
 			using (new RestoreBaseTables(db))
 			using (db.BeginTransaction())
 			{
-				var options = new BulkCopyOptions();
+				var options = GetDefaultBulkCopyOptions(context);
 
 				db.Parent.BulkCopy(options, new[] { new Parent { ParentID = 111001 } });
 				db.Child .BulkCopy(options, new[] { new Child { ParentID = 111001 } });
@@ -319,7 +315,9 @@ namespace Tests.xUpdate
 			using (var db = new DataContext(context))
 			using (var table = db.CreateLocalTable<SimpleBulkCopyTable>())
 			{
-				db.DataProvider.BulkCopy(table, new BulkCopyOptions() { BulkCopyType = copyType }, new[] { new SimpleBulkCopyTable() { Id = 1 } });
+				var options = GetDefaultBulkCopyOptions(context);
+				options.BulkCopyType = copyType;
+				db.DataProvider.BulkCopy(table, options, new[] { new SimpleBulkCopyTable() { Id = 1 } });
 			}
 		}
 
@@ -331,8 +329,13 @@ namespace Tests.xUpdate
 			using (var db = new DataContext(context))
 			using (var table = db.CreateLocalTable<SimpleBulkCopyTable>())
 			{
-				await db.DataProvider.BulkCopyAsync(table, new BulkCopyOptions() { BulkCopyType = copyType }, new[] { new SimpleBulkCopyTable() { Id = 1 } }, default);
-				await db.DataProvider.BulkCopyAsync(table, new BulkCopyOptions() { BulkCopyType = copyType }, AsyncEnumerableData(2, 1), default);
+				var options = GetDefaultBulkCopyOptions(context);
+				options.BulkCopyType = copyType;
+				await db.DataProvider.BulkCopyAsync(table, options, new[] { new SimpleBulkCopyTable() { Id = 1 } }, default);
+
+				options = GetDefaultBulkCopyOptions(context);
+				options.BulkCopyType = copyType;
+				await db.DataProvider.BulkCopyAsync(table, options, AsyncEnumerableData(2, 1), default);
 			}
 		}
 
@@ -344,9 +347,16 @@ namespace Tests.xUpdate
 			using (var db = new DataContext(context))
 			using (var table = db.CreateLocalTable<SimpleBulkCopyTable>())
 			{
-				table.BulkCopy(new[] { new SimpleBulkCopyTable() { Id = 1 } });
-				table.BulkCopy(5, new[] { new SimpleBulkCopyTable() { Id = 2 } });
-				table.BulkCopy(new BulkCopyOptions() { BulkCopyType = copyType }, new[] { new SimpleBulkCopyTable() { Id = 3 } });
+				var options = GetDefaultBulkCopyOptions(context);
+				table.BulkCopy(options, new[] { new SimpleBulkCopyTable() { Id = 1 } });
+
+				options = GetDefaultBulkCopyOptions(context);
+				options.MaxBatchSize = 5;
+				table.BulkCopy(options, new[] { new SimpleBulkCopyTable() { Id = 2 } });
+
+				options = GetDefaultBulkCopyOptions(context);
+				options.BulkCopyType = copyType;
+				table.BulkCopy(options, new[] { new SimpleBulkCopyTable() { Id = 3 } });
 			}
 		}
 
@@ -358,13 +368,27 @@ namespace Tests.xUpdate
 			using (var db = new DataContext(context))
 			using (var table = db.CreateLocalTable<SimpleBulkCopyTable>())
 			{
-				await table.BulkCopyAsync(new[] { new SimpleBulkCopyTable() { Id = 1 } });
-				await table.BulkCopyAsync(5, new[] { new SimpleBulkCopyTable() { Id = 2 } });
-				await table.BulkCopyAsync(new BulkCopyOptions() { BulkCopyType = copyType }, new[] { new SimpleBulkCopyTable() { Id = 3 } });
+				var options = GetDefaultBulkCopyOptions(context);
+				await table.BulkCopyAsync(options, new[] { new SimpleBulkCopyTable() { Id = 1 } });
 
-				await table.BulkCopyAsync(AsyncEnumerableData(10, 1));
-				await table.BulkCopyAsync(5, AsyncEnumerableData(20, 1));
-				await table.BulkCopyAsync(new BulkCopyOptions() { BulkCopyType = copyType }, AsyncEnumerableData(30, 1));
+				options = GetDefaultBulkCopyOptions(context);
+				options.MaxBatchSize = 5;
+				await table.BulkCopyAsync(options, new[] { new SimpleBulkCopyTable() { Id = 2 } });
+
+				options = GetDefaultBulkCopyOptions(context);
+				options.BulkCopyType = copyType;
+				await table.BulkCopyAsync(options, new[] { new SimpleBulkCopyTable() { Id = 3 } });
+
+				options = GetDefaultBulkCopyOptions(context);
+				await table.BulkCopyAsync(options, AsyncEnumerableData(10, 1));
+
+				options = GetDefaultBulkCopyOptions(context);
+				options.MaxBatchSize = 5;
+				await table.BulkCopyAsync(options, AsyncEnumerableData(20, 1));
+
+				options = GetDefaultBulkCopyOptions(context);
+				options.BulkCopyType = copyType;
+				await table.BulkCopyAsync(options, AsyncEnumerableData(30, 1));
 			}
 		}
 
@@ -439,7 +463,9 @@ namespace Tests.xUpdate
 			using (var db = new DataConnection(context, ms))
 			using (var table = db.CreateLocalTable<BaseClass>())
 			{
-				table.BulkCopy(new BulkCopyOptions { BulkCopyType = copyType }, data);
+				var options = GetDefaultBulkCopyOptions(context);
+				options.BulkCopyType = copyType;
+				table.BulkCopy(options, data);
 
 				var items = table.OrderBy(_ => _.Id).ToArray();
 
@@ -511,7 +537,9 @@ namespace Tests.xUpdate
 			using (var db = new DataConnection(context))
 			using (var table = db.CreateLocalTable<BaseDefaultDiscriminator>())
 			{
-				table.BulkCopy(new BulkCopyOptions { BulkCopyType = copyType }, data);
+				var options = GetDefaultBulkCopyOptions(context);
+				options.BulkCopyType = copyType;
+				table.BulkCopy(options, data);
 
 				var items = table.OrderBy(_ => _.Id).ToArray();
 

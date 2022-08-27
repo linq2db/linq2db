@@ -1,10 +1,4 @@
-﻿using System;
-using System.Data;
-using System.Data.Common;
-using System.Threading.Tasks;
-using LinqToDB.Interceptors;
-
-namespace LinqToDB.Data
+﻿namespace LinqToDB.Data
 {
 	/// <summary>
 	/// Disposable wrapper over <see cref="DbDataReader"/> instance, which properly disposes associated objects.

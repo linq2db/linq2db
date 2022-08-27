@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data.Linq;
+﻿using System.Data.Linq;
 using System.Data.SqlTypes;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
-
-using JetBrains.Annotations;
+using LinqToDB.Expressions;
 
 #region ReSharper disables
 // ReSharper disable RedundantTypeArgumentsOfMethod
@@ -21,10 +17,9 @@ using JetBrains.Annotations;
 namespace LinqToDB.Linq
 {
 	using Common;
-	using Extensions;
-	using LinqToDB.Common.Internal;
+	using Common.Internal;
 	using DataProvider.Firebird;
-	using LinqToDB.Expressions;
+	using Extensions;
 	using Mapping;
 
 	[PublicAPI]
@@ -134,7 +129,7 @@ namespace LinqToDB.Linq
 			if (expr is BinaryExpression binary)
 				return binary;
 
-			throw new ArgumentException($"Expression '{expr}' is not BinaryExpression node.");
+			return ThrowHelper.ThrowArgumentException<BinaryExpression>(nameof(expr), $"Expression '{expr}' is not BinaryExpression node.");
 		}
 
 		/// <summary>
@@ -153,10 +148,10 @@ namespace LinqToDB.Linq
 			Type             rightType,
 			LambdaExpression expression)
 		{
-			if (providerName == null) throw new ArgumentNullException(nameof(providerName));
-			if (leftType     == null) throw new ArgumentNullException(nameof(leftType));
-			if (rightType    == null) throw new ArgumentNullException(nameof(rightType));
-			if (expression   == null) throw new ArgumentNullException(nameof(expression));
+			if (providerName == null) ThrowHelper.ThrowArgumentNullException(nameof(providerName));
+			if (leftType     == null) ThrowHelper.ThrowArgumentNullException(nameof(leftType));
+			if (rightType    == null) ThrowHelper.ThrowArgumentNullException(nameof(rightType));
+			if (expression   == null) ThrowHelper.ThrowArgumentNullException(nameof(expression));
 
 			if (!_binaries.Value.TryGetValue(providerName, out var dic))
 				_binaries.Value.Add(providerName, dic = new Dictionary<Tuple<ExpressionType,Type,Type>,IExpressionInfo>());
@@ -260,10 +255,10 @@ namespace LinqToDB.Linq
 		public static void SetGenericInfoProvider(Type type)
 		{
 			if (!type.IsGenericTypeDefinition)
-				throw new LinqToDBException($"'{type}' must be a generic type.");
+				ThrowHelper.ThrowLinqToDBException($"'{type}' must be a generic type.");
 
 			if (!typeof(IGenericInfoProvider).IsSameOrParentOf(type))
-				throw new LinqToDBException($"'{type}' must inherit from 'IGenericInfoProvider'.");
+				ThrowHelper.ThrowLinqToDBException($"'{type}' must inherit from 'IGenericInfoProvider'.");
 
 			if (!_genericConvertProviders.ContainsKey(type))
 				lock (_genericConvertProviders)
@@ -1600,12 +1595,12 @@ namespace LinqToDB.Linq
 						pCount = field.IsStatic ? 0 : 1;
 					}
 					else
-						throw new InvalidOperationException($"Unknown member {member.Key}");
+						pCount = ThrowHelper.ThrowInvalidOperationException<int>($"Unknown member {member.Key}");
 
 					var lambda = member.Value.GetExpression(MappingSchema.Default);
 
 					if (pCount != lambda.Parameters.Count)
-						throw new InvalidOperationException(
+						ThrowHelper.ThrowInvalidOperationException(
 							$"Invalid number of parameters for '{member.Key}' and '{lambda}'.");
 				}
 			}
@@ -1826,24 +1821,24 @@ namespace LinqToDB.Linq
 		// ClickHouse
 		//
 		[Sql.Function("toDate32", ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
-		private static DateTime? ClickHouseGetDate(DateTimeOffset? dto) => throw new InvalidOperationException();
+		private static DateTime? ClickHouseGetDate(DateTimeOffset? dto) => ThrowHelper.ThrowLinqException<DateTime?>();
 		[Sql.Function("toDate32", ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
-		private static DateTime? ClickHouseGetDate(DateTime?       dt) => throw new InvalidOperationException();
+		private static DateTime? ClickHouseGetDate(DateTime?       dt) => ThrowHelper.ThrowLinqException<DateTime?>();
 
 		// :-/
 		[Sql.Expression("toInt64((toUnixTimestamp64Nano(toDateTime64({0}, 7)) - toUnixTimestamp64Nano(toDateTime64(toDate32({0}), 7))) / 100)", ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable, Precedence = SqlQuery.Precedence.Primary)]
-		private static TimeSpan? ClickHouseGetTime(DateTimeOffset? dto) => throw new InvalidOperationException();
+		private static TimeSpan? ClickHouseGetTime(DateTimeOffset? dto) => ThrowHelper.ThrowLinqException<TimeSpan?>();
 		[Sql.Expression("toInt64((toUnixTimestamp64Nano(toDateTime64({0}, 7)) - toUnixTimestamp64Nano(toDateTime64(toDate32({0}), 7))) / 100)", ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable, Precedence = SqlQuery.Precedence.Primary)]
-		private static TimeSpan? ClickHouseGetTime(DateTime? dt) => throw new InvalidOperationException();
+		private static TimeSpan? ClickHouseGetTime(DateTime? dt) => ThrowHelper.ThrowLinqException<TimeSpan?>();
 
 		[Sql.Function("roundBankers", IsNullable = Sql.IsNullableType.SameAsFirstParameter)]
-		private static decimal? ClickHouseRoundToEven(decimal? value) => throw new InvalidOperationException();
+		private static decimal? ClickHouseRoundToEven(decimal? value) => ThrowHelper.ThrowLinqException<decimal?>();
 		[Sql.Function("roundBankers", IsNullable = Sql.IsNullableType.SameAsFirstParameter)]
-		private static double? ClickHouseRoundToEven(double? value) => throw new InvalidOperationException();
+		private static double? ClickHouseRoundToEven(double? value) => ThrowHelper.ThrowLinqException<double?>();
 		[Sql.Function("roundBankers", IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
-		private static decimal? ClickHouseRoundToEven(decimal? value, int? precision) => throw new InvalidOperationException();
+		private static decimal? ClickHouseRoundToEven(decimal? value, int? precision) => ThrowHelper.ThrowLinqException<decimal?>();
 		[Sql.Function("roundBankers", IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
-		private static double? ClickHouseRoundToEven(double? value, int? precision) => throw new InvalidOperationException();
+		private static double? ClickHouseRoundToEven(double? value, int? precision) => ThrowHelper.ThrowLinqException<double?>();
 
 		#endregion
 

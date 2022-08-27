@@ -1,17 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data.SqlTypes;
+﻿using System.Data.SqlTypes;
 using System.Globalization;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Threading;
 
 namespace LinqToDB.Common
 {
 	using Expressions;
 	using Extensions;
-	using LinqToDB.Common.Internal;
+	using Internal;
 	using Mapping;
 
 	public static class ConvertBuilder
@@ -26,7 +22,7 @@ namespace LinqToDB.Common
 			}
 			catch (Exception ex)
 			{
-				throw new LinqToDBConvertException($"Cannot convert value '{value}: {value.GetType().FullName}' to type '{conversionType.FullName}'", ex);
+				return ThrowHelper.ThrowLinqToDBConvertException<object>($"Cannot convert value '{value}: {value.GetType().FullName}' to type '{conversionType.FullName}'", ex);
 			}
 		}
 
@@ -250,7 +246,7 @@ namespace LinqToDB.Common
 
 		static object ThrowLinqToDBException(string text)
 		{
-			throw new LinqToDBConvertException(text);
+			return ThrowHelper.ThrowLinqToDBConvertException<object>(text);
 		}
 
 		static readonly MethodInfo _throwLinqToDBConvertException = MemberHelper.MethodOf(() => ThrowLinqToDBException(null!));

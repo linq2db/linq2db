@@ -1,9 +1,5 @@
-﻿using System;
-using System.Data;
+﻿using System.Data;
 using System.Data.Common;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.Access;
@@ -118,7 +114,7 @@ public class a_CreateData : TestBase
 			if (DataConnection.TraceSwitch.TraceInfo)
 				TestContext.WriteLine("\nBulkCopy LinqDataTypes\n");
 
-			var options = new BulkCopyOptions();
+			var options = GetDefaultBulkCopyOptions(configString);
 
 			db.BulkCopy(
 				options,
