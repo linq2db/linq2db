@@ -1,8 +1,6 @@
-﻿using System;
-using System.Globalization;
+﻿using System.Globalization;
 using System.Net;
 using System.Numerics;
-using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Common;
@@ -28,17 +26,6 @@ namespace Tests.DataProvider
 
 		// parameters support not implemented currently
 		protected override bool TestParameters => false;
-
-		protected override BulkCopyOptions GetDefaultBulkCopyOptions(string context)
-		{
-			var options = base.GetDefaultBulkCopyOptions(context);
-
-			// workaround for https://github.com/DarkWanderer/ClickHouse.Client/issues/152
-			if (context.IsAnyOf(ProviderName.ClickHouseClient))
-				options.WithoutSession = true;
-
-			return options;
-		}
 
 		/*
 		 * Currently missing types:

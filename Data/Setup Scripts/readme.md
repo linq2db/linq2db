@@ -3,6 +3,7 @@ Contains database setup scripts for local testing
 ### Linux (WSL2) images
 
 - `clickhouse.cmd` : Windows script to create or update docker container with ClickHouse instance
+- `mariadb.cmd` : Windows script to create or update docker container with MariaDB instance
 - `pgsql92.cmd` : Windows script to create or update docker container with PostgreSQL 9.2 instance
 - `pgsql93.cmd` : Windows script to create or update docker container with PostgreSQL 9.3 instance
 - `pgsql95.cmd` : Windows script to create or update docker container with PostgreSQL 9.5 instance

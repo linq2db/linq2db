@@ -1,6 +1,4 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
-using LinqToDB.Mapping;
+﻿using LinqToDB.Mapping;
 
 using NUnit.Framework;
 

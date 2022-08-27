@@ -1,7 +1,4 @@
-﻿using System;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
+﻿using System.Runtime.CompilerServices;
 
 using LinqToDB;
 using LinqToDB.Data;
@@ -1449,7 +1446,10 @@ namespace Tests.xUpdate
 
 				try
 				{
-					((DataConnection)db).BulkCopy(100, new[]
+					var options          = GetDefaultBulkCopyOptions(context);
+					options.MaxBatchSize = 100;
+
+					((DataConnection)db).BulkCopy(options, new[]
 					{
 						new LinqDataTypes2 { ID = 1003, MoneyValue = 0m, DateTimeValue = null,              BoolValue = true,  GuidValue = new Guid("ef129165-6ffe-4df9-bb6b-bb16e413c883"), SmallIntValue =  null, IntValue = null    },
 						new LinqDataTypes2 { ID = 1004, MoneyValue = 0m, DateTimeValue = TestData.DateTime, BoolValue = false, GuidValue = null,                                             SmallIntValue =  2,    IntValue = 1532334 }

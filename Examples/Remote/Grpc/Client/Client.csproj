@@ -30,4 +30,8 @@
 		</Compile>
 	</ItemGroup>
 
+	<ItemGroup>
+		<Using Remove="System.Net.Http" />
+	</ItemGroup>
+
 </Project>

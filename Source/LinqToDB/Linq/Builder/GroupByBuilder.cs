@@ -1,17 +1,13 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Data;
+﻿using System.Collections;
 using System.Diagnostics;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
 	using Common;
 	using Extensions;
-	using LinqToDB.Expressions;
 	using Mapping;
 	using SqlQuery;
 	using Reflection;
@@ -327,14 +323,10 @@ namespace LinqToDB.Linq.Builder
 						}
 					}
 
-					//var parameters = context.Builder.ParametersContext.CurrentSqlParameters
-					//	.Select((p, i) => (p, i))
-					//	.GroupBy(_ => _.p.Expression, ExpressionEqualityComparer.Instance)
-					//	.ToDictionary(_ => _.Key, _ => _.Select(_ => _.i).First(), ExpressionEqualityComparer.Instance);
-
 					var parameters = context.Builder.ParametersContext.CurrentSqlParameters
 						.Select((p, i) => (p, i))
-						.ToDictionary(_ => _.p.Expression, _ => _.i);
+						.GroupBy(_ => _.p.Expression, ExpressionEqualityComparer.Instance)
+						.ToDictionary(_ => _.Key, _ => _.Select(_ => _.i).First(), ExpressionEqualityComparer.Instance);
 
 					var paramArray = Expression.Parameter(typeof(object[]), "ps");
 

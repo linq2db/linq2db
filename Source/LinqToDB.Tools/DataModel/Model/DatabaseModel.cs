@@ -1,9 +1,7 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using LinqToDB.CodeModel;
-
-namespace LinqToDB.DataModel
+﻿namespace LinqToDB.DataModel
 {
+	using CodeModel;
+
 	/// <summary>
 	/// Root object for database model. Contains reference to data model and various model options.
 	/// </summary>

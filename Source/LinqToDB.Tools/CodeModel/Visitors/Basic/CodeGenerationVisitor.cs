@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace LinqToDB.CodeModel
+﻿namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// Base code generation visitor that contains public API for code generation.

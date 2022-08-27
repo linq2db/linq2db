@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LinqToDB.Mapping
+﻿namespace LinqToDB.Mapping
 {
 	// TODO: right now we can reference other aliases and create a loop, that will lead to stack overflow exception
 	// We should detect loops or disalow aliases to aliases.

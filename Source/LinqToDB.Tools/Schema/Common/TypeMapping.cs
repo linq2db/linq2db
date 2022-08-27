@@ -1,7 +1,7 @@
-﻿using LinqToDB.CodeModel;
-
-namespace LinqToDB.Schema
+﻿namespace LinqToDB.Schema
 {
+	using CodeModel;
+
 	/// <summary>
 	/// Type mapping information.
 	/// </summary>

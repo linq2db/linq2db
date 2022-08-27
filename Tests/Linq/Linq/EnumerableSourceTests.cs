@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using FluentAssertions;
+﻿using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
@@ -557,7 +554,7 @@ namespace Tests.Linq
 					select n;
 
 
-				var result = query.ToArray();
+				var result = query.OrderBy(x => x.ID).ToArray();
 
 				result.Should().HaveCount(2);
 

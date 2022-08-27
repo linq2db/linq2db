@@ -1,16 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using LinqToDB.CodeModel;
-using LinqToDB.DataModel;
-using LinqToDB.Metadata;
-using LinqToDB.Naming;
-using LinqToDB.Schema;
-using LinqToDB.SqlQuery;
+﻿using System.Globalization;
 
 namespace LinqToDB.Scaffold
 {
+	using CodeModel;
+	using DataModel;
+	using Metadata;
+	using Naming;
+	using Schema;
+	using SqlQuery;
+
 	partial class DataModelLoader
 	{
 		/// <summary>

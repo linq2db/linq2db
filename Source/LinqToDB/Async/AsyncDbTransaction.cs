@@ -1,11 +1,4 @@
-﻿using System;
-using System.Data.Common;
-using System.Threading;
-using System.Threading.Tasks;
-
-using JetBrains.Annotations;
-
-namespace LinqToDB.Async
+﻿namespace LinqToDB.Async
 {
 	/// <summary>
 	/// Basic <see cref="IAsyncDbTransaction"/> implementation with fallback to synchronous operations if corresponding functionality

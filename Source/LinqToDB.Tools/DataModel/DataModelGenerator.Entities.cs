@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using LinqToDB.CodeModel;
-using LinqToDB.Data;
-
-namespace LinqToDB.DataModel
+﻿namespace LinqToDB.DataModel
 {
+	using CodeModel;
+
 	// contains entity related generation logic:
 	// - entity classes generation
 	// - optional Find extension generation

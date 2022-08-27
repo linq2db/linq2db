@@ -1,13 +1,11 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Data.Common;
+﻿using System.Collections.Concurrent;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Expressions
 {
 	using Common;
 	using Common.Internal;
-	using LinqToDB.Extensions;
+	using Extensions;
 	using Linq;
 	using Reflection;
 	using Mapping;

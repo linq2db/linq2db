@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Globalization;
-using System.IO;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 
@@ -1436,6 +1432,17 @@ namespace Tests
 
 			using (DataConnection dc = new TestDataConnection(GetProviderName(context, out var _)))
 				return ((InformixDataProvider)dc.DataProvider).Adapter.IsIDSProvider;
+		}
+
+		protected virtual BulkCopyOptions GetDefaultBulkCopyOptions(string configuration)
+		{
+			var options = new BulkCopyOptions();
+
+			// https://github.com/DarkWanderer/ClickHouse.Client/issues/152
+			if (configuration.IsAnyOf(ProviderName.ClickHouseClient))
+				options.WithoutSession = true;
+
+			return options;
 		}
 	}
 

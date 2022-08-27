@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq.Expressions;
-using System.Threading.Tasks;
-using System.Threading;
+﻿using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider
 {

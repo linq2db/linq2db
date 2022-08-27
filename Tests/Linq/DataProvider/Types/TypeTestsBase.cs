@@ -1,13 +1,6 @@
-﻿using System;
-using System.Globalization;
-using System.Threading.Tasks;
-using System.Linq;
-using System.Numerics;
-using System.Net;
-using LinqToDB;
+﻿using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
@@ -30,11 +23,6 @@ namespace Tests.DataProvider
 		/// Used by TestType method when testParameters parameter is not set (or <c>null</c>).
 		/// </summary>
 		protected virtual bool TestParameters => true;
-
-		/// <summary>
-		/// Returns default bulk copy options for context.
-		/// </summary>
-		protected virtual BulkCopyOptions GetDefaultBulkCopyOptions(string context) => new();
 
 		/// <summary>
 		/// Performs single type configuration testing:

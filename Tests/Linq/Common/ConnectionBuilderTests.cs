@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
+﻿using System.Diagnostics;
 using LinqToDB.AspNet.Logging;
 using LinqToDB.Configuration;
 using Microsoft.Extensions.DependencyInjection;

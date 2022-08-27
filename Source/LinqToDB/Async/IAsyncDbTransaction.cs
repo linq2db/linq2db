@@ -1,11 +1,4 @@
-﻿using System;
-using System.Data.Common;
-using System.Threading;
-using System.Threading.Tasks;
-
-using JetBrains.Annotations;
-
-namespace LinqToDB.Async
+﻿namespace LinqToDB.Async
 {
 	/// <summary>
 	/// Wrapper over <see cref="DbTransaction"/> instance with asynchronous operations, missing from <see cref="DbTransaction"/>.
