@@ -491,5 +491,18 @@ namespace LinqToDB.Mapping
 		{
 			return HasAttribute(new ValueConverterAttribute { ValueConverter = new ValueConverter<TProperty, TProvider>(toProvider, toModel, handlesNulls) });
 		}
+
+		/// <summary>
+		/// Specifies value generation sequence for current column.
+		/// See <see cref="SequenceNameAttribute"/> notes for list of supported databases.
+		/// </summary>
+		/// <param name="sequenceName">Name of sequence.</param>
+		/// <param name="schema">Optional sequence schema name.</param>
+		/// <param name="configuration">Optional mapping configuration name. If not specified, entity configuration used.</param>
+		/// <returns>Returns current column mapping builder.</returns>
+		public PropertyMappingBuilder<TEntity, TProperty> UseSequence(string sequenceName, string? schema = null, string? configuration = null)
+		{
+			return HasAttribute(new SequenceNameAttribute(configuration ?? _entity.Configuration, sequenceName) { Schema = schema });
+		}
 	}
 }
