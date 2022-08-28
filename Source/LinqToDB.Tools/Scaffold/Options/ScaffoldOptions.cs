@@ -45,7 +45,10 @@
 			options.Schema.LoadDatabaseName            = false;
 			options.Schema.LoadProceduresSchema        = true;
 			options.Schema.LoadProcedureSchema         = _ => true;
+			options.Schema.LoadStoredProcedure         = _ => true;
 			options.Schema.LoadTableFunction           = _ => true;
+			options.Schema.LoadScalarFunction          = _ => true;
+			options.Schema.LoadAggregateFunction       = _ => true;
 			options.Schema.EnableSqlServerReturnValue  = false;
 			options.Schema.Schemas .Clear();
 			options.Schema.Catalogs.Clear();

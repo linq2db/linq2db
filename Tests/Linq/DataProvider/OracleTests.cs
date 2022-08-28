@@ -3949,5 +3949,18 @@ CREATE TABLE ""TABLE_A""(
 				public int O { get; set; }
 			}
 		}
+
+		[Test]
+		public void Issue3732Test([IncludeDataSources(TestProvName.AllOracle)] string context)
+		{
+			using var db    = GetDataConnection(context);
+			using var table = db.CreateLocalTable<BulkCopyTable>();
+			using var _     = new OracleAlternativeBulkCopyMode(AlternativeBulkCopy.InsertInto);
+
+			db.BulkCopy(Enumerable.Range(1, 10).Select(x => new BulkCopyTable() { Id = x }));
+
+			var id = 4;
+			table.Where(x => x.Id != id).ToArray();
+		}
 	}
 }
