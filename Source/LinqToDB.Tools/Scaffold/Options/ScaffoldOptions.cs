@@ -40,6 +40,7 @@
 			options.Schema.LoadTableOrView             = (_, _) => true;
 			options.Schema.IgnoreDuplicateForeignKeys  = false;
 			options.Schema.IncludeSchemas              = true;
+			options.Schema.DefaultSchemas              = null;
 			options.Schema.IncludeCatalogs             = true;
 			options.Schema.UseSafeSchemaLoad           = false;
 			options.Schema.LoadDatabaseName            = false;

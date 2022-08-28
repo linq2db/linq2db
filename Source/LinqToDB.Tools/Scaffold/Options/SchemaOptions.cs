@@ -71,6 +71,14 @@ namespace LinqToDB.Scaffold
 		/// </summary>
 		public ISet<string> Schemas { get; } = new HashSet<string>();
 		/// <summary>
+		/// List of default schemas. When <c>null</c>, use default schema information from database schema provider.
+		/// <list type="bullet">
+		/// <item>Default: <c>null</c></item>
+		/// <item>In T4 compability mode: <c>null</c></item>
+		/// </list>
+		/// </summary>
+		public ISet<string>? DefaultSchemas { get; set; }
+		/// <summary>
 		/// Specify how to treat <see cref="Catalogs"/> list, when it is not empty.
 		/// When <c>true</c>, load only specified catalogs, otherwise all load catalogs except specififed in <see cref="Catalogs"/>.
 		/// <list type="bullet">

@@ -121,6 +121,7 @@
 			//defaultOptions.Schema.IncludeCatalogs + defaultOptions.Schema.Catalogs
 			//defaultOptions.Schema.ExcludeCatalogs + defaultOptions.Schema.Catalogs
 			AddMutuallyExclusiveOptions(_schemaOptions, SchemaOptions.IncludedCatalogs, SchemaOptions.ExcludedCatalogs);
+			AddOption(_schemaOptions, SchemaOptions.DefaultSchemas);
 			AddMutuallyExclusiveOptions(_schemaOptions, SchemaOptions.IncludedTables, SchemaOptions.ExcludedTables);
 			AddMutuallyExclusiveOptions(_schemaOptions, SchemaOptions.IncludedViews, SchemaOptions.ExcludedViews);
 			AddMutuallyExclusiveOptions(_schemaOptions, SchemaOptions.ProceduresWithSchema, SchemaOptions.ProceduresWithoutSchema);
