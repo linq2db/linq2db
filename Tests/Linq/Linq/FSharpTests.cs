@@ -135,5 +135,20 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 			FSharp.SelectTest.Issue3699Test(db);
 		}
+
+		[ActiveIssue("https://github.com/linq2db/linq2db/issues/3743")]
+		[Test]
+		public void Issue3743Test1([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.Issue3743.Issue3743Test1(db, 1);
+		}
+
+		[Test]
+		public void Issue3743Test2([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.Issue3743.Issue3743Test2(db, 1);
+		}
 	}
 }
