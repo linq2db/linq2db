@@ -777,6 +777,62 @@ namespace Tests.Data
 
 		#endregion
 
+		#region ICommandInterceptor.CommandInitialized
+
+		[Test]
+		public async ValueTask BeforeReaderDisposeTestOnDataConnection([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool closeAfterUse)
+		{
+			using var db = GetDataContext(context);
+
+			var interceptor = new TestCommandInterceptor();
+			db.AddInterceptor(interceptor);
+
+			db.Person.ToList();
+
+			Assert.True(interceptor.BeforeReaderDisposeTriggered);
+			Assert.False(interceptor.BeforeReaderDisposeAsyncTriggered);
+
+			interceptor.BeforeReaderDisposeTriggered = false;
+
+			await db.Person.ToListAsync();
+
+#if NETFRAMEWORK
+			Assert.True(interceptor.BeforeReaderDisposeTriggered);
+			Assert.False(interceptor.BeforeReaderDisposeAsyncTriggered);
+#else
+			Assert.False(interceptor.BeforeReaderDisposeTriggered);
+			Assert.True(interceptor.BeforeReaderDisposeAsyncTriggered);
+#endif
+		}
+
+		[Test]
+		public async ValueTask BeforeReaderDisposeTestOnDataContext([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool closeAfterUse)
+		{
+			using var db = new DataContext(context);
+
+			var interceptor = new TestCommandInterceptor();
+			db.AddInterceptor(interceptor);
+
+			db.GetTable<Person>().ToList();
+
+			Assert.True(interceptor.BeforeReaderDisposeTriggered);
+			Assert.False(interceptor.BeforeReaderDisposeAsyncTriggered);
+
+			interceptor.BeforeReaderDisposeTriggered = false;
+
+			await db.GetTable<Person>().ToListAsync();
+
+#if NETFRAMEWORK
+			Assert.True(interceptor.BeforeReaderDisposeTriggered);
+			Assert.False(interceptor.BeforeReaderDisposeAsyncTriggered);
+#else
+			Assert.False(interceptor.BeforeReaderDisposeTriggered);
+			Assert.True(interceptor.BeforeReaderDisposeAsyncTriggered);
+#endif
+		}
+
+		#endregion
+
 		#endregion
 
 		#region IConnectionInterceptor
@@ -1072,13 +1128,13 @@ namespace Tests.Data
 			}
 		}
 
-		#endregion
+#endregion
 
-		#endregion
+#endregion
 
-		#region IDataContextInterceptor
+#region IDataContextInterceptor
 
-		#region EntityCreated
+#region EntityCreated
 		[Test]
 		public void EntityCreated_DataConnection_Or_RemoteContext([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
@@ -1138,8 +1194,8 @@ namespace Tests.Data
 			}
 		}
 
-		#endregion
-		#region OnClosing/OnClosed
+#endregion
+#region OnClosing/OnClosed
 
 		[Test]
 		public void CloseEvents_DataConnection_Or_RemoteContext([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
@@ -1646,9 +1702,9 @@ namespace Tests.Data
 			Assert.True(interceptor.OnClosingAsyncContexts.Values.All(_ => _ == 1));
 		}
 
-		#endregion
+#endregion
 
-		#endregion
+#endregion
 
 		private class TestCommandInterceptor : CommandInterceptor
 		{
@@ -1668,6 +1724,8 @@ namespace Tests.Data
 			public bool ExecuteScalarTriggered             { get; set; }
 			public bool ExecuteScalarAsyncTriggered        { get; set; }
 			public bool ExecuteAfterExecuteReaderTriggered { get; set; }
+			public bool BeforeReaderDisposeTriggered       { get; set; }
+			public bool BeforeReaderDisposeAsyncTriggered  { get; set; }
 
 			public override Option<int> ExecuteNonQuery(CommandEventData eventData, DbCommand command, Option<int> result)
 			{
@@ -1709,6 +1767,18 @@ namespace Tests.Data
 			{
 				ExecuteScalarAsyncTriggered = true;
 				return base.ExecuteScalarAsync(eventData, command, result, cancellationToken);
+			}
+
+			public override void BeforeReaderDispose(CommandEventData eventData, DbCommand? command, DbDataReader dataReader)
+			{
+				BeforeReaderDisposeTriggered = true;
+				base.BeforeReaderDispose(eventData, command, dataReader);
+			}
+
+			public override Task BeforeReaderDisposeAsync(CommandEventData eventData, DbCommand? command, DbDataReader dataReader)
+			{
+				BeforeReaderDisposeAsyncTriggered = true;
+				return base.BeforeReaderDisposeAsync(eventData, command, dataReader);
 			}
 		}
 
