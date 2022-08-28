@@ -23,8 +23,8 @@ let Issue3743Test1(db : IDataContext, id: int) =
                     (fun (p, c) cInfo ->
                         (p, c, cInfo)
                     ))
-    let result = query.ToArray()
-    0
+    query.ToArray()
+    |> ignore
 
 let Issue3743Test2(db : IDataContext, id: int) =
     let parents = db.GetTable<Parent>()
@@ -47,5 +47,5 @@ let Issue3743Test2(db : IDataContext, id: int) =
                     (fun x cInfo ->
                         (x.p, x.c, cInfo)
                     ))
-    let result = query.ToArray()
-    0
+    query.ToArray()
+    |> ignore
