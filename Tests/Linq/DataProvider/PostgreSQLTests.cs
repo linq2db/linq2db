@@ -6,29 +6,24 @@ using System.Net;
 using System.Net.NetworkInformation;
 using System.Xml;
 using System.Xml.Linq;
-
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.PostgreSQL;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
+using LinqToDB.Tools;
 using LinqToDB.Tools.Comparers;
-
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using NpgsqlTypes;
-
 using NUnit.Framework;
 using NUnit.Framework.Interfaces;
 using NUnit.Framework.Internal;
 using NUnit.Framework.Internal.Builders;
 
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-
 namespace Tests.DataProvider
 {
-	using System.Threading.Tasks;
-	using LinqToDB.Tools;
 	using Model;
 
 	[TestFixture]

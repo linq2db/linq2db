@@ -3,6 +3,7 @@
 using LinqToDB;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
+using LinqToDB.Tools;
 
 using NUnit.Framework;
 
@@ -694,6 +695,49 @@ namespace Tests.Mapping
 				else
 					Assert.That(sql2, Does.Not.Contain("[Money]"));
 			}
+		}
+
+		public class SequenceTable
+		{
+			public int Id { get; set; }
+		}
+
+		[Test]
+		public void TestSequenceHelper([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			var ms = new MappingSchema();
+
+			ms.GetFluentMappingBuilder()
+				.Entity<SequenceTable>()
+				.Property(p => p.Id)
+				.UseSequence("sequencetestseq");
+
+			using var db = GetDataConnection(context, ms);
+			var records = Enumerable.Range(1, 10).Select(x => new SequenceTable()).ToArray();
+
+			records.RetrieveIdentity(db, true);
+
+			for (var i = 0; i < records.Length; i++)
+				Assert.AreEqual(records[0].Id + i, records[i].Id);
+		}
+
+		[Test]
+		public void TestSequenceAttribute([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			var ms = new MappingSchema();
+
+			ms.GetFluentMappingBuilder()
+				.Entity<SequenceTable>()
+				.Property(p => p.Id)
+				.HasAttribute(new SequenceNameAttribute("sequencetestseq"));
+
+			using var db = GetDataConnection(context, ms);
+			var records = Enumerable.Range(1, 10).Select(x => new SequenceTable()).ToArray();
+
+			records.RetrieveIdentity(db, true);
+
+			for (var i = 0; i < records.Length; i++)
+				Assert.AreEqual(records[0].Id + i, records[i].Id);
 		}
 	}
 }
