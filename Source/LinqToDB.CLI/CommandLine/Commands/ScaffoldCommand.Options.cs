@@ -1177,6 +1177,25 @@ If you don't specify some property, CLI will use default value for current optio
 					null);
 
 			/// <summary>
+			/// Explicit list of schemas to load option.
+			/// </summary>
+			public static readonly CliOption DefaultSchemas = new StringCliOption(
+					"default-schemas",
+					null,
+					false,
+					true,
+					"specify which schemas should be recognized as default schemas",
+					@"Objects from schemas, marked as default, will be:
+  - put to main data context instead of separate schema-specific class (see also schema-as-type option)
+  - will skip generation of schema name in metadata (see also include-default-schema-name option)
+
+When this option is not set, CLI tool use database-specific logic to detect default schema. Usually it is current user/schema name associated with connection string, used for database scaffolding and supports only one schema. Using this option you can specify multiple schemas.",
+					null,
+					null,
+					_defaultOptions.Schema.DefaultSchemas?.ToArray(),
+					_t4ModeOptions.Schema.DefaultSchemas?.ToArray());
+
+			/// <summary>
 			/// Explicit list of catalogs/databases for schema load option.
 			/// </summary>
 			public static readonly CliOption IncludedCatalogs = new StringCliOption(

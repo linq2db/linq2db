@@ -713,7 +713,7 @@
 		IEnumerable<View>              ISchemaProvider.GetViews             (                                    ) => _views;
 		IEnumerable<ForeignKey>        ISchemaProvider.GetForeignKeys       (                                    ) => _foreignKeys;
 
-		ISet<string> ISchemaProvider.GetDefaultSchemas() => _defaultSchemas;
+		ISet<string> ISchemaProvider.GetDefaultSchemas() => _options.DefaultSchemas ??  _defaultSchemas;
 
 		string? ISchemaProvider.DatabaseName  => _databaseName;
 		string? ISchemaProvider.ServerVersion => _serverVersion;

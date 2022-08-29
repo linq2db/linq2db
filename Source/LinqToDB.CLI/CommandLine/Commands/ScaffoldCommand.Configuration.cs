@@ -225,6 +225,15 @@
 					settings.Schemas.Add(strVal);
 			}
 
+			if (options.Remove(SchemaOptions.DefaultSchemas, out value))
+			{
+				settings.DefaultSchemas = new HashSet<string>();
+
+				foreach (var strVal in (string[])value!)
+					settings.DefaultSchemas.Add(strVal);
+			}
+
+
 			// include/exclude catalogs
 			if (options.Remove(SchemaOptions.IncludedCatalogs, out value))
 			{
