@@ -3962,5 +3962,50 @@ CREATE TABLE ""TABLE_A""(
 			var id = 4;
 			table.Where(x => x.Id != id).ToArray();
 		}
+
+		[Test]
+		public void Issue3740Test1([IncludeDataSources(TestProvName.AllOracle12Plus)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			db.Execute("CREATE OR REPLACE FUNCTION ISSUE3742(myParameter IN VARCHAR2) RETURN BOOLEAN AS BEGIN RETURN TRUE; END;");
+			try
+			{
+				db.Execute(@"WITH
+FUNCTION convert_bool(i IN VARCHAR2) RETURN NUMBER AS
+BEGIN
+	RETURN CASE ISSUE3742(i) WHEN TRUE THEN 1 WHEN FALSE THEN 0 END;
+END convert_bool;
+SELECT convert_bool(:p) FROM SYS.DUAL", new { p = "test" });
+			}
+			finally
+			{
+				db.Execute("DROP FUNCTION ISSUE3742");
+			}
+		}
+
+		[Test]
+		public void Issue3740Test2([IncludeDataSources(TestProvName.AllOracle12Plus)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			db.Execute("CREATE OR REPLACE FUNCTION ISSUE3742(myParameter IN VARCHAR2) RETURN BOOLEAN AS BEGIN RETURN TRUE; END;");
+			try
+			{
+				db.NextQueryHints.Add(@"**WITH
+FUNCTION convert_bool(i IN VARCHAR2) RETURN NUMBER AS
+BEGIN
+	RETURN CASE ISSUE3742(i) WHEN TRUE THEN 1 WHEN FALSE THEN 0 END;
+END convert_bool;");
+				db.Select(() => Issue3742Function("test"));
+			}
+			finally
+			{
+				db.Execute("DROP FUNCTION ISSUE3742");
+			}
+		}
+
+		[Sql.Expression("convert_bool({0})", ServerSideOnly = true)]
+		public static bool Issue3742Function(string parameter) => ThrowHelper.ThrowInvalidOperationException<bool>();
 	}
 }

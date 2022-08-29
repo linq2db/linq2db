@@ -2203,7 +2203,6 @@ namespace Tests.DataProvider
 				Assert.True(data.SequenceEqual(res));
 			}
 		}
-
 	}
 
 	public static class TestPgAggregates
