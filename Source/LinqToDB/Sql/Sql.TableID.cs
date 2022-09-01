@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 
 namespace LinqToDB
 {
@@ -46,7 +45,7 @@ namespace LinqToDB
 				var idx = value.IndexOf(':');
 
 				if (idx == -1)
-					throw new InvalidOperationException($"Cannot parse '{value}' to SqlID.");
+					ThrowHelper.ThrowInvalidOperationException($"Cannot parse '{value}' to SqlID.");
 
 				var type = value.Substring(0, idx);
 				var id   = value.Substring(idx + 1);

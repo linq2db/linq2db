@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
+﻿using System.Diagnostics;
 using System.Text;
 
 namespace LinqToDB.SqlProvider
@@ -363,8 +360,7 @@ namespace LinqToDB.SqlProvider
 
 		void RemoveSource(SqlTableSource fromTable, SqlJoinedTable join)
 		{
-			if (_removedSources == null)
-				_removedSources = new HashSet<int>();
+			_removedSources ??= new HashSet<int>();
 
 			_removedSources.Add(join.Table.SourceID);
 
@@ -401,8 +397,7 @@ namespace LinqToDB.SqlProvider
 
 		void ReplaceField(VirtualField oldField, VirtualField newField)
 		{
-			if (_replaceMap == null)
-				_replaceMap = new Dictionary<VirtualField, VirtualField>();
+			_replaceMap ??= new Dictionary<VirtualField, VirtualField>();
 
 			_replaceMap.Remove(oldField);
 			_replaceMap.Add   (oldField, newField);
@@ -410,8 +405,7 @@ namespace LinqToDB.SqlProvider
 
 		void AddEqualFields(VirtualField field1, VirtualField field2, int levelSourceId)
 		{
-			if (_equalityMap == null)
-				_equalityMap = new Dictionary<VirtualField, HashSet<Tuple<int, VirtualField>>>();
+			_equalityMap ??= new Dictionary<VirtualField, HashSet<Tuple<int, VirtualField>>>();
 
 			if (!_equalityMap.TryGetValue(field1, out var set))
 			{
@@ -569,8 +563,7 @@ namespace LinqToDB.SqlProvider
 
 		void AddSearchConditions(SqlSearchCondition search, IEnumerable<SqlCondition> conditions)
 		{
-			if (_additionalFilter == null)
-				_additionalFilter = new Dictionary<SqlSearchCondition, SqlSearchCondition>();
+			_additionalFilter ??= new Dictionary<SqlSearchCondition, SqlSearchCondition>();
 
 			if (!_additionalFilter.TryGetValue(search, out var value))
 			{
@@ -737,7 +730,7 @@ namespace LinqToDB.SqlProvider
 			{
 				var fields = new VirtualField[v.Count];
 				for (var i = 0; i < v.Count; i++)
-					fields[i] = GetUnderlayingField(v[i]) ?? throw new InvalidOperationException($"Cannot get field for {v[i]}");
+					fields[i] = GetUnderlayingField(v[i]) ?? ThrowHelper.ThrowInvalidOperationException<VirtualField>($"Cannot get field for {v[i]}");
 				result.Add(fields);
 			}
 
@@ -750,8 +743,7 @@ namespace LinqToDB.SqlProvider
 			{
 				keys = GetKeysInternal(tableSource);
 
-				if (_keysCache == null)
-					_keysCache = new Dictionary<int, List<VirtualField[]>?>();
+				_keysCache ??= new Dictionary<int, List<VirtualField[]>?>();
 
 				_keysCache.Add(tableSource.SourceID, keys);
 			}
@@ -946,14 +938,12 @@ namespace LinqToDB.SqlProvider
 
 				equality.OneCondition = c;
 
-				if (found == null)
-					found = new List<FoundEquality>();
+				found ??= new List<FoundEquality>();
 
 				found.Add(equality);
 			}
 
-			if (_fieldPairCache == null)
-				_fieldPairCache = new Dictionary<Tuple<SqlTableSource?, SqlTableSource>, List<FoundEquality>?>();
+			_fieldPairCache ??= new Dictionary<Tuple<SqlTableSource?, SqlTableSource>, List<FoundEquality>?>();
 
 			_fieldPairCache.Add(key, found);
 
@@ -1003,8 +993,7 @@ namespace LinqToDB.SqlProvider
 
 				if (keys.All(k => foundFields.Contains(k)))
 				{
-					if (uniqueFields == null)
-						uniqueFields = new HashSet<VirtualField>();
+					uniqueFields ??= new HashSet<VirtualField>();
 
 					foreach (var key in keys)
 						uniqueFields.Add(key);
@@ -1095,8 +1084,7 @@ namespace LinqToDB.SqlProvider
 
 					if (f1.ManyField.Name == f2.ManyField.Name && f1.OneField.Name == f2.OneField.Name)
 					{
-						if (found == null)
-							found = new List<FoundEquality>();
+						found ??= new List<FoundEquality>();
 
 						found.Add(f2);
 					}
@@ -1126,8 +1114,7 @@ namespace LinqToDB.SqlProvider
 
 				if (keys.All(k => foundFields.Contains(k)))
 				{
-					if (uniqueFields == null)
-						uniqueFields = new HashSet<VirtualField>();
+					uniqueFields ??= new HashSet<VirtualField>();
 
 					foreach (var key in keys)
 						uniqueFields.Add(key);
@@ -1191,8 +1178,7 @@ namespace LinqToDB.SqlProvider
 
 				if (keys.All(k => foundFields.Contains(k)))
 				{
-					if (uniqueFields == null)
-						uniqueFields = new HashSet<VirtualField>();
+					uniqueFields ??= new HashSet<VirtualField>();
 					foreach (var key in keys)
 						uniqueFields.Add(key);
 				}
@@ -1252,8 +1238,7 @@ namespace LinqToDB.SqlProvider
 
 				if (keys.All(k => foundFields.Contains(k)))
 				{
-					if (uniqueFields == null)
-						uniqueFields = new HashSet<VirtualField>();
+					uniqueFields ??= new HashSet<VirtualField>();
 					foreach (var key in keys)
 						uniqueFields.Add(key);
 				}
@@ -1284,25 +1269,26 @@ namespace LinqToDB.SqlProvider
 		{
 			public VirtualField(ISqlExpression expression)
 			{
-				if (expression == null) throw new ArgumentNullException(nameof(expression));
+				if (expression == null) ThrowHelper.ThrowArgumentNullException(nameof(expression));
 
 				if (expression is SqlField field)
 					Field = field;
 				else if (expression is SqlColumn column)
 					Column = column;
 				else
-					throw new ArgumentException($"Expression '{expression}' is not a Field or Column.",
-						nameof(expression));
+					ThrowHelper.ThrowArgumentException(
+						nameof(expression),
+						$"Expression '{expression}' is not a Field or Column.");
 			}
 
 			public VirtualField(SqlField field)
 			{
-				Field = field ?? throw new ArgumentNullException(nameof(field));
+				Field = field ?? ThrowHelper.ThrowArgumentNullException<SqlField>(nameof(field));
 			}
 
 			public VirtualField(SqlColumn column)
 			{
-				Column = column ?? throw new ArgumentNullException(nameof(column));
+				Column = column ?? ThrowHelper.ThrowArgumentNullException<SqlColumn>(nameof(column));
 			}
 
 			public SqlField?  Field  { get; }

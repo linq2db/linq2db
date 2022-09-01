@@ -1,7 +1,4 @@
-﻿using System;
-using System.Linq;
-using System.Threading.Tasks;
-using LinqToDB;
+﻿using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
@@ -18,7 +15,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public async Task AggregationWithNull([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public async Task AggregationWithNull([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<TestClass>())

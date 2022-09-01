@@ -1,13 +1,12 @@
-﻿using System;
-#if NET472
+﻿#if NET472
 using System.Data.Linq.SqlClient;
 #else
 using System.Data;
 #endif
 
-using System.Linq;
 using FluentAssertions;
 using LinqToDB;
+using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 using NUnit.Framework;
@@ -49,8 +48,8 @@ namespace Tests.Linq
 		public void Like()
 		{
 #if !NETFRAMEWORK
-			Assert.Throws<InvalidOperationException>(() => Sql.Like(null, null));
-			Assert.Throws<InvalidOperationException>(() => Sql.Like(null, null, null));
+			Assert.Throws<LinqException>(() => Sql.Like(null, null));
+			Assert.Throws<LinqException>(() => Sql.Like(null, null, null));
 #else
 			Assert.Pass("We don't test server-side method here.");
 #endif
@@ -1010,7 +1009,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Stuff2([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void Stuff2([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1390,6 +1389,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void IsNullOrEmpty2([DataSources] string context)
 		{
@@ -1642,7 +1642,7 @@ namespace Tests.Linq
 			protected MySpecialBaseClass(string value)
 			{
 				if (value == null)
-					throw new ArgumentNullException(nameof(value));
+					ThrowHelper.ThrowArgumentNullException(nameof(value));
 				Value = value;
 			}
 
@@ -1740,6 +1740,7 @@ namespace Tests.Linq
 			// providers doesn't support IConvertible parameter coercion
 			ProviderName.SQLiteMS,
 			ProviderName.DB2,
+			TestProvName.AllClickHouse,
 			TestProvName.AllMySqlConnector,
 			TestProvName.AllPostgreSQL,
 			TestProvName.AllInformix,

@@ -1,6 +1,4 @@
-﻿using System;
-using System.Linq;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using LinqToDB;
 using LinqToDB.Mapping;
 using LinqToDB.Expressions;
@@ -17,7 +15,7 @@ namespace Tests.UserTests
 	public class Issue3148Tests : TestBase
 	{
 		[Test]
-		public void TestDefaultExpression([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool withDefault)
+		public void TestDefaultExpression([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool withDefault)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -46,7 +44,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestDefaultExpression_01([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool withDefault)
+		public void TestDefaultExpression_01([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool withDefault)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -69,7 +67,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestDefaultExpression_02([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool withDefault)
+		public void TestDefaultExpression_02([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool withDefault)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -92,7 +90,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestDefaultExpression_05([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool withDefault)
+		public void TestDefaultExpression_05([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool withDefault)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -125,7 +123,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestDefaultExpression_06([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool withDefault)
+		public void TestDefaultExpression_06([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool withDefault)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -193,7 +191,7 @@ namespace Tests.UserTests
 		// no idea wether it should work, but now it throws (due to bad expression rewrite?)
 		// InvalidOperationException : variable 'x' of type 'Tests.Model.Child' referenced from scope '', but it is not defined
 		[Test, ActiveIssue]
-		public void TestDefaultExpression_08([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool withDefault)
+		public void TestDefaultExpression_08([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool withDefault)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -239,6 +237,7 @@ namespace Tests.UserTests
 		[Test, ActiveIssue(
 			Configurations = new[]
 			{
+				TestProvName.AllClickHouse,
 				TestProvName.AllAccess,
 				ProviderName.DB2,
 				TestProvName.AllFirebird,
@@ -250,7 +249,7 @@ namespace Tests.UserTests
 				TestProvName.AllSqlServer,
 				TestProvName.AllSybase
 			})]
-		public void TestDefaultExpression_09([DataSources] string context, [Values] bool withDefault)
+		public void TestDefaultExpression_09([DataSources(TestProvName.AllClickHouse)] string context, [Values] bool withDefault)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -339,7 +338,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestDefaultExpression_12([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool withDefault)
+		public void TestDefaultExpression_12([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool withDefault)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -368,7 +367,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestDefaultExpression_13([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool withDefault)
+		public void TestDefaultExpression_13([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool withDefault)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -391,7 +390,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestDefaultExpression_14([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool withDefault)
+		public void TestDefaultExpression_14([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool withDefault)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -414,7 +413,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestDefaultExpression_15([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool withDefault)
+		public void TestDefaultExpression_15([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool withDefault)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -437,7 +436,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestDefaultExpression_16([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool withDefault)
+		public void TestDefaultExpression_16([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool withDefault)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -474,7 +473,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestDefaultExpression_17([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool withDefault)
+		public void TestDefaultExpression_17([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool withDefault)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -495,7 +494,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestDefaultExpression_18([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool withDefault)
+		public void TestDefaultExpression_18([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool withDefault)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -516,7 +515,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestDefaultExpression_19([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool withDefault)
+		public void TestDefaultExpression_19([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool withDefault)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -538,7 +537,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestDefaultExpression_20([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer)] string context, [Values] bool withDefault)
+		public void TestDefaultExpression_20([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context, [Values] bool withDefault)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -561,7 +560,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestDefaultExpression_21([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool withDefault)
+		public void TestDefaultExpression_21([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool withDefault)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -590,7 +589,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestDefaultExpression_22([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool withDefault)
+		public void TestDefaultExpression_22([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool withDefault)
 		{
 			using (var db = GetDataContext(context))
 			{

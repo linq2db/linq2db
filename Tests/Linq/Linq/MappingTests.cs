@@ -1,7 +1,4 @@
-﻿using System;
-using System.Linq;
-
-using LinqToDB;
+﻿using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
@@ -575,7 +572,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestRecordMapping([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TestRecordMapping([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
 			ms.GetFluentMappingBuilder().Entity<Record>()
@@ -612,7 +609,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestRecordLikeMapping([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TestRecordLikeMapping([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
 			ms.GetFluentMappingBuilder().Entity<RecordLike>()
@@ -649,7 +646,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestInitOnly([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TestInitOnly([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
 			ms.GetFluentMappingBuilder().Entity<WithInitOnly>()

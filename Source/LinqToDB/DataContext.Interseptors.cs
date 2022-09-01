@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LinqToDB
+﻿namespace LinqToDB
 {
 	using Interceptors;
 
@@ -68,7 +66,7 @@ namespace LinqToDB
 				{
 					if (aggregator != null)
 						// this actually shouldn't be possible
-						throw new InvalidOperationException($"{nameof(AggregatedInterceptor<TI>)}<{nameof(TI)}> already exists");
+						ThrowHelper.ThrowInvalidOperationException($"{nameof(AggregatedInterceptor<TI>)}<{nameof(TI)}> already exists");
 
 					aggregator = new();
 					aggregator.Interceptors.AddRange(ai.Interceptors);

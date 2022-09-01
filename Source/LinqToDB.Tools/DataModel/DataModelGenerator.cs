@@ -1,13 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using LinqToDB.CodeModel;
-using LinqToDB.Metadata;
-using LinqToDB.Scaffold;
-using LinqToDB.SqlProvider;
-
-namespace LinqToDB.DataModel
+﻿namespace LinqToDB.DataModel
 {
+	using CodeModel;
+	using Metadata;
+	using Scaffold;
+	using SqlProvider;
+
 	/// <summary>
 	/// Implements code model AST generation for database model and produce AST for:
 	/// <list type="bullet">

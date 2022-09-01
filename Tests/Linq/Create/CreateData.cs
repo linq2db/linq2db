@@ -1,9 +1,5 @@
-﻿using System;
-using System.Data;
+﻿using System.Data;
 using System.Data.Common;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.Access;
@@ -106,8 +102,7 @@ public class a_CreateData : TestBase
 						{
 							TestContext.WriteLine("\nFAILED\n");
 
-							if (exception == null)
-								exception = ex;
+							exception ??= ex;
 						}
 					}
 				}
@@ -119,7 +114,7 @@ public class a_CreateData : TestBase
 			if (DataConnection.TraceSwitch.TraceInfo)
 				TestContext.WriteLine("\nBulkCopy LinqDataTypes\n");
 
-			var options = new BulkCopyOptions();
+			var options = GetDefaultBulkCopyOptions(configString);
 
 			db.BulkCopy(
 				options,
@@ -265,6 +260,7 @@ public class a_CreateData : TestBase
 			                                                               RunScript(context+ ".Data", "\nGO\n",  "Access",   AccessODBCAction);  break;
 			case ProviderName.SqlCe                                      : RunScript(context,          "\nGO\n",  "SqlCe");
 			                                                               RunScript(context+ ".Data", "\nGO\n",  "SqlCe");                       break;
+			case string when context.IsAnyOf(TestProvName.AllClickHouse) : RunScript(context,          "\nGO\n",  "ClickHouse");                  break;
 			default                                                      :
 				var script = CustomizationSupport.Interceptor.InterceptCreateData(context);
 				if (script != null)

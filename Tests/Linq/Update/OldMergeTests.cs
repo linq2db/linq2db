@@ -1,8 +1,4 @@
-﻿using System;
-using System.Linq;
-using System.Threading.Tasks;
-
-using LinqToDB;
+﻿using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
@@ -28,6 +24,7 @@ namespace Tests.xUpdate
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,
 				ProviderName.SqlCe,
+				TestProvName.AllClickHouse,
 				TestProvName.AllSqlServer2005,
 				TestProvName.AllSybase,
 				TestProvName.AllSapHana)]
@@ -61,6 +58,7 @@ namespace Tests.xUpdate
 			[DataSources(
 				false,
 				TestProvName.AllAccess,
+				TestProvName.AllClickHouse,
 				ProviderName.DB2,
 				TestProvName.AllFirebird,
 				TestProvName.AllMySql,
@@ -85,6 +83,7 @@ namespace Tests.xUpdate
 			[DataSources(
 				false,
 				TestProvName.AllAccess,
+				TestProvName.AllClickHouse,
 				ProviderName.DB2,
 				TestProvName.AllFirebird,
 				TestProvName.AllMySql,
@@ -109,6 +108,7 @@ namespace Tests.xUpdate
 			[DataSources(
 				false,
 				TestProvName.AllAccess,
+				TestProvName.AllClickHouse,
 				ProviderName.DB2,
 				TestProvName.AllFirebird,
 				TestProvName.AllMySql,
@@ -133,6 +133,7 @@ namespace Tests.xUpdate
 			[DataSources(
 				false,
 				TestProvName.AllAccess,
+				TestProvName.AllClickHouse,
 				ProviderName.DB2,
 				TestProvName.AllFirebird,
 				TestProvName.AllMySql,
@@ -157,6 +158,7 @@ namespace Tests.xUpdate
 			[DataSources(
 				false,
 				TestProvName.AllAccess,
+				TestProvName.AllClickHouse,
 				ProviderName.DB2,
 				TestProvName.AllFirebird,
 				TestProvName.AllMySql,
@@ -182,6 +184,7 @@ namespace Tests.xUpdate
 			[DataSources(
 				false,
 				TestProvName.AllAccess,
+				TestProvName.AllClickHouse,
 				ProviderName.DB2,
 				TestProvName.AllFirebird,
 				TestProvName.AllMySql,
@@ -209,6 +212,7 @@ namespace Tests.xUpdate
 			[DataSources(
 				false,
 				TestProvName.AllAccess,
+				TestProvName.AllClickHouse,
 				ProviderName.DB2,
 				TestProvName.AllFirebird,
 				TestProvName.AllMySql,
@@ -241,6 +245,7 @@ namespace Tests.xUpdate
 			[DataSources(
 				false,
 				TestProvName.AllAccess,
+				TestProvName.AllClickHouse,
 				ProviderName.DB2,
 				TestProvName.AllInformix,
 				TestProvName.AllMySql,
@@ -273,6 +278,7 @@ namespace Tests.xUpdate
 			[DataSources(
 				false,
 				TestProvName.AllAccess,
+				TestProvName.AllClickHouse,
 				ProviderName.DB2,
 				TestProvName.AllMySql,
 				TestProvName.AllPostgreSQL,

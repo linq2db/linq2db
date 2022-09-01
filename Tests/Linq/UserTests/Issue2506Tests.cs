@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using LinqToDB;
+﻿using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
@@ -45,7 +43,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void ParameterizedEagerLoad([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values("en", "de")] string lang)
+		public void ParameterizedEagerLoad([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values("en", "de")] string lang)
 		{
 			var items = new Item[]
 			{

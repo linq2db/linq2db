@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Globalization;
-using System.IO;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 
@@ -38,6 +34,8 @@ namespace Tests
 			public static readonly DateTimeOffset DateTimeOffset          = new DateTimeOffset(2020, 2, 29, 17, 54, 55, 123, TimeSpan.FromMinutes(40)).AddTicks(1234);
 			public static readonly DateTimeOffset DateTimeOffsetUtc       = new DateTimeOffset(2020, 2, 29, 17, 9, 55, 123, TimeSpan.Zero).AddTicks(1234);
 			public static readonly DateTime DateTime                      = new DateTime(2020, 2, 29, 17, 54, 55, 123).AddTicks(1234);
+			public static readonly DateTime DateTime0                     = new DateTime(2020, 2, 29, 17, 54, 55);
+			public static readonly DateTime DateTime3                     = new DateTime(2020, 2, 29, 17, 54, 55, 123);
 			public static readonly DateTime DateTimeUtc                   = new DateTime(2020, 2, 29, 17, 54, 55, 123, DateTimeKind.Utc).AddTicks(1234);
 			public static readonly DateTime DateTime4Utc                  = new DateTime(2020, 2, 29, 17, 54, 55, 123, DateTimeKind.Utc).AddTicks(1000);
 			public static readonly DateTime Date                          = new (2020, 2, 29);
@@ -382,6 +380,7 @@ namespace Tests
 			TestProvName.AllPostgreSQL,
 			TestProvName.AllMySql,
 			TestProvName.AllSapHana,
+			TestProvName.AllClickHouse
 		}.SplitAll()).ToList();
 
 		private const string LinqServiceSuffix = ".LinqService";
@@ -454,7 +453,7 @@ namespace Tests
 				case ProviderName.Informix:
 					token = '?'; break;
 				case ProviderName.SapHanaNative:
-				case string when context.IsAnyOf(TestProvName.AllOracle):
+				case string when context.IsAnyOf(TestProvName.AllOracle, TestProvName.AllPostgreSQL):
 					token = ':'; break;
 			}
 
@@ -613,8 +612,7 @@ namespace Tests
 		{
 			get
 			{
-				if (_parent1 == null)
-					_parent1 = Parent.Select(p => new Parent1 { ParentID = p.ParentID, Value1 = p.Value1 }).ToList();
+				_parent1 ??= Parent.Select(p => new Parent1 { ParentID = p.ParentID, Value1 = p.Value1 }).ToList();
 
 				return _parent1;
 			}
@@ -645,8 +643,7 @@ namespace Tests
 		{
 			get
 			{
-				if (_parentInheritance == null)
-					_parentInheritance = Parent.Select(p =>
+				_parentInheritance ??= Parent.Select(p =>
 						p.Value1 == null ? new ParentInheritanceNull { ParentID = p.ParentID } :
 						p.Value1.Value == 1 ? new ParentInheritance1 { ParentID = p.ParentID, Value1 = p.Value1.Value } :
 						 (ParentInheritanceBase)new ParentInheritanceValue { ParentID = p.ParentID, Value1 = p.Value1.Value }
@@ -1056,6 +1053,7 @@ namespace Tests
 			// windows: both db and catalog are case sensitive
 			return provider.IsAnyOf(TestProvName.AllSqlServerCS)
 				|| provider.IsAnyOf(ProviderName.DB2)
+				|| provider.IsAnyOf(TestProvName.AllClickHouse)
 				|| provider.IsAnyOf(TestProvName.AllFirebird)
 				|| provider.IsAnyOf(TestProvName.AllInformix)
 				|| provider.IsAnyOf(TestProvName.AllOracle)
@@ -1076,6 +1074,7 @@ namespace Tests
 
 			// unconfigured providers (some could be configured in theory):
 			// Access : no such concept as collation on column level (db-only)
+			// ClickHouse: collation supported only for order by clause
 			// DB2
 			// Informix
 			// Oracle (in theory v12 has collations, but to enable them you need to complete quite a quest...)
@@ -1352,6 +1351,9 @@ namespace Tests
 				}
 			}
 
+			if (provider != null)
+				AssertState(provider);
+
 			// dump baselines
 			var ctx = CustomTestContext.Get();
 
@@ -1376,6 +1378,45 @@ namespace Tests
 			CustomTestContext.Release();
 		}
 
+		// helper to detect tests that leave database in inconsistent state
+		// enable only for debug to not slowdown tests
+		private bool _badState;
+#pragma warning disable CA1805 // Do not initialize unnecessarily
+		private bool _assertStateEnabled = false;
+#pragma warning restore CA1805 // Do not initialize unnecessarily
+		private void AssertState(string context)
+		{
+			// don't fail tests if database is not consistent already
+			if (!_assertStateEnabled || _badState)
+				return;
+
+			using var _ = new DisableBaseline("isn't baseline query");
+			using var db = GetDataConnection(context);
+
+			try
+			{
+				AreEqual(Person.OrderBy(_ => _.ID), db.Person.OrderBy(_ => _.ID), ComparerBuilder.GetEqualityComparer<IPerson>());
+				AreEqual(Doctor.OrderBy(_ => _.PersonID), db.Doctor.OrderBy(_ => _.PersonID), ComparerBuilder.GetEqualityComparer<Doctor>());
+				AreEqual(Patient.OrderBy(_ => _.PersonID), db.Patient.OrderBy(_ => _.PersonID), ComparerBuilder.GetEqualityComparer<Patient>(_ => _.PersonID, _ => _.Diagnosis));
+
+				AreEqual(Parent.OrderBy(_ => _.ParentID), db.Parent.OrderBy(_ => _.ParentID), ComparerBuilder.GetEqualityComparer<Parent>(_ => _.ParentID, _ => _.Value1));
+				AreEqual(Child.OrderBy(_ => _.ParentID).ThenBy(_ => _.ChildID), db.Child.OrderBy(_ => _.ParentID).ThenBy(_ => _.ChildID), ComparerBuilder.GetEqualityComparer<Child>(_ => _.ParentID, _ => _.ChildID));
+				AreEqual(GrandChild.OrderBy(_ => _.ParentID).ThenBy(_ => _.ChildID).ThenBy(_ => _.GrandChildID), db.GrandChild.OrderBy(_ => _.ParentID).ThenBy(_ => _.ChildID).ThenBy(_ => _.GrandChildID), ComparerBuilder.GetEqualityComparer<GrandChild>(_ => _.ParentID, _ => _.ChildID, _ => _.GrandChildID));
+
+				AreEqual(InheritanceParent.OrderBy(_ => _.InheritanceParentId), db.InheritanceParent.OrderBy(_ => _.InheritanceParentId), ComparerBuilder.GetEqualityComparer<InheritanceParentBase>());
+				AreEqual(InheritanceChild.OrderBy(_ => _.InheritanceChildId), db.InheritanceChild.OrderBy(_ => _.InheritanceChildId), ComparerBuilder.GetEqualityComparer<InheritanceChildBase>(_ => _.InheritanceChildId, _ => _.TypeDiscriminator, _ => _.InheritanceParentId));
+
+				AreEqual(Types2.OrderBy(_ => _.ID), db.Types2.OrderBy(_ => _.ID), ComparerBuilder.GetEqualityComparer<LinqDataTypes2>());
+
+				// TODO: AllTypes
+			}
+			catch
+			{
+				_badState = true;
+				throw new InvalidOperationException("SMOrc");
+			}
+		}
+
 		protected string GetCurrentBaselines()
 		{
 			return CustomTestContext.Get().Get<StringBuilder>(CustomTestContext.BASELINE)?.ToString() ?? string.Empty;
@@ -1391,6 +1432,17 @@ namespace Tests
 
 			using (DataConnection dc = new TestDataConnection(GetProviderName(context, out var _)))
 				return ((InformixDataProvider)dc.DataProvider).Adapter.IsIDSProvider;
+		}
+
+		protected virtual BulkCopyOptions GetDefaultBulkCopyOptions(string configuration)
+		{
+			var options = new BulkCopyOptions();
+
+			// https://github.com/DarkWanderer/ClickHouse.Client/issues/152
+			if (configuration.IsAnyOf(ProviderName.ClickHouseClient))
+				options.WithoutSession = true;
+
+			return options;
 		}
 	}
 
@@ -1447,8 +1499,7 @@ namespace Tests
 		{
 			if (LogFilePath != null)
 			{
-				if (_logWriter == null)
-					_logWriter = File.CreateText(LogFilePath);
+				_logWriter ??= File.CreateText(LogFilePath);
 
 				_logWriter.WriteLine(text);
 				_logWriter.Flush();

@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 using LinqToDB;
 using LinqToDB.Mapping;
 
@@ -70,7 +69,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void TruncateIdentityNoResetTest([DataSources] string context)
+		public void TruncateIdentityNoResetTest([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 

@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LinqToDB
+﻿namespace LinqToDB
 {
 	/// <summary>
 	/// List of data types, supported by linq2db.
@@ -171,6 +169,11 @@ namespace LinqToDB
 		Date,
 
 		/// <summary>
+		/// Date32 ClickHouse type.
+		/// </summary>
+		Date32,
+
+		/// <summary>
 		/// A type representing a time value.
 		/// </summary>
 		Time,
@@ -199,6 +202,11 @@ namespace LinqToDB
 		/// Time zone value range is -14:00 through +14:00.
 		/// </summary>
 		DateTimeOffset,
+
+		/// <summary>
+		/// DateTime64 ClickHouse type.
+		/// </summary>
+		DateTime64,
 
 		/// <summary>
 		/// Array of type Byte.
@@ -279,6 +287,16 @@ namespace LinqToDB
 		Enum,
 
 		/// <summary>
+		/// ClickHouse Enum8 type.
+		/// </summary>
+		Enum8,
+
+		/// <summary>
+		/// ClickHouse Enum16 type.
+		/// </summary>
+		Enum16,
+
+		/// <summary>
 		/// Oracle BFILE data type.
 		/// </summary>
 		BFile,
@@ -295,7 +313,98 @@ namespace LinqToDB
 
 		/// <summary>
 		/// An integral type representing signed 128-bit integers with values between -170141183460469231731687303715884105728 and 170141183460469231731687303715884105727.
+		/// Used with: Firebird 4+, ClickHouse.
 		/// </summary>
 		Int128,
+
+		/// <summary>
+		/// Unsigned 128-bit integer.
+		/// Used with: ClickHouse.
+		/// </summary>
+		UInt128,
+
+		/// <summary>
+		/// Signed 256-bit integer.
+		/// Used with: ClickHouse.
+		/// </summary>
+		Int256,
+
+		/// <summary>
+		/// Unsigned 256-bit integer.
+		/// Used with: ClickHouse.
+		/// </summary>
+		UInt256,
+
+		/// <summary>
+		/// IPv4 address.
+		/// Used with: ClickHouse.
+		/// </summary>
+		IPv4,
+
+		/// <summary>
+		/// IPv6 address.
+		/// Used with: ClickHouse.
+		/// </summary>
+		IPv6,
+
+		/// <summary>
+		/// IntervalSecond ClickHouse type.
+		/// </summary>
+		IntervalSecond,
+
+		/// <summary>
+		/// IntervalMinute ClickHouse type.
+		/// </summary>
+		IntervalMinute,
+
+		/// <summary>
+		/// IntervalHour ClickHouse type.
+		/// </summary>
+		IntervalHour,
+
+		/// <summary>
+		/// IntervalDay ClickHouse type.
+		/// </summary>
+		IntervalDay,
+
+		/// <summary>
+		/// IntervalWeek ClickHouse type.
+		/// </summary>
+		IntervalWeek,
+
+		/// <summary>
+		/// IntervalMonth ClickHouse type.
+		/// </summary>
+		IntervalMonth,
+
+		/// <summary>
+		/// IntervalQuarter ClickHouse type.
+		/// </summary>
+		IntervalQuarter,
+
+		/// <summary>
+		/// IntervalYear ClickHouse type.
+		/// </summary>
+		IntervalYear,
+
+		/// <summary>
+		/// Decimal32 ClickHouse type.
+		/// </summary>
+		Decimal32,
+
+		/// <summary>
+		/// Decimal64 ClickHouse type.
+		/// </summary>
+		Decimal64,
+
+		/// <summary>
+		/// Decimal128 ClickHouse type.
+		/// </summary>
+		Decimal128,
+
+		/// <summary>
+		/// Decimal256 ClickHouse type.
+		/// </summary>
+		Decimal256,
 	}
 }

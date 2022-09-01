@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Text;
 
 namespace LinqToDB.DataProvider.SapHana
 {
-	using SqlQuery;
-	using SqlProvider;
 	using Mapping;
+	using SqlProvider;
+	using SqlQuery;
 
 	partial class SapHanaSqlBuilder : BasicSqlBuilder
 	{
@@ -38,7 +36,7 @@ namespace LinqToDB.DataProvider.SapHana
 				var table = insertClause.Into;
 
 				if (identityField == null || table == null)
-					throw new SqlException("Identity field must be defined for '{0}'.", insertClause.Into.NameForLogging);
+					ThrowHelper.ThrowSqlException($"Identity field must be defined for '{insertClause.Into.NameForLogging}'.");
 
 				StringBuilder.Append("SELECT CURRENT_IDENTITY_VALUE() FROM DUMMY");
 			}
@@ -77,7 +75,7 @@ namespace LinqToDB.DataProvider.SapHana
 			}
 		}
 
-		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
+		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable, bool canBeNull)
 		{
 			switch (type.Type.DataType)
 			{
@@ -120,7 +118,7 @@ namespace LinqToDB.DataProvider.SapHana
 					}
 					break;
 			}
-			base.BuildDataTypeFromDataType(type, forCreateTable);
+			base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull);
 		}
 
 		protected override void BuildFromClause(SqlStatement statement, SelectQuery selectQuery)
@@ -185,7 +183,7 @@ namespace LinqToDB.DataProvider.SapHana
 		{
 			// <table_name> ::= [[<linked_server_name>.]<schema_name>.][library_name:]<identifier>
 			if (name.Server != null && name.Schema == null)
-				throw new LinqToDBException("You must specify schema name for linked server queries.");
+				ThrowHelper.ThrowLinqToDBException("You must specify schema name for linked server queries.");
 
 			if (name.Server != null)
 			{
@@ -210,33 +208,24 @@ namespace LinqToDB.DataProvider.SapHana
 
 		protected override void BuildCreateTableCommand(SqlTable table)
 		{
-			string command;
-
-			if (table.TableOptions.IsTemporaryOptionSet())
+			var command = (table.TableOptions.IsTemporaryOptionSet(), table.TableOptions & TableOptions.IsTemporaryOptionSet) switch
 			{
-				switch (table.TableOptions & TableOptions.IsTemporaryOptionSet)
-				{
-					case TableOptions.IsTemporary                                                                              :
-					case TableOptions.IsTemporary |                                          TableOptions.IsLocalTemporaryData :
-					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                     :
-					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData :
-					case                                                                     TableOptions.IsLocalTemporaryData :
-					case                            TableOptions.IsLocalTemporaryStructure                                     :
-					case                            TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData :
-						command = "CREATE LOCAL TEMPORARY TABLE ";
-						break;
-					case TableOptions.IsGlobalTemporaryStructure                                                               :
-					case TableOptions.IsGlobalTemporaryStructure | TableOptions.IsLocalTemporaryData                           :
-						command = "CREATE GLOBAL TEMPORARY TABLE ";
-						break;
-					case var value :
-						throw new InvalidOperationException($"Incompatible table options '{value}'");
-				}
-			}
-			else
-			{
-				command = "CREATE TABLE ";
-			}
+				(true, TableOptions.IsTemporary                                                                             ) or
+				(true, TableOptions.IsTemporary |                                          TableOptions.IsLocalTemporaryData) or
+				(true, TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                    ) or
+				(true, TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData) or
+				(true,                                                                     TableOptions.IsLocalTemporaryData) or
+				(true,                            TableOptions.IsLocalTemporaryStructure                                    ) or
+				(true,                            TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData)
+					=> "CREATE LOCAL TEMPORARY TABLE ",
+				(true, TableOptions.IsGlobalTemporaryStructure                                                              ) or
+				(true, TableOptions.IsGlobalTemporaryStructure | TableOptions.IsLocalTemporaryData                          )
+					=> "CREATE GLOBAL TEMPORARY TABLE ",
+				(true, var value)
+					=> ThrowHelper.ThrowInvalidOperationException<string>($"Incompatible table options '{value}'"),
+				(false, _)
+					=> "CREATE TABLE ",
+			};
 
 			StringBuilder.Append(command);
 		}

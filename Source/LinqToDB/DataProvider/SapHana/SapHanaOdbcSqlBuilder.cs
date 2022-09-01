@@ -1,11 +1,10 @@
-﻿using System;
-using System.Text;
+﻿using System.Text;
 
 namespace LinqToDB.DataProvider.SapHana
 {
 	using Mapping;
-	using SqlQuery;
 	using SqlProvider;
+	using SqlQuery;
 
 	class SapHanaOdbcSqlBuilder : SapHanaSqlBuilder
 	{
@@ -32,7 +31,7 @@ namespace LinqToDB.DataProvider.SapHana
 			};
 		}
 
-		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
+		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable, bool canBeNull)
 		{
 			switch (type.Type.DataType)
 			{
@@ -43,7 +42,7 @@ namespace LinqToDB.DataProvider.SapHana
 					StringBuilder.Append("Decimal(10, 4)");
 					break;
 				default:
-					base.BuildDataTypeFromDataType(type, forCreateTable);
+					base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull);
 					break;
 			}
 		}

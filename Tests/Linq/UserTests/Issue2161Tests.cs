@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Data.Common;
-using System.Linq;
+﻿using System.Data.Common;
 using LinqToDB;
 using LinqToDB.Interceptors;
 using LinqToDB.Mapping;
@@ -49,7 +47,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestLoadWithDiscriminator([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestLoadWithDiscriminator([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<Order>(new []{new OrderType1() { OrderId = 1, OrderName = "Order1" }}))

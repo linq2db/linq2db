@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text.Json;
+﻿using System.Text.Json;
 using JetBrains.Annotations;
 
 using LinqToDB;
@@ -15,8 +12,8 @@ using NUnit.Framework;
 // ReSharper disable once CheckNamespace
 namespace Tests.xUpdate
 {
-	using ColumnBuilder       = Action<EntityMappingBuilder<CreateTableTypesTests.CreateTableTypes>>;
-	using ValueBuilder        = Action<CreateTableTypesTests.CreateTableTypes>;
+	using ColumnBuilder = Action<EntityMappingBuilder<CreateTableTypesTests.CreateTableTypes>>;
+	using ValueBuilder = Action<CreateTableTypesTests.CreateTableTypes>;
 	using DefaultValueBuilder = Action<string, CreateTableTypesTests.CreateTableTypes>;
 
 	[TestFixture]
@@ -126,7 +123,8 @@ namespace Tests.xUpdate
 				yield return new TestCreateTableColumnTypeParameters("Double"                         , e => e.HasColumn(_ => _.Double),                                 v => v.Double             = 3.14                                , null,                                                                                                                        ctx => ctx.IsAnyOf(TestProvName.AllFirebird), null);
 				// Firebird looses precision of double
 				yield return new TestCreateTableColumnTypeParameters("DoubleNullable"                 , e => e.HasColumn(_ => _.DoubleNullable),                         v => v.DoubleNullable     = 4.13                                , null,                                                                                                                        ctx => ctx.IsAnyOf(TestProvName.AllFirebird), null);
-				yield return new TestCreateTableColumnTypeParameters("Boolean"                        , e => e.HasColumn(_ => _.Boolean),                                v => v.Boolean            = true                                , null,                                                                                                                        null,                            null);
+				//clickhouse.mysql: https://github.com/ClickHouse/ClickHouse/issues/37999
+				yield return new TestCreateTableColumnTypeParameters("Boolean"                        , e => e.HasColumn(_ => _.Boolean),                                v => v.Boolean            = true                                , null,                                                                                                                        ctx => ctx.IsAnyOf(ProviderName.ClickHouseMySql), null);
 				// Sybase doesn't support nullable bits
 				// Access allows you to define nullable bits, but returns null as false
 				yield return new TestCreateTableColumnTypeParameters("BooleanNullable"                , e => e.HasColumn(_ => _.BooleanNullable),                        v => v.BooleanNullable    = true                                , (ctx, v) => { if (ctx.IsAnyOf(TestProvName.AllAccess)) { v.BooleanNullable = false; } },                                                  null,                            ctx => ctx.IsAnyOf(TestProvName.AllSybase));
@@ -156,6 +154,7 @@ namespace Tests.xUpdate
 		// TODO: fix
 		// oracle native tests could fail due to bug in provider:
 		// InitialLONGFetchSize option makes it read garbage for String/StringNullable testcases
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56", Configurations = new[] { ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void TestCreateTableColumnType(
 			[DataSources] string context,

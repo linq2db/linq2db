@@ -1,21 +1,19 @@
-﻿using System;
-using System.Data.Linq;
+﻿using System.Data.Linq;
 using System.Data.SqlTypes;
 using System.Globalization;
-using System.IO;
 using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Xml;
-using System.Runtime.CompilerServices;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
 	using Common;
 	using Expressions;
-	using Metadata;
-	using Mapping;
-	using SqlQuery;
 	using Extensions;
+	using Mapping;
+	using Metadata;
+	using SqlQuery;
 
 	sealed class SqlServerMappingSchema : LockedMappingSchema
 	{
@@ -167,7 +165,6 @@ namespace LinqToDB.DataProvider.SqlServer
 			AddScalarType(typeof(SqlXml),       SqlXml.     Null, true, DataType.Xml);
 
 			AddScalarType(typeof(DateTime),  DataType.DateTime2);
-			AddScalarType(typeof(DateTime?), DataType.DateTime2);
 
 			SqlServerTypes.Configure(this);
 
@@ -286,7 +283,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				{
 					var precision = dt.Type.Precision ?? 7;
 					if (precision < 0 || precision > 7)
-						throw new InvalidOperationException($"DATETIME2 type precision is out-of-bounds: {precision}");
+						ThrowHelper.ThrowInvalidOperationException($"DATETIME2 type precision is out-of-bounds: {precision}");
 
 					// DATETIME2FROMPARTS ( year, month, day, hour, minute, seconds, fractions, precision )
 					stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DaTETIME2_FROMPARTS_FORMAT, value.Year, value.Month, value.Day, value.Hour, value.Minute, value.Second, GetFractionalSecondFromTicks(value.Ticks, precision), precision);
@@ -296,7 +293,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				{
 					var precision = dt.Type.Precision ?? 7;
 					if (precision < 0 || precision > 7)
-						throw new InvalidOperationException($"DATETIME2 type precision is out-of-bounds: {precision}");
+						ThrowHelper.ThrowInvalidOperationException($"DATETIME2 type precision is out-of-bounds: {precision}");
 
 					stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATETIME2_TYPED_FORMATS[precision], value);
 					break;
@@ -305,7 +302,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				{
 					var precision = dt.Type.Precision ?? 7;
 					if (precision < 0 || precision > 7)
-						throw new InvalidOperationException($"DATETIME2 type precision is out-of-bounds: {precision}");
+						ThrowHelper.ThrowInvalidOperationException($"DATETIME2 type precision is out-of-bounds: {precision}");
 
 					stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATETIME_WITH_PRECISION_FORMATS[precision], value);
 					break;
@@ -325,7 +322,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		internal static string ConvertTimeSpanToString(TimeSpan value, int precision)
 		{
 			if (precision < 0 || precision > 7)
-				throw new InvalidOperationException($"TIME type precision is out-of-bounds: {precision}");
+				ThrowHelper.ThrowInvalidOperationException($"TIME type precision is out-of-bounds: {precision}");
 
 			return value.ToString(TIME_RAW_FORMATS[precision]);
 		}
@@ -333,7 +330,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		internal static string ConvertDateTimeOffsetToString(DateTimeOffset value, int precision)
 		{
 			if (precision < 0 || precision > 7)
-				throw new InvalidOperationException($"DATETIMEOFFSET type precision is out-of-bounds: {precision}");
+				ThrowHelper.ThrowInvalidOperationException($"DATETIMEOFFSET type precision is out-of-bounds: {precision}");
 
 			return value.ToString(DATETIMEOFFSET_RAW_FORMATS[precision]);
 		}
@@ -346,7 +343,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				{
 					var precision = sqlDataType.Type.Precision ?? 7;
 					if (precision < 0 || precision > 7)
-						throw new InvalidOperationException($"TIME type precision is out-of-bounds: {precision}");
+						ThrowHelper.ThrowInvalidOperationException($"TIME type precision is out-of-bounds: {precision}");
 
 					var ticks = value.Ticks - (value.Ticks % ValueExtensions.TICKS_DIVIDERS[precision]);
 
@@ -357,7 +354,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				{
 					var precision = sqlDataType.Type.Precision ?? 7;
 					if (precision < 0 || precision > 7)
-						throw new InvalidOperationException($"TIME type precision is out-of-bounds: {precision}");
+						ThrowHelper.ThrowInvalidOperationException($"TIME type precision is out-of-bounds: {precision}");
 
 					var ticks = value.Ticks - (value.Ticks % ValueExtensions.TICKS_DIVIDERS[precision]);
 
@@ -368,7 +365,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				{
 					var precision = sqlDataType.Type.Precision ?? 7;
 					if (precision < 0 || precision > 7)
-						throw new InvalidOperationException($"TIME type precision is out-of-bounds: {precision}");
+						ThrowHelper.ThrowInvalidOperationException($"TIME type precision is out-of-bounds: {precision}");
 
 					var ticks = value.Ticks - (value.Ticks % ValueExtensions.TICKS_DIVIDERS[precision]);
 
@@ -378,12 +375,12 @@ namespace LinqToDB.DataProvider.SqlServer
 				default:
 				{
 					if (value < TimeSpan.Zero || value >= TimeSpan.FromDays(1))
-						throw new InvalidOperationException($"TIME value is out-of-bounds: {value:c}");
+						ThrowHelper.ThrowInvalidOperationException($"TIME value is out-of-bounds: {value:c}");
 
 					var precision = sqlDataType.Type.Precision ?? 7;
 
 					if (precision < 0 || precision > 7)
-						throw new InvalidOperationException($"TIME type precision is out-of-bounds: {precision}");
+						ThrowHelper.ThrowInvalidOperationException($"TIME type precision is out-of-bounds: {precision}");
 
 					if (supportsFromParts)
 						// TIMEFROMPARTS ( hour, minute, seconds, fractions, precision )
@@ -436,7 +433,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				{
 					var precision = sqlDataType.Type.Precision ?? 7;
 					if (precision < 0 || precision > 7)
-						throw new InvalidOperationException($"DATETIMEOFFSET type precision is out-of-bounds: {precision}");
+						ThrowHelper.ThrowInvalidOperationException($"DATETIMEOFFSET type precision is out-of-bounds: {precision}");
 
 					stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATETIMEOFFSET_FORMATS[precision], value);
 					break;
@@ -445,7 +442,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				{
 					var precision = sqlDataType.Type.Precision ?? 7;
 					if (precision < 0 || precision > 7)
-						throw new InvalidOperationException($"DATETIMEOFFSET type precision is out-of-bounds: {precision}");
+						ThrowHelper.ThrowInvalidOperationException($"DATETIMEOFFSET type precision is out-of-bounds: {precision}");
 
 					stringBuilder.Append('N');
 					stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATETIMEOFFSET_FORMATS[precision], value);
@@ -460,7 +457,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				{
 					var precision = sqlDataType.Type.Precision ?? 7;
 					if (precision < 0 || precision > 7)
-						throw new InvalidOperationException($"DATETIMEOFFSET type precision is out-of-bounds: {precision}");
+						ThrowHelper.ThrowInvalidOperationException($"DATETIMEOFFSET type precision is out-of-bounds: {precision}");
 
 					stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATETIMEOFFSET_AS_DATETIME_TYPED_FORMATS[precision], value.LocalDateTime);
 					break;
@@ -470,7 +467,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				{
 					var precision = sqlDataType.Type.Precision ?? 7;
 					if (precision < 0 || precision > 7)
-						throw new InvalidOperationException($"DATETIMEOFFSET type precision is out-of-bounds: {precision}");
+						ThrowHelper.ThrowInvalidOperationException($"DATETIMEOFFSET type precision is out-of-bounds: {precision}");
 
 					if (supportsFromParts)
 						// DATETIMEOFFSETFROMPARTS ( year, month, day, hour, minute, seconds, fractions, hour_offset, minute_offset, precision )
@@ -625,6 +622,28 @@ namespace LinqToDB.DataProvider.SqlServer
 		public sealed class SqlServer2019MappingSchema : LockedMappingSchema
 		{
 			public SqlServer2019MappingSchema() : base(ProviderName.SqlServer2019, Instance)
+			{
+				ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
+
+				SetValueToSqlConverter(typeof(TimeSpan)      , (sb, dt, v) => ConvertTimeSpanToSql      (sb, dt, (TimeSpan)v             , true, true));
+				SetValueToSqlConverter(typeof(SqlDateTime)   , (sb, dt, v) => ConvertDateTimeToSql      (sb, dt, (DateTime)(SqlDateTime)v, true, true));
+				SetValueToSqlConverter(typeof(DateTime)      , (sb, dt, v) => ConvertDateTimeToSql      (sb, dt, (DateTime)v             , true, true));
+				SetValueToSqlConverter(typeof(DateTimeOffset), (sb, dt, v) => ConvertDateTimeOffsetToSql(sb, dt, (DateTimeOffset)v       , true, true));
+
+#if NET6_0_OR_GREATER
+				SetValueToSqlConverter(typeof(DateOnly)      , (sb, dt, v) => ConvertDateToSql          (sb, dt, (DateOnly)v             , true, true));
+#endif
+			}
+
+			public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
+			{
+				return Instance.TryGetConvertExpression(@from, to);
+			}
+		}
+
+		public sealed class SqlServer2022MappingSchema : LockedMappingSchema
+		{
+			public SqlServer2022MappingSchema() : base(ProviderName.SqlServer2022, Instance)
 			{
 				ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 

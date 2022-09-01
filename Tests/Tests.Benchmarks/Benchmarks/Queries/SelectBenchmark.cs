@@ -1,11 +1,9 @@
-﻿using System.Linq;
-using System.Data;
+﻿using System.Data;
 using BenchmarkDotNet.Attributes;
 using LinqToDB.Benchmarks.Mappings;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.PostgreSQL;
 using LinqToDB.Benchmarks.TestProvider;
-using System;
 using System.Data.Common;
 
 namespace LinqToDB.Benchmarks.Queries

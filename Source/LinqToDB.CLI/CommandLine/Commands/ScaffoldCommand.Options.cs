@@ -1,14 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using LinqToDB.Configuration;
-using LinqToDB.DataModel;
-using LinqToDB.Naming;
-using LinqToDB.Scaffold;
+﻿using System.Reflection;
 
 namespace LinqToDB.CommandLine
 {
+	using Configuration;
+	using DataModel;
+	using Naming;
+	using Scaffold;
+
 	partial class ScaffoldCommand : CliCommand
 	{
 		private static readonly OptionCategory _generalOptions        = new (1, "General"        , "basic options"           , "general"  );
@@ -88,18 +86,21 @@ JSON file example:
 					null,
 					null,
 					false,
-					new (false, false, DatabaseType.Access    .ToString(), "MS Access (requires OLE DB or/and ODBC provider installed)"),
-					new (false, false, DatabaseType.DB2       .ToString(), "IBM DB2 LUW or z/OS"                                       ),
-					new (false, false, DatabaseType.Firebird  .ToString(), "Firebird"                                                  ),
-					new (false, false, DatabaseType.Informix  .ToString(), "IBM Informix"                                              ),
-					new (false, false, DatabaseType.SQLServer .ToString(), "MS SQL Server (including Azure SQL Server)"                ),
-					new (false, false, DatabaseType.MySQL     .ToString(), "MySQL/MariaDB"                                             ),
-					new (false, false, DatabaseType.Oracle    .ToString(), "Oracle Database"                                           ),
-					new (false, false, DatabaseType.PostgreSQL.ToString(), "PostgreSQL"                                                ),
-					new (false, false, DatabaseType.SqlCe     .ToString(), "MS SQL Server Compact"                                     ),
-					new (false, false, DatabaseType.SQLite    .ToString(), "SQLite"                                                    ),
-					new (false, false, DatabaseType.Sybase    .ToString(), "SAP/Sybase ASE"                                            ),
-					new (false, false, DatabaseType.SapHana   .ToString(), "SAP HANA"                                                  ));
+					new (false, false, DatabaseType.Access         .ToString(), "MS Access (requires OLE DB or/and ODBC provider installed)"),
+					new (false, false, DatabaseType.DB2            .ToString(), "IBM DB2 LUW or z/OS"                                       ),
+					new (false, false, DatabaseType.Firebird       .ToString(), "Firebird"                                                  ),
+					new (false, false, DatabaseType.Informix       .ToString(), "IBM Informix"                                              ),
+					new (false, false, DatabaseType.SQLServer      .ToString(), "MS SQL Server (including Azure SQL Server)"                ),
+					new (false, false, DatabaseType.MySQL          .ToString(), "MySQL/MariaDB"                                             ),
+					new (false, false, DatabaseType.Oracle         .ToString(), "Oracle Database"                                           ),
+					new (false, false, DatabaseType.PostgreSQL     .ToString(), "PostgreSQL"                                                ),
+					new (false, false, DatabaseType.SqlCe          .ToString(), "MS SQL Server Compact"                                     ),
+					new (false, false, DatabaseType.SQLite         .ToString(), "SQLite"                                                    ),
+					new (false, false, DatabaseType.Sybase         .ToString(), "SAP/Sybase ASE"                                            ),
+					new (false, false, DatabaseType.SapHana        .ToString(), "SAP HANA"                                                  ),
+					new (false, false, DatabaseType.ClickHouseMySql.ToString(), "ClickHouse (MySql interface)"                              ),
+					new (false, false, DatabaseType.ClickHouseHttp .ToString(), "ClickHouse (HTTP(S) interface)"                            ),
+					new (false, false, DatabaseType.ClickHouseTcp  .ToString(), "ClickHouse (TCP/binary interface)"                         ));
 
 			/// <summary>
 			/// Database provider location option.
@@ -397,8 +398,9 @@ Customization using compiled assembly has several requirements:
 - prefix                           : string? : optional name prefix
 - suffix                           : string? : optional name suffix
 - transformation                   : string  : base name transformation logic (see values below)
+    + ""none""                : no transformations applied, treat whole identifier as one word
     + ""split_by_underscore"" : split base name, got from database object name, into separate words by underscore (_)
-    + ""t4""                  : emulation of identifier generation logic for association name used by T4 templates (compat. option)
+    + ""association""         : emulation of identifier generation logic for association name used by T4 templates (compat. option)
 - pluralize_if_ends_with_word_only : bool    : when set, pluralization not applied if name ends with non-word (e.g. with digit)
 - ignore_all_caps                  : bool    : when set, casing not applied to names that contain only uppercase letters
 If you don't specify some property, CLI will use default value for current option. This allows you to override only some properties without need to specify all properties.
@@ -1175,6 +1177,25 @@ If you don't specify some property, CLI will use default value for current optio
 					null);
 
 			/// <summary>
+			/// Explicit list of schemas to load option.
+			/// </summary>
+			public static readonly CliOption DefaultSchemas = new StringCliOption(
+					"default-schemas",
+					null,
+					false,
+					true,
+					"specify which schemas should be recognized as default schemas",
+					@"Objects from schemas, marked as default, will be:
+  - put to main data context instead of separate schema-specific class (see also schema-as-type option)
+  - will skip generation of schema name in metadata (see also include-default-schema-name option)
+
+When this option is not set, CLI tool use database-specific logic to detect default schema. Usually it is current user/schema name associated with connection string, used for database scaffolding and supports only one schema. Using this option you can specify multiple schemas.",
+					null,
+					null,
+					_defaultOptions.Schema.DefaultSchemas?.ToArray(),
+					_t4ModeOptions.Schema.DefaultSchemas?.ToArray());
+
+			/// <summary>
 			/// Explicit list of catalogs/databases for schema load option.
 			/// </summary>
 			public static readonly CliOption IncludedCatalogs = new StringCliOption(
@@ -1483,6 +1504,80 @@ string // also you can put procedure name as string directly to list
 					});
 
 			/// <summary>
+			/// Stored procedure load filter option.
+			/// </summary>
+			public static readonly CliOption IncludedStoredProcedures = new ObjectNameFilterCliOption(
+					"include-stored-procedures",
+					null,
+					false,
+					"only load stored procedures with specified name(s)",
+					@"Provided stored procedures names should have same casing as actual procedure name in database. Specifying this option in command line has several limitations and it is recommended to use JSON for it instead:
+  - there is no way to specify schema name for stored procedure;
+  - stored procedure name cannot have comma (,) as it is used as list separator;
+  - only exact match possible;
+JSON allows you to specify more options:
+  - stored procedure schema (schema property);
+  - regular expression (regex property) instead of exact stored procedure name (name property).
+JSON list element schema:
+{
+    ""name""  : string  // stored procedure name
+    ""schema"": string? // stored procedure schema (optional)
+}
+|
+{
+    ""regex"" : string  // stored procedure name matching regular expression
+    ""schema"": string? // stored procedure schema (optional)
+}
+|
+string // also you can put stored procedure name as string directly to list
+",
+					new[] { "--include-stored-procedures GetUsers,GetRoles,LoadPermissions" },
+					new[]
+					{
+						/*lang=json*/
+						"{ \"schema\": { \"include-stored-procedures\": [ \"ActiveUsers\", { \"name\": \"InactiveUsers\", \"schema\": \"dbo\" } ] } } // ActiveUsers and dbo.InactiveUsers procedures",
+						/*lang=json*/
+						"{ \"schema\": { \"include-stored-procedures\": [ { \"regex\": \"^Query.$+\", \"schema\": \"dbo\" } ] } } // all stored procedures starting from Query prefix"
+					});
+
+			/// <summary>
+			/// Stored procedure skip filter option.
+			/// </summary>
+			public static readonly CliOption ExcludedStoredProcedures = new ObjectNameFilterCliOption(
+					"exclude-stored-procedures",
+					null,
+					false,
+					"skip load of stored procedures with specified name(s)",
+					@"Provided stored procedures names should have same casing as actual procedure name in database. Specifying this option in command line has several limitations and it is recommended to use JSON for it instead:
+  - there is no way to specify schema name for stored procedure;
+  - stored procedure name cannot have comma (,) as it is used as list separator;
+  - only exact match possible;
+JSON allows you to specify more options:
+  - stored procedure schema (schema property);
+  - regular expression (regex property) instead of exact stored procedure name (name property).
+JSON list element schema:
+{
+    ""name""  : string  // stored procedure name
+    ""schema"": string? // stored procedure schema (optional)
+}
+|
+{
+    ""regex"" : string  // stored procedure name matching regular expression
+    ""schema"": string? // stored procedure schema  (optional)
+}
+|
+string // also you can put stored procedure name as string directly to list
+",
+					new[] { "--exclude-stored-procedure GetUsers,GetRoles,LoadPermissions" },
+					new[]
+					{
+						/*lang=json*/
+						"{ \"schema\": { \"exclude-stored-procedure\": [ \"TestProcedure\", { \"name\": \"CheckDb\", \"schema\": \"dbo\" } ] } } // TestProcedure and dbo.CheckDb procedures ignored",
+						/*lang=json*/
+						"{ \"schema\": { \"exclude-stored-procedure\": [ { \"regex\": \"^Audit.$+\", \"schema\": \"dbo\" } ] } } // all stored procedures starting from Audit prefix ignored"
+					});
+
+			/// <summary>
 			/// Table function load filter option.
 			/// </summary>
 			public static readonly CliOption IncludedTableFunctions = new ObjectNameFilterCliOption(
@@ -1555,6 +1650,154 @@ string // also you can put table function name as string directly to list
 						/*lang=json*/
 						"{ \"schema\": { \"exclude-table-functions\": [ { \"regex\": \"^Audit.$+\", \"schema\": \"dbo\" } ] } } // all table functions starting from Audit prefix ignored"
 					});
+
+			/// <summary>
+			/// Scalar function load filter option.
+			/// </summary>
+			public static readonly CliOption IncludedScalarFunctions = new ObjectNameFilterCliOption(
+					"include-scalar-functions",
+					null,
+					false,
+					"only load scalar functions with specified name(s)",
+					@"Provided scalar functions names should have same casing as actual function name in database. Specifying this option in command line has several limitations and it is recommended to use JSON for it instead:
+  - there is no way to specify schema name for scalar function;
+  - scalar function name cannot have comma (,) as it is used as list separator;
+  - only exact match possible;
+JSON allows you to specify more options:
+  - scalar function schema (schema property);
+  - regular expression (regex property) instead of exact scalar function name (name property).
+JSON list element schema:
+{
+    ""name""  : string  // scalar function name
+    ""schema"": string? // scalar function schema (optional)
+}
+|
+{
+    ""regex"" : string  // scalar function name matching regular expression
+    ""schema"": string? // scalar function schema (optional)
+}
+|
+string // also you can put scalar function name as string directly to list
+",
+					new[] { "--include-scalar-functions GetUsers,GetRoles,LoadPermissions" },
+					new[]
+					{
+						/*lang=json*/
+						"{ \"schema\": { \"include-scalar-functions\": [ \"ActiveUsers\", { \"name\": \"InactiveUsers\", \"schema\": \"dbo\" } ] } } // ActiveUsers and dbo.InactiveUsers functions",
+						/*lang=json*/
+						"{ \"schema\": { \"include-scalar-functions\": [ { \"regex\": \"^Query.$+\", \"schema\": \"dbo\" } ] } } // all scalar functions starting from Query prefix"
+					});
+
+			/// <summary>
+			/// Scalar function skip filter option.
+			/// </summary>
+			public static readonly CliOption ExcludedScalarFunctions = new ObjectNameFilterCliOption(
+					"exclude-scalar-functions",
+					null,
+					false,
+					"skip load of scalar functions with specified name(s)",
+					@"Provided scalar functions names should have same casing as actual function name in database. Specifying this option in command line has several limitations and it is recommended to use JSON for it instead:
+  - there is no way to specify schema name for scalar function;
+  - scalar function name cannot have comma (,) as it is used as list separator;
+  - only exact match possible;
+JSON allows you to specify more options:
+  - scalar function schema (schema property);
+  - regular expression (regex property) instead of exact scalar function name (name property).
+JSON list element schema:
+{
+    ""name""  : string  // scalar function name
+    ""schema"": string? // scalar function schema (optional)
+}
+|
+{
+    ""regex"" : string  // scalar function name matching regular expression
+    ""schema"": string? // scalar function schema  (optional)
+}
+|
+string // also you can put scalar function name as string directly to list
+",
+					new[] { "--exclude-scalar-functions GetUsers,GetRoles,LoadPermissions" },
+					new[]
+					{
+						/*lang=json*/
+						"{ \"schema\": { \"exclude-scalar-functions\": [ \"TestFunction\", { \"name\": \"CheckDb\", \"schema\": \"dbo\" } ] } } // TestFunction and dbo.CheckDb functions ignored",
+						/*lang=json*/
+						"{ \"schema\": { \"exclude-scalar-functions\": [ { \"regex\": \"^Audit.$+\", \"schema\": \"dbo\" } ] } } // all scalar functions starting from Audit prefix ignored"
+					});
+
+			/// <summary>
+			/// Aggregate function load filter option.
+			/// </summary>
+			public static readonly CliOption IncludedAggregateFunctions = new ObjectNameFilterCliOption(
+					"include-aggregate-functions",
+					null,
+					false,
+					"only load aggregate functions with specified name(s)",
+					@"Provided aggregate functions names should have same casing as actual function name in database. Specifying this option in command line has several limitations and it is recommended to use JSON for it instead:
+  - there is no way to specify schema name for aggregate function;
+  - aggregate function name cannot have comma (,) as it is used as list separator;
+  - only exact match possible;
+JSON allows you to specify more options:
+  - aggregate function schema (schema property);
+  - regular expression (regex property) instead of exact aggregate function name (name property).
+JSON list element schema:
+{
+    ""name""  : string  // aggregate function name
+    ""schema"": string? // aggregate function schema (optional)
+}
+|
+{
+    ""regex"" : string  // aggregate function name matching regular expression
+    ""schema"": string? // aggregate function schema (optional)
+}
+|
+string // also you can put aggregateaggregate function name as string directly to list
+",
+					new[] { "--include-aggregate-functions GetUsers,GetRoles,LoadPermissions" },
+					new[]
+					{
+						/*lang=json*/
+						"{ \"schema\": { \"include-aggregate-functions\": [ \"ActiveUsers\", { \"name\": \"InactiveUsers\", \"schema\": \"dbo\" } ] } } // ActiveUsers and dbo.InactiveUsers functions",
+						/*lang=json*/
+						"{ \"schema\": { \"include-aggregate-functions\": [ { \"regex\": \"^Query.$+\", \"schema\": \"dbo\" } ] } } // all aggregate functions starting from Query prefix"
+					});
+
+			/// <summary>
+			/// Aggregate function skip filter option.
+			/// </summary>
+			public static readonly CliOption ExcludedAggregateFunctions = new ObjectNameFilterCliOption(
+					"exclude-aggregate-functions",
+					null,
+					false,
+					"skip load of aggregate functions with specified name(s)",
+					@"Provided aggregate functions names should have same casing as actual function name in database. Specifying this option in command line has several limitations and it is recommended to use JSON for it instead:
+  - there is no way to specify schema name for aggregate function;
+  - aggregate function name cannot have comma (,) as it is used as list separator;
+  - only exact match possible;
+JSON allows you to specify more options:
+  - aggregate function schema (schema property);
+  - regular expression (regex property) instead of exact aggregate function name (name property).
+JSON list element schema:
+{
+    ""name""  : string  // aggregate function name
+    ""schema"": string? // aggregate function schema (optional)
+}
+|
+{
+    ""regex"" : string  // aggregate function name matching regular expression
+    ""schema"": string? // aggregate function schema  (optional)
+}
+|
+string // also you can put aggregate function name as string directly to list
+",
+					new[] { "--exclude-aggregate-functions GetUsers,GetRoles,LoadPermissions" },
+					new[]
+					{
+						/*lang=json*/
+						"{ \"schema\": { \"exclude-aggregate-functions\": [ \"TestFunction\", { \"name\": \"CheckDb\", \"schema\": \"dbo\" } ] } } // TestFunction and dbo.CheckDb functions ignored",
+						/*lang=json*/
+						"{ \"schema\": { \"exclude-aggregate-functions\": [ { \"regex\": \"^Audit.$+\", \"schema\": \"dbo\" } ] } } // all aggregate functions starting from Audit prefix ignored"
+					});
 		}
 
 		private enum DatabaseType
@@ -1570,7 +1813,11 @@ string // also you can put table function name as string directly to list
 			SqlCe,
 			SQLite,
 			Sybase,
-			SapHana
+			SapHana,
+			// all three ClickHouse clients used as we don't know which protocol available for user
+			ClickHouseMySql,
+			ClickHouseHttp,
+			ClickHouseTcp,
 		}
 
 		public static CliCommand Instance { get; } = new ScaffoldCommand();

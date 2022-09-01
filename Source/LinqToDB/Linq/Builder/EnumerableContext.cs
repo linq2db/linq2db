@@ -1,15 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
+﻿using System.Diagnostics;
 using System.Linq.Expressions;
 using System.Reflection;
+using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
 	using Common;
 	using Data;
-	using LinqToDB.Expressions;
 	using Extensions;
 	using Mapping;
 	using SqlQuery;
@@ -311,11 +308,11 @@ namespace LinqToDB.Linq.Builder
 				constructors = objectType.GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic);
 
 				if (constructors.Length == 0)
-					throw new InvalidOperationException($"Type '{objectType.Name}' has no constructors.");
+					ThrowHelper.ThrowInvalidOperationException($"Type '{objectType.Name}' has no constructors.");
 			}
 
 			if (constructors.Length > 1)
-				throw new InvalidOperationException($"Type '{objectType.Name}' has ambiguous constructors.");
+				ThrowHelper.ThrowInvalidOperationException($"Type '{objectType.Name}' has ambiguous constructors.");
 
 			return constructors[0];
 		}
@@ -363,7 +360,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (!argFound)
 			{
-				throw new InvalidOperationException($"Type '{objectType.Name}' has no suitable constructor.");
+				ThrowHelper.ThrowInvalidOperationException($"Type '{objectType.Name}' has no suitable constructor.");
 			}
 
 			var expr = Expression.New(ctor, args);
@@ -519,8 +516,7 @@ namespace LinqToDB.Linq.Builder
 						field = new SqlField(_elementType, "item", true);
 						var param = Expression.Parameter(typeof(object), "record");
 						var body = Expression.New(Methods.LinqToDB.Sql.SqlValueConstructor,
-							Expression.Constant(new DbDataType(_elementType,
-								ColumnDescriptor.CalculateDataType(Builder.MappingSchema, _elementType))),
+							Expression.Constant(ColumnDescriptor.CalculateDbDataType(Builder.MappingSchema, _elementType)),
 							param);
 
 						var getterLambda = Expression.Lambda<Func<object, ISqlExpression>>(body, param);
@@ -546,7 +542,7 @@ namespace LinqToDB.Linq.Builder
 					}
 
 					if (sql.Length == 0)
-						throw new LinqToDBException($"Entity of type '{_elementType.Name}' as no defined columns.");
+						ThrowHelper.ThrowLinqToDBException($"Entity of type '{_elementType.Name}' as no defined columns.");
 				}
 
 				return sql;
@@ -578,7 +574,7 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			throw new NotImplementedException();
+			return ThrowHelper.ThrowNotImplementedException<SqlInfo[]>();
 		}
 
 		private SqlField BuildField(ColumnDescriptor column)
@@ -691,7 +687,7 @@ namespace LinqToDB.Linq.Builder
 
 		public IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)
 		{
-			throw new NotImplementedException();
+			return ThrowHelper.ThrowNotImplementedException<IBuildContext?>();
 		}
 
 		public int ConvertToParentIndex(int index, IBuildContext context)
@@ -710,7 +706,7 @@ namespace LinqToDB.Linq.Builder
 
 		public ISqlExpression GetSubQuery(IBuildContext context)
 		{
-			throw new NotImplementedException();
+			return ThrowHelper.ThrowNotImplementedException<ISqlExpression>();
 		}
 
 		public SqlStatement GetResultStatement()

@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using FluentAssertions;
+﻿using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
@@ -84,7 +83,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void UpdateWhenTableSecond([DataSources(TestProvName.AllInformix)] string context)
+		public void UpdateWhenTableSecond([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(element_services.TestData()))
@@ -109,7 +108,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void UpdateWhenTableFirst([DataSources(TestProvName.AllInformix)] string context)
+		public void UpdateWhenTableFirst([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(element_services.TestData()))
@@ -134,7 +133,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void UpdateWhenTableFirstWithLeftJoin([DataSources(TestProvName.AllInformix)] string context)
+		public void UpdateWhenTableFirstWithLeftJoin([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(element_services.TestData()))

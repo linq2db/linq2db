@@ -1,8 +1,4 @@
-﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
-
-namespace LinqToDB.Data.RetryPolicy
+﻿namespace LinqToDB.Data.RetryPolicy
 {
 	public interface IRetryPolicy
 	{

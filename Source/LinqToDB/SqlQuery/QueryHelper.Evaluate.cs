@@ -1,5 +1,4 @@
-﻿using System;
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 
 namespace LinqToDB.SqlQuery
@@ -294,7 +293,7 @@ namespace LinqToDB.SqlQuery
 							return false;
 						}
 
-						case "$ToLower$":
+						case PseudoFunctions.TO_LOWER:
 						{
 							if (function.Parameters[0]
 								.TryEvaluateExpression(context, out var strValue, out errorMessage))
@@ -312,7 +311,7 @@ namespace LinqToDB.SqlQuery
 							return false;
 						}
 
-						case "$ToUpper$":
+						case PseudoFunctions.TO_UPPER:
 						{
 							if (function.Parameters[0]
 								.TryEvaluateExpression(context, out var strValue, out errorMessage))
@@ -412,7 +411,7 @@ namespace LinqToDB.SqlQuery
 		{
 			var (value, error) = expr.TryEvaluateExpression(context);
 			if (error != null)
-				throw new LinqToDBException(error);
+				ThrowHelper.ThrowLinqToDBException(error);
 
 			return value;
 		}

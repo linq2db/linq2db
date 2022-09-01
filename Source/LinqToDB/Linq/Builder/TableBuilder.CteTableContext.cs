@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
+using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
 	using SqlQuery;
 
 	partial class TableBuilder
@@ -35,7 +32,8 @@ namespace LinqToDB.Linq.Builder
 					isRecursive = true;
 					break;
 				default:
-					throw new InvalidOperationException();
+					bodyExpr = ThrowHelper.ThrowInvalidOperationException<Expression>();
+					break;
 			}
 
 			bodyExpr = builder.ConvertExpression(bodyExpr);
@@ -142,11 +140,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						var baseInfo = baseInfos.FirstOrDefault(bi => bi.CompareMembers(info));
 						var alias    = flags == ConvertFlags.Field ? GenerateAlias(expression) : null;
-						if (alias == null)
-						{
-							alias = baseInfo?.MemberChain.LastOrDefault()?.Name ??
-						                  info.MemberChain.LastOrDefault()?.Name;
-						}	
+						alias ??= baseInfo?.MemberChain.LastOrDefault()?.Name ?? info.MemberChain.LastOrDefault()?.Name;
 						var field    = RegisterCteField(baseInfo?.Sql, info.Sql, info.Index, alias);
 						return new SqlInfo(info.MemberChain, field);
 					})
@@ -178,8 +172,7 @@ namespace LinqToDB.Linq.Builder
 					alias = field?.Name;
 				}
 
-				if (alias == null)
-					alias = column.Alias;
+				alias ??= column.Alias;
 
 				return alias;
 			}
@@ -219,7 +212,7 @@ namespace LinqToDB.Linq.Builder
 
 			SqlField RegisterCteField(ISqlExpression? baseExpression, ISqlExpression expression, int index, string? alias)
 			{
-				if (expression == null) throw new ArgumentNullException(nameof(expression));
+				if (expression == null) ThrowHelper.ThrowArgumentNullException(nameof(expression));
 
 				var cteField = _cte.RegisterFieldMapping(index, () =>
 				{

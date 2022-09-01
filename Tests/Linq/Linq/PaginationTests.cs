@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using LinqToDB;
+﻿using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
@@ -88,7 +84,6 @@ namespace Tests.Linq
 				AreEqualWithComparer(pagination2.Items, byKey2.Items);
 			}
 		}
-
 
 		[Test]
 		public void ApplyOrderBy([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)

@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LinqToDB.Data
+﻿namespace LinqToDB.Data
 {
 	/// <summary>
 	/// Defines behavior of <see cref="DataConnectionExtensions.BulkCopy{T}(DataConnection, BulkCopyOptions, System.Collections.Generic.IEnumerable{T})"/> method.
@@ -29,6 +27,8 @@ namespace LinqToDB.Data
 			TableOptions           = options.TableOptions;
 			NotifyAfter            = options.NotifyAfter;
 			RowsCopiedCallback     = options.RowsCopiedCallback;
+			MaxDegreeOfParallelism = options.MaxDegreeOfParallelism;
+			WithoutSession         = options.WithoutSession;
 		}
 
 		/// <summary>Number of rows in each batch. At the end of each batch, the rows in the batch are sent to the server.</summary>
@@ -91,14 +91,25 @@ namespace LinqToDB.Data
 
 		/// <summary>
 		/// Gets or sets whether to Always use Parameters for MultipleRowsCopy. Default is false.
-		/// If True, provider's override for <see cref="LinqToDB.DataProvider.BasicBulkCopy.MaxParameters"/> will be used to determine the maximum number of rows per insert,
+		/// If True, provider's override for <see cref="DataProvider.BasicBulkCopy.MaxParameters"/> will be used to determine the maximum number of rows per insert,
 		/// Unless overridden by <see cref="MaxParametersForBatch"/>.
 		/// </summary>
 		public bool UseParameters { get; set; }
 		
 		/// <summary>
-		/// If set, will override the Maximum parameters per batch statement from <see cref="LinqToDB.DataProvider.BasicBulkCopy.MaxParameters"/>.
+		/// If set, will override the Maximum parameters per batch statement from <see cref="DataProvider.BasicBulkCopy.MaxParameters"/>.
 		/// </summary>
 		public int? MaxParametersForBatch { get; set; }
+
+		/// <summary>
+		/// Implemented only by ClickHouse.Client provider. Defines number of connections, used for parallel insert in <see cref="BulkCopyType.ProviderSpecific"/> mode.
+		/// </summary>
+		public int? MaxDegreeOfParallelism { get; set; }
+
+		/// <summary>
+		/// Implemented only by ClickHouse.Client provider. When set, provider-specific bulk copy will use session-less connection even if called over connection with session.
+		/// Note that session-less connections cannot be used with session-bound functionality like temporary tables.
+		/// </summary>
+		public bool WithoutSession { get; set; }
 	}
 }

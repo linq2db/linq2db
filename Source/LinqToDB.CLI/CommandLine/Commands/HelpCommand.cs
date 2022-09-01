@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using LinqToDB.Naming;
+﻿using System.Globalization;
 
 namespace LinqToDB.CommandLine
 {
+	using Naming;
+
 	/// <summary>
 	/// Help command implementation.
 	/// Supports:
@@ -379,6 +377,7 @@ namespace LinqToDB.CommandLine
 			{
 				case NameTransformation.SplitByUnderscore: value = "\"split_by_underscore\""; break;
 				case NameTransformation.Association      : value = "\"association\""        ; break;
+				case NameTransformation.None             : value = "\"none\""               ; break;
 				default:
 					throw new InvalidOperationException($"Unknown transformation option: {options.Transformation}");
 			}

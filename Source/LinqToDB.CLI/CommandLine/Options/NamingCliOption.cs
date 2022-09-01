@@ -1,9 +1,9 @@
-﻿using System.Collections.Generic;
-using System.Text.Json;
-using LinqToDB.Naming;
+﻿using System.Text.Json;
 
 namespace LinqToDB.CommandLine
 {
+	using Naming;
+
 	/// <summary>
 	/// Code identifier normalization/generation options. Not supported in CLI (JSON only).
 	/// </summary>
@@ -137,6 +137,7 @@ namespace LinqToDB.CommandLine
 						var transformationValue = property.Value.GetString()!;
 						switch (transformationValue.ToLowerInvariant())
 						{
+							case "none"               : options.Transformation = NameTransformation.None             ; break;
 							case "split_by_underscore": options.Transformation = NameTransformation.SplitByUnderscore; break;
 							case "association"        : options.Transformation = NameTransformation.Association      ; break;
 							default                   :

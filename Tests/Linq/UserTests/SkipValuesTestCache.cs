@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using LinqToDB;
+﻿using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
@@ -27,7 +26,8 @@ namespace Tests.UserTests
 				{
 					var count = db.Insert(new TestTable() { Id = 1, Name = "John", Age = value });
 
-					Assert.Greater(count, 0);
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+						Assert.Greater(count, 0);
 
 					var r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1)!;
 
@@ -44,7 +44,8 @@ namespace Tests.UserTests
 					r.Age = value;
 					count = db.Update(r);
 
-					Assert.Greater(count, 0);
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+						Assert.Greater(count, 0);
 					r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1)!;
 					Assert.IsNotNull(r);
 					if (value == 2)

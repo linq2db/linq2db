@@ -1,8 +1,4 @@
-﻿using System;
-using System.Linq;
-
-using LinqToDB;
-using LinqToDB.Data;
+﻿using LinqToDB;
 
 using NUnit.Framework;
 
@@ -14,7 +10,7 @@ namespace Tests.UserTests
 	public class Issue264Tests : TestBase
 	{
 		[Test]
-		public void Test1([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		public void Test1([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -31,7 +27,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void Test2([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		public void Test2([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -48,7 +44,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void Test3([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		public void Test3([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -65,7 +61,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestWorkaround([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		public void TestWorkaround([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{

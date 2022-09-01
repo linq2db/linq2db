@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
@@ -146,7 +144,7 @@ namespace LinqToDB.DataProvider.Oracle
 						string.IsNullOrEmpty(c.DbType)
 							? GetDataTypeText(
 								new SqlDataType(
-									c.DataType == DataType.Undefined ? SqlDataType.GetDataType(c.MemberType).Type.DataType : c.DataType,
+									c.DataType == DataType.Undefined ? mappingSchema.GetDataType(c.MemberType).Type.DataType : c.DataType,
 									c.MemberType,
 									c.Length,
 									c.Precision,

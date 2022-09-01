@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using LinqToDB;
+﻿using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 using NUnit.Framework;
@@ -73,7 +70,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestParameterCaching([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestParameterCaching([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<Email>())

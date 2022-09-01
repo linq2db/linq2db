@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using LinqToDB.Mapping;
+﻿using LinqToDB.Mapping;
 using NUnit.Framework;
 
 namespace Tests.UserTests
@@ -27,7 +26,7 @@ namespace Tests.UserTests
 
 
 		[Test]
-		public void NullReferenceExceptionTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void NullReferenceExceptionTest([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var ms      = new MappingSchema();
 			var builder = ms.GetFluentMappingBuilder();

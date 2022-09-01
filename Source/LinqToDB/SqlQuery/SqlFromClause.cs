@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
@@ -83,7 +80,7 @@ namespace LinqToDB.SqlQuery
 					if (alias == null || ts.Alias == alias)
 						return ts;
 					else
-						throw new ArgumentException($"Invalid alias: '{ts.Alias}' != '{alias}'");
+						ThrowHelper.ThrowArgumentException($"Invalid alias: '{ts.Alias}' != '{alias}'");
 
 			return null;
 		}

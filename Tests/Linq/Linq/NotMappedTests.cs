@@ -1,6 +1,4 @@
-﻿using System;
-using System.Linq;
-using LinqToDB;
+﻿using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
@@ -66,7 +64,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestAutomapperGenerated([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestAutomapperGenerated([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var testData = GenerateTestData();
 
@@ -104,7 +102,7 @@ namespace Tests.Linq
 		}
 		
 		[Test]
-		public void TestViaSelect([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestViaSelect([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var testData = GenerateTestData();
 

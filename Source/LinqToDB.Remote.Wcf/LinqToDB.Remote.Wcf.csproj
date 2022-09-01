@@ -1,5 +1,4 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-	<Import Project="..\..\Build\linq2db.Source.props" />
 
 	<PropertyGroup>
 		<AssemblyName>linq2db.Remote.Wcf</AssemblyName>
@@ -11,6 +10,10 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\LinqToDB\LinqToDB.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Using Remove="System.Net.Http" />
 	</ItemGroup>
 
 	<ItemGroup>

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections;
 using System.Reflection;
 using LinqToDB;
 using LinqToDB.Expressions;
@@ -191,7 +188,7 @@ namespace Tests.OData.Microsoft
 		}
 
 		[Test]
-		public void SelectPure([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
+		public void SelectPure([IncludeDataSources(ProviderName.SQLiteClassic, TestProvName.AllClickHouse)] string context)
 		{
 			var testData = GenerateTestData();
 			using (var db = GetDataContext(context))

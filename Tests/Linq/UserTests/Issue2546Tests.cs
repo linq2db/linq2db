@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using LinqToDB;
+﻿using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
@@ -16,7 +15,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestContainerParameter([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestContainerParameter([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
 

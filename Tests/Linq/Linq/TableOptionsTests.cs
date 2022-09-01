@@ -1,7 +1,4 @@
-﻿using System.Linq;
-using System.Threading.Tasks;
-
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 
 using LinqToDB;
 using LinqToDB.Data;
@@ -137,6 +134,7 @@ namespace Tests.Linq
 			true,
 			ProviderName.DB2,
 			TestProvName.AllInformix,
+			TestProvName.AllClickHouse,
 			TestProvName.AllFirebird,
 			TestProvName.AllMySql,
 			TestProvName.AllOracle,
@@ -166,6 +164,7 @@ namespace Tests.Linq
 			ProviderName.DB2,
 			TestProvName.AllInformix,
 			TestProvName.AllFirebird,
+			TestProvName.AllClickHouse,
 			TestProvName.AllMySql,
 			TestProvName.AllOracle,
 			TestProvName.AllPostgreSQL,

@@ -246,7 +246,7 @@
 		{
 			class LimitedSources : IncludeDataSourcesAttribute
 			{
-				public LimitedSources() : base(TestProvName.AllSQLite)
+				public LimitedSources() : base(TestProvName.AllSQLite, TestProvName.AllClickHouse)
 				{
 				}
 			}

@@ -1,10 +1,4 @@
-﻿using System;
-using System.Data;
-using System.Data.Common;
-using System.Threading;
-using System.Threading.Tasks;
-
-namespace LinqToDB.Linq
+﻿namespace LinqToDB.Linq
 {
 	public interface IDataReaderAsync : IDisposable,
 #if NATIVE_ASYNC

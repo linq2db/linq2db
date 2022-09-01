@@ -1,13 +1,12 @@
-﻿using System;
-using System.Dynamic;
+﻿using System.Dynamic;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security;
-using System.Threading;
-using LinqToDB.Common;
 
 namespace LinqToDB
 {
+	using Common;
+
 	// implementation based on code from https://github.com/dotnet/runtime/issues/12587
 	/// <summary>
 	/// This class is used as COM object wrapper instead of dynamic keyword, as dynamic for COM is not supported on .net core till v5.
@@ -33,18 +32,18 @@ namespace LinqToDB
 			{
 				return new ComWrapper(Activator.CreateInstance(Type.GetTypeFromProgID(progID, true)!)!);
 			}
-#endif
 
-			throw new PlatformNotSupportedException();
+			return ThrowHelper.ThrowPlatformNotSupportedException<dynamic>();
+#endif
 		}
 
 		public static dynamic Wrap(object instance)
 		{
 			if (instance is null)
-				throw new ArgumentNullException(nameof(instance));
+				ThrowHelper.ThrowArgumentNullException(nameof(instance));
 
 			if (!instance.GetType().IsCOMObject)
-				throw new ArgumentException("Object must be a COM object", nameof(instance));
+				ThrowHelper.ThrowArgumentException(nameof(instance), "Object must be a COM object");
 
 			return new ComWrapper(instance);
 		}

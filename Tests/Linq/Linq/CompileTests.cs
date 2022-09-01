@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using System.Linq.Expressions;
 
 using LinqToDB;
 
@@ -114,7 +109,7 @@ namespace Tests.Linq
 		}
 
 		[Test, Order(100)]
-		public void ConcurrentTest1([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void ConcurrentTest1([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (new DisableBaseline("Multi-threading"))
 			{
@@ -123,14 +118,14 @@ namespace Tests.Linq
 
 				const int count = 100;
 
-				var threads = new Thread[count];
-				var results = new int   [count, 2];
+				var threads = new Task[count];
+				var results = new int [count, 2];
 
 				for (var i = 0; i < count; i++)
 				{
 					var n = i;
 
-					threads[i] = new Thread(() =>
+					threads[i] = Task.Run(() =>
 					{
 						using (var db = GetDataContext(context))
 						{
@@ -141,11 +136,7 @@ namespace Tests.Linq
 					});
 				}
 
-				for (var i = 0; i < count; i++)
-					threads[i].Start();
-
-				for (var i = 0; i < count; i++)
-					threads[i].Join();
+				Task.WaitAll(threads);
 
 				for (var i = 0; i < count; i++)
 					Assert.AreEqual(results[i, 0], results[i, 1]);
@@ -153,7 +144,7 @@ namespace Tests.Linq
 		}
 
 		[Test, Order(100)]
-		public void ConcurrentTestWithOptmization([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void ConcurrentTestWithOptmization([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (new DisableBaseline("Multi-threading"))
 			{
@@ -162,14 +153,14 @@ namespace Tests.Linq
 
 				const int count = 100;
 
-				var threads = new Thread[count];
-				var results = new int   [count, 2];
+				var threads = new Task[count];
+				var results = new int [count, 2];
 
 				for (var i = 0; i < count; i++)
 				{
 					var n = i;
 
-					threads[i] = new Thread(() =>
+					threads[i] = Task.Run(() =>
 					{
 						using (var db = GetDataContext(context))
 						{
@@ -180,11 +171,7 @@ namespace Tests.Linq
 					});
 				}
 
-				for (var i = 0; i < count; i++)
-					threads[i].Start();
-
-				for (var i = 0; i < count; i++)
-					threads[i].Join();
+				Task.WaitAll(threads);
 
 				for (var i = 0; i < count; i++)
 					Assert.AreEqual(results[i, 0], results[i, 1]);
@@ -192,18 +179,18 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ConcurrentTest2([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void ConcurrentTest2([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (new DisableBaseline("Multi-threading"))
 			{
-				var threads = new Thread[100];
-				var results = new int   [100,2];
+				var threads = new Task[100];
+				var results = new int [100,2];
 
 				for (var i = 0; i < 100; i++)
 				{
 					var n = i;
 
-					threads[i] = new Thread(() =>
+					threads[i] = Task.Run(() =>
 					{
 						using (var db = GetDataContext(context))
 						{
@@ -214,11 +201,7 @@ namespace Tests.Linq
 					});
 				}
 
-				for (var i = 0; i < 100; i++)
-					threads[i].Start();
-
-				for (var i = 0; i < 100; i++)
-					threads[i].Join();
+				Task.WaitAll(threads);
 
 				for (var i = 0; i < 100; i++)
 					Assert.AreEqual(results[i, 0], results[i, 1]);
@@ -226,20 +209,20 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ConcurrentTest3([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void ConcurrentTest3([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (new DisableBaseline("Multi-threading"))
 			{
 				var threadCount = 100;
 
-				var threads = new Thread[threadCount];
-				var results = new int   [threadCount,2];
+				var threads = new Task[threadCount];
+				var results = new int [threadCount,2];
 
 				for (var i = 0; i < threadCount; i++)
 				{
 					var n = i;
 
-					threads[i] = new Thread(() =>
+					threads[i] = Task.Run(() =>
 					{
 						using (var db = GetDataContext(context))
 						{
@@ -250,11 +233,7 @@ namespace Tests.Linq
 					});
 				}
 
-				for (var i = 0; i < threadCount; i++)
-					threads[i].Start();
-
-				for (var i = 0; i < threadCount; i++)
-					threads[i].Join();
+				Task.WaitAll(threads);
 
 				for (var i = 0; i < threadCount; i++)
 					Assert.AreEqual(results[i, 0], results[i, 1]);
@@ -353,6 +332,7 @@ namespace Tests.Linq
 				select x;
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void ContainsTest([DataSources] string context)
 		{
@@ -366,6 +346,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public async Task ContainsTestAsync([DataSources] string context)
 		{
@@ -379,6 +360,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void AnyTest([DataSources] string context)
 		{
@@ -392,6 +374,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public async Task AnyTestAsync([DataSources] string context)
 		{
@@ -405,6 +388,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void AnyTest2([DataSources] string context)
 		{
@@ -418,6 +402,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public async Task AnyTestAsync2([DataSources] string context)
 		{

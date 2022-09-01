@@ -1,8 +1,4 @@
-﻿using System;
-using System.Data;
-using System.Data.Common;
-
-namespace LinqToDB.DataProvider.Firebird
+﻿namespace LinqToDB.DataProvider.Firebird
 {
 	using Common;
 	using Expressions;
@@ -20,7 +16,7 @@ namespace LinqToDB.DataProvider.Firebird
 			var assembly = Tools.TryLoadAssembly(AssemblyName, null);
 
 			if (assembly == null)
-				throw new InvalidOperationException($"Cannot load assembly {AssemblyName}");
+				ThrowHelper.ThrowInvalidOperationException($"Cannot load assembly {AssemblyName}");
 
 			ConnectionType      = assembly.GetType($"{ClientNamespace}.FbConnection" , true)!;
 			DataReaderType      = assembly.GetType($"{ClientNamespace}.FbDataReader" , true)!;
@@ -50,20 +46,20 @@ namespace LinqToDB.DataProvider.Firebird
 			if (FbDecFloatType != null)
 			{
 				typeMapper.RegisterTypeWrapper<FbDecFloat>(FbDecFloatType);
-				MappingSchema.SetDataType(FbDecFloatType, new SqlDataType(DataType.DecFloat, FbDecFloatType, "DECFLOAT"));
+				MappingSchema.SetDataType(FbDecFloatType, new SqlDataType(DataType.DecFloat, FbDecFloatType));
 				// we don't register literal generation for decfloat as it looks like special values (inf, (s)nan are not supported in literals)
 			}
 
 			if (FbZonedDateTimeType != null)
 			{
 				typeMapper.RegisterTypeWrapper<FbZonedDateTime>(FbZonedDateTimeType);
-				MappingSchema.SetDataType(FbZonedDateTimeType, new SqlDataType(DataType.DateTimeOffset, FbZonedDateTimeType, "TIMESPAN WITH TIME ZONE"));
+				MappingSchema.SetDataType(FbZonedDateTimeType, new SqlDataType(DataType.DateTimeOffset, FbZonedDateTimeType));
 			}
 
 			if (FbZonedTimeType != null)
 			{
 				typeMapper.RegisterTypeWrapper<FbZonedTime>(FbZonedTimeType);
-				MappingSchema.SetDataType(FbZonedTimeType, new SqlDataType(DataType.TimeTZ, FbZonedTimeType, "TIME WITH TIME ZONE"));
+				MappingSchema.SetDataType(FbZonedTimeType, new SqlDataType(DataType.TimeTZ, FbZonedTimeType));
 			}
 
 			typeMapper.FinalizeMappings();
@@ -134,7 +130,7 @@ namespace LinqToDB.DataProvider.Firebird
 		[Wrapper]
 		private class FbConnection
 		{
-			public static void ClearAllPools() => throw new NotImplementedException();
+			public static void ClearAllPools() => ThrowHelper.ThrowNotImplementedException();
 		}
 
 		[Wrapper]

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using System.Reflection;
 
 namespace LinqToDB.Common
@@ -28,7 +25,7 @@ namespace LinqToDB.Common
 				else
 				{
 					if (value != pair.Item2)
-						throw new InvalidOperationException();
+						ThrowHelper.ThrowInvalidOperationException();
 				}
 			}
 		}
@@ -117,7 +114,7 @@ namespace LinqToDB.Common
 			var newGenericArguments = genericArguments.Select((t, i) =>
 			{
 				if (!typesMapping.TryGetValue(t, out var replaced))
-					throw new LinqToDBException($"Not found type mapping for generic argument '{t.Name}'.");
+					ThrowHelper.ThrowLinqToDBException($"Not found type mapping for generic argument '{t.Name}'.");
 				return replaced;
 			}).ToArray();
 

@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LinqToDB.CodeModel
+﻿namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// Base class for method-like object builders.

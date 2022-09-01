@@ -3,9 +3,7 @@ using LinqToDB.Data;
 
 using NUnit.Framework;
 using Tests.Model;
-using System.Linq;
 using Tests.UserTests;
-using System.Collections.Generic;
 using LinqToDB.Tools.Comparers;
 
 namespace Tests.DataProvider

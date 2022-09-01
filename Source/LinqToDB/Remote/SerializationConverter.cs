@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 
 namespace LinqToDB.Remote
 {
@@ -49,8 +48,7 @@ namespace LinqToDB.Remote
 						from     = Enum.GetUnderlyingType(from);
 					}
 
-					if (li == null)
-						li = ms.GetConverter(new DbDataType(from), new DbDataType(_stringType), true)!;
+					li ??= ms.GetConverter(new DbDataType(from), new DbDataType(_stringType), true)!;
 
 					var b  = li.CheckNullLambda.Body;
 					var ps = li.CheckNullLambda.Parameters;
@@ -100,8 +98,7 @@ namespace LinqToDB.Remote
 							to = Enum.GetUnderlyingType(to);
 						}
 
-					if (li == null)
-						li = ms.GetConverter(new DbDataType(_stringType), new DbDataType(to), true)!;
+					li ??= ms.GetConverter(new DbDataType(_stringType), new DbDataType(to), true)!;
 
 					var b  = li.CheckNullLambda.Body;
 					var ps = li.CheckNullLambda.Parameters;

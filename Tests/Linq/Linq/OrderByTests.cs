@@ -1,7 +1,4 @@
-﻿using System;
-using System.Linq;
-
-using LinqToDB;
+﻿using LinqToDB;
 using LinqToDB.SqlQuery;
 using NUnit.Framework;
 
@@ -515,7 +512,7 @@ namespace Tests.Linq
 
 
 		[Test]
-		public void OrderByConstant([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		public void OrderByConstant([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = (TestDataConnection)GetDataContext(context))
 			{
@@ -532,7 +529,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void OrderByConstant2([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		public void OrderByConstant2([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = (TestDataConnection)GetDataContext(context))
 			{
@@ -549,7 +546,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void OrderByImmutableSubquery([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		public void OrderByImmutableSubquery([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = (TestDataConnection)GetDataContext(context))
 			{
@@ -567,7 +564,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void OrderByUnionImmutable([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		public void OrderByUnionImmutable([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = (TestDataConnection)GetDataContext(context))
 			{
@@ -591,7 +588,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void OrderByInUnion([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracle)] string context)
+		public void OrderByInUnion([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracle, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

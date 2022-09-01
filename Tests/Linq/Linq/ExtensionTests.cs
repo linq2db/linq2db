@@ -1,6 +1,4 @@
-﻿using System.Linq;
-
-using LinqToDB;
+﻿using LinqToDB;
 
 using NUnit.Framework;
 
@@ -18,28 +16,28 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TableName([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void TableName([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				db.GetTable<ParenTable>().TableName("Parent").ToList();
 		}
 
 		[Test]
-		public void DatabaseName([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void DatabaseName([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				db.GetTable<Parent>().DatabaseName(TestUtils.GetDatabaseName(db, context)).ToList();
 		}
 
 		[Test]
-		public void SchemaName([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void SchemaName([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				db.GetTable<Parent>().SchemaName("dbo").ToList();
 		}
 
 		[Test]
-		public void AllNames([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void AllNames([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				db.GetTable<ParenTable>()
@@ -50,7 +48,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TableNameImmutable([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TableNameImmutable([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -65,7 +63,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DatabaseNameImmutable([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void DatabaseNameImmutable([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -80,7 +78,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SchemaNameImmutable([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void SchemaNameImmutable([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

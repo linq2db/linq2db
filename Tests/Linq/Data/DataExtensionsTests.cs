@@ -1,7 +1,4 @@
-﻿using System;
-using System.Linq;
-
-using LinqToDB;
+﻿using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 
@@ -14,7 +11,7 @@ namespace Tests.Data
 	public class DataExtensionsTests : TestBase
 	{
 		[Test]
-		public void TestScalar1([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		public void TestScalar1([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var conn = GetDataConnection(context))
 			{
@@ -25,7 +22,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void TestScalar2([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		public void TestScalar2([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var conn = GetDataConnection(context))
 			{
@@ -152,7 +149,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void TestObjectLeftJoinProjection([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestObjectLeftJoinProjection([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var conn = GetDataContext(context))
 			{
@@ -172,7 +169,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void TestGrouping1([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestGrouping1([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (new GuardGrouping(false))
 			using (new PreloadGroups(false))
@@ -189,7 +186,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void TestGrouping2([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestGrouping2([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (new GuardGrouping(false))
 			using (new PreloadGroups(false))
@@ -290,8 +287,9 @@ namespace Tests.Data
 			}
 		}
 
+		[ActiveIssue("Poor parameters support", Configuration = ProviderName.ClickHouseClient)]
 		[Test]
-		public void TestDataParameterMapping2([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestDataParameterMapping2([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
 
@@ -307,8 +305,9 @@ namespace Tests.Data
 			}
 		}
 
+		[ActiveIssue("Poor parameters support", Configuration = ProviderName.ClickHouseClient)]
 		[Test]
-		public void TestDataParameterMapping3([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestDataParameterMapping3([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
 

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using System.Reflection;
 
 namespace LinqToDB.Expressions
@@ -17,7 +16,7 @@ namespace LinqToDB.Expressions
 				fi = obj.Type.GetField(name, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.FlattenHierarchy);
 			
 			if (fi == null)
-				throw new InvalidOperationException($"Instance field with name {name} not found on type {obj.Type}");
+				ThrowHelper.ThrowInvalidOperationException($"Instance field with name {name} not found on type {obj.Type}");
 
 			return Expression.Field(obj, fi);
 		}
@@ -34,7 +33,7 @@ namespace LinqToDB.Expressions
 				fi = type.GetField(name, BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.FlattenHierarchy);
 
 			if (fi == null)
-				throw new InvalidOperationException($"Static field with name {name} not found on type {type}");
+				ThrowHelper.ThrowInvalidOperationException($"Static field with name {name} not found on type {type}");
 
 			return Expression.Field(null, fi);
 		}
@@ -50,7 +49,7 @@ namespace LinqToDB.Expressions
 				pi = obj.Type.GetProperty(name, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.FlattenHierarchy);
 
 			if (pi == null)
-				throw new InvalidOperationException($"Instance property with name {name} not found on type {obj.Type}");
+				ThrowHelper.ThrowInvalidOperationException($"Instance property with name {name} not found on type {obj.Type}");
 
 			return Expression.Property(obj, pi);
 		}
@@ -67,7 +66,7 @@ namespace LinqToDB.Expressions
 				pi = type.GetProperty(name, BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.FlattenHierarchy);
 
 			if (pi == null)
-				throw new InvalidOperationException($"Static property with name {name} not found on type {type}");
+				ThrowHelper.ThrowInvalidOperationException($"Static property with name {name} not found on type {type}");
 
 			return Expression.Property(null, pi);
 		}
@@ -94,7 +93,7 @@ namespace LinqToDB.Expressions
 			if (fi != null)
 				return Expression.Field(obj, fi);
 
-			throw new InvalidOperationException($"Instance property or field with name {name} not found on type {obj.Type}");
+			return ThrowHelper.ThrowInvalidOperationException<MemberExpression>($"Instance property or field with name {name} not found on type {obj.Type}");
 		}
 
 		/// <summary>
@@ -127,7 +126,7 @@ namespace LinqToDB.Expressions
 			if (fi != null)
 				return Expression.Field(null, fi);
 
-			throw new InvalidOperationException($"Static property or field with name {name} not found on type {type}");
+			return ThrowHelper.ThrowInvalidOperationException<MemberExpression>($"Static property or field with name {name} not found on type {type}");
 		}
 	}
 }

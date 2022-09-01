@@ -1,11 +1,11 @@
 ﻿using System.ServiceModel;
-using System.Threading.Tasks;
-using LinqToDB.Remote.Grpc.Dto;
 using ProtoBuf.Grpc;
 
 
 namespace LinqToDB.Remote.Grpc
 {
+	using Dto;
+
 	/// <summary>
 	/// grpc-based remote context service contract.
 	/// </summary>

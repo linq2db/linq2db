@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Text;
-using LinqToDB.Extensions;
+﻿using System.Runtime.CompilerServices;
 
 namespace LinqToDB.Common.Internal
 {
+	using Extensions;
+
 	public static class TypeExtensions
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

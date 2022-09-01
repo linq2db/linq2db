@@ -1,9 +1,7 @@
-﻿using System.Collections.Generic;
-using LinqToDB.Schema;
-using LinqToDB.SqlQuery;
-
-namespace LinqToDB.DataModel
+﻿namespace LinqToDB.DataModel
 {
+	using SqlQuery;
+
 	/// <summary>
 	/// Stored procedure descriptor.
 	/// </summary>

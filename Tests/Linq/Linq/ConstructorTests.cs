@@ -1,6 +1,4 @@
-﻿using System;
-using System.Linq;
-using FluentAssertions;
+﻿using FluentAssertions;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -144,7 +142,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestPublicConstructor([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestPublicConstructor([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(new []{ new WithPublicConstructor(0) {Id = 1, Value = "Some"}}))
@@ -156,7 +154,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestPrivateConstructor([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestPrivateConstructor([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(new []{ new WithPrivateConstructor(0) {Id = 1, Value = "Some"}}))
@@ -168,7 +166,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestProtectedConstructor([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestProtectedConstructor([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(new []{ new WithProtectedConstructor(0) {Id = 1, Value = "Some"}}))
@@ -180,7 +178,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestAmbiguousConstructor([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestAmbiguousConstructor([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(new []{ new WithAmbiguousConstructor(0) {Id = 1, Value = "Some"}}))
@@ -190,7 +188,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestManyConstructors([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestManyConstructors([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(new []{ new WithManyConstructors(0) {Id = 1, Value = "Some"}}))
@@ -202,7 +200,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestPrivateParameterizedConstructor([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestPrivateParameterizedConstructor([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var table = db.CreateLocalTable(new []{ WithOnlyPrivateConstructor.Create(5)});
@@ -213,7 +211,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestProtectedParameterizedConstructor([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestProtectedParameterizedConstructor([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var table = db.CreateLocalTable(new []{ WithOnlyProtectedConstructor.Create(5)});
@@ -224,7 +222,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestPublicAndProtectedParameterizedConstructors([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestPublicAndProtectedParameterizedConstructors([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var table = db.CreateLocalTable(new []{ WithPublicAndProtectedConstructor.Create(5)});

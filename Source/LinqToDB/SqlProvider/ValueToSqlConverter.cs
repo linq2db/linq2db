@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data.SqlTypes;
+﻿using System.Data.SqlTypes;
 using System.Globalization;
 using System.Text;
 
@@ -10,7 +8,7 @@ namespace LinqToDB.SqlProvider
 	using Extensions;
 	using SqlQuery;
 
-	using ConverterType = Action<StringBuilder,SqlQuery.SqlDataType,object>;
+	using ConverterType = Action<StringBuilder, SqlQuery.SqlDataType, object>;
 
 	public class ValueToSqlConverter
 	{
@@ -248,7 +246,7 @@ namespace LinqToDB.SqlProvider
 		public StringBuilder Convert(StringBuilder stringBuilder, SqlDataType? dataType, object? value)
 		{
 			if (!TryConvert(stringBuilder, dataType, value))
-				throw new LinqToDBException($"Cannot convert value of type {value?.GetType()} to SQL");
+				ThrowHelper.ThrowLinqToDBException($"Cannot convert value of type {value?.GetType()} to SQL");
 
 			return stringBuilder;
 		}

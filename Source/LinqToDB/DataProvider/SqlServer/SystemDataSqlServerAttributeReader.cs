@@ -1,13 +1,10 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Linq;
+﻿using System.Collections.Concurrent;
 using System.Reflection;
 
 namespace LinqToDB.Metadata
 {
 	using Common;
 	using Extensions;
-	using LinqToDB.DataProvider.SqlServer;
 	using Mapping;
 
 	/// <summary>

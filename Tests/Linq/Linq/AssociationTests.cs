@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Threading.Tasks;
+﻿using System.Linq.Expressions;
 using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Mapping;
@@ -112,7 +108,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SelectMany3([DataSources(TestProvName.AllAccess)] string context)
+		public void SelectMany3([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -127,7 +123,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SelectMany4([DataSources(TestProvName.AllAccess)] string context)
+		public void SelectMany4([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -264,7 +260,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void StackOverflow2([DataSources(ProviderName.SqlCe)] string context)
+		public void StackOverflow2([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -273,7 +269,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void StackOverflow3([DataSources(ProviderName.SqlCe)] string context)
+		public void StackOverflow3([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -282,7 +278,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void StackOverflow4([DataSources(ProviderName.SqlCe)] string context)
+		public void StackOverflow4([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -451,7 +447,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LetTest1([DataSources] string context)
+		public void LetTest1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -464,7 +460,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LetTest2([DataSources] string context)
+		public void LetTest2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -486,7 +482,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NullAssociation([DataSources] string context)
+		public void NullAssociation([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -733,7 +729,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestGenericAssociation3([DataSources(ProviderName.SqlCe)] string context)
+		public void TestGenericAssociation3([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -883,7 +879,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DistinctSelect([DataSources] string context)
+		public void DistinctSelect([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -904,7 +900,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ComplexQueryWithManyToMany([DataSources] string context)
+		public void ComplexQueryWithManyToMany([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1059,7 +1055,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue1711Test1([DataSources(TestProvName.AllAccess)] string context)
+		public void Issue1711Test1([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
 			ms.GetFluentMappingBuilder()
@@ -1079,7 +1075,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue1711Test2([DataSources(TestProvName.AllAccess)] string context)
+		public void Issue1711Test2([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
 			ms.GetFluentMappingBuilder()
@@ -1128,6 +1124,7 @@ namespace Tests.Linq
 			public bool Actual { get; set; }
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56", Configurations = new[] { ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void Issue1096Test([DataSources] string context)
 		{
@@ -1185,7 +1182,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue2981Test([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void Issue2981Test([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t1 = db.CreateLocalTable<Issue2981Entity>(new[]
@@ -1309,7 +1306,11 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue3557Case1([DataSources(TestProvName.AllSapHana, TestProvName.AllSybase, TestProvName.AllInformix)] string context)
+		public void Issue3557Case1([DataSources(
+			TestProvName.AllClickHouse,
+			TestProvName.AllSapHana,
+			TestProvName.AllSybase,
+			TestProvName.AllInformix)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var data = db.CreateLocalTable(Data.Records);
@@ -1336,7 +1337,11 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue3557Case2([DataSources(TestProvName.AllSapHana, TestProvName.AllSybase, TestProvName.AllInformix)] string context)
+		public void Issue3557Case2([DataSources(
+			TestProvName.AllClickHouse,
+			TestProvName.AllSapHana,
+			TestProvName.AllSybase,
+			TestProvName.AllInformix)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var data = db.CreateLocalTable(Data.Records);
@@ -1363,7 +1368,11 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue3557Case3([DataSources(TestProvName.AllSapHana, TestProvName.AllSybase, TestProvName.AllInformix)] string context)
+		public void Issue3557Case3([DataSources(
+			TestProvName.AllClickHouse,
+			TestProvName.AllSapHana,
+			TestProvName.AllSybase,
+			TestProvName.AllInformix)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var data = db.CreateLocalTable(Data.Records);

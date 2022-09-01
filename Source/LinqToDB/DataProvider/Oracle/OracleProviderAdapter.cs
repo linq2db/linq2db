@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Data.Common;
-using System.Linq;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using System.Reflection;
 using System.Xml;
 
@@ -222,15 +217,15 @@ namespace LinqToDB.DataProvider.Oracle
 		internal interface IBulkCopyAdapter
 		{
 			IBulkCopyService Create(
-				DbConnection connection,
-				BulkCopyOptions options,
-				string table,
-				string? schema,
-				int? notifyAfter,
+				DbConnection                connection,
+				BulkCopyOptions             options,
+				string                      table,
+				string?                     schema,
+				int?                        notifyAfter,
 				Action<BulkCopyRowsCopied>? rowsCopiedCallback,
-				BulkCopyRowsCopied rowsCopiedArgs,
-				int? batchSize,
-				int? timeout);
+				BulkCopyRowsCopied          rowsCopiedArgs,
+				int?                        batchSize,
+				int?                        timeout);
 		}
 
 		private sealed class OracleBulkCopyAdapter : IBulkCopyAdapter
@@ -396,8 +391,7 @@ namespace LinqToDB.DataProvider.Oracle
 			{
 				if (_nativeAdapter == null)
 					lock (_nativeSyncRoot)
-						if (_nativeAdapter == null)
-							_nativeAdapter = CreateAdapter(NativeAssemblyName, NativeClientNamespace, NativeTypesNamespace, NativeProviderFactoryName, new OracleNativeClientAdapterMappingSchema());
+						_nativeAdapter ??= CreateAdapter(NativeAssemblyName, NativeClientNamespace, NativeTypesNamespace, NativeProviderFactoryName, new OracleNativeClientAdapterMappingSchema());
 
 				return _nativeAdapter;
 			}
@@ -405,8 +399,7 @@ namespace LinqToDB.DataProvider.Oracle
 			{
 				if (_devartAdapter == null)
 					lock (_devartSyncRoot)
-						if (_devartAdapter == null)
-							_devartAdapter = CreateDevartAdapter();
+						_devartAdapter ??= CreateDevartAdapter();
 
 				return _devartAdapter;
 			}
@@ -414,8 +407,7 @@ namespace LinqToDB.DataProvider.Oracle
 			{
 				if (_managedAdapter == null)
 					lock (_managedSyncRoot)
-						if (_managedAdapter == null)
-							_managedAdapter = CreateAdapter(ManagedAssemblyName, ManagedClientNamespace, ManagedTypesNamespace, null, new OracleManagedClientAdapterMappingSchema());
+						_managedAdapter ??= CreateAdapter(ManagedAssemblyName, ManagedClientNamespace, ManagedTypesNamespace, null, new OracleManagedClientAdapterMappingSchema());
 
 				return _managedAdapter;
 			}
@@ -448,7 +440,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 			var assembly = Tools.TryLoadAssembly(assemblyName, factoryName);
 			if (assembly == null)
-				throw new InvalidOperationException($"Cannot load assembly {assemblyName}");
+				ThrowHelper.ThrowInvalidOperationException($"Cannot load assembly {assemblyName}");
 
 			var connectionType  = assembly.GetType($"{clientNamespace}.OracleConnection" , true)!;
 			var parameterType   = assembly.GetType($"{clientNamespace}.OracleParameter"  , true)!;
@@ -670,7 +662,7 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			var assembly = Tools.TryLoadAssembly(DevartAssemblyName, DevartFactoryName);
 			if (assembly == null)
-				throw new InvalidOperationException($"Cannot load assembly {DevartAssemblyName}");
+				ThrowHelper.ThrowInvalidOperationException($"Cannot load assembly {DevartAssemblyName}");
 
 			var mappingSchema = new OracleDevartClientAdapterMappingSchema();
 
@@ -1130,8 +1122,8 @@ namespace LinqToDB.DataProvider.Oracle
 			[Wrapper]
 			public class OracleDataReader
 			{
-				public OracleTimeStamp GetOracleTimeStamp(int i) => throw new NotImplementedException();
-				public OracleNumber    GetOracleNumber   (int i) => throw new NotImplementedException();
+				public OracleTimeStamp GetOracleTimeStamp(int i) => ThrowHelper.ThrowNotImplementedException<OracleTimeStamp>();
+				public OracleNumber    GetOracleNumber   (int i) => ThrowHelper.ThrowNotImplementedException<OracleNumber   >();
 			}
 
 			[Wrapper]
@@ -1139,11 +1131,11 @@ namespace LinqToDB.DataProvider.Oracle
 			{
 				public bool PassParametersByName
 				{
-					get => throw new NotImplementedException();
-					set => throw new NotImplementedException();
+					get => ThrowHelper.ThrowNotImplementedException<bool>();
+					set => ThrowHelper.ThrowNotImplementedException();
 				}
 
-				public int ExecuteArray(int iters) => throw new NotImplementedException();
+				public int ExecuteArray(int iters) => ThrowHelper.ThrowNotImplementedException<int>();
 			}
 
 			[Wrapper]
@@ -1164,7 +1156,7 @@ namespace LinqToDB.DataProvider.Oracle
 				{
 				}
 
-				public OracleConnection(string connectionString) => throw new NotImplementedException();
+				public OracleConnection(string connectionString) => ThrowHelper.ThrowNotImplementedException();
 
 				public void Open()               => ((Action<OracleConnection>)CompiledWrappers[0])(this);
 				public DbCommand CreateCommand() => ((Func<OracleConnection, DbCommand>)CompiledWrappers[1])(this);
@@ -1174,7 +1166,7 @@ namespace LinqToDB.DataProvider.Oracle
 			[Wrapper]
 			public class OracleNumber
 			{
-				public static explicit operator decimal(OracleNumber val) => throw new NotImplementedException();
+				public static explicit operator decimal(OracleNumber val) => ThrowHelper.ThrowNotImplementedException<decimal>();
 			}
 
 			[Wrapper]
@@ -1184,17 +1176,17 @@ namespace LinqToDB.DataProvider.Oracle
 				{
 				}
 
-				public OracleTimeStamp(int year, int month, int day, int hour, int minute, int second, int nanosecond, string timeZone) => throw new NotImplementedException();
+				public OracleTimeStamp(int year, int month, int day, int hour, int minute, int second, int nanosecond, string timeZone) => ThrowHelper.ThrowNotImplementedException();
 
-				public int Year                => throw new NotImplementedException();
-				public int Month               => throw new NotImplementedException();
-				public int Day                 => throw new NotImplementedException();
-				public int Hour                => throw new NotImplementedException();
-				public int Minute              => throw new NotImplementedException();
-				public int Second              => throw new NotImplementedException();
-				public int Nanosecond          => throw new NotImplementedException();
-				public string TimeZone         => throw new NotImplementedException();
-				public TimeSpan TimeZoneOffset => throw new NotImplementedException();
+				public int Year                => ThrowHelper.ThrowNotImplementedException<int>();
+				public int Month               => ThrowHelper.ThrowNotImplementedException<int>();
+				public int Day                 => ThrowHelper.ThrowNotImplementedException<int>();
+				public int Hour                => ThrowHelper.ThrowNotImplementedException<int>();
+				public int Minute              => ThrowHelper.ThrowNotImplementedException<int>();
+				public int Second              => ThrowHelper.ThrowNotImplementedException<int>();
+				public int Nanosecond          => ThrowHelper.ThrowNotImplementedException<int>();
+				public string TimeZone         => ThrowHelper.ThrowNotImplementedException<string>();
+				public TimeSpan TimeZoneOffset => ThrowHelper.ThrowNotImplementedException<TimeSpan>();
 			}
 
 			#region BulkCopy
@@ -1230,7 +1222,7 @@ namespace LinqToDB.DataProvider.Oracle
 				{
 				}
 
-				public OracleLoader(string tableName, OracleConnection connection, OracleLoaderOptions options) => throw new NotImplementedException();
+				public OracleLoader(string tableName, OracleConnection connection, OracleLoaderOptions options) => ThrowHelper.ThrowNotImplementedException();
 
 				public void Dispose() => ((Action<OracleLoader>)CompiledWrappers[0])(this);
 #pragma warning disable RS0030 // API mapping must preserve type
@@ -1328,7 +1320,7 @@ namespace LinqToDB.DataProvider.Oracle
 				{
 				}
 
-				public OracleLoaderColumn(string name, OracleDbType dbType, int size, int precision, int scale, string dateFormat) => throw new NotImplementedException();
+				public OracleLoaderColumn(string name, OracleDbType dbType, int size, int precision, int scale, string dateFormat) => ThrowHelper.ThrowNotImplementedException();
 			}
 
 			#endregion
@@ -1404,9 +1396,9 @@ namespace LinqToDB.DataProvider.Oracle
 			[Wrapper]
 			public class OracleDataReader
 			{
-				public OracleTimeStampTZ  GetOracleTimeStampTZ (int i) => throw new NotImplementedException();
-				public OracleTimeStampLTZ GetOracleTimeStampLTZ(int i) => throw new NotImplementedException();
-				public OracleDecimal      GetOracleDecimal     (int i) => throw new NotImplementedException();
+				public OracleTimeStampTZ  GetOracleTimeStampTZ (int i) => ThrowHelper.ThrowNotImplementedException<OracleTimeStampTZ >();
+				public OracleTimeStampLTZ GetOracleTimeStampLTZ(int i) => ThrowHelper.ThrowNotImplementedException<OracleTimeStampLTZ>();
+				public OracleDecimal      GetOracleDecimal     (int i) => ThrowHelper.ThrowNotImplementedException<OracleDecimal     >();
 			}
 
 			[Wrapper]
@@ -1458,20 +1450,20 @@ namespace LinqToDB.DataProvider.Oracle
 			{
 				public int ArrayBindCount
 				{
-					get => throw new NotImplementedException();
-					set => throw new NotImplementedException();
+					get => ThrowHelper.ThrowNotImplementedException<int>();
+					set => ThrowHelper.ThrowNotImplementedException();
 				}
 
 				public bool BindByName
 				{
-					get => throw new NotImplementedException();
-					set => throw new NotImplementedException();
+					get => ThrowHelper.ThrowNotImplementedException<bool>();
+					set => ThrowHelper.ThrowNotImplementedException();
 				}
 
 				public int InitialLONGFetchSize
 				{
-					get => throw new NotImplementedException();
-					set => throw new NotImplementedException();
+					get => ThrowHelper.ThrowNotImplementedException<int>();
+					set => ThrowHelper.ThrowNotImplementedException();
 				}
 			}
 
@@ -1493,12 +1485,12 @@ namespace LinqToDB.DataProvider.Oracle
 				{
 				}
 
-				public OracleConnection(string connectionString) => throw new NotImplementedException();
+				public OracleConnection(string connectionString) => ThrowHelper.ThrowNotImplementedException();
 
 				// not called using wrapper
-				public string HostName     => throw new NotImplementedException();
-				public string DatabaseName => throw new NotImplementedException();
-				public string ServiceName  => throw new NotImplementedException();
+				public string HostName     => ThrowHelper.ThrowNotImplementedException<string>();
+				public string DatabaseName => ThrowHelper.ThrowNotImplementedException<string>();
+				public string ServiceName  => ThrowHelper.ThrowNotImplementedException<string>();
 
 				public void      Open         () => ((Action<OracleConnection>         )CompiledWrappers[0])(this);
 				public DbCommand CreateCommand() => ((Func<OracleConnection, DbCommand>)CompiledWrappers[1])(this);
@@ -1508,24 +1500,24 @@ namespace LinqToDB.DataProvider.Oracle
 			[Wrapper]
 			public class OracleTimeStampLTZ
 			{
-				public int Year       => throw new NotImplementedException();
-				public int Month      => throw new NotImplementedException();
-				public int Day        => throw new NotImplementedException();
-				public int Hour       => throw new NotImplementedException();
-				public int Minute     => throw new NotImplementedException();
-				public int Second     => throw new NotImplementedException();
-				public int Nanosecond => throw new NotImplementedException();
+				public int Year       => ThrowHelper.ThrowNotImplementedException<int>();
+				public int Month      => ThrowHelper.ThrowNotImplementedException<int>();
+				public int Day        => ThrowHelper.ThrowNotImplementedException<int>();
+				public int Hour       => ThrowHelper.ThrowNotImplementedException<int>();
+				public int Minute     => ThrowHelper.ThrowNotImplementedException<int>();
+				public int Second     => ThrowHelper.ThrowNotImplementedException<int>();
+				public int Nanosecond => ThrowHelper.ThrowNotImplementedException<int>();
 
-				public OracleTimeStampTZ ToOracleTimeStampTZ()    => throw new NotImplementedException();
-				public static TimeSpan   GetLocalTimeZoneOffset() => throw new NotImplementedException();
+				public OracleTimeStampTZ ToOracleTimeStampTZ()    => ThrowHelper.ThrowNotImplementedException<OracleTimeStampTZ>();
+				public static TimeSpan   GetLocalTimeZoneOffset() => ThrowHelper.ThrowNotImplementedException<TimeSpan>();
 			}
 
 			[Wrapper]
 			public class OracleDecimal
 			{
-				public static OracleDecimal SetPrecision(OracleDecimal value1, int precision) => throw new NotImplementedException();
+				public static OracleDecimal SetPrecision(OracleDecimal value1, int precision) => ThrowHelper.ThrowNotImplementedException<OracleDecimal>();
 
-				public static explicit operator decimal(OracleDecimal value1) => throw new NotImplementedException();
+				public static explicit operator decimal(OracleDecimal value1) => ThrowHelper.ThrowNotImplementedException<decimal>();
 			}
 
 			[Wrapper]
@@ -1535,18 +1527,18 @@ namespace LinqToDB.DataProvider.Oracle
 				{
 				}
 
-				public OracleTimeStampTZ(int year, int month, int day, int hour, int minute, int second, int nanosecond, string timeZone) => throw new NotImplementedException();
+				public OracleTimeStampTZ(int year, int month, int day, int hour, int minute, int second, int nanosecond, string timeZone) => ThrowHelper.ThrowNotImplementedException();
 
-				public int Year        => throw new NotImplementedException();
-				public int Month       => throw new NotImplementedException();
-				public int Day         => throw new NotImplementedException();
-				public int Hour        => throw new NotImplementedException();
-				public int Minute      => throw new NotImplementedException();
-				public int Second      => throw new NotImplementedException();
-				public int Nanosecond  => throw new NotImplementedException();
-				public string TimeZone => throw new NotImplementedException();
+				public int Year        => ThrowHelper.ThrowNotImplementedException<int>();
+				public int Month       => ThrowHelper.ThrowNotImplementedException<int>();
+				public int Day         => ThrowHelper.ThrowNotImplementedException<int>();
+				public int Hour        => ThrowHelper.ThrowNotImplementedException<int>();
+				public int Minute      => ThrowHelper.ThrowNotImplementedException<int>();
+				public int Second      => ThrowHelper.ThrowNotImplementedException<int>();
+				public int Nanosecond  => ThrowHelper.ThrowNotImplementedException<int>();
+				public string TimeZone => ThrowHelper.ThrowNotImplementedException<string>();
 
-				public TimeSpan GetTimeZoneOffset() => throw new NotImplementedException();
+				public TimeSpan GetTimeZoneOffset() => ThrowHelper.ThrowNotImplementedException<TimeSpan>();
 			}
 
 			#region BulkCopy
@@ -1594,7 +1586,7 @@ namespace LinqToDB.DataProvider.Oracle
 				{
 				}
 
-				public OracleBulkCopy(OracleConnection connection, OracleBulkCopyOptions options) => throw new NotImplementedException();
+				public OracleBulkCopy(OracleConnection connection, OracleBulkCopyOptions options) => ThrowHelper.ThrowNotImplementedException();
 
 				public void Dispose      ()                       => ((Action<OracleBulkCopy>)CompiledWrappers[0])(this);
 	#pragma warning disable RS0030 // API mapping must preserve type
@@ -1702,7 +1694,7 @@ namespace LinqToDB.DataProvider.Oracle
 				{
 				}
 
-				public OracleBulkCopyColumnMapping(int source, string destination) => throw new NotImplementedException();
+				public OracleBulkCopyColumnMapping(int source, string destination) => ThrowHelper.ThrowNotImplementedException();
 			}
 		}
 

@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LinqToDB.Remote
+﻿namespace LinqToDB.Remote
 {
 	using Interceptors;
 

@@ -1,7 +1,5 @@
-﻿using System;
-using System.Data.Common;
-using System.Linq;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
+using System.Reflection;
 
 namespace LinqToDB.DataProvider
 {
@@ -24,8 +22,9 @@ namespace LinqToDB.DataProvider
 
 		public TProviderMappings Adapter { get; }
 
-		public override string? ConnectionNamespace => Adapter.ConnectionType.Namespace;
-		public override Type    DataReaderType      => Adapter.DataReaderType;
+		public override string? ConnectionNamespace   => Adapter.ConnectionType.Namespace;
+		public override Type    DataReaderType        => Adapter.DataReaderType;
+		public override bool    TransactionsSupported => Adapter.TransactionType != null;
 
 		Func<string, DbConnection>? _createConnection;
 
@@ -46,7 +45,7 @@ namespace LinqToDB.DataProvider
 			var l = Expression.Lambda<Func<string, DbConnection>>(
 				Expression.Convert(Expression.New(
 					connectionType.GetConstructor(new[] { typeof(string) })
-						?? throw new InvalidOperationException($"DbConnection type {connectionType} missing constructor with connection string parameter: {connectionType.Name}(string connectionString)"),
+						?? ThrowHelper.ThrowInvalidOperationException<ConstructorInfo>($"DbConnection type {connectionType} missing constructor with connection string parameter: {connectionType.Name}(string connectionString)"),
 					p), typeof(DbConnection)),
 				p);
 			return l;
@@ -175,6 +174,9 @@ namespace LinqToDB.DataProvider
 
 		public virtual DbTransaction? TryGetProviderTransaction(IDataContext dataContext, DbTransaction transaction)
 		{
+			if (Adapter.TransactionType == null)
+				return null;
+
 			transaction = dataContext.UnwrapDataObjectInterceptor?.UnwrapTransaction(dataContext, transaction) ?? transaction;
 			return Adapter.TransactionType.IsSameOrParentOf(transaction.GetType()) ? transaction : null;
 		}

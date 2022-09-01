@@ -1,9 +1,7 @@
 ﻿using System.Data.Linq;
-using System.Linq;
 using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
-using Tests.Model;
 
 namespace Tests.UserTests
 {
@@ -22,7 +20,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestBinaryLengthTranslation([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestBinaryLengthTranslation([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (var table = db.CreateLocalTable<IssueClass>())

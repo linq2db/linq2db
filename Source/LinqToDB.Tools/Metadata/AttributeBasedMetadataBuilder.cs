@@ -1,11 +1,9 @@
-﻿using System;
-using LinqToDB.Schema;
-using LinqToDB.CodeModel;
-using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
-
-namespace LinqToDB.Metadata
+﻿namespace LinqToDB.Metadata
 {
+	using CodeModel;
+	using Mapping;
+	using SqlQuery;
+
 	/// <summary>
 	/// Provides attribute-based implementation of data model metadata generator.
 	/// General rule used for generation here is that we skip property setters generation when they will set

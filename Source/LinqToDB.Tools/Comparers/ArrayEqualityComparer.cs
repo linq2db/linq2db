@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-
-namespace LinqToDB.Tools.Comparers
+﻿namespace LinqToDB.Tools.Comparers
 {
 	class ArrayEqualityComparer<T> : EqualityComparer<T[]>
 	{

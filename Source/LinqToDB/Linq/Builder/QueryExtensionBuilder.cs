@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
+using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
 	using SqlQuery;
 
 	class QueryExtensionBuilder : MethodCallBuilder
@@ -112,7 +109,8 @@ namespace LinqToDB.Linq.Builder
 					case Sql.QueryExtensionScope.TableHint:
 					case Sql.QueryExtensionScope.IndexHint:
 					{
-						var table = SequenceHelper.GetTableContext(sequence) ?? throw new LinqToDBException($"Cannot get table context from {sequence.GetType()}");
+						var table = SequenceHelper.GetTableContext(sequence) ?? 
+							ThrowHelper.ThrowLinqToDBException<TableBuilder.TableContext>($"Cannot get table context from {sequence.GetType()}");
 						attr.ExtendTable(table.SqlTable, list);
 						break;
 					}

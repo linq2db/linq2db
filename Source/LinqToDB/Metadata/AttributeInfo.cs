@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 
 namespace LinqToDB.Metadata
 {
@@ -49,7 +46,7 @@ namespace LinqToDB.Metadata
 				}
 				else
 				{
-					throw new NotImplementedException();
+					ThrowHelper.ThrowNotImplementedException();
 				}
 			}
 

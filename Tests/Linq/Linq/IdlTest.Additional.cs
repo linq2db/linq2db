@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-
-using LinqToDB;
+﻿using LinqToDB;
 
 using NUnit.Framework;
 
@@ -42,7 +39,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestMono03Mono([IncludeDataSources(TestProvName.AllMySql)] string context)
+		public void TestMono03Mono([IncludeDataSources(TestProvName.AllMySql, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.That(new GenericConcatQuery1(db, new object[] { "A", 1 }).Query().ToList(), Is.Not.Null);

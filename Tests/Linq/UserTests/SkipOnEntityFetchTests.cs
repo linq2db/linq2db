@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using LinqToDB;
+﻿using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
@@ -46,9 +45,9 @@ namespace Tests.UserTests
 			public string ContentType { get; set; } = null!;
 		}
 
-
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
-		public void SelectFullEntityWithSkipColumn([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void SelectFullEntityWithSkipColumn([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -76,7 +75,7 @@ namespace Tests.UserTests
 
 
 		[Test]
-		public void FirstOrDefaultTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void FirstOrDefaultTest([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var data = new[]
 			{
