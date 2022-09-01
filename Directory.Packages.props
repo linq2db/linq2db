@@ -42,16 +42,16 @@
 		<PackageVersion Include="Net.IBM.Data.Db2-lnx"                                  Version="6.0.0.200"     />
 		<PackageVersion Include="Net.IBM.Data.Db2-osx"                                  Version="6.0.0.200"     />
 		<PackageVersion Include="Npgsql"                                                Version="7.0.0-preview.7" />
-		<PackageVersion Include="ClickHouse.Client"                                     Version="5.0.3"         />
+		<PackageVersion Include="ClickHouse.Client"                                     Version="5.0.4"         />
 		<PackageVersion Include="Octonica.ClickHouseClient"                             Version="2.2.9"         />
 		<PackageVersion Include="Microsoft.Data.Sqlite"                                 Version="6.0.8"         />
-		<PackageVersion Include="Microsoft.SqlServer.Types"                             Version="160.600.9-ctp2p0" />
+		<PackageVersion Include="Microsoft.SqlServer.Types"                             Version="160.900.6-rc0" />
 		<!--tests support-->
 		<PackageVersion Include="NUnit"                                                 Version="3.13.3"        />
 		<PackageVersion Include="NUnit3TestAdapter"                                     Version="4.2.1"         />
-		<PackageVersion Include="Microsoft.NET.Test.Sdk"                                Version="17.3.0"        />
+		<PackageVersion Include="Microsoft.NET.Test.Sdk"                                Version="17.3.1"        />
 		<PackageVersion Include="FluentAssertions"                                      Version="6.7.0"         />
-		<PackageVersion Include="BenchmarkDotNet"                                       Version="0.13.1"        />
+		<PackageVersion Include="BenchmarkDotNet"                                       Version="0.13.2"        />
 		<PackageVersion Include="JetBrains.Profiler.Api"                                Version="1.1.8"         />
 		<PackageVersion Include="FSharp.Core"                                           Version="6.0.5"         />
 		<!--packages for test projects-->
@@ -72,7 +72,7 @@
 		<!--remote targets + remote examples targets-->
 		<!--source-->
 		<PackageVersion Include="protobuf-net.Grpc"                                     Version="1.0.171"       />
-		<PackageVersion Include="Grpc.Net.Client"                                       Version="2.47.0"        />
+		<PackageVersion Include="Grpc.Net.Client"                                       Version="2.48.0"        />
 		<!--examples-->
 		<PackageVersion Include="linq2db.t4models"                                      Version="4.0.0-preview.10" />
 		<!--tests-->
@@ -105,7 +105,7 @@
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' != 'net472' AND '$(TargetFramework)' != 'netcoreapp3.1' ">
-		<PackageVersion Include="MySqlConnector"                                        Version="2.1.12"        />
+		<PackageVersion Include="MySqlConnector"                                        Version="2.1.13"        />
 	</ItemGroup>
 
 </Project>
