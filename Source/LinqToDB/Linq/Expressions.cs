@@ -1656,34 +1656,38 @@ namespace LinqToDB.Linq
 
 		#region Sql specific
 
-		// Miissing support for trimChars: Access, SqlCe, SybaseASE
+		// Missing support for trimChars: Access, SqlCe, SybaseASE
+		// Firebird/MySQL - chars parameter treated as string, not as set of characters
 		[CLSCompliant(false)]
-		[Sql.Extension(ProviderName.Firebird     , "TRIM(TRAILING {1} FROM {0})", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(TrimCharactersBuilder))]
+		//[Sql.Extension(ProviderName.Firebird     , "TRIM(TRAILING {1} FROM {0})", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(TrimCharactersBuilder))]
 		[Sql.Extension(ProviderName.ClickHouse   , "trim(TRAILING {1} FROM {0})", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(TrimCharactersBuilder))]
-		[Sql.Extension(ProviderName.MySql        , "TRIM(TRAILING {1} FROM {0})", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(TrimCharactersBuilder))]
+		//[Sql.Extension(ProviderName.MySql        , "TRIM(TRAILING {1} FROM {0})", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(TrimCharactersBuilder))]
 		[Sql.Extension(ProviderName.SqlServer2022, "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(TrimCharactersBuilder))]
 		[Sql.Extension(ProviderName.DB2          , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(TrimCharactersBuilder))]
 		[Sql.Extension(ProviderName.Informix     , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(TrimCharactersBuilder))]
 		[Sql.Extension(ProviderName.Oracle       , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(TrimCharactersBuilder))]
 		[Sql.Extension(ProviderName.PostgreSQL   , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(TrimCharactersBuilder))]
 		[Sql.Extension(ProviderName.SapHana      , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(TrimCharactersBuilder))]
+		[Sql.Extension(ProviderName.SQLite       , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(TrimCharactersBuilder))]
 		[Sql.Function("RTrim", 0,                                         IsNullable = Sql.IsNullableType.SameAsFirstParameter)]
 		public static string? TrimRight(string? str, params char[] trimChars)
 		{
 			return str?.TrimEnd(trimChars);
 		}
 
-		// Miissing support for trimChars: Access, SqlCe, SybaseASE
+		// Missing support for trimChars: Access, SqlCe, SybaseASE
+		// Firebird/MySQL - chars parameter treated as string, not as set of characters
 		[CLSCompliant(false)]
-		[Sql.Extension(ProviderName.Firebird     , "TRIM(LEADING {1} FROM {0})", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(TrimCharactersBuilder))]
+		//[Sql.Extension(ProviderName.Firebird     , "TRIM(LEADING {1} FROM {0})", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(TrimCharactersBuilder))]
 		[Sql.Extension(ProviderName.ClickHouse   , "trim(LEADING {1} FROM {0})", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(TrimCharactersBuilder))]
-		[Sql.Extension(ProviderName.MySql        , "TRIM(LEADING {1} FROM {0})", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(TrimCharactersBuilder))]
+		//[Sql.Extension(ProviderName.MySql        , "TRIM(LEADING {1} FROM {0})", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(TrimCharactersBuilder))]
 		[Sql.Extension(ProviderName.SqlServer2022, "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(TrimCharactersBuilder))]
 		[Sql.Extension(ProviderName.DB2          , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(TrimCharactersBuilder))]
 		[Sql.Extension(ProviderName.Informix     , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(TrimCharactersBuilder))]
 		[Sql.Extension(ProviderName.Oracle       , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(TrimCharactersBuilder))]
 		[Sql.Extension(ProviderName.PostgreSQL   , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(TrimCharactersBuilder))]
 		[Sql.Extension(ProviderName.SapHana      , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(TrimCharactersBuilder))]
+		[Sql.Extension(ProviderName.SQLite       , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(TrimCharactersBuilder))]
 		[Sql.Function("LTrim", 0, IsNullable = Sql.IsNullableType.SameAsFirstParameter)]
 		public static string? TrimLeft(string? str, params char[] trimChars)
 		{

@@ -1177,8 +1177,16 @@ namespace Tests.Linq
 			}
 		}
 
+		// for disabled providers see notes on implementation at
+		// EXpressions.TrimLeft/TrimRight
 		[Test]
-		public void TrimLeftCharacters([DataSources(TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSqlServer2019Minus, TestProvName.AllSybase)] string context)
+		public void TrimLeftCharacters([DataSources(
+			TestProvName.AllFirebird,
+			TestProvName.AllMySql,
+			TestProvName.AllAccess,
+			ProviderName.SqlCe,
+			TestProvName.AllSqlServer2019Minus,
+			TestProvName.AllSybase)] string context)
 		{
 			using var db = GetDataContext(context);
 			var q =
@@ -1191,7 +1199,13 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TrimRightCharacters([DataSources(TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSqlServer2019Minus, TestProvName.AllSybase)] string context)
+		public void TrimRightCharacters([DataSources(
+			TestProvName.AllFirebird,
+			TestProvName.AllMySql,
+			TestProvName.AllAccess,
+			ProviderName.SqlCe,
+			TestProvName.AllSqlServer2019Minus,
+			TestProvName.AllSybase)] string context)
 		{
 			using var db = GetDataContext(context);
 			var q =
