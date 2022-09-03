@@ -1656,22 +1656,56 @@ namespace LinqToDB.Linq
 
 		#region Sql specific
 
-		// TODO: why chars ignored for SQL?
+		// Miissing support for trimChars: Access, SqlCe, SybaseASE
 		[CLSCompliant(false)]
-		[Sql.Expression(ProviderName.Firebird, "TRIM(TRAILING FROM {0})", IsNullable = Sql.IsNullableType.SameAsFirstParameter)]
+		[Sql.Extension(ProviderName.Firebird     , "TRIM(TRAILING {1} FROM {0})", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(TrimCharactersBuilder))]
+		[Sql.Extension(ProviderName.ClickHouse   , "trim(TRAILING {1} FROM {0})", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(TrimCharactersBuilder))]
+		[Sql.Extension(ProviderName.MySql        , "TRIM(TRAILING {1} FROM {0})", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(TrimCharactersBuilder))]
+		[Sql.Extension(ProviderName.SqlServer2022, "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(TrimCharactersBuilder))]
+		[Sql.Extension(ProviderName.DB2          , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(TrimCharactersBuilder))]
+		[Sql.Extension(ProviderName.Informix     , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(TrimCharactersBuilder))]
+		[Sql.Extension(ProviderName.Oracle       , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(TrimCharactersBuilder))]
+		[Sql.Extension(ProviderName.PostgreSQL   , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(TrimCharactersBuilder))]
+		[Sql.Extension(ProviderName.SapHana      , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(TrimCharactersBuilder))]
 		[Sql.Function("RTrim", 0,                                         IsNullable = Sql.IsNullableType.SameAsFirstParameter)]
 		public static string? TrimRight(string? str, params char[] trimChars)
 		{
 			return str?.TrimEnd(trimChars);
 		}
 
-		// TODO: why chars ignored for SQL?
+		// Miissing support for trimChars: Access, SqlCe, SybaseASE
 		[CLSCompliant(false)]
-		[Sql.Expression(ProviderName.Firebird, "TRIM(LEADING FROM {0})", IsNullable = Sql.IsNullableType.SameAsFirstParameter)]
-		[Sql.Function("LTrim", 0,                                        IsNullable = Sql.IsNullableType.SameAsFirstParameter)]
+		[Sql.Extension(ProviderName.Firebird     , "TRIM(LEADING {1} FROM {0})", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(TrimCharactersBuilder))]
+		[Sql.Extension(ProviderName.ClickHouse   , "trim(LEADING {1} FROM {0})", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(TrimCharactersBuilder))]
+		[Sql.Extension(ProviderName.MySql        , "TRIM(LEADING {1} FROM {0})", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(TrimCharactersBuilder))]
+		[Sql.Extension(ProviderName.SqlServer2022, "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(TrimCharactersBuilder))]
+		[Sql.Extension(ProviderName.DB2          , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(TrimCharactersBuilder))]
+		[Sql.Extension(ProviderName.Informix     , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(TrimCharactersBuilder))]
+		[Sql.Extension(ProviderName.Oracle       , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(TrimCharactersBuilder))]
+		[Sql.Extension(ProviderName.PostgreSQL   , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(TrimCharactersBuilder))]
+		[Sql.Extension(ProviderName.SapHana      , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(TrimCharactersBuilder))]
+		[Sql.Function("LTrim", 0, IsNullable = Sql.IsNullableType.SameAsFirstParameter)]
 		public static string? TrimLeft(string? str, params char[] trimChars)
 		{
 			return str?.TrimStart(trimChars);
+		}
+
+		class TrimCharactersBuilder : Sql.IExtensionCallBuilder
+		{
+			public void Build(Sql.ISqExtensionBuilder builder)
+			{
+				var stringExpression = builder.GetExpression("str");
+				var chars            = builder.GetValue<char[]>("trimChars");
+				// this is the reason why we have custom builder: we need to collapse array parameter to string parameter
+				var charsString      = chars == null || chars.Length == 0 ? " " : new string(chars);
+
+				builder.ResultExpression = new SqlQuery.SqlExpression(
+					typeof(string),
+					builder.Expression,
+					SqlQuery.Precedence.Primary,
+					stringExpression,
+					new SqlQuery.SqlExpression(typeof(string), "{0}", new SqlQuery.SqlValue(charsString)));
+			}
 		}
 
 		#endregion

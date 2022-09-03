@@ -2,6 +2,7 @@
 using LinqToDB;
 using LinqToDB.Data;
 using NUnit.Framework;
+using System.Runtime.InteropServices;
 
 namespace Tests.Linq
 {
@@ -25,11 +26,6 @@ namespace Tests.Linq
 			[DataSources]        string context,
 			[Values(2, 4, null)] int?   value)
 		{
-			if (context.IsAnyOf(TestProvName.AllSqlServer2022Plus))
-			{
-				Assert.Inconclusive("Temporary disabled. CTP2.1 docker image required");
-			}
-
 			using var db  = GetDataContext(context);
 			using var src = SetupSrcTable(db);
 
@@ -53,11 +49,6 @@ namespace Tests.Linq
 			[DataSources(TestProvName.AllAccess)] string context,
 			[Values("abc", "xyz", null)] string? value)
 		{
-			if (context.IsAnyOf(TestProvName.AllSqlServer2022Plus))
-			{
-				Assert.Inconclusive("Temporary disabled. CTP2.1 docker image required");
-			}
-
 			using var db  = GetDataContext(context);
 			using var src = SetupSrcTable(db);
 
