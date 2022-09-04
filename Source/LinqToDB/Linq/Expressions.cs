@@ -1659,7 +1659,7 @@ namespace LinqToDB.Linq
 		// Missing support for trimChars: Access, SqlCe, SybaseASE
 		// Firebird/MySQL - chars parameter treated as string, not as set of characters
 		[CLSCompliant(false)]
-		//[Sql.Extension(ProviderName.Firebird     , "TRIM(TRAILING {1} FROM {0})", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(TrimCharactersBuilder))]
+		[Sql.Extension(ProviderName.Firebird     , "TRIM(TRAILING FROM {0})"    , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(TrimCharactersBuilder))]
 		[Sql.Extension(ProviderName.ClickHouse   , "trim(TRAILING {1} FROM {0})", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(TrimCharactersBuilder))]
 		//[Sql.Extension(ProviderName.MySql        , "TRIM(TRAILING {1} FROM {0})", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(TrimCharactersBuilder))]
 		[Sql.Extension(ProviderName.SqlServer2022, "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(TrimCharactersBuilder))]
@@ -1678,7 +1678,7 @@ namespace LinqToDB.Linq
 		// Missing support for trimChars: Access, SqlCe, SybaseASE
 		// Firebird/MySQL - chars parameter treated as string, not as set of characters
 		[CLSCompliant(false)]
-		//[Sql.Extension(ProviderName.Firebird     , "TRIM(LEADING {1} FROM {0})", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(TrimCharactersBuilder))]
+		[Sql.Extension(ProviderName.Firebird     , "TRIM(LEADING FROM {0})"    , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(TrimCharactersBuilder))]
 		[Sql.Extension(ProviderName.ClickHouse   , "trim(LEADING {1} FROM {0})", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(TrimCharactersBuilder))]
 		//[Sql.Extension(ProviderName.MySql        , "TRIM(LEADING {1} FROM {0})", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(TrimCharactersBuilder))]
 		[Sql.Extension(ProviderName.SqlServer2022, "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(TrimCharactersBuilder))]
