@@ -2,7 +2,7 @@
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlFunction : ISqlExpression//ISqlTableSource
+	public sealed class SqlFunction : ISqlExpression//ISqlTableSource
 	{
 		public SqlFunction(Type systemType, string name, params ISqlExpression[] parameters)
 			: this(systemType, name, false, true, SqlQuery.Precedence.Primary, parameters)

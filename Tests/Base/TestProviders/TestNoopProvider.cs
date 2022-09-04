@@ -320,8 +320,7 @@ namespace Tests
 		public static ISqlOptimizer Instance = new TestNoopSqlOptimizer();
 
 		private TestNoopSqlOptimizer()
-			: base(new SqlProviderFlags())
-		{
-		}
+			: base(new SqlProviderFlags(), new AstFactory())
+		{ }
 	}
 }

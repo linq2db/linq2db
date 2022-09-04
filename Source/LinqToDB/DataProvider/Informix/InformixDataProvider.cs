@@ -38,7 +38,7 @@
 			SetField<DbDataReader, double >((r, i) => GetDouble (r, i));
 			SetField<DbDataReader, decimal>((r, i) => GetDecimal(r, i));
 
-			_sqlOptimizer = new InformixSqlOptimizer(SqlProviderFlags);
+			_sqlOptimizer = new InformixSqlOptimizer(SqlProviderFlags, GetAstFactory());
 
 			if (Adapter.GetBigIntReaderMethod != null)
 				SetField(typeof(long), "BIGINT", Adapter.GetBigIntReaderMethod, false, dataReaderType: Adapter.DataReaderType);

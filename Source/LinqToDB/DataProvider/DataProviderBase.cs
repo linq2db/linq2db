@@ -14,6 +14,7 @@ namespace LinqToDB.DataProvider
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
+	using SqlQuery;
 
 	public abstract class DataProviderBase : IDataProvider
 	{
@@ -111,6 +112,10 @@ namespace LinqToDB.DataProvider
 		protected abstract DbConnection  CreateConnectionInternal (string connectionString);
 		public    abstract ISqlBuilder   CreateSqlBuilder(MappingSchema mappingSchema);
 		public    abstract ISqlOptimizer GetSqlOptimizer ();
+
+		// FIXME(jods): GetAstFactory() should be abstract once overriden in every provider
+		private readonly AstFactory _ast = new AstFactory();
+		public virtual AstFactory GetAstFactory() => _ast;
 
 		public virtual DbCommand InitCommand(DataConnection dataConnection, DbCommand command, CommandType commandType, string commandText, DataParameter[]? parameters, bool withParameters)
 		{

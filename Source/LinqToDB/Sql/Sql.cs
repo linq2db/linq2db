@@ -685,15 +685,17 @@ namespace LinqToDB
 				var condition = new SqlCondition(
 					false,
 					new SqlPredicate.NotExpr(
-						new SqlExpression(
-							typeof(bool),
-							"{0} SIMILAR TO {1}",
-							Precedence.Comparison,
-							SqlFlags.IsPredicate,
-							str,
-							new SqlValue(typeof(string), whiteSpaces)),
-						true,
-						Precedence.LogicalNegation),
+						new SqlPredicate.Expr(
+							new SqlExpression(
+								typeof(bool),
+								"{0} SIMILAR TO {1}",
+								Precedence.Comparison,
+								SqlFlags.IsPredicate,
+								str,
+								new SqlValue(typeof(string), whiteSpaces)
+							)
+						)
+					),
 					true);
 
 				if (str.CanBeNull)
@@ -716,15 +718,17 @@ namespace LinqToDB
 				var condition = new SqlCondition(
 					false,
 					new SqlPredicate.NotExpr(
-						new SqlExpression(
-							typeof(bool),
-							"{0} RLIKE {1}",
-							Precedence.Comparison,
-							SqlFlags.IsPredicate,
-							str,
-							new SqlValue(typeof(string), whiteSpaces)),
-						true,
-						Precedence.LogicalNegation),
+						new SqlPredicate.Expr(
+							new SqlExpression(
+								typeof(bool),
+								"{0} RLIKE {1}",
+								Precedence.Comparison,
+								SqlFlags.IsPredicate,
+								str,
+								new SqlValue(typeof(string), whiteSpaces)
+							)
+						)
+					),
 					true);
 
 				if (str.CanBeNull)
@@ -1006,7 +1010,7 @@ namespace LinqToDB
 							100 :
 							SqlDataType.GetMaxDisplaySize(dataContext.MappingSchema.GetDataType(arg.SystemType).Type.DataType);
 
-						arr[i] = PseudoFunctions.MakeConvert(new SqlDataType(DataType.VarChar, typeof(string), len, null, null, null), new SqlDataType(arg.GetExpressionType()), arg);
+						arr[i] = dataContext.AstFactory.Convert(new SqlDataType(DataType.VarChar, typeof(string), len, null, null, null), arg);
 					}
 				}
 

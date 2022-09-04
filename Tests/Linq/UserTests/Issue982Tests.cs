@@ -13,9 +13,9 @@ namespace Tests.UserTests
 	{
 		private class Issue982FirebirdSqlOptimizer : FirebirdSqlOptimizer
 		{
-			public Issue982FirebirdSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
-			{
-			}
+			public Issue982FirebirdSqlOptimizer(SqlProviderFlags sqlProviderFlags) 
+				: base(sqlProviderFlags, new AstFactory())
+			{ }
 
 			public override SqlStatement Finalize(MappingSchema mappingSchema, SqlStatement statement)
 			{

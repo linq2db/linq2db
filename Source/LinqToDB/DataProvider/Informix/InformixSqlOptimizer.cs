@@ -7,9 +7,9 @@
 
 	class InformixSqlOptimizer : BasicSqlOptimizer
 	{
-		public InformixSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
-		{
-		}
+		public InformixSqlOptimizer(SqlProviderFlags sqlProviderFlags, AstFactory ast)
+			: base(sqlProviderFlags, ast)
+		{ }
 
 		public override bool IsParameterDependedElement(IQueryElement element)
 		{
@@ -214,8 +214,9 @@
 			return expression;
 		}
 
-		protected override ISqlExpression ConvertFunction(SqlFunction func)
+		protected override ISqlExpression ConvertFunction(ISqlExpression expr)
 		{
+			if (expr is not SqlFunction func) return expr;
 			func = ConvertFunctionParameters(func, false);
 			return base.ConvertFunction(func);
 		}

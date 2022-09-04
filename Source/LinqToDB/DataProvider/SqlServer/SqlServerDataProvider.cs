@@ -62,14 +62,14 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			_sqlOptimizer = version switch
 			{
-				SqlServerVersion.v2005 => new SqlServer2005SqlOptimizer(SqlProviderFlags),
-				SqlServerVersion.v2012 => new SqlServer2012SqlOptimizer(SqlProviderFlags),
-				SqlServerVersion.v2014 => new SqlServer2014SqlOptimizer(SqlProviderFlags),
-				SqlServerVersion.v2016 => new SqlServer2016SqlOptimizer(SqlProviderFlags),
-				SqlServerVersion.v2017 => new SqlServer2017SqlOptimizer(SqlProviderFlags),
-				SqlServerVersion.v2019 => new SqlServer2019SqlOptimizer(SqlProviderFlags),
-				SqlServerVersion.v2022 => new SqlServer2022SqlOptimizer(SqlProviderFlags),
-				_                      => new SqlServer2008SqlOptimizer(SqlProviderFlags),
+				SqlServerVersion.v2005 => new SqlServer2005SqlOptimizer(SqlProviderFlags, GetAstFactory()),
+				SqlServerVersion.v2012 => new SqlServer2012SqlOptimizer(SqlProviderFlags, GetAstFactory()),
+				SqlServerVersion.v2014 => new SqlServer2014SqlOptimizer(SqlProviderFlags, GetAstFactory()),
+				SqlServerVersion.v2016 => new SqlServer2016SqlOptimizer(SqlProviderFlags, GetAstFactory()),
+				SqlServerVersion.v2017 => new SqlServer2017SqlOptimizer(SqlProviderFlags, GetAstFactory()),
+				SqlServerVersion.v2019 => new SqlServer2019SqlOptimizer(SqlProviderFlags, GetAstFactory()),
+				SqlServerVersion.v2022 => new SqlServer2022SqlOptimizer(SqlProviderFlags, GetAstFactory()),
+				_                      => new SqlServer2008SqlOptimizer(SqlProviderFlags, GetAstFactory()),
 			};
 
 			// missing:

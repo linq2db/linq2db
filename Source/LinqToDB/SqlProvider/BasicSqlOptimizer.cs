@@ -18,12 +18,15 @@ namespace LinqToDB.SqlProvider
 	{
 		#region Init
 
-		protected BasicSqlOptimizer(SqlProviderFlags sqlProviderFlags)
+		protected BasicSqlOptimizer(SqlProviderFlags sqlProviderFlags, AstFactory ast)
 		{
 			SqlProviderFlags = sqlProviderFlags;
+			this.ast         = ast;
 		}
 
 		public SqlProviderFlags SqlProviderFlags { get; }
+
+		protected readonly AstFactory ast;
 
 		#endregion
 
@@ -1082,9 +1085,7 @@ namespace LinqToDB.SqlProvider
 					    func.Parameters[2] is SqlSearchCondition sc &&
 					    func.Parameters[1].TryEvaluateExpression(context, out var v1) && v1 is null)
 					{
-						if (isTrue.IsNot)
-							return new SqlPredicate.NotExpr(sc, true, Precedence.LogicalNegation);
-						return sc;
+						return isTrue.IsNot ? ast.Not(sc) : sc;
 					}
 				}
 			}
@@ -1202,7 +1203,7 @@ namespace LinqToDB.SqlProvider
 							return sc;
 
 						if (Equals(value, v2) && !sc.CanBeNull)
-							return new SqlPredicate.NotExpr(sc, true, Precedence.LogicalNegation);
+							return ast.Not(sc);
 					}
 				}
 			}
@@ -1320,37 +1321,23 @@ namespace LinqToDB.SqlProvider
 
 					if (expr.WithNull == null && (expr.Operator == SqlPredicate.Operator.Equal || expr.Operator == SqlPredicate.Operator.NotEqual))
 					{
-						if (expr.Expr2 is ISqlPredicate)
+						if (expr.Expr2 is ISqlPredicate pred2)
 						{
 							var boolValue1 = QueryHelper.GetBoolValue(expr.Expr1, context);
 							if (boolValue1 != null)
 							{
-								ISqlPredicate transformed = new SqlPredicate.Expr(expr.Expr2);
 								var isNot = boolValue1.Value != (expr.Operator == SqlPredicate.Operator.Equal);
-								if (isNot)
-								{
-									transformed =
-										new SqlPredicate.NotExpr(expr.Expr2, true, Precedence.LogicalNegation);
-								}
-
-								return transformed;
+								return isNot ? ast.Not(pred2) : new SqlPredicate.Expr(expr.Expr2);
 							}
 						}
 
-						if (expr.Expr1 is ISqlPredicate)
+						if (expr.Expr1 is ISqlPredicate pred1)
 						{
 							var boolValue2 = QueryHelper.GetBoolValue(expr.Expr2, context);
 							if (boolValue2 != null)
 							{
-								ISqlPredicate transformed = new SqlPredicate.Expr(expr.Expr1);
 								var isNot = boolValue2.Value != (expr.Operator == SqlPredicate.Operator.Equal);
-								if (isNot)
-								{
-									transformed =
-										new SqlPredicate.NotExpr(expr.Expr1, true, Precedence.LogicalNegation);
-								}
-
-								return transformed;
+								return isNot ? ast.Not(pred1) : new SqlPredicate.Expr(expr.Expr1);
 							}
 						}
 					}
@@ -1378,7 +1365,7 @@ namespace LinqToDB.SqlProvider
 				{
 					var expr = (SqlPredicate.NotExpr)predicate;
 
-					if (expr.IsNot && expr.Expr1 is SqlSearchCondition sc)
+					if (expr.Expr1 is SqlSearchCondition sc)
 					{
 						if (sc.Conditions.Count == 1)
 						{
@@ -1583,11 +1570,11 @@ namespace LinqToDB.SqlProvider
 		{
 			var newPredicate = !between.IsNot
 				? new SqlSearchCondition(
-					new SqlCondition(false, new SqlPredicate.ExprExpr(between.Expr1, SqlPredicate.Operator.GreaterOrEqual, between.Expr2, withNull: false)),
-					new SqlCondition(false, new SqlPredicate.ExprExpr(between.Expr1, SqlPredicate.Operator.LessOrEqual,    between.Expr3, withNull: false)))
+					new SqlCondition(false, new SqlPredicate.ExprExpr(between.Expr1, SqlPredicate.Operator.GreaterOrEqual, between.Expr2, withNull: null)),
+					new SqlCondition(false, new SqlPredicate.ExprExpr(between.Expr1, SqlPredicate.Operator.LessOrEqual,    between.Expr3, withNull: null)))
 				: new SqlSearchCondition(
-					new SqlCondition(false, new SqlPredicate.ExprExpr(between.Expr1, SqlPredicate.Operator.Less,    between.Expr2, withNull: false), isOr: true),
-					new SqlCondition(false, new SqlPredicate.ExprExpr(between.Expr1, SqlPredicate.Operator.Greater, between.Expr3, withNull: false)));
+					new SqlCondition(false, new SqlPredicate.ExprExpr(between.Expr1, SqlPredicate.Operator.Less,    between.Expr2, withNull: null), isOr: true),
+					new SqlCondition(false, new SqlPredicate.ExprExpr(between.Expr1, SqlPredicate.Operator.Greater, between.Expr3, withNull: null)));
 
 			return newPredicate;
 		}
@@ -1954,7 +1941,7 @@ namespace LinqToDB.SqlProvider
 									be.SystemType,
 									be.Expr1,
 									be.Operation,
-									ConvertExpressionImpl(PseudoFunctions.MakeConvert(new SqlDataType(DataType.VarChar, typeof(string), len.Value), new SqlDataType(be.Expr2.GetExpressionType()), be.Expr2), visitor),
+									ConvertExpressionImpl(ast.Convert(new SqlDataType(DataType.VarChar, typeof(string), len.Value), be.Expr2), visitor),
 									be.Precedence);
 							}
 
@@ -1967,7 +1954,7 @@ namespace LinqToDB.SqlProvider
 
 								return new SqlBinaryExpression(
 									be.SystemType,
-									ConvertExpressionImpl(PseudoFunctions.MakeConvert(new SqlDataType(DataType.VarChar, typeof(string), len.Value), new SqlDataType(be.Expr1.GetExpressionType()), be.Expr1), visitor),
+									ConvertExpressionImpl(ast.Convert(new SqlDataType(DataType.VarChar, typeof(string), len.Value), be.Expr1), visitor),
 									be.Operation,
 									be.Expr2,
 									be.Precedence);
@@ -2003,8 +1990,10 @@ namespace LinqToDB.SqlProvider
 			return expression;
 		}
 
-		protected virtual ISqlExpression ConvertFunction(SqlFunction func)
+		protected virtual ISqlExpression ConvertFunction(ISqlExpression expr)
 		{
+			if (expr is not SqlFunction func) return expr;
+			
 			switch (func.Name)
 			{
 				case "Average": return new SqlFunction(func.SystemType, "Avg", func.Parameters);
@@ -2454,7 +2443,7 @@ namespace LinqToDB.SqlProvider
 								return new SqlPredicate.Expr(new SqlValue(p.IsNot));
 
 							if (p.IsNot)
-								return new SqlPredicate.NotExpr(sc, true, Precedence.LogicalNegation);
+								return ast.Not(sc);
 
 							return new SqlPredicate.Expr(sc, Precedence.LogicalDisjunction);
 						}
@@ -2500,7 +2489,7 @@ namespace LinqToDB.SqlProvider
 							return new SqlPredicate.Expr(new SqlValue(p.IsNot));
 
 						if (p.IsNot)
-							return new SqlPredicate.NotExpr(sc, true, Precedence.LogicalNegation);
+							return ast.Not(sc);
 
 						return new SqlPredicate.Expr(sc, Precedence.LogicalDisjunction);
 					}

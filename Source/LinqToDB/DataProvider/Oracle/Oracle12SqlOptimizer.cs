@@ -5,9 +5,9 @@
 
 	public class Oracle12SqlOptimizer : Oracle11SqlOptimizer
 	{
-		public Oracle12SqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
-		{
-		}
+		public Oracle12SqlOptimizer(SqlProviderFlags sqlProviderFlags, AstFactory ast) 
+			: base(sqlProviderFlags, ast)
+		{ }
 
 		public override SqlStatement TransformStatement(SqlStatement statement)
 		{
@@ -23,8 +23,10 @@
 			return statement;
 		}
 
-		protected override ISqlExpression ConvertFunction(SqlFunction func)
+		protected override ISqlExpression ConvertFunction(ISqlExpression expr)
 		{
+			if (expr is not SqlFunction func) return expr;
+			
 			func = ConvertFunctionParameters(func, false);
 
 			switch (func.Name)

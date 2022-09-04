@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\LinqToDB\LinqToDB.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Moq" Version="4.16.1" />
+    <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="3.21.1" />
+	<PackageReference Include="Microsoft.Data.SqlClient" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net6.0</TargetFramework>
+  </PropertyGroup>
+
+</Project>

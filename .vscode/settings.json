@@ -1,0 +1,5 @@
+{
+  "dotnet-test-explorer.enableTelemetry": false,
+  "dotnet-test-explorer.testProjectPath": "./Tests/Linq/Tests.csproj",
+  "dotnet-test-explorer.testArguments": "-f net6.0 --no-restore"
+}

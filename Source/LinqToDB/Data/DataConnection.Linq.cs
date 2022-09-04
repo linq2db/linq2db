@@ -19,6 +19,7 @@ namespace LinqToDB.Data
 		SqlProviderFlags IDataContext.SqlProviderFlags      => DataProvider.SqlProviderFlags;
 		TableOptions     IDataContext.SupportedTableOptions => DataProvider.SupportedTableOptions;
 		Type             IDataContext.DataReaderType        => DataProvider.DataReaderType;
+		AstFactory       IDataContext.AstFactory            => DataProvider.GetAstFactory();
 
 		bool             IDataContext.CloseAfterUse    { get; set; }
 

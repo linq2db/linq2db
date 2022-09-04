@@ -7,9 +7,9 @@
 
 	sealed class ClickHouseSqlOptimizer : BasicSqlOptimizer
 	{
-		public ClickHouseSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
-		{
-		}
+		public ClickHouseSqlOptimizer(SqlProviderFlags sqlProviderFlags, AstFactory ast) 
+			: base(sqlProviderFlags, ast)
+		{ }
 
 		public override SqlStatement FinalizeStatement(SqlStatement statement, EvaluationContext context)
 		{
@@ -96,7 +96,7 @@
 			var searchExpr = predicate.Expr2;
 			var dataExpr   = predicate.Expr1;
 
-			SqlPredicate.Expr? subStrPredicate = null;
+			ISqlPredicate? subStrPredicate = null;
 
 			switch (predicate.Kind)
 			{
@@ -131,14 +131,12 @@
 					break;
 
 				case SqlPredicate.SearchString.SearchKind.Contains:
-					subStrPredicate = new SqlPredicate.ExprExpr(
+					subStrPredicate = ast.Greater(
 						new SqlFunction(typeof(bool), caseSensitive ? "position" : "positionCaseInsensitive", false, true, dataExpr, searchExpr)
 						{
 							CanBeNull = searchExpr.CanBeNull || dataExpr.CanBeNull
 						},
-						SqlPredicate.Operator.Greater,
-						new SqlValue(0),
-						null);
+						ast.Zero);
 					break;
 			}
 
@@ -239,8 +237,10 @@
 			}
 		}
 
-		protected override ISqlExpression ConvertFunction(SqlFunction func)
+		protected override ISqlExpression ConvertFunction(ISqlExpression expr)
 		{
+			if (expr is not SqlFunction func) return expr;
+			
 			switch (func.Name)
 			{
 				case "Max":
@@ -314,7 +314,7 @@
 								};
 
 								if (defaultValue != null)
-									newFunc = ConvertFunction(PseudoFunctions.MakeCoalesce(func.SystemType, newFunc, defaultValue));
+									newFunc = ConvertFunction(ast.Coalesce(newFunc, defaultValue, func.SystemType));
 
 								return newFunc;
 							}
@@ -331,7 +331,7 @@
 								};
 
 								if (defaultValue != null)
-									newFunc = ConvertFunction(PseudoFunctions.MakeCoalesce(func.SystemType, newFunc, defaultValue));
+									newFunc = ConvertFunction(ast.Coalesce(newFunc, defaultValue, func.SystemType));
 
 								return newFunc;
 							}
@@ -345,7 +345,7 @@
 								};
 
 								if (defaultValue != null)
-									newFunc = ConvertFunction(PseudoFunctions.MakeCoalesce(func.SystemType, newFunc, defaultValue));
+									newFunc = ConvertFunction(ast.Coalesce(newFunc, defaultValue, func.SystemType));
 
 								return newFunc;
 							}

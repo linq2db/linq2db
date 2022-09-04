@@ -2358,15 +2358,8 @@ namespace LinqToDB.SqlProvider
 				case QueryElementType.NotExprPredicate:
 					{
 						var p = (SqlPredicate.NotExpr)predicate;
-
-						if (p.IsNot)
-							StringBuilder.Append("NOT ");
-
-						BuildExpression(
-							((SqlPredicate.NotExpr)predicate).IsNot
-								? Precedence.LogicalNegation
-								: GetPrecedence((SqlPredicate.NotExpr)predicate),
-							((SqlPredicate.NotExpr)predicate).Expr1);
+						StringBuilder.Append("NOT ");
+						BuildPredicate(Precedence.LogicalNegation, p.Expr1.Precedence, p.Expr1);
 					}
 
 					break;

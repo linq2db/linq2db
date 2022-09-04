@@ -8,9 +8,9 @@
 
 	class MySqlSqlOptimizer : BasicSqlOptimizer
 	{
-		public MySqlSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
-		{
-		}
+		public MySqlSqlOptimizer(SqlProviderFlags sqlProviderFlags, AstFactory ast)
+			: base(sqlProviderFlags, ast)
+		{ }
 
 		public override bool CanCompareSearchConditions => true;
 
@@ -136,9 +136,9 @@
 				{
 					case SqlPredicate.SearchString.SearchKind.Contains:
 					{
-						newPredicate = new SqlPredicate.ExprExpr(
-							new SqlFunction(typeof(int), "LOCATE", searchExpr, dataExpr), SqlPredicate.Operator.Greater,
-							new SqlValue(0), null);
+						newPredicate = ast.Greater(
+							new SqlFunction(typeof(int), "LOCATE", searchExpr, dataExpr),
+							ast.Zero);
 						break;
 					}
 				}

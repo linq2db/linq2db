@@ -44,7 +44,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			SetCharField("bpchar"   , (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("character", (r,i) => r.GetString(i).TrimEnd(' '));
 
-			_sqlOptimizer = new PostgreSQLSqlOptimizer(SqlProviderFlags);
+			_sqlOptimizer = new PostgreSQLSqlOptimizer(SqlProviderFlags, GetAstFactory());
 
 			ConfigureTypes();
 		}

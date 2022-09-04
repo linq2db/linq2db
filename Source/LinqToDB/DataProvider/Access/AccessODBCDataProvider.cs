@@ -37,7 +37,7 @@ namespace LinqToDB.DataProvider.Access
 			SetToType<DbDataReader, ushort, short>("SMALLINT", (r, i) => unchecked((ushort)r.GetInt16(i)));
 			SetProviderField<DbDataReader, TimeSpan, DateTime>((r, i) => r.GetDateTime(i) - new DateTime(1899, 12, 30));
 
-			_sqlOptimizer = new AccessODBCSqlOptimizer(SqlProviderFlags);
+			_sqlOptimizer = new AccessODBCSqlOptimizer(SqlProviderFlags, GetAstFactory());
 		}
 
 		public override TableOptions SupportedTableOptions => TableOptions.None;

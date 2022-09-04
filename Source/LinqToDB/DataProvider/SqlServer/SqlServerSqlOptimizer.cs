@@ -8,7 +8,8 @@
 	{
 		private readonly SqlServerVersion _sqlVersion;
 
-		protected SqlServerSqlOptimizer(SqlProviderFlags sqlProviderFlags, SqlServerVersion sqlVersion) : base(sqlProviderFlags)
+		protected SqlServerSqlOptimizer(SqlProviderFlags sqlProviderFlags, SqlServerVersion sqlVersion, AstFactory ast)
+			: base(sqlProviderFlags, ast)
 		{
 			_sqlVersion = sqlVersion;
 		}
@@ -36,50 +37,40 @@
 
 			if (predicate.CaseSensitive.EvaluateBoolExpression(visitor.Context.OptimizationContext.Context) == true)
 			{
-				SqlPredicate.ExprExpr? subStrPredicate = null;
+				ISqlPredicate? subStrPredicate = null;
 
 				switch (predicate.Kind)
 				{
 					case SqlPredicate.SearchString.SearchKind.StartsWith:
 					{
-						subStrPredicate =
-							new SqlPredicate.ExprExpr(
-								new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary, new SqlFunction(
-									typeof(string), "LEFT", predicate.Expr1,
+						subStrPredicate = ast.Equal(
+							new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary, 
+								new SqlFunction(typeof(string), "LEFT", 
+									predicate.Expr1,
 									new SqlFunction(typeof(int), "Length", predicate.Expr2))),
-								SqlPredicate.Operator.Equal,
-								new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary, predicate.Expr2),
-								null
-							);
+							new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary, predicate.Expr2));
 
 						break;
 					}
 
 					case SqlPredicate.SearchString.SearchKind.EndsWith:
 					{
-						subStrPredicate =
-							new SqlPredicate.ExprExpr(
-								new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary, new SqlFunction(
-									typeof(string), "RIGHT", predicate.Expr1,
+						subStrPredicate = ast.Equal(
+							new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary, 
+								new SqlFunction(typeof(string), "RIGHT", 
+									predicate.Expr1,
 									new SqlFunction(typeof(int), "Length", predicate.Expr2))),
-								SqlPredicate.Operator.Equal,
-								new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary, predicate.Expr2),
-								null
-							);
+							new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary, predicate.Expr2));
 
 						break;
 					}
 					case SqlPredicate.SearchString.SearchKind.Contains:
 					{
-						subStrPredicate =
-							new SqlPredicate.ExprExpr(
-								new SqlFunction(typeof(int), "CHARINDEX",
-									new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary,
-										predicate.Expr2),
-									new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary,
-										predicate.Expr1)),
-								SqlPredicate.Operator.Greater,
-								new SqlValue(0), null);
+						subStrPredicate = ast.Greater(
+							new SqlFunction(typeof(int), "CHARINDEX",
+								new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary, predicate.Expr2),
+								new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary, predicate.Expr1)),
+							ast.Zero);
 
 						break;
 					}

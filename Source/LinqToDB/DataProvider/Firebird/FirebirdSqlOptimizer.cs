@@ -7,9 +7,9 @@
 
 	public class FirebirdSqlOptimizer : BasicSqlOptimizer
 	{
-		public FirebirdSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
-		{
-		}
+		public FirebirdSqlOptimizer(SqlProviderFlags sqlProviderFlags, AstFactory ast) 
+			: base(sqlProviderFlags, ast)
+		{ }
 
 		public override SqlStatement Finalize(MappingSchema mappingSchema, SqlStatement statement)
 		{
@@ -227,10 +227,10 @@
 			return expression;
 		}
 
-		protected override ISqlExpression ConvertFunction(SqlFunction func)
+		protected override ISqlExpression ConvertFunction(ISqlExpression expr)
 		{
-			func = ConvertFunctionParameters(func, false);
-			
+			if (expr is not SqlFunction func) return expr;
+			func = ConvertFunctionParameters(func, false);			
 			return base.ConvertFunction(func);
 		}
 
