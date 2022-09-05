@@ -501,14 +501,6 @@ namespace LinqToDB
 						mapping.GetAttributes<ExtensionAttribute>(memberInfo.ReflectedType!, memberInfo,
 							static a => a.Configuration, inherit: true, exactForConfiguration: true);
 
-				if (attributes.Length == 0)
-				{
-					// notify if there is method that has no defined attribute for specific configuration
-					attributes = mapping.GetAttributes<ExtensionAttribute>(memberInfo.ReflectedType!, memberInfo);
-					if (attributes.Length > 0)
-						ThrowHelper.ThrowLinqToDBException($"Member {memberInfo.Name}, unsupported for configuration(s) '{string.Join(", ", mapping.ConfigurationList)}'.");
-				}
-
 				return attributes;
 			}
 
