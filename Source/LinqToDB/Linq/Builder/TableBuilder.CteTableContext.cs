@@ -47,10 +47,8 @@ namespace LinqToDB.Linq.Builder
 			cteTableContext.EnsureInitialized();
 
 			// populate all fields
-			/*
 			if (isRecursive)
 				_ = builder.MakeExpression(new ContextRefExpression(methodCall.Method.GetGenericArguments()[0], cteContext), ProjectFlags.SQL);
-				*/
 
 			return cteTableContext;
 		}
@@ -144,6 +142,9 @@ namespace LinqToDB.Linq.Builder
 
 					if (!flags.HasFlag(ProjectFlags.Test))
 					{
+						// replace tracking path back
+						translated = SequenceHelper.CorrectTrackingPath(translated, _cteContext, this);
+
 						var placeholders = ExpressionBuilder.CollectPlaceholders(translated).Where(p =>
 							p.SelectQuery == _cteContext.SubqueryContext?.SelectQuery && p.Index != null)
 							.ToList();
@@ -174,7 +175,10 @@ namespace LinqToDB.Linq.Builder
 						var newField = new SqlField(field);
 						CteTable.Add(newField);
 
-						newPlaceholder = ExpressionBuilder.CreatePlaceholder(SelectQuery, newField, placeholder.Path, index: placeholder.Index);
+						newPlaceholder = ExpressionBuilder.CreatePlaceholder(SelectQuery, newField,
+							placeholder.TrackingPath ?? throw new InvalidOperationException(),
+							index: placeholder.Index);
+
 						_fieldsMap[placeholder] = newPlaceholder;
 					}
 
@@ -239,7 +243,6 @@ namespace LinqToDB.Linq.Builder
 
 			public void EnsureInitialized()
 			{
-				_cteContext.InitQuery();
 			}
 
 		}

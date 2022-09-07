@@ -42,6 +42,29 @@ namespace LinqToDB.Linq.Builder
 			return expression;
 		}
 
+		[return: NotNullIfNotNull("expression")]
+		public static Expression? CorrectTrackingPath(Expression? expression, IBuildContext current, IBuildContext underlying)
+		{
+			if (expression != null)
+			{
+				var transformed = expression.Transform((current, underlying), static (ctx, e) =>
+				{
+					if (e is SqlPlaceholderExpression placeholder && placeholder.TrackingPath != null)
+					{
+						e = placeholder.WithTrackingPath(CorrectExpression(placeholder.TrackingPath, 
+							ctx.current,
+							ctx.underlying));
+					}
+
+					return e;
+				});
+
+				return transformed;
+			}
+
+			return expression;
+		}
+
 		public static Expression ReplaceContext(Expression expression, IBuildContext current, IBuildContext onContext)
 		{
 			var newExpression = expression.Transform((expression, current, onContext), (ctx, e) =>

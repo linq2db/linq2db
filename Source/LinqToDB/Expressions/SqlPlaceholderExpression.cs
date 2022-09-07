@@ -14,6 +14,8 @@ namespace LinqToDB.Expressions
 			#if DEBUG
 			if (sql is SqlColumn column && column.Parent == selectQuery)
 				throw new InvalidOperationException();
+			if (path is SqlPlaceholderExpression)
+				throw new InvalidOperationException();
 			#endif
 
 			SelectQuery  = selectQuery;

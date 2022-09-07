@@ -3,6 +3,7 @@ using System.CodeDom;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using LinqToDB.Expressions;
 using LinqToDB.SqlQuery;
 
@@ -28,8 +29,10 @@ namespace LinqToDB.Linq.Builder
 		public Expression?       Expression           { get; }
 
 		public IBuildContext? CteInnerQueryContext { get; private set; }
-		public IBuildContext? SubqueryContext { get; private set; }
+		public IBuildContext? SubqueryContext      { get; private set; }
 		public CteClause      CteClause            { get; }
+
+		ContextRefExpression CteContextRef { get; }
 
 		public CteContext(ExpressionBuilder builder, IBuildContext? cteInnerQueryContext, CteClause cteClause, Expression cteExpression)
 		{
@@ -37,6 +40,11 @@ namespace LinqToDB.Linq.Builder
 			CteInnerQueryContext = cteInnerQueryContext;
 			CteClause            = cteClause;
 			Expression           = cteExpression;
+
+			var elementType = ExpressionBuilder.GetEnumerableElementType(cteExpression.Type);
+
+			CteContextRef = new ContextRefExpression(elementType, this);
+
 #if DEBUG
 			ContextId = Builder.GenerateContextId();
 #endif
@@ -69,6 +77,9 @@ namespace LinqToDB.Linq.Builder
 
 		public void InitQuery()
 		{
+			if (_isRecursiveCall)
+				return;
+
 			if (CteInnerQueryContext != null)
 				return;
 
@@ -141,25 +152,48 @@ namespace LinqToDB.Linq.Builder
 			*/
 
 			//var correctedPath = SequenceHelper.CorrectExpression(path, this, CteInnerQueryContext);
-			var correctedPath = SequenceHelper.CorrectExpression(path, this, SubqueryContext!);
-			if (!ReferenceEquals(correctedPath, path))
-			{
-				correctedPath = Builder.MakeExpression(correctedPath, flags);
-				correctedPath = RemapRecursive(correctedPath);
 
+			InitQuery();
+
+			if (SubqueryContext == null || CteInnerQueryContext == null)
+				throw new InvalidOperationException();
+
+			var subqueryPath  = SequenceHelper.CorrectExpression(path, this, SubqueryContext);
+			var correctedPath = subqueryPath;
+
+			if (!ReferenceEquals(subqueryPath, path))
+			{
+				correctedPath = Builder.ConvertToSqlExpr(CteInnerQueryContext, correctedPath, flags);
 
 				if (!flags.HasFlag(ProjectFlags.Test))
 				{
-					var placeholders = ExpressionBuilder.CollectPlaceholders(correctedPath)
-						.Where(p => p.SelectQuery == SubqueryContext!.SelectQuery && p.Index != null).ToList();
+					correctedPath = SequenceHelper.CorrectTrackingPath(correctedPath, SubqueryContext, this);
+
+					var memberPath = GetMemberPath(subqueryPath);
+					correctedPath = Builder.UpdateNesting(SubqueryContext, correctedPath);
+					correctedPath = RemapRecursive(correctedPath);
+					var placeholders = ExpressionBuilder.CollectPlaceholders2(correctedPath, memberPath).ToList();
 
 					var remapped = RemapToFields(correctedPath, placeholders);
 					return remapped;
-
 				}
 			}
 
 			return correctedPath;
+		}
+
+		static List<MemberInfo> GetMemberPath(Expression expr)
+		{
+			var     result  = new List<MemberInfo>();
+			var     current = expr;
+			string? alias   = null;
+			while (current is MemberExpression memberExpression)
+			{
+				result.Insert(0, memberExpression.Member);
+				current = memberExpression.Expression;
+			}
+
+			return result;
 		}
 
 		static string? GenerateColumnAlias(Expression expr)
@@ -173,6 +207,21 @@ namespace LinqToDB.Linq.Builder
 				else
 					alias = memberExpression.Member.Name;
 				current = memberExpression.Expression;
+			}
+
+			return alias;
+		}
+
+		static string? GenerateColumnAlias(MemberInfo[] path)
+		{
+			string? alias   = null;
+
+			foreach (var current in path)
+			{
+				if (alias != null)
+					alias = current.Name + "_" + alias;
+				else
+					alias = current.Name;
 			}
 
 			return alias;
@@ -196,7 +245,7 @@ namespace LinqToDB.Linq.Builder
 			return transformed;
 		}
 
-		Expression RemapToFields(Expression expression, List<SqlPlaceholderExpression> placeholders)
+		Expression RemapToFields(Expression expression, List<(SqlPlaceholderExpression placeholder, MemberInfo[] path)> placeholders)
 		{
 			if (placeholders.Count == 0)
 				return expression;
@@ -207,17 +256,19 @@ namespace LinqToDB.Linq.Builder
 
 			for (var index = 0; index < placeholders.Count; index++)
 			{
-				var placeholder = placeholders[index];
+				var (placeholder, path) = placeholders[index];
+
 				if (!_knownMap.TryGetValue(placeholder, out var newPlaceholder))
 				{
 					var field = CteClause.RegisterFieldMapping(placeholder.Index!.Value, () =>
 					{
-						var newField = new SqlField(placeholder.Type, GenerateColumnAlias(placeholder.Path),
+						var newField = new SqlField(placeholder.Type, path.Length > 0 ? GenerateColumnAlias(path) : GenerateColumnAlias(placeholder.Path),
 							placeholder.Sql.CanBeNull);
 						return newField;
 					});
 
-					newPlaceholder         = ExpressionBuilder.CreatePlaceholder(SubqueryContext!.SelectQuery, field, placeholder.Path, index: placeholder.Index);
+					newPlaceholder = ExpressionBuilder.CreatePlaceholder(SubqueryContext!.SelectQuery, field,
+						placeholder.Path, trackingPath: placeholder.TrackingPath, index: placeholder.Index);
 
 					_knownMap[placeholder]    = newPlaceholder;
 					// Cycle mapping
@@ -237,7 +288,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (e.NodeType == ExpressionType.Extension && e is SqlPlaceholderExpression placeholder)
 				{
-					var index = ctx.placeholders.IndexOf(placeholder);
+					var index = ctx.placeholders.FindIndex(pi => pi.placeholder == placeholder);
 					if (index >= 0)
 					{
 						return ctx.newPlaceholders[index];

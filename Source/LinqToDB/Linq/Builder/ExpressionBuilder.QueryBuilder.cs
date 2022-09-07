@@ -349,10 +349,13 @@ namespace LinqToDB.Linq.Builder
 
 						if (expr is SqlPlaceholderExpression placeholder && !ReferenceEquals(context.upToContext.SelectQuery, placeholder.SelectQuery))
 						{
-							if (IsSameParentTree(context.info, placeholder.SelectQuery))
+							if (placeholder.SelectQuery != null && IsSameParentTree(context.info, placeholder.SelectQuery))
 							{
 								do
 								{
+									if (placeholder.SelectQuery == null)
+										break;
+
 									var parentQuery = context.info.GetParentQuery(placeholder.SelectQuery);
 
 									if (parentQuery == null)

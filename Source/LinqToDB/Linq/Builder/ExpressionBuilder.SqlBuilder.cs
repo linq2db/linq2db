@@ -832,16 +832,16 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		public static SqlPlaceholderExpression CreatePlaceholder(IBuildContext context, ISqlExpression sqlExpression,
-			Expression path, Type? convertType = null, string? alias = null, int? index = null)
+			Expression path, Type? convertType = null, string? alias = null, int? index = null, Expression? trackingPath = null)
 		{
-			var placeholder = new SqlPlaceholderExpression(context.SelectQuery, sqlExpression, path, convertType, alias, index);
+			var placeholder = new SqlPlaceholderExpression(context.SelectQuery, sqlExpression, path, convertType, alias, index, trackingPath);
 			return placeholder;
 		}
 
 		public static SqlPlaceholderExpression CreatePlaceholder(SelectQuery? selectQuery, ISqlExpression sqlExpression,
-			Expression path, Type? convertType = null, string? alias = null, int? index = null)
+			Expression path, Type? convertType = null, string? alias = null, int? index = null, Expression? trackingPath = null)
 		{
-			var placeholder = new SqlPlaceholderExpression(selectQuery, sqlExpression, path, convertType, alias, index);
+			var placeholder = new SqlPlaceholderExpression(selectQuery, sqlExpression, path, convertType, alias, index, trackingPath);
 			return placeholder;
 		}
 
@@ -922,19 +922,27 @@ namespace LinqToDB.Linq.Builder
 				result = UpdateNesting(context, result);
 			}
 
-			if (cache && result is SqlPlaceholderExpression placeholder)
+			if (result is SqlPlaceholderExpression placeholder)
 			{
-				if (updateNesting && placeholder.SelectQuery != context.SelectQuery && placeholder.Sql is not SqlColumn)
-				{
-					// recreate placeholder
-					placeholder = CreatePlaceholder(context.SelectQuery, placeholder.Sql, placeholder.Path,
-						placeholder.ConvertType, placeholder.Alias, placeholder.Index);
+				placeholder = placeholder.WithTrackingPath(expression);
 
-					result = placeholder;
+				if (cache)
+				{
+					if (updateNesting && placeholder.SelectQuery != context.SelectQuery &&
+					    placeholder.Sql is not SqlColumn)
+					{
+						// recreate placeholder
+						placeholder = CreatePlaceholder(context.SelectQuery, placeholder.Sql, placeholder.Path,
+							placeholder.ConvertType, placeholder.Alias, placeholder.Index, trackingPath: expression);
+					}
+
+					placeholder = placeholder.WithTrackingPath(expression);
+
+					_cachedSql[cacheKey]               = placeholder;
+					_preciseCachedSql[preciseCacheKey] = placeholder;
 				}
 
-				_cachedSql[cacheKey]               = placeholder;
-				_preciseCachedSql[preciseCacheKey] = placeholder;
+				result = placeholder;
 			}
 
 			return result;
@@ -2038,6 +2046,30 @@ namespace LinqToDB.Linq.Builder
 			});
 
 			return result;
+		}
+
+		public static IEnumerable<(SqlPlaceholderExpression placeholder, MemberInfo[] path)> CollectPlaceholders2(
+			Expression expression, List<MemberInfo> currentPath)
+		{
+			IEnumerable<(SqlPlaceholderExpression placeholder, MemberInfo[] path)> Collect(Expression expr, Stack<MemberInfo> current)
+			{
+				if (expr is SqlPlaceholderExpression placeholder)
+					yield return (placeholder, current.ToArray());
+
+				if (expr is SqlGenericConstructorExpression generic)
+				{
+					foreach (var assignment in generic.Assignments)
+					{
+						current.Push(assignment.MemberInfo);
+						foreach (var found in Collect(assignment.Expression, current))
+							yield return found;
+						current.Pop();
+					}
+				}
+			}
+
+			foreach (var found in Collect(expression, new (currentPath)))
+				yield return found;
 		}
 
 		public static List<SqlPlaceholderExpression> CollectDistinctPlaceholders(Expression expression)
@@ -3869,8 +3901,14 @@ namespace LinqToDB.Linq.Builder
 					// SetOperationContext can know how to process such path without preparing
 
 					var corrected = rootContext.BuildContext.MakeExpression(path, flags);
+
 					if (!ReferenceEquals(corrected, path) && corrected is not DefaultValueExpression && corrected is not SqlErrorExpression)
 					{
+						if (corrected is SqlPlaceholderExpression placeholder)
+						{
+							corrected = placeholder.WithTrackingPath(path);
+						}
+
 						return MakeExpression(corrected, flags);
 					}
 				}
@@ -3968,6 +4006,10 @@ namespace LinqToDB.Linq.Builder
 					{
 						expression = new SqlEagerLoadExpression(rootContext, path, GetSequenceExpression(rootContext.BuildContext));
 					}
+					else if (expression is SqlPlaceholderExpression placeholder)
+					{
+						expression = placeholder.WithTrackingPath(path);
+					}
 				}	
 				else
 					expression = path;
@@ -4017,7 +4059,7 @@ namespace LinqToDB.Linq.Builder
 
 			var idx = asNew
 				? sqlPlaceholder.SelectQuery.Select.AddNew(sqlPlaceholder.Sql)
-				: sqlPlaceholder.SelectQuery.Select.Add(sqlPlaceholder.Sql);
+				: sqlPlaceholder.SelectQuery.Select.AddNew(sqlPlaceholder.Sql);
 
 			var column = sqlPlaceholder.SelectQuery.Select.Columns[idx];
 
