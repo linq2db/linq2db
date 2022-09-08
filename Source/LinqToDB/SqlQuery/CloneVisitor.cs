@@ -531,7 +531,7 @@ namespace LinqToDB.SqlQuery
 				{
 					var expr = (SqlPredicate.NotExpr)(IQueryElement)element;
 					// TODO: children Clone called before _objectTree update (original cloning logic)
-					_objectTree.Add(element, clone = new SqlPredicate.NotExpr(Clone(expr.Expr1), expr.IsNot, expr.Precedence));
+					_objectTree.Add(element, clone = new SqlPredicate.NotExpr(Clone(expr.Expr1)));
 					break;
 				}
 

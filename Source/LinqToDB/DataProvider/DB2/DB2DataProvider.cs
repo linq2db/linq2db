@@ -28,7 +28,7 @@
 			SetCharFieldToType<char>("CHAR", DataTools.GetCharExpression);
 			SetCharField            ("CHAR", (r, i) => r.GetString(i).TrimEnd(' '));
 
-			_sqlOptimizer = new DB2SqlOptimizer(SqlProviderFlags);
+			_sqlOptimizer = new DB2SqlOptimizer(SqlProviderFlags, GetAstFactory());
 
 			SetProviderField(Adapter.DB2Int64Type       , typeof(long)    , Adapter.GetDB2Int64ReaderMethod       , dataReaderType: Adapter.DataReaderType);
 			SetProviderField(Adapter.DB2Int32Type       , typeof(int)     , Adapter.GetDB2Int32ReaderMethod       , dataReaderType: Adapter.DataReaderType);

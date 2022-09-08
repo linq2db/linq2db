@@ -8,6 +8,7 @@ namespace LinqToDB
 	using Interceptors;
 	using Mapping;
 	using SqlProvider;
+	using SqlQuery;
 
 	/// <summary>
 	/// Database connection abstraction interface.
@@ -33,6 +34,7 @@ namespace LinqToDB
 		/// Gets SQL optimizer service factory method for current context data provider.
 		/// </summary>
 		Func<ISqlOptimizer> GetSqlOptimizer       { get; }
+		AstFactory          AstFactory            { get; }
 		/// <summary>
 		/// Gets SQL support flags for current context data provider.
 		/// </summary>

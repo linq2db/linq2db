@@ -97,6 +97,7 @@ namespace LinqToDB.Linq.Builder
 		private  HashSet<Expression>?              _subQueryExpressions;
 		readonly ExpressionTreeOptimizationContext _optimizationContext;
 		readonly ParametersContext                 _parametersContext;
+		readonly AstFactory                        _ast;
 
 		public ExpressionTreeOptimizationContext   OptimizationContext => _optimizationContext;
 		public ParametersContext                   ParametersContext   => _parametersContext;
@@ -118,7 +119,8 @@ namespace LinqToDB.Linq.Builder
 			Expression                        expression,
 			ParameterExpression[]?            compiledParameters)
 		{
-			_query               = query;
+			_ast                 = dataContext.AstFactory;
+			_query               = query;			
 
 			CollectQueryDepended(expression);
 

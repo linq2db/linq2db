@@ -54,9 +54,9 @@
 			SetCharFieldToType<char>("NChar", DataTools.GetCharExpression);
 
 			if (version == OracleVersion.v11)
-				_sqlOptimizer = new Oracle11SqlOptimizer(SqlProviderFlags);
+				_sqlOptimizer = new Oracle11SqlOptimizer(SqlProviderFlags, GetAstFactory());
 			else
-				_sqlOptimizer = new Oracle12SqlOptimizer(SqlProviderFlags);
+				_sqlOptimizer = new Oracle12SqlOptimizer(SqlProviderFlags, GetAstFactory());
 
 			foreach (var (type, method) in Adapter.CustomReaders)
 				SetProviderField(type, type, method, dataReaderType: Adapter.DataReaderType);

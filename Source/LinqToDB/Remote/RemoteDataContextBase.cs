@@ -12,6 +12,7 @@ namespace LinqToDB.Remote
 	using Interceptors;
 	using Mapping;
 	using SqlProvider;
+	using SqlQuery;
 
 	[PublicAPI]
 	public abstract partial class RemoteDataContextBase : IDataContext
@@ -111,6 +112,9 @@ namespace LinqToDB.Remote
 				_serializationMappingSchema = new SerializationMappingSchema(_mappingSchema);
 			}
 		}
+
+		// FIXME(jods): AstFactory should be specific to remoted provider type
+		public AstFactory AstFactory { get; } = new AstFactory();
 
 		private  MappingSchema? _serializationMappingSchema;
 		internal MappingSchema   SerializationMappingSchema => _serializationMappingSchema ??= new SerializationMappingSchema(MappingSchema);
@@ -269,16 +273,19 @@ namespace LinqToDB.Remote
 			get
 			{
 				if (_getSqlOptimizer == null)
-				{
+				{					
 					var key  = Tuple.Create(SqlOptimizerType, ((IDataContext)this).SqlProviderFlags);
-
+										
 					_getSqlOptimizer = _sqlOptimizers.GetOrAdd(key, static key =>
 						Expression.Lambda<Func<ISqlOptimizer>>(
-								Expression.New(
-									key.Item1.GetConstructor(new[] { typeof(SqlProviderFlags) }) ??
-										ThrowHelper.ThrowInvalidOperationException<ConstructorInfo>(
-											$"Constructor for type '{key.Item1.Name}' not found."),
-									Expression.Constant(key.Item2)))
+							Expression.New(
+								key.Item1.GetConstructor(new[] { typeof(SqlProviderFlags), typeof(AstFactory) }) 
+									?? ThrowHelper.ThrowInvalidOperationException<ConstructorInfo>(
+										$"Constructor for type '{key.Item1.Name}' not found."),
+								Expression.Constant(key.Item2),
+								// FIXME(jods): inject provider-specific factory
+								Expression.Constant(new AstFactory()))
+							)
 							.CompileExpression());
 				}
 

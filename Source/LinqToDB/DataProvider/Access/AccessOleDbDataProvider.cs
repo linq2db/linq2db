@@ -31,7 +31,7 @@ namespace LinqToDB.DataProvider.Access
 
 			SetProviderField<DbDataReader, TimeSpan, DateTime>((r, i) => r.GetDateTime(i) - new DateTime(1899, 12, 30));
 
-			_sqlOptimizer = new AccessSqlOptimizer(SqlProviderFlags);
+			_sqlOptimizer = new AccessSqlOptimizer(SqlProviderFlags, GetAstFactory());
 		}
 
 		public override TableOptions SupportedTableOptions => TableOptions.None;

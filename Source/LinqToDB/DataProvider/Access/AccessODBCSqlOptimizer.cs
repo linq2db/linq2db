@@ -6,9 +6,9 @@
 
 	class AccessODBCSqlOptimizer : AccessSqlOptimizer
 	{
-		public AccessODBCSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
-		{
-		}
+		public AccessODBCSqlOptimizer(SqlProviderFlags sqlProviderFlags, AstFactory ast) 
+			: base(sqlProviderFlags, ast)
+		{ }
 
 		public override SqlStatement Finalize(MappingSchema mappingSchema, SqlStatement statement)
 		{

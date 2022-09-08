@@ -43,7 +43,7 @@ namespace LinqToDB.DataProvider.SQLite
 				                                         RowFeature.CompareToSelect | RowFeature.Between     | RowFeature.Update;
 			}
 
-			_sqlOptimizer = new SQLiteSqlOptimizer(SqlProviderFlags);
+			_sqlOptimizer = new SQLiteSqlOptimizer(SqlProviderFlags, GetAstFactory());
 
 			/*
 			 * WHAT'S WRONG WITH SQLITE:

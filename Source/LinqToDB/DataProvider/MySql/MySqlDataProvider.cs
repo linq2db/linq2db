@@ -21,7 +21,7 @@
 			SqlProviderFlags.IsNamingQueryBlockSupported       = true;
 			SqlProviderFlags.RowConstructorSupport             = RowFeature.Equality | RowFeature.Comparisons | RowFeature.CompareToSelect | RowFeature.In;
 
-			_sqlOptimizer = new MySqlSqlOptimizer(SqlProviderFlags);
+			_sqlOptimizer = new MySqlSqlOptimizer(SqlProviderFlags, GetAstFactory());
 
 			// configure provider-specific data readers
 			if (Adapter.GetMySqlDecimalMethodName != null)

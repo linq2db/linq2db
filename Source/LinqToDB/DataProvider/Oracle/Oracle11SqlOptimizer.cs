@@ -7,9 +7,9 @@
 
 	public class Oracle11SqlOptimizer : BasicSqlOptimizer
 	{
-		public Oracle11SqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
-		{
-		}
+		public Oracle11SqlOptimizer(SqlProviderFlags sqlProviderFlags, AstFactory ast) 
+			: base(sqlProviderFlags, ast)
+		{ }
 
 		public override SqlStatement Finalize(MappingSchema mappingSchema, SqlStatement statement)
 		{
@@ -87,8 +87,8 @@
 							if (string1 == "")
 							{
 								var sc = new SqlSearchCondition();
-								sc.Conditions.Add(new SqlCondition(false, new SqlPredicate.ExprExpr(expr.Expr1, expr.Operator, expr.Expr2, null), true));
-								sc.Conditions.Add(new SqlCondition(false, new SqlPredicate.IsNull(expr.Expr2, false), true));
+								sc.Conditions.Add(new SqlCondition(false, ast.Comparison(expr.Expr1, expr.Operator, expr.Expr2), true));
+								sc.Conditions.Add(new SqlCondition(false, ast.IsNull(expr.Expr2), true));
 								return sc;
 							}
 						}
@@ -99,8 +99,8 @@
 							if (string2 == "")
 							{
 								var sc = new SqlSearchCondition();
-								sc.Conditions.Add(new SqlCondition(false, new SqlPredicate.ExprExpr(expr.Expr1, expr.Operator, expr.Expr2, null), true));
-								sc.Conditions.Add(new SqlCondition(false, new SqlPredicate.IsNull(expr.Expr1, false), true));
+								sc.Conditions.Add(new SqlCondition(false, ast.Comparison(expr.Expr1, expr.Operator, expr.Expr2), true));
+								sc.Conditions.Add(new SqlCondition(false, ast.IsNull(expr.Expr1), true));
 								return sc;
 							}
 						}
@@ -300,8 +300,9 @@
 				withStack: false);
 		}
 
-		protected override ISqlExpression ConvertFunction(SqlFunction func)
+		protected override ISqlExpression ConvertFunction(ISqlExpression expr)
 		{
+			if (expr is not SqlFunction func) return expr;
 			func = ConvertFunctionParameters(func, false);
 			return base.ConvertFunction(func);
 		}

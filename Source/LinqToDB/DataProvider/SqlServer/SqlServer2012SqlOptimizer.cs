@@ -5,13 +5,13 @@
 
 	class SqlServer2012SqlOptimizer : SqlServerSqlOptimizer
 	{
-		public SqlServer2012SqlOptimizer(SqlProviderFlags sqlProviderFlags) : this(sqlProviderFlags, SqlServerVersion.v2012)
-		{
-		}
+		public SqlServer2012SqlOptimizer(SqlProviderFlags sqlProviderFlags, AstFactory ast)
+			: this(sqlProviderFlags, SqlServerVersion.v2012, ast)
+		{ }
 
-		protected SqlServer2012SqlOptimizer(SqlProviderFlags sqlProviderFlags, SqlServerVersion version) : base(sqlProviderFlags, version)
-		{
-		}
+		protected SqlServer2012SqlOptimizer(SqlProviderFlags sqlProviderFlags, SqlServerVersion version, AstFactory ast) 
+			: base(sqlProviderFlags, version, ast)
+		{ }
 
 		public override SqlStatement TransformStatement(SqlStatement statement)
 		{
@@ -46,8 +46,10 @@
 			return statement;
 		}
 
-		protected override ISqlExpression ConvertFunction(SqlFunction func)
+		protected override ISqlExpression ConvertFunction(ISqlExpression expr)
 		{
+			if (expr is not SqlFunction func) return expr;
+
 			func = ConvertFunctionParameters(func, false);
 
 			switch (func.Name)
@@ -66,7 +68,7 @@
 			return base.ConvertFunction(func);
 		}
 
-		static SqlFunction ConvertCase(bool canBeNull, Type systemType, ISqlExpression[] parameters, int start)
+		SqlFunction ConvertCase(bool canBeNull, Type systemType, ISqlExpression[] parameters, int start)
 		{
 			var len  = parameters.Length - start;
 			var name = start == 0 ? "IIF" : "CASE";
@@ -75,9 +77,7 @@
 			if (start == 0 && SqlExpression.NeedsEqual(cond))
 			{
 				cond = new SqlSearchCondition(
-					new SqlCondition(
-						false,
-						new SqlPredicate.ExprExpr(cond, SqlPredicate.Operator.Equal, new SqlValue(1), null)));
+					new SqlCondition(isNot: false, ast.Equal(cond, ast.One)));
 			}
 
 			if (len == 3)

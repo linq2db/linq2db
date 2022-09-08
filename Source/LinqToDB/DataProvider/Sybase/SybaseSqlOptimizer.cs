@@ -6,9 +6,9 @@
 
 	class SybaseSqlOptimizer : BasicSqlOptimizer
 	{
-		public SybaseSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
-		{
-		}
+		public SybaseSqlOptimizer(SqlProviderFlags sqlProviderFlags, AstFactory ast)
+			: base(sqlProviderFlags, ast)
+		{ }
 
 		public override SqlStatement TransformStatement(SqlStatement statement)
 		{
@@ -23,8 +23,10 @@
 
 		public override string[] LikeCharactersToEscape => SybaseCharactersToEscape;
 
-		protected override ISqlExpression ConvertFunction(SqlFunction func)
+		protected override ISqlExpression ConvertFunction(ISqlExpression expr)
 		{
+			if (expr is not SqlFunction func) return expr;
+			
 			func = ConvertFunctionParameters(func, false);
 
 			switch (func.Name)

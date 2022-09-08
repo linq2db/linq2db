@@ -7,9 +7,9 @@
 
 	class PostgreSQLSqlOptimizer : BasicSqlOptimizer
 	{
-		public PostgreSQLSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
-		{
-		}
+		public PostgreSQLSqlOptimizer(SqlProviderFlags sqlProviderFlags, AstFactory ast)
+			: base(sqlProviderFlags, ast)
+		{ }
 
 		public override bool CanCompareSearchConditions => true;
 

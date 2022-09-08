@@ -519,9 +519,9 @@
 				}
 			}
 
-			if (condition.IsNot && condition.Predicate is IInvertibleElement invertibleElement && invertibleElement.CanInvert())
+			if (condition.IsNot && condition.Predicate is IInvertibleElement { CanInvert: true } invertibleElement)
 			{
-				return new SqlCondition(false, (ISqlPredicate)invertibleElement.Invert(), condition.IsOr);
+				return new SqlCondition(false, invertibleElement.Invert(), condition.IsOr);
 			}
 
 			return condition;
@@ -552,7 +552,7 @@
 				{
 					var exprExpr = (SqlPredicate.ExprExpr)cond.Predicate;
 
-					if (cond.IsNot && exprExpr.CanInvert())
+					if (cond.IsNot && exprExpr.CanInvert)
 					{
 						exprExpr = (SqlPredicate.ExprExpr)exprExpr.Invert();
 						newCond  = new SqlCondition(false, exprExpr, newCond.IsOr);
@@ -590,8 +590,8 @@
 						}
 						else if (expr.Expr1 is SqlSearchCondition expCond && expCond.Conditions.Count == 1)
 						{
-							if (expCond.Conditions[0].Predicate is IInvertibleElement invertible && invertible.CanInvert())
-								newCond = new SqlCondition(false, (ISqlPredicate)invertible.Invert(), newCond.IsOr);
+							if (expCond.Conditions[0].Predicate is IInvertibleElement { CanInvert: true } invertible)
+								newCond = new SqlCondition(false, invertible.Invert(), newCond.IsOr);
 						}
 					}
 				}
@@ -686,9 +686,9 @@
 							isNot = !isNot;
 
 						var predicate = sc.Conditions[0].Predicate;
-						if (isNot && predicate is IInvertibleElement invertible && invertible.CanInvert())
+						if (isNot && predicate is IInvertibleElement { CanInvert: true } invertible)
 						{
-							predicate = (ISqlPredicate)invertible.Invert();
+							predicate = invertible.Invert();
 							isNot = !isNot;
 						}
 

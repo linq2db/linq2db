@@ -34,7 +34,7 @@ namespace LinqToDB.DataProvider.SqlCe
 			SetCharField("NChar",    (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("NVarChar", (r,i) => r.GetString(i).TrimEnd(' '));
 
-			_sqlOptimizer = new SqlCeSqlOptimizer(SqlProviderFlags);
+			_sqlOptimizer = new SqlCeSqlOptimizer(SqlProviderFlags, GetAstFactory());
 		}
 
 		#region Overrides

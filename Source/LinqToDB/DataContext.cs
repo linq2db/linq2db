@@ -11,6 +11,7 @@ namespace LinqToDB
 	using Linq;
 	using Mapping;
 	using SqlProvider;
+	using SqlQuery;
 
 	/// <summary>
 	/// Implements abstraction over non-persistent database connection that could be released after query or transaction execution.
@@ -142,6 +143,8 @@ namespace LinqToDB
 		/// Gets database provider implementation.
 		/// </summary>
 		public IDataProvider DataProvider        => _optionsBuilder.DataProvider!;
+
+		public AstFactory    AstFactory          => DataProvider.GetAstFactory();
 
 		/// <summary>
 		/// Gets or sets context identifier. Uses provider's name by default.
