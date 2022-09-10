@@ -62,27 +62,25 @@
 								new SqlFunction(typeof(string), "SUBSTRING",
 									predicate.Expr1,
 									ast.One,
-									new SqlFunction(typeof(int), "Length", predicate.Expr2))),
+									ast.Length(predicate.Expr2))),
 							new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary, predicate.Expr2));
 						break;
 					}
 
 					case SqlPredicate.SearchString.SearchKind.EndsWith:
 					{
-						var indexExpression = new SqlBinaryExpression(typeof(int),
-							new SqlBinaryExpression(typeof(int),
-								new SqlFunction(typeof(int), "Length", predicate.Expr1),
-								"-",
-								new SqlFunction(typeof(int), "Length", predicate.Expr2)),
-							"+",
-							new SqlValue(1));
+						var indexExpression = ast.Add<int>(
+							ast.Subtract<int>(
+								ast.Length(predicate.Expr1),
+								ast.Length(predicate.Expr2)),
+							ast.One);
 
 						subStrPredicate = ast.Equal(
 							new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary,
 								new SqlFunction(typeof(string), "SUBSTRING",
 									predicate.Expr1,
 									indexExpression,
-									new SqlFunction(typeof(int), "Length", predicate.Expr2))),
+									ast.Length(predicate.Expr2))),
 							new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary, predicate.Expr2));
 
 						break;

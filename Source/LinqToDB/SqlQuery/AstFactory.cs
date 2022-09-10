@@ -67,7 +67,7 @@ namespace LinqToDB.SqlQuery
 		public SqlSearchCondition And(params ISqlPredicate[] operands)
 			=> And((ICollection<ISqlPredicate>)operands);
 
-		public SqlSearchCondition And(ICollection<ISqlPredicate> operands)
+		public SqlSearchCondition And(IEnumerable<ISqlPredicate> operands)
 		{
 			// TODO(jods): ensure nested AND are flattened. It's done by the Expression parser for efficiency,
 			// but it isn't guaranteed when manipulating the AST, e.g. by optimizations.
@@ -79,7 +79,7 @@ namespace LinqToDB.SqlQuery
 		public SqlSearchCondition Or(params ISqlPredicate[] operands)
 			=> Or((ICollection<ISqlPredicate>)operands);
 
-		public SqlSearchCondition Or(ICollection<ISqlPredicate> operands)
+		public SqlSearchCondition Or(IEnumerable<ISqlPredicate> operands)
 		{
 			// TODO(jods): ensure nested OR are flattened. It's done by the Expression parser for efficiency,
 			// but it isn't guaranteed when manipulating the AST, e.g. by optimizations.
@@ -115,6 +115,7 @@ namespace LinqToDB.SqlQuery
 		public readonly SqlValue MinusOne = new SqlValue(-1);
 		public readonly SqlValue Zero     = new SqlValue(0);
 		public readonly SqlValue One      = new SqlValue(1);
+		public readonly SqlValue Two      = new SqlValue(2);
 
 		public readonly SqlValue True     = new SqlValue(true);
 		public readonly SqlValue False    = new SqlValue(false);
@@ -122,20 +123,48 @@ namespace LinqToDB.SqlQuery
 		public readonly ISqlPredicate TruePredicate;
 		public readonly ISqlPredicate FalsePredicate;
 
+		public SqlValue Const(int value)
+		{
+			return value switch
+			{
+				-1 => MinusOne,
+				0  => Zero,
+				1  => One,
+				2  => Two,
+				_  => new SqlValue(value),
+			};
+		}
+
 		#endregion
 
 		#region Expressions:Numbers
 
+		public ISqlExpression Negate<T>(ISqlExpression a)
+			=> Negate(a, typeof(T));
+
 		public ISqlExpression Negate(ISqlExpression a, Type sysType)
 			=> new SqlBinaryExpression(sysType, MinusOne, "*", a, Precedence.Multiplicative);
+
+		public ISqlExpression Add<T>(ISqlExpression a, ISqlExpression b)
+			=> Add(a, b, typeof(T));
+
 		public ISqlExpression Add(ISqlExpression a, ISqlExpression b, Type sysType)
 			=> new SqlBinaryExpression(sysType, a, "+", b, Precedence.Additive);
+
+		public ISqlExpression Subtract<T>(ISqlExpression a, ISqlExpression b)
+			=> Subtract(a, b, typeof(T));
 
 		public ISqlExpression Subtract(ISqlExpression a, ISqlExpression b, Type sysType)
 			=> new SqlBinaryExpression(sysType, a, "-", b, Precedence.Subtraction);
 
+		public ISqlExpression Multiply<T>(ISqlExpression a, ISqlExpression b)
+			=> Multiply(a, b, typeof(T));
+
 		public ISqlExpression Multiply(ISqlExpression a, ISqlExpression b, Type sysType)
 			=> new SqlBinaryExpression(sysType, a, "*", b, Precedence.Multiplicative);
+
+		public ISqlExpression Divide<T>(ISqlExpression a, ISqlExpression b)
+			=> Divide(a, b, typeof(T));
 
 		public ISqlExpression Divide(ISqlExpression a, ISqlExpression b, Type sysType)
 			=> new SqlBinaryExpression(sysType, a, "/", b, Precedence.Multiplicative);
@@ -183,6 +212,10 @@ namespace LinqToDB.SqlQuery
 			};
 		}
 
+		// REVIEW(jods): ISqlPredicate seems more logical/convenient. Could we get rid of the ISqlExpression overload?
+		public ISqlExpression If(ISqlPredicate condition, ISqlExpression whenTrue, ISqlExpression whenFalse, Type sysType)
+			=> If(ToExpression(condition), whenTrue, whenFalse, sysType);
+
 		public ISqlExpression If(ISqlExpression condition, ISqlExpression whenTrue, ISqlExpression whenFalse, Type sysType)
 		{			
 			// Flatten chained else-if calls
@@ -219,6 +252,34 @@ namespace LinqToDB.SqlQuery
 				CanBeNull = value.CanBeNull
 			};
 		}
+
+		#endregion
+
+		#region Expressions:Functions
+
+		public ISqlExpression Func<T>(string name, params ISqlExpression[] parameters)
+			=> Func(typeof(T), name, parameters);
+
+		public ISqlExpression Func(Type returnType, string name, params ISqlExpression[] parameters)
+			=> new SqlFunction(returnType, name, parameters);
+
+		public ISqlExpression Func(Type returnType, bool nullable, string name, params ISqlExpression[] parameters)
+			=> new SqlFunction(returnType, name, parameters) { CanBeNull = nullable };
+
+		public ISqlExpression Length(ISqlExpression value)
+			=> new SqlFunction(typeof(int), "Length", value) { CanBeNull = value.CanBeNull };
+
+		public ISqlExpression Substr(ISqlExpression value, ISqlExpression start)
+			=> new SqlFunction(typeof(string), "Substr", value, start) 
+			{ 
+				CanBeNull = value.CanBeNull | start.CanBeNull,
+			};
+
+		public ISqlExpression Substr(ISqlExpression value, ISqlExpression start, ISqlExpression length)
+			=> new SqlFunction(typeof(string), "Substr", value, start, length) 
+			{ 
+				CanBeNull = value.CanBeNull | start.CanBeNull | length.CanBeNull,
+			};
 
 		#endregion
 

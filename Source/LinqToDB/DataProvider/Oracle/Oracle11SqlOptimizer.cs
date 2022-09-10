@@ -125,15 +125,17 @@
 					case "%": return new SqlFunction(be.SystemType, "MOD", be.Expr1, be.Expr2);
 					case "&": return new SqlFunction(be.SystemType, "BITAND", be.Expr1, be.Expr2);
 					case "|": // (a + b) - BITAND(a, b)
-						return Sub(
-							Add(be.Expr1, be.Expr2, be.SystemType),
+						return ast.Subtract(
+							ast.Add(be.Expr1, be.Expr2, be.SystemType),
 							new SqlFunction(be.SystemType, "BITAND", be.Expr1, be.Expr2),
 							be.SystemType);
 
 					case "^": // (a + b) - BITAND(a, b) * 2
-						return Sub(
-							Add(be.Expr1, be.Expr2, be.SystemType),
-							Mul(new SqlFunction(be.SystemType, "BITAND", be.Expr1, be.Expr2), 2),
+						return ast.Subtract(
+							ast.Add(be.Expr1, be.Expr2, be.SystemType),
+							ast.Multiply<int>(
+								new SqlFunction(be.SystemType, "BITAND", be.Expr1, be.Expr2), 
+								ast.Two),
 							be.SystemType);
 					case "+": return be.SystemType == typeof(string) ? new SqlBinaryExpression(be.SystemType, be.Expr1, "||", be.Expr2, be.Precedence) : expression;
 				}
@@ -229,7 +231,9 @@
 			else if (expression is SqlExpression e)
 			{
 				if (e.Expr.StartsWith("To_Number(To_Char(") && e.Expr.EndsWith(", 'FF'))"))
-					return Div(new SqlExpression(e.SystemType, e.Expr.Replace("To_Number(To_Char(", "to_Number(To_Char("), e.Parameters), 1000);
+					return ast.Divide<int>(
+						new SqlExpression(e.SystemType, e.Expr.Replace("To_Number(To_Char(", "to_Number(To_Char("), e.Parameters), 
+						ast.Const(1000));
 			}
 
 			return expression;

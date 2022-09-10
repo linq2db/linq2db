@@ -86,7 +86,7 @@ namespace LinqToDB.DataProvider.Access
 				{
 					case SqlPredicate.SearchString.SearchKind.StartsWith:
 					{
-						subStrPredicate = ast.Equal(							
+						subStrPredicate = ast.Equal(
 							new SqlFunction(typeof(int), "InStr",
 								ast.One,
 								predicate.Expr1,
@@ -99,13 +99,13 @@ namespace LinqToDB.DataProvider.Access
 
 					case SqlPredicate.SearchString.SearchKind.EndsWith:
 					{
-						var indexExpr = new SqlBinaryExpression(typeof(int),
-							new SqlBinaryExpression(typeof(int),
-								new SqlFunction(typeof(int), "Length", predicate.Expr1), "-",
-								new SqlFunction(typeof(int), "Length", predicate.Expr2)), "+",
-							new SqlValue(1));
+						var indexExpr = ast.Add<int>(
+							ast.Subtract<int>(
+								ast.Length(predicate.Expr1), 
+								ast.Length(predicate.Expr2)),
+							ast.One);
 
-						subStrPredicate = ast.Equal(							
+						subStrPredicate = ast.Equal(
 							new SqlFunction(typeof(int), "InStr",
 								indexExpr,
 								predicate.Expr1,
@@ -132,9 +132,9 @@ namespace LinqToDB.DataProvider.Access
 
 				if (subStrPredicate != null)
 				{
-					return new SqlSearchCondition(
-						new SqlCondition(false, like, predicate.IsNot),
-						new SqlCondition(predicate.IsNot, subStrPredicate));
+					return predicate.IsNot
+						? ast.Or(like, ast.Not(subStrPredicate))
+						: ast.And(like, subStrPredicate);
 				}
 			}
 

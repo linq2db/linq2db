@@ -26,16 +26,9 @@
 
 				case QueryType.Update :
 				{
-					if (SqlProviderFlags.IsUpdateFromSupported)
-					{
-						statement = GetAlternativeUpdatePostgreSqlite((SqlUpdateStatement)statement);
-					}
-					else
-					{
-						statement = GetAlternativeUpdate((SqlUpdateStatement)statement);
-					}
-
-					break;
+					return SqlProviderFlags.IsUpdateFromSupported
+						? GetAlternativeUpdatePostgreSqlite((SqlUpdateStatement)statement)
+						: GetAlternativeUpdate((SqlUpdateStatement)statement);
 				}
 			}
 
@@ -57,10 +50,7 @@
 					case SqlPredicate.SearchString.SearchKind.StartsWith:
 					{
 						subStrPredicate = ast.Equal(
-							new SqlFunction(typeof(string), "Substr", 
-								predicate.Expr1, 
-								ast.One,
-								new SqlFunction(typeof(int), "Length", predicate.Expr2)),
+							ast.Substr(predicate.Expr1, ast.One, ast.Length(predicate.Expr2)),
 							predicate.Expr2);
 
 						break;
@@ -69,12 +59,9 @@
 					case SqlPredicate.SearchString.SearchKind.EndsWith:
 					{
 						subStrPredicate = ast.Equal(
-							new SqlFunction(typeof(string), "Substr",
-								predicate.Expr1,
-								ast.Negate(
-									new SqlFunction(typeof(int), "Length", predicate.Expr2),
-									typeof(int))
-							),
+							ast.Substr(
+								predicate.Expr1, 
+								ast.Negate<int>(ast.Length(predicate.Expr2))),
 							predicate.Expr2);
 
 						break;
@@ -82,7 +69,8 @@
 					case SqlPredicate.SearchString.SearchKind.Contains:
 					{
 						subStrPredicate = ast.Greater(
-							new SqlFunction(typeof(int), "InStr", predicate.Expr1, predicate.Expr2),
+							// REVIEW(jods): replace by ast.CharIndex once we have provider-specific factories
+							ast.Func<int>("Instr", predicate.Expr1, predicate.Expr2),
 							ast.Zero);
 
 						break;
@@ -92,11 +80,9 @@
 
 				if (subStrPredicate != null)
 				{
-					var result = new SqlSearchCondition(
-						new SqlCondition(false, like, predicate.IsNot),
-						new SqlCondition(predicate.IsNot, subStrPredicate));
-
-					return result;
+					return predicate.IsNot
+						? ast.Or(like, ast.Not(subStrPredicate))
+						: ast.And(like, subStrPredicate);
 				}
 			}
 
@@ -111,11 +97,17 @@
 			{
 				switch (be.Operation)
 				{
-					case "+": return be.SystemType == typeof(string)? new SqlBinaryExpression(be.SystemType, be.Expr1, "||", be.Expr2, be.Precedence) : expression;
+					case "+": 
+						return be.SystemType == typeof(string)
+							? new SqlBinaryExpression(be.SystemType, be.Expr1, "||", be.Expr2, be.Precedence)
+							: expression;
 					case "^": // (a + b) - (a & b) * 2
-						return Sub(
-							Add(be.Expr1, be.Expr2, be.SystemType),
-							Mul(new SqlBinaryExpression(be.SystemType, be.Expr1, "&", be.Expr2), 2), be.SystemType);
+						return ast.Subtract(
+							ast.Add(be.Expr1, be.Expr2, be.SystemType),
+							ast.Multiply<int>(
+								ast.BitAnd(be.Expr1, be.Expr2, be.SystemType), 
+								ast.Two), 
+								be.SystemType);
 				}
 			}
 			else if (expression is SqlFunction func)
@@ -207,10 +199,10 @@
 
 		private static bool IsDateTime(Type type)
 		{
-			return    type == typeof(DateTime)
-			          || type == typeof(DateTimeOffset)
-			          || type == typeof(DateTime?)
-			          || type == typeof(DateTimeOffset?);
+			return type == typeof(DateTime)
+				|| type == typeof(DateTimeOffset)
+			    || type == typeof(DateTime?)
+			    || type == typeof(DateTimeOffset?);
 		}
 
 		protected override ISqlExpression ConvertConvertion(SqlFunction func)
