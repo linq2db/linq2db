@@ -150,7 +150,10 @@ namespace LinqToDB.Linq.Builder
 				if (!path.Type.IsSameOrParentOf(Body.Type) && flags.HasFlag(ProjectFlags.Expression))
 					return new SqlEagerLoadExpression((ContextRefExpression)path, path, GetEagerLoadExpression(path));
 
-				result = Body;
+				if (flags.HasFlag(ProjectFlags.SQL))
+					result = Builder.ConvertToSqlExpr(this, Body, flags);
+				else
+					result = Body;
 			}
 			else
 			{

@@ -107,7 +107,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			var contextRef = new ContextRefExpression(typeof(object), context);
 
-			var rootContext = context.Builder.MakeExpression(contextRef, ProjectFlags.Expand) as ContextRefExpression;
+			var rootContext = context.Builder.MakeExpression(context, contextRef, ProjectFlags.Expand) as ContextRefExpression;
 
 			var tableContext = rootContext?.BuildContext as TableBuilder.TableContext;
 
@@ -131,7 +131,7 @@ namespace LinqToDB.Linq.Builder
 
 		public static Expression RequireSqlExpression(this IBuildContext context, Expression? path)
 		{
-			var sql = context.Builder.MakeExpression(path, ProjectFlags.SQL);
+			var sql = context.Builder.MakeExpression(context, path, ProjectFlags.SQL);
 			if (sql == null)
 				throw new LinqException("'{0}' cannot be converted to SQL.", path);
 

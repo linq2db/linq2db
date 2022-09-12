@@ -204,7 +204,7 @@ namespace LinqToDB.Linq.Builder
 			ref List<Preamble>? preambles, 
 			Expression[]        previousKeys)
 		{
-			var expr = MakeExpression(new ContextRefExpression(typeof(T), sequence), ProjectFlags.Expression);
+			var expr = MakeExpression(sequence, new ContextRefExpression(typeof(T), sequence), ProjectFlags.Expression);
 
 			expr = FinalizeProjection(query, sequence, expr, queryParameter, ref preambles, previousKeys);
 

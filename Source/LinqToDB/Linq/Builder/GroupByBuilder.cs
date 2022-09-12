@@ -430,7 +430,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (SequenceHelper.IsSameContext(path, this) && flags.HasFlag(ProjectFlags.Keys))
 				{
-					var result = Builder.MakeExpression(_keyRef, flags);
+					var result = Builder.MakeExpression(this, _keyRef, flags);
 					return result;
 				}
 
@@ -488,7 +488,7 @@ namespace LinqToDB.Linq.Builder
 
 					var keyPath = new ContextRefExpression(me.Type, _key);
 
-					var result = Builder.MakeExpression(keyPath, flags);
+					var result = Builder.MakeExpression(this, keyPath, flags);
 
 					return result;
 				}

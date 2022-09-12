@@ -123,7 +123,7 @@ namespace LinqToDB.Linq.Builder
 				Init();
 			}
 
-			readonly         Type?                     _type;
+			readonly         Type                      _type;
 			readonly         bool                      _isObject;
 			readonly         MethodCallExpression      _methodCall;
 			private readonly SetOperation              _setOperation;

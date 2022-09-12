@@ -322,7 +322,7 @@ namespace LinqToDB.Linq.Builder
 						// Bad thing here. We expect that SelectQueryOptimizer will transfer OUTER APPLY to ROW_NUMBER query. We have to predict it here
 						if (!IsAssociation && !Builder.DataContext.SqlProviderFlags.IsApplyJoinSupported && !Builder.DataContext.SqlProviderFlags.IsWindowFunctionsSupported)
 						{
-							var sqlProjected = Builder.MakeExpression(projected, ProjectFlags.Test);
+							var sqlProjected = Builder.MakeExpression(this, projected, ProjectFlags.Test);
 
 							var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(sqlProjected);
 

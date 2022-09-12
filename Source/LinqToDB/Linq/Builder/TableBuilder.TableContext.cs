@@ -242,7 +242,7 @@ namespace LinqToDB.Linq.Builder
 				if (sql == null)
 					return path;
 
-				var placeholder = ExpressionBuilder.CreatePlaceholder(this, sql, path);
+				var placeholder = ExpressionBuilder.CreatePlaceholder(this, sql, path, trackingPath: path);
 
 				return placeholder;
 			}

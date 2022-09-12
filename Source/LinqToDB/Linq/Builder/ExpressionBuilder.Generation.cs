@@ -124,7 +124,7 @@ namespace LinqToDB.Linq.Builder
 			if (flags.HasFlag(ProjectFlags.SQL) || flags.HasFlag(ProjectFlags.Test))
 			{
 				var assignments = members
-					.Select(x => new SqlGenericConstructorExpression.Assignment(x.Member, x.Expression, x.Column.MemberAccessor.HasSetter, x.IsLoaded))
+					.Select(x => new SqlGenericConstructorExpression.Assignment(x.Member, x.Expression, x.Column?.MemberAccessor.HasSetter == true, x.IsLoaded))
 					.ToList();
 
 				return new SqlGenericConstructorExpression(SqlGenericConstructorExpression.CreateType.Full, entityType, null, new ReadOnlyCollection<SqlGenericConstructorExpression.Assignment>(assignments));

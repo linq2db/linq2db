@@ -166,7 +166,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (isOuter)
 				{
-					var root = MakeExpression(associationExpression, ProjectFlags.AssociationRoot);
+					var root = MakeExpression(rootContext.BuildContext, associationExpression, ProjectFlags.AssociationRoot);
 					_isOuterAssociations ??= new HashSet<Expression>(ExpressionEqualityComparer.Instance);
 					_isOuterAssociations.Add(root);
 				}

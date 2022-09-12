@@ -29,6 +29,7 @@ using TypeHelper = LinqToDB.Common.TypeHelper;
 
 namespace Tests
 {
+	using System.Diagnostics.CodeAnalysis;
 	using Model;
 	using Tools;
 
@@ -1218,7 +1219,8 @@ namespace Tests
 			Assert.IsTrue(b);
 		}
 
-		public static Expression CheckForNull(Expression? expression)
+		[return: NotNullIfNotNull("expression")]
+		public static Expression? CheckForNull(Expression? expression)
 		{
 			if (expression != null && expression.NodeType.NotIn(ExpressionType.Lambda, ExpressionType.Quote) &&
 			    (expression.Type.IsClass || expression.Type.IsInterface) &&
@@ -1233,7 +1235,8 @@ namespace Tests
 			return expression;
 		}
 
-		public static Expression CheckForNull(Expression? expression, Expression trueExpression, Expression falseExpression)
+		[return: NotNullIfNotNull("expression")]
+		public static Expression? CheckForNull(Expression? expression, Expression trueExpression, Expression falseExpression)
 		{
 			if (expression is MemberExpression me)
 				expression = CheckForNull(me);

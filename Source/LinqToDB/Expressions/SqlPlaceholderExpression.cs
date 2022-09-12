@@ -16,11 +16,13 @@ namespace LinqToDB.Expressions
 				throw new InvalidOperationException();
 			if (path is SqlPlaceholderExpression)
 				throw new InvalidOperationException();
+			if (trackingPath is SqlPlaceholderExpression)
+				throw new InvalidOperationException();
 			#endif
 
 			SelectQuery  = selectQuery;
 			Path         = path;
-			ConvertType  = convertType;
+			ConvertType  = convertType ?? path.Type;
 			Alias        = alias;
 			Index        = index;
 			Sql          = sql;
@@ -33,7 +35,7 @@ namespace LinqToDB.Expressions
 		public int?           Index        { get; }
 		public string?        Alias        { get; set; }
 		public ISqlExpression Sql          { get; }
-		public Type?          ConvertType  { get; }
+		public Type           ConvertType  { get; }
 
 
 		public override ExpressionType NodeType => ExpressionType.Extension;
@@ -97,7 +99,7 @@ namespace LinqToDB.Expressions
 
 		protected bool Equals(SqlPlaceholderExpression other)
 		{
-			return Equals(SelectQuery, other.SelectQuery)                        &&
+			return Equals(SelectQuery, other.SelectQuery)                       &&
 			       ExpressionEqualityComparer.Instance.Equals(Path, other.Path) &&
 			       Index       == other.Index                                   &&
 			       ConvertType == other.ConvertType;
@@ -130,7 +132,7 @@ namespace LinqToDB.Expressions
 				var hashCode = SelectQuery != null ? SelectQuery.GetHashCode() : 0;
 				hashCode = (hashCode * 397) ^ ExpressionEqualityComparer.Instance.GetHashCode(Path);
 				hashCode = (hashCode * 397) ^ Index.GetHashCode();
-				hashCode = (hashCode * 397) ^ (ConvertType != null ? ConvertType.GetHashCode() : 0);
+				hashCode = (hashCode * 397) ^ ConvertType.GetHashCode();
 				return hashCode;
 			}
 		}

@@ -110,7 +110,7 @@ namespace LinqToDB.Linq.Builder
 				return ThrowHelper.ThrowNotImplementedException<SqlInfo[]>();
 			}
 
-			public Expression MakeExpression(Expression? path, ProjectFlags flags)
+			public Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
 				throw new NotImplementedException();
 			}

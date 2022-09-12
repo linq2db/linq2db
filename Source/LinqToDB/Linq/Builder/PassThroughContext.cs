@@ -60,7 +60,7 @@ namespace LinqToDB.Linq.Builder
 		public virtual Expression MakeExpression(Expression path, ProjectFlags flags)
 		{
 			path = SequenceHelper.CorrectExpression(path, this, Context);
-			return Builder.MakeExpression(path, flags);
+			return Builder.MakeExpression(Context, path, flags);
 		}
 
 		public abstract IBuildContext Clone(CloningContext    context);

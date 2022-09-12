@@ -113,22 +113,22 @@ namespace LinqToDB.Linq.Builder
 			return genericType.GetGenericArguments()[0];
 		}
 
-		Expression ExpandContexts(Expression expression)
+		Expression ExpandContexts(IBuildContext currentContext, Expression expression)
 		{
-			var result = expression.Transform(this, static (builder, e) =>
+			var result = expression.Transform((builder: this, currentContext), static (ctx, e) =>
 			{
 				if (e.NodeType == ExpressionType.Extension || e.NodeType == ExpressionType.MemberAccess ||
 				    e.NodeType == ExpressionType.Call)
 				{
 					if (e.NodeType == ExpressionType.MemberAccess)
 					{
-						if (null != e.Find(e, (ctx, e) => e.NodeType == ExpressionType.Parameter))
+						if (null != e.Find(e, (_, e) => e.NodeType == ExpressionType.Parameter))
 						{
 							return new TransformInfo(e);
 						}
 					}
 
-					var newExpr = builder.MakeExpression(e, ProjectFlags.Expand);
+					var newExpr = ctx.builder.MakeExpression(ctx.currentContext, e, ProjectFlags.Expand);
 
 					return new TransformInfo(newExpr, false);
 				}
@@ -153,7 +153,7 @@ namespace LinqToDB.Linq.Builder
 
 			var sequenceExpression = eagerLoad.SequenceExpression;
 
-			sequenceExpression = ExpandContexts(sequenceExpression);
+			sequenceExpression = ExpandContexts(buildContext, sequenceExpression);
 
 			var correctedSequence    = cloningContext.CloneExpression(sequenceExpression);
 

@@ -42,7 +42,7 @@ namespace LinqToDB.Linq.Builder
 			SqlPlaceholderExpression functionPlaceholder;
 			AggregationContext       context;
 
-			var sequenceArgument = builder.CorrectRoot(methodCall.Arguments[0]);
+			var sequenceArgument = builder.CorrectRoot(null, methodCall.Arguments[0]);
 
 			if (!buildInfo.IsSubQuery)
 			{
@@ -107,7 +107,7 @@ namespace LinqToDB.Linq.Builder
 							new BuildInfo(buildInfo, sequenceArgument)
 								{ CreateSubQuery = false, IsAggregation = true });
 
-						var rootContext  = builder.GetRootContext(sequenceArgument, false);
+						var rootContext  = builder.GetRootContext(null, sequenceArgument, false);
 
 						if (rootContext != null)
 						{

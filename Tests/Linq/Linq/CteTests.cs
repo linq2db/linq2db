@@ -995,7 +995,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("Scalar recursive CTE are not working: SQL logic error near *: syntax error")]
+		//[ActiveIssue("Scalar recursive CTE are not working: SQL logic error near *: syntax error")]
 		[Test]
 		public void TestRecursiveScalar([CteContextSource] string context)
 		{
@@ -1353,7 +1353,6 @@ namespace Tests.Linq
 			public TestFolder? Parent { get; set; }
 		}
 
-		[ActiveIssue(2264)]
 		[Test(Description = "Recursive common table expression 'CTE' does not contain a top-level UNION ALL operator.")]
 		public void Issue2264([CteContextSource] string context)
 		{

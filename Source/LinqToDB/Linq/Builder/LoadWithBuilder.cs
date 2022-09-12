@@ -254,7 +254,7 @@ namespace LinqToDB.Linq.Builder
 
 							if (attr == null)
 							{
-								var projected = builder.MakeExpression(expression, ProjectFlags.Expand);
+								var projected = builder.MakeExpression(context, expression, ProjectFlags.Expand);
 								if (projected == expression)
 									throw new LinqToDBException($"Member '{expression}' is not an association.");
 								expression = projected;
@@ -282,24 +282,24 @@ namespace LinqToDB.Linq.Builder
 							break;
 						}
 
-							if (expression is ContextRefExpression contextRef)
+						if (expression is ContextRefExpression contextRef)
+						{
+							var newExpression = builder.MakeExpression(context, expression, ProjectFlags.AssociationRoot);
+							if (!ReferenceEquals(newExpression, expression))
 							{
-								var newExpression = builder.MakeExpression(expression, ProjectFlags.AssociationRoot);
-								if (!ReferenceEquals(newExpression, expression))
-								{
-									expression = newExpression;
-								}
-								else
-								{
-									stop    = true;
-									context = contextRef.BuildContext;
-								}
-
-								break;
+								expression = newExpression;
+							}
+							else
+							{
+								stop    = true;
+								context = contextRef.BuildContext;
 							}
 
-							goto default;
+							break;
 						}
+
+						goto default;
+					}
 
 					case ExpressionType.Convert      :
 					{

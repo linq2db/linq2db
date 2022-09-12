@@ -48,7 +48,7 @@ namespace LinqToDB.Linq.Builder
 
 			// populate all fields
 			if (isRecursive)
-				_ = builder.MakeExpression(new ContextRefExpression(methodCall.Method.GetGenericArguments()[0], cteContext), ProjectFlags.SQL);
+				_ = builder.MakeExpression(cteContext, new ContextRefExpression(methodCall.Method.GetGenericArguments()[0], cteContext), ProjectFlags.SQL);
 
 			return cteTableContext;
 		}
@@ -138,7 +138,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					_cteContext.InitQuery();
 
-					var translated = Builder.MakeExpression(ctePath, flags);
+					var translated = Builder.MakeExpression(_cteContext, ctePath, flags);
 
 					if (!flags.HasFlag(ProjectFlags.Test))
 					{

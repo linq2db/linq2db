@@ -16,16 +16,16 @@ namespace LinqToDB.Linq.Builder
 
 		Expression CalcBuildContext(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
-			if (buildInfo.Expression is ContextRefExpression)
+			if (buildInfo.Parent == null || buildInfo.Expression is ContextRefExpression)
 				return buildInfo.Expression;
 
-			var root = builder.MakeExpression(buildInfo.Expression, GetRootProjectFlags(buildInfo));
+			var root = builder.MakeExpression(buildInfo.Parent, buildInfo.Expression, GetRootProjectFlags(buildInfo));
 			if (ExpressionEqualityComparer.Instance.Equals(root, buildInfo.Expression))
 			{
 				if (root is ContextRefExpression)
 					return root;
 
-				var newExpression = builder.MakeExpression(root, buildInfo.GetFlags());
+				var newExpression = builder.MakeExpression(buildInfo.Parent, root, ProjectFlags.Expand);
 
 				return newExpression;
 			}

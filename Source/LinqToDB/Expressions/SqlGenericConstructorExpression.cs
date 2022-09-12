@@ -61,7 +61,7 @@ namespace LinqToDB.Expressions
 
 			public Parameter WithExpression(Expression expression)
 			{
-				if (expression == Expression)
+				if (ReferenceEquals(expression, Expression))
 					return this;
 				return new Parameter(expression, ParamType, MemberInfo);
 			}

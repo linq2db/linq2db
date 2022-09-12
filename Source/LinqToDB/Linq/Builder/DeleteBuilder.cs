@@ -40,7 +40,7 @@ namespace LinqToDB.Linq.Builder
 
 			sequence.Statement = deleteStatement;
 
-			var root = builder.MakeExpression(new ContextRefExpression(sequenceArgument.Type, sequence),
+			var root = builder.MakeExpression(sequence, new ContextRefExpression(sequenceArgument.Type, sequence),
 				ProjectFlags.Root);
 
 			if (root is ContextRefExpression rootRef && rootRef.BuildContext is TableBuilder.TableContext tableContext)

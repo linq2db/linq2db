@@ -29,7 +29,7 @@ namespace LinqToDB.Linq.Builder
 			var expr         = SequenceHelper.PrepareBody(collectionSelector, scopeContext).Unwrap();
 
 			// GroupJoin handling
-			expr = builder.MakeExpression(expr, ProjectFlags.Expand);
+			expr = builder.MakeExpression(scopeContext, expr, ProjectFlags.Expand);
 
 			// correcting query for Eager Loading
 			expr = SequenceHelper.MoveAllToScopedContext(expr, scopeContext);

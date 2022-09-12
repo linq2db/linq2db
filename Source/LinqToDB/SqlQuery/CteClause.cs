@@ -87,6 +87,14 @@ namespace LinqToDB.SqlQuery
 			return null;
 		}
 
+		public void UpdateIndex(int index, SqlField field)
+		{
+			if (index >= Fields!.Length)
+				throw new InvalidOperationException();
+
+			Fields[index] = field;
+		}
+
 		public SqlField RegisterFieldMapping(int index, Func<SqlField> fieldFactory)
 		{
 			if (Fields!.Length > index && Fields[index] != null)

@@ -508,7 +508,7 @@ namespace LinqToDB.Linq.Builder
 								if (ma.Member.IsNullableValueMember())
 									break;
 
-								newExpr = context.builder.MakeExpression(ma, context.flags);
+								newExpr = context.builder.MakeExpression(context.context, ma, context.flags);
 
 								if (!ReferenceEquals(newExpr, ma))
 									return new TransformInfo(newExpr, false, true);
@@ -518,7 +518,7 @@ namespace LinqToDB.Linq.Builder
 
 						case ExpressionType.Call:
 							{
-								var newExpr = context.builder.MakeExpression(expr, context.flags);
+								var newExpr = context.builder.MakeExpression(context.context, expr, context.flags);
 
 								if (!ReferenceEquals(newExpr, expr))
 								{
@@ -618,7 +618,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							if (expr is ContextRefExpression contextRef)
 							{
-								var buildExpr = context.builder.MakeExpression(contextRef, context.flags);
+								var buildExpr = context.builder.MakeExpression(context.context, contextRef, context.flags);
 								if (buildExpr.Type != expr.Type)
 								{
 									buildExpr = Expression.Convert(buildExpr, expr.Type);
@@ -665,7 +665,7 @@ namespace LinqToDB.Linq.Builder
 
 							if (expr is SqlGenericParamAccessExpression paramAccessExpression)
 							{
-								return new TransformInfo(context.builder.MakeExpression(paramAccessExpression, context.flags), false, true);
+								return new TransformInfo(context.builder.MakeExpression(context.context, paramAccessExpression, context.flags), false, true);
 							}
 
 							return new TransformInfo(expr);
@@ -705,11 +705,11 @@ namespace LinqToDB.Linq.Builder
 			public Expression?   Expression;
 				}
 
-		public Expression CorrectRoot(Expression expr)
+		public Expression CorrectRoot(IBuildContext? currentContext, Expression expr)
 		{
 			if (expr is MethodCallExpression mc && mc.IsQueryable())
 			{
-				var firstArg = CorrectRoot(mc.Arguments[0]);
+				var firstArg = CorrectRoot(currentContext, mc.Arguments[0]);
 				if (!ReferenceEquals(firstArg, mc.Arguments[0]))
 				{
 					var args = mc.Arguments.ToArray();
@@ -719,26 +719,26 @@ namespace LinqToDB.Linq.Builder
 
 			}
 			else
-				expr = MakeExpression(expr, ProjectFlags.Root);
+				expr = MakeExpression(currentContext, expr, ProjectFlags.Root);
 
 			return expr;
 		}
 
-		public ContextRefExpression? GetRootContext(Expression? expression, bool isAggregation)
+		public ContextRefExpression? GetRootContext(IBuildContext? currentContext, Expression? expression, bool isAggregation)
 		{
 			if (expression == null)
 				return null;
 
-			expression = MakeExpression(expression, isAggregation ? ProjectFlags.AggregationRoot : ProjectFlags.Root);
+			expression = MakeExpression(currentContext, expression, isAggregation ? ProjectFlags.AggregationRoot : ProjectFlags.Root);
 
 			if (expression is MemberExpression memberExpression)
 			{
-				expression = GetRootContext(memberExpression.Expression, isAggregation);
+				expression = GetRootContext(currentContext, memberExpression.Expression, isAggregation);
 			}
 
 			if (expression is MethodCallExpression mc && mc.IsQueryable())
 			{
-				expression = GetRootContext(mc.Arguments[0], isAggregation);
+				expression = GetRootContext(currentContext, mc.Arguments[0], isAggregation);
 			}
 
 			return expression as ContextRefExpression;
@@ -748,7 +748,7 @@ namespace LinqToDB.Linq.Builder
 
 		SubQueryContextInfo GetSubQueryContext(IBuildContext context, Expression expr, bool isTest)
 		{
-			var testExpression = CorrectRoot(expr);
+			var testExpression = CorrectRoot(context, expr);
 
 			_buildContextCache ??= new List<SubQueryContextInfo>();
 
@@ -758,7 +758,7 @@ namespace LinqToDB.Linq.Builder
 					return item;
 			}
 
-			var rootQuery = GetRootContext(testExpression, false);
+			var rootQuery = GetRootContext(context, testExpression, false);
 
 			if (rootQuery != null)
 			{
@@ -767,7 +767,7 @@ namespace LinqToDB.Linq.Builder
 			else
 			{
 				var contextRef = new ContextRefExpression(typeof(object), context);
-				rootQuery = GetRootContext(contextRef, false);
+				rootQuery = GetRootContext(context, contextRef, false);
 				if (rootQuery != null)
 				{
 					context = rootQuery.BuildContext;
@@ -790,7 +790,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			var info = GetSubQueryContext(context, expr, isTest);
 			if (info.Expression == null)
-				info.Expression = MakeExpression(new ContextRefExpression(expr.Type, info.Context), ProjectFlags.Expression);
+				info.Expression = MakeExpression(context, new ContextRefExpression(expr.Type, info.Context), ProjectFlags.Expression);
 
 			if (!string.IsNullOrEmpty(alias))
 				info.Context.SetAlias(alias);

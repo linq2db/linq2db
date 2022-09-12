@@ -16,9 +16,9 @@ namespace LinqToDB.Linq.Builder
 		public string Path         => this.GetPath();
 		public int    ContextId    { get; }
 #endif
-		public SelectQuery? SelectQuery
+		public SelectQuery SelectQuery
 		{
-			get => CteInnerQueryContext?.SelectQuery;
+			get => CteInnerQueryContext?.SelectQuery ?? new SelectQuery();
 			set { }
 		}
 
@@ -97,10 +97,12 @@ namespace LinqToDB.Linq.Builder
 				var subqueryPath = SequenceHelper.CorrectExpression(mapped.Value.Path, this, SubqueryContext);
 				var projectFlags = ProjectFlags.SQL;
 
-				var subqueryPathTranslated = Builder.MakeExpression(subqueryPath, projectFlags) as SqlPlaceholderExpression;
+				var subqueryPathTranslated = Builder.MakeExpression(SubqueryContext, subqueryPath, projectFlags) as SqlPlaceholderExpression;
 
 				if (subqueryPathTranslated == null)
 					throw new LinqException($"'{subqueryPath}' cannot be converted to SQL.");
+
+				CteClause.UpdateIndex(subqueryPathTranslated.Index!.Value, (SqlField)mapped.Value.Sql);
 
 				var newPlaceholder = ExpressionBuilder.CreatePlaceholder(SubqueryContext!.SelectQuery, mapped.Value.Sql, subqueryPathTranslated.Path, index: subqueryPathTranslated.Index);
 				_knownMap[subqueryPathTranslated] = newPlaceholder;
@@ -116,25 +118,20 @@ namespace LinqToDB.Linq.Builder
 
 			if (_isRecursiveCall)
 			{
-				if (path is MemberExpression)
+				if (!_recursiveMap.TryGetValue(path, out var newPlaceholder))
 				{
-					if (!_recursiveMap.TryGetValue(path, out var newPlaceholder))
+					var index = CteClause.Fields?.Length ?? 0;
+					var field = CteClause.RegisterFieldMapping(index, () =>
 					{
-						var index = CteClause.Fields?.Length ?? 0;
-						var field = CteClause.RegisterFieldMapping(index, () =>
-						{
-							var newField = new SqlField(path.Type, GenerateColumnAlias(path), true);
-							return newField;
-						});
+						var newField = new SqlField(path.Type, GenerateColumnAlias(path), true);
+						return newField;
+					});
 
-						newPlaceholder = ExpressionBuilder.CreatePlaceholder((SelectQuery?)null, field, path, index: index);
-						_recursiveMap[path] = newPlaceholder;
-					}
-
-					return newPlaceholder;
-
+					newPlaceholder = ExpressionBuilder.CreatePlaceholder((SelectQuery?)null, field, path, index: index, trackingPath: path);
+					_recursiveMap[path] = newPlaceholder;
 				}
-				return path;
+
+				return newPlaceholder;
 			}
 
 			/*
@@ -194,6 +191,17 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			return result;
+		}
+
+		static string? GenerateColumnAlias(ISqlExpression sqlExpression)
+		{
+			if (sqlExpression is SqlField field)
+				return field.PhysicalName;
+
+			if (sqlExpression is SqlColumn column)
+				return column.RawAlias ?? GenerateColumnAlias(column.Expression);
+
+			return null;
 		}
 
 		static string? GenerateColumnAlias(Expression expr)
@@ -262,7 +270,8 @@ namespace LinqToDB.Linq.Builder
 				{
 					var field = CteClause.RegisterFieldMapping(placeholder.Index!.Value, () =>
 					{
-						var newField = new SqlField(placeholder.Type, path.Length > 0 ? GenerateColumnAlias(path) : GenerateColumnAlias(placeholder.Path),
+						var newField = new SqlField(placeholder.Type,
+							(path.Length > 0 ? GenerateColumnAlias(path) : GenerateColumnAlias(placeholder.Path)) ?? GenerateColumnAlias(placeholder.Sql),
 							placeholder.Sql.CanBeNull);
 						return newField;
 					});
@@ -318,7 +327,7 @@ namespace LinqToDB.Linq.Builder
 
 		public IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)
 		{
-			throw new NotImplementedException();
+			return null;
 		}
 
 		public int ConvertToParentIndex(int index, IBuildContext context)
