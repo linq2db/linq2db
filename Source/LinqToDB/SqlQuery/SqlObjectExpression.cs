@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
+	using Extensions;
 	using Mapping;
-	using LinqToDB.Extensions;
 
 	public class SqlObjectExpression : ISqlExpression
 	{

@@ -1,16 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
+﻿using System.Diagnostics;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Runtime.CompilerServices;
+using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
 	using Common;
 	using Data;
-	using LinqToDB.Expressions;
 	using Extensions;
 	using Mapping;
 	using SqlQuery;
@@ -148,12 +144,12 @@ namespace LinqToDB.Linq.Builder
 		public Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 		{
 			throw new NotImplementedException();
-		}
+			}
 
 		public SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 		{
 			throw new NotImplementedException();
-		}
+					}
 
 		private static ConstructorInfo _parameterConstructor =
 			MemberHelper.ConstructorOf(() => new SqlParameter(new DbDataType(typeof(object)), "", null));
@@ -162,19 +158,19 @@ namespace LinqToDB.Linq.Builder
 			MemberHelper.ConstructorOf(() => new SqlValue(new DbDataType(typeof(object)), null));
 
 		private SqlField? GetField(MemberExpression path)
-		{
-			foreach (var column in _entityDescriptor.Columns)
 			{
+						foreach (var column in _entityDescriptor.Columns)
+						{
 				if (column.MemberInfo.EqualsTo(path.Member, _elementType))
-				{
-					var newField = BuildField(column);
+							{
+								var newField = BuildField(column);
 
 					return newField;
-				}
-			}
+							}
+						}
 
 			return null;
-		}
+				}
 
 		private SqlField BuildField(ColumnDescriptor column)
 		{
@@ -223,7 +219,7 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		public Expression MakeExpression(Expression path, ProjectFlags flags)
-		{
+			{
 			if (SequenceHelper.IsSameContext(path, this))
 			{
 				if (flags.HasFlag(ProjectFlags.Root))
@@ -252,14 +248,14 @@ namespace LinqToDB.Linq.Builder
 		{
 			//TODO: Clone
 			throw new NotImplementedException();
-		}
+				}
 
 		public void SetRunQuery<T>(Query<T> query, Expression expr)
-		{
+						{
 			var mapper = Builder.BuildMapper<T>(expr);
 
 			QueryRunner.SetRunQuery(query, mapper);
-		}
+					}
 
 		public IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 		{

@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
 	using System.Diagnostics.CodeAnalysis;
-	using Mapping;
 
 	public class SqlCteTable : SqlTable
 	{

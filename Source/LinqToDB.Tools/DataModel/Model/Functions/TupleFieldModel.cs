@@ -1,7 +1,7 @@
-﻿using LinqToDB.Schema;
-
-namespace LinqToDB.DataModel
+﻿namespace LinqToDB.DataModel
 {
+	using Schema;
+
 	/// <summary>
 	/// Scalar function return tuple field descriptor.
 	/// </summary>

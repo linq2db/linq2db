@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using System.Reflection;
 
 namespace LinqToDB.Expressions
@@ -145,7 +143,7 @@ namespace LinqToDB.Expressions
 					if (replaced.TryGetValue(parameterExpression, out var newParam))
 					{
 						return newParam;
-					}
+	}
 
 					var newName = parameterExpression.Name;
 					if (!newName.EndsWith("]") || usedNames.Contains(newName))
@@ -157,7 +155,7 @@ namespace LinqToDB.Expressions
 							{
 								newName = candidateName;
 								break;
-							}
+}
 						}
 					}
 

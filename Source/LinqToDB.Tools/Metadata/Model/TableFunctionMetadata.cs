@@ -1,8 +1,7 @@
-﻿using LinqToDB.Schema;
-using LinqToDB.SqlQuery;
-
-namespace LinqToDB.Metadata
+﻿namespace LinqToDB.Metadata
 {
+	using SqlQuery;
+
 	/// <summary>
 	/// Table function mapping attributes, used with <see cref="Sql.TableFunctionAttribute"/> mapping attribute.
 	/// </summary>

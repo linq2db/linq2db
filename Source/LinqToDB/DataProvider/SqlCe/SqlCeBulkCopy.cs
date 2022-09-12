@@ -1,10 +1,6 @@
-﻿using System.Collections.Generic;
-
-namespace LinqToDB.DataProvider.SqlCe
+﻿namespace LinqToDB.DataProvider.SqlCe
 {
 	using Data;
-	using System.Threading;
-	using System.Threading.Tasks;
 
 	class SqlCeBulkCopy : BasicBulkCopy
 	{

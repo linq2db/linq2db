@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections;
 using System.Data.SqlTypes;
-using System.Linq;
 using System.Numerics;
 using System.Text;
 
@@ -10,7 +7,7 @@ namespace LinqToDB.SqlQuery
 {
 	using Common;
 	using Common.Internal;
-	using LinqToDB.Extensions;
+	using Extensions;
 	using Mapping;
 
 	public class SqlDataType : ISqlExpression, IEquatable<SqlDataType>

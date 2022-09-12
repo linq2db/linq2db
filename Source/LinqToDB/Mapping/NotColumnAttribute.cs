@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LinqToDB.Mapping
+﻿namespace LinqToDB.Mapping
 {
 	/// <summary>
 	/// Marks current property or column to be ignored for mapping when explicit column mapping disabled.

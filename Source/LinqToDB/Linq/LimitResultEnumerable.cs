@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using System.Collections;
 
 namespace LinqToDB.Linq
 {
 	using Async;
-	using LinqToDB.Common.Internal;
+	using Common.Internal;
 
 	class LimitResultEnumerable<T> : IResultEnumerable<T>
 	{

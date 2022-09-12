@@ -1,7 +1,4 @@
-﻿using System;
-using System.Linq;
-using System.Security.Cryptography;
-using LinqToDB;
+﻿using LinqToDB;
 using LinqToDB.Data;
 
 namespace Tests

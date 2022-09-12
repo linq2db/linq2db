@@ -1,10 +1,10 @@
-﻿using System;
-using System.Linq.Expressions;
-using LinqToDB.Linq.Builder;
-using LinqToDB.Mapping;
+﻿using System.Linq.Expressions;
 
 namespace LinqToDB.Expressions
 {
+	using Linq.Builder;
+	using Mapping;
+
 	class SqlAdjustTypeExpression: Expression
 	{
 		readonly Type          _type;

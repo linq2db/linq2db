@@ -1,21 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data.Common;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Threading;
 using System.Runtime.CompilerServices;
 
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
+	using Common;
 	using Extensions;
 	using Mapping;
-	using Common;
 	using Reflection;
 	using SqlQuery;
+	using LinqToDB.Expressions;
 
 	partial class ExpressionBuilder
 	{
@@ -103,7 +98,7 @@ namespace LinqToDB.Linq.Builder
 				var conv = (UnaryExpression)resultExpr;
 				if (memberType.IsNullable() == true
 				    && conv.Operand is SqlPlaceholderExpression readerExpression
-				    && !readerExpression.Type.IsNullable())
+					&& !readerExpression.Type.IsNullable())
 				{
 					resultExpr = readerExpression.MakeNullable();
 				}
@@ -161,7 +156,7 @@ namespace LinqToDB.Linq.Builder
 			expression.Visit(
 				(builder: this, duplicates, visited),
 				static (ctx, e) =>
-				{
+					{
 					if (e is SqlGenericConstructorExpression || e is SqlPlaceholderExpression)
 					{
 						if (!ctx.visited.Add(e))
@@ -169,7 +164,7 @@ namespace LinqToDB.Linq.Builder
 							ctx.duplicates.Add(e, null);
 						}
 					}
-				});
+					});
 
 			if (duplicates.Count == 0)
 				return expression;
@@ -185,7 +180,7 @@ namespace LinqToDB.Linq.Builder
 			var corrected = expression.Transform(
 				(builder: this, duplicates),
 				static (ctx, e) =>
-				{
+								{
 					if (e.NodeType == ExpressionType.Extension && ctx.duplicates.TryGetValue(e, out var replacement))
 					{
 						return replacement;
@@ -198,7 +193,7 @@ namespace LinqToDB.Linq.Builder
 
 			var result = globalGenerator.Build();
 			return result;
-		}
+							}
 
 		Expression FinalizeProjection<T>(
 			Query<T>            query, 
@@ -207,7 +202,7 @@ namespace LinqToDB.Linq.Builder
 			ParameterExpression queryParameter, 
 			ref List<Preamble>? preambles,
 			Expression[]        previousKeys)
-		{
+							{
 			// going to parent
 
 			while (context.Parent != null)
@@ -239,7 +234,7 @@ namespace LinqToDB.Linq.Builder
 			postProcessed = postProcessed.Transform(
 				(builder: this, map: processedMap, translatedMap: new Dictionary<Expression, Expression>(), generator: globalGenerator, context),
 				static (ctx, e) =>
-				{
+									{
 					if (e is SqlErrorExpression error)
 						throw error.CreateError();
 
@@ -281,7 +276,7 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		public Expression ToColumns(IBuildContext rootContext, Expression expression)
-		{
+								{
 			var info         = new QueryInformation(rootContext.SelectQuery);
 			var processedMap = new Dictionary<Expression, Expression>();
 
@@ -289,7 +284,7 @@ namespace LinqToDB.Linq.Builder
 				expression.Transform(
 					(builder: this, map: processedMap, info),
 					static (context, expr) =>
-					{
+									{
 						if (context.map.TryGetValue(expr, out var mapped))
 							return mapped;
 
@@ -314,7 +309,7 @@ namespace LinqToDB.Linq.Builder
 					});
 
 			return withColumns;
-		}
+									}
 
 		static bool IsSameParentTree(QueryInformation info, SelectQuery testedQuery)
 		{
@@ -329,10 +324,10 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			return false;
-		}
+							}
 
 		public Expression UpdateNesting(IBuildContext upToContext, Expression expression)
-		{
+							{
 			// short path
 			if (expression is SqlPlaceholderExpression currentPlaceholder && currentPlaceholder.SelectQuery == upToContext.SelectQuery)
 				return expression;
@@ -343,7 +338,7 @@ namespace LinqToDB.Linq.Builder
 				expression.Transform(
 					(builder: this, upToContext, info),
 					static (context, expr) =>
-					{
+								{
 						if (expr is SqlErrorExpression error)
 							throw error.CreateError();
 
@@ -375,10 +370,10 @@ namespace LinqToDB.Linq.Builder
 					});
 
 			return withColumns;
-		}
+							}
 
 		public bool TryConvertToSql(IBuildContext context, ProjectFlags flags, Expression expression, ColumnDescriptor? columnDescriptor, [NotNullWhen(true)] out ISqlExpression? sqlExpression, out Expression actual)
-		{
+							{
 			flags = flags & ~ProjectFlags.Expression | ProjectFlags.SQL;
 
 			sqlExpression = null;
@@ -489,10 +484,10 @@ namespace LinqToDB.Linq.Builder
 								context.builder.RemoveConvertedExpression(cex.Operand);
 
 								return ret;
-							}
+								}
 
 						case ExpressionType.MemberAccess:
-							{
+								{
 								var ma = (MemberExpression)expr;
 
 								if (context.builder.IsServerSideOnly(ma) || context.builder.PreferServerSide(ma, false) && !context.builder.HasNoneSqlMember(ma))
@@ -680,11 +675,11 @@ namespace LinqToDB.Linq.Builder
 						case ExpressionType.Lambda:
 						case ExpressionType.Parameter:
 						case ExpressionType.NewArrayInit:
-					{
+				{
 							return new TransformInfo(expr);
-						}
+				}
 					*/
-					}
+				}
 
 					/*
 					var asSQL = context.builder.TryConvertToSqlExpr(context.context, expr, context.flags);
@@ -703,7 +698,7 @@ namespace LinqToDB.Linq.Builder
 			public Expression    SequenceExpression  = null!;
 			public IBuildContext Context = null!;
 			public Expression?   Expression;
-				}
+							}
 
 		public Expression CorrectRoot(IBuildContext? currentContext, Expression expr)
 		{
@@ -742,7 +737,7 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			return expression as ContextRefExpression;
-		}
+			}
 
 		List<SubQueryContextInfo>? _buildContextCache;
 
@@ -753,15 +748,15 @@ namespace LinqToDB.Linq.Builder
 			_buildContextCache ??= new List<SubQueryContextInfo>();
 
 			foreach (var item in _buildContextCache)
-			{
+		{
 				if (testExpression.EqualsTo(item.SequenceExpression, OptimizationContext.GetSimpleEqualsToContext(false)))
 					return item;
-			}
+		}
 
 			var rootQuery = GetRootContext(context, testExpression, false);
 
 			if (rootQuery != null)
-			{
+		{
 				context = rootQuery.BuildContext;
 			}
 			else
@@ -771,13 +766,13 @@ namespace LinqToDB.Linq.Builder
 				if (rootQuery != null)
 				{
 					context = rootQuery.BuildContext;
-				}
+			}
 			}
 
 			var ctx = GetSubQuery(context, testExpression, isTest);
 
 			var info = new SubQueryContextInfo { SequenceExpression = testExpression, Context = ctx };
-			
+
 			if (!isTest)
 			{
 				_buildContextCache.Add(info);

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 
 namespace LinqToDB.Expressions
 {
@@ -254,8 +251,8 @@ namespace LinqToDB.Expressions
 						Visit(generic.Assignments.Select(a => a.Expression));
 					}
 					else
-						if (expr.CanReduce)
-							Visit(expr.Reduce());
+					if (expr.CanReduce)
+						Visit(expr.Reduce());
 
 					break;
 				}

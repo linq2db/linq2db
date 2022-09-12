@@ -1,13 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 
 namespace LinqToDB.Expressions
 {
-	using LinqToDB.Extensions;
+	using Extensions;
 
 	readonly struct TransformInfoVisitor<TContext>
 	{
@@ -452,7 +449,7 @@ namespace LinqToDB.Expressions
 				var postProcess = construct.PostProcess == null ? null : Transform(construct.PostProcess);
 
 				return construct.Update(construct.BuildContext, inner, postProcess as List<LambdaExpression>);
-			}
+	}
 
 			if (expr is SqlGenericConstructorExpression generic)
 			{
@@ -461,7 +458,7 @@ namespace LinqToDB.Expressions
 				if (!ReferenceEquals(assignments, generic.Assignments))
 				{
 					generic = generic.ReplaceAssignments(assignments.ToList());
-				}
+}
 
 				var parameters = Transform(generic.Parameters, TransformParameters);
 

@@ -1,12 +1,10 @@
-﻿using System;
-using System.Diagnostics;
-using System.Linq;
+﻿using System.Diagnostics;
 using System.Linq.Expressions;
 using System.Reflection;
 
 namespace LinqToDB.Expressions
 {
-	using LinqToDB.Extensions;
+	using Extensions;
 	using Mapping;
 	using Reflection;
 

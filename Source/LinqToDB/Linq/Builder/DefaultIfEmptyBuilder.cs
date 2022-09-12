@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
+using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
 	using SqlQuery;
 
 	class DefaultIfEmptyBuilder : MethodCallBuilder
@@ -41,14 +38,14 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
-			{
+				{
 				if (SequenceHelper.IsSameContext(path, this) && (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AssociationRoot)))
 					return path;
 
 				var expr = base.MakeExpression(path, flags);
 
 				if (!Disabled && flags.HasFlag(ProjectFlags.Expression) && SequenceHelper.IsSameContext(path, this))
-				{
+					{
 					expr = Builder.BuildSqlExpression(new Dictionary<Expression, Expression>(), this, expr, flags);
 
 					var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(expr);
@@ -65,10 +62,10 @@ namespace LinqToDB.Linq.Builder
 					var defaultValue = DefaultValue ?? new DefaultValueExpression(Builder.MappingSchema, expr.Type);
 
 					expr = Expression.Condition(new SqlReaderIsNullExpression(notNull), defaultValue, expr);
-				}
+									}
 
 				return expr;
-			}
+				}
 
 			public override IBuildContext Clone(CloningContext context)
 			{

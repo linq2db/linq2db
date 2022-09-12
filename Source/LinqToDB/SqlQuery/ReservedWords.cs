@@ -1,13 +1,7 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
+﻿using System.Collections.Concurrent;
 
 namespace LinqToDB.SqlQuery
 {
-	using LinqToDB.Extensions;
-
 	public static class ReservedWords
 	{
 		static ReservedWords()

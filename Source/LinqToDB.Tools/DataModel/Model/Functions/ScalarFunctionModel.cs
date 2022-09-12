@@ -1,10 +1,9 @@
-﻿using LinqToDB.Metadata;
-using LinqToDB.Schema;
-using LinqToDB.CodeModel;
-using LinqToDB.SqlQuery;
-
-namespace LinqToDB.DataModel
+﻿namespace LinqToDB.DataModel
 {
+	using Metadata;
+	using CodeModel;
+	using SqlQuery;
+
 	/// <summary>
 	/// Scalar function descriptor.
 	/// </summary>

@@ -1,11 +1,9 @@
-﻿using System.Linq;
-using System.Collections.Generic;
-using System;
-using System.Diagnostics.CodeAnalysis;
-using LinqToDB.Common;
+﻿using System.Diagnostics.CodeAnalysis;
 
 namespace LinqToDB.CodeModel
 {
+	using Common;
+
 	/// <summary>
 	/// This visitor inspects code model and collect two collections:
 	/// <list type="bullet">

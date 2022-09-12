@@ -1,7 +1,7 @@
-﻿using LinqToDB.SqlQuery;
-
-namespace LinqToDB.DataProvider.Sybase
+﻿namespace LinqToDB.DataProvider.Sybase
 {
+	using SqlQuery;
+
 	partial class SybaseSqlBuilder
 	{
 		// VALUES(...) syntax not supported

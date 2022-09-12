@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace LinqToDB.CodeModel
+﻿namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// Base AST visitor class without node visit methods implementation.

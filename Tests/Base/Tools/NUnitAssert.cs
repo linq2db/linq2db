@@ -1,8 +1,4 @@
-﻿using System;
-using System.Linq;
-using System.Threading.Tasks;
-using NUnit.Framework;
-using NUnit.Framework.Internal;
+﻿using NUnit.Framework;
 
 namespace Tests.Tools
 {

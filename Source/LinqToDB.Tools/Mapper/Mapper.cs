@@ -1,12 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 
 using JetBrains.Annotations;
-using LinqToDB.Common;
 
 namespace LinqToDB.Tools.Mapper
 {
+	using Common;
+
 	/// <summary>
 	/// Maps an object of <i>TFrom</i> type to an object of <i>TTo</i> type.
 	/// </summary>

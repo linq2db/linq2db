@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections;
 using System.Net.NetworkInformation;
 
 using LinqToDB;
@@ -15,7 +12,6 @@ using NUnit.Framework;
 namespace Tests.SchemaProvider
 {
 	using System.Net;
-	using Model;
 
 	[TestFixture]
 	public class PostgreSQLTests : TestBase

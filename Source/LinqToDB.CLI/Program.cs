@@ -1,8 +1,7 @@
-﻿using System;
-using LinqToDB.CommandLine;
-
-namespace LinqToDB.Tools
+﻿namespace LinqToDB.Tools
 {
+	using CommandLine;
+
 	internal static class Program
 	{
 		private static int Main(string[] args)

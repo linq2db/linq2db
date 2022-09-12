@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Data.Common;
-using System.Reflection;
+﻿using System.Reflection;
 
 namespace LinqToDB.DataProvider.SqlCe
 {

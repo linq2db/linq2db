@@ -1,10 +1,7 @@
-﻿using System;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 
 namespace LinqToDB
 {
-	using Linq;
-
 	partial class Sql
 	{
 		public interface IGroupBy

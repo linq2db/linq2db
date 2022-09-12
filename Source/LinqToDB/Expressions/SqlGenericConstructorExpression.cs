@@ -1,14 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
+﻿using System.Collections.ObjectModel;
 using System.Linq.Expressions;
 using System.Reflection;
-using LinqToDB.Extensions;
-using LinqToDB.Reflection;
 
 namespace LinqToDB.Expressions
 {
+	using Extensions;
+	using Reflection;
+
 	class SqlGenericConstructorExpression : Expression
 	{
 		public class Assignment

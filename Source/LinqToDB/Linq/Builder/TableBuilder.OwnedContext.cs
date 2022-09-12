@@ -1,7 +1,7 @@
-﻿using LinqToDB.Mapping;
-
-namespace LinqToDB.Linq.Builder
+﻿namespace LinqToDB.Linq.Builder
 {
+	using Mapping;
+
 	partial class TableBuilder
 	{
 		public class OwnedContext : PassThroughContext

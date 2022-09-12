@@ -1,7 +1,5 @@
-﻿using System;
-using System.Data.Common;
+﻿using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using LinqToDB.Interceptors;
 
 namespace Tests

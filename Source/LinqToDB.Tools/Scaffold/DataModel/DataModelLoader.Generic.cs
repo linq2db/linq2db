@@ -1,9 +1,7 @@
-﻿using System.Collections.Generic;
-using LinqToDB.Schema;
-using LinqToDB.SqlQuery;
-
-namespace LinqToDB.Scaffold
+﻿namespace LinqToDB.Scaffold
 {
+	using SqlQuery;
+
 	partial class DataModelLoader
 	{
 		/// <summary>

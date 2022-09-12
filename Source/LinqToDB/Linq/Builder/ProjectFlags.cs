@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LinqToDB.Linq.Builder
+﻿namespace LinqToDB.Linq.Builder
 {
 	[Flags]
 	enum ProjectFlags

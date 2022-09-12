@@ -1,11 +1,9 @@
-﻿using System;
-#if NET472
+﻿#if NET472
 using System.Data.Linq.SqlClient;
 #else
 using System.Data;
 #endif
 
-using System.Linq;
 using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Linq;

@@ -1,8 +1,7 @@
-﻿using System.Collections.Generic;
-using LinqToDB.Async;
-
-namespace LinqToDB.Linq
+﻿namespace LinqToDB.Linq
 {
+	using Async;
+
 	public interface IResultEnumerable<out T> : IEnumerable<T>, IAsyncEnumerable<T>
 	{
 		

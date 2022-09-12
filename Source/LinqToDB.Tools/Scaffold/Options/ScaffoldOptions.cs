@@ -1,9 +1,9 @@
-﻿using LinqToDB.DataModel;
-using LinqToDB.Naming;
-using LinqToDB.Schema;
-
-namespace LinqToDB.Scaffold
+﻿namespace LinqToDB.Scaffold
 {
+	using DataModel;
+	using Naming;
+	using Schema;
+
 	public class ScaffoldOptions
 	{
 		private ScaffoldOptions()

@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using System.Reflection;
+using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
 	using Extensions;
 	using Reflection;
 	using SqlQuery;
@@ -91,13 +87,13 @@ namespace LinqToDB.Linq.Builder
 			set1.SelectQuery.SetOperators.Add(setOperator);
 
 			return new SetOperationContext(setOperation, set1, set2, methodCall);
-		}
+				}
 
 		protected override SequenceConvertInfo? Convert(
 			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-		{
+				{
 			return null;
-		}
+				}
 
 		#endregion
 
@@ -151,11 +147,11 @@ namespace LinqToDB.Linq.Builder
 			private SqlGenericConstructorExpression? _body;
 
 			static string? GenerateColumnAlias(Expression expr)
-			{
+				{
 				var     current = expr;
 				string? alias   = null;
 				while (current is MemberExpression memberExpression)
-				{
+					{
 					if (alias != null)
 						alias = memberExpression.Member.Name + "_" + alias;
 					else
@@ -167,54 +163,54 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			static string? GenerateColumnAlias(SqlGenericConstructorExpression.Parameter param)
-			{
+						{
 				if (param.MemberInfo != null)
 					return param.MemberInfo.Name;
 
 				return GenerateColumnAlias(param.Expression);
-			}
+					}
 
 			SqlGenericConstructorExpression? MatchSequences(Expression root, Expression leftExpr, Expression rightExpr, IBuildContext leftSequence, IBuildContext rightSequence, 
 				//ref Expression? leftCreate, ref Expression? rightCreate, 
 				ref List<Expression>? mismatches)
-			{
+					{
 				leftExpr  = SqlGenericConstructorExpression.Parse(leftExpr);
 				rightExpr = SqlGenericConstructorExpression.Parse(rightExpr);
 
 				if (leftExpr is SqlGenericConstructorExpression leftGenericPrep &&
 				    rightExpr is not SqlGenericConstructorExpression)
-				{
+						{
 					if (rightExpr is SqlPlaceholderExpression paceholder && paceholder.Sql is SqlValue value && value.Value == null)
-					{
+							{
 						return MatchSequences(root, leftExpr, new SqlGenericConstructorExpression(leftGenericPrep),
 							leftSequence, rightSequence, ref mismatches);
-					}
+							}
 
 					throw new NotImplementedException();
-				}
+						}
 
 				if (rightExpr is SqlGenericConstructorExpression rightGenericPrep &&
 				    leftExpr is not SqlGenericConstructorExpression)
-				{
+						{
 					if (leftExpr is SqlPlaceholderExpression paceholder && paceholder.Sql is SqlValue value && value.Value == null)
-					{
+								{
 						return MatchSequences(root, new SqlGenericConstructorExpression(rightGenericPrep),
 							rightExpr,
 							leftSequence, rightSequence, ref mismatches);
-					}
+									}
 
 					throw new NotImplementedException();
-				}
+								}
 
 				if (leftExpr is SqlGenericConstructorExpression leftGeneric &&
 				    rightExpr is SqlGenericConstructorExpression rightGeneric)
-				{
+						{
 					var newAssignments = new List<SqlGenericConstructorExpression.Assignment>(leftGeneric.Assignments.Count);
 
 					var matched = new HashSet<MemberInfo>(MemberInfoComparer.Instance);
 
 					for (int l = 0; l < leftGeneric.Assignments.Count; l++)
-					{
+								{
 						var left = leftGeneric.Assignments[l];
 
 						var found = false;
@@ -223,7 +219,7 @@ namespace LinqToDB.Linq.Builder
 						var mi      = root.Type.GetMemberEx(left.MemberInfo);
 
 						if (mi == null)
-						{
+									{
 							// handling inheritance mapping
 							//
 							if (left.MemberInfo.ReflectedType == null)
@@ -246,19 +242,19 @@ namespace LinqToDB.Linq.Builder
 								{
 									assignmentExpr = MatchSequences(assignmentExpr, left.Expression, right.Expression,
 										leftSequence, rightSequence, ref mismatches);
-								}
-								else
-								{
+									}
+						else
+						{
 									_matchedPairs.Add(ma, (_matchedPairs.Count, left, right));
-								}
+						}
 
 								found = true;
 								break;
-							}
-						}
+					}
+				}
 
 						if (!found)
-						{
+				{
 							if (left.Expression is not SqlPlaceholderExpression leftPlaceholder)
 								throw new NotImplementedException();
 
@@ -275,12 +271,12 @@ namespace LinqToDB.Linq.Builder
 
 						matched.Add(left.MemberInfo);
 
-					}
+			}
 
 					// Enumerate from other side to match not found pairs from first iteration
 					//
 					for (int r = 0; r < rightGeneric.Assignments.Count; r++)
-					{
+			{
 						var right = rightGeneric.Assignments[r];
 
 						if (matched.Contains(right.MemberInfo))
@@ -289,7 +285,7 @@ namespace LinqToDB.Linq.Builder
 						var assignmentExpr = (Expression)Expression.MakeMemberAccess(root, right.MemberInfo);
 
 						if (right.Expression is SqlGenericConstructorExpression genericRight)
-						{
+				{
 							assignmentExpr = MatchSequences(assignmentExpr, new SqlGenericConstructorExpression(
 									SqlGenericConstructorExpression.CreateType.Incompatible,
 									genericRight.Type, null, null), right.Expression,
@@ -312,7 +308,7 @@ namespace LinqToDB.Linq.Builder
 						}
 
 						newAssignments.Add(new SqlGenericConstructorExpression.Assignment(right.MemberInfo, assignmentExpr, right.IsMandatory, right.IsLoaded));
-					}
+				}
 
 					var createType = SuggestCreateType(leftExpr.Type, leftGeneric.ConstructType,
 						rightGeneric.ConstructType);
@@ -324,7 +320,7 @@ namespace LinqToDB.Linq.Builder
 
 					List<SqlGenericConstructorExpression.Parameter>? newParameters = null;      
 					if (maxParametersCount > 0)
-					{
+				{
 						var isConstructMismatch = rightGeneric.Constructor       != leftGeneric.Constructor ||
 						                          rightGeneric.ConstructorMethod != leftGeneric.ConstructorMethod;
 
@@ -332,7 +328,7 @@ namespace LinqToDB.Linq.Builder
 
 						newParameters = new List<SqlGenericConstructorExpression.Parameter>(maxParametersCount);
 						for (int i = 0; i < leftGeneric.Parameters.Count; i++)
-						{
+					{
 							var left = leftGeneric.Parameters[i];
 
 							if (left.MemberInfo != null)
@@ -343,40 +339,40 @@ namespace LinqToDB.Linq.Builder
 									// already matched by member
 									newParameters.Add(left.WithExpression(ma));
 									continue;
-								}
-							}
+					}
+				}
 
 							SqlGenericConstructorExpression.Parameter? right = null;
 
 							if (!isConstructMismatch)
-							{
+				{
 								if (rightGeneric.Parameters.Count == 0)
-								{
+					{
 									throw new NotImplementedException("Missing parameters handling not implemented yet");
-								}
+					}
 
 								right = rightGeneric.Parameters[i];
-							}
+				}
 							else
 							{
 								throw new NotImplementedException();
 
 								// we cannot use positioned match. We have to use matching via MemberInfo
 								if (left.MemberInfo != null)
-								{
+				{
 									throw new NotImplementedException();
-								}
+					}
 							}
 
 							if (right == null)
 							{
 								throw new LinqToDBException("Could not find parameter match");
-							}
+				}
 
 							var assignmentExpr = (Expression)new SqlGenericParamAccessExpression(root, i, left.ParamType);
 
 							if (left.Expression is SqlGenericConstructorExpression || right.Expression is SqlGenericConstructorExpression)
-							{
+				{
 								assignmentExpr = MatchSequences(assignmentExpr, left.Expression, right.Expression,
 									leftSequence, rightSequence, ref mismatches);
 							}
@@ -387,19 +383,19 @@ namespace LinqToDB.Linq.Builder
 
 
 							/*if (leftParam.Expression is SqlGenericConstructorExpression ||  rightParam.Expression is SqlGenericConstructorExpression)
-							{
+					{
 								_ = MatchSequences(key)
 							}*/
 
 							newParameters.Add(left.WithExpression(assignmentExpr));
 
-						}
-
-						resultConstructor = resultConstructor.ReplaceParameters(newParameters);
 					}
 
-					return resultConstructor;
+						resultConstructor = resultConstructor.ReplaceParameters(newParameters);
 				}
+
+					return resultConstructor;
+			}
 
 				// Scalar
 				return null;
@@ -454,24 +450,24 @@ namespace LinqToDB.Linq.Builder
 
 						Expression newExpression = Expression.MakeMemberAccess(currentRoot, assignment.MemberInfo);
 						if (assignment.Expression is SqlGenericConstructorExpression assignmentGeneric)
-						{
+									{
 							newExpression = CorrectAssignments(newExpression, assignmentGeneric);
-						}
+									}
 
 						newAssignments.Add(assignment.WithExpression(newExpression));
-					}
+								}
 
 					constructorExpression = constructorExpression.ReplaceAssignments(newAssignments);
-				}
+							}
 
 				if (constructorExpression.ConstructType == SqlGenericConstructorExpression.CreateType.Full)
-				{
+							{
 					return Builder.TryConstruct(constructorExpression, this, ProjectFlags.Expression);
-				}
+								}	
 
 				/*
 				if (constructorExpression.Parameters.Count > 0)
-				{
+								{
 					var newParameters = new List<SqlGenericConstructorExpression.Parameter>(constructorExpression.Parameters.Count);
 
 					for (var i = 0; i < constructorExpression.Parameters.Count; i++)
@@ -483,31 +479,31 @@ namespace LinqToDB.Linq.Builder
 						if (parameter.Expression is SqlGenericConstructorExpression assignmentGeneric)
 						{
 							newExpression = CorrectAssignments(newExpression, assignmentGeneric);
-						}
+								}
 
 						newParameters.Add(parameter.WithExpression(newExpression));
 					#1#
-					}
+							}
 
 					//constructorExpression.ReplaceParameters(newParameters);
-				}
+						}
 				*/
 
 				return constructorExpression;
 			}
 
 			Expression MakeConditionalConstructExpression(Expression root, Expression leftExpression, Expression rightExpression)
-			{
+						{
 				if (leftExpression is not SqlGenericConstructorExpression)
 				{
 					if (leftExpression is SqlPlaceholderExpression placeholder && placeholder.Sql is SqlValue value && value.Value == null)
 						leftExpression = Expression.Default(leftExpression.Type);
-					else
+							else
 						throw new InvalidOperationException();
-				}
+						}
 
 				if (rightExpression is not SqlGenericConstructorExpression)
-				{
+						{
 					if (rightExpression is SqlPlaceholderExpression placeholder && placeholder.Sql is SqlValue value && value.Value == null)
 						rightExpression = Expression.Default(rightExpression.Type);
 					else
@@ -518,7 +514,7 @@ namespace LinqToDB.Linq.Builder
 				var sequenceRightSetId = Builder.GenerateSetId(_sequence2.SubQuery.SelectQuery.SourceID);
 
 				if (_setIdPlaceholder == null)
-				{
+							{
 
 					var sqlValueLeft  = new SqlValue(sequenceLeftSetId);
 					var sqlValueRight = new SqlValue(sequenceRightSetId);
@@ -542,7 +538,7 @@ namespace LinqToDB.Linq.Builder
 					rightIdPlaceholder = Builder.MakeColumn(SelectQuery, rightIdPlaceholder, asNew: true);
 
 					_setIdPlaceholder = leftIdPlaceholder;
-				}
+								}
 
 				if (leftExpression is SqlGenericConstructorExpression genericLeft)
 					leftExpression  = CorrectAssignments(root, genericLeft);
@@ -551,14 +547,14 @@ namespace LinqToDB.Linq.Builder
 					rightExpression = CorrectAssignments(root, genericRight);
 
 				if (leftExpression.Type != root.Type)
-				{
+								{
 					leftExpression = Expression.Convert(leftExpression, root.Type);
-				}
+										}
 
 				if (rightExpression.Type != root.Type)
-				{
+										{
 					rightExpression = Expression.Convert(rightExpression, root.Type);
-				}
+												}
 
 				var resultExpr = Expression.Condition(
 					Expression.Equal(_setIdPlaceholder, Expression.Constant(sequenceLeftSetId)),
@@ -567,21 +563,21 @@ namespace LinqToDB.Linq.Builder
 				);
 
 				return resultExpr;
-			}
+											}
 
 
 			Expression MakeConditionalConstructExpression()
-			{
+											{
 				if (_type == null)
 					throw new InvalidOperationException();
 
 				return MakeConditionalConstructExpression(new ContextRefExpression(_type, this), 
 					_leftSqlExpr,
 					_rightSqlExpr);
-			}
+											}
 
 			void Init()
-			{
+											{
 				var ref1 = new ContextRefExpression(_type, _sequence1.SubQuery);
 				var ref2 = new ContextRefExpression(_type, _sequence2.SubQuery);
 
@@ -595,11 +591,11 @@ namespace LinqToDB.Linq.Builder
 				_body = MatchSequences(root, _leftSqlExpr, _rightSqlExpr, _sequence1, _sequence2, ref mismatches);
 
 				if (_body == null)
-				{
+						{
 					if (_leftSqlExpr is SqlPlaceholderExpression placeholderLeft && _rightSqlExpr is SqlPlaceholderExpression placeholderRight)
 					{
 						var leftColumn = Builder.MakeColumn(_sequence1.SelectQuery, placeholderLeft, asNew: true);
-						
+
 						leftColumn = Builder.MakeColumn(SelectQuery, leftColumn, asNew: true);
 						leftColumn = leftColumn.WithPath(root);
 
@@ -607,11 +603,11 @@ namespace LinqToDB.Linq.Builder
 
 						var rightColumn = Builder.MakeColumn(_sequence2.SelectQuery, placeholderRight, asNew: true);
 						rightColumn = Builder.MakeColumn(SelectQuery, rightColumn, asNew: true);
-					}
-					else
-					{
+						}
+						else
+						{
 						throw new LinqException($"Set operation over {_leftSqlExpr} and {_rightSqlExpr} is not supported.");
-					}
+							}
 				}
 				else
 				{
@@ -652,12 +648,12 @@ namespace LinqToDB.Linq.Builder
 
 							var leftExpression = Builder.ConvertToSqlExpr(_sequence1.SubQuery, left.Expression);
 							if (leftExpression is SqlPlaceholderExpression placeholderLeft)
-							{
+						{
 								if (alias != null)
 									placeholderLeft.Alias = alias;
 
 								var leftColumn = Builder.MakeColumn(_sequence1.SelectQuery, placeholderLeft, asNew: true);
-						
+
 								leftColumn = Builder.MakeColumn(SelectQuery, leftColumn, asNew: true);
 								leftColumn = leftColumn.WithPath(key);
 
@@ -672,11 +668,11 @@ namespace LinqToDB.Linq.Builder
 
 								var rightColumn = Builder.MakeColumn(_sequence2.SelectQuery, placeholderRight, asNew: true);
 								rightColumn = Builder.MakeColumn(SelectQuery, rightColumn, asNew: true);
-							}
 						}
 					}
 				}
-			}
+					}
+				}
 
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
@@ -706,7 +702,7 @@ namespace LinqToDB.Linq.Builder
 			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 			{
 				throw new NotImplementedException();
-			}
+				}
 
 			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 			{
@@ -726,36 +722,36 @@ namespace LinqToDB.Linq.Builder
 				});
 
 				return isIncompatible;
-			}
+							}
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
-			{
+							{
 				if (SequenceHelper.IsSameContext(path, this) &&
 				    (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AssociationRoot)))
-				{
+								{
 					return path;
 				}
 
 				if (SequenceHelper.IsSameContext(path, this))
-				{
+									{
 					if (_body == null)
-					{
+										{
 						return _createdSQL.Values.Single();
 					}
 
 					if (flags.HasFlag(ProjectFlags.Expression))
-					{
+											{
 						if (IsIncompatible(_body))
 						{
 							if (_setOperation != SetOperation.UnionAll)
 							{
 								throw new LinqToDBException($"Could not decide which construction typer to use `query.Select(x => new {_body.Type.Name} {{ ... }})` to specify projection.");
-							}
+											}
 							else
 							{
 								return MakeConditionalConstructExpression();
-							}
-						}
+										}
+									}
 
 						var constructed = Builder.TryConstruct(_body, this, flags);
 
@@ -763,7 +759,7 @@ namespace LinqToDB.Linq.Builder
 					}
 
 					return _body;
-				}
+								}
 
 				if (flags.HasFlag(ProjectFlags.Root))
 					return path;
@@ -781,7 +777,7 @@ namespace LinqToDB.Linq.Builder
 
 							var result = MakeConditionalConstructExpression(path, leftExpression, rightExpression);
 							return result;
-						}
+							}
 					}
 
 					if (projected is MemberExpression || projected is SqlGenericParamAccessExpression)

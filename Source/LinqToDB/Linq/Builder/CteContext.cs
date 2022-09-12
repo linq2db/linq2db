@@ -1,14 +1,11 @@
-﻿using System;
-using System.CodeDom;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using System.Reflection;
 using LinqToDB.Expressions;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Builder
 {
+	using SqlQuery;
+
 	internal class CteContext : IBuildContext
 	{
 #if DEBUG
@@ -16,9 +13,9 @@ namespace LinqToDB.Linq.Builder
 		public string Path         => this.GetPath();
 		public int    ContextId    { get; }
 #endif
-		public SelectQuery SelectQuery
+		public SelectQuery? SelectQuery
 		{
-			get => CteInnerQueryContext?.SelectQuery ?? new SelectQuery();
+			get => CteInnerQueryContext?.SelectQuery;
 			set { }
 		}
 

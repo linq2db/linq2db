@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using FluentAssertions;
+﻿using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;

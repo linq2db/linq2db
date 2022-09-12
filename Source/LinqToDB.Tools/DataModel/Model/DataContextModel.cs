@@ -1,8 +1,7 @@
-﻿using System.Collections.Generic;
-using LinqToDB.Configuration;
-
-namespace LinqToDB.DataModel
+﻿namespace LinqToDB.DataModel
 {
+	using Configuration;
+
 	/// <summary>
 	/// Main database context descriptor. Also contains data model for current/default database schema.
 	/// </summary>

@@ -1,10 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq.Expressions;
-using LinqToDB.Linq.Builder;
+﻿using System.Linq.Expressions;
 
 namespace LinqToDB.Expressions
 {
+	using Linq.Builder;
+
 	class ContextConstructionExpression : Expression
 	{
 		public ContextConstructionExpression(IBuildContext buildContext, Expression innerExpression, List<LambdaExpression>? postProcess = null)
@@ -13,7 +12,7 @@ namespace LinqToDB.Expressions
 			InnerExpression = innerExpression;
 			PostProcess     = postProcess;
 		}
-
+		 
 		public IBuildContext           BuildContext    { get; private set; }
 		public Expression              InnerExpression { get; private set; }
 		public List<LambdaExpression>? PostProcess     { get; private set; }

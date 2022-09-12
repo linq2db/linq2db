@@ -1,8 +1,7 @@
-﻿using System.Collections.Generic;
-using LinqToDB.CodeModel;
-
-namespace LinqToDB.DataModel
+﻿namespace LinqToDB.DataModel
 {
+	using CodeModel;
+
 	/// <summary>
 	/// Contains basic method (including lambda methods and constructors) attributes.
 	/// </summary>

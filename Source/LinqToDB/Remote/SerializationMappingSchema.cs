@@ -1,10 +1,10 @@
-﻿namespace LinqToDB.Remote
+﻿using System.Data.Linq;
+using System.Globalization;
+
+namespace LinqToDB.Remote
 {
-	using LinqToDB.Common;
+	using Common;
 	using Mapping;
-	using System;
-	using System.Data.Linq;
-	using System.Globalization;
 
 	/// <summary>
 	/// Mapping schema, that defines remote context values de-/serialization converters.

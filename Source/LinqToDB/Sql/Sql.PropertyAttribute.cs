@@ -1,12 +1,11 @@
-﻿using System;
-using System.Linq.Expressions;
-using LinqToDB.Mapping;
+﻿using System.Linq.Expressions;
 
 // ReSharper disable CheckNamespace
 
 namespace LinqToDB
 {
-	using LinqToDB.Common;
+	using Common;
+	using Mapping;
 	using SqlQuery;
 
 	partial class Sql

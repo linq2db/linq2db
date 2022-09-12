@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
+﻿using System.Diagnostics;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
@@ -61,7 +58,7 @@ namespace LinqToDB.Linq.Builder
 		protected virtual int GetIndex(int index, ISqlExpression column)
 		{
 			throw new NotImplementedException();
-		}
+			}
 
 		public override int ConvertToParentIndex(int index, IBuildContext context)
 		{
@@ -94,7 +91,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			var selectQuery = context.CloneElement(SelectQuery);
 			return new SubQueryContext(context.CloneContext(SubQuery), selectQuery, false);
-		}
+	}
 
 		public override Expression MakeExpression(Expression path, ProjectFlags flags)
 		{
@@ -110,7 +107,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (!flags.HasFlag(ProjectFlags.Test)/* && !flags.HasFlag(ProjectFlags.Expression)#1#)
 					result = Builder.UpdateNesting(this, result);
-			}
+}
 			*/
 
 			if (!flags.HasFlag(ProjectFlags.Test))

@@ -1,10 +1,8 @@
-﻿using System;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
+using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
-
 	class ContextRefBuilder : ISequenceBuilder
 	{
 		public int BuildCounter { get; set; }
@@ -53,7 +51,7 @@ namespace LinqToDB.Linq.Builder
 			var context = contextRef.BuildContext;
 
 			if (!buildInfo.CreateSubQuery)
-				return context;
+			return context;
 
 			var elementContext = context.GetContext(buildInfo.Expression, 0, buildInfo);
 			if (elementContext != null)

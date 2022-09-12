@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Text;
+﻿using System.Text;
 
 namespace LinqToDB.SchemaProvider
 {
 	using Common;
 	using Data;
-	using LinqToDB.SqlProvider;
 
 	public abstract class SchemaProviderBase : ISchemaProvider
 	{
