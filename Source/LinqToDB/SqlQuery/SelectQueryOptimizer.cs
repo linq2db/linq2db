@@ -393,7 +393,7 @@ namespace LinqToDB.SqlQuery
 				if (ctx.parentSetType.TryGetValue(sql, out var parentOp) && parentOp != operation)
 					return;
 
-				var newIndexes = new Dictionary<ISqlExpression, int>();
+				var newIndexes = new Dictionary<ISqlExpression, int>(Utils.ObjectReferenceEqualityComparer<ISqlExpression>.Default);
 
 				for (var i = 0; i < sql.Select.Columns.Count; i++)
 				{
@@ -415,20 +415,25 @@ namespace LinqToDB.SqlQuery
 
 				ctx.exprs.Add(union, sql);
 
-				for (var i = 0; i < union.Select.Columns.Count; i++)
+				foreach (var pair in newIndexes.OrderBy(x => x.Value))
 				{
-					var ucol = union.Select.Columns[i];
+					var currentIndex = union.Select.Columns.FindIndex(c => ReferenceEquals(c, pair.Key));
+					if (currentIndex < 0)
+						throw new InvalidOperationException();
 
-					var newIdx = newIndexes[ucol];
-
-					if (newIdx != i)
+					var newIndex = pair.Value;
+					if (currentIndex != newIndex)
 					{
+						var uc = union.Select.Columns[currentIndex];
+						union.Select.Columns.RemoveAt(currentIndex);
+						union.Select.Select.Columns.Insert(newIndex, uc);
+
 						// change indexes in SetOperators
 						foreach (var op in union.SetOperators)
 						{
-							var column = op.SelectQuery.Select.Columns[i];
-							op.SelectQuery.Select.Columns.RemoveAt(i);
-							op.SelectQuery.Select.Columns.Insert(newIdx, column);
+							var column = op.SelectQuery.Select.Columns[currentIndex];
+							op.SelectQuery.Select.Columns.RemoveAt(currentIndex);
+							op.SelectQuery.Select.Columns.Insert(newIndex, column);
 						}
 					}
 				}
