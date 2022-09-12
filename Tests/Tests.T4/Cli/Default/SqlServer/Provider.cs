@@ -12,10 +12,18 @@ using LinqToDB.Mapping;
 
 namespace Cli.Default.SqlServer
 {
-	[Table("CreateIfNotExistsTable")]
-	public class CreateIfNotExistsTable
+	[Table("Provider")]
+	public class Provider
 	{
-		[Column("Id"   )] public int Id    { get; set; } // int
-		[Column("Value")] public int Value { get; set; } // int
+		[Column("ProviderId", IsPrimaryKey = true )] public int    ProviderId { get; set; } // int
+		[Column("Test"      , CanBeNull    = false)] public string Test       { get; set; } = null!; // nvarchar(max)
+
+		#region Associations
+		/// <summary>
+		/// FK_Provider_Member
+		/// </summary>
+		[Association(CanBeNull = false, ThisKey = nameof(ProviderId), OtherKey = nameof(SqlServer.Member.MemberId))]
+		public Member Member { get; set; } = null!;
+		#endregion
 	}
 }

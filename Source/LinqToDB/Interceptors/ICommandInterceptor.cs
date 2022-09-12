@@ -92,5 +92,21 @@
 		/// <param name="commandBehavior">Behavior, used for command execution.</param>
 		/// <param name="dataReader"><see cref="DbDataReader"/> instance, returned by <see cref="DbCommand.ExecuteReader(CommandBehavior)"/> or <see cref="DbCommand.ExecuteReaderAsync(CommandBehavior, CancellationToken)"/> methods.</param>
 		void AfterExecuteReader(CommandEventData eventData, DbCommand command, CommandBehavior commandBehavior, DbDataReader dataReader);
+
+		/// <summary>
+		/// Event, triggered after all data is consumed from <see cref="DbDataReader"/> before <see cref="IDisposable.Dispose"/> call.
+		/// </summary>
+		/// <param name="eventData">Additional data for event.</param>
+		/// <param name="command">Executed command. Could be <c>null</c>.</param>
+		/// <param name="dataReader"><see cref="DbDataReader"/> instance.</param>
+		void BeforeReaderDispose(CommandEventData eventData, DbCommand? command, DbDataReader dataReader);
+
+		/// <summary>
+		/// Event, triggered after all data is consumed from <see cref="DbDataReader"/> before <c>DisposeAsync</c> call.
+		/// </summary>
+		/// <param name="eventData">Additional data for event.</param>
+		/// <param name="command">Executed command. Could be <c>null</c>.</param>
+		/// <param name="dataReader"><see cref="DbDataReader"/> instance.</param>
+		Task BeforeReaderDisposeAsync(CommandEventData eventData, DbCommand? command, DbDataReader dataReader);
 	}
 }

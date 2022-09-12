@@ -1177,6 +1177,46 @@ namespace Tests.Linq
 			}
 		}
 
+		// for disabled providers see notes on implementation at
+		// EXpressions.TrimLeft/TrimRight
+		[Test]
+		public void TrimLeftCharacters([DataSources(
+			TestProvName.AllFirebird,
+			TestProvName.AllMySql,
+			TestProvName.AllAccess,
+			ProviderName.SqlCe,
+			TestProvName.AllSqlServer2019Minus,
+			TestProvName.AllSybase)] string context)
+		{
+			using var db = GetDataContext(context);
+			var q =
+				from p in db.Person
+				where p.ID == 1
+				select new { p.ID, Name = "  " + p.FirstName + " " } into pp
+				where pp.Name.TrimStart(' ', 'J') == "ohn "
+				select pp;
+			Assert.AreEqual(1, q.ToList().First().ID);
+		}
+
+		[Test]
+		public void TrimRightCharacters([DataSources(
+			TestProvName.AllFirebird,
+			TestProvName.AllMySql,
+			TestProvName.AllAccess,
+			ProviderName.SqlCe,
+			TestProvName.AllSqlServer2019Minus,
+			TestProvName.AllSybase)] string context)
+		{
+			using var db = GetDataContext(context);
+			var q =
+				from p in db.Person
+				where p.ID == 1
+				select new { p.ID, Name = "  " + p.FirstName + " " } into pp
+				where pp.Name.TrimEnd(' ', 'n') == "  Joh"
+				select pp;
+			Assert.AreEqual(1, q.ToList().First().ID);
+		}
+
 		[Test]
 		public void ToLower([DataSources] string context)
 		{

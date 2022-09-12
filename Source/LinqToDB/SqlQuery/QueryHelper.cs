@@ -252,11 +252,6 @@ namespace LinqToDB.SqlQuery
 						return SuggestDbDataType(query.Select.Columns[0]);
 					break;
 				}
-				case QueryElementType.SqlBinaryExpression:
-				{
-					var binary = (SqlBinaryExpression)expr;
-					return SuggestDbDataType(binary.Expr1) ?? SuggestDbDataType(binary.Expr2);
-				}
 				case QueryElementType.SqlValue:
 				{
 					var sqlValue = (SqlValue)expr;

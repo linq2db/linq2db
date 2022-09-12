@@ -225,6 +225,15 @@
 					settings.Schemas.Add(strVal);
 			}
 
+			if (options.Remove(SchemaOptions.DefaultSchemas, out value))
+			{
+				settings.DefaultSchemas = new HashSet<string>();
+
+				foreach (var strVal in (string[])value!)
+					settings.DefaultSchemas.Add(strVal);
+			}
+
+
 			// include/exclude catalogs
 			if (options.Remove(SchemaOptions.IncludedCatalogs, out value))
 			{
@@ -285,6 +294,18 @@
 				};
 			}
 
+			// stored procedure filter
+			if (options.Remove(SchemaOptions.IncludedStoredProcedures, out value))
+			{
+				var filter = (NameFilter)value!;
+				settings.LoadStoredProcedure = name => filter.ApplyTo(name.Schema, name.Name);
+			}
+			else if (options.Remove(SchemaOptions.ExcludedStoredProcedures, out value))
+			{
+				var filter = (NameFilter)value!;
+				settings.LoadStoredProcedure = name => !filter.ApplyTo(name.Schema, name.Name);
+			}
+
 			// procedure schema load filter
 			if (options.Remove(SchemaOptions.ProceduresWithSchema, out value))
 			{
@@ -307,6 +328,30 @@
 			{
 				var filter = (NameFilter)value!;
 				settings.LoadTableFunction = name => !filter.ApplyTo(name.Schema, name.Name);
+			}
+
+			// scalar function filter
+			if (options.Remove(SchemaOptions.IncludedScalarFunctions, out value))
+			{
+				var filter = (NameFilter)value!;
+				settings.LoadScalarFunction = name => filter.ApplyTo(name.Schema, name.Name);
+			}
+			else if (options.Remove(SchemaOptions.ExcludedScalarFunctions, out value))
+			{
+				var filter = (NameFilter)value!;
+				settings.LoadScalarFunction = name => !filter.ApplyTo(name.Schema, name.Name);
+			}
+
+			// aggregate function filter
+			if (options.Remove(SchemaOptions.IncludedAggregateFunctions, out value))
+			{
+				var filter = (NameFilter)value!;
+				settings.LoadAggregateFunction = name => filter.ApplyTo(name.Schema, name.Name);
+			}
+			else if (options.Remove(SchemaOptions.ExcludedAggregateFunctions, out value))
+			{
+				var filter = (NameFilter)value!;
+				settings.LoadAggregateFunction = name => !filter.ApplyTo(name.Schema, name.Name);
 			}
 		}
 	}

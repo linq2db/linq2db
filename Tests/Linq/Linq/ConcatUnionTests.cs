@@ -1805,5 +1805,26 @@ namespace Tests.Linq
 
 			q3.ToList();
 		}
+
+		[Test]
+		public void Issue3738Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query1 = db.Person.Select(x => new
+			{
+				Id     = (string?)("I-" + x.ID),
+				Name   = x.FirstName
+			});
+			var query2 = db.Person.Select(x => new
+			{
+				Id   = (string?)null,
+				Name = "QUASI-" + x.FirstName,
+			});
+
+			var resultingQuery = query1.Concat(query2);
+
+			resultingQuery.ToList();
+		}
 	}
 }

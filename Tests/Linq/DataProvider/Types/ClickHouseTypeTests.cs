@@ -436,12 +436,12 @@ namespace Tests.DataProvider
 		{
 			// https://clickhouse.com/docs/en/sql-reference/data-types/datetime64/
 
-			var min = new DateTime(1900, 1, 1, 0, 0, 0, DateTimeKind.Unspecified);
+			var min  = new DateTime(1900, 1, 1, 0, 0, 0, DateTimeKind.Unspecified);
 			// DateTime/DateTimeOffset cannot store precision 8/9 without precision loss
-			var max = new DateTime(2299, 12, 31, 23, 59, 59, 999, DateTimeKind.Unspecified).AddTicks(9999);
-			// https://github.com/ClickHouse/ClickHouse/issues/38730
+			var max  = new DateTime(2299, 12, 31, 23, 59, 59, 999, DateTimeKind.Unspecified).AddTicks(9999);
+			// max value for DateTime64(9)
 			var max9 = new DateTime(2262, 4, 11, 23, 47, 16, 854, DateTimeKind.Unspecified).AddTicks(7758);
-			var val = TestData.DateTime;
+			var val  = TestData.DateTime;
 
 			// https://github.com/Octonica/ClickHouseClient/issues/60
 			// https://github.com/Octonica/ClickHouseClient/issues/62
