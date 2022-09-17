@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LinqToDB.Common;
+using System;
 using System.Collections.Generic;
 
 namespace LinqToDB.SqlQuery
@@ -283,16 +284,11 @@ namespace LinqToDB.SqlQuery
 				return new ExprExpr(Expr1, InvertOperator(Operator), Expr2, !WithNull);
 			}
 
-			public ISqlPredicate Reduce(NullabilityContext nullability, EvaluationContext context, bool insideNot)
-			{
-				ISqlPredicate MakeWithoutNulls()
-				{
-					return new ExprExpr(Expr1, Operator, Expr2, null);
-				}
-
-				if (WithNull == null)
+			public ISqlPredicate Reduce(NullabilityContext nullability, EvaluationContext context, bool insideNot, LinqOptions options)
+			{				
+				if (options.CompareNulls == CompareNulls.LikeSql)
 					return this;
-					
+
 				if (Operator == Operator.Equal || Operator == Operator.NotEqual)
 				{
 					if (Expr1.TryEvaluateExpression(context, out var value1))

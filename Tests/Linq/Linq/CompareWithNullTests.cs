@@ -1,5 +1,6 @@
 using FluentAssertions;
 using LinqToDB;
+using LinqToDB.Common;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 using System;
@@ -94,7 +95,7 @@ namespace Tests.Linq
 			// when creating baseline file and this would result in path names too long for Windows to handle.
 			[Range(0, 35)]                              int index)
 		{
-			using var _   = new CompareNullsAsValuesOption(withNullCompares);
+			using var _   = new CompareNullsOption(withNullCompares);
 			using var db  = GetDataContext(context);
 			using var src = SetupSrcTable(db);
 
@@ -120,15 +121,44 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test]
+		public void Options(
+			// This test can run in all providers, but the same everywhere
+			// as we're just testing the compiler options
+			[IncludeDataSources(ProviderName.SQLiteMS)] string       context,
+			[Values]                                    CompareNulls option)
+		{
+			using var _   = new CompareNullsOption(option);
+			using var db  = GetDataContext(context);
+			using var src = SetupSrcTable(db);
+			
+			
+			// == null always translates to IS NULL
+			var result = src.Where(x => x.A == null).Count();
+			result.Should().Be(2);
+			
+			// == default is the same as == null
+			result = src.Where(x => x.A == default).Count();
+			result.Should().Be(2);
+
+			// LikeCSharp should obviously match.
+			// LikeSqlExceptParameters sniffs parameters and should translate to IS NULL.
+			// LikeSql should translate straight to x.A = p, which should have no result.
+			int? p = null;
+			result = src.Where(x => x.A == p).Count();
+			result.Should().Be(option == CompareNulls.LikeSql ? 0 : 2);
+		}
+
 		public class Src
 		{
-			public int  Id     { get; set; }
-			public int? A      { get; set; }
-			public int? B      { get; set; }
-			public ME?  EnumA  { get; set; }
-			public ME?  EnumB  { get; set; }
-			public CE?  CEnumA { get; set; }
-			public CE?  CEnumB { get; set; }
+			public int     Id     { get; set; }
+			public int?    A      { get; set; }
+			public int?    B      { get; set; }
+			public ME?     EnumA  { get; set; }
+			public ME?     EnumB  { get; set; }
+			public CE?     CEnumA { get; set; }
+			public CE?     CEnumB { get; set; }
+			public string? Text   { get; set; }
 		}
 
 		public enum ME { [MapValue("A")] One, [MapValue("B")] Two }

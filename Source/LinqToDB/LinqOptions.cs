@@ -47,9 +47,9 @@ namespace LinqToDB
 	/// - removes left joins if joined table is not used in query.
 	/// Default value: <c>true</c>.
 	/// </param>
-	/// <param name="CompareNullsAsValues">
+	/// <param name="CompareNulls">
 	/// <summary>
-	/// If set to true nullable fields would be checked for IS NULL in Equal/NotEqual comparisons.
+	/// If set to LikeCSharp nullable fields would be checked for IS NULL in Equal/NotEqual comparisons.
 	/// This affects: Equal, NotEqual, Not Contains
 	/// Default value: <c>true</c>.
 	/// </summary>
@@ -148,21 +148,21 @@ namespace LinqToDB
 	/// </param>
 	public sealed record LinqOptions
 	(
-		bool      PreloadGroups           = false,
-		bool      IgnoreEmptyUpdate       = false,
-		bool      GenerateExpressionTest  = false,
-		bool      TraceMapperExpression   = false,
-		bool      DoNotClearOrderBys      = false,
-		bool      OptimizeJoins           = true,
-		bool      CompareNullsAsValues    = true,
-		bool      GuardGrouping           = true,
-		bool      DisableQueryCache       = false,
-		TimeSpan? CacheSlidingExpiration  = default,
-		bool      PreferApply             = true,
-		bool      KeepDistinctOrdered     = true,
-		bool      ParameterizeTakeSkip    = true,
-		bool      EnableContextSchemaEdit = false,
-		bool      PreferExistsForScalar   = default
+		bool         PreloadGroups           = false,
+		bool         IgnoreEmptyUpdate       = false,
+		bool         GenerateExpressionTest  = false,
+		bool         TraceMapperExpression   = false,
+		bool         DoNotClearOrderBys      = false,
+		bool         OptimizeJoins           = true,
+		CompareNulls CompareNulls            = CompareNulls.LikeCSharp,
+		bool         GuardGrouping           = true,
+		bool         DisableQueryCache       = false,
+		TimeSpan?    CacheSlidingExpiration  = default,
+		bool         PreferApply             = true,
+		bool         KeepDistinctOrdered     = true,
+		bool         ParameterizeTakeSkip    = true,
+		bool         EnableContextSchemaEdit = false,
+		bool         PreferExistsForScalar   = default
 		// If you add another parameter here, don't forget to update
 		// LinqOptions copy constructor and IConfigurationID.ConfigurationID.
 	)
@@ -180,7 +180,7 @@ namespace LinqToDB
 			TraceMapperExpression   = original.TraceMapperExpression;
 			DoNotClearOrderBys      = original.DoNotClearOrderBys;
 			OptimizeJoins           = original.OptimizeJoins;
-			CompareNullsAsValues    = original.CompareNullsAsValues;
+			CompareNulls            = original.CompareNulls;
 			GuardGrouping           = original.GuardGrouping;
 			DisableQueryCache       = original.DisableQueryCache;
 			CacheSlidingExpiration  = original.CacheSlidingExpiration;
