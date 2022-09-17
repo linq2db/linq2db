@@ -1,18 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using System.Reflection;
 
 namespace LinqToDB.Reflection
 {
-	using System.Data;
-	using System.Data.Common;
 	using Expressions;
+	using Common;
+	using Extensions;
 	using Linq;
-	using LinqToDB.Common;
-	using LinqToDB.Extensions;
-	using LinqToDB.SqlQuery;
+	using SqlQuery;
 
 	/// <summary>
 	/// This API supports the LinqToDB infrastructure and is not intended to be used  directly from your code.
@@ -27,8 +22,9 @@ namespace LinqToDB.Reflection
 
 		public static class ADONet
 		{
-			public static readonly MethodInfo IsDBNull      = MemberHelper.MethodOf<DbDataReader>(r => r.IsDBNull(0));
-			public static readonly MethodInfo IsDBNullAsync = MemberHelper.MethodOf<DbDataReader>(r => r.IsDBNullAsync(0));
+			public static readonly MethodInfo   IsDBNull         = MemberHelper.MethodOf  <DbDataReader>(r => r.IsDBNull(0));
+			public static readonly MethodInfo   IsDBNullAsync    = MemberHelper.MethodOf  <DbDataReader>(r => r.IsDBNullAsync(0));
+			public static readonly PropertyInfo ConnectionString = MemberHelper.PropertyOf<DbConnection>(c => c.ConnectionString);
 		}
 
 		public static class Enumerable

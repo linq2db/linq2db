@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Text;
 
 namespace LinqToDB.Mapping
 {
@@ -21,7 +19,7 @@ namespace LinqToDB.Mapping
 		protected SkipValuesByListAttribute(IEnumerable<object?> values)
 		{
 			if (values == null)
-				throw new ArgumentNullException(nameof(values));
+				ThrowHelper.ThrowArgumentNullException(nameof(values));
 
 			Values = new HashSet<object?>(values);
 		}

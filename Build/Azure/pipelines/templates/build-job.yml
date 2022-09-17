@@ -17,13 +17,13 @@ jobs:
     displayName: 'Install .net 6'
     inputs:
       packageType: sdk
-      version: 6.0.203 #6.x
+      version: 6.x
 
   - task: PowerShell@2
     inputs:
       filePath: '$(Build.SourcesDirectory)/Build/SetVersion.ps1'
       workingDirectory: '$(Build.SourcesDirectory)'
-      arguments: -path $(Build.SourcesDirectory)/Build/linq2db.Default.props -version $(assemblyVersion)
+      arguments: -path $(Build.SourcesDirectory)/Directory.Build.props -version $(assemblyVersion)
     displayName: Update assembly version
 
   - task: MSBuild@1
@@ -65,7 +65,7 @@ jobs:
         if %errorlevel% neq 0 exit
         xcopy /i /s testing\net472\runtimes testing\net472x64\runtimes
         if %errorlevel% neq 0 exit
-        xcopy /i /s testing\net472\x64 testing\net472x64\x64
+        xcopy /i /s /y testing\net472\x64 testing\net472x64\x64
         if %errorlevel% neq 0 exit
         xcopy /i /s Tests\Linq\bin\$(build_configuration)\netcoreapp3.1\publishx86 testing\netcore31x86
         if %errorlevel% neq 0 exit

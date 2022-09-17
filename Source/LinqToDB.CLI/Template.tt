@@ -9,10 +9,12 @@
 // additional namespace imports (usings)
 <#@ import namespace="System"                     #>
 <#@ import namespace="System.Collections.Generic" #>
+<#@ import namespace="System.Linq"                #>
 <#@ import namespace="LinqToDB.CodeModel"         #>
+<#@ import namespace="LinqToDB.DataModel"         #>
 <#@ import namespace="LinqToDB.Schema"            #>
 <#@ import namespace="LinqToDB.Scaffold"          #>
-<#@ import namespace="LinqToDB.DataModel"         #>
+<#@ import namespace="LinqToDB.SqlQuery"          #>
 
 /*
 
@@ -121,7 +123,7 @@ public class Interceptors : ScaffoldInterceptors
 	/// <param name="typeParser">Type parser to create value for <see cref="TypeMapping.CLRType"/> property from <see cref="Type"/> instance or type name string.</param>
 	/// <param name="defaultMapping">Default type mapping for specified <paramref name="databaseType"/>.</param>
 	/// <returns>Type mapping information for specified <paramref name="databaseType"/>.</returns>
-	public override TypeMapping GetTypeMapping(DatabaseType databaseType, ITypeParser typeParser, TypeMapping defaultMapping)
+	public override TypeMapping? GetTypeMapping(DatabaseType databaseType, ITypeParser typeParser, TypeMapping? defaultMapping)
 	{
 		return defaultMapping;
 	}

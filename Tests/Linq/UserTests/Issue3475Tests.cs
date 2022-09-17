@@ -1,12 +1,9 @@
-﻿using System.Linq;
-using FluentAssertions;
+﻿using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 using System.Linq.Dynamic.Core;
 using System.Linq.Dynamic.Core.CustomTypeProviders;
-using System.Collections.Generic;
-using System;
 
 namespace Tests.UserTests
 {
@@ -35,7 +32,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void NumberLikeTests([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void NumberLikeTests([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			ParsingConfig.Default.CustomTypeProvider = new LinqToDBDynamicLinqCustomTypeProvider();
 

@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-
-namespace LinqToDB.DataProvider.MySql
+﻿namespace LinqToDB.DataProvider.MySql
 {
 	using Common;
 	using Data;
-	using LinqToDB.SchemaProvider;
+	using SchemaProvider;
 
 	class MySqlSchemaProvider : SchemaProviderBase
 	{
@@ -61,7 +56,6 @@ namespace LinqToDB.DataProvider.MySql
 						//
 						TableID            = catalog.ToLower() + ".." + name,
 						CatalogName        = catalog,
-						SchemaName         = string.Empty,
 						TableName          = name,
 						IsDefaultSchema    = true,
 						IsView             = type == "VIEW" || type == "SYSTEM VIEW",
@@ -204,7 +198,7 @@ SELECT
 				.ToList();
 		}
 
-		protected override DataType GetDataType(string? dataType, string? columnType, int? length, int? prec, int? scale)
+		protected override DataType GetDataType(string? dataType, string? columnType, int? length, int? precision, int? scale)
 		{
 			return dataType?.ToLower() switch
 			{

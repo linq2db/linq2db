@@ -1,16 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using LinqToDB.CodeModel;
-using LinqToDB.DataModel;
-using LinqToDB.Metadata;
-using LinqToDB.Naming;
-using LinqToDB.Schema;
-using LinqToDB.SqlQuery;
+﻿using System.Globalization;
 
 namespace LinqToDB.Scaffold
 {
+	using CodeModel;
+	using DataModel;
+	using Metadata;
+	using Naming;
+	using Schema;
+	using SqlQuery;
+
 	partial class DataModelLoader
 	{
 		/// <summary>
@@ -309,8 +307,13 @@ namespace LinqToDB.Scaffold
 
 				newName = fkName;
 
+				// FK side of one-to-one relation by primary keys
+				var isOneToOne = false;
+				if (firstFromColumnName != null && _entities.TryGetValue(otherTable, out var sourceTable))
+					isOneToOne = sourceTable.Entity.Columns.Any(_ => _.Metadata.Name == firstFromColumnName && _.Metadata.IsPrimaryKey);
+
 				// if column name provided - generate association name based on column name
-				if (firstFromColumnName != null && firstFromColumnName.ToLower().EndsWith("id"))
+				if (!isOneToOne && firstFromColumnName != null && firstFromColumnName.ToLower().EndsWith("id"))
 				{
 					// if column name provided and ends with ID suffix
 					// we trim ID part and possible _ connectors before it

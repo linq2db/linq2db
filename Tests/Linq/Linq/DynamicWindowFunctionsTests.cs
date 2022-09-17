@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using System.Reflection;
 using LinqToDB;
 using LinqToDB.Common;
@@ -200,7 +197,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SampleSelectTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void SampleSelectTest([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable<SampleClass>())

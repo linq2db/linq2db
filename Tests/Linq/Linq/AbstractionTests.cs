@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using LinqToDB;
+﻿using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
@@ -126,7 +124,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void AssociationSelect([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void AssociationSelect([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(SampleClass1.Seed()))

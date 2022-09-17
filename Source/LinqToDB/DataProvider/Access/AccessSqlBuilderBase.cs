@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Text;
 
 namespace LinqToDB.DataProvider.Access
 {
@@ -145,7 +143,7 @@ namespace LinqToDB.DataProvider.Access
 				case '%': expr = new SqlBinaryExpression(expr.SystemType, expr.Expr1, "MOD", expr.Expr2, Precedence.Additive - 1); break;
 				case '&':
 				case '|':
-				case '^': throw new SqlException("Operator '{0}' is not supported by the {1}.", expr.Operation, GetType().Name);
+				case '^': expr = ThrowHelper.ThrowSqlException<SqlBinaryExpression>($"Operator '{expr.Operation}' is not supported by the {GetType().Name}."); break;
 			}
 
 			base.BuildBinaryExpression(expr);
@@ -230,7 +228,7 @@ namespace LinqToDB.DataProvider.Access
 			var len = parameters.Length - start;
 
 			if (len < 3)
-				throw new SqlException("CASE statement is not supported by the {0}.", GetType().Name);
+				return ThrowHelper.ThrowSqlException<SqlFunction>($"CASE statement is not supported by the {GetType().Name}.");
 
 			if (len == 3)
 				return new SqlFunction(systemType, "Iif", parameters[start], parameters[start + 1], parameters[start + 2]);
@@ -245,12 +243,12 @@ namespace LinqToDB.DataProvider.Access
 			base.BuildUpdateSet(selectQuery, updateClause);
 		}
 
-		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
+		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable, bool canBeNull)
 		{
 			switch (type.Type.DataType)
 			{
-				case DataType.DateTime2 : StringBuilder.Append("timestamp");                    break;
-				default                 : base.BuildDataTypeFromDataType(type, forCreateTable); break;
+				case DataType.DateTime2 : StringBuilder.Append("timestamp");                               break;
+				default                 : base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull); break;
 			}
 		}
 
@@ -318,7 +316,7 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override void BuildMergeStatement(SqlMergeStatement merge)
 		{
-			throw new LinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
+			ThrowHelper.ThrowLinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
 		}
 
 		protected override StringBuilder BuildSqlComment(StringBuilder sb, SqlComment comment)

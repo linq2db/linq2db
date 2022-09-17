@@ -1,6 +1,4 @@
 ﻿using NUnit.Framework;
-using System;
-using System.Linq;
 using LinqToDB;
 
 namespace Tests.UserTests
@@ -10,7 +8,7 @@ namespace Tests.UserTests
 	{
 		[Test]
 		public void Issue1750Test(
-			[IncludeDataSources(false, TestProvName.AllSQLite)] string context, 
+			[IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, 
 			[Values(true, false)] bool includeX, 
 			[Values(true, false)] bool includeY,
 			[Values(true, false)] bool includeZ)

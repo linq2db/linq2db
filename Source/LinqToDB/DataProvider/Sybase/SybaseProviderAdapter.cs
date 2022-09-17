@@ -1,11 +1,8 @@
-﻿using System;
-using System.Data;
+﻿using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider.Sybase
 {
-	using System.Data.Common;
-	using System.Linq.Expressions;
-	using LinqToDB.Expressions;
+	using Expressions;
 
 	public class SybaseProviderAdapter : IDynamicProviderAdapter
 	{
@@ -75,8 +72,7 @@ namespace LinqToDB.DataProvider.Sybase
 			{
 				if (_nativeInstance == null)
 					lock (_nativeSyncRoot)
-						if (_nativeInstance == null)
-							_nativeInstance = CreateAdapter(NativeAssemblyName, NativeClientNamespace, NativeProviderFactoryName, true);
+						_nativeInstance ??= CreateAdapter(NativeAssemblyName, NativeClientNamespace, NativeProviderFactoryName, true);
 
 				return _nativeInstance;
 			}
@@ -84,8 +80,7 @@ namespace LinqToDB.DataProvider.Sybase
 			{
 				if (_managedInstance == null)
 					lock (_managedSyncRoot)
-						if (_managedInstance == null)
-							_managedInstance = CreateAdapter(ManagedAssemblyName, ManagedClientNamespace, null, false);
+						_managedInstance ??= CreateAdapter(ManagedAssemblyName, ManagedClientNamespace, null, false);
 
 				return _managedInstance;
 			}
@@ -95,7 +90,7 @@ namespace LinqToDB.DataProvider.Sybase
 		{
 			var assembly = Common.Tools.TryLoadAssembly(assemblyName, dbFactoryName);
 			if (assembly == null)
-				throw new InvalidOperationException($"Cannot load assembly {assemblyName}");
+				ThrowHelper.ThrowInvalidOperationException($"Cannot load assembly {assemblyName}");
 
 			var connectionType  = assembly.GetType($"{clientNamespace}.AseConnection" , true)!;
 			var commandType     = assembly.GetType($"{clientNamespace}.AseCommand"    , true)!;
@@ -244,7 +239,7 @@ namespace LinqToDB.DataProvider.Sybase
 			{
 			}
 
-			public AseBulkCopy(AseConnection connection, AseBulkCopyOptions options, AseTransaction? transaction) => throw new NotImplementedException();
+			public AseBulkCopy(AseConnection connection, AseBulkCopyOptions options, AseTransaction? transaction) => ThrowHelper.ThrowNotImplementedException();
 
 			void IDisposable.Dispose() => ((Action<AseBulkCopy>)CompiledWrappers[0])(this);
 
@@ -362,7 +357,7 @@ namespace LinqToDB.DataProvider.Sybase
 			{
 			}
 
-			public AseBulkCopyColumnMapping(string source, string destination) => throw new NotImplementedException();
+			public AseBulkCopyColumnMapping(string source, string destination) => ThrowHelper.ThrowNotImplementedException();
 		}
 
 		#endregion

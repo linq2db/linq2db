@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using LinqToDB.Mapping;
+﻿using LinqToDB.Mapping;
 using NUnit.Framework;
 
 namespace Tests.UserTests
@@ -24,7 +23,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestRefTypeDoNotThrow([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestRefTypeDoNotThrow([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable<Entity>())

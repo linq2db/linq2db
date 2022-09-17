@@ -26,12 +26,12 @@ let Insert1 (db : IDataContext) =
         cleanup() |> ignore
 
 
-let Insert2 (db : IDataContext) =
+let Insert2 (db : IDataContext, personId : int) =
 
     let p =
         { ComplexPerson.Name = { FirstName = "fn"; MiddleName = ""; LastName = "ln" }
           Gender = "M"
-          ID = 0 }
+          ID = personId }
 
     let id = query {
         for p in db.GetTable<Person>() do

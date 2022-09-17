@@ -1,12 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Data.Common;
-using System.Linq.Expressions;
-using System.Threading;
-using System.Threading.Tasks;
-
-using JetBrains.Annotations;
+﻿using System.Linq.Expressions;
 
 namespace LinqToDB
 {
@@ -49,8 +41,9 @@ namespace LinqToDB
 		public DataContext(string? configurationString)
 			: this(new LinqToDBConnectionOptionsBuilder()
 				.UseConfigurationString(
-					configurationString ?? DataConnection.DefaultConfiguration
-						?? throw new ArgumentNullException($"Neither {nameof(configurationString)} nor {nameof(DataConnection)}.{DataConnection.DefaultConfiguration} specified"))
+					configurationString 
+				        ?? DataConnection.DefaultConfiguration
+						?? ThrowHelper.ThrowArgumentNullException<string>($"Neither {nameof(configurationString)} nor {nameof(DataConnection)}.{DataConnection.DefaultConfiguration} specified"))
 				.Build())
 		{
 		}
@@ -63,8 +56,8 @@ namespace LinqToDB
 		public DataContext(IDataProvider dataProvider, string connectionString)
 			: this(new LinqToDBConnectionOptionsBuilder()
 				.UseConnectionString(
-					dataProvider     ?? throw new ArgumentNullException(nameof(dataProvider)),
-					connectionString ?? throw new ArgumentNullException(nameof(connectionString)))
+					dataProvider     ?? ThrowHelper.ThrowArgumentNullException<IDataProvider>(nameof(dataProvider)),
+					connectionString ?? ThrowHelper.ThrowArgumentNullException<string       >(nameof(connectionString)))
 				.Build())
 		{
 		}
@@ -74,11 +67,11 @@ namespace LinqToDB
 		/// </summary>
 		/// <param name="providerName">Name of database provider to use with this connection. <see cref="ProviderName"/> class for list of providers.</param>
 		/// <param name="connectionString">Database connection string to use for connection with database.</param>
-		public DataContext( string providerName, string connectionString)
+		public DataContext(string providerName, string connectionString)
 			: this(new LinqToDBConnectionOptionsBuilder()
 				.UseConnectionString(
-					providerName     ?? throw new ArgumentNullException(nameof(providerName)),
-					connectionString ?? throw new ArgumentNullException(nameof(connectionString)))
+					providerName     ?? ThrowHelper.ThrowArgumentNullException<string>(nameof(providerName)),
+					connectionString ?? ThrowHelper.ThrowArgumentNullException<string>(nameof(connectionString)))
 				.Build())
 		{
 		}
@@ -103,14 +96,14 @@ namespace LinqToDB
 				if (options.ProviderName != null && options.ConnectionString != null)
 				{
 					dataProvider = DataConnection.GetDataProvider(options.ProviderName, options.ConnectionString)
-					  ?? throw new LinqToDBException($"DataProvider '{options.ProviderName}' not found.");
+					  ?? ThrowHelper.ThrowLinqToDBException<IDataProvider>($"DataProvider '{options.ProviderName}' not found.");
 				}
 				else if (options.ConfigurationString != null)
 					dataProvider = DataConnection.GetDataProvider(options.ConfigurationString);
 			}
 
 			if (dataProvider == null)
-				throw new LinqToDBException($"DataProvider not specified.");
+				ThrowHelper.ThrowLinqToDBException($"DataProvider not specified.");
 
 			_optionsBuilder.UseDataProvider (dataProvider);
 			_optionsBuilder.UseMappingSchema(options.MappingSchema ?? dataProvider.MappingSchema);
@@ -120,7 +113,7 @@ namespace LinqToDB
 			else if (options.ConnectionFactory   != null) _optionsBuilder.UseConnectionFactory  (dataProvider, options.ConnectionFactory);
 			else if (options.ConfigurationString != null) _optionsBuilder.UseConfigurationString(options.ConfigurationString);
 			else if (options.DbConnection        != null) _optionsBuilder.UseConnection         (dataProvider, options.DbConnection, options.DisposeConnection);
-			else if (options.ConnectionString    != null) _optionsBuilder.UseConnectionString   (options.ProviderName!, options.ConnectionString);
+			else if (options.ConnectionString    != null) _optionsBuilder.UseConnectionString   (dataProvider, options.ConnectionString);
 
 			// interceptors magic
 			// as we need to aggregate interceptors, we don't pass them as-is from options to builder but manage separately
@@ -164,7 +157,7 @@ namespace LinqToDB
 			get => _optionsBuilder.MappingSchema!;
 			set
 			{
-				_optionsBuilder.UseMappingSchema(value ?? throw new ArgumentNullException(nameof(value)));
+				_optionsBuilder.UseMappingSchema(value ?? ThrowHelper.ThrowArgumentNullException<MappingSchema>(nameof(value)));
 				_prebuiltOptions = _optionsBuilder.Build();
 			}
 		}
@@ -339,7 +332,7 @@ namespace LinqToDB
 		{
 			if (_disposed)
 				// GetType().FullName to support inherited types
-				throw new ObjectDisposedException(GetType().FullName);
+				ThrowHelper.ThrowObjectDisposedException(GetType().FullName);
 		}
 
 		/// <summary>

@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using LinqToDB;
+﻿using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
@@ -50,7 +49,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void IssueTest([DataSources] string context)
+		public void IssueTest([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

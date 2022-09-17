@@ -1,13 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using LinqToDB.Linq;
 
 namespace LinqToDB.Expressions
 {
+	using Linq;
+
 	// PathVisitor cannot be shared/reused due to _visited state field
 	internal class PathVisitor<TContext>
 	{
@@ -238,16 +236,19 @@ namespace LinqToDB.Expressions
 				case ExpressionType.Default  : path = ConvertPathTo(typeof(DefaultExpression  )); break;
 
 				case ExpressionType.Extension:
-					{
-						path = _path;
-						if (expr.CanReduce)
-							Path(expr.Reduce());
+				{
+					path = _path;
+					if (expr.CanReduce)
+						Path(expr.Reduce());
 
-						break;
-					}
+					break;
+				}
 
 				default:
-					throw new NotImplementedException($"Unhandled expression type: {expr.NodeType}");
+				{
+					path = ThrowHelper.ThrowNotImplementedException<Expression>($"Unhandled expression type: {expr.NodeType}");
+					break;
+				}
 			}
 
 			_func(_context, expr, path);

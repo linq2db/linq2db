@@ -30,7 +30,6 @@ namespace Default.SqlServer
 		public ITable<AllTypes2>                AllTypes2                { get { return this.GetTable<AllTypes2>(); } }
 		public ITable<Child>                    Children                 { get { return this.GetTable<Child>(); } }
 		public ITable<CollatedTable>            CollatedTables           { get { return this.GetTable<CollatedTable>(); } }
-		public ITable<CreateIfNotExistsTable>   CreateIfNotExistsTables  { get { return this.GetTable<CreateIfNotExistsTable>(); } }
 		public ITable<DataType>                 DataTypes                { get { return this.GetTable<DataType>(); } }
 		public ITable<DecimalOverflow>          DecimalOverflows         { get { return this.GetTable<DecimalOverflow>(); } }
 		public ITable<Doctor>                   Doctors                  { get { return this.GetTable<Doctor>(); } }
@@ -44,6 +43,7 @@ namespace Default.SqlServer
 		public ITable<Issue1115>                Issue1115                { get { return this.GetTable<Issue1115>(); } }
 		public ITable<Issue1144>                Issue1144                { get { return this.GetTable<Issue1144>(); } }
 		public ITable<LinqDataType>             LinqDataTypes            { get { return this.GetTable<LinqDataType>(); } }
+		public ITable<Member>                   Members                  { get { return this.GetTable<Member>(); } }
 		public ITable<NameTest>                 NameTests                { get { return this.GetTable<NameTest>(); } }
 		/// <summary>
 		/// This is Parent table
@@ -53,6 +53,7 @@ namespace Default.SqlServer
 		public ITable<ParentView>               ParentViews              { get { return this.GetTable<ParentView>(); } }
 		public ITable<Patient>                  Patients                 { get { return this.GetTable<Patient>(); } }
 		public ITable<Person>                   People                   { get { return this.GetTable<Person>(); } }
+		public ITable<Provider>                 Providers                { get { return this.GetTable<Provider>(); } }
 		public ITable<SameTableName>            SameTableNames           { get { return this.GetTable<SameTableName>(); } }
 		public ITable<TestSchema_SameTableName> SameTableNames0          { get { return this.GetTable<TestSchema_SameTableName>(); } }
 		public ITable<SqlType>                  SqlTypes                 { get { return this.GetTable<SqlType>(); } }
@@ -214,13 +215,6 @@ namespace Default.SqlServer
 		[Column, NotNull] public string CaseInsensitive { get; set; } = null!; // nvarchar(20)
 	}
 
-	[Table(Schema="dbo", Name="CreateIfNotExistsTable")]
-	public partial class CreateIfNotExistsTable
-	{
-		[Column, NotNull] public int Id    { get; set; } // int
-		[Column, NotNull] public int Value { get; set; } // int
-	}
-
 	[Table(Schema="dbo", Name="DataType")]
 	public partial class DataType
 	{
@@ -246,7 +240,7 @@ namespace Default.SqlServer
 		#region Associations
 
 		/// <summary>
-		/// FK_Doctor_Person (TestData2017.dbo.Person)
+		/// FK_Doctor_Person (dbo.Person)
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
 		public Person Person { get; set; } = null!;
@@ -287,7 +281,7 @@ namespace Default.SqlServer
 		#region Associations
 
 		/// <summary>
-		/// FK_Patient2_IndexTable_BackReference (TestData2017.dbo.IndexTable2)
+		/// FK_Patient2_IndexTable_BackReference (dbo.IndexTable2)
 		/// </summary>
 		[Association(ThisKey="PKField2, PKField1", OtherKey="PKField2, PKField1", CanBeNull=true)]
 		public IndexTable2? Patient { get; set; }
@@ -304,7 +298,7 @@ namespace Default.SqlServer
 		#region Associations
 
 		/// <summary>
-		/// FK_Patient2_IndexTable (TestData2017.dbo.IndexTable)
+		/// FK_Patient2_IndexTable (dbo.IndexTable)
 		/// </summary>
 		[Association(ThisKey="PKField2, PKField1", OtherKey="PKField2, PKField1", CanBeNull=false)]
 		public IndexTable Patient2IndexTable { get; set; } = null!;
@@ -361,6 +355,23 @@ namespace Default.SqlServer
 		[Column(),      Nullable            ] public string?   StringValue    { get; set; } // nvarchar(50)
 	}
 
+	[Table(Schema="dbo", Name="Member")]
+	public partial class Member
+	{
+		[PrimaryKey, Identity] public int    MemberId { get; set; } // int
+		[Column,     NotNull ] public string Alias    { get; set; } = null!; // nvarchar(50)
+
+		#region Associations
+
+		/// <summary>
+		/// FK_Provider_Member_BackReference (dbo.Provider)
+		/// </summary>
+		[Association(ThisKey="MemberId", OtherKey="ProviderId", CanBeNull=true)]
+		public Provider? Provider { get; set; }
+
+		#endregion
+	}
+
 	[Table(Schema="dbo", Name="Name.Test")]
 	public partial class NameTest
 	{
@@ -403,7 +414,7 @@ namespace Default.SqlServer
 		#region Associations
 
 		/// <summary>
-		/// FK_Patient_Person (TestData2017.dbo.Person)
+		/// FK_Patient_Person (dbo.Person)
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
 		public Person Person { get; set; } = null!;
@@ -423,16 +434,33 @@ namespace Default.SqlServer
 		#region Associations
 
 		/// <summary>
-		/// FK_Doctor_Person_BackReference (TestData2017.dbo.Doctor)
+		/// FK_Doctor_Person_BackReference (dbo.Doctor)
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
 		public Doctor? Doctor { get; set; }
 
 		/// <summary>
-		/// FK_Patient_Person_BackReference (TestData2017.dbo.Patient)
+		/// FK_Patient_Person_BackReference (dbo.Patient)
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
 		public Patient? Patient { get; set; }
+
+		#endregion
+	}
+
+	[Table(Schema="dbo", Name="Provider")]
+	public partial class Provider
+	{
+		[PrimaryKey, NotNull] public int    ProviderId { get; set; } // int
+		[Column,     NotNull] public string Test       { get; set; } = null!; // nvarchar(max)
+
+		#region Associations
+
+		/// <summary>
+		/// FK_Provider_Member (dbo.Member)
+		/// </summary>
+		[Association(ThisKey="ProviderId", OtherKey="MemberId", CanBeNull=false)]
+		public Member Member { get; set; } = null!;
 
 		#endregion
 	}
@@ -534,19 +562,19 @@ namespace Default.SqlServer
 		#region Associations
 
 		/// <summary>
-		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA2_BackReference (TestData2017.TestSchema.TestSchemaB)
+		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA2_BackReference (TestSchema.TestSchemaB)
 		/// </summary>
 		[Association(ThisKey="TestSchemaAID", OtherKey="TargetTestSchemaAId", CanBeNull=true)]
 		public IEnumerable<TestSchema_TestSchemaB> FkTestSchemaTestSchemaBYTargetTestSchemaA2BackReferences { get; set; } = null!;
 
 		/// <summary>
-		/// FK_TestSchema_TestSchemaBY_OriginTestSchemaA_BackReference (TestData2017.TestSchema.TestSchemaB)
+		/// FK_TestSchema_TestSchemaBY_OriginTestSchemaA_BackReference (TestSchema.TestSchemaB)
 		/// </summary>
 		[Association(ThisKey="TestSchemaAID", OtherKey="OriginTestSchemaAID", CanBeNull=true)]
 		public IEnumerable<TestSchema_TestSchemaB> TestSchemaBYOriginTestSchemaA { get; set; } = null!;
 
 		/// <summary>
-		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA_BackReference (TestData2017.TestSchema.TestSchemaB)
+		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA_BackReference (TestSchema.TestSchemaB)
 		/// </summary>
 		[Association(ThisKey="TestSchemaAID", OtherKey="TargetTestSchemaAID", CanBeNull=true)]
 		public IEnumerable<TestSchema_TestSchemaB> TestSchemaBYTargetTestSchemaA { get; set; } = null!;
@@ -565,19 +593,19 @@ namespace Default.SqlServer
 		#region Associations
 
 		/// <summary>
-		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA (TestData2017.TestSchema.TestSchemaA)
+		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA (TestSchema.TestSchemaA)
 		/// </summary>
 		[Association(ThisKey="TargetTestSchemaAID", OtherKey="TestSchemaAID", CanBeNull=false)]
 		public TestSchema_TestSchemaA FKTargetTestSchemaA { get; set; } = null!;
 
 		/// <summary>
-		/// FK_TestSchema_TestSchemaBY_OriginTestSchemaA (TestData2017.TestSchema.TestSchemaA)
+		/// FK_TestSchema_TestSchemaBY_OriginTestSchemaA (TestSchema.TestSchemaA)
 		/// </summary>
 		[Association(ThisKey="OriginTestSchemaAID", OtherKey="TestSchemaAID", CanBeNull=false)]
 		public TestSchema_TestSchemaA OriginTestSchemaA { get; set; } = null!;
 
 		/// <summary>
-		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA2 (TestData2017.TestSchema.TestSchemaA)
+		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA2 (TestSchema.TestSchemaA)
 		/// </summary>
 		[Association(ThisKey="TargetTestSchemaAId", OtherKey="TestSchemaAID", CanBeNull=false)]
 		public TestSchema_TestSchemaA TargetTestSchemaA { get; set; } = null!;
@@ -600,19 +628,19 @@ namespace Default.SqlServer
 		#region Associations
 
 		/// <summary>
-		/// FK_TestSchemaY_TestSchemaX_BackReference (TestData2017.dbo.TestSchemaY)
+		/// FK_TestSchemaY_TestSchemaX_BackReference (dbo.TestSchemaY)
 		/// </summary>
 		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=true)]
 		public IEnumerable<TestSchemaY> TestSchemaY { get; set; } = null!;
 
 		/// <summary>
-		/// FK_TestSchemaY_OtherID_BackReference (TestData2017.dbo.TestSchemaY)
+		/// FK_TestSchemaY_OtherID_BackReference (dbo.TestSchemaY)
 		/// </summary>
 		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=true)]
 		public IEnumerable<TestSchemaY> TestSchemaYOtherIds { get; set; } = null!;
 
 		/// <summary>
-		/// FK_TestSchemaY_ParentTestSchemaX_BackReference (TestData2017.dbo.TestSchemaY)
+		/// FK_TestSchemaY_ParentTestSchemaX_BackReference (dbo.TestSchemaY)
 		/// </summary>
 		[Association(ThisKey="TestSchemaXID", OtherKey="ParentTestSchemaXID", CanBeNull=true)]
 		public IEnumerable<TestSchemaY> TestSchemaYParentTestSchemaX { get; set; } = null!;
@@ -630,19 +658,19 @@ namespace Default.SqlServer
 		#region Associations
 
 		/// <summary>
-		/// FK_TestSchemaY_TestSchemaX (TestData2017.dbo.TestSchemaX)
+		/// FK_TestSchemaY_OtherID (dbo.TestSchemaX)
 		/// </summary>
 		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false)]
-		public TestSchemaX FkTestSchemaYTestSchemaX { get; set; } = null!;
+		public TestSchemaX FkTestSchemaYOtherID { get; set; } = null!;
 
 		/// <summary>
-		/// FK_TestSchemaY_ParentTestSchemaX (TestData2017.dbo.TestSchemaX)
+		/// FK_TestSchemaY_ParentTestSchemaX (dbo.TestSchemaX)
 		/// </summary>
 		[Association(ThisKey="ParentTestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false)]
 		public TestSchemaX ParentTestSchemaX { get; set; } = null!;
 
 		/// <summary>
-		/// FK_TestSchemaY_OtherID (TestData2017.dbo.TestSchemaX)
+		/// FK_TestSchemaY_TestSchemaX (dbo.TestSchemaX)
 		/// </summary>
 		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false)]
 		public TestSchemaX TestSchemaX { get; set; } = null!;
@@ -1339,6 +1367,12 @@ namespace Default.SqlServer
 				t.Id == Id);
 		}
 
+		public static Member? Find(this ITable<Member> table, int MemberId)
+		{
+			return table.FirstOrDefault(t =>
+				t.MemberId == MemberId);
+		}
+
 		public static Parent? Find(this ITable<Parent> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
@@ -1355,6 +1389,12 @@ namespace Default.SqlServer
 		{
 			return table.FirstOrDefault(t =>
 				t.PersonID == PersonID);
+		}
+
+		public static Provider? Find(this ITable<Provider> table, int ProviderId)
+		{
+			return table.FirstOrDefault(t =>
+				t.ProviderId == ProviderId);
 		}
 
 		public static SqlType? Find(this ITable<SqlType> table, int ID)

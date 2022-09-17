@@ -1,5 +1,4 @@
-﻿using System;
-using LinqToDB;
+﻿using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 using NUnit.Framework;
@@ -25,7 +24,7 @@ namespace Tests.UserTests
 
 		[Test]
 		public void Issue2372Test(
-			[IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllPostgreSQL)] string context)
+			[IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)] string context)
 		{
 			Model.ITestDataContext? db1 = null;
 			try

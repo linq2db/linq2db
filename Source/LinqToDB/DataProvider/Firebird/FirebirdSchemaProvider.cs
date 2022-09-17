@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.IO;
-using System.Linq;
-using System.Numerics;
+﻿using System.Numerics;
 using System.Globalization;
 
 namespace LinqToDB.DataProvider.Firebird
@@ -444,7 +439,7 @@ FROM RDB$FUNCTION_ARGUMENTS p
 			return dataTypes;
 		}
 
-		protected override DataType GetDataType(string? dataType, string? columnType, int? length, int? prec, int? scale)
+		protected override DataType GetDataType(string? dataType, string? columnType, int? length, int? precision, int? scale)
 		{
 			return dataType?.ToLower() switch
 			{

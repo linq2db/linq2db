@@ -1,6 +1,4 @@
-﻿using System;
-using System.Linq;
-using LinqToDB;
+﻿using LinqToDB;
 using NUnit.Framework;
 
 namespace Tests.UserTests
@@ -150,8 +148,9 @@ namespace Tests.UserTests
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
-		public void Test([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void Test([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var typeId = TestData.Guid1;
 

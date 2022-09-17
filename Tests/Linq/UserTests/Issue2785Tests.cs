@@ -1,7 +1,4 @@
-﻿using System;
-using System.Linq;
-using LinqToDB;
-using LinqToDB.Mapping;
+﻿using LinqToDB;
 using NUnit.Framework;
 
 namespace Tests.UserTests
@@ -10,7 +7,7 @@ namespace Tests.UserTests
 	public class Issue2785Tests : TestBase
 	{
 		[Test]
-		public void Issue2785TestTopLevel([IncludeDataSources(TestProvName.AllOracle)] string context)
+		public void Issue2785TestTopLevel([IncludeDataSources(TestProvName.AllOracle, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -23,7 +20,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void Issue2785TestSubquery([IncludeDataSources(TestProvName.AllOracle)] string context)
+		public void Issue2785TestSubquery([IncludeDataSources(TestProvName.AllOracle, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

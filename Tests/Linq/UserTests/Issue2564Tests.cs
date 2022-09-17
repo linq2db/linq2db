@@ -1,6 +1,4 @@
-﻿using System;
-using System.Linq;
-using LinqToDB;
+﻿using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
@@ -21,7 +19,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestIssue2564([IncludeDataSources(TestProvName.AllOracle)] string context)
+		public void TestIssue2564([IncludeDataSources(TestProvName.AllOracle, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
 

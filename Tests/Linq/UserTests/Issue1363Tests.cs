@@ -1,7 +1,4 @@
-﻿using System;
-using System.Linq;
-
-using LinqToDB;
+﻿using LinqToDB;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -29,7 +26,7 @@ namespace Tests.UserTests
 			TestProvName.AllSybase,
 		})]
 		[Test]
-		public void TestInsert([DataSources(TestProvName.AllSqlServer2005)] string context)
+		public void TestInsert([DataSources(TestProvName.AllSqlServer2005, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var tbl = db.CreateLocalTable<Issue1363Record>())

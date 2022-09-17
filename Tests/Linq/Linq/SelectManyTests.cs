@@ -1,6 +1,4 @@
-﻿using System.Linq;
-
-using LinqToDB;
+﻿using LinqToDB;
 
 using NUnit.Framework;
 
@@ -120,7 +118,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Basic10([DataSources(TestProvName.AllAccess)] string context)
+		public void Basic10([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -129,7 +127,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Basic11([DataSources(TestProvName.AllAccess)] string context)
+		public void Basic11([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(

@@ -1,6 +1,4 @@
-﻿using System.Linq;
-
-using LinqToDB;
+﻿using LinqToDB;
 
 using NUnit.Framework;
 
@@ -746,15 +744,15 @@ namespace Tests.xUpdate
 
 				var rows = table
 					.Merge()
-					.Using(GetSource2(db).ToList().Select(_ => new
+					.Using(GetSource2(db).ToList().OrderBy(_ => _.OtherId).Select(_ => new
 					{
-						@in = _.OtherId,
-						join = _.OtherField1,
-						outer = _.OtherField2,
-						inner = _.OtherField3,
-						with = _.OtherField4,
-						left = _.OtherField5,
-						Left = _.OtherField2
+						@in    = _.OtherId,
+						join   = _.OtherField1,
+						outer  = _.OtherField2,
+						inner  = _.OtherField3,
+						with   = _.OtherField4,
+						left   = _.OtherField5,
+						Left   = _.OtherField2
 					}))
 					.On((t, s) => t.Id == s.@in)
 					.UpdateWhenMatchedAnd(

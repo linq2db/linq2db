@@ -1,10 +1,9 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Linq.Expressions;
+using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
 	using SqlQuery;
 
 	class ScalarSelectBuilder : ISequenceBuilder
@@ -69,8 +68,7 @@ namespace LinqToDB.Linq.Builder
 
 			public Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 			{
-				if (expression == null)
-					expression = ((LambdaExpression)Expression!).Body.Unwrap();
+				expression ??= ((LambdaExpression)Expression!).Body.Unwrap();
 
 				switch (expression.NodeType)
 				{
@@ -98,12 +96,12 @@ namespace LinqToDB.Linq.Builder
 
 			public SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 			{
-				throw new NotImplementedException();
+				return ThrowHelper.ThrowNotImplementedException<SqlInfo[]>();
 			}
 
 			public SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 			{
-				throw new NotImplementedException();
+				return ThrowHelper.ThrowNotImplementedException<SqlInfo[]>();
 			}
 
 			public IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
@@ -117,7 +115,7 @@ namespace LinqToDB.Linq.Builder
 
 			public IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)
 			{
-				throw new NotImplementedException();
+				return ThrowHelper.ThrowNotImplementedException<IBuildContext?>();
 			}
 
 			public int ConvertToParentIndex(int index, IBuildContext context)

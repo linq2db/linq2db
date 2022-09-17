@@ -1,10 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using LinqToDB.CodeModel;
+﻿using System.Globalization;
 
 namespace LinqToDB.DataModel
 {
+	using CodeModel;
+
 	// contains basic code generation logic, not related to data model.
 	partial class DataModelGenerator
 	{
@@ -39,9 +38,12 @@ namespace LinqToDB.DataModel
 			if (model.FileName == null)
 				throw new InvalidOperationException($"{nameof(DefineFileClass)} called for class without {nameof(model.FileName)} set.");
 
+			var setClassNameToFileName = false;
+
 			// get or create class file
 			if (!_files.TryGetValue(model.FileName, out var file))
 			{
+				setClassNameToFileName = true;
 				DefineFile(model.FileName);
 				file = _files[model.FileName];
 			}
@@ -68,7 +70,12 @@ namespace LinqToDB.DataModel
 				}
 			}
 
-			return DefineClass(classes, model);
+			var builder = DefineClass(classes, model);
+
+			if (setClassNameToFileName)
+				file.file.NameSource = builder.Type.Name;
+
+			return builder;
 		}
 
 		/// <summary>

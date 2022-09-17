@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using LinqToDB;
+﻿using LinqToDB;
 using LinqToDB.Data;
 
 using NUnit.Framework;
@@ -12,7 +11,7 @@ namespace Tests.UserTests
 	public class Issue737Tests : TestBase
 	{
 		[Test]
-		public void Test([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		public void Test([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{

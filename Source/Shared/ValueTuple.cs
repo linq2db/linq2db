@@ -6,6 +6,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
+using LinqToDB;
 
 #pragma warning disable CA2201 // IndexOutOfRangeException reserved for runtime
 namespace System
@@ -60,7 +61,7 @@ namespace System
 
 			if (obj is not ValueTuple)
 			{
-				throw new ArgumentException($"Argument must be of type {obj.GetType()}.", nameof(obj));
+				ThrowHelper.ThrowArgumentException($"Argument must be of type {obj.GetType()}.", nameof(obj));
 			}
 
 			return 0;
@@ -85,7 +86,7 @@ namespace System
 
 			if (other is not ValueTuple)
 			{
-				throw new ArgumentException($"Argument must be of type {other.GetType()}.", nameof(other));
+				ThrowHelper.ThrowArgumentException($"Argument must be of type {other.GetType()}.", nameof(other));
 			}
 
 			return 0;
@@ -313,7 +314,7 @@ namespace System
 					return Comparer<T1>.Default.Compare(Item1, objTuple.Item1);
 				}
 
-				throw new ArgumentException($"Argument must be of type {obj.GetType()}.", nameof(obj));
+				ThrowHelper.ThrowArgumentException($"Argument must be of type {obj.GetType()}.", nameof(obj));
 			}
 
 			return 1;
@@ -341,7 +342,7 @@ namespace System
 					return comparer.Compare(Item1, objTuple.Item1);
 				}
 
-				throw new ArgumentException($"Argument must be of type {other.GetType()}.", nameof(other));
+				ThrowHelper.ThrowArgumentException($"Argument must be of type {other.GetType()}.", nameof(other));
 			}
 
 			return 1;
@@ -487,7 +488,7 @@ namespace System
 					return CompareTo(objTuple);
 				}
 
-				throw new ArgumentException($"Argument must be of type {obj.GetType()}.", nameof(obj));
+				ThrowHelper.ThrowArgumentException($"Argument must be of type {obj.GetType()}.", nameof(obj));
 			}
 
 			return 1;
@@ -521,7 +522,7 @@ namespace System
 					return comparer.Compare(Item2, objTuple.Item2);
 				}
 
-				throw new ArgumentException($"Argument must be of type {other.GetType()}.", nameof(other));
+				ThrowHelper.ThrowArgumentException($"Argument must be of type {other.GetType()}.", nameof(other));
 			}
 
 			return 1;
@@ -665,7 +666,7 @@ namespace System
 					return CompareTo(objTuple);
 				}
 
-				throw new ArgumentException($"Argument must be of type {obj.GetType()}.", nameof(obj));
+				ThrowHelper.ThrowArgumentException($"Argument must be of type {obj.GetType()}.", nameof(obj));
 			}
 
 			return 1;
@@ -705,7 +706,7 @@ namespace System
 					return comparer.Compare(Item3, objTuple.Item3);
 				}
 
-				throw new ArgumentException($"Argument must be of type {other.GetType()}.", nameof(other));
+				ThrowHelper.ThrowArgumentException($"Argument must be of type {other.GetType()}.", nameof(other));
 			}
 
 			return 1;
@@ -858,7 +859,7 @@ namespace System
 					return CompareTo(objTuple);
 				}
 
-				throw new ArgumentException($"Argument must be of type {obj.GetType()}.", nameof(obj));
+				ThrowHelper.ThrowArgumentException($"Argument must be of type {obj.GetType()}.", nameof(obj));
 			}
 
 			return 1;
@@ -904,7 +905,7 @@ namespace System
 					return comparer.Compare(Item4, objTuple.Item4);
 				}
 
-				throw new ArgumentException($"Argument must be of type {other.GetType()}.", nameof(other));
+				ThrowHelper.ThrowArgumentException($"Argument must be of type {other.GetType()}.", nameof(other));
 			}
 
 			return 1;
@@ -1067,7 +1068,7 @@ namespace System
 					return CompareTo(objTuple);
 				}
 
-				throw new ArgumentException($"Argument must be of type {obj.GetType()}.", nameof(obj));
+				ThrowHelper.ThrowArgumentException($"Argument must be of type {obj.GetType()}.", nameof(obj));
 			}
 
 			return 1;
@@ -1119,7 +1120,7 @@ namespace System
 					return comparer.Compare(Item5, objTuple.Item5);
 				}
 
-				throw new ArgumentException($"Argument must be of type {other.GetType()}.", nameof(other));
+				ThrowHelper.ThrowArgumentException($"Argument must be of type {other.GetType()}.", nameof(other));
 			}
 
 			return 1;
@@ -1293,7 +1294,7 @@ namespace System
 					return CompareTo(objTuple);
 				}
 
-				throw new ArgumentException($"Argument must be of type {obj.GetType()}.", nameof(obj));
+				ThrowHelper.ThrowArgumentException($"Argument must be of type {obj.GetType()}.", nameof(obj));
 			}
 
 			return 1;
@@ -1351,7 +1352,7 @@ namespace System
 					return comparer.Compare(Item6, objTuple.Item6);
 				}
 
-				throw new ArgumentException($"Argument must be of type {other.GetType()}.", nameof(other));
+				ThrowHelper.ThrowArgumentException($"Argument must be of type {other.GetType()}.", nameof(other));
 			}
 
 			return 1;
@@ -1536,7 +1537,7 @@ namespace System
 					return CompareTo(objTuple);
 				}
 
-				throw new ArgumentException($"Argument must be of type {obj.GetType()}.", nameof(obj));
+				ThrowHelper.ThrowArgumentException($"Argument must be of type {obj.GetType()}.", nameof(obj));
 			}
 
 			return 1;
@@ -1600,7 +1601,7 @@ namespace System
 					return comparer.Compare(Item7, objTuple.Item7);
 				}
 
-				throw new ArgumentException($"Argument must be of type {other.GetType()}.", nameof(other));
+				ThrowHelper.ThrowArgumentException($"Argument must be of type {other.GetType()}.", nameof(other));
 			}
 
 			return 1;
@@ -1730,7 +1731,7 @@ namespace System
 		{
 			if (rest is not IStructTupleInternal)
 			{
-				throw new ArgumentException("The last element of an eight element ValueTuple must be a ValueTuple.");
+				ThrowHelper.ThrowArgumentException("The last element of an eight element ValueTuple must be a ValueTuple.");
 			}
 
 			Item1 = item1;
@@ -1802,7 +1803,7 @@ namespace System
 					return CompareTo(objTuple);
 				}
 
-				throw new ArgumentException($"Argument must be of type {obj.GetType()}.", nameof(obj));
+				ThrowHelper.ThrowArgumentException($"Argument must be of type {obj.GetType()}.", nameof(obj));
 			}
 
 			return 1;
@@ -1872,7 +1873,7 @@ namespace System
 					return comparer.Compare(Rest, objTuple.Rest);
 				}
 
-				throw new ArgumentException($"Argument must be of type {other.GetType()}.", nameof(other));
+				ThrowHelper.ThrowArgumentException($"Argument must be of type {other.GetType()}.", nameof(other));
 			}
 
 			return 1;

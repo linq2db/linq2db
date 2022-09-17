@@ -1,7 +1,4 @@
-﻿using System;
-using System.Data.Common;
-
-namespace LinqToDB.DataProvider
+﻿namespace LinqToDB.DataProvider
 {
 	/// <summary>
 	/// Contains base information about ADO.NET provider.
@@ -31,7 +28,8 @@ namespace LinqToDB.DataProvider
 
 		/// <summary>
 		/// Gets type, that implements <see cref="DbTransaction"/> for current ADO.NET provider.
+		/// For providers/databases without transaction support contains <c>null</c>.
 		/// </summary>
-		Type TransactionType { get; }
+		Type? TransactionType { get; }
 	}
 }

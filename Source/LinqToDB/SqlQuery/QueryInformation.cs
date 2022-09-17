@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace LinqToDB.SqlQuery
+﻿namespace LinqToDB.SqlQuery
 {
 	/// <summary>
 	/// This is internal API and is not intended for use by Linq To DB applications.
@@ -19,7 +16,7 @@ namespace LinqToDB.SqlQuery
 		/// </summary>
 		public QueryInformation(SelectQuery rootQuery)
 		{
-			_rootQuery = rootQuery ?? throw new ArgumentNullException(nameof(rootQuery));
+			_rootQuery = rootQuery ?? ThrowHelper.ThrowArgumentNullException<SelectQuery>(nameof(rootQuery));
 		}
 
 		/// <summary>

@@ -1,12 +1,9 @@
-﻿using LinqToDB.Common;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
+﻿using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
+	using Common;
+
 	public class SqlTableLikeSource : ISqlTableSource
 	{
 		public SqlTableLikeSource()
@@ -112,7 +109,7 @@ namespace LinqToDB.SqlQuery
 
 		public int SourceID { get; }
 
-		IList<ISqlExpression> ISqlTableSource.GetKeys(bool allIfEmpty) => throw new NotImplementedException();
+		IList<ISqlExpression> ISqlTableSource.GetKeys(bool allIfEmpty) => ThrowHelper.ThrowNotImplementedException<IList<ISqlExpression>>();
 
 		#endregion
 
@@ -127,19 +124,20 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpression
 
-		bool ISqlExpression.CanBeNull => throw new NotImplementedException();
+		bool ISqlExpression.CanBeNull => ThrowHelper.ThrowNotImplementedException<bool>();
 
-		int ISqlExpression.Precedence => throw new NotImplementedException();
+		int ISqlExpression.Precedence => ThrowHelper.ThrowNotImplementedException<int>();
 
-		Type ISqlExpression.SystemType => throw new NotImplementedException();
+		Type ISqlExpression.SystemType => ThrowHelper.ThrowNotImplementedException<Type>();
 
-		bool ISqlExpression.Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer) => throw new NotImplementedException();
+		bool ISqlExpression.Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)
+			=> ThrowHelper.ThrowNotImplementedException<bool>();
 		
 		#endregion
 
 		#region IEquatable
 
-		bool IEquatable<ISqlExpression>.Equals(ISqlExpression? other) => throw new NotImplementedException();
+		bool IEquatable<ISqlExpression>.Equals(ISqlExpression? other) => ThrowHelper.ThrowNotImplementedException<bool>();
 
 		#endregion
 

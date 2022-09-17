@@ -1,13 +1,8 @@
-using System;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Threading;
-using System.Threading.Tasks;
-using JetBrains.Annotations;
-using LinqToDB.Async;
+﻿using System.Linq.Expressions;
 
 namespace LinqToDB
 {
+	using Async;
 	using Methods = LinqToDB.Reflection.Methods.LinqToDB.MultiInsert;
 
 	public static class MultiInsertExtensions
@@ -23,7 +18,7 @@ namespace LinqToDB
 		[Pure, LinqTunnel]
 		public static IMultiInsertSource<TSource> MultiInsert<TSource>(this IQueryable<TSource> source)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
 
 			var query = source.Provider.CreateQuery<TSource>(
 				Expression.Call(
@@ -49,9 +44,9 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<TSource, TTarget>> setter)
 			where TTarget : notnull
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (target == null) throw new ArgumentNullException(nameof(target));
-			if (setter == null) throw new ArgumentNullException(nameof(setter));
+			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (target == null) ThrowHelper.ThrowArgumentNullException(nameof(target));
+			if (setter == null) ThrowHelper.ThrowArgumentNullException(nameof(setter));
 			
 			var query = ((MultiInsertQuery<TSource>)source).Query;
 
@@ -83,10 +78,10 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<TSource, TTarget>> setter)
 			where TTarget : notnull
 		{
-			if (source    == null) throw new ArgumentNullException(nameof(source));
-			if (condition == null) throw new ArgumentNullException(nameof(condition));
-			if (target    == null) throw new ArgumentNullException(nameof(target));
-			if (setter    == null) throw new ArgumentNullException(nameof(setter));
+			if (source    == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (condition == null) ThrowHelper.ThrowArgumentNullException(nameof(condition));
+			if (target    == null) ThrowHelper.ThrowArgumentNullException(nameof(target));
+			if (setter    == null) ThrowHelper.ThrowArgumentNullException(nameof(setter));
 
 			var query = ((MultiInsertQuery<TSource>)source).Query;
 
@@ -117,9 +112,9 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<TSource, TTarget>> setter)
 			where TTarget : notnull
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (target == null) throw new ArgumentNullException(nameof(target));
-			if (setter == null) throw new ArgumentNullException(nameof(setter));
+			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (target == null) ThrowHelper.ThrowArgumentNullException(nameof(target));
+			if (setter == null) ThrowHelper.ThrowArgumentNullException(nameof(setter));
 
 			var query = ((MultiInsertQuery<TSource>)source).Query;
 
@@ -142,7 +137,7 @@ namespace LinqToDB
 		/// <returns>Number of inserted rows.</returns>
 		public static int Insert<TSource>(this IMultiInsertInto<TSource> insert)
 		{
-			if (insert == null) throw new ArgumentNullException(nameof(insert));
+			if (insert == null) ThrowHelper.ThrowArgumentNullException(nameof(insert));
 			
 			IQueryable query = ((MultiInsertQuery<TSource>)insert).Query;
 			query = LinqExtensions.ProcessSourceQueryable?.Invoke(query) ?? query;
@@ -163,7 +158,7 @@ namespace LinqToDB
 		/// <returns>Number of inserted rows.</returns>
 		public static Task<int> InsertAsync<TSource>(this IMultiInsertInto<TSource> insert, CancellationToken token = default)
 		{
-			if (insert == null) throw new ArgumentNullException(nameof(insert));
+			if (insert == null) ThrowHelper.ThrowArgumentNullException(nameof(insert));
 			
 			IQueryable query = ((MultiInsertQuery<TSource>)insert).Query;
 			query = LinqExtensions.ProcessSourceQueryable?.Invoke(query) ?? query;
@@ -187,7 +182,7 @@ namespace LinqToDB
 		/// <returns>Number of inserted rows.</returns>
 		public static int InsertAll<TSource>(this IMultiInsertElse<TSource> insert)
 		{
-			if (insert == null) throw new ArgumentNullException(nameof(insert));
+			if (insert == null) ThrowHelper.ThrowArgumentNullException(nameof(insert));
 
 			IQueryable query = ((MultiInsertQuery<TSource>)insert).Query;
 			query = LinqExtensions.ProcessSourceQueryable?.Invoke(query) ?? query;
@@ -208,7 +203,7 @@ namespace LinqToDB
 		/// <returns>Number of inserted rows.</returns>
 		public static Task<int> InsertAllAsync<TSource>(this IMultiInsertElse<TSource> insert, CancellationToken token = default)
 		{
-			if (insert == null) throw new ArgumentNullException(nameof(insert));
+			if (insert == null) ThrowHelper.ThrowArgumentNullException(nameof(insert));
 
 			IQueryable query = ((MultiInsertQuery<TSource>)insert).Query;
 			query = LinqExtensions.ProcessSourceQueryable?.Invoke(query) ?? query;
@@ -232,7 +227,7 @@ namespace LinqToDB
 		/// <returns>Number of inserted rows.</returns>
 		public static int InsertFirst<TSource>(this IMultiInsertElse<TSource> insert)
 		{
-			if (insert == null) throw new ArgumentNullException(nameof(insert));
+			if (insert == null) ThrowHelper.ThrowArgumentNullException(nameof(insert));
 
 			IQueryable query = ((MultiInsertQuery<TSource>)insert).Query;
 			query = LinqExtensions.ProcessSourceQueryable?.Invoke(query) ?? query;
@@ -253,7 +248,7 @@ namespace LinqToDB
 		/// <returns>Number of inserted rows.</returns>
 		public static Task<int> InsertFirstAsync<TSource>(this IMultiInsertElse<TSource> insert, CancellationToken token = default)
 		{
-			if (insert == null) throw new ArgumentNullException(nameof(insert));
+			if (insert == null) ThrowHelper.ThrowArgumentNullException(nameof(insert));
 
 			IQueryable query = ((MultiInsertQuery<TSource>)insert).Query;
 			query = LinqExtensions.ProcessSourceQueryable?.Invoke(query) ?? query;

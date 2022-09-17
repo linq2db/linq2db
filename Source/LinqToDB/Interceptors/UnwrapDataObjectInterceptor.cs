@@ -1,7 +1,4 @@
-﻿using System;
-using System.Data.Common;
-
-namespace LinqToDB.Interceptors
+﻿namespace LinqToDB.Interceptors
 {
 	public abstract class UnwrapDataObjectInterceptor : IUnwrapDataObjectInterceptor
 	{

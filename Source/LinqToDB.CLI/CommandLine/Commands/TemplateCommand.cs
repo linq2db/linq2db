@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-
-namespace LinqToDB.CommandLine
+﻿namespace LinqToDB.CommandLine
 {
 	/// <summary>
 	/// Template command implementation.
@@ -21,6 +17,7 @@ namespace LinqToDB.CommandLine
 			false,
 			"relative or full path to generated sample template file (with file name)",
 			"If target folder doesn't exists, it will be created.",
+			null,
 			null,
 			null,
 			null);

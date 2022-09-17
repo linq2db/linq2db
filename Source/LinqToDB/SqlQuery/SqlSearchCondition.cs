@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
@@ -136,9 +133,23 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
+		public bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 		{
-			return this == other;
+			return other is ISqlPredicate otherPredicate
+				&& Equals(otherPredicate, comparer);
+		}
+
+		public bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer)
+		{
+			if (other is not SqlSearchCondition otherCondition
+				|| Conditions.Count != otherCondition.Conditions.Count)
+				return false;
+
+			for (var i = 0; i < Conditions.Count; i++)
+				if (!Conditions[i].Equals(otherCondition.Conditions[i], comparer))
+					return false;
+
+			return true;
 		}
 
 		#endregion

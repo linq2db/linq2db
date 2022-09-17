@@ -1,5 +1,6 @@
 ﻿namespace LinqToDB.Data.RetryPolicy
 {
+	using DataProvider.ClickHouse;
 	using DataProvider.SqlServer;
 
 	static class DefaultRetryPolicyFactory
@@ -8,6 +9,8 @@
 		{
 			if (dataContext.DataProvider is SqlServerDataProvider)
 				return new SqlServerRetryPolicy();
+			if (dataContext.DataProvider is ClickHouseDataProvider { Name: ProviderName.ClickHouseOctonica } clickHouseDataProvider)
+				return new ClickHouseRetryPolicy();
 
 			return null;
 		}

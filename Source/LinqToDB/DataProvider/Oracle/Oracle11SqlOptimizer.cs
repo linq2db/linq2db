@@ -1,9 +1,8 @@
-﻿using System;
-
-namespace LinqToDB.DataProvider.Oracle
+﻿namespace LinqToDB.DataProvider.Oracle
 {
 	using Common;
 	using Extensions;
+	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
 
@@ -13,11 +12,11 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 		}
 
-		public override SqlStatement Finalize(SqlStatement statement)
+		public override SqlStatement Finalize(MappingSchema mappingSchema, SqlStatement statement)
 		{
 			CheckAliases(statement, 30);
 
-			return base.Finalize(statement);
+			return base.Finalize(mappingSchema, statement);
 		}
 
 		public override SqlStatement TransformStatement(SqlStatement statement)

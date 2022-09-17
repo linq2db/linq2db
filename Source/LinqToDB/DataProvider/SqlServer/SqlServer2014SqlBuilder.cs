@@ -1,9 +1,7 @@
-﻿using System;
-
-namespace LinqToDB.DataProvider.SqlServer
+﻿namespace LinqToDB.DataProvider.SqlServer
 {
-	using SqlProvider;
 	using Mapping;
+	using SqlProvider;
 
 	class SqlServer2014SqlBuilder : SqlServer2012SqlBuilder
 	{

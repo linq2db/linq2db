@@ -58,5 +58,7 @@ stages:
         db_filter: '[sqlserver.2019]'
       ${{ if eq(variables['Build.DefinitionName'], 'test-sybase') }}:
         db_filter: '[sybase.ase.all]'
+      ${{ if eq(variables['Build.DefinitionName'], 'test-clickhouse') }}:
+        db_filter: '[clickhouse.all]'
       ${{ if ne(variables['Build.DefinitionName'], 'test-all') }}:
         mac_enabled: true

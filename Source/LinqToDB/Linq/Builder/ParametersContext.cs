@@ -1,13 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using System.Reflection;
+using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
 	using Common;
 	using Data;
-	using LinqToDB.Expressions;
 	using Extensions;
 	using Mapping;
 	using Reflection;
@@ -214,7 +212,7 @@ namespace LinqToDB.Linq.Builder
 				// compiled query case
 				//
 				if (null == arg.Find(ExpressionBuilder.ParametersParam))
-					throw new InvalidOperationException($"Method '{methodCall}' does not have accessor.");
+					ThrowHelper.ThrowInvalidOperationException($"Method '{methodCall}' does not have accessor.");
 				return arg;
 			}
 
@@ -451,7 +449,7 @@ namespace LinqToDB.Linq.Builder
 						// It can be fixed by adding additional parameter to execution path, but it's may slowdown performance.
 						// So for now decided to throw exception.
 						if (e == context.dataContextParam && !typeof(DataConnection).IsSameOrParentOf(context.dataContext.GetType()))
-							throw new LinqException("Only DataConnection descendants can be used as source of parameters.");
+							ThrowHelper.ThrowLinqException("Only DataConnection descendants can be used as source of parameters.");
 						return e;
 					}
 					case ExpressionType.MemberAccess:

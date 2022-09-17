@@ -1,9 +1,8 @@
-﻿using System;
-using LinqToDB.CodeModel;
-using LinqToDB.Mapping;
-
-namespace LinqToDB.Metadata
+﻿namespace LinqToDB.Metadata
 {
+	using CodeModel;
+	using Mapping;
+
 	/// <summary>
 	/// Association (foreign key relation) mapping attributes.
 	/// </summary>

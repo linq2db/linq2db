@@ -1,9 +1,7 @@
-﻿using System;
-using LinqToDB.Common.Internal;
-
-namespace LinqToDB.Mapping
+﻿namespace LinqToDB.Mapping
 {
 	using Common;
+	using Common.Internal;
 	using Reflection;
 
 	[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, Inherited = true)]

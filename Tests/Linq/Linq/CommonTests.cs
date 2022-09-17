@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
+﻿using System.Diagnostics;
 using System.Linq.Expressions;
-using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
@@ -18,7 +14,7 @@ namespace Tests.Linq
 	public class CommonTests : TestBase
 	{
 		[Test]
-		public void CheckNullTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)]
+		public void CheckNullTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -310,6 +306,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void Condition1([DataSources] string context)
 		{
@@ -509,7 +506,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ParameterTest1([DataSources] string context)
+		public void ParameterTest1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

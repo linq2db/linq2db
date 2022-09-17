@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using LinqToDB;
+﻿using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
@@ -256,7 +254,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestLoadWithInfiniteLoop([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestLoadWithInfiniteLoop([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

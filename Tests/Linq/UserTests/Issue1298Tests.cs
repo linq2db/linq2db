@@ -1,8 +1,6 @@
 ﻿using LinqToDB;
-using LinqToDB.Data;
 using LinqToDB.Mapping;
 using NUnit.Framework;
-using System.Linq;
 
 namespace Tests.UserTests
 {
@@ -60,10 +58,9 @@ namespace Tests.UserTests
 		{
 			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
+			using (db.CreateLocalTable<mega_composites>())
+			using (db.CreateLocalTable<Qwerty>())
 			{
-				db.CreateTable<mega_composites>();
-				db.CreateTable<Qwerty>();
-
 				db.Insert(new Qwerty() { Id = 1, asdfgh = "res1" });
 				db.Insert(new Qwerty() { Id = 100500, asdfgh = "res100500" });
 
@@ -114,14 +111,13 @@ namespace Tests.UserTests
 		}
 
 		[Test, ActiveIssue(1298, Details = "Expression 'x.y1' is not a Field.")]
-		public void Issue1298Test1([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		public void Issue1298Test1([IncludeDataSources(TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
+			using (db.CreateLocalTable<mega_composites>())
+			using (db.CreateLocalTable<Qwerty>())
 			{
-				db.CreateTable<mega_composites>();
-				db.CreateTable<Qwerty>();
-
 				db.Insert(new Qwerty() { Id = 1, asdfgh = "res1" });
 				db.Insert(new Qwerty() { Id = 100500, asdfgh = "res100500" });
 

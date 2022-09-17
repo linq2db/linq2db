@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using LinqToDB;
+﻿using LinqToDB;
 using NUnit.Framework;
 
 namespace Tests.UserTests
@@ -29,7 +28,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void ConditionalTests([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void ConditionalTests([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var invoices = new Invoice[]{new Invoice
 			{

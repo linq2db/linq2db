@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-
-using LinqToDB;
+﻿using LinqToDB;
 using LinqToDB.Data;
 
 using NUnit.Framework;
@@ -18,7 +14,7 @@ namespace Tests.UserTests
 		class IssueContextSourceAttribute : IncludeDataSourcesAttribute
 		{
 			public IssueContextSourceAttribute(bool includeLinqService = true)
-				: base(includeLinqService, TestProvName.AllSQLite, TestProvName.AllSqlServer2008Plus)
+				: base(includeLinqService, TestProvName.AllSQLite, TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)
 			{ }
 		}
 

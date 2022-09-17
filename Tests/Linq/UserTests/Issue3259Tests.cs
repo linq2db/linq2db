@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Mapping;
@@ -61,7 +58,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void SubqueryAggregation([DataSources(ProviderName.SqlCe, TestProvName.AllSybase)] string context)
+		public void SubqueryAggregation([DataSources(ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllClickHouse)] string context)
 		{
 			var ms      = new MappingSchema();
 			var builder = ms.GetFluentMappingBuilder();

@@ -1,23 +1,17 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Data;
-using System.Data.Common;
-using System.Linq;
+﻿using System.Collections;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Threading;
 using System.Runtime.CompilerServices;
+using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
+	using Common;
+	using Common.Internal;
 	using Extensions;
 	using Mapping;
-	using Common;
 	using Reflection;
 	using SqlQuery;
-	using LinqToDB.Common.Internal;
 
 	partial class ExpressionBuilder
 	{
@@ -321,7 +315,7 @@ namespace LinqToDB.Linq.Builder
 								{
 									var ctx = context.builder.GetContext(context.context, ce);
 									if (ctx == null)
-										throw new InvalidOperationException();
+										ThrowHelper.ThrowInvalidOperationException();
 
 									return new TransformInfo(ctx.BuildExpression(ce, 0, context.enforceServerSide));
 								}
@@ -359,10 +353,7 @@ namespace LinqToDB.Linq.Builder
 									var newArgument = context.builder.ConvertAssignmentArgument(context.context, argument, ne.Members?[i], context.enforceServerSide, memberAlias);
 
 									if (newArgument != argument)
-									{
-										if (arguments == null)
-											arguments = ne.Arguments.Take(i).ToList();
-									}
+										arguments ??= ne.Arguments.Take(i).ToList();
 
 									arguments?.Add(newArgument);
 								}
@@ -595,8 +586,7 @@ namespace LinqToDB.Linq.Builder
 		public Expression GetSubQueryExpression(IBuildContext context, MethodCallExpression expr, bool enforceServerSide, string? alias)
 		{
 			var info = GetSubQueryContext(context, expr);
-			if (info.Expression == null)
-				info.Expression = info.Context.BuildExpression(null, 0, enforceServerSide);
+			info.Expression ??= info.Context.BuildExpression(null, 0, enforceServerSide);
 
 			if (!string.IsNullOrEmpty(alias))
 				info.Context.SetAlias(alias!);
@@ -820,8 +810,7 @@ namespace LinqToDB.Linq.Builder
 
 		public ParameterExpression BuildVariable(Expression expr, string? name = null)
 		{
-			if (name == null)
-				name = expr.Type.Name + Interlocked.Increment(ref VarIndex);
+			name ??= expr.Type.Name + Interlocked.Increment(ref VarIndex);
 
 			var variable = Expression.Variable(
 				expr.Type,
@@ -1019,8 +1008,7 @@ namespace LinqToDB.Linq.Builder
 					root.NodeType == ExpressionType.Parameter &&
 					!context.parameters.Contains((ParameterExpression)root))
 				{
-					if (context.builder._buildMultipleQueryExpressions == null)
-						context.builder._buildMultipleQueryExpressions = new HashSet<Expression>();
+					context.builder._buildMultipleQueryExpressions ??= new HashSet<Expression>();
 
 					context.builder._buildMultipleQueryExpressions.Add(e);
 

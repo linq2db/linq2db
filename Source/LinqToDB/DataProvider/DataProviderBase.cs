@@ -1,13 +1,7 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Data;
-using System.Data.Common;
+﻿using System.Collections.Concurrent;
 using System.Data.Linq;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -29,28 +23,43 @@ namespace LinqToDB.DataProvider
 		{
 			Name             = name;
 			MappingSchema    = mappingSchema;
-			SqlProviderFlags = new SqlProviderFlags
+			// set default flags values explicitly even for default values
+			SqlProviderFlags = new SqlProviderFlags()
 			{
+				IsSybaseBuggyGroupBy                 = false,
+				IsParameterOrderDependent            = false,
 				AcceptsTakeAsParameter               = true,
+				AcceptsTakeAsParameterIfSkip         = false,
 				IsTakeSupported                      = true,
 				IsSkipSupported                      = true,
+				IsSkipSupportedIfTake                = false,
+				TakeHintsSupported                   = null,
 				IsSubQueryTakeSupported              = true,
 				IsSubQueryColumnSupported            = true,
+				IsSubQueryOrderBySupported           = false,
 				IsCountSubQuerySupported             = true,
+				IsIdentityParameterRequired          = false,
+				IsApplyJoinSupported                 = false,
 				IsInsertOrUpdateSupported            = true,
 				CanCombineParameters                 = true,
 				MaxInListValuesCount                 = int.MaxValue,
-				IsDistinctOrderBySupported           = true,
-				IsSubQueryOrderBySupported           = false,
 				IsUpdateSetTableAliasSupported       = true,
-				TakeHintsSupported                   = null,
+				OutputDeleteUseSpecialTable          = false,
+				OutputInsertUseSpecialTable          = false,
+				OutputUpdateUseSpecialTables         = false,
+				IsGroupByColumnRequred               = false,
 				IsCrossJoinSupported                 = true,
 				IsInnerJoinAsCrossSupported          = true,
+				IsCommonTableExpressionsSupported    = false,
+				IsDistinctOrderBySupported           = true,
 				IsOrderByAggregateFunctionsSupported = true,
 				IsAllSetOperationsSupported          = false,
 				IsDistinctSetOperationsSupported     = true,
-				IsUpdateFromSupported                = true,
+				IsCountDistinctSupported             = false,
 				AcceptsOuterExpressionInAggregate    = true,
+				IsUpdateFromSupported                = true,
+				DefaultMultiQueryIsolationLevel      = IsolationLevel.RepeatableRead,
+				RowConstructorSupport                = RowFeature.None,
 			};
 
 			SetField<DbDataReader, bool>    ((r,i) => r.GetBoolean (i));
@@ -78,6 +87,7 @@ namespace LinqToDB.DataProvider
 		public virtual  MappingSchema    MappingSchema         { get; }
 		public          SqlProviderFlags SqlProviderFlags      { get; }
 		public abstract TableOptions     SupportedTableOptions { get; }
+		public virtual  bool             TransactionsSupported => true;
 
 		public static Func<IDataProvider, DbConnection, DbConnection>? OnConnectionCreated { get; set; }
 
@@ -221,7 +231,7 @@ namespace LinqToDB.DataProvider
 			if (fieldType == null)
 			{
 				var name = reader.GetName(idx);
-				throw new LinqToDBException($"Can't create '{typeName}' type or '{providerType}' specific type for {name}.");
+				ThrowHelper.ThrowLinqToDBException($"Can't create '{typeName}' type or '{providerType}' specific type for {name}.");
 			}
 
 			typeName = NormalizeTypeName(typeName);
@@ -252,6 +262,7 @@ namespace LinqToDB.DataProvider
 
 			if (FindExpression(new ReaderInfo { DataReaderType = dataReaderType, ToType = toType, ProviderFieldType = providerType, FieldType = fieldType, DataTypeName = typeName }, out var expr) ||
 			    FindExpression(new ReaderInfo { DataReaderType = dataReaderType, ToType = toType, ProviderFieldType = providerType, FieldType = fieldType                          }, out expr) ||
+			    FindExpression(new ReaderInfo { DataReaderType = dataReaderType, ToType = toType, ProviderFieldType = providerType,                        DataTypeName = typeName }, out expr) ||
 			    FindExpression(new ReaderInfo { DataReaderType = dataReaderType, ToType = toType, ProviderFieldType = providerType                                                 }, out expr) ||
 			    FindExpression(new ReaderInfo { DataReaderType = dataReaderType,                  ProviderFieldType = providerType                                                 }, out expr) ||
 			    FindExpression(new ReaderInfo { DataReaderType = dataReaderType,                  ProviderFieldType = providerType, FieldType = fieldType, DataTypeName = typeName }, out expr) ||
@@ -265,6 +276,7 @@ namespace LinqToDB.DataProvider
 
 			if (FindExpression(new ReaderInfo { ToType = toType, ProviderFieldType = providerType, FieldType = fieldType, DataTypeName = typeName }, out expr) ||
 			    FindExpression(new ReaderInfo { ToType = toType, ProviderFieldType = providerType, FieldType = fieldType                          }, out expr) ||
+			    FindExpression(new ReaderInfo { ToType = toType, ProviderFieldType = providerType,                        DataTypeName = typeName }, out expr) ||
 			    FindExpression(new ReaderInfo { ToType = toType, ProviderFieldType = providerType                                                 }, out expr) ||
 			    FindExpression(new ReaderInfo {                  ProviderFieldType = providerType                                                 }, out expr) ||
 			    FindExpression(new ReaderInfo {                  ProviderFieldType = providerType, FieldType = fieldType, DataTypeName = typeName }, out expr) ||

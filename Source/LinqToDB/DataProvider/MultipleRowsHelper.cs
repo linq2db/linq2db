@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using System.Text;
 
 namespace LinqToDB.DataProvider
 {
@@ -31,7 +26,7 @@ namespace LinqToDB.DataProvider
 				? dc
 				: dataConnection is DataContext dx
 					? dx.GetDataConnection()
-					: throw new ArgumentException($"Must be of {nameof(DataConnection)} or {nameof(DataContext)} type but was {dataConnection.GetType()}", nameof(dataConnection));
+					: ThrowHelper.ThrowArgumentException<DataConnection>(nameof(dataConnection), $"Must be of {nameof(DataConnection)} or {nameof(DataContext)} type but was {dataConnection.GetType()}");
 
 			MappingSchema  = dataConnection.MappingSchema;
 			Options        = options;
@@ -138,7 +133,35 @@ namespace LinqToDB.DataProvider
 
 		public bool Execute()
 		{
-			DataConnection.Execute(StringBuilder.AppendLine().ToString(), Parameters.ToArray());
+			var commandSql = StringBuilder.AppendLine().ToString();
+			var parameters = Parameters.ToArray();
+
+			DataConnection.Execute(commandSql, parameters);
+
+			if (Options.RowsCopiedCallback != null)
+			{
+				Options.RowsCopiedCallback(RowsCopied);
+
+				if (RowsCopied.Abort)
+					return false;
+			}
+
+			Parameters.Clear();
+			ParameterIndex        = 0;
+			CurrentCount          = 0;
+			LastRowParameterIndex = 0;
+			LastRowStringIndex    = HeaderSize;
+			StringBuilder.Length  = HeaderSize;
+
+			return true;
+		}
+
+		internal bool ExecuteCustom(Func<DataConnection, string, DataParameter[], int> customExecute)
+		{
+			var commandSql = StringBuilder.AppendLine().ToString();
+			var parameters = Parameters.ToArray();
+
+			customExecute(DataConnection, commandSql, parameters);
 
 			if (Options.RowsCopiedCallback != null)
 			{

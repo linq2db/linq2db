@@ -1,10 +1,5 @@
-﻿using System;
-using System.Data;
-using System.Linq;
-
-namespace LinqToDB.DataProvider.SapHana
+﻿namespace LinqToDB.DataProvider.SapHana
 {
-	using System.Data.Common;
 	using Common;
 	using Data;
 	using Extensions;
@@ -15,24 +10,15 @@ namespace LinqToDB.DataProvider.SapHana
 	{
 		public SapHanaOdbcDataProvider() : base(ProviderName.SapHanaOdbc, MappingSchemaInstance, OdbcProviderAdapter.GetInstance())
 		{
-			//supported flags
-			SqlProviderFlags.IsParameterOrderDependent = true;
-
-			//supported flags
-			SqlProviderFlags.IsCountSubQuerySupported  = true;
-
+			SqlProviderFlags.IsParameterOrderDependent         = true;
 			//Exception: Sap.Data.Hana.HanaException
 			//Message: single-row query returns more than one row
 			//when expression returns more than 1 row
 			//mark this as supported, it's better to throw exception
 			//then replace with left join, in which case returns incorrect data
-			SqlProviderFlags.IsSubQueryColumnSupported  = true;
-			SqlProviderFlags.IsTakeSupported            = true;
-			SqlProviderFlags.IsDistinctOrderBySupported = false;
-
-			//not supported flags
+			SqlProviderFlags.IsSubQueryColumnSupported         = true;
+			SqlProviderFlags.IsDistinctOrderBySupported        = false;
 			SqlProviderFlags.IsSubQueryTakeSupported           = false;
-			SqlProviderFlags.IsApplyJoinSupported              = false;
 			SqlProviderFlags.IsInsertOrUpdateSupported         = false;
 			SqlProviderFlags.AcceptsOuterExpressionInAggregate = false;
 

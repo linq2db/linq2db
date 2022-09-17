@@ -1,6 +1,4 @@
-﻿using System;
-using System.Linq;
-using LinqToDB;
+﻿using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 using NUnit.Framework;
@@ -22,7 +20,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestMappingCombine([IncludeDataSources(ProviderName.SQLiteMS)] string context)
+		public void TestMappingCombine([IncludeDataSources(ProviderName.SQLiteMS, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
 			var mb = ms.GetFluentMappingBuilder();

@@ -1,15 +1,15 @@
-﻿using System;
-using System.Linq.Expressions;
-using LinqToDB.Linq.Builder;
+﻿using System.Linq.Expressions;
 
 namespace LinqToDB.Expressions
 {
+	using Linq.Builder;
+
 	class ContextRefExpression : Expression
 	{
 		public ContextRefExpression(Type elementType, IBuildContext buildContext)
 		{
 			ElementType = elementType;
-			BuildContext = buildContext ?? throw new ArgumentNullException(nameof(buildContext));
+			BuildContext = buildContext ?? ThrowHelper.ThrowArgumentNullException<IBuildContext>(nameof(buildContext));
 		}
 
 		public Type ElementType { get; }

@@ -1,20 +1,13 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Data;
-using System.Data.Common;
-using System.Linq;
+﻿using System.Collections.Concurrent;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Threading;
-using System.Threading.Tasks;
-using JetBrains.Annotations;
-using LinqToDB.Common;
-using LinqToDB.Expressions;
-using LinqToDB.Extensions;
 
 namespace LinqToDB.Async
 {
+	using Common;
+	using Expressions;
+	using Extensions;
+
 	/// <summary>
 	/// Provides factory methods to create async wrappers for <see cref="DbConnection"/> and <see cref="DbTransaction"/> instances.
 	/// </summary>
@@ -68,7 +61,7 @@ namespace LinqToDB.Async
 		public static IAsyncDbConnection Create(DbConnection connection)
 		{
 			if (connection == null)
-				throw new ArgumentNullException(nameof(connection));
+				ThrowHelper.ThrowArgumentNullException(nameof(connection));
 
 			// no wrap required
 			if (connection is IAsyncDbConnection asyncConnection)
@@ -85,7 +78,7 @@ namespace LinqToDB.Async
 		public static IAsyncDbTransaction Create(DbTransaction transaction)
 		{
 			if (transaction == null)
-				throw new ArgumentNullException(nameof(transaction));
+				ThrowHelper.ThrowArgumentNullException(nameof(transaction));
 
 			// no wrap required
 			if (transaction is IAsyncDbTransaction asyncTransaction)

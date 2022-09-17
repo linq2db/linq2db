@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using LinqToDB;
+﻿using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
@@ -27,7 +26,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void EpxprExprPredicatePlus([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void EpxprExprPredicatePlus([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var items = DataClass.Seed();
 
@@ -57,7 +56,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void EpxprExprPredicateMinus([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void EpxprExprPredicateMinus([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var items = DataClass.Seed();
 
@@ -87,7 +86,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void BinaryPlus([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void BinaryPlus([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var items = DataClass.Seed();
 

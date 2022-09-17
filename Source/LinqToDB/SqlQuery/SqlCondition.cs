@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Text;
+﻿using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
@@ -62,5 +61,12 @@ namespace LinqToDB.SqlQuery
 		}
 
 		#endregion
+
+		public bool Equals(SqlCondition other, Func<ISqlExpression, ISqlExpression, bool> comparer)
+		{
+			return IsNot == other.IsNot
+				&& IsOr  == other.IsOr
+				&& Predicate.Equals(other.Predicate, comparer);
+		}
 	}
 }

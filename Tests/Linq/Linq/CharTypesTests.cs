@@ -1,6 +1,4 @@
-﻿using System.Linq;
-
-using LinqToDB;
+﻿using LinqToDB;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -84,14 +82,16 @@ namespace Tests.Linq
 			new StringTestTable()
 		};
 
-		// need to configure sybase docker image to use utf8 character set
-		[ActiveIssue(Configuration = TestProvName.AllSybase)]
+		// Sybase: need to configure sybase docker image to use utf8 character set
+		// CH: We don't perform trimming of FixedString type
+		[ActiveIssue(Configurations = new[] { TestProvName.AllSybase } )]
 		[Test]
-		public void StringTrimming([DataSources(TestProvName.AllInformix)] string context)
+		public void StringTrimming([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
 				var lastId = db.GetTable<StringTestTable>().Select(_ => _.Id).Max();
+				var nextId = lastId + 1;
 
 				try
 				{
@@ -107,6 +107,9 @@ namespace Tests.Linq
 						if (context.IsAnyOf(TestProvName.AllFirebird))
 							query = db.GetTable<StringTestTable>().Value(_ => _.String, record.String);
 
+						if (context.IsAnyOf(TestProvName.AllClickHouse))
+							query = query.Value(_ => _.Id, nextId++);
+
 						query.Insert();
 					}
 
@@ -118,16 +121,20 @@ namespace Tests.Linq
 					{
 						if (!SkipChar(context))
 						{
-							if (context.IsAnyOf(TestProvName.AllSybase))
+							if (context.IsAnyOf(TestProvName.AllSybase, TestProvName.AllOracleDevartOCI))
 								Assert.AreEqual(testData[i].String?.TrimEnd(' ')?.TrimEnd('\0'), records[i].String);
+							else if (context.IsAnyOf(TestProvName.AllClickHouse))
+								Assert.AreEqual(testData[i].String?.TrimEnd('\0'), records[i].String);
 							else
 								Assert.AreEqual(testData[i].String?.TrimEnd(' '), records[i].String);
 						}
 
 						if (!context.IsAnyOf(TestProvName.AllFirebird))
 						{
-							if (context.IsAnyOf(TestProvName.AllSybase))
+							if (context.IsAnyOf(TestProvName.AllSybase, TestProvName.AllOracleDevartOCI))
 								Assert.AreEqual(testData[i].NString?.TrimEnd(' ')?.TrimEnd('\0'), records[i].NString);
+							else if (context.IsAnyOf(TestProvName.AllClickHouse))
+								Assert.AreEqual(testData[i].NString?.TrimEnd('\0'), records[i].NString);
 							else
 								Assert.AreEqual(testData[i].NString?.TrimEnd(' '), records[i].NString);
 						}
@@ -219,7 +226,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var lastId = db.GetTable<CharTestTable>().Select(_ => _.Id).Max();
-
+				var nextId = lastId + 1;
 				try
 				{
 					var testData = GetCharData(context);
@@ -232,6 +239,9 @@ namespace Tests.Linq
 
 						if (context.IsAnyOf(TestProvName.AllFirebird))
 							query = db.GetTable<CharTestTable>().Value(_ => _.Char, record.Char);
+
+						if (context.IsAnyOf(TestProvName.AllClickHouse))
+							query = query.Value(_ => _.Id, nextId++);
 
 						query.Insert();
 					}

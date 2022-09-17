@@ -1,6 +1,4 @@
-﻿using System.Linq;
-
-using LinqToDB;
+﻿using LinqToDB;
 
 using NUnit.Framework;
 
@@ -137,6 +135,7 @@ namespace Tests.xUpdate
 			TestProvName.AllOracle,
 			TestProvName.AllSybase,
 			TestProvName.AllSqlServer2008Plus,
+			ProviderName.PostgreSQL15,
 			TestProvName.AllInformix,
 			TestProvName.AllSapHana,
 			ProviderName.Firebird)]

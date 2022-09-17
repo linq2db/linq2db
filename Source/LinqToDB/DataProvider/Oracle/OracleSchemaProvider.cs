@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data.Common;
-using System.Linq;
-using System.Data;
-
-namespace LinqToDB.DataProvider.Oracle
+﻿namespace LinqToDB.DataProvider.Oracle
 {
 	using Common;
 	using Data;
@@ -31,7 +25,7 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			var defaultSchema = dataConnection.Execute<string>("SELECT USER FROM DUAL");
 			SchemasFilter     = BuildSchemaFilter(options, defaultSchema, OracleMappingSchema.ConvertStringToSql);
-			_majorVersion     = int.Parse(dataConnection.Execute<string>("select VERSION from PRODUCT_COMPONENT_VERSION where PRODUCT like 'PL/SQL%'").Split('.')[0]);
+			_majorVersion     = GetMajorVersion(dataConnection);
 
 			return base.GetSchema(dataConnection, options);
 		}
@@ -42,7 +36,7 @@ namespace LinqToDB.DataProvider.Oracle
 			if (connection == null)
 				return string.Empty;
 
-			return _provider.Adapter.GetHostName(connection);
+			return _provider.Adapter.GetHostName?.Invoke(connection) ?? connection.DataSource;
 		}
 
 		protected override string GetDatabaseName(DataConnection dbConnection)
@@ -51,7 +45,7 @@ namespace LinqToDB.DataProvider.Oracle
 			if (connection == null)
 				return string.Empty;
 
-			return _provider.Adapter.GetDatabaseName(connection);
+			return _provider.Adapter.GetDatabaseName?.Invoke(connection) ?? connection.Database;
 		}
 
 		private string? _currentUser;
@@ -160,7 +154,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		private int GetMajorVersion(DataConnection dataConnection)
 		{
-			var version = dataConnection.Query<string>("SELECT VERSION FROM PRODUCT_COMPONENT_VERSION WHERE PRODUCT LIKE 'PL/SQL%'").FirstOrDefault();
+			var version = dataConnection.Query<string?>("SELECT  VERSION from PRODUCT_COMPONENT_VERSION WHERE ROWNUM = 1").FirstOrDefault();
 			if (version != null)
 			{
 				try
@@ -170,7 +164,7 @@ namespace LinqToDB.DataProvider.Oracle
 				catch { }
 			}
 
-			return 0;
+			return 11;
 		}
 
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
@@ -179,7 +173,7 @@ namespace LinqToDB.DataProvider.Oracle
 				return new List<ColumnInfo>();
 
 			var isIdentitySql = "0                                              as IsIdentity,";
-			if (GetMajorVersion(dataConnection) >= 12)
+			if (_majorVersion >= 12)
 			{
 				isIdentitySql = "CASE c.IDENTITY_COLUMN WHEN 'YES' THEN 1 ELSE 0 END as IsIdentity,";
 			}
@@ -404,8 +398,7 @@ ORDER BY
 
 		private void LoadCurrentUser(DataConnection dataConnection)
 		{
-			if (_currentUser == null)
-				_currentUser = dataConnection.Execute<string>("select user from dual");
+			_currentUser ??= dataConnection.Execute<string>("select user from dual");
 		}
 
 		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection, IEnumerable<ProcedureInfo> procedures, GetSchemaOptions options)
@@ -524,7 +517,7 @@ WHERE SEQUENCE > 0 AND DATA_LEVEL = 0 AND OWNER = USER
 			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale, options);
 		}
 
-		protected override DataType GetDataType(string? dataType, string? columnType, int? length, int? prec, int? scale)
+		protected override DataType GetDataType(string? dataType, string? columnType, int? length, int? precision, int? scale)
 		{
 			switch (dataType)
 			{
@@ -548,6 +541,7 @@ WHERE SEQUENCE > 0 AND DATA_LEVEL = 0 AND OWNER = USER
 				case "VARCHAR2"               : return DataType.VarChar;
 				case "XMLTYPE"                : return DataType.Xml;
 				case "ROWID"                  : return DataType.VarChar;
+				case "REF CURSOR"             : return DataType.Cursor;
 				default:
 					if (dataType?.StartsWith("TIMESTAMP") == true)
 						return dataType.EndsWith("TIME ZONE") ? DataType.DateTimeOffset : DataType.DateTime2;
@@ -584,11 +578,12 @@ WHERE SEQUENCE > 0 AND DATA_LEVEL = 0 AND OWNER = USER
 				case "NCHAR"                          :
 				case "LONG"                           :
 				case "ROWID"                          :
-				case "CHAR"                           : return _provider.Adapter.OracleStringType      .Name;
-				case "TIMESTAMP"                      : return _provider.Adapter.OracleTimeStampType   .Name;
-				case "TIMESTAMP WITH LOCAL TIME ZONE" : return _provider.Adapter.OracleTimeStampLTZType.Name;
-				case "TIMESTAMP WITH TIME ZONE"       : return _provider.Adapter.OracleTimeStampTZType .Name;
-				case "XMLTYPE"                        : return _provider.Adapter.OracleXmlTypeType     .Name;
+				case "CHAR"                           : return _provider.Adapter.OracleStringType       .Name;
+				case "TIMESTAMP"                      : return _provider.Adapter.OracleTimeStampType    .Name;
+				case "TIMESTAMP WITH LOCAL TIME ZONE" : return _provider.Adapter.OracleTimeStampLTZType?.Name ?? _provider.Adapter.OracleTimeStampType.Name;
+				case "TIMESTAMP WITH TIME ZONE"       : return _provider.Adapter.OracleTimeStampTZType? .Name ?? _provider.Adapter.OracleTimeStampType.Name;
+				case "XMLTYPE"                        : return _provider.Adapter.OracleXmlTypeType      .Name;
+				case "REF CURSOR"                     : return _provider.Adapter.OracleRefCursorType    .Name;
 			}
 
 			return base.GetProviderSpecificType(dataType);

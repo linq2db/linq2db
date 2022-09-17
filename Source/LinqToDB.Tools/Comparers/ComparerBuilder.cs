@@ -1,17 +1,15 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections;
 using System.Linq.Expressions;
 using System.Reflection;
 using JetBrains.Annotations;
-using LinqToDB.Common;
-using LinqToDB.Expressions;
-using LinqToDB.Extensions;
-using LinqToDB.Reflection;
 
 namespace LinqToDB.Tools.Comparers
 {
+	using Common;
+	using Expressions;
+	using Extensions;
+	using Reflection;
+
 	/// <summary>
 	/// Builds comparer functions and comparers.
 	/// </summary>
@@ -126,7 +124,7 @@ namespace LinqToDB.Tools.Comparers
 		[Pure]
 		public static IEqualityComparer<T> GetEqualityComparer<T>(params Expression<Func<T,object?>>[] membersToCompare)
 		{
-			if (membersToCompare == null) throw new ArgumentNullException(nameof(membersToCompare));
+			if (membersToCompare == null) ThrowHelper.ThrowArgumentNullException(nameof(membersToCompare));
 			return new Comparer<T>(CreateEqualsFunc<T>(membersToCompare), CreateGetHashCodeFunc<T>(membersToCompare));
 		}
 
@@ -151,7 +149,7 @@ namespace LinqToDB.Tools.Comparers
 		public static IEqualityComparer<T> GetEqualityComparer<T>(
 			[InstantHandle] Func<TypeAccessor<T>,IEnumerable<MemberAccessor>> membersToCompare)
 		{
-			if (membersToCompare == null) throw new ArgumentNullException(nameof(membersToCompare));
+			if (membersToCompare == null) ThrowHelper.ThrowArgumentNullException(nameof(membersToCompare));
 
 			var members = membersToCompare(TypeAccessor.GetAccessor<T>()).ToList();
 			return new Comparer<T>(GetEqualsFunc<T>(members), GetGetHashCodeFunc<T>(members));
@@ -168,7 +166,7 @@ namespace LinqToDB.Tools.Comparers
 		public static IEqualityComparer<T> GetEqualityComparer<T>(
 			[InstantHandle] Func<MemberAccessor,bool> memberPredicate)
 		{
-			if (memberPredicate == null) throw new ArgumentNullException(nameof(memberPredicate));
+			if (memberPredicate == null) ThrowHelper.ThrowArgumentNullException(nameof(memberPredicate));
 
 			var members = TypeAccessor.GetAccessor<T>().Members.Where(memberPredicate).ToList();
 			return new Comparer<T>(GetEqualsFunc<T>(members), GetGetHashCodeFunc<T>(members));

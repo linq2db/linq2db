@@ -1,16 +1,12 @@
-﻿using System;
-using System.Linq;
-
-using NUnit.Framework;
+﻿using NUnit.Framework;
 
 namespace Tests.UserTests
 {
-
 	[TestFixture]
 	public class Issue708Tests : TestBase
 	{
 		[Test]
-		public void Test2([DataSources] string context)
+		public void Test2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

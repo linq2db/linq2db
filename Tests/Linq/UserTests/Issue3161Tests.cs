@@ -1,6 +1,4 @@
-﻿using System;
-using System.Linq;
-using FluentAssertions;
+﻿using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
@@ -34,7 +32,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void CrossApplyOnce([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void CrossApplyOnce([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tbl1 = db.CreateLocalTable(new[]
@@ -67,7 +65,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void CrossApplyTwice([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void CrossApplyTwice([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tbl1 = db.CreateLocalTable(new[]

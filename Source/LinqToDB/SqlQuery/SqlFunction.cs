@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
@@ -30,11 +28,11 @@ namespace LinqToDB.SqlQuery
 		{
 			//_sourceID = Interlocked.Increment(ref SqlQuery.SourceIDCounter);
 
-			if (systemType == null) throw new ArgumentNullException(nameof(systemType));
-			if (parameters == null) throw new ArgumentNullException(nameof(parameters));
+			if (systemType == null) ThrowHelper.ThrowArgumentNullException(nameof(systemType));
+			if (parameters == null) ThrowHelper.ThrowArgumentNullException(nameof(parameters));
 
 			foreach (var p in parameters)
-				if (p == null) throw new ArgumentNullException(nameof(parameters));
+				if (p == null) ThrowHelper.ThrowArgumentNullException(nameof(parameters));
 
 			SystemType  = systemType;
 			Name        = name;

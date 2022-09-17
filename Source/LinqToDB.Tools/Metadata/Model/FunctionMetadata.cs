@@ -1,8 +1,7 @@
-﻿using LinqToDB.Schema;
-using LinqToDB.SqlQuery;
-
-namespace LinqToDB.Metadata
+﻿namespace LinqToDB.Metadata
 {
+	using SqlQuery;
+
 	/// <summary>
 	/// Scalar, aggregate or window (analytic) function mapping attributes, used
 	/// with <see cref="Sql.FunctionAttribute"/> mapping attribute.

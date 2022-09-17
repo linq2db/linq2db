@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace LinqToDB.SqlQuery
@@ -65,8 +63,7 @@ namespace LinqToDB.SqlQuery
 
 		internal void SetTakeConverter(int take)
 		{
-			if (TakeValues == null)
-				TakeValues = new List<int>();
+			TakeValues ??= new List<int>();
 
 			TakeValues.Add(take);
 

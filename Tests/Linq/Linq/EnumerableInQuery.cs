@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using LinqToDB;
+﻿using LinqToDB;
 using LinqToDB.Mapping;
 using LinqToDB.Tools.Comparers;
 using NUnit.Framework;
@@ -19,7 +16,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SelectQueryFromList([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void SelectQueryFromList([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var items = new[]
 			{
@@ -69,7 +66,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void AnonymousProjection([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void AnonymousProjection([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

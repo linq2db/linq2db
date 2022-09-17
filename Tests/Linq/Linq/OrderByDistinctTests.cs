@@ -1,6 +1,4 @@
-﻿using System.Linq;
-
-using LinqToDB;
+﻿using LinqToDB;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
@@ -408,7 +406,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void OrderBySubQuery([DataSources(ProviderName.SqlCe)] string context)
+		public void OrderBySubQuery([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			var testData = GetTestData();
 

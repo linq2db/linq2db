@@ -1,6 +1,4 @@
-﻿using System.Linq;
-
-using LinqToDB;
+﻿using LinqToDB;
 
 using NUnit.Framework;
 
@@ -91,8 +89,11 @@ namespace Tests.Linq
 
 		[Test]
 		public void NestedFirstOrDefaultScalar2([DataSources(
-			TestProvName.AllInformix, TestProvName.AllOracle,
-			TestProvName.AllSybase, TestProvName.AllSapHana)]
+			TestProvName.AllInformix,
+			TestProvName.AllOracle,
+			TestProvName.AllClickHouse,
+			TestProvName.AllSybase,
+			TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -144,7 +145,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NestedFirstOrDefault3([DataSources(TestProvName.AllInformix, TestProvName.AllSapHana, TestProvName.AllOracle)]
+		public void NestedFirstOrDefault3([DataSources(TestProvName.AllInformix, TestProvName.AllSapHana, TestProvName.AllOracle, TestProvName.AllClickHouse)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -177,7 +178,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NestedSingleOrDefault1([DataSources] string context)
+		public void NestedSingleOrDefault1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(

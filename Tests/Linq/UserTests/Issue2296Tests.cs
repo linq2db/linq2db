@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using LinqToDB;
+﻿using LinqToDB;
 using NUnit.Framework;
 
 namespace Tests.UserTests
@@ -9,7 +8,7 @@ namespace Tests.UserTests
 	{
 		[Test]
 		public void Issue2296Test(
-			[IncludeDataSources(true, TestProvName.AllSqlServer)] string context,
+			[IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context,
 			[Values(true, false)] bool reverseWhereQuery)
 		{
 			using (var db = GetDataContext(context))

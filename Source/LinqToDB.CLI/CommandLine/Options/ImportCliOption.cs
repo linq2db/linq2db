@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text.Json;
+﻿using System.Text.Json;
 
 namespace LinqToDB.CommandLine
 {
@@ -46,7 +43,8 @@ namespace LinqToDB.CommandLine
 
 			var options = new JsonDocumentOptions()
 			{
-				CommentHandling = JsonCommentHandling.Skip
+				CommentHandling = JsonCommentHandling.Skip,
+				AllowTrailingCommas = true
 			};
 			var json = JsonDocument.Parse(File.ReadAllText(rawValue), options);
 
@@ -55,6 +53,8 @@ namespace LinqToDB.CommandLine
 				errorDetails = $"JSON ({rawValue}): object expected as root element";
 				return null;
 			}
+
+			var conflictingOptions = new HashSet<CliOption>();
 
 			foreach (var categoryProperty in json.RootElement.EnumerateObject())
 			{
@@ -103,6 +103,18 @@ namespace LinqToDB.CommandLine
 						// TODO: is it possible or json parser will throw earlier?
 						errorDetails = $"JSON ({rawValue}): option '{categoryProperty.Name}.{optionProperty.Name}' specified multiple times";
 						return null;
+					}
+					else if (conflictingOptions.Contains(option))
+					{
+						errorDetails = $"Option '{categoryProperty.Name}.{optionProperty.Name}' conflicts with other option(s): {string.Join(", ", command.GetIncompatibleOptions(option)!.Select(o => $"{o.Name}"))}";
+						return null;
+					}
+
+					var incompatibleOptions = command.GetIncompatibleOptions(option);
+					if (incompatibleOptions != null)
+					{
+						foreach (var opt in incompatibleOptions)
+							conflictingOptions.Add(opt);
 					}
 
 					var value = option.ParseJSON(optionProperty.Value, out errorDetails);

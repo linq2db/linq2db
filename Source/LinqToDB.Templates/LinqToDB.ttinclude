@@ -452,8 +452,6 @@ void GenerateTypesFromMetadata()
 				{
 					string otherTableName = null;
 
-					if (key.OtherTable.TableSchema.CatalogName != null)
-						otherTableName = key.OtherTable.TableSchema.CatalogName + ".";
 					if (key.OtherTable.TableSchema.SchemaName != null)
 						otherTableName += key.OtherTable.TableSchema.SchemaName + ".";
 					otherTableName += key.OtherTable.TableSchema.TableName;

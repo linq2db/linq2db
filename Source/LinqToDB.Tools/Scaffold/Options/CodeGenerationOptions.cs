@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace LinqToDB.Scaffold
+﻿namespace LinqToDB.Scaffold
 {
 	/// <summary>
 	/// General code-generation options, not related to data model directly.
@@ -65,6 +62,15 @@ namespace LinqToDB.Scaffold
 		/// </list>
 		/// </summary>
 		public bool ClassPerFile { get; set; } = true;
+
+		/// <summary>
+		/// Adds '.generated' suffix to files before extension.
+		/// <list type="bullet">
+		/// <item>Default: <c>false</c></item>
+		/// <item>In T4 compability mode: <c>false</c></item>
+		/// </list>
+		/// </summary>
+		public bool AddGeneratedFileSuffix { get; set; }
 
 		/// <summary>
 		/// List of type and/or namespace names that conflict with generated code. Used to adjust code-generation to resolve conflicts.

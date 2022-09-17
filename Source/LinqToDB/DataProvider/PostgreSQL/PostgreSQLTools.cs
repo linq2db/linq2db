@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Data.Common;
-using System.Reflection;
-
-using JetBrains.Annotations;
+﻿using System.Reflection;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
@@ -17,6 +11,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		static readonly Lazy<IDataProvider> _postgreSQLDataProvider92 = DataConnection.CreateDataProvider<PostgreSQLDataProvider92>();
 		static readonly Lazy<IDataProvider> _postgreSQLDataProvider93 = DataConnection.CreateDataProvider<PostgreSQLDataProvider93>();
 		static readonly Lazy<IDataProvider> _postgreSQLDataProvider95 = DataConnection.CreateDataProvider<PostgreSQLDataProvider95>();
+		static readonly Lazy<IDataProvider> _postgreSQLDataProvider15 = DataConnection.CreateDataProvider<PostgreSQLDataProvider15>();
 
 		public static bool AutoDetectProvider     { get; set; } = true;
 
@@ -40,6 +35,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				case ProviderName.PostgreSQL92 : return _postgreSQLDataProvider92.Value;
 				case ProviderName.PostgreSQL93 : return _postgreSQLDataProvider93.Value;
 				case ProviderName.PostgreSQL95 : return _postgreSQLDataProvider95.Value;
+				case ProviderName.PostgreSQL15 : return _postgreSQLDataProvider15.Value;
 				case ""                        :
 				case null                      :
 					if (css.Name == "PostgreSQL")
@@ -47,6 +43,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					break;
 				case NpgsqlProviderAdapter.ClientNamespace :
 				case var providerName when providerName.Contains("PostgreSQL") || providerName.Contains(NpgsqlProviderAdapter.AssemblyName):
+					if (css.Name.Contains("15"))
+						return _postgreSQLDataProvider15.Value;
+
 					if (css.Name.Contains("92") || css.Name.Contains("9.2"))
 						return _postgreSQLDataProvider92.Value;
 
@@ -55,7 +54,12 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						return _postgreSQLDataProvider93.Value;
 
 					if (css.Name.Contains("95") || css.Name.Contains("9.5") ||
-						css.Name.Contains("96") || css.Name.Contains("9.6"))
+						css.Name.Contains("96") || css.Name.Contains("9.6") ||
+						css.Name.Contains("10") ||
+						css.Name.Contains("11") ||
+						css.Name.Contains("12") ||
+						css.Name.Contains("13") ||
+						css.Name.Contains("14"))
 						return _postgreSQLDataProvider95.Value;
 
 					if (AutoDetectProvider)
@@ -69,6 +73,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 								conn.Open();
 
 								var postgreSqlVersion = conn.PostgreSqlVersion;
+
+								if (postgreSqlVersion.Major >= 15)
+									return _postgreSQLDataProvider15.Value;
 
 								if (postgreSqlVersion.Major > 9 || postgreSqlVersion.Major == 9 && postgreSqlVersion.Minor > 4)
 									return _postgreSQLDataProvider95.Value;
@@ -95,6 +102,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			return version switch
 			{
+				PostgreSQLVersion.v15 => _postgreSQLDataProvider15.Value,
 				PostgreSQLVersion.v95 => _postgreSQLDataProvider95.Value,
 				PostgreSQLVersion.v93 => _postgreSQLDataProvider93.Value,
 				_                     => _postgreSQLDataProvider92.Value,

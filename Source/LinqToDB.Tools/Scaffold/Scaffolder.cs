@@ -1,16 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using LinqToDB.CodeModel;
-using LinqToDB.Common;
-using LinqToDB.DataModel;
-using LinqToDB.Metadata;
-using LinqToDB.Naming;
-using LinqToDB.Schema;
-using LinqToDB.SqlProvider;
-
-namespace LinqToDB.Scaffold
+﻿namespace LinqToDB.Scaffold
 {
+	using CodeModel;
+	using Common;
+	using DataModel;
+	using Metadata;
+	using Naming;
+	using Schema;
+	using SqlProvider;
+
 	/// <summary>
 	/// Helper class to simplify common scenario of data model generation from database.
 	/// </summary>
@@ -161,7 +158,7 @@ namespace LinqToDB.Scaffold
 
 			var results = new SourceCodeFile[files.Length];
 			for (var i = 0; i < results.Length; i++)
-				results[i] = new SourceCodeFile($"{files[i].FileName}.{Language.FileExtension}", sources[i]);
+				results[i] = new SourceCodeFile($"{files[i].FileName}{(_options.CodeGeneration.AddGeneratedFileSuffix ? ".generated" : null)}.{Language.FileExtension}", sources[i]);
 
 			return results;
 		}

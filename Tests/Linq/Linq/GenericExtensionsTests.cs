@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
+﻿using System.Reflection;
 
 using LinqToDB;
 
@@ -18,7 +15,7 @@ namespace Tests.Linq
 		{
 			Configuration = configuration;
 			Expression    = expression;
-			Types         = types ?? throw new ArgumentNullException(nameof(types));
+			Types         = types ?? ThrowHelper.ThrowArgumentNullException<Type?[]>(nameof(types));
 		}
 
 		public string  Configuration { get; set; }

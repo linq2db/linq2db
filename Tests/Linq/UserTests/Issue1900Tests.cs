@@ -1,6 +1,4 @@
-﻿using System;
-using System.Linq;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
@@ -40,7 +38,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestDynamicInColumns([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestDynamicInColumns([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(new []{ new PersonPrototype

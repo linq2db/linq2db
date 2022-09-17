@@ -1,10 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using LinqToDB.Common;
+﻿using System.Text;
 
 namespace LinqToDB.CodeModel
 {
+	using Common;
+
 	/// <summary>
 	/// Implements text (code) generation using table layout.
 	/// </summary>
@@ -85,8 +84,7 @@ namespace LinqToDB.CodeModel
 
 			_rowsCount++;
 
-			if (_data == null)
-				_data = (ColumnGroupData)header.CreateDataStorage();
+			_data ??= (ColumnGroupData)header.CreateDataStorage();
 
 			_data!.SetCurrentRowIndex(_rowsCount - 1);
 

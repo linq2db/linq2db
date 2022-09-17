@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
@@ -46,7 +43,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestAssociation([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public void TestAssociation([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

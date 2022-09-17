@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LinqToDB.DataProvider.SqlServer
+﻿namespace LinqToDB.DataProvider.SqlServer
 {
 	public enum SqlServerVersion
 	{
@@ -11,5 +9,6 @@ namespace LinqToDB.DataProvider.SqlServer
 		v2016,
 		v2017,
 		v2019,
+		v2022,
 	}
 }

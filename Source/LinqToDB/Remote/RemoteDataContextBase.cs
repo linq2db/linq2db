@@ -1,18 +1,11 @@
-﻿using System;
-using System.Data.Common;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
+﻿using System.Collections.Concurrent;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Threading.Tasks;
-
-using JetBrains.Annotations;
-using LinqToDB.Common.Internal;
 
 namespace LinqToDB.Remote
 {
-	using System.Threading;
 	using Common;
+	using Common.Internal;
 	using DataProvider;
 	using Expressions;
 	using Extensions;
@@ -246,7 +239,7 @@ namespace LinqToDB.Remote
 									typeof(MappingSchema),
 									typeof(ISqlOptimizer),
 									typeof(SqlProviderFlags)
-								}) ?? throw new InvalidOperationException($"Constructor for type '{key.Item1.Name}' not found."),
+								}) ?? ThrowHelper.ThrowInvalidOperationException<ConstructorInfo>($"Constructor for type '{key.Item1.Name}' not found."),
 								new Expression[]
 								{
 									Expression.Constant(null, typeof(IDataProvider)),
@@ -282,9 +275,9 @@ namespace LinqToDB.Remote
 					_getSqlOptimizer = _sqlOptimizers.GetOrAdd(key, static key =>
 						Expression.Lambda<Func<ISqlOptimizer>>(
 								Expression.New(
-									key.Item1.GetConstructor(new[] {typeof(SqlProviderFlags)}) ??
-									throw new InvalidOperationException(
-										$"Constructor for type '{key.Item1.Name}' not found."),
+									key.Item1.GetConstructor(new[] { typeof(SqlProviderFlags) }) ??
+										ThrowHelper.ThrowInvalidOperationException<ConstructorInfo>(
+											$"Constructor for type '{key.Item1.Name}' not found."),
 									Expression.Constant(key.Item2)))
 							.CompileExpression());
 				}
@@ -300,14 +293,13 @@ namespace LinqToDB.Remote
 		{
 			_batchCounter++;
 
-			if (_queryBatch == null)
-				_queryBatch = new List<string>();
+			_queryBatch ??= new List<string>();
 		}
 
 		public void CommitBatch()
 		{
 			if (_batchCounter == 0)
-				throw new InvalidOperationException();
+				ThrowHelper.ThrowInvalidOperationException();
 
 			_batchCounter--;
 
@@ -331,7 +323,7 @@ namespace LinqToDB.Remote
 		public async Task CommitBatchAsync()
 		{
 			if (_batchCounter == 0)
-				throw new InvalidOperationException();
+				ThrowHelper.ThrowInvalidOperationException();
 
 			_batchCounter--;
 
@@ -369,7 +361,7 @@ namespace LinqToDB.Remote
 		protected void ThrowOnDisposed()
 		{
 			if (Disposed)
-				throw new ObjectDisposedException("RemoteDataContext", "IDataContext is disposed, see https://github.com/linq2db/linq2db/wiki/Managing-data-connection");
+				ThrowHelper.ThrowObjectDisposedException("RemoteDataContext", "IDataContext is disposed, see https://github.com/linq2db/linq2db/wiki/Managing-data-connection");
 		}
 
 		void IDataContext.Close()

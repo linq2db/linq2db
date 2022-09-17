@@ -1,6 +1,4 @@
-﻿using System.Linq;
-
-using LinqToDB;
+﻿using LinqToDB;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -16,11 +14,12 @@ namespace Tests.UserTests
 			public int Id;
 
 			[Column(Length = 100)]
-			[Column(DataType = DataType.Blob, Configuration = ProviderName.DB2)]
-			[Column(DataType = DataType.Blob, Configuration = ProviderName.Firebird)]
-			[Column(DataType = DataType.Blob, Configuration = ProviderName.Oracle)]
-			[Column(DataType = DataType.Blob, Configuration = ProviderName.PostgreSQL, DbType = "bytea")]
-			[Column(                          Configuration = ProviderName.Informix,   DbType = "byte")]
+			[Column(DataType = DataType.Blob,      Configuration = ProviderName.DB2)]
+			[Column(DataType = DataType.Blob,      Configuration = ProviderName.Firebird)]
+			[Column(DataType = DataType.Blob,      Configuration = ProviderName.Oracle)]
+			[Column(DataType = DataType.VarBinary, Configuration = ProviderName.ClickHouse)]
+			[Column(DataType = DataType.Blob,      Configuration = ProviderName.PostgreSQL, DbType = "bytea")]
+			[Column(                               Configuration = ProviderName.Informix,   DbType = "byte")]
 			public byte[]? BlobValue;
 		}
 

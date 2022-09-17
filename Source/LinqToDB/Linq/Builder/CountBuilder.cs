@@ -1,9 +1,8 @@
-﻿using System;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
+using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
 	using SqlQuery;
 
 	class CountBuilder : MethodCallBuilder
@@ -129,7 +128,7 @@ namespace LinqToDB.Linq.Builder
 				return flags switch
 				{
 					ConvertFlags.Field => new[] { new SqlInfo(Sql!, Parent!.SelectQuery) },
-					_                  => throw new NotImplementedException(),
+					_                  => ThrowHelper.ThrowNotImplementedException<SqlInfo[]>(),
 				};
 			}
 
@@ -142,7 +141,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							new SqlInfo(Sql!, Parent!.SelectQuery, Parent.SelectQuery.Select.Add(Sql!))
 						},
-					_ => throw new NotImplementedException(),
+					_ => ThrowHelper.ThrowNotImplementedException<SqlInfo[]>(),
 				};
 			}
 

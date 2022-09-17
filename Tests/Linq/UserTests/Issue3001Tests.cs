@@ -1,6 +1,4 @@
-﻿using System;
-using System.Linq;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Mapping;
@@ -56,8 +54,9 @@ namespace Tests.UserTests
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
-		public void TestExpressionAssociation([IncludeDataSources(TestProvName.AllSQLite)]
+		public void TestExpressionAssociation([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)]
 			string context)
 		{
 			using var db          = GetDataContext(context);

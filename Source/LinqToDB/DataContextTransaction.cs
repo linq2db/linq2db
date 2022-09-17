@@ -1,10 +1,4 @@
-﻿using System;
-using System.Data;
-using System.Threading;
-using System.Threading.Tasks;
-using JetBrains.Annotations;
-
-namespace LinqToDB
+﻿namespace LinqToDB
 {
 	/// <summary>
 	/// Explicit data context <see cref="DataContext"/> transaction wrapper.
@@ -18,7 +12,7 @@ namespace LinqToDB
 		/// <param name="dataContext">Data context.</param>
 		public DataContextTransaction(DataContext dataContext)
 		{
-			DataContext = dataContext ?? throw new ArgumentNullException(nameof(dataContext));
+			DataContext = dataContext ?? ThrowHelper.ThrowArgumentNullException<DataContext>(nameof(dataContext));
 		}
 
 		/// <summary>

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Diagnostics;
 using LinqToDB;
 using LinqToDB.Configuration;
 using NUnit.Framework;
@@ -13,6 +9,7 @@ namespace Tests.Data
 {
 	using System.Data;
 	using Model;
+	using Tests.Tools;
 
 	[TestFixture]
 	public class TraceTests : TestBase
@@ -58,6 +55,62 @@ namespace Tests.Data
 				};
 
 			return steps.ToDictionary(s => s.Enum, s => s.Value);
+		}
+
+		[Test]
+		public void TraceInfoErrorsAreReportedForInvalidConnectionString([DataSources(false)] string context)
+		{
+			var events   = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
+			var counters = GetEnumValues((TraceInfoStep s) => 0);
+
+			using (var db0 = (TestDataConnection)GetDataContext(context))
+			using (var db  = new DataContext(db0.DataProvider.Name, "BAD"))
+			{
+				db.OnTraceConnection = e =>
+				{
+					events[e.TraceInfoStep] = e;
+					counters[e.TraceInfoStep]++;
+				};
+
+				NUnitAssert.ThrowsAny(() => db.GetTable<Child>().ToList(), typeof(ArgumentException), typeof(InvalidOperationException));
+
+				// steps called once
+				Assert.AreEqual(1, counters[TraceInfoStep.Error]);
+				Assert.AreEqual(1, counters[TraceInfoStep.Completed]);
+
+				// steps never called
+				Assert.AreEqual(0, counters[TraceInfoStep.BeforeExecute]);
+				Assert.AreEqual(0, counters[TraceInfoStep.AfterExecute]);
+				Assert.AreEqual(0, counters[TraceInfoStep.MapperCreated]);
+			}
+		}
+
+		[Test]
+		public async Task TraceInfoErrorsAreReportedForInvalidConnectionStringAsync([DataSources(false)] string context)
+		{
+			var events   = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
+			var counters = GetEnumValues((TraceInfoStep s) => 0);
+
+			using (var db0 = (TestDataConnection)GetDataContext(context))
+			using (var db  = new DataContext(db0.DataProvider.Name, "BAD"))
+			{
+				db.OnTraceConnection = e =>
+				{
+					events[e.TraceInfoStep] = e;
+					counters[e.TraceInfoStep]++;
+				};
+
+				await NUnitAssert.ThrowsAnyAsync(() => db.GetTable<Child>().ToListAsync(), typeof(ArgumentException), typeof(InvalidOperationException));
+
+				// steps called once
+				Assert.AreEqual(1, counters[TraceInfoStep.Error]);
+				Assert.AreEqual(1, counters[TraceInfoStep.Completed]);
+
+				// steps never called
+				Assert.AreEqual(0, counters[TraceInfoStep.BeforeExecute]);
+				Assert.AreEqual(0, counters[TraceInfoStep.AfterExecute]);
+				Assert.AreEqual(0, counters[TraceInfoStep.MapperCreated]);
+			}
 		}
 
 		[Test]

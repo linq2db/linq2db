@@ -1,5 +1,4 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
@@ -104,6 +103,15 @@ namespace LinqToDB.Common
 		{
 			return SystemType == other.SystemType
 				&& DataType   == other.DataType
+				&& Length     == other.Length
+				&& Precision  == other.Precision
+				&& Scale      == other.Scale
+				&& string.Equals(DbType, other.DbType);
+		}
+
+		public bool EqualsDbOnly(DbDataType other)
+		{
+			return DataType   == other.DataType
 				&& Length     == other.Length
 				&& Precision  == other.Precision
 				&& Scale      == other.Scale

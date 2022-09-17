@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using FluentAssertions;
+﻿using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
@@ -143,7 +141,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void EagerLoadingTest([DataSources] string context)
+		public void EagerLoadingTest([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<InternalEmail>(new[] { new InternalEmail { Id = 10, UserId = 1, RequestId = 1 } }))

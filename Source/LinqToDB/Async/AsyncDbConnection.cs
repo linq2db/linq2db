@@ -1,11 +1,4 @@
-﻿using System;
-using System.Data;
-using System.Data.Common;
-using System.Diagnostics.CodeAnalysis;
-using System.Threading;
-using System.Threading.Tasks;
-
-using JetBrains.Annotations;
+﻿using System.Diagnostics.CodeAnalysis;
 
 namespace LinqToDB.Async
 {
@@ -19,7 +12,7 @@ namespace LinqToDB.Async
 	{
 		protected internal AsyncDbConnection(DbConnection connection)
 		{
-			Connection = connection ?? throw new ArgumentNullException(nameof(connection));
+			Connection = connection ?? ThrowHelper.ThrowArgumentNullException<DbConnection>(nameof(connection));
 		}
 
 		public virtual DbConnection Connection { get; }

@@ -1,17 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data.Common;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-
-namespace LinqToDB.DataProvider.PostgreSQL
+﻿namespace LinqToDB.DataProvider.PostgreSQL
 {
 	using Common;
 	using Data;
 	using Mapping;
 	using SqlProvider;
-	using Extensions;
 
 	class PostgreSQLBulkCopy : BasicBulkCopy
 	{
@@ -85,7 +77,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			if (connection == null)
 				return MultipleRowsCopy(table, options, source);
 
-			var sqlBuilder = (BasicSqlBuilder)_provider.CreateSqlBuilder(table.DataContext.MappingSchema);
+			var sqlBuilder = (PostgreSQLSqlBuilder)_provider.CreateSqlBuilder(table.DataContext.MappingSchema);
 			var ed         = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T));
 			var tableName  = GetTableName(sqlBuilder, options, table);
 			var columns    = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToArray();
@@ -105,7 +97,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		private (NpgsqlProviderAdapter.NpgsqlDbType?[] npgsqlTypes, string?[] dbTypes, DbDataType[] columnTypes) BuildTypes(
 			NpgsqlProviderAdapter adapter,
-			BasicSqlBuilder       sqlBuilder,
+			PostgreSQLSqlBuilder  sqlBuilder,
 			ColumnDescriptor[]    columns)
 		{
 			var npgsqlTypes = new NpgsqlProviderAdapter.NpgsqlDbType?[columns.Length];
@@ -126,7 +118,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				npgsqlTypes[i] = npgsqlType;
 
 				if (npgsqlType == null && dbTypes[i] == null)
-					throw new LinqToDBException($"Cannot guess PostgreSQL type for column {columns[i].ColumnName}. Specify type explicitly in column mapping.");
+					ThrowHelper.ThrowLinqToDBException($"Cannot guess PostgreSQL type for column {columns[i].ColumnName}. Specify type explicitly in column mapping.");
 			}
 
 			return (npgsqlTypes, dbTypes, columnTypes);
@@ -232,9 +224,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			var connection = _provider.TryGetProviderConnection(dataConnection, dataConnection.Connection);
 
 			if (connection == null)
-				return await MultipleRowsCopyAsync(table, options, source, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				return await MultipleRowsCopyAsync(table, options, source, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
-			var sqlBuilder  = (BasicSqlBuilder)_provider.CreateSqlBuilder(table.DataContext.MappingSchema);
+			var sqlBuilder  = (PostgreSQLSqlBuilder)_provider.CreateSqlBuilder(table.DataContext.MappingSchema);
 			var ed          = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T));
 			var tableName   = GetTableName(sqlBuilder, options, table);
 			var columns     = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToArray();
@@ -248,7 +240,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			var (npgsqlTypes, dbTypes, columnTypes) = BuildTypes(_provider.Adapter, sqlBuilder, columns);
 
 			var writer = _provider.Adapter.BeginBinaryImportAsync != null
-				? await _provider.Adapter.BeginBinaryImportAsync(connection, copyCommand, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext)
+				? await _provider.Adapter.BeginBinaryImportAsync(connection, copyCommand, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext)
 				: _provider.Adapter.BeginBinaryImport(connection, copyCommand);
 
 			if (!writer.SupportsAsync)
@@ -264,15 +256,15 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			{
 				foreach (var item in source)
 				{
-					await writer.StartRowAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					await writer.StartRowAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 					for (var i = 0; i < columns.Length; i++)
 					{
 						if (npgsqlTypes[i] != null)
 							await writer.WriteAsync(_provider.NormalizeTimeStamp(columns[i].GetProviderValue(item!), columnTypes[i]), npgsqlTypes[i]!.Value, cancellationToken)
-								.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+								.ConfigureAwait(Configuration.ContinueOnCapturedContext);
 						else
 							await writer.WriteAsync(_provider.NormalizeTimeStamp(columns[i].GetProviderValue(item!), columnTypes[i]), dbTypes[i]!, cancellationToken)
-							.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+							.ConfigureAwait(Configuration.ContinueOnCapturedContext);
 					}
 
 					currentCount++;
@@ -291,13 +283,13 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					if (currentCount >= batchSize)
 					{
 						await writer.CompleteAsync(cancellationToken)
-							.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+							.ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 						await writer.DisposeAsync()
-							.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+							.ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 						writer = _provider.Adapter.BeginBinaryImportAsync != null
-							? await _provider.Adapter.BeginBinaryImportAsync(connection, copyCommand, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext)
+							? await _provider.Adapter.BeginBinaryImportAsync(connection, copyCommand, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext)
 							: _provider.Adapter.BeginBinaryImport(connection, copyCommand);
 						currentCount = 0;
 					}
@@ -310,9 +302,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						() => $"INSERT ASYNC BULK {tableName}({string.Join(", ", columns.Select(x => x.ColumnName))}){Environment.NewLine}",
 						async () => {
 							var ret = await writer.CompleteAsync(cancellationToken)
-								.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+								.ConfigureAwait(Configuration.ContinueOnCapturedContext);
 							return (int)rowsCopied.RowsCopied;
-						}).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+						}).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 				}
 
 				if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
@@ -321,7 +313,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			finally
 			{
 				await writer.DisposeAsync()
-					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					.ConfigureAwait(Configuration.ContinueOnCapturedContext);
 			}
 
 			return rowsCopied;
@@ -336,7 +328,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			if (connection == null)
 				return await MultipleRowsCopyAsync(table, options, source, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-			var sqlBuilder  = (BasicSqlBuilder)_provider.CreateSqlBuilder(table.DataContext.MappingSchema);
+			var sqlBuilder  = (PostgreSQLSqlBuilder)_provider.CreateSqlBuilder(table.DataContext.MappingSchema);
 			var ed          = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T));
 			var tableName   = GetTableName(sqlBuilder, options, table);
 			var columns     = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToArray();

@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using LinqToDB;
+﻿using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
@@ -22,7 +21,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestInsertDynamic([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer)] string context)
+		public void TestInsertDynamic([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
 
@@ -47,7 +46,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestInsertObject([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer)] string context)
+		public void TestInsertObject([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
 
@@ -72,7 +71,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestUpdateObject([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer)] string context)
+		public void TestUpdateObject([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
 
@@ -100,7 +99,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestUpdateSet([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer)] string context)
+		public void TestUpdateSet([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
 

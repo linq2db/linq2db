@@ -1,8 +1,4 @@
-﻿using System;
-using System.Linq;
-using System.Threading.Tasks;
-
-using LinqToDB;
+﻿using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 
@@ -67,7 +63,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void CreateLocalTempTable1([IncludeDataSources(TestProvName.AllSqlServer2008Plus /*, ProviderName.DB2*/)] string context)
+		public void CreateLocalTempTable1([IncludeDataSources(TestProvName.AllSqlServer2008Plus/*, ProviderName.DB2*/)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -110,9 +106,11 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/58", Configuration = ProviderName.ClickHouseOctonica)]
 		[Test]
 		public async Task CreateLocalTempTable1Async([IncludeDataSources(
 			TestProvName.AllSQLite,
+			TestProvName.AllClickHouse,
 			TestProvName.AllSqlServer2008Plus /*, ProviderName.DB2*/)]
 			string context)
 		{
@@ -182,13 +180,15 @@ namespace Tests.xUpdate
 			[Column(DataType=DataType.Int32)]
 			public FieldType1? Field11;
 			public FieldType2? Field2;
+			[Column(DataType=DataType.VarChar, Configuration = ProviderName.ClickHouse)]
 			[Column(DataType=DataType.Char, Length=2)]
 			public FieldType2 Field21;
 			public FieldType3 Field3;
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/58", Configuration = ProviderName.ClickHouseOctonica)]
 		[Test]
-		public void CreateTableWithEnum([IncludeDataSources(TestProvName.AllSqlServer2012)] string context)
+		public void CreateTableWithEnum([IncludeDataSources(TestProvName.AllSqlServer2012, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

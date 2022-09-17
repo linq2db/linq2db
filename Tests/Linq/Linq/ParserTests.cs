@@ -1,6 +1,4 @@
-﻿using System.Linq;
-
-using LinqToDB;
+﻿using LinqToDB;
 using LinqToDB.DataProvider.Oracle;
 using LinqToDB.SqlQuery;
 
@@ -14,7 +12,7 @@ namespace Tests.Linq
 	public class ParserTests : TestBase
 	{
 		[Test]
-		public void Join6([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void Join6([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{

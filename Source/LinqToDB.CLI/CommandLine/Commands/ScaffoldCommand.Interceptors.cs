@@ -1,20 +1,17 @@
-﻿using System;
-using System.CodeDom.Compiler;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
+﻿using System.CodeDom.Compiler;
 using System.Reflection;
 using System.Runtime.Loader;
-using LinqToDB.Scaffold;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Emit;
-using Mono.TextTemplating;
 using Microsoft.Extensions.DependencyModel;
 using Microsoft.Extensions.DependencyModel.Resolution;
+using Mono.TextTemplating;
 
 namespace LinqToDB.CommandLine
 {
+	using Scaffold;
+
 	partial class ScaffoldCommand : CliCommand
 	{
 		private const string TEMPLATE_CLASS_NAME        = "CustomT4Scaffolder";
@@ -308,7 +305,7 @@ namespace LinqToDB.CommandLine
 			compiledCode.Add(CSharpSyntaxTree.ParseText(sourceCode, parseOptions));
 
 			// create compilation unit
-			var compilationOptions = new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, nullableContextOptions: NullableContextOptions.Warnings);
+			var compilationOptions = new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, nullableContextOptions: NullableContextOptions.Enable);
 			var compilation        = CSharpCompilation.Create(assemblyName, compiledCode, references, compilationOptions);
 
 			// compile into memory

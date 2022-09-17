@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LinqToDB.Mapping
+﻿namespace LinqToDB.Mapping
 {
 	class LockedMappingSchemaInfo : MappingSchemaInfo
 	{
@@ -23,7 +21,7 @@ namespace LinqToDB.Mapping
 		public override void ResetID()
 		{
 			if (_isLocked)
-				throw new LinqToDBException($"MappingSchema '{_mappingSchema.GetType()}' is locked.");
+				ThrowHelper.ThrowLinqToDBException($"MappingSchema '{_mappingSchema.GetType()}' is locked.");
 			base.ResetID();
 		}
 	}

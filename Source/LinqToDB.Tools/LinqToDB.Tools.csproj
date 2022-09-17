@@ -1,5 +1,4 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-	<Import Project="..\..\Build\linq2db.Source.props" />
 
 	<PropertyGroup>
 		<AssemblyName>linq2db.Tools</AssemblyName>
@@ -16,7 +15,7 @@
 
 		<PackageReference Include="Humanizer.Core" />
 
-    <None Update="DataProvider\SqlServer\Schemas\Schemas.tt">
+		<None Update="DataProvider\SqlServer\Schemas\Schemas.tt">
 			<Generator>TextTemplatingFileGenerator</Generator>
 			<LastGenOutput>Schemas.generated.cs</LastGenOutput>
 		</None>
@@ -25,6 +24,10 @@
 			<AutoGen>True</AutoGen>
 			<DependentUpon>Schemas.tt</DependentUpon>
 		</Compile>
+	</ItemGroup>
 
-   </ItemGroup>
+	<ItemGroup>
+		<Using Remove="System.Net.Http" />
+	</ItemGroup>
+
 </Project>

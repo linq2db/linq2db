@@ -1,6 +1,4 @@
-﻿using System;
-using System.Linq;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Linq;
@@ -103,7 +101,7 @@ namespace Tests.UserTests
 
 		[Test]
 		public void Issue2468Test(
-			[IncludeDataSources(TestProvName.AllSQLite)]
+			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)]
 			string context)
 		{
 

@@ -1,6 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
-using LinqToDB;
+﻿using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.SqlServer;
@@ -48,7 +46,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestConcurrentSelect([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void TestConcurrentSelect([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)] string context)
 		{
 			var dbFactory = MyDB.CreateFactory(context, 1, TimeSpan.FromSeconds(1));
 

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Data;
-using System.Linq;
-using System.Text;
+﻿using System.Text;
 
 #region ReSharper disable
 // ReSharper disable SuggestUseVarKeywordEverywhere
@@ -66,10 +63,8 @@ namespace LinqToDB.DataProvider.Firebird
 
 		protected override void BuildGetIdentity(SqlInsertClause insertClause)
 		{
-			var identityField = insertClause.Into!.GetIdentityField();
-
-			if (identityField == null)
-				throw new SqlException("Identity field must be defined for '{0}'.", insertClause.Into.NameForLogging);
+			var identityField = insertClause.Into!.GetIdentityField()
+			                    ?? ThrowHelper.ThrowSqlException<SqlField>($"Identity field must be defined for '{insertClause.Into.NameForLogging}'.");
 
 			AppendIndent().AppendLine("RETURNING");
 			AppendIndent().Append('\t');
@@ -84,7 +79,7 @@ namespace LinqToDB.DataProvider.Firebird
 			return base.GetIdentityExpression(table);
 		}
 
-		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
+		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable, bool canBeNull)
 		{
 			switch (type.Type.DataType)
 			{
@@ -99,7 +94,7 @@ namespace LinqToDB.DataProvider.Firebird
 					                                                                                      break;
 
 				case DataType.Decimal       :
-					base.BuildDataTypeFromDataType(type.Type.Precision > 18 ? new SqlDataType(type.Type.DataType, type.Type.SystemType, null, 18, type.Type.Scale, type.Type.DbType) : type, forCreateTable);
+					base.BuildDataTypeFromDataType(type.Type.Precision > 18 ? new SqlDataType(type.Type.DataType, type.Type.SystemType, null, 18, type.Type.Scale, type.Type.DbType) : type, forCreateTable, canBeNull);
 					                                                                                      break;
 				case DataType.SByte         :
 				case DataType.Byte          : StringBuilder.Append("SmallInt");                           break;
@@ -130,14 +125,14 @@ namespace LinqToDB.DataProvider.Firebird
 					if (type.Type.SystemType == typeof(Guid) || type.Type.SystemType == typeof(Guid?))
 						StringBuilder.Append("CHAR(38)");
 					else
-						base.BuildDataTypeFromDataType(type, forCreateTable);
+						base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull);
 					break;
 
 				case DataType.VarBinary     : StringBuilder.Append("BLOB");                               break;
 				// BOOLEAN type available since FB 3.0, but FirebirdDataProvider.SetParameter converts boolean to '1'/'0'
 				// so for now we will use type, compatible with SetParameter by default
 				case DataType.Boolean       : StringBuilder.Append("CHAR");                               break;
-				default: base.BuildDataTypeFromDataType(type, forCreateTable);                            break;
+				default: base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull);                 break;
 			}
 		}
 
@@ -353,31 +348,23 @@ namespace LinqToDB.DataProvider.Firebird
 
 		protected override void BuildCreateTableCommand(SqlTable table)
 		{
-			string command;
-
-			if (table.TableOptions.IsTemporaryOptionSet())
+			var command = (table.TableOptions.IsTemporaryOptionSet(), table.TableOptions & TableOptions.IsTemporaryOptionSet) switch
 			{
-				switch (table.TableOptions & TableOptions.IsTemporaryOptionSet)
-				{
-					case TableOptions.IsTemporary                                                                                     :
-					case TableOptions.IsTemporary |                                           TableOptions.IsLocalTemporaryData       :
-					case TableOptions.IsTemporary | TableOptions.IsGlobalTemporaryStructure                                           :
-					case TableOptions.IsTemporary | TableOptions.IsGlobalTemporaryStructure | TableOptions.IsLocalTemporaryData       :
-					case                                                                      TableOptions.IsLocalTemporaryData       :
-					case                                                                      TableOptions.IsTransactionTemporaryData :
-					case                            TableOptions.IsGlobalTemporaryStructure                                           :
-					case                            TableOptions.IsGlobalTemporaryStructure | TableOptions.IsLocalTemporaryData       :
-					case                            TableOptions.IsGlobalTemporaryStructure | TableOptions.IsTransactionTemporaryData :
-						command = "CREATE GLOBAL TEMPORARY TABLE ";
-						break;
-					case var value :
-						throw new InvalidOperationException($"Incompatible table options '{value}'");
-				}
-			}
-			else
-			{
-				command = "CREATE TABLE ";
-			}
+				(true, TableOptions.IsTemporary                                                                                    ) or
+				(true, TableOptions.IsTemporary |                                           TableOptions.IsLocalTemporaryData      ) or
+				(true, TableOptions.IsTemporary | TableOptions.IsGlobalTemporaryStructure                                          ) or
+				(true, TableOptions.IsTemporary | TableOptions.IsGlobalTemporaryStructure | TableOptions.IsLocalTemporaryData      ) or
+				(true,                                                                      TableOptions.IsLocalTemporaryData      ) or
+				(true,                                                                      TableOptions.IsTransactionTemporaryData) or
+				(true,                            TableOptions.IsGlobalTemporaryStructure                                          ) or
+				(true,                            TableOptions.IsGlobalTemporaryStructure | TableOptions.IsLocalTemporaryData      ) or
+				(true,                            TableOptions.IsGlobalTemporaryStructure | TableOptions.IsTransactionTemporaryData)
+					=> "CREATE GLOBAL TEMPORARY TABLE ",
+				(true, var value)
+					=> ThrowHelper.ThrowInvalidOperationException<string>($"Incompatible table options '{value}'"),
+				(false, _)
+					=> "CREATE TABLE ",
+			};
 
 			StringBuilder.Append(command);
 		}

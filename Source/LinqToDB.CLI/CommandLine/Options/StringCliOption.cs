@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Text.Json;
+﻿using System.Text.Json;
 
 namespace LinqToDB.CommandLine
 {
@@ -14,7 +13,8 @@ namespace LinqToDB.CommandLine
 	/// <param name="DetailedHelp">Optional detailed help for option.</param>
 	/// <param name="Examples">Optional list of option use examples.</param>
 	/// <param name="JsonExamples">Optional list of option use examples in JSON.</param>
-	/// <param name="Default">Optional default value (or values for <paramref name="AllowMultiple"/> set to <c>true</c>), used when user didn't specified option explicitly.</param>
+	/// <param name="Default">Optional default value (or values for <paramref name="AllowMultiple"/> set to <c>true</c>), used when user didn't specified option explicitly in default mode.</param>
+	/// <param name="T4Default">Optional default value (or values for <paramref name="AllowMultiple"/> set to <c>true</c>), used when user didn't specified option explicitly in T4-compat mode.</param>
 	internal sealed record StringCliOption(
 		string    Name,
 		char?     ShortName,
@@ -24,7 +24,8 @@ namespace LinqToDB.CommandLine
 		string?   DetailedHelp,
 		string[]? Examples,
 		string[]? JsonExamples,
-		string[]? Default)
+		string[]? Default,
+		string[]? T4Default)
 		: CliOption(
 			Name,
 			ShortName,

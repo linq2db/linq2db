@@ -1,16 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
+﻿using System.Data;
 using System.Data.Common;
 using System.Data.Linq;
 using System.Data.SqlTypes;
 using System.Diagnostics;
 using System.Globalization;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 using FluentAssertions;
@@ -1441,7 +1436,7 @@ namespace Tests.DataProvider
 		{
 			using (var db = (DataConnection)GetDataContext(context))
 			{
-				var dbName = TestUtils.GetDatabaseName(db);
+				var dbName = TestUtils.GetDatabaseName(db, context);
 
 				var par = new
 				{
@@ -1463,7 +1458,7 @@ namespace Tests.DataProvider
 		{
 			using (var db = (DataConnection)GetDataContext(context))
 			{
-				var dbName = TestUtils.GetDatabaseName(db);
+				var dbName = TestUtils.GetDatabaseName(db, context);
 
 				var par = new
 				{
@@ -1485,7 +1480,7 @@ namespace Tests.DataProvider
 		{
 			using (var db = (DataConnection)GetDataContext(context))
 			{
-				var dbName = TestUtils.GetDatabaseName(db);
+				var dbName = TestUtils.GetDatabaseName(db, context);
 
 				var par = new
 				{
@@ -1507,7 +1502,7 @@ namespace Tests.DataProvider
 		{
 			using (var db = (DataConnection)GetDataContext(context))
 			{
-				var dbName = TestUtils.GetDatabaseName(db);
+				var dbName = TestUtils.GetDatabaseName(db, context);
 
 				var par = new
 				{
@@ -1529,7 +1524,7 @@ namespace Tests.DataProvider
 		{
 			using (var db = (DataConnection)GetDataContext(context))
 			{
-				var dbName            = TestUtils.GetDatabaseName(db);
+				var dbName            = TestUtils.GetDatabaseName(db, context);
 				var    inputID        = 1234;
 				var    inputStr       = "InputStr";
 				int?   outputID       = 5678;
@@ -1566,7 +1561,7 @@ namespace Tests.DataProvider
 		{
 			using (var db = (DataConnection)GetDataContext(context))
 			{
-				var dbName            = TestUtils.GetDatabaseName(db);
+				var dbName            = TestUtils.GetDatabaseName(db, context);
 				var    inputID        = 1234;
 				var    inputStr       = "InputStr";
 				int?   outputID       = 5678;
