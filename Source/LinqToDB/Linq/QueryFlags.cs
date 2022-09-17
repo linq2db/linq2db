@@ -23,7 +23,7 @@ namespace LinqToDB.Linq
 		/// </summary>
 		PreferApply          = 0x08,
 		/// <summary>
-		/// BIt set, when <see cref="Common.Configuration.Linq.CompareNullsAsValues"/> is enabled for query.
+		/// Bit set, when <see cref="Common.Configuration.Linq.CompareNullsAsValues"/> is enabled for query.
 		/// </summary>
 		CompareNullsAsValues = 0x10,
 	}

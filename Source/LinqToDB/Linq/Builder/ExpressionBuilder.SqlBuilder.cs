@@ -1583,7 +1583,8 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.Equal:
 				case ExpressionType.NotEqual:
 
-					if (!context!.SelectQuery.IsParameterDependent &&
+					if (Configuration.Linq.CompareNulls != CompareNulls.LikeSql &&
+						!context!.SelectQuery.IsParameterDependent &&						
 						(l is SqlParameter && l.CanBeNull || r is SqlParameter && r.CanBeNull))
 						context.SelectQuery.IsParameterDependent = true;
 
@@ -1662,7 +1663,7 @@ namespace LinqToDB.Linq.Builder
 					return new SqlPredicate.IsTrue(expression, trueValue, falseValue, withNullValue, isNot);
 				}
 
-				// Mandatory shortcut when CompareNullsAsValues == false 
+				// Mandatory shortcut when CompareNulls == CompareNulls.LikeSql
 				// as ExprExpr will not sniff the nullability of its values
 				if (right.IsNullValue())
 					return new SqlPredicate.IsNull(l, op == SqlPredicate.Operator.NotEqual);

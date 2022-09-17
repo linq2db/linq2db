@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LinqToDB.Common;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -162,10 +163,11 @@ namespace LinqToDB.SqlQuery
 			}
 
 			public ISqlPredicate Reduce(EvaluationContext context)
-			{
-				if (WithNull == null)
+			{				
+				if (WithNull == null && 
+					Common.Configuration.Linq.CompareNulls == CompareNulls.LikeSql)
 					return this;
-					
+
 				if (Operator == Operator.Equal || Operator == Operator.NotEqual)
 				{
 					if (Expr1.TryEvaluateExpression(context, out var value1))
@@ -179,6 +181,9 @@ namespace LinqToDB.SqlQuery
 							return new IsNull(Expr1, Operator != Operator.Equal);
 					}
 				}
+
+				if (WithNull == null)
+					return this;
 
 				var canBeNull_1 = Expr1.ShouldCheckForNull();
 				var canBeNull_2 = Expr2.ShouldCheckForNull();
