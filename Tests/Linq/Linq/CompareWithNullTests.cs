@@ -1,10 +1,8 @@
 using FluentAssertions;
 using LinqToDB;
-using LinqToDB.Tools;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -86,12 +84,15 @@ namespace Tests.Linq
 
 		[Test]
 		public void Functional(
-			[DataSources] string context,
-			[Values]      bool   withNullCompares,
+			// This test can run in all providers, but it adds 72 tests per provider.
+			// As the behaviour is the same everywhere, we can speed things up by 
+			// only running for in a single provider.
+			[IncludeDataSources(ProviderName.SQLiteMS)] string context,
+			[Values]                                    bool   withNullCompares,
 			// Use an indirect index into the test case data instead of [ValuesSource].
 			// The parameter (tuple including expression) is serialized into the test name
 			// when creating baseline file and this would result in path names too long for Windows to handle.
-			[Range(0, 35)] int index)
+			[Range(0, 35)]                              int index)
 		{
 			using var _   = new CompareNullsAsValuesOption(withNullCompares);
 			using var db  = GetDataContext(context);
