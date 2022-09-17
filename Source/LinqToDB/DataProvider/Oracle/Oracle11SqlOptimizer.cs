@@ -119,7 +119,7 @@
 									// Always false
 									new SqlValue(1), SqlPredicate.Operator.Equal, new SqlValue(0), withNull: null),
 								// Overlaps doesn't operate on strings
-								_ => throw new InvalidOperationException(),
+								_ => ThrowHelper.ThrowInvalidOperationException<SqlPredicate>(),
 							};
 						}
 
@@ -136,7 +136,7 @@
 								SqlPredicate.Operator.NotGreater     => SqlPredicate.Operator.NotLess,
 								SqlPredicate.Operator.NotLess        => SqlPredicate.Operator.NotGreater,
 								// Overlaps doesn't operate on strings
-								_ => throw new InvalidOperationException(),
+								_ => ThrowHelper.ThrowInvalidOperationException<SqlPredicate.Operator>(),
 							};
 						}
 					}
