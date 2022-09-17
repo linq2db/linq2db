@@ -172,9 +172,14 @@ namespace LinqToDB.Common
 			public static bool OptimizeJoins = true;
 
 			/// <summary>
-			/// If set to true nullable fields would be checked for IS NULL in Equal/NotEqual comparisons.
+			/// If set to LikeCSharp nullable fields would be checked for IS NULL in Equal/NotEqual comparisons.
+			/// If set to LikeSql comparisons are compiled straight to equivalent SQL operators, which consider
+			/// nulls values as not equal.
+			/// LikeSqlExceptParameters is a backward compatible option that works mostly as LikeSql, 
+			/// but sniffs parameters values and changes = into IS NULL when parameters are null.
+			/// Comparisons to literal null are always compiled into IS NULL.
 			/// This affects: Equal, NotEqual, Not Contains
-			/// Default value: <c>true</c>.
+			/// Default value: <c>LikeCSharp</c>.
 			/// </summary>
 			/// <example>
 			/// <code>
@@ -193,7 +198,7 @@ namespace LinqToDB.Common
 			/// db.MyEntity.Where(e => ! filter.Contains(e.Value))
 			/// </code>
 			///
-			/// Would be converted to next queries:
+			/// Would be converted to next queries under LikeCSharp:
 			/// <code>
 			/// SELECT Value FROM MyEntity WHERE Value IS NULL OR Value != 10
 			///
@@ -204,7 +209,14 @@ namespace LinqToDB.Common
 			/// SELECT Value FROM MyEntity WHERE Value IS NULL OR NOT Value IN (1, 2, 3)
 			/// </code>
 			/// </example>
-			public static bool CompareNullsAsValues = true;
+			public static CompareNulls CompareNulls = CompareNulls.LikeCSharp;
+			
+			public static bool CompareNullsAsValues 
+			{
+				get => CompareNulls == CompareNulls.LikeCSharp;
+				[Obsolete("Use CompareNulls instead: true maps to LikeCSharp and false to LikeSqlExceptParameters")]
+				set => CompareNulls = value ? CompareNulls.LikeCSharp : CompareNulls.LikeSqlExceptParameters;
+			}
 
 			/// <summary>
 			/// Controls behavior of LINQ query, which ends with GroupBy call.

@@ -1181,7 +1181,7 @@ namespace LinqToDB.SqlProvider
 						{
 							if (c1.Conditions[0].Predicate is SqlPredicate.ExprExpr ee)
 							{
-								return (ISqlPredicate)ee.Invert();
+								return ee.Invert();
 							}
 
 							var sc = new SqlSearchCondition();
@@ -1303,6 +1303,17 @@ namespace LinqToDB.SqlProvider
 					break;
 				}
 
+				case QueryElementType.IsNullPredicate:
+				{
+					var isNull = (SqlPredicate.IsNull) predicate;
+					if (isNull.Expr1 is SqlRow row && 
+						!SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.IsNull))
+					{
+						return RowIsNullFallback(row, isNull.IsNot);
+					}
+					break;
+				}
+
 				case QueryElementType.BetweenPredicate:
 				{
 					var between = (SqlPredicate.Between)predicate;
@@ -1387,14 +1398,8 @@ namespace LinqToDB.SqlProvider
 							if (cond.IsNot)
 								return cond.Predicate;
 
-							if (cond.Predicate is SqlPredicate.ExprExpr ee)
-							{
-								if (ee.Operator == SqlPredicate.Operator.Equal)
-									return new SqlPredicate.ExprExpr(ee.Expr1, SqlPredicate.Operator.NotEqual, ee.Expr2, Configuration.Linq.CompareNullsAsValues ? true : null);
-
-								if (ee.Operator == SqlPredicate.Operator.NotEqual)
-									return new SqlPredicate.ExprExpr(ee.Expr1, SqlPredicate.Operator.Equal, ee.Expr2, Configuration.Linq.CompareNullsAsValues ? true : null);
-							}
+							if (cond.Predicate is IInvertibleElement inv && inv.CanInvert())
+								return inv.Invert();
 						}
 					}
 
@@ -1583,11 +1588,11 @@ namespace LinqToDB.SqlProvider
 		{
 			var newPredicate = !between.IsNot
 				? new SqlSearchCondition(
-					new SqlCondition(false, new SqlPredicate.ExprExpr(between.Expr1, SqlPredicate.Operator.GreaterOrEqual, between.Expr2, withNull: false)),
-					new SqlCondition(false, new SqlPredicate.ExprExpr(between.Expr1, SqlPredicate.Operator.LessOrEqual,    between.Expr3, withNull: false)))
+					new SqlCondition(false, new SqlPredicate.ExprExpr(between.Expr1, SqlPredicate.Operator.GreaterOrEqual, between.Expr2, withNull: null)),
+					new SqlCondition(false, new SqlPredicate.ExprExpr(between.Expr1, SqlPredicate.Operator.LessOrEqual,    between.Expr3, withNull: null)))
 				: new SqlSearchCondition(
-					new SqlCondition(false, new SqlPredicate.ExprExpr(between.Expr1, SqlPredicate.Operator.Less,    between.Expr2, withNull: false), isOr: true),
-					new SqlCondition(false, new SqlPredicate.ExprExpr(between.Expr1, SqlPredicate.Operator.Greater, between.Expr3, withNull: false)));
+					new SqlCondition(false, new SqlPredicate.ExprExpr(between.Expr1, SqlPredicate.Operator.Less,    between.Expr2, withNull: null), isOr: true),
+					new SqlCondition(false, new SqlPredicate.ExprExpr(between.Expr1, SqlPredicate.Operator.Greater, between.Expr3, withNull: null)));
 
 			return newPredicate;
 		}
@@ -2442,7 +2447,7 @@ namespace LinqToDB.SqlProvider
 									//TODO: review
 									var cond = sqlValue.Value == null ?
 										new SqlCondition(false, new SqlPredicate.IsNull  (field, false)) :
-										new SqlCondition(false, new SqlPredicate.ExprExpr(field, SqlPredicate.Operator.Equal, sqlValue, null));
+										new SqlCondition(false, new SqlPredicate.ExprExpr(field, SqlPredicate.Operator.Equal, sqlValue, withNull: true));
 
 									itemCond.Conditions.Add(cond);
 								}
@@ -2488,7 +2493,7 @@ namespace LinqToDB.SqlProvider
 								var value = expr.GetSqlValue(item!, i);
 								var cond  = value == null ?
 									new SqlCondition(false, new SqlPredicate.IsNull  (sql, false)) :
-									new SqlCondition(false, new SqlPredicate.ExprExpr(sql, SqlPredicate.Operator.Equal, value, null));
+									new SqlCondition(false, new SqlPredicate.ExprExpr(sql, SqlPredicate.Operator.Equal, value, withNull: true));
 
 								itemCond.Conditions.Add(cond);
 							}
@@ -2689,7 +2694,7 @@ namespace LinqToDB.SqlProvider
 					{
 						sc2.Conditions.Add(new SqlCondition(
 							false,
-							new SqlPredicate.ExprExpr(copyKeys[i], SqlPredicate.Operator.Equal, tableKeys[i], Configuration.Linq.CompareNullsAsValues ? true : null)));
+							new SqlPredicate.ExprExpr(copyKeys[i], SqlPredicate.Operator.Equal, tableKeys[i], withNull: true)));
 					}
 
 					deleteStatement.SelectQuery.Where.SearchCondition.Conditions.Clear();

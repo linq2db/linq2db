@@ -34,7 +34,7 @@ namespace Tests.Linq
 			[DataSources] string context,
 			[Values]      bool   withNullCompares)
 		{
-			using var _   = new CompareNullsAsValuesOption(withNullCompares);
+			using var _   = new CompareNullsOption(withNullCompares);
 			using var db  = GetDataContext(context);
 			using var src = SetupSrcTable(db);
 
@@ -64,7 +64,7 @@ namespace Tests.Linq
 			[DataSources] string context,
 			[Values]      bool   withNullCompares)
 		{
-			using var _   = new CompareNullsAsValuesOption(withNullCompares);
+			using var _   = new CompareNullsOption(withNullCompares);
 			using var db  = GetDataContext(context);
 			using var src = SetupSrcTable(db);
 
@@ -94,7 +94,7 @@ namespace Tests.Linq
 			[DataSources] string context,
 			[Values]      bool   withNullCompares)
 		{
-			using var _   = new CompareNullsAsValuesOption(withNullCompares);
+			using var _   = new CompareNullsOption(withNullCompares);
 			using var db  = GetDataContext(context);
 			using var src = SetupSrcTable(db);
 
@@ -124,7 +124,7 @@ namespace Tests.Linq
 			[DataSources] string context,
 			[Values]      bool   withNullCompares)
 		{
-			using var _   = new CompareNullsAsValuesOption(withNullCompares);
+			using var _   = new CompareNullsOption(withNullCompares);
 			using var db  = GetDataContext(context);
 			using var src = SetupSrcTable(db);
 
@@ -145,7 +145,7 @@ namespace Tests.Linq
 			[DataSources] string context,
 			[Values]      bool   withNullCompares)
 		{
-			using var _   = new CompareNullsAsValuesOption(withNullCompares);
+			using var _   = new CompareNullsOption(withNullCompares);
 			using var db  = GetDataContext(context);
 			using var src = SetupSrcTable(db);
 
@@ -166,7 +166,7 @@ namespace Tests.Linq
 			[DataSources] string context,
 			[Values]      bool   withNullCompares)
 		{
-			using var _   = new CompareNullsAsValuesOption(withNullCompares);
+			using var _   = new CompareNullsOption(withNullCompares);
 			using var db  = GetDataContext(context);
 			using var src = SetupSrcTable(db);
 
@@ -191,7 +191,7 @@ namespace Tests.Linq
 			[DataSources(TestProvName.AllAccess)] string context,
 			[Values]                              bool   withNullCompares)
 		{
-			using var _   = new CompareNullsAsValuesOption(withNullCompares);
+			using var _   = new CompareNullsOption(withNullCompares);
 			using var db  = GetDataContext(context);
 			using var src = SetupSrcTable(db);
 
@@ -213,7 +213,7 @@ namespace Tests.Linq
 			[DataSources(TestProvName.AllAccess)] string context,
 			[Values]                              bool   withNullCompares)
 		{
-			using var _   = new CompareNullsAsValuesOption(withNullCompares);
+			using var _   = new CompareNullsOption(withNullCompares);
 			using var db  = GetDataContext(context);
 			using var src = SetupSrcTable(db);
 
@@ -235,7 +235,7 @@ namespace Tests.Linq
 			[DataSources(TestProvName.AllAccess)] string context,
 			[Values]                              bool   withNullCompares)
 		{
-			using var _   = new CompareNullsAsValuesOption(withNullCompares);
+			using var _   = new CompareNullsOption(withNullCompares);
 			using var db  = GetDataContext(context);
 			using var src = SetupSrcTable(db);
 

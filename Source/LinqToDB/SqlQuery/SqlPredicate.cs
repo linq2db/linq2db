@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using LinqToDB.Common;
+using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
@@ -70,7 +71,7 @@ namespace LinqToDB.SqlQuery
 
 			public bool CanInvert() => true;
 
-			public abstract IQueryElement Invert();
+			public abstract ISqlPredicate Invert();
 
 			public override bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 			{
@@ -94,7 +95,7 @@ namespace LinqToDB.SqlQuery
 			{
 			}
 
-			public override IQueryElement Invert()
+			public override ISqlPredicate Invert()
 			{
 				return new NotExpr(Expr1, !IsNot, Precedence);
 			}
@@ -175,18 +176,21 @@ namespace LinqToDB.SqlQuery
 				};
 			}
 
-			public bool CanInvert()
-			{
-				return true;
-			}
+			public bool CanInvert() => Operator != Operator.Overlaps;
 
-			public IQueryElement Invert()
+			public ISqlPredicate Invert()
 			{
 				return new ExprExpr(Expr1, InvertOperator(Operator), Expr2, !WithNull);
 			}
 
 			public ISqlPredicate Reduce(EvaluationContext context)
 			{
+				// CompareNulls.LikeSql compiles as-is, no change
+				if (Common.Configuration.Linq.CompareNulls == CompareNulls.LikeSql)
+					return this;
+
+				// CompareNulls.LikeSqlExceptParameters and CompareNulls.LikeCSharp 
+				// always sniffs parameters to == and != (for backward compatibility).
 				if (Operator == Operator.Equal || Operator == Operator.NotEqual)
 				{
 					if (Expr1.TryEvaluateExpression(context, out var value1))
@@ -201,6 +205,9 @@ namespace LinqToDB.SqlQuery
 					}
 				}
 
+				// Only CompareNulls.LikeCSharp handles all conditions.
+				// Notice that it sometimes creates operands `WithNull: null` 
+				// when it wants an expression to work as LikeSql.
 				if (WithNull == null)
 					return this;
 
@@ -270,10 +277,7 @@ namespace LinqToDB.SqlQuery
 									search.Conditions.Add(new SqlCondition(false, predicate, true));
 
 									search.Conditions.Add(new SqlCondition(false, new IsNull(Expr1, false), false));
-									search.Conditions.Add(new SqlCondition(false, new IsNull(Expr2, true), true));
-
-									search.Conditions.Add(new SqlCondition(false, new IsNull(Expr1, true), false));
-									search.Conditions.Add(new SqlCondition(false, new IsNull(Expr2, false), false));
+									search.Conditions.Add(new SqlCondition(false, new IsNull(Expr2, false), true));
 								}
 								else if (Operator == Operator.NotEqual)
 								{
@@ -294,7 +298,7 @@ namespace LinqToDB.SqlQuery
 								else 
 								{
 									search.Conditions.Add(new SqlCondition(false, predicate, true));
-									search.Conditions.Add(new SqlCondition(false, new IsNull(Expr1, false), false));
+									search.Conditions.Add(new SqlCondition(false, new IsNull(Expr1, false), true));
 									search.Conditions.Add(new SqlCondition(false, new IsNull(Expr2, false), false));
 								}
 							}
@@ -391,7 +395,7 @@ namespace LinqToDB.SqlQuery
 				Escape = Escape?.Walk(options, context, func);
 			}
 
-			public override IQueryElement Invert()
+			public override ISqlPredicate Invert()
 			{
 				return new Like(Expr1, !IsNot, Expr2, Escape);
 			}
@@ -455,7 +459,7 @@ namespace LinqToDB.SqlQuery
 				Expr2 = Expr2.Walk(options, context, func)!;
 			}
 
-			public override IQueryElement Invert()
+			public override ISqlPredicate Invert()
 			{
 				return new SearchString(Expr1, !IsNot, Expr2, Kind, CaseSensitive);
 			}
@@ -512,7 +516,7 @@ namespace LinqToDB.SqlQuery
 				Expr2 = Expr2.Walk(options, context, func)!;
 			}
 
-			public override IQueryElement Invert() => new IsDistinct(Expr1, !IsNot, Expr2);
+			public override ISqlPredicate Invert() => new IsDistinct(Expr1, !IsNot, Expr2);
 
 			public override QueryElementType ElementType => QueryElementType.IsDistinctPredicate;
 
@@ -554,7 +558,7 @@ namespace LinqToDB.SqlQuery
 				Expr3 = Expr3.Walk(options, context, func)!;
 			}
 
-			public override IQueryElement Invert()
+			public override ISqlPredicate Invert()
 			{
 				return new Between(Expr1, !IsNot, Expr2, Expr3);
 			}
@@ -623,7 +627,7 @@ namespace LinqToDB.SqlQuery
 				return search;
 			}
 
-			public override IQueryElement Invert()
+			public override ISqlPredicate Invert()
 			{
 				return new IsTrue(Expr1, TrueValue, FalseValue, !WithNull, !IsNot);
 			}
@@ -641,7 +645,7 @@ namespace LinqToDB.SqlQuery
 			{
 			}
 
-			public override IQueryElement Invert()
+			public override ISqlPredicate Invert()
 			{
 				return new IsNull(Expr1, !IsNot);
 			}
@@ -683,7 +687,7 @@ namespace LinqToDB.SqlQuery
 				SubQuery = (SelectQuery)((ISqlExpression)SubQuery).Walk(options, context, func)!;
 			}
 
-			public override IQueryElement Invert()
+			public override ISqlPredicate Invert()
 			{
 				return new InSubQuery(Expr1, !IsNot, SubQuery);
 			}
@@ -751,7 +755,7 @@ namespace LinqToDB.SqlQuery
 					Values[i] = Values[i].Walk(options, context, func)!;
 			}
 
-			public override IQueryElement Invert()
+			public override ISqlPredicate Invert()
 			{
 				return new InList(Expr1, !WithNull, !IsNot, Values);
 			}
