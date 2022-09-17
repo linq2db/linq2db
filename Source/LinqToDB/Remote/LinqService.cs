@@ -73,23 +73,13 @@
 				SqlBuilderType        = ctx.DataProvider.CreateSqlBuilder(ctx.MappingSchema).GetType().AssemblyQualifiedName!,
 				SqlOptimizerType      = ctx.DataProvider.GetSqlOptimizer().GetType().AssemblyQualifiedName!,
 				SqlProviderFlags      = ctx.DataProvider.SqlProviderFlags,
-				SupportedTableOptions = ctx.DataProvider.SupportedTableOptions
+				SupportedTableOptions = ctx.DataProvider.SupportedTableOptions,
+				AstFactoryType        = ctx.DataProvider.GetAstFactory().GetType().AssemblyQualifiedName!,
 			};
 		}
 
 		public virtual Task<LinqServiceInfo> GetInfoAsync(string? configuration, CancellationToken cancellationToken)
-		{
-			using var ctx = CreateDataContext(configuration);
-
-			return Task.FromResult(new LinqServiceInfo()
-			{
-				MappingSchemaType     = ctx.DataProvider.MappingSchema.GetType().AssemblyQualifiedName!,
-				SqlBuilderType        = ctx.DataProvider.CreateSqlBuilder(ctx.MappingSchema).GetType().AssemblyQualifiedName!,
-				SqlOptimizerType      = ctx.DataProvider.GetSqlOptimizer().GetType().AssemblyQualifiedName!,
-				SqlProviderFlags      = ctx.DataProvider.SqlProviderFlags,
-				SupportedTableOptions = ctx.DataProvider.SupportedTableOptions
-			});
-		}
+			=> Task.FromResult(GetInfo(configuration));
 
 		#region ExecuteNonQuery + ExecuteNonQueryAsync
 
