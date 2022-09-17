@@ -17,5 +17,7 @@ namespace LinqToDB.Remote
 		public SqlProviderFlags SqlProviderFlags      { get; set; } = null!;
 		[DataMember(Order = 5)]
 		public TableOptions     SupportedTableOptions { get; set; }
+		[DataMember(Order = 6)]
+		public string           AstFactoryType        { get; set; } = null!;
 	}
 }

@@ -7,9 +7,9 @@
 
 	class PostgreSQLSqlOptimizer : BasicSqlOptimizer
 	{
-		public PostgreSQLSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
-		{
-		}
+		public PostgreSQLSqlOptimizer(SqlProviderFlags sqlProviderFlags, AstFactory ast)
+			: base(sqlProviderFlags, ast)
+		{ }
 
 		public override bool CanCompareSearchConditions => true;
 
@@ -75,18 +75,19 @@
 						return func.Parameters.Length == 2
 							? new SqlExpression(func.SystemType, "Position({0} in {1})", Precedence.Primary,
 								func.Parameters[0], func.Parameters[1])
-							: Add<int>(
+							: ast.Add<int>(
 								new SqlExpression(func.SystemType, "Position({0} in {1})", Precedence.Primary,
 									func.Parameters[0],
 									ConvertExpressionImpl(
-										new SqlFunction(typeof(string), "Substring",
+										ast.Func<string>("Substring",
 										func.Parameters[1],
 										func.Parameters[2],
-										Sub<int>(
+										ast.Subtract<int>(
 											ConvertExpressionImpl(
-													new SqlFunction(typeof(int), "Length", func.Parameters[1]), visitor), func.Parameters[2])),
+													ast.Func<int>("Length", func.Parameters[1]), visitor), 
+													func.Parameters[2])),
 										visitor)),
-								Sub(func.Parameters[2], 1));
+								ast.Subtract<int>(func.Parameters[2], ast.One));
 				}
 			}
 

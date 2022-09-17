@@ -6,9 +6,9 @@ namespace LinqToDB.DataProvider.Access
 
 	class AccessSqlOptimizer : BasicSqlOptimizer
 	{
-		public AccessSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
-		{
-		}
+		public AccessSqlOptimizer(SqlProviderFlags sqlProviderFlags, AstFactory ast) 
+			: base(sqlProviderFlags, ast)
+		{ }
 
 		public override bool CanCompareSearchConditions => true;
 
@@ -80,56 +80,51 @@ namespace LinqToDB.DataProvider.Access
 
 			if (predicate.CaseSensitive.EvaluateBoolExpression(visitor.Context.OptimizationContext.Context) == true)
 			{
-				SqlPredicate.ExprExpr? subStrPredicate = null;
+				ISqlPredicate? subStrPredicate = null;
 
 				switch (predicate.Kind)
 				{
 					case SqlPredicate.SearchString.SearchKind.StartsWith:
 					{
-						subStrPredicate =
-							new SqlPredicate.ExprExpr(
-								new SqlFunction(typeof(int), "InStr",
-									new SqlValue(1),
-									predicate.Expr1,
-									predicate.Expr2,
-									new SqlValue(0)),
-								SqlPredicate.Operator.Equal,
-								new SqlValue(1), null);
+						subStrPredicate = ast.Equal(
+							new SqlFunction(typeof(int), "InStr",
+								ast.One,
+								predicate.Expr1,
+								predicate.Expr2,
+								ast.Zero),
+							ast.One);
 
 						break;
 					}
 
 					case SqlPredicate.SearchString.SearchKind.EndsWith:
 					{
-						var indexExpr = new SqlBinaryExpression(typeof(int),
-							new SqlBinaryExpression(typeof(int),
-								new SqlFunction(typeof(int), "Length", predicate.Expr1), "-",
-								new SqlFunction(typeof(int), "Length", predicate.Expr2)), "+",
-							new SqlValue(1));
+						var indexExpr = ast.Add<int>(
+							ast.Subtract<int>(
+								ast.Length(predicate.Expr1), 
+								ast.Length(predicate.Expr2)),
+							ast.One);
 
-						subStrPredicate =
-							new SqlPredicate.ExprExpr(
-								new SqlFunction(typeof(int), "InStr",
-									indexExpr,
-									predicate.Expr1,
-									predicate.Expr2,
-									new SqlValue(0)),
-								SqlPredicate.Operator.Equal,
-								indexExpr, null);
+						subStrPredicate = ast.Equal(
+							new SqlFunction(typeof(int), "InStr",
+								indexExpr,
+								predicate.Expr1,
+								predicate.Expr2,
+								ast.Zero),
+							indexExpr);
 
 						break;
 					}
 					case SqlPredicate.SearchString.SearchKind.Contains:
 					{
-						subStrPredicate =
-							new SqlPredicate.ExprExpr(
-								new SqlFunction(typeof(int), "InStr",
-									new SqlValue(1),
-									predicate.Expr1,
-									predicate.Expr2,
-									new SqlValue(0)),
-								SqlPredicate.Operator.GreaterOrEqual,
-								new SqlValue(1), null);
+						subStrPredicate = ast.GreaterEqual(
+							new SqlFunction(typeof(int), "InStr",
+								ast.One,
+								predicate.Expr1,
+								predicate.Expr2,
+								ast.Zero),
+							ast.One);
+
 						break;
 					}
 
@@ -137,25 +132,26 @@ namespace LinqToDB.DataProvider.Access
 
 				if (subStrPredicate != null)
 				{
-					var result = new SqlSearchCondition(
-						new SqlCondition(false, like, predicate.IsNot),
-						new SqlCondition(predicate.IsNot, subStrPredicate));
-
-					return result;
+					return predicate.IsNot
+						? ast.Or(like, ast.Not(subStrPredicate))
+						: ast.And(like, subStrPredicate);
 				}
 			}
 
 			return like;
 		}
 
-		protected override ISqlExpression ConvertFunction(SqlFunction func)
+		protected override ISqlExpression ConvertFunction(ISqlExpression expr)
 		{
+			if (expr is not SqlFunction func) return expr;
+
 			switch (func.Name)
 			{
 				case PseudoFunctions.TO_LOWER: return new SqlFunction(func.SystemType, "LCase", func.IsAggregate, func.IsPure, func.Precedence, func.Parameters);
 				case PseudoFunctions.TO_UPPER: return new SqlFunction(func.SystemType, "UCase", func.IsAggregate, func.IsPure, func.Precedence, func.Parameters);
 				case "Length"                : return new SqlFunction(func.SystemType, "LEN",   func.IsAggregate, func.IsPure, func.Precedence, func.Parameters);
 			}
+			
 			return base.ConvertFunction(func);
 		}
 	}

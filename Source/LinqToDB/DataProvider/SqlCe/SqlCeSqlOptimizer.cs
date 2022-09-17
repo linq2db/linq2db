@@ -6,9 +6,9 @@
 
 	class SqlCeSqlOptimizer : BasicSqlOptimizer
 	{
-		public SqlCeSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
-		{
-		}
+		public SqlCeSqlOptimizer(SqlProviderFlags sqlProviderFlags, AstFactory ast)
+			: base(sqlProviderFlags, ast)
+		{ }
 
 		public override SqlStatement TransformStatement(SqlStatement statement)
 		{
@@ -51,61 +51,47 @@
 
 			if (predicate.CaseSensitive.EvaluateBoolExpression(visitor.Context.OptimizationContext.Context) == true)
 			{
-				SqlPredicate.ExprExpr? subStrPredicate = null;
+				ISqlPredicate? subStrPredicate = null;
 
 				switch (predicate.Kind)
 				{
 					case SqlPredicate.SearchString.SearchKind.StartsWith:
 					{
-						subStrPredicate =
-							new SqlPredicate.ExprExpr(
-								new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary,
-									new SqlFunction(typeof(string), "SUBSTRING",
-										predicate.Expr1,
-										new SqlValue(1),
-									new SqlFunction(typeof(int), "Length", predicate.Expr2))),
-								SqlPredicate.Operator.Equal,
-								new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary, predicate.Expr2),
-								null
-							);
+						subStrPredicate = ast.Equal(
+							new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary,
+								new SqlFunction(typeof(string), "SUBSTRING",
+									predicate.Expr1,
+									ast.One,
+									ast.Length(predicate.Expr2))),
+							new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary, predicate.Expr2));
 						break;
 					}
 
 					case SqlPredicate.SearchString.SearchKind.EndsWith:
 					{
-						var indexExpression = new SqlBinaryExpression(typeof(int),
-							new SqlBinaryExpression(typeof(int),
-								new SqlFunction(typeof(int), "Length", predicate.Expr1),
-								"-",
-								new SqlFunction(typeof(int), "Length", predicate.Expr2)),
-							"+",
-							new SqlValue(1));
+						var indexExpression = ast.Add<int>(
+							ast.Subtract<int>(
+								ast.Length(predicate.Expr1),
+								ast.Length(predicate.Expr2)),
+							ast.One);
 
-						subStrPredicate =
-							new SqlPredicate.ExprExpr(
-								new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary,
-									new SqlFunction(typeof(string), "SUBSTRING",
-										predicate.Expr1,
-										indexExpression,
-										new SqlFunction(typeof(int), "Length", predicate.Expr2))),
-								SqlPredicate.Operator.Equal,
-								new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary, predicate.Expr2),
-								null
-							);
+						subStrPredicate = ast.Equal(
+							new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary,
+								new SqlFunction(typeof(string), "SUBSTRING",
+									predicate.Expr1,
+									indexExpression,
+									ast.Length(predicate.Expr2))),
+							new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary, predicate.Expr2));
 
 						break;
 					}
 					case SqlPredicate.SearchString.SearchKind.Contains:
 					{
-						subStrPredicate =
-							new SqlPredicate.ExprExpr(
-								new SqlFunction(typeof(int), "CHARINDEX",
-									new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary,
-										predicate.Expr2),
-									new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary,
-										predicate.Expr1)),
-								SqlPredicate.Operator.Greater,
-								new SqlValue(0), null);
+						subStrPredicate = ast.Greater(
+							new SqlFunction(typeof(int), "CHARINDEX",
+								new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary, predicate.Expr2),
+								new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary, predicate.Expr1)),
+							ast.Zero);
 
 						break;
 					}
@@ -321,8 +307,9 @@
 			return expression;
 		}
 
-		protected override ISqlExpression ConvertFunction(SqlFunction func)
+		protected override ISqlExpression ConvertFunction(ISqlExpression expr)
 		{
+			if (expr is not SqlFunction func) return expr;
 			func = ConvertFunctionParameters(func, false);
 			return base.ConvertFunction(func);
 		}

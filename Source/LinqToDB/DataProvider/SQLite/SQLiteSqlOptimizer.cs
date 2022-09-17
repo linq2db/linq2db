@@ -7,10 +7,9 @@
 
 	class SQLiteSqlOptimizer : BasicSqlOptimizer
 	{
-		public SQLiteSqlOptimizer(SqlProviderFlags sqlProviderFlags)
-			: base(sqlProviderFlags)
-		{
-		}
+		public SQLiteSqlOptimizer(SqlProviderFlags sqlProviderFlags, AstFactory ast)
+			: base(sqlProviderFlags, ast)
+		{ }
 
 		public override bool CanCompareSearchConditions => true;
 
@@ -27,16 +26,9 @@
 
 				case QueryType.Update :
 				{
-					if (SqlProviderFlags.IsUpdateFromSupported)
-					{
-						statement = GetAlternativeUpdatePostgreSqlite((SqlUpdateStatement)statement);
-					}
-					else
-					{
-						statement = GetAlternativeUpdate((SqlUpdateStatement)statement);
-					}
-
-					break;
+					return SqlProviderFlags.IsUpdateFromSupported
+						? GetAlternativeUpdatePostgreSqlite((SqlUpdateStatement)statement)
+						: GetAlternativeUpdate((SqlUpdateStatement)statement);
 				}
 			}
 
@@ -51,43 +43,35 @@
 
 			if (predicate.CaseSensitive.EvaluateBoolExpression(visitor.Context.OptimizationContext.Context) == true)
 			{
-				SqlPredicate.ExprExpr? subStrPredicate = null;
+				ISqlPredicate? subStrPredicate = null;
 
 				switch (predicate.Kind)
 				{
 					case SqlPredicate.SearchString.SearchKind.StartsWith:
 					{
-						subStrPredicate =
-							new SqlPredicate.ExprExpr(
-								new SqlFunction(typeof(string), "Substr", predicate.Expr1, new SqlValue(1),
-									new SqlFunction(typeof(int), "Length", predicate.Expr2)),
-								SqlPredicate.Operator.Equal,
-								predicate.Expr2, null);
+						subStrPredicate = ast.Equal(
+							ast.Substr(predicate.Expr1, ast.One, ast.Length(predicate.Expr2)),
+							predicate.Expr2);
 
 						break;
 					}
 
 					case SqlPredicate.SearchString.SearchKind.EndsWith:
 					{
-						subStrPredicate =
-							new SqlPredicate.ExprExpr(
-								new SqlFunction(typeof(string), "Substr", predicate.Expr1,
-									new SqlBinaryExpression(typeof(int),
-										new SqlFunction(typeof(int), "Length", predicate.Expr2), "*", new SqlValue(-1),
-										Precedence.Multiplicative)
-								),
-								SqlPredicate.Operator.Equal,
-								predicate.Expr2, null);
+						subStrPredicate = ast.Equal(
+							ast.Substr(
+								predicate.Expr1, 
+								ast.Negate<int>(ast.Length(predicate.Expr2))),
+							predicate.Expr2);
 
 						break;
 					}
 					case SqlPredicate.SearchString.SearchKind.Contains:
 					{
-						subStrPredicate =
-							new SqlPredicate.ExprExpr(
-								new SqlFunction(typeof(int), "InStr", predicate.Expr1, predicate.Expr2),
-								SqlPredicate.Operator.Greater,
-								new SqlValue(0), null);
+						subStrPredicate = ast.Greater(
+							// REVIEW(jods): replace by ast.CharIndex once we have provider-specific factories
+							ast.Func<int>("Instr", predicate.Expr1, predicate.Expr2),
+							ast.Zero);
 
 						break;
 					}
@@ -96,11 +80,9 @@
 
 				if (subStrPredicate != null)
 				{
-					var result = new SqlSearchCondition(
-						new SqlCondition(false, like, predicate.IsNot),
-						new SqlCondition(predicate.IsNot, subStrPredicate));
-
-					return result;
+					return predicate.IsNot
+						? ast.Or(like, ast.Not(subStrPredicate))
+						: ast.And(like, subStrPredicate);
 				}
 			}
 
@@ -115,11 +97,17 @@
 			{
 				switch (be.Operation)
 				{
-					case "+": return be.SystemType == typeof(string)? new SqlBinaryExpression(be.SystemType, be.Expr1, "||", be.Expr2, be.Precedence) : expression;
+					case "+": 
+						return be.SystemType == typeof(string)
+							? new SqlBinaryExpression(be.SystemType, be.Expr1, "||", be.Expr2, be.Precedence)
+							: expression;
 					case "^": // (a + b) - (a & b) * 2
-						return Sub(
-							Add(be.Expr1, be.Expr2, be.SystemType),
-							Mul(new SqlBinaryExpression(be.SystemType, be.Expr1, "&", be.Expr2), 2), be.SystemType);
+						return ast.Subtract(
+							ast.Add(be.Expr1, be.Expr2, be.SystemType),
+							ast.Multiply<int>(
+								ast.BitAnd(be.Expr1, be.Expr2, be.SystemType), 
+								ast.Two), 
+								be.SystemType);
 				}
 			}
 			else if (expression is SqlFunction func)
@@ -161,31 +149,34 @@
 		{
 			if (predicate is SqlPredicate.ExprExpr exprExpr)
 			{
-				var leftType  = QueryHelper.GetDbDataType(exprExpr.Expr1);
-				var rightType = QueryHelper.GetDbDataType(exprExpr.Expr2);
+				var (left, op, right, _) = exprExpr;
+				var leftType  = QueryHelper.GetDbDataType(left);
+				var rightType = QueryHelper.GetDbDataType(right);
 
 				if ((IsDateTime(leftType) || IsDateTime(rightType)) &&
-				    !(exprExpr.Expr1.TryEvaluateExpression(visitor. Context.OptimizationContext.Context, out var value1) && value1 == null ||
-				      exprExpr.Expr2.TryEvaluateExpression(visitor.Context.OptimizationContext.Context, out var value2) && value2 == null))
+				    !( left.TryEvaluateExpression(visitor.Context.OptimizationContext.Context, out var value1) && value1 == null ||
+				      right.TryEvaluateExpression(visitor.Context.OptimizationContext.Context, out var value2) && value2 == null))
 				{
-					if (!(exprExpr.Expr1 is SqlFunction func1 && (func1.Name == PseudoFunctions.CONVERT || func1.Name == "DateTime")))
+					bool modified = false;
+
+					if (left is not SqlFunction { Name: PseudoFunctions.CONVERT or "DateTime" })
 					{
-						var left = PseudoFunctions.MakeConvert(new SqlDataType(leftType), new SqlDataType(leftType), exprExpr.Expr1);
-						exprExpr = new SqlPredicate.ExprExpr(left, exprExpr.Operator, exprExpr.Expr2, null);
+						left = ast.Convert(new SqlDataType(leftType), left, fromType: new SqlDataType(leftType));
+						modified = true;
 					}
 					
-					if (!(exprExpr.Expr2 is SqlFunction func2 && (func2.Name == PseudoFunctions.CONVERT || func2.Name == "DateTime")))
+					if (right is not SqlFunction { Name: PseudoFunctions.CONVERT or "DateTime" })
 					{
-						var right = PseudoFunctions.MakeConvert(new SqlDataType(rightType), new SqlDataType(rightType), exprExpr.Expr2);
-						exprExpr = new SqlPredicate.ExprExpr(exprExpr.Expr1, exprExpr.Operator, right, null);
+						right = ast.Convert(new SqlDataType(rightType), right, fromType: new SqlDataType(rightType));
+						modified = true;
 					}
 
-					predicate = exprExpr;
+					if (modified)
+						predicate = ast.Comparison(left, op, right);
 				}
 			}
 
-			predicate = base.ConvertPredicateImpl(predicate, visitor);
-			return predicate;
+			return base.ConvertPredicateImpl(predicate, visitor);
 		}
 
 
@@ -208,10 +199,10 @@
 
 		private static bool IsDateTime(Type type)
 		{
-			return    type == typeof(DateTime)
-			          || type == typeof(DateTimeOffset)
-			          || type == typeof(DateTime?)
-			          || type == typeof(DateTimeOffset?);
+			return type == typeof(DateTime)
+				|| type == typeof(DateTimeOffset)
+			    || type == typeof(DateTime?)
+			    || type == typeof(DateTimeOffset?);
 		}
 
 		protected override ISqlExpression ConvertConvertion(SqlFunction func)

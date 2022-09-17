@@ -95,18 +95,5 @@
 		/// Function to return first non-null argument: <c>COALESCE(values...)</c>
 		/// </summary>
 		public const string COALESCE = "$Coalesce$";
-		public static SqlFunction MakeCoalesce(Type systemType, params ISqlExpression[] values)
-		{
-			var canBeNull = true;
-
-			foreach (var value in values)
-				if (!value.CanBeNull)
-					canBeNull = false;
-
-			return new SqlFunction(systemType, COALESCE, false, true, values)
-			{
-				CanBeNull = canBeNull
-			};
-		}
 	}
 }

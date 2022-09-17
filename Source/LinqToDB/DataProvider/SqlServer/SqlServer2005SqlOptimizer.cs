@@ -5,9 +5,9 @@
 
 	class SqlServer2005SqlOptimizer : SqlServerSqlOptimizer
 	{
-		public SqlServer2005SqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags, SqlServerVersion.v2005)
-		{
-		}
+		public SqlServer2005SqlOptimizer(SqlProviderFlags sqlProviderFlags, AstFactory ast)
+			: base(sqlProviderFlags, SqlServerVersion.v2005, ast)
+		{ }
 
 		public override SqlStatement TransformStatement(SqlStatement statement)
 		{
@@ -21,8 +21,9 @@
 			return statement;
 		}
 
-		protected override ISqlExpression ConvertFunction(SqlFunction func)
+		protected override ISqlExpression ConvertFunction(ISqlExpression expr)
 		{
+			if (expr is not SqlFunction func) return expr;
 			func = ConvertFunctionParameters(func, false);
 			return base.ConvertFunction(func);
 		}

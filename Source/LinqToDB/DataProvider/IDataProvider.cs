@@ -8,6 +8,7 @@ namespace LinqToDB.DataProvider
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
+	using SqlQuery;
 
 	public interface IDataProvider
 	{
@@ -23,6 +24,7 @@ namespace LinqToDB.DataProvider
 		DbConnection     CreateConnection      (string        connectionString);
 		ISqlBuilder      CreateSqlBuilder      (MappingSchema mappingSchema);
 		ISqlOptimizer    GetSqlOptimizer       ();
+		AstFactory       GetAstFactory         ();
 		/// <summary>
 		/// Initializes <see cref="DataConnection"/> command object.
 		/// </summary>

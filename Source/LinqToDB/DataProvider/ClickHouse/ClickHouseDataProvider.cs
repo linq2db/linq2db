@@ -53,7 +53,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 			// 2. not tested as we don't support parameters currently
 			//SqlProviderFlags.AcceptsTakeAsParameter = true;
 
-			_sqlOptimizer = new ClickHouseSqlOptimizer(SqlProviderFlags);
+			_sqlOptimizer = new ClickHouseSqlOptimizer(SqlProviderFlags, GetAstFactory());
 
 			if (Adapter.GetSByteReaderMethod          != null) SetProviderField(typeof(sbyte         ), Adapter.GetSByteReaderMethod,          Adapter.DataReaderType);
 			if (Adapter.GetUInt16ReaderMethod         != null) SetProviderField(typeof(ushort        ), Adapter.GetUInt16ReaderMethod,         Adapter.DataReaderType);

@@ -381,10 +381,10 @@ namespace LinqToDB.SqlQuery
 					case QueryElementType.NotExprPredicate:
 					{
 						var p = (SqlPredicate.NotExpr)element;
-						var e = (ISqlExpression?)ConvertInternal(p.Expr1);
+						var e = (ISqlPredicate?)ConvertInternal(p.Expr1);
 
 						if (e != null && !ReferenceEquals(p.Expr1, e))
-							newElement = new SqlPredicate.NotExpr(e, p.IsNot, p.Precedence);
+							newElement = new SqlPredicate.NotExpr(e);
 
 						break;
 					}

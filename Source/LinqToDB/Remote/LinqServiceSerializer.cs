@@ -968,8 +968,6 @@ namespace LinqToDB.Remote
 							var elem = (SqlPredicate.NotExpr)e;
 
 							Append(elem.Expr1);
-							Append(elem.IsNot);
-							Append(elem.Precedence);
 
 							break;
 						}
@@ -1817,11 +1815,9 @@ namespace LinqToDB.Remote
 
 					case QueryElementType.NotExprPredicate :
 						{
-							var expr1      = Read<ISqlExpression>()!;
-							var isNot      = ReadBool();
-							var precedence = ReadInt();
+							var expr1      = Read<ISqlPredicate>()!;
 
-							obj = new SqlPredicate.NotExpr(expr1, isNot, precedence);
+							obj = new SqlPredicate.NotExpr(expr1);
 
 							break;
 						}

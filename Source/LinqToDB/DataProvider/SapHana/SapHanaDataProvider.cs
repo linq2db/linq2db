@@ -23,7 +23,7 @@
 			SqlProviderFlags.IsUpdateFromSupported             = false;
 			SqlProviderFlags.AcceptsOuterExpressionInAggregate = false;
 
-			_sqlOptimizer = new SapHanaNativeSqlOptimizer(SqlProviderFlags);
+			_sqlOptimizer = new SapHanaNativeSqlOptimizer(SqlProviderFlags, GetAstFactory());
 		}
 
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider()

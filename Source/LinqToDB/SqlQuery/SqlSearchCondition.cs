@@ -2,7 +2,7 @@
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlSearchCondition : ConditionBase<SqlSearchCondition, SqlSearchCondition.Next>, ISqlPredicate, ISqlExpression, IInvertibleElement
+	public sealed class SqlSearchCondition : ConditionBase<SqlSearchCondition, SqlSearchCondition.Next>, ISqlPredicate, ISqlExpression, IInvertibleElement
 	{
 		public SqlSearchCondition()
 		{
@@ -91,12 +91,9 @@ namespace LinqToDB.SqlQuery
 
 		#region IInvertibleElement Members
 
-		public bool CanInvert()
-		{
-			return Conditions.Count > 0 && Conditions.Count(c => c.IsNot) > Conditions.Count / 2;
-		}
+		public bool CanInvert => Conditions.Count > 0 && Conditions.Count(c => c.IsNot) > Conditions.Count / 2;
 
-		public IQueryElement Invert()
+		public ISqlPredicate Invert()
 		{
 			if (Conditions.Count == 0)
 			{

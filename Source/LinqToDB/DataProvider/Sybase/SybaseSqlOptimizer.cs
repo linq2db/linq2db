@@ -6,9 +6,9 @@
 
 	class SybaseSqlOptimizer : BasicSqlOptimizer
 	{
-		public SybaseSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
-		{
-		}
+		public SybaseSqlOptimizer(SqlProviderFlags sqlProviderFlags, AstFactory ast)
+			: base(sqlProviderFlags, ast)
+		{ }
 
 		public override SqlStatement TransformStatement(SqlStatement statement)
 		{
@@ -23,25 +23,30 @@
 
 		public override string[] LikeCharactersToEscape => SybaseCharactersToEscape;
 
-		protected override ISqlExpression ConvertFunction(SqlFunction func)
+		protected override ISqlExpression ConvertFunction(ISqlExpression expr)
 		{
+			if (expr is not SqlFunction func) return expr;
+			
 			func = ConvertFunctionParameters(func, false);
 
 			switch (func.Name)
 			{
-				case PseudoFunctions.REPLACE: return new SqlFunction(func.SystemType, "Str_Replace", func.IsAggregate, func.IsPure, func.Precedence, func.Parameters) { CanBeNull = func.CanBeNull };
+				case PseudoFunctions.REPLACE: 
+					return new SqlFunction(func.SystemType, "Str_Replace", func.IsAggregate, func.IsPure, func.Precedence, func.Parameters) { CanBeNull = func.CanBeNull };
 
 				case "CharIndex":
 				{
 					if (func.Parameters.Length == 3)
-						return Add<int>(
-							new SqlFunction(func.SystemType, "CharIndex",
+						return ast.Add<int>(
+							ast.Func(func.SystemType, "CharIndex",
 								func.Parameters[0],
-								new SqlFunction(typeof(string), "Substring",
+								// TODO(jods): ast.Substr once we have provider-specific alternatives
+								ast.Func<string>("Substring",
 									func.Parameters[1],
 									func.Parameters[2],
-									new SqlFunction(typeof(int), "Len", func.Parameters[1]))),
-							Sub(func.Parameters[2], 1));
+									// TODO(jods): ast.Length once we have provider-specific alternatives
+									ast.Func<int>("Len", func.Parameters[1]))),
+							ast.Subtract<int>(func.Parameters[2], ast.One));
 					break;
 				}
 

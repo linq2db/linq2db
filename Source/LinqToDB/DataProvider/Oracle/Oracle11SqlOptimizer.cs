@@ -7,9 +7,9 @@
 
 	public class Oracle11SqlOptimizer : BasicSqlOptimizer
 	{
-		public Oracle11SqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
-		{
-		}
+		public Oracle11SqlOptimizer(SqlProviderFlags sqlProviderFlags, AstFactory ast) 
+			: base(sqlProviderFlags, ast)
+		{ }
 
 		public override SqlStatement Finalize(MappingSchema mappingSchema, SqlStatement statement)
 		{
@@ -87,8 +87,8 @@
 							if (string1 == "")
 							{
 								var sc = new SqlSearchCondition();
-								sc.Conditions.Add(new SqlCondition(false, new SqlPredicate.ExprExpr(expr.Expr1, expr.Operator, expr.Expr2, null), true));
-								sc.Conditions.Add(new SqlCondition(false, new SqlPredicate.IsNull(expr.Expr2, false), true));
+								sc.Conditions.Add(new SqlCondition(false, ast.Comparison(expr.Expr1, expr.Operator, expr.Expr2), true));
+								sc.Conditions.Add(new SqlCondition(false, ast.IsNull(expr.Expr2), true));
 								return sc;
 							}
 						}
@@ -99,8 +99,8 @@
 							if (string2 == "")
 							{
 								var sc = new SqlSearchCondition();
-								sc.Conditions.Add(new SqlCondition(false, new SqlPredicate.ExprExpr(expr.Expr1, expr.Operator, expr.Expr2, null), true));
-								sc.Conditions.Add(new SqlCondition(false, new SqlPredicate.IsNull(expr.Expr1, false), true));
+								sc.Conditions.Add(new SqlCondition(false, ast.Comparison(expr.Expr1, expr.Operator, expr.Expr2), true));
+								sc.Conditions.Add(new SqlCondition(false, ast.IsNull(expr.Expr1), true));
 								return sc;
 							}
 						}
@@ -125,15 +125,17 @@
 					case "%": return new SqlFunction(be.SystemType, "MOD", be.Expr1, be.Expr2);
 					case "&": return new SqlFunction(be.SystemType, "BITAND", be.Expr1, be.Expr2);
 					case "|": // (a + b) - BITAND(a, b)
-						return Sub(
-							Add(be.Expr1, be.Expr2, be.SystemType),
+						return ast.Subtract(
+							ast.Add(be.Expr1, be.Expr2, be.SystemType),
 							new SqlFunction(be.SystemType, "BITAND", be.Expr1, be.Expr2),
 							be.SystemType);
 
 					case "^": // (a + b) - BITAND(a, b) * 2
-						return Sub(
-							Add(be.Expr1, be.Expr2, be.SystemType),
-							Mul(new SqlFunction(be.SystemType, "BITAND", be.Expr1, be.Expr2), 2),
+						return ast.Subtract(
+							ast.Add(be.Expr1, be.Expr2, be.SystemType),
+							ast.Multiply<int>(
+								new SqlFunction(be.SystemType, "BITAND", be.Expr1, be.Expr2), 
+								ast.Two),
 							be.SystemType);
 					case "+": return be.SystemType == typeof(string) ? new SqlBinaryExpression(be.SystemType, be.Expr1, "||", be.Expr2, be.Precedence) : expression;
 				}
@@ -229,7 +231,9 @@
 			else if (expression is SqlExpression e)
 			{
 				if (e.Expr.StartsWith("To_Number(To_Char(") && e.Expr.EndsWith(", 'FF'))"))
-					return Div(new SqlExpression(e.SystemType, e.Expr.Replace("To_Number(To_Char(", "to_Number(To_Char("), e.Parameters), 1000);
+					return ast.Divide<int>(
+						new SqlExpression(e.SystemType, e.Expr.Replace("To_Number(To_Char(", "to_Number(To_Char("), e.Parameters), 
+						ast.Const(1000));
 			}
 
 			return expression;
@@ -300,8 +304,9 @@
 				withStack: false);
 		}
 
-		protected override ISqlExpression ConvertFunction(SqlFunction func)
+		protected override ISqlExpression ConvertFunction(ISqlExpression expr)
 		{
+			if (expr is not SqlFunction func) return expr;
 			func = ConvertFunctionParameters(func, false);
 			return base.ConvertFunction(func);
 		}

@@ -12,6 +12,7 @@ namespace LinqToDB.Remote
 	using Interceptors;
 	using Mapping;
 	using SqlProvider;
+	using SqlQuery;
 
 	[PublicAPI]
 	public abstract partial class RemoteDataContextBase : IDataContext
@@ -112,6 +113,9 @@ namespace LinqToDB.Remote
 			}
 		}
 
+		private AstFactory? _astFactory;
+		public  AstFactory   AstFactory => _astFactory ??= GetAstFactory(AstFactoryType);
+
 		private  MappingSchema? _serializationMappingSchema;
 		internal MappingSchema   SerializationMappingSchema => _serializationMappingSchema ??= new SerializationMappingSchema(MappingSchema);
 
@@ -124,6 +128,21 @@ namespace LinqToDB.Remote
 
 		private List<string>? _nextQueryHints;
 		public  List<string>   NextQueryHints => _nextQueryHints ??= new List<string>();
+
+		private        Type? _astFactoryType;
+		public virtual Type  AstFactoryType
+		{
+			get
+			{
+				if (_astFactoryType == null)
+				{
+					var type = GetConfigurationInfo().LinqServiceInfo.AstFactoryType;
+					_astFactoryType = Type.GetType(type)!;
+				}
+				return _astFactoryType;
+			}
+			set => _astFactoryType = value;
+		}
 
 		private        Type? _sqlProviderType;
 		public virtual Type   SqlProviderType
@@ -205,6 +224,13 @@ namespace LinqToDB.Remote
 			return null;
 		}
 
+		static readonly ConcurrentDictionary<Type, AstFactory> _astFactories = new ();
+
+		static AstFactory GetAstFactory(Type t)
+		{
+			return _astFactories.GetOrAdd(t, static t => (AstFactory)Activator.CreateInstance(t)!);
+		}
+
 		static readonly ConcurrentDictionary<Tuple<Type, MappingSchema, Type, SqlProviderFlags>, Func<ISqlBuilder>> _sqlBuilders = new ();
 
 		Func<ISqlBuilder>? _createSqlProvider;
@@ -260,7 +286,7 @@ namespace LinqToDB.Remote
 			}
 		}
 
-		static readonly ConcurrentDictionary<Tuple<Type, SqlProviderFlags>, Func<ISqlOptimizer>> _sqlOptimizers = new ();
+		static readonly ConcurrentDictionary<Tuple<Type, SqlProviderFlags, Type>, Func<ISqlOptimizer>> _sqlOptimizers = new ();
 
 		Func<ISqlOptimizer>? _getSqlOptimizer;
 
@@ -269,16 +295,18 @@ namespace LinqToDB.Remote
 			get
 			{
 				if (_getSqlOptimizer == null)
-				{
-					var key  = Tuple.Create(SqlOptimizerType, ((IDataContext)this).SqlProviderFlags);
-
+				{					
+					var key  = Tuple.Create(SqlOptimizerType, ((IDataContext)this).SqlProviderFlags, AstFactoryType);
+										
 					_getSqlOptimizer = _sqlOptimizers.GetOrAdd(key, static key =>
 						Expression.Lambda<Func<ISqlOptimizer>>(
-								Expression.New(
-									key.Item1.GetConstructor(new[] { typeof(SqlProviderFlags) }) ??
-										ThrowHelper.ThrowInvalidOperationException<ConstructorInfo>(
-											$"Constructor for type '{key.Item1.Name}' not found."),
-									Expression.Constant(key.Item2)))
+							Expression.New(
+								key.Item1.GetConstructor(new[] { typeof(SqlProviderFlags), typeof(AstFactory) }) 
+									?? ThrowHelper.ThrowInvalidOperationException<ConstructorInfo>(
+										$"Constructor for type '{key.Item1.Name}' not found."),
+								Expression.Constant(key.Item2),
+								Expression.Constant(GetAstFactory(key.Item3)))
+							)
 							.CompileExpression());
 				}
 

@@ -6,9 +6,9 @@
 
 	class DB2SqlOptimizer : BasicSqlOptimizer
 	{
-		public DB2SqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
-		{
-		}
+		public DB2SqlOptimizer(SqlProviderFlags sqlProviderFlags, AstFactory ast) 
+			: base(sqlProviderFlags, ast)
+		{ }
 
 		public override SqlStatement TransformStatement(SqlStatement statement)
 		{
@@ -102,37 +102,38 @@
 						return new SqlFunction(func.SystemType, e.Expr, par1);
 					}
 
-					case "Millisecond"   : return Div(new SqlFunction(func.SystemType, "Microsecond", func.Parameters), 1000);
+					case "Millisecond"   : return ast.Divide<int>(ast.Func(func.SystemType, "Microsecond", func.Parameters), ast.Const(1000));
 					case "SmallDateTime" :
 					case "DateTime"      :
-					case "DateTime2"     : return new SqlFunction(func.SystemType, "TimeStamp", func.Parameters);
-					case "UInt16"        : return new SqlFunction(func.SystemType, "Int",       func.Parameters);
-					case "UInt32"        : return new SqlFunction(func.SystemType, "BigInt",    func.Parameters);
-					case "UInt64"        : return new SqlFunction(func.SystemType, "Decimal",   func.Parameters);
+					case "DateTime2"     : return ast.Func(func.SystemType, "TimeStamp", func.Parameters);
+					case "UInt16"        : return ast.Func(func.SystemType, "Int",       func.Parameters);
+					case "UInt32"        : return ast.Func(func.SystemType, "BigInt",    func.Parameters);
+					case "UInt64"        : return ast.Func(func.SystemType, "Decimal",   func.Parameters);
 					case "Byte"          :
 					case "SByte"         :
-					case "Int16"         : return new SqlFunction(func.SystemType, "SmallInt",  func.Parameters);
-					case "Int32"         : return new SqlFunction(func.SystemType, "Int",       func.Parameters);
-					case "Int64"         : return new SqlFunction(func.SystemType, "BigInt",    func.Parameters);
-					case "Double"        : return new SqlFunction(func.SystemType, "Float",     func.Parameters);
-					case "Single"        : return new SqlFunction(func.SystemType, "Real",      func.Parameters);
-					case "Money"         : return new SqlFunction(func.SystemType, "Decimal",   func.Parameters[0], new SqlValue(19), new SqlValue(4));
-					case "SmallMoney"    : return new SqlFunction(func.SystemType, "Decimal",   func.Parameters[0], new SqlValue(10), new SqlValue(4));
+					case "Int16"         : return ast.Func(func.SystemType, "SmallInt",  func.Parameters);
+					case "Int32"         : return ast.Func(func.SystemType, "Int",       func.Parameters);
+					case "Int64"         : return ast.Func(func.SystemType, "BigInt",    func.Parameters);
+					case "Double"        : return ast.Func(func.SystemType, "Float",     func.Parameters);
+					case "Single"        : return ast.Func(func.SystemType, "Real",      func.Parameters);
+					case "Money"         : return ast.Func(func.SystemType, "Decimal",   func.Parameters[0], ast.Const(19), ast.Const(4));
+					case "SmallMoney"    : return ast.Func(func.SystemType, "Decimal",   func.Parameters[0], ast.Const(10), ast.Const(4));
 					case "VarChar"       :
 						if (func.Parameters[0].SystemType!.ToUnderlying() == typeof(decimal))
-							return new SqlFunction(func.SystemType, "Char", func.Parameters[0]);
+							return ast.Func(func.SystemType, "Char", func.Parameters[0]);
 						break;
 
 					case "NChar"         :
-					case "NVarChar"      : return new SqlFunction(func.SystemType, "Char",      func.Parameters);
+					case "NVarChar"      : return ast.Func(func.SystemType, "Char",      func.Parameters);
 				}
 			}
 
 			return expression;
 		}
 
-		protected override ISqlExpression ConvertFunction(SqlFunction func)
+		protected override ISqlExpression ConvertFunction(ISqlExpression expr)
 		{
+			if (expr is not SqlFunction func) return expr;
 			func = ConvertFunctionParameters(func, false);
 			return base.ConvertFunction(func);
 		}

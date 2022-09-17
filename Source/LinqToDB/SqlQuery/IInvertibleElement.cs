@@ -2,7 +2,7 @@
 {
 	public interface IInvertibleElement
 	{
-		bool CanInvert();
-		IQueryElement Invert();
+		bool CanInvert { get; }
+		ISqlPredicate Invert();
 	}
 }

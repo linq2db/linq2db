@@ -7,6 +7,7 @@ using LinqToDB.Interceptors;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
 
 using NUnit.Framework;
 
@@ -32,6 +33,7 @@ namespace Tests.Samples
 			public string              ContextName           => _context.ContextName;
 			public int                 ContextID             => _context.ContextID;
 			public Func<ISqlOptimizer> GetSqlOptimizer       => _context.GetSqlOptimizer;
+			public AstFactory          AstFactory            => _context.AstFactory;
 			public Type                DataReaderType        => _context.DataReaderType;
 			public Func<ISqlBuilder>   CreateSqlProvider     => _context.CreateSqlProvider;
 			public List<string>        NextQueryHints        => _context.NextQueryHints;

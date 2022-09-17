@@ -37,7 +37,7 @@ namespace LinqToDB.DataProvider.Sybase
 			SetProviderField<DbDataReader, TimeSpan,DateTime>((r,i) => r.GetDateTime(i) - new DateTime(1900, 1, 1));
 			SetField<DbDataReader, DateTime>("time", (r,i) => GetDateTimeAsTime(r.GetDateTime(i)));
 
-			_sqlOptimizer = new SybaseSqlOptimizer(SqlProviderFlags);
+			_sqlOptimizer = new SybaseSqlOptimizer(SqlProviderFlags, GetAstFactory());
 		}
 
 		static DateTime GetDateTimeAsTime(DateTime value)

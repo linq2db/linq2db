@@ -6,10 +6,9 @@
 
 	class SapHanaSqlOptimizer : BasicSqlOptimizer
 	{
-		public SapHanaSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
-		{
-
-		}
+		public SapHanaSqlOptimizer(SqlProviderFlags sqlProviderFlags, AstFactory ast)
+			: base(sqlProviderFlags, ast)
+		{ }
 
 		public override SqlStatement TransformStatement(SqlStatement statement)
 		{
@@ -49,14 +48,16 @@
 					case "&":
 						return new SqlFunction(be.SystemType, "BITAND", be.Expr1, be.Expr2);
 					case "|":
-						return Sub(
-							Add(be.Expr1, be.Expr2, be.SystemType),
+						return ast.Subtract(
+							ast.Add(be.Expr1, be.Expr2, be.SystemType),
 							new SqlFunction(be.SystemType, "BITAND", be.Expr1, be.Expr2),
 							be.SystemType);
 					case "^": // (a + b) - BITAND(a, b) * 2
-						return Sub(
-							Add(be.Expr1, be.Expr2, be.SystemType),
-							Mul(new SqlFunction(be.SystemType, "BITAND", be.Expr1, be.Expr2), 2),
+						return ast.Subtract(
+							ast.Add(be.Expr1, be.Expr2, be.SystemType),
+							ast.Multiply<int>(
+								new SqlFunction(be.SystemType, "BITAND", be.Expr1, be.Expr2), 
+								ast.Two),
 							be.SystemType);
 					case "+":
 						return be.SystemType == typeof(string) ?
@@ -69,7 +70,7 @@
 		}
 
 		//this is for Tests.Linq.Common.CoalesceLike test
-		static SqlFunction ConvertCase(SqlFunction? func, Type systemType, ISqlExpression[] parameters, int start)
+		SqlFunction ConvertCase(SqlFunction? func, Type systemType, ISqlExpression[] parameters, int start)
 		{
 			var len  = parameters.Length - start;
 			var cond = parameters[start];
@@ -77,9 +78,7 @@
 			if (start == 0 && SqlExpression.NeedsEqual(cond))
 			{
 				cond = new SqlSearchCondition(
-					new SqlCondition(
-						false,
-						new SqlPredicate.ExprExpr(cond, SqlPredicate.Operator.Equal, new SqlValue(1), null)));
+					new SqlCondition(false, ast.Equal(cond, ast.One)));
 			}
 
 			const string name = "CASE";
@@ -100,8 +99,9 @@
 		}
 
 		//this is for Tests.Linq.Common.CoalesceLike test
-		protected override ISqlExpression ConvertFunction(SqlFunction func)
+		protected override ISqlExpression ConvertFunction(ISqlExpression expr)
 		{
+			if (expr is not SqlFunction func) return expr;
 			func = ConvertFunctionParameters(func, false);
 			switch (func.Name)
 			{
