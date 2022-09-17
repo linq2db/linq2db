@@ -1534,7 +1534,7 @@ namespace LinqToDB.SqlProvider
 			return false;
 		}
 
-		public virtual bool IsParameterDependedElement(NullabilityContext nullability, IQueryElement element)
+		public virtual bool IsParameterDependedElement(NullabilityContext nullability, IQueryElement element, DataOptions dataOptions)
 		{
 			switch (element.ElementType)
 			{
@@ -1630,7 +1630,7 @@ namespace LinqToDB.SqlProvider
 					if (searchString.Expr2.ElementType != QueryElementType.SqlValue)
 						return true;
 
-					return IsParameterDependedElement(nullability, searchString.CaseSensitive);
+					return IsParameterDependedElement(nullability, searchString.CaseSensitive, dataOptions);
 				}
 				case QueryElementType.SqlCase:
 				{
@@ -1672,10 +1672,10 @@ namespace LinqToDB.SqlProvider
 			return false;
 		}
 
-		public bool IsParameterDependent(NullabilityContext nullability, SqlStatement statement)
+		public bool IsParameterDependent(NullabilityContext nullability, SqlStatement statement, DataOptions dataOptions)
 		{
-			return null != statement.Find((optimizer : this, nullability),
-				static (ctx, e) => ctx.optimizer.IsParameterDependedElement(ctx.nullability, e));
+			return null != statement.Find((optimizer : this, nullability, dataOptions),
+				static (ctx, e) => ctx.optimizer.IsParameterDependedElement(ctx.nullability, e, ctx.dataOptions));
 		}
 
 		public virtual SqlStatement FinalizeStatement(SqlStatement statement, EvaluationContext context, DataOptions dataOptions, MappingSchema mappingSchema)

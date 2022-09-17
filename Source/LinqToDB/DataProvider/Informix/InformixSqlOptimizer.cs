@@ -17,9 +17,9 @@ namespace LinqToDB.DataProvider.Informix
 			return new InformixSqlExpressionConvertVisitor(allowModify);
 		}
 
-		public override bool IsParameterDependedElement(NullabilityContext nullability, IQueryElement element)
+		public override bool IsParameterDependedElement(NullabilityContext nullability, IQueryElement element, DataOptions dataOptions)
 		{
-			if (base.IsParameterDependedElement(nullability, element))
+			if (base.IsParameterDependedElement(nullability, element, dataOptions))
 				return true;
 
 			switch (element.ElementType)

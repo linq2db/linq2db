@@ -149,6 +149,30 @@ namespace Tests.Linq
 			result.Should().Be(option == CompareNulls.LikeSql ? 0 : 2);
 		}
 
+		[Test]
+		public void OracleEmptyStrings(
+			[IncludeDataSources(TestProvName.AllOracle)] string      context,
+			[Values]                                    CompareNulls option)
+		{
+			using var _   = new CompareNullsOption(option);
+			using var db  = GetDataContext(context);
+			using var src = db.CreateLocalTable(new[] 
+			{
+				new Src { Id = 1, Text = "abc" },
+				new Src { Id = 2, Text = null  },
+			});
+			
+			
+			// == null always translates to IS NULL
+			int result = src.Where(x => x.Text == "").Select(x => x.Id).FirstOrDefault();
+			result.Should().Be(2);
+
+			// LikeSql should translate straight to x.A = p, which should have no result.
+			var p = "";
+			result = src.Where(x => x.Text == p).Select(x => x.Id).FirstOrDefault();
+			result.Should().Be(option == CompareNulls.LikeSql ? 0 : 2);
+		}
+
 		public class Src
 		{
 			public int     Id     { get; set; }

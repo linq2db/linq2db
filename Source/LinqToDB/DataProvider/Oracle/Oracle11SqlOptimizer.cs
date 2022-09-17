@@ -30,27 +30,25 @@ namespace LinqToDB.DataProvider.Oracle
 			return statement;
 		}
 
-		public override bool IsParameterDependedElement(NullabilityContext nullability, IQueryElement element)
+		public override bool IsParameterDependedElement(NullabilityContext nullability, IQueryElement element, DataOptions dataOptions)
 		{
-			if (base.IsParameterDependedElement(nullability, element))
+			if (base.IsParameterDependedElement(nullability, element, dataOptions))
 				return true;
 
 			switch (element.ElementType)
 			{
 				case QueryElementType.ExprExprPredicate:
 				{
-					var expr = (SqlPredicate.ExprExpr)element;
+					var (a, op, b, withNull) = (SqlPredicate.ExprExpr)element;
 
-					// Oracle saves empty string as null to database, so we need predicate modification before sending query
-					//
-					if ((expr.Operator == SqlPredicate.Operator.Equal          ||
-						 expr.Operator == SqlPredicate.Operator.NotEqual       ||
-						 expr.Operator == SqlPredicate.Operator.GreaterOrEqual ||
-						 expr.Operator == SqlPredicate.Operator.LessOrEqual) && expr.WithNull == true)
+					// See ConvertPredicateImpl, we transform empty strings "" into null-handling expressions
+					if (withNull != null ||
+						(dataOptions.LinqOptions.CompareNulls != CompareNulls.LikeSql &&
+							op is SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual))
 					{
-						if (expr.Expr1.SystemType == typeof(string) && expr.Expr1.CanBeEvaluated(true))
+						if (a.SystemType == typeof(string) && a.CanBeEvaluated(true))
 							return true;
-						if (expr.Expr2.SystemType == typeof(string) && expr.Expr2.CanBeEvaluated(true))
+						if (b.SystemType == typeof(string) && b.CanBeEvaluated(true))
 							return true;
 					}
 					break;

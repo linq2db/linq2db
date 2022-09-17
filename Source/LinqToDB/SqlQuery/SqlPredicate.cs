@@ -289,6 +289,8 @@ namespace LinqToDB.SqlQuery
 				if (options.CompareNulls == CompareNulls.LikeSql)
 					return this;
 
+				// CompareNulls.LikeSqlExceptParameters and CompareNulls.LikeCSharp 
+				// always sniffs parameters to == and != (for backward compatibility).
 				if (Operator == Operator.Equal || Operator == Operator.NotEqual)
 				{
 					if (Expr1.TryEvaluateExpression(context, out var value1))
@@ -303,6 +305,9 @@ namespace LinqToDB.SqlQuery
 					}
 				}
 
+				// Only CompareNulls.LikeCSharp handles all conditions.
+				// Notice that it sometimes creates operands `WithNull: null` 
+				// when it wants an expression to work as LikeSql.
 				if (WithNull == null || nullability.IsEmpty)
 					return this;
 
