@@ -155,35 +155,6 @@ namespace LinqToDB.Mapping
 			}
 		}
 
-#if NETSTANDARD2_0_OR_GREATER
-		private static bool _useNullableReflection = ProbeNullableReflectionSupport();
-		
-		private static bool ProbeNullableReflectionSupport()
-		{
-			if (!Configuration.UseNullableTypesMetadata)
-				return false;
-
-			try
-			{
-				var propInfo = typeof(ColumnDescriptor).GetProperty(nameof(SequenceName));
-				var context  = new NullabilityInfoContext();
-				// Create() throws InvalidOperationException if feature flag NullabilityInfoContextSupport is false.
-				// This happens when build is configured to aggressively trim C# nullability attributes,
-				// which is the default for MAUI and Blazor targets.
-				// Linq2db still works and users have two choices:
-				// 1. Rely on good old [Column] or [NotNullable] attributes instead;
-				// 2. Prevent aggressive trimming by adding the following property to csproj:
-				//    <NullabilityInfoContextSupport>true</NullabilityInfoContextSupport>
-				context.Create(propInfo);
-				return true;
-			}
-			catch (InvalidOperationException)
-			{
-				return false;
-			}
-		}
-#endif
-
 		private bool AnalyzeCanBeNull(ColumnAttribute columnAttribute)
 		{
 			if (columnAttribute.HasCanBeNull())
@@ -196,8 +167,8 @@ namespace LinqToDB.Mapping
 			if (na != null)
 				return na.CanBeNull;
 				
-#if NETSTANDARD2_0_OR_GREATER
-			if (_useNullableReflection)
+#if NETSTANDARD2_0_OR_GREATER || NETCOREAPP2_0_OR_GREATER || NET5_0_OR_GREATER
+			if (Configuration.UseNullableTypesMetadata)
 			{
 				// Extract info from C# Nullable Reference Types if available.
 				// Note that this should also handle Nullable Value Types.
@@ -210,7 +181,7 @@ namespace LinqToDB.Mapping
 				};
 				
 				if (nullability != NullabilityState.Unknown)
-					return nullability == NullabilityState.Nullable;				
+					return nullability == NullabilityState.Nullable;
 			}
 #endif
 

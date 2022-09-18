@@ -214,8 +214,16 @@ namespace LinqToDB.Mapping
 				if (aa != null)
 				{
 					Associations.Add(new AssociationDescriptor(
-						TypeAccessor.Type, member.MemberInfo, aa.GetThisKeys(), aa.GetOtherKeys(),
-						aa.ExpressionPredicate, aa.Predicate, aa.QueryExpressionMethod, aa.QueryExpression, aa.Storage, aa.CanBeNull,
+						TypeAccessor.Type, 
+						member.MemberInfo, 
+						aa.GetThisKeys(), 
+						aa.GetOtherKeys(),
+						aa.ExpressionPredicate, 
+						aa.Predicate, 
+						aa.QueryExpressionMethod, 
+						aa.QueryExpression,
+						aa.Storage,
+						aa.ConfiguredCanBeNull,
 						aa.AliasName));
 					continue;
 				}

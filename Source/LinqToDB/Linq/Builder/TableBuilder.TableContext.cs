@@ -1709,7 +1709,7 @@ namespace LinqToDB.Linq.Builder
 							attribute.QueryExpressionMethod,
 							attribute.QueryExpression,
 							attribute.Storage,
-							attribute.CanBeNull,
+							attribute.ConfiguredCanBeNull,
 							attribute.AliasName
 						);
 				}

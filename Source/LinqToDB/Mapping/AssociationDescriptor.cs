@@ -39,7 +39,7 @@ namespace LinqToDB.Mapping
 			string?     expressionQueryMethod,
 			Expression? expressionQuery,
 			string?     storage,
-			bool        canBeNull,
+			bool?       canBeNull,
 			string?     aliasName)
 		{
 			if (memberInfo == null) throw new ArgumentNullException(nameof(memberInfo));
@@ -63,7 +63,7 @@ namespace LinqToDB.Mapping
 			ExpressionQueryMethod = expressionQueryMethod;
 			ExpressionQuery       = expressionQuery;
 			Storage               = storage;
-			CanBeNull             = canBeNull;
+			CanBeNull             = canBeNull ?? AnalyzeCanBeNull();
 			AliasName             = aliasName;
 		}
 
@@ -107,7 +107,7 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Gets or sets alias for association. Used in SQL generation process.
 		/// </summary>
-		public string? AliasName           { get; set; }
+		public string?     AliasName           { get; set; }
 
 		/// <summary>
 		/// Parse comma-separated list of association key column members into string array.
@@ -309,6 +309,33 @@ namespace LinqToDB.Mapping
 				throw new LinqToDBException("Result type of expression predicate should be 'IQueryable<{objectType.Name}>'");
 
 			return lambda;
+		}
+
+		private bool AnalyzeCanBeNull()
+		{
+#if NETSTANDARD2_0_OR_GREATER || NETCOREAPP2_0_OR_GREATER || NET5_0_OR_GREATER
+			// Note that nullability of Collections can't be determined from types.
+			// OUTER JOIN are usually materialized in non-nullable, but empty, collections.
+			// For example, `IList<Product> Products` might well require an OUTER JOIN.
+			// Neither `IList<Product>?` nor `IList<Product?>` would be correct.
+			if (Configuration.UseNullableTypesMetadata && !IsList)
+			{
+				// Extract info from C# Nullable Reference Types if available.
+				// Note that this should also handle Nullable Value Types.
+				var context = new NullabilityInfoContext();
+				var nullability = MemberInfo switch 
+				{
+					PropertyInfo p => context.Create(p).ReadState,
+					FieldInfo    f => context.Create(f).ReadState,
+					MethodInfo   m => context.Create(m.ReturnParameter).ReadState,
+								 _ => NullabilityState.Unknown,
+				};
+				
+				if (nullability != NullabilityState.Unknown)
+					return nullability == NullabilityState.Nullable;				
+			}
+#endif
+			return true;
 		}
 	}
 }

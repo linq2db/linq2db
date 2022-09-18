@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Threading.Tasks;
 
 using JetBrains.Annotations;
@@ -101,7 +102,8 @@ namespace LinqToDB.Common
 		/// Set to 0 to truncate all string data.
 		/// </remarks>
 		public static int MaxStringParameterLengthLogging { get; set; } = 200;
-
+		
+		private static bool _useNullableTypesMetadata;
 		/// <summary>
 		/// Whether or not Nullable Reference Types annotations from C#
 		/// are read and taken into consideration to determine if a
@@ -110,7 +112,42 @@ namespace LinqToDB.Common
 		/// annotations in [Column] or [Nullable].
 		/// </summary>
 		/// <remarks>Defaults to false.</remarks>
-		public static bool UseNullableTypesMetadata { get; set; }
+		public static bool UseNullableTypesMetadata 
+		{ 
+			get => _useNullableTypesMetadata;
+			set 
+			{
+				// Can't change the default value of "false" on platforms where nullable metadata is unavailable.				
+				if (value) EnsureNullableReflectionSupported();					
+				_useNullableTypesMetadata = value;
+			}
+		}	
+
+		private static void EnsureNullableReflectionSupported()
+		{
+			// This check is not cached as it is expected that UseNullableTypesMetadata is only set once.
+#if NETSTANDARD2_0_OR_GREATER || NETCOREAPP2_0_OR_GREATER || NET5_0_OR_GREATER
+			try
+			{
+				var propInfo = typeof(Configuration).GetProperty(nameof(UseNullableTypesMetadata))!;
+				var context  = new NullabilityInfoContext();
+				// Create() throws InvalidOperationException if feature flag NullabilityInfoContextSupport is false.
+				// This happens when build is configured to aggressively trim C# nullability attributes,
+				// which is the default for MAUI and Blazor targets.
+				// Linq2db still works and users have two choices:
+				// 1. Rely on good old [Column] or [NotNullable] attributes instead;
+				// 2. Prevent aggressive trimming by adding the following property to csproj:
+				//    <NullabilityInfoContextSupport>true</NullabilityInfoContextSupport>
+				context.Create(propInfo);
+				return;
+			}
+			catch (InvalidOperationException)
+			{ /* throw below */ }
+#endif
+			throw new NotSupportedException("Nullable metadata is not available. " +
+				"Check that you run on .net standard 2.0 or greater, " + 
+				"and that you don't trim nullable metadata during build (see NullabilityInfoContextSupport).");
+		}
 
 		public static class Data
 		{

@@ -237,7 +237,7 @@ namespace LinqToDB.Mapping
 			Expression<Func<TEntity, TProperty>>   prop,
 			Expression<Func<TEntity, TThisKey>>    thisKey,
 			Expression<Func<TProperty, TOtherKey>> otherKey,
-			bool                                   canBeNull = true)
+			bool?                                  canBeNull = null)
 		{
 			if (prop     == null) throw new ArgumentNullException(nameof(prop));
 			if (thisKey  == null) throw new ArgumentNullException(nameof(thisKey));
@@ -246,7 +246,12 @@ namespace LinqToDB.Mapping
 			var thisKeyName  = MemberHelper.GetMemberInfo(thisKey).Name;
 			var otherKeyName = MemberHelper.GetMemberInfo(otherKey).Name;
 
-			return Property( prop ).HasAttribute( new AssociationAttribute { ThisKey = thisKeyName, OtherKey = otherKeyName, CanBeNull = canBeNull } );
+			return Property( prop ).HasAttribute(new AssociationAttribute 
+			{ 
+				ThisKey             = thisKeyName, 
+				OtherKey            = otherKeyName, 
+				ConfiguredCanBeNull = canBeNull,
+			});
 		}
 
 		/// <summary>
@@ -264,7 +269,7 @@ namespace LinqToDB.Mapping
 			Expression<Func<TEntity, IEnumerable<TPropElement>>> prop,
 			Expression<Func<TEntity, TThisKey>>                  thisKey,
 			Expression<Func<TPropElement, TOtherKey>>            otherKey,
-			bool                                                 canBeNull = true)
+			bool?                                                canBeNull = null)
 		{
 			if (prop     == null) throw new ArgumentNullException(nameof(prop));
 			if (thisKey  == null) throw new ArgumentNullException(nameof(thisKey));
@@ -273,7 +278,12 @@ namespace LinqToDB.Mapping
 			var thisKeyName  = MemberHelper.GetMemberInfo(thisKey).Name;
 			var otherKeyName = MemberHelper.GetMemberInfo(otherKey).Name;
 
-			return Property( prop ).HasAttribute( new AssociationAttribute { ThisKey = thisKeyName, OtherKey = otherKeyName, CanBeNull = canBeNull } );
+			return Property( prop ).HasAttribute(new AssociationAttribute 
+			{ 
+				ThisKey             = thisKeyName, 
+				OtherKey            = otherKeyName, 
+				ConfiguredCanBeNull = canBeNull,
+			});
 		}
 
 		/// <summary>
@@ -287,12 +297,16 @@ namespace LinqToDB.Mapping
 		public PropertyMappingBuilder<TEntity, IEnumerable<TOther>> Association<TOther>(
 			Expression<Func<TEntity, IEnumerable<TOther>>> prop,
 			Expression<Func<TEntity, TOther, bool>>        predicate,
-			bool                                           canBeNull = true)
+			bool?                                          canBeNull = null)
 		{
 			if (prop      == null) throw new ArgumentNullException(nameof(prop));
 			if (predicate == null) throw new ArgumentNullException(nameof(predicate));
 
-			return Property( prop ).HasAttribute( new AssociationAttribute { Predicate = predicate, CanBeNull = canBeNull } );
+			return Property( prop ).HasAttribute(new AssociationAttribute 
+			{ 
+				Predicate           = predicate, 
+				ConfiguredCanBeNull = canBeNull,
+			});
 		}
 
 		/// <summary>
@@ -306,12 +320,16 @@ namespace LinqToDB.Mapping
 		public PropertyMappingBuilder<TEntity, TOther> Association<TOther>(
 			Expression<Func<TEntity, TOther>>       prop,
 			Expression<Func<TEntity, TOther, bool>> predicate,
-			bool                                    canBeNull = true)
+			bool?                                   canBeNull = null)
 		{
 			if (prop      == null) throw new ArgumentNullException(nameof(prop));
 			if (predicate == null) throw new ArgumentNullException(nameof(predicate));
 
-			return Property( prop ).HasAttribute( new AssociationAttribute { Predicate = predicate, CanBeNull = canBeNull } );
+			return Property( prop ).HasAttribute(new AssociationAttribute 
+			{ 
+				Predicate           = predicate, 
+				ConfiguredCanBeNull = canBeNull,
+			});
 		}
 
 		/// <summary>
@@ -325,12 +343,16 @@ namespace LinqToDB.Mapping
 		public PropertyMappingBuilder<TEntity, IEnumerable<TOther>> Association<TOther>(
 			Expression<Func<TEntity, IEnumerable<TOther>>>              prop,
 			Expression<Func<TEntity, IDataContext, IQueryable<TOther>>> queryExpression,
-			bool                                                        canBeNull = true)
+			bool?                                                       canBeNull = null)
 		{
 			if (prop            == null) throw new ArgumentNullException(nameof(prop));
 			if (queryExpression == null) throw new ArgumentNullException(nameof(queryExpression));
 
-			return Property( prop ).HasAttribute( new AssociationAttribute { QueryExpression = queryExpression, CanBeNull = canBeNull } );
+			return Property( prop ).HasAttribute(new AssociationAttribute
+			{ 
+				QueryExpression     = queryExpression, 
+				ConfiguredCanBeNull = canBeNull,
+			});
 		}
 
 		/// <summary>
@@ -344,12 +366,16 @@ namespace LinqToDB.Mapping
 		public PropertyMappingBuilder<TEntity, TOther> Association<TOther>(
 			Expression<Func<TEntity, TOther>>                           prop,
 			Expression<Func<TEntity, IDataContext, IQueryable<TOther>>> queryExpression,
-			bool                                                        canBeNull = true)
+			bool?                                                       canBeNull = null)
 		{
 			if (prop            == null) throw new ArgumentNullException(nameof(prop));
 			if (queryExpression == null) throw new ArgumentNullException(nameof(queryExpression));
 
-			return Property( prop ).HasAttribute( new AssociationAttribute { QueryExpression = queryExpression, CanBeNull = canBeNull } );
+			return Property( prop ).HasAttribute(new AssociationAttribute 
+			{ 
+				QueryExpression     = queryExpression, 
+				ConfiguredCanBeNull = canBeNull,
+			});
 		}
 
 		/// <summary>
