@@ -1,18 +1,22 @@
-﻿using System.Data.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Data.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+
+using JetBrains.Annotations;
+using PN = LinqToDB.ProviderName;
 
 // ReSharper disable CheckNamespace
 // ReSharper disable RedundantNameQualifier
 
 namespace LinqToDB
 {
-	using Common;
+	using Mapping;
 	using Expressions;
 	using Linq;
-	using Mapping;
 	using SqlQuery;
-	using PN = ProviderName;
+	using LinqToDB.Common;
 
 	[PublicAPI]
 	public static partial class Sql

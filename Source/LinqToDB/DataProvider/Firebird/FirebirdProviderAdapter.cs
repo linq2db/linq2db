@@ -1,4 +1,8 @@
-﻿namespace LinqToDB.DataProvider.Firebird
+﻿using System;
+using System.Data;
+using System.Data.Common;
+
+namespace LinqToDB.DataProvider.Firebird
 {
 	using Common;
 	using Expressions;

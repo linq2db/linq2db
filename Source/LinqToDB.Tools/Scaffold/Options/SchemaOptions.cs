@@ -1,10 +1,11 @@
-﻿using System.Data;
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using LinqToDB.Schema;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Scaffold
 {
-	using Schema;
-	using SqlQuery;
-
 	public sealed class SchemaOptions
 	{
 		internal SchemaOptions() { }

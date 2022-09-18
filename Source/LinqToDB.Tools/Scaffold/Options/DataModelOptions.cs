@@ -1,13 +1,15 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using LinqToDB.Configuration;
+using LinqToDB.Data;
+using LinqToDB.DataModel;
+using LinqToDB.Naming;
+using LinqToDB.Schema;
 
 namespace LinqToDB.Scaffold
 {
-	using Configuration;
-	using Data;
-	using DataModel;
-	using Naming;
-	using Schema;
-
 	/// <summary>
 	/// Data model-related options.
 	/// </summary>

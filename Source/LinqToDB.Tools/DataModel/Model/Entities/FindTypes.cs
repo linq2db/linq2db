@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.DataModel
+﻿using System;
+
+namespace LinqToDB.DataModel
 {
 	/// <summary>
 	/// Defines which Find method signatures should be generated.

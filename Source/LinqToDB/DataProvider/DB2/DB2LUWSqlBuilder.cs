@@ -1,10 +1,11 @@
-﻿using System.Text;
+﻿using System;
 
 namespace LinqToDB.DataProvider.DB2
 {
+	using System.Text;
+	using LinqToDB.SqlQuery;
 	using Mapping;
 	using SqlProvider;
-	using SqlQuery;
 
 	class DB2LUWSqlBuilder : DB2SqlBuilderBase
 	{

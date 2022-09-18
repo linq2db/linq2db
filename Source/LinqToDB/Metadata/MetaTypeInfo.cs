@@ -1,4 +1,8 @@
-﻿namespace LinqToDB.Metadata
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace LinqToDB.Metadata
 {
 	class MetaTypeInfo
 	{

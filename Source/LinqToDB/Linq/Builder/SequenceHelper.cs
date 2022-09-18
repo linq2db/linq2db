@@ -1,8 +1,11 @@
-﻿using System.Linq.Expressions;
-using LinqToDB.Expressions;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using LinqToDB.Expressions;
+
 	static class SequenceHelper
 	{
 		public static Expression? CorrectExpression(Expression? expression, IBuildContext current, IBuildContext underlying)

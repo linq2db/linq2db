@@ -1,4 +1,8 @@
-﻿namespace LinqToDB.CommandLine
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+
+namespace LinqToDB.CommandLine
 {
 	/// <summary>
 	/// Template command implementation.

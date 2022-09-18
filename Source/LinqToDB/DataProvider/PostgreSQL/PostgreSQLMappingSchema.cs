@@ -1,4 +1,5 @@
-﻿using System.Data.Linq;
+﻿using System;
+using System.Data.Linq;
 using System.Globalization;
 using System.Net.NetworkInformation;
 using System.Text;

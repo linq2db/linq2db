@@ -1,11 +1,10 @@
-﻿using System.Globalization;
+﻿using System;
+using System.Globalization;
 using System.Reflection;
-using PropertyAttributes = System.Reflection.PropertyAttributes;
+using LinqToDB.Common;
 
 namespace LinqToDB.Mapping
 {
-	using Common;
-
 	/// <summary>
 	/// Represents a dynamic column, which doesn't have a backing field in it's declaring type.
 	/// </summary>

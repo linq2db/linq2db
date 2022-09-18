@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.Reflection
+﻿using System;
+
+namespace LinqToDB.Reflection
 {
 	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface)]
 	public class ObjectFactoryAttribute : Attribute

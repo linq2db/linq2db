@@ -1,7 +1,10 @@
-﻿namespace LinqToDB.DataProvider
-{
-	using Expressions;
+﻿using System;
+using System.Data;
+using System.Data.Common;
+using LinqToDB.Expressions;
 
+namespace LinqToDB.DataProvider
+{
 	public class OleDbProviderAdapter : IDynamicProviderAdapter
 	{
 		private static readonly object _syncRoot = new object();

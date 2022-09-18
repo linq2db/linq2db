@@ -1,4 +1,9 @@
-﻿namespace LinqToDB.Async
+﻿using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace LinqToDB.Async
 {
 	// Do not expose to public surface, will conflict with other libraries
 	/// <summary>

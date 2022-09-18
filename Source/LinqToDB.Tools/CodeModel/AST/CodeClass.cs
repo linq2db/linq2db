@@ -1,7 +1,8 @@
-﻿namespace LinqToDB.CodeModel
-{
-	using Common;
+﻿using System.Collections.Generic;
+using LinqToDB.Common;
 
+namespace LinqToDB.CodeModel
+{
 	public sealed class CodeClass : TypeBase, IGroupElement
 	{
 		private readonly List<CodeTypeToken> _implements;

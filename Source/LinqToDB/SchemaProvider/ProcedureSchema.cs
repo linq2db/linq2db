@@ -1,4 +1,7 @@
-﻿namespace LinqToDB.SchemaProvider
+﻿using System;
+using System.Collections.Generic;
+
+namespace LinqToDB.SchemaProvider
 {
 	/// <summary>
 	/// Describes database procedure or function.

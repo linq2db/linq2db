@@ -1,10 +1,13 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Text;
+using System.Threading;
+using LinqToDB.Common;
 
 namespace LinqToDB.SqlQuery
 {
-	using Common;
-
 	[DebuggerDisplay("CTE({CteID}, {Name})")]
 	public class CteClause : IQueryElement, ISqlExpressionWalkable
 	{

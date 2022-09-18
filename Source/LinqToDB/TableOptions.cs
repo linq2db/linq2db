@@ -1,9 +1,12 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System;
+using System.Runtime.CompilerServices;
+
+using JetBrains.Annotations;
+
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB
 {
-	using SqlQuery;
-
 	/// <summary>
 	/// Provides table mapping flags to specify temporary table kind if mapped table is temporary table
 	/// and Create/Drop Table API behavior when target table exists/not exists.

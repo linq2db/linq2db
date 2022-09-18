@@ -1,4 +1,6 @@
-﻿namespace LinqToDB
+﻿using System;
+
+namespace LinqToDB
 {
 	using Interceptors;
 

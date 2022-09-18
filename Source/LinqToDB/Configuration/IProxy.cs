@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.Configuration
+﻿using System;
+
+namespace LinqToDB.Configuration
 {
 	/// <summary>
 	/// Proxy object interface.

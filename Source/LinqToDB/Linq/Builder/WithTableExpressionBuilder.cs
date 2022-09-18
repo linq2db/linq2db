@@ -1,9 +1,9 @@
 ﻿using System.Linq.Expressions;
-using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
 	using Common;
+	using LinqToDB.Expressions;
 	using SqlQuery;
 
 	class WithTableExpressionBuilder : MethodCallBuilder

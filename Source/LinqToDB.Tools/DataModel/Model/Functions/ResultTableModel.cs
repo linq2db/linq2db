@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.DataModel
+﻿using System.Collections.Generic;
+
+namespace LinqToDB.DataModel
 {
 	/// <summary>
 	/// Custom mapping class descriptor for procedure or table function return record.

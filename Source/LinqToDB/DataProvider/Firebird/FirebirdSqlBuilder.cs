@@ -1,4 +1,7 @@
-﻿using System.Text;
+﻿using System;
+using System.Data;
+using System.Linq;
+using System.Text;
 
 #region ReSharper disable
 // ReSharper disable SuggestUseVarKeywordEverywhere

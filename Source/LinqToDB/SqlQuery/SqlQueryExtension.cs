@@ -1,4 +1,8 @@
-﻿namespace LinqToDB.SqlQuery
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace LinqToDB.SqlQuery
 {
 	public class SqlQueryExtension : ISqlExpressionWalkable
 	{

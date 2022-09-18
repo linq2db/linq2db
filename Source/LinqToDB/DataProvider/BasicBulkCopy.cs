@@ -1,12 +1,18 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Data.Common;
 using System.Diagnostics;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider
 {
 	using Data;
-	using Mapping;
+	using LinqToDB.Mapping;
 	using SqlProvider;
-	using SqlQuery;
 
 	public class BasicBulkCopy
 	{

@@ -1,15 +1,19 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq.Expressions;
-using System.Reflection;
+
+using JetBrains.Annotations;
 
 namespace LinqToDB.Expressions
 {
-	using Common;
-	using Extensions;
-	using Mapping;
-	using Reflection;
+	using LinqToDB.Common;
+	using LinqToDB.Extensions;
+	using LinqToDB.Mapping;
+	using LinqToDB.Reflection;
+	using System.Diagnostics.CodeAnalysis;
+	using System.Reflection;
 
-	public static class ExpressionExtensions
+	public static class Extensions
 	{
 		#region GetDebugView
 

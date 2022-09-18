@@ -1,7 +1,11 @@
-﻿namespace LinqToDB.DataModel
-{
-	using CodeModel;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using LinqToDB.CodeModel;
+using LinqToDB.Data;
 
+namespace LinqToDB.DataModel
+{
 	// contains entity related generation logic:
 	// - entity classes generation
 	// - optional Find extension generation

@@ -1,6 +1,9 @@
-﻿namespace LinqToDB.SqlProvider
+﻿using System;
+using System.Collections.Generic;
+
+namespace LinqToDB.SqlProvider
 {
-	using Common;
+	using LinqToDB.Common;
 	using SqlQuery;
 
 	public abstract partial class BasicSqlBuilder : ISqlBuilder

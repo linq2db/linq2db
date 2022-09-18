@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.Mapping
+﻿using System;
+
+namespace LinqToDB.Mapping
 {
 	/// <summary>
 	/// Marks target member as dynamic columns store.

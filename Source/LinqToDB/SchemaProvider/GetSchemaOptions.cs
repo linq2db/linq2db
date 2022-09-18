@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.SchemaProvider
+﻿using System;
+
+namespace LinqToDB.SchemaProvider
 {
 	/// <summary>
 	/// Defines schema load options.

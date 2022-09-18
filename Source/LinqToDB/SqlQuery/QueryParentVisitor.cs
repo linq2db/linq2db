@@ -1,7 +1,9 @@
-﻿namespace LinqToDB.SqlQuery
-{
-	using Remote;
+﻿using System;
+using System.Collections.Generic;
+using LinqToDB.Remote;
 
+namespace LinqToDB.SqlQuery
+{
 	public readonly struct QueryParentVisitor<TContext>
 	{
 		public   readonly Dictionary<IQueryElement,IQueryElement?>  VisitedElements;

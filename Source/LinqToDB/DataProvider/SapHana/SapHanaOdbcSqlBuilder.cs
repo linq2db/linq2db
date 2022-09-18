@@ -1,10 +1,11 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
 
 namespace LinqToDB.DataProvider.SapHana
 {
 	using Mapping;
-	using SqlProvider;
 	using SqlQuery;
+	using SqlProvider;
 
 	class SapHanaOdbcSqlBuilder : SapHanaSqlBuilder
 	{

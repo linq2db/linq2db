@@ -1,4 +1,7 @@
-﻿using LinqToDB;
+﻿using System;
+using System.Linq;
+
+using LinqToDB;
 using LinqToDB.SqlQuery;
 using NUnit.Framework;
 

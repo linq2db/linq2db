@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.DataProvider.SapHana
+﻿using System;
+
+namespace LinqToDB.DataProvider.SapHana
 {
 	using Extensions;
 	using SqlProvider;

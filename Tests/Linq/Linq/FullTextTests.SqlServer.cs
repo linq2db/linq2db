@@ -1,7 +1,9 @@
 ﻿using LinqToDB;
 using LinqToDB.DataProvider.SqlServer;
 using NUnit.Framework;
+using System.Linq;
 using FluentAssertions;
+using FluentAssertions.Common;
 using Tests.Model;
 
 namespace Tests.Linq

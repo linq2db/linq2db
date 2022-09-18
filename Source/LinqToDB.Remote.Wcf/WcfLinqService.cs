@@ -1,4 +1,6 @@
-﻿using System.ServiceModel;
+﻿using System;
+using System.ServiceModel;
+using System.Threading.Tasks;
 
 namespace LinqToDB.Remote.Wcf
 {

@@ -1,7 +1,8 @@
-﻿namespace LinqToDB.DataProvider.SQLite
-{
-	using Expressions;
+﻿using System;
+using LinqToDB.Expressions;
 
+namespace LinqToDB.DataProvider.SQLite
+{
 	public class SQLiteProviderAdapter : IDynamicProviderAdapter
 	{
 		private static readonly object _systemSyncRoot = new ();

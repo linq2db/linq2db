@@ -1,11 +1,14 @@
-﻿using System.Globalization;
-using System.Linq.Expressions;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using LinqToDB.Mapping;
 
 namespace LinqToDB.DataProvider.SapHana
 {
-	using Expressions;
-	using Mapping;
-	using SqlProvider;
+	using System.Globalization;
+	using System.Linq.Expressions;
+	using LinqToDB.Expressions;
+	using LinqToDB.SqlProvider;
 	using SqlQuery;
 
 	public class CalculationViewInputParametersExpressionAttribute : Sql.TableExpressionAttribute

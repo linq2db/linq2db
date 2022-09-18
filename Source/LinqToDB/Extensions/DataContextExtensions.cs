@@ -1,4 +1,6 @@
-﻿namespace LinqToDB
+﻿using System.Collections.Generic;
+
+namespace LinqToDB
 {
 	/// <summary>
 	/// Internal data context helpers.

@@ -1,6 +1,8 @@
-﻿using System.Data.Linq;
+﻿using System;
+using System.Data.Linq;
 using System.Data.SqlTypes;
 using System.Globalization;
+using System.IO;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 using System.Text;

@@ -1,10 +1,12 @@
-﻿using System.Text;
+﻿using System;
+using System.Data.Common;
+using System.Text;
 
 namespace LinqToDB.DataProvider.SqlCe
 {
-	using Mapping;
-	using SqlProvider;
 	using SqlQuery;
+	using SqlProvider;
+	using Mapping;
 
 	class SqlCeSqlBuilder : BasicSqlBuilder
 	{

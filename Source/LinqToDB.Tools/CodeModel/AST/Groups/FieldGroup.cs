@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.CodeModel
+﻿using System.Collections.Generic;
+
+namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// Group of fields.

@@ -1,4 +1,10 @@
-﻿namespace LinqToDB
+﻿using System;
+using System.Data;
+using System.Threading;
+using System.Threading.Tasks;
+using JetBrains.Annotations;
+
+namespace LinqToDB
 {
 	/// <summary>
 	/// Explicit data context <see cref="DataContext"/> transaction wrapper.

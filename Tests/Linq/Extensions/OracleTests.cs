@@ -1,4 +1,7 @@
-﻿using LinqToDB;
+﻿using System;
+using System.Linq;
+
+using LinqToDB;
 using LinqToDB.DataProvider.Oracle;
 
 using NUnit.Framework;

@@ -1,4 +1,9 @@
-﻿namespace LinqToDB.Data
+﻿using System;
+using System.Data;
+using System.Data.Common;
+using System.Threading.Tasks;
+
+namespace LinqToDB.Data
 {
 	using Interceptors;
 

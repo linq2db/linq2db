@@ -1,4 +1,7 @@
-﻿using LinqToDB;
+﻿using System;
+using System.Linq;
+
+using LinqToDB;
 using LinqToDB.DataProvider.Access;
 using LinqToDB.DataProvider.Oracle;
 using LinqToDB.DataProvider.MySql;
@@ -11,6 +14,9 @@ using NUnit.Framework;
 
 namespace Tests.Extensions
 {
+	using Linq;
+	using Model;
+
 	[TestFixture]
 	public class DocExampleTests : TestBase
 	{

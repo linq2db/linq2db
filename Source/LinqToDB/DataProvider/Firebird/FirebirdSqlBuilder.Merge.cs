@@ -1,9 +1,11 @@
-﻿using System.Globalization;
-using System.Text;
-
-namespace LinqToDB.DataProvider.Firebird
+﻿namespace LinqToDB.DataProvider.Firebird
 {
-	using SqlQuery;
+	using LinqToDB.SqlQuery;
+	using System;
+	using System.Linq;
+	using System.Collections.Generic;
+	using System.Globalization;
+	using System.Text;
 
 	public partial class FirebirdSqlBuilder
 	{

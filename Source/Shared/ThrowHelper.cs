@@ -2,7 +2,12 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
+using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
+using System.Runtime.InteropServices;
+using System.Threading;
 
 #pragma warning disable IDE0160 // Convert to block scoped namespace
 namespace LinqToDB;

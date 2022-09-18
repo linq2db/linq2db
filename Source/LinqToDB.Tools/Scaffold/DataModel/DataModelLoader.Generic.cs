@@ -1,7 +1,9 @@
-﻿namespace LinqToDB.Scaffold
-{
-	using SqlQuery;
+﻿using System.Collections.Generic;
+using LinqToDB.Schema;
+using LinqToDB.SqlQuery;
 
+namespace LinqToDB.Scaffold
+{
 	partial class DataModelLoader
 	{
 		/// <summary>

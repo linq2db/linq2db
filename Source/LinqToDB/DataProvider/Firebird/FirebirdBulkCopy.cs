@@ -1,7 +1,11 @@
-﻿namespace LinqToDB.DataProvider.Firebird
+﻿using System.Collections.Generic;
+
+namespace LinqToDB.DataProvider.Firebird
 {
 	using Data;
-	using Mapping;
+	using LinqToDB.Mapping;
+	using System.Threading;
+	using System.Threading.Tasks;
 
 	class FirebirdBulkCopy : BasicBulkCopy
 	{

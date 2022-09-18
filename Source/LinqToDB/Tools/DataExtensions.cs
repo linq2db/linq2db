@@ -1,4 +1,9 @@
-﻿namespace LinqToDB.Tools
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+
+namespace LinqToDB.Tools
 {
 	using Common;
 	using Data;

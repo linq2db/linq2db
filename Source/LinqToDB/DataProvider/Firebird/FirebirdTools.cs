@@ -1,4 +1,8 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Data.Common;
+using System.Reflection;
+
+using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.Firebird
 {

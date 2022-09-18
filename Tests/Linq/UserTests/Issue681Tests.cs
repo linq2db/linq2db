@@ -1,4 +1,6 @@
-﻿#if NETFRAMEWORK
+﻿using System.Linq;
+
+#if NETFRAMEWORK
 using System.ServiceModel;
 #else
 using Grpc.Core;

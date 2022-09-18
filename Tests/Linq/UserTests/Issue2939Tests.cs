@@ -1,4 +1,7 @@
-﻿using LinqToDB;
+﻿using System;
+using System.Linq;
+using FluentAssertions;
+using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 

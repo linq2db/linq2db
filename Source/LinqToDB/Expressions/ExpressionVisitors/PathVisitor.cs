@@ -1,11 +1,13 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using LinqToDB.Linq;
 
 namespace LinqToDB.Expressions
 {
-	using Linq;
-
 	// PathVisitor cannot be shared/reused due to _visited state field
 	internal class PathVisitor<TContext>
 	{

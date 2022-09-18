@@ -1,4 +1,8 @@
-﻿namespace LinqToDB.Data
+﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace LinqToDB.Data
 {
 	/// <summary>
 	/// Data connection transaction controller.

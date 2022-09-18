@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.DataProvider.Informix
+﻿using JetBrains.Annotations;
+
+namespace LinqToDB.DataProvider.Informix
 {
 	using System.Collections.Generic;
 	using Configuration;

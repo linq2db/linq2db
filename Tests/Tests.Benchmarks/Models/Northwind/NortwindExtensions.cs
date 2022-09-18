@@ -1,4 +1,7 @@
-﻿namespace LinqToDB.Benchmarks.Models
+﻿using System;
+using System.Linq;
+
+namespace LinqToDB.Benchmarks.Models
 {
 	public static class NortwindExtensions
 	{

@@ -1,9 +1,10 @@
-﻿using System.Globalization;
+﻿using System;
+using System.Collections.Generic;
+using System.Globalization;
+using LinqToDB.CodeModel;
 
 namespace LinqToDB.DataModel
 {
-	using CodeModel;
-
 	// contains basic code generation logic, not related to data model.
 	partial class DataModelGenerator
 	{

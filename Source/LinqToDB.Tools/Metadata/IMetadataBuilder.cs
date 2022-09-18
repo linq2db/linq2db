@@ -1,8 +1,8 @@
-﻿namespace LinqToDB.Metadata
-{
-	using CodeModel;
-	using Mapping;
+﻿using LinqToDB.CodeModel;
+using LinqToDB.Mapping;
 
+namespace LinqToDB.Metadata
+{
 	/// <summary>
 	/// Provides database model metadata generator abstraction.
 	/// </summary>

@@ -1,9 +1,11 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Expressions
 {
-	using Extensions;
+	using LinqToDB.Extensions;
 
 	readonly struct TransformInfoVisitor<TContext>
 	{

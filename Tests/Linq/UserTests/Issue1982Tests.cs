@@ -1,6 +1,8 @@
 ﻿using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
+using System;
+using System.Linq;
 
 namespace Tests.UserTests
 {

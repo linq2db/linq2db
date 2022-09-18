@@ -1,10 +1,14 @@
-﻿using System.Text;
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Text;
+using System.Data.Common;
 
 namespace LinqToDB.DataProvider.Sybase
 {
-	using Mapping;
-	using SqlProvider;
 	using SqlQuery;
+	using SqlProvider;
+	using Mapping;
 
 	partial class SybaseSqlBuilder : BasicSqlBuilder
 	{

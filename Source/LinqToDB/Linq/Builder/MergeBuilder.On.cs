@@ -1,9 +1,11 @@
-﻿using System.Linq.Expressions;
+﻿using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
-using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using LinqToDB.Expressions;
+
 	using static LinqToDB.Reflection.Methods.LinqToDB.Merge;
 
 	internal partial class MergeBuilder

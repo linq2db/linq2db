@@ -1,4 +1,8 @@
-﻿namespace LinqToDB.Tools.Comparers
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace LinqToDB.Tools.Comparers
 {
 	class EnumerableEqualityComparer<T> : EqualityComparer<IEnumerable<T>>
 	{

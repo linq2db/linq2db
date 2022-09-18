@@ -1,4 +1,7 @@
-﻿namespace LinqToDB.SqlQuery
+﻿using System;
+using System.Collections.Generic;
+
+namespace LinqToDB.SqlQuery
 {
 	/// <summary>
 	/// This is internal API and is not intended for use by Linq To DB applications.

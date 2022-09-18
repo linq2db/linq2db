@@ -1,10 +1,13 @@
-﻿namespace LinqToDB.DataModel
-{
-	using CodeModel;
-	using Data;
-	using SqlProvider;
-	using SqlQuery;
+﻿using System;
+using System.Text;
+using LinqToDB.Schema;
+using LinqToDB.CodeModel;
+using LinqToDB.Data;
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
 
+namespace LinqToDB.DataModel
+{
 	// basic functionality for function/procedure mappings generation
 	partial class DataModelGenerator
 	{

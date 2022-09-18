@@ -1,4 +1,8 @@
-﻿namespace LinqToDB.DataProvider.Firebird
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace LinqToDB.DataProvider.Firebird
 {
 	using Extensions;
 	using Mapping;

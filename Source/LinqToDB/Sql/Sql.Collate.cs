@@ -1,8 +1,10 @@
-﻿using System.Text.RegularExpressions;
+﻿using System;
+using System.Text.RegularExpressions;
 
 namespace LinqToDB
 {
 	using Expressions;
+	using Linq;
 	using SqlQuery;
 
 	public static partial class Sql

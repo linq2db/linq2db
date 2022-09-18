@@ -1,11 +1,14 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Data;
 
 namespace LinqToDB.DataProvider.Informix
 {
-	using Common;
-	using DataProvider.DB2;
-	using Expressions;
-	using Mapping;
+	using System.Data.Common;
+	using System.Linq.Expressions;
+	using LinqToDB.Common;
+	using LinqToDB.DataProvider.DB2;
+	using LinqToDB.Expressions;
+	using LinqToDB.Mapping;
 
 	// Note on informix providers: there are actually 3 providers:
 	// - SQLI Provider(IBM.Data.Informix) : netfx only, no bulk copy

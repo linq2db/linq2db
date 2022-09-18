@@ -1,9 +1,11 @@
-﻿using System.Globalization;
+﻿using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using LinqToDB.Naming;
 
 namespace LinqToDB.CommandLine
 {
-	using Naming;
-
 	/// <summary>
 	/// Help command implementation.
 	/// Supports:

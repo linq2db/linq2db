@@ -1,4 +1,9 @@
-﻿namespace LinqToDB.DataProvider.Sybase
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+
+namespace LinqToDB.DataProvider.Sybase
 {
 	using Common;
 	using Data;

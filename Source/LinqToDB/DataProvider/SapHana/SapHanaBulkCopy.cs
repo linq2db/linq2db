@@ -1,6 +1,12 @@
-﻿namespace LinqToDB.DataProvider.SapHana
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace LinqToDB.DataProvider.SapHana
 {
 	using Data;
+	using System.Threading;
+	using System.Threading.Tasks;
 
 	class SapHanaBulkCopy : BasicBulkCopy
 	{

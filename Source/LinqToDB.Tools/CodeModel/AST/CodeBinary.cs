@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.CodeModel
+﻿using System;
+
+namespace LinqToDB.CodeModel
 {
 	public sealed class CodeBinary : ICodeExpression
 	{

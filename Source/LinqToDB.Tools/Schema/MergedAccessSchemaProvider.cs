@@ -1,4 +1,7 @@
-﻿namespace LinqToDB.Schema
+﻿using System.Collections.Generic;
+using System.Linq;
+
+namespace LinqToDB.Schema
 {
 	/// <summary>
 	/// Implements schema provider for MS Access, that takes schema from OLE DB and ODBC providers and merge it into single schema

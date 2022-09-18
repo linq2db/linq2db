@@ -1,6 +1,9 @@
-﻿namespace LinqToDB.Common.Internal
+﻿using System;
+using System.Threading;
+
+namespace LinqToDB.Common.Internal
 {
-	internal static class NonCapturingLazyInitializer
+    internal static class NonCapturingLazyInitializer
     {
         public static TValue EnsureInitialized<TParam, TValue>(
             ref TValue? target,

@@ -1,4 +1,7 @@
-﻿namespace LinqToDB.DataProvider
+﻿using System;
+using System.Data.Common;
+
+namespace LinqToDB.DataProvider
 {
 	/// <summary>
 	/// Contains base information about ADO.NET provider.

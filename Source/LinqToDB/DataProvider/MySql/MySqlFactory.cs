@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.DataProvider.MySql
+﻿using JetBrains.Annotations;
+
+namespace LinqToDB.DataProvider.MySql
 {
 	using System.Collections.Generic;
 	using Configuration;

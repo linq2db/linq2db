@@ -1,4 +1,12 @@
-﻿namespace LinqToDB
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+
+using JetBrains.Annotations;
+
+namespace LinqToDB
 {
 	using Linq;
 #if !NATIVE_ASYNC

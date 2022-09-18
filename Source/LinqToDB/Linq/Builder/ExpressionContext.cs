@@ -1,9 +1,10 @@
-﻿using System.Linq.Expressions;
-using LinqToDB.Expressions;
+﻿using System;
+using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Common;
+	using LinqToDB.Common;
+	using LinqToDB.Expressions;
 	using SqlQuery;
 
 	class ExpressionContext : SequenceContextBase

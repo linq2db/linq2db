@@ -1,4 +1,7 @@
-﻿namespace LinqToDB.CodeModel
+﻿using System;
+using System.Collections.Generic;
+
+namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// Identifier comparer/equality comparer for names and name sequences (e.g. namespaces).

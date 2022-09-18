@@ -1,11 +1,12 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq.Expressions;
 using System.Reflection;
 using LinqToDB.Expressions;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Builder
 {
-	using SqlQuery;
-
 	using Methods = Reflection.Methods.LinqToDB.MultiInsert;
 
 	class MultiInsertBuilder : MethodCallBuilder

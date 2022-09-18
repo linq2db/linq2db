@@ -1,4 +1,5 @@
-﻿using BenchmarkDotNet.Attributes;
+﻿using System.Linq;
+using BenchmarkDotNet.Attributes;
 
 namespace LinqToDB.Benchmarks.TypeMapping
 {

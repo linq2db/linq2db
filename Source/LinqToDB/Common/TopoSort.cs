@@ -1,4 +1,9 @@
-﻿namespace LinqToDB.Common
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using JetBrains.Annotations;
+
+namespace LinqToDB.Common
 {
 	/// <summary>
 	/// This alogrithm is partially borrowed from CodeJam library.

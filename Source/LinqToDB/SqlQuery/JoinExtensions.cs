@@ -1,6 +1,6 @@
 ﻿namespace LinqToDB.SqlQuery
 {
-	public static class JoinExtensions
+	public static class Extensions
 	{
 		#region Join
 
@@ -105,5 +105,6 @@
 		}
 
 		#endregion
+
 	}
 }

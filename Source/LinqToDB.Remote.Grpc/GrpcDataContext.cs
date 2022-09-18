@@ -1,4 +1,5 @@
-﻿using Grpc.Net.Client;
+﻿using System;
+using Grpc.Net.Client;
 
 namespace LinqToDB.Remote.Grpc
 {

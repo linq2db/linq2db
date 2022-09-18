@@ -1,7 +1,8 @@
-﻿namespace LinqToDB.CodeModel
-{
-	using Common;
+﻿using System.Collections.Generic;
+using LinqToDB.Common;
 
+namespace LinqToDB.CodeModel
+{
 	/// <summary>
 	/// Base class for method-like nodes.
 	/// </summary>

@@ -1,7 +1,7 @@
-﻿namespace LinqToDB.DataModel
-{
-	using Metadata;
+﻿using LinqToDB.Metadata;
 
+namespace LinqToDB.DataModel
+{
 	/// <summary>
 	/// Entity column model.
 	/// </summary>

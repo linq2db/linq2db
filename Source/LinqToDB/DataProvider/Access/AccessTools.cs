@@ -1,9 +1,14 @@
-﻿using System.Security;
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
 
 namespace LinqToDB.DataProvider.Access
 {
-	using Configuration;
+	using System.Data.Common;
+	using System.IO;
+	using System.Security;
 	using Data;
+	using LinqToDB.Configuration;
 
 	/// <summary>
 	/// Contains Access provider management tools.

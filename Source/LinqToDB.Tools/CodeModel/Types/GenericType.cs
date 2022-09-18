@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.CodeModel
+﻿using System.Collections.Generic;
+
+namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// Implementation of generic type.

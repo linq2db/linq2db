@@ -1,10 +1,12 @@
-﻿using System.Text;
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
 
 namespace LinqToDB.DataProvider.SapHana
 {
-	using Mapping;
-	using SqlProvider;
 	using SqlQuery;
+	using SqlProvider;
+	using Mapping;
 
 	partial class SapHanaSqlBuilder : BasicSqlBuilder
 	{
