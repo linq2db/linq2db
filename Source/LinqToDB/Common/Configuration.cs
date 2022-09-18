@@ -102,6 +102,16 @@ namespace LinqToDB.Common
 		/// </remarks>
 		public static int MaxStringParameterLengthLogging { get; set; } = 200;
 
+		/// <summary>
+		/// Whether or not Nullable Reference Types annotations from C#
+		/// are read and taken into consideration to determine if a
+		/// column or association can be null.
+		/// Nullable Types can be overriden with explicit CanBeNull
+		/// annotations in [Column] or [Nullable].
+		/// </summary>
+		/// <remarks>Defaults to false.</remarks>
+		public static bool UseNullableTypesMetadata { get; set; }
+
 		public static class Data
 		{
 			/// <summary>

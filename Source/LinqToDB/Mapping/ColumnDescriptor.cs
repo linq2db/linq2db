@@ -160,6 +160,9 @@ namespace LinqToDB.Mapping
 		
 		private static bool ProbeNullableReflectionSupport()
 		{
+			if (!Configuration.UseNullableTypesMetadata)
+				return false;
+
 			try
 			{
 				var propInfo = typeof(ColumnDescriptor).GetProperty(nameof(SequenceName));
@@ -203,7 +206,7 @@ namespace LinqToDB.Mapping
 				{
 					PropertyInfo p => context.Create(p).ReadState,
 					FieldInfo    f => context.Create(f).ReadState,
-								_ => NullabilityState.Unknown,
+								 _ => NullabilityState.Unknown,
 				};
 				
 				if (nullability != NullabilityState.Unknown)
