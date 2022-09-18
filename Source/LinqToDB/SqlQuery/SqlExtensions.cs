@@ -89,7 +89,7 @@ namespace LinqToDB.SqlQuery
 		{
 			var result = statement.GetInsertClause();
 			if (result == null)
-				ThrowHelper.ThrowLinqToDBException($"Insert clause not found in {statement.GetType().Name}");
+				throw new LinqToDBException($"Insert clause not found in {statement.GetType().Name}");
 			return result;
 		}
 
@@ -115,7 +115,7 @@ namespace LinqToDB.SqlQuery
 		{
 			var result = statement.GetUpdateClause();
 			if (result == null)
-				ThrowHelper.ThrowLinqToDBException($"Update clause not found in {statement.GetType().Name}");
+				throw new LinqToDBException($"Update clause not found in {statement.GetType().Name}");
 			return result;
 		}
 
@@ -142,7 +142,7 @@ namespace LinqToDB.SqlQuery
 		{
 			var selectQuery = statement.SelectQuery;
 			if (selectQuery == null)
-				ThrowHelper.ThrowLinqToDBException("Sqlect Query required");
+				throw new LinqToDBException("Sqlect Query required");
 			return selectQuery;
 		}
 
@@ -156,7 +156,7 @@ namespace LinqToDB.SqlQuery
 		{
 			return expr is MethodCallExpression { Method.Name: "Row" } call
 				? call.Arguments
-				: ThrowHelper.ThrowLinqToDBException< ReadOnlyCollection<Expression>>("Calls to Sql.Row() are the only valid expressions of type SqlRow.");
+				: throw new LinqToDBException("Calls to Sql.Row() are the only valid expressions of type SqlRow.");
 		}
 	}
 }

@@ -48,7 +48,7 @@ namespace LinqToDB.Remote
 		public override long     GetInt64   (int ordinal) => (long    )GetValue(ordinal)!;
 		public override string   GetString  (int ordinal) => (string  )GetValue(ordinal)!;
 
-		public override object GetValue(int ordinal) => GetValueInternal(ordinal) ?? ThrowHelper.ThrowInvalidOperationException<object>("Value is NULL");
+		public override object GetValue(int ordinal) => GetValueInternal(ordinal) ?? throw new InvalidOperationException("Value is NULL");
 
 		private object? GetValueInternal(int ordinal)
 		{
@@ -83,15 +83,15 @@ namespace LinqToDB.Remote
 			return false;
 		}
 
-		public override long        GetBytes      (int ordinal, long dataOffset, byte[]? buffer, int bufferOffset, int length) => ThrowHelper.ThrowNotImplementedException<long>();
-		public override long        GetChars      (int ordinal, long dataOffset, char[]? buffer, int bufferOffset, int length) => ThrowHelper.ThrowNotImplementedException<long>();
-		public override int         GetValues     (object[] values) => ThrowHelper.ThrowNotImplementedException<int>();
-		public override IEnumerator GetEnumerator () => ThrowHelper.ThrowNotImplementedException<IEnumerator>();
-		public override DataTable   GetSchemaTable() => ThrowHelper.ThrowNotImplementedException<DataTable  >();
-		public override bool        NextResult    () => ThrowHelper.ThrowNotImplementedException<bool       >();
+		public override long        GetBytes      (int ordinal, long dataOffset, byte[]? buffer, int bufferOffset, int length) => throw new NotImplementedException();
+		public override long        GetChars      (int ordinal, long dataOffset, char[]? buffer, int bufferOffset, int length) => throw new NotImplementedException();
+		public override int         GetValues     (object[] values) => throw new NotImplementedException();
+		public override IEnumerator GetEnumerator () => throw new NotImplementedException();
+		public override DataTable   GetSchemaTable() => throw new NotImplementedException();
+		public override bool        NextResult    () => throw new NotImplementedException();
 
-		public override bool IsClosed       => ThrowHelper.ThrowNotImplementedException<bool>();
-		public override int RecordsAffected => ThrowHelper.ThrowNotImplementedException<int>();
+		public override bool IsClosed       => throw new NotImplementedException();
+		public override int RecordsAffected => throw new NotImplementedException();
 		#endregion
 	}
 }

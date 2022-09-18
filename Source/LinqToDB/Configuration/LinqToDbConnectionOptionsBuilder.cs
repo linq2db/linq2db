@@ -37,7 +37,7 @@ namespace LinqToDB.Configuration
 		private void CheckAssignSetupType(ConnectionSetupType type)
 		{
 			if (SetupType != ConnectionSetupType.DefaultConfiguration)
-				ThrowHelper.ThrowLinqToDBException(
+				throw new LinqToDBException(
 					$"{nameof(LinqToDBConnectionOptionsBuilder)} already setup using {SetupType}, use Reset first to overwrite");
 			SetupType = type;
 		}
@@ -72,8 +72,8 @@ namespace LinqToDB.Configuration
 		{
 			CheckAssignSetupType(ConnectionSetupType.ConnectionString);
 
-			ConnectionString = connectionString ?? ThrowHelper.ThrowArgumentNullException<string>(nameof(connectionString));
-			ProviderName     = providerName     ?? ThrowHelper.ThrowArgumentNullException<string>(nameof(providerName));
+			ConnectionString = connectionString ?? throw new ArgumentNullException(nameof(connectionString));
+			ProviderName     = providerName     ?? throw new ArgumentNullException(nameof(providerName));
 
 			return this;
 		}
@@ -90,8 +90,8 @@ namespace LinqToDB.Configuration
 		{
 			CheckAssignSetupType(ConnectionSetupType.ConnectionString);
 
-			ConnectionString = connectionString ?? ThrowHelper.ThrowArgumentNullException<string       >(nameof(connectionString));
-			DataProvider     = dataProvider     ?? ThrowHelper.ThrowArgumentNullException<IDataProvider>(nameof(dataProvider));
+			ConnectionString = connectionString ?? throw new ArgumentNullException(nameof(connectionString));
+			DataProvider     = dataProvider     ?? throw new ArgumentNullException(nameof(dataProvider));
 
 			return this;
 		}
@@ -106,7 +106,7 @@ namespace LinqToDB.Configuration
 		{
 			CheckAssignSetupType(ConnectionSetupType.ConfigurationString);
 
-			ConfigurationString = configurationString ?? ThrowHelper.ThrowArgumentNullException<string>(nameof(configurationString));
+			ConfigurationString = configurationString ?? throw new ArgumentNullException(nameof(configurationString));
 			return this;
 		}
 
@@ -122,8 +122,8 @@ namespace LinqToDB.Configuration
 		{
 			CheckAssignSetupType(ConnectionSetupType.ConnectionFactory);
 
-			DataProvider      = dataProvider      ?? ThrowHelper.ThrowArgumentNullException<IDataProvider     >(nameof(dataProvider));
-			ConnectionFactory = connectionFactory ?? ThrowHelper.ThrowArgumentNullException<Func<DbConnection>>(nameof(connectionFactory));
+			DataProvider      = dataProvider      ?? throw new ArgumentNullException(nameof(dataProvider));
+			ConnectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
 
 			return this;
 		}
@@ -142,8 +142,8 @@ namespace LinqToDB.Configuration
 		{
 			CheckAssignSetupType(ConnectionSetupType.Connection);
 
-			DataProvider = dataProvider ?? ThrowHelper.ThrowArgumentNullException<IDataProvider>(nameof(dataProvider));
-			DbConnection = connection   ?? ThrowHelper.ThrowArgumentNullException<DbConnection >(nameof(connection));
+			DataProvider = dataProvider ?? throw new ArgumentNullException(nameof(dataProvider));
+			DbConnection = connection   ?? throw new ArgumentNullException(nameof(connection));
 
 			DisposeConnection = disposeConnection;
 
@@ -156,14 +156,13 @@ namespace LinqToDB.Configuration
 		/// <param name="dataProvider">Used by the connection to determine functionality when executing commands/queries.</param>
 		/// <param name="transaction">Existing transaction.</param>
 		/// <returns>The builder instance so calls can be chained.</returns>
-		public LinqToDBConnectionOptionsBuilder UseTransaction(
-			IDataProvider dataProvider,
+		public LinqToDBConnectionOptionsBuilder UseTransaction(IDataProvider dataProvider,
 			DbTransaction transaction)
 		{
 			CheckAssignSetupType(ConnectionSetupType.Transaction);
 
-			DataProvider  = dataProvider ?? ThrowHelper.ThrowArgumentNullException<IDataProvider>(nameof(dataProvider));
-			DbTransaction = transaction  ?? ThrowHelper.ThrowArgumentNullException<DbTransaction>(nameof(transaction));
+			DataProvider  = dataProvider ?? throw new ArgumentNullException(nameof(dataProvider));
+			DbTransaction = transaction  ?? throw new ArgumentNullException(nameof(transaction));
 
 			return this;
 		}
@@ -175,7 +174,7 @@ namespace LinqToDB.Configuration
 		/// <returns>The builder instance so calls can be chained.</returns>
 		public LinqToDBConnectionOptionsBuilder UseMappingSchema(MappingSchema mappingSchema)
 		{
-			MappingSchema = mappingSchema ?? ThrowHelper.ThrowArgumentNullException<MappingSchema>(nameof(mappingSchema));
+			MappingSchema = mappingSchema ?? throw new ArgumentNullException(nameof(mappingSchema));
 			return this;
 		}
 
@@ -186,7 +185,7 @@ namespace LinqToDB.Configuration
 		/// <returns>The builder instance so calls can be chained.</returns>
 		public LinqToDBConnectionOptionsBuilder UseDataProvider(IDataProvider dataProvider)
 		{
-			DataProvider = dataProvider ?? ThrowHelper.ThrowArgumentNullException<IDataProvider>(nameof(dataProvider));
+			DataProvider = dataProvider ?? throw new ArgumentNullException(nameof(dataProvider));
 			return this;
 		}
 

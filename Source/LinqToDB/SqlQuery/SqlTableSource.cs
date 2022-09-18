@@ -18,7 +18,7 @@ namespace LinqToDB.SqlQuery
 
 		public SqlTableSource(ISqlTableSource source, string? alias, params SqlJoinedTable[]? joins)
 		{
-			Source = source ?? ThrowHelper.ThrowArgumentNullException<ISqlTableSource>(nameof(source));
+			Source = source ?? throw new ArgumentNullException(nameof(source));
 			_alias = alias;
 
 			if (joins != null)
@@ -27,7 +27,7 @@ namespace LinqToDB.SqlQuery
 
 		public SqlTableSource(ISqlTableSource source, string? alias, IEnumerable<SqlJoinedTable> joins, IEnumerable<ISqlExpression[]>? uniqueKeys)
 		{
-			Source = source ?? ThrowHelper.ThrowArgumentNullException<ISqlTableSource>(nameof(source));
+			Source = source ?? throw new ArgumentNullException(nameof(source));
 			_alias = alias;
 
 			if (joins != null)

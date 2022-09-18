@@ -137,7 +137,7 @@ namespace LinqToDB.DataProvider.Firebird
 					break;
 				}	
 				default:
-					return ThrowHelper.ThrowInvalidOperationException<ISqlPredicate>($"Unexpected predicate: {predicate.Kind}");
+					throw new InvalidOperationException($"Unexpected predicate: {predicate.Kind}");
 			}
 
 			return new SqlSearchCondition(new SqlCondition(false, new SqlPredicate.Expr(expr)));

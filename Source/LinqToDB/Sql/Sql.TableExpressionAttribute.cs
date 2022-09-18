@@ -52,7 +52,7 @@ namespace LinqToDB
 				ExpressionAttribute.PrepareParameterValues(context, mappingSchema, methodCall, ref expressionStr, false, out var knownExpressions, false, out var genericTypes, converter);
 
 				if (string.IsNullOrEmpty(expressionStr))
-					ThrowHelper.ThrowLinqToDBException($"Cannot retrieve Table Expression body from expression '{methodCall}'.");
+					throw new LinqToDBException($"Cannot retrieve Table Expression body from expression '{methodCall}'.");
 
 				// Add two fake expressions, TableName and Alias
 				knownExpressions.Insert(0, null);

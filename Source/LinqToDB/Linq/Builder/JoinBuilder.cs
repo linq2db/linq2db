@@ -34,7 +34,7 @@ namespace LinqToDB.Linq.Builder
 					throwExpr = mi.Bindings.Any(b => b.BindingType != MemberBindingType.Assignment);
 
 				if (throwExpr)
-					ThrowHelper.ThrowNotSupportedException($"Explicit construction of entity type '{body.Type}' in join is not allowed.");
+					throw new NotSupportedException($"Explicit construction of entity type '{body.Type}' in join is not allowed.");
 			}
 
 			return true;
@@ -105,7 +105,7 @@ namespace LinqToDB.Linq.Builder
 				for (var i = 0; i < mi1.Bindings.Count; i++)
 				{
 					if (mi1.Bindings[i].Member != mi2.Bindings[i].Member)
-						ThrowHelper.ThrowLinqException($"List of member inits does not match for entity type '{outerKeySelector.Type}'.");
+						throw new LinqException($"List of member inits does not match for entity type '{outerKeySelector.Type}'.");
 
 					var arg1 = ((MemberAssignment)mi1.Bindings[i]).Expression;
 					var arg2 = ((MemberAssignment)mi2.Bindings[i]).Expression;
@@ -184,7 +184,7 @@ namespace LinqToDB.Linq.Builder
 				for (var i = 0; i < mi1.Bindings.Count; i++)
 				{
 					if (mi1.Bindings[i].Member != mi2.Bindings[i].Member)
-						ThrowHelper.ThrowLinqException($"List of member inits does not match for entity type '{outerKeySelector.Type}'.");
+						throw new LinqException($"List of member inits does not match for entity type '{outerKeySelector.Type}'.");
 
 					var arg1 = ((MemberAssignment)mi1.Bindings[i]).Expression;
 					var arg2 = ((MemberAssignment)mi2.Bindings[i]).Expression;

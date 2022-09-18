@@ -201,7 +201,7 @@ namespace LinqToDB.Expressions
 						((ChangeTypeExpression)expr1).Expression.EqualsTo(((ChangeTypeExpression)expr2).Expression, info);
 
 				default:
-					return ThrowHelper.ThrowNotImplementedException<bool>($"Unhandled expression type: {expr1.NodeType}");
+					throw new NotImplementedException($"Unhandled expression type: {expr1.NodeType}");
 			}
 		}
 

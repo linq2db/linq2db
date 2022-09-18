@@ -41,7 +41,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			var info = ConvertToIndex(null, 0, ConvertFlags.All);
 			if (info.Length != 1)
-				ThrowHelper.ThrowInvalidOperationException();
+				throw new InvalidOperationException();
 
 			var parentIndex = ConvertToParentIndex(info[0].Index, this);
 			return Builder.BuildSql(SqlExpression.SystemType ?? typeof(object), parentIndex, info[0].Sql);
@@ -70,11 +70,11 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (expression is ParameterExpression)
 				{
-					ThrowHelper.ThrowNotImplementedException();
+					throw new NotImplementedException();
 				}
 			}
 
-			return ThrowHelper.ThrowNotImplementedException<IsExpressionResult>();
+			throw new NotImplementedException();
 		}
 
 		public IBuildContext? GetContext     (Expression? expression, int level, BuildInfo buildInfo)
@@ -84,7 +84,7 @@ namespace LinqToDB.Linq.Builder
 
 		public virtual SqlStatement GetResultStatement()
 		{
-			return ThrowHelper.ThrowNotImplementedException<SqlStatement>();
+			throw new NotImplementedException();
 		}
 
 		public void CompleteColumns()

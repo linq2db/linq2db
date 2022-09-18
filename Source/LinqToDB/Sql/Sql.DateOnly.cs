@@ -37,7 +37,7 @@ namespace LinqToDB
 				DateParts.Day       => date.Value.Day,
 				DateParts.Week      => CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(date.Value.ToDateTime(TimeOnly.MinValue), CalendarWeekRule.FirstDay, DayOfWeek.Sunday),
 				DateParts.WeekDay   => ((int)date.Value.DayOfWeek + 1 + DateFirst + 6) % 7 + 1,
-				_                   => ThrowHelper.ThrowInvalidOperationException<int>(),
+				_                   => throw new InvalidOperationException(),
 			};
 		}
 		#endregion
@@ -69,7 +69,7 @@ namespace LinqToDB
 				DateParts.Day       => date.Value.AddDays((int)number.Value),
 				DateParts.Week      => date.Value.AddDays((int)number.Value * 7),
 				DateParts.WeekDay   => date.Value.AddDays((int)number.Value),
-				_                   => ThrowHelper.ThrowInvalidOperationException<DateOnly>(),
+				_                   => throw new InvalidOperationException(),
 			};
 		}
 
@@ -81,18 +81,19 @@ namespace LinqToDB
 				var date   = builder.GetExpression("date");
 				var number = builder.GetExpression("number", true);
 
-				string expStr = "strftime('%Y-%m-%d', {0}," +
-					part switch
-					{
-						DateParts.Year      => "{1} || ' Year')",
-						DateParts.Quarter   => "({1}*3) || ' Month')",
-						DateParts.Month     => "{1} || ' Month')",
-						DateParts.DayOfYear or 
-						DateParts.WeekDay   or 
-						DateParts.Day       => "{1} || ' Day')",
-						DateParts.Week      => "({1}*7) || ' Day')",
-						_ => ThrowHelper.ThrowInvalidOperationException<string>($"Unexpected datepart: {part}"),
-					};
+				string expStr = "strftime('%Y-%m-%d', {0},";
+				switch (part)
+				{
+					case DateParts.Year:      expStr += "{1} || ' Year')"; break;
+					case DateParts.Quarter:   expStr += "({1}*3) || ' Month')"; break;
+					case DateParts.Month:     expStr += "{1} || ' Month')"; break;
+					case DateParts.DayOfYear:
+					case DateParts.WeekDay:
+					case DateParts.Day:       expStr += "{1} || ' Day')"; break;
+					case DateParts.Week:      expStr += "({1}*7) || ' Day')"; break;
+					default:
+						throw new InvalidOperationException($"Unexpected datepart: {part}");
+				}
 
 				builder.ResultExpression = new SqlExpression(typeof(DateTime?), expStr, Precedence.Concatenate, date, number);
 			}
@@ -117,7 +118,7 @@ namespace LinqToDB
 			return part switch
 			{
 				DateParts.Day => endDate.Value.DayNumber - startDate.Value.DayNumber,
-				_             => ThrowHelper.ThrowInvalidOperationException<int>(),
+				_             => throw new InvalidOperationException(),
 			};
 		}
 		#endregion

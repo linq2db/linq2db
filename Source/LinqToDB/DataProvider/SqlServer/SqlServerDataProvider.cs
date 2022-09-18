@@ -156,7 +156,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				SqlServerVersion.v2017 => new SqlServer2017SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags),
 				SqlServerVersion.v2019 => new SqlServer2019SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags),
 				SqlServerVersion.v2022 => new SqlServer2022SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags),
-				_                      => ThrowHelper.ThrowInvalidOperationException<ISqlBuilder>(),
+				_                      => throw new InvalidOperationException(),
 			};
 		}
 

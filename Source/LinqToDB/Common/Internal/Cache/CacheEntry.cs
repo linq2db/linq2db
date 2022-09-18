@@ -37,17 +37,17 @@ namespace LinqToDB.Common.Internal.Cache
 		{
 			if (key == null)
 			{
-				ThrowHelper.ThrowArgumentNullException(nameof(key));
+				throw new ArgumentNullException(nameof(key));
 			}
 
 			if (notifyCacheEntryCommit == null)
 			{
-				ThrowHelper.ThrowArgumentNullException(nameof(notifyCacheEntryCommit));
+				throw new ArgumentNullException(nameof(notifyCacheEntryCommit));
 			}
 
 			if (notifyCacheOfExpiration == null)
 			{
-				ThrowHelper.ThrowArgumentNullException(nameof(notifyCacheOfExpiration));
+				throw new ArgumentNullException(nameof(notifyCacheOfExpiration));
 			}
 
 			Key = key;
@@ -76,7 +76,7 @@ namespace LinqToDB.Common.Internal.Cache
 			{
 				if (value <= TimeSpan.Zero)
 				{
-					ThrowHelper.ThrowArgumentOutOfRangeException(
+					throw new ArgumentOutOfRangeException(
 						nameof(AbsoluteExpirationRelativeToNow),
 						value,
 						"The relative expiration value must be positive.");
@@ -97,7 +97,7 @@ namespace LinqToDB.Common.Internal.Cache
 			{
 				if (value <= TimeSpan.Zero)
 				{
-					ThrowHelper.ThrowArgumentOutOfRangeException(
+					throw new ArgumentOutOfRangeException(
 						nameof(SlidingExpiration),
 						value,
 						"The sliding expiration value must be positive.");
@@ -148,7 +148,7 @@ namespace LinqToDB.Common.Internal.Cache
 			{
 				if (value < 0)
 				{
-					ThrowHelper.ThrowArgumentOutOfRangeException(nameof(value), value, $"{nameof(value)} must be non-negative.");
+					throw new ArgumentOutOfRangeException(nameof(value), value, $"{nameof(value)} must be non-negative.");
 				}
 
 				_size = value;

@@ -57,7 +57,7 @@ namespace LinqToDB.DataProvider
 #else
 						var assembly = Common.Tools.TryLoadAssembly(AssemblyName, null);
 						if (assembly == null)
-							ThrowHelper.ThrowInvalidOperationException($"Cannot load assembly {AssemblyName}");
+							throw new InvalidOperationException($"Cannot load assembly {AssemblyName}");
 #endif
 
 						var connectionType  = assembly.GetType($"{ClientNamespace}.OleDbConnection" , true)!;
@@ -110,8 +110,7 @@ namespace LinqToDB.DataProvider
 		[Wrapper]
 		private class OleDbConnection
 		{
-			public DataTable GetOleDbSchemaTable(Guid schema, object[]? restrictions) 
-				=> ThrowHelper.ThrowNotImplementedException<DataTable>();
+			public DataTable GetOleDbSchemaTable(Guid schema, object[]? restrictions) => throw new NotImplementedException();
 		}
 
 		[Wrapper]

@@ -129,7 +129,7 @@ namespace LinqToDB.Linq.Builder
 				return flags switch
 				{
 					ConvertFlags.Field => new[] { new SqlInfo(Sql!, Parent!.SelectQuery) },
-					_                  => ThrowHelper.ThrowNotImplementedException<SqlInfo[]>(),
+					_                  => throw new NotImplementedException(),
 				};
 			}
 
@@ -142,7 +142,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							new SqlInfo(Sql!, Parent!.SelectQuery, Parent.SelectQuery.Select.Add(Sql!))
 						},
-					_ => ThrowHelper.ThrowNotImplementedException<SqlInfo[]>(),
+					_ => throw new NotImplementedException(),
 				};
 			}
 

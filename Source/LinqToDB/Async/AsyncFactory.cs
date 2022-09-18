@@ -68,7 +68,7 @@ namespace LinqToDB.Async
 		public static IAsyncDbConnection Create(DbConnection connection)
 		{
 			if (connection == null)
-				ThrowHelper.ThrowArgumentNullException(nameof(connection));
+				throw new ArgumentNullException(nameof(connection));
 
 			// no wrap required
 			if (connection is IAsyncDbConnection asyncConnection)
@@ -85,7 +85,7 @@ namespace LinqToDB.Async
 		public static IAsyncDbTransaction Create(DbTransaction transaction)
 		{
 			if (transaction == null)
-				ThrowHelper.ThrowArgumentNullException(nameof(transaction));
+				throw new ArgumentNullException(nameof(transaction));
 
 			// no wrap required
 			if (transaction is IAsyncDbTransaction asyncTransaction)

@@ -256,7 +256,7 @@ namespace LinqToDB.DataProvider.Sybase
 				case TableOptions.IsGlobalTemporaryStructure | TableOptions.IsGlobalTemporaryData                          :
 					return $"##{physicalName}";
 				case var value :
-					return ThrowHelper.ThrowInvalidOperationException<string>($"Incompatible table options '{value}'");
+					throw new InvalidOperationException($"Incompatible table options '{value}'");
 			}
 		}
 

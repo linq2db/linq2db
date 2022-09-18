@@ -261,8 +261,7 @@ namespace LinqToDB.Expressions
 				case ExpressionType.Constant : break;
 
 				default:
-					ThrowHelper.ThrowNotImplementedException($"Unhandled expression type: {expr.NodeType}");
-					break;
+					throw new NotImplementedException($"Unhandled expression type: {expr.NodeType}");
 			}
 		}
 

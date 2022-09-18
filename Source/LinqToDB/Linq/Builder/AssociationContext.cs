@@ -22,7 +22,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			// get => TableContext.SelectQuery;
 			get => SubqueryContext.SelectQuery;
-			set => ThrowHelper.ThrowNotImplementedException();
+			set => throw new NotImplementedException();
 		}
 
 		public SqlStatement? Statement

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace LinqToDB.Reflection
 {
@@ -7,12 +7,12 @@ namespace LinqToDB.Reflection
 	{
 		public ObjectFactoryAttribute(Type type)
 		{
-			if (type == null) ThrowHelper.ThrowArgumentNullException(nameof(type));
+			if (type == null) throw new ArgumentNullException(nameof(type));
 
 			ObjectFactory = (Activator.CreateInstance(type) as IObjectFactory)!;
 
 			if (ObjectFactory == null)
-				ThrowHelper.ThrowArgumentException(nameof(type), $"Type '{type}' does not implement IObjectFactory interface.");
+				throw new ArgumentException($"Type '{type}' does not implement IObjectFactory interface.");
 		}
 
 		public IObjectFactory ObjectFactory { get; }

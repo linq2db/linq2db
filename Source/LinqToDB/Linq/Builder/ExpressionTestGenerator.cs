@@ -566,7 +566,7 @@ namespace LinqToDB.Linq.Builder
 				return string.Format(@"{0}
 		public {1}({2})
 		{{
-			// ThrowHelper.ThrowNotImplementedException();
+			// throw new NotImplementedException();
 		}}",
 					attr,
 					name,
@@ -638,7 +638,7 @@ namespace LinqToDB.Linq.Builder
 					return string.Format(@"{0}
 		{5}{4}{1} {2}({3})
 		{{
-			ThrowHelper.ThrowNotImplementedException();
+			throw new NotImplementedException();
 		}}",
 						string.Concat(attrs.Select(a => "\r\n\t\t" + a.ToString())),
 						GetTypeName(m.ReturnType),

@@ -236,7 +236,7 @@ namespace LinqToDB.DataProvider.DB2
 
 			// "db..table" syntax not supported
 			if (name.Database != null && schemaName == null)
-				ThrowHelper.ThrowLinqToDBException("DB2 requires schema name if database name provided.");
+				throw new LinqToDBException("DB2 requires schema name if database name provided.");
 
 			if (name.Database != null)
 			{
@@ -298,24 +298,33 @@ END");
 
 		protected override void BuildCreateTableCommand(SqlTable table)
 		{
-			var command = (table.TableOptions.IsTemporaryOptionSet(), table.TableOptions & TableOptions.IsTemporaryOptionSet) switch
+			string command;
+
+			if (table.TableOptions.IsTemporaryOptionSet())
 			{
-				(true, TableOptions.IsTemporary                                                                              ) or
-				(true, TableOptions.IsTemporary |                                           TableOptions.IsLocalTemporaryData) or
-				(true, TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                     ) or
-				(true, TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure  | TableOptions.IsLocalTemporaryData) or
-				(true,                                                                      TableOptions.IsLocalTemporaryData) or
-				(true,                            TableOptions.IsLocalTemporaryStructure                                     ) or
-				(true,                            TableOptions.IsLocalTemporaryStructure  | TableOptions.IsLocalTemporaryData)
-					=> "DECLARE GLOBAL TEMPORARY TABLE ",
-				(true,                            TableOptions.IsGlobalTemporaryStructure                                    ) or
-				(true,                            TableOptions.IsGlobalTemporaryStructure | TableOptions.IsLocalTemporaryData) 
-					=> "CREATE GLOBAL TEMPORARY TABLE ",
-				(true, var value)
-					=> ThrowHelper.ThrowInvalidOperationException<string>($"Incompatible table options '{value}'"),
-				(false, _) 
-					=> "CREATE TABLE ",
-			};
+				switch (table.TableOptions & TableOptions.IsTemporaryOptionSet)
+				{
+					case TableOptions.IsTemporary                                                                               :
+					case TableOptions.IsTemporary |                                           TableOptions.IsLocalTemporaryData :
+					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                      :
+					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure  | TableOptions.IsLocalTemporaryData :
+					case                                                                      TableOptions.IsLocalTemporaryData :
+					case                            TableOptions.IsLocalTemporaryStructure                                      :
+					case                            TableOptions.IsLocalTemporaryStructure  | TableOptions.IsLocalTemporaryData :
+						command = "DECLARE GLOBAL TEMPORARY TABLE ";
+						break;
+					case                            TableOptions.IsGlobalTemporaryStructure                                     :
+					case                            TableOptions.IsGlobalTemporaryStructure | TableOptions.IsLocalTemporaryData :
+						command = "CREATE GLOBAL TEMPORARY TABLE ";
+						break;
+					case var value :
+						throw new InvalidOperationException($"Incompatible table options '{value}'");
+				}
+			}
+			else
+			{
+				command = "CREATE TABLE ";
+			}
 
 			StringBuilder.Append(command);
 		}

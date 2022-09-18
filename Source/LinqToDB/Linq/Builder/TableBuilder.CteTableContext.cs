@@ -35,8 +35,7 @@ namespace LinqToDB.Linq.Builder
 					isRecursive = true;
 					break;
 				default:
-					bodyExpr = ThrowHelper.ThrowInvalidOperationException<Expression>();
-					break;
+					throw new InvalidOperationException();
 			}
 
 			bodyExpr = builder.ConvertExpression(bodyExpr);
@@ -215,7 +214,7 @@ namespace LinqToDB.Linq.Builder
 
 			SqlField RegisterCteField(ISqlExpression? baseExpression, ISqlExpression expression, int index, string? alias)
 			{
-				if (expression == null) ThrowHelper.ThrowArgumentNullException(nameof(expression));
+				if (expression == null) throw new ArgumentNullException(nameof(expression));
 
 				var cteField = _cte.RegisterFieldMapping(index, () =>
 				{

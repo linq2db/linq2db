@@ -84,7 +84,7 @@ namespace LinqToDB.Common
 				case   'T' : return true;
 			}
 
-			return ThrowHelper.ThrowInvalidCastException<bool>("Invalid cast from System.String to System.Bool");
+			throw new InvalidCastException("Invalid cast from System.String to System.Bool");
 		}
 
 		/// <summary>

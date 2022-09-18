@@ -82,7 +82,7 @@ namespace LinqToDB.Tools.EntityServices
 				if (mappingSchema.IsScalarType(typeof(TK)))
 				{
 					if (_keyColumns.Count != 1)
-						ThrowHelper.ThrowLinqToDBConvertException($"Type '{typeof(T).Name}' must contain only one key column.");
+						throw new LinqToDBConvertException($"Type '{typeof(T).Name}' must contain only one key column.");
 
 					_mapper = v =>
 					{
@@ -97,7 +97,7 @@ namespace LinqToDB.Tools.EntityServices
 
 					foreach (var column in _keyColumns)
 						if (!fromNames.Contains(column.Name))
-							ThrowHelper.ThrowLinqToDBConvertException($"Type '{typeof(TK).Name}' must contain field or property '{column.Name}'.");
+							throw new LinqToDBConvertException($"Type '{typeof(TK).Name}' must contain field or property '{column.Name}'.");
 
 					_mapper = Map.GetMapper<TK,T>(m => m.SetToMemberFilter(ma => _keyColumns.Count == 0 || _keyColumns.Contains(ma))).GetMapper();
 				}
@@ -143,8 +143,8 @@ namespace LinqToDB.Tools.EntityServices
 
 		public T? GetEntity(IDataContext context, object key)
 		{
-			if (context == null) ThrowHelper.ThrowArgumentNullException(nameof(context));
-			if (key     == null) ThrowHelper.ThrowArgumentNullException(nameof(key));
+			if (context == null) throw new ArgumentNullException(nameof(context));
+			if (key     == null) throw new ArgumentNullException(nameof(key));
 
 			if (_keyComparers == null)
 				lock (this)

@@ -16,7 +16,7 @@ namespace LinqToDB.Async
 	{
 		internal protected AsyncDbTransaction(DbTransaction transaction)
 		{
-			Transaction = transaction ?? ThrowHelper.ThrowArgumentNullException<DbTransaction>(nameof(transaction));
+			Transaction = transaction ?? throw new ArgumentNullException(nameof(transaction));
 		}
 
 		public DbTransaction Transaction { get; }

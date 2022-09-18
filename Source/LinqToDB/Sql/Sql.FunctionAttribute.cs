@@ -93,7 +93,7 @@ namespace LinqToDB
 				PrepareParameterValues(context, dataContext.MappingSchema, expression, ref expressionStr, true, out var knownExpressions, IgnoreGenericParameters, out var genericTypes, converter);
 
 				if (string.IsNullOrEmpty(expressionStr))
-					ThrowHelper.ThrowLinqToDBException($"Cannot retrieve function name for expression '{expression}'.");
+					throw new LinqToDBException($"Cannot retrieve function name for expression '{expression}'.");
 
 				var parameters = PrepareArguments(context, expressionStr!, ArgIndices, addDefault: true, knownExpressions, genericTypes, converter);
 

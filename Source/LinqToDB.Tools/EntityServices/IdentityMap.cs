@@ -15,7 +15,7 @@ namespace LinqToDB.Tools.EntityServices
 	{
 		public IdentityMap(IDataContext dataContext)
 		{
-			_dataContext = dataContext ?? ThrowHelper.ThrowArgumentNullException<IDataContext>(nameof(dataContext));
+			_dataContext = dataContext ?? throw new ArgumentNullException(nameof(dataContext));
 			_dataContext.AddInterceptor(this);
 		}
 

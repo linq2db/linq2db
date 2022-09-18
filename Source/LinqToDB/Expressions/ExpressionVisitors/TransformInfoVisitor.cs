@@ -335,7 +335,7 @@ namespace LinqToDB.Expressions
 					return expr;
 
 				default:
-					return ThrowHelper.ThrowNotImplementedException<Expression>($"Unhandled expression type: {expr.NodeType}");
+					throw new NotImplementedException($"Unhandled expression type: {expr.NodeType}");
 			}
 		}
 

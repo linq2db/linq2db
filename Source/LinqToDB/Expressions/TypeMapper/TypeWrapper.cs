@@ -58,7 +58,7 @@ namespace LinqToDB.Expressions
 		{
 			if (!(getter.Body is MemberExpression me)
 				|| !(me.Member is PropertyInfo pi))
-				return ThrowHelper.ThrowLinqToDBException<Expression<Action<TI, TP>>>($"Expected property accessor expression");
+				throw new LinqToDBException($"Expected property accessor expression");
 
 			var pThis  = Expression.Parameter(typeof(TI));
 			var pValue = Expression.Parameter(typeof(TP));

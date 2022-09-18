@@ -96,7 +96,7 @@ namespace LinqToDB.Linq.Builder
 					var genericType     = typeof(IEnumerable<>).GetGenericType(info.Expression.Type);
 
 					if (genericType == null || prevGenericType == null)
-						ThrowHelper.ThrowInvalidOperationException();
+						throw new InvalidOperationException();
 
 					var newArgument = info.Expression;
 					var elementType = genericType.GetGenericArguments()[0];
@@ -364,7 +364,7 @@ namespace LinqToDB.Linq.Builder
 					return null!; // ???
 				}
 
-				return ThrowHelper.ThrowNotImplementedException<Expression>();
+				throw new NotImplementedException();
 			}
 
 			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
@@ -384,7 +384,7 @@ namespace LinqToDB.Linq.Builder
 
 			public override IBuildContext GetContext(Expression? expression, int level, BuildInfo buildInfo)
 			{
-				return ThrowHelper.ThrowNotImplementedException<IBuildContext>();
+				throw new NotImplementedException();
 			}
 		}
 	}

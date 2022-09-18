@@ -209,7 +209,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// </summary>
 		public static void ResolveSqlTypes(string path)
 		{
-			if (path == null) ThrowHelper.ThrowArgumentNullException(nameof(path));
+			if (path == null) throw new ArgumentNullException(nameof(path));
 
 			new AssemblyResolver(path, SqlServerTypes.AssemblyName);
 

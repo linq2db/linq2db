@@ -71,7 +71,7 @@ namespace LinqToDB
 				}
 
 				if (string.IsNullOrEmpty(name))
-					ThrowHelper.ThrowLinqToDBException($"Cannot retrieve property name for expression '{expression}'.");
+					throw new LinqToDBException($"Cannot retrieve property name for expression '{expression}'.");
 
 				return new SqlExpression(expression.Type, name!, SqlQuery.Precedence.Primary)
 				{

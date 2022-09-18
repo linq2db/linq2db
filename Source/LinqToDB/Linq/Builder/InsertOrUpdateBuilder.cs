@@ -52,7 +52,7 @@ namespace LinqToDB.Linq.Builder
 				var keys  = table.GetKeys(false);
 
 				if (keys.Count == 0)
-					ThrowHelper.ThrowLinqException($"InsertOrUpdate method requires the '{table.NameForLogging}' table to have a primary key.");
+					throw new LinqException("InsertOrUpdate method requires the '{0}' table to have a primary key.", table.NameForLogging);
 
 				var q =
 				(
@@ -64,8 +64,9 @@ namespace LinqToDB.Linq.Builder
 				var missedKey = keys.Except(q.Select(i => i.k)).FirstOrDefault();
 
 				if (missedKey != null)
-					ThrowHelper.ThrowLinqException(
-						$"InsertOrUpdate method requires the '{table.NameForLogging}.{((SqlField)missedKey).Name}' field to be included in the insert setter.");
+					throw new LinqException("InsertOrUpdate method requires the '{0}.{1}' field to be included in the insert setter.",
+						table.NameForLogging,
+						((SqlField)missedKey).Name);
 
 				insertOrUpdateStatement.Update.Keys.AddRange(q.Select(i => i.i));
 			}
@@ -104,27 +105,27 @@ namespace LinqToDB.Linq.Builder
 
 			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 			{
-				return ThrowHelper.ThrowNotImplementedException<Expression>();
+				throw new NotImplementedException();
 			}
 
 			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 			{
-				return ThrowHelper.ThrowNotImplementedException<SqlInfo[]>();
+				throw new NotImplementedException();
 			}
 
 			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 			{
-				return ThrowHelper.ThrowNotImplementedException<SqlInfo[]>();
+				throw new NotImplementedException();
 			}
 
 			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 			{
-				return ThrowHelper.ThrowNotImplementedException<IsExpressionResult>();
+				throw new NotImplementedException();
 			}
 
 			public override IBuildContext GetContext(Expression? expression, int level, BuildInfo buildInfo)
 			{
-				return ThrowHelper.ThrowNotImplementedException<IBuildContext>();
+				throw new NotImplementedException();
 			}
 		}
 

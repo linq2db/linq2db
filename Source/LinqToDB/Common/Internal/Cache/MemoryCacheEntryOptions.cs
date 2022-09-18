@@ -36,7 +36,7 @@ namespace LinqToDB.Common.Internal.Cache
 			{
 				if (value <= TimeSpan.Zero)
 				{
-					ThrowHelper.ThrowArgumentOutOfRangeException(
+					throw new ArgumentOutOfRangeException(
 						nameof(AbsoluteExpirationRelativeToNow),
 						value,
 						"The relative expiration value must be positive.");
@@ -57,7 +57,7 @@ namespace LinqToDB.Common.Internal.Cache
 			{
 				if (value <= TimeSpan.Zero)
 				{
-					ThrowHelper.ThrowArgumentOutOfRangeException(
+					throw new ArgumentOutOfRangeException(
 						nameof(SlidingExpiration),
 						value,
 						"The sliding expiration value must be positive.");
@@ -93,7 +93,7 @@ namespace LinqToDB.Common.Internal.Cache
 			{
 				if (value < 0)
 				{
-					ThrowHelper.ThrowArgumentOutOfRangeException(nameof(value), value, $"{nameof(value)} must be non-negative.");
+					throw new ArgumentOutOfRangeException(nameof(value), value, $"{nameof(value)} must be non-negative.");
 				}
 
 				_size = value;

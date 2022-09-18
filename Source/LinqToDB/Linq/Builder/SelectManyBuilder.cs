@@ -229,7 +229,7 @@ namespace LinqToDB.Linq.Builder
 				if (Collection == null)
 					base.BuildQuery(query, queryParameter);
 
-				ThrowHelper.ThrowNotImplementedException();
+				throw new NotImplementedException();
 			}
 
 			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)

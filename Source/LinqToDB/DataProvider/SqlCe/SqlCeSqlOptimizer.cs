@@ -175,7 +175,7 @@ namespace LinqToDB.DataProvider.SqlCe
 
 								if (q.OrderBy.IsEmpty)
 								{
-									ThrowHelper.ThrowLinqToDBException("Order by required for Skip operation.");
+									throw new LinqToDBException("Order by required for Skip operation.");
 								}
 							}
 

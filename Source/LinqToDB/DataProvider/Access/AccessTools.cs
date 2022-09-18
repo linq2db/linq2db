@@ -103,7 +103,7 @@ namespace LinqToDB.DataProvider.Access
 		/// </remarks>
 		public static void CreateDatabase(string databaseName, bool deleteIfExists = false, string provider = "Microsoft.Jet.OLEDB.4.0")
 		{
-			if (databaseName == null) ThrowHelper.ThrowArgumentNullException(nameof(databaseName));
+			if (databaseName == null) throw new ArgumentNullException(nameof(databaseName));
 
 			databaseName = databaseName.Trim();
 
@@ -138,7 +138,7 @@ namespace LinqToDB.DataProvider.Access
 		/// <param name="databaseName">Name of database to remove.</param>
 		public static void DropDatabase(string databaseName)
 		{
-			if (databaseName == null) ThrowHelper.ThrowArgumentNullException(nameof(databaseName));
+			if (databaseName == null) throw new ArgumentNullException(nameof(databaseName));
 
 			DataTools.DropFileDatabase(databaseName, ".mdb");
 		}

@@ -237,7 +237,7 @@ namespace LinqToDB.DataProvider
 			if (fieldType == null)
 			{
 				var name = reader.GetName(idx);
-				ThrowHelper.ThrowLinqToDBException($"Can't create '{typeName}' type or '{providerType}' specific type for {name}.");
+				throw new LinqToDBException($"Can't create '{typeName}' type or '{providerType}' specific type for {name}.");
 			}
 
 			typeName = NormalizeTypeName(typeName);

@@ -34,7 +34,7 @@ namespace LinqToDB.SqlQuery
 			bool         isRecursive,
 			string?      name)
 		{
-			ObjectType  = objectType ?? ThrowHelper.ThrowArgumentNullException<Type>(nameof(objectType));
+			ObjectType  = objectType ?? throw new ArgumentNullException(nameof(objectType));
 			Body        = body;
 			IsRecursive = isRecursive;
 			Name        = name;

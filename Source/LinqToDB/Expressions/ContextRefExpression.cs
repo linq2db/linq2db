@@ -9,7 +9,7 @@ namespace LinqToDB.Expressions
 		public ContextRefExpression(Type elementType, IBuildContext buildContext)
 		{
 			ElementType = elementType;
-			BuildContext = buildContext ?? ThrowHelper.ThrowArgumentNullException<IBuildContext>(nameof(buildContext));
+			BuildContext = buildContext ?? throw new ArgumentNullException(nameof(buildContext));
 		}
 
 		public Type ElementType { get; }

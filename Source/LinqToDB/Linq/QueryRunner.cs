@@ -236,7 +236,7 @@ namespace LinqToDB.Linq
 
 			var evaluated = sqlExpr.EvaluateExpression(new EvaluationContext(parameterValues)) as int?;
 			if (evaluated == null)
-				ThrowHelper.ThrowInvalidOperationException($"Can not evaluate integer expression from '{sqlExpr}'.");
+				throw new InvalidOperationException($"Can not evaluate integer expression from '{sqlExpr}'.");
 			return evaluated.Value;
 		}
 
@@ -345,7 +345,7 @@ namespace LinqToDB.Linq
 			FinalizeQuery(query);
 
 			if (query.Queries.Count != 1)
-				ThrowHelper.ThrowInvalidOperationException();
+				throw new InvalidOperationException();
 
 			TakeSkipDelegate? skip = null, take = null;
 
@@ -686,7 +686,7 @@ namespace LinqToDB.Linq
 
 			// we can safely assume it is block expression
 			if (expression.Body is not BlockExpression block)
-				return ThrowHelper.ThrowLinqException<Expression<Func<IQueryRunner, DbDataReader, T>>>("BlockExpression missing for mapper");
+				throw new LinqException("BlockExpression missing for mapper");
 
 			return
 				Expression.Lambda<Func<IQueryRunner, DbDataReader, T>>(
@@ -764,7 +764,7 @@ namespace LinqToDB.Linq
 			FinalizeQuery(query);
 
 			if (query.Queries.Count != 1)
-				ThrowHelper.ThrowInvalidOperationException();
+				throw new InvalidOperationException();
 
 			ClearParameters(query);
 
@@ -847,7 +847,7 @@ namespace LinqToDB.Linq
 			FinalizeQuery(query);
 
 			if (query.Queries.Count != 1)
-				ThrowHelper.ThrowInvalidOperationException();
+				throw new InvalidOperationException();
 
 			ClearParameters(query);
 
@@ -887,7 +887,7 @@ namespace LinqToDB.Linq
 			FinalizeQuery(query);
 
 			if (query.Queries.Count != 1)
-				ThrowHelper.ThrowInvalidOperationException();
+				throw new InvalidOperationException();
 
 			ClearParameters(query);
 
@@ -927,7 +927,7 @@ namespace LinqToDB.Linq
 			FinalizeQuery(query);
 
 			if (query.Queries.Count != 2)
-				ThrowHelper.ThrowInvalidOperationException();
+				throw new InvalidOperationException();
 
 			ClearParameters(query);
 
@@ -985,7 +985,7 @@ namespace LinqToDB.Linq
 			FinalizeQuery(query);
 
 			if (query.Queries.Count != 2)
-				ThrowHelper.ThrowInvalidOperationException();
+				throw new InvalidOperationException();
 
 			ClearParameters(query);
 

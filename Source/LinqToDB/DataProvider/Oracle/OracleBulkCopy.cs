@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.Common;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -363,7 +362,7 @@ namespace LinqToDB.DataProvider.Oracle
 			return new CommandInfo(connection, sql, parameters)
 				.ExecuteCustom(cmd => _provider.Adapter.ExecuteArray!(
 					_provider.TryGetProviderCommand(connection, cmd)
-						?? ThrowHelper.ThrowLinqToDBException<DbCommand>($"AlternativeBulkCopy.InsertInto BulkCopy mode cannot be used with {cmd.GetType()} type. Use OracleTools.UseAlternativeBulkCopy to change mode."),
+						?? throw new LinqToDBException($"AlternativeBulkCopy.InsertInto BulkCopy mode cannot be used with {cmd.GetType()} type. Use OracleTools.UseAlternativeBulkCopy to change mode."),
 					iters));
 		}
 

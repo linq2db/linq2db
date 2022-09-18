@@ -41,7 +41,7 @@ namespace System.Runtime.CompilerServices
 		{
 			if (transformNames == null)
 			{
-				LinqToDB.ThrowHelper.ThrowArgumentNullException(nameof(transformNames));
+				throw new ArgumentNullException(nameof(transformNames));
 			}
 
 			_transformNames = transformNames;

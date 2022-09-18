@@ -33,18 +33,18 @@ namespace LinqToDB
 			{
 				return new ComWrapper(Activator.CreateInstance(Type.GetTypeFromProgID(progID, true)!)!);
 			}
-
-			return ThrowHelper.ThrowPlatformNotSupportedException<dynamic>();
 #endif
+
+			throw new PlatformNotSupportedException();
 		}
 
 		public static dynamic Wrap(object instance)
 		{
 			if (instance is null)
-				ThrowHelper.ThrowArgumentNullException(nameof(instance));
+				throw new ArgumentNullException(nameof(instance));
 
 			if (!instance.GetType().IsCOMObject)
-				ThrowHelper.ThrowArgumentException(nameof(instance), "Object must be a COM object");
+				throw new ArgumentException("Object must be a COM object", nameof(instance));
 
 			return new ComWrapper(instance);
 		}

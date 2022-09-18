@@ -59,7 +59,7 @@ namespace LinqToDB.SqlQuery
 		public override SelectQuery? SelectQuery
 		{
 			get => null;
-			set => ThrowHelper.ThrowInvalidOperationException();
+			set => throw new InvalidOperationException();
 		}
 
 		public override ISqlTableSource? GetTableSource(ISqlTableSource table)

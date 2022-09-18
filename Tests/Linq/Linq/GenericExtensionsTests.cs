@@ -18,7 +18,7 @@ namespace Tests.Linq
 		{
 			Configuration = configuration;
 			Expression    = expression;
-			Types         = types ?? ThrowHelper.ThrowArgumentNullException<Type?[]>(nameof(types));
+			Types         = types ?? throw new ArgumentNullException(nameof(types));
 		}
 
 		public string  Configuration { get; set; }

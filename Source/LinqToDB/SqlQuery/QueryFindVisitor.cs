@@ -396,8 +396,7 @@ namespace LinqToDB.SqlQuery
 					break;
 
 				default:
-					ThrowHelper.ThrowInvalidOperationException($"Find visitor not implemented for element {element.ElementType}");
-					break;
+					throw new InvalidOperationException($"Find visitor not implemented for element {element.ElementType}");
 			}
 
 			return null;

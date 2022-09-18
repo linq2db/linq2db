@@ -23,7 +23,7 @@ namespace LinqToDB.Remote.Grpc
 		/// <exception cref="ArgumentNullException"></exception>
 		public GrpcLinqService(ILinqService linqService, bool transferInternalExceptionToClient)
 		{
-			_linqService = linqService ?? ThrowHelper.ThrowArgumentNullException<ILinqService>(nameof(linqService));
+			_linqService = linqService ?? throw new ArgumentNullException(nameof(linqService));
 			_transferInternalExceptionToClient = transferInternalExceptionToClient;
 		}
 

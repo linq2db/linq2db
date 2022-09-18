@@ -37,7 +37,7 @@ namespace LinqToDB.Common
 		internal static string GetPath(this Assembly assembly)
 		{
 			return Path.GetDirectoryName(assembly.GetFileName())
-				?? ThrowHelper.ThrowInvalidOperationException<string>($"Cannot get path to {assembly.GetFileName()}");
+				?? throw new InvalidOperationException($"Cannot get path to {assembly.GetFileName()}");
 		}
 
 		/// <summary>

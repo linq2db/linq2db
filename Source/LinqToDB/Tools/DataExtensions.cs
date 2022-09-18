@@ -33,8 +33,8 @@ namespace LinqToDB.Tools
 			bool                useIdentity     = false)
 			where T: notnull
 		{
-			if (source  == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
-			if (context == null) ThrowHelper.ThrowArgumentNullException(nameof(context));
+			if (source  == null) throw new ArgumentNullException(nameof(source));
+			if (context == null) throw new ArgumentNullException(nameof(context));
 
 			IList<T>? sourceList = null;
 
@@ -103,7 +103,7 @@ namespace LinqToDB.Tools
 					TypeCode.UInt64  => (ulong  )maxValue + 1,
 					TypeCode.Single  => (float  )maxValue + 1,
 					TypeCode.Decimal => (decimal)maxValue + 1,
-					_                => ThrowHelper.ThrowNotImplementedException<object>(),
+					_                => throw new NotImplementedException(),
 				};
 				var value = Converter.ChangeType(maxValue, column.MemberType);
 				column.MemberAccessor.SetValue(item!, value);
@@ -129,7 +129,7 @@ namespace LinqToDB.Tools
 					TypeCode.UInt64  => (ulong  )last + (ulong)(i + 1) * (ulong)step,
 					TypeCode.Single  => (float  )last + (i + 1) * (float  )step,
 					TypeCode.Decimal => (decimal)last + (i + 1) * (decimal)step,
-					_                => ThrowHelper.ThrowNotImplementedException<object>(),
+					_                => throw new NotImplementedException(),
 				};
 
 				var value = Converter.ChangeType(nextValue, column.MemberType);

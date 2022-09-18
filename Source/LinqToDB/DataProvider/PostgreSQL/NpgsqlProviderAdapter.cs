@@ -177,7 +177,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					{
 						var assembly = Tools.TryLoadAssembly(AssemblyName, null);
 						if (assembly == null)
-							ThrowHelper.ThrowInvalidOperationException($"Cannot load assembly {AssemblyName}");
+							throw new InvalidOperationException($"Cannot load assembly {AssemblyName}");
 
 						var connectionType     = assembly.GetType($"{ClientNamespace}.NpgsqlConnection"  , true)!;
 						var parameterType      = assembly.GetType($"{ClientNamespace}.NpgsqlParameter"   , true)!;
@@ -557,16 +557,15 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			{
 			}
 
-			public NpgsqlConnection(string connectionString) => ThrowHelper.ThrowNotImplementedException();
+			public NpgsqlConnection(string connectionString) => throw new NotImplementedException();
 
 			public Version PostgreSqlVersion => ((Func<NpgsqlConnection, Version>)CompiledWrappers[0])(this);
 			public void    Open()            => ((Action<NpgsqlConnection>)CompiledWrappers[1])(this);
 			public void    Dispose()         => ((Action<NpgsqlConnection>)CompiledWrappers[2])(this);
 
 			// not implemented, as it is not called from wrapper
-			internal NpgsqlBinaryImporter BeginBinaryImport(string copyFromCommand) => ThrowHelper.ThrowNotImplementedException<NpgsqlBinaryImporter>();
-			internal Task<NpgsqlBinaryImporter> BeginBinaryImportAsync(string copyFromCommand, CancellationToken cancellationToken) 
-				=> ThrowHelper.ThrowNotImplementedException<Task<NpgsqlBinaryImporter>>();
+			internal NpgsqlBinaryImporter BeginBinaryImport(string copyFromCommand) => throw new NotImplementedException();
+			internal Task<NpgsqlBinaryImporter> BeginBinaryImportAsync(string copyFromCommand, CancellationToken cancellationToken) => throw new NotImplementedException();
 		}
 
 		#region BulkCopy

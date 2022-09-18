@@ -155,7 +155,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		{
 			var assembly = Common.Tools.TryLoadAssembly(ClientAssemblyName, ClientProviderFactoryName);
 			if (assembly == null)
-				ThrowHelper.ThrowInvalidOperationException($"Cannot load assembly {ClientAssemblyName}");
+				throw new InvalidOperationException($"Cannot load assembly {ClientAssemblyName}");
 
 			var connectionType              = assembly.GetType($"{ClientClientNamespace}.ClickHouseConnection"             , true)!;
 			var commandType                 = assembly.GetType($"{ClientClientNamespace}.ClickHouseCommand"                , true)!;
@@ -200,7 +200,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		{
 			var assembly = Common.Tools.TryLoadAssembly(OctonicaAssemblyName, OctonicaProviderFactoryName);
 			if (assembly == null)
-				ThrowHelper.ThrowInvalidOperationException($"Cannot load assembly {OctonicaAssemblyName}");
+				throw new InvalidOperationException($"Cannot load assembly {OctonicaAssemblyName}");
 
 			var connectionType     = assembly.GetType($"{OctonicaClientNamespace}.ClickHouseConnection"           , true)!;
 			var commandType        = assembly.GetType($"{OctonicaClientNamespace}.ClickHouseCommand"              , true)!;
@@ -280,7 +280,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 				{
 				}
 
-				public ClickHouseConnection(string connectionString) => ThrowHelper.ThrowNotImplementedException();
+				public ClickHouseConnection(string connectionString) => throw new NotImplementedException();
 
 				public string ConnectionString => ((Func<ClickHouseConnection, string>)CompiledWrappers[1])(this);
 
@@ -305,7 +305,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 				{
 				}
 
-				public ClickHouseConnectionStringBuilder(string connectionString) => ThrowHelper.ThrowNotImplementedException();
+				public ClickHouseConnectionStringBuilder(string connectionString) => throw new NotImplementedException();
 
 				public bool UseSession
 				{
@@ -346,7 +346,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 				{
 				}
 
-				public ClickHouseBulkCopy(ClickHouseConnection connection) => ThrowHelper.ThrowNotImplementedException();
+				public ClickHouseBulkCopy(ClickHouseConnection connection) => throw new NotImplementedException();
 
 				void IDisposable.Dispose() => ((Action<ClickHouseBulkCopy>)CompiledWrappers[0])(this);
 
@@ -388,8 +388,8 @@ namespace LinqToDB.DataProvider.ClickHouse
 			[Wrapper]
 			internal class ClickHouseConnection
 			{
-				public ClickHouseColumnWriter       CreateColumnWriter(string insertFormatCommand)                                           => ThrowHelper.ThrowNotImplementedException<ClickHouseColumnWriter      >();
-				public Task<ClickHouseColumnWriter> CreateColumnWriterAsync(string insertFormatCommand, CancellationToken cancellationToken) => ThrowHelper.ThrowNotImplementedException<Task<ClickHouseColumnWriter>>();
+				public ClickHouseColumnWriter       CreateColumnWriter(string insertFormatCommand)                                           => throw new NotImplementedException();
+				public Task<ClickHouseColumnWriter> CreateColumnWriterAsync(string insertFormatCommand, CancellationToken cancellationToken) => throw new NotImplementedException();
 			}
 
 			[Wrapper]
@@ -399,7 +399,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 				{
 				}
 
-				public ClickHouseColumnSettings(Type columnType) => ThrowHelper.ThrowNotImplementedException();
+				public ClickHouseColumnSettings(Type columnType) => throw new NotImplementedException();
 			}
 
 			[Wrapper]

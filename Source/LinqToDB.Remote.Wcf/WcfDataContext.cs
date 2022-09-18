@@ -18,25 +18,25 @@ namespace LinqToDB.Remote.Wcf
 
 		public WcfDataContext(string endpointConfigurationName)
 		{
-			_endpointConfigurationName = endpointConfigurationName ?? ThrowHelper.ThrowArgumentNullException<string>(nameof(endpointConfigurationName));
+			_endpointConfigurationName = endpointConfigurationName ?? throw new ArgumentNullException(nameof(endpointConfigurationName));
 		}
 
 		public WcfDataContext(string endpointConfigurationName, string remoteAddress)
 		{
-			_endpointConfigurationName = endpointConfigurationName ?? ThrowHelper.ThrowArgumentNullException<string>(nameof(endpointConfigurationName));
-			_remoteAddress             = remoteAddress             ?? ThrowHelper.ThrowArgumentNullException<string>(nameof(remoteAddress));
+			_endpointConfigurationName = endpointConfigurationName ?? throw new ArgumentNullException(nameof(endpointConfigurationName));
+			_remoteAddress             = remoteAddress             ?? throw new ArgumentNullException(nameof(remoteAddress));
 		}
 
 		public WcfDataContext(string endpointConfigurationName, EndpointAddress endpointAddress)
 		{
-			_endpointConfigurationName = endpointConfigurationName ?? ThrowHelper.ThrowArgumentNullException<string         >(nameof(endpointConfigurationName));
-			_endpointAddress           = endpointAddress           ?? ThrowHelper.ThrowArgumentNullException<EndpointAddress>(nameof(endpointAddress));
+			_endpointConfigurationName = endpointConfigurationName ?? throw new ArgumentNullException(nameof(endpointConfigurationName));
+			_endpointAddress           = endpointAddress           ?? throw new ArgumentNullException(nameof(endpointAddress));
 		}
 
 		public WcfDataContext(Binding binding, EndpointAddress endpointAddress)
 		{
-			Binding          = binding         ?? ThrowHelper.ThrowArgumentNullException<Binding        >(nameof(binding));
-			_endpointAddress = endpointAddress ?? ThrowHelper.ThrowArgumentNullException<EndpointAddress>(nameof(endpointAddress));
+			Binding          = binding         ?? throw new ArgumentNullException(nameof(binding));
+			_endpointAddress = endpointAddress ?? throw new ArgumentNullException(nameof(endpointAddress));
 		}
 
 		string?          _endpointConfigurationName;

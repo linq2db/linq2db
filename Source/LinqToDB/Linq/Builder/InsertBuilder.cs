@@ -187,7 +187,7 @@ namespace LinqToDB.Linq.Builder
 					var insertedTable = builder.DataContext.SqlProviderFlags.OutputInsertUseSpecialTable ? SqlTable.Inserted(outputExpression.Parameters[0].Type) : insertStatement.Insert.Into;
 
 					if (insertedTable == null)
-						ThrowHelper.ThrowInvalidOperationException("Cannot find target table for INSERT statement");
+						throw new InvalidOperationException("Cannot find target table for INSERT statement");
 
 					outputContext = new TableBuilder.TableContext(builder, new SelectQuery(), insertedTable);
 
@@ -215,7 +215,7 @@ namespace LinqToDB.Linq.Builder
 			var insert = insertStatement.Insert;
 
 			if (insert.Into == null)
-				ThrowHelper.ThrowLinqToDBException("Insert query has no setters defined.");
+				throw new LinqToDBException("Insert query has no setters defined.");
 
 			var q = insert.Into.IdentityFields
 				.Except(insert.Items.Select(e => e.Column).OfType<SqlField>());
@@ -287,34 +287,33 @@ namespace LinqToDB.Linq.Builder
 						QueryRunner.SetNonQueryQuery(query);
 						break;
 					default:
-						ThrowHelper.ThrowInvalidOperationException($"Unexpected insert type: {_insertType}");
-						break;
+						throw new InvalidOperationException($"Unexpected insert type: {_insertType}");
 				}
 			}
 
 			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 			{
-				return ThrowHelper.ThrowNotImplementedException<Expression>();
+				throw new NotImplementedException();
 			}
 
 			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 			{
-				return ThrowHelper.ThrowNotImplementedException<SqlInfo[]>();
+				throw new NotImplementedException();
 			}
 
 			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 			{
-				return ThrowHelper.ThrowNotImplementedException<SqlInfo[]>();
+				throw new NotImplementedException();
 			}
 
 			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 			{
-				return ThrowHelper.ThrowNotImplementedException<IsExpressionResult>();
+				throw new NotImplementedException();
 			}
 
 			public override IBuildContext GetContext(Expression? expression, int level, BuildInfo buildInfo)
 			{
-				return ThrowHelper.ThrowNotImplementedException<IBuildContext>();
+				throw new NotImplementedException();
 			}
 		}
 

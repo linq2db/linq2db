@@ -221,7 +221,7 @@ namespace LinqToDB.Linq.Builder
 				n = builder.BuildCounter;
 			}
 
-			return ThrowHelper.ThrowLinqException<IBuildContext>($"Sequence '{buildInfo.Expression}' cannot be converted to SQL.");
+			throw new LinqException("Sequence '{0}' cannot be converted to SQL.", buildInfo.Expression);
 		}
 
 		public ISequenceBuilder? GetBuilder(BuildInfo buildInfo, bool throwIfNotFound = true)
@@ -233,7 +233,7 @@ namespace LinqToDB.Linq.Builder
 					return builder;
 
 			if (throwIfNotFound)
-				ThrowHelper.ThrowLinqException($"Sequence '{buildInfo.Expression}' cannot be converted to SQL.");
+				throw new LinqException("Sequence '{0}' cannot be converted to SQL.", buildInfo.Expression);
 			return null;
 		}
 
@@ -246,7 +246,7 @@ namespace LinqToDB.Linq.Builder
 					return builder.Convert(this, buildInfo, param);
 
 			if (throwExceptionIfCantConvert)
-				ThrowHelper.ThrowLinqException($"Sequence '{buildInfo.Expression}' cannot be converted to SQL.");
+				throw new LinqException("Sequence '{0}' cannot be converted to SQL.", buildInfo.Expression);
 
 			return null;
 		}
@@ -319,7 +319,7 @@ namespace LinqToDB.Linq.Builder
 							Expression.Lambda(p.Expr, (ParameterExpression)p.Path));
 					}
 
-					ThrowHelper.ThrowInvalidOperationException();
+					throw new InvalidOperationException();
 				}
 
 				return sequence.Expression;
@@ -984,7 +984,7 @@ namespace LinqToDB.Linq.Builder
 					case "TKey"    : typeArgs[1] = argTypes[i]; break;
 					case "TElement": typeArgs[2] = argTypes[i]; break;
 					case "TResult" : typeArgs[3] = argTypes[i]; break;
-					default: return ThrowHelper.ThrowInvalidOperationException<Expression>($"Unexpected GroupBy type parameter: {args[i].Name}");
+					default: throw new InvalidOperationException($"Unexpected GroupBy type parameter: {args[i].Name}");
 				}
 			}
 
@@ -1187,7 +1187,7 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			if (cm == null)
-				ThrowHelper.ThrowInvalidOperationException("Sequence contains no elements");
+				throw new InvalidOperationException("Sequence contains no elements");
 
 			var wm = GetMethodInfo(method, "Where");
 
@@ -1286,7 +1286,7 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 			if (cm == null)
-				ThrowHelper.ThrowInvalidOperationException("Sequence contains no elements");
+				throw new InvalidOperationException("Sequence contains no elements");
 
 			var argType = types[0];
 
@@ -1392,8 +1392,8 @@ namespace LinqToDB.Linq.Builder
 								new[] { fakeQuery.Expression }.Concat(callExpression.Arguments.Skip(1)));
 							if (CanBeCompiled(callExpression))
 							{
-								if (callExpression.EvaluateExpression() is not IQueryable appliedQuery)
-									return ThrowHelper.ThrowLinqToDBException<Expression>($"Method call '{expression}' returned null value.");
+								if (!(callExpression.EvaluateExpression() is IQueryable appliedQuery))
+									throw new LinqToDBException($"Method call '{expression}' returned null value.");
 								var newExpression = appliedQuery.Expression.Replace(fakeQuery.Expression, firstArgument);
 								return newExpression;
 							}
@@ -1407,7 +1407,7 @@ namespace LinqToDB.Linq.Builder
 
 				_parametersContext._expressionAccessors.TryGetValue(expression, out var accessor);
 				if (accessor == null)
-					ThrowHelper.ThrowLinqToDBException($"IQueryable value accessor for '{expression}' not found.");
+					throw new LinqToDBException($"IQueryable value accessor for '{expression}' not found.");
 
 				var path =
 					Expression.Call(
@@ -1433,7 +1433,7 @@ namespace LinqToDB.Linq.Builder
 				return qex;
 			}
 
-			return ThrowHelper.ThrowInvalidOperationException<Expression>();
+			throw new InvalidOperationException();
 		}
 
 		#endregion
@@ -1527,7 +1527,7 @@ namespace LinqToDB.Linq.Builder
 						return m;
 			}
 
-			return ThrowHelper.ThrowInvalidOperationException<MethodInfo>("Sequence contains no elements");
+			throw new InvalidOperationException("Sequence contains no elements");
 		}
 
 		MethodInfo GetMethodInfo(MethodCallExpression method, string name)
@@ -1547,7 +1547,7 @@ namespace LinqToDB.Linq.Builder
 						return m;
 			}
 
-			return ThrowHelper.ThrowInvalidOperationException<MethodInfo>("Sequence contains no elements");
+			throw new InvalidOperationException("Sequence contains no elements");
 		}
 
 		static Type[] GetMethodGenericTypes(MethodCallExpression method)

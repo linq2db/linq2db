@@ -262,7 +262,7 @@ namespace LinqToDB.SqlQuery
 					var cteTable = (SqlCteTable)(IQueryElement)element;
 
 					if (cteTable.Cte == null)
-						ThrowHelper.ThrowInvalidOperationException("Cte is null");
+						throw new InvalidOperationException("Cte is null");
 
 					// TODO: children Clone called before _objectTree update (original cloning logic)
 					var table = new SqlCteTable(
@@ -793,8 +793,7 @@ namespace LinqToDB.SqlQuery
 				//case QueryElementType.MultiInsertStatement:
 				//case QueryElementType.MergeSourceTable:
 				default:
-					ThrowHelper.ThrowNotImplementedException($"Unsupported query element type: {element.GetType()} ({element.ElementType})");
-					break;
+					throw new NotImplementedException($"Unsupported query element type: {element.GetType()} ({element.ElementType})");
 			}
 
 			if (element is IQueryExtendible { SqlQueryExtensions: {} } qe)

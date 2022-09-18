@@ -22,7 +22,7 @@ namespace LinqToDB.SqlProvider
 		public OptimizationContext(EvaluationContext context, AliasesContext aliases, 
 			bool isParameterOrderDepended)
 		{
-			Aliases = aliases ?? ThrowHelper.ThrowArgumentNullException<AliasesContext>(nameof(aliases));
+			Aliases = aliases ?? throw new ArgumentNullException(nameof(aliases));
 			Context = context;
 			IsParameterOrderDepended = isParameterOrderDepended;
 		}
@@ -157,7 +157,7 @@ namespace LinqToDB.SqlProvider
 
 			// temporary(?) guard
 			if (_nestingLevel > 0)
-				ThrowHelper.ThrowInvalidOperationException("Nested optimization detected");
+				throw new InvalidOperationException("Nested optimization detected");
 			_nestingLevel++;
 			var res = (T?)_visitor.ConvertInternal(element) ?? element;
 			_nestingLevel--;

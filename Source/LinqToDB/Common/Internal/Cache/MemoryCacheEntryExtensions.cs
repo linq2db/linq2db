@@ -35,7 +35,7 @@ namespace LinqToDB.Common.Internal.Cache
 		{
 			if (size < 0)
 			{
-				ThrowHelper.ThrowArgumentOutOfRangeException(nameof(size), size, $"{nameof(size)} must be non-negative.");
+				throw new ArgumentOutOfRangeException(nameof(size), size, $"{nameof(size)} must be non-negative.");
 			}
 
 			options.Size = size;
@@ -55,7 +55,7 @@ namespace LinqToDB.Common.Internal.Cache
 		{
 			if (expirationToken == null)
 			{
-				ThrowHelper.ThrowArgumentNullException(nameof(expirationToken));
+				throw new ArgumentNullException(nameof(expirationToken));
 			}
 
 			options.ExpirationTokens.Add(expirationToken);
@@ -121,7 +121,7 @@ namespace LinqToDB.Common.Internal.Cache
 		{
 			if (callback == null)
 			{
-				ThrowHelper.ThrowArgumentNullException(nameof(callback));
+				throw new ArgumentNullException(nameof(callback));
 			}
 
 			return options.RegisterPostEvictionCallback(callback, state: null);
@@ -142,7 +142,7 @@ namespace LinqToDB.Common.Internal.Cache
 		{
 			if (callback == null)
 			{
-				ThrowHelper.ThrowArgumentNullException(nameof(callback));
+				throw new ArgumentNullException(nameof(callback));
 			}
 
 			options.PostEvictionCallbacks.Add(new PostEvictionCallbackRegistration<TKey>()

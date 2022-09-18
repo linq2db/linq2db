@@ -18,7 +18,7 @@ namespace LinqToDB
 		/// <param name="dataContext">Data context.</param>
 		public DataContextTransaction(DataContext dataContext)
 		{
-			DataContext = dataContext ?? ThrowHelper.ThrowArgumentNullException<DataContext>(nameof(dataContext));
+			DataContext = dataContext ?? throw new ArgumentNullException(nameof(dataContext));
 		}
 
 		/// <summary>

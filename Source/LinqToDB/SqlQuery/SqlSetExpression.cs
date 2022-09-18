@@ -27,7 +27,7 @@ namespace LinqToDB.SqlQuery
 				{
 					var columns = subquery.Select.Columns;
 					if (columns.Count != row.Values.Length)
-						ThrowHelper.ThrowLinqToDBException("Arity of row expression and subquery do not match.");
+						throw new LinqToDBException("Arity of row expression and subquery do not match.");
 					for (int i = 0; i < row.Values.Length; i++)				
 						RefineDbParameter(row.Values[i], columns[i].Expression);
 				}
@@ -35,13 +35,13 @@ namespace LinqToDB.SqlQuery
 				{
 					var values = sqlRow.Values;
 					if (values.Length != row.Values.Length)
-						ThrowHelper.ThrowLinqToDBException("Arity of row expressions do not match.");
+						throw new LinqToDBException("Arity of row expressions do not match.");
 					for (int i = 0; i < values.Length; i++)
 						RefineDbParameter(values[i], values[i]);
 				}
 				else if (expression != null)
 				{
-					ThrowHelper.ThrowArgumentException(nameof(expression), "An array of expressions can only be SET to a subquery or row expression");
+					throw new ArgumentException("An array of expressions can only be SET to a subquery or row expression", nameof(expression));
 				}
 			}
 			else

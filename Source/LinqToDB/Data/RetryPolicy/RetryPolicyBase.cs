@@ -22,9 +22,9 @@ namespace LinqToDB.Data.RetryPolicy
 		protected RetryPolicyBase(int maxRetryCount, TimeSpan maxRetryDelay)
 		{
 			if (maxRetryCount < 0)
-				ThrowHelper.ThrowArgumentOutOfRangeException(nameof(maxRetryCount));
+				throw new ArgumentOutOfRangeException(nameof(maxRetryCount));
 			if (maxRetryDelay.TotalMilliseconds < 0.0)
-				ThrowHelper.ThrowArgumentOutOfRangeException(nameof(maxRetryDelay));
+				throw new ArgumentOutOfRangeException(nameof(maxRetryDelay));
 
 			MaxRetryCount         = maxRetryCount;
 			MaxRetryDelay         = maxRetryDelay;

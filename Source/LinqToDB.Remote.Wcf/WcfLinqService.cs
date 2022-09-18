@@ -15,7 +15,7 @@ namespace LinqToDB.Remote.Wcf
 			bool transferInternalExceptionToClient
 			)
 		{
-			_linqService = linqService ?? ThrowHelper.ThrowArgumentNullException<ILinqService>(nameof(linqService));
+			_linqService = linqService ?? throw new ArgumentNullException(nameof(linqService));
 			_transferInternalExceptionToClient = transferInternalExceptionToClient;
 		}
 

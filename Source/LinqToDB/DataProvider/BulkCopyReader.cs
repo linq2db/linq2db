@@ -151,7 +151,7 @@ namespace LinqToDB.DataProvider
 			return _dataConnection.DataProvider.ConvertParameterType(_columns[ordinal].MemberType, _columnTypes[ordinal]);
 		}
 
-		public override object GetValue(int ordinal) => GetValueInternal(ordinal) ?? ThrowHelper.ThrowInvalidOperationException<object>("Value is NULL");
+		public override object GetValue(int ordinal) => GetValueInternal(ordinal) ?? throw new InvalidOperationException("Value is NULL");
 
 		private object? GetValueInternal(int ordinal)
 		{
@@ -181,32 +181,32 @@ namespace LinqToDB.DataProvider
 
 		public override long GetBytes(int ordinal, long dataOffset, byte[]? buffer, int bufferOffset, int length)
 		{
-			return ThrowHelper.ThrowNotImplementedException<long>();
+			throw new NotImplementedException();
 		}
 
 		public override long GetChars(int ordinal, long dataOffset, char[]? buffer, int bufferOffset, int length)
 		{
-			return ThrowHelper.ThrowNotImplementedException<long>();
+			throw new NotImplementedException();
 		}
 
-		public override string      GetDataTypeName(int ordinal) => ThrowHelper.ThrowNotImplementedException<string  >();
+		public override string      GetDataTypeName(int ordinal) => throw new NotImplementedException();
 		public override int         GetOrdinal     (string name) => _ordinals[name];
-		public override bool        GetBoolean     (int ordinal) => ThrowHelper.ThrowNotImplementedException<bool    >();
-		public override byte        GetByte        (int ordinal) => ThrowHelper.ThrowNotImplementedException<byte    >();
-		public override char        GetChar        (int ordinal) => ThrowHelper.ThrowNotImplementedException<char    >();
-		public override Guid        GetGuid        (int ordinal) => ThrowHelper.ThrowNotImplementedException<Guid    >();
-		public override short       GetInt16       (int ordinal) => ThrowHelper.ThrowNotImplementedException<short   >();
-		public override int         GetInt32       (int ordinal) => ThrowHelper.ThrowNotImplementedException<int     >();
-		public override long        GetInt64       (int ordinal) => ThrowHelper.ThrowNotImplementedException<long    >();
-		public override float       GetFloat       (int ordinal) => ThrowHelper.ThrowNotImplementedException<float   >();
-		public override double      GetDouble      (int ordinal) => ThrowHelper.ThrowNotImplementedException<double  >();
-		public override string      GetString      (int ordinal) => ThrowHelper.ThrowNotImplementedException<string  >();
-		public override decimal     GetDecimal     (int ordinal) => ThrowHelper.ThrowNotImplementedException<decimal >();
-		public override DateTime    GetDateTime    (int ordinal) => ThrowHelper.ThrowNotImplementedException<DateTime>();
+		public override bool        GetBoolean     (int ordinal) => throw new NotImplementedException();
+		public override byte        GetByte        (int ordinal) => throw new NotImplementedException();
+		public override char        GetChar        (int ordinal) => throw new NotImplementedException();
+		public override Guid        GetGuid        (int ordinal) => throw new NotImplementedException();
+		public override short       GetInt16       (int ordinal) => throw new NotImplementedException();
+		public override int         GetInt32       (int ordinal) => throw new NotImplementedException();
+		public override long        GetInt64       (int ordinal) => throw new NotImplementedException();
+		public override float       GetFloat       (int ordinal) => throw new NotImplementedException();
+		public override double      GetDouble      (int ordinal) => throw new NotImplementedException();
+		public override string      GetString      (int ordinal) => throw new NotImplementedException();
+		public override decimal     GetDecimal     (int ordinal) => throw new NotImplementedException();
+		public override DateTime    GetDateTime    (int ordinal) => throw new NotImplementedException();
 		public override bool        IsDBNull       (int ordinal) => GetValueInternal(ordinal) == null;
 
-		public override object this[int i]       => ThrowHelper.ThrowNotImplementedException<object>();
-		public override object this[string name] => ThrowHelper.ThrowNotImplementedException<object>();
+		public override object this[int i]       => throw new NotImplementedException();
+		public override object this[string name] => throw new NotImplementedException();
 
 #endregion
 
@@ -301,16 +301,16 @@ namespace LinqToDB.DataProvider
 		}
 #endif
 
-		public override int Depth           => ThrowHelper.ThrowNotImplementedException<int>();
+		public override int Depth           => throw new NotImplementedException();
 
 		public override bool IsClosed       => false;
 
-		public override int RecordsAffected => ThrowHelper.ThrowNotImplementedException<int>();
+		public override int RecordsAffected => throw new NotImplementedException();
 
 #endregion
 
-		public override IEnumerator GetEnumerator() => ThrowHelper.ThrowNotImplementedException<IEnumerator>();
+		public override IEnumerator GetEnumerator() => throw new NotImplementedException();
 
-		public override bool HasRows => ThrowHelper.ThrowNotImplementedException<bool>();
+		public override bool HasRows => throw new NotImplementedException();
 	}
 }

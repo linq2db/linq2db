@@ -10,10 +10,10 @@ namespace LinqToDB.SqlQuery
 	{
 		public SqlExpression(Type? systemType, string expr, int precedence, SqlFlags flags, params ISqlExpression[] parameters)
 		{
-			if (parameters == null) ThrowHelper.ThrowArgumentNullException(nameof(parameters));
+			if (parameters == null) throw new ArgumentNullException(nameof(parameters));
 
 			foreach (var value in parameters)
-				if (value == null) ThrowHelper.ThrowArgumentNullException(nameof(parameters));
+				if (value == null) throw new ArgumentNullException(nameof(parameters));
 
 			SystemType  = systemType;
 			Expr        = expr;

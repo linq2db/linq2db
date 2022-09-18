@@ -28,7 +28,7 @@ namespace LinqToDB.Common
 				else
 				{
 					if (value != pair.Item2)
-						ThrowHelper.ThrowInvalidOperationException();
+						throw new InvalidOperationException();
 				}
 			}
 		}
@@ -117,7 +117,7 @@ namespace LinqToDB.Common
 			var newGenericArguments = genericArguments.Select((t, i) =>
 			{
 				if (!typesMapping.TryGetValue(t, out var replaced))
-					ThrowHelper.ThrowLinqToDBException($"Not found type mapping for generic argument '{t.Name}'.");
+					throw new LinqToDBException($"Not found type mapping for generic argument '{t.Name}'.");
 				return replaced;
 			}).ToArray();
 

@@ -30,7 +30,7 @@ namespace LinqToDB.Mapping
 		/// <see cref="ProviderName"/> for standard configuration names.</param>
 		public EntityMappingBuilder(FluentMappingBuilder builder, string? configuration)
 		{
-			_builder = builder ?? ThrowHelper.ThrowArgumentNullException<FluentMappingBuilder>(nameof(builder));
+			_builder = builder ?? throw new ArgumentNullException(nameof(builder));
 
 			Configuration = configuration;
 		}
@@ -239,9 +239,9 @@ namespace LinqToDB.Mapping
 			Expression<Func<TProperty, TOtherKey>> otherKey,
 			bool                                   canBeNull = true)
 		{
-			if (prop     == null) ThrowHelper.ThrowArgumentNullException(nameof(prop));
-			if (thisKey  == null) ThrowHelper.ThrowArgumentNullException(nameof(thisKey));
-			if (otherKey == null) ThrowHelper.ThrowArgumentNullException(nameof(otherKey));
+			if (prop     == null) throw new ArgumentNullException(nameof(prop));
+			if (thisKey  == null) throw new ArgumentNullException(nameof(thisKey));
+			if (otherKey == null) throw new ArgumentNullException(nameof(otherKey));
 
 			var thisKeyName  = MemberHelper.GetMemberInfo(thisKey).Name;
 			var otherKeyName = MemberHelper.GetMemberInfo(otherKey).Name;
@@ -266,9 +266,9 @@ namespace LinqToDB.Mapping
 			Expression<Func<TPropElement, TOtherKey>>            otherKey,
 			bool                                                 canBeNull = true)
 		{
-			if (prop     == null) ThrowHelper.ThrowArgumentNullException(nameof(prop));
-			if (thisKey  == null) ThrowHelper.ThrowArgumentNullException(nameof(thisKey));
-			if (otherKey == null) ThrowHelper.ThrowArgumentNullException(nameof(otherKey));
+			if (prop     == null) throw new ArgumentNullException(nameof(prop));
+			if (thisKey  == null) throw new ArgumentNullException(nameof(thisKey));
+			if (otherKey == null) throw new ArgumentNullException(nameof(otherKey));
 
 			var thisKeyName  = MemberHelper.GetMemberInfo(thisKey).Name;
 			var otherKeyName = MemberHelper.GetMemberInfo(otherKey).Name;
@@ -289,8 +289,8 @@ namespace LinqToDB.Mapping
 			Expression<Func<TEntity, TOther, bool>>        predicate,
 			bool                                           canBeNull = true)
 		{
-			if (prop      == null) ThrowHelper.ThrowArgumentNullException(nameof(prop));
-			if (predicate == null) ThrowHelper.ThrowArgumentNullException(nameof(predicate));
+			if (prop      == null) throw new ArgumentNullException(nameof(prop));
+			if (predicate == null) throw new ArgumentNullException(nameof(predicate));
 
 			return Property( prop ).HasAttribute( new AssociationAttribute { Predicate = predicate, CanBeNull = canBeNull } );
 		}
@@ -308,8 +308,8 @@ namespace LinqToDB.Mapping
 			Expression<Func<TEntity, TOther, bool>> predicate,
 			bool                                    canBeNull = true)
 		{
-			if (prop      == null) ThrowHelper.ThrowArgumentNullException(nameof(prop));
-			if (predicate == null) ThrowHelper.ThrowArgumentNullException(nameof(predicate));
+			if (prop      == null) throw new ArgumentNullException(nameof(prop));
+			if (predicate == null) throw new ArgumentNullException(nameof(predicate));
 
 			return Property( prop ).HasAttribute( new AssociationAttribute { Predicate = predicate, CanBeNull = canBeNull } );
 		}
@@ -327,8 +327,8 @@ namespace LinqToDB.Mapping
 			Expression<Func<TEntity, IDataContext, IQueryable<TOther>>> queryExpression,
 			bool                                                        canBeNull = true)
 		{
-			if (prop            == null) ThrowHelper.ThrowArgumentNullException(nameof(prop));
-			if (queryExpression == null) ThrowHelper.ThrowArgumentNullException(nameof(queryExpression));
+			if (prop            == null) throw new ArgumentNullException(nameof(prop));
+			if (queryExpression == null) throw new ArgumentNullException(nameof(queryExpression));
 
 			return Property( prop ).HasAttribute( new AssociationAttribute { QueryExpression = queryExpression, CanBeNull = canBeNull } );
 		}
@@ -346,8 +346,8 @@ namespace LinqToDB.Mapping
 			Expression<Func<TEntity, IDataContext, IQueryable<TOther>>> queryExpression,
 			bool                                                        canBeNull = true)
 		{
-			if (prop            == null) ThrowHelper.ThrowArgumentNullException(nameof(prop));
-			if (queryExpression == null) ThrowHelper.ThrowArgumentNullException(nameof(queryExpression));
+			if (prop            == null) throw new ArgumentNullException(nameof(prop));
+			if (queryExpression == null) throw new ArgumentNullException(nameof(queryExpression));
 
 			return Property( prop ).HasAttribute( new AssociationAttribute { QueryExpression = queryExpression, CanBeNull = canBeNull } );
 		}
@@ -751,7 +751,7 @@ namespace LinqToDB.Mapping
 
 				if (e is MemberExpression && memberInfo.ReflectedType != typeof(TEntity)) memberInfo = typeof(TEntity).GetMemberEx(memberInfo)!;
 
-				if (memberInfo == null) ThrowHelper.ThrowArgumentException($"'{e}' cant be converted to a class member.");
+				if (memberInfo == null) throw new ArgumentException($"'{e}' cant be converted to a class member.");
 
 				var attr = existingGetter!(GetAttributes(memberInfo, configGetter));
 
