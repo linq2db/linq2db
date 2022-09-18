@@ -311,7 +311,7 @@ namespace LinqToDB.Mapping
 
 		private bool AnalyzeCanBeNull()
 		{
-#if NETSTANDARD2_0_OR_GREATER || NETCOREAPP2_0_OR_GREATER || NET5_0_OR_GREATER
+#if NET461_OR_GREATER || NETSTANDARD2_0_OR_GREATER || NETCOREAPP2_0_OR_GREATER || NET5_0_OR_GREATER
 			// Note that nullability of Collections can't be determined from types.
 			// OUTER JOIN are usually materialized in non-nullable, but empty, collections.
 			// For example, `IList<Product> Products` might well require an OUTER JOIN.

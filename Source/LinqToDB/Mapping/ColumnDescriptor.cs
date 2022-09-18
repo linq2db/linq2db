@@ -164,7 +164,7 @@ namespace LinqToDB.Mapping
 			if (na != null)
 				return na.CanBeNull;
 				
-#if NETSTANDARD2_0_OR_GREATER || NETCOREAPP2_0_OR_GREATER || NET5_0_OR_GREATER
+#if NET461_OR_GREATER || NETSTANDARD2_0_OR_GREATER || NETCOREAPP2_0_OR_GREATER || NET5_0_OR_GREATER
 			if (Configuration.UseNullableTypesMetadata)
 			{
 				// Extract info from C# Nullable Reference Types if available.

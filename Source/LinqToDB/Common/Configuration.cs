@@ -126,7 +126,7 @@ namespace LinqToDB.Common
 		private static void EnsureNullableReflectionSupported()
 		{
 			// This check is not cached as it is expected that UseNullableTypesMetadata is only set once.
-#if NETSTANDARD2_0_OR_GREATER || NETCOREAPP2_0_OR_GREATER || NET5_0_OR_GREATER
+#if NET461_OR_GREATER || NETSTANDARD2_0_OR_GREATER || NETCOREAPP2_0_OR_GREATER || NET5_0_OR_GREATER
 			try
 			{
 				var propInfo = typeof(Configuration).GetProperty(nameof(UseNullableTypesMetadata))!;
