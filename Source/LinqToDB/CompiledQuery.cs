@@ -1,15 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using JetBrains.Annotations;
+﻿using System.Linq.Expressions;
 
 namespace LinqToDB
 {
+	using Common;
 	using Expressions;
 	using Extensions;
 	using Linq;
-	using LinqToDB.Common;
 
 	/// <summary>
 	/// Provides API for compilation and caching of queries for reuse.
@@ -30,8 +26,7 @@ namespace LinqToDB
 		{
 			if (_compiledQuery == null)
 				lock (_sync)
-					if (_compiledQuery == null)
-						_compiledQuery = CompileQuery(_query);
+					_compiledQuery ??= CompileQuery(_query);
 
 			//TODO: pass preambles
 			return (TResult)_compiledQuery(args, null)!;
@@ -257,7 +252,7 @@ namespace LinqToDB
 			Expression<Func<TDC,TResult>> query)
 			  where TDC : IDataContext
 		{
-			if (query == null) throw new ArgumentNullException(nameof(query));
+			if (query == null) ThrowHelper.ThrowArgumentNullException(nameof(query));
 			return new CompiledQuery(query).Invoke<TDC,TResult>;
 		}
 
@@ -275,7 +270,7 @@ namespace LinqToDB
 			Expression<Func<TDC,TArg1,TResult>> query)
 			where TDC : IDataContext
 		{
-			if (query == null) throw new ArgumentNullException(nameof(query));
+			if (query == null) ThrowHelper.ThrowArgumentNullException(nameof(query));
 			return new CompiledQuery(query).Invoke<TDC,TArg1,TResult>;
 		}
 
@@ -294,7 +289,7 @@ namespace LinqToDB
 			Expression<Func<TDC,TArg1,TArg2,TResult>> query)
 			where TDC : IDataContext
 		{
-			if (query == null) throw new ArgumentNullException(nameof(query));
+			if (query == null) ThrowHelper.ThrowArgumentNullException(nameof(query));
 			return new CompiledQuery(query).Invoke<TDC,TArg1,TArg2,TResult>;
 		}
 
@@ -314,7 +309,7 @@ namespace LinqToDB
 			Expression<Func<TDC,TArg1,TArg2,TArg3,TResult>> query)
 			where TDC : IDataContext
 		{
-			if (query == null) throw new ArgumentNullException(nameof(query));
+			if (query == null) ThrowHelper.ThrowArgumentNullException(nameof(query));
 			return new CompiledQuery(query).Invoke<TDC,TArg1,TArg2,TArg3,TResult>;
 		}
 
@@ -335,7 +330,7 @@ namespace LinqToDB
 			Expression<Func<TDC,TArg1,TArg2,TArg3,TArg4,TResult>> query)
 			where TDC : IDataContext
 		{
-			if (query == null) throw new ArgumentNullException(nameof(query));
+			if (query == null) ThrowHelper.ThrowArgumentNullException(nameof(query));
 			return new CompiledQuery(query).Invoke<TDC,TArg1,TArg2,TArg3,TArg4,TResult>;
 		}
 
@@ -357,7 +352,7 @@ namespace LinqToDB
 			Expression<Func<TDC,TArg1,TArg2,TArg3,TArg4,TArg5,TResult>> query)
 			where TDC : IDataContext
 		{
-			if (query == null) throw new ArgumentNullException(nameof(query));
+			if (query == null) ThrowHelper.ThrowArgumentNullException(nameof(query));
 			return new CompiledQuery(query).Invoke<TDC,TArg1,TArg2,TArg3,TArg4,TArg5,TResult>;
 		}
 

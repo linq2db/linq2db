@@ -1,7 +1,4 @@
-﻿using System;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Threading.Tasks;
+﻿using System.Linq.Expressions;
 
 using LinqToDB;
 using LinqToDB.Data;
@@ -120,7 +117,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestSchema([IncludeDataSources(ProviderName.SQLiteMS)] string context)
+		public void TestSchema([IncludeDataSources(ProviderName.SQLiteMS, TestProvName.AllClickHouse)] string context)
 		{
 			void TestMethod(string columnName, string? schemaName = null)
 			{
@@ -149,7 +146,7 @@ namespace Tests.Linq
 
 			builder.Entity<SampleClass>()
 				.Property(e => e.Id).IsPrimaryKey()
-				.Property(e => e.StrKey).IsPrimaryKey().HasColumnName("Key" + columnName).HasLength(50)
+				.Property(e => e.StrKey).IsNullable(false).IsPrimaryKey().HasColumnName("Key" + columnName).HasLength(50)
 				.Property(e => e.Value).HasColumnName(columnName).HasLength(50);
 
 			builder.Entity<SampleClassWithIdentity>()
@@ -160,7 +157,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestSqlQueryDepended([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestSqlQueryDepended([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<ManyFields>())

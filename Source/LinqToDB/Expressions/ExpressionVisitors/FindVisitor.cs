@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 
 namespace LinqToDB.Expressions
 {
@@ -270,7 +268,8 @@ namespace LinqToDB.Expressions
 
 					// TODO: comment before merge to avoid potential regressions?
 				default:
-					throw new NotImplementedException($"Unhandled expression type: {expr.NodeType}");
+					ThrowHelper.ThrowNotImplementedException($"Unhandled expression type: {expr.NodeType}");
+					break;
 			}
 
 			return null;

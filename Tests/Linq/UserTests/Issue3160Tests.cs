@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using LinqToDB;
+﻿using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
@@ -106,7 +103,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void NestedDictionaryTest2([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void NestedDictionaryTest2([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tbl1 = db.CreateLocalTable(new[]
@@ -151,7 +148,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void NestedDictionaryTest3([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void NestedDictionaryTest3([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tbl1 = db.CreateLocalTable(new[]
@@ -202,7 +199,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void NestedDictionaryTest3CrossApply([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void NestedDictionaryTest3CrossApply([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tbl1 = db.CreateLocalTable(new[]

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace LinqToDB.Schema
+﻿namespace LinqToDB.Schema
 {
 	/// <summary>
 	/// Table primary key constraint descriptor.

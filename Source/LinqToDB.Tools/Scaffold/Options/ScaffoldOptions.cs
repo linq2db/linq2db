@@ -1,9 +1,9 @@
-﻿using LinqToDB.DataModel;
-using LinqToDB.Naming;
-using LinqToDB.Schema;
-
-namespace LinqToDB.Scaffold
+﻿namespace LinqToDB.Scaffold
 {
+	using DataModel;
+	using Naming;
+	using Schema;
+
 	public class ScaffoldOptions
 	{
 		private ScaffoldOptions()
@@ -40,12 +40,16 @@ namespace LinqToDB.Scaffold
 			options.Schema.LoadTableOrView             = (_, _) => true;
 			options.Schema.IgnoreDuplicateForeignKeys  = false;
 			options.Schema.IncludeSchemas              = true;
+			options.Schema.DefaultSchemas              = null;
 			options.Schema.IncludeCatalogs             = true;
 			options.Schema.UseSafeSchemaLoad           = false;
 			options.Schema.LoadDatabaseName            = false;
 			options.Schema.LoadProceduresSchema        = true;
 			options.Schema.LoadProcedureSchema         = _ => true;
+			options.Schema.LoadStoredProcedure         = _ => true;
 			options.Schema.LoadTableFunction           = _ => true;
+			options.Schema.LoadScalarFunction          = _ => true;
+			options.Schema.LoadAggregateFunction       = _ => true;
 			options.Schema.EnableSqlServerReturnValue  = false;
 			options.Schema.Schemas .Clear();
 			options.Schema.Catalogs.Clear();

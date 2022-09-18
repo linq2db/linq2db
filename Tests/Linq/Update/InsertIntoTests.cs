@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using LinqToDB;
+﻿using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
@@ -22,7 +21,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void InsertFromQuery([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void InsertFromQuery([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(InsertTestClass.Seed()))
@@ -41,7 +40,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void InsertFromTable([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void InsertFromTable([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(InsertTestClass.Seed()))
@@ -60,7 +59,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void InsertFromCTE([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void InsertFromCTE([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(InsertTestClass.Seed()))
@@ -79,7 +78,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void InsertFromSql([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void InsertFromSql([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(InsertTestClass.Seed()))
@@ -99,7 +98,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void InsertFromTableOverride([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void InsertFromTableOverride([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(InsertTestClass.Seed()))

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Linq;
-
-using LinqToDB;
+﻿using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Tools;
@@ -337,7 +334,7 @@ namespace Tests.DataProvider
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Parse<decimal>("345,98", "de-DE"));
 			Console.WriteLine(result);
-			Assert.That(result, Is.EqualTo(345.98m));
+			Assert.That(result, Is.EqualTo(346m));
 		}
 
 		[Test]
@@ -526,7 +523,7 @@ namespace Tests.DataProvider
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.TryParse<decimal>("345,98", "de-DE"));
 			Console.WriteLine(result);
-			Assert.That(result, Is.EqualTo(345.98m));
+			Assert.That(result, Is.EqualTo(346m));
 		}
 
 		#endregion

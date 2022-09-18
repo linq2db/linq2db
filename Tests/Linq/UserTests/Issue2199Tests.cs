@@ -1,6 +1,4 @@
-﻿using System;
-using System.Linq;
-using LinqToDB;
+﻿using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
@@ -39,7 +37,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void LeftJoinTests([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void LeftJoinTests([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<Manufacturer>())
@@ -67,7 +65,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void LeftJoinTests2([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void LeftJoinTests2([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<Manufacturer>())

@@ -1,6 +1,4 @@
-﻿using System;
-using System.Linq;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using NUnit.Framework;
 
 namespace Tests.UserTests
@@ -113,7 +111,7 @@ namespace Tests.UserTests
 							ActualStageId = (p as Task).ActualStage!.Id
 						});
 
-					var res2 = query2.ToArray();
+					var res2 = query2.OrderBy(_ => _.Instance.Id).ToArray();
 
 					Assert.AreEqual(2, res2.Length);
 					Assert.IsNotNull(res2[0].Instance);

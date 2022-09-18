@@ -1,7 +1,4 @@
-﻿using System;
-using System.Linq;
-
-using NUnit.Framework;
+﻿using NUnit.Framework;
 
 namespace Tests.Exceptions
 {
@@ -16,7 +13,7 @@ namespace Tests.Exceptions
 		}
 
 		[Test]
-		public void NonNullableMax2([DataSources] string context)
+		public void NonNullableMax2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -32,7 +29,7 @@ namespace Tests.Exceptions
 		}
 
 		[Test]
-		public void NonNullableAverage([DataSources] string context)
+		public void NonNullableAverage([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.Throws(typeof(InvalidOperationException), () => db.Parent.Where(_ => _.ParentID < 0).Average(_ => _.ParentID));

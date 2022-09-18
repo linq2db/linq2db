@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections;
 using System.Reflection;
 using System.Text;
-using System.Threading;
 
 namespace LinqToDB.SqlQuery
 {
@@ -32,7 +29,7 @@ namespace LinqToDB.SqlQuery
 
 			foreach (var field in fields)
 			{
-				if (field.Table != null) throw new InvalidOperationException("Invalid parent table.");
+				if (field.Table != null) ThrowHelper.ThrowInvalidOperationException("Invalid parent table.");
 				_fields.Add(field);
 				field.Table = this;
 			}
@@ -50,7 +47,7 @@ namespace LinqToDB.SqlQuery
 
 			foreach (var field in fields)
 			{
-				if (field.Table != null) throw new InvalidOperationException("Invalid parent table.");
+				if (field.Table != null) ThrowHelper.ThrowInvalidOperationException("Invalid parent table.");
 				_fields.Add(field);
 				field.Table = this;
 			}
@@ -90,7 +87,7 @@ namespace LinqToDB.SqlQuery
 
 		internal void Add(SqlField field, MemberInfo? memberInfo, Func<object, ISqlExpression> valueBuilder)
 		{
-			if (field.Table != null) throw new InvalidOperationException("Invalid parent table.");
+			if (field.Table != null) ThrowHelper.ThrowInvalidOperationException("Invalid parent table.");
 
 			field.Table = this;
 			_fields.Add(field);
@@ -111,8 +108,8 @@ namespace LinqToDB.SqlQuery
 
 			// rows pre-build for remote context
 
-			if (!(Source?.EvaluateExpression(context) is IEnumerable source))
-				throw new LinqToDBException($"Source must be enumerable: {Source}");
+			if (Source?.EvaluateExpression(context) is not IEnumerable source)
+				return ThrowHelper.ThrowLinqToDBException<IReadOnlyList<ISqlExpression[]>>($"Source must be enumerable: {Source}");
 
 			var rows = new List<ISqlExpression[]>();
 
@@ -121,7 +118,7 @@ namespace LinqToDB.SqlQuery
 				foreach (var record in source)
 				{
 					if (record == null)
-						throw new LinqToDBException("Merge source cannot hold null records");
+						ThrowHelper.ThrowLinqToDBException("Merge source cannot hold null records");
 
 					var row = new ISqlExpression[ValueBuilders!.Count];
 					var idx = 0;
@@ -155,13 +152,13 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpression
 
-		bool ISqlExpression.CanBeNull => throw new NotImplementedException();
+		bool ISqlExpression.CanBeNull => ThrowHelper.ThrowNotImplementedException<bool>();
 
-		int ISqlExpression.Precedence => throw new NotImplementedException();
+		int ISqlExpression.Precedence => ThrowHelper.ThrowNotImplementedException<int>();
 
 		Type ISqlExpression.SystemType => typeof(object);
 
-		bool ISqlExpression.Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer) => throw new NotImplementedException();
+		bool ISqlExpression.Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer) => ThrowHelper.ThrowNotImplementedException<bool>();
 
 		#endregion
 
@@ -221,7 +218,7 @@ namespace LinqToDB.SqlQuery
 		#endregion
 
 		#region IEquatable
-		bool IEquatable<ISqlExpression>.Equals(ISqlExpression? other) => throw new NotImplementedException();
+		bool IEquatable<ISqlExpression>.Equals(ISqlExpression? other) => ThrowHelper.ThrowNotImplementedException<bool>();
 		#endregion
 
 		#region ISqlExpressionWalkable

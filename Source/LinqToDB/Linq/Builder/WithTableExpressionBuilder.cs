@@ -1,9 +1,9 @@
 ﻿using System.Linq.Expressions;
+using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
 	using Common;
-	using LinqToDB.Expressions;
 	using SqlQuery;
 
 	class WithTableExpressionBuilder : MethodCallBuilder
@@ -22,7 +22,7 @@ namespace LinqToDB.Linq.Builder
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
-			var table    = SequenceHelper.GetTableContext(sequence) ?? throw new LinqToDBException($"Cannot get table context from {sequence.GetType()}");
+			var table    = SequenceHelper.GetTableContext(sequence) ?? ThrowHelper.ThrowLinqToDBException<TableBuilder.TableContext>($"Cannot get table context from {sequence.GetType()}");
 			var value    = (string)methodCall.Arguments[1].EvaluateExpression()!;
 
 			table.SqlTable.SqlTableType   = SqlTableType.Expression;

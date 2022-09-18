@@ -1,9 +1,7 @@
-﻿using System.Collections.Generic;
-using LinqToDB;
+﻿using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 using NUnit.Framework;
-using Tests.Model;
 
 namespace Tests.UserTests
 {
@@ -11,7 +9,7 @@ namespace Tests.UserTests
 	public class Issue3056Tests : TestBase
 	{
 		[Test]
-		public void DataModelDynamicTableTest2([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		public void DataModelDynamicTableTest2([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var mappingSchema =  new MappingSchema();
 			var fm            =mappingSchema.GetFluentMappingBuilder();
@@ -35,15 +33,12 @@ namespace Tests.UserTests
 			using (var db = (DataConnection)GetDataContext(context, mappingSchema))
 			using (db.CreateLocalTable<TestRow>())
 			{
-				
+				var options          = GetDefaultBulkCopyOptions(context);
+				options.TableName    = TestTableName;
+				options.SchemaName   = "dbo";
+				options.MaxBatchSize = 100;
 
-				db.BulkCopy(new BulkCopyOptions
-					{
-						TableName    = TestTableName,
-						SchemaName   = "dbo",
-						MaxBatchSize = 100
-					},
-					rows);
+				db.BulkCopy(options, rows);
 			}
 		}
 

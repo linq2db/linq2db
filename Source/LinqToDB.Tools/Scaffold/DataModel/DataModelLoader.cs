@@ -1,13 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using LinqToDB.CodeModel;
-using LinqToDB.DataModel;
-using LinqToDB.Naming;
-using LinqToDB.Schema;
-using LinqToDB.SqlQuery;
-
-namespace LinqToDB.Scaffold
+﻿namespace LinqToDB.Scaffold
 {
+	using CodeModel;
+	using DataModel;
+	using Naming;
+	using Schema;
+	using SqlQuery;
+
 	/// <summary>
 	/// Implements database schema load and conversion to data model.
 	/// </summary>
@@ -201,6 +199,7 @@ Changes to this file may cause incorrect behavior and will be lost if the code i
 			mapping = _interceptors.GetTypeMapping(databaseType, _languageProvider.TypeParser, mapping);
 			if (mapping == null)
 			{
+				// TODO: use logger
 				Console.Error.WriteLine($"Database type {databaseType} cannot be mapped to know .NET type and will be mapped to System.Object. You can specify .NET type for this database type manually using {nameof(ScaffoldInterceptors)}.{nameof(ScaffoldInterceptors.GetTypeMapping)} interceptor");
 				mapping = _unmappedType;
 			}

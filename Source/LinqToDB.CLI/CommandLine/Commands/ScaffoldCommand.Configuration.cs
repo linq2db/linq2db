@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using LinqToDB.DataModel;
-using LinqToDB.Naming;
-using LinqToDB.Scaffold;
-using LinqToDB.Schema;
-
-namespace LinqToDB.CommandLine
+﻿namespace LinqToDB.CommandLine
 {
+	using DataModel;
+	using Naming;
+	using Scaffold;
+	using Schema;
+
 	partial class ScaffoldCommand : CliCommand
 	{
 		/// <summary>
@@ -163,25 +161,25 @@ namespace LinqToDB.CommandLine
 			}
 
 			// naming options
-			if (options.Remove(DataModel.DataContextClassNaming              , out value)) settings.DataContextClassNameOptions                    = (NormalizationOptions)value!;
-			if (options.Remove(DataModel.EntityClassNaming                   , out value)) settings.EntityClassNameOptions                         = (NormalizationOptions)value!;
-			if (options.Remove(DataModel.EntityColumnPropertyNaming          , out value)) settings.EntityColumnPropertyNameOptions                = (NormalizationOptions)value!;
-			if (options.Remove(DataModel.EntityContextPropertyNaming         , out value)) settings.EntityContextPropertyNameOptions               = (NormalizationOptions)value!;
-			if (options.Remove(DataModel.AssociationNaming                   , out value)) settings.SourceAssociationPropertyNameOptions           = (NormalizationOptions)value!;
-			if (options.Remove(DataModel.AssocationBackReferenceSingleNaming , out value)) settings.TargetSingularAssociationPropertyNameOptions   = (NormalizationOptions)value!;
-			if (options.Remove(DataModel.AssocationBackReferenceManyNaming   , out value)) settings.TargetMultipleAssociationPropertyNameOptions   = (NormalizationOptions)value!;
-			if (options.Remove(DataModel.ProcOrFuncMethodNaming              , out value)) settings.ProcedureNameOptions                           = (NormalizationOptions)value!;
-			if (options.Remove(DataModel.ProcOrFuncParameterNaming           , out value)) settings.ProcedureParameterNameOptions                  = (NormalizationOptions)value!;
-			if (options.Remove(DataModel.ProcOrFuncResultClassNaming         , out value)) settings.ProcedureResultClassNameOptions                = (NormalizationOptions)value!;
-			if (options.Remove(DataModel.AsyncProcResultClassNaming          , out value)) settings.AsyncProcedureResultClassNameOptions           = (NormalizationOptions)value!;
-			if (options.Remove(DataModel.AsyncProcResultClassPropertyNaming  , out value)) settings.AsyncProcedureResultClassPropertiesNameOptions = (NormalizationOptions)value!;
-			if (options.Remove(DataModel.ProcOrFuncResultColumnPropertyNaming, out value)) settings.ProcedureResultColumnPropertyNameOptions       = (NormalizationOptions)value!;
-			if (options.Remove(DataModel.TableFunctionMethodInfoNaming       , out value)) settings.TableFunctionMethodInfoFieldNameOptions        = (NormalizationOptions)value!;
-			if (options.Remove(DataModel.FunctionTupleClassNaming            , out value)) settings.FunctionTupleResultClassNameOptions            = (NormalizationOptions)value!;
-			if (options.Remove(DataModel.FunctionTupleFieldPropertyNaming    , out value)) settings.FunctionTupleResultPropertyNameOptions         = (NormalizationOptions)value!;
-			if (options.Remove(DataModel.SchemaWrapperClassNaming            , out value)) settings.SchemaClassNameOptions                         = (NormalizationOptions)value!;
-			if (options.Remove(DataModel.SchemaContextPropertyNaming         , out value)) settings.SchemaPropertyNameOptions                      = (NormalizationOptions)value!;
-			if (options.Remove(DataModel.FindParameterNaming                 , out value)) settings.FindParameterNameOptions                       = (NormalizationOptions)value!;
+			if (options.Remove(DataModel.DataContextClassNaming              , out value)) settings.DataContextClassNameOptions                    = ((NormalizationOptions)value!).MergeInto(settings.DataContextClassNameOptions);
+			if (options.Remove(DataModel.EntityClassNaming                   , out value)) settings.EntityClassNameOptions                         = ((NormalizationOptions)value!).MergeInto(settings.EntityClassNameOptions);
+			if (options.Remove(DataModel.EntityColumnPropertyNaming          , out value)) settings.EntityColumnPropertyNameOptions                = ((NormalizationOptions)value!).MergeInto(settings.EntityColumnPropertyNameOptions);
+			if (options.Remove(DataModel.EntityContextPropertyNaming         , out value)) settings.EntityContextPropertyNameOptions               = ((NormalizationOptions)value!).MergeInto(settings.EntityContextPropertyNameOptions);
+			if (options.Remove(DataModel.AssociationNaming                   , out value)) settings.SourceAssociationPropertyNameOptions           = ((NormalizationOptions)value!).MergeInto(settings.SourceAssociationPropertyNameOptions);
+			if (options.Remove(DataModel.AssocationBackReferenceSingleNaming , out value)) settings.TargetSingularAssociationPropertyNameOptions   = ((NormalizationOptions)value!).MergeInto(settings.TargetSingularAssociationPropertyNameOptions);
+			if (options.Remove(DataModel.AssocationBackReferenceManyNaming   , out value)) settings.TargetMultipleAssociationPropertyNameOptions   = ((NormalizationOptions)value!).MergeInto(settings.TargetMultipleAssociationPropertyNameOptions);
+			if (options.Remove(DataModel.ProcOrFuncMethodNaming              , out value)) settings.ProcedureNameOptions                           = ((NormalizationOptions)value!).MergeInto(settings.ProcedureNameOptions);
+			if (options.Remove(DataModel.ProcOrFuncParameterNaming           , out value)) settings.ProcedureParameterNameOptions                  = ((NormalizationOptions)value!).MergeInto(settings.ProcedureParameterNameOptions);
+			if (options.Remove(DataModel.ProcOrFuncResultClassNaming         , out value)) settings.ProcedureResultClassNameOptions                = ((NormalizationOptions)value!).MergeInto(settings.ProcedureResultClassNameOptions);
+			if (options.Remove(DataModel.AsyncProcResultClassNaming          , out value)) settings.AsyncProcedureResultClassNameOptions           = ((NormalizationOptions)value!).MergeInto(settings.AsyncProcedureResultClassNameOptions);
+			if (options.Remove(DataModel.AsyncProcResultClassPropertyNaming  , out value)) settings.AsyncProcedureResultClassPropertiesNameOptions = ((NormalizationOptions)value!).MergeInto(settings.AsyncProcedureResultClassPropertiesNameOptions);
+			if (options.Remove(DataModel.ProcOrFuncResultColumnPropertyNaming, out value)) settings.ProcedureResultColumnPropertyNameOptions       = ((NormalizationOptions)value!).MergeInto(settings.ProcedureResultColumnPropertyNameOptions);
+			if (options.Remove(DataModel.TableFunctionMethodInfoNaming       , out value)) settings.TableFunctionMethodInfoFieldNameOptions        = ((NormalizationOptions)value!).MergeInto(settings.TableFunctionMethodInfoFieldNameOptions);
+			if (options.Remove(DataModel.FunctionTupleClassNaming            , out value)) settings.FunctionTupleResultClassNameOptions            = ((NormalizationOptions)value!).MergeInto(settings.FunctionTupleResultClassNameOptions);
+			if (options.Remove(DataModel.FunctionTupleFieldPropertyNaming    , out value)) settings.FunctionTupleResultPropertyNameOptions         = ((NormalizationOptions)value!).MergeInto(settings.FunctionTupleResultPropertyNameOptions);
+			if (options.Remove(DataModel.SchemaWrapperClassNaming            , out value)) settings.SchemaClassNameOptions                         = ((NormalizationOptions)value!).MergeInto(settings.SchemaClassNameOptions);
+			if (options.Remove(DataModel.SchemaContextPropertyNaming         , out value)) settings.SchemaPropertyNameOptions                      = ((NormalizationOptions)value!).MergeInto(settings.SchemaPropertyNameOptions);
+			if (options.Remove(DataModel.FindParameterNaming                 , out value)) settings.FindParameterNameOptions                       = ((NormalizationOptions)value!).MergeInto(settings.FindParameterNameOptions);
 		}
 
 		/// <summary>
@@ -226,6 +224,15 @@ namespace LinqToDB.CommandLine
 				foreach (var strVal in (string[])value!)
 					settings.Schemas.Add(strVal);
 			}
+
+			if (options.Remove(SchemaOptions.DefaultSchemas, out value))
+			{
+				settings.DefaultSchemas = new HashSet<string>();
+
+				foreach (var strVal in (string[])value!)
+					settings.DefaultSchemas.Add(strVal);
+			}
+
 
 			// include/exclude catalogs
 			if (options.Remove(SchemaOptions.IncludedCatalogs, out value))
@@ -287,6 +294,18 @@ namespace LinqToDB.CommandLine
 				};
 			}
 
+			// stored procedure filter
+			if (options.Remove(SchemaOptions.IncludedStoredProcedures, out value))
+			{
+				var filter = (NameFilter)value!;
+				settings.LoadStoredProcedure = name => filter.ApplyTo(name.Schema, name.Name);
+			}
+			else if (options.Remove(SchemaOptions.ExcludedStoredProcedures, out value))
+			{
+				var filter = (NameFilter)value!;
+				settings.LoadStoredProcedure = name => !filter.ApplyTo(name.Schema, name.Name);
+			}
+
 			// procedure schema load filter
 			if (options.Remove(SchemaOptions.ProceduresWithSchema, out value))
 			{
@@ -309,6 +328,30 @@ namespace LinqToDB.CommandLine
 			{
 				var filter = (NameFilter)value!;
 				settings.LoadTableFunction = name => !filter.ApplyTo(name.Schema, name.Name);
+			}
+
+			// scalar function filter
+			if (options.Remove(SchemaOptions.IncludedScalarFunctions, out value))
+			{
+				var filter = (NameFilter)value!;
+				settings.LoadScalarFunction = name => filter.ApplyTo(name.Schema, name.Name);
+			}
+			else if (options.Remove(SchemaOptions.ExcludedScalarFunctions, out value))
+			{
+				var filter = (NameFilter)value!;
+				settings.LoadScalarFunction = name => !filter.ApplyTo(name.Schema, name.Name);
+			}
+
+			// aggregate function filter
+			if (options.Remove(SchemaOptions.IncludedAggregateFunctions, out value))
+			{
+				var filter = (NameFilter)value!;
+				settings.LoadAggregateFunction = name => filter.ApplyTo(name.Schema, name.Name);
+			}
+			else if (options.Remove(SchemaOptions.ExcludedAggregateFunctions, out value))
+			{
+				var filter = (NameFilter)value!;
+				settings.LoadAggregateFunction = name => !filter.ApplyTo(name.Schema, name.Name);
 			}
 		}
 	}

@@ -1,9 +1,9 @@
-﻿using System.Collections.Generic;
-using System.Text.Json;
-using LinqToDB.Naming;
+﻿using System.Text.Json;
 
 namespace LinqToDB.CommandLine
 {
+	using Naming;
+
 	/// <summary>
 	/// Code identifier normalization/generation options. Not supported in CLI (JSON only).
 	/// </summary>
@@ -95,10 +95,10 @@ namespace LinqToDB.CommandLine
 						var pluralizationValue = property.Value.GetString()!;
 						switch (pluralizationValue.ToLowerInvariant())
 						{
-							case "none"                      : options.Pluralization =Pluralization.None                 ; break;
-							case "plural"                    : options.Pluralization =Pluralization.Plural               ; break;
-							case "plural_multiple_characters": options.Pluralization =Pluralization.PluralIfLongerThanOne; break;
-							case "singular"                  : options.Pluralization =Pluralization.Singular             ; break;
+							case "none"                      : options.Pluralization = Pluralization.None                 ; break;
+							case "plural"                    : options.Pluralization = Pluralization.Plural               ; break;
+							case "plural_multiple_characters": options.Pluralization = Pluralization.PluralIfLongerThanOne; break;
+							case "singular"                  : options.Pluralization = Pluralization.Singular             ; break;
 							default                          :
 								errorDetails = $"pluralization : unknown value: '{pluralizationValue}'";
 								return null;
@@ -137,6 +137,7 @@ namespace LinqToDB.CommandLine
 						var transformationValue = property.Value.GetString()!;
 						switch (transformationValue.ToLowerInvariant())
 						{
+							case "none"               : options.Transformation = NameTransformation.None             ; break;
 							case "split_by_underscore": options.Transformation = NameTransformation.SplitByUnderscore; break;
 							case "association"        : options.Transformation = NameTransformation.Association      ; break;
 							default                   :

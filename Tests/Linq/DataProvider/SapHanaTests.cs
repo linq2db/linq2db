@@ -1,10 +1,7 @@
-﻿using System;
-using System.Data.Linq;
-using System.Linq;
+﻿using System.Data.Linq;
 using System.Reflection;
 using System.Xml;
 using System.Xml.Linq;
-using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Common;
@@ -736,7 +733,7 @@ namespace Tests.DataProvider
 		{
 			using (var db = GetDataConnection(context))
 			{
-				var currentSchema = TestUtils.GetSchemaName(db);
+				var currentSchema = TestUtils.GetSchemaName(db, context);
 				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
 
 				foreach (var table in schema.Tables)

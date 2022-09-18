@@ -487,6 +487,8 @@ CREATE TABLE AllTypes
 -- SKIP SqlServer.2017.MS BEGIN
 -- SKIP SqlServer.2019 BEGIN
 -- SKIP SqlServer.2019.MS BEGIN
+-- SKIP SqlServer.2022 BEGIN
+-- SKIP SqlServer.2022.MS BEGIN
 -- SKIP SqlServer.SA BEGIN
 -- SKIP SqlServer.SA.MS BEGIN
 -- SKIP SqlServer.Contained BEGIN
@@ -517,6 +519,8 @@ CREATE TABLE AllTypes
 -- SKIP SqlServer.2017.MS END
 -- SKIP SqlServer.2019 END
 -- SKIP SqlServer.2019.MS END
+-- SKIP SqlServer.2022 END
+-- SKIP SqlServer.2022.MS END
 -- SKIP SqlServer.SA END
 -- SKIP SqlServer.SA.MS END
 -- SKIP SqlServer.Contained END
@@ -717,6 +721,8 @@ GO
 -- SKIP SqlServer.2017.MS BEGIN
 -- SKIP SqlServer.2019 BEGIN
 -- SKIP SqlServer.2019.MS BEGIN
+-- SKIP SqlServer.2022 BEGIN
+-- SKIP SqlServer.2022.MS BEGIN
 -- SKIP SqlServer.SA BEGIN
 -- SKIP SqlServer.SA.MS BEGIN
 -- SKIP SqlServer.Contained BEGIN
@@ -750,6 +756,8 @@ GO
 -- SKIP SqlServer.2017.MS END
 -- SKIP SqlServer.2019 END
 -- SKIP SqlServer.2019.MS END
+-- SKIP SqlServer.2022 END
+-- SKIP SqlServer.2022.MS END
 -- SKIP SqlServer.SA END
 -- SKIP SqlServer.SA.MS END
 -- SKIP SqlServer.Contained END
@@ -1353,3 +1361,24 @@ CREATE SEQUENCE dbo.TestSequence
 GO
 -- SKIP SqlServer.2008 END
 -- SKIP SqlServer.2005 END
+
+-- one-to-one (by primary key) relation for scaffold testing
+GO
+DROP TABLE Provider
+GO
+DROP TABLE Member
+GO
+CREATE TABLE Member(
+	MemberId INT IDENTITY(1,1) NOT NULL,
+	Alias    NVARCHAR(50)      NOT NULL,
+ CONSTRAINT PK_Member PRIMARY KEY (MemberId)
+)
+GO
+CREATE TABLE Provider(
+	ProviderId INT           NOT NULL,
+	Test       NVARCHAR(MAX) NOT NULL,
+ CONSTRAINT PK_Provider PRIMARY KEY (ProviderId)
+)
+GO
+ALTER TABLE Provider WITH CHECK ADD CONSTRAINT FK_Provider_Member FOREIGN KEY(ProviderId) REFERENCES Member (MemberId)
+GO

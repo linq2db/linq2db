@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
+using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
 	using Common;
-	using LinqToDB.Expressions;
 	using SqlQuery;
 
 	class AllJoinsLinqBuilder : MethodCallBuilder
@@ -56,7 +53,7 @@ namespace LinqToDB.Linq.Builder
 						SqlJoinType.Left  => JoinType.Left,
 						SqlJoinType.Right => JoinType.Right,
 						SqlJoinType.Full  => JoinType.Full,
-						_                 => throw new InvalidOperationException($"Unexpected join type: {(SqlJoinType)methodCall.Arguments[2].EvaluateExpression()!}")
+						_                 => ThrowHelper.ThrowInvalidOperationException<JoinType>($"Unexpected join type: {(SqlJoinType)methodCall.Arguments[2].EvaluateExpression()!}")
 					};
 					break;
 			}
@@ -141,8 +138,7 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-				if (result == null)
-					result = base.ConvertToSql(expression, level, flags);
+				result ??= base.ConvertToSql(expression, level, flags);
 
 				return result;
 			}

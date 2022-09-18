@@ -1,14 +1,12 @@
-﻿using System;
-using System.Collections;
-using System.Linq;
+﻿using System.Collections;
 using System.Linq.Expressions;
 using System.Reflection;
-using LinqToDB.Linq.Builder;
 
 namespace LinqToDB.Mapping
 {
 	using Common;
 	using Extensions;
+	using Linq.Builder;
 
 	/// <summary>
 	/// Stores association descriptor.
@@ -42,17 +40,17 @@ namespace LinqToDB.Mapping
 			bool?       canBeNull,
 			string?     aliasName)
 		{
-			if (memberInfo == null) throw new ArgumentNullException(nameof(memberInfo));
-			if (thisKey    == null) throw new ArgumentNullException(nameof(thisKey));
-			if (otherKey   == null) throw new ArgumentNullException(nameof(otherKey));
+			if (memberInfo == null) ThrowHelper.ThrowArgumentNullException(nameof(memberInfo));
+			if (thisKey    == null) ThrowHelper.ThrowArgumentNullException(nameof(thisKey));
+			if (otherKey   == null) ThrowHelper.ThrowArgumentNullException(nameof(otherKey));
 
 			if (thisKey.Length == 0 && string.IsNullOrEmpty(expressionPredicate) && predicate == null && string.IsNullOrEmpty(expressionQueryMethod) && expressionQuery == null)
-				throw new ArgumentOutOfRangeException(
+				ThrowHelper.ThrowArgumentOutOfRangeException(
 					nameof(thisKey),
 					$"Association '{type.Name}.{memberInfo.Name}' does not define keys.");
 
 			if (thisKey.Length != otherKey.Length)
-				throw new ArgumentException(
+				ThrowHelper.ThrowArgumentException(
 					$"Association '{type.Name}.{memberInfo.Name}' has different number of keys for parent and child objects.");
 
 			MemberInfo            = memberInfo;
@@ -167,7 +165,7 @@ namespace LinqToDB.Mapping
 					return methodInfo.DeclaringType!;
 				}
 
-				throw new LinqToDBException($"Can not retrieve declaring type form member {methodInfo}");
+				ThrowHelper.ThrowLinqToDBException($"Can not retrieve declaring type form member {methodInfo}");
 			}
 
 			return MemberInfo.DeclaringType!;
@@ -191,17 +189,17 @@ namespace LinqToDB.Mapping
 			var type = MemberInfo.DeclaringType;
 
 			if (type == null)
-				throw new ArgumentException($"Member '{MemberInfo.Name}' has no declaring type");
+				ThrowHelper.ThrowArgumentException($"Member '{MemberInfo.Name}' has no declaring type");
 
 			if (!string.IsNullOrEmpty(ExpressionPredicate))
 			{
 				var members = type.GetStaticMembersEx(ExpressionPredicate!);
 
 				if (members.Length == 0)
-					throw new LinqToDBException($"Static member '{ExpressionPredicate}' for type '{type.Name}' not found");
+					ThrowHelper.ThrowLinqToDBException($"Static member '{ExpressionPredicate}' for type '{type.Name}' not found");
 
 				if (members.Length > 1)
-					throw new LinqToDBException($"Ambiguous members '{ExpressionPredicate}' for type '{type.Name}' has been found");
+					ThrowHelper.ThrowLinqToDBException($"Ambiguous members '{ExpressionPredicate}' for type '{type.Name}' has been found");
 
 				var propInfo = members[0] as PropertyInfo;
 
@@ -213,7 +211,7 @@ namespace LinqToDB.Mapping
 
 					predicate = value as Expression;
 					if (predicate == null)
-						throw new LinqToDBException($"Property '{ExpressionPredicate}' for type '{type.Name}' should return expression");
+						ThrowHelper.ThrowLinqToDBException($"Property '{ExpressionPredicate}' for type '{type.Name}' should return expression");
 				}
 				else
 				{
@@ -221,18 +219,18 @@ namespace LinqToDB.Mapping
 					if (method != null)
 					{
 						if (method.GetParameters().Length > 0)
-							throw new LinqToDBException($"Method '{ExpressionPredicate}' for type '{type.Name}' should have no parameters");
+							ThrowHelper.ThrowLinqToDBException($"Method '{ExpressionPredicate}' for type '{type.Name}' should have no parameters");
 						var value = method.Invoke(null, Array<object>.Empty);
 						if (value == null)
 							return null;
 
 						predicate = value as Expression;
 						if (predicate == null)
-							throw new LinqToDBException($"Method '{ExpressionPredicate}' for type '{type.Name}' should return expression");
+							ThrowHelper.ThrowLinqToDBException($"Method '{ExpressionPredicate}' for type '{type.Name}' should return expression");
 					}
 				}
 				if (predicate == null)
-					throw new LinqToDBException(
+					ThrowHelper.ThrowLinqToDBException(
 						$"Member '{ExpressionPredicate}' for type '{type.Name}' should be static property or method");
 			}
 			else
@@ -241,23 +239,23 @@ namespace LinqToDB.Mapping
 			var lambda = predicate as LambdaExpression;
 			if (lambda == null || lambda.Parameters.Count != 2)
 				if (!string.IsNullOrEmpty(ExpressionPredicate))
-					throw new LinqToDBException(
+					ThrowHelper.ThrowLinqToDBException(
 						$"Invalid predicate expression in {type.Name}.{ExpressionPredicate}. Expected: Expression<Func<{parentType.Name}, {objectType.Name}, bool>>");
 				else
-					throw new LinqToDBException(
+					ThrowHelper.ThrowLinqToDBException(
 						$"Invalid predicate expression in {type.Name}. Expected: Expression<Func<{parentType.Name}, {objectType.Name}, bool>>");
 
 			var firstParameter = lambda.Parameters[0];
 			if (!firstParameter.Type.IsSameOrParentOf(parentType) && !parentType.IsSameOrParentOf(firstParameter.Type))
 			{
-				throw new LinqToDBException($"First parameter of expression predicate should be '{parentType.Name}'");
+				ThrowHelper.ThrowLinqToDBException($"First parameter of expression predicate should be '{parentType.Name}'");
 			}
 
 			if (lambda.Parameters[1].Type != objectType)
-				throw new LinqToDBException($"Second parameter of expression predicate should be '{objectType.Name}'");
+				ThrowHelper.ThrowLinqToDBException($"Second parameter of expression predicate should be '{objectType.Name}'");
 
 			if (lambda.ReturnType != typeof(bool))
-				throw new LinqToDBException("Result type of expression predicate should be 'bool'");
+				ThrowHelper.ThrowLinqToDBException("Result type of expression predicate should be 'bool'");
 
 			return lambda;
 		}
@@ -285,7 +283,7 @@ namespace LinqToDB.Mapping
 			var type = MemberInfo.DeclaringType;
 
 			if (type == null)
-				throw new ArgumentException($"Member '{MemberInfo.Name}' has no declaring type");
+				ThrowHelper.ThrowArgumentException($"Member '{MemberInfo.Name}' has no declaring type");
 
 			if (!string.IsNullOrEmpty(ExpressionQueryMethod))
 				queryExpression = type.GetExpressionFromExpressionMember<Expression>(ExpressionQueryMethod!);
@@ -295,18 +293,18 @@ namespace LinqToDB.Mapping
 			var lambda = queryExpression as LambdaExpression;
 			if (lambda == null || lambda.Parameters.Count < 1)
 				if (!string.IsNullOrEmpty(ExpressionQueryMethod))
-					throw new LinqToDBException(
+					ThrowHelper.ThrowLinqToDBException(
 						$"Invalid predicate expression in {type.Name}.{ExpressionQueryMethod}. Expected: Expression<Func<{parentType.Name}, IDataContext, IQueryable<{objectType.Name}>>>");
 				else
-					throw new LinqToDBException(
+					ThrowHelper.ThrowLinqToDBException(
 						$"Invalid predicate expression in {type.Name}. Expected: Expression<Func<{parentType.Name}, IDataContext, IQueryable<{objectType.Name}>>>");
 
 			if (!lambda.Parameters[0].Type.IsSameOrParentOf(parentType))
-				throw new LinqToDBException($"First parameter of expression predicate should be '{parentType.Name}'");
+				ThrowHelper.ThrowLinqToDBException($"First parameter of expression predicate should be '{parentType.Name}'");
 
 			if (!(typeof(IQueryable<>).IsSameOrParentOf(lambda.ReturnType) &&
 			      lambda.ReturnType.GetGenericArguments()[0].IsSameOrParentOf(objectType)))
-				throw new LinqToDBException("Result type of expression predicate should be 'IQueryable<{objectType.Name}>'");
+				ThrowHelper.ThrowLinqToDBException("Result type of expression predicate should be 'IQueryable<{objectType.Name}>'");
 
 			return lambda;
 		}

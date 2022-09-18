@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq.Expressions;
-using System.Threading.Tasks;
-using System.Threading;
+﻿using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider
 {
@@ -23,6 +18,7 @@ namespace LinqToDB.DataProvider
 		MappingSchema    MappingSchema         { get; }
 		SqlProviderFlags SqlProviderFlags      { get; }
 		TableOptions     SupportedTableOptions { get; }
+		bool             TransactionsSupported { get; }
 		void             InitContext           (IDataContext dataContext);
 		DbConnection     CreateConnection      (string        connectionString);
 		ISqlBuilder      CreateSqlBuilder      (MappingSchema mappingSchema);

@@ -1,10 +1,4 @@
-﻿using System;
-using System.Data;
-using System.Data.Common;
-using System.Threading;
-using System.Threading.Tasks;
-
-namespace LinqToDB.Interceptors
+﻿namespace LinqToDB.Interceptors
 {
 	using Common;
 
@@ -95,6 +89,25 @@ namespace LinqToDB.Interceptors
 				foreach (var interceptor in Interceptors)
 					interceptor.AfterExecuteReader(eventData, command, commandBehavior, dataReader);
 			});
+		}
+
+		public void BeforeReaderDispose(CommandEventData eventData, DbCommand? command, DbDataReader dataReader)
+		{
+			Apply(() =>
+			{
+				foreach (var interceptor in Interceptors)
+					interceptor.BeforeReaderDispose(eventData, command, dataReader);
+			});
+		}
+
+		public async Task BeforeReaderDisposeAsync(CommandEventData eventData, DbCommand? command, DbDataReader dataReader)
+		{
+			await Apply(async () =>
+			{
+				foreach (var interceptor in Interceptors)
+					await interceptor.BeforeReaderDisposeAsync(eventData, command, dataReader)
+					.ConfigureAwait(Configuration.ContinueOnCapturedContext);
+			}).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 		}
 	}
 }

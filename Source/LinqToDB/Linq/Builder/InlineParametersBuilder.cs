@@ -1,8 +1,8 @@
 ﻿using System.Linq.Expressions;
+using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
 	using Reflection;
 
 	class InlineParametersBuilder : MethodCallBuilder

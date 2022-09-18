@@ -1,20 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Data.Common;
+﻿using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Dynamic;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
-using System.Diagnostics;
-
-using JetBrains.Annotations;
-
+using System.Text;
 // type, readertype, configID, sql, additionalKey, isScalar
 using QueryKey = System.ValueTuple<System.Type, System.Type, int, string, string?, bool>;
 
@@ -879,6 +869,38 @@ namespace LinqToDB.Data
 			InitCommand();
 
 			var commandResult = DataConnection.ExecuteNonQuery();
+
+			stopwatch.Stop();
+			if (DataConnection.TraceSwitchConnection.TraceInfo)
+			{
+				DataConnection.OnTraceConnection(new TraceInfo(DataConnection, TraceInfoStep.Completed, TraceOperation.DisposeQuery, isAsync: false)
+				{
+					TraceLevel      = TraceLevel.Info,
+					Command         = DataConnection.CurrentCommand,
+					StartTime       = startedOn,
+					ExecutionTime   = stopwatch.Elapsed,
+					RecordsAffected = commandResult,
+				});
+			}
+
+			if (DataConnection.CurrentCommand?.Parameters.Count > 0 && Parameters?.Length > 0)
+				RebindParameters(DataConnection.CurrentCommand);
+
+			return commandResult;
+		}
+
+		/// <summary>
+		/// Executes command using custom execute method and returns number of affected records.
+		/// </summary>
+		/// <param name="customExecute">Custom execute method.</param>
+		/// <returns>Number of records, affected by command execution.</returns>
+		internal int ExecuteCustom(Func<DbCommand, int> customExecute)
+		{
+			var startedOn     = DateTime.UtcNow;
+			var stopwatch     = Stopwatch.StartNew();
+			InitCommand();
+
+			var commandResult = DataConnection.ExecuteNonQueryCustom(customExecute);
 
 			stopwatch.Stop();
 			if (DataConnection.TraceSwitchConnection.TraceInfo)

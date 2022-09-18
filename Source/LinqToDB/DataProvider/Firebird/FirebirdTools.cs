@@ -1,8 +1,4 @@
-﻿using System;
-using System.Data.Common;
-using System.Reflection;
-
-using JetBrains.Annotations;
+﻿using System.Reflection;
 
 namespace LinqToDB.DataProvider.Firebird
 {
@@ -30,13 +26,13 @@ namespace LinqToDB.DataProvider.Firebird
 
 		public static void ResolveFirebird(string path)
 		{
-			if (path == null) throw new ArgumentNullException(nameof(path));
+			if (path == null) ThrowHelper.ThrowArgumentNullException(nameof(path));
 			_ = new AssemblyResolver(path, FirebirdProviderAdapter.AssemblyName);
 		}
 
 		public static void ResolveFirebird(Assembly assembly)
 		{
-			if (assembly == null) throw new ArgumentNullException(nameof(assembly));
+			if (assembly == null) ThrowHelper.ThrowArgumentNullException(nameof(assembly));
 			_ = new AssemblyResolver(assembly, FirebirdProviderAdapter.AssemblyName);
 		}
 

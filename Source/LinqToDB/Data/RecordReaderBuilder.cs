@@ -1,17 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using System.Reflection;
 
 namespace LinqToDB.Data
 {
-	using System.Data.Common;
+	using Common;
 	using Expressions;
 	using Linq;
 	using Linq.Builder;
-	using LinqToDB.Common;
 	using Mapping;
 	using Reflection;
 
@@ -68,8 +63,7 @@ namespace LinqToDB.Data
 
 		private ParameterExpression BuildVariable(Expression expr, string? name = null)
 		{
-			if (name == null)
-				name = expr.Type.Name + ++_varIndex;
+			name ??= expr.Type.Name + ++_varIndex;
 
 			var variable = Expression.Variable(
 				expr.Type,

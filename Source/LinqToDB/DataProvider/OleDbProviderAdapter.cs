@@ -1,10 +1,7 @@
-﻿using System;
-using System.Data;
-using System.Data.Common;
-using LinqToDB.Expressions;
-
-namespace LinqToDB.DataProvider
+﻿namespace LinqToDB.DataProvider
 {
+	using Expressions;
+
 	public class OleDbProviderAdapter : IDynamicProviderAdapter
 	{
 		private static readonly object _syncRoot = new object();
@@ -57,7 +54,7 @@ namespace LinqToDB.DataProvider
 #else
 						var assembly = Common.Tools.TryLoadAssembly(AssemblyName, null);
 						if (assembly == null)
-							throw new InvalidOperationException($"Cannot load assembly {AssemblyName}");
+							ThrowHelper.ThrowInvalidOperationException($"Cannot load assembly {AssemblyName}");
 #endif
 
 						var connectionType  = assembly.GetType($"{ClientNamespace}.OleDbConnection" , true)!;
@@ -110,7 +107,8 @@ namespace LinqToDB.DataProvider
 		[Wrapper]
 		private class OleDbConnection
 		{
-			public DataTable GetOleDbSchemaTable(Guid schema, object[]? restrictions) => throw new NotImplementedException();
+			public DataTable GetOleDbSchemaTable(Guid schema, object[]? restrictions) 
+				=> ThrowHelper.ThrowNotImplementedException<DataTable>();
 		}
 
 		[Wrapper]

@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Threading;
-using LinqToDB.Common;
+﻿using System.Reflection;
 
 namespace LinqToDB.Metadata
 {
+	using Common;
+
 	/// <summary>
 	/// Aggregation metadata reader, that just delegates all calls to nested readers.
 	/// </summary>
@@ -23,7 +20,7 @@ namespace LinqToDB.Metadata
 		public MetadataReader(params IMetadataReader[] readers)
 		{
 			if (readers == null)
-				throw new ArgumentNullException(nameof(readers));
+				ThrowHelper.ThrowArgumentNullException(nameof(readers));
 			_readers = readers.ToList();
 		}
 

@@ -1,12 +1,11 @@
-## LINQ to DB
+# LINQ to DB
 
 [![NuGet Version and Downloads count](https://buildstats.info/nuget/linq2db?includePreReleases=true)](https://www.nuget.org/profiles/LinqToDB) [![License](https://img.shields.io/github/license/linq2db/linq2db)](MIT-LICENSE.txt)
 [![Follow @linq2db](https://img.shields.io/twitter/follow/linq2db.svg)](https://twitter.com/linq2db) [!["good first issue" tasks](https://img.shields.io/github/issues/linq2db/linq2db/good%20first%20issue.svg)](https://github.com/linq2db/linq2db/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22)
 
 [![Master branch build](https://img.shields.io/azure-devops/build/linq2db/linq2db/5/master?label=build%20(master))](https://dev.azure.com/linq2db/linq2db/_build?definitionId=5&_a=summary) [![Latest build](https://img.shields.io/azure-devops/build/linq2db/linq2db/5?label=build%20(latest))](https://dev.azure.com/linq2db/linq2db/_build?definitionId=5&_a=summary)
 
-
-LINQ to DB is the fastest LINQ database access library offering a simple, light, fast, and type-safe layer between your POCO objects and your database. 
+LINQ to DB is the fastest LINQ database access library offering a simple, light, fast, and type-safe layer between your POCO objects and your database.
 
 Architecturally it is one step above micro-ORMs like Dapper, Massive, or PetaPoco, in that you work with LINQ expressions, not with magic strings, while maintaining a thin abstraction layer between your code and the database. Your queries are checked by the C# compiler and allow for easy refactoring.
 
@@ -16,25 +15,25 @@ In other words **LINQ to DB is type-safe SQL**.
 
 Development version nuget [feed](https://pkgs.dev.azure.com/linq2db/linq2db/_packaging/linq2db/nuget/v3/index.json) ([how to use](https://docs.microsoft.com/en-us/nuget/consume-packages/install-use-packages-visual-studio#package-sources))
 
-
 ## Standout Features
 
- - Rich Querying API:
-   - [Explicit Join Syntax](https://linq2db.github.io/articles/sql/Join-Operators.html) (In addition to standard LINQ join syntax.)
-   - [CTE Support](https://linq2db.github.io/articles/sql/CTE.html)
-   - [Bulk Copy/Insert](https://linq2db.github.io/articles/sql/Bulk-Copy.html)
-   - [Window/Analytic Functions](https://linq2db.github.io/articles/sql/Window-Functions-%28Analytic-Functions%29.html)
-   - [Merge API](https://linq2db.github.io/articles/sql/merge/Merge-API-Description.html)
- - Extensibility:
-   - [Ability to Map Custom SQL to Static Functions](https://github.com/linq2db/linq2db/tree/master/Source/LinqToDB/Sql/)
+- Rich Querying API:
+  - [Explicit Join Syntax](https://linq2db.github.io/articles/sql/Join-Operators.html) (In addition to standard LINQ join syntax.)
+  - [CTE Support](https://linq2db.github.io/articles/sql/CTE.html)
+  - [Bulk Copy/Insert](https://linq2db.github.io/articles/sql/Bulk-Copy.html)
+  - [Window/Analytic Functions](https://linq2db.github.io/articles/sql/Window-Functions-%28Analytic-Functions%29.html)
+  - [Merge API](https://linq2db.github.io/articles/sql/merge/Merge-API-Description.html)
+- Extensibility:
+  - [Ability to Map Custom SQL to Static Functions](https://github.com/linq2db/linq2db/tree/master/Source/LinqToDB/Sql/)
 
 Visit our [blog](http://blog.linq2db.com/) and see [Github.io documentation](https://linq2db.github.io/index.html) for more details.
 
 Code examples and demos can be found [here](https://github.com/linq2db/examples) or in [tests](https://github.com/linq2db/linq2db/tree/master/Tests/Linq).
 
-[Release Notes](https://github.com/linq2db/linq2db/wiki/Releases-and-Roadmap) page.
+[Release notes](https://github.com/linq2db/linq2db/wiki/Releases-and-Roadmap) page.
 
 ### Related linq2db and 3rd-party projects
+
 - [linq2db.EntityFrameworkCore](https://github.com/linq2db/linq2db.EntityFrameworkCore) (adds support for linq2db functionality in EF.Core projects)
 - [LINQPad Driver](https://github.com/linq2db/linq2db.LINQPad)
 - [DB2 iSeries Provider](https://github.com/LinqToDB4iSeries/Linq2DB4iSeries)
@@ -43,16 +42,16 @@ Code examples and demos can be found [here](https://github.com/linq2db/examples)
 - [ASP.NET CORE 5 Template](https://github.com/David-Mawer/LINQ2DB-MVC-Core-5)
 - [PostGIS extensions for linq2db](https://github.com/apdevelop/linq2db-postgis-extensions)
 
-
 Notable open-source users:
+
 - [nopCommerce](https://github.com/nopSolutions/nopCommerce) (starting from v4.30) - popular open-source e-commerce solution
 - [OdataToEntity](https://github.com/voronov-maxim/OdataToEntity) - library to create OData service from database context
 - [SunEngine](https://github.com/sunengine/SunEngine) - site, blog and forum engine
 
 Unmantained projects:
+
 - [LinqToDB.Identity](https://github.com/linq2db/LinqToDB.Identity) - ASP.NET Core Identity provider using linq2db
 - [IdentityServer4.LinqToDB](https://github.com/linq2db/IdentityServer4.LinqToDB) - IdentityServer4 persistence layer using linq2db
-
 
 ## How to help the project
 
@@ -61,7 +60,8 @@ No, this is not the donate link. We do need something really more valuable - you
 ## Let's get started
 
 From **NuGet**:
-* `Install-Package linq2db`
+
+- `Install-Package linq2db`
 
 ## Configuring connection strings
 
@@ -101,7 +101,6 @@ b.UseConnectionFactory(
 // pass configured options to data connection constructor
 var dc = new DataConnection(builder.Build());
 ```
-
 
 ### Using Config File (.NET Framework)
 
@@ -151,7 +150,6 @@ public class MySettings : ILinqToDBSettings
         }
     }
 }
-
 ```
 
 And later just set on program startup before the first query is done (Startup.cs for example):
@@ -166,7 +164,7 @@ See [article](https://linq2db.github.io/articles/get-started/asp-dotnet-core/ind
 
 ## Now let's create a **POCO** class
 
-You can generate POCO classes from your database using [T4 templates](https://linq2db.github.io/articles/T4.html).  These classes will be generated using the `Attribute configuration`. Demonstration video could be found [here](https://linq2db.github.io/articles/general/Video.html). 
+You can generate POCO classes from your database using [T4 templates](https://linq2db.github.io/articles/T4.html).  These classes will be generated using the `Attribute configuration`. Demonstration video could be found [here](https://linq2db.github.io/articles/general/Video.html).
 
 Alternatively, you can write them manually, using `Attribute configuration`, `Fluent configuration`, or inferring.
 
@@ -211,11 +209,11 @@ public class Product
 }
 ```
 
-Property `Name` will be ignored as it lacks `Column` attibute. 
+Property `Name` will be ignored as it lacks `Column` attibute.
 
 ### Fluent Configuration
 
-This method lets you configure your mapping dynamically at runtime. Furthermore, it lets you to have several different configurations if you need so. You will get all configuration abilities available with attribute configuration. These two approaches are interchangeable in its abilities. This kind of configuration is done through the class `MappingSchema`. 
+This method lets you configure your mapping dynamically at runtime. Furthermore, it lets you to have several different configurations if you need so. You will get all configuration abilities available with attribute configuration. These two approaches are interchangeable in its abilities. This kind of configuration is done through the class `MappingSchema`.
 
 With Fluent approach you can configure only things that require it explicitly. All other properties will be inferred by linq2db:
 
@@ -365,7 +363,7 @@ public static List<Product> All(bool onlyActive, string searchFor)
 
 ## Paging
 
-A lot of times we need to write code that returns only a subset of the entire dataset. We expand on the previous example to show what a product search function could look like. 
+A lot of times we need to write code that returns only a subset of the entire dataset. We expand on the previous example to show what a product search function could look like.
 
 Keep in mind that the code below will query the database twice. Once to find out the total number of records, something that is required by many paging controls, and once to return the actual data.
 
@@ -765,4 +763,5 @@ public class DbDataContext : DataConnection
 ```
 
 # More
+
 Still have questions left? Check out our [documentation site](https://linq2db.github.io) and [FAQ](https://linq2db.github.io/articles/FAQ.html)

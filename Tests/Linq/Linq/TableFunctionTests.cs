@@ -1,7 +1,4 @@
-﻿using System;
-using System.Linq;
-
-using LinqToDB;
+﻿using LinqToDB;
 using LinqToDB.Data;
 
 using NUnit.Framework;
@@ -113,7 +110,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q =
-					from p in Model.Functions.WithTabLock1<Parent>(db).SchemaName("dbo")
+					from p in Functions.WithTabLock1<Parent>(db).SchemaName("dbo")
 					select p;
 
 				q.ToList();

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Threading.Tasks;
+﻿using System.Linq.Expressions;
 
 using LinqToDB;
 using LinqToDB.Mapping;
@@ -18,10 +15,10 @@ namespace Tests.xUpdate
 	[TestFixture]
 	public class InsertWithOutputTests : TestBase
 	{
-		private const string FeatureInsertOutputSingle     = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLiteClassic}";
-		private const string FeatureInsertOutputMultiple   = $"{TestProvName.AllSqlServer},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLiteClassic}";
-		private const string FeatureInsertOutputWithSchema = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird},{TestProvName.AllMariaDB},{TestProvName.AllSQLiteClassic}";
-		private const string FeatureInsertOutputInto       = TestProvName.AllSqlServer;
+		private const string FeatureInsertOutputSingle     = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite}";
+		private const string FeatureInsertOutputMultiple   = $"{TestProvName.AllSqlServer},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite}";
+		private const string FeatureInsertOutputWithSchema = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird},{TestProvName.AllMariaDB},{TestProvName.AllSQLite}";
+		private const string FeatureInsertOutputInto       = $"{TestProvName.AllSqlServer}";
 
 		[Table]
 		class TableWithData
@@ -592,6 +589,57 @@ namespace Tests.xUpdate
 							)
 						);
 					}
+				}
+				finally
+				{
+					db.Child.Delete(c => c.ChildID > idsLimit);
+				}
+			}
+		}
+
+		[Test]
+		public void InsertWithOutputIntoTempTable([IncludeDataSources(FeatureInsertOutputInto)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				const int idsLimit = 1000;
+
+				try
+				{
+					var id = idsLimit + 1;
+
+					db.Child.Delete(c => c.ChildID > idsLimit);
+
+					var param = 10050;
+					using var t = db.CreateLocalTable<Child>("TInserted", tableOptions: TableOptions.IsTemporary);
+					var output =
+						db.Child
+							.Where(c => c.ChildID == 11)
+							.InsertWithOutputInto(
+								db.Child,
+								c => new Child()
+								{
+									ParentID = c.ParentID,
+									ChildID  = id + Sql.AsSql(param)
+								},
+								t);
+
+					Assert.AreEqual(1, output);
+
+					AreEqual(db.Child.Where(c => c.ChildID > idsLimit)
+						.Select(
+						c => new Child()
+						{
+							ParentID = c.ParentID,
+							ChildID  = c.ChildID
+						}),
+						t.Select(c => new Child()
+						{
+							ParentID = c.ParentID,
+							ChildID  = c.ChildID
+						}
+						)
+					);
 				}
 				finally
 				{

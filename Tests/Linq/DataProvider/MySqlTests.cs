@@ -1,16 +1,11 @@
 ﻿extern alias MySqlData;
 extern alias MySqlConnector;
-
-using System;
 using System.Data.Linq;
-using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
 using System.Collections;
-using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
-using System.Threading.Tasks;
 using System.Reflection;
 
 using LinqToDB;
@@ -23,15 +18,15 @@ using LinqToDB.DataProvider.MySql;
 using LinqToDB.Tools.Comparers;
 
 using NUnit.Framework;
-using MySqlDataDateTime      = MySqlData::MySql.Data.Types.MySqlDateTime;
-using MySqlDataDecimal       = MySqlData::MySql.Data.Types.MySqlDecimal;
+using MySqlDataDateTime = MySqlData::MySql.Data.Types.MySqlDateTime;
+using MySqlDataDecimal = MySqlData::MySql.Data.Types.MySqlDecimal;
 #if NETFRAMEWORK
 using MySqlConnectorDateTime = MySqlConnector::MySql.Data.Types.MySqlDateTime;
 #else
 using MySqlConnectorDateTime = MySqlConnector::MySqlConnector.MySqlDateTime;
 #endif
 #if NET6_0_OR_GREATER
-using MySqlConnectorDecimal  = MySqlConnector::MySqlConnector.MySqlDecimal;
+using MySqlConnectorDecimal = MySqlConnector::MySqlConnector.MySqlDecimal;
 #endif
 
 namespace Tests.DataProvider
@@ -1257,7 +1252,7 @@ namespace Tests.DataProvider
 			{
 
 				var expectedProc = testCase.Schema;
-				expectedProc.CatalogName = TestUtils.GetDatabaseName(db);
+				expectedProc.CatalogName = TestUtils.GetDatabaseName(db, context);
 
 				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
 
@@ -1459,7 +1454,7 @@ namespace Tests.DataProvider
 		[Table]
 		public class CreateTable
 		{
-			[Column                                                              ] public string? VarChar255;
+			[Column                                                              ] public string? VarCharDefault;
 			[Column(Length = 1)                                                  ] public string? VarChar1;
 			[Column(Length = 112)                                                ] public string? VarChar112;
 			[Column                                                              ] public char    Char;
@@ -1554,7 +1549,7 @@ namespace Tests.DataProvider
 				{
 					var sql = db.LastQuery!;
 
-					Assert.True(sql.Contains("\t`VarChar255`       VARCHAR(255)          NULL"));
+					Assert.True(sql.Contains("\t`VarCharDefault`   VARCHAR(4000)         NULL"));
 					Assert.True(sql.Contains("\t`VarChar1`         VARCHAR(1)            NULL"));
 					Assert.True(sql.Contains("\t`VarChar112`       VARCHAR(112)          NULL"));
 					Assert.True(sql.Contains("\t`Char`             CHAR              NOT NULL"));
@@ -1622,7 +1617,7 @@ namespace Tests.DataProvider
 					var testRecord = new CreateTable()
 					{
 						VarChar1         = "ы",
-						VarChar255       = "ыsdf",
+						VarCharDefault   = "ыsdf",
 						VarChar112       = "ы123",
 						Char             = 'я',
 						Char1            = "!",
@@ -1682,7 +1677,7 @@ namespace Tests.DataProvider
 					var readRecord = table.Single();
 
 					Assert.AreEqual(testRecord.VarChar1        , readRecord.VarChar1);
-					Assert.AreEqual(testRecord.VarChar255      , readRecord.VarChar255);
+					Assert.AreEqual(testRecord.VarCharDefault  , readRecord.VarCharDefault);
 					Assert.AreEqual(testRecord.VarChar112      , readRecord.VarChar112);
 					Assert.AreEqual(testRecord.Char            , readRecord.Char);
 					Assert.AreEqual(testRecord.Char1           , readRecord.Char1);
@@ -1753,7 +1748,7 @@ namespace Tests.DataProvider
 		[Table]
 		public class TestSchemaTypesTable
 		{
-			[Column                                                  ] public string? VarChar255;
+			[Column                                                  ] public string? VarCharDefault;
 			[Column(Length = 1)                                      ] public string? VarChar1;
 			[Column(Length = 112)                                    ] public string? VarChar112;
 			[Column                                                  ] public char    Char;
@@ -1846,7 +1841,7 @@ namespace Tests.DataProvider
 					var tableSchema = schema.Tables.Where(t => t.TableName!.ToLower() == "testschematypestable").SingleOrDefault()!;
 					Assert.IsNotNull(tableSchema);
 
-					assertColumn("VarChar255"        , "string"  , DataType.VarChar);
+					assertColumn("VarCharDefault"    , "string"  , DataType.VarChar);
 					assertColumn("VarChar1"          , "char?"   , DataType.VarChar);
 					assertColumn("VarChar112"        , "string"  , DataType.VarChar);
 					assertColumn("Char"              , "char"    , DataType.Char);
@@ -1945,7 +1940,7 @@ namespace Tests.DataProvider
 
 				Assert.IsNotNull(proc);
 
-				assertParameter("VarChar255"        , "string"   , DataType.VarChar);
+				assertParameter("VarCharDefault"    , "string"   , DataType.VarChar);
 				assertParameter("VarChar1"          , "char?"    , DataType.VarChar);
 				assertParameter("Char255"           , "string"   , DataType.Char);
 				assertParameter("Char1"             , "char?"    , DataType.Char);
@@ -2027,7 +2022,7 @@ namespace Tests.DataProvider
 				Assert.IsNotNull(proc);
 				Assert.IsNotNull(proc.ResultTable);
 
-				assertColumn("VarChar255"        , "string"   , DataType.VarChar);
+				assertColumn("VarCharDefault"    , "string"   , DataType.VarChar);
 				assertColumn("VarChar1"          , "char?"    , DataType.VarChar);
 				assertColumn("Char255"           , "string"   , DataType.Char);
 				assertColumn("Char1"             , "char?"    , DataType.Char);
@@ -2139,6 +2134,26 @@ namespace Tests.DataProvider
 				{
 					db.Execute("set session sql_mode=default");
 				}
+			}
+		}
+
+		class Issue3611Table
+		{
+			[Column(Length = 2000, DataType = DataType.VarChar)]   public string? VarChar   { get; set; }
+			[Column(Length = 2000, DataType = DataType.VarBinary)] public byte[]? VarBinary { get; set; }
+		}
+		[Test]
+		public void Issue3611([IncludeDataSources(false, TestProvName.AllMySql)] string context)
+		{
+			using (var db = GetDataConnection(context))
+			using (db.CreateLocalTable<Issue3611Table>())
+			{
+				// VARCHAR/VARBINARY max length depends on many factors:
+				// 1. MySQL version: 255 prior to 5.0.3 and 65535 for 5.0.3+
+				// 2. column encoding: for utf8 it will be 21844
+				// 3. other columns. total row size is limited to 64K
+				Assert.True(db.LastQuery!.Contains("VARCHAR(2000)"));
+				Assert.True(db.LastQuery!.Contains("VARBINARY(2000)"));
 			}
 		}
 	}

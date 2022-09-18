@@ -1,7 +1,4 @@
-﻿using System;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Threading.Tasks;
+﻿using System.Linq.Expressions;
 using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Mapping;
@@ -121,6 +118,7 @@ namespace Tests.Linq
 					Where(c => c.ChildID != 1032));
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/23194", Configuration = TestProvName.AllClickHouse)]
 		[Test]
 		public void Concat5([DataSources(ProviderName.DB2, TestProvName.AllInformix)] string context)
 		{
@@ -135,6 +133,7 @@ namespace Tests.Linq
 					Where(c => c.ChildID != 1032));
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/23194", Configuration = TestProvName.AllClickHouse)]
 		[Test]
 		public void Concat501([DataSources(ProviderName.DB2, TestProvName.AllInformix)] string context)
 		{
@@ -164,7 +163,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Concat6([DataSources(ProviderName.SqlCe)] string context)
+		public void Concat6([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -239,6 +238,7 @@ namespace Tests.Linq
 					db.Child. Select(c => new { ID1 = c.ParentID, ID2 = c.ParentID + 1, ID3 = c.ChildID,  })));
 		}
 
+		[ActiveIssue("https://github.com/linq2db/linq2db/issues/3360", Configuration = TestProvName.AllClickHouse)]
 		[Test]
 		public void Concat851([DataSources] string context)
 		{
@@ -294,6 +294,7 @@ namespace Tests.Linq
 					db.Parent.Select(c => new Parent { ParentID = c.ParentID, Value1   = c.Value1   })));
 		}
 
+		[ActiveIssue("https://github.com/linq2db/linq2db/issues/3360", Configuration = TestProvName.AllClickHouse)]
 		[Test]
 		public void Concat89([DataSources(TestProvName.AllInformix)] string context)
 		{
@@ -363,6 +364,7 @@ namespace Tests.Linq
 					select child);
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void Union3([DataSources] string context)
 		{
@@ -375,6 +377,7 @@ namespace Tests.Linq
 					(from ch in db.Child  select new { id = ch.ParentID, val = false })));
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void Union4([DataSources] string context)
 		{
@@ -389,6 +392,7 @@ namespace Tests.Linq
 					.Select(p => new { p.id, p.val }));
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void Union41([DataSources] string context)
 		{
@@ -403,6 +407,7 @@ namespace Tests.Linq
 					.Select(p => p));
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void Union42([DataSources] string context)
 		{
@@ -416,6 +421,7 @@ namespace Tests.Linq
 					.Select(p => p.val));
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void Union421([DataSources] string context)
 		{
@@ -892,7 +898,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestConcatInheritance([IncludeDataSources(TestProvName.AllSQLiteClassic)] string context)
+		public void TestConcatInheritance([IncludeDataSources(TestProvName.AllSQLiteClassic, TestProvName.AllClickHouse)] string context)
 		{
 			var testData = new[]
 			{
@@ -974,6 +980,7 @@ namespace Tests.Linq
 				true,
 				TestProvName.AllOracle,
 				TestProvName.AllSqlServer2012Plus,
+				TestProvName.AllClickHouse,
 				TestProvName.AllPostgreSQL)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -991,6 +998,7 @@ namespace Tests.Linq
 				true,
 				TestProvName.AllOracle,
 				TestProvName.AllSqlServer2012Plus,
+				TestProvName.AllClickHouse,
 				TestProvName.AllPostgreSQL)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1028,6 +1036,7 @@ namespace Tests.Linq
 			query.Invoking(q => q.ToArray()).Should().NotThrow();
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void SelectWithBooleanNulls([DataSources] string context)
 		{
@@ -1346,7 +1355,7 @@ namespace Tests.Linq
 
 		[ActiveIssue(2948)]
 		[Test(Description = "InvalidCastException : Unable to cast object of type 'System.Linq.Expressions.MemberMemberBinding' to type 'System.Linq.Expressions.MemberAssignment'.")]
-		public void Issue2948([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public void Issue2948([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1376,7 +1385,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "invalid SQL for Any() subquery")]
-		public void Issue2932_Works([DataSources] string context)
+		public void Issue2932_Works([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1520,6 +1529,65 @@ namespace Tests.Linq
 			Assert.IsNull(pat.Patient);
 			pat = res.Where(r => r.ID == 2).Skip(1).Single();
 			Assert.IsNull(pat.Patient);
+		}
+
+		// ClickHouse developers themself doesn't know how their aliases work, so there will be no workaround
+		// from our side. User should use names carefully in queries
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/23194", Configuration = TestProvName.AllClickHouse)]
+		[Test]
+		public void Issue3369Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q1 = from x in db.Person
+					 where x.ID == 1
+					 select new
+					 {
+						 x.ID,
+						 FirstName = "A",
+						 OK = x.FirstName == "123" ? "Y" : "N",
+					 };
+			var q2 = from x in db.Person
+					 where x.ID == 2
+					 select new
+					 {
+						 x.ID,
+						 x.FirstName,
+						 OK = "N"
+					 };
+			var query = q1.Union(q2);
+			var q3 = from x in query
+					 from y in db.Person.LeftJoin(t => t.ID == x.ID)
+					 where x.ID == 3
+					 select new
+					 {
+						 x.ID,
+						 x.OK,
+						 FirstName = x.FirstName == "ddd" ? y.FirstName : x.FirstName,
+					 };
+
+			q3.ToList();
+		}
+
+		[Test]
+		public void Issue3738Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query1 = db.Person.Select(x => new
+			{
+				Id     = (string?)("I-" + x.ID),
+				Name   = x.FirstName
+			});
+			var query2 = db.Person.Select(x => new
+			{
+				Id   = (string?)null,
+				Name = "QUASI-" + x.FirstName,
+			});
+
+			var resultingQuery = query1.Concat(query2);
+
+			resultingQuery.ToList();
 		}
 	}
 }

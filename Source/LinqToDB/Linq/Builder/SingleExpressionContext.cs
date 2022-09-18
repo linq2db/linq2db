@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -41,7 +40,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			var info = ConvertToIndex(null, 0, ConvertFlags.All);
 			if (info.Length != 1)
-				throw new InvalidOperationException();
+				ThrowHelper.ThrowInvalidOperationException();
 
 			var parentIndex = ConvertToParentIndex(info[0].Index, this);
 			return Builder.BuildSql(SqlExpression.SystemType ?? typeof(object), parentIndex, info[0].Sql);
@@ -70,11 +69,11 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (expression is ParameterExpression)
 				{
-					throw new NotImplementedException();
+					ThrowHelper.ThrowNotImplementedException();
 				}
 			}
 
-			throw new NotImplementedException();
+			return ThrowHelper.ThrowNotImplementedException<IsExpressionResult>();
 		}
 
 		public IBuildContext? GetContext     (Expression? expression, int level, BuildInfo buildInfo)
@@ -84,7 +83,7 @@ namespace LinqToDB.Linq.Builder
 
 		public virtual SqlStatement GetResultStatement()
 		{
-			throw new NotImplementedException();
+			return ThrowHelper.ThrowNotImplementedException<SqlStatement>();
 		}
 
 		public void CompleteColumns()

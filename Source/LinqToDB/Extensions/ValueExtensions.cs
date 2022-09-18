@@ -1,13 +1,5 @@
-﻿using System;
-using System.Text;
-using System.Reflection;
-
-namespace LinqToDB.Extensions
+﻿namespace LinqToDB.Extensions
 {
-	using Common;
-	using Mapping;
-	using SqlQuery;
-
 	/// <summary>
 	/// Contains data manipulation helpers (e.g. for use in query parameters).
 	/// </summary>
@@ -31,7 +23,7 @@ namespace LinqToDB.Extensions
 				return ts.Ticks;
 
 			if (precision < 0)
-				throw new InvalidOperationException($"Precision must be >= 0: {precision}");
+				ThrowHelper.ThrowInvalidOperationException($"Precision must be >= 0: {precision}");
 
 			return ts.Ticks - (ts.Ticks % TICKS_DIVIDERS[precision]);
 		}
@@ -42,7 +34,7 @@ namespace LinqToDB.Extensions
 				return dto;
 
 			if (precision < 0)
-				throw new InvalidOperationException($"Precision must be >= 0: {precision}");
+				ThrowHelper.ThrowInvalidOperationException($"Precision must be >= 0: {precision}");
 
 			var delta = dto.Ticks % TICKS_DIVIDERS[precision];
 			return delta == 0 ? dto : dto.AddTicks(-delta);
@@ -54,7 +46,7 @@ namespace LinqToDB.Extensions
 				return dt;
 
 			if (precision < 0)
-				throw new InvalidOperationException($"Precision must be >= 0: {precision}");
+				ThrowHelper.ThrowInvalidOperationException($"Precision must be >= 0: {precision}");
 
 			var delta = dt.Ticks % TICKS_DIVIDERS[precision];
 			return delta == 0 ? dt : dt.AddTicks(-delta);

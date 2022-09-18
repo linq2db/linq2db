@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
+﻿using System.Diagnostics;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -10,9 +7,8 @@ namespace LinqToDB.Mapping
 	using Common;
 	using Expressions;
 	using Extensions;
-	using Linq;
-	using LinqToDB.SqlQuery;
 	using Reflection;
+	using SqlQuery;
 
 	/// <summary>
 	/// Stores mapping entity descriptor.
@@ -264,8 +260,7 @@ namespace LinqToDB.Mapping
 
 				if (caa != null)
 				{
-					if (Aliases == null)
-						Aliases = new Dictionary<string, string?>();
+					Aliases ??= new Dictionary<string, string?>();
 
 					Aliases.Add(member.Name, caa.MemberName);
 				}
@@ -273,8 +268,7 @@ namespace LinqToDB.Mapping
 				var ma = MappingSchema.GetAttribute<ExpressionMethodAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration);
 				if (ma != null && ma.IsColumn)
 				{
-					if (CalculatedMembers == null)
-						CalculatedMembers = new List<MemberAccessor>();
+					CalculatedMembers ??= new List<MemberAccessor>();
 					CalculatedMembers.Add(member);
 				}
 			}
@@ -291,7 +285,7 @@ namespace LinqToDB.Mapping
 		void SetColumn(ColumnAttribute attr, bool hasInheritanceMapping)
 		{
 			if (attr.MemberName == null)
-				throw new LinqToDBException($"The Column attribute of the '{TypeAccessor.Type}' type must have MemberName.");
+				ThrowHelper.ThrowLinqToDBException($"The Column attribute of the '{TypeAccessor.Type}' type must have MemberName.");
 
 			if (attr.MemberName.IndexOf('.') < 0)
 			{
@@ -378,14 +372,11 @@ namespace LinqToDB.Mapping
 					result.Add(mapping);
 				}
 
-				var discriminator = result.Select(m => m.Discriminator).FirstOrDefault(d => d != null);
-
-				if (discriminator == null)
-					throw new LinqException("Inheritance Discriminator is not defined for the '{0}' hierarchy.", ObjectType);
+				var discriminator = result.Select(m => m.Discriminator).FirstOrDefault(d => d != null)
+				                    ?? ThrowHelper.ThrowLinqException<ColumnDescriptor>($"Inheritance Discriminator is not defined for the '{ObjectType}' hierarchy.");
 
 				foreach (var mapping in result)
-					if (mapping.Discriminator == null)
-						mapping.Discriminator = discriminator;
+					mapping.Discriminator ??= discriminator;
 			}
 
 			_inheritanceMappings = result;
@@ -462,7 +453,7 @@ namespace LinqToDB.Mapping
 					var orderedAttributes = MappingSchema.SortByConfiguration(attr => attr.Configuration, dynamicStoreAttributes).ToArray();
 
 					if (orderedAttributes[1].Configuration == orderedAttributes[0].Configuration)
-						throw new LinqToDBException($"Multiple dynamic store configuration attributes with same configuration found for {TypeAccessor.Type}");
+						ThrowHelper.ThrowLinqToDBException($"Multiple dynamic store configuration attributes with same configuration found for {TypeAccessor.Type}");
 
 					dynamicStoreAttribute = orderedAttributes[0];
 				}
@@ -487,7 +478,7 @@ namespace LinqToDB.Mapping
 					var tryGetValueMethodInfo = storageType.GetMethod("TryGetValue");
 
 					if (tryGetValueMethodInfo == null)
-						throw new LinqToDBException("Storage property do not have method 'TryGetValue'");
+						ThrowHelper.ThrowLinqToDBException("Storage property do not have method 'TryGetValue'");
 
 					// get value via "Item" accessor; we're not null-checking
 					DynamicColumnGetter =

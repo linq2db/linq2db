@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using LinqToDB.Data;
+﻿using LinqToDB.Data;
 
 using NUnit.Framework;
 
@@ -16,18 +14,18 @@ namespace Tests.Data
 	[TestFixture]
 	public class ProcedureTests : TestBase
 	{
-		public static IEnumerable<Person> PersonSelectByKey(DataConnection dataConnection, int? @id)
+		public static IEnumerable<Person> PersonSelectByKey(DataConnection dataConnection, string context, int? @id)
 		{
-			var databaseName     = TestUtils.GetDatabaseName(dataConnection);
+			var databaseName     = TestUtils.GetDatabaseName(dataConnection, context);
 			var escapedTableName = SqlServerTools.QuoteIdentifier(databaseName);
 
 			return dataConnection.QueryProc<Person>(escapedTableName + "..[Person_SelectByKey]",
 				new DataParameter("@id", @id));
 		}
 
-		public static IEnumerable<Person> PersonSelectByKeyLowercaseColumns(DataConnection dataConnection, int? @id)
+		public static IEnumerable<Person> PersonSelectByKeyLowercaseColumns(DataConnection dataConnection, string context, int? @id)
 		{
-			var databaseName     = TestUtils.GetDatabaseName(dataConnection);
+			var databaseName     = TestUtils.GetDatabaseName(dataConnection, context);
 			var escapedTableName = SqlServerTools.QuoteIdentifier(databaseName);
 
 			return dataConnection.QueryProc<Person>(escapedTableName + "..[Person_SelectByKeyLowercase]",
@@ -39,9 +37,9 @@ namespace Tests.Data
 		{
 			using (var db = GetDataConnection(context))
 			{
-				var p1 = PersonSelectByKeyLowercaseColumns(db, 1).First();
+				var p1 = PersonSelectByKeyLowercaseColumns(db, context, 1).First();
 				var p2 = db.Query<Person>("SELECT PersonID, FirstName FROM Person WHERE PersonID = @id", new { id = 1 }).First();
-				var p3 = PersonSelectByKey(db, 1).First();
+				var p3 = PersonSelectByKey(db, context, 1).First();
 
 				Assert.AreEqual(p1.FirstName, p2.FirstName);
 				Assert.AreEqual(p1.FirstName, p3.FirstName);
@@ -53,7 +51,7 @@ namespace Tests.Data
 		{
 			using (var db = GetDataConnection(context))
 			{
-				var p1 = PersonSelectByKey(db, 1).First();
+				var p1 = PersonSelectByKey(db, context, 1).First();
 				var p2 = db.Query<Person>("SELECT * FROM Person WHERE PersonID = @id", new { id = 1 }).First();
 
 				Assert.AreEqual(p1, p2);

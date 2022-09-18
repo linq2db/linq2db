@@ -1,8 +1,4 @@
-﻿using System;
-
-using JetBrains.Annotations;
-
-namespace LinqToDB
+﻿namespace LinqToDB
 {
 	using DataProvider.DB2;
 	using DataProvider.SqlServer;
@@ -95,6 +91,11 @@ namespace LinqToDB
 		/// </summary>
 		public const string SqlServer2019 = "SqlServer.2019";
 		/// <summary>
+		/// Microsoft SQL Server 2022 provider.
+		/// Used as configuration name for SQL Server 2019 mapping schema <see cref="SqlServerMappingSchema.SqlServer2022MappingSchema"/>.
+		/// </summary>
+		public const string SqlServer2022 = "SqlServer.2022";
+		/// <summary>
 		/// MySql provider.
 		/// Used as configuration name for MySql mapping schema <see cref="DataProvider.MySql.MySqlMappingSchema"/>.
 		/// </summary>
@@ -116,12 +117,17 @@ namespace LinqToDB
 		public const string Oracle        = "Oracle";
 		/// <summary>
 		/// Oracle (11g dialect) ODP.NET native provider.
-		/// Used as configuration name for Oracle native provider mapping schema <see cref="DataProvider.Oracle.OracleMappingSchema.NativeMappingSchema"/>.
+		/// Used as configuration name for Oracle native provider mapping schema <see cref="DataProvider.Oracle.OracleMappingSchema.Native11MappingSchema"/>.
 		/// </summary>
 		public const string Oracle11Native  = "Oracle.11.Native";
 		/// <summary>
+		/// Oracle (11g dialect) Devart provider.
+		/// Used as configuration name for Oracle managed provider mapping schema <see cref="DataProvider.Oracle.OracleMappingSchema.Devart11MappingSchema"/>.
+		/// </summary>
+		public const string Oracle11Devart = "Oracle.11.Devart";
+		/// <summary>
 		/// Oracle (11g dialect) ODP.NET managed provider.
-		/// Used as configuration name for Oracle managed provider mapping schema <see cref="DataProvider.Oracle.OracleMappingSchema.ManagedMappingSchema"/>.
+		/// Used as configuration name for Oracle managed provider mapping schema <see cref="DataProvider.Oracle.OracleMappingSchema.Managed11MappingSchema"/>.
 		/// </summary>
 		public const string Oracle11Managed = "Oracle.11.Managed";
 		/// <summary>
@@ -134,6 +140,11 @@ namespace LinqToDB
 		/// Used as configuration name for Oracle managed provider mapping schema <see cref="DataProvider.Oracle.OracleMappingSchema.ManagedMappingSchema"/>.
 		/// </summary>
 		public const string OracleManaged = "Oracle.Managed";
+		/// <summary>
+		/// Oracle Devart provider.
+		/// Used as configuration name for Oracle managed provider mapping schema <see cref="DataProvider.Oracle.OracleMappingSchema.DevartMappingSchema"/>.
+		/// </summary>
+		public const string OracleDevart = "Oracle.Devart";
 		/// <summary>
 		/// PostgreSQL 9.2- data provider.
 		/// Used as configuration name for PostgreSQL mapping schema <see cref="DataProvider.PostgreSQL.PostgreSQLMappingSchema"/>.
@@ -151,6 +162,10 @@ namespace LinqToDB
 		/// PostgreSQL 9.5+ data provider.
 		/// </summary>
 		public const string PostgreSQL95  = "PostgreSQL.9.5";
+		/// <summary>
+		/// PostgreSQL 15+ data provider.
+		/// </summary>
+		public const string PostgreSQL15 = "PostgreSQL.15";
 		/// <summary>
 		/// Microsoft SQL Server Compact Edition provider.
 		/// Used as configuration name for SQL CE mapping schema <see cref="DataProvider.SqlCe.SqlCeMappingSchema"/>.
@@ -193,6 +208,22 @@ namespace LinqToDB
 		/// SAP HANA ODBC provider.
 		/// Used as configuration name for SAP HANA mapping schema <see cref="DataProvider.SapHana.SapHanaMappingSchema.OdbcMappingSchema"/>.
 		/// </summary>
-		public const string SapHanaOdbc = "SapHana.Odbc";
+		public const string SapHanaOdbc   = "SapHana.Odbc";
+		/// <summary>
+		/// ClickHouse provider base name.
+		/// </summary>
+		public const string ClickHouse        = "ClickHouse";
+		/// <summary>
+		/// ClickHouse provider using Octonica.ClickHouseClient ADO.NET provider.
+		/// </summary>
+		public const string ClickHouseOctonica = "ClickHouse.Octonica";
+		/// <summary>
+		/// ClickHouse provider using ClickHouse.Client ADO.NET provider.
+		/// </summary>
+		public const string ClickHouseClient   = "ClickHouse.Client";
+		/// <summary>
+		/// ClickHouse provider using MySqlConnector ADO.NET provider.
+		/// </summary>
+		public const string ClickHouseMySql   = "ClickHouse.MySql";
 	}
 }

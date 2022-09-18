@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 
 namespace LinqToDB.Tools
 {
@@ -26,8 +22,8 @@ namespace LinqToDB.Tools
 			this MappingSchema mappingSchema,
 			[InstantHandle] Func<ColumnDescriptor,bool> columnPredicate)
 		{
-			if (mappingSchema   == null) throw new ArgumentNullException(nameof(mappingSchema));
-			if (columnPredicate == null) throw new ArgumentNullException(nameof(columnPredicate));
+			if (mappingSchema   == null) ThrowHelper.ThrowArgumentNullException(nameof(mappingSchema));
+			if (columnPredicate == null) ThrowHelper.ThrowArgumentNullException(nameof(columnPredicate));
 
 			var cols = new HashSet<MemberAccessor>(
 				mappingSchema.GetEntityDescriptor(typeof(T)).Columns
@@ -46,7 +42,7 @@ namespace LinqToDB.Tools
 		[Pure]
 		public static IEqualityComparer<T> GetEntityEqualityComparer<T>(this MappingSchema mappingSchema)
 		{
-			if (mappingSchema == null) throw new ArgumentNullException(nameof(mappingSchema));
+			if (mappingSchema == null) ThrowHelper.ThrowArgumentNullException(nameof(mappingSchema));
 
 			var cols = new HashSet<MemberAccessor>(
 				mappingSchema.GetEntityDescriptor(typeof(T)).Columns
@@ -65,7 +61,7 @@ namespace LinqToDB.Tools
 		[Pure]
 		public static IEqualityComparer<T> GetKeyEqualityComparer<T>(this MappingSchema mappingSchema)
 		{
-			if (mappingSchema == null) throw new ArgumentNullException(nameof(mappingSchema));
+			if (mappingSchema == null) ThrowHelper.ThrowArgumentNullException(nameof(mappingSchema));
 
 			var cols = new HashSet<MemberAccessor>(
 				mappingSchema.GetEntityDescriptor(typeof(T)).Columns
@@ -90,8 +86,8 @@ namespace LinqToDB.Tools
 			this IDataContext dataContext,
 			[InstantHandle] Func<ColumnDescriptor,bool> columnPredicate)
 		{
-			if (dataContext     == null) throw new ArgumentNullException(nameof(dataContext));
-			if (columnPredicate == null) throw new ArgumentNullException(nameof(columnPredicate));
+			if (dataContext     == null) ThrowHelper.ThrowArgumentNullException(nameof(dataContext));
+			if (columnPredicate == null) ThrowHelper.ThrowArgumentNullException(nameof(columnPredicate));
 
 			return dataContext.MappingSchema.GetEqualityComparer<T>(columnPredicate);
 		}
@@ -106,7 +102,7 @@ namespace LinqToDB.Tools
 		[Pure]
 		public static IEqualityComparer<T> GetEntityEqualityComparer<T>(this IDataContext dataContext)
 		{
-			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
+			if (dataContext == null) ThrowHelper.ThrowArgumentNullException(nameof(dataContext));
 
 			return dataContext.MappingSchema.GetEntityEqualityComparer<T>();
 		}
@@ -121,7 +117,7 @@ namespace LinqToDB.Tools
 		[Pure]
 		public static IEqualityComparer<T> GetKeyEqualityComparer<T>(this IDataContext dataContext)
 		{
-			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
+			if (dataContext == null) ThrowHelper.ThrowArgumentNullException(nameof(dataContext));
 
 			return dataContext.MappingSchema.GetKeyEqualityComparer<T>();
 		}
@@ -140,8 +136,8 @@ namespace LinqToDB.Tools
 			[InstantHandle] Func<ColumnDescriptor,bool> columnPredicate)
 			where T : notnull
 		{
-			if (table           == null) throw new ArgumentNullException(nameof(table));
-			if (columnPredicate == null) throw new ArgumentNullException(nameof(columnPredicate));
+			if (table           == null) ThrowHelper.ThrowArgumentNullException(nameof(table));
+			if (columnPredicate == null) ThrowHelper.ThrowArgumentNullException(nameof(columnPredicate));
 
 			return table.DataContext.MappingSchema.GetEqualityComparer<T>(columnPredicate);
 		}
@@ -157,7 +153,7 @@ namespace LinqToDB.Tools
 		public static IEqualityComparer<T> GetEntityEqualityComparer<T>(this ITable<T> table)
 			where T : notnull
 		{
-			if (table == null) throw new ArgumentNullException(nameof(table));
+			if (table == null) ThrowHelper.ThrowArgumentNullException(nameof(table));
 
 			return table.DataContext.MappingSchema.GetEntityEqualityComparer<T>();
 		}
@@ -173,7 +169,7 @@ namespace LinqToDB.Tools
 		public static IEqualityComparer<T> GetKeyEqualityComparer<T>(this ITable<T> table)
 			where T : notnull
 		{
-			if (table == null) throw new ArgumentNullException(nameof(table));
+			if (table == null) ThrowHelper.ThrowArgumentNullException(nameof(table));
 
 			return table.DataContext.MappingSchema.GetKeyEqualityComparer<T>();
 		}

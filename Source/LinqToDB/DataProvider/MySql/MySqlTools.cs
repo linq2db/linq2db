@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.IO;
-using System.Reflection;
+﻿using System.Reflection;
 
 namespace LinqToDB.DataProvider.MySql
 {
@@ -18,7 +14,8 @@ namespace LinqToDB.DataProvider.MySql
 
 		internal static IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)
 		{
-			if (css.IsGlobal)
+			// ensure ClickHouse configuration over mysql protocol is not detected as mysql
+			if (css.IsGlobal || css.ProviderName?.Contains("ClickHouse") == true || css.Name.Contains("ClickHouse"))
 				return null;
 
 			switch (css.ProviderName)
@@ -90,7 +87,7 @@ namespace LinqToDB.DataProvider.MySql
 
 		public static void ResolveMySql(string path, string? assemblyName)
 		{
-			if (path == null) throw new ArgumentNullException(nameof(path));
+			if (path == null) ThrowHelper.ThrowArgumentNullException(nameof(path));
 			new AssemblyResolver(
 				path,
 				assemblyName
@@ -101,7 +98,7 @@ namespace LinqToDB.DataProvider.MySql
 
 		public static void ResolveMySql(Assembly assembly)
 		{
-			if (assembly == null) throw new ArgumentNullException(nameof(assembly));
+			if (assembly == null) ThrowHelper.ThrowArgumentNullException(nameof(assembly));
 			new AssemblyResolver(assembly, assembly.FullName!);
 		}
 

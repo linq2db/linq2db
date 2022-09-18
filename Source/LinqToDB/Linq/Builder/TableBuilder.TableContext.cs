@@ -1,20 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
+﻿using System.Diagnostics;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Runtime.CompilerServices;
+using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using Common;
 	using Extensions;
-	using LinqToDB.Expressions;
 	using Interceptors;
 	using Mapping;
 	using Reflection;
 	using SqlQuery;
-	using Common;
 
 	partial class TableBuilder
 	{
@@ -122,7 +118,7 @@ namespace LinqToDB.Linq.Builder
 				var attr = mc.Method.GetTableFunctionAttribute(builder.MappingSchema)!;
 
 				if (!typeof(IQueryable<>).IsSameOrParentOf(mc.Method.ReturnType))
-					throw new LinqException("Table function has to return IQueryable<T>.");
+					ThrowHelper.ThrowLinqException("Table function has to return IQueryable<T>.");
 
 				OriginalType     = mc.Method.ReturnType.GetGenericArguments()[0];
 				ObjectType       = GetObjectType();
@@ -198,8 +194,7 @@ namespace LinqToDB.Linq.Builder
 							Builder.AssociationPath.Push(Tuple.Create(new AccessorMember(ma), (IBuildContext)this, (List<LoadWithInfo[]>?)loadWith));
 
 							ex = BuildExpression(ma, 1, parentObject);
-							if (_loadWithCache == null)
-								_loadWithCache = new Dictionary<MemberInfo, Expression>();
+							_loadWithCache ??= new Dictionary<MemberInfo, Expression>();
 							_loadWithCache.Add(member.Info.MemberInfo, ex);
 
 							_ = Builder.AssociationPath.Pop();
@@ -498,11 +493,11 @@ namespace LinqToDB.Linq.Builder
 					constructors = objectType.GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic);
 
 					if (constructors.Length == 0)
-						throw new InvalidOperationException($"Type '{objectType.Name}' has no constructors.");
+						ThrowHelper.ThrowInvalidOperationException($"Type '{objectType.Name}' has no constructors.");
 				}
 
 				if (constructors.Length > 1)
-					throw new InvalidOperationException($"Type '{objectType.Name}' has ambiguous constructors.");
+					ThrowHelper.ThrowInvalidOperationException($"Type '{objectType.Name}' has ambiguous constructors.");
 
 				return constructors[0];
 			}
@@ -549,7 +544,7 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				if (!argFound)
-					throw new InvalidOperationException($"Type '{objectType.Name}' has no suitable constructor.");
+					ThrowHelper.ThrowInvalidOperationException($"Type '{objectType.Name}' has no suitable constructor.");
 
 				var expr = Expression.New(ctor, args);
 
@@ -628,7 +623,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					info = ConvertToIndex(null, 0, ConvertFlags.All);
 					if (info.Length != 1)
-						throw new LinqToDBException($"Invalid scalar type processing for type '{tableType.Name}'.");
+						ThrowHelper.ThrowLinqToDBException($"Invalid scalar type processing for type '{tableType.Name}'.");
 					var parentIndex = ConvertToParentIndex(info[0].Index, this);
 					return Builder.BuildSql(tableType, parentIndex, info[0].Sql);
 				}
@@ -689,8 +684,8 @@ namespace LinqToDB.Linq.Builder
 				}
 				else
 				{
-					var field           = SqlTable[InheritanceMapping[0].DiscriminatorName] ?? throw new LinqException($"Field {InheritanceMapping[0].DiscriminatorName} not found in table {SqlTable}");
-					var dindex          = ConvertToParentIndex(_indexes[field].Index, this);
+					var field  = SqlTable[InheritanceMapping[0].DiscriminatorName] ?? ThrowHelper.ThrowLinqException<SqlField>($"Field {InheritanceMapping[0].DiscriminatorName} not found in table {SqlTable}");
+					var dindex = ConvertToParentIndex(_indexes[field].Index, this);
 
 					expr = Expression.Convert(
 						Expression.Call(null, Methods.LinqToDB.Exceptions.DefaultInheritanceMappingException,
@@ -704,7 +699,7 @@ namespace LinqToDB.Linq.Builder
 					if (mapping.m == defaultMapping)
 						continue;
 
-					var field  = SqlTable[InheritanceMapping[mapping.i].DiscriminatorName] ?? throw new LinqException($"Field {InheritanceMapping[mapping.i].DiscriminatorName} not found in table {SqlTable}");
+					var field  = SqlTable[InheritanceMapping[mapping.i].DiscriminatorName] ?? ThrowHelper.ThrowLinqException<SqlField>($"Field {InheritanceMapping[mapping.i].DiscriminatorName} not found in table {SqlTable}");
 					var dindex = ConvertToParentIndex(_indexes[field].Index, this);
 
 					Expression testExpr;
@@ -769,7 +764,6 @@ namespace LinqToDB.Linq.Builder
 
 			Expression BuildExpression(Expression? expression, int level, ParameterExpression? parentObject)
 			{
-
 				if (expression == null)
 				{
 					return BuildQuery(OriginalType, this, parentObject);
@@ -801,7 +795,7 @@ namespace LinqToDB.Linq.Builder
 						}
 					}
 
-					throw new LinqException("'{0}' cannot be converted to SQL.", expression);
+					return ThrowHelper.ThrowLinqException<Expression>($"'{expression}' cannot be converted to SQL.");
 				}
 
 				if (contextInfo.Field == null)
@@ -809,7 +803,7 @@ namespace LinqToDB.Linq.Builder
 					Expression expr;
 
 					if (contextInfo.CurrentExpression == null)
-						throw new InvalidOperationException("contextInfo.CurrentExpression is null");
+						ThrowHelper.ThrowInvalidOperationException("contextInfo.CurrentExpression is null");
 
 					var maxLevel = contextInfo.CurrentExpression.GetLevel(Builder.MappingSchema);
 
@@ -963,11 +957,11 @@ namespace LinqToDB.Linq.Builder
 							if (contextInfo == null)
 							{
 								if (expression == null)
-									throw new InvalidOperationException();
+									ThrowHelper.ThrowInvalidOperationException();
 
 								var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
 
-								throw new LinqException($"Expression '{levelExpression}' is not a Field.");
+								ThrowHelper.ThrowLinqException($"Expression '{levelExpression}' is not a Field.");
 							}
 
 							if (contextInfo.Field != null)
@@ -1018,7 +1012,7 @@ namespace LinqToDB.Linq.Builder
 						}
 				}
 
-				throw new NotImplementedException();
+				return ThrowHelper.ThrowNotImplementedException<SqlInfo[]>();
 			}
 
 			#endregion
@@ -1071,7 +1065,7 @@ namespace LinqToDB.Linq.Builder
 						return info;
 				}
 
-				throw new NotImplementedException();
+				return ThrowHelper.ThrowNotImplementedException<SqlInfo[]>();
 			}
 
 			#endregion
@@ -1255,17 +1249,17 @@ namespace LinqToDB.Linq.Builder
 						}
 						else
 						{
-							var tableLevel  = FindContextExpression(expression, level, true, true)!;
+							var tableLevel  = FindContextExpression(expression, level, forceInner: false, throwExceptionForNull: true)!;
 
 							var result = tableLevel.Context.GetContext(tableLevel.CurrentExpression, tableLevel.CurrentLevel + 1, buildInfo);
 							if (result == null)
-								throw new LinqException($"Can not build association for expression '{tableLevel.CurrentExpression}'");
+								ThrowHelper.ThrowLinqException($"Can not build association for expression '{tableLevel.CurrentExpression}'");
 							return result;
 						}
 					}
 				}
 
-				throw new InvalidOperationException();
+				return ThrowHelper.ThrowInvalidOperationException<IBuildContext>();
 			}
 
 			public virtual SqlStatement GetResultStatement()
@@ -1303,8 +1297,7 @@ namespace LinqToDB.Linq.Builder
 					return;
 
 				if (!alias.Contains('<'))
-					if (SqlTable.Alias == null)
-						SqlTable.Alias = alias;
+					SqlTable.Alias ??= alias;
 			}
 
 			#endregion
@@ -1476,8 +1469,8 @@ namespace LinqToDB.Linq.Builder
 								EntityDescriptor != null &&
 								EntityDescriptor.TypeAccessor.Type == memberExpression.Member.DeclaringType)
 							{
-								throw new LinqException("Member '{0}.{1}' is not a table column.",
-									memberExpression.Member.DeclaringType.Name, memberExpression.Member.Name);
+								ThrowHelper.ThrowLinqException(
+									$"Member '{memberExpression.Member.DeclaringType.Name}.{memberExpression.Member.Name}' is not a table column.");
 							}
 						}
 					}
@@ -1488,43 +1481,43 @@ namespace LinqToDB.Linq.Builder
 
 			private SqlField? GetOrAddDynamicColumn(MemberExpression memberExpression)
 			{
-								if (memberExpression.Member.IsDynamicColumnPropertyEx())
-								{
-									var fieldName = memberExpression.Member.Name;
+				if (memberExpression.Member.IsDynamicColumnPropertyEx())
+				{
+					var fieldName = memberExpression.Member.Name;
 
-									// do not add association columns
-									var flag = true;
-									foreach (var assoc in EntityDescriptor.Associations)
-									{
-										if (assoc.MemberInfo == memberExpression.Member)
-										{
-											flag = false;
-											break;
-										}
-									}
+					// do not add association columns
+					var flag = true;
+					foreach (var assoc in EntityDescriptor.Associations)
+					{
+						if (assoc.MemberInfo == memberExpression.Member)
+						{
+							flag = false;
+							break;
+						}
+					}
 
-									if (flag)
-									{
-										var newField = SqlTable[fieldName];
-										if (newField == null)
-										{
-											newField = new SqlField(
-												new ColumnDescriptor(
-													Builder.MappingSchema,
-													EntityDescriptor,
-													new ColumnAttribute(fieldName),
-													new MemberAccessor(EntityDescriptor.TypeAccessor,
-														memberExpression.Member, EntityDescriptor),
-													InheritanceMapping.Count > 0)
+					if (flag)
+					{
+						var newField = SqlTable[fieldName];
+						if (newField == null)
+						{
+							newField = new SqlField(
+								new ColumnDescriptor(
+									Builder.MappingSchema,
+									EntityDescriptor,
+									new ColumnAttribute(fieldName),
+									new MemberAccessor(EntityDescriptor.TypeAccessor,
+										memberExpression.Member, EntityDescriptor),
+									InheritanceMapping.Count > 0)
 							)
 							{ IsDynamic = true, };
 
-											SqlTable.Add(newField);
-										}
+							SqlTable.Add(newField);
+						}
 
-										return newField;
-									}
-								}
+						return newField;
+					}
+				}
 
 				return null;
 			}
@@ -1668,7 +1661,7 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				if (throwExceptionForNull)
-					throw new LinqException($"Expression '{expression}' ({levelExpression}) is not a table.");
+					ThrowHelper.ThrowLinqException($"Expression '{expression}' ({levelExpression}) is not a table.");
 
 				return null;
 			}

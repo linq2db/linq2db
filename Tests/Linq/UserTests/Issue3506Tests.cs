@@ -1,12 +1,6 @@
-﻿using System.Linq;
-using FluentAssertions;
-using LinqToDB;
-using LinqToDB.Mapping;
+﻿using LinqToDB;
 using NUnit.Framework;
 using System.Linq.Dynamic.Core;
-using System.Linq.Dynamic.Core.CustomTypeProviders;
-using System.Collections.Generic;
-using System;
 
 namespace Tests.UserTests
 {
@@ -14,7 +8,7 @@ namespace Tests.UserTests
 	public class Issue3506Tests : TestBase
 	{
 		[Test]
-		public void Test1([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void Test1([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var cats = new[]
 			{
@@ -45,7 +39,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void Test2([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void Test2([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var cats = new[]
 			{

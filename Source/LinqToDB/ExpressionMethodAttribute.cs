@@ -1,7 +1,4 @@
-﻿using System;
-using System.Linq.Expressions;
-
-using JetBrains.Annotations;
+﻿using System.Linq.Expressions;
 
 namespace LinqToDB
 {
@@ -42,7 +39,7 @@ namespace LinqToDB
 		public ExpressionMethodAttribute(string methodName)
 		{
 			if (string.IsNullOrEmpty(methodName))
-				throw new ArgumentException("Value cannot be null or empty.", nameof(methodName));
+				ThrowHelper.ThrowArgumentException(nameof(methodName), "Value cannot be null or empty.");
 			MethodName = methodName;
 		}
 
@@ -52,7 +49,7 @@ namespace LinqToDB
 		/// <param name="expression">Substitution expression.</param>
 		public ExpressionMethodAttribute(LambdaExpression expression)
 		{
-			Expression = expression ?? throw new ArgumentNullException(nameof(expression));
+			Expression = expression ?? ThrowHelper.ThrowArgumentNullException<LambdaExpression>(nameof(expression));
 		}
 
 		/// <summary>
@@ -63,7 +60,7 @@ namespace LinqToDB
 		public ExpressionMethodAttribute(string? configuration, string methodName)
 		{
 			Configuration = configuration;
-			MethodName    = methodName ?? throw new ArgumentNullException(nameof(methodName));
+			MethodName    = methodName ?? ThrowHelper.ThrowArgumentNullException<string>(nameof(methodName));
 		}
 
 		/// <summary>

@@ -1,9 +1,7 @@
-﻿using System;
-using LinqToDB.SqlQuery;
-
-namespace LinqToDB.DataProvider.SqlServer
+﻿namespace LinqToDB.DataProvider.SqlServer
 {
 	using SqlProvider;
+	using SqlQuery;
 
 	class SqlServer2012SqlOptimizer : SqlServerSqlOptimizer
 	{
@@ -54,6 +52,9 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			switch (func.Name)
 			{
+				case PseudoFunctions.TRY_CONVERT:
+					return new SqlFunction(func.SystemType, "TRY_CONVERT", false, true, func.Parameters[0], func.Parameters[2]) { CanBeNull = true };
+
 				case "CASE"     :
 
 					if (func.Parameters.Length <= 5)

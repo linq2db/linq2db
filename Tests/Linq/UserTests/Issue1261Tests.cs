@@ -1,4 +1,4 @@
-﻿using System.Linq;
+﻿using LinqToDB;
 
 using NUnit.Framework;
 
@@ -7,6 +7,7 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue1261Tests : TestBase
 	{
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void TestLinqAll([DataSources] string context)
 		{

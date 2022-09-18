@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
+﻿using System.Collections.Concurrent;
 using System.Diagnostics;
 
 namespace LinqToDB.Reflection
@@ -12,7 +10,7 @@ namespace LinqToDB.Reflection
 
 		protected void AddMember(MemberAccessor member)
 		{
-			if (member == null) throw new ArgumentNullException(nameof(member));
+			if (member == null) ThrowHelper.ThrowArgumentNullException(nameof(member));
 
 			Members.Add(member);
 			_membersByName[member.MemberInfo.Name] = member;
@@ -25,7 +23,7 @@ namespace LinqToDB.Reflection
 		[DebuggerStepThrough]
 		public virtual object CreateInstance()
 		{
-			throw new LinqToDBException($"The '{Type.Name}' type must have public default or init constructor.");
+			return ThrowHelper.ThrowLinqToDBException<object>($"The '{Type.Name}' type must have public default or init constructor.");
 		}
 
 		[DebuggerStepThrough]
@@ -67,7 +65,7 @@ namespace LinqToDB.Reflection
 
 		public static TypeAccessor GetAccessor(Type type)
 		{
-			if (type == null) throw new ArgumentNullException(nameof(type));
+			if (type == null) ThrowHelper.ThrowArgumentNullException(nameof(type));
 
 			if (_accessors.TryGetValue(type, out var accessor))
 				return accessor;

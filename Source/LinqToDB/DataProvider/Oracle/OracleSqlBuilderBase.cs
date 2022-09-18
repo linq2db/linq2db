@@ -1,15 +1,11 @@
-﻿using System;
-using System.Data;
-using System.Linq;
+﻿using System.Text;
 
 namespace LinqToDB.DataProvider.Oracle
 {
 	using Common;
-	using SqlQuery;
-	using SqlProvider;
-	using System.Text;
 	using Mapping;
-	using System.Data.Common;
+	using SqlProvider;
+	using SqlQuery;
 
 	abstract partial class OracleSqlBuilderBase : BasicSqlBuilder
 	{
@@ -38,10 +34,8 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override void BuildGetIdentity(SqlInsertClause insertClause)
 		{
-			var identityField = insertClause.Into!.GetIdentityField();
-
-			if (identityField == null)
-				throw new SqlException("Identity field must be defined for '{0}'.", insertClause.Into.NameForLogging);
+			var identityField = insertClause.Into!.GetIdentityField()
+								?? ThrowHelper.ThrowSqlException<SqlField>($"Identity field must be defined for '{insertClause.Into.NameForLogging}'.");
 
 			AppendIndent().AppendLine("RETURNING ");
 			AppendIndent().Append('\t');
@@ -88,7 +82,7 @@ namespace LinqToDB.DataProvider.Oracle
 			base.BuildSetOperation(operation, sb);
 		}
 
-		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
+		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable, bool canBeNull)
 		{
 			switch (type.Type.DataType)
 			{
@@ -135,7 +129,7 @@ namespace LinqToDB.DataProvider.Oracle
 					else
 						StringBuilder.Append("Raw(").Append(type.Type.Length).Append(')');
 					break;
-				default: base.BuildDataTypeFromDataType(type, forCreateTable);                    break;
+				default: base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull);         break;
 			}
 		}
 
@@ -560,31 +554,23 @@ END;",
 
 		protected override void BuildCreateTableCommand(SqlTable table)
 		{
-			string command;
-
-			if (table.TableOptions.IsTemporaryOptionSet())
+			var command = (table.TableOptions.IsTemporaryOptionSet(), table.TableOptions & TableOptions.IsTemporaryOptionSet) switch
 			{
-				switch (table.TableOptions & TableOptions.IsTemporaryOptionSet)
-				{
-					case TableOptions.IsTemporary                                                                                     :
-					case TableOptions.IsTemporary |                                           TableOptions.IsLocalTemporaryData       :
-					case TableOptions.IsTemporary | TableOptions.IsGlobalTemporaryStructure                                           :
-					case TableOptions.IsTemporary | TableOptions.IsGlobalTemporaryStructure | TableOptions.IsLocalTemporaryData       :
-					case                                                                      TableOptions.IsLocalTemporaryData       :
-					case                                                                      TableOptions.IsTransactionTemporaryData :
-					case                            TableOptions.IsGlobalTemporaryStructure                                           :
-					case                            TableOptions.IsGlobalTemporaryStructure | TableOptions.IsLocalTemporaryData       :
-					case                            TableOptions.IsGlobalTemporaryStructure | TableOptions.IsTransactionTemporaryData :
-						command = "CREATE GLOBAL TEMPORARY TABLE ";
-						break;
-					case var value :
-						throw new InvalidOperationException($"Incompatible table options '{value}'");
-				}
-			}
-			else
-			{
-				command = "CREATE TABLE ";
-			}
+				(true, TableOptions.IsTemporary                                                                                    ) or
+				(true, TableOptions.IsTemporary |                                           TableOptions.IsLocalTemporaryData      ) or
+				(true, TableOptions.IsTemporary | TableOptions.IsGlobalTemporaryStructure                                          ) or
+				(true, TableOptions.IsTemporary | TableOptions.IsGlobalTemporaryStructure | TableOptions.IsLocalTemporaryData      ) or
+				(true,                                                                      TableOptions.IsLocalTemporaryData      ) or
+				(true,                                                                      TableOptions.IsTransactionTemporaryData) or
+				(true,                            TableOptions.IsGlobalTemporaryStructure                                          ) or
+				(true,                            TableOptions.IsGlobalTemporaryStructure | TableOptions.IsLocalTemporaryData      ) or
+				(true,                            TableOptions.IsGlobalTemporaryStructure | TableOptions.IsTransactionTemporaryData)
+					=> "CREATE GLOBAL TEMPORARY TABLE ",
+				(true, var value)
+					=> ThrowHelper.ThrowInvalidOperationException<string>($"Incompatible table options '{value}'"),
+				(false, _)
+					=> "CREATE TABLE ",
+			};
 
 			StringBuilder.Append(command);
 		}

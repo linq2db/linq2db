@@ -5,7 +5,7 @@ namespace Tests
 	public static class TestProvName
 	{
 		#region SQLite
-		public const string Default           = "SQLite.Default";
+		public const string Default                           = "SQLite.Default";
 		public const string NorthwindSQLite                   = "Northwind.SQLite";
 		public const string NorthwindSQLiteMS                 = "Northwind.SQLite.MS";
 		public const string AllSQLiteNorthwind                = $"{NorthwindSQLite},{NorthwindSQLiteMS}";
@@ -93,11 +93,12 @@ namespace Tests
 		public const string PostgreSQL13      = "PostgreSQL.13";
 		public const string PostgreSQL14      = "PostgreSQL.14";
 
-		public const string AllPostgreSQL9      = $"{ProviderName.PostgreSQL92},{ProviderName.PostgreSQL93},{ProviderName.PostgreSQL95}";
-		public const string AllPostgreSQL10Plus = $"{PostgreSQL10},{PostgreSQL11},{PostgreSQL12},{PostgreSQL13},{PostgreSQL14}";
-		public const string AllPostgreSQL95Plus = $"{ProviderName.PostgreSQL95},{AllPostgreSQL10Plus}";
-		public const string AllPostgreSQL93Plus = $"{ProviderName.PostgreSQL93},{AllPostgreSQL95Plus}";
-		public const string AllPostgreSQL       = $"{AllPostgreSQL9},{AllPostgreSQL10Plus}";
+		public const string AllPostgreSQL9       = $"{ProviderName.PostgreSQL92},{ProviderName.PostgreSQL93},{ProviderName.PostgreSQL95}";
+		public const string AllPostgreSQL10Plus  = $"{PostgreSQL10},{PostgreSQL11},{PostgreSQL12},{PostgreSQL13},{PostgreSQL14},{ProviderName.PostgreSQL15}";
+		public const string AllPostgreSQL95Plus  = $"{ProviderName.PostgreSQL95},{AllPostgreSQL10Plus}";
+		public const string AllPostgreSQL93Plus  = $"{ProviderName.PostgreSQL93},{AllPostgreSQL95Plus}";
+		public const string AllPostgreSQL        = $"{AllPostgreSQL9},{AllPostgreSQL10Plus}";
+		public const string AllPostgreSQL14Minus = $"{AllPostgreSQL9},{PostgreSQL10},{PostgreSQL11},{PostgreSQL12},{PostgreSQL13},{PostgreSQL14}";
 		#endregion
 
 		#region Firebird
@@ -128,12 +129,13 @@ namespace Tests
 		public const string SqlServer2016MS              = "SqlServer.2016.MS";
 		public const string SqlServer2017MS              = "SqlServer.2017.MS";
 		public const string SqlServer2019MS              = "SqlServer.2019.MS";
+		public const string SqlServer2022MS              = "SqlServer.2022.MS";
 
 		public const string SqlServerSequentialAccess    = "SqlServer.SA";
 		public const string SqlServerSequentialAccessMS  = "SqlServer.SA.MS";
 		public const string AllSqlServerSequentialAccess = $"{SqlServerSequentialAccess},{SqlServerSequentialAccessMS}";
 
-		public const string SqlServerContained                  = "SqlServer.Contained";
+		public const string SqlServerContained           = "SqlServer.Contained";
 		public const string SqlServerContainedMS         = "SqlServer.Contained.MS";
 		public const string AllSqlServerContained        = $"{SqlServerContained},{SqlServerContainedMS}";
 
@@ -148,14 +150,17 @@ namespace Tests
 		public const string AllSqlServer2016             = $"{ProviderName.SqlServer2016},{SqlServer2016MS}";
 		public const string AllSqlServer2017             = $"{ProviderName.SqlServer2017},{SqlServer2017MS}";
 		public const string AllSqlServer2019             = $"{ProviderName.SqlServer2019},{SqlServer2019MS},{AllSqlServerSequentialAccess},{AllSqlServerContained}";
+		public const string AllSqlServer2022             = $"{ProviderName.SqlServer2022},{SqlServer2022MS}";
 		public const string AllSqlServer2008Minus        = $"{AllSqlServer2005},{AllSqlServer2008}";
-		public const string AllSqlServer2019Plus         = $"{AllSqlServer2019},{AllSqlAzure}";
+		public const string AllSqlServer2019Minus        = $"{AllSqlServer2008Minus},{AllSqlServer2012},{AllSqlServer2014},{AllSqlServer2016},{AllSqlServer2017},{AllSqlServer2019}";
+		public const string AllSqlServer2022Plus         = $"{AllSqlServer2022},{AllSqlAzure}";
+		public const string AllSqlServer2019Plus         = $"{AllSqlServer2019},{AllSqlServer2022Plus}";
 		public const string AllSqlServer2017Plus         = $"{AllSqlServer2017},{AllSqlServer2019Plus}";
 		public const string AllSqlServer2016Plus         = $"{AllSqlServer2016},{AllSqlServer2017Plus}";
-		public const string AllSqlServer2012PlusNoAzure  = $"{AllSqlServer2012},{AllSqlServer2014},{AllSqlServer2016},{AllSqlServer2017},{AllSqlServer2019}";
 		public const string AllSqlServer2012Plus         = $"{AllSqlServer2012},{AllSqlServer2014},{AllSqlServer2016Plus}";
 		public const string AllSqlServer2008Plus         = $"{AllSqlServer2008},{AllSqlServer2012Plus}";
-		public const string AllSqlServerNoAzure          = $"{AllSqlServer2005},{AllSqlServer2008},{AllSqlServer2012},{AllSqlServer2014},{AllSqlServer2016},{AllSqlServer2017},{AllSqlServer2019}";
+		public const string AllSqlServer2012PlusNoAzure  = $"{AllSqlServer2012},{AllSqlServer2014},{AllSqlServer2016},{AllSqlServer2017},{AllSqlServer2019},{AllSqlServer2022}";
+		public const string AllSqlServerNoAzure          = $"{AllSqlServer2005},{AllSqlServer2008},{AllSqlServer2012PlusNoAzure}";
 		public const string AllSqlServer                 = $"{AllSqlServerNoAzure},{AllSqlAzure}";
 		#endregion
 
@@ -164,13 +169,38 @@ namespace Tests
 		#endregion
 
 		#region Oracle
-		public const string Oracle11Native   = "Oracle.11.Native";
-		public const string Oracle11Managed  = "Oracle.11.Managed";
-		public const string AllOracleManaged = $"{Oracle11Managed},{ProviderName.OracleManaged}";
-		public const string AllOracleNative  = $"{Oracle11Native},{ProviderName.OracleNative}";
-		public const string AllOracle11      = $"{Oracle11Native},{Oracle11Managed}";
-		public const string AllOracle12      = $"{ProviderName.OracleNative},{ProviderName.OracleManaged}";
-		public const string AllOracle        = $"{AllOracle11},{AllOracle12}";
+		public const string Oracle11DevartDirect   = "Oracle.11.Devart.Direct";
+		public const string Oracle11DevartOCI      = "Oracle.11.Devart.OCI";
+
+		public const string Oracle12DevartDirect   = "Oracle.12.Devart.Direct";
+		public const string Oracle12DevartOCI      = "Oracle.12.Devart.OCI";
+		public const string Oracle12Managed        = "Oracle.12.Managed";
+		public const string Oracle12Native         = "Oracle.12.Native";
+
+		public const string Oracle18DevartDirect   = "Oracle.18.Devart.Direct";
+		public const string Oracle18DevartOCI      = "Oracle.18.Devart.OCI";
+		public const string Oracle18Managed        = "Oracle.18.Managed";
+		public const string Oracle18Native         = "Oracle.18.Native";
+
+		public const string Oracle21DevartDirect   = "Oracle.21.Devart.Direct";
+		public const string Oracle21DevartOCI      = "Oracle.21.Devart.OCI";
+		public const string Oracle21Managed        = "Oracle.21.Managed";
+		public const string Oracle21Native         = "Oracle.21.Native";
+
+		public const string AllOracleDevartOCI     = $"{Oracle11DevartOCI},{Oracle12DevartOCI},{Oracle18DevartOCI},{Oracle21DevartOCI}";
+		public const string AllOracleDevartDirect  = $"{Oracle11DevartDirect},{Oracle12DevartDirect},{Oracle18DevartDirect},{Oracle21DevartDirect}";
+		public const string AllOracleDevart        = $"{AllOracleDevartOCI},{AllOracleDevartDirect}";
+
+		public const string AllOracleManaged       = $"{ProviderName.Oracle11Managed},{Oracle12Managed},{Oracle18Managed},{Oracle21Managed}";
+		public const string AllOracleNative        = $"{ProviderName.Oracle11Native},{Oracle12Native},{Oracle18Native},{Oracle21Native}";
+
+		public const string AllOracle11            = $"{ProviderName.Oracle11Native},{ProviderName.Oracle11Managed},{Oracle11DevartOCI},{Oracle11DevartDirect}";
+		public const string AllOracle12            = $"{Oracle12Native},{Oracle12Managed},{Oracle12DevartOCI},{Oracle12DevartDirect}";
+		public const string AllOracle18            = $"{Oracle18Native},{Oracle18Managed},{Oracle18DevartOCI},{Oracle18DevartDirect}";
+		public const string AllOracle21            = $"{Oracle21Native},{Oracle21Managed},{Oracle21DevartOCI},{Oracle21DevartDirect}";
+		public const string AllOracle12Plus        = $"{AllOracle12},{AllOracle18},{AllOracle21}";
+
+		public const string AllOracle              = $"{AllOracle11},{AllOracle12},{AllOracle18},{AllOracle21}";
 		#endregion
 
 		/// <summary>
@@ -179,7 +209,8 @@ namespace Tests
 		/// </summary>
 		public const string NoopProvider  = "TestNoopProvider";
 
-		public const string AllSapHana  = $"{ProviderName.SapHanaNative},{ProviderName.SapHanaOdbc}";
-		public const string AllInformix = $"{ProviderName.Informix},{ProviderName.InformixDB2}";
+		public const string AllSapHana    = $"{ProviderName.SapHanaNative},{ProviderName.SapHanaOdbc}";
+		public const string AllInformix   = $"{ProviderName.Informix},{ProviderName.InformixDB2}";
+		public const string AllClickHouse = $"{ProviderName.ClickHouseClient},{ProviderName.ClickHouseOctonica},{ProviderName.ClickHouseMySql}";
 	}
 }

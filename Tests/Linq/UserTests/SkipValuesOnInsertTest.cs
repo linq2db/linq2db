@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using LinqToDB;
+﻿using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
@@ -84,7 +83,8 @@ namespace Tests.UserTests
 
 					var count = db.Insert(new TestTable() {Id = 1, Name = "John", Age = 14});
 
-					Assert.Greater(count, 0);
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+						Assert.Greater(count, 0);
 
 					var r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1)!;
 
@@ -93,7 +93,8 @@ namespace Tests.UserTests
 
 					count = db.Insert(new TestTable() {Id = 2, Name = "Max", Age = 15});
 
-					Assert.Greater(count, 0);
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+						Assert.Greater(count, 0);
 
 					r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 2)!;
 
@@ -113,7 +114,8 @@ namespace Tests.UserTests
 
 					var count = db.Insert(new TestTable() {Id = 1, Name = "Paul", Age = 14});
 
-					Assert.Greater(count, 0);
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+						Assert.Greater(count, 0);
 
 					var r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1)!;
 
@@ -122,7 +124,8 @@ namespace Tests.UserTests
 
 					count = db.Insert(new TestTable() {Id = 2, Name = "Mary", Age = 15});
 
-					Assert.Greater(count, 0);
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+						Assert.Greater(count, 0);
 
 					r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 2)!;
 
@@ -142,7 +145,8 @@ namespace Tests.UserTests
 
 					var count = db.Insert(new TestTable() {Id = 1, Name = "Smith", Age = 2});
 
-					Assert.Greater(count, 0);
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+						Assert.Greater(count, 0);
 
 					var r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1)!;
 
@@ -151,7 +155,8 @@ namespace Tests.UserTests
 
 					count = db.Insert(new TestTable() {Id = 2, Name = "Tommy", Age = 5});
 
-					Assert.Greater(count, 0);
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+						Assert.Greater(count, 0);
 
 					r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 2)!;
 
@@ -171,7 +176,8 @@ namespace Tests.UserTests
 
 					var count = db.Insert(new TestTable() {Id = 1, Name = "Smith", Age = 55});
 
-					Assert.Greater(count, 0);
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+						Assert.Greater(count, 0);
 
 					var r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1)!;
 
@@ -180,7 +186,8 @@ namespace Tests.UserTests
 
 					count = db.Insert(new TestTable() {Id = 2, Name = "Tommy", Age = 50});
 
-					Assert.Greater(count, 0);
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+						Assert.Greater(count, 0);
 
 					r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 2)!;
 
@@ -202,7 +209,9 @@ namespace Tests.UserTests
 					
 					var count = db.Insert(new TestTableNull() { Id = 1, Name = "Tommy", Age = null });
 
-					Assert.Greater(count, 0);
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+						Assert.Greater(count, 0);
+
 					var r = db.GetTable<TestTableNull>().FirstOrDefault(t => t.Id == 1)!;
 
 					Assert.IsNotNull(r);
@@ -225,7 +234,8 @@ namespace Tests.UserTests
 				{
 					var count = db.Insert(new TestTableFluent() { Id = 1, Name = null, Age = 2 });
 
-					Assert.Greater(count, 0);
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+						Assert.Greater(count, 0);
 
 					var r = db.GetTable<TestTableFluent>().FirstOrDefault(t => t.Id == 1)!;
 
@@ -244,7 +254,8 @@ namespace Tests.UserTests
 				{
 					var count = db.Insert(new TestTableEnum() { Id = 1, Name = "Max", Age = 20, Gender = TestTableEnum.GenderType.Male});
 
-					Assert.Greater(count, 0);
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+						Assert.Greater(count, 0);
 
 					var r = db.GetTable<TestTableEnum>().FirstOrDefault(t => t.Id == 1)!;
 
@@ -253,7 +264,8 @@ namespace Tests.UserTests
 
 					count = db.Insert(new TestTableEnum() { Id = 2, Name = "Jenny", Age = 25, Gender = TestTableEnum.GenderType.Female });
 
-					Assert.Greater(count, 0);
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+						Assert.Greater(count, 0);
 
 					r = db.GetTable<TestTableEnum>().FirstOrDefault(t => t.Id == 2)!;
 
@@ -272,7 +284,8 @@ namespace Tests.UserTests
 				{
 					var count = db.Insert(new TestTableMixed() { Id = 1, Name = "Jason", Age = 20 });
 
-					Assert.Greater(count, 0);
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+						Assert.Greater(count, 0);
 
 					var r = db.GetTable<TestTableMixed>().FirstOrDefault(t => t.Id == 1)!;
 
@@ -281,14 +294,18 @@ namespace Tests.UserTests
 
 					r.Name = "Max";
 					count = db.Update(r);
-					Assert.Greater(count, 0);
+
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+						Assert.Greater(count, 0);
+
 					r = db.GetTable<TestTableMixed>().FirstOrDefault(t => t.Id == 1)!;
 					Assert.IsNotNull(r);
 					Assert.AreEqual(r.Name, "Jason");
 
 					count = db.Insert(new TestTableMixed() { Id = 2, Name = "John", Age = 25 });
 
-					Assert.Greater(count, 0);
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+						Assert.Greater(count, 0);
 
 					r = db.GetTable<TestTableMixed>().FirstOrDefault(t => t.Id == 2)!;
 
@@ -297,7 +314,9 @@ namespace Tests.UserTests
 
 					r.Name = "Jessy";
 					count = db.Update(r);
-					Assert.Greater(count, 0);
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+						Assert.Greater(count, 0);
+
 					r = db.GetTable<TestTableMixed>().FirstOrDefault(t => t.Id == 2)!;
 					Assert.IsNotNull(r);
 					Assert.AreEqual(r.Name, "Jessy");

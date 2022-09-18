@@ -1,9 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Data;
-
-using JetBrains.Annotations;
-
-namespace LinqToDB.SchemaProvider
+﻿namespace LinqToDB.SchemaProvider
 {
 	[PublicAPI]
 	public class DatabaseSchema

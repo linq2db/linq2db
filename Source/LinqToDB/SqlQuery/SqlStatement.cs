@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Text;
-using System.Linq;
 
 namespace LinqToDB.SqlQuery
 {
@@ -294,7 +291,7 @@ namespace LinqToDB.SqlQuery
 					var ts = statement.SelectQuery?.GetTableSource(f.Table!) ?? statement.GetTableSource(f.Table!);
 
 					if (ts == null && f != f.Table!.All)
-						throw new SqlException("Table '{0}' not found.", f.Table);
+						ThrowHelper.ThrowSqlException($"Table '{f.Table}' not found.");
 				}
 			});
 		}

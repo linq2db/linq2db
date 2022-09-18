@@ -1,15 +1,10 @@
-﻿using System;
-using System.Data;
-using System.Data.Common;
-using System.Reflection;
+﻿using System.Reflection;
 
 namespace LinqToDB.DataProvider.SapHana
 {
-	using Data;
+	using Common;
 	using Configuration;
-	using System;
-	using System.IO;
-	using LinqToDB.Common;
+	using Data;
 
 	public static class SapHanaTools
 	{

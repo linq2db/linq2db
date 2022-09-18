@@ -1,16 +1,12 @@
-using System;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Threading.Tasks;
-
-using LinqToDB.Extensions;
-using LinqToDB.SqlQuery;
+﻿using System.Linq.Expressions;
+using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Common.Internal;
-	using LinqToDB.Expressions;
-	using LinqToDB.Reflection;
+	using Common.Internal;
+	using Extensions;
+	using Reflection;
+	using SqlQuery;
 
 	class MethodChainBuilder : MethodCallBuilder
 	{
@@ -85,7 +81,7 @@ namespace LinqToDB.Linq.Builder
 			static int CheckNullValue(bool isNull, object context)
 			{
 				if (isNull)
-					throw new InvalidOperationException(
+					ThrowHelper.ThrowInvalidOperationException(
 						$"Function {context} returns non-nullable value, but result is NULL. Use nullable version of the function instead.");
 				return 0;
 			}
@@ -137,13 +133,13 @@ namespace LinqToDB.Linq.Builder
 					case ConvertFlags.Field : return Sequence.ConvertToSql(expression, level, flags);
 				}
 
-				throw new InvalidOperationException();
+				return ThrowHelper.ThrowInvalidOperationException<SqlInfo[]>();
 			}
 
 			public override int ConvertToParentIndex(int index, IBuildContext context)
 			{
 				if (index != FieldIndex)
-					throw new InvalidOperationException();
+					ThrowHelper.ThrowInvalidOperationException();
 
 				if (_parentIndex != null)
 					return _parentIndex.Value;
@@ -170,7 +166,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							new SqlInfo(Sql, SelectQuery, FieldIndex)
 						},
-					_ => throw new InvalidOperationException(),
+					_ => ThrowHelper.ThrowInvalidOperationException<SqlInfo[]>(),
 				};
 			}
 
@@ -188,7 +184,7 @@ namespace LinqToDB.Linq.Builder
 
 			public override IBuildContext GetContext(Expression? expression, int level, BuildInfo buildInfo)
 			{
-				throw new NotImplementedException();
+				return ThrowHelper.ThrowNotImplementedException<IBuildContext>();
 			}
 		}
 

@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using LinqToDB;
+﻿using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
@@ -77,7 +76,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void UpdateTestWhere(
-			[DataSources(ProviderName.Access, TestProvName.AllMySql, ProviderName.SqlCe, TestProvName.AllInformix)]
+			[DataSources(ProviderName.Access, TestProvName.AllMySql, ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllClickHouse)]
 			string context)
 		{
 			var data = GenerateData();
@@ -128,7 +127,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void UpdateTestJoin(
-			[DataSources(ProviderName.SqlCe, TestProvName.AllInformix)]
+			[DataSources(ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllClickHouse)]
 			string context)
 		{
 			var data = GenerateData();
@@ -231,7 +230,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void UpdateTestJoinSkipTake(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllSqlServer2005, TestProvName.AllMySql, ProviderName.SqlCe, TestProvName.AllSybase)]
+			[DataSources(TestProvName.AllAccess, TestProvName.AllSqlServer2005, TestProvName.AllMySql, ProviderName.SqlCe, TestProvName.AllClickHouse, TestProvName.AllSybase)]
 			string context)
 		{
 			var data = GenerateData();
@@ -281,7 +280,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void UpdateTestJoinTake(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllSqlServer2005, TestProvName.AllMySql, ProviderName.SqlCe)]
+			[DataSources(TestProvName.AllAccess, TestProvName.AllSqlServer2005, TestProvName.AllMySql, TestProvName.AllClickHouse, ProviderName.SqlCe)]
 			string context)
 		{
 			var data = GenerateData();
@@ -331,7 +330,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void UpdateTestAssociation(
-			[DataSources(ProviderName.SqlCe, TestProvName.AllInformix)]
+			[DataSources(ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllClickHouse)]
 			string context)
 		{
 			var data = GenerateData();
@@ -350,13 +349,12 @@ namespace Tests.xUpdate
 				var updatedValue = forUpdates.Where(v => v.Relation!.RelatedValue1 == 11).Select(v => v.Value1).First();
 
 				Assert.AreEqual(13, updatedValue);
-
 			}
 		}
 
 		[Test]
 		public void UpdateTestAssociationAsUpdatable(
-			[DataSources(ProviderName.SqlCe, TestProvName.AllInformix)]
+			[DataSources(ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllClickHouse)]
 			string context)
 		{
 			var data = GenerateData();
@@ -378,13 +376,12 @@ namespace Tests.xUpdate
 				var updatedValue = forUpdates.Where(v => v.Relation!.RelatedValue1 == 11).Select(v => v.Value1).First();
 
 				Assert.AreEqual(13, updatedValue);
-
 			}
 		}
 
 		[Test]
 		public void UpdateTestAssociationSimple(
-			[DataSources(TestProvName.AllInformix)]
+			[DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)]
 			string context)
 		{
 			var data = GenerateData();
@@ -414,7 +411,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void UpdateTestAssociationSimpleAsUpdatable(
-			[DataSources(TestProvName.AllInformix)]
+			[DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)]
 			string context)
 		{
 			var data = GenerateData();

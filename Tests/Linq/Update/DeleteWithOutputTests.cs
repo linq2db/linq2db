@@ -1,8 +1,4 @@
-﻿using System;
-using System.Linq;
-using System.Threading.Tasks;
-
-using LinqToDB;
+﻿using LinqToDB;
 using LinqToDB.Mapping;
 using LinqToDB.Tools.Comparers;
 
@@ -13,9 +9,9 @@ namespace Tests.xUpdate
 	[TestFixture]
 	public class DeleteWithOutputTests : TestBase
 	{
-		private const string FeatureDeleteOutputMultiple = $"{TestProvName.AllSqlServer},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLiteClassic}";
-		private const string FeatureDeleteOutputSingle   = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLiteClassic}";
-		private const string FeatureDeleteOutputInto     = TestProvName.AllSqlServer;
+		private const string FeatureDeleteOutputMultiple = $"{TestProvName.AllSqlServer},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite}";
+		private const string FeatureDeleteOutputSingle   = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite}";
+		private const string FeatureDeleteOutputInto     = $"{TestProvName.AllSqlServer}";
 
 		[Table]
 		class TableWithData
@@ -464,6 +460,41 @@ namespace Tests.xUpdate
 					target.ToArray(),
 					ComparerBuilder.GetEqualityComparer<DestinationTable>());
 			}
+		}
+
+		[Test]
+		public void DeleteWithOutputIntoTempTable([IncludeDataSources(FeatureDeleteOutputInto)] string context)
+		{
+			var sourceData    = GetSourceData();
+			using var db     = GetDataContext(context);
+			using var source = db.CreateLocalTable(sourceData);
+			using var target = db.CreateLocalTable<DestinationTable>(tableOptions: TableOptions.IsTemporary);
+			var expected = source
+				.Where(s => s.Id > 3)
+				.ToArray();
+
+			var param = 100500;
+			var output = source
+				.Where(s => s.Id > 3)
+				.DeleteWithOutputInto(
+					target,
+					s => new DestinationTable()
+					{
+						Id       = s.Id       + param,
+						Value    = s.Value    + param,
+						ValueStr = s.ValueStr + param
+					});
+
+			AreEqual(
+				expected
+					.Select(s => new DestinationTable()
+					{
+						Id       = s.Id       + param,
+						Value    = s.Value    + param,
+						ValueStr = s.ValueStr + param,
+					}),
+				target.ToArray(),
+				ComparerBuilder.GetEqualityComparer<DestinationTable>());
 		}
 	}
 }

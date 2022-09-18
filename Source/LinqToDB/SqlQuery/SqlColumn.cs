@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.Text;
 
 namespace LinqToDB.SqlQuery
@@ -11,7 +8,7 @@ namespace LinqToDB.SqlQuery
 		public SqlColumn(SelectQuery? parent, ISqlExpression expression, string? alias)
 		{
 			Parent      = parent;
-			_expression = expression ?? throw new ArgumentNullException(nameof(expression));
+			_expression = expression ?? ThrowHelper.ThrowArgumentNullException<ISqlExpression>(nameof(expression));
 			RawAlias    = alias;
 
 #if DEBUG
@@ -40,7 +37,7 @@ namespace LinqToDB.SqlQuery
 				if (_expression == value)
 					return;
 				if (value == this)
-					throw new InvalidOperationException();
+					ThrowHelper.ThrowInvalidOperationException();
 				_expression = value;
 				_hashCode   = null;
 			}

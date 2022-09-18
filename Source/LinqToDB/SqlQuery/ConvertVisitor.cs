@@ -1,13 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
-using LinqToDB.Remote;
 
 namespace LinqToDB.SqlQuery
 {
 	using Linq.Builder;
+	using Remote;
 
 	public class ConvertVisitor<TContext>
 	{
@@ -26,7 +23,7 @@ namespace LinqToDB.SqlQuery
 		private Dictionary<IQueryElement, IQueryElement?>? _visitedElements;
 		private List<IQueryElement>?                       _stack;
 
-		public List<IQueryElement> Stack         => _stack ??= (HasStack ? new () : throw new InvalidOperationException("Stack tracking is not enabled for current visitor instance"));
+		public List<IQueryElement> Stack         => _stack ??= (HasStack ? new () : ThrowHelper.ThrowInvalidOperationException<List<IQueryElement>>("Stack tracking is not enabled for current visitor instance"));
 		public IQueryElement?      ParentElement => Stack.Count == 0 ? null : Stack[Stack.Count - 1];
 		public IQueryElement       CurrentElement = null!;
 
@@ -525,7 +522,7 @@ namespace LinqToDB.SqlQuery
 							else if (f is ISqlPredicate predicate)
 								newElement = predicate;
 							else
-								throw new InvalidCastException("Converted FuncLikePredicate expression is not a Predicate expression.");
+								ThrowHelper.ThrowInvalidCastException("Converted FuncLikePredicate expression is not a Predicate expression.");
 						}
 
 						break;
@@ -791,10 +788,7 @@ namespace LinqToDB.SqlQuery
 
 								if (!ReferenceEquals(expr, column.Expression))
 								{
-									if (cols == null)
-									{
-										cols = new List<SqlColumn>(sc.Columns.Take(i));
-									}
+									cols ??= new List<SqlColumn>(sc.Columns.Take(i));
 
 									var newColumn = new SqlColumn(null, expr, column.Alias);
 									cols.Add(newColumn);
@@ -959,6 +953,12 @@ namespace LinqToDB.SqlQuery
 
 								foreach (var column in q.Select.Columns)
 									sc.Columns.Add(column.Clone(q, objTree, static (q, e) => e is SqlColumn c && c.Parent == q));
+							}
+							else
+							{
+								for (var i = 0; i < q.Select.Columns.Count; i++)
+									if (ReferenceEquals(sc.Columns[i], q.Select.Columns[i]))
+										sc.Columns[i] = q.Select.Columns[i].Clone(q, objTree ??= new(), static (q, e) => e is SqlColumn c && c.Parent == q);
 							}
 
 							if (ReferenceEquals(fc, q.From))
@@ -1334,8 +1334,7 @@ namespace LinqToDB.SqlQuery
 
 								newCte.Body = correctedBody;
 
-								if (newClauses == null)
-									newClauses = new(with.Clauses);
+								newClauses ??= new(with.Clauses);
 
 								newClauses[i] = newCte;
 							}
@@ -1346,8 +1345,7 @@ namespace LinqToDB.SqlQuery
 
 							if (!_visitAll || !ReferenceEquals(cte, newCte))
 							{
-								if (newClauses == null)
-									newClauses = new(with.Clauses);
+								newClauses ??= new(with.Clauses);
 								newClauses[i] = newCte;
 
 								AddVisited(cte, newCte);
@@ -1381,7 +1379,8 @@ namespace LinqToDB.SqlQuery
 						break;
 
 					default:
-						throw new InvalidOperationException($"Convert visitor not implemented for element {element.ElementType}");
+						ThrowHelper.ThrowInvalidOperationException($"Convert visitor not implemented for element {element.ElementType}");
+						break;
 				}
 
 				if (element != newElement && element is IQueryExtendible { SqlQueryExtensions.Count: > 0 } qe && newElement is IQueryExtendible ne)

@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using JetBrains.Annotations;
-
-namespace LinqToDB.Common
+﻿namespace LinqToDB.Common
 {
 	/// <summary>
 	/// This alogrithm is partially borrowed from CodeJam library.
@@ -147,9 +142,9 @@ namespace LinqToDB.Common
 			IEqualityComparer<T> equalityComparer)
 			where T : notnull
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (dependsOnGetter == null) throw new ArgumentNullException(nameof(dependsOnGetter));
-			if (equalityComparer == null) throw new ArgumentNullException(nameof(equalityComparer));
+			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (dependsOnGetter == null) ThrowHelper.ThrowArgumentNullException(nameof(dependsOnGetter));
+			if (equalityComparer == null) ThrowHelper.ThrowArgumentNullException(nameof(equalityComparer));
 
 			// Fast path
 			if (source.Count == 0)

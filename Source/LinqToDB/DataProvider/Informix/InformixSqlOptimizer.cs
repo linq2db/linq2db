@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LinqToDB.DataProvider.Informix
+﻿namespace LinqToDB.DataProvider.Informix
 {
 	using Extensions;
 	using SqlProvider;
@@ -78,7 +76,7 @@ namespace LinqToDB.DataProvider.Informix
 				p.IsQueryParameter = false;
 		}
 
-		public override SqlStatement Finalize(SqlStatement statement)
+		public override SqlStatement Finalize(MappingSchema mappingSchema, SqlStatement statement)
 		{
 			CheckAliases(statement, int.MaxValue);
 
@@ -94,7 +92,7 @@ namespace LinqToDB.DataProvider.Informix
 						select.VisitAll(ClearQueryParameter);
 				});
 
-			return base.Finalize(statement);
+			return base.Finalize(mappingSchema, statement);
 		}
 
 		public override SqlStatement TransformStatement(SqlStatement statement)
@@ -189,6 +187,12 @@ namespace LinqToDB.DataProvider.Informix
 
 										return new SqlFunction(func.SystemType, "Date", func.Parameters[1]);
 									}
+
+									if ((IsDateTime2Type(func.Parameters[0], "DateTime2")
+											|| IsDateTimeType(func.Parameters[0], "DateTime")
+											|| IsSmallDateTimeType(func.Parameters[0], "SmallDateTime"))
+										&& func.Parameters[1].SystemType == typeof(string))
+										return new SqlFunction(func.SystemType, "To_Date", func.Parameters[1], new SqlValue("%Y-%m-%d %H:%M:%S"));
 
 									if (IsTimeDataType(func.Parameters[0]))
 										return new SqlExpression(func.SystemType, "Cast(Extend({0}, hour to second) as Char(8))", Precedence.Primary, func.Parameters[1]);

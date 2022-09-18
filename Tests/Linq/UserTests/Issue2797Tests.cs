@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using LinqToDB;
+﻿using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 using NUnit.Framework;
@@ -17,7 +16,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestCaseGeneration([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestCaseGeneration([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = (DataConnection)GetDataContext(context))
 			using (var table = db.CreateLocalTable<SampleClass>())

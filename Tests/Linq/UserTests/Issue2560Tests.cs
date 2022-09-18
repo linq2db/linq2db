@@ -1,5 +1,4 @@
-﻿using System;
-using LinqToDB;
+﻿using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
@@ -20,7 +19,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestNodaTimeInsert([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		public void TestNodaTimeInsert([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
 

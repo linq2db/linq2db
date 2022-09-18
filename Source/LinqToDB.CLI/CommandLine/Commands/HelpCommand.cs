@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using LinqToDB.Naming;
+﻿using System.Globalization;
 
 namespace LinqToDB.CommandLine
 {
+	using Naming;
+
 	/// <summary>
 	/// Help command implementation.
 	/// Supports:
@@ -186,6 +184,14 @@ namespace LinqToDB.CommandLine
 
 		private void WriteOptionHelp(CliCommand command, int maxOptionNameWidth, string indent, OptionCategory? category, CliOption option)
 		{
+			// workaround for https://github.com/linq2db/linq2db/issues/3612
+			var consoleWidth = 80;
+			try
+			{
+				consoleWidth = Console.BufferWidth;
+			}
+			catch { };
+
 			Console.Out.WriteLine();
 			Console.Out.Write("   ");
 
@@ -315,7 +321,7 @@ namespace LinqToDB.CommandLine
 				{
 					var line = lines[i];
 
-					var lineWidth            = Console.BufferWidth - indent.Length - 1;
+					var lineWidth            = consoleWidth - indent.Length - 1;
 					var incompleteLineLength = line.Length % lineWidth;
 					var partsCount           = line.Length / lineWidth + (incompleteLineLength > 0 ? 1 : 0);
 
@@ -371,6 +377,7 @@ namespace LinqToDB.CommandLine
 			{
 				case NameTransformation.SplitByUnderscore: value = "\"split_by_underscore\""; break;
 				case NameTransformation.Association      : value = "\"association\""        ; break;
+				case NameTransformation.None             : value = "\"none\""               ; break;
 				default:
 					throw new InvalidOperationException($"Unknown transformation option: {options.Transformation}");
 			}

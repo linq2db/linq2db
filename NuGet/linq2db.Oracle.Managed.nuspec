@@ -16,19 +16,19 @@
 		<dependencies>
 			<group targetFramework=".NETFramework4.5">
 				<dependency id="linq2db"                       version="4.0.0"    />
-				<dependency id="Oracle.ManagedDataAccess"      version="19.14.0"  />
+				<dependency id="Oracle.ManagedDataAccess"      version="19.16.0"  />
 			</group>
 			<group targetFramework=".NETFramework4.6.2">
 				<dependency id="linq2db"                       version="4.0.0"    />
-				<dependency id="Oracle.ManagedDataAccess"      version="21.6.1"   />
+				<dependency id="Oracle.ManagedDataAccess"      version="21.7.0"   />
 			</group>
 			<group targetFramework=".NETStandard2.0">
 				<dependency id="linq2db"                       version="4.0.0"    />
-				<dependency id="Oracle.ManagedDataAccess.Core" version="2.19.140" />
+				<dependency id="Oracle.ManagedDataAccess.Core" version="2.19.160" />
 			</group>
 			<group targetFramework=".NETStandard2.1">
 				<dependency id="linq2db"                       version="4.0.0"    />
-				<dependency id="Oracle.ManagedDataAccess.Core" version="3.21.61"  />
+				<dependency id="Oracle.ManagedDataAccess.Core" version="3.21.70"  />
 			</group>
 		</dependencies>
 		<contentFiles>

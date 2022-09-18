@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using FluentAssertions;
+﻿using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
@@ -37,7 +35,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void ColumnOptimization([DataSources] string context)
+		public void ColumnOptimization([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<EmployeeScheduleSection>())
@@ -70,7 +68,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void SubQueryAny([DataSources] string context)
+		public void SubQueryAny([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<EmployeeScheduleSection>())

@@ -1,13 +1,11 @@
-﻿using System;
-using System.Linq;
-using System.Linq.Expressions;
-using LinqToDB.Mapping;
+﻿using System.Linq.Expressions;
 
 // ReSharper disable CheckNamespace
 
 namespace LinqToDB
 {
-	using LinqToDB.SqlProvider;
+	using Mapping;
+	using SqlProvider;
 	using SqlQuery;
 
 	partial class Sql
@@ -49,10 +47,10 @@ namespace LinqToDB
 				table.SqlTableType = SqlTableType.Expression;
 				var expressionStr  = table.Expression = Expression ?? methodCall.Method.Name!;
 
-				ExpressionAttribute.PrepareParameterValues(methodCall, ref expressionStr, false, out var knownExpressions, false, out var genericTypes);
+				ExpressionAttribute.PrepareParameterValues(context, mappingSchema, methodCall, ref expressionStr, false, out var knownExpressions, false, out var genericTypes, converter);
 
 				if (string.IsNullOrEmpty(expressionStr))
-					throw new LinqToDBException($"Cannot retrieve Table Expression body from expression '{methodCall}'.");
+					ThrowHelper.ThrowLinqToDBException($"Cannot retrieve Table Expression body from expression '{methodCall}'.");
 
 				// Add two fake expressions, TableName and Alias
 				knownExpressions.Insert(0, null);

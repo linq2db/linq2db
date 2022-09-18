@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-
-using NUnit.Framework;
+﻿using NUnit.Framework;
 
 namespace Tests.Linq
 {
@@ -44,7 +40,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Contains1([DataSources] string context)
+		public void Contains1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -53,7 +49,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Contains2([DataSources] string context)
+		public void Contains2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -62,7 +58,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Contains201([DataSources] string context)
+		public void Contains201([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -71,7 +67,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Contains3([DataSources] string context)
+		public void Contains3([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -80,7 +76,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Contains4([DataSources] string context)
+		public void Contains4([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -89,7 +85,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Contains5([DataSources] string context)
+		public void Contains5([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -98,7 +94,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Contains6([DataSources] string context)
+		public void Contains6([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			var n = 1;
 
@@ -108,6 +104,7 @@ namespace Tests.Linq
 					from p in db.Parent where db.Child.Select(c => c.ParentID).Contains(p.ParentID + n) select p);
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void Contains7([DataSources] string context)
 		{
@@ -117,6 +114,7 @@ namespace Tests.Linq
 					db.Child.Select(c => c.ParentID).Contains(11));
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void Contains701([DataSources] string context)
 		{
@@ -335,6 +333,7 @@ namespace Tests.Linq
 				db.Parent1.Where(p => p.ParentID == 1).Contains(parent));
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void Contains14([DataSources] string context)
 		{
@@ -390,7 +389,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue3017([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		public void Issue3017([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using var scope = new DisableBaseline("Multithreading");
 

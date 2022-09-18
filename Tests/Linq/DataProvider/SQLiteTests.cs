@@ -1,9 +1,5 @@
-﻿using System;
-using System.Data.Linq;
+﻿using System.Data.Linq;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -597,7 +593,7 @@ namespace Tests.DataProvider
 				case ProviderName.SQLiteClassic:
 				case TestProvName.SQLiteClassicMiniProfilerMapped:
 				case TestProvName.SQLiteClassicMiniProfilerUnmapped:
-					expectedVersion = "3.37.0";
+					expectedVersion = "3.38.5.1";
 					break;
 				case ProviderName.SQLiteMS:
 					expectedVersion = "3.35.5";

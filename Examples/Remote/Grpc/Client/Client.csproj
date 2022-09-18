@@ -1,5 +1,4 @@
 <Project Sdk="Microsoft.NET.Sdk">
-	<Import Project="..\..\..\linq2db.Examples.props" />
 
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
@@ -29,6 +28,10 @@
 			<AutoGen>True</AutoGen>
 			<DependentUpon>Northwind.tt</DependentUpon>
 		</Compile>
+	</ItemGroup>
+
+	<ItemGroup>
+		<Using Remove="System.Net.Http" />
 	</ItemGroup>
 
 </Project>
