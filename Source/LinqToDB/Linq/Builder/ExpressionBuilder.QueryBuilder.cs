@@ -161,7 +161,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						if (!ctx.visited.Add(e))
 						{
-							ctx.duplicates.Add(e, null);
+							ctx.duplicates[e] = null;
 						}
 					}
 					});
@@ -327,7 +327,7 @@ namespace LinqToDB.Linq.Builder
 							}
 
 		public Expression UpdateNesting(IBuildContext upToContext, Expression expression)
-							{
+		{
 			// short path
 			if (expression is SqlPlaceholderExpression currentPlaceholder && currentPlaceholder.SelectQuery == upToContext.SelectQuery)
 				return expression;
@@ -338,7 +338,7 @@ namespace LinqToDB.Linq.Builder
 				expression.Transform(
 					(builder: this, upToContext, info),
 					static (context, expr) =>
-								{
+					{
 						if (expr is SqlErrorExpression error)
 							throw error.CreateError();
 
@@ -535,7 +535,7 @@ namespace LinqToDB.Linq.Builder
 								if (context.builder.IsSequence(info))
 								{
 									return new TransformInfo(
-										context.builder.GetSubQueryExpression(context.context, ce, false,
+										context.builder.GetSubQueryExpression(context.context, ce,
 											context.alias, context.flags.HasFlag(ProjectFlags.Test)), false, true);
 								}
 
@@ -633,7 +633,6 @@ namespace LinqToDB.Linq.Builder
 									if (context.builder.IsSequence(info))
 									{
 										buildExpr = context.builder.GetSubQueryExpression(context.context, contextRef,
-											false,
 											context.alias, context.flags.HasFlag(ProjectFlags.Test));
 									}
 								}
@@ -748,15 +747,15 @@ namespace LinqToDB.Linq.Builder
 			_buildContextCache ??= new List<SubQueryContextInfo>();
 
 			foreach (var item in _buildContextCache)
-		{
+			{
 				if (testExpression.EqualsTo(item.SequenceExpression, OptimizationContext.GetSimpleEqualsToContext(false)))
 					return item;
-		}
+			}
 
 			var rootQuery = GetRootContext(context, testExpression, false);
 
 			if (rootQuery != null)
-		{
+			{
 				context = rootQuery.BuildContext;
 			}
 			else
@@ -766,7 +765,7 @@ namespace LinqToDB.Linq.Builder
 				if (rootQuery != null)
 				{
 					context = rootQuery.BuildContext;
-			}
+				}
 			}
 
 			var ctx = GetSubQuery(context, testExpression, isTest);
@@ -781,16 +780,19 @@ namespace LinqToDB.Linq.Builder
 			return info;
 		}
 
-		Expression GetSubQueryExpression(IBuildContext context, Expression expr, bool enforceServerSide, string? alias, bool isTest)
+		Expression GetSubQueryExpression(IBuildContext context, Expression expr, string? alias, bool isTest)
 		{
 			var info = GetSubQueryContext(context, expr, isTest);
-			if (info.Expression == null)
+
+			return new ContextRefExpression(expr.Type, info.Context);
+
+			/*if (info.Expression == null)
 				info.Expression = MakeExpression(context, new ContextRefExpression(expr.Type, info.Context), ProjectFlags.Expression);
 
 			if (!string.IsNullOrEmpty(alias))
 				info.Context.SetAlias(alias);
 
-			return UpdateNesting(context, info.Expression);
+			return UpdateNesting(context, info.Expression);*/
 		}
 
 		static bool EnforceServerSide(IBuildContext context)

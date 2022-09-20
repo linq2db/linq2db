@@ -207,54 +207,67 @@ namespace LinqToDB.Linq.Builder
 			#region ConvertToIndex
 
 			public virtual SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
-						{
+			{
 				throw new NotImplementedException();
-									}
+			}
 
 			SqlGenericConstructorExpression? _fullEntityExpression;
 
 			public Expression MakeExpression(Expression path, ProjectFlags flags)
-								{
+			{
 				if (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AssociationRoot) || flags.HasFlag(ProjectFlags.Expand))
 					return path;
 
 				if (SequenceHelper.IsSameContext(path, this))
-								{
+				{
 					// trying to access Queryable variant
 					if (path.Type != ObjectType && flags.HasFlag(ProjectFlags.Expression))
 						return new SqlEagerLoadExpression((ContextRefExpression)path, path, Builder.GetSequenceExpression(this));
 
 					if (_fullEntityExpression == null)
-							{
+					{
 						_fullEntityExpression = Builder.BuildFullEntityExpression(this, ObjectType, flags);
-							}
+					}
 
 					return _fullEntityExpression;
-							}
+				}
 
 				if (path is not MemberExpression member)
 					return ExpressionBuilder.CreateSqlError(this, path);
 
 				var sql = GetField(member, member.GetLevel(Builder.MappingSchema), false);
 				if (sql == null)
+				{
+					if (EntityDescriptor.HasCalculatedMembers)
+					{
+						var found = EntityDescriptor.CalculatedMembers?.Find(ma =>
+							MemberInfoComparer.Instance.Equals(ma.MemberInfo, member.Member));
+
+						if (found != null)
+						{
+							return Builder.ExposeExpression(member);
+						}
+
+					}
 					return path;
+				}
 
 				var placeholder = ExpressionBuilder.CreatePlaceholder(this, sql, path, trackingPath: path);
 
 				return placeholder;
-								}
+			}
 
 			public IBuildContext Clone(CloningContext context)
 			{
 				return new TableContext(Builder, context.CloneElement(SelectQuery), context.CloneElement(SqlTable));
-				}
+			}
 
 			public void SetRunQuery<T>(Query<T> query, Expression expr)
 			{
 				var mapper = Builder.BuildMapper<T>(expr);
 
 				QueryRunner.SetRunQuery(query, mapper);
-				}
+			}
 
 			#endregion
 

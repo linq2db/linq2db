@@ -100,15 +100,10 @@ namespace LinqToDB.Linq.Builder
 
 			var result = base.MakeExpression(path, flags);
 
-			/*
 			if (flags.HasFlag(ProjectFlags.SQL))
 			{
 				result = Builder.ConvertToSqlExpr(SubQuery, result, flags);
-
-				if (!flags.HasFlag(ProjectFlags.Test)/* && !flags.HasFlag(ProjectFlags.Expression)#1#)
-					result = Builder.UpdateNesting(this, result);
-}
-			*/
+			}
 
 			if (!flags.HasFlag(ProjectFlags.Test))
 			{

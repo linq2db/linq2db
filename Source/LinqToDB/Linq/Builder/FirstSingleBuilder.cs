@@ -63,13 +63,13 @@ namespace LinqToDB.Linq.Builder
 			var isOuter = false;
 
 			if (forceOuter || methodCall.Method.Name.Contains("OrDefault"))
-		{
+			{
 				sequence = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, sequence, null);
 				isOuter  = true;
-				}
+			}
 
 			return new FirstSingleContext(buildInfo.Parent, sequence, methodCall, buildInfo.IsSubQuery, buildInfo.IsAssociation, isOuter);
-					}
+		}
 
 		protected override SequenceConvertInfo? Convert(
 			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)

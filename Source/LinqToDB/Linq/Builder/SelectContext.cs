@@ -126,11 +126,11 @@ namespace LinqToDB.Linq.Builder
 			Expression result;
 
 			if (SequenceHelper.IsSameContext(path, this))
-		{
-				if (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AssociationRoot))
 			{
-					if (Body is ContextRefExpression bodyRef)
+				if (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AssociationRoot))
 				{
+					if (Body is ContextRefExpression bodyRef)
+					{
 						// updating type for Inheritance mapping
 						//
 						return bodyRef.WithType(path.Type);
@@ -139,32 +139,29 @@ namespace LinqToDB.Linq.Builder
 					if (Body is MemberExpression me)
 					{
 						return Body;
-						}
+					}
 
 					return path;
-					}
+				}
 
 				if (!path.Type.IsSameOrParentOf(Body.Type) && flags.HasFlag(ProjectFlags.Expression))
 					return new SqlEagerLoadExpression((ContextRefExpression)path, path, GetEagerLoadExpression(path));
 
-				if (flags.HasFlag(ProjectFlags.SQL))
-					result = Builder.ConvertToSqlExpr(this, Body, flags);
-				else
-					result = Body;
+				result = Body;
 			}
 			else
 			{
 				result = Builder.Project(this, path, null, 0, flags, Body);
 
 				if (!ReferenceEquals(result, Body))
-								{
+				{
 					if (flags.HasFlag(ProjectFlags.Root) &&
 					    !(result is ContextRefExpression || result is MemberExpression ||
 					      result is MethodCallExpression))
-									{
+					{
 						return path;
-									}
-								}
+					}
+				}
 			}
 
 			return result;

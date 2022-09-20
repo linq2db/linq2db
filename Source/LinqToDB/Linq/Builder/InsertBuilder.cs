@@ -289,6 +289,11 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
+			public override void SetRunQuery<T>(Query<T> query, Expression expr)
+			{
+				QueryRunner.SetNonQueryQuery(query);
+			}
+
 			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 			{
 				return ThrowHelper.ThrowNotImplementedException<Expression>();

@@ -5,7 +5,6 @@ using System.Diagnostics;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -16,6 +15,7 @@ namespace LinqToDB.Linq.Builder
 	using Mapping;
 	using Reflection;
 	using SqlQuery;
+	using LinqToDB.Expressions;
 
 	partial class ExpressionBuilder
 	{
@@ -889,9 +889,9 @@ namespace LinqToDB.Linq.Builder
 
 			if (sql == null)
 			{
-			if (!PreferServerSide(expression, false))
-			{
-				if (columnDescriptor?.ValueConverter == null && CanBeConstant(expression))
+				if (!PreferServerSide(expression, false))
+				{
+					if (columnDescriptor?.ValueConverter == null && CanBeConstant(expression))
 						sql = BuildConstant(expression, columnDescriptor);
 					else if (expression.NodeType != ExpressionType.MemberInit && expression.NodeType != ExpressionType.New && CanBeCompiled(expression))
 						sql = ParametersContext.BuildParameter(expression, columnDescriptor).SqlParameter;
@@ -1268,6 +1268,10 @@ namespace LinqToDB.Linq.Builder
 
 				case ExpressionType.Call:
 				{
+					var newExpr = MakeExpression(context, expression, flags);
+					if (!ReferenceEquals(expression, newExpr))
+						return ConvertToSqlExpr(context, newExpr, flags, unwrap, columnDescriptor, isPureExpression, alias);
+
 					var e = (MethodCallExpression)expression;
 
 					/*var isAggregation = e.IsAggregate(MappingSchema);
@@ -1283,6 +1287,7 @@ namespace LinqToDB.Linq.Builder
 						}
 					}*/
 
+					/*
 					var buildInfo = new BuildInfo((IBuildContext?)null, e, new SelectQuery());
 					if (IsSequence(buildInfo))
 					{
@@ -1291,6 +1296,7 @@ namespace LinqToDB.Linq.Builder
 
 						return ConvertToSqlExpr(context, subqueryExpr, flags, unwrap, columnDescriptor, isPureExpression);
 					}
+					*/
 
 					/*
 					if ((isAggregation || e.IsQueryable()) && !ContainsBuilder.IsConstant(e))
@@ -3508,11 +3514,11 @@ namespace LinqToDB.Linq.Builder
 				{
 					// going deeper
 					return Project(context, me, nextPath, nextPath.Count - 1, flags, body);
-	}
+				}
 
 				// make path projection
 				return Project(context, null, nextPath, nextPath.Count - 1, flags, body);
-}
+			}
 
 			if (path is SqlGenericParamAccessExpression accessExpression)
 			{
@@ -3797,7 +3803,7 @@ namespace LinqToDB.Linq.Builder
 					var cnt = (ConstantExpression)body;
 					if (cnt.Value == null)
 					{
-						var expr        = (path ?? next)!;
+						var expr = (path ?? next)!;
 
 						var placeholder = CreatePlaceholder(context, new SqlValue(expr.Type, null), expr);
 
@@ -3857,8 +3863,6 @@ namespace LinqToDB.Linq.Builder
 			// nothing to project here
 			if (path.NodeType == ExpressionType.Extension && path is SqlPlaceholderExpression)
 				return path;
-
-			path = ExposeExpression(path);
 
 			if (!(flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AggregationRoot) ||
 			      flags.HasFlag(ProjectFlags.AssociationRoot)))
@@ -4024,7 +4028,7 @@ namespace LinqToDB.Linq.Builder
 
 					if (IsSequence(info))
 					{
-						expression = GetSubQueryExpression(ctx, path, false, null, flags.HasFlag(ProjectFlags.Test));
+						expression = GetSubQueryExpression(ctx, path, null, flags.HasFlag(ProjectFlags.Test));
 					}
 				}
 			}
