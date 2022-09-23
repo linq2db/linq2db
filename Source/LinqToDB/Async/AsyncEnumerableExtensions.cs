@@ -161,11 +161,11 @@
 				{
 					var first = enumerator.Current;
 					if (await enumerator.MoveNextAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
-						return default!;
+						return ThrowHelper.ThrowInvalidOperationException<TSource>("The input sequence contains more than one element.");
 					return first;
-	}
+				}
 				return default!;
-}
+			}
 		}
 
 		/// <summary>
