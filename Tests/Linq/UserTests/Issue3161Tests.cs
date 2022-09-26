@@ -112,10 +112,9 @@ namespace Tests.UserTests
 				.ToList();
 			Assert.That(ret.Count, Is.EqualTo(2));
 
-			// uncomment after 3161 fixed
-			//var baselines = GetCurrentBaselines();
-			//baselines.Should().Contain("SELECT", Exactly.Twice());
-			//baselines.Should().Contain("SELECT TOP", Exactly.Once());
+			var baselines = GetCurrentBaselines();
+			baselines.Should().Contain("SELECT", Exactly.Times(3));
+			baselines.Should().Contain("SELECT TOP", Exactly.Twice());
 		}
 	}
 }
