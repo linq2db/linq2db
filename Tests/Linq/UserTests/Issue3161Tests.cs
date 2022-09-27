@@ -112,9 +112,16 @@ namespace Tests.UserTests
 				.ToList();
 			Assert.That(ret.Count, Is.EqualTo(2));
 
+			// validate that the prior statement executed as a single query, not two distinct queries
 			var baselines = GetCurrentBaselines();
 			baselines.Should().Contain("SELECT", Exactly.Times(3));
 			baselines.Should().Contain("SELECT TOP", Exactly.Twice());
+
+			// LastQuery will only return a single query, so if it was split into two queries, not all name fields would be present
+			var lastQuery = ((DataConnection)db).LastQuery;
+			lastQuery.Should().Contain("NAME1", Exactly.Once());
+			lastQuery.Should().Contain("NAME2", Exactly.Once());
+			lastQuery.Should().Contain("NAME3", Exactly.Once());
 		}
 	}
 }
