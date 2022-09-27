@@ -1,4 +1,9 @@
-﻿namespace LinqToDB.Async
+﻿using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace LinqToDB.Async
 {
 	// Do not expose to public surface, will conflict with other libraries
 	/// <summary>
@@ -26,7 +31,7 @@
 			this IAsyncEnumerable<T> source,
 			CancellationToken        cancellationToken = default)
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (source == null) throw new ArgumentNullException(nameof(source));
 
 			var result = new List<T>();
 			var enumerator = source.GetAsyncEnumerator(cancellationToken);
@@ -87,7 +92,7 @@
 			this IAsyncEnumerable<T> source,
 			CancellationToken        cancellationToken = default)
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (source == null) throw new ArgumentNullException(nameof(source));
 
 			var enumerator = source.GetAsyncEnumerator(cancellationToken);
 #if !NATIVE_ASYNC
@@ -112,7 +117,7 @@
 		/// <exception cref="InvalidOperationException">The source sequence is empty.</exception>
 		public static async Task<TSource> FirstAsync<TSource>(this IAsyncEnumerable<TSource> source, CancellationToken token = default)
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (source == null) throw new ArgumentNullException(nameof(source));
 
 			var enumerator = source.GetAsyncEnumerator(token);
 #if !NATIVE_ASYNC
@@ -125,7 +130,7 @@
 					return enumerator.Current;
 			}
 
-			return ThrowHelper.ThrowInvalidOperationException<TSource>("The source sequence is empty.");
+			throw new InvalidOperationException("The source sequence is empty.");
 		}
 
 		/// <summary>
@@ -161,7 +166,7 @@
 				{
 					var first = enumerator.Current;
 					if (await enumerator.MoveNextAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
-						return ThrowHelper.ThrowInvalidOperationException<TSource>("The input sequence contains more than one element.");
+						throw new InvalidOperationException("The input sequence contains more than one element.");
 					return first;
 				}
 				return default!;

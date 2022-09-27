@@ -1,8 +1,9 @@
-﻿namespace LinqToDB.DataModel
-{
-	using CodeModel;
-	using Common;
+﻿using System;
+using LinqToDB.CodeModel;
+using LinqToDB.Common;
 
+namespace LinqToDB.DataModel
+{
 	// contains generation logic for scalar function mappings
 	partial class DataModelGenerator
 	{

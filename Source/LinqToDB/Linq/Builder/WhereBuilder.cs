@@ -1,8 +1,9 @@
 ﻿using System.Linq.Expressions;
-using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using LinqToDB.Expressions;
+
 	class WhereBuilder : MethodCallBuilder
 	{
 		private static readonly string[] MethodNames = { "Where", "Having" };

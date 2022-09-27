@@ -1,8 +1,10 @@
-﻿namespace LinqToDB.DataProvider.SqlCe
+﻿using System;
+
+namespace LinqToDB.DataProvider.SqlCe
 {
 	using Extensions;
-	using SqlProvider;
 	using SqlQuery;
+	using SqlProvider;
 
 	class SqlCeSqlOptimizer : BasicSqlOptimizer
 	{
@@ -173,7 +175,7 @@
 
 								if (q.OrderBy.IsEmpty)
 								{
-									ThrowHelper.ThrowLinqToDBException("Order by required for Skip operation.");
+									throw new LinqToDBException("Order by required for Skip operation.");
 								}
 							}
 

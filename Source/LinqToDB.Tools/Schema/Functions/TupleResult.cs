@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.Schema
+﻿using System.Collections.Generic;
+
+namespace LinqToDB.Schema
 {
 	/// <summary>
 	/// Tuple-like return type descriptor.

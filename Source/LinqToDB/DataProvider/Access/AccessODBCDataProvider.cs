@@ -1,4 +1,8 @@
-﻿using OdbcType = LinqToDB.DataProvider.OdbcProviderAdapter.OdbcType;
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+
+using OdbcType = LinqToDB.DataProvider.OdbcProviderAdapter.OdbcType;
 
 namespace LinqToDB.DataProvider.Access
 {

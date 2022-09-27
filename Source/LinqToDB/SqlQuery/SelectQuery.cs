@@ -1,5 +1,9 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Text;
+using System.Threading;
 
 namespace LinqToDB.SqlQuery
 {
@@ -333,7 +337,7 @@ namespace LinqToDB.SqlQuery
 					var ts = query.GetTableSource(f.Table!);
 
 					if (ts == null && f != f.Table!.All)
-						ThrowHelper.ThrowSqlException($"Table '{f.Table}' not found.");
+						throw new SqlException("Table '{0}' not found.", f.Table);
 				}
 			});
 		}

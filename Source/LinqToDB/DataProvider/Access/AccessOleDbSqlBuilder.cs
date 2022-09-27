@@ -1,4 +1,7 @@
-﻿namespace LinqToDB.DataProvider.Access
+﻿﻿using System;
+﻿using System.Data;
+
+namespace LinqToDB.DataProvider.Access
 {
 	using System.Data.Common;
 	using Mapping;

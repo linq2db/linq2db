@@ -1,7 +1,12 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Text;
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
 
 namespace Tests.Model
 {

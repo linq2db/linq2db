@@ -1,9 +1,10 @@
-﻿using System.Runtime.InteropServices;
+﻿using System;
+using System.Runtime.InteropServices;
+using System.Threading.Tasks;
+using LinqToDB.Data;
 
 namespace LinqToDB
 {
-	using Data;
-
 	internal class DisposeCommandOnExceptionRegion : IExecutionScope
 	{
 		private readonly DataConnection _dataConnection;

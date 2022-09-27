@@ -1,4 +1,10 @@
-﻿namespace LinqToDB.DataProvider.Access
+﻿using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+
+
+
+namespace LinqToDB.DataProvider.Access
 {
 	using Common;
 	using Data;

@@ -1,4 +1,9 @@
-﻿namespace LinqToDB.Interceptors
+﻿using System;
+using System.Data.Common;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace LinqToDB.Interceptors
 {
 	public abstract class ConnectionInterceptor : IConnectionInterceptor
 	{

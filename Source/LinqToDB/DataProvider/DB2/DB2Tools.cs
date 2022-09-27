@@ -1,7 +1,13 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Reflection;
+
+using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.DB2
 {
+	using System.Data.Common;
 	using Configuration;
 	using Data;
 

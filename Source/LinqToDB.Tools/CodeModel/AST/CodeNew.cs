@@ -1,7 +1,9 @@
-﻿namespace LinqToDB.CodeModel
-{
-	using Common;
+﻿using System.Collections.Generic;
+using System.Linq;
+using LinqToDB.Common;
 
+namespace LinqToDB.CodeModel
+{
 	/// <summary>
 	/// New object instantiation expression.
 	/// </summary>

@@ -1,4 +1,6 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Linq;
+using System.Linq.Expressions;
 
 using PN = LinqToDB.ProviderName;
 
@@ -15,8 +17,8 @@ namespace LinqToDB
 							this Sql.IAggregateFunctionNotOrdered<T, TR> aggregate, 
 			[ExprParameter]      Expression<Func<T, TKey>>               expr)
 		{
-			if (aggregate == null) ThrowHelper.ThrowArgumentNullException(nameof(aggregate));
-			if (expr      == null) ThrowHelper.ThrowArgumentNullException(nameof(expr));
+			if (aggregate == null) throw new ArgumentNullException(nameof(aggregate));
+			if (expr      == null) throw new ArgumentNullException(nameof(expr));
 
 			var query = aggregate.Query.Provider.CreateQuery<TR>(
 				Expression.Call(
@@ -33,7 +35,7 @@ namespace LinqToDB
 		public static Sql.IAggregateFunction<T, TR> OrderBy<T, TR>(
 			[ExprParameter] this Sql.IAggregateFunctionNotOrdered<T, TR> aggregate)
 		{
-			if (aggregate == null) ThrowHelper.ThrowArgumentNullException(nameof(aggregate));
+			if (aggregate == null) throw new ArgumentNullException(nameof(aggregate));
 
 			var query = aggregate.Query.Provider.CreateQuery<TR>(
 				Expression.Call(
@@ -51,8 +53,8 @@ namespace LinqToDB
 							this Sql.IAggregateFunctionNotOrdered<T, TR> aggregate, 
 			[ExprParameter]      Expression<Func<T, TKey>>               expr)
 		{
-			if (aggregate == null) ThrowHelper.ThrowArgumentNullException(nameof(aggregate));
-			if (expr      == null) ThrowHelper.ThrowArgumentNullException(nameof(expr));
+			if (aggregate == null) throw new ArgumentNullException(nameof(aggregate));
+			if (expr      == null) throw new ArgumentNullException(nameof(expr));
 
 			var query = aggregate.Query.Provider.CreateQuery<TR>(
 				Expression.Call(
@@ -69,7 +71,7 @@ namespace LinqToDB
 		public static Sql.IAggregateFunction<T, TR> OrderByDescending<T, TR>(
 			[ExprParameter] this Sql.IAggregateFunctionNotOrdered<T, TR> aggregate)
 		{
-			if (aggregate == null) ThrowHelper.ThrowArgumentNullException(nameof(aggregate));
+			if (aggregate == null) throw new ArgumentNullException(nameof(aggregate));
 
 			var query = aggregate.Query.Provider.CreateQuery<TR>(
 				Expression.Call(
@@ -86,8 +88,8 @@ namespace LinqToDB
 							this Sql.IAggregateFunctionOrdered<T, TR> aggregate, 
 			[ExprParameter]      Expression<Func<T, TKey>>            expr)
 		{
-			if (aggregate == null) ThrowHelper.ThrowArgumentNullException(nameof(aggregate));
-			if (expr      == null) ThrowHelper.ThrowArgumentNullException(nameof(expr));
+			if (aggregate == null) throw new ArgumentNullException(nameof(aggregate));
+			if (expr      == null) throw new ArgumentNullException(nameof(expr));
 
 			var query = aggregate.Query.Provider.CreateQuery<TR>(
 				Expression.Call(
@@ -103,8 +105,8 @@ namespace LinqToDB
 							this Sql.IAggregateFunctionOrdered<T, TR> aggregate, 
 			[ExprParameter]      Expression<Func<T, TKey>>        expr)
 		{
-			if (aggregate == null) ThrowHelper.ThrowArgumentNullException(nameof(aggregate));
-			if (expr      == null) ThrowHelper.ThrowArgumentNullException(nameof(expr));
+			if (aggregate == null) throw new ArgumentNullException(nameof(aggregate));
+			if (expr      == null) throw new ArgumentNullException(nameof(expr));
 
 			var query = aggregate.Query.Provider.CreateQuery<TR>(
 				Expression.Call(
@@ -121,7 +123,7 @@ namespace LinqToDB
 		[Sql.Extension(                  "",                                                                  ChainPrecedence = 0, IsAggregate = true)]
 		public static TR ToValue<T, TR>(this Sql.IAggregateFunction<T, TR> aggregate)
 		{
-			if (aggregate == null) ThrowHelper.ThrowArgumentNullException(nameof(aggregate));
+			if (aggregate == null) throw new ArgumentNullException(nameof(aggregate));
 
 			return aggregate.Query.Provider.Execute<TR>(
 				Expression.Call(
@@ -150,7 +152,7 @@ namespace LinqToDB
 		{
 			public AggregateFunctionNotOrderedImpl(IQueryable<TR> query)
 			{
-				Query = query ?? ThrowHelper.ThrowArgumentNullException<IQueryable<TR>>(nameof(query));
+				Query = query ?? throw new ArgumentNullException(nameof(query));
 			}
 
 			public IQueryable Query { get; }

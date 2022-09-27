@@ -1,4 +1,7 @@
-﻿namespace LinqToDB.Metadata
+﻿using System;
+using System.Linq;
+
+namespace LinqToDB.Metadata
 {
 	class MetaMemberInfo
 	{

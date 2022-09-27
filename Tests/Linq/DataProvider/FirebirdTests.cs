@@ -1,12 +1,16 @@
-﻿using System.Data.Linq;
+﻿using System;
+using System.Data.Linq;
 using System.Diagnostics;
+using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
+using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
 using System.Linq.Expressions;
 using System.Numerics;
 using System.Reflection;
+using System.Threading.Tasks;
 
 using FirebirdSql.Data.FirebirdClient;
 using FirebirdSql.Data.Types;

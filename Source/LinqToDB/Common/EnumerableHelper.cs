@@ -1,7 +1,11 @@
-﻿namespace LinqToDB.Common
-{
-	using Async;
+﻿using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using LinqToDB.Async;
 
+namespace LinqToDB.Common
+{
 	public class EnumerableHelper
 	{
 #if NATIVE_ASYNC
@@ -58,7 +62,7 @@
 			public Batcher(IEnumerable<T> source, int batchSize)
 			{
 				if (batchSize < 1)
-					ThrowHelper.ThrowArgumentException(nameof(batchSize), $"{nameof(batchSize)} must be >= 1");
+					throw new ArgumentException($"{nameof(batchSize)} must be >= 1");
 
 				_batchSize = batchSize;
 				_enumerator = source.GetEnumerator();
@@ -69,7 +73,7 @@
 				get
 				{
 					if (_currentBatchEnumerateStarted)
-						ThrowHelper.ThrowInvalidOperationException("Cannot enumerate IBatched.Current multiple times");
+						throw new InvalidOperationException("Cannot enumerate IBatched.Current multiple times");
 
 					_currentBatchEnumerateStarted = true;
 					for (var i = 0; i < _batchSize; i++)
@@ -124,12 +128,9 @@
 		/// <returns>New enumerable of batches.</returns>
 		public static IAsyncEnumerable<IAsyncEnumerable<T>> Batch<T>(IAsyncEnumerable<T> source, int batchSize)
 		{
-			return batchSize switch
-			{
-				<= 0 => ThrowHelper.ThrowArgumentOutOfRangeException<IAsyncEnumerable<IAsyncEnumerable<T>>>(nameof(batchSize)),
-				<  int.MaxValue => new AsyncBatchEnumerable<T>(source, batchSize),
-				_               => BatchSingle(source)
-			};
+			if (batchSize <= 0) throw new ArgumentOutOfRangeException(nameof(batchSize));
+			if (batchSize < Int32.MaxValue) return new AsyncBatchEnumerable<T>(source, batchSize);
+			return BatchSingle(source);
 		}
 
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
@@ -168,11 +169,11 @@
 				_batchSize = batchSize;
 			}
 
-			public IAsyncEnumerable<T> Current => _isCurrent ? this : ThrowHelper.ThrowInvalidOperationException<IAsyncEnumerable<T>>();
+			public IAsyncEnumerable<T> Current => _isCurrent ? this : throw new InvalidOperationException();
 
 			IAsyncEnumerator<T> IAsyncEnumerable<T>.GetAsyncEnumerator(CancellationToken cancellationToken)
 			{
-				if (_current == null) ThrowHelper.ThrowInvalidOperationException();
+				if (_current == null) throw new InvalidOperationException();
 
 				var enumerator = _current;
 				_current       = null;

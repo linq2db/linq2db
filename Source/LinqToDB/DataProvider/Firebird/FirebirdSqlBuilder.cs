@@ -1,4 +1,7 @@
-﻿using System.Text;
+﻿using System;
+using System.Data;
+using System.Linq;
+using System.Text;
 
 #region ReSharper disable
 // ReSharper disable SuggestUseVarKeywordEverywhere
@@ -63,8 +66,10 @@ namespace LinqToDB.DataProvider.Firebird
 
 		protected override void BuildGetIdentity(SqlInsertClause insertClause)
 		{
-			var identityField = insertClause.Into!.GetIdentityField()
-			                    ?? ThrowHelper.ThrowSqlException<SqlField>($"Identity field must be defined for '{insertClause.Into.NameForLogging}'.");
+			var identityField = insertClause.Into!.GetIdentityField();
+
+			if (identityField == null)
+				throw new SqlException("Identity field must be defined for '{0}'.", insertClause.Into.NameForLogging);
 
 			AppendIndent().AppendLine("RETURNING");
 			AppendIndent().Append('\t');
@@ -348,23 +353,31 @@ namespace LinqToDB.DataProvider.Firebird
 
 		protected override void BuildCreateTableCommand(SqlTable table)
 		{
-			var command = (table.TableOptions.IsTemporaryOptionSet(), table.TableOptions & TableOptions.IsTemporaryOptionSet) switch
+			string command;
+
+			if (table.TableOptions.IsTemporaryOptionSet())
 			{
-				(true, TableOptions.IsTemporary                                                                                    ) or
-				(true, TableOptions.IsTemporary |                                           TableOptions.IsLocalTemporaryData      ) or
-				(true, TableOptions.IsTemporary | TableOptions.IsGlobalTemporaryStructure                                          ) or
-				(true, TableOptions.IsTemporary | TableOptions.IsGlobalTemporaryStructure | TableOptions.IsLocalTemporaryData      ) or
-				(true,                                                                      TableOptions.IsLocalTemporaryData      ) or
-				(true,                                                                      TableOptions.IsTransactionTemporaryData) or
-				(true,                            TableOptions.IsGlobalTemporaryStructure                                          ) or
-				(true,                            TableOptions.IsGlobalTemporaryStructure | TableOptions.IsLocalTemporaryData      ) or
-				(true,                            TableOptions.IsGlobalTemporaryStructure | TableOptions.IsTransactionTemporaryData)
-					=> "CREATE GLOBAL TEMPORARY TABLE ",
-				(true, var value)
-					=> ThrowHelper.ThrowInvalidOperationException<string>($"Incompatible table options '{value}'"),
-				(false, _)
-					=> "CREATE TABLE ",
-			};
+				switch (table.TableOptions & TableOptions.IsTemporaryOptionSet)
+				{
+					case TableOptions.IsTemporary                                                                                     :
+					case TableOptions.IsTemporary |                                           TableOptions.IsLocalTemporaryData       :
+					case TableOptions.IsTemporary | TableOptions.IsGlobalTemporaryStructure                                           :
+					case TableOptions.IsTemporary | TableOptions.IsGlobalTemporaryStructure | TableOptions.IsLocalTemporaryData       :
+					case                                                                      TableOptions.IsLocalTemporaryData       :
+					case                                                                      TableOptions.IsTransactionTemporaryData :
+					case                            TableOptions.IsGlobalTemporaryStructure                                           :
+					case                            TableOptions.IsGlobalTemporaryStructure | TableOptions.IsLocalTemporaryData       :
+					case                            TableOptions.IsGlobalTemporaryStructure | TableOptions.IsTransactionTemporaryData :
+						command = "CREATE GLOBAL TEMPORARY TABLE ";
+						break;
+					case var value :
+						throw new InvalidOperationException($"Incompatible table options '{value}'");
+				}
+			}
+			else
+			{
+				command = "CREATE TABLE ";
+			}
 
 			StringBuilder.Append(command);
 		}

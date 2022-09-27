@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.CodeModel
+﻿using System;
+
+namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// Provides helpers to create <see cref="IType"/> type descriptor from <see cref="Type"/> or string with type name.

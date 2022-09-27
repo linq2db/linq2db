@@ -1,12 +1,16 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Diagnostics.CodeAnalysis;
 
 namespace LinqToDB.Expressions
 {
+	using Common;
 	using Common.Internal;
-	using Extensions;
+	using LinqToDB.Extensions;
 	using Linq;
 	using Linq.Builder;
 	using Mapping;
@@ -509,7 +513,7 @@ namespace LinqToDB.Expressions
 			var expr    = FindLevel(expression, mapping, level, ref current);
 
 			if (expr == null || current != level)
-				ThrowHelper.ThrowInvalidOperationException();
+				throw new InvalidOperationException();
 
 			return expr;
 		}

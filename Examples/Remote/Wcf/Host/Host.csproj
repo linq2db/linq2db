@@ -12,8 +12,4 @@
 		<Reference Include="System.ServiceModel" />
 	</ItemGroup>
 
-	<ItemGroup>
-		<Using Remove="System.Net.Http" />
-	</ItemGroup>
-
 </Project>

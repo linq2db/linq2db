@@ -1,9 +1,11 @@
-﻿namespace LinqToDB.Metadata
-{
-	using CodeModel;
-	using SqlProvider;
-	using SqlQuery;
+﻿using System.Text;
+using LinqToDB.Schema;
+using LinqToDB.CodeModel;
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
 
+namespace LinqToDB.Metadata
+{
 	/// <summary>
 	/// Provides access to built-in metadata generators.
 	/// </summary>

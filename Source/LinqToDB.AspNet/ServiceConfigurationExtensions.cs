@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using System;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace LinqToDB.AspNet
 {
@@ -195,7 +196,7 @@ namespace LinqToDB.AspNet
 						.Any()))
 				return false;
 
-			return ThrowHelper.ThrowArgumentException<bool>($"Missing constructor accepting '{nameof(LinqToDBConnectionOptions)}' on type {typeof(TContext).Name}.");
+			throw new ArgumentException($"Missing constructor accepting '{nameof(LinqToDBConnectionOptions)}' on type {typeof(TContext).Name}.");
 		}
 	}
 }

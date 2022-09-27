@@ -1,4 +1,7 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Data;
+using System.Data.Common;
+using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider.DB2
 {
@@ -45,7 +48,7 @@ namespace LinqToDB.DataProvider.DB2
 			}
 
 			if (assembly == null)
-				ThrowHelper.ThrowInvalidOperationException($"Cannot load assembly {AssemblyName}");
+				throw new InvalidOperationException($"Cannot load assembly {AssemblyName}");
 
 			ConnectionType  = assembly.GetType($"{clientNamespace}.DB2Connection" , true)!;
 			ParameterType   = assembly.GetType($"{clientNamespace}.DB2Parameter"  , true)!;
@@ -264,7 +267,7 @@ namespace LinqToDB.DataProvider.DB2
 			{
 			}
 
-			public DB2Connection(string connectionString) => ThrowHelper.ThrowNotImplementedException();
+			public DB2Connection(string connectionString) => throw new NotImplementedException();
 
 			// internal actually
 			public DB2ServerTypes eServerType => ((Func<DB2Connection, DB2ServerTypes>)CompiledWrappers[0])(this);
@@ -386,7 +389,7 @@ namespace LinqToDB.DataProvider.DB2
 			{
 			}
 
-			public DB2BulkCopy(DB2Connection connection, DB2BulkCopyOptions options) => ThrowHelper.ThrowNotImplementedException();
+			public DB2BulkCopy(DB2Connection connection, DB2BulkCopyOptions options) => throw new NotImplementedException();
 
 			public void Dispose      ()                       => ((Action<DB2BulkCopy>)CompiledWrappers[0])(this);
 #pragma warning disable RS0030 // API mapping must preserve type
@@ -487,7 +490,7 @@ namespace LinqToDB.DataProvider.DB2
 			{
 			}
 
-			public DB2BulkCopyColumnMapping(int source, string destination) => ThrowHelper.ThrowNotImplementedException();
+			public DB2BulkCopyColumnMapping(int source, string destination) => throw new NotImplementedException();
 		}
 
 		#endregion

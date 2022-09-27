@@ -1,12 +1,14 @@
-﻿using System.Linq.Expressions;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
-using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
 	using Extensions;
+	using LinqToDB.Expressions;
 	using Mapping;
-	using System;
+	using Common;
 
 	class LoadWithBuilder : MethodCallBuilder
 	{
@@ -26,7 +28,7 @@ namespace LinqToDB.Linq.Builder
 				filterType.GetGenericArguments()[0].GetGenericArguments()[0].GetGenericArguments()[0] :
 				filterType.GetGenericArguments()[0].GetGenericArguments()[0];
 			if (propType != itemType)
-				ThrowHelper.ThrowLinqException("Invalid filter function usage.");
+				throw new LinqException("Invalid filter function usage.");
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
@@ -62,7 +64,7 @@ namespace LinqToDB.Linq.Builder
 					.ToArray();
 
 			if (associations.Length == 0)
-				ThrowHelper.ThrowLinqToDBException($"Unable to retrieve properties path for LoadWith/ThenLoad. Path: '{path}'");
+				throw new LinqToDBException($"Unable to retrieve properties path for LoadWith/ThenLoad. Path: '{path}'");
 
 
 			if (methodCall.Arguments.Count == 3)
@@ -132,7 +134,7 @@ namespace LinqToDB.Linq.Builder
 
 			var expr = path.GetLevelExpression(ctx.Builder.MappingSchema, 0);
 
-			return ThrowHelper.ThrowLinqToDBException<TableBuilder.TableContext>(
+			throw new LinqToDBException(
 				$"Unable to find table information for LoadWith. Consider moving LoadWith closer to GetTable<{expr.Type.Name}>() method.");
 		}
 		*/
@@ -190,16 +192,16 @@ namespace LinqToDB.Linq.Builder
 				switch (expression.NodeType)
 				{
 					case ExpressionType.Parameter :
-					{
-						if (lastMember == null)
-							goto default;
-						stop = true;
-						break;
-					}
+						{
+							if (lastMember == null)
+								goto default;
+							stop = true;
+							break;
+						}
 
 					case ExpressionType.Call      :
-					{
-						var cexpr = (MethodCallExpression)expression;
+						{
+							var cexpr = (MethodCallExpression)expression;
 
 							if (cexpr.Method.IsSqlPropertyMethodEx())
 							{
@@ -211,32 +213,32 @@ namespace LinqToDB.Linq.Builder
 								yield break;*/
 							}
 
-						if (lastMember == null)
-							goto default;
-
-						var expr  = cexpr.Object;
-
-						if (expr == null)
-						{
-							if (cexpr.Arguments.Count == 0)
+							if (lastMember == null)
 								goto default;
 
-							expr = cexpr.Arguments[0];
+							var expr  = cexpr.Object;
+
+							if (expr == null)
+							{
+								if (cexpr.Arguments.Count == 0)
+									goto default;
+
+								expr = cexpr.Arguments[0];
+							}
+
+							if (expr.NodeType != ExpressionType.MemberAccess)
+								goto default;
+
+							var member = ((MemberExpression)expr).Member;
+							var mtype  = member.GetMemberType();
+
+							if (lastMember.ReflectedType != mtype.GetItemType())
+								goto default;
+
+							expression = expr;
+
+							break;
 						}
-
-						if (expr.NodeType != ExpressionType.MemberAccess)
-							goto default;
-
-						var member = ((MemberExpression)expr).Member;
-						var mtype  = member.GetMemberType();
-
-						if (lastMember.ReflectedType != mtype.GetItemType())
-							goto default;
-
-						expression = expr;
-
-						break;
-					}
 
 					case ExpressionType.MemberAccess :
 						{
@@ -260,55 +262,54 @@ namespace LinqToDB.Linq.Builder
 
 							members.Add(member);
 
-						expression = mexpr.Expression!;
+							expression = mexpr.Expression!;
 
-						break;
-					}
+							break;
+						}
 
 					case ExpressionType.ArrayIndex   :
-					{
-						expression = ((BinaryExpression)expression).Left;
-						break;
-					}
+						{
+							expression = ((BinaryExpression)expression).Left;
+							break;
+						}
 
 					case ExpressionType.Extension    :
-					{
-						if (expression is GetItemExpression getItemExpression)
 						{
-							expression = getItemExpression.Expression;
-							break;
-						}
-
-						if (expression is ContextRefExpression contextRef)
-						{
-							var newExpression = builder.MakeExpression(context, expression, ProjectFlags.AssociationRoot);
-							if (!ReferenceEquals(newExpression, expression))
+							if (expression is GetItemExpression getItemExpression)
 							{
-								expression = newExpression;
-							}
-							else
-							{
-								stop    = true;
-								context = contextRef.BuildContext;
+								expression = getItemExpression.Expression;
+								break;
 							}
 
-							break;
-						}
+							if (expression is ContextRefExpression contextRef)
+							{
+								var newExpression = builder.MakeExpression(context, expression, ProjectFlags.AssociationRoot);
+								if (!ReferenceEquals(newExpression, expression))
+								{
+									expression = newExpression;
+								}
+								else
+								{
+									stop    = true;
+									context = contextRef.BuildContext;
+								}
 
-						goto default;
+								break;
+							}
+
+							goto default;
 					}
 
 					case ExpressionType.Convert      :
-					{
-						expression = ((UnaryExpression)expression).Operand;
-						break;
-					}
+						{
+							expression = ((UnaryExpression)expression).Operand;
+							break;
+						}
 
-					default                          :
-					{
-						ThrowHelper.ThrowLinqToDBException($"Expression '{expression}' is not an association.");
-						break;
-					}
+					default :
+						{
+							throw new LinqToDBException($"Expression '{expression}' is not an association.");
+						}
 				}
 			}
 

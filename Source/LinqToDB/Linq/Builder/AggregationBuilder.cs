@@ -1,4 +1,6 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Linq;
+using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -206,7 +208,7 @@ namespace LinqToDB.Linq.Builder
 			static int CheckNullValue(bool isNull, object context)
 			{
 				if (isNull)
-					ThrowHelper.ThrowInvalidOperationException(
+					throw new InvalidOperationException(
 						$"Function {context} returns non-nullable value, but result is NULL. Use nullable version of the function instead.");
 				return 0;
 			}
@@ -275,7 +277,7 @@ namespace LinqToDB.Linq.Builder
 			public override IBuildContext Clone(CloningContext context)
 			{
 				return new AggregationContext(null, context.CloneContext(Sequence), _methodName, _returnType);
-						}
+            }
 
 			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 			{
@@ -284,7 +286,7 @@ namespace LinqToDB.Linq.Builder
 
 			public override IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)
 			{
-				return ThrowHelper.ThrowNotImplementedException<IBuildContext>();
+				throw new NotImplementedException();
 			}
 		}
 	}

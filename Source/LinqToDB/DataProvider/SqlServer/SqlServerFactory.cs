@@ -1,4 +1,9 @@
-﻿namespace LinqToDB.DataProvider.SqlServer
+﻿using System.Collections.Generic;
+using System.Linq;
+
+using JetBrains.Annotations;
+
+namespace LinqToDB.DataProvider.SqlServer
 {
 	using Configuration;
 

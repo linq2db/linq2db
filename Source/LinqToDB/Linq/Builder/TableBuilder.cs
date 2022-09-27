@@ -1,9 +1,11 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
-using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using LinqToDB.Expressions;
 	using Reflection;
 	using Extensions;
 	using SqlQuery;
@@ -165,7 +167,7 @@ namespace LinqToDB.Linq.Builder
 			var refExpression = new ContextRefExpression(typeof(IQueryable<>).MakeGenericType(entityType), tableContext);
 			var replaced = optimized.Replace(fakeQuery.Expression, refExpression);
 			if (replaced == optimized)
-				ThrowHelper.ThrowLinqException("Could not correct query result for processing.");
+				throw new LinqException("Could not correct query result for processing.");
 
 			var context   = builder.BuildSequence(new BuildInfo(buildInfo, replaced));
 			return context;

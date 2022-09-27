@@ -1,11 +1,12 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Linq.Expressions;
+using LinqToDB.Mapping;
 
 // ReSharper disable CheckNamespace
 
 namespace LinqToDB
 {
-	using Common;
-	using Mapping;
+	using LinqToDB.Common;
 	using SqlQuery;
 
 	partial class Sql
@@ -70,7 +71,7 @@ namespace LinqToDB
 				}
 
 				if (string.IsNullOrEmpty(name))
-					ThrowHelper.ThrowLinqToDBException($"Cannot retrieve property name for expression '{expression}'.");
+					throw new LinqToDBException($"Cannot retrieve property name for expression '{expression}'.");
 
 				return new SqlExpression(expression.Type, name!, SqlQuery.Precedence.Primary)
 				{

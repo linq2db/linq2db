@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.Mapping
+﻿using System.Collections.Generic;
+
+namespace LinqToDB.Mapping
 {
 	using Reflection;
 

@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.Data
+﻿using System;
+
+namespace LinqToDB.Data
 {
 	/// <summary>
 	/// Defines behavior of <see cref="DataConnectionExtensions.BulkCopy{T}(DataConnection, BulkCopyOptions, System.Collections.Generic.IEnumerable{T})"/> method.

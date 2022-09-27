@@ -1,8 +1,9 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Linq.Expressions;
 
 namespace Tests.OrmBattle.Helper
 {
-	public static class ExpressionUtils
+    public static class ExpressionUtils
     {
         public static MemberExpression ExtractMember(Expression expression)
         {

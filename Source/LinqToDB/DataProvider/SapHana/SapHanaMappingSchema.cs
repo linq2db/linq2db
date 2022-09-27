@@ -1,4 +1,5 @@
-﻿using System.Data.Linq;
+﻿using System;
+using System.Data.Linq;
 using System.Text;
 
 namespace LinqToDB.DataProvider.SapHana

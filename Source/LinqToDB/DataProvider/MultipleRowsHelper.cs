@@ -1,4 +1,9 @@
-﻿using System.Text;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider
 {
@@ -26,7 +31,7 @@ namespace LinqToDB.DataProvider
 				? dc
 				: dataConnection is DataContext dx
 					? dx.GetDataConnection()
-					: ThrowHelper.ThrowArgumentException<DataConnection>(nameof(dataConnection), $"Must be of {nameof(DataConnection)} or {nameof(DataContext)} type but was {dataConnection.GetType()}");
+					: throw new ArgumentException($"Must be of {nameof(DataConnection)} or {nameof(DataContext)} type but was {dataConnection.GetType()}", nameof(dataConnection));
 
 			MappingSchema  = dataConnection.MappingSchema;
 			Options        = options;

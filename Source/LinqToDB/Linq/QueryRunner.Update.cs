@@ -1,4 +1,8 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
@@ -68,7 +72,7 @@ namespace LinqToDB.Linq
 					if (Configuration.Linq.IgnoreEmptyUpdate)
 						return null;
 
-					ThrowHelper.ThrowLinqException(
+					throw new LinqException(
 						keys.Count == sqlTable.Fields.Count ?
 							$"There are no fields to update in the type '{sqlTable.NameForLogging}'. No PK is defined or all fields are keys." :
 							$"There are no fields to update in the type '{sqlTable.NameForLogging}'.");

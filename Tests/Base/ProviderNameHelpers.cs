@@ -1,4 +1,8 @@
-﻿namespace Tests
+﻿using System.Collections.Generic;
+using System.Linq;
+using LinqToDB;
+
+namespace Tests
 {
 	public static class ProviderNameHelpers
 	{

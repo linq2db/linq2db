@@ -3,6 +3,11 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+
 namespace LinqToDB.Data.RetryPolicy
 {
 	using Common;
@@ -17,9 +22,9 @@ namespace LinqToDB.Data.RetryPolicy
 		protected RetryPolicyBase(int maxRetryCount, TimeSpan maxRetryDelay)
 		{
 			if (maxRetryCount < 0)
-				ThrowHelper.ThrowArgumentOutOfRangeException(nameof(maxRetryCount));
+				throw new ArgumentOutOfRangeException(nameof(maxRetryCount));
 			if (maxRetryDelay.TotalMilliseconds < 0.0)
-				ThrowHelper.ThrowArgumentOutOfRangeException(nameof(maxRetryDelay));
+				throw new ArgumentOutOfRangeException(nameof(maxRetryDelay));
 
 			MaxRetryCount         = maxRetryCount;
 			MaxRetryDelay         = maxRetryDelay;

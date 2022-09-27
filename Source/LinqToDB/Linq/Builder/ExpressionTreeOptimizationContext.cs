@@ -1,12 +1,15 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
 	using Common;
 	using Data;
+	using LinqToDB.Expressions;
 	using Extensions;
 	using Mapping;
 	using SqlQuery;
@@ -801,7 +804,7 @@ namespace LinqToDB.Linq.Builder
 								return ExpressionBuilder.DataContextParam;
 							}
 
-							ThrowHelper.ThrowLinqToDBException($"Can't convert {wpi} to expression.");
+							throw new LinqToDBException($"Can't convert {wpi} to expression.");
 						}
 
 						return wpi;
@@ -881,7 +884,7 @@ namespace LinqToDB.Linq.Builder
 								return ExpressionBuilder.DataContextParam;
 							}
 
-							ThrowHelper.ThrowLinqToDBException($"Can't convert {wpi} to expression.");
+							throw new LinqToDBException($"Can't convert {wpi} to expression.");
 						}
 
 						var result = n < 0 ? context.pi.Object! : context.pi.Arguments[n];

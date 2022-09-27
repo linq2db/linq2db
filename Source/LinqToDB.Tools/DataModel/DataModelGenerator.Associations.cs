@@ -1,8 +1,10 @@
-﻿namespace LinqToDB.DataModel
-{
-	using CodeModel;
-	using Metadata;
+﻿using System;
+using System.Collections.Generic;
+using LinqToDB.CodeModel;
+using LinqToDB.Metadata;
 
+namespace LinqToDB.DataModel
+{
 	// Constains assiction generation code
 	// Associations could generated in two equivalent forms:
 	// - as association properties in entities

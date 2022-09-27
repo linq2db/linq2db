@@ -1,7 +1,7 @@
-﻿namespace LinqToDB.DataModel
-{
-	using Metadata;
+﻿using LinqToDB.Metadata;
 
+namespace LinqToDB.DataModel
+{
 	/// <summary>
 	/// Association (e.g. foreign key relation) model. Defines whole relation (both sides).
 	/// </summary>

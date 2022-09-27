@@ -1,4 +1,6 @@
-﻿using System.Text;
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
 
 namespace LinqToDB.DataProvider.Access
 {
@@ -143,7 +145,7 @@ namespace LinqToDB.DataProvider.Access
 				case '%': expr = new SqlBinaryExpression(expr.SystemType, expr.Expr1, "MOD", expr.Expr2, Precedence.Additive - 1); break;
 				case '&':
 				case '|':
-				case '^': expr = ThrowHelper.ThrowSqlException<SqlBinaryExpression>($"Operator '{expr.Operation}' is not supported by the {GetType().Name}."); break;
+				case '^': throw new SqlException("Operator '{0}' is not supported by the {1}.", expr.Operation, GetType().Name);
 			}
 
 			base.BuildBinaryExpression(expr);
@@ -228,7 +230,7 @@ namespace LinqToDB.DataProvider.Access
 			var len = parameters.Length - start;
 
 			if (len < 3)
-				return ThrowHelper.ThrowSqlException<SqlFunction>($"CASE statement is not supported by the {GetType().Name}.");
+				throw new SqlException("CASE statement is not supported by the {0}.", GetType().Name);
 
 			if (len == 3)
 				return new SqlFunction(systemType, "Iif", parameters[start], parameters[start + 1], parameters[start + 2]);
@@ -316,7 +318,7 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override void BuildMergeStatement(SqlMergeStatement merge)
 		{
-			ThrowHelper.ThrowLinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
+			throw new LinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
 		}
 
 		protected override StringBuilder BuildSqlComment(StringBuilder sb, SqlComment comment)

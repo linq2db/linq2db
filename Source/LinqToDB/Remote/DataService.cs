@@ -7,12 +7,12 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Remote
 {
-	using Common;
 	using Extensions;
 	using Expressions;
 	using Linq;
 	using Mapping;
 	using SqlQuery;
+	using LinqToDB.Common;
 
 	public class DataService<T> : System.Data.Services.DataService<T>, IServiceProvider
 		where T : IDataContext
@@ -228,7 +228,7 @@ namespace LinqToDB.Remote
 
 			public ResourceAssociationSet GetResourceAssociationSet(ResourceSet resourceSet, ResourceType resourceType, ResourceProperty resourceProperty)
 			{
-				return ThrowHelper.ThrowNotImplementedException<ResourceAssociationSet>();
+				throw new NotImplementedException();
 			}
 
 			public bool TryResolveResourceType(string name, out ResourceType resourceType)
@@ -303,22 +303,22 @@ namespace LinqToDB.Remote
 
 			public object GetPropertyValue(object target, ResourceProperty resourceProperty)
 			{
-				return ThrowHelper.ThrowNotImplementedException<object>();
+				throw new NotImplementedException();
 			}
 
 			public object GetOpenPropertyValue(object target, string propertyName)
 			{
-				return ThrowHelper.ThrowNotImplementedException<object>();
+				throw new NotImplementedException();
 			}
 
 			public IEnumerable<KeyValuePair<string,object>> GetOpenPropertyValues(object target)
 			{
-				return ThrowHelper.ThrowNotImplementedException<IEnumerable<KeyValuePair<string, object>>>();
+				throw new NotImplementedException();
 			}
 
 			public object InvokeServiceOperation(ServiceOperation serviceOperation, object[] parameters)
 			{
-				return ThrowHelper.ThrowNotImplementedException<object>();
+				throw new NotImplementedException();
 			}
 
 			public object? CurrentDataSource         { get; set; }
@@ -366,12 +366,12 @@ namespace LinqToDB.Remote
 
 			public void SetConcurrencyValues(object resourceCookie, bool? checkForEquality, IEnumerable<KeyValuePair<string,object>> concurrencyValues)
 			{
-				ThrowHelper.ThrowNotImplementedException();
+				throw new NotImplementedException();
 			}
 
 			public void AddReferenceToCollection(object targetResource, string propertyName, object resourceToBeAdded)
 			{
-				ThrowHelper.ThrowNotImplementedException();
+				throw new NotImplementedException();
 			}
 
 			public void ClearChanges()
@@ -388,7 +388,7 @@ namespace LinqToDB.Remote
 					return resource;
 				}
 
-				return ThrowHelper.ThrowLinqException<object>($"Type '{fullTypeName}' not found");
+				throw new LinqException($"Type '{fullTypeName}' not found");
 			}
 
 			public void DeleteResource(object targetResource)
@@ -403,7 +403,7 @@ namespace LinqToDB.Remote
 				foreach (var item in query)
 				{
 					if (resource != null)
-						ThrowHelper.ThrowLinqException("Resource not uniquely identified");
+						throw new LinqException("Resource not uniquely identified");
 					resource = item;
 				}
 
@@ -418,7 +418,7 @@ namespace LinqToDB.Remote
 
 			public void RemoveReferenceFromCollection(object targetResource, string propertyName, object resourceToBeRemoved)
 			{
-				ThrowHelper.ThrowNotImplementedException();
+				throw new NotImplementedException();
 			}
 
 			public object ResetResource(object resource)
@@ -434,12 +434,12 @@ namespace LinqToDB.Remote
 
 			public void SaveChanges()
 			{
-				ThrowHelper.ThrowNotImplementedException();
+				throw new NotImplementedException();
 			}
 
 			public void SetReference(object targetResource, string propertyName, object? propertyValue)
 			{
-				ThrowHelper.ThrowNotImplementedException();
+				throw new NotImplementedException();
 			}
 
 			public void SetValue(object targetResource, string propertyName, object? propertyValue)

@@ -1,6 +1,8 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using System;
+
 namespace LinqToDB.Common.Internal.Cache
 {
 	public static class CacheEntryExtensions
@@ -33,7 +35,7 @@ namespace LinqToDB.Common.Internal.Cache
 		{
 			if (expirationToken == null)
 			{
-				ThrowHelper.ThrowArgumentNullException(nameof(expirationToken));
+				throw new ArgumentNullException(nameof(expirationToken));
 			}
 
 			entry.ExpirationTokens.Add(expirationToken);
@@ -99,7 +101,7 @@ namespace LinqToDB.Common.Internal.Cache
 		{
 			if (callback == null)
 			{
-				ThrowHelper.ThrowArgumentNullException(nameof(callback));
+				throw new ArgumentNullException(nameof(callback));
 			}
 
 			return entry.RegisterPostEvictionCallback(callback, state: null);
@@ -120,7 +122,7 @@ namespace LinqToDB.Common.Internal.Cache
 		{
 			if (callback == null)
 			{
-				ThrowHelper.ThrowArgumentNullException(nameof(callback));
+				throw new ArgumentNullException(nameof(callback));
 			}
 
 			entry.PostEvictionCallbacks.Add(new PostEvictionCallbackRegistration<TKey>()
@@ -159,7 +161,7 @@ namespace LinqToDB.Common.Internal.Cache
 		{
 			if (size < 0)
 			{
-				ThrowHelper.ThrowArgumentOutOfRangeException(nameof(size), size, $"{nameof(size)} must be non-negative.");
+				throw new ArgumentOutOfRangeException(nameof(size), size, $"{nameof(size)} must be non-negative.");
 			}
 
 			entry.Size = size;
@@ -177,7 +179,7 @@ namespace LinqToDB.Common.Internal.Cache
 		{
 			if (options == null)
 			{
-				ThrowHelper.ThrowArgumentNullException(nameof(options));
+				throw new ArgumentNullException(nameof(options));
 			}
 
 			entry.AbsoluteExpiration = options.AbsoluteExpiration;

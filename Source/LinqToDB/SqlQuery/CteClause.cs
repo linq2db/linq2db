@@ -1,10 +1,13 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Text;
+using System.Threading;
+using LinqToDB.Common;
 
 namespace LinqToDB.SqlQuery
 {
-	using Common;
-
 	[DebuggerDisplay("CTE({CteID}, {Name})")]
 	public class CteClause : IQueryElement, ISqlExpressionWalkable
 	{
@@ -31,7 +34,7 @@ namespace LinqToDB.SqlQuery
 			bool         isRecursive,
 			string?      name)
 		{
-			ObjectType  = objectType ?? ThrowHelper.ThrowArgumentNullException<Type>(nameof(objectType));
+			ObjectType  = objectType ?? throw new ArgumentNullException(nameof(objectType));
 			Body        = body;
 			IsRecursive = isRecursive;
 			Name        = name;

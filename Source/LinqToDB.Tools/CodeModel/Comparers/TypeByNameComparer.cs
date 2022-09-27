@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.CodeModel
+﻿using System.Collections.Generic;
+
+namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// Compare types by name (including namespace and parent type names) e.g. in name conflict resolution logic.

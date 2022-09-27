@@ -1,5 +1,10 @@
-﻿namespace LinqToDB.DataProvider.SapHana
+﻿using System;
+using System.Data;
+using System.Linq;
+
+namespace LinqToDB.DataProvider.SapHana
 {
+	using System.Data.Common;
 	using Common;
 	using Data;
 	using Extensions;

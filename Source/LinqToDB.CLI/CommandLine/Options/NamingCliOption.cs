@@ -1,9 +1,9 @@
-﻿using System.Text.Json;
+﻿using System.Collections.Generic;
+using System.Text.Json;
+using LinqToDB.Naming;
 
 namespace LinqToDB.CommandLine
 {
-	using Naming;
-
 	/// <summary>
 	/// Code identifier normalization/generation options. Not supported in CLI (JSON only).
 	/// </summary>

@@ -1,4 +1,6 @@
-﻿using LinqToDB;
+﻿using System;
+using System.Collections.Generic;
+using LinqToDB;
 using LinqToDB.Data;
 
 namespace Tests.Tools

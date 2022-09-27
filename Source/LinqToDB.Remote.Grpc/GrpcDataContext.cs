@@ -1,4 +1,5 @@
-﻿using Grpc.Net.Client;
+﻿using System;
+using Grpc.Net.Client;
 
 namespace LinqToDB.Remote.Grpc
 {
@@ -25,7 +26,7 @@ namespace LinqToDB.Remote.Grpc
 		public GrpcDataContext(string address)
 		{
 			if (string.IsNullOrWhiteSpace(address))
-				ThrowHelper.ThrowArgumentException(nameof(address), $"'{nameof(address)}' cannot be null or whitespace.");
+				throw new ArgumentException($"'{nameof(address)}' cannot be null or whitespace.", nameof(address));
 
 			Address = address;
 		}

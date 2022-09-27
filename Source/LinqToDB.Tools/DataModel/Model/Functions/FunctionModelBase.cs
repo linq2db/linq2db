@@ -1,7 +1,9 @@
-﻿namespace LinqToDB.DataModel
-{
-	using SqlQuery;
+﻿using System.Collections.Generic;
+using LinqToDB.Schema;
+using LinqToDB.SqlQuery;
 
+namespace LinqToDB.DataModel
+{
 	/// <summary>
 	/// Base class for stored procedure or function descriptors.
 	/// </summary>

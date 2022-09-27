@@ -3,7 +3,7 @@
 namespace LinqToDB.Expressions
 {
 	using Common.Internal;
-	using Extensions;
+	using LinqToDB.Extensions;
 	using SqlQuery;
 
 	class SqlPlaceholderExpression : Expression

@@ -1,10 +1,10 @@
 ﻿using System.Reflection;
+using LinqToDB.Metadata;
+using LinqToDB.Schema;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataModel
 {
-	using Metadata;
-	using SqlQuery;
-
 	/// <summary>
 	/// Table function model.
 	/// </summary>

@@ -1,7 +1,10 @@
-﻿using LinqToDB;
+﻿using System.Linq;
+using System.Threading.Tasks;
+using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Mapping;
 using NUnit.Framework;
+using Tests.Model;
 
 namespace Tests.xUpdate
 {

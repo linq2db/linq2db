@@ -1,13 +1,16 @@
-﻿namespace LinqToDB.Scaffold
-{
-	using CodeModel;
-	using Common;
-	using DataModel;
-	using Metadata;
-	using Naming;
-	using Schema;
-	using SqlProvider;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using LinqToDB.CodeModel;
+using LinqToDB.Common;
+using LinqToDB.DataModel;
+using LinqToDB.Metadata;
+using LinqToDB.Naming;
+using LinqToDB.Schema;
+using LinqToDB.SqlProvider;
 
+namespace LinqToDB.Scaffold
+{
 	/// <summary>
 	/// Helper class to simplify common scenario of data model generation from database.
 	/// </summary>

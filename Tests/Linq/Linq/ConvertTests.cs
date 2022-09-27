@@ -1,4 +1,6 @@
-﻿using System.Globalization;
+﻿using System;
+using System.Globalization;
+using System.Linq;
 using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Mapping;

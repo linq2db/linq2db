@@ -1,9 +1,15 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
+using System.Threading;
+
+using JetBrains.Annotations;
 
 namespace LinqToDB
 {
@@ -171,10 +177,10 @@ namespace LinqToDB
 				bool? canBeNull,
 				params SqlExtensionParam[] parameters)
 			{
-				if (parameters == null) ThrowHelper.ThrowArgumentNullException(nameof(parameters));
+				if (parameters == null) throw new ArgumentNullException(nameof(parameters));
 
 				foreach (var value in parameters)
-					if (value == null) ThrowHelper.ThrowArgumentNullException(nameof(parameters));
+					if (value == null) throw new ArgumentNullException(nameof(parameters));
 
 				SystemType       = systemType;
 				Expr             = expr;
@@ -318,13 +324,13 @@ namespace LinqToDB
 					_context      = context;
 					Configuration = configuration;
 					BuilderValue  = builderValue;
-					DataContext   = dataContext  ?? ThrowHelper.ThrowArgumentNullException<IDataContext>(nameof(dataContext));
-					Query         = query        ?? ThrowHelper.ThrowArgumentNullException<SelectQuery>(nameof(query));
-					Extension     = extension    ?? ThrowHelper.ThrowArgumentNullException<SqlExtension>(nameof(extension));
-					_convert      = converter    ?? ThrowHelper.ThrowArgumentNullException<Func<TContext, Expression, ColumnDescriptor?, ISqlExpression>>(nameof(converter));
+					DataContext   = dataContext  ?? throw new ArgumentNullException(nameof(dataContext));
+					Query         = query        ?? throw new ArgumentNullException(nameof(query));
+					Extension     = extension    ?? throw new ArgumentNullException(nameof(extension));
+					_convert      = converter    ?? throw new ArgumentNullException(nameof(converter));
 					Member        = member;
 					Method        = member as MethodInfo;
-					Arguments     = arguments    ?? ThrowHelper.ThrowArgumentNullException<Expression[]>(nameof(arguments));
+					Arguments     = arguments    ?? throw new ArgumentNullException(nameof(arguments));
 				}
 
 				public MethodInfo?  Method { get; }
@@ -372,7 +378,7 @@ namespace LinqToDB
 								return GetValue<T>(i);
 					}
 
-					return ThrowHelper.ThrowInvalidOperationException<T>($"Argument '{argName}' not found");
+					throw new InvalidOperationException(string.Format("Argument '{0}' not found", argName));
 				}
 
 				public object GetObjectValue(int index)
@@ -392,7 +398,7 @@ namespace LinqToDB
 								return GetObjectValue(i);
 					}
 
-					return ThrowHelper.ThrowInvalidOperationException<object>($"Argument '{argName}' not found");
+					throw new InvalidOperationException(string.Format("Argument '{0}' not found", argName));
 				}
 
 				public ISqlExpression GetExpression(int index, bool unwrap)
@@ -414,7 +420,7 @@ namespace LinqToDB
 						}
 					}
 
-					return ThrowHelper.ThrowInvalidOperationException<ISqlExpression>(string.Format("Argument '{0}' not found", argName));
+					throw new InvalidOperationException(string.Format("Argument '{0}' not found", argName));
 				}
 
 				public ISqlExpression ConvertToSqlExpression()
@@ -500,6 +506,14 @@ namespace LinqToDB
 				var attributes =
 						mapping.GetAttributes<ExtensionAttribute>(memberInfo.ReflectedType!, memberInfo,
 							static a => a.Configuration, inherit: true, exactForConfiguration: true);
+
+				if (attributes.Length == 0)
+				{
+					// notify if there is method that has no defined attribute for specific configuration
+					attributes = mapping.GetAttributes<ExtensionAttribute>(memberInfo.ReflectedType!, memberInfo);
+					if (attributes.Length > 0)
+						throw new LinqToDBException($"Member {memberInfo.Name}, unsupported for configuration(s) '{string.Join(", ", mapping.ConfigurationList)}'.");
+				}
 
 				return attributes;
 			}
@@ -728,8 +742,7 @@ namespace LinqToDB
 							if (Activator.CreateInstance(t)! is IExtensionCallBuilder res)
 								return res;
 
-							return ThrowHelper.ThrowArgumentException<IExtensionCallBuilder>(
-								nameof(t),
+							throw new ArgumentException(
 								$"Type '{t}' does not implement {nameof(IExtensionCallBuilder)} interface.");
 						}
 					);
@@ -784,7 +797,7 @@ namespace LinqToDB
 						else
 						{
 							if (resolving.Contains(p))
-								ThrowHelper.ThrowInvalidOperationException("Circular reference");
+								throw new InvalidOperationException("Circular reference");
 
 							resolving.Add(p);
 							var ext = p.Extension;
@@ -841,7 +854,7 @@ namespace LinqToDB
 				var chain  = BuildFunctionsChain(context, dataContext, query, expression, converter);
 
 				if (chain.Count == 0)
-					ThrowHelper.ThrowInvalidOperationException("No sequence found for expression '{expression}'");
+					throw new InvalidOperationException("No sequence found for expression '{expression}'");
 
 				var ordered = chain
 					.Select(static (c, i) => Tuple.Create(c, i))
@@ -856,9 +869,9 @@ namespace LinqToDB
 				{
 					var replaced = chain.Where(static c => c.Expression != null).ToArray();
 					if (replaced.Length == 0)
-						ThrowHelper.ThrowInvalidOperationException($"Can not find root sequence for expression '{expression}'");
+						throw new InvalidOperationException($"Can not find root sequence for expression '{expression}'");
 					else if (replaced.Length > 1)
-						ThrowHelper.ThrowInvalidOperationException($"Multiple root sequences found for expression '{expression}'");
+						throw new InvalidOperationException($"Multiple root sequences found for expression '{expression}'");
 
 					return replaced[0].Expression!;
 				}

@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Data.Linq;
 using System.Globalization;
 using System.Linq.Expressions;
@@ -83,7 +84,7 @@ namespace LinqToDB.Common
 				case   'T' : return true;
 			}
 
-			return ThrowHelper.ThrowInvalidCastException<bool>("Invalid cast from System.String to System.Bool");
+			throw new InvalidCastException("Invalid cast from System.String to System.Bool");
 		}
 
 		/// <summary>

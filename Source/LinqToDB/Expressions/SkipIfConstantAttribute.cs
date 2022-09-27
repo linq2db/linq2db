@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.Expressions
+﻿using System;
+
+namespace LinqToDB.Expressions
 {
 	/// <summary>
 	/// Used to tell query expression comparer to skip method call argument comparison if it is constant.

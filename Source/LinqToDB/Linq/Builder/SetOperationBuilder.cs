@@ -1,9 +1,10 @@
-﻿using System.Linq.Expressions;
+﻿using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
-using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using LinqToDB.Expressions;
 	using Extensions;
 	using Reflection;
 	using SqlQuery;
@@ -24,17 +25,19 @@ namespace LinqToDB.Linq.Builder
 			var sequence1 = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 			var sequence2 = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery()));
 
-			var setOperation = methodCall.Method.Name switch
+			SetOperation setOperation;
+			switch (methodCall.Method.Name)
 			{
-				"Concat" or 
-				"UnionAll"     => SetOperation.UnionAll,
-				"Union"        => SetOperation.Union,
-				"Except"       => SetOperation.Except,
-				"ExceptAll"    => SetOperation.ExceptAll,
-				"Intersect"    => SetOperation.Intersect,
-				"IntersectAll" => SetOperation.IntersectAll,
-				_              => ThrowHelper.ThrowArgumentException<SetOperation>($"Invalid method name {methodCall.Method.Name}."),
-			};
+				case "Concat"       : 
+				case "UnionAll"     : setOperation = SetOperation.UnionAll;     break;
+				case "Union"        : setOperation = SetOperation.Union;        break;
+				case "Except"       : setOperation = SetOperation.Except;       break;
+				case "ExceptAll"    : setOperation = SetOperation.ExceptAll;    break;
+				case "Intersect"    : setOperation = SetOperation.Intersect;    break;
+				case "IntersectAll" : setOperation = SetOperation.IntersectAll; break;
+				default:
+					throw new ArgumentException($"Invalid method name {methodCall.Method.Name}.");
+			}
 
 			var needsEmulation = !builder.DataContext.SqlProviderFlags.IsAllSetOperationsSupported &&
 			                     (setOperation == SetOperation.ExceptAll || setOperation == SetOperation.IntersectAll)
@@ -66,7 +69,7 @@ namespace LinqToDB.Linq.Builder
 				var keys2 = query.   ConvertToSql(null, 0, ConvertFlags.All);
 
 				if (keys1.Length != keys2.Length)
-					ThrowHelper.ThrowInvalidOperationException();
+					throw new InvalidOperationException();
 
 				for (var i = 0; i < keys1.Length; i++)
 				{

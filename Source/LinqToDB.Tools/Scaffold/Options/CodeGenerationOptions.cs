@@ -1,4 +1,7 @@
-﻿namespace LinqToDB.Scaffold
+﻿using System;
+using System.Collections.Generic;
+
+namespace LinqToDB.Scaffold
 {
 	/// <summary>
 	/// General code-generation options, not related to data model directly.

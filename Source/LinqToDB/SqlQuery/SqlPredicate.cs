@@ -1,4 +1,6 @@
-﻿using System.Text;
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
@@ -22,13 +24,13 @@ namespace LinqToDB.SqlQuery
 			public Expr(ISqlExpression exp1, int precedence)
 				: base(precedence)
 			{
-				Expr1 = exp1 ?? ThrowHelper.ThrowArgumentNullException<ISqlExpression>(nameof(exp1));
+				Expr1 = exp1 ?? throw new ArgumentNullException(nameof(exp1));
 			}
 
 			public Expr(ISqlExpression exp1)
 				: base(exp1.Precedence)
 			{
-				Expr1 = exp1 ?? ThrowHelper.ThrowArgumentNullException<ISqlExpression>(nameof(exp1));
+				Expr1 = exp1 ?? throw new ArgumentNullException(nameof(exp1));
 			}
 
 			public ISqlExpression Expr1 { get; set; }
@@ -45,7 +47,7 @@ namespace LinqToDB.SqlQuery
 				Expr1 = Expr1.Walk(options, context, func)!;
 
 				if (Expr1 == null)
-					ThrowHelper.ThrowInvalidOperationException();
+					throw new InvalidOperationException();
 			}
 
 			public override bool CanBeNull => Expr1.CanBeNull;
@@ -152,7 +154,7 @@ namespace LinqToDB.SqlQuery
 					Operator.LessOrEqual    => "<=",
 					Operator.NotLess        => "!<",
 					Operator.Overlaps       => "OVERLAPS",
-					_                       => ThrowHelper.ThrowInvalidOperationException<string>(),
+					_                       => throw new InvalidOperationException(),
 				};
 				sb.Append(' ').Append(op).Append(' ');
 
@@ -161,18 +163,18 @@ namespace LinqToDB.SqlQuery
 
 			static Operator InvertOperator(Operator op)
 			{
-				return op switch
+				switch (op)
 				{
-					Operator.Equal          => Operator.NotEqual,
-					Operator.NotEqual       => Operator.Equal,
-					Operator.Greater        => Operator.LessOrEqual,
-					Operator.NotLess        or
-					Operator.GreaterOrEqual => Operator.Less,
-					Operator.Less           => Operator.GreaterOrEqual,
-					Operator.NotGreater     or
-					Operator.LessOrEqual    => Operator.Greater,
-					_ => ThrowHelper.ThrowInvalidOperationException<Operator>(),
-				};
+					case Operator.Equal          : return Operator.NotEqual;
+					case Operator.NotEqual       : return Operator.Equal;
+					case Operator.Greater        : return Operator.LessOrEqual;
+					case Operator.NotLess        :
+					case Operator.GreaterOrEqual : return Operator.Less;
+					case Operator.Less           : return Operator.GreaterOrEqual;
+					case Operator.NotGreater     :
+					case Operator.LessOrEqual    : return Operator.Greater;
+					default: throw new InvalidOperationException();
+				}
 			}
 
 			public bool CanInvert()
@@ -479,8 +481,7 @@ namespace LinqToDB.SqlQuery
 						sb.Append(" CONTAINS ");
 						break;
 					default:
-						ThrowHelper.ThrowInvalidOperationException($"Unexpected search kind: {Kind}");
-						break;
+						throw new InvalidOperationException($"Unexpected search kind: {Kind}");
 				}
 
 				Expr2.ToString(sb, dic);

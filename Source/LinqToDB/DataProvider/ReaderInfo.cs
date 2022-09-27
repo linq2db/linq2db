@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.DataProvider
+﻿using System;
+
+namespace LinqToDB.DataProvider
 {
 	// TODO: V4: refactor to readonly struct
 	public struct ReaderInfo : IEquatable<ReaderInfo>

@@ -1,6 +1,8 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using System;
+
 namespace LinqToDB.Common.Internal.Cache
 {
 	internal class CacheEntryStack<TKey>
@@ -17,7 +19,7 @@ namespace LinqToDB.Common.Internal.Cache
 		{
 			if (previous == null)
 			{
-				ThrowHelper.ThrowArgumentNullException(nameof(previous));
+				throw new ArgumentNullException(nameof(previous));
 			}
 
 			_previous = previous;

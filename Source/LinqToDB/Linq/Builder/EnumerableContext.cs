@@ -1,12 +1,15 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
 	using Common;
 	using Data;
+	using LinqToDB.Expressions;
 	using Extensions;
 	using Mapping;
 	using SqlQuery;
@@ -170,7 +173,7 @@ namespace LinqToDB.Linq.Builder
 						}
 
 			return null;
-				}
+        }
 
 		private SqlField BuildField(ColumnDescriptor column)
 		{
@@ -280,7 +283,7 @@ namespace LinqToDB.Linq.Builder
 
 		public ISqlExpression GetSubQuery(IBuildContext context)
 		{
-			return ThrowHelper.ThrowNotImplementedException<ISqlExpression>();
+			throw new NotImplementedException();
 		}
 
 		public SqlStatement GetResultStatement()

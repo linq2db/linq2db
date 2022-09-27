@@ -4,7 +4,7 @@ using System.Reflection;
 
 namespace LinqToDB.Expressions
 {
-	using Extensions;
+	using LinqToDB.Extensions;
 	using Reflection;
 
 	class SqlGenericConstructorExpression : Expression

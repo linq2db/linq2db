@@ -1,10 +1,12 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
 namespace LinqToDB.Expressions
 {
-	using Extensions;
+	using LinqToDB.Extensions;
 	using Mapping;
 	using Reflection;
 
@@ -112,7 +114,7 @@ namespace LinqToDB.Expressions
 				var objectExpr = methodCall.Arguments[0].UnwrapConvert();
 				var memberName = methodCall.Arguments[1].EvaluateExpression() as string
 #pragma warning disable CA2208 // Instantiate argument exceptions correctly
-					?? ThrowHelper.ThrowArgumentNullException<string>("propertyName");
+					?? throw new ArgumentNullException("propertyName");
 #pragma warning restore CA2208 // Instantiate argument exceptions correctly
 
 				// check if member exists on type

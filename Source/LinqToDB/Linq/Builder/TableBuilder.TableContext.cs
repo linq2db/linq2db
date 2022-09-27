@@ -1,13 +1,20 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
 	using Extensions;
+	using LinqToDB.Expressions;
+	using Interceptors;
 	using Mapping;
 	using Reflection;
 	using SqlQuery;
+	using Common;
 
 	partial class TableBuilder
 	{
@@ -119,7 +126,7 @@ namespace LinqToDB.Linq.Builder
 				var attr = mc.Method.GetTableFunctionAttribute(builder.MappingSchema)!;
 
 				if (!typeof(IQueryable<>).IsSameOrParentOf(mc.Method.ReturnType))
-					ThrowHelper.ThrowLinqException("Table function has to return IQueryable<T>.");
+					throw new LinqException("Table function has to return IQueryable<T>.");
 
 				OriginalType     = mc.Method.ReturnType.GetGenericArguments()[0];
 				ObjectType       = GetObjectType();
@@ -276,7 +283,7 @@ namespace LinqToDB.Linq.Builder
 			public virtual IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 			{
 				throw new NotImplementedException(); 
-						}
+			}
 
 			#endregion
 
@@ -309,7 +316,7 @@ namespace LinqToDB.Linq.Builder
 			public virtual int ConvertToParentIndex(int index, IBuildContext? context)
 			{
 				throw new NotImplementedException(); 
-				}
+			}
 
 			#endregion
 
@@ -475,59 +482,59 @@ namespace LinqToDB.Linq.Builder
 											if (mm.MemberAccessor.MemberInfo.EqualsTo(memberExpression.Member))
 												return field;
 
-				if (memberExpression.Member.IsDynamicColumnPropertyEx())
-				{
-					var fieldName = memberExpression.Member.Name;
+								if (memberExpression.Member.IsDynamicColumnPropertyEx())
+								{
+									var fieldName = memberExpression.Member.Name;
 
-					// do not add association columns
-					var flag = true;
-					foreach (var assoc in EntityDescriptor.Associations)
-					{
-						if (assoc.MemberInfo == memberExpression.Member)
-						{
-							flag = false;
-							break;
-						}
-					}
+									// do not add association columns
+									var flag = true;
+									foreach (var assoc in EntityDescriptor.Associations)
+									{
+										if (assoc.MemberInfo == memberExpression.Member)
+										{
+											flag = false;
+											break;
+										}
+									}
 
-					if (flag)
-					{
-						var newField = SqlTable[fieldName];
-						if (newField == null)
-						{
-							newField = new SqlField(
-								new ColumnDescriptor(
-									Builder.MappingSchema,
-									EntityDescriptor,
-									new ColumnAttribute(fieldName),
-									new MemberAccessor(EntityDescriptor.TypeAccessor,
-										memberExpression.Member, EntityDescriptor),
-									InheritanceMapping.Count > 0)
+									if (flag)
+									{
+										var newField = SqlTable[fieldName];
+										if (newField == null)
+										{
+											newField = new SqlField(
+												new ColumnDescriptor(
+													Builder.MappingSchema,
+													EntityDescriptor,
+													new ColumnAttribute(fieldName),
+													new MemberAccessor(EntityDescriptor.TypeAccessor,
+														memberExpression.Member, EntityDescriptor),
+													InheritanceMapping.Count > 0)
 											) { IsDynamic = true, };
 
-							SqlTable.Add(newField);
-						}
+											SqlTable.Add(newField);
+										}
 
-						return newField;
-					}
-				}
-			}
+										return newField;
+									}
+								}
+							}
 
-							if (throwException &&
-								EntityDescriptor != null &&
-								EntityDescriptor.TypeAccessor.Type == memberExpression.Member.DeclaringType)
-			{
+							if (throwException                             &&
+							    EntityDescriptor                   != null &&
+							    EntityDescriptor.TypeAccessor.Type == memberExpression.Member.DeclaringType)
+							{
 								throw new LinqException("Member '{0}.{1}' is not a table column.",
 									memberExpression.Member.DeclaringType.Name, memberExpression.Member.Name);
-				}
-				}
-			}
+							}
+						}
+					}
 				}
 
 				if (throwException)
 				{
 					throw new LinqException($"Member '{expression}' is not a table column.");
-						}
+				}
 				return null;
 			}
 

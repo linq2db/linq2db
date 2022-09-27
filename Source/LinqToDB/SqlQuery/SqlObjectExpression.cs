@@ -1,9 +1,10 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
-	using Extensions;
+	using LinqToDB.Extensions;
 	using Mapping;
 
 	public class SqlObjectExpression : ISqlExpression

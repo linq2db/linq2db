@@ -1,9 +1,14 @@
-﻿using System.Text;
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+using System.Text;
 
 namespace LinqToDB.SchemaProvider
 {
 	using Common;
 	using Data;
+	using LinqToDB.SqlProvider;
 
 	public abstract class SchemaProviderBase : ISchemaProvider
 	{
@@ -319,7 +324,7 @@ namespace LinqToDB.SchemaProvider
 					var isActiveTransaction = dataConnection.Transaction != null;
 
 					if (GetProcedureSchemaExecutesProcedure && isActiveTransaction)
-						ThrowHelper.ThrowLinqToDBException("Cannot read schema with GetSchemaOptions.GetProcedures = true from transaction. Remove transaction or set GetSchemaOptions.GetProcedures to false");
+						throw new LinqToDBException("Cannot read schema with GetSchemaOptions.GetProcedures = true from transaction. Remove transaction or set GetSchemaOptions.GetProcedures to false");
 
 					if (!isActiveTransaction)
 						dataConnection.BeginTransaction();

@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System;
+using System.Runtime.CompilerServices;
 
 namespace LinqToDB.Common
 {
@@ -29,7 +30,7 @@ namespace LinqToDB.Common
 		public T Value
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => _hasValue ? _value : ThrowHelper.ThrowInvalidOperationException<T>($"{nameof(Option<int>)}.{nameof(Value)} not set");
+			get => _hasValue ? _value : throw new InvalidOperationException($"{nameof(Option<int>)}.{nameof(Value)} not set");
 		}
 
 		/// <summary>

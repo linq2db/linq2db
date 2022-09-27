@@ -1,4 +1,8 @@
-﻿namespace LinqToDB
+﻿using System;
+
+using JetBrains.Annotations;
+
+namespace LinqToDB
 {
 	using DataProvider.DB2;
 	using DataProvider.SqlServer;

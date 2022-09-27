@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
 
 namespace LinqToDB.Extensions
 {
@@ -79,7 +80,7 @@ namespace LinqToDB.Extensions
 			SqlDataType? dataType, object? value)
 		{
 			if (!mappingSchema.TryConvertToSql(stringBuilder, dataType, value))
-				ThrowHelper.ThrowLinqToDBException($"Cannot convert value of type {value?.GetType()} to SQL");
+				throw new LinqToDBException($"Cannot convert value of type {value?.GetType()} to SQL");
 		}
 
 		public static Sql.ExpressionAttribute? GetExpressionAttribute(this MemberInfo member, MappingSchema mappingSchema)

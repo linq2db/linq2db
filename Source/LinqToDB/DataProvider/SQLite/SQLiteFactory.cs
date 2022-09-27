@@ -1,4 +1,7 @@
-﻿namespace LinqToDB.DataProvider.SQLite
+﻿using JetBrains.Annotations;
+using System.Collections.Generic;
+
+namespace LinqToDB.DataProvider.SQLite
 {
 	using Configuration;
 
