@@ -3,8 +3,8 @@ using System.Data.Common;
 using System.IO;
 using System.Reflection;
 
+using LinqToDB.DataProvider.ClickHouse;
 using NUnit.Framework;
-
 using Tests;
 
 /// <summary>
@@ -17,6 +17,9 @@ public class TestsInitialization
 	[OneTimeSetUp]
 	public void TestAssemblySetup()
 	{
+		// required for tests expectations
+		ClickHouseConfiguration.UseStandardCompatibleAggregates = true;
+
 		// uncomment it to run tests with SeqentialAccess command behavior
 		//LinqToDB.Common.Configuration.OptimizeForSequentialAccess = true;
 		//DbCommandProcessorExtensions.Instance = new SequentialAccessCommandProcessor();

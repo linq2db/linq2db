@@ -162,8 +162,9 @@ namespace Tests.Samples
 	public class JsonConvertTests : TestBase
 	{
 
+		[ActiveIssue("https://feedback.azure.com/d365community/idea/6f685846-7c2b-ed11-a81b-6045bd853c94", Configuration = TestProvName.AllSqlServer2022)]
 		[Test]
-		public void SampleSelectTest([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
+		public void SampleSelectTest([IncludeDataSources(TestProvName.AllSqlServer2016Plus, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = new MyDataConnection(context))
 			using (var table = db.CreateLocalTable<SampleClass>())

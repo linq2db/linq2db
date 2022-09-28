@@ -29,11 +29,9 @@ namespace LinqToDB.DataProvider.Sybase
 			SqlProviderFlags.AcceptsTakeAsParameter           = false;
 			SqlProviderFlags.IsSkipSupported                  = false;
 			SqlProviderFlags.IsSubQueryTakeSupported          = false;
-			//SqlProviderFlags.IsCountSubQuerySupported       = false;
 			SqlProviderFlags.CanCombineParameters             = false;
 			SqlProviderFlags.IsSybaseBuggyGroupBy             = true;
 			SqlProviderFlags.IsCrossJoinSupported             = false;
-			SqlProviderFlags.IsSubQueryOrderBySupported       = false;
 			SqlProviderFlags.IsDistinctOrderBySupported       = false;
 			SqlProviderFlags.IsDistinctSetOperationsSupported = false;
 
@@ -221,8 +219,7 @@ namespace LinqToDB.DataProvider.Sybase
 			BulkCopyOptions                                        bulkCopyOptions,
 			IEnumerable<T>                                         source)
 		{
-			if (_bulkCopy == null)
-				_bulkCopy = new SybaseBulkCopy(this);
+			_bulkCopy ??= new SybaseBulkCopy(this);
 
 			return _bulkCopy.BulkCopy(
 				bulkCopyOptions.BulkCopyType == BulkCopyType.Default ? SybaseTools.DefaultBulkCopyType : bulkCopyOptions.BulkCopyType,
@@ -235,8 +232,7 @@ namespace LinqToDB.DataProvider.Sybase
 			BulkCopyOptions bulkCopyOptions,
 			IEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			if (_bulkCopy == null)
-				_bulkCopy = new SybaseBulkCopy(this);
+			_bulkCopy ??= new SybaseBulkCopy(this);
 
 			return _bulkCopy.BulkCopyAsync(
 				bulkCopyOptions.BulkCopyType == BulkCopyType.Default ? SybaseTools.DefaultBulkCopyType : bulkCopyOptions.BulkCopyType,
@@ -251,8 +247,7 @@ namespace LinqToDB.DataProvider.Sybase
 			BulkCopyOptions bulkCopyOptions,
 			IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			if (_bulkCopy == null)
-				_bulkCopy = new SybaseBulkCopy(this);
+			_bulkCopy ??= new SybaseBulkCopy(this);
 
 			return _bulkCopy.BulkCopyAsync(
 				bulkCopyOptions.BulkCopyType == BulkCopyType.Default ? SybaseTools.DefaultBulkCopyType : bulkCopyOptions.BulkCopyType,

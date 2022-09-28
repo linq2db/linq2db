@@ -194,11 +194,11 @@ namespace LinqToDB.SqlQuery
 					//TODO: unify function names and put in common constant storage
 					//For example it should be "$COALESCE$" and "$CASE$" do do not mix with user defined extension
 
-					if (function.Name == "Coalesce" && function.Parameters.Length == 2)
+					if (function.Name is "Coalesce" or PseudoFunctions.COALESCE && function.Parameters.Length == 2)
 					{
 						return GetColumnDescriptor(function.Parameters[0]);
 					}
-					if (function.Name == "CASE" && function.Parameters.Length == 3)
+					else if (function.Name == "CASE" && function.Parameters.Length == 3)
 					{
 						return GetColumnDescriptor(function.Parameters[1]) ??
 						       GetColumnDescriptor(function.Parameters[2]);
@@ -254,11 +254,6 @@ namespace LinqToDB.SqlQuery
 					if (query.Select.Columns.Count == 1)
 						return SuggestDbDataType(query.Select.Columns[0]);
 					break;
-				}
-				case QueryElementType.SqlBinaryExpression:
-				{
-					var binary = (SqlBinaryExpression)expr;
-					return SuggestDbDataType(binary.Expr1) ?? SuggestDbDataType(binary.Expr2);
 				}
 				case QueryElementType.SqlValue:
 				{
@@ -906,7 +901,7 @@ namespace LinqToDB.SqlQuery
 					current = column.Expression;
 				else if (current is SqlFunction func)
 				{
-					if (func.Name == "$Convert$")
+					if (func.Name == PseudoFunctions.CONVERT)
 						current = func.Parameters[2];
 					else
 						break;
@@ -1769,12 +1764,9 @@ namespace LinqToDB.SqlQuery
 		{
 			var tableToUpdate = updateStatement.Update.Table;
 
-			if (tableToUpdate == null)
-			{
-				tableToUpdate = EnumerateAccessibleSources(updateStatement.SelectQuery)
-					.OfType<SqlTable>()
-					.FirstOrDefault();
-			}
+			tableToUpdate ??= EnumerateAccessibleSources(updateStatement.SelectQuery)
+				.OfType<SqlTable>()
+				.FirstOrDefault();
 
 			return tableToUpdate;
 		}
@@ -1783,12 +1775,9 @@ namespace LinqToDB.SqlQuery
 		{
 			var tableToDelete = deleteStatement.Table;
 
-			if (tableToDelete == null)
-			{
-				tableToDelete = EnumerateAccessibleSources(deleteStatement.SelectQuery)
-					.OfType<SqlTable>()
-					.FirstOrDefault();
-			}
+			tableToDelete ??= EnumerateAccessibleSources(deleteStatement.SelectQuery)
+				.OfType<SqlTable>()
+				.FirstOrDefault();
 
 			return tableToDelete;
 		}

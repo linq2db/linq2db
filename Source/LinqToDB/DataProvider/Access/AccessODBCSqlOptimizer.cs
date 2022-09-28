@@ -2,6 +2,7 @@
 
 namespace LinqToDB.DataProvider.Access
 {
+	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
 
@@ -11,9 +12,9 @@ namespace LinqToDB.DataProvider.Access
 		{
 		}
 
-		public override SqlStatement Finalize(SqlStatement statement, DataOptions dataOptions)
+		public override SqlStatement Finalize(MappingSchema mappingSchema, SqlStatement statement, DataOptions dataOptions)
 		{
-			statement = base.Finalize(statement, dataOptions);
+			statement = base.Finalize(mappingSchema, statement, dataOptions);
 
 			statement = WrapParameters(statement);
 

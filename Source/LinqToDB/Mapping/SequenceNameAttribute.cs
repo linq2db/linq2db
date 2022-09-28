@@ -5,19 +5,21 @@ namespace LinqToDB.Mapping
 	/// <summary>
 	/// Specifies value generation sequence for mapped property of field.
 	/// Currently it supported only for:
-	/// - Firebird generators;
-	/// - Oracle sequences;
-	/// - PostgreSQL serial pseudotypes/sequences;
+	/// <list type="bullet">
+	/// <item>Firebird generators</item>
+	/// <item>Oracle sequences</item>
+	/// <item>PostgreSQL serial pseudotypes/sequences</item>
+	/// </list>
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = true)]
-	public class SequenceNameAttribute : Attribute
+	public class SequenceNameAttribute : MappingAttribute
 	{
 		/// <summary>
 		/// Creates attribute instance.
 		/// </summary>
 		/// <param name="configuration">Mapping schema configuration name. See <see cref="Configuration"/>.</param>
 		/// <param name="sequenceName">Sequence generator name.</param>
-		public SequenceNameAttribute(string configuration, string sequenceName)
+		public SequenceNameAttribute(string? configuration, string sequenceName)
 		{
 			Configuration = configuration;
 			SequenceName  = sequenceName;
@@ -48,5 +50,10 @@ namespace LinqToDB.Mapping
 		/// Gets or sets sequence generator schema name.
 		/// </summary>
 		public string? Schema { get; set; }
+
+		public override string GetObjectID()
+		{
+			return $".{Configuration}.{Schema}.{SequenceName}.";
+		}
 	}
 }

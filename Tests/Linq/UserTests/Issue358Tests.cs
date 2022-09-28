@@ -98,6 +98,7 @@ namespace Tests.UserTests
 
 		static LinqDataTypes2 FixData(LinqDataTypes2 data)
 		{
+			data = data.Clone();
 			data.StringValue = null;
 			return data;
 		}

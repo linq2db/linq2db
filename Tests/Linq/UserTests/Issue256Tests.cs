@@ -40,7 +40,7 @@ namespace Tests.UserTests
 		class Issue256TestSourceAttribute : IncludeDataSourcesAttribute
 		{
 			// tests are provider-agnostic
-			public Issue256TestSourceAttribute() : base(TestProvName.AllSQLite) {}
+			public Issue256TestSourceAttribute() : base(TestProvName.AllSQLite, TestProvName.AllClickHouse) {}
 		}
 
 		static Action<ITestDataContext,byte[],int>[] TestActions => new Action<ITestDataContext,byte[],int>[]

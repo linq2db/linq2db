@@ -32,6 +32,18 @@ namespace LinqToDB.DataProvider.Access
 			return base.ConvertLikePredicate(mappingSchema, predicate, context);
 		}
 
+		protected override string EscapeLikePattern(string str)
+		{
+			var newStr = DataTools.EscapeUnterminatedBracket(str);
+			if (newStr == str)
+				newStr = newStr.Replace("[", "[[]");
+
+			foreach (var s in LikeCharactersToEscape)
+				newStr = newStr.Replace(s, "[" + s + "]");
+
+			return newStr;
+		}
+
 		public override ISqlExpression EscapeLikeCharacters(ISqlExpression expression, ref ISqlExpression? escape)
 		{
 			throw new LinqException("Access does not support `Replace` function which is required for such query.");
@@ -143,9 +155,9 @@ namespace LinqToDB.DataProvider.Access
 		{
 			switch (func.Name)
 			{
-				case "$ToLower$" : return new SqlFunction(func.SystemType, "LCase", func.IsAggregate, func.IsPure, func.Precedence, func.Parameters);
-				case "$ToUpper$" : return new SqlFunction(func.SystemType, "UCase", func.IsAggregate, func.IsPure, func.Precedence, func.Parameters);
-				case "Length"    : return new SqlFunction(func.SystemType, "LEN",   func.IsAggregate, func.IsPure, func.Precedence, func.Parameters);
+				case PseudoFunctions.TO_LOWER: return new SqlFunction(func.SystemType, "LCase", func.IsAggregate, func.IsPure, func.Precedence, func.Parameters);
+				case PseudoFunctions.TO_UPPER: return new SqlFunction(func.SystemType, "UCase", func.IsAggregate, func.IsPure, func.Precedence, func.Parameters);
+				case "Length"                : return new SqlFunction(func.SystemType, "LEN",   func.IsAggregate, func.IsPure, func.Precedence, func.Parameters);
 			}
 			return base.ConvertFunction(func);
 		}

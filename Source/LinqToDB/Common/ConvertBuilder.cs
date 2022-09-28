@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.SqlTypes;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -42,6 +43,19 @@ namespace LinqToDB.Common
 				p = Expression.Convert(p, ptype);
 
 			return Expression.New(ctor, p);
+		}
+
+		static Expression? GetValueOrDefault(Type from, Type to, Expression p)
+		{
+			if (!from.IsNullable() || to != from.UnwrapNullableType())
+				return null;
+
+			var mi = from.GetMethod("GetValueOrDefault", BindingFlags.Instance | BindingFlags.Public, null, Array<Type>.Empty, null);
+
+			if (mi == null)
+				return null;
+
+			return Expression.Call(p, mi);
 		}
 
 		static Expression? GetValue(Type from, Type to, Expression p)
@@ -120,7 +134,7 @@ namespace LinqToDB.Common
 			}
 		}
 
-		static Expression? GetConvertion(Type from, Type to, Expression p)
+		static Expression? GetConversion(Type from, Type to, Expression p)
 		{
 			if (IsConvertible(from) && IsConvertible(to) && to != typeof(bool) ||
 				from.IsAssignableFrom(to) && to.IsAssignableFrom(from))
@@ -129,11 +143,18 @@ namespace LinqToDB.Common
 		 	return null;
 		}
 
+		static readonly Type[] ParseParameters = new[] { typeof(string), typeof(IFormatProvider) };
+
 		static Expression? GetParse(Type from, Type to, Expression p)
 		{
 			if (from == typeof(string))
 			{
-				var mi = to.GetMethodEx("Parse", from);
+				var mi = to.GetMethodEx("Parse", ParseParameters);
+
+				if (mi != null)
+					return Expression.Call(mi, p, Expression.Property(null, typeof(CultureInfo), nameof(CultureInfo.InvariantCulture)));
+
+				mi = to.GetMethodEx("Parse", from);
 
 				if (mi != null)
 				{
@@ -149,6 +170,19 @@ namespace LinqToDB.Common
 				}
 
 				return null;
+			}
+
+			return null;
+		}
+
+		static readonly Type[] ToStringInvariantArgTypes = new[]{ typeof(IFormatProvider) };
+
+		static Expression? GetToStringInvariant(Type from, Type to, Expression p)
+		{
+			if (to == typeof(string) && !from.IsNullable())
+			{
+				var mi = from.GetMethodEx("ToString", ToStringInvariantArgTypes);
+				return mi != null ? Expression.Call(p, mi, Expression.Property(null, typeof(CultureInfo), nameof(CultureInfo.InvariantCulture))) : null;
 			}
 
 			return null;
@@ -486,13 +520,15 @@ namespace LinqToDB.Common
 				return Tuple.Create(ex, true);
 
 			ex =
-				GetConvertion(from, to, expr) ??
-				GetCtor      (from, to, expr) ??
-				GetValue     (from, to, expr) ??
-				GetOperator  (from, to, expr) ??
-				GetParse     (from, to, expr) ??
-				GetToString  (from, to, expr) ??
-				GetParseEnum (from, to, expr);
+				GetConversion       (from, to, expr) ??
+				GetCtor             (from, to, expr) ??
+				GetValueOrDefault   (from, to, expr) ??
+				GetValue            (from, to, expr) ??
+				GetOperator         (from, to, expr) ??
+				GetParse            (from, to, expr) ??
+				GetToStringInvariant(from, to, expr) ??
+				GetToString         (from, to, expr) ??
+				GetParseEnum        (from, to, expr);
 
 			return ex != null ? Tuple.Create(ex, false) : null;
 		}
@@ -535,8 +571,7 @@ namespace LinqToDB.Common
 
 		public static Tuple<LambdaExpression,LambdaExpression?,bool> GetConverter(MappingSchema? mappingSchema, Type from, Type to)
 		{
-			if (mappingSchema == null)
-				mappingSchema = MappingSchema.Default;
+			mappingSchema ??= MappingSchema.Default;
 
 			var p  = Expression.Parameter(from, "p");
 			var ne = null as LambdaExpression;

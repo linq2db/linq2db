@@ -288,8 +288,7 @@ namespace LinqToDB.Linq.Builder
 
 				public IEnumerator<TElement> GetEnumerator()
 				{
-					if (_items == null)
-						_items = GetItems();
+					_items ??= GetItems();
 
 					return _items.GetEnumerator();
 				}
@@ -331,7 +330,9 @@ namespace LinqToDB.Linq.Builder
 
 					var parameters = context.Builder.ParametersContext.CurrentSqlParameters
 						.Select((p, i) => (p, i))
-						.ToDictionary(_ => _.p.Expression, _ => _.i, ExpressionEqualityComparer.Instance);
+						.GroupBy(_ => _.p.Expression, ExpressionEqualityComparer.Instance)
+						.ToDictionary(_ => _.Key, _ => _.Select(_ => _.i).First(), ExpressionEqualityComparer.Instance);
+
 					var paramArray = Expression.Parameter(typeof(object[]), "ps");
 
 					var groupExpression = context._sequenceExpr.Transform(

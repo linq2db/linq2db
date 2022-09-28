@@ -1,8 +1,12 @@
-﻿using LinqToDB;
-using LinqToDB.Data;
-using NUnit.Framework;
+﻿using System;
 using System.Linq;
+
 using FluentAssertions;
+
+using LinqToDB;
+using LinqToDB.Data;
+
+using NUnit.Framework;
 
 namespace Tests.Linq
 {
@@ -71,7 +75,7 @@ namespace Tests.Linq
 			[Values(5, 6, null)] int? value)
 		{
 			using var db = GetDataContext(context);
-			
+
 			var src = db.SelectQuery(() => new { ID = 1 });
 
 			int count = src.Count(s => 5.IsDistinctFrom(value));
@@ -85,11 +89,11 @@ namespace Tests.Linq
 				c2.LastQuery.Should().NotContainAny("5", "6");
 		}
 
-		class Src 
+		class Src
 		{
-			public int Int { get; set; }
-			public int? NullableInt { get; set; }
-			public string String { get; set; } = null!;
+			public int     Int            { get; set; }
+			public int?    NullableInt    { get; set; }
+			public string  String         { get; set; } = null!;
 			public string? NullableString { get; set; }
 		}
 	}

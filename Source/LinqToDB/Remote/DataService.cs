@@ -21,8 +21,7 @@ namespace LinqToDB.Remote
 
 		public DataService()
 		{
-			if (_defaultMetadata == null)
-				_defaultMetadata = Tuple.Create(default(T)!, new MetadataInfo(MappingSchema.Default));
+			_defaultMetadata ??= Tuple.Create(default(T)!, new MetadataInfo(MappingSchema.Default));
 
 			_metadata = new MetadataProvider(_defaultMetadata.Item2);
 			_query    = new QueryProvider   (_defaultMetadata.Item2);

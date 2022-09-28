@@ -117,6 +117,7 @@ namespace Tests.Linq
 					from p in db.Person select new { p.Patient, IsPatient = p.Patient != null });
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void BoolResult2([DataSources] string context)
 		{
@@ -126,6 +127,7 @@ namespace Tests.Linq
 					from p in db.Person select new { IsPatient = Sql.AsSql(p.Patient != null) });
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void BoolResult3([DataSources] string context)
 		{
@@ -211,29 +213,22 @@ namespace Tests.Linq
 		{
 			using (new DisableBaseline("Server-side guid generation test"))
 			using (var db = GetDataContext(context))
+			using (new RestoreBaseTables(db))
 			{
-				try
+				db.Types.Insert(() => new LinqDataTypes
 				{
-					db.Types.Delete(_ => _.ID > 1000);
-					db.Types.Insert(() => new LinqDataTypes
-					{
-						ID            = 1001,
-						MoneyValue    = 1001,
-						DateTimeValue = Sql.CurrentTimestamp,
-						BoolValue     = true,
-						GuidValue     = Sql.NewGuid(),
-						BinaryValue   = new Binary(new byte[] { 1 }),
-						SmallIntValue = 1001
-					});
+					ID            = 1001,
+					MoneyValue    = 1001,
+					DateTimeValue = Sql.CurrentTimestamp,
+					BoolValue     = true,
+					GuidValue     = Sql.NewGuid(),
+					BinaryValue   = new Binary(new byte[] { 1 }),
+					SmallIntValue = 1001
+				});
 
-					var guid = db.Types.Single(_ => _.ID == 1001).GuidValue;
+				var guid = db.Types.Single(_ => _.ID == 1001).GuidValue;
 
-					Assert.AreEqual(1001, db.Types.Single(_ => _.GuidValue == guid).ID);
-				}
-				finally
-				{
-					db.Types.Delete(_ => _.ID > 1000);
-				}
+				Assert.AreEqual(1001, db.Types.Single(_ => _.GuidValue == guid).ID);
 			}
 		}
 
@@ -286,6 +281,7 @@ namespace Tests.Linq
 		public void UpdateBinary1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
+			using (new RestoreBaseTables(db))
 			{
 				db.Types
 					.Where(t => t.ID == 1)
@@ -304,6 +300,7 @@ namespace Tests.Linq
 		public void UpdateBinary2([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
+			using (new RestoreBaseTables(db))
 			{
 				var ints     = new[] { 1, 2 };
 				var binaries = new[] { new byte[] { 1, 2, 3, 4, 5 }, new byte[] { 5, 4, 3, 2, 1 } };
@@ -530,25 +527,21 @@ namespace Tests.Linq
 			string context)
 		{
 			using (var db = GetDataContext(context))
-			using (new DeletePerson(db))
+			using (new RestoreBaseTables(db))
 			{
 				db.BeginTransaction();
 
-				var id =
-					db.Person
-						.InsertWithIdentity(() => new Person
-						{
-							FirstName = "擊敗奴隸",
-							LastName  = "Юникодкин",
-							Gender    = Gender.Male
-						});
-
-				Assert.NotNull(id);
+				db.Insert(new Person()
+				{
+					ID        = 100,
+					FirstName = "擊敗奴隸",
+					LastName  = "Юникодкин",
+					Gender    = Gender.Male
+				});
 
 				var person = db.Person.Single(p => p.FirstName == "擊敗奴隸" && p.LastName == "Юникодкин");
 
 				Assert.NotNull (person);
-				Assert.AreEqual(id, person.ID);
 				Assert.AreEqual("擊敗奴隸", person.FirstName);
 				Assert.AreEqual("Юникодкин", person.LastName);
 			}
@@ -814,88 +807,82 @@ namespace Tests.Linq
 			var skipId       = context.IsAnyOf(ProviderName.DB2) || context.IsAnyOf(TestProvName.AllSybase) || context.IsAnyOf(ProviderName.SqlCe);
 
 			using (var db = GetDataContext(context))
+			using (new RestoreBaseTables(db))
 			{
 				db.InlineParameters = inline;
 
 				var maxID = db.GetTable<AllTypes>().Select(_ => _.ID).Max();
-				try
-				{
-					var real  = float.NaN;
-					var dbl   = double.NaN;
-					if (skipId)
-						db.GetTable<AllTypes>().Insert(() => new AllTypes()
-						{
-							floatDataType  = real,
-							doubleDataType = dbl,
-						});
-					else
-						db.GetTable<AllTypes>().Insert(() => new AllTypes()
-						{
-							ID             = 1000,
-							floatDataType  = real,
-							doubleDataType = dbl,
-						});
-					real = skipFloatInf ? float.NaN : float.NegativeInfinity;
-					dbl  = double.NegativeInfinity;
-					if (skipId)
-						db.GetTable<AllTypes>().Insert(() => new AllTypes()
-						{
-							floatDataType  = real,
-							doubleDataType = dbl,
-						});
-					else
-						db.GetTable<AllTypes>().Insert(() => new AllTypes()
-						{
-							ID             = 1001,
-							floatDataType  = real,
-							doubleDataType = dbl,
-						});
-					real = skipFloatInf ? float.NaN : float.PositiveInfinity;
-					dbl  = double.PositiveInfinity;
-					if (skipId)
-						db.GetTable<AllTypes>().Insert(() => new AllTypes()
-						{
-							floatDataType  = real,
-							doubleDataType = dbl,
-						});
-					else
-						db.GetTable<AllTypes>().Insert(() => new AllTypes()
-						{
-							ID             = 1002,
-							floatDataType  = real,
-							doubleDataType = dbl,
-						});
+				var real  = float.NaN;
+				var dbl   = double.NaN;
+				if (skipId)
+					db.GetTable<AllTypes>().Insert(() => new AllTypes()
+					{
+						floatDataType = real,
+						doubleDataType = dbl,
+					});
+				else
+					db.GetTable<AllTypes>().Insert(() => new AllTypes()
+					{
+						ID             = 1000,
+						floatDataType  = real,
+						doubleDataType = dbl,
+					});
+				real = skipFloatInf ? float.NaN : float.NegativeInfinity;
+				dbl  = double.NegativeInfinity;
+				if (skipId)
+					db.GetTable<AllTypes>().Insert(() => new AllTypes()
+					{
+						floatDataType  = real,
+						doubleDataType = dbl,
+					});
+				else
+					db.GetTable<AllTypes>().Insert(() => new AllTypes()
+					{
+						ID             = 1001,
+						floatDataType  = real,
+						doubleDataType = dbl,
+					});
+				real = skipFloatInf ? float.NaN : float.PositiveInfinity;
+				dbl  = double.PositiveInfinity;
+				if (skipId)
+					db.GetTable<AllTypes>().Insert(() => new AllTypes()
+					{
+						floatDataType  = real,
+						doubleDataType = dbl,
+					});
+				else
+					db.GetTable<AllTypes>().Insert(() => new AllTypes()
+					{
+						ID             = 1002,
+						floatDataType  = real,
+						doubleDataType = dbl,
+					});
 
-					var res = db.GetTable<AllTypes>()
-						.Where(_ => _.ID > maxID)
-						.OrderBy(_ => _.ID)
-						.Select(_ => new { _.floatDataType, _.doubleDataType})
-						.ToArray();
+				var res = db.GetTable<AllTypes>()
+					.Where(_ => _.ID > maxID)
+					.OrderBy(_ => _.ID)
+					.Select(_ => new { _.floatDataType, _.doubleDataType})
+					.ToArray();
 
-					Assert.AreEqual (3   , res.Length);
-					Assert.IsNaN    (res[0].floatDataType);
-					Assert.IsNaN    (res[0].doubleDataType);
+				Assert.AreEqual (3   , res.Length);
+				Assert.IsNaN    (res[0].floatDataType);
+				Assert.IsNaN    (res[0].doubleDataType);
 
-					Assert.IsNotNull(res[1].floatDataType);
-					Assert.IsNotNull(res[1].doubleDataType);
-					if (skipFloatInf)
-						Assert.IsNaN(res[0].floatDataType);
-					else
-						Assert.True     (float.IsNegativeInfinity(res[1].floatDataType!.Value));
-					Assert.True     (double.IsNegativeInfinity(res[1].doubleDataType!.Value));
+				Assert.IsNotNull(res[1].floatDataType);
+				Assert.IsNotNull(res[1].doubleDataType);
+				if (skipFloatInf)
+					Assert.IsNaN(res[0].floatDataType);
+				else
+					Assert.True(float.IsNegativeInfinity(res[1].floatDataType!.Value));
+				Assert.True(double.IsNegativeInfinity(res[1].doubleDataType!.Value));
 
-					Assert.IsNotNull(res[2].floatDataType);
-					Assert.IsNotNull(res[2].doubleDataType);
-					if (skipFloatInf)
-						Assert.IsNaN(res[0].floatDataType);
-					else
-						Assert.True     (float.IsPositiveInfinity(res[2].floatDataType!.Value));
-					Assert.True     (double.IsPositiveInfinity(res[2].doubleDataType!.Value));
-				}
-				finally
-				{
-					db.GetTable<AllTypes>().Where(_ => _.ID > maxID).Delete();
-				}
+				Assert.IsNotNull(res[2].floatDataType);
+				Assert.IsNotNull(res[2].doubleDataType);
+				if (skipFloatInf)
+					Assert.IsNaN(res[0].floatDataType);
+				else
+					Assert.True     (float.IsPositiveInfinity(res[2].floatDataType!.Value));
+				Assert.True     (double.IsPositiveInfinity(res[2].doubleDataType!.Value));
 			}
 		}
 

@@ -80,8 +80,7 @@ namespace LinqToDB.Linq.Builder
 			}
 			else
 			{
-				if (table.LoadWith == null)
-					table.LoadWith = new List<LoadWithInfo[]>();
+				table.LoadWith ??= new List<LoadWithInfo[]>();
 
 				if (methodCall.Arguments.Count == 3)
 				{

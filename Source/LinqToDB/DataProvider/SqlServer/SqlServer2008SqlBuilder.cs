@@ -1,10 +1,10 @@
-﻿using System;
+using System;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
 	using Mapping;
-	using SqlQuery;
 	using SqlProvider;
+	using SqlQuery;
 
 	partial class SqlServer2008SqlBuilder : SqlServerSqlBuilder
 	{

@@ -5,6 +5,8 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Data
 {
+	using Interceptors;
+
 	/// <summary>
 	/// Disposable wrapper over <see cref="DbDataReader"/> instance, which properly disposes associated objects.
 	/// </summary>
@@ -42,6 +44,9 @@ namespace LinqToDB.Data
 
 			if (DataReader != null)
 			{
+				if (_dataConnection is IInterceptable<ICommandInterceptor> interceptable)
+					interceptable.Interceptor?.BeforeReaderDispose(new (_dataConnection), Command, DataReader);
+
 				DataReader.Dispose();
 				DataReader = null;
 			}
@@ -68,6 +73,9 @@ namespace LinqToDB.Data
 
 			if (DataReader != null)
 			{
+				if (_dataConnection is IInterceptable<ICommandInterceptor> interceptable && interceptable.Interceptor != null)
+					await interceptable.Interceptor.BeforeReaderDisposeAsync(new(_dataConnection), Command, DataReader).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+
 				await DataReader.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 				DataReader = null;
 			}

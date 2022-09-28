@@ -54,7 +54,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void CrossApplyTestExt([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		public void CrossApplyTestExt([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -118,7 +118,7 @@ namespace Tests.UserTests
 
 		[ActiveIssue(Details = "Converted FuncLikePredicate expression is not a Predicate expression.")]
 		[Test]
-		public void ExistsRemoval([IncludeDataSources(TestProvName.AllSqlServer)] string context, [Values] bool shouldFilter, [Values] bool isPositive)
+		public void ExistsRemoval([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context, [Values] bool shouldFilter, [Values] bool isPositive)
 		{
 			using (var db = GetDataContext(context))
 			{

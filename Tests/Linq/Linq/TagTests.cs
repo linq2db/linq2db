@@ -270,7 +270,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable<TestTable>())
 			{
-				table.TagQuery(tag).Update(_ => new TestTable() { Id = 1 });
+				table.TagQuery(tag).Update(_ => new TestTable() { Fd = 1 });
 
 				var commandSql = GetCurrentBaselines();
 
@@ -296,7 +296,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test_SqlInsertOrUpdateStatement([DataSources(NOT_SUPPORTED)] string context)
+		public void Test_SqlInsertOrUpdateStatement([DataSources(NOT_SUPPORTED, TestProvName.AllClickHouse)] string context)
 		{
 			var tag = "My Test";
 			var expected = $"/* {tag} */{Environment.NewLine}";

@@ -89,6 +89,10 @@ namespace LinqToDB.Expressions
 			var toType = type.ToNullableUnderlying();
 
 			Expression ex;
+			Type? mapType = null;
+
+			if (toType.IsEnum)
+				mapType = ConvertBuilder.GetDefaultMappingFromEnumType(mappingSchema, toType);
 
 			if (converter != null)
 			{
@@ -97,7 +101,7 @@ namespace LinqToDB.Expressions
 			}
 			else
 			{
-				ex = dataContext.GetReaderExpression(dataReader, idx, dataReaderExpr, toType);
+				ex = dataContext.GetReaderExpression(dataReader, idx, dataReaderExpr, mapType?.ToNullableUnderlying() ?? toType);
 			}
 
 			if (ex.NodeType == ExpressionType.Lambda)
@@ -117,6 +121,9 @@ namespace LinqToDB.Expressions
 				//
 				var expectedType = converter.FromProviderExpression.Parameters[0].Type;
 
+				if (expectedType != ex.Type)
+					ex = ConvertExpressionToType(ex, expectedType, mappingSchema);
+
 				if (converter.HandlesNulls)
 				{
 					ex = Condition(
@@ -125,27 +132,19 @@ namespace LinqToDB.Expressions
 						ex);
 				}
 
-				if (expectedType != ex.Type)
-				{
-					ex = ConvertExpressionToType(ex, expectedType, mappingSchema);
-				}
-
 				ex = InternalExtensions.ApplyLambdaToExpression(converter.FromProviderExpression, ex);
 				if (toType != ex.Type && toType.IsAssignableFrom(ex.Type))
 				{
 					ex = Convert(ex, toType);
 				}
-
 			}
 			else if (toType.IsEnum)
 			{
-				var mapType = ConvertBuilder.GetDefaultMappingFromEnumType(mappingSchema, toType)!;
-
 				if (mapType != ex.Type)
 				{
 					// Use only defined convert
-					var econv = mappingSchema.GetConvertExpression(ex.Type, type,    false, false) ??
-					            mappingSchema.GetConvertExpression(ex.Type, mapType, false)!;
+					var econv = mappingSchema.GetConvertExpression(ex.Type, type,     false, false) ??
+					            mappingSchema.GetConvertExpression(ex.Type, mapType!, false)!;
 
 					ex = InternalExtensions.ApplyLambdaToExpression(econv, ex);
 				}

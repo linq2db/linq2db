@@ -24,7 +24,8 @@ namespace Tests.xUpdate
 		[Table("AllTypes")]
 		public class TestTable1
 		{
-			[Identity]
+			[Column(Configuration = ProviderName.ClickHouse)]
+			[Column(IsIdentity = true)]
 			public int ID { get; set; }
 
 			[Column("intDataType")]
@@ -38,7 +39,8 @@ namespace Tests.xUpdate
 		[Table("AllTypes")]
 		public class TestTable2
 		{
-			[Identity, Column(SkipOnInsert = true)]
+			[Column(SkipOnInsert = true, Configuration = ProviderName.ClickHouse)]
+			[Column(SkipOnInsert = true, IsIdentity = true)]
 			public int ID { get; set; }
 
 			[Column("intDataType")]
@@ -49,10 +51,10 @@ namespace Tests.xUpdate
 
 		[Test]
 		public async Task KeepIdentity_SkipOnInsertTrue(
-			[DataSources(false)]string context,
-			[Values(null, true, false)]bool? keepIdentity,
-			[Values] BulkCopyType copyType,
-			[Values(0, 1, 2)] int asyncMode) // 0 == sync, 1 == async, 2 == async with IAsyncEnumerable
+			[DataSources(false, TestProvName.AllClickHouse)] string context,
+			[Values(null, true, false)                     ] bool? keepIdentity,
+			[Values                                        ] BulkCopyType copyType,
+			[Values(0, 1, 2)                               ] int asyncMode) // 0 == sync, 1 == async, 2 == async with IAsyncEnumerable
 		{
 			if ((context == ProviderName.Sybase) && copyType == BulkCopyType.ProviderSpecific && keepIdentity != true)
 				Assert.Inconclusive("Sybase native bulk copy doesn't support identity insert (despite documentation)");
@@ -105,12 +107,12 @@ namespace Tests.xUpdate
 									Value = 300
 								}
 							};
-						if (asyncMode == 0) // synchronous 
+						if (asyncMode == 0) // synchronous
 						{
 							db.BulkCopy(
 								options,
 								values);
-						} 
+						}
 						else if (asyncMode == 1) // asynchronous
 						{
 							await db.BulkCopyAsync(
@@ -135,7 +137,8 @@ namespace Tests.xUpdate
 
 		[Test]
 		public async Task KeepIdentity_SkipOnInsertFalse(
-			[DataSources(false)]        string       context,
+			[DataSources(false, TestProvName.AllClickHouse)]
+		                                string       context,
 			[Values(null, true, false)] bool?        keepIdentity,
 			[Values]                    BulkCopyType copyType,
 			[Values(0, 1, 2)]           int          asyncMode) // 0 == sync, 1 == async, 2 == async with IAsyncEnumerable
@@ -267,38 +270,39 @@ namespace Tests.xUpdate
 			return true;
 		}
 
-		// DB2: 
+		// DB2:
 		[Test]
 		public void ReuseOptionTest([DataSources(false, ProviderName.DB2)] string context)
 		{
 			using (var db = GetDataConnection(context))
+			using (new RestoreBaseTables(db))
 			using (db.BeginTransaction())
 			{
-				var options = new BulkCopyOptions();
+				var options = GetDefaultBulkCopyOptions(context);
 
 				db.Parent.BulkCopy(options, new[] { new Parent { ParentID = 111001 } });
-				db.Child. BulkCopy(options, new[] { new Child  { ParentID = 111001 } });
+				db.Child .BulkCopy(options, new[] { new Child { ParentID = 111001 } });
 			}
 		}
-		
+
+		// ClickHouse: parameters support not implemented (yet?)
 		[Test]
-		public void UseParametersTest([DataSources(false)] string context)
+		public void UseParametersTest([DataSources(false, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = new TestDataConnection(context))
-			using (db.BeginTransaction())
-			{
-				var options = new BulkCopyOptions(){ UseParameters = true, MaxBatchSize = 50, BulkCopyType = BulkCopyType.MultipleRows };
-				var start   = 111001;
+			using var db = new TestDataConnection(context);
+			using var _ = new RestoreBaseTables(db);
+			using var tr = db.BeginTransaction();
+			var options = new BulkCopyOptions(){ UseParameters = true, MaxBatchSize = 50, BulkCopyType = BulkCopyType.MultipleRows };
+			var start   = 111001;
 
-				var rowsToInsert = Enumerable.Range(start, 149)
-					.Select(r => new Parent() {ParentID = r, Value1 = r-start}).ToList();
+			var rowsToInsert = Enumerable.Range(start, 149)
+				.Select(r => new Parent() {ParentID = r, Value1 = r-start}).ToList();
 
-				db.Parent.BulkCopy(options, rowsToInsert);
+			db.Parent.BulkCopy(options, rowsToInsert);
 
-				Assert.AreEqual(rowsToInsert.Count,
-					db.Parent.Where(r =>
-						r.ParentID >= rowsToInsert[0].ParentID && r.ParentID <= rowsToInsert.Last().ParentID).Count());
-			}
+			Assert.AreEqual(rowsToInsert.Count,
+				db.Parent.Where(r =>
+					r.ParentID >= rowsToInsert[0].ParentID && r.ParentID <= rowsToInsert.Last().ParentID).Count());
 		}
 
 		[Table]
@@ -315,7 +319,9 @@ namespace Tests.xUpdate
 			using (var db = new DataContext(context))
 			using (var table = db.CreateLocalTable<SimpleBulkCopyTable>())
 			{
-				db.DataProvider.BulkCopy(db.Options, table, new BulkCopyOptions() { BulkCopyType = copyType }, new[] { new SimpleBulkCopyTable() { Id = 1 } });
+				var options = GetDefaultBulkCopyOptions(context);
+				options.BulkCopyType = copyType;
+				db.DataProvider.BulkCopy(db.Options, table, options, new[] { new SimpleBulkCopyTable() { Id = 1 } });
 			}
 		}
 
@@ -327,8 +333,13 @@ namespace Tests.xUpdate
 			using (var db = new DataContext(context))
 			using (var table = db.CreateLocalTable<SimpleBulkCopyTable>())
 			{
-				await db.DataProvider.BulkCopyAsync(db.Options, table, new BulkCopyOptions() { BulkCopyType = copyType }, new[] { new SimpleBulkCopyTable() { Id = 1 } }, default);
-				await db.DataProvider.BulkCopyAsync(db.Options, table, new BulkCopyOptions() { BulkCopyType = copyType }, AsyncEnumerableData(2, 1), default);
+				var options = GetDefaultBulkCopyOptions(context);
+				options.BulkCopyType = copyType;
+				await db.DataProvider.BulkCopyAsync(db.Options, table, options, new[] { new SimpleBulkCopyTable() { Id = 1 } }, default);
+
+				options = GetDefaultBulkCopyOptions(context);
+				options.BulkCopyType = copyType;
+				await db.DataProvider.BulkCopyAsync(db.Options, table, options, AsyncEnumerableData(2, 1), default);
 			}
 		}
 
@@ -340,9 +351,16 @@ namespace Tests.xUpdate
 			using (var db = new DataContext(context))
 			using (var table = db.CreateLocalTable<SimpleBulkCopyTable>())
 			{
-				table.BulkCopy(new[] { new SimpleBulkCopyTable() { Id = 1 } });
-				table.BulkCopy(5, new[] { new SimpleBulkCopyTable() { Id = 2 } });
-				table.BulkCopy(new BulkCopyOptions() { BulkCopyType = copyType }, new[] { new SimpleBulkCopyTable() { Id = 3 } });
+				var options = GetDefaultBulkCopyOptions(context);
+				table.BulkCopy(options, new[] { new SimpleBulkCopyTable() { Id = 1 } });
+
+				options = GetDefaultBulkCopyOptions(context);
+				options.MaxBatchSize = 5;
+				table.BulkCopy(options, new[] { new SimpleBulkCopyTable() { Id = 2 } });
+
+				options = GetDefaultBulkCopyOptions(context);
+				options.BulkCopyType = copyType;
+				table.BulkCopy(options, new[] { new SimpleBulkCopyTable() { Id = 3 } });
 			}
 		}
 
@@ -354,13 +372,27 @@ namespace Tests.xUpdate
 			using (var db = new DataContext(context))
 			using (var table = db.CreateLocalTable<SimpleBulkCopyTable>())
 			{
-				await table.BulkCopyAsync(new[] { new SimpleBulkCopyTable() { Id = 1 } });
-				await table.BulkCopyAsync(5, new[] { new SimpleBulkCopyTable() { Id = 2 } });
-				await table.BulkCopyAsync(new BulkCopyOptions() { BulkCopyType = copyType }, new[] { new SimpleBulkCopyTable() { Id = 3 } });
+				var options = GetDefaultBulkCopyOptions(context);
+				await table.BulkCopyAsync(options, new[] { new SimpleBulkCopyTable() { Id = 1 } });
 
-				await table.BulkCopyAsync(AsyncEnumerableData(10, 1));
-				await table.BulkCopyAsync(5, AsyncEnumerableData(20, 1));
-				await table.BulkCopyAsync(new BulkCopyOptions() { BulkCopyType = copyType }, AsyncEnumerableData(30, 1));
+				options = GetDefaultBulkCopyOptions(context);
+				options.MaxBatchSize = 5;
+				await table.BulkCopyAsync(options, new[] { new SimpleBulkCopyTable() { Id = 2 } });
+
+				options = GetDefaultBulkCopyOptions(context);
+				options.BulkCopyType = copyType;
+				await table.BulkCopyAsync(options, new[] { new SimpleBulkCopyTable() { Id = 3 } });
+
+				options = GetDefaultBulkCopyOptions(context);
+				await table.BulkCopyAsync(options, AsyncEnumerableData(10, 1));
+
+				options = GetDefaultBulkCopyOptions(context);
+				options.MaxBatchSize = 5;
+				await table.BulkCopyAsync(options, AsyncEnumerableData(20, 1));
+
+				options = GetDefaultBulkCopyOptions(context);
+				options.BulkCopyType = copyType;
+				await table.BulkCopyAsync(options, AsyncEnumerableData(30, 1));
 			}
 		}
 
@@ -391,16 +423,16 @@ namespace Tests.xUpdate
 
 			[Column(Length = 50)]
 			public string? Value1 { get; set; }
-		}		
-		
+		}
+
 		class Inherited2 : BaseClass
 		{
 			public override int Discriminator => 2;
 
 			[Column(Length = 50)]
 			public string? Value2 { get; set; }
-		}		
-		
+		}
+
 		class Inherited3 : BaseClass
 		{
 			public override int Discriminator => 3;
@@ -412,7 +444,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void BulcopyTPH(
+		public void BulkCopyTPH(
 			[DataSources(false)] string context,
 			[Values] BulkCopyType copyType)
 		{
@@ -435,9 +467,11 @@ namespace Tests.xUpdate
 			using (var db = new DataConnection(context, ms))
 			using (var table = db.CreateLocalTable<BaseClass>())
 			{
-				table.BulkCopy(new BulkCopyOptions { BulkCopyType = copyType }, data);
+				var options = GetDefaultBulkCopyOptions(context);
+				options.BulkCopyType = copyType;
+				table.BulkCopy(options, data);
 
-				var items = table.ToArray();
+				var items = table.OrderBy(_ => _.Id).ToArray();
 
 				items[0].Id.Should().Be(1);
 				items[0].Discriminator.Should().Be(1);
@@ -458,7 +492,6 @@ namespace Tests.xUpdate
 				table.Single(x => ((Inherited1)x).Value1 == "Str1").Should().BeOfType(typeof(Inherited1));
 				table.Single(x => ((Inherited2)x).Value2 == "Str2").Should().BeOfType(typeof(Inherited2));
 				table.Single(x => ((Inherited3)x).Value3 == "Str3").Should().BeOfType(typeof(Inherited3));
-
 			}
 		}
 
@@ -479,14 +512,14 @@ namespace Tests.xUpdate
 		{
 			[Column(Length = 50)]
 			public string? Value1 { get; set; }
-		}		
-		
+		}
+
 		class InheritedDefault2 : BaseDefaultDiscriminator
 		{
 			[Column(Length = 50)]
 			public string? Value2 { get; set; }
-		}		
-		
+		}
+
 		class InheritedDefault3 : BaseDefaultDiscriminator
 		{
 			[Column(Length = 50)]
@@ -494,8 +527,8 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void BulcopyTPHDefault(
-			[IncludeDataSources(false, TestProvName.AllSQLite)] string context,
+		public void BulkCopyTPHDefault(
+			[IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context,
 			[Values] BulkCopyType copyType)
 		{
 			var data = new BaseDefaultDiscriminator[]
@@ -508,9 +541,11 @@ namespace Tests.xUpdate
 			using (var db = new DataConnection(context))
 			using (var table = db.CreateLocalTable<BaseDefaultDiscriminator>())
 			{
-				table.BulkCopy(new BulkCopyOptions { BulkCopyType = copyType }, data);
+				var options = GetDefaultBulkCopyOptions(context);
+				options.BulkCopyType = copyType;
+				table.BulkCopy(options, data);
 
-				var items = table.ToArray();
+				var items = table.OrderBy(_ => _.Id).ToArray();
 
 				items[0].Id.Should().Be(1);
 				items[0].Discriminator.Should().Be(1);
@@ -533,7 +568,5 @@ namespace Tests.xUpdate
 				table.Single(x => ((InheritedDefault3)x).Value3 == "Str3").Should().BeOfType(typeof(InheritedDefault3));
 			}
 		}
-
-
 	}
 }

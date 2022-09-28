@@ -131,8 +131,7 @@ namespace LinqToDB.DataProvider.SQLite
 			{
 				if (_systemDataSQLite == null)
 					lock (_systemSyncRoot)
-						if (_systemDataSQLite == null)
-							_systemDataSQLite = CreateAdapter(SystemDataSQLiteAssemblyName, SystemDataSQLiteClientNamespace, "SQLite");
+						_systemDataSQLite ??= CreateAdapter(SystemDataSQLiteAssemblyName, SystemDataSQLiteClientNamespace, "SQLite");
 
 				return _systemDataSQLite;
 			}
@@ -140,8 +139,7 @@ namespace LinqToDB.DataProvider.SQLite
 			{
 				if (_microsoftDataSQLite == null)
 					lock (_msSyncRoot)
-						if (_microsoftDataSQLite == null)
-							_microsoftDataSQLite = CreateAdapter(MicrosoftDataSQLiteAssemblyName, MicrosoftDataSQLiteClientNamespace, "Sqlite");
+						_microsoftDataSQLite ??= CreateAdapter(MicrosoftDataSQLiteAssemblyName, MicrosoftDataSQLiteClientNamespace, "Sqlite");
 
 				return _microsoftDataSQLite;
 			}

@@ -112,7 +112,7 @@ namespace LinqToDB.DataProvider.Informix
 			}
 		}
 
-		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
+		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable, bool canBeNull)
 		{
 			switch (type.Type.DataType)
 			{
@@ -149,7 +149,7 @@ namespace LinqToDB.DataProvider.Informix
 					break;
 			}
 
-			base.BuildDataTypeFromDataType(type, forCreateTable);
+			base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull);
 		}
 
 		/// <summary>
@@ -284,7 +284,7 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			BuildExpression(value);
 			StringBuilder.Append("::");
-			BuildDataType(dataType, false);
+			BuildDataType(dataType, false, value.CanBeNull);
 		}
 
 		protected override void BuildCreateTableCommand(SqlTable table)

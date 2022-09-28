@@ -32,7 +32,9 @@ namespace Tests.Linq
 			[DataSources] string context)
 		{
 			using var db  = GetDataContext(context);
-			using var src = SetupSrcTable(db);
+			using var tb = SetupSrcTable(db);
+
+			var src = tb.OrderBy(_ => _.Int);
 
 			var ints = src.Select(s => Sql.NullIf(s.Int, 2)).ToArray();
 			ints[0].Should().Be(null);
@@ -64,7 +66,9 @@ namespace Tests.Linq
 			[DataSources] string context)
 		{
 			using var db  = GetDataContext(context);
-			using var src = SetupSrcTable(db);
+			using var tb = SetupSrcTable(db);
+
+			var src = tb.OrderBy(_ => _.Int);
 
 			var strings = src.Select(s => Sql.NullIf(s.String, "abc")).ToArray();
 			strings[0].Should().Be(null);

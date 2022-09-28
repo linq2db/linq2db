@@ -153,8 +153,7 @@ namespace LinqToDB.Mapping
 
 				if (a != null)
 				{
-					if (DbType == null)
-						DbType = a.DbType;
+					DbType ??= a.DbType;
 
 					if (DataType == DataType.Undefined && a.DataType.HasValue)
 						DataType = a.DataType.Value;
@@ -423,15 +422,14 @@ namespace LinqToDB.Mapping
 		/// <returns></returns>
 		public DbDataType GetDbDataType(bool completeDataType)
 		{
-			var systemType = MemberType;
-			var dataType   = DataType;
+			var systemType         = MemberType;
+			var dataType           = DataType;
+			DbDataType? dbDataType = null;
 
 			if (completeDataType && dataType == DataType.Undefined)
-			{
-				dataType = CalculateDataType(MappingSchema, systemType);
-			}
+				dbDataType = CalculateDbDataType(MappingSchema, systemType);
 
-			return new DbDataType(systemType, dataType, DbType, Length, Precision, Scale);
+			return new DbDataType(systemType, dbDataType?.DataType ?? dataType, DbType ?? dbDataType?.DbType, Length ?? dbDataType?.Length, Precision ?? dbDataType?.Precision, Scale ?? dbDataType?.Scale);
 		}
 
 
@@ -478,44 +476,43 @@ namespace LinqToDB.Mapping
 			return dbDataType;
 		}
 
-		public static DataType CalculateDataType(MappingSchema mappingSchema, Type systemType)
+		public static DbDataType CalculateDbDataType(MappingSchema mappingSchema, Type systemType)
 		{
-			var dataType = DataType.Undefined;
+			DbDataType dbDataType = default;
+
 			if (systemType.ToNullableUnderlying().IsEnum)
 			{
 				var enumType = mappingSchema.GetDefaultFromEnumType(systemType);
 
 				if (enumType != null)
-					dataType = mappingSchema.GetDataType(enumType).Type.DataType;
+					dbDataType = mappingSchema.GetDataType(enumType).Type;
 
-				if (dataType == DataType.Undefined && systemType.IsNullable())
+				if (dbDataType.DataType == DataType.Undefined && systemType.IsNullable())
 				{
 					enumType = mappingSchema.GetDefaultFromEnumType(systemType.ToNullableUnderlying());
 
 					if (enumType != null)
-						dataType = mappingSchema.GetDataType(enumType).Type.DataType;
+						dbDataType = mappingSchema.GetDataType(enumType).Type;
 				}
 
-				if (dataType == DataType.Undefined)
+				if (dbDataType.DataType == DataType.Undefined)
 				{
 					enumType = mappingSchema.GetDefaultFromEnumType(typeof(Enum));
 
 					if (enumType != null)
-						dataType = mappingSchema.GetDataType(enumType).Type.DataType;
+						dbDataType = mappingSchema.GetDataType(enumType).Type;
 				}
 
-				if (dataType == DataType.Undefined)
-				{
-					dataType = mappingSchema.GetUnderlyingDataType(systemType, out var canBeNull).Type.DataType;
-				}
+				if (dbDataType.DataType == DataType.Undefined)
+					dbDataType = mappingSchema.GetUnderlyingDataType(systemType, out var canBeNull).Type;
 			}
 
-			if (dataType == DataType.Undefined)
-				dataType = mappingSchema.GetDataType(systemType).Type.DataType;
-			if (dataType == DataType.Undefined)
-				dataType = mappingSchema.GetUnderlyingDataType(systemType, out var _).Type.DataType;
+			if (dbDataType.DataType == DataType.Undefined)
+				dbDataType = mappingSchema.GetDataType(systemType).Type;
+			if (dbDataType.DataType == DataType.Undefined)
+				dbDataType = mappingSchema.GetUnderlyingDataType(systemType, out var _).Type;
 
-			return dataType;
+			return dbDataType.WithSystemType(systemType);
 		}
 
 		/// <summary>

@@ -227,8 +227,7 @@ namespace LinqToDB.DataModel
 
 			// by default property type will be null here, but user could override it manually
 			// and we should respect it
-			if (propertyModel.Type == null)
-				propertyModel.Type = type;
+			propertyModel.Type ??= type;
 
 			// declare property
 			var propertyBuilder = DefineProperty(associations, propertyModel);

@@ -41,10 +41,7 @@ namespace LinqToDB.Common.Internal.Cache
 			_setEntry                    = SetEntry;
 			_entryExpirationNotification = EntryExpired;
 
-			if (_options.Clock == null)
-			{
-				_options.Clock = new SystemClock();
-			}
+			_options.Clock ??= new SystemClock();
 
 			_lastExpirationScan = _options.Clock.UtcNow;
 		}

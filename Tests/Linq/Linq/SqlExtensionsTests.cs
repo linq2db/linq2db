@@ -196,7 +196,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ExprPredicateTest([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void ExprPredicateTest([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var sampleData = new[]
 			{
@@ -270,6 +270,7 @@ namespace Tests.Linq
 		public void TestSqlCollate1(
 			[DataSources(
 				ProviderName.SqlCe,
+				TestProvName.AllClickHouse,
 				TestProvName.AllAccess,
 				TestProvName.AllSapHana,
 				TestProvName.AllOracle11,
@@ -289,6 +290,7 @@ namespace Tests.Linq
 		public void TestSqlCollate2(
 			[DataSources(
 				ProviderName.SqlCe,
+				TestProvName.AllClickHouse,
 				TestProvName.AllAccess,
 				TestProvName.AllSapHana,
 				TestProvName.AllOracle11,

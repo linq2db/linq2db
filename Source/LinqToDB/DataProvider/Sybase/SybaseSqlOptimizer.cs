@@ -33,7 +33,7 @@ namespace LinqToDB.DataProvider.Sybase
 
 			switch (func.Name)
 			{
-				case "$Replace$": return new SqlFunction(func.SystemType, "Str_Replace", func.IsAggregate, func.IsPure, func.Precedence, func.Parameters);
+				case PseudoFunctions.REPLACE: return new SqlFunction(func.SystemType, "Str_Replace", func.IsAggregate, func.IsPure, func.Precedence, func.Parameters) { CanBeNull = func.CanBeNull };
 
 				case "CharIndex":
 				{
@@ -68,7 +68,7 @@ namespace LinqToDB.DataProvider.Sybase
 					break;
 				}
 
-				case "$Convert$":
+				case PseudoFunctions.CONVERT:
 				{
 					var ftype = func.SystemType.ToUnderlying();
 					if (ftype == typeof(string))
@@ -81,7 +81,10 @@ namespace LinqToDB.DataProvider.Sybase
 #endif
 							)
 						{
-							return new SqlFunction(func.SystemType, "convert", func.Parameters[0], func.Parameters[2], new SqlValue(23));
+							return new SqlFunction(func.SystemType, "convert", false, true, func.Parameters[0], func.Parameters[2], new SqlValue(23))
+							{
+								CanBeNull = func.CanBeNull
+							};
 						}
 					}
 

@@ -28,6 +28,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			SetValueToSqlConverter(typeof(char),     (sb,dt,v) => ConvertCharToSql  (sb, (char)v));
 			SetValueToSqlConverter(typeof(byte[]),   (sb,dt,v) => ConvertBinaryToSql(sb, (byte[])v));
 			SetValueToSqlConverter(typeof(Binary),   (sb,dt,v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
+			SetValueToSqlConverter(typeof(Guid),     (sb,dt,v) => sb.AppendFormat("'{0:D}'::uuid", (Guid)v));
 			SetValueToSqlConverter(typeof(DateTime), (sb,dt,v) => BuildDateTime(sb, dt, (DateTime)v));
 
 			// adds floating point special values support
@@ -50,7 +51,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 			AddScalarType(typeof(string),    DataType.Text);
 			AddScalarType(typeof(TimeSpan),  DataType.Interval);
-			AddScalarType(typeof(TimeSpan?), DataType.Interval);
 
 #if NET6_0_OR_GREATER
 			SetValueToSqlConverter(typeof(DateOnly), (sb, dt, v) => BuildDate(sb, dt, (DateOnly)v));
@@ -62,10 +62,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			SetConvertExpression<uint   , DataParameter>(value => new DataParameter(null, (long )value, DataType.Int64));
 			SetConvertExpression<uint?  , DataParameter>(value => new DataParameter(null, (long?)value, DataType.Int64), addNullCheck: false);
 
-			var ulongType = new SqlDataType(DataType.Decimal, typeof(decimal), 20, 0);
+			var ulongType = new SqlDataType(DataType.Decimal, typeof(ulong), 20, 0);
 			// set type for proper SQL type generation
 			AddScalarType(typeof(ulong ), ulongType);
-			AddScalarType(typeof(ulong?), ulongType);
 
 			SetConvertExpression<ulong , DataParameter>(value => new DataParameter(null, (decimal)value , DataType.Decimal) /*{ Precision = 20, Scale = 0 }*/);
 			SetConvertExpression<ulong?, DataParameter>(value => new DataParameter(null, (decimal?)value, DataType.Decimal) /*{ Precision = 20, Scale = 0 }*/, addNullCheck: false);
@@ -111,7 +110,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 			stringBuilder.AppendByteArrayAsHexViaLookup32(value);
 
-			stringBuilder.Append('\'');
+			stringBuilder.Append("'::bytea");
 		}
 
 		static readonly Action<StringBuilder, int> AppendConversionAction = AppendConversion;
@@ -153,6 +152,13 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		public sealed class PostgreSQL95MappingSchema : LockedMappingSchema
 		{
 			public PostgreSQL95MappingSchema() : base(ProviderName.PostgreSQL95, NpgsqlProviderAdapter.GetInstance().MappingSchema, Instance)
+			{
+			}
+		}
+
+		public sealed class PostgreSQL15MappingSchema : LockedMappingSchema
+		{
+			public PostgreSQL15MappingSchema() : base(ProviderName.PostgreSQL15, NpgsqlProviderAdapter.GetInstance().MappingSchema, Instance)
 			{
 			}
 		}

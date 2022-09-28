@@ -87,7 +87,7 @@ namespace LinqToDB.DataProvider.Oracle
 			base.BuildSetOperation(operation, sb);
 		}
 
-		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
+		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable, bool canBeNull)
 		{
 			switch (type.Type.DataType)
 			{
@@ -134,7 +134,7 @@ namespace LinqToDB.DataProvider.Oracle
 					else
 						StringBuilder.Append("Raw(").Append(type.Type.Length).Append(')');
 					break;
-				default: base.BuildDataTypeFromDataType(type, forCreateTable);                    break;
+				default: base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull);         break;
 			}
 		}
 

@@ -4,7 +4,7 @@ using LinqToDB.Data;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
-namespace Tests.Playground
+namespace Tests
 {
 	[TestFixture]
 	public class DynamicResultTests : TestBase

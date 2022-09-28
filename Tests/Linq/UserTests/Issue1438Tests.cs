@@ -22,7 +22,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void GeneralTest([DataSources] string context)
+		public void GeneralTest([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

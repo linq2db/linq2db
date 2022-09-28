@@ -30,8 +30,7 @@ namespace LinqToDB
 		{
 			if (_compiledQuery == null)
 				lock (_sync)
-					if (_compiledQuery == null)
-						_compiledQuery = CompileQuery(_query);
+					_compiledQuery ??= CompileQuery(_query);
 
 			//TODO: pass preambles
 			return (TResult)_compiledQuery(args, null)!;

@@ -43,6 +43,7 @@ namespace Default.SqlServer
 		public ITable<Issue1115>                Issue1115                { get { return this.GetTable<Issue1115>(); } }
 		public ITable<Issue1144>                Issue1144                { get { return this.GetTable<Issue1144>(); } }
 		public ITable<LinqDataType>             LinqDataTypes            { get { return this.GetTable<LinqDataType>(); } }
+		public ITable<Member>                   Members                  { get { return this.GetTable<Member>(); } }
 		public ITable<NameTest>                 NameTests                { get { return this.GetTable<NameTest>(); } }
 		/// <summary>
 		/// This is Parent table
@@ -52,6 +53,7 @@ namespace Default.SqlServer
 		public ITable<ParentView>               ParentViews              { get { return this.GetTable<ParentView>(); } }
 		public ITable<Patient>                  Patients                 { get { return this.GetTable<Patient>(); } }
 		public ITable<Person>                   People                   { get { return this.GetTable<Person>(); } }
+		public ITable<Provider>                 Providers                { get { return this.GetTable<Provider>(); } }
 		public ITable<SameTableName>            SameTableNames           { get { return this.GetTable<SameTableName>(); } }
 		public ITable<TestSchema_SameTableName> SameTableNames0          { get { return this.GetTable<TestSchema_SameTableName>(); } }
 		public ITable<SqlType>                  SqlTypes                 { get { return this.GetTable<SqlType>(); } }
@@ -346,6 +348,23 @@ namespace Default.SqlServer
 		[Column(),      Nullable            ] public string?   StringValue    { get; set; } // nvarchar(50)
 	}
 
+	[Table(Schema="dbo", Name="Member")]
+	public partial class Member
+	{
+		[PrimaryKey, Identity] public int    MemberId { get; set; } // int
+		[Column,     NotNull ] public string Alias    { get; set; } = null!; // nvarchar(50)
+
+		#region Associations
+
+		/// <summary>
+		/// FK_Provider_Member_BackReference (dbo.Provider)
+		/// </summary>
+		[Association(ThisKey="MemberId", OtherKey="ProviderId", CanBeNull=true)]
+		public Provider? Provider { get; set; }
+
+		#endregion
+	}
+
 	[Table(Schema="dbo", Name="Name.Test")]
 	public partial class NameTest
 	{
@@ -418,6 +437,23 @@ namespace Default.SqlServer
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
 		public Patient? Patient { get; set; }
+
+		#endregion
+	}
+
+	[Table(Schema="dbo", Name="Provider")]
+	public partial class Provider
+	{
+		[PrimaryKey, NotNull] public int    ProviderId { get; set; } // int
+		[Column,     NotNull] public string Test       { get; set; } = null!; // nvarchar(max)
+
+		#region Associations
+
+		/// <summary>
+		/// FK_Provider_Member (dbo.Member)
+		/// </summary>
+		[Association(ThisKey="ProviderId", OtherKey="MemberId", CanBeNull=false)]
+		public Member Member { get; set; } = null!;
 
 		#endregion
 	}
@@ -615,10 +651,10 @@ namespace Default.SqlServer
 		#region Associations
 
 		/// <summary>
-		/// FK_TestSchemaY_TestSchemaX (dbo.TestSchemaX)
+		/// FK_TestSchemaY_OtherID (dbo.TestSchemaX)
 		/// </summary>
 		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false)]
-		public TestSchemaX FkTestSchemaYTestSchemaX { get; set; } = null!;
+		public TestSchemaX FkTestSchemaYOtherID { get; set; } = null!;
 
 		/// <summary>
 		/// FK_TestSchemaY_ParentTestSchemaX (dbo.TestSchemaX)
@@ -627,7 +663,7 @@ namespace Default.SqlServer
 		public TestSchemaX ParentTestSchemaX { get; set; } = null!;
 
 		/// <summary>
-		/// FK_TestSchemaY_OtherID (dbo.TestSchemaX)
+		/// FK_TestSchemaY_TestSchemaX (dbo.TestSchemaX)
 		/// </summary>
 		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false)]
 		public TestSchemaX TestSchemaX { get; set; } = null!;
@@ -1324,6 +1360,12 @@ namespace Default.SqlServer
 				t.Id == Id);
 		}
 
+		public static Member? Find(this ITable<Member> table, int MemberId)
+		{
+			return table.FirstOrDefault(t =>
+				t.MemberId == MemberId);
+		}
+
 		public static Parent? Find(this ITable<Parent> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
@@ -1340,6 +1382,12 @@ namespace Default.SqlServer
 		{
 			return table.FirstOrDefault(t =>
 				t.PersonID == PersonID);
+		}
+
+		public static Provider? Find(this ITable<Provider> table, int ProviderId)
+		{
+			return table.FirstOrDefault(t =>
+				t.ProviderId == ProviderId);
 		}
 
 		public static SqlType? Find(this ITable<SqlType> table, int ID)

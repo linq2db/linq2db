@@ -308,12 +308,9 @@ namespace LinqToDB.Data
 						{
 							var sqlp = command.SqlParameters[i];
 
-							if (dbCommand == null)
-							{
-								dbCommand = forGetSqlText
-									? dataConnection.EnsureConnection(false).CreateCommand()
-									: dataConnection.GetOrCreateCommand();
-							}
+							dbCommand ??= forGetSqlText
+								? dataConnection.EnsureConnection(false).CreateCommand()
+								: dataConnection.GetOrCreateCommand();
 
 							parms[i] = CreateParameter(dataConnection, dbCommand, sqlp, sqlp.GetParameterValue(parameterValues), forGetSqlText);
 						}
@@ -549,8 +546,8 @@ namespace LinqToDB.Data
 						idParam = dataConnection.CurrentCommand!.CreateParameter();
 
 						idParam.ParameterName = "IDENTITY_PARAMETER";
-						idParam.Direction = ParameterDirection.Output;
-						idParam.DbType = DbType.Decimal;
+						idParam.Direction     = ParameterDirection.Output;
+						idParam.DbType        = DbType.Decimal;
 
 						dataConnection.CurrentCommand!.Parameters.Add(idParam);
 					}

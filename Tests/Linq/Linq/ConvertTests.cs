@@ -4,6 +4,7 @@ using System.Linq;
 using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
 using NUnit.Framework;
 using Tests.Model;
 
@@ -16,7 +17,7 @@ namespace Tests.Linq
 		public void Test1([DataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context))
-				Assert.AreEqual(1, (from t in db.Types where t.MoneyValue * t.ID == 1.11m  select t).Single().ID);
+				Assert.AreEqual(1, (from t in db.Types where t.MoneyValue * t.ID == 1.11m select t).Single().ID);
 		}
 
 		#region Int
@@ -282,8 +283,18 @@ namespace Tests.Linq
 					from p in from t in db.Types select (decimal)t.MoneyValue where p > 0 select p);
 		}
 
+		// providers disabled due to change in
+		// https://github.com/linq2db/linq2db/pull/3690
 		[Test]
-		public void ConvertToDecimal([DataSources] string context)
+		public void ConvertToDecimal([DataSources(
+			ProviderName.DB2,
+			TestProvName.AllFirebird,
+			TestProvName.AllSqlServer,
+			TestProvName.AllSybase,
+			TestProvName.AllOracle,
+			TestProvName.AllMySql,
+			ProviderName.SqlCe
+			)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -404,7 +415,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ToSqlTime([DataSources(TestProvName.AllSQLite, TestProvName.AllAccess)] string context)
+		public void ToSqlTime([DataSources(TestProvName.AllSQLite, TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -588,6 +599,7 @@ namespace Tests.Linq
 					select t);
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56", Configuration = ProviderName.ClickHouseOctonica)]
 		[Test]
 		public void ConvertToBoolean1([DataSources] string context)
 		{
@@ -597,6 +609,7 @@ namespace Tests.Linq
 					from p in from t in db.Types select Convert.ToBoolean(t.MoneyValue) where p == true select p);
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56", Configuration = ProviderName.ClickHouseOctonica)]
 		[Test]
 		public void ConvertToBoolean2([DataSources] string context)
 		{
@@ -612,15 +625,28 @@ namespace Tests.Linq
 		[Test]
 		public void ConvertFromOneToAnother([DataSources] string context)
 		{
+			// providers disabled due to change in
+			// https://github.com/linq2db/linq2db/pull/3690
+			var scaleLessDecimal = context.IsAnyOf(
+				TestProvName.AllFirebird,
+				TestProvName.AllSybase,
+				TestProvName.AllOracle,
+				TestProvName.AllMySql,
+				ProviderName.SqlCe,
+				TestProvName.AllSqlServer);
+
 			using (var db = GetDataContext(context))
 			{
 				var decimalValue = 6579.64648m;
 				var floatValue   = 6579.64648f;
 				var doubleValue  = 6579.64648d;
 
-				AssertConvert(db, decimalValue, decimalValue);
-				AssertConvert(db, decimalValue, floatValue);
-				AssertConvert(db, decimalValue, doubleValue);
+				if (!scaleLessDecimal)
+				{
+					AssertConvert(db, decimalValue, decimalValue);
+					AssertConvert(db, decimalValue, floatValue);
+					AssertConvert(db, decimalValue, doubleValue);
+				}
 
 				AssertConvert(db, floatValue, decimalValue);
 				AssertConvert(db, floatValue, floatValue);
@@ -643,7 +669,7 @@ namespace Tests.Linq
 		}
 
 		//[CLSCompliant(false)]
-		[Sql.Function("$Convert$", 1, 2, 0, ServerSideOnly = true)]
+		[Sql.Function(PseudoFunctions.CONVERT, 1, 2, 0, ServerSideOnly = true)]
 		public static TTo ServerConvert<TTo, TFrom>(TFrom obj)
 		{
 			throw new NotImplementedException();
@@ -737,7 +763,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNoConvert_Byte([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		public void TestNoConvert_Byte([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -754,7 +780,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNoConvertWithExtension_Byte([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		public void TestNoConvertWithExtension_Byte([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -771,7 +797,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNoConvert_SByte([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		public void TestNoConvert_SByte([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -788,7 +814,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNoConvertWithExtension_SByte([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		public void TestNoConvertWithExtension_SByte([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -805,7 +831,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNoConvert_Int16([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		public void TestNoConvert_Int16([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -822,7 +848,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNoConvertWithExtension_Int16([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		public void TestNoConvertWithExtension_Int16([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -839,7 +865,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNoConvert_UInt16([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		public void TestNoConvert_UInt16([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -856,7 +882,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNoConvertWithExtension_UInt16([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		public void TestNoConvertWithExtension_UInt16([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -873,7 +899,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNoConvert_Int32([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		public void TestNoConvert_Int32([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -890,7 +916,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNoConvertWithExtension_Int32([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		public void TestNoConvertWithExtension_Int32([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -907,7 +933,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNoConvert_UInt32([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		public void TestNoConvert_UInt32([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -924,7 +950,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNoConvertWithExtension_UInt32([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		public void TestNoConvertWithExtension_UInt32([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -941,7 +967,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNoConvert_Int64([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		public void TestNoConvert_Int64([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -958,7 +984,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNoConvertWithExtension_Int64([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		public void TestNoConvertWithExtension_Int64([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -975,7 +1001,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNoConvert_UInt64([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		public void TestNoConvert_UInt64([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -992,7 +1018,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNoConvertWithExtension_UInt64([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		public void TestNoConvertWithExtension_UInt64([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -1287,6 +1313,7 @@ namespace Tests.Linq
 		// and we need custom reference type that wraps something like int for test
 		[Test]
 		public void TryConvertConvertedStruct([IncludeDataSources(true,
+			TestProvName.AllClickHouse,
 			TestProvName.AllOracle12Plus,
 			TestProvName.AllSqlServer2012Plus
 			)] string context)
@@ -1299,6 +1326,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void TryConvertNotConvertedStruct([IncludeDataSources(true,
+			TestProvName.AllClickHouse,
 			TestProvName.AllOracle12Plus,
 			TestProvName.AllSqlServer2012Plus
 			)] string context)
@@ -1310,7 +1338,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TryConvertConvertedClass([IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context)
+		public void TryConvertConvertedClass([IncludeDataSources(true, TestProvName.AllSqlServer2012Plus, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1319,7 +1347,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TryConvertOrDefaultConvertedStruct([IncludeDataSources(true, TestProvName.AllOracle12Plus)] string context)
+		public void TryConvertOrDefaultConvertedStruct([IncludeDataSources(true, TestProvName.AllOracle12Plus, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1328,7 +1356,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TryConvertOrDefaultNotConvertedStruct([IncludeDataSources(true, TestProvName.AllOracle12Plus)] string context)
+		public void TryConvertOrDefaultNotConvertedStruct([IncludeDataSources(true, TestProvName.AllOracle12Plus, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1436,6 +1464,7 @@ namespace Tests.Linq
 						Prop_uint             = Sql.AsSql(x.Prop_uint            .ToString()),
 						Prop_ulong            = Sql.AsSql(x.Prop_ulong           .ToString()),
 						Prop_Guid             = Sql.AsSql(x.Prop_Guid            .ToString()),
+						Prop_DateTime         = Sql.AsSql(x.Prop_DateTime        .ToString()),
 						NullableProp_bool     = Sql.AsSql(x.NullableProp_bool    .ToString()),
 						NullableProp_byte     = Sql.AsSql(x.NullableProp_byte    .ToString()),
 						NullableProp_char     = Sql.AsSql(x.NullableProp_char    .ToString()),
@@ -1450,46 +1479,44 @@ namespace Tests.Linq
 						NullableProp_uint     = Sql.AsSql(x.NullableProp_uint    .ToString()),
 						NullableProp_ulong    = Sql.AsSql(x.NullableProp_ulong   .ToString()),
 						NullableProp_Guid     = Sql.AsSql(x.NullableProp_Guid    .ToString()),
-						Prop_DateTime         = Sql.AsSql(x.Prop_DateTime        .ToString()),
 						NullableProp_DateTime = Sql.AsSql(x.NullableProp_DateTime.ToString()),
 					})
 					.First();
 
 				var noSqlConverted = table.Select(x => new
 					{
-						Prop_bool            = x.Prop_bool ? "1" : "0",
-						Prop_byte            = x.Prop_byte            .ToString(CultureInfo.InvariantCulture),
-						Prop_char            = x.Prop_char            .ToString(CultureInfo.InvariantCulture),
-						Prop_decimal         = x.Prop_decimal         .ToString(CultureInfo.InvariantCulture),
-						Prop_double          = x.Prop_double          .ToString(CultureInfo.InvariantCulture),
-						Prop_short           = x.Prop_short           .ToString(CultureInfo.InvariantCulture),
-						Prop_int             = x.Prop_int             .ToString(CultureInfo.InvariantCulture),
-						Prop_long            = x.Prop_long            .ToString(CultureInfo.InvariantCulture),
-						Prop_sbyte           = x.Prop_sbyte           .ToString(CultureInfo.InvariantCulture),
-						Prop_float           = x.Prop_float           .ToString(CultureInfo.InvariantCulture),
-						Prop_ushort          = x.Prop_ushort          .ToString(CultureInfo.InvariantCulture),
-						Prop_uint            = x.Prop_uint            .ToString(CultureInfo.InvariantCulture),
-						Prop_ulong           = x.Prop_ulong           .ToString(CultureInfo.InvariantCulture),
-						Prop_Guid            = x.Prop_Guid            .ToString(),
-						NullableProp_bool    = x.NullableProp_bool == null ? "" : x.NullableProp_bool.Value ? "1" : "0",
-						NullableProp_byte    = x.NullableProp_byte    !.Value.ToString(CultureInfo.InvariantCulture),
-						NullableProp_char    = x.NullableProp_char    !.Value.ToString(CultureInfo.InvariantCulture),
-						NullableProp_decimal = x.NullableProp_decimal !.Value.ToString(CultureInfo.InvariantCulture),
-						NullableProp_double  = x.NullableProp_double  !.Value.ToString(CultureInfo.InvariantCulture),
-						NullableProp_short   = x.NullableProp_short   !.Value.ToString(CultureInfo.InvariantCulture),
-						NullableProp_int     = x.NullableProp_int     !.Value.ToString(CultureInfo.InvariantCulture),
-						NullableProp_long    = x.NullableProp_long    !.Value.ToString(CultureInfo.InvariantCulture),
-						NullableProp_sbyte   = x.NullableProp_sbyte   !.Value.ToString(CultureInfo.InvariantCulture),
-						NullableProp_float   = x.NullableProp_float   !.Value.ToString(CultureInfo.InvariantCulture),
-						NullableProp_ushort  = x.NullableProp_ushort  !.Value.ToString(CultureInfo.InvariantCulture),
-						NullableProp_uint    = x.NullableProp_uint    !.Value.ToString(CultureInfo.InvariantCulture),
-						NullableProp_ulong   = x.NullableProp_ulong   !.Value.ToString(CultureInfo.InvariantCulture),
-						NullableProp_Guid    = x.NullableProp_Guid    .ToString(),
-						Prop_DateTime         = Sql.AsSql(x.Prop_DateTime        .ToString()),
-						NullableProp_DateTime = Sql.AsSql(x.NullableProp_DateTime.ToString()),
+						Prop_bool             = x.Prop_bool ? "1" : "0",
+						Prop_byte             = x.Prop_byte            .ToString(CultureInfo.InvariantCulture),
+						Prop_char             = x.Prop_char            .ToString(CultureInfo.InvariantCulture),
+						Prop_decimal          = x.Prop_decimal         .ToString(CultureInfo.InvariantCulture),
+						Prop_double           = x.Prop_double          .ToString(CultureInfo.InvariantCulture),
+						Prop_short            = x.Prop_short           .ToString(CultureInfo.InvariantCulture),
+						Prop_int              = x.Prop_int             .ToString(CultureInfo.InvariantCulture),
+						Prop_long             = x.Prop_long            .ToString(CultureInfo.InvariantCulture),
+						Prop_sbyte            = x.Prop_sbyte           .ToString(CultureInfo.InvariantCulture),
+						Prop_float            = x.Prop_float           .ToString(CultureInfo.InvariantCulture),
+						Prop_ushort           = x.Prop_ushort          .ToString(CultureInfo.InvariantCulture),
+						Prop_uint             = x.Prop_uint            .ToString(CultureInfo.InvariantCulture),
+						Prop_ulong            = x.Prop_ulong           .ToString(CultureInfo.InvariantCulture),
+						Prop_Guid             = x.Prop_Guid            .ToString(),
+						Prop_DateTime         = x.Prop_DateTime        .ToString("yyyy-MM-dd HH:mm:ss.fffffff"),
+						NullableProp_bool     = x.NullableProp_bool == null ? "" : x.NullableProp_bool.Value ? "1" : "0",
+						NullableProp_byte     = x.NullableProp_byte    !.Value.ToString(CultureInfo.InvariantCulture),
+						NullableProp_char     = x.NullableProp_char    !.Value.ToString(CultureInfo.InvariantCulture),
+						NullableProp_decimal  = x.NullableProp_decimal !.Value.ToString(CultureInfo.InvariantCulture),
+						NullableProp_double   = x.NullableProp_double  !.Value.ToString(CultureInfo.InvariantCulture),
+						NullableProp_short    = x.NullableProp_short   !.Value.ToString(CultureInfo.InvariantCulture),
+						NullableProp_int      = x.NullableProp_int     !.Value.ToString(CultureInfo.InvariantCulture),
+						NullableProp_long     = x.NullableProp_long    !.Value.ToString(CultureInfo.InvariantCulture),
+						NullableProp_sbyte    = x.NullableProp_sbyte   !.Value.ToString(CultureInfo.InvariantCulture),
+						NullableProp_float    = x.NullableProp_float   !.Value.ToString(CultureInfo.InvariantCulture),
+						NullableProp_ushort   = x.NullableProp_ushort  !.Value.ToString(CultureInfo.InvariantCulture),
+						NullableProp_uint     = x.NullableProp_uint    !.Value.ToString(CultureInfo.InvariantCulture),
+						NullableProp_ulong    = x.NullableProp_ulong   !.Value.ToString(CultureInfo.InvariantCulture),
+						NullableProp_Guid     = x.NullableProp_Guid    !.Value.ToString(),
+						NullableProp_DateTime = x.NullableProp_DateTime!.Value.ToString("yyyy-MM-dd HH:mm:ss.fffffff"),
 					})
 					.First();
-
 
 				sqlConverted.Should().Be(noSqlConverted);
 			}

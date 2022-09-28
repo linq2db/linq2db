@@ -93,11 +93,12 @@ namespace Tests
 		public const string PostgreSQL13      = "PostgreSQL.13";
 		public const string PostgreSQL14      = "PostgreSQL.14";
 
-		public const string AllPostgreSQL9      = $"{ProviderName.PostgreSQL92},{ProviderName.PostgreSQL93},{ProviderName.PostgreSQL95}";
-		public const string AllPostgreSQL10Plus = $"{PostgreSQL10},{PostgreSQL11},{PostgreSQL12},{PostgreSQL13},{PostgreSQL14}";
-		public const string AllPostgreSQL95Plus = $"{ProviderName.PostgreSQL95},{AllPostgreSQL10Plus}";
-		public const string AllPostgreSQL93Plus = $"{ProviderName.PostgreSQL93},{AllPostgreSQL95Plus}";
-		public const string AllPostgreSQL       = $"{AllPostgreSQL9},{AllPostgreSQL10Plus}";
+		public const string AllPostgreSQL9       = $"{ProviderName.PostgreSQL92},{ProviderName.PostgreSQL93},{ProviderName.PostgreSQL95}";
+		public const string AllPostgreSQL10Plus  = $"{PostgreSQL10},{PostgreSQL11},{PostgreSQL12},{PostgreSQL13},{PostgreSQL14},{ProviderName.PostgreSQL15}";
+		public const string AllPostgreSQL95Plus  = $"{ProviderName.PostgreSQL95},{AllPostgreSQL10Plus}";
+		public const string AllPostgreSQL93Plus  = $"{ProviderName.PostgreSQL93},{AllPostgreSQL95Plus}";
+		public const string AllPostgreSQL        = $"{AllPostgreSQL9},{AllPostgreSQL10Plus}";
+		public const string AllPostgreSQL14Minus = $"{AllPostgreSQL9},{PostgreSQL10},{PostgreSQL11},{PostgreSQL12},{PostgreSQL13},{PostgreSQL14}";
 		#endregion
 
 		#region Firebird
@@ -128,6 +129,7 @@ namespace Tests
 		public const string SqlServer2016MS              = "SqlServer.2016.MS";
 		public const string SqlServer2017MS              = "SqlServer.2017.MS";
 		public const string SqlServer2019MS              = "SqlServer.2019.MS";
+		public const string SqlServer2022MS              = "SqlServer.2022.MS";
 
 		public const string SqlServerSequentialAccess    = "SqlServer.SA";
 		public const string SqlServerSequentialAccessMS  = "SqlServer.SA.MS";
@@ -148,14 +150,17 @@ namespace Tests
 		public const string AllSqlServer2016             = $"{ProviderName.SqlServer2016},{SqlServer2016MS}";
 		public const string AllSqlServer2017             = $"{ProviderName.SqlServer2017},{SqlServer2017MS}";
 		public const string AllSqlServer2019             = $"{ProviderName.SqlServer2019},{SqlServer2019MS},{AllSqlServerSequentialAccess},{AllSqlServerContained}";
+		public const string AllSqlServer2022             = $"{ProviderName.SqlServer2022},{SqlServer2022MS}";
 		public const string AllSqlServer2008Minus        = $"{AllSqlServer2005},{AllSqlServer2008}";
-		public const string AllSqlServer2019Plus         = $"{AllSqlServer2019},{AllSqlAzure}";
+		public const string AllSqlServer2019Minus        = $"{AllSqlServer2008Minus},{AllSqlServer2012},{AllSqlServer2014},{AllSqlServer2016},{AllSqlServer2017},{AllSqlServer2019}";
+		public const string AllSqlServer2022Plus         = $"{AllSqlServer2022},{AllSqlAzure}";
+		public const string AllSqlServer2019Plus         = $"{AllSqlServer2019},{AllSqlServer2022Plus}";
 		public const string AllSqlServer2017Plus         = $"{AllSqlServer2017},{AllSqlServer2019Plus}";
 		public const string AllSqlServer2016Plus         = $"{AllSqlServer2016},{AllSqlServer2017Plus}";
-		public const string AllSqlServer2012PlusNoAzure  = $"{AllSqlServer2012},{AllSqlServer2014},{AllSqlServer2016},{AllSqlServer2017},{AllSqlServer2019}";
 		public const string AllSqlServer2012Plus         = $"{AllSqlServer2012},{AllSqlServer2014},{AllSqlServer2016Plus}";
 		public const string AllSqlServer2008Plus         = $"{AllSqlServer2008},{AllSqlServer2012Plus}";
-		public const string AllSqlServerNoAzure          = $"{AllSqlServer2005},{AllSqlServer2008},{AllSqlServer2012},{AllSqlServer2014},{AllSqlServer2016},{AllSqlServer2017},{AllSqlServer2019}";
+		public const string AllSqlServer2012PlusNoAzure  = $"{AllSqlServer2012},{AllSqlServer2014},{AllSqlServer2016},{AllSqlServer2017},{AllSqlServer2019},{AllSqlServer2022}";
+		public const string AllSqlServerNoAzure          = $"{AllSqlServer2005},{AllSqlServer2008},{AllSqlServer2012PlusNoAzure}";
 		public const string AllSqlServer                 = $"{AllSqlServerNoAzure},{AllSqlAzure}";
 		#endregion
 
@@ -204,7 +209,8 @@ namespace Tests
 		/// </summary>
 		public const string NoopProvider  = "TestNoopProvider";
 
-		public const string AllSapHana  = $"{ProviderName.SapHanaNative},{ProviderName.SapHanaOdbc}";
-		public const string AllInformix = $"{ProviderName.Informix},{ProviderName.InformixDB2}";
+		public const string AllSapHana    = $"{ProviderName.SapHanaNative},{ProviderName.SapHanaOdbc}";
+		public const string AllInformix   = $"{ProviderName.Informix},{ProviderName.InformixDB2}";
+		public const string AllClickHouse = $"{ProviderName.ClickHouseClient},{ProviderName.ClickHouseOctonica},{ProviderName.ClickHouseMySql}";
 	}
 }

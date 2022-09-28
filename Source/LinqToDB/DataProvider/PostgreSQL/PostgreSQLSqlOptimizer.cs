@@ -3,6 +3,7 @@
 namespace LinqToDB.DataProvider.PostgreSQL
 {
 	using Extensions;
+	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
 
@@ -14,11 +15,11 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		public override bool CanCompareSearchConditions => true;
 
-		public override SqlStatement Finalize(SqlStatement statement, DataOptions dataOptions)
+		public override SqlStatement Finalize(MappingSchema mappingSchema, SqlStatement statement, DataOptions dataOptions)
 		{
 			CheckAliases(statement, int.MaxValue);
 
-			return base.Finalize(statement, dataOptions);
+			return base.Finalize(mappingSchema, statement, dataOptions);
 		}
 
 		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions)

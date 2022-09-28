@@ -622,26 +622,22 @@ namespace LinqToDB.Linq.Builder
 			{
 				var updateStatement = (SqlUpdateStatement)Statement!;
 
-				if (updateStatement.SelectQuery.From.Tables.Count > 0 && updateStatement.SelectQuery.From.Tables[0].Source is SelectQuery)
-				{
 				var expr   = BuildExpression(null, 0, false);
+				var mapper = Builder.BuildMapper<T>(expr);
 
+				if (updateStatement.SelectQuery.From.Tables.Count > 0
+					&& updateStatement.SelectQuery.From.Tables[0].Source is SelectQuery sourceQuery
+					&& sourceQuery.Select.Columns.Count > 0)
+				{
+					// TODO: better fix?
+					// for "UPDATE qry FROM qry(T)" we must check that output doesn't include missing field from qry
+					// e.g. see Issue3044UpdateOutputWithTake2 test and TableWithData.Value field
 					var setColumns = new HashSet<string>();
 
-					foreach (var item in updateStatement.Update.Items)
-					{
-						switch (item.Column)
-						{
-							case SqlColumn { Expression : SqlField field } :
-								setColumns.Add(field.PhysicalName);
-								break;
-							case SqlField field :
-								setColumns.Add(field.PhysicalName);
-								break;
-						}
-					}
+					foreach (var col in sourceQuery.Select.Columns)
+						setColumns.Add(col.Alias!);
 
-					var columns = new List<ISqlExpression>();
+					var columns = new List<ISqlExpression>(Sequence[0].SelectQuery.Select.Columns.Count);
 
 					foreach (var c in Sequence[0].SelectQuery.Select.Columns)
 					{
@@ -651,22 +647,23 @@ namespace LinqToDB.Linq.Builder
 							columns.Add(c.Expression);
 					}
 
-				var mapper = Builder.BuildMapper<T>(expr);
-
 					updateStatement.Output!.OutputColumns = columns;
 
 					QueryRunner.SetRunQuery(query, mapper);
 				}
 				else
 				{
-					var expr   = BuildExpression(null, 0, false);
-					var mapper = Builder.BuildMapper<T>(expr);
 
-					updateStatement.Output!.OutputColumns = Sequence[0].SelectQuery.Select.Columns.Select(c => c.Expression).ToList();
+					var columns = new List<ISqlExpression>(Sequence[0].SelectQuery.Select.Columns.Count);
 
-				QueryRunner.SetRunQuery(query, mapper);
+					foreach (var c in Sequence[0].SelectQuery.Select.Columns)
+						columns.Add(c.Expression);
+
+					updateStatement.Output!.OutputColumns = columns;
+
+					QueryRunner.SetRunQuery(query, mapper);
+				}
 			}
-		}
 		}
 		#endregion
 

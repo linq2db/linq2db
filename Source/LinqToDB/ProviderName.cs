@@ -95,6 +95,11 @@ namespace LinqToDB
 		/// </summary>
 		public const string SqlServer2019 = "SqlServer.2019";
 		/// <summary>
+		/// Microsoft SQL Server 2022 provider.
+		/// Used as configuration name for SQL Server 2019 mapping schema <see cref="SqlServerMappingSchema.SqlServer2022MappingSchema"/>.
+		/// </summary>
+		public const string SqlServer2022 = "SqlServer.2022";
+		/// <summary>
 		/// MySql provider.
 		/// Used as configuration name for MySql mapping schema <see cref="DataProvider.MySql.MySqlMappingSchema"/>.
 		/// </summary>
@@ -162,6 +167,10 @@ namespace LinqToDB
 		/// </summary>
 		public const string PostgreSQL95  = "PostgreSQL.9.5";
 		/// <summary>
+		/// PostgreSQL 15+ data provider.
+		/// </summary>
+		public const string PostgreSQL15 = "PostgreSQL.15";
+		/// <summary>
 		/// Microsoft SQL Server Compact Edition provider.
 		/// Used as configuration name for SQL CE mapping schema <see cref="DataProvider.SqlCe.SqlCeMappingSchema"/>.
 		/// </summary>
@@ -203,6 +212,22 @@ namespace LinqToDB
 		/// SAP HANA ODBC provider.
 		/// Used as configuration name for SAP HANA mapping schema <see cref="DataProvider.SapHana.SapHanaMappingSchema.OdbcMappingSchema"/>.
 		/// </summary>
-		public const string SapHanaOdbc = "SapHana.Odbc";
+		public const string SapHanaOdbc   = "SapHana.Odbc";
+		/// <summary>
+		/// ClickHouse provider base name.
+		/// </summary>
+		public const string ClickHouse        = "ClickHouse";
+		/// <summary>
+		/// ClickHouse provider using Octonica.ClickHouseClient ADO.NET provider.
+		/// </summary>
+		public const string ClickHouseOctonica = "ClickHouse.Octonica";
+		/// <summary>
+		/// ClickHouse provider using ClickHouse.Client ADO.NET provider.
+		/// </summary>
+		public const string ClickHouseClient   = "ClickHouse.Client";
+		/// <summary>
+		/// ClickHouse provider using MySqlConnector ADO.NET provider.
+		/// </summary>
+		public const string ClickHouseMySql   = "ClickHouse.MySql";
 	}
 }

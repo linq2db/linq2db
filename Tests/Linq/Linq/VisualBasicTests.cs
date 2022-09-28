@@ -24,7 +24,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void CompareString1([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void CompareString1([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

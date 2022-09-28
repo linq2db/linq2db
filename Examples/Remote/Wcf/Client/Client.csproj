@@ -1,5 +1,4 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-	<Import Project="..\..\..\linq2db.Examples.props" />
 
 	<PropertyGroup>
 		<TargetFramework>net48</TargetFramework>

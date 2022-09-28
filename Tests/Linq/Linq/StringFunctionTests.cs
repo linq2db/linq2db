@@ -1010,7 +1010,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Stuff2([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void Stuff2([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1176,6 +1176,46 @@ namespace Tests.Linq
 					where pp.Name.TrimEnd() == "  John" select pp;
 				Assert.AreEqual(1, q.ToList().First().ID);
 			}
+		}
+
+		// for disabled providers see notes on implementation at
+		// EXpressions.TrimLeft/TrimRight
+		[Test]
+		public void TrimLeftCharacters([DataSources(
+			TestProvName.AllFirebird,
+			TestProvName.AllMySql,
+			TestProvName.AllAccess,
+			ProviderName.SqlCe,
+			TestProvName.AllSqlServer2019Minus,
+			TestProvName.AllSybase)] string context)
+		{
+			using var db = GetDataContext(context);
+			var q =
+				from p in db.Person
+				where p.ID == 1
+				select new { p.ID, Name = "  " + p.FirstName + " " } into pp
+				where pp.Name.TrimStart(' ', 'J') == "ohn "
+				select pp;
+			Assert.AreEqual(1, q.ToList().First().ID);
+		}
+
+		[Test]
+		public void TrimRightCharacters([DataSources(
+			TestProvName.AllFirebird,
+			TestProvName.AllMySql,
+			TestProvName.AllAccess,
+			ProviderName.SqlCe,
+			TestProvName.AllSqlServer2019Minus,
+			TestProvName.AllSybase)] string context)
+		{
+			using var db = GetDataContext(context);
+			var q =
+				from p in db.Person
+				where p.ID == 1
+				select new { p.ID, Name = "  " + p.FirstName + " " } into pp
+				where pp.Name.TrimEnd(' ', 'n') == "  Joh"
+				select pp;
+			Assert.AreEqual(1, q.ToList().First().ID);
 		}
 
 		[Test]
@@ -1390,6 +1430,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void IsNullOrEmpty2([DataSources] string context)
 		{
@@ -1740,6 +1781,7 @@ namespace Tests.Linq
 			// providers doesn't support IConvertible parameter coercion
 			ProviderName.SQLiteMS,
 			ProviderName.DB2,
+			TestProvName.AllClickHouse,
 			TestProvName.AllMySqlConnector,
 			TestProvName.AllPostgreSQL,
 			TestProvName.AllInformix,

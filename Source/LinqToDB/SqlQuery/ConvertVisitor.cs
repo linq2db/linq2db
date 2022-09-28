@@ -791,10 +791,7 @@ namespace LinqToDB.SqlQuery
 
 								if (!ReferenceEquals(expr, column.Expression))
 								{
-									if (cols == null)
-									{
-										cols = new List<SqlColumn>(sc.Columns.Take(i));
-									}
+									cols ??= new List<SqlColumn>(sc.Columns.Take(i));
 
 									var newColumn = new SqlColumn(null, expr, column.Alias);
 									cols.Add(newColumn);
@@ -959,6 +956,12 @@ namespace LinqToDB.SqlQuery
 
 								foreach (var column in q.Select.Columns)
 									sc.Columns.Add(column.Clone(q, objTree, static (q, e) => e is SqlColumn c && c.Parent == q));
+							}
+							else
+							{
+								for (var i = 0; i < q.Select.Columns.Count; i++)
+									if (ReferenceEquals(sc.Columns[i], q.Select.Columns[i]))
+										sc.Columns[i] = q.Select.Columns[i].Clone(q, objTree ??= new(), static (q, e) => e is SqlColumn c && c.Parent == q);
 							}
 
 							if (ReferenceEquals(fc, q.From))
@@ -1334,8 +1337,7 @@ namespace LinqToDB.SqlQuery
 
 								newCte.Body = correctedBody;
 
-								if (newClauses == null)
-									newClauses = new(with.Clauses);
+								newClauses ??= new(with.Clauses);
 
 								newClauses[i] = newCte;
 							}
@@ -1346,8 +1348,7 @@ namespace LinqToDB.SqlQuery
 
 							if (!_visitAll || !ReferenceEquals(cte, newCte))
 							{
-								if (newClauses == null)
-									newClauses = new(with.Clauses);
+								newClauses ??= new(with.Clauses);
 								newClauses[i] = newCte;
 
 								AddVisited(cte, newCte);

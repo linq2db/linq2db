@@ -162,11 +162,11 @@ jobs:
       with_baselines: ${{ parameters.with_baselines }}
 
 ########################
-#  Tests: Ubuntu 20.04 #
+#  Tests: Ubuntu 22.04 #
 ########################
 - job: test_ubuntu_job
   pool:
-    vmImage: 'ubuntu-20.04'
+    vmImage: 'ubuntu-22.04'
   displayName: 'Tests: Linux'
   dependsOn: create_baselines_branch
   condition: ${{ parameters.enabled }}

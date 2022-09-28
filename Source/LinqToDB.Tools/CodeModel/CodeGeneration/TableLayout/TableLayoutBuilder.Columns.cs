@@ -333,8 +333,7 @@ namespace LinqToDB.CodeModel
 			public void AddValue(string value, int rowIndex)
 			{
 				// allocate values collection if it is not created yet
-				if (_rowValues == null)
-					_rowValues = new();
+				_rowValues ??= new();
 
 				// fill prevous rows with null, if they are not filled yet
 				while (_rowValues.Count < rowIndex)

@@ -27,7 +27,7 @@ namespace Tests.UserTests
 			{
 				using (db.CreateLocalTable<Issue1107TestsClass>())
 				{
-					((DataConnection)db).BulkCopy(new[] { new Issue1107TestsClass() { TestDate = new DateTime(2018, 1, 1) } });
+					((DataConnection)db).BulkCopy(GetDefaultBulkCopyOptions(configuration), new[] { new Issue1107TestsClass() { TestDate = new DateTime(2018, 1, 1) } });
 				}
 			}
 		}

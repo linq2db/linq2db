@@ -22,7 +22,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestBinaryLengthTranslation([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestBinaryLengthTranslation([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (var table = db.CreateLocalTable<IssueClass>())

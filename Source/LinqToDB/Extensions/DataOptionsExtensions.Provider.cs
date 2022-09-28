@@ -5,6 +5,7 @@ namespace LinqToDB
 {
 	using Data;
 	using DataProvider.Access;
+	using DataProvider.ClickHouse;
 	using DataProvider.DB2;
 	using DataProvider.Informix;
 	using DataProvider.Oracle;
@@ -548,6 +549,21 @@ namespace LinqToDB
 				connectionString);
 		}
 #endif
+
+		#endregion
+
+		#region UseClickHouse
+		/// <summary>
+		/// Configure connection to use UseClickHouse provider and connection string.
+		/// </summary>
+		/// <param name="options">Instance of <see cref="DataOptions"/>.</param>
+		/// <param name="provider">ClickHouse provider.</param>
+		/// <param name="connectionString">ClickHouse connection string.</param>
+		/// <returns>The builder instance so calls can be chained.</returns>
+		public static DataOptions UseClickHouse(this DataOptions options, ClickHouseProvider provider, string connectionString)
+		{
+			return options.UseConnectionString(ClickHouseTools.GetDataProvider(provider), connectionString);
+		}
 
 		#endregion
 	}

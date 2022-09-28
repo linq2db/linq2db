@@ -198,8 +198,7 @@ namespace LinqToDB.DataProvider.DB2
 			BulkCopyOptions                                        bulkCopyOptions,
 			IEnumerable<T>                                         source)
 		{
-			if (_bulkCopy == null)
-				_bulkCopy = new DB2BulkCopy(this);
+			_bulkCopy ??= new DB2BulkCopy(this);
 
 			return _bulkCopy.BulkCopy(
 				bulkCopyOptions.BulkCopyType == BulkCopyType.Default ? DB2Tools.DefaultBulkCopyType : bulkCopyOptions.BulkCopyType,
@@ -212,8 +211,7 @@ namespace LinqToDB.DataProvider.DB2
 			BulkCopyOptions bulkCopyOptions,
 			IEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			if (_bulkCopy == null)
-				_bulkCopy = new DB2BulkCopy(this);
+			_bulkCopy ??= new DB2BulkCopy(this);
 
 			return _bulkCopy.BulkCopyAsync(
 				bulkCopyOptions.BulkCopyType == BulkCopyType.Default ? DB2Tools.DefaultBulkCopyType : bulkCopyOptions.BulkCopyType,
@@ -228,8 +226,7 @@ namespace LinqToDB.DataProvider.DB2
 			BulkCopyOptions bulkCopyOptions,
 			IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			if (_bulkCopy == null)
-				_bulkCopy = new DB2BulkCopy(this);
+			_bulkCopy ??= new DB2BulkCopy(this);
 
 			return _bulkCopy.BulkCopyAsync(
 				bulkCopyOptions.BulkCopyType == BulkCopyType.Default ? DB2Tools.DefaultBulkCopyType : bulkCopyOptions.BulkCopyType,

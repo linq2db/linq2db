@@ -44,9 +44,9 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <param name="errorNumbersToAdd">Additional SQL error numbers that should be considered transient.</param>
 		public SqlServerRetryPolicy(
 			int               maxRetryCount,
-			TimeSpan          maxRetryDelay, 
-			double            randomFactor, 
-			double            exponentialBase, 
+			TimeSpan          maxRetryDelay,
+			double            randomFactor,
+			double            exponentialBase,
 			TimeSpan          coefficient,
 			ICollection<int>? errorNumbersToAdd)
 			: base(maxRetryCount, maxRetryDelay, randomFactor, exponentialBase, coefficient)

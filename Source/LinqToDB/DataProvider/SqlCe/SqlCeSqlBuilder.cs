@@ -69,18 +69,18 @@ namespace LinqToDB.DataProvider.SqlCe
 			}
 		}
 
-		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
+		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable, bool canBeNull)
 		{
 			switch (type.Type.DataType)
 			{
-				case DataType.Guid          : StringBuilder.Append("UNIQUEIDENTIFIER");                                                             return;
-				case DataType.Char          : base.BuildDataTypeFromDataType(new SqlDataType(DataType.NChar,    type.Type.Length), forCreateTable); return;
-				case DataType.VarChar       : base.BuildDataTypeFromDataType(new SqlDataType(DataType.NVarChar, type.Type.Length), forCreateTable); return;
-				case DataType.SmallMoney    : StringBuilder.Append("Decimal(10, 4)");                                                               return;
+				case DataType.Guid          : StringBuilder.Append("UNIQUEIDENTIFIER");                                                                        return;
+				case DataType.Char          : base.BuildDataTypeFromDataType(new SqlDataType(DataType.NChar,    type.Type.Length), forCreateTable, canBeNull); return;
+				case DataType.VarChar       : base.BuildDataTypeFromDataType(new SqlDataType(DataType.NVarChar, type.Type.Length), forCreateTable, canBeNull); return;
+				case DataType.SmallMoney    : StringBuilder.Append("Decimal(10, 4)");                                                                          return;
 				case DataType.DateTime2     :
 				case DataType.Time          :
 				case DataType.Date          :
-				case DataType.SmallDateTime : StringBuilder.Append("DateTime");                                                                     return;
+				case DataType.SmallDateTime : StringBuilder.Append("DateTime");                                                                                return;
 				case DataType.NVarChar:
 					if (type.Type.Length == null || type.Type.Length > 4000 || type.Type.Length < 1)
 					{
@@ -93,7 +93,7 @@ namespace LinqToDB.DataProvider.SqlCe
 					break;
 			}
 
-			base.BuildDataTypeFromDataType(type, forCreateTable);
+			base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull);
 		}
 
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)

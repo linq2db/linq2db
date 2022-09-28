@@ -153,7 +153,7 @@ namespace Tests.Linq
 				.Should().Be(1);
 
 			ints.Count(i => Row(i.One, i.Two, i.Four) > Row(i.One, i.Five, i.Three))
-				.Should().Be(0);				
+				.Should().Be(0);
 
 			ints.Count(i => Row(i.One, i.Nil, i.Four) > Row(i.One, (int?)i.Two, i.Three))
 				.Should().Be(0);
@@ -178,7 +178,7 @@ namespace Tests.Linq
 				.Should().Be(1);
 
 			ints.Count(i => Row(i.One, i.Two, i.Four) >= Row(i.One, i.Five, i.Three))
-				.Should().Be(0);				
+				.Should().Be(0);
 
 			ints.Count(i => Row(i.One, i.Nil, i.Four) >= Row(i.One, (int?)i.Two, i.Three))
 				.Should().Be(0);
@@ -203,7 +203,7 @@ namespace Tests.Linq
 				.Should().Be(0);
 
 			ints.Count(i => Row(i.One, i.Two, i.Four) < Row(i.One, i.Five, i.Three))
-				.Should().Be(1);				
+				.Should().Be(1);
 
 			ints.Count(i => Row(i.One, i.Nil, i.One) < Row(i.One, (int?)i.Two, i.Three))
 				.Should().Be(0);
@@ -228,7 +228,7 @@ namespace Tests.Linq
 				.Should().Be(0);
 
 			ints.Count(i => Row(i.One, i.Two, i.Four) <= Row(i.One, i.Five, i.Three))
-				.Should().Be(1);				
+				.Should().Be(1);
 
 			ints.Count(i => Row(i.One, i.Nil, i.One) <= Row(i.One, (int?)i.Two, i.Three))
 				.Should().Be(0);
@@ -240,8 +240,9 @@ namespace Tests.Linq
 				.Should().Be(1);
 		}
 
+		// looks like ClickHouse treats IN as correlated subquery and cannot handle outer column references
 		[Test]
-		public void In([DataSources] string context)
+		public void In([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using var db   = GetDataContext(context);
 			using var ints = SetupIntsTable(db);
@@ -272,7 +273,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NotIn([DataSources] string context)
+		public void NotIn([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using var db   = GetDataContext(context);
 			using var ints = SetupIntsTable(db);
@@ -424,7 +425,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Overlaps(
-			[IncludeDataSources(true, TestProvName.AllOracle /* TestProvName.AllPostgreSQL, ProviderName.DB2 */)] string context)
+			[IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse /* TestProvName.AllPostgreSQL, ProviderName.DB2 */)] string context)
 		{
 			// Postgre and DB2 have support but needs to know the type of parameters explicitely,
 			// so this test wouldn't work without adding casts at every constant.
@@ -456,9 +457,9 @@ namespace Tests.Linq
 		[Test]
 		public void EqualToSelect(
 			[IncludeDataSources(true,
-				TestProvName.AllMySql, 
-				TestProvName.AllOracle, 
-				TestProvName.AllPostgreSQL, 
+				TestProvName.AllMySql,
+				TestProvName.AllOracle,
+				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite)] string context)
 		{
 			// This feature is not emulated when there's no native support.
@@ -497,8 +498,8 @@ namespace Tests.Linq
 		[Test]
 		public void CompareToSelect(
 			[IncludeDataSources(true,
-				TestProvName.AllMySql, 
-				TestProvName.AllPostgreSQL, 
+				TestProvName.AllMySql,
+				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite)] string context)
 		{
 			// This feature is not emulated when there's no native support.
@@ -533,7 +534,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MixedTypes([DataSources] string context)
+		public void MixedTypes([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			var data = new[]
 			{
@@ -580,7 +581,7 @@ namespace Tests.Linq
 		[Test]
 		public void UpdateRowSelect(
 			[IncludeDataSources(true,
-				ProviderName.DB2, 
+				ProviderName.DB2,
 				TestProvName.AllPostgreSQL95Plus,
 				TestProvName.AllOracle)] string context)
 		{

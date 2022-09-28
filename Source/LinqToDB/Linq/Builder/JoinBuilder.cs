@@ -216,14 +216,11 @@ namespace LinqToDB.Linq.Builder
 				outerKeyContext, outerKeySelector,
 				innerKeyContext, innerKeySelector);
 
-			if (predicate == null)
-			{
-				predicate = new SqlPredicate.ExprExpr(
-					builder.ConvertToSql(outerKeyContext, outerKeySelector),
-					SqlPredicate.Operator.Equal,
-					builder.ConvertToSql(innerKeyContext, innerKeySelector),
-					builder.DataOptions.LinqOptions.CompareNullsAsValues ? true : null);
-			}
+			predicate ??= new SqlPredicate.ExprExpr(
+				builder.ConvertToSql(outerKeyContext, outerKeySelector),
+				SqlPredicate.Operator.Equal,
+				builder.ConvertToSql(innerKeyContext, innerKeySelector),
+				builder.DataOptions.LinqOptions.CompareNullsAsValues ? true : null);
 
 			condition.Conditions.Add(new SqlCondition(false, predicate));
 		}
@@ -239,14 +236,11 @@ namespace LinqToDB.Linq.Builder
 				outerKeyContext, outerKeySelector,
 				subQueryKeyContext, innerKeySelector);
 
-			if (predicate == null)
-			{
-				predicate = new SqlPredicate.ExprExpr(
-					builder.ConvertToSql(outerKeyContext, outerKeySelector),
-					SqlPredicate.Operator.Equal,
-					builder.ConvertToSql(subQueryKeyContext, innerKeySelector),
-					builder.DataOptions.LinqOptions.CompareNullsAsValues ? true : null);
-			}
+			predicate ??= new SqlPredicate.ExprExpr(
+				builder.ConvertToSql(outerKeyContext, outerKeySelector),
+				SqlPredicate.Operator.Equal,
+				builder.ConvertToSql(subQueryKeyContext, innerKeySelector),
+				builder.DataOptions.LinqOptions.CompareNullsAsValues ? true : null);
 
 			subQuerySelect.Where.SearchCondition.Conditions.Add(new SqlCondition(false, predicate));
 		}

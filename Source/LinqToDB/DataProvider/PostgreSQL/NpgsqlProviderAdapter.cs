@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Net;
@@ -9,7 +10,6 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
-	using System.Data.Common;
 	using Common;
 	using Data;
 	using Expressions;
@@ -38,18 +38,21 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 			MappingSchema mappingSchema,
 
-			Type npgsqlDateType,
-			Type npgsqlPointType,
-			Type npgsqlLSegType,
-			Type npgsqlBoxType,
-			Type npgsqlCircleType,
-			Type npgsqlPathType,
-			Type npgsqlPolygonType,
-			Type npgsqlLineType,
-			Type npgsqlInetType,
-			Type npgsqlTimeSpanType,
-			Type npgsqlDateTimeType,
-			Type npgsqlRangeTType,
+			Type? npgsqlDateType,
+			Type  npgsqlPointType,
+			Type  npgsqlLSegType,
+			Type  npgsqlBoxType,
+			Type  npgsqlCircleType,
+			Type  npgsqlPathType,
+			Type  npgsqlPolygonType,
+			Type  npgsqlLineType,
+			Type  npgsqlInetType,
+			Type? npgsqlTimeSpanType,
+			Type? npgsqlDateTimeType,
+			Type  npgsqlRangeTType,
+			Type? npgsqlIntervalType,
+
+			Expression? npgsqlIntervalReader,
 
 			Func<string, NpgsqlConnection> connectionCreator,
 
@@ -77,6 +80,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			NpgsqlTimeSpanType = npgsqlTimeSpanType;
 			NpgsqlDateTimeType = npgsqlDateTimeType;
 			NpgsqlRangeTType   = npgsqlRangeTType;
+			NpgsqlIntervalType = npgsqlIntervalType;
+
+			NpgsqlIntervalReader = npgsqlIntervalReader;
 
 			MappingSchema      = mappingSchema;
 			_connectionCreator = connectionCreator;
@@ -106,7 +112,15 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		public Type CommandType     { get; }
 		public Type TransactionType { get; }
 
-		public Type NpgsqlDateType     { get; }
+		// removed in v7
+		public Type? NpgsqlDateType     { get; }
+		public Type? NpgsqlTimeSpanType { get; }
+		public Type? NpgsqlDateTimeType { get; }
+
+		// added in v6
+		public Type?       NpgsqlIntervalType   { get; }
+		public Expression? NpgsqlIntervalReader { get; }
+
 		public Type NpgsqlPointType    { get; }
 		public Type NpgsqlLSegType     { get; }
 		public Type NpgsqlBoxType      { get; }
@@ -115,13 +129,11 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		public Type NpgsqlPolygonType  { get; }
 		public Type NpgsqlLineType     { get; }
 		public Type NpgsqlInetType     { get; }
-		public Type NpgsqlTimeSpanType { get; }
-		public Type NpgsqlDateTimeType { get; }
 		public Type NpgsqlRangeTType   { get; }
 
-		public string GetIntervalReaderMethod => "GetInterval";
-		public string GetTimeStampReaderMethod => "GetTimeStamp";
-		public string GetDateReaderMethod => "GetDate";
+		public string? GetIntervalReaderMethod  => NpgsqlTimeSpanType != null ? "GetInterval"  : null;
+		public string? GetTimeStampReaderMethod => NpgsqlDateTimeType != null ? "GetTimeStamp" : null;
+		public string? GetDateReaderMethod      => NpgsqlDateType     != null ? "GetDate"      : null;
 
 		public string ProviderTypesNamespace => TypesNamespace;
 
@@ -171,7 +183,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						var commandType        = assembly.GetType($"{ClientNamespace}.NpgsqlCommand"     , true)!;
 						var transactionType    = assembly.GetType($"{ClientNamespace}.NpgsqlTransaction" , true)!;
 						var dbType             = assembly.GetType($"{TypesNamespace}.NpgsqlDbType"       , true)!;
-						var npgsqlDateType     = assembly.GetType($"{TypesNamespace}.NpgsqlDate"         , true)!;
+						var npgsqlDateType     = assembly.GetType($"{TypesNamespace}.NpgsqlDate"         , false);
 						var npgsqlPointType    = assembly.GetType($"{TypesNamespace}.NpgsqlPoint"        , true)!;
 						var npgsqlLSegType     = assembly.GetType($"{TypesNamespace}.NpgsqlLSeg"         , true)!;
 						var npgsqlBoxType      = assembly.GetType($"{TypesNamespace}.NpgsqlBox"          , true)!;
@@ -180,9 +192,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						var npgsqlPolygonType  = assembly.GetType($"{TypesNamespace}.NpgsqlPolygon"      , true)!;
 						var npgsqlLineType     = assembly.GetType($"{TypesNamespace}.NpgsqlLine"         , true)!;
 						var npgsqlInetType     = assembly.GetType($"{TypesNamespace}.NpgsqlInet"         , true)!;
-						var npgsqlTimeSpanType = assembly.GetType($"{TypesNamespace}.NpgsqlTimeSpan"     , true)!;
-						var npgsqlDateTimeType = assembly.GetType($"{TypesNamespace}.NpgsqlDateTime"     , true)!;
+						var npgsqlTimeSpanType = assembly.GetType($"{TypesNamespace}.NpgsqlTimeSpan"     , false);
+						var npgsqlDateTimeType = assembly.GetType($"{TypesNamespace}.NpgsqlDateTime"     , false);
 						var npgsqlRangeTType   = assembly.GetType($"{TypesNamespace}.NpgsqlRange`1"      , true)!;
+						var npgsqlIntervalType = assembly.GetType($"{TypesNamespace}.NpgsqlInterval"     , false);
 
 						var npgsqlBinaryImporterType = assembly.GetType($"{ClientNamespace}.NpgsqlBinaryImporter", true)!;
 
@@ -218,11 +231,31 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						var mappingSchema = new MappingSchema();
 
 						// date/time types
-						AddUdtType(npgsqlDateType);
-						AddUdtType(npgsqlDateTimeType);
-						mappingSchema.SetDataType(npgsqlTimeSpanType, DataType.Interval);
-						mappingSchema.SetDataType(npgsqlTimeSpanType.AsNullable(), DataType.Interval);
+						if (npgsqlDateType != null)
+							AddUdtType(npgsqlDateType);
+						if (npgsqlDateTimeType != null)
+							AddUdtType(npgsqlDateTimeType);
+						if (npgsqlTimeSpanType != null)
+						{
+							mappingSchema.SetDataType(npgsqlTimeSpanType, DataType.Interval);
+							mappingSchema.SetDataType(npgsqlTimeSpanType.AsNullable(), DataType.Interval);
+						}
+
+						Expression? npgsqlIntervalReader = null;
+						if (npgsqlIntervalType != null)
+						{
+							mappingSchema.SetDataType(npgsqlIntervalType, DataType.Interval);
+							mappingSchema.SetDataType(npgsqlIntervalType.AsNullable(), DataType.Interval);
+
+							var reader  = Expression.Parameter(typeof(DbDataReader));
+							var ordinal = Expression.Parameter(typeof(int));
+							var body    = Expression.Call(reader, nameof(DbDataReader.GetFieldValue), new[] { npgsqlIntervalType }, ordinal);
+
+							npgsqlIntervalReader = Expression.Lambda(body, reader, ordinal);
+						}
+
 						// NpgsqlDateTimeType => DateTimeOffset
+						if (npgsqlDateTimeType != null)
 						{
 							var p = Expression.Parameter(npgsqlDateTimeType, "p");
 							var pi = p.Type.GetProperty("DateTime");
@@ -340,6 +373,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 							npgsqlTimeSpanType,
 							npgsqlDateTimeType,
 							npgsqlRangeTType,
+							npgsqlIntervalType,
+
+							npgsqlIntervalReader,
 
 							typeMapper.BuildWrappedFactory((string connectionString) => new NpgsqlConnection(connectionString)),
 

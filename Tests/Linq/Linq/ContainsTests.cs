@@ -184,10 +184,12 @@ namespace Tests.Linq
 			count.Should().Be(2);
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/38439", Configuration = TestProvName.AllClickHouse)]
 		[Test]
 		public void AllNulls(
 			// Excluded Access from tests because it seems to have non compliant behavior.
 			// It is the only DB that returns 1 for `WHERE Int NOT IN (null, null)`
+			// Nope, Access is not alone anymore
 			[DataSources(TestProvName.AllAccess)] string context,
 			[Values]                              bool   withNullCompares)
 		{
@@ -204,10 +206,12 @@ namespace Tests.Linq
 			count.Should().Be(withNullCompares ? 1 : 0);
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/38439", Configuration = TestProvName.AllClickHouse)]
 		[Test]
 		public void AllNullsEnum(
 			// Excluded Access from tests because it seems to have non compliant behavior.
 			// It is the only DB that returns 1 for `WHERE Enum NOT IN (null, null)`
+			// Nope, Access is not alone anymore
 			[DataSources(TestProvName.AllAccess)] string context,
 			[Values]                              bool   withNullCompares)
 		{
@@ -224,10 +228,12 @@ namespace Tests.Linq
 			count.Should().Be(withNullCompares ? 1 : 0);
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/38439", Configuration = TestProvName.AllClickHouse)]
 		[Test]
 		public void AllNullsCEnum(
 			// Excluded Access from tests because it seems to have non compliant behavior.
 			// It is the only DB that returns 1 for `WHERE CEnum NOT IN (null, null)`
+			// Nope, Access is not alone anymore
 			[DataSources(TestProvName.AllAccess)] string context,
 			[Values]                              bool   withNullCompares)
 		{

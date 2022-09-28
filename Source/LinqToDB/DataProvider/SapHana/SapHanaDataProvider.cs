@@ -17,26 +17,17 @@ namespace LinqToDB.DataProvider.SapHana
 	{
 		public SapHanaDataProvider() : base(ProviderName.SapHanaNative, MappingSchemaInstance, SapHanaProviderAdapter.GetInstance())
 		{
-			SqlProviderFlags.IsParameterOrderDependent = true;
-
-			//supported flags
-			SqlProviderFlags.IsCountSubQuerySupported  = true;
-
+			SqlProviderFlags.IsParameterOrderDependent         = true;
 			//Exception: Sap.Data.Hana.HanaException
 			//Message: single-row query returns more than one row
 			//when expression returns more than 1 row
 			//mark this as supported, it's better to throw exception
 			//instead of replace with left join, in which case returns incorrect data
-			SqlProviderFlags.IsSubQueryColumnSupported  = true;
-
-			SqlProviderFlags.IsTakeSupported            = true;
-			SqlProviderFlags.IsDistinctOrderBySupported = false;
-
-			//not supported flags
-			SqlProviderFlags.IsSubQueryTakeSupported   = false;
-			SqlProviderFlags.IsApplyJoinSupported      = false;
-			SqlProviderFlags.IsInsertOrUpdateSupported = false;
-			SqlProviderFlags.IsUpdateFromSupported     = false;
+			SqlProviderFlags.IsSubQueryColumnSupported         = true;
+			SqlProviderFlags.IsDistinctOrderBySupported        = false;
+			SqlProviderFlags.IsSubQueryTakeSupported           = false;
+			SqlProviderFlags.IsInsertOrUpdateSupported         = false;
+			SqlProviderFlags.IsUpdateFromSupported             = false;
 			SqlProviderFlags.AcceptsOuterExpressionInAggregate = false;
 
 			_sqlOptimizer = new SapHanaNativeSqlOptimizer(SqlProviderFlags);

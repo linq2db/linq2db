@@ -81,9 +81,9 @@ namespace Tests.SchemaProvider
 				AssertType<Model.LinqDataTypes>(conn.MappingSchema, dbSchema);
 				AssertType<Model.Parent>       (conn.MappingSchema, dbSchema);
 
-				if (!context.IsAnyOf(ProviderName.AccessOdbc))
+				if (!context.IsAnyOf(ProviderName.AccessOdbc, TestProvName.AllClickHouse))
 					Assert.That(getTable("doctor").ForeignKeys.Count, Is.EqualTo(1));
-				else // no FK information for ACCESS ODBC
+				else // no FK information for ACCESS ODBC, no FKs in CH
 					Assert.That(dbSchema.Tables.Single(t => t.TableName!.ToLower() == "doctor").ForeignKeys.Count, Is.EqualTo(0));
 
 				switch (context)
@@ -176,7 +176,7 @@ namespace Tests.SchemaProvider
 		}
 
 		[Test]
-		public void MySqlPKTest([IncludeDataSources(TestProvName.AllMySql)]
+		public void MySqlPKTest([IncludeDataSources(TestProvName.AllMySql, TestProvName.AllClickHouse)]
 			string context)
 		{
 			using (var conn = GetDataConnection(context))
@@ -327,6 +327,7 @@ namespace Tests.SchemaProvider
 		public void PrimaryForeignKeyTest([DataSources(false, TestProvName.AllOracle12, ProviderName.AccessOdbc, ProviderName.SQLiteMS)]
 			string context)
 		{
+			var skipFK = context.IsAnyOf(TestProvName.AllClickHouse);
 			using (var db = GetDataConnection(context))
 			{
 				var p = db.DataProvider.GetSchemaProvider();
@@ -339,13 +340,15 @@ namespace Tests.SchemaProvider
 				var fkCountDoctor = s.Tables.Single(_ => _.TableName!.Equals(nameof(Model.Doctor), StringComparison.OrdinalIgnoreCase)).ForeignKeys.Count;
 				var pkCountDoctor = s.Tables.Single(_ => _.TableName!.Equals(nameof(Model.Doctor), StringComparison.OrdinalIgnoreCase)).Columns.Count(_ => _.IsPrimaryKey);
 
-				Assert.AreEqual(1, fkCountDoctor);
+				if (!skipFK)
+					Assert.AreEqual(1, fkCountDoctor);
 				Assert.AreEqual(1, pkCountDoctor);
 
 				var fkCountPerson = s.Tables.Single(_ => _.TableName!.Equals(nameof(Model.Person), StringComparison.OrdinalIgnoreCase) && !(_.SchemaName ?? "").Equals("MySchema", StringComparison.OrdinalIgnoreCase)).ForeignKeys.Count;
 				var pkCountPerson = s.Tables.Single(_ => _.TableName!.Equals(nameof(Model.Person), StringComparison.OrdinalIgnoreCase) && !(_.SchemaName ?? "").Equals("MySchema", StringComparison.OrdinalIgnoreCase)).Columns.Count(_ => _.IsPrimaryKey);
 
-				Assert.AreEqual(2, fkCountPerson);
+				if (!skipFK)
+					Assert.AreEqual(2, fkCountPerson);
 				Assert.AreEqual(1, pkCountPerson);
 			}
 		}
@@ -388,7 +391,7 @@ namespace Tests.SchemaProvider
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2348")]
-		public void SchemaOnlyTestIssue2348([IncludeDataSources(TestProvName.AllSqlServer2012Plus)] string context)
+		public void SchemaOnlyTestIssue2348([IncludeDataSources(TestProvName.AllSqlServer2012Plus, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = (DataConnection)GetDataContext(context);
 

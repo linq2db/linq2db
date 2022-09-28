@@ -794,7 +794,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void TestNullableParameterInSourceQuery([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public void TestNullableParameterInSourceQuery([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, ProviderName.PostgreSQL15)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var target = db.CreateLocalTable<TestNullableParameterTarget>())
@@ -821,5 +821,39 @@ namespace Tests.xUpdate
 			}
 		}
 		#endregion
+
+		[Test(Description = "Test query filter not used for target, but preserved for source")]
+		public void Issue3729Test([MergeDataContextSource] string context)
+		{
+			// prepare data before fiters applied
+			using (var db1 = GetDataContext(context))
+				PrepareData(db1);
+
+			var ms = new MappingSchema();
+			ms.GetFluentMappingBuilder().Entity<TestMapping1>().HasQueryFilter((t, _) => t.Where(_ => _.Id > 5));
+
+			using var db = GetDataContext(context, ms);
+
+			var table = GetTarget(db);
+
+			var rows = table
+				.Merge()
+				.Using(GetSource1(db))
+				.OnTargetKey()
+				.InsertWhenNotMatched()
+				.Merge();
+
+			var result = table.IgnoreFilters().OrderBy(_ => _.Id).ToList();
+
+			AssertRowCount(1, rows, context);
+
+			Assert.AreEqual(5, result.Count);
+
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialTargetData[2], result[2], null, 203);
+			AssertRow(InitialTargetData[3], result[3], null, null);
+			AssertRow(InitialSourceData[3], result[4], null, 216);
+		}
 	}
 }

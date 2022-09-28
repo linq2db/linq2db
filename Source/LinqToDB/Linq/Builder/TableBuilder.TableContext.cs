@@ -198,8 +198,7 @@ namespace LinqToDB.Linq.Builder
 							Builder.AssociationPath.Push(Tuple.Create(new AccessorMember(ma), (IBuildContext)this, (List<LoadWithInfo[]>?)loadWith));
 
 							ex = BuildExpression(ma, 1, parentObject);
-							if (_loadWithCache == null)
-								_loadWithCache = new Dictionary<MemberInfo, Expression>();
+							_loadWithCache ??= new Dictionary<MemberInfo, Expression>();
 							_loadWithCache.Add(member.Info.MemberInfo, ex);
 
 							_ = Builder.AssociationPath.Pop();
@@ -1303,8 +1302,7 @@ namespace LinqToDB.Linq.Builder
 					return;
 
 				if (!alias.Contains('<'))
-					if (SqlTable.Alias == null)
-						SqlTable.Alias = alias;
+					SqlTable.Alias ??= alias;
 			}
 
 			#endregion

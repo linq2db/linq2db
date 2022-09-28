@@ -220,7 +220,7 @@ namespace Tests.Linq
 		// https://connect.microsoft.com/SQLServer/feedback/details/3139577/performace-regression-for-compatibility-level-2014-for-specific-query
 		[Test]
 		public void MultipleSelect11([IncludeDataSources(
-			TestProvName.AllSqlServer2008, TestProvName.AllSqlServer2012, TestProvName.AllSapHana)]
+			TestProvName.AllSqlServer2008, TestProvName.AllSqlServer2012, TestProvName.AllSapHana, TestProvName.AllClickHouse)]
 			string context)
 		{
 			var dt = DateTime.Now;
@@ -414,7 +414,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Coalesce4([DataSources(ProviderName.SqlCe)] string context)
+		public void Coalesce4([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -425,7 +425,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Coalesce5([DataSources(ProviderName.SqlCe)] string context)
+		public void Coalesce5([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -912,7 +912,7 @@ namespace Tests.Linq
 
 
 		[Test]
-		public void InternalFieldProjection([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void InternalFieldProjection([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -922,7 +922,7 @@ namespace Tests.Linq
 					InternalStr = t.StringValue
 				});
 
-				var result = query.Where(x => x.InternalStr != "").ToArray();
+				var result = query.Where(x => x.InternalStr != "").OrderBy(_ => _.Int).ToArray();
 				Assert.That(result[0].InternalStr, Is.EqualTo(Types.First().StringValue));
 			}
 		}
@@ -1020,7 +1020,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestExpressionMethodInProjection([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TestExpressionMethodInProjection([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(new []
@@ -1059,7 +1059,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void TestConditionalProjectionOptimization(
-			[IncludeDataSources(false, TestProvName.AllSQLite)] string context,
+			[IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context,
 			[Values(true, false)] bool includeChild,
 			[Values(1, 2)] int iteration)
 		{
@@ -1103,7 +1103,7 @@ namespace Tests.Linq
 
 
 		[Test]
-		public void TestConditionalInProjection([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TestConditionalInProjection([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(new []
@@ -1121,6 +1121,7 @@ namespace Tests.Linq
 					from c in db.GetTable<ChildEntityObject>().LeftJoin(c => c.Id == m.Id)
 					select new
 					{
+						m.Id,
 						Child1 = c,
 						Child2 = c == null ? null : new ChildEntityObject { Id = c.Id, Value = c.Value },
 						Child3 = c != null ? c : new ChildEntityObject { Id = 4, Value = "Generated" },
@@ -1132,7 +1133,7 @@ namespace Tests.Linq
 							: c
 					};
 
-				var result = query.ToArray();
+				var result = query.OrderBy(_ => _.Id).ToArray();
 
 				Assert.NotNull(result[0].Child1);
 				Assert.IsNull (result[1].Child1);
@@ -1153,7 +1154,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestConditionalInProjectionSubquery([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TestConditionalInProjectionSubquery([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(new []
@@ -1214,7 +1215,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestConstructorProjection([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestConstructorProjection([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1239,7 +1240,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestMethodFabricProjection([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestMethodFabricProjection([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1265,7 +1266,7 @@ namespace Tests.Linq
 
 		[ActiveIssue("Currently linq2db do not support such queries")]
 		[Test]
-		public void TestComplexMethodFabricProjection([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestComplexMethodFabricProjection([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1290,7 +1291,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestComplexNestedProjection([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestComplexNestedProjection([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1677,7 +1678,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MaterializeTwoMapped([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void MaterializeTwoMapped([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var data = new[] { new TestMappingColumn1PropInfo  { Id = 1, TestNumber = 3 } };
 			using (var db = GetDataContext(context))

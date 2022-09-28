@@ -53,19 +53,22 @@ namespace LinqToDB.CommandLine
 			var providerName = Enum.Parse<DatabaseType>((string)value!);
 			var provider     = providerName switch
 			{
-				DatabaseType.Access     => ProviderName.Access,
-				DatabaseType.DB2        => ProviderName.DB2,
-				DatabaseType.Firebird   => ProviderName.Firebird,
-				DatabaseType.Informix   => ProviderName.Informix,
-				DatabaseType.SQLServer  => ProviderName.SqlServer,
-				DatabaseType.MySQL      => ProviderName.MySql,
-				DatabaseType.Oracle     => ProviderName.Oracle,
-				DatabaseType.PostgreSQL => ProviderName.PostgreSQL,
-				DatabaseType.SqlCe      => ProviderName.SqlCe,
-				DatabaseType.SQLite     => ProviderName.SQLite,
-				DatabaseType.Sybase     => ProviderName.Sybase,
-				DatabaseType.SapHana    => ProviderName.SapHana,
-				_                       => throw new InvalidOperationException($"Unsupported provider: {providerName}")
+				DatabaseType.Access          => ProviderName.Access,
+				DatabaseType.DB2             => ProviderName.DB2,
+				DatabaseType.Firebird        => ProviderName.Firebird,
+				DatabaseType.Informix        => ProviderName.Informix,
+				DatabaseType.SQLServer       => ProviderName.SqlServer,
+				DatabaseType.MySQL           => ProviderName.MySql,
+				DatabaseType.Oracle          => ProviderName.Oracle,
+				DatabaseType.PostgreSQL      => ProviderName.PostgreSQL,
+				DatabaseType.SqlCe           => ProviderName.SqlCe,
+				DatabaseType.SQLite          => ProviderName.SQLite,
+				DatabaseType.Sybase          => ProviderName.Sybase,
+				DatabaseType.SapHana         => ProviderName.SapHana,
+				DatabaseType.ClickHouseMySql => ProviderName.ClickHouseMySql,
+				DatabaseType.ClickHouseHttp  => ProviderName.ClickHouseClient,
+				DatabaseType.ClickHouseTcp   => ProviderName.ClickHouseOctonica,
+				_                            => throw new InvalidOperationException($"Unsupported provider: {providerName}")
 			};
 
 			options.Remove(General.ConnectionString, out value);
@@ -172,31 +175,35 @@ namespace LinqToDB.CommandLine
 			// - allow user to specify provider discovery hints (e.g. provider path) for unmanaged providers
 			switch (provider)
 			{
-				case ProviderName.SQLite:
+				case ProviderName.ClickHouseMySql   :
+				case ProviderName.ClickHouseClient  :
+				case ProviderName.ClickHouseOctonica:
+					break;
+				case ProviderName.SQLite            :
 					provider = ProviderName.SQLiteClassic;
 					break;
-				case ProviderName.SqlServer:
+				case ProviderName.SqlServer         :
 					SqlServerTools.AutoDetectProvider = true;
 					SqlServerTools.DefaultProvider = SqlServerProvider.MicrosoftDataSqlClient;
 					break;
-				case ProviderName.Firebird:
-					// TODO: don't forget to add versioning here after Firebird versioning feature merged
+				case ProviderName.Firebird          :
+					// TODO                         : don't forget to add versioning here after Firebird versioning feature merged
 					break;
-				case ProviderName.MySql:
-					// TODO: remove provider hint after MySQL.Data support removed
+				case ProviderName.MySql             :
+					// TODO                         : remove provider hint after MySQL.Data support removed
 					provider = ProviderName.MySqlConnector;
 					break;
-				case ProviderName.Oracle:
+				case ProviderName.Oracle            :
 					OracleTools.AutoDetectProvider = true;
 					provider = ProviderName.OracleManaged;
 					break;
-				case ProviderName.PostgreSQL:
+				case ProviderName.PostgreSQL        :
 					PostgreSQLTools.AutoDetectProvider = true;
 					break;
-				case ProviderName.Sybase:
+				case ProviderName.Sybase            :
 					provider = ProviderName.SybaseManaged;
 					break;
-				case ProviderName.SqlCe:
+				case ProviderName.SqlCe             :
 				{
 					if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
 					{

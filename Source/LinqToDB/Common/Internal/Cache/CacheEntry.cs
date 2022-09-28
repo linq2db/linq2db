@@ -98,10 +98,7 @@ namespace LinqToDB.Common.Internal.Cache
 		{
 			get
 			{
-				if (_expirationTokens == null)
-				{
-					_expirationTokens = new List<IChangeToken>();
-				}
+				_expirationTokens ??= new List<IChangeToken>();
 
 				return _expirationTokens;
 			}
@@ -114,10 +111,7 @@ namespace LinqToDB.Common.Internal.Cache
 		{
 			get
 			{
-				if (_postEvictionCallbacks == null)
-				{
-					_postEvictionCallbacks = new List<PostEvictionCallbackRegistration<TKey>>();
-				}
+				_postEvictionCallbacks ??= new List<PostEvictionCallbackRegistration<TKey>>();
 
 				return _postEvictionCallbacks;
 			}

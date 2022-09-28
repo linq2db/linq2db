@@ -24,8 +24,9 @@ namespace LinqToDB.DataProvider
 
 		public TProviderMappings Adapter { get; }
 
-		public override string? ConnectionNamespace => Adapter.ConnectionType.Namespace;
-		public override Type    DataReaderType      => Adapter.DataReaderType;
+		public override string? ConnectionNamespace   => Adapter.ConnectionType.Namespace;
+		public override Type    DataReaderType        => Adapter.DataReaderType;
+		public override bool    TransactionsSupported => Adapter.TransactionType != null;
 
 		Func<string, DbConnection>? _createConnection;
 
@@ -175,6 +176,9 @@ namespace LinqToDB.DataProvider
 
 		public virtual DbTransaction? TryGetProviderTransaction(IDataContext dataContext, DbTransaction transaction)
 		{
+			if (Adapter.TransactionType == null)
+				return null;
+
 			transaction = dataContext.UnwrapDataObjectInterceptor?.UnwrapTransaction(dataContext, transaction) ?? transaction;
 			return Adapter.TransactionType.IsSameOrParentOf(transaction.GetType()) ? transaction : null;
 		}

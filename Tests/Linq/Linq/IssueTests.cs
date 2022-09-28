@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB;
+using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 
@@ -11,8 +13,6 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
-	using System.Collections.Generic;
-	using LinqToDB.Common;
 	using Model;
 
 	[TestFixture]
@@ -21,7 +21,7 @@ namespace Tests.Linq
 		// https://github.com/linq2db/linq2db/issues/38
 		//
 		[Test]
-		public void Issue38Test([DataSources(false)] string context)
+		public void Issue38Test([DataSources(false, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -46,13 +46,13 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var t1 = db.Types2.First();
+				var t1 = db.Types2.Where(r => r.ID == 1).First();
 
 				t1.BoolValue = !t1.BoolValue;
 
 				db.Update(t1);
 
-				var t2 = db.Types2.First();
+				var t2 = db.Types2.First(r => r.ID == t1.ID);
 
 				Assert.That(t2.BoolValue, Is.EqualTo(t1.BoolValue));
 
@@ -65,7 +65,7 @@ namespace Tests.Linq
 		// https://github.com/linq2db/linq2db/issues/60
 		//
 		[Test]
-		public void Issue60Test([IncludeDataSources(TestProvName.AllSqlServer, ProviderName.SqlCe)] string context)
+		public void Issue60Test([IncludeDataSources(TestProvName.AllSqlServer, ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -87,7 +87,7 @@ namespace Tests.Linq
 		// https://github.com/linq2db/linq2db/issues/67
 		//
 		[Test]
-		public void Issue67Test([DataSources] string context)
+		public void Issue67Test([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -106,7 +106,7 @@ namespace Tests.Linq
 		}
 
 		[Test()]
-		public void Issue75Test([DataSources] string context)
+		public void Issue75Test([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -400,6 +400,7 @@ namespace Tests.Linq
 			Client
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56", Configurations = new[] { ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void Issue535Test2([DataSources(TestProvName.AllSybase)] string context)
 		{
@@ -425,6 +426,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56", Configurations = new[] { ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void Issue535Test3([DataSources(TestProvName.AllSybase)] string context)
 		{
@@ -621,7 +623,7 @@ namespace Tests.Linq
 			}
 		}
 		[Test]
-		public void Issue909Subquery([DataSources] string context)
+		public void Issue909Subquery([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

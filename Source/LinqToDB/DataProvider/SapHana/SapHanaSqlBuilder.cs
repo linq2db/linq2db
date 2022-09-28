@@ -77,7 +77,7 @@ namespace LinqToDB.DataProvider.SapHana
 			}
 		}
 
-		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
+		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable, bool canBeNull)
 		{
 			switch (type.Type.DataType)
 			{
@@ -120,7 +120,7 @@ namespace LinqToDB.DataProvider.SapHana
 					}
 					break;
 			}
-			base.BuildDataTypeFromDataType(type, forCreateTable);
+			base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull);
 		}
 
 		protected override void BuildFromClause(SqlStatement statement, SelectQuery selectQuery)

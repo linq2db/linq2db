@@ -119,8 +119,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			{
 				if (_systemAdapter == null)
 					lock (_sysSyncRoot)
-						if (_systemAdapter == null)
-							_systemAdapter = CreateAdapter(SystemAssemblyName, SystemClientNamespace, SystemProviderFactoryName);
+						_systemAdapter ??= CreateAdapter(SystemAssemblyName, SystemClientNamespace, SystemProviderFactoryName);
 
 				return _systemAdapter;
 			}
@@ -128,8 +127,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			{
 				if (_microsoftAdapter == null)
 					lock (_msSyncRoot)
-						if (_microsoftAdapter == null)
-							_microsoftAdapter = CreateAdapter(MicrosoftAssemblyName, MicrosoftClientNamespace, MicrosoftProviderFactoryName);
+						_microsoftAdapter ??= CreateAdapter(MicrosoftAssemblyName, MicrosoftClientNamespace, MicrosoftProviderFactoryName);
 
 				return _microsoftAdapter;
 			}

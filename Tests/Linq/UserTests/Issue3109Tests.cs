@@ -46,6 +46,7 @@ namespace Tests.UserTests
 			public int LeftId { get; set; }
 
 			[Column(IsPrimaryKey = true, CanBeNull = false, DataType = DataType.Blob)]
+			[Column(IsPrimaryKey = true, CanBeNull = false, DataType = DataType.VarBinary, Configuration = ProviderName.ClickHouse)]
 			public byte[] RightId { get; set; } = null!;
 
 			[Association(ThisKey = nameof(LeftId), OtherKey = nameof(Issue3109Tests.Left.LeftId))]
@@ -63,6 +64,7 @@ namespace Tests.UserTests
 		private class Right
 		{
 			[Column(IsPrimaryKey = true, CanBeNull = false, DataType = DataType.Blob)]
+			[Column(IsPrimaryKey = true, CanBeNull = false, DataType = DataType.VarBinary, Configuration = ProviderName.ClickHouse)]
 			public byte[] RightId { get; set; } = null!;
 
 			public string? RightData { get; set; }
@@ -79,7 +81,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void SampleSelectTest([IncludeDataSources(false, TestProvName.AllSQLite)]
+		public void SampleSelectTest([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)]
 			string context)
 		{
 			Left      left      = new() { LeftId  = 1 };

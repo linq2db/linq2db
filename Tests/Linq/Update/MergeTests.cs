@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 
+using Tests.Model;
+
 using LinqToDB;
 using LinqToDB.Mapping;
 
@@ -22,7 +24,8 @@ namespace Tests.xUpdate
 				ProviderName.SqlCe,
 				TestProvName.AllSQLite,
 				TestProvName.AllSqlServer2005,
-				TestProvName.AllPostgreSQL,
+				TestProvName.AllClickHouse,
+				TestProvName.AllPostgreSQL14Minus,
 				TestProvName.AllMySql,
 			}.SelectMany(_ => _.Split(',')).ToList();
 
@@ -43,7 +46,8 @@ namespace Tests.xUpdate
 			static string[] Supported = new[]
 			{
 				TestProvName.AllSybase,
-				TestProvName.AllSqlServer2008Plus
+				TestProvName.AllSqlServer2008Plus,
+				ProviderName.PostgreSQL15,
 			}.SelectMany(_ => _.Split(',')).ToArray();
 
 			public IdentityInsertMergeDataContextSourceAttribute(params string[] except)
@@ -85,6 +89,7 @@ namespace Tests.xUpdate
 
 		[Table("TestMergeIdentity", Configuration = ProviderName.Sybase)]
 		[Table("TestMergeIdentity", Configuration = ProviderName.SqlServer)]
+		[Table("TestMergeIdentity", Configuration = ProviderName.PostgreSQL)]
 		class TestMappingWithIdentity
 		{
 			[Column("Id", SkipOnInsert = true, IsIdentity = true)]

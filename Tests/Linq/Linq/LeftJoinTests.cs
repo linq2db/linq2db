@@ -25,7 +25,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void left_join_on_sub_query_with_two_inner_joins_results_in_incorrect_SQL([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void left_join_on_sub_query_with_two_inner_joins_results_in_incorrect_SQL([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<A>())

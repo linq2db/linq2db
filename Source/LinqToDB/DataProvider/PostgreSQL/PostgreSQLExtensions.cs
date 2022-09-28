@@ -9,7 +9,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	using Linq;
 	using SqlQuery;
 #if !NET45
-	using LinqToDB.Common;
+	using Common;
 	using Mapping;
 #endif
 
@@ -484,7 +484,5 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		}
 
 		#endregion
-
-
 	}
 }

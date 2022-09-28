@@ -41,7 +41,9 @@ namespace Tests.UserTests
 		[Test]
 		public void TestWithoutTransaction([DataSources(false,
 			// those providers doesn't support stored procedures
-			ProviderName.SqlCe, TestProvName.AllSQLite,
+			ProviderName.SqlCe,
+			TestProvName.AllSQLite,
+			TestProvName.AllClickHouse,
 			// those providers miss procedure schema load implementation for now
 			TestProvName.AllInformix)]
 			string context)
@@ -82,6 +84,7 @@ namespace Tests.UserTests
 			// those providers doesn't support stored procedures
 			ProviderName.SqlCe,
 			TestProvName.AllSQLite,
+			TestProvName.AllClickHouse,
 			// those providers miss procedure schema load implementation for now
 			TestProvName.AllInformix,
 			// those providers cannot load schema when in transaction

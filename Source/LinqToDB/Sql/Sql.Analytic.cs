@@ -112,7 +112,7 @@ namespace LinqToDB
 			{
 				case Sql.Nulls.None   :
 				case Sql.Nulls.Respect:
-					// no need to add RESPECT NULLS, as it is default behavior and token itself supported only by Oracle and Informix
+					// no need to add RESPECT NULLS, as it is default behavior and token itself supported only by Oracle, Informix and SQL Server 2022
 					return string.Empty;
 				case Sql.Nulls.Ignore :
 					return "IGNORE NULLS";
@@ -708,6 +708,7 @@ namespace LinqToDB
 			throw new LinqException($"'{nameof(DenseRank)}' is server-side method.");
 		}
 
+		[Sql.Extension("FIRST_VALUE({expr}){_}{modifier?}", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true, Configuration = ProviderName.SqlServer2022)]
 		[Sql.Extension("FIRST_VALUE({expr}{_}{modifier?})", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true)]
 		public static IAggregateFunctionSelfContained<T> FirstValue<T>(this Sql.ISqlExtension? ext, [ExprParameter] T expr, [SqlQueryDependent] Sql.Nulls nulls)
 		{
@@ -744,6 +745,7 @@ namespace LinqToDB
 			throw new LinqException($"'{nameof(Lag)}' is server-side method.");
 		}
 
+		[Sql.Extension("LAST_VALUE({expr}){_}{modifier?}", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true, Configuration = ProviderName.SqlServer2022)]
 		[Sql.Extension("LAST_VALUE({expr}{_}{modifier?})", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true)]
 		public static IAggregateFunctionSelfContained<T> LastValue<T>(this Sql.ISqlExtension? ext, [ExprParameter] T expr, [SqlQueryDependent] Sql.Nulls nulls)
 		{

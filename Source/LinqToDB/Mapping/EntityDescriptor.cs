@@ -256,8 +256,7 @@ namespace LinqToDB.Mapping
 
 				if (caa != null)
 				{
-					if (Aliases == null)
-						Aliases = new Dictionary<string, string?>();
+					Aliases ??= new Dictionary<string, string?>();
 
 					Aliases.Add(member.Name, caa.MemberName);
 				}
@@ -265,8 +264,7 @@ namespace LinqToDB.Mapping
 				var ma = MappingSchema.GetAttribute<ExpressionMethodAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration);
 				if (ma != null && ma.IsColumn)
 				{
-					if (CalculatedMembers == null)
-						CalculatedMembers = new List<MemberAccessor>();
+					CalculatedMembers ??= new List<MemberAccessor>();
 					CalculatedMembers.Add(member);
 				}
 			}
@@ -376,8 +374,7 @@ namespace LinqToDB.Mapping
 					throw new LinqException("Inheritance Discriminator is not defined for the '{0}' hierarchy.", ObjectType);
 
 				foreach (var mapping in result)
-					if (mapping.Discriminator == null)
-						mapping.Discriminator = discriminator;
+					mapping.Discriminator ??= discriminator;
 			}
 
 			_inheritanceMappings = result;

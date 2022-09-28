@@ -11,7 +11,7 @@ namespace Tests.Linq
 	public class ConvertExpressionTests : TestBase
 	{
 		[Test]
-		public void Select1([DataSources] string context)
+		public void Select1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -24,7 +24,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Select2([DataSources] string context)
+		public void Select2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -39,7 +39,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Select3([DataSources] string context)
+		public void Select3([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -54,7 +54,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Select4([DataSources] string context)
+		public void Select4([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -69,7 +69,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Where1([DataSources] string context)
+		public void Where1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -86,7 +86,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Where2([DataSources] string context)
+		public void Where2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -103,7 +103,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Where3([DataSources] string context)
+		public void Where3([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -159,7 +159,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Any1([DataSources] string context)
+		public void Any1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(
@@ -172,7 +172,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Any2([DataSources] string context)
+		public void Any2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(
@@ -185,7 +185,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Any3([DataSources] string context)
+		public void Any3([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(
@@ -215,7 +215,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LetTest1([DataSources(ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllSapHana)] string context)
+		public void LetTest1([DataSources(ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllSapHana, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -233,7 +233,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LetTest2([DataSources(ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllSapHana)] string context)
+		public void LetTest2([DataSources(ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllSapHana, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -267,7 +267,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LetTest4([DataSources(TestProvName.AllInformix, TestProvName.AllSapHana)] string context)
+		public void LetTest4([DataSources(TestProvName.AllInformix, TestProvName.AllSapHana, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -297,7 +297,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LetTest41([DataSources(TestProvName.AllInformix, TestProvName.AllSapHana)] string context)
+		public void LetTest41([DataSources(TestProvName.AllInformix, TestProvName.AllSapHana, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -327,7 +327,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LetTest5([DataSources(TestProvName.AllOracle11, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllSapHana)] string context)
+		public void LetTest5([DataSources(TestProvName.AllOracle11, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllSapHana, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -357,7 +357,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LetTest6([DataSources(TestProvName.AllOracle11, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllSapHana)] string context)
+		public void LetTest6([DataSources(TestProvName.AllOracle11, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllSapHana, TestProvName.AllClickHouse)] string context)
 		{
 			//LinqToDB.Common.Configuration.Linq.GenerateExpressionTest = true;
 
@@ -400,7 +400,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LetTest61([DataSources(TestProvName.AllOracle11, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllSapHana)] string context)
+		public void LetTest61([DataSources(TestProvName.AllOracle11, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllSapHana, TestProvName.AllClickHouse)] string context)
 		{
 			//LinqToDB.Common.Configuration.Linq.GenerateExpressionTest = true;
 
@@ -444,7 +444,7 @@ namespace Tests.Linq
 
 		// PostgreSQL92 Uses 3 queries and we join results in wrong order. See LetTest71 with explicit sort
 		[Test]
-		public void LetTest7([DataSources(TestProvName.AllInformix, ProviderName.PostgreSQL92, TestProvName.AllSybase, TestProvName.AllSapHana, TestProvName.AllAccess)] string context)
+		public void LetTest7([DataSources(TestProvName.AllInformix, ProviderName.PostgreSQL92, TestProvName.AllSybase, TestProvName.AllSapHana, TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -478,7 +478,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LetTest71([DataSources(TestProvName.AllOracle11, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllSapHana, ProviderName.Access)] string context)
+		public void LetTest71([DataSources(TestProvName.AllOracle11, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllSapHana, ProviderName.Access, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -512,7 +512,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LetTest8([DataSources] string context)
+		public void LetTest8([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -565,6 +565,7 @@ namespace Tests.Linq
 					).Take(10));
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void LetTest10([DataSources] string context)
 		{
@@ -605,7 +606,8 @@ namespace Tests.Linq
 					,
 					from p in db.Parent
 					let ch1 = db.Child.OrderBy(c => c.ParentID).FirstOrDefault(c => c.ParentID > 0)
-					let ch2 = db.Child.Where(c => c.ChildID > -100)
+					let ch2 = db.Child.OrderBy(c => c.ParentID).Where(c => c.ChildID > -100)
+					orderby p.ParentID
 					select new
 					{
 						First1 = ch1 == null ? 0 : ch1.ParentID,
@@ -645,7 +647,7 @@ namespace Tests.Linq
 		enum EnumUInt64 : ulong  { TestValue = 4 }
 
 		[Test]
-		public void TestConversionRemovedForEnumOfTypeByte([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		public void TestConversionRemovedForEnumOfTypeByte([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db    = GetDataConnection(context))
 			using (var table = db.CreateLocalTable<ConversionsTestTable>())
@@ -691,7 +693,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestConversionRemovedForEnumOfTypeSByte([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		public void TestConversionRemovedForEnumOfTypeSByte([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db    = GetDataConnection(context))
 			using (var table = db.CreateLocalTable<ConversionsTestTable>())
@@ -737,7 +739,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestConversionRemovedForEnumOfTypeInt16([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		public void TestConversionRemovedForEnumOfTypeInt16([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db    = GetDataConnection(context))
 			using (var table = db.CreateLocalTable<ConversionsTestTable>())
@@ -783,7 +785,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestConversionRemovedForEnumOfTypeUInt16([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		public void TestConversionRemovedForEnumOfTypeUInt16([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db    = GetDataConnection(context))
 			using (var table = db.CreateLocalTable<ConversionsTestTable>())
@@ -829,7 +831,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestConversionRemovedForEnumOfTypeInt32([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		public void TestConversionRemovedForEnumOfTypeInt32([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db    = GetDataConnection(context))
 			using (var table = db.CreateLocalTable<ConversionsTestTable>())
@@ -875,7 +877,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestConversionRemovedForEnumOfTypeUInt32([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		public void TestConversionRemovedForEnumOfTypeUInt32([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db    = GetDataConnection(context))
 			using (var table = db.CreateLocalTable<ConversionsTestTable>())
@@ -921,7 +923,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestConversionRemovedForEnumOfTypeInt64([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		public void TestConversionRemovedForEnumOfTypeInt64([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db    = GetDataConnection(context))
 			using (var table = db.CreateLocalTable<ConversionsTestTable>())
@@ -967,7 +969,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestConversionRemovedForEnumOfTypeUInt64([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		public void TestConversionRemovedForEnumOfTypeUInt64([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db    = GetDataConnection(context))
 			using (var table = db.CreateLocalTable<ConversionsTestTable>())
