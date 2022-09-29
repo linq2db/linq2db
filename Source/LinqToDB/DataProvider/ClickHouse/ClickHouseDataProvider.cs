@@ -129,9 +129,9 @@ namespace LinqToDB.DataProvider.ClickHouse
 			TableOptions.CreateIfNotExists         |
 			TableOptions.DropIfExists;
 
-		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions options)
+		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
 		{
-			return new ClickHouseSqlBuilder(this, mappingSchema, options, GetSqlOptimizer(), SqlProviderFlags);
+			return new ClickHouseSqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(), SqlProviderFlags);
 		}
 
 		public override ISqlOptimizer GetSqlOptimizer() => _sqlOptimizer;
