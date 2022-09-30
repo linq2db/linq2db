@@ -49,11 +49,15 @@ namespace LinqToDB.Linq.Builder
 
 				var sequence = builder.BuildSequence(new BuildInfo(buildInfo, sequenceArgument, new SelectQuery()));
 
+				// finalizing context
+				_ = builder.MakeExpression(sequence, new ContextRefExpression(buildInfo.Expression.Type, sequence),
+					ProjectFlags.Expand);
+
 				if (methodName == "Count" || methodName == "LongCount")
 				{
 					functionPlaceholder = ExpressionBuilder.CreatePlaceholder(sequence, SqlFunction.CreateCount(returnType, sequence.SelectQuery), buildInfo.Expression);
 					context = new AggregationContext(buildInfo.Parent, sequence, methodCall.Method.Name, methodCall.Method.ReturnType);
-			}
+				}
 				else
 				{
 					Expression refExpression = new ContextRefExpression(sequenceArgument.Type, sequence);
@@ -84,21 +88,21 @@ namespace LinqToDB.Linq.Builder
 				// It means that as root we have used fake context
 				var testSelectQuery = testSequence.SelectQuery;
 				if (testSelectQuery.From.Tables.Count == 0)
-			{
+				{
 					var valid = true;
 					if (!testSelectQuery.Where.IsEmpty)
-				{
+					{
 						valid = false;
 						/* TODO: we can inject predicate into function if provider supports that
 						switch (methodName)
-					{
-							case "Sum":
-							{
-								filter = testSelectQuery.
-					}
-				}
+						{
+								case "Sum":
+								{
+									filter = testSelectQuery.
+								}
+							}
 						*/
-			}
+					}
 
 					if (valid)
 					{
@@ -106,7 +110,7 @@ namespace LinqToDB.Linq.Builder
 							new BuildInfo(buildInfo, sequenceArgument)
 								{ CreateSubQuery = false, IsAggregation = true });
 
-						var rootContext  = builder.GetRootContext(null, sequenceArgument, false);
+						var rootContext = builder.GetRootContext(null, sequenceArgument, false);
 
 						if (rootContext != null)
 						{
@@ -242,14 +246,14 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
-				{
+			{
 				throw new NotImplementedException();
-							}
+			}
 
 			private bool _joinCreated;
 
 			void CreateWeakOuterJoin(SelectQuery parentQuery, SelectQuery selectQuery)
-				{
+			{
 				if (!_joinCreated)
 				{
 					_joinCreated = true;
@@ -266,9 +270,9 @@ namespace LinqToDB.Linq.Builder
 				if (OuterJoinParentQuery != null)
 				{
 					if (!flags.HasFlag(ProjectFlags.Test))
-				{
+					{
 						CreateWeakOuterJoin(OuterJoinParentQuery, SelectQuery);
-				}
+					}
 				}
 
 				return Placeholder;

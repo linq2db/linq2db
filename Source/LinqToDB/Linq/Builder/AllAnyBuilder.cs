@@ -41,6 +41,10 @@ namespace LinqToDB.Linq.Builder
 				sequence.SetAlias(condition.Parameters[0].Name);
 			}
 
+			// finalizing context
+			_ = builder.MakeExpression(sequence, new ContextRefExpression(buildInfo.Expression.Type, sequence),
+				ProjectFlags.Expand);
+
 			return new AllAnyContext(buildInfo.Parent, buildInfo.SelectQuery, methodCall, sequence);
 		}
 
@@ -105,7 +109,7 @@ namespace LinqToDB.Linq.Builder
 						_methodCall.Method.Name.StartsWith("All"),
 						new SqlPredicate.FuncLike(SqlFunction.CreateExists(Sequence.SelectQuery)));
 
-					_innerSql = ExpressionBuilder.CreatePlaceholder(this, new SqlSearchCondition(cond), path, convertType: typeof(bool));
+					_innerSql = ExpressionBuilder.CreatePlaceholder(Parent?.SelectQuery ?? SelectQuery, new SqlSearchCondition(cond), path, convertType: typeof(bool));
 				}
 
 				return _innerSql;

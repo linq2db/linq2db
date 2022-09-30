@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Linq.Expressions;
+using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -107,6 +108,11 @@ namespace LinqToDB.Linq.Builder
 
 			if (!flags.HasFlag(ProjectFlags.Test))
 			{
+				if (result is SqlPlaceholderExpression placeholder)
+				{
+					result = placeholder.WithTrackingPath(path);
+				}
+
 				result = Builder.UpdateNesting(this, result);
 
 				// remap back, especially for Recursive CTE

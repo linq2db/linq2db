@@ -25,14 +25,15 @@ namespace LinqToDB.Linq.Builder
 		{
 			if (expression != null)
 			{
-				var root = current.Builder.GetRootObject(expression);
+				return ReplaceContext(expression, current, underlying);
+				/*var root = current.Builder.GetRootObject(expression);
 				if (root is ContextRefExpression refExpression)
 				{
 					if (refExpression.BuildContext == current)
 					{
 						expression = expression.Replace(root, new ContextRefExpression(root.Type, underlying), EqualityComparer<Expression>.Default);
 					}
-				}
+				}*/
 			}
 
 			return expression;

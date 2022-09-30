@@ -129,8 +129,14 @@ namespace LinqToDB.Linq.Builder
 
 			public Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
-				if (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AssociationRoot) || flags.HasFlag(ProjectFlags.Expand))
+				if (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AssociationRoot))
 					return path;
+
+				if (flags.HasFlag(ProjectFlags.Expand))
+				{
+					_cteContext.InitQuery();
+					return path;
+				}
 
 				var ctePath = SequenceHelper.CorrectExpression(path, this, _cteContext);
 				if (!ReferenceEquals(ctePath, path))

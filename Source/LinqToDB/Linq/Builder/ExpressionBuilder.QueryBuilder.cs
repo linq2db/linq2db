@@ -696,14 +696,14 @@ namespace LinqToDB.Linq.Builder
 				});
 
 			return result;
-				}
+		}
 
 		class SubQueryContextInfo
-				{
+		{
 			public Expression    SequenceExpression  = null!;
 			public IBuildContext Context = null!;
 			public Expression?   Expression;
-							}
+		}
 
 		public Expression CorrectRoot(IBuildContext? currentContext, Expression expr)
 		{
@@ -742,7 +742,7 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			return expression as ContextRefExpression;
-			}
+		}
 
 		List<SubQueryContextInfo>? _buildContextCache;
 

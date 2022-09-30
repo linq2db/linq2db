@@ -910,7 +910,7 @@ namespace LinqToDB.Linq.Builder
 			}
 			else
 			{
-				var newExpr = expression/*MakeExpression(expression, flags)*/;
+				var newExpr = MakeExpression(context, expression, flags);
 				result = ConvertToSqlInternal(context, newExpr, flags, unwrap: unwrap, columnDescriptor: columnDescriptor, isPureExpression: isPureExpression, alias: alias);
 			}
 
@@ -1200,7 +1200,7 @@ namespace LinqToDB.Linq.Builder
 							newExpr = ma.Update(new ContextRefExpression(ma.Expression.Type, sequence));
 							return ConvertToSqlExpr(context, newExpr, flags, unwrap, columnDescriptor,
 								isPureExpression);
-					}
+						}
 					}
 
 					/*
@@ -1244,15 +1244,6 @@ namespace LinqToDB.Linq.Builder
 					if (expression is SqlPlaceholderExpression placeholder)
 					{
 						return placeholder;
-				}
-
-					if (expression is ContextRefExpression contextRef)
-					{
-						var newExpr = MakeExpression(context, expression, flags);
-						if (!ReferenceEquals(newExpr, expression))
-						{
-							return ConvertToSqlExpr(context, newExpr, flags, unwrap, columnDescriptor, isPureExpression);
-						}
 					}
 
 					if (expression is SqlGenericConstructorExpression genericConstructor)
@@ -1273,10 +1264,6 @@ namespace LinqToDB.Linq.Builder
 
 				case ExpressionType.Call:
 				{
-					var newExpr = MakeExpression(context, expression, flags);
-					if (!ReferenceEquals(expression, newExpr))
-						return ConvertToSqlExpr(context, newExpr, flags, unwrap, columnDescriptor, isPureExpression, alias);
-
 					var e = (MethodCallExpression)expression;
 
 					/*var isAggregation = e.IsAggregate(MappingSchema);
@@ -1407,7 +1394,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						return ConvertToSqlExpr(context, transformed, flags, unwrap, columnDescriptor, isPureExpression,
 							alias);
-			}
+					}
 
 					break;
 				}
@@ -2070,6 +2057,17 @@ namespace LinqToDB.Linq.Builder
 					{
 						current.Push(assignment.MemberInfo);
 						foreach (var found in Collect(assignment.Expression, current))
+							yield return found;
+						current.Pop();
+					}
+
+					foreach (var parameter in generic.Parameters)
+					{
+						if (parameter.MemberInfo == null)
+							throw new LinqException("Parameters which are not mapped to field are not supported.");
+
+						current.Push(parameter.MemberInfo);
+						foreach (var found in Collect(parameter.Expression, current))
 							yield return found;
 						current.Pop();
 					}
@@ -3907,9 +3905,11 @@ namespace LinqToDB.Linq.Builder
 
 					var corrected = rootContext.BuildContext.MakeExpression(path, flags);
 
-					if (!ReferenceEquals(corrected, path) && corrected is not DefaultValueExpression && corrected is not SqlErrorExpression)
+					if (!ExpressionEqualityComparer.Instance.Equals(corrected, path) && corrected is not DefaultValueExpression && corrected is not SqlErrorExpression)
 					{
-						corrected = MakeExpression(currentContext, corrected, flags);
+						corrected = MakeExpression(rootContext.BuildContext, corrected, flags);
+
+						var pathStr = path.ToString();
 
 						if (corrected is SqlPlaceholderExpression placeholder)
 						{
@@ -3927,7 +3927,7 @@ namespace LinqToDB.Linq.Builder
 
 				path = newPath;
 
-				if (IsAssociation(newPath))
+				if (!flags.HasFlag(ProjectFlags.Root) && IsAssociation(newPath))
 				{
 					root = MakeExpression(currentContext, root, ProjectFlags.AssociationRoot);
 					path = ((MemberExpression)newPath).Update(root);
@@ -4018,7 +4018,7 @@ namespace LinqToDB.Linq.Builder
 					expression = path;
 			}
 
-			if (!ReferenceEquals(expression, path))
+			if (!ExpressionEqualityComparer.Instance.Equals(expression, path))
 			{
 				expression = MakeExpression(currentContext, expression, flags);
 			}

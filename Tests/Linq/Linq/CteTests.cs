@@ -1266,6 +1266,8 @@ namespace Tests.Linq
 					);
 			});
 
+			var zzz = query.ToArray();
+
 			AreEqual(
 				Person.Select(p => new Issue3357RecordClass(p.ID, p.FirstName, p.LastName)),
 				query.ToArray());

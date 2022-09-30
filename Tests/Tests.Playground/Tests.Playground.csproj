@@ -6,6 +6,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<Compile Include="..\Linq\Linq\AllAnyTests.cs" Link="AllAnyTests.cs" />
 		<Compile Include="..\Linq\Linq\CteTests.cs" Link="CteTests.cs" />
 		<Compile Include="..\Linq\Linq\EagerLoadingTests.cs" Link="EagerLoadingTests.cs" />
 		<Compile Include="..\Linq\TestsInitialization.cs" Link="TestsInitialization.cs" />
