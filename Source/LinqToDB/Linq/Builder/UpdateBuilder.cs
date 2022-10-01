@@ -354,11 +354,11 @@ namespace LinqToDB.Linq.Builder
 
 					if (argument is NewExpression newExpr && newExpr.Type.IsAnonymous())
 					{
-						BuildNew(newExpr, Expression.MakeMemberAccess(path, member));
+						BuildNew(newExpr, pe);
 					}
 					else if (argument is MemberInitExpression initExpr && !into.IsExpression(pe, 1, RequestFor.Field).Result)
 					{
-						BuildMemberInit(initExpr, Expression.MakeMemberAccess(path, member));
+						BuildMemberInit(initExpr, pe);
 					}
 					else
 					{
