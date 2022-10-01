@@ -63,7 +63,6 @@ namespace LinqToDB.Linq.Builder
 				case OutputMethod.IUpdatable:
 				{
 					// int Update<T>(this IUpdateable<T> source)
-					CheckAssociation(sequence);
 
 					objectType       = genericArguments[0];
 					outputExpression = RewriteOutputExpression(outputExpression);
@@ -75,7 +74,6 @@ namespace LinqToDB.Linq.Builder
 				{
 					// int Update<T>(this IQueryable<T> source, Expression<Func<T,T>> setter)
 					// int Update<T>(this IQueryable<T> source, Expression<Func<T,bool>> predicate, Expression<Func<T,T>> setter)
-					CheckAssociation(sequence);
 
 					var expr = methodCall.Arguments[1].Unwrap();
 					if (expr is LambdaExpression lex && lex.ReturnType == typeof(bool))
@@ -269,35 +267,6 @@ namespace LinqToDB.Linq.Builder
 			};
 		}
 
-		static void CheckAssociation(IBuildContext sequence)
-		{
-			throw new NotImplementedException();
-
-			if (sequence is SelectContext ctx/* && ctx.IsScalar*/)
-			{
-				var res = ctx.IsExpression(null, 0, RequestFor.Association);
-
-				if (res.Result)
-				{
-					var atc = res.Context!.IsExpression(null, 0, RequestFor.Table);
-					if (atc.Result && atc.Context is TableBuilder.TableContext tableContext)
-					{
-						ctx.Statement!.RequireUpdateClause().Table = tableContext.SqlTable;
-					}
-				}
-				else
-				{
-					res = ctx.IsExpression(null, 0, RequestFor.Table);
-
-					if (res.Result && res.Context is TableBuilder.TableContext tc)
-					{
-						if (ctx.Statement!.SelectQuery!.From.Tables.Count == 0 || ctx.Statement.SelectQuery.From.Tables[0].Source != tc.SelectQuery)
-							ctx.Statement.RequireUpdateClause().Table = tc.SqlTable;
-					}
-				}
-			}
-		}
-
 		#endregion
 
 		#region Helpers
@@ -321,11 +290,8 @@ namespace LinqToDB.Linq.Builder
 			List<SqlSetExpression> items,
 			params IBuildContext[] sequences)
 		{
-			var setterExpr = setter.Body;
-			if (setter.Parameters.Count > 0)
-			{
-				setterExpr = SequenceHelper.PrepareBody(setter, sequences);
-			}
+			var setterBody = SequenceHelper.PrepareBody(setter, sequences);
+			var setterExpr = builder.ConvertToSqlExpr(into, setterBody);
 
 			void BuildSetter(MemberExpression memberExpression, Expression expression)
 			{
@@ -335,25 +301,21 @@ namespace LinqToDB.Linq.Builder
 				items.Add(new SqlSetExpression(column, expr));
 			}
 
-			void BuildNew(NewExpression expression, Expression path)
+			void BuildGeneric(SqlGenericConstructorExpression generic, Expression path)
 			{
-				for (var i = 0; i < expression.Members!.Count; i++)
+				foreach (var assignment in generic.Assignments)
 				{
-					var member   = expression.Members[i];
-					var argument = expression.Arguments[i];
+					var member   = assignment.MemberInfo;
+					var argument = assignment.Expression;
 
 					if (member is MethodInfo mi)
 						member = mi.GetPropertyInfo();
 
 					var pe = Expression.MakeMemberAccess(path, member);
 
-					if (argument is NewExpression newExpr && newExpr.Type.IsAnonymous())
+					if (argument is SqlGenericConstructorExpression genericArgument)
 					{
-						BuildNew(newExpr, Expression.MakeMemberAccess(path, member));
-					}
-					else if (argument is MemberInitExpression initExpr && !into.IsExpression(pe, 1, RequestFor.Field).Result)
-					{
-						BuildMemberInit(initExpr, Expression.MakeMemberAccess(path, member));
+						BuildGeneric(genericArgument, Expression.MakeMemberAccess(path, member));
 					}
 					else
 					{
@@ -362,74 +324,15 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			void BuildMemberInit(MemberInitExpression expression, Expression path)
-			{
-				foreach (var binding in expression.Bindings)
-				{
-					var member = binding.Member;
-
-					if (member is MethodInfo mi)
-						member = mi.GetPropertyInfo();
-
-					if (binding is MemberAssignment ma)
-					{
-						var pe = Expression.MakeMemberAccess(path, member);
-
-						if (ma.Expression is NewExpression newExpr && newExpr.Type.IsAnonymous())
-						{
-							BuildNew(newExpr, Expression.MakeMemberAccess(path, member));
-						}
-						else if (ma.Expression is MemberInitExpression initExpr && !into.IsExpression(pe, 1, RequestFor.Field).Result)
-						{
-							BuildMemberInit(initExpr, Expression.MakeMemberAccess(path, member));
-						}
-						else
-						{
-							BuildSetter(pe, ma.Expression);
-						}
-					}
-					else
-						throw new InvalidOperationException();
-				}
-			}
-
 			var bodyPath = new ContextRefExpression(setterExpr.Type, into);
 			var bodyExpr = setterExpr;
 
-			if (bodyExpr.NodeType == ExpressionType.New && bodyExpr.Type.IsAnonymous())
+			if (bodyExpr is SqlGenericConstructorExpression generic)
 			{
-				var ex = (NewExpression)bodyExpr;
-
-				BuildNew(ex, bodyPath);
-			}
-			else if (bodyExpr.NodeType == ExpressionType.MemberInit)
-			{
-				var ex = (MemberInitExpression)bodyExpr;
-
-				BuildMemberInit(ex, bodyPath);
+				BuildGeneric(generic, bodyPath);
 			}
 			else
-			{
-				var sqlInfo = builder.ConvertToSqlExpr(buildInfo.Parent, setterExpr, ProjectFlags.SQL, false);
-
-				throw new NotImplementedException(); 
-
-				/*foreach (var info in sqlInfo)
-				{
-					if (info.MemberChain.Length == 0)
-						throw new LinqException("Object initializer expected for insert statement.");
-
-					if (info.MemberChain.Length != 1)
-						throw new InvalidOperationException();
-
-					var member = info.MemberChain[0];
-					var pe     = Expression.MakeMemberAccess(bodyPath, member);
-					var column = into.ConvertToSql(pe, 1, ConvertFlags.Field);
-					var expr   = info.Sql;
-
-					items.Add(new SqlSetExpression(column[0].Sql, expr));
-				}*/
-			}
+				throw new LinqException($"Setter expression '{setterExpr}' cannot be used for build SQL.");
 		}
 
 		internal static void ParseSet(

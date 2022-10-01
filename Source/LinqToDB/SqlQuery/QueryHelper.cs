@@ -239,7 +239,7 @@ namespace LinqToDB.SqlQuery
 				}
 				case QueryElementType.SqlField:
 				{
-					return ((SqlField)expr).ColumnDescriptor.GetDbDataType(true);
+					return ((SqlField)expr).ColumnDescriptor?.GetDbDataType(true);
 				}
 				case QueryElementType.SqlExpression:
 				{

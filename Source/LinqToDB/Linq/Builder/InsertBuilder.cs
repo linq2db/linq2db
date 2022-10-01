@@ -291,6 +291,17 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
+			public override Expression MakeExpression(Expression path, ProjectFlags flags)
+			{
+				if (SequenceHelper.IsSameContext(path, this) && flags.HasFlag(ProjectFlags.Expression))
+				{
+					return new SqlGenericConstructorExpression(SqlGenericConstructorExpression.CreateType.Auto,
+						path.Type, null, null);
+				}
+
+				return base.MakeExpression(path, flags);
+			}
+
 			public override void SetRunQuery<T>(Query<T> query, Expression expr)
 			{
 				QueryRunner.SetNonQueryQuery(query);
