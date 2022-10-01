@@ -1274,6 +1274,55 @@ namespace LinqToDB
 			return new Updatable<T>((IQueryable<T>)query);
 		}
 
+		/// <summary>Adds update fields expressions to query.</summary>
+		/// <typeparam name="T">Updated record type.</typeparam>
+		/// <param name="source">Source query with records to update.</param>
+		/// <param name="subSelect">A subquery that returns an initializer for updated fields "new T { Field = ... }".</param>
+		/// <returns><see cref="IUpdatable{T}"/> query.</returns>
+		/// <remarks>This method only works with providers that support SQL Row Constructors in UPDATE setters.</remarks>
+		[LinqTunnel, Pure]
+		public static IUpdatable<T> Set<T>(
+							this IQueryable<T>                 source, 
+			[InstantHandle] Expression<Func<T, IQueryable<T>>> subSelect)
+		{
+			if (source    == null) throw new ArgumentNullException(nameof(source));
+			if (subSelect == null) throw new ArgumentNullException(nameof(subSelect));
+
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+			return SetSubQuery(currentSource, Methods.LinqToDB.Update.SetQueryableSubQuery, subSelect);
+		}
+
+		/// <summary>Adds update fields expressions to query.</summary>
+		/// <typeparam name="T">Updated record type.</typeparam>
+		/// <param name="source">Source query with records to update.</param>
+		/// <param name="subSelect">A subquery that returns an initializer for updated fields "new T { Field = ... }".</param>
+		/// <returns><see cref="IUpdatable{T}"/> query.</returns>
+		/// <remarks>This method only works with providers that support SQL Row Constructors in UPDATE setters.</remarks>
+		[LinqTunnel, Pure]
+		public static IUpdatable<T> Set<T>(
+							this IUpdatable<T>                 source, 
+			[InstantHandle] Expression<Func<T, IQueryable<T>>> subSelect)
+		{
+			if (source    == null) throw new ArgumentNullException(nameof(source));
+			if (subSelect == null) throw new ArgumentNullException(nameof(subSelect));
+
+			return SetSubQuery(source.Query, Methods.LinqToDB.Update.SetUpdatableSubQuery, subSelect);
+		}
+
+		private static IUpdatable<T> SetSubQuery<T>(
+			IQueryable query, 
+			MethodInfo method, 
+			Expression<Func<T, IQueryable<T>>> subQuery)
+		{
+			return new Updatable<T>(
+				query.Provider.CreateQuery<T>(
+					Expression.Call(
+						null,
+						method.MakeGenericMethod(typeof(T)),
+						query.Expression,
+						Expression.Quote(subQuery))));
+		}
+
 		/// <summary>Adds update field expression to query.</summary>
 		/// <typeparam name="T">Updated record type.</typeparam>
 		/// <typeparam name="TV">Updated field type.</typeparam>

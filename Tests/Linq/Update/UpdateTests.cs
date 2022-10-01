@@ -1715,6 +1715,57 @@ namespace Tests.xUpdate
 			read.Value6.Should().Be(UpdateSetEnum.Value3);
 		}
 
+		[Test]
+		public void TestSetQueryableRow(
+			// Native `UPDATE SET ROW(a, b) = SELECT 1, 2` support required
+			[IncludeDataSources(true,	
+				ProviderName.DB2,
+				TestProvName.AllPostgreSQL95Plus,
+				TestProvName.AllOracle)] string context)
+		{
+			var data = new UpdateSetTest[]
+			{
+				new () { Id = 1, Value2 = 1 },
+				new () { Id = 2, Value2 = 20, Value5 = 1 },
+				new () { Id = 3, Value3 = UpdateSetEnum.Value3, Value4 = TestData.Guid4 },
+			};
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			int affected = table
+				.Where(x => x.Id == 1)
+				.Set(x => x.Value1, TestData.Guid1)
+				.Set(old => from x in table
+							where x.Id == 2
+							select new UpdateSetTest 
+							{
+								Value2 = old.Value2 + x.Value5!.Value,
+								Value5 = x.Value2,
+								Value3 = UpdateSetEnum.Value1,
+							})
+				.Set(old => table
+					.Select(x => new UpdateSetTest
+					{
+						Value4 = x.Value4,
+						Value6 = old.Value2 == 1 ? x.Value3 : UpdateSetEnum.Value1,
+					})
+					.Where(x => x.Id == 3))
+				.Update();
+
+			var read = table.First(x => x.Id == 1);
+
+			affected.Should().Be(1);
+			read.Should().BeEquivalentTo(new UpdateSetTest
+			{
+				Id     = 1,
+				Value2 = 2,
+				Value3 = UpdateSetEnum.Value1,
+				Value4 = TestData.Guid4,
+				Value5 = 20,
+				Value6 = UpdateSetEnum.Value3,
+			});
+		}
+
 		[Table]
 		class MainTable
 		{
