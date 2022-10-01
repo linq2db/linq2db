@@ -224,7 +224,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (ctx.IsExpression(null, 0, RequestFor.Field).Result)
 					ctx.ConvertToIndex(null, 0, ConvertFlags.Field);
-				if (ctx.IsExpression(null, 0, RequestFor.Expression).Result)
+				if (ctx.IsExpression(null, 0, RequestFor.Expression).Result && !ctx.IsExpression(null, 0, RequestFor.Object).Result)
 					ctx.ConvertToIndex(null, 0, ConvertFlags.All);
 			}
 
