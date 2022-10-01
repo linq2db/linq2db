@@ -1206,6 +1206,74 @@ namespace LinqToDB
 				Expression.Quote(update));
 		}
 
+		/// <summary>Adds update fields expressions to query.</summary>
+		/// <typeparam name="T">Updated record type.</typeparam>
+		/// <param name="source">Source query with records to update.</param>
+		/// <param name="setters">An initializer expression "new T { Field = ... }" that sets one or multiple fields.</param>
+		/// <returns><see cref="IUpdatable{T}"/> query.</returns>
+		[LinqTunnel, Pure]
+		public static IUpdatable<T> Set<T>(
+			                this IQueryable<T>     source,
+			[InstantHandle] Expression<Func<T, T>> setters)
+		{
+			if (source  == null) throw new ArgumentNullException(nameof(source));
+			if (setters == null) throw new ArgumentNullException(nameof(setters));
+
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+			return SetInitializer(currentSource, Methods.LinqToDB.Update.SetQueryablePrev, setters);
+		}
+
+		/// <summary>Adds update fields expressions to query.</summary>
+		/// <typeparam name="T">Updated record type.</typeparam>
+		/// <param name="source">Source query with records to update.</param>
+		/// <param name="setters">An initializer expression "new T { Field = ... }" that sets one or multiple fields.</param>
+		/// <returns><see cref="IUpdatable{T}"/> query.</returns>
+		[LinqTunnel, Pure]
+		public static IUpdatable<T> Set<T>(
+			                this IUpdatable<T>     source,
+			[InstantHandle] Expression<Func<T, T>> setters)
+		{
+			if (source  == null) throw new ArgumentNullException(nameof(source));
+			if (setters == null) throw new ArgumentNullException(nameof(setters));
+
+			return SetInitializer(source.Query, Methods.LinqToDB.Update.SetUpdatablePrev, setters);
+		}
+
+		[LinqTunnel, Pure]
+		private static IUpdatable<T> SetInitializer<T>(
+							IQueryable             query,
+							MethodInfo             method,
+			[InstantHandle] Expression<Func<T, T>> setters)
+		{
+			if (setters is not LambdaExpression { Body: MemberInitExpression init, Parameters: {} parameters })
+				throw new ArgumentException("setters must be an initializer expression", nameof(setters));
+			if (init.Bindings.Count == 0)
+				throw new ArgumentException("At least one initializer must be specified", nameof(setters));
+
+			var extractFrom = Expression.Parameter(typeof(T));
+			var oldRow = parameters[0];
+			foreach (var binding in init.Bindings)
+			{
+				if (binding is not MemberAssignment assign)
+					throw new ArgumentException("Only member assignments are supported", nameof(setters));
+
+				query = query.Provider.CreateQuery<T>(
+					Expression.Call(
+						null,
+						method.MakeGenericMethod(typeof(T), assign.Expression.Type),
+						query.Expression,
+						Expression.Quote(Expression.Lambda(
+							Expression.MakeMemberAccess(extractFrom, assign.Member),
+							extractFrom)),
+						Expression.Quote(Expression.Lambda(
+							assign.Expression,
+							oldRow))));
+
+				method = Methods.LinqToDB.Update.SetUpdatablePrev;
+			}
+			return new Updatable<T>((IQueryable<T>)query);
+		}
+
 		/// <summary>Adds update field expression to query.</summary>
 		/// <typeparam name="T">Updated record type.</typeparam>
 		/// <typeparam name="TV">Updated field type.</typeparam>

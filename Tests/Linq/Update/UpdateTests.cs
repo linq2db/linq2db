@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
+using FluentAssertions;
+
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
@@ -1680,6 +1682,37 @@ namespace Tests.xUpdate
 				Assert.That(result[1].Items2, Is.EqualTo("Z2" + str));
 
 			}
+		}
+
+		[Test]
+		public void TestSetInitializer([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(UpdateSetTest.Data);
+			
+			int affected = table
+				.Where(x => x.Id == 1)
+				.Set(old => new ()
+				{
+					Value2 = 20,
+					Value5 = old.Value2 * 5,
+				})
+				.Set(_ => new ()
+				{
+					Value1 = TestData.Guid6,
+					Value3 = UpdateSetEnum.Value3,
+				})
+				.Set(x => x.Value6, UpdateSetEnum.Value3)
+				.Update();
+
+			var read = table.First(x => x.Id == 1);
+
+			affected.Should().Be(1);
+			read.Value1.Should().Be(TestData.Guid6);
+			read.Value2.Should().Be(20);
+			read.Value3.Should().Be(UpdateSetEnum.Value3);
+			read.Value5.Should().Be(50);
+			read.Value6.Should().Be(UpdateSetEnum.Value3);
 		}
 
 		[Table]
