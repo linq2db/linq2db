@@ -1,10 +1,12 @@
-﻿using System.Text;
+﻿using System;
+using System.Data.Common;
+using System.Text;
 
 namespace LinqToDB.DataProvider.SqlCe
 {
-	using Mapping;
-	using SqlProvider;
 	using SqlQuery;
+	using SqlProvider;
+	using Mapping;
 
 	class SqlCeSqlBuilder : BasicSqlBuilder
 	{
@@ -156,7 +158,7 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		protected override void BuildMergeStatement(SqlMergeStatement merge)
 		{
-			ThrowHelper.ThrowLinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
+			throw new LinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
 		}
 
 		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr) => BuildIsDistinctPredicateFallback(expr);

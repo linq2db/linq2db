@@ -1,4 +1,11 @@
-﻿namespace LinqToDB.DataProvider.DB2
+﻿using System;
+using System.Collections.Generic;
+using System.Data.Common;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace LinqToDB.DataProvider.DB2
 {
 	using Data;
 	using Common;

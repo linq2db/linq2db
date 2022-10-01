@@ -1,7 +1,9 @@
-﻿namespace LinqToDB.Schema
-{
-	using SqlQuery;
+﻿using System.Collections.Generic;
+using System.Linq;
+using LinqToDB.SqlQuery;
 
+namespace LinqToDB.Schema
+{
 	/// <summary>
 	/// Describes foreign key relation between tables.
 	/// </summary>

@@ -12,8 +12,4 @@
 		<PackageReference Include="System.Data.SqlClient" />
 	</ItemGroup>
 
-	<ItemGroup>
-		<Using Remove="System.Net.Http" />
-	</ItemGroup>
-
 </Project>

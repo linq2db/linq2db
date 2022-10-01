@@ -1,4 +1,7 @@
-﻿namespace LinqToDB.Remote
+﻿using System;
+using System.Collections.Generic;
+
+namespace LinqToDB.Remote
 {
 	public class LinqServiceResult
 	{

@@ -1,4 +1,8 @@
-﻿namespace LinqToDB.Data
+﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace LinqToDB.Data
 {
 	/// <summary>
 	/// Data connection transaction controller.
@@ -16,7 +20,7 @@
 		/// <param name="dataConnection">Data connection instance.</param>
 		public DataConnectionTransaction(DataConnection dataConnection)
 		{
-			DataConnection = dataConnection ?? ThrowHelper.ThrowArgumentNullException<DataConnection>(nameof(dataConnection));
+			DataConnection = dataConnection ?? throw new ArgumentNullException(nameof(dataConnection));
 		}
 
 		/// <summary>

@@ -1,4 +1,7 @@
-﻿namespace LinqToDB.DataProvider.Firebird
+﻿using JetBrains.Annotations;
+using System.Collections.Generic;
+
+namespace LinqToDB.DataProvider.Firebird
 {
 	using Configuration;
 

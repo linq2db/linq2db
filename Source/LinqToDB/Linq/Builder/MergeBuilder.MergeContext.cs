@@ -1,8 +1,10 @@
-﻿using System.Linq.Expressions;
-using LinqToDB.Expressions;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using LinqToDB.Expressions;
 	using SqlQuery;
 
 	internal partial class MergeBuilder
@@ -47,12 +49,12 @@ namespace LinqToDB.Linq.Builder
 
 			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 			{
-				return ThrowHelper.ThrowNotImplementedException<Expression>();
+				throw new NotImplementedException();
 			}
 
 			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 			{
-				return ThrowHelper.ThrowNotImplementedException<SqlInfo[]>();
+				throw new NotImplementedException();
 			}
 
 			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
@@ -62,33 +64,33 @@ namespace LinqToDB.Linq.Builder
 					switch (flags)
 					{
 						case ConvertFlags.Field:
-						{
-							var root = Builder.GetRootObject(expression);
-
-							if (root.NodeType == ExpressionType.Parameter)
 							{
-								if (_sourceParameters.Contains(root))
-									return SourceContext.ConvertToSql(expression, level, flags);
+								var root = Builder.GetRootObject(expression);
 
-								return TargetContext.ConvertToSql(expression, level, flags);
+								if (root.NodeType == ExpressionType.Parameter)
+								{
+									if (_sourceParameters.Contains(root))
+										return SourceContext.ConvertToSql(expression, level, flags);
+
+									return TargetContext.ConvertToSql(expression, level, flags);
+								}
+
+								if (root is ContextRefExpression contextRef)
+								{
+									return contextRef.BuildContext.ConvertToSql(expression, level, flags);
+								}
+
+								break;
 							}
-
-							if (root is ContextRefExpression contextRef)
-							{
-								return contextRef.BuildContext.ConvertToSql(expression, level, flags);
-							}
-
-							break;
-						}
 					}
 				}
 
-				return ThrowHelper.ThrowLinqException<SqlInfo[]>($"'{expression}' cannot be converted to SQL.");
+				throw new LinqException("'{0}' cannot be converted to SQL.", expression);
 			}
 
 			public override IBuildContext GetContext(Expression? expression, int level, BuildInfo buildInfo)
 			{
-				return ThrowHelper.ThrowNotImplementedException<IBuildContext>();
+				throw new NotImplementedException();
 			}
 
 			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)

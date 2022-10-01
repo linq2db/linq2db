@@ -1,5 +1,7 @@
-﻿using System.Data;
+﻿using System;
+using System.Data;
 using System.Data.Common;
+using System.Linq;
 using BenchmarkDotNet.Attributes;
 using LinqToDB.Benchmarks.Mappings;
 using LinqToDB.Benchmarks.TestProvider;

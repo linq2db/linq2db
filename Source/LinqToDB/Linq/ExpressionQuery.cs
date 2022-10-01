@@ -1,6 +1,11 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
@@ -14,7 +19,7 @@ namespace LinqToDB.Linq
 
 		protected void Init(IDataContext dataContext, Expression? expression)
 		{
-			DataContext = dataContext ?? ThrowHelper.ThrowArgumentNullException<IDataContext>(nameof(dataContext));
+			DataContext = dataContext ?? throw new ArgumentNullException(nameof(dataContext));
 			Expression  = expression  ?? Expression.Constant(this);
 		}
 
@@ -247,7 +252,7 @@ namespace LinqToDB.Linq
 		IQueryable<TElement> IQueryProvider.CreateQuery<TElement>(Expression expression)
 		{
 			if (expression == null)
-				ThrowHelper.ThrowArgumentNullException(nameof(expression));
+				throw new ArgumentNullException(nameof(expression));
 
 			return new ExpressionQueryImpl<TElement>(DataContext, expression);
 		}
@@ -255,7 +260,7 @@ namespace LinqToDB.Linq
 		IQueryable IQueryProvider.CreateQuery(Expression expression)
 		{
 			if (expression == null)
-				ThrowHelper.ThrowArgumentNullException(nameof(expression));
+				throw new ArgumentNullException(nameof(expression));
 
 			var elementType = expression.Type.GetItemType() ?? expression.Type;
 
@@ -281,7 +286,7 @@ namespace LinqToDB.Linq
 
 				var getElement = query.GetElement;
 				if (getElement == null)
-					ThrowHelper.ThrowLinqToDBException("GetElement is not assigned by the context.");
+					throw new LinqToDBException("GetElement is not assigned by the context.");
 				return (TResult)getElement(DataContext, expression, Parameters, Preambles)!;
 			}
 		}
@@ -296,7 +301,7 @@ namespace LinqToDB.Linq
 
 				var getElement = query.GetElement;
 				if (getElement == null)
-					ThrowHelper.ThrowLinqToDBException("GetElement is not assigned by the context.");
+					throw new LinqToDBException("GetElement is not assigned by the context.");
 				return getElement(DataContext, expression, Parameters, Preambles);
 			}
 		}

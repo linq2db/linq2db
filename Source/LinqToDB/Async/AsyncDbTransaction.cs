@@ -1,4 +1,11 @@
-﻿namespace LinqToDB.Async
+﻿using System;
+using System.Data.Common;
+using System.Threading;
+using System.Threading.Tasks;
+
+using JetBrains.Annotations;
+
+namespace LinqToDB.Async
 {
 	/// <summary>
 	/// Basic <see cref="IAsyncDbTransaction"/> implementation with fallback to synchronous operations if corresponding functionality
@@ -9,7 +16,7 @@
 	{
 		internal protected AsyncDbTransaction(DbTransaction transaction)
 		{
-			Transaction = transaction ?? ThrowHelper.ThrowArgumentNullException<DbTransaction>(nameof(transaction));
+			Transaction = transaction ?? throw new ArgumentNullException(nameof(transaction));
 		}
 
 		public DbTransaction Transaction { get; }

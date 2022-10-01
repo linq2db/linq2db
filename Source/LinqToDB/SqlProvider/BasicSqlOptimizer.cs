@@ -1,5 +1,8 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 
 // ReSharper disable InconsistentNaming
 
@@ -7,6 +10,7 @@ namespace LinqToDB.SqlProvider
 {
 	using Common;
 	using Common.Internal;
+	using DataProvider;
 	using Expressions;
 	using Extensions;
 	using Linq;
@@ -366,7 +370,7 @@ namespace LinqToDB.SqlProvider
 				{
 					// TODO: Ideally if there is no recursive CTEs we can convert them to SubQueries
 					if (!SqlProviderFlags.IsCommonTableExpressionsSupported)
-						ThrowHelper.ThrowLinqToDBException("DataProvider do not supports Common Table Expressions.");
+						throw new LinqToDBException("DataProvider do not supports Common Table Expressions.");
 
 					var ordered = TopoSorting.TopoSort(cteHolder.WriteableValue.Keys, cteHolder, static (cteHolder, i) => cteHolder.WriteableValue![i]).ToList();
 
@@ -1055,18 +1059,18 @@ namespace LinqToDB.SqlProvider
 
 		static SqlPredicate.Operator InvertOperator(SqlPredicate.Operator op, bool preserveEqual)
 		{
-			return op switch
+			switch (op)
 			{
-				SqlPredicate.Operator.Equal          => preserveEqual ? op : SqlPredicate.Operator.NotEqual,
-				SqlPredicate.Operator.NotEqual       => preserveEqual ? op : SqlPredicate.Operator.Equal,
-				SqlPredicate.Operator.Greater        => SqlPredicate.Operator.LessOrEqual,
-				SqlPredicate.Operator.NotLess        or
-				SqlPredicate.Operator.GreaterOrEqual => preserveEqual ? SqlPredicate.Operator.LessOrEqual : SqlPredicate.Operator.Less,
-				SqlPredicate.Operator.Less           => SqlPredicate.Operator.GreaterOrEqual,
-				SqlPredicate.Operator.NotGreater     or
-				SqlPredicate.Operator.LessOrEqual    => preserveEqual ? SqlPredicate.Operator.GreaterOrEqual : SqlPredicate.Operator.Greater,
-				_ => ThrowHelper.ThrowInvalidOperationException<SqlPredicate.Operator>(),
-			};
+				case SqlPredicate.Operator.Equal          : return preserveEqual ? op : SqlPredicate.Operator.NotEqual;
+				case SqlPredicate.Operator.NotEqual       : return preserveEqual ? op : SqlPredicate.Operator.Equal;
+				case SqlPredicate.Operator.Greater        : return SqlPredicate.Operator.LessOrEqual;
+				case SqlPredicate.Operator.NotLess        :
+				case SqlPredicate.Operator.GreaterOrEqual : return preserveEqual ? SqlPredicate.Operator.LessOrEqual : SqlPredicate.Operator.Less;
+				case SqlPredicate.Operator.Less           : return SqlPredicate.Operator.GreaterOrEqual;
+				case SqlPredicate.Operator.NotGreater     :
+				case SqlPredicate.Operator.LessOrEqual    : return preserveEqual ? SqlPredicate.Operator.GreaterOrEqual : SqlPredicate.Operator.Greater;
+				default: throw new InvalidOperationException();
+			}
 		}
 
 		ISqlPredicate OptimizeCase(SqlPredicate.IsTrue isTrue, EvaluationContext context)
@@ -1260,19 +1264,21 @@ namespace LinqToDB.SqlProvider
 
 		static bool Compare(int v1, int v2, SqlPredicate.Operator op)
 		{
-			return op switch
+			switch (op)
 			{
-				SqlPredicate.Operator.Equal           => v1 == v2,
-				SqlPredicate.Operator.NotEqual        => v1 != v2,
-				SqlPredicate.Operator.Greater         => v1 >  v2,
-				SqlPredicate.Operator.NotLess or
-				SqlPredicate.Operator.GreaterOrEqual  => v1 >= v2,
-				SqlPredicate.Operator.Less            => v1 <  v2,
-				SqlPredicate.Operator.NotGreater or
-				SqlPredicate.Operator.LessOrEqual     => v1 <= v2,
-				_                                     => ThrowHelper.ThrowInvalidOperationException<bool>(),
-			};
+				case SqlPredicate.Operator.Equal:           return v1 == v2;
+				case SqlPredicate.Operator.NotEqual:        return v1 != v2;
+				case SqlPredicate.Operator.Greater:         return v1 >  v2;
+				case SqlPredicate.Operator.NotLess:
+				case SqlPredicate.Operator.GreaterOrEqual:  return v1 >= v2;
+				case SqlPredicate.Operator.Less:            return v1 <  v2;
+				case SqlPredicate.Operator.NotGreater:
+				case SqlPredicate.Operator.LessOrEqual:     return v1 <= v2;
+			}
+
+			throw new InvalidOperationException();
 		}
+
 
 		public virtual ISqlPredicate OptimizePredicate(ISqlPredicate predicate, EvaluationContext context)
 		{
@@ -1454,7 +1460,7 @@ namespace LinqToDB.SqlProvider
 				// ROW(a, b) IS [NOT] NULL
 				case SqlValue { Value: null }:
 					if (op is not (SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual))
-						ThrowHelper.ThrowLinqException("Null SqlRow is only allowed in equality comparisons");
+						throw new LinqException("Null SqlRow is only allowed in equality comparisons");
 					if (!SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.IsNull))
 						return RowIsNullFallback((SqlRow)predicate.Expr1, op == SqlPredicate.Operator.NotEqual);
 					break;
@@ -1469,12 +1475,11 @@ namespace LinqToDB.SqlProvider
 				case SelectQuery:
 					if (!SqlProviderFlags.RowConstructorSupport.HasFlag(feature) ||
 						!SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.CompareToSelect))
-						ThrowHelper.ThrowLinqException("SqlRow comparisons to SELECT are not supported by this DB provider");
+						throw new LinqException("SqlRow comparisons to SELECT are not supported by this DB provider");
 					break;
 
 				default:
-					ThrowHelper.ThrowLinqException("Inappropriate SqlRow expression, only Sql.Row() and sub-selects are valid.");
-					break;
+					throw new LinqException("Inappropriate SqlRow expression, only Sql.Row() and sub-selects are valid.");
 			}
 
 			// Default ExprExpr translation is ok
@@ -1567,7 +1572,7 @@ namespace LinqToDB.SqlProvider
 				//TODO: make it working if possible
 				/*
 				if (row1.Values.Length != 2 || row2.Values.Length != 2)
-					ThrowHelper.ThrowLinqException("Unsupported SqlRow conversion from operator: " + op);
+					throw new LinqException("Unsupported SqlRow conversion from operator: " + op);
 
 				rewrite.Conditions.Add(new SqlCondition(false, new SqlPredicate.ExprExpr(row1.Values[0], SqlPredicate.Operator.LessOrEqual, row2.Values[1], withNull: false)));
 				rewrite.Conditions.Add(new SqlCondition(false, new SqlPredicate.ExprExpr(row2.Values[0], SqlPredicate.Operator.LessOrEqual, row1.Values[1], withNull: false)));
@@ -1576,7 +1581,7 @@ namespace LinqToDB.SqlProvider
 				return rewrite;
 			}
 
-			return ThrowHelper.ThrowLinqException<ISqlPredicate>("Unsupported SqlRow operator: " + op);
+			throw new LinqException("Unsupported SqlRow operator: " + op);
 		}
 
 		public virtual ISqlPredicate ConvertBetweenPredicate(SqlPredicate.Between between)
@@ -2136,7 +2141,7 @@ namespace LinqToDB.SqlProvider
 			if (withConversion)
 			{
 				if (mappingSchema == null)
-					ThrowHelper.ThrowInvalidOperationException("MappingSchema is required for conversion");
+					throw new InvalidOperationException("MappingSchema is required for conversion");
 
 				newElement = RunOptimization(newElement, optimizationContext, this, mappingSchema, true,
 					static(visitor, e) =>
@@ -2322,7 +2327,7 @@ namespace LinqToDB.SqlProvider
 					SqlPredicate.SearchString.SearchKind.StartsWith => patternValue + LikeWildcardCharacter,
 					SqlPredicate.SearchString.SearchKind.EndsWith   => LikeWildcardCharacter + patternValue,
 					SqlPredicate.SearchString.SearchKind.Contains   => LikeWildcardCharacter + patternValue + LikeWildcardCharacter,
-					_ => ThrowHelper.ThrowInvalidOperationException<string>($"Unexpected predicate kind: {predicate.Kind}")
+					_ => throw new InvalidOperationException($"Unexpected predicate kind: {predicate.Kind}")
 				};
 
 				var patternExpr = LikePatternParameterSupport
@@ -2355,7 +2360,7 @@ namespace LinqToDB.SqlProvider
 					SqlPredicate.SearchString.SearchKind.StartsWith => new SqlBinaryExpression(typeof(string), patternExpr, "+", anyCharacterExpr, Precedence.Additive),
 					SqlPredicate.SearchString.SearchKind.EndsWith   => new SqlBinaryExpression(typeof(string), anyCharacterExpr, "+", patternExpr, Precedence.Additive),
 					SqlPredicate.SearchString.SearchKind.Contains   => new SqlBinaryExpression(typeof(string), new SqlBinaryExpression(typeof(string), anyCharacterExpr, "+", patternExpr, Precedence.Additive), "+", anyCharacterExpr, Precedence.Additive),
-					_ => ThrowHelper.ThrowInvalidOperationException<ISqlExpression>($"Unexpected predicate kind: {predicate.Kind}")
+					_ => throw new InvalidOperationException($"Unexpected predicate kind: {predicate.Kind}")
 				};
 
 				patternExpr = OptimizeExpression(patternExpr, visitor);
@@ -2385,7 +2390,7 @@ namespace LinqToDB.SqlProvider
 		{
 			var result = QueryHelper.GetUnderlyingField(expr);
 			if (result == null)
-				ThrowHelper.ThrowInvalidOperationException($"Cannot retrieve underlying field for '{expr.ToDebugString()}'.");
+				throw new InvalidOperationException($"Cannot retrieve underlying field for '{expr.ToDebugString()}'.");
 			return result;
 		}
 
@@ -2408,7 +2413,7 @@ namespace LinqToDB.SqlProvider
 						var keys  = table.GetKeys(true);
 
 						if (keys == null || keys.Count == 0)
-							ThrowHelper.ThrowSqlException("Cant create IN expression.");
+							throw new SqlException("Cant create IN expression.");
 
 						if (keys.Count == 1)
 						{
@@ -2668,7 +2673,7 @@ namespace LinqToDB.SqlProvider
 				deleteStatement.SelectQuery.From.Tables[0].Source is SqlTable table)
 			{
 				if (deleteStatement.Output != null)
-					ThrowHelper.ThrowNotImplementedException($"GetAlternativeDelete not implemented for delete with output");
+					throw new NotImplementedException($"GetAlternativeDelete not implemented for delete with output");
 
 				var sql = new SelectQuery { IsParameterDependent = deleteStatement.IsParameterDependent };
 
@@ -2761,7 +2766,7 @@ namespace LinqToDB.SqlProvider
 				var tableToUpdate = updateStatement.GetUpdateTable();
 
 				if (tableToUpdate == null)
-					ThrowHelper.ThrowLinqToDBException("Query can't be translated to UPDATE Statement.");
+					throw new LinqToDBException("Query can't be translated to UPDATE Statement.");
 
 				// we have to ensure that clone do not contain tableToUpdate
 				var objectTree   = new Dictionary<IQueryElement, IQueryElement>();
@@ -2785,7 +2790,7 @@ namespace LinqToDB.SqlProvider
 				}
 
 				if (tableToCompare == null)
-					ThrowHelper.ThrowLinqToDBException("Query can't be translated to UPDATE Statement.");
+					throw new LinqToDBException("Query can't be translated to UPDATE Statement.");
 
 				var compareKeys = tableToCompare.GetKeys(true);
 				var tableKeys   = tableToUpdate.GetKeys(true);
@@ -2795,7 +2800,7 @@ namespace LinqToDB.SqlProvider
 				{
 					var column = QueryHelper.NeedColumnForExpression(clonedQuery, compareKeys[i], false);
 					if (column == null)
-						ThrowHelper.ThrowLinqToDBException($"Can not create query column for expression '{compareKeys[i]}'.");
+						throw new LinqToDBException($"Can not create query column for expression '{compareKeys[i]}'.");
 					var compare = QueryHelper.GenerateEquality(tableKeys[i], column);
 					clonedQuery.Where.SearchCondition.Conditions.Add(compare);
 				}
@@ -2841,7 +2846,7 @@ namespace LinqToDB.SqlProvider
 									: expr);
 
 							var newColumn = tableToUpdate[QueryHelper.GetUnderlyingField(item.Column)!.Name]
-							                ?? ThrowHelper.ThrowLinqException<SqlField>(
+							                ?? throw new LinqException(
 								                $"Field {QueryHelper.GetUnderlyingField(item.Column)!.Name} not found in table {tableToUpdate}");
 
 							var remapped = ex.Convert((tableToUpdateMapping, innerQuery, objectTree),
@@ -2873,9 +2878,11 @@ namespace LinqToDB.SqlProvider
 
 
 							//var column = QueryHelper.NeedColumnForExpression(innerQuery, item.Expression!, false);
-							var newUpdateExpression = innerQuery.Select.AddNewColumn(remapped)
-							                          ?? ThrowHelper.ThrowInvalidOperationException<SqlColumn>(
-															$"Could not create column for expression '{item.Expression}'");
+							var newUpdateExpression = innerQuery.Select.AddNewColumn(remapped);
+
+							if (newUpdateExpression == null)
+								throw new InvalidOperationException(
+									$"Could not create column for expression '{item.Expression}'");
 
 							rows.Add((newColumn, newUpdateExpression));
 						}
@@ -2946,7 +2953,7 @@ namespace LinqToDB.SqlProvider
 					}
 
 						item.Column = tableToUpdate[QueryHelper.GetUnderlyingField(item.Column)!.Name]
-						              ?? ThrowHelper.ThrowLinqException<SqlField>(
+						              ?? throw new LinqException(
 							              $"Field {QueryHelper.GetUnderlyingField(item.Column)!.Name} not found in table {tableToUpdate}");
 						item.Expression = ex;
 						newUpdateStatement.Update.Items.Add(item);
@@ -2994,7 +3001,7 @@ namespace LinqToDB.SqlProvider
 			element?.Walk(WalkOptions.Default, (replacing, withTable), static (ctx, e) =>
 			{
 				if (e is SqlField field && field.Table == ctx.replacing)
-					return ctx.withTable[field.Name] ?? ThrowHelper.ThrowLinqException<SqlField>($"Field {field.Name} not found in table {ctx.withTable}");
+					return ctx.withTable[field.Name] ?? throw new LinqException($"Field {field.Name} not found in table {ctx.withTable}");
 
 				return e;
 			});
@@ -3047,7 +3054,7 @@ namespace LinqToDB.SqlProvider
 			{
 				var foundTable = QueryHelper.EnumerateAccessibleTables(statement.SelectQuery).FirstOrDefault();
 				if (foundTable == null)
-					ThrowHelper.ThrowLinqToDBException("Invalid query for Update.");
+					throw new LinqToDBException("Invalid query for Update.");
 
 				tableToUpdate  = foundTable;
 				tableToCompare = tableToUpdate;
@@ -3065,7 +3072,7 @@ namespace LinqToDB.SqlProvider
 			{
 				var foundTable = FindUpdateTable(statement.SelectQuery, tableToUpdate);
 				if (foundTable is null)
-					ThrowHelper.ThrowLinqToDBException("Invalid query for Update. Could not find appropriate table in the query.");
+					throw new LinqToDBException("Invalid query for Update. Could not find appropriate table in the query.");
 
 				tableToCompare = foundTable;
 			}
@@ -3141,7 +3148,7 @@ namespace LinqToDB.SqlProvider
 			if (comparingIsNeed)
 			{
 				if (tableToCompare == null)
-					ThrowHelper.ThrowInvalidOperationException();
+					throw new InvalidOperationException();
 
 				if (tableToCompare == tableToUpdate)
 				{
@@ -3154,14 +3161,14 @@ namespace LinqToDB.SqlProvider
 						var newItem = item.Convert((tableToCompare, tableToUpdate), static (v, e) =>
 						{
 							if (e is SqlField field && field.Table == v.Context.tableToCompare)
-								return v.Context.tableToUpdate[field.Name] ?? ThrowHelper.ThrowLinqException<SqlField>($"Field {field.Name} not found in table {v.Context.tableToUpdate}");
+								return v.Context.tableToUpdate[field.Name] ?? throw new LinqException($"Field {field.Name} not found in table {v.Context.tableToUpdate}");
 
 							return e;
 						});
 
 						var updateField = QueryHelper.GetUnderlyingField(newItem.Column);
 						if (updateField != null)
-							newItem.Column = tableToUpdate[updateField.Name] ?? ThrowHelper.ThrowLinqException<SqlField>($"Field {updateField.Name} not found in table {tableToUpdate}");
+							newItem.Column = tableToUpdate[updateField.Name] ?? throw new LinqException($"Field {updateField.Name} not found in table {tableToUpdate}");
 
 						statement.Update.Items[i] = newItem;
 					}
@@ -3171,14 +3178,14 @@ namespace LinqToDB.SqlProvider
 				var keys2 = tableToCompare.GetKeys(true);
 
 				if (keys1.Count == 0)
-					ThrowHelper.ThrowLinqToDBException(
+					throw new LinqToDBException(
 						$"Table {tableToUpdate.NameForLogging} do not have primary key. Update transformation is not available.");
 
 				for (int i = 0; i < keys1.Count; i++)
 				{
 					var column = QueryHelper.NeedColumnForExpression(statement.SelectQuery, keys2[i], false);
 					if (column == null)
-						ThrowHelper.ThrowLinqToDBException($"Can not create query column for expression '{keys2[i]}'.");
+						throw new LinqToDBException($"Can not create query column for expression '{keys2[i]}'.");
 
 					var compare = QueryHelper.GenerateEquality(keys1[i], column);
 					statement.SelectQuery.Where.SearchCondition.Conditions.Add(compare);
@@ -3222,7 +3229,7 @@ namespace LinqToDB.SqlProvider
 							{
 								if (exp is SqlField field && field.Table == ctx.updateTable)
 								{
-									return ctx.jt[field.Name] ?? ThrowHelper.ThrowLinqException<SqlField>($"Field {field.Name} not found in table {ctx.jt}");
+									return ctx.jt[field.Name] ?? throw new LinqException($"Field {field.Name} not found in table {ctx.jt}");
 								}
 								return exp;
 							});
@@ -3237,7 +3244,7 @@ namespace LinqToDB.SqlProvider
 					statement.Update = statement.Update.Convert((updateTable, newUpdateTable), static (v, e) =>
 					{
 						if (e is SqlField field && field.Table == v.Context.updateTable)
-							return v.Context.newUpdateTable[field.Name] ?? ThrowHelper.ThrowLinqException<SqlField>($"Field {field.Name} not found in table {v.Context.newUpdateTable}");
+							return v.Context.newUpdateTable[field.Name] ?? throw new LinqException($"Field {field.Name} not found in table {v.Context.newUpdateTable}");
 
 						return e;
 					});

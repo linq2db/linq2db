@@ -1,4 +1,5 @@
-﻿using System.Data;
+﻿using System;
+using System.Data;
 
 namespace LinqToDB.Benchmarks.TestProvider
 {

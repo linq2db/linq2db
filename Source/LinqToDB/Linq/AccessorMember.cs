@@ -1,4 +1,5 @@
-﻿using System.Collections.ObjectModel;
+﻿using System;
+using System.Collections.ObjectModel;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -30,7 +31,7 @@ namespace LinqToDB.Linq
 			}
 			else
 			{
-				ThrowHelper.ThrowInvalidOperationException($"Expression '{expression}' cannot be used in association.");
+				throw new InvalidOperationException($"Expression '{expression}' cannot be used in association.");
 			}
 		}
 

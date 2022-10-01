@@ -1,16 +1,23 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data.Linq;
-using System.Diagnostics.CodeAnalysis;
+using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Xml;
 
+using JetBrains.Annotations;
+
 namespace LinqToDB.Extensions
 {
-	using Common;
-	using Reflection;
+	using System.Diagnostics.CodeAnalysis;
+	using Expressions;
+	using LinqToDB.Common;
+	using LinqToDB.Reflection;
 
 	[PublicAPI]
 	public static class ReflectionExtensions
@@ -380,7 +387,7 @@ namespace LinqToDB.Extensions
 		public static T[] GetAttributes<T>(this Type type)
 			where T : Attribute
 		{
-			if (type == null) ThrowHelper.ThrowArgumentNullException(nameof(type));
+			if (type == null) throw new ArgumentNullException(nameof(type));
 
 			return CacheHelper<T>.TypeAttributes.GetOrAdd(
 				type,
@@ -426,7 +433,7 @@ namespace LinqToDB.Extensions
 		/// </returns>
 		public static Type ToUnderlying(this Type type)
 		{
-			if (type == null) ThrowHelper.ThrowArgumentNullException(nameof(type));
+			if (type == null) throw new ArgumentNullException(nameof(type));
 
 			if (type.IsNullable()) type = type.GetGenericArguments()[0];
 			if (type.IsEnum      ) type = Enum.GetUnderlyingType(type);
@@ -436,7 +443,7 @@ namespace LinqToDB.Extensions
 
 		public static Type ToNullableUnderlying(this Type type)
 		{
-			if (type == null) ThrowHelper.ThrowArgumentNullException(nameof(type));
+			if (type == null) throw new ArgumentNullException(nameof(type));
 			//return type.IsNullable() ? type.GetGenericArguments()[0] : type;
 			return Nullable.GetUnderlyingType(type) ?? type;
 		}
@@ -449,9 +456,9 @@ namespace LinqToDB.Extensions
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Type AsNullable(this Type type)
 		{
-			if (type == null)      ThrowHelper.ThrowArgumentNullException(nameof(type));
-			if (!type.IsValueType) ThrowHelper.ThrowArgumentException(nameof(type), $"{type} is not a value type");
-			if (type.IsNullable()) ThrowHelper.ThrowArgumentException(nameof(type), $"{type} is nullable type already");
+			if (type == null)      throw new ArgumentNullException(nameof(type));
+			if (!type.IsValueType) throw new ArgumentException($"{type} is not a value type");
+			if (type.IsNullable()) throw new ArgumentException($"{type} is nullable type already");
 
 			return typeof(Nullable<>).MakeGenericType(type);
 		}
@@ -494,8 +501,8 @@ namespace LinqToDB.Extensions
 		/// aren't a parent and it's child.</remarks>
 		public static bool IsSameOrParentOf(this Type parent, Type child)
 		{
-			if (parent == null) ThrowHelper.ThrowArgumentNullException(nameof(parent));
-			if (child  == null) ThrowHelper.ThrowArgumentNullException(nameof(child));
+			if (parent == null) throw new ArgumentNullException(nameof(parent));
+			if (child  == null) throw new ArgumentNullException(nameof(child));
 
 			if (parent == child)
 				return true;
@@ -547,8 +554,8 @@ namespace LinqToDB.Extensions
 		[Pure]
 		public static bool IsSubClassOf(this Type type, Type check)
 		{
-			if (type  == null) ThrowHelper.ThrowArgumentNullException(nameof(type));
-			if (check == null) ThrowHelper.ThrowArgumentNullException(nameof(check));
+			if (type  == null) throw new ArgumentNullException(nameof(type));
+			if (check == null) throw new ArgumentNullException(nameof(check));
 
 			if (type == check)
 				return false;
@@ -580,7 +587,7 @@ namespace LinqToDB.Extensions
 
 		public static Type? GetGenericType(this Type genericType, Type type)
 		{
-			if (genericType == null) ThrowHelper.ThrowArgumentNullException(nameof(genericType));
+			if (genericType == null) throw new ArgumentNullException(nameof(genericType));
 
 			while (type != typeof(object))
 			{
@@ -932,7 +939,7 @@ namespace LinqToDB.Extensions
 				MemberTypes.Field       => ((FieldInfo)memberInfo).FieldType,
 				MemberTypes.Method      => ((MethodInfo)memberInfo).ReturnType,
 				MemberTypes.Constructor => memberInfo.DeclaringType!,
-				_                       => ThrowHelper.ThrowInvalidOperationException<Type>(),
+				_                       => throw new InvalidOperationException(),
 			};
 		}
 
@@ -1070,7 +1077,7 @@ namespace LinqToDB.Extensions
 
 		public static bool IsAnonymous(this Type type)
 		{
-			if (type == null) ThrowHelper.ThrowArgumentNullException(nameof(type));
+			if (type == null) throw new ArgumentNullException(nameof(type));
 
 			return
 				!type.IsPublic &&

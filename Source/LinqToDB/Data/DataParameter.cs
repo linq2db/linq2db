@@ -1,11 +1,15 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
+using System.Data;
 using System.Data.Linq;
 using System.Xml;
 using System.Xml.Linq;
+using System.Collections.Generic;
 
 namespace LinqToDB.Data
 {
-	using Common;
+	using System.Data.Common;
+	using LinqToDB.Common;
 	using Mapping;
 
 	[ScalarType]

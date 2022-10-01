@@ -1,7 +1,7 @@
 ﻿namespace LinqToDB.Data.RetryPolicy
 {
-	using DataProvider.ClickHouse;
 	using DataProvider.SqlServer;
+	using LinqToDB.DataProvider.ClickHouse;
 
 	static class DefaultRetryPolicyFactory
 	{

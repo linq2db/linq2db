@@ -1,4 +1,9 @@
-﻿namespace LinqToDB.Remote
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace LinqToDB.Remote
 {
 	using System.Threading;
 	using Common;
@@ -54,7 +59,7 @@
 		protected virtual void ValidateQuery(LinqServiceQuery query)
 		{
 			if (AllowUpdates == false && query.Statement.QueryType != QueryType.Select)
-				ThrowHelper.ThrowLinqException("Insert/Update/Delete requests are not allowed by the service policy.");
+				throw new LinqException("Insert/Update/Delete requests are not allowed by the service policy.");
 		}
 
 		protected virtual void HandleException(Exception exception)
@@ -347,7 +352,7 @@
 				QueryType.Delete => ((SqlDeleteStatement)query.Statement).Output!.OutputColumns!,
 				QueryType.Update => ((SqlUpdateStatement)query.Statement).Output!.OutputColumns!,
 				QueryType.Merge  => ((SqlMergeStatement )query.Statement).Output!.OutputColumns!,
-				_ => ThrowHelper.ThrowNotImplementedException<List<ISqlExpression>>($"Query type not supported: {query.Statement.QueryType}"),
+				_ => throw new NotImplementedException($"Query type not supported: {query.Statement.QueryType}"),
 			};
 
 			for (var i = 0; i < ret.FieldCount; i++)

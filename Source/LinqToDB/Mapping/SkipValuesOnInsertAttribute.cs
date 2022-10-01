@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.Mapping
+﻿using System;
+
+namespace LinqToDB.Mapping
 {
 	/// <summary>
 	/// Attribute for skipping specific values on insert.

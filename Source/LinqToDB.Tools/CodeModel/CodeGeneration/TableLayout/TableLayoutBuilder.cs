@@ -1,9 +1,10 @@
-﻿using System.Text;
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+using LinqToDB.Common;
 
 namespace LinqToDB.CodeModel
 {
-	using Common;
-
 	/// <summary>
 	/// Implements text (code) generation using table layout.
 	/// </summary>

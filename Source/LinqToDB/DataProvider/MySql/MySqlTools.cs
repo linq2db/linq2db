@@ -1,4 +1,8 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.IO;
+using System.Reflection;
 
 namespace LinqToDB.DataProvider.MySql
 {
@@ -87,7 +91,7 @@ namespace LinqToDB.DataProvider.MySql
 
 		public static void ResolveMySql(string path, string? assemblyName)
 		{
-			if (path == null) ThrowHelper.ThrowArgumentNullException(nameof(path));
+			if (path == null) throw new ArgumentNullException(nameof(path));
 			new AssemblyResolver(
 				path,
 				assemblyName
@@ -98,7 +102,7 @@ namespace LinqToDB.DataProvider.MySql
 
 		public static void ResolveMySql(Assembly assembly)
 		{
-			if (assembly == null) ThrowHelper.ThrowArgumentNullException(nameof(assembly));
+			if (assembly == null) throw new ArgumentNullException(nameof(assembly));
 			new AssemblyResolver(assembly, assembly.FullName!);
 		}
 

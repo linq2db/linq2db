@@ -1,4 +1,7 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using LinqToDB;
 using LinqToDB.Data;
@@ -159,6 +162,7 @@ namespace Tests.Samples
 	public class JsonConvertTests : TestBase
 	{
 
+		[ActiveIssue("https://feedback.azure.com/d365community/idea/6f685846-7c2b-ed11-a81b-6045bd853c94", Configuration = TestProvName.AllSqlServer2022)]
 		[Test]
 		public void SampleSelectTest([IncludeDataSources(TestProvName.AllSqlServer2016Plus, TestProvName.AllClickHouse)] string context)
 		{

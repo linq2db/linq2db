@@ -1,4 +1,7 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Text;
 
 namespace LinqToDB.SqlProvider
@@ -730,7 +733,7 @@ namespace LinqToDB.SqlProvider
 			{
 				var fields = new VirtualField[v.Count];
 				for (var i = 0; i < v.Count; i++)
-					fields[i] = GetUnderlayingField(v[i]) ?? ThrowHelper.ThrowInvalidOperationException<VirtualField>($"Cannot get field for {v[i]}");
+					fields[i] = GetUnderlayingField(v[i]) ?? throw new InvalidOperationException($"Cannot get field for {v[i]}");
 				result.Add(fields);
 			}
 
@@ -1269,26 +1272,25 @@ namespace LinqToDB.SqlProvider
 		{
 			public VirtualField(ISqlExpression expression)
 			{
-				if (expression == null) ThrowHelper.ThrowArgumentNullException(nameof(expression));
+				if (expression == null) throw new ArgumentNullException(nameof(expression));
 
 				if (expression is SqlField field)
 					Field = field;
 				else if (expression is SqlColumn column)
 					Column = column;
 				else
-					ThrowHelper.ThrowArgumentException(
-						nameof(expression),
-						$"Expression '{expression}' is not a Field or Column.");
+					throw new ArgumentException($"Expression '{expression}' is not a Field or Column.",
+						nameof(expression));
 			}
 
 			public VirtualField(SqlField field)
 			{
-				Field = field ?? ThrowHelper.ThrowArgumentNullException<SqlField>(nameof(field));
+				Field = field ?? throw new ArgumentNullException(nameof(field));
 			}
 
 			public VirtualField(SqlColumn column)
 			{
-				Column = column ?? ThrowHelper.ThrowArgumentNullException<SqlColumn>(nameof(column));
+				Column = column ?? throw new ArgumentNullException(nameof(column));
 			}
 
 			public SqlField?  Field  { get; }

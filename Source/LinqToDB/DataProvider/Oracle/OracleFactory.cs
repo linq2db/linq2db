@@ -1,4 +1,8 @@
-﻿namespace LinqToDB.DataProvider.Oracle
+﻿using JetBrains.Annotations;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace LinqToDB.DataProvider.Oracle
 {
 	using Configuration;
 

@@ -1,10 +1,13 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using LinqToDB.Expressions;
 	using Extensions;
 	using Reflection;
 	using SqlQuery;
@@ -25,17 +28,19 @@ namespace LinqToDB.Linq.Builder
 			var sequence1 = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 			var sequence2 = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery()));
 
-			var setOperation = methodCall.Method.Name switch
+			SetOperation setOperation;
+			switch (methodCall.Method.Name)
 			{
-				"Concat" or 
-				"UnionAll"     => SetOperation.UnionAll,
-				"Union"        => SetOperation.Union,
-				"Except"       => SetOperation.Except,
-				"ExceptAll"    => SetOperation.ExceptAll,
-				"Intersect"    => SetOperation.Intersect,
-				"IntersectAll" => SetOperation.IntersectAll,
-				_              => ThrowHelper.ThrowArgumentException<SetOperation>($"Invalid method name {methodCall.Method.Name}."),
-			};
+				case "Concat"       : 
+				case "UnionAll"     : setOperation = SetOperation.UnionAll;     break;
+				case "Union"        : setOperation = SetOperation.Union;        break;
+				case "Except"       : setOperation = SetOperation.Except;       break;
+				case "ExceptAll"    : setOperation = SetOperation.ExceptAll;    break;
+				case "Intersect"    : setOperation = SetOperation.Intersect;    break;
+				case "IntersectAll" : setOperation = SetOperation.IntersectAll; break;
+				default:
+					throw new ArgumentException($"Invalid method name {methodCall.Method.Name}.");
+			}
 
 			var needsEmulation = !builder.DataContext.SqlProviderFlags.IsAllSetOperationsSupported &&
 			                     (setOperation == SetOperation.ExceptAll || setOperation == SetOperation.IntersectAll)
@@ -67,7 +72,7 @@ namespace LinqToDB.Linq.Builder
 				var keys2 = query.   ConvertToSql(null, 0, ConvertFlags.All);
 
 				if (keys1.Length != keys2.Length)
-					ThrowHelper.ThrowInvalidOperationException();
+					throw new InvalidOperationException();
 
 				for (var i = 0; i < keys1.Length; i++)
 				{
@@ -203,7 +208,7 @@ namespace LinqToDB.Linq.Builder
 				foreach (var info in infos)
 				{
 					if (info.MemberChain.Length == 0)
-						ThrowHelper.ThrowInvalidOperationException();
+						throw new InvalidOperationException();
 
 					if (isFirst)
 					{
@@ -251,7 +256,7 @@ namespace LinqToDB.Linq.Builder
 							var member = new Member { MemberExpression = Expression.MakeMemberAccess(_unionParameter, info.MemberChain[0]) };
 
 								if (sequence.IsExpression(member.MemberExpression, 1, RequestFor.Object).Result)
-									ThrowHelper.ThrowLinqException("Types in UNION are constructed incompatibly.");
+									throw new LinqException("Types in UNION are constructed incompatibly.");
 
 								_unionMembers.Add(em = new UnionMember(member, info));
 								if (em.Infos.Count < Sequences.Count)
@@ -293,7 +298,7 @@ namespace LinqToDB.Linq.Builder
 						continue;
 
 					//if (sequence.IsExpression(member.Member.MemberExpression, 1, RequestFor.Object).Result)
-					//	ThrowHelper.ThrowLinqException("Types in UNION are constructed incompatibly.");
+					//	throw new LinqException("Types in UNION are constructed incompatibly.");
 
 					var info = member.Infos[0];
 
@@ -415,9 +420,9 @@ namespace LinqToDB.Linq.Builder
 							if ((recordType & RecordType.CallConstructorOnRead) != 0)
 							{
 								if (nctor.Members != null)
-									expr = ThrowHelper.ThrowLinqToDBException<Expression>($"Call to '{nctor.Type}' record constructor cannot have initializers.");
+									throw new LinqToDBException($"Call to '{nctor.Type}' record constructor cannot have initializers.");
 								else if (nctor.Arguments.Count == 0)
-									expr = ThrowHelper.ThrowLinqToDBException<Expression>($"Call to '{nctor.Type}' record constructor requires parameters.");
+									throw new LinqToDBException($"Call to '{nctor.Type}' record constructor requires parameters.");
 								else
 								{
 									var ctorParms = nctor.Constructor!.GetParameters();
@@ -435,19 +440,18 @@ namespace LinqToDB.Linq.Builder
 							else
 							{
 								if (nctor.Members == null)
-								{
-									expr = ThrowHelper.ThrowLinqToDBException<Expression>($"Call to '{nctor.Type}' constructor lacks initializers.");
-								}	
+									throw new LinqToDBException($"Call to '{nctor.Type}' constructor lacks initializers.");
 								else
 								{
 									var members = nctor.Members
-										.Select(m => m is MethodInfo info ? info.GetPropertyInfo() : m)
-										.ToList();
+								.Select(m => m is MethodInfo info ? info.GetPropertyInfo() : m)
+								.ToList();
 
-									expr = Expression.New(
-										nctor.Constructor!,
-										members.Select(m => ExpressionHelper.PropertyOrField(_unionParameter!, m.Name)),
-										members);
+							expr = Expression.New(
+								nctor.Constructor!,
+								members.Select(m => ExpressionHelper.PropertyOrField(_unionParameter!, m.Name)),
+								members);
+
 								}
 							}
 
@@ -585,7 +589,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					if (sequence.IsExpression(testExpression, level, RequestFor.Association).Result)
 					{
-						ThrowHelper.ThrowLinqToDBException(
+						throw new LinqToDBException(
 							"Associations with Concat/Union or other Set operations are not supported.");
 					}
 				}
@@ -672,7 +676,7 @@ namespace LinqToDB.Linq.Builder
 									}
 
 									if (member == null)
-										ThrowHelper.ThrowLinqToDBException($"Expression '{expression}' is not a field.");
+										throw new LinqToDBException($"Expression '{expression}' is not a field.");
 
 									member.SqlQueryInfo ??= new SqlInfo
 										(
@@ -691,7 +695,7 @@ namespace LinqToDB.Linq.Builder
 							break;
 					}
 
-					ThrowHelper.ThrowInvalidOperationException();
+					throw new InvalidOperationException();
 				}
 
 				return base.ConvertToSql(expression, level, flags);

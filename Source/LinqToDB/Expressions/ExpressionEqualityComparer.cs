@@ -3,17 +3,19 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using LinqToDB.Extensions;
+using LinqToDB.Linq;
 
 // ReSharper disable SwitchStatementMissingSomeCases
 // ReSharper disable ForCanBeConvertedToForeach
 // ReSharper disable LoopCanBeConvertedToQuery
 namespace LinqToDB.Expressions
 {
-	using Extensions;
-	using Linq;
-
 	/// <summary>
 	///     This API supports the Entity Framework Core infrastructure and is not intended to be used
 	///     directly from your code. This API may change or be removed in future releases.
@@ -224,8 +226,7 @@ namespace LinqToDB.Expressions
 									}
 									break;
 								default:
-									ThrowHelper.ThrowNotImplementedException();
-									break;
+									throw new NotImplementedException();
 							}
 						}
 
@@ -279,8 +280,7 @@ namespace LinqToDB.Expressions
 //                        break;
 //                    }
 					default:
-						ThrowHelper.ThrowNotImplementedException();
-						break;
+						throw new NotImplementedException();
 				}
 
 				return hashCode;
@@ -399,7 +399,7 @@ namespace LinqToDB.Expressions
 //                    case ExpressionType.Extension:
 //                        return CompareExtension(a, b);
 					default:
-						return ThrowHelper.ThrowNotImplementedException<bool>();
+						throw new NotImplementedException();
 				}
 			}
 
@@ -681,7 +681,7 @@ namespace LinqToDB.Expressions
 					MemberBindingType.Assignment	=> CompareMemberAssignment((MemberAssignment)a, (MemberAssignment)b),
 					MemberBindingType.ListBinding	=> CompareMemberListBinding((MemberListBinding)a, (MemberListBinding)b),
 					MemberBindingType.MemberBinding => CompareMemberMemberBinding((MemberMemberBinding)a, (MemberMemberBinding)b),
-					_                               => ThrowHelper.ThrowNotImplementedException<bool>(),
+					_                               => throw new NotImplementedException(),
 				};
 			}
 

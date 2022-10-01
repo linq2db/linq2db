@@ -2,6 +2,7 @@
 using LinqToDB.Mapping;
 using NUnit.Framework;
 using System.Data.Linq;
+using System.Linq;
 
 namespace Tests.UserTests
 {

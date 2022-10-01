@@ -4,7 +4,9 @@ using LinqToDB.DataProvider.Firebird;
 using LinqToDB.DataProvider.Oracle;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
+using System;
 using System.Globalization;
+using System.Threading;
 using Tests.Model;
 
 namespace Tests

@@ -1,6 +1,8 @@
 ﻿using LinqToDB;
 using LinqToDB.Tools;
 using NUnit.Framework;
+using System;
+using System.Linq;
 using FluentAssertions;
 
 using static LinqToDB.Sql;

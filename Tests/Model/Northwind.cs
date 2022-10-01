@@ -1,4 +1,6 @@
-﻿using System.Data.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Data.Linq;
 using LinqToDB.Mapping;
 
 namespace Tests.Model

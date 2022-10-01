@@ -1,9 +1,13 @@
-﻿using System.Data.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Data.Linq;
 using System.Data.SqlTypes;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
-using LinqToDB.Expressions;
+
+using JetBrains.Annotations;
 
 #region ReSharper disables
 // ReSharper disable RedundantTypeArgumentsOfMethod
@@ -17,9 +21,10 @@ using LinqToDB.Expressions;
 namespace LinqToDB.Linq
 {
 	using Common;
-	using Common.Internal;
-	using DataProvider.Firebird;
 	using Extensions;
+	using LinqToDB.Common.Internal;
+	using DataProvider.Firebird;
+	using LinqToDB.Expressions;
 	using Mapping;
 
 	[PublicAPI]
@@ -129,7 +134,7 @@ namespace LinqToDB.Linq
 			if (expr is BinaryExpression binary)
 				return binary;
 
-			return ThrowHelper.ThrowArgumentException<BinaryExpression>(nameof(expr), $"Expression '{expr}' is not BinaryExpression node.");
+			throw new ArgumentException($"Expression '{expr}' is not BinaryExpression node.");
 		}
 
 		/// <summary>
@@ -148,10 +153,10 @@ namespace LinqToDB.Linq
 			Type             rightType,
 			LambdaExpression expression)
 		{
-			if (providerName == null) ThrowHelper.ThrowArgumentNullException(nameof(providerName));
-			if (leftType     == null) ThrowHelper.ThrowArgumentNullException(nameof(leftType));
-			if (rightType    == null) ThrowHelper.ThrowArgumentNullException(nameof(rightType));
-			if (expression   == null) ThrowHelper.ThrowArgumentNullException(nameof(expression));
+			if (providerName == null) throw new ArgumentNullException(nameof(providerName));
+			if (leftType     == null) throw new ArgumentNullException(nameof(leftType));
+			if (rightType    == null) throw new ArgumentNullException(nameof(rightType));
+			if (expression   == null) throw new ArgumentNullException(nameof(expression));
 
 			if (!_binaries.Value.TryGetValue(providerName, out var dic))
 				_binaries.Value.Add(providerName, dic = new Dictionary<Tuple<ExpressionType,Type,Type>,IExpressionInfo>());
@@ -255,10 +260,10 @@ namespace LinqToDB.Linq
 		public static void SetGenericInfoProvider(Type type)
 		{
 			if (!type.IsGenericTypeDefinition)
-				ThrowHelper.ThrowLinqToDBException($"'{type}' must be a generic type.");
+				throw new LinqToDBException($"'{type}' must be a generic type.");
 
 			if (!typeof(IGenericInfoProvider).IsSameOrParentOf(type))
-				ThrowHelper.ThrowLinqToDBException($"'{type}' must inherit from 'IGenericInfoProvider'.");
+				throw new LinqToDBException($"'{type}' must inherit from 'IGenericInfoProvider'.");
 
 			if (!_genericConvertProviders.ContainsKey(type))
 				lock (_genericConvertProviders)
@@ -1595,12 +1600,12 @@ namespace LinqToDB.Linq
 						pCount = field.IsStatic ? 0 : 1;
 					}
 					else
-						pCount = ThrowHelper.ThrowInvalidOperationException<int>($"Unknown member {member.Key}");
+						throw new InvalidOperationException($"Unknown member {member.Key}");
 
 					var lambda = member.Value.GetExpression(MappingSchema.Default);
 
 					if (pCount != lambda.Parameters.Count)
-						ThrowHelper.ThrowInvalidOperationException(
+						throw new InvalidOperationException(
 							$"Invalid number of parameters for '{member.Key}' and '{lambda}'.");
 				}
 			}
@@ -1656,22 +1661,88 @@ namespace LinqToDB.Linq
 
 		#region Sql specific
 
-		// TODO: why chars ignored for SQL?
+		// Missing support for trimChars: Access, SqlCe, SybaseASE
+		// Firebird/MySQL - chars parameter treated as string, not as set of characters
 		[CLSCompliant(false)]
-		[Sql.Expression(ProviderName.Firebird, "TRIM(TRAILING FROM {0})", IsNullable = Sql.IsNullableType.SameAsFirstParameter)]
+		[Sql.Expression(ProviderName.Firebird    , "TRIM(TRAILING FROM {0})"    , ServerSideOnly = false, PreferServerSide = false)]
+		[Sql.Extension(ProviderName.ClickHouse   , "trim(TRAILING {1} FROM {0})", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
+		[Sql.Extension(ProviderName.SqlServer2022, "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
+		[Sql.Extension(ProviderName.DB2          , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
+		[Sql.Extension(ProviderName.Informix     , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
+		[Sql.Extension(ProviderName.Oracle       , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
+		[Sql.Extension(ProviderName.PostgreSQL   , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
+		[Sql.Extension(ProviderName.SapHana      , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
+		[Sql.Extension(ProviderName.SQLite       , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
 		[Sql.Function("RTrim", 0,                                         IsNullable = Sql.IsNullableType.SameAsFirstParameter)]
 		public static string? TrimRight(string? str, params char[] trimChars)
 		{
 			return str?.TrimEnd(trimChars);
 		}
 
-		// TODO: why chars ignored for SQL?
+		// Missing support for trimChars: Access, SqlCe, SybaseASE
+		// Firebird/MySQL - chars parameter treated as string, not as set of characters
 		[CLSCompliant(false)]
-		[Sql.Expression(ProviderName.Firebird, "TRIM(LEADING FROM {0})", IsNullable = Sql.IsNullableType.SameAsFirstParameter)]
-		[Sql.Function("LTrim", 0,                                        IsNullable = Sql.IsNullableType.SameAsFirstParameter)]
+		[Sql.Expression(ProviderName.Firebird    , "TRIM(LEADING FROM {0})"    , ServerSideOnly = false, PreferServerSide = false)]
+		[Sql.Extension(ProviderName.ClickHouse   , "trim(LEADING {1} FROM {0})", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
+		[Sql.Extension(ProviderName.SqlServer2022, "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
+		[Sql.Extension(ProviderName.DB2          , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
+		[Sql.Extension(ProviderName.Informix     , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
+		[Sql.Extension(ProviderName.Oracle       , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
+		[Sql.Extension(ProviderName.PostgreSQL   , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
+		[Sql.Extension(ProviderName.SapHana      , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
+		[Sql.Extension(ProviderName.SQLite       , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
+		[Sql.Function("LTrim", 0, IsNullable = Sql.IsNullableType.SameAsFirstParameter)]
 		public static string? TrimLeft(string? str, params char[] trimChars)
 		{
 			return str?.TrimStart(trimChars);
+		}
+
+		class LTrimCharactersBuilder : Sql.IExtensionCallBuilder
+		{
+			public void Build(Sql.ISqExtensionBuilder builder)
+			{
+				var stringExpression = builder.GetExpression("str");
+				var chars            = builder.GetValue<char[]>("trimChars");
+				if (chars == null || chars.Length == 0)
+				{
+					builder.ResultExpression = new SqlQuery.SqlFunction(
+						typeof(string),
+						"LTRIM",
+						stringExpression);
+					return;
+				}
+
+				builder.ResultExpression = new SqlQuery.SqlExpression(
+					typeof(string),
+					builder.Expression,
+					SqlQuery.Precedence.Primary,
+					stringExpression,
+					new SqlQuery.SqlExpression(typeof(string), "{0}", new SqlQuery.SqlValue(new string(chars))));
+			}
+		}
+
+		class RTrimCharactersBuilder : Sql.IExtensionCallBuilder
+		{
+			public void Build(Sql.ISqExtensionBuilder builder)
+			{
+				var stringExpression = builder.GetExpression("str");
+				var chars            = builder.GetValue<char[]>("trimChars");
+				if (chars == null || chars.Length == 0)
+				{
+					builder.ResultExpression = new SqlQuery.SqlFunction(
+						typeof(string),
+						"RTRIM",
+						stringExpression);
+					return;
+				}
+
+				builder.ResultExpression = new SqlQuery.SqlExpression(
+					typeof(string),
+					builder.Expression,
+					SqlQuery.Precedence.Primary,
+					stringExpression,
+					new SqlQuery.SqlExpression(typeof(string), "{0}", new SqlQuery.SqlValue(new string(chars))));
+			}
 		}
 
 		#endregion
@@ -1821,24 +1892,24 @@ namespace LinqToDB.Linq
 		// ClickHouse
 		//
 		[Sql.Function("toDate32", ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
-		private static DateTime? ClickHouseGetDate(DateTimeOffset? dto) => ThrowHelper.ThrowLinqException<DateTime?>();
+		private static DateTime? ClickHouseGetDate(DateTimeOffset? dto) => throw new InvalidOperationException();
 		[Sql.Function("toDate32", ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
-		private static DateTime? ClickHouseGetDate(DateTime?       dt) => ThrowHelper.ThrowLinqException<DateTime?>();
+		private static DateTime? ClickHouseGetDate(DateTime?       dt) => throw new InvalidOperationException();
 
 		// :-/
 		[Sql.Expression("toInt64((toUnixTimestamp64Nano(toDateTime64({0}, 7)) - toUnixTimestamp64Nano(toDateTime64(toDate32({0}), 7))) / 100)", ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable, Precedence = SqlQuery.Precedence.Primary)]
-		private static TimeSpan? ClickHouseGetTime(DateTimeOffset? dto) => ThrowHelper.ThrowLinqException<TimeSpan?>();
+		private static TimeSpan? ClickHouseGetTime(DateTimeOffset? dto) => throw new InvalidOperationException();
 		[Sql.Expression("toInt64((toUnixTimestamp64Nano(toDateTime64({0}, 7)) - toUnixTimestamp64Nano(toDateTime64(toDate32({0}), 7))) / 100)", ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable, Precedence = SqlQuery.Precedence.Primary)]
-		private static TimeSpan? ClickHouseGetTime(DateTime? dt) => ThrowHelper.ThrowLinqException<TimeSpan?>();
+		private static TimeSpan? ClickHouseGetTime(DateTime? dt) => throw new InvalidOperationException();
 
 		[Sql.Function("roundBankers", IsNullable = Sql.IsNullableType.SameAsFirstParameter)]
-		private static decimal? ClickHouseRoundToEven(decimal? value) => ThrowHelper.ThrowLinqException<decimal?>();
+		private static decimal? ClickHouseRoundToEven(decimal? value) => throw new InvalidOperationException();
 		[Sql.Function("roundBankers", IsNullable = Sql.IsNullableType.SameAsFirstParameter)]
-		private static double? ClickHouseRoundToEven(double? value) => ThrowHelper.ThrowLinqException<double?>();
+		private static double? ClickHouseRoundToEven(double? value) => throw new InvalidOperationException();
 		[Sql.Function("roundBankers", IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
-		private static decimal? ClickHouseRoundToEven(decimal? value, int? precision) => ThrowHelper.ThrowLinqException<decimal?>();
+		private static decimal? ClickHouseRoundToEven(decimal? value, int? precision) => throw new InvalidOperationException();
 		[Sql.Function("roundBankers", IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
-		private static double? ClickHouseRoundToEven(double? value, int? precision) => ThrowHelper.ThrowLinqException<double?>();
+		private static double? ClickHouseRoundToEven(double? value, int? precision) => throw new InvalidOperationException();
 
 		#endregion
 

@@ -1,4 +1,8 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
@@ -43,7 +47,7 @@ namespace LinqToDB.Linq
 				var keys = sqlTable.GetKeys(true).Cast<SqlField>().ToList();
 
 				if (keys.Count == 0)
-					ThrowHelper.ThrowLinqException($"Table '{sqlTable.NameForLogging}' does not have primary key.");
+					throw new LinqException($"Table '{sqlTable.NameForLogging}' does not have primary key.");
 
 				foreach (var field in keys)
 				{

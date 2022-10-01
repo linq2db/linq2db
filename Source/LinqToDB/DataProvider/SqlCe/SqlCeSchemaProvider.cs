@@ -1,4 +1,10 @@
-﻿/*
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.IO;
+using System.Linq;
+
+/*
 
 	https://blog.sqlauthority.com/2011/10/02/sql-server-ce-list-of-information_schema-system-tables/
 
@@ -24,10 +30,9 @@ FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS
 SELECT *
 FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS
 */
-using System.Data.SqlTypes;
-
 namespace LinqToDB.DataProvider.SqlCe
 {
+	using System.Data.SqlTypes;
 	using Common;
 	using Data;
 	using SchemaProvider;

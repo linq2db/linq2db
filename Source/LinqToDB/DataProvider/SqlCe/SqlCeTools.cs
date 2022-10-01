@@ -1,4 +1,8 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Data.Common;
+using System.Reflection;
 
 namespace LinqToDB.DataProvider.SqlCe
 {
@@ -53,7 +57,7 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		public static void CreateDatabase(string databaseName, bool deleteIfExists = false)
 		{
-			if (databaseName == null) ThrowHelper.ThrowArgumentNullException(nameof(databaseName));
+			if (databaseName == null) throw new ArgumentNullException(nameof(databaseName));
 
 			DataTools.CreateFileDatabase(
 				databaseName, deleteIfExists, ".sdf",
@@ -66,7 +70,7 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		public static void DropDatabase(string databaseName)
 		{
-			if (databaseName == null) ThrowHelper.ThrowArgumentNullException(nameof(databaseName));
+			if (databaseName == null) throw new ArgumentNullException(nameof(databaseName));
 
 			DataTools.DropFileDatabase(databaseName, ".sdf");
 		}

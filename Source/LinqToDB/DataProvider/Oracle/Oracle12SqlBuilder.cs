@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.DataProvider.Oracle
+﻿using System;
+
+namespace LinqToDB.DataProvider.Oracle
 {
 	using Mapping;
 	using SqlProvider;

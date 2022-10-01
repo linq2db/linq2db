@@ -1,4 +1,7 @@
-﻿namespace LinqToDB.Interceptors
+﻿using System;
+using System.Data.Common;
+
+namespace LinqToDB.Interceptors
 {
 	internal sealed class OneTimeCommandInterceptor : CommandInterceptor
 	{

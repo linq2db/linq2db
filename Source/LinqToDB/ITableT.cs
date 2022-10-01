@@ -1,4 +1,6 @@
-﻿namespace LinqToDB
+﻿using JetBrains.Annotations;
+
+namespace LinqToDB
 {
 	using Linq;
 

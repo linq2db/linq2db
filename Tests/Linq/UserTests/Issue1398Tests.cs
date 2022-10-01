@@ -2,7 +2,12 @@
 using LinqToDB.DataProvider.SQLite;
 using LinqToDB.Mapping;
 using NUnit.Framework;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
+using Tests.Model;
 using static Tests.xUpdate.MergeTests;
 
 namespace Tests.UserTests

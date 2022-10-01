@@ -1,17 +1,23 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Data;
+using System.Data.Common;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Threading;
 using System.Runtime.CompilerServices;
-using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Common;
-	using Common.Internal;
+	using LinqToDB.Expressions;
 	using Extensions;
 	using Mapping;
+	using Common;
 	using Reflection;
 	using SqlQuery;
+	using LinqToDB.Common.Internal;
 
 	partial class ExpressionBuilder
 	{
@@ -315,7 +321,7 @@ namespace LinqToDB.Linq.Builder
 								{
 									var ctx = context.builder.GetContext(context.context, ce);
 									if (ctx == null)
-										ThrowHelper.ThrowInvalidOperationException();
+										throw new InvalidOperationException();
 
 									return new TransformInfo(ctx.BuildExpression(ce, 0, context.enforceServerSide));
 								}

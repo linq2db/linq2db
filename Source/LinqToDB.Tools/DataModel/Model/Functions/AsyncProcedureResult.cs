@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.DataModel
+﻿using System.Collections.Generic;
+
+namespace LinqToDB.DataModel
 {
 	/// <summary>
 	/// This model defines results wrapper class for async stored procedure mapper in cases when procedure returns multiple values:

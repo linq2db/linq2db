@@ -1,10 +1,15 @@
-﻿using System.Data;
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
 using System.Data.Common;
 using System.Data.Linq;
 using System.Diagnostics;
 using System.Globalization;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 using System.Reflection;
@@ -3698,7 +3703,7 @@ CREATE TABLE ""TABLE_A""(
 					).Select(x => x.ID).ToArray();
 			}
 		}
-	
+
 		[Table("LinqDataTypes", IsColumnAttributeRequired = false)]
 		class LinqDataTypesBlobs
 		{
@@ -3709,7 +3714,7 @@ CREATE TABLE ""TABLE_A""(
 			[Column("BinaryValue", DataType = DataType.Blob)]
 			public OracleBlob? Blob { get; set; }
 		}
-		
+
 		[Test]
 		public void TestBlob([IncludeDataSources(TestProvName.AllOracleManaged)] string context)
 		{
@@ -4006,6 +4011,6 @@ END convert_bool;");
 		}
 
 		[Sql.Expression("convert_bool({0})", ServerSideOnly = true)]
-		public static bool Issue3742Function(string parameter) => ThrowHelper.ThrowInvalidOperationException<bool>();
+		public static bool Issue3742Function(string parameter) => throw new InvalidOperationException();
 	}
 }

@@ -1,12 +1,15 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
-using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Common;
 	using Extensions;
+	using LinqToDB.Expressions;
 	using SqlQuery;
+	using Common;
 
 	class UpdateBuilder : MethodCallBuilder
 	{
@@ -118,7 +121,7 @@ namespace LinqToDB.Linq.Builder
 						var tableInfo = sequence.IsExpression(body, level, RequestFor.Table);
 
 						if (tableInfo.Result == false)
-							ThrowHelper.ThrowLinqException($"Expression '{body}' must be a table.");
+							throw new LinqException("Expression '{0}' must be a table.", body);
 
 						into = tableInfo.Context!;
 					}
@@ -153,12 +156,11 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				default:
-					objectType = ThrowHelper.ThrowInvalidOperationException<Type>("Unknown Output Method");
-					break;
+					throw new InvalidOperationException("Unknown Output Method");
 			}
 
 			if (updateStatement.Update.Items.Count == 0)
-				ThrowHelper.ThrowLinqToDBException("Update query has no setters defined.");
+				throw new LinqToDBException("Update query has no setters defined.");
 
 			if (updateType == UpdateType.Update)
 				return new UpdateContext(buildInfo.Parent, sequence);
@@ -167,7 +169,7 @@ namespace LinqToDB.Linq.Builder
 			var deletedTable  = SqlTable.Deleted(objectType);
 
 			if (insertedTable == null)
-				ThrowHelper.ThrowInvalidOperationException("Cannot find target table for UPDATE statement");
+				throw new InvalidOperationException("Cannot find target table for UPDATE statement");
 
 			updateStatement.Output = new SqlOutputClause();
 
@@ -392,7 +394,7 @@ namespace LinqToDB.Linq.Builder
 						}
 					}
 					else
-						ThrowHelper.ThrowInvalidOperationException();
+						throw new InvalidOperationException();
 				}
 			}
 
@@ -424,10 +426,10 @@ namespace LinqToDB.Linq.Builder
 				foreach (var info in sqlInfo)
 				{
 					if (info.MemberChain.Length == 0)
-						ThrowHelper.ThrowLinqException("Object initializer expected for insert statement.");
+						throw new LinqException("Object initializer expected for insert statement.");
 
 					if (info.MemberChain.Length != 1)
-						ThrowHelper.ThrowInvalidOperationException();
+						throw new InvalidOperationException();
 
 					var member = info.MemberChain[0];
 					var pe     = Expression.MakeMemberAccess(bodyPath, member);
@@ -489,7 +491,7 @@ namespace LinqToDB.Linq.Builder
 				var field = sql.Select(s => QueryHelper.GetUnderlyingField(s.Sql)).FirstOrDefault(f => f != null);
 
 				if (sql.Length != 1)
-					ThrowHelper.ThrowLinqException($"Expression '{extract}' can not be used as Update Field.");
+					throw new LinqException($"Expression '{extract}' can not be used as Update Field.");
 
 				return table != null && field != null ? table[field.Name]! : sql[0].Sql;
 			}
@@ -516,7 +518,7 @@ namespace LinqToDB.Linq.Builder
 				member = body.Member;
 
 				if (!member.IsPropertyEx() && !member.IsFieldEx() || rootObject != extract.Parameters[0])
-					ThrowHelper.ThrowLinqException("Member expression expected for the 'Set' statement.");
+					throw new LinqException("Member expression expected for the 'Set' statement.");
 
 				if (member is MethodInfo info)
 					member = info.GetPropertyInfo();
@@ -525,19 +527,19 @@ namespace LinqToDB.Linq.Builder
 				var column     = select.ConvertToSql(columnExpr, 1, ConvertFlags.Field);
 
 				if (column.Length == 0)
-					ThrowHelper.ThrowLinqException($"Member '{member.DeclaringType?.Name}.{member.Name}' is not a table column.");
+					throw new LinqException("Member '{0}.{1}' is not a table column.", member.DeclaringType?.Name, member.Name);
 				columnSql = column[0].Sql;
 			}
 			else
 			{
 				member = MemberHelper.GetMemberInfo(ext);
 				if (member == null)
-					ThrowHelper.ThrowLinqException("Member expression expected for the 'Set' statement.");
+					throw new LinqException("Member expression expected for the 'Set' statement.");
 
 				var memberExpr = Expression.MakeMemberAccess(rootObject, member);
 				var column     = select.ConvertToSql(memberExpr, 1, ConvertFlags.Field);
 				if (column.Length == 0)
-					ThrowHelper.ThrowLinqException($"Expression '{ext}' is not a table column.");
+					throw new LinqException($"Expression '{ext}' is not a table column.");
 				columnSql = column[0].Sql;
 			}
 
@@ -573,27 +575,27 @@ namespace LinqToDB.Linq.Builder
 
 			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 			{
-				return ThrowHelper.ThrowNotImplementedException<Expression>();
+				throw new NotImplementedException();
 			}
 
 			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 			{
-				return ThrowHelper.ThrowNotImplementedException<SqlInfo[]>();
+				throw new NotImplementedException();
 			}
 
 			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 			{
-				return ThrowHelper.ThrowNotImplementedException<SqlInfo[]>();
+				throw new NotImplementedException();
 			}
 
 			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 			{
-				return ThrowHelper.ThrowNotImplementedException<IsExpressionResult>();
+				throw new NotImplementedException();
 			}
 
 			public override IBuildContext GetContext(Expression? expression, int level, BuildInfo buildInfo)
 			{
-				return ThrowHelper.ThrowNotImplementedException<IBuildContext>();
+				throw new NotImplementedException();
 			}
 		}
 

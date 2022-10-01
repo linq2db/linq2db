@@ -1,4 +1,6 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
+using System.Linq;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
@@ -20,7 +22,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			// get => TableContext.SelectQuery;
 			get => SubqueryContext.SelectQuery;
-			set => ThrowHelper.ThrowNotImplementedException();
+			set => throw new NotImplementedException();
 		}
 
 		public SqlStatement? Statement

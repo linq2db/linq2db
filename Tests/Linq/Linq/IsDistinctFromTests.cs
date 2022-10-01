@@ -1,6 +1,11 @@
-﻿using FluentAssertions;
+﻿using System;
+using System.Linq;
+
+using FluentAssertions;
+
 using LinqToDB;
 using LinqToDB.Data;
+
 using NUnit.Framework;
 
 namespace Tests.Linq
@@ -25,11 +30,6 @@ namespace Tests.Linq
 			[DataSources]        string context,
 			[Values(2, 4, null)] int?   value)
 		{
-			if (context.IsAnyOf(TestProvName.AllSqlServer2022Plus))
-			{
-				Assert.Inconclusive("Temporary disabled. CTP2.1 docker image required");
-			}
-
 			using var db  = GetDataContext(context);
 			using var src = SetupSrcTable(db);
 
@@ -53,11 +53,6 @@ namespace Tests.Linq
 			[DataSources(TestProvName.AllAccess)] string context,
 			[Values("abc", "xyz", null)] string? value)
 		{
-			if (context.IsAnyOf(TestProvName.AllSqlServer2022Plus))
-			{
-				Assert.Inconclusive("Temporary disabled. CTP2.1 docker image required");
-			}
-
 			using var db  = GetDataContext(context);
 			using var src = SetupSrcTable(db);
 
@@ -80,7 +75,7 @@ namespace Tests.Linq
 			[Values(5, 6, null)] int? value)
 		{
 			using var db = GetDataContext(context);
-			
+
 			var src = db.SelectQuery(() => new { ID = 1 });
 
 			int count = src.Count(s => 5.IsDistinctFrom(value));

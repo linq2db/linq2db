@@ -1,14 +1,17 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Common;
+	using LinqToDB.Expressions;
 	using Extensions;
-	using Mapping;
 	using SqlQuery;
+	using Common;
+	using Mapping;
 
 	// This class implements double functionality (scalar and member type selects)
 	// and could be implemented as two different classes.
@@ -258,7 +261,7 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			return ThrowHelper.ThrowNotImplementedException<Expression>();
+			throw new NotImplementedException();
 		}
 
 		#endregion
@@ -322,7 +325,7 @@ namespace LinqToDB.Linq.Builder
 						return list.ToArray();
 					}
 
-					ThrowHelper.ThrowNotImplementedException();
+					throw new NotImplementedException();
 				}
 
 				switch (flags)
@@ -418,7 +421,7 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			return ThrowHelper.ThrowNotImplementedException<SqlInfo[]>();
+			throw new NotImplementedException();
 		}
 
 		SqlInfo[] ConvertMember(MemberInfo member, Expression expression, ConvertFlags flags)
@@ -582,7 +585,7 @@ namespace LinqToDB.Linq.Builder
 												idx = ConvertToSql(expression, level, flags);
 
 												if (flags == ConvertFlags.Field && idx.Length != 1)
-													ThrowHelper.ThrowInvalidOperationException();
+													throw new InvalidOperationException();
 
 												for (var i = 0; i < idx.Length; i++)
 												{
@@ -618,7 +621,7 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			return ThrowHelper.ThrowNotImplementedException<SqlInfo[]>();
+			throw new NotImplementedException();
 		}
 
 		SqlInfo SetInfo(SqlInfo info, MemberInfo? member)
@@ -785,7 +788,7 @@ namespace LinqToDB.Linq.Builder
 
 											if (memberExpression == null)
 												return IsExpressionResult.GetResult(requestFlag == RequestFor.Expression);
-											//ThrowHelper.ThrowInvalidOperationException(
+											//throw new InvalidOperationException(
 											//	string.Format("Invalid member '{0}.{1}'", member.DeclaringType, member.Name));
 										}
 
@@ -882,8 +885,7 @@ namespace LinqToDB.Linq.Builder
 					expression,
 					level,
 					static (buildInfo, ctx, ex, l) => ctx!.GetContext(ex, l, buildInfo),
-					static _ => ThrowHelper.ThrowNotImplementedException<IBuildContext>(),
-					throwOnError: true);
+					static _ => throw new NotImplementedException(), true);
 			}
 			else
 			{
@@ -914,7 +916,7 @@ namespace LinqToDB.Linq.Builder
 									ctx.GetContext(ex, l, buildInfo));
 
 							if (context == null)
-								ThrowHelper.ThrowNotImplementedException();
+								throw new NotImplementedException();
 
 							return context;
 						}
@@ -970,7 +972,7 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			return ThrowHelper.ThrowNotImplementedException<IBuildContext>();
+			throw new NotImplementedException();
 		}
 
 		#endregion
@@ -1096,7 +1098,7 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			if (throwOnError)
-				ThrowHelper.ThrowNotImplementedException();
+				throw new NotImplementedException();
 
 			return default!;
 		}
@@ -1178,7 +1180,7 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			if (throwOnError && memberExpression == null)
-				ThrowHelper.ThrowLinqToDBException($"Member '{memberInfo.Name}' not found in type '{Body?.Type.Name ?? "<Unknown>"}'.");
+				throw new LinqToDBException($"Member '{memberInfo.Name}' not found in type '{Body?.Type.Name ?? "<Unknown>"}'.");
 			return memberExpression;
 		}
 
@@ -1279,7 +1281,7 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			if (levelExpresion.NodeType != ExpressionType.MemberAccess)
-				return ThrowHelper.ThrowLinqException<Expression>($"Invalid expression {levelExpresion}");
+				throw new LinqException("Invalid expression {0}", levelExpresion);
 
 			var me = (MemberExpression)levelExpresion;
 
@@ -1292,7 +1294,7 @@ namespace LinqToDB.Linq.Builder
 // ReSharper disable ConditionIsAlwaysTrueOrFalse
 // ReSharper disable HeuristicUnreachableCode
 						if (expr.Members == null)
-							return ThrowHelper.ThrowLinqException<Expression>($"Invalid expression {expression}");
+							throw new LinqException("Invalid expression {0}", expression);
 // ReSharper restore HeuristicUnreachableCode
 // ReSharper restore ConditionIsAlwaysTrueOrFalse
 
@@ -1302,7 +1304,7 @@ namespace LinqToDB.Linq.Builder
 									expr.Arguments[i].Unwrap() :
 									GetMemberExpression(expr.Arguments[i].Unwrap(), expression, level + 1);
 
-						return ThrowHelper.ThrowLinqException<Expression>($"Invalid expression {expression}");
+						throw new LinqException("Invalid expression {0}", expression);
 					}
 
 				case ExpressionType.MemberInit:
@@ -1317,7 +1319,7 @@ namespace LinqToDB.Linq.Builder
 									GetMemberExpression(binding.Expression.Unwrap(), expression, level + 1);
 						}
 
-						return ThrowHelper.ThrowLinqException<Expression>($"Invalid expression {expression}");
+						throw new LinqException("Invalid expression {0}", expression);
 					}
 			}
 
@@ -1372,7 +1374,7 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-				ThrowHelper.ThrowLinqToDBException($"'{sourceExpression}' cannot be converted to SQL.");
+				throw new LinqToDBException($"'{sourceExpression}' cannot be converted to SQL.");
 			}
 
 			return memberExpression;

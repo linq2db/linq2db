@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.Linq.Internal
+﻿using System;
+
+namespace LinqToDB.Linq.Internal
 {
 	/// <summary>
 	/// Internal API.

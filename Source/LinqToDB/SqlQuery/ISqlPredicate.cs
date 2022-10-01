@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.SqlQuery
+﻿using System;
+
+namespace LinqToDB.SqlQuery
 {
 	public interface ISqlPredicate : IQueryElement, ISqlExpressionWalkable
 	{

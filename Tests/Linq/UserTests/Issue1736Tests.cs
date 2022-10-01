@@ -1,4 +1,6 @@
-﻿using System.Runtime.Serialization;
+﻿using System;
+using System.Linq;
+using System.Runtime.Serialization;
 using LinqToDB;
 using NUnit.Framework;
 

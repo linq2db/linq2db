@@ -1,10 +1,10 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Linq.Expressions;
 using System.Reflection;
+using LinqToDB.Common;
 
 namespace LinqToDB.Expressions
 {
-	using Common;
-
 	/// <summary>
 	/// Implements base class for typed wrappers over provider-specific type.
 	/// </summary>
@@ -58,7 +58,7 @@ namespace LinqToDB.Expressions
 		{
 			if (!(getter.Body is MemberExpression me)
 				|| !(me.Member is PropertyInfo pi))
-				return ThrowHelper.ThrowLinqToDBException<Expression<Action<TI, TP>>>($"Expected property accessor expression");
+				throw new LinqToDBException($"Expected property accessor expression");
 
 			var pThis  = Expression.Parameter(typeof(TI));
 			var pValue = Expression.Parameter(typeof(TP));

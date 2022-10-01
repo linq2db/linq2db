@@ -1,4 +1,5 @@
-﻿using Humanizer;
+﻿using System;
+using Humanizer;
 
 namespace LinqToDB.Naming
 {

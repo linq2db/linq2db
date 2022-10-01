@@ -1,5 +1,8 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
 
 using JetBrains.Annotations;
 
@@ -12,7 +15,7 @@ namespace LinqToDB.Tools.EntityServices
 	{
 		public IdentityMap(IDataContext dataContext)
 		{
-			_dataContext = dataContext ?? ThrowHelper.ThrowArgumentNullException<IDataContext>(nameof(dataContext));
+			_dataContext = dataContext ?? throw new ArgumentNullException(nameof(dataContext));
 			_dataContext.AddInterceptor(this);
 		}
 

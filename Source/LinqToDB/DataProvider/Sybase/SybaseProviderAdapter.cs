@@ -1,8 +1,11 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Data;
 
 namespace LinqToDB.DataProvider.Sybase
 {
-	using Expressions;
+	using System.Data.Common;
+	using System.Linq.Expressions;
+	using LinqToDB.Expressions;
 
 	public class SybaseProviderAdapter : IDynamicProviderAdapter
 	{
@@ -90,7 +93,7 @@ namespace LinqToDB.DataProvider.Sybase
 		{
 			var assembly = Common.Tools.TryLoadAssembly(assemblyName, dbFactoryName);
 			if (assembly == null)
-				ThrowHelper.ThrowInvalidOperationException($"Cannot load assembly {assemblyName}");
+				throw new InvalidOperationException($"Cannot load assembly {assemblyName}");
 
 			var connectionType  = assembly.GetType($"{clientNamespace}.AseConnection" , true)!;
 			var commandType     = assembly.GetType($"{clientNamespace}.AseCommand"    , true)!;
@@ -239,7 +242,7 @@ namespace LinqToDB.DataProvider.Sybase
 			{
 			}
 
-			public AseBulkCopy(AseConnection connection, AseBulkCopyOptions options, AseTransaction? transaction) => ThrowHelper.ThrowNotImplementedException();
+			public AseBulkCopy(AseConnection connection, AseBulkCopyOptions options, AseTransaction? transaction) => throw new NotImplementedException();
 
 			void IDisposable.Dispose() => ((Action<AseBulkCopy>)CompiledWrappers[0])(this);
 
@@ -357,7 +360,7 @@ namespace LinqToDB.DataProvider.Sybase
 			{
 			}
 
-			public AseBulkCopyColumnMapping(string source, string destination) => ThrowHelper.ThrowNotImplementedException();
+			public AseBulkCopyColumnMapping(string source, string destination) => throw new NotImplementedException();
 		}
 
 		#endregion

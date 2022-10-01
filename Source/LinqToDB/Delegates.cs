@@ -1,7 +1,7 @@
-﻿namespace LinqToDB
-{
-	using Mapping;
+﻿using LinqToDB.Mapping;
 
+namespace LinqToDB
+{
 	/// <summary>
 	/// Defines signature for column filter for insert operations.
 	/// </summary>

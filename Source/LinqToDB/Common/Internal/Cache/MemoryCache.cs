@@ -1,7 +1,12 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace LinqToDB.Common.Internal.Cache
 {
@@ -32,7 +37,7 @@ namespace LinqToDB.Common.Internal.Cache
 		{
 			if (optionsAccessor == null)
 			{
-				ThrowHelper.ThrowArgumentNullException(nameof(optionsAccessor));
+				throw new ArgumentNullException(nameof(optionsAccessor));
 			}
 
 			_options = optionsAccessor;
@@ -86,7 +91,7 @@ namespace LinqToDB.Common.Internal.Cache
 
 			if (_options.SizeLimit.HasValue && !entry.Size.HasValue)
 			{
-				ThrowHelper.ThrowInvalidOperationException($"Cache entry must specify a value for {nameof(entry.Size)} when {nameof(_options.SizeLimit)} is set.");
+				throw new InvalidOperationException($"Cache entry must specify a value for {nameof(entry.Size)} when {nameof(_options.SizeLimit)} is set.");
 			}
 
 			var utcNow = _options.Clock!.UtcNow;
@@ -398,8 +403,7 @@ namespace LinqToDB.Common.Internal.Cache
 						case CacheItemPriority.NeverRemove:
 							break;
 						default:
-							ThrowHelper.ThrowNotSupportedException("Not implemented: " + entry.Priority);
-							break;
+							throw new NotSupportedException("Not implemented: " + entry.Priority);
 					}
 				}
 			}
@@ -467,7 +471,7 @@ namespace LinqToDB.Common.Internal.Cache
 		{
 			if (_disposed)
 			{
-				ThrowHelper.ThrowObjectDisposedException(typeof(MemoryCache<TKey>).FullName);
+				throw new ObjectDisposedException(typeof(MemoryCache<TKey>).FullName);
 			}
 		}
 	}

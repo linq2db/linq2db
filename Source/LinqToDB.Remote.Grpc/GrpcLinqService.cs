@@ -1,10 +1,12 @@
 ﻿using Grpc.Core;
+using LinqToDB.Remote.Grpc.Dto;
 using ProtoBuf.Grpc;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace LinqToDB.Remote.Grpc
 {
-	using Dto;
-
 	/// <summary>
 	/// grpc-based remote data context server implementation.
 	/// </summary>
@@ -21,7 +23,7 @@ namespace LinqToDB.Remote.Grpc
 		/// <exception cref="ArgumentNullException"></exception>
 		public GrpcLinqService(ILinqService linqService, bool transferInternalExceptionToClient)
 		{
-			_linqService = linqService ?? ThrowHelper.ThrowArgumentNullException<ILinqService>(nameof(linqService));
+			_linqService = linqService ?? throw new ArgumentNullException(nameof(linqService));
 			_transferInternalExceptionToClient = transferInternalExceptionToClient;
 		}
 

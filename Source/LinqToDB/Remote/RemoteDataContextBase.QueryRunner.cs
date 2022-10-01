@@ -1,11 +1,16 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace LinqToDB.Remote
 {
+	using System.Data.Common;
 	using Common.Internal;
-	using Data;
 	using Linq;
+	using LinqToDB.Data;
 	using SqlProvider;
 	using SqlQuery;
 #if !NATIVE_ASYNC
@@ -189,7 +194,7 @@ namespace LinqToDB.Remote
 			public override object? ExecuteScalar()
 			{
 				if (_dataContext._batchCounter > 0)
-					ThrowHelper.ThrowLinqException("Incompatible batch operation.");
+					throw new LinqException("Incompatible batch operation.");
 
 				SetCommand(false);
 
@@ -228,7 +233,7 @@ namespace LinqToDB.Remote
 				_dataContext.ThrowOnDisposed();
 
 				if (_dataContext._batchCounter > 0)
-					ThrowHelper.ThrowLinqException("Incompatible batch operation.");
+					throw new LinqException("Incompatible batch operation.");
 
 				SetCommand(false);
 
@@ -308,7 +313,7 @@ namespace LinqToDB.Remote
 			public override async Task<IDataReaderAsync> ExecuteReaderAsync(CancellationToken cancellationToken)
 			{
 				if (_dataContext._batchCounter > 0)
-					ThrowHelper.ThrowLinqException("Incompatible batch operation.");
+					throw new LinqException("Incompatible batch operation.");
 
 				// preload _configurationInfo asynchronously if needed
 				await _dataContext.GetConfigurationInfoAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
@@ -338,7 +343,7 @@ namespace LinqToDB.Remote
 			public override async Task<object?> ExecuteScalarAsync(CancellationToken cancellationToken)
 			{
 				if (_dataContext._batchCounter > 0)
-					ThrowHelper.ThrowLinqException("Incompatible batch operation.");
+					throw new LinqException("Incompatible batch operation.");
 
 				// preload _configurationInfo asynchronously if needed
 				await _dataContext.GetConfigurationInfoAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);

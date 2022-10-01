@@ -1,11 +1,13 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
+using System.Data.Common;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Expressions
 {
 	using Common;
 	using Common.Internal;
-	using Extensions;
+	using LinqToDB.Extensions;
 	using Linq;
 	using Reflection;
 	using Mapping;
@@ -189,7 +191,7 @@ namespace LinqToDB.Expressions
 			/// This method is used as placeholder, which will be replaced with raw value variable.
 			/// </summary>
 			/// <returns></returns>
-			public static object? RawValuePlaceholder() => ThrowHelper.ThrowInvalidOperationException<object?>("Raw value placeholder replacement failed");
+			public static object? RawValuePlaceholder() => throw new InvalidOperationException("Raw value placeholder replacement failed");
 
 			/*
 			 * We could have column readers for same column with different ColumnType types  which results in different
@@ -240,9 +242,11 @@ namespace LinqToDB.Expressions
 				catch (Exception ex)
 				{
 					var name = dataReader.GetName(ColumnIndex);
-					return ThrowHelper.ThrowLinqToDBConvertException<object>(
-						$"Mapping of column '{name}' value failed, see inner exception for details",
-						ex, name);
+					throw new LinqToDBConvertException(
+							$"Mapping of column '{name}' value failed, see inner exception for details", ex)
+					{
+						ColumnName = name
+					};
 				}
 			}
 
@@ -264,7 +268,7 @@ namespace LinqToDB.Expressions
 						if (rawExpr == null)
 							rawExpr = currentRawExpr;
 						else if (rawExpr.Method != currentRawExpr.Method)
-							ThrowHelper.ThrowLinqToDBConvertException(
+							throw new LinqToDBConvertException(
 								$"Different data reader methods used for same column: '{rawExpr.Method.DeclaringType?.Name}.{rawExpr.Method.Name}' vs '{currentRawExpr.Method.DeclaringType?.Name}.{currentRawExpr.Method.Name}'");
 
 					}
@@ -309,9 +313,11 @@ namespace LinqToDB.Expressions
 				catch (Exception ex)
 				{
 					var name = dataReader.GetName(ColumnIndex);
-					return ThrowHelper.ThrowLinqToDBConvertException<object>(
-						$"Mapping of column '{name}' value failed, see inner exception for details",
-						ex, name);
+					throw new LinqToDBConvertException(
+							$"Mapping of column '{name}' value failed, see inner exception for details", ex)
+					{
+						ColumnName = name
+					};
 				}
 			}
 

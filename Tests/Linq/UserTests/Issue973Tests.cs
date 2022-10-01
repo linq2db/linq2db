@@ -1,4 +1,7 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Expressions;
@@ -31,7 +34,7 @@ namespace Tests.UserTests
 
 			if (values == null || values.Length == 0)
 			{
-				ThrowHelper.ThrowArgumentNullException("values", "Values for \"In\" operation should not be empty");
+				throw new ArgumentNullException("values", "Values for \"In\" operation should not be empty");
 			}
 
 			foreach (var value in values)

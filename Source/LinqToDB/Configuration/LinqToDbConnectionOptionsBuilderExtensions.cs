@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.Configuration
+﻿using System;
+
+namespace LinqToDB.Configuration
 {
 	using DataProvider.Access;
 	using DataProvider.ClickHouse;

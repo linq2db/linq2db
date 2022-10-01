@@ -1,6 +1,10 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
+using System.Linq;
+using System.Runtime.Serialization;
 using System.Text;
 
 namespace LinqToDB.Remote
@@ -467,7 +471,7 @@ namespace LinqToDB.Remote
 					{
 						TypeIndex      => ResolveType(ReadString())!,
 						TypeArrayIndex => GetArrayType(Read<Type>()!),
-						_              => ThrowHelper.ThrowSerializationException<Type>(
+						_              => throw new SerializationException(
 							$"TypeIndex or TypeArrayIndex ({TypeIndex} or {TypeArrayIndex}) expected, but was {typecode}"),
 					};
 					ObjectIndices.Add(idx, type);
@@ -476,7 +480,7 @@ namespace LinqToDB.Remote
 
 					var idx2 = ReadInt();
 					if (idx2 != idx)
-						ThrowHelper.ThrowSerializationException($"Wrong type reading, expected index is {idx} but was {idx2}");
+						throw new SerializationException($"Wrong type reading, expected index is {idx} but was {idx2}");
 				}
 
 				return (Type?) type;
@@ -609,7 +613,7 @@ namespace LinqToDB.Remote
 						if (type == null)
 						{
 							if (Configuration.LinqService.ThrowUnresolvedTypeException)
-								ThrowHelper.ThrowLinqToDBException(
+								throw new LinqToDBException(
 									$"Type '{str}' cannot be resolved. Use LinqService.TypeResolver to resolve unknown types.");
 
 							UnresolvedTypes.Add(str);
@@ -650,7 +654,7 @@ namespace LinqToDB.Remote
 					static (context, e) => context.serializer.Visit(e, context.evaluationContext));
 
 				if (DelayedObjects.Count > 0)
-					ThrowHelper.ThrowLinqToDBException($"QuerySerializer error. Unknown object '{DelayedObjects.First().Key.GetType()}'.");
+					throw new LinqToDBException($"QuerySerializer error. Unknown object '{DelayedObjects.First().Key.GetType()}'.");
 
 				Builder.AppendLine();
 
@@ -1476,8 +1480,7 @@ namespace LinqToDB.Remote
 						}
 
 					default:
-						ThrowHelper.ThrowInvalidOperationException($"Serialize not implemented for element {e.ElementType}");
-						break;
+						throw new InvalidOperationException($"Serialize not implemented for element {e.ElementType}");
 				}
 
 				if (e is IQueryExtendible qe)
@@ -2408,8 +2411,7 @@ namespace LinqToDB.Remote
 						}
 
 					default:
-						ThrowHelper.ThrowInvalidOperationException($"Parse not implemented for element {(QueryElementType)type}");
-						break;
+						throw new InvalidOperationException($"Parse not implemented for element {(QueryElementType)type}");
 				}
 
 				if (obj is IQueryExtendible qe)

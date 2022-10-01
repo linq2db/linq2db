@@ -1,9 +1,10 @@
-﻿using System.Linq.Expressions;
-using LinqToDB.Expressions;
+﻿using System;
+using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Common;
+	using LinqToDB.Common;
+	using LinqToDB.Expressions;
 	using SqlQuery;
 
 	class ExpressionContext : SequenceContextBase
@@ -26,7 +27,7 @@ namespace LinqToDB.Linq.Builder
 
 		public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 		{
-			return ThrowHelper.ThrowInvalidOperationException<Expression>();
+			throw new InvalidOperationException();
 		}
 
 		public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
@@ -82,15 +83,15 @@ namespace LinqToDB.Linq.Builder
 						}
 				}
 
-				ThrowHelper.ThrowLinqException($"'{expression}' cannot be converted to SQL.");
+				throw new LinqException("'{0}' cannot be converted to SQL.", expression);
 			}
 
-			return ThrowHelper.ThrowInvalidOperationException<SqlInfo[]>();
+			throw new InvalidOperationException();
 		}
 
 		public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 		{
-			return ThrowHelper.ThrowInvalidOperationException<SqlInfo[]>();
+			throw new InvalidOperationException();
 		}
 
 		public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)

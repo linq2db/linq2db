@@ -1,4 +1,7 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -14,7 +17,7 @@ namespace LinqToDB.Linq.Builder
 			: base(subQuery)
 		{
 			if (selectQuery == subQuery.SelectQuery)
-				ThrowHelper.ThrowArgumentException(nameof(subQuery), "Wrong subQuery argument.");
+				throw new ArgumentException("Wrong subQuery argument.", nameof(subQuery));
 
 			SubQuery        = subQuery;
 			SubQuery.Parent = this;

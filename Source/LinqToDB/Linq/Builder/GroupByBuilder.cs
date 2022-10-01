@@ -1,13 +1,17 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Data;
 using System.Diagnostics;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
 	using Common;
 	using Extensions;
+	using LinqToDB.Expressions;
 	using Mapping;
 	using SqlQuery;
 	using Reflection;
@@ -36,7 +40,7 @@ namespace LinqToDB.Linq.Builder
 					throwExpr = mi.Bindings.Any(b => b.BindingType != MemberBindingType.Assignment);
 
 				if (throwExpr)
-					ThrowHelper.ThrowNotSupportedException($"Explicit construction of entity type '{body.Type}' in group by is not allowed.");
+					throw new NotSupportedException($"Explicit construction of entity type '{body.Type}' in group by is not allowed.");
 			}
 
 			return (methodCall.Arguments[methodCall.Arguments.Count - 1].Unwrap().NodeType == ExpressionType.Lambda);
@@ -96,7 +100,7 @@ namespace LinqToDB.Linq.Builder
 										groupingKind = GroupingType.Cube;
 									else if (mc.IsSameGenericMethod(Methods.LinqToDB.GroupBy.GroupingSets))
 										groupingKind = GroupingType.GroupBySets;
-									else ThrowHelper.ThrowInvalidOperationException();
+									else throw new InvalidOperationException();
 								}
 							}
 						}
@@ -138,7 +142,7 @@ namespace LinqToDB.Linq.Builder
 				var goupingSetBody = groupingKey!.Body;
 				var groupingSets = EnumGroupingSets(goupingSetBody).ToArray();
 				if (groupingSets.Length == 0)
-					ThrowHelper.ThrowLinqException($"Invalid grouping sets expression '{goupingSetBody}'.");
+					throw new LinqException($"Invalid grouping sets expression '{goupingSetBody}'.");
 
 				foreach (var groupingSet in groupingSets)
 				{
@@ -445,7 +449,7 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-				return ThrowHelper.ThrowNotImplementedException<Expression>();
+				throw new NotImplementedException();
 			}
 
 			ISqlExpression ConvertEnumerable(MethodCallExpression call)
@@ -501,7 +505,7 @@ namespace LinqToDB.Linq.Builder
 				if (CountBuilder.MethodNames.Contains(call.Method.Name))
 				{
 					if (args.Length > 0)
-						ThrowHelper.ThrowInvalidOperationException();
+						throw new InvalidOperationException();
 
 					return SqlFunction.CreateCount(call.Type, SelectQuery);
 				}
@@ -602,48 +606,48 @@ namespace LinqToDB.Linq.Builder
 					switch (expression.NodeType)
 					{
 						case ExpressionType.Call         :
-						{
-							var e = (MethodCallExpression)expression;
-
-							if (e.IsQueryable() || e.IsAggregate(Builder.MappingSchema))
 							{
-								return new[] { new SqlInfo(ConvertEnumerable(e)) };
-							}
+								var e = (MethodCallExpression)expression;
 
-							break;
-						}
-
-						case ExpressionType.MemberAccess :
-						{
-							var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
-
-							if (levelExpression.NodeType == ExpressionType.MemberAccess)
-							{
-								var e = (MemberExpression)levelExpression;
-
-								if (e.Member.Name == "Key")
+								if (e.IsQueryable() || e.IsAggregate(Builder.MappingSchema))
 								{
-									if (_keyProperty == null)
-										_keyProperty = _groupingType.GetProperty("Key");
-
-									if (e.Member == _keyProperty)
-									{
-										if (ReferenceEquals(levelExpression, expression))
-											return _key.ConvertToSql(null, 0, flags);
-
-										return _key.ConvertToSql(expression, level + 1, flags);
-									}
+									return new[] { new SqlInfo(ConvertEnumerable(e)) };
 								}
 
-								return Sequence.ConvertToSql(expression, level, flags);
+								break;
 							}
 
-							break;
-						}
+						case ExpressionType.MemberAccess :
+							{
+								var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
+
+								if (levelExpression.NodeType == ExpressionType.MemberAccess)
+								{
+									var e = (MemberExpression)levelExpression;
+
+									if (e.Member.Name == "Key")
+									{
+										if (_keyProperty == null)
+											_keyProperty = _groupingType.GetProperty("Key");
+
+										if (e.Member == _keyProperty)
+										{
+											if (ReferenceEquals(levelExpression, expression))
+												return _key.ConvertToSql(null, 0, flags);
+
+											return _key.ConvertToSql(expression, level + 1, flags);
+										}
+									}
+
+									return Sequence.ConvertToSql(expression, level, flags);
+								}
+
+								break;
+							}
 					}
 				}
 
-				return ThrowHelper.ThrowLinqException<SqlInfo[]>($"Expression '{expression}' cannot be converted to SQL.");
+				throw new LinqException("Expression '{0}' cannot be converted to SQL.", expression);
 			}
 
 			readonly Dictionary<Tuple<Expression?,int,ConvertFlags>,SqlInfo[]> _expressionIndex = new ();
@@ -787,7 +791,7 @@ namespace LinqToDB.Linq.Builder
 					return ctx;
 				}
 
-				return ThrowHelper.ThrowNotImplementedException<IBuildContext?>();
+				throw new NotImplementedException();
 			}
 		}
 

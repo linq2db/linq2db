@@ -1,7 +1,8 @@
-﻿namespace LinqToDB.DataProvider.SQLite
-{
-	using Expressions;
+﻿using System;
+using LinqToDB.Expressions;
 
+namespace LinqToDB.DataProvider.SQLite
+{
 	public class SQLiteProviderAdapter : IDynamicProviderAdapter
 	{
 		private static readonly object _systemSyncRoot = new ();
@@ -67,7 +68,7 @@
 		{
 			var assembly = Common.Tools.TryLoadAssembly(assemblyName, null);
 			if (assembly == null)
-				ThrowHelper.ThrowInvalidOperationException($"Cannot load assembly {assemblyName}");
+				throw new InvalidOperationException($"Cannot load assembly {assemblyName}");
 
 			var connectionType  = assembly.GetType($"{clientNamespace}.{prefix}Connection" , true)!;
 			var dataReaderType  = assembly.GetType($"{clientNamespace}.{prefix}DataReader" , true)!;
@@ -148,13 +149,13 @@
 		[Wrapper]
 		private class SqliteConnection
 		{
-			public static void ClearAllPools() => ThrowHelper.ThrowNotImplementedException();
+			public static void ClearAllPools() => throw new NotImplementedException();
 		}
 
 		[Wrapper]
 		private class SQLiteConnection
 		{
-			public static void ClearAllPools() => ThrowHelper.ThrowNotImplementedException();
+			public static void ClearAllPools() => throw new NotImplementedException();
 		}
 		#endregion
 	}

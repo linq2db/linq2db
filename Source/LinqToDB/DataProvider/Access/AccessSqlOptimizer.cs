@@ -1,6 +1,8 @@
+﻿using LinqToDB.Linq;
+using LinqToDB.Mapping;
+
 namespace LinqToDB.DataProvider.Access
 {
-	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
 
@@ -43,7 +45,7 @@ namespace LinqToDB.DataProvider.Access
 
 		public override ISqlExpression EscapeLikeCharacters(ISqlExpression expression, ref ISqlExpression? escape)
 		{
-			return ThrowHelper.ThrowLinqException<ISqlExpression>("Access does not support `Replace` function which is required for such query.");
+			throw new LinqException("Access does not support `Replace` function which is required for such query.");
 		}
 
 		public override SqlStatement TransformStatement(SqlStatement statement)
@@ -59,7 +61,7 @@ namespace LinqToDB.DataProvider.Access
 		private SqlUpdateStatement CorrectAccessUpdate(SqlUpdateStatement statement)
 		{
 			if (statement.SelectQuery.Select.HasModifier)
-				ThrowHelper.ThrowLinqToDBException("Access does not support update query limitation");
+				throw new LinqToDBException("Access does not support update query limitation");
 
 			statement = CorrectUpdateTable(statement);
 

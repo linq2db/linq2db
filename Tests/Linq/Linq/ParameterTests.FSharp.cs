@@ -1,4 +1,7 @@
-﻿using LinqToDB;
+﻿using System.Linq;
+
+using LinqToDB;
+using LinqToDB.Data;
 using NUnit.Framework;
 
 using Tests.FSharp.Models;

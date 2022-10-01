@@ -1,4 +1,5 @@
-﻿using System.Data.Linq;
+﻿using System;
+using System.Data.Linq;
 using System.Data.SqlTypes;
 using System.Globalization;
 using LinqToDB.Common;

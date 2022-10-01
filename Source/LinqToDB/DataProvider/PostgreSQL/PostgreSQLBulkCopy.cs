@@ -1,4 +1,11 @@
-﻿namespace LinqToDB.DataProvider.PostgreSQL
+﻿using System;
+using System.Collections.Generic;
+using System.Data.Common;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace LinqToDB.DataProvider.PostgreSQL
 {
 	using Common;
 	using Data;
@@ -118,7 +125,7 @@
 				npgsqlTypes[i] = npgsqlType;
 
 				if (npgsqlType == null && dbTypes[i] == null)
-					ThrowHelper.ThrowLinqToDBException($"Cannot guess PostgreSQL type for column {columns[i].ColumnName}. Specify type explicitly in column mapping.");
+					throw new LinqToDBException($"Cannot guess PostgreSQL type for column {columns[i].ColumnName}. Specify type explicitly in column mapping.");
 			}
 
 			return (npgsqlTypes, dbTypes, columnTypes);

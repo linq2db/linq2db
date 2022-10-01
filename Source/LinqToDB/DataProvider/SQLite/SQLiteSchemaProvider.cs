@@ -1,4 +1,9 @@
-﻿namespace LinqToDB.DataProvider.SQLite
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Data;
+
+namespace LinqToDB.DataProvider.SQLite
 {
 	using Common;
 	using Data;

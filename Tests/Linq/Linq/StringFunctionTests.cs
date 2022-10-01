@@ -1,12 +1,13 @@
-﻿#if NET472
+﻿using System;
+#if NET472
 using System.Data.Linq.SqlClient;
 #else
 using System.Data;
 #endif
 
+using System.Linq;
 using FluentAssertions;
 using LinqToDB;
-using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 using NUnit.Framework;
@@ -48,8 +49,8 @@ namespace Tests.Linq
 		public void Like()
 		{
 #if !NETFRAMEWORK
-			Assert.Throws<LinqException>(() => Sql.Like(null, null));
-			Assert.Throws<LinqException>(() => Sql.Like(null, null, null));
+			Assert.Throws<InvalidOperationException>(() => Sql.Like(null, null));
+			Assert.Throws<InvalidOperationException>(() => Sql.Like(null, null, null));
 #else
 			Assert.Pass("We don't test server-side method here.");
 #endif
@@ -1177,6 +1178,46 @@ namespace Tests.Linq
 			}
 		}
 
+		// for disabled providers see notes on implementation at
+		// EXpressions.TrimLeft/TrimRight
+		[Test]
+		public void TrimLeftCharacters([DataSources(
+			TestProvName.AllFirebird,
+			TestProvName.AllMySql,
+			TestProvName.AllAccess,
+			ProviderName.SqlCe,
+			TestProvName.AllSqlServer2019Minus,
+			TestProvName.AllSybase)] string context)
+		{
+			using var db = GetDataContext(context);
+			var q =
+				from p in db.Person
+				where p.ID == 1
+				select new { p.ID, Name = "  " + p.FirstName + " " } into pp
+				where pp.Name.TrimStart(' ', 'J') == "ohn "
+				select pp;
+			Assert.AreEqual(1, q.ToList().First().ID);
+		}
+
+		[Test]
+		public void TrimRightCharacters([DataSources(
+			TestProvName.AllFirebird,
+			TestProvName.AllMySql,
+			TestProvName.AllAccess,
+			ProviderName.SqlCe,
+			TestProvName.AllSqlServer2019Minus,
+			TestProvName.AllSybase)] string context)
+		{
+			using var db = GetDataContext(context);
+			var q =
+				from p in db.Person
+				where p.ID == 1
+				select new { p.ID, Name = "  " + p.FirstName + " " } into pp
+				where pp.Name.TrimEnd(' ', 'n') == "  Joh"
+				select pp;
+			Assert.AreEqual(1, q.ToList().First().ID);
+		}
+
 		[Test]
 		public void ToLower([DataSources] string context)
 		{
@@ -1642,7 +1683,7 @@ namespace Tests.Linq
 			protected MySpecialBaseClass(string value)
 			{
 				if (value == null)
-					ThrowHelper.ThrowArgumentNullException(nameof(value));
+					throw new ArgumentNullException(nameof(value));
 				Value = value;
 			}
 

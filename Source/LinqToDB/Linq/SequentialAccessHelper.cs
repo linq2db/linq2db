@@ -1,13 +1,19 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Data;
+using System.Data.Common;
+using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
-using LinqToDB.Expressions;
+using System.Collections.Generic;
 
 namespace LinqToDB.Linq
 {
-	using Common.Internal;
 	using Extensions;
+	using Common;
+	using LinqToDB.Expressions;
 	using Internal;
 	using Reflection;
+	using LinqToDB.Common.Internal;
 
 	internal static class SequentialAccessHelper
 	{
@@ -195,7 +201,7 @@ namespace LinqToDB.Linq
 
 			// expression cannot be optimized
 			if (ctx.FailMessage != null)
-				ThrowHelper.ThrowLinqToDBException($"{nameof(OptimizeMappingExpressionForSequentialAccess)} optimization failed: {ctx.FailMessage}");
+				throw new LinqToDBException($"{nameof(OptimizeMappingExpressionForSequentialAccess)} optimization failed: {ctx.FailMessage}");
 
 			// generate value readers for slow mode
 			if (ctx.SlowColumnTypes != null)
@@ -241,7 +247,7 @@ namespace LinqToDB.Linq
 					}
 
 					if (!found)
-						ThrowHelper.ThrowLinqToDBException($"{nameof(OptimizeMappingExpressionForSequentialAccess)} optimization failed: cannot find data reader assignment");
+						throw new LinqToDBException($"{nameof(OptimizeMappingExpressionForSequentialAccess)} optimization failed: cannot find data reader assignment");
 
 					// first N expressions init context variables
 					return block.Update(
@@ -334,7 +340,7 @@ namespace LinqToDB.Linq
 
 			// expression cannot be optimized
 			if (ctx.FailMessage != null)
-				ThrowHelper.ThrowLinqToDBException($"{nameof(OptimizeColumnReaderForSequentialAccess)} optimization failed (slow mode): {ctx.FailMessage}");
+				throw new LinqToDBException($"{nameof(OptimizeColumnReaderForSequentialAccess)} optimization failed (slow mode): {ctx.FailMessage}");
 
 			return expression;
 		}
@@ -378,7 +384,7 @@ namespace LinqToDB.Linq
 							if (context.RawCall == null)
 								context.RawCall = call;
 							else if (context.RawCall.Method != call.Method)
-								ThrowHelper.ThrowLinqToDBConvertException(
+								throw new LinqToDBConvertException(
 									$"Different data reader methods used for same column: '{context.RawCall.Method.DeclaringType?.Name}.{context.RawCall.Method.Name}' vs '{call.Method.DeclaringType?.Name}.{call.Method.Name}'");
 						}
 					}
@@ -386,10 +392,10 @@ namespace LinqToDB.Linq
 			});
 
 			if (ctx.FailMessage != null)
-				ThrowHelper.ThrowLinqToDBException($"{nameof(OptimizeColumnReaderForSequentialAccess)} optimization failed (slow mode): {ctx.FailMessage}");
+				throw new LinqToDBException($"{nameof(OptimizeColumnReaderForSequentialAccess)} optimization failed (slow mode): {ctx.FailMessage}");
 
 			if (ctx.RawCall == null)
-				ThrowHelper.ThrowLinqToDBException($"Cannot find column value reader in expression");
+				throw new LinqToDBException($"Cannot find column value reader in expression");
 
 			return ctx.RawCall;
 		}

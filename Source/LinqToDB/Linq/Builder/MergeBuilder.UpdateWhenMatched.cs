@@ -1,8 +1,9 @@
-﻿using System.Linq.Expressions;
-using LinqToDB.Expressions;
+﻿using System.Linq;
+using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using LinqToDB.Expressions;
 	using SqlQuery;
 
 	using static LinqToDB.Reflection.Methods.LinqToDB.Merge;
@@ -46,7 +47,7 @@ namespace LinqToDB.Linq.Builder
 					var keys       = sqlTable.GetKeys(false).Cast<SqlField>().ToList();
 					foreach (var field in sqlTable.Fields.Where(f => f.IsUpdatable).Except(keys))
 					{
-						var expression = LinqToDB.Expressions.ExpressionExtensions.GetMemberGetter(field.ColumnDescriptor.MemberInfo, param);
+						var expression = LinqToDB.Expressions.Extensions.GetMemberGetter(field.ColumnDescriptor.MemberInfo, param);
 						var tgtExpr    = mergeContext.TargetContext.ConvertToSql(builder.ConvertExpression(expression), 1, ConvertFlags.Field)[0].Sql;
 						var srcExpr    = mergeContext.SourceContext.ConvertToSql(builder.ConvertExpression(expression), 1, ConvertFlags.Field)[0].Sql;
 

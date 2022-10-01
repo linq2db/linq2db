@@ -1,4 +1,6 @@
-﻿// ReSharper disable CheckNamespace
+﻿using System;
+
+// ReSharper disable CheckNamespace
 
 namespace LinqToDB
 {

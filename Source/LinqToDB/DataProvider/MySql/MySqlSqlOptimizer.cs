@@ -1,4 +1,8 @@
-﻿namespace LinqToDB.DataProvider.MySql
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace LinqToDB.DataProvider.MySql
 {
 	using Extensions;
 	using SqlProvider;
@@ -37,7 +41,7 @@
 		private SqlUpdateStatement CorrectMySqlUpdate(SqlUpdateStatement statement)
 		{
 			if (statement.SelectQuery.Select.SkipValue != null)
-				ThrowHelper.ThrowLinqToDBException("MySql does not support Skip in update query");
+				throw new LinqToDBException("MySql does not support Skip in update query");
 
 			statement = CorrectUpdateTable(statement);
 

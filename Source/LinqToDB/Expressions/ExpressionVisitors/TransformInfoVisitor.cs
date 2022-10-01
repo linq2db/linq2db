@@ -1,9 +1,11 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Expressions
 {
-	using Extensions;
+	using LinqToDB.Extensions;
 
 	readonly struct TransformInfoVisitor<TContext>
 	{
@@ -333,7 +335,7 @@ namespace LinqToDB.Expressions
 					return expr;
 
 				default:
-					return ThrowHelper.ThrowNotImplementedException<Expression>($"Unhandled expression type: {expr.NodeType}");
+					throw new NotImplementedException($"Unhandled expression type: {expr.NodeType}");
 			}
 		}
 

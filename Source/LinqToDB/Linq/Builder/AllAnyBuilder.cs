@@ -1,8 +1,9 @@
-﻿using System.Linq.Expressions;
-using LinqToDB.Expressions;
+﻿using System;
+using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using LinqToDB.Expressions;
 	using SqlQuery;
 
 	class AllAnyBuilder : MethodCallBuilder
@@ -129,7 +130,7 @@ namespace LinqToDB.Linq.Builder
 					return new[] { new SqlInfo(sql, query) };
 				}
 
-				return ThrowHelper.ThrowNotImplementedException<SqlInfo[]>();
+				throw new NotImplementedException();
 			}
 
 			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
@@ -158,7 +159,7 @@ namespace LinqToDB.Linq.Builder
 
 			public override IBuildContext GetContext(Expression? expression, int level, BuildInfo buildInfo)
 			{
-				return ThrowHelper.ThrowNotImplementedException<IBuildContext>();
+				throw new NotImplementedException();
 			}
 
 			ISqlExpression? _subQuerySql;

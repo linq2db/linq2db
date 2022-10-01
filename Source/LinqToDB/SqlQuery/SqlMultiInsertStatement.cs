@@ -1,4 +1,6 @@
-﻿using System.Text;
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
@@ -57,7 +59,7 @@ namespace LinqToDB.SqlQuery
 		public override SelectQuery? SelectQuery
 		{
 			get => null;
-			set => ThrowHelper.ThrowInvalidOperationException();
+			set => throw new InvalidOperationException();
 		}
 
 		public override ISqlTableSource? GetTableSource(ISqlTableSource table)

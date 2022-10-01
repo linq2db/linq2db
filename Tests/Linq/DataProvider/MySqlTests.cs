@@ -1,11 +1,16 @@
 ﻿extern alias MySqlData;
 extern alias MySqlConnector;
+
+using System;
 using System.Data.Linq;
+using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
 using System.Collections;
+using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
+using System.Threading.Tasks;
 using System.Reflection;
 
 using LinqToDB;
@@ -18,15 +23,15 @@ using LinqToDB.DataProvider.MySql;
 using LinqToDB.Tools.Comparers;
 
 using NUnit.Framework;
-using MySqlDataDateTime = MySqlData::MySql.Data.Types.MySqlDateTime;
-using MySqlDataDecimal = MySqlData::MySql.Data.Types.MySqlDecimal;
+using MySqlDataDateTime      = MySqlData::MySql.Data.Types.MySqlDateTime;
+using MySqlDataDecimal       = MySqlData::MySql.Data.Types.MySqlDecimal;
 #if NETFRAMEWORK
 using MySqlConnectorDateTime = MySqlConnector::MySql.Data.Types.MySqlDateTime;
 #else
 using MySqlConnectorDateTime = MySqlConnector::MySqlConnector.MySqlDateTime;
 #endif
 #if NET6_0_OR_GREATER
-using MySqlConnectorDecimal = MySqlConnector::MySqlConnector.MySqlDecimal;
+using MySqlConnectorDecimal  = MySqlConnector::MySqlConnector.MySqlDecimal;
 #endif
 
 namespace Tests.DataProvider

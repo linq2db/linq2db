@@ -1,4 +1,7 @@
-﻿using System.Data;
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
 using System.Reflection;
 using LinqToDB;
 using LinqToDB.Data;
@@ -10,7 +13,7 @@ using Microsoft.SqlServer.Server;
 using NUnit.Framework;
 using Tests.Model;
 using SqlDataRecordMS = Microsoft.Data.SqlClient.Server.SqlDataRecord;
-using SqlMetaDataMS = Microsoft.Data.SqlClient.Server.SqlMetaData;
+using SqlMetaDataMS   = Microsoft.Data.SqlClient.Server.SqlMetaData;
 
 namespace Tests.DataProvider
 {

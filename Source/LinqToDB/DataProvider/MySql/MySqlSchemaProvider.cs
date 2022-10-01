@@ -1,8 +1,13 @@
-﻿namespace LinqToDB.DataProvider.MySql
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+
+namespace LinqToDB.DataProvider.MySql
 {
 	using Common;
 	using Data;
-	using SchemaProvider;
+	using LinqToDB.SchemaProvider;
 
 	class MySqlSchemaProvider : SchemaProviderBase
 	{

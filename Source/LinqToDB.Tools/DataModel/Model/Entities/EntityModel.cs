@@ -1,7 +1,11 @@
-﻿namespace LinqToDB.DataModel
-{
-	using Metadata;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using LinqToDB.CodeModel;
+using LinqToDB.Metadata;
 
+namespace LinqToDB.DataModel
+{
 	/// <summary>
 	/// Contains mapping entity attributes.
 	/// </summary>

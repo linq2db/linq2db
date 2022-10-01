@@ -1,7 +1,8 @@
-﻿namespace LinqToDB.DataModel
-{
-	using CodeModel;
+﻿using System.Collections.Generic;
+using LinqToDB.CodeModel;
 
+namespace LinqToDB.DataModel
+{
 	// contains generation logic for data context class supplementary code like constructors
 	partial class DataModelGenerator
 	{

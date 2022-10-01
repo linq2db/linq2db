@@ -1,12 +1,15 @@
-﻿using System.Linq.Expressions;
-using LinqToDB.Expressions;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Common;
+	using LinqToDB.Expressions;
 	using Extensions;
-	using Reflection;
 	using SqlQuery;
+	using Common;
+	using Reflection;
 
 	class FirstSingleBuilder : MethodCallBuilder
 	{
@@ -93,7 +96,7 @@ namespace LinqToDB.Linq.Builder
 					var genericType     = typeof(IEnumerable<>).GetGenericType(info.Expression.Type);
 
 					if (genericType == null || prevGenericType == null)
-						ThrowHelper.ThrowInvalidOperationException();
+						throw new InvalidOperationException();
 
 					var newArgument = info.Expression;
 					var elementType = genericType.GetGenericArguments()[0];
@@ -279,15 +282,11 @@ namespace LinqToDB.Linq.Builder
 					{
 						foreach (var member in sc.Members.Values)
 						{
-							var found = null != member.Find(ctx, static(c, e) =>
+							if (member is MethodCallExpression mc && context.Builder.IsSubQuery(ctx, mc))
 							{
-								if (e is MethodCallExpression mc && c.Builder.IsSubQuery(c, mc))
-									return true;
-								return false;
-							});
-
-							if (found)
 								return true;
+							}
+							return false;
 						}
 
 						return false;
@@ -361,7 +360,7 @@ namespace LinqToDB.Linq.Builder
 					return null!; // ???
 				}
 
-				return ThrowHelper.ThrowNotImplementedException<Expression>();
+				throw new NotImplementedException();
 			}
 
 			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
@@ -381,7 +380,7 @@ namespace LinqToDB.Linq.Builder
 
 			public override IBuildContext GetContext(Expression? expression, int level, BuildInfo buildInfo)
 			{
-				return ThrowHelper.ThrowNotImplementedException<IBuildContext>();
+				throw new NotImplementedException();
 			}
 		}
 	}

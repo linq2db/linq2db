@@ -1,6 +1,8 @@
-﻿namespace LinqToDB.DataProvider
+﻿using System.Collections.Generic;
+using LinqToDB.Configuration;
+
+namespace LinqToDB.DataProvider
 {
-	using Configuration;
 
 	public interface IDataProviderFactory
 	{

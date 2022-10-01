@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.Mapping
+﻿using System;
+
+namespace LinqToDB.Mapping
 {
 	/// <summary>
 	/// Flags for specifying skip modifications used for Attributes based on <see cref="SkipBaseAttribute"/>.

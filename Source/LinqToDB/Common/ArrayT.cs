@@ -1,4 +1,7 @@
-﻿namespace LinqToDB.Common
+﻿using System;
+using JetBrains.Annotations;
+
+namespace LinqToDB.Common
 {
 	/// <summary>
 	/// Empty array instance helper.

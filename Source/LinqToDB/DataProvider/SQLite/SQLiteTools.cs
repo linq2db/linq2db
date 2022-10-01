@@ -1,4 +1,9 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Data.Common;
+using System.IO;
+using System.Reflection;
 
 namespace LinqToDB.DataProvider.SQLite
 {
@@ -122,7 +127,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 		public static void CreateDatabase(string databaseName, bool deleteIfExists = false)
 		{
-			if (databaseName == null) ThrowHelper.ThrowArgumentNullException(nameof(databaseName));
+			if (databaseName == null) throw new ArgumentNullException(nameof(databaseName));
 
 			DataTools.CreateFileDatabase(
 				databaseName, deleteIfExists, ".sqlite",
@@ -135,7 +140,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 		public static void DropDatabase(string databaseName)
 		{
-			if (databaseName == null) ThrowHelper.ThrowArgumentNullException(nameof(databaseName));
+			if (databaseName == null) throw new ArgumentNullException(nameof(databaseName));
 
 			DataTools.DropFileDatabase(databaseName, ".sqlite");
 		}

@@ -1,4 +1,8 @@
-﻿namespace LinqToDB.DataProvider.Firebird
+﻿using System;
+using System.Data;
+using System.Data.Common;
+
+namespace LinqToDB.DataProvider.Firebird
 {
 	using Common;
 	using Expressions;
@@ -16,7 +20,7 @@
 			var assembly = Tools.TryLoadAssembly(AssemblyName, null);
 
 			if (assembly == null)
-				ThrowHelper.ThrowInvalidOperationException($"Cannot load assembly {AssemblyName}");
+				throw new InvalidOperationException($"Cannot load assembly {AssemblyName}");
 
 			ConnectionType      = assembly.GetType($"{ClientNamespace}.FbConnection" , true)!;
 			DataReaderType      = assembly.GetType($"{ClientNamespace}.FbDataReader" , true)!;
@@ -130,7 +134,7 @@
 		[Wrapper]
 		private class FbConnection
 		{
-			public static void ClearAllPools() => ThrowHelper.ThrowNotImplementedException();
+			public static void ClearAllPools() => throw new NotImplementedException();
 		}
 
 		[Wrapper]

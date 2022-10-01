@@ -1,4 +1,9 @@
-﻿namespace LinqToDB.DataProvider.Sybase
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+
+namespace LinqToDB.DataProvider.Sybase
 {
 	using Common;
 	using Data;
@@ -191,7 +196,7 @@ WHERE
 		{
 			// otherwise GetSchema will throw AseException
 			if (dataConnection.Transaction != null && GetProcedureSchemaExecutesProcedure)
-				ThrowHelper.ThrowLinqToDBException("Cannot read schema with GetSchemaOptions.GetProcedures = true from transaction. Remove transaction or set GetSchemaOptions.GetProcedures to false");
+				throw new LinqToDBException("Cannot read schema with GetSchemaOptions.GetProcedures = true from transaction. Remove transaction or set GetSchemaOptions.GetProcedures to false");
 
 			using (var reader = dataConnection.ExecuteReader(
 				"sp_oledb_getprocedurecolumns",

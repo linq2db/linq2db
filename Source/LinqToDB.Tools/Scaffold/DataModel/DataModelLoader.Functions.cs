@@ -1,11 +1,14 @@
-﻿namespace LinqToDB.Scaffold
-{
-	using CodeModel;
-	using DataModel;
-	using Metadata;
-	using Schema;
-	using SqlQuery;
+﻿using System;
+using System.Collections.Generic;
+using LinqToDB.Metadata;
+using LinqToDB.Schema;
+using LinqToDB.CodeModel;
+using LinqToDB.DataModel;
+using System.Linq;
+using LinqToDB.SqlQuery;
 
+namespace LinqToDB.Scaffold
+{
 	partial class DataModelLoader
 	{
 		/// <summary>

@@ -1,7 +1,8 @@
-﻿namespace LinqToDB.DataModel
-{
-	using SqlQuery;
+﻿using LinqToDB.Schema;
+using LinqToDB.SqlQuery;
 
+namespace LinqToDB.DataModel
+{
 	/// <summary>
 	/// Base class for table function and stored procedure descriptors (database methods with table-like results).
 	/// </summary>

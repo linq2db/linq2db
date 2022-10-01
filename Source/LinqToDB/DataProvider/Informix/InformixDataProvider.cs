@@ -1,4 +1,10 @@
-﻿namespace LinqToDB.DataProvider.Informix
+﻿using System;
+using System.Collections.Generic;
+using System.Data.Common;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace LinqToDB.DataProvider.Informix
 {
 	using Common;
 	using Data;

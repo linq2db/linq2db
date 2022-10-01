@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 
 namespace LinqToDB.SqlQuery
@@ -411,7 +412,7 @@ namespace LinqToDB.SqlQuery
 		{
 			var (value, error) = expr.TryEvaluateExpression(context);
 			if (error != null)
-				ThrowHelper.ThrowLinqToDBException(error);
+				throw new LinqToDBException(error);
 
 			return value;
 		}

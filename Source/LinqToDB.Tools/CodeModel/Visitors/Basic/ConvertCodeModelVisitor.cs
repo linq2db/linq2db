@@ -1,4 +1,7 @@
-﻿namespace LinqToDB.CodeModel
+﻿using System;
+using System.Collections.Generic;
+
+namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// Base AST rewrite visitor class with noop node visit methods implementation with root-to-leaf visit order.

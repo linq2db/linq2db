@@ -1,4 +1,8 @@
-﻿namespace LinqToDB
+﻿using System;
+
+using JetBrains.Annotations;
+
+namespace LinqToDB
 {
 	/// <summary>
 	/// Explicit <see cref="DataContext"/> connection reuse scope.

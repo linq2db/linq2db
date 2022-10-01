@@ -1,9 +1,10 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Linq.Expressions;
 using System.Reflection;
-using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using LinqToDB.Expressions;
 	using SqlQuery;
 
 	using static LinqToDB.Reflection.Methods.LinqToDB.Merge;
@@ -28,8 +29,7 @@ namespace LinqToDB.Linq.Builder
 				if (target is not TableBuilder.TableContext tableContext
 					|| !tableContext.SelectQuery.IsSimple)
 				{
-					return ThrowHelper.ThrowNotImplementedException<IBuildContext>(
-						"Currently, only CTEs are supported as the target of a merge. You can fix by calling .AsCte() on the parameter before passing into .MergeInto().");
+					throw new NotImplementedException("Currently, only CTEs are supported as the target of a merge. You can fix by calling .AsCte() on the parameter before passing into .MergeInto().");
 				}
 
 				var targetTable = tableContext.SqlTable;

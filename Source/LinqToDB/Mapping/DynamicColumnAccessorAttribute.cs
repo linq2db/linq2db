@@ -1,4 +1,5 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Linq.Expressions;
 
 namespace LinqToDB.Mapping
 {
@@ -75,7 +76,7 @@ namespace LinqToDB.Mapping
 			if (GetterExpression       != null) getters++;
 
 			if (setters != 1 || getters != 1)
-				ThrowHelper.ThrowLinqToDBException($"{nameof(DynamicColumnAccessorAttribute)} should have exactly one setter and getter configured.");
+				throw new LinqToDBException($"{nameof(DynamicColumnAccessorAttribute)} should have exactly one setter and getter configured.");
 		}
 
 		public override string GetObjectID()

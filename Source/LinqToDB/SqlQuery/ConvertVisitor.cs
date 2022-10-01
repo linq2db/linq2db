@@ -1,10 +1,13 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Runtime.CompilerServices;
+using LinqToDB.Remote;
 
 namespace LinqToDB.SqlQuery
 {
 	using Linq.Builder;
-	using Remote;
 
 	public class ConvertVisitor<TContext>
 	{
@@ -23,7 +26,7 @@ namespace LinqToDB.SqlQuery
 		private Dictionary<IQueryElement, IQueryElement?>? _visitedElements;
 		private List<IQueryElement>?                       _stack;
 
-		public List<IQueryElement> Stack         => _stack ??= (HasStack ? new () : ThrowHelper.ThrowInvalidOperationException<List<IQueryElement>>("Stack tracking is not enabled for current visitor instance"));
+		public List<IQueryElement> Stack         => _stack ??= (HasStack ? new () : throw new InvalidOperationException("Stack tracking is not enabled for current visitor instance"));
 		public IQueryElement?      ParentElement => Stack.Count == 0 ? null : Stack[Stack.Count - 1];
 		public IQueryElement       CurrentElement = null!;
 
@@ -522,7 +525,7 @@ namespace LinqToDB.SqlQuery
 							else if (f is ISqlPredicate predicate)
 								newElement = predicate;
 							else
-								ThrowHelper.ThrowInvalidCastException("Converted FuncLikePredicate expression is not a Predicate expression.");
+								throw new InvalidCastException("Converted FuncLikePredicate expression is not a Predicate expression.");
 						}
 
 						break;
@@ -1176,7 +1179,7 @@ namespace LinqToDB.SqlQuery
 						var insertedT = ConvertInternal(output.InsertedTable) as SqlTable;
 						var deletedT  = ConvertInternal(output.DeletedTable)  as SqlTable;
 						var outputT   = ConvertInternal(output.OutputTable)   as SqlTable;
-						var outputС   = output.OutputColumns != null ? ConvertSafe(output.OutputColumns) : null;
+						var outputC   = output.OutputColumns != null ? ConvertSafe(output.OutputColumns) : null;
 
 						List<SqlSetExpression>? outputItems = null;
 
@@ -1187,7 +1190,7 @@ namespace LinqToDB.SqlQuery
 							insertedT != null && !ReferenceEquals(output.InsertedTable, insertedT) ||
 							deletedT  != null && !ReferenceEquals(output.DeletedTable, deletedT)   ||
 							outputT   != null && !ReferenceEquals(output.OutputTable, outputT)     ||
-							outputС   != null && !ReferenceEquals(output.OutputColumns, outputС)   ||
+							outputC   != null && !ReferenceEquals(output.OutputColumns, outputC)   ||
 							output.HasOutputItems && outputItems != null && !ReferenceEquals(output.OutputItems, outputItems)
 						)
 						{
@@ -1196,7 +1199,7 @@ namespace LinqToDB.SqlQuery
 								InsertedTable = insertedT ?? output.InsertedTable,
 								DeletedTable  = deletedT  ?? output.DeletedTable,
 								OutputTable   = outputT   ?? output.OutputTable,
-								OutputColumns = outputС   ?? output.OutputColumns,
+								OutputColumns = outputC   ?? output.OutputColumns,
 							};
 
 							if (outputItems != null)
@@ -1379,8 +1382,7 @@ namespace LinqToDB.SqlQuery
 						break;
 
 					default:
-						ThrowHelper.ThrowInvalidOperationException($"Convert visitor not implemented for element {element.ElementType}");
-						break;
+						throw new InvalidOperationException($"Convert visitor not implemented for element {element.ElementType}");
 				}
 
 				if (element != newElement && element is IQueryExtendible { SqlQueryExtensions.Count: > 0 } qe && newElement is IQueryExtendible ne)
