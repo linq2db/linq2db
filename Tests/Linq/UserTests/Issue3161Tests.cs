@@ -69,7 +69,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void CrossApplyTwice([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)] string context)
+		public void CrossApplyTwice([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tbl1 = db.CreateLocalTable(new[]
