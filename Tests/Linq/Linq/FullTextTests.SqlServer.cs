@@ -1905,7 +1905,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					where Sql.Ext.SqlServer().Contains("aнанас", c.Description, c.Description)
+					where Sql.Ext.SqlServer().Contains("ананас", c.Description, c.Description)
 					orderby c.CategoryID descending
 					select c;
 
@@ -1913,7 +1913,7 @@ namespace Tests.Linq
 
 				Assert.AreEqual(0, results.Count);
 
-				Assert.That(db.LastQuery!.Contains("CONTAINS(([c_1].[Description], [c_1].[Description]), N'aнанас')"));
+				Assert.That(db.LastQuery!.Contains("CONTAINS(([c_1].[Description], [c_1].[Description]), N'ананас')"));
 			}
 		}
 

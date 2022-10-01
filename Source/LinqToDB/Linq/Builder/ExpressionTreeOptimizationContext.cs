@@ -632,7 +632,7 @@ namespace LinqToDB.Linq.Builder
 					var ll = Expressions.ConvertMember(MappingSchema, ue.Operand?.Type, ue.Operand!.Type.GetProperty(nameof(Array.Length))!);
 					if (ll != null)
 					{
-						var ex = СonvertMemberExpression(expr, ue.Operand!, ll);
+						var ex = ConvertMemberExpression(expr, ue.Operand!, ll);
 
 						return new TransformInfo(ex, false, true);
 					}
@@ -660,7 +660,7 @@ namespace LinqToDB.Linq.Builder
 
 					if (l != null)
 					{
-						var ex = СonvertMemberExpression(expr, me.Expression!, l);
+						var ex = ConvertMemberExpression(expr, me.Expression!, l);
 
 						return new TransformInfo(AliasCall(ex, alias!), false, true);
 					}
@@ -669,7 +669,7 @@ namespace LinqToDB.Linq.Builder
 
 					if (l != null)
 					{
-						var ex = СonvertMemberExpression(expr, me.Expression!, l);
+						var ex = ConvertMemberExpression(expr, me.Expression!, l);
 
 						return new TransformInfo(ex, false, true);
 					}
@@ -782,7 +782,7 @@ namespace LinqToDB.Linq.Builder
 			return result;
 		}
 
-		public static Expression СonvertMemberExpression(Expression expr, Expression root, LambdaExpression l)
+		private static Expression ConvertMemberExpression(Expression expr, Expression root, LambdaExpression l)
 		{
 			var body  = l.Body.Unwrap();
 			var parms = l.Parameters.ToDictionary(p => p);

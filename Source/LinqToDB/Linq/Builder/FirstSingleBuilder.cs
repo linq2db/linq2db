@@ -215,15 +215,11 @@ namespace LinqToDB.Linq.Builder
 					{
 						foreach (var member in sc.Members.Values)
 						{
-							var found = null != member.Find(ctx, static(c, e) =>
+							if (member is MethodCallExpression mc && context.Builder.IsSubQuery(ctx, mc))
 							{
-								if (e is MethodCallExpression mc && c.Builder.IsSubQuery(c, mc))
-									return true;
-								return false;
-							});
-
-							if (found)
 								return true;
+							}
+							return false;
 						}
 
 						return false;
