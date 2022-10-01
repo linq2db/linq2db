@@ -42,6 +42,10 @@ namespace LinqToDB.Linq.Builder
 			var selector = (LambdaExpression)methodCall.Arguments[1].Unwrap();
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
+			// finalizing context
+			_ = builder.MakeExpression(sequence, new ContextRefExpression(buildInfo.Expression.Type, sequence),
+				ProjectFlags.Expand);
+
 			sequence.SetAlias(selector.Parameters[0].Name);
 
 			var body = selector.Body.Unwrap();

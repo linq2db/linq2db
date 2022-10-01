@@ -1142,7 +1142,19 @@ namespace LinqToDB.SqlQuery
 			else
 				isQueryOK = isQueryOK && (concatWhere || query.Where.IsEmpty && query.Having.IsEmpty);
 
-			isQueryOK = isQueryOK && !query.HasSetOperators && query.GroupBy.IsEmpty && !query.Select.HasModifier;
+			if (isQueryOK && parentJoinedTable == null)
+			{
+				if (query.HasSetOperators || !query.GroupBy.IsEmpty || query.Select.HasModifier)
+				{
+					isQueryOK = false;
+					if (parentQuery.IsSimple && query.Select.Columns.Count == _selectQuery.Select.Columns.Count)
+					{
+						isQueryOK = query.Select.Columns.All(cc =>
+							_selectQuery.Select.Columns.Any(c => ReferenceEquals(c.Expression, cc)));
+					}
+				}
+			}
+
 			//isQueryOK = isQueryOK && (_flags.IsDistinctOrderBySupported || query.Select.IsDistinct );
 
 			if (isQueryOK && parentJoinedTable != null && parentJoinedTable.JoinType != JoinType.Inner)
@@ -1150,34 +1162,34 @@ namespace LinqToDB.SqlQuery
 				if (parentJoinedTable.JoinType == JoinType.Full || parentJoinedTable.JoinType == JoinType.Right)
 				{
 					isQueryOK = query.Where.IsEmpty;
-			}
+				}
 				else
-			{
-				var sqlTableSource = query.From.Tables[0];
-				if (sqlTableSource.Joins.Count > 0)
 				{
-					var hasOtherJoin = false;
-					foreach (var join in sqlTableSource.Joins)
+					var sqlTableSource = query.From.Tables[0];
+					if (sqlTableSource.Joins.Count > 0)
 					{
-						if (join.JoinType != parentJoinedTable.JoinType)
+						var hasOtherJoin = false;
+						foreach (var join in sqlTableSource.Joins)
 						{
-							hasOtherJoin = true;
-							break;
+							if (join.JoinType != parentJoinedTable.JoinType)
+							{
+								hasOtherJoin = true;
+								break;
+							}
 						}
-					}
 
-					if (hasOtherJoin)
-						isQueryOK = false;
-					else
-					{
-						// check that this subquery do not infer with parent join via other joined tables
+						if (hasOtherJoin)
+							isQueryOK = false;
+						else
+						{
+							// check that this subquery do not infer with parent join via other joined tables
 							var joinSources =
 								new HashSet<ISqlTableSource>(sqlTableSource.Joins.Select(static j => j.Table.Source));
-						if (QueryHelper.IsDependsOn(parentJoinedTable.Condition, joinSources))
-							isQueryOK = false;
+							if (QueryHelper.IsDependsOn(parentJoinedTable.Condition, joinSources))
+								isQueryOK = false;
+						}
 					}
 				}
-			}
 			}
 
 			if (!isQueryOK)
@@ -1330,7 +1342,11 @@ namespace LinqToDB.SqlQuery
 				}
 			};
 
-			if (!query.Having.IsEmpty) ConcatSearchCondition(_selectQuery.Having, query.Having);
+			if (!query.Having.IsEmpty) 
+				ConcatSearchCondition(_selectQuery.Having, query.Having);
+
+			if (parentJoinedTable == null && query.Select.IsDistinct) 
+				_selectQuery.Select.IsDistinct = true;
 
 			((ISqlExpressionWalkable)top).Walk(WalkOptions.Default, (query, selectQuery: _selectQuery), static (ctx, expr) =>
 			{
