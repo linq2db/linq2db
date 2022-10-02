@@ -1087,9 +1087,9 @@ namespace Tests.Linq
 			db.LastQuery!.Should().Contain("SELECT", Exactly.Times(6));
 		}
 
-		// only pgsql supports all 6 operators right now
+		// only pgsql and CH support all 6 operators right now
 		[Test(Description = "Test that we generate sub-queries for incompatible set operators and order queries properly")]
-		public void Issue3359_MultipleSetsCombined_DifferentOperators([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		public void Issue3359_MultipleSetsCombined_DifferentOperators([IncludeDataSources(TestProvName.AllPostgreSQL/*, TestProvName.AllClickHouse*/)] string context)
 		{
 			using var db = (TestDataConnection)GetDataContext(context);
 

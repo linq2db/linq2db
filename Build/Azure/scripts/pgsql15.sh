@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # TODO: update tag to 15 when it is released
-docker run -d --name pgsql -e POSTGRES_PASSWORD=Password12! -p 5432:5432 -v /var/run/postgresql:/var/run/postgresql postgres:15beta3
+docker run -d --name pgsql -e POSTGRES_PASSWORD=Password12! -p 5432:5432 -v /var/run/postgresql:/var/run/postgresql postgres:15rc1
 
 retries=0
 until docker exec pgsql psql -U postgres -c '\l' | grep -q 'testdata'; do
