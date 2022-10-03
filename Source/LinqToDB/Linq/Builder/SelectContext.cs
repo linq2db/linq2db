@@ -111,8 +111,8 @@ namespace LinqToDB.Linq.Builder
 
 		public virtual SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 		{
-					throw new NotImplementedException();
-				}
+			throw new NotImplementedException();
+		}
 
 		#endregion
 
@@ -121,7 +121,7 @@ namespace LinqToDB.Linq.Builder
 		public virtual SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 		{
 			throw new NotImplementedException();
-					}
+		}
 
 		#endregion
 

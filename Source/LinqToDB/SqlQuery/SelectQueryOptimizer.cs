@@ -1142,12 +1142,12 @@ namespace LinqToDB.SqlQuery
 			else
 				isQueryOK = isQueryOK && (concatWhere || query.Where.IsEmpty && query.Having.IsEmpty);
 
-			if (isQueryOK && parentJoinedTable == null)
+			if (isQueryOK)
 			{
 				if (query.HasSetOperators || !query.GroupBy.IsEmpty || query.Select.HasModifier)
 				{
 					isQueryOK = false;
-					if (parentQuery.IsSimple && query.Select.Columns.Count == _selectQuery.Select.Columns.Count)
+					if (parentJoinedTable == null && parentQuery.IsSimple && query.Select.Columns.Count == _selectQuery.Select.Columns.Count)
 					{
 						isQueryOK = query.Select.Columns.All(cc =>
 							_selectQuery.Select.Columns.Any(c => ReferenceEquals(c.Expression, cc)));
@@ -1345,6 +1345,9 @@ namespace LinqToDB.SqlQuery
 			if (!query.Having.IsEmpty) 
 				ConcatSearchCondition(_selectQuery.Having, query.Having);
 
+			if (!query.GroupBy.IsEmpty)
+				_selectQuery.GroupBy.Items.AddRange(query.GroupBy.Items);
+
 			if (parentJoinedTable == null && query.Select.IsDistinct) 
 				_selectQuery.Select.IsDistinct = true;
 
@@ -1373,12 +1376,13 @@ namespace LinqToDB.SqlQuery
 			{
 				var joinSources = new HashSet<ISqlTableSource>(parentTableSources);
 				joinSources.Add(joinTable.Table);
-			foreach (var join in joinSource.Joins)
-			{
+
+				foreach (var join in joinSource.Joins)
+				{
 					if (join.JoinType == JoinType.CrossApply || join.JoinType == JoinType.OuterApply|| join.JoinType == JoinType.FullApply || join.JoinType == JoinType.RightApply)
 					{
 						OptimizeApply(parentQuery, joinSources, joinSource, join, isApplySupported);
-			}
+					}
 
 					joinSources.AddRange(QueryHelper.EnumerateAccessibleSources(join.Table));
 				}
@@ -1413,21 +1417,21 @@ namespace LinqToDB.SqlQuery
 
 				var toIgnore = new HashSet<IQueryElement> { joinTable };
 
-					if (conditions.Count > 0)
+				if (conditions.Count > 0)
+				{
+					for (var i = conditions.Count - 1; i >= 0; i--)
 					{
-						for (var i = conditions.Count - 1; i >= 0; i--)
-						{
-							var condition = conditions[i];
+						var condition = conditions[i];
 
 						var contains = QueryHelper.IsDependsOn(condition, parentTableSources, toIgnore);
 
-								if (contains)
-								{
-									searchCondition.Insert(0, condition);
-									conditions.RemoveAt(i);
-								}
-							}
+						if (contains)
+						{
+							searchCondition.Insert(0, condition);
+							conditions.RemoveAt(i);
 						}
+					}
+				}
 
 				var toCheck = new HashSet<ISqlTableSource>();
 
@@ -1435,7 +1439,7 @@ namespace LinqToDB.SqlQuery
 
 				for (int i = 0; i < searchCondition.Count; i++)
 				{
-					var cond    = searchCondition[i];
+					var cond = searchCondition[i];
 					var newCond = cond.Convert((sql, toCheck, toIgnore, isAgg), static (visitor, e) =>
 					{
 						if (e.ElementType == QueryElementType.Column || e.ElementType == QueryElementType.SqlField)
@@ -1452,15 +1456,15 @@ namespace LinqToDB.SqlQuery
 									}
 
 									return newExpr;
+								}
+							}
 						}
-					}
-				}
 
 						return e;
 					});
 
 					searchCondition[i] = newCond;
-						}
+				}
 
 				var newJoinType = joinTable.JoinType switch
 				{
@@ -1473,8 +1477,8 @@ namespace LinqToDB.SqlQuery
 
 				joinTable.JoinType = newJoinType;
 				joinTable.Condition.Conditions.AddRange(searchCondition);
-					}
-				}
+			}
+		}
 
 		static void ConcatSearchCondition(SqlWhereClause where1, SqlWhereClause where2)
 		{
@@ -1627,9 +1631,9 @@ namespace LinqToDB.SqlQuery
 
 			((ISqlExpressionWalkable)_selectQuery.Select).Walk(WalkOptions.Default, (object?)null, static (_, expr) =>
 			{
-				if (expr is SelectQuery query    &&
-					query.From.Tables.Count == 0 &&
-					query.Select.Columns.Count == 1)
+				if (expr is SelectQuery query       &&
+				    query.From.Tables.Count    == 0 &&
+				    query.Select.Columns.Count == 1)
 				{
 					query.Select.Columns[0].Expression.Visit(query, static (query, e) =>
 					{
@@ -1711,8 +1715,8 @@ namespace LinqToDB.SqlQuery
 				if (takeValue is int intValue)
 				{
 					return intValue == 1;
-	}
-}
+				}
+			}
 
 			byTake = false;
 
@@ -1768,7 +1772,7 @@ namespace LinqToDB.SqlQuery
 							if (join.JoinType == JoinType.OuterApply || join.JoinType == JoinType.Left)
 							{
 								if (join.Table.Source is SelectQuery tsQuery &&
-								    tsQuery.Select.Columns.Count == 1         &&
+								    tsQuery.Select.Columns.Count == 1        &&
 								    IsLimitedToOneRecord(tsQuery, ctx.context, out var byTake))
 								{
 									if (byTake && !ctx.flags.IsSubQueryTakeSupported)

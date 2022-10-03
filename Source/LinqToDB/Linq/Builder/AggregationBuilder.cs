@@ -267,6 +267,9 @@ namespace LinqToDB.Linq.Builder
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
+				if (SequenceHelper.IsSameContext(path, this) && flags.HasFlag(ProjectFlags.Root))
+					return path;
+
 				if (OuterJoinParentQuery != null)
 				{
 					if (!flags.HasFlag(ProjectFlags.Test))
@@ -290,7 +293,7 @@ namespace LinqToDB.Linq.Builder
 
 			public override IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)
 			{
-				throw new NotImplementedException();
+				return null;
 			}
 		}
 	}

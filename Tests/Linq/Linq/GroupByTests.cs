@@ -1215,6 +1215,7 @@ namespace Tests.Linq
 		[Test]
 		public void GroupByAggregate2([NorthwindDataContext] string context)
 		{
+			using (new GuardGrouping(false))
 			using (var db = new NorthwindDB(context))
 			{
 				var dd = GetNorthwindAsList(context);
@@ -1233,6 +1234,7 @@ namespace Tests.Linq
 		[Test]
 		public void GroupByAggregate3([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
+			using (new GuardGrouping(false))
 			using (var db = GetDataContext(context))
 				AreEqual(
 					(

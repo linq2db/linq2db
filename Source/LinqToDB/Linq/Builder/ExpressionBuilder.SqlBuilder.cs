@@ -812,7 +812,7 @@ namespace LinqToDB.Linq.Builder
 		Dictionary<SqlCacheKey, Expression> _preciseCachedSql = new(SqlCacheKey.SqlCacheKeyComparer);
 		Dictionary<SqlCacheKey, Expression> _cachedSql = new(SqlCacheKey.SqlCacheKeyComparer);
 
-		public SqlPlaceholderExpression ConvertToSqlPlaceholder(IBuildContext? context, Expression expression, ProjectFlags flags = ProjectFlags.SQL, bool unwrap = false, ColumnDescriptor? columnDescriptor = null, bool isPureExpression = false)
+		public SqlPlaceholderExpression ConvertToSqlPlaceholder(IBuildContext context, Expression expression, ProjectFlags flags = ProjectFlags.SQL, bool unwrap = false, ColumnDescriptor? columnDescriptor = null, bool isPureExpression = false)
 		{
 			var expr = ConvertToSqlExpr(context, expression, flags, unwrap, columnDescriptor, isPureExpression: isPureExpression);
 
@@ -824,7 +824,7 @@ namespace LinqToDB.Linq.Builder
 			return placeholder;
 		}
 
-		public ISqlExpression ConvertToSql(IBuildContext? context, Expression expression, ProjectFlags flags = ProjectFlags.SQL, bool unwrap = false, ColumnDescriptor? columnDescriptor = null, bool isPureExpression = false)
+		public ISqlExpression ConvertToSql(IBuildContext context, Expression expression, ProjectFlags flags = ProjectFlags.SQL, bool unwrap = false, ColumnDescriptor? columnDescriptor = null, bool isPureExpression = false)
 		{
 			var placeholder = ConvertToSqlPlaceholder(context, expression, flags, unwrap: unwrap, columnDescriptor: columnDescriptor, isPureExpression: isPureExpression);
 
@@ -886,33 +886,59 @@ namespace LinqToDB.Linq.Builder
 			}*/
 
 			ISqlExpression? sql = null;
+			Expression?     result = null;
 
-			if (typeof(IToSqlConverter).IsSameOrParentOf(expression.Type))
-			{
-				sql = ConvertToSqlConvertible(expression);
-			}
+			var isFirst = true;
 
-			if (sql == null)
+			var newExpr = expression;
+
+			while (true)
 			{
-				if (!PreferServerSide(expression, false))
+				if (typeof(IToSqlConverter).IsSameOrParentOf(newExpr.Type))
 				{
-					if (columnDescriptor?.ValueConverter == null && CanBeConstant(expression))
-						sql = BuildConstant(expression, columnDescriptor);
-					else if (expression.NodeType != ExpressionType.MemberInit && expression.NodeType != ExpressionType.New && CanBeCompiled(expression))
-						sql = ParametersContext.BuildParameter(expression, columnDescriptor).SqlParameter;
+					sql = ConvertToSqlConvertible(newExpr);
 				}
+
+				if (sql == null)
+				{
+					if (!PreferServerSide(newExpr, false))
+					{
+						if (columnDescriptor?.ValueConverter == null && CanBeConstant(newExpr))
+							sql = BuildConstant(newExpr, columnDescriptor);
+						else if (newExpr.NodeType != ExpressionType.MemberInit && newExpr.NodeType != ExpressionType.New && CanBeCompiled(expression))
+							sql = ParametersContext.BuildParameter(newExpr, columnDescriptor).SqlParameter;
+					}
+				}
+
+				if (!isFirst)
+					break;
+
+				if (sql == null)
+				{
+					newExpr = MakeExpression(context, newExpr, flags);
+					if (newExpr is SqlPlaceholderExpression)
+					{
+						result = newExpr;
+						break;
+					}
+				}
+				else
+					break;
+
+				isFirst = false;
 			}
 
-			Expression result;
-			if (sql != null)
+			if (result == null)
 			{
-				result = CreatePlaceholder(context.SelectQuery, sql, expression, alias: alias);
-			}
-			else
-			{
-				var newExpr = MakeExpression(context, expression, flags);
-				result = ConvertToSqlInternal(context, newExpr, flags, unwrap: unwrap, columnDescriptor: columnDescriptor, isPureExpression: isPureExpression, alias: alias);
-			}
+				if (sql != null)
+				{
+					result = CreatePlaceholder(context.SelectQuery, sql, newExpr, alias: alias);
+				}
+				else
+				{
+					result = ConvertToSqlInternal(context, newExpr, flags, unwrap: unwrap, columnDescriptor: columnDescriptor, isPureExpression: isPureExpression, alias: alias);
+				}
+			} 
 
 			// nesting for Expressions updated in finalization
 			var updateNesting = !flags.HasFlag(ProjectFlags.Test) && !flags.HasFlag(ProjectFlags.Expression);
@@ -3885,7 +3911,7 @@ namespace LinqToDB.Linq.Builder
 
 			ContextRefExpression? rootContext = null;
 
-			if (path is MemberExpression memberExpression)
+			if (path is MemberExpression memberExpression && memberExpression.Expression != null)
 			{
 				if (memberExpression.Member.IsNullableValueMember())
 				{
@@ -3933,11 +3959,13 @@ namespace LinqToDB.Linq.Builder
 					path = ((MemberExpression)newPath).Update(root);
 					if (root is ContextRefExpression contextRef)
 					{
+						/*
 						if (flags.HasFlag(ProjectFlags.AssociationRoot))
 						{
 							expression = root;
 						}
 						else
+						*/
 						{
 							expression = TryCreateAssociation(path, contextRef, flags);
 						}
@@ -4027,11 +4055,19 @@ namespace LinqToDB.Linq.Builder
 				var ctx = rootContext?.BuildContext ?? currentContext;
 				if (ctx != null)
 				{
-					var info = new BuildInfo(currentContext, path, ctx.SelectQuery);
+					var info = new BuildInfo(currentContext, path, ctx.SelectQuery)
+					{
+						IsTest = flags.HasFlag(ProjectFlags.Test)
+					};
 
 					if (IsSequence(info))
 					{
 						expression = GetSubQueryExpression(ctx, path, null, flags.HasFlag(ProjectFlags.Test));
+						expression = MakeExpression(ctx, expression, flags);
+						if (expression.Type != path.Type)
+						{
+							expression = new SqlAdjustTypeExpression(expression, path.Type, MappingSchema);
+						}
 					}
 				}
 			}

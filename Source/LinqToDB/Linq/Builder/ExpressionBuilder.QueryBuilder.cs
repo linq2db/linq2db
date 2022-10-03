@@ -376,10 +376,10 @@ namespace LinqToDB.Linq.Builder
 					});
 
 			return withColumns;
-							}
+		}
 
 		public bool TryConvertToSql(IBuildContext context, ProjectFlags flags, Expression expression, ColumnDescriptor? columnDescriptor, [NotNullWhen(true)] out ISqlExpression? sqlExpression, out Expression actual)
-							{
+		{
 			flags = flags & ~ProjectFlags.Expression | ProjectFlags.SQL;
 
 			sqlExpression = null;
@@ -788,17 +788,12 @@ namespace LinqToDB.Linq.Builder
 
 		Expression GetSubQueryExpression(IBuildContext context, Expression expr, string? alias, bool isTest)
 		{
-			var info = GetSubQueryContext(context, expr, isTest);
+			var unwrapped = expr.Unwrap();
+			var info = GetSubQueryContext(context, unwrapped, isTest);
 
-			return new ContextRefExpression(expr.Type, info.Context);
+			var resultExpr = (Expression)new ContextRefExpression(unwrapped.Type, info.Context);
 
-			/*if (info.Expression == null)
-				info.Expression = MakeExpression(context, new ContextRefExpression(expr.Type, info.Context), ProjectFlags.Expression);
-
-			if (!string.IsNullOrEmpty(alias))
-				info.Context.SetAlias(alias);
-
-			return UpdateNesting(context, info.Expression);*/
+			return resultExpr;
 		}
 
 		static bool EnforceServerSide(IBuildContext context)
