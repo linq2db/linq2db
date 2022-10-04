@@ -52,7 +52,7 @@ namespace LinqToDB.Linq.Builder
 			var context = contextRef.BuildContext;
 
 			if (!buildInfo.CreateSubQuery)
-			return context;
+				return context;
 
 			var elementContext = context.GetContext(buildInfo.Expression, 0, buildInfo);
 			if (elementContext != null)

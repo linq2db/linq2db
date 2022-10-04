@@ -1133,6 +1133,8 @@ namespace LinqToDB.SqlQuery
 			bool optimizeValues,
 			SqlJoinedTable? parentJoinedTable)
 		{
+			var skipColumnCheck = false;
+
 			var query = (SelectQuery)childSource.Source;
 
 			var isQueryOK = !query.DoNotRemove && query.From.Tables.Count == 1;
@@ -1147,10 +1149,17 @@ namespace LinqToDB.SqlQuery
 				if (query.HasSetOperators || !query.GroupBy.IsEmpty || query.Select.HasModifier)
 				{
 					isQueryOK = false;
-					if (parentJoinedTable == null && parentQuery.IsSimple && query.Select.Columns.Count == _selectQuery.Select.Columns.Count)
+					if (parentJoinedTable == null && parentQuery.IsSimple)
 					{
-						isQueryOK = query.Select.Columns.All(cc =>
-							_selectQuery.Select.Columns.Any(c => ReferenceEquals(c.Expression, cc)));
+						skipColumnCheck = true;
+						if (query.Select.IsDistinct)
+						{
+							isQueryOK = query.Select.Columns.Count == _selectQuery.Select.Columns.Count &&
+							            query.Select.Columns.All(cc =>
+								            _selectQuery.Select.Columns.Any(c => ReferenceEquals(c.Expression, cc)));
+						}
+						else
+							isQueryOK = !parentQuery.Select.Columns.Any(static c => QueryHelper.IsAggregationOrWindowFunction(c.Expression));
 					}
 				}
 			}
@@ -1195,7 +1204,7 @@ namespace LinqToDB.SqlQuery
 			if (!isQueryOK)
 				return childSource;
 
-			var isColumnsOK = (allColumns && !query.Select.Columns.Any(static c => QueryHelper.IsAggregationOrWindowFunction(c.Expression)));
+			var isColumnsOK = skipColumnCheck || (allColumns && !query.Select.Columns.Any(static c => QueryHelper.IsAggregationOrWindowFunction(c.Expression)));
 
 			if (!isColumnsOK)
 			{

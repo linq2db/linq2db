@@ -27,6 +27,10 @@ namespace LinqToDB.Linq.Builder
 			{
 				result += $"(T: {tc.SqlTable.SourceID})";
 			}
+			if (context is ScopeContext scope)
+			{
+				result += $"({scope.Context.SelectQuery.SourceID} -> {scope.UpTo.SelectQuery.SourceID})";
+			}
 			else if (context is SubQueryContext sc)
 			{
 				result += $"(SC)";

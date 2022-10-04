@@ -1,26 +1,30 @@
 ﻿using System.Linq.Expressions;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Builder
 {
 	class ScopeContext : PassThroughContext
 	{
-		readonly IBuildContext _upTo;
+		public   IBuildContext UpTo { get; }
+
+		public override SelectQuery SelectQuery { get => UpTo.SelectQuery; set => UpTo.SelectQuery = value; }
 
 		public ScopeContext(IBuildContext context, IBuildContext upTo) : base(context)
 		{
-			_upTo = upTo;
+			UpTo = upTo;
 		}
 
 		public override Expression MakeExpression(Expression path, ProjectFlags flags)
 		{
-			if (flags.HasFlag(ProjectFlags.Root))
+			if (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AssociationRoot) || flags.HasFlag(ProjectFlags.Expand))
 				return path;
 
 			var newExpr = base.MakeExpression(path, flags);
 
 			if (!flags.HasFlag(ProjectFlags.Test))
 			{
-				newExpr = Builder.UpdateNesting(_upTo, newExpr);
+				newExpr = SequenceHelper.MoveAllToScopedContext(newExpr, UpTo);
+				newExpr = Builder.UpdateNesting(UpTo, newExpr);
 			}
 
 			return newExpr;
@@ -28,7 +32,7 @@ namespace LinqToDB.Linq.Builder
 
 		public override IBuildContext Clone(CloningContext context)
 		{
-			return new ScopeContext(context.CloneContext(Context), context.CloneContext(_upTo));
+			return new ScopeContext(context.CloneContext(Context), context.CloneContext(UpTo));
 		}
 	}
 }

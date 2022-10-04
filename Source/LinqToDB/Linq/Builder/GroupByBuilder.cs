@@ -334,7 +334,7 @@ namespace LinqToDB.Linq.Builder
 				if (newFlags.HasFlag(ProjectFlags.Expression))
 					newFlags = (newFlags & ~ProjectFlags.Expression) | ProjectFlags.SQL;
 
-				newFlags = newFlags | ProjectFlags.Keys;
+				newFlags |= ProjectFlags.Keys;
 
 				var result = base.MakeExpression(path, newFlags);
 
@@ -451,14 +451,6 @@ namespace LinqToDB.Linq.Builder
 
 					var groupingPath = path;
 
-					//TODO: remove
-					/*
-					if (!typeof(IGrouping<,>).IsSameOrParentOf(groupingPath.Type))
-						{
-						groupingPath = new ContextRefExpression(GetInterfaceGroupingType(), this);
-							}
-					*/
-
 					var assignments = new List<SqlGenericConstructorExpression.Assignment>(2);
 
 					assignments.Add(new SqlGenericConstructorExpression.Assignment(
@@ -483,6 +475,11 @@ namespace LinqToDB.Linq.Builder
 						return path;
 
 					var keyPath = new ContextRefExpression(me.Type, _key);
+
+					if (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AssociationRoot))
+					{
+						return new ContextRefExpression(path.Type, new ScopeContext(_key, this));
+					}
 
 					var result = Builder.MakeExpression(this, keyPath, flags);
 

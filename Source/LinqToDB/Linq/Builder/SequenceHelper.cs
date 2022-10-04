@@ -79,19 +79,20 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		public static Expression MoveAllToScopedContext(Expression expression, IBuildContext upTo)
-			{
+		{
 			var newExpression = expression.Transform((expression, upTo), (ctx, e) =>
 			{
-				if (e.NodeType == ExpressionType.Extension && e is ContextRefExpression contextRef)
+				if (e.NodeType == ExpressionType.Extension)
 				{
-					return contextRef.WithContext(new ScopeContext(contextRef.BuildContext, ctx.upTo));
+					if (e is ContextRefExpression contextRef)
+						return contextRef.WithContext(new ScopeContext(contextRef.BuildContext, ctx.upTo));
 				}
 
 				return e;
 			});
 
 			return newExpression;
-			}
+		}
 
 		public static Expression MoveToScopedContext(Expression expression, IBuildContext upTo)
 		{

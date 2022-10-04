@@ -109,7 +109,7 @@ namespace LinqToDB.Expressions
 				for (var i = 0; i < newExpression.Members.Count; i++)
 				{
 					var member = newExpression.Members[i];
-					items.Add(new Assignment(member, Parse(newExpression.Arguments[i]), true, false));
+					items.Add(new Assignment(member, newExpression.Arguments[i], true, false));
 				}
 
 				Parameters = Parameter.EmptyCollection;
