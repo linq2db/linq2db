@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Common;
+using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 using Tests.Model;
@@ -687,7 +688,7 @@ namespace Tests.xUpdate
 						.InsertWhenNotMatched()
 						.Merge())!;
 
-				Assert.IsInstanceOf<LinqToDBException>(exception);
+				Assert.IsInstanceOf<LinqException>(exception);
 				Assert.AreEqual("'s.Field2' cannot be converted to SQL.", exception.Message);
 			}
 		}
@@ -713,7 +714,7 @@ namespace Tests.xUpdate
 						})
 						.Merge())!;
 
-				Assert.IsInstanceOf<LinqToDBException>(exception);
+				Assert.IsInstanceOf<LinqException>(exception);
 				Assert.AreEqual("'s.Field3' cannot be converted to SQL.", exception.Message);
 				//Assert.AreEqual("Column Field3 doesn't exist in source", exception.Message);
 			}
@@ -1109,7 +1110,7 @@ namespace Tests.xUpdate
 						})
 					.Merge())!;
 
-				Assert.IsInstanceOf<LinqToDBException>(exception);
+				Assert.IsInstanceOf<LinqException>(exception);
 				Assert.AreEqual("'_.Field2' cannot be converted to SQL.", exception.Message);
 			}
 		}

@@ -78,6 +78,7 @@ namespace LinqToDB.SqlQuery
 		#endregion
 
 		#region Clone
+
 		[return: NotNullIfNotNull("element")]
 		public static T? Clone<T>(this T? element, Dictionary<IQueryElement, IQueryElement> objectTree)
 			where T : class, IQueryElement
@@ -86,6 +87,12 @@ namespace LinqToDB.SqlQuery
 				return null;
 
 			return new CloneVisitor<object?>(objectTree, null).Clone(element);
+		}
+
+		public static void CloneInto<T>(this IReadOnlyList<T> source, IList<T> target, Dictionary<IQueryElement, IQueryElement> objectTree)
+			where T : class, IQueryElement
+		{
+			new CloneVisitor<object?>(objectTree, null).CloneInto(target, source);
 		}
 
 		[return: NotNullIfNotNull("elements")]

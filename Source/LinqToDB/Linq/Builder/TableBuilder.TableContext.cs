@@ -207,7 +207,7 @@ namespace LinqToDB.Linq.Builder
 			public virtual SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 			{
 				throw new NotImplementedException();
-									}
+			}
 
 			#endregion
 

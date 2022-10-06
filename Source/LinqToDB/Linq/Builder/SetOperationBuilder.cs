@@ -769,14 +769,14 @@ namespace LinqToDB.Linq.Builder
 				
 				if (_body != null)
 				{
-					var projected = Builder.Project(this, path, null, -1, flags, _body);
+					var projected = Builder.Project(this, path, null, -1, flags, _body, true);
 
 					if (flags.HasFlag(ProjectFlags.Expression))
 					{
 						if (IsIncompatible(projected))
 						{
-							var leftExpression  = Builder.Project(this, path, null, -1, flags, _leftSqlExpr);
-							var rightExpression = Builder.Project(this, path, null, -1, flags, _rightSqlExpr);
+							var leftExpression  = Builder.Project(this, path, null, -1, flags, _leftSqlExpr, true);
+							var rightExpression = Builder.Project(this, path, null, -1, flags, _rightSqlExpr, true);
 
 							var result = MakeConditionalConstructExpression(path, leftExpression, rightExpression);
 							return result;

@@ -28,6 +28,7 @@ namespace LinqToDB.Linq.Builder
 				var mergeContext = (MergeContext)builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
 				var sourceContext         = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery()));
+
 				var source                = new TableLikeQueryContext(sourceContext);
 				mergeContext.Sequences    = new IBuildContext[] { mergeContext.Sequence, source };
 				mergeContext.Merge.Source = source.Source;

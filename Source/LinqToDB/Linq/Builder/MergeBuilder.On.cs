@@ -123,7 +123,6 @@ namespace LinqToDB.Linq.Builder
 					statement.On.Conditions.AddRange(filterExpression.Conditions);
 				}
 
-				mergeContext.SourceContext.MatchBuilt();
 				return mergeContext;
 			}
 		}

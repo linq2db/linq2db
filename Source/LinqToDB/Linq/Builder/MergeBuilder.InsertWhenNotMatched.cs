@@ -44,15 +44,18 @@ namespace LinqToDB.Linq.Builder
 				{
 					// build setters like QueryRunner.Insert
 					var sqlTable   = (SqlTable)statement.Target.Source;
-					var param      = Expression.Parameter(sqlTable.ObjectType, "s");
+
+					var sourceRef = new ContextRefExpression(sqlTable.ObjectType, mergeContext.SourceContext);
+					var targetRef = new ContextRefExpression(sqlTable.ObjectType, mergeContext.TargetContext);
 
 					foreach (var field in sqlTable.Fields)
 					{
 						if (field.IsInsertable)
 						{
-							var expression = LinqToDB.Expressions.Extensions.GetMemberGetter(field.ColumnDescriptor.MemberInfo, param);
-							var tgtExpr    = mergeContext.TargetContext.ConvertToSql(builder.ConvertExpression(expression), 1, ConvertFlags.Field)[0].Sql;
-							var srcExpr    = mergeContext.SourceContext.ConvertToSql(builder.ConvertExpression(expression), 1, ConvertFlags.Field)[0].Sql;
+							var sourceExpression = LinqToDB.Expressions.Extensions.GetMemberGetter(field.ColumnDescriptor.MemberInfo, sourceRef);
+							var targetExpression = LinqToDB.Expressions.Extensions.GetMemberGetter(field.ColumnDescriptor.MemberInfo, targetRef);
+							var tgtExpr    = builder.ConvertToSql(mergeContext.TargetContext, targetExpression);
+							var srcExpr    = builder.ConvertToSql(mergeContext.SourceContext, sourceExpression);
 
 							operation.Items.Add(new SqlSetExpression(tgtExpr, srcExpr));
 						}
@@ -68,13 +71,15 @@ namespace LinqToDB.Linq.Builder
 
 				if (!predicate.IsNullValue())
 				{
-					var condition     = (LambdaExpression)predicate.Unwrap();
-					var conditionExpr = builder.ConvertExpression(condition.Body.Unwrap());
+					var condition = predicate.UnwrapLambda();
+
+					var sourceRef = new ContextRefExpression(condition.Parameters[0].Type, mergeContext.SourceContext);
+					var conditionExpr = builder.ConvertExpression(condition.GetBody(sourceRef));
 
 					operation.Where = new SqlSearchCondition();
 
 					builder.BuildSearchCondition(
-						new ExpressionContext(null, new[] { mergeContext.SourceContext }, condition),
+						mergeContext.SourceContext,
 						conditionExpr, ProjectFlags.SQL,
 						operation.Where.Conditions);
 				}

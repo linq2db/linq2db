@@ -1,10 +1,10 @@
 ﻿using System.Diagnostics;
 using System.Linq.Expressions;
-using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
 	using SqlQuery;
+	using LinqToDB.Expressions;
 
 	[DebuggerDisplay("{BuildContextDebuggingHelper.GetContextInfo(this)}")]
 	class SubQueryContext : PassThroughContext

@@ -173,10 +173,9 @@ namespace LinqToDB.Linq.Builder
 		{
 			SqlSearchCondition result;
 
-			var isTableContext = onContext.IsExpression(null, 0, RequestFor.Table);
-			if (isTableContext.Result)
+			var tableContext = SequenceHelper.GetTableContext(onContext);
+			if (tableContext != null)
 			{
-				var tableContext  = (TableBuilder.TableContext)onContext;
 				var clonedContext = new TableBuilder.TableContext(builder, new SelectQuery(), tableContext.SqlTable);
 
 				var targetParameter = Expression.Parameter(tableContext.ObjectType);

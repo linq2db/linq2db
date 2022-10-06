@@ -56,7 +56,7 @@ namespace LinqToDB.Linq.Builder
 			LambdaExpression  setter)
 		{
 			var source        = (TableLikeQueryContext)builder.BuildSequence(new BuildInfo(buildInfo, query));
-			var statement     = (SqlMultiInsertStatement)source.Context.Statement!;
+			var statement     = (SqlMultiInsertStatement)source.InnerQueryContext.Statement!;
 			var into          = builder.BuildSequence(new BuildInfo(buildInfo, table, new SelectQuery()));
 			var targetContext = new MultiInsertContext(statement, source, into);
 			var when          = condition != null ? new SqlSearchCondition() : null;
@@ -133,11 +133,11 @@ namespace LinqToDB.Linq.Builder
 		private static IBuildContext BuildInsert(ExpressionBuilder builder, BuildInfo buildInfo, MultiInsertType type, Expression query)
 		{
 			var source           = (TableLikeQueryContext)builder.BuildSequence(new BuildInfo(buildInfo, query));
-			var statement        = (SqlMultiInsertStatement)source.Context.Statement!;
+			var statement        = (SqlMultiInsertStatement)source.InnerQueryContext.Statement!;
 
 			statement.InsertType = type;
 
-			return new MultiInsertContext(source.Context);
+			return new MultiInsertContext(source.InnerQueryContext);
 		}
 
 		private static IBuildContext BuildInsert(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)

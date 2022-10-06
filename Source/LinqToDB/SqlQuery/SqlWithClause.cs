@@ -31,7 +31,7 @@ namespace LinqToDB.SqlQuery
 
 					cte.ToString(sb, dic);
 
-					if (cte.Fields!.Length > 3)
+					if (cte.Fields.Count > 3)
 					{
 						sb.AppendLine();
 						/*AppendIndent();*/ sb.AppendLine("(");
@@ -51,7 +51,7 @@ namespace LinqToDB.SqlQuery
 						sb.AppendLine();
 						/*AppendIndent();*/ sb.AppendLine(")");
 					}
-					else if (cte.Fields.Length > 0)
+					else if (cte.Fields.Count > 0)
 					{
 						sb.Append(" (");
 

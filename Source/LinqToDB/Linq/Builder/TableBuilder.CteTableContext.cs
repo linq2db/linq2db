@@ -90,6 +90,10 @@ namespace LinqToDB.Linq.Builder
 				CteTable    = new SqlCteTable(objectType, _cteContext.CteClause);
 
 				SelectQuery.From.Table(CteTable);
+
+#if DEBUG
+				ContextId = Builder.GenerateContextId();
+#endif
 			}
 
 			public void SetRunQuery<T>(Query<T> query, Expression expr)

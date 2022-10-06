@@ -365,9 +365,9 @@ namespace LinqToDB.SqlProvider
 
 		static void CorrectEmptyCte(CteClause cte)
 		{
-			if (cte.Fields == null || cte.Fields.Length == 0)
+			if (cte.Fields.Count == 0)
 			{
-				cte.Fields = new[] { new SqlField(typeof(int), "any", false) };
+				cte.Fields.Add(new SqlField(typeof(int), "any", false));
 				cte.Body!.Select.AddNew(new SqlValue(1), "any");
 			}
 		}

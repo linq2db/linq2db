@@ -1300,7 +1300,8 @@ namespace LinqToDB.SqlQuery
 							{
 								var objTree = new Dictionary<IQueryElement, IQueryElement>();
 
-								var clonedFields = cte.Fields!.Clone(objTree);
+								var clonedFields = new List<SqlField>(cte.Fields.Count);
+								cte.Fields.CloneInto(clonedFields, objTree);
 
 								newCte = new CteClause(
 									body,

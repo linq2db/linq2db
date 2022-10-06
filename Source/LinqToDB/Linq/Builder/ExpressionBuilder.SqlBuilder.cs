@@ -864,7 +864,7 @@ namespace LinqToDB.Linq.Builder
 			var cacheFlags = flags & ~ProjectFlags.Keys;
 
 			var cacheKey        = new SqlCacheKey(expression, null, columnDescriptor, null, cacheFlags);
-			var preciseCacheKey = new SqlCacheKey(expression, null, columnDescriptor, context.SelectQuery, cacheFlags);
+			var preciseCacheKey = new SqlCacheKey(expression, null, columnDescriptor, context?.SelectQuery, cacheFlags);
 
 			if (_preciseCachedSql.TryGetValue(preciseCacheKey, out var sqlExpr))
 			{
@@ -3527,7 +3527,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region Projection
 
-		public Expression Project(IBuildContext context, Expression? path, List<Expression>? nextPath, int nextIndex, ProjectFlags flags, Expression body)
+		public Expression Project(IBuildContext context, Expression? path, List<Expression>? nextPath, int nextIndex, ProjectFlags flags, Expression body, bool strict)
 		{
 			MemberInfo? member = null;
 			Expression? next   = null;
@@ -3540,11 +3540,11 @@ namespace LinqToDB.Linq.Builder
 				if (memberExpression.Expression is MemberExpression me)
 				{
 					// going deeper
-					return Project(context, me, nextPath, nextPath.Count - 1, flags, body);
+					return Project(context, me, nextPath, nextPath.Count - 1, flags, body, strict);
 				}
 
 				// make path projection
-				return Project(context, null, nextPath, nextPath.Count - 1, flags, body);
+				return Project(context, null, nextPath, nextPath.Count - 1, flags, body, strict);
 			}
 
 			if (path is SqlGenericParamAccessExpression accessExpression)
@@ -3555,11 +3555,11 @@ namespace LinqToDB.Linq.Builder
 				if (accessExpression.Constructor is SqlGenericParamAccessExpression ae)
 				{
 					// going deeper
-					return Project(context, ae, nextPath, nextPath.Count - 1, flags, body);
+					return Project(context, ae, nextPath, nextPath.Count - 1, flags, body, strict);
 				}
 
 				// make path projection
-				return Project(context, null, nextPath, nextPath.Count - 1, flags, body);
+				return Project(context, null, nextPath, nextPath.Count - 1, flags, body, strict);
 			}
 
 			if (path == null)
@@ -3610,7 +3610,6 @@ namespace LinqToDB.Linq.Builder
 							var newPath = nextPath![0].Replace(next!, ma);
 
 							return newPath;
-							//return context.Builder.MakeExpression(newPath, flags);
 						}
 
 						if (body is SqlGenericConstructorExpression genericConstructor)
@@ -3659,10 +3658,13 @@ namespace LinqToDB.Linq.Builder
 
 							if (bodyExpresion is not null)
 							{
-								return Project(context, path, nextPath, nextIndex - 1, flags, bodyExpresion);
+								return Project(context, path, nextPath, nextIndex - 1, flags, bodyExpresion, strict);
 							}
 
-							return new DefaultValueExpression(null, nextPath[0].Type);
+							if (strict)
+								return CreateSqlError(null, nextPath![0]);
+
+							return new DefaultValueExpression(null, nextPath![0].Type);
 						}
 					}
 
@@ -3679,7 +3681,7 @@ namespace LinqToDB.Linq.Builder
 						if (body is SqlGenericConstructorExpression constructorExpression)
 						{
 							var projected = Project(context, path, nextPath, nextIndex - 1, flags,
-								constructorExpression.Parameters[paramAccessExpression.ParamIndex].Expression);
+								constructorExpression.Parameters[paramAccessExpression.ParamIndex].Expression, strict);
 							return projected;
 						}
 
@@ -3701,7 +3703,7 @@ namespace LinqToDB.Linq.Builder
 
 						var newMember = ((MemberExpression)nextPath[nextIndex]).Update(body);
 
-						return Project(context, null, nextPath, nextIndex - 1, flags, newMember);
+						return Project(context, null, nextPath, nextIndex - 1, flags, newMember, strict);
 
 						//					return Project(context, null, nextPath, nextIndex - 1, flags, neMember);
 					}
@@ -3726,7 +3728,7 @@ namespace LinqToDB.Linq.Builder
 
 							if (MemberInfoEqualityComparer.Default.Equals(memberLocal, member))
 							{
-								return Project(context, path, nextPath, nextIndex - 1, flags, ne.Arguments[i]);
+								return Project(context, path, nextPath, nextIndex - 1, flags, ne.Arguments[i], strict);
 							}
 						}
 					}
@@ -3742,7 +3744,7 @@ namespace LinqToDB.Linq.Builder
 							if (memberByParam != null &&
 							    MemberInfoEqualityComparer.Default.Equals(memberByParam, member))
 							{
-								return Project(context, path, nextPath, nextIndex - 1, flags, ne.Arguments[i]);
+								return Project(context, path, nextPath, nextIndex - 1, flags, ne.Arguments[i], strict);
 							}
 						}
 					}
@@ -3750,7 +3752,10 @@ namespace LinqToDB.Linq.Builder
 					if (member == null)
 						return ne;
 
-					return new DefaultValueExpression(null, nextPath[0].Type);
+					if (strict)
+						return CreateSqlError(null, nextPath![0]);
+
+					return new DefaultValueExpression(null, nextPath![0].Type);
 				}
 
 				case ExpressionType.MemberInit:
@@ -3772,7 +3777,7 @@ namespace LinqToDB.Linq.Builder
 
 							if (MemberInfoEqualityComparer.Default.Equals(memberLocal, member))
 							{
-								return Project(context, path, nextPath, nextIndex - 1, flags, ne.Arguments[i]);
+								return Project(context, path, nextPath, nextIndex - 1, flags, ne.Arguments[i], strict);
 							}
 						}
 					}
@@ -3787,7 +3792,7 @@ namespace LinqToDB.Linq.Builder
 								var assignment = (MemberAssignment)binding;
 								if (MemberInfoEqualityComparer.Default.Equals(assignment.Member, member))
 								{
-									return Project(context, path, nextPath, nextIndex - 1, flags, assignment.Expression);
+									return Project(context, path, nextPath, nextIndex - 1, flags, assignment.Expression, strict);
 								}
 								break;
 							}	
@@ -3797,7 +3802,7 @@ namespace LinqToDB.Linq.Builder
 								if (MemberInfoEqualityComparer.Default.Equals(memberMemberBinding.Member, member))
 								{
 									return Project(context, path, nextPath, nextIndex - 1, flags,
-										new SqlGenericConstructorExpression(memberMemberBinding.Member.GetMemberType(), memberMemberBinding.Bindings));
+										new SqlGenericConstructorExpression(memberMemberBinding.Member.GetMemberType(), memberMemberBinding.Bindings), strict);
 								}
 								break;
 							}	
@@ -3811,14 +3816,17 @@ namespace LinqToDB.Linq.Builder
 					if (member == null)
 						return ne;
 
-					return new DefaultValueExpression(null, nextPath[0].Type);
+					if (strict)
+						return CreateSqlError(null, nextPath![0]);
+
+					return new DefaultValueExpression(null, nextPath![0].Type);
 
 				}
 				case ExpressionType.Conditional:
 				{
 					var cond      = (ConditionalExpression)body;
-					var trueExpr  = Project(context, null, nextPath, nextIndex, flags, cond.IfTrue);
-					var falseExpr = Project(context, null, nextPath, nextIndex, flags, cond.IfFalse);
+					var trueExpr  = Project(context, null, nextPath, nextIndex, flags, cond.IfTrue, strict);
+					var falseExpr = Project(context, null, nextPath, nextIndex, flags, cond.IfFalse, strict);
 
 					var newExpr = (Expression)Expression.Condition(cond.Test, trueExpr, falseExpr);
 
@@ -3856,7 +3864,7 @@ namespace LinqToDB.Linq.Builder
 							if (memberByParam != null &&
 							    MemberInfoEqualityComparer.Default.Equals(memberByParam, member))
 							{
-								return Project(context, path, nextPath, nextIndex - 1, flags, mc.Arguments[i]);
+								return Project(context, path, nextPath, nextIndex - 1, flags, mc.Arguments[i], strict);
 							}
 						}
 					}
@@ -3864,7 +3872,7 @@ namespace LinqToDB.Linq.Builder
 					if (member != null)
 					{
 						var ma = Expression.MakeMemberAccess(mc, member);
-						return Project(context, path, nextPath, nextIndex - 1, flags, ma);
+						return Project(context, path, nextPath, nextIndex - 1, flags, ma, strict);
 					}
 
 					return mc;

@@ -491,7 +491,7 @@ namespace LinqToDB.SqlProvider
 
 				if (IsCteColumnListSupported)
 				{
-					if (cte.Fields!.Length > 3)
+					if (cte.Fields.Count > 3)
 					{
 						StringBuilder.AppendLine();
 						AppendIndent(); StringBuilder.AppendLine(OpenParens);
@@ -511,7 +511,7 @@ namespace LinqToDB.SqlProvider
 						StringBuilder.AppendLine();
 						AppendIndent(); StringBuilder.AppendLine(")");
 					}
-					else if (cte.Fields.Length > 0)
+					else if (cte.Fields.Count > 0)
 					{
 						StringBuilder.Append(" (");
 

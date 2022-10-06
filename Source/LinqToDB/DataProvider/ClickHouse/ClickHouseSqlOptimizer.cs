@@ -54,7 +54,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 			{
 				if (e is CteClause cte)
 				{
-					for (var i = 0; i < cte.Fields!.Length; i++)
+					for (var i = 0; i < cte.Fields.Count; i++)
 						cte.Body!.Select.Columns[i].RawAlias = cte.Fields[i].Alias ?? cte.Fields[i].PhysicalName;
 
 					// block rewrite of alias

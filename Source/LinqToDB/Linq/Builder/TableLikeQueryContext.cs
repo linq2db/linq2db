@@ -1,69 +1,134 @@
 ﻿using System;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Builder
 {
-	class TableLikeQueryContext : SubQueryContext
+	using LinqToDB.Expressions;
+	using SqlQuery;
+
+	class TableLikeQueryContext : IBuildContext
 	{
-		public SqlTableLikeSource Source { get; }
+#if DEBUG
+		public string SqlQueryText => SelectQuery == null ? "" : SelectQuery.SqlText;
+		public string Path         => this.GetPath();
+		public int    ContextId    { get; }
+#endif
+		public SelectQuery? SelectQuery
+		{
+			get => InnerQueryContext?.SelectQuery;
+			set { }
+		}
+
+		public SqlStatement?  Statement { get; set; }
+		public IBuildContext? Parent    { get; set; }
+
+		public ExpressionBuilder  Builder           { get; }
+		public Expression?        Expression        { get; }
+
+		public IBuildContext      InnerQueryContext { get; }
+		public SubQueryContext    SubqueryContext   { get; }
+		public SqlTableLikeSource Source            { get; }
 
 		public TableLikeQueryContext(IBuildContext sourceContext)
-			: base(sourceContext, new SelectQuery { ParentSelect = sourceContext.SelectQuery }, true)
 		{
+			Builder           = sourceContext.Builder;
+			InnerQueryContext = sourceContext;
+			SubqueryContext   = new SubQueryContext(sourceContext);
+
 			Source = sourceContext is EnumerableContext enumerableSource
 				? new SqlTableLikeSource { SourceEnumerable = enumerableSource.Table }
 				: new SqlTableLikeSource { SourceQuery = sourceContext.SelectQuery };
 		}
 
-		public void MatchBuilt()
+		Dictionary<SqlPlaceholderExpression, SqlPlaceholderExpression> _knownMap = new (ExpressionEqualityComparer.Instance);
+
+		public void       BuildQuery<T>(Query<T>      query,      ParameterExpression queryParameter)
 		{
-			// for table source, we should build all associations, used in operations as left joins to not affect
-			// number of records, returned by source, if association had inner join configured
-			// associations, used in match, should use their original join type
-			if (SubQuery is TableBuilder.TableContext table)
-				table.ForceLeftJoinAssociations = true;
+			throw new NotImplementedException();
 		}
 
-		public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
+		public Expression BuildExpression(Expression? expression, int                 level, bool enforceServerSide)
 		{
-			expression = SequenceHelper.CorrectExpression(expression, this, SubQuery);
-
-			return SubQuery
-				.ConvertToIndex(expression, level, flags)
-				.Select(info =>
-				{
-					var expr  = (info.Sql is SqlColumn column) ? column.Expression : info.Sql;
-					var field = RegisterSourceField(expr, expr, info.Index, info.MemberChain.LastOrDefault());
-
-					return new SqlInfo(info.MemberChain, field);
-				})
-				.ToArray();
+			throw new NotImplementedException();
 		}
 
-		SqlField RegisterSourceField(ISqlExpression baseExpression, ISqlExpression expression, int index, MemberInfo? member)
+		public SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 		{
-			var sourceField = Source.RegisterSourceField(baseExpression, expression, index, () =>
+			throw new NotImplementedException();
+		}
+
+		public SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
+		{
+			throw new NotImplementedException();
+		}
+
+		public Expression MakeExpression(Expression path, ProjectFlags flags)
+		{
+			var subqueryPath  = SequenceHelper.CorrectExpression(path, this, SubqueryContext);
+			var correctedPath = subqueryPath;
+
+			if (!ReferenceEquals(subqueryPath, path))
 			{
-				var f = QueryHelper.GetUnderlyingField(baseExpression ?? expression);
+				correctedPath = Builder.ConvertToSqlExpr(InnerQueryContext, correctedPath, flags);
 
-				var newField = f == null
-					? new SqlField(expression.SystemType!, member?.Name, expression.CanBeNull)
-					: new SqlField(f) { Name = member?.Name ?? f.Name};
+				if (!flags.HasFlag(ProjectFlags.Test))
+				{
+					correctedPath = SequenceHelper.CorrectTrackingPath(correctedPath, SubqueryContext, this);
 
-				newField.PhysicalName = newField.Name;
-				newField.Table        = Source;
-				return newField;
-			});
+					var memberPath = TableLikeHelpers.GetMemberPath(subqueryPath);
+					correctedPath = Builder.UpdateNesting(SubqueryContext, correctedPath);
+					var placeholders = ExpressionBuilder.CollectPlaceholders2(correctedPath, memberPath).ToList();
 
-			return sourceField;
+					var remapped = TableLikeHelpers.RemapToFields(SubqueryContext, Source, Source.SourceFields, _knownMap, correctedPath, placeholders);
+
+					return remapped;
+				}
+			}
+
+			return correctedPath;
 		}
 
-		public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
+		public IBuildContext Clone(CloningContext context)
 		{
-			return base.IsExpression(expression, level, requestFlag);
+			throw new NotImplementedException();
+		}
+
+		public void SetRunQuery<T>(Query<T> query, Expression expr)
+		{
+			throw new NotImplementedException();
+		}
+
+		public IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
+		{
+			throw new NotImplementedException();
+		}
+
+		public IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)
+		{
+			return null;
+		}
+
+		public int ConvertToParentIndex(int index, IBuildContext context)
+		{
+			throw new NotImplementedException();
+		}
+
+		public void SetAlias(string? alias)
+		{
+		}
+
+		public ISqlExpression? GetSubQuery(IBuildContext context)
+		{
+			throw new NotImplementedException();
+		}
+
+		public SqlStatement GetResultStatement()
+		{
+			return SubqueryContext.GetResultStatement();
+		}
+
+		public void CompleteColumns()
+		{
 		}
 	}
 }

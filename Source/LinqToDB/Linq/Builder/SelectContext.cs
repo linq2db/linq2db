@@ -155,7 +155,7 @@ namespace LinqToDB.Linq.Builder
 			}
 			else
 			{
-				result = Builder.Project(this, path, null, 0, flags, Body);
+				result = Builder.Project(this, path, null, 0, flags, Body, true);
 
 				if (!ReferenceEquals(result, Body))
 				{

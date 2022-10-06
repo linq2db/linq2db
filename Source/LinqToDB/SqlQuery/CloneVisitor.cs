@@ -50,7 +50,7 @@ namespace LinqToDB.SqlQuery
 			return newArr;
 		}
 
-		private void CloneInto<T>(IList<T> target, IReadOnlyList<T>? source)
+		public void CloneInto<T>(IList<T> target, IReadOnlyList<T>? source)
 			where T : class, IQueryElement
 		{
 			if (source == null)
@@ -145,8 +145,8 @@ namespace LinqToDB.SqlQuery
 						cteClause.IsRecursive,
 						cteClause.Name));
 
-					newCteClause.Body   = Clone(cteClause.Body);
-					newCteClause.Fields = Clone(cteClause.Fields);
+					newCteClause.Body = Clone(cteClause.Body);
+					 cteClause.Fields.CloneInto(newCteClause.Fields, _objectTree);
 					break;
 				}
 

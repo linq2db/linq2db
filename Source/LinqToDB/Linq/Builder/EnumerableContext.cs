@@ -61,7 +61,7 @@ namespace LinqToDB.Linq.Builder
 			if (Expression.NodeType == ExpressionType.NewArrayInit)
 				return BuildValuesTableFromArray((NewArrayExpression)Expression);
 
-			return new SqlValuesTable(Builder.ConvertToSql(Parent, Expression));
+			return new SqlValuesTable(Builder.ConvertToSql(this, Expression));
 		}
 
 		SqlValuesTable BuildValuesTableFromArray(NewArrayExpression arrayExpression)
