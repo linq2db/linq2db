@@ -3,6 +3,7 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using System.Linq;
 	using LinqToDB.Expressions;
 
 	static class SequenceHelper
@@ -10,7 +11,11 @@ namespace LinqToDB.Linq.Builder
 		public static Expression PrepareBody(LambdaExpression lambda, params IBuildContext[] sequences)
 		{
 			var body = lambda.GetBody(sequences
-				.Select((s, idx) => (Expression)new ContextRefExpression(lambda.Parameters[idx].Type, s)).ToArray());
+				.Select((s, idx) =>
+				{
+					var parameter = lambda.Parameters[idx];
+					return (Expression)new ContextRefExpression(parameter.Type, s, parameter.Name);
+				}).ToArray());
 
 			return body;
 		}
@@ -69,7 +74,7 @@ namespace LinqToDB.Linq.Builder
 				if (e.NodeType              == ExpressionType.Extension && e is ContextRefExpression contextRef &&
 				    contextRef.BuildContext == ctx.current)
 				{
-					return new ContextRefExpression(contextRef.Type, ctx.onContext);
+					return new ContextRefExpression(contextRef.Type, ctx.onContext, contextRef.Alias);
 				}
 
 				return e;

@@ -8,14 +8,16 @@ namespace LinqToDB.Expressions
 
 	class ContextRefExpression : Expression, IEquatable<ContextRefExpression>
 	{
-		public ContextRefExpression(Type elementType, IBuildContext buildContext)
+		public ContextRefExpression(Type elementType, IBuildContext buildContext, string? alias = null)
 		{
-			ElementType = elementType;
+			ElementType  = elementType;
 			BuildContext = buildContext ?? throw new ArgumentNullException(nameof(buildContext));
+			Alias        = alias;
 		}
 
-		public Type ElementType { get; }
+		public Type          ElementType  { get; }
 		public IBuildContext BuildContext { get; }
+		public string?       Alias        { get; }
 
 		public override ExpressionType NodeType => ExpressionType.Extension;
 		public override Type Type => ElementType;
@@ -40,7 +42,15 @@ namespace LinqToDB.Expressions
 			if (buildContext == BuildContext)
 				return this;
 
-			return new ContextRefExpression(Type, buildContext);
+			return new ContextRefExpression(Type, buildContext, Alias);
+		}
+
+		public ContextRefExpression WithAlias(string? alias)
+		{
+			if (Alias == alias)
+				return this;
+
+			return new ContextRefExpression(Type, BuildContext, alias);
 		}
 
 		#region Equality members

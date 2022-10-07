@@ -1,6 +1,8 @@
 ﻿using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
+using FluentAssertions;
+using LinqToDB.Linq;
 
 namespace Tests.Linq
 {
@@ -26,6 +28,7 @@ namespace Tests.Linq
 
 		class TestChildClass
 		{
+			public int? IntProp { get; set; }
 			public string? StringProp { get; set; }
 		}
 
@@ -95,6 +98,54 @@ namespace Tests.Linq
 				query = query.Where(x => x.child.StringProp.Contains("2"));
 
 				AssertQuery(query);
+			}
+		}
+
+		[Test]
+		public void ViaConditionDeep([DataSources(false)] string context)
+		{
+			var data = ConditionalData.Seed();
+
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(data))
+			{
+				var query =
+					from p in table
+					select new
+					{
+						Id = p.Id,
+						child = p.StringProp == "1" || p.StringProp == null ? new TestChildClass {StringProp = "2"} 
+							: p.StringProp == "2" ? new TestChildClass {StringProp = p.StringProp, IntProp       = 1} 
+							: new TestChildClass {StringProp                         = p.StringProp + "2", IntProp = 2} 
+					};
+
+				query    = query.Where(x => x.child.StringProp.EndsWith("2") && x.child.IntProp == 2);
+
+				AssertQuery(query);
+			}
+		}
+
+		[Test]
+		public void ViaConditionDeepFail([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			var data = ConditionalData.Seed();
+
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(data))
+			{
+				var query =
+					from p in table
+					select new
+					{
+						Id = p.Id,
+						child = p.StringProp == "1" ? new TestChildClass {StringProp = "2"} 
+							: p.StringProp   == "2" ? new TestChildClass {StringProp = p.StringProp} 
+							: new TestChildClass {StringProp                         = p.StringProp + "2"} 
+					};
+
+				query = query.Where(m => m.child.StringProp!.Contains("2") && m.child.IntProp == 1);
+
+				query.Enumerating(x => x).Should().ThrowExactly<LinqException>().Where(e => e.Message.Contains("m.child.IntProp"));
 			}
 		}
 

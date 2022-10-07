@@ -36,7 +36,7 @@ namespace LinqToDB.Linq.Builder
 					return false;
 
 				if (e is SqlFunction func)
-			{
+				{
 					if (forGroup)
 						isHaving = func.IsAggregate;
 					else
@@ -58,7 +58,7 @@ namespace LinqToDB.Linq.Builder
 			});
 
 			return isHaving;
-			}
+		}
 
 		public IBuildContext BuildWhere(IBuildContext? parent, IBuildContext sequence, LambdaExpression condition,
 			bool checkForSubQuery, bool enforceHaving, bool isTest)
@@ -68,9 +68,8 @@ namespace LinqToDB.Linq.Builder
 				sequence = new SubQueryContext(sequence);
 			}
 
-			var originalContextRef = new ContextRefExpression(condition.Parameters[0].Type, sequence);
-			var body               = condition.GetBody(originalContextRef);
-			var expr               = ConvertExpression(body.Unwrap());
+			var body = SequenceHelper.PrepareBody(condition, sequence);
+			var expr = ConvertExpression(body.Unwrap());
 
 			var sc = new SqlSearchCondition();
 			BuildSearchCondition(sequence, expr, isTest ? ProjectFlags.Test : ProjectFlags.SQL, sc.Conditions);
@@ -3755,7 +3754,7 @@ namespace LinqToDB.Linq.Builder
 					if (strict)
 						return CreateSqlError(null, nextPath![0]);
 
-					return new DefaultValueExpression(null, nextPath![0].Type);
+					return Expression.Default(nextPath![0].Type);
 				}
 
 				case ExpressionType.MemberInit:
@@ -3819,7 +3818,7 @@ namespace LinqToDB.Linq.Builder
 					if (strict)
 						return CreateSqlError(null, nextPath![0]);
 
-					return new DefaultValueExpression(null, nextPath![0].Type);
+					return Expression.Default(nextPath![0].Type);
 
 				}
 				case ExpressionType.Conditional:
@@ -3827,6 +3826,20 @@ namespace LinqToDB.Linq.Builder
 					var cond      = (ConditionalExpression)body;
 					var trueExpr  = Project(context, null, nextPath, nextIndex, flags, cond.IfTrue, strict);
 					var falseExpr = Project(context, null, nextPath, nextIndex, flags, cond.IfFalse, strict);
+
+					var trueHasError = trueExpr is SqlErrorExpression;
+					var falseHasError = falseExpr is SqlErrorExpression;
+
+					if (strict && (trueHasError || falseHasError))
+					{
+						if (trueHasError == falseHasError)
+						{
+							return trueExpr;
+						}
+
+						trueExpr  = Project(context, null, nextPath, nextIndex, flags, cond.IfTrue, false);
+						falseExpr = Project(context, null, nextPath, nextIndex, flags, cond.IfFalse, false);
+					}
 
 					var newExpr = (Expression)Expression.Condition(cond.Test, trueExpr, falseExpr);
 

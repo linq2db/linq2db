@@ -345,9 +345,6 @@ namespace LinqToDB.Linq.Builder
 					(builder: this, upToContext, info),
 					static (context, expr) =>
 					{
-						if (expr is SqlErrorExpression error)
-							throw error.CreateError();
-
 						if (expr is SqlPlaceholderExpression placeholder && !ReferenceEquals(context.upToContext.SelectQuery, placeholder.SelectQuery))
 						{
 							if (placeholder.SelectQuery != null && IsSameParentTree(context.info, placeholder.SelectQuery))
