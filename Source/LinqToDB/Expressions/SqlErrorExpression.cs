@@ -29,7 +29,12 @@ namespace LinqToDB.Expressions
 
 		public Exception CreateError()
 		{
-			var transformed = Expression.Transform(e =>
+			return new LinqException($"'{PrepareExpression(Expression)}' cannot be converted to SQL.");
+		}
+
+		public static Expression PrepareExpression(Expression expression)
+		{
+			var transformed = expression.Transform(e =>
 			{
 				if (e is ContextRefExpression contextRef)
 				{
@@ -39,7 +44,7 @@ namespace LinqToDB.Expressions
 				return e;
 			});
 
-			return new LinqException($"'{transformed}' cannot be converted to SQL.");
+			return transformed;
 		}
 
 		public override string ToString()

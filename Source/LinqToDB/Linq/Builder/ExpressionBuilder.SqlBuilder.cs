@@ -817,7 +817,10 @@ namespace LinqToDB.Linq.Builder
 
 			if (expr is not SqlPlaceholderExpression placeholder)
 			{
-				throw new LinqToDBException($"Expression {expression} could not be converted to the SQL.");
+				if (expr is SqlErrorExpression errorExpression)
+					throw errorExpression.CreateError();
+
+				throw CreateSqlError(context, expression).CreateError();
 			}
 
 			return placeholder;
