@@ -29,7 +29,6 @@ namespace LinqToDB
 			public void Build(ISqExtensionBuilder builder)
 			{	
 				var expr = builder.GetExpression("expr");
-				SqlExpression.CanBeNull = expr.CanBeNull;
 				var collation = builder.GetValue<string>("collation");
 
 				if (!ValidateCollation(collation))
@@ -57,7 +56,6 @@ namespace LinqToDB
 			public void Build(ISqExtensionBuilder builder)
 			{
 				var expr      = builder.GetExpression("expr");
-				SqlExpression.CanBeNull = expr.CanBeNull;
 				var collation = builder.GetValue<string>("collation").Replace("\"", "\"\"");
 
 				builder.ResultExpression = new SqlExpression(typeof(string), $"{{0}} COLLATE \"{collation}\"", Precedence.Primary, expr)
@@ -72,7 +70,6 @@ namespace LinqToDB
 			public void Build(ISqExtensionBuilder builder)
 			{
 				var expr      = builder.GetExpression("expr");
-				SqlExpression.CanBeNull = expr.CanBeNull;
 				var collation = builder.GetValue<string>("collation");
 
 				// collation cannot be parameter
