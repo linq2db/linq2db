@@ -17,7 +17,8 @@ namespace LinqToDB
 		[Extension("", ServerSideOnly = true, BuilderType = typeof(DB2LUWCollationBuilder)    , Configuration = ProviderName.DB2LUW)]
 		[Extension("", ServerSideOnly = true, BuilderType = typeof(PostgreSQLCollationBuilder), Configuration = ProviderName.PostgreSQL)]
 		[Extension("", ServerSideOnly = true, BuilderType = typeof(NamedCollationBuilder))]
-		public static string Collate(this string expr, [SqlQueryDependent] string collation)
+		[return: NotNullIfNotNull("expr")]
+		public static string? Collate(this string? expr, [SqlQueryDependent] string collation)
 			=> throw new InvalidOperationException($"{nameof(Sql)}.{nameof(Sql.Collate)} is server-side only API.");
 
 		internal class NamedCollationBuilder : IExtensionCallBuilder
@@ -27,6 +28,7 @@ namespace LinqToDB
 			public void Build(ISqExtensionBuilder builder)
 			{
 				var expr = builder.GetExpression("expr");
+				SqlExpression.CanBeNull = expr.CanBeNull;
 				var collation = builder.GetValue<string>("collation");
 
 				if (!ValidateCollation(collation))
@@ -51,6 +53,7 @@ namespace LinqToDB
 			public void Build(ISqExtensionBuilder builder)
 			{
 				var expr      = builder.GetExpression("expr");
+				SqlExpression.CanBeNull = expr.CanBeNull;
 				var collation = builder.GetValue<string>("collation").Replace("\"", "\"\"");
 
 				builder.ResultExpression = new SqlExpression(typeof(string), $"{{0}} COLLATE \"{collation}\"", Precedence.Primary, expr);
@@ -62,6 +65,7 @@ namespace LinqToDB
 			public void Build(ISqExtensionBuilder builder)
 			{
 				var expr      = builder.GetExpression("expr");
+				SqlExpression.CanBeNull = expr.CanBeNull;
 				var collation = builder.GetValue<string>("collation");
 
 				// collation cannot be parameter
