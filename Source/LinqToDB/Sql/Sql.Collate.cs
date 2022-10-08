@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text.RegularExpressions;
+using System.Diagnostics.CodeAnalysis;
 using LinqToDB.Expressions;
 using LinqToDB.SqlQuery;
 
@@ -26,7 +27,7 @@ namespace LinqToDB
 			private static readonly Regex _collationValidator = new Regex(@"^[a-zA-Z0-9_\.-@]+$", RegexOptions.Compiled);
 
 			public void Build(ISqExtensionBuilder builder)
-			{
+			{	
 				var expr = builder.GetExpression("expr");
 				SqlExpression.CanBeNull = expr.CanBeNull;
 				var collation = builder.GetValue<string>("collation");
@@ -34,7 +35,10 @@ namespace LinqToDB
 				if (!ValidateCollation(collation))
 					throw new InvalidOperationException($"Invalid collation: {collation}");
 
-				builder.ResultExpression = new SqlExpression(typeof(string), $"{{0}} COLLATE {collation}", Precedence.Primary, expr);
+				builder.ResultExpression = new SqlExpression(typeof(string), $"{{0}} COLLATE {collation}", Precedence.Primary, expr)
+				{
+					CanBeNull = expr.CanBeNull
+				};
 			}
 
 			/// <summary>
@@ -56,7 +60,10 @@ namespace LinqToDB
 				SqlExpression.CanBeNull = expr.CanBeNull;
 				var collation = builder.GetValue<string>("collation").Replace("\"", "\"\"");
 
-				builder.ResultExpression = new SqlExpression(typeof(string), $"{{0}} COLLATE \"{collation}\"", Precedence.Primary, expr);
+				builder.ResultExpression = new SqlExpression(typeof(string), $"{{0}} COLLATE \"{collation}\"", Precedence.Primary, expr)
+				{
+					CanBeNull = expr.CanBeNull
+				};
 			}
 		}
 
@@ -70,6 +77,10 @@ namespace LinqToDB
 
 				// collation cannot be parameter
 				builder.ResultExpression = new SqlExpression(typeof(string), $"COLLATION_KEY_BIT({{0}}, {{1}})", Precedence.Primary, expr, new SqlValue(typeof(string), collation));
+				builder.ResultExpression = new SqlExpression(typeof(string), $"{{0}} COLLATE \"{collation}\"", Precedence.Primary, expr) 
+				{ 
+					CanBeNull = expr.CanBeNull 
+				};
 			}
 		}
 	}
