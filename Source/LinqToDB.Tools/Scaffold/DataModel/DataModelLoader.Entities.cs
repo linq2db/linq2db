@@ -204,7 +204,11 @@ namespace LinqToDB.Scaffold
 			// back-reference is always optional
 			var targetMetadata      = new AssociationMetadata() { CanBeNull = true           };
 			
-			var association         = new AssociationModel(sourceMetadata, targetMetadata, source.Entity, target.Entity, manyToOne);
+			var association         = new AssociationModel(sourceMetadata, targetMetadata, source.Entity, target.Entity, manyToOne)
+			{
+				ForeignKeyName = fk.Name
+			};
+
 			association.FromColumns = fromColumns;
 			association.ToColumns   = toColumns;
 

@@ -762,7 +762,7 @@ namespace LinqToDB.CodeModel
 		}
 
 		// TODO: replace forceNullable with NRT annotation lookup
-		private static CodeReference PropertyOrField<TObject, TProperty>(Expression<Func<TObject, TProperty>> accessor, bool forceNullable)
+		public static CodeReference PropertyOrField<TObject, TProperty>(Expression<Func<TObject, TProperty>> accessor, bool forceNullable)
 		{
 			var member = ((MemberExpression)accessor.Body).Member;
 			if (member is PropertyInfo pi)
