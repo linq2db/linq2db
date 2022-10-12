@@ -10,12 +10,14 @@ namespace LinqToDB.Linq.Builder
 	{
 		public static Expression PrepareBody(LambdaExpression lambda, params IBuildContext[] sequences)
 		{
-			var body = lambda.GetBody(sequences
-				.Select((s, idx) =>
-				{
-					var parameter = lambda.Parameters[idx];
-					return (Expression)new ContextRefExpression(parameter.Type, s, parameter.Name);
-				}).ToArray());
+			var body = lambda.Parameters.Count == 0
+				? lambda.Body
+				: lambda.GetBody(sequences
+					.Select((s, idx) =>
+					{
+						var parameter = lambda.Parameters[idx];
+						return (Expression)new ContextRefExpression(parameter.Type, s, parameter.Name);
+					}).ToArray());
 
 			return body;
 		}
@@ -110,9 +112,20 @@ namespace LinqToDB.Linq.Builder
 		{
 			var contextRef = new ContextRefExpression(typeof(object), context);
 
-			var rootContext = context.Builder.MakeExpression(context, contextRef, ProjectFlags.Expand) as ContextRefExpression;
+			var rootContext = context.Builder.MakeExpression(context, contextRef, ProjectFlags.Table) as ContextRefExpression;
 
 			var tableContext = rootContext?.BuildContext as TableBuilder.TableContext;
+
+			return tableContext;
+		}
+
+		public static TableBuilder.CteTableContext? GetCteContext(IBuildContext context)
+		{
+			var contextRef = new ContextRefExpression(typeof(object), context);
+
+			var rootContext = context.Builder.MakeExpression(context, contextRef, ProjectFlags.Table) as ContextRefExpression;
+
+			var tableContext = rootContext?.BuildContext as TableBuilder.CteTableContext;
 
 			return tableContext;
 		}

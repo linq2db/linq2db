@@ -138,13 +138,13 @@ namespace Tests.xUpdate
 
 				var table = GetTarget(db);
 
-				var rows = table.Where(_ => _.Id >= 1).AsCte()
+				var rows = table.Where(s => s.Id >= 1).AsCte()
 					.Merge().Using(GetSource1(db))
 					.OnTargetKey()
 					.InsertWhenNotMatched()
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+				var result = table.OrderBy(t => t.Id).ToList();
 
 				AssertRowCount(2, rows, context);
 

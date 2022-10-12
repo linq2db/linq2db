@@ -101,6 +101,9 @@ namespace LinqToDB.Linq.Builder
 
 			var result = base.MakeExpression(path, flags);
 
+			if (flags.HasFlag(ProjectFlags.Table))
+				return result;
+
 			if (flags.HasFlag(ProjectFlags.SQL))
 			{
 				result = Builder.ConvertToSqlExpr(SubQuery, result, flags);

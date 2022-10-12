@@ -123,6 +123,16 @@ namespace LinqToDB.Linq.Builder
 
 				QueryRunner.SetRunQuery(query, mapper);
 			}
+
+			public override void SetRunQuery<T>(Query<T> query, Expression expr)
+			{
+				base.SetRunQuery(query, expr);
+
+				var mergeStatement = (SqlMergeStatement)Statement!;
+
+				mergeStatement.Output!.OutputColumns = Sequence[0].SelectQuery.Select.Columns.Select(c => c.Expression).ToList();
+
+			}
 		}
 
 		private static SelectQuery RemoveContextFromQuery(TableBuilder.TableContext tableContext, SelectQuery query)
@@ -222,16 +232,30 @@ namespace LinqToDB.Linq.Builder
 			}
 			else
 			{
-				var conditionExpr = builder.ConvertExpression(condition.Body.Unwrap());
+				var body = SequenceHelper.PrepareBody(condition,
+					secondContext == null ? new[] { onContext } : new[] { onContext, secondContext });
+
+				var conditionExpr = builder.ConvertExpression(body.Unwrap());
 				result = new SqlSearchCondition();
 
 				builder.BuildSearchCondition(
-					new ExpressionContext(null, secondContext == null? new[] { onContext } : new[] { onContext, secondContext }, condition),
+					onContext,
 					conditionExpr, ProjectFlags.SQL, 
 					result.Conditions);
 			}
 
 			return result;
 		}
+
+		static SqlTable? GetTargetTable(IBuildContext target)
+		{
+			var tableContext = SequenceHelper.GetTableContext(target);
+			if (tableContext != null)
+				return tableContext.SqlTable;
+
+			var cteContext = SequenceHelper.GetCteContext(target);
+			return cteContext?.CteTable;
+		}
+
 	}
 }

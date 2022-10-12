@@ -39,8 +39,13 @@ namespace LinqToDB.Linq.Builder
 
 			public SqlMergeStatement Merge => (SqlMergeStatement)Statement!;
 
-			public IBuildContext           TargetContext => Sequence;
+			public IBuildContext         TargetContext => Sequence;
 			public TableLikeQueryContext SourceContext => (TableLikeQueryContext)Sequences[1];
+
+			public override SqlStatement GetResultStatement()
+			{
+				return Merge;
+			}
 
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
@@ -50,6 +55,11 @@ namespace LinqToDB.Linq.Builder
 			public override void SetRunQuery<T>(Query<T> query, Expression expr)
 			{
 				QueryRunner.SetNonQueryQuery(query);
+			}
+
+			public override Expression MakeExpression(Expression path, ProjectFlags flags)
+			{
+				return path;
 			}
 
 			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
@@ -69,44 +79,20 @@ namespace LinqToDB.Linq.Builder
 
 			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 			{
-				if (expression != null)
-				{
-					switch (flags)
-					{
-						case ConvertFlags.Field:
-							{
-								var root = Builder.GetRootObject(expression);
-
-								if (root.NodeType == ExpressionType.Parameter)
-								{
-									if (_sourceParameters.Contains(root))
-										return SourceContext.ConvertToSql(expression, level, flags);
-
-									return TargetContext.ConvertToSql(expression, level, flags);
-								}
-
-								if (root is ContextRefExpression contextRef)
-								{
-									return contextRef.BuildContext.ConvertToSql(expression, level, flags);
-								}
-
-								break;
-							}
-					}
-				}
-
-				throw new LinqException("'{0}' cannot be converted to SQL.", expression);
+				throw new NotImplementedException();
 			}
 
-			public override IBuildContext GetContext(Expression? expression, int level, BuildInfo buildInfo)
+			public override IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)
 			{
-				throw new NotImplementedException();
+				return null;
 			}
 
 			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 			{
-				return SourceContext.IsExpression(expression, level, requestFlag);
+				throw new NotImplementedException();
 			}
+
+			
 		}
 	}
 }

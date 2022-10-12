@@ -65,6 +65,10 @@ namespace LinqToDB.Linq.Builder
 
 		public Expression MakeExpression(Expression path, ProjectFlags flags)
 		{
+			if (SequenceHelper.IsSameContext(path, this))
+			{
+				return ExpressionBuilder.CreatePlaceholder(this, SqlExpression, path);
+			}
 			throw new NotImplementedException();
 		}
 

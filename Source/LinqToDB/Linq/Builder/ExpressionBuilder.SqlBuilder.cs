@@ -1217,6 +1217,7 @@ namespace LinqToDB.Linq.Builder
 
 					*/
 
+					/*
 					if (ma.Expression is not ContextRefExpression)
 					{
 						var buildInfo = new BuildInfo(context, ma.Expression, context.SelectQuery);
@@ -1230,6 +1231,7 @@ namespace LinqToDB.Linq.Builder
 								isPureExpression);
 						}
 					}
+					*/
 
 					/*
 					var ctx = GetContext(context, expression);
@@ -1763,7 +1765,7 @@ namespace LinqToDB.Linq.Builder
 			var        param = Expression.Parameter(current.Type, "o");
 			Expression body  = param;
 			for (int i = memberPath.Count - 1; i >= 0; i--)
-		{
+			{
 				body = Expression.MakeMemberAccess(body, memberPath[i]);
 			}
 
@@ -1829,6 +1831,48 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
+			SqlSearchCondition GenerateConstructorComparison(SqlGenericConstructorExpression leftConstructor, SqlGenericConstructorExpression rightConstructor)
+			{
+				var searchCondition = new SqlSearchCondition();
+				GenerateConstructorComparisonRecursive(searchCondition, leftConstructor, rightConstructor);
+				return searchCondition;
+			}
+
+			void GenerateConstructorComparisonRecursive(SqlSearchCondition searchCondition, SqlGenericConstructorExpression leftConstructor, SqlGenericConstructorExpression rightConstructor)
+			{
+				foreach (var assignment in leftConstructor.Assignments)
+				{
+					var found = rightConstructor.Assignments.FirstOrDefault(a =>
+						MemberInfoEqualityComparer.Default.Equals(a.MemberInfo, assignment.MemberInfo));
+
+					if (found == null)
+						continue;
+
+					if (assignment.Expression is SqlGenericConstructorExpression subGenericLeft)
+					{
+						if (assignment.Expression is not SqlGenericConstructorExpression subGenericRight)
+							continue;
+						GenerateConstructorComparisonRecursive(searchCondition, subGenericLeft, subGenericRight);
+					}
+					else if (assignment.Expression is SqlPlaceholderExpression placeholderLeft && found.Expression is SqlPlaceholderExpression placeholderRight)
+					{
+						var predicate =
+							new SqlPredicate.ExprExpr(
+								placeholderLeft.Sql,
+								nodeType == ExpressionType.Equal ? SqlPredicate.Operator.Equal : SqlPredicate.Operator.NotEqual,
+								placeholderRight.Sql, Configuration.Linq.CompareNullsAsValues ? true : null);
+
+						searchCondition.Conditions.Add(new SqlCondition(false, predicate, nodeType == ExpressionType.NotEqual));
+					}
+					else
+					{
+						throw new InvalidOperationException(
+							$"Expression '{SqlErrorExpression.PrepareExpression(assignment.Expression)}' cannot be used for comparison.");
+					}
+				}
+			}
+
+
 			if (!RestoreCompare(ref left, ref right))
 				RestoreCompare(ref right, ref left);
 
@@ -1873,7 +1917,7 @@ namespace LinqToDB.Linq.Builder
 					if (r is SqlValue rv && rv.Value == null)
 					{
 						return GenerateNullComaprison(leftPlaceholders, isNot);
-			}
+					}
 
 					if (rightExpr is SqlGenericConstructorExpression rightGeneric && l is SqlParameter lParam)
 					{
@@ -1885,27 +1929,13 @@ namespace LinqToDB.Linq.Builder
 						return GenerateObjectComparison(leftGeneric, right);
 					}
 
-					if (leftPlaceholders.Count == 0 || rightPlaceholders.Count == 0)
-						return null;
-
-					var matched = MatchPlaceholders(leftExpr, rightExpr);
-
-					if (matched.Count == 0)
-						return null;
-
-					var searchCondition = new SqlSearchCondition();
-					foreach (var pair in matched)
+					if (leftExpr is SqlGenericConstructorExpression leftGenericConstructor &&
+					    rightExpr is SqlGenericConstructorExpression rightGenericConstructor)
 					{
-						var equality = new SqlPredicate.ExprExpr(
-							pair.left.Sql,
-							isNot ? SqlPredicate.Operator.NotEqual : SqlPredicate.Operator.Equal,
-							pair.right.Sql, Configuration.Linq.CompareNullsAsValues ? true : null);
-
-						searchCondition.Conditions.Add(new SqlCondition(false, equality, isNot));
-
+						return GenerateConstructorComparison(leftGenericConstructor, rightGenericConstructor);
 					}
 
-					return searchCondition;
+					return null;
 			}
 
 			var op = nodeType switch
@@ -2029,33 +2059,6 @@ namespace LinqToDB.Linq.Builder
 			return predicate;
 		}
 
-		//TODO: lazy implementation
-		public List<(SqlPlaceholderExpression left, SqlPlaceholderExpression right)> MatchPlaceholders(Expression leftExpr, Expression rightExpr)
-		{
-			var leftPaths = new Dictionary<Expression, SqlPlaceholderExpression>();
-			leftExpr.Path(ExpressionParam, leftPaths, static (paths, e, p) =>
-			{
-				if (e is SqlPlaceholderExpression placeholder)
-				{
-					paths.Add(p, placeholder);
-				}
-			});
-
-			var rightPaths = new Dictionary<Expression, SqlPlaceholderExpression>();
-			rightExpr.Path(ExpressionParam, rightPaths, static (paths, e, p) =>
-			{
-				if (e is SqlPlaceholderExpression placeholder)
-				{
-					paths.Add(p, placeholder);
-				}
-			});
-
-			var matched = leftPaths.Join(rightPaths, x => x.Key, x => x.Key, (l, r) => (left: l.Value, right: r.Value),
-				ExpressionEqualityComparer.Instance).ToList();
-
-			return matched;
-		}
-
 		public static List<SqlPlaceholderExpression> CollectPlaceholders(Expression expression)
 		{
 			var result = new List<SqlPlaceholderExpression>();
@@ -2118,30 +2121,6 @@ namespace LinqToDB.Linq.Builder
 						list.Add(placeholder);
 				}
 			});
-
-			return result;
-		}
-
-		public List<SqlPlaceholderExpression> CollectPKPlaceholders(Expression expression)
-		{
-			var result = new List<SqlPlaceholderExpression>();
-
-			expression.Visit(result, static (list, e) =>
-			{
-				if (e is SqlPlaceholderExpression placeholder)
-				{
-					if (!list.Contains(placeholder))
-						list.Add(placeholder);
-				}
-			});
-
-			// Table context for example
-			if (expression is ContextConstructionExpression)
-			{
-				var filtered = result.Where(p => (p.Sql is SqlField field) && field.IsPrimaryKey).ToList();
-				if (filtered.Count > 0)
-					return filtered;
-			}
 
 			return result;
 		}
@@ -3971,6 +3950,11 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				var root = MakeExpression(currentContext, memberExpression.Expression, ProjectFlags.Root);
+
+				if (rootContext != null && IsAssociation(root))
+				{
+					root = TryCreateAssociation(root, rootContext, flags);
+				}
 
 				Expression newPath;
 				newPath = memberExpression.Update(root);

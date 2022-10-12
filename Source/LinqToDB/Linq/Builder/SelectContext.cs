@@ -177,7 +177,7 @@ namespace LinqToDB.Linq.Builder
 				Sequence.Select(s => context.CloneContext(s)).ToArray());
 		}
 
-		public void SetRunQuery<T>(Query<T> query, Expression expr)
+		public virtual void SetRunQuery<T>(Query<T> query, Expression expr)
 		{
 			var mapper = Builder.BuildMapper<T>(expr);
 

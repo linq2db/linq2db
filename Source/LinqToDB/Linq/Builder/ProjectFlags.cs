@@ -20,5 +20,9 @@
 		/// </summary>
 		Test            = 0x40,
 		AssociationRoot = 0x80,	
+		/// <summary>
+		/// Specify that we are looking for a table
+		/// </summary>
+		Table = 0x100,	
 	}
 }

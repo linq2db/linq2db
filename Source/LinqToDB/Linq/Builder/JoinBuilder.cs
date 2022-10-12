@@ -75,41 +75,16 @@ namespace LinqToDB.Linq.Builder
 			var outerKeySelector = SequenceHelper.PrepareBody(outerKeyLambda, outerContext).Unwrap();
 			var innerKeySelector = SequenceHelper.PrepareBody(innerKeyLambda, innerKeyContext).Unwrap();
 
-			// Make join and where for the counter.
-			//
-			if (outerKeySelector.NodeType == ExpressionType.New)
-			{
-				var new1 = (NewExpression)outerKeySelector;
-				var new2 = (NewExpression)innerKeySelector;
+			var comparePredicate = builder.ConvertCompare(outerContext, ExpressionType.Equal, outerKeySelector, innerKeySelector,
+				ProjectFlags.SQL);
 
-				for (var i = 0; i < new1.Arguments.Count; i++)
-				{
-					var arg1 = new1.Arguments[i];
-					var arg2 = new2.Arguments[i];
+			if (comparePredicate == null)
+				throw new LinqException($"Could not create comparison for '{SqlErrorExpression.PrepareExpression(outerKeyLambda)}' and {SqlErrorExpression.PrepareExpression(innerKeyLambda)}.");
 
-					BuildJoin(builder, join.JoinedTable.Condition, outerContext, arg1, innerKeyContext, arg2);
-				}
-			}
-			else if (outerKeySelector.NodeType == ExpressionType.MemberInit)
-			{
-				var mi1 = (MemberInitExpression)outerKeySelector;
-				var mi2 = (MemberInitExpression)innerKeySelector;
-
-				for (var i = 0; i < mi1.Bindings.Count; i++)
-				{
-					if (mi1.Bindings[i].Member != mi2.Bindings[i].Member)
-						throw new LinqException($"List of member inits does not match for entity type '{outerKeySelector.Type}'.");
-
-					var arg1 = ((MemberAssignment)mi1.Bindings[i]).Expression;
-					var arg2 = ((MemberAssignment)mi2.Bindings[i]).Expression;
-
-					BuildJoin(builder, join.JoinedTable.Condition, outerContext, arg1, innerKeyContext, arg2);
-				}
-			}
+			if (comparePredicate is SqlSearchCondition sc)
+				join.JoinedTable.Condition.Conditions.AddRange(sc.Conditions);
 			else
-			{
-				BuildJoin(builder, join.JoinedTable.Condition, outerContext, outerKeySelector, innerKeyContext, innerKeySelector);
-			}
+				join.JoinedTable.Condition.Conditions.Add(new SqlCondition(false, comparePredicate, false));
 
 			return new SelectContext(buildInfo.Parent, selector, buildInfo.IsSubQuery, outerContext, innerContext)
 #if DEBUG
@@ -117,30 +92,7 @@ namespace LinqToDB.Linq.Builder
 				Debug_MethodCall = methodCall
 			}
 #endif
-				;
-		}
-
-		internal static void BuildJoin(
-			ExpressionBuilder builder,
-			SqlSearchCondition condition,
-			IBuildContext outerKeyContext, Expression outerKeySelector,
-			IBuildContext innerKeyContext, Expression innerKeySelector)
-		{
-			var predicate = builder.ConvertCompare(outerKeyContext,
-				ExpressionType.Equal,
-				outerKeySelector, 
-				innerKeySelector, ProjectFlags.SQL);
-
-			if (predicate == null)
-			{
-				predicate = new SqlPredicate.ExprExpr(
-					builder.ConvertToSql(outerKeyContext, outerKeySelector),
-					SqlPredicate.Operator.Equal,
-					builder.ConvertToSql(innerKeyContext, innerKeySelector),
-					Common.Configuration.Linq.CompareNullsAsValues ? true : null);
-			}
-
-			condition.Conditions.Add(new SqlCondition(false, predicate));
+			;
 		}
 
 	}

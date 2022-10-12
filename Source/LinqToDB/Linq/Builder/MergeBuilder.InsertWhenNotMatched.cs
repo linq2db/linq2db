@@ -48,23 +48,27 @@ namespace LinqToDB.Linq.Builder
 					var sourceRef = new ContextRefExpression(sqlTable.ObjectType, mergeContext.SourceContext);
 					var targetRef = new ContextRefExpression(sqlTable.ObjectType, mergeContext.TargetContext);
 
-					foreach (var field in sqlTable.Fields)
+					var ed = builder.MappingSchema.GetEntityDescriptor(sqlTable.ObjectType);
+
+					foreach (var column in ed.Columns)
 					{
-						if (field.IsInsertable)
+						var targetExpression = LinqToDB.Expressions.Extensions.GetMemberGetter(column.MemberInfo, targetRef);
+
+						if (!column.SkipOnInsert)
 						{
-							var sourceExpression = LinqToDB.Expressions.Extensions.GetMemberGetter(field.ColumnDescriptor.MemberInfo, sourceRef);
-							var targetExpression = LinqToDB.Expressions.Extensions.GetMemberGetter(field.ColumnDescriptor.MemberInfo, targetRef);
+							var sourceExpression = LinqToDB.Expressions.Extensions.GetMemberGetter(column.MemberInfo, sourceRef);
 							var tgtExpr    = builder.ConvertToSql(mergeContext.TargetContext, targetExpression);
 							var srcExpr    = builder.ConvertToSql(mergeContext.SourceContext, sourceExpression);
 
 							operation.Items.Add(new SqlSetExpression(tgtExpr, srcExpr));
 						}
-						else if (field.IsIdentity)
+						else if (column.IsIdentity)
 						{
-							var expr = builder.DataContext.CreateSqlProvider().GetIdentityExpression(sqlTable);
+							var expr    = builder.DataContext.CreateSqlProvider().GetIdentityExpression(sqlTable);
+							var tgtExpr = builder.ConvertToSql(mergeContext.TargetContext, targetExpression);
 
 							if (expr != null)
-								operation.Items.Add(new SqlSetExpression(field, expr));
+								operation.Items.Add(new SqlSetExpression(tgtExpr, expr));
 						}
 					}
 				}

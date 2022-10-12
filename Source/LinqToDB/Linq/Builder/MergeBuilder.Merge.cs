@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -34,13 +35,9 @@ namespace LinqToDB.Linq.Builder
 				if (disableFilters)
 					builder.PopDisabledFilter();
 
-				if (target is not TableBuilder.TableContext tableContext
-					|| !tableContext.SelectQuery.IsSimple)
-				{
+				var targetTable = GetTargetTable(target);
+				if (targetTable == null)
 					throw new NotImplementedException("Currently, only CTEs are supported as the target of a merge. You can fix by calling .AsCte() before calling .Merge()");
-				}
-
-				var targetTable = tableContext.SqlTable;
 
 				var merge = new SqlMergeStatement(targetTable);
 				if (methodCall.Arguments.Count == 2)

@@ -26,13 +26,9 @@ namespace LinqToDB.Linq.Builder
 				var sourceContext = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0], new SelectQuery()));
 				var target        = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1]) { AssociationsAsSubQueries = true });
 
-				if (target is not TableBuilder.TableContext tableContext
-					|| !tableContext.SelectQuery.IsSimple)
-				{
+				var targetTable = GetTargetTable(target);
+				if (targetTable == null)
 					throw new NotImplementedException("Currently, only CTEs are supported as the target of a merge. You can fix by calling .AsCte() on the parameter before passing into .MergeInto().");
-				}
-
-				var targetTable = tableContext.SqlTable;
 
 				var merge = new SqlMergeStatement(targetTable);
 				if (methodCall.Arguments.Count == 3)
@@ -45,6 +41,7 @@ namespace LinqToDB.Linq.Builder
 
 				return new MergeContext(merge, target, source);
 			}
+
 		}
 	}
 }

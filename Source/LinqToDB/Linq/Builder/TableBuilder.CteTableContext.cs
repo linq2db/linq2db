@@ -63,7 +63,7 @@ namespace LinqToDB.Linq.Builder
 			return cteTableContext;
 		}
 
-		class CteTableContext: IBuildContext
+		public class CteTableContext: IBuildContext
 		{
 #if DEBUG
 			public string SqlQueryText => SelectQuery == null ? "" : SelectQuery.SqlText;
@@ -133,7 +133,7 @@ namespace LinqToDB.Linq.Builder
 
 			public Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
-				if (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AssociationRoot))
+				if (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AssociationRoot) || flags.HasFlag(ProjectFlags.Table))
 					return path;
 
 				if (flags.HasFlag(ProjectFlags.Expand))

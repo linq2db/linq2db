@@ -73,7 +73,7 @@ namespace LinqToDB.Linq.Builder
 			if (root is not ContextRefExpression contextRef)
 				return builder.IsSequence(new BuildInfo(buildInfo, root));
 
-			return true;
+			return contextRef.BuildContext.GetContext(buildInfo.Expression, 0, buildInfo) != null;
 		}
 	}
 }

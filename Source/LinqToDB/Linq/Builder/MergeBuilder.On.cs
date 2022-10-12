@@ -4,6 +4,7 @@ using System.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
+	using SqlQuery;
 	using LinqToDB.Expressions;
 
 	using static LinqToDB.Reflection.Methods.LinqToDB.Merge;
@@ -28,12 +29,8 @@ namespace LinqToDB.Linq.Builder
 				if (methodCall.Arguments.Count == 2)
 				{
 					// On<TTarget, TSource>(IMergeableOn<TTarget, TSource> merge, Expression<Func<TTarget, TSource, bool>> matchCondition)
-					var predicate     = methodCall.Arguments[1];
-					var condition     = (LambdaExpression)predicate.Unwrap();
-					var conditionExpr = builder.ConvertExpression(condition.Body.Unwrap());
-
-					mergeContext.AddTargetParameter(condition.Parameters[0]);
-					mergeContext.AddSourceParameter(condition.Parameters[1]);
+					var predicate = methodCall.Arguments[1];
+					var condition = predicate.UnwrapLambda();
 
 					var filterExpression = BuildSearchCondition(builder, statement, mergeContext.TargetContext, mergeContext.SourceContext,
 						condition);
@@ -42,57 +39,27 @@ namespace LinqToDB.Linq.Builder
 				}
 				else if (methodCall.Arguments.Count == 3)
 				{
-					var targetKeyLambda = ((LambdaExpression)methodCall.Arguments[1].Unwrap());
-					var sourceKeyLambda = ((LambdaExpression)methodCall.Arguments[2].Unwrap());
+					var targetKeyLambda = methodCall.Arguments[1].UnwrapLambda();
+					var sourceKeyLambda = methodCall.Arguments[2].UnwrapLambda();
 
-					var targetKeySelector = targetKeyLambda.Body.Unwrap();
-					var sourceKeySelector = sourceKeyLambda.Body.Unwrap();
+					var targetKeySelector = SequenceHelper.PrepareBody(targetKeyLambda, mergeContext.TargetContext).Unwrap();
+					var sourceKeySelector = SequenceHelper.PrepareBody(sourceKeyLambda, mergeContext.SourceContext).Unwrap();
 
-					var targetKeyContext = new ExpressionContext(buildInfo.Parent, mergeContext.TargetContext, targetKeyLambda);
-					var sourceKeyContext = new ExpressionContext(buildInfo.Parent, mergeContext.SourceContext, sourceKeyLambda);
+					var comparePredicate = builder.ConvertCompare(mergeContext, ExpressionType.Equal, targetKeySelector, sourceKeySelector,
+						ProjectFlags.SQL);
 
-					if (targetKeySelector.NodeType == ExpressionType.New)
-					{
-						var new1 = (NewExpression)targetKeySelector;
-						var new2 = (NewExpression)sourceKeySelector;
+					if (comparePredicate == null)
+						throw new LinqException($"Could not create comparison for '{SqlErrorExpression.PrepareExpression(targetKeyLambda)}' and {SqlErrorExpression.PrepareExpression(sourceKeyLambda)}.");
 
-						for (var i = 0; i < new1.Arguments.Count; i++)
-						{
-							var arg1 = new1.Arguments[i];
-							var arg2 = new2.Arguments[i];
-
-							JoinBuilder.BuildJoin(builder, statement.On, targetKeyContext, arg1, sourceKeyContext, arg2);
-						}
-					}
-					else if (targetKeySelector.NodeType == ExpressionType.MemberInit)
-					{
-						// TODO: migrate unordered members support to original code
-						var mi1 = (MemberInitExpression)targetKeySelector;
-						var mi2 = (MemberInitExpression)sourceKeySelector;
-
-						if (mi1.Bindings.Count != mi2.Bindings.Count)
-							throw new LinqException($"List of member inits does not match for entity type '{targetKeySelector.Type}'.");
-
-						for (var i = 0; i < mi1.Bindings.Count; i++)
-						{
-							var binding2 = (MemberAssignment?)mi2.Bindings.FirstOrDefault(b => b.Member == mi1.Bindings[i].Member);
-							if (binding2 == null)
-								throw new LinqException($"List of member inits does not match for entity type '{targetKeySelector.Type}'.");
-
-							var arg1 = ((MemberAssignment)mi1.Bindings[i]).Expression;
-							var arg2 = binding2.Expression;
-
-							JoinBuilder.BuildJoin(builder, statement.On, targetKeyContext, arg1, sourceKeyContext, arg2);
-						}
-					}
+					if (comparePredicate is SqlSearchCondition sc)
+						statement.On.Conditions.AddRange(sc.Conditions);
 					else
-					{
-						JoinBuilder.BuildJoin(builder, statement.On, targetKeyContext, targetKeySelector, sourceKeyContext, sourceKeySelector);
-					}
+						statement.On.Conditions.Add(new SqlCondition(false, comparePredicate, false));
 				}
 				else
 				{
 					// OnTargetKey<TTarget>(IMergeableOn<TTarget, TTarget> merge)
+					//
 					var targetType       = statement.Target.SystemType!;
 					var pTarget          = Expression.Parameter(targetType, "t");
 					var pSource          = Expression.Parameter(targetType, "s");
