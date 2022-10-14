@@ -278,7 +278,23 @@ namespace LinqToDB.Linq.Builder
 
 						break;
 					}
-
+				// new MyObject { MyProp = p.MyProp == null ? null : new MyObject2 { ... } ... }
+				//
+				case ExpressionType.Conditional:
+					{
+						var expr = (ConditionalExpression)expression;
+						var shouldNotNullExpr = expr.IfTrue.IsNullValue()
+							? expr.IfFalse : expr.IfFalse.IsNullValue()
+							? expr.IfTrue : null;
+						if(shouldNotNullExpr == null)
+						{
+							break;
+						}
+						var q = GetExpressions(param, path, level, shouldNotNullExpr);
+						foreach (var e in q)
+							yield return e;
+						break;
+					}
 				// parameter
 				//
 				case ExpressionType.Parameter  :
