@@ -1982,5 +1982,78 @@ AS
 				}
 			}
 		}
+
+		[Table]
+		class IsNullTable
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column] public long? BigInt { get; set; }
+			[Column] public bool? Bit { get; set; }
+			[Column] public int? Int { get; set; }
+			[Column] public sbyte? TinyInt { get; set; }
+			[Column] public short? SmallInt { get; set; }
+			[Column] public float? Real { get; set; }
+			[Column] public double? Float { get; set; }
+
+			[Column(DataType = DataType.Money)] public decimal? Money { get; set; }
+			[Column(DataType = DataType.SmallMoney)] public decimal? SmallMoney { get; set; }
+
+			[Column] public decimal? Decimal { get; set; }
+			[Column(Precision = 20)] public decimal? Decimal_20_0 { get; set; }
+			[Column(Scale = 5)] public decimal? Decimal_18_5 { get; set; }
+			[Column(Precision = 15, Scale = 5)] public decimal? Decimal_15_5 { get; set; }
+
+			[Column(DataType = DataType.Date)] public DateTime? Date { get; set; }
+			[Column] public DateTime? DateTime { get; set; }
+			[Column(DataType = DataType.SmallDateTime)] public DateTime? SmallDateTime { get; set; }
+
+			[Column(DataType = DataType.DateTime2)] public DateTimeOffset? DateTime2 { get; set; }
+			[Column(DataType = DataType.DateTime2, Precision = 0)] public DateTimeOffset? DateTime2_0 { get; set; }
+			[Column(DataType = DataType.DateTime2, Precision = 3)] public DateTimeOffset? DateTime2_3 { get; set; }
+			[Column(DataType = DataType.DateTime2, Precision = 7)] public DateTimeOffset? DateTime2_7 { get; set; }
+
+			[Column(DataType = DataType.DateTimeOffset)] public DateTimeOffset? DateTimeOffset { get; set; }
+			[Column(DataType = DataType.DateTimeOffset, Precision = 0)] public DateTimeOffset? DateTimeOffset_0 { get; set; }
+			[Column(DataType = DataType.DateTimeOffset, Precision = 3)] public DateTimeOffset? DateTimeOffset_3 { get; set; }
+			[Column(DataType = DataType.DateTimeOffset, Precision = 7)] public DateTimeOffset? DateTimeOffset_7 { get; set; }
+
+			[Column] public TimeSpan? Time { get; set; }
+			[Column(Precision = 0)] public TimeSpan? Time_0 { get; set; }
+			[Column(Precision = 3)] public TimeSpan? Time_3 { get; set; }
+			[Column(Precision = 7)] public TimeSpan? Time_7 { get; set; }
+
+			[Column(DataType = DataType.Char, Length = 5)] public string? Char_5 { get; set; }
+			[Column(DataType = DataType.Char, Length = 10)] public string? Char_10 { get; set; }
+			[Column(DataType = DataType.VarChar)] public string? VarChar { get; set; }
+			[Column(DataType = DataType.VarChar, Length = 5)] public string? VarChar_5 { get; set; }
+			[Column(DataType = DataType.VarChar, Length = 10)] public string? VarChar_10 { get; set; }
+			[Column(DataType = DataType.NChar, Length = 5)] public string? NChar_5 { get; set; }
+			[Column(DataType = DataType.NChar, Length = 10)] public string? NChar_10 { get; set; }
+			[Column(DataType = DataType.NVarChar)] public string? NVarChar { get; set; }
+			[Column(DataType = DataType.NVarChar, Length = 5)] public string? NVarChar_5 { get; set; }
+			[Column(DataType = DataType.NVarChar, Length = 10)] public string? NVarChar_10 { get; set; }
+
+			[Column(DataType = DataType.Text)] public string? Text { get; set; }
+			[Column(DataType = DataType.NText)] public string? NText { get; set; }
+
+			[Column(DataType = DataType.Binary, Length = 5)] public byte[]? Binary_5 { get; set; }
+			[Column(DataType = DataType.Binary, Length = 10)] public byte[]? Binary_10 { get; set; }
+			[Column(DataType = DataType.VarBinary)] public byte[]? VarBinary { get; set; }
+			[Column(DataType = DataType.VarBinary, Length = 5)] public byte[]? VarBinary_5 { get; set; }
+			[Column(DataType = DataType.VarBinary, Length = 10)] public byte[]? VarBinary_10 { get; set; }
+
+			[Column(DataType = DataType.Image)] public byte[]? Image { get; set; }
+		}
+
+		[Test]
+		public void IsNullTest([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (var tb = db.CreateLocalTable<IsNullTable>())
+			{
+				tb.Select(r => r.VarChar ?? r.NVarChar).ToList();
+			}
+		}
 	}
 }
