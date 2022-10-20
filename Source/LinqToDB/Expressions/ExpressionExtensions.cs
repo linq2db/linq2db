@@ -13,7 +13,7 @@ namespace LinqToDB.Expressions
 	using Mapping;
 	using Reflection;
 
-	public static class Extensions
+	public static class ExpressionExtensions
 	{
 		#region GetDebugView
 

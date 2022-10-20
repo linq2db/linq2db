@@ -56,6 +56,9 @@ public class TestsInitialization
 
 		// uncomment to run FEC for all tests and comment reset line in TestBase.OnAfterTest
 		//LinqToDB.Common.Compilation.SetExpressionCompiler(_ => FastExpressionCompiler.ExpressionCompiler.CompileFast(_, true));
+
+		//custom initialization logic
+		CustomizationSupport.Init();
 	}
 
 	// workaround for

@@ -739,7 +739,7 @@ namespace LinqToDB.SqlQuery
 					return false;
 
 				for (var i = 0; i < Values.Count; i++)
-					if (Values[i].Equals(expr.Values[i], comparer))
+					if (!Values[i].Equals(expr.Values[i], comparer))
 						return false;
 
 				return true;

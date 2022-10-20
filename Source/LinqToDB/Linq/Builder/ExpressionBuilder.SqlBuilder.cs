@@ -224,7 +224,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (ctx.IsExpression(null, 0, RequestFor.Field).Result)
 					ctx.ConvertToIndex(null, 0, ConvertFlags.Field);
-				if (ctx.IsExpression(null, 0, RequestFor.Expression).Result)
+				if (ctx.IsExpression(null, 0, RequestFor.Expression).Result && !ctx.IsExpression(null, 0, RequestFor.Object).Result)
 					ctx.ConvertToIndex(null, 0, ConvertFlags.All);
 			}
 
@@ -1059,24 +1059,6 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				case ExpressionType.Parameter:
-				{
-					var ctx = GetContext(context, expression);
-
-					if (ctx != null)
-					{
-						var sql = ctx.ConvertToSql(expression, 0, ConvertFlags.Field);
-
-						switch (sql.Length)
-						{
-							case 0: break;
-							case 1: return sql[0].Sql;
-							default: throw new InvalidOperationException();
-						}
-					}
-
-					break;
-				}
-
 				case ExpressionType.Extension:
 				{
 					var ctx = GetContext(context, expression);

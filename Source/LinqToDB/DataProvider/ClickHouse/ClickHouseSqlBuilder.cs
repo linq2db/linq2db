@@ -463,13 +463,12 @@ namespace LinqToDB.DataProvider.ClickHouse
 		{
 			switch (operation)
 			{
-				case SetOperation.Union       : sb.Append("UNION DISTINCT"); break;
-				case SetOperation.UnionAll    : sb.Append("UNION ALL");      break;
-				case SetOperation.Except      : sb.Append("EXCEPT");         break;
-				case SetOperation.Intersect   : sb.Append("INTERSECT");      break;
-					// not supported
-				//case SetOperation.IntersectAll: sb.Append("INTERSECT ALL");  break;
-				//case SetOperation.ExceptAll   : sb.Append("EXCEPT ALL");     break;
+				case SetOperation.Union       : sb.Append("UNION DISTINCT");     break;
+				case SetOperation.UnionAll    : sb.Append("UNION ALL");          break;
+				case SetOperation.Except      : sb.Append("EXCEPT DISTINCT");    break;
+				case SetOperation.Intersect   : sb.Append("INTERSECT DISTINCT"); break;
+				case SetOperation.IntersectAll: sb.Append("INTERSECT ALL");      break;
+				case SetOperation.ExceptAll   : sb.Append("EXCEPT ALL");         break;
 				default                       : throw new LinqToDBException($"SET operation {nameof(operation)} is not supported by ClickHouse");
 			}
 		}
