@@ -43,7 +43,7 @@ namespace System.Data.Linq
 
 		public static bool operator ==(Binary? binary1, Binary? binary2)
 		{
-			if (binary1 is null && binary1 is null)
+			if (binary1 is null && binary2 is null)
 				return true;
 			if (binary1 is null || binary2 is null)
 				return false;
@@ -55,7 +55,7 @@ namespace System.Data.Linq
 
 		public static bool operator !=(Binary? binary1, Binary? binary2)
 		{
-			if (binary1 is null && binary1 is null)
+			if (binary1 is null && binary2 is null)
 				return false;
 			if (binary1 is null || binary2 is null)
 				return true;

@@ -4,7 +4,7 @@ rm -rf ./clidriver/
 
 if [ -e ./IBM.Data.Db2.dll ]
 then
-    nuget install Net.IBM.Data.Db2-osx -Version 6.0.0.200 -ExcludeVersion
+    nuget install Net.IBM.Data.Db2-osx -Version 6.0.0.300 -ExcludeVersion
     cp -f ./Net.IBM.Data.Db2-osx/lib/net6.0/IBM.Data.Db2.dll ./IBM.Data.Db2.dll
     cp -rf ./Net.IBM.Data.Db2-osx/buildTransitive/clidriver/ ./clidriver/
 else
