@@ -20,8 +20,8 @@ namespace LinqToDB.Linq.Builder
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var sequence           = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
-			var collectionSelector = (LambdaExpression)methodCall.Arguments[1].Unwrap();
-			var resultSelector     = (LambdaExpression)methodCall.Arguments[2].Unwrap();
+			var collectionSelector = methodCall.Arguments[1].UnwrapLambda();
+			var resultSelector     = methodCall.Arguments[2].UnwrapLambda();
 
 			sequence = new SubQueryContext(sequence);
 

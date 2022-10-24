@@ -1,13 +1,11 @@
 ﻿using System;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using LinqToDB.Common;
 
 namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
-	using Reflection;
+	using Common;
 	using SqlQuery;
 
 	using static LinqToDB.Reflection.Methods.LinqToDB.Merge;
@@ -135,119 +133,137 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-		private static SelectQuery RemoveContextFromQuery(TableBuilder.TableContext tableContext, SelectQuery query)
+		public static void BuildMatchCondition(ExpressionBuilder builder, Expression condition, TableLikeQueryContext source,
+			SqlSearchCondition searchCondition)
 		{
-			var clonedTableSource = tableContext.SelectQuery.From.Tables[0];
+			BuildMatchCondition(builder, condition, null, null, source, searchCondition);
+		}
+
+		public static void BuildMatchCondition(ExpressionBuilder builder, Expression targetKeySelector, Expression sourceKeySelector, TableLikeQueryContext source,
+			SqlSearchCondition searchCondition)
+		{
+			BuildMatchCondition(builder, null, targetKeySelector, sourceKeySelector, source, searchCondition);
+		}
+
+		static void BuildMatchCondition(ExpressionBuilder builder, Expression? condition, Expression? targetKeySelector, Expression? sourceKeySelector, TableLikeQueryContext source, SqlSearchCondition searchCondition)
+		{
+			if (condition == null)
+			{
+				if (targetKeySelector == null || sourceKeySelector == null)
+					throw new InvalidOperationException();
+
+				if (!source.IsTargetAssociation(targetKeySelector))
+				{
+					var comparePredicate = builder.ConvertCompare(source.SourceContextRef.BuildContext, ExpressionType.Equal, targetKeySelector, sourceKeySelector,
+						ProjectFlags.SQL);
+
+					if (comparePredicate == null)
+						throw new LinqException($"Could not create comparison for '{SqlErrorExpression.PrepareExpression(targetKeySelector)}' and {SqlErrorExpression.PrepareExpression(sourceKeySelector)}.");
+
+					if (comparePredicate is SqlSearchCondition sc)
+						searchCondition.Conditions.AddRange(sc.Conditions);
+					else
+						searchCondition.Conditions.Add(new SqlCondition(false, comparePredicate, false));
+				}
+				else
+				{
+					var cloningContext      = new CloningContext();
+					var targetContext       = source.TargetContextRef.BuildContext;
+					var clonedTargetContext = cloningContext.CloneContext(targetContext);
+					var clonedContextRef    = source.TargetContextRef.WithContext(clonedTargetContext);
+
+					var correctedTargetKeySelector = targetKeySelector.Replace(source.TargetPropAccess, clonedContextRef);
+
+					var comparePredicate = builder.ConvertCompare(clonedTargetContext, ExpressionType.Equal, correctedTargetKeySelector, sourceKeySelector,
+						ProjectFlags.SQL);
+
+					if (comparePredicate == null)
+						throw new LinqException($"Could not create comparison for '{SqlErrorExpression.PrepareExpression(targetKeySelector)}' and {SqlErrorExpression.PrepareExpression(sourceKeySelector)}.");
+
+					var selectQuery = clonedTargetContext.SelectQuery;
+
+					if (comparePredicate is SqlSearchCondition sc)
+						selectQuery.Where.SearchCondition.Conditions.AddRange(sc.Conditions);
+					else
+						selectQuery.Where.SearchCondition.Conditions.Add(new SqlCondition(false, comparePredicate, false));
+
+					var targetTable = GetTargetTable(targetContext);
+					if (targetTable == null)
+						throw new NotImplementedException("Currently, only CTEs are supported as the target of a merge. You can fix by calling .AsCte() before calling .Merge()");
+
+					var clonedTargetTable = GetTargetTable(clonedTargetContext);
+
+					if (clonedTargetTable == null)
+						throw new InvalidOperationException();
+
+					var cleanQuery = ReplaceSourceInQuery(selectQuery, clonedTargetTable, targetTable);
+
+					searchCondition.Conditions.Add(new SqlCondition(false,
+						new SqlPredicate.FuncLike(SqlFunction.CreateExists(cleanQuery))));					
+				}
+			}
+			else if (!source.IsTargetAssociation(condition))
+			{
+				builder.BuildSearchCondition(source.SourceContextRef.BuildContext, condition, ProjectFlags.SQL,
+					searchCondition.Conditions);
+			}
+			else
+			{
+				var cloningContext      = new CloningContext();
+				var targetContext       = source.TargetContextRef.BuildContext;
+				var clonedTargetContext = cloningContext.CloneContext(targetContext);
+				var clonedContextRef    = source.TargetContextRef.WithContext(clonedTargetContext);
+
+				var correctedCondition = condition.Replace(source.TargetPropAccess, clonedContextRef);
+
+				builder.BuildSearchCondition(clonedTargetContext, correctedCondition, ProjectFlags.SQL,
+					clonedTargetContext.SelectQuery.Where.SearchCondition.Conditions);
+
+				var targetTable = GetTargetTable(targetContext);
+				if (targetTable == null)
+					throw new NotImplementedException("Currently, only CTEs are supported as the target of a merge. You can fix by calling .AsCte() before calling .Merge()");
+
+				var clonedTargetTable = GetTargetTable(clonedTargetContext);
+
+				if (clonedTargetTable == null)
+					throw new InvalidOperationException();
+
+				var cleanQuery = ReplaceSourceInQuery(clonedTargetContext.SelectQuery, clonedTargetTable, targetTable);
+
+				searchCondition.Conditions.Add(new SqlCondition(false,
+					new SqlPredicate.FuncLike(SqlFunction.CreateExists(cleanQuery))));
+			}
+		}
+
+		public static SelectQuery ReplaceSourceInQuery(SelectQuery query, SqlTable toReplace, SqlTable replaceBy)
+		{
+			var clonedTableSource = query.From.Tables[0];
 			while (clonedTableSource.Joins.Count > 0)
 			{
 				var join = clonedTableSource.Joins[0];
-				tableContext.SelectQuery.From.Tables.Add(join.Table);
+				query.From.Tables.Add(join.Table);
 				clonedTableSource.Joins.RemoveAt(0);
 			}
 
-			tableContext.SelectQuery.From.Tables.RemoveAt(0);
-			query.Visit(query, static (query, e) =>
+			query.From.Tables.RemoveAt(0);
+
+			query = query.Convert((toReplace, replaceBy), allowMutation: true, static (visitor, e) =>
 			{
-				if (e is SelectQuery selectQuery && selectQuery.From.Tables.Count > 0)
+				if (e is SqlField field)
 				{
-					if (selectQuery.From.Tables[0].Source is SelectQuery subSelect)
+					if (field.Table == visitor.Context.toReplace)
 					{
-						if (subSelect.From.Tables.Count == 0)
-						{
-							if (!subSelect.Where.IsEmpty)
-							{
-								selectQuery.Where.ConcatSearchCondition(subSelect.Where.SearchCondition);
-							}
-
-							selectQuery.From.Tables.RemoveAt(0);
-
-							query.Walk(WalkOptions.Default, subSelect, static (subSelect, qe) =>
-								{
-									if (qe is SqlColumn column && column.Parent == subSelect)
-									{
-										return column.Expression;
-									}
-
-									return qe;
-								});
-						}
-
+						return visitor.Context.replaceBy[field.Name] ?? throw new InvalidOperationException();
 					}
 				}
+
+				return e;
 			});
 
 			return query;
 		}
 
-		public static SqlSearchCondition BuildSearchCondition(ExpressionBuilder builder, SqlStatement statement, IBuildContext onContext, IBuildContext? secondContext, LambdaExpression condition)
-		{
-			SqlSearchCondition result;
-
-			var tableContext = SequenceHelper.GetTableContext(onContext);
-			if (tableContext != null)
-			{
-				var clonedContext = new TableBuilder.TableContext(builder, new SelectQuery(), tableContext.SqlTable);
-
-				var targetParameter = Expression.Parameter(tableContext.ObjectType);
-
-				if (secondContext != null)
-				{
-					var secondContextRefExpression =
-							new ContextRefExpression(condition.Parameters[1].Type, secondContext);
-
-					var newBody = condition.GetBody(targetParameter, secondContextRefExpression);
-					condition = Expression.Lambda(newBody, targetParameter);
-				}
-				else
-				{
-					var newBody = condition.GetBody(targetParameter);
-					condition   = Expression.Lambda(newBody, targetParameter);
-				}
-
-				var subqueryContext = new SubQueryContext(clonedContext);
-				var contextRef      = new ContextRefExpression(typeof(IQueryable<>).MakeGenericType(tableContext.ObjectType), subqueryContext);
-				var whereMethodInfo = Methods.Queryable.Where.MakeGenericMethod(tableContext.ObjectType);
-				var whereCall       = Expression.Call(whereMethodInfo, contextRef, Expression.Quote(condition));
-
-				var buildSequence = builder.BuildSequence(new BuildInfo((IBuildContext?)null, whereCall, new SelectQuery()));
-
-				var query = buildSequence.SelectQuery;
-				query     = RemoveContextFromQuery(clonedContext, query);
-
-				//TODO: Why it is not handled by main optimizer
-				var sqlFlags = builder.DataContext.SqlProviderFlags;
-				new SelectQueryOptimizer(sqlFlags, new EvaluationContext(), query, query, 0, statement)
-					.FinalizeAndValidate(sqlFlags.IsApplyJoinSupported);
-				
-				if (query.From.Tables.Count == 0)
-				{
-					result = query.Where.SearchCondition;
-				}
-				else
-				{
-					result = new SqlSearchCondition();
-					result.Conditions.Add(new SqlCondition(false,
-						new SqlPredicate.FuncLike(SqlFunction.CreateExists(query))));
-				}
-			}
-			else
-			{
-				var body = SequenceHelper.PrepareBody(condition,
-					secondContext == null ? new[] { onContext } : new[] { onContext, secondContext });
-
-				var conditionExpr = builder.ConvertExpression(body.Unwrap());
-				result = new SqlSearchCondition();
-
-				builder.BuildSearchCondition(
-					onContext,
-					conditionExpr, ProjectFlags.SQL, 
-					result.Conditions);
-			}
-
-			return result;
-		}
-
-		static SqlTable? GetTargetTable(IBuildContext target)
+		public static SqlTable? GetTargetTable(IBuildContext target)
 		{
 			var tableContext = SequenceHelper.GetTableContext(target);
 			if (tableContext != null)
@@ -257,5 +273,12 @@ namespace LinqToDB.Linq.Builder
 			return cteContext?.CteTable;
 		}
 
+		static Expression EnsureType(Expression expression, Type type)
+		{
+			if (expression.Type == type)
+				return expression;
+
+			return Expression.Convert(expression, type);
+		}
 	}
 }

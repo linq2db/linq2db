@@ -1,4 +1,5 @@
 ﻿using System.Linq.Expressions;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -29,13 +30,16 @@ namespace LinqToDB.Linq.Builder
 
 				if (!setter.IsNullValue())
 				{
-					var setterExpression = (LambdaExpression)setter.Unwrap();
-					mergeContext.AddSourceParameter(setterExpression.Parameters[0]);
+					var setterExpression = setter.UnwrapLambda();
+
+					mergeContext.SourceContext.SourceContextRef.Alias = setterExpression.Parameters[0].Name;
+
+					var correctedExpression = Expression.Lambda(mergeContext.SourceContext.PrepareSourceLambda(setterExpression));
 
 					UpdateBuilder.BuildSetterWithContext(
 						builder,
 						buildInfo,
-						setterExpression,
+						correctedExpression,
 						mergeContext.TargetContext,
 						operation.Items,
 						mergeContext.SourceContext);
@@ -45,7 +49,7 @@ namespace LinqToDB.Linq.Builder
 					// build setters like QueryRunner.Insert
 					var sqlTable   = (SqlTable)statement.Target.Source;
 
-					var sourceRef = new ContextRefExpression(sqlTable.ObjectType, mergeContext.SourceContext);
+					var sourceRef = mergeContext.SourceContext.SourcePropAccess;
 					var targetRef = new ContextRefExpression(sqlTable.ObjectType, mergeContext.TargetContext);
 
 					var ed = builder.MappingSchema.GetEntityDescriptor(sqlTable.ObjectType);
@@ -56,7 +60,11 @@ namespace LinqToDB.Linq.Builder
 
 						if (!column.SkipOnInsert)
 						{
-							var sourceExpression = LinqToDB.Expressions.Extensions.GetMemberGetter(column.MemberInfo, sourceRef);
+							var sourceMemberInfo = sourceRef.Type.GetMemberEx(column.MemberInfo);
+							if (sourceMemberInfo is null)
+								throw new InvalidOperationException($"Member '{column.MemberInfo}' not found in type '{sourceRef.Type}'.");
+
+							var sourceExpression = LinqToDB.Expressions.Extensions.GetMemberGetter(sourceMemberInfo, sourceRef);
 							var tgtExpr    = builder.ConvertToSql(mergeContext.TargetContext, targetExpression);
 							var srcExpr    = builder.ConvertToSql(mergeContext.SourceContext, sourceExpression);
 
@@ -77,8 +85,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					var condition = predicate.UnwrapLambda();
 
-					var sourceRef = new ContextRefExpression(condition.Parameters[0].Type, mergeContext.SourceContext);
-					var conditionExpr = builder.ConvertExpression(condition.GetBody(sourceRef));
+					var conditionExpr = mergeContext.SourceContext.PrepareSourceLambda(condition);
 
 					operation.Where = new SqlSearchCondition();
 

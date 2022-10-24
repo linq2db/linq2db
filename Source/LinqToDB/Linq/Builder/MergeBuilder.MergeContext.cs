@@ -1,29 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
 	using SqlQuery;
 
 	internal partial class MergeBuilder
 	{
-		private class MergeContext : SequenceContextBase
+		class MergeContext : SequenceContextBase
 		{
-			private readonly ISet<Expression> _sourceParameters = new HashSet<Expression>();
-			private readonly ISet<Expression> _targetParameters = new HashSet<Expression>();
-
-			public void AddSourceParameter(Expression param)
-			{
-				_sourceParameters.Add(param);
-			}
-
-			public void AddTargetParameter(Expression param)
-			{
-				_targetParameters.Add(param);
-			}
-
 			public MergeContext(SqlMergeStatement merge, IBuildContext target)
 				: base(null, target, null)
 			{

@@ -27,8 +27,13 @@ namespace LinqToDB.Linq.Builder
 				var predicate = methodCall.Arguments[1];
 				if (!predicate.IsNullValue())
 				{
-					var condition   = (LambdaExpression)predicate.Unwrap();
-					operation.Where = BuildSearchCondition(builder, statement, mergeContext.TargetContext, mergeContext.SourceContext, condition);
+					var condition   = predicate.UnwrapLambda();
+					var conditionExpression = mergeContext.SourceContext.PrepareTargetSourceLambda(condition);
+
+					operation.Where = new SqlSearchCondition();
+
+					builder.BuildSearchCondition(mergeContext.SourceContext, conditionExpression, buildInfo.GetFlags(ProjectFlags.ForceOuterAssociation),
+						operation.Where.Conditions);
 				}
 
 				return mergeContext;

@@ -7,7 +7,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Methods = LinqToDB.Reflection.Methods.LinqToDB.MultiInsert;
+	using Methods = Reflection.Methods.LinqToDB.MultiInsert;
 
 	class MultiInsertBuilder : MethodCallBuilder
 	{
@@ -37,13 +37,14 @@ namespace LinqToDB.Linq.Builder
 
 		private static IBuildContext BuildMultiInsert(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
+			throw new NotImplementedException();
 			// MultiInsert(IQueryable)
-			var sourceContext       = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+			/*var sourceContext       = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 			var source              = new TableLikeQueryContext(sourceContext);
 			var statement           = new SqlMultiInsertStatement(source.Source);
 			sourceContext.Statement = statement;
 
-			return source;
+			return source;*/
 		}
 
 		private static IBuildContext BuildTargetTable(

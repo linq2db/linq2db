@@ -19,8 +19,15 @@ namespace LinqToDB.Linq.Builder
 			{
 				var mergeContext = (MergeContext)builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
-				// is it ok to reuse context like that?
-				var source                = new TableLikeQueryContext(mergeContext.TargetContext);
+				var genericArguments = methodCall.Method.GetGenericArguments();
+
+				var cloningContext      = new CloningContext();
+				var clonedTargetContext = cloningContext.CloneContext(mergeContext.TargetContext);
+
+				var targetContextRef = new ContextRefExpression(genericArguments[0], mergeContext.TargetContext, "target");
+				var sourceContextRef = new ContextRefExpression(genericArguments[0], clonedTargetContext, "source");
+
+				var source                = new TableLikeQueryContext(targetContextRef, sourceContextRef);
 				mergeContext.Sequences    = new IBuildContext[] { mergeContext.Sequence, source };
 				mergeContext.Merge.Source = source.Source;
 

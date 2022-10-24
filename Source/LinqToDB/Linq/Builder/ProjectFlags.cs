@@ -24,5 +24,9 @@
 		/// Specify that we are looking for a table
 		/// </summary>
 		Table = 0x100,	
+		/// <summary>
+		/// Specify that we associations should not filter out recordset
+		/// </summary>
+		ForceOuterAssociation = 0x200,	
 	}
 }

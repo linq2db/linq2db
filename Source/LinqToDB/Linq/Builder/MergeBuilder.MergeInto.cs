@@ -37,7 +37,10 @@ namespace LinqToDB.Linq.Builder
 				target.SetAlias(merge.Target.Alias!);
 				target.Statement = merge;
 
-				var source = new TableLikeQueryContext(sourceContext);
+				var genericArguments = methodCall.Method.GetGenericArguments();
+
+				var source = new TableLikeQueryContext(new ContextRefExpression(genericArguments[0], target, "t"),
+					new ContextRefExpression(genericArguments[1], sourceContext, "s"));
 
 				return new MergeContext(merge, target, source);
 			}

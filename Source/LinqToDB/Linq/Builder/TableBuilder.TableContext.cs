@@ -69,7 +69,8 @@ namespace LinqToDB.Linq.Builder
 				SqlTable         = new SqlTable(builder.MappingSchema, ObjectType);
 				EntityDescriptor = Builder.MappingSchema.GetEntityDescriptor(ObjectType);
 
-				SelectQuery.From.Table(SqlTable);
+				if (!buildInfo.IsTest)
+					SelectQuery.From.Table(SqlTable);
 
 				Init(true);
 			}
@@ -231,12 +232,12 @@ namespace LinqToDB.Linq.Builder
 					if (path.Type != ObjectType && flags.HasFlag(ProjectFlags.Expression))
 						return new SqlEagerLoadExpression((ContextRefExpression)path, path, Builder.GetSequenceExpression(this));
 
-					if (_fullEntityExpression == null)
+					if (!flags.HasFlag(ProjectFlags.Keys))
 					{
-						_fullEntityExpression = Builder.BuildFullEntityExpression(this, ObjectType, flags);
+						return _fullEntityExpression ??= Builder.BuildFullEntityExpression(this, ObjectType, flags);
 					}
 
-					return _fullEntityExpression;
+					return Builder.BuildFullEntityExpression(this, ObjectType, flags);
 				}
 
 				if (path is not MemberExpression member)

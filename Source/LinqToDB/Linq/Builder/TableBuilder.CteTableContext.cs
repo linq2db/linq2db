@@ -42,7 +42,7 @@ namespace LinqToDB.Linq.Builder
 			var cteContext = builder.RegisterCte(query, bodyExpr, () => new CteClause(null, bodyExpr.Type.GetGenericArguments()[0], isRecursive, name));
 
 			var objectType      = methodCall.Method.GetGenericArguments()[0];
-			var cteTableContext = new CteTableContext(builder, buildInfo.Parent, objectType, buildInfo.SelectQuery, cteContext);
+			var cteTableContext = new CteTableContext(builder, buildInfo.Parent, objectType, buildInfo.SelectQuery, cteContext, buildInfo.IsTest);
 			cteTableContext.EnsureInitialized();
 
 			// populate all fields
@@ -57,7 +57,7 @@ namespace LinqToDB.Linq.Builder
 			var queryable = (IQueryable)buildInfo.Expression.EvaluateExpression()!;
 			var cteContext = builder.RegisterCte(queryable, null, () => new CteClause(null, queryable.ElementType, false, ""));
 
-			var cteTableContext = new CteTableContext(builder, buildInfo.Parent, queryable.ElementType, buildInfo.SelectQuery, cteContext);
+			var cteTableContext = new CteTableContext(builder, buildInfo.Parent, queryable.ElementType, buildInfo.SelectQuery, cteContext, buildInfo.IsTest);
 			cteTableContext.EnsureInitialized();
 
 			return cteTableContext;
@@ -81,7 +81,7 @@ namespace LinqToDB.Linq.Builder
 			public Expression?       Expression { get; }
 			public SqlCteTable       CteTable   { get; }
 
-			public CteTableContext(ExpressionBuilder builder, IBuildContext? parent, Type objectType, SelectQuery selectQuery, CteContext cteContext)
+			public CteTableContext(ExpressionBuilder builder, IBuildContext? parent, Type objectType, SelectQuery selectQuery, CteContext cteContext, bool isTest)
 			{
 				Builder     = builder;
 				Parent      = parent;
@@ -89,7 +89,8 @@ namespace LinqToDB.Linq.Builder
 				SelectQuery = selectQuery;
 				CteTable    = new SqlCteTable(objectType, _cteContext.CteClause);
 
-				SelectQuery.From.Table(CteTable);
+				if (!isTest)
+					SelectQuery.From.Table(CteTable);
 
 #if DEBUG
 				ContextId = Builder.GenerateContextId();

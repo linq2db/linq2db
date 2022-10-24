@@ -26,21 +26,26 @@ namespace LinqToDB.Linq.Builder
 				statement.Operations.Add(operation);
 
 				Expression predicate = methodCall.Arguments[1];
-				Expression setter = methodCall.Arguments[2];
+				var setter = methodCall.Arguments[2].UnwrapLambda();
+
+				var setterCorrected = Expression.Lambda(mergeContext.SourceContext.PrepareSelfTargetLambda(setter));
 
 				UpdateBuilder.BuildSetter(
 					builder,
 					buildInfo,
-					(LambdaExpression)setter.Unwrap(),
-					mergeContext,
+					setterCorrected,
+					mergeContext.TargetContext,
 					operation.Items,
-					mergeContext);
+					mergeContext.SourceContext);
 
 				if (!predicate.IsNullValue())
 				{
-					var condition = (LambdaExpression)predicate.Unwrap();
+					var condition          = predicate.UnwrapLambda();
+					var conditionCorrected = mergeContext.SourceContext.PrepareSelfTargetLambda(condition);
 
-					operation.Where = BuildSearchCondition(builder, statement, mergeContext.TargetContext, null, condition);
+					operation.Where = new SqlSearchCondition();
+
+					builder.BuildSearchCondition(mergeContext.TargetContext, conditionCorrected, ProjectFlags.SQL, operation.Where.Conditions);
 				}
 
 				return mergeContext;

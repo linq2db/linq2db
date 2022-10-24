@@ -43,11 +43,14 @@ namespace LinqToDB.SqlProvider
 
 //statement.EnsureFindTables();
 
-			//TODO: We can use Walk here but OptimizeUnions fails with subqueries. Needs revising.
-			statement.WalkQueries(
+			statement.Walk(WalkOptions.Default, 
 				(SqlProviderFlags, statement, evaluationContext),
-				static (context, selectQuery) =>
+				static (context, expr) =>
 				{
+					if (expr.ElementType != QueryElementType.SqlQuery)
+						return expr;
+
+					var selectQuery = (SelectQuery)expr;
 					new SelectQueryOptimizer(context.SqlProviderFlags, context.evaluationContext, context.statement, selectQuery, 0).FinalizeAndValidate(
 						context.SqlProviderFlags.IsApplyJoinSupported);
 

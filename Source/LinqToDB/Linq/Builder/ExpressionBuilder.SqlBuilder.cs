@@ -728,7 +728,7 @@ namespace LinqToDB.Linq.Builder
 				Expression       = expression;
 				Context          = context;
 				ColumnDescriptor = columnDescriptor;
-				SelectQuery = selectQuery;
+				SelectQuery      = selectQuery;
 				Flags            = flags;
 			}
 
@@ -798,7 +798,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						var hashCode = obj.ResultType.GetHashCode();
 						hashCode = (hashCode * 397) ^ (obj.Expression != null ? ExpressionEqualityComparer.Instance.GetHashCode(obj.Expression) : 0);
-						hashCode = (hashCode * 397) ^ obj.SelectQuery.GetHashCode();
+						hashCode = (hashCode * 397) ^ obj.SelectQuery?.GetHashCode() ?? 0;
 						hashCode = (hashCode * 397) ^ (obj.ParentQuery != null ? obj.ParentQuery.GetHashCode() : 0);
 						return hashCode;
 					}
@@ -2845,7 +2845,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region Search Condition Builder
 
-		internal bool BuildSearchCondition(IBuildContext? context, Expression expression, ProjectFlags flags, List<SqlCondition> conditions)
+		public bool BuildSearchCondition(IBuildContext? context, Expression expression, ProjectFlags flags, List<SqlCondition> conditions)
 		{
 			//expression = GetRemoveNullPropagationTransformer(true).Transform(expression);
 
@@ -3524,6 +3524,12 @@ namespace LinqToDB.Linq.Builder
 					return Project(context, me, nextPath, nextPath.Count - 1, flags, body, strict);
 				}
 
+				if (memberExpression.Expression.NodeType == ExpressionType.Convert)
+				{
+					// going deeper
+					return Project(context, ((UnaryExpression)memberExpression.Expression).Operand, nextPath, nextPath.Count - 1, flags, body, strict);
+				}
+
 				// make path projection
 				return Project(context, null, nextPath, nextPath.Count - 1, flags, body, strict);
 			}
@@ -3587,7 +3593,11 @@ namespace LinqToDB.Linq.Builder
 					{
 						if (body is ContextRefExpression contextRef)
 						{
-							var ma      = Expression.MakeMemberAccess(contextRef, member);
+							var memberCorrected  = contextRef.Type.GetMemberEx(member);
+							if (memberCorrected  is null)
+								throw new InvalidOperationException($"Member '{member}' not found in type '{contextRef.Type}'.");
+
+							var ma      = Expression.MakeMemberAccess(contextRef, memberCorrected);
 							var newPath = nextPath![0].Replace(next!, ma);
 
 							return newPath;
@@ -3949,34 +3959,17 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-				var root = MakeExpression(currentContext, memberExpression.Expression, ProjectFlags.Root);
+				var root = MakeExpression(currentContext, memberExpression.Expression, flags.RootFlag());
 
-				if (rootContext != null && IsAssociation(root))
-				{
-					root = TryCreateAssociation(root, rootContext, flags);
-				}
-
-				Expression newPath;
-				newPath = memberExpression.Update(root);
+				var newPath = memberExpression.Update(root);
 
 				path = newPath;
 
-				if (!flags.HasFlag(ProjectFlags.Root) && IsAssociation(newPath))
+				if (IsAssociation(newPath))
 				{
-					root = MakeExpression(currentContext, root, ProjectFlags.AssociationRoot);
-					path = ((MemberExpression)newPath).Update(root);
 					if (root is ContextRefExpression contextRef)
 					{
-						/*
-						if (flags.HasFlag(ProjectFlags.AssociationRoot))
-						{
-							expression = root;
-						}
-						else
-						*/
-						{
-							expression = TryCreateAssociation(path, contextRef, flags);
-						}
+						expression = TryCreateAssociation(newPath, contextRef, flags);
 					}
 				}
 
@@ -4006,7 +3999,7 @@ namespace LinqToDB.Linq.Builder
 					if (arguments.Count == 0)
 						throw new InvalidOperationException("Association methods should have at least one parameter");
 
-					var rootArgument = MakeExpression(currentContext, arguments[0], ProjectFlags.Root);
+					var rootArgument = MakeExpression(currentContext, arguments[0], flags.RootFlag());
 					if (!ReferenceEquals(rootArgument, arguments[0]))
 					{
 						var argumentsArray = arguments.ToArray();
@@ -4065,7 +4058,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					var info = new BuildInfo(currentContext, path, ctx.SelectQuery)
 					{
-						IsTest = flags.HasFlag(ProjectFlags.Test)
+						IsTest = true
 					};
 
 					if (IsSequence(info))

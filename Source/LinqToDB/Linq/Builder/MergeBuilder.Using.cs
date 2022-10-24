@@ -29,8 +29,13 @@ namespace LinqToDB.Linq.Builder
 
 				var sourceContext         = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery()));
 
-				var source                = new TableLikeQueryContext(sourceContext);
-				mergeContext.Sequences    = new IBuildContext[] { mergeContext.Sequence, source };
+				var genericArgs = methodCall.Method.GetGenericArguments();
+
+				var source = new TableLikeQueryContext(
+					new ContextRefExpression(genericArgs[0], mergeContext.TargetContext, "target"),
+					new ContextRefExpression(genericArgs[1], sourceContext, "source"));
+
+				mergeContext.Sequences    = new[] { mergeContext.Sequence, source };
 				mergeContext.Merge.Source = source.Source;
 
 				return mergeContext;

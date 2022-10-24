@@ -121,9 +121,11 @@ namespace LinqToDB.Linq.Builder
 			if (!IsAssociation(expression))
 				return expression;
 
+			var associationRoot = (ContextRefExpression)MakeExpression(rootContext.BuildContext, rootContext, flags.AssociationRootFlag());
+
 			_associations ??= new Dictionary<SqlCacheKey, Expression>(SqlCacheKey.SqlCacheKeyComparer);
 
-			var key = new SqlCacheKey(expression, rootContext.BuildContext, null, null, ProjectFlags.Root);
+			var key = new SqlCacheKey(expression, associationRoot.BuildContext, null, null, ProjectFlags.Root);
 
 			if (_associations.TryGetValue(key, out var associationExpression))
 				return associationExpression;
@@ -135,7 +137,7 @@ namespace LinqToDB.Linq.Builder
 
 			var loadWith = GetLoadWith(rootContext.BuildContext);
 
-			bool isOuter = false;
+			bool isOuter = flags.HasFlag(ProjectFlags.ForceOuterAssociation);
 
 			if (associationDescriptor.IsList)
 			{
@@ -144,7 +146,7 @@ namespace LinqToDB.Linq.Builder
 			}
 			else
 			{
-				isOuter = associationDescriptor.CanBeNull || _isOuterAssociations?.Contains(rootContext) == true;
+				isOuter = isOuter || associationDescriptor.CanBeNull || _isOuterAssociations?.Contains(rootContext) == true;
 			}
 
 			var association = AssociationHelper.BuildAssociationQuery(this, rootContext, memberInfo, associationDescriptor, !associationDescriptor.IsList, loadWith, ref isOuter);
@@ -155,7 +157,11 @@ namespace LinqToDB.Linq.Builder
 			{
 				// IsAssociation will force to create OuterApply instead of subquery. Handled in FirstSingleContext
 				//
-				var buildInfo = new BuildInfo(rootContext.BuildContext, association, new SelectQuery()) { IsAssociation = true };
+				var buildInfo = new BuildInfo(rootContext.BuildContext, association, new SelectQuery())
+				{
+					IsAssociation = true
+				};
+
 				var sequence = BuildSequence(buildInfo);
 
 				sequence.SetAlias(associationDescriptor.GenerateAlias());
@@ -164,7 +170,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (isOuter)
 				{
-					var root = MakeExpression(rootContext.BuildContext, associationExpression, ProjectFlags.AssociationRoot);
+					var root = MakeExpression(rootContext.BuildContext, associationExpression, flags.AssociationRootFlag());
 					_isOuterAssociations ??= new HashSet<Expression>(ExpressionEqualityComparer.Instance);
 					_isOuterAssociations.Add(root);
 				}

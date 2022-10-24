@@ -17,7 +17,7 @@ namespace LinqToDB.Expressions
 
 		public Type          ElementType  { get; }
 		public IBuildContext BuildContext { get; }
-		public string?       Alias        { get; }
+		public string?       Alias        { get; set; }
 
 		public override ExpressionType NodeType => ExpressionType.Extension;
 		public override Type Type => ElementType;

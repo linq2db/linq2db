@@ -32,29 +32,32 @@ namespace LinqToDB.Linq.Builder
 					var predicate = methodCall.Arguments[1];
 					var condition = predicate.UnwrapLambda();
 
-					var filterExpression = BuildSearchCondition(builder, statement, mergeContext.TargetContext, mergeContext.SourceContext,
-						condition);
+					mergeContext.SourceContext.ConnectionLambda       = condition;
 
-					statement.On.Conditions.AddRange(filterExpression.Conditions);
+					// correct aliases for better error handling
+					//
+					mergeContext.SourceContext.TargetContextRef.Alias = condition.Parameters[0].Name;
+					mergeContext.SourceContext.SourceContextRef.Alias = condition.Parameters[1].Name;
+
+					var preparedCondition = mergeContext.SourceContext.GenerateCondition();
+
+					BuildMatchCondition(builder, preparedCondition, mergeContext.SourceContext, statement.On);
 				}
 				else if (methodCall.Arguments.Count == 3)
 				{
 					var targetKeyLambda = methodCall.Arguments[1].UnwrapLambda();
 					var sourceKeyLambda = methodCall.Arguments[2].UnwrapLambda();
 
-					var targetKeySelector = SequenceHelper.PrepareBody(targetKeyLambda, mergeContext.TargetContext).Unwrap();
-					var sourceKeySelector = SequenceHelper.PrepareBody(sourceKeyLambda, mergeContext.SourceContext).Unwrap();
+					mergeContext.SourceContext.TargetContextRef.Alias = targetKeyLambda.Parameters[0].Name;
+					mergeContext.SourceContext.SourceContextRef.Alias = sourceKeyLambda.Parameters[0].Name;
 
-					var comparePredicate = builder.ConvertCompare(mergeContext, ExpressionType.Equal, targetKeySelector, sourceKeySelector,
-						ProjectFlags.SQL);
+					var targetKeySelector = mergeContext.SourceContext.PrepareTargetLambda(targetKeyLambda);
+					var sourceKeySelector = mergeContext.SourceContext.PrepareSourceLambda(sourceKeyLambda);
 
-					if (comparePredicate == null)
-						throw new LinqException($"Could not create comparison for '{SqlErrorExpression.PrepareExpression(targetKeyLambda)}' and {SqlErrorExpression.PrepareExpression(sourceKeyLambda)}.");
+					mergeContext.SourceContext.TargetKeySelector = targetKeySelector;
+					mergeContext.SourceContext.SourceKeySelector = sourceKeySelector;
 
-					if (comparePredicate is SqlSearchCondition sc)
-						statement.On.Conditions.AddRange(sc.Conditions);
-					else
-						statement.On.Conditions.Add(new SqlCondition(false, comparePredicate, false));
+					BuildMatchCondition(builder, targetKeySelector, sourceKeySelector, mergeContext.SourceContext, statement.On);
 				}
 				else
 				{
@@ -84,10 +87,11 @@ namespace LinqToDB.Linq.Builder
 
 					var condition = Expression.Lambda(ex, pTarget, pSource);
 
-					var filterExpression = BuildSearchCondition(builder, statement, mergeContext.TargetContext, mergeContext.SourceContext,
-						condition);
+					mergeContext.SourceContext.ConnectionLambda = condition;
 
-					statement.On.Conditions.AddRange(filterExpression.Conditions);
+					var generatedCondition = mergeContext.SourceContext.GenerateCondition();
+
+					BuildMatchCondition(builder, generatedCondition, mergeContext.SourceContext, statement.On);
 				}
 
 				return mergeContext;

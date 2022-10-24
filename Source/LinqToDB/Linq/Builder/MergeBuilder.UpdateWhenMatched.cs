@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using System.Linq.Expressions;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -31,29 +32,35 @@ namespace LinqToDB.Linq.Builder
 				if (!setter.IsNullValue())
 				{
 					var setterExpression = (LambdaExpression)setter.Unwrap();
+					
+					var setterExpressionCorrected = Expression.Lambda(mergeContext.SourceContext.PrepareTargetSourceLambda(setterExpression));
+
 					UpdateBuilder.BuildSetterWithContext(
 						builder,
 						buildInfo,
-						setterExpression,
+						setterExpressionCorrected,
 						mergeContext.TargetContext,
-						operation.Items,
-						mergeContext.TargetContext, mergeContext.SourceContext);
+						operation.Items);
 				}
 				else
 				{
 					// build setters like QueryRunner.Update
 					var sqlTable   = (SqlTable)statement.Target.Source;
 
-					var sourceRef = new ContextRefExpression(sqlTable.ObjectType, mergeContext.SourceContext);
+					var sourceRef = mergeContext.SourceContext.SourcePropAccess;
 					var targetRef = new ContextRefExpression(sqlTable.ObjectType, mergeContext.TargetContext);
 
 					var keys       = sqlTable.GetKeys(false).Cast<SqlField>().ToList();
 					foreach (var field in sqlTable.Fields.Where(f => f.IsUpdatable).Except(keys))
 					{
-						var sourceExpression = LinqToDB.Expressions.Extensions.GetMemberGetter(field.ColumnDescriptor.MemberInfo, sourceRef);
+						var sourceMemberInfo = sourceRef.Type.GetMemberEx(field.ColumnDescriptor.MemberInfo);
+						if (sourceMemberInfo is null)
+							throw new InvalidOperationException($"Member '{field.ColumnDescriptor.MemberInfo}' not found in type '{sourceRef.Type}'.");
+
+						var sourceExpression = LinqToDB.Expressions.Extensions.GetMemberGetter(sourceMemberInfo, sourceRef);
 						var targetExpression = LinqToDB.Expressions.Extensions.GetMemberGetter(field.ColumnDescriptor.MemberInfo, targetRef);
-						var tgtExpr    = builder.ConvertToSql(mergeContext.TargetContext, targetExpression);
-						var srcExpr    = builder.ConvertToSql(mergeContext.SourceContext, sourceExpression);
+						var tgtExpr          = builder.ConvertToSql(mergeContext.TargetContext, targetExpression);
+						var srcExpr          = builder.ConvertToSql(mergeContext.SourceContext, sourceExpression);
 
 						operation.Items.Add(new SqlSetExpression(tgtExpr, srcExpr));
 					}
@@ -70,7 +77,12 @@ namespace LinqToDB.Linq.Builder
 				{
 					var condition = predicate.UnwrapLambda();
 
-					operation.Where = BuildSearchCondition(builder, statement, mergeContext.TargetContext, mergeContext.SourceContext, condition);
+					var conditionPrepared = mergeContext.SourceContext.PrepareTargetSourceLambda(condition);
+
+					operation.Where = new SqlSearchCondition();
+
+					builder.BuildSearchCondition(mergeContext.SourceContext.SourceContextRef.BuildContext,
+						conditionPrepared, ProjectFlags.SQL, operation.Where.Conditions);
 				}
 
 				return mergeContext;
