@@ -3904,8 +3904,7 @@ namespace LinqToDB.Linq.Builder
 			if (path.NodeType == ExpressionType.Extension && path is SqlPlaceholderExpression)
 				return path;
 
-			if (!(flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AggregationRoot) ||
-			      flags.HasFlag(ProjectFlags.AssociationRoot)))
+			if ((flags & (ProjectFlags.Root | ProjectFlags.AggregationRoot | ProjectFlags.AssociationRoot | ProjectFlags.Expand)) == 0)
 			{
 				// try to find already converted to SQL
 				var sqlKey = new SqlCacheKey(path, null, null, null, ProjectFlags.SQL);
