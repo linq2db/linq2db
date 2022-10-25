@@ -57,8 +57,8 @@ namespace LinqToDB.Linq.Builder
 						if (sourceMemberInfo is null)
 							throw new InvalidOperationException($"Member '{field.ColumnDescriptor.MemberInfo}' not found in type '{sourceRef.Type}'.");
 
-						var sourceExpression = LinqToDB.Expressions.Extensions.GetMemberGetter(sourceMemberInfo, sourceRef);
-						var targetExpression = LinqToDB.Expressions.Extensions.GetMemberGetter(field.ColumnDescriptor.MemberInfo, targetRef);
+						var sourceExpression = ExpressionExtensions.GetMemberGetter(sourceMemberInfo, sourceRef);
+						var targetExpression = ExpressionExtensions.GetMemberGetter(field.ColumnDescriptor.MemberInfo, targetRef);
 						var tgtExpr          = builder.ConvertToSql(mergeContext.TargetContext, targetExpression);
 						var srcExpr          = builder.ConvertToSql(mergeContext.SourceContext, sourceExpression);
 

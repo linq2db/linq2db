@@ -52,8 +52,8 @@ namespace LinqToDB.Linq.Builder
 
 					foreach (var field in sqlTable.Fields.Where(f => f.IsUpdatable).Except(keys))
 					{
-						var sourceExpr = LinqToDB.Expressions.Extensions.GetMemberGetter(field.ColumnDescriptor.MemberInfo, sourceProp);
-						var targetExpr = LinqToDB.Expressions.Extensions.GetMemberGetter(field.ColumnDescriptor.MemberInfo, targetProp);
+						var sourceExpr = ExpressionExtensions.GetMemberGetter(field.ColumnDescriptor.MemberInfo, sourceProp);
+						var targetExpr = ExpressionExtensions.GetMemberGetter(field.ColumnDescriptor.MemberInfo, targetProp);
 
 						var tgtExpr    = builder.ConvertToSql(mergeContext.SourceContext.SourceContextRef.BuildContext, targetExpr);
 						var srcExpr    = builder.ConvertToSql(mergeContext.SourceContext.SourceContextRef.BuildContext, sourceExpr);;

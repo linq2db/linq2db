@@ -56,7 +56,7 @@ namespace LinqToDB.Linq.Builder
 
 					foreach (var column in ed.Columns)
 					{
-						var targetExpression = LinqToDB.Expressions.Extensions.GetMemberGetter(column.MemberInfo, targetRef);
+						var targetExpression = ExpressionExtensions.GetMemberGetter(column.MemberInfo, targetRef);
 
 						if (!column.SkipOnInsert)
 						{
@@ -64,9 +64,9 @@ namespace LinqToDB.Linq.Builder
 							if (sourceMemberInfo is null)
 								throw new InvalidOperationException($"Member '{column.MemberInfo}' not found in type '{sourceRef.Type}'.");
 
-							var sourceExpression = LinqToDB.Expressions.Extensions.GetMemberGetter(sourceMemberInfo, sourceRef);
-							var tgtExpr    = builder.ConvertToSql(mergeContext.TargetContext, targetExpression);
-							var srcExpr    = builder.ConvertToSql(mergeContext.SourceContext, sourceExpression);
+							var sourceExpression = ExpressionExtensions.GetMemberGetter(sourceMemberInfo, sourceRef);
+							var tgtExpr          = builder.ConvertToSql(mergeContext.TargetContext, targetExpression);
+							var srcExpr          = builder.ConvertToSql(mergeContext.SourceContext, sourceExpression);
 
 							operation.Items.Add(new SqlSetExpression(tgtExpr, srcExpr));
 						}
