@@ -195,6 +195,7 @@ namespace LinqToDB.Linq.Builder
 
 				foreach (var groupingSet in groupingSets)
 				{
+					throw new NotImplementedException();
 					var groupSql = builder.ConvertExpressions(keySequence, groupingSet, ConvertFlags.Key, null);
 					groupingSubquery.SelectQuery.GroupBy.Items.Add(
 						new SqlGroupingSet(groupSql.Select(s => keySequence.SelectQuery.Select.AddColumn(s.Sql))));

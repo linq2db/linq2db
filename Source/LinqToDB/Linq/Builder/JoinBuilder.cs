@@ -76,7 +76,7 @@ namespace LinqToDB.Linq.Builder
 			var innerKeySelector = SequenceHelper.PrepareBody(innerKeyLambda, innerKeyContext).Unwrap();
 
 			var comparePredicate = builder.ConvertCompare(outerContext, ExpressionType.Equal, outerKeySelector, innerKeySelector,
-				ProjectFlags.SQL);
+				buildInfo.GetFlags(ProjectFlags.SQL));
 
 			if (comparePredicate == null)
 				throw new LinqException($"Could not create comparison for '{SqlErrorExpression.PrepareExpression(outerKeyLambda)}' and {SqlErrorExpression.PrepareExpression(innerKeyLambda)}.");

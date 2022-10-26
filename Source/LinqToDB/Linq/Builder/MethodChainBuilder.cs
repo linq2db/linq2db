@@ -1,16 +1,11 @@
-using System;
-using System.Linq;
+﻿using System;
 using System.Linq.Expressions;
-using System.Threading.Tasks;
-
-using LinqToDB.Extensions;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Common.Internal;
 	using LinqToDB.Expressions;
-	using LinqToDB.Reflection;
+	using Extensions;
 
 	class MethodChainBuilder : MethodCallBuilder
 	{
@@ -51,8 +46,7 @@ namespace LinqToDB.Linq.Builder
 			var sqlExpression = finalFunction.GetExpression((builder, context), builder.DataContext, context.SelectQuery, methodCall,
 				static (ctx, e, descriptor) => ctx.builder.ConvertToExtensionSql(ctx.context, e, descriptor));
 
-			context.Sql        = context.SelectQuery;
-			context.FieldIndex = context.SelectQuery.Select.Add(sqlExpression, methodCall.Method.Name);
+			context.Placeholder = ExpressionBuilder.CreatePlaceholder(context, sqlExpression, methodCall, alias: methodCall.Method.Name);
 
 			return context;
 		}
@@ -78,10 +72,10 @@ namespace LinqToDB.Linq.Builder
 			private  SqlInfo[]? _index;
 			private  int?       _parentIndex;
 
-			public int                  FieldIndex;
-			public ISqlExpression       Sql = null!;
-			public MethodCallExpression MethodCall { get; }
+			public SqlPlaceholderExpression Placeholder = null!;
+			public MethodCallExpression     MethodCall { get; }
 
+			// ReSharper disable once ParameterOnlyUsedForPreconditionCheck.Local
 			static int CheckNullValue(bool isNull, object context)
 			{
 				if (isNull)
@@ -92,8 +86,13 @@ namespace LinqToDB.Linq.Builder
 
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
-				var expr   = BuildExpression(FieldIndex, Sql);
-				var mapper = Builder.BuildMapper<object>(expr);
+				throw new NotImplementedException();
+			}
+
+			public override void SetRunQuery<T>(Query<T> query, Expression expr)
+			{
+				var builtExpr = BuildExpression();
+				var mapper    = Builder.BuildMapper<object>(builtExpr);
 
 				CompleteColumns();
 				QueryRunner.SetRunQuery(query, mapper);
@@ -101,26 +100,23 @@ namespace LinqToDB.Linq.Builder
 
 			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 			{
-				var info  = ConvertToIndex(expression, level, ConvertFlags.Field)[0];
-				var index = info.Index;
-				if (Parent != null)
-					index = ConvertToParentIndex(index, Parent);
-				return BuildExpression(index, info.Sql);
+				throw new NotImplementedException();
 			}
 
-			Expression BuildExpression(int fieldIndex, ISqlExpression? sqlExpression)
+			Expression BuildExpression()
 			{
 				Expression expr;
 
 				if (_returnType.IsNullableType())
 				{
-					expr = Builder.BuildSql(_returnType, fieldIndex, sqlExpression);
+					expr = Placeholder;
 				}
 				else
 				{
 					expr = Expression.Block(
-						Expression.Call(null, MemberHelper.MethodOf(() => CheckNullValue(false, null!)), Expression.Call(ExpressionBuilder.DataReaderParam, Methods.ADONet.IsDBNull, ExpressionInstances.Constant0), Expression.Constant(_methodName)),
-						Builder.BuildSql(_returnType, fieldIndex, sqlExpression));
+						Expression.Call(null, MemberHelper.MethodOf(() => CheckNullValue(false, null!)),
+							new SqlReaderIsNullExpression(Placeholder), Expression.Constant(_methodName)),
+						Placeholder);
 				}
 
 				return expr;
@@ -128,72 +124,35 @@ namespace LinqToDB.Linq.Builder
 
 			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 			{
-				expression = SequenceHelper.CorrectExpression(expression, this, Sequence);
-
-				switch (flags)
-				{
-					case ConvertFlags.All   :
-					case ConvertFlags.Key   :
-					case ConvertFlags.Field : return Sequence.ConvertToSql(expression, level, flags);
-				}
-
-				throw new InvalidOperationException();
+				throw new NotImplementedException();
 			}
 
 			public override int ConvertToParentIndex(int index, IBuildContext context)
 			{
-				if (index != FieldIndex)
-					throw new InvalidOperationException();
-
-				if (_parentIndex != null)
-					return _parentIndex.Value;
-
-				if (Parent != null)
-				{
-					index        = Parent.SelectQuery.Select.Add(Sql);
-					_parentIndex = Parent.ConvertToParentIndex(index, Parent);
-				}
-				else
-				{
-					_parentIndex = index;
-				}
-
-				return _parentIndex.Value;
+				throw new NotImplementedException();
 			}
 
 			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 			{
-				return flags switch
-				{
-					ConvertFlags.Field =>
-						_index ??= new[]
-						{
-							new SqlInfo(Sql, SelectQuery, FieldIndex)
-						},
-					_ => throw new InvalidOperationException(),
-				};
-			}
-
-			public override IBuildContext Clone(CloningContext context)
-			{
-				return new ChainContext(null, context.CloneContext(Sequence), context.CloneExpression(MethodCall));
+				throw new NotImplementedException();
 			}
 
 			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 			{
-				expression = SequenceHelper.CorrectExpression(expression, this, Sequence);
-
-				return requestFlag switch
-				{
-					RequestFor.Root       => IsExpressionResult.GetResult(Lambda != null && expression == Lambda.Parameters[0]),
-					RequestFor.Expression => IsExpressionResult.True,
-					_                     => IsExpressionResult.False,
-				};
+				throw new NotImplementedException();
 			}
 
-			public override IBuildContext GetContext(Expression? expression, int level, BuildInfo buildInfo)
+			public override IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)
 			{
-				throw new NotImplementedException();
+				return null;
+			}
+
+			public override IBuildContext Clone(CloningContext context)
+			{
+				return new ChainContext(null, context.CloneContext(Sequence), context.CloneExpression(MethodCall))
+				{
+					Placeholder = context.CloneExpression(Placeholder)
+				};
 			}
 		}
 

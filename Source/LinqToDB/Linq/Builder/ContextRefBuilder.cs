@@ -10,7 +10,7 @@ namespace LinqToDB.Linq.Builder
 
 		static ProjectFlags GetRootProjectFlags(BuildInfo buildInfo)
 		{
-			return buildInfo.IsAggregation ? ProjectFlags.AggregationRoot : ProjectFlags.Root;
+			return buildInfo.GetFlags(buildInfo.IsAggregation ? ProjectFlags.AggregationRoot : ProjectFlags.Root);
 		}
 
 		Expression CalcBuildContext(ExpressionBuilder builder, BuildInfo buildInfo)
@@ -37,7 +37,7 @@ namespace LinqToDB.Linq.Builder
 			var root = CalcBuildContext(builder, buildInfo);
 
 			if (!ReferenceEquals(root, buildInfo.Expression))
-				return builder.IsSequence(new BuildInfo(buildInfo, root));
+				return builder.IsSequence(new BuildInfo(buildInfo, root) {IsTest = true});
 
 			return root is ContextRefExpression;
 		}

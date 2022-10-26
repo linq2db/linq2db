@@ -480,8 +480,6 @@ namespace LinqToDB.SqlQuery
 				if (e is SelectQuery sql && sql != context.optimizer._selectQuery)
 				{
 					sql.ParentSelect = context.optimizer._selectQuery;
-					new SelectQueryOptimizer(context.optimizer._flags, context.optimizer._evaluationContext, context.optimizer._rootElement, sql, context.optimizer._level + 1, context.optimizer._dependencies)
-						.FinalizeAndValidateInternal(context.isApplySupported);
 
 					if (sql.IsParameterDependent)
 						context.optimizer._selectQuery.IsParameterDependent = true;

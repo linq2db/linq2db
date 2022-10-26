@@ -533,15 +533,6 @@ namespace LinqToDB.Linq.Builder
 									return new TransformInfo(withAlias);
 								}
 
-								var info = new BuildInfo(context.context, ce, new SelectQuery {ParentSelect = context.context.SelectQuery});
-
-								if (context.builder.IsSequence(info))
-								{
-									return new TransformInfo(
-										context.builder.GetSubQueryExpression(context.context, ce,
-											context.alias, context.flags.HasFlag(ProjectFlags.Test)), false, true);
-								}
-
 								break;
 							}
 
@@ -628,17 +619,6 @@ namespace LinqToDB.Linq.Builder
 										buildExpr,
 										context.flags, context.alias);
 								}
-								else
-								{
-									//TODO: maybe remove
-									var info = new BuildInfo(context.context, contextRef, new SelectQuery {ParentSelect = context.context.SelectQuery});
-
-									if (context.builder.IsSequence(info))
-									{
-										buildExpr = context.builder.GetSubQueryExpression(context.context, contextRef,
-											context.alias, context.flags.HasFlag(ProjectFlags.Test));
-									}
-								}
 
 								context.translated[expr] = buildExpr;
 
@@ -697,9 +677,9 @@ namespace LinqToDB.Linq.Builder
 
 		class SubQueryContextInfo
 		{
-			public Expression    SequenceExpression  = null!;
-			public IBuildContext Context = null!;
-			public Expression?   Expression;
+			public Expression     SequenceExpression = null!;
+			public IBuildContext? Context;
+			public Expression?    Expression;
 		}
 
 		public Expression CorrectRoot(IBuildContext? currentContext, Expression expr)
@@ -783,10 +763,13 @@ namespace LinqToDB.Linq.Builder
 			return info;
 		}
 
-		Expression GetSubQueryExpression(IBuildContext context, Expression expr, string? alias, bool isTest)
+		Expression? TryGetSubQueryExpression(IBuildContext context, Expression expr, string? alias, bool isTest)
 		{
 			var unwrapped = expr.Unwrap();
 			var info = GetSubQueryContext(context, unwrapped, isTest);
+
+			if (info.Context == null)
+				return null;
 
 			var resultExpr = (Expression)new ContextRefExpression(unwrapped.Type, info.Context);
 

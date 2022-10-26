@@ -83,7 +83,7 @@ namespace LinqToDB.Linq.Builder
 				var placeholderSelect   = parentContext.SelectQuery;
 
 				var testSequence = builder.BuildSequence(new BuildInfo(buildInfo, sequenceArgument, new SelectQuery())
-					{ AggregationTest = true, IsAggregation = true });
+					{ AggregationTest = true, IsAggregation = true, IsTest = true });
 
 				// It means that as root we have used fake context
 				var testSelectQuery = testSequence.SelectQuery;

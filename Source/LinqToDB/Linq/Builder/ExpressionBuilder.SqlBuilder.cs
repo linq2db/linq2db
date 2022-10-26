@@ -72,7 +72,12 @@ namespace LinqToDB.Linq.Builder
 			var expr = ConvertExpression(body.Unwrap());
 
 			var sc = new SqlSearchCondition();
-			BuildSearchCondition(sequence, expr, isTest ? ProjectFlags.Test : ProjectFlags.SQL, sc.Conditions);
+
+			var flags = ProjectFlags.SQL;
+			if (isTest)
+				flags |= ProjectFlags.Test;
+
+			BuildSearchCondition(sequence, expr, flags, sc.Conditions);
 
 			sequence.SelectQuery.Where.ConcatSearchCondition(sc);
 
@@ -143,8 +148,14 @@ namespace LinqToDB.Linq.Builder
 
 		#region SubQueryToSql
 
-		public IBuildContext GetSubQuery(IBuildContext context, Expression expr, bool isTest)
+		public IBuildContext? GetSubQuery(IBuildContext context, Expression expr, bool isTest)
 		{
+			var testInfo =
+				new BuildInfo(context, expr, new SelectQuery { ParentSelect = context.SelectQuery }) { IsTest = true };
+
+			if (!IsSequence(testInfo))
+				return null;
+			
 			var info = new BuildInfo(context, expr, new SelectQuery {ParentSelect = context.SelectQuery})
 			{
 				CreateSubQuery = true,
@@ -152,14 +163,6 @@ namespace LinqToDB.Linq.Builder
 			};
 
 			var ctx = BuildSequence(info);
-
-			/*
-			if (ctx.SelectQuery.Select.Columns.Count == 0)
-			{
-				var sqlExpr = MakeExpression(new ContextRefExpression(expr.Type, ctx), ProjectFlags.SQL);
-				UpdateNesting(context, sqlExpr);
-			}
-			*/
 
 			return ctx;
 		}
@@ -4055,15 +4058,10 @@ namespace LinqToDB.Linq.Builder
 				var ctx = rootContext?.BuildContext ?? currentContext;
 				if (ctx != null)
 				{
-					var info = new BuildInfo(currentContext, path, ctx.SelectQuery)
+					var subqueryExpression = TryGetSubQueryExpression(ctx, path, null, flags.HasFlag(ProjectFlags.Test));
+					if (subqueryExpression != null)
 					{
-						IsTest = true
-					};
-
-					if (IsSequence(info))
-					{
-						expression = GetSubQueryExpression(ctx, path, null, flags.HasFlag(ProjectFlags.Test));
-						expression = MakeExpression(ctx, expression, flags);
+						expression = MakeExpression(ctx, subqueryExpression, flags);
 						if (expression.Type != path.Type)
 						{
 							expression = new SqlAdjustTypeExpression(expression, path.Type, MappingSchema);

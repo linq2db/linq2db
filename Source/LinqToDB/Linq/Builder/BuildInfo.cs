@@ -18,7 +18,6 @@ namespace LinqToDB.Linq.Builder
 		{
 			SequenceInfo   = buildInfo;
 			CreateSubQuery = buildInfo.CreateSubQuery;
-			IsTest         = buildInfo.IsTest;
 		}
 
 		public BuildInfo(BuildInfo buildInfo, Expression expression, SelectQuery selectQuery)
@@ -26,7 +25,6 @@ namespace LinqToDB.Linq.Builder
 		{
 			SequenceInfo   = buildInfo;
 			CreateSubQuery = buildInfo.CreateSubQuery;
-			IsTest         = buildInfo.IsTest;
 		}
 
 		public BuildInfo?     SequenceInfo             { get; set; }
