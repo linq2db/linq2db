@@ -168,6 +168,11 @@ namespace LinqToDB.Linq.Builder
 
 			void CreateJoin()
 			{
+				// sequence created in test mode and there can be no tables.
+				//
+				if (Parent!.SelectQuery.From.Tables.Count == 0)
+					return;
+
 				if (!_isJoinCreated)
 				{
 					_isJoinCreated = true;
@@ -360,9 +365,9 @@ namespace LinqToDB.Linq.Builder
 				return Sequence.IsExpression(expression, level, requestFlag);
 			}
 
-			public override IBuildContext GetContext(Expression? expression, int level, BuildInfo buildInfo)
+			public override IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)
 			{
-				throw new NotImplementedException();
+				return null;
 			}
 		}
 	}

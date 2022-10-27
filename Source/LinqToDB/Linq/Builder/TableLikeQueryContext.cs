@@ -73,36 +73,41 @@ namespace LinqToDB.Linq.Builder
 
 		public Expression PrepareSourceLambda(LambdaExpression lambdaExpression)
 		{
-			if (lambdaExpression.Parameters.Count == 1)
-				return lambdaExpression.GetBody(SourcePropAccess);
+			if (lambdaExpression.Parameters.Count != 1)
+				throw new InvalidOperationException();
 
-			throw new InvalidOperationException();
+			SourceContextRef.Alias = lambdaExpression.Parameters[0].Name;
+
+			return lambdaExpression.GetBody(SourcePropAccess);
 		}
 
 		public Expression PrepareTargetSourceLambda(LambdaExpression lambdaExpression)
 		{
-			if (lambdaExpression.Parameters.Count == 2)
-				return lambdaExpression.GetBody(TargetPropAccess, SourcePropAccess);
+			if (lambdaExpression.Parameters.Count != 2)
+				throw new InvalidOperationException();
 
-			throw new InvalidOperationException();
+			TargetContextRef.Alias = lambdaExpression.Parameters[0].Name;
+			SourceContextRef.Alias = lambdaExpression.Parameters[1].Name;
+
+			return lambdaExpression.GetBody(TargetPropAccess, SourcePropAccess);
 		}
 
 		public Expression PrepareTargetLambda(LambdaExpression lambdaExpression)
 		{
-			if (lambdaExpression.Parameters.Count == 1)
-				return lambdaExpression.GetBody(TargetPropAccess);
+			if (lambdaExpression.Parameters.Count != 1)
+				throw new InvalidOperationException();
 
-			throw new InvalidOperationException();
+			TargetContextRef.Alias = lambdaExpression.Parameters[0].Name;
+
+			return lambdaExpression.GetBody(TargetPropAccess);
 		}
 
 		public Expression PrepareSelfTargetLambda(LambdaExpression lambdaExpression)
 		{
-			if (lambdaExpression.Parameters.Count == 1)
-			{
-				return lambdaExpression.GetBody(EnsureType(SelfTargetPropAccess, lambdaExpression.Parameters[0].Type));
-			}
+			if (lambdaExpression.Parameters.Count != 1)
+				throw new InvalidOperationException();
 
-			throw new InvalidOperationException();
+			return lambdaExpression.GetBody(EnsureType(SelfTargetPropAccess, lambdaExpression.Parameters[0].Type));
 		}
 
 		static Expression EnsureType(Expression expression, Type type)
@@ -153,7 +158,8 @@ namespace LinqToDB.Linq.Builder
 					if (e.NodeType == ExpressionType.MemberAccess)
 					{
 						var unwrappedObj = ((MemberExpression)e).Expression.UnwrapConvert();
-						if (ExpressionEqualityComparer.Instance.Equals(unwrappedObj, ctx.TargetContextRef) || ExpressionEqualityComparer.Instance.Equals(unwrappedObj, ctx.TargetPropAccess))
+						if (ExpressionEqualityComparer.Instance.Equals(unwrappedObj, ctx.TargetContextRef) || 
+						    ExpressionEqualityComparer.Instance.Equals(unwrappedObj, ctx.TargetPropAccess))
 						{
 							return true;
 						}
@@ -222,54 +228,9 @@ namespace LinqToDB.Linq.Builder
 				{
 					if (IsSelfTargetExpression(path))
 					{
-						// in case when there is no access to the Source we are trying to generate subquery SQL
-						//
-						var cloningContext = new CloningContext();
-
-						var targetContext = TargetContextRef.BuildContext;
-						var clonedTargetContext = cloningContext.CloneContext(targetContext);
-						var clonedContextRef = new ContextRefExpression(TargetContextRef.Type, clonedTargetContext, "self_target");
-
-						correctedPath = correctedPath.Replace(TargetContextRef, clonedContextRef);
-						var sqlExpr = Builder.ConvertToSqlExpr(clonedTargetContext, correctedPath, flags);
-
-						SqlPlaceholderExpression? placeholder = null;
-						if (sqlExpr is SqlPlaceholderExpression fieldPlaceholder)
-							placeholder = fieldPlaceholder;
-						else if (sqlExpr is SqlGenericConstructorExpression generic)
-						{
-							if (generic.Assignments.Count != 1)
-								throw new InvalidOperationException();
-
-							if (generic.Assignments[0].Expression is SqlPlaceholderExpression assignmentPlaceholder)
-								placeholder = assignmentPlaceholder;
-						}
-
-						if (placeholder == null)
-							throw new InvalidOperationException();
-
-						// forcing making column
-						_ = Builder.MakeColumn(null, placeholder);
-
-						var query = clonedTargetContext.SelectQuery;
-
-						var targetTable = MergeBuilder.GetTargetTable(targetContext);
-						if (targetTable == null)
-							throw new NotImplementedException("Currently, only CTEs are supported as the target of a merge. You can fix by calling .AsCte() before calling .Merge()");
-
-						var clonedTargetTable = MergeBuilder.GetTargetTable(clonedTargetContext);
-
-						if (clonedTargetTable == null)
-							throw new InvalidOperationException();
-
-						query = MergeBuilder.ReplaceSourceInQuery(query, clonedTargetTable, targetTable);
-						
-						// creating subquery placeholder
-						var resultPlaceholder = ExpressionBuilder.CreatePlaceholder(TargetContextRef.BuildContext, query, placeholder.Path);
-
-						var result = sqlExpr.Replace(placeholder, resultPlaceholder, ExpressionEqualityComparer.Instance);
-
-						return result;
+						var selfTargetContext = new SelfTargetContext(TargetContextRef);
+						correctedPath = correctedPath.Replace(TargetContextRef, TargetContextRef.WithContext(selfTargetContext));
+						return correctedPath;
 					}
 
 					// Redirecting to TargetInSourceContextRef for correct processing associations
@@ -308,6 +269,10 @@ namespace LinqToDB.Linq.Builder
 
 			if (!ReferenceEquals(correctedPath, path))
 			{
+				// remove forcing, if association is created in source. Maybe we can find better way...
+				if (!HasAssociation(Builder, path))
+					flags &= ~ProjectFlags.ForceOuterAssociation;
+
 				correctedPath = Builder.ConvertToSqlExpr(InnerQueryContext, correctedPath, flags);
 
 				if (!flags.HasFlag(ProjectFlags.Test))
@@ -370,11 +335,98 @@ namespace LinqToDB.Linq.Builder
 		{
 		}
 
+		public static bool HasAssociation(ExpressionBuilder builder, Expression expression)
+		{
+			var result = null != expression.Find(builder, static (builder, expr) =>
+			{
+				if (builder.IsAssociation(expr))
+					return true;
+				return false;
+			});
+
+			return result;
+		}
+
+
 		class ProjectionHelper<TTarget, TSource>
 		{
 			public TTarget? target       { get; set; }
 			public TSource? source       { get; set; }
 			public TTarget? selft_target { get; set; }
+		}
+
+		class SelfTargetContext : PassThroughContext
+		{
+			public SelfTargetContext(ContextRefExpression targetContextRef) : base(targetContextRef.BuildContext)
+			{
+				TargetContextRef = targetContextRef;
+			}
+
+			public ContextRefExpression TargetContextRef { get; }
+			IBuildContext               TargetContext    => Context;
+
+			public override IBuildContext Clone(CloningContext context)
+			{
+				throw new NotImplementedException();
+			}
+
+			public override Expression MakeExpression(Expression path, ProjectFlags flags)
+			{
+				if (flags.IsTest() || !HasAssociation(Builder, path))
+					return base.MakeExpression(path, flags);
+
+				// in case when there is no access to the Source we are trying to generate subquery SQL
+				//
+				var cloningContext = new CloningContext();
+
+				var targetContext = TargetContext;
+				var clonedTargetContext = cloningContext.CloneContext(targetContext);
+
+				var correctedPath = SequenceHelper.ReplaceContext(path, this, clonedTargetContext);
+
+				var sqlExpr = Builder.ConvertToSqlExpr(clonedTargetContext, correctedPath, flags);
+
+				SqlPlaceholderExpression? placeholder = null;
+				if (sqlExpr is SqlPlaceholderExpression fieldPlaceholder)
+					placeholder = fieldPlaceholder;
+				else if (sqlExpr is SqlGenericConstructorExpression generic)
+				{
+					if (generic.Assignments.Count != 1)
+						throw new InvalidOperationException();
+
+					if (generic.Assignments[0].Expression is SqlPlaceholderExpression assignmentPlaceholder)
+						placeholder = assignmentPlaceholder;
+				}
+
+				if (placeholder == null)
+				{
+					return ExpressionBuilder.CreateSqlError(this, path);
+				}
+
+				// forcing making column
+				_ = Builder.MakeColumn(null, placeholder);
+
+				var query = clonedTargetContext.SelectQuery;
+
+				var targetTable = MergeBuilder.GetTargetTable(targetContext);
+				if (targetTable == null)
+					throw new NotImplementedException("Currently, only CTEs are supported as the target of a merge. You can fix by calling .AsCte() before calling .Merge()");
+
+				var clonedTargetTable = MergeBuilder.GetTargetTable(clonedTargetContext);
+
+				if (clonedTargetTable == null)
+					throw new InvalidOperationException();
+
+				query = MergeBuilder.ReplaceSourceInQuery(query, clonedTargetTable, targetTable);
+
+				// creating subquery placeholder
+				var resultPlaceholder = ExpressionBuilder.CreatePlaceholder(TargetContextRef.BuildContext, query, placeholder.Path);
+
+				var result = sqlExpr.Replace(placeholder, resultPlaceholder, ExpressionEqualityComparer.Instance);
+
+				return result;
+
+			}
 		}
 	}
 }

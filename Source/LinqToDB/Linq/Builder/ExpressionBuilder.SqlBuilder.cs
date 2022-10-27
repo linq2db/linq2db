@@ -156,6 +156,10 @@ namespace LinqToDB.Linq.Builder
 			if (!IsSequence(testInfo))
 				return null;
 			
+			// give chance for context to intercept
+			//
+			var corrected = context.MakeExpression(expr, isTest ? ProjectFlags.SQL | ProjectFlags.Test : ProjectFlags.SQL);
+
 			var info = new BuildInfo(context, expr, new SelectQuery {ParentSelect = context.SelectQuery})
 			{
 				CreateSubQuery = true,
@@ -910,7 +914,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						if (columnDescriptor?.ValueConverter == null && CanBeConstant(newExpr))
 							sql = BuildConstant(newExpr, columnDescriptor);
-						else if (newExpr.NodeType != ExpressionType.MemberInit && newExpr.NodeType != ExpressionType.New && CanBeCompiled(expression))
+						else if (newExpr.NodeType != ExpressionType.MemberInit && newExpr.NodeType != ExpressionType.New && CanBeCompiled(newExpr))
 							sql = ParametersContext.BuildParameter(newExpr, columnDescriptor).SqlParameter;
 					}
 				}

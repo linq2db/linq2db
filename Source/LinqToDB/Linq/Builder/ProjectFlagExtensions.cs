@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.Linq.Builder
+﻿using System.Runtime.CompilerServices;
+
+namespace LinqToDB.Linq.Builder
 {
 	static class ProjectFlagExtensions
 	{
@@ -17,6 +19,12 @@
 		public static ProjectFlags AssociationRootFlag(this ProjectFlags flags)
 		{
 			return (flags & FlagsToPreserve) | ProjectFlags.AssociationRoot;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool IsTest(this ProjectFlags flags)
+		{
+			return (flags & ProjectFlags.Test) != 0;
 		}
 	}
 }

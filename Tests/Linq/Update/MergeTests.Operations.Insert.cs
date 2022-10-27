@@ -1111,7 +1111,7 @@ namespace Tests.xUpdate
 					.Merge())!;
 
 				Assert.IsInstanceOf<LinqException>(exception);
-				Assert.AreEqual("'source.Field2' cannot be converted to SQL.", exception.Message);
+				Assert.AreEqual("'_.Field2' cannot be converted to SQL.", exception.Message);
 			}
 		}
 		#endregion

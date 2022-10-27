@@ -763,7 +763,7 @@ namespace LinqToDB.Linq.Builder
 			return info;
 		}
 
-		Expression? TryGetSubQueryExpression(IBuildContext context, Expression expr, string? alias, bool isTest)
+		public Expression? TryGetSubQueryExpression(IBuildContext context, Expression expr, string? alias, bool isTest)
 		{
 			var unwrapped = expr.Unwrap();
 			var info = GetSubQueryContext(context, unwrapped, isTest);

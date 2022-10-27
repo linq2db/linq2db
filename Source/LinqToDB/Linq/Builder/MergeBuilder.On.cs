@@ -48,9 +48,6 @@ namespace LinqToDB.Linq.Builder
 					var targetKeyLambda = methodCall.Arguments[1].UnwrapLambda();
 					var sourceKeyLambda = methodCall.Arguments[2].UnwrapLambda();
 
-					mergeContext.SourceContext.TargetContextRef.Alias = targetKeyLambda.Parameters[0].Name;
-					mergeContext.SourceContext.SourceContextRef.Alias = sourceKeyLambda.Parameters[0].Name;
-
 					var targetKeySelector = mergeContext.SourceContext.PrepareTargetLambda(targetKeyLambda);
 					var sourceKeySelector = mergeContext.SourceContext.PrepareSourceLambda(sourceKeyLambda);
 

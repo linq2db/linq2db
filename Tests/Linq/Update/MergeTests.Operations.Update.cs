@@ -805,8 +805,8 @@ namespace Tests.xUpdate
 						.UpdateWhenMatched()
 						.Merge())!;
 
-				Assert.IsInstanceOf<LinqToDBException>(exception);
-				Assert.AreEqual("'s.Field2' cannot be converted to SQL.", exception.Message);
+				Assert.IsInstanceOf<LinqException>(exception);
+				Assert.AreEqual("'source.Field2' cannot be converted to SQL.", exception.Message);
 			}
 		}
 
@@ -831,7 +831,7 @@ namespace Tests.xUpdate
 						})
 						.Merge())!;
 
-				Assert.IsInstanceOf<LinqToDBException>(exception);
+				Assert.IsInstanceOf<LinqException>(exception);
 				Assert.AreEqual("'s.Field2' cannot be converted to SQL.", exception.Message);
 			}
 		}

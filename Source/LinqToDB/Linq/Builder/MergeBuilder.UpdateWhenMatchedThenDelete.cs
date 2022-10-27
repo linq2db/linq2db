@@ -35,6 +35,9 @@ namespace LinqToDB.Linq.Builder
 					var setterExpression = setter.UnwrapLambda();
 					var setterExpressionCorrected = Expression.Lambda(mergeContext.SourceContext.PrepareTargetSourceLambda(setterExpression));
 
+					mergeContext.SourceContext.TargetContextRef.Alias = setterExpression.Parameters[0].Name;
+					mergeContext.SourceContext.SourceContextRef.Alias = setterExpression.Parameters[1].Name;
+
 					UpdateBuilder.BuildSetterWithContext(
 						builder,
 						buildInfo,
