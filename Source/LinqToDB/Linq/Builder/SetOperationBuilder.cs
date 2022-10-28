@@ -465,7 +465,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (constructorExpression.ConstructType == SqlGenericConstructorExpression.CreateType.Full)
 				{
-					return Builder.TryConstruct(constructorExpression, this, ProjectFlags.Expression);
+					return Builder.TryConstruct(Builder.MappingSchema, constructorExpression, this, ProjectFlags.Expression);
 				}	
 
 				/*
@@ -756,7 +756,7 @@ namespace LinqToDB.Linq.Builder
 							}
 						}
 
-						var constructed = Builder.TryConstruct(_body, this, flags);
+						var constructed = Builder.TryConstruct(Builder.MappingSchema, _body, this, flags);
 
 						return constructed;
 					}

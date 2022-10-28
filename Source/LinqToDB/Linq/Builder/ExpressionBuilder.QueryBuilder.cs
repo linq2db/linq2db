@@ -629,7 +629,7 @@ namespace LinqToDB.Linq.Builder
 							{
 								if (context.flags.HasFlag(ProjectFlags.Expression))
 								{
-									var constructed = context.builder.TryConstruct(constructorExpression, context.context, context.flags);
+									var constructed = context.builder.TryConstruct(context.builder.MappingSchema, constructorExpression, context.context, context.flags);
 									if (!ReferenceEquals(constructed, constructorExpression))
 									{
 										constructed = context.builder.BuildSqlExpression(context.translated,

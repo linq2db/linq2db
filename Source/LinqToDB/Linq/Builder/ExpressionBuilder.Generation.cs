@@ -471,6 +471,7 @@ namespace LinqToDB.Linq.Builder
 
 
 		private Expression? TryWithConstructor(
+			MappingSchema                                     mappingSchema,
 			TypeAccessor                                      typeAccessor,
 			ConstructorInfo                                   constructorInfo,
 			SqlGenericConstructorExpression                   constructorExpression, 
@@ -536,6 +537,10 @@ namespace LinqToDB.Linq.Builder
 			var bindings = new List<MemberBinding>(Math.Max(0, constructorExpression.Assignments.Count - loadedColumns.Count));
 			var ignored  = 0;
 
+			var ed = mappingSchema.GetEntityDescriptor(typeAccessor.Type);
+
+			List<SqlGenericConstructorExpression.Assignment>? dynamicProperties = null;
+
 			for (int i = 0; i < constructorExpression.Assignments.Count; i++)
 			{
 				if (loadedColumns.Contains(i))
@@ -546,18 +551,26 @@ namespace LinqToDB.Linq.Builder
 				// handling inheritance
 				if (assignment.MemberInfo.DeclaringType?.IsAssignableFrom(typeAccessor.Type) == true)
 				{
-					var memberAccessor = typeAccessor[assignment.MemberInfo.Name];
-
-					if (!memberAccessor.HasSetter)
+					if (assignment.MemberInfo.IsDynamicColumnPropertyEx())
 					{
-						if (assignment.IsMandatory)
-							missed?.Add(assignment);
-						else
-							++ignored;
+						dynamicProperties ??= new List<SqlGenericConstructorExpression.Assignment>();
+						dynamicProperties.Add(assignment);
 					}
 					else
 					{
-						bindings.Add(Expression.Bind(assignment.MemberInfo, assignment.Expression));
+						var memberAccessor = typeAccessor[assignment.MemberInfo.Name];
+
+						if (!memberAccessor.HasSetter)
+						{
+							if (assignment.IsMandatory)
+								missed?.Add(assignment);
+							else
+								++ignored;
+						}
+						else
+						{
+							bindings.Add(Expression.Bind(assignment.MemberInfo, assignment.Expression));
+						}
 					}
 				}
 				else
@@ -566,10 +579,29 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			if (loadedColumns.Count + bindings.Count + ignored != constructorExpression.Assignments.Count)
+			if (loadedColumns.Count + bindings.Count + ignored + (dynamicProperties?.Count ?? 0) != constructorExpression.Assignments.Count)
 				return null;
 
-			return Expression.MemberInit(newExpression, bindings);
+			Expression result = Expression.MemberInit(newExpression, bindings);
+
+			//TODO: we can make it in MemberInit
+			if (dynamicProperties?.Count > 0 && ed.DynamicColumnSetter != null)
+			{
+				var generator   = new ExpressionGenerator();
+				var objVariable = generator.AssignToVariable(result, "obj");
+
+				foreach (var d in dynamicProperties)
+				{
+					generator.AddExpression(
+						ed.DynamicColumnSetter.GetBody(objVariable, Expression.Constant(d.MemberInfo.Name), d.Expression));
+				}
+
+				generator.AddExpression(objVariable);
+
+				result = generator.Build();
+			}
+
+			return result;
 		}
 
 		public Expression TryConstructFullEntity(IBuildContext context, SqlGenericConstructorExpression constructorExpression, ProjectFlags flags, bool checkInheritance = true)
@@ -643,16 +675,16 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			return ConstructObject(constructorExpression);
+			return ConstructObject(MappingSchema, constructorExpression);
 		}
 
-		public Expression ConstructObject(SqlGenericConstructorExpression constructorExpression)
+		public Expression ConstructObject(MappingSchema mappingSchema, SqlGenericConstructorExpression constructorExpression)
 		{
 			var typeAccessor = TypeAccessor.GetAccessor(constructorExpression.ObjectType);
 
 			if (constructorExpression.Constructor != null)
 			{
-				var instantiation = TryWithConstructor(typeAccessor, constructorExpression.Constructor, constructorExpression, null);
+				var instantiation = TryWithConstructor(mappingSchema, typeAccessor, constructorExpression.Constructor, constructorExpression, null);
 				if (instantiation != null)
 					return instantiation;
 			}
@@ -662,7 +694,7 @@ namespace LinqToDB.Linq.Builder
 			for (int i = 0; i < constructors.Length; i++)
 			{
 				var constructor   = constructors[i];
-				var instantiation = TryWithConstructor(typeAccessor, constructor, constructorExpression, null);
+				var instantiation = TryWithConstructor(mappingSchema, typeAccessor, constructor, constructorExpression, null);
 				if (instantiation != null)
 					return instantiation;
 			}
@@ -683,7 +715,7 @@ namespace LinqToDB.Linq.Builder
 		*/
 		}
 
-		public Expression TryConstruct(SqlGenericConstructorExpression constructorExpression, IBuildContext context,  ProjectFlags flags)
+		public Expression TryConstruct(MappingSchema mappingSchema, SqlGenericConstructorExpression constructorExpression, IBuildContext context,  ProjectFlags flags)
 		{
 			switch (constructorExpression.ConstructType)
 			{
@@ -697,7 +729,7 @@ namespace LinqToDB.Linq.Builder
 				case SqlGenericConstructorExpression.CreateType.Auto:
 				case SqlGenericConstructorExpression.CreateType.New:
 				{
-					return ConstructObject(constructorExpression);
+					return ConstructObject(mappingSchema, constructorExpression);
 				}
 				default:
 					throw new NotImplementedException();

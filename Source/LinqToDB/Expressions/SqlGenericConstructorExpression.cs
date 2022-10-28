@@ -212,7 +212,7 @@ namespace LinqToDB.Expressions
 					case MemberBindingType.Assignment:
 					{
 						var a = (MemberAssignment)binding;
-						items.Add(new Assignment(a.Member, Parse(a.Expression), true, false));
+						items.Add(new Assignment(a.Member, a.Expression, true, false));
 						break;
 					}
 
