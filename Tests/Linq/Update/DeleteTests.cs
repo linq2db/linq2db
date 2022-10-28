@@ -139,19 +139,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void DeleteMany1(
-			[DataSources(
-				TestProvName.AllAccess,
-				TestProvName.AllClickHouse,
-				ProviderName.DB2,
-				TestProvName.AllInformix,
-				TestProvName.AllOracle,
-				TestProvName.AllPostgreSQL,
-				ProviderName.SqlCe,
-				TestProvName.AllSQLite,
-				TestProvName.AllFirebird,
-				TestProvName.AllSapHana)]
-			string context)
+		public void DeleteMany1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -179,19 +167,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void DeleteMany2(
-			[DataSources(
-				TestProvName.AllAccess,
-				TestProvName.AllClickHouse,
-				ProviderName.DB2,
-				TestProvName.AllInformix,
-				TestProvName.AllOracle,
-				TestProvName.AllPostgreSQL,
-				TestProvName.AllSQLite,
-				TestProvName.AllFirebird,
-				ProviderName.SqlCe,
-				TestProvName.AllSapHana)]
-			string context)
+		public void DeleteMany2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -228,19 +204,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void DeleteMany3(
-			[DataSources(
-				TestProvName.AllAccess,
-				TestProvName.AllClickHouse,
-				ProviderName.DB2,
-				TestProvName.AllInformix,
-				TestProvName.AllOracle,
-				TestProvName.AllPostgreSQL,
-				TestProvName.AllSQLite,
-				TestProvName.AllFirebird,
-				ProviderName.SqlCe,
-				TestProvName.AllSapHana)]
-			string context)
+		public void DeleteMany3([DataSources] string context)
 		{
 			var ids = new[] { 1001 };
 

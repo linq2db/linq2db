@@ -2276,9 +2276,16 @@ namespace LinqToDB.SqlProvider
 
 		protected SqlDeleteStatement GetAlternativeDelete(SqlDeleteStatement deleteStatement)
 		{
-			if ((deleteStatement.SelectQuery.From.Tables.Count > 1 || deleteStatement.SelectQuery.From.Tables[0].Joins.Count > 0) &&
-				deleteStatement.SelectQuery.From.Tables[0].Source is SqlTable table)
+			if ((deleteStatement.SelectQuery.From.Tables.Count > 1 || deleteStatement.SelectQuery.From.Tables[0].Joins.Count > 0))
 			{
+				var table = deleteStatement.Table;
+				if (table == null)
+					table = deleteStatement.SelectQuery.From.Tables[0].Source as SqlTable;
+
+				//TODO: probably we can improve this part
+				if (table == null)
+					throw new LinqToDBException("Could not deduce table for delete");
+
 				if (deleteStatement.Output != null)
 					throw new NotImplementedException($"GetAlternativeDelete not implemented for delete with output");
 

@@ -40,10 +40,9 @@ namespace LinqToDB.Linq.Builder
 
 			sequence.Statement = deleteStatement;
 
-			var root = builder.MakeExpression(sequence, new ContextRefExpression(sequenceArgument.Type, sequence),
-				ProjectFlags.Root);
+			var tableContext = SequenceHelper.GetTableContext(sequence);
 
-			if (root is ContextRefExpression rootRef && rootRef.BuildContext is TableBuilder.TableContext tableContext)
+			if (tableContext != null)
 				deleteStatement.Table = tableContext.SqlTable;
 
 			static LambdaExpression BuildDefaultOutputExpression(Type outputType)

@@ -336,22 +336,17 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		internal static void ParseSet(
-			ExpressionBuilder               builder,
-			BuildInfo                       buildInfo,
-			LambdaExpression                extract,
-			LambdaExpression                update,
-			IBuildContext                   fieldsContext,
-			IBuildContext                   valuesContext,
-			SqlTable?                       table,
-			List<SqlSetExpression>          items)
+			ExpressionBuilder      builder,
+			BuildInfo              buildInfo,
+			LambdaExpression       extract,
+			LambdaExpression       update,
+			IBuildContext          fieldsContext,
+			IBuildContext          valuesContext,
+			SqlTable?              table,
+			List<SqlSetExpression> items)
 		{
 			extract = (LambdaExpression)builder.ConvertExpression(extract);
-			var ext = extract.Body.Unwrap();
-
-			var sp  = fieldsContext.Parent;
-			var ctx = new ExpressionContext(buildInfo.Parent, fieldsContext, extract);
-			
-			builder.ReplaceParent(ctx, sp);
+			var ext = SequenceHelper.PrepareBody(extract, fieldsContext);
 
 			Mapping.ColumnDescriptor? columnDescriptor = null;
 			SqlSetExpression 		  setExpression;
@@ -373,21 +368,19 @@ namespace LinqToDB.Linq.Builder
 				setExpression    = new SqlSetExpression(column, null);
 			}
 
-			sp  = valuesContext.Parent;
-			ctx = new ExpressionContext(buildInfo.Parent, valuesContext, update);
-			setExpression.Expression = builder.ConvertToSqlExpression(ctx, update.Body, columnDescriptor, false);
-			builder.ReplaceParent(ctx, sp);
+			setExpression.Expression = builder.ConvertToSqlExpression(fieldsContext, update.Body, columnDescriptor, false);
+
 			items.Add(setExpression);
 
 			ISqlExpression GetField(Expression fieldExpr)
 			{
-				var sql   = ctx.ConvertToSql(fieldExpr, 0, ConvertFlags.Field);
-				var field = sql.Select(s => QueryHelper.GetUnderlyingField(s.Sql)).FirstOrDefault(f => f != null);
+				var sql   = builder.ConvertToSql(fieldsContext, fieldExpr);
+				var field = QueryHelper.GetUnderlyingField(sql);
 				
-				if (sql.Length != 1)
-					throw new LinqException($"Expression '{extract}' can not be used as Update Field.");
+				if (field == null)
+					throw new LinqException($"Expression '{SqlErrorExpression.PrepareExpression(extract)}' can not be used as Update Field.");
 
-				return table != null && field != null ? table[field.Name]! : sql[0].Sql;
+				return table == null ? field : table[field.Name]!;
 			}
 		}
 
@@ -580,8 +573,8 @@ namespace LinqToDB.Linq.Builder
 				//if (sequence.SelectQuery.Select.SkipValue != null || !sequence.SelectQuery.Select.OrderBy.IsEmpty)
 				//	sequence = new SubQueryContext(sequence);
 
-				var extract  = (LambdaExpression)methodCall.Arguments[1].Unwrap();
-				var update   =  methodCall.Arguments.Count > 2 ? methodCall.Arguments[2].Unwrap() : null;
+				var extract  = methodCall.Arguments[1].UnwrapLambda();
+				var update   = methodCall.Arguments.Count > 2 ? methodCall.Arguments[2].Unwrap() : null;
 
 				var updateStatement = sequence.Statement as SqlUpdateStatement ?? new SqlUpdateStatement(sequence.SelectQuery);
 				sequence.Statement  = updateStatement;
@@ -598,6 +591,7 @@ namespace LinqToDB.Linq.Builder
 					updateStatement.Update.Items.Add(new SqlSetExpression(expr, null));
 				}
 				else if (update.NodeType == ExpressionType.Lambda)
+				{
 					ParseSet(
 						builder,
 						buildInfo,
@@ -607,7 +601,9 @@ namespace LinqToDB.Linq.Builder
 						sequence,
 						updateStatement.Update.Table,
 						updateStatement.Update.Items);
+				}
 				else
+				{
 					ParseSet(
 						builder,
 						extract,
@@ -615,6 +611,7 @@ namespace LinqToDB.Linq.Builder
 						2,
 						sequence,
 						updateStatement.Update.Items);
+				}
 
 				// TODO: remove in v4?
 				updateStatement.Update.Items.RemoveDuplicatesFromTail((s1, s2) => s1.Column.Equals(s2.Column));
