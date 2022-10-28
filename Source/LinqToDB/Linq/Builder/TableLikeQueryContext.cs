@@ -425,7 +425,6 @@ namespace LinqToDB.Linq.Builder
 				var result = sqlExpr.Replace(placeholder, resultPlaceholder, ExpressionEqualityComparer.Instance);
 
 				return result;
-
 			}
 		}
 	}

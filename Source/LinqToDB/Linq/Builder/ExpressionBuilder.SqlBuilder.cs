@@ -156,10 +156,6 @@ namespace LinqToDB.Linq.Builder
 			if (!IsSequence(testInfo))
 				return null;
 			
-			// give chance for context to intercept
-			//
-			var corrected = context.MakeExpression(expr, isTest ? ProjectFlags.SQL | ProjectFlags.Test : ProjectFlags.SQL);
-
 			var info = new BuildInfo(context, expr, new SelectQuery {ParentSelect = context.SelectQuery})
 			{
 				CreateSubQuery = true,
@@ -1204,77 +1200,15 @@ namespace LinqToDB.Linq.Builder
 
 					var newExpr = MakeExpression(context, ma, flags);
 
-					if (!ReferenceEquals(newExpr, ma))
+					if (!ExpressionEqualityComparer.Instance.Equals(newExpr, ma))
 					{
 						if (newExpr is SqlPlaceholderExpression)
 							return newExpr;
 						return ConvertToSqlExpr(context, newExpr, flags, unwrap, columnDescriptor, isPureExpression);
 					}
 
-					/*
-					var buildInfo = new BuildInfo(context, ma, context.SelectQuery);
-
-					if (IsSequence(buildInfo))
-						{
-						var sequence = BuildSequence(buildInfo);
-
-						newExpr = new ContextRefExpression(ma.Type, sequence);
-						return ConvertToSqlExpr(context, newExpr, flags.HasFlag(ProjectFlags.Test), unwrap, columnDescriptor, isPureExpression);
-						}
-
-					*/
-
-					/*
-					if (ma.Expression is not ContextRefExpression)
-					{
-						var buildInfo = new BuildInfo(context, ma.Expression, context.SelectQuery);
-
-						if (IsSequence(buildInfo))
-						{
-							var sequence = BuildSequence(buildInfo);
-
-							newExpr = ma.Update(new ContextRefExpression(ma.Expression.Type, sequence));
-							return ConvertToSqlExpr(context, newExpr, flags, unwrap, columnDescriptor,
-								isPureExpression);
-						}
-					}
-					*/
-
-					/*
-					var ctx = GetContext(context, expression);
-
-					if (ctx != null)
-					{
-						var sql = ctx.RequireSqlExpression(expression);
-						if (!ReferenceEquals(sql, expression))
-							sql = ConvertToSqlExpr(ctx, sql, flags.HasFlag(ProjectFlags.Test), unwrap, columnDescriptor, isPureExpression);
-
-						return sql;
-					}
-					*/
-					
-
 					break;
 				}
-
-				/*case ExpressionType.Parameter:
-				{
-					var ctx = GetContext(context, expression);
-
-					if (ctx != null)
-					{
-						var sql = ctx.ConvertToSql(expression, 0, ConvertFlags.Field);
-
-						switch (sql.Length)
-						{
-							case 0: break;
-							case 1: return sql[0].Sql;
-							default: throw new InvalidOperationException();
-						}
-					}
-
-					break;
-				}*/
 
 				case ExpressionType.Extension:
 				{
@@ -1356,7 +1290,7 @@ namespace LinqToDB.Linq.Builder
 					var expr = ConvertMethod(e);
 
 					if (expr != null)
-						return CreatePlaceholder(context, ConvertToSql(context, expr, unwrap: unwrap), expression, alias: alias);
+						return ConvertToSqlExpr(context, expr, unwrap: unwrap, alias: alias, flags: flags, columnDescriptor: columnDescriptor, isPureExpression: isPureExpression);
 
 					var attr = e.Method.GetExpressionAttribute(MappingSchema);
 
@@ -1885,7 +1819,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (context == null)
 				throw new InvalidOperationException();
-
+			  
 			ISqlExpression? l = null;
 			ISqlExpression? r = null;
 
@@ -3986,14 +3920,15 @@ namespace LinqToDB.Linq.Builder
 					rootContext = root.GetLevelExpression(MappingSchema, 0) as ContextRefExpression;
 				}
 			}
+			/*
 			else if (path.NodeType == ExpressionType.Convert)
 			{
 				var unary = (UnaryExpression)path;
-				if (unary.Operand is ContextRefExpression contextRef)
-				{
-					expression = new ContextRefExpression(unary.Type, contextRef.BuildContext);
-				}
+
+				var newExpr = MakeExpression(currentContext, unary.Operand, flags);
+				return Expression.Convert(newExpr, path.Type);
 			}
+			*/
 			else if (path is MethodCallExpression mc)
 			{
 				if (IsAssociation(mc))
@@ -4059,6 +3994,10 @@ namespace LinqToDB.Linq.Builder
 			}
 			else if (flags.HasFlag(ProjectFlags.SQL) || flags.HasFlag(ProjectFlags.Expression))
 			{
+				var exposed = ExposeExpression(path);
+				if (!ReferenceEquals(exposed, path))
+					return MakeExpression(currentContext, exposed, flags);
+
 				var ctx = rootContext?.BuildContext ?? currentContext;
 				if (ctx != null)
 				{
