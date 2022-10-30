@@ -219,17 +219,17 @@ namespace LinqToDB.Scaffold
 			// use foreign key column name for association name generation
 			var sourceColumnName     = fk.Relation.Count == 1 ? fk.Relation[0].SourceColumn : null;
 			var fromAssociationName  = GenerateAssociationName(
-				fk.Target,
 				fk.Source,
+				fk.Target,
 				sourceColumnName,
 				fk.Name,
 				_options.DataModel.SourceAssociationPropertyNameOptions,
 				defaultSchemas);
 			var toAssocationName     = GenerateAssociationName(
-				fk.Source,
 				fk.Target,
+				fk.Source,
 				null,
-				fk.Name,
+				null,
 				manyToOne
 					? _options.DataModel.TargetMultipleAssociationPropertyNameOptions
 					: _options.DataModel.TargetSingularAssociationPropertyNameOptions,
@@ -288,15 +288,16 @@ namespace LinqToDB.Scaffold
 			SqlObjectName        thisTable,
 			SqlObjectName        otherTable,
 			string?              firstFromColumnName,
-			string               fkName,
+			string?              fkName,
 			NormalizationOptions settings,
 			ISet<string>         defaultSchemas)
 		{
 			var name = otherTable.Name;
 
 			// T4 compatibility mode use logic, similar to one, used by old T4 templates
-			if (settings.Transformation == NameTransformation.Association)
+			if (fkName != null && settings.Transformation == NameTransformation.Association)
 			{
+				System.Diagnostics.Debugger.Launch();
 				// approximate port of SetForeignKeyMemberName T4 method.
 				// Approximate, because not all logic could be converted due to difference in generation pipeline
 
@@ -341,8 +342,8 @@ namespace LinqToDB.Scaffold
 					newName = string.Concat(newName
 						.Split('_')
 						.Where(_ =>
-							_.Length > 0 && _ != otherTable.Name &&
-							(otherTable.Schema == null || defaultSchemas.Contains(otherTable.Schema) || _ != otherTable.Schema)));
+							_.Length > 0 && _ != thisTable.Name &&
+							(thisTable.Schema == null || defaultSchemas.Contains(thisTable.Schema) || _ != thisTable.Schema)));
 
 					// remove trailing digits
 					// note that new implementation match all digits, not just 0-9 as it was in T4
