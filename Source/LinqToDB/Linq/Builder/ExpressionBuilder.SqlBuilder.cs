@@ -79,7 +79,8 @@ namespace LinqToDB.Linq.Builder
 
 			BuildSearchCondition(sequence, expr, flags, sc.Conditions);
 
-			sequence.SelectQuery.Where.ConcatSearchCondition(sc);
+			if (!isTest)
+				sequence.SelectQuery.Where.ConcatSearchCondition(sc);
 
 			return sequence;
 		}
@@ -879,17 +880,6 @@ namespace LinqToDB.Linq.Builder
 			var cache = expression is SqlPlaceholderExpression ||
 			            null != expression.Find(1, (_, e) => e is ContextRefExpression);
 
-			/*if (cache && _cachedSql.TryGetValue(cacheKey, out sqlExpr) && false)
-			{
-				// conversion found but needs nesting update
-
-				sqlExpr = UpdateNesting(context, sqlExpr);
-
-				_preciseCachedSql[preciseCacheKey] = sqlExpr;
-
-				return sqlExpr;
-			}*/
-
 			ISqlExpression? sql = null;
 			Expression?     result = null;
 
@@ -948,6 +938,8 @@ namespace LinqToDB.Linq.Builder
 			// nesting for Expressions updated in finalization
 			var updateNesting = !flags.HasFlag(ProjectFlags.Test) && !flags.HasFlag(ProjectFlags.Expression);
 
+			_cachedSql[cacheKey] = result;
+
 			if (updateNesting)
 			{
 				result = UpdateNesting(context, result);
@@ -971,7 +963,6 @@ namespace LinqToDB.Linq.Builder
 					if (expression is not SqlPlaceholderExpression)
 						placeholder = placeholder.WithTrackingPath(expression);
 
-					_cachedSql[cacheKey]               = placeholder;
 					_preciseCachedSql[preciseCacheKey] = placeholder;
 				}
 
@@ -3848,7 +3839,7 @@ namespace LinqToDB.Linq.Builder
 			if ((flags & (ProjectFlags.Root | ProjectFlags.AggregationRoot | ProjectFlags.AssociationRoot | ProjectFlags.Expand)) == 0)
 			{
 				// try to find already converted to SQL
-				var sqlKey = new SqlCacheKey(path, null, null, null, ProjectFlags.SQL);
+				var sqlKey = new SqlCacheKey(path, null, null, null, flags.SqlFlag());
 				if (_cachedSql.TryGetValue(sqlKey, out var cachedSql))
 				{
 					return cachedSql;
@@ -3978,7 +3969,8 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (rootContext != null)
 				{
-					expression = rootContext.BuildContext.MakeExpression(path, flags);
+					currentContext = rootContext.BuildContext;
+					expression     = rootContext.BuildContext.MakeExpression(path, flags);
 					if (expression is SqlEagerLoadExpression eager && rootContext.BuildContext != eager.ContextRef.BuildContext)
 					{
 						expression = new SqlEagerLoadExpression(rootContext, path, GetSequenceExpression(rootContext.BuildContext));

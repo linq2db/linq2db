@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -24,6 +25,7 @@ namespace LinqToDB.Linq.Builder
 			return entityType;
 		}
 
+		[DebuggerDisplay("{Member.Name} = {Expression}")]
 		class AssignmentInfo
 		{
 			public AssignmentInfo(ColumnDescriptor column, Expression expression)
@@ -221,8 +223,7 @@ namespace LinqToDB.Linq.Builder
 					me = Expression.MakeMemberAccess(objExpression, mi);
 				}
 
-				var sqlExpression = context.Builder.BuildSqlExpression(new Dictionary<Expression, Expression>(), context, me, flags);
-				members.Add(new AssignmentInfo(column, sqlExpression));
+				members.Add(new AssignmentInfo(column, me));
 			}
 
 			var loadWith = GetLoadWith(context);

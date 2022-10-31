@@ -35,7 +35,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
-			var selector = (LambdaExpression)methodCall.Arguments[1].Unwrap();
+			var selector = methodCall.Arguments[1].UnwrapLambda();
 
 			// reset LoadWith sequence
 			if (methodCall.IsQueryable("LoadWith"))
@@ -49,8 +49,7 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			var contextRef     = new ContextRefExpression(selector.Parameters[0].Type, sequence);
-			var path           = selector.GetBody(contextRef);
+			var path = SequenceHelper.PrepareBody(selector, sequence);
 
 			var extractResult = ExtractAssociations(builder, path, null);
 

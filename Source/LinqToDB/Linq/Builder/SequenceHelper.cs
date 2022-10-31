@@ -92,7 +92,12 @@ namespace LinqToDB.Linq.Builder
 				if (e.NodeType == ExpressionType.Extension)
 				{
 					if (e is ContextRefExpression contextRef)
+					{
+						// already correctly scoped
+						if (contextRef.BuildContext is ScopeContext scopeContext && scopeContext.UpTo == ctx.upTo)
+							return e;
 						return contextRef.WithContext(new ScopeContext(contextRef.BuildContext, ctx.upTo));
+					}
 				}
 
 				return e;

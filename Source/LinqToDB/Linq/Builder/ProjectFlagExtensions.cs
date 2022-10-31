@@ -10,12 +10,20 @@ namespace LinqToDB.Linq.Builder
 		{
 			return flags & FlagsToPreserve;
 		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 
 		public static ProjectFlags RootFlag(this ProjectFlags flags)
 		{
 			return (flags & FlagsToPreserve) | ProjectFlags.Root;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static ProjectFlags SqlFlag(this ProjectFlags flags)
+		{
+			return (flags & FlagsToPreserve) | ProjectFlags.SQL;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ProjectFlags AssociationRootFlag(this ProjectFlags flags)
 		{
 			return (flags & FlagsToPreserve) | ProjectFlags.AssociationRoot;

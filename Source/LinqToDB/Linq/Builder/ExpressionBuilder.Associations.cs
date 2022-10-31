@@ -125,7 +125,7 @@ namespace LinqToDB.Linq.Builder
 
 			_associations ??= new Dictionary<SqlCacheKey, Expression>(SqlCacheKey.SqlCacheKeyComparer);
 
-			var key = new SqlCacheKey(expression, associationRoot.BuildContext, null, null, ProjectFlags.Root);
+			var key = new SqlCacheKey(expression, associationRoot.BuildContext, null, null, flags.RootFlag());
 
 			if (_associations.TryGetValue(key, out var associationExpression))
 				return associationExpression;
@@ -159,6 +159,7 @@ namespace LinqToDB.Linq.Builder
 				//
 				var buildInfo = new BuildInfo(rootContext.BuildContext, association, new SelectQuery())
 				{
+					IsTest = flags.IsTest(),
 					IsAssociation = true
 				};
 
@@ -168,7 +169,7 @@ namespace LinqToDB.Linq.Builder
 
 				associationExpression = new ContextRefExpression(association.Type, sequence);
 
-				if (isOuter)
+				if (!flags.IsTest() && isOuter)
 				{
 					var root = MakeExpression(rootContext.BuildContext, associationExpression, flags.AssociationRootFlag());
 					_isOuterAssociations ??= new HashSet<Expression>(ExpressionEqualityComparer.Instance);

@@ -1420,7 +1420,7 @@ namespace LinqToDB.SqlQuery
 
 				var searchCondition = new List<SqlCondition>();
 
-					var conditions = sql.Where.SearchCondition.Conditions;
+				var conditions = sql.Where.SearchCondition.Conditions;
 
 				var toIgnore = new HashSet<IQueryElement> { joinTable };
 

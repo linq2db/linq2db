@@ -96,7 +96,7 @@ namespace LinqToDB.Linq.Builder
 
 					break;
 
-				case ExpressionType.Parameter:
+				/*case ExpressionType.Parameter:
 					{
 						if (buildInfo.IsSubQuery && buildInfo.SelectQuery.From.Tables.Count == 0)
 						{
@@ -113,7 +113,7 @@ namespace LinqToDB.Linq.Builder
 						}
 
 						break;
-					}
+					}*/
 			}
 
 			return BuildContextType.None;

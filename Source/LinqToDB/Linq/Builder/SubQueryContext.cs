@@ -118,8 +118,11 @@ namespace LinqToDB.Linq.Builder
 
 				result = Builder.UpdateNesting(this, result);
 
-				// remap back, especially for Recursive CTE
-				result = SequenceHelper.ReplaceContext(result, SubQuery, this);
+				if (!flags.HasFlag(ProjectFlags.AssociationRoot))
+				{
+					// remap back, especially for Recursive CTE
+					result = SequenceHelper.ReplaceContext(result, SubQuery, this);
+				}
 			}
 
 			return result;

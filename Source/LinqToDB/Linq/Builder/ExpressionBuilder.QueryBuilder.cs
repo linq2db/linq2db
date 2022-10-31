@@ -157,13 +157,13 @@ namespace LinqToDB.Linq.Builder
 		Expression Deduplicate(Expression expression)
 		{
 			var visited    = new HashSet<Expression>();
-			var duplicates = new Dictionary<Expression, Expression?>();
+			var duplicates = new Dictionary<Expression, Expression?>(ExpressionEqualityComparer.Instance);
 
 			expression.Visit(
 				(builder: this, duplicates, visited),
 				static (ctx, e) =>
 					{
-					if (e is SqlGenericConstructorExpression || e is SqlPlaceholderExpression)
+					if (e is SqlGenericConstructorExpression || e is SqlPlaceholderExpression || e is SqlAdjustTypeExpression)
 					{
 						if (!ctx.visited.Add(e))
 						{

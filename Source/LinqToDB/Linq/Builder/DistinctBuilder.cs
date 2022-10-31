@@ -38,7 +38,7 @@ namespace LinqToDB.Linq.Builder
 			else
 			{
 				// create all columns
-				_ = builder.ConvertToSqlExpr(subQueryContext, new ContextRefExpression(methodCall.Arguments[0].Type, sequence));
+				_ = builder.ConvertToSqlExpr(subQueryContext, new ContextRefExpression(methodCall.Arguments[0].Type, sequence), buildInfo.GetFlags());
 			}
 
 			return new DistinctContext(subQueryContext);

@@ -240,8 +240,11 @@ namespace LinqToDB.Linq.Builder
 		{
 			var groupSqlExpr = builder.ConvertToSqlExpr(onSequence, path, flags | ProjectFlags.Keys);
 
-			// only keys
-			groupSqlExpr = builder.UpdateNesting(sequence, groupSqlExpr);
+			if (!flags.IsTest())
+			{
+				// only keys
+				groupSqlExpr = builder.UpdateNesting(sequence, groupSqlExpr);
+			}
 
 			AppendGroupBy(builder, currentPlaceholders, sequence.SelectQuery, groupSqlExpr);
 		}
@@ -342,11 +345,12 @@ namespace LinqToDB.Linq.Builder
 				if (newFlags.HasFlag(ProjectFlags.SQL))
 				{
 					result = Builder.ConvertToSqlExpr(this, result, newFlags);
-					// appending missing keys
-					AppendGroupBy(Builder, GroupByContext.CurrentPlaceholders, GroupByContext.SubQuery.SelectQuery, result);
 
-					if (!newFlags.HasFlag(ProjectFlags.Test))
+					if (!newFlags.IsTest())
 					{
+						// appending missing keys
+						AppendGroupBy(Builder, GroupByContext.CurrentPlaceholders, GroupByContext.SubQuery.SelectQuery, result);
+
 						// we return SQL nested as GroupByContext
 						result = Builder.UpdateNesting(GroupByContext, result);
 					}

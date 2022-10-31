@@ -110,7 +110,7 @@ namespace LinqToDB.Linq.Builder
 							new BuildInfo(buildInfo, sequenceArgument)
 								{ CreateSubQuery = false, IsAggregation = true });
 
-						var rootContext = builder.GetRootContext(null, sequenceArgument, false);
+						var rootContext = builder.GetRootContext(buildInfo.Parent, sequenceArgument, false);
 
 						if (rootContext != null)
 						{
@@ -122,13 +122,9 @@ namespace LinqToDB.Linq.Builder
 								placeholderSequence = groupCtx.SubQuery;
 								placeholderSelect   = groupCtx.Element.SelectQuery;
 							}
-						}
-						else
-						{
-							throw new NotImplementedException();
-						}
 
-						isSimple = true;
+							isSimple = true;
+						}
 					}
 				}
 
@@ -174,10 +170,6 @@ namespace LinqToDB.Linq.Builder
 
 			functionPlaceholder.Alias = methodName;
 			context.Placeholder       = functionPlaceholder;
-
-			/*// force ExpressionBuilder to cache Aggregation SQL. It will be used later for BuildWhere.
-			_ = builder.ConvertToSqlExpr(context, new ContextRefExpression(methodCall.Method.ReturnType, context),
-				buildInfo.GetFlags());*/
 
 			return context;
 		}

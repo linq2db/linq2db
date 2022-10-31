@@ -1,4 +1,5 @@
 ﻿using System.Linq.Expressions;
+using LinqToDB.Expressions;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Builder
@@ -16,16 +17,21 @@ namespace LinqToDB.Linq.Builder
 
 		public override Expression MakeExpression(Expression path, ProjectFlags flags)
 		{
-			if (SequenceHelper.IsSameContext(path, this) && (flags.HasFlag(ProjectFlags.Root)            ||
+			/*if ((flags.HasFlag(ProjectFlags.Root)            ||
 			                                                 flags.HasFlag(ProjectFlags.AssociationRoot) ||
 			                                                 flags.HasFlag(ProjectFlags.Expand)))
 			{
 				return path;
-			}
+			}*/
 
-			var newExpr = base.MakeExpression(path, flags);
+			var correctedPath = SequenceHelper.CorrectExpression(path, this, Context);
+			var newExpr       = Builder.MakeExpression(Context, correctedPath, flags);
 
-			if (!flags.HasFlag(ProjectFlags.Test))
+			// nothing changed, return as is
+			if (ExpressionEqualityComparer.Instance.Equals(newExpr, correctedPath))
+				return path;
+
+			if (!flags.IsTest())
 			{
 				newExpr = SequenceHelper.MoveAllToScopedContext(newExpr, UpTo);
 				newExpr = Builder.UpdateNesting(UpTo, newExpr);
