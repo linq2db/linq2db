@@ -404,41 +404,41 @@ namespace LinqToDB.Linq
 			public IEnumerator<T> GetEnumerator()
 			{
 				using var runner = _dataContext.GetQueryRunner(_query, _queryNumber, _expression, _parameters, _preambles);
-			using var dr     = runner.ExecuteReader();
+				using var dr     = runner.ExecuteReader();
 
-			var dataReader = dr.DataReader!;
+				var dataReader = dr.DataReader!;
 
-			if (dataReader.Read())
-			{
+				if (dataReader.Read())
+				{
 					var origDataReader = _dataContext.UnwrapDataObjectInterceptor?.UnwrapDataReader(_dataContext, dataReader) ?? dataReader;
 					var mapperInfo     = _mapper.GetMapperInfo(_dataContext, runner, origDataReader);
 
-				do
-				{
-					T res;
+					do
+					{
+						T res;
 
-					try
-					{
-						res = mapperInfo.Mapper(runner, origDataReader);
-						runner.RowsCount++;
-					}
-					catch (Exception ex) when (ex is FormatException or InvalidCastException or LinqToDBConvertException || ex.GetType().Name.Contains("NullValueException"))
-					{
-						// TODO: debug cases when our tests go into slow-mode (e.g. sqlite.ms)
-						if (mapperInfo.IsFaulted)
-							throw;
+						try
+						{
+							res = mapperInfo.Mapper(runner, origDataReader);
+							runner.RowsCount++;
+						}
+						catch (Exception ex) when (ex is FormatException or InvalidCastException or LinqToDBConvertException || ex.GetType().Name.Contains("NullValueException"))
+						{
+							// TODO: debug cases when our tests go into slow-mode (e.g. sqlite.ms)
+							if (mapperInfo.IsFaulted)
+								throw;
 
 							res = _mapper.ReMapOnException(_dataContext, runner, origDataReader, ref mapperInfo, ex);
-					}
+						}
 
-					yield return res;
+						yield return res;
+					}
+					while (dataReader.Read());
 				}
-				while (dataReader.Read());
 			}
-		}
 
 			IEnumerator IEnumerable.GetEnumerator()
-		{
+			{
 				return GetEnumerator();
 			}
 

@@ -229,34 +229,44 @@ namespace LinqToDB.Linq.Builder
 				if (SequenceHelper.IsSameContext(path, this))
 				{
 					// trying to access Queryable variant
-					if (path.Type != ObjectType && flags.HasFlag(ProjectFlags.Expression))
+					if (!ObjectType.IsSameOrParentOf(path.Type) && flags.HasFlag(ProjectFlags.Expression))
 						return new SqlEagerLoadExpression((ContextRefExpression)path, path, Builder.GetSequenceExpression(this));
 
-					if (!flags.HasFlag(ProjectFlags.Keys))
-					{
-						return _fullEntityExpression ??= Builder.BuildFullEntityExpression(this, ObjectType, flags);
-					}
-
-					return Builder.BuildFullEntityExpression(this, ObjectType, flags);
+					return Builder.BuildFullEntityExpression(this, path.Type, flags);
 				}
 
-				if (path is not MemberExpression member)
-					return ExpressionBuilder.CreateSqlError(this, path);
+				Expression member;
+
+				if (path is MemberExpression me)
+				{
+					member = me;
+				}
+				else if (path is MethodCallExpression mc && mc.Method.IsSqlPropertyMethodEx())
+				{
+					var memberInfo = MemberHelper.GetMemberInfo(mc);
+					var memberAccess = Expression.MakeMemberAccess(mc.Arguments[0], memberInfo);
+					member = memberAccess;
+				}
+				else
+					return path;
 
 				var sql = GetField(member, member.GetLevel(Builder.MappingSchema), false);
+
 				if (sql == null)
 				{
+					var memberInfo = MemberHelper.GetMemberInfo(member);
+
 					if (EntityDescriptor.HasCalculatedMembers)
 					{
 						var found = EntityDescriptor.CalculatedMembers?.Find(ma =>
-							MemberInfoComparer.Instance.Equals(ma.MemberInfo, member.Member));
+							MemberInfoComparer.Instance.Equals(ma.MemberInfo, memberInfo));
 
 						if (found != null)
 						{
 							return Builder.ExposeExpression(member);
 						}
-
 					}
+
 					return path;
 				}
 

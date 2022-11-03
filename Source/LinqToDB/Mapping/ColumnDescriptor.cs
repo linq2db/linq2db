@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -15,6 +16,7 @@ namespace LinqToDB.Mapping
 	/// <summary>
 	/// Stores mapping entity column descriptor.
 	/// </summary>
+	[DebuggerDisplay("Member:{MemberName}, Column:'{ColumnName}'")]
 	public class ColumnDescriptor : IColumnChangeDescriptor
 	{
 		/// <summary>

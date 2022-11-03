@@ -10,6 +10,7 @@ namespace LinqToDB.Linq.Builder
 	using Extensions;
 	using Mapping;
 	using Reflection;
+	using static LinqToDB.Reflection.Methods.LinqToDB;
 
 	partial class ExpressionBuilder
 	{
@@ -52,6 +53,8 @@ namespace LinqToDB.Linq.Builder
 		{
 			entityType = GetTypeForInstantiation(entityType);
 
+			var contextRefExpression = new ContextRefExpression(entityType, context);
+
 			var entityDescriptor = MappingSchema.GetEntityDescriptor(entityType);
 
 			if (checkInheritance && flags.HasFlag(ProjectFlags.Expression))
@@ -83,8 +86,7 @@ namespace LinqToDB.Linq.Builder
 								"Inheritance mapping is not defined for discriminator value '{0}' in the '{1}' hierarchy.",
 								code, et);
 
-						var access = Expression.MakeMemberAccess(
-							new ContextRefExpression(onType, context), firstMapping.Discriminator.MemberInfo);
+						var access = Expression.MakeMemberAccess(contextRefExpression.WithType(onType), firstMapping.Discriminator.MemberInfo);
 
 						var codeExpr = Expression.Convert(access, typeof(object));
 
@@ -102,7 +104,8 @@ namespace LinqToDB.Linq.Builder
 						if (inheritance.IsDefault)
 							continue;
 
-						var contextRef = new ContextRefExpression(inheritance.Type, context);
+						var onType     = inheritance.Discriminator.MemberInfo.ReflectedType ?? inheritance.Type;
+						var contextRef = contextRefExpression.WithType(onType);
 
 						var test = Equal(
 							MappingSchema,
@@ -204,12 +207,21 @@ namespace LinqToDB.Linq.Builder
 				}
 				else
 				{
+					var declaringType = column.MemberInfo.DeclaringType!;
+					var objExpression = refExpression.WithType(declaringType);
+
+					// Target ReflectedType to DeclaringType for better caching
+					//
+					var memberInfo = declaringType.GetMemberEx(column.MemberInfo) ?? throw new InvalidOperationException();
+					me = Expression.MakeMemberAccess(objExpression, memberInfo);
+
+					/*
 					var mi = refExpression.Type.GetMemberEx(column.MemberInfo);
 
 					var objExpression = refExpression;
 					if (mi == null)
 					{
-						if (column.MemberInfo.ReflectedType == null)
+						if (column.MemberInfo.DeclaringType == null)
 							continue;
 
 						// Skip fake assignments
@@ -221,6 +233,7 @@ namespace LinqToDB.Linq.Builder
 					};
 
 					me = Expression.MakeMemberAccess(objExpression, mi);
+					*/
 				}
 
 				members.Add(new AssignmentInfo(column, me));
@@ -607,8 +620,9 @@ namespace LinqToDB.Linq.Builder
 
 		public Expression TryConstructFullEntity(IBuildContext context, SqlGenericConstructorExpression constructorExpression, ProjectFlags flags, bool checkInheritance = true)
 		{
-			var entityType       = constructorExpression.ObjectType;
-			var entityDescriptor = MappingSchema.GetEntityDescriptor(entityType);
+			var entityType           = constructorExpression.ObjectType;
+			var entityDescriptor     = MappingSchema.GetEntityDescriptor(entityType);
+			var contextRefExpression = new ContextRefExpression(entityType, context);
 
 			if (checkInheritance && flags.HasFlag(ProjectFlags.Expression))
 			{
@@ -620,13 +634,22 @@ namespace LinqToDB.Linq.Builder
 					Expression defaultExpression;
 					if (defaultDescriptor != null)
 					{
-						defaultExpression = TryConstructFullEntity(context, constructorExpression, flags, false);
+						if (defaultDescriptor.Type != constructorExpression.Type)
+						{
+							var subConstructor = BuildFullEntityExpression(context, defaultDescriptor.Type, flags);
+							defaultExpression = TryConstructFullEntity(context, subConstructor, flags, false);
+							defaultExpression = Expression.Convert(defaultExpression, constructorExpression.Type);
+						}
+						else
+						{
+							defaultExpression = TryConstructFullEntity(context, constructorExpression, flags, false);
+						}
 					}
 					else
 					{
 						var firstMapping = inheritanceMappings[0];
 
-						var onType = firstMapping.Discriminator.MemberInfo.ReflectedType;
+						var onType = firstMapping.Discriminator.MemberInfo.DeclaringType;
 						if (onType == null)
 						{
 							throw new LinqToDBException("Could not get discriminator ReflectedType.");
@@ -639,8 +662,7 @@ namespace LinqToDB.Linq.Builder
 								"Inheritance mapping is not defined for discriminator value '{0}' in the '{1}' hierarchy.",
 								code, et);
 
-						var access = Expression.MakeMemberAccess(
-							new ContextRefExpression(onType, context), firstMapping.Discriminator.MemberInfo);
+						var access = Expression.MakeMemberAccess(contextRefExpression.WithType(onType), firstMapping.Discriminator.MemberInfo);
 
 						var codeExpr = Expression.Convert(access, typeof(object));
 
@@ -658,12 +680,49 @@ namespace LinqToDB.Linq.Builder
 						if (inheritance.IsDefault)
 							continue;
 
-						var contextRef = new ContextRefExpression(inheritance.Type, context);
+						if (inheritance.Type.IsAbstract)
+							continue;
 
-						var test = Equal(
-							MappingSchema,
-							Expression.MakeMemberAccess(contextRef, inheritance.Discriminator.MemberInfo),
-							Expression.Constant(inheritance.Code));
+						Expression test;
+
+						var discriminatorMemberInfo = inheritance.Discriminator.MemberInfo;
+
+						var onType = discriminatorMemberInfo.DeclaringType ?? inheritance.Type;
+
+						var contextRef = contextRefExpression.WithType(onType);
+						var member     = contextRef.Type.GetMemberEx(discriminatorMemberInfo);
+						member = discriminatorMemberInfo;
+						if (false)
+						{
+							//TODO: strange behaviour, Member of inheritance has no Discriminator column
+
+							var dynamicPropCall = Expression.Call(SqlExt.Property.MakeGenericMethod(discriminatorMemberInfo.GetMemberType()),
+								contextRef, Expression.Constant(discriminatorMemberInfo.Name));
+
+							var dynamicSql = ConvertToSqlPlaceholder(context, dynamicPropCall, columnDescriptor: inheritance.Discriminator);
+
+							test = new SqlReaderIsNullExpression(dynamicSql);
+
+							// throw new InvalidOperationException(
+							// 	$"Type '{contextRef.Type.Name}' has no member '{inheritance.Discriminator.MemberInfo.Name}'");
+						}
+						else
+						{
+							var memberAccess = Expression.MakeMemberAccess(contextRef, member);
+
+							if (inheritance.Code == null)
+							{
+								var discriminatorSql = ConvertToSqlPlaceholder(context, memberAccess, columnDescriptor: inheritance.Discriminator);
+								test = new SqlReaderIsNullExpression(discriminatorSql);
+							}
+							else
+							{
+								test = Equal(
+									MappingSchema,
+									memberAccess,
+									Expression.Constant(inheritance.Code));
+							}
+						}
 
 						var subConstructor = BuildFullEntityExpression(context, inheritance.Type, flags);
 

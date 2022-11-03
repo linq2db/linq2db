@@ -131,7 +131,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (SequenceHelper.IsSameContext(path, this))
 			{
-				if (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AssociationRoot))
+				if (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AssociationRoot) || flags.HasFlag(ProjectFlags.Expand))
 				{
 					if (Body is ContextRefExpression bodyRef)
 					{
@@ -140,9 +140,14 @@ namespace LinqToDB.Linq.Builder
 						return bodyRef.WithType(path.Type);
 					}
 
-					if (Body is MemberExpression me)
+					if (Body.NodeType == ExpressionType.MemberAccess)
 					{
 						return Body;
+					}
+					if (Body.NodeType == ExpressionType.TypeAs)
+					{
+						result = Builder.Project(this, path, null, 0, flags, Body, true);
+						return result;
 					}
 
 					return path;
@@ -150,6 +155,12 @@ namespace LinqToDB.Linq.Builder
 
 				if (!path.Type.IsSameOrParentOf(Body.Type) && flags.HasFlag(ProjectFlags.Expression))
 					return new SqlEagerLoadExpression((ContextRefExpression)path, path, GetEagerLoadExpression(path));
+
+				if (Body.NodeType == ExpressionType.TypeAs)
+				{
+					result = Builder.Project(this, path, null, 0, flags, Body, true);
+					return result;
+				}
 
 				result = Body;
 			}

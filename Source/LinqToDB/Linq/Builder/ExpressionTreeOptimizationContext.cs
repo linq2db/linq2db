@@ -30,6 +30,10 @@ namespace LinqToDB.Linq.Builder
 			_expandExpressionTransformer =
 				TransformVisitor<ExpressionTreeOptimizationContext>.Create(this,
 					static (ctx, expr) => ctx.ExpandExpressionTransformer(expr));
+
+			_optimizeExpressionTransformer =
+				TransformInfoVisitor<ExpressionTreeOptimizationContext>.Create(this,
+					static (ctx, expr) => ctx.OptimizeExpressionTransformer(expr));
 		}
 
 		private EqualsToVisitor.EqualsToInfo? _equalsToContextFalse;
@@ -186,6 +190,14 @@ namespace LinqToDB.Linq.Builder
 			return result;
 		}
 
+		public Expression OptimizeExpression(Expression expression)
+		{
+			var result = _optimizeExpressionTransformer.Transform(expression);
+
+			return result;
+		}
+
+
 		private TransformVisitor<ExpressionTreeOptimizationContext> _expandExpressionTransformer;
 
 		private bool _expressionDependsOnParameters;
@@ -293,6 +305,149 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			return expr;
+		}
+
+		TransformInfoVisitor<ExpressionTreeOptimizationContext> _optimizeExpressionTransformer;
+
+		public TransformInfo OptimizeExpressionTransformer(Expression expr)
+		{
+			bool IsEqualConstants(Expression left, Expression right)
+			{
+				object valueLeft;
+				object valueRight;
+				if (left is ConstantExpression leftConst)
+					valueLeft = leftConst.Value;
+				else
+					valueLeft = MappingSchema.GetDefaultValue(left.Type);
+
+				if (right is ConstantExpression rightConst)
+					valueRight = rightConst.Value;
+				else
+					valueRight = MappingSchema.GetDefaultValue(right.Type);
+
+				return Equals(valueLeft, valueRight);
+			}
+
+			bool IsEqualValues(Expression left, Expression right)
+			{
+				if ((left.NodeType  == ExpressionType.Constant || left.NodeType  == ExpressionType.Default) &&
+				    (right.NodeType == ExpressionType.Constant || right.NodeType == ExpressionType.Default))
+				{
+					return IsEqualConstants(left, right);
+				}
+
+				return false;
+			}
+
+			switch (expr.NodeType)
+			{
+				case ExpressionType.Conditional:
+				{
+					var conditional = (ConditionalExpression)expr;
+
+					if (conditional.Test is ConstantExpression constExpr && constExpr.Value is bool b)
+					{
+						return new TransformInfo(b ? conditional.IfTrue : conditional.IfFalse);
+					}
+
+					break;
+				}
+
+				case ExpressionType.Not:
+				{
+					var notExpression = (UnaryExpression)expr;
+
+					if (notExpression.Operand.NodeType == ExpressionType.Not)
+						return new TransformInfo(((UnaryExpression)notExpression.Operand).Operand, false, true);
+
+					if (notExpression.Operand.NodeType == ExpressionType.Equal)
+					{
+						var equal = (BinaryExpression)notExpression.Operand;
+						if (equal.Left.NodeType  != ExpressionType.Convert &&
+						    equal.Right.NodeType != ExpressionType.Convert)
+						{
+							return new TransformInfo(Expression.NotEqual(equal.Left, equal.Right), false, true);
+						}
+					}
+
+					if (notExpression.Operand.NodeType == ExpressionType.NotEqual)
+					{
+						var notEqual = (BinaryExpression)notExpression.Operand;
+						if (notEqual.Left.NodeType  != ExpressionType.Convert &&
+						    notEqual.Right.NodeType != ExpressionType.Convert)
+						{
+							return new TransformInfo(Expression.Equal(notEqual.Left, notEqual.Right), false, true);
+						}
+					}
+					break;
+				}
+
+				case ExpressionType.Equal:
+				{
+					var binary = (BinaryExpression)expr;
+
+					if (binary.Left is ConditionalExpression leftCond)
+					{
+						if (IsEqualValues(binary.Right, leftCond.IfTrue))
+						{
+							return new TransformInfo(leftCond.Test, false, true);
+						}
+
+						if (IsEqualValues(binary.Right, leftCond.IfFalse))
+						{
+							return new TransformInfo(Expression.Not(leftCond.Test), false, true);
+						}
+					}
+					else if (binary.Right is ConditionalExpression rightCond)
+					{
+						if (IsEqualValues(binary.Left, rightCond.IfTrue))
+						{
+							return new TransformInfo(rightCond.Test, false, true);
+						}
+
+						if (IsEqualValues(binary.Left, rightCond.IfFalse))
+						{
+							return new TransformInfo(Expression.Not(rightCond.Test), false, true);
+						}
+					}
+
+					break;
+				}
+
+				case ExpressionType.NotEqual:
+				{
+					var binary = (BinaryExpression)expr;
+
+					if (binary.Left is ConditionalExpression leftCond)
+					{
+						if (IsEqualValues(binary.Right, leftCond.IfTrue))
+						{
+							return new TransformInfo(Expression.Not(leftCond.Test), false, true);
+						}
+
+						if (IsEqualValues(binary.Right, leftCond.IfFalse))
+						{
+							return new TransformInfo(leftCond.Test, false, true);
+						}
+					}
+					else if (binary.Right is ConditionalExpression rightCond)
+					{
+						if (IsEqualValues(binary.Left, rightCond.IfTrue))
+						{
+							return new TransformInfo(Expression.Not(rightCond.Test), false, true);
+						}
+
+						if (IsEqualValues(binary.Left, rightCond.IfFalse))
+						{
+							return new TransformInfo(rightCond.Test, false, true);
+						}
+					}
+
+					break;
+				}
+			}
+
+			return new TransformInfo(expr);
 		}
 
 		#region IsServerSideOnly

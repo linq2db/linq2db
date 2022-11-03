@@ -1,11 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using System.Collections.Generic;
-using System.Data;
 using System.Data.Common;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Threading;
 using System.Runtime.CompilerServices;
 
 namespace LinqToDB.Linq.Builder
@@ -13,7 +9,6 @@ namespace LinqToDB.Linq.Builder
 	using Common;
 	using Extensions;
 	using Mapping;
-	using Common;
 	using Reflection;
 	using SqlQuery;
 	using LinqToDB.Expressions;
@@ -162,15 +157,15 @@ namespace LinqToDB.Linq.Builder
 			expression.Visit(
 				(builder: this, duplicates, visited),
 				static (ctx, e) =>
-					{
-					if (e is SqlGenericConstructorExpression || e is SqlPlaceholderExpression || e is SqlAdjustTypeExpression)
+				{
+					if (e is SqlGenericConstructorExpression || /*e is SqlPlaceholderExpression ||*/ e is SqlAdjustTypeExpression || e is SqlReaderIsNullExpression)
 					{
 						if (!ctx.visited.Add(e))
 						{
 							ctx.duplicates[e] = null;
 						}
 					}
-					});
+				});
 
 			if (duplicates.Count == 0)
 				return expression;
@@ -186,7 +181,7 @@ namespace LinqToDB.Linq.Builder
 			var corrected = expression.Transform(
 				(builder: this, duplicates),
 				static (ctx, e) =>
-								{
+				{
 					if (e.NodeType == ExpressionType.Extension && ctx.duplicates.TryGetValue(e, out var replacement))
 					{
 						return replacement;
@@ -199,7 +194,7 @@ namespace LinqToDB.Linq.Builder
 
 			var result = globalGenerator.Build();
 			return result;
-							}
+		}
 
 		Expression FinalizeProjection<T>(
 			Query<T>            query, 
@@ -208,7 +203,7 @@ namespace LinqToDB.Linq.Builder
 			ParameterExpression queryParameter, 
 			ref List<Preamble>? preambles,
 			Expression[]        previousKeys)
-							{
+		{
 			// going to parent
 
 			while (context.Parent != null)
@@ -282,7 +277,7 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		public Expression ToColumns(IBuildContext rootContext, Expression expression)
-								{
+		{
 			var info         = new QueryInformation(rootContext.SelectQuery);
 			var processedMap = new Dictionary<Expression, Expression>();
 
@@ -315,7 +310,7 @@ namespace LinqToDB.Linq.Builder
 					});
 
 			return withColumns;
-									}
+		}
 
 		static bool IsSameParentTree(QueryInformation info, SelectQuery testedQuery)
 		{
@@ -330,7 +325,7 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			return false;
-							}
+		}
 
 		public Expression UpdateNesting(IBuildContext upToContext, Expression expression)
 		{
@@ -490,7 +485,7 @@ namespace LinqToDB.Linq.Builder
 								}
 
 						case ExpressionType.MemberAccess:
-								{
+							{
 								var ma = (MemberExpression)expr;
 
 								if (context.builder.IsServerSideOnly(ma) || context.builder.PreferServerSide(ma, false) && !context.builder.HasNoneSqlMember(ma))
@@ -607,7 +602,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							if (expr is ContextRefExpression contextRef)
 							{
-								var buildExpr = context.builder.MakeExpression(context.context, contextRef, context.flags);
+								var buildExpr = context.builder.MakeExpression(contextRef.BuildContext, contextRef, context.flags);
 								if (buildExpr.Type != expr.Type)
 								{
 									buildExpr = Expression.Convert(buildExpr, expr.Type);
@@ -615,7 +610,7 @@ namespace LinqToDB.Linq.Builder
 
 								if (!ReferenceEquals(buildExpr, contextRef))
 								{
-									buildExpr = context.builder.BuildSqlExpression(context.translated, context.context,
+									buildExpr = context.builder.BuildSqlExpression(context.translated, contextRef.BuildContext,
 										buildExpr,
 										context.flags, context.alias);
 								}
@@ -646,6 +641,18 @@ namespace LinqToDB.Linq.Builder
 							}
 
 							return new TransformInfo(expr);
+						}
+
+						case ExpressionType.Conditional:
+						{
+							// Try to convert condition to the SQL
+							var asSQL = context.builder.TryConvertToSqlExpr(context.context, expr, context.flags);
+
+							if (asSQL != null)
+							{
+								return new TransformInfo(asSQL);
+							}
+							break;
 						}
 
 

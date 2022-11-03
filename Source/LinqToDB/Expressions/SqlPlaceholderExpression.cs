@@ -81,19 +81,21 @@ namespace LinqToDB.Expressions
 
 		public override string ToString()
 		{
+			var pathStr = "#" + ExpressionEqualityComparer.Instance.GetHashCode(Path)/* + " " + Path*/;
+
 			if (SelectQuery == null)
 			{
 				if (Sql is SqlColumn column)
 				{
 					var sourceId = column.Parent!.SourceID;
-					return $"SQL[{Index}]({sourceId}): {{{Sql}}}";
+					return $"SQL[{Index}]({sourceId}): {{{Sql}}} ({pathStr})";
 				}
 
-				return $"SQL: {{{Sql}}}";
+				return $"SQL: {{{Sql}}} ({pathStr})";
 
 			}
 
-			return $"SQL({SelectQuery.SourceID}): {{{Sql}}}";
+			return $"SQL({SelectQuery.SourceID}): {{{Sql}}} ({pathStr})";
 		}
 
 		protected bool Equals(SqlPlaceholderExpression other)

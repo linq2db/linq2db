@@ -17,6 +17,11 @@ namespace LinqToDB.Linq.Builder
 			return (flags & FlagsToPreserve) | ProjectFlags.Root;
 		}
 
+		public static ProjectFlags ExpandFlag(this ProjectFlags flags)
+		{
+			return (flags & FlagsToPreserve) | ProjectFlags.Expand;
+		}
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ProjectFlags SqlFlag(this ProjectFlags flags)
 		{
