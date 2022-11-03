@@ -1796,45 +1796,46 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			SqlSearchCondition GenerateConstructorComparison(SqlGenericConstructorExpression leftConstructor, SqlGenericConstructorExpression rightConstructor)
+			ISqlPredicate? GenerateConstructorComparison(SqlGenericConstructorExpression leftConstructor, SqlGenericConstructorExpression rightConstructor)
 			{
 				var searchCondition = new SqlSearchCondition();
-				GenerateConstructorComparisonRecursive(searchCondition, leftConstructor, rightConstructor);
-				return searchCondition;
-			}
+				var usedMembers     = new HashSet<MemberInfo>(MemberInfoEqualityComparer.Default);
 
-			void GenerateConstructorComparisonRecursive(SqlSearchCondition searchCondition, SqlGenericConstructorExpression leftConstructor, SqlGenericConstructorExpression rightConstructor)
-			{
-				foreach (var assignment in leftConstructor.Assignments)
+				foreach (var leftAssignment in leftConstructor.Assignments)
 				{
 					var found = rightConstructor.Assignments.FirstOrDefault(a =>
-						MemberInfoEqualityComparer.Default.Equals(a.MemberInfo, assignment.MemberInfo));
+						MemberInfoEqualityComparer.Default.Equals(a.MemberInfo, leftAssignment.MemberInfo));
 
-					if (found == null)
-						continue;
-
-					if (assignment.Expression is SqlGenericConstructorExpression subGenericLeft)
+					var rightExpression = found?.Expression;
+					if (rightExpression == null)
 					{
-						if (assignment.Expression is not SqlGenericConstructorExpression subGenericRight)
-							continue;
-						GenerateConstructorComparisonRecursive(searchCondition, subGenericLeft, subGenericRight);
-					}
-					else if (assignment.Expression is SqlPlaceholderExpression placeholderLeft && found.Expression is SqlPlaceholderExpression placeholderRight)
-					{
-						var predicate =
-							new SqlPredicate.ExprExpr(
-								placeholderLeft.Sql,
-								nodeType == ExpressionType.Equal ? SqlPredicate.Operator.Equal : SqlPredicate.Operator.NotEqual,
-								placeholderRight.Sql, Configuration.Linq.CompareNullsAsValues ? true : null);
-
-						searchCondition.Conditions.Add(new SqlCondition(false, predicate, nodeType == ExpressionType.NotEqual));
+						rightExpression = Expression.Default(leftAssignment.Expression.Type);
 					}
 					else
 					{
-						throw new InvalidOperationException(
-							$"Expression '{SqlErrorExpression.PrepareExpression(assignment.Expression)}' cannot be used for comparison.");
+						usedMembers.Add(found!.MemberInfo);
 					}
+
+					var predicate = ConvertCompare(context, nodeType, leftAssignment.Expression, rightExpression, flags);
+					if (predicate == null)
+						return null;
+					searchCondition.Conditions.Add(new SqlCondition(false, predicate, nodeType == ExpressionType.NotEqual));
 				}
+
+				foreach (var rightAssignment in rightConstructor.Assignments)
+				{
+					if (usedMembers.Contains(rightAssignment.MemberInfo))
+						continue;
+
+					var leftExpression = Expression.Default(rightAssignment.Expression.Type);
+
+					var predicate = ConvertCompare(context, nodeType, leftExpression, rightAssignment.Expression, flags);
+					if (predicate == null)
+						return null;
+					searchCondition.Conditions.Add(new SqlCondition(false, predicate, nodeType == ExpressionType.NotEqual));
+				}
+
+				return searchCondition;
 			}
 
 
@@ -1871,16 +1872,21 @@ namespace LinqToDB.Linq.Builder
 					if (l != null && r != null)
 						break;
 
-					var leftPlaceholders  = CollectDistinctPlaceholders(leftExpr);
-					var rightPlaceholders = CollectDistinctPlaceholders(rightExpr);
+					if (leftExpr is SqlGenericConstructorExpression leftGenericConstructor &&
+					    rightExpr is SqlGenericConstructorExpression rightGenericConstructor)
+					{
+						return GenerateConstructorComparison(leftGenericConstructor, rightGenericConstructor);
+					}
 
 					if (l is SqlValue lv && lv.Value == null)
 					{
+						var rightPlaceholders = CollectDistinctPlaceholders(rightExpr);
 						return GenerateNullComparison(rightPlaceholders, isNot);
 					}
 
 					if (r is SqlValue rv && rv.Value == null)
 					{
+						var leftPlaceholders = CollectDistinctPlaceholders(leftExpr);
 						return GenerateNullComparison(leftPlaceholders, isNot);
 					}
 
@@ -1892,12 +1898,6 @@ namespace LinqToDB.Linq.Builder
 					if (leftExpr is SqlGenericConstructorExpression leftGeneric && r is SqlParameter rParam)
 					{
 						return GenerateObjectComparison(leftGeneric, right);
-					}
-
-					if (leftExpr is SqlGenericConstructorExpression leftGenericConstructor &&
-					    rightExpr is SqlGenericConstructorExpression rightGenericConstructor)
-					{
-						return GenerateConstructorComparison(leftGenericConstructor, rightGenericConstructor);
 					}
 
 					return null;
