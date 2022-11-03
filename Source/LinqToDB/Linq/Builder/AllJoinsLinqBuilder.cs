@@ -69,7 +69,7 @@ namespace LinqToDB.Linq.Builder
 				innerContext = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, innerContext, null);
 			innerContext = new SubQueryContext(innerContext);
 
-			var selector = (LambdaExpression)methodCall.Arguments[methodCall.Arguments.Count - 1].Unwrap();
+			var selector = methodCall.Arguments[^1].UnwrapLambda();
 
 			outerContext.SetAlias(selector.Parameters[0].Name);
 			innerContext.SetAlias(selector.Parameters[1].Name);

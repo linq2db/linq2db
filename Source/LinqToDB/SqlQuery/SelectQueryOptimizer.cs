@@ -1162,6 +1162,12 @@ namespace LinqToDB.SqlQuery
 				}
 			}
 
+			if (isQueryOK)
+			{
+				if (query.Select.HasModifier && !parentQuery.IsSimple)
+					isQueryOK = false;
+			}
+
 			//isQueryOK = isQueryOK && (_flags.IsDistinctOrderBySupported || query.Select.IsDistinct );
 
 			if (isQueryOK && parentJoinedTable != null && parentJoinedTable.JoinType != JoinType.Inner)
@@ -1357,6 +1363,19 @@ namespace LinqToDB.SqlQuery
 
 			if (parentJoinedTable == null && query.Select.IsDistinct) 
 				_selectQuery.Select.IsDistinct = true;
+
+			if (query.Select.TakeValue != null)
+			{
+				if (_selectQuery.Select.TakeValue != null)
+					throw new InvalidOperationException();
+				_selectQuery.Select.TakeValue = query.Select.TakeValue;
+			}
+			if (query.Select.SkipValue != null)
+			{
+				if (_selectQuery.Select.SkipValue != null)
+					throw new InvalidOperationException();
+				_selectQuery.Select.SkipValue = query.Select.SkipValue;
+			}
 
 			((ISqlExpressionWalkable)top).Walk(WalkOptions.Default, (query, selectQuery: _selectQuery), static (ctx, expr) =>
 			{
