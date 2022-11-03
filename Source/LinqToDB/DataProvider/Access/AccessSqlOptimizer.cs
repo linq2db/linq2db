@@ -50,6 +50,8 @@ namespace LinqToDB.DataProvider.Access
 
 		public override SqlStatement TransformStatement(SqlStatement statement)
 		{
+			statement = CorrectUnboundedInnerJoin(statement);
+
 			return statement.QueryType switch
 			{
 				QueryType.Delete => GetAlternativeDelete((SqlDeleteStatement)statement),
@@ -70,6 +72,45 @@ namespace LinqToDB.DataProvider.Access
 
 			return statement;
 		}
+
+		SqlStatement CorrectUnboundedInnerJoin(SqlStatement statement)
+		{
+			statement.Visit(static e =>
+			{
+				if (e.ElementType == QueryElementType.SqlQuery)
+				{
+					var sqlQuery = (SelectQuery)e;
+
+					for (var tIndex = 0; tIndex < sqlQuery.From.Tables.Count; tIndex++)
+					{
+						var t = sqlQuery.From.Tables[tIndex];
+						for (int i = 0; i < t.Joins.Count; i++)
+						{
+							var join = t.Joins[i];
+							if (join.JoinType == JoinType.Inner)
+							{
+								var usedSources = new HashSet<ISqlTableSource>();
+								QueryHelper.GetUsedSources(join.Condition, usedSources);
+
+								if (usedSources.Count < 2)
+								{
+									// Convert to old style JOIN
+									sqlQuery.From.Tables.Insert(tIndex + 1, join.Table);
+									sqlQuery.From.Where.ConcatSearchCondition(join.Condition);
+
+									t.Joins.RemoveAt(i);
+									--i;
+								}
+							}
+						}
+					}
+				}
+
+			});
+
+			return statement;
+		}
+
 
 		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate, ConvertVisitor<RunOptimizationContext> visitor)
 		{

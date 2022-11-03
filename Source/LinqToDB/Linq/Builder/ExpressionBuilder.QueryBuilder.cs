@@ -184,7 +184,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					if (e.NodeType == ExpressionType.Extension && ctx.duplicates.TryGetValue(e, out var replacement))
 					{
-						return replacement;
+						return replacement!;
 					}
 
 					return e;
