@@ -297,7 +297,6 @@ namespace LinqToDB.Scaffold
 			// T4 compatibility mode use logic, similar to one, used by old T4 templates
 			if (fkName != null && settings.Transformation == NameTransformation.Association)
 			{
-				System.Diagnostics.Debugger.Launch();
 				// approximate port of SetForeignKeyMemberName T4 method.
 				// Approximate, because not all logic could be converted due to difference in generation pipeline
 
