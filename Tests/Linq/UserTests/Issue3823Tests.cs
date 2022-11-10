@@ -17,7 +17,7 @@ namespace Tests.UserTests
 
 		public class TopologyDTO : BasicDTO
 		{
-			public virtual string Name { get; set; }
+			public virtual string? Name { get; set; }
 
 			public virtual Guid ParentId { get; set; }
 		}
@@ -45,7 +45,7 @@ namespace Tests.UserTests
 			   .Property(e => e.ParentId).HasColumnName("ClientId")
 			   .Property(e => e.Id).IsPrimaryKey();
 
-			TempTable<LocationDTO> table = null;
+			TempTable<LocationDTO> table;
 			using (var db = GetDataContext(configuration, ms))
 			{
 				table = db.CreateLocalTable<LocationDTO>();
@@ -64,7 +64,7 @@ namespace Tests.UserTests
 
 			using (var db = GetDataContext(configuration, ms))
 			{
-				table = db.GetTable<LocationDTO>().ToList();
+				var data = db.GetTable<LocationDTO>().ToList();
 			}
 
 			table.Dispose();
