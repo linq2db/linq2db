@@ -31,9 +31,9 @@ namespace LinqToDB.Linq.Builder
 				TransformVisitor<ExpressionTreeOptimizationContext>.Create(this,
 					static (ctx, expr) => ctx.ExpandExpressionTransformer(expr));
 
-			_optimizeExpressionTransformer =
+			_optimizeExpressionTreeTransformer =
 				TransformInfoVisitor<ExpressionTreeOptimizationContext>.Create(this,
-					static (ctx, expr) => ctx.OptimizeExpressionTransformer(expr));
+					static (ctx, expr) => ctx.OptimizeExpressionTreeTransformer(expr));
 		}
 
 		private EqualsToVisitor.EqualsToInfo? _equalsToContextFalse;
@@ -169,7 +169,7 @@ namespace LinqToDB.Linq.Builder
 				var mc = (MethodCallExpression)expr;
 				if (typeof(IQueryable<>).IsSameOrParentOf(mc.Type)
 					&& !mc.IsQueryable(false)
-					&& CanBeCompiled(mc))
+					&& CanBeCompiled(mc, false))
 				{
 					var queryable = (IQueryable)mc.EvaluateExpression()!;
 
@@ -190,9 +190,16 @@ namespace LinqToDB.Linq.Builder
 			return result;
 		}
 
-		public Expression OptimizeExpression(Expression expression)
+		public Expression OptimizeExpressionTree(Expression expression)
 		{
-			var result = _optimizeExpressionTransformer.Transform(expression);
+			var result = expression;
+			do
+			{
+				var prevExpression = result;
+				result = _optimizeExpressionTreeTransformer.Transform(prevExpression);
+				if (prevExpression == result)
+					break;
+			} while (true);
 
 			return result;
 		}
@@ -291,7 +298,7 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.Conditional:
 				{
 					var conditional = (ConditionalExpression)expr;
-					if (CanBeCompiled(conditional.Test))
+					if (CanBeCompiled(conditional.Test, false))
 					{
 						var testValue = conditional.Test.EvaluateExpression();
 						if (testValue is bool test)
@@ -307,36 +314,71 @@ namespace LinqToDB.Linq.Builder
 			return expr;
 		}
 
-		TransformInfoVisitor<ExpressionTreeOptimizationContext> _optimizeExpressionTransformer;
+		TransformInfoVisitor<ExpressionTreeOptimizationContext> _optimizeExpressionTreeTransformer;
 
-		public TransformInfo OptimizeExpressionTransformer(Expression expr)
+		public TransformInfo OptimizeExpressionTreeTransformer(Expression expr)
 		{
 			bool IsEqualConstants(Expression left, Expression right)
 			{
 				object valueLeft;
 				object valueRight;
+
 				if (left is ConstantExpression leftConst)
 					valueLeft = leftConst.Value;
+				else if (left is SqlPlaceholderExpression leftPlaceholder)
+					valueLeft = ((SqlValue)leftPlaceholder.Sql).Value;
 				else
 					valueLeft = MappingSchema.GetDefaultValue(left.Type);
 
 				if (right is ConstantExpression rightConst)
 					valueRight = rightConst.Value;
+				else if (right is SqlPlaceholderExpression rightPlaceholder)
+					valueRight = ((SqlValue)rightPlaceholder.Sql).Value;
 				else
 					valueRight = MappingSchema.GetDefaultValue(right.Type);
 
 				return Equals(valueLeft, valueRight);
 			}
 
+			bool isComparable(Expression testExpr)
+			{
+				return testExpr.NodeType == ExpressionType.Constant || testExpr.NodeType == ExpressionType.Default ||
+				       testExpr is DefaultValueExpression;
+			}
+
 			bool IsEqualValues(Expression left, Expression right)
 			{
-				if ((left.NodeType  == ExpressionType.Constant || left.NodeType  == ExpressionType.Default) &&
-				    (right.NodeType == ExpressionType.Constant || right.NodeType == ExpressionType.Default))
+				if (isComparable(left) && isComparable(right))
 				{
 					return IsEqualConstants(left, right);
 				}
 
 				return false;
+			}
+
+			bool? IsNull(Expression testExpr)
+			{
+				if (testExpr.Type.IsValueType)
+					return null;
+
+				if (testExpr.NodeType == ExpressionType.Constant)
+				{
+					return ((ConstantExpression)testExpr).Value == null;
+				}
+				if (testExpr.NodeType == ExpressionType.Default)
+				{
+					return true;
+				}
+				if (testExpr.NodeType == ExpressionType.New || testExpr.NodeType == ExpressionType.MemberInit)
+				{
+					return false;
+				}
+				if (testExpr is DefaultValueExpression)
+				{
+					return true;
+				}
+
+				return null;
 			}
 
 			switch (expr.NodeType)
@@ -411,6 +453,14 @@ namespace LinqToDB.Linq.Builder
 						}
 					}
 
+					var isNullLeft  = IsNull(binary.Left);
+					var isNullRight = IsNull(binary.Right);
+
+					if (isNullLeft != null && isNullRight != null)
+					{
+						return new TransformInfo(Expression.Constant(isNullLeft == isNullRight));
+					}
+
 					break;
 				}
 
@@ -441,6 +491,14 @@ namespace LinqToDB.Linq.Builder
 						{
 							return new TransformInfo(rightCond.Test, false, true);
 						}
+					}
+
+					var isNullLeft  = IsNull(binary.Left);
+					var isNullRight = IsNull(binary.Right);
+
+					if (isNullLeft != null && isNullRight != null)
+					{
+						return new TransformInfo(Expression.Constant(isNullLeft != isNullRight));
 					}
 
 					break;
@@ -583,7 +641,7 @@ namespace LinqToDB.Linq.Builder
 			ExpressionBuilder.DataContextParam
 		};
 
-		public bool CanBeCompiled(Expression expr)
+		public bool CanBeCompiled(Expression expr, bool inProjection)
 		{
 			if (_lastExpr2 == expr)
 				return _lastResult2;
@@ -591,7 +649,7 @@ namespace LinqToDB.Linq.Builder
 			// context allocation is cheaper than HashSet allocation
 			// and HashSet allocation is rare
 
-			var result = null == GetCanBeCompiledVisitor().Find(expr);
+			var result = null == GetCanBeCompiledVisitor(inProjection).Find(expr);
 
 			_lastExpr2 = expr;
 			return _lastResult2 = result;
@@ -599,8 +657,11 @@ namespace LinqToDB.Linq.Builder
 
 		internal class CanBeCompiledContext
 		{
-			public CanBeCompiledContext(ExpressionTreeOptimizationContext optimizationContext)
+			public bool InProjection { get; }
+
+			public CanBeCompiledContext(ExpressionTreeOptimizationContext optimizationContext, bool inProjection)
 			{
+				InProjection        = inProjection;
 				OptimizationContext = optimizationContext;
 				AllowedParams       = DefaultAllowedParams;
 			}
@@ -616,17 +677,29 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private FindVisitor<CanBeCompiledContext> GetCanBeCompiledVisitor()
+		private FindVisitor<CanBeCompiledContext> GetCanBeCompiledVisitor(bool inProjection)
 		{
-			if (_canBeCompiledFindVisitor == null)
-				_canBeCompiledFindVisitor = FindVisitor<CanBeCompiledContext>.Create(new CanBeCompiledContext(this), static (ctx, e) => ctx.OptimizationContext.CanBeCompiledFind(ctx, e));
-			else
-				_canBeCompiledFindVisitor.Value.Context!.Reset();
+			if (_canBeCompiledFindVisitors == null)
+				_canBeCompiledFindVisitors = new FindVisitor<CanBeCompiledContext>?[2];
 
-			return _canBeCompiledFindVisitor.Value;
+			var idx = inProjection ? 1 : 0;
+
+			if (_canBeCompiledFindVisitors[idx] == null)
+			{
+				_canBeCompiledFindVisitors[idx] = FindVisitor<CanBeCompiledContext>.Create(
+					new CanBeCompiledContext(this, inProjection),
+					static (ctx, e) => ctx.OptimizationContext.CanBeCompiledFind(ctx, e));
+			}	
+			else
+			{
+				_canBeCompiledFindVisitors[idx]!.Value.Context!.Reset();
+			}
+
+			return _canBeCompiledFindVisitors[idx]!.Value;
 		}
 
-		private FindVisitor<CanBeCompiledContext>? _canBeCompiledFindVisitor;
+		FindVisitor<CanBeCompiledContext>?[]? _canBeCompiledFindVisitors;
+
 		private bool CanBeCompiledFind(CanBeCompiledContext context, Expression ex)
 		{
 			if (IsServerSideOnly(ex))
@@ -681,7 +754,7 @@ namespace LinqToDB.Linq.Builder
 					if (ex is SqlErrorExpression)
 						return true;
 					if (ex is SqlPlaceholderExpression)
-						return true;
+						return !context.InProjection; // placeholder will be converted to DataReader expression
 					if (ex is SqlGenericParamAccessExpression)
 						return true;
 					return !ex.CanReduce;
@@ -808,7 +881,7 @@ namespace LinqToDB.Linq.Builder
 					//	return new TransformInfo(Expression.Convert(me.Expression!, me.Type), false, true);
 					//}
 
-					if (CanBeCompiled(expr))
+					if (CanBeCompiled(expr, true))
 						break;
 
 					var l  = ConvertMethodExpression(me.Expression?.Type ?? me.Member.ReflectedType!, me.Member, out var alias);
@@ -1112,7 +1185,7 @@ namespace LinqToDB.Linq.Builder
 						}
 
 						var attr = pi.Member.GetExpressionAttribute(MappingSchema);
-						return attr != null && (attr.PreferServerSide || enforceServerSide) && !CanBeCompiled(expr);
+						return attr != null && (attr.PreferServerSide || enforceServerSide) && !CanBeCompiled(expr, true);
 					}
 
 				case ExpressionType.Call:
@@ -1124,7 +1197,7 @@ namespace LinqToDB.Linq.Builder
 							return GetVisitor(enforceServerSide).Find(l.Body.Unwrap()) != null;
 
 						var attr = pi.Method.GetExpressionAttribute(MappingSchema);
-						return attr != null && (attr.PreferServerSide || enforceServerSide) && !CanBeCompiled(expr);
+						return attr != null && (attr.PreferServerSide || enforceServerSide) && !CanBeCompiled(expr, true);
 					}
 				default:
 					{

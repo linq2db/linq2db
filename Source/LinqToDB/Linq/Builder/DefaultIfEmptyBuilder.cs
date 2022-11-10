@@ -46,7 +46,7 @@ namespace LinqToDB.Linq.Builder
 				var expr = base.MakeExpression(path, flags);
 
 				if (!Disabled && flags.HasFlag(ProjectFlags.Expression) && SequenceHelper.IsSameContext(path, this))
-					{
+				{
 					expr = Builder.BuildSqlExpression(new Dictionary<Expression, Expression>(), this, expr, flags);
 
 					var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(expr);
@@ -63,7 +63,7 @@ namespace LinqToDB.Linq.Builder
 					var defaultValue = DefaultValue ?? new DefaultValueExpression(Builder.MappingSchema, expr.Type);
 
 					expr = Expression.Condition(new SqlReaderIsNullExpression(notNull), defaultValue, expr);
-									}
+				}
 
 				return expr;
 				}

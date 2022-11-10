@@ -181,10 +181,16 @@ namespace Tests.Linq
 		public void GroupBy2([DataSources] string context)
 		{
 			using (new GuardGrouping(false))
-			using (var db = GetDataContext(context))
+			{
+				using var db = GetDataContext(context);
+
+				var xx = (from ch in db.Child group ch by ch.Parent1).ToList();
+
+
 				AreEqual(
 					(from ch in    Child group ch by ch.Parent1).ToList().Select(g => g.Key),
 					(from ch in db.Child group ch by ch.Parent1).ToList().Select(g => g.Key));
+			}
 		}
 
 		[Test]

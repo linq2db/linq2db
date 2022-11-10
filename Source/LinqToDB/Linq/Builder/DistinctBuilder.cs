@@ -27,21 +27,24 @@ namespace LinqToDB.Linq.Builder
 
 			var subQueryContext = new SubQueryContext(sequence);
 
-			sequence.SelectQuery.Select.IsDistinct = true;
+			subQueryContext.SelectQuery.Select.IsDistinct = true;
+
+			var outerSubqueryContext = new SubQueryContext(subQueryContext);
 
 			// We do not need all fields for SelectDistinct
 			//
 			if (methodCall.IsSameGenericMethod(Methods.LinqToDB.SelectDistinct))
 			{
-				sequence.SelectQuery.Select.OptimizeDistinct = true;
+				subQueryContext.SelectQuery.Select.OptimizeDistinct = true;
 			}
 			else
 			{
 				// create all columns
-				_ = builder.ConvertToSqlExpr(subQueryContext, new ContextRefExpression(methodCall.Arguments[0].Type, sequence), buildInfo.GetFlags());
+				var sqlExpr = builder.ConvertToSqlExpr(subQueryContext, new ContextRefExpression(methodCall.Method.GetGenericArguments()[0], sequence), buildInfo.GetFlags());
+				builder.UpdateNesting(outerSubqueryContext, sqlExpr);
 			}
 
-			return new DistinctContext(subQueryContext);
+			return new DistinctContext(outerSubqueryContext);
 		}
 
 		protected override SequenceConvertInfo? Convert(
@@ -61,10 +64,13 @@ namespace LinqToDB.Linq.Builder
 				if (SequenceHelper.IsSameContext(path, this) && (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AssociationRoot)))
 					return path;
 
+				//flags = flags.SqlFlag();
+				/*
 				if (flags.HasFlag(ProjectFlags.Expression))
 				{
 					flags = flags & ~ProjectFlags.Expression | ProjectFlags.SQL;
 				}
+				*/
 				
 				return base.MakeExpression(path, flags);
 			}

@@ -331,7 +331,7 @@ namespace LinqToDB.Linq.Builder
 								if (flags.HasFlag(ProjectFlags.Expression))
 								{
 									throw new NotImplementedException();
-									return new SqlEagerLoadExpression(null!, path, Builder.GetSequenceExpression(this));
+									return new SqlEagerLoadExpression((ContextRefExpression)path, path, Builder.GetSequenceExpression(this));
 								}
 							}
 						}

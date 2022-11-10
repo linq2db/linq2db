@@ -111,7 +111,13 @@ namespace LinqToDB.Linq.Builder
 
 			public Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
-				throw new NotImplementedException();
+				if (SequenceHelper.IsSameContext(path, this))
+				{
+					var expression = ((LambdaExpression)Expression!).Body.Unwrap();
+					return expression;
+				}
+
+				return path;
 			}
 
 			public IBuildContext Clone(CloningContext context)

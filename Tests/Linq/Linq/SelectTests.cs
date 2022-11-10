@@ -756,7 +756,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var query1 = from p in db.Parent
-					from c in db.Child.Where(c => c.ParentID == p.ParentID)
+					from c in db.Child.LoadWith(c => c.Parent).Where(c => c.ParentID == p.ParentID)
 					select new
 					{
 						Info1 = p != null ? new { p.ParentID, p.Value1 } : null,

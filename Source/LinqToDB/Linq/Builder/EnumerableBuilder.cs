@@ -38,7 +38,7 @@ namespace LinqToDB.Linq.Builder
 			if (collectionType == null)
 				return false;
 
-			if (!builder.CanBeCompiled(expr))
+			if (!builder.CanBeCompiled(expr, buildInfo.CreateSubQuery))
 				return false;
 
 			switch (expr.NodeType)

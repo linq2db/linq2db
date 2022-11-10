@@ -1426,7 +1426,7 @@ namespace LinqToDB.Linq.Builder
 
 							callExpression = callExpression.Update(callExpression.Object,
 								new[] { fakeQuery.Expression }.Concat(callExpression.Arguments.Skip(1)));
-							if (CanBeCompiled(callExpression))
+							if (CanBeCompiled(callExpression, false))
 							{
 								if (!(callExpression.EvaluateExpression() is IQueryable appliedQuery))
 									throw new LinqToDBException($"Method call '{expression}' returned null value.");

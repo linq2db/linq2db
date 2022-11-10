@@ -72,6 +72,13 @@ namespace LinqToDB.Expressions
 			}
 		}
 
+		SqlGenericConstructorExpression()
+		{
+			Parameters  = null!;
+			Assignments = null!;
+			ObjectType  = null!;
+		}
+
 		public SqlGenericConstructorExpression(CreateType createType, Type objectType, ReadOnlyCollection<Parameter>? parameters, ReadOnlyCollection<Assignment>? assignments) : this()
 		{
 			ObjectType    = objectType;
@@ -242,8 +249,9 @@ namespace LinqToDB.Expressions
 		public ReadOnlyCollection<Parameter>  Parameters  { get; private set; }
 		public ReadOnlyCollection<Assignment> Assignments { get; private set; }
 
-		public override ExpressionType NodeType => ExpressionType.Extension;
-		public override Type           Type     => ObjectType;
+		public override ExpressionType NodeType  => ExpressionType.Extension;
+		public override Type           Type      => ObjectType;
+		public override bool           CanReduce => true;
 
 		public override string ToString()
 		{
@@ -274,13 +282,6 @@ namespace LinqToDB.Expressions
 			New,
 			MemberInit,
 			MethodCall
-		}
-
-		SqlGenericConstructorExpression()
-		{
-			Parameters  = null!;
-			Assignments = null!;
-			ObjectType  = null!;
 		}
 
 		public SqlGenericConstructorExpression AppendAssignment(Assignment assignment)

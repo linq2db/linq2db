@@ -162,10 +162,10 @@ namespace LinqToDB.Linq.Builder
 
 				var subQueryCtx = (SubQueryContext)Sequence;
 
-				var testPlaceholder = Builder.TryConvertToSqlExpr(Parent, expr, flags) as SqlPlaceholderExpression;
+				var testPlaceholder = Builder.TryConvertToSqlPlaceholder(Parent, expr, flags) as SqlPlaceholderExpression;
 
 				var contextRef = new ContextRefExpression(args[0], subQueryCtx.SubQuery);
-				var sequencePlaceholder = Builder.TryConvertToSqlExpr(subQueryCtx.SubQuery, contextRef, flags) as SqlPlaceholderExpression;
+				var sequencePlaceholder = Builder.TryConvertToSqlPlaceholder(subQueryCtx.SubQuery, contextRef, flags) as SqlPlaceholderExpression;
 
 				SqlCondition cond;
 

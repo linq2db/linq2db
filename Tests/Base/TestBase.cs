@@ -1349,7 +1349,7 @@ namespace Tests
 			{
 				if (!loaded.TryGetValue(eType, out var itemsExpression))
 				{
-					var newCall = LinqToDB.Common.TypeHelper.MakeMethodCall(Methods.Queryable.ToArray, tableExpression);
+					var newCall = TypeHelper.MakeMethodCall(Methods.Queryable.ToArray, tableExpression);
 					using (new DisableLogging())
 					{
 						var items = newCall.EvaluateExpression();
@@ -1359,7 +1359,7 @@ namespace Tests
 				}
 
 				var queryCall =
-					LinqToDB.Common.TypeHelper.MakeMethodCall(Methods.Enumerable.AsQueryable,
+					TypeHelper.MakeMethodCall(Methods.Enumerable.AsQueryable,
 						itemsExpression);
 
 				return queryCall;
@@ -1374,7 +1374,7 @@ namespace Tests
 					if (mc.Method.Name == nameof(Methods.LinqToDB.AsSubQuery))
 						return new TransformInfo(mc.Arguments[0], false, true);
 
-					if (typeof(ITable<>).IsSameOrParentOf(mc.Type))
+					if (typeof(ITable<>).IsSameOrParentOf(mc.Type) || typeof(ILoadWithQueryable<,>).IsSameOrParentOf(mc.Type))
 					{
 						var entityType = mc.Method.ReturnType.GetGenericArguments()[0];
 

@@ -620,7 +620,7 @@ namespace LinqToDB.Linq
 		{
 			var executeQuery = query.GetResultEnumerable;
 			destQuery.GetResultEnumerable = (db, expr, ps, preambles) => wrapper(executeQuery(db, expr, ps, preambles));
-			}
+		}
 
 		static void SetRunQuery<T>(
 			Query<T> query,

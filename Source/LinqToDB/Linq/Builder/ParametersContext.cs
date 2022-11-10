@@ -54,7 +54,7 @@ namespace LinqToDB.Linq.Builder
 				if (OptimizationContext.CanBeConstant(expression))
 					return null;
 
-				if (OptimizationContext.CanBeCompiled(expression))
+				if (OptimizationContext.CanBeCompiled(expression, false))
 				{
 					return BuildParameter(expression, null);
 				}
@@ -80,10 +80,10 @@ namespace LinqToDB.Linq.Builder
 			InPredicate
 		}
 
-		public ParameterAccessor BuildParameter(Expression expr, ColumnDescriptor? columnDescriptor, bool forceConstant = false,
+		public ParameterAccessor BuildParameter(Expression expr, ColumnDescriptor? columnDescriptor, bool forceConstant = false, string? alias = null,
 			BuildParameterType buildParameterType = BuildParameterType.Default)
 		{
-			string? name = null;
+			string? name = alias;
 
 			var newExpr = ReplaceParameter(_expressionAccessors, expr, forceConstant, nm => name = nm);
 

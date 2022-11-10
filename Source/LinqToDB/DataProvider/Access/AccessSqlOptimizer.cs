@@ -50,7 +50,7 @@ namespace LinqToDB.DataProvider.Access
 
 		public override SqlStatement TransformStatement(SqlStatement statement)
 		{
-			statement = CorrectUnboundedInnerJoin(statement);
+			statement = CorrectInnerJoins(statement);
 
 			return statement.QueryType switch
 			{
@@ -73,7 +73,7 @@ namespace LinqToDB.DataProvider.Access
 			return statement;
 		}
 
-		SqlStatement CorrectUnboundedInnerJoin(SqlStatement statement)
+		SqlStatement CorrectInnerJoins(SqlStatement statement)
 		{
 			statement.Visit(static e =>
 			{
@@ -89,12 +89,40 @@ namespace LinqToDB.DataProvider.Access
 							var join = t.Joins[i];
 							if (join.JoinType == JoinType.Inner)
 							{
-								var usedSources = new HashSet<ISqlTableSource>();
-								QueryHelper.GetUsedSources(join.Condition, usedSources);
+								bool moveUp = false;
 
-								if (usedSources.Count < 2)
+								if (join.Table.Joins.Count > 0 && join.Table.Joins[0].JoinType == JoinType.Inner)
+								{
+									// INNER JOIN Table1 t1
+									//		INNER JOIN Table2 t2 ON ...
+									// ON t1.Field = t2.Field
+									//
+
+									var usedSources = new HashSet<ISqlTableSource>();
+									QueryHelper.GetUsedSources(join.Condition, usedSources);
+
+									if (usedSources.Contains(join.Table.Joins[0].Table.Source))
+									{
+										moveUp = true;
+									}
+								}
+								else
+								{
+									// Check for join with unbounded condition
+									//
+									// INNER JOIN Table1 t1 ON other.Field = 1
+									//
+
+									var usedSources = new HashSet<ISqlTableSource>();
+									QueryHelper.GetUsedSources(join.Condition, usedSources);
+
+									moveUp = usedSources.Count < 2;
+								}
+
+								if (moveUp)
 								{
 									// Convert to old style JOIN
+									//
 									sqlQuery.From.Tables.Insert(tIndex + 1, join.Table);
 									sqlQuery.From.Where.ConcatSearchCondition(join.Condition);
 

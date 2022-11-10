@@ -839,7 +839,7 @@ namespace LinqToDB.SqlQuery
 			foreach (var source in QueryHelper.EnumerateAccessibleSources(query))
 			{
 				accessibleSources.Add(source);
-				if (source is SelectQuery q && (q.From.Tables.Count != 1 || QueryHelper.EnumerateJoins(q).Any()))
+				if (source is SelectQuery q && (q.From.Tables.Count != 1 || q.GroupBy.IsEmpty && QueryHelper.EnumerateJoins(q).Any()))
 				{
 					complexFound = true;
 					break;
@@ -1135,7 +1135,15 @@ namespace LinqToDB.SqlQuery
 
 			var query = (SelectQuery)childSource.Source;
 
-			var isQueryOK = !query.DoNotRemove && query.From.Tables.Count == 1;
+			var isQueryOK = !query.DoNotRemove;
+
+			if (isQueryOK)
+			{
+				if (query.From.Tables.Count > 1)
+				{
+					isQueryOK = !parentQuery.Select.HasModifier;
+				}
+			}
 
 			if (parentJoinedTable != null)
 				isQueryOK = isQueryOK && query.Having.IsEmpty;
