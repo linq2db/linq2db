@@ -134,6 +134,71 @@ namespace LinqToDB.Linq.Builder
 			return result;
 		}
 
+		bool CanBeCompiledQueryableArguments(MethodCallExpression mc)
+		{
+			//TODO: revise CanBeCompiled
+
+			/*
+			for(var i = 1; i < mc.Arguments.Count; i++)
+			{
+				if (!CanBeCompiled(mc.Arguments[i], false))
+					return false;
+			}
+
+			*/
+			return true;
+		}
+
+		List<(LambdaExpression, bool)>? CollectOrderBy(Expression sequenceExpression)
+		{
+			sequenceExpression = sequenceExpression.UnwrapConvert();
+			var current = sequenceExpression;
+
+			List<(LambdaExpression, bool)>? result = null;
+
+			while (current is MethodCallExpression mc && mc.IsQueryable())
+			{
+				if (mc.IsQueryable(nameof(Enumerable.ThenBy)))
+				{
+					if (!CanBeCompiledQueryableArguments(mc))
+						break;
+					result ??= new ();
+					result.Add((mc.Arguments[1].UnwrapLambda(), false));
+				}
+				else if (mc.IsQueryable(nameof(Enumerable.ThenByDescending)))
+				{
+					if (!CanBeCompiledQueryableArguments(mc))
+						break;
+					result ??= new ();
+					result.Add((mc.Arguments[1].UnwrapLambda(), true));
+				}
+				else if (mc.IsQueryable(nameof(Enumerable.OrderBy)))
+				{
+					if (!CanBeCompiledQueryableArguments(mc))
+						break;
+					result ??= new ();
+					result.Add((mc.Arguments[1].UnwrapLambda(), false));
+					break;
+				}
+				else if (mc.IsQueryable(nameof(Enumerable.OrderByDescending)))
+				{
+					if (!CanBeCompiledQueryableArguments(mc))
+						break;
+					result ??= new ();
+					result.Add((mc.Arguments[1].UnwrapLambda(), true));
+					break;
+				}
+
+				current = mc.Arguments[0];
+				if (!mc.Type.IsSameOrParentOf(current.Type))
+					break;
+			}
+
+			result?.Reverse();
+
+			return result;
+		}
+
 		Expression ProcessEagerLoadingExpression(
 			IBuildContext          buildContext,  
 			SqlEagerLoadExpression eagerLoad,
@@ -187,6 +252,8 @@ namespace LinqToDB.Linq.Builder
 			}
 			else
 			{
+				var orderByToApply = CollectOrderBy(correctedSequence);
+
 				var mainKeyExpression   = GenerateKeyExpression(mainKeys, 0);
 				var detailKeyExpression = GenerateKeyExpression(detailKeys, 0);
 
@@ -252,7 +319,7 @@ namespace LinqToDB.Linq.Builder
 				var detailSequence = BuildSequence(new BuildInfo((IBuildContext?)null, selectManyCall,
 					clonedParentContextRef.BuildContext.SelectQuery));
 
-				var parameters = new object[] { detailSequence, mainKeyExpression, selectManyCall, queryParameter, preambles, detailKeys };
+				var parameters = new object?[] { detailSequence, mainKeyExpression, selectManyCall, queryParameter, preambles, orderByToApply, detailKeys };
 
 				resultExpression = (Expression)_buildPreambleQueryAttachedMethodInfo
 					.MakeGenericMethod(mainKeyExpression.Type, detailType)
@@ -266,6 +333,23 @@ namespace LinqToDB.Linq.Builder
 			resultExpression = AdjustType(resultExpression, eagerLoad.Type, MappingSchema);
 
 			return resultExpression;
+		}
+
+		static Expression ApplyEnumerableOrderBy(Expression queryExpr, List<(LambdaExpression, bool)> orderBy)
+		{
+			var isFirst = true;
+			foreach (var order in orderBy)
+			{
+				var methodName =
+					isFirst ? order.Item2 ? nameof(Queryable.OrderByDescending) : nameof(Queryable.OrderBy)
+					: order.Item2 ? nameof(Queryable.ThenByDescending) : nameof(Queryable.ThenBy);
+
+				var lambda = order.Item1;
+				queryExpr = Expression.Call(typeof(Enumerable), methodName, new[] { lambda.Parameters[0].Type, lambda.Body.Type }, queryExpr, lambda);
+				isFirst = false;
+			}
+
+			return queryExpr;
 		}
 
 		static MethodInfo _buildSelectManyDetailSelectorInfo =
@@ -285,6 +369,7 @@ namespace LinqToDB.Linq.Builder
 			Expression          queryExpression, 
 			ParameterExpression queryParameter,
 			List<Preamble>      preambles,
+			List<(LambdaExpression, bool)>? additionalOrderBy,
 			Expression[]        previousKeys) 
 			where TKey : notnull
 		{
@@ -300,10 +385,15 @@ namespace LinqToDB.Linq.Builder
 
 			var getListMethod = MemberHelper.MethodOf((PreambleResult<TKey, T> c) => c.GetList(default!));
 
-			var resultExpression =
+			Expression resultExpression =
 				Expression.Call(
 					Expression.Convert(Expression.ArrayIndex(PreambleParam, ExpressionInstances.Int32(idx)),
 						typeof(PreambleResult<TKey, T>)), getListMethod, keyExpression);
+
+			if (additionalOrderBy != null)
+			{
+				resultExpression = ApplyEnumerableOrderBy(resultExpression, additionalOrderBy);
+			}
 
 
 			return resultExpression;

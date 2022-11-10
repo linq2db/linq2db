@@ -296,14 +296,14 @@ namespace LinqToDB.SqlQuery
 					case QueryElementType.Column:
 					{
 						var c = (SqlColumn) e;
-						if (context.hash.Contains(c.Parent!))
+						if (c.Parent != null && context.hash.Contains(c.Parent))
 							context.found.Add(c);
 						break;
 					}
 					case QueryElementType.SqlField:
 					{
 						var f = (SqlField) e;
-						if (context.hash.Contains(f.Table!))
+						if (f.Table != null && context.hash.Contains(f.Table))
 							context.found.Add(f);
 						break;
 					}

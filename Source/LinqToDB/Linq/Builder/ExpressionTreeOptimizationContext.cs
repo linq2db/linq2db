@@ -633,6 +633,7 @@ namespace LinqToDB.Linq.Builder
 		#region CanBeCompiled
 
 		Expression? _lastExpr2;
+		bool        _lastInProjection2;
 		bool        _lastResult2;
 
 		static HashSet<Expression> DefaultAllowedParams = new ()
@@ -643,7 +644,7 @@ namespace LinqToDB.Linq.Builder
 
 		public bool CanBeCompiled(Expression expr, bool inProjection)
 		{
-			if (_lastExpr2 == expr)
+			if (_lastExpr2 == expr && _lastInProjection2 == inProjection)
 				return _lastResult2;
 
 			// context allocation is cheaper than HashSet allocation
@@ -651,8 +652,10 @@ namespace LinqToDB.Linq.Builder
 
 			var result = null == GetCanBeCompiledVisitor(inProjection).Find(expr);
 
-			_lastExpr2 = expr;
-			return _lastResult2 = result;
+			_lastExpr2         = expr;
+			_lastResult2       = result;
+			_lastInProjection2 = inProjection;
+			return result;
 		}
 
 		internal class CanBeCompiledContext

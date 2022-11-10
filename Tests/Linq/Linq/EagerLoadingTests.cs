@@ -759,7 +759,7 @@ FROM
 						Detail = dd,
 						DetailAssociated = dd.SubDetails,
 						DetailAssociatedFiltered = dd.SubDetails.OrderBy(sd => sd.SubDetailValue).Take(10).ToArray(),
-						Masters = master.Where(mm => m.Id1 == dd.MasterId).OrderBy(mm => mm.Value).Take(10).ToArray()
+						Masters = master.Where(mm => mm.Id1 == dd.MasterId).OrderBy(mm => mm.Value).Take(10).ToArray()
 					};
 
 				var expectedQuery = from m in masterRecords.OrderByDescending(m => m.Id2).Take(20)
@@ -771,7 +771,7 @@ FROM
 						Detail = dd,
 						DetailAssociated = subDetailRecords.Where(sd => sd.DetailId == dd.DetailId).ToArray(),
 						DetailAssociatedFiltered = subDetailRecords.OrderBy(sd => sd.SubDetailValue).Where(sd => sd.DetailId == dd.DetailId).Take(10).ToArray(),
-						Masters = masterRecords.Where(mm => m.Id1 == dd.MasterId).OrderBy(mm => mm.Value).Take(10).ToArray()
+						Masters = masterRecords.Where(mm => mm.Id1 == dd.MasterId).OrderBy(mm => mm.Value).Take(10).ToArray()
 					};
 
 				var result   = query.ToArray();

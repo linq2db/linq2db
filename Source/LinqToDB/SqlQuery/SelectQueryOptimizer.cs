@@ -1,6 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
@@ -1136,8 +1135,75 @@ namespace LinqToDB.SqlQuery
 				if (isApplySupported && isAgg)
 					return;
 
-				if (sql.Select.HasModifier)
-					throw new NotImplementedException("Translating to ROW_NUMBER query is not implemented yet.");
+				var skipValue = sql.Select.SkipValue;
+				var takeValue = sql.Select.TakeValue;
+
+				ISqlExpression?       rnExpression = null;
+				List<ISqlExpression>? partitionBy  = null;
+
+				if (skipValue != null || takeValue != null)
+				{
+					List<ISqlExpression> parameters = new List<ISqlExpression>();
+
+					var sources          = QueryHelper.EnumerateAccessibleSources(sql).ToArray();
+					var found            = new HashSet<ISqlExpression>();
+					QueryHelper.CollectDependencies(sql.Where, sources, found);
+					if (found.Count > 0)
+					{
+						partitionBy = found.ToList();
+					}
+
+					var rnBuilder = new StringBuilder(); 
+					rnBuilder.Append("ROW_NUMBER() OVER (");
+
+					if (partitionBy != null)
+					{
+						rnBuilder.Append("PARTITION BY ");
+						for (int i = 0; i < partitionBy.Count; i++)
+						{
+							if (i > 0)
+								rnBuilder.Append(", ");
+
+							rnBuilder.Append($"{{{parameters.Count}}}");
+							parameters.Add(partitionBy[i]);
+						}
+					}
+
+
+					var orderByItems = sql.OrderBy.Items.ToList();
+
+					if (sql.OrderBy.IsEmpty)
+					{
+						if (partitionBy == null)
+							throw new InvalidOperationException("OrderBy not specified for limited recordset.");
+						orderByItems.Add(new SqlOrderByItem(partitionBy[0], false));
+					}
+
+					if (orderByItems.Count > 0)
+					{
+						if (partitionBy != null)
+							rnBuilder.Append(' ');
+
+						rnBuilder.Append("ORDER BY ");
+						for (int i = 0; i < orderByItems.Count; i++)
+						{
+							if (i > 0)
+								rnBuilder.Append(", ");
+
+							var orderItem = orderByItems[i];
+							rnBuilder.Append($"{{{parameters.Count}}}");
+							if (orderItem.IsDescending)
+								rnBuilder.Append(" DESC");
+
+							parameters.Add(orderItem.Expression);
+						}
+					}
+
+					rnBuilder.Append(')');
+
+					rnExpression = new SqlExpression(typeof(long), rnBuilder.ToString(), Precedence.Primary,
+						SqlFlags.IsWindowFunction, parameters.ToArray());
+				}
 
 				var whereToIgnore = new HashSet<IQueryElement> { sql.Where, sql.Select };
 
@@ -1164,6 +1230,35 @@ namespace LinqToDB.SqlQuery
 							searchCondition.Insert(0, condition);
 							conditions.RemoveAt(i);
 						}
+					}
+				}
+
+				if (rnExpression != null)
+				{
+					// processing ROW_NUMBER
+
+					var rnColumn = sql.Select.AddNewColumn(rnExpression);
+
+					sql.Select.SkipValue = null;
+					sql.Select.TakeValue = null;
+
+					if (skipValue != null)
+					{
+						searchCondition.Add(new SqlCondition(false,
+							new SqlPredicate.ExprExpr(rnColumn, SqlPredicate.Operator.Greater, skipValue, null)));
+
+						if (takeValue != null)
+						{
+							searchCondition.Add(new SqlCondition(false, new SqlPredicate.ExprExpr(rnColumn,
+								SqlPredicate.Operator.LessOrEqual, new SqlBinaryExpression(skipValue.SystemType!,
+									skipValue, "+", takeValue), null)));
+						}
+					}
+					else if (takeValue != null)
+					{
+						searchCondition.Add(new SqlCondition(false,
+							new SqlPredicate.ExprExpr(rnColumn, SqlPredicate.Operator.LessOrEqual, takeValue, null)));
+
 					}
 				}
 
