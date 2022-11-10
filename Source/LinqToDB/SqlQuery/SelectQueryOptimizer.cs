@@ -1238,6 +1238,7 @@ namespace LinqToDB.SqlQuery
 					// processing ROW_NUMBER
 
 					var rnColumn = sql.Select.AddNewColumn(rnExpression);
+					rnColumn.RawAlias = "rn";
 
 					sql.Select.SkipValue = null;
 					sql.Select.TakeValue = null;
@@ -1598,7 +1599,7 @@ namespace LinqToDB.SqlQuery
 						for (int j = table.Joins.Count - 1; j >= 0; j--)
 						{
 							var join = table.Joins[j];
-							if (join.JoinType == JoinType.OuterApply || join.JoinType == JoinType.Left)
+							if (join.JoinType == JoinType.OuterApply || join.JoinType == JoinType.CrossApply || join.JoinType == JoinType.Left)
 							{
 								if (join.Table.Source is SelectQuery tsQuery &&
 								    tsQuery.Select.Columns.Count == 1        &&

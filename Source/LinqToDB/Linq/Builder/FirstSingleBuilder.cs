@@ -159,11 +159,6 @@ namespace LinqToDB.Linq.Builder
 						.SingleOrDefaultAsync(token).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 			}
 
-			static object SequenceException()
-			{
-				return Array<object>.Empty.First();
-			}
-
 			bool _isJoinCreated;
 
 			void CreateJoin()
@@ -184,120 +179,8 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			int _checkNullIndex = -1;
-
-			int GetCheckNullIndex()
-			{
-				if (_checkNullIndex < 0)
-				{
-					//TODO: Check maybe we have to use DefaultIfEmptyContext
-					var q =
-						from col in SelectQuery.Select.Columns
-						where !col.CanBeNull
-						select SelectQuery.Select.Columns.IndexOf(col);
-
-					_checkNullIndex = q.DefaultIfEmpty(-1).First();
-
-					if (_checkNullIndex < 0)
-					{
-						_checkNullIndex = SelectQuery.Select.Add(new SqlValue(1));
-						SelectQuery.Select.Columns[_checkNullIndex].RawAlias = "is_empty";
-					}
-
-					_checkNullIndex = ConvertToParentIndex(_checkNullIndex, this);
-				}
-
-				return _checkNullIndex;
-			}
-
-			static bool HasSubQuery(IBuildContext context)
-			{
-				var ctx = context;
-
-				while (true)
-				{
-					if (ctx is SelectContext sc)
-					{
-						foreach (var member in sc.Members.Values)
-						{
-							if (member is MethodCallExpression mc && context.Builder.IsSubQuery(ctx, mc))
-							{
-								return true;
-							}
-							return false;
-						}
-
-						return false;
-					}
-
-					if (ctx is SubQueryContext sub)
-					{
-						ctx = sub.SubQuery;
-					}
-					else if (ctx is PassThroughContext pass)
-					{
-						ctx = pass.Context;
-					}
-					else
-					{
-						break;
-					}
-				}
-
-				return false;
-			}
-
 			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 			{
-				if (expression == null || level == 0)
-				{
-					if (Builder.DataContext.SqlProviderFlags.IsApplyJoinSupported &&
-						Parent!.SelectQuery.GroupBy.IsEmpty &&
-						Parent.SelectQuery.From.Tables.Count > 0 &&
-						!HasSubQuery(Sequence))
-					{
-						CreateJoin();
-
-						var expr = Sequence.BuildExpression(expression, expression == null ? level : level + 1, enforceServerSide);
-
-						Expression defaultValue;
-
-						if (_methodCall.Method.Name.EndsWith("OrDefault"))
-							defaultValue = Expression.Constant(expr.Type.GetDefaultValue(), expr.Type);
-						else
-							defaultValue = Expression.Convert(
-								Expression.Call(
-									null,
-									MemberHelper.MethodOf(() => SequenceException())),
-								expr.Type);
-
-						expr = Expression.Condition(
-							Expression.Call(
-								ExpressionBuilder.DataReaderParam,
-								ReflectionHelper.DataReader.IsDBNull,
-								ExpressionInstances.Int32Array(GetCheckNullIndex())),
-							defaultValue,
-							expr);
-
-						return expr;
-					}
-
-					if (expression == null)
-					{
-						if (   !Builder.DataContext.SqlProviderFlags.IsSubQueryColumnSupported
-						    || Sequence.IsExpression(null, level, RequestFor.Object).Result)
-						{
-							return Builder.BuildMultipleQuery(Parent!, _methodCall, ProjectFlags.SQL);
-						}
-
-						var idx = Parent!.SelectQuery.Select.Add(SelectQuery);
-						    idx = Parent.ConvertToParentIndex(idx, Parent);
-						return Builder.BuildSql(_methodCall.Type, idx, SelectQuery);
-					}
-
-					return null!; // ???
-				}
-
 				throw new NotImplementedException();
 			}
 
@@ -322,15 +205,15 @@ namespace LinqToDB.Linq.Builder
 						// Bad thing here. We expect that SelectQueryOptimizer will transfer OUTER APPLY to ROW_NUMBER query. We have to predict it here
 						if (!IsAssociation && !Builder.DataContext.SqlProviderFlags.IsApplyJoinSupported && !Builder.DataContext.SqlProviderFlags.IsWindowFunctionsSupported)
 						{
-							var sqlProjected = Builder.MakeExpression(this, projected, ProjectFlags.Test);
+							var sqlProjected = Builder.ConvertToSqlExpr(this, projected, ProjectFlags.Test);
 
 							var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(sqlProjected);
 
-							if (placeholders.Count > 1)
+							if (placeholders.Count > 1 || !Builder.DataContext.SqlProviderFlags.IsSubQueryColumnSupported)
 							{
 								if (flags.HasFlag(ProjectFlags.Expression))
 								{
-									throw new NotImplementedException();
+									throw new NotImplementedException("Eager loading for FirstSingleBuilder is not implemented yet.");
 									return new SqlEagerLoadExpression((ContextRefExpression)path, path, Builder.GetSequenceExpression(this));
 								}
 							}
