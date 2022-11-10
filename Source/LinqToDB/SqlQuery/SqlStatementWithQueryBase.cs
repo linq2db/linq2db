@@ -31,17 +31,5 @@ namespace LinqToDB.SqlQuery
 			var ts = SelectQuery!.GetTableSource(table) ?? With?.GetTableSource(table);
 			return ts;
 		}
-
-		public override void WalkQueries<TContext>(TContext context, Func<TContext, SelectQuery, SelectQuery> func)
-		{
-			if (SelectQuery != null)
-			{
-				var newQuery = func(context, SelectQuery);
-				if (!ReferenceEquals(newQuery, SelectQuery))
-					SelectQuery = newQuery;
-			}
-
-			With?.WalkQueries(context, func);
-		}
 	}
 }

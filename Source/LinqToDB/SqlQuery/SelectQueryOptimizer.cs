@@ -7,7 +7,7 @@ namespace LinqToDB.SqlQuery
 	using Common;
 	using SqlProvider;
 
-	class SelectQueryOptimizer
+	internal class SelectQueryOptimizer
 	{
 		public SelectQueryOptimizer(SqlProviderFlags flags, EvaluationContext evaluationContext, IQueryElement rootElement, SelectQuery selectQuery, int level, params IQueryElement[] dependencies)
 		{
@@ -48,311 +48,11 @@ namespace LinqToDB.SqlQuery
 
 			OptimizeUnions();
 			FinalizeAndValidateInternal(isApplySupported);
-			//ResolveFields();
 
 #if DEBUG
 			// ReSharper disable once RedundantAssignment
 			var newSqlText = _selectQuery.SqlText;
 #endif
-		}
-
-		class QueryData
-		{
-			public          SelectQuery          Query   = null!;
-			public readonly List<ISqlExpression> Fields  = new ();
-			public readonly List<QueryData>      Queries = new ();
-		}
-
-		void ResolveFields()
-		{
-			var root = GetQueryData(_rootElement, _selectQuery, new HashSet<IQueryElement>());
-
-			ResolveFields(root);
-		}
-
-		static QueryData GetQueryData(IQueryElement? root, SelectQuery selectQuery, HashSet<IQueryElement> visitedHash)
-		{
-			var data = new QueryData { Query = selectQuery };
-
-			(root ?? selectQuery).VisitParentFirst((selectQuery, visitedHash, data), static (context, e) =>
-			{
-				switch (e.ElementType)
-				{
-					case QueryElementType.SqlField :
-						{
-							var field = (SqlField)e;
-
-							if (field.Name.Length != 1 || field.Name[0] != '*')
-								context.data.Fields.Add(field);
-
-							break;
-						}
-
-					case QueryElementType.SqlQuery :
-						{
-							if (e != context.selectQuery)
-							{
-								context.data.Queries.Add(GetQueryData(null, (SelectQuery)e, context.visitedHash));
-								return false;
-							}
-
-							break;
-						}
-
-					case QueryElementType.Column :
-						return ((SqlColumn)e).Parent == context.selectQuery;
-
-					case QueryElementType.SqlTable :
-						return false;
-
-					case QueryElementType.SqlCteTable :
-						return false;
-
-					case QueryElementType.CteClause :
-					{
-						var query = ((CteClause)e).Body;
-						if (query != context.selectQuery && query != null && context.visitedHash.Add(e))
-						{
-							context.data.Queries.Add(GetQueryData(null, query, context.visitedHash));
-							return false;
-						}
-
-						break;
-					}
-				}
-
-				return true;
-			});
-
-			return data;
-		}
-
-		static SqlTableSource? FindField(SqlField field, SqlTableSource table)
-		{
-			if (field.Table == table.Source)
-				return table;
-
-			foreach (var join in table.Joins)
-			{
-				var t = FindField(field, join.Table);
-
-				if (t != null)
-					return join.Table;
-			}
-
-			return null;
-		}
-
-		static ISqlExpression? GetColumn(QueryData data, SqlField field)
-		{
-			foreach (var query in data.Queries)
-			{
-				var q = query.Query;
-
-				foreach (var table in q.From.Tables)
-				{
-					var t = FindField(field, table);
-
-					if (t != null)
-					{
-						var n   = q.Select.Columns.Count;
-						var idx = q.Select.Add(field);
-
-						if (n != q.Select.Columns.Count)
-							if (!q.GroupBy.IsEmpty || q.Select.Columns.Any(static c => QueryHelper.IsAggregationOrWindowFunction(c.Expression)))
-								q.GroupBy.Items.Add(field);
-
-						return q.Select.Columns[idx];
-					}
-				}
-			}
-
-			return null;
-		}
-
-		static void ResolveFields(QueryData data)
-		{
-			if (data.Queries.Count == 0)
-				return;
-
-			var dic = new Dictionary<ISqlExpression,ISqlExpression>();
-
-			foreach (var sqlExpression in data.Fields)
-			{
-				var field = (SqlField)sqlExpression;
-
-				if (dic.ContainsKey(field))
-					continue;
-
-				var found = false;
-
-				foreach (var table in data.Query.From.Tables)
-				{
-					found = FindField(field, table) != null;
-
-					if (found)
-						break;
-				}
-
-				if (!found)
-				{
-					var expr = GetColumn(data, field);
-
-					if (expr != null)
-						dic.Add(field, expr);
-				}
-			}
-
-			if (dic.Count > 0)
-				data.Query.VisitParentFirst((dic, data), static (context, e) =>
-				{
-					ISqlExpression? ex;
-
-					switch (e.ElementType)
-					{
-						case QueryElementType.SqlQuery :
-							return e == context.data.Query;
-
-						case QueryElementType.SqlFunction :
-							{
-								var parms = ((SqlFunction)e).Parameters;
-
-								for (var i = 0; i < parms.Length; i++)
-									if (context.dic.TryGetValue(parms[i], out ex))
-										parms[i] = ex;
-
-								break;
-							}
-
-						case QueryElementType.SqlExpression :
-							{
-								var parms = ((SqlExpression)e).Parameters;
-
-								for (var i = 0; i < parms.Length; i++)
-									if (context.dic.TryGetValue(parms[i], out ex))
-										parms[i] = ex;
-
-								break;
-							}
-
-						case QueryElementType.SqlBinaryExpression :
-							{
-								var expr = (SqlBinaryExpression)e;
-								if (context.dic.TryGetValue(expr.Expr1, out ex)) expr.Expr1 = ex;
-								if (context.dic.TryGetValue(expr.Expr2, out ex)) expr.Expr2 = ex;
-								break;
-							}
-
-						case QueryElementType.ExprPredicate       :
-						case QueryElementType.NotExprPredicate    :
-						case QueryElementType.IsNullPredicate     :
-						case QueryElementType.InSubQueryPredicate :
-							{
-								var expr                                                    = (SqlPredicate.Expr)e;
-								if (context.dic.TryGetValue(expr.Expr1, out ex)) expr.Expr1 = ex;
-								break;
-							}
-
-						case QueryElementType.IsDistinctPredicate :
-							{
-								var expr = (SqlPredicate.IsDistinct)e;
-								if (context.dic.TryGetValue(expr.Expr1, out ex)) expr.Expr1 = ex;
-								if (context.dic.TryGetValue(expr.Expr2, out ex)) expr.Expr2 = ex;
-								break;
-							}
-
-						case QueryElementType.ExprExprPredicate :
-							{
-								var expr                                                    = (SqlPredicate.ExprExpr)e;
-								if (context.dic.TryGetValue(expr.Expr1, out ex)) expr.Expr1 = ex;
-								if (context.dic.TryGetValue(expr.Expr2, out ex)) expr.Expr2 = ex;
-								break;
-							}
-
-						case QueryElementType.IsTruePredicate :
-							{
-								var expr = (SqlPredicate.IsTrue)e;
-								if (context.dic.TryGetValue(expr.Expr1,      out ex)) expr.Expr1      = ex;
-								if (context.dic.TryGetValue(expr.TrueValue,  out ex)) expr.TrueValue  = ex;
-								if (context.dic.TryGetValue(expr.FalseValue, out ex)) expr.FalseValue = ex;
-								break;
-							}
-						
-						case QueryElementType.LikePredicate :
-							{
-								var expr = (SqlPredicate.Like)e;
-								if (                       context.dic.TryGetValue(expr.Expr1,  out ex)) expr.Expr1  = ex;
-								if (                       context.dic.TryGetValue(expr.Expr2,  out ex)) expr.Expr2  = ex;
-								if (expr.Escape != null && context.dic.TryGetValue(expr.Escape, out ex)) expr.Escape = ex;
-								break;
-							}
-
-						case QueryElementType.BetweenPredicate :
-							{
-								var expr                                                    = (SqlPredicate.Between)e;
-								if (context.dic.TryGetValue(expr.Expr1, out ex)) expr.Expr1 = ex;
-								if (context.dic.TryGetValue(expr.Expr2, out ex)) expr.Expr2 = ex;
-								if (context.dic.TryGetValue(expr.Expr3, out ex)) expr.Expr3 = ex;
-								break;
-							}
-
-						case QueryElementType.InListPredicate :
-							{
-								var expr = (SqlPredicate.InList)e;
-
-								if (context.dic.TryGetValue(expr.Expr1, out ex)) expr.Expr1 = ex;
-
-								for (var i = 0; i < expr.Values.Count; i++)
-									if (context.dic.TryGetValue(expr.Values[i], out ex))
-										expr.Values[i] = ex;
-
-								break;
-							}
-
-						case QueryElementType.Column :
-							{
-								var expr = (SqlColumn)e;
-
-								if (expr.Parent != context.data.Query)
-									return false;
-
-								if (context.dic.TryGetValue(expr.Expression, out ex)) expr.Expression = ex;
-
-								break;
-							}
-
-						case QueryElementType.SetExpression :
-							{
-								var expr = (SqlSetExpression)e;
-								if (context.dic.TryGetValue(expr.Expression!, out ex)) expr.Expression = ex;
-								break;
-							}
-
-						case QueryElementType.GroupByClause :
-							{
-								var expr = (SqlGroupByClause)e;
-
-								for (var i = 0; i < expr.Items.Count; i++)
-									if (context.dic.TryGetValue(expr.Items[i], out ex))
-										expr.Items[i] = ex;
-
-								break;
-							}
-
-						case QueryElementType.OrderByItem :
-							{
-								var expr = (SqlOrderByItem)e;
-								if (context.dic.TryGetValue(expr.Expression, out ex)) expr.Expression = ex;
-								break;
-							}
-					}
-
-					return true;
-				});
-
-			foreach (var query in data.Queries)
-				if (query.Queries.Count > 0)
-					ResolveFields(query);
 		}
 
 		void OptimizeUnions()
@@ -502,7 +202,7 @@ namespace LinqToDB.SqlQuery
 			CorrectColumns();
 		}
 
-		private void OptimizeGroupBy()
+		void OptimizeGroupBy()
 		{
 			if (!_selectQuery.GroupBy.IsEmpty)
 			{
@@ -526,8 +226,8 @@ namespace LinqToDB.SqlQuery
 				}
 			}
 		}
-		
-		private void CorrectColumns()
+
+		void CorrectColumns()
 		{
 			if (!_selectQuery.GroupBy.IsEmpty && _selectQuery.Select.Columns.Count == 0)
 			{

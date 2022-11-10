@@ -283,8 +283,6 @@ namespace LinqToDB.SqlQuery
 
 		public abstract ISqlTableSource? GetTableSource(ISqlTableSource table);
 
-		public abstract void WalkQueries<TContext>(TContext context, Func<TContext, SelectQuery, SelectQuery> func);
-
 		internal void EnsureFindTables()
 		{
 			this.Visit(this, static (statement, e) =>
