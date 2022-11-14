@@ -4,8 +4,8 @@ using System.Linq.Expressions;
 namespace LinqToDB.Linq.Builder
 {
 	using Extensions;
-	
-	class GroupByElementBuilder : ISequenceBuilder
+
+	sealed class GroupByElementBuilder : ISequenceBuilder
 	{
 		public int BuildCounter { get; set; }
 

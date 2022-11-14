@@ -13,7 +13,7 @@ using NUnit.Framework;
 
 namespace Tests.UserTests
 {
-	internal class DbObjectSetExtensionCallBuilder : Sql.IExtensionCallBuilder
+	internal sealed class DbObjectSetExtensionCallBuilder : Sql.IExtensionCallBuilder
 	{
 		public void Build(Sql.ISqExtensionBuilder builder)
 		{

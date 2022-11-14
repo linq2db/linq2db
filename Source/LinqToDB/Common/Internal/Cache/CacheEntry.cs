@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Common.Internal.Cache
 {
-	internal class CacheEntry<TKey> : ICacheEntry<TKey>
+	internal sealed class CacheEntry<TKey> : ICacheEntry<TKey>
 		where TKey: notnull
 	{
 		private bool                                           _disposed;

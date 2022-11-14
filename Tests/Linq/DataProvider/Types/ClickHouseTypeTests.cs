@@ -13,7 +13,7 @@ namespace Tests.DataProvider
 {
 	public sealed  class ClickHouseTypeTests : TypeTestsBase
 	{
-		class ClickHouseDataSourcesAttribute : IncludeDataSourcesAttribute
+		sealed class ClickHouseDataSourcesAttribute : IncludeDataSourcesAttribute
 		{
 			public ClickHouseDataSourcesAttribute()
 				: this(true)

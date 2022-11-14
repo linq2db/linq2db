@@ -16,7 +16,7 @@ namespace Tests.UserTests
 			Text    = 1,
 		}
 
-		class CustomTableColumn
+		sealed class CustomTableColumn
 		{
 			public int? DataTypeID { get; set; }
 		}

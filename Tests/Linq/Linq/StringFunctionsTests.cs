@@ -29,7 +29,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class SampleClass
+		sealed class SampleClass
 		{
 			[Column]                                                              public int     Id     { get; set; }
 			[Column(Length = 50, CanBeNull = true)]                               public string? Value1 { get; set; }

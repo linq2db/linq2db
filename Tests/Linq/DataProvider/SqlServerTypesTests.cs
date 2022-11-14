@@ -18,7 +18,7 @@ namespace Tests.DataProvider
 	public partial class SqlServerTypesTests : DataProviderTestBase
 	{
 		[Table(Name="AllTypes2")]
-		class AllTypes2
+		sealed class AllTypes2
 		{
 			[Column(DbType="int"),   PrimaryKey, Identity] public int             ID                     { get; set; } // int
 			[Column(DbType="date"),              Nullable] public DateTime?       dateDataType           { get; set; } // date
@@ -33,11 +33,6 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestHierarchyId([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
-#if !NET472
-			if (IsMsProvider(context))
-				Assert.Inconclusive("Spatial types test disabled for Microsoft.Data.SqlClient");
-#endif
-
 			using (new SerializeAssemblyQualifiedName(true))
 			using (var conn = GetDataContext(context))
 			{
@@ -59,7 +54,7 @@ namespace Tests.DataProvider
 		}
 
 		[Table("#tmp")]
-		class MyTable
+		sealed class MyTable
 		{
 			[Column] public SqlHierarchyId ID;
 		}
@@ -77,10 +72,6 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestGeography([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-#if !NET472
-			if (IsMsProvider(context))
-				Assert.Inconclusive("Spatial types test disabled for Microsoft.Data.SqlClient");
-#endif
 			using (new SerializeAssemblyQualifiedName(true))
 			using (var conn = GetDataContext(context))
 			{
@@ -96,11 +87,8 @@ namespace Tests.DataProvider
 						v5  = t.geographyDataType.M,
 						//v6  = t.geographyDataType.HasZ,
 						//v7  = t.geographyDataType.HasM,
-						// missing API
-#if NET472
 						v8 = SqlGeography.GeomFromGml(t.geographyDataType.AsGml(), 4326),
 						v9  = t.geographyDataType.AsGml(),
-#endif
 						v10 = t.geographyDataType.ToString(),
 						v11 = SqlGeography.Parse("LINESTRING(-122.360 47.656, -122.343 47.656)"),
 						v12 = SqlGeography.Point(1, 1, 4326),
@@ -142,9 +130,6 @@ namespace Tests.DataProvider
 		[Test]
 		public void Where1([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			if (IsMsProvider(context))
-				Assert.Inconclusive("Spatial types test disabled for Microsoft.Data.SqlClient");
-
 			using (new SerializeAssemblyQualifiedName(true))
 			using (var db = GetDataContext(context))
 			{
@@ -161,9 +146,6 @@ namespace Tests.DataProvider
 		[Test]
 		public void Where2([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			if (IsMsProvider(context))
-				Assert.Inconclusive("Spatial types test disabled for Microsoft.Data.SqlClient");
-
 			using (new SerializeAssemblyQualifiedName(true))
 			using (var db = GetDataContext(context))
 			{
@@ -180,9 +162,6 @@ namespace Tests.DataProvider
 		[Test]
 		public void Where3([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			if (IsMsProvider(context))
-				Assert.Inconclusive("Spatial types test disabled for Microsoft.Data.SqlClient");
-
 			using (new SerializeAssemblyQualifiedName(true))
 			using (var db = GetDataContext(context))
 			{
@@ -199,9 +178,6 @@ namespace Tests.DataProvider
 		[Test]
 		public void Where4([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			if (IsMsProvider(context))
-				Assert.Inconclusive("Spatial types test disabled for Microsoft.Data.SqlClient");
-
 			using (new SerializeAssemblyQualifiedName(true))
 			using (var db = GetDataContext(context))
 			{
@@ -218,9 +194,6 @@ namespace Tests.DataProvider
 		[Test]
 		public void Where5([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			if (IsMsProvider(context))
-				Assert.Inconclusive("Spatial types test disabled for Microsoft.Data.SqlClient");
-
 			using (new SerializeAssemblyQualifiedName(true))
 			using (var db = GetDataContext(context))
 			{
@@ -237,9 +210,6 @@ namespace Tests.DataProvider
 		[Test]
 		public void Where6([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			if (IsMsProvider(context))
-				Assert.Inconclusive("Spatial types test disabled for Microsoft.Data.SqlClient");
-
 			using (new SerializeAssemblyQualifiedName(true))
 			using (var db = GetDataContext(context))
 			{
@@ -264,9 +234,6 @@ namespace Tests.DataProvider
 		[Test]
 		public void Where7([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			if (IsMsProvider(context))
-				Assert.Inconclusive("Spatial types test disabled for Microsoft.Data.SqlClient");
-
 			using (new SerializeAssemblyQualifiedName(true))
 			using (var db = GetDataContext(context))
 			{
@@ -283,9 +250,6 @@ namespace Tests.DataProvider
 		[Test]
 		public void Where8([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			if (IsMsProvider(context))
-				Assert.Inconclusive("Spatial types test disabled for Microsoft.Data.SqlClient");
-
 			using (new SerializeAssemblyQualifiedName(true))
 			using (var db = GetDataContext(context))
 			{
@@ -300,7 +264,7 @@ namespace Tests.DataProvider
 		}
 
 		[Table]
-		class Issue1836
+		sealed class Issue1836
 		{
 			[PrimaryKey]
 			public int Id { get; set; }
@@ -324,9 +288,6 @@ namespace Tests.DataProvider
 		[Test]
 		public void SelectSqlGeography([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			if (IsMsProvider(context))
-				Assert.Inconclusive("Spatial types test disabled for Microsoft.Data.SqlClient");
-
 			using (new SerializeAssemblyQualifiedName(true))
 			using (var db = GetDataContext(context))
 			using (var t  = db.CreateLocalTable(Issue1836.Data))
@@ -337,10 +298,7 @@ namespace Tests.DataProvider
 				Assert.AreEqual(1, records[0].Id);
 				Assert.True(records[0].HomeLocation!.IsNull);
 				Assert.AreEqual(2, records[1].Id);
-				// missing API
-#if NET472
 				Assert.True(Issue1836.Data[1].HomeLocation!.STEquals(records[1].HomeLocation).IsTrue);
-#endif
 			}
 		}
 

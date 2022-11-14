@@ -265,7 +265,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		internal static class ClientWrappers
 		{
 			[Wrapper]
-			public class ClickHouseConnection : TypeWrapper, IDisposable
+			public sealed class ClickHouseConnection : TypeWrapper, IDisposable
 			{
 				private static LambdaExpression[] Wrappers { get; }
 					= new LambdaExpression[]
@@ -288,7 +288,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 			}
 
 			[Wrapper]
-			public class ClickHouseConnectionStringBuilder : TypeWrapper
+			public sealed class ClickHouseConnectionStringBuilder : TypeWrapper
 			{
 				private static LambdaExpression[] Wrappers { get; }
 					= new LambdaExpression[]
@@ -317,7 +317,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 			}
 
 			[Wrapper]
-			public class ClickHouseBulkCopy : TypeWrapper, IDisposable
+			public sealed class ClickHouseBulkCopy : TypeWrapper, IDisposable
 			{
 				private static LambdaExpression[] Wrappers { get; }
 					= new LambdaExpression[]
@@ -386,7 +386,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		public static class OctonicaWrappers
 		{
 			[Wrapper]
-			internal class ClickHouseConnection
+			internal sealed class ClickHouseConnection
 			{
 				public ClickHouseColumnWriter       CreateColumnWriter(string insertFormatCommand)                                           => throw new NotImplementedException();
 				public Task<ClickHouseColumnWriter> CreateColumnWriterAsync(string insertFormatCommand, CancellationToken cancellationToken) => throw new NotImplementedException();
@@ -457,7 +457,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 			}
 
 			[Wrapper]
-			internal class ClickHouseException : TypeWrapper
+			internal sealed class ClickHouseException : TypeWrapper
 			{
 				private static LambdaExpression[] Wrappers { get; }
 					= new LambdaExpression[]

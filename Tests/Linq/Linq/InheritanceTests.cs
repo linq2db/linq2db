@@ -231,10 +231,10 @@ namespace Tests.Linq
 					await db.ParentInheritance.OfType<ParentInheritance1>().Cast<ParentInheritanceBase>().ToListAsync());
 		}
 
-		class ParentEx : Parent
+		sealed class ParentEx : Parent
 		{
 			[NotColumn]
-			protected bool Field1;
+			public bool Field1;
 
 			public static void Test(InheritanceTests inheritance, string context)
 			{
@@ -252,7 +252,7 @@ namespace Tests.Linq
 		}
 
 		[Table("Person", IsColumnAttributeRequired = false)]
-		class PersonEx : Person
+		sealed class PersonEx : Person
 		{
 		}
 
@@ -403,7 +403,7 @@ namespace Tests.Linq
 		}
 
 		[Table(Name="Child")]
-		class ChildTest14 : IChildTest14
+		sealed class ChildTest14 : IChildTest14
 		{
 			[PrimaryKey] public int ChildID { get; set; }
 

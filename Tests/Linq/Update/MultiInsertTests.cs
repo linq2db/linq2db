@@ -541,20 +541,20 @@ namespace Tests.xUpdate
 			}
 		}
 
-		class TestSource
+		sealed class TestSource
 		{
 			public int   ID { get; set; }
 			public short N  { get; set; }
 		}
 
-		class Dest1
+		sealed class Dest1
 		{
 			public int     ID          { get; set; }
 			public short?  Value       { get; set; }
 			public string? StringValue { get; set; }
 		}
 
-		class Dest2
+		sealed class Dest2
 		{
 			public int ID    { get; set; }
 			public int Int   { get; set; }

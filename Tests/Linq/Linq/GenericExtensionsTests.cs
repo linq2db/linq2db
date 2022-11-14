@@ -26,7 +26,7 @@ namespace Tests.Linq
 		public Type?[] Types         { get; }
 	}
 
-	class GenericBuilder : Sql.IExtensionCallBuilder
+	sealed class GenericBuilder : Sql.IExtensionCallBuilder
 	{
 		string Match(Type[] current, ExtensionChoiceAttribute[] choices)
 		{
@@ -93,9 +93,8 @@ namespace Tests.Linq
 		}
 	}
 
-	class GenericExtensionTests : TestBase
+	sealed class GenericExtensionTests : TestBase
 	{
-
 		[Test]
 		public void Issue326([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{

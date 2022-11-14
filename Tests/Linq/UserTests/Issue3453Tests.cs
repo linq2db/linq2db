@@ -41,7 +41,10 @@ namespace Tests.UserTests
 
 		private MappingSchema SetupEnums(string context, bool withTable)
 		{
+			// TODO: currently unclear how to integrate new API with linq2db, will address in https://github.com/linq2db/linq2db/issues/3501
+#pragma warning disable CS0618 // Type or member is obsolete
 			NpgsqlConnection.GlobalTypeMapper.MapEnum<TimeUnit>("time_unit");
+#pragma warning restore CS0618 // Type or member is obsolete
 
 			var mappingSchema = new MappingSchema();
 

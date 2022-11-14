@@ -11,11 +11,11 @@ namespace LinqToDB.Common
 #if NATIVE_ASYNC
 		internal static IEnumerable<T> AsyncToSyncEnumerable<T>(IAsyncEnumerator<T> enumerator)
 		{
-			var result = SafeAwaiter.Run(() => enumerator.MoveNextAsync());
+			var result = SafeAwaiter.Run(enumerator.MoveNextAsync);
 			while (result)
 			{
 				yield return enumerator.Current;
-				result = SafeAwaiter.Run(() => enumerator.MoveNextAsync());
+				result = SafeAwaiter.Run(enumerator.MoveNextAsync);
 			}
 		}
 
@@ -48,7 +48,7 @@ namespace LinqToDB.Common
 				yield return batcher.Current;
 		}
 
-		private class Batcher<T>
+		private sealed class Batcher<T>
 		{
 			private readonly int _batchSize;
 			private readonly IEnumerator<T> _enumerator;
@@ -140,7 +140,7 @@ namespace LinqToDB.Common
 			yield return source;
 		}
 
-		private class AsyncBatchEnumerable<T> : IAsyncEnumerable<IAsyncEnumerable<T>>
+		private sealed class AsyncBatchEnumerable<T> : IAsyncEnumerable<IAsyncEnumerable<T>>
 		{
 			IAsyncEnumerable<T> _source;
 			int _batchSize;
@@ -155,7 +155,7 @@ namespace LinqToDB.Common
 				=> new AsyncBatchEnumerator<T>(_source, _batchSize, cancellationToken);
 		}
 
-		private class AsyncBatchEnumerator<T> : IAsyncEnumerator<IAsyncEnumerable<T>>, IAsyncEnumerable<T>
+		private sealed class AsyncBatchEnumerator<T> : IAsyncEnumerator<IAsyncEnumerable<T>>, IAsyncEnumerable<T>
 		{
 			readonly IAsyncEnumerator<T> _source;
 			readonly int                 _batchSize;

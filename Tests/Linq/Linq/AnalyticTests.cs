@@ -1321,7 +1321,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class Position
+		sealed class Position
 		{
 			[Column] public int  Group { get; set; }
 			[Column] public int  Order { get; set; }
@@ -1600,7 +1600,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class Issue1799Table1
+		sealed class Issue1799Table1
 		{
 			[Column] public int      EventUser { get; set; }
 			[Column] public int      ProcessID { get; set; }
@@ -1608,14 +1608,14 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class Issue1799Table2
+		sealed class Issue1799Table2
 		{
 			[Column] public int     UserId        { get; set; }
 			[Column] public string? UserGroups { get; set; }
 		}
 
 		[Table]
-		class Issue1799Table3
+		sealed class Issue1799Table3
 		{
 			[Column] public int     ProcessID   { get; set; }
 			[Column] public string? ProcessName { get; set; }

@@ -3,12 +3,13 @@
 	<PropertyGroup>
 		<RootNamespace>LinqToDB.CLI</RootNamespace>
 		<AssemblyName>dotnet-linq2db</AssemblyName>
-		<TargetFrameworks>netcoreapp3.1</TargetFrameworks>
+		<TargetFrameworks>netcoreapp3.1;net7.0</TargetFrameworks>
 		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
 		<OutputType>Exe</OutputType>
 		<WarningsAsErrors>true</WarningsAsErrors>
 		<SignAssembly>False</SignAssembly>
 		<RollForward>Major</RollForward>
+		<SUppressTfmSupportBuildWarnings>true</SUppressTfmSupportBuildWarnings>
 	</PropertyGroup>
 
 	<Target Name="CopyHosts" AfterTargets="Build">

@@ -1,4 +1,4 @@
-﻿<#@ template language="C#" debug="True" hostSpecific="True" compilerOptions="/langversion:10" #>
+﻿<#@ template language="C#" debug="True" hostSpecific="True" compilerOptions="/langversion:11" #>
 <#@ output extension=".generated.cs"                                                          #>
 <#@ include file="CLI.ttinclude"                                               once="true"    #>
 <#

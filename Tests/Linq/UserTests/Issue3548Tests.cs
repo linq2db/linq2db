@@ -59,7 +59,10 @@ namespace Tests.UserTests
 			using (var db = GetDataConnection(context))
 				db.Execute("DROP TABLE IF EXISTS \"User\";DROP TYPE IF EXISTS user_type_enum;CREATE TYPE user_type_enum AS ENUM('org', 'org_user');");
 
+			// TODO: currently unclear how to integrate new API with linq2db, will address in https://github.com/linq2db/linq2db/issues/3501
+#pragma warning disable CS0618 // Type or member is obsolete
 			NpgsqlConnection.GlobalTypeMapper.MapEnum<UserTypeEnum>();
+#pragma warning restore CS0618 // Type or member is obsolete
 
 			try
 			{

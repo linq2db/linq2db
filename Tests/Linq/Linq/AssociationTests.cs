@@ -557,7 +557,7 @@ namespace Tests.Linq
 
 		[Table("Parent")]
 		[UsedImplicitly]
-		class Parent170
+		sealed class Parent170
 		{
 			[Column] public int ParentID;
 			[Column] public int Value1;
@@ -571,7 +571,7 @@ namespace Tests.Linq
 
 		[Table("Child")]
 		[UsedImplicitly]
-		class Child170
+		sealed class Child170
 		{
 			[Column] public int ParentID;
 			[Column] public int ChildID;
@@ -615,7 +615,7 @@ namespace Tests.Linq
 
 		[Table("Child")]
 		[UsedImplicitly]
-		class StorageTestClass
+		sealed class StorageTestClass
 		{
 			[Column] public int ParentID;
 			[Column] public int ChildID;
@@ -1011,7 +1011,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class Employee
+		sealed class Employee
 		{
 			[Column] public int  Id           { get; set; }
 			[Column] public int? DepartmentId { get; set; }
@@ -1023,7 +1023,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class Department
+		sealed class Department
 		{
 			[Column] public int     DepartmentId { get; set; }
 			[Column] public string? Name         { get; set; }
@@ -1046,12 +1046,12 @@ namespace Tests.Linq
 			}
 		}
 
-		class Entity1711
+		sealed class Entity1711
 		{
 			public long Id { get; set; }
 		}
 
-		class Relationship1711
+		sealed class Relationship1711
 		{
 			public long EntityId { get; set; }
 
@@ -1100,7 +1100,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class Issue1096Task
+		sealed class Issue1096Task
 		{
 			[Column]
 			public int Id { get; set; }
@@ -1116,7 +1116,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class Issue1096TaskStage
+		sealed class Issue1096TaskStage
 		{
 			[Column(IsPrimaryKey = true)]
 			public int Id { get; set; }

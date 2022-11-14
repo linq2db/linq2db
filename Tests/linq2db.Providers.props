@@ -15,11 +15,11 @@
 		<PackageReference Include="Microsoft.Data.SqlClient" />
 		<PackageReference Include="Microsoft.Data.SQLite" />
 		<PackageReference Include="Devart.Data.Oracle" />
+		<PackageReference Include="Microsoft.SqlServer.Types" />
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net472' ">
 		<PackageReference Include="Oracle.ManagedDataAccess" />
-		<PackageReference Include="Microsoft.SqlServer.Types" />
 
 		<Reference Include="IBM.Data.Informix">
 			<HintPath>$(MSBuildThisFileDirectory)\..\Redist\IBM\IBM.Data.Informix.dll</HintPath>
@@ -42,12 +42,6 @@
 		<PackageReference Include="ClickHouse.Client" />
 		<PackageReference Include="Octonica.ClickHouseClient" />
 		<!--<PackageReference Include="Devart.Data.Oracle" />-->
-
-		<!--nuget doesn't have strong name, so we use local self-signed copy-->
-		<!--<PackageReference Include="dotMorten.Microsoft.SqlServer.Types" />-->
-		<Reference Include="Microsoft.SqlServer.Types">
-			<HintPath>$(MSBuildThisFileDirectory)\..\Redist\dotMorten.Microsoft.SqlServer.Types\Microsoft.SqlServer.Types.dll</HintPath>
-		</Reference>
 	</ItemGroup>
 
 	<!--some magic to not include x64 reference to IBM.Data.DB2.Core in x86 builds, as it fails x86 tests-->
@@ -65,7 +59,7 @@
 				<PackageReference Include="IBM.Data.DB2.Core-lnx" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' " />
 				<PackageReference Include="IBM.Data.DB2.Core-osx" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' "/>
 			</ItemGroup>
-			<ItemGroup Condition=" '$(TargetFramework)' == 'net6.0' ">
+			<ItemGroup Condition=" '$(TargetFramework)' == 'net6.0' OR '$(TargetFramework)' == 'net7.0' ">
 				<PackageReference Include="Net.IBM.Data.Db2" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' " />
 				<PackageReference Include="Net.IBM.Data.Db2-lnx" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' " />
 				<PackageReference Include="Net.IBM.Data.Db2-osx" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' "/>

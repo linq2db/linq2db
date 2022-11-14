@@ -418,7 +418,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		class InsertTable
+		sealed class InsertTable
 		{
 			[PrimaryKey]
 			public int Id { get; set; }
@@ -985,7 +985,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		class GuidID
+		sealed class GuidID
 		{
 			[Identity] public Guid ID;
 					   public int  Field1;
@@ -1054,7 +1054,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		class GuidID2
+		sealed class GuidID2
 		{
 			[Identity] public Guid ID;
 		}
@@ -1661,7 +1661,7 @@ namespace Tests.xUpdate
 		}
 
 		[Table("LinqDataTypes")]
-		class TestConvertTable1
+		sealed class TestConvertTable1
 		{
 			[PrimaryKey]                        public int      ID;
 			[Column(DataType = DataType.Int64)] public TimeSpan BigIntValue;
@@ -1692,7 +1692,7 @@ namespace Tests.xUpdate
 		}
 
 		[Table("LinqDataTypes")]
-		class TestConvertTable2
+		sealed class TestConvertTable2
 		{
 			[PrimaryKey]                        public int       ID;
 			[Column(DataType = DataType.Int64)] public TimeSpan? BigIntValue;
@@ -2027,7 +2027,7 @@ namespace Tests.xUpdate
 		}
 
 		[Table]
-		class TestInsertOrReplaceTable
+		sealed class TestInsertOrReplaceTable
 		{
 			[PrimaryKey] public int     ID         { get; set; }
 			[Column]     public string? FirstName  { get; set; }

@@ -162,6 +162,8 @@ namespace Tests
 			var configName = "CORE31";
 #elif NET6_0
 			var configName = "NET60";
+#elif NET7_0
+			var configName = "NET70";
 #elif NET472
 			var configName = "NET472";
 #else

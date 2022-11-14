@@ -858,7 +858,7 @@ namespace LinqToDB.Data
 		public static IReadOnlyDictionary<string, IDataProvider> GetRegisteredProviders() =>
 			_dataProviders.ToDictionary(p => p.Key, p => p.Value);
 
-		class ConfigurationInfo
+		sealed class ConfigurationInfo
 		{
 			private readonly bool    _dataProviderSet;
 			private readonly string? _configurationString;

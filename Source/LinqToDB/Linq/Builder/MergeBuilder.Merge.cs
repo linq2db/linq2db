@@ -12,7 +12,7 @@ namespace LinqToDB.Linq.Builder
 
 	internal partial class MergeBuilder
 	{
-		internal class Merge : MethodCallBuilder
+		internal sealed class Merge : MethodCallBuilder
 		{
 			static readonly MethodInfo[] _supportedMethods = {MergeMethodInfo1, MergeMethodInfo2};
 

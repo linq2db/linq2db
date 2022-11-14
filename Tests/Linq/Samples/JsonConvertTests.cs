@@ -111,7 +111,7 @@ namespace Tests.Samples
 
 	public static class Json
 	{
-		class JsonValueBuilder : Sql.IExtensionCallBuilder
+		sealed class JsonValueBuilder : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
