@@ -60,6 +60,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			SqlProviderFlags.IsApplyJoinSupported              = true;
 			SqlProviderFlags.TakeHintsSupported                = TakeHints.Percent | TakeHints.WithTies;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
+			SqlProviderFlags.SupportsRowNumberWithoutOrderBy   = false;
 
 			SetCharField("char" , (r, i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("nchar", (r, i) => r.GetString(i).TrimEnd(' '));

@@ -16,7 +16,7 @@ namespace LinqToDB.Linq.Builder
 	using Reflection;
 
 	[DebuggerDisplay("{BuildContextDebuggingHelper.GetContextInfo(this)}")]
-	class EnumerableContext : IBuildContext
+	internal class EnumerableContext : IBuildContext
 	{
 		readonly Type _elementType;
 
@@ -31,7 +31,7 @@ namespace LinqToDB.Linq.Builder
 		public  SqlStatement?        Statement     { get; set; }
 		public  IBuildContext?       Parent        { get; set; }
 
-		private readonly EntityDescriptor _entityDescriptor;
+		readonly EntityDescriptor _entityDescriptor;
 
 		public SqlValuesTable Table { get; }
 
@@ -147,35 +147,37 @@ namespace LinqToDB.Linq.Builder
 		public Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 		{
 			throw new NotImplementedException();
-			}
+		}
 
 		public SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 		{
 			throw new NotImplementedException();
-					}
+		}
 
-		private static ConstructorInfo _parameterConstructor =
+		static ConstructorInfo _parameterConstructor =
 			MemberHelper.ConstructorOf(() => new SqlParameter(new DbDataType(typeof(object)), "", null));
 
-		private static ConstructorInfo _sqlValueconstructor =
+		static ConstructorInfo _sqlValueconstructor =
 			MemberHelper.ConstructorOf(() => new SqlValue(new DbDataType(typeof(object)), null));
 
-		private SqlField? GetField(MemberExpression path)
+		SqlField? GetField(MemberExpression path)
+		{
+			foreach (var column in _entityDescriptor.Columns)
 			{
-						foreach (var column in _entityDescriptor.Columns)
-						{
-				if (column.MemberInfo.EqualsTo(path.Member, _elementType))
-							{
-								var newField = BuildField(column);
+				if (!column.MemberInfo.EqualsTo(path.Member, _elementType))
+				{
+					continue;
+				}
 
-					return newField;
-							}
-						}
+				var newField = BuildField(column);
+
+				return newField;
+			}
 
 			return null;
         }
 
-		private SqlField BuildField(ColumnDescriptor column)
+		SqlField BuildField(ColumnDescriptor column)
 		{
 			var memberName = column.MemberName;
 			if (!Table.FieldsLookup!.TryGetValue(column.MemberInfo, out var newField))
@@ -222,7 +224,7 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		public Expression MakeExpression(Expression path, ProjectFlags flags)
-			{
+		{
 			if (SequenceHelper.IsSameContext(path, this))
 			{
 				if (flags.HasFlag(ProjectFlags.Root))
@@ -232,7 +234,14 @@ namespace LinqToDB.Linq.Builder
 				if (path.Type != _elementType && flags.HasFlag(ProjectFlags.Expression))
 					return new SqlEagerLoadExpression((ContextRefExpression)path, path, Builder.GetSequenceExpression(this));
 
-				return Builder.BuildEntityExpression(this, _elementType, flags);
+				if (flags.HasFlag(ProjectFlags.Expression))
+					return Expression; // do nothing
+
+				var result =
+					Builder.BuildSqlExpression(new Dictionary<Expression, Expression>(), this, Expression, flags.SqlFlag());
+
+				return result;
+				//return Builder.BuildEntityExpression(this, _elementType, flags);
 			}
 
 			if (path is not MemberExpression member)
@@ -251,14 +260,14 @@ namespace LinqToDB.Linq.Builder
 		{
 			//TODO: Clone
 			throw new NotImplementedException();
-				}
+		}
 
 		public void SetRunQuery<T>(Query<T> query, Expression expr)
-						{
+		{
 			var mapper = Builder.BuildMapper<T>(expr);
 
 			QueryRunner.SetRunQuery(query, mapper);
-					}
+		}
 
 		public IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 		{

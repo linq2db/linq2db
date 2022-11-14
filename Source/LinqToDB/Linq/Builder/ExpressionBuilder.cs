@@ -219,6 +219,9 @@ namespace LinqToDB.Linq.Builder
 			if (_sequenceExpressions.TryGetValue(sequence, out var expr))
 				return expr;
 
+			if (sequence is SubQueryContext sc)
+				return GetSequenceExpression(sc.SubQuery);
+
 			throw new InvalidOperationException("Sequence has no registered expression");
 		}
 

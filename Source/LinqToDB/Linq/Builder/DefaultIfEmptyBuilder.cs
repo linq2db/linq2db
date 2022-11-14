@@ -39,13 +39,13 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
-				{
+			{
 				if (SequenceHelper.IsSameContext(path, this) && (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AssociationRoot)))
 					return path;
 
 				var expr = base.MakeExpression(path, flags);
 
-				if (!Disabled && flags.HasFlag(ProjectFlags.Expression) && SequenceHelper.IsSameContext(path, this))
+				if (!Disabled && SequenceHelper.IsSameContext(path, this))
 				{
 					expr = Builder.BuildSqlExpression(new Dictionary<Expression, Expression>(), this, expr, flags);
 
@@ -62,11 +62,18 @@ namespace LinqToDB.Linq.Builder
 
 					var defaultValue = DefaultValue ?? new DefaultValueExpression(Builder.MappingSchema, expr.Type);
 
-					expr = Expression.Condition(new SqlReaderIsNullExpression(notNull), defaultValue, expr);
+					if (expr is not SqlPlaceholderExpression)
+					{
+						Expression notNullExpression;
+
+						notNullExpression = new SqlReaderIsNullExpression(notNull, true);
+
+						expr = Expression.Condition(notNullExpression, expr, defaultValue);
+					}
 				}
 
 				return expr;
-				}
+			}
 
 			public override IBuildContext Clone(CloningContext context)
 			{
@@ -75,20 +82,17 @@ namespace LinqToDB.Linq.Builder
 
 			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 			{
-				expression = SequenceHelper.CorrectExpression(expression, this, Sequence);
-				return Sequence.ConvertToSql(expression, level, flags);
+				throw new NotImplementedException();
 			}
 
 			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 			{
-				expression = SequenceHelper.CorrectExpression(expression, this, Sequence);
-				return Sequence.ConvertToIndex(expression, level, flags);
+				throw new NotImplementedException();
 			}
 
 			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 			{
-				expression = SequenceHelper.CorrectExpression(expression, this, Sequence);
-				return Sequence.IsExpression(expression, level, requestFlag);
+				throw new NotImplementedException();
 			}
 
 			public override IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)

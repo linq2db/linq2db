@@ -48,6 +48,8 @@ namespace LinqToDB.Linq.Builder
 				//shorter path
 
 				var sequence = builder.BuildSequence(new BuildInfo(buildInfo, sequenceArgument, new SelectQuery()));
+				if (sequence.SelectQuery.Select.HasModifier)
+					sequence = new SubQueryContext(sequence);
 
 				// finalizing context
 				_ = builder.MakeExpression(sequence, new ContextRefExpression(buildInfo.Expression.Type, sequence),

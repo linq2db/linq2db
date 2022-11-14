@@ -701,7 +701,7 @@ namespace LinqToDB.Linq.Builder
 
 							var dynamicSql = ConvertToSqlPlaceholder(context, dynamicPropCall, columnDescriptor: inheritance.Discriminator);
 
-							test = new SqlReaderIsNullExpression(dynamicSql);
+							test = new SqlReaderIsNullExpression(dynamicSql, false);
 
 							// throw new InvalidOperationException(
 							// 	$"Type '{contextRef.Type.Name}' has no member '{inheritance.Discriminator.MemberInfo.Name}'");
@@ -713,7 +713,7 @@ namespace LinqToDB.Linq.Builder
 							if (inheritance.Code == null)
 							{
 								var discriminatorSql = ConvertToSqlPlaceholder(context, memberAccess, columnDescriptor: inheritance.Discriminator);
-								test = new SqlReaderIsNullExpression(discriminatorSql);
+								test = new SqlReaderIsNullExpression(discriminatorSql, false);
 							}
 							else
 							{

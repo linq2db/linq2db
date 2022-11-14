@@ -24,12 +24,34 @@ namespace LinqToDB.Linq.Builder
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var argument = methodCall.Arguments[0];
+
+			SqlJoinedTable? fakeJoin = null;
 			if (buildInfo.Parent != null)
 			{
-				argument = SequenceHelper.MoveToScopedContext(argument, buildInfo.Parent);
+				argument = SequenceHelper.MoveAllToScopedContext(argument, buildInfo.Parent);
+
+				if (!buildInfo.IsTest)
+				{
+					if (buildInfo.Parent.SelectQuery.From.Tables.Count > 0)
+					{
+						// introducing fake join for correct nesting update
+
+						var join = buildInfo.SelectQuery.OuterApply();
+						join.JoinedTable.IsWeak = true;
+
+						fakeJoin = join.JoinedTable;
+
+						buildInfo.Parent.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);
+					}
+				}
 			}
 
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, argument));
+
+			if (fakeJoin != null)
+			{
+				buildInfo.Parent!.SelectQuery.From.Tables[0].Joins.Remove(fakeJoin);
+			}
 
 			var take     = 0;
 
@@ -195,11 +217,6 @@ namespace LinqToDB.Linq.Builder
 
 				if (!flags.HasFlag(ProjectFlags.Test))
 				{
-					if (flags.HasFlag(ProjectFlags.SQL))
-					{
-						projected = Builder.ConvertToSqlExpr(Sequence, projected, flags);
-					}
-
 					if (IsSubQuery)
 					{
 						// Bad thing here. We expect that SelectQueryOptimizer will transfer OUTER APPLY to ROW_NUMBER query. We have to predict it here

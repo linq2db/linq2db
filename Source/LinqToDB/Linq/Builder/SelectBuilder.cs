@@ -1,17 +1,10 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Data;
 using System.Diagnostics;
-using System.Linq;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
-	using Extensions;
-	using Reflection;
-	using System.Data.Common;
 
 	class SelectBuilder : MethodCallBuilder
 	{
@@ -100,52 +93,16 @@ namespace LinqToDB.Linq.Builder
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
 				throw new NotImplementedException();
-
-				/*var expr = Builder.FinalizeProjection(this,
-					Builder.MakeExpression(new ContextRefExpression(typeof(T), this), ProjectFlags.Expression));
-
-				expr = Builder.ToReadExpression(expr);
-
-				expr = expr.Replace(Lambda.Parameters[1], _counterParam);
-
-				if (expr.Type != typeof(T))
-					expr = Expression.Convert(expr, typeof(T));
-
-				var mapper = Expression.Lambda<Func<IQueryRunner,IDataContext,DbDataReader,Expression,object?[]?,object?[]?,int,T>>(
-					Builder.BuildBlock(expr), new []
-					{
-						ExpressionBuilder.QueryRunnerParam,
-						ExpressionBuilder.DataContextParam,
-						ExpressionBuilder.DataReaderParam,
-						ExpressionBuilder.ExpressionParam,
-						ExpressionBuilder.ParametersParam,
-						ExpressionBuilder.PreambleParam,
-						_counterParam
-					});
-
-				QueryRunner.SetRunQuery(query, mapper);*/
 			}
 
 			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 			{
-				switch (requestFlag)
-				{
-					case RequestFor.Expression :
-					case RequestFor.Root       :
-						if (expression == Lambda.Parameters[1])
-							return IsExpressionResult.True;
-						break;
-				}
-
-				return base.IsExpression(expression, level, requestFlag);
+				throw new NotImplementedException();
 			}
 
 			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 			{
-				if (expression == Lambda.Parameters[1])
-					return _counterParam;
-
-				return base.BuildExpression(expression, level, enforceServerSide);
+				throw new NotImplementedException();
 			}
 		}
 
@@ -157,182 +114,6 @@ namespace LinqToDB.Linq.Builder
 			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
 		{
 			return null;
-			var originalMethodCall = methodCall;
-			var selector           = (LambdaExpression)methodCall.Arguments[1].Unwrap();
-			var info               = builder.ConvertSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]), selector.Parameters[0], true);
-
-			if (info != null)
-			{
-				methodCall = (MethodCallExpression)methodCall.Transform(
-					(methodCall, info, selector),
-					static (context, ex) => ConvertMethod(context.methodCall, 0, context.info, context.selector.Parameters[0], ex));
-				selector   = (LambdaExpression)methodCall.Arguments[1].Unwrap();
-			}
-
-			if (param != null && !ReferenceEquals(param, builder.SequenceParameter))
-			{
-				var list =
-					(
-						from path in GetExpressions(selector.Parameters[0], param, 0, selector.Body.Unwrap())
-						orderby path.Level descending
-						select path
-					).ToList();
-
-				if (list.Count > 0)
-				{
-					var plist = list.Where(e => ReferenceEquals(e.Expr, selector.Parameters[0])).ToList();
-
-					if (plist.Count > 1)
-						list = list.Except(plist.Skip(1)).ToList();
-
-					var p = plist.FirstOrDefault();
-
-					if (p == null)
-					{
-						var types  = methodCall.Method.GetGenericArguments();
-						var mgen   = methodCall.Method.GetGenericMethodDefinition();
-						var btype  = typeof(ExpressionHolder<,>).MakeGenericType(types[0], selector.Body.Type);
-						var fields = btype.GetFields();
-						var pold   = selector.Parameters[0];
-						var psel   = Expression.Parameter(types[0], pold.Name);
-
-						methodCall = Expression.Call(
-							methodCall.Object,
-							mgen.MakeGenericMethod(types[0], btype),
-							methodCall.Arguments[0],
-							Expression.Lambda(
-								Expression.MemberInit(
-									Expression.New(btype),
-									Expression.Bind(fields[0], psel),
-									Expression.Bind(fields[1], selector.Body.Replace(pold, psel))),
-								psel));
-
-						selector = (LambdaExpression)methodCall.Arguments[1].Unwrap();
-						param    = Expression.Parameter(selector.Body.Type, param.Name);
-
-						list.Add(new SequenceConvertPath { Path = param, Expr = Expression.MakeMemberAccess(param, fields[1]), Level = 1 });
-
-						var expr = Expression.MakeMemberAccess(param, fields[0]);
-
-						foreach (var t in list)
-							t.Expr = t.Expr.Transform((pold, expr), static(context, ex) => ReferenceEquals(ex, context.pold) ? context.expr : ex);
-
-						return new SequenceConvertInfo
-						{
-							Parameter            = param,
-							Expression           = methodCall,
-							ExpressionsToReplace = list
-						};
-					}
-
-					if (info?.ExpressionsToReplace != null)
-					{
-						foreach (var path in info.ExpressionsToReplace)
-						{
-							path.Path = path.Path.Transform((p, info), static (context, e) => ReferenceEquals(e, context.info.Parameter) ? context.p.Path : e);
-							path.Expr = path.Expr.Transform((p, info), static (context, e) => ReferenceEquals(e, context.info.Parameter) ? context.p.Path : e);
-							path.Level += p.Level;
-
-							list.Add(path);
-						}
-
-						list = list.OrderByDescending(path => path.Level).ToList();
-					}
-
-					if (list.Count > 1)
-					{
-						return new SequenceConvertInfo
-						{
-							Parameter            = param,
-							Expression           = methodCall,
-							ExpressionsToReplace = list
-								.Where (e => !ReferenceEquals(e, p))
-								.Select(ei =>
-								{
-									ei.Expr = ei.Expr.Transform(p, static (p, e) => ReferenceEquals(e, p.Expr) ? p.Path : e);
-									return ei;
-								})
-								.ToList()
-						};
-					}
-				}
-			}
-
-			if (!ReferenceEquals(methodCall, originalMethodCall))
-				return new SequenceConvertInfo
-				{
-					Parameter  = param,
-					Expression = methodCall,
-				};
-
-			return null;
-		}
-
-		static IEnumerable<SequenceConvertPath> GetExpressions(ParameterExpression param, Expression path, int level, Expression expression)
-		{
-			switch (expression.NodeType)
-			{
-				// new { ... }
-				//
-				case ExpressionType.New        :
-					{
-						var expr = (NewExpression)expression;
-
-						if (expr.Members != null) for (var i = 0; i < expr.Members.Count; i++)
-						{
-							var q = GetExpressions(param, Expression.MakeMemberAccess(path, expr.Members[i]), level + 1, expr.Arguments[i]);
-							foreach (var e in q)
-								yield return e;
-						}
-
-						break;
-					}
-
-				// new MyObject { ... }
-				//
-				case ExpressionType.MemberInit :
-					{
-						var expr = (MemberInitExpression)expression;
-						var dic  = TypeAccessor.GetAccessor(expr.Type).Members
-							.Select((m,i) => new { m, i })
-							.ToDictionary(_ => _.m.MemberInfo.Name, _ => _.i);
-
-						foreach (var binding in expr.Bindings.Cast<MemberAssignment>().OrderBy(b => dic.TryGetValue(b.Member.Name, out var idx) ? idx : int.MaxValue))
-						{
-							var q = GetExpressions(param, Expression.MakeMemberAccess(path, binding.Member), level + 1, binding.Expression);
-							foreach (var e in q)
-								yield return e;
-						}
-
-						break;
-					}
-
-				// parameter
-				//
-				case ExpressionType.Parameter  :
-					if (ReferenceEquals(expression, param))
-						yield return new SequenceConvertPath { Path = path, Expr = expression, Level = level };
-					break;
-
-				case ExpressionType.TypeAs     :
-					yield return new SequenceConvertPath { Path = path, Expr = expression, Level = level };
-					break;
-
-				// Queryable method.
-				//
-				case ExpressionType.Call       :
-					{
-						var call = (MethodCallExpression)expression;
-
-						if (call.IsQueryable())
-							if (typeof(IEnumerable).IsSameOrParentOf(call.Type) ||
-							    typeof(IQueryable). IsSameOrParentOf(call.Type) ||
-							    FirstSingleBuilder.MethodNames.Contains(call.Method.Name))
-								yield return new SequenceConvertPath { Path = path, Expr = expression, Level = level };
-
-						break;
-					}
-			}
 		}
 
 		#endregion

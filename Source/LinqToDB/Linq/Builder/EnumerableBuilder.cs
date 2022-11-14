@@ -17,6 +17,9 @@ namespace LinqToDB.Linq.Builder
 
 		public bool CanBuild(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
+			if (buildInfo.IsSubQuery)
+				return false;
+
 			var expr = buildInfo.Expression;
 
 			if (expr.NodeType == ExpressionType.NewArrayInit)

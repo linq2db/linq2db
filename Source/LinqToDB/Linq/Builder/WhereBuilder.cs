@@ -17,7 +17,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			var isHaving  = methodCall.Method.Name == "Having";
 			var sequence  = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
-			var condition = (LambdaExpression)methodCall.Arguments[1].Unwrap();
+			var condition = methodCall.Arguments[1].UnwrapLambda();
 
 			if (sequence.SelectQuery.Select.IsDistinct        ||
 			    sequence.SelectQuery.Select.TakeValue != null ||

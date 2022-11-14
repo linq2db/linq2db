@@ -909,8 +909,11 @@ namespace LinqToDB.Linq.Builder
 						}
 						else if (CanBeCompiled(newExpr, false))
 						{
-							if (newExpr.NodeType != ExpressionType.MemberInit && newExpr.NodeType != ExpressionType.New || !isFirst)
-								sql = ParametersContext.BuildParameter(newExpr, columnDescriptor, alias: alias).SqlParameter;
+							if (newExpr.NodeType == ExpressionType.MemberInit || newExpr.NodeType == ExpressionType.New)
+								newExpr = SqlGenericConstructorExpression.Parse(newExpr);
+							else
+								if (!isFirst)
+									sql = ParametersContext.BuildParameter(newExpr, columnDescriptor, alias: alias).SqlParameter;
 						}
 					}
 				}
@@ -1193,6 +1196,17 @@ namespace LinqToDB.Linq.Builder
 								isPureExpression, p.MemberInfo?.Name ?? alias))).ToList());
 
 						return newConstructor;
+					}
+
+					if (expression is SqlReaderIsNullExpression readerIsNullExpression && flags.HasFlag(ProjectFlags.SQL))
+					{
+						var sc = new SqlSearchCondition();
+
+						var notNullPlaceholder = readerIsNullExpression.Placeholder;
+						if (!flags.IsTest())
+							notNullPlaceholder = (SqlPlaceholderExpression)UpdateNesting(context, notNullPlaceholder);
+						sc.Conditions.Add(new SqlCondition(false, new SqlPredicate.IsNull(notNullPlaceholder.Sql, readerIsNullExpression.IsNot)));
+						return CreatePlaceholder(context, sc, expression, alias: readerIsNullExpression.IsNot ? "not_null" : "null");
 					}
 
 					break;
@@ -1542,7 +1556,7 @@ namespace LinqToDB.Linq.Builder
 					var right = MakeExpression(context, e.Right, flags.ExpandFlag());
 
 					var newExpr   = e.Update(left, e.Conversion, right);
-					var optimized = OptimizationContext.OptimizeExpressionTree(newExpr);
+					var optimized = OptimizationContext.OptimizeExpressionTree(newExpr, false);
 
 					if (!ReferenceEquals(optimized, newExpr))
 					{
@@ -2792,7 +2806,7 @@ namespace LinqToDB.Linq.Builder
 		public bool BuildSearchCondition(IBuildContext? context, Expression expression, ProjectFlags flags, List<SqlCondition> conditions, bool runOptimization = true)
 		{
 			if (runOptimization)
-				expression = OptimizationContext.OptimizeExpressionTree(expression);
+				expression = OptimizationContext.OptimizeExpressionTree(expression, false);
 
 			//expression = GetRemoveNullPropagationTransformer(true).Transform(expression);
 
@@ -3792,8 +3806,12 @@ namespace LinqToDB.Linq.Builder
 			// nothing to project here
 			if (path.NodeType   == ExpressionType.Parameter 
 				|| path.NodeType == ExpressionType.Lambda
-			    || path.NodeType == ExpressionType.Extension && path is SqlPlaceholderExpression)
+				|| path.NodeType == ExpressionType.New
+				|| path.NodeType == ExpressionType.MemberInit
+			    || path.NodeType == ExpressionType.Extension && path is SqlPlaceholderExpression or SqlGenericConstructorExpression)
+			{
 				return path;
+			}
 
 			if ((flags & (ProjectFlags.Root | ProjectFlags.AggregationRoot | ProjectFlags.AssociationRoot | ProjectFlags.Expand)) == 0)
 			{
@@ -4093,6 +4111,12 @@ namespace LinqToDB.Linq.Builder
 					}
 
 					if (!handled && flags.HasFlag(ProjectFlags.Expression) && CanBeCompiled(path, true))
+					{
+						expression = path;
+						handled    = true;
+					}
+
+					if (flags.HasFlag(ProjectFlags.Expression) && path.NodeType == ExpressionType.NewArrayInit)
 					{
 						expression = path;
 						handled    = true;

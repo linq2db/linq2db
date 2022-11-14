@@ -64,7 +64,9 @@ namespace LinqToDB.SqlQuery
 			{
 				if (e is SelectQuery sql && sql.HasSetOperators)
 				{
-					parentSetType.Add(sql.From.Tables[0].Source, sql.SetOperators[0].Operation);
+					if (sql.From.Tables.Count > 0)
+						parentSetType.Add(sql.From.Tables[0].Source, sql.SetOperators[0].Operation);
+
 					foreach (var set in sql.SetOperators)
 						parentSetType.Add(set.SelectQuery, sql.SetOperators[0].Operation);
 				}
@@ -653,7 +655,7 @@ namespace LinqToDB.SqlQuery
 				(mainQuery.SqlQueryExtensions ??= new()).AddRange(subQuery.SqlQueryExtensions);
 		}
 
-		SqlTableSource OptimizeSubQuery(
+		SqlTableSource? OptimizeSubQuery(
 			SelectQuery parentQuery,
 			SqlTableSource source,
 			bool optimizeWhere,
@@ -673,7 +675,7 @@ namespace LinqToDB.SqlQuery
 					jt.JoinType == JoinType.Inner || jt.JoinType == JoinType.CrossApply,
 					jt);
 
-				if (table != jt.Table)
+				if (table != null && table != jt.Table)
 				{
 					if (jt.Table.Source is SelectQuery sql)
 					{
@@ -822,7 +824,7 @@ namespace LinqToDB.SqlQuery
 			return true;
 		}
 
-		SqlTableSource RemoveSubQuery(
+		SqlTableSource? RemoveSubQuery(
 			SelectQuery parentQuery,
 			SqlTableSource childSource,
 			bool concatWhere,
@@ -841,6 +843,10 @@ namespace LinqToDB.SqlQuery
 				if (query.From.Tables.Count > 1)
 				{
 					isQueryOK = !parentQuery.Select.HasModifier;
+				}
+				else
+				{
+					isQueryOK = parentQuery.Select.From.Tables.Count == 1;
 				}
 			}
 
@@ -877,6 +883,8 @@ namespace LinqToDB.SqlQuery
 
 			//isQueryOK = isQueryOK && (_flags.IsDistinctOrderBySupported || query.Select.IsDistinct );
 
+			var fromTable = query.From.Tables.FirstOrDefault();
+
 			if (isQueryOK && parentJoinedTable != null && parentJoinedTable.JoinType != JoinType.Inner)
 			{
 				if (parentJoinedTable.JoinType == JoinType.Full || parentJoinedTable.JoinType == JoinType.Right)
@@ -885,8 +893,8 @@ namespace LinqToDB.SqlQuery
 				}
 				else
 				{
-					var sqlTableSource = query.From.Tables[0];
-					if (sqlTableSource.Joins.Count > 0)
+					var sqlTableSource = fromTable;
+					if (sqlTableSource?.Joins.Count > 0)
 					{
 						var hasOtherJoin = false;
 						foreach (var join in sqlTableSource.Joins)
@@ -989,7 +997,8 @@ namespace LinqToDB.SqlQuery
 				}			
 			}
 
-			map.Add(query.All, query.From.Tables[0].All);
+			if (fromTable != null)
+				map.Add(query.All, fromTable.All);
 
 			List<ISqlExpression[]>? uniqueKeys = null;
 
@@ -1047,8 +1056,11 @@ namespace LinqToDB.SqlQuery
 				}
 			});
 
-			query.From.Tables[0].Joins.AddRange(childSource.Joins);
-			query.From.Tables[0].Alias ??= childSource.Alias;
+			if (fromTable != null)
+			{
+				fromTable.Joins.AddRange(childSource.Joins);
+				fromTable.Alias ??= childSource.Alias;
+			}
 
 			if (!query.Where.IsEmpty)
 			{
@@ -1093,10 +1105,10 @@ namespace LinqToDB.SqlQuery
 				return expr;
 			});
 
-			var result = query.From.Tables[0];
+			var result = fromTable;
 
 			if (uniqueKeys != null)
-				result.UniqueKeys.AddRange(uniqueKeys);
+				result?.UniqueKeys.AddRange(uniqueKeys);
 
 			return result;
 		}
@@ -1174,9 +1186,16 @@ namespace LinqToDB.SqlQuery
 
 					if (sql.OrderBy.IsEmpty)
 					{
-						if (partitionBy == null)
-							throw new InvalidOperationException("OrderBy not specified for limited recordset.");
-						orderByItems.Add(new SqlOrderByItem(partitionBy[0], false));
+						if (partitionBy != null)
+							orderByItems.Add(new SqlOrderByItem(partitionBy[0], false));
+						else if (!_flags.SupportsRowNumberWithoutOrderBy)
+						{
+							if (sql.Select.Columns.Count == 0)
+							{
+								throw new InvalidOperationException("OrderBy not specified for limited recordset.");
+							}
+							orderByItems.Add(new SqlOrderByItem(sql.Select.Columns[0].Expression, false));
+						}
 					}
 
 					if (orderByItems.Count > 0)
@@ -1348,6 +1367,13 @@ namespace LinqToDB.SqlQuery
 			for (var i = 0; i < _selectQuery.From.Tables.Count; i++)
 			{
 				var table = OptimizeSubQuery(_selectQuery, _selectQuery.From.Tables[i], true, false, isApplySupported, true, null);
+
+				if (table == null)
+				{
+					_selectQuery.From.Tables.RemoveAt(i);
+					--i;
+					continue;
+				}
 
 				if (table != _selectQuery.From.Tables[i])
 				{
@@ -1610,85 +1636,92 @@ namespace LinqToDB.SqlQuery
 
 									// where we can start analyzing that we can move join to subquery
 									var testedColumn = tsQuery.Select.Columns[0];
-									if (IsUniqueUsage(sq, testedColumn))
+
+									if (!IsUniqueUsage(sq, testedColumn))
 									{
-										if (testedColumn.Expression is SqlFunction function)
+										QueryHelper.MoveDuplicateUsageToSubQuery(sq);
+										// will be processed in the next step
+										ti = -1;
+										break;
+									}
+
+									if (testedColumn.Expression is SqlFunction function)
+									{
+										if (function.IsAggregate)
 										{
-											if (function.IsAggregate)
+											if (!ctx.flags.IsCountSubQuerySupported)
+												continue;
+										}
+									}
+
+									var mainQuery = table.Source as SelectQuery;
+									/*
+									if (mainQuery?.Select.HasModifier == true)
+										continue;
+										*/
+
+									// moving whole join to subquery
+
+									table.Joins.RemoveAt(j);
+									tsQuery.Where.ConcatSearchCondition(join.Condition);
+
+									if (mainQuery != null)
+									{
+										// moving into FROM query
+
+										var idx       = mainQuery.Select.Add(tsQuery);
+										var newColumn = mainQuery.Select.Columns[idx];
+										newColumn.RawAlias = testedColumn.RawAlias;
+
+										// temporary remove to avoid recursion
+										mainQuery.Select.Columns.RemoveAt(idx);
+
+										sq.Walk(WalkOptions.Default, (testedColumn, newColumn),
+											static (ctx, e) =>
 											{
-												if (!ctx.flags.IsCountSubQuerySupported)
-													continue;
-											}
-										}
-
-
-										var mainQuery = table.Source as SelectQuery;
-										if (mainQuery?.Select.HasModifier == true)
-											continue;
-
-										// moving whole join to subquery
-
-										table.Joins.RemoveAt(j);
-										tsQuery.Where.ConcatSearchCondition(join.Condition);
-
-										if (mainQuery != null)
-										{
-											// moving into FROM query
-
-											var idx       = mainQuery.Select.Add(tsQuery);
-											var newColumn = mainQuery.Select.Columns[idx];
-											newColumn.RawAlias = testedColumn.RawAlias;
-
-											// temporary remove to avoid recursion
-											mainQuery.Select.Columns.RemoveAt(idx);
-
-											sq.Walk(WalkOptions.Default, (testedColumn, newColumn),
-												static (ctx, e) =>
+												if (e == ctx.testedColumn)
 												{
-													if (e == ctx.testedColumn)
-													{
-														return ctx.newColumn;
-													}
+													return ctx.newColumn;
+												}
 
-													return e;
-												});
+												return e;
+											});
 
 
-											var newQuery = tsQuery.ConvertAll((mainQuery, testedColumn, newColumn),
-												allowMutation: true,
-												static (visitor, e) =>
+										var newQuery = tsQuery.ConvertAll((mainQuery, testedColumn, newColumn),
+											allowMutation: true,
+											static (visitor, e) =>
+											{
+												if (e is SqlColumn column &&
+												    column.Parent == visitor.Context.mainQuery)
 												{
-													if (e is SqlColumn column &&
-													    column.Parent == visitor.Context.mainQuery)
-													{
-														return column.Expression;
-													}
+													return column.Expression;
+												}
 
-													return e;
-												});
+												return e;
+											});
 
-											newColumn.Expression = newQuery;
+										newColumn.Expression = newQuery;
 
-											// restore at index
-											mainQuery.Select.Columns.Insert(idx, newColumn);
-										}
-										else
-										{
-											// replacing column with subquery
+										// restore at index
+										mainQuery.Select.Columns.Insert(idx, newColumn);
+									}
+									else
+									{
+										// replacing column with subquery
 
-											var newQuery = sq.ConvertAll((query: tsQuery, column: testedColumn),
-												allowMutation: true,
-												static (visitor, e) =>
-												{
-													if (e == visitor.Context.column)
-														return visitor.Context.query;
+										var newQuery = sq.ConvertAll((query: tsQuery, column: testedColumn),
+											allowMutation: true,
+											static (visitor, e) =>
+											{
+												if (e == visitor.Context.column)
+													return visitor.Context.query;
 
-													return e;
-												});
+												return e;
+											});
 
-											if (!ReferenceEquals(sq, newQuery))
-												throw new InvalidOperationException("Query should be not changed.");
-										}
+										if (!ReferenceEquals(sq, newQuery))
+											throw new InvalidOperationException("Query should be not changed.");
 									}
 								}
 							}

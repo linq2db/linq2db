@@ -325,6 +325,12 @@ namespace LinqToDB.SqlProvider
 		[DataMember(Order = 36)]
 		public List<string> CustomFlags { get; set; } = new List<string>();
 
+		/// <summary>
+		/// Provider supports ROW_NUMBER OVER ()
+		/// </summary>
+		[DataMember(Order = 37)]
+		public bool SupportsRowNumberWithoutOrderBy { get; set; } = true;
+
 		#region Equality
 		// equality support currently needed for remote context to avoid incorrect use of cached dependent types
 		// with different flags

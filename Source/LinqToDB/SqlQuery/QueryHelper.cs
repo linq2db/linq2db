@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Linq;
-using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -17,7 +15,7 @@ namespace LinqToDB.SqlQuery
 			return null != testedRoot.Find(element, static (element, e) => e == element);
 		}
 
-		private class IsDependsOnSourcesContext
+		class IsDependsOnSourcesContext
 		{
 			public IsDependsOnSourcesContext(HashSet<ISqlTableSource> onSources, HashSet<IQueryElement>? elementsToIgnore)
 			{
@@ -73,7 +71,7 @@ namespace LinqToDB.SqlQuery
 			return ctx.DependencyFound;
 		}
 
-		private class IsDependsOnElementContext
+		class IsDependsOnElementContext
 		{
 			public IsDependsOnElementContext(IQueryElement onElement, HashSet<IQueryElement>? elementsToIgnore)
 			{
@@ -105,7 +103,7 @@ namespace LinqToDB.SqlQuery
 			return ctx.DependencyFound;
 		}
 
-		private class DependencyCountContext
+		class DependencyCountContext
 		{
 			public DependencyCountContext(IQueryElement onElement, HashSet<IQueryElement>? elementsToIgnore)
 			{
@@ -281,12 +279,12 @@ namespace LinqToDB.SqlQuery
 			return descriptor.GetDbDataType(true);
 		}
 
-		public static void CollectDependencies(IQueryElement root, IEnumerable<ISqlTableSource> sources, HashSet<ISqlExpression> found, IEnumerable<IQueryElement>? ignore = null)
+		public static void CollectDependencies(IQueryElement root, IEnumerable<ISqlTableSource> sources, HashSet<ISqlExpression> found, IEnumerable<IQueryElement>? ignore = null, bool singleColumnLevel = false)
 		{
 			var hash       = new HashSet<ISqlTableSource>(sources);
 			var hashIgnore = new HashSet<IQueryElement>(ignore ?? Enumerable.Empty<IQueryElement>());
 
-			root.VisitParentFirst((hash, hashIgnore, found), static (context, e) =>
+			root.VisitParentFirst((hash, hashIgnore, found, singleColumnLevel), static (context, e) =>
 			{
 				if (e is ISqlTableSource source && context.hash.Contains(source) || context.hashIgnore.Contains(e))
 					return false;
@@ -298,6 +296,8 @@ namespace LinqToDB.SqlQuery
 						var c = (SqlColumn) e;
 						if (c.Parent != null && context.hash.Contains(c.Parent))
 							context.found.Add(c);
+						if (context.singleColumnLevel)
+							return false;
 						break;
 					}
 					case QueryElementType.SqlField:
@@ -1265,6 +1265,65 @@ namespace LinqToDB.SqlQuery
 				withStack);
 		}
 
+		public static void MoveDuplicateUsageToSubQuery(SelectQuery query)
+		{
+			var sources = new HashSet<ISqlTableSource>(EnumerateAccessibleSources(query));
+			var uniqueColumns = new HashSet<ISqlExpression>(query.Select.Columns.SelectMany(c =>
+			{
+				var found   = new HashSet<ISqlExpression>();
+				CollectDependencies(c.Expression, sources, found, singleColumnLevel: true);
+				return found;
+			}));
+
+			var subQuery = new SelectQuery();
+
+			var columnsMap = new Dictionary<IQueryElement, SqlColumn>();
+			foreach (var expr in uniqueColumns)
+			{
+				columnsMap.Add(expr, subQuery.Select.AddNewColumn(expr));
+			}
+
+			foreach (var column in query.Select.Columns)
+			{
+				var convertedExpression = column.Expression.ConvertAll(columnsMap, (v, e) =>
+				{
+					if (v.Context.TryGetValue(e, out var newColumn))
+						return newColumn;
+					return e;
+				});
+
+				column.Expression = convertedExpression;
+			}
+
+			subQuery.Where.SearchCondition.Conditions.AddRange(query.Where.SearchCondition.Conditions);
+			query.Where.SearchCondition.Conditions.Clear();
+
+			subQuery.Having.SearchCondition.Conditions.AddRange(query.Having.SearchCondition.Conditions);
+			query.Having.SearchCondition.Conditions.Clear();
+			
+			subQuery.GroupBy.Items.AddRange(query.GroupBy.Items);
+			query.GroupBy.Items.Clear();
+
+			subQuery.OrderBy.Items.AddRange(query.OrderBy.Items);
+			query.OrderBy.Items.Clear();
+
+			/*
+			subQuery.Select.IsDistinct = query.Select.IsDistinct;
+			query.Select.IsDistinct    = false;
+
+			subQuery.Select.SkipValue = query.Select.SkipValue;
+			query.Select.SkipValue    = null;
+			subQuery.Select.TakeValue = query.Select.TakeValue;
+			query.Select.TakeValue    = null;
+			*/
+
+			subQuery.From.Tables.AddRange(query.From.Tables);
+
+			query.Select.From.Tables.Clear();
+			_ = query.Select.From.Table(subQuery);
+
+		}
+
 		/// <summary>
 		/// Removes Join from query based on <paramref name="joinFunc"/> result.
 		/// </summary>
@@ -1647,7 +1706,7 @@ namespace LinqToDB.SqlQuery
 			return null != expression.Find(static e => (e.ElementType == QueryElementType.SqlParameter) && ((SqlParameter)e).IsQueryParameter);
 		}
 
-		private class NeedParameterInliningContext
+		class NeedParameterInliningContext
 		{
 			public bool HasParameter;
 			public bool IsQueryParameter;
@@ -1800,7 +1859,7 @@ namespace LinqToDB.SqlQuery
 			return tableToDelete;
 		}
 
-		private static void RemoveNotUnusedColumnsInternal(SelectQuery selectQuery, SelectQuery parentQuery)
+		static void RemoveNotUnusedColumnsInternal(SelectQuery selectQuery, SelectQuery parentQuery)
 		{
 			for (int i = 0; i < selectQuery.From.Tables.Count; i++)
 			{

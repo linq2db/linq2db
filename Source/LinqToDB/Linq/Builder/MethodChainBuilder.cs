@@ -115,7 +115,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					expr = Expression.Block(
 						Expression.Call(null, MemberHelper.MethodOf(() => CheckNullValue(false, null!)),
-							new SqlReaderIsNullExpression(Placeholder), Expression.Constant(_methodName)),
+							new SqlReaderIsNullExpression(Placeholder, false), Expression.Constant(_methodName)),
 						Placeholder);
 				}
 

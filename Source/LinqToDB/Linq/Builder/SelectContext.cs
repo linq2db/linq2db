@@ -153,7 +153,7 @@ namespace LinqToDB.Linq.Builder
 					return path;
 				}
 
-				if (!path.Type.IsSameOrParentOf(Body.Type) && flags.HasFlag(ProjectFlags.Expression))
+				if (!(path.Type.IsSameOrParentOf(Body.Type) || Body.Type.IsSameOrParentOf(path.Type)) && flags.HasFlag(ProjectFlags.Expression))
 					return new SqlEagerLoadExpression((ContextRefExpression)path, path, GetEagerLoadExpression(path));
 
 				if (Body.NodeType == ExpressionType.TypeAs)

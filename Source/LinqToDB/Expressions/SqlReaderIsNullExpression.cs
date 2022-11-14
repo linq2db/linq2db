@@ -5,10 +5,12 @@ namespace LinqToDB.Expressions
 	class SqlReaderIsNullExpression : Expression
 	{
 		public SqlPlaceholderExpression Placeholder { get; }
+		public bool                     IsNot       { get; }
 
-		public SqlReaderIsNullExpression(SqlPlaceholderExpression placeholder)
+		public SqlReaderIsNullExpression(SqlPlaceholderExpression placeholder, bool isNot)
 		{
 			Placeholder = placeholder;
+			IsNot  = isNot;
 		}
 
 		public override ExpressionType NodeType => ExpressionType.Extension;
@@ -19,12 +21,12 @@ namespace LinqToDB.Expressions
 			if (ReferenceEquals(placeholder, Placeholder))
 				return this;
 
-			return new SqlReaderIsNullExpression(placeholder);
+			return new SqlReaderIsNullExpression(placeholder, IsNot);
 		}
 
 		public override string ToString()
 		{
-			return $"IsDbNull({Placeholder})";
+			return IsNot ? $"IsNotDbNull({Placeholder})" : $"IsDbNull({Placeholder})";
 		}
 	}
 }

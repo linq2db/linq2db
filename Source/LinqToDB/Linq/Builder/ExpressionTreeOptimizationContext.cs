@@ -33,7 +33,11 @@ namespace LinqToDB.Linq.Builder
 
 			_optimizeExpressionTreeTransformer =
 				TransformInfoVisitor<ExpressionTreeOptimizationContext>.Create(this,
-					static (ctx, expr) => ctx.OptimizeExpressionTreeTransformer(expr));
+					static (ctx, expr) => ctx.OptimizeExpressionTreeTransformer(expr, false));
+
+			_optimizeExpressionTreeTransformerInProjection =
+				TransformInfoVisitor<ExpressionTreeOptimizationContext>.Create(this,
+					static (ctx, expr) => ctx.OptimizeExpressionTreeTransformer(expr, true));
 		}
 
 		private EqualsToVisitor.EqualsToInfo? _equalsToContextFalse;
@@ -190,13 +194,17 @@ namespace LinqToDB.Linq.Builder
 			return result;
 		}
 
-		public Expression OptimizeExpressionTree(Expression expression)
+		public Expression OptimizeExpressionTree(Expression expression, bool inProjection)
 		{
+			var transformer = inProjection
+				? _optimizeExpressionTreeTransformerInProjection
+				: _optimizeExpressionTreeTransformer;
+
 			var result = expression;
 			do
 			{
 				var prevExpression = result;
-				result = _optimizeExpressionTreeTransformer.Transform(prevExpression);
+				result = transformer.Transform(prevExpression);
 				if (prevExpression == result)
 					break;
 			} while (true);
@@ -315,8 +323,9 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		TransformInfoVisitor<ExpressionTreeOptimizationContext> _optimizeExpressionTreeTransformer;
+		TransformInfoVisitor<ExpressionTreeOptimizationContext> _optimizeExpressionTreeTransformerInProjection;
 
-		public TransformInfo OptimizeExpressionTreeTransformer(Expression expr)
+		public TransformInfo OptimizeExpressionTreeTransformer(Expression expr, bool inProjection)
 		{
 			bool IsEqualConstants(Expression left, Expression right)
 			{
@@ -453,12 +462,15 @@ namespace LinqToDB.Linq.Builder
 						}
 					}
 
-					var isNullLeft  = IsNull(binary.Left);
-					var isNullRight = IsNull(binary.Right);
-
-					if (isNullLeft != null && isNullRight != null)
+					if (inProjection)
 					{
-						return new TransformInfo(Expression.Constant(isNullLeft == isNullRight));
+						var isNullLeft  = IsNull(binary.Left);
+						var isNullRight = IsNull(binary.Right);
+
+						if (isNullLeft != null && isNullRight != null)
+						{
+							return new TransformInfo(Expression.Constant(isNullLeft == isNullRight));
+						}
 					}
 
 					break;
@@ -493,13 +505,16 @@ namespace LinqToDB.Linq.Builder
 						}
 					}
 
-					var isNullLeft  = IsNull(binary.Left);
-					var isNullRight = IsNull(binary.Right);
-
-					if (isNullLeft != null && isNullRight != null)
+					if (inProjection)
 					{
-						return new TransformInfo(Expression.Constant(isNullLeft != isNullRight));
-					}
+						var isNullLeft  = IsNull(binary.Left);
+						var isNullRight = IsNull(binary.Right);
+
+						if (isNullLeft != null && isNullRight != null)
+						{
+							return new TransformInfo(Expression.Constant(isNullLeft != isNullRight));
+						}
+					}	
 
 					break;
 				}

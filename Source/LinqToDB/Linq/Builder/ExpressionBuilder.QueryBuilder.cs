@@ -219,7 +219,7 @@ namespace LinqToDB.Linq.Builder
 			// convert all missed references
 			var postProcessed = BuildSqlExpression(new Dictionary<Expression, Expression>(), context, expression, ProjectFlags.Expression);
 
-			postProcessed = OptimizationContext.OptimizeExpressionTree(postProcessed);
+			postProcessed = OptimizationContext.OptimizeExpressionTree(postProcessed, true);
 
 			// deduplicate objects instantiation
 			postProcessed = Deduplicate(postProcessed);
@@ -605,6 +605,19 @@ namespace LinqToDB.Linq.Builder
 
 								return new TransformInfo(mi, true);*/
 							}
+
+						/*case ExpressionType.NewArrayInit:
+						{
+							var arrayExpr = (NewArrayExpression)expr;
+
+							var updated = arrayExpr.Update(arrayExpr.Expressions.Select(e =>
+								context.builder.BuildSqlExpression(
+									context.translated, context.context,
+									e,
+									context.flags, context.alias)));
+
+							return new TransformInfo(updated);
+						}*/
 
 						case ExpressionType.Extension:
 						{
@@ -1050,10 +1063,13 @@ namespace LinqToDB.Linq.Builder
 					if (isNullExpression.Placeholder.Index == null)
 						throw new InvalidOperationException();
 
-					var nullCheck = Expression.Call(
+					Expression nullCheck = Expression.Call(
 						DataReaderParam,
 						ReflectionHelper.DataReader.IsDBNull,
 						ExpressionInstances.Int32Array(isNullExpression.Placeholder.Index.Value));
+
+					if (isNullExpression.IsNot)
+						nullCheck = Expression.Not(nullCheck);
 
 					return nullCheck;
 				}

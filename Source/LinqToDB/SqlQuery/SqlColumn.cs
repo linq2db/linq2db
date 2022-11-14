@@ -156,7 +156,7 @@ namespace LinqToDB.SqlQuery
 			var underlying = UnderlyingExpression();
 			if (!ReferenceEquals(underlying, Expression))
 			{
-				sb.Append(" == ");
+				sb.Append(" := ");
 				underlying.ToString(sb, dic);
 			}
 
