@@ -14,7 +14,8 @@
 		<Nullable>enable</Nullable>
 		<WarningLevel>9999</WarningLevel>
 		<ErrorReport>prompt</ErrorReport>
-		<NoWarn>1573;1591</NoWarn>
+		<!--<NoWarn>1573;1591</NoWarn>-->
+		<NoWarn>1573;1591;CS9057</NoWarn>
 		<Features>strict</Features>
 		<TreatWarningsAsErrors>True</TreatWarningsAsErrors>
 
