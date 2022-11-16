@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -31,21 +30,35 @@ namespace LinqToDB.Linq.Builder
 
 			public Expression? DefaultValue { get; }
 
-			public bool Disabled { get; set; }
-
 			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 			{
 				throw new NotImplementedException();
 			}
 
+			static Expression ApplyNullability(Expression expr)
+			{
+				return expr.Transform(e =>
+				{
+					if (e.NodeType == ExpressionType.Extension && e is SqlPlaceholderExpression placeholder)
+					{
+						if (!placeholder.Sql.CanBeNull)
+						{
+							return placeholder.WithSql(new SqlNullabilityExpression(placeholder.Sql));
+						}
+					}
+
+					return e;
+				});
+			}
+
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
-				if (SequenceHelper.IsSameContext(path, this) && (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AssociationRoot)))
+				if (SequenceHelper.IsSameContext(path, this) && (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AssociationRoot)) || flags.HasFlag(ProjectFlags.Expand))
 					return path;
 
 				var expr = base.MakeExpression(path, flags);
 
-				if (!Disabled && SequenceHelper.IsSameContext(path, this))
+				if (SequenceHelper.IsSameContext(path, this))
 				{
 					expr = Builder.BuildSqlExpression(new Dictionary<Expression, Expression>(), this, expr, flags);
 
@@ -59,6 +72,8 @@ namespace LinqToDB.Linq.Builder
 						notNull = ExpressionBuilder.CreatePlaceholder(this,
 							new SqlValue(1), Expression.Constant(1), alias: "not_null");
 					}
+
+					expr = ApplyNullability(expr);
 
 					var defaultValue = DefaultValue ?? new DefaultValueExpression(Builder.MappingSchema, expr.Type);
 

@@ -24,6 +24,13 @@ namespace LinqToDB.Expressions
 			return new SqlReaderIsNullExpression(placeholder, IsNot);
 		}
 
+		public SqlReaderIsNullExpression WithIsNot(bool isNot)
+		{
+			if (IsNot == isNot)
+				return this;
+			return new SqlReaderIsNullExpression(Placeholder, isNot);
+		}
+
 		public override string ToString()
 		{
 			return IsNot ? $"IsNotDbNull({Placeholder})" : $"IsDbNull({Placeholder})";

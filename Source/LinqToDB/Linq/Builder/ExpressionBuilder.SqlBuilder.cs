@@ -909,8 +909,13 @@ namespace LinqToDB.Linq.Builder
 						}
 						else if (CanBeCompiled(newExpr, false))
 						{
-							if (newExpr.NodeType == ExpressionType.MemberInit || newExpr.NodeType == ExpressionType.New)
+							if ((newExpr.NodeType == ExpressionType.MemberInit ||
+							     newExpr.NodeType == ExpressionType.New) 
+							    && !newExpr.Type.IsValueType && flags.HasFlag(ProjectFlags.Keys))
+							{
+								// expression will be needed for comparison
 								newExpr = SqlGenericConstructorExpression.Parse(newExpr);
+							}
 							else
 								if (!isFirst)
 									sql = ParametersContext.BuildParameter(newExpr, columnDescriptor, alias: alias).SqlParameter;
@@ -1136,6 +1141,17 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.Conditional:
 				{
 					var e = (ConditionalExpression)expression;
+
+					/*if (flags.IsSql() && e.Test is SqlReaderIsNullExpression reader)
+					{
+						//TODO: not so elegant, prediction that expression was modified by DefaultIfEmptyContext
+						var defaultValue = reader.IsNot ? e.IfFalse : e.IfTrue;
+						if (defaultValue.NodeType == ExpressionType.Default || defaultValue is DefaultValueExpression)
+						{
+							var wrapped = reader.IsNot ? e.IfTrue : e.IfFalse;
+							return ConvertToSqlExpr(context, wrapped, flags, columnDescriptor: columnDescriptor, isPureExpression: isPureExpression);
+						}
+					}*/
 
 					var testExpr  = ConvertToSqlExpr(context, e.Test, flags, columnDescriptor: columnDescriptor, isPureExpression: isPureExpression);
 					var trueExpr  = ConvertToSqlExpr(context, e.IfTrue, flags, columnDescriptor: columnDescriptor, isPureExpression: isPureExpression);
@@ -1872,6 +1888,21 @@ namespace LinqToDB.Linq.Builder
 							return sc;
 						}
 
+						if (rightExpr is ConditionalExpression { Test: SqlPlaceholderExpression { Sql: SqlSearchCondition rightSearchCond } } && rightSearchCond.Conditions.Count == 1)
+						{
+							var condition  = rightSearchCond.Conditions[0];
+							var localIsNot = isNot;
+							if (condition.IsNot)
+								localIsNot = !localIsNot;
+
+							if (condition.Predicate is SqlPredicate.IsNull isnull)
+							{
+								if (isnull.IsNot == localIsNot)
+									return isnull;
+
+								return (ISqlPredicate)isnull.Invert();
+							}
+						}
 
 						var rightPlaceholders = CollectDistinctPlaceholders(rightExpr);
 						return GenerateNullComparison(rightPlaceholders, isNot);
@@ -1890,6 +1921,22 @@ namespace LinqToDB.Linq.Builder
 							}
 
 							return sc;
+						}
+
+						if (leftExpr is ConditionalExpression { Test: SqlPlaceholderExpression { Sql: SqlSearchCondition leftSearchCond } } && leftSearchCond.Conditions.Count == 1)
+						{
+							var condition  = leftSearchCond.Conditions[0];
+							var localIsNot = isNot;
+							if (condition.IsNot)
+								localIsNot = !localIsNot;
+
+							if (condition.Predicate is SqlPredicate.IsNull isnull)
+							{
+								if (isnull.IsNot == localIsNot)
+									return isnull;
+
+								return (ISqlPredicate)isnull.Invert();
+							}
 						}
 
 						var leftPlaceholders = CollectDistinctPlaceholders(leftExpr);
@@ -1929,6 +1976,9 @@ namespace LinqToDB.Linq.Builder
 			l ??= ConvertToSql(context, left, flags, unwrap: false, columnDescriptor: columnDescriptor);
 			r ??= ConvertToSql(context, right, flags, unwrap: true,  columnDescriptor: columnDescriptor);
 
+			var lOriginal = l;
+			var rOriginal = r;
+
 			l = QueryHelper.UnwrapExpression(l);
 			r = QueryHelper.UnwrapExpression(r);
 
@@ -1944,8 +1994,10 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.NotEqual:
 
 					if (!context!.SelectQuery.IsParameterDependent &&
-						(l is SqlParameter && l.CanBeNull || r is SqlParameter && r.CanBeNull))
+						(l is SqlParameter && lOriginal.CanBeNull || r is SqlParameter && r.CanBeNull))
+					{
 						context.SelectQuery.IsParameterDependent = true;
+					}
 
 					// | (SqlQuery(Select([]) as q), SqlValue(null))
 					// | (SqlValue(null), SqlQuery(Select([]) as q))  =>
@@ -1975,6 +2027,7 @@ namespace LinqToDB.Linq.Builder
 					CanBeNull     = false,
 					DoNotOptimize = true
 				};
+				lOriginal = l;
 			}
 
 			if (r is SqlSearchCondition)
@@ -1984,6 +2037,7 @@ namespace LinqToDB.Linq.Builder
 					CanBeNull     = false,
 					DoNotOptimize = true
 				};
+				rOriginal = r;
 			}
 
 			ISqlPredicate? predicate = null;
@@ -1994,13 +2048,13 @@ namespace LinqToDB.Linq.Builder
 				var             isNullable = false;
 				if (IsBooleanConstant(left, out value))
 				{
-					isNullable = typeof(bool?) == left.Type || r.CanBeNull;
-					expression = r;
+					isNullable = typeof(bool?) == left.Type || rOriginal.CanBeNull;
+					expression = rOriginal;
 				}
 				else if (IsBooleanConstant(right, out value))
 				{
-					isNullable = typeof(bool?) == right.Type || l.CanBeNull;
-					expression = l;
+					isNullable = typeof(bool?) == right.Type || lOriginal.CanBeNull;
+					expression = lOriginal;
 				}
 
 				if (value != null
@@ -2026,7 +2080,7 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			predicate ??= new SqlPredicate.ExprExpr(l, op, r, Configuration.Linq.CompareNullsAsValues ? true : null);
+			predicate ??= new SqlPredicate.ExprExpr(lOriginal, op, rOriginal, Configuration.Linq.CompareNullsAsValues ? true : null);
 			return predicate;
 		}
 

@@ -39,5 +39,11 @@ namespace LinqToDB.Linq.Builder
 		{
 			return (flags & ProjectFlags.Test) != 0;
 		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool IsSql(this ProjectFlags flags)
+		{
+			return (flags & ProjectFlags.SQL) != 0;
+		}
 	}
 }

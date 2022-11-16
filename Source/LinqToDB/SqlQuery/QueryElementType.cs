@@ -6,6 +6,7 @@
 		SqlFunction,
 		SqlParameter,
 		SqlExpression,
+		SqlNullabilityExpression,
 		SqlObjectExpression,
 		SqlBinaryExpression,
 		SqlValue,

@@ -51,6 +51,12 @@ namespace LinqToDB.SqlQuery
 						break;
 					}
 
+				case QueryElementType.SqlNullabilityExpression:
+				{
+					VisitX((SqlNullabilityExpression)element);
+					break;
+				}
+
 				case QueryElementType.SqlObjectExpression:
 					{
 						VisitX((SqlObjectExpression)element);
@@ -618,6 +624,11 @@ namespace LinqToDB.SqlQuery
 		void VisitX(SqlExpression element)
 		{
 			foreach (var v in element.Parameters) Visit(v);
+		}
+
+		void VisitX(SqlNullabilityExpression element)
+		{
+			Visit(element.SqlExpression);
 		}
 
 		void VisitX(SqlRow element)

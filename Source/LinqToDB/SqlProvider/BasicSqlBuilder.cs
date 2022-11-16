@@ -2851,6 +2851,10 @@ namespace LinqToDB.SqlProvider
 
 					break;
 
+				case QueryElementType.SqlNullabilityExpression:
+					BuildExpression(((SqlNullabilityExpression)expr).SqlExpression, buildTableName, checkParentheses, alias, ref addAlias, throwExceptionIfTableNotFound);
+					break;
+
 				case QueryElementType.SqlBinaryExpression:
 					BuildBinaryExpression((SqlBinaryExpression)expr);
 					break;

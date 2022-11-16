@@ -43,6 +43,11 @@ namespace LinqToDB.SqlQuery
 			return null;
 		}
 
+		IQueryElement? FindX(SqlNullabilityExpression ne)
+		{
+			return Find(ne.SqlExpression);
+		}
+
 		IQueryElement? FindX(SqlObjectExpression oe)
 		{
 			foreach (var item in oe.InfoParameters)
@@ -80,23 +85,24 @@ namespace LinqToDB.SqlQuery
 
 			switch (element.ElementType)
 			{
-				case QueryElementType.SqlFunction         : return Find(((SqlFunction)          element).Parameters     );
-				case QueryElementType.SqlExpression       : return Find(((SqlExpression)        element).Parameters     );
-				case QueryElementType.SqlObjectExpression : return FindX(((SqlObjectExpression) element)                );
-				case QueryElementType.Column              : return Find(((SqlColumn)            element).Expression     );
-				case QueryElementType.SearchCondition     : return FindX((SqlSearchCondition)   element                 );
-				case QueryElementType.Condition           : return Find(((SqlCondition)         element).Predicate      );
-				case QueryElementType.ExprPredicate       : return Find(((SqlPredicate.Expr)    element).Expr1          );
-				case QueryElementType.NotExprPredicate    : return Find(((SqlPredicate.NotExpr) element).Expr1          );
-				case QueryElementType.IsNullPredicate     : return Find(((SqlPredicate.IsNull)  element).Expr1          );
-				case QueryElementType.FromClause          : return Find(((SqlFromClause)        element).Tables         );
-				case QueryElementType.WhereClause         : return Find(((SqlWhereClause)       element).SearchCondition);
-				case QueryElementType.GroupByClause       : return Find(((SqlGroupByClause)     element).Items          );
-				case QueryElementType.GroupingSet         : return Find(((SqlGroupingSet)       element).Items          );
-				case QueryElementType.OrderByClause       : return Find(((SqlOrderByClause)     element).Items          );
-				case QueryElementType.OrderByItem         : return Find(((SqlOrderByItem)       element).Expression     );
-				case QueryElementType.SetOperator         : return Find(((SqlSetOperator)       element).SelectQuery    );
-				case QueryElementType.FuncLikePredicate   : return Find(((SqlPredicate.FuncLike)element).Function       );
+				case QueryElementType.SqlFunction              : return Find(((SqlFunction)          element).Parameters     );
+				case QueryElementType.SqlExpression            : return Find(((SqlExpression)        element).Parameters     );
+				case QueryElementType.SqlObjectExpression      : return FindX(((SqlObjectExpression) element)                );
+				case QueryElementType.SqlNullabilityExpression : return FindX((SqlNullabilityExpression)element);
+				case QueryElementType.Column                   : return Find(((SqlColumn)            element).Expression     );
+				case QueryElementType.SearchCondition          : return FindX((SqlSearchCondition)   element                 );
+				case QueryElementType.Condition                : return Find(((SqlCondition)         element).Predicate      );
+				case QueryElementType.ExprPredicate            : return Find(((SqlPredicate.Expr)    element).Expr1          );
+				case QueryElementType.NotExprPredicate         : return Find(((SqlPredicate.NotExpr) element).Expr1          );
+				case QueryElementType.IsNullPredicate          : return Find(((SqlPredicate.IsNull)  element).Expr1          );
+				case QueryElementType.FromClause               : return Find(((SqlFromClause)        element).Tables         );
+				case QueryElementType.WhereClause              : return Find(((SqlWhereClause)       element).SearchCondition);
+				case QueryElementType.GroupByClause            : return Find(((SqlGroupByClause)     element).Items          );
+				case QueryElementType.GroupingSet              : return Find(((SqlGroupingSet)       element).Items          );
+				case QueryElementType.OrderByClause            : return Find(((SqlOrderByClause)     element).Items          );
+				case QueryElementType.OrderByItem              : return Find(((SqlOrderByItem)       element).Expression     );
+				case QueryElementType.SetOperator              : return Find(((SqlSetOperator)       element).SelectQuery    );
+				case QueryElementType.FuncLikePredicate        : return Find(((SqlPredicate.FuncLike)element).Function       );
 
 				case QueryElementType.IsTruePredicate:
 					{

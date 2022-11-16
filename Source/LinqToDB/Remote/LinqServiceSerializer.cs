@@ -719,15 +719,16 @@ namespace LinqToDB.Remote
 							break;
 						}
 
-					case QueryElementType.SqlFunction         : GetType(((SqlFunction)        e).SystemType)          ; break;
-					case QueryElementType.SqlExpression       : GetType(((SqlExpression)      e).SystemType)          ; break;
-					case QueryElementType.SqlBinaryExpression : GetType(((SqlBinaryExpression)e).SystemType)          ; break;
-					case QueryElementType.SqlDataType         : GetType(((SqlDataType)        e).Type.SystemType)     ; break;
-					case QueryElementType.SqlValue            : GetType(((SqlValue)           e).ValueType.SystemType); break;
-					case QueryElementType.SqlTable            : GetType(((SqlTable)           e).ObjectType)          ; break;
-					case QueryElementType.SqlCteTable         : GetType(((SqlCteTable)        e).ObjectType)          ; break;
-					case QueryElementType.CteClause           : GetType(((CteClause)          e).ObjectType)          ; break;
-					case QueryElementType.SqlRawSqlTable      : GetType(((SqlRawSqlTable)     e).ObjectType)          ; break;
+					case QueryElementType.SqlFunction              : GetType(((SqlFunction)             e).SystemType)          ; break;
+					case QueryElementType.SqlExpression            : GetType(((SqlExpression)           e).SystemType)          ; break;
+					case QueryElementType.SqlNullabilityExpression : GetType(((SqlNullabilityExpression)e).SystemType)          ; break;
+					case QueryElementType.SqlBinaryExpression      : GetType(((SqlBinaryExpression)     e).SystemType)          ; break;
+					case QueryElementType.SqlDataType              : GetType(((SqlDataType)             e).Type.SystemType)     ; break;
+					case QueryElementType.SqlValue                 : GetType(((SqlValue)                e).ValueType.SystemType); break;
+					case QueryElementType.SqlTable                 : GetType(((SqlTable)                e).ObjectType)          ; break;
+					case QueryElementType.SqlCteTable              : GetType(((SqlCteTable)             e).ObjectType)          ; break;
+					case QueryElementType.CteClause                : GetType(((CteClause)               e).ObjectType)          ; break;
+					case QueryElementType.SqlRawSqlTable           : GetType(((SqlRawSqlTable)          e).ObjectType)          ; break;
 				}
 
 				ObjectIndices.Add(e, ++Index);
@@ -826,6 +827,14 @@ namespace LinqToDB.Remote
 
 							break;
 						}
+
+					case QueryElementType.SqlNullabilityExpression :
+					{
+						var elem = (SqlNullabilityExpression)e;
+						Append(elem.SqlExpression);
+
+						break;
+					}
 
 					case QueryElementType.SqlBinaryExpression :
 						{
@@ -1680,6 +1689,15 @@ namespace LinqToDB.Remote
 
 							break;
 						}
+
+					case QueryElementType.SqlNullabilityExpression :
+					{
+						var sqlExpression = Read<ISqlExpression>()!;
+
+						obj = new SqlNullabilityExpression(sqlExpression);
+
+						break;
+					}
 
 					case QueryElementType.SqlBinaryExpression :
 						{

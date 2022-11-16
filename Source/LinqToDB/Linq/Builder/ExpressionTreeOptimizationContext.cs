@@ -411,6 +411,12 @@ namespace LinqToDB.Linq.Builder
 					if (notExpression.Operand.NodeType == ExpressionType.Not)
 						return new TransformInfo(((UnaryExpression)notExpression.Operand).Operand, false, true);
 
+					if (notExpression.Operand.NodeType == ExpressionType.Extension &&
+					    notExpression.Operand is SqlReaderIsNullExpression isnull)
+					{
+						return new TransformInfo(isnull.WithIsNot(!isnull.IsNot), false, true);
+					}
+
 					if (notExpression.Operand.NodeType == ExpressionType.Equal)
 					{
 						var equal = (BinaryExpression)notExpression.Operand;

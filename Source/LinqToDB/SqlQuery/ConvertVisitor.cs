@@ -192,6 +192,17 @@ namespace LinqToDB.SqlQuery
 						break;
 					}
 
+					case QueryElementType.SqlNullabilityExpression:
+					{
+						var expr = (SqlNullabilityExpression)element;
+						var sql  = (ISqlExpression?)ConvertInternal(expr.SqlExpression);
+
+						if (sql != null && !ReferenceEquals(sql , expr.SqlExpression))
+							newElement = new SqlNullabilityExpression(sql);
+
+						break;
+					}
+
 					case QueryElementType.SqlObjectExpression:
 					{
 						var expr      = (SqlObjectExpression)element;

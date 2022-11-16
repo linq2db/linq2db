@@ -364,6 +364,8 @@ namespace LinqToDB.SqlQuery
 				if (!ReferenceEquals(expr, underlying))
 					return UnwrapExpression(underlying);
 			}
+			else if (expr.ElementType == QueryElementType.SqlNullabilityExpression)
+				return UnwrapExpression(((SqlNullabilityExpression)expr).SqlExpression);
 
 			return expr;
 		}
