@@ -507,7 +507,16 @@ namespace Tests.DataProvider
 			var defaultMin = -7922816251426433759.3543950335M;
 
 			await TestType<decimal, decimal?>(context, new(typeof(decimal)), default, default);
-			await TestType<decimal, decimal?>(context, new(typeof(decimal)), defaultMax, defaultMin);
+
+			if (context.IsAnyOf(ProviderName.ClickHouseClient))
+			{
+				// https://github.com/DarkWanderer/ClickHouse.Client/issues/229
+				defaultMax = 7922816251426433759.354395033M;
+				defaultMin = -7922816251426433759.354395033M;
+				await TestType<decimal, decimal?>(context, new(typeof(decimal)), defaultMax, defaultMin);
+			}
+			else
+				await TestType<decimal, decimal?>(context, new(typeof(decimal)), defaultMax, defaultMin);
 
 			// testing of all combinations is not feasible
 			// we will test only several precisions and first/last two scales for each tested precision
@@ -565,7 +574,7 @@ namespace Tests.DataProvider
 					await TestType<decimal, decimal?>(context, decimalType, minDecimal, maxDecimal);
 
 					var zero = "0";
-					if (context.IsAnyOf(ProviderName.ClickHouseOctonica) && s > 0)
+					if (context.IsAnyOf(ProviderName.ClickHouseOctonica, ProviderName.ClickHouseClient) && s > 0)
 						zero = $"{zero}.{new string('0', s)}";
 					await TestType<string, string?>(context, stringType, "0", default, getExpectedValue: v => zero);
 					await TestType<string, string?>(context, stringType, minString, maxString);

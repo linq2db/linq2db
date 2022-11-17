@@ -19,6 +19,15 @@ steps:
   condition: and(variables.title, eq(variables.net60, 'true'), succeeded())
 
 - task: UseDotNet@2
+  displayName: 'Install .NET 7 (x86)'
+  inputs:
+    packageType: sdk
+    version: 7.x
+  condition: and(variables.title, eq(variables.net70, 'true'), eq(variables.x86, 'true'), succeeded())
+  env:
+    PROCESSOR_ARCHITECTURE: x86
+
+- task: UseDotNet@2
   displayName: 'Install .NET 7'
   inputs:
     packageType: sdk

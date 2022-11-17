@@ -29,9 +29,9 @@
 		<PackageVersion Include="System.Data.OleDb"                                     Version="7.0.0"         />
 		<PackageVersion Include="System.Data.Odbc"                                      Version="7.0.0"         />
 		<PackageVersion Include="Oracle.ManagedDataAccess"                              Version="21.8.0"        />
-		<!--3.21 provider currently contains bug which leads to test failures with oracle 12-->
-		<!--<PackageVersion Include="Oracle.ManagedDataAccess.Core"                         Version="2.19.170"      />-->
-		<PackageVersion Include="Oracle.ManagedDataAccess.Core"                         Version="3.21.80"       />
+		<!--3.21 provider currently contains bug which leads to test failures with oracle 12+-->
+		<PackageVersion Include="Oracle.ManagedDataAccess.Core"                         Version="2.19.170"      />
+		<!--<PackageVersion Include="Oracle.ManagedDataAccess.Core"                         Version="3.21.80"       />-->
 		<PackageVersion Include="Devart.Data.Oracle"                                    Version="10.0.0"        />
 		<PackageVersion Include="FirebirdSql.Data.FirebirdClient"                       Version="9.1.0"         />
 		<PackageVersion Include="System.Data.SQLite.Core"                               Version="1.0.116"       />
@@ -74,6 +74,7 @@
 		<!--tests-->
 		<PackageVersion Include="System.Configuration.ConfigurationManager"             Version="7.0.0"         />
 		<PackageVersion Include="protobuf-net.Grpc.AspNetCore"                          Version="1.0.179"       />
+		<PackageVersion Include="Newtonsoft.Json"                                       Version="13.0.1"        />
 	</ItemGroup>
 	
 	<!--linq2db source-->
@@ -98,6 +99,8 @@
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">
 		<!--test v1.x compatibility, required for Pomelo EF.Core provider v5 -->
 		<PackageVersion Include="MySqlConnector"                                        Version="1.3.14"        />
+		<!--v7+ dropped support of netcoreapp3.1 and ns2.0 build is useless as it throws PNSE ¯\_(ツ)_/¯ -->
+		<PackageVersion Include="System.Data.Odbc"                                      Version="6.0.1"         />
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' != 'net472' AND '$(TargetFramework)' != 'netcoreapp3.1' ">
