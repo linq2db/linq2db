@@ -27,7 +27,6 @@
 		<!--don't use 5.0.1 version due to critical bug in it-->
 		<PackageVersion Include="Microsoft.Data.SqlClient"                              Version="5.0.0"         />
 		<PackageVersion Include="System.Data.OleDb"                                     Version="7.0.0"         />
-		<PackageVersion Include="System.Data.Odbc"                                      Version="7.0.0"         />
 		<PackageVersion Include="Oracle.ManagedDataAccess"                              Version="21.8.0"        />
 		<!--3.21 provider currently contains bug which leads to test failures with oracle 12+-->
 		<PackageVersion Include="Oracle.ManagedDataAccess.Core"                         Version="2.19.170"      />
@@ -105,6 +104,7 @@
 
 	<ItemGroup Condition=" '$(TargetFramework)' != 'net472' AND '$(TargetFramework)' != 'netcoreapp3.1' ">
 		<PackageVersion Include="MySqlConnector"                                        Version="2.2.0"         />
+		<PackageVersion Include="System.Data.Odbc"                                      Version="7.0.0"         />
 	</ItemGroup>
 
 </Project>
