@@ -911,7 +911,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							if ((newExpr.NodeType == ExpressionType.MemberInit ||
 							     newExpr.NodeType == ExpressionType.New) 
-							    && !newExpr.Type.IsValueType && flags.HasFlag(ProjectFlags.Keys))
+							    && !MappingSchema.IsScalarType(newExpr.Type) && flags.HasFlag(ProjectFlags.Keys))
 							{
 								// expression will be needed for comparison
 								newExpr = SqlGenericConstructorExpression.Parse(newExpr);
