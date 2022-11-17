@@ -1425,7 +1425,6 @@ namespace Tests.xUpdate
 						new LinqDataTypes2 { ID = 1004, MoneyValue = 0m, DateTimeValue = null, BoolValue = true,  GuidValue = new Guid("ef129165-6ffe-4df9-bb6b-bb16e413c883"), SmallIntValue =  null, IntValue = null }
 					};
 
-					// workaround for https://github.com/DarkWanderer/ClickHouse.Client/issues/152
 					var options = new BulkCopyOptions();
 					options.MaxBatchSize = 1;
 					if (context.IsAnyOf(ProviderName.ClickHouseClient))

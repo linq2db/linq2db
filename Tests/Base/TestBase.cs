@@ -1444,10 +1444,6 @@ namespace Tests
 		{
 			var options = new BulkCopyOptions();
 
-			// https://github.com/DarkWanderer/ClickHouse.Client/issues/152
-			if (configuration.IsAnyOf(ProviderName.ClickHouseClient))
-				options.WithoutSession = true;
-
 			return options;
 		}
 	}
