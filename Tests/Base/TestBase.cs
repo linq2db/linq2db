@@ -6,9 +6,9 @@ using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
-
 using LinqToDB;
 using LinqToDB.Common;
+using LinqToDB.Configuration;
 using LinqToDB.Data;
 using LinqToDB.Data.RetryPolicy;
 using LinqToDB.DataProvider.Informix;
@@ -19,11 +19,9 @@ using LinqToDB.Mapping;
 using LinqToDB.Reflection;
 using LinqToDB.Tools;
 using LinqToDB.Tools.Comparers;
-
-using Tests.Remote.ServerContainer;
-
 using NUnit.Framework;
 using NUnit.Framework.Internal;
+using Tests.Remote.ServerContainer;
 
 namespace Tests
 {
@@ -442,6 +440,20 @@ namespace Tests
 
 			if (retryPolicy != null)
 				res.RetryPolicy = retryPolicy;
+
+			return res;
+		}
+
+		protected TestDataConnection GetDataConnection(LinqToDBConnectionOptions options)
+		{
+			if (options.ConfigurationString?.EndsWith(".LinqService") == true)
+			{
+				throw new InvalidOperationException($"Call {nameof(GetDataContext)} for remote context creation");
+			}
+
+			Debug.WriteLine(options.ConfigurationString, "Provider ");
+
+			var res = new TestDataConnection(options);
 
 			return res;
 		}

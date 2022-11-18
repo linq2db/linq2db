@@ -3,7 +3,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
 using LinqToDB;
+using LinqToDB.Configuration;
 using LinqToDB.Data;
+using LinqToDB.DataProvider;
 using LinqToDB.Mapping;
 using Npgsql;
 using NUnit.Framework;
@@ -39,13 +41,8 @@ namespace Tests.UserTests
 			Day,
 		}
 
-		private MappingSchema SetupEnums(string context, bool withTable)
+		private LinqToDBConnectionOptions SetupEnums(string context, bool withTable)
 		{
-			// TODO: currently unclear how to integrate new API with linq2db, will address in https://github.com/linq2db/linq2db/issues/3501
-#pragma warning disable CS0618 // Type or member is obsolete
-			NpgsqlConnection.GlobalTypeMapper.MapEnum<TimeUnit>("time_unit");
-#pragma warning restore CS0618 // Type or member is obsolete
-
 			var mappingSchema = new MappingSchema();
 
 			const string initScript = @"
@@ -64,28 +61,36 @@ CREATE TABLE IF NOT EXISTS schedule
 INSERT INTO schedule(unit, unit_nullable,amount) VALUES ('day','day',1),('day','day',2),('day','day',3);";
 
 			// executing separately, we have to reload just created types
-			using (var db = (DataConnection)GetDataContext(context.Replace(".LinqService", string.Empty), mappingSchema))
+			IDataProvider dataProvider;
+			string?       connectionString;
+			using (var db = GetDataConnection(context))
 			{
 				db.Execute(initScript);
 				if (withTable)
 					db.Execute(createTableScript);
 
-				((NpgsqlConnection)db.Connection).ReloadTypes();
+				dataProvider     = db.DataProvider;
+				connectionString = db.ConnectionString;
 			}
 
-			return mappingSchema;
+			var builder = new NpgsqlDataSourceBuilder(connectionString);
+			builder.MapEnum<TimeUnit>("time_unit");
+			var dataSource = builder.Build();
+
+			return new LinqToDBConnectionOptionsBuilder()
+				.UseConnectionFactory(dataProvider, dataSource.CreateConnection)
+				.UseMappingSchema(mappingSchema)
+				.Build();
 		}
 
 		[Test]
-		public void EnumMappingTest([IncludeDataSources(true, TestProvName.AllPostgreSQL95Plus)] string context)
+		public void EnumMappingTest([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context)
 		{
-			var mappingSchema = SetupEnums(context, true);
-
 			var       unit         = TimeUnit.Day;
 			TimeUnit? unitNullable = TimeUnit.Day;
 			TimeUnit? unitNull     = null;
 
-			using (var db = GetDataContext(context, mappingSchema))
+			using (var db = GetDataConnection(SetupEnums(context, true)))
 			{
 				db.Insert(new Schedule { Unit = TimeUnit.Hour, Amount = 1 });
 
@@ -116,8 +121,6 @@ INSERT INTO schedule(unit, unit_nullable,amount) VALUES ('day','day',1),('day','
 		[Test]
 		public void EnumMappingTestWithTypes([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context, [Values] BulkCopyType bcType)
 		{
-			var mappingSchema = SetupEnums(context, false);
-
 			var data = new[]
 			{
 				new ScheduleWithTypes { Unit = TimeUnit.Day, UnitNullable  = TimeUnit.Day, Amount = 1 },
@@ -130,7 +133,7 @@ INSERT INTO schedule(unit, unit_nullable,amount) VALUES ('day','day',1),('day','
 			TimeUnit? unitNullable = TimeUnit.Day;
 			TimeUnit? unitNull     = null;
 
-			using (var db = (DataConnection)GetDataContext(context, mappingSchema))
+			using (var db = GetDataConnection(SetupEnums(context, false)))
 			using (db.CreateLocalTable<ScheduleWithTypes>())
 			{
 				db.BulkCopy(new BulkCopyOptions() { BulkCopyType = bcType }, data);
@@ -161,8 +164,6 @@ INSERT INTO schedule(unit, unit_nullable,amount) VALUES ('day','day',1),('day','
 		[Test]
 		public async Task EnumMappingTestWithTypesAsync([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context, [Values] BulkCopyType bcType)
 		{
-			var mappingSchema = SetupEnums(context, false);
-
 			var data = new[]
 			{
 				new ScheduleWithTypes { Unit = TimeUnit.Day, UnitNullable  = TimeUnit.Day, Amount = 1 },
@@ -175,7 +176,7 @@ INSERT INTO schedule(unit, unit_nullable,amount) VALUES ('day','day',1),('day','
 			TimeUnit? unitNullable = TimeUnit.Day;
 			TimeUnit? unitNull     = null;
 
-			using (var db = (DataConnection)GetDataContext(context, mappingSchema))
+			using (var db = GetDataConnection(SetupEnums(context, false)))
 			using (db.CreateLocalTable<ScheduleWithTypes>())
 			{
 				await db.BulkCopyAsync(new BulkCopyOptions() { BulkCopyType = bcType }, data);
