@@ -8,6 +8,9 @@ using LinqToDB.Data;
 using LinqToDB.Common;
 using LinqToDB.Mapping;
 using NUnit.Framework;
+#if !NETFRAMEWORK
+using ClickHouse.Client.Numerics;
+#endif
 
 namespace Tests.DataProvider
 {
@@ -59,7 +62,7 @@ namespace Tests.DataProvider
 		 *      not suppored by providers and still experimental
 		 *      implementation requires providers support and array and tuple types support first
 		 *
-		 * 9.  Decimals with precision > 29 lack support from providers (except MySql support as string)
+		 * 9.  Decimals with precision > 29 lack support from Octonica provider
 		 *
 		 * 10. DateTime/DateTime64 with precision > 8 lack of suitable type to store such precision
 		 * 
@@ -514,6 +517,12 @@ namespace Tests.DataProvider
 				defaultMax = 7922816251426433759.354395033M;
 				defaultMin = -7922816251426433759.354395033M;
 				await TestType<decimal, decimal?>(context, new(typeof(decimal)), defaultMax, defaultMin);
+
+#if !NETFRAMEWORK
+				var customMin = new ClickHouseDecimal(BigInteger.Parse("-" + new string('9', 76)), 10);
+				var customMax = new ClickHouseDecimal(BigInteger.Parse(new string('9', 76)), 10);
+				await TestType<ClickHouseDecimal, ClickHouseDecimal?>(context, new(typeof(ClickHouseDecimal)), customMax, customMin);
+#endif
 			}
 			else
 				await TestType<decimal, decimal?>(context, new(typeof(decimal)), defaultMax, defaultMin);
@@ -523,26 +532,30 @@ namespace Tests.DataProvider
 			var precisions = new int[] { 1, 2, 8, 9, 10, 11, 17, 18, 19, 20, 28, 29, 30, 37, 38, 39, 40, 75, 76 };
 			foreach (var p in precisions)
 			{
-				// https://github.com/DarkWanderer/ClickHouse.Client/issues/137
 				// https://github.com/Octonica/ClickHouseClient/issues/28
-				if (p >= 29 && context.IsAnyOf(ProviderName.ClickHouseClient, ProviderName.ClickHouseOctonica))
+				if (p >= 29 && context.IsAnyOf(ProviderName.ClickHouseOctonica))
 					continue;
+
+				var skipBasicTypes = p >= 29 && context.IsAnyOf(ProviderName.ClickHouseClient);
 
 				for (var s = 0; s <= p; s++)
 				{
 					if (s > 1 && s < p - 1)
 						continue;
 
+					// https://github.com/DarkWanderer/ClickHouse.Client/issues/230
+					var skipScale = s >= 29 && context.IsAnyOf(ProviderName.ClickHouseClient);
+
 					var dataType = p switch
 					{
 						< 10 => DataType.Decimal32,
 						< 19 => DataType.Decimal64,
 						< 38 => DataType.Decimal128,
-						_ => DataType.Decimal256
+						_    => DataType.Decimal256
 					};
 
 					var decimalType = new DbDataType(typeof(decimal), dataType, null, null, p, s);
-					var stringType = new DbDataType(typeof(string), dataType, null, null, p, s);
+					var stringType  = new DbDataType(typeof(string), dataType, null, null, p, s);
 
 					var maxString = new string('9', p);
 					if (s > 0)
@@ -570,14 +583,29 @@ namespace Tests.DataProvider
 						minDecimal = -maxDecimal;
 					}
 
-					await TestType<decimal, decimal?>(context, decimalType, default, default);
-					await TestType<decimal, decimal?>(context, decimalType, minDecimal, maxDecimal);
+					if (!skipScale)
+						await TestType<decimal, decimal?>(context, decimalType, default, default);
+					if (!skipBasicTypes)
+						await TestType<decimal, decimal?>(context, decimalType, minDecimal, maxDecimal);
 
 					var zero = "0";
 					if (context.IsAnyOf(ProviderName.ClickHouseOctonica, ProviderName.ClickHouseClient) && s > 0)
 						zero = $"{zero}.{new string('0', s)}";
-					await TestType<string, string?>(context, stringType, "0", default, getExpectedValue: v => zero);
-					await TestType<string, string?>(context, stringType, minString, maxString);
+					if (!skipScale)
+						await TestType<string, string?>(context, stringType, "0", default, getExpectedValue: v => zero);
+					if (!skipBasicTypes)
+						await TestType<string, string?>(context, stringType, minString, maxString);
+
+#if !NETFRAMEWORK
+					if (context.IsAnyOf(ProviderName.ClickHouseClient) && !skipScale)
+					{
+						var customDecimalType = new DbDataType(typeof(ClickHouseDecimal), dataType, null, null, p, s);
+						var customMin         = new ClickHouseDecimal(BigInteger.Parse("-" + new string('9', p)), s);
+						var customMax         = new ClickHouseDecimal(BigInteger.Parse(new string('9', p)), s);
+
+						await TestType<ClickHouseDecimal, ClickHouseDecimal?>(context, customDecimalType, customMin, customMax);
+					}
+#endif
 				}
 			}
 		}

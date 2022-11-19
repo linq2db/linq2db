@@ -161,7 +161,6 @@ namespace Tests.Samples
 	[TestFixture]
 	public class JsonConvertTests : TestBase
 	{
-
 		[Test]
 		public void SampleSelectTest([IncludeDataSources(TestProvName.AllSqlServer2016Plus, TestProvName.AllClickHouse)] string context)
 		{
