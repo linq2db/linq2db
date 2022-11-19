@@ -3171,6 +3171,7 @@ namespace LinqToDB.SqlProvider
 				StringBuilder.Append(type.Type.DbType);
 			else
 			{
+				var systemType = type.Type.SystemType.FullName;
 				if (type.Type.DataType == DataType.Undefined)
 					type = MappingSchema.GetDataType(type.Type.SystemType);
 
@@ -3182,7 +3183,7 @@ namespace LinqToDB.SqlProvider
 
 				if (type.Type.DataType == DataType.Undefined)
 					// give some hint to user that it is expected situation and he need to fix something on his side
-					throw new LinqToDBException("Database type cannot be determined automatically and must be specified explicitly");
+					throw new LinqToDBException($"Database column type cannot be determined automatically and must be specified explicitly for system type {systemType}");
 
 				BuildDataTypeFromDataType(type, forCreateTable, canBeNull);
 			}
