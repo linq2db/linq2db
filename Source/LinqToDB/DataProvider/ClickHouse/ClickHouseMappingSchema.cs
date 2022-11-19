@@ -780,6 +780,8 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 		private static string? GetIntervalLiteralFormat(DataType dataType)
 		{
+			// multi-component intervals generation not supported currently (not needed)
+			// https://github.com/ClickHouse/ClickHouse/pull/42195
 			return dataType switch
 			{
 				DataType.IntervalSecond  => "INTERVAL {0} SECOND",
