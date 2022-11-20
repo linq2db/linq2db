@@ -345,19 +345,19 @@ namespace LinqToDB.Linq.Builder
 
 								if (mt.DataType != DataType.Undefined)
 								{
-									context.result.DataType = context.result.DataType.WithDataType(mt.DataType);
+									context.result.DataType             = context.result.DataType.WithDataType(mt.DataType);
 									context.result.DbDataTypeExpression = Expression.Constant(mt);
 								}
 
 								if (mt.DbType != null)
 								{
-									context.result.DataType = context.result.DataType.WithDbType(mt.DbType);
+									context.result.DataType             = context.result.DataType.WithDbType(mt.DbType);
 									context.result.DbDataTypeExpression = Expression.Constant(mt);
 								}
 
 								if (mt.Length != null)
 								{
-									context.result.DataType = context.result.DataType.WithLength(mt.Length);
+									context.result.DataType             = context.result.DataType.WithLength(mt.Length);
 									context.result.DbDataTypeExpression = Expression.Constant(mt);
 								}
 
