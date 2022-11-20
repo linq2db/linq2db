@@ -26,7 +26,7 @@ namespace LinqToDB.Scaffold
 			ISet<string>     defaultSchemas,
 			IType?           baseType)
 		{
-			var (tableName, isNonDefaultSchema) = ProcessObjectName(table.Name, defaultSchemas);
+			var (tableName, isNonDefaultSchema) = ProcessObjectName(table.Name, defaultSchemas, false);
 
 			var metadata = new EntityMetadata()
 			{

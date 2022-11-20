@@ -718,9 +718,10 @@ namespace LinqToDB.Schema
 
 		ISet<string> ISchemaProvider.GetDefaultSchemas() => _options.DefaultSchemas ??  _defaultSchemas;
 
-		string? ISchemaProvider.DatabaseName  => _databaseName;
-		string? ISchemaProvider.ServerVersion => _serverVersion;
-		string? ISchemaProvider.DataSource    => _dataSource;
+		string?         ISchemaProvider.DatabaseName    => _databaseName;
+		string?         ISchemaProvider.ServerVersion   => _serverVersion;
+		string?         ISchemaProvider.DataSource      => _dataSource;
+		DatabaseOptions ISchemaProvider.DatabaseOptions => _isSqlServer ? SqlServerDatabaseOptions.Instance : DatabaseOptions.Default;
 		#endregion
 
 		#region ITypeMappingProvider
