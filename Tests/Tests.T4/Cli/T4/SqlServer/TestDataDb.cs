@@ -1018,7 +1018,7 @@ namespace Cli.T4.SqlServer
 		/// <summary>
 		/// FK_Patient2_IndexTable backreference
 		/// </summary>
-		[Association(ThisKey = nameof(PKField2) + "," + nameof(PKField2), OtherKey = nameof(IndexTable2.PKField2) + "," + nameof(PKField2))]
+		[Association(ThisKey = nameof(PKField2) + "," + nameof(PKField1), OtherKey = nameof(IndexTable2.PKField2) + "," + nameof(PKField1))]
 		public IndexTable2? Patient { get; set; }
 		#endregion
 	}
@@ -1033,7 +1033,7 @@ namespace Cli.T4.SqlServer
 		/// <summary>
 		/// FK_Patient2_IndexTable
 		/// </summary>
-		[Association(CanBeNull = false, ThisKey = nameof(PKField2) + "," + nameof(PKField2), OtherKey = nameof(IndexTable.PKField2) + "," + nameof(PKField2))]
+		[Association(CanBeNull = false, ThisKey = nameof(PKField2) + "," + nameof(PKField1), OtherKey = nameof(IndexTable.PKField2) + "," + nameof(PKField1))]
 		public IndexTable Patient2IndexTable { get; set; } = null!;
 		#endregion
 	}
