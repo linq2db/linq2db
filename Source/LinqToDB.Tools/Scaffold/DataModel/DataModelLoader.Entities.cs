@@ -107,7 +107,7 @@ namespace LinqToDB.Scaffold
 			Dictionary<string, ColumnModel> entityColumnsMap;
 			_columns.Add(entity, entityColumnsMap = new());
 
-			foreach (var column in table.Columns.OrderBy(c => c.Name))
+			foreach (var column in table.Columns.OrderBy(c => c.Ordinal))
 			{
 				var typeMapping    = MapType(column.Type);
 				var columnMetadata = new ColumnMetadata() { Name = column.Name };

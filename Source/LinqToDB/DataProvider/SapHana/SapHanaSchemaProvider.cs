@@ -769,6 +769,7 @@ namespace LinqToDB.DataProvider.SapHana
 					PrimaryKeyOrder      = -1,
 					IsIdentity           = column.c.IsIdentity,
 					Description          = column.c.Description,
+					Ordinal              = column.c.Ordinal,
 				});
 			}
 

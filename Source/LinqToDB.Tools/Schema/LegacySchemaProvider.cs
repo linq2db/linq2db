@@ -487,7 +487,8 @@ namespace LinqToDB.Schema
 				type,
 				column.IsNullable,
 				!column.SkipOnInsert,
-				!column.SkipOnUpdate);
+				!column.SkipOnUpdate,
+				column.Ordinal);
 		}
 
 		/// <summary>

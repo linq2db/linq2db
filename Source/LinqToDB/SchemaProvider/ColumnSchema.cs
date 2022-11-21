@@ -78,6 +78,11 @@ namespace LinqToDB.SchemaProvider
 		public int?        Scale                { get; set; }
 
 		/// <summary>
+		/// Column ordinal.
+		/// </summary>
+		public int?        Ordinal              { get; set; }
+
+		/// <summary>
 		/// Gets column owner schema.
 		/// </summary>
 		public TableSchema Table = null!;
