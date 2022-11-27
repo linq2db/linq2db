@@ -54,7 +54,6 @@
 		<PackageVersion Include="FSharp.Core"                                           Version="7.0.0"         />
 		<!--packages for test projects-->
 		<PackageVersion Include="System.Collections.Immutable"                          Version="7.0.0"         />
-		<PackageVersion Include="System.Text.Json"                                      Version="7.0.0"         />
 		<PackageVersion Include="MiniProfiler.Shared"                                   Version="4.2.22"        />
 		<PackageVersion Include="Microsoft.AspNet.OData"                                Version="7.6.1"         />
 		<!--don't update due to https://github.com/OData/AspNetCoreOData/issues/420#issuecomment-1219208060-->
@@ -101,6 +100,7 @@
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net472' ">
 		<!--test v0.x compatibility, required for Pomelo EF.Core provider v3 -->
 		<PackageVersion Include="MySqlConnector"                                        Version="0.69.10"       />
+		<PackageVersion Include="System.Text.Json"                                      Version="7.0.0"         />
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">
@@ -110,6 +110,7 @@
 		<PackageVersion Include="System.Data.Odbc"                                      Version="6.0.1"         />
 		<PackageVersion Include="System.Data.OleDb"                                     Version="6.0.0"         />
 		<PackageVersion Include="Microsoft.Extensions.DependencyModel"                  Version="6.0.0"         />
+		<PackageVersion Include="System.Text.Json"                                      Version="6.0.7"         />
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net6.0' OR '$(TargetFramework)' == 'net7.0' ">
