@@ -510,22 +510,16 @@ namespace Tests.DataProvider
 			var defaultMin = -7922816251426433759.3543950335M;
 
 			await TestType<decimal, decimal?>(context, new(typeof(decimal)), default, default);
-
-			if (context.IsAnyOf(ProviderName.ClickHouseClient))
-			{
-				// https://github.com/DarkWanderer/ClickHouse.Client/issues/229
-				defaultMax = 7922816251426433759.354395033M;
-				defaultMin = -7922816251426433759.354395033M;
-				await TestType<decimal, decimal?>(context, new(typeof(decimal)), defaultMax, defaultMin);
+			await TestType<decimal, decimal?>(context, new(typeof(decimal)), defaultMax, defaultMin);
 
 #if !NETFRAMEWORK
+			if (context.IsAnyOf(ProviderName.ClickHouseClient))
+			{
 				var customMin = new ClickHouseDecimal(BigInteger.Parse("-" + new string('9', 76)), 10);
 				var customMax = new ClickHouseDecimal(BigInteger.Parse(new string('9', 76)), 10);
 				await TestType<ClickHouseDecimal, ClickHouseDecimal?>(context, new(typeof(ClickHouseDecimal)), customMax, customMin);
-#endif
 			}
-			else
-				await TestType<decimal, decimal?>(context, new(typeof(decimal)), defaultMax, defaultMin);
+#endif
 
 			// testing of all combinations is not feasible
 			// we will test only several precisions and first/last two scales for each tested precision
@@ -542,9 +536,6 @@ namespace Tests.DataProvider
 				{
 					if (s > 1 && s < p - 1)
 						continue;
-
-					// https://github.com/DarkWanderer/ClickHouse.Client/issues/230
-					var skipScale = s >= 29 && context.IsAnyOf(ProviderName.ClickHouseClient);
 
 					var dataType = p switch
 					{
@@ -564,6 +555,10 @@ namespace Tests.DataProvider
 						maxString = $"0{maxString}";
 					var minString = $"-{maxString}";
 
+					// not really issue
+					// only ClickHouseClient fails because other providers parse values differently
+					// and we test only 0 value, which works for them
+					var skipOutOfRange = p >= 29 && context.IsAnyOf(ProviderName.ClickHouseClient);
 					decimal minDecimal;
 					decimal maxDecimal;
 					if (p >= 29)
@@ -583,7 +578,7 @@ namespace Tests.DataProvider
 						minDecimal = -maxDecimal;
 					}
 
-					if (!skipScale)
+					if (!skipOutOfRange)
 						await TestType<decimal, decimal?>(context, decimalType, default, default);
 					if (!skipBasicTypes)
 						await TestType<decimal, decimal?>(context, decimalType, minDecimal, maxDecimal);
@@ -591,13 +586,12 @@ namespace Tests.DataProvider
 					var zero = "0";
 					if (context.IsAnyOf(ProviderName.ClickHouseOctonica, ProviderName.ClickHouseClient) && s > 0)
 						zero = $"{zero}.{new string('0', s)}";
-					if (!skipScale)
-						await TestType<string, string?>(context, stringType, "0", default, getExpectedValue: v => zero);
+					await TestType<string, string?>(context, stringType, "0", default, getExpectedValue: v => zero);
 					if (!skipBasicTypes)
 						await TestType<string, string?>(context, stringType, minString, maxString);
 
 #if !NETFRAMEWORK
-					if (context.IsAnyOf(ProviderName.ClickHouseClient) && !skipScale)
+					if (context.IsAnyOf(ProviderName.ClickHouseClient))
 					{
 						var customDecimalType = new DbDataType(typeof(ClickHouseDecimal), dataType, null, null, p, s);
 						var customMin         = new ClickHouseDecimal(BigInteger.Parse("-" + new string('9', p)), s);
