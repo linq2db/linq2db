@@ -7,7 +7,6 @@
 		<Configurations>Debug;Release;Azure</Configurations>
 		<DefineConstants>$(DefineConstants)</DefineConstants>
 		<DefineConstants Condition="$(X86) != ''">$(DefineConstants);X86</DefineConstants>
-		<SUppressTfmSupportBuildWarnings>true</SUppressTfmSupportBuildWarnings>
 	</PropertyGroup>
 
 	<PropertyGroup Condition=" '$(Configuration)' == 'Azure' ">
