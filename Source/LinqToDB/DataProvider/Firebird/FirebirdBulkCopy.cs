@@ -7,7 +7,7 @@ namespace LinqToDB.DataProvider.Firebird
 	using System.Threading;
 	using System.Threading.Tasks;
 
-	class FirebirdBulkCopy : BasicBulkCopy
+	sealed class FirebirdBulkCopy : BasicBulkCopy
 	{
 		
 		/// <remarks>

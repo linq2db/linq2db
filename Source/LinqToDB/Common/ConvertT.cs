@@ -9,7 +9,7 @@ namespace LinqToDB.Common
 	using Expressions;
 
 	// moved to non-generic class to avoid instance-per-generic
-	internal class ConvertReducer
+	internal sealed class ConvertReducer
 	{
 		internal static readonly TransformVisitor<object?> ReducerVisitor = TransformVisitor<object?>.Create(Reducer);
 		private static Expression Reducer(Expression e)

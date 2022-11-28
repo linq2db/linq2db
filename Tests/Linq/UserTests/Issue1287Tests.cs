@@ -10,7 +10,7 @@ namespace Tests.UserTests
 	{
 		[Table]
 		[Table("ALLTYPES", Configuration = ProviderName.DB2)]
-		private class AllTypes
+		private sealed class AllTypes
 		{
 			[Column]
 			[Column("CHARDATATYPE", Configuration = ProviderName.DB2)]
@@ -19,7 +19,7 @@ namespace Tests.UserTests
 
 		[Table("AllTypes")]
 		[Table("ALLTYPES", Configuration = ProviderName.DB2)]
-		private class AllTypesNullable
+		private sealed class AllTypesNullable
 		{
 			[Column]
 			[Column("CHARDATATYPE", Configuration = ProviderName.DB2)]

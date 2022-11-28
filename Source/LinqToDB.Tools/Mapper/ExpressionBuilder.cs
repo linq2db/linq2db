@@ -17,9 +17,9 @@ namespace LinqToDB.Tools.Mapper
 	using Extensions;
 	using Reflection;
 
-	class ExpressionBuilder
+	sealed class ExpressionBuilder
 	{
-		class BuilderData
+		sealed class BuilderData
 		{
 			public BuilderData(Tuple<MemberInfo[],LambdaExpression>[]? memberMappers) => MemberMappers = memberMappers;
 
@@ -343,7 +343,7 @@ namespace LinqToDB.Tools.Mapper
 			return l;
 		}
 
-		class MappingImpl
+		sealed class MappingImpl
 		{
 			public MappingImpl(
 				ExpressionBuilder builder,

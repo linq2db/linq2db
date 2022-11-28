@@ -26,7 +26,7 @@ namespace LinqToDB.Naming
 		/// <returns>Normalized identifier.</returns>
 		public string NormalizeIdentifier(NormalizationOptions settings, string name)
 		{
-			var mixedCase = name.ToUpper() != name;
+			var mixedCase = name.ToUpperInvariant() != name;
 			// skip normalization for ALLCAPS names
 			if (!settings.DontCaseAllCaps || name.EnumerateCharacters().Any(c => c.category != UnicodeCategory.UppercaseLetter))
 			{
@@ -67,12 +67,12 @@ namespace LinqToDB.Naming
 						// apply pluralization (to lowercased form to not confuse pluralizer)
 						if (lastTextIndex == i)
 						{
-							var normalized = word.ToLower();
-							var toUpperCase = settings.Casing == NameCasing.T4CompatNonPluralized && normalized != word && word == word.ToUpper();
+							var normalized = word.ToLowerInvariant();
+							var toUpperCase = settings.Casing == NameCasing.T4CompatNonPluralized && normalized != word && word == word.ToUpperInvariant();
 
 							word = _pluralizationProvider.GetConverter(settings.Pluralization)(normalized);
 							if (toUpperCase)
-								word = word.ToUpper();
+								word = word.ToUpperInvariant();
 						}
 
 						// apply casing rules
@@ -111,10 +111,10 @@ namespace LinqToDB.Naming
 			if (casing == NameCasing.None)
 				return word;
 
-			if (casing == NameCasing.T4CompatPluralized && !lastWord && word.ToUpper() == word && word.Length <= 2)
+			if (casing == NameCasing.T4CompatPluralized && !lastWord && word.ToUpperInvariant() == word && word.Length <= 2)
 				return word;
 
-			if (casing == NameCasing.T4CompatNonPluralized && mixedCase && word.ToUpper() == word)
+			if (casing == NameCasing.T4CompatNonPluralized && mixedCase && word.ToUpperInvariant() == word)
 				return word;
 
 			var firstLetter = true;
@@ -129,14 +129,14 @@ namespace LinqToDB.Naming
 						case NameCasing.Pascal:
 						case NameCasing.T4CompatPluralized:
 						case NameCasing.T4CompatNonPluralized:
-							casedWord.Append(chr.ToUpper());
+							casedWord.Append(chr.ToUpperInvariant());
 							break;
 						case NameCasing.SnakeCase:
 						case NameCasing.LowerCase:
-							casedWord.Append(chr.ToLower());
+							casedWord.Append(chr.ToLowerInvariant());
 							break;
 						case NameCasing.CamelCase:
-							casedWord.Append(firstWord ? chr.ToLower() : chr.ToUpper());
+							casedWord.Append(firstWord ? chr.ToLowerInvariant() : chr.ToUpperInvariant());
 							break;
 					}
 					firstLetter = false;
@@ -146,7 +146,7 @@ namespace LinqToDB.Naming
 					switch (casing)
 					{
 						case NameCasing.UpperCase:
-							casedWord.Append(chr.ToUpper());
+							casedWord.Append(chr.ToUpperInvariant());
 							break;
 						case NameCasing.Pascal:
 						case NameCasing.T4CompatPluralized:
@@ -154,7 +154,7 @@ namespace LinqToDB.Naming
 						case NameCasing.SnakeCase:
 						case NameCasing.CamelCase:
 						case NameCasing.LowerCase:
-							casedWord.Append(chr.ToLower());
+							casedWord.Append(chr.ToLowerInvariant());
 							break;
 					}
 				}
@@ -188,7 +188,7 @@ namespace LinqToDB.Naming
 
 				var isText                = false; // current word is text (contains letters)
 				var uppercaseWord         = false; // current word contains only uppercase letters
-				var splitByUpperCase      = fragment.ToUpper() != fragment; // apply split-by-uppercase-letter logic to current fragment
+				var splitByUpperCase      = fragment.ToUpperInvariant() != fragment; // apply split-by-uppercase-letter logic to current fragment
 				var length                = 0;
 				string? previousCharacter = null; // previous identified character in current fragment
 

@@ -4,7 +4,7 @@
 	using SqlProvider;
 	using SqlQuery;
 
-	class AccessODBCSqlOptimizer : AccessSqlOptimizer
+	sealed class AccessODBCSqlOptimizer : AccessSqlOptimizer
 	{
 		public AccessODBCSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{

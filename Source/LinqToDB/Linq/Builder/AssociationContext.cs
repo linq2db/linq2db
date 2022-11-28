@@ -9,7 +9,7 @@ namespace LinqToDB.Linq.Builder
 	using SqlQuery;
 
 	[DebuggerDisplay("{BuildContextDebuggingHelper.GetContextInfo(this)}, T: {BuildContextDebuggingHelper.GetContextInfo(TableContext)}")]
-	class AssociationContext : IBuildContext
+	sealed class AssociationContext : IBuildContext
 	{
 #if DEBUG
 		string? IBuildContext.SqlQueryText => TableContext.SqlQueryText;

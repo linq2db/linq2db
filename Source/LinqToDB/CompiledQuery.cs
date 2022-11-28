@@ -48,7 +48,7 @@ namespace LinqToDB
 			Expression CallTable(LambdaExpression query, Expression expr, ParameterExpression ps, ParameterExpression preambles, MethodType type);
 		}
 
-		class TableHelper<T> : ITableHelper
+		sealed class TableHelper<T> : ITableHelper
 			where T : notnull
 		{
 			public Expression CallTable(LambdaExpression query, Expression expr, ParameterExpression ps, ParameterExpression preambles, MethodType type)

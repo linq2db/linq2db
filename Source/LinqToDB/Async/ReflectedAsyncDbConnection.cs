@@ -9,7 +9,7 @@ namespace LinqToDB.Async
 	/// <summary>
 	/// Provides reflection-based <see cref="DbConnection"/> wrapper with async operations support.
 	/// </summary>
-	internal class ReflectedAsyncDbConnection : AsyncDbConnection
+	internal sealed class ReflectedAsyncDbConnection : AsyncDbConnection
 	{
 		private readonly Func<DbConnection, CancellationToken, Task>?                                           _openAsync;
 		private readonly Func<DbConnection, Task>?                                                              _closeAsync;

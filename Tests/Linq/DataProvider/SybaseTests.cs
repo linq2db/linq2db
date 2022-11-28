@@ -595,7 +595,7 @@ namespace Tests.DataProvider
 		}
 
 		[Table]
-		class Issue1707
+		sealed class Issue1707
 		{
 			public static IEqualityComparer<Issue1707> Comparer = ComparerBuilder.GetEqualityComparer<Issue1707>();
 			[Column]
@@ -774,7 +774,7 @@ namespace Tests.DataProvider
 		};
 
 		[Table("LinqDataTypes")]
-		class DataTypes
+		sealed class DataTypes
 		{
 			[Column] public int       ID;
 			[Column] public decimal?  MoneyValue;

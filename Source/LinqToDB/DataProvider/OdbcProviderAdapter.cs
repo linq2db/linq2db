@@ -87,7 +87,7 @@ namespace LinqToDB.DataProvider
 		#region Wrappers
 
 		[Wrapper]
-		private class OdbcParameter
+		private sealed class OdbcParameter
 		{
 			public OdbcType OdbcType { get; set; }
 		}

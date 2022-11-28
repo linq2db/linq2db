@@ -11,7 +11,7 @@ namespace LinqToDB.Linq.Builder
 	}
 
 	[DebuggerDisplay("Key: {Key}, Data: {Data}")]
-	class KDH<TKey, TData>
+	sealed class KDH<TKey, TData>
 	{
 		public KDH()
 		{
@@ -28,7 +28,7 @@ namespace LinqToDB.Linq.Builder
 	}
 
 	[DebuggerDisplay("Key: {Key}, Data: {Data}")]
-	class FKDH<TKey, TData>
+	sealed class FKDH<TKey, TData>
 	{
 		public FKDH()
 		{

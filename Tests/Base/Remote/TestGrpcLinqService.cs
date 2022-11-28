@@ -10,7 +10,7 @@ namespace Tests.Remote
 
 	using LinqToDB.Remote.Grpc;
 
-	internal class TestGrpcLinqService : GrpcLinqService
+	internal sealed class TestGrpcLinqService : GrpcLinqService
 	{
 		private readonly LinqService    _linqService;
 

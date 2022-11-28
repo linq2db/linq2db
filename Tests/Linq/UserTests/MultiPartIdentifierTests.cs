@@ -14,7 +14,7 @@ namespace Tests.UserTests
 	public class MultiPartIdentifierTests : TestBase
 	{
 		[Table]
-		class Table1
+		sealed class Table1
 		{
 			[Column]
 			public long Field1;
@@ -33,7 +33,7 @@ namespace Tests.UserTests
 		}
 
 		[Table]
-		class Table2
+		sealed class Table2
 		{
 			[Column]
 			public long Field2 { get; set; }
@@ -49,7 +49,7 @@ namespace Tests.UserTests
 		}
 
 		[Table]
-		class Table3
+		sealed class Table3
 		{
 			[Column]
 			public int Field4;
@@ -59,7 +59,7 @@ namespace Tests.UserTests
 		}
 
 		[Table]
-		class Table4
+		sealed class Table4
 		{
 			[Column]
 			public int Field3 { get; set; }
@@ -75,7 +75,7 @@ namespace Tests.UserTests
 		}
 
 		[Table]
-		class Table5
+		sealed class Table5
 		{
 			[Column]
 			public int? Field5;

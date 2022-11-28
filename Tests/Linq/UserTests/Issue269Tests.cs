@@ -9,7 +9,7 @@ namespace Tests.UserTests
 	public class Issue269Tests : TestBase
 	{
 		[AttributeUsage(AttributeTargets.Parameter)]
-		class TestDataContextSourceAttribute : DataSourcesAttribute
+		sealed class TestDataContextSourceAttribute : DataSourcesAttribute
 		{
 			public static string[] Unsupported = new[]
 			{

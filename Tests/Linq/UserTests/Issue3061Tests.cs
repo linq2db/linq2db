@@ -12,7 +12,7 @@ namespace Tests.UserTests
 	public class Issue3061Tests : TestBase
 	{
 		[Table]
-		class Properties
+		sealed class Properties
 		{
 			[PrimaryKey]
 			public int     Id    { get; set; }
@@ -24,7 +24,7 @@ namespace Tests.UserTests
 			public List<IncidentProperty> IncidentProperties { get; set; } = null!;
 		}
 
-		class CaseLog
+		sealed class CaseLog
 		{
 			[PrimaryKey]
 			public int  Id     { get; set; }
@@ -32,7 +32,7 @@ namespace Tests.UserTests
 			public int? Number { get; set; }
 		}
 
-		class Incident
+		sealed class Incident
 		{
 			[PrimaryKey]
 			public int Id { get; set; }
@@ -41,7 +41,7 @@ namespace Tests.UserTests
 			public int? EventNumber { get; set; }
 		}
 
-		class CaseLogProperty
+		sealed class CaseLogProperty
 		{
 			[Column(CanBeNull = true)]
 			public int? PropertyId { get; set; }
@@ -52,7 +52,7 @@ namespace Tests.UserTests
 			public CaseLog CaseLog { get; set; } = null!;
 		}
 
-		class IncidentProperty
+		sealed class IncidentProperty
 		{
 			[Column(CanBeNull = true)]
 			public int? PropertyId { get; set; }
@@ -83,7 +83,7 @@ namespace Tests.UserTests
 		}
 
 		[Table]
-		class Root
+		sealed class Root
 		{
 			[Column] public int Id { get; set; }
 
@@ -95,7 +95,7 @@ namespace Tests.UserTests
 		}
 
 		[Table]
-		class Draft1
+		sealed class Draft1
 		{
 			[Column] public int     RootId { get; set; }
 			[Column] public string? Html   { get; set; }
@@ -103,7 +103,7 @@ namespace Tests.UserTests
 		}
 
 		[Table]
-		class Draft2
+		sealed class Draft2
 		{
 			[Column] public int     RootId { get; set; }
 			[Column] public string? Html   { get; set; }

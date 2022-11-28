@@ -38,7 +38,7 @@ namespace Tests.UserTests
 			public string FileName { get; set; } = null!;
 		}
 
-		private class EmailReader : IDisposable
+		private sealed class EmailReader : IDisposable
 		{
 			private bool disposed;
 			private readonly int id;

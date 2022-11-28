@@ -126,7 +126,7 @@ namespace LinqToDB.DataProvider.SapHana
 		}
 
 		[Wrapper]
-		private class HanaParameter
+		private sealed class HanaParameter
 		{
 			public HanaDbType HanaDbType { get; set; }
 		}

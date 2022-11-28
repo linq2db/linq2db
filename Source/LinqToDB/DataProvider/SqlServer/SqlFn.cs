@@ -152,7 +152,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		#region Conversion
 
-		class DataTypeBuilder : Sql.IExtensionCallBuilder
+		sealed class DataTypeBuilder : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
@@ -813,7 +813,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			Nanosecond,
 		}
 
-		class DatePartBuilder : Sql.IExtensionCallBuilder
+		sealed class DatePartBuilder : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
@@ -2585,7 +2585,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			throw new InvalidOperationException($"'{nameof(IndexProperty)}' is a server side only function.");
 		}
 
-		class NextValueForBuilder : Sql.IExtensionCallBuilder
+		sealed class NextValueForBuilder : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
@@ -3693,7 +3693,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			throw new InvalidOperationException($"'{nameof(Upper)}' is a server side only function.");
 		}
 
-		class CollateBuilder : Sql.IExtensionCallBuilder
+		sealed class CollateBuilder : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
@@ -4225,7 +4225,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		#endregion
 
-		class PropertyBuilder<T> : Sql.IExtensionCallBuilder
+		sealed class PropertyBuilder<T> : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{

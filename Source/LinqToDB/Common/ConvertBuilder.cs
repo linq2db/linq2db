@@ -339,7 +339,7 @@ namespace LinqToDB.Common
 			return null;
 		}
 
-		class EnumValues
+		sealed class EnumValues
 		{
 			public FieldInfo           Field = null!;
 			public MapValueAttribute[] Attrs = null!;

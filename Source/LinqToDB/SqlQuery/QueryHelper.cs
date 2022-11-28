@@ -17,7 +17,7 @@ namespace LinqToDB.SqlQuery
 			return null != testedRoot.Find(element, static (element, e) => e == element);
 		}
 
-		private class IsDependsOnSourcesContext
+		private sealed class IsDependsOnSourcesContext
 		{
 			public IsDependsOnSourcesContext(HashSet<ISqlTableSource> onSources, HashSet<IQueryElement>? elementsToIgnore)
 			{
@@ -73,7 +73,7 @@ namespace LinqToDB.SqlQuery
 			return ctx.DependencyFound;
 		}
 
-		private class IsDependsOnElementContext
+		private sealed class IsDependsOnElementContext
 		{
 			public IsDependsOnElementContext(IQueryElement onElement, HashSet<IQueryElement>? elementsToIgnore)
 			{
@@ -105,7 +105,7 @@ namespace LinqToDB.SqlQuery
 			return ctx.DependencyFound;
 		}
 
-		private class DependencyCountContext
+		private sealed class DependencyCountContext
 		{
 			public DependencyCountContext(IQueryElement onElement, HashSet<IQueryElement>? elementsToIgnore)
 			{
@@ -1629,7 +1629,7 @@ namespace LinqToDB.SqlQuery
 			return null != expression.Find(static e => (e.ElementType == QueryElementType.SqlParameter) && ((SqlParameter)e).IsQueryParameter);
 		}
 
-		private class NeedParameterInliningContext
+		private sealed class NeedParameterInliningContext
 		{
 			public bool HasParameter;
 			public bool IsQueryParameter;

@@ -13,7 +13,7 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue982Tests : TestBase
 	{
-		private class Issue982FirebirdSqlOptimizer : FirebirdSqlOptimizer
+		private sealed class Issue982FirebirdSqlOptimizer : FirebirdSqlOptimizer
 		{
 			public Issue982FirebirdSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 			{

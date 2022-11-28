@@ -19,6 +19,7 @@ namespace LinqToDB.Benchmarks
 			var net472 = Job.Default.WithRuntime(ClrRuntime.Net472).WithDefault().AsBaseline();
 			var core31 = Job.Default.WithRuntime(CoreRuntime.Core31).WithDefault();
 			var net60  = Job.Default.WithRuntime(CoreRuntime.Core60).WithDefault();
+			var net70  = Job.Default.WithRuntime(CoreRuntime.Core70).WithDefault();
 
 			return new ManualConfig()
 				.AddLogger         (DefaultConfig.Instance.GetLoggers        ().ToArray())
@@ -29,7 +30,7 @@ namespace LinqToDB.Benchmarks
 				.AddExporter       (MarkdownExporter.GitHub)
 				.AddDiagnoser      (MemoryDiagnoser.Default)
 				.WithArtifactsPath (@"..\..\..")
-				.AddJob            (net472, core31, net60);
+				.AddJob            (net472, core31, net60, net70);
 		}
 
 		private static Job WithDefault(this Job job)
@@ -41,7 +42,7 @@ namespace LinqToDB.Benchmarks
 				//.WithMaxIterationCount(6);
 		}
 
-		class FilteredColumnProvider : IColumnProvider
+		sealed class FilteredColumnProvider : IColumnProvider
 		{
 			private readonly IColumnProvider _provider;
 			public FilteredColumnProvider(IColumnProvider provider)

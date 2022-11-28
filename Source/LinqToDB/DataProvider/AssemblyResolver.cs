@@ -6,7 +6,7 @@ using LinqToDB.Common;
 
 namespace LinqToDB.DataProvider
 {
-	class AssemblyResolver
+	sealed class AssemblyResolver
 	{
 		readonly string?   _path;
 		readonly string    _resolveName;

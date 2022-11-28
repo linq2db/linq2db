@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace LinqToDB
 {
-	internal class InvariantCultureRegion : IExecutionScope
+	internal sealed class InvariantCultureRegion : IExecutionScope
 	{
 		private readonly IExecutionScope? _parentRegion;
 		private readonly CultureInfo?     _original;

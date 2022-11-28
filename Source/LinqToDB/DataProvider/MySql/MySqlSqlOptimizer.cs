@@ -10,7 +10,7 @@ namespace LinqToDB.DataProvider.MySql
 
 	using SqlBinary = SqlQuery.SqlBinaryExpression;
 
-	class MySqlSqlOptimizer : BasicSqlOptimizer
+	sealed class MySqlSqlOptimizer : BasicSqlOptimizer
 	{
 		public MySqlSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{

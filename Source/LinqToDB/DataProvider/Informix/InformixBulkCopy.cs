@@ -11,7 +11,7 @@ namespace LinqToDB.DataProvider.Informix
 	using Data;
 	using SqlProvider;
 
-	class InformixBulkCopy : BasicBulkCopy
+	sealed class InformixBulkCopy : BasicBulkCopy
 	{
 		protected override int                  MaxSqlLength  => 32767;
 		private readonly   InformixDataProvider _provider;
@@ -138,7 +138,7 @@ namespace LinqToDB.DataProvider.Informix
 		}
 #endif
 
-		protected BulkCopyRowsCopied IDSProviderSpecificCopy<T>(
+		private BulkCopyRowsCopied IDSProviderSpecificCopy<T>(
 			ITable<T>                               table,
 			BulkCopyOptions                         options,
 			IEnumerable<T>                          source,
