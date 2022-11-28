@@ -6,7 +6,7 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
-	class AllJoinsBuilder : MethodCallBuilder
+	sealed class AllJoinsBuilder : MethodCallBuilder
 	{
 		private static readonly string[] RightNullableOnlyMethodNames    = { "RightJoin", "FullJoin" };
 		private static readonly string[] NotRightNullableOnlyMethodNames = { "InnerJoin", "LeftJoin", "RightJoin", "FullJoin" };

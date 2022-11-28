@@ -464,7 +464,7 @@ namespace LinqToDB.Expressions
 			return mappedLambda;
 		}
 
-		class ReplaceTypesContext
+		sealed class ReplaceTypesContext
 		{
 			public ReplaceTypesContext(TypeMapper mapper, LambdaExpression lambda, ParameterExpression[] newParameters, bool mapConvert, bool ignoreMissingMembers)
 			{

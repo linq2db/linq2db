@@ -256,22 +256,22 @@ namespace Tests.Data
 			}
 		}
 
-		class MapperExpressionTest1
+		sealed class MapperExpressionTest1
 		{
 			public DateTime Value { get; set; }
 		}
 
-		class MapperExpressionTest2
+		sealed class MapperExpressionTest2
 		{
 			public MySqlDataDateTime Value { get; set; }
 		}
 
-		class MapperExpressionTest3
+		sealed class MapperExpressionTest3
 		{
 			public object? Value { get; set; }
 		}
 
-		class TestMySqlDataProvider : MySqlDataProvider
+		sealed class TestMySqlDataProvider : MySqlDataProvider
 		{
 			public TestMySqlDataProvider(string providerName)
 				: base(providerName)
@@ -297,7 +297,7 @@ namespace Tests.Data
 			}
 		}
 
-		class LinqMySqlDataProvider : MySqlDataProvider
+		sealed class LinqMySqlDataProvider : MySqlDataProvider
 		{
 			private readonly Func<string, DbConnection> _connectionFactory;
 			public LinqMySqlDataProvider(Func<string, DbConnection> connectionFactory)
@@ -518,7 +518,7 @@ namespace Tests.Data
 			}
 		}
 
-		class TestDB2LUWDataProvider : DB2DataProvider
+		sealed class TestDB2LUWDataProvider : DB2DataProvider
 		{
 			public TestDB2LUWDataProvider()
 				: base(ProviderName.DB2LUW, DB2Version.LUW)
@@ -1181,7 +1181,7 @@ namespace Tests.Data
 		}
 #endif
 
-		class TestInformixDataProvider : InformixDataProvider
+		sealed class TestInformixDataProvider : InformixDataProvider
 		{
 			public TestInformixDataProvider(string providerName)
 				: base(providerName)
@@ -1684,7 +1684,7 @@ namespace Tests.Data
 			public NpgsqlTypes.NpgsqlCircle? Column { get; set; }
 		}
 
-		internal class TestClickHouseDataProvider : ClickHouseDataProvider
+		internal sealed class TestClickHouseDataProvider : ClickHouseDataProvider
 		{
 			public TestClickHouseDataProvider(string providerName, ClickHouseProvider provider)
 				: base(providerName, provider)

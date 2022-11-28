@@ -6,7 +6,7 @@ namespace LinqToDB.DataProvider.SqlCe
 	using System.Threading;
 	using System.Threading.Tasks;
 
-	class SqlCeBulkCopy : BasicBulkCopy
+	sealed class SqlCeBulkCopy : BasicBulkCopy
 	{
 		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(
 			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)

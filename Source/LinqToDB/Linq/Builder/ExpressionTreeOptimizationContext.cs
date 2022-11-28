@@ -431,7 +431,7 @@ namespace LinqToDB.Linq.Builder
 			return _lastResult2 = result;
 		}
 
-		internal class CanBeCompiledContext
+		internal sealed class CanBeCompiledContext
 		{
 			public CanBeCompiledContext(ExpressionTreeOptimizationContext optimizationContext)
 			{

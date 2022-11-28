@@ -6,7 +6,7 @@ namespace LinqToDB.DataProvider
 	using SqlProvider;
 	using SqlQuery;
 
-	class TableSpecHintExtensionBuilder : ISqlTableExtensionBuilder
+	sealed class TableSpecHintExtensionBuilder : ISqlTableExtensionBuilder
 	{
 		void ISqlTableExtensionBuilder.Build(ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension, SqlTable table, string alias)
 		{

@@ -723,7 +723,7 @@ namespace Tests.DataProvider
 		}
 
 		[Table]
-		class TestTimeTypes
+		sealed class TestTimeTypes
 		{
 			[Column]
 			public int Id { get; set; }
@@ -882,7 +882,7 @@ namespace Tests.DataProvider
 		}
 
 		[Table]
-		class TestParametersTable
+		sealed class TestParametersTable
 		{
 			[ Column] public int     Id   { get; set; }
 			[ Column] public string? Text { get; set; }
@@ -997,7 +997,7 @@ namespace Tests.DataProvider
 				return db.GetTable<Record>(null, (MethodInfo)MethodBase.GetCurrentMethod()!, db, param1);
 			}
 
-			public class Record
+			public sealed class Record
 			{
 				public int O { get; set; }
 			}

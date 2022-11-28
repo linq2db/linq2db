@@ -122,7 +122,7 @@ namespace LinqToDB
 		[Extension(typeof(IsDistinctBuilder), Expression= "NOT", ServerSideOnly = false, PreferServerSide = false)]
 		public static bool IsNotDistinctFrom<T>(this T value, T? other) where T: struct => EqualityComparer<T?>.Default.Equals(value, other);
 
-		class IsDistinctBuilder : IExtensionCallBuilder
+		sealed class IsDistinctBuilder : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -200,7 +200,7 @@ namespace LinqToDB
 			throw new NotImplementedException();
 		}
 
-		class NoConvertBuilder : IExtensionCallBuilder
+		sealed class NoConvertBuilder : IExtensionCallBuilder
 		{
 			private static readonly MethodInfo _method = MethodHelper.GetMethodInfo(ConvertRemover<int, int>, 0).GetGenericMethodDefinition();
 
@@ -653,7 +653,7 @@ namespace LinqToDB
 		internal static bool IsNullOrWhiteSpace(string? str) => string.IsNullOrWhiteSpace(str);
 
 		// str IS NULL OR REPLACE...(str, WHITEPACES, '') == ''
-		internal class IsNullOrWhiteSpaceSqlCeBuilder : IExtensionCallBuilder
+		internal sealed class IsNullOrWhiteSpaceSqlCeBuilder : IExtensionCallBuilder
 		{
 			void IExtensionCallBuilder.Build(ISqExtensionBuilder builder)
 			{
@@ -680,7 +680,7 @@ namespace LinqToDB
 		}
 
 		// str IS NULL OR NOT(str SIMILAR TO _utf8 x'%[^WHITESPACES_UTF8]%')
-		internal class IsNullOrWhiteSpaceFirebirdBuilder : IExtensionCallBuilder
+		internal sealed class IsNullOrWhiteSpaceFirebirdBuilder : IExtensionCallBuilder
 		{
 			void IExtensionCallBuilder.Build(ISqExtensionBuilder builder)
 			{
@@ -711,7 +711,7 @@ namespace LinqToDB
 		}
 
 		// str IS NULL OR NOT(str RLIKE '%[^WHITESPACES]%')
-		internal class IsNullOrWhiteSpaceMySqlBuilder : IExtensionCallBuilder
+		internal sealed class IsNullOrWhiteSpaceMySqlBuilder : IExtensionCallBuilder
 		{
 			void IExtensionCallBuilder.Build(ISqExtensionBuilder builder)
 			{
@@ -742,7 +742,7 @@ namespace LinqToDB
 		}
 
 		// str IS NULL OR str NOT LIKE '%[^WHITESPACES]%'
-		internal class IsNullOrWhiteSpaceSybaseBuilder : IExtensionCallBuilder
+		internal sealed class IsNullOrWhiteSpaceSybaseBuilder : IExtensionCallBuilder
 		{
 			void IExtensionCallBuilder.Build(ISqExtensionBuilder builder)
 			{
@@ -768,7 +768,7 @@ namespace LinqToDB
 		}
 
 		// str IS NULL OR str NOT LIKE N'%[^WHITESPACES]%'
-		internal class IsNullOrWhiteSpaceSqlServerBuilder : IExtensionCallBuilder
+		internal sealed class IsNullOrWhiteSpaceSqlServerBuilder : IExtensionCallBuilder
 		{
 			void IExtensionCallBuilder.Build(ISqExtensionBuilder builder)
 			{
@@ -794,7 +794,7 @@ namespace LinqToDB
 		}
 
 		// str IS NULL OR LTRIM(str, '') = ''
-		internal class IsNullOrWhiteSpaceAccessBuilder : IExtensionCallBuilder
+		internal sealed class IsNullOrWhiteSpaceAccessBuilder : IExtensionCallBuilder
 		{
 			void IExtensionCallBuilder.Build(ISqExtensionBuilder builder)
 			{
@@ -818,7 +818,7 @@ namespace LinqToDB
 		}
 
 		// str IS NULL OR TRIM(N'WHITESPACES FROM str) = ''
-		internal class IsNullOrWhiteSpaceSqlServer2017Builder : IExtensionCallBuilder
+		internal sealed class IsNullOrWhiteSpaceSqlServer2017Builder : IExtensionCallBuilder
 		{
 			void IExtensionCallBuilder.Build(ISqExtensionBuilder builder)
 			{
@@ -842,7 +842,7 @@ namespace LinqToDB
 		}
 
 		// str IS NULL OR LTRIM(str, WHITESPACES) IS NULL
-		internal class IsNullOrWhiteSpaceOracleBuilder : IExtensionCallBuilder
+		internal sealed class IsNullOrWhiteSpaceOracleBuilder : IExtensionCallBuilder
 		{
 			void IExtensionCallBuilder.Build(ISqExtensionBuilder builder)
 			{
@@ -863,7 +863,7 @@ namespace LinqToDB
 		}
 
 		// str IS NULL OR LTRIM(str, ASCII_WHITESPACES) = ''
-		internal class IsNullOrWhiteSpaceInformixBuilder : IExtensionCallBuilder
+		internal sealed class IsNullOrWhiteSpaceInformixBuilder : IExtensionCallBuilder
 		{
 			void IExtensionCallBuilder.Build(ISqExtensionBuilder builder)
 			{
@@ -887,7 +887,7 @@ namespace LinqToDB
 		}
 
 		// str IS NULL OR LTRIM(str, WHITESPACES) = ''
-		internal class IsNullOrWhiteSpaceDefaultBuilder : IExtensionCallBuilder
+		internal sealed class IsNullOrWhiteSpaceDefaultBuilder : IExtensionCallBuilder
 		{
 			void IExtensionCallBuilder.Build(ISqExtensionBuilder builder)
 			{
@@ -962,13 +962,17 @@ namespace LinqToDB
 		[Function(PseudoFunctions.TO_LOWER, ServerSideOnly = true, IsPure = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static string? Lower(string? str)
 		{
+#pragma warning disable CA1311 // Specify a culture or use an invariant version
 			return str?.ToLower();
+#pragma warning restore CA1311 // Specify a culture or use an invariant version
 		}
 
 		[Function(PseudoFunctions.TO_UPPER, ServerSideOnly = true, IsPure = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static string? Upper(string? str)
 		{
+#pragma warning disable CA1311 // Specify a culture or use an invariant version
 			return str?.ToUpper();
+#pragma warning restore CA1311 // Specify a culture or use an invariant version
 		}
 
 		[Expression("Lpad({0},{1},'0')",                                                                            IsNullable = IsNullableType.SameAsFirstParameter)]
@@ -984,7 +988,7 @@ namespace LinqToDB
 			return val?.ToString("d" + length);
 		}
 
-		class ConcatAttribute : ExpressionAttribute
+		sealed class ConcatAttribute : ExpressionAttribute
 		{
 			public ConcatAttribute() : base("")
 			{

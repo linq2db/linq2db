@@ -14,7 +14,7 @@ namespace Tests.UserTests
 	public class ConverterInsertTests : TestBase
 	{
 		[Table]
-		new class Person
+		new sealed class Person
 		{
 			[Column(IsIdentity = false, Configuration = ProviderName.ClickHouse)]
 			[Column(IsIdentity = true)]
@@ -32,7 +32,7 @@ namespace Tests.UserTests
 		}
 
 		[Table("Person")]
-		class Person2
+		sealed class Person2
 		{
 			[Column(IsIdentity = false, Configuration = ProviderName.ClickHouse)]
 			[Column(IsIdentity = true)]
@@ -44,7 +44,7 @@ namespace Tests.UserTests
 		}
 
 		[Table("Person")]
-		class PurePerson
+		sealed class PurePerson
 		{
 			[Column(IsIdentity = false, Configuration = ProviderName.ClickHouse)]
 			[Column(IsIdentity = true)]

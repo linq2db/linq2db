@@ -8,7 +8,7 @@ namespace LinqToDB.Interceptors
 {
 	using Common;
 
-	class AggregatedCommandInterceptor : AggregatedInterceptor<ICommandInterceptor>, ICommandInterceptor
+	sealed class AggregatedCommandInterceptor : AggregatedInterceptor<ICommandInterceptor>, ICommandInterceptor
 	{
 		protected override AggregatedInterceptor<ICommandInterceptor> Create()
 		{

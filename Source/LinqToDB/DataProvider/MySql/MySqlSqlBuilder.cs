@@ -12,7 +12,7 @@ namespace LinqToDB.DataProvider.MySql
 	using SqlProvider;
 	using SqlQuery;
 
-	class MySqlSqlBuilder : BasicSqlBuilder
+	sealed class MySqlSqlBuilder : BasicSqlBuilder
 	{
 		public MySqlSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
@@ -595,7 +595,7 @@ namespace LinqToDB.DataProvider.MySql
 				StringBuilder.Append("IF NOT EXISTS ");
 		}
 
-		protected StringBuilder? HintBuilder;
+		private StringBuilder? HintBuilder;
 
 		int  _hintPosition;
 		bool _isTopLevelBuilder;

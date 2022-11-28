@@ -7,7 +7,7 @@ namespace Tests.Common
 	[TestFixture]
 	public class ValueComparerTests
 	{
-		class TestObject
+		sealed class TestObject
 		{
 			public int Id { get; set; }
 		}

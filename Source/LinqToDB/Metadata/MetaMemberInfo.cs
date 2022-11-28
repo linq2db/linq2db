@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace LinqToDB.Metadata
 {
-	class MetaMemberInfo
+	sealed class MetaMemberInfo
 	{
 		public MetaMemberInfo(string name, params AttributeInfo[] attributes)
 		{

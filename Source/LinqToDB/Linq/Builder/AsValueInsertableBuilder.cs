@@ -3,7 +3,7 @@ using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	class AsValueInsertableBuilder : MethodCallBuilder
+	sealed class AsValueInsertableBuilder : MethodCallBuilder
 	{
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{

@@ -19,7 +19,7 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using LinqToDB.Reflection;
 
-	partial class ExpressionBuilder
+	sealed partial class ExpressionBuilder
 	{
 		#region Sequence
 
@@ -733,7 +733,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region ConvertGroupBy
 
-		public class GroupSubQuery<TKey,TElement>
+		public sealed class GroupSubQuery<TKey,TElement>
 		{
 			public TKey     Key     = default!;
 			public TElement Element = default!;
@@ -753,7 +753,7 @@ namespace LinqToDB.Linq.Builder
 			Expression WrapInSubQueryResultE();
 		}
 
-		class GroupByHelper<TSource,TKey,TElement,TResult> : IGroupByHelper
+		sealed class GroupByHelper<TSource,TKey,TElement,TResult> : IGroupByHelper
 		{
 			bool              _wrapInSubQuery;
 			Expression        _sourceExpression = null!;
@@ -1067,7 +1067,7 @@ namespace LinqToDB.Linq.Builder
 			Expression AddElementSelectorE();
 		}
 
-		class SelectManyHelper<TSource,TCollection> : ISelectManyHelper
+		sealed class SelectManyHelper<TSource,TCollection> : ISelectManyHelper
 		{
 			Expression       _sourceExpression = null!;
 			LambdaExpression _colSelector = null!;
