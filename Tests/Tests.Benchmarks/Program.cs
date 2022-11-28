@@ -9,7 +9,7 @@ using JetBrains.Profiler.Api;
 
 namespace LinqToDB.Benchmarks
 {
-	class Program
+	sealed class Program
 	{
 		static void Main(string[] args)
 		{

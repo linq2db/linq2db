@@ -3,7 +3,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
-	class SqlServer2008SqlOptimizer : SqlServerSqlOptimizer
+	sealed class SqlServer2008SqlOptimizer : SqlServerSqlOptimizer
 	{
 		public SqlServer2008SqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags, SqlServerVersion.v2008)
 		{

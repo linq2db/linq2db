@@ -292,7 +292,7 @@ namespace LinqToDB.DataProvider.Informix
 		#region Wrappers
 
 		[Wrapper]
-		private class IfxParameter
+		private sealed class IfxParameter
 		{
 			public IfxType IfxType { get; set; }
 		}
@@ -513,7 +513,7 @@ namespace LinqToDB.DataProvider.Informix
 		}
 
 		[Wrapper]
-		internal class IfxTimeSpan : TypeWrapper
+		internal sealed class IfxTimeSpan : TypeWrapper
 		{
 			public IfxTimeSpan(object instance) : base(instance, null)
 			{

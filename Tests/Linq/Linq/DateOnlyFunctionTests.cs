@@ -14,7 +14,7 @@ namespace Tests.Linq
 	public class DateOnlyFunctionTests : TestBase
 	{
 		[Table("Transactions")]
-		private class Transaction
+		private sealed class Transaction
 		{
 			[PrimaryKey] public int      TransactionId   { get; set; }
 			[Column]     public DateOnly TransactionDate { get; set; }

@@ -610,7 +610,7 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
-		private class MoveCountSubqueryContext
+		private sealed class MoveCountSubqueryContext
 		{
 			public MoveCountSubqueryContext(SelectQuery subQuery)
 			{
@@ -815,7 +815,7 @@ namespace LinqToDB.SqlProvider
 			return selectQuery;
 		}
 
-		private class MoveSubqueryCountContext
+		private sealed class MoveSubqueryCountContext
 		{
 			public MoveSubqueryCountContext(SelectQuery subQuery)
 			{

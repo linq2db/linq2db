@@ -780,6 +780,8 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 		private static string? GetIntervalLiteralFormat(DataType dataType)
 		{
+			// multi-component intervals generation not supported currently (not needed)
+			// https://github.com/ClickHouse/ClickHouse/pull/42195
 			return dataType switch
 			{
 				DataType.IntervalSecond  => "INTERVAL {0} SECOND",
@@ -857,8 +859,37 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 		public sealed class ClientMappingSchema : LockedMappingSchema
 		{
-			public ClientMappingSchema() : base(ProviderName.ClickHouseClient, Instance)
+			public ClientMappingSchema() : base(ProviderName.ClickHouseClient, new MappingSchema?[] { ClickHouseProviderAdapter.GetInstance(ClickHouseProvider.ClickHouseClient).MappingSchema, Instance }.Where(_ => _ != null).ToArray()!)
 			{
+				var adapter = ClickHouseProviderAdapter.GetInstance(ClickHouseProvider.ClickHouseClient);
+				if (adapter.ClientDecimalType != null)
+				{
+					SetValueToSqlConverter(adapter.ClientDecimalType, (sb, dt, v) => ConvertClientDecimal(sb, dt, adapter.ClientDecimalToStringConverter!(v)));
+				}
+			}
+
+			private static void ConvertClientDecimal(StringBuilder sb, SqlDataType dt, string value)
+			{
+				var scale = dt.Type.Scale ?? DEFAULT_DECIMAL_SCALE;
+
+				switch (dt.Type.DataType)
+				{
+					case DataType.Decimal32 :
+						sb.AppendFormat(CultureInfo.InvariantCulture, "toDecimal32('{0}', {1})", value, scale);
+						break;
+					case DataType.Undefined :
+					case DataType.Decimal64 :
+						sb.AppendFormat(CultureInfo.InvariantCulture, "toDecimal64('{0}', {1})", value, scale);
+						break;
+					case DataType.Decimal128:
+						sb.AppendFormat(CultureInfo.InvariantCulture, "toDecimal128('{0}', {1})", value, scale);
+						break;
+					case DataType.Decimal256:
+						sb.AppendFormat(CultureInfo.InvariantCulture, "toDecimal256('{0}', {1})", value, scale);
+						break;
+					default:
+						throw new LinqToDBConvertException($"Unsupported Decimal type mapping: {dt.Type.DataType}");
+				}
 			}
 		}
 

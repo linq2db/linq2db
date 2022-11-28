@@ -1334,7 +1334,7 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		public static MappingSchema Default = new DefaultMappingSchema();
 
-		class DefaultMappingSchema : LockedMappingSchema
+		sealed class DefaultMappingSchema : LockedMappingSchema
 		{
 			public DefaultMappingSchema() : base(new DefaultMappingSchemaInfo())
 			{
@@ -1380,7 +1380,7 @@ namespace LinqToDB.Mapping
 
 			protected internal override int GenerateID() => 0;
 
-			class DefaultMappingSchemaInfo : MappingSchemaInfo
+			sealed class DefaultMappingSchemaInfo : MappingSchemaInfo
 			{
 				public DefaultMappingSchemaInfo() : base("")
 				{

@@ -13,7 +13,7 @@ namespace LinqToDB.DataProvider.MySql
 		public static IMySqlExtensions? MySql(this Sql.ISqlExtension? ext) => null;
 
 		#region FTS
-		class ModifierBuilder : Sql.IExtensionCallBuilder
+		sealed class ModifierBuilder : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{

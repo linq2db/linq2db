@@ -9,7 +9,7 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
-	class AllJoinsLinqBuilder : MethodCallBuilder
+	sealed class AllJoinsLinqBuilder : MethodCallBuilder
 	{
 		private static readonly string[] MethodNames4 = { "InnerJoin", "LeftJoin", "RightJoin", "FullJoin" };
 
@@ -110,7 +110,7 @@ namespace LinqToDB.Linq.Builder
 			return joinContext;
 		}
 
-		class JoinContext : SelectContext
+		sealed class JoinContext : SelectContext
 		{
 			public JoinContext(IBuildContext? parent, LambdaExpression lambda, IBuildContext outerContext, IBuildContext innerContext) : base(parent, lambda, outerContext, innerContext)
 			{

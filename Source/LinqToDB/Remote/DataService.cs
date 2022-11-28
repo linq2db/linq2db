@@ -66,14 +66,14 @@ namespace LinqToDB.Remote
 
 #region MetadataInfo
 
-		class TypeInfo
+		sealed class TypeInfo
 		{
 			public ResourceType     Type   = null!;
 			public SqlTable         Table  = null!;
 			public EntityDescriptor Mapper = null!;
 		}
 
-		class MetadataInfo
+		sealed class MetadataInfo
 		{
 			public MetadataInfo(MappingSchema mappingSchema)
 			{
@@ -212,7 +212,7 @@ namespace LinqToDB.Remote
 
 #region MetadataProvider
 
-		class MetadataProvider : IDataServiceMetadataProvider
+		sealed class MetadataProvider : IDataServiceMetadataProvider
 		{
 			public MetadataProvider(MetadataInfo data)
 			{
@@ -263,7 +263,7 @@ namespace LinqToDB.Remote
 
 #region QueryProvider
 
-		class QueryProvider : IDataServiceQueryProvider
+		sealed class QueryProvider : IDataServiceQueryProvider
 		{
 			public QueryProvider(MetadataInfo data)
 			{
@@ -333,18 +333,18 @@ namespace LinqToDB.Remote
 		{
 			public object Resource = null!;
 
-			public class Create : ResourceAction {}
-			public class Delete : ResourceAction {}
-			public class Reset  : ResourceAction {}
+			public sealed class Create : ResourceAction {}
+			public sealed class Delete : ResourceAction {}
+			public sealed class Reset  : ResourceAction {}
 
-			public class Update : ResourceAction
+			public sealed class Update : ResourceAction
 			{
 				public string  Property = null!;
 				public object? Value;
 			}
 		}
 
-		class UpdateProvider : IDataServiceUpdateProvider
+		sealed class UpdateProvider : IDataServiceUpdateProvider
 		{
 #region Init
 

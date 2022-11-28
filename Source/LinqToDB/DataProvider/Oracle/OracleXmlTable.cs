@@ -14,7 +14,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 	public static partial class OracleTools
 	{
-		class OracleXmlTableAttribute : Sql.TableExpressionAttribute
+		sealed class OracleXmlTableAttribute : Sql.TableExpressionAttribute
 		{
 			public OracleXmlTableAttribute()
 				: base("")

@@ -535,7 +535,7 @@ namespace Tests.UserTests
 	        [Column("AIN_MODEL_EXTERNAL_ID"), Nullable] public string? AinModelExternalId { get; set; } // NVARCHAR2(120)
 	    }
 
-		internal class WipCte
+		internal sealed class WipCte
 		{
 			private readonly WipDB db;
 

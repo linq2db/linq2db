@@ -141,7 +141,7 @@ namespace Tests.Mapping
 			Assert.AreEqual(100000.999,                            ms.GetConverter<string,double>  ()!("100000,999"));
 		}
 
-		class AttrTest
+		sealed class AttrTest
 		{
 			[MapValue(Value = 1)]
 			[MapValue(Value = 2, Configuration = "2")]

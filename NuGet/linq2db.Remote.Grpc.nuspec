@@ -10,10 +10,10 @@
 		</tags>
 		<readme>README.md</readme>
 		<dependencies>
-			<group targetFramework=".NETStandard2.0">
+			<group targetFramework="netstandard2.0">
 				<dependency id="linq2db"           version="4.0.0"   />
 				<dependency id="Grpc.Net.Client"   version="2.49.0"  />
-				<dependency id="protobuf-net.Grpc" version="1.0.177" />
+				<dependency id="protobuf-net.Grpc" version="1.0.179" />
 			</group>
 		</dependencies>
 	</metadata>

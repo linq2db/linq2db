@@ -46,7 +46,7 @@ namespace Tests.UserTests
 
 		private const string TestTableName = "Table_3056";
 		[Table(TestTableName, Schema = "dbo")]
-		class TestRow
+		sealed class TestRow
 		{
 			[PrimaryKey, Identity]
 			public int Id;

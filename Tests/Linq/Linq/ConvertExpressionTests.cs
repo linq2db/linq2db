@@ -615,8 +615,8 @@ namespace Tests.Linq
 					});
 		}
 
-				#region Removal of compiler-generated conversions
-		class ConversionsTestTable
+		#region Removal of compiler-generated conversions
+		sealed class ConversionsTestTable
 		{
 			public sbyte   SByte  { get; set; }
 			public byte    Byte   { get; set; }
@@ -688,7 +688,7 @@ namespace Tests.Linq
 							 || (ulong )EnumByte.TestValue == x.UInt64N)
 					.ToList();
 
-				Assert.False(db.LastQuery!.ToLower().Contains("convert"));
+				Assert.False(db.LastQuery!.ToLowerInvariant().Contains("convert"));
 			}
 		}
 
@@ -734,7 +734,7 @@ namespace Tests.Linq
 							 || (ulong )EnumSByte.TestValue == x.UInt64N)
 					.ToList();
 
-				Assert.False(db.LastQuery!.ToLower().Contains("convert"));
+				Assert.False(db.LastQuery!.ToLowerInvariant().Contains("convert"));
 			}
 		}
 
@@ -780,7 +780,7 @@ namespace Tests.Linq
 							 || (ulong )EnumInt16.TestValue == x.UInt64N)
 					.ToList();
 
-				Assert.False(db.LastQuery!.ToLower().Contains("convert"));
+				Assert.False(db.LastQuery!.ToLowerInvariant().Contains("convert"));
 			}
 		}
 
@@ -826,7 +826,7 @@ namespace Tests.Linq
 							 || (ulong )EnumUInt16.TestValue == x.UInt64N)
 					.ToList();
 
-				Assert.False(db.LastQuery!.ToLower().Contains("convert"));
+				Assert.False(db.LastQuery!.ToLowerInvariant().Contains("convert"));
 			}
 		}
 
@@ -872,7 +872,7 @@ namespace Tests.Linq
 							 || (ulong )EnumInt32.TestValue == x.UInt64N)
 					.ToList();
 
-				Assert.False(db.LastQuery!.ToLower().Contains("convert"));
+				Assert.False(db.LastQuery!.ToLowerInvariant().Contains("convert"));
 			}
 		}
 
@@ -918,7 +918,7 @@ namespace Tests.Linq
 							 || (ulong )EnumUInt32.TestValue == x.UInt64N)
 					.ToList();
 
-				Assert.False(db.LastQuery!.ToLower().Contains("convert"));
+				Assert.False(db.LastQuery!.ToLowerInvariant().Contains("convert"));
 			}
 		}
 
@@ -964,7 +964,7 @@ namespace Tests.Linq
 							 || (ulong )EnumInt64.TestValue == x.UInt64N)
 					.ToList();
 
-				Assert.False(db.LastQuery!.ToLower().Contains("convert"));
+				Assert.False(db.LastQuery!.ToLowerInvariant().Contains("convert"));
 			}
 		}
 
@@ -1010,7 +1010,7 @@ namespace Tests.Linq
 							 || (ulong )EnumUInt64.TestValue == x.UInt64N)
 					.ToList();
 
-				Assert.False(db.LastQuery!.ToLower().Contains("convert"));
+				Assert.False(db.LastQuery!.ToLowerInvariant().Contains("convert"));
 			}
 		}
 

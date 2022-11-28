@@ -13,7 +13,7 @@ namespace LinqToDB.Tools
 {
 	public static class EnumerableExtensions
 	{
-		class ValueHolder<T>
+		sealed class ValueHolder<T>
 		{
 			[UsedImplicitly] public T Value = default!;
 		}

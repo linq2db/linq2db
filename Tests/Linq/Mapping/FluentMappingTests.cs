@@ -18,7 +18,7 @@ namespace Tests.Mapping
 	public class FluentMappingTests : TestBase
 	{
 		[Table]
-		class MyClass
+		sealed class MyClass
 		{
 			public int ID;
 			public int ID1 { get; set; }
@@ -28,7 +28,7 @@ namespace Tests.Mapping
 		}
 
 		[Table(IsColumnAttributeRequired = true)]
-		class MyClass2
+		sealed class MyClass2
 		{
 			public int ID { get; set; }
 
@@ -36,7 +36,7 @@ namespace Tests.Mapping
 		}
 
 		[Table]
-		class MyClass3
+		sealed class MyClass3
 		{
 			public int ID { get; set; }
 		}
@@ -79,7 +79,7 @@ namespace Tests.Mapping
 		{
 		}
 
-		class MyInheritedClass2 : MyInheritedClass
+		sealed class MyInheritedClass2 : MyInheritedClass
 		{
 		}
 
@@ -89,7 +89,7 @@ namespace Tests.Mapping
 			public int     IntValue    { get; set; }
 		}
 
-		class MyInheritedClass4 : MyInheritedClass3, IInterface2
+		sealed class MyInheritedClass4 : MyInheritedClass3, IInterface2
 		{
 			public int MarkedOnType { get; set; }
 		}
@@ -102,10 +102,10 @@ namespace Tests.Mapping
 
 			ms.EntityDescriptorCreatedCallback = (mappingSchema, entityDescriptor) =>
 			{
-				entityDescriptor.TableName = entityDescriptor.TableName.ToLower();
+				entityDescriptor.TableName = entityDescriptor.TableName.ToLowerInvariant();
 				foreach (var entityDescriptorColumn in entityDescriptor.Columns)
 				{
-					entityDescriptorColumn.ColumnName = entityDescriptorColumn.ColumnName.ToLower();
+					entityDescriptorColumn.ColumnName = entityDescriptorColumn.ColumnName.ToLowerInvariant();
 				}
 			};
 
@@ -391,7 +391,7 @@ namespace Tests.Mapping
 			}
 		}
 
-		class DescendantEntity : BaseEntity
+		sealed class DescendantEntity : BaseEntity
 		{
 		}
 

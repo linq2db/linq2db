@@ -6,7 +6,7 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
-	class TruncateBuilder : MethodCallBuilder
+	sealed class TruncateBuilder : MethodCallBuilder
 	{
 		#region TruncateBuilder
 
@@ -34,7 +34,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region TruncateContext
 
-		class TruncateContext : SequenceContextBase
+		sealed class TruncateContext : SequenceContextBase
 		{
 			public TruncateContext(IBuildContext? parent, IBuildContext sequence)
 				: base(parent, sequence, null)

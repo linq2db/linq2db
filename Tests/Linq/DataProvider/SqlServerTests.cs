@@ -270,7 +270,7 @@ namespace Tests.DataProvider
 		}
 
 		[Table]
-		class DateTime2Table
+		sealed class DateTime2Table
 		{
 			[Column] public int Id { get; set; }
 			[Column(DataType = DataType.DateTime2)] public DateTime DTD { get; set; }
@@ -766,7 +766,7 @@ namespace Tests.DataProvider
 		}
 
 		[Table(Schema = "dbo", Name = "LinqDataTypes")]
-		class DataTypes
+		sealed class DataTypes
 		{
 			[Column] public int      ID;
 			[Column] public decimal  MoneyValue;
@@ -907,7 +907,7 @@ namespace Tests.DataProvider
 		}
 
 		[Table]
-		internal class AllTypes
+		internal sealed class AllTypes
 		{
 			[Identity]
 			[Column(DataType=DataType.Int32),          LinqToDB.Mapping.NotNull] public int             ID                       { get; set; }
@@ -1152,7 +1152,7 @@ namespace Tests.DataProvider
 		}
 
 		[Table(Name="AllTypes2")]
-		class AllTypes2
+		sealed class AllTypes2
 		{
 			[Column(DbType="int"),   PrimaryKey, Identity] public int             ID                     { get; set; } // int
 			[Column(DbType="date"),              Nullable] public DateTime?       dateDataType           { get; set; } // date
@@ -1321,7 +1321,7 @@ namespace Tests.DataProvider
 		}
 
 		[Table("#TempTable")]
-		class TempTable
+		sealed class TempTable
 		{
 			[PrimaryKey] public int ID;
 		}
@@ -1349,14 +1349,14 @@ namespace Tests.DataProvider
 		}
 
 		[Table("DecimalOverflow")]
-		class DecimalOverflow
+		sealed class DecimalOverflow
 		{
 			[Column] public decimal Decimal1;
 			[Column] public decimal Decimal2;
 			[Column] public decimal Decimal3;
 		}
 
-		internal class TestSqlServerDataProvider : SqlServerDataProvider
+		internal sealed class TestSqlServerDataProvider : SqlServerDataProvider
 		{
 			public TestSqlServerDataProvider(string providerName, SqlServerVersion version, SqlServerProvider provider)
 				: base(providerName, version, provider)
@@ -1401,7 +1401,7 @@ namespace Tests.DataProvider
 		}
 
 		[Table("DecimalOverflow")]
-		class DecimalOverflow2
+		sealed class DecimalOverflow2
 		{
 			[Column] public SqlDecimal Decimal1;
 			[Column] public SqlDecimal Decimal2;
@@ -1612,7 +1612,7 @@ namespace Tests.DataProvider
 		}
 
 		[Table("Issue1613")]
-		private class Issue1613Table
+		private sealed class Issue1613Table
 		{
 			[Column("dt"), Nullable]
 			public DateTimeOffset? DateTimeOffset { get; set; }

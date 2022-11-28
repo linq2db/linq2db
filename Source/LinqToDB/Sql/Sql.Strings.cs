@@ -14,7 +14,7 @@ namespace LinqToDB
 	{
 		#region StringAggregate
 
-		class StringAggSql2017Builder : IExtensionCallBuilder
+		sealed class StringAggSql2017Builder : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -42,7 +42,7 @@ namespace LinqToDB
 			}
 		}
 
-		class StringAggSapHanaBuilder : IExtensionCallBuilder
+		sealed class StringAggSapHanaBuilder : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -163,7 +163,7 @@ namespace LinqToDB
 
 		#region ConcatStrings
 
-		class CommonConcatWsArgumentsBuilder : IExtensionCallBuilder
+		sealed class CommonConcatWsArgumentsBuilder : IExtensionCallBuilder
 		{
 			SqlExpression IsNullExpression(string isNullFormat, ISqlExpression value)
 			{
@@ -224,7 +224,7 @@ namespace LinqToDB
 			}
 		}
 
-		class OldSqlServerConcatWsBuilder : BaseEmulationConcatWsBuilder
+		sealed class OldSqlServerConcatWsBuilder : BaseEmulationConcatWsBuilder
 		{
 			protected override SqlExpression IsNullExpression(ISqlExpression value)
 			{
@@ -245,7 +245,7 @@ namespace LinqToDB
 			}
 		}
 
-		class SqliteConcatWsBuilder : BaseEmulationConcatWsBuilder
+		sealed class SqliteConcatWsBuilder : BaseEmulationConcatWsBuilder
 		{
 			protected override SqlExpression IsNullExpression(ISqlExpression value)
 			{
