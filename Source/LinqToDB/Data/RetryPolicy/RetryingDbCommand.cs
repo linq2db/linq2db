@@ -8,7 +8,7 @@ namespace LinqToDB.Data.RetryPolicy
 {
 	using Configuration;
 
-	class RetryingDbCommand : DbCommand, IProxy<DbCommand>
+	sealed class RetryingDbCommand : DbCommand, IProxy<DbCommand>
 	{
 		readonly DbCommand    _command;
 		readonly IRetryPolicy _policy;
@@ -86,12 +86,12 @@ namespace LinqToDB.Data.RetryPolicy
 
 		public override int ExecuteNonQuery()
 		{
-			return _policy.Execute(() => _command.ExecuteNonQuery());
+			return _policy.Execute(_command.ExecuteNonQuery);
 		}
 
 		public override object? ExecuteScalar()
 		{
-			return _policy.Execute(() => _command.ExecuteScalar());
+			return _policy.Execute(_command.ExecuteScalar);
 		}
 
 		protected override Task<DbDataReader> ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
@@ -101,12 +101,12 @@ namespace LinqToDB.Data.RetryPolicy
 
 		public override Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken)
 		{
-			return _policy.ExecuteAsync(ct => _command.ExecuteNonQueryAsync(ct), cancellationToken);
+			return _policy.ExecuteAsync(_command.ExecuteNonQueryAsync, cancellationToken);
 		}
 
 		public override Task<object?> ExecuteScalarAsync(CancellationToken cancellationToken)
 		{
-			return _policy.ExecuteAsync(ct => _command.ExecuteScalarAsync(ct), cancellationToken);
+			return _policy.ExecuteAsync(_command.ExecuteScalarAsync, cancellationToken);
 		}
 
 		public DbCommand UnderlyingObject => _command;

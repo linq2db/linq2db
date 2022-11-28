@@ -3,7 +3,7 @@ using System.Data.Common;
 
 namespace LinqToDB.Interceptors
 {
-	class AggregatedUnwrapDataObjectInterceptor : AggregatedInterceptor<IUnwrapDataObjectInterceptor>, IUnwrapDataObjectInterceptor
+	sealed class AggregatedUnwrapDataObjectInterceptor : AggregatedInterceptor<IUnwrapDataObjectInterceptor>, IUnwrapDataObjectInterceptor
 	{
 		protected override AggregatedInterceptor<IUnwrapDataObjectInterceptor> Create()
 		{

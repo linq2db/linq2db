@@ -3,12 +3,15 @@
 	<PropertyGroup>
 		<RootNamespace>LinqToDB.CLI</RootNamespace>
 		<AssemblyName>dotnet-linq2db</AssemblyName>
-		<TargetFrameworks>netcoreapp3.1</TargetFrameworks>
+		<TargetFrameworks>netcoreapp3.1;net7.0</TargetFrameworks>
 		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
 		<OutputType>Exe</OutputType>
 		<WarningsAsErrors>true</WarningsAsErrors>
 		<SignAssembly>False</SignAssembly>
 		<RollForward>Major</RollForward>
+
+		<!--https://github.com/DarkWanderer/ClickHouse.Client/issues/238-->
+		<SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings>
 	</PropertyGroup>
 
 	<Target Name="CopyHosts" AfterTargets="Build">
@@ -48,6 +51,5 @@
 		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
 		<!--interceptor dependencies resolve-->
 		<PackageReference Include="Microsoft.Extensions.DependencyModel" />
-
 	</ItemGroup>
 </Project>

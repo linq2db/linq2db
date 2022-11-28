@@ -12,7 +12,7 @@ namespace Tests.Mapping
 	public class DynamicStoreTests : TestBase
 	{
 		[Table("DynamicColumnsTestTable")]
-		class DynamicColumnsTestFullTable
+		sealed class DynamicColumnsTestFullTable
 		{
 			[Column]
 			public int Id { get; set; }
@@ -22,7 +22,7 @@ namespace Tests.Mapping
 		}
 
 		[Table("DynamicColumnsTestTable")]
-		class FluentMetadataBasedStore
+		sealed class FluentMetadataBasedStore
 		{
 			public int Id { get; set; }
 
@@ -32,7 +32,7 @@ namespace Tests.Mapping
 		}
 
 		[Table("DynamicColumnsTestTable")]
-		class AttributeMetadataBasedStore
+		sealed class AttributeMetadataBasedStore
 		{
 			[Column]
 			public int Id { get; set; }
@@ -56,7 +56,7 @@ namespace Tests.Mapping
 		}
 
 		[DynamicColumnAccessor(GetterMethod = nameof(GetProperty), SetterMethod = nameof(SetProperty))]
-		class InstanceGetterSetterMethods : CustomSetterGetterBase
+		sealed class InstanceGetterSetterMethods : CustomSetterGetterBase
 		{
 			private object GetProperty(string name, object defaultValue)
 			{
@@ -73,7 +73,7 @@ namespace Tests.Mapping
 		}
 
 		[DynamicColumnAccessor(GetterMethod = nameof(GetProperty), SetterMethod = nameof(SetProperty))]
-		class StaticGetterSetterMethods : CustomSetterGetterBase
+		sealed class StaticGetterSetterMethods : CustomSetterGetterBase
 		{
 			public static Dictionary<int, Dictionary<string, object>> InstanceValues { get; set; } = new Dictionary<int, Dictionary<string, object>>();
 
@@ -100,7 +100,7 @@ namespace Tests.Mapping
 		}
 
 		[DynamicColumnAccessor(GetterExpressionMethod = nameof(GetPropertyExpression), SetterExpressionMethod =nameof(SetPropertyExpression))]
-		class InstanceGetterSetterExpressionMethods : CustomSetterGetterBase
+		sealed class InstanceGetterSetterExpressionMethods : CustomSetterGetterBase
 		{
 			public static Expression<Func<InstanceGetterSetterExpressionMethods, string, object, object>> GetPropertyExpression
 			{
@@ -130,7 +130,7 @@ namespace Tests.Mapping
 		}
 
 		[DynamicColumnAccessor(GetterExpressionMethod = nameof(GetPropertyExpression), SetterExpressionMethod = nameof(SetPropertyExpression))]
-		class StaticGetterSetterExpressionMethods : CustomSetterGetterBase
+		sealed class StaticGetterSetterExpressionMethods : CustomSetterGetterBase
 		{
 			public static Dictionary<int, Dictionary<string, object>> InstanceValues { get; set; } = new Dictionary<int, Dictionary<string, object>>();
 
@@ -171,7 +171,7 @@ namespace Tests.Mapping
 
 		[DynamicColumnAccessor(GetterMethod = nameof(GetProperty), SetterMethod = nameof(SetProperty))]
 		[DynamicColumnAccessor(GetterMethod = nameof(GetSQLiteProperty), SetterMethod = nameof(SetSQLiteProperty), Configuration = ProviderName.SQLite)]
-		class SQLiteInstanceGetterSetterMethods : CustomSetterGetterBase
+		sealed class SQLiteInstanceGetterSetterMethods : CustomSetterGetterBase
 		{
 			public object GetSQLiteProperty(string name, object defaultValue)
 			{
@@ -202,7 +202,7 @@ namespace Tests.Mapping
 
 		[Table("DynamicColumnsTestTable")]
 		[DynamicColumnAccessor(GetterMethod = nameof(GetSQLiteProperty), SetterMethod = nameof(SetSQLiteProperty), Configuration = ProviderName.SQLite)]
-		class GetterSetterVsStorageMethods1
+		sealed class GetterSetterVsStorageMethods1
 		{
 			[Column]
 			public int Id { get; set; }
@@ -228,7 +228,7 @@ namespace Tests.Mapping
 
 		[Table("DynamicColumnsTestTable")]
 		[DynamicColumnAccessor(GetterMethod = nameof(GetProperty), SetterMethod = nameof(SetProperty))]
-		class GetterSetterVsStorageMethods2
+		sealed class GetterSetterVsStorageMethods2
 		{
 			[Column]
 			public int Id { get; set; }
@@ -255,7 +255,7 @@ namespace Tests.Mapping
 
 		[Table("DynamicColumnsTestTable")]
 		[DynamicColumnAccessor(GetterMethod = nameof(GetProperty), SetterMethod = nameof(SetProperty))]
-		class GetterSetterVsStorageMethodsConflict
+		sealed class GetterSetterVsStorageMethodsConflict
 		{
 			[Column]
 			public int Id { get; set; }
@@ -281,7 +281,7 @@ namespace Tests.Mapping
 		[DynamicColumnAccessor(
 			GetterMethod = nameof(GetProperty), SetterMethod = nameof(SetProperty),
 			GetterExpressionMethod = nameof(GetPropertyExpression), SetterExpressionMethod = nameof(SetPropertyExpression))]
-		class MultipleGetterSetterMethods
+		sealed class MultipleGetterSetterMethods
 		{
 			[Column]
 			public int Id { get; set; }
@@ -314,7 +314,7 @@ namespace Tests.Mapping
 
 		[Table("DynamicColumnsTestTable")]
 		[DynamicColumnAccessor]
-		class NoGetterSetterMethods
+		sealed class NoGetterSetterMethods
 		{
 			[Column]
 			public int Id { get; set; }

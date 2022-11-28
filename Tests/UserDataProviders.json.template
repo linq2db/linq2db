@@ -328,6 +328,114 @@
 		]
 	},
 
+	"NET70": {
+		"BasedOn": "NET60",
+		"DefaultConfiguration": "SQLite.MS",
+		"Providers": [
+			// to enable test provider uncomment it and configure connection string if need
+
+			// SQLite-based test configurations
+			"SQLite.Classic",
+			"SQLite.MS"
+			//"SQLite.Classic.MPM",
+			//"SQLite.Classic.MPU",
+			//"Northwind.SQLite",
+			//"Northwind.SQLite.MS",
+
+			// no-db test configuration
+			//"TestNoopProvider",
+
+			// SQL CE
+			//"SqlCe",
+
+			// Firebird 2.5-4
+			//"Firebird",
+			//"Firebird3",
+			//"Firebird4",
+
+			// Various versions of SQL Server
+			//"SqlServer.2005",
+			//"SqlServer.2005.MS",
+			//"SqlServer.2008",
+			//"SqlServer.2008.MS",
+			//"SqlServer.2012",
+			//"SqlServer.2012.MS",
+			//"SqlServer.2014",
+			//"SqlServer.2014.MS",
+			//"SqlServer.2016",
+			//"SqlServer.2016.MS",
+			//"SqlServer.2017",
+			//"SqlServer.2017.MS",
+			//"SqlServer.2019",
+			//"SqlServer.2019.MS",
+			//"SqlServer.2022",
+			//"SqlServer.2022.MS",
+			//"SqlServer.SA",
+			//"SqlServer.SA.MS",
+			//"SqlServer.Contained",
+			//"SqlServer.Contained.MS",
+			//"SqlServer.Northwind",
+			//"SqlServer.Northwind.MS",
+			//"SqlServer.Azure",
+			//"SqlServer.Azure.MS",
+
+			// MySQL and MariaDB
+			//"MySql",
+			//"MySqlConnector",
+			//"MySql55",
+			//"MySql55Connector",
+			//"MariaDB",
+			//"MariaDBConnector",
+
+			// PostgreSQL
+			//"PostgreSQL.9.2",
+			//"PostgreSQL.9.3",
+			//"PostgreSQL.9.5",
+			//"PostgreSQL.10",
+			//"PostgreSQL.11",
+			//"PostgreSQL.12",
+			//"PostgreSQL.13",
+			//"PostgreSQL.14",
+			//"PostgreSQL.15",
+
+			// OleDB and ODBC MS Access providers
+			//"Access",
+			//"Access.Odbc",
+
+			// SAP/Sybase ASE
+			//"Sybase.Managed",
+
+			// DB2
+			//"DB2",
+
+			// Informix
+			//"Informix.DB2",
+
+			// Oracle 11 and 12+
+			//"Oracle.11.Managed",
+			//"Oracle.11.Devart.Direct",
+			//"Oracle.11.Devart.OCI",
+			//"Oracle.12.Managed",
+			//"Oracle.12.Devart.Direct",
+			//"Oracle.12.Devart.OCI",
+			//"Oracle.18.Managed",
+			//"Oracle.18.Devart.Direct",
+			//"Oracle.18.Devart.OCI",
+			//"Oracle.21.Managed",
+			//"Oracle.21.Devart.Direct",
+			//"Oracle.21.Devart.OCI",
+
+			// SAP HANA 2
+			//"SapHana.Odbc",
+			//"SapHana.Native",
+
+			// ClickHouse
+			//"ClickHouse.Octonica",
+			//"ClickHouse.Client",
+			//"ClickHouse.MySql",
+		]
+	},
+
 	// For those providers you should specify connection string first to use them.
 	// If we have setup script for database in "Data\Setup Scripts" folder, connection string is already set
 	"MyConnectionStrings": {
@@ -377,18 +485,54 @@
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
 
-			"SqlServer.2017"        : { "Provider": "System.Data.SqlClient"   , "ConnectionString": "Server=localhost,1417;Database=TestData;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"          },
-			"SqlServer.2017.MS"     : { "Provider": "Microsoft.Data.SqlClient", "ConnectionString": "Server=localhost,1417;Database=TestDataMS;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"        },
-			"SqlServer.2019"        : { "Provider": "System.Data.SqlClient"   , "ConnectionString": "Server=localhost,1419;Database=TestData;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"          },
-			"SqlServer.2019.MS"     : { "Provider": "Microsoft.Data.SqlClient", "ConnectionString": "Server=localhost,1419;Database=TestDataMS;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"        },
-			"SqlServer.2022"        : { "Provider": "System.Data.SqlClient"   , "ConnectionString": "Server=localhost,1422;Database=TestData;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"          },
-			"SqlServer.2022.MS"     : { "Provider": "Microsoft.Data.SqlClient", "ConnectionString": "Server=localhost,1422;Database=TestDataMS;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"        },
-			"SqlServer.SA"          : { "Provider": "System.Data.SqlClient"   , "ConnectionString": "localhost,1419;Database=TestDataSA;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"               },
-			"SqlServer.SA.MS"       : { "Provider": "Microsoft.Data.SqlClient", "ConnectionString": "localhost,1419;Database=TestDataMSSA;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"             },
-			"SqlServer.Contained"   : { "Provider": "System.Data.SqlClient"   , "ConnectionString": "localhost,1419;Database=TestDataContained;User Id=sa;Password=Password12!Encrypt=true;TrustServerCertificate=true"         },
-			"SqlServer.Contained.MS": { "Provider": "Microsoft.Data.SqlClient", "ConnectionString": "localhost,1419;Database=TestDataMSContained;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"      },
-			"SqlServer.Northwind"   : { "Provider": "System.Data.SqlClient"   , "ConnectionString": "localhost,1419;Database=Northwind;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"                },
-			"SqlServer.Northwind.MS": { "Provider": "Microsoft.Data.SqlClient", "ConnectionString": "localhost,1419;Database=NorthwindMS;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"              },
+			"SqlServer.2017": {
+				"Provider": "System.Data.SqlClient",
+				"ConnectionString": "Server=localhost,1417;Database=TestData;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
+			},
+			"SqlServer.2017.MS": {
+				"Provider": "Microsoft.Data.SqlClient",
+				"ConnectionString": "Server=localhost,1417;Database=TestDataMS;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
+			},
+			"SqlServer.2019": {
+				"Provider": "System.Data.SqlClient",
+				"ConnectionString": "Server=localhost,1419;Database=TestData;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
+			},
+			"SqlServer.2019.MS": {
+				"Provider": "Microsoft.Data.SqlClient",
+				"ConnectionString": "Server=localhost,1419;Database=TestDataMS;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
+			},
+			"SqlServer.2022": {
+				"Provider": "System.Data.SqlClient",
+				"ConnectionString": "Server=localhost,1422;Database=TestData;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
+			},
+			"SqlServer.2022.MS": {
+				"Provider": "Microsoft.Data.SqlClient",
+				"ConnectionString": "Server=localhost,1422;Database=TestDataMS;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
+			},
+			"SqlServer.SA": {
+				"Provider": "System.Data.SqlClient",
+				"ConnectionString": "localhost,1419;Database=TestDataSA;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
+			},
+			"SqlServer.SA.MS": {
+				"Provider": "Microsoft.Data.SqlClient",
+				"ConnectionString": "localhost,1419;Database=TestDataMSSA;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
+			},
+			"SqlServer.Contained": {
+				"Provider": "System.Data.SqlClient",
+				"ConnectionString": "localhost,1419;Database=TestDataContained;User Id=sa;Password=Password12!Encrypt=true;TrustServerCertificate=true"
+			},
+			"SqlServer.Contained.MS": {
+				"Provider": "Microsoft.Data.SqlClient",
+				"ConnectionString": "localhost,1419;Database=TestDataMSContained;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
+			},
+			"SqlServer.Northwind": {
+				"Provider": "System.Data.SqlClient",
+				"ConnectionString": "localhost,1419;Database=Northwind;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
+			},
+			"SqlServer.Northwind.MS": {
+				"Provider": "Microsoft.Data.SqlClient",
+				"ConnectionString": "localhost,1419;Database=NorthwindMS;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
+			},
 
 			"SqlServer.Azure": {
 				"Provider": "System.Data.SqlClient",
@@ -435,8 +579,14 @@
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
 
-			"MariaDB"         : { "Provider": "MySql"         , "ConnectionString": "Server=localhost;Port=3316;SslMode=None;Database=testdata;Uid=root;Pwd=root;charset=utf8;Allow User Variables=True;"                                    },
-			"MariaDBConnector": { "Provider": "MySqlConnector", "ConnectionString": "Server=localhost;Port=3316;SslMode=None;Database=testdataconnector;Uid=root;Pwd=root;charset=utf8;Allow User Variables=True;AllowLoadLocalInfile=true;" },
+			"MariaDB": {
+				"Provider": "MySql",
+				"ConnectionString": "Server=localhost;Port=3316;SslMode=None;Database=testdata;Uid=root;Pwd=root;charset=utf8;Allow User Variables=True;"
+			},
+			"MariaDBConnector": {
+				"Provider": "MySqlConnector",
+				"ConnectionString": "Server=localhost;Port=3316;SslMode=None;Database=testdataconnector;Uid=root;Pwd=root;charset=utf8;Allow User Variables=True;AllowLoadLocalInfile=true;"
+			},
 
 			"Oracle.11.Native": {
 				"Provider": "Oracle.DataAccess.Client",
@@ -503,15 +653,42 @@
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
 
-			"PostgreSQL.9.2": { "Provider": "Npgsql", "ConnectionString": "Server=localhost;Port=5492;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100;" },
-			"PostgreSQL.9.3": { "Provider": "Npgsql", "ConnectionString": "Server=localhost;Port=5493;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100;" },
-			"PostgreSQL.9.5": { "Provider": "Npgsql", "ConnectionString": "Server=localhost;Port=5495;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100;" },
-			"PostgreSQL.10" : { "Provider": "Npgsql", "ConnectionString": "Server=localhost;Port=5410;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100;" },
-			"PostgreSQL.11" : { "Provider": "Npgsql", "ConnectionString": "Server=localhost;Port=5411;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100;" },
-			"PostgreSQL.12" : { "Provider": "Npgsql", "ConnectionString": "Server=localhost;Port=5412;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100;" },
-			"PostgreSQL.13" : { "Provider": "Npgsql", "ConnectionString": "Server=localhost;Port=5413;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100;" },
-			"PostgreSQL.14" : { "Provider": "Npgsql", "ConnectionString": "Server=localhost;Port=5414;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100;" },
-			"PostgreSQL.15" : { "Provider": "Npgsql", "ConnectionString": "Server=localhost;Port=5415;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100;" },
+			"PostgreSQL.9.2": {
+				"Provider": "Npgsql",
+				"ConnectionString": "Server=localhost;Port=5492;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100;"
+			},
+			"PostgreSQL.9.3": {
+				"Provider": "Npgsql",
+				"ConnectionString": "Server=localhost;Port=5493;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100;"
+			},
+			"PostgreSQL.9.5": {
+				"Provider": "Npgsql",
+				"ConnectionString": "Server=localhost;Port=5495;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100;"
+			},
+			"PostgreSQL.10": {
+				"Provider": "Npgsql",
+				"ConnectionString": "Server=localhost;Port=5410;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100;"
+			},
+			"PostgreSQL.11": {
+				"Provider": "Npgsql",
+				"ConnectionString": "Server=localhost;Port=5411;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100;"
+			},
+			"PostgreSQL.12": {
+				"Provider": "Npgsql",
+				"ConnectionString": "Server=localhost;Port=5412;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100;"
+			},
+			"PostgreSQL.13": {
+				"Provider": "Npgsql",
+				"ConnectionString": "Server=localhost;Port=5413;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100;"
+			},
+			"PostgreSQL.14": {
+				"Provider": "Npgsql",
+				"ConnectionString": "Server=localhost;Port=5414;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100;"
+			},
+			"PostgreSQL.15": {
+				"Provider": "Npgsql",
+				"ConnectionString": "Server=localhost;Port=5415;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100;"
+			},
 
 			"Sybase": {
 				"Provider": "Sybase.Data.AseClient",
@@ -529,9 +706,18 @@
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
 
-			"ClickHouse.Octonica": { "Provider": "Octonica.ClickHouseClient", "ConnectionString": "Host=localhost;Port=9000;Database=testdb1;User=testuser;Password=testuser" },
-			"ClickHouse.Client"  : { "Provider": "ClickHouse.Client",         "ConnectionString": "Host=localhost;Port=8123;Database=testdb2;Username=testuser;Password=testuser;UseSession=true" },
-			"ClickHouse.MySql"   : { "Provider": "MySqlConnector",            "ConnectionString": "Host=localhost;Port=9004;Database=testdb3;Username=testuser;Password=testuser;Pooling=false;" }
+			"ClickHouse.Octonica": {
+				"Provider": "Octonica.ClickHouseClient",
+				"ConnectionString": "Host=localhost;Port=9000;Database=testdb1;User=testuser;Password=testuser"
+			},
+			"ClickHouse.Client": {
+				"Provider": "ClickHouse.Client",
+				"ConnectionString": "Host=localhost;Port=8123;Database=testdb2;Username=testuser;Password=testuser;UseSession=true"
+			},
+			"ClickHouse.MySql": {
+				"Provider": "MySqlConnector",
+				"ConnectionString": "Host=localhost;Port=9004;Database=testdb3;Username=testuser;Password=testuser;Pooling=false;"
+			}
 		}
 	},
 

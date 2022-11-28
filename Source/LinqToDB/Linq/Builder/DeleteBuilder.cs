@@ -7,7 +7,7 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
-	class DeleteBuilder : MethodCallBuilder
+	sealed class DeleteBuilder : MethodCallBuilder
 	{
 		private static readonly string[] MethodNames =
 		{
@@ -119,7 +119,7 @@ namespace LinqToDB.Linq.Builder
 			return new DeleteContext(buildInfo.Parent, sequence);
 		}
 
-		class DeleteContext : SequenceContextBase
+		sealed class DeleteContext : SequenceContextBase
 		{
 			public enum DeleteType
 			{
@@ -164,7 +164,7 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-		class DeleteWithOutputContext : SelectContext
+		sealed class DeleteWithOutputContext : SelectContext
 		{
 			public DeleteWithOutputContext(IBuildContext? parent, IBuildContext sequence, IBuildContext outputContext, LambdaExpression outputExpression)
 				: base(parent, outputExpression, outputContext)

@@ -47,13 +47,13 @@ namespace Tests.TypeMapping
 		}
 
 		[Wrapper]
-		internal class OracleParameter
+		internal sealed class OracleParameter
 		{
 			public OracleDbType OracleDbType { get; set; }
 		}
 
 		[Wrapper]
-		internal class OracleDataReader
+		internal sealed class OracleDataReader
 		{
 			public OracleDate GetOracleDate(int idx) => throw new NotImplementedException();
 		}

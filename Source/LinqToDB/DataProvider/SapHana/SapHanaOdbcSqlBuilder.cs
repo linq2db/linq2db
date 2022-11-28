@@ -7,7 +7,7 @@ namespace LinqToDB.DataProvider.SapHana
 	using SqlQuery;
 	using SqlProvider;
 
-	class SapHanaOdbcSqlBuilder : SapHanaSqlBuilder
+	sealed class SapHanaOdbcSqlBuilder : SapHanaSqlBuilder
 	{
 		public SapHanaOdbcSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
@@ -19,7 +19,7 @@ namespace LinqToDB.DataProvider.SapHana
 			return new SapHanaOdbcSqlBuilder(this);
 		}
 
-		protected SapHanaOdbcSqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
+		private SapHanaOdbcSqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
 		{
 		}
 

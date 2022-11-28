@@ -9,12 +9,12 @@ namespace LinqToDB.DataProvider.SqlServer
 	using Data;
 	using SchemaProvider;
 
-	class SqlServerSchemaProvider : SchemaProviderBase
+	sealed class SqlServerSchemaProvider : SchemaProviderBase
 	{
-		protected bool IsAzure;
-		protected int  CompatibilityLevel;
+		private bool IsAzure;
+		private int  CompatibilityLevel;
 
-		protected readonly SqlServerDataProvider Provider;
+		private readonly SqlServerDataProvider Provider;
 
 		public SqlServerSchemaProvider(SqlServerDataProvider provider)
 		{

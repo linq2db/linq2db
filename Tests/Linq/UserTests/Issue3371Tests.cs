@@ -7,7 +7,7 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue3371Tests : TestBase
 	{
-		private class PayRate
+		private sealed class PayRate
 		{
 			public PayRate()
 			{
@@ -18,7 +18,7 @@ namespace Tests.UserTests
 			public string Name { get; set; }
 		}
 
-		private class Employee
+		private sealed class Employee
 		{
 			public int      Id        { get; set; }
 			public PayRate? PayRate   { get; set; }

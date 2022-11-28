@@ -13,13 +13,13 @@ namespace Tests.UserTests
 	public class SelectManyDeleteTests : TestBase
 	{
 		[Table(Name = "GrandChild")]
-		new class GrandChild
+		new sealed class GrandChild
 		{
 			[Column] public int ChildID { get; set; }
 		}
 
 		[Table(Name = "Child")]
-		new class Child
+		new sealed class Child
 		{
 			[Column] public int ParentID { get; set; }
 			[Column] public int ChildID  { get; set; }
@@ -29,7 +29,7 @@ namespace Tests.UserTests
 		}
 
 		[Table(Name = "Parent")]
-		new class Parent
+		new sealed class Parent
 		{
 			[Identity, PrimaryKey(1)]
 			public int ParentID { get; set; }

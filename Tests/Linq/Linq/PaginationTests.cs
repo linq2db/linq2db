@@ -12,7 +12,7 @@ namespace Tests.Linq
 	public class PaginationTests : TestBase
 	{
 		[Table]
-		class PaginationData
+		sealed class PaginationData
 		{
 			[Column] public int Id { get; set; }
 			[Column] public int Value { get; set; }

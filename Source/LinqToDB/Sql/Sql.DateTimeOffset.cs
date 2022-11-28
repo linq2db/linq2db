@@ -47,7 +47,7 @@ namespace LinqToDB
 
 		#region DateAdd
 
-		class DateOffsetAddBuilder : IExtensionCallBuilder
+		sealed class DateOffsetAddBuilder : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -62,7 +62,7 @@ namespace LinqToDB
 			}
 		}
 
-		class DateOffsetAddBuilderPostgreSQL : IExtensionCallBuilder
+		sealed class DateOffsetAddBuilderPostgreSQL : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{

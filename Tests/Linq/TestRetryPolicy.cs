@@ -6,7 +6,7 @@ using LinqToDB.Data.RetryPolicy;
 
 namespace Tests
 {
-	class TestRetryPolicy : IRetryPolicy
+	sealed class TestRetryPolicy : IRetryPolicy
 	{
 		public TResult Execute<TResult>(Func<TResult> operation)
 		{

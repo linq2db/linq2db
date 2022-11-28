@@ -102,13 +102,13 @@ namespace LinqToDB.DataProvider
 		}
 
 		[Wrapper]
-		private class OleDbParameter
+		private sealed class OleDbParameter
 		{
 			public OleDbType OleDbType { get; set; }
 		}
 
 		[Wrapper]
-		private class OleDbConnection
+		private sealed class OleDbConnection
 		{
 			public DataTable GetOleDbSchemaTable(Guid schema, object[]? restrictions) => throw new NotImplementedException();
 		}

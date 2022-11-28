@@ -67,7 +67,7 @@
 		/// <summary>
 		/// Top level column group builder implementation.
 		/// </summary>
-		private class HeaderConfigurator : GroupConfiguratorBase<IHeaderConfigurator>, IHeaderConfigurator
+		private sealed class HeaderConfigurator : GroupConfiguratorBase<IHeaderConfigurator>, IHeaderConfigurator
 		{
 			public HeaderConfigurator(ColumnGroup group)
 				: base(group)
@@ -85,7 +85,7 @@
 		/// Child column group builder implementation.
 		/// </summary>
 		/// <typeparam name="TParent"></typeparam>
-		private class GroupConfigurator<TParent> : GroupConfiguratorBase<IColumnGroupConfigurator<TParent>>, IColumnGroupConfigurator<TParent>
+		private sealed class GroupConfigurator<TParent> : GroupConfiguratorBase<IColumnGroupConfigurator<TParent>>, IColumnGroupConfigurator<TParent>
 			where TParent : IColumnGroupConfiguratorBase<TParent>
 		{
 			private readonly TParent _parent;

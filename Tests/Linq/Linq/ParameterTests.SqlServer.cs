@@ -13,7 +13,7 @@ namespace Tests.Linq
 	public partial class ParameterTests
 	{
 		[Table("AllTypes")]
-		class AllTypesWithLength
+		sealed class AllTypesWithLength
 		{
 			[Column(                             Length = 1)]  public byte[]? VarBinaryDataType;
 			[Column(DataType = DataType.VarChar, Length = 20)] public string? VarcharDataType;
@@ -21,7 +21,7 @@ namespace Tests.Linq
 		}
 
 		[Table("AllTypes")]
-		class AllTypesCustom
+		sealed class AllTypesCustom
 		{
 			[Column] public VarBinary? VarBinaryDataType;
 			[Column] public VarChar?   VarcharDataType;
@@ -29,21 +29,21 @@ namespace Tests.Linq
 		}
 
 		[Table("AllTypes")]
-		class AllTypesCustomWithLength
+		sealed class AllTypesCustomWithLength
 		{
 			[Column(Length = 1)]  public VarBinary? VarBinaryDataType;
 			[Column(Length = 20)] public VarChar?   VarcharDataType;
 			[Column(Length = 20)] public NVarChar?  NVarcharDataType;
 		}
 
-		class AllTypesCustomMaxLength
+		sealed class AllTypesCustomMaxLength
 		{
 			public VarBinary? VarBinary;
 			public VarChar?   VarChar;
 			public NVarChar?  NVarChar;
 		}
 
-		class VarChar : CustomBase<string>
+		sealed class VarChar : CustomBase<string>
 		{
 			public override string ToString(IFormatProvider? provider)
 			{
@@ -51,7 +51,7 @@ namespace Tests.Linq
 			}
 		}
 
-		class NVarChar : CustomBase<string>
+		sealed class NVarChar : CustomBase<string>
 		{
 			public override string ToString(IFormatProvider? provider)
 			{
@@ -59,7 +59,7 @@ namespace Tests.Linq
 			}
 		}
 
-		class VarBinary : CustomBase<byte[]>
+		sealed class VarBinary : CustomBase<byte[]>
 		{
 			public override object ToType(Type conversionType, IFormatProvider? provider)
 			{

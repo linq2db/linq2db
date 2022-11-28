@@ -8,7 +8,7 @@ namespace LinqToDB.Remote
 	using System.Data.Common;
 	using Mapping;
 
-	class RemoteDataReader : DbDataReader
+	sealed class RemoteDataReader : DbDataReader
 	{
 		public RemoteDataReader(MappingSchema mappingSchema, LinqServiceResult result)
 		{

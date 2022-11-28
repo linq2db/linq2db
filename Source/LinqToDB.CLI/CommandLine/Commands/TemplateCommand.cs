@@ -59,7 +59,7 @@ namespace LinqToDB.CommandLine
 				return StatusCodes.EXPECTED_ERROR;
 			}
 
-			Directory.CreateDirectory(Path.GetDirectoryName(fullPath));
+			Directory.CreateDirectory(Path.GetDirectoryName(fullPath)!);
 
 			using var template = GetType().Assembly.GetManifestResourceStream("LinqToDB.CLI.Template.tt")!;
 			using var file     = File.Create(fullPath);

@@ -11,7 +11,7 @@ namespace LinqToDB.Linq.Builder
 	using Common;
 	using Reflection;
 
-	class FirstSingleBuilder : MethodCallBuilder
+	sealed class FirstSingleBuilder : MethodCallBuilder
 	{
 		public  static readonly string[] MethodNames      = { "First"     , "FirstOrDefault"     , "Single"     , "SingleOrDefault"      };
 		private static readonly string[] MethodNamesAsync = { "FirstAsync", "FirstOrDefaultAsync", "SingleAsync", "SingleOrDefaultAsync" };
@@ -129,7 +129,7 @@ namespace LinqToDB.Linq.Builder
 			return null;
 		}
 
-		public class FirstSingleContext : SequenceContextBase
+		public sealed class FirstSingleContext : SequenceContextBase
 		{
 			public FirstSingleContext(IBuildContext? parent, IBuildContext sequence, MethodCallExpression methodCall)
 				: base(parent, sequence, null)
@@ -282,15 +282,11 @@ namespace LinqToDB.Linq.Builder
 					{
 						foreach (var member in sc.Members.Values)
 						{
-							var found = null != member.Find(ctx, static(c, e) =>
+							if (member is MethodCallExpression mc && context.Builder.IsSubQuery(ctx, mc))
 							{
-								if (e is MethodCallExpression mc && c.Builder.IsSubQuery(c, mc))
-									return true;
-								return false;
-							});
-
-							if (found)
 								return true;
+							}
+							return false;
 						}
 
 						return false;

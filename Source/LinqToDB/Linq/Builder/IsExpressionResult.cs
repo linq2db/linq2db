@@ -5,7 +5,7 @@ namespace LinqToDB.Linq.Builder
 	/// <summary>
 	/// Contains result of <see cref="IBuildContext.IsExpression"/> function call.
 	/// </summary>
-	struct IsExpressionResult
+	readonly struct IsExpressionResult
 	{
 		/// <summary>
 		/// Indicates when test or request was successful.

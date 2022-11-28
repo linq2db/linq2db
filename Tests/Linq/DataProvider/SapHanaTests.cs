@@ -845,7 +845,7 @@ namespace Tests.DataProvider
 				return db.GetTable<Record>(null, (MethodInfo)MethodBase.GetCurrentMethod()!, db, param1);
 			}
 
-			public class Record
+			public sealed class Record
 			{
 				public int O { get; set; }
 			}
