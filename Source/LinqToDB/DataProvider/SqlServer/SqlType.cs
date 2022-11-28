@@ -19,7 +19,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			return _dataType;
 		}
 
-		class SqlExpression : Sql.ExpressionAttribute
+		sealed class SqlExpression : Sql.ExpressionAttribute
 		{
 			public SqlExpression(string name) : base(ProviderName.SqlServer, name)
 			{

@@ -13,7 +13,7 @@ namespace Tests.UserTests
 	public class Issue2560Tests : TestBase
 	{
 		[Table]
-		class DataClass
+		sealed class DataClass
 		{
 			[Column] public int Id    { get; set; }
 			[Column] public LocalDateTime Value { get; set; }

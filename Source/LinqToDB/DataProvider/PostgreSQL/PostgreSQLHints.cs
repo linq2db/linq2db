@@ -24,7 +24,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		public const string NoWait     = "NOWAIT";
 		public const string SkipLocked = "SKIP LOCKED";
 
-		class SubQueryTableHintExtensionBuilder : ISqlQueryExtensionBuilder
+		sealed class SubQueryTableHintExtensionBuilder : ISqlQueryExtensionBuilder
 		{
 			void ISqlQueryExtensionBuilder.Build(ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension)
 			{

@@ -204,7 +204,7 @@ namespace Tests.DataProvider
 		};
 
 		[Table("LinqDataTypes")]
-		class DataTypes
+		sealed class DataTypes
 		{
 			[Column] public int       ID;
 			[Column] public decimal?  MoneyValue;

@@ -15,7 +15,7 @@ namespace LinqToDB.Data
 	using Mapping;
 	using Reflection;
 
-	class RecordReaderBuilder
+	sealed class RecordReaderBuilder
 	{
 		public static readonly ParameterExpression DataReaderParam  = Expression.Parameter(typeof(DbDataReader),  "rd");
 		public        readonly ParameterExpression DataReaderLocal;
@@ -168,7 +168,7 @@ namespace LinqToDB.Data
 			return expr;
 		}
 
-		class ColumnInfo
+		sealed class ColumnInfo
 		{
 			public bool       IsComplex;
 			public string     Name       = null!;
@@ -304,12 +304,12 @@ namespace LinqToDB.Data
 			return expr;
 		}
 
-		protected virtual Expression ProcessExpression(Expression expression)
+		private Expression ProcessExpression(Expression expression)
 		{
 			return expression;
 		}
 
-		class ReadColumnInfo
+		sealed class ReadColumnInfo
 		{
 			public int              ReaderIndex;
 			public ColumnDescriptor Column = null!;

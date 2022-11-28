@@ -42,7 +42,7 @@ namespace Tests.UserTests
 		};
 
 		[Table("Issue2816Table")]
-		class TestClass
+		sealed class TestClass
 		{
 			[PrimaryKey]
 			public int Id { get; set; }

@@ -231,7 +231,7 @@ namespace LinqToDB.DataProvider.DB2
 		#region Wrappers
 
 		[Wrapper]
-		private class DB2Binary
+		private sealed class DB2Binary
 		{
 			public bool IsNull { get; }
 		}
@@ -276,7 +276,7 @@ namespace LinqToDB.DataProvider.DB2
 		}
 
 		[Wrapper]
-		private class DB2Parameter
+		private sealed class DB2Parameter
 		{
 			public DB2Type DB2Type { get; set; }
 		}
@@ -346,7 +346,7 @@ namespace LinqToDB.DataProvider.DB2
 		}
 
 		[Wrapper]
-		internal class DB2Transaction
+		internal sealed class DB2Transaction
 		{
 		}
 

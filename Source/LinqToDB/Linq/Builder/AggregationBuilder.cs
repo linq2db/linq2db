@@ -12,7 +12,7 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Common.Internal;
 	using LinqToDB.Expressions;
 
-	class AggregationBuilder : MethodCallBuilder
+	sealed class AggregationBuilder : MethodCallBuilder
 	{
 		public  static readonly string[] MethodNames      = { "Average"     , "Min"     , "Max"     , "Sum"      };
 		private static readonly string[] MethodNamesAsync = { "AverageAsync", "MinAsync", "MaxAsync", "SumAsync" };
@@ -77,7 +77,7 @@ namespace LinqToDB.Linq.Builder
 			return context;
 		}
 
-		class AggregationContext : SequenceContextBase
+		sealed class AggregationContext : SequenceContextBase
 		{
 			public AggregationContext(IBuildContext? parent, IBuildContext sequence, MethodCallExpression methodCall)
 				: base(parent, sequence, null)

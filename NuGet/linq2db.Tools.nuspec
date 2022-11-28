@@ -10,15 +10,15 @@
 		</tags>
 		<readme>README.md</readme>
 		<dependencies>
-			<group targetFramework=".NETFramework4.5" >
+			<group targetFramework="net45" >
 				<dependency id="linq2db"        version="4.0.0"  />
 				<dependency id="Humanizer.Core" version="2.14.1" />
 			</group>
-			<group targetFramework=".NETFramework4.6" >
+			<group targetFramework="net46" >
 				<dependency id="linq2db"        version="4.0.0"  />
 				<dependency id="Humanizer.Core" version="2.14.1" />
 			</group>
-			<group targetFramework=".NETStandard2.0">
+			<group targetFramework="netstandard2.0">
 				<dependency id="linq2db"        version="4.0.0"  />
 				<dependency id="Humanizer.Core" version="2.14.1" />
 			</group>

@@ -5,7 +5,7 @@ namespace LinqToDB.SqlProvider
 {
 	using SqlQuery;
 
-	class HintWithParameterExtensionBuilder : ISqlQueryExtensionBuilder
+	sealed class HintWithParameterExtensionBuilder : ISqlQueryExtensionBuilder
 	{
 		void ISqlQueryExtensionBuilder.Build(ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension)
 		{

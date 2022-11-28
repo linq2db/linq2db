@@ -612,7 +612,7 @@ namespace LinqToDB.SchemaProvider
 
 					for (var i = 0; i < paramNames.Length; i++)
 					{
-						switch (paramNames[i].Trim().ToLower())
+						switch (paramNames[i].Trim().ToLowerInvariant())
 						{
 							case "size"       :
 							case "length"     : paramValues[i] = length; break;
@@ -764,7 +764,7 @@ namespace LinqToDB.SchemaProvider
 			{
 				name = key.MemberName;
 
-				if (key.BackReference != null && key.ThisColumns.Count == 1 && key.ThisColumns[0].MemberName.ToLower().EndsWith("id"))
+				if (key.BackReference != null && key.ThisColumns.Count == 1 && key.ThisColumns[0].MemberName.ToLowerInvariant().EndsWith("id"))
 				{
 					name = key.ThisColumns[0].MemberName;
 					name = name.Substring(0, name.Length - "id".Length).TrimEnd('_');

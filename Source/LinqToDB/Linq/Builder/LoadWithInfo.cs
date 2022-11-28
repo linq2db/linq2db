@@ -3,7 +3,7 @@ using System.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
-	class LoadWithInfo
+	sealed class LoadWithInfo
 	{
 		public LoadWithInfo(MemberInfo memberInfo)
 		{
@@ -14,7 +14,7 @@ namespace LinqToDB.Linq.Builder
 		public LambdaExpression? MemberFilter { get; set; }
 		public Expression?       FilterFunc   { get; set; }
 
-		protected bool Equals(LoadWithInfo other)
+		private bool Equals(LoadWithInfo other)
 		{
 			return MemberInfo.Equals(other.MemberInfo);
 		}

@@ -14,7 +14,7 @@ namespace Tests.xUpdate
 	[Order(10000)]
 	public class CreateTempTableTests : TestBase
 	{
-		class IDTable
+		sealed class IDTable
 		{
 			public int ID;
 		}

@@ -25,7 +25,7 @@ namespace Tests.Linq
 			return ctx;
 		}
 
-		class TestEntityServiceInterceptor : EntityServiceInterceptor
+		sealed class TestEntityServiceInterceptor : EntityServiceInterceptor
 		{
 			public int EntityCreatedCallCounter { get; set; }
 			public bool CheckEntityIdentity     { get; set; }

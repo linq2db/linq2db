@@ -13,7 +13,7 @@ namespace LinqToDB
 	/// This class is used as COM object wrapper instead of dynamic keyword, as dynamic for COM is not supported on .net core till v5.
 	/// See original issue https://github.com/dotnet/runtime/issues/12587.
 	/// </summary>
-	internal class ComWrapper : DynamicObject, IDisposable
+	internal sealed class ComWrapper : DynamicObject, IDisposable
 	{
 		private object _instance;
 

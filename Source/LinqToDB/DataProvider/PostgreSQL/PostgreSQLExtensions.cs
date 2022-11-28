@@ -23,7 +23,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		#region Analytic Functions
 
-		class ApplyAggregateModifier: Sql.IExtensionCallBuilder
+		sealed class ApplyAggregateModifier : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{

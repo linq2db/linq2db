@@ -9,6 +9,9 @@
 		<WarningsAsErrors>true</WarningsAsErrors>
 		<SignAssembly>False</SignAssembly>
 		<RollForward>Major</RollForward>
+
+		<!--https://github.com/DarkWanderer/ClickHouse.Client/issues/238-->
+		<SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings>
 	</PropertyGroup>
 
 	<Target Name="CopyHosts" AfterTargets="Build">
@@ -50,6 +53,5 @@
 		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
 		<!--interceptor dependencies resolve-->
 		<PackageReference Include="Microsoft.Extensions.DependencyModel" />
-
 	</ItemGroup>
 </Project>

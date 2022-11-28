@@ -339,7 +339,9 @@ namespace LinqToDB.Linq
 						{
 							expr = new LazyExpressionInfo();
 
+#pragma warning disable CA1311 // Specify a culture or use an invariant version
 							((LazyExpressionInfo)expr).SetExpression(L<string,string,bool,int>((s1,s2,b) => b ? string.CompareOrdinal(s1.ToUpper(), s2.ToUpper()) : string.CompareOrdinal(s1, s2)));
+#pragma warning restore CA1311 // Specify a culture or use an invariant version
 
 							Members[""].Add(memberKey, expr);
 						}
@@ -495,7 +497,7 @@ namespace LinqToDB.Linq
 			void SetInfo();
 		}
 
-		class GetValueOrDefaultExpressionInfo<T1> : IExpressionInfo, ISetInfo
+		sealed class GetValueOrDefaultExpressionInfo<T1> : IExpressionInfo, ISetInfo
 			where T1 : struct
 		{
 #pragma warning disable CS0649 // Field is never assigned to...
@@ -517,7 +519,7 @@ namespace LinqToDB.Linq
 			}
 		}
 
-		class GetValueOrDefaultInfoProvider<T> : IGenericInfoProvider
+		sealed class GetValueOrDefaultInfoProvider<T> : IGenericInfoProvider
 		{
 			public void SetInfo(MappingSchema mappingSchema)
 			{
@@ -613,8 +615,10 @@ namespace LinqToDB.Linq
 #endif
 			{ M(() => "".TrimEnd    ((char[])null!)), N(() => L<string,char[],string?>     ((string obj,char[] ch)                    => TrimRight(obj, ch))) },
 			{ M(() => "".TrimStart  ((char[])null!)), N(() => L<string,char[],string?>     ((string obj,char[] ch)                    => TrimLeft (obj, ch))) },
+#pragma warning disable CA1311 // Specify a culture or use an invariant version
 			{ M(() => "".ToLower    ()        ), N(() => L<string?,string?>                ((string? obj)                             => Sql.Lower(obj))) },
 			{ M(() => "".ToUpper    ()        ), N(() => L<string?,string?>                ((string? obj)                             => Sql.Upper(obj))) },
+#pragma warning restore CA1311 // Specify a culture or use an invariant version
 			{ M(() => "".CompareTo  ("")      ), N(() => L<string,string,int>              ((string obj,string p0)                    => ConvertToCaseCompareTo(obj, p0)!.Value)) },
 			{ M(() => "".CompareTo  (1)       ), N(() => L<string,object,int>              ((string obj,object p0)                    => ConvertToCaseCompareTo(obj, p0.ToString())!.Value)) },
 
@@ -633,10 +637,12 @@ namespace LinqToDB.Linq
 			{ M(() => string.CompareOrdinal("",0,"",0,0)),                                    N(() => L<string,int,string,int,int,int>                 ((string s1,int i1,string s2,int i2,int l)                     => s1.Substring(i1, l).CompareTo(s2.Substring(i2, l)))) },
 			{ M(() => string.Compare       ("","")),                                          N(() => L<string,string,int>                             ((string s1,string s2)                                         => s1.CompareTo(s2))) },
 			{ M(() => string.Compare       ("",0,"",0,0)),                                    N(() => L<string,int,string,int,int,int>                 ((string s1,int i1,string s2,int i2,int l)                     => s1.Substring(i1,l).CompareTo(s2.Substring(i2,l)))) },
+#pragma warning disable CA1311 // Specify a culture or use an invariant version
 			{ M(() => string.Compare       ("","",true)),                                     N(() => L<string,string,bool,int>                        ((string s1,string s2,bool b)                                  => b ? s1.ToLower().CompareTo(s2.ToLower()) : s1.CompareTo(s2))) },
 			{ M(() => string.Compare       ("",0,"",0,0,true)),                               N(() => L<string,int,string,int,int,bool,int>            ((string s1,int i1,string s2,int i2,int l,bool b)              => b ? s1.Substring(i1,l).ToLower().CompareTo(s2.Substring(i2, l).ToLower()) : s1.Substring(i1, l).CompareTo(s2.Substring(i2, l)))) },
 			{ M(() => string.Compare       ("",0,"",0,0,StringComparison.OrdinalIgnoreCase)), N(() => L<string,int,string,int,int,StringComparison,int>((string s1,int i1,string s2,int i2,int l,StringComparison sc) => sc == StringComparison.CurrentCultureIgnoreCase || sc==StringComparison.OrdinalIgnoreCase ? s1.Substring(i1,l).ToLower().CompareTo(s2.Substring(i2, l).ToLower()) : s1.Substring(i1, l).CompareTo(s2.Substring(i2, l)))) },
 			{ M(() => string.Compare       ("","",StringComparison.OrdinalIgnoreCase)),       N(() => L<string,string,StringComparison,int>            ((string s1,string s2,StringComparison sc)                     => sc == StringComparison.CurrentCultureIgnoreCase || sc==StringComparison.OrdinalIgnoreCase ? s1.ToLower().CompareTo(s2.ToLower()) : s1.CompareTo(s2))) },
+#pragma warning restore CA1311 // Specify a culture or use an invariant version
 
 			{ M(() => AltStuff("",0,0,"")), N(() => L<string,int?,int?,string,string>((string p0,int? p1,int ?p2,string p3) => Sql.Left(p0, p1 - 1) + p3 + Sql.Right(p0, p0.Length - (p1 + p2 - 1)))) },
 
@@ -1697,7 +1703,7 @@ namespace LinqToDB.Linq
 			return str?.TrimStart(trimChars);
 		}
 
-		class LTrimCharactersBuilder : Sql.IExtensionCallBuilder
+		sealed class LTrimCharactersBuilder : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
@@ -1721,7 +1727,7 @@ namespace LinqToDB.Linq
 			}
 		}
 
-		class RTrimCharactersBuilder : Sql.IExtensionCallBuilder
+		sealed class RTrimCharactersBuilder : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
@@ -1819,7 +1825,7 @@ namespace LinqToDB.Linq
 
 		// SqlServer
 		//
-		class DateAddBuilder : Sql.IExtensionCallBuilder
+		sealed class DateAddBuilder : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{

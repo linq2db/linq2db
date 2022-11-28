@@ -4,7 +4,7 @@ using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	class ChangeTypeExpressionBuilder : ISequenceBuilder
+	sealed class ChangeTypeExpressionBuilder : ISequenceBuilder
 	{
 		public int BuildCounter { get; set; }
 

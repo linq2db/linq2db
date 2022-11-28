@@ -9,7 +9,7 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue2564Tests : TestBase
 	{
-		class Issue2564Class
+		sealed class Issue2564Class
 		{
 			public long Id { get; set; }
 			public DateTime TimestampGenerated { get; set; }

@@ -418,7 +418,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		class InsertTable
+		sealed class InsertTable
 		{
 			[PrimaryKey]
 			public int Id { get; set; }
@@ -985,7 +985,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		class GuidID
+		sealed class GuidID
 		{
 			[Identity] public Guid ID;
 					   public int  Field1;
@@ -1054,7 +1054,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		class GuidID2
+		sealed class GuidID2
 		{
 			[Identity] public Guid ID;
 		}
@@ -1425,7 +1425,6 @@ namespace Tests.xUpdate
 						new LinqDataTypes2 { ID = 1004, MoneyValue = 0m, DateTimeValue = null, BoolValue = true,  GuidValue = new Guid("ef129165-6ffe-4df9-bb6b-bb16e413c883"), SmallIntValue =  null, IntValue = null }
 					};
 
-					// workaround for https://github.com/DarkWanderer/ClickHouse.Client/issues/152
 					var options = new BulkCopyOptions();
 					options.MaxBatchSize = 1;
 					if (context.IsAnyOf(ProviderName.ClickHouseClient))
@@ -1661,7 +1660,7 @@ namespace Tests.xUpdate
 		}
 
 		[Table("LinqDataTypes")]
-		class TestConvertTable1
+		sealed class TestConvertTable1
 		{
 			[PrimaryKey]                        public int      ID;
 			[Column(DataType = DataType.Int64)] public TimeSpan BigIntValue;
@@ -1692,7 +1691,7 @@ namespace Tests.xUpdate
 		}
 
 		[Table("LinqDataTypes")]
-		class TestConvertTable2
+		sealed class TestConvertTable2
 		{
 			[PrimaryKey]                        public int       ID;
 			[Column(DataType = DataType.Int64)] public TimeSpan? BigIntValue;
@@ -2027,7 +2026,7 @@ namespace Tests.xUpdate
 		}
 
 		[Table]
-		class TestInsertOrReplaceTable
+		sealed class TestInsertOrReplaceTable
 		{
 			[PrimaryKey] public int     ID         { get; set; }
 			[Column]     public string? FirstName  { get; set; }
