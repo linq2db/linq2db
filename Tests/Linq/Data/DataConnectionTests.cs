@@ -1745,7 +1745,8 @@ namespace Tests.Data
 				ProviderName.SqlCe,
 				TestProvName.AllSQLiteClassic,
 				TestProvName.AllSqlServer,
-				ProviderName.ClickHouseClient,
+				// depends on connection pool size
+				//ProviderName.ClickHouseClient,
 				ProviderName.ClickHouseOctonica,
 				TestProvName.AllSybase)] string context)
 		{
