@@ -18,7 +18,11 @@ namespace LinqToDB.Data
 		private          bool            _disposed;
 		private readonly DataConnection? _dataConnection;
 
-		internal DataReaderWrapper(DbDataReader dataReader)
+		/// <summary>
+		/// Creates wrapper instance for specified data reader.
+		/// </summary>
+		/// <param name="dataReader">Wrapped data reader instance.</param>
+		public DataReaderWrapper(DbDataReader dataReader)
 		{
 			DataReader = dataReader;
 		}

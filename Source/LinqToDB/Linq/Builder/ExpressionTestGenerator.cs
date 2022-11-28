@@ -13,7 +13,7 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using LinqToDB.Mapping;
 
-	class ExpressionTestGenerator
+	sealed class ExpressionTestGenerator
 	{
 		readonly bool          _mangleNames;
 		readonly StringBuilder _exprBuilder = new ();

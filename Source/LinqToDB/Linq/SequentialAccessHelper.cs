@@ -26,7 +26,7 @@ namespace LinqToDB.Linq
 		}
 
 		// shared between two visitors to avoid extra context allocation
-		private class OptimizeMappingExpressionForSequentialAccessContext
+		private sealed class OptimizeMappingExpressionForSequentialAccessContext
 		{
 			public OptimizeMappingExpressionForSequentialAccessContext(int fieldCount)
 			{
@@ -278,7 +278,7 @@ namespace LinqToDB.Linq
 			return null;
 		}
 
-		class OptimizeColumnReaderForSequentialAccessContext
+		sealed class OptimizeColumnReaderForSequentialAccessContext
 		{
 			public OptimizeColumnReaderForSequentialAccessContext(Expression isNullParameter, Expression rawValueParameter, int columnIndex)
 			{
@@ -345,7 +345,7 @@ namespace LinqToDB.Linq
 			return expression;
 		}
 
-		class ExtractRawValueReaderContext
+		sealed class ExtractRawValueReaderContext
 		{
 			public ExtractRawValueReaderContext(int columnIndex)
 			{

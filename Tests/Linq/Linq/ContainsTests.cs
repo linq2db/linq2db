@@ -250,7 +250,7 @@ namespace Tests.Linq
 			count.Should().Be(withNullCompares ? 1 : 0);
 		}
 
-		class Src
+		sealed class Src
 		{
 			public int            Id    { get; set; }
 			public int?           Int   { get; set; }

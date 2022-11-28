@@ -217,7 +217,7 @@ namespace Tests.Data
 			}
 		}
 
-		private class TestConnectionInterceptor : ConnectionInterceptor
+		private sealed class TestConnectionInterceptor : ConnectionInterceptor
 		{
 			private readonly Action<ConnectionEventData, DbConnection>? _onConnectionOpening;
 			private readonly Action<ConnectionEventData, DbConnection>? _onConnectionOpened;
@@ -614,7 +614,7 @@ namespace Tests.Data
 			}
 		}
 
-		class TestEntityServiceInterceptor : EntityServiceInterceptor
+		sealed class TestEntityServiceInterceptor : EntityServiceInterceptor
 		{
 			public int EntityCreatedCallCounter { get; set; }
 			public override object EntityCreated(EntityCreatedEventData eventData, object entity)
@@ -624,7 +624,7 @@ namespace Tests.Data
 			}
 		}
 
-		class TestDataContextInterceptor : DataContextInterceptor
+		sealed class TestDataContextInterceptor : DataContextInterceptor
 		{
 			public int OnClosingCallCounter { get; set; }
 			public int OnClosedCallCounter { get; set; }
@@ -656,7 +656,7 @@ namespace Tests.Data
 			}
 		}
 
-		class TestRetryPolicy : IRetryPolicy
+		sealed class TestRetryPolicy : IRetryPolicy
 		{
 			TResult       IRetryPolicy.Execute<TResult>     (Func<TResult> operation                                                              ) => operation();
 			void          IRetryPolicy.Execute              (Action operation                                                                     ) => operation();
@@ -1340,7 +1340,7 @@ namespace Tests.Data
 		#endregion
 
 		[Table]
-		class TransactionScopeTable
+		sealed class TransactionScopeTable
 		{
 			[Column] public int Id { get; set; }
 		}

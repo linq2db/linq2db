@@ -12,8 +12,8 @@ namespace LinqToDB.DataProvider.DB2
 	using SchemaProvider;
 	using SqlProvider;
 
-	class DB2LUWDataProvider : DB2DataProvider { public DB2LUWDataProvider() : base(ProviderName.DB2LUW, DB2Version.LUW) {} }
-	class DB2zOSDataProvider : DB2DataProvider { public DB2zOSDataProvider() : base(ProviderName.DB2zOS, DB2Version.zOS) {} }
+	sealed class DB2LUWDataProvider : DB2DataProvider { public DB2LUWDataProvider() : base(ProviderName.DB2LUW, DB2Version.LUW) {} }
+	sealed class DB2zOSDataProvider : DB2DataProvider { public DB2zOSDataProvider() : base(ProviderName.DB2zOS, DB2Version.zOS) {} }
 
 	public abstract class DB2DataProvider : DynamicDataProviderBase<DB2ProviderAdapter>
 	{

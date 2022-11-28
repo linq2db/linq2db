@@ -9,7 +9,7 @@ namespace Tests.Linq
 	public class GroupByExtensionsTests : TestBase
 	{
 		[Table]
-		class GroupSampleClass
+		sealed class GroupSampleClass
 		{
 			[Column] public int Id1    { get; set; }
 			[Column] public int Id2    { get; set; }

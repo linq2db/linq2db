@@ -7,7 +7,7 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
-	class InsertOrUpdateBuilder : MethodCallBuilder
+	sealed class InsertOrUpdateBuilder : MethodCallBuilder
 	{
 		#region InsertOrUpdateBuilder
 
@@ -88,7 +88,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region UpdateContext
 
-		class InsertOrUpdateContext : SequenceContextBase
+		sealed class InsertOrUpdateContext : SequenceContextBase
 		{
 			public InsertOrUpdateContext(IBuildContext? parent, IBuildContext sequence)
 				: base(parent, sequence, null)

@@ -9,7 +9,7 @@ namespace Tests.Linq
 	[TestFixture]
 	public class OptimizerTests : TestBase
 	{
-		class OptimizerData
+		sealed class OptimizerData
 		{
 			[PrimaryKey(1)]
 			public int Key1 { get; set; }

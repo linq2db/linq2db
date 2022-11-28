@@ -3,6 +3,7 @@ using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB;
+using LinqToDB.Configuration;
 using LinqToDB.Data;
 
 namespace Tests.Model
@@ -23,6 +24,11 @@ namespace Tests.Model
 		}
 
 		public TestDataConnection()
+		{
+		}
+
+		public TestDataConnection(LinqToDBConnectionOptions options)
+			:base(options)
 		{
 		}
 

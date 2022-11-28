@@ -8,7 +8,7 @@ namespace LinqToDB.DataProvider.SqlServer
 	using Configuration;
 
 	[UsedImplicitly]
-	class SqlServerFactory : IDataProviderFactory
+	sealed class SqlServerFactory : IDataProviderFactory
 	{
 		IDataProvider IDataProviderFactory.GetDataProvider(IEnumerable<NamedValue> attributes)
 		{

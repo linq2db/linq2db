@@ -17,7 +17,7 @@ namespace Tests.Data
 	[TestFixture]
 	public class RetryPolicyTest : TestBase
 	{
-		class Retry : IRetryPolicy
+		sealed class Retry : IRetryPolicy
 		{
 			public int Count { get; private set; }
 
@@ -80,7 +80,7 @@ namespace Tests.Data
 			}
 		}
 
-		class TestException : Exception
+		sealed class TestException : Exception
 		{}
 
 		public class FakeClass
@@ -266,13 +266,13 @@ namespace Tests.Data
 		}
 
 		[Table]
-		class MyEntity
+		sealed class MyEntity
 		{
 			[Column                       ] public long   Id   { get; set; }
 			[NotNull, Column(Length = 256)] public string Name { get; set; } = null!;
 		}
 
-		class DummyRetryPolicy : IRetryPolicy
+		sealed class DummyRetryPolicy : IRetryPolicy
 		{
 			public TResult       Execute<TResult>(Func<TResult> operation)                                                                                              => throw new NotImplementedException("ExecuteT");
 			public void          Execute(Action operation)                                                                                                              => throw new NotImplementedException("Execute");

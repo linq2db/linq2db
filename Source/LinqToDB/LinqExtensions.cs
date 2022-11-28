@@ -1054,7 +1054,7 @@ namespace LinqToDB
 			return await Task.Run(() => currentSource.Provider.Execute<int>(expr), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
-		internal class Updatable<T> : IUpdatable<T>
+		internal sealed class Updatable<T> : IUpdatable<T>
 		{
 			public Updatable(IQueryable<T> query)
 			{
@@ -1563,7 +1563,7 @@ namespace LinqToDB
 
 		#region ValueInsertable
 
-		internal class ValueInsertable<T> : IValueInsertable<T>
+		internal sealed class ValueInsertable<T> : IValueInsertable<T>
 		{
 			public ValueInsertable(IQueryable<T> query)
 			{
@@ -2227,7 +2227,7 @@ namespace LinqToDB
 				await InsertWithIdentityAsync(currentSource, target, setter, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext));
 		}
 
-		internal class SelectInsertable<T,TT> : ISelectInsertable<T,TT>
+		internal sealed class SelectInsertable<T,TT> : ISelectInsertable<T,TT>
 		{
 			public SelectInsertable(IQueryable<T> query)
 			{

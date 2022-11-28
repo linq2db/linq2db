@@ -114,7 +114,7 @@ namespace LinqToDB.DataProvider.SqlCe
 		}
 
 		[Wrapper]
-		private class SqlCeParameter
+		private sealed class SqlCeParameter
 		{
 			public SqlDbType SqlDbType { get; set; }
 		}

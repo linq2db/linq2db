@@ -13,18 +13,18 @@ namespace Tests.Linq
 	[TestFixture]
 	public class CompileTestsAsync : TestBase
 	{
-		class AsyncDataTable
+		sealed class AsyncDataTable
 		{
 			[PrimaryKey]
 			public int Id { get; set; }
 		}
 
-		class AsyncDataProjection
+		sealed class AsyncDataProjection
 		{
 			public int Id { get; set; }
 			public int Value { get; set; }
 
-			protected bool Equals(AsyncDataProjection other)
+			private bool Equals(AsyncDataProjection other)
 			{
 				return Id == other.Id && Value == other.Value;
 			}

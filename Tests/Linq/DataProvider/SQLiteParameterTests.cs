@@ -11,7 +11,7 @@ namespace Tests.DataProvider
 	public class SQLiteParameterTests : TestBase
 	{
 		[Table]
-		class ClassWithIntDate
+		sealed class ClassWithIntDate
 		{
 			[Column] public int Id             { get; set; }
 			[Column(DataType = DataType.Int64)] public DateTime Value { get; set; }
@@ -20,7 +20,7 @@ namespace Tests.DataProvider
 		}
 
 		[Table]
-		class ClassRealTypes
+		sealed class ClassRealTypes
 		{
 			[Column] public int Id             { get; set; }
 			[Column] public double DoubleValue { get; set; }

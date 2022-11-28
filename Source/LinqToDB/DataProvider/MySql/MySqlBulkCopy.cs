@@ -9,7 +9,7 @@ namespace LinqToDB.DataProvider.MySql
 	using Common;
 	using Data;
 
-	class MySqlBulkCopy : BasicBulkCopy
+	sealed class MySqlBulkCopy : BasicBulkCopy
 	{
 		/// <summary>
 		/// Settings based on https://www.jooq.org/doc/3.12/manual/sql-building/dsl-context/custom-settings/settings-inline-threshold/

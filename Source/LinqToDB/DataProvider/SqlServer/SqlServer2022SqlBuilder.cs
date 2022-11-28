@@ -4,7 +4,7 @@
 	using Mapping;
 	using SqlProvider;
 
-	class SqlServer2022SqlBuilder : SqlServer2019SqlBuilder
+	sealed class SqlServer2022SqlBuilder : SqlServer2019SqlBuilder
 	{
 		public SqlServer2022SqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)

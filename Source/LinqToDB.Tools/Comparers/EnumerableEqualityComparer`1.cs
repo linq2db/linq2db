@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace LinqToDB.Tools.Comparers
 {
-	class EnumerableEqualityComparer<T> : EqualityComparer<IEnumerable<T>>
+	sealed class EnumerableEqualityComparer<T> : EqualityComparer<IEnumerable<T>>
 	{
 		public new static EnumerableEqualityComparer<T> Default { get; } = new EnumerableEqualityComparer<T>();
 

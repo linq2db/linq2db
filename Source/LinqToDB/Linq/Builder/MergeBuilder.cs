@@ -12,7 +12,7 @@ namespace LinqToDB.Linq.Builder
 
 	using static LinqToDB.Reflection.Methods.LinqToDB.Merge;
 
-	internal partial class MergeBuilder : MethodCallBuilder
+	internal sealed partial class MergeBuilder : MethodCallBuilder
 	{
 		static readonly MethodInfo[] _supportedMethods = {ExecuteMergeMethodInfo, MergeWithOutput, MergeWithOutputInto};
 
@@ -101,7 +101,7 @@ namespace LinqToDB.Linq.Builder
 			return mergeContext;
 		}
 
-		class MergeOutputContext : SelectContext
+		sealed class MergeOutputContext : SelectContext
 		{
 			public MergeOutputContext(IBuildContext? parent, LambdaExpression lambda, MergeContext mergeContext, IBuildContext emptyTable, IBuildContext deletedTable, IBuildContext insertedTable)
 				: base(parent, lambda, emptyTable, deletedTable, insertedTable)

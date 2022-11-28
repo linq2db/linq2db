@@ -6,14 +6,14 @@ namespace LinqToDB.DataProvider.Oracle
 	using SqlQuery;
 	using SqlProvider;
 
-	partial class Oracle11SqlBuilder : OracleSqlBuilderBase
+	sealed partial class Oracle11SqlBuilder : OracleSqlBuilderBase
 	{
 		public Oracle11SqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
-		protected Oracle11SqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
+		private Oracle11SqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
 		{
 		}
 

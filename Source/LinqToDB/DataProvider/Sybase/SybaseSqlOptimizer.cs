@@ -8,7 +8,7 @@ namespace LinqToDB.DataProvider.Sybase
 	using SqlProvider;
 	using SqlQuery;
 
-	class SybaseSqlOptimizer : BasicSqlOptimizer
+	sealed class SybaseSqlOptimizer : BasicSqlOptimizer
 	{
 		public SybaseSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{
@@ -23,7 +23,7 @@ namespace LinqToDB.DataProvider.Sybase
 			};
 		}
 
-		protected static string[] SybaseCharactersToEscape = {"_", "%", "[", "]", "^"};
+		private static string[] SybaseCharactersToEscape = {"_", "%", "[", "]", "^"};
 
 		public override string[] LikeCharactersToEscape => SybaseCharactersToEscape;
 

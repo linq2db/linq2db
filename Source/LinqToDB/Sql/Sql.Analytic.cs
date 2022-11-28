@@ -53,7 +53,7 @@ namespace LinqToDB
 
 		#region Call Builders
 
-		class OrderItemBuilder: Sql.IExtensionCallBuilder
+		sealed class OrderItemBuilder : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
@@ -74,7 +74,7 @@ namespace LinqToDB
 			}
 		}
 
-		class ApplyAggregateModifier: Sql.IExtensionCallBuilder
+		sealed class ApplyAggregateModifier : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
@@ -95,7 +95,7 @@ namespace LinqToDB
 			}
 		}
 
-		class ApplyNullsModifier: Sql.IExtensionCallBuilder
+		sealed class ApplyNullsModifier : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
@@ -137,7 +137,7 @@ namespace LinqToDB
 			return string.Empty;
 		}
 
-		class ApplyFromAndNullsModifier: Sql.IExtensionCallBuilder
+		sealed class ApplyFromAndNullsModifier : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{

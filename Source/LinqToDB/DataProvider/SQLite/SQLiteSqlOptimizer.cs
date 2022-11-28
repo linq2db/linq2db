@@ -7,7 +7,7 @@ namespace LinqToDB.DataProvider.SQLite
 	using SqlProvider;
 	using SqlQuery;
 
-	class SQLiteSqlOptimizer : BasicSqlOptimizer
+	sealed class SQLiteSqlOptimizer : BasicSqlOptimizer
 	{
 		public SQLiteSqlOptimizer(SqlProviderFlags sqlProviderFlags)
 			: base(sqlProviderFlags)

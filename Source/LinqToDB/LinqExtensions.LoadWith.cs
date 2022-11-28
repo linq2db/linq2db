@@ -59,7 +59,7 @@ namespace LinqToDB
 			return table;
 		}
 
-		class LoadWithQueryable<TEntity, TProperty> : ILoadWithQueryable<TEntity, TProperty>
+		sealed class LoadWithQueryable<TEntity, TProperty> : ILoadWithQueryable<TEntity, TProperty>
 		{
 			private readonly IQueryable<TEntity> _query;
 

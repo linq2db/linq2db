@@ -8,7 +8,7 @@ namespace LinqToDB.DataProvider.SapHana
 	using System.Threading;
 	using System.Threading.Tasks;
 
-	class SapHanaBulkCopy : BasicBulkCopy
+	sealed class SapHanaBulkCopy : BasicBulkCopy
 	{
 		private readonly SapHanaDataProvider _provider;
 

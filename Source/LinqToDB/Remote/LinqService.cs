@@ -508,7 +508,7 @@ namespace LinqToDB.Remote
 
 		#region private classes
 
-		private class QueryContext : IQueryContext
+		private sealed class QueryContext : IQueryContext
 		{
 			public SqlStatement    Statement  { get; set; } = null!;
 			public object?         Context    { get; set; }

@@ -260,7 +260,7 @@ namespace LinqToDB.DataProvider.Firebird
 					// if identifier is not quoted, it must be converted to upper case to match record in rdb$relation_name
 					if (FirebirdConfiguration.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.None ||
 						FirebirdConfiguration.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Auto && IsValidIdentifier(identifierValue))
-						identifierValue = identifierValue.ToUpper();
+						identifierValue = identifierValue.ToUpperInvariant();
 
 					BuildValue(null, identifierValue);
 
@@ -405,7 +405,7 @@ namespace LinqToDB.DataProvider.Firebird
 						// if identifier is not quoted, it must be converted to upper case to match record in rdb$relation_name
 						if (FirebirdConfiguration.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.None ||
 							FirebirdConfiguration.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Auto && IsValidIdentifier(identifierValue))
-							identifierValue = identifierValue.ToUpper();
+							identifierValue = identifierValue.ToUpperInvariant();
 
 						BuildValue(null, identifierValue);
 
@@ -448,7 +448,7 @@ namespace LinqToDB.DataProvider.Firebird
 					// if identifier is not quoted, it must be converted to upper case to match record in rdb$relation_name
 					if (FirebirdConfiguration.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.None ||
 						FirebirdConfiguration.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Auto && IsValidIdentifier(identifierValue))
-						identifierValue = identifierValue.ToUpper();
+						identifierValue = identifierValue.ToUpperInvariant();
 
 					Indent--;
 

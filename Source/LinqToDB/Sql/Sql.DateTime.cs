@@ -66,7 +66,7 @@ namespace LinqToDB
 
 		#region DatePart
 
-		internal class DatePartBuilder : IExtensionCallBuilder
+		internal sealed class DatePartBuilder : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -98,7 +98,7 @@ namespace LinqToDB
 			}
 		}
 
-		class DatePartBuilderMySql: IExtensionCallBuilder
+		sealed class DatePartBuilderMySql : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -131,7 +131,7 @@ namespace LinqToDB
 			}
 		}
 
-		class DatePartBuilderPostgre: IExtensionCallBuilder
+		sealed class DatePartBuilderPostgre : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -164,7 +164,7 @@ namespace LinqToDB
 			}
 		}
 
-		class DatePartBuilderSqLite: IExtensionCallBuilder
+		sealed class DatePartBuilderSqLite : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -201,7 +201,7 @@ namespace LinqToDB
 			}
 		}
 
-		class DatePartBuilderAccess: IExtensionCallBuilder
+		sealed class DatePartBuilderAccess : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -224,7 +224,7 @@ namespace LinqToDB
 			}
 		}
 
-		class DatePartBuilderSapHana: IExtensionCallBuilder
+		sealed class DatePartBuilderSapHana : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -256,7 +256,7 @@ namespace LinqToDB
 			}
 		}
 
-		class DatePartBuilderInformix: IExtensionCallBuilder
+		sealed class DatePartBuilderInformix : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -309,7 +309,7 @@ namespace LinqToDB
 			}
 		}
 
-		class DatePartBuilderOracle: IExtensionCallBuilder
+		sealed class DatePartBuilderOracle : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -341,7 +341,7 @@ namespace LinqToDB
 			}
 		}
 
-		class DatePartBuilderDB2: IExtensionCallBuilder
+		sealed class DatePartBuilderDB2 : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -373,7 +373,7 @@ namespace LinqToDB
 			}
 		}
 
-		class DatePartBuilderFirebird: IExtensionCallBuilder
+		sealed class DatePartBuilderFirebird : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -411,7 +411,7 @@ namespace LinqToDB
 			}
 		}
 
-		class DatePartBuilderClickHouse : IExtensionCallBuilder
+		sealed class DatePartBuilderClickHouse : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -482,7 +482,7 @@ namespace LinqToDB
 
 		#region DateAdd
 
-		class DateAddBuilder : IExtensionCallBuilder
+		sealed class DateAddBuilder : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -496,7 +496,7 @@ namespace LinqToDB
 			}
 		}
 
-		class DateAddBuilderOracle : IExtensionCallBuilder
+		sealed class DateAddBuilderOracle : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -529,7 +529,7 @@ namespace LinqToDB
 			}
 		}
 
-		class DateAddBuilderDB2 : IExtensionCallBuilder
+		sealed class DateAddBuilderDB2 : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -563,7 +563,7 @@ namespace LinqToDB
 			}
 		}
 
-		class DateAddBuilderInformix : IExtensionCallBuilder
+		sealed class DateAddBuilderInformix : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -593,7 +593,7 @@ namespace LinqToDB
 			}
 		}
 
-		class DateAddBuilderPostgreSQL : IExtensionCallBuilder
+		sealed class DateAddBuilderPostgreSQL : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -626,7 +626,7 @@ namespace LinqToDB
 			}
 		}
 
-		class DateAddBuilderMySql : IExtensionCallBuilder
+		sealed class DateAddBuilderMySql : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -657,7 +657,7 @@ namespace LinqToDB
 			}
 		}
 
-		class DateAddBuilderSQLite : IExtensionCallBuilder
+		sealed class DateAddBuilderSQLite : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -687,7 +687,7 @@ namespace LinqToDB
 			}
 		}
 
-		class DateAddBuilderAccess : IExtensionCallBuilder
+		sealed class DateAddBuilderAccess : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -714,7 +714,7 @@ namespace LinqToDB
 			}
 		}
 
-		class DateAddBuilderSapHana : IExtensionCallBuilder
+		sealed class DateAddBuilderSapHana : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -759,7 +759,7 @@ namespace LinqToDB
 			}
 		}
 
-		class DateAddBuilderFirebird : IExtensionCallBuilder
+		sealed class DateAddBuilderFirebird : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -789,7 +789,7 @@ namespace LinqToDB
 			}
 		}
 
-		class DateAddBuilderClickHouse : IExtensionCallBuilder
+		sealed class DateAddBuilderClickHouse : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -864,7 +864,7 @@ namespace LinqToDB
 
 		#region DateDiff
 
-		class DateDiffBuilder : IExtensionCallBuilder
+		sealed class DateDiffBuilder : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -877,7 +877,7 @@ namespace LinqToDB
 			}
 		}
 
-		class DateDiffBuilderSapHana : IExtensionCallBuilder
+		sealed class DateDiffBuilderSapHana : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -906,7 +906,7 @@ namespace LinqToDB
 			}
 		}
 
-		class DateDiffBuilderDB2 : IExtensionCallBuilder
+		sealed class DateDiffBuilderDB2 : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -948,7 +948,7 @@ namespace LinqToDB
 			}
 		}
 
-		class DateDiffBuilderSQLite : IExtensionCallBuilder
+		sealed class DateDiffBuilderSQLite : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -970,7 +970,7 @@ namespace LinqToDB
 			}
 		}
 
-		class DateDiffBuilderPostgreSql : IExtensionCallBuilder
+		sealed class DateDiffBuilderPostgreSql : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -993,7 +993,7 @@ namespace LinqToDB
 			}
 		}
 
-		class DateDiffBuilderAccess : IExtensionCallBuilder
+		sealed class DateDiffBuilderAccess : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -1025,7 +1025,7 @@ namespace LinqToDB
 			}
 		}
 
-		class DateDiffBuilderOracle : IExtensionCallBuilder
+		sealed class DateDiffBuilderOracle : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -1056,7 +1056,7 @@ namespace LinqToDB
 			}
 		}
 
-		class DateDiffBuilderClickHouse : IExtensionCallBuilder
+		sealed class DateDiffBuilderClickHouse : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{

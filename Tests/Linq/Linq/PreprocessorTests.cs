@@ -15,7 +15,7 @@ namespace Tests.Linq
 	[TestFixture]
 	public class PreprocessorTests : TestBase
 	{
-		class PostProcessorDataConnection : DataConnection, IExpressionPreprocessor
+		sealed class PostProcessorDataConnection : DataConnection, IExpressionPreprocessor
 		{
 			public PostProcessorDataConnection(string configurationString) : base(configurationString)
 			{

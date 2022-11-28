@@ -104,7 +104,7 @@ namespace Tests.Extensions
 			Assert.That(LastQuery, Contains.Substring("[Person] INDEXED BY IX_PersonDesc"));
 		}
 
-		class GuidMapping
+		sealed class GuidMapping
 		{
 			[Column]
 			public Guid? BlobGuid1 { get; set; }

@@ -120,7 +120,7 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		//TODO: We have to separate TableContext in proper hierarchy
-		class RawSqlContext : TableContext
+		sealed class RawSqlContext : TableContext
 		{
 			public RawSqlContext(ExpressionBuilder builder, BuildInfo buildInfo, Type originalType, bool isScalar, string sql, ISqlExpression[] parameters)
 				: base(builder, buildInfo, new SqlRawSqlTable(builder.MappingSchema, originalType, sql, parameters))
