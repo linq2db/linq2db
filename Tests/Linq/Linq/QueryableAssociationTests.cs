@@ -623,7 +623,7 @@ WHERE
 			}
 		}
 
-		class EntityWithUser
+		sealed class EntityWithUser
 		{
 			[Column]
 			public int UserId { get; set; }
@@ -691,7 +691,7 @@ WHERE
 			}
 		}
 
-		class CustomDataConnection : DataConnection
+		sealed class CustomDataConnection : DataConnection
 		{
 			public CustomDataConnection(string? configurationString) : base(configurationString)
 			{
@@ -700,7 +700,7 @@ WHERE
 			public int CurrentUserId { get; set; }
 		}
 
-		class CustomDataContext : DataContext
+		sealed class CustomDataContext : DataContext
 		{
 		
 			public CustomDataContext(string? configurationString) : base(configurationString)

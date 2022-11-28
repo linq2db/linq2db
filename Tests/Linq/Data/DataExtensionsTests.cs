@@ -47,7 +47,7 @@ namespace Tests.Data
 			}
 		}
 
-		class QueryObject
+		sealed class QueryObject
 		{
 			public int      Column1;
 			public DateTime Column2;
@@ -266,7 +266,7 @@ namespace Tests.Data
 		}
 
 		[ScalarType]
-		class TwoValues
+		sealed class TwoValues
 		{
 			public int Value1;
 			public int Value2;

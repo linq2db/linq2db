@@ -6,7 +6,7 @@ namespace LinqToDB.DataProvider.Oracle
 	using Configuration;
 	using Data;
 
-	class OracleProviderDetector : ProviderDetectorBase<OracleProvider,OracleVersion,DbConnection>
+	sealed class OracleProviderDetector : ProviderDetectorBase<OracleProvider,OracleVersion,DbConnection>
 	{
 		public OracleProviderDetector() : base(OracleVersion.AutoDetect, OracleVersion.v12)
 		{

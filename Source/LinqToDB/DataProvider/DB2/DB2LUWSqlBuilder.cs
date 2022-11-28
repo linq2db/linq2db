@@ -7,7 +7,7 @@ namespace LinqToDB.DataProvider.DB2
 	using SqlProvider;
 	using SqlQuery;
 
-	class DB2LUWSqlBuilder : DB2SqlBuilderBase
+	sealed class DB2LUWSqlBuilder : DB2SqlBuilderBase
 	{
 		public DB2LUWSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)

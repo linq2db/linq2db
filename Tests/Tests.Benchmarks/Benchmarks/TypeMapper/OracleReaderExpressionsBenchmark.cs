@@ -27,9 +27,9 @@ namespace LinqToDB.Benchmarks.TypeMapping
 		{ 
 		}
 
-		class Original
+		sealed class Original
 		{
-			internal class OracleTimeStampTZ
+			internal sealed class OracleTimeStampTZ
 			{
 				public static OracleTimeStampTZ Instance { get; } = new OracleTimeStampTZ();
 
@@ -44,14 +44,14 @@ namespace LinqToDB.Benchmarks.TypeMapping
 				public TimeSpan GetTimeZoneOffset() => TimeSpan.Zero;
 			}
 
-			internal class OracleTimeStampLTZ
+			internal sealed class OracleTimeStampLTZ
 			{
 				public static OracleTimeStampLTZ Instance { get; } = new OracleTimeStampLTZ();
 
 				public OracleTimeStampTZ ToOracleTimeStampTZ() => OracleTimeStampTZ.Instance;
 			}
 
-			internal class OracleDecimal
+			internal sealed class OracleDecimal
 			{
 				public static OracleDecimal Instance { get; } = new OracleDecimal();
 
@@ -60,7 +60,7 @@ namespace LinqToDB.Benchmarks.TypeMapping
 				public static explicit operator decimal(OracleDecimal value1) => 1m;
 			}
 
-			internal class OracleDataReader : ITestDataReader
+			internal sealed class OracleDataReader : ITestDataReader
 			{
 				[MethodImpl(MethodImplOptions.NoInlining)]
 				public OracleTimeStampTZ  GetOracleTimeStampTZ(int i)  => OracleTimeStampTZ.Instance;
@@ -71,10 +71,10 @@ namespace LinqToDB.Benchmarks.TypeMapping
 			}
 		}
 
-		class Wrapped
+		sealed class Wrapped
 		{
 			[Wrapper]
-			internal class OracleDataReader
+			internal sealed class OracleDataReader
 			{
 				public OracleTimeStampTZ  GetOracleTimeStampTZ(int i)  => throw new NotImplementedException();
 				public OracleTimeStampLTZ GetOracleTimeStampLTZ(int i) => throw new NotImplementedException();
@@ -82,13 +82,13 @@ namespace LinqToDB.Benchmarks.TypeMapping
 			}
 
 			[Wrapper]
-			internal class OracleTimeStampLTZ
+			internal sealed class OracleTimeStampLTZ
 			{
 				public OracleTimeStampTZ ToOracleTimeStampTZ() => throw new NotImplementedException();
 			}
 
 			[Wrapper]
-			internal class OracleDecimal
+			internal sealed class OracleDecimal
 			{
 				public static OracleDecimal SetPrecision(OracleDecimal value1, int precision) => throw new NotImplementedException();
 
@@ -96,7 +96,7 @@ namespace LinqToDB.Benchmarks.TypeMapping
 			}
 
 			[Wrapper]
-			internal class OracleTimeStampTZ
+			internal sealed class OracleTimeStampTZ
 			{
 				public int Year       => throw new NotImplementedException();
 				public int Month      => throw new NotImplementedException();
@@ -126,7 +126,7 @@ namespace LinqToDB.Benchmarks.TypeMapping
 			var generator    = new ExpressionGenerator(typeMapper);
 			var rdParam      = Expression.Parameter(typeof(ITestDataReader), "rd");
 			var indexParam   = Expression.Parameter(typeof(int), "i");
-			var tstzExpr     = generator.MapExpression((ITestDataReader rd, int i) => ((Wrapped.OracleDataReader)rd).GetOracleTimeStampTZ(i), rdParam, indexParam);
+			var tstzExpr     = generator.MapExpression((ITestDataReader rd, int i) => ((Wrapped.OracleDataReader)(object)rd).GetOracleTimeStampTZ(i), rdParam, indexParam);
 			var tstzVariable = generator.AssignToVariable(tstzExpr, "tstz");
 			var expr         = generator.MapExpression((Wrapped.OracleTimeStampTZ tstz) => new DateTimeOffset(
 				tstz.Year, tstz.Month, tstz.Day,
@@ -138,7 +138,7 @@ namespace LinqToDB.Benchmarks.TypeMapping
 
 			// _readDateTimeOffsetFromOracleTimeStampLTZ
 			generator    = new ExpressionGenerator(typeMapper);
-			tstzExpr     = generator.MapExpression((ITestDataReader rd, int i) => ((Wrapped.OracleDataReader)rd).GetOracleTimeStampLTZ(i).ToOracleTimeStampTZ(), rdParam, indexParam);
+			tstzExpr     = generator.MapExpression((ITestDataReader rd, int i) => ((Wrapped.OracleDataReader)(object)rd).GetOracleTimeStampLTZ(i).ToOracleTimeStampTZ(), rdParam, indexParam);
 			tstzVariable = generator.AssignToVariable(tstzExpr, "tstz");
 			expr         = generator.MapExpression((Wrapped.OracleTimeStampTZ tstz) => new DateTimeOffset(
 				tstz.Year, tstz.Month, tstz.Day,
@@ -150,7 +150,7 @@ namespace LinqToDB.Benchmarks.TypeMapping
 
 			// rd.GetOracleDecimal(i) => decimal
 			generator            = new ExpressionGenerator(typeMapper);
-			var decExpr          = generator.MapExpression((ITestDataReader rd, int i) => ((Wrapped.OracleDataReader)rd).GetOracleDecimal(i), rdParam, indexParam);
+			var decExpr          = generator.MapExpression((ITestDataReader rd, int i) => ((Wrapped.OracleDataReader)(object)rd).GetOracleDecimal(i), rdParam, indexParam);
 			var oracleDecimalVar = generator.AssignToVariable(decExpr, "dec");
 			var precision        = generator.AssignToVariable(Expression.Constant(29), "precision");
 			var decimalVar       = generator.AddVariable(Expression.Parameter(typeof(decimal), "dec"));
@@ -182,9 +182,9 @@ namespace LinqToDB.Benchmarks.TypeMapping
 				rdParam,
 				indexParam)).Compile();
 
-			_readOracleDecimalToInt     = ((Expression<Func<ITestDataReader, int, int>>)typeMapper.MapLambda<ITestDataReader, int, int>((rd, i) => (int)(decimal)Wrapped.OracleDecimal.SetPrecision(((Wrapped.OracleDataReader)rd).GetOracleDecimal(i), 27))).Compile();
-			_readOracleDecimalToLong    = ((Expression<Func<ITestDataReader, int, long>>)typeMapper.MapLambda<ITestDataReader, int, long>((rd, i) => (long)(decimal)Wrapped.OracleDecimal.SetPrecision(((Wrapped.OracleDataReader)rd).GetOracleDecimal(i), 27))).Compile();
-			_readOracleDecimalToDecimal = ((Expression<Func<ITestDataReader, int, decimal>>)typeMapper.MapLambda<ITestDataReader, int, decimal>((rd, i) => (decimal)Wrapped.OracleDecimal.SetPrecision(((Wrapped.OracleDataReader)rd).GetOracleDecimal(i), 27))).Compile();
+			_readOracleDecimalToInt     = ((Expression<Func<ITestDataReader, int, int>>)typeMapper.MapLambda<ITestDataReader, int, int>((rd, i) => (int)(decimal)Wrapped.OracleDecimal.SetPrecision(((Wrapped.OracleDataReader)(object)rd).GetOracleDecimal(i), 27))).Compile();
+			_readOracleDecimalToLong    = ((Expression<Func<ITestDataReader, int, long>>)typeMapper.MapLambda<ITestDataReader, int, long>((rd, i) => (long)(decimal)Wrapped.OracleDecimal.SetPrecision(((Wrapped.OracleDataReader)(object)rd).GetOracleDecimal(i), 27))).Compile();
+			_readOracleDecimalToDecimal = ((Expression<Func<ITestDataReader, int, decimal>>)typeMapper.MapLambda<ITestDataReader, int, decimal>((rd, i) => (decimal)Wrapped.OracleDecimal.SetPrecision(((Wrapped.OracleDataReader)(object)rd).GetOracleDecimal(i), 27))).Compile();
 		}
 
 		[Benchmark]

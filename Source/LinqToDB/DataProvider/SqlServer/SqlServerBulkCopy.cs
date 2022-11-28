@@ -10,7 +10,7 @@ namespace LinqToDB.DataProvider.SqlServer
 	using Data;
 	using SqlProvider;
 
-	class SqlServerBulkCopy : BasicBulkCopy
+	sealed class SqlServerBulkCopy : BasicBulkCopy
 	{
 		/// <remarks>
 		/// Settings based on https://www.jooq.org/doc/3.12/manual/sql-building/dsl-context/custom-settings/settings-inline-threshold/

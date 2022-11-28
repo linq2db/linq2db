@@ -7,7 +7,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	using SqlProvider;
 	using SqlQuery;
 
-	class PostgreSQLSqlOptimizer : BasicSqlOptimizer
+	sealed class PostgreSQLSqlOptimizer : BasicSqlOptimizer
 	{
 		public PostgreSQLSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{

@@ -10,7 +10,7 @@ namespace Tests
 	public class DynamicResultTests : TestBase
 	{
 		[Table]
-		class RawDynamicData
+		sealed class RawDynamicData
 		{
 			[Column] public int AId { get; set; }
 			[Column] public int AValue { get; set; }

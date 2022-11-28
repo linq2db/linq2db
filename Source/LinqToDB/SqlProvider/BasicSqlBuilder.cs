@@ -1266,7 +1266,7 @@ namespace LinqToDB.SqlProvider
 				AppendIndent().Append(createTable.StatementFooter);
 		}
 
-		class CreateFieldInfo
+		sealed class CreateFieldInfo
 		{
 			public SqlField      Field = null!;
 			public StringBuilder StringBuilder = null!;

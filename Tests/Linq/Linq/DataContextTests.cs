@@ -153,7 +153,7 @@ namespace Tests.Linq
 			}
 		}
 
-		class TestDataContext: DataContext
+		sealed class TestDataContext : DataContext
 		{
 			public TestDataContext(string context)
 				: base(context)
@@ -232,7 +232,7 @@ namespace Tests.Linq
 			}
 		}
 
-		class NewDataContext : DataContext
+		sealed class NewDataContext : DataContext
 		{
 			public NewDataContext(string context)
 				: base(context)

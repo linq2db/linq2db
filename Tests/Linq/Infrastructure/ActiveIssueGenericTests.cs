@@ -4,7 +4,7 @@ using NUnit.Framework;
 
 namespace Tests.Infrastructure
 {
-	internal class ActiveIssueGenericTests
+	internal sealed class ActiveIssueGenericTests
 	{
 		[Test]
 		[ActiveIssue]

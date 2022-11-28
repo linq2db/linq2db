@@ -403,7 +403,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		#region Wrappers
 
 		[Wrapper]
-		private class NpgsqlParameter
+		private sealed class NpgsqlParameter
 		{
 			public NpgsqlDbType NpgsqlDbType { get; set; }
 		}

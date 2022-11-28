@@ -10,7 +10,7 @@ namespace Tests.Remote
 
 	using LinqToDB.Remote.Wcf;
 
-	internal class TestWcfLinqService : WcfLinqService
+	internal sealed class TestWcfLinqService : WcfLinqService
 	{
 		private readonly LinqService    _linqService;
 

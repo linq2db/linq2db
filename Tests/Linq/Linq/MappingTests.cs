@@ -116,7 +116,7 @@ namespace Tests.Linq
 		}
 
 		[Table("Parent")]
-		class TestParent
+		sealed class TestParent
 		{
 			[Column] public int       ParentID;
 			[Column] public TestValue Value1;
@@ -129,7 +129,7 @@ namespace Tests.Linq
 				db.GetTable<TestParent>().Where(p => p.Value1 == TestValue.Value1).ToList();
 		}
 
-		internal class LinqDataTypes
+		internal sealed class LinqDataTypes
 		{
 			public TestValue ID;
 		}
@@ -236,13 +236,13 @@ namespace Tests.Linq
 		}
 
 		[Table(Name="Parent")]
-		class MyParent
+		sealed class MyParent
 		{
 			[Column] public MyInt ParentID;
 			[Column] public int?  Value1;
 		}
 
-		class MyMappingSchema : MappingSchema
+		sealed class MyMappingSchema : MappingSchema
 		{
 			public MyMappingSchema()
 			{
@@ -324,7 +324,7 @@ namespace Tests.Linq
 		}
 
 		[Table("Parent")]
-		class MyParent1
+		sealed class MyParent1
 		{
 			[Column] public int  ParentID;
 			[Column] public int? Value1;
@@ -378,7 +378,7 @@ namespace Tests.Linq
 		}
 
 		[Table("Person")]
-		class Table171
+		sealed class Table171
 		{
 			[Column] public Gender Gender;
 		}
@@ -473,7 +473,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context, suppressSequentialAccess: true))
 			{
 				var ex = Assert.Throws<LinqToDBConvertException>(() => db.GetTable<BadMapping>().Select(_ => new { _.BadEnum }).ToList())!;
-				Assert.AreEqual("lastname", ex.ColumnName!.ToLower());
+				Assert.AreEqual("lastname", ex.ColumnName!.ToLowerInvariant());
 			}
 		}
 

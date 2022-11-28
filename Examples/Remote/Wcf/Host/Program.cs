@@ -7,7 +7,7 @@ namespace Host
 	using LinqToDB.Remote;
 	using LinqToDB.Remote.Wcf;
 
-	class Program
+	sealed class Program
 	{
 		static void Main(string[] args)
 		{

@@ -7,7 +7,7 @@ namespace LinqToDB.DataProvider.SqlServer
 	using Configuration;
 	using Data;
 
-	class SqlServerProviderDetector : ProviderDetectorBase<SqlServerProvider,SqlServerVersion,SqlServerProviderAdapter.SqlConnection>
+	sealed class SqlServerProviderDetector : ProviderDetectorBase<SqlServerProvider,SqlServerVersion,SqlServerProviderAdapter.SqlConnection>
 	{
 		public SqlServerProviderDetector() : base(SqlServerVersion.AutoDetect, SqlServerVersion.v2008)
 		{

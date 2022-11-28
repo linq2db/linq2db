@@ -75,7 +75,7 @@ namespace Tests.TypeMapping
 				Value = value;
 			}
 
-			public Task<SampleClass> GetSelfAsync(CancellationToken cancellationToken) => Task<SampleClass>.FromResult(this);
+			public Task<SampleClass> GetSelfAsync(CancellationToken cancellationToken) => Task.FromResult(this);
 
 			public RegularEnum1 GetRegularEnum1(int raw) => (RegularEnum1)raw;
 			public RegularEnum2 GetRegularEnum2(int raw) => (RegularEnum2)raw;
@@ -138,7 +138,7 @@ namespace Tests.TypeMapping
 			Bits24 = 10
 		}
 
-		internal class SqlError
+		internal sealed class SqlError
 		{
 			public SqlError()
 			{
@@ -146,7 +146,7 @@ namespace Tests.TypeMapping
 		}
 
 		[Wrapper]
-		internal class SqlErrorCollection : IEnumerable
+		internal sealed class SqlErrorCollection : IEnumerable
 		{
 			private List<object> _errors = new ()
 			{
@@ -168,7 +168,7 @@ namespace Tests.TypeMapping
 		[Wrapper] delegate string      ReturningDelegate           (string input);
 		[Wrapper] delegate SampleClass ReturningDelegateWithMapping(SampleClass input);
 
-		class StringToIntMapper : ICustomMapper
+		sealed class StringToIntMapper : ICustomMapper
 		{
 			bool ICustomMapper.CanMap(Expression expression)
 			{
@@ -181,7 +181,7 @@ namespace Tests.TypeMapping
 			}
 		}
 
-		class SampleClass : TypeWrapper
+		sealed class SampleClass : TypeWrapper
 		{
 			private static object[] Wrappers { get; }
 				= new object[]
@@ -329,7 +329,7 @@ namespace Tests.TypeMapping
 			internal static string GetOtherStr(this SampleClass sc, int idx) => throw new NotImplementedException();
 		}
 
-		class OtherClass : TypeWrapper
+		sealed class OtherClass : TypeWrapper
 		{
 			private static LambdaExpression[] Wrappers { get; }
 				= new LambdaExpression[]
@@ -345,7 +345,7 @@ namespace Tests.TypeMapping
 			}
 		}
 
-		class CollectionSample : TypeWrapper
+		sealed class CollectionSample : TypeWrapper
 		{
 			private static LambdaExpression[] Wrappers { get; }
 				= new LambdaExpression[]
@@ -366,7 +366,7 @@ namespace Tests.TypeMapping
 		}
 
 		[Wrapper]
-		internal class SqlError : TypeWrapper
+		internal sealed class SqlError : TypeWrapper
 		{
 			public SqlError(object instance) : base(instance, null)
 			{
@@ -374,7 +374,7 @@ namespace Tests.TypeMapping
 		}
 
 		[Wrapper]
-		internal class SqlErrorCollection : TypeWrapper
+		internal sealed class SqlErrorCollection : TypeWrapper
 		{
 			private static LambdaExpression[] Wrappers { get; }
 				= new LambdaExpression[]
@@ -530,7 +530,7 @@ namespace Tests.TypeMapping
 				var pToken    = Expression.Parameter(typeof(CancellationToken));
 
 				var asyncCall = Expression.Lambda<Func<Dynamic.ISampleClass, CancellationToken, Task<SampleClass>>>(
-					typeMapper.MapExpression((Dynamic.ISampleClass instance, CancellationToken cancellationToken) => typeMapper.WrapTask<SampleClass>(((SampleClass)instance).GetSelfAsync(cancellationToken), typeof(Dynamic.SampleClass), cancellationToken), pInstance, pToken),
+					typeMapper.MapExpression((Dynamic.ISampleClass instance, CancellationToken cancellationToken) => typeMapper.WrapTask<SampleClass>(((SampleClass)(object)instance).GetSelfAsync(cancellationToken), typeof(Dynamic.SampleClass), cancellationToken), pInstance, pToken),
 					pInstance, pToken);
 
 				var instance = await asyncCall.CompileExpression()(new Dynamic.SampleClass(55, 77) {StrValue = "Str"}, default);

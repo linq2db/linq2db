@@ -217,7 +217,7 @@ namespace Tests.Data
 			}
 		}
 
-		private class TestConnectionInterceptor : ConnectionInterceptor
+		private sealed class TestConnectionInterceptor : ConnectionInterceptor
 		{
 			private readonly Action<ConnectionEventData, DbConnection>? _onConnectionOpening;
 			private readonly Action<ConnectionEventData, DbConnection>? _onConnectionOpened;
@@ -614,7 +614,7 @@ namespace Tests.Data
 			}
 		}
 
-		class TestEntityServiceInterceptor : EntityServiceInterceptor
+		sealed class TestEntityServiceInterceptor : EntityServiceInterceptor
 		{
 			public int EntityCreatedCallCounter { get; set; }
 			public override object EntityCreated(EntityCreatedEventData eventData, object entity)
@@ -624,7 +624,7 @@ namespace Tests.Data
 			}
 		}
 
-		class TestDataContextInterceptor : DataContextInterceptor
+		sealed class TestDataContextInterceptor : DataContextInterceptor
 		{
 			public int OnClosingCallCounter { get; set; }
 			public int OnClosedCallCounter { get; set; }
@@ -656,7 +656,7 @@ namespace Tests.Data
 			}
 		}
 
-		class TestRetryPolicy : IRetryPolicy
+		sealed class TestRetryPolicy : IRetryPolicy
 		{
 			TResult       IRetryPolicy.Execute<TResult>     (Func<TResult> operation                                                              ) => operation();
 			void          IRetryPolicy.Execute              (Action operation                                                                     ) => operation();
@@ -1340,7 +1340,7 @@ namespace Tests.Data
 		#endregion
 
 		[Table]
-		class TransactionScopeTable
+		sealed class TransactionScopeTable
 		{
 			[Column] public int Id { get; set; }
 		}
@@ -1475,7 +1475,8 @@ namespace Tests.Data
 			[IncludeDataSources(false,
 				TestProvName.AllOracle,
 				ProviderName.SqlCe,
-				ProviderName.ClickHouseClient,
+				// depends on connection pool size
+				//ProviderName.ClickHouseClient,
 				ProviderName.ClickHouseOctonica,
 				ProviderName.SybaseManaged)] string context)
 		{
@@ -1596,7 +1597,9 @@ namespace Tests.Data
 				TestProvName.AllOracle,
 				TestProvName.AllSapHana,
 				ProviderName.SqlCe,
-				ProviderName.ClickHouseClient,
+				// disabled - depends on connection pool size
+				// which is one for session-aware connection
+				//ProviderName.ClickHouseClient,
 				ProviderName.ClickHouseOctonica,
 				TestProvName.AllSQLite,
 				TestProvName.AllSqlServer,
@@ -1735,7 +1738,8 @@ namespace Tests.Data
 				ProviderName.SqlCe,
 				TestProvName.AllSQLiteClassic,
 				TestProvName.AllSqlServer,
-				ProviderName.ClickHouseClient,
+				// depends on connection pool size
+				//ProviderName.ClickHouseClient,
 				ProviderName.ClickHouseOctonica,
 				TestProvName.AllSybase)] string context)
 		{
@@ -1846,6 +1850,8 @@ namespace Tests.Data
 			[DataSources(false,
 				TestProvName.AllMySql,
 				ProviderName.ClickHouseMySql,
+				// depends on connection pool size
+				ProviderName.ClickHouseClient,
 				TestProvName.AllPostgreSQL)] string context)
 		{
 			using (var db = GetDataConnection(context))
@@ -1932,6 +1938,8 @@ namespace Tests.Data
 			[DataSources(false,
 				TestProvName.AllMySql,
 				ProviderName.ClickHouseMySql,
+				// depends on connection pool size
+				ProviderName.ClickHouseClient,
 				TestProvName.AllPostgreSQL)] string context)
 		{
 			using (var db = GetDataConnection(context))

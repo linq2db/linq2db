@@ -57,7 +57,7 @@ namespace LinqToDB.Tools.EntityServices
 			Expression<Func<T,bool>> GetPredicate(MappingSchema mappingSchema, object key);
 		}
 
-		class KeyComparer<TK> : IKeyComparer
+		sealed class KeyComparer<TK> : IKeyComparer
 		{
 			Func<TK,T>?           _mapper;
 			List<MemberAccessor>? _keyColumns;

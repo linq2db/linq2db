@@ -71,7 +71,9 @@ namespace LinqToDB.CommandLine
 			{
 				// this method loads assemblies from both assembly folder and nuget cache and requires deps.json file
 				// see https://github.com/dotnet/runtime/issues/18527#issuecomment-611499261
-				var dependencyContext = DependencyContext.Load(interceptorsAssembly);
+				var dependencyContext = DependencyContext.Load(interceptorsAssembly)
+					?? throw new InvalidOperationException($"DependencyContext.Load cannot load interceptor assembly");
+
 				var resolver          = new ICompilationAssemblyResolver[]
 				{
 					new AppBaseCompilationAssemblyResolver(assemblyFolder),
@@ -348,7 +350,7 @@ namespace LinqToDB.CommandLine
 
 			var generator    = new TemplateGenerator();
 			var templateText = File.ReadAllText(t4templatePath);
-			var template     = ParsedTemplate.FromText(templateText, generator);
+			var template     = generator.ParseTemplate(Path.GetFileName(t4templatePath), templateText);
 
 			// parse template by mono.t4
 			if (!generator.PreprocessTemplate(null, TEMPLATE_CLASS_NAME, null, templateText, out var language, out var referencesFromTemplate, out templateCode))

@@ -30,7 +30,7 @@ namespace LinqToDB.Remote
 
 		public string? Configuration { get; set; }
 
-		class ConfigurationInfo
+		sealed class ConfigurationInfo
 		{
 			public LinqServiceInfo LinqServiceInfo = null!;
 			public MappingSchema   MappingSchema   = null!;
@@ -38,7 +38,7 @@ namespace LinqToDB.Remote
 
 		static readonly ConcurrentDictionary<string,ConfigurationInfo> _configurations = new();
 
-		class RemoteMappingSchema : MappingSchema
+		sealed class RemoteMappingSchema : MappingSchema
 		{
 			public RemoteMappingSchema(string configuration, MappingSchema mappingSchema)
 				: base(configuration, mappingSchema)

@@ -7,7 +7,7 @@ namespace LinqToDB.Linq.Builder
 	using SqlQuery;
 	using LinqToDB.Expressions;
 
-	class OrderByBuilder : MethodCallBuilder
+	sealed class OrderByBuilder : MethodCallBuilder
 	{
 		private static readonly string[] MethodNames = { "OrderBy", "OrderByDescending", "ThenBy", "ThenByDescending", "ThenOrBy", "ThenOrByDescending" };
 

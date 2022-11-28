@@ -16,8 +16,8 @@ namespace LinqToDB.DataProvider.Sybase
 	using SqlProvider;
 	using Extensions;
 
-	class SybaseDataProviderNative  : SybaseDataProvider { public SybaseDataProviderNative()  : base(ProviderName.Sybase)        {} }
-	class SybaseDataProviderManaged : SybaseDataProvider { public SybaseDataProviderManaged() : base(ProviderName.SybaseManaged) {} }
+	sealed class SybaseDataProviderNative  : SybaseDataProvider { public SybaseDataProviderNative()  : base(ProviderName.Sybase)        {} }
+	sealed class SybaseDataProviderManaged : SybaseDataProvider { public SybaseDataProviderManaged() : base(ProviderName.SybaseManaged) {} }
 
 	public abstract class SybaseDataProvider : DynamicDataProviderBase<SybaseProviderAdapter>
 	{

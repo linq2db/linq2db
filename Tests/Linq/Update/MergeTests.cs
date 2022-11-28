@@ -62,7 +62,7 @@ namespace Tests.xUpdate
 		}
 
 		[Table("merge1")]
-		internal class TestMapping1
+		internal sealed class TestMapping1
 		{
 			[Column("Id")]
 			[PrimaryKey]
@@ -90,7 +90,7 @@ namespace Tests.xUpdate
 		[Table("TestMergeIdentity", Configuration = ProviderName.Sybase)]
 		[Table("TestMergeIdentity", Configuration = ProviderName.SqlServer)]
 		[Table("TestMergeIdentity", Configuration = ProviderName.PostgreSQL)]
-		class TestMappingWithIdentity
+		sealed class TestMappingWithIdentity
 		{
 			[Column("Id", SkipOnInsert = true, IsIdentity = true)]
 			public int Id;
@@ -100,7 +100,7 @@ namespace Tests.xUpdate
 		}
 
 		[Table("merge2")]
-		internal class TestMapping2
+		internal sealed class TestMapping2
 		{
 			[Column("Id")]
 			[PrimaryKey]

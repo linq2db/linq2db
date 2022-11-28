@@ -12,8 +12,8 @@ namespace LinqToDB.DataProvider.Informix
 	using Mapping;
 	using SqlProvider;
 
-	class InformixDataProviderInformix : InformixDataProvider { public InformixDataProviderInformix() : base(ProviderName.Informix)    {} }
-	class InformixDataProviderDB2      : InformixDataProvider { public InformixDataProviderDB2()      : base(ProviderName.InformixDB2) {} }
+	sealed class InformixDataProviderInformix : InformixDataProvider { public InformixDataProviderInformix() : base(ProviderName.Informix)    {} }
+	sealed class InformixDataProviderDB2      : InformixDataProvider { public InformixDataProviderDB2()      : base(ProviderName.InformixDB2) {} }
 
 	public abstract class InformixDataProvider : DynamicDataProviderBase<InformixProviderAdapter>
 	{

@@ -529,7 +529,7 @@ namespace LinqToDB
 			return MappingSchema.GetFluentMappingBuilder();
 		}
 
-		class QueryRunner : IQueryRunner
+		sealed class QueryRunner : IQueryRunner
 		{
 			public QueryRunner(DataContext dataContext, IQueryRunner queryRunner)
 			{

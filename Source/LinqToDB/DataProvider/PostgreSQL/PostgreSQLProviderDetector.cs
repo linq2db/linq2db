@@ -5,7 +5,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	using Configuration;
 	using Data;
 
-	class PostgreSQLProviderDetector : ProviderDetectorBase<PostgreSQLProviderDetector.Provider,PostgreSQLVersion,NpgsqlProviderAdapter.NpgsqlConnection>
+	sealed class PostgreSQLProviderDetector : ProviderDetectorBase<PostgreSQLProviderDetector.Provider,PostgreSQLVersion,NpgsqlProviderAdapter.NpgsqlConnection>
 	{
 		internal enum Provider {}
 

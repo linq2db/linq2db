@@ -8,7 +8,7 @@ namespace LinqToDB.SqlProvider
 {
 	using SqlQuery;
 
-	class JoinOptimizer
+	sealed class JoinOptimizer
 	{
 		Dictionary<SqlSearchCondition,SqlSearchCondition>?                      _additionalFilter;
 		Dictionary<VirtualField,HashSet<Tuple<int,VirtualField>>>?              _equalityMap;
@@ -69,7 +69,7 @@ namespace LinqToDB.SqlProvider
 			return IsDependedExcludeJoins(testedSources);
 		}
 
-		private class IsDependedContext
+		private sealed class IsDependedContext
 		{
 			public IsDependedContext(JoinOptimizer optimizer, HashSet<int> testedSources)
 			{
@@ -131,7 +131,7 @@ namespace LinqToDB.SqlProvider
 			return IsDependedExcludeJoins(testedSources);
 		}
 
-		private class IsDependedExcludeJoinsContext
+		private sealed class IsDependedExcludeJoinsContext
 		{
 			public IsDependedExcludeJoinsContext(JoinOptimizer optimizer, HashSet<int> testedSources)
 			{
@@ -181,7 +181,7 @@ namespace LinqToDB.SqlProvider
 			return ctx.Dependent;
 		}
 
-		private class HasDependencyWithParentContext
+		private sealed class HasDependencyWithParentContext
 		{
 			public HasDependencyWithParentContext(SqlJoinedTable child, HashSet<int> sources)
 			{
@@ -222,7 +222,7 @@ namespace LinqToDB.SqlProvider
 			return ctx.Dependent;
 		}
 
-		private class IsDependedOnJoinContext
+		private sealed class IsDependedOnJoinContext
 		{
 			public IsDependedOnJoinContext(JoinOptimizer optimizer, SqlTableSource table, HashSet<int> testedSources, int currentSourceId)
 			{
@@ -994,7 +994,7 @@ namespace LinqToDB.SqlProvider
 			{
 				var keys = uniqueKeys[i];
 
-				if (keys.All(k => foundFields.Contains(k)))
+				if (keys.All(foundFields.Contains))
 				{
 					uniqueFields ??= new HashSet<VirtualField>();
 
@@ -1115,7 +1115,7 @@ namespace LinqToDB.SqlProvider
 			{
 				var keys = uniqueKeys[i];
 
-				if (keys.All(k => foundFields.Contains(k)))
+				if (keys.All(foundFields.Contains))
 				{
 					uniqueFields ??= new HashSet<VirtualField>();
 
@@ -1179,7 +1179,7 @@ namespace LinqToDB.SqlProvider
 			{
 				var keys = uniqueKeys[i];
 
-				if (keys.All(k => foundFields.Contains(k)))
+				if (keys.All(foundFields.Contains))
 				{
 					uniqueFields ??= new HashSet<VirtualField>();
 					foreach (var key in keys)
@@ -1239,7 +1239,7 @@ namespace LinqToDB.SqlProvider
 			{
 				var keys = uniqueKeys[i];
 
-				if (keys.All(k => foundFields.Contains(k)))
+				if (keys.All(foundFields.Contains))
 				{
 					uniqueFields ??= new HashSet<VirtualField>();
 					foreach (var key in keys)
@@ -1259,7 +1259,7 @@ namespace LinqToDB.SqlProvider
 
 
 		[DebuggerDisplay("{ManyField.DisplayString()} -> {OneField.DisplayString()}")]
-		class FoundEquality
+		sealed class FoundEquality
 		{
 			public VirtualField ManyField = null!;
 			public SqlCondition OneCondition = null!;
@@ -1268,7 +1268,7 @@ namespace LinqToDB.SqlProvider
 
 		//TODO: investigate do we still needs this class over ISqlExpression
 		[DebuggerDisplay("{DisplayString()}")]
-		class VirtualField
+		sealed class VirtualField
 		{
 			public VirtualField(ISqlExpression expression)
 			{

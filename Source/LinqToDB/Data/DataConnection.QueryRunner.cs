@@ -24,7 +24,7 @@ namespace LinqToDB.Data
 			return new QueryRunner(query, queryNumber, this, expression, parameters, preambles);
 		}
 
-		internal class QueryRunner : QueryRunnerBase
+		internal sealed class QueryRunner : QueryRunnerBase
 		{
 			public QueryRunner(Query query, int queryNumber, DataConnection dataConnection, Expression expression, object?[]? parameters, object?[]? preambles)
 				: base(query, queryNumber, dataConnection, expression, parameters, preambles)
@@ -171,7 +171,7 @@ namespace LinqToDB.Data
 #endif
 			}
 
-			public class CommandWithParameters
+			public sealed class CommandWithParameters
 			{
 				public CommandWithParameters(string command, SqlParameter[] sqlParameters)
 				{
@@ -183,14 +183,14 @@ namespace LinqToDB.Data
 				public SqlParameter[]      SqlParameters { get; }
 			}
 
-			public class PreparedQuery
+			public sealed class PreparedQuery
 			{
 				public CommandWithParameters[]      Commands      = null!;
 				public SqlStatement                 Statement     = null!;
 				public IReadOnlyCollection<string>? QueryHints;
 			}
 
-			public class ExecutionPreparedQuery
+			public sealed class ExecutionPreparedQuery
 			{
 				public ExecutionPreparedQuery(PreparedQuery preparedQuery, DbParameter[]?[] commandsParameters)
 				{
@@ -658,9 +658,9 @@ namespace LinqToDB.Data
 				return _dataReader = _dataConnection.ExecuteReader();
 			}
 
-#endregion
+			#endregion
 
-			class DataReaderAsync : IDataReaderAsync
+			sealed class DataReaderAsync : IDataReaderAsync
 			{
 				public DataReaderAsync(DataReaderWrapper dataReader)
 				{

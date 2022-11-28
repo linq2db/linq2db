@@ -9,7 +9,7 @@ namespace LinqToDB.Linq
 	using System.Data.Common;
 	using LinqToDB.Expressions;
 
-	class ReflectionHelper
+	sealed class ReflectionHelper
 	{
 		public class Expressor<T>
 		{
@@ -29,91 +29,91 @@ namespace LinqToDB.Linq
 			}
 		}
 
-		public class Binary : Expressor<BinaryExpression>
+		public sealed class Binary : Expressor<BinaryExpression>
 		{
 			public static PropertyInfo Conversion = PropertyOf(e => e.Conversion);
 			public static PropertyInfo Left       = PropertyOf(e => e.Left);
 			public static PropertyInfo Right      = PropertyOf(e => e.Right);
 		}
 
-		public class Unary : Expressor<UnaryExpression>
+		public sealed class Unary : Expressor<UnaryExpression>
 		{
 			public static PropertyInfo Operand = PropertyOf(e => e.Operand);
 		}
 
-		public class LambdaExpr : Expressor<LambdaExpression>
+		public sealed class LambdaExpr : Expressor<LambdaExpression>
 		{
 			public static PropertyInfo Body       = PropertyOf(e => e.Body);
 			public static PropertyInfo Parameters = PropertyOf(e => e.Parameters);
 		}
 
-		public class Constant : Expressor<ConstantExpression>
+		public sealed class Constant : Expressor<ConstantExpression>
 		{
 			public static PropertyInfo Value = PropertyOf(e => e.Value);
 		}
 
-		public class QueryableInt : Expressor<IQueryable>
+		public sealed class QueryableInt : Expressor<IQueryable>
 		{
 			public static PropertyInfo Expression = PropertyOf(e => e.Expression);
 		}
 
-		public class MethodCall : Expressor<MethodCallExpression>
+		public sealed class MethodCall : Expressor<MethodCallExpression>
 		{
 			public static PropertyInfo Object    = PropertyOf(e => e.Object);
 			public static PropertyInfo Arguments = PropertyOf(e => e.Arguments);
 		}
 
-		public class Conditional : Expressor<ConditionalExpression>
+		public sealed class Conditional : Expressor<ConditionalExpression>
 		{
 			public static PropertyInfo Test    = PropertyOf(e => e.Test);
 			public static PropertyInfo IfTrue  = PropertyOf(e => e.IfTrue);
 			public static PropertyInfo IfFalse = PropertyOf(e => e.IfFalse);
 		}
 
-		public class Invocation : Expressor<InvocationExpression>
+		public sealed class Invocation : Expressor<InvocationExpression>
 		{
 			public static PropertyInfo Expression = PropertyOf(e => e.Expression);
 			public static PropertyInfo Arguments  = PropertyOf(e => e.Arguments);
 		}
 
-		public class ListInit : Expressor<ListInitExpression>
+		public sealed class ListInit : Expressor<ListInitExpression>
 		{
 			public static PropertyInfo NewExpression = PropertyOf(e => e.NewExpression);
 			public static PropertyInfo Initializers  = PropertyOf(e => e.Initializers);
 		}
 
-		public class ElementInit : Expressor<System.Linq.Expressions.ElementInit>
+		public sealed class ElementInit : Expressor<System.Linq.Expressions.ElementInit>
 		{
 			public static PropertyInfo Arguments = PropertyOf(e => e.Arguments);
 		}
 
-		public class Member : Expressor<MemberExpression>
+		public sealed class Member : Expressor<MemberExpression>
 		{
 			public static PropertyInfo Expression = PropertyOf(e => e.Expression);
 		}
 
-		public class MemberInit : Expressor<MemberInitExpression>
+		public sealed class MemberInit : Expressor<MemberInitExpression>
 		{
 			public static PropertyInfo NewExpression = PropertyOf(e => e.NewExpression);
 			public static PropertyInfo Bindings      = PropertyOf(e => e.Bindings);
 		}
 
-		public class New : Expressor<NewExpression>
+		public sealed class New : Expressor<NewExpression>
 		{
 			public static PropertyInfo Arguments = PropertyOf(e => e.Arguments);
 		}
 
-		public class NewArray : Expressor<NewArrayExpression>
+		public sealed class NewArray : Expressor<NewArrayExpression>
 		{
 			public static PropertyInfo Expressions = PropertyOf(e => e.Expressions);
 		}
 
-		public class TypeBinary : Expressor<TypeBinaryExpression>
+		public sealed class TypeBinary : Expressor<TypeBinaryExpression>
 		{
 			public static PropertyInfo Expression = PropertyOf(e => e.Expression);
 		}
 
-		public class IndexExpressor<T>
+		public sealed class IndexExpressor<T>
 		{
 			public static MethodInfo IndexerExpressor(Expression<Func<ReadOnlyCollection<T>, object>> func)
 			{
@@ -123,22 +123,22 @@ namespace LinqToDB.Linq
 			public static MethodInfo Item = IndexerExpressor(c => c[0]!);
 		}
 
-		public class MemberAssignmentBind : Expressor<MemberAssignment>
+		public sealed class MemberAssignmentBind : Expressor<MemberAssignment>
 		{
 			public static PropertyInfo Expression = PropertyOf(e => e.Expression);
 		}
 
-		public class MemberListBind : Expressor<MemberListBinding>
+		public sealed class MemberListBind : Expressor<MemberListBinding>
 		{
 			public static PropertyInfo Initializers = PropertyOf(e => e.Initializers);
 		}
 
-		public class MemberMemberBind : Expressor<MemberMemberBinding>
+		public sealed class MemberMemberBind : Expressor<MemberMemberBinding>
 		{
 			public static PropertyInfo Bindings = PropertyOf(e => e.Bindings);
 		}
 
-		public class Block : Expressor<BlockExpression>
+		public sealed class Block : Expressor<BlockExpression>
 		{
 			public static PropertyInfo Expressions = PropertyOf(e => e.Expressions);
 			public static PropertyInfo Variables   = PropertyOf(e => e.Variables);
@@ -148,15 +148,15 @@ namespace LinqToDB.Linq
 		public static MethodInfo ParamItem = IndexExpressor<ParameterExpression>.Item;
 		public static MethodInfo ElemItem  = IndexExpressor<ElementInit>        .Item;
 
-		public class DataReader : Expressor<DbDataReader>
+		public sealed class DataReader : Expressor<DbDataReader>
 		{
 			public static MethodInfo GetValue = MethodOf(rd => rd.GetValue(0));
 			public static MethodInfo IsDBNull = MethodOf(rd => rd.IsDBNull(0));
 		}
 
-		public class Functions
+		public sealed class Functions
 		{
-			public class String : Expressor<string>
+			public sealed class String : Expressor<string>
 			{
 #if NETFRAMEWORK
 				public static MethodInfo Like11 = MethodOf(s => System.Data.Linq.SqlClient.SqlMethods.Like("", ""));
@@ -168,7 +168,7 @@ namespace LinqToDB.Linq
 			}
 
 #if !NET45
-			public class FormattableString : Expressor<System.FormattableString>
+			public sealed class FormattableString : Expressor<System.FormattableString>
 			{
 				public static MethodInfo GetArguments = MethodOf(s => s.GetArgument(0));
 			}

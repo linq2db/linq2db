@@ -258,7 +258,7 @@ namespace Tests.Linq
 					select g.Key);
 		}
 
-		class GroupByInfo
+		sealed class GroupByInfo
 		{
 			public GroupByInfo? Prev;
 			public object?      Field;
@@ -2052,7 +2052,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class Issue680Table
+		sealed class Issue680Table
 		{
 			[Column] public DateTime TimeStamp;
 		}
@@ -2085,11 +2085,13 @@ namespace Tests.Linq
 
 			using (var db = GetDataContext(context))
 			{
+#pragma warning disable CA1311 // Specify a culture or use an invariant version
 				var result = db.Person.GroupJoin(db.Patient, re => re.ID, ri => ri.PersonID, (re, ri) => new
 				{
 					Name = re.FirstName,
 					Roles = ri.ToList().Select(p => p.Diagnosis)
 				}).Where(p => p.Name.ToLower().Contains(input.ToLower())).ToList();
+#pragma warning restore CA1311 // Specify a culture or use an invariant version
 			}
 		}
 
@@ -2098,11 +2100,13 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
+#pragma warning disable CA1311 // Specify a culture or use an invariant version
 				var result = db.Person.GroupJoin(db.Patient, re => re.ID, ri => ri.PersonID, (re, ri) => new
 				{
 					Name = re.FirstName,
 					Roles = ri.ToList().Select(p => p.Diagnosis)
 				}).Where(p => p.Name.ToLower().Contains("test".ToLower())).ToList();
+#pragma warning restore CA1311 // Specify a culture or use an invariant version
 			}
 		}
 
@@ -2155,7 +2159,7 @@ namespace Tests.Linq
 			}
 		}
 
-		class Issue1078Table
+		sealed class Issue1078Table
 		{
 			[PrimaryKey]
 			public int UserID { get; set; }
@@ -2217,7 +2221,7 @@ namespace Tests.Linq
 			}
 		}
 
-		class Issue1192Table
+		sealed class Issue1192Table
 		{
 			public int IdId { get; internal set; }
 			public int MyOtherId { get; internal set; }

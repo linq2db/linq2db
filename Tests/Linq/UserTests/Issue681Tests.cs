@@ -20,7 +20,7 @@ namespace Tests.UserTests
 	public class Issue681Tests : TestBase
 	{
 		[Table("LinqDataTypes")]
-		class TestTable
+		sealed class TestTable
 		{
 			[Column("ID")]
 			public int ID { get; set; }

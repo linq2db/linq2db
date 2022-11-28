@@ -11,7 +11,7 @@ namespace LinqToDB.Linq.Builder
 	using SqlQuery;
 	using Common;
 
-	class UpdateBuilder : MethodCallBuilder
+	sealed class UpdateBuilder : MethodCallBuilder
 	{
 		static readonly string[] _methods =
 		{
@@ -563,7 +563,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region UpdateContext
 
-		class UpdateContext : SequenceContextBase
+		sealed class UpdateContext : SequenceContextBase
 		{
 			public UpdateContext(IBuildContext? parent, IBuildContext sequence)
 				: base(parent, sequence, null)
@@ -601,7 +601,7 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-		class UpdateOutputContext : SelectContext
+		sealed class UpdateOutputContext : SelectContext
 		{
 			public UpdateOutputContext(
 				IBuildContext?     parent,
@@ -669,7 +669,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region Set
 
-		internal class Set : MethodCallBuilder
+		internal sealed class Set : MethodCallBuilder
 		{
 			protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 			{

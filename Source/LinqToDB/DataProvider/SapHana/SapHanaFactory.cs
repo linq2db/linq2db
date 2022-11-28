@@ -7,7 +7,7 @@ namespace LinqToDB.DataProvider.SapHana
 	using Configuration;
 
 	[UsedImplicitly]
-	class SapHanaFactory : IDataProviderFactory
+	sealed class SapHanaFactory : IDataProviderFactory
 	{
 		IDataProvider IDataProviderFactory.GetDataProvider(IEnumerable<NamedValue> attributes)
 		{

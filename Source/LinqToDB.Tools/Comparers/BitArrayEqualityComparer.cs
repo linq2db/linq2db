@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace LinqToDB.Tools.Comparers
 {
-	class BitArrayEqualityComparer : EqualityComparer<BitArray>
+	sealed class BitArrayEqualityComparer : EqualityComparer<BitArray>
 	{
 		public new static BitArrayEqualityComparer Default { get; } = new BitArrayEqualityComparer();
 

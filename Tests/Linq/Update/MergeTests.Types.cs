@@ -13,7 +13,7 @@ namespace Tests.xUpdate
 	public partial class MergeTests : TestBase
 	{
 		[Table("unspecified")]
-		class MergeTypes
+		sealed class MergeTypes
 		{
 			[Column("Id")]
 			[PrimaryKey]

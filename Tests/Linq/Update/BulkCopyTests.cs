@@ -417,7 +417,7 @@ namespace Tests.xUpdate
 			public abstract int Discriminator { get; }
 		}
 
-		class Inherited1 : BaseClass
+		sealed class Inherited1 : BaseClass
 		{
 			public override int Discriminator => 1;
 
@@ -425,7 +425,7 @@ namespace Tests.xUpdate
 			public string? Value1 { get; set; }
 		}
 
-		class Inherited2 : BaseClass
+		sealed class Inherited2 : BaseClass
 		{
 			public override int Discriminator => 2;
 
@@ -433,7 +433,7 @@ namespace Tests.xUpdate
 			public string? Value2 { get; set; }
 		}
 
-		class Inherited3 : BaseClass
+		sealed class Inherited3 : BaseClass
 		{
 			public override int Discriminator => 3;
 
@@ -508,19 +508,19 @@ namespace Tests.xUpdate
 			public int Discriminator { get; set; }
 		}
 
-		class InheritedDefault1 : BaseDefaultDiscriminator
+		sealed class InheritedDefault1 : BaseDefaultDiscriminator
 		{
 			[Column(Length = 50)]
 			public string? Value1 { get; set; }
 		}
 
-		class InheritedDefault2 : BaseDefaultDiscriminator
+		sealed class InheritedDefault2 : BaseDefaultDiscriminator
 		{
 			[Column(Length = 50)]
 			public string? Value2 { get; set; }
 		}
 
-		class InheritedDefault3 : BaseDefaultDiscriminator
+		sealed class InheritedDefault3 : BaseDefaultDiscriminator
 		{
 			[Column(Length = 50)]
 			public string? Value3 { get; set; }

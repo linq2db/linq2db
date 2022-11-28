@@ -15,7 +15,7 @@ namespace LinqToDB.Scaffold
 	{
 		private static readonly TypeMapping _unmappedType = new(WellKnownTypes.System.Object, null);
 
-		private record TableWithEntity(TableLikeObject TableOrView, EntityModel Entity);
+		private sealed record TableWithEntity(TableLikeObject TableOrView, EntityModel Entity);
 
 		// language-specific naming services for initial normalization of identifiers in data model
 		// (generation of valid identifiers without name conflicts resolution)

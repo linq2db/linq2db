@@ -109,7 +109,7 @@ namespace LinqToDB.DataProvider.Access
 
 			databaseName = databaseName.Trim();
 
-			if (!databaseName.ToLower().EndsWith(".mdb"))
+			if (!databaseName.ToLowerInvariant().EndsWith(".mdb"))
 				databaseName += ".mdb";
 
 			if (File.Exists(databaseName))

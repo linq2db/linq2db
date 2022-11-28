@@ -231,7 +231,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		#region SqlException
 		[Wrapper]
-		internal class SqlException : TypeWrapper
+		internal sealed class SqlException : TypeWrapper
 		{
 			private static LambdaExpression[] Wrappers { get; }
 				= new LambdaExpression[]
@@ -248,7 +248,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		[Wrapper]
-		internal class SqlErrorCollection : TypeWrapper
+		internal sealed class SqlErrorCollection : TypeWrapper
 		{
 			private static LambdaExpression[] Wrappers { get; }
 				= new LambdaExpression[]
@@ -279,7 +279,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		[Wrapper]
-		internal class SqlError : TypeWrapper
+		internal sealed class SqlError : TypeWrapper
 		{
 			private static LambdaExpression[] Wrappers { get; }
 				= new LambdaExpression[]
@@ -297,7 +297,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		#endregion
 
 		[Wrapper]
-		private class SqlParameter
+		private sealed class SqlParameter
 		{
 			// string return type is correct, TypeName and UdtTypeName return empty string instead of null
 			public string    UdtTypeName { get; set; } = null!;
