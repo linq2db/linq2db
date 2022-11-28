@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace LinqToDB.Metadata
 {
-	class MetaTypeInfo
+	sealed class MetaTypeInfo
 	{
 		public MetaTypeInfo(string name, Dictionary<string,MetaMemberInfo> members, params AttributeInfo[] attributes)
 		{

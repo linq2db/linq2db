@@ -24,7 +24,7 @@ namespace Tests.xUpdate
 		private const string FeatureInsertOutputInto       = $"{TestProvName.AllSqlServer}";
 
 		[Table]
-		class TableWithData
+		sealed class TableWithData
 		{
 			[Column]              public int     Id       { get; set; }
 			[Column]              public int     Value    { get; set; }
@@ -32,7 +32,7 @@ namespace Tests.xUpdate
 		}
 
 		[Table(Schema = "TestSchema")]
-		class TableWithDataAndSchema
+		sealed class TableWithDataAndSchema
 		{
 			[Column]              public int     Id       { get; set; }
 			[Column]              public int     Value    { get; set; }
@@ -40,7 +40,7 @@ namespace Tests.xUpdate
 		}
 
 		[Table]
-		class DestinationTable
+		sealed class DestinationTable
 		{
 			[Column]              public int     Id       { get; set; }
 			[Column]              public int     Value    { get; set; }

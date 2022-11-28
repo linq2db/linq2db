@@ -79,7 +79,7 @@ namespace LinqToDB.Linq.Builder
 			return cteContext;
 		}
 
-		class CteTableContext : TableContext
+		sealed class CteTableContext : TableContext
 		{
 			private readonly CteClause      _cte;
 			private readonly Expression     _cteExpression;

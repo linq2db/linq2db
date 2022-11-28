@@ -14,7 +14,7 @@ namespace LinqToDB.DataProvider.Access
 	{
 	}
 
-	class AccessSpecificTable<TSource> : DatabaseSpecificTable<TSource>, IAccessSpecificTable<TSource>, ITable
+	sealed class AccessSpecificTable<TSource> : DatabaseSpecificTable<TSource>, IAccessSpecificTable<TSource>, ITable
 		where TSource : notnull
 	{
 		public AccessSpecificTable(ITable<TSource> table) : base(table)
@@ -26,7 +26,7 @@ namespace LinqToDB.DataProvider.Access
 	{
 	}
 
-	class AccessSpecificQueryable<TSource> : DatabaseSpecificQueryable<TSource>, IAccessSpecificQueryable<TSource>, ITable
+	sealed class AccessSpecificQueryable<TSource> : DatabaseSpecificQueryable<TSource>, IAccessSpecificQueryable<TSource>, ITable
 	{
 		public AccessSpecificQueryable(IQueryable<TSource> queryable) : base(queryable)
 		{

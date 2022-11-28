@@ -7,7 +7,7 @@ namespace LinqToDB.SqlQuery
 	using Common;
 	using SqlProvider;
 
-	class SelectQueryOptimizer
+	sealed class SelectQueryOptimizer
 	{
 		public SelectQueryOptimizer(SqlProviderFlags flags, IQueryElement rootElement, SelectQuery selectQuery, int level, params IQueryElement[] dependencies)
 		{
@@ -56,7 +56,7 @@ namespace LinqToDB.SqlQuery
 #endif
 		}
 
-		class QueryData
+		sealed class QueryData
 		{
 			public          SelectQuery          Query   = null!;
 			public readonly List<ISqlExpression> Fields  = new ();

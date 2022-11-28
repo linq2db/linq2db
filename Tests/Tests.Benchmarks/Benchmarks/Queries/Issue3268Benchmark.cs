@@ -148,7 +148,7 @@ namespace LinqToDB.Benchmarks.Queries
 		}
 
 		[Table]
-		class MyPOCON
+		sealed class MyPOCON
 		{
 			[Column] public string?  Code     { get; set; }
 			[Column] public string?  Currency { get; set; }
@@ -157,7 +157,7 @@ namespace LinqToDB.Benchmarks.Queries
 		}
 
 		[Table]
-		class MyPOCO
+		sealed class MyPOCO
 		{
 			[Column] public string? Code     { get; set; }
 			[Column] public string? Currency { get; set; }

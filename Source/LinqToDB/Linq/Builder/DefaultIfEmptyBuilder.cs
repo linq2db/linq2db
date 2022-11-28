@@ -6,7 +6,7 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
-	class DefaultIfEmptyBuilder : MethodCallBuilder
+	sealed class DefaultIfEmptyBuilder : MethodCallBuilder
 	{
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
@@ -30,7 +30,7 @@ namespace LinqToDB.Linq.Builder
 			return new DefaultIfEmptyContext(buildInfo.Parent, sequence, defaultValue);
 		}
 
-		public class DefaultIfEmptyContext : SequenceContextBase
+		public sealed class DefaultIfEmptyContext : SequenceContextBase
 		{
 			public DefaultIfEmptyContext(IBuildContext? parent, IBuildContext sequence, Expression? defaultValue)
 				: base(parent, sequence, null)

@@ -102,7 +102,7 @@ namespace Tests.DataProvider
 			public object Result                                               { get; set; }
 		}
 
-		class TestDataTypeAttribute : NUnitAttribute, ITestBuilder, IImplyFixture
+		sealed class TestDataTypeAttribute : NUnitAttribute, ITestBuilder, IImplyFixture
 		{
 			public TestDataTypeAttribute(string providerName)
 			{
@@ -1683,7 +1683,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		class ExtraBulkCopyTypesTable
+		sealed class ExtraBulkCopyTypesTable
 		{
 			[Column                            ] public int     Id      { get; set; }
 			[Column                            ] public byte?   Byte    { get; set; }
@@ -1990,7 +1990,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		class ScalarResult<T>
+		sealed class ScalarResult<T>
 		{
 			public T Value = default!;
 		}
@@ -2142,7 +2142,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		class TableWithArray
+		sealed class TableWithArray
 		{
 			[Column]
 			public string[] StringArray { get; set; } = null!;

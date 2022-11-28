@@ -73,7 +73,7 @@ namespace LinqToDB
 			};
 		}
 
-		class DateOnlyAddBuilderSQLite : IExtensionCallBuilder
+		sealed class DateOnlyAddBuilderSQLite : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{

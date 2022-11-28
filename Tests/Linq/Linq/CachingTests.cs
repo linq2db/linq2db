@@ -13,7 +13,7 @@ namespace Tests.Linq
 
 	public class CachingTests: TestBase
 	{
-		class AggregateFuncBuilder: Sql.IExtensionCallBuilder
+		sealed class AggregateFuncBuilder : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{

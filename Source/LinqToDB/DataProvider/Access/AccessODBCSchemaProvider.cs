@@ -13,7 +13,7 @@ namespace LinqToDB.DataProvider.Access
 	// unused tables:
 	// DataSourceInformation - database settings
 	// ReservedWords - reserved words
-	class AccessODBCSchemaProvider : AccessSchemaProviderBase
+	sealed class AccessODBCSchemaProvider : AccessSchemaProviderBase
 	{
 		public AccessODBCSchemaProvider()
 		{
@@ -167,7 +167,7 @@ namespace LinqToDB.DataProvider.Access
 
 					for (var i = 0; i < paramNames.Length; i++)
 					{
-						switch (paramNames[i].Trim().ToLower())
+						switch (paramNames[i].Trim().ToLowerInvariant())
 						{
 							case "length"   : paramValues[i] = length   ; break;
 							case "precision": paramValues[i] = precision; break;

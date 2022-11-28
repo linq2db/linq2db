@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
@@ -287,7 +287,7 @@ namespace LinqToDB
 		public interface IMultiInsertElse<TSource>
 		{ }
 
-		private class MultiInsertQuery<TSource> : IMultiInsertSource<TSource>
+		private sealed class MultiInsertQuery<TSource> : IMultiInsertSource<TSource>
 		{
 			public readonly IQueryable<TSource> Query;
 

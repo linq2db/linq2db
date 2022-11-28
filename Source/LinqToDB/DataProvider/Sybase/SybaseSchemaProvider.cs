@@ -9,7 +9,7 @@ namespace LinqToDB.DataProvider.Sybase
 	using Data;
 	using SchemaProvider;
 
-	class SybaseSchemaProvider : SchemaProviderBase
+	sealed class SybaseSchemaProvider : SchemaProviderBase
 	{
 		private readonly SybaseDataProvider _provider;
 		public SybaseSchemaProvider(SybaseDataProvider provider)

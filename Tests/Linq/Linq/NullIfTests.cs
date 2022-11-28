@@ -95,7 +95,7 @@ namespace Tests.Linq
 			strings[1].Should().Be(null);
 		}
 
-		class Src
+		sealed class Src
 		{
 			public int Int { get; set; }
 			public int? NullableInt { get; set; }

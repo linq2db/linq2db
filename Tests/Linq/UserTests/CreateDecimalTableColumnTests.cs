@@ -23,7 +23,7 @@ namespace Tests.UserTests
 			Assert.That(table.Fields.Single().Type!.Scale, Is.EqualTo(4));
 		}
 
-		class Foo
+		sealed class Foo
 		{
 			public decimal Field { get; set; }
 		}

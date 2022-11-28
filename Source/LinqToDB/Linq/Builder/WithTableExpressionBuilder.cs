@@ -6,7 +6,7 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
-	class WithTableExpressionBuilder : MethodCallBuilder
+	sealed class WithTableExpressionBuilder : MethodCallBuilder
 	{
 		private static readonly string[] MethodNames =
 		{

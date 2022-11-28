@@ -11,13 +11,13 @@ namespace Tests.xUpdate
 	// could be added on request
 	public partial class MergeTests
 	{
-		class DynamicColumns1
+		sealed class DynamicColumns1
 		{
 			[DynamicColumnsStore]
 			public IDictionary<string, object> ExtendedProperties { get; set; } = null!;
 		}
 
-		class DynamicColumns2
+		sealed class DynamicColumns2
 		{
 			[DynamicColumnsStore]
 			public IDictionary<string, object> ExtendedProperties { get; set; } = null!;

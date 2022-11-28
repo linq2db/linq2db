@@ -10,7 +10,7 @@ namespace Tests.Linq
 	public class SetOperatorTests : TestBase
 	{
 		[Table]
-		class SampleData
+		sealed class SampleData
 		{
 			[PrimaryKey]
 			[Column] public int Id     { get; set; }

@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Interceptors
 {
-	class AggregatedConnectionInterceptor : AggregatedInterceptor<IConnectionInterceptor>, IConnectionInterceptor
+	sealed class AggregatedConnectionInterceptor : AggregatedInterceptor<IConnectionInterceptor>, IConnectionInterceptor
 	{
 		protected override AggregatedInterceptor<IConnectionInterceptor> Create()
 		{

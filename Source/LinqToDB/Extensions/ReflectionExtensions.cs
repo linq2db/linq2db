@@ -882,7 +882,7 @@ namespace LinqToDB.Extensions
 			object? GetDefaultValue();
 		}
 
-		class GetDefaultValueHelper<T> : IGetDefaultValueHelper
+		sealed class GetDefaultValueHelper<T> : IGetDefaultValueHelper
 		{
 			public object? GetDefaultValue()
 			{
@@ -982,7 +982,7 @@ namespace LinqToDB.Extensions
 			if (fromType == toType)
 				return true;
 
-			if (_castDic.ContainsKey(toType) && _castDic[toType].Contains(fromType))
+			if (_castDic.TryGetValue(toType, out var types) && types.Contains(fromType))
 				return true;
 
 			var tc = TypeDescriptor.GetConverter(fromType);

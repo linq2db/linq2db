@@ -460,7 +460,7 @@ namespace LinqToDB.Linq.Builder
 			return loadWithFunc;
 		}
 
-		public class LoadWithItem
+		public sealed class LoadWithItem
 		{
 			public LoadWithInfo Info  = null!;
 			public List<LoadWithInfo[]> NextLoadWith = null!;

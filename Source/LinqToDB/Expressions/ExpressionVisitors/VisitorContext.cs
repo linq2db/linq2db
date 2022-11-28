@@ -1,11 +1,11 @@
 ﻿namespace LinqToDB.Expressions
 {
-	internal class WritableContext<T>
+	internal sealed class WritableContext<T>
 	{
 		public T WriteableValue = default!;
 	}
 
-	internal class WritableContext<TWriteable, TStatic>
+	internal sealed class WritableContext<TWriteable, TStatic>
 	{
 		public WritableContext(TStatic staticValue)
 		{

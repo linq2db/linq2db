@@ -756,7 +756,7 @@ namespace Tests.Linq
 		// AllTypes is mess...
 		[Table]
 		[Table("ALLTYPES", Configuration = ProviderName.DB2)]
-		class AllTypes
+		sealed class AllTypes
 		{
 			[Column] public int     ID             { get; set; }
 

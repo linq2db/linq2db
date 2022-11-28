@@ -881,12 +881,12 @@ namespace Tests.Linq
 		}
 
 
-		class TakeSkipClass
+		sealed class TakeSkipClass
 		{
 			[Column(DataType = DataType.VarChar, Length = 10)]
 			public string? Value { get; set; }
 
-			protected bool Equals(TakeSkipClass other)
+			private bool Equals(TakeSkipClass other)
 			{
 				return Value == other.Value;
 			}
@@ -1038,8 +1038,8 @@ namespace Tests.Linq
 
 				if (db is TestDataConnection cn)
 				{
-					Assert.False(cn.LastQuery!.ToLower().Contains("iif"));
-					Assert.False(cn.LastQuery!.ToLower().Contains("case"));
+					Assert.False(cn.LastQuery!.ToLowerInvariant().Contains("iif"));
+					Assert.False(cn.LastQuery!.ToLowerInvariant().Contains("case"));
 				}
 				CheckTakeGlobalParams(db);
 			}
@@ -1077,8 +1077,8 @@ namespace Tests.Linq
 
 				if (db is TestDataConnection cn)
 				{
-					Assert.False(cn.LastQuery!.ToLower().Contains("iif"));
-					Assert.False(cn.LastQuery!.ToLower().Contains("case"));
+					Assert.False(cn.LastQuery!.ToLowerInvariant().Contains("iif"));
+					Assert.False(cn.LastQuery!.ToLowerInvariant().Contains("case"));
 				}
 				CheckTakeGlobalParams(db);
 			}
@@ -1122,8 +1122,8 @@ namespace Tests.Linq
 
 				if (db is TestDataConnection cn)
 				{
-					Assert.False(cn.LastQuery!.ToLower().Contains("iif"));
-					Assert.False(cn.LastQuery!.ToLower().Contains("case"));
+					Assert.False(cn.LastQuery!.ToLowerInvariant().Contains("iif"));
+					Assert.False(cn.LastQuery!.ToLowerInvariant().Contains("case"));
 				}
 				CheckTakeGlobalParams(db);
 			}
@@ -1167,8 +1167,8 @@ namespace Tests.Linq
 
 				if (db is TestDataConnection cn)
 				{
-					Assert.False(cn.LastQuery!.ToLower().Contains("iif"));
-					Assert.False(cn.LastQuery!.ToLower().Contains("case"));
+					Assert.False(cn.LastQuery!.ToLowerInvariant().Contains("iif"));
+					Assert.False(cn.LastQuery!.ToLowerInvariant().Contains("case"));
 				}
 				CheckTakeGlobalParams(db);
 			}
@@ -1205,8 +1205,8 @@ namespace Tests.Linq
 
 				if (db is TestDataConnection cn)
 				{
-					Assert.False(cn.LastQuery!.ToLower().Contains("iif"));
-					Assert.False(cn.LastQuery!.ToLower().Contains("case"));
+					Assert.False(cn.LastQuery!.ToLowerInvariant().Contains("iif"));
+					Assert.False(cn.LastQuery!.ToLowerInvariant().Contains("case"));
 				}
 			}
 		}
@@ -1246,8 +1246,8 @@ namespace Tests.Linq
 
 					if (db is TestDataConnection cn)
 					{
-						Assert.False(cn.LastQuery!.ToLower().Contains("iif"));
-						Assert.False(cn.LastQuery!.ToLower().Contains("case"));
+						Assert.False(cn.LastQuery!.ToLowerInvariant().Contains("iif"));
+						Assert.False(cn.LastQuery!.ToLowerInvariant().Contains("case"));
 					}
 
 					if (i == 2)
@@ -1295,8 +1295,8 @@ namespace Tests.Linq
 
 				if (db is TestDataConnection cn)
 				{
-					Assert.False(cn.LastQuery!.ToLower().Contains("iif"));
-					Assert.False(cn.LastQuery!.ToLower().Contains("case"));
+					Assert.False(cn.LastQuery!.ToLowerInvariant().Contains("iif"));
+					Assert.False(cn.LastQuery!.ToLowerInvariant().Contains("case"));
 				}
 			}
 		}
@@ -1339,8 +1339,8 @@ namespace Tests.Linq
 
 				if (db is TestDataConnection cn)
 				{
-					Assert.False(cn.LastQuery!.ToLower().Contains("iif"));
-					Assert.False(cn.LastQuery!.ToLower().Contains("case"));
+					Assert.False(cn.LastQuery!.ToLowerInvariant().Contains("iif"));
+					Assert.False(cn.LastQuery!.ToLowerInvariant().Contains("case"));
 				}
 			}
 		}
@@ -1385,8 +1385,8 @@ namespace Tests.Linq
 
 				if (db is TestDataConnection cn)
 				{
-					Assert.False(cn.LastQuery!.ToLower().Contains("iif"));
-					Assert.False(cn.LastQuery!.ToLower().Contains("case"));
+					Assert.False(cn.LastQuery!.ToLowerInvariant().Contains("iif"));
+					Assert.False(cn.LastQuery!.ToLowerInvariant().Contains("case"));
 				}
 				CheckTakeGlobalParams(db);
 			}
@@ -1432,8 +1432,8 @@ namespace Tests.Linq
 
 				if (db is TestDataConnection cn)
 				{
-					Assert.False(cn.LastQuery!.ToLower().Contains("iif"));
-					Assert.False(cn.LastQuery!.ToLower().Contains("case"));
+					Assert.False(cn.LastQuery!.ToLowerInvariant().Contains("iif"));
+					Assert.False(cn.LastQuery!.ToLowerInvariant().Contains("case"));
 				}
 				CheckTakeGlobalParams(db);
 			}
@@ -1484,8 +1484,8 @@ namespace Tests.Linq
 
 				if (db is TestDataConnection cn)
 				{
-					Assert.False(cn.LastQuery!.ToLower().Contains("iif"));
-					Assert.False(cn.LastQuery!.ToLower().Contains("case"));
+					Assert.False(cn.LastQuery!.ToLowerInvariant().Contains("iif"));
+					Assert.False(cn.LastQuery!.ToLowerInvariant().Contains("case"));
 				}
 				CheckTakeGlobalParams(db);
 			}
@@ -1536,8 +1536,8 @@ namespace Tests.Linq
 
 				if (db is TestDataConnection cn)
 				{
-					Assert.False(cn.LastQuery!.ToLower().Contains("iif"));
-					Assert.False(cn.LastQuery!.ToLower().Contains("case"));
+					Assert.False(cn.LastQuery!.ToLowerInvariant().Contains("iif"));
+					Assert.False(cn.LastQuery!.ToLowerInvariant().Contains("case"));
 				}
 				CheckTakeGlobalParams(db);
 			}

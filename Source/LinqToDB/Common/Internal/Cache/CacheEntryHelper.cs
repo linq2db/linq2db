@@ -6,7 +6,7 @@ using System.Threading;
 
 namespace LinqToDB.Common.Internal.Cache
 {
-	internal class CacheEntryHelper<TKey>
+	internal sealed class CacheEntryHelper<TKey>
 			where TKey : notnull
 	{
 		private static readonly AsyncLocal<CacheEntryStack<TKey>> _scopes = new ();

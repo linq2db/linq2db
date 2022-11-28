@@ -10,7 +10,7 @@ namespace Tests.Mapping
 	[TestFixture]
 	public class FluentMappingExpressionMethodTests : TestBase
 	{
-		class InstanceClass
+		sealed class InstanceClass
 		{
 			public int    Id       { get; set; }
 			public int    Value    { get; set; }

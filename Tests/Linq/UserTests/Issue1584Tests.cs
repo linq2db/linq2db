@@ -19,7 +19,7 @@ namespace Tests.UserTests
 			ConnectionOriented = 2,
 			All                = 3
 		}
-		private class RateCharges
+		private sealed class RateCharges
 		{
 			public RateEntry? RateEntry    { get; set; }
 			public decimal    FlatRate     { get; set; }

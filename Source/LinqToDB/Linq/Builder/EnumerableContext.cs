@@ -16,7 +16,7 @@ namespace LinqToDB.Linq.Builder
 	using Reflection;
 
 	[DebuggerDisplay("{BuildContextDebuggingHelper.GetContextInfo(this)}")]
-	class EnumerableContext : IBuildContext
+	sealed class EnumerableContext : IBuildContext
 	{
 		readonly Type _elementType;
 
@@ -185,7 +185,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region TableContext code almost not changed. TODO: Remove after implementing base ObjectContext
 
-		class ColumnInfo
+		sealed class ColumnInfo
 		{
 			public bool       IsComplex;
 			public string     Name       = null!;
