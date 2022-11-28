@@ -26,7 +26,7 @@ namespace Tests.Tools
 +-------+".Replace("\r", "").Replace("\n", ""));
 		}
 
-		class TestDiagnostic
+		sealed class TestDiagnostic
 		{
 			public string?  StringValue;
 			public DateTime DateTimeValue { get; set; }

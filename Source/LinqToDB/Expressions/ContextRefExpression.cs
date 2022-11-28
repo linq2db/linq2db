@@ -4,7 +4,7 @@ using LinqToDB.Linq.Builder;
 
 namespace LinqToDB.Expressions
 {
-	class ContextRefExpression : Expression
+	sealed class ContextRefExpression : Expression
 	{
 		public ContextRefExpression(Type elementType, IBuildContext buildContext)
 		{
@@ -27,7 +27,7 @@ namespace LinqToDB.Expressions
 
 		#region Equality members
 
-		protected bool Equals(ContextRefExpression other)
+		private bool Equals(ContextRefExpression other)
 		{
 			return Equals(ElementType, other.ElementType) && Equals(BuildContext, other.BuildContext);
 		}

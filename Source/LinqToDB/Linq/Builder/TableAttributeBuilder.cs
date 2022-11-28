@@ -4,7 +4,7 @@ namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
 
-	class TableAttributeBuilder : MethodCallBuilder
+	sealed class TableAttributeBuilder : MethodCallBuilder
 	{
 		private static readonly string[] MethodNames = new[]
 		{

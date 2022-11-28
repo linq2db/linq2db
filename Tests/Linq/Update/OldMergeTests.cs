@@ -237,7 +237,7 @@ namespace Tests.xUpdate
 		}
 
 		[Table("AllTypes")]
-		class AllType
+		sealed class AllType
 		{
 			[PrimaryKey, Identity] public int ID;
 			[Column(DataType = DataType.Char,  Length = 1)]  public char    charDataType;

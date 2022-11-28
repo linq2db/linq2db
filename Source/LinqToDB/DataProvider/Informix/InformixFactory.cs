@@ -6,7 +6,7 @@ namespace LinqToDB.DataProvider.Informix
 	using Configuration;
 
 	[UsedImplicitly]
-	class InformixFactory : IDataProviderFactory
+	sealed class InformixFactory : IDataProviderFactory
 	{
 		IDataProvider IDataProviderFactory.GetDataProvider(IEnumerable<NamedValue> attributes)
 		{

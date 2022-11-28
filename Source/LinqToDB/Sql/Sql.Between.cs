@@ -34,7 +34,7 @@ namespace LinqToDB
 			return value != null && (value.Value.CompareTo(low) < 0 || value.Value.CompareTo(high) > 0);
 		}
 
-		private class BetweenBuilder : IExtensionCallBuilder
+		private sealed class BetweenBuilder : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -44,7 +44,7 @@ namespace LinqToDB
 			}
 		}
 		
-		private class NotBetweenBuilder : IExtensionCallBuilder
+		private sealed class NotBetweenBuilder : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{

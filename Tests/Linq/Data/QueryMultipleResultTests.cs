@@ -12,8 +12,7 @@ namespace Tests.Data
 	[TestFixture]
 	public class QueryMultipleResultTests : TestBase
 	{
-
-		class MultipleResultExample
+		sealed class MultipleResultExample
 		{
 			[ResultSetIndex(0)] public IEnumerable<Person>  AllPersons   { get; set; } = null!;
 			[ResultSetIndex(1)] public IList<Doctor>        AllDoctors   { get; set; } = null!;
@@ -61,7 +60,7 @@ namespace Tests.Data
 			}
 		}
 
-		class MultipleResultExampleWithoutAttributes
+		sealed class MultipleResultExampleWithoutAttributes
 		{
 			public IEnumerable<Person>  AllPersons   { get; set; } = null!;
 			public IList<Doctor>        AllDoctors   { get; set; } = null!;
@@ -111,7 +110,7 @@ namespace Tests.Data
 
 
 		[Table]
-		class ProcedureMultipleResultExample
+		sealed class ProcedureMultipleResultExample
 		{
 			[ResultSetIndex(0)] public IList<int>           MatchingPersonIds { get; set; } = null!;
 			[ResultSetIndex(1)] public IEnumerable<Person>  MatchingPersons   { get; set; } = null!;
@@ -263,7 +262,7 @@ namespace Tests.Data
 
 
 		[Table]
-		class ProcedureMultipleResultExampleWithoutAttributes
+		sealed class ProcedureMultipleResultExampleWithoutAttributes
 		{
 			public IList<int>           MatchingPersonIds { get; set; } = null!;
 			public IEnumerable<Person>  MatchingPersons   { get; set; } = null!;

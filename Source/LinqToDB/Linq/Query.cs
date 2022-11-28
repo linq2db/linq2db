@@ -287,9 +287,9 @@ namespace LinqToDB.Linq
 
 		#region Query cache
 
-		class QueryCache
+		sealed class QueryCache
 		{
-			class QueryCacheEntry
+			sealed class QueryCacheEntry
 			{
 				public QueryCacheEntry(Query<T> query, QueryFlags flags)
 				{
@@ -556,7 +556,7 @@ namespace LinqToDB.Linq
 		}
 	}
 
-	class ParameterAccessor
+	sealed class ParameterAccessor
 	{
 		public ParameterAccessor(
 			Expression                             expression,

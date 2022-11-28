@@ -59,7 +59,7 @@ namespace Tests.Linq
 		}
 
 		[UsedImplicitly]
-		class DisposableTable
+		sealed class DisposableTable
 		{
 			public int ID;
 		}
@@ -84,7 +84,7 @@ namespace Tests.Linq
 		[Table(IsTemporary = true, Configuration = ProviderName.PostgreSQL, Database = "TestData", Schema = "test_schema")]
 		[Table(IsTemporary = true, Configuration = ProviderName.DB2,                               Schema = "SESSION")]
 		[UsedImplicitly]
-		class IsTemporaryTable
+		sealed class IsTemporaryTable
 		{
 			[Column] public int Id    { get; set; }
 			[Column] public int Value { get; set; }
@@ -101,7 +101,7 @@ namespace Tests.Linq
 		[Table(TableOptions = TableOptions.IsGlobalTemporaryStructure)]
 		[Table(TableOptions = TableOptions.IsGlobalTemporaryStructure, Configuration = ProviderName.DB2, Schema = "SESSION")]
 		[UsedImplicitly]
-		class IsGlobalTemporaryTable
+		sealed class IsGlobalTemporaryTable
 		{
 			[Column] public int Id    { get; set; }
 			[Column] public int Value { get; set; }
@@ -126,7 +126,7 @@ namespace Tests.Linq
 		[Table(TableOptions = TableOptions.CreateIfNotExists | TableOptions.IsTemporary, Configuration = ProviderName.SqlServer2008)]
 		[Table("##temp_table", TableOptions = TableOptions.CreateIfNotExists, Configuration = ProviderName.SqlServer2012)]
 		[UsedImplicitly]
-		class CreateIfNotExistsTable
+		sealed class CreateIfNotExistsTable
 		{
 			[Column] public int Id    { get; set; }
 			[Column] public int Value { get; set; }
@@ -189,7 +189,7 @@ namespace Tests.Linq
 		}
 
 		[UsedImplicitly]
-		class TestTable
+		sealed class TestTable
 		{
 			[Column] public int Id    { get; set; }
 			[Column] public int Value { get; set; }

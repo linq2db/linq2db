@@ -18,7 +18,7 @@ namespace LinqToDB
 	public static partial class LinqExtensions
 	{
 
-		private class MergeQuery<TTarget, TSource> :
+		private sealed class MergeQuery<TTarget, TSource> :
 			IMergeableUsing<TTarget>,
 			IMergeableOn<TTarget, TSource>,
 			IMergeableSource<TTarget, TSource>,

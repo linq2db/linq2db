@@ -60,7 +60,7 @@ namespace LinqToDB
 		public static SqlRow<T1, SqlRow<T2, SqlRow<T3, SqlRow<T4, SqlRow<T5, SqlRow<T6, SqlRow<T7, T8>>>>>>> Row<T1, T2, T3, T4, T5, T6, T7, T8>(T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8)
 			=> throw new LinqToDBException("Row is only server-side method.");
 
-		private class RowBuilder : IExtensionCallBuilder
+		private sealed class RowBuilder : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -75,7 +75,7 @@ namespace LinqToDB
 		public static bool Overlaps<T1, T2, T3, T4>(this SqlRow<T1, T2> thisRow, SqlRow<T3, T4> other)
 			=> throw new NotImplementedException();
 
-		private class OverlapsBuilder : IExtensionCallBuilder
+		private sealed class OverlapsBuilder : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{

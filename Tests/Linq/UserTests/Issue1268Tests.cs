@@ -10,7 +10,7 @@ namespace Tests.UserTests
 	public class Issue1268Tests : TestBase
 	{
 		[Table("DynamicColumnTable")]
-		class FullClass
+		sealed class FullClass
 		{
 			[Column]
 			         public int     Id        { get; set; }
@@ -19,7 +19,7 @@ namespace Tests.UserTests
 		}
 
 		[Table("DynamicColumnTable")]
-		class RepresentTable
+		sealed class RepresentTable
 		{
 			[Column]
 			         public int     Id        { get; set; }

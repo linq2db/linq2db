@@ -180,9 +180,9 @@ namespace Tests.Linq
 					from p in db.Person select p.FirstName.Length + "".Length);
 		}
 
-		class Test
+		sealed class Test
 		{
-			class Entity
+			sealed class Entity
 			{
 				public Test? TestField;
 			}
@@ -217,7 +217,7 @@ namespace Tests.Linq
 			}
 		}
 
-		class MyClass
+		sealed class MyClass
 		{
 			public int ID;
 
@@ -557,7 +557,7 @@ namespace Tests.Linq
 			Assert.That(_i, Is.EqualTo(2));
 		}
 
-		class User
+		sealed class User
 		{
 			public string? FirstName;
 			public int?    Status;

@@ -14,7 +14,7 @@ namespace Tests.xUpdate
 	[Order(10000)]
 	public class CreateTableTests : TestBase
 	{
-		class TestTable
+		sealed class TestTable
 		{
 			public int       ID;
 			public string?   Field1;
@@ -178,7 +178,7 @@ namespace Tests.xUpdate
 			Value2,
 		}
 
-		class TestEnumTable
+		sealed class TestEnumTable
 		{
 			public FieldType1 Field1;
 			[Column(DataType=DataType.Int32)]
@@ -308,7 +308,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		class TestCreateFormat
+		sealed class TestCreateFormat
 		{
 			[Column(CreateFormat = "{0}{1}{2}{3}/* test */"), NotNull]
 			public int Field1;

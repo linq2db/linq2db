@@ -213,7 +213,7 @@ namespace LinqToDB.DataProvider
 		{
 			databaseName = databaseName.Trim();
 
-			if (!databaseName.ToLower().EndsWith(extension))
+			if (!databaseName.ToLowerInvariant().EndsWith(extension))
 				databaseName += extension;
 
 			if (File.Exists(databaseName))
@@ -236,7 +236,7 @@ namespace LinqToDB.DataProvider
 			}
 			else
 			{
-				if (!databaseName.ToLower().EndsWith(extension))
+				if (!databaseName.ToLowerInvariant().EndsWith(extension))
 				{
 					databaseName += extension;
 

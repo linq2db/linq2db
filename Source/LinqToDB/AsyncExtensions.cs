@@ -69,7 +69,7 @@ namespace LinqToDB
 		#endregion
 
 		[AttributeUsage(AttributeTargets.Method)]
-		internal class ElementAsyncAttribute : Attribute
+		internal sealed class ElementAsyncAttribute : Attribute
 		{
 		}
 
@@ -94,7 +94,7 @@ namespace LinqToDB
 			return new AsyncEnumerableAdapter<TSource>(source);
 		}
 
-		private class AsyncEnumerableAdapter<T> : IAsyncEnumerable<T>
+		private sealed class AsyncEnumerableAdapter<T> : IAsyncEnumerable<T>
 		{
 			private readonly IQueryable<T> _query;
 			public AsyncEnumerableAdapter(IQueryable<T> query)

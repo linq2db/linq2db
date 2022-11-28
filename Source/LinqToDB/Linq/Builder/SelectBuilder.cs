@@ -13,7 +13,7 @@ namespace LinqToDB.Linq.Builder
 	using Reflection;
 	using System.Data.Common;
 
-	class SelectBuilder : MethodCallBuilder
+	sealed class SelectBuilder : MethodCallBuilder
 	{
 		#region SelectBuilder
 
@@ -68,7 +68,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region SelectContext2
 
-		class SelectContext2 : SelectContext
+		sealed class SelectContext2 : SelectContext
 		{
 			public SelectContext2(IBuildContext? parent, LambdaExpression lambda, IBuildContext sequence)
 				: base(parent, lambda, sequence)

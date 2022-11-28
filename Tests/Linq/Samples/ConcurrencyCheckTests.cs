@@ -14,7 +14,7 @@ namespace Tests.Samples
 	[TestFixture]
 	public class ConcurrencyCheckTests : TestBase
 	{
-		class InterceptDataConnection : DataConnection
+		sealed class InterceptDataConnection : DataConnection
 		{
 			public InterceptDataConnection(string providerName, string connectionString) : base(providerName, connectionString)
 			{

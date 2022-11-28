@@ -12,7 +12,7 @@ namespace LinqToDB.Expressions
 	using Reflection;
 	using Mapping;
 
-	class ConvertFromDataReaderExpression : Expression
+	sealed class ConvertFromDataReaderExpression : Expression
 	{
 		public ConvertFromDataReaderExpression(Type type, int idx, IValueConverter? converter, Expression dataReaderParam)
 		{
@@ -175,7 +175,7 @@ namespace LinqToDB.Expressions
 			return ex;
 		}
 
-		internal class ColumnReader
+		internal sealed class ColumnReader
 		{
 			public ColumnReader(IDataContext dataContext, MappingSchema mappingSchema, Type columnType, int columnIndex, IValueConverter? converter, bool slowMode)
 			{

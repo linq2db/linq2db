@@ -162,7 +162,7 @@ namespace Tests.Linq
 			}
 		}
 
-		class AllTypes
+		sealed class AllTypes
 		{
 			public decimal DecimalDataType;
 			public byte[]? BinaryDataType;
@@ -365,7 +365,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class Table404One
+		sealed class Table404One
 		{
 			[Column] public int Id { get; set; }
 
@@ -377,7 +377,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class Table404Two
+		sealed class Table404Two
 		{
 			[Column] public int Id { get; set; }
 
@@ -396,7 +396,7 @@ namespace Tests.Linq
 			};
 		}
 
-		class FirstTable
+		sealed class FirstTable
 		{
 			public int Id;
 			public List<Table404Two>? Values;
@@ -478,7 +478,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class TestEqualsTable1
+		sealed class TestEqualsTable1
 		{
 			[Column]
 			public int Id { get; set; }
@@ -488,7 +488,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class TestEqualsTable2
+		sealed class TestEqualsTable2
 		{
 			[Column]
 			public int Id { get; set; }

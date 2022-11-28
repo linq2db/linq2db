@@ -149,7 +149,7 @@ namespace LinqToDB.DataProvider.Sybase
 		}
 
 		[Wrapper]
-		private class AseParameter
+		private sealed class AseParameter
 		{
 			public AseDbType AseDbType { get; set; }
 		}

@@ -13,7 +13,7 @@ namespace Tests.Common
 	[TestFixture]
 	public class ConnectionBuilderTests : TestBase
 	{
-		private class TestLoggerFactory : ILoggerFactory
+		private sealed class TestLoggerFactory : ILoggerFactory
 		{
 			public List<TestLogger> Loggers = new ();
 
@@ -33,7 +33,7 @@ namespace Tests.Common
 			}
 		}
 
-		private class TestLogger : ILogger
+		private sealed class TestLogger : ILogger
 		{
 			public List<string> Messages = new ();
 
@@ -52,9 +52,13 @@ namespace Tests.Common
 				return false;
 			}
 
-			public IDisposable BeginScope<TState>(TState state) => new Disposable();
+			public IDisposable BeginScope<TState>(TState state)
+#if !NETFRAMEWORK
+				where TState : notnull
+#endif
+				=> new Disposable();
 
-			private class Disposable : IDisposable
+			private sealed class Disposable : IDisposable
 			{
 				void IDisposable.Dispose()
 				{

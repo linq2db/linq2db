@@ -6,7 +6,7 @@ namespace LinqToDB.DataProvider.SqlCe
 	using Configuration;
 
 	[UsedImplicitly]
-	class SqlCeFactory : IDataProviderFactory
+	sealed class SqlCeFactory : IDataProviderFactory
 	{
 		IDataProvider IDataProviderFactory.GetDataProvider(IEnumerable<NamedValue> attributes)
 		{

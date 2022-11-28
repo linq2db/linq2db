@@ -70,7 +70,7 @@ namespace LinqToDB.DataProvider
 		{
 			if (disposing && _asyncEnumerator != null)
 			{
-				SafeAwaiter.Run(() => _asyncEnumerator.DisposeAsync());
+				SafeAwaiter.Run(_asyncEnumerator.DisposeAsync);
 			}
 		}
 #endif
