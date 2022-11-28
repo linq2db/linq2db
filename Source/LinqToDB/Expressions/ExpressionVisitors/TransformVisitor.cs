@@ -6,7 +6,7 @@ using System.Runtime.CompilerServices;
 
 namespace LinqToDB.Expressions
 {
-	internal class TransformVisitor<TContext>
+	internal sealed class TransformVisitor<TContext>
 	{
 		private readonly TContext?                             _context;
 		private readonly Func<TContext,Expression,Expression>? _func;

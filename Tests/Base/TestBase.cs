@@ -487,14 +487,14 @@ namespace Tests
 			return res;
 		}
 
-		protected TestDataConnection GetDataConnection(LinqToDBConnectionOptions options)
+		protected TestDataConnection GetDataConnection(DataOptions options)
 		{
-			if (options.ConfigurationString?.EndsWith(".LinqService") == true)
+			if (options.ConnectionOptions.ConfigurationString?.EndsWith(".LinqService") == true)
 			{
 				throw new InvalidOperationException($"Call {nameof(GetDataContext)} for remote context creation");
 			}
 
-			Debug.WriteLine(options.ConfigurationString, "Provider ");
+			Debug.WriteLine(options.ConnectionOptions.ConfigurationString, "Provider ");
 
 			var res = new TestDataConnection(options);
 

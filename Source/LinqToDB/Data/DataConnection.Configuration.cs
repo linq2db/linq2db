@@ -75,7 +75,7 @@ namespace LinqToDB.Data
 
 		internal static ConcurrentDictionary<string,DataOptions> ConnectionOptionsByConfigurationString = new();
 
-		internal class ConfigurationInfo
+		internal sealed class ConfigurationInfo
 		{
 			readonly bool    _dataProviderSet;
 			readonly string? _configurationString;

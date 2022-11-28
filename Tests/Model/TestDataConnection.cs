@@ -27,11 +27,6 @@ namespace Tests.Model
 		{
 		}
 
-		public TestDataConnection(LinqToDBConnectionOptions options)
-			:base(options)
-		{
-		}
-
 		static object _sync = new ();
 
 //		[Table("AllTypes")]

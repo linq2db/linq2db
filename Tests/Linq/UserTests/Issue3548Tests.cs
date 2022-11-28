@@ -72,9 +72,8 @@ namespace Tests.UserTests
 			builder.MapEnum<UserTypeEnum>();
 			var dataSource = builder.Build();
 
-			var options = new LinqToDBConnectionOptionsBuilder()
-				.UseConnectionFactory(dataProvider, dataSource.CreateConnection)
-				.Build();
+			var options = new DataOptions()
+				.UseConnectionFactory(dataProvider, dataSource.CreateConnection);
 
 			try
 			{
