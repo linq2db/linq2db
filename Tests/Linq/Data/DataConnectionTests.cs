@@ -1603,7 +1603,9 @@ namespace Tests.Data
 				TestProvName.AllOracle,
 				TestProvName.AllSapHana,
 				ProviderName.SqlCe,
-				ProviderName.ClickHouseClient,
+				// disabled - depends on connection pool size
+				// which is one for session-aware connection
+				//ProviderName.ClickHouseClient,
 				ProviderName.ClickHouseOctonica,
 				TestProvName.AllSQLite,
 				TestProvName.AllSqlServer,
