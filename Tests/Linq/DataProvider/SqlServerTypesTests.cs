@@ -18,7 +18,7 @@ namespace Tests.DataProvider
 	public partial class SqlServerTypesTests : DataProviderTestBase
 	{
 		[Table(Name="AllTypes2")]
-		class AllTypes2
+		sealed class AllTypes2
 		{
 			[Column(DbType="int"),   PrimaryKey, Identity] public int             ID                     { get; set; } // int
 			[Column(DbType="date"),              Nullable] public DateTime?       dateDataType           { get; set; } // date
@@ -59,7 +59,7 @@ namespace Tests.DataProvider
 		}
 
 		[Table("#tmp")]
-		class MyTable
+		sealed class MyTable
 		{
 			[Column] public SqlHierarchyId ID;
 		}
@@ -81,6 +81,7 @@ namespace Tests.DataProvider
 			if (IsMsProvider(context))
 				Assert.Inconclusive("Spatial types test disabled for Microsoft.Data.SqlClient");
 #endif
+
 			using (new SerializeAssemblyQualifiedName(true))
 			using (var conn = GetDataContext(context))
 			{
@@ -96,7 +97,6 @@ namespace Tests.DataProvider
 						v5  = t.geographyDataType.M,
 						//v6  = t.geographyDataType.HasZ,
 						//v7  = t.geographyDataType.HasM,
-						// missing API
 #if NET472
 						v8 = SqlGeography.GeomFromGml(t.geographyDataType.AsGml(), 4326),
 						v9  = t.geographyDataType.AsGml(),
@@ -300,7 +300,7 @@ namespace Tests.DataProvider
 		}
 
 		[Table]
-		class Issue1836
+		sealed class Issue1836
 		{
 			[PrimaryKey]
 			public int Id { get; set; }

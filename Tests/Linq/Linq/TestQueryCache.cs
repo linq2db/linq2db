@@ -18,7 +18,7 @@ namespace Tests.Linq
 	public class TestQueryCache : TestBase
 	{
 		[Table]
-		class SampleClass
+		sealed class SampleClass
 		{
 			public int Id         { get; set; }
 			public string? StrKey { get; set; }
@@ -26,7 +26,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class SampleClassWithIdentity
+		sealed class SampleClassWithIdentity
 		{
 			[Identity]
 			public int Id         { get; set; }
@@ -34,7 +34,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class ManyFields
+		sealed class ManyFields
 		{
 			[PrimaryKey]
 			public int  Id     { get; set; }

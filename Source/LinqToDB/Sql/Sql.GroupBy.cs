@@ -15,7 +15,7 @@ namespace LinqToDB
 			public T GroupingSets<T>(Expression<Func<T>> setsExpression);
 		}
 
-		class GroupByImpl : IGroupBy
+		sealed class GroupByImpl : IGroupBy
 		{
 			public bool None => true;
 

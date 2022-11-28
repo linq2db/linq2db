@@ -8,7 +8,7 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
-	class JoinBuilder : MethodCallBuilder
+	sealed class JoinBuilder : MethodCallBuilder
 	{
 		private static readonly string[] MethodNames = { "Join", "GroupJoin" };
 
@@ -245,7 +245,7 @@ namespace LinqToDB.Linq.Builder
 			subQuerySelect.Where.SearchCondition.Conditions.Add(new SqlCondition(false, predicate));
 		}
 
-		internal class InnerKeyContext : ExpressionContext
+		internal sealed class InnerKeyContext : ExpressionContext
 		{
 			public InnerKeyContext(IBuildContext? parent, IBuildContext sequence, LambdaExpression lambda)
 				: base(parent, sequence, lambda)
@@ -278,7 +278,7 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-		internal class GroupJoinContext : JoinContext
+		internal sealed class GroupJoinContext : JoinContext
 		{
 			public GroupJoinContext(
 				IBuildContext?           parent,
@@ -308,7 +308,7 @@ namespace LinqToDB.Linq.Builder
 				Expression GetGroupJoin(GroupJoinContext context);
 			}
 
-			class GroupJoinHelper<TKey,TElement> : IGroupJoinHelper
+			sealed class GroupJoinHelper<TKey,TElement> : IGroupJoinHelper
 			{
 				public Expression GetGroupJoin(GroupJoinContext context)
 				{
@@ -385,7 +385,7 @@ namespace LinqToDB.Linq.Builder
 				Expression GetGroupJoinCall(GroupJoinContext context);
 			}
 
-			class GroupJoinCallHelper<T> : IGroupJoinCallHelper
+			sealed class GroupJoinCallHelper<T> : IGroupJoinCallHelper
 			{
 				public Expression GetGroupJoinCall(GroupJoinContext context)
 				{
@@ -463,7 +463,7 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-		internal class GroupJoinSubQueryContext : SubQueryContext
+		internal sealed class GroupJoinSubQueryContext : SubQueryContext
 		{
 			public SqlJoinedTable?      Join;
 			public GroupJoinContext?    GroupJoin;

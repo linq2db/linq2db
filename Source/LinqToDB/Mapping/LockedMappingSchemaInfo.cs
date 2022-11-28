@@ -2,7 +2,7 @@
 
 namespace LinqToDB.Mapping
 {
-	class LockedMappingSchemaInfo : MappingSchemaInfo
+	sealed class LockedMappingSchemaInfo : MappingSchemaInfo
 	{
 		public LockedMappingSchemaInfo(string configuration, MappingSchema mappingSchema) : base(configuration)
 		{

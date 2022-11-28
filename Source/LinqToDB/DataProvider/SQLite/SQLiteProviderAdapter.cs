@@ -147,13 +147,13 @@ namespace LinqToDB.DataProvider.SQLite
 
 		#region wrappers
 		[Wrapper]
-		private class SqliteConnection
+		private sealed class SqliteConnection
 		{
 			public static void ClearAllPools() => throw new NotImplementedException();
 		}
 
 		[Wrapper]
-		private class SQLiteConnection
+		private sealed class SQLiteConnection
 		{
 			public static void ClearAllPools() => throw new NotImplementedException();
 		}

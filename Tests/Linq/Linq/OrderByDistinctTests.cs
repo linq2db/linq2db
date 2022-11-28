@@ -11,7 +11,7 @@ namespace Tests.Linq
 	[TestFixture]
 	public class OrderByDistinctTests : TestBase
 	{
-		class OrderByDistinctData
+		sealed class OrderByDistinctData
 		{
 			[PrimaryKey]
 			public int Id { get; set; }

@@ -18,7 +18,7 @@ namespace Tests.Linq
 	public class ValueConversionTests : TestBase
 	{
 
-		class ItemClass
+		sealed class ItemClass
 		{
 			public string? Value { get; set; }
 		}
@@ -32,7 +32,7 @@ namespace Tests.Linq
 		}
 		
 		[Table("ValueConversion")]
-		class MainClass
+		sealed class MainClass
 		{
 			[PrimaryKey]
 			public int Id    { get; set; }
@@ -86,7 +86,7 @@ namespace Tests.Linq
 			}
 		}
 
-		class WithNullConverter: ValueConverter<EnumValue, string?>
+		sealed class WithNullConverter : ValueConverter<EnumValue, string?>
 		{
 			public WithNullConverter() : base(v => v == EnumValue.Null ? null : v.ToString(), p=> p == null ? EnumValue.Null : (EnumValue)Enum.Parse(typeof(EnumValue), p), true)
 			{
@@ -95,7 +95,7 @@ namespace Tests.Linq
 		}
 
 		[Table("ValueConversion")]
-		class MainClassRaw
+		sealed class MainClassRaw
 		{
 			[PrimaryKey]
 			public int Id    { get; set; }
@@ -142,8 +142,7 @@ namespace Tests.Linq
 				.Property(e => e.Value1)
 				.HasConversion(v => JsonConvert.SerializeObject(v), p => JsonConvert.DeserializeObject<JToken>(p))
 				.Property(e => e.Value2)
-				.HasConversionFunc(v => JsonConvert.SerializeObject(v),
-					p => JsonConvert.DeserializeObject<List<ItemClass>>(p))
+				.HasConversionFunc(JsonConvert.SerializeObject, JsonConvert.DeserializeObject<List<ItemClass>>)
 				.Property(e => e.Enum)
 				.HasConversion(v => v.ToString(), p => (EnumValue)Enum.Parse(typeof(EnumValue), p))
 				.Property(e => e.EnumNullable)

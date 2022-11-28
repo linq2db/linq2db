@@ -557,7 +557,7 @@ namespace LinqToDB.Linq.Builder
 			return result;
 		}
 
-		class SubQueryContextInfo
+		sealed class SubQueryContextInfo
 		{
 			public MethodCallExpression Method  = null!;
 			public IBuildContext        Context = null!;
@@ -862,7 +862,7 @@ namespace LinqToDB.Linq.Builder
 				IEnumerable<Expression> parameters);
 		}
 
-		class MultipleQueryHelper<TRet> : IMultipleQueryHelper
+		sealed class MultipleQueryHelper<TRet> : IMultipleQueryHelper
 		{
 			public Expression GetSubquery(
 				ExpressionBuilder       builder,

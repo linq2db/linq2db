@@ -16,7 +16,7 @@ namespace Tests.UserTests
 	{
 		public static class SqlLite
 		{
-			class MatchBuilder : Sql.IExtensionCallBuilder
+			sealed class MatchBuilder : Sql.IExtensionCallBuilder
 			{
 				public void Build(Sql.ISqExtensionBuilder builder)
 				{

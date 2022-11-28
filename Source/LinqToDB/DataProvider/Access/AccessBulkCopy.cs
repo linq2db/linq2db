@@ -1,6 +1,6 @@
 ﻿namespace LinqToDB.DataProvider.Access
 {
-	class AccessBulkCopy : BasicBulkCopy
+	sealed class AccessBulkCopy : BasicBulkCopy
 	{
 		/// <remarks>
 		/// Settings based on https://www.jooq.org/doc/3.12/manual/sql-building/dsl-context/custom-settings/settings-inline-threshold/

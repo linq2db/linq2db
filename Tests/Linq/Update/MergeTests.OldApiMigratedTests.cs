@@ -168,7 +168,7 @@ namespace Tests.xUpdate
 
 		[Table("ALLTYPES", Configuration = ProviderName.DB2)]
 		[Table("AllTypes")]
-		class AllType
+		sealed class AllType
 		{
 			[PrimaryKey, Identity]
 			public int ID;

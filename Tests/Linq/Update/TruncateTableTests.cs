@@ -13,7 +13,7 @@ namespace Tests.xUpdate
 	{
 		[Table]
 		[UsedImplicitly]
-		class TestTrun
+		sealed class TestTrun
 		{
 			[Column, PrimaryKey] public int     ID;
 			[Column]             public decimal Field1;
@@ -33,7 +33,7 @@ namespace Tests.xUpdate
 		}
 
 		[Table]
-		class TestIdTrun
+		sealed class TestIdTrun
 		{
 			[Column, Identity, PrimaryKey] public int     ID;
 			[Column]                       public decimal Field1;

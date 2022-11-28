@@ -22,7 +22,7 @@ namespace LinqToDB.Expressions
 	/// <summary>
 	/// Converts <see cref="Task{T}"/> or ValueTask&lt;TResult&gt; to <see cref="Task"/>.
 	/// </summary>
-	internal class GenericTaskToTaskMapper : ICustomMapper
+	internal sealed class GenericTaskToTaskMapper : ICustomMapper
 	{
 		bool ICustomMapper.CanMap(Expression expression)
 		{

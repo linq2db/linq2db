@@ -9,7 +9,7 @@ namespace Tests.UserTests
 	public class Issue1084Tests : TestBase
 	{
 		[Table("i1084_person")]
-		class Issue1084Person
+		sealed class Issue1084Person
 		{
 			public Issue1084Person(Issue1084Person k)
 			{
@@ -24,7 +24,7 @@ namespace Tests.UserTests
 		}
 
 		[Table("i1084_person")]
-		class Issue1084Personv2
+		sealed class Issue1084Personv2
 		{
 			public Issue1084Personv2()
 			{
@@ -39,7 +39,7 @@ namespace Tests.UserTests
 		}
 
 		[Table("i1084_person")]
-		class Issue1084Personv3
+		sealed class Issue1084Personv3
 		{
 			public bool Default;
 			public bool Copy;
@@ -68,7 +68,7 @@ namespace Tests.UserTests
 		}
 
 		[Table("i1084_student")]
-		class Issue1084Student
+		sealed class Issue1084Student
 		{
 			[Column] public int     Id            { get; set; }
 			[Column] public string? Number        { get; set; }

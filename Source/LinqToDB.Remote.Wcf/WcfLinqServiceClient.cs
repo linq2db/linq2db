@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Remote.Wcf
 {
-	class WcfLinqServiceClient : ClientBase<IWcfLinqService>, ILinqService
+	sealed class WcfLinqServiceClient : ClientBase<IWcfLinqService>, ILinqService
 	{
 		public WcfLinqServiceClient(string endpointConfigurationName)
 			: base(endpointConfigurationName)

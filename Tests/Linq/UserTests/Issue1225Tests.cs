@@ -12,7 +12,7 @@ namespace Tests.UserTests
 	public class Issue1225Tests : TestBase
 	{
 		[Table]
-		class Task
+		sealed class Task
 		{
 			[Column(IsPrimaryKey = true)]
 			public int Id { get; set; }
@@ -25,7 +25,7 @@ namespace Tests.UserTests
 		}
 
 		[Table]
-		class TaskStage
+		sealed class TaskStage
 		{
 			[Column(IsPrimaryKey = true)]
 			public int Id { get; set; }
@@ -39,7 +39,7 @@ namespace Tests.UserTests
 			public bool Actual { get; set; }
 		}
 
-		private class GroupByWrapper
+		private sealed class GroupByWrapper
 		{
 			public GroupByWrapper()
 			{
@@ -48,7 +48,7 @@ namespace Tests.UserTests
 			public LastInChain GroupByContainer { get; set; } = null!;
 		}
 
-		private class LastInChain
+		private sealed class LastInChain
 		{
 			public LastInChain()
 			{
@@ -58,7 +58,7 @@ namespace Tests.UserTests
 			public object? Value { get; set; }
 		}
 
-		private class AggregationWrapper
+		private sealed class AggregationWrapper
 		{
 			public AggregationWrapper()
 			{

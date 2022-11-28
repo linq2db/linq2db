@@ -12,7 +12,7 @@ namespace Tests.UserTests
 	public class Issue3649Tests : TestBase
 	{
 		[Table]
-		class Total
+		sealed class Total
 		{
 			[Column]              public int     Id    { get; set; }
 			[Column]              public int     Sum   { get; set; }
@@ -20,7 +20,7 @@ namespace Tests.UserTests
 		}
 
 		[Table]
-		class Entry
+		sealed class Entry
 		{
 			[Column] public int Id    { get; set; }
 			[Column] public int TotalId    { get; set; }

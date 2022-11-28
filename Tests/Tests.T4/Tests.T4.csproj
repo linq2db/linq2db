@@ -18,10 +18,10 @@
 		<Reference Include="PresentationCore" />
 		<Reference Include="PresentationFramework" />
 		<Reference Include="WindowsBase" />
-
+		
 		<PackageReference Include="Microsoft.SqlServer.Types" />
-
 	</ItemGroup>
+
 	<ItemGroup Condition="'$(TargetFramework)' != 'net472'">
 		<!--nuget doesn't have strong name, so we use local self-signed copy-->
 		<!--<PackageReference Include="dotMorten.Microsoft.SqlServer.Types" />-->

@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Interceptors
 {
-	class AggregatedDataContextInterceptor : AggregatedInterceptor<IDataContextInterceptor>, IDataContextInterceptor
+	sealed class AggregatedDataContextInterceptor : AggregatedInterceptor<IDataContextInterceptor>, IDataContextInterceptor
 	{
 		protected override AggregatedInterceptor<IDataContextInterceptor> Create()
 		{

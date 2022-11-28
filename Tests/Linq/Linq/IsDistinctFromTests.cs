@@ -89,7 +89,7 @@ namespace Tests.Linq
 				c2.LastQuery.Should().NotContainAny("5", "6");
 		}
 
-		class Src
+		sealed class Src
 		{
 			public int     Int            { get; set; }
 			public int?    NullableInt    { get; set; }
