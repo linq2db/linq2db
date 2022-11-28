@@ -478,7 +478,7 @@ namespace LinqToDB.Linq.Builder
 
 		readonly Dictionary<Tuple<MemberInfo?,ConvertFlags>,SqlInfo[]> _memberIndex = new ();
 
-		class SqlData
+		sealed class SqlData
 		{
 			public SqlInfo[]  Sql    = null!;
 			public MemberInfo Member = null!;

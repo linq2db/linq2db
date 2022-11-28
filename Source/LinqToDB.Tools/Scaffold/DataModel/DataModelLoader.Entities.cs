@@ -315,7 +315,7 @@ namespace LinqToDB.Scaffold
 					isOneToOne = sourceTable.Entity.Columns.Any(_ => _.Metadata.Name == firstFromColumnName && _.Metadata.IsPrimaryKey);
 
 				// if column name provided - generate association name based on column name
-				if (!isOneToOne && firstFromColumnName != null && firstFromColumnName.ToLower().EndsWith("id"))
+				if (!isOneToOne && firstFromColumnName != null && firstFromColumnName.ToLowerInvariant().EndsWith("id"))
 				{
 					// if column name provided and ends with ID suffix
 					// we trim ID part and possible _ connectors before it

@@ -8,7 +8,7 @@ namespace LinqToDB.Metadata
 	using Common;
 	using Extensions;
 
-	class AttributeInfo
+	sealed class AttributeInfo
 	{
 		public AttributeInfo(string name, Dictionary<string,object?> values)
 		{

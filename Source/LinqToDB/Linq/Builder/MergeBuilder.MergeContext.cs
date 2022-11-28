@@ -9,7 +9,7 @@ namespace LinqToDB.Linq.Builder
 
 	internal partial class MergeBuilder
 	{
-		private class MergeContext : SequenceContextBase
+		private sealed class MergeContext : SequenceContextBase
 		{
 			private readonly ISet<Expression> _sourceParameters = new HashSet<Expression>();
 			private readonly ISet<Expression> _targetParameters = new HashSet<Expression>();

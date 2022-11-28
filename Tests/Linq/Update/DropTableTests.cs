@@ -13,7 +13,7 @@ namespace Tests.xUpdate
 	[Order(10000)]
 	public class DropTableTests : TestBase
 	{
-		class DropTableTest
+		sealed class DropTableTest
 		{
 			public int ID { get; set; }
 		}
@@ -44,7 +44,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		class DropTableTestID
+		sealed class DropTableTestID
 		{
 			[Identity, PrimaryKey]
 			public int ID  { get; set; }

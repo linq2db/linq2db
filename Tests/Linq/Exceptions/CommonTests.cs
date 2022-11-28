@@ -14,7 +14,7 @@ namespace Tests.Exceptions
 	[TestFixture]
 	public class CommonTests : TestBase
 	{
-		class MyDataConnection : TestDataConnection
+		sealed class MyDataConnection : TestDataConnection
 		{
 			public MyDataConnection(string context) : base(context)
 			{

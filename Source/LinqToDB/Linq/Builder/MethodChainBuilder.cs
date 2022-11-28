@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
@@ -12,7 +12,7 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using LinqToDB.Reflection;
 
-	class MethodChainBuilder : MethodCallBuilder
+	sealed class MethodChainBuilder : MethodCallBuilder
 	{
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
@@ -57,7 +57,7 @@ namespace LinqToDB.Linq.Builder
 			return context;
 		}
 
-		internal class ChainContext : SequenceContextBase
+		internal sealed class ChainContext : SequenceContextBase
 		{
 			public ChainContext(IBuildContext? parent, IBuildContext sequence, MethodCallExpression methodCall)
 				: base(parent, sequence, null)

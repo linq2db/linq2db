@@ -5,7 +5,7 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using Reflection;
 
-	class DisableGroupingGuardBuilder : MethodCallBuilder
+	sealed class DisableGroupingGuardBuilder : MethodCallBuilder
 	{
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{

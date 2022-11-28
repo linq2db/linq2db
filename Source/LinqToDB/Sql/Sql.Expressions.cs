@@ -18,7 +18,7 @@ namespace LinqToDB
 
 	public partial class Sql
 	{
-		private class FieldsExprBuilderDirect : IExtensionCallBuilder
+		private sealed class FieldsExprBuilderDirect : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -44,7 +44,7 @@ namespace LinqToDB
 			}
 		}
 
-		private class FieldNameBuilderDirect : IExtensionCallBuilder
+		private sealed class FieldNameBuilderDirect : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -72,7 +72,7 @@ namespace LinqToDB
 			}
 		}
 
-		class FieldNameBuilder : IExtensionCallBuilder
+		sealed class FieldNameBuilder : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -298,7 +298,7 @@ namespace LinqToDB
 			public abstract TableOptions TableOptions { get; }
 		}
 
-		private class TableHelper<T> : TableHelper
+		private sealed class TableHelper<T> : TableHelper
 			where T : notnull
 		{
 			private readonly ITable<T> _table;
@@ -315,7 +315,7 @@ namespace LinqToDB
 			public override TableOptions TableOptions => _table.TableOptions;
 		}
 
-		private class TableNameBuilderDirect : IExtensionCallBuilder
+		private sealed class TableNameBuilderDirect : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -371,7 +371,7 @@ namespace LinqToDB
 			}
 		}
 
-		private class TableNameBuilder : IExtensionCallBuilder
+		private sealed class TableNameBuilder : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -417,7 +417,7 @@ namespace LinqToDB
 			}
 		}
 
-		private class TableSourceBuilder : IExtensionCallBuilder
+		private sealed class TableSourceBuilder : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -425,7 +425,7 @@ namespace LinqToDB
 			}
 		}
 
-		private class TableOrColumnAsFieldBuilder : IExtensionCallBuilder
+		private sealed class TableOrColumnAsFieldBuilder : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -447,7 +447,7 @@ namespace LinqToDB
 			}
 		}
 
-		private class TableAsFieldBuilder : IExtensionCallBuilder
+		private sealed class TableAsFieldBuilder : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -463,7 +463,7 @@ namespace LinqToDB
 			}
 		}
 
-		private class TableFieldBuilder : IExtensionCallBuilder
+		private sealed class TableFieldBuilder : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -617,7 +617,7 @@ namespace LinqToDB
 			return new SqlAliasPlaceholder();
 		}
 
-		class ExprBuilder : IExtensionCallBuilder
+		sealed class ExprBuilder : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{

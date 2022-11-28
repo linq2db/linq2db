@@ -896,7 +896,7 @@ namespace Tests.Linq
 		}
 
 		[Table("ConcatTest")]
-		class DerivedEntity : BaseEntity
+		sealed class DerivedEntity : BaseEntity
 		{
 		}
 

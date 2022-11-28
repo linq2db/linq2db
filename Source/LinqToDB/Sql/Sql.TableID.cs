@@ -9,7 +9,7 @@ namespace LinqToDB
 
 	public partial class Sql
 	{
-		public struct SqlID : IToSqlConverter
+		public readonly struct SqlID : IToSqlConverter
 		{
 			public SqlIDType Type { get; }
 			public string    ID   { get; }

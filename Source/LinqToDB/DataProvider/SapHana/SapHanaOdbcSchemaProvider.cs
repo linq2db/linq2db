@@ -10,7 +10,7 @@ namespace LinqToDB.DataProvider.SapHana
 	using Data;
 	using SchemaProvider;
 
-	class SapHanaOdbcSchemaProvider : SapHanaSchemaProvider
+	sealed class SapHanaOdbcSchemaProvider : SapHanaSchemaProvider
 	{
 		protected override List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
 		{

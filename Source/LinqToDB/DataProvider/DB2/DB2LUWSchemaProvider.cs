@@ -388,7 +388,7 @@ WHERE
 					var ss = s.Split('=');
 					return new { key = ss.Length == 2 ? ss[0] : "", value = ss.Length == 2 ? ss[1] : "" };
 				})
-				.Where (s => s.key.ToUpper() == "SERVER")
+				.Where (s => s.key.ToLowerInvariant() == "server")
 				.Select(s => s.value)
 				.FirstOrDefault();
 

@@ -3,7 +3,7 @@
 	/// <summary>
 	/// Contains table information, passed to <see cref="GetSchemaOptions.LoadTable"/> delegate.
 	/// </summary>
-	public struct LoadTableData
+	public readonly struct LoadTableData
 	{
 		private readonly TableInfo _info;
 

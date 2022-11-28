@@ -7,7 +7,7 @@ namespace LinqToDB.DataProvider.Informix
 	using SqlQuery;
 	using Mapping;
 
-	class InformixSqlOptimizer : BasicSqlOptimizer
+	sealed class InformixSqlOptimizer : BasicSqlOptimizer
 	{
 		public InformixSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{

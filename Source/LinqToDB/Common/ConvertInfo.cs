@@ -9,11 +9,11 @@ namespace LinqToDB.Common
 	using Internal;
 	using Mapping;
 
-	class ConvertInfo
+	sealed class ConvertInfo
 	{
 		public static ConvertInfo Default = new ();
 
-		public class LambdaInfo : IEquatable<LambdaInfo>
+		public sealed class LambdaInfo : IEquatable<LambdaInfo>
 		{
 			public LambdaInfo(
 				LambdaExpression  checkNullLambda,

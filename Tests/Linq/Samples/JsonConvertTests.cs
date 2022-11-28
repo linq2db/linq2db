@@ -111,7 +111,7 @@ namespace Tests.Samples
 
 	public static class Json
 	{
-		class JsonValueBuilder : Sql.IExtensionCallBuilder
+		sealed class JsonValueBuilder : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
@@ -161,8 +161,6 @@ namespace Tests.Samples
 	[TestFixture]
 	public class JsonConvertTests : TestBase
 	{
-
-		[ActiveIssue("https://feedback.azure.com/d365community/idea/6f685846-7c2b-ed11-a81b-6045bd853c94", Configuration = TestProvName.AllSqlServer2022)]
 		[Test]
 		public void SampleSelectTest([IncludeDataSources(TestProvName.AllSqlServer2016Plus, TestProvName.AllClickHouse)] string context)
 		{

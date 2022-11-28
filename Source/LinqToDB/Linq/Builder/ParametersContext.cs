@@ -13,7 +13,7 @@ namespace LinqToDB.Linq.Builder
 	using Reflection;
 	using SqlQuery;
 
-	class ParametersContext
+	sealed class ParametersContext
 	{
 		public ParametersContext(Expression parametersExpression, ExpressionTreeOptimizationContext optimizationContext, IDataContext dataContext)
 		{
@@ -305,7 +305,7 @@ namespace LinqToDB.Linq.Builder
 			return p;
 		}
 
-		public class ValueTypeExpression
+		public sealed class ValueTypeExpression
 		{
 			public Expression ValueExpression      = null!;
 			public Expression DbDataTypeExpression = null!;

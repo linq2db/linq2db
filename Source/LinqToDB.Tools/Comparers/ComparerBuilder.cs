@@ -78,7 +78,7 @@ namespace LinqToDB.Tools.Comparers
 		public static Func<T,int> GetGetHashCodeFunc<T>(params Expression<Func<T, object?>>[] members)
 			=> CreateGetHashCodeFunc<T>(members);
 
-		class Comparer<T> : EqualityComparer<T>
+		sealed class Comparer<T> : EqualityComparer<T>
 		{
 			public Comparer(Func<T,T,bool> equals, Func<T,int> getHashCode)
 			{

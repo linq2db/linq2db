@@ -77,7 +77,7 @@ namespace LinqToDB.Configuration
 
 		IEnumerable<IDataProviderSettings> ILinqToDBSettings.DataProviders => DataProviders.OfType<DataProviderElement>();
 
-		class ConnectionStringEx : IConnectionStringSettings
+		sealed class ConnectionStringEx : IConnectionStringSettings
 		{
 			private readonly CSS _css;
 

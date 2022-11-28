@@ -13,7 +13,7 @@ namespace Tests.UserTests
 			public int Id { get; set; }
 		}
 
-		class FluentDerived : FluentBase
+		sealed class FluentDerived : FluentBase
 		{
 			public string? StringValue { get; set; }
 		}
@@ -25,7 +25,7 @@ namespace Tests.UserTests
 			public int Id { get; set; }
 		}
 
-		class AttributeDerived : AttributeBase
+		sealed class AttributeDerived : AttributeBase
 		{
 			public string? StringValue { get; set; }
 		}

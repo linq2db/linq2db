@@ -12,7 +12,7 @@ namespace LinqToDB.Common.Internal
 	using Expressions;
 	using Linq;
 
-	class IdentifierBuilder
+	sealed class IdentifierBuilder
 	{
 		public IdentifierBuilder()
 		{

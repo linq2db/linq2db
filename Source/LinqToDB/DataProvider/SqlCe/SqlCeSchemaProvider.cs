@@ -37,7 +37,7 @@ namespace LinqToDB.DataProvider.SqlCe
 	using Data;
 	using SchemaProvider;
 
-	class SqlCeSchemaProvider : SchemaProviderBase
+	sealed class SqlCeSchemaProvider : SchemaProviderBase
 	{
 		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
@@ -126,7 +126,7 @@ INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE oc ON oc.CONSTRAINT_NAME = rc.UNI
 
 		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, int? length, int? precision, int? scale, GetSchemaOptions options)
 		{
-			return (dataType?.ToLower()) switch
+			return (dataType?.ToLowerInvariant()) switch
 			{
 				"tinyint" => typeof(byte),
 				_         => base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale, options),
@@ -135,7 +135,7 @@ INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE oc ON oc.CONSTRAINT_NAME = rc.UNI
 
 		protected override DataType GetDataType(string? dataType, string? columnType, int? length, int? precision, int? scale)
 		{
-			return dataType?.ToLower() switch
+			return dataType?.ToLowerInvariant() switch
 			{
 				"smallint"         => DataType.Int16,
 				"int"              => DataType.Int32,

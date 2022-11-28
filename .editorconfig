@@ -208,12 +208,18 @@ dotnet_diagnostic.IDE0005.severity = none # IDE0005: Remove unnecessary import
 
 # not reviewed yet rules
 dotnet_diagnostic.IDE0007.severity = none # IDE0007: Use 'var' instead of explicit type
+dotnet_diagnostic.IDE0008.severity = none # IDE0008: Use explicit type
+dotnet_diagnostic.IDE0009.severity = none # IDE0009: Qualify member access
 dotnet_diagnostic.IDE0010.severity = none # IDE0010: Add missing cases to switch statement
 dotnet_diagnostic.IDE0011.severity = none # IDE0011: Add braces
 dotnet_diagnostic.IDE0016.severity = none # IDE0016: Use throw expression
 dotnet_diagnostic.IDE0017.severity = none # IDE0017: Use object initializers
 dotnet_diagnostic.IDE0018.severity = none # IDE0018: Inline variable declaration
 dotnet_diagnostic.IDE0019.severity = none # IDE0019: Use pattern matching to avoid 'as' followed by a 'null' check
+dotnet_diagnostic.IDE0021.severity = none # IDE0021: Use expression body for
+dotnet_diagnostic.IDE0022.severity = none # IDE0022: Use expression body for
+dotnet_diagnostic.IDE0023.severity = none # IDE0023: Use expression body for
+dotnet_diagnostic.IDE0024.severity = none # IDE0024: Use expression body for
 dotnet_diagnostic.IDE0025.severity = none # IDE0025: Use expression body for properties
 dotnet_diagnostic.IDE0026.severity = none # IDE0026: Use expression body for indexers
 dotnet_diagnostic.IDE0027.severity = none # IDE0027: Use expression body for accessors
@@ -223,6 +229,7 @@ dotnet_diagnostic.IDE0030.severity = none # IDE0030: Use coalesce expression
 dotnet_diagnostic.IDE0031.severity = none # IDE0031: Use null propagation
 dotnet_diagnostic.IDE0032.severity = none # IDE0032: Use auto property
 dotnet_diagnostic.IDE0034.severity = none # IDE0034: Simplify 'default' expression
+dotnet_diagnostic.IDE0035.severity = none # IDE0035: Remove unreachable code
 dotnet_diagnostic.IDE0036.severity = none # IDE0036: Order modifiers
 dotnet_diagnostic.IDE0037.severity = none # IDE0037: Use inferred member name
 dotnet_diagnostic.IDE0038.severity = none # IDE0038: Use pattern matching to avoid 'is' check followed by a cast
@@ -263,10 +270,14 @@ dotnet_diagnostic.IDE0130.severity = none # IDE0130: Namespace does not match fo
 dotnet_diagnostic.IDE0150.severity = none # IDE0150: null check can be clarified
 dotnet_diagnostic.IDE0210.severity = none # IDE0210: convert to lol-level statements
 dotnet_diagnostic.IDE0220.severity = none # IDE0220: add explicit cast to MS implicity typed collections foreach
+dotnet_diagnostic.IDE0230.severity = none # IDE0230: use utf-8 literal
 dotnet_diagnostic.IDE1006.severity = none # IDE1006: Naming rule violation
 
 dotnet_diagnostic.CS1998.severity = error # CS1998: Async method lacks 'await' operators and will run synchronously
 dotnet_diagnostic.CS8618.severity = error # CS8618: Non-nullable field is uninitialized. Consider declaring as nullable.
 dotnet_diagnostic.CS4014.severity = error # CS4014: Because this call is not awaited, execution of the current method continues before the call is completed
+
+dotnet_diagnostic.SYSLIB1045.severity = none # Use GeneratedRegexAttribute
+dotnet_diagnostic.SYSLIB1054.severity = none # Use LibraryImportAttribute
 
 #

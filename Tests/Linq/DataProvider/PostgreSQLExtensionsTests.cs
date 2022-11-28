@@ -11,7 +11,7 @@ namespace Tests.DataProvider
 	public class PostgreSQLExtensionsTests : TestBase
 	{
 		[Table]
-		class SampleClass
+		sealed class SampleClass
 		{
 			[Column] public int     Id           { get; set; }
 			[Column] public string  StrValue     { get; set; } = null!;

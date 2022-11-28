@@ -20,7 +20,7 @@ namespace LinqToDB
 		public static string Collate(this string expr, [SqlQueryDependent] string collation)
 			=> throw new InvalidOperationException($"{nameof(Sql)}.{nameof(Sql.Collate)} is server-side only API.");
 
-		internal class NamedCollationBuilder : IExtensionCallBuilder
+		internal sealed class NamedCollationBuilder : IExtensionCallBuilder
 		{
 			private static readonly Regex _collationValidator = new Regex(@"^[a-zA-Z0-9_\.-@]+$", RegexOptions.Compiled);
 
@@ -46,7 +46,7 @@ namespace LinqToDB
 			}
 		}
 
-		internal class PostgreSQLCollationBuilder : IExtensionCallBuilder
+		internal sealed class PostgreSQLCollationBuilder : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -57,7 +57,7 @@ namespace LinqToDB
 			}
 		}
 
-		internal class DB2LUWCollationBuilder : IExtensionCallBuilder
+		internal sealed class DB2LUWCollationBuilder : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{

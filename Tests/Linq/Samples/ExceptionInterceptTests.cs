@@ -13,7 +13,7 @@ namespace Tests.Samples
 	[TestFixture]
 	public class ExceptionInterceptTests : TestBase
 	{
-		private class Retry : IRetryPolicy
+		private sealed class Retry : IRetryPolicy
 		{
 			public int Count { get; private set; }
 

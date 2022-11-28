@@ -4,7 +4,7 @@ using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	class HasUniqueKeyBuilder : MethodCallBuilder
+	sealed class HasUniqueKeyBuilder : MethodCallBuilder
 	{
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{

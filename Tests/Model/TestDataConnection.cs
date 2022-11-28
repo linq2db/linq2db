@@ -4,6 +4,7 @@ using System.Linq.Expressions;
 using System.Text;
 
 using LinqToDB;
+using LinqToDB.Configuration;
 using LinqToDB.Data;
 using LinqToDB.SqlProvider;
 using LinqToDB.SqlQuery;
@@ -22,6 +23,11 @@ namespace Tests.Model
 		}
 
 		public TestDataConnection()
+		{
+		}
+
+		public TestDataConnection(LinqToDBConnectionOptions options)
+			:base(options)
 		{
 		}
 

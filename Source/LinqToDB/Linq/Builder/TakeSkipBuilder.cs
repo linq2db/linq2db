@@ -6,7 +6,7 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
-	class TakeSkipBuilder : MethodCallBuilder
+	sealed class TakeSkipBuilder : MethodCallBuilder
 	{
 		private static readonly string[] MethodNames = { "Skip", "Take" };
 

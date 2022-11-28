@@ -25,7 +25,7 @@ namespace LinqToDB.Remote
 			return new QueryRunner(query, queryNumber, this, expression, parameters, preambles);
 		}
 
-		class QueryRunner : QueryRunnerBase
+		sealed class QueryRunner : QueryRunnerBase
 		{
 			public QueryRunner(Query query, int queryNumber, RemoteDataContextBase dataContext, Expression expression, object?[]? parameters, object?[]? preambles)
 				: base(query, queryNumber, dataContext, expression, parameters, preambles)
@@ -256,7 +256,7 @@ namespace LinqToDB.Remote
 				return new DataReaderWrapper(new RemoteDataReader(_dataContext.SerializationMappingSchema, result));
 			}
 
-			class DataReaderAsync : IDataReaderAsync
+			sealed class DataReaderAsync : IDataReaderAsync
 			{
 				public DataReaderAsync(RemoteDataReader dataReader)
 				{
