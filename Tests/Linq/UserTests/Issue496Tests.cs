@@ -12,7 +12,7 @@ namespace Tests.UserTests
 	public class Issue496Tests : TestBase
 	{
 		[Table("Parent", IsColumnAttributeRequired = false)]
-		new class Parent1
+		new sealed class Parent1
 		{
 			public int ParentID;
 			[Association(ThisKey = "ParentID", OtherKey = "ParentID", CanBeNull = true)]
@@ -20,14 +20,14 @@ namespace Tests.UserTests
 		}
 
 		[Table("Child", IsColumnAttributeRequired = false)]
-		class Child1
+		sealed class Child1
 		{
 			public int  ChildID;
 			public int? ParentID;
 		}
 
 		[Table("Parent", IsColumnAttributeRequired = false)]
-		class Parent2
+		sealed class Parent2
 		{
 			public int ParentID;
 			[Association(ThisKey = "ParentID", OtherKey = "ParentID", CanBeNull = true)]
@@ -35,7 +35,7 @@ namespace Tests.UserTests
 		}
 
 		[Table("Child", IsColumnAttributeRequired = false)]
-		class Child2
+		sealed class Child2
 		{
 			public int  ChildID;
 			public long ParentID;
@@ -47,7 +47,7 @@ namespace Tests.UserTests
 		}
 
 		[Table("Parent", IsColumnAttributeRequired = false)]
-		class Parent3
+		sealed class Parent3
 		{
 			public int ParentID;
 			[Association(ThisKey = "ParentID", OtherKey = "ParentID", CanBeNull = true)]
@@ -55,14 +55,14 @@ namespace Tests.UserTests
 		}
 
 		[Table("Child", IsColumnAttributeRequired = false)]
-		class Child3
+		sealed class Child3
 		{
 			        public int    ChildID;
 			[Column]public MyInt? ParentID;
 		}
 
 		[Table("Parent", IsColumnAttributeRequired = false)]
-		new class Parent4
+		new sealed class Parent4
 		{
 			[Column]
 			public MyInt? ParentID;
@@ -71,14 +71,14 @@ namespace Tests.UserTests
 		}
 
 		[Table("Child", IsColumnAttributeRequired = false)]
-		class Child4
+		sealed class Child4
 		{
 			public int ChildID;
 			public int ParentID;
 		}
 
 		[Table("Parent", IsColumnAttributeRequired = false)]
-		new class Parent5
+		new sealed class Parent5
 		{
 			[Column]
 			public MyInt? ParentID;
@@ -87,7 +87,7 @@ namespace Tests.UserTests
 		}
 
 		[Table("Child", IsColumnAttributeRequired = false)]
-		class Child5
+		sealed class Child5
 		{
 			         public int    ChildID;
 			[Column] public MyInt? ParentID;

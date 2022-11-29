@@ -189,7 +189,7 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-		private class BuildParentHierarchyContext
+		private sealed class BuildParentHierarchyContext
 		{
 			public BuildParentHierarchyContext(QueryInformation qi, SelectQuery selectQuery)
 			{

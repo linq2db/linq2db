@@ -6,7 +6,7 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
-	class DropBuilder : MethodCallBuilder
+	sealed class DropBuilder : MethodCallBuilder
 	{
 		#region DropBuilder
 
@@ -39,7 +39,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region DropContext
 
-		class DropContext : SequenceContextBase
+		sealed class DropContext : SequenceContextBase
 		{
 			public DropContext(IBuildContext? parent, IBuildContext sequence)
 				: base(parent, sequence, null)

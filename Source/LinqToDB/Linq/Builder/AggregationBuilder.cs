@@ -9,7 +9,7 @@ namespace LinqToDB.Linq.Builder
 	using Mapping;
 	using SqlQuery;
 
-	class AggregationBuilder : MethodCallBuilder
+	sealed class AggregationBuilder : MethodCallBuilder
 	{
 		public  static readonly string[] MethodNames      = { "Average"     , "Min"     , "Max"     , "Sum",      "Count"     , "LongCount"      };
 		private static readonly string[] MethodNamesAsync = { "AverageAsync", "MinAsync", "MaxAsync", "SumAsync", "CountAsync", "LongCountAsync" };
@@ -182,7 +182,7 @@ namespace LinqToDB.Linq.Builder
 			return null;
 		}
 
-		class AggregationContext : SequenceContextBase
+		sealed class AggregationContext : SequenceContextBase
 		{
 			public AggregationContext(IBuildContext? parent, IBuildContext sequence, string methodName, Type returnType)
 				: base(parent, sequence, null)

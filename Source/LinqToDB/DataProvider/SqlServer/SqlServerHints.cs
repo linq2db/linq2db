@@ -152,7 +152,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			return (table, indexNames) => table.TableHint(Table.Index, indexNames);
 		}
 
-		class WithForceSeekExtensionBuilder : ISqlQueryExtensionBuilder
+		sealed class WithForceSeekExtensionBuilder : ISqlQueryExtensionBuilder
 		{
 			public void Build(ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension)
 			{
@@ -218,7 +218,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			return (table, cells) => table.TableHint2012Plus(Table.SpatialWindowMaxCells(cells));
 		}
 
-		class ParamsExtensionBuilder : ISqlQueryExtensionBuilder
+		sealed class ParamsExtensionBuilder : ISqlQueryExtensionBuilder
 		{
 			public void Build(ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension)
 			{
@@ -278,7 +278,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					Expression.NewArrayInit(typeof(string), values.Select(Expression.Constant)))));
 		}
 
-		class TableParamsExtensionBuilder : ISqlQueryExtensionBuilder
+		sealed class TableParamsExtensionBuilder : ISqlQueryExtensionBuilder
 		{
 			public void Build(ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension)
 			{

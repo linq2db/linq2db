@@ -64,7 +64,7 @@ namespace LinqToDB.Linq.Builder
 			return cteTableContext;
 		}
 
-		public class CteTableContext: IBuildContext
+		public sealed class CteTableContext: IBuildContext
 		{
 #if DEBUG
 			public string SqlQueryText => SelectQuery == null ? "" : SelectQuery.SqlText;

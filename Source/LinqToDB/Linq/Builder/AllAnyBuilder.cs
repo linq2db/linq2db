@@ -6,7 +6,7 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
-	class AllAnyBuilder : MethodCallBuilder
+	sealed class AllAnyBuilder : MethodCallBuilder
 	{
 		private static readonly string[] MethodNames      = { "All"     , "Any"      };
 		private static readonly string[] MethodNamesAsync = { "AllAsync", "AnyAsync" };
@@ -54,7 +54,7 @@ namespace LinqToDB.Linq.Builder
 			return null;
 		}
 
-		class AllAnyContext : SequenceContextBase
+		sealed class AllAnyContext : SequenceContextBase
 		{
 			readonly MethodCallExpression _methodCall;
 

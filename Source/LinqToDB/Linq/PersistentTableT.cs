@@ -12,7 +12,7 @@ namespace LinqToDB.Linq
 	using Async;
 #endif
 
-	class PersistentTable<T> : ITable<T>
+	sealed class PersistentTable<T> : ITable<T>
 		where T : notnull
 	{
 		private readonly IQueryable<T> _query;

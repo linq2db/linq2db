@@ -8,7 +8,7 @@ namespace LinqToDB.Linq.Builder
 	using Extensions;
 	using SqlQuery;
 
-	class OfTypeBuilder : MethodCallBuilder
+	sealed class OfTypeBuilder : MethodCallBuilder
 	{
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
@@ -90,7 +90,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region OfTypeContext
 
-		class OfTypeContext : PassThroughContext
+		sealed class OfTypeContext : PassThroughContext
 		{
 			public Type EntityType { get; }
 

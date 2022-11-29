@@ -3,7 +3,9 @@ using System.Linq;
 using System.Linq.Expressions;
 using FluentAssertions;
 using LinqToDB;
+using LinqToDB.Configuration;
 using LinqToDB.Data;
+using LinqToDB.DataProvider;
 using LinqToDB.Mapping;
 using Npgsql;
 using NpgsqlTypes;
@@ -56,14 +58,27 @@ namespace Tests.UserTests
 		[Test]
 		public void EnumEvaluationInFilter([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			using (var db = GetDataConnection(context))
-				db.Execute("DROP TABLE IF EXISTS \"User\";DROP TYPE IF EXISTS user_type_enum;CREATE TYPE user_type_enum AS ENUM('org', 'org_user');");
+			IDataProvider dataProvider;
+			string?       connectionString;
 
-			NpgsqlConnection.GlobalTypeMapper.MapEnum<UserTypeEnum>();
+			using (var db = GetDataConnection(context))
+			{
+				db.Execute("DROP TABLE IF EXISTS \"User\";DROP TYPE IF EXISTS user_type_enum;CREATE TYPE user_type_enum AS ENUM('org', 'org_user');");
+				dataProvider     = db.DataProvider;
+				connectionString = db.ConnectionString;
+			}
+
+			var builder = new NpgsqlDataSourceBuilder(connectionString);
+			builder.MapEnum<UserTypeEnum>();
+			var dataSource = builder.Build();
+
+			var options = new LinqToDBConnectionOptionsBuilder()
+				.UseConnectionFactory(dataProvider, dataSource.CreateConnection)
+				.Build();
 
 			try
 			{
-				using var db = GetDataConnection(context);
+				using var db = GetDataConnection(options);
 				using var _  = db.CreateLocalTable(User.Data);
 
 				((NpgsqlConnection)db.Connection).ReloadTypes();

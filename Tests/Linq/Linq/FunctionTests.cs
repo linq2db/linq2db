@@ -621,7 +621,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class TagsTable
+		sealed class TagsTable
 		{
 			[Column] public string? Name { get; set; }
 		}
@@ -642,7 +642,7 @@ namespace Tests.Linq
 
 	public static class SqlLite
 	{
-		class MatchBuilder : Sql.IExtensionCallBuilder
+		sealed class MatchBuilder : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{

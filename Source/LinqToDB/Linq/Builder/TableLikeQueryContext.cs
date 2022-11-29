@@ -6,7 +6,7 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
-	class TableLikeQueryContext : IBuildContext
+    sealed class TableLikeQueryContext : IBuildContext
 	{
 #if DEBUG
 		public string SqlQueryText => SelectQuery == null ? "" : SelectQuery.SqlText;

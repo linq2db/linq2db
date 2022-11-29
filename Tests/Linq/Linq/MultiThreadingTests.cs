@@ -27,7 +27,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class MultiThreadedData
+		sealed class MultiThreadedData
 		{
 			[Column(IsPrimaryKey = true)]
 			public int Id    { get; set; }

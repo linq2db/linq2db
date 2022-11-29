@@ -10,7 +10,7 @@ namespace LinqToDB.Linq.Builder
 	using Extensions;
 	using SqlQuery;
 
-	partial class TableBuilder : ISequenceBuilder
+	sealed partial class TableBuilder : ISequenceBuilder
 	{
 		int ISequenceBuilder.BuildCounter { get; set; }
 

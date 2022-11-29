@@ -9,7 +9,7 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
-	class FirstSingleBuilder : MethodCallBuilder
+	sealed class FirstSingleBuilder : MethodCallBuilder
 	{
 		public  static readonly string[] MethodNames      = { "First"     , "FirstOrDefault"     , "Single"     , "SingleOrDefault"      };
 		private static readonly string[] MethodNamesAsync = { "FirstAsync", "FirstOrDefaultAsync", "SingleAsync", "SingleOrDefaultAsync" };
@@ -100,7 +100,7 @@ namespace LinqToDB.Linq.Builder
 			return null;
 		}
 
-		public class FirstSingleContext : SequenceContextBase
+		public sealed class FirstSingleContext : SequenceContextBase
 		{
 			public FirstSingleContext(IBuildContext? parent, IBuildContext sequence, MethodCallExpression methodCall, bool isSubQuery, bool isAssociation, bool isOuter)
 				: base(parent, sequence, null)

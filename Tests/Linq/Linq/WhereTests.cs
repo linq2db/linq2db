@@ -144,7 +144,7 @@ namespace Tests.Linq
 				TestOneJohn(from p in db.Person where p.ID == StaticTestMethod() select p);
 		}
 
-		class TestMethodClass
+		sealed class TestMethodClass
 		{
 			private readonly int _n;
 
@@ -499,7 +499,7 @@ namespace Tests.Linq
 				Assert.AreEqual(1, (from p in db.Parent where p.Value1 == p.ParentID && p.Value1 == 1 select p).ToList().Count);
 		}
 
-		class WhereCompareData
+		sealed class WhereCompareData
 		{
 			[PrimaryKey]
 			public int Id { get; set; }
@@ -1412,7 +1412,7 @@ namespace Tests.Linq
 			}
 		}
 
-		class WhereCases
+		sealed class WhereCases
 		{
 			[PrimaryKey]
 			public int Id { get; set; }
@@ -1667,7 +1667,7 @@ namespace Tests.Linq
 			{
 				db.Parent.Where(p => db.Child.Select(c => c.ParentID).Contains(p.ParentID + 100)).Delete();
 
-				Assert.False(db.LastQuery!.ToLower().Contains("iif(exists(") || db.LastQuery!.ToLower().Contains("when exists("));
+				Assert.False(db.LastQuery!.ToLowerInvariant().Contains("iif(exists(") || db.LastQuery!.ToLowerInvariant().Contains("when exists("));
 			}
 		}
 
@@ -1678,11 +1678,11 @@ namespace Tests.Linq
 			{
 				db.Parent.Where(p => p.Children.Any() && p.ParentID > 100).Delete();
 
-				Assert.False(db.LastQuery!.ToLower().Contains("iif(exists(") || db.LastQuery!.ToLower().Contains("when exists("));
+				Assert.False(db.LastQuery!.ToLowerInvariant().Contains("iif(exists(") || db.LastQuery!.ToLowerInvariant().Contains("when exists("));
 			}
 		}
 
-		class Parameter
+		sealed class Parameter
 		{
 			public int Id;
 		}
@@ -1796,7 +1796,7 @@ namespace Tests.Linq
 			return value => value == "1" ? "test" : value;
 		}
 
-		class WhereWithBool
+		sealed class WhereWithBool
 		{
 			[PrimaryKey]
 			public int Id { get; set; }
@@ -1827,7 +1827,7 @@ namespace Tests.Linq
 			}
 		}
 
-		class WhereWithString
+		sealed class WhereWithString
 		{
 			[PrimaryKey]
 			public int Id { get; set; }
@@ -1882,7 +1882,7 @@ namespace Tests.Linq
 
 
 		#region issue 2424
-		class Isue2424Table
+		sealed class Isue2424Table
 		{
 			[Column] public int    Id;
 			[Column] public string StrValue = null!;

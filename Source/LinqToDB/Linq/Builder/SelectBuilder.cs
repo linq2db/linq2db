@@ -6,7 +6,7 @@ namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
 
-	class SelectBuilder : MethodCallBuilder
+	sealed class SelectBuilder : MethodCallBuilder
 	{
 		#region SelectBuilder
 
@@ -81,7 +81,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region SelectContext2
 
-		class SelectContext2 : SelectContext
+		sealed class SelectContext2 : SelectContext
 		{
 			public SelectContext2(IBuildContext? parent, LambdaExpression lambda, bool isSubQuery, IBuildContext sequence)
 				: base(parent, lambda, isSubQuery, sequence)

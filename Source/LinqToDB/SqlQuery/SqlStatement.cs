@@ -90,7 +90,7 @@ namespace LinqToDB.SqlQuery
 			return name;
 		}
 
-		private class PrepareQueryAndAliasesContext
+		private sealed class PrepareQueryAndAliasesContext
 		{
 			public PrepareQueryAndAliasesContext(AliasesContext? prevAliasContext)
 			{

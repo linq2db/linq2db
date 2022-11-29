@@ -117,28 +117,28 @@ namespace LinqToDB.DataProvider.Firebird
 		#region Wrappers
 
 		[Wrapper]
-		private class FbDecFloat
+		private sealed class FbDecFloat
 		{
 		}
 
 		[Wrapper]
-		private class FbZonedDateTime
+		private sealed class FbZonedDateTime
 		{
 		}
 
 		[Wrapper]
-		private class FbZonedTime
+		private sealed class FbZonedTime
 		{
 		}
 
 		[Wrapper]
-		private class FbConnection
+		private sealed class FbConnection
 		{
 			public static void ClearAllPools() => throw new NotImplementedException();
 		}
 
 		[Wrapper]
-		private class FbParameter
+		private sealed class FbParameter
 		{
 			public FbDbType FbDbType { get; set; }
 		}

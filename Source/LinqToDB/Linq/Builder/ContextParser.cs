@@ -5,7 +5,7 @@ namespace LinqToDB.Linq.Builder
 {
 	using SqlProvider;
 
-	class ContextParser : ISequenceBuilder
+	sealed class ContextParser : ISequenceBuilder
 	{
 		public int BuildCounter { get; set; }
 
@@ -31,7 +31,7 @@ namespace LinqToDB.Linq.Builder
 			return builder.IsSequence(new BuildInfo(buildInfo, ((MethodCallExpression)buildInfo.Expression).Arguments[0]));
 		}
 
-		public class Context : PassThroughContext
+		public sealed class Context : PassThroughContext
 		{
 			public Context(IBuildContext context) : base(context)
 			{

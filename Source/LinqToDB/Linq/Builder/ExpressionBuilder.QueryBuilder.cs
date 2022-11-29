@@ -707,7 +707,7 @@ namespace LinqToDB.Linq.Builder
 			return result;
 		}
 
-		class SubQueryContextInfo
+		sealed class SubQueryContextInfo
 		{
 			public Expression     SequenceExpression = null!;
 			public IBuildContext? Context;
@@ -1116,7 +1116,7 @@ namespace LinqToDB.Linq.Builder
 				IEnumerable<Expression> parameters);
 		}
 
-		class MultipleQueryHelper<TRet> : IMultipleQueryHelper
+		sealed class MultipleQueryHelper<TRet> : IMultipleQueryHelper
 		{
 			public Expression GetSubquery(
 				ExpressionBuilder       builder,

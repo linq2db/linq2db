@@ -75,7 +75,7 @@ namespace LinqToDB.Expressions
 			return ctx.Count;
 		}
 
-		private class CountContext<TContext>
+		private sealed class CountContext<TContext>
 		{
 			public CountContext(TContext context, Func<TContext, Expression, bool> func)
 			{

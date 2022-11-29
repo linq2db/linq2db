@@ -6,7 +6,7 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
-	class ContainsBuilder : MethodCallBuilder
+	sealed class ContainsBuilder : MethodCallBuilder
 	{
 		private static readonly string[] MethodNames      = { "Contains"      };
 		private static readonly string[] MethodNamesAsync = { "ContainsAsync" };
@@ -37,7 +37,7 @@ namespace LinqToDB.Linq.Builder
 			return methodCall.IsQueryable(false) == false;
 		}
 
-		class ContainsContext : SequenceContextBase
+		sealed class ContainsContext : SequenceContextBase
 		{
 			readonly MethodCallExpression _methodCall;
 			readonly bool                 _buildInStatement;

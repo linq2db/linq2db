@@ -19,7 +19,7 @@ namespace Tests.DataProvider
 	public abstract class TypeTestsBase : TestBase
 	{
 		// Mapping for single type configuration testing for both nullable and non-nullable database columns
-		private class TypeTable<TType, TNullableType>
+		private sealed class TypeTable<TType, TNullableType>
 		{
 			[Column(CanBeNull = false)] public TType          Column         { get; set; } = default!;
 			[Column(CanBeNull = true )] public TNullableType? ColumnNullable { get; set; }

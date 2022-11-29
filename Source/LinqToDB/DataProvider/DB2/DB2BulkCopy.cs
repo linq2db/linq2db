@@ -12,7 +12,7 @@ namespace LinqToDB.DataProvider.DB2
 
 	using DB2BulkCopyOptions = DB2ProviderAdapter.DB2BulkCopyOptions;
 
-	class DB2BulkCopy : BasicBulkCopy
+	sealed class DB2BulkCopy : BasicBulkCopy
 	{
 		/// <remarks>
 		/// Settings based on https://www.ibm.com/docs/en/i/7.3?topic=reference-sql-limits

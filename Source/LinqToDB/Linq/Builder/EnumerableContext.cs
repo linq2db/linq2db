@@ -16,7 +16,7 @@ namespace LinqToDB.Linq.Builder
 	using Reflection;
 
 	[DebuggerDisplay("{BuildContextDebuggingHelper.GetContextInfo(this)}")]
-	internal class EnumerableContext : IBuildContext
+	sealed class EnumerableContext : IBuildContext
 	{
 		readonly Type _elementType;
 

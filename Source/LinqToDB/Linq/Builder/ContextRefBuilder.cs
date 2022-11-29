@@ -4,7 +4,7 @@ namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
 
-	class ContextRefBuilder : ISequenceBuilder
+	sealed class ContextRefBuilder : ISequenceBuilder
 	{
 		public int BuildCounter { get; set; }
 

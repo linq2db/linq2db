@@ -64,7 +64,7 @@ namespace LinqToDB.Expressions
 			return new EqualsToInfo(dataContext, queryableAccessorDic, queryableMemberAccessorDic, queryDependedObjects, compareConstantValues);
 		}
 
-		internal class EqualsToInfo
+		internal sealed class EqualsToInfo
 		{
 			public EqualsToInfo(
 				IDataContext                                              dataContext,

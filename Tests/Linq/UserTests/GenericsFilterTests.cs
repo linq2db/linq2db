@@ -57,18 +57,18 @@ namespace Tests.UserTests
 			int Id { get; set; }
 		}
 
-		class Firm : IIdentifiable
+		sealed class Firm : IIdentifiable
 		{
 			public int Id { get; set; }
 			public int Value { get; set; }
 		}
 
-		class TypeA
+		sealed class TypeA
 		{
 			public int Id { get; set; }
 		}
 
-		class TypeB
+		sealed class TypeB
 		{
 			public int Id { get; set; }
 		}

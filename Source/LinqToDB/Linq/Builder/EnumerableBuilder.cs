@@ -9,7 +9,7 @@ using LinqToDB.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
-	class EnumerableBuilder : ISequenceBuilder
+	sealed class EnumerableBuilder : ISequenceBuilder
 	{
 		public int BuildCounter { get; set; }
 

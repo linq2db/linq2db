@@ -6,7 +6,7 @@ namespace LinqToDB.DataProvider.SqlCe
 	using SqlQuery;
 	using SqlProvider;
 
-	class SqlCeSqlOptimizer : BasicSqlOptimizer
+	sealed class SqlCeSqlOptimizer : BasicSqlOptimizer
 	{
 		public SqlCeSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{
@@ -43,7 +43,7 @@ namespace LinqToDB.DataProvider.SqlCe
 			return statement;
 		}
 
-		protected static string[] LikeSqlCeCharactersToEscape = { "_", "%" };
+		private static string[] LikeSqlCeCharactersToEscape = { "_", "%" };
 
 		public override string[] LikeCharactersToEscape => LikeSqlCeCharactersToEscape;
 
@@ -218,7 +218,7 @@ namespace LinqToDB.DataProvider.SqlCe
 			// already fixed by CorrectSkipAndColumns
 		}
 
-		protected SqlStatement CorrectBooleanComparison(SqlStatement statement)
+		private SqlStatement CorrectBooleanComparison(SqlStatement statement)
 		{
 			statement = statement.ConvertAll(this, true, static (_, e) =>
 			{

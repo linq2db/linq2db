@@ -665,7 +665,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class Contract_Distributor_Agent
+		sealed class Contract_Distributor_Agent
 		{
 			[Column] public int Agent_Id { get; set; }
 			[Column] public int Distributor_Id { get; set; }
@@ -681,7 +681,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class Agent
+		sealed class Agent
 		{
 			[Column] public int Agent_Id { get; set; }
 			[Column] public string? First_Name { get; set; }
@@ -694,7 +694,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class Distributor
+		sealed class Distributor
 		{
 			[Column] public int Distributor_Id { get; set; }
 			[Column] public string? Type_Code { get; set; }
@@ -707,7 +707,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class Distributor_Commercial_Propert
+		sealed class Distributor_Commercial_Propert
 		{
 			[Column] public int Distributor_Id { get; set; }
 			[Column] public int Commercial_Property_Id { get; set; }
@@ -720,7 +720,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class Commercial_Property
+		sealed class Commercial_Property
 		{
 			[Column              ] public int     Commercial_Property_Id { get; set; }
 			[Column(Length = 100)] public string? Street_Number          { get; set; }
@@ -737,7 +737,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class Contract_Dates
+		sealed class Contract_Dates
 		{
 			[Column] public int Contract_Id { get; set; }
 			[Column] public string? Type_Code { get; set; }
@@ -750,7 +750,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class Cities
+		sealed class Cities
 		{
 			[Column] public string? City_Code { get; set; }
 			[Column] public string? City_Name { get; set; }

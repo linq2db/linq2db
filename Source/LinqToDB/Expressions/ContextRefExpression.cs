@@ -6,7 +6,7 @@ namespace LinqToDB.Expressions
 {
 	using Linq.Builder;
 
-	class ContextRefExpression : Expression, IEquatable<ContextRefExpression>
+    sealed class ContextRefExpression : Expression, IEquatable<ContextRefExpression>
 	{
 		public ContextRefExpression(Type elementType, IBuildContext buildContext, string? alias = null)
 		{

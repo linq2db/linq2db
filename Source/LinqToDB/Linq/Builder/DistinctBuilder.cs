@@ -6,7 +6,7 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using System.Reflection;
 
-	class DistinctBuilder : MethodCallBuilder
+	sealed class DistinctBuilder : MethodCallBuilder
 	{
 		static readonly MethodInfo[] _supportedMethods = { Methods.Queryable.Distinct, Methods.Enumerable.Distinct, Methods.LinqToDB.SelectDistinct };
 

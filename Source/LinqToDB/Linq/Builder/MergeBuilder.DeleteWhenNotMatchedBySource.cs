@@ -9,7 +9,7 @@ namespace LinqToDB.Linq.Builder
 
 	internal partial class MergeBuilder
 	{
-		internal class DeleteWhenNotMatchedBySource : MethodCallBuilder
+		internal sealed class DeleteWhenNotMatchedBySource : MethodCallBuilder
 		{
 			protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 			{

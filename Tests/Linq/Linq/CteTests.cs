@@ -310,7 +310,7 @@ namespace Tests.Linq
 			}
 		}
 
-		class EmployeeHierarchyCTE
+		sealed class EmployeeHierarchyCTE
 		{
 			public int EmployeeID;
 			public string LastName  = null!;
@@ -460,9 +460,9 @@ namespace Tests.Linq
 			}
 		}
 
-		private class CteDMLTests
+		private sealed class CteDMLTests
 		{
-			protected bool Equals(CteDMLTests other)
+			private bool Equals(CteDMLTests other)
 			{
 				return ChildID == other.ChildID && ParentID == other.ParentID;
 			}
@@ -611,7 +611,7 @@ namespace Tests.Linq
 			}
 		}
 
-		class RecursiveCTE
+		sealed class RecursiveCTE
 		{
 			public int? ParentID;
 			public int? ChildID;
@@ -694,7 +694,7 @@ namespace Tests.Linq
 			};
 		}
 
-		class HierarchyData
+		sealed class HierarchyData
 		{
 			public int Id { get; set; }
 			public int Level { get; set; }
@@ -839,11 +839,11 @@ namespace Tests.Linq
 			}
 		}
 
-		private class TestWrapper
+		private sealed class TestWrapper
 		{
 			public Child? Child { get; set; }
 
-			protected bool Equals(TestWrapper other)
+			private bool Equals(TestWrapper other)
 			{
 				return Equals(Child, other.Child);
 			}
@@ -863,12 +863,12 @@ namespace Tests.Linq
 			}
 		}
 
-		private class TestWrapper2
+		private sealed class TestWrapper2
 		{
 			public Child?  Child   { get; set; }
 			public Parent? Parent { get; set; }
 
-			protected bool Equals(TestWrapper2 other)
+			private bool Equals(TestWrapper2 other)
 			{
 				return Equals(Child, other.Child) && Equals(Parent, other.Parent);
 			}
@@ -1018,13 +1018,13 @@ namespace Tests.Linq
 			}
 		}
 
-		class OrgGroupDepthWrapper
+		sealed class OrgGroupDepthWrapper
 		{
 			public OrgGroup? OrgGroup { get; set; }
 			public int Depth { get; set; }
 		}
 
-		class OrgGroup
+		sealed class OrgGroup
 		{
 			[PrimaryKey]
 			public int Id { get; set; }
@@ -1078,7 +1078,7 @@ namespace Tests.Linq
 			public string? Property2 { get; set; }
 		}
 
-		class NestingC : NestingB
+		sealed class NestingC : NestingB
 		{
 			public string? Property3 { get; set; }
 		}
@@ -1134,7 +1134,7 @@ namespace Tests.Linq
 			}
 		}
 
-		internal class WipCte
+		internal sealed class WipCte
 		{
 			private readonly IDataContext db;
 
@@ -1155,7 +1155,7 @@ namespace Tests.Linq
 						select new AllowedNcCodeOutput { NcCodeBo = ncCode.Handle, NcCode = ncCode.NcCodeColumn, NcCodeDescription = ncCode.Description }).Distinct().AsCte(nameof(AllowedNcCode));
 			}
 
-			internal class AllowedNcCodeOutput
+			internal sealed class AllowedNcCodeOutput
 			{
 				internal string? NcCodeBo          { get; set; }
 				internal string? NcCode            { get; set; }
@@ -1187,7 +1187,7 @@ namespace Tests.Linq
 		}
 		#endregion
 
-		private class Issue3359Projection
+		private sealed class Issue3359Projection
 		{
 			public string FirstName { get; set; } = null!;
 			public string LastName  { get; set; } = null!;
@@ -1335,7 +1335,7 @@ namespace Tests.Linq
 				query.ToArray());
 		}
 
-		class CteEntity<TEntity> where TEntity : class
+		sealed class CteEntity<TEntity> where TEntity : class
 		{
 			public TEntity Entity   { get; set; } = null!;
 			public Guid    Id       { get; set; }
@@ -1345,7 +1345,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class TestFolder
+		sealed class TestFolder
 		{
 			[Column] public Guid        Id       { get; set; }
 			[Column] public string?     Label    { get; set; }

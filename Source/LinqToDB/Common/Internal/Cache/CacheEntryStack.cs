@@ -5,7 +5,7 @@ using System;
 
 namespace LinqToDB.Common.Internal.Cache
 {
-	internal class CacheEntryStack<TKey>
+	internal sealed class CacheEntryStack<TKey>
 		where TKey: notnull
 	{
 		private readonly CacheEntryStack<TKey>? _previous;

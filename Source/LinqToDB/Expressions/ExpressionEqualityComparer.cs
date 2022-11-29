@@ -20,7 +20,7 @@ namespace LinqToDB.Expressions
 	///     This API supports the Entity Framework Core infrastructure and is not intended to be used
 	///     directly from your code. This API may change or be removed in future releases.
 	/// </summary>
-	class ExpressionEqualityComparer : IEqualityComparer<Expression>
+	sealed class ExpressionEqualityComparer : IEqualityComparer<Expression>
 	{
 		public static ExpressionEqualityComparer Instance { get; } = new ExpressionEqualityComparer();
 
@@ -32,7 +32,7 @@ namespace LinqToDB.Expressions
 		///     This API supports the Entity Framework Core infrastructure and is not intended to be used
 		///     directly from your code. This API may change or be removed in future releases.
 		/// </summary>
-		public virtual int GetHashCode(Expression? obj)
+		public int GetHashCode(Expression? obj)
 		{
 			if (obj == null)
 			{
@@ -329,7 +329,7 @@ namespace LinqToDB.Expressions
 			return hashCode;
 		}
 
-		public virtual bool Equals(Expression? x, Expression? y) => new ExpressionComparer().Compare(x, y);
+		public bool Equals(Expression? x, Expression? y) => new ExpressionComparer().Compare(x, y);
 
 		private sealed class ExpressionComparer
 		{
@@ -745,7 +745,7 @@ namespace LinqToDB.Expressions
 				=> Equals(a.AddMethod, b.AddMethod)
 				   && CompareExpressionList(a.Arguments, b.Arguments);
 
-			private class ScopedDictionary<TKey, TValue>
+			private sealed class ScopedDictionary<TKey, TValue>
 				where TKey : notnull
 			{
 				private readonly ScopedDictionary<TKey, TValue>? _previous;

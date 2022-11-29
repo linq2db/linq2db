@@ -293,7 +293,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		class Key
+		sealed class Key
 		{
 			public int? fkey1;
 			public int? fkey2;

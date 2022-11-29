@@ -679,7 +679,7 @@ namespace LinqToDB.Linq.Builder
 			return result;
 		}
 
-		internal class CanBeCompiledContext
+		internal sealed class CanBeCompiledContext
 		{
 			public bool InProjection { get; }
 

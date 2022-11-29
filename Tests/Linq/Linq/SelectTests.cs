@@ -372,7 +372,7 @@ namespace Tests.Linq
 			}
 		}
 
-		class MyMapSchema : MappingSchema
+		sealed class MyMapSchema : MappingSchema
 		{
 			public MyMapSchema()
 			{
@@ -934,7 +934,7 @@ namespace Tests.Linq
 			}
 		}
 
-		class LocalClass
+		sealed class LocalClass
 		{
 		}
 
@@ -977,7 +977,7 @@ namespace Tests.Linq
 			}
 		}
 
-		class MainEntityObject
+		sealed class MainEntityObject
 		{
 			[PrimaryKey]
 			public int Id { get; set; }
@@ -1057,8 +1057,7 @@ namespace Tests.Linq
 			}
 		}
 
-
-		class IntermediateChildResult
+		sealed class IntermediateChildResult
 		{
 			public int?   ParentId { get; set; }
 			public Child? Child    { get; set; }
@@ -1209,7 +1208,7 @@ namespace Tests.Linq
 			}
 		}
 
-		class ParentResult
+		sealed class ParentResult
 		{
 			public ParentResult(int parentID, int? value1)
 			{
@@ -1586,7 +1585,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class SelectExpressionTable
+		sealed class SelectExpressionTable
 		{
 			[PrimaryKey] public int ID { get; set; }
 
@@ -1698,7 +1697,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class Table860_1
+		sealed class Table860_1
 		{
 			[Column] public int Id  { get; set; }
 			[Column] public int bId { get; set; }
@@ -1708,7 +1707,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class Table860_2
+		sealed class Table860_2
 		{
 			[Column] public int Id  { get; set; }
 			[Column] public int cId { get; set; }
@@ -1718,7 +1717,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class Table860_3
+		sealed class Table860_3
 		{
 			[Column] public int     Id   { get; set; }
 			[Column] public string? Prop { get; set; }

@@ -8,7 +8,7 @@ namespace LinqToDB.Linq.Builder
 	using Common;
 	using LinqToDB.Expressions;
 
-	class OrderByBuilder : MethodCallBuilder
+	sealed class OrderByBuilder : MethodCallBuilder
 	{
 		private static readonly string[] MethodNames = { "OrderBy", "OrderByDescending", "ThenBy", "ThenByDescending", "ThenOrBy", "ThenOrByDescending" };
 

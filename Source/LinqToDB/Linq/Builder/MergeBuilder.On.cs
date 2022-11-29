@@ -11,7 +11,7 @@ namespace LinqToDB.Linq.Builder
 
 	internal partial class MergeBuilder
 	{
-		internal class On : MethodCallBuilder
+		internal sealed class On : MethodCallBuilder
 		{
 			static readonly MethodInfo[] _supportedMethods = {OnMethodInfo1, OnMethodInfo2, OnTargetKeyMethodInfo};
 

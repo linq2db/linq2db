@@ -10,7 +10,7 @@ namespace LinqToDB.Linq.Builder
 	using Mapping;
 	using Common;
 
-	class LoadWithBuilder : MethodCallBuilder
+	sealed class LoadWithBuilder : MethodCallBuilder
 	{
 		public static readonly string[] MethodNames = { "LoadWith", "ThenLoad", "LoadWithAsTable" };
 
@@ -315,7 +315,7 @@ namespace LinqToDB.Linq.Builder
 			return (context, members);
 		}
 
-		internal class LoadWithContext : PassThroughContext
+		internal sealed class LoadWithContext : PassThroughContext
 		{
 			public IBuildContext RegisterContext { get; }
 

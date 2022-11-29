@@ -5,7 +5,7 @@ using LinqToDB.Data;
 
 namespace LinqToDB
 {
-	internal class DisposeCommandOnExceptionRegion : IExecutionScope
+	internal sealed class DisposeCommandOnExceptionRegion : IExecutionScope
 	{
 		private readonly DataConnection _dataConnection;
 

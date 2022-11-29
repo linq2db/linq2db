@@ -15,7 +15,7 @@ namespace LinqToDB.Linq.Builder
 	using SqlQuery;
 	using Reflection;
 
-	class GroupByBuilder : MethodCallBuilder
+	sealed class GroupByBuilder : MethodCallBuilder
 	{
 		static readonly MethodInfo[] GroupingSetMethods = new [] { Methods.LinqToDB.GroupBy.Rollup, Methods.LinqToDB.GroupBy.Cube, Methods.LinqToDB.GroupBy.GroupingSets };
 
@@ -309,7 +309,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region KeyContext
 
-		internal class KeyContext : SelectContext
+		internal sealed class KeyContext : SelectContext
 		{
 			public KeyContext(IBuildContext? parent, LambdaExpression lambda, bool isSubQuery, params IBuildContext[] sequences)
 				: base(parent, lambda, isSubQuery, sequences)

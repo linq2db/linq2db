@@ -7,7 +7,7 @@ namespace LinqToDB.Linq.Builder
 
 	internal partial class MergeBuilder
 	{
-		class MergeContext : SequenceContextBase
+        sealed class MergeContext : SequenceContextBase
 		{
 			public MergeContext(SqlMergeStatement merge, IBuildContext target)
 				: base(null, target, null)

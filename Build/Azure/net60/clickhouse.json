@@ -2,8 +2,7 @@
 	"NET60.Azure": {
 		"Providers": [
 			"ClickHouse.Octonica",
-			// disabled due https://github.com/DarkWanderer/ClickHouse.Client/issues/152
-			//"ClickHouse.Client",
+			"ClickHouse.Client",
 			"ClickHouse.MySql"
 		]
 	}

@@ -9,7 +9,7 @@ namespace LinqToDB.Linq.Builder
 	using Reflection;
 	using SqlQuery;
 
-	class SetOperationBuilder : MethodCallBuilder
+	sealed class SetOperationBuilder : MethodCallBuilder
 	{
 		private static readonly string[] MethodNames = { "Concat", "UnionAll", "Union", "Except", "Intersect", "ExceptAll", "IntersectAll" };
 

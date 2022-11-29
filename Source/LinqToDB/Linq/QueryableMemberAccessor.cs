@@ -10,7 +10,7 @@ namespace LinqToDB.Linq
 		public abstract Expression Execute(MemberInfo mi, IDataContext ctx);
 	}
 
-	class QueryableMemberAccessor<TContext> : QueryableMemberAccessor
+	sealed class QueryableMemberAccessor<TContext> : QueryableMemberAccessor
 	{
 		private readonly TContext                                             _context;
 		private readonly Func<TContext, MemberInfo, IDataContext, Expression> _accessor;

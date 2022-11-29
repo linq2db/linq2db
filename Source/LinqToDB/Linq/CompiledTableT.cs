@@ -7,7 +7,7 @@ namespace LinqToDB.Linq
 	using Builder;
 	using Common.Internal.Cache;
 
-	class CompiledTable<T>
+	sealed class CompiledTable<T>
 		where T : notnull
 	{
 		public CompiledTable(LambdaExpression lambda, Expression expression)

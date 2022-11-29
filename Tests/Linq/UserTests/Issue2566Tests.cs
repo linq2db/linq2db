@@ -11,9 +11,8 @@ namespace Tests.UserTests
 	public class Issue2566Tests : TestBase
 	{
 		[Table]
-		class DataClass
+		sealed class DataClass
 		{
-			
 			[Column] [PrimaryKey] public int Id { get; set; }
 
 			private string? _value;

@@ -9,7 +9,7 @@ namespace LinqToDB.Linq.Builder
 {
 	using Methods = Reflection.Methods.LinqToDB.MultiInsert;
 
-	class MultiInsertBuilder : MethodCallBuilder
+	sealed class MultiInsertBuilder : MethodCallBuilder
 	{
 		#region MultiInsertBuilder
 
@@ -175,7 +175,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region MultiInsertContext
 
-		class MultiInsertContext : SequenceContextBase
+		sealed class MultiInsertContext : SequenceContextBase
 		{
 			private readonly ISet<Expression> _sourceParameters = new HashSet<Expression>();
 
