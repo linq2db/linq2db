@@ -863,6 +863,8 @@ namespace LinqToDB.SqlProvider
 						return GetUnderlayingField(sqlExpr.Parameters[0]);
 					break;
 				}
+				case QueryElementType.SqlNullabilityExpression:
+					return GetUnderlayingField(((SqlNullabilityExpression)expr).SqlExpression);
 				case QueryElementType.SqlField:
 					return new VirtualField((SqlField) expr);
 				case QueryElementType.Column:

@@ -67,7 +67,19 @@ namespace LinqToDB.Linq.Builder
 			{
 				var condition = (LambdaExpression)methodCall.Arguments[conditionIndex].Unwrap();
 
-				var result = builder.BuildWhere(buildInfo.Parent, sequence, condition, false, false, buildInfo.AggregationTest);
+				var save = builder.CompareNullsAsValues;
+				if (joinType == JoinType.Right || joinType == JoinType.Full)
+				{
+					// Do not allow compare null as values
+					builder.CompareNullsAsValues = false;
+				}
+
+				var result = builder.BuildWhere(buildInfo.Parent, sequence, condition, enforceHaving: false, checkForSubQuery: false, isTest: buildInfo.AggregationTest, forJoin: true);
+
+				if (joinType == JoinType.Right || joinType == JoinType.Full)
+				{
+					builder.CompareNullsAsValues = save;
+				}
 
 				result.SetAlias(condition.Parameters[0].Name);
 				return result;

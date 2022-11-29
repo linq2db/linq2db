@@ -73,18 +73,27 @@ namespace LinqToDB.Linq.Builder
 							new SqlValue(1), Expression.Constant(1), alias: "not_null");
 					}
 
-					expr = ApplyNullability(expr);
+					if (!flags.HasFlag(ProjectFlags.Comparison))
+						expr = ApplyNullability(expr);
 
-					var defaultValue = DefaultValue ?? new DefaultValueExpression(Builder.MappingSchema, expr.Type);
-
-					if (expr is not SqlPlaceholderExpression)
+					if (flags.HasFlag(ProjectFlags.Expression))
 					{
-						Expression notNullExpression;
+						var defaultValue = DefaultValue ?? new DefaultValueExpression(Builder.MappingSchema, expr.Type);
 
-						notNullExpression = new SqlReaderIsNullExpression(notNull, true);
+						if (expr is not SqlPlaceholderExpression)
+						{
+							Expression notNullExpression;
 
-						expr = Expression.Condition(notNullExpression, expr, defaultValue);
+							notNullExpression = new SqlReaderIsNullExpression(notNull, true);
+
+							expr = Expression.Condition(notNullExpression, expr, defaultValue);
+						}
 					}
+				}
+				else
+				{
+					if (!flags.HasFlag(ProjectFlags.Comparison))
+						expr = ApplyNullability(expr);
 				}
 
 				return expr;

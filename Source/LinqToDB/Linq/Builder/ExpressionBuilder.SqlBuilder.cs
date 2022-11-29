@@ -24,6 +24,11 @@ namespace LinqToDB.Linq.Builder
 
 	partial class ExpressionBuilder
 	{
+		#region CompareNullsAsValues
+
+		public bool CompareNullsAsValues { get; set; } = Configuration.Linq.CompareNullsAsValues;
+
+		#endregion
 
 		#region Build Where
 
@@ -61,7 +66,7 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		public IBuildContext BuildWhere(IBuildContext? parent, IBuildContext sequence, LambdaExpression condition,
-			bool checkForSubQuery, bool enforceHaving, bool isTest)
+			bool checkForSubQuery, bool enforceHaving, bool isTest, bool forJoin)
 		{
 			if (sequence is not SubQueryContext)
 			{
@@ -76,6 +81,8 @@ namespace LinqToDB.Linq.Builder
 			var flags = ProjectFlags.SQL;
 			if (isTest)
 				flags |= ProjectFlags.Test;
+			if (forJoin)
+				flags |= ProjectFlags.Comparison;
 
 			BuildSearchCondition(sequence, expr, flags, sc.Conditions);
 
@@ -1875,7 +1882,7 @@ namespace LinqToDB.Linq.Builder
 
 					if (l is SqlValue lv && lv.Value == null)
 					{
-						if (rightExpr is SqlGenericConstructorExpression genericRight && (genericRight.ConstructType ==
+						/*if (rightExpr is SqlGenericConstructorExpression genericRight && (genericRight.ConstructType ==
 							    SqlGenericConstructorExpression.CreateType.New || genericRight.ConstructType ==
 							    SqlGenericConstructorExpression.CreateType.MemberInit))
 						{
@@ -1886,7 +1893,7 @@ namespace LinqToDB.Linq.Builder
 							}
 
 							return sc;
-						}
+						}*/
 
 						if (rightExpr is ConditionalExpression { Test: SqlPlaceholderExpression { Sql: SqlSearchCondition rightSearchCond } } && rightSearchCond.Conditions.Count == 1)
 						{
@@ -1910,7 +1917,7 @@ namespace LinqToDB.Linq.Builder
 
 					if (r is SqlValue rv && rv.Value == null)
 					{
-						if (leftExpr is SqlGenericConstructorExpression genericLeft && (genericLeft.ConstructType ==
+						/*if (leftExpr is SqlGenericConstructorExpression genericLeft && (genericLeft.ConstructType ==
 							    SqlGenericConstructorExpression.CreateType.New || genericLeft.ConstructType ==
 							    SqlGenericConstructorExpression.CreateType.MemberInit))
 						{
@@ -1921,7 +1928,7 @@ namespace LinqToDB.Linq.Builder
 							}
 
 							return sc;
-						}
+						}*/
 
 						if (leftExpr is ConditionalExpression { Test: SqlPlaceholderExpression { Sql: SqlSearchCondition leftSearchCond } } && leftSearchCond.Conditions.Count == 1)
 						{
@@ -2072,7 +2079,7 @@ namespace LinqToDB.Linq.Builder
 					var trueValue  = ConvertToSql(context, ExpressionInstances.True,  unwrap: false, columnDescriptor: descriptor);
 					var falseValue = ConvertToSql(context, ExpressionInstances.False, unwrap: false, columnDescriptor: descriptor);
 
-					var withNullValue = Configuration.Linq.CompareNullsAsValues &&
+					var withNullValue = CompareNullsAsValues &&
 										(isNullable || NeedNullCheck(expression))
 						? withNull
 						: (bool?)null;
@@ -2080,7 +2087,7 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			predicate ??= new SqlPredicate.ExprExpr(lOriginal, op, rOriginal, Configuration.Linq.CompareNullsAsValues ? true : null);
+			predicate ??= new SqlPredicate.ExprExpr(lOriginal, op, rOriginal, CompareNullsAsValues ? true : null);
 			return predicate;
 		}
 

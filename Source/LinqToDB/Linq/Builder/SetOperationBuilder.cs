@@ -145,8 +145,6 @@ namespace LinqToDB.Linq.Builder
 
 			readonly Dictionary<Expression, SqlPlaceholderExpression> _createdSQL = new(ExpressionEqualityComparer.Instance);
 
-			List<SqlPlaceholderExpression>? _createdParamSQL;
-
 			private SqlGenericConstructorExpression? _body;
 
 			static string? GenerateColumnAlias(Expression expr)
@@ -173,6 +171,13 @@ namespace LinqToDB.Linq.Builder
 				return GenerateColumnAlias(param.Expression);
 			}
 
+			static bool IsNullExpr(Expression expr)
+			{
+				return expr.NodeType == ExpressionType.Default || expr is DefaultValueExpression ||
+					expr is SqlPlaceholderExpression paceholder && paceholder.Sql is SqlValue value &&
+					value.Value == null;
+			}
+
 			SqlGenericConstructorExpression? MatchSequences(Expression root, Expression leftExpr, Expression rightExpr, IBuildContext leftSequence, IBuildContext rightSequence, 
 				//ref Expression? leftCreate, ref Expression? rightCreate, 
 				ref List<Expression>? mismatches)
@@ -183,7 +188,7 @@ namespace LinqToDB.Linq.Builder
 				if (leftExpr is SqlGenericConstructorExpression leftGenericPrep &&
 				    rightExpr is not SqlGenericConstructorExpression)
 				{
-					if (rightExpr is SqlPlaceholderExpression paceholder && paceholder.Sql is SqlValue value && value.Value == null)
+					if (IsNullExpr(rightExpr))
 					{
 						return MatchSequences(root, leftExpr, new SqlGenericConstructorExpression(leftGenericPrep),
 							leftSequence, rightSequence, ref mismatches);
@@ -195,7 +200,7 @@ namespace LinqToDB.Linq.Builder
 				if (rightExpr is SqlGenericConstructorExpression rightGenericPrep &&
 				    leftExpr is not SqlGenericConstructorExpression)
 				{
-					if (leftExpr is SqlPlaceholderExpression paceholder && paceholder.Sql is SqlValue value && value.Value == null)
+					if (IsNullExpr(leftExpr))
 					{
 						return MatchSequences(root, new SqlGenericConstructorExpression(rightGenericPrep),
 							rightExpr,

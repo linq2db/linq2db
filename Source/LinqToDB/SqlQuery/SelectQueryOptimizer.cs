@@ -1155,11 +1155,11 @@ namespace LinqToDB.SqlQuery
 
 				if (skipValue != null || takeValue != null)
 				{
-					List<ISqlExpression> parameters = new List<ISqlExpression>();
+					var parameters = new List<ISqlExpression>();
 
 					var sources          = QueryHelper.EnumerateAccessibleSources(sql).ToArray();
 					var found            = new HashSet<ISqlExpression>();
-					QueryHelper.CollectDependencies(sql.Where, sources, found);
+					QueryHelper.CollectDependencies(sql.Where, sources, found, singleColumnLevel: true);
 					if (found.Count > 0)
 					{
 						partitionBy = found.ToList();

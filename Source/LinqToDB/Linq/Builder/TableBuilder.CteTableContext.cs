@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using LinqToDB.Common;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -180,9 +181,21 @@ namespace LinqToDB.Linq.Builder
 					var placeholder = placeholders[index];
 					if (!_fieldsMap.TryGetValue(placeholder, out var newPlaceholder))
 					{
-						var field = (SqlField)placeholder.Sql;
+						var field = placeholder.Sql as SqlField;
 
-						var newField = new SqlField(field);
+						var newField = field != null
+							? new SqlField(field)
+							: null;
+
+						if (newField == null)
+						{
+							newField = new SqlField(placeholder.Sql.SystemType ?? typeof(object), "field",
+								placeholder.Sql.CanBeNull);
+
+							var name = "field";
+							Utils.MakeUniqueNames(new []{newField}, staticNames: CteTable.Fields.Select(f => f.Name), f => f.Name, (f, n, _) => f.Name = n);
+						}
+
 						CteTable.Add(newField);
 
 						newPlaceholder = ExpressionBuilder.CreatePlaceholder(SelectQuery, newField,

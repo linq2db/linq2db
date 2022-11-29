@@ -28,5 +28,9 @@
 		/// Specify that we associations should not filter out recordset
 		/// </summary>
 		ForceOuterAssociation = 0x200,	
+		/// <summary>
+		/// Specify that it is needed SQL for comparison, no nullalbility should be applied
+		/// </summary>
+		Comparison = 0x400,	
 	}
 }
