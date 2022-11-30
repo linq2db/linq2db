@@ -3,7 +3,7 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using System.Linq;
+	using SqlQuery;
 	using LinqToDB.Expressions;
 
 	static class SequenceHelper
@@ -77,6 +77,21 @@ namespace LinqToDB.Linq.Builder
 				    contextRef.BuildContext == ctx.current)
 				{
 					return new ContextRefExpression(contextRef.Type, ctx.onContext, contextRef.Alias);
+				}
+
+				return e;
+			});
+
+			return newExpression;
+		}
+
+		public static Expression CorrectSelectQuery(Expression expression, SelectQuery selectQuery)
+		{
+			var newExpression = expression.Transform((expression, selectQuery), (ctx, e) =>
+			{
+				if (e.NodeType == ExpressionType.Extension && e is SqlPlaceholderExpression sqlPlaceholderExpression)
+				{
+					return sqlPlaceholderExpression.WithSelectQuery(ctx.selectQuery);
 				}
 
 				return e;

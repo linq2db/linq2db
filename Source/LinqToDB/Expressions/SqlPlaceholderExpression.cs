@@ -79,6 +79,14 @@ namespace LinqToDB.Expressions
 			return new SqlPlaceholderExpression(SelectQuery, sqlExpression, Path, Type, Alias, Index, TrackingPath);
 		}
 
+		public SqlPlaceholderExpression WithSelectQuery(SelectQuery selectQuery)
+		{
+			if (SelectQuery != null && SelectQuery.Equals(selectQuery))
+				return this;
+
+			return new SqlPlaceholderExpression(selectQuery, Sql, Path, Type, Alias, Index, TrackingPath);
+		}
+
 		public SqlPlaceholderExpression WithTrackingPath(Expression trackingPath)
 		{
 			if (ExpressionEqualityComparer.Instance.Equals(trackingPath, TrackingPath))

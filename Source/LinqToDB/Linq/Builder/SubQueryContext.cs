@@ -109,6 +109,10 @@ namespace LinqToDB.Linq.Builder
 				result = Builder.ConvertToSqlExpr(SubQuery, result, flags);
 			}
 
+			// correct all placeholders, they should target to appropriate SubQuery.SelectQuery
+			//
+			result = SequenceHelper.CorrectSelectQuery(result, SubQuery.SelectQuery);
+
 			if (!flags.HasFlag(ProjectFlags.Test))
 			{
 				if (result is SqlPlaceholderExpression placeholder)
