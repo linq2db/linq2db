@@ -48,7 +48,7 @@ namespace Tests.Linq
 						child = p.StringProp == "1" ? null : new TestChildClass {StringProp = p.StringProp}
 					};
 
-				query = query.Where(x => x.child.StringProp.Contains("2"));
+				query = query.Where(x => x.child.StringProp!.Contains("2"));
 
 				AssertQuery(query);
 			}
@@ -71,7 +71,7 @@ namespace Tests.Linq
 						child = p.StringProp == "1" ? new TestChildClass {StringProp = p.StringProp} : null
 					};
 
-				query = query.Where(x => x.child.StringProp.Contains("2"));
+				query = query.Where(x => x.child.StringProp!.Contains("2"));
 
 				AssertQuery(query);
 			}
@@ -95,7 +95,7 @@ namespace Tests.Linq
 							: new TestChildClass {StringProp = p.StringProp}
 					};
 
-				query = query.Where(x => x.child.StringProp.Contains("2"));
+				query = query.Where(x => x.child.StringProp!.Contains("2"));
 
 				AssertQuery(query);
 			}
@@ -119,7 +119,7 @@ namespace Tests.Linq
 							: new TestChildClass {StringProp                         = p.StringProp + "2", IntProp = 2} 
 					};
 
-				query    = query.Where(x => x.child.StringProp.EndsWith("2") && x.child.IntProp == 2);
+				query    = query.Where(x => x.child.StringProp!.EndsWith("2") && x.child.IntProp == 2);
 
 				AssertQuery(query);
 			}
@@ -189,7 +189,7 @@ namespace Tests.Linq
 						Id = p.Id,
 						Sub = p == null
 							? new { Prop = new { V = "-1"} }
-							: new { Prop = p.StringProp.Contains("1") ? new
+							: new { Prop = p.StringProp!.Contains("1") ? new
 							{
 								V = "1"
 							} : new

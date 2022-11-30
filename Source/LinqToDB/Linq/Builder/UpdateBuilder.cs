@@ -78,7 +78,7 @@ namespace LinqToDB.Linq.Builder
 					var expr = methodCall.Arguments[1].Unwrap();
 					if (expr is LambdaExpression lex && lex.ReturnType == typeof(bool))
 					{
-						sequence = builder.BuildWhere(buildInfo.Parent, sequence, (LambdaExpression)methodCall.Arguments[1].Unwrap(), false, false, buildInfo.AggregationTest, forJoin: false);
+						sequence = builder.BuildWhere(buildInfo.Parent, sequence, (LambdaExpression)methodCall.Arguments[1].Unwrap(), false, false, buildInfo.AggregationTest);
 						expr     = methodCall.Arguments[2].Unwrap();
 					}
 

@@ -298,7 +298,7 @@ namespace Tests.Linq
 					,
 					from ch in db.Child
 					group ch by new GroupByInfo { Prev = new GroupByInfo { Field = ch.ParentID }, Field = ch.ChildID } into g
-					select g.Key, q => q.OrderBy(x => x.Prev.Field).ThenBy(x => x.Field));
+					select g.Key, q => q.OrderBy(x => x.Prev!.Field).ThenBy(x => x.Field));
 		}
 
 		[Test]

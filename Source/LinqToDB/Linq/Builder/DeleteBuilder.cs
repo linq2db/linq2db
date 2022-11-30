@@ -34,7 +34,7 @@ namespace LinqToDB.Linq.Builder
 			var sequence         = builder.BuildSequence(new BuildInfo(buildInfo, sequenceArgument));
 
 			if (methodCall.Arguments.Count == 2 && deleteType == DeleteContext.DeleteType.Delete)
-				sequence = builder.BuildWhere(buildInfo.Parent, sequence, (LambdaExpression)methodCall.Arguments[1].Unwrap(), false, false, buildInfo.AggregationTest, forJoin: false);
+				sequence = builder.BuildWhere(buildInfo.Parent, sequence, (LambdaExpression)methodCall.Arguments[1].Unwrap(), false, false, buildInfo.AggregationTest);
 
 			var deleteStatement = new SqlDeleteStatement(sequence.SelectQuery);
 

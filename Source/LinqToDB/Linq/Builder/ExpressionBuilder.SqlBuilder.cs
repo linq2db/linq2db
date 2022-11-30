@@ -66,7 +66,7 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		public IBuildContext BuildWhere(IBuildContext? parent, IBuildContext sequence, LambdaExpression condition,
-			bool checkForSubQuery, bool enforceHaving, bool isTest, bool forJoin)
+			bool checkForSubQuery, bool enforceHaving, bool isTest)
 		{
 			if (sequence is not SubQueryContext)
 			{
@@ -81,8 +81,6 @@ namespace LinqToDB.Linq.Builder
 			var flags = ProjectFlags.SQL;
 			if (isTest)
 				flags |= ProjectFlags.Test;
-			if (forJoin)
-				flags |= ProjectFlags.Comparison;
 
 			BuildSearchCondition(sequence, expr, flags, sc.Conditions);
 
@@ -783,7 +781,7 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		[DebuggerDisplay("S: {SelectQuery?.SourceID}, E: {Expression}")]
-		struct ColumnCacheKey
+		readonly struct ColumnCacheKey
 		{
 			public ColumnCacheKey(Expression? expression, Type resultType, SelectQuery selectQuery, SelectQuery? parentQuery)
 			{

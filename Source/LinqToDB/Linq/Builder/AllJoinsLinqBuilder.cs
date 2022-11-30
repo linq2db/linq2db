@@ -62,11 +62,11 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			if (joinType == JoinType.Right || joinType == JoinType.Full)
-				outerContext = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, outerContext, null);
+				outerContext = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, outerContext, null, false);
 			outerContext = new SubQueryContext(outerContext);
 
 			if (joinType == JoinType.Left || joinType == JoinType.Full)
-				innerContext = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, innerContext, null);
+				innerContext = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, innerContext, null, false);
 			innerContext = new SubQueryContext(innerContext);
 
 			var selector = methodCall.Arguments[^1].UnwrapLambda();
@@ -97,22 +97,11 @@ namespace LinqToDB.Linq.Builder
 				if (extensions != null)
 					join.JoinedTable.SqlQueryExtensions = extensions;
 
-				var save = builder.CompareNullsAsValues;
-				if (joinType == JoinType.Right || joinType == JoinType.Full)
-				{
-					// Do not allow compare null as values
-					builder.CompareNullsAsValues = false;
-				}
-
 				builder.BuildSearchCondition(
 					joinContext, 
 					conditionExpr, ProjectFlags.SQL,
 					join.JoinedTable.Condition.Conditions);
 
-				if (joinType == JoinType.Right || joinType == JoinType.Full)
-				{
-					builder.CompareNullsAsValues = save;
-				}
 			}
 			else
 			{

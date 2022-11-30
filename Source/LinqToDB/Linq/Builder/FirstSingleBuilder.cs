@@ -87,7 +87,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (forceOuter || methodCall.Method.Name.Contains("OrDefault"))
 			{
-				sequence = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, sequence, null);
+				sequence = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, sequence, null, allowNullField: true);
 				isOuter  = true;
 			}
 

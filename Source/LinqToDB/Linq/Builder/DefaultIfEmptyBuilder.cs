@@ -17,15 +17,18 @@ namespace LinqToDB.Linq.Builder
 			var sequence     = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 			var defaultValue = methodCall.Arguments.Count == 1 ? null : methodCall.Arguments[1].Unwrap();
 
-			return new DefaultIfEmptyContext(buildInfo.Parent, sequence, defaultValue);
+			return new DefaultIfEmptyContext(buildInfo.Parent, sequence, defaultValue, true);
 		}
 
 		public sealed class DefaultIfEmptyContext : SequenceContextBase
 		{
-			public DefaultIfEmptyContext(IBuildContext? parent, IBuildContext sequence, Expression? defaultValue)
+			readonly bool _allowNullField;
+
+			public DefaultIfEmptyContext(IBuildContext? parent, IBuildContext sequence, Expression? defaultValue, bool allowNullField)
 				: base(parent, sequence, null)
 			{
-				DefaultValue = defaultValue;
+				_allowNullField = allowNullField;
+				DefaultValue    = defaultValue;
 			}
 
 			public Expression? DefaultValue { get; }
@@ -57,42 +60,34 @@ namespace LinqToDB.Linq.Builder
 					return path;
 
 				var expr = base.MakeExpression(path, flags);
+				expr = Builder.BuildSqlExpression(new Dictionary<Expression, Expression>(), this, expr, flags);
 
-				if (SequenceHelper.IsSameContext(path, this))
+				if (flags.HasFlag(ProjectFlags.Expression) && expr is not SqlPlaceholderExpression)
 				{
-					expr = Builder.BuildSqlExpression(new Dictionary<Expression, Expression>(), this, expr, flags);
-
 					var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(expr);
+
+					expr = ApplyNullability(expr);
 
 					var notNull = placeholders
 						.FirstOrDefault(placeholder => !placeholder.Sql.CanBeNull);
 
-					if (notNull == null)
+					if (notNull != null || _allowNullField)
 					{
-						notNull = ExpressionBuilder.CreatePlaceholder(this,
-							new SqlValue(1), Expression.Constant(1), alias: "not_null");
-					}
+						if (notNull == null)
+						{
+							notNull = ExpressionBuilder.CreatePlaceholder(this,
+								new SqlValue(1), Expression.Constant(1), alias: "not_null");
+						}
 
-					if (!flags.HasFlag(ProjectFlags.Comparison))
-						expr = ApplyNullability(expr);
-
-					if (flags.HasFlag(ProjectFlags.Expression))
-					{
 						var defaultValue = DefaultValue ?? new DefaultValueExpression(Builder.MappingSchema, expr.Type);
 
-						if (expr is not SqlPlaceholderExpression)
-						{
-							Expression notNullExpression;
-
-							notNullExpression = new SqlReaderIsNullExpression(notNull, true);
-
-							expr = Expression.Condition(notNullExpression, expr, defaultValue);
-						}
+						var notNullExpression = new SqlReaderIsNullExpression(notNull, true);
+						expr = Expression.Condition(notNullExpression, expr, defaultValue);
 					}
 				}
 				else
 				{
-					if (!flags.HasFlag(ProjectFlags.Comparison))
+					if (!flags.HasFlag(ProjectFlags.Keys))
 						expr = ApplyNullability(expr);
 				}
 
@@ -101,7 +96,7 @@ namespace LinqToDB.Linq.Builder
 
 			public override IBuildContext Clone(CloningContext context)
 			{
-				return new DefaultIfEmptyContext(null, context.CloneContext(Sequence), context.CloneExpression(DefaultValue));
+				return new DefaultIfEmptyContext(null, context.CloneContext(Sequence), context.CloneExpression(DefaultValue), _allowNullField);
 			}
 
 			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)

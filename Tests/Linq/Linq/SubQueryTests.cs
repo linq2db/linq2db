@@ -76,21 +76,6 @@ namespace Tests.Linq
 			{
 				IEnumerable<int> ids = new[] { 1, 2 };
 
-				var rids   = db.Parent
-					.Where(p => ids.Contains(p.ParentID))
-					.Select(p => p.Value1 == null ? p.ParentID : p.ParentID + 1)
-					.Distinct();
-
-				var result = rids.Select(id =>
-					new
-					{
-						id,
-						Count1 = db.Child.Where(p => p.ParentID == id).Count(),
-						Count2 = db.Child.Where(p => p.ParentID == id && p.ParentID == _testValue).Count(),
-					}).ToList();
-
-				return;
-
 				var eids = Parent
 					.Where(p => ids.Contains(p.ParentID))
 					.Select(p => p.Value1 == null ? p.ParentID : p.ParentID + 1)
@@ -102,6 +87,19 @@ namespace Tests.Linq
 						id,
 						Count1 = Child.Where(p => p.ParentID == id).Count(),
 						Count2 = Child.Where(p => p.ParentID == id && p.ParentID == _testValue).Count(),
+					});
+
+				var rids = db.Parent
+					.Where(p => ids.Contains(p.ParentID))
+					.Select(p => p.Value1 == null ? p.ParentID : p.ParentID + 1)
+					.Distinct();
+
+				var result = rids.Select(id =>
+					new
+					{
+						id,
+						Count1 = db.Child.Where(p => p.ParentID == id).Count(),
+						Count2 = db.Child.Where(p => p.ParentID == id && p.ParentID == _testValue).Count(),
 					});
 
 				AreEqual(expected, result);

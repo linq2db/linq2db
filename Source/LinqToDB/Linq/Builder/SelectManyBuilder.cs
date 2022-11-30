@@ -40,7 +40,7 @@ namespace LinqToDB.Linq.Builder
 			// DefaultIfEmptyContext wil handle correctly projecting NULL objects
 			//
 			if (collectionInfo.JoinType == JoinType.Full || collectionInfo.JoinType == JoinType.Right)
-				sequence = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, sequence, null);
+				sequence = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, sequence, null, false);
 
 			IBuildContext context = new SelectContext(buildInfo.Parent, resultSelector, buildInfo.IsSubQuery, sequence,
 				collection);

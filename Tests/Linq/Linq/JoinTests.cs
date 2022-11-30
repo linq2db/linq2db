@@ -1362,10 +1362,11 @@ namespace Tests.Linq
 				var expected = Parent.SqlJoinInternal(Parent, joinType, (p1, p) => p1.ParentID == p.ParentID && p1.Value1 == p.Value1, (p1, p2) => p2);
 
 				var actual = db.Parent.Join(db.Parent, joinType, (p1, p2) => p1.ParentID == p2.ParentID && p1.Value1 == p2.Value1,
-					(p1, p2) => p2);
+					(p1, p2) => p2)
+					.ToList();
 
 				AreEqual(expected.ToList().OrderBy(r => r!.ParentID).ThenBy(r => r!.Value1),
-					actual.ToList().OrderBy(r => r.ParentID).ThenBy(r => r.Value1));
+					actual.OrderBy(r => r.ParentID).ThenBy(r => r.Value1));
 			}
 		}
 
