@@ -8,8 +8,8 @@ namespace LinqToDB.Linq.Builder
 
 	sealed class AllJoinsBuilder : MethodCallBuilder
 	{
-		private static readonly string[] RightNullableOnlyMethodNames    = { "RightJoin", "FullJoin" };
-		private static readonly string[] NotRightNullableOnlyMethodNames = { "InnerJoin", "LeftJoin", "RightJoin", "FullJoin" };
+		static readonly string[] RightNullableOnlyMethodNames    = { "RightJoin", "FullJoin" };
+		static readonly string[] NotRightNullableOnlyMethodNames = { "InnerJoin", "LeftJoin", "RightJoin", "FullJoin" };
 
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{

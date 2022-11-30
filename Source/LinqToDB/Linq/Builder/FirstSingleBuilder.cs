@@ -5,14 +5,13 @@ namespace LinqToDB.Linq.Builder
 {
 	using Async;
 	using Common;
-	using Extensions;
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
 	sealed class FirstSingleBuilder : MethodCallBuilder
 	{
-		public  static readonly string[] MethodNames      = { "First"     , "FirstOrDefault"     , "Single"     , "SingleOrDefault"      };
-		private static readonly string[] MethodNamesAsync = { "FirstAsync", "FirstOrDefaultAsync", "SingleAsync", "SingleOrDefaultAsync" };
+		static readonly string[] MethodNames      = { "First"     , "FirstOrDefault"     , "Single"     , "SingleOrDefault"      };
+		static readonly string[] MethodNamesAsync = { "FirstAsync", "FirstOrDefaultAsync", "SingleAsync", "SingleOrDefaultAsync" };
 
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
@@ -119,15 +118,7 @@ namespace LinqToDB.Linq.Builder
 
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
-				Sequence.BuildQuery(query, queryParameter);
-
-				switch (_methodCall.Method.Name.Replace("Async", ""))
-				{
-					case "First"           : GetFirstElement          (query); break;
-					case "FirstOrDefault"  : GetFirstOrDefaultElement (query); break;
-					case "Single"          : GetSingleElement         (query); break;
-					case "SingleOrDefault" : GetSingleOrDefaultElement(query); break;
-				}
+				throw new NotImplementedException();
 			}
 
 			public override void SetRunQuery<T>(Query<T> query, Expression expr)
@@ -147,7 +138,8 @@ namespace LinqToDB.Linq.Builder
 
 			static void GetFirstElement<T>(Query<T> query)
 			{
-				query.GetElement      = (db, expr, ps, preambles) => query.GetResultEnumerable(db, expr, ps, preambles).First();
+				query.GetElement = (db, expr, ps, preambles) =>
+					query.GetResultEnumerable(db, expr, ps, preambles).First();
 
 				query.GetElementAsync = query.GetElementAsync = async (db, expr, ps, preambles, token) =>
 					await query.GetResultEnumerable(db, expr, ps, preambles)
@@ -156,7 +148,8 @@ namespace LinqToDB.Linq.Builder
 
 			static void GetFirstOrDefaultElement<T>(Query<T> query)
 			{
-				query.GetElement      = (db, expr, ps, preambles) => query.GetResultEnumerable(db, expr, ps, preambles).FirstOrDefault();
+				query.GetElement = (db, expr, ps, preambles) =>
+					query.GetResultEnumerable(db, expr, ps, preambles).FirstOrDefault();
 
 				query.GetElementAsync = query.GetElementAsync = async (db, expr, ps, preambles, token) =>
 					await query.GetResultEnumerable(db, expr, ps, preambles)
@@ -165,7 +158,8 @@ namespace LinqToDB.Linq.Builder
 
 			static void GetSingleElement<T>(Query<T> query)
 			{
-				query.GetElement      = (db, expr, ps, preambles) => query.GetResultEnumerable(db, expr, ps, preambles).Single();
+				query.GetElement = (db, expr, ps, preambles) =>
+					query.GetResultEnumerable(db, expr, ps, preambles).Single();
 
 				query.GetElementAsync = async (db, expr, ps, preambles, token) =>
 					await query.GetResultEnumerable(db, expr, ps, preambles)
@@ -174,7 +168,8 @@ namespace LinqToDB.Linq.Builder
 
 			static void GetSingleOrDefaultElement<T>(Query<T> query)
 			{
-				query.GetElement      = (db, expr, ps, preambles) => query.GetResultEnumerable(db, expr, ps, preambles).SingleOrDefault();
+				query.GetElement = (db, expr, ps, preambles) =>
+					query.GetResultEnumerable(db, expr, ps, preambles).SingleOrDefault();
 
 				query.GetElementAsync = async (db, expr, ps, preambles, token) =>
 					await query.GetResultEnumerable(db, expr, ps, preambles)
@@ -252,17 +247,17 @@ namespace LinqToDB.Linq.Builder
 
 			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 			{
-				return Sequence.ConvertToSql(expression, level + 1, flags);
+				throw new NotImplementedException();
 			}
 
 			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 			{
-				return Sequence.ConvertToIndex(expression, level, flags);
+				throw new NotImplementedException();
 			}
 
 			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 			{
-				return Sequence.IsExpression(expression, level, requestFlag);
+				throw new NotImplementedException();
 			}
 
 			public override IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)

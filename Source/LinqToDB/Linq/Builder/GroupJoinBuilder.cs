@@ -1,11 +1,11 @@
 ﻿using System.Diagnostics;
 using System.Linq.Expressions;
-using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
 	using Reflection;
 	using SqlQuery;
+	using LinqToDB.Expressions;
 
 	class GroupJoinBuilder : MethodCallBuilder
 	{
@@ -139,7 +139,7 @@ namespace LinqToDB.Linq.Builder
 				throw new NotImplementedException();
 			}
 
-			public IBuildContext? GetContext (Expression? expression, int level, BuildInfo buildInfo)
+			public IBuildContext GetContext (Expression? expression, int level, BuildInfo buildInfo)
 			{
 				var expr = GetGroupJoinCall();
 				var sequence = Builder.BuildSequence(new BuildInfo(Parent, expr, new SelectQuery()));

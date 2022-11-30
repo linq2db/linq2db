@@ -8,7 +8,7 @@ namespace LinqToDB.Linq.Builder
 
 	sealed class TakeSkipBuilder : MethodCallBuilder
 	{
-		private static readonly string[] MethodNames = { "Skip", "Take" };
+		static readonly string[] MethodNames = { "Skip", "Take" };
 
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
@@ -63,22 +63,6 @@ namespace LinqToDB.Linq.Builder
 		protected override SequenceConvertInfo? Convert(
 			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
 		{
-			var info = builder.ConvertSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]), null, true);
-
-			if (info != null)
-			{
-				info.Expression =
-					Expression.Call(
-						methodCall.Method.DeclaringType!,
-						methodCall.Method.Name,
-						new[] { info.Expression.Type.GetGenericArguments()[0] },
-						info.Expression, methodCall.Arguments[1]);
-					//methodCall.Transform(ex => ConvertMethod(methodCall, 0, info, null, ex));
-				info.Parameter  = param;
-
-				return info;
-			}
-
 			return null;
 		}
 
@@ -93,20 +77,25 @@ namespace LinqToDB.Linq.Builder
 				throw new LinqException("Take with hints could not be applied with Skip");
 
 			if (sql.Select.TakeValue != null)
+			{
 				expr = new SqlFunction(
 					typeof(int),
 					"CASE",
 					new SqlBinaryExpression(typeof(bool), sql.Select.TakeValue, "<", expr, Precedence.Comparison),
 					sql.Select.TakeValue,
 					expr);
+			}
 
 			sql.Select.Take(expr, hints);
 
 			if ( sql.Select.SkipValue != null &&
 				 builder.DataContext.SqlProviderFlags.IsTakeSupported &&
 				!builder.DataContext.SqlProviderFlags.GetIsSkipSupportedFlag(sql.Select.TakeValue, sql.Select.SkipValue))
+			{
 				sql.Select.Take(
-					new SqlBinaryExpression(typeof(int), sql.Select.SkipValue, "+", sql.Select.TakeValue!, Precedence.Additive), hints);
+					new SqlBinaryExpression(typeof(int), sql.Select.SkipValue, "+", sql.Select.TakeValue!,
+						Precedence.Additive), hints);
+			}
 		}
 
 		static void BuildSkip(ExpressionBuilder builder, IBuildContext sequence, ISqlExpression expr)
@@ -125,8 +114,11 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (builder.DataContext.SqlProviderFlags.GetIsSkipSupportedFlag(sql.Select.TakeValue, sql.Select.SkipValue) ||
 					!builder.DataContext.SqlProviderFlags.IsTakeSupported)
+				{
 					sql.Select.Take(
-						new SqlBinaryExpression(typeof(int), sql.Select.TakeValue, "-", expr, Precedence.Additive), sql.Select.TakeHints);
+						new SqlBinaryExpression(typeof(int), sql.Select.TakeValue, "-", expr, Precedence.Additive),
+						sql.Select.TakeHints);
+				}
 			}
 		}
 	}

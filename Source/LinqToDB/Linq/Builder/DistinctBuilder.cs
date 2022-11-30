@@ -1,10 +1,10 @@
-﻿using System.Linq.Expressions;
+﻿using System.Reflection;
+using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
 	using Reflection;
 	using LinqToDB.Expressions;
-	using System.Reflection;
 
 	sealed class DistinctBuilder : MethodCallBuilder
 	{
@@ -64,14 +64,6 @@ namespace LinqToDB.Linq.Builder
 				if (SequenceHelper.IsSameContext(path, this) && (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AssociationRoot)))
 					return path;
 
-				//flags = flags.SqlFlag();
-				/*
-				if (flags.HasFlag(ProjectFlags.Expression))
-				{
-					flags = flags & ~ProjectFlags.Expression | ProjectFlags.SQL;
-				}
-				*/
-				
 				return base.MakeExpression(path, flags);
 			}
 

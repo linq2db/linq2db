@@ -1,11 +1,10 @@
 ﻿using System;
-using System.Linq;
 using System.Linq.Expressions;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Builder
 {
 	using Common;
+	using SqlQuery;
 	using LinqToDB.Expressions;
 
 	sealed class OrderByBuilder : MethodCallBuilder
@@ -17,7 +16,7 @@ namespace LinqToDB.Linq.Builder
 			if (!methodCall.IsQueryable(MethodNames))
 				return false;
 
-			var body = ((LambdaExpression)methodCall.Arguments[1].Unwrap()).Body.Unwrap();
+			var body = methodCall.Arguments[1].UnwrapLambda().Body.Unwrap();
 
 			if (body.NodeType == ExpressionType.MemberInit)
 			{

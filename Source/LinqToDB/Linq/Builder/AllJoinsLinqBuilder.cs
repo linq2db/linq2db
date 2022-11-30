@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
@@ -11,7 +9,7 @@ namespace LinqToDB.Linq.Builder
 
 	sealed class AllJoinsLinqBuilder : MethodCallBuilder
 	{
-		private static readonly string[] MethodNames4 = { "InnerJoin", "LeftJoin", "RightJoin", "FullJoin" };
+		static readonly string[] MethodNames4 = { "InnerJoin", "LeftJoin", "RightJoin", "FullJoin" };
 
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
@@ -84,8 +82,8 @@ namespace LinqToDB.Linq.Builder
 
 			if (conditionIndex != -1)
 			{
-				var condition     = (LambdaExpression)methodCall.Arguments[conditionIndex].Unwrap();
-				var conditionExpr =  SequenceHelper.PrepareBody(condition, outerContext, innerContext);
+				var condition     = methodCall.Arguments[conditionIndex].UnwrapLambda();
+				var conditionExpr = SequenceHelper.PrepareBody(condition, outerContext, innerContext);
 
 				conditionExpr = builder.ConvertExpression(conditionExpr);
 
@@ -111,40 +109,16 @@ namespace LinqToDB.Linq.Builder
 			return joinContext;
 		}
 
+		//TODO: Do we need this?
 		sealed class JoinContext : SelectContext
 		{
 			public JoinContext(IBuildContext? parent, LambdaExpression lambda, bool isSubQuery, IBuildContext outerContext, IBuildContext innerContext) : base(parent, lambda, isSubQuery, outerContext, innerContext)
 			{
 			}
 
-			public IBuildContext OuterContext => Sequence[0];
-			public IBuildContext InnerContext => Sequence[1];
-
 			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 			{
-				SqlInfo[]? result = null;
-
-				if (expression != null)
-				{
-					var root = Builder.GetRootObject(expression);
-
-					if (root.NodeType == ExpressionType.Parameter && root == Lambda.Parameters[1] || root is ContextRefExpression contextRef && contextRef.BuildContext == this)
-					{
-						result = base.ConvertToSql(expression, level, flags);
-
-						// we need exact column from InnerContext
-						result = result.Select(s =>
-							{
-								var idx = InnerContext.SelectQuery.Select.Add(s.Sql);
-								return new SqlInfo(s.MemberChain, InnerContext.SelectQuery.Select.Columns[idx], InnerContext.SelectQuery, idx);
-							})
-							.ToArray();
-					}
-				}
-
-				result ??= base.ConvertToSql(expression, level, flags);
-
-				return result;
+				throw new NotImplementedException();
 			}
 		}
 	}

@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
@@ -62,13 +60,13 @@ namespace LinqToDB.Linq.Builder
 			if (extensions != null)
 				join.JoinedTable.SqlQueryExtensions = extensions;
 
-			var selector = (LambdaExpression)methodCall.Arguments[4].Unwrap();
+			var selector = methodCall.Arguments[4].UnwrapLambda();
 
-			outerContext.     SetAlias(selector.Parameters[0].Name);
+			outerContext.SetAlias(selector.Parameters[0].Name);
 			innerContext.SetAlias(selector.Parameters[1].Name);
 
-			var outerKeyLambda = (LambdaExpression)methodCall.Arguments[2].Unwrap();
-			var innerKeyLambda = (LambdaExpression)methodCall.Arguments[3].Unwrap();
+			var outerKeyLambda = methodCall.Arguments[2].UnwrapLambda();
+			var innerKeyLambda = methodCall.Arguments[3].UnwrapLambda();
 
 			var innerKeyContext  = innerContext;
 
