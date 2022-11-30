@@ -6,7 +6,7 @@ namespace LinqToDB.Linq.Builder
 
 	sealed class TableAttributeBuilder : MethodCallBuilder
 	{
-		private static readonly string[] MethodNames = new[]
+		static readonly string[] MethodNames = 
 		{
 			nameof(LinqExtensions.TableName),
 			nameof(LinqExtensions.ServerName),
@@ -37,8 +37,8 @@ namespace LinqToDB.Linq.Builder
 				case nameof(LinqExtensions.DatabaseName)  : table.SqlTable.TableName = table.SqlTable.TableName with { Database = (string?)value }; break;
 				case nameof(LinqExtensions.SchemaName)    : table.SqlTable.TableName = table.SqlTable.TableName with { Schema   = (string?)value }; break;
 				case nameof(TableExtensions.TableOptions) : table.SqlTable.TableOptions  = (TableOptions)value!; break;
-				case nameof(TableExtensions.IsTemporary)  : table.SqlTable.Set((bool)value!, TableOptions.IsTemporary); break;
 				case nameof(LinqExtensions.TableID)       : table.SqlTable.ID            = (string?)     value;  break;
+				case nameof(TableExtensions.IsTemporary)  : table.SqlTable.Set((bool)value!, TableOptions.IsTemporary); break;
 			}
 
 			return sequence;
