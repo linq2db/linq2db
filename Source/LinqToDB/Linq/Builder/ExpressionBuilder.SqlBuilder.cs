@@ -1237,56 +1237,6 @@ namespace LinqToDB.Linq.Builder
 				{
 					var e = (MethodCallExpression)expression;
 
-					/*var isAggregation = e.IsAggregate(MappingSchema);
-					if (isAggregation && !e.IsQueryable())
-					{
-						var arg = e.Arguments[0];
-						var enumerableType = arg.Type;
-						if (EagerLoading.IsEnumerableType(enumerableType, MappingSchema))
-						{
-							var elementType = EagerLoading.GetEnumerableElementType(enumerableType, MappingSchema);
-							if (!e.Method.GetParameters()[0].ParameterType.IsSameOrParentOf(typeof(IEnumerable<>).MakeGenericType(elementType)))
-								isAggregation = false;
-						}
-					}*/
-
-					/*
-					var buildInfo = new BuildInfo((IBuildContext?)null, e, new SelectQuery());
-					if (IsSequence(buildInfo))
-					{
-						var subqueryCtx  = GetSubQueryContext(context, e, flags.HasFlag(ProjectFlags.Test));
-						var subqueryExpr = new ContextRefExpression(e.Type, subqueryCtx.Context);
-
-						return ConvertToSqlExpr(context, subqueryExpr, flags, unwrap, columnDescriptor, isPureExpression);
-					}
-					*/
-
-					/*
-					if ((isAggregation || e.IsQueryable()) && !ContainsBuilder.IsConstant(e))
-					{
-						if (IsSubQuery(context!, e))
-						{
-							return CreatePlaceholder(context, SubQueryToSql(context!, e), expression);
-						}
-
-						if (isAggregation)
-						{
-							var ctx = GetContext(context, expression);
-
-							if (ctx != null)
-							{
-								var sql = ctx.RequireSqlExpression(expression);
-
-								return sql;
-							}
-
-							break;
-						}
-
-						return CreatePlaceholder(context, SubQueryToSql(context!, e), expression);
-					}
-					*/
-
 					var expr = ConvertMethod(e);
 
 					if (expr != null)
@@ -1304,13 +1254,22 @@ namespace LinqToDB.Linq.Builder
 
 					if (e.Method.DeclaringType == typeof(string) && e.Method.Name == "Format")
 					{
-						return CreatePlaceholder(context, ConvertFormatToSql(context, e, isPureExpression), expression, alias: alias);
+						var sqlExpression = TryConvertFormatToSql(context, e, isPureExpression, flags);
+						if (sqlExpression != null)
+							return CreatePlaceholder(context, sqlExpression, expression, alias: alias);
+						break;
 					}
 
 					if (e.IsSameGenericMethod(Methods.LinqToDB.SqlExt.Alias))
 					{
-						var sql = ConvertToSql(context, e.Arguments[0], unwrap: unwrap);
-						return CreatePlaceholder(context, sql, expression, alias: alias);
+						var sqlExpr = ConvertToSqlExpr(context, e.Arguments[0], unwrap: unwrap, flags: flags,
+							columnDescriptor: columnDescriptor, isPureExpression: isPureExpression, alias: alias);
+
+						if (sqlExpr is SqlPlaceholderExpression placeholderExpression)
+						{
+							sqlExpr = placeholderExpression.WithAlias(alias);
+						}
+						return sqlExpr;
 					}
 
 					break;
@@ -1405,7 +1364,7 @@ namespace LinqToDB.Linq.Builder
 		}
 
 
-		public ISqlExpression ConvertFormatToSql(IBuildContext? context, MethodCallExpression mc, bool isPureExpression)
+		public ISqlExpression? TryConvertFormatToSql(IBuildContext? context, MethodCallExpression mc, bool isPureExpression, ProjectFlags flags)
 		{
 			// TODO: move PrepareRawSqlArguments to more correct location
 			TableBuilder.PrepareRawSqlArguments(mc, null,
@@ -1413,7 +1372,12 @@ namespace LinqToDB.Linq.Builder
 
 			var sqlArguments = new List<ISqlExpression>();
 			foreach (var a in arguments)
-				sqlArguments.Add(ConvertToSql(context, a));
+			{
+				if (!TryConvertToSql(context, flags, a, null, out var sqlExpr, out _))
+					return null;
+
+				sqlArguments.Add(sqlExpr);
+			}
 
 			if (isPureExpression)
 				return new SqlExpression(mc.Type, format, Precedence.Primary, sqlArguments.ToArray());

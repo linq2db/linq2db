@@ -95,6 +95,14 @@ namespace LinqToDB.Expressions
 			return new SqlPlaceholderExpression(SelectQuery, Sql, Path, Type, Alias, Index, trackingPath);
 		}
 
+		public Expression WithAlias(string? alias)
+		{
+			if (Equals(Alias, alias))
+				return this;
+
+			return new SqlPlaceholderExpression(SelectQuery, Sql, Path, Type, alias, Index, TrackingPath);
+		}
+
 		public override string ToString()
 		{
 			var pathStr = "#" + ExpressionEqualityComparer.Instance.GetHashCode(Path)/* + " " + Path*/;

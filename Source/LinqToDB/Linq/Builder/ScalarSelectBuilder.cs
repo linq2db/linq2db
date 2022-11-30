@@ -143,12 +143,12 @@ namespace LinqToDB.Linq.Builder
 
 			public IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)
 			{
-				throw new NotImplementedException();
+				return null;
 			}
 
 			public int ConvertToParentIndex(int index, IBuildContext context)
 			{
-				return Parent?.ConvertToParentIndex(index, context) ?? index;
+				throw new NotImplementedException();
 			}
 
 			public void SetAlias(string? alias)
