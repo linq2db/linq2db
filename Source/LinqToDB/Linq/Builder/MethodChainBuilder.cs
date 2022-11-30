@@ -67,10 +67,8 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			readonly string     _methodName;
-			readonly Type       _returnType;
-			private  SqlInfo[]? _index;
-			private  int?       _parentIndex;
+			readonly string _methodName;
+			readonly Type   _returnType;
 
 			public SqlPlaceholderExpression Placeholder = null!;
 			public MethodCallExpression     MethodCall { get; }
