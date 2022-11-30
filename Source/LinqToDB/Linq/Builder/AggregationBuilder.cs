@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
@@ -11,8 +10,8 @@ namespace LinqToDB.Linq.Builder
 
 	sealed class AggregationBuilder : MethodCallBuilder
 	{
-		public  static readonly string[] MethodNames      = { "Average"     , "Min"     , "Max"     , "Sum",      "Count"     , "LongCount"      };
-		private static readonly string[] MethodNamesAsync = { "AverageAsync", "MinAsync", "MaxAsync", "SumAsync", "CountAsync", "LongCountAsync" };
+		public static readonly string[] MethodNames      = { "Average"     , "Min"     , "Max"     , "Sum",      "Count"     , "LongCount"      };
+		       static readonly string[] MethodNamesAsync = { "AverageAsync", "MinAsync", "MaxAsync", "SumAsync", "CountAsync", "LongCountAsync" };
 
 		public static Sql.ExpressionAttribute? GetAggregateDefinition(MethodCallExpression methodCall, MappingSchema mapping)
 		{
@@ -203,6 +202,8 @@ namespace LinqToDB.Linq.Builder
 			public SqlPlaceholderExpression Placeholder = null!;
 			public SelectQuery?             OuterJoinParentQuery { get; set; }
 
+			SqlJoinedTable? _joinedTable;
+
 			static int CheckNullValue(bool isNull, object context)
 			{
 				if (isNull)
@@ -214,12 +215,6 @@ namespace LinqToDB.Linq.Builder
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
 				throw new NotImplementedException();
-				/*var expr = Builder.FinalizeProjection(this,
-					Builder.MakeExpression(new ContextRefExpression(typeof(T), this), ProjectFlags.Expression));
-
-				var mapper = Builder.BuildMapper<object>(expr);
-
-				QueryRunner.SetRunQuery(query, mapper);*/
 			}
 
 			public override void SetRunQuery<T>(Query<T> query, Expression expr)
@@ -244,16 +239,14 @@ namespace LinqToDB.Linq.Builder
 				throw new NotImplementedException();
 			}
 
-			private bool _joinCreated;
-
 			void CreateWeakOuterJoin(SelectQuery parentQuery, SelectQuery selectQuery)
 			{
-				if (!_joinCreated)
+				if (_joinedTable == null)
 				{
-					_joinCreated = true;
-
 					var join = selectQuery.OuterApply();
 					join.JoinedTable.IsWeak = true;
+
+					_joinedTable = join.JoinedTable;
 
 					parentQuery.From.Tables[0].Joins.Add(join.JoinedTable);
 				}
@@ -277,8 +270,14 @@ namespace LinqToDB.Linq.Builder
 
 			public override IBuildContext Clone(CloningContext context)
 			{
-				return new AggregationContext(null, context.CloneContext(Sequence), _methodName, _returnType);
-            }
+				var newContext = new AggregationContext(null, context.CloneContext(Sequence), _methodName, _returnType);
+
+				newContext.Placeholder          = context.CloneExpression(Placeholder);
+				newContext.OuterJoinParentQuery = context.CloneElement(OuterJoinParentQuery);
+				newContext._joinedTable         = context.CloneElement(_joinedTable);
+
+				return newContext;
+			}
 
 			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 			{
