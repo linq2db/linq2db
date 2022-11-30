@@ -1297,17 +1297,46 @@ namespace LinqToDB.SqlQuery
 				column.Expression = convertedExpression;
 			}
 
-			subQuery.Where.SearchCondition.Conditions.AddRange(query.Where.SearchCondition.Conditions);
-			query.Where.SearchCondition.Conditions.Clear();
+			if (!query.Where.IsEmpty)
+			{
+				query.Where = query.Where.ConvertAll(columnsMap, (v, e) =>
+				{
+					if (v.Context.TryGetValue(e, out var newColumn))
+						return newColumn;
+					return e;
+				});
+			}
 
-			subQuery.Having.SearchCondition.Conditions.AddRange(query.Having.SearchCondition.Conditions);
-			query.Having.SearchCondition.Conditions.Clear();
-			
-			subQuery.GroupBy.Items.AddRange(query.GroupBy.Items);
-			query.GroupBy.Items.Clear();
+			if (!query.Having.IsEmpty)
+			{
+				query.Having = query.Having.ConvertAll(columnsMap, (v, e) =>
+				{
+					if (v.Context.TryGetValue(e, out var newColumn))
+						return newColumn;
+					return e;
+				});
+			}
 
-			subQuery.OrderBy.Items.AddRange(query.OrderBy.Items);
-			query.OrderBy.Items.Clear();
+		
+			if (!query.GroupBy.IsEmpty)
+			{
+				query.GroupBy = query.GroupBy.ConvertAll(columnsMap, (v, e) =>
+				{
+					if (v.Context.TryGetValue(e, out var newColumn))
+						return newColumn;
+					return e;
+				});
+			}
+
+			if (!query.OrderBy.IsEmpty)
+			{
+				query.OrderBy = query.OrderBy.ConvertAll(columnsMap, (v, e) =>
+				{
+					if (v.Context.TryGetValue(e, out var newColumn))
+						return newColumn;
+					return e;
+				});
+			}
 
 			/*
 			subQuery.Select.IsDistinct = query.Select.IsDistinct;
@@ -1505,9 +1534,6 @@ namespace LinqToDB.SqlQuery
 
 			return false;
 		}
-
-		// TODO: IsAggregationOrWindowFunction use needs review - maybe we should call ContainsAggregationOrWindowFunction there
-		public static bool ContainsAggregationOrWindowFunction(IQueryElement expr) => null != expr.Find(IsAggregationOrWindowFunction);
 
 		public static bool IsAggregation(IQueryElement expr)
 		{

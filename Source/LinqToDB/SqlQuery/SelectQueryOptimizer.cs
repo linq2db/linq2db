@@ -795,7 +795,7 @@ namespace LinqToDB.SqlQuery
 				}
 			}
 
-			if (!QueryHelper.ContainsAggregationOrWindowFunction(expr))
+			if (!QueryHelper.IsAggregationOrWindowFunction(expr))
 			{
 				var elementsToIgnore = new HashSet<IQueryElement> { query };
 
@@ -1543,7 +1543,7 @@ namespace LinqToDB.SqlQuery
 					if (_flags.IsDistinctOrderBySupported)
 						continue;
 
-					if (Common.Configuration.Linq.KeepDistinctOrdered)
+					if (Configuration.Linq.KeepDistinctOrdered)
 					{
 						// trying to convert to GROUP BY quivalent
 						QueryHelper.TryConvertOrderedDistinctToGroupBy(query, _flags);
