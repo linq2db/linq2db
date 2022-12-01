@@ -46,7 +46,11 @@ namespace LinqToDB.CodeModel
 				if (Immutable)
 					throw new InvalidOperationException($"Immutable identifier rename attempt detected: {_name} => {value}");
 
-				_name = value;
+				if (_name != value)
+				{
+					_name = value;
+					OnChange?.Invoke(value);
+				}
 			}
 		}
 		/// <summary>
@@ -59,5 +63,7 @@ namespace LinqToDB.CodeModel
 		public int?            Position   { get; }
 
 		CodeElementType ICodeElement.ElementType => CodeElementType.Identifier;
+
+		internal event Action<string>? OnChange;
 	}
 }
