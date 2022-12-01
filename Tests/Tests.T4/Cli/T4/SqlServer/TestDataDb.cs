@@ -50,46 +50,46 @@ namespace Cli.T4.SqlServer
 
 		partial void InitDataContext();
 
-		public ITable<InheritanceParent>        InheritanceParents       => this.GetTable<InheritanceParent>();
-		public ITable<InheritanceChild>         InheritanceChildren      => this.GetTable<InheritanceChild>();
-		public ITable<Person>                   People                   => this.GetTable<Person>();
-		public ITable<Doctor>                   Doctors                  => this.GetTable<Doctor>();
-		public ITable<Patient>                  Patients                 => this.GetTable<Patient>();
+		public ITable<TestSchema_SameTableName> SameTableNames           => this.GetTable<TestSchema_SameTableName>();
+		public ITable<TestSchema_TestSchemaA>   TestSchemaA              => this.GetTable<TestSchema_TestSchemaA>();
+		public ITable<TestSchema_TestSchemaB>   TestSchemaB              => this.GetTable<TestSchema_TestSchemaB>();
 		public ITable<AllType>                  AllTypes                 => this.GetTable<AllType>();
 		public ITable<AllTypes2>                AllTypes2                => this.GetTable<AllTypes2>();
+		public ITable<Child>                    Children                 => this.GetTable<Child>();
+		public ITable<CollatedTable>            CollatedTables           => this.GetTable<CollatedTable>();
+		public ITable<DataType>                 DataTypes                => this.GetTable<DataType>();
+		public ITable<DecimalOverflow>          DecimalOverflows         => this.GetTable<DecimalOverflow>();
+		public ITable<Doctor>                   Doctors                  => this.GetTable<Doctor>();
+		public ITable<GrandChild>               GrandChildren            => this.GetTable<GrandChild>();
+		public ITable<GuidID>                   GuidIds                  => this.GetTable<GuidID>();
+		public ITable<GuidID2>                  GuidID2                  => this.GetTable<GuidID2>();
+		public ITable<IndexTable>               IndexTables              => this.GetTable<IndexTable>();
+		public ITable<IndexTable2>              IndexTable2              => this.GetTable<IndexTable2>();
+		public ITable<InheritanceChild>         InheritanceChildren      => this.GetTable<InheritanceChild>();
+		public ITable<InheritanceParent>        InheritanceParents       => this.GetTable<InheritanceParent>();
+		public ITable<Issue1115>                Issue1115                => this.GetTable<Issue1115>();
+		public ITable<Issue1144>                Issue1144                => this.GetTable<Issue1144>();
+		public ITable<LinqDataType>             LinqDataTypes            => this.GetTable<LinqDataType>();
+		public ITable<Member>                   Members                  => this.GetTable<Member>();
+		public ITable<NameTest>                 NameTests                => this.GetTable<NameTest>();
 		/// <summary>
 		/// This is Parent table
 		/// </summary>
 		public ITable<Parent>                   Parents                  => this.GetTable<Parent>();
-		public ITable<Child>                    Children                 => this.GetTable<Child>();
-		public ITable<GrandChild>               GrandChildren            => this.GetTable<GrandChild>();
-		public ITable<LinqDataType>             LinqDataTypes            => this.GetTable<LinqDataType>();
-		public ITable<TestIdentity>             TestIdentities           => this.GetTable<TestIdentity>();
-		public ITable<IndexTable>               IndexTables              => this.GetTable<IndexTable>();
-		public ITable<IndexTable2>              IndexTable2              => this.GetTable<IndexTable2>();
-		public ITable<NameTest>                 NameTests                => this.GetTable<NameTest>();
-		public ITable<GuidID>                   GuidIds                  => this.GetTable<GuidID>();
-		public ITable<GuidID2>                  GuidID2                  => this.GetTable<GuidID2>();
-		public ITable<DecimalOverflow>          DecimalOverflows         => this.GetTable<DecimalOverflow>();
+		public ITable<Patient>                  Patients                 => this.GetTable<Patient>();
+		public ITable<Person>                   People                   => this.GetTable<Person>();
+		public ITable<Provider>                 Providers                => this.GetTable<Provider>();
+		public ITable<SameTableName>            SameTableNames1          => this.GetTable<SameTableName>();
 		public ITable<SqlType>                  SqlTypes                 => this.GetTable<SqlType>();
+		public ITable<TestIdentity>             TestIdentities           => this.GetTable<TestIdentity>();
 		public ITable<TestMerge1>               TestMerge1               => this.GetTable<TestMerge1>();
 		public ITable<TestMerge2>               TestMerge2               => this.GetTable<TestMerge2>();
 		public ITable<TestMergeIdentity>        TestMergeIdentities      => this.GetTable<TestMergeIdentity>();
 		public ITable<TestSchemaX>              TestSchemaX              => this.GetTable<TestSchemaX>();
 		public ITable<TestSchemaY>              TestSchemaY              => this.GetTable<TestSchemaY>();
-		public ITable<TestSchema_TestSchemaA>   TestSchemaA              => this.GetTable<TestSchema_TestSchemaA>();
-		public ITable<TestSchema_TestSchemaB>   TestSchemaB              => this.GetTable<TestSchema_TestSchemaB>();
-		public ITable<Issue1144>                Issue1144                => this.GetTable<Issue1144>();
-		public ITable<SameTableName>            SameTableNames           => this.GetTable<SameTableName>();
 		public ITable<TestSchemaSameTableName>  TestSchemaSameTableNames => this.GetTable<TestSchemaSameTableName>();
-		public ITable<TestSchema_SameTableName> SameTableNames1          => this.GetTable<TestSchema_SameTableName>();
-		public ITable<Issue1115>                Issue1115                => this.GetTable<Issue1115>();
-		public ITable<DataType>                 DataTypes                => this.GetTable<DataType>();
-		public ITable<CollatedTable>            CollatedTables           => this.GetTable<CollatedTable>();
-		public ITable<Member>                   Members                  => this.GetTable<Member>();
-		public ITable<Provider>                 Providers                => this.GetTable<Provider>();
-		public ITable<ParentView>               ParentViews              => this.GetTable<ParentView>();
 		public ITable<ParentChildView>          ParentChildViews         => this.GetTable<ParentChildView>();
+		public ITable<ParentView>               ParentViews              => this.GetTable<ParentView>();
 
 		#region Table Functions
 		#region GetParentById
@@ -126,40 +126,50 @@ namespace Cli.T4.SqlServer
 		#endregion
 	}
 
-	[Table("InheritanceParent", Schema = "dbo")]
-	public partial class InheritanceParent
+	[Table("SameTableName", Schema = "TestSchema")]
+	public partial class TestSchema_SameTableName
 	{
-		[Column("InheritanceParentId", IsPrimaryKey = true)] public int     InheritanceParentId { get; set; } // int
-		[Column("TypeDiscriminator"                       )] public int?    TypeDiscriminator   { get; set; } // int
-		[Column("Name"                                    )] public string? Name                { get; set; } // nvarchar(50)
+		[Column("id")] public int? Id { get; set; } // int
+	}
+
+	[Table("TestSchemaA", Schema = "TestSchema")]
+	public partial class TestSchema_TestSchemaA
+	{
+		[Column("Field1"                            )] public int Field1        { get; set; } // int
+		[Column("TestSchemaAID", IsPrimaryKey = true)] public int TestSchemaAID { get; set; } // int
+
+		#region Associations
+		/// <summary>
+		/// FK_TestSchema_TestSchemaBY_OriginTestSchemaA backreference
+		/// </summary>
+		[Association(ThisKey = nameof(TestSchemaAID), OtherKey = nameof(TestSchema_TestSchemaB.OriginTestSchemaAID))]
+		public IEnumerable<TestSchema_TestSchemaB> TestSchemaByOriginTestSchemaA { get; set; } = null!;
+
+		/// <summary>
+		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA backreference
+		/// </summary>
+		[Association(ThisKey = nameof(TestSchemaAID), OtherKey = nameof(TestSchema_TestSchemaB.TargetTestSchemaAID1))]
+		public IEnumerable<TestSchema_TestSchemaB> TestSchemaByTargetTestSchemaA { get; set; } = null!;
+
+		/// <summary>
+		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA2 backreference
+		/// </summary>
+		[Association(ThisKey = nameof(TestSchemaAID), OtherKey = nameof(TestSchema_TestSchemaB.TargetTestSchemaAID))]
+		public IEnumerable<TestSchema_TestSchemaB> TestSchemaByTargetTestSchemaA1 { get; set; } = null!;
+		#endregion
 	}
 
 	public static partial class ExtensionMethods
 	{
 		#region Table Extensions
-		public static InheritanceParent? Find(this ITable<InheritanceParent> table, int inheritanceParentId)
+		public static TestSchema_TestSchemaA? Find(this ITable<TestSchema_TestSchemaA> table, int testSchemaAid)
 		{
-			return table.FirstOrDefault(e => e.InheritanceParentId == inheritanceParentId);
+			return table.FirstOrDefault(e => e.TestSchemaAID == testSchemaAid);
 		}
 
-		public static InheritanceChild? Find(this ITable<InheritanceChild> table, int inheritanceChildId)
+		public static TestSchema_TestSchemaB? Find(this ITable<TestSchema_TestSchemaB> table, int testSchemaBid)
 		{
-			return table.FirstOrDefault(e => e.InheritanceChildId == inheritanceChildId);
-		}
-
-		public static Person? Find(this ITable<Person> table, int personId)
-		{
-			return table.FirstOrDefault(e => e.PersonID == personId);
-		}
-
-		public static Doctor? Find(this ITable<Doctor> table, int personId)
-		{
-			return table.FirstOrDefault(e => e.PersonID == personId);
-		}
-
-		public static Patient? Find(this ITable<Patient> table, int personId)
-		{
-			return table.FirstOrDefault(e => e.PersonID == personId);
+			return table.FirstOrDefault(e => e.TestSchemaBID == testSchemaBid);
 		}
 
 		public static AllType? Find(this ITable<AllType> table, int id)
@@ -172,14 +182,19 @@ namespace Cli.T4.SqlServer
 			return table.FirstOrDefault(e => e.ID == id);
 		}
 
-		public static Parent? Find(this ITable<Parent> table, int id)
+		public static Child? Find(this ITable<Child> table, int id)
 		{
 			return table.FirstOrDefault(e => e.ID == id);
 		}
 
-		public static Child? Find(this ITable<Child> table, int id)
+		public static DecimalOverflow? Find(this ITable<DecimalOverflow> table, decimal decimal1)
 		{
-			return table.FirstOrDefault(e => e.ID == id);
+			return table.FirstOrDefault(e => e.Decimal1 == decimal1);
+		}
+
+		public static Doctor? Find(this ITable<Doctor> table, int personId)
+		{
+			return table.FirstOrDefault(e => e.PersonID == personId);
 		}
 
 		public static GrandChild? Find(this ITable<GrandChild> table, int id)
@@ -187,12 +202,12 @@ namespace Cli.T4.SqlServer
 			return table.FirstOrDefault(e => e.ID == id);
 		}
 
-		public static LinqDataType? Find(this ITable<LinqDataType> table, int id)
+		public static GuidID? Find(this ITable<GuidID> table, Guid id)
 		{
 			return table.FirstOrDefault(e => e.ID == id);
 		}
 
-		public static TestIdentity? Find(this ITable<TestIdentity> table, int id)
+		public static GuidID2? Find(this ITable<GuidID2> table, Guid id)
 		{
 			return table.FirstOrDefault(e => e.ID == id);
 		}
@@ -207,22 +222,62 @@ namespace Cli.T4.SqlServer
 			return table.FirstOrDefault(e => e.PKField2 == pkField2 && e.PKField1 == pkField1);
 		}
 
-		public static GuidID? Find(this ITable<GuidID> table, Guid id)
+		public static InheritanceChild? Find(this ITable<InheritanceChild> table, int inheritanceChildId)
+		{
+			return table.FirstOrDefault(e => e.InheritanceChildId == inheritanceChildId);
+		}
+
+		public static InheritanceParent? Find(this ITable<InheritanceParent> table, int inheritanceParentId)
+		{
+			return table.FirstOrDefault(e => e.InheritanceParentId == inheritanceParentId);
+		}
+
+		public static Issue1115? Find(this ITable<Issue1115> table, SqlHierarchyId id)
+		{
+			return table.FirstOrDefault(e => (bool)(e.Id == id));
+		}
+
+		public static Issue1144? Find(this ITable<Issue1144> table, int id)
+		{
+			return table.FirstOrDefault(e => e.Id == id);
+		}
+
+		public static LinqDataType? Find(this ITable<LinqDataType> table, int id)
 		{
 			return table.FirstOrDefault(e => e.ID == id);
 		}
 
-		public static GuidID2? Find(this ITable<GuidID2> table, Guid id)
+		public static Member? Find(this ITable<Member> table, int memberId)
+		{
+			return table.FirstOrDefault(e => e.MemberId == memberId);
+		}
+
+		public static Parent? Find(this ITable<Parent> table, int id)
 		{
 			return table.FirstOrDefault(e => e.ID == id);
 		}
 
-		public static DecimalOverflow? Find(this ITable<DecimalOverflow> table, decimal decimal1)
+		public static Patient? Find(this ITable<Patient> table, int personId)
 		{
-			return table.FirstOrDefault(e => e.Decimal1 == decimal1);
+			return table.FirstOrDefault(e => e.PersonID == personId);
+		}
+
+		public static Person? Find(this ITable<Person> table, int personId)
+		{
+			return table.FirstOrDefault(e => e.PersonID == personId);
+		}
+
+		public static Provider? Find(this ITable<Provider> table, int providerId)
+		{
+			return table.FirstOrDefault(e => e.ProviderId == providerId);
 		}
 
 		public static SqlType? Find(this ITable<SqlType> table, int id)
+		{
+			return table.FirstOrDefault(e => e.ID == id);
+		}
+
+		public static TestIdentity? Find(this ITable<TestIdentity> table, int id)
 		{
 			return table.FirstOrDefault(e => e.ID == id);
 		}
@@ -246,39 +301,24 @@ namespace Cli.T4.SqlServer
 		{
 			return table.FirstOrDefault(e => e.TestSchemaXID == testSchemaXid);
 		}
-
-		public static TestSchema_TestSchemaA? Find(this ITable<TestSchema_TestSchemaA> table, int testSchemaAid)
-		{
-			return table.FirstOrDefault(e => e.TestSchemaAID == testSchemaAid);
-		}
-
-		public static TestSchema_TestSchemaB? Find(this ITable<TestSchema_TestSchemaB> table, int testSchemaBid)
-		{
-			return table.FirstOrDefault(e => e.TestSchemaBID == testSchemaBid);
-		}
-
-		public static Issue1144? Find(this ITable<Issue1144> table, int id)
-		{
-			return table.FirstOrDefault(e => e.Id == id);
-		}
-
-		public static Issue1115? Find(this ITable<Issue1115> table, SqlHierarchyId id)
-		{
-			return table.FirstOrDefault(e => (bool)(e.Id == id));
-		}
-
-		public static Member? Find(this ITable<Member> table, int memberId)
-		{
-			return table.FirstOrDefault(e => e.MemberId == memberId);
-		}
-
-		public static Provider? Find(this ITable<Provider> table, int providerId)
-		{
-			return table.FirstOrDefault(e => e.ProviderId == providerId);
-		}
 		#endregion
 
 		#region Stored Procedures
+		#region TestProcedure
+		public static IEnumerable<TestProcedureResult> TestProcedure(this TestDataDB dataConnection)
+		{
+			return dataConnection.QueryProc(dataReader => new TestProcedureResult()
+			{
+				Column = Converter.ChangeTypeTo<int>(dataReader.GetValue(0), dataConnection.MappingSchema)
+			}, "[TestSchema].[TestProcedure]");
+		}
+
+		public partial class TestProcedureResult
+		{
+			public int Column { get; set; }
+		}
+		#endregion
+
 		#region AddIssue792Record
 		public static int AddIssue792Record(this TestDataDB dataConnection)
 		{
@@ -768,21 +808,6 @@ namespace Cli.T4.SqlServer
 		}
 		#endregion
 
-		#region TestProcedure
-		public static IEnumerable<TestProcedureResult> TestProcedure(this TestDataDB dataConnection)
-		{
-			return dataConnection.QueryProc(dataReader => new TestProcedureResult()
-			{
-				Column = Converter.ChangeTypeTo<int>(dataReader.GetValue(0), dataConnection.MappingSchema)
-			}, "[TestSchema].[TestProcedure]");
-		}
-
-		public partial class TestProcedureResult
-		{
-			public int Column { get; set; }
-		}
-		#endregion
-
 		#region VariableResults
 		public static IEnumerable<VariableResultsResult> VariableResults(this TestDataDB dataConnection, bool? returnFullRow)
 		{
@@ -819,37 +844,129 @@ namespace Cli.T4.SqlServer
 		#endregion
 	}
 
-	[Table("InheritanceChild", Schema = "dbo")]
-	public partial class InheritanceChild
+	[Table("TestSchemaB", Schema = "TestSchema")]
+	public partial class TestSchema_TestSchemaB
 	{
-		[Column("InheritanceChildId" , IsPrimaryKey = true)] public int     InheritanceChildId  { get; set; } // int
-		[Column("InheritanceParentId"                     )] public int     InheritanceParentId { get; set; } // int
-		[Column("TypeDiscriminator"                       )] public int?    TypeDiscriminator   { get; set; } // int
-		[Column("Name"                                    )] public string? Name                { get; set; } // nvarchar(50)
-	}
-
-	[Table("Person", Schema = "dbo")]
-	public partial class Person
-	{
-		[Column("PersonID"  , IsPrimaryKey = true , IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int     PersonID   { get; set; } // int
-		[Column("FirstName" , CanBeNull    = false                                                             )] public string  FirstName  { get; set; } = null!; // nvarchar(50)
-		[Column("LastName"  , CanBeNull    = false                                                             )] public string  LastName   { get; set; } = null!; // nvarchar(50)
-		[Column("MiddleName"                                                                                   )] public string? MiddleName { get; set; } // nvarchar(50)
-		[Column("Gender"                                                                                       )] public char    Gender     { get; set; } // char(1)
+		[Column("OriginTestSchemaAID"                         )] public int OriginTestSchemaAID  { get; set; } // int
+		[Column("Target_Test_Schema_A_ID"                     )] public int TargetTestSchemaAID  { get; set; } // int
+		[Column("TargetTestSchemaAID"                         )] public int TargetTestSchemaAID1 { get; set; } // int
+		[Column("TestSchemaBID"          , IsPrimaryKey = true)] public int TestSchemaBID        { get; set; } // int
 
 		#region Associations
 		/// <summary>
-		/// FK_Doctor_Person backreference
+		/// FK_TestSchema_TestSchemaBY_OriginTestSchemaA
 		/// </summary>
-		[Association(ThisKey = nameof(PersonID), OtherKey = nameof(SqlServer.Doctor.PersonID))]
-		public Doctor? Doctor { get; set; }
+		[Association(CanBeNull = false, ThisKey = nameof(OriginTestSchemaAID), OtherKey = nameof(TestSchema_TestSchemaA.TestSchemaAID))]
+		public TestSchema_TestSchemaA OriginTestSchemaA { get; set; } = null!;
 
 		/// <summary>
-		/// FK_Patient_Person backreference
+		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA
 		/// </summary>
-		[Association(ThisKey = nameof(PersonID), OtherKey = nameof(SqlServer.Patient.PersonID))]
-		public Patient? Patient { get; set; }
+		[Association(CanBeNull = false, ThisKey = nameof(TargetTestSchemaAID1), OtherKey = nameof(TestSchema_TestSchemaA.TestSchemaAID))]
+		public TestSchema_TestSchemaA TargetTestSchemaA { get; set; } = null!;
+
+		/// <summary>
+		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA2
+		/// </summary>
+		[Association(CanBeNull = false, ThisKey = nameof(TargetTestSchemaAID), OtherKey = nameof(TestSchema_TestSchemaA.TestSchemaAID))]
+		public TestSchema_TestSchemaA TargetTestSchemaA1 { get; set; } = null!;
 		#endregion
+	}
+
+	[Table("AllTypes", Schema = "dbo")]
+	public partial class AllType
+	{
+		[Column("bigintDataType"                                                                                              )] public long?           BigintDataType           { get; set; } // bigint
+		[Column("binaryDataType"                                                                                              )] public byte[]?         BinaryDataType           { get; set; } // binary(1)
+		[Column("bitDataType"                                                                                                 )] public bool?           BitDataType              { get; set; } // bit
+		[Column("char20DataType"                                                                                              )] public string?         Char20DataType           { get; set; } // char(20)
+		[Column("charDataType"                                                                                                )] public char?           CharDataType             { get; set; } // char(1)
+		[Column("dateDataType"                                                                                                )] public DateTime?       DateDataType             { get; set; } // date
+		[Column("datetime2DataType"                                                                                           )] public DateTime?       Datetime2DataType        { get; set; } // datetime2(7)
+		[Column("datetimeDataType"                                                                                            )] public DateTime?       DatetimeDataType         { get; set; } // datetime
+		[Column("datetimeoffset0DataType"                                                                                     )] public DateTimeOffset? Datetimeoffset0DataType  { get; set; } // datetimeoffset(0)
+		[Column("datetimeoffset1DataType"                                                                                     )] public DateTimeOffset? Datetimeoffset1DataType  { get; set; } // datetimeoffset(1)
+		[Column("datetimeoffset2DataType"                                                                                     )] public DateTimeOffset? Datetimeoffset2DataType  { get; set; } // datetimeoffset(2)
+		[Column("datetimeoffset3DataType"                                                                                     )] public DateTimeOffset? Datetimeoffset3DataType  { get; set; } // datetimeoffset(3)
+		[Column("datetimeoffset4DataType"                                                                                     )] public DateTimeOffset? Datetimeoffset4DataType  { get; set; } // datetimeoffset(4)
+		[Column("datetimeoffset5DataType"                                                                                     )] public DateTimeOffset? Datetimeoffset5DataType  { get; set; } // datetimeoffset(5)
+		[Column("datetimeoffset6DataType"                                                                                     )] public DateTimeOffset? Datetimeoffset6DataType  { get; set; } // datetimeoffset(6)
+		[Column("datetimeoffset7DataType"                                                                                     )] public DateTimeOffset? Datetimeoffset7DataType  { get; set; } // datetimeoffset(7)
+		[Column("datetimeoffsetDataType"                                                                                      )] public DateTimeOffset? DatetimeoffsetDataType   { get; set; } // datetimeoffset(7)
+		[Column("decimalDataType"                                                                                             )] public decimal?        DecimalDataType          { get; set; } // decimal(18, 1)
+		[Column("floatDataType"                                                                                               )] public double?         FloatDataType            { get; set; } // float
+		[Column("ID"                      , IsPrimaryKey = true, IsIdentity   = true, SkipOnInsert = true, SkipOnUpdate = true)] public int             ID                       { get; set; } // int
+		[Column("imageDataType"                                                                                               )] public byte[]?         ImageDataType            { get; set; } // image
+		[Column("intDataType"                                                                                                 )] public int?            IntDataType              { get; set; } // int
+		[Column("moneyDataType"                                                                                               )] public decimal?        MoneyDataType            { get; set; } // money
+		[Column("ncharDataType"                                                                                               )] public string?         NcharDataType            { get; set; } // nchar(20)
+		[Column("ntextDataType"                                                                                               )] public string?         NtextDataType            { get; set; } // ntext
+		[Column("numericDataType"                                                                                             )] public decimal?        NumericDataType          { get; set; } // numeric(18, 1)
+		[Column("nvarchar_max_DataType"                                                                                       )] public string?         NvarcharMaxDataType      { get; set; } // nvarchar(max)
+		[Column("nvarcharDataType"                                                                                            )] public string?         NvarcharDataType         { get; set; } // nvarchar(20)
+		[Column("realDataType"                                                                                                )] public float?          RealDataType             { get; set; } // real
+		[Column("smalldatetimeDataType"                                                                                       )] public DateTime?       SmalldatetimeDataType    { get; set; } // smalldatetime
+		[Column("smallintDataType"                                                                                            )] public short?          SmallintDataType         { get; set; } // smallint
+		[Column("smallmoneyDataType"                                                                                          )] public decimal?        SmallmoneyDataType       { get; set; } // smallmoney
+		[Column("sql_variantDataType"                                                                                         )] public object?         SqlVariantDataType       { get; set; } // sql_variant
+		[Column("textDataType"                                                                                                )] public string?         TextDataType             { get; set; } // text
+		[Column("timeDataType"                                                                                                )] public TimeSpan?       TimeDataType             { get; set; } // time(7)
+		[Column("timestampDataType"       , SkipOnInsert = true, SkipOnUpdate = true                                          )] public byte[]?         TimestampDataType        { get; set; } // timestamp
+		[Column("tinyintDataType"                                                                                             )] public byte?           TinyintDataType          { get; set; } // tinyint
+		[Column("uniqueidentifierDataType"                                                                                    )] public Guid?           UniqueidentifierDataType { get; set; } // uniqueidentifier
+		[Column("varbinary_max_DataType"                                                                                      )] public byte[]?         VarbinaryMaxDataType     { get; set; } // varbinary(max)
+		[Column("varbinaryDataType"                                                                                           )] public byte[]?         VarbinaryDataType        { get; set; } // varbinary(1)
+		[Column("varchar_max_DataType"                                                                                        )] public string?         VarcharMaxDataType       { get; set; } // varchar(max)
+		[Column("varcharDataType"                                                                                             )] public string?         VarcharDataType          { get; set; } // varchar(20)
+		[Column("xmlDataType"                                                                                                 )] public string?         XmlDataType              { get; set; } // xml
+	}
+
+	[Table("AllTypes2", Schema = "dbo")]
+	public partial class AllTypes2
+	{
+		[Column("dateDataType"                                                                                            )] public DateTime?       DateDataType           { get; set; } // date
+		[Column("datetime2DataType"                                                                                       )] public DateTime?       Datetime2DataType      { get; set; } // datetime2(7)
+		[Column("datetimeoffsetDataType"                                                                                  )] public DateTimeOffset? DatetimeoffsetDataType { get; set; } // datetimeoffset(7)
+		[Column("geographyDataType"                                                                                       )] public SqlGeography?   GeographyDataType      { get; set; } // geography
+		[Column("geometryDataType"                                                                                        )] public SqlGeometry?    GeometryDataType       { get; set; } // geometry
+		[Column("hierarchyidDataType"                                                                                     )] public SqlHierarchyId? HierarchyidDataType    { get; set; } // hierarchyid
+		[Column("ID"                    , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int             ID                     { get; set; } // int
+		[Column("timeDataType"                                                                                            )] public TimeSpan?       TimeDataType           { get; set; } // time(7)
+	}
+
+	[Table("Child", Schema = "dbo")]
+	public partial class Child
+	{
+		[Column("_ID"     , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int  ID       { get; set; } // int
+		/// <summary>
+		/// This ChildID column
+		/// </summary>
+		[Column("ChildID"                                                                                   )] public int? ChildID  { get; set; } // int
+		[Column("ParentID"                                                                                  )] public int? ParentID { get; set; } // int
+	}
+
+	[Table("CollatedTable", Schema = "dbo")]
+	public partial class CollatedTable
+	{
+		[Column("CaseInsensitive", CanBeNull = false)] public string CaseInsensitive { get; set; } = null!; // nvarchar(20)
+		[Column("CaseSensitive"  , CanBeNull = false)] public string CaseSensitive   { get; set; } = null!; // nvarchar(20)
+		[Column("Id"                                )] public int    Id              { get; set; } // int
+	}
+
+	[Table("DataType", Schema = "dbo")]
+	public partial class DataType
+	{
+		[Column("id")] public int Id { get; set; } // int
+	}
+
+	[Table("DecimalOverflow", Schema = "dbo")]
+	public partial class DecimalOverflow
+	{
+		[Column("Decimal1", IsPrimaryKey = true)] public decimal  Decimal1 { get; set; } // decimal(38, 20)
+		[Column("Decimal2"                     )] public decimal? Decimal2 { get; set; } // decimal(31, 2)
+		[Column("Decimal3"                     )] public decimal? Decimal3 { get; set; } // decimal(38, 36)
+		[Column("Decimal4"                     )] public decimal? Decimal4 { get; set; } // decimal(29, 0)
+		[Column("Decimal5"                     )] public decimal? Decimal5 { get; set; } // decimal(38, 38)
 	}
 
 	[Table("Doctor", Schema = "dbo")]
@@ -867,149 +984,41 @@ namespace Cli.T4.SqlServer
 		#endregion
 	}
 
-	[Table("Patient", Schema = "dbo")]
-	public partial class Patient
-	{
-		[Column("PersonID" , IsPrimaryKey = true )] public int    PersonID  { get; set; } // int
-		[Column("Diagnosis", CanBeNull    = false)] public string Diagnosis { get; set; } = null!; // nvarchar(256)
-
-		#region Associations
-		/// <summary>
-		/// FK_Patient_Person
-		/// </summary>
-		[Association(CanBeNull = false, ThisKey = nameof(PersonID), OtherKey = nameof(SqlServer.Person.PersonID))]
-		public Person Person { get; set; } = null!;
-		#endregion
-	}
-
-	[Table("AllTypes", Schema = "dbo")]
-	public partial class AllType
-	{
-		[Column("ID"                      , IsPrimaryKey = true, IsIdentity   = true, SkipOnInsert = true, SkipOnUpdate = true)] public int             ID                       { get; set; } // int
-		[Column("bigintDataType"                                                                                              )] public long?           BigintDataType           { get; set; } // bigint
-		[Column("numericDataType"                                                                                             )] public decimal?        NumericDataType          { get; set; } // numeric(18, 1)
-		[Column("bitDataType"                                                                                                 )] public bool?           BitDataType              { get; set; } // bit
-		[Column("smallintDataType"                                                                                            )] public short?          SmallintDataType         { get; set; } // smallint
-		[Column("decimalDataType"                                                                                             )] public decimal?        DecimalDataType          { get; set; } // decimal(18, 1)
-		[Column("smallmoneyDataType"                                                                                          )] public decimal?        SmallmoneyDataType       { get; set; } // smallmoney
-		[Column("intDataType"                                                                                                 )] public int?            IntDataType              { get; set; } // int
-		[Column("tinyintDataType"                                                                                             )] public byte?           TinyintDataType          { get; set; } // tinyint
-		[Column("moneyDataType"                                                                                               )] public decimal?        MoneyDataType            { get; set; } // money
-		[Column("floatDataType"                                                                                               )] public double?         FloatDataType            { get; set; } // float
-		[Column("realDataType"                                                                                                )] public float?          RealDataType             { get; set; } // real
-		[Column("datetimeDataType"                                                                                            )] public DateTime?       DatetimeDataType         { get; set; } // datetime
-		[Column("smalldatetimeDataType"                                                                                       )] public DateTime?       SmalldatetimeDataType    { get; set; } // smalldatetime
-		[Column("charDataType"                                                                                                )] public char?           CharDataType             { get; set; } // char(1)
-		[Column("char20DataType"                                                                                              )] public string?         Char20DataType           { get; set; } // char(20)
-		[Column("varcharDataType"                                                                                             )] public string?         VarcharDataType          { get; set; } // varchar(20)
-		[Column("textDataType"                                                                                                )] public string?         TextDataType             { get; set; } // text
-		[Column("ncharDataType"                                                                                               )] public string?         NcharDataType            { get; set; } // nchar(20)
-		[Column("nvarcharDataType"                                                                                            )] public string?         NvarcharDataType         { get; set; } // nvarchar(20)
-		[Column("ntextDataType"                                                                                               )] public string?         NtextDataType            { get; set; } // ntext
-		[Column("binaryDataType"                                                                                              )] public byte[]?         BinaryDataType           { get; set; } // binary(1)
-		[Column("varbinaryDataType"                                                                                           )] public byte[]?         VarbinaryDataType        { get; set; } // varbinary(1)
-		[Column("imageDataType"                                                                                               )] public byte[]?         ImageDataType            { get; set; } // image
-		[Column("timestampDataType"       , SkipOnInsert = true, SkipOnUpdate = true                                          )] public byte[]?         TimestampDataType        { get; set; } // timestamp
-		[Column("uniqueidentifierDataType"                                                                                    )] public Guid?           UniqueidentifierDataType { get; set; } // uniqueidentifier
-		[Column("sql_variantDataType"                                                                                         )] public object?         SqlVariantDataType       { get; set; } // sql_variant
-		[Column("nvarchar_max_DataType"                                                                                       )] public string?         NvarcharMaxDataType      { get; set; } // nvarchar(max)
-		[Column("varchar_max_DataType"                                                                                        )] public string?         VarcharMaxDataType       { get; set; } // varchar(max)
-		[Column("varbinary_max_DataType"                                                                                      )] public byte[]?         VarbinaryMaxDataType     { get; set; } // varbinary(max)
-		[Column("xmlDataType"                                                                                                 )] public string?         XmlDataType              { get; set; } // xml
-		[Column("datetime2DataType"                                                                                           )] public DateTime?       Datetime2DataType        { get; set; } // datetime2(7)
-		[Column("datetimeoffsetDataType"                                                                                      )] public DateTimeOffset? DatetimeoffsetDataType   { get; set; } // datetimeoffset(7)
-		[Column("datetimeoffset0DataType"                                                                                     )] public DateTimeOffset? Datetimeoffset0DataType  { get; set; } // datetimeoffset(0)
-		[Column("datetimeoffset1DataType"                                                                                     )] public DateTimeOffset? Datetimeoffset1DataType  { get; set; } // datetimeoffset(1)
-		[Column("datetimeoffset2DataType"                                                                                     )] public DateTimeOffset? Datetimeoffset2DataType  { get; set; } // datetimeoffset(2)
-		[Column("datetimeoffset3DataType"                                                                                     )] public DateTimeOffset? Datetimeoffset3DataType  { get; set; } // datetimeoffset(3)
-		[Column("datetimeoffset4DataType"                                                                                     )] public DateTimeOffset? Datetimeoffset4DataType  { get; set; } // datetimeoffset(4)
-		[Column("datetimeoffset5DataType"                                                                                     )] public DateTimeOffset? Datetimeoffset5DataType  { get; set; } // datetimeoffset(5)
-		[Column("datetimeoffset6DataType"                                                                                     )] public DateTimeOffset? Datetimeoffset6DataType  { get; set; } // datetimeoffset(6)
-		[Column("datetimeoffset7DataType"                                                                                     )] public DateTimeOffset? Datetimeoffset7DataType  { get; set; } // datetimeoffset(7)
-		[Column("dateDataType"                                                                                                )] public DateTime?       DateDataType             { get; set; } // date
-		[Column("timeDataType"                                                                                                )] public TimeSpan?       TimeDataType             { get; set; } // time(7)
-	}
-
-	[Table("AllTypes2", Schema = "dbo")]
-	public partial class AllTypes2
-	{
-		[Column("ID"                    , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int             ID                     { get; set; } // int
-		[Column("dateDataType"                                                                                            )] public DateTime?       DateDataType           { get; set; } // date
-		[Column("datetimeoffsetDataType"                                                                                  )] public DateTimeOffset? DatetimeoffsetDataType { get; set; } // datetimeoffset(7)
-		[Column("datetime2DataType"                                                                                       )] public DateTime?       Datetime2DataType      { get; set; } // datetime2(7)
-		[Column("timeDataType"                                                                                            )] public TimeSpan?       TimeDataType           { get; set; } // time(7)
-		[Column("hierarchyidDataType"                                                                                     )] public SqlHierarchyId? HierarchyidDataType    { get; set; } // hierarchyid
-		[Column("geographyDataType"                                                                                       )] public SqlGeography?   GeographyDataType      { get; set; } // geography
-		[Column("geometryDataType"                                                                                        )] public SqlGeometry?    GeometryDataType       { get; set; } // geometry
-	}
-
-	/// <summary>
-	/// This is Parent table
-	/// </summary>
-	[Table("Parent", Schema = "dbo")]
-	public partial class Parent
-	{
-		[Column("ParentID"                                                                                  )] public int? ParentID { get; set; } // int
-		[Column("Value1"                                                                                    )] public int? Value1   { get; set; } // int
-		[Column("_ID"     , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int  ID       { get; set; } // int
-	}
-
-	[Table("Child", Schema = "dbo")]
-	public partial class Child
-	{
-		[Column("ParentID"                                                                                  )] public int? ParentID { get; set; } // int
-		/// <summary>
-		/// This ChildID column
-		/// </summary>
-		[Column("ChildID"                                                                                   )] public int? ChildID  { get; set; } // int
-		[Column("_ID"     , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int  ID       { get; set; } // int
-	}
-
 	[Table("GrandChild", Schema = "dbo")]
 	public partial class GrandChild
 	{
-		[Column("ParentID"                                                                                      )] public int? ParentID     { get; set; } // int
+		[Column("_ID"         , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int  ID           { get; set; } // int
 		[Column("ChildID"                                                                                       )] public int? ChildID      { get; set; } // int
 		[Column("GrandChildID"                                                                                  )] public int? GrandChildID { get; set; } // int
-		[Column("_ID"         , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int  ID           { get; set; } // int
+		[Column("ParentID"                                                                                      )] public int? ParentID     { get; set; } // int
 	}
 
-	[Table("LinqDataTypes", Schema = "dbo")]
-	public partial class LinqDataType
+	[Table("GuidID", Schema = "dbo")]
+	public partial class GuidID
 	{
-		[Column("_ID"           , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int       ID             { get; set; } // int
-		[Column("ID"                                                                                              )] public int?      ID1            { get; set; } // int
-		[Column("MoneyValue"                                                                                      )] public decimal?  MoneyValue     { get; set; } // decimal(10, 4)
-		[Column("DateTimeValue"                                                                                   )] public DateTime? DateTimeValue  { get; set; } // datetime
-		[Column("DateTimeValue2"                                                                                  )] public DateTime? DateTimeValue2 { get; set; } // datetime2(7)
-		[Column("BoolValue"                                                                                       )] public bool?     BoolValue      { get; set; } // bit
-		[Column("GuidValue"                                                                                       )] public Guid?     GuidValue      { get; set; } // uniqueidentifier
-		[Column("BinaryValue"                                                                                     )] public byte[]?   BinaryValue    { get; set; } // varbinary(5000)
-		[Column("SmallIntValue"                                                                                   )] public short?    SmallIntValue  { get; set; } // smallint
-		[Column("IntValue"                                                                                        )] public int?      IntValue       { get; set; } // int
-		[Column("BigIntValue"                                                                                     )] public long?     BigIntValue    { get; set; } // bigint
-		[Column("StringValue"                                                                                     )] public string?   StringValue    { get; set; } // nvarchar(50)
+		[Column("Field1"                     )] public int? Field1 { get; set; } // int
+		[Column("ID"    , IsPrimaryKey = true)] public Guid ID     { get; set; } // uniqueidentifier
 	}
 
-	[Table("TestIdentity", Schema = "dbo")]
-	public partial class TestIdentity
+	[Table("GuidID2", Schema = "dbo")]
+	public partial class GuidID2
 	{
-		[Column("ID", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int ID { get; set; } // int
+		[Column("ID", IsPrimaryKey = true)] public Guid ID { get; set; } // uniqueidentifier
 	}
 
 	[Table("IndexTable", Schema = "dbo")]
 	public partial class IndexTable
 	{
+		[Column("IndexField"                                           )] public int IndexField  { get; set; } // int
 		[Column("PKField1"   , IsPrimaryKey = true, PrimaryKeyOrder = 1)] public int PKField1    { get; set; } // int
 		[Column("PKField2"   , IsPrimaryKey = true, PrimaryKeyOrder = 0)] public int PKField2    { get; set; } // int
 		[Column("UniqueField"                                          )] public int UniqueField { get; set; } // int
-		[Column("IndexField"                                           )] public int IndexField  { get; set; } // int
 
 		#region Associations
 		/// <summary>
 		/// FK_Patient2_IndexTable backreference
 		/// </summary>
-		[Association(ThisKey = nameof(PKField2) + "," + nameof(PKField2), OtherKey = nameof(IndexTable2.PKField2) + "," + nameof(PKField2))]
+		[Association(ThisKey = nameof(PKField2) + "," + nameof(PKField1), OtherKey = nameof(IndexTable2.PKField2) + "," + nameof(PKField1))]
 		public IndexTable2? Patient { get; set; }
 		#endregion
 	}
@@ -1024,219 +1033,32 @@ namespace Cli.T4.SqlServer
 		/// <summary>
 		/// FK_Patient2_IndexTable
 		/// </summary>
-		[Association(CanBeNull = false, ThisKey = nameof(PKField2) + "," + nameof(PKField2), OtherKey = nameof(IndexTable.PKField2) + "," + nameof(PKField2))]
+		[Association(CanBeNull = false, ThisKey = nameof(PKField2) + "," + nameof(PKField1), OtherKey = nameof(IndexTable.PKField2) + "," + nameof(PKField1))]
 		public IndexTable Patient2IndexTable { get; set; } = null!;
 		#endregion
 	}
 
-	[Table("Name.Test", Schema = "dbo")]
-	public partial class NameTest
+	[Table("InheritanceChild", Schema = "dbo")]
+	public partial class InheritanceChild
 	{
-		[Column("Name.Test")] public int? NameTest1 { get; set; } // int
+		[Column("InheritanceChildId" , IsPrimaryKey = true)] public int     InheritanceChildId  { get; set; } // int
+		[Column("InheritanceParentId"                     )] public int     InheritanceParentId { get; set; } // int
+		[Column("Name"                                    )] public string? Name                { get; set; } // nvarchar(50)
+		[Column("TypeDiscriminator"                       )] public int?    TypeDiscriminator   { get; set; } // int
 	}
 
-	[Table("GuidID", Schema = "dbo")]
-	public partial class GuidID
+	[Table("InheritanceParent", Schema = "dbo")]
+	public partial class InheritanceParent
 	{
-		[Column("ID"    , IsPrimaryKey = true)] public Guid ID     { get; set; } // uniqueidentifier
-		[Column("Field1"                     )] public int? Field1 { get; set; } // int
+		[Column("InheritanceParentId", IsPrimaryKey = true)] public int     InheritanceParentId { get; set; } // int
+		[Column("Name"                                    )] public string? Name                { get; set; } // nvarchar(50)
+		[Column("TypeDiscriminator"                       )] public int?    TypeDiscriminator   { get; set; } // int
 	}
 
-	[Table("GuidID2", Schema = "dbo")]
-	public partial class GuidID2
+	[Table("Issue1115", Schema = "dbo")]
+	public partial class Issue1115
 	{
-		[Column("ID", IsPrimaryKey = true)] public Guid ID { get; set; } // uniqueidentifier
-	}
-
-	[Table("DecimalOverflow", Schema = "dbo")]
-	public partial class DecimalOverflow
-	{
-		[Column("Decimal1", IsPrimaryKey = true)] public decimal  Decimal1 { get; set; } // decimal(38, 20)
-		[Column("Decimal2"                     )] public decimal? Decimal2 { get; set; } // decimal(31, 2)
-		[Column("Decimal3"                     )] public decimal? Decimal3 { get; set; } // decimal(38, 36)
-		[Column("Decimal4"                     )] public decimal? Decimal4 { get; set; } // decimal(29, 0)
-		[Column("Decimal5"                     )] public decimal? Decimal5 { get; set; } // decimal(38, 38)
-	}
-
-	[Table("SqlTypes", Schema = "dbo")]
-	public partial class SqlType
-	{
-		[Column("ID" , IsPrimaryKey = true)] public int             ID  { get; set; } // int
-		[Column("HID"                     )] public SqlHierarchyId? Hid { get; set; } // hierarchyid
-	}
-
-	[Table("TestMerge1", Schema = "dbo")]
-	public partial class TestMerge1
-	{
-		[Column("Id"             , IsPrimaryKey = true)] public int             Id              { get; set; } // int
-		[Column("Field1"                              )] public int?            Field1          { get; set; } // int
-		[Column("Field2"                              )] public int?            Field2          { get; set; } // int
-		[Column("Field3"                              )] public int?            Field3          { get; set; } // int
-		[Column("Field4"                              )] public int?            Field4          { get; set; } // int
-		[Column("Field5"                              )] public int?            Field5          { get; set; } // int
-		[Column("FieldInt64"                          )] public long?           FieldInt64      { get; set; } // bigint
-		[Column("FieldBoolean"                        )] public bool?           FieldBoolean    { get; set; } // bit
-		[Column("FieldString"                         )] public string?         FieldString     { get; set; } // varchar(20)
-		[Column("FieldNString"                        )] public string?         FieldNString    { get; set; } // nvarchar(20)
-		[Column("FieldChar"                           )] public char?           FieldChar       { get; set; } // char(1)
-		[Column("FieldNChar"                          )] public char?           FieldNChar      { get; set; } // nchar(1)
-		[Column("FieldFloat"                          )] public float?          FieldFloat      { get; set; } // real
-		[Column("FieldDouble"                         )] public double?         FieldDouble     { get; set; } // float
-		[Column("FieldDateTime"                       )] public DateTime?       FieldDateTime   { get; set; } // datetime
-		[Column("FieldDateTime2"                      )] public DateTimeOffset? FieldDateTime2  { get; set; } // datetimeoffset(7)
-		[Column("FieldBinary"                         )] public byte[]?         FieldBinary     { get; set; } // varbinary(20)
-		[Column("FieldGuid"                           )] public Guid?           FieldGuid       { get; set; } // uniqueidentifier
-		[Column("FieldDecimal"                        )] public decimal?        FieldDecimal    { get; set; } // decimal(24, 10)
-		[Column("FieldDate"                           )] public DateTime?       FieldDate       { get; set; } // date
-		[Column("FieldTime"                           )] public TimeSpan?       FieldTime       { get; set; } // time(7)
-		[Column("FieldEnumString"                     )] public string?         FieldEnumString { get; set; } // varchar(20)
-		[Column("FieldEnumNumber"                     )] public int?            FieldEnumNumber { get; set; } // int
-	}
-
-	[Table("TestMerge2", Schema = "dbo")]
-	public partial class TestMerge2
-	{
-		[Column("Id"             , IsPrimaryKey = true)] public int             Id              { get; set; } // int
-		[Column("Field1"                              )] public int?            Field1          { get; set; } // int
-		[Column("Field2"                              )] public int?            Field2          { get; set; } // int
-		[Column("Field3"                              )] public int?            Field3          { get; set; } // int
-		[Column("Field4"                              )] public int?            Field4          { get; set; } // int
-		[Column("Field5"                              )] public int?            Field5          { get; set; } // int
-		[Column("FieldInt64"                          )] public long?           FieldInt64      { get; set; } // bigint
-		[Column("FieldBoolean"                        )] public bool?           FieldBoolean    { get; set; } // bit
-		[Column("FieldString"                         )] public string?         FieldString     { get; set; } // varchar(20)
-		[Column("FieldNString"                        )] public string?         FieldNString    { get; set; } // nvarchar(20)
-		[Column("FieldChar"                           )] public char?           FieldChar       { get; set; } // char(1)
-		[Column("FieldNChar"                          )] public char?           FieldNChar      { get; set; } // nchar(1)
-		[Column("FieldFloat"                          )] public float?          FieldFloat      { get; set; } // real
-		[Column("FieldDouble"                         )] public double?         FieldDouble     { get; set; } // float
-		[Column("FieldDateTime"                       )] public DateTime?       FieldDateTime   { get; set; } // datetime
-		[Column("FieldDateTime2"                      )] public DateTimeOffset? FieldDateTime2  { get; set; } // datetimeoffset(7)
-		[Column("FieldBinary"                         )] public byte[]?         FieldBinary     { get; set; } // varbinary(20)
-		[Column("FieldGuid"                           )] public Guid?           FieldGuid       { get; set; } // uniqueidentifier
-		[Column("FieldDecimal"                        )] public decimal?        FieldDecimal    { get; set; } // decimal(24, 10)
-		[Column("FieldDate"                           )] public DateTime?       FieldDate       { get; set; } // date
-		[Column("FieldTime"                           )] public TimeSpan?       FieldTime       { get; set; } // time(7)
-		[Column("FieldEnumString"                     )] public string?         FieldEnumString { get; set; } // varchar(20)
-		[Column("FieldEnumNumber"                     )] public int?            FieldEnumNumber { get; set; } // int
-	}
-
-	[Table("TestMergeIdentity", Schema = "dbo")]
-	public partial class TestMergeIdentity
-	{
-		[Column("Id"   , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int  Id    { get; set; } // int
-		[Column("Field"                                                                                  )] public int? Field { get; set; } // int
-	}
-
-	[Table("TestSchemaX", Schema = "dbo")]
-	public partial class TestSchemaX
-	{
-		[Column("TestSchemaXID", IsPrimaryKey = true)] public int TestSchemaXID { get; set; } // int
-		[Column("Field1"                            )] public int Field1        { get; set; } // int
-
-		#region Associations
-		/// <summary>
-		/// FK_TestSchemaY_TestSchemaX backreference
-		/// </summary>
-		[Association(ThisKey = nameof(TestSchemaXID), OtherKey = nameof(SqlServer.TestSchemaY.TestSchemaXID))]
-		public IEnumerable<TestSchemaY> TestSchemaY { get; set; } = null!;
-
-		/// <summary>
-		/// FK_TestSchemaY_ParentTestSchemaX backreference
-		/// </summary>
-		[Association(ThisKey = nameof(TestSchemaXID), OtherKey = nameof(SqlServer.TestSchemaY.ParentTestSchemaXID))]
-		public IEnumerable<TestSchemaY> TestSchemaYParentTestSchemaX { get; set; } = null!;
-
-		/// <summary>
-		/// FK_TestSchemaY_OtherID backreference
-		/// </summary>
-		[Association(ThisKey = nameof(TestSchemaXID), OtherKey = nameof(SqlServer.TestSchemaY.TestSchemaXID))]
-		public IEnumerable<TestSchemaY> TestSchemaYOtherIds { get; set; } = null!;
-		#endregion
-	}
-
-	[Table("TestSchemaY", Schema = "dbo")]
-	public partial class TestSchemaY
-	{
-		[Column("TestSchemaXID"      )] public int TestSchemaXID       { get; set; } // int
-		[Column("ParentTestSchemaXID")] public int ParentTestSchemaXID { get; set; } // int
-		[Column("OtherID"            )] public int OtherID             { get; set; } // int
-
-		#region Associations
-		/// <summary>
-		/// FK_TestSchemaY_TestSchemaX
-		/// </summary>
-		[Association(CanBeNull = false, ThisKey = nameof(TestSchemaXID), OtherKey = nameof(SqlServer.TestSchemaX.TestSchemaXID))]
-		public TestSchemaX TestSchemaX { get; set; } = null!;
-
-		/// <summary>
-		/// FK_TestSchemaY_ParentTestSchemaX
-		/// </summary>
-		[Association(CanBeNull = false, ThisKey = nameof(ParentTestSchemaXID), OtherKey = nameof(SqlServer.TestSchemaX.TestSchemaXID))]
-		public TestSchemaX ParentTestSchemaX { get; set; } = null!;
-
-		/// <summary>
-		/// FK_TestSchemaY_OtherID
-		/// </summary>
-		[Association(CanBeNull = false, ThisKey = nameof(TestSchemaXID), OtherKey = nameof(SqlServer.TestSchemaX.TestSchemaXID))]
-		public TestSchemaX TestSchemaX1 { get; set; } = null!;
-		#endregion
-	}
-
-	[Table("TestSchemaA", Schema = "TestSchema")]
-	public partial class TestSchema_TestSchemaA
-	{
-		[Column("TestSchemaAID", IsPrimaryKey = true)] public int TestSchemaAID { get; set; } // int
-		[Column("Field1"                            )] public int Field1        { get; set; } // int
-
-		#region Associations
-		/// <summary>
-		/// FK_TestSchema_TestSchemaBY_OriginTestSchemaA backreference
-		/// </summary>
-		[Association(ThisKey = nameof(TestSchemaAID), OtherKey = nameof(TestSchema_TestSchemaB.OriginTestSchemaAID))]
-		public IEnumerable<TestSchema_TestSchemaB> TestSchemaByOriginTestSchemaA { get; set; } = null!;
-
-		/// <summary>
-		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA backreference
-		/// </summary>
-		[Association(ThisKey = nameof(TestSchemaAID), OtherKey = nameof(TestSchema_TestSchemaB.TargetTestSchemaAID))]
-		public IEnumerable<TestSchema_TestSchemaB> TestSchemaByTargetTestSchemaA { get; set; } = null!;
-
-		/// <summary>
-		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA2 backreference
-		/// </summary>
-		[Association(ThisKey = nameof(TestSchemaAID), OtherKey = nameof(TestSchema_TestSchemaB.TargetTestSchemaAID1))]
-		public IEnumerable<TestSchema_TestSchemaB> TestSchemaByTargetTestSchemaA1 { get; set; } = null!;
-		#endregion
-	}
-
-	[Table("TestSchemaB", Schema = "TestSchema")]
-	public partial class TestSchema_TestSchemaB
-	{
-		[Column("TestSchemaBID"          , IsPrimaryKey = true)] public int TestSchemaBID        { get; set; } // int
-		[Column("OriginTestSchemaAID"                         )] public int OriginTestSchemaAID  { get; set; } // int
-		[Column("TargetTestSchemaAID"                         )] public int TargetTestSchemaAID  { get; set; } // int
-		[Column("Target_Test_Schema_A_ID"                     )] public int TargetTestSchemaAID1 { get; set; } // int
-
-		#region Associations
-		/// <summary>
-		/// FK_TestSchema_TestSchemaBY_OriginTestSchemaA
-		/// </summary>
-		[Association(CanBeNull = false, ThisKey = nameof(OriginTestSchemaAID), OtherKey = nameof(TestSchema_TestSchemaA.TestSchemaAID))]
-		public TestSchema_TestSchemaA OriginTestSchemaA { get; set; } = null!;
-
-		/// <summary>
-		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA
-		/// </summary>
-		[Association(CanBeNull = false, ThisKey = nameof(TargetTestSchemaAID), OtherKey = nameof(TestSchema_TestSchemaA.TestSchemaAID))]
-		public TestSchema_TestSchemaA TargetTestSchemaA { get; set; } = null!;
-
-		/// <summary>
-		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA2
-		/// </summary>
-		[Association(CanBeNull = false, ThisKey = nameof(TargetTestSchemaAID1), OtherKey = nameof(TestSchema_TestSchemaA.TestSchemaAID))]
-		public TestSchema_TestSchemaA TargetTestSchemaA1 { get; set; } = null!;
-		#endregion
+		[Column("id", IsPrimaryKey = true)] public SqlHierarchyId Id { get; set; } // hierarchyid
 	}
 
 	[Table("Issue1144", Schema = "dbo")]
@@ -1248,49 +1070,28 @@ namespace Cli.T4.SqlServer
 		[Column("id", IsPrimaryKey = true)] public int Id { get; set; } // int
 	}
 
-	[Table("SameTableName", Schema = "dbo")]
-	public partial class SameTableName
+	[Table("LinqDataTypes", Schema = "dbo")]
+	public partial class LinqDataType
 	{
-		[Column("id")] public int? Id { get; set; } // int
-	}
-
-	[Table("TestSchema_SameTableName", Schema = "dbo")]
-	public partial class TestSchemaSameTableName
-	{
-		[Column("id")] public int? Id { get; set; } // int
-	}
-
-	[Table("SameTableName", Schema = "TestSchema")]
-	public partial class TestSchema_SameTableName
-	{
-		[Column("id")] public int? Id { get; set; } // int
-	}
-
-	[Table("Issue1115", Schema = "dbo")]
-	public partial class Issue1115
-	{
-		[Column("id", IsPrimaryKey = true)] public SqlHierarchyId Id { get; set; } // hierarchyid
-	}
-
-	[Table("DataType", Schema = "dbo")]
-	public partial class DataType
-	{
-		[Column("id")] public int Id { get; set; } // int
-	}
-
-	[Table("CollatedTable", Schema = "dbo")]
-	public partial class CollatedTable
-	{
-		[Column("Id"                                )] public int    Id              { get; set; } // int
-		[Column("CaseSensitive"  , CanBeNull = false)] public string CaseSensitive   { get; set; } = null!; // nvarchar(20)
-		[Column("CaseInsensitive", CanBeNull = false)] public string CaseInsensitive { get; set; } = null!; // nvarchar(20)
+		[Column("_ID"           , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int       ID             { get; set; } // int
+		[Column("BigIntValue"                                                                                     )] public long?     BigIntValue    { get; set; } // bigint
+		[Column("BinaryValue"                                                                                     )] public byte[]?   BinaryValue    { get; set; } // varbinary(5000)
+		[Column("BoolValue"                                                                                       )] public bool?     BoolValue      { get; set; } // bit
+		[Column("DateTimeValue"                                                                                   )] public DateTime? DateTimeValue  { get; set; } // datetime
+		[Column("DateTimeValue2"                                                                                  )] public DateTime? DateTimeValue2 { get; set; } // datetime2(7)
+		[Column("GuidValue"                                                                                       )] public Guid?     GuidValue      { get; set; } // uniqueidentifier
+		[Column("ID"                                                                                              )] public int?      ID1            { get; set; } // int
+		[Column("IntValue"                                                                                        )] public int?      IntValue       { get; set; } // int
+		[Column("MoneyValue"                                                                                      )] public decimal?  MoneyValue     { get; set; } // decimal(10, 4)
+		[Column("SmallIntValue"                                                                                   )] public short?    SmallIntValue  { get; set; } // smallint
+		[Column("StringValue"                                                                                     )] public string?   StringValue    { get; set; } // nvarchar(50)
 	}
 
 	[Table("Member", Schema = "dbo")]
 	public partial class Member
 	{
-		[Column("MemberId", IsPrimaryKey = true , IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int    MemberId { get; set; } // int
 		[Column("Alias"   , CanBeNull    = false                                                             )] public string Alias    { get; set; } = null!; // nvarchar(50)
+		[Column("MemberId", IsPrimaryKey = true , IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int    MemberId { get; set; } // int
 
 		#region Associations
 		/// <summary>
@@ -1298,6 +1099,62 @@ namespace Cli.T4.SqlServer
 		/// </summary>
 		[Association(ThisKey = nameof(MemberId), OtherKey = nameof(SqlServer.Provider.ProviderId))]
 		public Provider? Provider { get; set; }
+		#endregion
+	}
+
+	[Table("Name.Test", Schema = "dbo")]
+	public partial class NameTest
+	{
+		[Column("Name.Test")] public int? NameTest1 { get; set; } // int
+	}
+
+	/// <summary>
+	/// This is Parent table
+	/// </summary>
+	[Table("Parent", Schema = "dbo")]
+	public partial class Parent
+	{
+		[Column("_ID"     , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int  ID       { get; set; } // int
+		[Column("ParentID"                                                                                  )] public int? ParentID { get; set; } // int
+		[Column("Value1"                                                                                    )] public int? Value1   { get; set; } // int
+	}
+
+	[Table("Patient", Schema = "dbo")]
+	public partial class Patient
+	{
+		[Column("Diagnosis", CanBeNull    = false)] public string Diagnosis { get; set; } = null!; // nvarchar(256)
+		[Column("PersonID" , IsPrimaryKey = true )] public int    PersonID  { get; set; } // int
+
+		#region Associations
+		/// <summary>
+		/// FK_Patient_Person
+		/// </summary>
+		[Association(CanBeNull = false, ThisKey = nameof(PersonID), OtherKey = nameof(SqlServer.Person.PersonID))]
+		public Person Person { get; set; } = null!;
+		#endregion
+	}
+
+	[Table("Person", Schema = "dbo")]
+	public partial class Person
+	{
+		[Column("FirstName" , CanBeNull    = false                                                             )] public string  FirstName  { get; set; } = null!; // nvarchar(50)
+		[Column("Gender"                                                                                       )] public char    Gender     { get; set; } // char(1)
+		[Column("LastName"  , CanBeNull    = false                                                             )] public string  LastName   { get; set; } = null!; // nvarchar(50)
+		[Column("MiddleName"                                                                                   )] public string? MiddleName { get; set; } // nvarchar(50)
+		[Column("PersonID"  , IsPrimaryKey = true , IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int     PersonID   { get; set; } // int
+
+		#region Associations
+		/// <summary>
+		/// FK_Doctor_Person backreference
+		/// </summary>
+		[Association(ThisKey = nameof(PersonID), OtherKey = nameof(SqlServer.Doctor.PersonID))]
+		public Doctor? Doctor { get; set; }
+
+		/// <summary>
+		/// FK_Patient_Person backreference
+		/// </summary>
+		[Association(ThisKey = nameof(PersonID), OtherKey = nameof(SqlServer.Patient.PersonID))]
+		public Patient? Patient { get; set; }
 		#endregion
 	}
 
@@ -1316,19 +1173,162 @@ namespace Cli.T4.SqlServer
 		#endregion
 	}
 
-	[Table("ParentView", Schema = "dbo", IsView = true)]
-	public partial class ParentView
+	[Table("SameTableName", Schema = "dbo")]
+	public partial class SameTableName
 	{
-		[Column("ParentID"                                                             )] public int? ParentID { get; set; } // int
-		[Column("Value1"                                                               )] public int? Value1   { get; set; } // int
-		[Column("_ID"     , IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int  ID       { get; set; } // int
+		[Column("id")] public int? Id { get; set; } // int
+	}
+
+	[Table("SqlTypes", Schema = "dbo")]
+	public partial class SqlType
+	{
+		[Column("HID"                     )] public SqlHierarchyId? Hid { get; set; } // hierarchyid
+		[Column("ID" , IsPrimaryKey = true)] public int             ID  { get; set; } // int
+	}
+
+	[Table("TestIdentity", Schema = "dbo")]
+	public partial class TestIdentity
+	{
+		[Column("ID", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int ID { get; set; } // int
+	}
+
+	[Table("TestMerge1", Schema = "dbo")]
+	public partial class TestMerge1
+	{
+		[Column("Field1"                              )] public int?            Field1          { get; set; } // int
+		[Column("Field2"                              )] public int?            Field2          { get; set; } // int
+		[Column("Field3"                              )] public int?            Field3          { get; set; } // int
+		[Column("Field4"                              )] public int?            Field4          { get; set; } // int
+		[Column("Field5"                              )] public int?            Field5          { get; set; } // int
+		[Column("FieldBinary"                         )] public byte[]?         FieldBinary     { get; set; } // varbinary(20)
+		[Column("FieldBoolean"                        )] public bool?           FieldBoolean    { get; set; } // bit
+		[Column("FieldChar"                           )] public char?           FieldChar       { get; set; } // char(1)
+		[Column("FieldDate"                           )] public DateTime?       FieldDate       { get; set; } // date
+		[Column("FieldDateTime"                       )] public DateTime?       FieldDateTime   { get; set; } // datetime
+		[Column("FieldDateTime2"                      )] public DateTimeOffset? FieldDateTime2  { get; set; } // datetimeoffset(7)
+		[Column("FieldDecimal"                        )] public decimal?        FieldDecimal    { get; set; } // decimal(24, 10)
+		[Column("FieldDouble"                         )] public double?         FieldDouble     { get; set; } // float
+		[Column("FieldEnumNumber"                     )] public int?            FieldEnumNumber { get; set; } // int
+		[Column("FieldEnumString"                     )] public string?         FieldEnumString { get; set; } // varchar(20)
+		[Column("FieldFloat"                          )] public float?          FieldFloat      { get; set; } // real
+		[Column("FieldGuid"                           )] public Guid?           FieldGuid       { get; set; } // uniqueidentifier
+		[Column("FieldInt64"                          )] public long?           FieldInt64      { get; set; } // bigint
+		[Column("FieldNChar"                          )] public char?           FieldNChar      { get; set; } // nchar(1)
+		[Column("FieldNString"                        )] public string?         FieldNString    { get; set; } // nvarchar(20)
+		[Column("FieldString"                         )] public string?         FieldString     { get; set; } // varchar(20)
+		[Column("FieldTime"                           )] public TimeSpan?       FieldTime       { get; set; } // time(7)
+		[Column("Id"             , IsPrimaryKey = true)] public int             Id              { get; set; } // int
+	}
+
+	[Table("TestMerge2", Schema = "dbo")]
+	public partial class TestMerge2
+	{
+		[Column("Field1"                              )] public int?            Field1          { get; set; } // int
+		[Column("Field2"                              )] public int?            Field2          { get; set; } // int
+		[Column("Field3"                              )] public int?            Field3          { get; set; } // int
+		[Column("Field4"                              )] public int?            Field4          { get; set; } // int
+		[Column("Field5"                              )] public int?            Field5          { get; set; } // int
+		[Column("FieldBinary"                         )] public byte[]?         FieldBinary     { get; set; } // varbinary(20)
+		[Column("FieldBoolean"                        )] public bool?           FieldBoolean    { get; set; } // bit
+		[Column("FieldChar"                           )] public char?           FieldChar       { get; set; } // char(1)
+		[Column("FieldDate"                           )] public DateTime?       FieldDate       { get; set; } // date
+		[Column("FieldDateTime"                       )] public DateTime?       FieldDateTime   { get; set; } // datetime
+		[Column("FieldDateTime2"                      )] public DateTimeOffset? FieldDateTime2  { get; set; } // datetimeoffset(7)
+		[Column("FieldDecimal"                        )] public decimal?        FieldDecimal    { get; set; } // decimal(24, 10)
+		[Column("FieldDouble"                         )] public double?         FieldDouble     { get; set; } // float
+		[Column("FieldEnumNumber"                     )] public int?            FieldEnumNumber { get; set; } // int
+		[Column("FieldEnumString"                     )] public string?         FieldEnumString { get; set; } // varchar(20)
+		[Column("FieldFloat"                          )] public float?          FieldFloat      { get; set; } // real
+		[Column("FieldGuid"                           )] public Guid?           FieldGuid       { get; set; } // uniqueidentifier
+		[Column("FieldInt64"                          )] public long?           FieldInt64      { get; set; } // bigint
+		[Column("FieldNChar"                          )] public char?           FieldNChar      { get; set; } // nchar(1)
+		[Column("FieldNString"                        )] public string?         FieldNString    { get; set; } // nvarchar(20)
+		[Column("FieldString"                         )] public string?         FieldString     { get; set; } // varchar(20)
+		[Column("FieldTime"                           )] public TimeSpan?       FieldTime       { get; set; } // time(7)
+		[Column("Id"             , IsPrimaryKey = true)] public int             Id              { get; set; } // int
+	}
+
+	[Table("TestMergeIdentity", Schema = "dbo")]
+	public partial class TestMergeIdentity
+	{
+		[Column("Field"                                                                                  )] public int? Field { get; set; } // int
+		[Column("Id"   , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int  Id    { get; set; } // int
+	}
+
+	[Table("TestSchemaX", Schema = "dbo")]
+	public partial class TestSchemaX
+	{
+		[Column("Field1"                            )] public int Field1        { get; set; } // int
+		[Column("TestSchemaXID", IsPrimaryKey = true)] public int TestSchemaXID { get; set; } // int
+
+		#region Associations
+		/// <summary>
+		/// FK_TestSchemaY_OtherID backreference
+		/// </summary>
+		[Association(ThisKey = nameof(TestSchemaXID), OtherKey = nameof(SqlServer.TestSchemaY.TestSchemaXID))]
+		public IEnumerable<TestSchemaY> TestSchemaYOtherIds { get; set; } = null!;
+
+		/// <summary>
+		/// FK_TestSchemaY_ParentTestSchemaX backreference
+		/// </summary>
+		[Association(ThisKey = nameof(TestSchemaXID), OtherKey = nameof(SqlServer.TestSchemaY.ParentTestSchemaXID))]
+		public IEnumerable<TestSchemaY> TestSchemaYParentTestSchemaX { get; set; } = null!;
+
+		/// <summary>
+		/// FK_TestSchemaY_TestSchemaX backreference
+		/// </summary>
+		[Association(ThisKey = nameof(TestSchemaXID), OtherKey = nameof(SqlServer.TestSchemaY.TestSchemaXID))]
+		public IEnumerable<TestSchemaY> TestSchemaY { get; set; } = null!;
+		#endregion
+	}
+
+	[Table("TestSchemaY", Schema = "dbo")]
+	public partial class TestSchemaY
+	{
+		[Column("OtherID"            )] public int OtherID             { get; set; } // int
+		[Column("ParentTestSchemaXID")] public int ParentTestSchemaXID { get; set; } // int
+		[Column("TestSchemaXID"      )] public int TestSchemaXID       { get; set; } // int
+
+		#region Associations
+		/// <summary>
+		/// FK_TestSchemaY_OtherID
+		/// </summary>
+		[Association(CanBeNull = false, ThisKey = nameof(TestSchemaXID), OtherKey = nameof(SqlServer.TestSchemaX.TestSchemaXID))]
+		public TestSchemaX TestSchemaX { get; set; } = null!;
+
+		/// <summary>
+		/// FK_TestSchemaY_ParentTestSchemaX
+		/// </summary>
+		[Association(CanBeNull = false, ThisKey = nameof(ParentTestSchemaXID), OtherKey = nameof(SqlServer.TestSchemaX.TestSchemaXID))]
+		public TestSchemaX ParentTestSchemaX { get; set; } = null!;
+
+		/// <summary>
+		/// FK_TestSchemaY_TestSchemaX
+		/// </summary>
+		[Association(CanBeNull = false, ThisKey = nameof(TestSchemaXID), OtherKey = nameof(SqlServer.TestSchemaX.TestSchemaXID))]
+		public TestSchemaX TestSchemaX1 { get; set; } = null!;
+		#endregion
+	}
+
+	[Table("TestSchema_SameTableName", Schema = "dbo")]
+	public partial class TestSchemaSameTableName
+	{
+		[Column("id")] public int? Id { get; set; } // int
 	}
 
 	[Table("ParentChildView", Schema = "dbo", IsView = true)]
 	public partial class ParentChildView
 	{
+		[Column("ChildID" )] public int? ChildID  { get; set; } // int
 		[Column("ParentID")] public int? ParentID { get; set; } // int
 		[Column("Value1"  )] public int? Value1   { get; set; } // int
-		[Column("ChildID" )] public int? ChildID  { get; set; } // int
+	}
+
+	[Table("ParentView", Schema = "dbo", IsView = true)]
+	public partial class ParentView
+	{
+		[Column("_ID"     , IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int  ID       { get; set; } // int
+		[Column("ParentID"                                                             )] public int? ParentID { get; set; } // int
+		[Column("Value1"                                                               )] public int? Value1   { get; set; } // int
 	}
 }

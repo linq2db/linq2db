@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using LinqToDB.CodeModel;
 using LinqToDB.DataModel;
@@ -92,14 +93,16 @@ Changes to this file may cause incorrect behavior and will be lost if the code i
 			// load tables as entities
 			if (_options.Schema.LoadedObjects.HasFlag(SchemaObjects.Table))
 			{
-				foreach (var table in _interceptors.GetTables(_schemaProvider.GetTables()))
+				foreach (var table in _interceptors.GetTables(_schemaProvider.GetTables())
+						.OrderBy(t => t.Name, SqlObjectNameComparer.Instance))
 					BuildEntity(dataContext, table, defaultSchemas, baseEntityType);
 			}
 
 			// load views as entities
 			if (_options.Schema.LoadedObjects.HasFlag(SchemaObjects.View))
 			{
-				foreach (var view in _interceptors.GetViews(_schemaProvider.GetViews()))
+				foreach (var view in _interceptors.GetViews(_schemaProvider.GetViews())
+						.OrderBy(t => t.Name, SqlObjectNameComparer.Instance))
 					BuildEntity(dataContext, view, defaultSchemas, baseEntityType);
 			}
 
@@ -108,7 +111,8 @@ Changes to this file may cause incorrect behavior and will be lost if the code i
 			{
 				Dictionary<(SqlObjectName from, SqlObjectName to), List<ISet<ForeignKeyColumnMapping>>>? duplicateFKs = null;
 
-				foreach (var fk in _interceptors.GetForeignKeys(_schemaProvider.GetForeignKeys()))
+				foreach (var fk in _interceptors.GetForeignKeys(_schemaProvider.GetForeignKeys())
+					.OrderBy(t => t.Name))
 				{
 					// detect and skip duplicate foreign keys
 					if (_options.Schema.IgnoreDuplicateForeignKeys)
@@ -161,28 +165,32 @@ Changes to this file may cause incorrect behavior and will be lost if the code i
 			// load stored procedures
 			if (_options.Schema.LoadedObjects.HasFlag(SchemaObjects.StoredProcedure))
 			{
-				foreach (var proc in _interceptors.GetProcedures(_schemaProvider.GetProcedures(_options.Schema.LoadProceduresSchema, _options.Schema.UseSafeSchemaLoad)))
+				foreach (var proc in _interceptors.GetProcedures(_schemaProvider.GetProcedures(_options.Schema.LoadProceduresSchema, _options.Schema.UseSafeSchemaLoad))
+						.OrderBy(t => t.Name, SqlObjectNameComparer.Instance))
 					BuildStoredProcedure(dataContext, proc, defaultSchemas);
 			}
 
 			// load table functions
 			if (_options.Schema.LoadedObjects.HasFlag(SchemaObjects.TableFunction))
 			{
-				foreach (var func in _interceptors.GetTableFunctions(_schemaProvider.GetTableFunctions()))
+				foreach (var func in _interceptors.GetTableFunctions(_schemaProvider.GetTableFunctions())
+						.OrderBy(t => t.Name, SqlObjectNameComparer.Instance))
 					BuildTableFunction(dataContext, func, defaultSchemas);
 			}
 
 			// load scalar functions
 			if (_options.Schema.LoadedObjects.HasFlag(SchemaObjects.ScalarFunction))
 			{
-				foreach (var func in _interceptors.GetScalarFunctions(_schemaProvider.GetScalarFunctions()))
+				foreach (var func in _interceptors.GetScalarFunctions(_schemaProvider.GetScalarFunctions())
+						.OrderBy(t => t.Name, SqlObjectNameComparer.Instance))
 					BuildScalarFunction(dataContext, func, defaultSchemas);
 			}
 
 			// load aggregate functions
 			if (_options.Schema.LoadedObjects.HasFlag(SchemaObjects.AggregateFunction))
 			{
-				foreach (var func in _interceptors.GetAggregateFunctions(_schemaProvider.GetAggregateFunctions()))
+				foreach (var func in _interceptors.GetAggregateFunctions(_schemaProvider.GetAggregateFunctions())
+						.OrderBy(t => t.Name, SqlObjectNameComparer.Instance))
 					BuildAggregateFunction(dataContext, func, defaultSchemas);
 			}
 

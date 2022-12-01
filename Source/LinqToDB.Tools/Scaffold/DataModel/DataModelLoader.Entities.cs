@@ -26,7 +26,7 @@ namespace LinqToDB.Scaffold
 			ISet<string>     defaultSchemas,
 			IType?           baseType)
 		{
-			var (tableName, isNonDefaultSchema) = ProcessObjectName(table.Name, defaultSchemas);
+			var (tableName, isNonDefaultSchema) = ProcessObjectName(table.Name, defaultSchemas, false);
 
 			var metadata = new EntityMetadata()
 			{
@@ -107,7 +107,7 @@ namespace LinqToDB.Scaffold
 			Dictionary<string, ColumnModel> entityColumnsMap;
 			_columns.Add(entity, entityColumnsMap = new());
 
-			foreach (var column in table.Columns)
+			foreach (var column in table.Columns.OrderBy(c => c.Ordinal))
 			{
 				var typeMapping    = MapType(column.Type);
 				var columnMetadata = new ColumnMetadata() { Name = column.Name };
