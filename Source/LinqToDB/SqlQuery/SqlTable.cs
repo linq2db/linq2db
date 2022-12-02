@@ -169,6 +169,11 @@ namespace LinqToDB.SqlQuery
 
 		#region Public Members
 
+		// TODO: v5 replace with method with proper name
+		/// <summary>
+		/// Search for table field by member name.
+		/// </summary>
+		/// <param name="fieldName">Member name (!), not name in database.</param>
 		public SqlField? this[string fieldName]
 		{
 			get
