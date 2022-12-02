@@ -3,7 +3,7 @@
 	/// <summary>
 	/// Base class for AST visitors with default implementation for all nodes.
 	/// </summary>
-	internal abstract class NoopCodeModelVisitor: CodeModelVisitor
+	public abstract class NoopCodeModelVisitor: CodeModelVisitor
 	{
 		protected override void Visit(CodeImport import        ) { }
 		protected override void Visit(CodePragma pragma        ) { }

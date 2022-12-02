@@ -105,6 +105,8 @@ CREATE TABLE TestIdentity (
 )
 GO
 
+DROP VIEW IF EXISTS AllTypesView
+GO
 DROP TABLE IF EXISTS AllTypes
 GO
 
@@ -140,6 +142,14 @@ CREATE TABLE AllTypes
 	uniqueidentifierDataType uniqueidentifier NULL,
 	objectDataType           Object           NULL
 )
+GO
+
+CREATE VIEW AllTypesView
+AS
+SELECT
+	*,
+	ROW_NUMBER () OVER () AS Number
+FROM AllTypes
 GO
 
 INSERT INTO AllTypes
