@@ -705,7 +705,7 @@ namespace LinqToDB.CodeModel
 				/// <summary>
 				/// DataConnectionExtensions.ExecuteProc method reference.
 				/// </summary>
-				public static CodeIdentifier DataConnectionExtensions_ExecuteProc { get; } = new CodeIdentifier(nameof(global::LinqToDB.Data.DataConnectionExtensions.ExecuteProc), true);
+				public static CodeIdentifier DataConnectionExtensions_ExecuteProc      { get; } = new CodeIdentifier(nameof(global::LinqToDB.Data.DataConnectionExtensions.ExecuteProc), true);
 				/// <summary>
 				/// DataConnectionExtensions.ExecuteProcAsync method reference.
 				/// </summary>
@@ -713,11 +713,16 @@ namespace LinqToDB.CodeModel
 				/// <summary>
 				/// DataConnectionExtensions.QueryProc method reference.
 				/// </summary>
-				public static CodeIdentifier DataConnectionExtensions_QueryProc   { get; } = new CodeIdentifier(nameof(global::LinqToDB.Data.DataConnectionExtensions.QueryProc), true);
+				public static CodeIdentifier DataConnectionExtensions_QueryProc        { get; } = new CodeIdentifier(nameof(global::LinqToDB.Data.DataConnectionExtensions.QueryProc), true);
 				/// <summary>
 				/// DataConnectionExtensions.QueryProcAsync method reference.
 				/// </summary>
-				public static CodeIdentifier DataConnectionExtensions_QueryProcAsync { get; } = new CodeIdentifier(nameof(global::LinqToDB.Data.DataConnectionExtensions.QueryProcAsync), true);
+				public static CodeIdentifier DataConnectionExtensions_QueryProcAsync   { get; } = new CodeIdentifier(nameof(global::LinqToDB.Data.DataConnectionExtensions.QueryProcAsync), true);
+
+				/// <summary>
+				/// <see cref="DataConnection.CommandTimeout"/> property reference.
+				/// </summary>
+				public static CodeReference DataConnection_CommandTimeout { get; } = PropertyOrField((DataConnection dc) => dc.CommandTimeout, false);
 
 				/// <summary>
 				/// <see cref="DataParameter.Direction"/> property reference.
@@ -762,7 +767,7 @@ namespace LinqToDB.CodeModel
 		}
 
 		// TODO: replace forceNullable with NRT annotation lookup
-		private static CodeReference PropertyOrField<TObject, TProperty>(Expression<Func<TObject, TProperty>> accessor, bool forceNullable)
+		public static CodeReference PropertyOrField<TObject, TProperty>(Expression<Func<TObject, TProperty>> accessor, bool forceNullable)
 		{
 			var member = ((MemberExpression)accessor.Body).Member;
 			if (member is PropertyInfo pi)

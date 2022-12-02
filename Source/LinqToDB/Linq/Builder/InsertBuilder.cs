@@ -156,12 +156,8 @@ namespace LinqToDB.Linq.Builder
 
 								foreach (var c in ed.Columns.Where(c => !c.SkipOnInsert))
 								{
-									var field = table[c.ColumnName];
-									if (field == null)
-										continue;
-
-									var pe = Expression.MakeMemberAccess(arg, c.MemberInfo);
-
+									var field     = table[c.MemberName] ?? throw new InvalidOperationException($"Cannot find column {c.MemberName}({c.ColumnName})");
+									var pe        = Expression.MakeMemberAccess(arg, c.MemberInfo);
 									var column    = into.ConvertToSql(pe, 1, ConvertFlags.Field);
 									var parameter = builder.ParametersContext.BuildParameterFromArgumentProperty(methodCall, argIndex, field.ColumnDescriptor);
 

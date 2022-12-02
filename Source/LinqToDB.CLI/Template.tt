@@ -226,4 +226,14 @@ public class Interceptors : ScaffoldInterceptors
 	{
 	}
 	#endregion
+
+	/// <summary>
+	/// Event, triggered after source code generation done. Provides access to database model objects with final types and names set.
+	/// Could be used to establish link between database object and generated code.
+	/// </summary>
+	/// <param name="model">Database model descriptors.</param>
+	public override void AfterSourceCodeGenerated(FinalDataModel model)
+	{
+		// you probably don't need it
+	}
 }

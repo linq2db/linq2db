@@ -123,6 +123,11 @@ namespace LinqToDB.DataModel
 
 			method.Returns(returnType);
 
+			method.Method.ChangeHandler += m =>
+			{
+				function.Return = m.ReturnType!.Type;
+			};
+
 			foreach (var param in function.Parameters)
 				DefineParameter(method, param.Parameter);
 		}

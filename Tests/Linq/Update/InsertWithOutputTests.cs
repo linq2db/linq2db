@@ -671,5 +671,42 @@ namespace Tests.xUpdate
 				Assert.AreEqual(data.ValueStr, output.ValueStr);
 			}
 		}
+
+		[Table]
+		public partial class Issue3834Table
+		{
+			[Column("Id"     , IsPrimaryKey = true )] public int       Id         { get; set; }
+			[Column("Nesto"  , CanBeNull    = false)] public string    Nesto      { get; set; } = null!;
+			[Column("Nest"   , CanBeNull    = false)] public string    Nest       { get; set; } = null!;
+			[Column("WhatSov", CanBeNull    = false)] public string    Whatsov    { get; set; } = null!;
+			[Column("Co2grund")                     ] public string?   Co2Grund   { get; set; }
+			[Column("Co2aend")                      ] public string?   Co2Aend    { get; set; }
+		}
+
+		[Test]
+		public void Issue3834([IncludeDataSources(true, FeatureInsertOutputSingle)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable<Issue3834Table>();
+
+			var what = new Issue3834Table()
+			{
+				Id       = 123,
+				Co2Aend  = "What",
+				Nest     = "Nessss",
+				Co2Grund = "xxx",
+				Nesto    = "Nesto",
+				Whatsov  = "Whatsov"
+			};
+
+			var x = table.InsertWithOutput(what);
+
+			Assert.AreEqual(what.Id      , x.Id      );
+			Assert.AreEqual(what.Co2Aend , x.Co2Aend );
+			Assert.AreEqual(what.Nest    , x.Nest    );
+			Assert.AreEqual(what.Co2Grund, x.Co2Grund);
+			Assert.AreEqual(what.Nesto   , x.Nesto   );
+			Assert.AreEqual(what.Whatsov , x.Whatsov );
+		}
 	}
 }
