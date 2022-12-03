@@ -46,7 +46,6 @@ namespace Tests.UserTests
 			}
 		}
 
-
 		[Test]
 		public void TestUnorderedTakeSkipZero([DataSources] string context)
 		{

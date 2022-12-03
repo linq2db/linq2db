@@ -91,7 +91,10 @@ namespace LinqToDB.Linq.Builder
 
 			var found = newAccessor;
 
-			if (_parameters != null)
+			// constants/default(T) must be excluded from parameter deduplication:
+			// constant value could change for next query execution which will lead to lost parameter
+			// see CharTrimming test inserts for such example
+			if (_parameters != null && expr.NodeType != ExpressionType.Constant && expr.NodeType != ExpressionType.Default)
 			{
 				foreach (var (paramExpr, column, accessor) in _parameters)
 				{
