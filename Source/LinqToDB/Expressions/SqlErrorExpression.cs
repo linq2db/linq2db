@@ -24,12 +24,22 @@ namespace LinqToDB.Expressions
 
 		public override Expression Reduce()
 		{
-			throw CreateError();
+			throw CreateError(Expression);
 		}
 
 		public Exception CreateError()
 		{
-			return new LinqException($"'{PrepareExpression(Expression)}' cannot be converted to SQL.");
+			return CreateError(Expression);
+		}
+
+		public static Exception CreateError(Expression expression)
+		{
+			return new LinqException($"'{PrepareExpression(expression)}' cannot be converted to SQL.");
+		}
+
+		public static void ThrowError(Expression expression)
+		{
+			throw CreateError(expression);
 		}
 
 		public static Expression PrepareExpression(Expression expression)

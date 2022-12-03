@@ -89,10 +89,9 @@ namespace LinqToDB.Common
 			return Enumerable.Empty<T>().AsQueryable();
 		}
 
-		public static IQueryable CreateEmptyQuery(Type elementType)
+		internal static T[] ArrayAppend<T>(this T[] array, T newElement)
 		{
-			var method = Methods.LinqToDB.Tools.CreateEmptyQuery.MakeGenericMethod(elementType);
-			return (IQueryable)method.Invoke(null, Array<object>.Empty)!;
+			return Array<T>.Append(array, newElement);
 		}
 
 		public static Assembly? TryLoadAssembly(string? assemblyName, string? providerFactory)

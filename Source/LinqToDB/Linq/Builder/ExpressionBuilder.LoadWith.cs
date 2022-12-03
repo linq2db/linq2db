@@ -2,9 +2,9 @@
 {
 	using Common;
 
-	partial class ExpressionBuilder
+	internal partial class ExpressionBuilder
 	{
-		private Dictionary<IBuildContext, List<LoadWithInfo[]>>? _loadWithInformation;
+		Dictionary<IBuildContext, List<LoadWithInfo[]>>? _loadWithInformation;
 
 		public List<LoadWithInfo[]>? GetLoadWith(IBuildContext sequence)
 		{

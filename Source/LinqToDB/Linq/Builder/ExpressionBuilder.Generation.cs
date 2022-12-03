@@ -12,7 +12,7 @@ namespace LinqToDB.Linq.Builder
 	using Reflection;
 	using static LinqToDB.Reflection.Methods.LinqToDB;
 
-	partial class ExpressionBuilder
+	internal partial class ExpressionBuilder
 	{
 		#region Entity Construction
 
@@ -26,395 +26,134 @@ namespace LinqToDB.Linq.Builder
 			return entityType;
 		}
 
-		[DebuggerDisplay("{Member.Name} = {Expression}")]
-		class AssignmentInfo
+		SqlGenericConstructorExpression BuildGenericFromMembers(IBuildContext? context,
+			List<ColumnDescriptor> columns, ProjectFlags flags, Expression currentPath, int level)
 		{
-			public AssignmentInfo(ColumnDescriptor column, Expression expression)
+			var members       = new List<SqlGenericConstructorExpression.Assignment>();
+
+			var checkForKey = flags.HasFlag(ProjectFlags.Keys) && columns.Any(c => c.IsPrimaryKey);
+
+			if (checkForKey)
 			{
-				Column     = column;
-				Member     = column.MemberInfo;
-				Expression = expression;
+				columns = columns.Where(c => c.IsPrimaryKey).ToList();
 			}
+			var hasNested   = false;
 
-			public AssignmentInfo(MemberInfo member, Expression expression, bool isLoaded)
+			if (level == 0)
 			{
-				Member = member;
-				Expression = expression;
-				IsLoaded = isLoaded;
-			}
-
-			public ColumnDescriptor? Column     { get; }
-			public MemberInfo        Member     { get; }
-			public Expression        Expression { get; }
-			public bool              IsLoaded   { get; }
-		}
-
-		public Expression BuildEntityExpression(IBuildContext context, Type entityType, ProjectFlags flags, bool checkInheritance = true)
-		{
-			entityType = GetTypeForInstantiation(entityType);
-
-			var contextRefExpression = new ContextRefExpression(entityType, context);
-
-			var entityDescriptor = MappingSchema.GetEntityDescriptor(entityType);
-
-			if (checkInheritance && flags.HasFlag(ProjectFlags.Expression))
-			{
-				var inheritanceMappings = entityDescriptor.InheritanceMapping;
-				if (inheritanceMappings.Count > 0)
+				foreach (var column in columns)
 				{
-					var defaultDescriptor = inheritanceMappings.FirstOrDefault(x => x.IsDefault);
-
-					Expression defaultExpression;
-					if (defaultDescriptor != null)
+					Expression me;
+					if (column.MemberName.Contains('.'))
 					{
-						defaultExpression = BuildEntityExpression(context, defaultDescriptor.Type, flags, false);
+						hasNested = true;
 					}
 					else
 					{
-						var firstMapping = inheritanceMappings[0];
+						var declaringType = column.MemberInfo.DeclaringType!;
+						var objExpression = currentPath;
+						if (declaringType != objExpression.Type)
+							objExpression = Expression.Convert(objExpression, declaringType);
 
-						var onType = firstMapping.Discriminator.MemberInfo.ReflectedType;
-						if (onType == null)
-						{
-							throw new LinqToDBException("Could not get discriminator ReflectedType.");
-						}
+						// Target ReflectedType to DeclaringType for better caching
+						//
+						var memberInfo = declaringType.GetMemberEx(column.MemberInfo) ??
+						                 throw new InvalidOperationException();
+						me = Expression.MakeMemberAccess(objExpression, memberInfo);
 
-						var generator    = new ExpressionGenerator();
-
-						Expression<Func<object, Type, Exception>> throwExpr = (code, et) =>
-							new LinqException(
-								"Inheritance mapping is not defined for discriminator value '{0}' in the '{1}' hierarchy.",
-								code, et);
-
-						var access = Expression.MakeMemberAccess(contextRefExpression.WithType(onType), firstMapping.Discriminator.MemberInfo);
-
-						var codeExpr = Expression.Convert(access, typeof(object));
-
-						generator.Throw(throwExpr.GetBody(codeExpr, Expression.Constant(onType, typeof(Type))));
-						generator.AddExpression(new DefaultValueExpression(MappingSchema, entityType));
-
-						defaultExpression = generator.Build();
+						members.Add(new SqlGenericConstructorExpression.Assignment(memberInfo, me,
+							column.MemberAccessor.HasSetter, false));
 					}
 
-					var current = defaultExpression;
+				}
+			}
 
-					for (int i = 0; i < inheritanceMappings.Count; i++)
+			if (level > 0 || hasNested)
+			{
+				var processed = new HashSet<string>();
+				foreach (var column in columns)
+				{
+					if (!column.MemberName.Contains('.'))
 					{
-						var inheritance = inheritanceMappings[i];
-						if (inheritance.IsDefault)
-							continue;
-
-						var onType     = inheritance.Discriminator.MemberInfo.ReflectedType ?? inheritance.Type;
-						var contextRef = contextRefExpression.WithType(onType);
-
-						var test = Equal(
-							MappingSchema,
-							Expression.MakeMemberAccess(contextRef, inheritance.Discriminator.MemberInfo),
-							Expression.Constant(inheritance.Code));
-
-						var tableExpr = Expression.Convert(BuildEntityExpression(context, inheritance.Type, flags, false), current.Type);
-
-						current = Expression.Condition(test, tableExpr, current);
+						continue;
 					}
 
-					return current;
-				}
-			}
+					var names = column.MemberName.Split('.');
 
-			var members = BuildMembers(context, entityDescriptor, flags);
-
-			if (flags.HasFlag(ProjectFlags.SQL) || flags.HasFlag(ProjectFlags.Test))
-			{
-				var assignments = members
-					.Select(x => new SqlGenericConstructorExpression.Assignment(x.Member, x.Expression, x.Column?.MemberAccessor.HasSetter == true, x.IsLoaded))
-					.ToList();
-
-				return new SqlGenericConstructorExpression(SqlGenericConstructorExpression.CreateType.Full, entityType, null, new ReadOnlyCollection<SqlGenericConstructorExpression.Assignment>(assignments));
-			}
-
-			//if (flags.HasFlag(ProjectFlags.Expression))
-			{
-				List<LambdaExpression>? postProcess = null;
-
-				var expr =
-					IsRecord(MappingSchema.GetAttributes<Attribute>(entityType), out var _)
-						?
-						BuildRecordConstructor(entityDescriptor, members)
-						: IsAnonymous(entityType)
-							? BuildRecordConstructor(entityDescriptor, members)
-							:
-							BuildDefaultConstructor(entityDescriptor, members, ref postProcess);
-
-				if (flags.HasFlag(ProjectFlags.Expression))
-				{
-					BuildCalculatedColumns(context, entityDescriptor, expr.Type, ref postProcess);
-
-					//TODO:
-					/*
-					expr = ProcessExpression(expr);
-					expr = NotifyEntityCreated(expr);
-					*/
-				}
-
-				return new ContextConstructionExpression(context, expr, postProcess);
-			}
-
-			throw new NotImplementedException();
-		}
-
-		void BuildCalculatedColumns(IBuildContext context, EntityDescriptor entityDescriptor, Type objectType, ref List<LambdaExpression>? postProcess)
-		{
-			if (!entityDescriptor.HasCalculatedMembers)
-				return;
-
-			var contextRef = new ContextRefExpression(objectType, context);
-
-			var param    = Expression.Parameter(objectType, "e");
-
-			postProcess ??= new List<LambdaExpression>();
-
-			foreach (var member in entityDescriptor.CalculatedMembers!)
-			{
-				var assign = Expression.Assign(Expression.MakeMemberAccess(param, member.MemberInfo),
-					Expression.MakeMemberAccess(contextRef, member.MemberInfo));
-
-				var assignLambda = Expression.Lambda(assign, param);
-
-				postProcess.Add(assignLambda);
-			}
-		}
-
-		List<AssignmentInfo> BuildMembers(IBuildContext context,
-			EntityDescriptor entityDescriptor, ProjectFlags flags)
-		{
-			var members       = new List<AssignmentInfo>();
-			var objectType    = entityDescriptor.ObjectType;
-			var refExpression = new ContextRefExpression(objectType, context);
-
-			var checkForKey = flags.HasFlag(ProjectFlags.Keys) && entityDescriptor.Columns.Any(c => c.IsPrimaryKey);
-
-			foreach (var column in entityDescriptor.Columns)
-			{
-				if (checkForKey && !column.IsPrimaryKey)
-					continue;
-
-				Expression me;
-				if (column.MemberName.Contains('.'))
-				{
-					var memberNames = column.MemberName.Split('.');
-
-					me = memberNames.Aggregate((Expression)refExpression, Expression.PropertyOrField);
-				}
-				else
-				{
-					var declaringType = column.MemberInfo.DeclaringType!;
-					var objExpression = refExpression.WithType(declaringType);
-
-					// Target ReflectedType to DeclaringType for better caching
-					//
-					var memberInfo = declaringType.GetMemberEx(column.MemberInfo) ?? throw new InvalidOperationException();
-					me = Expression.MakeMemberAccess(objExpression, memberInfo);
-
-					/*
-					var mi = refExpression.Type.GetMemberEx(column.MemberInfo);
-
-					var objExpression = refExpression;
-					if (mi == null)
-					{
-						if (column.MemberInfo.DeclaringType == null)
-							continue;
-
-						// Skip fake assignments
-						if (flags.HasFlag(ProjectFlags.Expression))
-							continue;
-
-						objExpression = new ContextRefExpression(column.MemberInfo.ReflectedType, context);
-						mi = column.MemberInfo;
-					};
-
-					me = Expression.MakeMemberAccess(objExpression, mi);
-					*/
-				}
-
-				members.Add(new AssignmentInfo(column, me));
-			}
-
-			var loadWith = GetLoadWith(context);
-
-			if (loadWith != null)
-			{
-				var contextRef = new ContextRefExpression(objectType, context);
-
-				var assignedMembers = new HashSet<MemberInfo >(MemberInfoComparer.Instance);
-
-				foreach (var info in loadWith)
-				{
-					var memberInfo = info[0].MemberInfo;
-
-					if (!assignedMembers.Add(memberInfo))
+					if (level >= names.Length)
 						continue;
 
-					var expression = Expression.MakeMemberAccess(contextRef, memberInfo);
-					var ad         = GetAssociationDescriptor(expression, out var accessorMember);
-					if (ad != null)
+					var currentMemberName = names[level];
+					MemberInfo memberInfo;
+					Expression assignExpression;
+
+					if (names.Length - 1 > level)
 					{
-						if (!string.IsNullOrEmpty(ad.Storage))
+						var propPath = string.Join(".", names.Take(level + 1));
+						if (!processed.Add(propPath))
+							continue;
+
+						memberInfo = currentPath.Type.GetMember(currentMemberName).Single();
+
+						var newColumns = columns.Where(c => c.MemberName.StartsWith(propPath)).ToList();
+						var newPath    = Expression.MakeMemberAccess(currentPath, memberInfo);
+
+						assignExpression = BuildGenericFromMembers(null, newColumns, flags, newPath, level + 1);
+					}
+					else
+					{
+						memberInfo       = column.MemberInfo;
+						assignExpression = Expression.MakeMemberAccess(currentPath, memberInfo);
+					}
+
+					members.Add(new SqlGenericConstructorExpression.Assignment(memberInfo, assignExpression, column.MemberAccessor.HasSetter, false));
+				}
+			}
+
+			if (context != null && !flags.HasFlag(ProjectFlags.Keys))
+			{
+				var entityDescriptor = MappingSchema.GetEntityDescriptor(currentPath.Type);
+				BuildCalculatedColumns(context, entityDescriptor, entityDescriptor.ObjectType, members);
+			}
+
+			if (level == 0 && context != null)
+			{
+				var loadWith = GetLoadWith(context);
+
+				if (loadWith != null)
+				{
+					var assignedMembers = new HashSet<MemberInfo>(MemberInfoComparer.Instance);
+
+					foreach (var info in loadWith)
+					{
+						var memberInfo = info[0].MemberInfo;
+
+						if (!assignedMembers.Add(memberInfo))
+							continue;
+
+						var expression = Expression.MakeMemberAccess(currentPath, memberInfo);
+						var ad         = GetAssociationDescriptor(expression, out var accessorMember);
+						if (ad != null)
 						{
-							memberInfo = memberInfo.ReflectedType!.GetMember(ad.Storage!,
-								BindingFlags.Instance | BindingFlags.Public | BindingFlags.FlattenHierarchy |
-								BindingFlags.NonPublic).SingleOrDefault();
+							if (!string.IsNullOrEmpty(ad.Storage))
+							{
+								memberInfo = memberInfo.ReflectedType!.GetMember(ad.Storage!,
+									BindingFlags.Instance | BindingFlags.Public | BindingFlags.FlattenHierarchy |
+									BindingFlags.NonPublic).SingleOrDefault();
+							}
 						}
-					}
-					members.Add(new AssignmentInfo(memberInfo, expression, true));
-				}
-			}
 
-			return members;
-		}
-
-		Expression BuildDefaultConstructor(EntityDescriptor entityDescriptor, List<AssignmentInfo> members, ref List<LambdaExpression>? postProcess)
-		{
-			var constructor = SuggestConstructor(entityDescriptor);
-
-			List<ColumnDescriptor>? ignoredColumns = null;
-			var newExpression = BuildNewExpression(constructor, members, ref ignoredColumns);
-
-			var initExpr = Expression.MemberInit(newExpression,
-				members
-					.Where(m => m.Column == null || ignoredColumns?.Contains(m.Column) != true)
-					// IMPORTANT: refactoring this condition will affect hasComplex variable calculation below
-					.Where(static m => m.Column?.MemberAccessor.IsComplex != true)
-					.Select(static m => new
-					{
-						Storage = m.Column?.StorageInfo ?? m.Member,
-						Expression = m.Expression
-					})
-					.Where(static m => m.Storage is not PropertyInfo prop || prop.CanWrite)
-					.Select(static m => (MemberBinding)Expression.Bind(m.Storage, m.Expression))
-			);
-
-			foreach (var ai in members)
-			{
-				if (ai.Column?.MemberAccessor.IsComplex == true)
-				{
-					postProcess ??= new List<LambdaExpression>();
-
-					var setter = ai.Column.MemberAccessor.SetterExpression!;
-					setter = Expression.Lambda(setter.GetBody(setter.Parameters[0], ai.Expression), setter.Parameters[0]);
-
-					postProcess.Add(setter);
-				}
-			}
-
-			return initExpr;
-		}
-
-		private static ConstructorInfo SuggestConstructor(EntityDescriptor entityDescriptor)
-		{
-			var constructors = entityDescriptor.ObjectType.GetConstructors(BindingFlags.Instance | BindingFlags.Public |
-			                                                               BindingFlags.NonPublic);
-
-			if (constructors.Length == 0)
-			{
-				throw new InvalidOperationException(
-					$"No constructors found for '{entityDescriptor.ObjectType.Name}.'");
-			}
-
-			// public without parameters
-			foreach (var info in constructors)
-			{
-				if (info.IsPublic && info.GetParameters().Length == 0)
-					return info;
-			}
-
-			//TODO: Use MatchParameter to calculate which constructor is suitable
-			// nonpublic without parameters
-			foreach (var info in constructors)
-			{
-				if (!info.IsPublic && info.GetParameters().Length == 0)
-					return info;
-			}
-
-			// first public with parameters
-			foreach (var info in constructors)
-			{
-				if (info.IsPublic)
-					return info;
-			}
-
-			// first nonpublic
-			foreach (var info in constructors)
-			{
-				if (!info.IsPublic)
-					return info;
-			}
-
-			throw new InvalidOperationException(
-				$"Could not decide which constructor should be used for '{entityDescriptor.ObjectType.Name}.'");
-		}
-
-		private static int MatchParameter(ParameterInfo parameter, List<AssignmentInfo> members)
-		{
-			var found = members.FindIndex(x =>
-				x.Column.MemberType == parameter.ParameterType &&
-				x.Column.MemberName == parameter.Name);
-
-			if (found < 0)
-			{
-				found = members.FindIndex(x =>
-					x.Column.MemberType == parameter.ParameterType &&
-					x.Column.MemberName.Equals(parameter.Name,
-						StringComparison.InvariantCultureIgnoreCase));
-			}
-
-			return found;
-		}
-
-		NewExpression BuildNewExpression(ConstructorInfo constructor, List<AssignmentInfo> members, ref List<ColumnDescriptor>? ignoredColumns)
-		{
-			var parameters = constructor.GetParameters();
-
-			if (parameters.Length <= 0)
-			{
-				return Expression.New(constructor);
-			}
-
-			var parameterValues = new List<Expression>();
-
-			foreach (var parameterInfo in parameters)
-			{
-				var idx = MatchParameter(parameterInfo, members);
-
-				if (idx >= 0)
-				{
-					var ai = members[idx];
-					parameterValues.Add(ai.Expression);
-					ignoredColumns ??= new List<ColumnDescriptor>();
-					
-					if (ai.Column != null)
-					{
-						ignoredColumns.Add(ai.Column);
+						members.Add(
+							new SqlGenericConstructorExpression.Assignment(memberInfo, expression, false, true));
 					}
 				}
-				else
-				{
-					parameterValues.Add(Expression.Constant(
-						MappingSchema.GetDefaultValue(parameterInfo.ParameterType), parameterInfo.ParameterType));
-				}
 			}
 
-			return Expression.New(constructor, parameterValues);
+			var generic = new SqlGenericConstructorExpression(SqlGenericConstructorExpression.CreateType.Full,
+				currentPath.Type,
+				null, new ReadOnlyCollection<SqlGenericConstructorExpression.Assignment>(members));
 
-		}
-
-		Expression BuildRecordConstructor(EntityDescriptor entityDescriptor, List<AssignmentInfo> members)
-		{
-			var ctor = entityDescriptor.ObjectType.GetConstructors().Single();
-
-			var ignoredColumns = new List<ColumnDescriptor>();
-			var newExpression  = BuildNewExpression(ctor, members, ref ignoredColumns);
-
-			return newExpression;
+			return generic;
 		}
 
 		#endregion Entity Construction
@@ -427,16 +166,12 @@ namespace LinqToDB.Linq.Builder
 
 			var entityDescriptor = MappingSchema.GetEntityDescriptor(entityType);
 
-			var members = BuildMembers(context, entityDescriptor, flags);
+			var objectType    = entityDescriptor.ObjectType;
+			var refExpression = new ContextRefExpression(objectType, context);
 
-			var assignments = members
-				.Select(x => new SqlGenericConstructorExpression.Assignment(x.Member, x.Expression, x.Column?.MemberAccessor.HasSetter == true, x.IsLoaded))
-				.ToList();
+			var generic = BuildGenericFromMembers(context, entityDescriptor.Columns, flags, refExpression, 0);
 
-			if (!flags.HasFlag(ProjectFlags.Keys))
-				BuildCalculatedColumns(context, entityDescriptor, entityType, assignments);
-
-			return new SqlGenericConstructorExpression(SqlGenericConstructorExpression.CreateType.Full, entityType, null, new ReadOnlyCollection<SqlGenericConstructorExpression.Assignment>(assignments));
+			return generic;
 		}
 
 		void BuildCalculatedColumns(IBuildContext context, EntityDescriptor entityDescriptor, Type objectType, List<SqlGenericConstructorExpression.Assignment> assignments)
@@ -466,7 +201,7 @@ namespace LinqToDB.Linq.Builder
 			return -1;
 		}
 
-		private static int MatchParameter(ParameterInfo parameter, ReadOnlyCollection<SqlGenericConstructorExpression.Assignment> members)
+		static int MatchParameter(ParameterInfo parameter, ReadOnlyCollection<SqlGenericConstructorExpression.Assignment> members)
 		{
 			var found = FindIndex(members, x =>
 				x.MemberInfo.GetMemberType() == parameter.ParameterType &&
@@ -484,7 +219,7 @@ namespace LinqToDB.Linq.Builder
 		}
 
 
-		private Expression? TryWithConstructor(
+		Expression? TryWithConstructor(
 			MappingSchema                                     mappingSchema,
 			TypeAccessor                                      typeAccessor,
 			ConstructorInfo                                   constructorInfo,
