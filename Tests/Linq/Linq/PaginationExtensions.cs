@@ -89,7 +89,7 @@ namespace Tests.Linq
 
 		#region Helpers
 
-		[return: NotNullIfNotNull("ex")]
+		[return: NotNullIfNotNull(nameof(ex))]
 		static Expression? Unwrap(this Expression? ex)
 		{
 			if (ex == null)

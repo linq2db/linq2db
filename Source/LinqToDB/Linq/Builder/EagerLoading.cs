@@ -1641,7 +1641,7 @@ namespace LinqToDB.Linq.Builder
 		}
 
 
-		[return: NotNullIfNotNull("body")]
+		[return: NotNullIfNotNull(nameof(body))]
 		internal static Expression? ReplaceParametersWithChangedType(Expression? body, IList<ParameterExpression> before, IList<ParameterExpression> after)
 		{
 			if (body == null)
@@ -1691,7 +1691,7 @@ namespace LinqToDB.Linq.Builder
 			return newBody;
 		}
 
-		[return: NotNullIfNotNull("expr")]
+		[return: NotNullIfNotNull(nameof(expr))]
 		internal static Expression? FinalizeExpressionKeys(HashSet<Expression> stable, Expression? expr)
 		{
 			if (expr == null)

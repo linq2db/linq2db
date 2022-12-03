@@ -1590,7 +1590,7 @@ namespace LinqToDB.Linq.Builder
 
 		Dictionary<Expression, Expression>? _rootExpressions;
 
-		[return: NotNullIfNotNull("expr")]
+		[return: NotNullIfNotNull(nameof(expr))]
 		public Expression? GetRootObject(Expression? expr)
 		{
 			if (expr == null)
