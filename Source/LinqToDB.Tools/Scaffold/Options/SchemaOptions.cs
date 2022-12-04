@@ -39,6 +39,15 @@ namespace LinqToDB.Scaffold
 		/// </list>
 		/// </summary>
 		public Func<SqlObjectName, bool, bool> LoadTableOrView { get; set; } = (_, _) => true;
+
+		/// <summary>
+		/// This option applied only to SQL Server 2016+ and, when enabled, removes history tables information for temporal tables from schema load results.
+		/// <list type="bullet">
+		/// <item>Default: <c>false</c></item>
+		/// <item>In T4 compability mode: <c>false</c></item>
+		/// </list>
+		/// </summary>
+		public bool IgnoreSystemHistoryTables { get; set; }
 		#endregion
 
 		#region Foreign Keys
