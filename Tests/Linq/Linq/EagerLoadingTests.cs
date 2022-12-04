@@ -1612,7 +1612,7 @@ FROM
 
 			internal static Expression<Func<Test3799Item, Test3799FirstChildModel>> Selector = item => new Test3799FirstChildModel
 			{
-				Name = item.Name,
+				Name          = item.Name,
 				ChildrenNames = item.Children.AsQueryable().Select(x => x.Name).ToList(),
 			};
 		}
@@ -1624,7 +1624,7 @@ FROM
 
 			internal static Expression<Func<Test3799Item, Test3799ItemModel>> Selector = item => new Test3799ItemModel()
 			{
-				Name = item.Name,
+				Name       = item.Name,
 				FirstChild = item.Children.AsQueryable().Select(Test3799FirstChildModel.Selector).FirstOrDefault(),
 			};
 		}

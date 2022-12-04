@@ -286,7 +286,6 @@ namespace LinqToDB.Linq.Builder
 							{
 								return true;
 							}
-							return false;
 						}
 
 						return false;
