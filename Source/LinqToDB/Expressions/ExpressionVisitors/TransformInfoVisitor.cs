@@ -43,7 +43,7 @@ namespace LinqToDB.Expressions
 			return new TransformInfoVisitor<TContext>(context, func);
 		}
 
-		[return: NotNullIfNotNull("expr")]
+		[return: NotNullIfNotNull(nameof(expr))]
 		public Expression? Transform(Expression? expr)
 		{
 			if (expr == null)

@@ -1929,7 +1929,7 @@ namespace LinqToDB.SqlProvider
 
 		#region Conversion
 
-		[return: NotNullIfNotNull("element")]
+		[return: NotNullIfNotNull(nameof(element))]
 		public virtual IQueryElement? ConvertElement(MappingSchema mappingSchema, IQueryElement? element, OptimizationContext context)
 		{
 			return OptimizeElement(mappingSchema, element, context, true);

@@ -907,7 +907,7 @@ namespace LinqToDB.Extensions
 
 #region MethodInfo extensions
 
-		[return: NotNullIfNotNull("method")]
+		[return: NotNullIfNotNull(nameof(method))]
 		public static PropertyInfo? GetPropertyInfo(this MethodInfo? method)
 		{
 			if (method != null)
