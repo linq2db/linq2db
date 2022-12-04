@@ -1581,5 +1581,62 @@ FROM
 		}
 		#endregion
 
+		#region Issue 3799
+
+		[Table]
+		public class Test3799Item
+		{
+			[PrimaryKey     ] public int    Id       { get; set; }
+			[Column         ] public int?   ParentId { get; set; }
+			[Column, NotNull] public string Name     { get; set; } = null!;
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(ParentId), CanBeNull = true)]
+			public IEnumerable<Test3799Item> Children { get; set; } = null!;
+
+			public static Test3799Item[] TestData = new[]
+			{
+				new Test3799Item() { Id = 1, ParentId = null, Name = "root"      },
+				new Test3799Item() { Id = 2, ParentId = 1   , Name = "child 1"   },
+				new Test3799Item() { Id = 3, ParentId = 2   , Name = "child 1.1" },
+				new Test3799Item() { Id = 4, ParentId = 2   , Name = "child 1.2" },
+				new Test3799Item() { Id = 5, ParentId = 1   , Name = "child 2"   },
+				new Test3799Item() { Id = 6, ParentId = 5   , Name = "child 2.1" },
+				new Test3799Item() { Id = 7, ParentId = 5   , Name = "child 2.1" },
+			};
+		}
+
+		public sealed class Test3799FirstChildModel
+		{
+			public string              Name          { get; set; } = null!;
+			public IEnumerable<string> ChildrenNames { get; set; } = null!;
+
+			internal static Expression<Func<Test3799Item, Test3799FirstChildModel>> Selector = item => new Test3799FirstChildModel
+			{
+				Name = item.Name,
+				ChildrenNames = item.Children.AsQueryable().Select(x => x.Name).ToList(),
+			};
+		}
+
+		public sealed class Test3799ItemModel
+		{
+			public string                   Name       { get; set; } = null!;
+			public Test3799FirstChildModel? FirstChild { get; set; }
+
+			internal static Expression<Func<Test3799Item, Test3799ItemModel>> Selector = item => new Test3799ItemModel()
+			{
+				Name = item.Name,
+				FirstChild = item.Children.AsQueryable().Select(Test3799FirstChildModel.Selector).FirstOrDefault(),
+			};
+		}
+
+		[Test]
+		public void Issue3799Test([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable<Test3799Item>(Test3799Item.TestData);
+
+			var result = table.Select(Test3799ItemModel.Selector).ToList();
+		}
+		#endregion
 	}
 }
