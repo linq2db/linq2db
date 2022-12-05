@@ -143,7 +143,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			if (BuildStep == Step.Output)
 			{
 				return;
-		}
+			}
 
 			base.BuildOutputSubclause(output);
 		}

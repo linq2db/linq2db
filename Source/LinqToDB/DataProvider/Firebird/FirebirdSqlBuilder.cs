@@ -96,7 +96,7 @@ namespace LinqToDB.DataProvider.Firebird
 					StringBuilder.Append("DECFLOAT");
 					if (type.Type.Precision != null && type.Type.Precision <= 16)
 						StringBuilder.Append("(16)");
-					                                                                                      break;
+					break;
 
 				case DataType.Decimal       :
 					base.BuildDataTypeFromDataType(type.Type.Precision > 18 ? new SqlDataType(type.Type.DataType, type.Type.SystemType, null, 18, type.Type.Scale, type.Type.DbType) : type, forCreateTable, canBeNull);

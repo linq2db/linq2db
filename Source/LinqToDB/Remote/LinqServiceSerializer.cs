@@ -2466,10 +2466,10 @@ namespace LinqToDB.Remote
 				ObjectIndices.Add(idx, obj!);
 
 				if (DelayedObjects.Count > 0 && DelayedObjects.TryGetValue(idx, out var action))
-					{
-						action(obj!);
-						DelayedObjects.Remove(idx);
-					}
+				{
+					action(obj!);
+					DelayedObjects.Remove(idx);
+				}
 
 				return true;
 			}

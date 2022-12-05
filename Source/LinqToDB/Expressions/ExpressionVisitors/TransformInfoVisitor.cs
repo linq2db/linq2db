@@ -451,7 +451,7 @@ namespace LinqToDB.Expressions
 				var postProcess = construct.PostProcess == null ? null : Transform(construct.PostProcess);
 
 				return construct.Update(construct.BuildContext, inner, postProcess as List<LambdaExpression>);
-	}
+			}
 
 			if (expr is SqlGenericConstructorExpression generic)
 			{
@@ -460,7 +460,7 @@ namespace LinqToDB.Expressions
 				if (!ReferenceEquals(assignments, generic.Assignments))
 				{
 					generic = generic.ReplaceAssignments(assignments.ToList());
-}
+				}
 
 				var parameters = Transform(generic.Parameters, TransformParameters);
 

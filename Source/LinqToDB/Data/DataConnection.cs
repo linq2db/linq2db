@@ -1688,13 +1688,13 @@ namespace LinqToDB.Data
 						dataConnection.TransactionAsync!.Commit();
 
 						if (dataConnection._closeTransaction)
-				{
+						{
 							dataConnection.TransactionAsync.Dispose();
 							dataConnection.TransactionAsync = null;
 
 							if (dataConnection._command != null)
 								dataConnection._command.Transaction = null;
-				}
+						}
 
 						return true;
 					});

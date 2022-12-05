@@ -187,13 +187,13 @@ namespace LinqToDB.Data
 						await dataConnection.TransactionAsync!.CommitAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 						if (dataConnection._closeTransaction)
-				{
+						{
 							await dataConnection.TransactionAsync.DisposeAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
 							dataConnection.TransactionAsync = null;
 
 							if (dataConnection._command != null)
 								dataConnection._command.Transaction = null;
-				}
+						}
 						return _;
 					}, cancellationToken)
 					.ConfigureAwait(Configuration.ContinueOnCapturedContext);
@@ -220,13 +220,13 @@ namespace LinqToDB.Data
 						await dataConnection.TransactionAsync!.RollbackAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 						if (dataConnection._closeTransaction)
-				{
+						{
 							await dataConnection.TransactionAsync.DisposeAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
 							dataConnection.TransactionAsync = null;
 
 							if (dataConnection._command != null)
 								dataConnection._command.Transaction = null;
-				}
+						}
 						return _;
 					}, cancellationToken)
 					.ConfigureAwait(Configuration.ContinueOnCapturedContext);

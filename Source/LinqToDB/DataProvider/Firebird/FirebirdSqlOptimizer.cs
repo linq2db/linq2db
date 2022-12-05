@@ -300,40 +300,40 @@ namespace LinqToDB.DataProvider.Firebird
 		private static bool CastRequired(IReadOnlyList<IQueryElement> parents)
 		{
 			for (var i = parents.Count - 1; i >= 0; i--)
-					{
-						// went outside of subquery, mission abort
+			{
+				// went outside of subquery, mission abort
 				if (parents[i] is SelectQuery)
 					return false;
 
-						// part of select column
+				// part of select column
 				if (parents[i] is SqlColumn)
 					return true;
 
-						// part of output clause
+				// part of output clause
 				if (parents[i] is SqlOutputClause)
 					return true;
 
-						// insert or update keys used in merge source select query
+				// insert or update keys used in merge source select query
 				if (parents[i] is SqlSetExpression set
-							&& i == 2
-					&& (parents[1] is SqlInsertClause || parents[1] is SqlUpdateClause)
-					&& parents[0] is SqlInsertOrUpdateStatement insertOrUpdate
-							&& insertOrUpdate.Update.Keys.Any(k => k.Expression == set.Expression))
+				    && i == 2
+				    && (parents[1] is SqlInsertClause || parents[1] is SqlUpdateClause)
+				    && parents[0] is SqlInsertOrUpdateStatement insertOrUpdate
+				    && insertOrUpdate.Update.Keys.Any(k => k.Expression == set.Expression))
 					return true;
 
-						// enumerable merge source
+				// enumerable merge source
 				if (parents[i] is SqlValuesTable)
 					return true;
 
-						// complex insert/update statement, including merge
+				// complex insert/update statement, including merge
 				if (parents[i] is SqlSetExpression
-							&& i >= 2
-					&& i < parents.Count - 1 // not just parameter setter
-					&& (parents[i - 1] is SqlUpdateClause
-						|| parents[i - 1] is SqlInsertClause
-						|| parents[i - 1] is SqlMergeOperationClause))
+				    && i >= 2
+				    && i < parents.Count - 1 // not just parameter setter
+				    && (parents[i    - 1] is SqlUpdateClause
+				        || parents[i - 1] is SqlInsertClause
+				        || parents[i - 1] is SqlMergeOperationClause))
 					return true;
-					}
+			}
 
 			return false;
 		}

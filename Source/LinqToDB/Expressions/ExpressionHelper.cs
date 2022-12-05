@@ -144,7 +144,7 @@ namespace LinqToDB.Expressions
 					if (replaced.TryGetValue(parameterExpression, out var newParam))
 					{
 						return newParam;
-	}
+					}
 
 					var newName = parameterExpression.Name;
 					if (!newName.EndsWith("]") || usedNames.Contains(newName))
@@ -156,7 +156,7 @@ namespace LinqToDB.Expressions
 							{
 								newName = candidateName;
 								break;
-}
+							}
 						}
 					}
 

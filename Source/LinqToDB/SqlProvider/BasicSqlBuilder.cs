@@ -2209,20 +2209,20 @@ namespace LinqToDB.SqlProvider
 			var doTake = NeedTake(takeExpr)           && LimitFormat(selectQuery)  != null;
 
 			if (doSkip || doTake)
-		{
+			{
 				AppendIndent();
 
 				if (doSkip && OffsetFirst)
-		{
+				{
 					StringBuilder.AppendFormat(
 						OffsetFormat(selectQuery)!, WithStringBuilder(new StringBuilder(), () => BuildExpression(skipExpr!)));
 
 					if (doTake)
 						StringBuilder.Append(' ');
-		}
+				}
 		
 				if (doTake)
-		{
+				{
 					StringBuilder.AppendFormat(
 						LimitFormat(selectQuery)!, WithStringBuilder(new StringBuilder(), () => BuildExpression(takeExpr!)));
 
@@ -2883,10 +2883,10 @@ namespace LinqToDB.SqlProvider
 							var newParm = OptimizationContext.AddParameter(parm);
 							BuildParameter(newParm);
 						}
-				}
 
-					break;
-
+						break;
+					}
+						
 				case QueryElementType.SqlDataType:
 					BuildDataType((SqlDataType)expr, forCreateTable: false, canBeNull: true);
 					break;
@@ -3044,7 +3044,7 @@ namespace LinqToDB.SqlProvider
 			if (value is Sql.SqlID id)
 				TryBuildSqlID(id);
 			else
-			MappingSchema.ConvertToSqlValue(StringBuilder, dataType, value);
+				MappingSchema.ConvertToSqlValue(StringBuilder, dataType, value);
 		}
 
 		#endregion

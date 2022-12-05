@@ -211,7 +211,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			if (includeSchemas.Count > 0)
 			{
 				foreach (var toInclude in IncludedSchemas)
-		{
+				{
 					excludeSchemas.Remove(toInclude);
 				}
 			}

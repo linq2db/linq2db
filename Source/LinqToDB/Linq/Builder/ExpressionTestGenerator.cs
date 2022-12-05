@@ -270,8 +270,8 @@ namespace LinqToDB.Linq.Builder
 
 						if (typeof(Table<>).IsSameOrParentOf(expr.Type))
 							_exprBuilder.AppendFormat("db.GetTable<{0}>()", GetTypeName(expr.Type.GetGenericArguments()[0]));
-					else if (c.Value == _dataContext)
-						_exprBuilder.Append("db");
+						else if (c.Value == _dataContext)
+							_exprBuilder.Append("db");
 						else if (expr.ToString() == "value(" + expr.Type + ")")
 							_exprBuilder.Append("value(").Append(GetTypeName(expr.Type)).Append(')');
 						else
