@@ -97,6 +97,11 @@ namespace LinqToDB.Linq.Builder
 
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
+				throw new NotImplementedException();
+			}
+
+			public override void SetRunQuery<T>(Query<T> query, Expression expr)
+			{
 				if (Builder.DataContext.SqlProviderFlags.IsInsertOrUpdateSupported)
 					QueryRunner.SetNonQueryQuery(query);
 				else

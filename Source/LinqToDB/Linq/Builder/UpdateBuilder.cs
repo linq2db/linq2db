@@ -1,15 +1,15 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.Diagnostics;
 using System.Linq.Expressions;
 using System.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
 	using Extensions;
-	using LinqToDB.Expressions;
+	using Mapping;
 	using SqlQuery;
 	using Common;
+	using LinqToDB.Expressions;
 
 	sealed class UpdateBuilder : MethodCallBuilder
 	{
@@ -290,15 +290,31 @@ namespace LinqToDB.Linq.Builder
 			List<SqlSetExpression> items,
 			params IBuildContext[] sequences)
 		{
-			var setterBody = SequenceHelper.PrepareBody(setter, sequences);
-			var setterExpr = builder.ConvertToSqlExpr(into, setterBody);
+			var setterBody     = SequenceHelper.PrepareBody(setter, sequences);
+			var sourceSequence = sequences[0];
+			var setterExpr     = builder.ConvertToSqlExpr(sourceSequence, setterBody);
+			if (setterExpr is not SqlGenericConstructorExpression)
+			{
+				// try again in Keys mode
+				setterExpr = builder.ConvertToSqlExpr(into, setterBody, ProjectFlags.SQL | ProjectFlags.Keys);
+			}
 
 			void BuildSetter(MemberExpression memberExpression, Expression expression)
 			{
 				var column = builder.ConvertToSql(into, memberExpression);
-				var expr   = builder.ConvertToSql(into, expression, ProjectFlags.SQL, columnDescriptor: QueryHelper.GetColumnDescriptor(column));
+				var expr   = builder.ConvertToSqlExpr(sourceSequence, expression, ProjectFlags.SQL, columnDescriptor: QueryHelper.GetColumnDescriptor(column));
+				var withColumns = expr;
 
-				items.Add(new SqlSetExpression(column, expr));
+				// if there are joins we have to make columns
+				if (sourceSequence != into || QueryHelper.EnumerateAccessibleSources(sourceSequence.SelectQuery).Skip(1).Any())
+				{
+					withColumns = builder.ToColumns(sourceSequence, expr);
+				}
+
+				if (withColumns is not SqlPlaceholderExpression placeholder)
+					throw SqlErrorExpression.CreateError(withColumns);
+				
+				items.Insert(placeholder.Index ?? items.Count, new SqlSetExpression(column, placeholder.Sql));
 			}
 
 			void BuildGeneric(SqlGenericConstructorExpression generic, Expression path)
@@ -335,6 +351,144 @@ namespace LinqToDB.Linq.Builder
 				throw new LinqException($"Setter expression '{setterExpr}' cannot be used for build SQL.");
 		}
 
+		internal static void InitializeSetExpressions(
+			ExpressionBuilder           builder,
+			BuildInfo                   buildInfo, 
+			IBuildContext               context,
+			SqlTable?                   table,
+			List<SetExpressionEnvelope> envelopes,
+			List<SqlSetExpression>      items)
+		{
+			ISqlExpression GetField(Expression fieldExpr)
+			{
+				var sql   = builder.ConvertToSql(context, fieldExpr);
+				var field = QueryHelper.GetUnderlyingField(sql);
+				
+				if (field == null)
+					throw new LinqException($"Expression '{SqlErrorExpression.PrepareExpression(fieldExpr)}' can not be used as Update Field.");
+
+				return table == null ? field : table[field.Name]!;
+			}
+
+			SqlSetExpression  setExpression;
+			ColumnDescriptor? columnDescriptor = null;
+
+			foreach (var envelope in envelopes)
+			{
+				var fieldExpression = builder.ConvertExpression(envelope.FieldExpression);
+				var valueExpression = builder.ConvertExpression(envelope.ValueExpression);
+
+				if (fieldExpression.IsSqlRow())
+				{
+					var row = fieldExpression.GetSqlRowValues()
+						.Select(GetField)
+						.ToArray();
+
+					var rowExpression = new SqlRow(row);
+
+					setExpression = new SqlSetExpression(rowExpression, null);
+				}
+				else
+				{
+					var column = GetField(fieldExpression);
+					columnDescriptor = QueryHelper.GetColumnDescriptor(column);
+					setExpression    = new SqlSetExpression(column, null);
+				}
+
+				var sqlExpr = builder.ConvertToSqlExpr(context, valueExpression,
+					columnDescriptor: columnDescriptor, unwrap: false);
+
+				if (sqlExpr is not SqlPlaceholderExpression placeholder)
+					throw SqlErrorExpression.CreateError(valueExpression);
+
+				var sql = context.SelectQuery.Select.AddNewColumn(placeholder.Sql);
+				setExpression.Expression = sql;
+
+				items.Add(setExpression);
+			}
+		}
+
+		static void ParseSet(
+			Expression                  targetPath,
+			ExpressionBuilder           builder,
+			Expression                  fieldExpression,
+			Expression                  valueExpression,
+			List<SetExpressionEnvelope> envelopes)
+		{
+			var correctedField = SqlGenericConstructorExpression.Parse(fieldExpression);
+
+			if (correctedField is SqlGenericConstructorExpression fieldGeneric)
+			{
+				var correctedValue = SqlGenericConstructorExpression.Parse(valueExpression);
+
+				if (correctedValue is not SqlGenericConstructorExpression valueGeneric)
+					throw SqlErrorExpression.CreateError(valueExpression);
+
+				var pairs =
+					from f in fieldGeneric.Assignments
+					join v in valueGeneric.Assignments on f.MemberInfo equals v.MemberInfo
+					select (f, v);
+
+				foreach (var (f, v) in pairs)
+				{
+					var currentPath = Expression.MakeMemberAccess(targetPath, f.MemberInfo);
+					ParseSet(currentPath, builder, f.Expression, v.Expression, envelopes);
+				}
+			}
+			else
+			{
+				var correctedValue = SqlGenericConstructorExpression.Parse(valueExpression);
+
+				if (correctedValue is SqlGenericConstructorExpression valueGeneric)
+				{
+					foreach (var assignment in valueGeneric.Assignments)
+					{
+						var currentPath = Expression.MakeMemberAccess(targetPath, assignment.MemberInfo);
+						ParseSet(currentPath, builder, currentPath, assignment.Expression, envelopes);
+					}
+				}
+				else
+					envelopes.Add(new SetExpressionEnvelope(correctedField, valueExpression));
+			}
+		}
+
+		internal static void ParseSet(
+			ExpressionBuilder           builder,
+			ContextRefExpression        targetRef,
+			Expression                  fieldExpression,
+			Expression                  valueExpression,
+			List<SetExpressionEnvelope> envelopes)
+		{
+			ParseSet(targetRef, builder, fieldExpression, valueExpression, envelopes);
+		}
+
+		internal static void ParseSetter(
+			ExpressionBuilder           builder,
+			ContextRefExpression        targetRef,
+			Expression                  setterExpression,
+			List<SetExpressionEnvelope> envelopes)
+		{
+			var correctedSetter = SqlGenericConstructorExpression.Parse(setterExpression);
+
+			if (correctedSetter is not SqlGenericConstructorExpression)
+			{
+				correctedSetter = builder.ConvertToSqlExpr(targetRef.BuildContext, correctedSetter);
+			}
+
+			if (correctedSetter is SqlGenericConstructorExpression generic)
+			{
+				foreach (var assignment in generic.Assignments)
+				{
+					ParseSet(Expression.MakeMemberAccess(targetRef, assignment.MemberInfo), builder, Expression.MakeMemberAccess(targetRef, assignment.MemberInfo), assignment.Expression, envelopes);
+				}
+			}
+			else
+			{
+				throw new NotImplementedException();
+			}
+		}
+
+
 		internal static void ParseSet(
 			ExpressionBuilder      builder,
 			BuildInfo              buildInfo,
@@ -346,9 +500,10 @@ namespace LinqToDB.Linq.Builder
 			List<SqlSetExpression> items)
 		{
 			extract = (LambdaExpression)builder.ConvertExpression(extract);
-			var ext = SequenceHelper.PrepareBody(extract, fieldsContext);
+			var ext        = SequenceHelper.PrepareBody(extract, fieldsContext);
+			var updateBody = SequenceHelper.PrepareBody(update, valuesContext);
 
-			Mapping.ColumnDescriptor? columnDescriptor = null;
+			ColumnDescriptor? columnDescriptor = null;
 			SqlSetExpression 		  setExpression;
 
 			if (ext.IsSqlRow())
@@ -368,9 +523,21 @@ namespace LinqToDB.Linq.Builder
 				setExpression    = new SqlSetExpression(column, null);
 			}
 
-			setExpression.Expression = builder.ConvertToSqlExpression(fieldsContext, update.Body, columnDescriptor, false);
+			var sqlExpr = builder.ConvertToSqlExpr(valuesContext, updateBody, columnDescriptor: columnDescriptor, unwrap: false);
 
-			items.Add(setExpression);
+			var withColumns = sqlExpr;
+
+			if (valuesContext != fieldsContext)
+			{
+				withColumns = builder.ToColumns(valuesContext, withColumns);
+			}
+
+			if (withColumns is not SqlPlaceholderExpression placeholder)
+				throw SqlErrorExpression.CreateError(withColumns);
+
+			setExpression.Expression = placeholder.Sql;
+
+			items.Insert(placeholder.Index ?? items.Count, setExpression);
 
 			ISqlExpression GetField(Expression fieldExpr)
 			{
@@ -384,65 +551,19 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-		internal static void ParseSet(
-			ExpressionBuilder               builder,
-			LambdaExpression                extract,
-			MethodCallExpression            updateMethod,
-			int                             valueIndex,
-			IBuildContext                   select,
-			List<SqlSetExpression> items)
+		[DebuggerDisplay("{FieldExpression} = {ValueExpression}")]
+		public sealed class SetExpressionEnvelope
 		{
-			var ext        = extract.Body.Unwrap();
-			var rootObject = builder.GetRootObject(ext);
-
-			ISqlExpression columnSql;
-			MemberInfo     member;
-
-			if (ext.NodeType == ExpressionType.MemberAccess)
+			public SetExpressionEnvelope(Expression fieldExpression, Expression valueExpression)
 			{
-				var body = (MemberExpression)ext;
-
-				member = body.Member;
-
-				if (!member.IsPropertyEx() && !member.IsFieldEx() || rootObject != extract.Parameters[0])
-					throw new LinqException("Member expression expected for the 'Set' statement.");
-
-				if (member is MethodInfo info)
-					member = info.GetPropertyInfo();
-
-				var columnExpr = body;
-				var column     = select.ConvertToSql(columnExpr, 1, ConvertFlags.Field);
-
-				if (column.Length == 0)
-					throw new LinqException("Member '{0}.{1}' is not a table column.", member.DeclaringType?.Name, member.Name);
-				columnSql = column[0].Sql;
-			}
-			else
-			{
-				member = MemberHelper.GetMemberInfo(ext);
-				if (member == null)
-					throw new LinqException("Member expression expected for the 'Set' statement.");
-
-				var memberExpr = Expression.MakeMemberAccess(rootObject, member);
-				var column     = select.ConvertToSql(memberExpr, 1, ConvertFlags.Field);
-				if (column.Length == 0)
-					throw new LinqException($"Expression '{ext}' is not a table column.");
-				columnSql = column[0].Sql;
+				FieldExpression = fieldExpression;
+				ValueExpression = valueExpression;
 			}
 
-			var columnDescriptor = QueryHelper.GetColumnDescriptor(columnSql);
-
-			// Note: this ParseSet overload doesn't support a SqlRow value.
-			// This overload is called for a constants, e.g. `Set(x => x.Name, "Doe")`.
-			// SqlRow can't be constructed as C# values, they can only be used inside expressions, so the call
-			// `Set(x => SqlRow(x.Name, x.Age), SqlRow("Doe", 18))`
-			// is not possible (2nd SqlRow would be called at runtime and throw).
-			// This is useless anyway, as `Set(x => x.Name, "Doe").Set(x => x.Age, 18)` generates simpler SQL anyway.
-
-			var p = builder.ParametersContext.BuildParameter(updateMethod.Arguments[valueIndex], columnDescriptor, true);
-
-			items.Add(new SqlSetExpression(columnSql, p.SqlParameter));
+			public Expression FieldExpression { get; }
+			public Expression ValueExpression { get; }
 		}
+
 
 		#endregion
 
@@ -590,26 +711,18 @@ namespace LinqToDB.Linq.Builder
 
 					updateStatement.Update.Items.Add(new SqlSetExpression(expr, null));
 				}
-				else if (update.NodeType == ExpressionType.Lambda)
+				else 
 				{
+					var updateLambda = update as LambdaExpression ?? Expression.Lambda(update);
+
 					ParseSet(
 						builder,
 						buildInfo,
 						extract,
-						(LambdaExpression)update,
+						updateLambda,
 						sequence,
 						sequence,
 						updateStatement.Update.Table,
-						updateStatement.Update.Items);
-				}
-				else
-				{
-					ParseSet(
-						builder,
-						extract,
-						methodCall,
-						2,
-						sequence,
 						updateStatement.Update.Items);
 				}
 

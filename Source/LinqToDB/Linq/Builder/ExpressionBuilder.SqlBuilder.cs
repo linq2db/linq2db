@@ -731,7 +731,7 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		[DebuggerDisplay("S: {SelectQuery?.SourceID} F: {Flags}, E: {Expression}, C: {Context}")]
-		struct SqlCacheKey
+		readonly struct SqlCacheKey
 		{
 			public SqlCacheKey(Expression? expression, IBuildContext? context, ColumnDescriptor? columnDescriptor, SelectQuery? selectQuery, ProjectFlags flags)
 			{

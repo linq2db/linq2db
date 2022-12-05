@@ -1604,7 +1604,7 @@ namespace LinqToDB.SqlQuery
 				return counter < 2;
 			});
 
-			return counter == 1;
+			return counter <= 1;
 		}
 
 

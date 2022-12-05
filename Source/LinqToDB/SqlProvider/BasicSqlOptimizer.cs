@@ -68,6 +68,7 @@ namespace LinqToDB.SqlProvider
 				FinalizeCte(statement);
 			}
 
+			statement = FinalizeInsert(statement);
 			statement = CorrectUnionOrderBy(statement);
 			statement = FixSetOperationNulls(statement);
 			statement = OptimizeUpdateSubqueries(statement);
@@ -76,6 +77,33 @@ namespace LinqToDB.SqlProvider
 			statement = FinalizeStatement(statement, evaluationContext);
 
 //statement.EnsureFindTables();
+
+			return statement;
+		}
+
+		protected virtual SqlStatement FinalizeInsert(SqlStatement statement)
+		{
+			if (statement is SqlInsertStatement insertStatement)
+			{
+				var isSelfInsert =
+					insertStatement.SelectQuery.From.Tables.Count     == 1 &&
+					insertStatement.SelectQuery.From.Tables[0].Source == insertStatement.Insert.Into;
+
+				if (isSelfInsert)
+				{
+					if (insertStatement.SelectQuery.IsSimple)
+					{
+						// simplify insert
+						//
+						insertStatement.Insert.Items.ForEach(item =>
+						{
+							if (item.Expression is SqlColumn column)
+								item.Expression = column.Expression;
+						});
+						insertStatement.SelectQuery.From.Tables.Clear();
+					}
+				}
+			}
 
 			return statement;
 		}

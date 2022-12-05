@@ -917,17 +917,20 @@ namespace LinqToDB.SqlProvider
 
 			if (appendTableName)
 			{
-				BuildPhysicalTable(insertClause.Into!, null);
-
-				if (addAlias)
+				if (insertClause.Into != null)
 				{
-					var ts = Statement.SelectQuery!.GetTableSource(insertClause.Into!);
-					var alias = GetTableAlias(ts!);
-					if (alias != null)
+					BuildPhysicalTable(insertClause.Into, null);
+
+					if (addAlias)
 					{
-						StringBuilder
-							.Append(" AS ");
-						Convert(StringBuilder, alias, ConvertType.NameToQueryTableAlias);
+						var ts    = Statement.SelectQuery!.GetTableSource(insertClause.Into!);
+						var alias = GetTableAlias(ts!);
+						if (alias != null)
+						{
+							StringBuilder
+								.Append(" AS ");
+							Convert(StringBuilder, alias, ConvertType.NameToQueryTableAlias);
+						}
 					}
 				}
 			}
@@ -1587,7 +1590,7 @@ namespace LinqToDB.SqlProvider
 			var tablePath = TablePath;
 
 			if (alias != null)
-		{
+			{
 				if (TablePath is { Length: > 0 })
 					TablePath += '.';
 				TablePath += alias;
