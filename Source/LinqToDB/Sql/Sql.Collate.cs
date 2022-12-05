@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
 using LinqToDB.Expressions;
 using LinqToDB.SqlQuery;
@@ -17,7 +18,8 @@ namespace LinqToDB
 		[Extension("", ServerSideOnly = true, BuilderType = typeof(DB2LUWCollationBuilder)    , Configuration = ProviderName.DB2LUW)]
 		[Extension("", ServerSideOnly = true, BuilderType = typeof(PostgreSQLCollationBuilder), Configuration = ProviderName.PostgreSQL)]
 		[Extension("", ServerSideOnly = true, BuilderType = typeof(NamedCollationBuilder))]
-		public static string Collate(this string expr, [SqlQueryDependent] string collation)
+		[return: NotNullIfNotNull(nameof(expr))]
+		public static string? Collate(this string? expr, [SqlQueryDependent] string collation)
 			=> throw new InvalidOperationException($"{nameof(Sql)}.{nameof(Sql.Collate)} is server-side only API.");
 
 		internal sealed class NamedCollationBuilder : IExtensionCallBuilder
@@ -32,7 +34,10 @@ namespace LinqToDB
 				if (!ValidateCollation(collation))
 					throw new InvalidOperationException($"Invalid collation: {collation}");
 
-				builder.ResultExpression = new SqlExpression(typeof(string), $"{{0}} COLLATE {collation}", Precedence.Primary, expr);
+				builder.ResultExpression = new SqlExpression(typeof(string), $"{{0}} COLLATE {collation}", Precedence.Primary, expr)
+				{
+					CanBeNull = expr.CanBeNull
+				};
 			}
 
 			/// <summary>
@@ -53,7 +58,10 @@ namespace LinqToDB
 				var expr      = builder.GetExpression("expr");
 				var collation = builder.GetValue<string>("collation").Replace("\"", "\"\"");
 
-				builder.ResultExpression = new SqlExpression(typeof(string), $"{{0}} COLLATE \"{collation}\"", Precedence.Primary, expr);
+				builder.ResultExpression = new SqlExpression(typeof(string), $"{{0}} COLLATE \"{collation}\"", Precedence.Primary, expr)
+				{
+					CanBeNull = expr.CanBeNull
+				};
 			}
 		}
 
@@ -65,7 +73,10 @@ namespace LinqToDB
 				var collation = builder.GetValue<string>("collation");
 
 				// collation cannot be parameter
-				builder.ResultExpression = new SqlExpression(typeof(string), $"COLLATION_KEY_BIT({{0}}, {{1}})", Precedence.Primary, expr, new SqlValue(typeof(string), collation));
+				builder.ResultExpression = new SqlExpression(typeof(string), $"COLLATION_KEY_BIT({{0}}, {{1}})", Precedence.Primary, expr, new SqlValue(typeof(string), collation))
+				{
+					CanBeNull = expr.CanBeNull
+				};
 			}
 		}
 	}

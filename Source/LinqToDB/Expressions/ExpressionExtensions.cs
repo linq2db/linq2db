@@ -225,7 +225,7 @@ namespace LinqToDB.Expressions
 		/// replace expression with the returned value of the given <paramref name="func"/>.
 		/// </summary>
 		/// <returns>The modified expression.</returns>
-		[return: NotNullIfNotNull("expr")]
+		[return: NotNullIfNotNull(nameof(expr))]
 		public static Expression? Transform<TContext>(this Expression? expr, TContext context, [InstantHandle] Func<TContext, Expression, Expression> func)
 		{
 			if (expr == null)
@@ -239,7 +239,7 @@ namespace LinqToDB.Expressions
 		/// replace expression with the returned value of the given <paramref name="func"/>.
 		/// </summary>
 		/// <returns>The modified expression.</returns>
-		[return: NotNullIfNotNull("expr")]
+		[return: NotNullIfNotNull(nameof(expr))]
 		public static Expression? Transform(this Expression? expr, [InstantHandle] Func<Expression, Expression> func)
 		{
 			if (expr == null)
@@ -252,7 +252,7 @@ namespace LinqToDB.Expressions
 
 		#region Transform2
 
-		[return: NotNullIfNotNull("expr")]
+		[return: NotNullIfNotNull(nameof(expr))]
 		public static Expression? Transform<TContext>(this Expression? expr, TContext context, Func<TContext, Expression, TransformInfo> func)
 		{
 			if (expr == null)
@@ -261,7 +261,7 @@ namespace LinqToDB.Expressions
 			return new TransformInfoVisitor<TContext>(context, func).Transform(expr);
 		}
 
-		[return: NotNullIfNotNull("expr")]
+		[return: NotNullIfNotNull(nameof(expr))]
 		public static Expression? Transform(this Expression? expr, Func<Expression, TransformInfo> func)
 		{
 			if (expr == null)

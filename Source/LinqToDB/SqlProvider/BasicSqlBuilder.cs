@@ -115,7 +115,7 @@ namespace LinqToDB.SqlProvider
 
 		#region Helpers
 
-		[return: NotNullIfNotNull("element")]
+		[return: NotNullIfNotNull(nameof(element))]
 		public T? ConvertElement<T>(T? element)
 			where T : class, IQueryElement
 		{

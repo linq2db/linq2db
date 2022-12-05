@@ -71,15 +71,19 @@ namespace LinqToDB.Schema
 		/// <summary>
 		/// Gets current database name.
 		/// </summary>
-		string? DatabaseName  { get; }
+		string? DatabaseName            { get; }
 		/// <summary>
 		/// Gets current server name.
 		/// </summary>
-		string? ServerVersion { get; }
+		string? ServerVersion           { get; }
 		/// <summary>
 		/// Gets value of <see cref="DbConnection.DataSource"/> property.
 		/// Returned value is implementation-specific to used ADO.NET provider.
 		/// </summary>
-		string? DataSource    { get; }
+		string? DataSource              { get; }
+		/// <summary>
+		/// Database-specific options, useful for scaffold process.
+		/// </summary>
+		DatabaseOptions DatabaseOptions { get; }
 	}
 }

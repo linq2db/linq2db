@@ -27,7 +27,7 @@ namespace LinqToDB.SqlProvider
 		/// <summary>
 		/// Converts query element to specific provider dialect. 
 		/// </summary>
-		[return: NotNullIfNotNull("element")]
+		[return: NotNullIfNotNull(nameof(element))]
 		IQueryElement? ConvertElement(MappingSchema mappingSchema, IQueryElement? element, OptimizationContext context);
 
 	}

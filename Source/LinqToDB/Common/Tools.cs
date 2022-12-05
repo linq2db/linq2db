@@ -100,7 +100,12 @@ namespace LinqToDB.Common
 			{
 				try
 				{
-					return Assembly.Load(assemblyName);
+					// first try to get already loaded assembly as under .net framework
+					// we can end up with multiple versions of assemblies in memory which
+					// doesn't make sense and actually breaks T4 templates
+					// https://github.com/linq2db/linq2db/issues/3218
+					return AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(a => a.GetName().Name == assemblyName)
+						?? Assembly.Load(assemblyName);
 				}
 				catch {}
 			}

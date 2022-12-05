@@ -216,7 +216,7 @@ namespace LinqToDB.Linq
 			}
 		}
 
-		public static void MakeAlternativeInsertOrUpdate(Query query)
+		public static void  MakeAlternativeInsertOrUpdate(Query query)
 		{
 			var firstStatement  = (SqlInsertOrUpdateStatement)query.Queries[0].Statement;
 			var cloned          = firstStatement.Clone();

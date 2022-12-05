@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace LinqToDB.CodeModel
 {
@@ -33,6 +34,9 @@ namespace LinqToDB.CodeModel
 			Initializer     = initializer;
 
 			Reference = new CodeReference(this);
+
+			Name.OnChange += _ => ChangeHandler?.Invoke(this);
+			Type.Type.SetNameChangeHandler(_ => ChangeHandler?.Invoke(this));
 		}
 
 		public CodeProperty(CodeIdentifier name, IType type)
@@ -87,5 +91,10 @@ namespace LinqToDB.CodeModel
 		public CodeReference    Reference       { get; }
 
 		public override CodeElementType ElementType => CodeElementType.Property;
+
+		/// <summary>
+		/// Internal change-tracking infrastructure. Single action instance is enough.
+		/// </summary>
+		internal Action<CodeProperty>? ChangeHandler { get; set; }
 	}
 }

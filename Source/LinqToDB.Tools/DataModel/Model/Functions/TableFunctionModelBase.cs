@@ -11,13 +11,8 @@ namespace LinqToDB.DataModel
 		protected TableFunctionModelBase(SqlObjectName name, MethodModel method)
 			: base(name, method)
 		{
-			Name   = name;
 		}
 
-		/// <summary>
-		/// Gets or sets database name of function/procedure.
-		/// </summary>
-		public SqlObjectName Name  { get; set; }
 		/// <summary>
 		/// Contains error message, generated when result record type failed to load.
 		/// </summary>

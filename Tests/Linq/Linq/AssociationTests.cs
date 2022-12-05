@@ -1408,6 +1408,39 @@ namespace Tests.Linq
 			Assert.True(result[2].Reason == "прст1" || result[2].Reason == "прст2");
 		}
 		#endregion
+
+		[Test]
+		public void Issue3809Test([DataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+			var actual = db.Parent.Select(a => new
+			{
+				a.ParentID,
+				ParentTest = a.ParentTest == null ? null : new
+				{
+					a.ParentTest.ParentID,
+					Children = a.ParentTest.Children.OrderBy(a => a.ChildID).Select(a => new
+					{
+						a.ParentID,
+						a.ChildID
+					})
+				}
+			}).Where(a => a.ParentTest == null || a.ParentTest.Children.Any(a => a.ChildID == 11)).ToArray();
+			var expected = Parent.Select(a => new
+			{
+				a.ParentID,
+				ParentTest = a.ParentTest == null ? null : new
+				{
+					a.ParentTest.ParentID,
+					Children = a.ParentTest.Children.OrderBy(a => a.ChildID).Select(a => new
+					{
+						a.ParentID,
+						a.ChildID
+					})
+				}
+			}).Where(a => a.ParentTest == null || a.ParentTest.Children.Any(a => a.ChildID == 11)).ToArray();
+			AreEqualWithComparer(expected, actual);
+		}
 	}
 
 	public static class AssociationExtension

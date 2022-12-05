@@ -32,7 +32,7 @@ namespace LinqToDB.SqlQuery
 			_doCloneStatic = doClone;
 		}
 
-		[return: NotNullIfNotNull("elements")]
+		[return: NotNullIfNotNull(nameof(elements))]
 		public T[]? Clone<T>(T[]? elements)
 			where T : class, IQueryElement
 		{
@@ -120,7 +120,7 @@ namespace LinqToDB.SqlQuery
 		// note on clone implementation:
 		// 1. when cloning element, add it first to _objectTree before cloing it's members to avoid issues, when child elements contain reference to current element
 		// 2. use _objectTree.Add() instead of _objectTree[e] = clone; to detect double clone errors
-		[return: NotNullIfNotNull("element")]
+		[return: NotNullIfNotNull(nameof(element))]
 		internal T? Clone<T>(T? element)
 			where T: class, IQueryElement
 		{

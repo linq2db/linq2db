@@ -105,7 +105,7 @@ namespace LinqToDB.Scaffold
 		/// <item>Return parameter descriptor: <see cref="StoredProcedureModel.Return"/></item>
 		/// <item>Return tables (data sets) descriptor: <see cref="StoredProcedureModel.Results"/></item>
 		/// <item>Error, returned by data set schema load procedure: <see cref="TableFunctionModelBase.Error"/></item>
-		/// <item>Metadata (procedure name): <see cref="TableFunctionModelBase.Name"/></item>
+		/// <item>Metadata (procedure name): <see cref="FunctionModelBase.Name"/></item>
 		/// <item>Method code-generation options: <see cref="FunctionModelBase.Method"/></item>
 		/// <item>Parameters: <see cref="FunctionModelBase.Parameters"/></item>
 		/// </list>
@@ -122,7 +122,7 @@ namespace LinqToDB.Scaffold
 		/// <item>Function metadata: <see cref="TableFunctionModel.Metadata"/></item>
 		/// <item>Return table descriptor: <see cref="TableFunctionModel.Result"/></item>
 		/// <item>Error, returned by data set schema load procedure: <see cref="TableFunctionModelBase.Error"/></item>
-		/// <item>Metadata (function name): <see cref="TableFunctionModelBase.Name"/></item>
+		/// <item>Metadata (function name): <see cref="FunctionModelBase.Name"/></item>
 		/// <item>Method code-generation options: <see cref="FunctionModelBase.Method"/></item>
 		/// <item>Parameters: <see cref="FunctionModelBase.Parameters"/></item>
 		/// </list>
@@ -180,5 +180,14 @@ namespace LinqToDB.Scaffold
 		}
 
 		#endregion
+
+		/// <summary>
+		/// Event, triggered after source code generation done. Provides access to database model objects with final types and names set.
+		/// Could be used to establish link between database object and generated code.
+		/// </summary>
+		/// <param name="model">Database model descriptors.</param>
+		public virtual void AfterSourceCodeGenerated(FinalDataModel model)
+		{
+		}
 	}
 }
