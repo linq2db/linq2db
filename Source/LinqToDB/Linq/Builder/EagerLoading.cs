@@ -353,7 +353,7 @@ namespace LinqToDB.Linq.Builder
 					case ExpressionType.Call:
 					{
 						if (context.NewQueryable != null)
-							return new TransformInfo(e, true); ;
+							return new TransformInfo(e, true);
 
 						var mc = (MethodCallExpression)e;
 						if (mc.IsQueryable(LoadWithBuilder.MethodNames))

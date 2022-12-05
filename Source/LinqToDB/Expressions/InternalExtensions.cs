@@ -342,7 +342,7 @@ namespace LinqToDB.Expressions
 			var functions = mapping.GetAttributes<Sql.ExtensionAttribute>(methodCall.Method.ReflectedType!,
 				methodCall.Method,
 				static f => f.Configuration);
-			return functions.Any();
+			return functions.Length > 0;
 		}
 
 		public static bool IsQueryable(this MethodCallExpression method, string name)
