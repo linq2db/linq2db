@@ -117,28 +117,7 @@ namespace LinqToDB.SqlQuery
 
 				ctx.exprs.Add(union, sql);
 
-				foreach (var pair in newIndexes.OrderBy(x => x.Value))
-				{
-					var currentIndex = union.Select.Columns.FindIndex(c => ReferenceEquals(c, pair.Key));
-					if (currentIndex < 0)
-						throw new InvalidOperationException();
-
-					var newIndex = pair.Value;
-					if (currentIndex != newIndex)
-					{
-						var uc = union.Select.Columns[currentIndex];
-						union.Select.Columns.RemoveAt(currentIndex);
-						union.Select.Select.Columns.Insert(newIndex, uc);
-
-						// change indexes in SetOperators
-						foreach (var op in union.SetOperators)
-						{
-							var column = op.SelectQuery.Select.Columns[currentIndex];
-							op.SelectQuery.Select.Columns.RemoveAt(currentIndex);
-							op.SelectQuery.Select.Columns.Insert(newIndex, column);
-						}
-					}
-				}
+				UpdateSetIndexes(newIndexes, union);
 
 				for (var i = 0; i < sql.Select.Columns.Count; i++)
 				{
@@ -171,6 +150,32 @@ namespace LinqToDB.SqlQuery
 					WalkOptions.WithProcessParent,
 					exprs,
 					static (exprs, expr) => exprs.TryGetValue(expr, out var e) ? e : expr);
+			}
+		}
+
+		static void UpdateSetIndexes(Dictionary<ISqlExpression, int> newIndexes, SelectQuery setQuery)
+		{
+			foreach (var pair in newIndexes.OrderBy(x => x.Value))
+			{
+				var currentIndex = setQuery.Select.Columns.FindIndex(c => ReferenceEquals(c, pair.Key));
+				if (currentIndex < 0)
+					throw new InvalidOperationException();
+
+				var newIndex = pair.Value;
+				if (currentIndex != newIndex)
+				{
+					var uc = setQuery.Select.Columns[currentIndex];
+					setQuery.Select.Columns.RemoveAt(currentIndex);
+					setQuery.Select.Select.Columns.Insert(newIndex, uc);
+
+					// change indexes in SetOperators
+					foreach (var op in setQuery.SetOperators)
+					{
+						var column = op.SelectQuery.Select.Columns[currentIndex];
+						op.SelectQuery.Select.Columns.RemoveAt(currentIndex);
+						op.SelectQuery.Select.Columns.Insert(newIndex, column);
+					}
+				}
 			}
 		}
 
@@ -863,7 +868,7 @@ namespace LinqToDB.SqlQuery
 					if (parentJoinedTable == null && parentQuery.IsSimple)
 					{
 						skipColumnCheck = true;
-						if (query.Select.IsDistinct)
+						if (query.HasSetOperators || query.Select.IsDistinct)
 						{
 							isQueryOK = query.Select.Columns.Count == _selectQuery.Select.Columns.Count &&
 							            query.Select.Columns.All(cc =>
@@ -1089,11 +1094,21 @@ namespace LinqToDB.SqlQuery
 					throw new InvalidOperationException();
 				_selectQuery.Select.TakeValue = query.Select.TakeValue;
 			}
+
 			if (query.Select.SkipValue != null)
 			{
 				if (_selectQuery.Select.SkipValue != null)
 					throw new InvalidOperationException();
 				_selectQuery.Select.SkipValue = query.Select.SkipValue;
+			}
+
+			if (query.HasSetOperators)
+			{
+				throw new NotImplementedException();
+				var newIndexes = new Dictionary<ISqlExpression, int>(Utils.ObjectReferenceEqualityComparer<ISqlExpression>.Default);
+				UpdateSetIndexes(newIndexes, query);
+				_selectQuery.SetOperators.AddRange(query.SetOperators);
+
 			}
 
 			((ISqlExpressionWalkable)top).Walk(WalkOptions.Default, (query, selectQuery: _selectQuery), static (ctx, expr) =>

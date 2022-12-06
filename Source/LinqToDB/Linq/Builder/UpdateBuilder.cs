@@ -357,7 +357,8 @@ namespace LinqToDB.Linq.Builder
 			IBuildContext               context,
 			SqlTable?                   table,
 			List<SetExpressionEnvelope> envelopes,
-			List<SqlSetExpression>      items)
+			List<SqlSetExpression>      items,
+			bool createColumns)
 		{
 			ISqlExpression GetField(Expression fieldExpr)
 			{
@@ -401,7 +402,8 @@ namespace LinqToDB.Linq.Builder
 				if (sqlExpr is not SqlPlaceholderExpression placeholder)
 					throw SqlErrorExpression.CreateError(valueExpression);
 
-				var sql = context.SelectQuery.Select.AddNewColumn(placeholder.Sql);
+				var sql = createColumns ? context.SelectQuery.Select.AddNewColumn(placeholder.Sql) : placeholder.Sql;
+
 				setExpression.Expression = sql;
 
 				items.Add(setExpression);
@@ -484,6 +486,9 @@ namespace LinqToDB.Linq.Builder
 			}
 			else
 			{
+				if (correctedSetter is SqlPlaceholderExpression { Sql: SqlValue { Value: null } })
+					return;
+
 				throw new NotImplementedException();
 			}
 		}

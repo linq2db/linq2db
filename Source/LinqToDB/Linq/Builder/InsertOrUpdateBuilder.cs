@@ -23,26 +23,38 @@ namespace LinqToDB.Linq.Builder
 			var insertOrUpdateStatement = new SqlInsertOrUpdateStatement(sequence.SelectQuery);
 			sequence.Statement = insertOrUpdateStatement;
 
-			UpdateBuilder.BuildSetter(
-				builder,
-				buildInfo,
-				(LambdaExpression)methodCall.Arguments[1].Unwrap(),
-				sequence,
-				insertOrUpdateStatement.Insert.Items,
-				sequence);
+			var insertExpressions = new List<UpdateBuilder.SetExpressionEnvelope>();
+			List<UpdateBuilder.SetExpressionEnvelope>? updateExpressions = null;
+
+			var contextRef       = new ContextRefExpression(methodCall.Method.GetGenericArguments()[0], sequence);
+			var insertSetterExpr = SequenceHelper.PrepareBody(methodCall.Arguments[1].UnwrapLambda(), sequence);
+
+			UpdateBuilder.ParseSetter(builder, contextRef, insertSetterExpr, insertExpressions);
 
 			var updateExpr = methodCall.Arguments[2].Unwrap();
 			if (!updateExpr.IsNullValue())
-				UpdateBuilder.BuildSetter(
-					builder,
-					buildInfo,
-					(LambdaExpression)updateExpr,
-					sequence,
-					insertOrUpdateStatement.Update.Items,
-					sequence);
+			{
+				updateExpressions = new List<UpdateBuilder.SetExpressionEnvelope>();
+				var updateSetterExpr = SequenceHelper.PrepareBody(updateExpr.UnwrapLambda(), sequence);
 
-			insertOrUpdateStatement.Insert.Into  = ((TableBuilder.TableContext)sequence).SqlTable;
-			insertOrUpdateStatement.Update.Table = ((TableBuilder.TableContext)sequence).SqlTable;
+				UpdateBuilder.ParseSetter(builder, contextRef, updateSetterExpr, updateExpressions);
+			}
+
+			var tableContext = SequenceHelper.GetTableContext(sequence);
+			if (tableContext == null)
+				throw new LinqException("Could not retrieve table information from query.");
+
+			UpdateBuilder.InitializeSetExpressions(builder, buildInfo, sequence, tableContext.SqlTable,
+				insertExpressions, insertOrUpdateStatement.Insert.Items, false);
+
+			if (updateExpressions != null)
+			{
+				UpdateBuilder.InitializeSetExpressions(builder, buildInfo, sequence, tableContext.SqlTable,
+					updateExpressions, insertOrUpdateStatement.Update.Items, false);
+			}
+
+			insertOrUpdateStatement.Insert.Into  = tableContext.SqlTable;
+			insertOrUpdateStatement.Update.Table = tableContext.SqlTable;
 			insertOrUpdateStatement.SelectQuery.From.Tables.Clear();
 			insertOrUpdateStatement.SelectQuery.From.Table(insertOrUpdateStatement.Update.Table);
 
@@ -72,13 +84,14 @@ namespace LinqToDB.Linq.Builder
 			}
 			else
 			{
-				UpdateBuilder.BuildSetter(
-					builder,
-					buildInfo,
-					(LambdaExpression)methodCall.Arguments[3].Unwrap(),
-					sequence,
-					insertOrUpdateStatement.Update.Keys,
-					sequence);
+				var keysExpressions  = new List<UpdateBuilder.SetExpressionEnvelope>();
+
+				var keysExpr = SequenceHelper.PrepareBody(methodCall.Arguments[3].UnwrapLambda(), sequence);
+
+				UpdateBuilder.ParseSetter(builder, contextRef, keysExpr, keysExpressions);
+
+				UpdateBuilder.InitializeSetExpressions(builder, buildInfo, sequence, tableContext.SqlTable,
+					keysExpressions, insertOrUpdateStatement.Update.Keys, false);
 			}
 
 			return new InsertOrUpdateContext(buildInfo.Parent, sequence);

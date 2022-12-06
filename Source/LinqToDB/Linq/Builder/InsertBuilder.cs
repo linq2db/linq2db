@@ -1,14 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using LinqToDB.Common;
 
 namespace LinqToDB.Linq.Builder
 {
 	using Extensions;
 	using SqlQuery;
+	using Common;
 	using LinqToDB.Expressions;
 
 	sealed class InsertBuilder : MethodCallBuilder
@@ -37,7 +35,7 @@ namespace LinqToDB.Linq.Builder
 			}
 			else
 			{
-				insertContext = new InsertContext(buildInfo.Parent, sequence, InsertContext.InsertType.Insert,
+				insertContext = new InsertContext(buildInfo.Parent, sequence, InsertContext.InsertTypeEnum.Insert,
 					new SqlInsertStatement(sequence.SelectQuery), null);
 			}
 		}
@@ -50,15 +48,17 @@ namespace LinqToDB.Linq.Builder
 
 			var insertStatement = insertContext.InsertStatement;
 
-			var insertType = InsertContext.InsertType.Insert;
+			var insertType = InsertContext.InsertTypeEnum.Insert;
 
 			switch (methodCall.Method.Name)
 			{
-				case nameof(LinqExtensions.Insert)                : insertType = InsertContext.InsertType.Insert;             break;
-				case nameof(LinqExtensions.InsertWithIdentity)    : insertType = InsertContext.InsertType.InsertWithIdentity; break;
-				case nameof(LinqExtensions.InsertWithOutput)      : insertType = InsertContext.InsertType.InsertOutput;       break;
-				case nameof(LinqExtensions.InsertWithOutputInto)  : insertType = InsertContext.InsertType.InsertOutputInto;   break;
+				case nameof(LinqExtensions.Insert)                : insertType = InsertContext.InsertTypeEnum.Insert;             break;
+				case nameof(LinqExtensions.InsertWithIdentity)    : insertType = InsertContext.InsertTypeEnum.InsertWithIdentity; break;
+				case nameof(LinqExtensions.InsertWithOutput)      : insertType = InsertContext.InsertTypeEnum.InsertOutput;       break;
+				case nameof(LinqExtensions.InsertWithOutputInto)  : insertType = InsertContext.InsertTypeEnum.InsertOutputInto;   break;
 			}
+
+			insertContext.InsertType = insertType;
 
 			static LambdaExpression BuildDefaultOutputExpression(Type outputType)
 			{
@@ -164,7 +164,7 @@ namespace LinqToDB.Linq.Builder
 					//sequence.SelectQuery.From.Tables.Clear();
 				}
 
-				if (insertType == InsertContext.InsertType.InsertOutput || insertType == InsertContext.InsertType.InsertOutputInto)
+				if (insertType == InsertContext.InsertTypeEnum.InsertOutput || insertType == InsertContext.InsertTypeEnum.InsertOutputInto)
 				{
 					outputExpression =
 						methodCall.GetArgumentByName("outputExpression")?.UnwrapLambda()
@@ -182,7 +182,7 @@ namespace LinqToDB.Linq.Builder
 					if (builder.DataContext.SqlProviderFlags.OutputInsertUseSpecialTable)
 						insertStatement.Output.InsertedTable = insertedTable;
 
-					if (insertType == InsertContext.InsertType.InsertOutputInto)
+					if (insertType == InsertContext.InsertTypeEnum.InsertOutputInto)
 					{
 						var outputTable = methodCall.GetArgumentByName("outputTable")!;
 						var destination = builder.BuildSequence(new BuildInfo(buildInfo, outputTable, new SelectQuery()));
@@ -200,10 +200,13 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
+			if (insertContext.SetExpressions.Count == 0)
+				throw new LinqToDBException("Insert query has no setters defined.");
+
 			insertContext.LastBuildInfo = buildInfo;
 			insertContext.FinalizeSetters();
 
-			insertStatement.Insert.WithIdentity = insertType == InsertContext.InsertType.InsertWithIdentity;
+			insertStatement.Insert.WithIdentity = insertType == InsertContext.InsertTypeEnum.InsertWithIdentity;
 
 			return insertContext;
 		}
@@ -216,7 +219,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			public SqlInsertStatement InsertStatement { get; }
 
-			public enum InsertType
+			public enum InsertTypeEnum
 			{
 				Insert,
 				InsertWithIdentity,
@@ -224,15 +227,16 @@ namespace LinqToDB.Linq.Builder
 				InsertOutputInto
 			}
 
-			public InsertContext(IBuildContext? parent, IBuildContext sequence, InsertType insertType, SqlInsertStatement insertStatement, LambdaExpression? outputExpression)
+			public InsertContext(IBuildContext? parent, IBuildContext sequence, InsertTypeEnum insertType, SqlInsertStatement insertStatement, LambdaExpression? outputExpression)
 				: base(parent, sequence, outputExpression)
 			{
-				_insertType       = insertType;
+				InsertType        = insertType;
 				_outputExpression = outputExpression;
 				InsertStatement   = insertStatement;
 			}
 
-			readonly InsertType        _insertType;
+			public InsertTypeEnum InsertType { get; set; }
+
 			readonly LambdaExpression? _outputExpression;
 
 			public List<UpdateBuilder.SetExpressionEnvelope> SetExpressions { get; } = new ();
@@ -250,13 +254,7 @@ namespace LinqToDB.Linq.Builder
 				if (SequenceHelper.IsSameContext(path, this) && flags.HasFlag(ProjectFlags.Expression))
 				{
 					FinalizeSetters();
-					if (!Builder.MappingSchema.IsScalarType(path.Type))
-					{
-						return new SqlGenericConstructorExpression(SqlGenericConstructorExpression.CreateType.Auto,
-							path.Type, null, null);
-					}
-
-					return path;
+					return Expression.Default(path.Type);
 				}
 
 				return base.MakeExpression(path, flags);
@@ -284,7 +282,7 @@ namespace LinqToDB.Linq.Builder
 				SetExpressions.RemoveDuplicatesFromTail((s1, s2) =>
 					ExpressionEqualityComparer.Instance.Equals(s1.FieldExpression, s2.FieldExpression));
 
-				UpdateBuilder.InitializeSetExpressions(Builder, LastBuildInfo, Sequence, insert.Into, SetExpressions, insert.Items);
+				UpdateBuilder.InitializeSetExpressions(Builder, LastBuildInfo, Sequence, insert.Into, SetExpressions, insert.Items, true);
 
 				var q = insert.Into.IdentityFields
 					.Except(insert.Items.Select(e => e.Column).OfType<SqlField>());
@@ -308,19 +306,19 @@ namespace LinqToDB.Linq.Builder
 
 			public override void SetRunQuery<T>(Query<T> query, Expression expr)
 			{
-				switch (_insertType)
+				switch (InsertType)
 				{
-					case InsertType.Insert:
+					case InsertTypeEnum.Insert:
 					{
 						QueryRunner.SetNonQueryQuery(query);
 						break;
 					}
-					case InsertType.InsertWithIdentity:
+					case InsertTypeEnum.InsertWithIdentity:
 					{
 						QueryRunner.SetScalarQuery(query);
 						break;
 					}	
-					case InsertType.InsertOutput:
+					case InsertTypeEnum.InsertOutput:
 					{
 						var mapper = Builder.BuildMapper<T>(expr);
 
@@ -334,13 +332,13 @@ namespace LinqToDB.Linq.Builder
 
 						break;
 					}					
-					case InsertType.InsertOutputInto:
+					case InsertTypeEnum.InsertOutputInto:
 					{
 						QueryRunner.SetNonQueryQuery(query);
 						break;
 					}	
 					default:
-						throw new InvalidOperationException($"Unexpected insert type: {_insertType}");
+						throw new InvalidOperationException($"Unexpected insert type: {InsertType}");
 				}
 			}
 
@@ -366,7 +364,7 @@ namespace LinqToDB.Linq.Builder
 
 			public override IBuildContext Clone(CloningContext context)
 			{
-				return new InsertContext(null, context.CloneContext(Sequence), _insertType, context.CloneElement(InsertStatement), context.CloneExpression(_outputExpression));
+				return new InsertContext(null, context.CloneContext(Sequence), InsertType, context.CloneElement(InsertStatement), context.CloneExpression(_outputExpression));
 			}
 
 			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
@@ -474,7 +472,7 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				insertStatement = new SqlInsertStatement(sequence.SelectQuery);
-				insertContext = new InsertContext(buildInfo.Parent, sequence, InsertContext.InsertType.Insert, insertStatement, null);
+				insertContext = new InsertContext(buildInfo.Parent, sequence, InsertContext.InsertTypeEnum.Insert, insertStatement, null);
 				insertContext.Into = destinationSequence;
 				insertContext.LastBuildInfo = buildInfo;
 
