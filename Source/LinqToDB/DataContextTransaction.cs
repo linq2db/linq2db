@@ -200,7 +200,7 @@ namespace LinqToDB
 			{
 				var db = DataContext.GetDataConnection();
 
-				db.RollbackTransaction();
+				db.DisposeTransaction();
 
 				_transactionCounter = 0;
 
@@ -219,7 +219,7 @@ namespace LinqToDB
 			{
 				var db = DataContext.GetDataConnection();
 
-				await db.RollbackTransactionAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				await db.DisposeTransactionAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 				_transactionCounter = 0;
 
