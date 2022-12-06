@@ -355,26 +355,14 @@ namespace LinqToDB.Linq.Builder
 			ExpressionBuilder           builder,
 			BuildInfo                   buildInfo, 
 			IBuildContext               context,
-			SqlTable?                   table,
 			List<SetExpressionEnvelope> envelopes,
 			List<SqlSetExpression>      items,
 			bool createColumns)
 		{
-			ISqlExpression GetField(Expression fieldExpr)
+			ISqlExpression GetFieldExpression(Expression fieldExpr)
 			{
 				var sql   = builder.ConvertToSql(context, fieldExpr);
-				var field = QueryHelper.GetUnderlyingField(sql);
-				
-				if (field == null)
-				{
-					if (table != null)
-						throw new LinqException(
-							$"Expression '{SqlErrorExpression.PrepareExpression(fieldExpr)}' can not be used as Update Field.");
-
-					return sql;
-				}
-
-				return table == null ? field : table[field.Name]!;
+				return sql;
 			}
 
 			SqlSetExpression  setExpression;
@@ -388,7 +376,7 @@ namespace LinqToDB.Linq.Builder
 				if (fieldExpression.IsSqlRow())
 				{
 					var row = fieldExpression.GetSqlRowValues()
-						.Select(GetField)
+						.Select(GetFieldExpression)
 						.ToArray();
 
 					var rowExpression = new SqlRow(row);
@@ -397,7 +385,7 @@ namespace LinqToDB.Linq.Builder
 				}
 				else
 				{
-					var column = GetField(fieldExpression);
+					var column = GetFieldExpression(fieldExpression);
 					columnDescriptor = QueryHelper.GetColumnDescriptor(column);
 					setExpression    = new SqlSetExpression(column, null);
 				}
