@@ -391,6 +391,134 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		public void InsertIValueInsertableWithOutputObjTest([IncludeDataSources(true, FeatureInsertOutputSingle)] string context, [Values(1, 2)] int value)
+		{
+			using (var db = GetDataContext(context))
+			using (var source = db.CreateLocalTable<TableWithData>())
+			{
+				var data = new TableWithData
+				{
+					Value    = value * 100,
+					Id       = value,
+					ValueStr = "SomeStr" + value
+				};
+
+				var output = source
+					.Value(a => a.Value, value * 100)
+					.Value(a => a.Id, value)
+					.Value(a => a.ValueStr, "SomeStr" + value)
+					.InsertWithOutput();
+
+				Assert.AreEqual(data.Id, output.Id);
+				Assert.AreEqual(data.Value, output.Value);
+				Assert.AreEqual(data.ValueStr, output.ValueStr);
+			}
+		}
+
+		[Test]
+		public async Task InsertIValueInsertableWithOutputObjAsyncTest([IncludeDataSources(true, FeatureInsertOutputSingle)] string context, [Values(1, 2)] int value)
+		{
+			using (var db = GetDataContext(context))
+			using (var source = db.CreateLocalTable<TableWithData>())
+			{
+				var data = new TableWithData
+				{
+					Value    = value * 100,
+					Id       = value,
+					ValueStr = "SomeStr" + value
+				};
+
+				var output = await source
+					.Value(a => a.Value, value * 100)
+					.Value(a => a.Id, value)
+					.Value(a => a.ValueStr, "SomeStr" + value)
+					.InsertWithOutputAsync();
+
+				Assert.AreEqual(data.Id, output.Id);
+				Assert.AreEqual(data.Value, output.Value);
+				Assert.AreEqual(data.ValueStr, output.ValueStr);
+			}
+		}
+
+		[Test]
+		public void InsertIValueInsertableWithOutputObjWithSetterTest([IncludeDataSources(true, FeatureInsertOutputSingle)] string context, [Values(1, 2)] int value)
+		{
+			using (var db = GetDataContext(context))
+			using (var source = db.CreateLocalTable<TableWithData>())
+			{
+				Expression<Func<TableWithData>> dataFunc = () => new TableWithData
+				{
+					Value    = value * 100,
+					Id       = value,
+					ValueStr = "SomeStr" + value
+				};
+
+				var output = source
+					.Value(a => a.Value, () => value * 100)
+					.Value(a => a.Id, () => value)
+					.Value(a => a.ValueStr, () => "SomeStr" + value)
+					.InsertWithOutput();
+				var data   = dataFunc.CompileExpression()();
+
+				Assert.AreEqual(data.Id, output.Id);
+				Assert.AreEqual(data.Value, output.Value);
+				Assert.AreEqual(data.ValueStr, output.ValueStr);
+			}
+		}
+
+		[Test]
+		public async Task InsertIValueInsertableWithOutputObjWithSetterAsyncTest([IncludeDataSources(true, FeatureInsertOutputSingle)] string context, [Values(1, 2)] int value)
+		{
+			using (var db = GetDataContext(context))
+			using (var source = db.CreateLocalTable<TableWithData>())
+			{
+				Expression<Func<TableWithData>> dataFunc = () => new TableWithData
+				{
+					Value    = value * 100,
+					Id       = value,
+					ValueStr = "SomeStr" + value
+				};
+
+				var output = await source
+					.Value(a => a.Value, () => value * 100)
+					.Value(a => a.Id, () => value)
+					.Value(a => a.ValueStr, () => "SomeStr" + value)
+					.InsertWithOutputAsync();
+				var data = dataFunc.CompileExpression()();
+
+				Assert.AreEqual(data.Id, output.Id);
+				Assert.AreEqual(data.Value, output.Value);
+				Assert.AreEqual(data.ValueStr, output.ValueStr);
+			}
+		}
+
+		[Test]
+		public void InsertIValueInsertableWithOutputDynamicWithSetterTest([IncludeDataSources(true, FeatureInsertOutputSingle)] string context, [Values(1, 2)] int value)
+		{
+			using (var db = GetDataContext(context))
+			using (var source = db.CreateLocalTable<TableWithData>())
+			{
+				Expression<Func<TableWithData>> dataFunc = () => new TableWithData
+				{
+					Value    = value * 100,
+					Id       = value,
+					ValueStr = "SomeStr" + value
+				};
+
+				var output = source
+					.Value(a => a.Value, () => value * 100)
+					.Value(a => a.Id, () => value)
+					.Value(a => a.ValueStr, () => "SomeStr" + value)
+					.InsertWithOutput(inserted => new { inserted.Id, inserted.Value, inserted.ValueStr });
+				var data = dataFunc.CompileExpression()();
+
+				Assert.AreEqual(data.Id, output.Id);
+				Assert.AreEqual(data.Value, output.Value);
+				Assert.AreEqual(data.ValueStr, output.ValueStr);
+			}
+		}
+
+		[Test]
 		public void InsertWithOutputIntoTest1([IncludeDataSources(false, FeatureInsertOutputInto)] string context, [Values(100, 200)] int param)
 		{
 			using (var db = GetDataContext(context))
