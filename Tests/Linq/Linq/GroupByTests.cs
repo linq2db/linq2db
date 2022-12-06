@@ -2384,5 +2384,81 @@ namespace Tests.Linq
 				}
 			}
 		}
+
+		[Table]
+		public class Issue3761Table
+		{
+			[Column, NotNull, PrimaryKey] public int?      LETO     { get; set; }
+			[Column, NotNull, PrimaryKey] public int?      STEVILKA { get; set; }
+			[Column                     ] public DateTime? DATUM    { get; set; }
+			[Column                     ] public decimal?  SKUPAJ   { get; set; }
+		}
+
+		[Test]
+		public void Issue3761Test1([DataSources(TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSqlServer2005)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable<Issue3761Table>();
+
+			var query = table.Where(n => n.DATUM < new DateTime(2019, 1, 1))
+				.GroupBy(
+					n => new
+					{
+						n.DATUM.GetValueOrDefault().Year,
+						n.DATUM.GetValueOrDefault().Month
+					},
+					(k, n) => new
+					{
+						k.Year,
+						k.Month,
+						Sum = n.Sum(nal => nal.SKUPAJ)
+					});
+
+			query.ToList();
+			Assert.AreEqual(2, query.GetSelectQuery().GroupBy.Items.Count);
+		}
+
+		[Test]
+		public void Issue3761Test2([DataSources(TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSqlServer2005)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable<Issue3761Table>();
+
+			var query = table.Where(n => n.DATUM < new DateTime(2019, 1, 1))
+				.GroupBy(
+					n => new
+					{
+						n.DATUM.GetValueOrDefault().Year,
+						n.DATUM.GetValueOrDefault().Month
+					},
+					(k, n) => new
+					{
+						k.Year,
+						k.Month,
+						Sum = n.Sum(nal => nal.SKUPAJ)
+					})
+				.UnionAll(
+					table
+						.Where(n => n.DATUM >= new DateTime(2019, 1, 1))
+						.GroupBy(
+							n => new
+							{
+								n.DATUM.GetValueOrDefault().Year,
+								n.DATUM.GetValueOrDefault().Month
+							},
+							(k, n) => new
+							{
+								k.Year,
+								k.Month,
+								Sum = n.Sum(nal => nal.SKUPAJ)
+							}));
+
+			query.ToList();
+
+			var sql = query.GetSelectQuery();
+
+			Assert.AreEqual(2, ((SelectQuery)((SqlTableSource)sql.From.Tables[0]).Source).GroupBy.Items.Count);
+			Assert.AreEqual(2, ((SelectQuery)((SqlTableSource)sql.SetOperators[0].SelectQuery.From.Tables[0]).Source).GroupBy.Items.Count);
+		}
 	}
 }

@@ -1242,6 +1242,20 @@ When this option is not set, CLI tool use database-specific logic to detect defa
 					_t4ModeOptions.Schema.LoadDatabaseName);
 
 			/// <summary>
+			/// Don't load history tables for SQL Server temporal tables.
+			/// </summary>
+			public static readonly CliOption IgnoreSystemHistoryTables = new BooleanCliOption(
+					"mssql-ignore-temporal-history-tables",
+					null,
+					false,
+					"ignore history tables for SQL Server temporal tables (SQL Server 2016+ only)",
+					null,
+					null,
+					null,
+					_defaultOptions.Schema.IgnoreSystemHistoryTables,
+					_t4ModeOptions.Schema.IgnoreSystemHistoryTables);
+
+			/// <summary>
 			/// Use only safe schema load methods to load table function and store procedure result-set schema option.
 			/// </summary>
 			public static readonly CliOption UseSafeSchemaLoadOnly = new BooleanCliOption(
