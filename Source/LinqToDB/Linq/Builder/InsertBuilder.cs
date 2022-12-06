@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq.Expressions;
-using System.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -116,59 +115,45 @@ namespace LinqToDB.Linq.Builder
 					// static TTarget InsertWithOutput<TTarget>(this ITable<TTarget> target, Expression<Func<TTarget>> setter, Expression<Func<TTarget,TOutput>> outputExpression)
 					//
 
-					var argIndex = 1;
-					var arg = methodCall.Arguments[argIndex].Unwrap();
-					LambdaExpression? setter = null;
+					var argIndex   = 1;
+					var arg        = methodCall.Arguments[argIndex].Unwrap();
+					var targetType = methodCall.Method.GetGenericArguments()[0];
+
+					insertContext.Into = sequence;
+
+					var tableContext = SequenceHelper.GetTableContext(sequence);
+					if (tableContext == null)
+						throw new InvalidOperationException("Table context not found.");
+
+					var intoContextRef = new ContextRefExpression(targetType, insertContext.Into);
+
+					Expression setterExpr;
 					switch (arg)
 					{
 						case LambdaExpression lambda:
 						{
-							Expression setterExpr;
-							ContextRefExpression contextRef;
-							insertContext.Into = sequence;
 							if (lambda.Parameters.Count == 0)
 							{
-								var type = lambda.Body.Type;
 								setterExpr = lambda.Body;
-								contextRef = new ContextRefExpression(type, insertContext.Into);
 							}	
 							else
 								throw new NotImplementedException();
 
-							UpdateBuilder.ParseSetter(builder,
-								contextRef, 
-								setterExpr, 
-								insertContext.SetExpressions);
-
 							break;
 						}
 						default:
-							{
-								throw new NotImplementedException();
+						{
+							setterExpr = builder.BuildFullEntityExpression(arg, targetType,
+								ProjectFlags.SQL, ExpressionBuilder.FullEntityPurpose.Insert);
 
-								var objType = arg.Type;
-
-								var ed   = builder.MappingSchema.GetEntityDescriptor(objType);
-								var into = sequence;
-								var ctx  = new TableBuilder.TableContext(builder, buildInfo, objType);
-
-								var table = new SqlTable(objType);
-
-								foreach (var c in ed.Columns.Where(c => !c.SkipOnInsert))
-								{
-									var field     = table[c.MemberName] ?? throw new InvalidOperationException($"Cannot find column {c.MemberName}({c.ColumnName})");
-									var pe        = Expression.MakeMemberAccess(arg, c.MemberInfo);
-									var column    = into.ConvertToSql(pe, 1, ConvertFlags.Field);
-									var parameter = builder.ParametersContext.BuildParameterFromArgumentProperty(methodCall, argIndex, field.ColumnDescriptor);
-
-									insertStatement.Insert.Items.Add(new SqlSetExpression(column[0].Sql, parameter.SqlParameter));
-								}
-
-								break;
-							}
+							break;
+						}
 					}
 
-					//sequence.SelectQuery.From.Tables.Clear();
+					UpdateBuilder.ParseSetter(builder,
+						intoContextRef, 
+						setterExpr, 
+						insertContext.SetExpressions);
 				}
 
 				if (insertType == InsertContext.InsertTypeEnum.InsertOutput || insertType == InsertContext.InsertTypeEnum.InsertOutputInto)
@@ -178,13 +163,19 @@ namespace LinqToDB.Linq.Builder
 						?? BuildDefaultOutputExpression(methodCall.Method.GetGenericArguments().Last());
 
 					insertStatement.Output = new SqlOutputClause();
+					insertContext.OutputExpression = outputExpression;
 
-					var insertedTable = builder.DataContext.SqlProviderFlags.OutputInsertUseSpecialTable ? SqlTable.Inserted(outputExpression.Parameters[0].Type) : insertStatement.Insert.Into;
+					var insertedTable = builder.DataContext.SqlProviderFlags.OutputInsertUseSpecialTable ? SqlTable.Inserted(outputExpression.Parameters[0].Type) : null;
+
+					if (insertedTable == null && insertContext.Into != null)
+					{
+						insertedTable = SequenceHelper.GetTableContext(insertContext.Into)?.SqlTable;
+					}
 
 					if (insertedTable == null)
 						throw new InvalidOperationException("Cannot find target table for INSERT statement");
 
-					outputContext = new TableBuilder.TableContext(builder, new SelectQuery(), insertedTable);
+					insertContext.OutputContext = new TableBuilder.TableContext(builder, new SelectQuery(), insertedTable);
 
 					if (builder.DataContext.SqlProviderFlags.OutputInsertUseSpecialTable)
 						insertStatement.Output.InsertedTable = insertedTable;
@@ -194,17 +185,16 @@ namespace LinqToDB.Linq.Builder
 						var outputTable = methodCall.GetArgumentByName("outputTable")!;
 						var destination = builder.BuildSequence(new BuildInfo(buildInfo, outputTable, new SelectQuery()));
 
-						throw new NotImplementedException();
-
-						UpdateBuilder.BuildSetter(
-							builder,
-							buildInfo,
-							outputExpression,
-							destination,
-							insertStatement.Output.OutputItems,
-							outputContext);
+						var destinationRef = new ContextRefExpression(outputExpression.Parameters[0].Type, destination);
+						var outputExpr     = SequenceHelper.PrepareBody(outputExpression, insertContext.OutputContext);
 
 						insertStatement.Output.OutputTable = ((TableBuilder.TableContext)destination).SqlTable;
+
+						var outputSetters = new List<UpdateBuilder.SetExpressionEnvelope>();
+						UpdateBuilder.ParseSetter(builder, destinationRef, outputExpr, outputSetters);
+
+						UpdateBuilder.InitializeSetExpressions(builder, buildInfo, insertContext.OutputContext,
+							insertStatement.Output.OutputTable, outputSetters, insertStatement.Output.OutputItems, false);
 					}
 				}
 			}
@@ -239,19 +229,19 @@ namespace LinqToDB.Linq.Builder
 			public InsertContext(IBuildContext? parent, IBuildContext sequence, InsertTypeEnum insertType, SqlInsertStatement insertStatement, LambdaExpression? outputExpression)
 				: base(parent, sequence, outputExpression)
 			{
-				InsertType        = insertType;
-				_outputExpression = outputExpression;
-				InsertStatement   = insertStatement;
+				InsertType       = insertType;
+				InsertStatement  = insertStatement;
+				OutputExpression = outputExpression;
 			}
 
 			public InsertTypeEnum InsertType { get; set; }
 
-			readonly LambdaExpression? _outputExpression;
-
 			public List<UpdateBuilder.SetExpressionEnvelope> SetExpressions { get; } = new ();
 
-			public IBuildContext? Into          { get; set; }
-			public BuildInfo?     LastBuildInfo { get; set; }
+			public IBuildContext?             Into             { get; set; }
+			public BuildInfo?                 LastBuildInfo    { get; set; }
+			public LambdaExpression?          OutputExpression { get; set; }
+			public TableBuilder.TableContext? OutputContext    { get; set; }
 
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
@@ -263,6 +253,32 @@ namespace LinqToDB.Linq.Builder
 				if (SequenceHelper.IsSameContext(path, this) && flags.HasFlag(ProjectFlags.Expression))
 				{
 					FinalizeSetters();
+
+					if (InsertType == InsertTypeEnum.InsertOutput)
+					{
+						if (OutputExpression == null || OutputContext == null || LastBuildInfo == null)
+							throw new InvalidOperationException();
+
+						var selectContext = new SelectContext(Parent, OutputExpression, false, OutputContext);
+						var outputRef = new ContextRefExpression(path.Type, selectContext);
+
+						var outputExpressions = new List<UpdateBuilder.SetExpressionEnvelope>();
+
+						var sqlExpr = Builder.ConvertToSqlExpr(selectContext, outputRef);
+						if (sqlExpr is SqlPlaceholderExpression)
+							outputExpressions.Add(new UpdateBuilder.SetExpressionEnvelope(sqlExpr, sqlExpr));
+						else
+							UpdateBuilder.ParseSetter(Builder, outputRef, sqlExpr, outputExpressions);
+
+						var setItems = new List<SqlSetExpression>();
+						UpdateBuilder.InitializeSetExpressions(Builder, LastBuildInfo, selectContext, null, outputExpressions, setItems, false);
+
+						InsertStatement.Output!.OutputColumns = setItems.Select(c => c.Expression!).ToList();
+
+						return sqlExpr;
+
+					}
+
 					return Expression.Default(path.Type);
 				}
 
@@ -330,15 +346,7 @@ namespace LinqToDB.Linq.Builder
 					case InsertTypeEnum.InsertOutput:
 					{
 						var mapper = Builder.BuildMapper<T>(expr);
-
-						var insertStatement = (SqlInsertStatement)Statement!;
-						var outputQuery     = Sequence.SelectQuery;
-
-						insertStatement.Output!.OutputColumns =
-							outputQuery.Select.Columns.Select(c => c.Expression).ToList();
-
 						QueryRunner.SetRunQuery(query, mapper);
-
 						break;
 					}					
 					case InsertTypeEnum.InsertOutputInto:
@@ -373,7 +381,7 @@ namespace LinqToDB.Linq.Builder
 
 			public override IBuildContext Clone(CloningContext context)
 			{
-				return new InsertContext(null, context.CloneContext(Sequence), InsertType, context.CloneElement(InsertStatement), context.CloneExpression(_outputExpression));
+				return new InsertContext(null, context.CloneContext(Sequence), InsertType, context.CloneElement(InsertStatement), context.CloneExpression(OutputExpression));
 			}
 
 			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)

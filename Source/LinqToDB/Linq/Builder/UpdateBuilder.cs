@@ -366,7 +366,13 @@ namespace LinqToDB.Linq.Builder
 				var field = QueryHelper.GetUnderlyingField(sql);
 				
 				if (field == null)
-					throw new LinqException($"Expression '{SqlErrorExpression.PrepareExpression(fieldExpr)}' can not be used as Update Field.");
+				{
+					if (table != null)
+						throw new LinqException(
+							$"Expression '{SqlErrorExpression.PrepareExpression(fieldExpr)}' can not be used as Update Field.");
+
+					return sql;
+				}
 
 				return table == null ? field : table[field.Name]!;
 			}

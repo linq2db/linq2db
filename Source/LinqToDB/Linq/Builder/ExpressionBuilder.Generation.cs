@@ -27,16 +27,31 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		SqlGenericConstructorExpression BuildGenericFromMembers(IBuildContext? context,
-			List<ColumnDescriptor> columns, ProjectFlags flags, Expression currentPath, int level)
+			List<ColumnDescriptor> columns, ProjectFlags flags, Expression currentPath, int level,
+			FullEntityPurpose purpose)
 		{
-			var members       = new List<SqlGenericConstructorExpression.Assignment>();
+			var members = new List<SqlGenericConstructorExpression.Assignment>();
 
 			var checkForKey = flags.HasFlag(ProjectFlags.Keys) && columns.Any(c => c.IsPrimaryKey);
 
-			if (checkForKey)
+			if (checkForKey || purpose != FullEntityPurpose.Default)
 			{
-				columns = columns.Where(c => c.IsPrimaryKey).ToList();
+				columns = columns.Where(c =>
+				{
+					var valid = true;
+					if (checkForKey)
+						valid = c.IsPrimaryKey;
+					if (valid)
+					{
+						if (purpose == FullEntityPurpose.Insert)
+							valid = !c.SkipOnInsert;
+						else if (purpose == FullEntityPurpose.Update)
+							valid = !c.SkipOnUpdate;
+					}
+					return valid;
+				}).ToList();
 			}
+
 			var hasNested   = false;
 
 			if (level == 0)
@@ -98,7 +113,7 @@ namespace LinqToDB.Linq.Builder
 						var newColumns = columns.Where(c => c.MemberName.StartsWith(propPath)).ToList();
 						var newPath    = Expression.MakeMemberAccess(currentPath, memberInfo);
 
-						assignExpression = BuildGenericFromMembers(null, newColumns, flags, newPath, level + 1);
+						assignExpression = BuildGenericFromMembers(null, newColumns, flags, newPath, level + 1, purpose);
 					}
 					else
 					{
@@ -110,13 +125,13 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			if (context != null && !flags.HasFlag(ProjectFlags.Keys))
+			if (context != null && !flags.HasFlag(ProjectFlags.Keys) && purpose == FullEntityPurpose.Default)
 			{
 				var entityDescriptor = MappingSchema.GetEntityDescriptor(currentPath.Type);
 				BuildCalculatedColumns(context, entityDescriptor, entityDescriptor.ObjectType, members);
 			}
 
-			if (level == 0 && context != null)
+			if (level == 0 && context != null && purpose == FullEntityPurpose.Default)
 			{
 				var loadWith = GetLoadWith(context);
 
@@ -149,7 +164,10 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			var generic = new SqlGenericConstructorExpression(SqlGenericConstructorExpression.CreateType.Full,
+			var generic = new SqlGenericConstructorExpression(
+				purpose == FullEntityPurpose.Default
+					? SqlGenericConstructorExpression.CreateType.Full
+					: SqlGenericConstructorExpression.CreateType.Auto,
 				currentPath.Type,
 				null, new ReadOnlyCollection<SqlGenericConstructorExpression.Assignment>(members));
 
@@ -160,6 +178,13 @@ namespace LinqToDB.Linq.Builder
 
 		#region Generic Entity Construction
 
+		public enum FullEntityPurpose
+		{
+			Default,
+			Insert,
+			Update
+		}
+
 		public SqlGenericConstructorExpression BuildFullEntityExpression(IBuildContext context, Type entityType, ProjectFlags flags)
 		{
 			entityType = GetTypeForInstantiation(entityType);
@@ -169,7 +194,18 @@ namespace LinqToDB.Linq.Builder
 			var objectType    = entityDescriptor.ObjectType;
 			var refExpression = new ContextRefExpression(objectType, context);
 
-			var generic = BuildGenericFromMembers(context, entityDescriptor.Columns, flags, refExpression, 0);
+			var generic = BuildGenericFromMembers(context, entityDescriptor.Columns, flags, refExpression, 0, FullEntityPurpose.Default);
+
+			return generic;
+		}
+
+		public SqlGenericConstructorExpression BuildFullEntityExpression(Expression root, Type entityType, ProjectFlags flags, FullEntityPurpose purpose)
+		{
+			entityType = GetTypeForInstantiation(entityType);
+
+			var entityDescriptor = MappingSchema.GetEntityDescriptor(entityType);
+
+			var generic = BuildGenericFromMembers(null, entityDescriptor.Columns, flags, root, 0, purpose);
 
 			return generic;
 		}

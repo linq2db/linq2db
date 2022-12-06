@@ -660,6 +660,13 @@ namespace LinqToDB.Mapping
 					new DefaultValueExpression(this, type));
 			}
 
+			if (body.Type != type)
+			{
+				var convertExpr = GetConvertExpression(body.Type, type);
+				if (convertExpr != null)
+					body = InternalExtensions.ApplyLambdaToExpression(convertExpr, body);
+			}
+
 			var expr = Expression.Lambda(body, param);
 			return expr;
 		}
