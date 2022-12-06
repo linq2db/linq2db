@@ -86,9 +86,6 @@ namespace LinqToDB.Linq.Builder
 				insert.Items,
 				targetContext);
 
-			if (insert.Items.Count == 0)
-				insert.Items.AddRange(insert.DefaultItems);
-
 			return source;
 		}
 

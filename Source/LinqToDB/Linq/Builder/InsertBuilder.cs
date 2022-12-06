@@ -77,23 +77,26 @@ namespace LinqToDB.Linq.Builder
 				{
 					// static int Insert<T>              (this IValueInsertable<T> source)
 					// static int Insert<TSource,TTarget>(this ISelectInsertable<TSource,TTarget> source)
-
-					//sequence.SelectQuery.Select.Columns.Clear();
-
-					if (insertContext.SetExpressions.Count == 0)
-					{
-						//throw new NotImplementedException();
-					}
+					//
 
 					insertContext.Into ??= sequence;
 
-					//AddInsertColumns(sequence.SelectQuery, insertStatement.Insert.Items);
+					if (insertContext.SetExpressions.Count == 0)
+					{
+						var sourceRef = new ContextRefExpression(methodCall.Method.GetGenericArguments()[0], sequence);
+						var targetRef = new ContextRefExpression(methodCall.Method.GetGenericArguments()[1], insertContext.Into);
+
+						var sqlExpr = builder.ConvertToSqlExpr(sequence, sourceRef);
+
+						UpdateBuilder.ParseSetter(builder, targetRef, sqlExpr, insertContext.SetExpressions);
+					}
 				}
 				else if (methodCall.Arguments.Count > 1                  &&
 					typeof(IQueryable<>).IsSameOrParentOf(argument.Type) &&
 					typeof(ITable<>).IsSameOrParentOf(methodCall.Arguments[1].Type))
 				{
 					// static int Insert<TSource,TTarget>(this IQueryable<TSource> source, Table<TTarget> target, Expression<Func<TSource,TTarget>> setter)
+					//
 
 					var into = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery()));
 					insertContext.Into = into;
@@ -111,6 +114,8 @@ namespace LinqToDB.Linq.Builder
 					// static int Insert<T>(this Table<T> target, Expression<Func<T>> setter)
 					// static TTarget InsertWithOutput<TTarget>(this ITable<TTarget> target, Expression<Func<TTarget>> setter)
 					// static TTarget InsertWithOutput<TTarget>(this ITable<TTarget> target, Expression<Func<TTarget>> setter, Expression<Func<TTarget,TOutput>> outputExpression)
+					//
+
 					var argIndex = 1;
 					var arg = methodCall.Arguments[argIndex].Unwrap();
 					LambdaExpression? setter = null;
@@ -139,6 +144,8 @@ namespace LinqToDB.Linq.Builder
 						}
 						default:
 							{
+								throw new NotImplementedException();
+
 								var objType = arg.Type;
 
 								var ed   = builder.MappingSchema.GetEntityDescriptor(objType);
@@ -186,6 +193,8 @@ namespace LinqToDB.Linq.Builder
 					{
 						var outputTable = methodCall.GetArgumentByName("outputTable")!;
 						var destination = builder.BuildSequence(new BuildInfo(buildInfo, outputTable, new SelectQuery()));
+
+						throw new NotImplementedException();
 
 						UpdateBuilder.BuildSetter(
 							builder,
@@ -387,62 +396,6 @@ namespace LinqToDB.Linq.Builder
 			protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 			{
 				return methodCall.IsQueryable("Into");
-			}
-
-			sealed class MatchInfo
-			{
-				public MatchInfo(SqlPlaceholderExpression placeholder, MemberInfo[] memberPath)
-				{
-					Placeholder = placeholder;
-					MemberPath  = memberPath;
-				}
-
-				public SqlPlaceholderExpression Placeholder { get; }
-				public MemberInfo[]             MemberPath  { get; }
-			}
-
-			static IEnumerable<(MatchInfo left, MatchInfo right)>
-				MatchMembers(MemberInfo[] currentPath, SqlGenericConstructorExpression left, SqlGenericConstructorExpression right)
-			{
-				var matchedQuery =
-					from leftAssignment in left.Assignments
-					join rightAssignment in right.Assignments on leftAssignment.MemberInfo equals rightAssignment.MemberInfo
-					select (leftAssignment, rightAssignment);
-
-				foreach (var (la, ra) in matchedQuery)
-				{
-					var newPath  = currentPath.ArrayAppend(la.MemberInfo);
-
-					if (la.Expression is SqlPlaceholderExpression leftPlaceholder && ra.Expression is SqlPlaceholderExpression rightPlaceholder)
-					{
-						yield return (new MatchInfo(leftPlaceholder, newPath), new MatchInfo(rightPlaceholder, newPath));
-					}
-					else if (la.Expression is SqlGenericConstructorExpression leftGeneric &&
-					         ra.Expression is SqlGenericConstructorExpression rightGeneric)
-					{
-						foreach (var r in MatchMembers(newPath, leftGeneric, rightGeneric))
-							yield return r;
-					}
-				}
-			}
-
-			static IEnumerable<(MatchInfo left, MatchInfo right)> 
-				MatchSequences(ExpressionBuilder builder, ContextRefExpression source, ContextRefExpression destination)
-			{
-				var sourceExpr = builder.ConvertToSqlExpr(source.BuildContext, source, ProjectFlags.SQL);
-				var destExpr   = builder.ConvertToSqlExpr(destination.BuildContext, destination, ProjectFlags.SQL);
-
-				if (destExpr is not SqlGenericConstructorExpression destGeneric)
-					throw new LinqToDBException("Could not convert destination to tale expression.");
-
-				if (sourceExpr is not SqlGenericConstructorExpression sourceGeneric)
-				{
-					sourceGeneric = destGeneric;
-				}
-
-				var matched = MatchMembers(Array<MemberInfo>.Empty, sourceGeneric, destGeneric);
-
-				return matched;
 			}
 
 			protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
