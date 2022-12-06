@@ -31,6 +31,12 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
+			var withTemporal        = CompatibilityLevel >= 130;
+			var temporalFilterStart = !withTemporal || !options.IgnoreSystemHistoryTables ? string.Empty : "(";
+			var temporalFilterEnd   = !withTemporal || !options.IgnoreSystemHistoryTables ? string.Empty : @"
+					) AND t.temporal_type <> 1
+";
+
 			return dataConnection.Query<TableInfo>(
 				IsAzure ? @"
 				SELECT
@@ -48,7 +54,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					ON
 						OBJECT_ID('[' + TABLE_CATALOG + '].[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']') = t.object_id
 				WHERE
-					t.object_id IS NULL OR t.is_ms_shipped <> 1"
+					" + temporalFilterStart + @"t.object_id IS NULL OR t.is_ms_shipped <> 1" + temporalFilterEnd
 				: @"
 				SELECT
 					TABLE_CATALOG COLLATE DATABASE_DEFAULT + '.' + TABLE_SCHEMA + '.' + TABLE_NAME as TableID,
@@ -71,7 +77,7 @@ namespace LinqToDB.DataProvider.SqlServer
 						x.minor_id = 0 AND
 						x.name = 'MS_Description'
 				WHERE
-					t.object_id IS NULL OR
+					" + temporalFilterStart + @"t.object_id IS NULL OR
 					t.is_ms_shipped <> 1 AND
 					(
 						SELECT
@@ -83,7 +89,7 @@ namespace LinqToDB.DataProvider.SqlServer
 							minor_id = 0           AND
 							class    = 1           AND
 							name     = N'microsoft_database_tools_support'
-					) IS NULL")
+					) IS NULL" + temporalFilterEnd)
 				.ToList();
 		}
 
@@ -112,6 +118,17 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
 		{
+			var withTemporal = CompatibilityLevel >= 130;
+
+			// column is from/to field (GeneratedAlwaysType)
+			// or belongs to SYSTEM_VERSIONED_TEMPORAL_TABLE
+			var temporalClause = !withTemporal ? string.Empty : @"
+						OR COLUMNPROPERTY(object_id('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'GeneratedAlwaysType') <> 0
+						OR t.temporal_type = 1
+";
+			var temporalJoin = !withTemporal ? string.Empty : @"
+					LEFT JOIN sys.tables t ON OBJECT_ID('[' + TABLE_CATALOG + '].[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']') = t.object_id";
+
 			return dataConnection.Query<ColumnInfo>(
 				IsAzure ? @"
 				SELECT
@@ -126,16 +143,16 @@ namespace LinqToDB.DataProvider.SqlServer
 					''                                                                                                  as [Description],
 					COLUMNPROPERTY(object_id('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'IsIdentity') as IsIdentity,
 					CASE WHEN c.DATA_TYPE = 'timestamp'
-						OR COLUMNPROPERTY(object_id('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'IsComputed') = 1
+						OR COLUMNPROPERTY(object_id('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'IsComputed') = 1" + temporalClause + @"
 						THEN 1 ELSE 0 END as SkipOnInsert,
 					CASE WHEN c.DATA_TYPE = 'timestamp'
-						OR COLUMNPROPERTY(object_id('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'IsComputed') = 1
+						OR COLUMNPROPERTY(object_id('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'IsComputed') = 1" + temporalClause + @"
 						THEN 1 ELSE 0 END as SkipOnUpdate
 				FROM
-					INFORMATION_SCHEMA.COLUMNS c"
+					INFORMATION_SCHEMA.COLUMNS c" + temporalJoin
 				: @"
 				SELECT
-					TABLE_CATALOG COLLATE DATABASE_DEFAULT + '.' + TABLE_SCHEMA + '.' + TABLE_NAME                                               as TableID,
+					TABLE_CATALOG COLLATE DATABASE_DEFAULT + '.' + TABLE_SCHEMA + '.' + TABLE_NAME                      as TableID,
 					COLUMN_NAME                                                                                         as Name,
 					CASE WHEN IS_NULLABLE = 'YES' THEN 1 ELSE 0 END                                                     as IsNullable,
 					ORDINAL_POSITION                                                                                    as Ordinal,
@@ -146,10 +163,10 @@ namespace LinqToDB.DataProvider.SqlServer
 					ISNULL(CONVERT(varchar(8000), x.value), '')                                                         as [Description],
 					COLUMNPROPERTY(object_id('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'IsIdentity') as IsIdentity,
 					CASE WHEN c.DATA_TYPE = 'timestamp'
-						OR COLUMNPROPERTY(object_id('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'IsComputed') = 1
+						OR COLUMNPROPERTY(object_id('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'IsComputed') = 1" + temporalClause + @"
 						THEN 1 ELSE 0 END as SkipOnInsert,
 					CASE WHEN c.DATA_TYPE = 'timestamp'
-						OR COLUMNPROPERTY(object_id('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'IsComputed') = 1
+						OR COLUMNPROPERTY(object_id('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'IsComputed') = 1" + temporalClause + @"
 						THEN 1 ELSE 0 END as SkipOnUpdate
 				FROM
 					INFORMATION_SCHEMA.COLUMNS c
@@ -159,7 +176,7 @@ namespace LinqToDB.DataProvider.SqlServer
 						--OBJECT_ID('[' + TABLE_CATALOG + '].[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']') = x.major_id AND
 						OBJECT_ID('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']') = x.major_id AND
 						COLUMNPROPERTY(OBJECT_ID('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'ColumnID') = x.minor_id AND
-						x.name = 'MS_Description' AND x.class = 1")
+						x.name = 'MS_Description' AND x.class = 1" + temporalJoin)
 				.Select(c =>
 				{
 					var dti = GetDataType(c.DataType, null, options);
