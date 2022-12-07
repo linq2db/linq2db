@@ -420,10 +420,13 @@ namespace LinqToDB.Remote
 
 				for (var i = 0; i < ret.FieldCount; i++)
 				{
-					var value = columnReaders[i].GetValue(reader);
+					if (!reader.IsDBNull(i))
+					{
+						var value = columnReaders[i].GetValue(reader);
 
-					if (value != null)
-						data[i] = SerializationConverter.Serialize(SerializationMappingSchema, value);
+						if (value != null)
+							data[i] = SerializationConverter.Serialize(SerializationMappingSchema, value);
+					}
 				}
 
 				ret.Data.Add(data);

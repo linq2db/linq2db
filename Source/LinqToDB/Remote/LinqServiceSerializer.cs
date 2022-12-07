@@ -1627,7 +1627,7 @@ namespace LinqToDB.Remote
 							ReadDelayedObject(table =>
 							{
 								field.Table = table as ISqlTableSource;
-								if (table is SqlTable sqlTable)
+								if (table is SqlTable sqlTable && sqlTable.ObjectType != null)
 								{
 									var ed = _ms.GetEntityDescriptor(sqlTable.ObjectType);
 									field.ColumnDescriptor = ed[field.Name]!;
