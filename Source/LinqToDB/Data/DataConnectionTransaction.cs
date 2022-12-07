@@ -75,25 +75,13 @@ namespace LinqToDB.Data
 		public void Dispose()
 		{
 			if (_disposeTransaction)
-				DataConnection.RollbackTransaction();
+				DataConnection.DisposeTransaction();
 		}
 
 #if NATIVE_ASYNC
-		public ValueTask DisposeAsync()
-		{
-			if (_disposeTransaction)
-				return new ValueTask(DataConnection.RollbackTransactionAsync());
-
-			return default;
-		}
+		public ValueTask DisposeAsync() => new (DataConnection.DisposeTransactionAsync());
 #else
-		public Task DisposeAsync()
-		{
-			if (_disposeTransaction)
-				return DataConnection.RollbackTransactionAsync();
-
-			return TaskEx.CompletedTask;
-		}
+		public Task DisposeAsync() => DataConnection.DisposeTransactionAsync();
 #endif
 	}
 }
