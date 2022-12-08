@@ -84,7 +84,7 @@ namespace LinqToDB.Linq.Builder
 
 				// force nullability
 				if (!index.Sql.CanBeNull)
-					indexes[i] = index.WithSql(new SqlExpression("{0}", index.Sql.Precedence, index.Sql) { CanBeNull = true });
+					indexes[i] = index.WithSql(new SqlExpression(index.Sql.SystemType, "{0}", index.Sql.Precedence, index.Sql) { CanBeNull = true });
 			}
 
 			return indexes;

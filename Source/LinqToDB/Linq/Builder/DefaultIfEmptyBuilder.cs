@@ -124,7 +124,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					var item = sql[i];
 					if (!item.Sql.CanBeNull)
-						sql[i] = item.WithSql(new SqlExpression("{0}", item.Sql.Precedence, item.Sql) { CanBeNull = true });
+						sql[i] = item.WithSql(new SqlExpression(item.Sql.SystemType, "{0}", item.Sql.Precedence, item.Sql) { CanBeNull = true });
 				}
 
 				return sql;
