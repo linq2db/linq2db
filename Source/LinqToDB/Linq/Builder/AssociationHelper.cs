@@ -119,8 +119,8 @@ namespace LinqToDB.Linq.Builder
 
 				if (expressionPredicate != null)
 				{
-					shouldAddDefaultIfEmpty = true;
-					shouldAddCacheCheck = true;
+					shouldAddDefaultIfEmpty = association.CanBeNull;
+					shouldAddCacheCheck     = true;
 
 					var replacedBody = expressionPredicate.GetBody(parentParam, childParam);
 
@@ -136,7 +136,7 @@ namespace LinqToDB.Linq.Builder
 					if (ed.QueryFilterFunc != null)
 					{
 						shouldAddDefaultIfEmpty = true;
-						shouldAddCacheCheck = true;
+						shouldAddCacheCheck     = true;
 					}
 				}
 
