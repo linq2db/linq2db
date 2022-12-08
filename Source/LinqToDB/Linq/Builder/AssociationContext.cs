@@ -65,8 +65,8 @@ namespace LinqToDB.Linq.Builder
 			expression  = SequenceHelper.CorrectExpression(expression, this, SubqueryContext);
 			var indexes = ConvertToIndex(expression, level, flags);
 
-			indexes = indexes.Select(idx => idx.WithQuery(SelectQuery))
-				.ToArray();
+			for (var i = 0; i < indexes.Length; i++)
+				indexes[i] = indexes[i].WithQuery(SelectQuery);
 
 			return indexes;
 		}
@@ -75,14 +75,19 @@ namespace LinqToDB.Linq.Builder
 		{
 			expression = SequenceHelper.CorrectExpression(expression, this, SubqueryContext);
 
-			var indexes = SubqueryContext
-				.ConvertToIndex(expression, level, flags)
-				.ToArray();
+			var indexes = SubqueryContext.ConvertToIndex(expression, level, flags);
 
-			var corrected = indexes.Select(s => s.WithSql(SubqueryContext.SelectQuery.Select.Columns[s.Index]))
-				.ToArray();
+			for (var i = 0; i < indexes.Length; i++)
+			{
+				var index  = indexes[i];
+				indexes[i] = index = index.WithSql(SubqueryContext.SelectQuery.Select.Columns[index.Index]);
 
-			return corrected;
+				// force nullability
+				if (!index.Sql.CanBeNull)
+					indexes[i] = index.WithSql(new SqlExpression("{0}", index.Sql.Precedence, index.Sql) { CanBeNull = true });
+			}
+
+			return indexes;
 		}
 
 		public IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
