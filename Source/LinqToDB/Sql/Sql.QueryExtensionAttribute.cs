@@ -7,6 +7,7 @@ namespace LinqToDB
 {
 	using Common;
 	using Linq.Builder;
+	using LinqToDB.Common.Internal;
 	using Mapping;
 	using SqlQuery;
 
@@ -16,7 +17,7 @@ namespace LinqToDB
 		/// Defines custom query extension builder.
 		/// </summary>
 		[AttributeUsage(AttributeTargets.Method | AttributeTargets.Property, AllowMultiple = true)]
-		public class QueryExtensionAttribute : Attribute
+		public class QueryExtensionAttribute : MappingAttribute
 		{
 			public QueryExtensionAttribute(QueryExtensionScope scope, Type extensionBuilderType)
 			{
@@ -125,6 +126,11 @@ namespace LinqToDB
 				}
 
 				return mapping.GetAttributes<QueryExtensionAttribute>(memberInfo.ReflectedType!, memberInfo, a => a.Configuration, inherit: true, exactForConfiguration: true);
+			}
+
+			public override string GetObjectID()
+			{
+				return $".{Configuration}.{(int)Scope}.{IdentifierBuilder.GetObjectID(ExtensionBuilderType)}.{IdentifierBuilder.GetObjectID(ExtensionArguments)}.";
 			}
 		}
 	}

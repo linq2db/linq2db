@@ -2,6 +2,7 @@
 using System.Linq.Expressions;
 
 using JetBrains.Annotations;
+using LinqToDB.Common.Internal;
 
 namespace LinqToDB.Mapping
 {
@@ -161,7 +162,7 @@ namespace LinqToDB.Mapping
 
 		public override string GetObjectID()
 		{
-			return $".{Configuration}.{ThisKey}.{OtherKey}.{ExpressionPredicate}.{QueryExpressionMethod}.{Storage}.{(CanBeNull?1:0)}.{AliasName}.";
+			return $".{Configuration}.{ThisKey}.{OtherKey}.{ExpressionPredicate}.{IdentifierBuilder.GetObjectID(Predicate)}.{QueryExpressionMethod}.{IdentifierBuilder.GetObjectID(QueryExpression)}.{Storage}.{(CanBeNull?1:0)}.{AliasName}.";
 		}
 	}
 }

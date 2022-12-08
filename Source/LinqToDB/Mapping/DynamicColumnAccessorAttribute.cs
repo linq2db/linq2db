@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq.Expressions;
+using LinqToDB.Common.Internal;
 
 namespace LinqToDB.Mapping
 {
@@ -81,7 +82,7 @@ namespace LinqToDB.Mapping
 
 		public override string GetObjectID()
 		{
-			return $".{Configuration}.{SetterMethod}.{GetterMethod}.{SetterExpressionMethod}.{GetterExpressionMethod}.";
+			return $".{Configuration}.{SetterMethod}.{GetterMethod}.{SetterExpressionMethod}.{GetterExpressionMethod}.{IdentifierBuilder.GetObjectID(SetterExpression)}.{IdentifierBuilder.GetObjectID(GetterExpression)}.";
 		}
 	}
 }

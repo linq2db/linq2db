@@ -9,6 +9,7 @@ using JetBrains.Annotations;
 namespace LinqToDB
 {
 	using Expressions;
+	using LinqToDB.Common.Internal;
 	using Mapping;
 	using SqlQuery;
 
@@ -21,7 +22,7 @@ namespace LinqToDB
 		[PublicAPI]
 		[Serializable]
 		[AttributeUsage(AttributeTargets.Property | AttributeTargets.Method, AllowMultiple = true, Inherited = false)]
-		public class ExpressionAttribute : Attribute
+		public class ExpressionAttribute : MappingAttribute
 		{
 			/// <summary>
 			/// Creates an Expression that will be used in SQL,
@@ -519,6 +520,11 @@ namespace LinqToDB
 			}
 
 			public virtual bool GetIsPredicate(Expression expression) => IsPredicate;
+
+			public override string GetObjectID()
+			{
+				return $".{Configuration}.{Expression}.{IdentifierBuilder.GetObjectID(ArgIndices)}.{Precedence}.{(ServerSideOnly ? 1 : 0)}.{(PreferServerSide ? 1 : 0)}.{(InlineParameters ? 1 : 0)}.{(ExpectExpression ? 1 : 0)}.{(IsPredicate ? 1 : 0)}.{(IsAggregate ? 1 : 0)}.{(IsWindowFunction ? 1 : 0)}.{(IsPure ? 1 : 0)}.{(int)IsNullable}.{(IgnoreGenericParameters ? 1 : 0)}.{(CanBeNull ? 1 : 0)}.";
+			}
 		}
 	}
 }

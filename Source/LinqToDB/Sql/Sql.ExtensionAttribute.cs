@@ -16,6 +16,7 @@ namespace LinqToDB
 	using Common;
 	using Expressions;
 	using Extensions;
+	using LinqToDB.Common.Internal;
 	using Mapping;
 	using SqlQuery;
 
@@ -954,6 +955,11 @@ namespace LinqToDB
 					mainExtension.CanBeNull, IsNullable);
 
 				return res;
+			}
+
+			public override string GetObjectID()
+			{
+				return $"{base.GetObjectID()}.{TokenName}.{IdentifierBuilder.GetObjectID(BuilderType)}.{BuilderValue}.{ChainPrecedence}.";
 			}
 		}
 	}
