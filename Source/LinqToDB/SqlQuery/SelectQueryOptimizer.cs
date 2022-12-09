@@ -1150,7 +1150,7 @@ namespace LinqToDB.SqlQuery
 					{
 						var constCount = 0;
 						foreach (var column in groupingSet.Items.OfType<SqlColumn>())
-							if (column.Parent == query && QueryHelper.IsConstantFast(column.Expression))
+							if (column.Parent == query && QueryHelper.IsConstant(column.Expression))
 								constCount++;
 						
 						if (constCount == groupingSet.Items.Count)
@@ -1163,7 +1163,7 @@ namespace LinqToDB.SqlQuery
 					{
 						if (item is SqlColumn column && column.Parent == query)
 						{
-							if (QueryHelper.IsConstantFast(column.Expression))
+							if (QueryHelper.IsConstant(column.Expression))
 								++cntCount;
 						}
 					}
