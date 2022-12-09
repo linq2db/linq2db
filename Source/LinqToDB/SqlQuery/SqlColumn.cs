@@ -65,13 +65,24 @@ namespace LinqToDB.SqlQuery
 		public ISqlExpression UnderlyingExpression()
 		{
 			var current = QueryHelper.UnwrapExpression(Expression);
-			while (current.ElementType == QueryElementType.Column)
+			while (true)
 			{
-				var column      = (SqlColumn)current;
-				var columnQuery = column.Parent;
-				if (columnQuery == null || columnQuery.HasSetOperators || QueryHelper.EnumerateLevelSources(columnQuery).Take(2).Count() > 1)
+				if (current.ElementType == QueryElementType.Column)
+				{
+					var column      = (SqlColumn)current;
+					var columnQuery = column.Parent;
+					if (columnQuery == null || columnQuery.HasSetOperators || QueryHelper.EnumerateLevelSources(columnQuery).Take(2).Count() > 1)
+						break;
+					current = QueryHelper.UnwrapExpression(column.Expression);
+				}
+				else if (current is SqlExpression expr && expr.Expr == "{0}")
+				{
+					current = expr.Parameters[0];
+				}
+				else
+				{
 					break;
-				current = QueryHelper.UnwrapExpression(column.Expression);
+				}
 			}
 
 			return current;

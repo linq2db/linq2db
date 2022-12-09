@@ -178,22 +178,18 @@ namespace LinqToDB.SqlQuery
 			{
 				var column           = Columns[i];
 				var columnExpression = column.Expression;
+				var underlying       = column.UnderlyingExpression();
 
-				if (columnExpression.CanBeNull == colExpression.CanBeNull)
+				if (underlying.Equals(colUnderlying))
 				{
-					var underlying = column.UnderlyingExpression();
-
-					if (underlying.Equals(colUnderlying))
+					if (underlying.ElementType == QueryElementType.SqlValue &&
+						colExpression.ElementType == QueryElementType.Column)
 					{
-						if (underlying.ElementType    == QueryElementType.SqlValue &&
-						    colExpression.ElementType == QueryElementType.Column)
-						{
-							// avoid suppressing constant columns
-							continue;
-						}
-
-						return i;
+						// avoid suppressing constant columns
+						continue;
 					}
+
+					return i;
 				}
 			}
 
