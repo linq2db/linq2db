@@ -73,9 +73,9 @@ namespace LinqToDB.Linq.Builder
 
 		public SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 		{
-			expression = SequenceHelper.CorrectExpression(expression, this, SubqueryContext);
-
+			expression  = SequenceHelper.CorrectExpression(expression, this, SubqueryContext);
 			var indexes = SubqueryContext.ConvertToIndex(expression, level, flags);
+			var isOuter = SubqueryContext is DefaultIfEmptyBuilder.DefaultIfEmptyContext;
 
 			for (var i = 0; i < indexes.Length; i++)
 			{
@@ -83,7 +83,7 @@ namespace LinqToDB.Linq.Builder
 				indexes[i] = index = index.WithSql(SubqueryContext.SelectQuery.Select.Columns[index.Index]);
 
 				// force nullability
-				if (!index.Sql.CanBeNull)
+				if (isOuter && !index.Sql.CanBeNull)
 					indexes[i] = index.WithSql(new SqlExpression(index.Sql.SystemType, "{0}", index.Sql.Precedence, index.Sql) { CanBeNull = true });
 			}
 

@@ -108,7 +108,7 @@ namespace LinqToDB.Linq.Builder
 			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 			{
 				expression = SequenceHelper.CorrectExpression(expression, this, Sequence);
-				return ForceNullability(Sequence.ConvertToSql(expression, level, flags));
+				return Sequence.ConvertToSql(expression, level, flags);
 			}
 
 			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
