@@ -248,7 +248,7 @@ namespace LinqToDB.Data
 					default(object?),
 					static async (dataConnection, _, cancellationToken) =>
 					{
-						await dataConnection.TransactionAsync!.DisposeAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
+						await dataConnection.TransactionAsync!.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 						dataConnection.TransactionAsync = null;
 
 						if (dataConnection._command != null)
@@ -256,7 +256,7 @@ namespace LinqToDB.Data
 
 						return _;
 					}, default)
-					.ConfigureAwait(Configuration.ContinueOnCapturedContext);
+					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			}
 		}
 
