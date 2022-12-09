@@ -132,7 +132,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				var groupSql = builder.ConvertExpressions(key, keySelector.Body.Unwrap(), ConvertFlags.Key, null);
 
-				var allowed = groupSql.Where(s => !QueryHelper.IsConstant(s.Sql));
+				var allowed = groupSql.Where(s => !QueryHelper.IsConstantFast(s.Sql));
 
 				foreach (var sql in allowed)
 					sequence.SelectQuery.GroupBy.Expr(sql.Sql);

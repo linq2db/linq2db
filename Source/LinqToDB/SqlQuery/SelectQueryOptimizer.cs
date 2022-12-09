@@ -476,14 +476,14 @@ namespace LinqToDB.SqlQuery
 				//
 				for (int i = _selectQuery.GroupBy.Items.Count - 1; i >= 0; i--)
 				{
-					if (QueryHelper.IsConstant(_selectQuery.GroupBy.Items[i]))
+					if (QueryHelper.IsConstantFast(_selectQuery.GroupBy.Items[i]))
 					{
 						if (i == 0 && _selectQuery.GroupBy.Items.Count == 1)
 						{
-							// we cannot remove all group items if there is at least one aggregation function
+							// we cannot remove all group items if there is at least one non aggregation expression
 							//
-							var lastShouldStay = _selectQuery.Select.Columns.Any(static c => QueryHelper.IsAggregationOrWindowFunction(c.Expression));
-							if (lastShouldStay)
+							var allAggregates = _selectQuery.Select.Columns.All(static c => QueryHelper.IsAggregationFunction(c.Expression));
+							if (!allAggregates)
 								break;
 						}
 
@@ -1032,33 +1032,28 @@ namespace LinqToDB.SqlQuery
 				}
 			}
 
-			if (!QueryHelper.ContainsAggregationOrWindowFunction(expr))
+			var elementsToIgnore = new HashSet<IQueryElement> { query };
+
+			var depends = QueryHelper.IsDependsOn(parentQuery.GroupBy, column, elementsToIgnore);
+			if (depends)
+				return true;
+
+			if (!_flags.AcceptsOuterExpressionInAggregate                &&
+			    column.Expression.ElementType != QueryElementType.Column &&
+			    QueryHelper.HasOuterReferences(sources, column))
 			{
-				var elementsToIgnore = new HashSet<IQueryElement> { query };
-
-				var depends = QueryHelper.IsDependsOn(parentQuery.GroupBy, column, elementsToIgnore);
-				if (depends)
-					return true;
-
-				if (!_flags.AcceptsOuterExpressionInAggregate && 
-				    column.Expression.ElementType != QueryElementType.Column &&
-				    QueryHelper.HasOuterReferences(sources, column))
-				{
-					// handle case when aggregate expression has outer references. SQL Server will fail.
-					return true;
-				}
-
-				if (QueryHelper.IsComplexExpression(expr))
-				{
-					var dependsCount = QueryHelper.DependencyCount(parentQuery, column, elementsToIgnore);
-
-					return dependsCount > 1;
-				}
-
-				return false;
+				// handle case when aggregate expression has outer references. SQL Server will fail.
+				return true;
 			}
 
-			return true;
+			if (QueryHelper.IsComplexExpression(expr))
+			{
+				var dependsCount = QueryHelper.DependencyCount(parentQuery, column, elementsToIgnore);
+
+				return dependsCount > 1;
+			}
+
+			return false;
 		}
 
 		SqlTableSource RemoveSubQuery(
@@ -1114,10 +1109,15 @@ namespace LinqToDB.SqlQuery
 				}
 			}
 
+			if (query.Select.Columns.Any(static c => QueryHelper.ContainsAggregationOrWindowFunction(c.Expression)))
+			{
+				isQueryOK = query.Where.IsEmpty && query.GroupBy.IsEmpty && parentQuery.IsSimpleOrSet;
+			}
+
 			if (!isQueryOK)
 				return childSource;
 
-			var isColumnsOK = (allColumns && !query.Select.Columns.Any(static c => QueryHelper.IsAggregationOrWindowFunction(c.Expression)));
+			var isColumnsOK = allColumns;
 
 			if (!isColumnsOK)
 			{
@@ -1143,34 +1143,37 @@ namespace LinqToDB.SqlQuery
 
 			if (isColumnsOK && !parentQuery.GroupBy.IsEmpty)
 			{
-				var cntCount = 0;
 				foreach (var item in parentQuery.GroupBy.Items)
 				{
 					if (item is SqlGroupingSet groupingSet && groupingSet.Items.Count > 0)
 					{
-						var constCount = 0;
 						foreach (var column in groupingSet.Items.OfType<SqlColumn>())
-							if (column.Parent == query && QueryHelper.IsConstant(column.Expression))
-								constCount++;
-						
-						if (constCount == groupingSet.Items.Count)
 						{
-							isColumnsOK = false;
-							break;
-						}
+							if (parentQuery.Select.Columns.Find(c => ReferenceEquals(c.Expression, column)) != null)
+							{
+								isColumnsOK = false;
+								break;
+							}
+						}	
 					}
 					else
 					{
 						if (item is SqlColumn column && column.Parent == query)
 						{
-							if (QueryHelper.IsConstant(column.Expression))
-								++cntCount;
+							if (QueryHelper.IsConstantFast(column.Expression))
+							{
+								if (parentQuery.Select.Columns.Find(c => ReferenceEquals(c.Expression, column)) != null)
+								{
+									isColumnsOK = false;
+									break;
+								}
+							}
 						}
 					}
-				}
 
-				if (isColumnsOK && cntCount == parentQuery.GroupBy.Items.Count)
-					isColumnsOK = false;
+					if (!isColumnsOK)
+						break;
+				}
 			}
 
 			if (!isColumnsOK)
