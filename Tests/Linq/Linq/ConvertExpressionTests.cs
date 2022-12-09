@@ -1,7 +1,8 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 
 using LinqToDB;
-
+using LinqToDB.Mapping;
 using NUnit.Framework;
 using Tests.Model;
 
@@ -1014,6 +1015,38 @@ namespace Tests.Linq
 			}
 		}
 
+		#endregion
+
+		#region issue 3791
+		[Table]
+		public class Issue3791Table
+		{
+			[Identity, PrimaryKey] public int     Id      { get; set; }
+			[Column              ] public string? OtherId { get; set; }
+
+			[Association(ThisKey = nameof(OtherId), OtherKey = nameof(Issue3791GuidTable.Id))]
+			public Issue3791GuidTable? Association { get; set; }
+		}
+		[Table(IsColumnAttributeRequired = false)]
+		public class Issue3791GuidTable
+		{
+			[PrimaryKey] public Guid Id { get; set; }
+		}
+
+		[Test]
+		public void Issue3791Test([DataSources] string context)
+		{
+			var ms = new MappingSchema();
+			ms.SetConvertExpression<Guid, string>(a => a.ToString());
+			ms.SetConvertExpression<string, Guid>(a => Guid.Parse(a));
+
+			using var db = GetDataContext(context);
+
+			using var table = db.CreateLocalTable<Issue3791Table>();
+			using var _     = db.CreateLocalTable<Issue3791GuidTable>();
+
+			table.LoadWith(a => a.Association).ToList();
+		}
 		#endregion
 	}
 }

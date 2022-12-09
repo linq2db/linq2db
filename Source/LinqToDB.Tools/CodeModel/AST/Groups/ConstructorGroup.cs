@@ -21,7 +21,7 @@ namespace LinqToDB.CodeModel
 		/// <summary>
 		/// Owner class.
 		/// </summary>
-		public CodeClass Class { get; }
+		public CodeClass Class { get; set; }
 
 		public override CodeElementType ElementType => CodeElementType.ConstructorGroup;
 

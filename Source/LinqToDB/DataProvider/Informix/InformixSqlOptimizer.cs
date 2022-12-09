@@ -135,7 +135,8 @@ namespace LinqToDB.DataProvider.Informix
 			{
 				switch (func.Name)
 				{
-					case "Coalesce" : return ConvertCoalesceToBinaryFunc(func, "Nvl");
+					// passing parameter to NVL will result in "A syntax error has occurred." error from server
+					case "Coalesce" : return ConvertCoalesceToBinaryFunc(func, "Nvl", supportsParameters: false);
 					case "Convert"  :
 					{
 						var par0 = func.Parameters[0];

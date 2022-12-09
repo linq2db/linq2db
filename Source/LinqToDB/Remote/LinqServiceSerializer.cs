@@ -262,7 +262,7 @@ namespace LinqToDB.Remote
 
 		public class DeserializerBase
 		{
-			private   readonly MappingSchema _ms;
+			protected readonly MappingSchema _ms;
 			protected readonly Dictionary<int,object>         ObjectIndices  = new ();
 			protected readonly Dictionary<int,Action<object>> DelayedObjects = new ();
 
@@ -1627,6 +1627,11 @@ namespace LinqToDB.Remote
 							ReadDelayedObject(table =>
 							{
 								field.Table = table as ISqlTableSource;
+								if (table is SqlTable sqlTable && sqlTable.ObjectType != null)
+								{
+									var ed = _ms.GetEntityDescriptor(sqlTable.ObjectType);
+									field.ColumnDescriptor = ed[field.Name]!;
+								}
 							});
 
 							break;

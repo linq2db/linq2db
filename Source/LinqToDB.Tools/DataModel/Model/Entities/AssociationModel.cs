@@ -74,5 +74,10 @@ namespace LinqToDB.DataModel
 		/// it has collection-based type on target entity.
 		/// </summary>
 		public bool                ManyToOne              { get; set; }
+
+		/// <summary>
+		/// Get or set name of foreign key constrain for association based on foreign key.
+		/// </summary>
+		public string?             ForeignKeyName         { get; set; }
 	}
 }

@@ -1931,7 +1931,7 @@ namespace LinqToDB.SqlProvider
 
 		#region Conversion
 
-		[return: NotNullIfNotNull("element")]
+		[return: NotNullIfNotNull(nameof(element))]
 		public virtual IQueryElement? ConvertElement(MappingSchema mappingSchema, DataOptions dataOptions, IQueryElement? element, OptimizationContext context)
 		{
 			return OptimizeElement(mappingSchema, dataOptions, element, context, true);
@@ -2521,12 +2521,19 @@ namespace LinqToDB.SqlProvider
 			return p;
 		}
 
-		protected ISqlExpression ConvertCoalesceToBinaryFunc(SqlFunction func, string funcName)
+		protected ISqlExpression ConvertCoalesceToBinaryFunc(SqlFunction func, string funcName, bool supportsParameters = true)
 		{
 			var last = func.Parameters[func.Parameters.Length - 1];
+			if (!supportsParameters && last is SqlParameter p1)
+				p1.IsQueryParameter = false;
+
 			for (int i = func.Parameters.Length - 2; i >= 0; i--)
 			{
-				last = new SqlFunction(func.SystemType, funcName, func.Parameters[i], last);
+				var param = func.Parameters[i];
+				if (!supportsParameters && param is SqlParameter p2)
+					p2.IsQueryParameter = false;
+
+				last = new SqlFunction(func.SystemType, funcName, param, last);
 			}
 			return last;
 		}

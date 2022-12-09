@@ -241,7 +241,7 @@ namespace LinqToDB.Tools.Mapper
 			return New(type);
 		}
 
-		[return: NotNullIfNotNull("expr")]
+		[return: NotNullIfNotNull(nameof(expr))]
 		static Expression? Convert(Expression? expr, Type toType) =>
 			expr == null ? null : expr.Type == toType ? expr : Expression.Convert(expr, toType);
 

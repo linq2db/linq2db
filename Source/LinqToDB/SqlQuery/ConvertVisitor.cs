@@ -144,7 +144,7 @@ namespace LinqToDB.SqlQuery
 			return null;
 		}
 
-		[return: NotNullIfNotNull("element")]
+		[return: NotNullIfNotNull(nameof(element))]
 		internal IQueryElement? ConvertInternal(IQueryElement? element)
 		{
 			if (element == null)

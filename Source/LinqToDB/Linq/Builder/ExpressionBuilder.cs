@@ -357,25 +357,17 @@ namespace LinqToDB.Linq.Builder
 
 		Expression ConvertParameters(Expression expression)
 		{
+			if (CompiledParameters == null) return expression;
+
 			return expression.Transform(CompiledParameters, static(compiledParameters, expr) =>
 			{
-				switch (expr.NodeType)
+				if (expr.NodeType == ExpressionType.Parameter)
 				{
-					case ExpressionType.Parameter:
-						if (compiledParameters != null)
-						{
-							var idx = Array.IndexOf(compiledParameters, (ParameterExpression)expr);
-
-							if (idx > 0)
-								return
-									Expression.Convert(
-										Expression.ArrayIndex(
-											ParametersParam,
-											ExpressionInstances.Int32(idx)),
-										expr.Type);
-						}
-
-						break;
+					var idx = Array.IndexOf(compiledParameters, (ParameterExpression)expr);
+					if (idx >= 0)
+						return Expression.Convert(
+							Expression.ArrayIndex(ParametersParam, ExpressionInstances.Int32(idx)),
+							expr.Type);
 				}
 
 				return expr;
@@ -1600,7 +1592,7 @@ namespace LinqToDB.Linq.Builder
 
 		Dictionary<Expression, Expression>? _rootExpressions;
 
-		[return: NotNullIfNotNull("expr")]
+		[return: NotNullIfNotNull(nameof(expr))]
 		public Expression? GetRootObject(Expression? expr)
 		{
 			if (expr == null)

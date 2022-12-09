@@ -487,7 +487,8 @@ namespace LinqToDB.Schema
 				type,
 				column.IsNullable,
 				!column.SkipOnInsert,
-				!column.SkipOnUpdate);
+				!column.SkipOnUpdate,
+				column.Ordinal);
 		}
 
 		/// <summary>
@@ -701,8 +702,9 @@ namespace LinqToDB.Schema
 				throw new InvalidOperationException($"{nameof(GetSchemaOptions)}.{nameof(GetSchemaOptions.LoadProcedure)} called for non-table returning object {p.ProcedureName}");
 			};
 
-			legacyOptions.LoadTable     = t => options.LoadTableOrView(new SqlObjectName(t.Name, Schema: t.Schema), t.IsView);
-			legacyOptions.UseSchemaOnly = options.UseSafeSchemaLoad;
+			legacyOptions.LoadTable                 = t => options.LoadTableOrView(new SqlObjectName(t.Name, Schema: t.Schema), t.IsView);
+			legacyOptions.UseSchemaOnly             = options.UseSafeSchemaLoad;
+			legacyOptions.IgnoreSystemHistoryTables = options.IgnoreSystemHistoryTables;
 
 			return legacyOptions;
 		}
@@ -718,9 +720,10 @@ namespace LinqToDB.Schema
 
 		ISet<string> ISchemaProvider.GetDefaultSchemas() => _options.DefaultSchemas ??  _defaultSchemas;
 
-		string? ISchemaProvider.DatabaseName  => _databaseName;
-		string? ISchemaProvider.ServerVersion => _serverVersion;
-		string? ISchemaProvider.DataSource    => _dataSource;
+		string?         ISchemaProvider.DatabaseName    => _databaseName;
+		string?         ISchemaProvider.ServerVersion   => _serverVersion;
+		string?         ISchemaProvider.DataSource      => _dataSource;
+		DatabaseOptions ISchemaProvider.DatabaseOptions => _isSqlServer ? SqlServerDatabaseOptions.Instance : DatabaseOptions.Default;
 		#endregion
 
 		#region ITypeMappingProvider
