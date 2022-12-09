@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -1914,6 +1915,17 @@ namespace LinqToDB.SqlQuery
 		public static void RemoveNotUnusedColumns(this SelectQuery selectQuery)
 		{
 			RemoveNotUnusedColumnsInternal(selectQuery, selectQuery);
+		}
+
+		[return: NotNullIfNotNull(nameof(sqlExpression))]
+		public static ISqlExpression? SimplifyColumnExpression(ISqlExpression? sqlExpression)
+		{
+			if (sqlExpression is SelectQuery selectQuery && selectQuery.Select.Columns.Count == 1 && selectQuery.From.Tables.Count == 0)
+			{
+				sqlExpression = SimplifyColumnExpression(selectQuery.Select.Columns[0].Expression);
+			}
+
+			return sqlExpression;
 		}
 
 	}

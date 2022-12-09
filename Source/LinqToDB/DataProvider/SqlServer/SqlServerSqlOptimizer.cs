@@ -31,7 +31,6 @@ namespace LinqToDB.DataProvider.SqlServer
 				withStack: false);
 		}
 
-
 		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate, ConvertVisitor<RunOptimizationContext> visitor)
 		{
 			var like = base.ConvertSearchStringPredicate(predicate, visitor);

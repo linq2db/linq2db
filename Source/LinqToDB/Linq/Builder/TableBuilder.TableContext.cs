@@ -223,11 +223,14 @@ namespace LinqToDB.Linq.Builder
 
 			public Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
-				if (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AssociationRoot) || flags.HasFlag(ProjectFlags.Expand) || flags.HasFlag(ProjectFlags.Table))
+				if (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AssociationRoot) || flags.HasFlag(ProjectFlags.Expand))
 					return path;
 
 				if (SequenceHelper.IsSameContext(path, this))
 				{
+					if (flags.HasFlag(ProjectFlags.Table))
+						return path;
+
 					// trying to access Queryable variant
 					if (!ObjectType.IsSameOrParentOf(path.Type) && flags.HasFlag(ProjectFlags.Expression))
 						return new SqlEagerLoadExpression((ContextRefExpression)path, path, Builder.GetSequenceExpression(this));
@@ -251,6 +254,15 @@ namespace LinqToDB.Linq.Builder
 					return path;
 
 				var sql = GetField(member, member.GetLevel(Builder.MappingSchema), false);
+
+				if (sql != null)
+				{
+					if (flags.HasFlag(ProjectFlags.Table))
+					{
+						var root = Builder.GetRootContext(this, path, false);
+						return root ?? path;
+					}
+				}
 
 				if (sql == null)
 				{

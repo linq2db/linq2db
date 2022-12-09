@@ -156,9 +156,18 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		protected override void BuildUpdateTableName(SelectQuery selectQuery, SqlUpdateClause updateClause)
 		{
-			var table = updateClause.Table != null ?
-				(selectQuery.From.FindTableSource(updateClause.Table) ?? updateClause.Table) :
-				selectQuery.From.Tables[0];
+			ISqlTableSource? table = null;
+
+			if (updateClause.Table != null)
+			{
+				var foundTs = selectQuery.From.FindTableSource(updateClause.Table);
+				table = foundTs;
+			}
+
+			if (table == null)
+			{
+				table = updateClause.Table ?? (ISqlTableSource)selectQuery.From.Tables[0];
+			}
 
 			if (table is SqlTable)
 				BuildPhysicalTable(table, null);

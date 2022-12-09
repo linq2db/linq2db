@@ -332,11 +332,11 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			result.ValueExpression = expression.Transform(
-				(forceConstant, (expression as MemberExpression)?.Member, expressionAccessors, result, setName, MappingSchema),
+				(forceConstant, (expression as MemberExpression)?.Member, expressionAccessors, result, setName, paramContext: this),
 				static (context, expr) =>
 				{
 					if (expr.NodeType == ExpressionType.Constant
-						&& (context.forceConstant || !expr.Type.IsConstantable(false)))
+						&& (context.forceConstant || !expr.Type.IsConstantable(false) || !context.paramContext.CanBeConstant(expr)))
 					{
 						if (context.expressionAccessors.TryGetValue(expr, out var val))
 						{
@@ -344,7 +344,7 @@ namespace LinqToDB.Linq.Builder
 
 							if (context.Member != null)
 							{
-								var mt = ExpressionBuilder.GetMemberDataType(context.MappingSchema, context.Member);
+								var mt = ExpressionBuilder.GetMemberDataType(context.paramContext.MappingSchema, context.Member);
 
 								if (mt.DataType != DataType.Undefined)
 								{
@@ -521,5 +521,19 @@ namespace LinqToDB.Linq.Builder
 			return p.SqlParameter;
 		}
 
+		HashSet<Expression>? _constantsAsParameters;
+
+		public void MarkAsParameter(ConstantExpression expression)
+		{
+			_constantsAsParameters ??= new ();
+			_constantsAsParameters.Add(expression);
+		}
+
+		public bool CanBeConstant(Expression expr)
+		{
+			if (_constantsAsParameters != null && _constantsAsParameters.Contains(expr))
+				return false;
+			return true;
+		}
 	}
 }

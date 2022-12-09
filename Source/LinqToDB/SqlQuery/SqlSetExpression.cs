@@ -41,7 +41,7 @@ namespace LinqToDB.SqlQuery
 				}
 				else if (expression != null)
 				{
-					throw new ArgumentException("An array of expressions can only be SET to a subquery or row expression", nameof(expression));
+					//throw new ArgumentException("An array of expressions can only be SET to a subquery or row expression", nameof(expression));
 				}
 			}
 			else

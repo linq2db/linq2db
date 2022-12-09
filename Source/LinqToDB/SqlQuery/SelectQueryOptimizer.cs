@@ -1478,28 +1478,6 @@ namespace LinqToDB.SqlQuery
 
 		void OptimizeColumns()
 		{
-			// When selecting a SqlRow, expand the row into individual columns.
-			var columns = _selectQuery.Select.Columns;
-
-			for (var i = 0; i < columns.Count; i++)
-			{
-				var c = columns[i];
-				if (c.Expression.ElementType == QueryElementType.SqlRow)
-				{
-					if (_selectQuery.ParentSelect is null)
-						throw new LinqToDBException("SqlRow can not be returned from main SELECT");
-					if (columns.Count > 1)
-						throw new LinqToDBException("SqlRow expression must be the only result in a SELECT");
-
-					var row = (SqlRow)columns[0].Expression;
-					columns.Clear();
-					foreach (var value in row.Values)
-						_selectQuery.Select.AddNew(value);
-
-					break;
-				}
-			}
-
 			((ISqlExpressionWalkable)_selectQuery.Select).Walk(WalkOptions.Default, (object?)null, static (_, expr) =>
 			{
 				if (expr is SelectQuery query       &&
@@ -1524,6 +1502,11 @@ namespace LinqToDB.SqlQuery
 
 				return expr;
 			});
+
+			foreach (var column in _selectQuery.Select.Columns)
+			{
+				column.Expression = QueryHelper.SimplifyColumnExpression(column.Expression);
+			}
 		}
 
 		void OptimizeDistinctOrderBy()
@@ -1595,6 +1578,9 @@ namespace LinqToDB.SqlQuery
 			{
 				var column = selectQuery.Select.Columns[0];
 				if (QueryHelper.IsAggregation(column.Expression))
+					return true;
+
+				if (selectQuery.Select.From.Tables.Count == 0)
 					return true;
 			}
 

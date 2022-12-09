@@ -162,10 +162,10 @@ namespace LinqToDB.SqlQuery
 
 			return sb.ToString();
 
-#else
 			if (Expression is SqlField)
 				return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
 
+#else
 			return base.ToString()!;
 #endif
 		}

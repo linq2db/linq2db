@@ -352,6 +352,14 @@ namespace LinqToDB.SqlQuery
 					break;
 				}
 
+				case QueryElementType.SqlNullabilityExpression:
+				{
+					var expr = (SqlNullabilityExpression)(IQueryElement)element;
+
+					_objectTree.Add(element, clone = new SqlNullabilityExpression(Clone(expr.SqlExpression)));
+					break;
+				}
+
 				case QueryElementType.SqlField:
 				{
 					var field = (SqlField)(IQueryElement)element;

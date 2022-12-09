@@ -170,11 +170,14 @@ namespace LinqToDB.Linq.Builder
 
 				if (!ReferenceEquals(result, Body))
 				{
-					if (flags.HasFlag(ProjectFlags.Root) &&
-					    !(result is ContextRefExpression || result is MemberExpression ||
-					      result is MethodCallExpression))
+					if (!flags.HasFlag(ProjectFlags.Table))
 					{
-						return path;
+						if (flags.HasFlag(ProjectFlags.Root) &&
+						    !(result is ContextRefExpression || result is MemberExpression ||
+						      result is MethodCallExpression))
+						{
+							return path;
+						}
 					}
 				}
 			}

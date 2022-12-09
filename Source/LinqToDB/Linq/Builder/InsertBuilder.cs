@@ -196,7 +196,7 @@ namespace LinqToDB.Linq.Builder
 						var outputSetters = new List<UpdateBuilder.SetExpressionEnvelope>();
 						UpdateBuilder.ParseSetter(builder, destinationRef, outputExpr, outputSetters);
 
-						UpdateBuilder.InitializeSetExpressions(builder, buildInfo, insertContext.OutputContext,
+						UpdateBuilder.InitializeSetExpressions(builder, buildInfo, insertContext.OutputContext, insertContext.OutputContext,
 							outputSetters, insertStatement.Output.OutputItems, false);
 					}
 				}
@@ -275,7 +275,7 @@ namespace LinqToDB.Linq.Builder
 							UpdateBuilder.ParseSetter(Builder, outputRef, sqlExpr, outputExpressions);
 
 						var setItems = new List<SqlSetExpression>();
-						UpdateBuilder.InitializeSetExpressions(Builder, LastBuildInfo, selectContext, outputExpressions, setItems, false);
+						UpdateBuilder.InitializeSetExpressions(Builder, LastBuildInfo, selectContext, selectContext, outputExpressions, setItems, false);
 
 						InsertStatement.Output!.OutputColumns = setItems.Select(c => c.Expression!).ToList();
 
@@ -298,20 +298,20 @@ namespace LinqToDB.Linq.Builder
 
 				if (Into == null)
 				{
-					throw new LinqToDBException("Insert query has no setters defined.");
+					throw new LinqToDBException("Insert query has no defined target table.");
 				}
 
 				var tableContext = SequenceHelper.GetTableContext(Into);
 			
 				insert.Into = tableContext?.SqlTable;
 
-				if (insert.Into == null)
+				if (tableContext == null || insert.Into == null)
 					throw new LinqToDBException("Insert query has no setters defined.");
 
 				SetExpressions.RemoveDuplicatesFromTail((s1, s2) =>
 					ExpressionEqualityComparer.Instance.Equals(s1.FieldExpression, s2.FieldExpression));
 
-				UpdateBuilder.InitializeSetExpressions(Builder, LastBuildInfo, Sequence, SetExpressions, insert.Items, true);
+				UpdateBuilder.InitializeSetExpressions(Builder, LastBuildInfo, tableContext, Sequence, SetExpressions, insert.Items, true);
 
 				var q = insert.Into.IdentityFields
 					.Except(insert.Items.Select(e => e.Column).OfType<SqlField>());
@@ -471,10 +471,17 @@ namespace LinqToDB.Linq.Builder
 
 				var extractExp = SequenceHelper.PrepareBody(extract, insertContext.Into);
 				var updateExpr = update;
-				if (updateExpr is LambdaExpression updateLambda)
-					updateExpr = SequenceHelper.PrepareBody(updateLambda, sequence);
 
-				UpdateBuilder.ParseSet(builder, contextRef, extractExp, updateExpr, insertContext.SetExpressions);
+				if (updateExpr is ConstantExpression constantExpr)
+				{
+					builder.ParametersContext.MarkAsParameter(constantExpr);
+				}
+				else if (updateExpr is LambdaExpression updateLambda)
+				{
+					updateExpr = SequenceHelper.PrepareBody(updateLambda, sequence);
+				}
+
+				UpdateBuilder.ParseSet(contextRef, extractExp, updateExpr, insertContext.SetExpressions);
 				insertContext.LastBuildInfo = buildInfo;
 
 				return insertContext;

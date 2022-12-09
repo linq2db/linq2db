@@ -1,7 +1,5 @@
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Text;
 
 namespace LinqToDB.SqlQuery
@@ -31,6 +29,15 @@ namespace LinqToDB.SqlQuery
 
 		public bool Equals([AllowNull] ISqlExpression other)
 			=> other is SqlRow row && Values.SequenceEqual(row.Values);
+
+#if OVERRIDETOSTRING
+		public override string ToString()
+		{
+			var sb  = new StringBuilder();
+			var dic = new Dictionary<IQueryElement, IQueryElement>();
+			return ToString(sb, dic).ToString();
+		}
+#endif
 
 		public StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
 		{

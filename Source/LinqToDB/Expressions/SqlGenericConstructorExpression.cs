@@ -1,6 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using System.Linq.Expressions;
 using System.Reflection;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Expressions
 {
@@ -370,6 +371,9 @@ namespace LinqToDB.Expressions
 						return mc;
 
 					if (!mc.Method.IsStatic)
+						break;
+
+					if (mc.IsSqlRow() || mc.Method.DeclaringType == typeof(string))
 						break;
 
 					return new SqlGenericConstructorExpression(mc);

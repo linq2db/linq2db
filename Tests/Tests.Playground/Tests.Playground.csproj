@@ -13,6 +13,7 @@
 		<Compile Include="..\Linq\Linq\EagerLoadingTests.cs" Link="EagerLoadingTests.cs" />
 		<Compile Include="..\Linq\Linq\MathFunctionTests.cs" Link="MathFunctionTests.cs" />
 		<Compile Include="..\Linq\Linq\SelectScalarTests.cs" Link="SelectScalarTests.cs" />
+		<Compile Include="..\Linq\Linq\SqlRowTests.cs" Link="SqlRowTests.cs" />
 		<Compile Include="..\Linq\Linq\TakeSkipTests.cs" Link="TakeSkipTests.cs" />
 		<Compile Include="..\Linq\TestsInitialization.cs" Link="TestsInitialization.cs" />
 		<Compile Include="..\Linq\Create\CreateData.cs" Link="CreateData.cs" />
@@ -56,6 +57,7 @@
 		<Compile Include="..\Linq\Update\MergeTests.TargetSourceOn.cs" Link="MergeTests.TargetSourceOn.cs" />
 		<Compile Include="..\Linq\Update\MergeTests.Types.cs" Link="MergeTests.Types.cs" />
 		<Compile Include="..\Linq\Update\MergeTests.WithOutput.cs" Link="MergeTests.WithOutput.cs" />
+		<Compile Include="..\Linq\Update\UpdateTests.cs" Link="UpdateTests.cs" />
 		<Compile Include="..\Linq\UserTests\IndexOutOfRangeInUnions.cs" Link="IndexOutOfRangeInUnions.cs" />
 	</ItemGroup>
 

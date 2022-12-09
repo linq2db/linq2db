@@ -69,6 +69,8 @@ namespace LinqToDB.SqlProvider
 			}
 
 			statement = FinalizeInsert(statement);
+			statement = FinalizeUpdate(statement);
+			statement = FinalizeSelect(statement);
 			statement = CorrectUnionOrderBy(statement);
 			statement = FixSetOperationNulls(statement);
 			statement = OptimizeUpdateSubqueries(statement);
@@ -101,6 +103,257 @@ namespace LinqToDB.SqlProvider
 								item.Expression = column.Expression;
 						});
 						insertStatement.SelectQuery.From.Tables.Clear();
+					}
+				}
+			}
+
+			return statement;
+		}
+
+		static (SqlTableSource? tableSource, List<IQueryElement>? queryPath) FindTableSource(Stack<IQueryElement> currentPath, SqlTableSource source, SqlTable table)
+		{
+			if (source.Source == table)
+				return (source, currentPath.ToList());
+
+			if (source.Source is SelectQuery selectQuery)
+			{
+				var result = FindTableSource(currentPath, selectQuery, table);
+				if (result.tableSource != null)
+					return result;
+			}
+
+			foreach (var join in source.Joins)
+			{
+				currentPath.Push(join);
+				var result = FindTableSource(currentPath, join.Table, table);
+				currentPath.Pop();
+				if (result.tableSource != null)
+				{
+					return result;
+				}
+			}
+
+			return default;
+		}
+
+		static (SqlTableSource? tableSource, List<IQueryElement>? queryPath) FindTableSource(Stack<IQueryElement> currentPath, SelectQuery selectQuery, SqlTable table)
+		{
+			currentPath.Push(selectQuery);
+			foreach (var source in selectQuery.From.Tables)
+			{
+				var result = FindTableSource(currentPath, source, table);
+				if (result.tableSource != null)
+					return result;
+			}
+			currentPath.Pop();
+
+			return default;
+		}
+
+		static bool IsCompatibleForUpdate(SelectQuery selectQuery)
+		{
+			return !selectQuery.Select.IsDistinct && selectQuery.Select.GroupBy.IsEmpty;
+		}
+
+		static bool IsCompatibleForUpdate(SqlJoinedTable joinedTable)
+		{
+			return joinedTable.JoinType == JoinType.Inner || joinedTable.JoinType == JoinType.Left ||
+			       joinedTable.JoinType == JoinType.Right;
+		}
+
+		public static bool IsCompatibleForUpdate(IEnumerable<IQueryElement> path)
+		{
+			var result = path.All(e =>
+			{
+				if (e is SelectQuery sc)
+					return IsCompatibleForUpdate(sc);
+				if (e is SqlJoinedTable jt)
+					return IsCompatibleForUpdate(jt);
+				return true;
+			});
+
+			return result;
+		}
+
+		public static ISqlExpression? PopulateNesting(List<SelectQuery> queryPath, ISqlExpression expression, int ignoreCount)
+		{
+			var current = expression;
+			for (var index = 0; index < queryPath.Count - ignoreCount; index++)
+			{
+				var selectQuery = queryPath[index];
+				var idx         = selectQuery.Select.Columns.FindIndex(c => c.Expression == current);
+				if (idx < 0)
+				{
+					if (selectQuery.Select.IsDistinct || !selectQuery.GroupBy.IsEmpty)
+						return null;
+
+					current = selectQuery.Select.AddNewColumn(current);
+				}
+				else
+					current = selectQuery.Select.Columns[idx];
+			}
+
+			return current;
+		}
+
+		SqlStatement CorrectUpdate(SqlUpdateStatement statement)
+		{
+			if (statement.Update.Table != null)
+			{
+				var (tableSource, queryPath) = FindTableSource(new Stack<IQueryElement>(),  statement.SelectQuery, statement.Update.Table);
+				if (tableSource != null && queryPath != null)
+				{
+					if (!IsCompatibleForUpdate(queryPath))
+					{
+						// we have to create new Update table and join via Keys
+
+						var queries = queryPath.OfType<SelectQuery>().ToList();
+						var keys    = statement.Update.Table.GetKeys(false).ToArray();
+
+						if (keys.Length == 0)
+						{
+							keys = queries[0].Select.Columns
+								.Where(c => c.Expression is SqlField field && field.Table == statement.Update.Table)
+								.Select(c => (SqlField)c.Expression)
+								.ToArray();
+						}
+
+						if (keys.Length == 0)
+						{
+							throw new LinqToDBException("Invalid update query.");
+						}
+
+						var keysColumns = new List<ISqlExpression>(keys.Length);
+						foreach(var key in keys)
+						{
+							var newColumn = PopulateNesting(queries, key, 1);
+							if (newColumn == null)
+							{
+								throw new LinqToDBException("Invalid update query. Could not create comparision key. It can be GROUP BY or DISTINCT query modifier.");
+							}
+
+							keysColumns.Add(newColumn);
+						}
+
+						var originalTableForUpdate = statement.Update.Table;
+						var objectMap              = new Dictionary<IQueryElement, IQueryElement>();
+						var newTable               = originalTableForUpdate.Clone(objectMap);
+
+						var sc    = new SqlSearchCondition();
+
+						for (var index = 0; index < keys.Length; index++)
+						{
+							var originalField = keys[index];
+
+							if (!objectMap.TryGetValue(originalField, out var newField))
+							{
+								throw new InvalidOperationException();
+							}
+
+							var originalColumn = keysColumns[index];
+
+							sc.Conditions.Add(QueryHelper.GenerateEquality((ISqlExpression)newField, originalColumn));
+						}
+
+						if (!SqlProviderFlags.IsUpdateFromSupported)
+						{
+							// build join
+							//
+
+							var tsIndex = statement.SelectQuery.From.Tables.FindIndex(ts =>
+								queries.Contains(ts.Source));
+
+							if (tsIndex < 0)
+								throw new InvalidOperationException();
+
+							var ts   = statement.SelectQuery.From.Tables[tsIndex];
+							var join = new SqlJoinedTable(JoinType.Inner, ts, false, sc);
+
+							statement.SelectQuery.From.Tables.RemoveAt(tsIndex);
+							statement.SelectQuery.From.Tables.Insert(0, new SqlTableSource(newTable, "t", join));
+						}
+						else
+						{
+							statement.SelectQuery.Where.EnsureConjunction().ConcatSearchCondition(sc);
+						}
+
+						for (var index = 0; index < statement.Update.Items.Count; index++)
+						{
+							var item = statement.Update.Items[index];
+							if (item.Column is SqlColumn column)
+								item.Column = QueryHelper.GetUnderlyingField(column.Expression) ?? column.Expression;
+
+							item = item.ConvertAll(this, (v, e) =>
+							{
+								if (objectMap.TryGetValue(e, out var newValue))
+								{
+									return newValue;
+								}
+
+								return e;
+							});
+
+							statement.Update.Items[index] = item;
+						}
+
+						statement.Update.Table = newTable;
+					}
+
+					foreach (var item in statement.Update.Items)
+					{
+						if (item.Expression is SqlColumn column)
+							item.Expression = column.Expression;
+					}
+				}
+			}
+
+			return statement;
+		}
+
+		protected virtual SqlStatement FinalizeUpdate(SqlStatement statement)
+		{
+			if (statement is SqlUpdateStatement updateStatement)
+			{
+				statement = CorrectUpdate(updateStatement);
+
+				// get from columns expression
+				//
+				updateStatement.Update.Items.ForEach(item =>
+				{
+					if (item.Expression is SqlColumn column)
+						item.Expression = column.Expression;
+
+					item.Expression = QueryHelper.SimplifyColumnExpression(item.Expression);
+				});
+
+			}
+
+			return statement;
+		}
+
+		protected virtual SqlStatement FinalizeSelect(SqlStatement statement)
+		{
+			if (statement is SqlSelectStatement selectStatement)
+			{
+				// When selecting a SqlRow, expand the row into individual columns.
+
+				var selectQuery = selectStatement.SelectQuery;
+				var columns     = selectQuery.Select.Columns;
+	
+				for (var i = 0; i < columns.Count; i++)
+				{
+					var c = columns[i];
+					if (c.Expression.ElementType == QueryElementType.SqlRow)
+					{
+						if (columns.Count > 1)
+							throw new LinqToDBException("SqlRow expression must be the only result in a SELECT");
+	
+						var row = (SqlRow)columns[0].Expression;
+						columns.Clear();
+						foreach (var value in row.Values)
+							selectQuery.Select.AddNew(value);
+	
+						break;
 					}
 				}
 			}

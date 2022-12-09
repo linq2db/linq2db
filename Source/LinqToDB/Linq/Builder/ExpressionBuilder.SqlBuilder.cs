@@ -1429,6 +1429,10 @@ namespace LinqToDB.Linq.Builder
 
 		bool CanBeConstant(Expression expr)
 		{
+			if (!ParametersContext.CanBeConstant(expr))
+			{
+				return false;
+			}
 			return _optimizationContext.CanBeConstant(expr);
 		}
 
@@ -3822,6 +3826,12 @@ namespace LinqToDB.Linq.Builder
 		/// <returns></returns>
 		public Expression MakeExpression(IBuildContext? currentContext, Expression path, ProjectFlags flags)
 		{
+			static Expression ExecuteMake(IBuildContext context, Expression expresion, ProjectFlags projectFlags)
+			{
+				var result = context.MakeExpression(expresion, projectFlags);
+				return result;
+			}
+
 			// nothing to project here
 			if (path.NodeType   == ExpressionType.Parameter 
 				|| path.NodeType == ExpressionType.Lambda
@@ -3832,7 +3842,7 @@ namespace LinqToDB.Linq.Builder
 				return path;
 			}
 
-			if ((flags & (ProjectFlags.Root | ProjectFlags.AggregationRoot | ProjectFlags.AssociationRoot | ProjectFlags.Expand)) == 0)
+			if ((flags & (ProjectFlags.Root | ProjectFlags.AggregationRoot | ProjectFlags.AssociationRoot | ProjectFlags.Expand | ProjectFlags.Table)) == 0)
 			{
 				// try to find already converted to SQL
 				var sqlKey = new SqlCacheKey(path, null, null, null, flags.SqlFlag());
@@ -3886,7 +3896,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					// SetOperationContext can know how to process such path without preparing
 
-					var corrected = rootContext.BuildContext.MakeExpression(path, flags);
+					var corrected = ExecuteMake(rootContext.BuildContext, path, flags);
 
 					if (!ExpressionEqualityComparer.Instance.Equals(corrected, path) && corrected is not DefaultValueExpression && corrected is not SqlErrorExpression)
 					{
@@ -4023,7 +4033,7 @@ namespace LinqToDB.Linq.Builder
 				if (rootContext != null)
 				{
 					currentContext = rootContext.BuildContext;
-					expression     = rootContext.BuildContext.MakeExpression(path, flags);
+					expression     = ExecuteMake(currentContext, path, flags);
 					if (expression is SqlEagerLoadExpression eager && rootContext.BuildContext != eager.ContextRef.BuildContext)
 					{
 						expression = new SqlEagerLoadExpression(rootContext, path, GetSequenceExpression(rootContext.BuildContext));
