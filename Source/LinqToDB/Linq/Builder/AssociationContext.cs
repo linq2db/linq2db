@@ -75,7 +75,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			expression  = SequenceHelper.CorrectExpression(expression, this, SubqueryContext);
 			var indexes = SubqueryContext.ConvertToIndex(expression, level, flags);
-			var isOuter = SubqueryContext is DefaultIfEmptyBuilder.DefaultIfEmptyContext;
+			var isOuter = SubqueryContext is DefaultIfEmptyBuilder.DefaultIfEmptyContext defaultIfEmpty && !defaultIfEmpty.Disabled;
 
 			for (var i = 0; i < indexes.Length; i++)
 			{
