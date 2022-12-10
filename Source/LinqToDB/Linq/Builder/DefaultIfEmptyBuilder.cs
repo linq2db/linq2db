@@ -117,8 +117,11 @@ namespace LinqToDB.Linq.Builder
 				return ForceNullability(Sequence.ConvertToIndex(expression, level, flags));
 			}
 
-			private static SqlInfo[] ForceNullability(SqlInfo[] sql)
+			private SqlInfo[] ForceNullability(SqlInfo[] sql)
 			{
+				if (Disabled || Builder.DisableDefaultIfEmpty)
+					return sql;
+
 				// force nullability
 				for (var i = 0; i < sql.Length; i++)
 				{
