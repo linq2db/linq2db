@@ -82,23 +82,30 @@ namespace LinqToDB.SqlQuery
 			get
 			{
 				if (RawAlias == null)
-				{
-					switch (Expression)
-					{
-						case SqlField    field  : return field.Alias ?? field.PhysicalName;
-						case SqlColumn   column : return column.Alias;
-						case SelectQuery query:
-							{
-								if (query.Select.Columns.Count == 1 && query.Select.Columns[0].Alias != "*")
-									return query.Select.Columns[0].Alias;
-								break;
-							}
-					}
-				}
+					return GetAlias(Expression);
 
 				return RawAlias;
 			}
 			set => RawAlias = value;
+		}
+
+		private static string? GetAlias(ISqlExpression? expr)
+		{
+			switch (expr)
+			{
+				case SqlField    field  : return field.Alias ?? field.PhysicalName;
+				case SqlColumn   column : return column.Alias;
+				case SelectQuery query  :
+					{
+						if (query.Select.Columns.Count == 1 && query.Select.Columns[0].Alias != "*")
+							return query.Select.Columns[0].Alias;
+						break;
+					}
+				case SqlExpression e
+					when e.Expr is "{0}": return GetAlias(e.Parameters[0]);
+			}
+
+			return null;
 		}
 
 		int? _hashCode;
