@@ -478,15 +478,6 @@ namespace LinqToDB.SqlQuery
 				{
 					if (QueryHelper.IsConstantFast(_selectQuery.GroupBy.Items[i]))
 					{
-						if (i == 0 && _selectQuery.GroupBy.Items.Count == 1)
-						{
-							// we cannot remove all group items if there is at least one non aggregation expression
-							//
-							var allAggregates = _selectQuery.Select.Columns.All(static c => QueryHelper.IsAggregationFunction(c.Expression));
-							if (!allAggregates)
-								break;
-						}
-
 						_selectQuery.GroupBy.Items.RemoveAt(i);
 					}
 				}
@@ -1111,7 +1102,13 @@ namespace LinqToDB.SqlQuery
 
 			if (query.Select.Columns.Any(static c => QueryHelper.ContainsAggregationOrWindowFunction(c.Expression)))
 			{
-				isQueryOK = query.Where.IsEmpty && query.GroupBy.IsEmpty && parentQuery.IsSimpleOrSet;
+				isQueryOK = parentJoinedTable == null && query.Where.IsEmpty && query.GroupBy.IsEmpty && parentQuery.IsSimpleOrSet;
+				if (isQueryOK)
+				{
+					// check for parent query aggregations
+					//TODO: Actually avoiding problem only with SQL Server
+					isQueryOK = !parentQuery.Select.Columns.Any(static c => QueryHelper.ContainsAggregationOrWindowFunctionOneLevel(c.Expression));
+				}
 			}
 
 			if (!isQueryOK)

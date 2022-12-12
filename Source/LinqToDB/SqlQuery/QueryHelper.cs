@@ -1451,8 +1451,26 @@ namespace LinqToDB.SqlQuery
 			return false;
 		}
 
-		// TODO: IsAggregationOrWindowFunction use needs review - maybe we should call ContainsAggregationOrWindowFunction there
-		public static bool ContainsAggregationOrWindowFunction(IQueryElement expr) => null != expr.Find(e => IsAggregationFunction(e) || IsWindowFunction(e));
+		public static bool ContainsAggregationOrWindowFunction(IQueryElement expr)
+		{
+			return null != expr.Find(e => IsAggregationFunction(e) || IsWindowFunction(e));
+		}
+
+		public static bool ContainsAggregationOrWindowFunctionOneLevel(IQueryElement expr)
+		{
+			var found = false;
+			expr.VisitParentFirst(expr, (_, e) =>
+			{
+				if (found)
+					return true;
+				if (e is SqlColumn)
+					return false;
+				found = IsAggregationFunction(e) || IsWindowFunction(e);
+				return !found;
+			});
+
+			return found;
+		}
 
 		/// <summary>
 		/// Collects unique keys from different sources.
