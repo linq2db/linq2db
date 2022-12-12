@@ -7,7 +7,7 @@ namespace LinqToDB
 {
 	using Common;
 	using Linq.Builder;
-	using LinqToDB.Common.Internal;
+	using Common.Internal;
 	using Mapping;
 	using SqlQuery;
 
