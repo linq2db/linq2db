@@ -2,10 +2,11 @@
 using System.Linq.Expressions;
 
 using JetBrains.Annotations;
-using LinqToDB.Common.Internal;
 
 namespace LinqToDB.Mapping
 {
+	using Common.Internal;
+
 	/// <summary>
 	/// Defines relation between tables or views.
 	/// Could be applied to:
