@@ -5,7 +5,7 @@ using JetBrains.Annotations;
 
 namespace LinqToDB
 {
-	using LinqToDB.Common.Internal;
+	using Common.Internal;
 	using Mapping;
 
 	/// <summary>
