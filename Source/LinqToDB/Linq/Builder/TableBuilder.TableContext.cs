@@ -1206,7 +1206,6 @@ namespace LinqToDB.Linq.Builder
 
 				if (buildInfo != null)
 				{
-
 					if (buildInfo.IsSubQuery)
 					{
 						var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
@@ -1244,12 +1243,24 @@ namespace LinqToDB.Linq.Builder
 								var queryMethod = AssociationHelper.CreateAssociationQueryLambda(
 									Builder, new AccessorMember(expression), tableLevel.Descriptor, OriginalType, parentExactType, elementType,
 									false, false, GetLoadWith(), out _);
-								;
+
 								var expr   = queryMethod.GetBody(ma);
 
 								buildInfo.IsAssociationBuilt = true;
 
-								return Builder.BuildSequence(new BuildInfo(buildInfo, expr));
+								DefaultIfEmptyBuilder.DefaultIfEmptyContext? defaultIfEmpty = null;
+								if (tableLevel.Context is TableContext tc)
+									defaultIfEmpty = tc.Parent as DefaultIfEmptyBuilder.DefaultIfEmptyContext;
+
+								if (defaultIfEmpty != null)
+									defaultIfEmpty.Disabled = true;
+
+								var result =  Builder.BuildSequence(new BuildInfo(buildInfo, expr));
+
+								if (defaultIfEmpty != null)
+									defaultIfEmpty.Disabled = false;
+
+								return result;
 							}
 						}
 						else

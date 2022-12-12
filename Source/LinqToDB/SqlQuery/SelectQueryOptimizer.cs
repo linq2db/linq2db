@@ -1012,7 +1012,7 @@ namespace LinqToDB.SqlQuery
 
 		bool CheckColumn(SelectQuery parentQuery, SqlColumn column, ISqlExpression expr, SelectQuery query, bool optimizeValues, ISet<ISqlTableSource> sources)
 		{
-			expr = QueryHelper.UnwrapExpression(expr);
+			expr = QueryHelper.UnwrapExpression(expr, checkNullability: false);
 
 			if (expr.ElementType == QueryElementType.SqlField     ||
 				expr.ElementType == QueryElementType.Column       ||

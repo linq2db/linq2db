@@ -40,8 +40,12 @@ namespace LinqToDB.Linq.Builder
 			var context        = new SelectManyContext(buildInfo.Parent, collectionSelector, sequence);
 			context.SetAlias(collectionSelector.Parameters[0].Name);
 
-			var collectionInfo = new BuildInfo(context, expr, new SelectQuery());
-			var collection     = builder.BuildSequence(collectionInfo);
+			var collectionInfo            = new BuildInfo(context, expr, new SelectQuery());
+			var old                       = builder.DisableDefaultIfEmpty;
+			builder.DisableDefaultIfEmpty = true;
+			var collection                = builder.BuildSequence(collectionInfo);
+			builder.DisableDefaultIfEmpty = old;
+
 			if (resultSelector.Parameters.Count > 1)
 				collection.SetAlias(resultSelector.Parameters[1].Name);
 
