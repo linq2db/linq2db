@@ -230,7 +230,7 @@ namespace LinqToDB.Linq.Builder
 				if (buildBlock && _variable != null)
 					return _variable;
 
-				var recordType       = RecordsHelper.GetRecordType(Builder.MappingSchema, objectType);
+				var recordType       = RecordsHelper.GetRecordType(objectType);
 				var entityDescriptor = Builder.MappingSchema.GetEntityDescriptor(objectType);
 
 				// choosing type that can be instantiated
@@ -391,7 +391,7 @@ namespace LinqToDB.Linq.Builder
 					var membersWithOrder = new List<(int sequence, MemberAccessor ma)>();
 					foreach (var member in typeAccessor.Members)
 					{
-						var sequence = RecordsHelper.GetFSharpRecordMemberSequence(Builder.MappingSchema, typeAccessor.Type, member.MemberInfo);
+						var sequence = RecordsHelper.GetFSharpRecordMemberSequence(member.MemberInfo);
 						if (sequence != -1)
 						{
 							membersWithOrder.Add((sequence, member));
@@ -457,7 +457,7 @@ namespace LinqToDB.Linq.Builder
 								}
 
 								var typeAcc  = TypeAccessor.GetAccessor(member.Type);
-								var memberRecordType = RecordsHelper.GetRecordType(Builder.MappingSchema, member.Type);
+								var memberRecordType = RecordsHelper.GetRecordType(member.Type);
 
 								var exprs = GetExpressions(typeAcc, memberRecordType, cols).ToList();
 

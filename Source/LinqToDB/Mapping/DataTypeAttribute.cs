@@ -10,7 +10,7 @@ namespace LinqToDB.Mapping
 	[AttributeUsage(
 		AttributeTargets.Field | AttributeTargets.Property,
 		AllowMultiple = true, Inherited = true)]
-	public class DataTypeAttribute : Attribute
+	public class DataTypeAttribute : MappingAttribute
 	{
 		/// <summary>
 		/// Creates attribute instance.
@@ -57,5 +57,10 @@ namespace LinqToDB.Mapping
 		/// Gets or sets the name of the database column type.
 		/// </summary>
 		public string? DbType { get; set; }
+
+		public override string GetObjectID()
+		{
+			return $".{Configuration}.{DataType}.{DbType}.";
+		}
 	}
 }
