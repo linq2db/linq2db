@@ -193,7 +193,7 @@ namespace LinqToDB.SqlQuery
 					var expr = (SqlExpression)ex;
 					if (expr.IsPredicate)
 						return false;
-					if (QueryHelper.IsTransitiveExpression(expr))
+					if (QueryHelper.IsTransitiveExpression(expr, checkNullability: true))
 						return NeedsEqual(expr.Parameters[0]);
 					return true;
 				}

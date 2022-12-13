@@ -102,6 +102,11 @@ namespace LinqToDB
 					CanBeNull = GetCanBeNull(parameters)
 				};
 			}
+
+			public override string GetObjectID()
+			{
+				return $"{base.GetObjectID()}.{Name}.";
+			}
 		}
 	}
 }

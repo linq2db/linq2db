@@ -416,7 +416,7 @@ namespace LinqToDB.Linq.Builder
 
 						if (nctor != null)
 						{
-							var recordType = RecordsHelper.GetRecordType(Builder.MappingSchema, nctor.Type);
+							var recordType = RecordsHelper.GetRecordType(nctor.Type);
 							if ((recordType & RecordType.CallConstructorOnRead) != 0)
 							{
 								if (nctor.Members != null)
