@@ -1062,7 +1062,6 @@ namespace LinqToDB.SqlQuery
 				query.From.Tables.Count  == 1                                &&
 				(concatWhere || query.Where.IsEmpty && query.Having.IsEmpty) &&
 				query.HasSetOperators    == false                            &&
-				query.GroupBy.IsEmpty                                        &&
 				query.Select.HasModifier == false;
 			//isQueryOK = isQueryOK && (_flags.IsDistinctOrderBySupported || query.Select.IsDistinct );
 
@@ -1100,9 +1099,29 @@ namespace LinqToDB.SqlQuery
 				}
 			}
 
-			if (query.Select.Columns.Any(static c => QueryHelper.ContainsAggregationOrWindowFunction(c.Expression)))
+			if (isQueryOK && !query.GroupBy.IsEmpty)
 			{
-				isQueryOK = parentJoinedTable == null && query.Where.IsEmpty && query.GroupBy.IsEmpty && parentQuery.IsSimpleOrSet;
+				isQueryOK = parentJoinedTable       == null &&
+				            childSource.Joins.Count == 0    &&
+				            parentQuery.IsSimpleOrSet       &&
+				            !parentQuery.Select.Columns.Any(static c =>
+					            QueryHelper.ContainsAggregationOrWindowFunctionOneLevel(c.Expression));
+			}
+
+			if (isQueryOK && query.Select.Columns.Any(static c => QueryHelper.ContainsAggregationOrWindowFunctionOneLevel(c.Expression)))
+			{
+				isQueryOK = parentJoinedTable == null && parentQuery.IsSimpleOrSet;
+			}
+
+			// SELECT MAX(query.c1) { parentQuery}
+			// FROM (
+			//	SELECT {query}
+			//		(SELECT Avg(t.Field)) AS c1
+			//  FROM Table
+			// )
+			if (isQueryOK && query.Select.Columns.Any(static c => QueryHelper.ContainsAggregationOrWindowFunction(c.Expression)))
+			{
+				isQueryOK = parentJoinedTable == null && parentQuery.IsSimpleOrSet;
 				if (isQueryOK)
 				{
 					// check for parent query aggregations
@@ -1159,7 +1178,7 @@ namespace LinqToDB.SqlQuery
 						{
 							if (QueryHelper.IsConstantFast(column.Expression))
 							{
-								if (parentQuery.Select.Columns.Find(c => ReferenceEquals(c.Expression, column)) != null)
+								if (parentQuery.GroupBy.Items.Count == 1 && parentQuery.Select.Columns.Find(c => ReferenceEquals(c.Expression, column)) != null)
 								{
 									isColumnsOK = false;
 									break;
@@ -1251,6 +1270,13 @@ namespace LinqToDB.SqlQuery
 
 			query.From.Tables[0].Joins.AddRange(childSource.Joins);
 			query.From.Tables[0].Alias ??= childSource.Alias;
+
+			if (!query.GroupBy.IsEmpty)
+			{
+				if (!_selectQuery.GroupBy.IsEmpty)
+					throw new InvalidOperationException();
+				_selectQuery.GroupBy.Items.AddRange(query.GroupBy.Items);
+			}
 
 			if (!query.Where. IsEmpty) ConcatSearchCondition(_selectQuery.Where,  query.Where);
 			if (!query.Having.IsEmpty) ConcatSearchCondition(_selectQuery.Having, query.Having);

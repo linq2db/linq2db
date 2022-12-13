@@ -2429,8 +2429,8 @@ namespace Tests.Linq
 
 			var sql = query.GetSelectQuery();
 
-			Assert.AreEqual(2, ((SelectQuery)((SqlTableSource)sql.From.Tables[0]).Source).GroupBy.Items.Count);
-			Assert.AreEqual(2, ((SelectQuery)((SqlTableSource)sql.SetOperators[0].SelectQuery.From.Tables[0]).Source).GroupBy.Items.Count);
+			Assert.AreEqual(2, sql.GroupBy.Items.Count);
+			Assert.AreEqual(2, sql.SetOperators[0].SelectQuery.GroupBy.Items.Count);
 		}
 
 		[Test]
