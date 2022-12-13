@@ -36,6 +36,7 @@ namespace LinqToDB
 			{
 			}
 
+			// TODO: V5 consider removal of Name+Expression
 			protected new string? Name => base.Name;
 
 			public string? Expression

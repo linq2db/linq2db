@@ -53,7 +53,7 @@ namespace LinqToDB.Data
 
 			var entityDescriptor = MappingSchema.GetEntityDescriptor(objectType);
 
-			var recordType = RecordsHelper.GetRecordType(MappingSchema, objectType);
+			var recordType = RecordsHelper.GetRecordType(objectType);
 			var expr = recordType == RecordType.NotRecord
 				? BuildDefaultConstructor(entityDescriptor, objectType)
 				: BuildRecordConstructor (entityDescriptor, objectType, recordType);
@@ -183,7 +183,7 @@ namespace LinqToDB.Data
 				members = new List<MemberAccessor>();
 				foreach (var member in typeAccessor.Members)
 				{
-					if (-1 != RecordsHelper.GetFSharpRecordMemberSequence(MappingSchema, typeAccessor.Type, member.MemberInfo))
+					if (-1 != RecordsHelper.GetFSharpRecordMemberSequence(member.MemberInfo))
 						members.Add(member);
 				}
 			}
@@ -229,7 +229,7 @@ namespace LinqToDB.Data
 						}
 
 						var typeAcc          = TypeAccessor.GetAccessor(member.Type);
-						var memberRecordType = RecordsHelper.GetRecordType(MappingSchema, member.Type);
+						var memberRecordType = RecordsHelper.GetRecordType(member.Type);
 
 						var exprs = GetExpressions(typeAcc, memberRecordType, cols).ToList();
 

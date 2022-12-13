@@ -6,14 +6,15 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB
 {
-	using LinqToDB.SqlProvider;
+	using Common.Internal;
+	using SqlProvider;
 	using SqlQuery;
 
 	partial class Sql
 	{
 		[Serializable]
 		[AttributeUsage(AttributeTargets.Method, AllowMultiple = true, Inherited = false)]
-		public class TableFunctionAttribute : Attribute
+		public class TableFunctionAttribute : MappingAttribute
 		{
 			public TableFunctionAttribute()
 			{
@@ -69,6 +70,11 @@ namespace LinqToDB
 					Package : Package  ?? table.TableName.Package);
 
 				table.TableArguments = ExpressionAttribute.PrepareArguments(context, string.Empty, ArgIndices, true, knownExpressions, genericTypes, converter);
+			}
+
+			public override string GetObjectID()
+			{
+				return $".{Configuration}.{Name}.{Schema}.{Database}.{Server}.{Package}.{IdentifierBuilder.GetObjectID(ArgIndices)}.";
 			}
 		}
 	}

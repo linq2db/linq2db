@@ -44,15 +44,11 @@ namespace LinqToDB.Linq
 		private static readonly ConcurrentDictionary<Type, RecordType> _recordCache = new ();
 		private static readonly ConcurrentDictionary<MemberInfo, int>  _fsharpRecordMemberCache = new ();
 
-		internal static RecordType GetRecordType(MappingSchema mappingSchema, Type objectType)
+		internal static RecordType GetRecordType(Type objectType)
 		{
-#if NET45 || NET46 || NETSTANDARD2_0
-			return _recordCache.GetOrAdd(objectType, objectType =>
-#else
-			return _recordCache.GetOrAdd(objectType, static (objectType, mappingSchema) =>
-#endif
+			return _recordCache.GetOrAdd(objectType, static objectType =>
 			{
-				if (IsFSharpRecord(mappingSchema, objectType))
+				if (IsFSharpRecord(objectType))
 					return RecordType.FSharp;
 
 				if (objectType.IsAnonymous())
@@ -62,24 +58,14 @@ namespace LinqToDB.Linq
 					return RecordType.RecordClass;
 
 				return RecordType.NotRecord;
-#if NET45 || NET46 || NETSTANDARD2_0
 			});
-#else
-			}, mappingSchema);
-#endif
 		}
 
-		public static int GetFSharpRecordMemberSequence(MappingSchema mappingSchema, Type objectType, MemberInfo memberInfo)
+		public static int GetFSharpRecordMemberSequence(MemberInfo memberInfo)
 		{
-#if NET45 || NET46 || NETSTANDARD2_0
-			return _fsharpRecordMemberCache.GetOrAdd(memberInfo, memberInfo =>
+			return _fsharpRecordMemberCache.GetOrAdd(memberInfo, static memberInfo =>
 			{
-#else
-			return _fsharpRecordMemberCache.GetOrAdd(memberInfo, static (memberInfo, ctx) =>
-			{
-				var (mappingSchema, objectType) = ctx;
-#endif
-				var attrs                  = mappingSchema.GetAttributes<Attribute>(objectType, memberInfo);
+				var attrs                  = memberInfo.GetCustomAttributes();
 				var compilationMappingAttr = attrs.FirstOrDefault(attr => attr.GetType().FullName == "Microsoft.FSharp.Core.CompilationMappingAttribute");
 
 				if (compilationMappingAttr != null)
@@ -91,16 +77,12 @@ namespace LinqToDB.Linq
 				}
 
 				return -1;
-#if NET45 || NET46 || NETSTANDARD2_0
 			});
-#else
-			}, (mappingSchema, objectType));
-#endif
 		}
 
-		private static bool IsFSharpRecord(MappingSchema mappingSchema, Type objectType)
+		private static bool IsFSharpRecord(Type objectType)
 		{
-			var attrs = mappingSchema.GetAttributes<Attribute>(objectType);
+			var attrs = objectType.GetAttributes<Attribute>();
 
 			var compilationMappingAttr = attrs.FirstOrDefault(attr => attr.GetType().FullName == "Microsoft.FSharp.Core.CompilationMappingAttribute");
 			if (compilationMappingAttr == null)

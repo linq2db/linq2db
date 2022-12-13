@@ -5,6 +5,7 @@ using JetBrains.Annotations;
 
 namespace LinqToDB
 {
+	using Common.Internal;
 	using Mapping;
 
 	/// <summary>
@@ -99,7 +100,7 @@ namespace LinqToDB
 
 		public override string GetObjectID()
 		{
-			return $".{Configuration}.{MethodName}.{(IsColumn?1:0)}.{Alias}.";
+			return $".{Configuration}.{MethodName}.{IdentifierBuilder.GetObjectID(Expression)}.{(IsColumn?1:0)}.{Alias}.";
 		}
 	}
 }

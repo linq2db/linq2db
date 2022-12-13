@@ -4,6 +4,8 @@ using System.Linq;
 using System.Reflection;
 
 using LinqToDB;
+using LinqToDB.Common.Internal;
+using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
@@ -12,7 +14,7 @@ namespace Tests.Linq
 	using Model;
 
 	[AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
-	public class ExtensionChoiceAttribute : Attribute
+	public class ExtensionChoiceAttribute : MappingAttribute
 	{
 		public ExtensionChoiceAttribute(string configuration, string expression, params Type?[] types)
 		{
@@ -23,7 +25,12 @@ namespace Tests.Linq
 
 		public string  Configuration { get; set; }
 		public string  Expression    { get; set; }
-		public Type?[] Types         { get; }
+		public Type?[] Types { get; }
+
+		public override string GetObjectID()
+		{
+			return $".{Configuration}.{Expression}.[{string.Join(",", Types.Select(IdentifierBuilder.GetObjectID))}].";
+		}
 	}
 
 	sealed class GenericBuilder : Sql.IExtensionCallBuilder
