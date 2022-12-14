@@ -22,8 +22,8 @@ namespace Cli.Default.PostgreSQL
 		/// <summary>
 		/// Doctor_PersonID_fkey
 		/// </summary>
-		[Association(CanBeNull = false, ThisKey = nameof(PersonId), OtherKey = nameof(PostgreSQL.Person.PersonId))]
-		public Person Person { get; set; } = null!;
+		[Association(CanBeNull = false, ThisKey = nameof(PersonId), OtherKey = nameof(Person.PersonId))]
+		public Person PersonIDfkey { get; set; } = null!;
 		#endregion
 	}
 }

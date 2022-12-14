@@ -24,7 +24,7 @@ using Microsoft.SqlServer.Types;
 
 namespace Sql2017ProcSchema
 {
-	public partial class TestDataNorthwindDB : LinqToDB.Data.DataConnection
+	public partial class NorthwindDB : LinqToDB.Data.DataConnection
 	{
 		public ITable<AlphabeticalListOfProduct>  AlphabeticalListOfProducts   { get { return this.GetTable<AlphabeticalListOfProduct>(); } }
 		public ITable<Category>                   Categories                   { get { return this.GetTable<Category>(); } }
@@ -55,13 +55,13 @@ namespace Sql2017ProcSchema
 		public ITable<Supplier>                   Suppliers                    { get { return this.GetTable<Supplier>(); } }
 		public ITable<Territory>                  Territories                  { get { return this.GetTable<Territory>(); } }
 
-		public TestDataNorthwindDB(int i)
+		public NorthwindDB(int i)
 		{
 			InitDataContext();
 			InitMappingSchema();
 		}
 
-		public TestDataNorthwindDB(string configuration)
+		public NorthwindDB(string configuration)
 			: base(configuration)
 		{
 			InitDataContext();
@@ -569,11 +569,11 @@ namespace Sql2017ProcSchema
 		#endregion
 	}
 
-	public static partial class TestDataNorthwindDBStoredProcedures
+	public static partial class NorthwindDBStoredProcedures
 	{
 		#region CustOrderHist
 
-		public static List<CustOrderHistResult> CustOrderHist(this TestDataNorthwindDB dataConnection, string? @CustomerID)
+		public static List<CustOrderHistResult> CustOrderHist(this NorthwindDB dataConnection, string? @CustomerID)
 		{
 			var parameters = new []
 			{
@@ -596,7 +596,7 @@ namespace Sql2017ProcSchema
 
 		#region CustOrdersDetail
 
-		public static List<CustOrdersDetailResult> CustOrdersDetail(this TestDataNorthwindDB dataConnection, int? @OrderID)
+		public static List<CustOrdersDetailResult> CustOrdersDetail(this NorthwindDB dataConnection, int? @OrderID)
 		{
 			var parameters = new []
 			{
@@ -619,7 +619,7 @@ namespace Sql2017ProcSchema
 
 		#region CustOrdersOrders
 
-		public static List<CustOrdersOrdersResult> CustOrdersOrders(this TestDataNorthwindDB dataConnection, string? @CustomerID)
+		public static List<CustOrdersOrdersResult> CustOrdersOrders(this NorthwindDB dataConnection, string? @CustomerID)
 		{
 			var parameters = new []
 			{
@@ -644,7 +644,7 @@ namespace Sql2017ProcSchema
 
 		#region EmployeeSalesByCountry
 
-		public static List<EmployeeSalesByCountryResult> EmployeeSalesByCountry(this TestDataNorthwindDB dataConnection, DateTime? @Beginning_Date, DateTime? @Ending_Date)
+		public static List<EmployeeSalesByCountryResult> EmployeeSalesByCountry(this NorthwindDB dataConnection, DateTime? @Beginning_Date, DateTime? @Ending_Date)
 		{
 			var parameters = new []
 			{
@@ -669,7 +669,7 @@ namespace Sql2017ProcSchema
 
 		#region SalesByYear
 
-		public static List<SalesByYearResult> SalesByYear(this TestDataNorthwindDB dataConnection, DateTime? @Beginning_Date, DateTime? @Ending_Date)
+		public static List<SalesByYearResult> SalesByYear(this NorthwindDB dataConnection, DateTime? @Beginning_Date, DateTime? @Ending_Date)
 		{
 			var parameters = new []
 			{
@@ -692,7 +692,7 @@ namespace Sql2017ProcSchema
 
 		#region SalesByCategory
 
-		public static List<SalesByCategoryResult> SalesByCategory(this TestDataNorthwindDB dataConnection, string? @CategoryName, string? @OrdYear)
+		public static List<SalesByCategoryResult> SalesByCategory(this NorthwindDB dataConnection, string? @CategoryName, string? @OrdYear)
 		{
 			var parameters = new []
 			{
@@ -719,7 +719,7 @@ namespace Sql2017ProcSchema
 
 		#region TenMostExpensiveProducts
 
-		public static List<TenMostExpensiveProductsResult> TenMostExpensiveProducts(this TestDataNorthwindDB dataConnection)
+		public static List<TenMostExpensiveProductsResult> TenMostExpensiveProducts(this NorthwindDB dataConnection)
 		{
 			return dataConnection.QueryProc<TenMostExpensiveProductsResult>("[Ten Most Expensive Products]").ToList();
 		}
@@ -1125,7 +1125,7 @@ namespace Sql2017ProcSchema
 		#endregion
 	}
 
-	public partial class TestData2017DB : LinqToDB.Data.DataConnection
+	public partial class TestDataDB : LinqToDB.Data.DataConnection
 	{
 		public ITable<AllType>                 AllTypes                 { get { return this.GetTable<AllType>(); } }
 		public ITable<AllTypes2>               AllTypes2                { get { return this.GetTable<AllTypes2>(); } }
@@ -1144,6 +1144,7 @@ namespace Sql2017ProcSchema
 		public ITable<Issue1115>               Issue1115                { get { return this.GetTable<Issue1115>(); } }
 		public ITable<Issue1144>               Issue1144                { get { return this.GetTable<Issue1144>(); } }
 		public ITable<LinqDataType>            LinqDataTypes            { get { return this.GetTable<LinqDataType>(); } }
+		public ITable<Member>                  Members                  { get { return this.GetTable<Member>(); } }
 		public ITable<NameTest>                NameTests                { get { return this.GetTable<NameTest>(); } }
 		/// <summary>
 		/// This is Parent table
@@ -1152,6 +1153,7 @@ namespace Sql2017ProcSchema
 		public ITable<ParentChildView>         ParentChildViews         { get { return this.GetTable<ParentChildView>(); } }
 		public ITable<ParentView>              ParentViews              { get { return this.GetTable<ParentView>(); } }
 		public ITable<Patient>                 Patients                 { get { return this.GetTable<Patient>(); } }
+		public ITable<Provider>                Providers                { get { return this.GetTable<Provider>(); } }
 		public ITable<SameTableName>           SameTableNames           { get { return this.GetTable<SameTableName>(); } }
 		public ITable<SqlType>                 SqlTypes                 { get { return this.GetTable<SqlType>(); } }
 		public ITable<TestIdentity>            TestIdentities           { get { return this.GetTable<TestIdentity>(); } }
@@ -1173,14 +1175,14 @@ namespace Sql2017ProcSchema
 
 		#endregion
 
-		public TestData2017DB(int i)
+		public TestDataDB(int i)
 		{
 			InitSchemas();
 			InitDataContext();
 			InitMappingSchema();
 		}
 
-		public TestData2017DB(string configuration)
+		public TestDataDB(string configuration)
 			: base(configuration)
 		{
 			InitSchemas();
@@ -1439,6 +1441,23 @@ namespace Sql2017ProcSchema
 		[Column(       DbType="nvarchar(50)",     DataType=LinqToDB.DataType.NVarChar,  Length=50),             Nullable            ] public string?   StringValue    { get; set; } // nvarchar(50)
 	}
 
+	[Table("Member")]
+	public partial class Member
+	{
+		[Column(DbType="int",          DataType=LinqToDB.DataType.Int32),               PrimaryKey, Identity] public int    MemberId { get; set; } // int
+		[Column(DbType="nvarchar(50)", DataType=LinqToDB.DataType.NVarChar, Length=50), NotNull             ] public string Alias    { get; set; } = null!; // nvarchar(50)
+
+		#region Associations
+
+		/// <summary>
+		/// FK_Provider_Member_BackReference (dbo.Provider)
+		/// </summary>
+		[Association(ThisKey="MemberId", OtherKey="ProviderId", CanBeNull=true)]
+		public Provider? Provider { get; set; }
+
+		#endregion
+	}
+
 	[Table("Name.Test")]
 	public partial class NameTest
 	{
@@ -1477,6 +1496,23 @@ namespace Sql2017ProcSchema
 	{
 		[Column(DbType="int",           DataType=LinqToDB.DataType.Int32),                PrimaryKey, NotNull] public int    PersonID  { get; set; } // int
 		[Column(DbType="nvarchar(256)", DataType=LinqToDB.DataType.NVarChar, Length=256),             NotNull] public string Diagnosis { get; set; } = null!; // nvarchar(256)
+	}
+
+	[Table("Provider")]
+	public partial class Provider
+	{
+		[Column(DbType="int",           DataType=LinqToDB.DataType.Int32),                         PrimaryKey, NotNull] public int    ProviderId { get; set; } // int
+		[Column(DbType="nvarchar(max)", DataType=LinqToDB.DataType.NVarChar, Length=int.MaxValue),             NotNull] public string Test       { get; set; } = null!; // nvarchar(max)
+
+		#region Associations
+
+		/// <summary>
+		/// FK_Provider_Member (dbo.Member)
+		/// </summary>
+		[Association(ThisKey="ProviderId", OtherKey="MemberId", CanBeNull=false)]
+		public Member Member { get; set; } = null!;
+
+		#endregion
 	}
 
 	[Table("SameTableName")]
@@ -1606,10 +1642,10 @@ namespace Sql2017ProcSchema
 		#region Associations
 
 		/// <summary>
-		/// FK_TestSchemaY_TestSchemaX (dbo.TestSchemaX)
+		/// FK_TestSchemaY_OtherID (dbo.TestSchemaX)
 		/// </summary>
 		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false)]
-		public TestSchemaX FkTestSchemaYTestSchemaX { get; set; } = null!;
+		public TestSchemaX FkTestSchemaYOtherID { get; set; } = null!;
 
 		/// <summary>
 		/// FK_TestSchemaY_ParentTestSchemaX (dbo.TestSchemaX)
@@ -1618,7 +1654,7 @@ namespace Sql2017ProcSchema
 		public TestSchemaX ParentTestSchemaX { get; set; } = null!;
 
 		/// <summary>
-		/// FK_TestSchemaY_OtherID (dbo.TestSchemaX)
+		/// FK_TestSchemaY_TestSchemaX (dbo.TestSchemaX)
 		/// </summary>
 		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false)]
 		public TestSchemaX TestSchemaX { get; set; } = null!;
@@ -1626,11 +1662,11 @@ namespace Sql2017ProcSchema
 		#endregion
 	}
 
-	public static partial class TestData2017DBStoredProcedures
+	public static partial class TestDataDBStoredProcedures
 	{
 		#region AddIssue792Record
 
-		public static int AddIssue792Record(this TestData2017DB dataConnection)
+		public static int AddIssue792Record(this TestDataDB dataConnection)
 		{
 			return dataConnection.ExecuteProc("[AddIssue792Record]");
 		}
@@ -1639,7 +1675,7 @@ namespace Sql2017ProcSchema
 
 		#region DuplicateColumnNames
 
-		public static List<DuplicateColumnNamesResult> DuplicateColumnNames(this TestData2017DB dataConnection)
+		public static List<DuplicateColumnNamesResult> DuplicateColumnNames(this TestDataDB dataConnection)
 		{
 			var ms = dataConnection.MappingSchema;
 
@@ -1662,7 +1698,7 @@ namespace Sql2017ProcSchema
 
 		#region ExecuteProcIntParameters
 
-		public static int ExecuteProcIntParameters(this TestData2017DB dataConnection, int? @input, ref int? @output)
+		public static int ExecuteProcIntParameters(this TestDataDB dataConnection, int? @input, ref int? @output)
 		{
 			var parameters = new []
 			{
@@ -1690,7 +1726,7 @@ namespace Sql2017ProcSchema
 		/// <param name="input">
 		/// This is &lt;test&gt; procedure parameter!
 		/// </param>
-		public static List<ExecuteProcStringParametersResult> ExecuteProcStringParameters(this TestData2017DB dataConnection, int? @input, ref int? @output)
+		public static List<ExecuteProcStringParametersResult> ExecuteProcStringParameters(this TestDataDB dataConnection, int? @input, ref int? @output)
 		{
 			var parameters = new []
 			{
@@ -1724,7 +1760,7 @@ namespace Sql2017ProcSchema
 
 		#region Issue1897
 
-		public static int Issue1897(this TestData2017DB dataConnection, out int @return)
+		public static int Issue1897(this TestDataDB dataConnection, out int @return)
 		{
 			var parameters = new []
 			{
@@ -1745,7 +1781,7 @@ namespace Sql2017ProcSchema
 
 		#region OutRefEnumTest
 
-		public static int OutRefEnumTest(this TestData2017DB dataConnection, string? @str, ref string? @outputStr, ref string? @inputOutputStr)
+		public static int OutRefEnumTest(this TestDataDB dataConnection, string? @str, ref string? @outputStr, ref string? @inputOutputStr)
 		{
 			var parameters = new []
 			{
@@ -1777,7 +1813,7 @@ namespace Sql2017ProcSchema
 
 		#region OutRefTest
 
-		public static int OutRefTest(this TestData2017DB dataConnection, int? @ID, ref int? @outputID, ref int? @inputOutputID, string? @str, ref string? @outputStr, ref string? @inputOutputStr)
+		public static int OutRefTest(this TestDataDB dataConnection, int? @ID, ref int? @outputID, ref int? @inputOutputID, string? @str, ref string? @outputStr, ref string? @inputOutputStr)
 		{
 			var parameters = new []
 			{
@@ -1820,7 +1856,7 @@ namespace Sql2017ProcSchema
 
 		#region PatientSelectAll
 
-		public static List<PatientSelectAllResult> PatientSelectAll(this TestData2017DB dataConnection)
+		public static List<PatientSelectAllResult> PatientSelectAll(this TestDataDB dataConnection)
 		{
 			return dataConnection.QueryProc<PatientSelectAllResult>("[Patient_SelectAll]").ToList();
 		}
@@ -1839,7 +1875,7 @@ namespace Sql2017ProcSchema
 
 		#region PatientSelectByName
 
-		public static List<PatientSelectByNameResult> PatientSelectByName(this TestData2017DB dataConnection, string? @firstName, string? @lastName)
+		public static List<PatientSelectByNameResult> PatientSelectByName(this TestDataDB dataConnection, string? @firstName, string? @lastName)
 		{
 			var parameters = new []
 			{
@@ -1870,7 +1906,7 @@ namespace Sql2017ProcSchema
 
 		#region PersonDelete
 
-		public static int PersonDelete(this TestData2017DB dataConnection, int? @PersonID)
+		public static int PersonDelete(this TestDataDB dataConnection, int? @PersonID)
 		{
 			var parameters = new []
 			{
@@ -1884,7 +1920,7 @@ namespace Sql2017ProcSchema
 
 		#region PersonInsert
 
-		public static List<PersonInsertResult> PersonInsert(this TestData2017DB dataConnection, string? @FirstName, string? @LastName, string? @MiddleName, char? @Gender)
+		public static List<PersonInsertResult> PersonInsert(this TestDataDB dataConnection, string? @FirstName, string? @LastName, string? @MiddleName, char? @Gender)
 		{
 			var parameters = new []
 			{
@@ -1918,7 +1954,7 @@ namespace Sql2017ProcSchema
 
 		#region PersonInsertOutputParameter
 
-		public static int PersonInsertOutputParameter(this TestData2017DB dataConnection, string? @FirstName, string? @LastName, string? @MiddleName, char? @Gender, ref int? @PersonID)
+		public static int PersonInsertOutputParameter(this TestDataDB dataConnection, string? @FirstName, string? @LastName, string? @MiddleName, char? @Gender, ref int? @PersonID)
 		{
 			var parameters = new []
 			{
@@ -1955,7 +1991,7 @@ namespace Sql2017ProcSchema
 
 		#region PersonSelectAll
 
-		public static List<PersonSelectAllResult> PersonSelectAll(this TestData2017DB dataConnection)
+		public static List<PersonSelectAllResult> PersonSelectAll(this TestDataDB dataConnection)
 		{
 			return dataConnection.QueryProc<PersonSelectAllResult>("[Person_SelectAll]").ToList();
 		}
@@ -1973,7 +2009,7 @@ namespace Sql2017ProcSchema
 
 		#region PersonSelectByKey
 
-		public static List<PersonSelectByKeyResult> PersonSelectByKey(this TestData2017DB dataConnection, int? @id)
+		public static List<PersonSelectByKeyResult> PersonSelectByKey(this TestDataDB dataConnection, int? @id)
 		{
 			var parameters = new []
 			{
@@ -1996,7 +2032,7 @@ namespace Sql2017ProcSchema
 
 		#region PersonSelectByKeyLowercase
 
-		public static List<PersonSelectByKeyLowercaseResult> PersonSelectByKeyLowercase(this TestData2017DB dataConnection, int? @id)
+		public static List<PersonSelectByKeyLowercaseResult> PersonSelectByKeyLowercase(this TestDataDB dataConnection, int? @id)
 		{
 			var parameters = new []
 			{
@@ -2016,7 +2052,7 @@ namespace Sql2017ProcSchema
 
 		#region PersonSelectByName
 
-		public static List<PersonSelectByNameResult> PersonSelectByName(this TestData2017DB dataConnection, string? @firstName, string? @lastName)
+		public static List<PersonSelectByNameResult> PersonSelectByName(this TestDataDB dataConnection, string? @firstName, string? @lastName)
 		{
 			var parameters = new []
 			{
@@ -2046,7 +2082,7 @@ namespace Sql2017ProcSchema
 
 		#region PersonSelectListByName
 
-		public static List<PersonSelectListByNameResult> PersonSelectListByName(this TestData2017DB dataConnection, string? @firstName, string? @lastName)
+		public static List<PersonSelectListByNameResult> PersonSelectListByName(this TestDataDB dataConnection, string? @firstName, string? @lastName)
 		{
 			var parameters = new []
 			{
@@ -2076,7 +2112,7 @@ namespace Sql2017ProcSchema
 
 		#region PersonUpdate
 
-		public static int PersonUpdate(this TestData2017DB dataConnection, int? @PersonID, string? @FirstName, string? @LastName, string? @MiddleName, char? @Gender)
+		public static int PersonUpdate(this TestDataDB dataConnection, int? @PersonID, string? @FirstName, string? @LastName, string? @MiddleName, char? @Gender)
 		{
 			var parameters = new []
 			{
@@ -2106,7 +2142,7 @@ namespace Sql2017ProcSchema
 
 		#region QueryProcMultipleParameters
 
-		public static List<QueryProcMultipleParametersResult> QueryProcMultipleParameters(this TestData2017DB dataConnection, int? @input, ref int? @output1, ref int? @output2, ref int? @output3)
+		public static List<QueryProcMultipleParametersResult> QueryProcMultipleParameters(this TestDataDB dataConnection, int? @input, ref int? @output1, ref int? @output2, ref int? @output3)
 		{
 			var parameters = new []
 			{
@@ -2147,7 +2183,7 @@ namespace Sql2017ProcSchema
 
 		#region QueryProcParameters
 
-		public static List<QueryProcParametersResult> QueryProcParameters(this TestData2017DB dataConnection, int? @input, ref int? @output1, ref int? @output2)
+		public static List<QueryProcParametersResult> QueryProcParameters(this TestDataDB dataConnection, int? @input, ref int? @output1, ref int? @output2)
 		{
 			var parameters = new []
 			{
@@ -2183,7 +2219,7 @@ namespace Sql2017ProcSchema
 
 		#region SelectImplicitColumn
 
-		public static List<SelectImplicitColumnResult> SelectImplicitColumn(this TestData2017DB dataConnection)
+		public static List<SelectImplicitColumnResult> SelectImplicitColumn(this TestDataDB dataConnection)
 		{
 			var ms = dataConnection.MappingSchema;
 
@@ -2204,7 +2240,7 @@ namespace Sql2017ProcSchema
 
 		#region TableTypeTestProc
 
-		public static List<TableTypeTestProcResult> TableTypeTestProc(this TestData2017DB dataConnection, DataTable? @table)
+		public static List<TableTypeTestProcResult> TableTypeTestProc(this TestDataDB dataConnection, DataTable? @table)
 		{
 			var parameters = new []
 			{
@@ -2227,7 +2263,7 @@ namespace Sql2017ProcSchema
 
 		#region VariableResults
 
-		public static List<VariableResultsResult> VariableResults(this TestData2017DB dataConnection, bool? @ReturnFullRow)
+		public static List<VariableResultsResult> VariableResults(this TestDataDB dataConnection, bool? @ReturnFullRow)
 		{
 			var parameters = new []
 			{
@@ -2360,6 +2396,12 @@ namespace Sql2017ProcSchema
 				t.Id == Id);
 		}
 
+		public static Member? Find(this ITable<Member> table, int MemberId)
+		{
+			return table.FirstOrDefault(t =>
+				t.MemberId == MemberId);
+		}
+
 		public static Parent? Find(this ITable<Parent> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
@@ -2370,6 +2412,12 @@ namespace Sql2017ProcSchema
 		{
 			return table.FirstOrDefault(t =>
 				t.PersonID == PersonID);
+		}
+
+		public static Provider? Find(this ITable<Provider> table, int ProviderId)
+		{
+			return table.FirstOrDefault(t =>
+				t.ProviderId == ProviderId);
 		}
 
 		public static SqlType? Find(this ITable<SqlType> table, int ID)
@@ -2450,6 +2498,50 @@ namespace Sql2017ProcSchema
 		public static IndexTable2 Patient2IndexTable(this IndexTable obj, IDataContext db)
 		{
 			return db.GetTable<IndexTable2>().Where(c => c.PKField2 == obj.PKField2 && c.PKField1 == obj.PKField1).First();
+		}
+
+		#endregion
+
+		#region Member Associations
+
+		/// <summary>
+		/// FK_Provider_Member_BackReference
+		/// </summary>
+		[Association(ThisKey="MemberId", OtherKey="ProviderId", CanBeNull=true)]
+		public static IQueryable<Provider> Providers(this Member obj, IDataContext db)
+		{
+			return db.GetTable<Provider>().Where(c => c.ProviderId == obj.MemberId);
+		}
+
+		/// <summary>
+		/// FK_Provider_Member_BackReference
+		/// </summary>
+		[Association(ThisKey="MemberId", OtherKey="ProviderId", CanBeNull=true)]
+		public static Member? Provider(this Provider obj, IDataContext db)
+		{
+			return db.GetTable<Member>().Where(c => c.MemberId == obj.ProviderId).FirstOrDefault();
+		}
+
+		#endregion
+
+		#region Provider Associations
+
+		/// <summary>
+		/// FK_Provider_Member
+		/// </summary>
+		[Association(ThisKey="ProviderId", OtherKey="MemberId", CanBeNull=false)]
+		public static IQueryable<Member> Members(this Provider obj, IDataContext db)
+		{
+			return db.GetTable<Member>().Where(c => c.MemberId == obj.ProviderId);
+		}
+
+		/// <summary>
+		/// FK_Provider_Member
+		/// </summary>
+		[Association(ThisKey="ProviderId", OtherKey="MemberId", CanBeNull=false)]
+		public static Provider Member(this Member obj, IDataContext db)
+		{
+			return db.GetTable<Provider>().Where(c => c.ProviderId == obj.MemberId).First();
 		}
 
 		#endregion
@@ -2577,19 +2669,19 @@ namespace Sql2017ProcSchema
 		#region TestSchemaY Associations
 
 		/// <summary>
-		/// FK_TestSchemaY_TestSchemaX
+		/// FK_TestSchemaY_OtherID
 		/// </summary>
 		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false)]
-		public static IQueryable<TestSchemaX> FkTestSchemaYTestSchemaX(this TestSchemaY obj, IDataContext db)
+		public static IQueryable<TestSchemaX> FkTestSchemaYOtherIds(this TestSchemaY obj, IDataContext db)
 		{
 			return db.GetTable<TestSchemaX>().Where(c => c.TestSchemaXID == obj.TestSchemaXID);
 		}
 
 		/// <summary>
-		/// FK_TestSchemaY_TestSchemaX
+		/// FK_TestSchemaY_OtherID
 		/// </summary>
 		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false)]
-		public static TestSchemaY FkTestSchemaYTestSchemaX0(this TestSchemaX obj, IDataContext db)
+		public static TestSchemaY FkTestSchemaYOtherID(this TestSchemaX obj, IDataContext db)
 		{
 			return db.GetTable<TestSchemaY>().Where(c => c.TestSchemaXID == obj.TestSchemaXID).First();
 		}
@@ -2613,7 +2705,7 @@ namespace Sql2017ProcSchema
 		}
 
 		/// <summary>
-		/// FK_TestSchemaY_OtherID
+		/// FK_TestSchemaY_TestSchemaX
 		/// </summary>
 		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false)]
 		public static IQueryable<TestSchemaX> TestSchemaX(this TestSchemaY obj, IDataContext db)
@@ -2622,7 +2714,7 @@ namespace Sql2017ProcSchema
 		}
 
 		/// <summary>
-		/// FK_TestSchemaY_OtherID
+		/// FK_TestSchemaY_TestSchemaX
 		/// </summary>
 		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false)]
 		public static TestSchemaY TestSchemaX0(this TestSchemaX obj, IDataContext db)
@@ -2717,11 +2809,11 @@ namespace Sql2017ProcSchema
 			#endregion
 		}
 
-		public static partial class TestData2017DBStoredProcedures
+		public static partial class TestDataDBStoredProcedures
 		{
 			#region TestProcedure
 
-			public static List<TestProcedureResult> TestProcedure(TestData2017DB dataConnection)
+			public static List<TestProcedureResult> TestProcedure(TestDataDB dataConnection)
 			{
 				var ms = dataConnection.MappingSchema;
 

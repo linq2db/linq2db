@@ -196,7 +196,7 @@ namespace LinqToDB.DataModel
 
 				// append column name to key
 				metadata.ThisKeyExpression  = metadata.ThisKeyExpression  == null ? thisKey  : AST.Add(metadata.ThisKeyExpression , thisKey);
-				metadata.OtherKeyExpression = metadata.OtherKeyExpression == null ? otherKey : AST.Add(metadata.OtherKeyExpression, thisKey);
+				metadata.OtherKeyExpression = metadata.OtherKeyExpression == null ? otherKey : AST.Add(metadata.OtherKeyExpression, otherKey);
 			}
 		}
 

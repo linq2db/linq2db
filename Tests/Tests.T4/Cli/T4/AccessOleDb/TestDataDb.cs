@@ -365,8 +365,8 @@ namespace Cli.T4.Access.OleDb
 		/// <summary>
 		/// PersonDoctor
 		/// </summary>
-		[Association(CanBeNull = false, ThisKey = nameof(PersonID), OtherKey = nameof(OleDb.Person.PersonID))]
-		public Person Person { get; set; } = null!;
+		[Association(CanBeNull = false, ThisKey = nameof(PersonID), OtherKey = nameof(Person.PersonID))]
+		public Person PersonDoctor { get; set; } = null!;
 		#endregion
 	}
 
@@ -434,8 +434,8 @@ namespace Cli.T4.Access.OleDb
 		/// <summary>
 		/// PersonPatient
 		/// </summary>
-		[Association(CanBeNull = false, ThisKey = nameof(PersonID), OtherKey = nameof(OleDb.Person.PersonID))]
-		public Person Person { get; set; } = null!;
+		[Association(CanBeNull = false, ThisKey = nameof(PersonID), OtherKey = nameof(Person.PersonID))]
+		public Person PersonPatient { get; set; } = null!;
 		#endregion
 	}
 
@@ -452,14 +452,14 @@ namespace Cli.T4.Access.OleDb
 		/// <summary>
 		/// PersonDoctor backreference
 		/// </summary>
-		[Association(ThisKey = nameof(PersonID), OtherKey = nameof(Doctor.PersonID))]
-		public Doctor? PersonDoctor { get; set; }
+		[Association(ThisKey = nameof(PersonID), OtherKey = nameof(OleDb.Doctor.PersonID))]
+		public Doctor? Doctor { get; set; }
 
 		/// <summary>
 		/// PersonPatient backreference
 		/// </summary>
-		[Association(ThisKey = nameof(PersonID), OtherKey = nameof(Patient.PersonID))]
-		public Patient? PersonPatient { get; set; }
+		[Association(ThisKey = nameof(PersonID), OtherKey = nameof(OleDb.Patient.PersonID))]
+		public Patient? Patient { get; set; }
 		#endregion
 	}
 

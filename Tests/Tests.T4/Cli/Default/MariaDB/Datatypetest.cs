@@ -13,8 +13,8 @@ using System;
 
 namespace Cli.Default.MariaDB
 {
-	[Table("datatypetest")]
-	public class Datatypetest
+	[Table("DataTypeTest")]
+	public class DataTypeTest
 	{
 		[Column("DataTypeID", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int       DataTypeId { get; set; } // int(11)
 		[Column("Binary_"                                                                                     )] public byte[]?   Binary     { get; set; } // binary(50)

@@ -12,7 +12,7 @@ using LinqToDB.Mapping;
 
 namespace Cli.Default.MariaDB
 {
-	[Table("patient")]
+	[Table("Patient")]
 	public class Patient
 	{
 		[Column("PersonID" , IsPrimaryKey = true )] public int    PersonId  { get; set; } // int(11)

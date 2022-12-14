@@ -60,35 +60,36 @@ namespace Cli.T4.PostgreSQL
 
 		partial void InitDataContext();
 
-		public ITable<InheritanceParent>              InheritanceParents        => this.GetTable<InheritanceParent>();
-		public ITable<InheritanceChild>               InheritanceChildren       => this.GetTable<InheritanceChild>();
 		public ITable<AllType>                        AllTypes                  => this.GetTable<AllType>();
+		public ITable<Child>                          Children                  => this.GetTable<Child>();
+		public ITable<CollatedTable>                  CollatedTables            => this.GetTable<CollatedTable>();
 		public ITable<Doctor>                         Doctors                   => this.GetTable<Doctor>();
+		public ITable<GrandChild>                     GrandChildren             => this.GetTable<GrandChild>();
+		public ITable<InheritanceChild>               InheritanceChildren       => this.GetTable<InheritanceChild>();
+		public ITable<InheritanceParent>              InheritanceParents        => this.GetTable<InheritanceParent>();
+		public ITable<LinqDataType>                   LinqDataTypes             => this.GetTable<LinqDataType>();
+		public ITable<Parent>                         Parents                   => this.GetTable<Parent>();
+		public ITable<Patient>                        Patients                  => this.GetTable<Patient>();
 		/// <summary>
 		/// This is the Person table
 		/// </summary>
 		public ITable<Person>                         People                    => this.GetTable<Person>();
-		public ITable<Patient>                        Patients                  => this.GetTable<Patient>();
-		public ITable<Parent>                         Parents                   => this.GetTable<Parent>();
-		public ITable<Child>                          Children                  => this.GetTable<Child>();
-		public ITable<GrandChild>                     GrandChildren             => this.GetTable<GrandChild>();
-		public ITable<LinqDataType>                   LinqDataTypes             => this.GetTable<LinqDataType>();
-		public ITable<Entity>                         Entities                  => this.GetTable<Entity>();
+		public ITable<SequenceCustomNamingTest>       SequenceCustomNamingTests => this.GetTable<SequenceCustomNamingTest>();
 		public ITable<SequenceTest1>                  SequenceTest1             => this.GetTable<SequenceTest1>();
 		public ITable<SequenceTest2>                  SequenceTest2             => this.GetTable<SequenceTest2>();
 		public ITable<SequenceTest3>                  SequenceTest3             => this.GetTable<SequenceTest3>();
 		public ITable<TestIdentity>                   TestIdentities            => this.GetTable<TestIdentity>();
-		public ITable<SequenceCustomNamingTest>       SequenceCustomNamingTests => this.GetTable<SequenceCustomNamingTest>();
-		public ITable<test_schema_TestSchemaIdentity> TestSchemaIdentities      => this.GetTable<test_schema_TestSchemaIdentity>();
-		public ITable<test_schema_Testserialidentity> Testserialidentities      => this.GetTable<test_schema_Testserialidentity>();
-		public ITable<test_schema_Testsamename>       Testsamenames             => this.GetTable<test_schema_Testsamename>();
-		public ITable<Testsamename>                   Testsamenames1            => this.GetTable<Testsamename>();
 		public ITable<TestMerge1>                     TestMerge1                => this.GetTable<TestMerge1>();
 		public ITable<TestMerge2>                     TestMerge2                => this.GetTable<TestMerge2>();
-		public ITable<SameName1>                      SameName1                 => this.GetTable<SameName1>();
+		public ITable<TestMergeIdentity>              TestMergeIdentities       => this.GetTable<TestMergeIdentity>();
+		public ITable<Entity>                         Entities                  => this.GetTable<Entity>();
 		public ITable<SameName>                       SameNames                 => this.GetTable<SameName>();
+		public ITable<SameName1>                      SameName1                 => this.GetTable<SameName1>();
 		public ITable<SameName2>                      SameName2                 => this.GetTable<SameName2>();
-		public ITable<CollatedTable>                  CollatedTables            => this.GetTable<CollatedTable>();
+		public ITable<Testsamename>                   Testsamenames             => this.GetTable<Testsamename>();
+		public ITable<test_schema_TestSchemaIdentity> TestSchemaIdentities      => this.GetTable<test_schema_TestSchemaIdentity>();
+		public ITable<test_schema_Testsamename>       Testsamenames1            => this.GetTable<test_schema_Testsamename>();
+		public ITable<test_schema_Testserialidentity> Testserialidentities      => this.GetTable<test_schema_Testserialidentity>();
 		/// <summary>
 		/// This is the Issue2023 matview
 		/// </summary>
@@ -207,234 +208,6 @@ namespace Cli.T4.PostgreSQL
 		public static MappingSchema ContextSchema { get; } = new MappingSchema();
 	}
 
-	[Table("InheritanceParent", Schema = "public")]
-	public partial class InheritanceParent
-	{
-		[Column("InheritanceParentId", IsPrimaryKey = true)] public int     InheritanceParentId { get; set; } // integer
-		[Column("TypeDiscriminator"                       )] public int?    TypeDiscriminator   { get; set; } // integer
-		[Column("Name"                                    )] public string? Name                { get; set; } // character varying(50)
-	}
-
-	public static partial class ExtensionMethods
-	{
-		#region Table Extensions
-		public static InheritanceParent? Find(this ITable<InheritanceParent> table, int inheritanceParentId)
-		{
-			return table.FirstOrDefault(e => e.InheritanceParentId == inheritanceParentId);
-		}
-
-		public static InheritanceChild? Find(this ITable<InheritanceChild> table, int inheritanceChildId)
-		{
-			return table.FirstOrDefault(e => e.InheritanceChildId == inheritanceChildId);
-		}
-
-		public static AllType? Find(this ITable<AllType> table, int id)
-		{
-			return table.FirstOrDefault(e => e.ID == id);
-		}
-
-		public static Doctor? Find(this ITable<Doctor> table, int personId)
-		{
-			return table.FirstOrDefault(e => e.PersonID == personId);
-		}
-
-		public static Person? Find(this ITable<Person> table, int personId)
-		{
-			return table.FirstOrDefault(e => e.PersonID == personId);
-		}
-
-		public static Patient? Find(this ITable<Patient> table, int personId)
-		{
-			return table.FirstOrDefault(e => e.PersonID == personId);
-		}
-
-		public static SequenceTest1? Find(this ITable<SequenceTest1> table, int id)
-		{
-			return table.FirstOrDefault(e => e.ID == id);
-		}
-
-		public static SequenceTest2? Find(this ITable<SequenceTest2> table, int id)
-		{
-			return table.FirstOrDefault(e => e.ID == id);
-		}
-
-		public static SequenceTest3? Find(this ITable<SequenceTest3> table, int id)
-		{
-			return table.FirstOrDefault(e => e.ID == id);
-		}
-
-		public static TestIdentity? Find(this ITable<TestIdentity> table, int id)
-		{
-			return table.FirstOrDefault(e => e.ID == id);
-		}
-
-		public static SequenceCustomNamingTest? Find(this ITable<SequenceCustomNamingTest> table, int id)
-		{
-			return table.FirstOrDefault(e => e.ID == id);
-		}
-
-		public static test_schema_TestSchemaIdentity? Find(this ITable<test_schema_TestSchemaIdentity> table, int id)
-		{
-			return table.FirstOrDefault(e => e.ID == id);
-		}
-
-		public static test_schema_Testserialidentity? Find(this ITable<test_schema_Testserialidentity> table, int id)
-		{
-			return table.FirstOrDefault(e => e.ID == id);
-		}
-
-		public static test_schema_Testsamename? Find(this ITable<test_schema_Testsamename> table, int id)
-		{
-			return table.FirstOrDefault(e => e.Id == id);
-		}
-
-		public static Testsamename? Find(this ITable<Testsamename> table, int id)
-		{
-			return table.FirstOrDefault(e => e.Id == id);
-		}
-
-		public static TestMerge1? Find(this ITable<TestMerge1> table, int id)
-		{
-			return table.FirstOrDefault(e => e.Id == id);
-		}
-
-		public static TestMerge2? Find(this ITable<TestMerge2> table, int id)
-		{
-			return table.FirstOrDefault(e => e.Id == id);
-		}
-
-		public static SameName1? Find(this ITable<SameName1> table, int id)
-		{
-			return table.FirstOrDefault(e => e.Id == id);
-		}
-
-		public static SameName? Find(this ITable<SameName> table, int id)
-		{
-			return table.FirstOrDefault(e => e.Id == id);
-		}
-
-		public static SameName2? Find(this ITable<SameName2> table, int id)
-		{
-			return table.FirstOrDefault(e => e.Id == id);
-		}
-		#endregion
-
-		#region Scalar Functions
-		#region AddIfNotExists
-		[Sql.Function("\"public\".add_if_not_exists", ServerSideOnly = true)]
-		public static object? AddIfNotExists(string? pName)
-		{
-			throw new InvalidOperationException("Scalar function cannot be called outside of query");
-		}
-		#endregion
-
-		#region Addissue792Record
-		[Sql.Function("\"public\".addissue792record", ServerSideOnly = true)]
-		public static object? Addissue792Record()
-		{
-			throw new InvalidOperationException("Scalar function cannot be called outside of query");
-		}
-		#endregion
-
-		#region Bool
-		[Sql.Function("\"public\".bool", ServerSideOnly = true)]
-		public static string? Bool(int? param)
-		{
-			throw new InvalidOperationException("Scalar function cannot be called outside of query");
-		}
-		#endregion
-
-		#region FnTest
-		[Sql.Function("\"SchemaName\".\"fnTest\"", ServerSideOnly = true)]
-		public static string? FnTest(int? param)
-		{
-			throw new InvalidOperationException("Scalar function cannot be called outside of query");
-		}
-		#endregion
-
-		#region Issue1742Date
-		[Sql.Function("\"public\".issue_1742_date", ServerSideOnly = true)]
-		public static int? Issue1742Date(DateTime? p1)
-		{
-			throw new InvalidOperationException("Scalar function cannot be called outside of query");
-		}
-		#endregion
-
-		#region Issue1742Ts
-		[Sql.Function("\"public\".issue_1742_ts", ServerSideOnly = true)]
-		public static int? Issue1742Ts(DateTime? p1)
-		{
-			throw new InvalidOperationException("Scalar function cannot be called outside of query");
-		}
-		#endregion
-
-		#region Issue1742Tstz
-		[Sql.Function("\"public\".issue_1742_tstz", ServerSideOnly = true)]
-		public static int? Issue1742Tstz(DateTimeOffset? p1)
-		{
-			throw new InvalidOperationException("Scalar function cannot be called outside of query");
-		}
-		#endregion
-
-		#region Reverse
-		[Sql.Function("\"public\".reverse", ServerSideOnly = true)]
-		public static string? Reverse(string? par7)
-		{
-			throw new InvalidOperationException("Scalar function cannot be called outside of query");
-		}
-		#endregion
-
-		#region TestFunctionParameters
-		[Sql.Function("\"public\".\"TestFunctionParameters\"", ServerSideOnly = true)]
-		public static TestFunctionParametersResult? TestFunctionParameters(int? param1, int? param2)
-		{
-			throw new InvalidOperationException("Scalar function cannot be called outside of query");
-		}
-
-		public partial class TestFunctionParametersResult
-		{
-			public int? Param2 { get; set; }
-			public int? Param3 { get; set; }
-		}
-		#endregion
-
-		#region TestScalarFunction
-		[Sql.Function("\"public\".\"TestScalarFunction\"", ServerSideOnly = true)]
-		public static string? TestScalarFunction(int? param)
-		{
-			throw new InvalidOperationException("Scalar function cannot be called outside of query");
-		}
-		#endregion
-
-		#region TestSingleOutParameterFunction
-		[Sql.Function("\"public\".\"TestSingleOutParameterFunction\"", ServerSideOnly = true)]
-		public static int? TestSingleOutParameterFunction(int? param1)
-		{
-			throw new InvalidOperationException("Scalar function cannot be called outside of query");
-		}
-		#endregion
-		#endregion
-
-		#region Aggregate Functions
-		#region TestAvg
-		[Sql.Function("\"public\".test_avg", ServerSideOnly = true, IsAggregate = true, ArgIndices = new []{ 1 })]
-		public static double? TestAvg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, double?>> par9)
-		{
-			throw new InvalidOperationException("Association cannot be called outside of query");
-		}
-		#endregion
-		#endregion
-	}
-
-	[Table("InheritanceChild", Schema = "public")]
-	public partial class InheritanceChild
-	{
-		[Column("InheritanceChildId" , IsPrimaryKey = true)] public int     InheritanceChildId  { get; set; } // integer
-		[Column("InheritanceParentId"                     )] public int     InheritanceParentId { get; set; } // integer
-		[Column("TypeDiscriminator"                       )] public int?    TypeDiscriminator   { get; set; } // integer
-		[Column("Name"                                    )] public string? Name                { get; set; } // character varying(50)
-	}
-
 	[Table("AllTypes", Schema = "public")]
 	public partial class AllType
 	{
@@ -487,6 +260,237 @@ namespace Cli.T4.PostgreSQL
 		[Column("decimalarray"                                                                                         )] public decimal[]?                  Decimalarray        { get; set; } // numeric[]
 	}
 
+	public static partial class ExtensionMethods
+	{
+		#region Table Extensions
+		public static AllType? Find(this ITable<AllType> table, int id)
+		{
+			return table.FirstOrDefault(e => e.ID == id);
+		}
+
+		public static Doctor? Find(this ITable<Doctor> table, int personId)
+		{
+			return table.FirstOrDefault(e => e.PersonID == personId);
+		}
+
+		public static InheritanceChild? Find(this ITable<InheritanceChild> table, int inheritanceChildId)
+		{
+			return table.FirstOrDefault(e => e.InheritanceChildId == inheritanceChildId);
+		}
+
+		public static InheritanceParent? Find(this ITable<InheritanceParent> table, int inheritanceParentId)
+		{
+			return table.FirstOrDefault(e => e.InheritanceParentId == inheritanceParentId);
+		}
+
+		public static Patient? Find(this ITable<Patient> table, int personId)
+		{
+			return table.FirstOrDefault(e => e.PersonID == personId);
+		}
+
+		public static Person? Find(this ITable<Person> table, int personId)
+		{
+			return table.FirstOrDefault(e => e.PersonID == personId);
+		}
+
+		public static SequenceCustomNamingTest? Find(this ITable<SequenceCustomNamingTest> table, int id)
+		{
+			return table.FirstOrDefault(e => e.ID == id);
+		}
+
+		public static SequenceTest1? Find(this ITable<SequenceTest1> table, int id)
+		{
+			return table.FirstOrDefault(e => e.ID == id);
+		}
+
+		public static SequenceTest2? Find(this ITable<SequenceTest2> table, int id)
+		{
+			return table.FirstOrDefault(e => e.ID == id);
+		}
+
+		public static SequenceTest3? Find(this ITable<SequenceTest3> table, int id)
+		{
+			return table.FirstOrDefault(e => e.ID == id);
+		}
+
+		public static TestIdentity? Find(this ITable<TestIdentity> table, int id)
+		{
+			return table.FirstOrDefault(e => e.ID == id);
+		}
+
+		public static TestMerge1? Find(this ITable<TestMerge1> table, int id)
+		{
+			return table.FirstOrDefault(e => e.Id == id);
+		}
+
+		public static TestMerge2? Find(this ITable<TestMerge2> table, int id)
+		{
+			return table.FirstOrDefault(e => e.Id == id);
+		}
+
+		public static TestMergeIdentity? Find(this ITable<TestMergeIdentity> table, int id)
+		{
+			return table.FirstOrDefault(e => e.Id == id);
+		}
+
+		public static SameName? Find(this ITable<SameName> table, int id)
+		{
+			return table.FirstOrDefault(e => e.Id == id);
+		}
+
+		public static SameName1? Find(this ITable<SameName1> table, int id)
+		{
+			return table.FirstOrDefault(e => e.Id == id);
+		}
+
+		public static SameName2? Find(this ITable<SameName2> table, int id)
+		{
+			return table.FirstOrDefault(e => e.Id == id);
+		}
+
+		public static Testsamename? Find(this ITable<Testsamename> table, int id)
+		{
+			return table.FirstOrDefault(e => e.Id == id);
+		}
+
+		public static test_schema_TestSchemaIdentity? Find(this ITable<test_schema_TestSchemaIdentity> table, int id)
+		{
+			return table.FirstOrDefault(e => e.ID == id);
+		}
+
+		public static test_schema_Testsamename? Find(this ITable<test_schema_Testsamename> table, int id)
+		{
+			return table.FirstOrDefault(e => e.Id == id);
+		}
+
+		public static test_schema_Testserialidentity? Find(this ITable<test_schema_Testserialidentity> table, int id)
+		{
+			return table.FirstOrDefault(e => e.ID == id);
+		}
+		#endregion
+
+		#region Scalar Functions
+		#region FnTest
+		[Sql.Function("\"SchemaName\".\"fnTest\"", ServerSideOnly = true)]
+		public static string? FnTest(int? param)
+		{
+			throw new InvalidOperationException("Scalar function cannot be called outside of query");
+		}
+		#endregion
+
+		#region TestFunctionParameters
+		[Sql.Function("\"public\".\"TestFunctionParameters\"", ServerSideOnly = true)]
+		public static TestFunctionParametersResult? TestFunctionParameters(int? param1, int? param2)
+		{
+			throw new InvalidOperationException("Scalar function cannot be called outside of query");
+		}
+
+		public partial class TestFunctionParametersResult
+		{
+			public int? Param2 { get; set; }
+			public int? Param3 { get; set; }
+		}
+		#endregion
+
+		#region TestScalarFunction
+		[Sql.Function("\"public\".\"TestScalarFunction\"", ServerSideOnly = true)]
+		public static string? TestScalarFunction(int? param)
+		{
+			throw new InvalidOperationException("Scalar function cannot be called outside of query");
+		}
+		#endregion
+
+		#region TestSingleOutParameterFunction
+		[Sql.Function("\"public\".\"TestSingleOutParameterFunction\"", ServerSideOnly = true)]
+		public static int? TestSingleOutParameterFunction(int? param1)
+		{
+			throw new InvalidOperationException("Scalar function cannot be called outside of query");
+		}
+		#endregion
+
+		#region AddIfNotExists
+		[Sql.Function("\"public\".add_if_not_exists", ServerSideOnly = true)]
+		public static object? AddIfNotExists(string? pName)
+		{
+			throw new InvalidOperationException("Scalar function cannot be called outside of query");
+		}
+		#endregion
+
+		#region Addissue792Record
+		[Sql.Function("\"public\".addissue792record", ServerSideOnly = true)]
+		public static object? Addissue792Record()
+		{
+			throw new InvalidOperationException("Scalar function cannot be called outside of query");
+		}
+		#endregion
+
+		#region Bool
+		[Sql.Function("\"public\".bool", ServerSideOnly = true)]
+		public static string? Bool(int? param)
+		{
+			throw new InvalidOperationException("Scalar function cannot be called outside of query");
+		}
+		#endregion
+
+		#region Issue1742Date
+		[Sql.Function("\"public\".issue_1742_date", ServerSideOnly = true)]
+		public static int? Issue1742Date(DateTime? p1)
+		{
+			throw new InvalidOperationException("Scalar function cannot be called outside of query");
+		}
+		#endregion
+
+		#region Issue1742Ts
+		[Sql.Function("\"public\".issue_1742_ts", ServerSideOnly = true)]
+		public static int? Issue1742Ts(DateTime? p1)
+		{
+			throw new InvalidOperationException("Scalar function cannot be called outside of query");
+		}
+		#endregion
+
+		#region Issue1742Tstz
+		[Sql.Function("\"public\".issue_1742_tstz", ServerSideOnly = true)]
+		public static int? Issue1742Tstz(DateTimeOffset? p1)
+		{
+			throw new InvalidOperationException("Scalar function cannot be called outside of query");
+		}
+		#endregion
+
+		#region Reverse
+		[Sql.Function("\"public\".reverse", ServerSideOnly = true)]
+		public static string? Reverse(string? par7)
+		{
+			throw new InvalidOperationException("Scalar function cannot be called outside of query");
+		}
+		#endregion
+		#endregion
+
+		#region Aggregate Functions
+		#region TestAvg
+		[Sql.Function("\"public\".test_avg", ServerSideOnly = true, IsAggregate = true, ArgIndices = new []{ 1 })]
+		public static double? TestAvg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, double?>> par9)
+		{
+			throw new InvalidOperationException("Association cannot be called outside of query");
+		}
+		#endregion
+		#endregion
+	}
+
+	[Table("Child", Schema = "public")]
+	public partial class Child
+	{
+		[Column("ParentID")] public int? ParentID { get; set; } // integer
+		[Column("ChildID" )] public int? ChildID  { get; set; } // integer
+	}
+
+	[Table("CollatedTable", Schema = "public")]
+	public partial class CollatedTable
+	{
+		[Column("Id"                                )] public int    Id              { get; set; } // integer
+		[Column("CaseSensitive"  , CanBeNull = false)] public string CaseSensitive   { get; set; } = null!; // character varying(20)
+		[Column("CaseInsensitive", CanBeNull = false)] public string CaseInsensitive { get; set; } = null!; // character varying(20)
+	}
+
 	[Table("Doctor", Schema = "public")]
 	public partial class Doctor
 	{
@@ -497,8 +501,71 @@ namespace Cli.T4.PostgreSQL
 		/// <summary>
 		/// Doctor_PersonID_fkey
 		/// </summary>
-		[Association(CanBeNull = false, ThisKey = nameof(PersonID), OtherKey = nameof(PostgreSQL.Person.PersonID))]
-		public Person Person { get; set; } = null!;
+		[Association(CanBeNull = false, ThisKey = nameof(PersonID), OtherKey = nameof(Person.PersonID))]
+		public Person PersonIDfkey { get; set; } = null!;
+		#endregion
+	}
+
+	[Table("GrandChild", Schema = "public")]
+	public partial class GrandChild
+	{
+		[Column("ParentID"    )] public int? ParentID     { get; set; } // integer
+		[Column("ChildID"     )] public int? ChildID      { get; set; } // integer
+		[Column("GrandChildID")] public int? GrandChildID { get; set; } // integer
+	}
+
+	[Table("InheritanceChild", Schema = "public")]
+	public partial class InheritanceChild
+	{
+		[Column("InheritanceChildId" , IsPrimaryKey = true)] public int     InheritanceChildId  { get; set; } // integer
+		[Column("InheritanceParentId"                     )] public int     InheritanceParentId { get; set; } // integer
+		[Column("TypeDiscriminator"                       )] public int?    TypeDiscriminator   { get; set; } // integer
+		[Column("Name"                                    )] public string? Name                { get; set; } // character varying(50)
+	}
+
+	[Table("InheritanceParent", Schema = "public")]
+	public partial class InheritanceParent
+	{
+		[Column("InheritanceParentId", IsPrimaryKey = true)] public int     InheritanceParentId { get; set; } // integer
+		[Column("TypeDiscriminator"                       )] public int?    TypeDiscriminator   { get; set; } // integer
+		[Column("Name"                                    )] public string? Name                { get; set; } // character varying(50)
+	}
+
+	[Table("LinqDataTypes", Schema = "public")]
+	public partial class LinqDataType
+	{
+		[Column("ID"            )] public int?      ID             { get; set; } // integer
+		[Column("MoneyValue"    )] public decimal?  MoneyValue     { get; set; } // numeric(10,4)
+		[Column("DateTimeValue" )] public DateTime? DateTimeValue  { get; set; } // timestamp (6) without time zone
+		[Column("DateTimeValue2")] public DateTime? DateTimeValue2 { get; set; } // timestamp (6) without time zone
+		[Column("BoolValue"     )] public bool?     BoolValue      { get; set; } // boolean
+		[Column("GuidValue"     )] public Guid?     GuidValue      { get; set; } // uuid
+		[Column("BinaryValue"   )] public byte[]?   BinaryValue    { get; set; } // bytea
+		[Column("SmallIntValue" )] public short?    SmallIntValue  { get; set; } // smallint
+		[Column("IntValue"      )] public int?      IntValue       { get; set; } // integer
+		[Column("BigIntValue"   )] public long?     BigIntValue    { get; set; } // bigint
+		[Column("StringValue"   )] public string?   StringValue    { get; set; } // character varying(50)
+	}
+
+	[Table("Parent", Schema = "public")]
+	public partial class Parent
+	{
+		[Column("ParentID")] public int? ParentID { get; set; } // integer
+		[Column("Value1"  )] public int? Value1   { get; set; } // integer
+	}
+
+	[Table("Patient", Schema = "public")]
+	public partial class Patient
+	{
+		[Column("PersonID" , IsPrimaryKey = true )] public int    PersonID  { get; set; } // integer
+		[Column("Diagnosis", CanBeNull    = false)] public string Diagnosis { get; set; } = null!; // character varying(256)
+
+		#region Associations
+		/// <summary>
+		/// Patient_PersonID_fkey
+		/// </summary>
+		[Association(CanBeNull = false, ThisKey = nameof(PersonID), OtherKey = nameof(Person.PersonID))]
+		public Person PersonIDfkey { get; set; } = null!;
 		#endregion
 	}
 
@@ -521,74 +588,22 @@ namespace Cli.T4.PostgreSQL
 		/// <summary>
 		/// Doctor_PersonID_fkey backreference
 		/// </summary>
-		[Association(ThisKey = nameof(PersonID), OtherKey = nameof(Doctor.PersonID))]
-		public Doctor? DoctorPersonIDfkey { get; set; }
+		[Association(ThisKey = nameof(PersonID), OtherKey = nameof(PostgreSQL.Doctor.PersonID))]
+		public Doctor? Doctor { get; set; }
 
 		/// <summary>
 		/// Patient_PersonID_fkey backreference
 		/// </summary>
-		[Association(ThisKey = nameof(PersonID), OtherKey = nameof(Patient.PersonID))]
-		public Patient? PatientPersonIDfkey { get; set; }
+		[Association(ThisKey = nameof(PersonID), OtherKey = nameof(PostgreSQL.Patient.PersonID))]
+		public Patient? Patient { get; set; }
 		#endregion
 	}
 
-	[Table("Patient", Schema = "public")]
-	public partial class Patient
+	[Table("SequenceCustomNamingTest", Schema = "public")]
+	public partial class SequenceCustomNamingTest
 	{
-		[Column("PersonID" , IsPrimaryKey = true )] public int    PersonID  { get; set; } // integer
-		[Column("Diagnosis", CanBeNull    = false)] public string Diagnosis { get; set; } = null!; // character varying(256)
-
-		#region Associations
-		/// <summary>
-		/// Patient_PersonID_fkey
-		/// </summary>
-		[Association(CanBeNull = false, ThisKey = nameof(PersonID), OtherKey = nameof(PostgreSQL.Person.PersonID))]
-		public Person Person { get; set; } = null!;
-		#endregion
-	}
-
-	[Table("Parent", Schema = "public")]
-	public partial class Parent
-	{
-		[Column("ParentID")] public int? ParentID { get; set; } // integer
-		[Column("Value1"  )] public int? Value1   { get; set; } // integer
-	}
-
-	[Table("Child", Schema = "public")]
-	public partial class Child
-	{
-		[Column("ParentID")] public int? ParentID { get; set; } // integer
-		[Column("ChildID" )] public int? ChildID  { get; set; } // integer
-	}
-
-	[Table("GrandChild", Schema = "public")]
-	public partial class GrandChild
-	{
-		[Column("ParentID"    )] public int? ParentID     { get; set; } // integer
-		[Column("ChildID"     )] public int? ChildID      { get; set; } // integer
-		[Column("GrandChildID")] public int? GrandChildID { get; set; } // integer
-	}
-
-	[Table("LinqDataTypes", Schema = "public")]
-	public partial class LinqDataType
-	{
-		[Column("ID"            )] public int?      ID             { get; set; } // integer
-		[Column("MoneyValue"    )] public decimal?  MoneyValue     { get; set; } // numeric(10,4)
-		[Column("DateTimeValue" )] public DateTime? DateTimeValue  { get; set; } // timestamp (6) without time zone
-		[Column("DateTimeValue2")] public DateTime? DateTimeValue2 { get; set; } // timestamp (6) without time zone
-		[Column("BoolValue"     )] public bool?     BoolValue      { get; set; } // boolean
-		[Column("GuidValue"     )] public Guid?     GuidValue      { get; set; } // uuid
-		[Column("BinaryValue"   )] public byte[]?   BinaryValue    { get; set; } // bytea
-		[Column("SmallIntValue" )] public short?    SmallIntValue  { get; set; } // smallint
-		[Column("IntValue"      )] public int?      IntValue       { get; set; } // integer
-		[Column("BigIntValue"   )] public long?     BigIntValue    { get; set; } // bigint
-		[Column("StringValue"   )] public string?   StringValue    { get; set; } // character varying(50)
-	}
-
-	[Table("entity", Schema = "public")]
-	public partial class Entity
-	{
-		[Column("the_name", CanBeNull = false)] public string TheName { get; set; } = null!; // character varying(255)
+		[Column("ID"   , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int     ID    { get; set; } // integer
+		[Column("Value"                                                                                  )] public string? Value { get; set; } // character varying(50)
 	}
 
 	[Table("SequenceTest1", Schema = "public")]
@@ -616,37 +631,6 @@ namespace Cli.T4.PostgreSQL
 	public partial class TestIdentity
 	{
 		[Column("ID", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int ID { get; set; } // integer
-	}
-
-	[Table("SequenceCustomNamingTest", Schema = "public")]
-	public partial class SequenceCustomNamingTest
-	{
-		[Column("ID"   , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int     ID    { get; set; } // integer
-		[Column("Value"                                                                                  )] public string? Value { get; set; } // character varying(50)
-	}
-
-	[Table("TestSchemaIdentity", Schema = "test_schema")]
-	public partial class test_schema_TestSchemaIdentity
-	{
-		[Column("ID", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int ID { get; set; } // integer
-	}
-
-	[Table("testserialidentity", Schema = "test_schema")]
-	public partial class test_schema_Testserialidentity
-	{
-		[Column("ID", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int ID { get; set; } // integer
-	}
-
-	[Table("testsamename", Schema = "test_schema")]
-	public partial class test_schema_Testsamename
-	{
-		[Column("id", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int Id { get; set; } // integer
-	}
-
-	[Table("testsamename", Schema = "public")]
-	public partial class Testsamename
-	{
-		[Column("id", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int Id { get; set; } // integer
 	}
 
 	[Table("TestMerge1", Schema = "public")]
@@ -705,19 +689,17 @@ namespace Cli.T4.PostgreSQL
 		[Column("FieldEnumNumber"                     )] public int?            FieldEnumNumber { get; set; } // integer
 	}
 
-	[Table("same_name1", Schema = "public")]
-	public partial class SameName1
+	[Table("TestMergeIdentity", Schema = "public")]
+	public partial class TestMergeIdentity
 	{
-		[Column("id"       , IsPrimaryKey = true)] public int  Id       { get; set; } // integer
-		[Column("same_name"                     )] public int? SameName { get; set; } // integer
+		[Column("Id"   , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int  Id    { get; set; } // integer
+		[Column("Field"                                                                                  )] public int? Field { get; set; } // integer
+	}
 
-		#region Associations
-		/// <summary>
-		/// same_name
-		/// </summary>
-		[Association(ThisKey = nameof(SameName), OtherKey = nameof(PostgreSQL.SameName.Id))]
-		public SameName? Samename { get; set; }
-		#endregion
+	[Table("entity", Schema = "public")]
+	public partial class Entity
+	{
+		[Column("the_name", CanBeNull = false)] public string TheName { get; set; } = null!; // character varying(255)
 	}
 
 	[Table("same_name", Schema = "public")]
@@ -730,13 +712,28 @@ namespace Cli.T4.PostgreSQL
 		/// same_name backreference
 		/// </summary>
 		[Association(ThisKey = nameof(Id), OtherKey = nameof(SameName1.SameName))]
-		public IEnumerable<SameName1> Samenames { get; set; } = null!;
+		public IEnumerable<SameName1> SameNames1 { get; set; } = null!;
 
 		/// <summary>
 		/// same_name backreference
 		/// </summary>
 		[Association(ThisKey = nameof(Id), OtherKey = nameof(SameName2.SameName))]
-		public IEnumerable<SameName2> Samenames1 { get; set; } = null!;
+		public IEnumerable<SameName2> SameNames2 { get; set; } = null!;
+		#endregion
+	}
+
+	[Table("same_name1", Schema = "public")]
+	public partial class SameName1
+	{
+		[Column("id"       , IsPrimaryKey = true)] public int  Id       { get; set; } // integer
+		[Column("same_name"                     )] public int? SameName { get; set; } // integer
+
+		#region Associations
+		/// <summary>
+		/// same_name
+		/// </summary>
+		[Association(ThisKey = nameof(SameName), OtherKey = nameof(PostgreSQL.SameName.Id))]
+		public SameName? Samename { get; set; }
 		#endregion
 	}
 
@@ -755,12 +752,28 @@ namespace Cli.T4.PostgreSQL
 		#endregion
 	}
 
-	[Table("CollatedTable", Schema = "public")]
-	public partial class CollatedTable
+	[Table("testsamename", Schema = "public")]
+	public partial class Testsamename
 	{
-		[Column("Id"                                )] public int    Id              { get; set; } // integer
-		[Column("CaseSensitive"  , CanBeNull = false)] public string CaseSensitive   { get; set; } = null!; // character varying(20)
-		[Column("CaseInsensitive", CanBeNull = false)] public string CaseInsensitive { get; set; } = null!; // character varying(20)
+		[Column("id", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int Id { get; set; } // integer
+	}
+
+	[Table("TestSchemaIdentity", Schema = "test_schema")]
+	public partial class test_schema_TestSchemaIdentity
+	{
+		[Column("ID", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int ID { get; set; } // integer
+	}
+
+	[Table("testsamename", Schema = "test_schema")]
+	public partial class test_schema_Testsamename
+	{
+		[Column("id", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int Id { get; set; } // integer
+	}
+
+	[Table("testserialidentity", Schema = "test_schema")]
+	public partial class test_schema_Testserialidentity
+	{
+		[Column("ID", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int ID { get; set; } // integer
 	}
 
 	/// <summary>

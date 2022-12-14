@@ -18,6 +18,7 @@
 		<Reference Include="PresentationCore" />
 		<Reference Include="PresentationFramework" />
 		<Reference Include="WindowsBase" />
+		<PackageReference Include="Oracle.ManagedDataAccess" />
 		
 		<PackageReference Include="Microsoft.SqlServer.Types" />
 	</ItemGroup>
@@ -28,6 +29,7 @@
 		<Reference Include="Microsoft.SqlServer.Types">
 			<HintPath>..\..\Redist\dotMorten.Microsoft.SqlServer.Types\Microsoft.SqlServer.Types.dll</HintPath>
 		</Reference>
+		<PackageReference Include="Oracle.ManagedDataAccess.Core" />
 	</ItemGroup>
 
 	<ItemGroup>

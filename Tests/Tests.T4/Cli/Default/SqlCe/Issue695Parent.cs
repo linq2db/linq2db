@@ -23,7 +23,7 @@ namespace Cli.Default.SqlCe
 		/// FK_Issue695_Parent backreference
 		/// </summary>
 		[Association(ThisKey = nameof(Id) + "," + nameof(Id), OtherKey = nameof(Issue695.Id) + "," + nameof(Id))]
-		public IEnumerable<Issue695> Issue695Parents { get; set; } = null!;
+		public IEnumerable<Issue695> Issues695 { get; set; } = null!;
 		#endregion
 	}
 }

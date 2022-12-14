@@ -218,10 +218,6 @@ namespace Tests.Linq
 			new CharTestTable()
 		};
 
-		// need to configure sybase docker image to use utf8 character set
-#if AZURE
-		[ActiveIssue(Configuration = TestProvName.AllSybase)]
-#endif
 		[Test]
 		public void CharTrimming([DataSources(TestProvName.AllInformix)] string context)
 		{

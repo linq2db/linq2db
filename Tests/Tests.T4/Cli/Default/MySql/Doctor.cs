@@ -12,7 +12,7 @@ using LinqToDB.Mapping;
 
 namespace Cli.Default.MySql
 {
-	[Table("doctor")]
+	[Table("Doctor")]
 	public class Doctor
 	{
 		[Column("PersonID", IsPrimaryKey = true )] public int    PersonId { get; set; } // int
