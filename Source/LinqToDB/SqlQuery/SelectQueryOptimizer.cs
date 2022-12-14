@@ -1110,7 +1110,7 @@ namespace LinqToDB.SqlQuery
 
 			if (isQueryOK && query.Select.Columns.Any(static c => QueryHelper.ContainsAggregationOrWindowFunctionOneLevel(c.Expression)))
 			{
-				isQueryOK = parentJoinedTable == null && parentQuery.IsSimpleOrSet;
+				isQueryOK = parentJoinedTable == null && parentQuery.IsSimpleOrSet && childSource.Joins.Count == 0;
 			}
 
 			// SELECT MAX(query.c1) { parentQuery}
@@ -1121,7 +1121,7 @@ namespace LinqToDB.SqlQuery
 			// )
 			if (isQueryOK && query.Select.Columns.Any(static c => QueryHelper.ContainsAggregationOrWindowFunction(c.Expression)))
 			{
-				isQueryOK = parentJoinedTable == null && parentQuery.IsSimpleOrSet;
+				isQueryOK = parentJoinedTable == null && parentQuery.IsSimpleOrSet && childSource.Joins.Count == 0;
 				if (isQueryOK)
 				{
 					// check for parent query aggregations
