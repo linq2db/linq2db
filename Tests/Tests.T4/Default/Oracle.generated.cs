@@ -24,44 +24,40 @@ namespace Default.Oracle
 {
 	public partial class TestDataDB : LinqToDB.Data.DataConnection
 	{
-		public ITable<AllType>                 AllTypes                 { get { return this.GetTable<AllType>(); } }
-		public ITable<BINARYDATA>              Binarydatas              { get { return this.GetTable<BINARYDATA>(); } }
-		public ITable<Child>                   Children                 { get { return this.GetTable<Child>(); } }
-		public ITable<CollatedTable>           CollatedTables           { get { return this.GetTable<CollatedTable>(); } }
-		public ITable<DataTypeTest>            DataTypeTests            { get { return this.GetTable<DataTypeTest>(); } }
-		public ITable<DecimalOverflow>         DecimalOverflows         { get { return this.GetTable<DecimalOverflow>(); } }
-		public ITable<Dest2>                   Dest2                    { get { return this.GetTable<Dest2>(); } }
-		public ITable<Doctor>                  Doctors                  { get { return this.GetTable<Doctor>(); } }
-		public ITable<GrandChild>              GrandChildren            { get { return this.GetTable<GrandChild>(); } }
-		public ITable<InheritanceChild>        InheritanceChildren      { get { return this.GetTable<InheritanceChild>(); } }
-		public ITable<InheritanceParent>       InheritanceParents       { get { return this.GetTable<InheritanceParent>(); } }
-		public ITable<Issue2564Table>          Issue2564Tables          { get { return this.GetTable<Issue2564Table>(); } }
-		public ITable<LinqDataType>            LinqDataTypes            { get { return this.GetTable<LinqDataType>(); } }
-		public ITable<LINQDATATYPESBC>         Linqdatatypesbcs         { get { return this.GetTable<LINQDATATYPESBC>(); } }
-		public ITable<LongRawTable>            LongRawTables            { get { return this.GetTable<LongRawTable>(); } }
-		public ITable<Parent>                  Parents                  { get { return this.GetTable<Parent>(); } }
-		public ITable<Patient>                 Patients                 { get { return this.GetTable<Patient>(); } }
-		public ITable<Person>                  People                   { get { return this.GetTable<Person>(); } }
+		public ITable<AllType>             AllTypes            { get { return this.GetTable<AllType>(); } }
+		public ITable<BINARYDATA>          Binarydatas         { get { return this.GetTable<BINARYDATA>(); } }
+		public ITable<Child>               Children            { get { return this.GetTable<Child>(); } }
+		public ITable<CollatedTable>       CollatedTables      { get { return this.GetTable<CollatedTable>(); } }
+		public ITable<DataTypeTest>        DataTypeTests       { get { return this.GetTable<DataTypeTest>(); } }
+		public ITable<DecimalOverflow>     DecimalOverflows    { get { return this.GetTable<DecimalOverflow>(); } }
+		public ITable<Doctor>              Doctors             { get { return this.GetTable<Doctor>(); } }
+		public ITable<GrandChild>          GrandChildren       { get { return this.GetTable<GrandChild>(); } }
+		public ITable<InheritanceChild>    InheritanceChildren { get { return this.GetTable<InheritanceChild>(); } }
+		public ITable<InheritanceParent>   InheritanceParents  { get { return this.GetTable<InheritanceParent>(); } }
+		public ITable<LinqDataType>        LinqDataTypes       { get { return this.GetTable<LinqDataType>(); } }
+		public ITable<LINQDATATYPESBC>     Linqdatatypesbcs    { get { return this.GetTable<LINQDATATYPESBC>(); } }
+		public ITable<LongRawTable>        LongRawTables       { get { return this.GetTable<LongRawTable>(); } }
+		public ITable<Parent>              Parents             { get { return this.GetTable<Parent>(); } }
+		public ITable<Patient>             Patients            { get { return this.GetTable<Patient>(); } }
+		public ITable<Person>              People              { get { return this.GetTable<Person>(); } }
 		/// <summary>
 		/// This is matview
 		/// </summary>
-		public ITable<SchemaTestMatView>       SchemaTestMatViews       { get { return this.GetTable<SchemaTestMatView>(); } }
+		public ITable<SchemaTestMatView>   SchemaTestMatViews  { get { return this.GetTable<SchemaTestMatView>(); } }
 		/// <summary>
 		/// This is table
 		/// </summary>
-		public ITable<SchemaTestTable>         SchemaTestTables         { get { return this.GetTable<SchemaTestTable>(); } }
-		public ITable<SchemaTestView>          SchemaTestViews          { get { return this.GetTable<SchemaTestView>(); } }
-		public ITable<SEQUENCETEST>            Sequencetests            { get { return this.GetTable<SEQUENCETEST>(); } }
-		public ITable<StgTradeInformation>     StgTradeInformation      { get { return this.GetTable<StgTradeInformation>(); } }
-		public ITable<StringTest>              StringTests              { get { return this.GetTable<StringTest>(); } }
-		public ITable<TEntity>                 TEntities                { get { return this.GetTable<TEntity>(); } }
-		public ITable<TestIdentity>            TestIdentities           { get { return this.GetTable<TestIdentity>(); } }
-		public ITable<TestMerge1>              TestMerge1               { get { return this.GetTable<TestMerge1>(); } }
-		public ITable<TestMerge2>              TestMerge2               { get { return this.GetTable<TestMerge2>(); } }
-		public ITable<TestSequenceSchemaTable> TestSequenceSchemaTables { get { return this.GetTable<TestSequenceSchemaTable>(); } }
-		public ITable<TestSource>              TestSources              { get { return this.GetTable<TestSource>(); } }
-		public ITable<TTestUser>               TTestUsers               { get { return this.GetTable<TTestUser>(); } }
-		public ITable<TTestUserContract>       TTestUserContracts       { get { return this.GetTable<TTestUserContract>(); } }
+		public ITable<SchemaTestTable>     SchemaTestTables    { get { return this.GetTable<SchemaTestTable>(); } }
+		public ITable<SchemaTestView>      SchemaTestViews     { get { return this.GetTable<SchemaTestView>(); } }
+		public ITable<SEQUENCETEST>        Sequencetests       { get { return this.GetTable<SEQUENCETEST>(); } }
+		public ITable<StgTradeInformation> StgTradeInformation { get { return this.GetTable<StgTradeInformation>(); } }
+		public ITable<StringTest>          StringTests         { get { return this.GetTable<StringTest>(); } }
+		public ITable<TEntity>             TEntities           { get { return this.GetTable<TEntity>(); } }
+		public ITable<TestIdentity>        TestIdentities      { get { return this.GetTable<TestIdentity>(); } }
+		public ITable<TestMerge1>          TestMerge1          { get { return this.GetTable<TestMerge1>(); } }
+		public ITable<TestMerge2>          TestMerge2          { get { return this.GetTable<TestMerge2>(); } }
+		public ITable<TTestUser>           TTestUsers          { get { return this.GetTable<TTestUser>(); } }
+		public ITable<TTestUserContract>   TTestUserContracts  { get { return this.GetTable<TTestUserContract>(); } }
 
 		public TestDataDB()
 		{
@@ -239,13 +235,6 @@ namespace Default.Oracle
 		[Column, Nullable] public decimal? Decimal5 { get; set; } // NUMBER (38,38)
 	}
 
-	[Table(Schema="MANAGED", Name="Dest2")]
-	public partial class Dest2
-	{
-		[Column, NotNull] public decimal ID  { get; set; } // NUMBER
-		[Column, NotNull] public decimal Int { get; set; } // NUMBER
-	}
-
 	[Table(Schema="MANAGED", Name="Doctor")]
 	public partial class Doctor
 	{
@@ -286,18 +275,6 @@ namespace Default.Oracle
 		[PrimaryKey, NotNull    ] public decimal  InheritanceParentId { get; set; } // NUMBER
 		[Column,        Nullable] public decimal? TypeDiscriminator   { get; set; } // NUMBER
 		[Column,        Nullable] public string?  Name                { get; set; } // NVARCHAR2(50)
-	}
-
-	[Table(Schema="MANAGED", Name="Issue2564Table")]
-	public partial class Issue2564Table
-	{
-		[PrimaryKey, NotNull    ] public long      Id                     { get; set; } // NUMBER (19,0)
-		[Column,     NotNull    ] public DateTime  TimestampGenerated     { get; set; } // TIMESTAMP(6)
-		[Column,        Nullable] public DateTime? TimestampGone          { get; set; } // TIMESTAMP(6)
-		[Column,        Nullable] public string?   MessageClassName       { get; set; } // VARCHAR2(255)
-		[Column,        Nullable] public string?   ExternID1              { get; set; } // VARCHAR2(255)
-		[Column,        Nullable] public string?   TranslatedMessageGroup { get; set; } // VARCHAR2(255)
-		[Column,        Nullable] public string?   TranslatedMessage1     { get; set; } // VARCHAR2(255)
 	}
 
 	[Table(Schema="MANAGED", Name="LinqDataTypes")]
@@ -514,19 +491,6 @@ namespace Default.Oracle
 		[Column,        Nullable] public decimal?        FieldEnumNumber { get; set; } // NUMBER
 	}
 
-	[Table(Schema="MANAGED", Name="TestSequenceSchemaTable")]
-	public partial class TestSequenceSchemaTable
-	{
-		[PrimaryKey, NotNull] public long Id { get; set; } // NUMBER (19,0)
-	}
-
-	[Table(Schema="MANAGED", Name="TestSource")]
-	public partial class TestSource
-	{
-		[Column, NotNull] public decimal ID { get; set; } // NUMBER
-		[Column, NotNull] public decimal N  { get; set; } // NUMBER
-	}
-
 	[Table(Schema="MANAGED", Name="t_test_user")]
 	public partial class TTestUser
 	{
@@ -536,7 +500,7 @@ namespace Default.Oracle
 		#region Associations
 
 		/// <summary>
-		/// SYS_C00903690_BackReference (MANAGED.t_test_user_contract)
+		/// SYS_C007123_BackReference (MANAGED.t_test_user_contract)
 		/// </summary>
 		[Association(ThisKey="UserId", OtherKey="UserId", CanBeNull=true)]
 		public IEnumerable<TTestUserContract> Syscs { get; set; } = null!;
@@ -555,7 +519,7 @@ namespace Default.Oracle
 		#region Associations
 
 		/// <summary>
-		/// SYS_C00903690 (MANAGED.t_test_user)
+		/// SYS_C007123 (MANAGED.t_test_user)
 		/// </summary>
 		[Association(ThisKey="UserId", OtherKey="UserId", CanBeNull=false)]
 		public TTestUser User { get; set; } = null!;
@@ -730,6 +694,37 @@ namespace Default.Oracle
 			};
 
 			return dataConnection.ExecuteProc("MANAGED.PERSON_UPDATE", parameters);
+		}
+
+		#endregion
+
+		#region RESULTSETTEST
+
+		public static IEnumerable<RESULTSETTESTResult> RESULTSETTEST(this TestDataDB dataConnection, out object? MR, out object? SR)
+		{
+			var parameters = new []
+			{
+				new DataParameter("MR", null, LinqToDB.DataType.Cursor)
+				{
+					Direction = ParameterDirection.Output
+				},
+				new DataParameter("SR", null, LinqToDB.DataType.Cursor)
+				{
+					Direction = ParameterDirection.Output
+				}
+			};
+
+			var ret = dataConnection.QueryProc<RESULTSETTESTResult>("MANAGED.RESULTSETTEST", parameters).ToList();
+
+			MR = Converter.ChangeTypeTo<object?>(parameters[0].Value);
+			SR = Converter.ChangeTypeTo<object?>(parameters[1].Value);
+
+			return ret;
+		}
+
+		public partial class RESULTSETTESTResult
+		{
+			public decimal? MASTERID { get; set; }
 		}
 
 		#endregion
@@ -932,12 +927,6 @@ namespace Default.Oracle
 				t.InheritanceParentId == InheritanceParentId);
 		}
 
-		public static Issue2564Table? Find(this ITable<Issue2564Table> table, long Id)
-		{
-			return table.FirstOrDefault(t =>
-				t.Id == Id);
-		}
-
 		public static LongRawTable? Find(this ITable<LongRawTable> table, decimal ID)
 		{
 			return table.FirstOrDefault(t =>
@@ -993,12 +982,6 @@ namespace Default.Oracle
 		}
 
 		public static TestMerge2? Find(this ITable<TestMerge2> table, decimal Id)
-		{
-			return table.FirstOrDefault(t =>
-				t.Id == Id);
-		}
-
-		public static TestSequenceSchemaTable? Find(this ITable<TestSequenceSchemaTable> table, long Id)
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);

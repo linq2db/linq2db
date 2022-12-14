@@ -21,15 +21,15 @@ namespace Cli.Default.SqlServer
 
 		#region Associations
 		/// <summary>
-		/// FK_TestSchemaY_TestSchemaX
+		/// FK_TestSchemaY_OtherID
 		/// </summary>
-		[Association(CanBeNull = false, ThisKey = nameof(TestSchemaXid), OtherKey = nameof(SqlServer.TestSchemaX.TestSchemaXid))]
-		public TestSchemaX TestSchemaX { get; set; } = null!;
+		[Association(CanBeNull = false, ThisKey = nameof(TestSchemaXid), OtherKey = nameof(TestSchemaX.TestSchemaXid))]
+		public TestSchemaX OtherId1 { get; set; } = null!;
 
 		/// <summary>
 		/// FK_TestSchemaY_ParentTestSchemaX
 		/// </summary>
-		[Association(CanBeNull = false, ThisKey = nameof(ParentTestSchemaXid), OtherKey = nameof(SqlServer.TestSchemaX.TestSchemaXid))]
+		[Association(CanBeNull = false, ThisKey = nameof(ParentTestSchemaXid), OtherKey = nameof(TestSchemaX.TestSchemaXid))]
 		public TestSchemaX ParentTestSchemaX { get; set; } = null!;
 		#endregion
 	}

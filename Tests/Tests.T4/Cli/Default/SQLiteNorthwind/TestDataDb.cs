@@ -42,8 +42,8 @@ namespace Cli.Default.SQLiteNorthwind
 		public ITable<CustomerCustomerDemo>       CustomerCustomerDemos        => this.GetTable<CustomerCustomerDemo>();
 		public ITable<CustomerDemographic>        CustomerDemographics         => this.GetTable<CustomerDemographic>();
 		public ITable<Customer>                   Customers                    => this.GetTable<Customer>();
-		public ITable<Employee>                   Employees                    => this.GetTable<Employee>();
 		public ITable<EmployeeTerritory>          EmployeeTerritories          => this.GetTable<EmployeeTerritory>();
+		public ITable<Employee>                   Employees                    => this.GetTable<Employee>();
 		public ITable<OrderDetail>                OrderDetails                 => this.GetTable<OrderDetail>();
 		public ITable<Order>                      Orders                       => this.GetTable<Order>();
 		public ITable<Product>                    Products                     => this.GetTable<Product>();
@@ -56,11 +56,11 @@ namespace Cli.Default.SQLiteNorthwind
 		public ITable<CustomerAndSuppliersByCity> CustomerAndSuppliersByCities => this.GetTable<CustomerAndSuppliersByCity>();
 		public ITable<OrderDetailsExtended>       OrderDetailsExtendeds        => this.GetTable<OrderDetailsExtended>();
 		public ITable<OrderSubtotal>              OrderSubtotals               => this.GetTable<OrderSubtotal>();
-		public ITable<SummaryOfSalesByQuarter>    SummaryOfSalesByQuarters     => this.GetTable<SummaryOfSalesByQuarter>();
-		public ITable<SummaryOfSalesByYear>       SummaryOfSalesByYears        => this.GetTable<SummaryOfSalesByYear>();
 		public ITable<OrdersQry>                  OrdersQries                  => this.GetTable<OrdersQry>();
 		public ITable<ProductsAboveAveragePrice>  ProductsAboveAveragePrices   => this.GetTable<ProductsAboveAveragePrice>();
 		public ITable<ProductsByCategory>         ProductsByCategories         => this.GetTable<ProductsByCategory>();
+		public ITable<SummaryOfSalesByQuarter>    SummaryOfSalesByQuarters     => this.GetTable<SummaryOfSalesByQuarter>();
+		public ITable<SummaryOfSalesByYear>       SummaryOfSalesByYears        => this.GetTable<SummaryOfSalesByYear>();
 	}
 
 	public static partial class ExtensionMethods
@@ -106,16 +106,6 @@ namespace Cli.Default.SQLiteNorthwind
 			return table.FirstOrDefaultAsync(e => e.CustomerId == customerId, cancellationToken);
 		}
 
-		public static Employee? Find(this ITable<Employee> table, int employeeId)
-		{
-			return table.FirstOrDefault(e => e.EmployeeId == employeeId);
-		}
-
-		public static Task<Employee?> FindAsync(this ITable<Employee> table, int employeeId, CancellationToken cancellationToken = default)
-		{
-			return table.FirstOrDefaultAsync(e => e.EmployeeId == employeeId, cancellationToken);
-		}
-
 		public static EmployeeTerritory? Find(this ITable<EmployeeTerritory> table, int employeeId, string territoryId)
 		{
 			return table.FirstOrDefault(e => e.EmployeeId == employeeId && e.TerritoryId == territoryId);
@@ -124,6 +114,16 @@ namespace Cli.Default.SQLiteNorthwind
 		public static Task<EmployeeTerritory?> FindAsync(this ITable<EmployeeTerritory> table, int employeeId, string territoryId, CancellationToken cancellationToken = default)
 		{
 			return table.FirstOrDefaultAsync(e => e.EmployeeId == employeeId && e.TerritoryId == territoryId, cancellationToken);
+		}
+
+		public static Employee? Find(this ITable<Employee> table, int employeeId)
+		{
+			return table.FirstOrDefault(e => e.EmployeeId == employeeId);
+		}
+
+		public static Task<Employee?> FindAsync(this ITable<Employee> table, int employeeId, CancellationToken cancellationToken = default)
+		{
+			return table.FirstOrDefaultAsync(e => e.EmployeeId == employeeId, cancellationToken);
 		}
 
 		public static OrderDetail? Find(this ITable<OrderDetail> table, int orderId, int productId)

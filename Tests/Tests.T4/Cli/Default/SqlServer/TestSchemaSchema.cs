@@ -23,9 +23,9 @@ namespace Cli.Default.SqlServer
 		{
 			private readonly IDataContext _dataContext;
 
+			public ITable<SameTableName> SameTableNames => _dataContext.GetTable<SameTableName>();
 			public ITable<TestSchemaA>   TestSchemaA    => _dataContext.GetTable<TestSchemaA>();
 			public ITable<TestSchemaB>   TestSchemaB    => _dataContext.GetTable<TestSchemaB>();
-			public ITable<SameTableName> SameTableNames => _dataContext.GetTable<SameTableName>();
 
 			public DataContext(IDataContext dataContext)
 			{
@@ -55,6 +55,12 @@ namespace Cli.Default.SqlServer
 		}
 		#endregion
 
+		[Table("SameTableName", Schema = "TestSchema")]
+		public class SameTableName
+		{
+			[Column("id")] public int? Id { get; set; } // int
+		}
+
 		[Table("TestSchemaA", Schema = "TestSchema")]
 		public class TestSchemaA
 		{
@@ -65,20 +71,20 @@ namespace Cli.Default.SqlServer
 			/// <summary>
 			/// FK_TestSchema_TestSchemaBY_OriginTestSchemaA backreference
 			/// </summary>
-			[Association(ThisKey = nameof(TestSchemaAid), OtherKey = nameof(TestSchemaB.OriginTestSchemaAid))]
-			public IEnumerable<TestSchemaB> TestSchemaByOriginTestSchemaA { get; set; } = null!;
+			[Association(ThisKey = nameof(TestSchemaAid), OtherKey = nameof(TestSchemaSchema.TestSchemaB.OriginTestSchemaAid))]
+			public IEnumerable<TestSchemaB> TestSchemaB { get; set; } = null!;
 
 			/// <summary>
 			/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA backreference
 			/// </summary>
-			[Association(ThisKey = nameof(TestSchemaAid), OtherKey = nameof(TestSchemaB.TargetTestSchemaAid))]
-			public IEnumerable<TestSchemaB> TestSchemaByTargetTestSchemaA { get; set; } = null!;
+			[Association(ThisKey = nameof(TestSchemaAid), OtherKey = nameof(TestSchemaSchema.TestSchemaB.TargetTestSchemaAid))]
+			public IEnumerable<TestSchemaB> TestSchemaB1 { get; set; } = null!;
 
 			/// <summary>
 			/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA2 backreference
 			/// </summary>
-			[Association(ThisKey = nameof(TestSchemaAid), OtherKey = nameof(TestSchemaB.TargetTestSchemaAId))]
-			public IEnumerable<TestSchemaB> TestSchemaByTargetTestSchemaA1 { get; set; } = null!;
+			[Association(ThisKey = nameof(TestSchemaAid), OtherKey = nameof(TestSchemaSchema.TestSchemaB.TargetTestSchemaAId))]
+			public IEnumerable<TestSchemaB> TestSchemaB2 { get; set; } = null!;
 			#endregion
 		}
 
@@ -109,12 +115,6 @@ namespace Cli.Default.SqlServer
 			[Association(CanBeNull = false, ThisKey = nameof(TargetTestSchemaAId), OtherKey = nameof(TestSchemaA.TestSchemaAid))]
 			public TestSchemaA TargetTestSchemaA1 { get; set; } = null!;
 			#endregion
-		}
-
-		[Table("SameTableName", Schema = "TestSchema")]
-		public class SameTableName
-		{
-			[Column("id")] public int? Id { get; set; } // int
 		}
 	}
 }

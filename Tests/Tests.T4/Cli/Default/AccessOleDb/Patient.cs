@@ -22,8 +22,8 @@ namespace Cli.Default.Access.OleDb
 		/// <summary>
 		/// PersonPatient
 		/// </summary>
-		[Association(CanBeNull = false, ThisKey = nameof(PersonId), OtherKey = nameof(OleDb.Person.PersonId))]
-		public Person Person { get; set; } = null!;
+		[Association(CanBeNull = false, ThisKey = nameof(PersonId), OtherKey = nameof(Person.PersonId))]
+		public Person PersonPatient { get; set; } = null!;
 		#endregion
 	}
 }
