@@ -69,24 +69,15 @@ namespace LinqToDB.Linq.Builder
 			expression  = SequenceHelper.CorrectExpression(expression, this, SubqueryContext);
 			var indexes = ConvertToIndex(expression, level, flags);
 
-			indexes = indexes.Select(idx => idx.WithQuery(SelectQuery))
-				.ToArray();
+			for (var i = 0; i < indexes.Length; i++)
+				indexes[i] = indexes[i].WithQuery(SelectQuery);
 
 			return indexes;
 		}
 
 		public SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 		{
-			expression = SequenceHelper.CorrectExpression(expression, this, SubqueryContext);
-
-			var indexes = SubqueryContext
-				.ConvertToIndex(expression, level, flags)
-				.ToArray();
-
-			var corrected = indexes.Select(s => s.WithSql(SubqueryContext.SelectQuery.Select.Columns[s.Index]))
-				.ToArray();
-
-			return corrected;
+			throw new NotImplementedException();
 		}
 
 		public Expression MakeExpression(Expression path, ProjectFlags flags)

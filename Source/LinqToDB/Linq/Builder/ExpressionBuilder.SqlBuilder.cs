@@ -1064,7 +1064,7 @@ namespace LinqToDB.Linq.Builder
 						case ExpressionType.SubtractChecked: return CreatePlaceholder(context, new SqlBinaryExpression(t, l, "-", r, Precedence.Subtraction), expression, alias: alias);
 						case ExpressionType.Coalesce:
 						{
-							if (QueryHelper.UnwrapExpression(r) is SqlFunction c)
+							if (QueryHelper.UnwrapExpression(r, checkNullability: true) is SqlFunction c)
 							{
 								if (c.Name is "Coalesce" or PseudoFunctions.COALESCE)
 								{
@@ -1175,7 +1175,7 @@ namespace LinqToDB.Linq.Builder
 
 						}
 
-						if (QueryHelper.UnwrapExpression(falseSql.Sql) is SqlFunction c && c.Name == "CASE")
+						if (QueryHelper.UnwrapExpression(falseSql.Sql, checkNullability: false) is SqlFunction c && c.Name == "CASE")
 						{
 							var parms = new ISqlExpression[c.Parameters.Length + 2];
 
@@ -1948,8 +1948,8 @@ namespace LinqToDB.Linq.Builder
 			var lOriginal = l;
 			var rOriginal = r;
 
-			l = QueryHelper.UnwrapExpression(l);
-			r = QueryHelper.UnwrapExpression(r);
+            l = QueryHelper.UnwrapExpression(l, checkNullability: true);
+            r = QueryHelper.UnwrapExpression(r, checkNullability: true);
 
 			if (l is SqlValue lValue)
 				lValue.ValueType = GetDataType(r, lValue.ValueType);

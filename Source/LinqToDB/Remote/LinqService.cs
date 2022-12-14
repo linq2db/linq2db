@@ -373,7 +373,14 @@ namespace LinqToDB.Remote
 				// ugh...
 				// still if it fails here due to empty columns - it is a bug in columns generation
 
-				var fieldType = selectExpressions[i].SystemType!;
+				var fieldType      = selectExpressions[i].SystemType!;
+				var valueConverter = QueryHelper.GetValueConverter(selectExpressions[i]);
+				if (valueConverter != null)
+				{
+					// value converter applied on client side for both directions
+					// here on read we need to prepare expected by converter type
+					fieldType = valueConverter.FromProviderExpression.Parameters[0].Type;
+				}
 
 				// async compiled query support
 				if (fieldType.IsGenericType && fieldType.GetGenericTypeDefinition() == typeof(Task<>))
@@ -402,17 +409,18 @@ namespace LinqToDB.Remote
 
 			for (var i = 0; i < ret.FieldCount; i++)
 				columnReaders[i] = new ConvertFromDataReaderExpression.ColumnReader(db, db.MappingSchema,
-					ret.FieldTypes[i], i, QueryHelper.GetValueConverter(selectExpressions[i]), true);
+					// converter must be null, see notes above
+					ret.FieldTypes[i], i, converter: null, true);
 
 			while (rd.DataReader!.Read())
 			{
-				var data = new string  [rd.DataReader!.FieldCount];
+				var data = new string[rd.DataReader!.FieldCount];
 
 				ret.RowCount++;
 
 				for (var i = 0; i < ret.FieldCount; i++)
 				{
-					if (!rd.DataReader!.IsDBNull(i))
+					if (!reader.IsDBNull(i))
 					{
 						var value = columnReaders[i].GetValue(reader);
 

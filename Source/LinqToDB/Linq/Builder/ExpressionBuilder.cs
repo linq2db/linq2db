@@ -171,6 +171,8 @@ namespace LinqToDB.Linq.Builder
 
 		#region Builder SQL
 
+		internal bool DisableDefaultIfEmpty;
+
 		public Query<T> Build<T>()
 		{
 			var sequence = BuildSequence(new BuildInfo((IBuildContext?)null, Expression, new SelectQuery()));

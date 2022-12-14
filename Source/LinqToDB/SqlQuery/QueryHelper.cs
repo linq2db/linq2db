@@ -345,39 +345,39 @@ namespace LinqToDB.SqlQuery
 			});
 		}
 
-		public static bool IsTransitiveExpression(SqlExpression sqlExpression)
+		public static bool IsTransitiveExpression(SqlExpression sqlExpression, bool checkNullability)
 		{
-			if (sqlExpression.Parameters.Length == 1 && sqlExpression.Expr.Trim() == "{0}" && sqlExpression.CanBeNull == sqlExpression.Parameters[0].CanBeNull)
+			if (sqlExpression.Parameters.Length == 1 && sqlExpression.Expr.Trim() == "{0}" && (!checkNullability || sqlExpression.CanBeNull == sqlExpression.Parameters[0].CanBeNull))
 			{
 				if (sqlExpression.Parameters[0] is SqlExpression argExpression)
-					return IsTransitiveExpression(argExpression);
+					return IsTransitiveExpression(argExpression, checkNullability);
 				return true;
 			}
 
 			return false;
 		}
 
-		public static ISqlExpression UnwrapExpression(ISqlExpression expr)
+		public static ISqlExpression UnwrapExpression(ISqlExpression expr, bool checkNullability)
 		{
 			if (expr.ElementType == QueryElementType.SqlExpression)
 			{
-				var underlying = GetUnderlyingExpressionValue((SqlExpression)expr);
+				var underlying = GetUnderlyingExpressionValue((SqlExpression)expr, checkNullability);
 				if (!ReferenceEquals(expr, underlying))
-					return UnwrapExpression(underlying);
+					return UnwrapExpression(underlying, checkNullability);
 			}
 			else if (expr.ElementType == QueryElementType.SqlNullabilityExpression)
-				return UnwrapExpression(((SqlNullabilityExpression)expr).SqlExpression);
+				return UnwrapExpression(((SqlNullabilityExpression)expr).SqlExpression, checkNullability);
 
 			return expr;
 		}
 
-		public static ISqlExpression GetUnderlyingExpressionValue(SqlExpression sqlExpression)
+		public static ISqlExpression GetUnderlyingExpressionValue(SqlExpression sqlExpression, bool checkNullability)
 		{
-			if (!IsTransitiveExpression(sqlExpression))
+			if (!IsTransitiveExpression(sqlExpression, checkNullability))
 				return sqlExpression;
 
 			if (sqlExpression.Parameters[0] is SqlExpression subExpr)
-				return GetUnderlyingExpressionValue(subExpr);
+				return GetUnderlyingExpressionValue(subExpr, checkNullability);
 
 			return sqlExpression.Parameters[0];
 		}
@@ -392,7 +392,7 @@ namespace LinqToDB.SqlQuery
 			if (expr.ElementType == QueryElementType.SqlExpression)
 			{
 				var sqlExpression = (SqlExpression) expr;
-				expr = GetUnderlyingExpressionValue(sqlExpression);
+				expr = GetUnderlyingExpressionValue(sqlExpression, true);
 			}
 			return expr.ElementType != QueryElementType.Column && expr.ElementType != QueryElementType.SqlField;
 		}
@@ -918,7 +918,7 @@ namespace LinqToDB.SqlQuery
 				}
 				else if (current is SqlExpression expr)
 				{
-					if (IsTransitiveExpression(expr))
+					if (IsTransitiveExpression(expr, true))
 						current = expr.Parameters[0];
 					else
 						break;

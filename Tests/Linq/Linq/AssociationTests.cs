@@ -429,6 +429,18 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test(Description = "CanBeNull=true association doesn't enforce nullability on referenced non-nullable columns")]
+		public void TestNullabilityPropagation([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			// left join makes t.Middle!.ParentID which means with default NULL comparison semantics we
+			// should generate following SQL:
+			// parent_id <> 4 or parent_id is null
+			var result = db.GetTable<Top>().Where(t => t.Middle!.ParentID != 4).ToArray();
+			Assert.AreEqual(14, result.Length);
+		}
+
 		[Table(Name="Child", IsColumnAttributeRequired=false)]
 		[InheritanceMapping(Code = 1, IsDefault = true, Type = typeof(ChildForHierarchy))]
 		public class ChildBaseForHierarchy

@@ -5,6 +5,8 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.Mapping
 {
+	using Common.Internal;
+
 	/// <summary>
 	/// Defines relation between tables or views.
 	/// Could be applied to:
@@ -161,7 +163,7 @@ namespace LinqToDB.Mapping
 
 		public override string GetObjectID()
 		{
-			return $".{Configuration}.{ThisKey}.{OtherKey}.{ExpressionPredicate}.{QueryExpressionMethod}.{Storage}.{(CanBeNull?1:0)}.{AliasName}.";
+			return $".{Configuration}.{ThisKey}.{OtherKey}.{ExpressionPredicate}.{IdentifierBuilder.GetObjectID(Predicate)}.{QueryExpressionMethod}.{IdentifierBuilder.GetObjectID(QueryExpression)}.{Storage}.{(CanBeNull?1:0)}.{AliasName}.";
 		}
 	}
 }
