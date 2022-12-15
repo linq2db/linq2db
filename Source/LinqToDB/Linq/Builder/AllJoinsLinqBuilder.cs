@@ -121,27 +121,20 @@ namespace LinqToDB.Linq.Builder
 
 			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 			{
-				SqlInfo[]? result = null;
+				var result = base.ConvertToSql(expression, level, flags);
 
-				if (expression != null)
-				{
-					var root = Builder.GetRootObject(expression);
-
-					if (root.NodeType == ExpressionType.Parameter && root == Lambda.Parameters[1])
+				// we need exact column from InnerContext
+				result = result.Select(s =>
 					{
-						result = base.ConvertToSql(expression, level, flags);
+						if (s.Sql is SqlColumn column && InnerContext.SelectQuery.From.Tables.Any(ts => ts.Source == column.Parent))
+						{
+							var idx = InnerContext.SelectQuery.Select.Add(s.Sql);
+							return new SqlInfo(s.MemberChain, InnerContext.SelectQuery.Select.Columns[idx], InnerContext.SelectQuery, idx);
+						}
 
-						// we need exact column from InnerContext
-						result = result.Select(s =>
-							{
-								var idx = InnerContext.SelectQuery.Select.Add(s.Sql);
-								return new SqlInfo(s.MemberChain, InnerContext.SelectQuery.Select.Columns[idx], InnerContext.SelectQuery, idx);
-							})
-							.ToArray();
-					}
-				}
-
-				result ??= base.ConvertToSql(expression, level, flags);
+						return s;
+					})
+					.ToArray();
 
 				return result;
 			}

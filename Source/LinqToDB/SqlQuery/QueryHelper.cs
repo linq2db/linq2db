@@ -398,7 +398,7 @@ namespace LinqToDB.SqlQuery
 		{
 			return expr.ElementType == QueryElementType.SqlValue || expr.ElementType == QueryElementType.SqlParameter;
 		}
-
+		
 		/// <summary>
 		/// Returns <c>true</c> if tested expression is constant during query execution (e.g. value or parameter).
 		/// </summary>
@@ -1429,17 +1429,61 @@ namespace LinqToDB.SqlQuery
 
 		public static bool IsAggregationOrWindowFunction(IQueryElement expr)
 		{
+			return IsAggregationFunction(expr) || IsWindowFunction(expr);
+		}
+
+		public static bool IsAggregationFunction(IQueryElement expr)
+		{
 			if (expr is SqlFunction func)
 				return func.IsAggregate;
 
 			if (expr is SqlExpression expression)
-				return (expression.Flags & (SqlFlags.IsAggregate | SqlFlags.IsWindowFunction)) != 0;
+				return (expression.Flags & SqlFlags.IsAggregate) != 0;
 
 			return false;
 		}
 
-		// TODO: IsAggregationOrWindowFunction use needs review - maybe we should call ContainsAggregationOrWindowFunction there
-		public static bool ContainsAggregationOrWindowFunction(IQueryElement expr) => null != expr.Find(IsAggregationOrWindowFunction);
+		public static bool IsWindowFunction(IQueryElement expr)
+		{
+			if (expr is SqlExpression expression)
+				return (expression.Flags & SqlFlags.IsWindowFunction) != 0;
+
+			return false;
+		}
+
+		public static bool ContainsAggregationOrWindowFunction(IQueryElement expr)
+		{
+			if (expr is SqlColumn)
+				return false;
+			if (expr is SqlSearchCondition || expr is SelectQuery)
+				return ContainsAggregationOrWindowFunctionDeep(expr);
+
+			if (IsAggregationFunction(expr) || IsWindowFunction(expr))
+				return true;
+
+			return false;
+		}
+
+		public static bool ContainsAggregationOrWindowFunctionDeep(IQueryElement expr)
+		{
+			return null != expr.Find(e => IsAggregationFunction(e) || IsWindowFunction(e));
+		}
+
+		public static bool ContainsAggregationOrWindowFunctionOneLevel(IQueryElement expr)
+		{
+			var found = false;
+			expr.VisitParentFirst(expr, (_, e) =>
+			{
+				if (found)
+					return true;
+				if (e is SqlColumn)
+					return false;
+				found = IsAggregationFunction(e) || IsWindowFunction(e);
+				return !found;
+			});
+
+			return found;
+		}
 
 		/// <summary>
 		/// Collects unique keys from different sources.

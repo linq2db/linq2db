@@ -139,17 +139,19 @@ namespace LinqToDB.Linq.Builder
 			}
 			else
 			{
-				var goupingSetBody = groupingKey!.Body;
-				var groupingSets = EnumGroupingSets(goupingSetBody).ToArray();
-				if (groupingSets.Length == 0)
-					throw new LinqException($"Invalid grouping sets expression '{goupingSetBody}'.");
+				var groupingSetBody = groupingKey!.Body;
 
-				foreach (var groupingSet in groupingSets)
+				var hasSets = false;
+				foreach (var groupingSet in EnumGroupingSets(groupingSetBody))
 				{
+					hasSets      = true;
 					var groupSql = builder.ConvertExpressions(keySequence, groupingSet, ConvertFlags.Key, null);
 					sequence.SelectQuery.GroupBy.Items.Add(
 						new SqlGroupingSet(groupSql.Select(s => keySequence.SelectQuery.Select.AddColumn(s.Sql))));
 				}
+
+				if (!hasSets)
+					throw new LinqException($"Invalid grouping sets expression '{groupingSetBody}'.");
 			}
 
 			sequence.SelectQuery.GroupBy.GroupingType = groupingKind;
