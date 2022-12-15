@@ -230,7 +230,7 @@ namespace LinqToDB.Linq.Builder
 				if (buildBlock && _variable != null)
 					return _variable;
 
-				var recordType       = RecordsHelper.GetRecordType(Builder.MappingSchema, objectType);
+				var recordType       = RecordsHelper.GetRecordType(objectType);
 				var entityDescriptor = Builder.MappingSchema.GetEntityDescriptor(objectType);
 
 				// choosing type that can be instantiated
@@ -375,7 +375,7 @@ namespace LinqToDB.Linq.Builder
 				return expr;
 			}
 
-			class ColumnInfo
+			sealed class ColumnInfo
 			{
 				public bool       IsComplex;
 				public string     Name = null!;
@@ -391,7 +391,7 @@ namespace LinqToDB.Linq.Builder
 					var membersWithOrder = new List<(int sequence, MemberAccessor ma)>();
 					foreach (var member in typeAccessor.Members)
 					{
-						var sequence = RecordsHelper.GetFSharpRecordMemberSequence(Builder.MappingSchema, typeAccessor.Type, member.MemberInfo);
+						var sequence = RecordsHelper.GetFSharpRecordMemberSequence(member.MemberInfo);
 						if (sequence != -1)
 						{
 							membersWithOrder.Add((sequence, member));
@@ -457,7 +457,7 @@ namespace LinqToDB.Linq.Builder
 								}
 
 								var typeAcc  = TypeAccessor.GetAccessor(member.Type);
-								var memberRecordType = RecordsHelper.GetRecordType(Builder.MappingSchema, member.Type);
+								var memberRecordType = RecordsHelper.GetRecordType(member.Type);
 
 								var exprs = GetExpressions(typeAcc, memberRecordType, cols).ToList();
 
@@ -601,9 +601,9 @@ namespace LinqToDB.Linq.Builder
 				var q = new List<(int idx, int sort)>();
 				for (var i = 0; i < SqlTable.Fields.Count; i++)
 				{
-					if (names.ContainsKey(SqlTable.Fields[i].Name))
+					if (names.TryGetValue(SqlTable.Fields[i].Name, out var nameIndex))
 					{
-						q.Add((i, names[SqlTable.Fields[i].Name]));
+						q.Add((i, nameIndex));
 					}
 				}
 
@@ -1206,7 +1206,6 @@ namespace LinqToDB.Linq.Builder
 
 				if (buildInfo != null)
 				{
-
 					if (buildInfo.IsSubQuery)
 					{
 						var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
@@ -1244,12 +1243,24 @@ namespace LinqToDB.Linq.Builder
 								var queryMethod = AssociationHelper.CreateAssociationQueryLambda(
 									Builder, new AccessorMember(expression), tableLevel.Descriptor, OriginalType, parentExactType, elementType,
 									false, false, GetLoadWith(), out _);
-								;
+
 								var expr   = queryMethod.GetBody(ma);
 
 								buildInfo.IsAssociationBuilt = true;
 
-								return Builder.BuildSequence(new BuildInfo(buildInfo, expr));
+								DefaultIfEmptyBuilder.DefaultIfEmptyContext? defaultIfEmpty = null;
+								if (tableLevel.Context is TableContext tc)
+									defaultIfEmpty = tc.Parent as DefaultIfEmptyBuilder.DefaultIfEmptyContext;
+
+								if (defaultIfEmpty != null)
+									defaultIfEmpty.Disabled = true;
+
+								var result =  Builder.BuildSequence(new BuildInfo(buildInfo, expr));
+
+								if (defaultIfEmpty != null)
+									defaultIfEmpty.Disabled = false;
+
+								return result;
 							}
 						}
 						else
@@ -1527,7 +1538,7 @@ namespace LinqToDB.Linq.Builder
 				return null;
 			}
 
-			class ContextInfo
+			sealed class ContextInfo
 			{
 				public ContextInfo(IBuildContext context, ISqlExpression? field, Expression? currentExpression, int currentLevel)
 				{

@@ -11,7 +11,7 @@ namespace LinqToDB.Mapping
 	/// custom Attribute derived from this to override <see cref="SkipBaseAttribute.ShouldSkip"/>
 	/// </summary>
 	[CLSCompliant(false)]
-	public abstract class SkipValuesByListAttribute: SkipBaseAttribute
+	public abstract class SkipValuesByListAttribute : SkipBaseAttribute
 	{
 		/// <summary>
 		/// Gets collection with values to skip.
@@ -40,12 +40,7 @@ namespace LinqToDB.Mapping
 
 		public override string GetObjectID()
 		{
-			var sb = new StringBuilder(base.GetObjectID());
-
-			foreach (var value in Values)
-				sb.Append(value).Append('.');
-
-			return sb.ToString();
+			return $"{base.GetObjectID()}.{string.Join(".", Values)}.";
 		}
 	}
 }

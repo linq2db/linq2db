@@ -6,9 +6,9 @@ using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
-
 using LinqToDB;
 using LinqToDB.Common;
+using LinqToDB.Configuration;
 using LinqToDB.Data;
 using LinqToDB.Data.RetryPolicy;
 using LinqToDB.DataProvider.Informix;
@@ -19,11 +19,9 @@ using LinqToDB.Mapping;
 using LinqToDB.Reflection;
 using LinqToDB.Tools;
 using LinqToDB.Tools.Comparers;
-
-using Tests.Remote.ServerContainer;
-
 using NUnit.Framework;
 using NUnit.Framework.Internal;
+using Tests.Remote.ServerContainer;
 
 namespace Tests
 {
@@ -162,6 +160,8 @@ namespace Tests
 			var configName = "CORE31";
 #elif NET6_0
 			var configName = "NET60";
+#elif NET7_0
+			var configName = "NET70";
 #elif NET472
 			var configName = "NET472";
 #else
@@ -440,6 +440,20 @@ namespace Tests
 
 			if (retryPolicy != null)
 				res.RetryPolicy = retryPolicy;
+
+			return res;
+		}
+
+		protected TestDataConnection GetDataConnection(LinqToDBConnectionOptions options)
+		{
+			if (options.ConfigurationString?.EndsWith(".LinqService") == true)
+			{
+				throw new InvalidOperationException($"Call {nameof(GetDataContext)} for remote context creation");
+			}
+
+			Debug.WriteLine(options.ConfigurationString, "Provider ");
+
+			var res = new TestDataConnection(options);
 
 			return res;
 		}
@@ -1441,10 +1455,6 @@ namespace Tests
 		protected virtual BulkCopyOptions GetDefaultBulkCopyOptions(string configuration)
 		{
 			var options = new BulkCopyOptions();
-
-			// https://github.com/DarkWanderer/ClickHouse.Client/issues/152
-			if (configuration.IsAnyOf(ProviderName.ClickHouseClient))
-				options.WithoutSession = true;
 
 			return options;
 		}

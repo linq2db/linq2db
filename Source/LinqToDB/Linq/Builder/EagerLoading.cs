@@ -18,7 +18,7 @@ namespace LinqToDB.Linq.Builder
 	using SqlQuery;
 	using Async;
 
-	internal class EagerLoading
+	internal sealed class EagerLoading
 	{
 		static readonly MethodInfo EnlistEagerLoadingFunctionalityMethodInfo = MemberHelper.MethodOfGeneric(() =>
 			EnlistEagerLoadingFunctionality<int, int, int>(null!, null!, null!, null!, null!));
@@ -26,7 +26,7 @@ namespace LinqToDB.Linq.Builder
 		static readonly MethodInfo EnlistEagerLoadingFunctionalityDetachedMethodInfo = MemberHelper.MethodOfGeneric(() =>
 			EnlistEagerLoadingFunctionalityDetached<int>(null!, null!));
 
-		class EagerLoadingContext<T, TKey>
+		sealed class EagerLoadingContext<T, TKey>
 			where TKey : notnull
 		{
 			private Dictionary<TKey, List<T>>? _items;
@@ -108,7 +108,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (!isEnumerable && type.IsClass && type.IsGenericType && type.Name.StartsWith("<>"))
 			{
-				isEnumerable = type.GenericTypeArguments.Any(t => IsDetailType(t));
+				isEnumerable = type.GenericTypeArguments.Any(IsDetailType);
 			}
 
 			return isEnumerable;
@@ -319,7 +319,7 @@ namespace LinqToDB.Linq.Builder
 			return false;
 		}
 
-		class ExtractNotSupportedPartContext
+		sealed class ExtractNotSupportedPartContext
 		{
 			public ExtractNotSupportedPartContext(MappingSchema mappingSchema)
 			{
@@ -486,7 +486,7 @@ namespace LinqToDB.Linq.Builder
 			return result;
 		}
 
-		class KeyInfo
+		sealed class KeyInfo
 		{
 			public Expression Original       = null!;
 			public Expression ForSelect      = null!;
@@ -1547,7 +1547,7 @@ namespace LinqToDB.Linq.Builder
 			return after;
 		}
 
-		internal class ReplaceInfo
+		internal sealed class ReplaceInfo
 		{
 			public ReplaceInfo(MappingSchema mappingSchema)
 			{
@@ -1641,7 +1641,7 @@ namespace LinqToDB.Linq.Builder
 		}
 
 
-		[return: NotNullIfNotNull("body")]
+		[return: NotNullIfNotNull(nameof(body))]
 		internal static Expression? ReplaceParametersWithChangedType(Expression? body, IList<ParameterExpression> before, IList<ParameterExpression> after)
 		{
 			if (body == null)
@@ -1691,7 +1691,7 @@ namespace LinqToDB.Linq.Builder
 			return newBody;
 		}
 
-		[return: NotNullIfNotNull("expr")]
+		[return: NotNullIfNotNull(nameof(expr))]
 		internal static Expression? FinalizeExpressionKeys(HashSet<Expression> stable, Expression? expr)
 		{
 			if (expr == null)

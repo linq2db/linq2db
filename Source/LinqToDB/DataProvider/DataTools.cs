@@ -14,7 +14,7 @@ namespace LinqToDB.DataProvider
 		/// <summary>
 		/// Improved version of <c>Replace("[", "[[]")</c> code, used before.
 		/// </summary>
-		[return: NotNullIfNotNull("str")]
+		[return: NotNullIfNotNull(nameof(str))]
 		public static string? EscapeUnterminatedBracket(string? str)
 		{
 			if (str == null)
@@ -213,7 +213,7 @@ namespace LinqToDB.DataProvider
 		{
 			databaseName = databaseName.Trim();
 
-			if (!databaseName.ToLower().EndsWith(extension))
+			if (!databaseName.ToLowerInvariant().EndsWith(extension))
 				databaseName += extension;
 
 			if (File.Exists(databaseName))
@@ -236,7 +236,7 @@ namespace LinqToDB.DataProvider
 			}
 			else
 			{
-				if (!databaseName.ToLower().EndsWith(extension))
+				if (!databaseName.ToLowerInvariant().EndsWith(extension))
 				{
 					databaseName += extension;
 

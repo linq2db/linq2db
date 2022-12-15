@@ -12,7 +12,7 @@ using LinqToDB.Mapping;
 
 namespace Cli.Default.MariaDB
 {
-	[Table("parent")]
+	[Table("Parent")]
 	public class Parent
 	{
 		[Column("ParentID")] public int? ParentId { get; set; } // int(11)

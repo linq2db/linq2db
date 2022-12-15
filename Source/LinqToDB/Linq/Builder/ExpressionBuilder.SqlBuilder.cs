@@ -53,7 +53,7 @@ namespace LinqToDB.Linq.Builder
 			return sequence;
 		}
 
-		class CheckSubQueryForWhereContext
+		sealed class CheckSubQueryForWhereContext
 		{
 			public CheckSubQueryForWhereContext(ExpressionBuilder builder, IBuildContext buildContext)
 			{
@@ -381,7 +381,7 @@ namespace LinqToDB.Linq.Builder
 			Expression ConvertNull(MemberExpression expression);
 		}
 
-		class ConvertHelper<T> : IConvertHelper
+		sealed class ConvertHelper<T> : IConvertHelper
 			where T : struct
 		{
 			public Expression ConvertNull(MemberExpression expression)
@@ -937,7 +937,7 @@ namespace LinqToDB.Linq.Builder
 						case ExpressionType.SubtractChecked: return new SqlBinaryExpression(t, l, "-", r, Precedence.Subtraction);
 						case ExpressionType.Coalesce       :
 						{
-							if (QueryHelper.UnwrapExpression(r) is SqlFunction c)
+							if (QueryHelper.UnwrapExpression(r, checkNullability: true) is SqlFunction c)
 							{
 								if (c.Name is "Coalesce" or PseudoFunctions.COALESCE)
 								{
@@ -1016,7 +1016,7 @@ namespace LinqToDB.Linq.Builder
 					var t = ConvertToSql(context, e.IfTrue);
 					var f = ConvertToSql(context, e.IfFalse);
 
-					if (QueryHelper.UnwrapExpression(f) is SqlFunction c && c.Name == "CASE")
+					if (QueryHelper.UnwrapExpression(f, checkNullability: true) is SqlFunction c && c.Name == "CASE")
 					{
 						var parms = new ISqlExpression[c.Parameters.Length + 2];
 
@@ -1059,24 +1059,6 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				case ExpressionType.Parameter:
-				{
-					var ctx = GetContext(context, expression);
-
-					if (ctx != null)
-					{
-						var sql = ctx.ConvertToSql(expression, 0, ConvertFlags.Field);
-
-						switch (sql.Length)
-						{
-							case 0: break;
-							case 1: return sql[0].Sql;
-							default: throw new InvalidOperationException();
-						}
-					}
-
-					break;
-				}
-
 				case ExpressionType.Extension:
 				{
 					var ctx = GetContext(context, expression);
@@ -1568,8 +1550,8 @@ namespace LinqToDB.Linq.Builder
 			var l  = ConvertToSql(context, left,  unwrap: false, cd);
 			var r  = ConvertToSql(context, right, unwrap: true,  cd);
 
-			l = QueryHelper.UnwrapExpression(l);
-			r = QueryHelper.UnwrapExpression(r);
+			l = QueryHelper.UnwrapExpression(l, checkNullability: true);
+			r = QueryHelper.UnwrapExpression(r, checkNullability: true);
 
 			if (l is SqlValue lValue)
 				lValue.ValueType = GetDataType(r, lValue.ValueType);
@@ -2154,7 +2136,7 @@ namespace LinqToDB.Linq.Builder
 			return typeResult;
 		}
 
-		private class GetDataTypeContext
+		private sealed class GetDataTypeContext
 		{
 			public GetDataTypeContext(DbDataType baseType)
 			{
@@ -2641,7 +2623,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region CanBeTranslatedToSql
 
-		private class CanBeTranslatedToSqlContext
+		private sealed class CanBeTranslatedToSqlContext
 		{
 			public CanBeTranslatedToSqlContext(ExpressionBuilder builder, IBuildContext buildContext, bool canBeCompiled)
 			{
@@ -2971,7 +2953,7 @@ namespace LinqToDB.Linq.Builder
 
 						var assignments = new List<(MemberAssignment ma, int order)>();
 						foreach (var ma in expr.Bindings.Cast<MemberAssignment>())
-							assignments.Add((ma, dic.ContainsKey(ma.Member.Name) ? dic[ma.Member.Name] : 1000000));
+							assignments.Add((ma, dic.TryGetValue(ma.Member.Name, out var idx) ? idx : 1000000));
 
 						foreach (var (binding, _) in assignments.OrderBy(static a => a.order))
 						{

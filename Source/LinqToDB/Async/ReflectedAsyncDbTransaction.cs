@@ -10,7 +10,7 @@ namespace LinqToDB.Async
 	/// missing from <see cref="DbTransaction"/>.
 	/// Providers with async operations support could override its methods with asynchronous implementations.
 	/// </summary>
-	internal class ReflectedAsyncDbTransaction : AsyncDbTransaction
+	internal sealed class ReflectedAsyncDbTransaction : AsyncDbTransaction
 	{
 		private readonly Func<DbTransaction, CancellationToken, Task>? _commitAsync;
 		private readonly Func<DbTransaction, CancellationToken, Task>? _rollbackAsync;

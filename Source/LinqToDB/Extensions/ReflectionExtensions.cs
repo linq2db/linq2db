@@ -882,7 +882,7 @@ namespace LinqToDB.Extensions
 			object? GetDefaultValue();
 		}
 
-		class GetDefaultValueHelper<T> : IGetDefaultValueHelper
+		sealed class GetDefaultValueHelper<T> : IGetDefaultValueHelper
 		{
 			public object? GetDefaultValue()
 			{
@@ -907,7 +907,7 @@ namespace LinqToDB.Extensions
 
 #region MethodInfo extensions
 
-		[return: NotNullIfNotNull("method")]
+		[return: NotNullIfNotNull(nameof(method))]
 		public static PropertyInfo? GetPropertyInfo(this MethodInfo? method)
 		{
 			if (method != null)
@@ -982,25 +982,17 @@ namespace LinqToDB.Extensions
 			if (fromType == toType)
 				return true;
 
-			if (_castDic.ContainsKey(toType) && _castDic[toType].Contains(fromType))
-				return true;
-
-			var tc = TypeDescriptor.GetConverter(fromType);
-
 			if (toType.IsAssignableFrom(fromType))
 				return true;
 
-			if (tc.CanConvertTo(toType))
+			if (_castDic.TryGetValue(toType, out var types) && types.Contains(fromType))
 				return true;
 
-			tc = TypeDescriptor.GetConverter(toType);
-
-			if (tc.CanConvertFrom(fromType))
-				return true;
-
-			if (fromType.GetMethods()
-				.Any(m => m.IsStatic && m.IsPublic && m.ReturnType == toType && (m.Name == "op_Implicit" || m.Name == "op_Explicit")))
-				return true;
+			foreach (var m in fromType.GetMethods())
+			{
+				if (m.IsStatic && m.IsPublic && m.ReturnType == toType && (m.Name == "op_Implicit" || m.Name == "op_Explicit"))
+					return true;
+			}
 
 			return false;
 		}

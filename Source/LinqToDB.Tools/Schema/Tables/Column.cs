@@ -10,7 +10,8 @@
 	/// <param name="Nullable">Column allows <c>NULL</c> values.</param>
 	/// <param name="Insertable">Flag indicating that column accepts user-provided values for insert operations.</param>
 	/// <param name="Updatable">Flag indicating that column accepts user-provided values for update operations.</param>
-	public sealed record Column(string Name, string? Description, DatabaseType Type, bool Nullable, bool Insertable, bool Updatable)
+	/// <param name="Ordinal">Column ordinal.</param>
+	public sealed record Column(string Name, string? Description, DatabaseType Type, bool Nullable, bool Insertable, bool Updatable, int? Ordinal)
 	{
 		public override string ToString() => Name;
 	}

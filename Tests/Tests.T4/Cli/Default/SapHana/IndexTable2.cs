@@ -22,7 +22,7 @@ namespace Cli.Default.SapHana
 		/// <summary>
 		/// FK_Patient2_IndexTable
 		/// </summary>
-		[Association(CanBeNull = false, ThisKey = nameof(PkField1) + "," + nameof(PkField1), OtherKey = nameof(IndexTable.PkField1) + "," + nameof(PkField1))]
+		[Association(CanBeNull = false, ThisKey = nameof(PkField1) + "," + nameof(PkField2), OtherKey = nameof(IndexTable.PkField1) + "," + nameof(IndexTable.PkField2))]
 		public IndexTable Patient2IndexTable { get; set; } = null!;
 		#endregion
 	}

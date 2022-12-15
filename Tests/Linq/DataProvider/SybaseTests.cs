@@ -356,7 +356,7 @@ namespace Tests.DataProvider
 		{
 			get
 			{
-				yield return new StringTestCase("'\u2000\u2001\u2002\u2003\uabab\u03bctесt", "u&'''\\2000\\2001\\2002\\2003\\abab\\03bctесt'", "Test case 1");
+				yield return new StringTestCase("'\u2000\u2001\u2002\u2003\uabab\u03bctest тест", "u&'''\\2000\\2001\\2002\\2003\\abab\\03bctest тест'", "Test case 1");
 				// this case fails for parameters, because driver terminates parameter value at \0 character
 				//yield return Tuple.Create("\0test", "char(0) + 'test'");
 			}
@@ -595,7 +595,7 @@ namespace Tests.DataProvider
 		}
 
 		[Table]
-		class Issue1707
+		sealed class Issue1707
 		{
 			public static IEqualityComparer<Issue1707> Comparer = ComparerBuilder.GetEqualityComparer<Issue1707>();
 			[Column]
@@ -774,7 +774,7 @@ namespace Tests.DataProvider
 		};
 
 		[Table("LinqDataTypes")]
-		class DataTypes
+		sealed class DataTypes
 		{
 			[Column] public int       ID;
 			[Column] public decimal?  MoneyValue;

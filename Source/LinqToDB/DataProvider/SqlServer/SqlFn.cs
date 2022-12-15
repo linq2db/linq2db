@@ -152,7 +152,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		#region Conversion
 
-		class DataTypeBuilder : Sql.IExtensionCallBuilder
+		sealed class DataTypeBuilder : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
@@ -172,7 +172,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>Returns expression, translated to data_type.</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Extension(ProviderName.SqlServer, "CAST({expression} as {data_type})", ServerSideOnly=true, BuilderType=typeof(DataTypeBuilder))]
-		[return: NotNullIfNotNull("expression")]
+		[return: NotNullIfNotNull(nameof(expression))]
 		public static T Cast<T>([ExprParameter] object? expression, [SqlQueryDependent] SqlType<T> data_type)
 		{
 			throw new InvalidOperationException($"'{nameof(Cast)}' is a server side only function.");
@@ -187,7 +187,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>Returns expression, translated to data_type.</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Extension(ProviderName.SqlServer, "CAST({expression} as {data_type})", ServerSideOnly=true, BuilderType=typeof(DataTypeBuilder))]
-		[return: NotNullIfNotNull("expression")]
+		[return: NotNullIfNotNull(nameof(expression))]
 		public static T Cast<T>([ExprParameter] object? expression, [SqlQueryDependent] Func<SqlType<T>> data_type)
 		{
 			throw new InvalidOperationException($"'{nameof(Cast)}' is a server side only function.");
@@ -201,7 +201,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>Returns expression, translated to data_type.</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Expression(ProviderName.SqlServer, "CAST({0} as {1})", ServerSideOnly=true)]
-		[return: NotNullIfNotNull("expression")]
+		[return: NotNullIfNotNull(nameof(expression))]
 		public static T Cast<T>(object? expression)
 		{
 			throw new InvalidOperationException($"'{nameof(Cast)}' is a server side only function.");
@@ -220,7 +220,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>Returns expression, translated to data_type.</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Extension(ProviderName.SqlServer, "CONVERT({data_type}, {expression})", ServerSideOnly=true, BuilderType=typeof(DataTypeBuilder))]
-		[return: NotNullIfNotNull("expression")]
+		[return: NotNullIfNotNull(nameof(expression))]
 		public static T Convert<T>([SqlQueryDependent] SqlType<T> data_type, [ExprParameter] object? expression)
 		{
 			throw new InvalidOperationException($"'{nameof(Convert)}' is a server side only function.");
@@ -235,7 +235,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>Returns expression, translated to data_type.</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Extension(ProviderName.SqlServer, "CONVERT({data_type}, {expression})", ServerSideOnly=true, BuilderType=typeof(DataTypeBuilder))]
-		[return: NotNullIfNotNull("expression")]
+		[return: NotNullIfNotNull(nameof(expression))]
 		public static T Convert<T>([SqlQueryDependent] Func<SqlType<T>> data_type, [ExprParameter] object? expression)
 		{
 			throw new InvalidOperationException($"'{nameof(Convert)}' is a server side only function.");
@@ -249,7 +249,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>Returns expression, translated to data_type.</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Expression(ProviderName.SqlServer, "CONVERT({1}, {0})", ServerSideOnly=true)]
-		[return: NotNullIfNotNull("expression")]
+		[return: NotNullIfNotNull(nameof(expression))]
 		public static T Convert<T>([ExprParameter] object? expression)
 		{
 			throw new InvalidOperationException($"'{nameof(Convert)}' is a server side only function.");
@@ -264,7 +264,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>Returns expression, translated to data_type.</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Extension(ProviderName.SqlServer, "CONVERT({data_type}, {expression}, {style})", ServerSideOnly=true, BuilderType=typeof(DataTypeBuilder))]
-		[return: NotNullIfNotNull("expression")]
+		[return: NotNullIfNotNull(nameof(expression))]
 		public static T Convert<T>([SqlQueryDependent] SqlType<T> data_type, [ExprParameter] object? expression, [SqlQueryDependent, ExprParameter] int style)
 		{
 			throw new InvalidOperationException($"'{nameof(Convert)}' is a server side only function.");
@@ -279,7 +279,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>Returns expression, translated to data_type.</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Extension(ProviderName.SqlServer, "CONVERT({data_type}, {expression}, {style})", ServerSideOnly=true, BuilderType=typeof(DataTypeBuilder))]
-		[return: NotNullIfNotNull("expression")]
+		[return: NotNullIfNotNull(nameof(expression))]
 		public static T Convert<T>([SqlQueryDependent] Func<SqlType<T>> data_type, [ExprParameter] object? expression, [SqlQueryDependent, ExprParameter] int style)
 		{
 			throw new InvalidOperationException($"'{nameof(Convert)}' is a server side only function.");
@@ -293,7 +293,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>Returns expression, translated to data_type.</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Expression(ProviderName.SqlServer, "CONVERT({2}, {0}, {1})", ServerSideOnly=true)]
-		[return: NotNullIfNotNull("expression")]
+		[return: NotNullIfNotNull(nameof(expression))]
 		public static T Convert<T>([ExprParameter] object? expression, [SqlQueryDependent, ExprParameter] int style)
 		{
 			throw new InvalidOperationException($"'{nameof(Convert)}' is a server side only function.");
@@ -401,7 +401,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>Returns expression, translated to data_type.</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Extension(ProviderName.SqlServer, "TRY_CAST({expression} as {data_type})", ServerSideOnly=true, BuilderType=typeof(DataTypeBuilder))]
-		[return: NotNullIfNotNull("expression")]
+		[return: NotNullIfNotNull(nameof(expression))]
 		public static T TryCast<T>([ExprParameter] object? expression, [SqlQueryDependent] SqlType<T> data_type)
 		{
 			throw new InvalidOperationException($"'{nameof(TryCast)}' is a server side only function.");
@@ -416,7 +416,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>Returns expression, translated to data_type.</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Extension(ProviderName.SqlServer, "TRY_CAST({expression} as {data_type})", ServerSideOnly=true, BuilderType=typeof(DataTypeBuilder))]
-		[return: NotNullIfNotNull("expression")]
+		[return: NotNullIfNotNull(nameof(expression))]
 		public static T TryCast<T>([ExprParameter] object? expression, [SqlQueryDependent] Func<SqlType<T>> data_type)
 		{
 			throw new InvalidOperationException($"'{nameof(TryCast)}' is a server side only function.");
@@ -430,7 +430,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>Returns expression, translated to data_type.</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Expression(ProviderName.SqlServer, "TRY_CAST({0} as {1})", ServerSideOnly=true)]
-		[return: NotNullIfNotNull("expression")]
+		[return: NotNullIfNotNull(nameof(expression))]
 		public static T TryCast<T>([ExprParameter] object? expression)
 		{
 			throw new InvalidOperationException($"'{nameof(TryCast)}' is a server side only function.");
@@ -449,7 +449,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>Returns expression, translated to data_type.</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Extension(ProviderName.SqlServer, "TRY_CONVERT({data_type}, {expression})", ServerSideOnly=true, BuilderType=typeof(DataTypeBuilder))]
-		[return: NotNullIfNotNull("expression")]
+		[return: NotNullIfNotNull(nameof(expression))]
 		public static T TryConvert<T>([SqlQueryDependent] SqlType<T> data_type, [ExprParameter] object? expression)
 		{
 			throw new InvalidOperationException($"'{nameof(TryConvert)}' is a server side only function.");
@@ -464,7 +464,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>Returns expression, translated to data_type.</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Extension(ProviderName.SqlServer, "TRY_CONVERT({data_type}, {expression})", ServerSideOnly=true, BuilderType=typeof(DataTypeBuilder))]
-		[return: NotNullIfNotNull("expression")]
+		[return: NotNullIfNotNull(nameof(expression))]
 		public static T TryConvert<T>([SqlQueryDependent] Func<SqlType<T>> data_type, [ExprParameter] object? expression)
 		{
 			throw new InvalidOperationException($"'{nameof(TryConvert)}' is a server side only function.");
@@ -478,7 +478,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>Returns expression, translated to data_type.</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Expression(ProviderName.SqlServer, "TRY_CONVERT({1}, {0})", ServerSideOnly=true)]
-		[return: NotNullIfNotNull("expression")]
+		[return: NotNullIfNotNull(nameof(expression))]
 		public static T TryConvert<T>([ExprParameter] object? expression)
 		{
 			throw new InvalidOperationException($"'{nameof(TryConvert)}' is a server side only function.");
@@ -493,7 +493,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>Returns expression, translated to data_type.</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Extension(ProviderName.SqlServer, "TRY_CONVERT({data_type}, {expression}, {style})", ServerSideOnly=true, BuilderType=typeof(DataTypeBuilder))]
-		[return: NotNullIfNotNull("expression")]
+		[return: NotNullIfNotNull(nameof(expression))]
 		public static T TryConvert<T>([SqlQueryDependent] SqlType<T> data_type, [ExprParameter] object? expression, [SqlQueryDependent, ExprParameter] int style)
 		{
 			throw new InvalidOperationException($"'{nameof(TryConvert)}' is a server side only function.");
@@ -508,7 +508,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>Returns expression, translated to data_type.</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Extension(ProviderName.SqlServer, "TRY_CONVERT({data_type}, {expression}, {style})", ServerSideOnly=true, BuilderType=typeof(DataTypeBuilder))]
-		[return: NotNullIfNotNull("expression")]
+		[return: NotNullIfNotNull(nameof(expression))]
 		public static T TryConvert<T>([SqlQueryDependent] Func<SqlType<T>> data_type, [ExprParameter] object? expression, [SqlQueryDependent, ExprParameter] int style)
 		{
 			throw new InvalidOperationException($"'{nameof(TryConvert)}' is a server side only function.");
@@ -522,7 +522,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>Returns expression, translated to data_type.</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Expression(ProviderName.SqlServer, "TRY_CONVERT({2}, {0}, {1})", ServerSideOnly=true)]
-		[return: NotNullIfNotNull("expression")]
+		[return: NotNullIfNotNull(nameof(expression))]
 		public static T TryConvert<T>([ExprParameter] object? expression, [SqlQueryDependent, ExprParameter] int style)
 		{
 			throw new InvalidOperationException($"'{nameof(TryConvert)}' is a server side only function.");
@@ -541,7 +541,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>Returns the result of the expression, translated to the requested data type.</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Extension(ProviderName.SqlServer, "TRY_PARSE({string_value} as {data_type})", ServerSideOnly=true, BuilderType=typeof(DataTypeBuilder))]
-		[return: NotNullIfNotNull("string_value")]
+		[return: NotNullIfNotNull(nameof(string_value))]
 		public static T TryParse<T>([ExprParameter] string string_value, [SqlQueryDependent] SqlType<T> data_type)
 		{
 			throw new InvalidOperationException($"'{nameof(TryParse)}' is a server side only function.");
@@ -556,7 +556,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>Returns the result of the expression, translated to the requested data type.</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Extension(ProviderName.SqlServer, "TRY_PARSE({string_value} as {data_type})", ServerSideOnly=true, BuilderType=typeof(DataTypeBuilder))]
-		[return: NotNullIfNotNull("string_value")]
+		[return: NotNullIfNotNull(nameof(string_value))]
 		public static T TryParse<T>([ExprParameter] string string_value, [SqlQueryDependent] Func<SqlType<T>> data_type)
 		{
 			throw new InvalidOperationException($"'{nameof(TryParse)}' is a server side only function.");
@@ -570,7 +570,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>Returns the result of the expression, translated to the requested data type.</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Expression(ProviderName.SqlServer, "TRY_PARSE({0} as {1})", ServerSideOnly=true)]
-		[return: NotNullIfNotNull("string_value")]
+		[return: NotNullIfNotNull(nameof(string_value))]
 		public static T TryParse<T>([ExprParameter] string string_value)
 		{
 			throw new InvalidOperationException($"'{nameof(TryParse)}' is a server side only function.");
@@ -586,7 +586,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>Returns the result of the expression, translated to the requested data type.</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Extension(ProviderName.SqlServer, "TRY_PARSE({string_value} as {data_type} USING {culture})", ServerSideOnly=true, BuilderType=typeof(DataTypeBuilder))]
-		[return: NotNullIfNotNull("string_value")]
+		[return: NotNullIfNotNull(nameof(string_value))]
 		public static T TryParse<T>([ExprParameter] string string_value, [SqlQueryDependent] SqlType<T> data_type, [ExprParameter, SqlQueryDependent] string culture)
 		{
 			throw new InvalidOperationException($"'{nameof(TryParse)}' is a server side only function.");
@@ -602,7 +602,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>Returns the result of the expression, translated to the requested data type.</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Extension(ProviderName.SqlServer, "TRY_PARSE({string_value} as {data_type} USING {culture})", ServerSideOnly=true, BuilderType=typeof(DataTypeBuilder))]
-		[return: NotNullIfNotNull("string_value")]
+		[return: NotNullIfNotNull(nameof(string_value))]
 		public static T TryParse<T>([ExprParameter] string string_value, [SqlQueryDependent] Func<SqlType<T>> data_type, [ExprParameter, SqlQueryDependent] string culture)
 		{
 			throw new InvalidOperationException($"'{nameof(TryParse)}' is a server side only function.");
@@ -617,7 +617,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>Returns the result of the expression, translated to the requested data type.</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Expression(ProviderName.SqlServer, "TRY_PARSE({0} as {2} USING {1})", ServerSideOnly=true)]
-		[return: NotNullIfNotNull("string_value")]
+		[return: NotNullIfNotNull(nameof(string_value))]
 		public static T TryParse<T>([ExprParameter] string string_value, [ExprParameter, SqlQueryDependent] string culture)
 		{
 			throw new InvalidOperationException($"'{nameof(TryParse)}' is a server side only function.");
@@ -658,7 +658,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Function(ProviderName.SqlServer, "DATALENGTH", 0, ServerSideOnly=true)]
 		[CLSCompliant(false)]
-		[return: NotNullIfNotNull("expression")]
+		[return: NotNullIfNotNull(nameof(expression))]
 		public static int? DataLength<T>(T expression)
 		{
 			throw new InvalidOperationException($"'{nameof(DataLength)}' is a server side only function.");
@@ -693,7 +693,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Function(ProviderName.SqlServer, "DATALENGTH", 0, ServerSideOnly=true)]
 		[CLSCompliant(false)]
-		[return: NotNullIfNotNull("expression")]
+		[return: NotNullIfNotNull(nameof(expression))]
 		public static long? DataLengthBig<T>(T expression)
 		{
 			throw new InvalidOperationException($"'{nameof(DataLengthBig)}' is a server side only function.");
@@ -813,7 +813,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			Nanosecond,
 		}
 
-		class DatePartBuilder : Sql.IExtensionCallBuilder
+		sealed class DatePartBuilder : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
@@ -835,7 +835,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>varchar</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Extension(ProviderName.SqlServer, "DATEADD({datepart}, {number}, {date})", ServerSideOnly=true, BuilderType=typeof(DatePartBuilder))]
-		[return: NotNullIfNotNull("date")]
+		[return: NotNullIfNotNull(nameof(date))]
 		public static DateTime? DateAdd([SqlQueryDependent] DateParts datepart, [ExprParameter] int? number, [ExprParameter] string? date)
 		{
 			throw new InvalidOperationException($"'{nameof(DateAdd)}' is a server side only function.");
@@ -852,7 +852,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>varchar</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Extension(ProviderName.SqlServer, "DATEADD({datepart}, {number}, {date})", ServerSideOnly=true, BuilderType=typeof(DatePartBuilder))]
-		[return: NotNullIfNotNull("date")]
+		[return: NotNullIfNotNull(nameof(date))]
 		public static DateTime? DateAdd([SqlQueryDependent] DateParts datepart, [ExprParameter] int? number, [ExprParameter] DateTime? date)
 		{
 			throw new InvalidOperationException($"'{nameof(DateAdd)}' is a server side only function.");
@@ -869,7 +869,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>varchar</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Extension(ProviderName.SqlServer, "DATEADD({datepart}, {number}, {date})", ServerSideOnly=true, BuilderType=typeof(DatePartBuilder))]
-		[return: NotNullIfNotNull("date")]
+		[return: NotNullIfNotNull(nameof(date))]
 		public static DateTimeOffset? DateAdd([SqlQueryDependent] DateParts datepart, [ExprParameter] int? number, [ExprParameter] DateTimeOffset? date)
 		{
 			throw new InvalidOperationException($"'{nameof(DateAdd)}' is a server side only function.");
@@ -886,7 +886,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>varchar</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Extension(ProviderName.SqlServer, "DATEADD({datepart}, {number}, {date})", ServerSideOnly=true, BuilderType=typeof(DatePartBuilder))]
-		[return: NotNullIfNotNull("date")]
+		[return: NotNullIfNotNull(nameof(date))]
 		public static TimeSpan? DateAdd([SqlQueryDependent] DateParts datepart, [ExprParameter] int? number, [ExprParameter] TimeSpan? date)
 		{
 			throw new InvalidOperationException($"'{nameof(DateAdd)}' is a server side only function.");
@@ -1205,7 +1205,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>nvarchar</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Extension(ProviderName.SqlServer, "DATENAME({datepart}, {date})", ServerSideOnly=true, BuilderType=typeof(DatePartBuilder))]
-		[return: NotNullIfNotNull("date")]
+		[return: NotNullIfNotNull(nameof(date))]
 		public static string? DateName([SqlQueryDependent] DateParts datepart, [ExprParameter] string? date)
 		{
 			throw new InvalidOperationException($"'{nameof(DateName)}' is a server side only function.");
@@ -1219,7 +1219,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>nvarchar</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Extension(ProviderName.SqlServer, "DATENAME({datepart}, {date})", ServerSideOnly=true, BuilderType=typeof(DatePartBuilder))]
-		[return: NotNullIfNotNull("date")]
+		[return: NotNullIfNotNull(nameof(date))]
 		public static string? DateName([SqlQueryDependent] DateParts datepart, [ExprParameter] DateTime? date)
 		{
 			throw new InvalidOperationException($"'{nameof(DateName)}' is a server side only function.");
@@ -1233,7 +1233,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>nvarchar</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Extension(ProviderName.SqlServer, "DATENAME({datepart}, {date})", ServerSideOnly=true, BuilderType=typeof(DatePartBuilder))]
-		[return: NotNullIfNotNull("date")]
+		[return: NotNullIfNotNull(nameof(date))]
 		public static string? DateName([SqlQueryDependent] DateParts datepart, [ExprParameter] DateTimeOffset? date)
 		{
 			throw new InvalidOperationException($"'{nameof(DateName)}' is a server side only function.");
@@ -1247,7 +1247,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>nvarchar</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Extension(ProviderName.SqlServer, "DATENAME({datepart}, {date})", ServerSideOnly=true, BuilderType=typeof(DatePartBuilder))]
-		[return: NotNullIfNotNull("date")]
+		[return: NotNullIfNotNull(nameof(date))]
 		public static string? DateName([SqlQueryDependent] DateParts datepart, [ExprParameter] TimeSpan? date)
 		{
 			throw new InvalidOperationException($"'{nameof(DateName)}' is a server side only function.");
@@ -1265,7 +1265,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>int</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Extension(ProviderName.SqlServer, "DATEPART({datepart}, {date})", ServerSideOnly=true, BuilderType=typeof(DatePartBuilder))]
-		[return: NotNullIfNotNull("date")]
+		[return: NotNullIfNotNull(nameof(date))]
 		public static int? DatePart([SqlQueryDependent] DateParts datepart, [ExprParameter] string? date)
 		{
 			throw new InvalidOperationException($"'{nameof(DatePart)}' is a server side only function.");
@@ -1279,7 +1279,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>int</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Extension(ProviderName.SqlServer, "DATEPART({datepart}, {date})", ServerSideOnly=true, BuilderType=typeof(DatePartBuilder))]
-		[return: NotNullIfNotNull("date")]
+		[return: NotNullIfNotNull(nameof(date))]
 		public static int? DatePart([SqlQueryDependent] DateParts datepart, [ExprParameter] DateTime? date)
 		{
 			throw new InvalidOperationException($"'{nameof(DatePart)}' is a server side only function.");
@@ -1293,7 +1293,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>int</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Extension(ProviderName.SqlServer, "DATEPART({datepart}, {date})", ServerSideOnly=true, BuilderType=typeof(DatePartBuilder))]
-		[return: NotNullIfNotNull("date")]
+		[return: NotNullIfNotNull(nameof(date))]
 		public static int? DatePart([SqlQueryDependent] DateParts datepart, [ExprParameter] DateTimeOffset? date)
 		{
 			throw new InvalidOperationException($"'{nameof(DatePart)}' is a server side only function.");
@@ -1307,7 +1307,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>int</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Extension(ProviderName.SqlServer, "DATEPART({datepart}, {date})", ServerSideOnly=true, BuilderType=typeof(DatePartBuilder))]
-		[return: NotNullIfNotNull("date")]
+		[return: NotNullIfNotNull(nameof(date))]
 		public static int? DatePart([SqlQueryDependent] DateParts datepart, [ExprParameter] TimeSpan? date)
 		{
 			throw new InvalidOperationException($"'{nameof(DatePart)}' is a server side only function.");
@@ -1324,7 +1324,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>int</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Function(ProviderName.SqlServer, "DAY", ServerSideOnly=true)]
-		[return: NotNullIfNotNull("date")]
+		[return: NotNullIfNotNull(nameof(date))]
 		public static int? Day(string? date)
 		{
 			throw new InvalidOperationException($"'{nameof(Day)}' is a server side only function.");
@@ -1337,7 +1337,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>int</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Function(ProviderName.SqlServer, "DAY", ServerSideOnly=true)]
-		[return: NotNullIfNotNull("date")]
+		[return: NotNullIfNotNull(nameof(date))]
 		public static int? Day(DateTime? date)
 		{
 			throw new InvalidOperationException($"'{nameof(Day)}' is a server side only function.");
@@ -1350,7 +1350,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>int</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Function(ProviderName.SqlServer, "DAY", ServerSideOnly=true)]
-		[return: NotNullIfNotNull("date")]
+		[return: NotNullIfNotNull(nameof(date))]
 		public static int? Day(DateTimeOffset? date)
 		{
 			throw new InvalidOperationException($"'{nameof(Day)}' is a server side only function.");
@@ -1368,7 +1368,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>date</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Function(ProviderName.SqlServer, "EOMONTH", ServerSideOnly=true)]
-		[return: NotNullIfNotNull("start_date")]
+		[return: NotNullIfNotNull(nameof(start_date))]
 		public static DateTime? EndOfMonth(string? start_date)
 		{
 			throw new InvalidOperationException($"'{nameof(EndOfMonth)}' is a server side only function.");
@@ -1383,7 +1383,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>date</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Function(ProviderName.SqlServer, "EOMONTH", ServerSideOnly=true)]
-		[return: NotNullIfNotNull("start_date")]
+		[return: NotNullIfNotNull(nameof(start_date))]
 		public static DateTime? EndOfMonth(string? start_date, int? month_to_add)
 		{
 			throw new InvalidOperationException($"'{nameof(EndOfMonth)}' is a server side only function.");
@@ -1397,7 +1397,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>date</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Function(ProviderName.SqlServer, "EOMONTH", ServerSideOnly=true)]
-		[return: NotNullIfNotNull("start_date")]
+		[return: NotNullIfNotNull(nameof(start_date))]
 		public static DateTime? EndOfMonth(DateTime? start_date)
 		{
 			throw new InvalidOperationException($"'{nameof(EndOfMonth)}' is a server side only function.");
@@ -1412,7 +1412,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>date</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Function(ProviderName.SqlServer, "EOMONTH", ServerSideOnly=true)]
-		[return: NotNullIfNotNull("start_date")]
+		[return: NotNullIfNotNull(nameof(start_date))]
 		public static DateTime? EndOfMonth(DateTime? start_date, int? month_to_add)
 		{
 			throw new InvalidOperationException($"'{nameof(EndOfMonth)}' is a server side only function.");
@@ -1515,7 +1515,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>int</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Function(ProviderName.SqlServer, "MONTH", ServerSideOnly=true)]
-		[return: NotNullIfNotNull("date")]
+		[return: NotNullIfNotNull(nameof(date))]
 		public static int? Month(string? date)
 		{
 			throw new InvalidOperationException($"'{nameof(Month)}' is a server side only function.");
@@ -1528,7 +1528,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>int</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Function(ProviderName.SqlServer, "MONTH", ServerSideOnly=true)]
-		[return: NotNullIfNotNull("date")]
+		[return: NotNullIfNotNull(nameof(date))]
 		public static int? Month(DateTime? date)
 		{
 			throw new InvalidOperationException($"'{nameof(Month)}' is a server side only function.");
@@ -1541,7 +1541,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>int</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Function(ProviderName.SqlServer, "MONTH", ServerSideOnly=true)]
-		[return: NotNullIfNotNull("date")]
+		[return: NotNullIfNotNull(nameof(date))]
 		public static int? Month(DateTimeOffset? date)
 		{
 			throw new InvalidOperationException($"'{nameof(Month)}' is a server side only function.");
@@ -1558,7 +1558,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>int</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Function(ProviderName.SqlServer, "YEAR", ServerSideOnly=true)]
-		[return: NotNullIfNotNull("date")]
+		[return: NotNullIfNotNull(nameof(date))]
 		public static int? Year(string? date)
 		{
 			throw new InvalidOperationException($"'{nameof(Year)}' is a server side only function.");
@@ -1571,7 +1571,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>int</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Function(ProviderName.SqlServer, "YEAR", ServerSideOnly=true)]
-		[return: NotNullIfNotNull("date")]
+		[return: NotNullIfNotNull(nameof(date))]
 		public static int? Year(DateTime? date)
 		{
 			throw new InvalidOperationException($"'{nameof(Year)}' is a server side only function.");
@@ -1584,7 +1584,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>int</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Function(ProviderName.SqlServer, "YEAR", ServerSideOnly=true)]
-		[return: NotNullIfNotNull("date")]
+		[return: NotNullIfNotNull(nameof(date))]
 		public static int? Year(DateTimeOffset? date)
 		{
 			throw new InvalidOperationException($"'{nameof(Year)}' is a server side only function.");
@@ -1601,7 +1601,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>int</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Function(ProviderName.SqlServer, "SWITCHOFFSET", ServerSideOnly=true)]
-		[return: NotNullIfNotNull("datetimeoffset_expression")]
+		[return: NotNullIfNotNull(nameof(datetimeoffset_expression))]
 		public static DateTimeOffset? SwitchOffset(DateTimeOffset? datetimeoffset_expression, string timezoneoffset_expression)
 		{
 			throw new InvalidOperationException($"'{nameof(SwitchOffset)}' is a server side only function.");
@@ -1614,7 +1614,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>int</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Function(ProviderName.SqlServer, "TODATETIMEOFFSET", ServerSideOnly=true)]
-		[return: NotNullIfNotNull("datetime_expression")]
+		[return: NotNullIfNotNull(nameof(datetime_expression))]
 		public static DateTimeOffset? ToDatetimeOffset(DateTimeOffset? datetime_expression, string timezoneoffset_expression)
 		{
 			throw new InvalidOperationException($"'{nameof(ToDatetimeOffset)}' is a server side only function.");
@@ -1634,7 +1634,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>Returns 1 if the string contains valid JSON; otherwise, returns 0. Returns null if expression is null.</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Function(ProviderName.SqlServer, "ISJSON", ServerSideOnly = true)]
-		[return: NotNullIfNotNull("expression")]
+		[return: NotNullIfNotNull(nameof(expression))]
 		public static bool? IsJson(string? expression)
 		{
 			throw new InvalidOperationException($"'{nameof(IsJson)}' is a server side only function.");
@@ -1680,7 +1680,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>Returns the updated value of expression as properly formatted JSON text.</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Function(ProviderName.SqlServer, "JSON_MODIFY", ServerSideOnly=true)]
-		[return: NotNullIfNotNull("expression")]
+		[return: NotNullIfNotNull(nameof(expression))]
 		public static string? JsonModify(string? expression, string path, string newValue)
 		{
 			throw new InvalidOperationException($"'{nameof(JsonModify)}' is a server side only function.");
@@ -1778,7 +1778,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>Returns the same type as numeric_expression.</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Function(ProviderName.SqlServer, "ABS", ServerSideOnly=true, IgnoreGenericParameters=true)]
-		[return: NotNullIfNotNull("numeric_expression")]
+		[return: NotNullIfNotNull(nameof(numeric_expression))]
 		public static T Abs<T>(T numeric_expression)
 		{
 			throw new InvalidOperationException($"'{nameof(Abs)}' is a server side only function.");
@@ -1794,7 +1794,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>float</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Function(ProviderName.SqlServer, "ACOS", ServerSideOnly=true, IgnoreGenericParameters=true)]
-		[return: NotNullIfNotNull("float_expression")]
+		[return: NotNullIfNotNull(nameof(float_expression))]
 		public static T Acos<T>(T float_expression)
 		{
 			throw new InvalidOperationException($"'{nameof(Acos)}' is a server side only function.");
@@ -1810,7 +1810,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>float</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Function(ProviderName.SqlServer, "ASIN", ServerSideOnly=true, IgnoreGenericParameters=true)]
-		[return: NotNullIfNotNull("float_expression")]
+		[return: NotNullIfNotNull(nameof(float_expression))]
 		public static T Asin<T>(T float_expression)
 		{
 			throw new InvalidOperationException($"'{nameof(Asin)}' is a server side only function.");
@@ -1825,7 +1825,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>float</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Function(ProviderName.SqlServer, "ATAN", ServerSideOnly=true, IgnoreGenericParameters=true)]
-		[return: NotNullIfNotNull("float_expression")]
+		[return: NotNullIfNotNull(nameof(float_expression))]
 		public static T Atan<T>(T float_expression)
 		{
 			throw new InvalidOperationException($"'{nameof(Atan)}' is a server side only function.");
@@ -1841,7 +1841,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>float</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Function(ProviderName.SqlServer, "ATN2", ServerSideOnly=true, IgnoreGenericParameters=true)]
-		[return: NotNullIfNotNull("float_expression")]
+		[return: NotNullIfNotNull(nameof(float_expression))]
 		public static T Atn2<T>(T float_expression, T float_expression2)
 		{
 			throw new InvalidOperationException($"'{nameof(Atn2)}' is a server side only function.");
@@ -1856,7 +1856,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>Return values have the same type as <c>numeric_expression</c>.</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Function(ProviderName.SqlServer, "CEILING", ServerSideOnly=true, IgnoreGenericParameters=true)]
-		[return: NotNullIfNotNull("numeric_expression")]
+		[return: NotNullIfNotNull(nameof(numeric_expression))]
 		public static T Ceiling<T>(T numeric_expression)
 		{
 			throw new InvalidOperationException($"'{nameof(Ceiling)}' is a server side only function.");
@@ -1871,7 +1871,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>float</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Function(ProviderName.SqlServer, "COS", ServerSideOnly=true, IgnoreGenericParameters=true)]
-		[return: NotNullIfNotNull("float_expression")]
+		[return: NotNullIfNotNull(nameof(float_expression))]
 		public static T Cos<T>(T float_expression)
 		{
 			throw new InvalidOperationException($"'{nameof(Cos)}' is a server side only function.");
@@ -1886,7 +1886,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>float</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Function(ProviderName.SqlServer, "COT", ServerSideOnly=true, IgnoreGenericParameters=true)]
-		[return: NotNullIfNotNull("float_expression")]
+		[return: NotNullIfNotNull(nameof(float_expression))]
 		public static T Cot<T>(T float_expression)
 		{
 			throw new InvalidOperationException($"'{nameof(Cot)}' is a server side only function.");
@@ -1901,7 +1901,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>Return values have the same type as <c>numeric_expression</c>.</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Function(ProviderName.SqlServer, "DEGREES", ServerSideOnly=true, IgnoreGenericParameters=true)]
-		[return: NotNullIfNotNull("numeric_expression")]
+		[return: NotNullIfNotNull(nameof(numeric_expression))]
 		public static T Degrees<T>(T numeric_expression)
 		{
 			throw new InvalidOperationException($"'{nameof(Degrees)}' is a server side only function.");
@@ -1916,7 +1916,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>float</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Function(ProviderName.SqlServer, "EXP", ServerSideOnly=true, IgnoreGenericParameters=true)]
-		[return: NotNullIfNotNull("float_expression")]
+		[return: NotNullIfNotNull(nameof(float_expression))]
 		public static T Exp<T>(T float_expression)
 		{
 			throw new InvalidOperationException($"'{nameof(Exp)}' is a server side only function.");
@@ -1931,7 +1931,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>Return values have the same type as <c>numeric_expression</c>.</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Function(ProviderName.SqlServer, "FLOOR", ServerSideOnly=true, IgnoreGenericParameters=true)]
-		[return: NotNullIfNotNull("numeric_expression")]
+		[return: NotNullIfNotNull(nameof(numeric_expression))]
 		public static T Floor<T>(T numeric_expression)
 		{
 			throw new InvalidOperationException($"'{nameof(Floor)}' is a server side only function.");
@@ -1946,7 +1946,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>float</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Function(ProviderName.SqlServer, "LOG", ServerSideOnly=true, IgnoreGenericParameters=true)]
-		[return: NotNullIfNotNull("float_expression")]
+		[return: NotNullIfNotNull(nameof(float_expression))]
 		public static T Log<T>(T float_expression)
 		{
 			throw new InvalidOperationException($"'{nameof(Log)}' is a server side only function.");
@@ -1962,7 +1962,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>float</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Function(ProviderName.SqlServer, "LOG", ServerSideOnly=true, IgnoreGenericParameters=true)]
-		[return: NotNullIfNotNull("float_expression")]
+		[return: NotNullIfNotNull(nameof(float_expression))]
 		public static T Log<T>(T float_expression, int @base)
 		{
 			throw new InvalidOperationException($"'{nameof(Log)}' is a server side only function.");
@@ -1977,7 +1977,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>float</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Function(ProviderName.SqlServer, "LOG", ServerSideOnly=true, IgnoreGenericParameters=true)]
-		[return: NotNullIfNotNull("float_expression")]
+		[return: NotNullIfNotNull(nameof(float_expression))]
 		public static T Log10<T>(T float_expression)
 		{
 			throw new InvalidOperationException($"'{nameof(Log10)}' is a server side only function.");
@@ -2006,7 +2006,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>float</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Function(ProviderName.SqlServer, "POWER", ServerSideOnly=true, IgnoreGenericParameters=true)]
-		[return: NotNullIfNotNull("float_expression")]
+		[return: NotNullIfNotNull(nameof(float_expression))]
 		public static T Power<T>(T float_expression, T y)
 		{
 			throw new InvalidOperationException($"'{nameof(Power)}' is a server side only function.");
@@ -2021,7 +2021,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>Return values have the same type as <c>numeric_expression</c>.</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Function(ProviderName.SqlServer, "SIGN", ServerSideOnly=true, IgnoreGenericParameters=true)]
-		[return: NotNullIfNotNull("numeric_expression")]
+		[return: NotNullIfNotNull(nameof(numeric_expression))]
 		public static T Sign<T>(T numeric_expression)
 		{
 			throw new InvalidOperationException($"'{nameof(Sign)}' is a server side only function.");
@@ -2068,7 +2068,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>Return values have the same type as <c>numeric_expression</c>.</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Function(ProviderName.SqlServer, "ROUND", ServerSideOnly=true, IgnoreGenericParameters=true)]
-		[return: NotNullIfNotNull("numeric_expression")]
+		[return: NotNullIfNotNull(nameof(numeric_expression))]
 		public static T Round<T>(T numeric_expression, int length, int function)
 		{
 			throw new InvalidOperationException($"'{nameof(Round)}' is a server side only function.");
@@ -2088,7 +2088,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>Return values have the same type as <c>numeric_expression</c>.</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Function(ProviderName.SqlServer, "ROUND", ServerSideOnly=true, IgnoreGenericParameters=true)]
-		[return: NotNullIfNotNull("numeric_expression")]
+		[return: NotNullIfNotNull(nameof(numeric_expression))]
 		public static T Round<T>(T numeric_expression, int length)
 		{
 			throw new InvalidOperationException($"'{nameof(Round)}' is a server side only function.");
@@ -2103,7 +2103,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>Return values have the same type as <c>numeric_expression</c>.</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Function(ProviderName.SqlServer, "RADIANS", ServerSideOnly=true, IgnoreGenericParameters=true)]
-		[return: NotNullIfNotNull("numeric_expression")]
+		[return: NotNullIfNotNull(nameof(numeric_expression))]
 		public static T Radians<T>(T numeric_expression)
 		{
 			throw new InvalidOperationException($"'{nameof(Radians)}' is a server side only function.");
@@ -2118,7 +2118,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>float</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Function(ProviderName.SqlServer, "SIN", ServerSideOnly=true, IgnoreGenericParameters=true)]
-		[return: NotNullIfNotNull("float_expression")]
+		[return: NotNullIfNotNull(nameof(float_expression))]
 		public static T Sin<T>(T float_expression, T y)
 		{
 			throw new InvalidOperationException($"'{nameof(Sin)}' is a server side only function.");
@@ -2133,7 +2133,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>float</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Function(ProviderName.SqlServer, "SQRT", ServerSideOnly=true, IgnoreGenericParameters=true)]
-		[return: NotNullIfNotNull("float_expression")]
+		[return: NotNullIfNotNull(nameof(float_expression))]
 		public static T Sqrt<T>(T float_expression)
 		{
 			throw new InvalidOperationException($"'{nameof(Sqrt)}' is a server side only function.");
@@ -2148,7 +2148,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>float</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Function(ProviderName.SqlServer, "SQUARE", ServerSideOnly=true, IgnoreGenericParameters=true)]
-		[return: NotNullIfNotNull("float_expression")]
+		[return: NotNullIfNotNull(nameof(float_expression))]
 		public static T Square<T>(T float_expression)
 		{
 			throw new InvalidOperationException($"'{nameof(Square)}' is a server side only function.");
@@ -2163,7 +2163,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>float</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Function(ProviderName.SqlServer, "TAN", ServerSideOnly=true, IgnoreGenericParameters=true)]
-		[return: NotNullIfNotNull("float_expression")]
+		[return: NotNullIfNotNull(nameof(float_expression))]
 		public static T Tan<T>(T float_expression)
 		{
 			throw new InvalidOperationException($"'{nameof(Tan)}' is a server side only function.");
@@ -2585,7 +2585,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			throw new InvalidOperationException($"'{nameof(IndexProperty)}' is a server side only function.");
 		}
 
-		class NextValueForBuilder : Sql.IExtensionCallBuilder
+		sealed class NextValueForBuilder : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
@@ -3693,7 +3693,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			throw new InvalidOperationException($"'{nameof(Upper)}' is a server side only function.");
 		}
 
-		class CollateBuilder : Sql.IExtensionCallBuilder
+		sealed class CollateBuilder : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
@@ -4225,7 +4225,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		#endregion
 
-		class PropertyBuilder<T> : Sql.IExtensionCallBuilder
+		sealed class PropertyBuilder<T> : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{

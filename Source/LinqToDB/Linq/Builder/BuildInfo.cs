@@ -4,7 +4,7 @@ namespace LinqToDB.Linq.Builder
 {
 	using SqlQuery;
 
-	class BuildInfo
+	sealed class BuildInfo
 	{
 		public BuildInfo(IBuildContext? parent, Expression expression, SelectQuery selectQuery)
 		{

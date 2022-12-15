@@ -6,7 +6,7 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
-	class DefaultIfEmptyBuilder : MethodCallBuilder
+	sealed class DefaultIfEmptyBuilder : MethodCallBuilder
 	{
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
@@ -30,7 +30,7 @@ namespace LinqToDB.Linq.Builder
 			return new DefaultIfEmptyContext(buildInfo.Parent, sequence, defaultValue);
 		}
 
-		public class DefaultIfEmptyContext : SequenceContextBase
+		public sealed class DefaultIfEmptyContext : SequenceContextBase
 		{
 			public DefaultIfEmptyContext(IBuildContext? parent, IBuildContext sequence, Expression? defaultValue)
 				: base(parent, sequence, null)
@@ -114,7 +114,23 @@ namespace LinqToDB.Linq.Builder
 			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 			{
 				expression = SequenceHelper.CorrectExpression(expression, this, Sequence);
-				return Sequence.ConvertToIndex(expression, level, flags);
+				return ForceNullability(Sequence.ConvertToIndex(expression, level, flags));
+			}
+
+			private SqlInfo[] ForceNullability(SqlInfo[] sql)
+			{
+				if (Disabled || Builder.DisableDefaultIfEmpty)
+					return sql;
+
+				// force nullability
+				for (var i = 0; i < sql.Length; i++)
+				{
+					var item = sql[i];
+					if (!item.Sql.CanBeNull)
+						sql[i] = item.WithSql(new SqlExpression(item.Sql.SystemType, "{0}", item.Sql.Precedence, item.Sql) { CanBeNull = true });
+				}
+
+				return sql;
 			}
 
 			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)

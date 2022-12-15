@@ -858,7 +858,7 @@ namespace LinqToDB.Data
 		public static IReadOnlyDictionary<string, IDataProvider> GetRegisteredProviders() =>
 			_dataProviders.ToDictionary(p => p.Key, p => p.Value);
 
-		class ConfigurationInfo
+		sealed class ConfigurationInfo
 		{
 			private readonly bool    _dataProviderSet;
 			private readonly string? _configurationString;
@@ -1725,6 +1725,31 @@ namespace LinqToDB.Data
 							if (dataConnection._command != null)
 								dataConnection._command.Transaction = null;
 						}
+
+						return true;
+					});
+			}
+		}
+
+		/// <summary>
+		/// Disposes transaction (if any), associated with connection.
+		/// </summary>
+		public virtual void DisposeTransaction()
+		{
+			if (TransactionAsync != null)
+			{
+				TraceAction(
+					this,
+					TraceOperation.DisposeTransaction,
+					static _ => "DisposeTransaction",
+					default(object?),
+					static (dataConnection, _) =>
+					{
+						dataConnection.TransactionAsync!.Dispose();
+						dataConnection.TransactionAsync = null;
+
+						if (dataConnection._command != null)
+							dataConnection._command.Transaction = null;
 
 						return true;
 					});

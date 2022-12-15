@@ -19,7 +19,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class MasterClass : ISoftDelete
+		sealed class MasterClass : ISoftDelete
 		{
 			[Column] public int     Id        { get; set; }
 			[Column] public string? Value     { get; set; }
@@ -35,7 +35,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class InfoClass
+		sealed class InfoClass
 		{
 			[Column] public int     Id    { get; set; }
 			[Column] public string? Value { get; set; }
@@ -46,7 +46,7 @@ namespace Tests.Linq
 
 
 		[Table]
-		class DetailClass: ISoftDelete
+		sealed class DetailClass : ISoftDelete
 		{
 			[Column] public int     Id    { get; set; }
 			[Column] public string? Value { get; set; }
@@ -104,7 +104,7 @@ namespace Tests.Linq
 			return Tuple.Create(masterRecords, infoRecords, detailRecords);
 		}
 
-		class MyDataContext : DataConnection
+		sealed class MyDataContext : DataConnection
 		{
 			public MyDataContext(string configuration, MappingSchema mappingSchema) : base(configuration, mappingSchema)
 			{
@@ -116,7 +116,7 @@ namespace Tests.Linq
 			public object Params { get; } = new DcParams();
 		}
 
-		class DcParams
+		sealed class DcParams
 		{
 			public bool IsSoftDeleteFilterEnabled { get; set; } = true;
 		}

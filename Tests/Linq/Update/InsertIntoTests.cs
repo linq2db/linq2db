@@ -9,7 +9,7 @@ namespace Tests.xUpdate
 	public class InsertIntoTests : TestBase
 	{
 		[Table]
-		class InsertTestClass
+		sealed class InsertTestClass
 		{
 			[Column(IsIdentity = true)] public int  Id         { get; set; }
 			[Column]                    public int  Value      { get; set; }

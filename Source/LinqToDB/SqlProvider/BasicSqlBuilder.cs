@@ -115,7 +115,7 @@ namespace LinqToDB.SqlProvider
 
 		#region Helpers
 
-		[return: NotNullIfNotNull("element")]
+		[return: NotNullIfNotNull(nameof(element))]
 		public T? ConvertElement<T>(T? element)
 			where T : class, IQueryElement
 		{
@@ -1263,7 +1263,7 @@ namespace LinqToDB.SqlProvider
 				AppendIndent().Append(createTable.StatementFooter);
 		}
 
-		class CreateFieldInfo
+		sealed class CreateFieldInfo
 		{
 			public SqlField      Field = null!;
 			public StringBuilder StringBuilder = null!;
@@ -2029,12 +2029,7 @@ namespace LinqToDB.SqlProvider
 			if (selectQuery.GroupBy.Items.Count == 0)
 				return;
 
-			var items = selectQuery.GroupBy.Items.Where(i => !(i is SqlValue || i is SqlParameter)).ToList();
-
-			if (items.Count == 0)
-				return;
-
-			BuildGroupByBody(selectQuery.GroupBy.GroupingType, items);
+			BuildGroupByBody(selectQuery.GroupBy.GroupingType, selectQuery.GroupBy.Items);
 		}
 
 		protected virtual void BuildGroupByBody(GroupingType groupingType, List<ISqlExpression> items)
@@ -2846,7 +2841,10 @@ namespace LinqToDB.SqlProvider
 					{
 						var e = (SqlExpression)expr;
 
-						BuildFormatValues(e.Expr, e.Parameters, () => GetPrecedence(e));
+						if (e.Expr == "{0}")
+							BuildExpression(e.Parameters[0], buildTableName, checkParentheses, alias, ref addAlias, throwExceptionIfTableNotFound);
+						else
+							BuildFormatValues(e.Expr, e.Parameters, () => GetPrecedence(e));
 					}
 
 					break;
@@ -3168,6 +3166,7 @@ namespace LinqToDB.SqlProvider
 				StringBuilder.Append(type.Type.DbType);
 			else
 			{
+				var systemType = type.Type.SystemType.FullName;
 				if (type.Type.DataType == DataType.Undefined)
 					type = MappingSchema.GetDataType(type.Type.SystemType);
 
@@ -3179,7 +3178,7 @@ namespace LinqToDB.SqlProvider
 
 				if (type.Type.DataType == DataType.Undefined)
 					// give some hint to user that it is expected situation and he need to fix something on his side
-					throw new LinqToDBException("Database type cannot be determined automatically and must be specified explicitly");
+					throw new LinqToDBException($"Database column type cannot be determined automatically and must be specified explicitly for system type {systemType}");
 
 				BuildDataTypeFromDataType(type, forCreateTable, canBeNull);
 			}

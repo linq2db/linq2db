@@ -423,6 +423,18 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test(Description = "CanBeNull=true association doesn't enforce nullability on referenced non-nullable columns")]
+		public void TestNullabilityPropagation([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			// left join makes t.Middle!.ParentID which means with default NULL comparison semantics we
+			// should generate following SQL:
+			// parent_id <> 4 or parent_id is null
+			var result = db.GetTable<Top>().Where(t => t.Middle!.ParentID != 4).ToArray();
+			Assert.AreEqual(14, result.Length);
+		}
+
 		[Table(Name="Child", IsColumnAttributeRequired=false)]
 		[InheritanceMapping(Code = 1, IsDefault = true, Type = typeof(ChildForHierarchy))]
 		public class ChildBaseForHierarchy
@@ -557,7 +569,7 @@ namespace Tests.Linq
 
 		[Table("Parent")]
 		[UsedImplicitly]
-		class Parent170
+		sealed class Parent170
 		{
 			[Column] public int ParentID;
 			[Column] public int Value1;
@@ -571,7 +583,7 @@ namespace Tests.Linq
 
 		[Table("Child")]
 		[UsedImplicitly]
-		class Child170
+		sealed class Child170
 		{
 			[Column] public int ParentID;
 			[Column] public int ChildID;
@@ -615,7 +627,7 @@ namespace Tests.Linq
 
 		[Table("Child")]
 		[UsedImplicitly]
-		class StorageTestClass
+		sealed class StorageTestClass
 		{
 			[Column] public int ParentID;
 			[Column] public int ChildID;
@@ -1011,7 +1023,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class Employee
+		sealed class Employee
 		{
 			[Column] public int  Id           { get; set; }
 			[Column] public int? DepartmentId { get; set; }
@@ -1023,7 +1035,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class Department
+		sealed class Department
 		{
 			[Column] public int     DepartmentId { get; set; }
 			[Column] public string? Name         { get; set; }
@@ -1046,12 +1058,12 @@ namespace Tests.Linq
 			}
 		}
 
-		class Entity1711
+		sealed class Entity1711
 		{
 			public long Id { get; set; }
 		}
 
-		class Relationship1711
+		sealed class Relationship1711
 		{
 			public long EntityId { get; set; }
 
@@ -1100,7 +1112,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class Issue1096Task
+		sealed class Issue1096Task
 		{
 			[Column]
 			public int Id { get; set; }
@@ -1116,7 +1128,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class Issue1096TaskStage
+		sealed class Issue1096TaskStage
 		{
 			[Column(IsPrimaryKey = true)]
 			public int Id { get; set; }
@@ -1402,6 +1414,39 @@ namespace Tests.Linq
 			Assert.True(result[2].Reason == "прст1" || result[2].Reason == "прст2");
 		}
 		#endregion
+
+		[Test]
+		public void Issue3809Test([DataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+			var actual = db.Parent.Select(a => new
+			{
+				a.ParentID,
+				ParentTest = a.ParentTest == null ? null : new
+				{
+					a.ParentTest.ParentID,
+					Children = a.ParentTest.Children.OrderBy(a => a.ChildID).Select(a => new
+					{
+						a.ParentID,
+						a.ChildID
+					})
+				}
+			}).Where(a => a.ParentTest == null || a.ParentTest.Children.Any(a => a.ChildID == 11)).ToArray();
+			var expected = Parent.Select(a => new
+			{
+				a.ParentID,
+				ParentTest = a.ParentTest == null ? null : new
+				{
+					a.ParentTest.ParentID,
+					Children = a.ParentTest.Children.OrderBy(a => a.ChildID).Select(a => new
+					{
+						a.ParentID,
+						a.ChildID
+					})
+				}
+			}).Where(a => a.ParentTest == null || a.ParentTest.Children.Any(a => a.ChildID == 11)).ToArray();
+			AreEqualWithComparer(expected, actual);
+		}
 	}
 
 	public static class AssociationExtension

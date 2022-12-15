@@ -50,16 +50,16 @@ namespace Cli.Default.SqlServerNorthwind
 		public IEnumerable<Employee> Employees1 { get; set; } = null!;
 
 		/// <summary>
-		/// FK_Orders_Employees backreference
-		/// </summary>
-		[Association(ThisKey = nameof(EmployeeId), OtherKey = nameof(Order.EmployeeId))]
-		public IEnumerable<Order> Orders { get; set; } = null!;
-
-		/// <summary>
 		/// FK_EmployeeTerritories_Employees backreference
 		/// </summary>
 		[Association(ThisKey = nameof(EmployeeId), OtherKey = nameof(EmployeeTerritory.EmployeeId))]
 		public IEnumerable<EmployeeTerritory> EmployeeTerritories { get; set; } = null!;
+
+		/// <summary>
+		/// FK_Orders_Employees backreference
+		/// </summary>
+		[Association(ThisKey = nameof(EmployeeId), OtherKey = nameof(Order.EmployeeId))]
+		public IEnumerable<Order> Orders { get; set; } = null!;
 		#endregion
 	}
 }

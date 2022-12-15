@@ -190,7 +190,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		class InsertTempTable
+		sealed class InsertTempTable
 		{
 			public string? Action    { get; set; }
 			public int     NewId     { get; set; }

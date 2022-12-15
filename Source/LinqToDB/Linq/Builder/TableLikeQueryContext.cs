@@ -6,7 +6,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Builder
 {
-	class TableLikeQueryContext : SubQueryContext
+	sealed class TableLikeQueryContext : SubQueryContext
 	{
 		public SqlTableLikeSource Source { get; }
 

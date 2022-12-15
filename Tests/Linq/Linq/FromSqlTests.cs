@@ -19,7 +19,7 @@ namespace Tests.Linq
 	public class FromSqlTests : TestBase
 	{
 		[Table(Name = "sample_class")]
-		class SampleClass
+		sealed class SampleClass
 		{
 			[Column("id")]
 			public int Id    { get; set; }
@@ -33,7 +33,7 @@ namespace Tests.Linq
 		}
 
 		[Table(Name = "sample_other_class")]
-		class SomeOtherClass
+		sealed class SomeOtherClass
 		{
 			[Column("id")]
 			public int Id       { get; set; }
@@ -50,7 +50,7 @@ namespace Tests.Linq
 			return Enumerable.Range(1, 20).Select(i => new SampleClass {Id = i, Value = "Str_" + i}).ToArray();
 		}
 
-		class ToTableName<T> : IToSqlConverter
+		sealed class ToTableName<T> : IToSqlConverter
 			where T : notnull
 		{
 			public ToTableName(ITable<T> table)
@@ -75,7 +75,7 @@ namespace Tests.Linq
 			return new ToTableName<T>(table);
 		}
 
-		class ToColumnName : IToSqlConverter
+		sealed class ToColumnName : IToSqlConverter
 		{
 			public ToColumnName(string columnName)
 			{
@@ -677,12 +677,12 @@ namespace Tests.Linq
 			}
 		}
 
-		class Scalar<T>
+		sealed class Scalar<T>
 		{
 			public T Value1 = default!;
 		}
 
-		class Values<T>
+		sealed class Values<T>
 		{
 			public T Value1 = default!;
 			public T Value2 = default!;

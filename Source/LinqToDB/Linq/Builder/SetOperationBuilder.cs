@@ -12,7 +12,7 @@ namespace LinqToDB.Linq.Builder
 	using Reflection;
 	using SqlQuery;
 
-	class SetOperationBuilder : MethodCallBuilder
+	sealed class SetOperationBuilder : MethodCallBuilder
 	{
 		private static readonly string[] MethodNames = { "Concat", "UnionAll", "Union", "Except", "Intersect", "ExceptAll", "IntersectAll" };
 
@@ -164,7 +164,7 @@ namespace LinqToDB.Linq.Builder
 			public readonly List<SubQueryContext>  Sequences = new ();
 
 			[DebuggerDisplay("{Member.MemberExpression}, SequenceInfo: ({SequenceInfo}), SqlQueryInfo: ({SqlQueryInfo})")]
-			class Member
+			sealed class Member
 			{
 				public SqlInfo?          SequenceInfo;
 				public SqlInfo?          SqlQueryInfo;
@@ -172,7 +172,7 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			[DebuggerDisplay("{Member.MemberExpression}, Infos.Count: {Infos.Count}, Infos[0]: ({Infos[0]}), Infos[1]: ({Infos[1]})")]
-			class UnionMember
+			sealed class UnionMember
 			{
 				public UnionMember(Member member, SqlInfo info)
 				{
@@ -416,7 +416,7 @@ namespace LinqToDB.Linq.Builder
 
 						if (nctor != null)
 						{
-							var recordType = RecordsHelper.GetRecordType(Builder.MappingSchema, nctor.Type);
+							var recordType = RecordsHelper.GetRecordType(nctor.Type);
 							if ((recordType & RecordType.CallConstructorOnRead) != 0)
 							{
 								if (nctor.Members != null)

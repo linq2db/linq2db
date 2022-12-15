@@ -8,7 +8,7 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
-	class QueryExtensionBuilder : MethodCallBuilder
+	sealed class QueryExtensionBuilder : MethodCallBuilder
 	{
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
@@ -145,7 +145,7 @@ namespace LinqToDB.Linq.Builder
 			return joinExtensions != null ? new JoinHintContext(sequence, joinExtensions) : sequence;
 		}
 
-		public class JoinHintContext : PassThroughContext
+		public sealed class JoinHintContext : PassThroughContext
 		{
 			public JoinHintContext(IBuildContext context, List<SqlQueryExtension> extensions)
 				: base(context)

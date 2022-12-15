@@ -610,7 +610,7 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
-		private class MoveCountSubqueryContext
+		private sealed class MoveCountSubqueryContext
 		{
 			public MoveCountSubqueryContext(SelectQuery subQuery)
 			{
@@ -815,7 +815,7 @@ namespace LinqToDB.SqlProvider
 			return selectQuery;
 		}
 
-		private class MoveSubqueryCountContext
+		private sealed class MoveSubqueryCountContext
 		{
 			public MoveSubqueryCountContext(SelectQuery subQuery)
 			{
@@ -1929,7 +1929,7 @@ namespace LinqToDB.SqlProvider
 
 		#region Conversion
 
-		[return: NotNullIfNotNull("element")]
+		[return: NotNullIfNotNull(nameof(element))]
 		public virtual IQueryElement? ConvertElement(MappingSchema mappingSchema, IQueryElement? element, OptimizationContext context)
 		{
 			return OptimizeElement(mappingSchema, element, context, true);
@@ -2515,12 +2515,19 @@ namespace LinqToDB.SqlProvider
 			return p;
 		}
 
-		protected ISqlExpression ConvertCoalesceToBinaryFunc(SqlFunction func, string funcName)
+		protected ISqlExpression ConvertCoalesceToBinaryFunc(SqlFunction func, string funcName, bool supportsParameters = true)
 		{
 			var last = func.Parameters[func.Parameters.Length - 1];
+			if (!supportsParameters && last is SqlParameter p1)
+				p1.IsQueryParameter = false;
+
 			for (int i = func.Parameters.Length - 2; i >= 0; i--)
 			{
-				last = new SqlFunction(func.SystemType, funcName, func.Parameters[i], last);
+				var param = func.Parameters[i];
+				if (!supportsParameters && param is SqlParameter p2)
+					p2.IsQueryParameter = false;
+
+				last = new SqlFunction(func.SystemType, funcName, param, last);
 			}
 			return last;
 		}

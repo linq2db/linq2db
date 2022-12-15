@@ -12,7 +12,7 @@ using LinqToDB.Mapping;
 
 namespace Cli.Default.MySql
 {
-	[Table("person")]
+	[Table("Person")]
 	public class Person
 	{
 		[Column("PersonID"  , IsPrimaryKey = true , IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int     PersonId   { get; set; } // int
@@ -25,14 +25,14 @@ namespace Cli.Default.MySql
 		/// <summary>
 		/// FK_Doctor_Person backreference
 		/// </summary>
-		[Association(ThisKey = nameof(PersonId), OtherKey = nameof(Doctor.PersonId))]
-		public Doctor? DoctorPerson { get; set; }
+		[Association(ThisKey = nameof(PersonId), OtherKey = nameof(MySql.Doctor.PersonId))]
+		public Doctor? Doctor { get; set; }
 
 		/// <summary>
 		/// FK_Patient_Person backreference
 		/// </summary>
-		[Association(ThisKey = nameof(PersonId), OtherKey = nameof(Patient.PersonId))]
-		public Patient? PatientPerson { get; set; }
+		[Association(ThisKey = nameof(PersonId), OtherKey = nameof(MySql.Patient.PersonId))]
+		public Patient? Patient { get; set; }
 		#endregion
 	}
 }

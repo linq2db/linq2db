@@ -464,7 +464,7 @@ namespace LinqToDB.Expressions
 			return mappedLambda;
 		}
 
-		class ReplaceTypesContext
+		sealed class ReplaceTypesContext
 		{
 			public ReplaceTypesContext(TypeMapper mapper, LambdaExpression lambda, ParameterExpression[] newParameters, bool mapConvert, bool ignoreMissingMembers)
 			{
@@ -802,7 +802,7 @@ namespace LinqToDB.Expressions
 			return ctx.Aborted ? null : converted;
 		}
 
-		[return: NotNullIfNotNull("mapperType")]
+		[return: NotNullIfNotNull(nameof(mapperType))]
 		private ICustomMapper? CreateTypeMapper(Type? mapperType)
 		{
 			if (mapperType == null)
@@ -1248,7 +1248,7 @@ namespace LinqToDB.Expressions
 
 		#endregion
 
-		[return: NotNullIfNotNull("instance")]
+		[return: NotNullIfNotNull(nameof(instance))]
 		public TR? Wrap<TR>(object? instance)
 			where TR: TypeWrapper
 		{
@@ -1258,7 +1258,7 @@ namespace LinqToDB.Expressions
 			return (TR)Wrap(typeof(TR), instance);
 		}
 
-		[return: NotNullIfNotNull("instance")]
+		[return: NotNullIfNotNull(nameof(instance))]
 		private object? Wrap(Type wrapperType, object? instance)
 		{
 			if (instance == null)

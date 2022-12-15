@@ -731,7 +731,7 @@ namespace Tests.xUpdate
 		}
 
 		[Table]
-		class PKOnlyTable
+		sealed class PKOnlyTable
 		{
 			[PrimaryKey] public int ID { get; set; }
 		}

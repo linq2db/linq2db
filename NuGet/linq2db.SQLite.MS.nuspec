@@ -13,13 +13,13 @@
 		<tags>linq linq2db SQLite LinqToDB ORM database DB SQL</tags>
 		<readme>README.md</readme>
 		<dependencies>
-			<group targetFramework=".NETFramework4.5.1">
+			<group targetFramework="net451">
 				<dependency id="linq2db"                version="4.0.0" />
 				<dependency id="Microsoft.Data.Sqlite"  version="1.1.1"  />
 			</group>
 			<group targetFramework="netstandard2.0">
 				<dependency id="linq2db"                version="4.0.0" />
-				<dependency id="Microsoft.Data.Sqlite"  version="6.0.8"  />
+				<dependency id="Microsoft.Data.Sqlite"  version="7.0.1"  />
 			</group>
 		</dependencies>
 		<contentFiles>

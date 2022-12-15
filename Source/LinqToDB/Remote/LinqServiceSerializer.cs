@@ -262,7 +262,7 @@ namespace LinqToDB.Remote
 
 		public class DeserializerBase
 		{
-			private   readonly MappingSchema _ms;
+			protected readonly MappingSchema _ms;
 			protected readonly Dictionary<int,object>         ObjectIndices  = new ();
 			protected readonly Dictionary<int,Action<object>> DelayedObjects = new ();
 
@@ -529,7 +529,7 @@ namespace LinqToDB.Remote
 				object? GetArray(DeserializerBase deserializer);
 			}
 
-			class DeserializerHelper<T> : IDeserializerHelper
+			sealed class DeserializerHelper<T> : IDeserializerHelper
 			{
 				public object? GetArray(DeserializerBase deserializer)
 				{
@@ -633,7 +633,7 @@ namespace LinqToDB.Remote
 
 		#region QuerySerializer
 
-		class QuerySerializer : SerializerBase
+		sealed class QuerySerializer : SerializerBase
 		{
 			public QuerySerializer(MappingSchema serializationMappingSchema)
 				: base(serializationMappingSchema)
@@ -1113,8 +1113,8 @@ namespace LinqToDB.Remote
 							else
 								Append(elem.SetOperators);
 
-							if (ObjectIndices.ContainsKey(elem.All))
-								Append(ObjectIndices[elem.All]);
+							if (ObjectIndices.TryGetValue(elem.All, out var index))
+								Append(index);
 							else
 								Builder.Append(" -");
 
@@ -1531,7 +1531,7 @@ namespace LinqToDB.Remote
 
 		#region QueryDeserializer
 
-		public class QueryDeserializer : DeserializerBase
+		public sealed class QueryDeserializer : DeserializerBase
 		{
 			SqlStatement   _statement  = null!;
 
@@ -1627,6 +1627,11 @@ namespace LinqToDB.Remote
 							ReadDelayedObject(table =>
 							{
 								field.Table = table as ISqlTableSource;
+								if (table is SqlTable sqlTable && sqlTable.ObjectType != null)
+								{
+									var ed = _ms.GetEntityDescriptor(sqlTable.ObjectType);
+									field.ColumnDescriptor = ed[field.Name]!;
+								}
 							});
 
 							break;
@@ -2461,7 +2466,7 @@ namespace LinqToDB.Remote
 
 		#region ResultSerializer
 
-		class ResultSerializer : SerializerBase
+		sealed class ResultSerializer : SerializerBase
 		{
 			public ResultSerializer(MappingSchema serializationMappingSchema)
 				: base(serializationMappingSchema)
@@ -2504,7 +2509,7 @@ namespace LinqToDB.Remote
 
 		#region ResultDeserializer
 
-		class ResultDeserializer : DeserializerBase
+		sealed class ResultDeserializer : DeserializerBase
 		{
 			public ResultDeserializer(MappingSchema serializationMappingSchema)
 				: base(serializationMappingSchema)
@@ -2552,7 +2557,7 @@ namespace LinqToDB.Remote
 
 		#region StringArraySerializer
 
-		class StringArraySerializer : SerializerBase
+		sealed class StringArraySerializer : SerializerBase
 		{
 			public StringArraySerializer(MappingSchema serializationMappingSchema)
 				: base(serializationMappingSchema)
@@ -2576,7 +2581,7 @@ namespace LinqToDB.Remote
 
 		#region StringArrayDeserializer
 
-		class StringArrayDeserializer : DeserializerBase
+		sealed class StringArrayDeserializer : DeserializerBase
 		{
 			public StringArrayDeserializer(MappingSchema serializationMappingSchema)
 				: base(serializationMappingSchema)
@@ -2606,7 +2611,7 @@ namespace LinqToDB.Remote
 			object ConvertToArray(object list);
 		}
 
-		class ArrayHelper<T> : IArrayHelper
+		sealed class ArrayHelper<T> : IArrayHelper
 		{
 			public Type GetArrayType()
 			{

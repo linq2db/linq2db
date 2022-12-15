@@ -666,9 +666,8 @@ namespace LinqToDB.Data
 			do
 			{
 				// Only process the field if we're reading it into a property.
-				if (indexMap.ContainsKey(resultIndex))
+				if (indexMap.TryGetValue(resultIndex, out var member))
 				{
-					var member = indexMap[resultIndex];
 					MethodInfo valueMethodInfo;
 					Type elementType;
 					if (member.Type.IsArray)
@@ -708,7 +707,7 @@ namespace LinqToDB.Data
 		static readonly MethodInfo _readSingletAsyncMethodInfo =
 			MemberHelper.MethodOf<CommandInfo>(ci => ci.ReadSingleAsync<int>(null!, default)).GetGenericMethodDefinition();
 
-		class ReaderAsyncEnumerable<T> : IAsyncEnumerable<T>
+		sealed class ReaderAsyncEnumerable<T> : IAsyncEnumerable<T>
 		{
 			readonly CommandInfo  _commandInfo;
 			readonly DbDataReader _rd;
@@ -725,7 +724,7 @@ namespace LinqToDB.Data
 			}
 		}
 
-		class ReaderAsyncEnumerator<T> : IAsyncEnumerator<T>
+		sealed class ReaderAsyncEnumerator<T> : IAsyncEnumerator<T>
 		{
 			readonly CommandInfo      _commandInfo;
 			readonly DbDataReader     _rd;
@@ -817,9 +816,8 @@ namespace LinqToDB.Data
 			do
 			{
 				// Only process the field if we're reading it into a property.
-				if (indexMap.ContainsKey(resultIndex))
+				if (indexMap.TryGetValue(resultIndex, out var member))
 				{
-					var member = indexMap[resultIndex];
 					MethodInfo valueMethodInfo;
 					Type elementType;
 					if (member.Type.IsArray)

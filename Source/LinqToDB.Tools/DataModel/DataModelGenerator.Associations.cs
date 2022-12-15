@@ -191,12 +191,12 @@ namespace LinqToDB.DataModel
 				}
 
 				// generate nameof() expressions for current key column
-				var thisKey  = AST.NameOf(AST.Member(thisBuilder .Type.Type, _columnProperties[thisColumns [0]].Reference));
-				var otherKey = AST.NameOf(AST.Member(otherBuilder.Type.Type, _columnProperties[otherColumns[0]].Reference));
+				var thisKey  = AST.NameOf(AST.Member(thisBuilder .Type.Type, _columnProperties[thisColumns [i]].Reference));
+				var otherKey = AST.NameOf(AST.Member(otherBuilder.Type.Type, _columnProperties[otherColumns[i]].Reference));
 
 				// append column name to key
 				metadata.ThisKeyExpression  = metadata.ThisKeyExpression  == null ? thisKey  : AST.Add(metadata.ThisKeyExpression , thisKey);
-				metadata.OtherKeyExpression = metadata.OtherKeyExpression == null ? otherKey : AST.Add(metadata.OtherKeyExpression, thisKey);
+				metadata.OtherKeyExpression = metadata.OtherKeyExpression == null ? otherKey : AST.Add(metadata.OtherKeyExpression, otherKey);
 			}
 		}
 

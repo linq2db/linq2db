@@ -3,7 +3,7 @@
 namespace LinqToDB.Mapping
 {
 	/// <summary>
-	/// Contains reference to filter function defined by <see cref="EntityMappingBuilder{T}.HasQueryFilter(System.Func{System.Linq.IQueryable{T},LinqToDB.IDataContext,System.Linq.IQueryable{T}})"/>
+	/// Contains reference to filter function defined by <see cref="EntityMappingBuilder{T}.HasQueryFilter(Func{System.Linq.IQueryable{T},IDataContext,System.Linq.IQueryable{T}})"/>
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface)]
 	public class QueryFilterAttribute : MappingAttribute
@@ -17,7 +17,7 @@ namespace LinqToDB.Mapping
 
 		public override string GetObjectID()
 		{
-			return $"..";
+			return $".{FilterFunc?.GetHashCode()}.";
 		}
 	}
 }

@@ -6,7 +6,7 @@ namespace LinqToDB.DataProvider.SQLite
 	using System.Threading;
 	using System.Threading.Tasks;
 
-	class SQLiteBulkCopy : BasicBulkCopy
+	sealed class SQLiteBulkCopy : BasicBulkCopy
 	{
 		
 		/// <remarks>
