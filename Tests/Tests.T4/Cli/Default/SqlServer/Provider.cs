@@ -22,8 +22,8 @@ namespace Cli.Default.SqlServer
 		/// <summary>
 		/// FK_Provider_Member
 		/// </summary>
-		[Association(CanBeNull = false, ThisKey = nameof(ProviderId), OtherKey = nameof(SqlServer.Member.MemberId))]
-		public Member Member { get; set; } = null!;
+		[Association(CanBeNull = false, ThisKey = nameof(ProviderId), OtherKey = nameof(Member.MemberId))]
+		public Member Provider1 { get; set; } = null!;
 		#endregion
 	}
 }

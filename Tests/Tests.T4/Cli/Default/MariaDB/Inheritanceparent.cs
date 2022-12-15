@@ -12,8 +12,8 @@ using LinqToDB.Mapping;
 
 namespace Cli.Default.MariaDB
 {
-	[Table("inheritanceparent")]
-	public class Inheritanceparent
+	[Table("InheritanceParent")]
+	public class InheritanceParent
 	{
 		[Column("InheritanceParentId", IsPrimaryKey = true)] public int     InheritanceParentId { get; set; } // int(11)
 		[Column("TypeDiscriminator"                       )] public int?    TypeDiscriminator   { get; set; } // int(11)

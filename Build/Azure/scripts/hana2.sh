@@ -1,6 +1,6 @@
 #!/bin/bash
 
-docker run -d --name hana2 -p 39017:39017 saplabs/hanaexpress:2.00.061.00.20220519.1 --agree-to-sap-license --passwords-url file:///hana/password.json
+docker run -h hxehost -d --name hana2 -p 39017:39017 saplabs/hanaexpress:2.00.061.00.20220519.1 --agree-to-sap-license --passwords-url file:///hana/password.json
 #echo Generate password file
 cat <<-EOJSON > hana_password.json
 {"master_password": "Passw0rd"}
@@ -27,9 +27,6 @@ done
 
 docker logs hana2
 
-# instead of hxehost, docker image use dynamic host name
-hxehost=$(docker logs hana2 | grep -oP "(?<=New host: ).*")
-
 # create test schema
 ~/linq2db_ci/providers/saphana/linux/HDBSQL/hdbsql -d HXE -n localhost:39017 -u SYSTEM -p Passw0rd CREATE SCHEMA TESTDB
 # clear memory limits
@@ -39,8 +36,8 @@ hxehost=$(docker logs hana2 | grep -oP "(?<=New host: ).*")
 ~/linq2db_ci/providers/saphana/linux/HDBSQL/hdbsql -d HXE -n localhost:39017 -u SYSTEM -p Passw0rd 'CREATE CREDENTIAL FOR USER SYSTEM COMPONENT '"'"'SAPHANAFEDERATION'"'"' PURPOSE '"'"'LINKED_DB'"'"' TYPE '"'"'PASSWORD'"'"' USING '"'"'user=SYSTEM;password=Passw0rd'"'"''
 
 # free some memory (diserver ~300mb, webdispatcher ~500m), so we can run tests
-~/linq2db_ci/providers/saphana/linux/HDBSQL/hdbsql -n localhost:39017 -u SYSTEM -p Passw0rd 'ALTER SYSTEM ALTER CONFIGURATION ('"'"'daemon.ini'"'"','"'"'host'"'"','${hxehost}') UNSET ('"'"'diserver'"'"','"'"'instances'"'"') WITH RECONFIGURE'
-~/linq2db_ci/providers/saphana/linux/HDBSQL/hdbsql -n localhost:39017 -u SYSTEM -p Passw0rd 'ALTER SYSTEM ALTER CONFIGURATION ('"'"'daemon.ini'"'"','"'"'host'"'"','${hxehost}') SET ('"'"'webdispatcher'"'"','"'"'instances'"'"') = '"'"'0'"'"' WITH RECONFIGURE'
+~/linq2db_ci/providers/saphana/linux/HDBSQL/hdbsql -n localhost:39017 -u SYSTEM -p Passw0rd 'ALTER SYSTEM ALTER CONFIGURATION ('"'"'daemon.ini'"'"','"'"'host'"'"','hxehost') UNSET ('"'"'diserver'"'"','"'"'instances'"'"') WITH RECONFIGURE'
+~/linq2db_ci/providers/saphana/linux/HDBSQL/hdbsql -n localhost:39017 -u SYSTEM -p Passw0rd 'ALTER SYSTEM ALTER CONFIGURATION ('"'"'daemon.ini'"'"','"'"'host'"'"','hxehost') SET ('"'"'webdispatcher'"'"','"'"'instances'"'"') = '"'"'0'"'"' WITH RECONFIGURE'
 
 cat <<-EOJSON > HanaDataProviders.json
 {

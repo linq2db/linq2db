@@ -13,8 +13,8 @@ using System;
 
 namespace Cli.Default.MySql
 {
-	[Table("linqdatatypes")]
-	public class Linqdatatype
+	[Table("LinqDataTypes")]
+	public class LinqDataType
 	{
 		[Column("ID"            )] public int?      Id             { get; set; } // int
 		[Column("MoneyValue"    )] public decimal?  MoneyValue     { get; set; } // decimal(10,4)

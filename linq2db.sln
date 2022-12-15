@@ -478,7 +478,15 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Local", "Local", "{6CB875B4-1799-4760-A734-091F34888A60}"
 	ProjectSection(SolutionItems) = preProject
 		Data\Setup Scripts\clickhouse.cmd = Data\Setup Scripts\clickhouse.cmd
+		Data\Setup Scripts\db2.cmd = Data\Setup Scripts\db2.cmd
+		Data\Setup Scripts\hana-password.json = Data\Setup Scripts\hana-password.json
+		Data\Setup Scripts\informix.cmd = Data\Setup Scripts\informix.cmd
+		Data\Setup Scripts\informix_init.sql = Data\Setup Scripts\informix_init.sql
 		Data\Setup Scripts\mariadb.cmd = Data\Setup Scripts\mariadb.cmd
+		Data\Setup Scripts\mysql55.cmd = Data\Setup Scripts\mysql55.cmd
+		Data\Setup Scripts\mysql80.cmd = Data\Setup Scripts\mysql80.cmd
+		Data\Setup Scripts\oracle11-setup.sql = Data\Setup Scripts\oracle11-setup.sql
+		Data\Setup Scripts\oracle11.cmd = Data\Setup Scripts\oracle11.cmd
 		Data\Setup Scripts\pgsql10.cmd = Data\Setup Scripts\pgsql10.cmd
 		Data\Setup Scripts\pgsql11.cmd = Data\Setup Scripts\pgsql11.cmd
 		Data\Setup Scripts\pgsql12.cmd = Data\Setup Scripts\pgsql12.cmd
@@ -489,10 +497,17 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Local", "Local", "{6CB875B4
 		Data\Setup Scripts\pgsql93.cmd = Data\Setup Scripts\pgsql93.cmd
 		Data\Setup Scripts\pgsql95.cmd = Data\Setup Scripts\pgsql95.cmd
 		Data\Setup Scripts\readme.md = Data\Setup Scripts\readme.md
+		Data\Setup Scripts\saphana2.cmd = Data\Setup Scripts\saphana2.cmd
 		Data\Setup Scripts\sqlserver2017.cmd = Data\Setup Scripts\sqlserver2017.cmd
 		Data\Setup Scripts\sqlserver2019.cmd = Data\Setup Scripts\sqlserver2019.cmd
 		Data\Setup Scripts\sqlserver2022-win.cmd = Data\Setup Scripts\sqlserver2022-win.cmd
 		Data\Setup Scripts\sqlserver2022.cmd = Data\Setup Scripts\sqlserver2022.cmd
+		Data\Setup Scripts\sybase-ase.cmd = Data\Setup Scripts\sybase-ase.cmd
+		Data\Setup Scripts\sybase-db.sql = Data\Setup Scripts\sybase-db.sql
+		Data\Setup Scripts\sybase-fix.sh = Data\Setup Scripts\sybase-fix.sh
+		Data\Setup Scripts\sybase-utf8.sql = Data\Setup Scripts\sybase-utf8.sql
+		Data\Setup Scripts\wait-err.cmd = Data\Setup Scripts\wait-err.cmd
+		Data\Setup Scripts\wait.cmd = Data\Setup Scripts\wait.cmd
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "net70", "net70", "{1ED95A47-B11F-4EA1-8916-B7BD2951417B}"

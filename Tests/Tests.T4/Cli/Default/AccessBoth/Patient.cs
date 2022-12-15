@@ -22,8 +22,8 @@ namespace Cli.Default.Access.Both
 		/// <summary>
 		/// PersonPatient
 		/// </summary>
-		[Association(CanBeNull = false, ThisKey = nameof(PersonId), OtherKey = nameof(Both.Person.PersonId))]
-		public Person Person { get; set; } = null!;
+		[Association(CanBeNull = false, ThisKey = nameof(PersonId), OtherKey = nameof(Person.PersonId))]
+		public Person PersonPatient { get; set; } = null!;
 		#endregion
 	}
 }

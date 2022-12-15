@@ -13,8 +13,8 @@ using System;
 
 namespace Cli.Default.MariaDB
 {
-	[Table("testmerge2")]
-	public class Testmerge2
+	[Table("TestMerge2")]
+	public class TestMerge2
 	{
 		[Column("Id"             , IsPrimaryKey = true)] public int       Id              { get; set; } // int(11)
 		[Column("Field1"                              )] public int?      Field1          { get; set; } // int(11)

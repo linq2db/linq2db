@@ -47,33 +47,33 @@ namespace Cli.T4.MariaDB
 
 		partial void InitDataContext();
 
-		public ITable<Alltype>           Alltypes            => this.GetTable<Alltype>();
-		public ITable<Alltypesnoyear>    Alltypesnoyears     => this.GetTable<Alltypesnoyear>();
+		public ITable<AllType>           AllTypes            => this.GetTable<AllType>();
+		public ITable<AllTypesNoYear>    AllTypesNoYears     => this.GetTable<AllTypesNoYear>();
 		public ITable<Child>             Children            => this.GetTable<Child>();
-		public ITable<Collatedtable>     Collatedtables      => this.GetTable<Collatedtable>();
-		public ITable<Datatypetest>      Datatypetests       => this.GetTable<Datatypetest>();
+		public ITable<CollatedTable>     CollatedTables      => this.GetTable<CollatedTable>();
+		public ITable<DataTypeTest>      DataTypeTests       => this.GetTable<DataTypeTest>();
 		public ITable<Doctor>            Doctors             => this.GetTable<Doctor>();
-		public ITable<Fulltextindextest> Fulltextindextests  => this.GetTable<Fulltextindextest>();
-		public ITable<Grandchild>        Grandchildren       => this.GetTable<Grandchild>();
-		public ITable<Inheritancechild>  Inheritancechildren => this.GetTable<Inheritancechild>();
-		public ITable<Inheritanceparent> Inheritanceparents  => this.GetTable<Inheritanceparent>();
+		public ITable<FullTextIndexTest> FullTextIndexTests  => this.GetTable<FullTextIndexTest>();
+		public ITable<GrandChild>        GrandChildren       => this.GetTable<GrandChild>();
+		public ITable<InheritanceChild>  InheritanceChildren => this.GetTable<InheritanceChild>();
+		public ITable<InheritanceParent> InheritanceParents  => this.GetTable<InheritanceParent>();
 		public ITable<Issue1993>         Issue1993           => this.GetTable<Issue1993>();
-		public ITable<Linqdatatype>      Linqdatatypes       => this.GetTable<Linqdatatype>();
+		public ITable<LinqDataType>      LinqDataTypes       => this.GetTable<LinqDataType>();
 		public ITable<Parent>            Parents             => this.GetTable<Parent>();
 		public ITable<Patient>           Patients            => this.GetTable<Patient>();
 		public ITable<Person>            People              => this.GetTable<Person>();
-		public ITable<Testidentity>      Testidentities      => this.GetTable<Testidentity>();
-		public ITable<Testmerge1>        Testmerge1          => this.GetTable<Testmerge1>();
-		public ITable<Testmerge2>        Testmerge2          => this.GetTable<Testmerge2>();
-		public ITable<Testsamename>      Testsamenames       => this.GetTable<Testsamename>();
+		public ITable<TestIdentity>      TestIdentities      => this.GetTable<TestIdentity>();
+		public ITable<TestMerge1>        TestMerge1          => this.GetTable<TestMerge1>();
+		public ITable<TestMerge2>        TestMerge2          => this.GetTable<TestMerge2>();
+		public ITable<TestSameName>      TestSameNames       => this.GetTable<TestSameName>();
 		/// <summary>
 		/// VIEW
 		/// </summary>
-		public ITable<Personview>        Personviews         => this.GetTable<Personview>();
+		public ITable<PersonView>        PersonViews         => this.GetTable<PersonView>();
 	}
 
-	[Table("alltypes")]
-	public partial class Alltype
+	[Table("AllTypes")]
+	public partial class AllType
 	{
 		[Column("ID"                 , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int       ID                  { get; set; } // int(11)
 		[Column("bigintDataType"                                                                                       )] public long?     BigintDataType      { get; set; } // bigint(20)
@@ -109,17 +109,17 @@ namespace Cli.T4.MariaDB
 	public static partial class ExtensionMethods
 	{
 		#region Table Extensions
-		public static Alltype? Find(this ITable<Alltype> table, int id)
+		public static AllType? Find(this ITable<AllType> table, int id)
 		{
 			return table.FirstOrDefault(e => e.ID == id);
 		}
 
-		public static Alltypesnoyear? Find(this ITable<Alltypesnoyear> table, int id)
+		public static AllTypesNoYear? Find(this ITable<AllTypesNoYear> table, int id)
 		{
 			return table.FirstOrDefault(e => e.ID == id);
 		}
 
-		public static Datatypetest? Find(this ITable<Datatypetest> table, int dataTypeId)
+		public static DataTypeTest? Find(this ITable<DataTypeTest> table, int dataTypeId)
 		{
 			return table.FirstOrDefault(e => e.DataTypeID == dataTypeId);
 		}
@@ -129,17 +129,17 @@ namespace Cli.T4.MariaDB
 			return table.FirstOrDefault(e => e.PersonID == personId);
 		}
 
-		public static Fulltextindextest? Find(this ITable<Fulltextindextest> table, uint id)
+		public static FullTextIndexTest? Find(this ITable<FullTextIndexTest> table, uint id)
 		{
 			return table.FirstOrDefault(e => e.Id == id);
 		}
 
-		public static Inheritancechild? Find(this ITable<Inheritancechild> table, int inheritanceChildId)
+		public static InheritanceChild? Find(this ITable<InheritanceChild> table, int inheritanceChildId)
 		{
 			return table.FirstOrDefault(e => e.InheritanceChildId == inheritanceChildId);
 		}
 
-		public static Inheritanceparent? Find(this ITable<Inheritanceparent> table, int inheritanceParentId)
+		public static InheritanceParent? Find(this ITable<InheritanceParent> table, int inheritanceParentId)
 		{
 			return table.FirstOrDefault(e => e.InheritanceParentId == inheritanceParentId);
 		}
@@ -159,22 +159,22 @@ namespace Cli.T4.MariaDB
 			return table.FirstOrDefault(e => e.PersonID == personId);
 		}
 
-		public static Testidentity? Find(this ITable<Testidentity> table, int id)
+		public static TestIdentity? Find(this ITable<TestIdentity> table, int id)
 		{
 			return table.FirstOrDefault(e => e.ID == id);
 		}
 
-		public static Testmerge1? Find(this ITable<Testmerge1> table, int id)
+		public static TestMerge1? Find(this ITable<TestMerge1> table, int id)
 		{
 			return table.FirstOrDefault(e => e.Id == id);
 		}
 
-		public static Testmerge2? Find(this ITable<Testmerge2> table, int id)
+		public static TestMerge2? Find(this ITable<TestMerge2> table, int id)
 		{
 			return table.FirstOrDefault(e => e.Id == id);
 		}
 
-		public static Testsamename? Find(this ITable<Testsamename> table, int id)
+		public static TestSameName? Find(this ITable<TestSameName> table, int id)
 		{
 			return table.FirstOrDefault(e => e.ID == id);
 		}
@@ -188,77 +188,12 @@ namespace Cli.T4.MariaDB
 		}
 		#endregion
 
-		#region TestOutputParametersWithoutTableProcedure
-		public static int TestOutputParametersWithoutTableProcedure(this TestDataDB dataConnection, string? aInParam, out bool? aOutParam)
-		{
-			var parameters = new []
-			{
-				new DataParameter("aInParam", aInParam, DataType.VarChar)
-				{
-					Size = 256
-				},
-				new DataParameter("aOutParam", null, DataType.SByte)
-				{
-					Direction = ParameterDirection.Output
-				}
-			};
-			aOutParam = Converter.ChangeTypeTo<bool?>(parameters[1].Value);
-			return dataConnection.ExecuteProc("`TestOutputParametersWithoutTableProcedure`", parameters);
-		}
-		#endregion
-
-		#region TestProcedure
-		public static IEnumerable<TestProcedureResult> TestProcedure(this TestDataDB dataConnection, int? param3, ref int? param2, out int? param1)
-		{
-			var parameters = new []
-			{
-				new DataParameter("param3", param3, DataType.Int32),
-				new DataParameter("param2", param2, DataType.Int32)
-				{
-					Direction = ParameterDirection.InputOutput
-				},
-				new DataParameter("param1", null, DataType.Int32)
-				{
-					Direction = ParameterDirection.Output
-				}
-			};
-			param2 = Converter.ChangeTypeTo<int?>(parameters[1].Value);
-			param1 = Converter.ChangeTypeTo<int?>(parameters[2].Value);
-			return dataConnection.QueryProc<TestProcedureResult>("`TestProcedure`", parameters).ToList();
-		}
-
-		public partial class TestProcedureResult
-		{
-			[Column("PersonID"                     )] public int     PersonID   { get; set; }
-			[Column("FirstName" , CanBeNull = false)] public string  FirstName  { get; set; } = null!;
-			[Column("LastName"  , CanBeNull = false)] public string  LastName   { get; set; } = null!;
-			[Column("MiddleName"                   )] public string? MiddleName { get; set; }
-			[Column("Gender"                       )] public char    Gender     { get; set; }
-		}
-		#endregion
-
-		#region TestProcedure
-		public static IEnumerable<TestProcedureResult1> TestProcedure(this TestDataDB dataConnection, int? i)
-		{
-			var parameters = new []
-			{
-				new DataParameter("i", i, DataType.Int32)
-			};
-			return dataConnection.QueryProc<TestProcedureResult1>("`TEST_PROCEDURE`", parameters);
-		}
-
-		public partial class TestProcedureResult1
-		{
-			[Column("i + 3")] public long? i3 { get; set; }
-		}
-		#endregion
-
 		#region Issue2313Parameters
-		public static IEnumerable<Issue2313ParametersResult> Issue2313Parameters(this TestDataDB dataConnection, string? varChar255, char? varChar1, string? char255, char? char1, byte[]? varBinary255, byte[]? binary255, byte[]? tinyBlob, byte[]? blob, byte[]? mediumBlob, byte[]? longBlob, string? tinyText, string? text, string? mediumText, string? longText, DateTime? date, DateTime? dateTime, DateTime? timeStamp, TimeSpan? time, string? json, bool? tinyInt, bool? tinyIntUnsigned, short? smallInt, short? smallIntUnsigned, int? mediumInt, int? mediumIntUnsigned, int? @int, int? intUnsigned, long? bigInt, long? bigIntUnsigned, decimal? @decimal, float? @float, double? @double, bool? boolean, bool? bit1, bool? bit8, bool? bit10, bool? bit16, bool? bit32, bool? bit64, string? @enum, string? @set, int? year, byte[]? geometry, byte[]? point, byte[]? lineString, byte[]? polygon, byte[]? multiPoint, byte[]? multiLineString, byte[]? multiPolygon, byte[]? geometryCollection)
+		public static IEnumerable<Issue2313ParametersResult> Issue2313Parameters(this TestDataDB dataConnection, string? varCharDefault, char? varChar1, string? char255, char? char1, byte[]? varBinary255, byte[]? binary255, byte[]? tinyBlob, byte[]? blob, byte[]? mediumBlob, byte[]? longBlob, string? tinyText, string? text, string? mediumText, string? longText, DateTime? date, DateTime? dateTime, DateTime? timeStamp, TimeSpan? time, string? json, bool? tinyInt, bool? tinyIntUnsigned, short? smallInt, short? smallIntUnsigned, int? mediumInt, int? mediumIntUnsigned, int? @int, int? intUnsigned, long? bigInt, long? bigIntUnsigned, decimal? @decimal, float? @float, double? @double, bool? boolean, bool? bit1, bool? bit8, bool? bit10, bool? bit16, bool? bit32, bool? bit64, string? @enum, string? @set, int? year, byte[]? geometry, byte[]? point, byte[]? lineString, byte[]? polygon, byte[]? multiPoint, byte[]? multiLineString, byte[]? multiPolygon, byte[]? geometryCollection)
 		{
 			var parameters = new []
 			{
-				new DataParameter("VarChar255", varChar255, DataType.VarChar)
+				new DataParameter("VarCharDefault", varCharDefault, DataType.VarChar)
 				{
 					Size = 255
 				},
@@ -365,7 +300,7 @@ namespace Cli.T4.MariaDB
 
 		public partial class Issue2313ParametersResult
 		{
-			[Column("`VarChar255`"                                                   )] public string?   VarChar255                                    { get; set; }
+			[Column("`VarCharDefault`"                                               )] public string?   VarCharDefault                                { get; set; }
 			[Column("`VarChar1`"                                                     )] public char?     VarChar1                                      { get; set; }
 			[Column("`Char255`"                                                      )] public string?   Char255                                       { get; set; }
 			[Column("`Char1`"                                                        )] public char?     Char1                                         { get; set; }
@@ -419,13 +354,13 @@ namespace Cli.T4.MariaDB
 		#endregion
 
 		#region Issue2313Results
-		public static IEnumerable<Issue2313ResultsResult> Issue2313Results(this TestDataDB dataConnection, string? varChar255, char? varChar1, string? char255, char? char1, byte[]? varBinary255, byte[]? binary255, byte[]? tinyBlob, byte[]? blob, byte[]? mediumBlob, byte[]? longBlob, string? tinyText, string? text, string? mediumText, string? longText, DateTime? date, DateTime? dateTime, DateTime? timeStamp, TimeSpan? time, bool? tinyInt, bool? tinyIntUnsigned, short? smallInt, short? smallIntUnsigned, int? mediumInt, int? mediumIntUnsigned, int? @int, int? intUnsigned, long? bigInt, long? bigIntUnsigned, decimal? @decimal, float? @float, double? @double, bool? boolean, bool? bit1, bool? bit8, bool? bit10, bool? bit16, bool? bit32, bool? bit64, string? @enum, string? @set, int? year)
+		public static IEnumerable<Issue2313ResultsResult> Issue2313Results(this TestDataDB dataConnection, string? varCharDefault, char? varChar1, string? char255, char? char1, byte[]? varBinary255, byte[]? binary255, byte[]? tinyBlob, byte[]? blob, byte[]? mediumBlob, byte[]? longBlob, string? tinyText, string? text, string? mediumText, string? longText, DateTime? date, DateTime? dateTime, DateTime? timeStamp, TimeSpan? time, bool? tinyInt, bool? tinyIntUnsigned, short? smallInt, short? smallIntUnsigned, int? mediumInt, int? mediumIntUnsigned, int? @int, int? intUnsigned, long? bigInt, long? bigIntUnsigned, decimal? @decimal, float? @float, double? @double, bool? boolean, bool? bit1, bool? bit8, bool? bit10, bool? bit16, bool? bit32, bool? bit64, string? @enum, string? @set, int? year)
 		{
 			var parameters = new []
 			{
-				new DataParameter("VarChar255", varChar255, DataType.VarChar)
+				new DataParameter("VarCharDefault", varCharDefault, DataType.VarChar)
 				{
-					Size = 255
+					Size = 4000
 				},
 				new DataParameter("VarChar1", varChar1, DataType.VarChar)
 				{
@@ -518,7 +453,7 @@ namespace Cli.T4.MariaDB
 
 		public partial class Issue2313ResultsResult
 		{
-			[Column("`VarChar255`"       )] public string?   VarChar255        { get; set; }
+			[Column("`VarCharDefault`"   )] public string?   VarCharDefault    { get; set; }
 			[Column("`VarChar1`"         )] public char?     VarChar1          { get; set; }
 			[Column("`Char255`"          )] public string?   Char255           { get; set; }
 			[Column("`Char1`"            )] public char?     Char1             { get; set; }
@@ -561,20 +496,85 @@ namespace Cli.T4.MariaDB
 			[Column("`Year`"             )] public int?      Year              { get; set; }
 		}
 		#endregion
+
+		#region TestProcedure
+		public static IEnumerable<TestProcedureResult> TestProcedure(this TestDataDB dataConnection, int? i)
+		{
+			var parameters = new []
+			{
+				new DataParameter("i", i, DataType.Int32)
+			};
+			return dataConnection.QueryProc<TestProcedureResult>("`TEST_PROCEDURE`", parameters);
+		}
+
+		public partial class TestProcedureResult
+		{
+			[Column("i + 3")] public long? i3 { get; set; }
+		}
+		#endregion
+
+		#region TestOutputParametersWithoutTableProcedure
+		public static int TestOutputParametersWithoutTableProcedure(this TestDataDB dataConnection, string? aInParam, out bool? aOutParam)
+		{
+			var parameters = new []
+			{
+				new DataParameter("aInParam", aInParam, DataType.VarChar)
+				{
+					Size = 256
+				},
+				new DataParameter("aOutParam", null, DataType.SByte)
+				{
+					Direction = ParameterDirection.Output
+				}
+			};
+			aOutParam = Converter.ChangeTypeTo<bool?>(parameters[1].Value);
+			return dataConnection.ExecuteProc("`TestOutputParametersWithoutTableProcedure`", parameters);
+		}
+		#endregion
+
+		#region TestProcedure
+		public static IEnumerable<TestProcedureResult1> TestProcedure(this TestDataDB dataConnection, int? param3, ref int? param2, out int? param1)
+		{
+			var parameters = new []
+			{
+				new DataParameter("param3", param3, DataType.Int32),
+				new DataParameter("param2", param2, DataType.Int32)
+				{
+					Direction = ParameterDirection.InputOutput
+				},
+				new DataParameter("param1", null, DataType.Int32)
+				{
+					Direction = ParameterDirection.Output
+				}
+			};
+			param2 = Converter.ChangeTypeTo<int?>(parameters[1].Value);
+			param1 = Converter.ChangeTypeTo<int?>(parameters[2].Value);
+			return dataConnection.QueryProc<TestProcedureResult1>("`TestProcedure`", parameters).ToList();
+		}
+
+		public partial class TestProcedureResult1
+		{
+			[Column("PersonID"                     )] public int     PersonID   { get; set; }
+			[Column("FirstName" , CanBeNull = false)] public string  FirstName  { get; set; } = null!;
+			[Column("LastName"  , CanBeNull = false)] public string  LastName   { get; set; } = null!;
+			[Column("MiddleName"                   )] public string? MiddleName { get; set; }
+			[Column("Gender"                       )] public char    Gender     { get; set; }
+		}
+		#endregion
 		#endregion
 
 		#region Scalar Functions
 		#region TestFunction
-		[Sql.Function("`TestFunction`", ServerSideOnly = true)]
-		public static string? TestFunction(int? param)
+		[Sql.Function("`TEST_FUNCTION`", ServerSideOnly = true)]
+		public static int? TestFunction(int? i)
 		{
 			throw new InvalidOperationException("Scalar function cannot be called outside of query");
 		}
 		#endregion
 
 		#region TestFunction
-		[Sql.Function("`TEST_FUNCTION`", ServerSideOnly = true)]
-		public static int? TestFunction1(int? i)
+		[Sql.Function("`TestFunction`", ServerSideOnly = true)]
+		public static string? TestFunction1(int? param)
 		{
 			throw new InvalidOperationException("Scalar function cannot be called outside of query");
 		}
@@ -582,8 +582,8 @@ namespace Cli.T4.MariaDB
 		#endregion
 	}
 
-	[Table("alltypesnoyear")]
-	public partial class Alltypesnoyear
+	[Table("AllTypesNoYear")]
+	public partial class AllTypesNoYear
 	{
 		[Column("ID"                 , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int       ID                  { get; set; } // int(11)
 		[Column("bigintDataType"                                                                                       )] public long?     BigintDataType      { get; set; } // bigint(20)
@@ -613,23 +613,23 @@ namespace Cli.T4.MariaDB
 		[Column("boolDataType"                                                                                         )] public bool?     BoolDataType        { get; set; } // tinyint(1)
 	}
 
-	[Table("child")]
+	[Table("Child")]
 	public partial class Child
 	{
 		[Column("ParentID")] public int? ParentID { get; set; } // int(11)
 		[Column("ChildID" )] public int? ChildID  { get; set; } // int(11)
 	}
 
-	[Table("collatedtable")]
-	public partial class Collatedtable
+	[Table("CollatedTable")]
+	public partial class CollatedTable
 	{
 		[Column("Id"                                )] public int    Id              { get; set; } // int(11)
 		[Column("CaseSensitive"  , CanBeNull = false)] public string CaseSensitive   { get; set; } = null!; // varchar(20)
 		[Column("CaseInsensitive", CanBeNull = false)] public string CaseInsensitive { get; set; } = null!; // varchar(20)
 	}
 
-	[Table("datatypetest")]
-	public partial class Datatypetest
+	[Table("DataTypeTest")]
+	public partial class DataTypeTest
 	{
 		[Column("DataTypeID", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int       DataTypeID { get; set; } // int(11)
 		[Column("Binary_"                                                                                     )] public byte[]?   Binary     { get; set; } // binary(50)
@@ -655,7 +655,7 @@ namespace Cli.T4.MariaDB
 		[Column("Xml_"                                                                                        )] public string?   Xml        { get; set; } // varchar(1000)
 	}
 
-	[Table("doctor")]
+	[Table("Doctor")]
 	public partial class Doctor
 	{
 		[Column("PersonID", IsPrimaryKey = true )] public int    PersonID { get; set; } // int(11)
@@ -670,24 +670,24 @@ namespace Cli.T4.MariaDB
 		#endregion
 	}
 
-	[Table("fulltextindextest")]
-	public partial class Fulltextindextest
+	[Table("FullTextIndexTest")]
+	public partial class FullTextIndexTest
 	{
 		[Column("id"        , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public uint    Id         { get; set; } // int(10) unsigned
 		[Column("TestField1"                                                                                  )] public string? TestField1 { get; set; } // text
 		[Column("TestField2"                                                                                  )] public string? TestField2 { get; set; } // text
 	}
 
-	[Table("grandchild")]
-	public partial class Grandchild
+	[Table("GrandChild")]
+	public partial class GrandChild
 	{
 		[Column("ParentID"    )] public int? ParentID     { get; set; } // int(11)
 		[Column("ChildID"     )] public int? ChildID      { get; set; } // int(11)
 		[Column("GrandChildID")] public int? GrandChildID { get; set; } // int(11)
 	}
 
-	[Table("inheritancechild")]
-	public partial class Inheritancechild
+	[Table("InheritanceChild")]
+	public partial class InheritanceChild
 	{
 		[Column("InheritanceChildId" , IsPrimaryKey = true)] public int     InheritanceChildId  { get; set; } // int(11)
 		[Column("InheritanceParentId"                     )] public int     InheritanceParentId { get; set; } // int(11)
@@ -695,23 +695,23 @@ namespace Cli.T4.MariaDB
 		[Column("Name"                                    )] public string? Name                { get; set; } // varchar(50)
 	}
 
-	[Table("inheritanceparent")]
-	public partial class Inheritanceparent
+	[Table("InheritanceParent")]
+	public partial class InheritanceParent
 	{
 		[Column("InheritanceParentId", IsPrimaryKey = true)] public int     InheritanceParentId { get; set; } // int(11)
 		[Column("TypeDiscriminator"                       )] public int?    TypeDiscriminator   { get; set; } // int(11)
 		[Column("Name"                                    )] public string? Name                { get; set; } // varchar(50)
 	}
 
-	[Table("issue1993")]
+	[Table("Issue1993")]
 	public partial class Issue1993
 	{
 		[Column("id"         , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public uint    Id          { get; set; } // int(10) unsigned
 		[Column("description"                                                                                  )] public string? Description { get; set; } // varchar(100)
 	}
 
-	[Table("linqdatatypes")]
-	public partial class Linqdatatype
+	[Table("LinqDataTypes")]
+	public partial class LinqDataType
 	{
 		[Column("ID"            )] public int?      ID             { get; set; } // int(11)
 		[Column("MoneyValue"    )] public decimal?  MoneyValue     { get; set; } // decimal(10,4)
@@ -726,14 +726,14 @@ namespace Cli.T4.MariaDB
 		[Column("StringValue"   )] public string?   StringValue    { get; set; } // varchar(50)
 	}
 
-	[Table("parent")]
+	[Table("Parent")]
 	public partial class Parent
 	{
 		[Column("ParentID")] public int? ParentID { get; set; } // int(11)
 		[Column("Value1"  )] public int? Value1   { get; set; } // int(11)
 	}
 
-	[Table("patient")]
+	[Table("Patient")]
 	public partial class Patient
 	{
 		[Column("PersonID" , IsPrimaryKey = true )] public int    PersonID  { get; set; } // int(11)
@@ -748,7 +748,7 @@ namespace Cli.T4.MariaDB
 		#endregion
 	}
 
-	[Table("person")]
+	[Table("Person")]
 	public partial class Person
 	{
 		[Column("PersonID"  , IsPrimaryKey = true , IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int     PersonID   { get; set; } // int(11)
@@ -761,25 +761,25 @@ namespace Cli.T4.MariaDB
 		/// <summary>
 		/// FK_Doctor_Person backreference
 		/// </summary>
-		[Association(ThisKey = nameof(PersonID), OtherKey = nameof(Doctor.PersonID))]
-		public Doctor? DoctorPerson { get; set; }
+		[Association(ThisKey = nameof(PersonID), OtherKey = nameof(MariaDB.Doctor.PersonID))]
+		public Doctor? Doctor { get; set; }
 
 		/// <summary>
 		/// FK_Patient_Person backreference
 		/// </summary>
-		[Association(ThisKey = nameof(PersonID), OtherKey = nameof(Patient.PersonID))]
-		public Patient? PatientPerson { get; set; }
+		[Association(ThisKey = nameof(PersonID), OtherKey = nameof(MariaDB.Patient.PersonID))]
+		public Patient? Patient { get; set; }
 		#endregion
 	}
 
-	[Table("testidentity")]
-	public partial class Testidentity
+	[Table("TestIdentity")]
+	public partial class TestIdentity
 	{
 		[Column("ID", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int ID { get; set; } // int(11)
 	}
 
-	[Table("testmerge1")]
-	public partial class Testmerge1
+	[Table("TestMerge1")]
+	public partial class TestMerge1
 	{
 		[Column("Id"             , IsPrimaryKey = true)] public int       Id              { get; set; } // int(11)
 		[Column("Field1"                              )] public int?      Field1          { get; set; } // int(11)
@@ -805,8 +805,8 @@ namespace Cli.T4.MariaDB
 		[Column("FieldEnumNumber"                     )] public int?      FieldEnumNumber { get; set; } // int(11)
 	}
 
-	[Table("testmerge2")]
-	public partial class Testmerge2
+	[Table("TestMerge2")]
+	public partial class TestMerge2
 	{
 		[Column("Id"             , IsPrimaryKey = true)] public int       Id              { get; set; } // int(11)
 		[Column("Field1"                              )] public int?      Field1          { get; set; } // int(11)
@@ -832,8 +832,8 @@ namespace Cli.T4.MariaDB
 		[Column("FieldEnumNumber"                     )] public int?      FieldEnumNumber { get; set; } // int(11)
 	}
 
-	[Table("testsamename")]
-	public partial class Testsamename
+	[Table("TestSameName")]
+	public partial class TestSameName
 	{
 		[Column("ID", IsPrimaryKey = true)] public int ID { get; set; } // int(11)
 	}
@@ -841,8 +841,8 @@ namespace Cli.T4.MariaDB
 	/// <summary>
 	/// VIEW
 	/// </summary>
-	[Table("personview", IsView = true)]
-	public partial class Personview
+	[Table("PersonView", IsView = true)]
+	public partial class PersonView
 	{
 		[Column("ID")] public int ID { get; set; } // int(11)
 	}

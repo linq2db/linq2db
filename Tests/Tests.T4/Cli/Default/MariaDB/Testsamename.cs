@@ -12,8 +12,8 @@ using LinqToDB.Mapping;
 
 namespace Cli.Default.MariaDB
 {
-	[Table("testsamename")]
-	public class Testsamename
+	[Table("TestSameName")]
+	public class TestSameName
 	{
 		[Column("ID", IsPrimaryKey = true)] public int Id { get; set; } // int(11)
 	}

@@ -27,7 +27,7 @@ using NpgsqlTypes;
 
 namespace PostreSQLDataContext
 {
-	public partial class TestdbDB : LinqToDB.Data.DataConnection
+	public partial class TestdataDB : LinqToDB.Data.DataConnection
 	{
 		public ITable<_testsamename>                  _testsamename             { get { return this.GetTable<_testsamename>(); } }
 		public ITable<AllType>                        AllTypes                  { get { return this.GetTable<AllType>(); } }
@@ -59,6 +59,7 @@ namespace PostreSQLDataContext
 		public ITable<TestIdentity>                   TestIdentities            { get { return this.GetTable<TestIdentity>(); } }
 		public ITable<TestMerge1>                     TestMerge1                { get { return this.GetTable<TestMerge1>(); } }
 		public ITable<TestMerge2>                     TestMerge2                { get { return this.GetTable<TestMerge2>(); } }
+		public ITable<TestMergeIdentity>              TestMergeIdentities       { get { return this.GetTable<TestMergeIdentity>(); } }
 		public ITable<test_schema_Testsamename>       Testsamenames             { get { return this.GetTable<test_schema_Testsamename>(); } }
 		public ITable<test_schema_TestSchemaIdentity> TestSchemaIdentities      { get { return this.GetTable<test_schema_TestSchemaIdentity>(); } }
 		public ITable<test_schema_Testserialidentity> Testserialidentities      { get { return this.GetTable<test_schema_Testserialidentity>(); } }
@@ -81,22 +82,6 @@ namespace PostreSQLDataContext
 
 		#endregion
 
-		#region TestTableFunction
-
-		[Sql.TableFunction(Schema="public", Name="\"TestTableFunction\"")]
-		public ITable<TestTableFunctionResult> TestTableFunction(int? param1)
-		{
-			return this.GetTable<TestTableFunctionResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				param1);
-		}
-
-		public partial class TestTableFunctionResult
-		{
-			public int? param2 { get; set; }
-		}
-
-		#endregion
-
 		#region TestTableFunction1
 
 		[Sql.TableFunction(Schema="public", Name="\"TestTableFunction1\"")]
@@ -111,6 +96,22 @@ namespace PostreSQLDataContext
 		{
 			public int? param3 { get; set; }
 			public int? param4 { get; set; }
+		}
+
+		#endregion
+
+		#region TestTableFunction
+
+		[Sql.TableFunction(Schema="public", Name="\"TestTableFunction\"")]
+		public ITable<TestTableFunctionResult> TestTableFunction(int? param1)
+		{
+			return this.GetTable<TestTableFunctionResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
+				param1);
+		}
+
+		public partial class TestTableFunctionResult
+		{
+			public int? param2 { get; set; }
 		}
 
 		#endregion
@@ -541,6 +542,13 @@ namespace PostreSQLDataContext
 		[Column(DataType=LinqToDB.DataType.Int32,          Precision=32, Scale=0),     Nullable         ] public int?            FieldEnumNumber { get; set; } // integer
 	}
 
+	[Table(Schema="public", Name="TestMergeIdentity")]
+	public partial class TestMergeIdentity
+	{
+		[Column(DataType=LinqToDB.DataType.Int32, Precision=32, Scale=0), PrimaryKey, Identity] public int  Id    { get; set; } // integer
+		[Column(DataType=LinqToDB.DataType.Int32, Precision=32, Scale=0), Nullable            ] public int? Field { get; set; } // integer
+	}
+
 	[Table(Schema="test_schema", Name="testsamename")]
 	public partial class test_schema_Testsamename
 	{
@@ -781,6 +789,12 @@ namespace PostreSQLDataContext
 		}
 
 		public static TestMerge2? Find(this ITable<TestMerge2> table, int Id)
+		{
+			return table.FirstOrDefault(t =>
+				t.Id == Id);
+		}
+
+		public static TestMergeIdentity? Find(this ITable<TestMergeIdentity> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);

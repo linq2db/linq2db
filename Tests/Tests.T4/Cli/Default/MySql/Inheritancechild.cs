@@ -12,8 +12,8 @@ using LinqToDB.Mapping;
 
 namespace Cli.Default.MySql
 {
-	[Table("inheritancechild")]
-	public class Inheritancechild
+	[Table("InheritanceChild")]
+	public class InheritanceChild
 	{
 		[Column("InheritanceChildId" , IsPrimaryKey = true)] public int     InheritanceChildId  { get; set; } // int
 		[Column("InheritanceParentId"                     )] public int     InheritanceParentId { get; set; } // int
