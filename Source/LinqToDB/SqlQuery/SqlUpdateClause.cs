@@ -12,9 +12,10 @@ namespace LinqToDB.SqlQuery
 			Keys  = new List<SqlSetExpression>();
 		}
 
-		public List<SqlSetExpression> Items { get; }
-		public List<SqlSetExpression> Keys  { get; }
-		public SqlTable?              Table { get; set; }
+		public List<SqlSetExpression> Items       { get; }
+		public List<SqlSetExpression> Keys        { get; }
+		public SqlTable?              Table       { get; set; }
+		public SqlTableSource?        TableSource { get; set; }
 
 		#region Overrides
 

@@ -575,16 +575,18 @@ namespace LinqToDB.SqlQuery
 
 					case QueryElementType.UpdateClause:
 					{
-						var s = (SqlUpdateClause)element;
-						var t = s.Table != null ? (SqlTable?)ConvertInternal(s.Table) : null;
-						var i = Convert(s.Items);
-						var k = Convert(s.Keys );
+						var s  = (SqlUpdateClause)element;
+						var t  = s.Table       != null ? (SqlTable?)ConvertInternal(s.Table) : null;
+						var ts = s.TableSource != null ? (SqlTableSource?)ConvertInternal(s.TableSource) : null;
+						var i  = Convert(s.Items);
+						var k  = Convert(s.Keys );
 
-						if (t != null && !ReferenceEquals(s.Table, t) ||
-							i != null && !ReferenceEquals(s.Items, i) ||
-							k != null && !ReferenceEquals(s.Keys, k))
+						if (t  != null && !ReferenceEquals(s.Table, t) ||
+						    ts != null && !ReferenceEquals(s.TableSource, ts) ||
+							i  != null && !ReferenceEquals(s.Items, i) ||
+							k  != null && !ReferenceEquals(s.Keys, k))
 						{
-							var sc = new SqlUpdateClause { Table = t ?? s.Table };
+							var sc = new SqlUpdateClause { Table = t ?? s.Table, TableSource = ts ?? s.TableSource };
 
 							sc.Items.AddRange(i ?? s.Items);
 							sc.Keys.AddRange(k ?? s.Keys);

@@ -486,6 +486,8 @@ namespace LinqToDB.SqlQuery
 		{
 			if (sc.Table != null)
 				Visit(sc.Table);
+			if (sc.TableSource != null)
+				Visit(sc.TableSource);
 
 			foreach (var c in sc.Items) Visit(c);
 			foreach (var c in sc.Keys ) Visit(c);

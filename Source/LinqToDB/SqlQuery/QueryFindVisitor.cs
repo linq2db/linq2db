@@ -237,6 +237,7 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.UpdateClause:
 					{
 						return
+							Find(((SqlUpdateClause)element).TableSource) ??
 							Find(((SqlUpdateClause)element).Table) ??
 							Find(((SqlUpdateClause)element).Items) ??
 							Find(((SqlUpdateClause)element).Keys );

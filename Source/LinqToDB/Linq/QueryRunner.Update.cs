@@ -42,6 +42,7 @@ namespace LinqToDB.Linq
 
 				var sqlQuery = new SelectQuery();
 				var updateStatement = new SqlUpdateStatement(sqlQuery);
+				updateStatement.Update.Table = sqlTable;
 
 				sqlQuery.From.Table(sqlTable);
 

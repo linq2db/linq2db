@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-
+using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
@@ -854,22 +854,8 @@ namespace Tests.xUpdate
 					.Set(y => y.BoolValue, y => y.Tables2.All(x => x.Value1 == 1))
 					.Update();
 
-				if (!context.IsAnyOf(TestProvName.AllSybase))
-				{
-					var idx = db.LastQuery!.IndexOf("INNER JOIN");
-
-					Assert.That(idx, Is.Not.EqualTo(-1));
-
-					idx = db.LastQuery.IndexOf("INNER JOIN", idx + 1);
-
-					Assert.That(idx, Is.EqualTo(-1));
-				}
-				else
-				{
-					var idx = db.LastQuery!.IndexOf("INNER JOIN");
-
-					Assert.That(idx, Is.EqualTo(-1));
-				}
+				db.LastQuery!.Should().Contain("INNER JOIN");
+				db.LastQuery!.Should().Contain("DISTINCT");
 			}
 		}
 

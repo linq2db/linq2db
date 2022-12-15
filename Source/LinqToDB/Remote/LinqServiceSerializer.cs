@@ -1213,6 +1213,7 @@ namespace LinqToDB.Remote
 							Append(elem.Items);
 							Append(elem.Keys);
 							Append(elem.Table);
+							Append(elem.TableSource);
 
 							break;
 						}
@@ -1278,8 +1279,8 @@ namespace LinqToDB.Remote
 							var elem = (SqlUpdateStatement)e;
 							Append(elem.Tag);
 							Append(elem.With);
-							Append(elem.Update);
 							Append(elem.SelectQuery);
+							Append(elem.Update);
 							Append(elem.Output);
 
 							break;
@@ -2089,11 +2090,12 @@ namespace LinqToDB.Remote
 
 					case QueryElementType.UpdateClause :
 						{
-							var items = ReadArray<SqlSetExpression>();
-							var keys  = ReadArray<SqlSetExpression>();
-							var table = Read<SqlTable>();
+							var items       = ReadArray<SqlSetExpression>();
+							var keys        = ReadArray<SqlSetExpression>();
+							var table       = Read<SqlTable>();
+							var tableSource = Read<SqlTableSource>();
 
-							var c = new SqlUpdateClause { Table = table };
+							var c = new SqlUpdateClause { Table = table, TableSource = tableSource };
 
 							if (items != null)
 								c.Items.AddRange(items);
@@ -2170,8 +2172,8 @@ namespace LinqToDB.Remote
 						{
 							var tag         = Read<SqlComment>();
 							var with        = Read<SqlWithClause>();
-							var update      = Read<SqlUpdateClause>()!;
 							var selectQuery = Read<SelectQuery>()!;
+							var update      = Read<SqlUpdateClause>()!;
 							var output      = Read<SqlOutputClause>()!;
 
 							obj = _statement = new SqlUpdateStatement(selectQuery)

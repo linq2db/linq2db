@@ -100,6 +100,16 @@ namespace LinqToDB.DataProvider.SqlServer
 			return like;
 		}
 
+		protected override SqlStatement FinalizeUpdate(SqlStatement statement)
+		{
+			var newStatement = base.FinalizeUpdate(statement);
+
+			if (newStatement is SqlUpdateStatement updateStatement)
+				newStatement = BasicCorrectUpdate(updateStatement);
+
+			return newStatement;
+		}
+
 		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expression, ConvertVisitor<RunOptimizationContext> visitor)
 		{
 			expression = base.ConvertExpressionImpl(expression, visitor);

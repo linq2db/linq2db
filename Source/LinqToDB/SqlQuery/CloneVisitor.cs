@@ -726,7 +726,8 @@ namespace LinqToDB.SqlQuery
 					// TODO: children Clone called before _objectTree update (original cloning logic)
 					var newUpdate = new SqlUpdateClause()
 					{
-						Table = Clone(update.Table)
+						Table = Clone(update.Table),
+						TableSource = Clone(update.TableSource)
 					};
 
 					CloneInto(newUpdate.Items, update.Items);

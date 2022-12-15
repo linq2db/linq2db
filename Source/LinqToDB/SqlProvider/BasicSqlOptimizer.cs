@@ -69,7 +69,6 @@ namespace LinqToDB.SqlProvider
 			}
 
 			statement = FinalizeInsert(statement);
-			statement = FinalizeUpdate(statement);
 			statement = FinalizeSelect(statement);
 			statement = CorrectUnionOrderBy(statement);
 			statement = FixSetOperationNulls(statement);
@@ -161,8 +160,11 @@ namespace LinqToDB.SqlProvider
 			       joinedTable.JoinType == JoinType.Right;
 		}
 
-		public static bool IsCompatibleForUpdate(IEnumerable<IQueryElement> path)
+		public static bool IsCompatibleForUpdate(List<IQueryElement> path)
 		{
+			if (path.Count > 2)
+				return false;
+
 			var result = path.All(e =>
 			{
 				if (e is SelectQuery sc)
@@ -196,19 +198,22 @@ namespace LinqToDB.SqlProvider
 			return current;
 		}
 
-		SqlStatement CorrectUpdate(SqlUpdateStatement statement)
+		protected virtual SqlUpdateStatement BasicCorrectUpdate(SqlUpdateStatement statement)
 		{
 			if (statement.Update.Table != null)
 			{
-				var (tableSource, queryPath) = FindTableSource(new Stack<IQueryElement>(),  statement.SelectQuery, statement.Update.Table);
+				var (tableSource, queryPath) = FindTableSource(new Stack<IQueryElement>(), statement.SelectQuery, statement.Update.Table);
+
 				if (tableSource != null && queryPath != null)
 				{
+					statement.Update.TableSource = tableSource;
+
 					if (!IsCompatibleForUpdate(queryPath))
 					{
 						// we have to create new Update table and join via Keys
 
 						var queries = queryPath.OfType<SelectQuery>().ToList();
-						var keys    = statement.Update.Table.GetKeys(false).ToArray();
+						var keys    = statement.Update.Table.GetKeys(true).ToArray();
 
 						if (keys.Length == 0)
 						{
@@ -296,13 +301,33 @@ namespace LinqToDB.SqlProvider
 							statement.Update.Items[index] = item;
 						}
 
-						statement.Update.Table = newTable;
+						statement.Update.Table       = newTable;
+						statement.Update.TableSource = null;
+					}
+					else
+					{
+						if (queryPath.Count > 0)
+						{
+							var ts = statement.SelectQuery.From.Tables.FirstOrDefault();
+							if (ts != null)
+							{
+								if (ts.Source is SelectQuery)
+									statement.Update.TableSource = ts;
+							}
+						}
 					}
 
-					foreach (var item in statement.Update.Items)
+					// remove current column wrapping
+					for (var index = 0; index < statement.Update.Items.Count; index++)
 					{
-						if (item.Expression is SqlColumn column)
-							item.Expression = column.Expression;
+						var item = statement.Update.Items[index];
+
+						statement.Update.Items[index] = item.Convert(statement.SelectQuery, (v, e) =>
+						{
+							if (e is SqlColumn column && column.Parent == v.Context)
+								return column.Expression;
+							return e;
+						});
 					}
 				}
 			}
@@ -314,8 +339,6 @@ namespace LinqToDB.SqlProvider
 		{
 			if (statement is SqlUpdateStatement updateStatement)
 			{
-				statement = CorrectUpdate(updateStatement);
-
 				// get from columns expression
 				//
 				updateStatement.Update.Items.ForEach(item =>
@@ -527,6 +550,7 @@ namespace LinqToDB.SqlProvider
 		//TODO: move tis to standard optimizer
 		protected virtual SqlStatement OptimizeUpdateSubqueries(SqlStatement statement)
 		{
+			/*
 			if (statement is SqlUpdateStatement updateStatement)
 			{
 				var evaluationContext = new EvaluationContext();
@@ -539,6 +563,7 @@ namespace LinqToDB.SqlProvider
 					}
 				}
 			}
+			*/
 
 			return statement;
 		}
@@ -2675,21 +2700,13 @@ namespace LinqToDB.SqlProvider
 				var clonedQuery  = updateStatement.SelectQuery.Clone(objectTree);
 
 				var tableToUpdateMapping = new Dictionary<IQueryElement,IQueryElement>(objectTree);
+
+				var tableToCompare = (SqlTable)objectTree[tableToUpdate];
+
 				// remove mapping from updatable table
 				objectTree.Remove(tableToUpdate);
 				foreach (var field in tableToUpdate.Fields)
 					objectTree.Remove(field);
-
-				SqlTable? tableToCompare = null;
-				foreach (var ts in QueryHelper.EnumerateAccessibleSources(clonedQuery))
-				{
-					var t = ts as SqlTable;
-					if (QueryHelper.IsEqualTables(t, tableToUpdate))
-					{
-						tableToCompare = t;
-						break;
-					}
-				}
 
 				if (tableToCompare == null)
 					throw new LinqToDBException("Query can't be translated to UPDATE Statement.");
@@ -2705,6 +2722,16 @@ namespace LinqToDB.SqlProvider
 						throw new LinqToDBException($"Can not create query column for expression '{compareKeys[i]}'.");
 					var compare = QueryHelper.GenerateEquality(tableKeys[i], column);
 					clonedQuery.Where.SearchCondition.Conditions.Add(compare);
+				}
+
+
+				// remove current column wrapping
+				foreach (var item in updateStatement.Update.Items)
+				{
+					if (item.Expression is SqlColumn column && column.Parent == updateStatement.SelectQuery)
+					{
+						item.Expression = column.Expression;
+					}
 				}
 
 				clonedQuery.Select.Columns.Clear();
@@ -2802,37 +2829,43 @@ namespace LinqToDB.SqlProvider
 				{
 					foreach (var item in updateStatement.Update.Items)
 					{
-						var ex = item.Expression!.Convert(objectTree, static (v, expr) =>
-							v.Context.TryGetValue(expr, out var newValue)
-								? newValue
-								: expr);
+						if (item.Expression == null)
+							continue;
 
 						var usedSources = new HashSet<ISqlTableSource>();
+
+						var ex = item.Expression;
+
 						QueryHelper.GetUsedSources(ex, usedSources);
 						usedSources.Remove(tableToUpdate);
-						if (objectTree.TryGetValue(tableToUpdate, out var replaced))
-							usedSources.Remove((ISqlTableSource)replaced);
 
 						if (usedSources.Count > 0)
 						{
 							// it means that update value column depends on other tables and we have to generate more complicated query
 
-							var innerQuery = clonedQuery.Clone(static e => e is not SqlTable);
+							var iterationTree = new Dictionary<IQueryElement, IQueryElement>();
+							var innerQuery    = clonedQuery.Clone(tableToUpdate, iterationTree, static (ut, e) => e != ut);
+
+							ex = ex!.Convert((iterationTree, objectTree), static (v, expr) =>
+							{
+								var converted = v.Context.objectTree.TryGetValue(expr, out var newValue)
+									? newValue
+									: expr;
+
+								converted = v.Context.iterationTree.TryGetValue(converted, out newValue)
+									? newValue
+									: converted;
+
+								return converted;
+							});
 
 							innerQuery.ParentSelect = sql;
 
 							innerQuery.Select.Columns.Clear();
 
-							var remapped = ex.Convert((tableToUpdateMapping, innerQuery, objectTree),
+							var remapped = ex.Convert((tableToUpdateMapping, innerQuery, objectTree: iterationTree),
 								static (v, e) =>
 								{
-									if (v.Context.tableToUpdateMapping.TryGetValue(e, out var n))
-									{
-										e = n;
-										v.Context.objectTree.Remove(e);
-										v.Context.objectTree.Add(e, n);
-									}
-
 									if (e is SqlColumn clmn && clmn.Parent != v.Context.innerQuery || e is SqlField)
 									{
 										var column = QueryHelper.NeedColumnForExpression(v.Context.innerQuery,
@@ -2851,12 +2884,17 @@ namespace LinqToDB.SqlProvider
 
 							innerQuery.Select.AddNew(remapped);
 							innerQuery.RemoveNotUnusedColumns();
+
 							ex = innerQuery;
 						}
+						else
+						{
+							ex = ex!.Convert(objectTree, static (v, expr) =>
+								v.Context.TryGetValue(expr, out var newValue)
+									? newValue
+									: expr);
+						}
 
-						item.Column = tableToUpdate[QueryHelper.GetUnderlyingField(item.Column)!.Name]
-						              ?? throw new LinqException(
-							              $"Field {QueryHelper.GetUnderlyingField(item.Column)!.Name} not found in table {tableToUpdate}");
 						item.Expression = ex;
 						newUpdateStatement.Update.Items.Add(item);
 					}
@@ -3110,6 +3148,7 @@ namespace LinqToDB.SqlProvider
 		/// <returns>Corrected statement.</returns>
 		protected SqlUpdateStatement CorrectUpdateTable(SqlUpdateStatement statement)
 		{
+			statement = BasicCorrectUpdate(statement);
 			var updateTable = statement.Update.Table;
 			if (updateTable != null)
 			{
@@ -3453,6 +3492,7 @@ namespace LinqToDB.SqlProvider
 		public virtual SqlStatement FinalizeStatement(SqlStatement statement, EvaluationContext context)
 		{
 			var newStatement = TransformStatement(statement);
+			newStatement = FinalizeUpdate(newStatement);
 
 			if (SqlProviderFlags.IsParameterOrderDependent)
 			{

@@ -156,23 +156,12 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		protected override void BuildUpdateTableName(SelectQuery selectQuery, SqlUpdateClause updateClause)
 		{
-			ISqlTableSource? table = null;
-
-			if (updateClause.Table != null)
-			{
-				var foundTs = selectQuery.From.FindTableSource(updateClause.Table);
-				table = foundTs;
-			}
-
-			if (table == null)
-			{
-				table = updateClause.Table ?? (ISqlTableSource)selectQuery.From.Tables[0];
-			}
-
-			if (table is SqlTable)
-				BuildPhysicalTable(table, null);
+			if (updateClause.TableSource != null)
+				Convert(StringBuilder, GetTableAlias(updateClause.TableSource)!, ConvertType.NameToQueryTableAlias);
+			else if (updateClause.Table != null)
+				BuildPhysicalTable(updateClause.Table, null);
 			else
-				Convert(StringBuilder, GetTableAlias(table)!, ConvertType.NameToQueryTableAlias);
+				throw new InvalidOperationException();
 		}
 
 		private string GetTablePhysicalName(string tableName, TableOptions tableOptions)

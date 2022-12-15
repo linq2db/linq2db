@@ -584,6 +584,38 @@ namespace LinqToDB.SqlQuery
 		/// </summary>
 		/// <param name="selectQuery"></param>
 		/// <returns></returns>
+		public static IEnumerable<SqlTableSource> EnumerateAccessibleTableSources(SelectQuery selectQuery)
+		{
+			foreach (var tableSource in selectQuery.Select.From.Tables)
+			{
+				foreach (var source in EnumerateAccessibleTableSources(tableSource))
+					yield return source;
+			}
+		}
+
+		public static IEnumerable<SqlTableSource> EnumerateAccessibleTableSources(SqlTableSource tableSource)
+		{
+			yield return tableSource;
+
+			if (tableSource.Source is SelectQuery q)
+			{
+				foreach (var ts in EnumerateAccessibleTableSources(q))
+					yield return ts;
+			}
+
+			foreach (var join in tableSource.Joins)
+			{
+				foreach (var source in EnumerateAccessibleTableSources(join.Table))
+					yield return source;
+			}
+
+		}
+
+		/// <summary>
+		/// Enumerates table sources recursively based on joins
+		/// </summary>
+		/// <param name="selectQuery"></param>
+		/// <returns></returns>
 		public static IEnumerable<ISqlTableSource> EnumerateAccessibleSources(SelectQuery selectQuery)
 		{
 			yield return selectQuery;

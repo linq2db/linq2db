@@ -10,7 +10,6 @@ namespace LinqToDB.Linq.Builder
 	using SqlQuery;
 	using Common;
 	using LinqToDB.Expressions;
-	using static LinqToDB.Linq.Builder.TableBuilder;
 
 	sealed class UpdateBuilder : MethodCallBuilder
 	{
@@ -137,6 +136,7 @@ namespace LinqToDB.Linq.Builder
 					// int Update<TSource,TTarget>(this IQueryable<TSource> source, Expression<Func<TSource,TTarget>> target, Expression<Func<TSource,TTarget>> setter)
 					//
 
+					objectType = genericArguments[1];
 					var expr = methodCall.Arguments[1].Unwrap();
 					IBuildContext into;
 
@@ -169,22 +169,47 @@ namespace LinqToDB.Linq.Builder
 							throw new LinqException("Cannot retrieve Table for update.");
 						}
 
-						if (sequenceTableContext != null)
+						if (sequenceTableContext == null)
 						{
-							// copy information form target table
-							//
-							sequenceTableContext.SqlTable.TableName    = intoTableContext.SqlTable.TableName;
-							sequenceTableContext.SqlTable.TableOptions = intoTableContext.SqlTable.TableOptions;
+							// trying to detect join table
 
-							updateContext.TargetTable = sequenceTableContext;							
+							var collectedTables = new HashSet<TableBuilder.TableContext >();
+							setterExpr.Visit((builder, sequence, collectedTables, intoTableContext), (ctx, e) =>
+							{
+								if (e is MemberExpression me)
+								{
+									if (ctx.builder.GetRootContext(ctx.sequence, me.Expression, false)?.BuildContext == ctx.sequence)
+									{
+										var tableCtx = SequenceHelper.GetTableContext(ctx.builder, e);
+										if (tableCtx != null && tableCtx.ObjectType == ctx.intoTableContext.ObjectType)
+										{
+											ctx.collectedTables.Add(tableCtx);
+										}
+									}
+								}
+							});
+
+							if (collectedTables.Count == 0)
+								throw new LinqToDBException("Could not find join table for update query.");
+
+							if (collectedTables.Count > 1)
+								throw new LinqToDBException("Could not find join table for update query. Ambiguous tables.");
+
+							sequenceTableContext = collectedTables.First();
+						}
+
+						if (!QueryHelper.IsEqualTables(sequenceTableContext.SqlTable, intoTableContext.SqlTable))
+						{
+							// create join between tables
+							throw new NotImplementedException();
 						}
 						else
 						{
-							updateContext.TargetTable = intoTableContext;
+							intoTableContext = sequenceTableContext;
 						}
-					}
 
-					objectType = genericArguments[1];
+						updateContext.TargetTable = intoTableContext;
+					}
 
 					var targetRef = new ContextRefExpression(objectType, updateContext.TargetTable);
 
@@ -418,6 +443,9 @@ namespace LinqToDB.Linq.Builder
 				var fieldExpression = builder.ConvertExpression(envelope.FieldExpression);
 				var valueExpression = envelope.ValueExpression != null ? builder.ConvertExpression(envelope.ValueExpression) : null;
 
+				if (valueExpression != null)
+					valueExpression = SequenceHelper.MoveAllToScopedContext(valueExpression, valuesContext);
+
 				if (fieldExpression.IsSqlRow())
 				{
 					var row = fieldExpression.GetSqlRowValues()
@@ -503,7 +531,7 @@ namespace LinqToDB.Linq.Builder
 			Expression                  valueExpression,
 			List<SetExpressionEnvelope> envelopes)
 		{
-			ParseSet(targetRef, fieldExpression, valueExpression, envelopes);
+			ParseSet((Expression)targetRef, fieldExpression, valueExpression, envelopes);
 		}
 
 		internal static void ParseSetter(
