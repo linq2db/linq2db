@@ -9,8 +9,8 @@ namespace LinqToDB.Identity.Model
 	/// Implementation of <see cref="ASP.IdentityRole{TKey}" /> with navigation properties.
 	/// </summary>
 	public class IdentityRole<TKey, TUserRole, TRoleClaim> : ASP.IdentityRole<TKey>
-		where TKey : IEquatable<TKey>
-		where TUserRole : ASP.IdentityUserRole<TKey>
+		where TKey       : IEquatable<TKey>
+		where TUserRole  : ASP.IdentityUserRole<TKey>
 		where TRoleClaim : ASP.IdentityRoleClaim<TKey>
 	{
 		/// <summary>

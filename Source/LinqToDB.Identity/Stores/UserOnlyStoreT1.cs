@@ -2,7 +2,6 @@
 
 namespace LinqToDB.Identity
 {
-
 	/// <summary>
 	/// Creates a new instance of a persistence store for the specified user type.
 	/// </summary>

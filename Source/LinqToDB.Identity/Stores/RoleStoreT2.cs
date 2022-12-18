@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Security.Claims;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 
 namespace LinqToDB.Identity
 {
@@ -15,7 +8,7 @@ namespace LinqToDB.Identity
 	/// <typeparam name="TRole">The type of the class representing a role.</typeparam>
 	/// <typeparam name="TContext">The type of the data context class used to access the store.</typeparam>
 	public class RoleStore<TRole, TContext> : RoleStore<TRole, TContext, string>
-		where TRole : IdentityRole<string>
+		where TRole    : IdentityRole<string>
 		where TContext : IDataContext
 	{
 		/// <summary>

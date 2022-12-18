@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading;
@@ -9,7 +8,6 @@ using Microsoft.AspNetCore.Identity;
 
 namespace LinqToDB.Identity
 {
-
 	/// <summary>
 	/// Creates a new instance of a persistence store for roles.
 	/// </summary>
@@ -20,10 +18,10 @@ namespace LinqToDB.Identity
 	/// <typeparam name="TRoleClaim">The type of the class representing a role claim.</typeparam>
 	public class RoleStore<TRole, TContext, TKey, TUserRole, TRoleClaim> :
 		RoleStoreBase<TRole, TKey, TUserRole, TRoleClaim>
-		where TRole : IdentityRole<TKey>
-		where TKey : IEquatable<TKey>
-		where TContext : IDataContext
-		where TUserRole : IdentityUserRole<TKey>, new()
+		where TRole      : IdentityRole<TKey>
+		where TKey       : IEquatable<TKey>
+		where TContext   : IDataContext
+		where TUserRole  : IdentityUserRole<TKey>, new()
 		where TRoleClaim : IdentityRoleClaim<TKey>, new()
 	{
 		/// <summary>
@@ -50,8 +48,7 @@ namespace LinqToDB.Identity
 		{
 			ThrowIfDisposed();
 
-			if (role == null)
-				throw new ArgumentNullException(nameof(role));
+			if (role == null) throw new ArgumentNullException(nameof(role));
 
 			await Context.InsertAndSetIdentity(role, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
@@ -62,10 +59,11 @@ namespace LinqToDB.Identity
 		public override async Task<IdentityResult> UpdateAsync(TRole role, CancellationToken cancellationToken = default)
 		{
 			ThrowIfDisposed();
-			if (role == null)
-				throw new ArgumentNullException(nameof(role));
+
+			if (role == null) throw new ArgumentNullException(nameof(role));
 
 			var result = await Context.UpdateConcurrent(role, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+
 			return result == 1 ? IdentityResult.Success : IdentityResult.Failed(ErrorDescriber.ConcurrencyFailure());
 		}
 
@@ -73,8 +71,8 @@ namespace LinqToDB.Identity
 		public override async Task<IdentityResult> DeleteAsync(TRole role, CancellationToken cancellationToken = default)
 		{
 			ThrowIfDisposed();
-			if (role == null)
-				throw new ArgumentNullException(nameof(role));
+
+			if (role == null) throw new ArgumentNullException(nameof(role));
 
 			var result = await Context.GetTable<TRole>()
 				.Where(_ => _.Id.Equals(role.Id) && _.ConcurrencyStamp == role.ConcurrencyStamp)
@@ -88,7 +86,9 @@ namespace LinqToDB.Identity
 		public override Task<TRole?> FindByIdAsync(string id, CancellationToken cancellationToken = default)
 		{
 			ThrowIfDisposed();
+
 			var roleId = ConvertIdFromString(id);
+
 			return Context.GetTable<TRole>().FirstOrDefaultAsync(u => u.Id.Equals(roleId!), cancellationToken);
 		}
 
@@ -104,8 +104,8 @@ namespace LinqToDB.Identity
 		public override async Task<IList<Claim>> GetClaimsAsync(TRole role, CancellationToken cancellationToken = default)
 		{
 			ThrowIfDisposed();
-			if (role == null)
-				throw new ArgumentNullException(nameof(role));
+
+			if (role == null) throw new ArgumentNullException(nameof(role));
 
 			return await Context.GetTable<TRoleClaim>()
 				.Where(rc => rc.RoleId.Equals(role.Id))
@@ -118,10 +118,9 @@ namespace LinqToDB.Identity
 		public override async Task AddClaimAsync(TRole role, Claim claim, CancellationToken cancellationToken = default)
 		{
 			ThrowIfDisposed();
-			if (role == null)
-				throw new ArgumentNullException(nameof(role));
-			if (claim == null)
-				throw new ArgumentNullException(nameof(claim));
+
+			if (role  == null) throw new ArgumentNullException(nameof(role));
+			if (claim == null) throw new ArgumentNullException(nameof(claim));
 
 			await Context.InsertAndSetIdentity(CreateRoleClaim(role, claim), cancellationToken)
 				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
@@ -131,10 +130,9 @@ namespace LinqToDB.Identity
 		public override async Task RemoveClaimAsync(TRole role, Claim claim, CancellationToken cancellationToken = default)
 		{
 			ThrowIfDisposed();
-			if (role == null)
-				throw new ArgumentNullException(nameof(role));
-			if (claim == null)
-				throw new ArgumentNullException(nameof(claim));
+
+			if (role  == null) throw new ArgumentNullException(nameof(role));
+			if (claim == null) throw new ArgumentNullException(nameof(claim));
 
 			await Context.GetTable<TRoleClaim>()
 				.Where(rc => rc.RoleId.Equals(role.Id) && rc.ClaimValue == claim.Value && rc.ClaimType == claim.Type)

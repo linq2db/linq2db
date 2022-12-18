@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Data.Common;
 using LinqToDB.Configuration;
-using LinqToDB.DataProvider;
 using Microsoft.AspNetCore.Identity;
 
 namespace LinqToDB.Identity
@@ -13,12 +11,10 @@ namespace LinqToDB.Identity
 	/// <typeparam name="TRole">The type of role objects.</typeparam>
 	/// <typeparam name="TKey">The type of the primary key for users and roles.</typeparam>
 	public class IdentityDataContext<TUser, TRole, TKey> :
-		IdentityDataContext
-		<TUser, TRole, TKey, IdentityUserClaim<TKey>, IdentityUserRole<TKey>, IdentityUserLogin<TKey>,
-			IdentityRoleClaim<TKey>, IdentityUserToken<TKey>>
+		IdentityDataContext<TUser, TRole, TKey, IdentityUserClaim<TKey>, IdentityUserRole<TKey>, IdentityUserLogin<TKey>, IdentityRoleClaim<TKey>, IdentityUserToken<TKey>>
 		where TUser : IdentityUser<TKey>
 		where TRole : IdentityRole<TKey>
-		where TKey : IEquatable<TKey>
+		where TKey  : IEquatable<TKey>
 	{
 		/// <summary>
 		/// Constructor with options.

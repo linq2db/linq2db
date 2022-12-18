@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using LinqToDB.Mapping;
 using ASP = Microsoft.AspNetCore.Identity;
 
@@ -10,7 +8,7 @@ namespace LinqToDB.Identity.Model
 	/// Implementation of <see cref="ASP.IdentityRole{TKey}" /> with navigation properties which uses a string as the primary key.
 	/// </summary>
 	public class IdentityRole<TUserRole, TRoleClaim> : IdentityRole<string, TUserRole, TRoleClaim>
-		where TUserRole : ASP.IdentityUserRole<string>
+		where TUserRole  : ASP.IdentityUserRole<string>
 		where TRoleClaim : ASP.IdentityRoleClaim<string>
 	{
 		/// <summary>

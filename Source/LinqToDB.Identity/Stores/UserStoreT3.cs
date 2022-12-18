@@ -9,8 +9,8 @@ namespace LinqToDB.Identity
 	/// <typeparam name="TRole">The type representing a role.</typeparam>
 	/// <typeparam name="TContext">The type of the data context class used to access the store.</typeparam>
 	public class UserStore<TUser, TRole, TContext> : UserStore<TUser, TRole, TContext, string>
-		where TUser : IdentityUser<string>
-		where TRole : IdentityRole<string>
+		where TUser    : IdentityUser<string>
+		where TRole    : IdentityRole<string>
 		where TContext : IDataContext
 	{
 		/// <summary>

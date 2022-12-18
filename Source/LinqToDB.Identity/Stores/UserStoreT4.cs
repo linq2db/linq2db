@@ -10,11 +10,12 @@ namespace LinqToDB.Identity
 	/// <typeparam name="TRole">The type representing a role.</typeparam>
 	/// <typeparam name="TContext">The type of the data context class used to access the store.</typeparam>
 	/// <typeparam name="TKey">The type of the primary key for a role.</typeparam>
-	public class UserStore<TUser, TRole, TContext, TKey> : UserStore<TUser, TRole, TContext, TKey, IdentityUserClaim<TKey>, IdentityUserRole<TKey>, IdentityUserLogin<TKey>, IdentityUserToken<TKey>, IdentityRoleClaim<TKey>>
-		where TUser : IdentityUser<TKey>
-		where TRole : IdentityRole<TKey>
+	public class UserStore<TUser, TRole, TContext, TKey>
+		: UserStore<TUser, TRole, TContext, TKey, IdentityUserClaim<TKey>, IdentityUserRole<TKey>, IdentityUserLogin<TKey>, IdentityUserToken<TKey>, IdentityRoleClaim<TKey>>
+		where TUser    : IdentityUser<TKey>
+		where TRole    : IdentityRole<TKey>
 		where TContext : IDataContext
-		where TKey : IEquatable<TKey>
+		where TKey     : IEquatable<TKey>
 	{
 		/// <summary>
 		/// Constructs a new instance of <see cref="UserStore{TUser, TRole, TContext, TKey}"/>.

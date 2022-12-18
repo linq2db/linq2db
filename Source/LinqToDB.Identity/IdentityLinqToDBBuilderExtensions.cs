@@ -1,8 +1,8 @@
-﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using System;
+﻿using System;
 using LinqToDB;
 using LinqToDB.Identity;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -21,6 +21,7 @@ namespace Microsoft.Extensions.DependencyInjection
 			where TContext : IDataContext
 		{
 			AddStores(builder.Services, builder.UserType, builder.RoleType, typeof(TContext));
+
 			return builder;
 		}
 
@@ -31,33 +32,31 @@ namespace Microsoft.Extensions.DependencyInjection
 
 			var keyType = identityUserType.GenericTypeArguments[0];
 
-			if (roleType != null)
+			if (roleType != null) // user+role stores
 			{
-				var identityRoleType = FindGenericBaseType(roleType, typeof(IdentityRole<>))
+				var _ = FindGenericBaseType(roleType, typeof(IdentityRole<>))
 					?? throw new InvalidOperationException(Resources.NotIdentityRole);
 
 				Type userStoreType;
 				Type roleStoreType;
 
-				var identityContext = FindGenericBaseType(contextType, typeof(IdentityDataContext<,,,,,,,>))
-					?? FindGenericBaseType(contextType, typeof(IdentityDataConnection<,,,,,,,>));
+				var identityContext =  FindGenericBaseType(contextType, typeof(IdentityDataContext   <,,,,,,,>))
+									?? FindGenericBaseType(contextType, typeof(IdentityDataConnection<,,,,,,,>));
 
 				if (identityContext == null)
 				{
 					userStoreType = typeof(UserStore<,,,>).MakeGenericType(userType, roleType, contextType, keyType);
-					roleStoreType = typeof(RoleStore<,,>).MakeGenericType(roleType, contextType, keyType);
+					roleStoreType = typeof(RoleStore<,,> ).MakeGenericType(roleType, contextType, keyType);
 				}
 				else
 				{
-					userStoreType = typeof(UserStore<,,,,,,,,>).MakeGenericType(userType, roleType, contextType,
-						identityContext.GenericTypeArguments[2], // TKey
+					userStoreType = typeof(UserStore<,,,,,,,,>).MakeGenericType(userType, roleType, contextType, keyType,
 						identityContext.GenericTypeArguments[3], // TUserClaim
 						identityContext.GenericTypeArguments[4], // TUserRole
 						identityContext.GenericTypeArguments[5], // TUserLogin
 						identityContext.GenericTypeArguments[7], // TUserToken
 						identityContext.GenericTypeArguments[6]); // TRoleClaim
-					roleStoreType = typeof(RoleStore<,,,,>).MakeGenericType(roleType, contextType,
-						identityContext.GenericTypeArguments[2], // TKey
+					roleStoreType = typeof(RoleStore<,,,,>).MakeGenericType(roleType, contextType, keyType,
 						identityContext.GenericTypeArguments[4], // TUserRole
 						identityContext.GenericTypeArguments[6]); // TRoleClaim
 				}
@@ -65,12 +64,12 @@ namespace Microsoft.Extensions.DependencyInjection
 				services.TryAddScoped(typeof(IUserStore<>).MakeGenericType(userType), userStoreType);
 				services.TryAddScoped(typeof(IRoleStore<>).MakeGenericType(roleType), roleStoreType);
 			}
-			else
+			else // user-only store
 			{
 				Type userStoreType;
 
-				var identityContext = FindGenericBaseType(contextType, typeof(IdentityDataContext<,,,,>))
-					?? FindGenericBaseType(contextType, typeof(IdentityDataConnection<,,,,>));
+				var identityContext =  FindGenericBaseType(contextType, typeof(IdentityDataContext   <,,,,>))
+									?? FindGenericBaseType(contextType, typeof(IdentityDataConnection<,,,,>));
 
 				if (identityContext == null)
 				{
@@ -78,12 +77,12 @@ namespace Microsoft.Extensions.DependencyInjection
 				}
 				else
 				{
-					userStoreType = typeof(UserOnlyStore<,,,,,>).MakeGenericType(userType, contextType,
-						identityContext.GenericTypeArguments[1], // TKey
+					userStoreType = typeof(UserOnlyStore<,,,,,>).MakeGenericType(userType, contextType, keyType,
 						identityContext.GenericTypeArguments[2], // TUserClaim
 						identityContext.GenericTypeArguments[3], // TUserLogin
 						identityContext.GenericTypeArguments[4]); // TUserToken
 				}
+
 				services.TryAddScoped(typeof(IUserStore<>).MakeGenericType(userType), userStoreType);
 			}
 		}
@@ -91,10 +90,12 @@ namespace Microsoft.Extensions.DependencyInjection
 		private static Type? FindGenericBaseType(Type currentType, Type genericBaseType)
 		{
 			Type? type = currentType;
+
 			while (type != null)
 			{
 				var genericType = type.IsGenericType ? type.GetGenericTypeDefinition() : null;
-				if (genericType != null && genericType == genericBaseType)
+
+				if (genericType == genericBaseType)
 					return type;
 
 				type = type.BaseType;

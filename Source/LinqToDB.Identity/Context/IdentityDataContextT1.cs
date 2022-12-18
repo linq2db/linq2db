@@ -1,6 +1,4 @@
-﻿using System.Data.Common;
-using LinqToDB.Configuration;
-using LinqToDB.DataProvider;
+﻿using LinqToDB.Configuration;
 using Microsoft.AspNetCore.Identity;
 
 namespace LinqToDB.Identity

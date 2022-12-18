@@ -1,10 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Security.Claims;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
 
 namespace LinqToDB.Identity
@@ -18,8 +12,8 @@ namespace LinqToDB.Identity
 	public class RoleStore<TRole, TContext, TKey> : RoleStore<TRole, TContext, TKey, IdentityUserRole<TKey>, IdentityRoleClaim<TKey>>,
 		IQueryableRoleStore<TRole>,
 		IRoleClaimStore<TRole>
-		where TRole : IdentityRole<TKey>
-		where TKey : IEquatable<TKey>
+		where TRole    : IdentityRole<TKey>
+		where TKey     : IEquatable<TKey>
 		where TContext : IDataContext
 	{
 		/// <summary>

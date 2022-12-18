@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Data.Common;
 using LinqToDB.Configuration;
 using LinqToDB.Data;
-using LinqToDB.DataProvider;
 using Microsoft.AspNetCore.Identity;
 
 namespace LinqToDB.Identity
@@ -17,8 +15,8 @@ namespace LinqToDB.Identity
 	/// <typeparam name="TUserToken">The type of the user token object.</typeparam>
 	public class IdentityDataConnection<TUser, TKey, TUserClaim, TUserLogin, TUserToken> :
 		DataConnection
-		where TUser : IdentityUser<TKey>
-		where TKey : IEquatable<TKey>
+		where TUser      : IdentityUser<TKey>
+		where TKey       : IEquatable<TKey>
 		where TUserClaim : IdentityUserClaim<TKey>
 		where TUserLogin : IdentityUserLogin<TKey>
 		where TUserToken : IdentityUserToken<TKey>

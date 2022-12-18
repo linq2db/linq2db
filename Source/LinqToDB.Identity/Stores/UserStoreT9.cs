@@ -25,12 +25,12 @@ namespace LinqToDB.Identity
 	public class UserStore<TUser, TRole, TContext, TKey, TUserClaim, TUserRole, TUserLogin, TUserToken, TRoleClaim> :
 		UserStoreBase<TUser, TRole, TKey, TUserClaim, TUserRole, TUserLogin, TUserToken, TRoleClaim>,
 		IProtectedUserStore<TUser>
-		where TUser : IdentityUser<TKey>
-		where TRole : IdentityRole<TKey>
-		where TContext : IDataContext
-		where TKey : IEquatable<TKey>
+		where TUser      : IdentityUser<TKey>
+		where TRole      : IdentityRole<TKey>
+		where TContext   : IDataContext
+		where TKey       : IEquatable<TKey>
 		where TUserClaim : IdentityUserClaim<TKey>, new()
-		where TUserRole : IdentityUserRole<TKey>, new()
+		where TUserRole  : IdentityUserRole<TKey>, new()
 		where TUserLogin : IdentityUserLogin<TKey>, new()
 		where TUserToken : IdentityUserToken<TKey>, new()
 		where TRoleClaim : IdentityRoleClaim<TKey>, new()
@@ -57,10 +57,11 @@ namespace LinqToDB.Identity
 		public override async Task<IdentityResult> CreateAsync(TUser user, CancellationToken cancellationToken = default)
 		{
 			ThrowIfDisposed();
-			if (user == null)
-				throw new ArgumentNullException(nameof(user));
+
+			if (user == null) throw new ArgumentNullException(nameof(user));
 
 			await Context.InsertAndSetIdentity(user, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+
 			return IdentityResult.Success;
 		}
 
@@ -68,8 +69,8 @@ namespace LinqToDB.Identity
 		public override async Task<IdentityResult> UpdateAsync(TUser user, CancellationToken cancellationToken = default)
 		{
 			ThrowIfDisposed();
-			if (user == null)
-				throw new ArgumentNullException(nameof(user));
+
+			if (user == null) throw new ArgumentNullException(nameof(user));
 
 			var result = await Context
 				.UpdateConcurrent(user, cancellationToken)
@@ -82,8 +83,8 @@ namespace LinqToDB.Identity
 		public override async Task<IdentityResult> DeleteAsync(TUser user, CancellationToken cancellationToken = default)
 		{
 			ThrowIfDisposed();
-			if (user == null)
-				throw new ArgumentNullException(nameof(user));
+
+			if (user == null) throw new ArgumentNullException(nameof(user));
 
 			var result = await Users
 					.Where(u => u.Id.Equals(user.Id) && u.ConcurrencyStamp == user.ConcurrencyStamp)
@@ -111,42 +112,12 @@ namespace LinqToDB.Identity
 			return Users.FirstOrDefaultAsync(u => u.NormalizedUserName == normalizedUserName, cancellationToken);
 		}
 
-		/// <inheritdoc cref="FindRoleAsync(string, CancellationToken)"/>
-		protected override Task<TRole?> FindRoleAsync(string normalizedRoleName, CancellationToken cancellationToken)
-		{
-			return Context.GetTable<TRole>().SingleOrDefaultAsync(r => r.NormalizedName == normalizedRoleName, cancellationToken);
-		}
-
-		/// <inheritdoc cref="FindUserRoleAsync(TKey, TKey, CancellationToken)"/>
-		protected override Task<TUserRole?> FindUserRoleAsync(TKey userId, TKey roleId, CancellationToken cancellationToken)
-		{
-			return Context.GetTable<TUserRole>().FirstOrDefaultAsync(r => r.UserId.Equals(userId) && r.RoleId.Equals(roleId), cancellationToken);
-		}
-
-		/// <inheritdoc cref="FindUserAsync(TKey, CancellationToken)"/>
-		protected override Task<TUser?> FindUserAsync(TKey userId, CancellationToken cancellationToken)
-		{
-			return Users.SingleOrDefaultAsync(u => u.Id.Equals(userId), cancellationToken);
-		}
-
-		/// <inheritdoc cref="FindUserLoginAsync(TKey, string, string, CancellationToken)"/>
-		protected override Task<TUserLogin?> FindUserLoginAsync(TKey userId, string loginProvider, string providerKey, CancellationToken cancellationToken)
-		{
-			return Context.GetTable<TUserLogin>().SingleOrDefaultAsync(userLogin => userLogin.UserId.Equals(userId) && userLogin.LoginProvider == loginProvider && userLogin.ProviderKey == providerKey, cancellationToken);
-		}
-
-		/// <inheritdoc cref="FindUserLoginAsync(string, string, CancellationToken)"/>
-		protected override Task<TUserLogin?> FindUserLoginAsync(string loginProvider, string providerKey, CancellationToken cancellationToken)
-		{
-			return Context.GetTable<TUserLogin>().SingleOrDefaultAsync(userLogin => userLogin.LoginProvider == loginProvider && userLogin.ProviderKey == providerKey, cancellationToken);
-		}
-
 		/// <inheritdoc cref="AddToRoleAsync(TUser, string, CancellationToken)"/>
 		public override async Task AddToRoleAsync(TUser user, string normalizedRoleName, CancellationToken cancellationToken = default)
 		{
 			ThrowIfDisposed();
 
-			if (user == null) throw new ArgumentNullException(nameof(user));
+			if (user == null)                                  throw new ArgumentNullException(nameof(user));
 			if (string.IsNullOrWhiteSpace(normalizedRoleName)) throw new ArgumentException(Resources.ValueCannotBeNullOrEmpty, nameof(normalizedRoleName));
 
 			var roleEntity = await FindRoleAsync(normalizedRoleName, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext)
@@ -160,7 +131,7 @@ namespace LinqToDB.Identity
 		{
 			ThrowIfDisposed();
 
-			if (user == null) throw new ArgumentNullException(nameof(user));
+			if (user == null)                                  throw new ArgumentNullException(nameof(user));
 			if (string.IsNullOrWhiteSpace(normalizedRoleName)) throw new ArgumentException(Resources.ValueCannotBeNullOrEmpty, nameof(normalizedRoleName));
 
 			var q =
@@ -193,7 +164,7 @@ namespace LinqToDB.Identity
 		{
 			ThrowIfDisposed();
 
-			if (user == null) throw new ArgumentNullException(nameof(user));
+			if (user == null)                                  throw new ArgumentNullException(nameof(user));
 			if (string.IsNullOrWhiteSpace(normalizedRoleName)) throw new ArgumentException(Resources.ValueCannotBeNullOrEmpty, nameof(normalizedRoleName));
 
 			var q = from ur in Context.GetTable<TUserRole>()
@@ -208,6 +179,7 @@ namespace LinqToDB.Identity
 		public override async Task<IList<Claim>> GetClaimsAsync(TUser user, CancellationToken cancellationToken = default)
 		{
 			ThrowIfDisposed();
+
 			if (user == null) throw new ArgumentNullException(nameof(user));
 
 			return await Context
@@ -222,7 +194,8 @@ namespace LinqToDB.Identity
 		public override async Task AddClaimsAsync(TUser user, IEnumerable<Claim> claims, CancellationToken cancellationToken = default)
 		{
 			ThrowIfDisposed();
-			if (user == null) throw new ArgumentNullException(nameof(user));
+
+			if (user   == null) throw new ArgumentNullException(nameof(user));
 			if (claims == null) throw new ArgumentNullException(nameof(claims));
 
 			var data = claims.Select(_ => CreateUserClaim(user, _));
@@ -235,8 +208,8 @@ namespace LinqToDB.Identity
 		{
 			ThrowIfDisposed();
 
-			if (user == null) throw new ArgumentNullException(nameof(user));
-			if (claim == null) throw new ArgumentNullException(nameof(claim));
+			if (user     == null) throw new ArgumentNullException(nameof(user));
+			if (claim    == null) throw new ArgumentNullException(nameof(claim));
 			if (newClaim == null) throw new ArgumentNullException(nameof(newClaim));
 
 			await Context.GetTable<TUserClaim>()
@@ -252,15 +225,15 @@ namespace LinqToDB.Identity
 		{
 			ThrowIfDisposed();
 
-			if (user == null) throw new ArgumentNullException(nameof(user));
+			if (user   == null) throw new ArgumentNullException(nameof(user));
 			if (claims == null) throw new ArgumentNullException(nameof(claims));
 
 			var userId = Expression.PropertyOrField(Expression.Constant(user, typeof(TUser)), nameof(user.Id));
 			var equals = typeof(TKey).GetMethod(nameof(IEquatable<TKey>.Equals), new[] {typeof(TKey)})
 				?? throw new InvalidOperationException($"Cannot find method Equals on type {typeof(TKey)}");
 			var uc     = Expression.Parameter(typeof(TUserClaim));
-			var cv = Expression.PropertyOrField(uc, nameof(IdentityUserClaim<TKey>.ClaimValue));
-			var ct = Expression.PropertyOrField(uc, nameof(IdentityUserClaim<TKey>.ClaimType));
+			var cv     = Expression.PropertyOrField(uc, nameof(IdentityUserClaim<TKey>.ClaimValue));
+			var ct     = Expression.PropertyOrField(uc, nameof(IdentityUserClaim<TKey>.ClaimType));
 
 			var ucUserId = Expression.PropertyOrField(uc, nameof(IdentityUserClaim<TKey>.UserId));
 			Expression? body = null;
@@ -271,8 +244,7 @@ namespace LinqToDB.Identity
 
 				var claimValueEquals = Expression.Equal(cv, Expression.PropertyOrField(cl, nameof(Claim.Value)));
 				var claimTypeEquals  = Expression.Equal(ct, Expression.PropertyOrField(cl, nameof(Claim.Type)));
-
-				var claimPredicate = Expression.AndAlso(claimValueEquals, claimTypeEquals);
+				var claimPredicate   = Expression.AndAlso(claimValueEquals, claimTypeEquals);
 
 				body = body == null ? claimPredicate : Expression.OrElse(body, claimPredicate);
 			}
@@ -295,9 +267,8 @@ namespace LinqToDB.Identity
 		{
 			ThrowIfDisposed();
 
-			if (user == null) throw new ArgumentNullException(nameof(user));
+			if (user  == null) throw new ArgumentNullException(nameof(user));
 			if (login == null) throw new ArgumentNullException(nameof(login));
-
 
 			await Context.InsertAndSetIdentity(CreateUserLogin(user, login), cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
@@ -322,10 +293,9 @@ namespace LinqToDB.Identity
 
 			if (user == null) throw new ArgumentNullException(nameof(user));
 
-			var userId = user.Id;
 			return await Context
 				.GetTable<TUserLogin>()
-				.Where(l => l.UserId.Equals(userId))
+				.Where(l => l.UserId.Equals(user.Id))
 				.Select(l => new UserLoginInfo(l.LoginProvider, l.ProviderKey, l.ProviderDisplayName))
 				.ToListAsync(cancellationToken)
 				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
@@ -348,8 +318,7 @@ namespace LinqToDB.Identity
 
 			var query = from userclaims in Context.GetTable<TUserClaim>()
 						join user in Users on userclaims.UserId equals user.Id
-						where userclaims.ClaimValue == claim.Value
-					  && userclaims.ClaimType == claim.Type
+						where userclaims.ClaimValue == claim.Value && userclaims.ClaimType == claim.Type
 						select user;
 
 			return await query.ToListAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
@@ -369,28 +338,6 @@ namespace LinqToDB.Identity
 						select user;
 
 			return await query.ToListAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-		}
-
-		/// <inheritdoc cref="FindTokenAsync(TUser, string, string, CancellationToken)"/>
-		protected override Task<TUserToken?> FindTokenAsync(TUser user, string loginProvider, string name, CancellationToken cancellationToken)
-		{
-			return Context.GetTable<TUserToken>().FirstOrDefaultAsync(
-				t => t.UserId.Equals(user.Id) && t.LoginProvider == loginProvider && t.Name == name, cancellationToken);
-		}
-
-		/// <inheritdoc cref="AddUserTokenAsync(TUserToken)"/>
-		protected override async Task AddUserTokenAsync(TUserToken token)
-		{
-			// wut? no cancellation token parameter?
-			await Context.InsertAndSetIdentity(token, default)
-				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-		}
-
-		/// <inheritdoc cref="AddUserTokenAsync(TUserToken)"/>
-		protected override async Task RemoveUserTokenAsync(TUserToken token)
-		{
-			// wut? no cancellation token parameter?
-			await Context.DeleteAsync(token, default).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
 		/// <inheritdoc cref="FindByLoginAsync(string, string, CancellationToken)"/>
@@ -431,6 +378,57 @@ namespace LinqToDB.Identity
 				.Where(_ => _.UserId.Equals(user.Id) && _.LoginProvider == loginProvider && _.Name == name)
 				.Select(_ => _.Value)
 				.FirstOrDefaultAsync(cancellationToken);
+		}
+
+		/// <inheritdoc cref="FindTokenAsync(TUser, string, string, CancellationToken)"/>
+		protected override Task<TUserToken?> FindTokenAsync(TUser user, string loginProvider, string name, CancellationToken cancellationToken)
+		{
+			return Context.GetTable<TUserToken>().FirstOrDefaultAsync(t => t.UserId.Equals(user.Id) && t.LoginProvider == loginProvider && t.Name == name, cancellationToken);
+		}
+
+		/// <inheritdoc cref="AddUserTokenAsync(TUserToken)"/>
+		protected override async Task AddUserTokenAsync(TUserToken token)
+		{
+			// wut? no cancellation token parameter?
+			await Context.InsertAndSetIdentity(token, default)
+				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+		}
+
+		/// <inheritdoc cref="AddUserTokenAsync(TUserToken)"/>
+		protected override async Task RemoveUserTokenAsync(TUserToken token)
+		{
+			// wut? no cancellation token parameter?
+			await Context.DeleteAsync(token, default).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+		}
+
+		/// <inheritdoc cref="FindRoleAsync(string, CancellationToken)"/>
+		protected override Task<TRole?> FindRoleAsync(string normalizedRoleName, CancellationToken cancellationToken)
+		{
+			return Context.GetTable<TRole>().SingleOrDefaultAsync(r => r.NormalizedName == normalizedRoleName, cancellationToken);
+		}
+
+		/// <inheritdoc cref="FindUserRoleAsync(TKey, TKey, CancellationToken)"/>
+		protected override Task<TUserRole?> FindUserRoleAsync(TKey userId, TKey roleId, CancellationToken cancellationToken)
+		{
+			return Context.GetTable<TUserRole>().FirstOrDefaultAsync(r => r.UserId.Equals(userId) && r.RoleId.Equals(roleId), cancellationToken);
+		}
+
+		/// <inheritdoc cref="FindUserAsync(TKey, CancellationToken)"/>
+		protected override Task<TUser?> FindUserAsync(TKey userId, CancellationToken cancellationToken)
+		{
+			return Users.SingleOrDefaultAsync(u => u.Id.Equals(userId), cancellationToken);
+		}
+
+		/// <inheritdoc cref="FindUserLoginAsync(TKey, string, string, CancellationToken)"/>
+		protected override Task<TUserLogin?> FindUserLoginAsync(TKey userId, string loginProvider, string providerKey, CancellationToken cancellationToken)
+		{
+			return Context.GetTable<TUserLogin>().SingleOrDefaultAsync(userLogin => userLogin.UserId.Equals(userId) && userLogin.LoginProvider == loginProvider && userLogin.ProviderKey == providerKey, cancellationToken);
+		}
+
+		/// <inheritdoc cref="FindUserLoginAsync(string, string, CancellationToken)"/>
+		protected override Task<TUserLogin?> FindUserLoginAsync(string loginProvider, string providerKey, CancellationToken cancellationToken)
+		{
+			return Context.GetTable<TUserLogin>().SingleOrDefaultAsync(userLogin => userLogin.LoginProvider == loginProvider && userLogin.ProviderKey == providerKey, cancellationToken);
 		}
 	}
 }
