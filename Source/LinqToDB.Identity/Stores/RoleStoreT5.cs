@@ -41,7 +41,11 @@ namespace LinqToDB.Identity
 		public virtual TContext Context { get; }
 
 		/// <inheritdoc cref="Roles"/>
-		public override IQueryable<TRole> Roles => Context.GetTable<TRole>();
+		public    override IQueryable<TRole>      Roles      => Context.GetTable<TRole>();
+		/// <summary>
+		/// A navigation property for the role claims the store contains.
+		/// </summary>
+		protected virtual  IQueryable<TRoleClaim> RoleClaims => Context.GetTable<TRoleClaim>();
 
 		/// <inheritdoc cref="CreateAsync(TRole, CancellationToken)"/>
 		public override async Task<IdentityResult> CreateAsync(TRole role, CancellationToken cancellationToken = default)
@@ -74,7 +78,7 @@ namespace LinqToDB.Identity
 
 			if (role == null) throw new ArgumentNullException(nameof(role));
 
-			var result = await Context.GetTable<TRole>()
+			var result = await Roles
 				.Where(_ => _.Id.Equals(role.Id) && _.ConcurrencyStamp == role.ConcurrencyStamp)
 				.DeleteAsync(cancellationToken)
 				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
@@ -89,7 +93,7 @@ namespace LinqToDB.Identity
 
 			var roleId = ConvertIdFromString(id);
 
-			return Context.GetTable<TRole>().FirstOrDefaultAsync(u => u.Id.Equals(roleId!), cancellationToken);
+			return Roles.FirstOrDefaultAsync(u => u.Id.Equals(roleId!), cancellationToken);
 		}
 
 		/// <inheritdoc cref="FindByNameAsync(string, CancellationToken)"/>
@@ -97,7 +101,7 @@ namespace LinqToDB.Identity
 		{
 			ThrowIfDisposed();
 
-			return Context.GetTable<TRole>().FirstOrDefaultAsync(r => r.NormalizedName == normalizedName, cancellationToken);
+			return Roles.FirstOrDefaultAsync(r => r.NormalizedName == normalizedName, cancellationToken);
 		}
 
 		/// <inheritdoc cref="GetClaimsAsync(TRole, CancellationToken)"/>
@@ -107,7 +111,7 @@ namespace LinqToDB.Identity
 
 			if (role == null) throw new ArgumentNullException(nameof(role));
 
-			return await Context.GetTable<TRoleClaim>()
+			return await RoleClaims
 				.Where(rc => rc.RoleId.Equals(role.Id))
 				.Select(c => c.ToClaim())
 				.ToListAsync(cancellationToken)
@@ -134,7 +138,7 @@ namespace LinqToDB.Identity
 			if (role  == null) throw new ArgumentNullException(nameof(role));
 			if (claim == null) throw new ArgumentNullException(nameof(claim));
 
-			await Context.GetTable<TRoleClaim>()
+			await RoleClaims
 				.Where(rc => rc.RoleId.Equals(role.Id) && rc.ClaimValue == claim.Value && rc.ClaimType == claim.Type)
 				.DeleteAsync(cancellationToken)
 				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
