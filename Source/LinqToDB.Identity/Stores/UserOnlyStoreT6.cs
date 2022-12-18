@@ -223,7 +223,6 @@ namespace LinqToDB.Identity
 			if (user  == null) throw new ArgumentNullException(nameof(user));
 			if (login == null) throw new ArgumentNullException(nameof(login));
 
-
 			await Context.InsertAndSetIdentity(CreateUserLogin(user, login), cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
@@ -352,7 +351,5 @@ namespace LinqToDB.Identity
 		{
 			return UserLogins.SingleOrDefaultAsync(userLogin => userLogin.LoginProvider == loginProvider && userLogin.ProviderKey == providerKey, cancellationToken);
 		}
-
-
 	}
 }
