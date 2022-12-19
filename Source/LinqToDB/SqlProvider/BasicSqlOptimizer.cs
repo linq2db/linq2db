@@ -322,7 +322,11 @@ namespace LinqToDB.SqlProvider
 					{
 						var item = statement.Update.Items[index];
 
-						statement.Update.Items[index] = item.Convert(statement.SelectQuery, (v, e) =>
+						var column = QueryHelper.NeedColumnForExpression(statement.SelectQuery, item.Column, false);
+						if (column != null)
+							item.Column = column;
+
+						item.Expression = item.Expression.Convert(statement.SelectQuery, (v, e) =>
 						{
 							if (e is SqlColumn column && column.Parent == v.Context)
 								return column.Expression;
@@ -2677,6 +2681,69 @@ namespace LinqToDB.SqlProvider
 
 		protected SqlUpdateStatement GetAlternativeUpdate(SqlUpdateStatement updateStatement)
 		{
+			static SelectQuery CloneQuery(
+				SelectQuery                                  query, 
+				SqlTable?                                    exceptTable,
+				out Dictionary<IQueryElement, IQueryElement> replaceTree)
+			{
+				replaceTree = new Dictionary<IQueryElement, IQueryElement>();
+				var clonedQuery = query.Clone(exceptTable, replaceTree, static (ut, e) =>
+				{
+					if ((e is SqlTable table && table == ut) || (e is SqlField field && field.Table == ut))
+					{
+						return false;
+					}
+
+					return true;
+				});
+
+				replaceTree = CorrectReplaceTree(replaceTree, exceptTable);
+
+				return clonedQuery;
+			}
+
+			static Dictionary<IQueryElement, IQueryElement> CorrectReplaceTree(Dictionary<IQueryElement, IQueryElement> replaceTree, SqlTable? exceptTable)
+			{
+				replaceTree = replaceTree
+					.Where(pair =>
+					{
+						if (pair.Key is SqlTable table)
+							return table != exceptTable;
+						if (pair.Key is SqlColumn)
+							return true;
+						if (pair.Key is SqlField field)
+							return field.Table != exceptTable;
+						return false;
+					})
+					.ToDictionary(pair => pair.Key, pair => pair.Value);
+
+				return replaceTree;
+			}
+
+			static IQueryElement RemapCloned(
+				IQueryElement                             element,
+				Dictionary<IQueryElement, IQueryElement>  mainTree,
+				Dictionary<IQueryElement, IQueryElement>? innerTree)
+			{
+				var newElement = element.Convert((mainTree, innerTree), static (v, expr) =>
+				{
+					var converted = v.Context.mainTree.TryGetValue(expr, out var newValue)
+						? newValue
+						: expr;
+
+					if (v.Context.innerTree != null)
+					{
+						converted = v.Context.innerTree.TryGetValue(converted, out newValue)
+							? newValue
+							: converted;
+					}
+
+					return converted;
+				});
+
+				return newElement;
+			}
+
 			var sourcesCount  = QueryHelper.EnumerateAccessibleSources(updateStatement.SelectQuery).Skip(1).Take(2).Count();
 
 			// It covers subqueries also. Simple subquery will have sourcesCount == 2
@@ -2696,17 +2763,10 @@ namespace LinqToDB.SqlProvider
 					throw new LinqToDBException("Query can't be translated to UPDATE Statement.");
 
 				// we have to ensure that clone do not contain tableToUpdate
-				var objectTree   = new Dictionary<IQueryElement, IQueryElement>();
-				var clonedQuery  = updateStatement.SelectQuery.Clone(objectTree);
+				var clonedQuery = CloneQuery(updateStatement.SelectQuery, null, out var replaceTree);
 
-				var tableToUpdateMapping = new Dictionary<IQueryElement,IQueryElement>(objectTree);
-
-				var tableToCompare = (SqlTable)objectTree[tableToUpdate];
-
-				// remove mapping from updatable table
-				objectTree.Remove(tableToUpdate);
-				foreach (var field in tableToUpdate.Fields)
-					objectTree.Remove(field);
+				var tableToCompare = (SqlTable)replaceTree[tableToUpdate];
+				replaceTree = CorrectReplaceTree(replaceTree, tableToUpdate);
 
 				if (tableToCompare == null)
 					throw new LinqToDBException("Query can't be translated to UPDATE Statement.");
@@ -2728,9 +2788,14 @@ namespace LinqToDB.SqlProvider
 				// remove current column wrapping
 				foreach (var item in updateStatement.Update.Items)
 				{
-					if (item.Expression is SqlColumn column && column.Parent == updateStatement.SelectQuery)
+					if (item.Expression is SqlColumn columnExpr && columnExpr.Parent == updateStatement.SelectQuery)
 					{
-						item.Expression = column.Expression;
+						item.Expression = columnExpr.Expression;
+					}
+
+					while (item.Column is SqlColumn column)
+					{
+						item.Column = column.Expression;
 					}
 				}
 
@@ -2747,7 +2812,7 @@ namespace LinqToDB.SqlProvider
 						var usedSources = new HashSet<ISqlTableSource>();
 						QueryHelper.GetUsedSources(item.Expression!, usedSources);
 						usedSources.Remove(tableToUpdate);
-						if (objectTree.TryGetValue(tableToUpdate, out var replaced))
+						if (replaceTree.TryGetValue(tableToUpdate, out var replaced))
 							usedSources.Remove((ISqlTableSource)replaced);
 
 						if (usedSources.Count > 0)
@@ -2763,57 +2828,24 @@ namespace LinqToDB.SqlProvider
 
 						processUniversalUpdate = false;
 
-						var innerQuery = clonedQuery.Clone(static e => e is not SqlTable);
+						var innerQuery = CloneQuery(clonedQuery, tableToUpdate, out var innerTree);
 						innerQuery.Select.Columns.Clear();
 
 						var rows = new List<(ISqlExpression, ISqlExpression)>(updateStatement.Update.Items.Count);
 						foreach (var item in updateStatement.Update.Items)
 						{
-							var ex = item.Expression!.Convert(objectTree, static (v, expr) =>
-								v.Context.TryGetValue(expr, out var newValue)
-									? newValue
-									: expr);
+							if (item.Expression == null)
+								continue;
 
-							var newColumn = tableToUpdate[QueryHelper.GetUnderlyingField(item.Column)!.Name]
-							                ?? throw new LinqException(
-								                $"Field {QueryHelper.GetUnderlyingField(item.Column)!.Name} not found in table {tableToUpdate}");
+							var ex = (ISqlExpression)RemapCloned(item.Expression, replaceTree, innerTree);
 
-							var remapped = ex.Convert((tableToUpdateMapping, innerQuery, objectTree),
-								static (v, e) =>
-								{
-									if (v.Context.tableToUpdateMapping.TryGetValue(e, out var n))
-									{
-										e = n;
-										v.Context.objectTree.Remove(e);
-										v.Context.objectTree.Add(e, n);
-									}
-
-									if (e is SqlColumn clmn && clmn.Parent != v.Context.innerQuery || e is SqlField)
-									{
-										var column = QueryHelper.NeedColumnForExpression(v.Context.innerQuery,
-											(ISqlExpression)e, false);
-										if (column != null)
-										{
-											v.Context.objectTree.Remove(e);
-											v.Context.objectTree.Add(e, column);
-											return column;
-										}
-									}
-
-									return e;
-
-								});
-
-
-
-							//var column = QueryHelper.NeedColumnForExpression(innerQuery, item.Expression!, false);
-							var newUpdateExpression = innerQuery.Select.AddNewColumn(remapped);
+							var newUpdateExpression = innerQuery.Select.AddNewColumn(ex);
 
 							if (newUpdateExpression == null)
 								throw new InvalidOperationException(
 									$"Could not create column for expression '{item.Expression}'");
 
-							rows.Add((newColumn, newUpdateExpression));
+							rows.Add((item.Column, newUpdateExpression));
 						}
 
 						var sqlRow        = new SqlRow(rows.Select(r => r.Item1).ToArray());
@@ -2843,56 +2875,22 @@ namespace LinqToDB.SqlProvider
 						{
 							// it means that update value column depends on other tables and we have to generate more complicated query
 
-							var iterationTree = new Dictionary<IQueryElement, IQueryElement>();
-							var innerQuery    = clonedQuery.Clone(tableToUpdate, iterationTree, static (ut, e) => e != ut);
+							var innerQuery = CloneQuery(clonedQuery, tableToUpdate, out var iterationTree);
 
-							ex = ex!.Convert((iterationTree, objectTree), static (v, expr) =>
-							{
-								var converted = v.Context.objectTree.TryGetValue(expr, out var newValue)
-									? newValue
-									: expr;
-
-								converted = v.Context.iterationTree.TryGetValue(converted, out newValue)
-									? newValue
-									: converted;
-
-								return converted;
-							});
+							ex = (ISqlExpression)RemapCloned(ex, replaceTree, iterationTree);
 
 							innerQuery.ParentSelect = sql;
 
 							innerQuery.Select.Columns.Clear();
 
-							var remapped = ex.Convert((tableToUpdateMapping, innerQuery, objectTree: iterationTree),
-								static (v, e) =>
-								{
-									if (e is SqlColumn clmn && clmn.Parent != v.Context.innerQuery || e is SqlField)
-									{
-										var column = QueryHelper.NeedColumnForExpression(v.Context.innerQuery,
-											(ISqlExpression)e, false);
-										if (column != null)
-										{
-											v.Context.objectTree.Remove(e);
-											v.Context.objectTree.Add(e, column);
-											return column;
-										}
-									}
-
-									return e;
-
-								});
-
-							innerQuery.Select.AddNew(remapped);
+							innerQuery.Select.AddNew(ex);
 							innerQuery.RemoveNotUnusedColumns();
 
 							ex = innerQuery;
 						}
 						else
 						{
-							ex = ex!.Convert(objectTree, static (v, expr) =>
-								v.Context.TryGetValue(expr, out var newValue)
-									? newValue
-									: expr);
+							ex = (ISqlExpression)RemapCloned(ex, replaceTree, null);
 						}
 
 						item.Expression = ex;
@@ -2902,13 +2900,7 @@ namespace LinqToDB.SqlProvider
 
 				if (updateStatement.Output != null)
 				{
-					newUpdateStatement.Output = updateStatement.Output.Convert(objectTree, static (v, e) =>
-					{
-						if (v.Context.TryGetValue(e, out var newElement))
-							return newElement;
-
-						return e;
-					});
+					newUpdateStatement.Output =  (SqlOutputClause)RemapCloned(updateStatement.Output, replaceTree, null);
 				}
 
 				newUpdateStatement.Update.Table = updateStatement.Update.Table != null ? tableToUpdate : null;

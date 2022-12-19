@@ -1224,11 +1224,6 @@ namespace LinqToDB.SqlQuery
 						return resultQuery;
 					}
 
-					if (element is SqlField f && f.Table != null && visitor.Context.correctedTables.TryGetValue(f.Table, out var levelQuery))
-					{
-						return NeedColumnForExpression(levelQuery, f, false)!;
-					}
-
 					return element;
 				}, withStack: withStack);
 
