@@ -491,7 +491,7 @@ namespace LinqToDB.SqlQuery
 						{
 							var sources = new HashSet<ISqlTableSource>(QueryHelper.EnumerateAccessibleSources(join.Table));
 							var ignore  = new HashSet<IQueryElement> { join };
-							if (QueryHelper.IsDependsOn(context.rootElement, sources, ignore))
+							if (QueryHelper.IsDependsOnSources(context.rootElement, sources, ignore))
 							{
 								join.IsWeak = false;
 								continue;
@@ -500,7 +500,7 @@ namespace LinqToDB.SqlQuery
 							var moveNext = false;
 							foreach (var d in context.dependencies)
 							{
-								if (QueryHelper.IsDependsOn(d, sources, ignore))
+								if (QueryHelper.IsDependsOnSources(d, sources, ignore))
 								{
 									join.IsWeak = false;
 									moveNext = true;
@@ -907,7 +907,7 @@ namespace LinqToDB.SqlQuery
 							// check that this subquery do not infer with parent join via other joined tables
 							var joinSources =
 								new HashSet<ISqlTableSource>(sqlTableSource.Joins.Select(static j => j.Table.Source));
-							if (QueryHelper.IsDependsOn(parentJoinedTable.Condition, joinSources))
+							if (QueryHelper.IsDependsOnSources(parentJoinedTable.Condition, joinSources))
 								isQueryOK = false;
 						}
 					}
@@ -1268,7 +1268,7 @@ namespace LinqToDB.SqlQuery
 				var whereToIgnore = new HashSet<IQueryElement> { sql.Where, sql.Select };
 
 				// we cannot optimize apply because reference to parent sources are used inside the query
-				if (QueryHelper.IsDependsOn(sql, parentTableSources, whereToIgnore))
+				if (QueryHelper.IsDependsOnSources(sql, parentTableSources, whereToIgnore))
 					return;
 
 				var searchCondition = new List<SqlCondition>();
@@ -1283,7 +1283,7 @@ namespace LinqToDB.SqlQuery
 					{
 						var condition = conditions[i];
 
-						var contains = QueryHelper.IsDependsOn(condition, parentTableSources, toIgnore);
+						var contains = QueryHelper.IsDependsOnSources(condition, parentTableSources, toIgnore);
 
 						if (contains)
 						{
@@ -1334,7 +1334,7 @@ namespace LinqToDB.SqlQuery
 					{
 						if (e.ElementType == QueryElementType.Column || e.ElementType == QueryElementType.SqlField)
 						{
-							if (QueryHelper.IsDependsOn(e, visitor.Context.toCheck))
+							if (QueryHelper.IsDependsOnSources(e, visitor.Context.toCheck))
 							{
 								if (e is not SqlColumn clm || clm.Parent != visitor.Context.sql)
 								{

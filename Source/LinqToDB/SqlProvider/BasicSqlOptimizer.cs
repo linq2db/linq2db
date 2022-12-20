@@ -2679,111 +2679,218 @@ namespace LinqToDB.SqlProvider
 			return false;
 		}
 
+		static bool HasComparisonInCondition(SqlSearchCondition search, SqlTable table)
+		{
+			return null != search.Find(e => e is SqlField field && field.Table == table);
+		}
+
+		static bool HasComparisonInQuery(SelectQuery query, SqlTable table)
+		{
+			if (query.Select.HasModifier || !query.GroupBy.IsEmpty)
+				return false;
+
+			if (HasComparisonInCondition(query.Where.SearchCondition, table))
+				return true;
+
+			foreach (var ts in query.From.Tables)
+			{
+				if (ts.Source is SelectQuery sc)
+				{
+					if (HasComparisonInQuery(sc, table))
+						return true;
+				}
+
+				foreach (var join in ts.Joins)
+				{
+					if (join.JoinType == JoinType.Inner)
+					{
+						if (HasComparisonInCondition(join.Condition, table))
+							return true;
+
+						if (join.Table.Source is SelectQuery jq)
+						{
+							if (HasComparisonInQuery(jq, table))
+								return true;
+						}
+					}
+				}
+						
+			}
+
+			return false;
+		}
+
+		static bool RemoveUpdateTableIfPossible(SelectQuery query, SqlTable table)
+		{
+			if (query.Select.HasModifier || !query.GroupBy.IsEmpty)
+				return false;
+				
+			for (int i = 0; i < query.From.Tables.Count; i++)
+			{
+				var ts = query.From.Tables[i];
+				if (ts.Joins.All(j => j.JoinType == JoinType.Inner || j.JoinType == JoinType.Left))
+				{
+					if (ts.Source == table)
+					{
+						query.From.Tables.RemoveAt(i);
+						for (int j = 0; j < ts.Joins.Count; j++)
+						{
+							query.From.Tables.Insert(i + j, ts.Joins[j].Table);
+							query.Where.EnsureConjunction().ConcatSearchCondition(ts.Joins[j].Condition);
+						}
+
+						return true;
+					}
+
+					for (int j = 0; j < ts.Joins.Count; j++)
+					{
+						var join = ts.Joins[j];
+						if (join.Table.Source == table)
+						{
+							if (ts.Joins.Skip(j + 1).Any(sj => QueryHelper.IsDependsOnSource(sj, table)))
+								return false;
+
+							ts.Joins.RemoveAt(j);
+							query.Where.EnsureConjunction().ConcatSearchCondition(join.Condition);
+
+							for (int sj = 0; j < join.Table.Joins.Count; j++)
+							{
+								ts.Joins.Insert(j + sj, join.Table.Joins[sj]);
+							}
+
+							query.Where.EnsureConjunction().ConcatSearchCondition(join.Condition);
+
+							return true;
+						}
+					}
+				}
+			}
+
+			return false;
+		}
+
+		static SelectQuery CloneQuery(
+			SelectQuery                                  query, 
+			SqlTable?                                    exceptTable,
+			out Dictionary<IQueryElement, IQueryElement> replaceTree)
+		{
+			replaceTree = new Dictionary<IQueryElement, IQueryElement>();
+			var clonedQuery = query.Clone(exceptTable, replaceTree, static (ut, e) =>
+			{
+				if ((e is SqlTable table && table == ut) || (e is SqlField field && field.Table == ut))
+				{
+					return false;
+				}
+
+				return true;
+			});
+
+			replaceTree = CorrectReplaceTree(replaceTree, exceptTable);
+
+			return clonedQuery;
+		}
+
+		static Dictionary<IQueryElement, IQueryElement> CorrectReplaceTree(Dictionary<IQueryElement, IQueryElement> replaceTree, SqlTable? exceptTable)
+		{
+			replaceTree = replaceTree
+				.Where(pair =>
+				{
+					if (pair.Key is SqlTable table)
+						return table != exceptTable;
+					if (pair.Key is SqlColumn)
+						return true;
+					if (pair.Key is SqlField field)
+						return field.Table != exceptTable;
+					return false;
+				})
+				.ToDictionary(pair => pair.Key, pair => pair.Value);
+
+			return replaceTree;
+		}
+
+		static IQueryElement RemapCloned(
+			IQueryElement                             element,
+			Dictionary<IQueryElement, IQueryElement>? mainTree,
+			Dictionary<IQueryElement, IQueryElement>? innerTree)
+		{
+			if (mainTree == null && innerTree == null) 
+				return element;
+
+			var newElement = element.Convert((mainTree, innerTree), static (v, expr) =>
+			{
+				var converted = v.Context.mainTree?.TryGetValue(expr, out var newValue) == true
+					? newValue
+					: expr;
+
+				if (v.Context.innerTree != null)
+				{
+					converted = v.Context.innerTree.TryGetValue(converted, out newValue)
+						? newValue
+						: converted;
+				}
+
+				return converted;
+			});
+
+			return newElement;
+		}
+
 		protected SqlUpdateStatement GetAlternativeUpdate(SqlUpdateStatement updateStatement)
 		{
-			static SelectQuery CloneQuery(
-				SelectQuery                                  query, 
-				SqlTable?                                    exceptTable,
-				out Dictionary<IQueryElement, IQueryElement> replaceTree)
+			var tableToUpdate = updateStatement.GetUpdateTable();
+			var needsComparison = !HasComparisonInQuery(updateStatement.SelectQuery, tableToUpdate);
+
+			if (updateStatement.Update.Table != null)
 			{
-				replaceTree = new Dictionary<IQueryElement, IQueryElement>();
-				var clonedQuery = query.Clone(exceptTable, replaceTree, static (ut, e) =>
+				if (!needsComparison)
 				{
-					if ((e is SqlTable table && table == ut) || (e is SqlField field && field.Table == ut))
-					{
-						return false;
-					}
-
-					return true;
-				});
-
-				replaceTree = CorrectReplaceTree(replaceTree, exceptTable);
-
-				return clonedQuery;
+					// trying to simplify query
+					RemoveUpdateTableIfPossible(updateStatement.SelectQuery, updateStatement.Update.Table);
+				}
 			}
 
-			static Dictionary<IQueryElement, IQueryElement> CorrectReplaceTree(Dictionary<IQueryElement, IQueryElement> replaceTree, SqlTable? exceptTable)
-			{
-				replaceTree = replaceTree
-					.Where(pair =>
-					{
-						if (pair.Key is SqlTable table)
-							return table != exceptTable;
-						if (pair.Key is SqlColumn)
-							return true;
-						if (pair.Key is SqlField field)
-							return field.Table != exceptTable;
-						return false;
-					})
-					.ToDictionary(pair => pair.Key, pair => pair.Value);
-
-				return replaceTree;
-			}
-
-			static IQueryElement RemapCloned(
-				IQueryElement                             element,
-				Dictionary<IQueryElement, IQueryElement>  mainTree,
-				Dictionary<IQueryElement, IQueryElement>? innerTree)
-			{
-				var newElement = element.Convert((mainTree, innerTree), static (v, expr) =>
-				{
-					var converted = v.Context.mainTree.TryGetValue(expr, out var newValue)
-						? newValue
-						: expr;
-
-					if (v.Context.innerTree != null)
-					{
-						converted = v.Context.innerTree.TryGetValue(converted, out newValue)
-							? newValue
-							: converted;
-					}
-
-					return converted;
-				});
-
-				return newElement;
-			}
-
-			var sourcesCount  = QueryHelper.EnumerateAccessibleSources(updateStatement.SelectQuery).Skip(1).Take(2).Count();
+			if (NeedsEnvelopingForUpdate(updateStatement.SelectQuery))
+				updateStatement = QueryHelper.WrapQuery(updateStatement, updateStatement.SelectQuery, allowMutation: true);
 
 			// It covers subqueries also. Simple subquery will have sourcesCount == 2
-			if (sourcesCount > 1)
+			if (QueryHelper.EnumerateAccessibleTableSources(updateStatement.SelectQuery).Any())
 			{
-				if (NeedsEnvelopingForUpdate(updateStatement.SelectQuery))
-					updateStatement = QueryHelper.WrapQuery(updateStatement, updateStatement.SelectQuery, allowMutation: true);
-
 				var sql = new SelectQuery { IsParameterDependent = updateStatement.IsParameterDependent  };
 
 				var newUpdateStatement = new SqlUpdateStatement(sql);
 				updateStatement.SelectQuery.ParentSelect = sql;
 
-				var tableToUpdate = updateStatement.GetUpdateTable();
-
 				if (tableToUpdate == null)
 					throw new LinqToDBException("Query can't be translated to UPDATE Statement.");
 
-				// we have to ensure that clone do not contain tableToUpdate
-				var clonedQuery = CloneQuery(updateStatement.SelectQuery, null, out var replaceTree);
+				Dictionary<IQueryElement, IQueryElement>? replaceTree = null;
 
-				var tableToCompare = (SqlTable)replaceTree[tableToUpdate];
-				replaceTree = CorrectReplaceTree(replaceTree, tableToUpdate);
+				var clonedQuery = CloneQuery(updateStatement.SelectQuery, needsComparison ? null : tableToUpdate, out replaceTree);
 
-				if (tableToCompare == null)
-					throw new LinqToDBException("Query can't be translated to UPDATE Statement.");
-
-				var compareKeys = tableToCompare.GetKeys(true);
-				var tableKeys   = tableToUpdate.GetKeys(true);
-
-				clonedQuery.Where.EnsureConjunction();
-				for (var i = 0; i < tableKeys.Count; i++)
+				SqlTable? tableToCompare = null;
+				if (replaceTree.TryGetValue(tableToUpdate, out var newTable))
 				{
-					var column = QueryHelper.NeedColumnForExpression(clonedQuery, compareKeys[i], false);
-					if (column == null)
-						throw new LinqToDBException($"Can not create query column for expression '{compareKeys[i]}'.");
-					var compare = QueryHelper.GenerateEquality(tableKeys[i], column);
-					clonedQuery.Where.SearchCondition.Conditions.Add(compare);
+					tableToCompare = (SqlTable)newTable;
 				}
 
+				if (tableToCompare != null)
+				{
+					replaceTree = CorrectReplaceTree(replaceTree, tableToUpdate);
+
+					var compareKeys = tableToCompare.GetKeys(true);
+					var tableKeys   = tableToUpdate.GetKeys(true);
+
+					clonedQuery.Where.EnsureConjunction();
+					for (var i = 0; i < tableKeys.Count; i++)
+					{
+						var column = QueryHelper.NeedColumnForExpression(clonedQuery, compareKeys[i], false);
+						if (column == null)
+							throw new LinqToDBException(
+								$"Can not create query column for expression '{compareKeys[i]}'.");
+						var compare = QueryHelper.GenerateEquality(tableKeys[i], column);
+						clonedQuery.Where.SearchCondition.Conditions.Add(compare);
+					}
+				}
 
 				// remove current column wrapping
 				foreach (var item in updateStatement.Update.Items)
@@ -2812,7 +2919,7 @@ namespace LinqToDB.SqlProvider
 						var usedSources = new HashSet<ISqlTableSource>();
 						QueryHelper.GetUsedSources(item.Expression!, usedSources);
 						usedSources.Remove(tableToUpdate);
-						if (replaceTree.TryGetValue(tableToUpdate, out var replaced))
+						if (replaceTree?.TryGetValue(tableToUpdate, out var replaced) == true)
 							usedSources.Remove((ISqlTableSource)replaced);
 
 						if (usedSources.Count > 0)
@@ -2853,7 +2960,6 @@ namespace LinqToDB.SqlProvider
 
 						newUpdateStatement.Update.Items.Clear();
 						newUpdateStatement.Update.Items.Add(newUpdateItem);
-
 					}
 				}
 
@@ -2907,23 +3013,18 @@ namespace LinqToDB.SqlProvider
 				newUpdateStatement.With         = updateStatement.With;
 
 				clonedQuery.RemoveNotUnusedColumns();
-				newUpdateStatement.SelectQuery.From.Table(tableToUpdate).Where.Exists(clonedQuery);
+				clonedQuery.OptimizeSelectQuery(updateStatement, SqlProviderFlags);
+				newUpdateStatement.SelectQuery.Where.Exists(clonedQuery);
 
 				updateStatement.Update.Items.Clear();
 
 				updateStatement = newUpdateStatement;
 
-				var tableSource = GetMainTableSource(updateStatement.SelectQuery);
-				tableSource!.Alias = "$F";
 			}
-			else
-			{
-				var tableSource = GetMainTableSource(updateStatement.SelectQuery);
-				if (tableSource!.Source is SqlTable || updateStatement.Update.Table != null)
-				{
-					tableSource.Alias = "$F";
-				}
-			}
+
+			var ts = FindTableSource(new Stack<IQueryElement>(), updateStatement.SelectQuery, tableToUpdate);
+			if (ts.tableSource != null)
+				ts.tableSource.Alias = "$F";
 
 			return updateStatement;
 		}
@@ -2977,152 +3078,63 @@ namespace LinqToDB.SqlProvider
 				statement = QueryHelper.WrapQuery(statement, statement.SelectQuery, allowMutation: true);
 			}
 
-			var tableToUpdate  = statement.Update.Table;
+			var tableToUpdate  = statement.Update.Table!;
 			var tableToCompare = tableToUpdate;
 
-			bool isDetachedUpdateTable;
+			var needsComparison = !HasComparisonInQuery(statement.SelectQuery, tableToUpdate);
 
-			if (tableToUpdate == null)
+			if (!needsComparison)
 			{
-				var foundTable = QueryHelper.EnumerateAccessibleTables(statement.SelectQuery).FirstOrDefault();
-				if (foundTable == null)
-					throw new LinqToDBException("Invalid query for Update.");
-
-				tableToUpdate  = foundTable;
-				tableToCompare = tableToUpdate;
-
-				isDetachedUpdateTable = false;
-			}
-			else
-			{
-				isDetachedUpdateTable = !QueryHelper.IsDependsOn(statement.SelectQuery, tableToUpdate);
+				RemoveUpdateTableIfPossible(statement.SelectQuery, tableToUpdate);
 			}
 
-
-			// find appropriate first table
-			if (isDetachedUpdateTable)
+			if (QueryHelper.IsDependsOn(statement.SelectQuery, tableToUpdate))
 			{
-				var foundTable = FindUpdateTable(statement.SelectQuery, tableToUpdate);
-				if (foundTable is null)
-					throw new LinqToDBException("Invalid query for Update. Could not find appropriate table in the query.");
-
-				tableToCompare = foundTable;
-			}
-
-
-			var comparingIsNeed = true;
-
-			// trying to detach compared table from the SQL
-			if (tableToCompare != null)
-			{
-				for (int i = 0; i < statement.SelectQuery.From.Tables.Count; i++)
+				if (QueryHelper.EnumerateAccessibleTableSources(statement.SelectQuery).Take(2).Count() == 1)
 				{
-					var ts = statement.SelectQuery.From.Tables[i];
+					needsComparison = !RemoveUpdateTableIfPossible(statement.SelectQuery, tableToUpdate) && needsComparison;
+				}
 
-					// We have strange limitation from PostgreSQL, so right now move only if we have one JOIN.
-					if (ts.Joins.Count > 1)
-						continue;
+				if (needsComparison || statement.SelectQuery.From.Tables.Count > 0)
+				{
+					var clonedQuery = CloneQuery(statement.SelectQuery, null, out var replaceTree);
+					tableToCompare = (SqlTable)replaceTree[tableToUpdate];
 
-					if (ts.Source is SqlTable table && table == tableToCompare)
+					var compareKeys = tableToCompare.GetKeys(true);
+					var tableKeys   = tableToUpdate.GetKeys(true);
+
+					clonedQuery.Where.EnsureConjunction();
+					for (var i = 0; i < tableKeys.Count; i++)
 					{
-						if (tableToCompare != tableToUpdate)
-						{
-							// replace removed source
-							ReplaceTable(statement, tableToCompare, tableToUpdate);
-							tableToCompare = tableToUpdate;
-						}
-
-						statement.SelectQuery.From.Tables.RemoveAt(i);
-
-						if (ts.Joins.Count > 0)
-						{
-							// move first joined source to From and append rest joins to this source
-
-							var firstJoin = ts.Joins[0];
-							statement.SelectQuery.Where.SearchCondition.EnsureConjunction().Conditions
-								.Add(new SqlCondition(false, firstJoin.Condition));
-
-							statement.SelectQuery.From.Tables.Insert(i, firstJoin.Table);
-
-							ts.Joins.RemoveAt(0);
-							firstJoin.Table.Joins.AddRange(ts.Joins);
-						}
-
-						comparingIsNeed = false;
-						break;
+						var column = QueryHelper.NeedColumnForExpression(clonedQuery, compareKeys[i], false);
+						if (column == null)
+							throw new LinqToDBException(
+								$"Can not create query column for expression '{compareKeys[i]}'.");
+						var compare = QueryHelper.GenerateEquality(tableKeys[i], column);
+						clonedQuery.Where.SearchCondition.Conditions.Add(compare);
 					}
 
-					for (int j = 0; j < ts.Joins.Count; j++)
+					var correctedTree = CorrectReplaceTree(replaceTree, tableToUpdate);
+
+					foreach (var item in statement.Update.Items)
 					{
-						var join = ts.Joins[j];
-						if (join.Table.Source is SqlTable joinTable && joinTable == tableToCompare)
+						if (item.Expression != null)
 						{
-							statement.SelectQuery.Where.SearchCondition.EnsureConjunction().Conditions
-								.Add(new SqlCondition(false, join.Condition));
-
-							if (tableToCompare != tableToUpdate)
-							{
-								// replace removed source
-								ReplaceTable(statement, tableToCompare, tableToUpdate);
-								tableToCompare = tableToUpdate;
-							}
-
-							// table joined, check how we can move it up from query
-							ts.Joins.RemoveAt(j);
-
-							comparingIsNeed = false;
-							break;
+							item.Expression = (ISqlExpression)RemapCloned(item.Expression, correctedTree, null);
 						}
 					}
+
+					statement.SelectQuery = clonedQuery;
 				}
 			}
 
-			if (comparingIsNeed)
+			// remove current column wrapping
+			foreach (var item in statement.Update.Items)
 			{
-				if (tableToCompare == null)
-					throw new InvalidOperationException();
-
-				if (tableToCompare == tableToUpdate)
+				while (item.Column is SqlColumn column)
 				{
-					// we have to create clone
-					tableToUpdate = tableToCompare.Clone();
-
-					for (var i = 0; i < statement.Update.Items.Count; i++)
-					{
-						var item = statement.Update.Items[i];
-						var newItem = item.Convert((tableToCompare, tableToUpdate), static (v, e) =>
-						{
-							if (e is SqlField field && field.Table == v.Context.tableToCompare)
-								return v.Context.tableToUpdate[field.Name] ?? throw new LinqException($"Field {field.Name} not found in table {v.Context.tableToUpdate}");
-
-							return e;
-						});
-
-						var updateField = QueryHelper.GetUnderlyingField(newItem.Column);
-						if (updateField != null)
-							newItem.Column = tableToUpdate[updateField.Name] ?? throw new LinqException($"Field {updateField.Name} not found in table {tableToUpdate}");
-
-						statement.Update.Items[i] = newItem;
-					}
+					item.Column = column.Expression;
 				}
-
-				var keys1 = tableToUpdate.GetKeys(true);
-				var keys2 = tableToCompare.GetKeys(true);
-
-				if (keys1.Count == 0)
-					throw new LinqToDBException(
-						$"Table {tableToUpdate.NameForLogging} do not have primary key. Update transformation is not available.");
-
-				for (int i = 0; i < keys1.Count; i++)
-				{
-					var column = QueryHelper.NeedColumnForExpression(statement.SelectQuery, keys2[i], false);
-					if (column == null)
-						throw new LinqToDBException($"Can not create query column for expression '{keys2[i]}'.");
-
-					var compare = QueryHelper.GenerateEquality(keys1[i], column);
-					statement.SelectQuery.Where.SearchCondition.Conditions.Add(compare);
-				}
-
 			}
 
 			tableToUpdate.Alias = "$F";
@@ -3141,46 +3153,44 @@ namespace LinqToDB.SqlProvider
 		protected SqlUpdateStatement CorrectUpdateTable(SqlUpdateStatement statement)
 		{
 			statement = BasicCorrectUpdate(statement);
-			var updateTable = statement.Update.Table;
-			if (updateTable != null)
+			var tableToUpdate = statement.Update.Table;
+			if (tableToUpdate != null)
 			{
 				var firstTable = statement.SelectQuery.From.Tables[0];
-				if (!(firstTable.Source is SqlTable ft) || !QueryHelper.IsEqualTables(ft, updateTable))
+
+				if (firstTable.Source != tableToUpdate)
 				{
-					foreach (var joinedTable in firstTable.Joins)
+					if (RemoveUpdateTableIfPossible(statement.SelectQuery, tableToUpdate))
 					{
-						if (joinedTable.Table.Source is SqlTable jt &&
-							QueryHelper.IsEqualTables(jt, updateTable) && (joinedTable.JoinType == JoinType.Inner || joinedTable.JoinType == JoinType.Left))
-						{
-							joinedTable.JoinType = JoinType.Inner;
-							joinedTable.Table.Source = firstTable.Source;
-							firstTable.Source = jt;
-
-							statement.Update.Table = jt;
-
-							statement.Walk(WalkOptions.Default, (updateTable, jt), static (ctx, exp) =>
-							{
-								if (exp is SqlField field && field.Table == ctx.updateTable)
-								{
-									return ctx.jt[field.Name] ?? throw new LinqException($"Field {field.Name} not found in table {ctx.jt}");
-								}
-								return exp;
-							});
-
-							break;
-						}
+						statement.SelectQuery.From.Tables.Insert(0, new SqlTableSource(tableToUpdate, "u"));
 					}
-				}
-				else if (firstTable.Source is SqlTable newUpdateTable && newUpdateTable != updateTable && QueryHelper.IsEqualTables(newUpdateTable, updateTable))
-				{
-					statement.Update.Table = newUpdateTable;
-					statement.Update = statement.Update.Convert((updateTable, newUpdateTable), static (v, e) =>
+					else
 					{
-						if (e is SqlField field && field.Table == v.Context.updateTable)
-							return v.Context.newUpdateTable[field.Name] ?? throw new LinqException($"Field {field.Name} not found in table {v.Context.newUpdateTable}");
+						if (QueryHelper.IsDependsOn(statement.SelectQuery, tableToUpdate))
+						{
+							tableToUpdate = tableToUpdate.Clone();
+						}
 
-						return e;
-					});
+						var tableToCompare = statement.Update.Table!;
+
+						var compareKeys = tableToCompare.GetKeys(true);
+						var tableKeys   = tableToUpdate.GetKeys(true);
+
+						statement.SelectQuery.From.Tables.Insert(0, new SqlTableSource(tableToUpdate, "u"));
+						statement.SelectQuery.Where.EnsureConjunction();
+						for (var i = 0; i < tableKeys.Count; i++)
+						{
+							var column =
+								QueryHelper.NeedColumnForExpression(statement.SelectQuery, compareKeys[i], false);
+							if (column == null)
+								throw new LinqToDBException(
+									$"Can not create query column for expression '{compareKeys[i]}'.");
+							var compare = QueryHelper.GenerateEquality(tableKeys[i], column);
+							statement.SelectQuery.Where.SearchCondition.Conditions.Add(compare);
+						}
+
+						statement.Update.Table = tableToUpdate;
+					}
 				}
 			}
 
@@ -3508,7 +3518,7 @@ namespace LinqToDB.SqlProvider
 						if (isAggregateQuery)
 						{
 							// remove unwanted join
-							if (!QueryHelper.IsDependsOn(statement, new HashSet<ISqlTableSource> { query },
+							if (!QueryHelper.IsDependsOnSources(statement, new HashSet<ISqlTableSource> { query },
 								new HashSet<IQueryElement> { join }))
 								return true;
 						}

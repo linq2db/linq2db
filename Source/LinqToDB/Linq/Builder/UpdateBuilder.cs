@@ -201,7 +201,19 @@ namespace LinqToDB.Linq.Builder
 						if (!QueryHelper.IsEqualTables(sequenceTableContext.SqlTable, intoTableContext.SqlTable))
 						{
 							// create join between tables
-							throw new NotImplementedException();
+							//
+
+							var sequenceRef = new ContextRefExpression(sequenceTableContext.SqlTable.ObjectType, sequenceTableContext);
+							var intoRef = new ContextRefExpression(sequenceTableContext.SqlTable.ObjectType, into);
+
+							var predicate = builder.ConvertCompare(sequence, ExpressionType.Equal,
+								sequenceRef, intoRef, ProjectFlags.SQL);
+
+							if (predicate == null)
+								throw new LinqToDBException("Cannot create update statement.");
+
+							sequenceTableContext.SelectQuery.Where.EnsureConjunction();
+							sequenceTableContext.SelectQuery.Where.SearchCondition.Conditions.Add(new SqlCondition(false, predicate));
 						}
 						else
 						{

@@ -116,7 +116,7 @@ namespace LinqToDB.DataProvider.Sybase
 					if (join.Table.Source == tableToUpdate)
 					{
 						var sources = new HashSet<ISqlTableSource>() { tableToUpdate };
-						if (sourceTable.Joins.Skip(i + 1).Any(j => QueryHelper.IsDependsOn(j, sources)))
+						if (sourceTable.Joins.Skip(i + 1).Any(j => QueryHelper.IsDependsOnSources(j, sources)))
 							break;
 						statement.SelectQuery.From.Tables.Insert(0, join.Table);
 						statement.SelectQuery.Where.SearchCondition.EnsureConjunction().Conditions

@@ -1384,12 +1384,59 @@ namespace Tests.xUpdate
 #pragma warning restore CA1311 // Specify a culture or use an invariant version
 			}
 		}
+
+		[Test]
+		public void TestUpdateFromJoinDifferentTable([DataSources(
+			TestProvName.AllAccess, // access doesn't have Replace mapping
+			TestProvName.AllClickHouse,
+			ProviderName.SqlCe,
+			TestProvName.AllInformix)] string context)
+		{
+			using (var db          = GetDataContext(context))
+			using (var gt_s_one    = db.CreateLocalTable(UpdateFromJoin.Data))
+			using (var gt_s_one_target = db.CreateLocalTable(tableName: "gt_s_one_target", UpdateFromJoin.Data))
+			using (var access_mode = db.CreateLocalTable(AccessMode.Data))
+			{
+#pragma warning disable CA1311 // Specify a culture or use an invariant version
+				gt_s_one
+					.GroupJoin(
+						access_mode,
+						l => l.col3!.Replace("auth.", "").ToUpper(),
+						am => am.code!.ToUpper(),
+						(l, am) => new
+						{
+							l,
+							am
+						})
+					.SelectMany(
+						x => x.am.DefaultIfEmpty(),
+						(x1, y1) => new
+						{
+							gt    = x1.l,
+							theAM = y1!.id
+						})
+					.Update(
+						gt_s_one.TableName("gt_s_one_target"),
+						s => new UpdateFromJoin()
+						{
+							col1 = s.gt.col1,
+							col2 = s.gt.col2,
+							col3 = s.gt.col3!.Replace("auth.", ""),
+							col4 = s.gt.col4,
+							col5 = s.gt.col3 == "empty" ? "1" : "0",
+							col6 = s.gt.col3 == "empty" ? "" : s.theAM.ToString()
+						});
+#pragma warning restore CA1311 // Specify a culture or use an invariant version
+			}
+		}
+
 		enum UpdateSetEnum
 		{
 			Value1 = 6,
 			Value2 = 7,
 			Value3 = 8
 		}
+
 		[Table]
 		sealed class UpdateSetTest
 		{

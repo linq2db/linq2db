@@ -30,7 +30,12 @@ namespace LinqToDB.SqlQuery
 			public          bool                     DependencyFound;
 		}
 
-		public static bool IsDependsOn(IQueryElement testedRoot, HashSet<ISqlTableSource> onSources, HashSet<IQueryElement>? elementsToIgnore = null)
+        public static bool IsDependsOnSource(IQueryElement testedRoot, ISqlTableSource onSource, HashSet<IQueryElement>? elementsToIgnore = null)
+        {
+	        return IsDependsOnSources(testedRoot, new HashSet<ISqlTableSource> { onSource }, elementsToIgnore);
+        }
+
+		public static bool IsDependsOnSources(IQueryElement testedRoot, HashSet<ISqlTableSource> onSources, HashSet<IQueryElement>? elementsToIgnore = null)
 		{
 			var ctx = new IsDependsOnSourcesContext(onSources, elementsToIgnore);
 
@@ -1978,6 +1983,12 @@ namespace LinqToDB.SqlQuery
 		public static void RemoveNotUnusedColumns(this SelectQuery selectQuery)
 		{
 			RemoveNotUnusedColumnsInternal(selectQuery, selectQuery);
+		}
+
+		public static void OptimizeSelectQuery(this SelectQuery selectQuery, IQueryElement root, SqlProviderFlags providerFlags)
+		{
+			new SelectQueryOptimizer(providerFlags, new EvaluationContext(), root, selectQuery, 0)
+				.FinalizeAndValidate(providerFlags.IsApplyJoinSupported);
 		}
 
 		[return: NotNullIfNotNull(nameof(sqlExpression))]
