@@ -66,7 +66,7 @@ namespace LinqToDB.Identity
 
 			if (role == null) throw new ArgumentNullException(nameof(role));
 
-			var result = await Context.UpdateConcurrent(role, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			var result = await Context.UpdateConcurrentAsync(role, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			return result == 1 ? IdentityResult.Success : IdentityResult.Failed(ErrorDescriber.ConcurrencyFailure());
 		}

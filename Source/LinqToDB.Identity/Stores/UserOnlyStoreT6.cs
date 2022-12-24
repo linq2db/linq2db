@@ -90,7 +90,7 @@ namespace LinqToDB.Identity
 			if (user == null) throw new ArgumentNullException(nameof(user));
 
 			var result = await Context
-				.UpdateConcurrent(user, cancellationToken)
+				.UpdateConcurrentAsync(user, cancellationToken)
 				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			return result == 1 ? IdentityResult.Success : IdentityResult.Failed(ErrorDescriber.ConcurrencyFailure());
