@@ -47,7 +47,7 @@ namespace LinqToDB.Mapping
 
 				case VersionBehavior.CurrentTimestamp:
 					return Expression.Lambda(
-						Expression.Call(Methods.LinqToDB.SqlExt.CurrentTimestamp),
+						Expression.Property(null, Methods.LinqToDB.SqlExt.CurrentTimestamp),
 						record);
 
 				default:

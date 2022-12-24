@@ -164,7 +164,8 @@ namespace LinqToDB.Reflection
 				public static readonly MethodInfo Alias            = MemberHelper.MethodOfGeneric<int?>(i => global::LinqToDB.Sql.Alias(i, ""));
 				// don't use MethodOfGeneric here (Sql.Property treatened in special way by it)
 				public static readonly MethodInfo Property         = typeof(global::LinqToDB.Sql).GetMethodEx(nameof(global::LinqToDB.Sql.Property))!.GetGenericMethodDefinition();
-				public static readonly MethodInfo CurrentTimestamp = typeof(global::LinqToDB.Sql).GetMethodEx(nameof(global::LinqToDB.Sql.CurrentTimestamp))!.GetGenericMethodDefinition();
+
+				public static readonly PropertyInfo CurrentTimestamp = MemberHelper.PropertyOf(() => global::LinqToDB.Sql.CurrentTimestamp);
 			}
 
 			public static class Update
