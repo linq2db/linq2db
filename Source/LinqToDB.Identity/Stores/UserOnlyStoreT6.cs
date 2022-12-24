@@ -103,10 +103,7 @@ namespace LinqToDB.Identity
 
 			if (user == null) throw new ArgumentNullException(nameof(user));
 
-			var result = await Users
-				.Where(u => u.Id.Equals(user.Id) && u.ConcurrencyStamp == user.ConcurrencyStamp)
-				.DeleteAsync(cancellationToken)
-				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			var result = await Context.DeleteConcurrentAsync(user, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			return result == 1 ? IdentityResult.Success : IdentityResult.Failed(ErrorDescriber.ConcurrencyFailure());
 		}
