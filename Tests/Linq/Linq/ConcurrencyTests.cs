@@ -15,7 +15,7 @@ namespace Tests.Linq
 	public class ConcurrencyTests : TestBase
 	{
 		[Table]
-		class ConcurrencyTable<TStamp>
+		public class ConcurrencyTable<TStamp>
 			where TStamp: notnull
 		{
 			[PrimaryKey] public int Id    { get; set; }
@@ -25,7 +25,7 @@ namespace Tests.Linq
 			[Column] public string? Value { get; set; }
 		}
 
-		class CustomConcurrencyPropertyAttribute : ConcurrencyPropertyAttribute
+		public class CustomConcurrencyPropertyAttribute : ConcurrencyPropertyAttribute
 		{
 			public CustomConcurrencyPropertyAttribute()
 				: base(default)
