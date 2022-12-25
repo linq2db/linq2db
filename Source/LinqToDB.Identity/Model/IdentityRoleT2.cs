@@ -1,5 +1,4 @@
 ﻿using System;
-using LinqToDB.Mapping;
 using ASP = Microsoft.AspNetCore.Identity;
 
 namespace LinqToDB.Identity.Model
@@ -27,9 +26,5 @@ namespace LinqToDB.Identity.Model
 		{
 			Id = Guid.NewGuid().ToString();
 		}
-
-		/// <inheritdoc cref="Id" />
-		[Column(CanBeNull = false, IsPrimaryKey = true, Length = 255)]
-		public override string Id { get; set; }
 	}
 }

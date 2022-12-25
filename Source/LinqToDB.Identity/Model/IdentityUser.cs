@@ -1,5 +1,4 @@
 ﻿using System;
-using LinqToDB.Mapping;
 
 namespace LinqToDB.Identity.Model
 {
@@ -30,11 +29,5 @@ namespace LinqToDB.Identity.Model
 		{
 			Id = Guid.NewGuid().ToString();
 		}
-
-		/// <summary>
-		/// Gets or sets the primary key for this user.
-		/// </summary>
-		[Column(CanBeNull = false, IsPrimaryKey = true, Length = 255)]
-		public override string Id { get; set; } = default!;
 	}
 }

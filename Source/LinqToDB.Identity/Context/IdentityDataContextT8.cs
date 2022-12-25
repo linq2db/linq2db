@@ -1,5 +1,6 @@
 ﻿using System;
 using LinqToDB.Configuration;
+using LinqToDB.Mapping;
 using Microsoft.AspNetCore.Identity;
 
 namespace LinqToDB.Identity
@@ -30,6 +31,7 @@ namespace LinqToDB.Identity
 		/// Constructor with options.
 		/// </summary>
 		/// <param name="options">Connection options.</param>
+		//public IdentityDataContext(DataOptions options)
 		public IdentityDataContext(LinqToDBConnectionOptions options)
 			: base(options)
 		{
@@ -40,6 +42,17 @@ namespace LinqToDB.Identity
 		/// </summary>
 		public IdentityDataContext()
 		{
+		}
+
+		protected override void ConfigureMappings(MappingSchema mappingSchema)
+		{
+			base.ConfigureMappings(mappingSchema);
+
+			var builder = mappingSchema.GetFluentMappingBuilder();
+
+			DefaultMappings.SetupIdentityRole     <TKey, TRole     >(builder);
+			DefaultMappings.SetupIdentityUserRole <TKey, TUserRole >(builder);
+			DefaultMappings.SetupIdentityRoleClaim<TKey, TRoleClaim>(builder);
 		}
 
 		/// <summary>

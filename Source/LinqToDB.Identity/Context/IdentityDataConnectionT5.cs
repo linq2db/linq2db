@@ -1,6 +1,7 @@
 ﻿using System;
 using LinqToDB.Configuration;
 using LinqToDB.Data;
+using LinqToDB.Mapping;
 using Microsoft.AspNetCore.Identity;
 
 namespace LinqToDB.Identity
@@ -21,13 +22,19 @@ namespace LinqToDB.Identity
 		where TUserLogin : IdentityUserLogin<TKey>
 		where TUserToken : IdentityUserToken<TKey>
 	{
+		private static readonly object _syncRoot = new ();
+		private static MappingSchema?  _mappingSchema;
+
 		/// <summary>
 		/// Constructor with options.
 		/// </summary>
 		/// <param name="options">Connection options.</param>
+		//public IdentityDataConnection(DataOptions options)
 		public IdentityDataConnection(LinqToDBConnectionOptions options)
 			: base(options)
 		{
+			// TODO: rework after options merge
+			AddMappingSchema(GetMappingSchema());
 		}
 
 		/// <summary>
@@ -35,6 +42,38 @@ namespace LinqToDB.Identity
 		/// </summary>
 		public IdentityDataConnection()
 		{
+			// TODO: rework after options merge
+			AddMappingSchema(GetMappingSchema());
+		}
+
+		private MappingSchema GetMappingSchema()
+		{
+			if (_mappingSchema == null)
+			{
+				lock (_syncRoot)
+				{
+					if (_mappingSchema == null)
+					{
+						var ms = new MappingSchema();
+
+						ConfigureMappings(ms);
+
+						_mappingSchema = ms;
+					}
+				}
+			}
+
+			return _mappingSchema;
+		}
+
+		protected virtual void ConfigureMappings(MappingSchema mappingSchema)
+		{
+			var builder = mappingSchema.GetFluentMappingBuilder();
+
+			DefaultMappings.SetupIdentityUser     <TKey, TUser     >(builder);
+			DefaultMappings.SetupIdentityUserClaim<TKey, TUserClaim>(builder);
+			DefaultMappings.SetupIdentityUserLogin<TKey, TUserLogin>(builder);
+			DefaultMappings.SetupIdentityUserToken<TKey, TUserToken>(builder);
 		}
 
 		/// <summary>

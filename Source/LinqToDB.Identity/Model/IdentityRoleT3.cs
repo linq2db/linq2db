@@ -39,9 +39,5 @@ namespace LinqToDB.Identity.Model
 		/// </summary>
 		[Association(ThisKey = nameof(Id), OtherKey = nameof(ASP.IdentityRoleClaim<TKey>.RoleId))]
 		public virtual ICollection<TRoleClaim>? Claims { get; set; }
-
-		/// <inheritdoc cref="Id" />
-		[Column(CanBeNull = false, IsPrimaryKey = true)]
-		public override TKey Id { get; set; } = default!;
 	}
 }

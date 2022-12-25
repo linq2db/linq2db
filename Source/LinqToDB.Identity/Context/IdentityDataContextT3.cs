@@ -20,6 +20,7 @@ namespace LinqToDB.Identity
 		/// Constructor with options.
 		/// </summary>
 		/// <param name="options">Connection options.</param>
+		//public IdentityDataContext(DataOptions options)
 		public IdentityDataContext(LinqToDBConnectionOptions options)
 			: base(options)
 		{

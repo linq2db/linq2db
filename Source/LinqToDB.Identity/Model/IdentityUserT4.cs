@@ -47,11 +47,5 @@ namespace LinqToDB.Identity.Model
 		/// </summary>
 		[Association(ThisKey = nameof(Id), OtherKey = nameof(ASP.IdentityUserLogin<TKey>.UserId))]
 		public virtual ICollection<TUserLogin>? Logins { get; set; }
-
-		/// <summary>
-		/// Gets or sets the primary key for this user.
-		/// </summary>
-		[Column(CanBeNull = false, IsPrimaryKey = true)]
-		public override TKey Id { get; set; } = default!;
 	}
 }
