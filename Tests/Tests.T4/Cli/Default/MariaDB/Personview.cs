@@ -15,8 +15,8 @@ namespace Cli.Default.MariaDB
 	/// <summary>
 	/// VIEW
 	/// </summary>
-	[Table("personview", IsView = true)]
-	public class Personview
+	[Table("PersonView", IsView = true)]
+	public class PersonView
 	{
 		[Column("ID")] public int Id { get; set; } // int(11)
 	}

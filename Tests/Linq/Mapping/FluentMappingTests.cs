@@ -436,7 +436,6 @@ namespace Tests.Mapping
 			var od2 = ms.GetEntityDescriptor(typeof(MyClass));
 
 			Assert.AreEqual("Name2", od2.Name.Name);
-
 		}
 
 		[Test]
@@ -741,6 +740,43 @@ namespace Tests.Mapping
 
 			for (var i = 0; i < records.Length; i++)
 				Assert.AreEqual(records[0].Id + i, records[i].Id);
+		}
+
+		[Table("Person")]
+		sealed class EnumPerson
+		{
+			[Column] public int        PersonID;
+			[Column] public GenderEnum Gender;
+		}
+
+		public enum GenderEnum
+		{
+			Male,
+			Female,
+			Unknown,
+			Other,
+		}
+
+		[Test]
+		public void MapValueTest([DataSources] string context)
+		{
+			var ms = new MappingSchema();
+			var mb = ms.GetFluentMappingBuilder();
+
+			mb.HasAttribute(typeof(GenderEnum).GetField(nameof(GenderEnum.Male))!,    new MapValueAttribute("M"));
+			mb.HasAttribute(typeof(GenderEnum).GetField(nameof(GenderEnum.Female))!,  new MapValueAttribute("F"));
+			mb.HasAttribute(typeof(GenderEnum).GetField(nameof(GenderEnum.Unknown))!, new MapValueAttribute("U"));
+			mb.HasAttribute(typeof(GenderEnum).GetField(nameof(GenderEnum.Other))!,   new MapValueAttribute("O"));
+
+			using var db = GetDataContext(context, ms);
+
+			var records = db.GetTable<EnumPerson>().OrderBy(r => r.PersonID).ToArray();
+
+			Assert.AreEqual(4, records.Length);
+			Assert.AreEqual(GenderEnum.Male,   records[0].Gender);
+			Assert.AreEqual(GenderEnum.Male,   records[1].Gender);
+			Assert.AreEqual(GenderEnum.Female, records[2].Gender);
+			Assert.AreEqual(GenderEnum.Male,   records[3].Gender);
 		}
 	}
 }

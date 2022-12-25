@@ -11,6 +11,7 @@ using LinqToDB.Configuration;
 using LinqToDB.Data;
 using LinqToDB.Expressions;
 using LinqToDB.Mapping;
+using Oracle.ManagedDataAccess.Types;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -43,53 +44,64 @@ namespace Cli.T4.Oracle
 
 		partial void InitDataContext();
 
-		public ITable<AllType>                 AllTypes                 => this.GetTable<AllType>();
-		public ITable<Binarydatum>             Binarydata               => this.GetTable<Binarydatum>();
-		public ITable<Child>                   Children                 => this.GetTable<Child>();
-		public ITable<CollatedTable>           CollatedTables           => this.GetTable<CollatedTable>();
-		public ITable<DataTypeTest>            DataTypeTests            => this.GetTable<DataTypeTest>();
-		public ITable<DecimalOverflow>         DecimalOverflows         => this.GetTable<DecimalOverflow>();
-		public ITable<Dest2>                   Dest2                    => this.GetTable<Dest2>();
-		public ITable<Doctor>                  Doctors                  => this.GetTable<Doctor>();
-		public ITable<GrandChild>              GrandChildren            => this.GetTable<GrandChild>();
-		public ITable<InheritanceChild>        InheritanceChildren      => this.GetTable<InheritanceChild>();
-		public ITable<InheritanceParent>       InheritanceParents       => this.GetTable<InheritanceParent>();
-		public ITable<Issue2564Table>          Issue2564Tables          => this.GetTable<Issue2564Table>();
-		public ITable<LinqDataType>            LinqDataTypes            => this.GetTable<LinqDataType>();
-		public ITable<Linqdatatypesbc>         Linqdatatypesbcs         => this.GetTable<Linqdatatypesbc>();
-		public ITable<LongRawTable>            LongRawTables            => this.GetTable<LongRawTable>();
-		public ITable<Parent>                  Parents                  => this.GetTable<Parent>();
-		public ITable<Patient>                 Patients                 => this.GetTable<Patient>();
-		public ITable<Person>                  People                   => this.GetTable<Person>();
+		public ITable<AllType>             AllTypes            => this.GetTable<AllType>();
+		public ITable<Binarydatum>         Binarydata          => this.GetTable<Binarydatum>();
+		public ITable<Child>               Children            => this.GetTable<Child>();
+		public ITable<CollatedTable>       CollatedTables      => this.GetTable<CollatedTable>();
+		public ITable<DataTypeTest>        DataTypeTests       => this.GetTable<DataTypeTest>();
+		public ITable<DecimalOverflow>     DecimalOverflows    => this.GetTable<DecimalOverflow>();
+		public ITable<Doctor>              Doctors             => this.GetTable<Doctor>();
+		public ITable<GrandChild>          GrandChildren       => this.GetTable<GrandChild>();
+		public ITable<InheritanceChild>    InheritanceChildren => this.GetTable<InheritanceChild>();
+		public ITable<InheritanceParent>   InheritanceParents  => this.GetTable<InheritanceParent>();
+		public ITable<Linqdatatypesbc>     Linqdatatypesbcs    => this.GetTable<Linqdatatypesbc>();
+		public ITable<LinqDataType>        LinqDataTypes       => this.GetTable<LinqDataType>();
+		public ITable<LongRawTable>        LongRawTables       => this.GetTable<LongRawTable>();
+		public ITable<Parent>              Parents             => this.GetTable<Parent>();
+		public ITable<Patient>             Patients            => this.GetTable<Patient>();
+		public ITable<Person>              People              => this.GetTable<Person>();
+		public ITable<Sequencetest>        Sequencetests       => this.GetTable<Sequencetest>();
+		public ITable<StgTradeInformation> StgTradeInformation => this.GetTable<StgTradeInformation>();
 		/// <summary>
 		/// This is table
 		/// </summary>
-		public ITable<SchemaTestTable>         SchemaTestTables         => this.GetTable<SchemaTestTable>();
-		public ITable<Sequencetest>            Sequencetests            => this.GetTable<Sequencetest>();
-		public ITable<StgTradeInformation>     StgTradeInformation      => this.GetTable<StgTradeInformation>();
-		public ITable<StringTest>              StringTests              => this.GetTable<StringTest>();
-		public ITable<TEntity>                 TEntities                => this.GetTable<TEntity>();
-		public ITable<TestIdentity>            TestIdentities           => this.GetTable<TestIdentity>();
-		public ITable<TestMerge1>              TestMerge1               => this.GetTable<TestMerge1>();
-		public ITable<TestMerge2>              TestMerge2               => this.GetTable<TestMerge2>();
-		public ITable<TestSequenceSchemaTable> TestSequenceSchemaTables => this.GetTable<TestSequenceSchemaTable>();
-		public ITable<TestSource>              TestSources              => this.GetTable<TestSource>();
-		public ITable<TTestUser>               TTestUsers               => this.GetTable<TTestUser>();
-		public ITable<TTestUserContract>       TTestUserContracts       => this.GetTable<TTestUserContract>();
+		public ITable<SchemaTestTable>     SchemaTestTables    => this.GetTable<SchemaTestTable>();
+		public ITable<StringTest>          StringTests         => this.GetTable<StringTest>();
+		public ITable<TestIdentity>        TestIdentities      => this.GetTable<TestIdentity>();
+		public ITable<TestMerge1>          TestMerge1          => this.GetTable<TestMerge1>();
+		public ITable<TestMerge2>          TestMerge2          => this.GetTable<TestMerge2>();
+		public ITable<TEntity>             TEntities           => this.GetTable<TEntity>();
+		public ITable<TTestUser>           TTestUsers          => this.GetTable<TTestUser>();
+		public ITable<TTestUserContract>   TTestUserContracts  => this.GetTable<TTestUserContract>();
 		/// <summary>
 		/// This is matview
 		/// </summary>
-		public ITable<SchemaTestMatView>       SchemaTestMatViews       => this.GetTable<SchemaTestMatView>();
-		public ITable<SchemaTestView>          SchemaTestViews          => this.GetTable<SchemaTestView>();
+		public ITable<SchemaTestMatView>   SchemaTestMatViews  => this.GetTable<SchemaTestMatView>();
+		public ITable<SchemaTestView>      SchemaTestViews     => this.GetTable<SchemaTestView>();
 
 		#region Table Functions
+		#region TestTableFunction
+		private static readonly MethodInfo _testTableFunction = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.TestTableFunction(default));
+
+		[Sql.TableFunction("TEST_TABLE_FUNCTION", Schema = "MANAGED")]
+		public ITable<TestTableFunctionResult> TestTableFunction(decimal? i)
+		{
+			return this.GetTable<TestTableFunctionResult>(this, _testTableFunction, i);
+		}
+
+		public partial class TestTableFunctionResult
+		{
+			[Column("O")] public decimal? O { get; set; }
+		}
+		#endregion
+
 		#region TestPackage1TestTableFunction
-		private static readonly MethodInfo _testTableFunction = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.TestPackage1TestTableFunction(default));
+		private static readonly MethodInfo _testTableFunction1 = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.TestPackage1TestTableFunction(default));
 
 		[Sql.TableFunction("TEST_TABLE_FUNCTION", Package = "TEST_PACKAGE1", Schema = "MANAGED")]
 		public ITable<TestPackage1TestTableFunctionResult> TestPackage1TestTableFunction(decimal? i)
 		{
-			return this.GetTable<TestPackage1TestTableFunctionResult>(this, _testTableFunction, i);
+			return this.GetTable<TestPackage1TestTableFunctionResult>(this, _testTableFunction1, i);
 		}
 
 		public partial class TestPackage1TestTableFunctionResult
@@ -99,30 +111,15 @@ namespace Cli.T4.Oracle
 		#endregion
 
 		#region TestPackage2TestTableFunction
-		private static readonly MethodInfo _testTableFunction1 = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.TestPackage2TestTableFunction(default));
+		private static readonly MethodInfo _testTableFunction2 = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.TestPackage2TestTableFunction(default));
 
 		[Sql.TableFunction("TEST_TABLE_FUNCTION", Package = "TEST_PACKAGE2", Schema = "MANAGED")]
 		public ITable<TestPackage2TestTableFunctionResult> TestPackage2TestTableFunction(decimal? i)
 		{
-			return this.GetTable<TestPackage2TestTableFunctionResult>(this, _testTableFunction1, i);
+			return this.GetTable<TestPackage2TestTableFunctionResult>(this, _testTableFunction2, i);
 		}
 
 		public partial class TestPackage2TestTableFunctionResult
-		{
-			[Column("O")] public decimal? O { get; set; }
-		}
-		#endregion
-
-		#region TestTableFunction
-		private static readonly MethodInfo _testTableFunction2 = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.TestTableFunction(default));
-
-		[Sql.TableFunction("TEST_TABLE_FUNCTION", Schema = "MANAGED")]
-		public ITable<TestTableFunctionResult> TestTableFunction(decimal? i)
-		{
-			return this.GetTable<TestTableFunctionResult>(this, _testTableFunction2, i);
-		}
-
-		public partial class TestTableFunctionResult
 		{
 			[Column("O")] public decimal? O { get; set; }
 		}
@@ -196,11 +193,6 @@ namespace Cli.T4.Oracle
 			return table.FirstOrDefault(e => e.InheritanceParentId == inheritanceParentId);
 		}
 
-		public static Issue2564Table? Find(this ITable<Issue2564Table> table, long id)
-		{
-			return table.FirstOrDefault(e => e.Id == id);
-		}
-
 		public static LongRawTable? Find(this ITable<LongRawTable> table, decimal id)
 		{
 			return table.FirstOrDefault(e => e.ID == id);
@@ -216,19 +208,14 @@ namespace Cli.T4.Oracle
 			return table.FirstOrDefault(e => e.PersonID == personId);
 		}
 
-		public static SchemaTestTable? Find(this ITable<SchemaTestTable> table, decimal id)
-		{
-			return table.FirstOrDefault(e => e.Id == id);
-		}
-
 		public static Sequencetest? Find(this ITable<Sequencetest> table, decimal id)
 		{
 			return table.FirstOrDefault(e => e.ID == id);
 		}
 
-		public static TEntity? Find(this ITable<TEntity> table, decimal entityId)
+		public static SchemaTestTable? Find(this ITable<SchemaTestTable> table, decimal id)
 		{
-			return table.FirstOrDefault(e => e.EntityId == entityId);
+			return table.FirstOrDefault(e => e.Id == id);
 		}
 
 		public static TestIdentity? Find(this ITable<TestIdentity> table, decimal id)
@@ -246,9 +233,9 @@ namespace Cli.T4.Oracle
 			return table.FirstOrDefault(e => e.Id == id);
 		}
 
-		public static TestSequenceSchemaTable? Find(this ITable<TestSequenceSchemaTable> table, long id)
+		public static TEntity? Find(this ITable<TEntity> table, decimal entityId)
 		{
-			return table.FirstOrDefault(e => e.Id == id);
+			return table.FirstOrDefault(e => e.EntityId == entityId);
 		}
 
 		public static TTestUser? Find(this ITable<TTestUser> table, decimal userId)
@@ -268,46 +255,6 @@ namespace Cli.T4.Oracle
 		#endregion
 
 		#region Stored Procedures
-		#region TestPackage1TestProcedure
-		public static int TestPackage1TestProcedure(this TestDataDB dataConnection, decimal? i, out decimal? o)
-		{
-			var parameters = new []
-			{
-				new DataParameter("I", i, DataType.Decimal)
-				{
-					Size = 22
-				},
-				new DataParameter("O", null, DataType.Decimal)
-				{
-					Direction = ParameterDirection.Output,
-					Size = 22
-				}
-			};
-			o = Converter.ChangeTypeTo<decimal?>(parameters[1].Value);
-			return dataConnection.ExecuteProc("MANAGED.TEST_PACKAGE1.TEST_PROCEDURE", parameters);
-		}
-		#endregion
-
-		#region TestPackage2TestProcedure
-		public static int TestPackage2TestProcedure(this TestDataDB dataConnection, decimal? i, out decimal? o)
-		{
-			var parameters = new []
-			{
-				new DataParameter("I", i, DataType.Decimal)
-				{
-					Size = 22
-				},
-				new DataParameter("O", null, DataType.Decimal)
-				{
-					Direction = ParameterDirection.Output,
-					Size = 22
-				}
-			};
-			o = Converter.ChangeTypeTo<decimal?>(parameters[1].Value);
-			return dataConnection.ExecuteProc("MANAGED.TEST_PACKAGE2.TEST_PROCEDURE", parameters);
-		}
-		#endregion
-
 		#region Addissue792Record
 		public static int Addissue792Record(this TestDataDB dataConnection)
 		{
@@ -405,6 +352,31 @@ namespace Cli.T4.Oracle
 		}
 		#endregion
 
+		#region Resultsettest
+		public static IEnumerable<ResultsettestResult> Resultsettest(this TestDataDB dataConnection, out OracleRefCursor? mr, out OracleRefCursor? sr)
+		{
+			var parameters = new []
+			{
+				new DataParameter("MR", null, DataType.Cursor)
+				{
+					Direction = ParameterDirection.Output
+				},
+				new DataParameter("SR", null, DataType.Cursor)
+				{
+					Direction = ParameterDirection.Output
+				}
+			};
+			mr = Converter.ChangeTypeTo<OracleRefCursor?>(parameters[0].Value);
+			sr = Converter.ChangeTypeTo<OracleRefCursor?>(parameters[1].Value);
+			return dataConnection.QueryProc<ResultsettestResult>("MANAGED.RESULTSETTEST", parameters).ToList();
+		}
+
+		public partial class ResultsettestResult
+		{
+			[Column("MASTERID")] public decimal? MASTERID { get; set; }
+		}
+		#endregion
+
 		#region TestProcedure
 		public static int TestProcedure(this TestDataDB dataConnection, decimal? i, out decimal? o)
 		{
@@ -424,28 +396,52 @@ namespace Cli.T4.Oracle
 			return dataConnection.ExecuteProc("MANAGED.TEST_PROCEDURE", parameters);
 		}
 		#endregion
+
+		#region TestPackage1TestProcedure
+		public static int TestPackage1TestProcedure(this TestDataDB dataConnection, decimal? i, out decimal? o)
+		{
+			var parameters = new []
+			{
+				new DataParameter("I", i, DataType.Decimal)
+				{
+					Size = 22
+				},
+				new DataParameter("O", null, DataType.Decimal)
+				{
+					Direction = ParameterDirection.Output,
+					Size = 22
+				}
+			};
+			o = Converter.ChangeTypeTo<decimal?>(parameters[1].Value);
+			return dataConnection.ExecuteProc("MANAGED.TEST_PACKAGE1.TEST_PROCEDURE", parameters);
+		}
+		#endregion
+
+		#region TestPackage2TestProcedure
+		public static int TestPackage2TestProcedure(this TestDataDB dataConnection, decimal? i, out decimal? o)
+		{
+			var parameters = new []
+			{
+				new DataParameter("I", i, DataType.Decimal)
+				{
+					Size = 22
+				},
+				new DataParameter("O", null, DataType.Decimal)
+				{
+					Direction = ParameterDirection.Output,
+					Size = 22
+				}
+			};
+			o = Converter.ChangeTypeTo<decimal?>(parameters[1].Value);
+			return dataConnection.ExecuteProc("MANAGED.TEST_PACKAGE2.TEST_PROCEDURE", parameters);
+		}
+		#endregion
 		#endregion
 
 		#region Scalar Functions
-		#region TestPackage1TestFunction
-		[Sql.Function("MANAGED.TEST_PACKAGE1.TEST_FUNCTION", ServerSideOnly = true)]
-		public static decimal? TestPackage1TestFunction(decimal? i)
-		{
-			throw new InvalidOperationException("Scalar function cannot be called outside of query");
-		}
-		#endregion
-
-		#region TestPackage2TestFunction
-		[Sql.Function("MANAGED.TEST_PACKAGE2.TEST_FUNCTION", ServerSideOnly = true)]
-		public static decimal? TestPackage2TestFunction(decimal? i)
-		{
-			throw new InvalidOperationException("Scalar function cannot be called outside of query");
-		}
-		#endregion
-
 		#region PatientSelectall
 		[Sql.Function("MANAGED.PATIENT_SELECTALL", ServerSideOnly = true)]
-		public static object? PatientSelectall()
+		public static OracleRefCursor? PatientSelectall()
 		{
 			throw new InvalidOperationException("Scalar function cannot be called outside of query");
 		}
@@ -453,7 +449,7 @@ namespace Cli.T4.Oracle
 
 		#region PatientSelectbyname
 		[Sql.Function("MANAGED.PATIENT_SELECTBYNAME", ServerSideOnly = true)]
-		public static object? PatientSelectbyname(string? pfirstname, string? plastname)
+		public static OracleRefCursor? PatientSelectbyname(string? pfirstname, string? plastname)
 		{
 			throw new InvalidOperationException("Scalar function cannot be called outside of query");
 		}
@@ -461,7 +457,7 @@ namespace Cli.T4.Oracle
 
 		#region PersonInsert
 		[Sql.Function("MANAGED.PERSON_INSERT", ServerSideOnly = true)]
-		public static object? PersonInsert(string? pfirstname, string? plastname, string? pmiddlename, string? pgender)
+		public static OracleRefCursor? PersonInsert(string? pfirstname, string? plastname, string? pmiddlename, string? pgender)
 		{
 			throw new InvalidOperationException("Scalar function cannot be called outside of query");
 		}
@@ -469,7 +465,7 @@ namespace Cli.T4.Oracle
 
 		#region PersonSelectall
 		[Sql.Function("MANAGED.PERSON_SELECTALL", ServerSideOnly = true)]
-		public static object? PersonSelectall()
+		public static OracleRefCursor? PersonSelectall()
 		{
 			throw new InvalidOperationException("Scalar function cannot be called outside of query");
 		}
@@ -477,7 +473,7 @@ namespace Cli.T4.Oracle
 
 		#region PersonSelectallbygender
 		[Sql.Function("MANAGED.PERSON_SELECTALLBYGENDER", ServerSideOnly = true)]
-		public static object? PersonSelectallbygender(string? pgender)
+		public static OracleRefCursor? PersonSelectallbygender(string? pgender)
 		{
 			throw new InvalidOperationException("Scalar function cannot be called outside of query");
 		}
@@ -485,7 +481,7 @@ namespace Cli.T4.Oracle
 
 		#region PersonSelectbykey
 		[Sql.Function("MANAGED.PERSON_SELECTBYKEY", ServerSideOnly = true)]
-		public static object? PersonSelectbykey(decimal? pid)
+		public static OracleRefCursor? PersonSelectbykey(decimal? pid)
 		{
 			throw new InvalidOperationException("Scalar function cannot be called outside of query");
 		}
@@ -493,7 +489,7 @@ namespace Cli.T4.Oracle
 
 		#region PersonSelectbyname
 		[Sql.Function("MANAGED.PERSON_SELECTBYNAME", ServerSideOnly = true)]
-		public static object? PersonSelectbyname(string? pfirstname, string? plastname)
+		public static OracleRefCursor? PersonSelectbyname(string? pfirstname, string? plastname)
 		{
 			throw new InvalidOperationException("Scalar function cannot be called outside of query");
 		}
@@ -501,7 +497,7 @@ namespace Cli.T4.Oracle
 
 		#region PersonSelectlistbyname
 		[Sql.Function("MANAGED.PERSON_SELECTLISTBYNAME", ServerSideOnly = true)]
-		public static object? PersonSelectlistbyname(string? pfirstname, string? plastname)
+		public static OracleRefCursor? PersonSelectlistbyname(string? pfirstname, string? plastname)
 		{
 			throw new InvalidOperationException("Scalar function cannot be called outside of query");
 		}
@@ -509,7 +505,7 @@ namespace Cli.T4.Oracle
 
 		#region ScalarDatareader
 		[Sql.Function("MANAGED.SCALAR_DATAREADER", ServerSideOnly = true)]
-		public static object? ScalarDatareader()
+		public static OracleRefCursor? ScalarDatareader()
 		{
 			throw new InvalidOperationException("Scalar function cannot be called outside of query");
 		}
@@ -526,6 +522,22 @@ namespace Cli.T4.Oracle
 		#region TestFunction
 		[Sql.Function("MANAGED.TEST_FUNCTION", ServerSideOnly = true)]
 		public static decimal? TestFunction(decimal? i)
+		{
+			throw new InvalidOperationException("Scalar function cannot be called outside of query");
+		}
+		#endregion
+
+		#region TestPackage1TestFunction
+		[Sql.Function("MANAGED.TEST_PACKAGE1.TEST_FUNCTION", ServerSideOnly = true)]
+		public static decimal? TestPackage1TestFunction(decimal? i)
+		{
+			throw new InvalidOperationException("Scalar function cannot be called outside of query");
+		}
+		#endregion
+
+		#region TestPackage2TestFunction
+		[Sql.Function("MANAGED.TEST_PACKAGE2.TEST_FUNCTION", ServerSideOnly = true)]
+		public static decimal? TestPackage2TestFunction(decimal? i)
 		{
 			throw new InvalidOperationException("Scalar function cannot be called outside of query");
 		}
@@ -593,13 +605,6 @@ namespace Cli.T4.Oracle
 		[Column("Decimal5")] public decimal? Decimal5 { get; set; } // NUMBER (38,38)
 	}
 
-	[Table("Dest2", Schema = "MANAGED")]
-	public partial class Dest2
-	{
-		[Column("ID" )] public decimal ID  { get; set; } // NUMBER
-		[Column("Int")] public decimal Int { get; set; } // NUMBER
-	}
-
 	[Table("Doctor", Schema = "MANAGED")]
 	public partial class Doctor
 	{
@@ -610,8 +615,8 @@ namespace Cli.T4.Oracle
 		/// <summary>
 		/// Fk_Doctor_Person
 		/// </summary>
-		[Association(CanBeNull = false, ThisKey = nameof(PersonID), OtherKey = nameof(Oracle.Person.PersonID))]
-		public Person Person { get; set; } = null!;
+		[Association(CanBeNull = false, ThisKey = nameof(PersonID), OtherKey = nameof(Person.PersonID))]
+		public Person FkPerson { get; set; } = null!;
 		#endregion
 	}
 
@@ -640,16 +645,19 @@ namespace Cli.T4.Oracle
 		[Column("Name"                                    )] public string?  Name                { get; set; } // NVARCHAR2(50)
 	}
 
-	[Table("Issue2564Table", Schema = "MANAGED")]
-	public partial class Issue2564Table
+	[Table("LINQDATATYPESBC", Schema = "MANAGED")]
+	public partial class Linqdatatypesbc
 	{
-		[Column("Id"                    , IsPrimaryKey = true)] public long      Id                     { get; set; } // NUMBER (19,0)
-		[Column("TimestampGenerated"                         )] public DateTime  TimestampGenerated     { get; set; } // TIMESTAMP(6)
-		[Column("TimestampGone"                              )] public DateTime? TimestampGone          { get; set; } // TIMESTAMP(6)
-		[Column("MessageClassName"                           )] public string?   MessageClassName       { get; set; } // VARCHAR2(255)
-		[Column("ExternID1"                                  )] public string?   ExternID1              { get; set; } // VARCHAR2(255)
-		[Column("TranslatedMessageGroup"                     )] public string?   TranslatedMessageGroup { get; set; } // VARCHAR2(255)
-		[Column("TranslatedMessage1"                         )] public string?   TranslatedMessage1     { get; set; } // VARCHAR2(255)
+		[Column("ID"            )] public decimal?  ID             { get; set; } // NUMBER
+		[Column("MONEYVALUE"    )] public decimal?  Moneyvalue     { get; set; } // NUMBER (10,4)
+		[Column("DATETIMEVALUE" )] public DateTime? Datetimevalue  { get; set; } // TIMESTAMP(6)
+		[Column("DATETIMEVALUE2")] public DateTime? Datetimevalue2 { get; set; } // TIMESTAMP(6)
+		[Column("BOOLVALUE"     )] public decimal?  Boolvalue      { get; set; } // NUMBER
+		[Column("GUIDVALUE"     )] public byte[]?   Guidvalue      { get; set; } // RAW(16)
+		[Column("SMALLINTVALUE" )] public decimal?  Smallintvalue  { get; set; } // NUMBER
+		[Column("INTVALUE"      )] public decimal?  Intvalue       { get; set; } // NUMBER
+		[Column("BIGINTVALUE"   )] public decimal?  Bigintvalue    { get; set; } // NUMBER (20,0)
+		[Column("STRINGVALUE"   )] public string?   Stringvalue    { get; set; } // VARCHAR2(50)
 	}
 
 	[Table("LinqDataTypes", Schema = "MANAGED")]
@@ -666,21 +674,6 @@ namespace Cli.T4.Oracle
 		[Column("IntValue"      )] public decimal?  IntValue       { get; set; } // NUMBER
 		[Column("BigIntValue"   )] public decimal?  BigIntValue    { get; set; } // NUMBER (20,0)
 		[Column("StringValue"   )] public string?   StringValue    { get; set; } // VARCHAR2(50)
-	}
-
-	[Table("LINQDATATYPESBC", Schema = "MANAGED")]
-	public partial class Linqdatatypesbc
-	{
-		[Column("ID"            )] public decimal?  ID             { get; set; } // NUMBER
-		[Column("MONEYVALUE"    )] public decimal?  Moneyvalue     { get; set; } // NUMBER (10,4)
-		[Column("DATETIMEVALUE" )] public DateTime? Datetimevalue  { get; set; } // TIMESTAMP(6)
-		[Column("DATETIMEVALUE2")] public DateTime? Datetimevalue2 { get; set; } // TIMESTAMP(6)
-		[Column("BOOLVALUE"     )] public decimal?  Boolvalue      { get; set; } // NUMBER
-		[Column("GUIDVALUE"     )] public byte[]?   Guidvalue      { get; set; } // RAW(16)
-		[Column("SMALLINTVALUE" )] public decimal?  Smallintvalue  { get; set; } // NUMBER
-		[Column("INTVALUE"      )] public decimal?  Intvalue       { get; set; } // NUMBER
-		[Column("BIGINTVALUE"   )] public decimal?  Bigintvalue    { get; set; } // NUMBER (20,0)
-		[Column("STRINGVALUE"   )] public string?   Stringvalue    { get; set; } // VARCHAR2(50)
 	}
 
 	[Table("LongRawTable", Schema = "MANAGED")]
@@ -707,8 +700,8 @@ namespace Cli.T4.Oracle
 		/// <summary>
 		/// Fk_Patient_Person
 		/// </summary>
-		[Association(CanBeNull = false, ThisKey = nameof(PersonID), OtherKey = nameof(Oracle.Person.PersonID))]
-		public Person Person { get; set; } = null!;
+		[Association(CanBeNull = false, ThisKey = nameof(PersonID), OtherKey = nameof(Person.PersonID))]
+		public Person FkPerson { get; set; } = null!;
 		#endregion
 	}
 
@@ -725,27 +718,15 @@ namespace Cli.T4.Oracle
 		/// <summary>
 		/// Fk_Doctor_Person backreference
 		/// </summary>
-		[Association(ThisKey = nameof(PersonID), OtherKey = nameof(Doctor.PersonID))]
-		public Doctor? FkDoctor { get; set; }
+		[Association(ThisKey = nameof(PersonID), OtherKey = nameof(Oracle.Doctor.PersonID))]
+		public Doctor? Doctor { get; set; }
 
 		/// <summary>
 		/// Fk_Patient_Person backreference
 		/// </summary>
-		[Association(ThisKey = nameof(PersonID), OtherKey = nameof(Patient.PersonID))]
-		public Patient? FkPatient { get; set; }
+		[Association(ThisKey = nameof(PersonID), OtherKey = nameof(Oracle.Patient.PersonID))]
+		public Patient? Patient { get; set; }
 		#endregion
-	}
-
-	/// <summary>
-	/// This is table
-	/// </summary>
-	[Table("SchemaTestTable", Schema = "MANAGED")]
-	public partial class SchemaTestTable
-	{
-		/// <summary>
-		/// This is column
-		/// </summary>
-		[Column("Id", IsPrimaryKey = true)] public decimal Id { get; set; } // NUMBER
 	}
 
 	[Table("SEQUENCETEST", Schema = "MANAGED")]
@@ -767,20 +748,24 @@ namespace Cli.T4.Oracle
 		[Column("VALUE_AS_DATE"        )] public DateTime? ValueASDate         { get; set; } // DATE
 	}
 
+	/// <summary>
+	/// This is table
+	/// </summary>
+	[Table("SchemaTestTable", Schema = "MANAGED")]
+	public partial class SchemaTestTable
+	{
+		/// <summary>
+		/// This is column
+		/// </summary>
+		[Column("Id", IsPrimaryKey = true)] public decimal Id { get; set; } // NUMBER
+	}
+
 	[Table("StringTest", Schema = "MANAGED")]
 	public partial class StringTest
 	{
 		[Column("StringValue1"                   )] public string? StringValue1 { get; set; } // VARCHAR2(50)
 		[Column("StringValue2"                   )] public string? StringValue2 { get; set; } // CHAR(50)
 		[Column("KeyValue"    , CanBeNull = false)] public string  KeyValue     { get; set; } = null!; // VARCHAR2(50)
-	}
-
-	[Table("t_entity", Schema = "MANAGED")]
-	public partial class TEntity
-	{
-		[Column("entity_id", IsPrimaryKey = true)] public decimal   EntityId { get; set; } // NUMBER
-		[Column("time"                          )] public DateTime? Time     { get; set; } // DATE
-		[Column("duration"                      )] public TimeSpan? Duration { get; set; } // INTERVAL DAY(3) TO SECOND(2)
 	}
 
 	[Table("TestIdentity", Schema = "MANAGED")]
@@ -841,17 +826,12 @@ namespace Cli.T4.Oracle
 		[Column("FieldEnumNumber"                     )] public decimal?        FieldEnumNumber { get; set; } // NUMBER
 	}
 
-	[Table("TestSequenceSchemaTable", Schema = "MANAGED")]
-	public partial class TestSequenceSchemaTable
+	[Table("t_entity", Schema = "MANAGED")]
+	public partial class TEntity
 	{
-		[Column("Id", IsPrimaryKey = true)] public long Id { get; set; } // NUMBER (19,0)
-	}
-
-	[Table("TestSource", Schema = "MANAGED")]
-	public partial class TestSource
-	{
-		[Column("ID")] public decimal ID { get; set; } // NUMBER
-		[Column("N" )] public decimal N  { get; set; } // NUMBER
+		[Column("entity_id", IsPrimaryKey = true)] public decimal   EntityId { get; set; } // NUMBER
+		[Column("time"                          )] public DateTime? Time     { get; set; } // DATE
+		[Column("duration"                      )] public TimeSpan? Duration { get; set; } // INTERVAL DAY(3) TO SECOND(2)
 	}
 
 	[Table("t_test_user", Schema = "MANAGED")]
@@ -862,10 +842,10 @@ namespace Cli.T4.Oracle
 
 		#region Associations
 		/// <summary>
-		/// SYS_C00903690 backreference
+		/// SYS_C007123 backreference
 		/// </summary>
 		[Association(ThisKey = nameof(UserId), OtherKey = nameof(TTestUserContract.UserId))]
-		public IEnumerable<TTestUserContract> Syscs { get; set; } = null!;
+		public IEnumerable<TTestUserContract> TTestUserContracts { get; set; } = null!;
 		#endregion
 	}
 
@@ -879,10 +859,10 @@ namespace Cli.T4.Oracle
 
 		#region Associations
 		/// <summary>
-		/// SYS_C00903690
+		/// SYS_C007123
 		/// </summary>
 		[Association(CanBeNull = false, ThisKey = nameof(UserId), OtherKey = nameof(TTestUser.UserId))]
-		public TTestUser User { get; set; } = null!;
+		public TTestUser Sysc { get; set; } = null!;
 		#endregion
 	}
 

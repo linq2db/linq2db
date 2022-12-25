@@ -275,7 +275,7 @@ namespace Cli.Default.DB2
 			/// <summary>
 			/// FK_SLAVETABLE_MASTERTABLE backreference
 			/// </summary>
-			[Association(ThisKey = nameof(Id1) + "," + nameof(Id1), OtherKey = nameof(Slavetable.Id222222222222222222222222) + "," + nameof(Id1))]
+			[Association(ThisKey = nameof(Id1) + "," + nameof(Id2), OtherKey = nameof(Slavetable.Id222222222222222222222222) + "," + nameof(Slavetable.Id1))]
 			public IEnumerable<Slavetable> Slavetables { get; set; } = null!;
 			#endregion
 		}
@@ -337,7 +337,7 @@ namespace Cli.Default.DB2
 			/// <summary>
 			/// FK_SLAVETABLE_MASTERTABLE
 			/// </summary>
-			[Association(CanBeNull = false, ThisKey = nameof(Id222222222222222222222222) + "," + nameof(Id222222222222222222222222), OtherKey = nameof(Db2Inst1Schema.Mastertable.Id1) + "," + nameof(Id222222222222222222222222))]
+			[Association(CanBeNull = false, ThisKey = nameof(Id222222222222222222222222) + "," + nameof(Id1), OtherKey = nameof(Db2Inst1Schema.Mastertable.Id1) + "," + nameof(Db2Inst1Schema.Mastertable.Id2))]
 			public Mastertable Mastertable { get; set; } = null!;
 			#endregion
 		}

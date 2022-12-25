@@ -24,8 +24,8 @@ namespace Cli.Default.SqlServer
 		/// <summary>
 		/// FK_Patient2_IndexTable backreference
 		/// </summary>
-		[Association(ThisKey = nameof(PkField2) + "," + nameof(PkField2), OtherKey = nameof(IndexTable2.PkField2) + "," + nameof(PkField2))]
-		public IndexTable2? Patient { get; set; }
+		[Association(ThisKey = nameof(PkField2) + "," + nameof(PkField1), OtherKey = nameof(SqlServer.IndexTable2.PkField2) + "," + nameof(SqlServer.IndexTable2.PkField1))]
+		public IndexTable2? IndexTable2 { get; set; }
 		#endregion
 	}
 }

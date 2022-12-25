@@ -31,14 +31,14 @@ namespace Cli.Default.PostgreSQL
 		/// <summary>
 		/// Doctor_PersonID_fkey backreference
 		/// </summary>
-		[Association(ThisKey = nameof(PersonId), OtherKey = nameof(Doctor.PersonId))]
-		public Doctor? DoctorPersonIDfkey { get; set; }
+		[Association(ThisKey = nameof(PersonId), OtherKey = nameof(PostgreSQL.Doctor.PersonId))]
+		public Doctor? Doctor { get; set; }
 
 		/// <summary>
 		/// Patient_PersonID_fkey backreference
 		/// </summary>
-		[Association(ThisKey = nameof(PersonId), OtherKey = nameof(Patient.PersonId))]
-		public Patient? PatientPersonIDfkey { get; set; }
+		[Association(ThisKey = nameof(PersonId), OtherKey = nameof(PostgreSQL.Patient.PersonId))]
+		public Patient? Patient { get; set; }
 		#endregion
 	}
 }

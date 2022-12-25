@@ -30,16 +30,16 @@ namespace Cli.Default.SqlServerNorthwind
 
 		#region Associations
 		/// <summary>
-		/// FK_Orders_Customers backreference
-		/// </summary>
-		[Association(ThisKey = nameof(CustomerId), OtherKey = nameof(Order.CustomerId))]
-		public IEnumerable<Order> Orders { get; set; } = null!;
-
-		/// <summary>
 		/// FK_CustomerCustomerDemo_Customers backreference
 		/// </summary>
 		[Association(ThisKey = nameof(CustomerId), OtherKey = nameof(CustomerCustomerDemo.CustomerId))]
 		public IEnumerable<CustomerCustomerDemo> CustomerCustomerDemos { get; set; } = null!;
+
+		/// <summary>
+		/// FK_Orders_Customers backreference
+		/// </summary>
+		[Association(ThisKey = nameof(CustomerId), OtherKey = nameof(Order.CustomerId))]
+		public IEnumerable<Order> Orders { get; set; } = null!;
 		#endregion
 	}
 }

@@ -22,8 +22,8 @@ namespace Cli.Default.SQLite
 		/// <summary>
 		/// FK_Doctor_0_0
 		/// </summary>
-		[Association(CanBeNull = false, ThisKey = nameof(PersonId), OtherKey = nameof(SQLite.Person.PersonId))]
-		public Person Person { get; set; } = null!;
+		[Association(CanBeNull = false, ThisKey = nameof(PersonId), OtherKey = nameof(Person.PersonId))]
+		public Person FkDoctor00 { get; set; } = null!;
 		#endregion
 	}
 }

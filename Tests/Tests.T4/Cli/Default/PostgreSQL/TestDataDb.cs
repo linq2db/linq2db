@@ -50,32 +50,33 @@ namespace Cli.Default.PostgreSQL
 
 		partial void InitDataContext();
 
-		public ITable<InheritanceParent>        InheritanceParents        => this.GetTable<InheritanceParent>();
-		public ITable<InheritanceChild>         InheritanceChildren       => this.GetTable<InheritanceChild>();
 		public ITable<AllType>                  AllTypes                  => this.GetTable<AllType>();
+		public ITable<Child>                    Children                  => this.GetTable<Child>();
+		public ITable<CollatedTable>            CollatedTables            => this.GetTable<CollatedTable>();
 		public ITable<Doctor>                   Doctors                   => this.GetTable<Doctor>();
+		public ITable<GrandChild>               GrandChildren             => this.GetTable<GrandChild>();
+		public ITable<InheritanceChild>         InheritanceChildren       => this.GetTable<InheritanceChild>();
+		public ITable<InheritanceParent>        InheritanceParents        => this.GetTable<InheritanceParent>();
+		public ITable<LinqDataType>             LinqDataTypes             => this.GetTable<LinqDataType>();
+		public ITable<Parent>                   Parents                   => this.GetTable<Parent>();
+		public ITable<Patient>                  Patients                  => this.GetTable<Patient>();
 		/// <summary>
 		/// This is the Person table
 		/// </summary>
 		public ITable<Person>                   People                    => this.GetTable<Person>();
-		public ITable<Patient>                  Patients                  => this.GetTable<Patient>();
-		public ITable<Parent>                   Parents                   => this.GetTable<Parent>();
-		public ITable<Child>                    Children                  => this.GetTable<Child>();
-		public ITable<GrandChild>               GrandChildren             => this.GetTable<GrandChild>();
-		public ITable<LinqDataType>             LinqDataTypes             => this.GetTable<LinqDataType>();
-		public ITable<Entity>                   Entities                  => this.GetTable<Entity>();
+		public ITable<SequenceCustomNamingTest> SequenceCustomNamingTests => this.GetTable<SequenceCustomNamingTest>();
 		public ITable<SequenceTest1>            SequenceTest1             => this.GetTable<SequenceTest1>();
 		public ITable<SequenceTest2>            SequenceTest2             => this.GetTable<SequenceTest2>();
 		public ITable<SequenceTest3>            SequenceTest3             => this.GetTable<SequenceTest3>();
 		public ITable<TestIdentity>             TestIdentities            => this.GetTable<TestIdentity>();
-		public ITable<SequenceCustomNamingTest> SequenceCustomNamingTests => this.GetTable<SequenceCustomNamingTest>();
-		public ITable<Testsamename>             Testsamenames             => this.GetTable<Testsamename>();
 		public ITable<TestMerge1>               TestMerge1                => this.GetTable<TestMerge1>();
 		public ITable<TestMerge2>               TestMerge2                => this.GetTable<TestMerge2>();
-		public ITable<SameName1>                SameName1                 => this.GetTable<SameName1>();
+		public ITable<TestMergeIdentity>        TestMergeIdentities       => this.GetTable<TestMergeIdentity>();
+		public ITable<Entity>                   Entities                  => this.GetTable<Entity>();
 		public ITable<SameName>                 SameNames                 => this.GetTable<SameName>();
+		public ITable<SameName1>                SameName1                 => this.GetTable<SameName1>();
 		public ITable<SameName2>                SameName2                 => this.GetTable<SameName2>();
-		public ITable<CollatedTable>            CollatedTables            => this.GetTable<CollatedTable>();
+		public ITable<Testsamename>             Testsamenames             => this.GetTable<Testsamename>();
 		/// <summary>
 		/// This is the Issue2023 matview
 		/// </summary>
@@ -85,26 +86,6 @@ namespace Cli.Default.PostgreSQL
 	public static partial class ExtensionMethods
 	{
 		#region Table Extensions
-		public static InheritanceParent? Find(this ITable<InheritanceParent> table, int inheritanceParentId)
-		{
-			return table.FirstOrDefault(e => e.InheritanceParentId == inheritanceParentId);
-		}
-
-		public static Task<InheritanceParent?> FindAsync(this ITable<InheritanceParent> table, int inheritanceParentId, CancellationToken cancellationToken = default)
-		{
-			return table.FirstOrDefaultAsync(e => e.InheritanceParentId == inheritanceParentId, cancellationToken);
-		}
-
-		public static InheritanceChild? Find(this ITable<InheritanceChild> table, int inheritanceChildId)
-		{
-			return table.FirstOrDefault(e => e.InheritanceChildId == inheritanceChildId);
-		}
-
-		public static Task<InheritanceChild?> FindAsync(this ITable<InheritanceChild> table, int inheritanceChildId, CancellationToken cancellationToken = default)
-		{
-			return table.FirstOrDefaultAsync(e => e.InheritanceChildId == inheritanceChildId, cancellationToken);
-		}
-
 		public static AllType? Find(this ITable<AllType> table, int id)
 		{
 			return table.FirstOrDefault(e => e.Id == id);
@@ -125,14 +106,24 @@ namespace Cli.Default.PostgreSQL
 			return table.FirstOrDefaultAsync(e => e.PersonId == personId, cancellationToken);
 		}
 
-		public static Person? Find(this ITable<Person> table, int personId)
+		public static InheritanceChild? Find(this ITable<InheritanceChild> table, int inheritanceChildId)
 		{
-			return table.FirstOrDefault(e => e.PersonId == personId);
+			return table.FirstOrDefault(e => e.InheritanceChildId == inheritanceChildId);
 		}
 
-		public static Task<Person?> FindAsync(this ITable<Person> table, int personId, CancellationToken cancellationToken = default)
+		public static Task<InheritanceChild?> FindAsync(this ITable<InheritanceChild> table, int inheritanceChildId, CancellationToken cancellationToken = default)
 		{
-			return table.FirstOrDefaultAsync(e => e.PersonId == personId, cancellationToken);
+			return table.FirstOrDefaultAsync(e => e.InheritanceChildId == inheritanceChildId, cancellationToken);
+		}
+
+		public static InheritanceParent? Find(this ITable<InheritanceParent> table, int inheritanceParentId)
+		{
+			return table.FirstOrDefault(e => e.InheritanceParentId == inheritanceParentId);
+		}
+
+		public static Task<InheritanceParent?> FindAsync(this ITable<InheritanceParent> table, int inheritanceParentId, CancellationToken cancellationToken = default)
+		{
+			return table.FirstOrDefaultAsync(e => e.InheritanceParentId == inheritanceParentId, cancellationToken);
 		}
 
 		public static Patient? Find(this ITable<Patient> table, int personId)
@@ -143,6 +134,26 @@ namespace Cli.Default.PostgreSQL
 		public static Task<Patient?> FindAsync(this ITable<Patient> table, int personId, CancellationToken cancellationToken = default)
 		{
 			return table.FirstOrDefaultAsync(e => e.PersonId == personId, cancellationToken);
+		}
+
+		public static Person? Find(this ITable<Person> table, int personId)
+		{
+			return table.FirstOrDefault(e => e.PersonId == personId);
+		}
+
+		public static Task<Person?> FindAsync(this ITable<Person> table, int personId, CancellationToken cancellationToken = default)
+		{
+			return table.FirstOrDefaultAsync(e => e.PersonId == personId, cancellationToken);
+		}
+
+		public static SequenceCustomNamingTest? Find(this ITable<SequenceCustomNamingTest> table, int id)
+		{
+			return table.FirstOrDefault(e => e.Id == id);
+		}
+
+		public static Task<SequenceCustomNamingTest?> FindAsync(this ITable<SequenceCustomNamingTest> table, int id, CancellationToken cancellationToken = default)
+		{
+			return table.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
 		}
 
 		public static SequenceTest1? Find(this ITable<SequenceTest1> table, int id)
@@ -185,26 +196,6 @@ namespace Cli.Default.PostgreSQL
 			return table.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
 		}
 
-		public static SequenceCustomNamingTest? Find(this ITable<SequenceCustomNamingTest> table, int id)
-		{
-			return table.FirstOrDefault(e => e.Id == id);
-		}
-
-		public static Task<SequenceCustomNamingTest?> FindAsync(this ITable<SequenceCustomNamingTest> table, int id, CancellationToken cancellationToken = default)
-		{
-			return table.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
-		}
-
-		public static Testsamename? Find(this ITable<Testsamename> table, int id)
-		{
-			return table.FirstOrDefault(e => e.Id == id);
-		}
-
-		public static Task<Testsamename?> FindAsync(this ITable<Testsamename> table, int id, CancellationToken cancellationToken = default)
-		{
-			return table.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
-		}
-
 		public static TestMerge1? Find(this ITable<TestMerge1> table, int id)
 		{
 			return table.FirstOrDefault(e => e.Id == id);
@@ -225,12 +216,12 @@ namespace Cli.Default.PostgreSQL
 			return table.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
 		}
 
-		public static SameName1? Find(this ITable<SameName1> table, int id)
+		public static TestMergeIdentity? Find(this ITable<TestMergeIdentity> table, int id)
 		{
 			return table.FirstOrDefault(e => e.Id == id);
 		}
 
-		public static Task<SameName1?> FindAsync(this ITable<SameName1> table, int id, CancellationToken cancellationToken = default)
+		public static Task<TestMergeIdentity?> FindAsync(this ITable<TestMergeIdentity> table, int id, CancellationToken cancellationToken = default)
 		{
 			return table.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
 		}
@@ -245,12 +236,32 @@ namespace Cli.Default.PostgreSQL
 			return table.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
 		}
 
+		public static SameName1? Find(this ITable<SameName1> table, int id)
+		{
+			return table.FirstOrDefault(e => e.Id == id);
+		}
+
+		public static Task<SameName1?> FindAsync(this ITable<SameName1> table, int id, CancellationToken cancellationToken = default)
+		{
+			return table.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
+		}
+
 		public static SameName2? Find(this ITable<SameName2> table, int id)
 		{
 			return table.FirstOrDefault(e => e.Id == id);
 		}
 
 		public static Task<SameName2?> FindAsync(this ITable<SameName2> table, int id, CancellationToken cancellationToken = default)
+		{
+			return table.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
+		}
+
+		public static Testsamename? Find(this ITable<Testsamename> table, int id)
+		{
+			return table.FirstOrDefault(e => e.Id == id);
+		}
+
+		public static Task<Testsamename?> FindAsync(this ITable<Testsamename> table, int id, CancellationToken cancellationToken = default)
 		{
 			return table.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
 		}

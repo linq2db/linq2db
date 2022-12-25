@@ -39,73 +39,70 @@ namespace Cli.T4.SqlServerNorthwind
 
 		partial void InitDataContext();
 
-		public ITable<CustomerDemographic>        CustomerDemographics         => this.GetTable<CustomerDemographic>();
-		public ITable<Region>                     Regions                      => this.GetTable<Region>();
-		public ITable<Employee>                   Employees                    => this.GetTable<Employee>();
 		public ITable<Category>                   Categories                   => this.GetTable<Category>();
+		public ITable<CustomerCustomerDemo>       CustomerCustomerDemos        => this.GetTable<CustomerCustomerDemo>();
+		public ITable<CustomerDemographic>        CustomerDemographics         => this.GetTable<CustomerDemographic>();
 		public ITable<Customer>                   Customers                    => this.GetTable<Customer>();
-		public ITable<Shipper>                    Shippers                     => this.GetTable<Shipper>();
-		public ITable<Supplier>                   Suppliers                    => this.GetTable<Supplier>();
+		public ITable<EmployeeTerritory>          EmployeeTerritories          => this.GetTable<EmployeeTerritory>();
+		public ITable<Employee>                   Employees                    => this.GetTable<Employee>();
+		public ITable<OrderDetail>                OrderDetails                 => this.GetTable<OrderDetail>();
 		public ITable<Order>                      Orders                       => this.GetTable<Order>();
 		public ITable<Product>                    Products                     => this.GetTable<Product>();
-		public ITable<OrderDetail>                OrderDetails                 => this.GetTable<OrderDetail>();
-		public ITable<CustomerCustomerDemo>       CustomerCustomerDemos        => this.GetTable<CustomerCustomerDemo>();
+		public ITable<Region>                     Regions                      => this.GetTable<Region>();
+		public ITable<Shipper>                    Shippers                     => this.GetTable<Shipper>();
+		public ITable<Supplier>                   Suppliers                    => this.GetTable<Supplier>();
 		public ITable<Territory>                  Territories                  => this.GetTable<Territory>();
-		public ITable<EmployeeTerritory>          EmployeeTerritories          => this.GetTable<EmployeeTerritory>();
-		public ITable<OrdersQry>                  OrdersQries                  => this.GetTable<OrdersQry>();
-		public ITable<QuarterlyOrder>             QuarterlyOrders              => this.GetTable<QuarterlyOrder>();
-		public ITable<Invoice>                    Invoices                     => this.GetTable<Invoice>();
-		public ITable<ProductSalesFor1997>        ProductSalesFor1997          => this.GetTable<ProductSalesFor1997>();
+		public ITable<AlphabeticalListOfProduct>  AlphabeticalListOfProducts   => this.GetTable<AlphabeticalListOfProduct>();
+		public ITable<CategorySalesFor1997>       CategorySalesFor1997         => this.GetTable<CategorySalesFor1997>();
 		public ITable<CurrentProductList>         CurrentProductLists          => this.GetTable<CurrentProductList>();
+		public ITable<CustomerAndSuppliersByCity> CustomerAndSuppliersByCities => this.GetTable<CustomerAndSuppliersByCity>();
+		public ITable<Invoice>                    Invoices                     => this.GetTable<Invoice>();
 		public ITable<OrderDetailsExtended>       OrderDetailsExtendeds        => this.GetTable<OrderDetailsExtended>();
+		public ITable<OrderSubtotal>              OrderSubtotals               => this.GetTable<OrderSubtotal>();
+		public ITable<OrdersQry>                  OrdersQries                  => this.GetTable<OrdersQry>();
+		public ITable<ProductSalesFor1997>        ProductSalesFor1997          => this.GetTable<ProductSalesFor1997>();
 		public ITable<ProductsAboveAveragePrice>  ProductsAboveAveragePrices   => this.GetTable<ProductsAboveAveragePrice>();
 		public ITable<ProductsByCategory>         ProductsByCategories         => this.GetTable<ProductsByCategory>();
-		public ITable<AlphabeticalListOfProduct>  AlphabeticalListOfProducts   => this.GetTable<AlphabeticalListOfProduct>();
-		public ITable<OrderSubtotal>              OrderSubtotals               => this.GetTable<OrderSubtotal>();
-		public ITable<CustomerAndSuppliersByCity> CustomerAndSuppliersByCities => this.GetTable<CustomerAndSuppliersByCity>();
+		public ITable<QuarterlyOrder>             QuarterlyOrders              => this.GetTable<QuarterlyOrder>();
 		public ITable<SalesTotalsByAmount>        SalesTotalsByAmounts         => this.GetTable<SalesTotalsByAmount>();
 		public ITable<SalesByCategory>            SalesByCategories            => this.GetTable<SalesByCategory>();
 		public ITable<SummaryOfSalesByQuarter>    SummaryOfSalesByQuarters     => this.GetTable<SummaryOfSalesByQuarter>();
 		public ITable<SummaryOfSalesByYear>       SummaryOfSalesByYears        => this.GetTable<SummaryOfSalesByYear>();
-		public ITable<CategorySalesFor1997>       CategorySalesFor1997         => this.GetTable<CategorySalesFor1997>();
 	}
 
-	[Table("CustomerDemographics", Schema = "dbo")]
-	public partial class CustomerDemographic
+	[Table("Categories", Schema = "dbo")]
+	public partial class Category
 	{
-		[Column("CustomerTypeID", CanBeNull = false, IsPrimaryKey = true)] public string  CustomerTypeID { get; set; } = null!; // nchar(10)
-		[Column("CustomerDesc"                                          )] public string? CustomerDesc   { get; set; } // ntext
+		[Column("CategoryID"  , IsPrimaryKey = true , IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int     CategoryID   { get; set; } // int
+		[Column("CategoryName", CanBeNull    = false                                                             )] public string  CategoryName { get; set; } = null!; // nvarchar(15)
+		[Column("Description"                                                                                    )] public string? Description  { get; set; } // ntext
+		[Column("Picture"                                                                                        )] public byte[]? Picture      { get; set; } // image
 
 		#region Associations
 		/// <summary>
-		/// FK_CustomerCustomerDemo backreference
+		/// FK_Products_Categories backreference
 		/// </summary>
-		[Association(ThisKey = nameof(CustomerTypeID), OtherKey = nameof(CustomerCustomerDemo.CustomerTypeID))]
-		public IEnumerable<CustomerCustomerDemo> CustomerCustomerDemos { get; set; } = null!;
+		[Association(ThisKey = nameof(CategoryID), OtherKey = nameof(Product.CategoryID))]
+		public IEnumerable<Product> Products { get; set; } = null!;
 		#endregion
 	}
 
 	public static partial class ExtensionMethods
 	{
 		#region Table Extensions
-		public static CustomerDemographic? Find(this ITable<CustomerDemographic> table, string customerTypeId)
-		{
-			return table.FirstOrDefault(e => e.CustomerTypeID == customerTypeId);
-		}
-
-		public static Region? Find(this ITable<Region> table, int regionId)
-		{
-			return table.FirstOrDefault(e => e.RegionID == regionId);
-		}
-
-		public static Employee? Find(this ITable<Employee> table, int employeeId)
-		{
-			return table.FirstOrDefault(e => e.EmployeeID == employeeId);
-		}
-
 		public static Category? Find(this ITable<Category> table, int categoryId)
 		{
 			return table.FirstOrDefault(e => e.CategoryID == categoryId);
+		}
+
+		public static CustomerCustomerDemo? Find(this ITable<CustomerCustomerDemo> table, string customerId, string customerTypeId)
+		{
+			return table.FirstOrDefault(e => e.CustomerID == customerId && e.CustomerTypeID == customerTypeId);
+		}
+
+		public static CustomerDemographic? Find(this ITable<CustomerDemographic> table, string customerTypeId)
+		{
+			return table.FirstOrDefault(e => e.CustomerTypeID == customerTypeId);
 		}
 
 		public static Customer? Find(this ITable<Customer> table, string customerId)
@@ -113,14 +110,19 @@ namespace Cli.T4.SqlServerNorthwind
 			return table.FirstOrDefault(e => e.CustomerID == customerId);
 		}
 
-		public static Shipper? Find(this ITable<Shipper> table, int shipperId)
+		public static EmployeeTerritory? Find(this ITable<EmployeeTerritory> table, int employeeId, string territoryId)
 		{
-			return table.FirstOrDefault(e => e.ShipperID == shipperId);
+			return table.FirstOrDefault(e => e.EmployeeID == employeeId && e.TerritoryID == territoryId);
 		}
 
-		public static Supplier? Find(this ITable<Supplier> table, int supplierId)
+		public static Employee? Find(this ITable<Employee> table, int employeeId)
 		{
-			return table.FirstOrDefault(e => e.SupplierID == supplierId);
+			return table.FirstOrDefault(e => e.EmployeeID == employeeId);
+		}
+
+		public static OrderDetail? Find(this ITable<OrderDetail> table, int orderId, int productId)
+		{
+			return table.FirstOrDefault(e => e.OrderID == orderId && e.ProductID == productId);
 		}
 
 		public static Order? Find(this ITable<Order> table, int orderId)
@@ -133,24 +135,24 @@ namespace Cli.T4.SqlServerNorthwind
 			return table.FirstOrDefault(e => e.ProductID == productId);
 		}
 
-		public static OrderDetail? Find(this ITable<OrderDetail> table, int orderId, int productId)
+		public static Region? Find(this ITable<Region> table, int regionId)
 		{
-			return table.FirstOrDefault(e => e.OrderID == orderId && e.ProductID == productId);
+			return table.FirstOrDefault(e => e.RegionID == regionId);
 		}
 
-		public static CustomerCustomerDemo? Find(this ITable<CustomerCustomerDemo> table, string customerId, string customerTypeId)
+		public static Shipper? Find(this ITable<Shipper> table, int shipperId)
 		{
-			return table.FirstOrDefault(e => e.CustomerID == customerId && e.CustomerTypeID == customerTypeId);
+			return table.FirstOrDefault(e => e.ShipperID == shipperId);
+		}
+
+		public static Supplier? Find(this ITable<Supplier> table, int supplierId)
+		{
+			return table.FirstOrDefault(e => e.SupplierID == supplierId);
 		}
 
 		public static Territory? Find(this ITable<Territory> table, string territoryId)
 		{
 			return table.FirstOrDefault(e => e.TerritoryID == territoryId);
-		}
-
-		public static EmployeeTerritory? Find(this ITable<EmployeeTerritory> table, int employeeId, string territoryId)
-		{
-			return table.FirstOrDefault(e => e.EmployeeID == employeeId && e.TerritoryID == territoryId);
 		}
 		#endregion
 
@@ -298,18 +300,90 @@ namespace Cli.T4.SqlServerNorthwind
 		#endregion
 	}
 
-	[Table("Region", Schema = "dbo")]
-	public partial class Region
+	[Table("CustomerCustomerDemo", Schema = "dbo")]
+	public partial class CustomerCustomerDemo
 	{
-		[Column("RegionID"         , IsPrimaryKey = true )] public int    RegionID          { get; set; } // int
-		[Column("RegionDescription", CanBeNull    = false)] public string RegionDescription { get; set; } = null!; // nchar(50)
+		[Column("CustomerID"    , CanBeNull = false, IsPrimaryKey = true, PrimaryKeyOrder = 0)] public string CustomerID     { get; set; } = null!; // nchar(5)
+		[Column("CustomerTypeID", CanBeNull = false, IsPrimaryKey = true, PrimaryKeyOrder = 1)] public string CustomerTypeID { get; set; } = null!; // nchar(10)
 
 		#region Associations
 		/// <summary>
-		/// FK_Territories_Region backreference
+		/// FK_CustomerCustomerDemo
 		/// </summary>
-		[Association(ThisKey = nameof(RegionID), OtherKey = nameof(Territory.RegionID))]
-		public IEnumerable<Territory> Territories { get; set; } = null!;
+		[Association(CanBeNull = false, ThisKey = nameof(CustomerTypeID), OtherKey = nameof(CustomerDemographic.CustomerTypeID))]
+		public CustomerDemographic FkCustomerCustomerDemo { get; set; } = null!;
+
+		/// <summary>
+		/// FK_CustomerCustomerDemo_Customers
+		/// </summary>
+		[Association(CanBeNull = false, ThisKey = nameof(CustomerID), OtherKey = nameof(Customer.CustomerID))]
+		public Customer Customers { get; set; } = null!;
+		#endregion
+	}
+
+	[Table("CustomerDemographics", Schema = "dbo")]
+	public partial class CustomerDemographic
+	{
+		[Column("CustomerTypeID", CanBeNull = false, IsPrimaryKey = true)] public string  CustomerTypeID { get; set; } = null!; // nchar(10)
+		[Column("CustomerDesc"                                          )] public string? CustomerDesc   { get; set; } // ntext
+
+		#region Associations
+		/// <summary>
+		/// FK_CustomerCustomerDemo backreference
+		/// </summary>
+		[Association(ThisKey = nameof(CustomerTypeID), OtherKey = nameof(CustomerCustomerDemo.CustomerTypeID))]
+		public IEnumerable<CustomerCustomerDemo> CustomerCustomerDemos { get; set; } = null!;
+		#endregion
+	}
+
+	[Table("Customers", Schema = "dbo")]
+	public partial class Customer
+	{
+		[Column("CustomerID"  , CanBeNull = false, IsPrimaryKey = true)] public string  CustomerID   { get; set; } = null!; // nchar(5)
+		[Column("CompanyName" , CanBeNull = false                     )] public string  CompanyName  { get; set; } = null!; // nvarchar(40)
+		[Column("ContactName"                                         )] public string? ContactName  { get; set; } // nvarchar(30)
+		[Column("ContactTitle"                                        )] public string? ContactTitle { get; set; } // nvarchar(30)
+		[Column("Address"                                             )] public string? Address      { get; set; } // nvarchar(60)
+		[Column("City"                                                )] public string? City         { get; set; } // nvarchar(15)
+		[Column("Region"                                              )] public string? Region       { get; set; } // nvarchar(15)
+		[Column("PostalCode"                                          )] public string? PostalCode   { get; set; } // nvarchar(10)
+		[Column("Country"                                             )] public string? Country      { get; set; } // nvarchar(15)
+		[Column("Phone"                                               )] public string? Phone        { get; set; } // nvarchar(24)
+		[Column("Fax"                                                 )] public string? Fax          { get; set; } // nvarchar(24)
+
+		#region Associations
+		/// <summary>
+		/// FK_CustomerCustomerDemo_Customers backreference
+		/// </summary>
+		[Association(ThisKey = nameof(CustomerID), OtherKey = nameof(CustomerCustomerDemo.CustomerID))]
+		public IEnumerable<CustomerCustomerDemo> CustomerCustomerDemos { get; set; } = null!;
+
+		/// <summary>
+		/// FK_Orders_Customers backreference
+		/// </summary>
+		[Association(ThisKey = nameof(CustomerID), OtherKey = nameof(Order.CustomerID))]
+		public IEnumerable<Order> Orders { get; set; } = null!;
+		#endregion
+	}
+
+	[Table("EmployeeTerritories", Schema = "dbo")]
+	public partial class EmployeeTerritory
+	{
+		[Column("EmployeeID" , IsPrimaryKey = true , PrimaryKeyOrder = 0                        )] public int    EmployeeID  { get; set; } // int
+		[Column("TerritoryID", CanBeNull    = false, IsPrimaryKey    = true, PrimaryKeyOrder = 1)] public string TerritoryID { get; set; } = null!; // nvarchar(20)
+
+		#region Associations
+		/// <summary>
+		/// FK_EmployeeTerritories_Employees
+		/// </summary>
+		[Association(CanBeNull = false, ThisKey = nameof(EmployeeID), OtherKey = nameof(Employee.EmployeeID))]
+		public Employee Employees { get; set; } = null!;
+
+		/// <summary>
+		/// FK_EmployeeTerritories_Territories
+		/// </summary>
+		[Association(CanBeNull = false, ThisKey = nameof(TerritoryID), OtherKey = nameof(Territory.TerritoryID))]
+		public Territory Territories { get; set; } = null!;
 		#endregion
 	}
 
@@ -349,63 +423,135 @@ namespace Cli.T4.SqlServerNorthwind
 		public IEnumerable<Employee> Employees1 { get; set; } = null!;
 
 		/// <summary>
-		/// FK_Orders_Employees backreference
-		/// </summary>
-		[Association(ThisKey = nameof(EmployeeID), OtherKey = nameof(Order.EmployeeID))]
-		public IEnumerable<Order> Orders { get; set; } = null!;
-
-		/// <summary>
 		/// FK_EmployeeTerritories_Employees backreference
 		/// </summary>
 		[Association(ThisKey = nameof(EmployeeID), OtherKey = nameof(EmployeeTerritory.EmployeeID))]
 		public IEnumerable<EmployeeTerritory> EmployeeTerritories { get; set; } = null!;
-		#endregion
-	}
 
-	[Table("Categories", Schema = "dbo")]
-	public partial class Category
-	{
-		[Column("CategoryID"  , IsPrimaryKey = true , IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int     CategoryID   { get; set; } // int
-		[Column("CategoryName", CanBeNull    = false                                                             )] public string  CategoryName { get; set; } = null!; // nvarchar(15)
-		[Column("Description"                                                                                    )] public string? Description  { get; set; } // ntext
-		[Column("Picture"                                                                                        )] public byte[]? Picture      { get; set; } // image
-
-		#region Associations
 		/// <summary>
-		/// FK_Products_Categories backreference
+		/// FK_Orders_Employees backreference
 		/// </summary>
-		[Association(ThisKey = nameof(CategoryID), OtherKey = nameof(Product.CategoryID))]
-		public IEnumerable<Product> Products { get; set; } = null!;
-		#endregion
-	}
-
-	[Table("Customers", Schema = "dbo")]
-	public partial class Customer
-	{
-		[Column("CustomerID"  , CanBeNull = false, IsPrimaryKey = true)] public string  CustomerID   { get; set; } = null!; // nchar(5)
-		[Column("CompanyName" , CanBeNull = false                     )] public string  CompanyName  { get; set; } = null!; // nvarchar(40)
-		[Column("ContactName"                                         )] public string? ContactName  { get; set; } // nvarchar(30)
-		[Column("ContactTitle"                                        )] public string? ContactTitle { get; set; } // nvarchar(30)
-		[Column("Address"                                             )] public string? Address      { get; set; } // nvarchar(60)
-		[Column("City"                                                )] public string? City         { get; set; } // nvarchar(15)
-		[Column("Region"                                              )] public string? Region       { get; set; } // nvarchar(15)
-		[Column("PostalCode"                                          )] public string? PostalCode   { get; set; } // nvarchar(10)
-		[Column("Country"                                             )] public string? Country      { get; set; } // nvarchar(15)
-		[Column("Phone"                                               )] public string? Phone        { get; set; } // nvarchar(24)
-		[Column("Fax"                                                 )] public string? Fax          { get; set; } // nvarchar(24)
-
-		#region Associations
-		/// <summary>
-		/// FK_Orders_Customers backreference
-		/// </summary>
-		[Association(ThisKey = nameof(CustomerID), OtherKey = nameof(Order.CustomerID))]
+		[Association(ThisKey = nameof(EmployeeID), OtherKey = nameof(Order.EmployeeID))]
 		public IEnumerable<Order> Orders { get; set; } = null!;
+		#endregion
+	}
+
+	[Table("Order Details", Schema = "dbo")]
+	public partial class OrderDetail
+	{
+		[Column("OrderID"  , IsPrimaryKey = true, PrimaryKeyOrder = 0)] public int     OrderID   { get; set; } // int
+		[Column("ProductID", IsPrimaryKey = true, PrimaryKeyOrder = 1)] public int     ProductID { get; set; } // int
+		[Column("UnitPrice"                                          )] public decimal UnitPrice { get; set; } // money
+		[Column("Quantity"                                           )] public short   Quantity  { get; set; } // smallint
+		[Column("Discount"                                           )] public float   Discount  { get; set; } // real
+
+		#region Associations
+		/// <summary>
+		/// FK_Order_Details_Orders
+		/// </summary>
+		[Association(CanBeNull = false, ThisKey = nameof(OrderID), OtherKey = nameof(Order.OrderID))]
+		public Order OrderDetailsOrders { get; set; } = null!;
 
 		/// <summary>
-		/// FK_CustomerCustomerDemo_Customers backreference
+		/// FK_Order_Details_Products
 		/// </summary>
-		[Association(ThisKey = nameof(CustomerID), OtherKey = nameof(CustomerCustomerDemo.CustomerID))]
-		public IEnumerable<CustomerCustomerDemo> CustomerCustomerDemos { get; set; } = null!;
+		[Association(CanBeNull = false, ThisKey = nameof(ProductID), OtherKey = nameof(Product.ProductID))]
+		public Product OrderDetailsProducts { get; set; } = null!;
+		#endregion
+	}
+
+	[Table("Orders", Schema = "dbo")]
+	public partial class Order
+	{
+		[Column("OrderID"       , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int       OrderID        { get; set; } // int
+		[Column("CustomerID"                                                                                      )] public string?   CustomerID     { get; set; } // nchar(5)
+		[Column("EmployeeID"                                                                                      )] public int?      EmployeeID     { get; set; } // int
+		[Column("OrderDate"                                                                                       )] public DateTime? OrderDate      { get; set; } // datetime
+		[Column("RequiredDate"                                                                                    )] public DateTime? RequiredDate   { get; set; } // datetime
+		[Column("ShippedDate"                                                                                     )] public DateTime? ShippedDate    { get; set; } // datetime
+		[Column("ShipVia"                                                                                         )] public int?      ShipVia        { get; set; } // int
+		[Column("Freight"                                                                                         )] public decimal?  Freight        { get; set; } // money
+		[Column("ShipName"                                                                                        )] public string?   ShipName       { get; set; } // nvarchar(40)
+		[Column("ShipAddress"                                                                                     )] public string?   ShipAddress    { get; set; } // nvarchar(60)
+		[Column("ShipCity"                                                                                        )] public string?   ShipCity       { get; set; } // nvarchar(15)
+		[Column("ShipRegion"                                                                                      )] public string?   ShipRegion     { get; set; } // nvarchar(15)
+		[Column("ShipPostalCode"                                                                                  )] public string?   ShipPostalCode { get; set; } // nvarchar(10)
+		[Column("ShipCountry"                                                                                     )] public string?   ShipCountry    { get; set; } // nvarchar(15)
+
+		#region Associations
+		/// <summary>
+		/// FK_Order_Details_Orders backreference
+		/// </summary>
+		[Association(ThisKey = nameof(OrderID), OtherKey = nameof(OrderDetail.OrderID))]
+		public IEnumerable<OrderDetail> OrderDetails { get; set; } = null!;
+
+		/// <summary>
+		/// FK_Orders_Customers
+		/// </summary>
+		[Association(ThisKey = nameof(CustomerID), OtherKey = nameof(Customer.CustomerID))]
+		public Customer? Customers { get; set; }
+
+		/// <summary>
+		/// FK_Orders_Employees
+		/// </summary>
+		[Association(ThisKey = nameof(EmployeeID), OtherKey = nameof(Employee.EmployeeID))]
+		public Employee? Employees { get; set; }
+
+		/// <summary>
+		/// FK_Orders_Shippers
+		/// </summary>
+		[Association(ThisKey = nameof(ShipVia), OtherKey = nameof(Shipper.ShipperID))]
+		public Shipper? Shippers { get; set; }
+		#endregion
+	}
+
+	[Table("Products", Schema = "dbo")]
+	public partial class Product
+	{
+		[Column("ProductID"      , IsPrimaryKey = true , IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int      ProductID       { get; set; } // int
+		[Column("ProductName"    , CanBeNull    = false                                                             )] public string   ProductName     { get; set; } = null!; // nvarchar(40)
+		[Column("SupplierID"                                                                                        )] public int?     SupplierID      { get; set; } // int
+		[Column("CategoryID"                                                                                        )] public int?     CategoryID      { get; set; } // int
+		[Column("QuantityPerUnit"                                                                                   )] public string?  QuantityPerUnit { get; set; } // nvarchar(20)
+		[Column("UnitPrice"                                                                                         )] public decimal? UnitPrice       { get; set; } // money
+		[Column("UnitsInStock"                                                                                      )] public short?   UnitsInStock    { get; set; } // smallint
+		[Column("UnitsOnOrder"                                                                                      )] public short?   UnitsOnOrder    { get; set; } // smallint
+		[Column("ReorderLevel"                                                                                      )] public short?   ReorderLevel    { get; set; } // smallint
+		[Column("Discontinued"                                                                                      )] public bool     Discontinued    { get; set; } // bit
+
+		#region Associations
+		/// <summary>
+		/// FK_Order_Details_Products backreference
+		/// </summary>
+		[Association(ThisKey = nameof(ProductID), OtherKey = nameof(OrderDetail.ProductID))]
+		public IEnumerable<OrderDetail> OrderDetails { get; set; } = null!;
+
+		/// <summary>
+		/// FK_Products_Categories
+		/// </summary>
+		[Association(ThisKey = nameof(CategoryID), OtherKey = nameof(Category.CategoryID))]
+		public Category? Categories { get; set; }
+
+		/// <summary>
+		/// FK_Products_Suppliers
+		/// </summary>
+		[Association(ThisKey = nameof(SupplierID), OtherKey = nameof(Supplier.SupplierID))]
+		public Supplier? Suppliers { get; set; }
+		#endregion
+	}
+
+	[Table("Region", Schema = "dbo")]
+	public partial class Region
+	{
+		[Column("RegionID"         , IsPrimaryKey = true )] public int    RegionID          { get; set; } // int
+		[Column("RegionDescription", CanBeNull    = false)] public string RegionDescription { get; set; } = null!; // nchar(50)
+
+		#region Associations
+		/// <summary>
+		/// FK_Territories_Region backreference
+		/// </summary>
+		[Association(ThisKey = nameof(RegionID), OtherKey = nameof(Territory.RegionID))]
+		public IEnumerable<Territory> Territories { get; set; } = null!;
 		#endregion
 	}
 
@@ -450,131 +596,6 @@ namespace Cli.T4.SqlServerNorthwind
 		#endregion
 	}
 
-	[Table("Orders", Schema = "dbo")]
-	public partial class Order
-	{
-		[Column("OrderID"       , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int       OrderID        { get; set; } // int
-		[Column("CustomerID"                                                                                      )] public string?   CustomerID     { get; set; } // nchar(5)
-		[Column("EmployeeID"                                                                                      )] public int?      EmployeeID     { get; set; } // int
-		[Column("OrderDate"                                                                                       )] public DateTime? OrderDate      { get; set; } // datetime
-		[Column("RequiredDate"                                                                                    )] public DateTime? RequiredDate   { get; set; } // datetime
-		[Column("ShippedDate"                                                                                     )] public DateTime? ShippedDate    { get; set; } // datetime
-		[Column("ShipVia"                                                                                         )] public int?      ShipVia        { get; set; } // int
-		[Column("Freight"                                                                                         )] public decimal?  Freight        { get; set; } // money
-		[Column("ShipName"                                                                                        )] public string?   ShipName       { get; set; } // nvarchar(40)
-		[Column("ShipAddress"                                                                                     )] public string?   ShipAddress    { get; set; } // nvarchar(60)
-		[Column("ShipCity"                                                                                        )] public string?   ShipCity       { get; set; } // nvarchar(15)
-		[Column("ShipRegion"                                                                                      )] public string?   ShipRegion     { get; set; } // nvarchar(15)
-		[Column("ShipPostalCode"                                                                                  )] public string?   ShipPostalCode { get; set; } // nvarchar(10)
-		[Column("ShipCountry"                                                                                     )] public string?   ShipCountry    { get; set; } // nvarchar(15)
-
-		#region Associations
-		/// <summary>
-		/// FK_Orders_Employees
-		/// </summary>
-		[Association(ThisKey = nameof(EmployeeID), OtherKey = nameof(SqlServerNorthwind.Employee.EmployeeID))]
-		public Employee? Employee { get; set; }
-
-		/// <summary>
-		/// FK_Orders_Customers
-		/// </summary>
-		[Association(ThisKey = nameof(CustomerID), OtherKey = nameof(SqlServerNorthwind.Customer.CustomerID))]
-		public Customer? Customer { get; set; }
-
-		/// <summary>
-		/// FK_Orders_Shippers
-		/// </summary>
-		[Association(ThisKey = nameof(ShipVia), OtherKey = nameof(Shipper.ShipperID))]
-		public Shipper? Shippers { get; set; }
-
-		/// <summary>
-		/// FK_Order_Details_Orders backreference
-		/// </summary>
-		[Association(ThisKey = nameof(OrderID), OtherKey = nameof(OrderDetail.OrderID))]
-		public IEnumerable<OrderDetail> OrderDetails { get; set; } = null!;
-		#endregion
-	}
-
-	[Table("Products", Schema = "dbo")]
-	public partial class Product
-	{
-		[Column("ProductID"      , IsPrimaryKey = true , IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int      ProductID       { get; set; } // int
-		[Column("ProductName"    , CanBeNull    = false                                                             )] public string   ProductName     { get; set; } = null!; // nvarchar(40)
-		[Column("SupplierID"                                                                                        )] public int?     SupplierID      { get; set; } // int
-		[Column("CategoryID"                                                                                        )] public int?     CategoryID      { get; set; } // int
-		[Column("QuantityPerUnit"                                                                                   )] public string?  QuantityPerUnit { get; set; } // nvarchar(20)
-		[Column("UnitPrice"                                                                                         )] public decimal? UnitPrice       { get; set; } // money
-		[Column("UnitsInStock"                                                                                      )] public short?   UnitsInStock    { get; set; } // smallint
-		[Column("UnitsOnOrder"                                                                                      )] public short?   UnitsOnOrder    { get; set; } // smallint
-		[Column("ReorderLevel"                                                                                      )] public short?   ReorderLevel    { get; set; } // smallint
-		[Column("Discontinued"                                                                                      )] public bool     Discontinued    { get; set; } // bit
-
-		#region Associations
-		/// <summary>
-		/// FK_Products_Suppliers
-		/// </summary>
-		[Association(ThisKey = nameof(SupplierID), OtherKey = nameof(SqlServerNorthwind.Supplier.SupplierID))]
-		public Supplier? Supplier { get; set; }
-
-		/// <summary>
-		/// FK_Products_Categories
-		/// </summary>
-		[Association(ThisKey = nameof(CategoryID), OtherKey = nameof(SqlServerNorthwind.Category.CategoryID))]
-		public Category? Category { get; set; }
-
-		/// <summary>
-		/// FK_Order_Details_Products backreference
-		/// </summary>
-		[Association(ThisKey = nameof(ProductID), OtherKey = nameof(OrderDetail.ProductID))]
-		public IEnumerable<OrderDetail> OrderDetails { get; set; } = null!;
-		#endregion
-	}
-
-	[Table("Order Details", Schema = "dbo")]
-	public partial class OrderDetail
-	{
-		[Column("OrderID"  , IsPrimaryKey = true, PrimaryKeyOrder = 0)] public int     OrderID   { get; set; } // int
-		[Column("ProductID", IsPrimaryKey = true, PrimaryKeyOrder = 1)] public int     ProductID { get; set; } // int
-		[Column("UnitPrice"                                          )] public decimal UnitPrice { get; set; } // money
-		[Column("Quantity"                                           )] public short   Quantity  { get; set; } // smallint
-		[Column("Discount"                                           )] public float   Discount  { get; set; } // real
-
-		#region Associations
-		/// <summary>
-		/// FK_Order_Details_Orders
-		/// </summary>
-		[Association(CanBeNull = false, ThisKey = nameof(OrderID), OtherKey = nameof(SqlServerNorthwind.Order.OrderID))]
-		public Order Order { get; set; } = null!;
-
-		/// <summary>
-		/// FK_Order_Details_Products
-		/// </summary>
-		[Association(CanBeNull = false, ThisKey = nameof(ProductID), OtherKey = nameof(SqlServerNorthwind.Product.ProductID))]
-		public Product Product { get; set; } = null!;
-		#endregion
-	}
-
-	[Table("CustomerCustomerDemo", Schema = "dbo")]
-	public partial class CustomerCustomerDemo
-	{
-		[Column("CustomerID"    , CanBeNull = false, IsPrimaryKey = true, PrimaryKeyOrder = 0)] public string CustomerID     { get; set; } = null!; // nchar(5)
-		[Column("CustomerTypeID", CanBeNull = false, IsPrimaryKey = true, PrimaryKeyOrder = 1)] public string CustomerTypeID { get; set; } = null!; // nchar(10)
-
-		#region Associations
-		/// <summary>
-		/// FK_CustomerCustomerDemo_Customers
-		/// </summary>
-		[Association(CanBeNull = false, ThisKey = nameof(CustomerID), OtherKey = nameof(SqlServerNorthwind.Customer.CustomerID))]
-		public Customer Customer { get; set; } = null!;
-
-		/// <summary>
-		/// FK_CustomerCustomerDemo
-		/// </summary>
-		[Association(CanBeNull = false, ThisKey = nameof(CustomerTypeID), OtherKey = nameof(CustomerDemographic.CustomerTypeID))]
-		public CustomerDemographic CustomerType { get; set; } = null!;
-		#endregion
-	}
-
 	[Table("Territories", Schema = "dbo")]
 	public partial class Territory
 	{
@@ -584,72 +605,56 @@ namespace Cli.T4.SqlServerNorthwind
 
 		#region Associations
 		/// <summary>
-		/// FK_Territories_Region
-		/// </summary>
-		[Association(CanBeNull = false, ThisKey = nameof(RegionID), OtherKey = nameof(SqlServerNorthwind.Region.RegionID))]
-		public Region Region { get; set; } = null!;
-
-		/// <summary>
 		/// FK_EmployeeTerritories_Territories backreference
 		/// </summary>
 		[Association(ThisKey = nameof(TerritoryID), OtherKey = nameof(EmployeeTerritory.TerritoryID))]
 		public IEnumerable<EmployeeTerritory> EmployeeTerritories { get; set; } = null!;
+
+		/// <summary>
+		/// FK_Territories_Region
+		/// </summary>
+		[Association(CanBeNull = false, ThisKey = nameof(RegionID), OtherKey = nameof(SqlServerNorthwind.Region.RegionID))]
+		public Region Region { get; set; } = null!;
 		#endregion
 	}
 
-	[Table("EmployeeTerritories", Schema = "dbo")]
-	public partial class EmployeeTerritory
+	[Table("Alphabetical list of products", Schema = "dbo", IsView = true)]
+	public partial class AlphabeticalListOfProduct
 	{
-		[Column("EmployeeID" , IsPrimaryKey = true , PrimaryKeyOrder = 0                        )] public int    EmployeeID  { get; set; } // int
-		[Column("TerritoryID", CanBeNull    = false, IsPrimaryKey    = true, PrimaryKeyOrder = 1)] public string TerritoryID { get; set; } = null!; // nvarchar(20)
-
-		#region Associations
-		/// <summary>
-		/// FK_EmployeeTerritories_Employees
-		/// </summary>
-		[Association(CanBeNull = false, ThisKey = nameof(EmployeeID), OtherKey = nameof(SqlServerNorthwind.Employee.EmployeeID))]
-		public Employee Employee { get; set; } = null!;
-
-		/// <summary>
-		/// FK_EmployeeTerritories_Territories
-		/// </summary>
-		[Association(CanBeNull = false, ThisKey = nameof(TerritoryID), OtherKey = nameof(SqlServerNorthwind.Territory.TerritoryID))]
-		public Territory Territory { get; set; } = null!;
-		#endregion
+		[Column("ProductID"                         )] public int      ProductID       { get; set; } // int
+		[Column("ProductName"    , CanBeNull = false)] public string   ProductName     { get; set; } = null!; // nvarchar(40)
+		[Column("SupplierID"                        )] public int?     SupplierID      { get; set; } // int
+		[Column("CategoryID"                        )] public int?     CategoryID      { get; set; } // int
+		[Column("QuantityPerUnit"                   )] public string?  QuantityPerUnit { get; set; } // nvarchar(20)
+		[Column("UnitPrice"                         )] public decimal? UnitPrice       { get; set; } // money
+		[Column("UnitsInStock"                      )] public short?   UnitsInStock    { get; set; } // smallint
+		[Column("UnitsOnOrder"                      )] public short?   UnitsOnOrder    { get; set; } // smallint
+		[Column("ReorderLevel"                      )] public short?   ReorderLevel    { get; set; } // smallint
+		[Column("Discontinued"                      )] public bool     Discontinued    { get; set; } // bit
+		[Column("CategoryName"   , CanBeNull = false)] public string   CategoryName    { get; set; } = null!; // nvarchar(15)
 	}
 
-	[Table("Orders Qry", Schema = "dbo", IsView = true)]
-	public partial class OrdersQry
+	[Table("Category Sales for 1997", Schema = "dbo", IsView = true)]
+	public partial class CategorySalesFor1997
 	{
-		[Column("OrderID"                          )] public int       OrderID        { get; set; } // int
-		[Column("CustomerID"                       )] public string?   CustomerID     { get; set; } // nchar(5)
-		[Column("EmployeeID"                       )] public int?      EmployeeID     { get; set; } // int
-		[Column("OrderDate"                        )] public DateTime? OrderDate      { get; set; } // datetime
-		[Column("RequiredDate"                     )] public DateTime? RequiredDate   { get; set; } // datetime
-		[Column("ShippedDate"                      )] public DateTime? ShippedDate    { get; set; } // datetime
-		[Column("ShipVia"                          )] public int?      ShipVia        { get; set; } // int
-		[Column("Freight"                          )] public decimal?  Freight        { get; set; } // money
-		[Column("ShipName"                         )] public string?   ShipName       { get; set; } // nvarchar(40)
-		[Column("ShipAddress"                      )] public string?   ShipAddress    { get; set; } // nvarchar(60)
-		[Column("ShipCity"                         )] public string?   ShipCity       { get; set; } // nvarchar(15)
-		[Column("ShipRegion"                       )] public string?   ShipRegion     { get; set; } // nvarchar(15)
-		[Column("ShipPostalCode"                   )] public string?   ShipPostalCode { get; set; } // nvarchar(10)
-		[Column("ShipCountry"                      )] public string?   ShipCountry    { get; set; } // nvarchar(15)
-		[Column("CompanyName"   , CanBeNull = false)] public string    CompanyName    { get; set; } = null!; // nvarchar(40)
-		[Column("Address"                          )] public string?   Address        { get; set; } // nvarchar(60)
-		[Column("City"                             )] public string?   City           { get; set; } // nvarchar(15)
-		[Column("Region"                           )] public string?   Region         { get; set; } // nvarchar(15)
-		[Column("PostalCode"                       )] public string?   PostalCode     { get; set; } // nvarchar(10)
-		[Column("Country"                          )] public string?   Country        { get; set; } // nvarchar(15)
+		[Column("CategoryName" , CanBeNull = false)] public string   CategoryName  { get; set; } = null!; // nvarchar(15)
+		[Column("CategorySales"                   )] public decimal? CategorySales { get; set; } // money
 	}
 
-	[Table("Quarterly Orders", Schema = "dbo", IsView = true)]
-	public partial class QuarterlyOrder
+	[Table("Current Product List", Schema = "dbo", IsView = true)]
+	public partial class CurrentProductList
 	{
-		[Column("CustomerID" )] public string? CustomerID  { get; set; } // nchar(5)
-		[Column("CompanyName")] public string? CompanyName { get; set; } // nvarchar(40)
-		[Column("City"       )] public string? City        { get; set; } // nvarchar(15)
-		[Column("Country"    )] public string? Country     { get; set; } // nvarchar(15)
+		[Column("ProductID"  , IsIdentity = true , SkipOnInsert = true, SkipOnUpdate = true)] public int    ProductID   { get; set; } // int
+		[Column("ProductName", CanBeNull  = false                                          )] public string ProductName { get; set; } = null!; // nvarchar(40)
+	}
+
+	[Table("Customer and Suppliers by City", Schema = "dbo", IsView = true)]
+	public partial class CustomerAndSuppliersByCity
+	{
+		[Column("City"                           )] public string? City         { get; set; } // nvarchar(15)
+		[Column("CompanyName" , CanBeNull = false)] public string  CompanyName  { get; set; } = null!; // nvarchar(40)
+		[Column("ContactName"                    )] public string? ContactName  { get; set; } // nvarchar(30)
+		[Column("Relationship", CanBeNull = false)] public string  Relationship { get; set; } = null!; // varchar(9)
 	}
 
 	[Table("Invoices", Schema = "dbo", IsView = true)]
@@ -683,21 +688,6 @@ namespace Cli.T4.SqlServerNorthwind
 		[Column("Freight"                          )] public decimal?  Freight        { get; set; } // money
 	}
 
-	[Table("Product Sales for 1997", Schema = "dbo", IsView = true)]
-	public partial class ProductSalesFor1997
-	{
-		[Column("CategoryName", CanBeNull = false)] public string   CategoryName { get; set; } = null!; // nvarchar(15)
-		[Column("ProductName" , CanBeNull = false)] public string   ProductName  { get; set; } = null!; // nvarchar(40)
-		[Column("ProductSales"                   )] public decimal? ProductSales { get; set; } // money
-	}
-
-	[Table("Current Product List", Schema = "dbo", IsView = true)]
-	public partial class CurrentProductList
-	{
-		[Column("ProductID"  , IsIdentity = true , SkipOnInsert = true, SkipOnUpdate = true)] public int    ProductID   { get; set; } // int
-		[Column("ProductName", CanBeNull  = false                                          )] public string ProductName { get; set; } = null!; // nvarchar(40)
-	}
-
 	[Table("Order Details Extended", Schema = "dbo", IsView = true)]
 	public partial class OrderDetailsExtended
 	{
@@ -708,6 +698,46 @@ namespace Cli.T4.SqlServerNorthwind
 		[Column("Quantity"                        )] public short    Quantity      { get; set; } // smallint
 		[Column("Discount"                        )] public float    Discount      { get; set; } // real
 		[Column("ExtendedPrice"                   )] public decimal? ExtendedPrice { get; set; } // money
+	}
+
+	[Table("Order Subtotals", Schema = "dbo", IsView = true)]
+	public partial class OrderSubtotal
+	{
+		[Column("OrderID" )] public int      OrderID  { get; set; } // int
+		[Column("Subtotal")] public decimal? Subtotal { get; set; } // money
+	}
+
+	[Table("Orders Qry", Schema = "dbo", IsView = true)]
+	public partial class OrdersQry
+	{
+		[Column("OrderID"                          )] public int       OrderID        { get; set; } // int
+		[Column("CustomerID"                       )] public string?   CustomerID     { get; set; } // nchar(5)
+		[Column("EmployeeID"                       )] public int?      EmployeeID     { get; set; } // int
+		[Column("OrderDate"                        )] public DateTime? OrderDate      { get; set; } // datetime
+		[Column("RequiredDate"                     )] public DateTime? RequiredDate   { get; set; } // datetime
+		[Column("ShippedDate"                      )] public DateTime? ShippedDate    { get; set; } // datetime
+		[Column("ShipVia"                          )] public int?      ShipVia        { get; set; } // int
+		[Column("Freight"                          )] public decimal?  Freight        { get; set; } // money
+		[Column("ShipName"                         )] public string?   ShipName       { get; set; } // nvarchar(40)
+		[Column("ShipAddress"                      )] public string?   ShipAddress    { get; set; } // nvarchar(60)
+		[Column("ShipCity"                         )] public string?   ShipCity       { get; set; } // nvarchar(15)
+		[Column("ShipRegion"                       )] public string?   ShipRegion     { get; set; } // nvarchar(15)
+		[Column("ShipPostalCode"                   )] public string?   ShipPostalCode { get; set; } // nvarchar(10)
+		[Column("ShipCountry"                      )] public string?   ShipCountry    { get; set; } // nvarchar(15)
+		[Column("CompanyName"   , CanBeNull = false)] public string    CompanyName    { get; set; } = null!; // nvarchar(40)
+		[Column("Address"                          )] public string?   Address        { get; set; } // nvarchar(60)
+		[Column("City"                             )] public string?   City           { get; set; } // nvarchar(15)
+		[Column("Region"                           )] public string?   Region         { get; set; } // nvarchar(15)
+		[Column("PostalCode"                       )] public string?   PostalCode     { get; set; } // nvarchar(10)
+		[Column("Country"                          )] public string?   Country        { get; set; } // nvarchar(15)
+	}
+
+	[Table("Product Sales for 1997", Schema = "dbo", IsView = true)]
+	public partial class ProductSalesFor1997
+	{
+		[Column("CategoryName", CanBeNull = false)] public string   CategoryName { get; set; } = null!; // nvarchar(15)
+		[Column("ProductName" , CanBeNull = false)] public string   ProductName  { get; set; } = null!; // nvarchar(40)
+		[Column("ProductSales"                   )] public decimal? ProductSales { get; set; } // money
 	}
 
 	[Table("Products Above Average Price", Schema = "dbo", IsView = true)]
@@ -727,36 +757,13 @@ namespace Cli.T4.SqlServerNorthwind
 		[Column("Discontinued"                      )] public bool    Discontinued    { get; set; } // bit
 	}
 
-	[Table("Alphabetical list of products", Schema = "dbo", IsView = true)]
-	public partial class AlphabeticalListOfProduct
+	[Table("Quarterly Orders", Schema = "dbo", IsView = true)]
+	public partial class QuarterlyOrder
 	{
-		[Column("ProductID"                         )] public int      ProductID       { get; set; } // int
-		[Column("ProductName"    , CanBeNull = false)] public string   ProductName     { get; set; } = null!; // nvarchar(40)
-		[Column("SupplierID"                        )] public int?     SupplierID      { get; set; } // int
-		[Column("CategoryID"                        )] public int?     CategoryID      { get; set; } // int
-		[Column("QuantityPerUnit"                   )] public string?  QuantityPerUnit { get; set; } // nvarchar(20)
-		[Column("UnitPrice"                         )] public decimal? UnitPrice       { get; set; } // money
-		[Column("UnitsInStock"                      )] public short?   UnitsInStock    { get; set; } // smallint
-		[Column("UnitsOnOrder"                      )] public short?   UnitsOnOrder    { get; set; } // smallint
-		[Column("ReorderLevel"                      )] public short?   ReorderLevel    { get; set; } // smallint
-		[Column("Discontinued"                      )] public bool     Discontinued    { get; set; } // bit
-		[Column("CategoryName"   , CanBeNull = false)] public string   CategoryName    { get; set; } = null!; // nvarchar(15)
-	}
-
-	[Table("Order Subtotals", Schema = "dbo", IsView = true)]
-	public partial class OrderSubtotal
-	{
-		[Column("OrderID" )] public int      OrderID  { get; set; } // int
-		[Column("Subtotal")] public decimal? Subtotal { get; set; } // money
-	}
-
-	[Table("Customer and Suppliers by City", Schema = "dbo", IsView = true)]
-	public partial class CustomerAndSuppliersByCity
-	{
-		[Column("City"                           )] public string? City         { get; set; } // nvarchar(15)
-		[Column("CompanyName" , CanBeNull = false)] public string  CompanyName  { get; set; } = null!; // nvarchar(40)
-		[Column("ContactName"                    )] public string? ContactName  { get; set; } // nvarchar(30)
-		[Column("Relationship", CanBeNull = false)] public string  Relationship { get; set; } = null!; // varchar(9)
+		[Column("CustomerID" )] public string? CustomerID  { get; set; } // nchar(5)
+		[Column("CompanyName")] public string? CompanyName { get; set; } // nvarchar(40)
+		[Column("City"       )] public string? City        { get; set; } // nvarchar(15)
+		[Column("Country"    )] public string? Country     { get; set; } // nvarchar(15)
 	}
 
 	[Table("Sales Totals by Amount", Schema = "dbo", IsView = true)]
@@ -791,12 +798,5 @@ namespace Cli.T4.SqlServerNorthwind
 		[Column("ShippedDate")] public DateTime? ShippedDate { get; set; } // datetime
 		[Column("OrderID"    )] public int       OrderID     { get; set; } // int
 		[Column("Subtotal"   )] public decimal?  Subtotal    { get; set; } // money
-	}
-
-	[Table("Category Sales for 1997", Schema = "dbo", IsView = true)]
-	public partial class CategorySalesFor1997
-	{
-		[Column("CategoryName" , CanBeNull = false)] public string   CategoryName  { get; set; } = null!; // nvarchar(15)
-		[Column("CategorySales"                   )] public decimal? CategorySales { get; set; } // money
 	}
 }

@@ -42,8 +42,8 @@ namespace Cli.T4.SQLiteNorthwind
 		public ITable<CustomerCustomerDemo>       CustomerCustomerDemos        => this.GetTable<CustomerCustomerDemo>();
 		public ITable<CustomerDemographic>        CustomerDemographics         => this.GetTable<CustomerDemographic>();
 		public ITable<Customer>                   Customers                    => this.GetTable<Customer>();
-		public ITable<Employee>                   Employees                    => this.GetTable<Employee>();
 		public ITable<EmployeeTerritory>          EmployeeTerritories          => this.GetTable<EmployeeTerritory>();
+		public ITable<Employee>                   Employees                    => this.GetTable<Employee>();
 		public ITable<OrderDetail>                OrderDetails                 => this.GetTable<OrderDetail>();
 		public ITable<Order>                      Orders                       => this.GetTable<Order>();
 		public ITable<Product>                    Products                     => this.GetTable<Product>();
@@ -56,11 +56,11 @@ namespace Cli.T4.SQLiteNorthwind
 		public ITable<CustomerAndSuppliersByCity> CustomerAndSuppliersByCities => this.GetTable<CustomerAndSuppliersByCity>();
 		public ITable<OrderDetailsExtended>       OrderDetailsExtendeds        => this.GetTable<OrderDetailsExtended>();
 		public ITable<OrderSubtotal>              OrderSubtotals               => this.GetTable<OrderSubtotal>();
-		public ITable<SummaryOfSalesByQuarter>    SummaryOfSalesByQuarters     => this.GetTable<SummaryOfSalesByQuarter>();
-		public ITable<SummaryOfSalesByYear>       SummaryOfSalesByYears        => this.GetTable<SummaryOfSalesByYear>();
 		public ITable<OrdersQry>                  OrdersQries                  => this.GetTable<OrdersQry>();
 		public ITable<ProductsAboveAveragePrice>  ProductsAboveAveragePrices   => this.GetTable<ProductsAboveAveragePrice>();
 		public ITable<ProductsByCategory>         ProductsByCategories         => this.GetTable<ProductsByCategory>();
+		public ITable<SummaryOfSalesByQuarter>    SummaryOfSalesByQuarters     => this.GetTable<SummaryOfSalesByQuarter>();
+		public ITable<SummaryOfSalesByYear>       SummaryOfSalesByYears        => this.GetTable<SummaryOfSalesByYear>();
 	}
 
 	[Table("Categories")]
@@ -95,14 +95,14 @@ namespace Cli.T4.SQLiteNorthwind
 			return table.FirstOrDefault(e => e.CustomerID == customerId);
 		}
 
-		public static Employee? Find(this ITable<Employee> table, int employeeId)
-		{
-			return table.FirstOrDefault(e => e.EmployeeID == employeeId);
-		}
-
 		public static EmployeeTerritory? Find(this ITable<EmployeeTerritory> table, int employeeId, string territoryId)
 		{
 			return table.FirstOrDefault(e => e.EmployeeID == employeeId && e.TerritoryID == territoryId);
+		}
+
+		public static Employee? Find(this ITable<Employee> table, int employeeId)
+		{
+			return table.FirstOrDefault(e => e.EmployeeID == employeeId);
 		}
 
 		public static OrderDetail? Find(this ITable<OrderDetail> table, int orderId, int productId)
@@ -172,6 +172,13 @@ namespace Cli.T4.SQLiteNorthwind
 		[Column("Fax"                                                 )] public string? Fax          { get; set; } // varchar(24)
 	}
 
+	[Table("EmployeeTerritories")]
+	public partial class EmployeeTerritory
+	{
+		[Column("EmployeeID" , IsPrimaryKey = true , PrimaryKeyOrder = 0                        )] public int    EmployeeID  { get; set; } // int
+		[Column("TerritoryID", CanBeNull    = false, IsPrimaryKey    = true, PrimaryKeyOrder = 1)] public string TerritoryID { get; set; } = null!; // varchar(20)
+	}
+
 	[Table("Employees")]
 	public partial class Employee
 	{
@@ -193,13 +200,6 @@ namespace Cli.T4.SQLiteNorthwind
 		[Column("Notes"                                                     )] public string?   Notes           { get; set; } // text(max)
 		[Column("ReportsTo"                                                 )] public int?      ReportsTo       { get; set; } // int
 		[Column("PhotoPath"                                                 )] public string?   PhotoPath       { get; set; } // varchar(255)
-	}
-
-	[Table("EmployeeTerritories")]
-	public partial class EmployeeTerritory
-	{
-		[Column("EmployeeID" , IsPrimaryKey = true , PrimaryKeyOrder = 0                        )] public int    EmployeeID  { get; set; } // int
-		[Column("TerritoryID", CanBeNull    = false, IsPrimaryKey    = true, PrimaryKeyOrder = 1)] public string TerritoryID { get; set; } = null!; // varchar(20)
 	}
 
 	[Table("Order Details")]
@@ -337,22 +337,6 @@ namespace Cli.T4.SQLiteNorthwind
 		[Column("Subtotal")] public object? Subtotal { get; set; } // NUMERIC
 	}
 
-	[Table("Summary of Sales by Quarter", IsView = true)]
-	public partial class SummaryOfSalesByQuarter
-	{
-		[Column("ShippedDate", SkipOnInsert = true, SkipOnUpdate = true)] public DateTime? ShippedDate { get; set; } // timestamp
-		[Column("OrderID"                                              )] public int       OrderID     { get; set; } // int
-		[Column("Subtotal"                                             )] public object?   Subtotal    { get; set; } // NUMERIC
-	}
-
-	[Table("Summary of Sales by Year", IsView = true)]
-	public partial class SummaryOfSalesByYear
-	{
-		[Column("ShippedDate", SkipOnInsert = true, SkipOnUpdate = true)] public DateTime? ShippedDate { get; set; } // timestamp
-		[Column("OrderID"                                              )] public int       OrderID     { get; set; } // int
-		[Column("Subtotal"                                             )] public object?   Subtotal    { get; set; } // NUMERIC
-	}
-
 	[Table("Orders Qry", IsView = true)]
 	public partial class OrdersQry
 	{
@@ -393,5 +377,21 @@ namespace Cli.T4.SQLiteNorthwind
 		[Column("QuantityPerUnit"                   )] public string? QuantityPerUnit { get; set; } // varchar(20)
 		[Column("UnitsInStock"                      )] public int?    UnitsInStock    { get; set; } // int
 		[Column("Discontinued"                      )] public int     Discontinued    { get; set; } // int
+	}
+
+	[Table("Summary of Sales by Quarter", IsView = true)]
+	public partial class SummaryOfSalesByQuarter
+	{
+		[Column("ShippedDate", SkipOnInsert = true, SkipOnUpdate = true)] public DateTime? ShippedDate { get; set; } // timestamp
+		[Column("OrderID"                                              )] public int       OrderID     { get; set; } // int
+		[Column("Subtotal"                                             )] public object?   Subtotal    { get; set; } // NUMERIC
+	}
+
+	[Table("Summary of Sales by Year", IsView = true)]
+	public partial class SummaryOfSalesByYear
+	{
+		[Column("ShippedDate", SkipOnInsert = true, SkipOnUpdate = true)] public DateTime? ShippedDate { get; set; } // timestamp
+		[Column("OrderID"                                              )] public int       OrderID     { get; set; } // int
+		[Column("Subtotal"                                             )] public object?   Subtotal    { get; set; } // NUMERIC
 	}
 }

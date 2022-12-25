@@ -2450,8 +2450,35 @@ namespace Tests.Linq
 
 			var sql = query.GetSelectQuery();
 
-			Assert.AreEqual(2, ((SelectQuery)((SqlTableSource)sql.From.Tables[0]).Source).GroupBy.Items.Count);
-			Assert.AreEqual(2, ((SelectQuery)((SqlTableSource)sql.SetOperators[0].SelectQuery.From.Tables[0]).Source).GroupBy.Items.Count);
+			Assert.AreEqual(2, sql.GroupBy.Items.Count);
+			Assert.AreEqual(2, sql.SetOperators[0].SelectQuery.GroupBy.Items.Count);
+		}
+
+		[Test]
+		public void Issue3872([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable<Issue3761Table>();
+
+			var query1 = db.Person.GroupBy(_ => 1).Select(r => r.Max(r => r.ID));
+
+			var query2 = db.Person.Select(r => r.ID);
+			var query  = query1.Concat(query2);
+			
+			query.ToList();
+
+			var ast = query.GetSelectQuery();
+
+			Assert.AreEqual(0, ast.GroupBy.Items.Count);
+			Assert.AreEqual(1, ast.From.Tables.Count);
+			if (ast.From.Tables[0] is not SqlTableSource source)
+			{
+				Assert.Fail("fail");
+			}
+			else
+			{
+				Assert.AreEqual(QueryElementType.SqlTable, source.Source.ElementType);
+			}
 		}
 	}
 }

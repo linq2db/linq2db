@@ -25,14 +25,14 @@ namespace Cli.Default.SqlServerNorthwind
 		/// <summary>
 		/// FK_Order_Details_Orders
 		/// </summary>
-		[Association(CanBeNull = false, ThisKey = nameof(OrderId), OtherKey = nameof(SqlServerNorthwind.Order.OrderId))]
-		public Order Order { get; set; } = null!;
+		[Association(CanBeNull = false, ThisKey = nameof(OrderId), OtherKey = nameof(Order.OrderId))]
+		public Order OrderDetailsOrders { get; set; } = null!;
 
 		/// <summary>
 		/// FK_Order_Details_Products
 		/// </summary>
-		[Association(CanBeNull = false, ThisKey = nameof(ProductId), OtherKey = nameof(SqlServerNorthwind.Product.ProductId))]
-		public Product Product { get; set; } = null!;
+		[Association(CanBeNull = false, ThisKey = nameof(ProductId), OtherKey = nameof(Product.ProductId))]
+		public Product OrderDetailsProducts { get; set; } = null!;
 		#endregion
 	}
 }

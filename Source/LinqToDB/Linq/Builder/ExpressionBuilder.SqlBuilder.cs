@@ -937,7 +937,7 @@ namespace LinqToDB.Linq.Builder
 						case ExpressionType.SubtractChecked: return new SqlBinaryExpression(t, l, "-", r, Precedence.Subtraction);
 						case ExpressionType.Coalesce       :
 						{
-							if (QueryHelper.UnwrapExpression(r) is SqlFunction c)
+							if (QueryHelper.UnwrapExpression(r, checkNullability: true) is SqlFunction c)
 							{
 								if (c.Name is "Coalesce" or PseudoFunctions.COALESCE)
 								{
@@ -1016,7 +1016,7 @@ namespace LinqToDB.Linq.Builder
 					var t = ConvertToSql(context, e.IfTrue);
 					var f = ConvertToSql(context, e.IfFalse);
 
-					if (QueryHelper.UnwrapExpression(f) is SqlFunction c && c.Name == "CASE")
+					if (QueryHelper.UnwrapExpression(f, checkNullability: true) is SqlFunction c && c.Name == "CASE")
 					{
 						var parms = new ISqlExpression[c.Parameters.Length + 2];
 
@@ -1550,8 +1550,8 @@ namespace LinqToDB.Linq.Builder
 			var l  = ConvertToSql(context, left,  unwrap: false, cd);
 			var r  = ConvertToSql(context, right, unwrap: true,  cd);
 
-			l = QueryHelper.UnwrapExpression(l);
-			r = QueryHelper.UnwrapExpression(r);
+			l = QueryHelper.UnwrapExpression(l, checkNullability: true);
+			r = QueryHelper.UnwrapExpression(r, checkNullability: true);
 
 			if (l is SqlValue lValue)
 				lValue.ValueType = GetDataType(r, lValue.ValueType);

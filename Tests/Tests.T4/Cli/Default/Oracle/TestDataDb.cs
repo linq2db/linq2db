@@ -38,44 +38,40 @@ namespace Cli.Default.Oracle
 
 		partial void InitDataContext();
 
-		public ITable<AllType>                 AllTypes                 => this.GetTable<AllType>();
-		public ITable<Binarydatum>             Binarydata               => this.GetTable<Binarydatum>();
-		public ITable<Child>                   Children                 => this.GetTable<Child>();
-		public ITable<CollatedTable>           CollatedTables           => this.GetTable<CollatedTable>();
-		public ITable<DataTypeTest>            DataTypeTests            => this.GetTable<DataTypeTest>();
-		public ITable<DecimalOverflow>         DecimalOverflows         => this.GetTable<DecimalOverflow>();
-		public ITable<Dest2>                   Dest2                    => this.GetTable<Dest2>();
-		public ITable<Doctor>                  Doctors                  => this.GetTable<Doctor>();
-		public ITable<GrandChild>              GrandChildren            => this.GetTable<GrandChild>();
-		public ITable<InheritanceChild>        InheritanceChildren      => this.GetTable<InheritanceChild>();
-		public ITable<InheritanceParent>       InheritanceParents       => this.GetTable<InheritanceParent>();
-		public ITable<Issue2564Table>          Issue2564Tables          => this.GetTable<Issue2564Table>();
-		public ITable<LinqDataType>            LinqDataTypes            => this.GetTable<LinqDataType>();
-		public ITable<Linqdatatypesbc>         Linqdatatypesbcs         => this.GetTable<Linqdatatypesbc>();
-		public ITable<LongRawTable>            LongRawTables            => this.GetTable<LongRawTable>();
-		public ITable<Parent>                  Parents                  => this.GetTable<Parent>();
-		public ITable<Patient>                 Patients                 => this.GetTable<Patient>();
-		public ITable<Person>                  People                   => this.GetTable<Person>();
+		public ITable<AllType>             AllTypes            => this.GetTable<AllType>();
+		public ITable<Binarydatum>         Binarydata          => this.GetTable<Binarydatum>();
+		public ITable<Child>               Children            => this.GetTable<Child>();
+		public ITable<CollatedTable>       CollatedTables      => this.GetTable<CollatedTable>();
+		public ITable<DataTypeTest>        DataTypeTests       => this.GetTable<DataTypeTest>();
+		public ITable<DecimalOverflow>     DecimalOverflows    => this.GetTable<DecimalOverflow>();
+		public ITable<Doctor>              Doctors             => this.GetTable<Doctor>();
+		public ITable<GrandChild>          GrandChildren       => this.GetTable<GrandChild>();
+		public ITable<InheritanceChild>    InheritanceChildren => this.GetTable<InheritanceChild>();
+		public ITable<InheritanceParent>   InheritanceParents  => this.GetTable<InheritanceParent>();
+		public ITable<Linqdatatypesbc>     Linqdatatypesbcs    => this.GetTable<Linqdatatypesbc>();
+		public ITable<LinqDataType>        LinqDataTypes       => this.GetTable<LinqDataType>();
+		public ITable<LongRawTable>        LongRawTables       => this.GetTable<LongRawTable>();
+		public ITable<Parent>              Parents             => this.GetTable<Parent>();
+		public ITable<Patient>             Patients            => this.GetTable<Patient>();
+		public ITable<Person>              People              => this.GetTable<Person>();
+		public ITable<Sequencetest>        Sequencetests       => this.GetTable<Sequencetest>();
+		public ITable<StgTradeInformation> StgTradeInformation => this.GetTable<StgTradeInformation>();
 		/// <summary>
 		/// This is table
 		/// </summary>
-		public ITable<SchemaTestTable>         SchemaTestTables         => this.GetTable<SchemaTestTable>();
-		public ITable<Sequencetest>            Sequencetests            => this.GetTable<Sequencetest>();
-		public ITable<StgTradeInformation>     StgTradeInformation      => this.GetTable<StgTradeInformation>();
-		public ITable<StringTest>              StringTests              => this.GetTable<StringTest>();
-		public ITable<TEntity>                 TEntities                => this.GetTable<TEntity>();
-		public ITable<TestIdentity>            TestIdentities           => this.GetTable<TestIdentity>();
-		public ITable<TestMerge1>              TestMerge1               => this.GetTable<TestMerge1>();
-		public ITable<TestMerge2>              TestMerge2               => this.GetTable<TestMerge2>();
-		public ITable<TestSequenceSchemaTable> TestSequenceSchemaTables => this.GetTable<TestSequenceSchemaTable>();
-		public ITable<TestSource>              TestSources              => this.GetTable<TestSource>();
-		public ITable<TTestUser>               TTestUsers               => this.GetTable<TTestUser>();
-		public ITable<TTestUserContract>       TTestUserContracts       => this.GetTable<TTestUserContract>();
+		public ITable<SchemaTestTable>     SchemaTestTables    => this.GetTable<SchemaTestTable>();
+		public ITable<StringTest>          StringTests         => this.GetTable<StringTest>();
+		public ITable<TestIdentity>        TestIdentities      => this.GetTable<TestIdentity>();
+		public ITable<TestMerge1>          TestMerge1          => this.GetTable<TestMerge1>();
+		public ITable<TestMerge2>          TestMerge2          => this.GetTable<TestMerge2>();
+		public ITable<TEntity>             TEntities           => this.GetTable<TEntity>();
+		public ITable<TTestUser>           TTestUsers          => this.GetTable<TTestUser>();
+		public ITable<TTestUserContract>   TTestUserContracts  => this.GetTable<TTestUserContract>();
 		/// <summary>
 		/// This is matview
 		/// </summary>
-		public ITable<SchemaTestMatView>       SchemaTestMatViews       => this.GetTable<SchemaTestMatView>();
-		public ITable<SchemaTestView>          SchemaTestViews          => this.GetTable<SchemaTestView>();
+		public ITable<SchemaTestMatView>   SchemaTestMatViews  => this.GetTable<SchemaTestMatView>();
+		public ITable<SchemaTestView>      SchemaTestViews     => this.GetTable<SchemaTestView>();
 	}
 
 	public static partial class ExtensionMethods
@@ -141,16 +137,6 @@ namespace Cli.Default.Oracle
 			return table.FirstOrDefaultAsync(e => e.InheritanceParentId == inheritanceParentId, cancellationToken);
 		}
 
-		public static Issue2564Table? Find(this ITable<Issue2564Table> table, long id)
-		{
-			return table.FirstOrDefault(e => e.Id == id);
-		}
-
-		public static Task<Issue2564Table?> FindAsync(this ITable<Issue2564Table> table, long id, CancellationToken cancellationToken = default)
-		{
-			return table.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
-		}
-
 		public static LongRawTable? Find(this ITable<LongRawTable> table, decimal id)
 		{
 			return table.FirstOrDefault(e => e.Id == id);
@@ -181,16 +167,6 @@ namespace Cli.Default.Oracle
 			return table.FirstOrDefaultAsync(e => e.PersonId == personId, cancellationToken);
 		}
 
-		public static SchemaTestTable? Find(this ITable<SchemaTestTable> table, decimal id)
-		{
-			return table.FirstOrDefault(e => e.Id == id);
-		}
-
-		public static Task<SchemaTestTable?> FindAsync(this ITable<SchemaTestTable> table, decimal id, CancellationToken cancellationToken = default)
-		{
-			return table.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
-		}
-
 		public static Sequencetest? Find(this ITable<Sequencetest> table, decimal id)
 		{
 			return table.FirstOrDefault(e => e.Id == id);
@@ -201,14 +177,14 @@ namespace Cli.Default.Oracle
 			return table.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
 		}
 
-		public static TEntity? Find(this ITable<TEntity> table, decimal entityId)
+		public static SchemaTestTable? Find(this ITable<SchemaTestTable> table, decimal id)
 		{
-			return table.FirstOrDefault(e => e.EntityId == entityId);
+			return table.FirstOrDefault(e => e.Id == id);
 		}
 
-		public static Task<TEntity?> FindAsync(this ITable<TEntity> table, decimal entityId, CancellationToken cancellationToken = default)
+		public static Task<SchemaTestTable?> FindAsync(this ITable<SchemaTestTable> table, decimal id, CancellationToken cancellationToken = default)
 		{
-			return table.FirstOrDefaultAsync(e => e.EntityId == entityId, cancellationToken);
+			return table.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
 		}
 
 		public static TestIdentity? Find(this ITable<TestIdentity> table, decimal id)
@@ -241,14 +217,14 @@ namespace Cli.Default.Oracle
 			return table.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
 		}
 
-		public static TestSequenceSchemaTable? Find(this ITable<TestSequenceSchemaTable> table, long id)
+		public static TEntity? Find(this ITable<TEntity> table, decimal entityId)
 		{
-			return table.FirstOrDefault(e => e.Id == id);
+			return table.FirstOrDefault(e => e.EntityId == entityId);
 		}
 
-		public static Task<TestSequenceSchemaTable?> FindAsync(this ITable<TestSequenceSchemaTable> table, long id, CancellationToken cancellationToken = default)
+		public static Task<TEntity?> FindAsync(this ITable<TEntity> table, decimal entityId, CancellationToken cancellationToken = default)
 		{
-			return table.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
+			return table.FirstOrDefaultAsync(e => e.EntityId == entityId, cancellationToken);
 		}
 
 		public static TTestUser? Find(this ITable<TTestUser> table, decimal userId)
