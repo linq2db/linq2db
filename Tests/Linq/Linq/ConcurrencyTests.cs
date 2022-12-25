@@ -14,7 +14,7 @@ namespace Tests.Linq
 	[TestFixture]
 	public class ConcurrencyTests : TestBase
 	{
-		[Table]
+		[Table("ConcurrencyTable")]
 		public class ConcurrencyTable<TStamp>
 			where TStamp: notnull
 		{
@@ -40,10 +40,13 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/linq2db/linq2db/issues/3894", Configuration = TestProvName.AllOracle)]
 		[Test]
 		public void TestAutoIncrement([DataSources] string context)
 		{
-			var ms = new MappingSchema();
+			// lack of rowcount support by clickhouse makes this API useless with ClickHouse
+			var skipCnt = context.IsAnyOf(TestProvName.AllClickHouse);
+			var ms      = new MappingSchema();
 
 			ms.GetFluentMappingBuilder()
 				.Entity<ConcurrencyTable<int>>()
@@ -61,18 +64,18 @@ namespace Tests.Linq
 			};
 
 			var cnt = db.Insert(record);
-			Assert.AreEqual(1, cnt);
+			if (!skipCnt) Assert.AreEqual(1, cnt);
 			AssertData(record);
 
 			record.Value = "value 1";
 			cnt = db.UpdateConcurrent(record);
-			Assert.AreEqual(1, cnt);
+			if (!skipCnt) Assert.AreEqual(1, cnt);
 			record.Stamp++;
 			AssertData(record);
 
 			record.Value = "value 2";
 			cnt = db.UpdateConcurrent(record);
-			Assert.AreEqual(1, cnt);
+			if (!skipCnt) Assert.AreEqual(1, cnt);
 			record.Stamp++;
 			AssertData(record);
 
@@ -91,7 +94,7 @@ namespace Tests.Linq
 			AssertData(record);
 
 			cnt = db.DeleteConcurrent(record);
-			Assert.AreEqual(1, cnt);
+			if (!skipCnt) Assert.AreEqual(1, cnt);
 			Assert.AreEqual(0, t.ToArray().Length);
 
 			void AssertData(ConcurrencyTable<int> record)
@@ -105,10 +108,12 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/linq2db/linq2db/issues/3894", Configuration = TestProvName.AllOracle)]
 		[Test]
 		public async ValueTask TestAutoIncrementAsync([DataSources] string context)
 		{
-			var ms = new MappingSchema();
+			var skipCnt = context.IsAnyOf(TestProvName.AllClickHouse);
+			var ms      = new MappingSchema();
 
 			ms.GetFluentMappingBuilder()
 				.Entity<ConcurrencyTable<int>>()
@@ -126,18 +131,18 @@ namespace Tests.Linq
 			};
 
 			var cnt = await db.InsertAsync(record);
-			Assert.AreEqual(1, cnt);
+			if (!skipCnt) Assert.AreEqual(1, cnt);
 			AssertData(record);
 
 			record.Value = "value 1";
 			cnt = await db.UpdateConcurrentAsync(record);
-			Assert.AreEqual(1, cnt);
+			if (!skipCnt) Assert.AreEqual(1, cnt);
 			record.Stamp++;
 			AssertData(record);
 
 			record.Value = "value 2";
 			cnt = await db.UpdateConcurrentAsync(record);
-			Assert.AreEqual(1, cnt);
+			if (!skipCnt) Assert.AreEqual(1, cnt);
 			record.Stamp++;
 			AssertData(record);
 
@@ -156,7 +161,7 @@ namespace Tests.Linq
 			AssertData(record);
 
 			cnt = await db.DeleteConcurrentAsync(record);
-			Assert.AreEqual(1, cnt);
+			if (!skipCnt) Assert.AreEqual(1, cnt);
 			Assert.AreEqual(0, t.ToArray().Length);
 
 			void AssertData(ConcurrencyTable<int> record)
@@ -170,10 +175,12 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/linq2db/linq2db/issues/3894", Configuration = TestProvName.AllOracle)]
 		[Test]
 		public async ValueTask TestTimeStamp([DataSources] string context)
 		{
-			var ms = new MappingSchema();
+			var skipCnt = context.IsAnyOf(TestProvName.AllClickHouse);
+			var ms      = new MappingSchema();
 
 			ms.GetFluentMappingBuilder()
 				.Entity<ConcurrencyTable<DateTime>>()
@@ -187,36 +194,36 @@ namespace Tests.Linq
 			var record = new ConcurrencyTable<DateTime>()
 			{
 				Id    = 1,
-				Stamp = TestData.DateTime,
+				Stamp = TestData.DateTime0,
 				Value = "initial"
 			};
 
 			var cnt = db.Insert(record);
-			Assert.AreEqual(1, cnt);
+			if (!skipCnt) Assert.AreEqual(1, cnt);
 			AssertData(record, true);
 
 			record.Value = "value 1";
 			cnt = db.UpdateConcurrent(record);
-			Assert.AreEqual(1, cnt);
+			if (!skipCnt) Assert.AreEqual(1, cnt);
 			AssertData(record);
 			// still believe timestamp is good as unique value?
 			await Task.Delay(TimeSpan.FromSeconds(1));
 
 			record.Value = "value 2";
 			cnt = db.UpdateConcurrent(record);
-			Assert.AreEqual(1, cnt);
+			if (!skipCnt) Assert.AreEqual(1, cnt);
 			AssertData(record);
 			await Task.Delay(TimeSpan.FromSeconds(1));
 
 			var dbStamp = record.Stamp;
 			record.Value = "value 3";
-			record.Stamp = TestData.DateTime;
+			record.Stamp = TestData.DateTime0;
 			cnt = db.UpdateConcurrent(record);
 			Assert.AreEqual(0, cnt);
 			record.Stamp = dbStamp;
 			record.Value = "value 2";
 			AssertData(record, true);
-			record.Stamp = TestData.DateTime;
+			record.Stamp = TestData.DateTime0;
 
 			cnt = db.DeleteConcurrent(record);
 			Assert.AreEqual(0, cnt);
@@ -224,7 +231,7 @@ namespace Tests.Linq
 			AssertData(record, true);
 
 			cnt = db.DeleteConcurrent(record);
-			Assert.AreEqual(1, cnt);
+			if (!skipCnt) Assert.AreEqual(1, cnt);
 			Assert.AreEqual(0, t.ToArray().Length);
 
 			void AssertData(ConcurrencyTable<DateTime> record, bool equals = false)
@@ -244,10 +251,12 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/linq2db/linq2db/issues/3894", Configuration = TestProvName.AllOracle)]
 		[Test]
 		public async ValueTask TestTimeStampAsync([DataSources] string context)
 		{
-			var ms = new MappingSchema();
+			var skipCnt = context.IsAnyOf(TestProvName.AllClickHouse);
+			var ms      = new MappingSchema();
 
 			ms.GetFluentMappingBuilder()
 				.Entity<ConcurrencyTable<DateTime>>()
@@ -261,36 +270,36 @@ namespace Tests.Linq
 			var record = new ConcurrencyTable<DateTime>()
 			{
 				Id    = 1,
-				Stamp = TestData.DateTime,
+				Stamp = TestData.DateTime0,
 				Value = "initial"
 			};
 
 			var cnt = await db.InsertAsync(record);
-			Assert.AreEqual(1, cnt);
+			if (!skipCnt) Assert.AreEqual(1, cnt);
 			AssertData(record, true);
 
 			record.Value = "value 1";
 			cnt = await db.UpdateConcurrentAsync(record);
-			Assert.AreEqual(1, cnt);
+			if (!skipCnt) Assert.AreEqual(1, cnt);
 			AssertData(record);
 			// still believe timestamp is good as unique value?
 			await Task.Delay(TimeSpan.FromSeconds(1));
 
 			record.Value = "value 2";
 			cnt = await db.UpdateConcurrentAsync(record);
-			Assert.AreEqual(1, cnt);
+			if (!skipCnt) Assert.AreEqual(1, cnt);
 			AssertData(record);
 			await Task.Delay(TimeSpan.FromSeconds(1));
 
 			var dbStamp = record.Stamp;
 			record.Value = "value 3";
-			record.Stamp = TestData.DateTime;
+			record.Stamp = TestData.DateTime0;
 			cnt = await db.UpdateConcurrentAsync(record);
 			Assert.AreEqual(0, cnt);
 			record.Stamp = dbStamp;
 			record.Value = "value 2";
 			AssertData(record, true);
-			record.Stamp = TestData.DateTime;
+			record.Stamp = TestData.DateTime0;
 
 			cnt = await db.DeleteConcurrentAsync(record);
 			Assert.AreEqual(0, cnt);
@@ -298,7 +307,7 @@ namespace Tests.Linq
 			AssertData(record, true);
 
 			cnt = await db.DeleteConcurrentAsync(record);
-			Assert.AreEqual(1, cnt);
+			if (!skipCnt) Assert.AreEqual(1, cnt);
 			Assert.AreEqual(0, t.ToArray().Length);
 
 			void AssertData(ConcurrencyTable<DateTime> record, bool equals = false)
@@ -318,10 +327,12 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/linq2db/linq2db/issues/3894", Configuration = TestProvName.AllOracle)]
 		[Test]
 		public void TestCustomStrategy([DataSources] string context)
 		{
-			var ms = new MappingSchema();
+			var skipCnt = context.IsAnyOf(TestProvName.AllClickHouse);
+			var ms      = new MappingSchema();
 
 			ms.GetFluentMappingBuilder()
 				.Entity<ConcurrencyTable<string>>()
@@ -340,17 +351,17 @@ namespace Tests.Linq
 			};
 
 			var cnt = db.Insert(record);
-			Assert.AreEqual(1, cnt);
+			if (!skipCnt) Assert.AreEqual(1, cnt);
 			AssertData(record, true);
 
 			record.Value = "value 1";
 			cnt = db.UpdateConcurrent(record);
-			Assert.AreEqual(1, cnt);
+			if (!skipCnt) Assert.AreEqual(1, cnt);
 			AssertData(record);
 
 			record.Value = "value 2";
 			cnt = db.UpdateConcurrent(record);
-			Assert.AreEqual(1, cnt);
+			if (!skipCnt) Assert.AreEqual(1, cnt);
 			AssertData(record);
 
 			var dbStamp = record.Stamp;
@@ -369,7 +380,7 @@ namespace Tests.Linq
 			AssertData(record, true);
 
 			cnt = db.DeleteConcurrent(record);
-			Assert.AreEqual(1, cnt);
+			if (!skipCnt) Assert.AreEqual(1, cnt);
 			Assert.AreEqual(0, t.ToArray().Length);
 
 			void AssertData(ConcurrencyTable<string> record, bool equals = false)
@@ -389,10 +400,12 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/linq2db/linq2db/issues/3894", Configuration = TestProvName.AllOracle)]
 		[Test]
 		public async ValueTask TestCustomStrategyAsync([DataSources] string context)
 		{
-			var ms = new MappingSchema();
+			var skipCnt = context.IsAnyOf(TestProvName.AllClickHouse);
+			var ms      = new MappingSchema();
 
 			ms.GetFluentMappingBuilder()
 				.Entity<ConcurrencyTable<string>>()
@@ -411,17 +424,17 @@ namespace Tests.Linq
 			};
 
 			var cnt = await db.InsertAsync(record);
-			Assert.AreEqual(1, cnt);
+			if (!skipCnt) Assert.AreEqual(1, cnt);
 			AssertData(record, true);
 
 			record.Value = "value 1";
 			cnt = await db.UpdateConcurrentAsync(record);
-			Assert.AreEqual(1, cnt);
+			if (!skipCnt) Assert.AreEqual(1, cnt);
 			AssertData(record);
 
 			record.Value = "value 2";
 			cnt = await db.UpdateConcurrentAsync(record);
-			Assert.AreEqual(1, cnt);
+			if (!skipCnt) Assert.AreEqual(1, cnt);
 			AssertData(record);
 
 			var dbStamp = record.Stamp;
@@ -440,7 +453,7 @@ namespace Tests.Linq
 			AssertData(record, true);
 
 			cnt = await db.DeleteConcurrentAsync(record);
-			Assert.AreEqual(1, cnt);
+			if (!skipCnt) Assert.AreEqual(1, cnt);
 			Assert.AreEqual(0, t.ToArray().Length);
 
 			void AssertData(ConcurrencyTable<string> record, bool equals = false)
@@ -460,10 +473,12 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/linq2db/linq2db/issues/3894", Configuration = TestProvName.AllOracle)]
 		[Test]
 		public void TestDbStrategy([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
 		{
-			var ms = new MappingSchema();
+			var skipCnt = context.IsAnyOf(TestProvName.AllClickHouse);
+			var ms      = new MappingSchema();
 
 			ms.GetFluentMappingBuilder()
 				.Entity<ConcurrencyTable<byte[]>>()
@@ -484,17 +499,17 @@ namespace Tests.Linq
 			};
 
 			var cnt = db.Insert(record);
-			Assert.AreEqual(1, cnt);
+			if (!skipCnt) Assert.AreEqual(1, cnt);
 			AssertData(record);
 
 			record.Value = "value 1";
 			cnt = db.UpdateConcurrent(record);
-			Assert.AreEqual(1, cnt);
+			if (!skipCnt) Assert.AreEqual(1, cnt);
 			AssertData(record);
 
 			record.Value = "value 2";
 			cnt = db.UpdateConcurrent(record);
-			Assert.AreEqual(1, cnt);
+			if (!skipCnt) Assert.AreEqual(1, cnt);
 			AssertData(record);
 
 			var dbStamp = record.Stamp.ToArray();
@@ -513,7 +528,7 @@ namespace Tests.Linq
 			AssertData(record, true);
 
 			cnt = db.DeleteConcurrent(record);
-			Assert.AreEqual(1, cnt);
+			if (!skipCnt) Assert.AreEqual(1, cnt);
 			Assert.AreEqual(0, t.ToArray().Length);
 
 			void AssertData(ConcurrencyTable<byte[]> record, bool equals = false)
@@ -533,10 +548,12 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/linq2db/linq2db/issues/3894", Configuration = TestProvName.AllOracle)]
 		[Test]
 		public async ValueTask TestDbStrategyAsync([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
 		{
-			var ms = new MappingSchema();
+			var skipCnt = context.IsAnyOf(TestProvName.AllClickHouse);
+			var ms      = new MappingSchema();
 
 			ms.GetFluentMappingBuilder()
 				.Entity<ConcurrencyTable<byte[]>>()
@@ -557,17 +574,17 @@ namespace Tests.Linq
 			};
 
 			var cnt = await db.InsertAsync(record);
-			Assert.AreEqual(1, cnt);
+			if (!skipCnt) Assert.AreEqual(1, cnt);
 			AssertData(record);
 
 			record.Value = "value 1";
 			cnt = await db.UpdateConcurrentAsync(record);
-			Assert.AreEqual(1, cnt);
+			if (!skipCnt) Assert.AreEqual(1, cnt);
 			AssertData(record);
 
 			record.Value = "value 2";
 			cnt = await db.UpdateConcurrentAsync(record);
-			Assert.AreEqual(1, cnt);
+			if (!skipCnt) Assert.AreEqual(1, cnt);
 			AssertData(record);
 
 			var dbStamp = record.Stamp.ToArray();
@@ -586,7 +603,7 @@ namespace Tests.Linq
 			AssertData(record, true);
 
 			cnt = await db.DeleteConcurrentAsync(record);
-			Assert.AreEqual(1, cnt);
+			if (!skipCnt) Assert.AreEqual(1, cnt);
 			Assert.AreEqual(0, t.ToArray().Length);
 
 			void AssertData(ConcurrencyTable<byte[]> record, bool equals = false)
