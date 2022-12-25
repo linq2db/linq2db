@@ -473,7 +473,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("https://github.com/linq2db/linq2db/issues/3894", Configuration = TestProvName.AllOracle)]
 		[Test]
 		public void TestDbStrategy([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
 		{
@@ -548,7 +547,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("https://github.com/linq2db/linq2db/issues/3894", Configuration = TestProvName.AllOracle)]
 		[Test]
 		public async ValueTask TestDbStrategyAsync([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
 		{
