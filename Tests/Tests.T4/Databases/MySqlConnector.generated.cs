@@ -60,7 +60,7 @@ namespace MySqlConnectorDataContext
 			InitMappingSchema();
 		}
 
-		public TestdbconnectorDB(DataOptions options)
+		public TestdataconnectorDB(DataOptions options)
 			: base(options)
 		{
 			InitDataContext();

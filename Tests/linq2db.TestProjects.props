@@ -4,6 +4,10 @@
 
 	<PropertyGroup>
 		<NoWarn>$(NoWarn);CS0649;CS8012</NoWarn>
+
+		<SignAssembly>True</SignAssembly>
+		<AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)/../Build/linq2db.snk</AssemblyOriginatorKeyFile>
+		<DelaySign>False</DelaySign>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -35,7 +39,7 @@
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net472' ">
 		<Reference Include="System.Data.Services" />
 		<Reference Include="System.ServiceModel" />
-		
+
 		<PackageReference Include="Microsoft.AspNet.OData" />
 
 		<None Include="$(MSBuildThisFileDirectory)\..\Redist\SqlServerTypes\x64\*.dll">
@@ -48,7 +52,7 @@
 		</None>
 
 	</ItemGroup>
-	
+
 	<ItemGroup Condition=" '$(TargetFramework)' != 'net472' ">
 		<PackageReference Include="Microsoft.AspNetCore.OData" />
 	</ItemGroup>
