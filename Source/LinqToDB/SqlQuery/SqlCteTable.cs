@@ -57,6 +57,7 @@ namespace LinqToDB.SqlQuery
 		public override StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
 		{
 			Cte?.ToString(sb, dic);
+			sb.Append('[').Append(SourceID).Append(']');
 			return sb;
 		}
 

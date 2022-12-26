@@ -2856,6 +2856,10 @@ namespace LinqToDB.SqlProvider
 					BuildExpression(((SqlNullabilityExpression)expr).SqlExpression, buildTableName, checkParentheses, alias, ref addAlias, throwExceptionIfTableNotFound);
 					break;
 
+				case QueryElementType.SqlAnchor:
+					BuildAnchor((SqlAnchor)expr);
+					break;
+
 				case QueryElementType.SqlBinaryExpression:
 					BuildBinaryExpression((SqlBinaryExpression)expr);
 					break;
@@ -2930,6 +2934,26 @@ namespace LinqToDB.SqlProvider
 			}
 
 			return StringBuilder;
+		}
+
+		protected virtual void BuildAnchor(SqlAnchor anchor)
+		{
+			var addAlias = false;
+			switch (anchor.AnchorKind)
+			{
+				case SqlAnchor.AnchorKindEnum.Deleted:
+					StringBuilder.Append(DeletedOutputTable)
+						.Append('.');
+					break;
+				case SqlAnchor.AnchorKindEnum.Inserted:
+					StringBuilder.Append(InsertedOutputTable)
+						.Append('.');
+					break;
+				default:
+					throw new ArgumentOutOfRangeException(anchor.AnchorKind.ToString());
+			}
+
+			BuildExpression(anchor.SqlExpression, false, false, null, ref addAlias, false);
 		}
 
 		protected virtual void BuildParameter(SqlParameter parameter)

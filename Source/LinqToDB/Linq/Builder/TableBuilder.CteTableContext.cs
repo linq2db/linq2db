@@ -64,7 +64,7 @@ namespace LinqToDB.Linq.Builder
 			return cteTableContext;
 		}
 
-		public sealed class CteTableContext: IBuildContext
+		public sealed class CteTableContext: ITableContext
 		{
 #if DEBUG
 			public string SqlQueryText => SelectQuery == null ? "" : SelectQuery.SqlText;
@@ -263,6 +263,10 @@ namespace LinqToDB.Linq.Builder
 			{
 				throw new NotImplementedException();
 			}
+
+			public Type ObjectType => CteTable.ObjectType;
+
+			public SqlTable SqlTable => CteTable;
 
 			public void EnsureInitialized()
 			{

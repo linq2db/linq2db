@@ -203,6 +203,17 @@ namespace LinqToDB.SqlQuery
 						break;
 					}
 
+					case QueryElementType.SqlAnchor:
+					{
+						var expr = (SqlAnchor)element;
+						var sql  = (ISqlExpression?)ConvertInternal(expr.SqlExpression);
+
+						if (sql != null && !ReferenceEquals(sql , expr.SqlExpression))
+							newElement = new SqlAnchor(sql, expr.AnchorKind);
+
+						break;
+					}
+
 					case QueryElementType.SqlObjectExpression:
 					{
 						var expr      = (SqlObjectExpression)element;
@@ -662,12 +673,29 @@ namespace LinqToDB.SqlQuery
 							tag         != null && !ReferenceEquals(s.Tag, tag)                 ||
 							with        != null && !ReferenceEquals(s.With, with))
 						{
+							// do it again to fixup changes
+							with = with ?? s.With;
+							if (with != null)
+								with = with.Convert(this, static (v, e) => v.Context.GetCurrentReplaced(e) ?? e, AllowMutation);
+							selectQuery = selectQuery ?? s.SelectQuery;
+							if (selectQuery != null)
+								selectQuery = selectQuery.Convert(this, static (v, e) => v.Context.GetCurrentReplaced(e) ?? e, AllowMutation);
+							update = update ?? s.Update;
+							if (update != null)
+								update = update.Convert(this, static (v, e) => v.Context.GetCurrentReplaced(e) ?? e, AllowMutation);
+							output = output ?? s.Output;
+							if (output != null)
+								output = output.Convert(this, static (v, e) => v.Context.GetCurrentReplaced(e) ?? e, AllowMutation);
+							tag = tag ?? s.Tag;
+							if (tag != null)
+								tag = tag.Convert(this, static (v, e) => v.Context.GetCurrentReplaced(e) ?? e, AllowMutation);
+
 							newElement = new SqlUpdateStatement(selectQuery ?? s.SelectQuery)
 							{
-								Update = update ?? s.Update,
-								Output = output ?? s.Output,
-								Tag    = tag    ?? s.Tag,
-								With   = with   ?? s.With,
+								Update = update,
+								Output = output,
+								Tag    = tag,
+								With   = with,
 							};
 							CorrectQueryHierarchy(((SqlUpdateStatement)newElement).SelectQuery);
 						}

@@ -360,6 +360,14 @@ namespace LinqToDB.SqlQuery
 					break;
 				}
 
+				case QueryElementType.SqlAnchor:
+				{
+					var expr = (SqlAnchor)(IQueryElement)element;
+
+					_objectTree.Add(element, clone = new SqlAnchor(Clone(expr.SqlExpression), expr.AnchorKind));
+					break;
+				}
+
 				case QueryElementType.SqlField:
 				{
 					var field = (SqlField)(IQueryElement)element;
@@ -741,10 +749,11 @@ namespace LinqToDB.SqlQuery
 				{
 					var update = (SqlUpdateStatement)(IQueryElement)element;
 					// TODO: children Clone called before _objectTree update (original cloning logic)
+					var with = Clone(update.With);
 					var newUpdate = new SqlUpdateStatement(Clone(update.SelectQuery))
 					{
 						Tag     = Clone(update.Tag),
-						With    = Clone(update.With),
+						With    = with,
 						Output  = Clone(update.Output)
 					};
 

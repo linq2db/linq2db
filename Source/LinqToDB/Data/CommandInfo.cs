@@ -1565,11 +1565,11 @@ namespace LinqToDB.Data
 					// dynamic case
 					//
 					return CreateDynamicObjectReader<T>(context.dataConnection, context.dataReader, (dc, dr, type, idx, dataReaderExpr) =>
-						new ConvertFromDataReaderExpression(type, idx, null, dataReaderExpr).Reduce(dc, dr));
+						new ConvertFromDataReaderExpression(type, idx, null, dataReaderExpr, (bool?)null).Reduce(dc, dr));
 				}
 
 				return CreateObjectReader<T>(context.dataConnection, context.dataReader, (dc, dr, type, idx, dataReaderExpr) =>
-				new ConvertFromDataReaderExpression(type, idx, null, dataReaderExpr).Reduce(dc, dr));
+				new ConvertFromDataReaderExpression(type, idx, null, dataReaderExpr, (bool?)null).Reduce(dc, dr));
 			});
 
 			return func;
@@ -1586,12 +1586,12 @@ namespace LinqToDB.Data
 				// dynamic case
 				//
 				func = CreateDynamicObjectReader<T>(dataConnection, dataReader, (dc, dr, type, idx, dataReaderExpr) =>
-				new ConvertFromDataReaderExpression(type, idx, null, dataReaderExpr).Reduce(dc, slowMode: true));
+				new ConvertFromDataReaderExpression(type, idx, null, dataReaderExpr, true).Reduce(dc, slowMode: true));
 			}
 			else
 			{
 				func = CreateObjectReader<T>(dataConnection, dataReader, (dc, dr, type, idx, dataReaderExpr) =>
-				new ConvertFromDataReaderExpression(type, idx, null, dataReaderExpr).Reduce(dc, slowMode: true));
+				new ConvertFromDataReaderExpression(type, idx, null, dataReaderExpr, true).Reduce(dc, slowMode: true));
 			}
 
 			_objectReaders.Set(key, func,

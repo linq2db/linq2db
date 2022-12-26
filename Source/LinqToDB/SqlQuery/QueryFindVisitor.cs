@@ -48,6 +48,11 @@ namespace LinqToDB.SqlQuery
 			return Find(ne.SqlExpression);
 		}
 
+		IQueryElement? FindX(SqlAnchor ne)
+		{
+			return Find(ne.SqlExpression);
+		}
+
 		IQueryElement? FindX(SqlObjectExpression oe)
 		{
 			foreach (var item in oe.InfoParameters)
@@ -88,7 +93,8 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.SqlFunction              : return Find(((SqlFunction)          element).Parameters     );
 				case QueryElementType.SqlExpression            : return Find(((SqlExpression)        element).Parameters     );
 				case QueryElementType.SqlObjectExpression      : return FindX(((SqlObjectExpression) element)                );
-				case QueryElementType.SqlNullabilityExpression : return FindX((SqlNullabilityExpression)element);
+				case QueryElementType.SqlNullabilityExpression : return FindX((SqlNullabilityExpression)element              );
+				case QueryElementType.SqlAnchor                : return FindX((SqlAnchor)            element                 );
 				case QueryElementType.Column                   : return Find(((SqlColumn)            element).Expression     );
 				case QueryElementType.SearchCondition          : return FindX((SqlSearchCondition)   element                 );
 				case QueryElementType.Condition                : return Find(((SqlCondition)         element).Predicate      );

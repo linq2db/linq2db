@@ -77,6 +77,22 @@ namespace LinqToDB.SqlQuery
 			return ctx.DependencyFound;
 		}
 
+		public static bool HasTableInQuery(SelectQuery query, SqlTable table)
+		{
+			return EnumerateAccessibleTables(query).Any(t => t == table);
+		}
+
+		public static bool IsSingleTableInQuery(SelectQuery query, SqlTable table)
+		{
+			if (query.From.Tables.Count == 1)
+			{
+				var ts = query.From.Tables[0];
+				if (ts.Source == table && ts.Joins.Count == 0)
+					return true;
+			}
+			return false;
+		}
+
         sealed class IsDependsOnElementContext
 		{
 			public IsDependsOnElementContext(IQueryElement onElement, HashSet<IQueryElement>? elementsToIgnore)
@@ -638,7 +654,7 @@ namespace LinqToDB.SqlQuery
 				.OfType<SqlTable>();
 		}
 
-		public static IEnumerable<ISqlTableSource> EnumerateLevelSources(SqlTableSource tableSource)
+		public static IEnumerable<SqlTableSource> EnumerateLevelSources(SqlTableSource tableSource)
 		{
 			foreach (var j in tableSource.Joins)
 			{
@@ -651,7 +667,7 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-		public static IEnumerable<ISqlTableSource> EnumerateLevelSources(SelectQuery selectQuery)
+		public static IEnumerable<SqlTableSource> EnumerateLevelSources(SelectQuery selectQuery)
 		{
 			foreach (var tableSource in selectQuery.Select.From.Tables)
 			{
@@ -667,7 +683,6 @@ namespace LinqToDB.SqlQuery
 		public static IEnumerable<SqlTable> EnumerateLevelTables(SelectQuery selectQuery)
 		{
 			return EnumerateLevelSources(selectQuery)
-				.OfType<SqlTableSource>()
 				.Select(static ts => ts.Source)
 				.OfType<SqlTable>();
 		}
@@ -718,6 +733,15 @@ namespace LinqToDB.SqlQuery
 		public static IEnumerable<SqlTableSource> EnumerateInnerJoined(SelectQuery selectQuery)
 		{
 			return selectQuery.Select.From.Tables.SelectMany(static t => EnumerateInnerJoined(t));
+		}
+
+		public static string SuggestTableSourceAlias(SelectQuery selectQuery, string alias)
+		{
+			var aliases = new[] { alias };
+			var currentAliases = EnumerateAccessibleTableSources(selectQuery).Where(ts => ts.Alias != null).Select(ts => ts.Alias);
+			Utils.MakeUniqueNames(aliases, currentAliases, s => s, (_, n, _) => aliases[0] = n);
+
+			return aliases[0];
 		}
 
 		/// <summary>

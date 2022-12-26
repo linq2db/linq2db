@@ -28,13 +28,15 @@ namespace LinqToDB.SqlQuery
 
 		public override StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
 		{
-			sb.AppendLine("UPDATE");
+			var writer = new SqlTextWriter(sb);
 
-			((IQueryElement)Update).ToString(sb, dic);
-
-			sb.AppendLine();
-
-			SelectQuery.ToString(sb, dic);
+			writer
+				.Append(With, dic)
+				.AppendLine("UPDATE")
+				.Append(Update, dic)
+				.AppendLine()
+				.Append(SelectQuery, dic)
+				.Append(Output, dic);
 
 			return sb;
 		}

@@ -57,6 +57,12 @@ namespace LinqToDB.SqlQuery
 					break;
 				}
 
+				case QueryElementType.SqlAnchor:
+				{
+					VisitX((SqlAnchor)element);
+					break;
+				}
+
 				case QueryElementType.SqlObjectExpression:
 					{
 						VisitX((SqlObjectExpression)element);
@@ -629,6 +635,11 @@ namespace LinqToDB.SqlQuery
 		}
 
 		void VisitX(SqlNullabilityExpression element)
+		{
+			Visit(element.SqlExpression);
+		}
+
+		void VisitX(SqlAnchor element)
 		{
 			Visit(element.SqlExpression);
 		}

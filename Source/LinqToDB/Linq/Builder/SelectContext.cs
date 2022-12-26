@@ -33,14 +33,14 @@ namespace LinqToDB.Linq.Builder
 #endif
 
 		public IBuildContext[]   Sequence    { [DebuggerStepThrough] get; }
-		public LambdaExpression  Lambda      { [DebuggerStepThrough] get; set; }
+		public LambdaExpression? Lambda      { [DebuggerStepThrough] get; set; }
 		public Expression        Body        { [DebuggerStepThrough] get; set; }
 		public ExpressionBuilder Builder     { [DebuggerStepThrough] get; }
 		public SelectQuery       SelectQuery { [DebuggerStepThrough] get; set; }
 		public SqlStatement?     Statement   { [DebuggerStepThrough] get; set; }
 		public IBuildContext?    Parent      { [DebuggerStepThrough] get; set; }
 
-		Expression IBuildContext.Expression => Lambda;
+		Expression IBuildContext.Expression => Body;
 
 		public readonly Dictionary<MemberInfo,Expression> Members = new (new MemberInfoComparer());
 
@@ -75,6 +75,20 @@ namespace LinqToDB.Linq.Builder
 				context.Parent = this;
 
 			Builder.Contexts.Add(this);
+#if DEBUG
+			ContextId = Builder.GenerateContextId();
+#endif
+		}
+
+		public SelectContext(IBuildContext? parent, Expression body, IBuildContext sequence, bool isSubQuery)
+		{
+			Parent     = parent;
+			Sequence   = new[] { sequence };
+			Builder    = sequence.Builder;
+			IsSubQuery = isSubQuery;
+			Body       = body;
+
+			SelectQuery = sequence.SelectQuery;
 #if DEBUG
 			ContextId = Builder.GenerateContextId();
 #endif

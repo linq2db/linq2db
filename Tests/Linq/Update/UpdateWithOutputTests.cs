@@ -2382,18 +2382,18 @@ namespace Tests.xUpdate
 			using var source = db.CreateLocalTable(sourceData);
 
 			var output = source
-				.Where(i => i.Id >= 7)
+				.Where(i => i.Id == 7)
 				.OrderBy(i => i.Id)
 				.Take(1)
-				.UpdateWithOutput(x => new TableWithData { Id = 20, ValueStr = x.ValueStr });
+				.UpdateWithOutput(x => new TableWithData { Value = 20, ValueStr = x.ValueStr });
 
 			AreEqual(
 				new[]
 				{
 					new UpdateOutput<TableWithData>
 					{
-						Deleted  = sourceData[6] with { Value = default },
-						Inserted = sourceData[6] with { Id = 20, Value = default },
+						Deleted  = sourceData[6],
+						Inserted = sourceData[6] with { Value = 20 },
 					}
 				},
 				output,
@@ -2435,11 +2435,11 @@ namespace Tests.xUpdate
 			using (var source = db.CreateLocalTable(sourceData))
 			{
 				var output = source
-					.Where(i => i.Id >= 7)
+					.Where(i => i.Id == 7)
 					.OrderBy(i => i.Id)
 					.Take(1)
 					.AsCte()
-					.UpdateWithOutput(x => new TableWithData { Id = 20, Value = x.Value, ValueStr = x.ValueStr });
+					.UpdateWithOutput(x => new TableWithData { Value = 20, ValueStr = x.ValueStr });
 
 				AreEqual(
 					new[]
@@ -2447,7 +2447,7 @@ namespace Tests.xUpdate
 						new UpdateOutput<TableWithData>
 						{
 							Deleted = sourceData[6],
-							Inserted = sourceData[6] with { Id = 20 },
+							Inserted = sourceData[6] with { Value = 20 },
 						}
 					},
 					output,

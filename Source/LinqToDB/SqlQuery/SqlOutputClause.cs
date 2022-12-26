@@ -20,12 +20,10 @@ namespace LinqToDB.SqlQuery
 		#region Overrides
 
 #if OVERRIDETOSTRING
-
-			public override string ToString()
-			{
-				return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
-			}
-
+		public override string ToString()
+		{
+			return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
+		}
 #endif
 
 		#endregion
@@ -61,7 +59,80 @@ namespace LinqToDB.SqlQuery
 
 		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
 		{
-			sb.Append("OUTPUT ");
+			var writer = new SqlTextWriter(sb);
+			writer.AppendLine()
+				.AppendLine("OUTPUT");
+
+			if (HasOutput)
+			{
+
+				using (writer.WithScope())
+				{
+					var first = true;
+
+					if (HasOutputItems)
+					{
+						foreach (var oi in OutputItems)
+						{
+							if (!first)
+								writer.AppendLine(',');
+							first = false;
+
+							writer.Append(oi.Expression!, dic);
+						}
+
+						writer.AppendLine();
+					}
+				}
+
+
+				if (OutputColumns != null)
+				{
+					using (writer.WithScope())
+					{
+						var first = true;
+
+						foreach (var expr in OutputColumns)
+						{
+							if (!first)
+								writer.AppendLine(',');
+
+							first = false;
+
+							writer.Append(expr, dic);
+						}
+					}
+
+					writer.AppendLine();
+				}
+
+				if (OutputTable != null)
+				{
+					writer.Append("INTO ")
+						.AppendLine(OutputTable.TableName.Name)
+						.AppendLine('(');
+
+					using (writer.WithScope())
+					{
+						var firstColumn = true;
+						if (HasOutputItems)
+						{
+							foreach (var oi in OutputItems)
+							{
+								if (!firstColumn)
+									writer.AppendLine(',');
+								firstColumn = false;
+
+								writer.Append(oi.Column, dic);
+							}
+						}
+
+						writer.AppendLine();
+					}
+
+					writer.AppendLine(")");
+				}
+			}
 
 			return sb;
 		}

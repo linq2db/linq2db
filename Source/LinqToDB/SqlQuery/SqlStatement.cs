@@ -6,6 +6,7 @@ using System.Linq;
 
 namespace LinqToDB.SqlQuery
 {
+	using System.Linq.Expressions;
 	using Common;
 	using Remote;
 
@@ -306,6 +307,13 @@ namespace LinqToDB.SqlQuery
 		{
 			return false;
 		}
+
+#if OVERRIDETOSTRING
+		public override string ToString()
+		{
+			return ToString(new StringBuilder(), new Dictionary<IQueryElement, IQueryElement>()).ToString();
+		}
+#endif
 
 	}
 }

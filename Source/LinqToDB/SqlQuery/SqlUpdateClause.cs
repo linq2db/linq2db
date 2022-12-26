@@ -54,10 +54,11 @@ namespace LinqToDB.SqlQuery
 
 		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
 		{
-			sb.Append("SET ");
-
+			sb.Append('\t');
 			((IQueryElement?)Table)?.ToString(sb, dic);
 
+			sb.AppendLine();
+			sb.Append("SET ");
 			sb.AppendLine();
 
 			foreach (var e in Items)

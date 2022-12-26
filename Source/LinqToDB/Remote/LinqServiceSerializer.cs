@@ -722,6 +722,7 @@ namespace LinqToDB.Remote
 					case QueryElementType.SqlFunction              : GetType(((SqlFunction)             e).SystemType)          ; break;
 					case QueryElementType.SqlExpression            : GetType(((SqlExpression)           e).SystemType)          ; break;
 					case QueryElementType.SqlNullabilityExpression : GetType(((SqlNullabilityExpression)e).SystemType)          ; break;
+					case QueryElementType.SqlAnchor                : GetType(((SqlAnchor)e).SystemType)                         ; break;
 					case QueryElementType.SqlBinaryExpression      : GetType(((SqlBinaryExpression)     e).SystemType)          ; break;
 					case QueryElementType.SqlDataType              : GetType(((SqlDataType)             e).Type.SystemType)     ; break;
 					case QueryElementType.SqlValue                 : GetType(((SqlValue)                e).ValueType.SystemType); break;
@@ -832,6 +833,15 @@ namespace LinqToDB.Remote
 					{
 						var elem = (SqlNullabilityExpression)e;
 						Append(elem.SqlExpression);
+
+						break;
+					}
+
+					case QueryElementType.SqlAnchor :
+					{
+						var elem = (SqlAnchor)e;
+						Append(elem.SqlExpression);
+						Append((int)elem.AnchorKind);
 
 						break;
 					}
@@ -1701,6 +1711,16 @@ namespace LinqToDB.Remote
 						var sqlExpression = Read<ISqlExpression>()!;
 
 						obj = new SqlNullabilityExpression(sqlExpression);
+
+						break;
+					}
+
+					case QueryElementType.SqlAnchor :
+					{
+						var sqlExpression = Read<ISqlExpression>()!;
+						var kind          = (SqlAnchor.AnchorKindEnum)ReadInt();
+
+						obj = new SqlAnchor(sqlExpression, kind);
 
 						break;
 					}

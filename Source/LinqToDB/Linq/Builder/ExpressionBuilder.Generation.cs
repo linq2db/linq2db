@@ -520,11 +520,12 @@ namespace LinqToDB.Linq.Builder
 					return instantiation;
 			}
 
-			var constructors = constructorExpression.ObjectType.GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+			var constructors = constructorExpression.ObjectType
+				.GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+				.OrderBy(c => c.GetParameters().Length);
 
-			for (int i = 0; i < constructors.Length; i++)
+			foreach (var constructor in constructors)
 			{
-				var constructor   = constructors[i];
 				var instantiation = TryWithConstructor(mappingSchema, typeAccessor, constructor, constructorExpression, null);
 				if (instantiation != null)
 					return instantiation;
@@ -570,41 +571,33 @@ namespace LinqToDB.Linq.Builder
 
 		#endregion
 
-		#region Helpers
 
-		static bool IsRecord(Attribute[] attrs, out int sequence)
+		public SqlGenericConstructorExpression RemapToNewPath(Expression prefixPath, SqlGenericConstructorExpression constructorExpression, Expression currentPath)
 		{
-			sequence = -1;
-			var compilationMappingAttr = attrs.FirstOrDefault(static attr => attr.GetType().FullName == "Microsoft.FSharp.Core.CompilationMappingAttribute");
-			var cliMutableAttr         = attrs.FirstOrDefault(static attr => attr.GetType().FullName == "Microsoft.FSharp.Core.CLIMutableAttribute");
+			//TODO: only assignments
+			var newAssignments = new List<SqlGenericConstructorExpression.Assignment>();
 
-			if (compilationMappingAttr != null)
+			foreach (var assignment in constructorExpression.Assignments)
 			{
-				// https://github.com/dotnet/fsharp/blob/1fcb351bb98fe361c7e70172ea51b5e6a4b52ee0/src/fsharp/FSharp.Core/prim-types.fsi
-				// entityType = 3
-				if (Convert.ToInt32(((dynamic)compilationMappingAttr).SourceConstructFlags) == 3)
-					return false;
+				Expression newAssignmentExpression;
 
-				sequence = ((dynamic)compilationMappingAttr).SequenceNumber;
+				var memberAccess = Expression.MakeMemberAccess(currentPath, assignment.MemberInfo);
+
+				if (assignment.Expression is SqlGenericConstructorExpression generic)
+				{
+					newAssignmentExpression = RemapToNewPath(prefixPath, generic, memberAccess);
+				}
+				else
+				{
+					newAssignmentExpression = memberAccess;
+				}
+
+				newAssignments.Add(new SqlGenericConstructorExpression.Assignment(assignment.MemberInfo,
+					newAssignmentExpression, assignment.IsMandatory, assignment.IsLoaded));
 			}
 
-			return compilationMappingAttr != null && cliMutableAttr == null;
+			return new SqlGenericConstructorExpression(SqlGenericConstructorExpression.CreateType.Auto,
+				constructorExpression.ObjectType, null, newAssignments.AsReadOnly());
 		}
-
-		bool IsAnonymous(Type type)
-		{
-			if (!type.IsPublic     &&
-			    type.IsGenericType &&
-			    (type.Name.StartsWith("<>f__AnonymousType", StringComparison.Ordinal) ||
-			     type.Name.StartsWith("VB$AnonymousType",   StringComparison.Ordinal)))
-			{
-				return MappingSchema.GetAttribute<CompilerGeneratedAttribute>(type) != null;
-			}
-
-			return false;
-		}			
-			
-		#endregion
-		
 	}
 }

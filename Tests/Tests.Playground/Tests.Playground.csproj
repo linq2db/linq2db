@@ -59,6 +59,7 @@
 		<Compile Include="..\Linq\Update\MergeTests.WithOutput.cs" Link="MergeTests.WithOutput.cs" />
 		<Compile Include="..\Linq\Update\UpdateFromTests.cs" Link="UpdateFromTests.cs" />
 		<Compile Include="..\Linq\Update\UpdateTests.cs" Link="UpdateTests.cs" />
+		<Compile Include="..\Linq\Update\UpdateWithOutputTests.cs" Link="UpdateWithOutputTests.cs" />
 		<Compile Include="..\Linq\UserTests\IndexOutOfRangeInUnions.cs" Link="IndexOutOfRangeInUnions.cs" />
 	</ItemGroup>
 

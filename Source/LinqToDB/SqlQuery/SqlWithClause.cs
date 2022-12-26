@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using LinqToDB.Common;
 
 namespace LinqToDB.SqlQuery
 {
@@ -10,6 +11,7 @@ namespace LinqToDB.SqlQuery
 
 		public StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
 		{
+			var writer = new SqlTextWriter(sb);
 			if (Clauses.Count > 0)
 			{
 				var first = true;
@@ -18,76 +20,75 @@ namespace LinqToDB.SqlQuery
 				{
 					if (first)
 					{
-						//AppendIndent();
-						sb.Append("WITH ");
+						writer.Append("WITH ");
 
 						first = false;
 					}
 					else
 					{
-						sb.Append(',').AppendLine();
-						//AppendIndent();
+						writer.Append(',').AppendLine();
 					}
 
-					cte.ToString(sb, dic);
+					using (writer.WithScope())
+						writer.Append(cte, dic);
 
 					if (cte.Fields.Count > 3)
 					{
-						sb.AppendLine();
-						/*AppendIndent();*/ sb.AppendLine("(");
-						//++Indent;
+						writer.AppendLine();
+						writer.AppendLine("(");
 
-						var firstField = true;
-						foreach (var field in cte.Fields)
+						using (writer.WithScope())
 						{
-							if (!firstField)
-								sb.AppendLine(",");
-							firstField = false;
-							//AppendIndent();
-							((IQueryElement)field).ToString(sb, dic);
+							var firstField = true;
+							foreach (var field in cte.Fields)
+							{
+								if (!firstField)
+									writer.AppendLine(",");
+								firstField = false;
+								writer.Append(field, dic);
+							}
 						}
 
-						//--Indent;
-						sb.AppendLine();
-						/*AppendIndent();*/ sb.AppendLine(")");
+						writer.AppendLine();
+						writer.AppendLine(")");
 					}
 					else if (cte.Fields.Count > 0)
 					{
-						sb.Append(" (");
+						writer.Append(" (");
 
 						var firstField = true;
 						foreach (var field in cte.Fields)
 						{
 							if (!firstField)
-								sb.Append(", ");
+								writer.Append(", ");
 							firstField = false;
-							((IQueryElement)field).ToString(sb, dic);
+							writer.Append(field, dic);
 						}
-						sb.AppendLine(")");
+						writer.AppendLine(")");
 					}
 					else
 					{
-						sb.Append(' ');
+						writer.Append(' ');
 					}
 
-					//AppendIndent();
-					sb.AppendLine("AS");
-					//AppendIndent();
-					sb.AppendLine("(");
+					writer.AppendLine("AS");
+					writer.AppendLine("(");
 
-					//Indent++;
+					using (writer.WithScope())
+					{
+						writer.Append(cte.Body!, dic);
+					}
 
-					cte.Body!.ToString(sb, dic);
-
-					//Indent--;
-
-					//AppendIndent();
-					sb.Append(')');
+					writer.AppendLine();
+					writer.Append(')');
 				}
 
-				sb.AppendLine();
+				writer.AppendLine();
 
 			}
+
+			writer.AppendLine("--------");
+
 			return sb;
 		}
 

@@ -19,7 +19,7 @@ namespace LinqToDB.Linq.Builder
 	partial class TableBuilder
 	{
 		[DebuggerDisplay("{BuildContextDebuggingHelper.GetContextInfo(this)}")]
-		public class TableContext : IBuildContext
+		public class TableContext : ITableContext
 		{
 			#region Properties
 
@@ -41,9 +41,10 @@ namespace LinqToDB.Linq.Builder
 			public bool                   IsScalar    { get; set; }
 
 			public Type             OriginalType     = null!;
-			public Type             ObjectType       = null!;
 			public EntityDescriptor EntityDescriptor = null!;
-			public SqlTable         SqlTable         = null!;
+
+			public Type     ObjectType { get; set; }
+			public SqlTable SqlTable   { get; set; }
 
 			internal bool           ForceLeftJoinAssociations { get; set; }
 

@@ -48,6 +48,8 @@ namespace LinqToDB.DataProvider.MySql
 			if (!statement.SelectQuery.OrderBy.IsEmpty)
 				statement.SelectQuery.OrderBy.Items.Clear();
 
+		CorrectUpdateSetters(statement);
+
 			return statement;
 		}
 

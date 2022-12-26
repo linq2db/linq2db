@@ -862,7 +862,7 @@ namespace LinqToDB.Linq.Builder
 
 		public Expression BuildSql(Type type, int idx, IValueConverter? converter)
 		{
-			return new ConvertFromDataReaderExpression(type, idx, converter, DataReaderLocal);
+			return new ConvertFromDataReaderExpression(type, idx, converter, DataReaderLocal, (bool?)null);
 		}
 
 		public Expression BuildSql(Type type, int idx, ISqlExpression? sourceExpression)
@@ -1050,12 +1050,10 @@ namespace LinqToDB.Linq.Builder
 
 					var valueType = placeholder.Type;
 
-					// read from DataReader as Nullable
-					/*if (placeholder.IsNullable && valueType.IsValueType && !valueType.IsNullable())
-						valueType = valueType.AsNullable();*/
+					var readerExpression = (Expression)new ConvertFromDataReaderExpression(valueType, placeholder.Index.Value,
+						QueryHelper.GetColumnDescriptor(placeholder.Sql)?.ValueConverter, DataReaderParam, placeholder.Sql.CanBeNull);
 
-					return new ConvertFromDataReaderExpression(valueType, placeholder.Index.Value,
-						QueryHelper.GetColumnDescriptor(placeholder.Sql)?.ValueConverter, DataReaderParam);
+					return readerExpression;
 				}
 
 				if (e is SqlReaderIsNullExpression isNullExpression)
