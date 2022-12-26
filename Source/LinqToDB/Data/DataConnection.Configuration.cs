@@ -243,7 +243,7 @@ namespace LinqToDB.Data
 		internal static IDataProvider GetDataProviderEx(string providerName, string connectionString)
 		{
 			if (!_dataProviders.TryGetValue(providerName, out var dataProvider))
-				dataProvider = DataConnection.GetDataProvider(providerName, connectionString);
+				dataProvider = GetDataProvider(providerName, connectionString);
 
 			return  dataProvider ?? throw new LinqToDBException($"DataProvider '{providerName}' not found.");
 		}

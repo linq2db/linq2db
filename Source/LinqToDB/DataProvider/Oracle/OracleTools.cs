@@ -25,7 +25,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		public static IDataProvider GetDataProvider(
-			OracleVersion  version          = OracleVersion.v12,
+			OracleVersion  version          = OracleVersion.AutoDetect,
 			OracleProvider provider         = OracleProvider.Managed,
 			string?        connectionString = null)
 		{
@@ -36,7 +36,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		public static DataConnection CreateDataConnection(
 			string connectionString,
-			OracleVersion version   = OracleVersion.v12,
+			OracleVersion version   = OracleVersion.AutoDetect,
 			OracleProvider provider = OracleProvider.Managed)
 		{
 			return new DataConnection(GetDataProvider(version, provider), connectionString);
@@ -44,7 +44,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		public static DataConnection CreateDataConnection(
 			DbConnection connection,
-			OracleVersion version   = OracleVersion.v12,
+			OracleVersion version   = OracleVersion.AutoDetect,
 			OracleProvider provider = OracleProvider.Managed)
 		{
 			return new DataConnection(GetDataProvider(version, provider), connection);
@@ -52,7 +52,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		public static DataConnection CreateDataConnection(
 			DbTransaction transaction,
-			OracleVersion version   = OracleVersion.v12,
+			OracleVersion version   = OracleVersion.AutoDetect,
 			OracleProvider provider = OracleProvider.Managed)
 		{
 			return new DataConnection(GetDataProvider(version, provider), transaction);
@@ -140,14 +140,18 @@ namespace LinqToDB.DataProvider.Oracle
 		#endregion
 
 		#region BulkCopy
-		public static BulkCopyType  DefaultBulkCopyType { get; set; } = BulkCopyType.MultipleRows;
-		#endregion
+		public static BulkCopyType  DefaultBulkCopyType
+		{
+			get => OracleOptions.Default.BulkCopyType;
+			set => OracleOptions.Default = OracleOptions.Default with { BulkCopyType = value };
+		}
+	#endregion
 
-		/// <summary>
-		/// Specifies type of multi-row INSERT operation to generate for <see cref="BulkCopyType.RowByRow"/> bulk copy mode.
-		/// Default value: <see cref="AlternativeBulkCopy.InsertAll"/>.
-		/// </summary>
-		public static AlternativeBulkCopy UseAlternativeBulkCopy
+	/// <summary>
+	/// Specifies type of multi-row INSERT operation to generate for <see cref="BulkCopyType.RowByRow"/> bulk copy mode.
+	/// Default value: <see cref="AlternativeBulkCopy.InsertAll"/>.
+	/// </summary>
+	public static AlternativeBulkCopy UseAlternativeBulkCopy
 		{
 			get => OracleOptions.Default.AlternativeBulkCopy;
 			set => OracleOptions.Default = OracleOptions.Default with { AlternativeBulkCopy = value };

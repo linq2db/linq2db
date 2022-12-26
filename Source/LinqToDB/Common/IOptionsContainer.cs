@@ -5,7 +5,7 @@ namespace LinqToDB.Common
 {
 	/// <summary>
 	/// <para>
-	/// The options to be used by a <see cref="IDataContext" />. Use a see cref="OptionsBuilder" />
+	/// The options to be used by a <see cref="IDataContext" />. Use an <see cref="OptionsContainer{T}" />
 	/// to create instances of classes that implement this interface, they are not designed to be directly created
 	/// in your application code.
 	/// </para>

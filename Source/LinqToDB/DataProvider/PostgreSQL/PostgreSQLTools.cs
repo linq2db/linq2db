@@ -33,7 +33,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		/// </summary>
 		public static bool NormalizeTimestampData { get; set; } = true;
 
-		public static IDataProvider GetDataProvider(PostgreSQLVersion version = PostgreSQLVersion.v92, string? connectionString = null)
+		public static IDataProvider GetDataProvider(PostgreSQLVersion version = PostgreSQLVersion.AutoDetect, string? connectionString = null)
 		{
 			return ProviderDetector.GetDataProvider(default, version, connectionString);
 		}
@@ -50,17 +50,17 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		#region CreateDataConnection
 
-		public static DataConnection CreateDataConnection(string connectionString, PostgreSQLVersion version = PostgreSQLVersion.v92)
+		public static DataConnection CreateDataConnection(string connectionString, PostgreSQLVersion version = PostgreSQLVersion.AutoDetect)
 		{
 			return new DataConnection(GetDataProvider(version), connectionString);
 		}
 
-		public static DataConnection CreateDataConnection(DbConnection connection, PostgreSQLVersion version = PostgreSQLVersion.v92)
+		public static DataConnection CreateDataConnection(DbConnection connection, PostgreSQLVersion version = PostgreSQLVersion.AutoDetect)
 		{
 			return new DataConnection(GetDataProvider(version), connection);
 		}
 
-		public static DataConnection CreateDataConnection(DbTransaction transaction, PostgreSQLVersion version = PostgreSQLVersion.v92)
+		public static DataConnection CreateDataConnection(DbTransaction transaction, PostgreSQLVersion version = PostgreSQLVersion.AutoDetect)
 		{
 			return new DataConnection(GetDataProvider(version), transaction);
 		}

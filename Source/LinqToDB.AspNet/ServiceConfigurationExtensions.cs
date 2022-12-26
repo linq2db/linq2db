@@ -160,7 +160,9 @@ namespace LinqToDB.AspNet
 		public static IServiceCollection AddLinqToDBContext<TContext, TContextImplementation>(
 			this IServiceCollection serviceCollection,
 			Func<IServiceProvider,DataOptions,DataOptions> configure,
-			ServiceLifetime lifetime  = ServiceLifetime.Scoped) where TContextImplementation : TContext, IDataContext
+			ServiceLifetime lifetime  = ServiceLifetime.Scoped)
+			where TContextImplementation : TContext, IDataContext
+			where TContext: IDataContext
 		{
 			var hasTypedConstructor = HasTypedContextConstructor<TContextImplementation>();
 

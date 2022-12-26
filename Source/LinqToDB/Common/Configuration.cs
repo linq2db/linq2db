@@ -128,6 +128,10 @@ namespace LinqToDB.Common
 		public static class Linq
 		{
 			private static volatile LinqOptions _options = new ();
+
+			/// <summary>
+			/// Default <see cref="LinqOptions"/> options. Automatically synchronized with other settings in <see cref="Linq"/> class.
+			/// </summary>
 			public  static LinqOptions Options
 			{
 				get => _options;
@@ -387,6 +391,7 @@ namespace LinqToDB.Common
 			/// If <c>true</c>, auto support for fluent mapping is ON,
 			/// which means that you do not need to create additional MappingSchema object to define FluentMapping.
 			/// You can use <c>context.MappingSchema.GetFluentMappingBuilder()</c>.
+			/// Default value: <c>true</c>.
 			/// </summary>
 			public static bool EnableAutoFluentMapping
 			{
@@ -450,6 +455,9 @@ namespace LinqToDB.Common
 				ExponentialBase : 2,
 				Coefficient     : TimeSpan.FromSeconds(1));
 
+			/// <summary>
+			/// Default <see cref="RetryPolicyOptions"/> options. Automatically synchronized with other settings in <see cref="RetryPolicy"/> class.
+			/// </summary>
 			public static  RetryPolicyOptions Options
 			{
 				get => _options;

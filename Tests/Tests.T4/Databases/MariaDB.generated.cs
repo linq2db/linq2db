@@ -60,7 +60,7 @@ namespace MariaDBDataContext
 			InitMappingSchema();
 		}
 
-		public TestdbDB(DataOptions options)
+		public TestdataDB(DataOptions options)
 			: base(options)
 		{
 			InitDataContext();

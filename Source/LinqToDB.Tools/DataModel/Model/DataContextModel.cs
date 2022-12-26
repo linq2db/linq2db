@@ -30,7 +30,7 @@ namespace LinqToDB.DataModel
 		/// </summary>
 		public bool                   HasUntypedOptionsConstructor             { get; set; }
 		/// <summary>
-		/// Enables generation of constructor with generic configuration options <see cref="DataOptions"/> parameter.
+		/// Enables generation of constructor with generic configuration options <see cref="DataOptions{T}"/> parameter.
 		/// </summary>
 		public bool                   HasTypedOptionsConstructor               { get; set; }
 		/// <summary>

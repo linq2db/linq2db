@@ -61,7 +61,7 @@ namespace LinqToDB.Data
 		/// <param name="configurationString">Name of database connection configuration to use with this connection.
 		/// In case of null, configuration from <see cref="DefaultConfiguration"/> property will be used.</param>
 		/// <param name="mappingSchema">Mapping schema to use with this connection.</param>
-		public DataConnection(string configurationString, MappingSchema mappingSchema)
+		public DataConnection(string? configurationString, MappingSchema mappingSchema)
 			: this(new DataOptions().UseConfigurationString(configurationString).UseMappingSchema(mappingSchema))
 		{
 		}

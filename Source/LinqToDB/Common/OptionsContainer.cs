@@ -3,6 +3,10 @@ using System.Collections.Generic;
 
 namespace LinqToDB.Common
 {
+	/// <summary>
+	/// Base class for options.
+	/// </summary>
+	/// <typeparam name="T">Derived type.</typeparam>
 	public abstract class OptionsContainer<T> : IOptionsContainer
 		where T : OptionsContainer<T>
 	{
@@ -18,6 +22,11 @@ namespace LinqToDB.Common
 
 		protected abstract T Clone();
 
+		/// <summary>
+		/// Adds or replace <see cref="IOptionSet"/> instance based on concrete implementation type.
+		/// </summary>
+		/// <param name="options">Set of options.</param>
+		/// <returns>New options object with <paramref name="options"/> applied.</returns>
 		public virtual T WithOptions(IOptionSet options)
 		{
 			var o = Clone();
@@ -30,6 +39,12 @@ namespace LinqToDB.Common
 			return o;
 		}
 
+		/// <summary>
+		/// Adds or replace <see cref="IOptionSet"/> instance, returned by <paramref name="optionSetter"/> delegate.
+		/// </summary>
+		/// <typeparam name="TSet"><see cref="IOptionSet"/> concrete type.</typeparam>
+		/// <param name="optionSetter">New option set creation delegate. Takes current options set as parameter.</param>
+		/// <returns>New options object (if <paramref name="optionSetter"/> created new options set).</returns>
 		public T WithOptions<TSet>(Func<TSet,TSet> optionSetter)
 			where TSet : class, IOptionSet, new()
 		{
@@ -41,6 +56,9 @@ namespace LinqToDB.Common
 
 		Dictionary<Type,IOptionSet>? _sets;
 
+		/// <summary>
+		/// Provides access to option sets, stored in current options object.
+		/// </summary>
 		public virtual IEnumerable<IOptionSet> OptionSets
 		{
 			get
@@ -51,6 +69,11 @@ namespace LinqToDB.Common
 			}
 		}
 
+		/// <summary>
+		/// Search for options set by set type <typeparamref name="TSet"/>.
+		/// </summary>
+		/// <typeparam name="TSet">Options set type.</typeparam>
+		/// <returns>Options set or <c>null</c> if set with type <typeparamref name="TSet"/> not found in options.</returns>
 		public virtual TSet? Find<TSet>()
 			where TSet : class, IOptionSet
 		{
@@ -60,6 +83,13 @@ namespace LinqToDB.Common
 			return null;
 		}
 
+		/// <summary>
+		/// Returns options set by set type <typeparamref name="TSet"/>. If options doesn't contain specific options set, it is created and added to options.
+		/// </summary>
+		/// <typeparam name="TSet">Options set type.</typeparam>
+		/// <returns>
+		/// Returns options set by set type <typeparamref name="TSet"/>. If options doesn't contain specific options set, it is created and added to options.
+		/// </returns>
 		public virtual TSet Get<TSet>()
 			where TSet : class, IOptionSet, new()
 		{
