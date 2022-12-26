@@ -3247,10 +3247,7 @@ namespace LinqToDB.SqlProvider
 				}
 			}
 
-			if (statement.Update.TableSource == null)
-			{
-				CorrectUpdateSetters(statement);
-			}
+			CorrectUpdateSetters(statement);
 
 			return statement;
 		}

@@ -103,7 +103,7 @@ namespace LinqToDB.Linq.Builder
 					}
 
 					var setterExpr = methodCall.Arguments[1].Unwrap();
-					if (setterExpr is LambdaExpression && methodCall.Arguments.Count == 3 && updateType != UpdateTypeEnum.UpdateOutput)
+					if (setterExpr is LambdaExpression && methodCall.Arguments.Count == 3 && updateType == UpdateTypeEnum.Update)
 					{
 						sequence = builder.BuildWhere(buildInfo.Parent, sequence, methodCall.Arguments[1].UnwrapLambda(), false, false, buildInfo.AggregationTest);
 						setterExpr = methodCall.Arguments[2].Unwrap();
@@ -267,16 +267,6 @@ namespace LinqToDB.Linq.Builder
 				updateContext.InsertedTable    = insertedTable;
 
 				return updateContext;
-
-//				throw new NotImplementedException();
-				/*var outputContext = new UpdateOutputContext(
-					buildInfo.Parent,
-					outputExpression,
-					sequence,
-					new TableBuilder.TableContext(builder, new SelectQuery(), deletedTable),
-					new TableBuilder.TableContext(builder, new SelectQuery(), insertedTable));
-
-				return outputContext;*/
 			}
 			else // updateType == UpdateType.UpdateOutputInto
 			{
@@ -295,20 +285,30 @@ namespace LinqToDB.Linq.Builder
 				var outputTable = methodCall.GetArgumentByName("outputTable")!;
 				var destination = builder.BuildSequence(new BuildInfo(buildInfo, outputTable, new SelectQuery()));
 
+				var destinationContext = SequenceHelper.GetTableContext(destination);
+				if (destinationContext == null)
+					throw new InvalidOperationException();
+
+				var destinationRef = new ContextRefExpression(destinationContext.ObjectType, destinationContext);
+
 				outputExpression ??= BuildDefaultOutputExpression(objectType);
 
-				throw new NotImplementedException();
-				BuildSetterWithContext(
-					builder,
-					buildInfo,
-					outputExpression,
-					destination,
-					updateStatement.Output.OutputItems,
-					sequence,
-					new TableBuilder.TableContext(builder, new SelectQuery(), deletedTable),
-					new TableBuilder.TableContext(builder, new SelectQuery(), insertedTable));
+				// create separate query for output
+				var outputQuery = new SelectQuery();
 
-				updateStatement.Output.OutputTable = ((TableBuilder.TableContext)destination).SqlTable;
+				var insertedContext = new AnchorContext(null, new TableBuilder.TableContext(builder, outputQuery, insertedTable)
+					, SqlAnchor.AnchorKindEnum.Inserted);
+				var deletedContext  = new AnchorContext(null, new TableBuilder.TableContext(builder, outputQuery, deletedTable)
+					, SqlAnchor.AnchorKindEnum.Deleted);
+
+				var outputBody = SequenceHelper.PrepareBody(outputExpression, sequence, deletedContext, insertedContext);
+
+				var outputExpressions = new List<SetExpressionEnvelope>();
+				ParseSetter(builder, destinationRef, outputBody, outputExpressions);
+
+				InitializeSetExpressions(builder, buildInfo, destinationContext, sequence, outputExpressions, updateStatement.Output.OutputItems, false);
+
+				updateStatement.Output.OutputTable = destinationContext.SqlTable;
 
 				return updateContext;
 			}
