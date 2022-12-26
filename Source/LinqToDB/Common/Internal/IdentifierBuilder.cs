@@ -14,13 +14,13 @@ namespace LinqToDB.Common.Internal
 	using Expressions;
 	using Linq;
 
-	sealed class IdentifierBuilder
+	public sealed class IdentifierBuilder
 	{
-		public IdentifierBuilder()
+		internal IdentifierBuilder()
 		{
 		}
 
-		public IdentifierBuilder(object? data)
+		internal IdentifierBuilder(object? data)
 		{
 			Add(data);
 		}
@@ -49,7 +49,7 @@ namespace LinqToDB.Common.Internal
 			return this;
 		}
 
-		public IdentifierBuilder Add(string? data)
+		internal IdentifierBuilder Add(string? data)
 		{
 			_stringBuilder
 				.Append('.')
@@ -67,7 +67,7 @@ namespace LinqToDB.Common.Internal
 			return this;
 		}
 
-		public IdentifierBuilder Add(object? data)
+		internal IdentifierBuilder Add(object? data)
 		{
 			_stringBuilder
 				.Append('.')
@@ -124,7 +124,7 @@ namespace LinqToDB.Common.Internal
 		static          int                              _identifierCounter;
 		static readonly ConcurrentDictionary<string,int> _identifiers = new ();
 
-		public int CreateID()
+		internal int CreateID()
 		{
 			var key = _stringBuilder.ToString();
 			var id  = _identifiers.GetOrAdd(key, static _ => CreateNextID());
@@ -136,7 +136,7 @@ namespace LinqToDB.Common.Internal
 			return id;
 		}
 
-		public static int CreateNextID() => Interlocked.Increment(ref _identifierCounter);
+		internal static int CreateNextID() => Interlocked.Increment(ref _identifierCounter);
 
 		static          int                               _typeCounter;
 		static readonly ConcurrentDictionary<Type,string> _types = new ();
@@ -144,6 +144,11 @@ namespace LinqToDB.Common.Internal
 		public static string GetObjectID(Type? obj)
 		{
 			return obj == null ? string.Empty : _types.GetOrAdd(obj, static _ => Interlocked.Increment(ref _typeCounter).ToString());
+		}
+
+		internal static string GetObjectID<T>(T[]? arr)
+		{
+			return arr == null ? string.Empty : $"[{string.Join(",", arr)}]";
 		}
 
 		static          int                              _expressionCounter;
@@ -170,7 +175,7 @@ namespace LinqToDB.Common.Internal
 		static          int                                 _objectCounter;
 		static readonly ConcurrentDictionary<object,string> _objects = new ();
 
-		public static string GetObjectID(object? obj)
+		internal static string GetObjectID(object? obj)
 		{
 			return obj switch
 			{

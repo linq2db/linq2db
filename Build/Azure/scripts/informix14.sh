@@ -1,8 +1,6 @@
 #!/bin/bash
 
-#docker run -d --name informix -e INIT_FILE=linq2db.sql -e LICENSE=ACCEPT -p 9089:9089 ibmcom/informix-developer-database:latest
-# newer docker images doesn't work
-docker run -d --name informix -e INIT_FILE=linq2db.sql -e LICENSE=ACCEPT -p 9089:9089 ibmcom/informix-developer-database:14.10.FC5DE
+docker run -d --name informix -e INIT_FILE=linq2db.sql -e LICENSE=ACCEPT -p 9089:9089 ibmcom/informix-developer-database:latest
 
 echo Generate CREATE DATABASE script
 cat <<-EOSQL > informix_init.sql
@@ -16,7 +14,7 @@ docker ps -a
 
 retries=0
 status="1"
-until docker logs informix | grep -q 'Informix container login Information'; do
+until docker logs informix | grep -q 'Informix container login information'; do
     sleep 5
     retries=`expr $retries + 1`
     echo waiting for informix to start

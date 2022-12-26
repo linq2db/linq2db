@@ -13,8 +13,8 @@ using System;
 
 namespace Cli.Default.MySql
 {
-	[Table("alltypes")]
-	public class Alltype
+	[Table("AllTypes")]
+	public class AllType
 	{
 		[Column("ID"                 , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int       Id                  { get; set; } // int
 		[Column("bigintDataType"                                                                                       )] public long?     BigintDataType      { get; set; } // bigint

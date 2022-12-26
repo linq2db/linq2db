@@ -6,8 +6,7 @@ docker ps -a
 
 echo Patching ClickHouse settings...
 docker exec clickhouse sed -i "0,/<\/default>/{s/<\/default>/<join_use_nulls>1<\/join_use_nulls><mutations_sync>1<\/mutations_sync><allow_experimental_object_type>1<\/allow_experimental_object_type><allow_experimental_geo_types>1<\/allow_experimental_geo_types><\/default>/}" /etc/clickhouse-server/users.xml
-docker stop clickhouse
-docker start clickhouse
+docker restart clickhouse
 
 retries=0
 # note that clickhouse logs to stderr(sic!) so 2>&1 needed

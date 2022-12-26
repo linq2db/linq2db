@@ -26,43 +26,44 @@ namespace TestAzureSQL
 {
 	public partial class TestDataDB : LinqToDB.Data.DataConnection
 	{
-		public ITable<AllType>                      AllTypes                  { get { return this.GetTable<AllType>(); } }
-		public ITable<AllTypes2>                    AllTypes2                 { get { return this.GetTable<AllTypes2>(); } }
-		public ITable<Child>                        Children                  { get { return this.GetTable<Child>(); } }
-		public ITable<CollatedTable>                CollatedTables            { get { return this.GetTable<CollatedTable>(); } }
-		public ITable<sys_DatabaseFirewallRule>     DatabaseFirewallRules     { get { return this.GetTable<sys_DatabaseFirewallRule>(); } }
-		public ITable<DataType>                     DataTypes                 { get { return this.GetTable<DataType>(); } }
-		public ITable<DecimalOverflow>              DecimalOverflows          { get { return this.GetTable<DecimalOverflow>(); } }
-		public ITable<Doctor>                       Doctors                   { get { return this.GetTable<Doctor>(); } }
-		public ITable<GrandChild>                   GrandChildren             { get { return this.GetTable<GrandChild>(); } }
-		public ITable<GuidID>                       GuidIds                   { get { return this.GetTable<GuidID>(); } }
-		public ITable<GuidID2>                      GuidID2                   { get { return this.GetTable<GuidID2>(); } }
-		public ITable<IndexTable>                   IndexTables               { get { return this.GetTable<IndexTable>(); } }
-		public ITable<IndexTable2>                  IndexTable2               { get { return this.GetTable<IndexTable2>(); } }
-		public ITable<InheritanceChild>             InheritanceChildren       { get { return this.GetTable<InheritanceChild>(); } }
-		public ITable<InheritanceParent>            InheritanceParents        { get { return this.GetTable<InheritanceParent>(); } }
-		public ITable<sys_Ipv6DatabaseFirewallRule> Ipv6DatabaseFirewallRules { get { return this.GetTable<sys_Ipv6DatabaseFirewallRule>(); } }
-		public ITable<Issue1115>                    Issue1115                 { get { return this.GetTable<Issue1115>(); } }
-		public ITable<Issue1144>                    Issue1144                 { get { return this.GetTable<Issue1144>(); } }
-		public ITable<LinqDataType>                 LinqDataTypes             { get { return this.GetTable<LinqDataType>(); } }
-		public ITable<NameTest>                     NameTests                 { get { return this.GetTable<NameTest>(); } }
-		public ITable<Parent>                       Parents                   { get { return this.GetTable<Parent>(); } }
-		public ITable<ParentChildView>              ParentChildViews          { get { return this.GetTable<ParentChildView>(); } }
-		public ITable<ParentView>                   ParentViews               { get { return this.GetTable<ParentView>(); } }
-		public ITable<Patient>                      Patients                  { get { return this.GetTable<Patient>(); } }
-		public ITable<Person>                       People                    { get { return this.GetTable<Person>(); } }
-		public ITable<SameTableName>                SameTableNames            { get { return this.GetTable<SameTableName>(); } }
-		public ITable<TestSchema_SameTableName>     SameTableNames0           { get { return this.GetTable<TestSchema_SameTableName>(); } }
-		public ITable<SqlType>                      SqlTypes                  { get { return this.GetTable<SqlType>(); } }
-		public ITable<TestIdentity>                 TestIdentities            { get { return this.GetTable<TestIdentity>(); } }
-		public ITable<TestMerge1>                   TestMerge1                { get { return this.GetTable<TestMerge1>(); } }
-		public ITable<TestMerge2>                   TestMerge2                { get { return this.GetTable<TestMerge2>(); } }
-		public ITable<TestMergeIdentity>            TestMergeIdentities       { get { return this.GetTable<TestMergeIdentity>(); } }
-		public ITable<TestSchema_TestSchemaA>       TestSchemaA               { get { return this.GetTable<TestSchema_TestSchemaA>(); } }
-		public ITable<TestSchema_TestSchemaB>       TestSchemaB               { get { return this.GetTable<TestSchema_TestSchemaB>(); } }
-		public ITable<TestSchemaSameTableName>      TestSchemaSameTableNames  { get { return this.GetTable<TestSchemaSameTableName>(); } }
-		public ITable<TestSchemaX>                  TestSchemaX               { get { return this.GetTable<TestSchemaX>(); } }
-		public ITable<TestSchemaY>                  TestSchemaY               { get { return this.GetTable<TestSchemaY>(); } }
+		public ITable<AllType>                  AllTypes                 { get { return this.GetTable<AllType>(); } }
+		public ITable<AllTypes2>                AllTypes2                { get { return this.GetTable<AllTypes2>(); } }
+		public ITable<Child>                    Children                 { get { return this.GetTable<Child>(); } }
+		public ITable<CollatedTable>            CollatedTables           { get { return this.GetTable<CollatedTable>(); } }
+		public ITable<sys_DatabaseFirewallRule> DatabaseFirewallRules    { get { return this.GetTable<sys_DatabaseFirewallRule>(); } }
+		public ITable<DataType>                 DataTypes                { get { return this.GetTable<DataType>(); } }
+		public ITable<DecimalOverflow>          DecimalOverflows         { get { return this.GetTable<DecimalOverflow>(); } }
+		public ITable<Doctor>                   Doctors                  { get { return this.GetTable<Doctor>(); } }
+		public ITable<GrandChild>               GrandChildren            { get { return this.GetTable<GrandChild>(); } }
+		public ITable<GuidID>                   GuidIds                  { get { return this.GetTable<GuidID>(); } }
+		public ITable<GuidID2>                  GuidID2                  { get { return this.GetTable<GuidID2>(); } }
+		public ITable<IndexTable>               IndexTables              { get { return this.GetTable<IndexTable>(); } }
+		public ITable<IndexTable2>              IndexTable2              { get { return this.GetTable<IndexTable2>(); } }
+		public ITable<InheritanceChild>         InheritanceChildren      { get { return this.GetTable<InheritanceChild>(); } }
+		public ITable<InheritanceParent>        InheritanceParents       { get { return this.GetTable<InheritanceParent>(); } }
+		public ITable<Issue1115>                Issue1115                { get { return this.GetTable<Issue1115>(); } }
+		public ITable<Issue1144>                Issue1144                { get { return this.GetTable<Issue1144>(); } }
+		public ITable<LinqDataType>             LinqDataTypes            { get { return this.GetTable<LinqDataType>(); } }
+		public ITable<Member>                   Members                  { get { return this.GetTable<Member>(); } }
+		public ITable<NameTest>                 NameTests                { get { return this.GetTable<NameTest>(); } }
+		public ITable<Parent>                   Parents                  { get { return this.GetTable<Parent>(); } }
+		public ITable<ParentChildView>          ParentChildViews         { get { return this.GetTable<ParentChildView>(); } }
+		public ITable<ParentView>               ParentViews              { get { return this.GetTable<ParentView>(); } }
+		public ITable<Patient>                  Patients                 { get { return this.GetTable<Patient>(); } }
+		public ITable<Person>                   People                   { get { return this.GetTable<Person>(); } }
+		public ITable<Provider>                 Providers                { get { return this.GetTable<Provider>(); } }
+		public ITable<SameTableName>            SameTableNames           { get { return this.GetTable<SameTableName>(); } }
+		public ITable<TestSchema_SameTableName> SameTableNames0          { get { return this.GetTable<TestSchema_SameTableName>(); } }
+		public ITable<SqlType>                  SqlTypes                 { get { return this.GetTable<SqlType>(); } }
+		public ITable<TestIdentity>             TestIdentities           { get { return this.GetTable<TestIdentity>(); } }
+		public ITable<TestMerge1>               TestMerge1               { get { return this.GetTable<TestMerge1>(); } }
+		public ITable<TestMerge2>               TestMerge2               { get { return this.GetTable<TestMerge2>(); } }
+		public ITable<TestMergeIdentity>        TestMergeIdentities      { get { return this.GetTable<TestMergeIdentity>(); } }
+		public ITable<TestSchema_TestSchemaA>   TestSchemaA              { get { return this.GetTable<TestSchema_TestSchemaA>(); } }
+		public ITable<TestSchema_TestSchemaB>   TestSchemaB              { get { return this.GetTable<TestSchema_TestSchemaB>(); } }
+		public ITable<TestSchemaSameTableName>  TestSchemaSameTableNames { get { return this.GetTable<TestSchemaSameTableName>(); } }
+		public ITable<TestSchemaX>              TestSchemaX              { get { return this.GetTable<TestSchemaX>(); } }
+		public ITable<TestSchemaY>              TestSchemaY              { get { return this.GetTable<TestSchemaY>(); } }
 
 		public TestDataDB(int i)
 		{
@@ -314,17 +315,6 @@ namespace TestAzureSQL
 		[Column,        Nullable] public string? Name                { get; set; } // nvarchar(50)
 	}
 
-	[Table(Schema="sys", Name="ipv6_database_firewall_rules", IsView=true)]
-	public partial class sys_Ipv6DatabaseFirewallRule
-	{
-		[Column("id"),                 Identity] public int      Id               { get; set; } // int
-		[Column("name"),               NotNull ] public string   Name             { get; set; } = null!; // nvarchar(128)
-		[Column("start_ipv6_address"), NotNull ] public string   StartIpv6Address { get; set; } = null!; // varchar(45)
-		[Column("end_ipv6_address"),   NotNull ] public string   EndIpv6Address   { get; set; } = null!; // varchar(45)
-		[Column("create_date"),        NotNull ] public DateTime CreateDate       { get; set; } // datetime
-		[Column("modify_date"),        NotNull ] public DateTime ModifyDate       { get; set; } // datetime
-	}
-
 	[Table(Schema="dbo", Name="Issue1115")]
 	public partial class Issue1115
 	{
@@ -352,6 +342,23 @@ namespace TestAzureSQL
 		[Column(),      Nullable            ] public int?      IntValue       { get; set; } // int
 		[Column(),      Nullable            ] public long?     BigIntValue    { get; set; } // bigint
 		[Column(),      Nullable            ] public string?   StringValue    { get; set; } // nvarchar(50)
+	}
+
+	[Table(Schema="dbo", Name="Member")]
+	public partial class Member
+	{
+		[PrimaryKey, Identity] public int    MemberId { get; set; } // int
+		[Column,     NotNull ] public string Alias    { get; set; } = null!; // nvarchar(50)
+
+		#region Associations
+
+		/// <summary>
+		/// FK_Provider_Member_BackReference (dbo.Provider)
+		/// </summary>
+		[Association(ThisKey="MemberId", OtherKey="ProviderId", CanBeNull=true)]
+		public Provider? Provider { get; set; }
+
+		#endregion
 	}
 
 	[Table(Schema="dbo", Name="Name.Test")]
@@ -423,6 +430,23 @@ namespace TestAzureSQL
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
 		public Patient? Patient { get; set; }
+
+		#endregion
+	}
+
+	[Table(Schema="dbo", Name="Provider")]
+	public partial class Provider
+	{
+		[PrimaryKey, NotNull] public int    ProviderId { get; set; } // int
+		[Column,     NotNull] public string Test       { get; set; } = null!; // nvarchar(max)
+
+		#region Associations
+
+		/// <summary>
+		/// FK_Provider_Member (dbo.Member)
+		/// </summary>
+		[Association(ThisKey="ProviderId", OtherKey="MemberId", CanBeNull=false)]
+		public Member Member { get; set; } = null!;
 
 		#endregion
 	}
@@ -1329,6 +1353,12 @@ namespace TestAzureSQL
 				t.Id == Id);
 		}
 
+		public static Member? Find(this ITable<Member> table, int MemberId)
+		{
+			return table.FirstOrDefault(t =>
+				t.MemberId == MemberId);
+		}
+
 		public static Parent? Find(this ITable<Parent> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
@@ -1345,6 +1375,12 @@ namespace TestAzureSQL
 		{
 			return table.FirstOrDefault(t =>
 				t.PersonID == PersonID);
+		}
+
+		public static Provider? Find(this ITable<Provider> table, int ProviderId)
+		{
+			return table.FirstOrDefault(t =>
+				t.ProviderId == ProviderId);
 		}
 
 		public static SqlType? Find(this ITable<SqlType> table, int ID)

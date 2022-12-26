@@ -25,13 +25,13 @@ namespace Cli.Default.Informix
 		/// <summary>
 		/// FK_testfkunique_testunique backreference
 		/// </summary>
-		[Association(ThisKey = nameof(Id1) + "," + nameof(Id1), OtherKey = nameof(Testfkunique.Id1) + "," + nameof(Id1))]
+		[Association(ThisKey = nameof(Id1) + "," + nameof(Id2), OtherKey = nameof(Testfkunique.Id1) + "," + nameof(Testfkunique.Id2))]
 		public IEnumerable<Testfkunique> Testfkuniques { get; set; } = null!;
 
 		/// <summary>
 		/// FK_testfkunique_testunique_1 backreference
 		/// </summary>
-		[Association(ThisKey = nameof(Id3) + "," + nameof(Id3), OtherKey = nameof(Testfkunique.Id3) + "," + nameof(Id3))]
+		[Association(ThisKey = nameof(Id3) + "," + nameof(Id4), OtherKey = nameof(Testfkunique.Id3) + "," + nameof(Testfkunique.Id4))]
 		public IEnumerable<Testfkunique> Testfkuniques1 { get; set; } = null!;
 		#endregion
 	}

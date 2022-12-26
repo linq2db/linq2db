@@ -1023,6 +1023,8 @@ namespace LinqToDB.Mapping
 		/// <returns>Attributes of specified type.</returns>
 		public T[] GetAttributes<T>(Type type, bool inherit = true)
 			where T : Attribute
+			// TODO: v5: enforce MappingAttribute here and on MetadataReaders
+			//where T : MappingAttribute
 		{
 			if (MetadataReaders.Length == 0)
 				return Array<T>.Empty;
@@ -1062,6 +1064,8 @@ namespace LinqToDB.Mapping
 		/// <returns>Attributes of specified type.</returns>
 		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo, bool inherit = true)
 			where T : Attribute
+			// TODO: v5: enforce MappingAttribute here and on MetadataReaders
+			//where T : MappingAttribute
 		{
 			if (MetadataReaders.Length == 0)
 				return Array<T>.Empty;
@@ -1100,6 +1104,8 @@ namespace LinqToDB.Mapping
 		/// <returns>First found attribute of specified type or <c>null</c>, if no attributes found.</returns>
 		public T? GetAttribute<T>(Type type, bool inherit = true)
 			where T : Attribute
+			// TODO: v5: enforce MappingAttribute here and on MetadataReaders
+			//where T : MappingAttribute
 		{
 			var attrs = GetAttributes<T>(type, inherit);
 			return attrs.Length == 0 ? null : attrs[0];
@@ -1115,6 +1121,8 @@ namespace LinqToDB.Mapping
 		/// <returns>First found attribute of specified type or <c>null</c>, if no attributes found.</returns>
 		public T? GetAttribute<T>(Type type, MemberInfo memberInfo, bool inherit = true)
 			where T : Attribute
+			// TODO: v5: enforce MappingAttribute here and on MetadataReaders
+			//where T : MappingAttribute
 		{
 			var attrs = GetAttributes<T>(type, memberInfo, inherit);
 			return attrs.Length == 0 ? null : attrs[0];
@@ -1133,6 +1141,8 @@ namespace LinqToDB.Mapping
 		public T[] GetAttributes<T>(Type type, Func<T,string?> configGetter, bool inherit = true,
 			bool exactForConfiguration = false)
 			where T : Attribute
+			// TODO: v5: enforce MappingAttribute here and on MetadataReaders
+			//where T : MappingAttribute
 		{
 			var list  = new List<T>();
 			var attrs = GetAttributes<T>(type, inherit);
@@ -1167,6 +1177,8 @@ namespace LinqToDB.Mapping
 		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo, Func<T,string?> configGetter, bool inherit = true,
 			bool exactForConfiguration = false)
 			where T : Attribute
+			// TODO: v5: enforce MappingAttribute here and on MetadataReaders
+			//where T : MappingAttribute
 		{
 			var list  = new List<T>();
 			var attrs = GetAttributes<T>(type, memberInfo, inherit);
@@ -1198,6 +1210,8 @@ namespace LinqToDB.Mapping
 		/// <returns>First found attribute of specified type or <c>null</c>, if no attributes found.</returns>
 		public T? GetAttribute<T>(Type type, Func<T,string?> configGetter, bool inherit = true)
 			where T : Attribute
+			// TODO: v5: enforce MappingAttribute here and on MetadataReaders
+			//where T : MappingAttribute
 		{
 			var attrs = GetAttributes(type, configGetter, inherit);
 			return attrs.Length == 0 ? null : attrs[0];
@@ -1215,6 +1229,8 @@ namespace LinqToDB.Mapping
 		/// <returns>First found attribute of specified type or <c>null</c>, if no attributes found.</returns>
 		public T? GetAttribute<T>(Type type, MemberInfo memberInfo, Func<T,string?> configGetter, bool inherit = true)
 			where T : Attribute
+			// TODO: v5: enforce MappingAttribute here and on MetadataReaders
+			//where T : MappingAttribute
 		{
 			var attrs = GetAttributes(type, memberInfo, configGetter, inherit);
 			return attrs.Length == 0 ? null : attrs[0];

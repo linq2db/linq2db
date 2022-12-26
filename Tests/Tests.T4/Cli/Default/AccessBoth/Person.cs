@@ -25,14 +25,14 @@ namespace Cli.Default.Access.Both
 		/// <summary>
 		/// PersonDoctor backreference
 		/// </summary>
-		[Association(ThisKey = nameof(PersonId), OtherKey = nameof(Doctor.PersonId))]
-		public Doctor? PersonDoctor { get; set; }
+		[Association(ThisKey = nameof(PersonId), OtherKey = nameof(Both.Doctor.PersonId))]
+		public Doctor? Doctor { get; set; }
 
 		/// <summary>
 		/// PersonPatient backreference
 		/// </summary>
-		[Association(ThisKey = nameof(PersonId), OtherKey = nameof(Patient.PersonId))]
-		public Patient? PersonPatient { get; set; }
+		[Association(ThisKey = nameof(PersonId), OtherKey = nameof(Both.Patient.PersonId))]
+		public Patient? Patient { get; set; }
 		#endregion
 	}
 }

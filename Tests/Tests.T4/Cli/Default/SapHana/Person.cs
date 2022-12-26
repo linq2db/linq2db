@@ -23,16 +23,16 @@ namespace Cli.Default.SapHana
 
 		#region Associations
 		/// <summary>
-		/// FK_Patient_Person backreference
-		/// </summary>
-		[Association(ThisKey = nameof(PersonId), OtherKey = nameof(SapHana.Patient.PersonId))]
-		public Patient? Patient { get; set; }
-
-		/// <summary>
 		/// FK_Doctor_Person backreference
 		/// </summary>
 		[Association(ThisKey = nameof(PersonId), OtherKey = nameof(SapHana.Doctor.PersonId))]
 		public Doctor? Doctor { get; set; }
+
+		/// <summary>
+		/// FK_Patient_Person backreference
+		/// </summary>
+		[Association(ThisKey = nameof(PersonId), OtherKey = nameof(SapHana.Patient.PersonId))]
+		public Patient? Patient { get; set; }
 		#endregion
 	}
 }

@@ -22,16 +22,16 @@ namespace Cli.Default.SqlServerNorthwind
 
 		#region Associations
 		/// <summary>
-		/// FK_Territories_Region
-		/// </summary>
-		[Association(CanBeNull = false, ThisKey = nameof(RegionId), OtherKey = nameof(SqlServerNorthwind.Region.RegionId))]
-		public Region Region { get; set; } = null!;
-
-		/// <summary>
 		/// FK_EmployeeTerritories_Territories backreference
 		/// </summary>
 		[Association(ThisKey = nameof(TerritoryId), OtherKey = nameof(EmployeeTerritory.TerritoryId))]
 		public IEnumerable<EmployeeTerritory> EmployeeTerritories { get; set; } = null!;
+
+		/// <summary>
+		/// FK_Territories_Region
+		/// </summary>
+		[Association(CanBeNull = false, ThisKey = nameof(RegionId), OtherKey = nameof(SqlServerNorthwind.Region.RegionId))]
+		public Region Region { get; set; } = null!;
 		#endregion
 	}
 }

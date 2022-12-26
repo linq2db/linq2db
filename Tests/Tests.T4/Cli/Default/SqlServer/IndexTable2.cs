@@ -22,7 +22,7 @@ namespace Cli.Default.SqlServer
 		/// <summary>
 		/// FK_Patient2_IndexTable
 		/// </summary>
-		[Association(CanBeNull = false, ThisKey = nameof(PkField2) + "," + nameof(PkField2), OtherKey = nameof(IndexTable.PkField2) + "," + nameof(PkField2))]
+		[Association(CanBeNull = false, ThisKey = nameof(PkField2) + "," + nameof(PkField1), OtherKey = nameof(IndexTable.PkField2) + "," + nameof(IndexTable.PkField1))]
 		public IndexTable Patient2IndexTable { get; set; } = null!;
 		#endregion
 	}
