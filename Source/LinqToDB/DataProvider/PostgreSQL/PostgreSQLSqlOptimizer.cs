@@ -24,10 +24,17 @@
 		{
 			return statement.QueryType switch
 			{
-				QueryType.Delete => GetAlternativeDelete((SqlDeleteStatement)statement),
+				QueryType.Delete => CorrectPostgreSqlDelete((SqlDeleteStatement)statement),
 				QueryType.Update => GetAlternativeUpdatePostgreSqlite((SqlUpdateStatement)statement),
 				_                => statement,
 			};
+		}
+
+		SqlStatement CorrectPostgreSqlDelete(SqlDeleteStatement statement)
+		{
+			statement = GetAlternativeDelete(statement);
+
+			return statement;
 		}
 
 		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate, ConvertVisitor<RunOptimizationContext> visitor)

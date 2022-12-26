@@ -30,15 +30,25 @@ namespace LinqToDB.Linq.Builder
 
 		public override Expression MakeExpression(Expression path, ProjectFlags flags)
 		{
-			var converted = base.MakeExpression(path, flags);
+			if (SequenceHelper.IsSameContext(path, this) && flags.HasFlag(ProjectFlags.Root))
+			{
+				return path;
+			}
 
-			converted = converted.Transform(e =>
+			if (!flags.HasFlag(ProjectFlags.SQL))
+				return base.MakeExpression(path, flags);
+
+			var correctedPath = SequenceHelper.CorrectExpression(path, this, Sequence);
+
+			var converted = Builder.ConvertToSqlExpr(Sequence, correctedPath, flags);
+
+			converted = converted.Transform(this, static (ctx, e) =>
 			{
 				if (e is SqlPlaceholderExpression paceholder)
 				{
 					if (paceholder.Sql is not SqlAnchor)
 					{
-						return paceholder.WithSql(new SqlAnchor(paceholder.Sql, AnchorKind));
+						return paceholder.WithSql(new SqlAnchor(paceholder.Sql, ctx.AnchorKind));
 					}
 				}
 				return e;

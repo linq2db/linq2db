@@ -2693,13 +2693,6 @@ namespace LinqToDB.SqlProvider
 			return deleteStatement;
 		}
 
-		protected SqlTableSource? GetMainTableSource(SelectQuery selectQuery)
-		{
-			if (selectQuery.From.Tables.Count > 0 && selectQuery.From.Tables[0] is SqlTableSource tableSource)
-				return tableSource;
-			return null;
-		}
-
 		public static bool IsAggregationFunction(IQueryElement expr)
 		{
 			if (expr is SqlFunction func)
@@ -3195,17 +3188,6 @@ namespace LinqToDB.SqlProvider
 			}
 
 			CorrectUpdateSetters(statement);
-
-			//remapping to table back
-			if (statement.Output != null)
-			{
-				statement.Output = statement.Output.Convert(tableToUpdate, (v, e) =>
-				{
-					if (e is SqlAnchor { AnchorKind: SqlAnchor.AnchorKindEnum.Inserted } anchor)
-						return anchor.SqlExpression;
-					return e;
-				}, true);
-			}
 
 			tableToUpdate.Alias = "$F";
 

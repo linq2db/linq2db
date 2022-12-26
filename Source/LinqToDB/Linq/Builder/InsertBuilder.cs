@@ -196,7 +196,7 @@ namespace LinqToDB.Linq.Builder
 						var outputSetters = new List<UpdateBuilder.SetExpressionEnvelope>();
 						UpdateBuilder.ParseSetter(builder, destinationRef, outputExpr, outputSetters);
 
-						UpdateBuilder.InitializeSetExpressions(builder, buildInfo, insertContext.OutputContext, insertContext.OutputContext,
+						UpdateBuilder.InitializeSetExpressions(builder, insertContext.OutputContext, insertContext.OutputContext,
 							outputSetters, insertStatement.Output.OutputItems, false);
 					}
 				}
@@ -275,7 +275,7 @@ namespace LinqToDB.Linq.Builder
 							UpdateBuilder.ParseSetter(Builder, outputRef, sqlExpr, outputExpressions);
 
 						var setItems = new List<SqlSetExpression>();
-						UpdateBuilder.InitializeSetExpressions(Builder, LastBuildInfo, selectContext, selectContext, outputExpressions, setItems, false);
+						UpdateBuilder.InitializeSetExpressions(Builder, selectContext, selectContext, outputExpressions, setItems, false);
 
 						InsertStatement.Output!.OutputColumns = setItems.Select(c => c.Expression!).ToList();
 
@@ -311,7 +311,7 @@ namespace LinqToDB.Linq.Builder
 				SetExpressions.RemoveDuplicatesFromTail((s1, s2) =>
 					ExpressionEqualityComparer.Instance.Equals(s1.FieldExpression, s2.FieldExpression));
 
-				UpdateBuilder.InitializeSetExpressions(Builder, LastBuildInfo, tableContext, Sequence, SetExpressions, insert.Items, true);
+				UpdateBuilder.InitializeSetExpressions(Builder, tableContext, Sequence, SetExpressions, insert.Items, true);
 
 				var q = insert.Into.IdentityFields
 					.Except(insert.Items.Select(e => e.Column).OfType<SqlField>());

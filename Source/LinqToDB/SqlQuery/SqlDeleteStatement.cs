@@ -40,11 +40,15 @@ namespace LinqToDB.SqlQuery
 
 		public override StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
 		{
-			sb.Append("DELETE FROM ");
+			var writer = new SqlTextWriter(sb);
 
-			((IQueryElement?)Table)?.ToString(sb, dic);
-
-			sb.AppendLine();
+			writer
+				.Append(With, dic)
+				.Append("DELETE FROM ")
+				.Append(Table, dic)
+				.AppendLine()
+				.AppendIndented(SelectQuery, dic)
+				.AppendLine();
 
 			return sb;
 		}

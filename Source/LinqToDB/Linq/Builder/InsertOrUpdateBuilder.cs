@@ -44,12 +44,12 @@ namespace LinqToDB.Linq.Builder
 			if (tableContext == null)
 				throw new LinqException("Could not retrieve table information from query.");
 
-			UpdateBuilder.InitializeSetExpressions(builder, buildInfo, tableContext, sequence,
+			UpdateBuilder.InitializeSetExpressions(builder, tableContext, sequence,
 				insertExpressions, insertOrUpdateStatement.Insert.Items, false);
 
 			if (updateExpressions != null)
 			{
-				UpdateBuilder.InitializeSetExpressions(builder, buildInfo, tableContext, sequence,
+				UpdateBuilder.InitializeSetExpressions(builder, tableContext, sequence,
 					updateExpressions, insertOrUpdateStatement.Update.Items, false);
 			}
 
@@ -90,7 +90,7 @@ namespace LinqToDB.Linq.Builder
 
 				UpdateBuilder.ParseSetter(builder, contextRef, keysExpr, keysExpressions);
 
-				UpdateBuilder.InitializeSetExpressions(builder, buildInfo, tableContext, sequence,
+				UpdateBuilder.InitializeSetExpressions(builder, tableContext, sequence,
 					keysExpressions, insertOrUpdateStatement.Update.Keys, false);
 			}
 

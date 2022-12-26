@@ -72,7 +72,7 @@ namespace LinqToDB.Linq.Builder
 			public int    ContextId    { get; private set; }
 #endif
 
-			CteContext _cteContext;
+			public CteContext CteContext { get; }
 
 			public SelectQuery    SelectQuery { get; set; }
 			public SqlStatement?  Statement   { get; set; }
@@ -86,9 +86,9 @@ namespace LinqToDB.Linq.Builder
 			{
 				Builder     = builder;
 				Parent      = parent;
-				_cteContext = cteContext;
+				CteContext = cteContext;
 				SelectQuery = selectQuery;
-				CteTable    = new SqlCteTable(objectType, _cteContext.CteClause);
+				CteTable    = new SqlCteTable(objectType, CteContext.CteClause);
 
 				if (!isTest)
 					SelectQuery.From.Table(CteTable);
@@ -140,24 +140,24 @@ namespace LinqToDB.Linq.Builder
 
 				if (flags.HasFlag(ProjectFlags.Expand))
 				{
-					_cteContext.InitQuery();
+					CteContext.InitQuery();
 					return path;
 				}
 
-				var ctePath = SequenceHelper.CorrectExpression(path, this, _cteContext);
+				var ctePath = SequenceHelper.CorrectExpression(path, this, CteContext);
 				if (!ReferenceEquals(ctePath, path))
 				{
-					_cteContext.InitQuery();
+					CteContext.InitQuery();
 
-					var translated = Builder.MakeExpression(_cteContext, ctePath, flags);
+					var translated = Builder.MakeExpression(CteContext, ctePath, flags);
 
 					if (!flags.HasFlag(ProjectFlags.Test))
 					{
 						// replace tracking path back
-						translated = SequenceHelper.CorrectTrackingPath(translated, _cteContext, this);
+						translated = SequenceHelper.CorrectTrackingPath(translated, CteContext, this);
 
 						var placeholders = ExpressionBuilder.CollectPlaceholders(translated).Where(p =>
-							p.SelectQuery == _cteContext.SubqueryContext?.SelectQuery && p.Index != null)
+							p.SelectQuery == CteContext.SubqueryContext?.SelectQuery && p.Index != null)
 							.ToList();
 
 						translated = RemapFields(translated, placeholders);

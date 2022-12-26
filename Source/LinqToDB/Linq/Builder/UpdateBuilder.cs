@@ -154,8 +154,6 @@ namespace LinqToDB.Linq.Builder
 							throw new LinqException("Cannot retrieve Table for update.");
 						}
 
-						into = tableContext;
-
 						updateContext.TargetTable = tableContext;
 					}
 					else
@@ -246,25 +244,44 @@ namespace LinqToDB.Linq.Builder
 			if (updateType == UpdateTypeEnum.Update)
 				return updateContext;
 
-			var insertedTable = builder.DataContext.SqlProviderFlags.OutputUpdateUseSpecialTables ? SqlTable.Inserted(objectType) : updateStatement.GetUpdateTable();
-			var deletedTable  = SqlTable.Deleted(objectType);
+			if (updateContext.TargetTable == null)
+				throw new InvalidOperationException();
 
-			if (insertedTable == null)
-				throw new InvalidOperationException("Cannot find target table for UPDATE statement");
+			// create separate query for output
+			var outputSelectQuery = new SelectQuery();
+
+			IBuildContext insertedContext;
+			IBuildContext deletedContext;
+
+			if (updateContext.TargetTable is TableBuilder.CteTableContext cteTable)
+			{
+				insertedContext = new TableBuilder.CteTableContext(builder, null,
+					updateContext.TargetTable.SqlTable.ObjectType, outputSelectQuery, cteTable.CteContext, false);
+				deletedContext = new TableBuilder.CteTableContext(builder, null,
+					updateContext.TargetTable.SqlTable.ObjectType, outputSelectQuery, cteTable.CteContext, false);
+			}	
+			else
+			{
+				insertedContext = new TableBuilder.TableContext(builder, outputSelectQuery, updateContext.TargetTable.SqlTable);
+				deletedContext = new TableBuilder.TableContext(builder, outputSelectQuery, updateContext.TargetTable.SqlTable);
+			}
 
 			updateStatement.Output = new SqlOutputClause();
 
+			updateStatement.Output.InsertedTable = ((ITableContext)insertedContext).SqlTable;
+			updateStatement.Output.DeletedTable  = ((ITableContext)deletedContext).SqlTable;
+
 			if (builder.DataContext.SqlProviderFlags.OutputUpdateUseSpecialTables)
 			{
-				updateStatement.Output.InsertedTable = insertedTable;
-				updateStatement.Output.DeletedTable  = deletedTable;
+				insertedContext = new AnchorContext(null, insertedContext, SqlAnchor.AnchorKindEnum.Inserted);
+				deletedContext  = new AnchorContext(null, deletedContext, SqlAnchor.AnchorKindEnum.Deleted);
 			}
-
+				
 			if (updateType == UpdateTypeEnum.UpdateOutput)
 			{
 				updateContext.OutputExpression = outputExpression;
-				updateContext.DeletedTable     = deletedTable;
-				updateContext.InsertedTable    = insertedTable;
+				updateContext.DeletedContext   = deletedContext;
+				updateContext.InsertedContext  = insertedContext;
 
 				return updateContext;
 			}
@@ -293,20 +310,12 @@ namespace LinqToDB.Linq.Builder
 
 				outputExpression ??= BuildDefaultOutputExpression(objectType);
 
-				// create separate query for output
-				var outputQuery = new SelectQuery();
-
-				var insertedContext = new AnchorContext(null, new TableBuilder.TableContext(builder, outputQuery, insertedTable)
-					, SqlAnchor.AnchorKindEnum.Inserted);
-				var deletedContext  = new AnchorContext(null, new TableBuilder.TableContext(builder, outputQuery, deletedTable)
-					, SqlAnchor.AnchorKindEnum.Deleted);
-
 				var outputBody = SequenceHelper.PrepareBody(outputExpression, sequence, deletedContext, insertedContext);
 
 				var outputExpressions = new List<SetExpressionEnvelope>();
 				ParseSetter(builder, destinationRef, outputBody, outputExpressions);
 
-				InitializeSetExpressions(builder, buildInfo, destinationContext, sequence, outputExpressions, updateStatement.Output.OutputItems, false);
+				InitializeSetExpressions(builder, destinationContext, sequence, outputExpressions, updateStatement.Output.OutputItems, false);
 
 				updateStatement.Output.OutputTable = destinationContext.SqlTable;
 
@@ -428,12 +437,12 @@ namespace LinqToDB.Linq.Builder
 
 		internal static void InitializeSetExpressions(
 			ExpressionBuilder           builder,
-			BuildInfo                   buildInfo, 
 			IBuildContext               fieldsContext,
 			IBuildContext               valuesContext,
 			List<SetExpressionEnvelope> envelopes,
 			List<SqlSetExpression>      items,
-			bool createColumns)
+			bool                        createColumns
+			)
 		{
 			ISqlExpression GetFieldExpression(Expression fieldExpr, bool isPureExpression)
 			{
@@ -615,9 +624,9 @@ namespace LinqToDB.Linq.Builder
 			public BuildInfo?                  LastBuildInfo    { get;                 set; }
 			public List<SetExpressionEnvelope> SetExpressions   { get; } = new ();
 
-			public LambdaExpression?           OutputExpression { get; set; }
-			public SqlTable?                   DeletedTable     { get; set; }
-			public SqlTable?                   InsertedTable    { get; set; }
+			public LambdaExpression? OutputExpression { get; set; }
+			public IBuildContext?    DeletedContext   { get; set; }
+			public IBuildContext?    InsertedContext  { get; set; }
 
 			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 			{
@@ -654,25 +663,7 @@ namespace LinqToDB.Linq.Builder
 				SetExpressions.RemoveDuplicatesFromTail((s1, s2) =>
 					ExpressionEqualityComparer.Instance.Equals(s1.FieldExpression, s2.FieldExpression));
 
-				InitializeSetExpressions(Builder, LastBuildInfo, TargetTable, Sequence, SetExpressions, update.Items, true);
-
-				/*var q = update.Keys.IdentityFields
-					.Except(update.Items.Select(e => e.Column).OfType<SqlField>());
-
-				foreach (var field in q)
-				{
-					var expr = Builder.DataContext.CreateSqlProvider().GetIdentityExpression(update.Into);
-
-					if (expr != null)
-					{
-						update.Items.Insert(0, new SqlSetExpression(field, expr));
-
-						/*if (methodCall.Arguments.Count == 3)
-						{
-							sequence.SelectQuery.Select.Columns.Insert(0, new SqlColumn(sequence.SelectQuery, insert.Items[0].Expression!));
-						}#2#
-					}
-				}*/
+				InitializeSetExpressions(Builder, TargetTable, Sequence, SetExpressions, update.Items, true);
 			}
 
 			public override void SetRunQuery<T>(Query<T> query, Expression expr)
@@ -762,20 +753,18 @@ namespace LinqToDB.Linq.Builder
 					
 					if (UpdateType == UpdateTypeEnum.UpdateOutput)
 					{
-						if (DeletedTable == null || InsertedTable == null || LastBuildInfo == null)
+						if (DeletedContext == null || InsertedContext == null || LastBuildInfo == null || TargetTable == null)
 							throw new InvalidOperationException();
 
 						UpdateStatement.Output ??= new SqlOutputClause();
 
-						var outputSelectQuery = new SelectQuery();
+						var outputSelectQuery = DeletedContext.SelectQuery;
 
-						var insertedContext = new AnchorContext(null, new TableBuilder.TableContext(Builder, outputSelectQuery, InsertedTable)
-							, SqlAnchor.AnchorKindEnum.Inserted);
-						var deletedContext  = new AnchorContext(null, new TableBuilder.TableContext(Builder, outputSelectQuery, DeletedTable)
-							, SqlAnchor.AnchorKindEnum.Deleted);
+						var insertedContext = InsertedContext;
+						var deletedContext  = DeletedContext;
 
 						var outputBody = OutputExpression == null
-							? BuildDefaultOutputExpression(Builder, InsertedTable.ObjectType, QuerySequence, insertedContext, deletedContext)
+							? BuildDefaultOutputExpression(Builder, TargetTable.ObjectType, QuerySequence, insertedContext, deletedContext)
 							: SequenceHelper.PrepareBody(OutputExpression, QuerySequence,
 								deletedContext, insertedContext);
 
@@ -792,7 +781,7 @@ namespace LinqToDB.Linq.Builder
 							ParseSetter(Builder, outputRef, sqlExpr, outputExpressions);
 
 						var setItems = new List<SqlSetExpression>();
-						InitializeSetExpressions(Builder, LastBuildInfo, selectContext, selectContext, outputExpressions, setItems, false);
+						InitializeSetExpressions(Builder, selectContext, selectContext, outputExpressions, setItems, false);
 
 						UpdateStatement.Output!.OutputColumns = setItems.Select(c => c.Column).ToList();
 

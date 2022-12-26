@@ -9,7 +9,7 @@ namespace LinqToDB.Linq.Builder
 
 	sealed class DeleteBuilder : MethodCallBuilder
 	{
-		private static readonly string[] MethodNames =
+		static readonly string[] MethodNames =
 		{
 			nameof(LinqExtensions.Delete),
 			nameof(LinqExtensions.DeleteWithOutput),
@@ -25,25 +25,24 @@ namespace LinqToDB.Linq.Builder
 		{
 			var deleteType = methodCall.Method.Name switch
 			{
-				nameof(LinqExtensions.DeleteWithOutput)     => DeleteContext.DeleteType.DeleteOutput,
-				nameof(LinqExtensions.DeleteWithOutputInto) => DeleteContext.DeleteType.DeleteOutputInto,
-				_                                           => DeleteContext.DeleteType.Delete,
+				nameof(LinqExtensions.DeleteWithOutput)     => DeleteContext.DeleteTypeEnum.DeleteOutput,
+				nameof(LinqExtensions.DeleteWithOutputInto) => DeleteContext.DeleteTypeEnum.DeleteOutputInto,
+				_                                           => DeleteContext.DeleteTypeEnum.Delete,
 			};
 
 			var sequenceArgument = methodCall.Arguments[0];
 			var sequence         = builder.BuildSequence(new BuildInfo(buildInfo, sequenceArgument));
 
-			if (methodCall.Arguments.Count == 2 && deleteType == DeleteContext.DeleteType.Delete)
+			if (methodCall.Arguments.Count == 2 && deleteType == DeleteContext.DeleteTypeEnum.Delete)
 				sequence = builder.BuildWhere(buildInfo.Parent, sequence, (LambdaExpression)methodCall.Arguments[1].Unwrap(), false, false, buildInfo.AggregationTest);
 
 			var deleteStatement = new SqlDeleteStatement(sequence.SelectQuery);
 
-			sequence.Statement = deleteStatement;
-
 			var tableContext = SequenceHelper.GetTableContext(sequence);
+			if (tableContext == null)
+				throw new InvalidOperationException("Cannot find target table for DELETE statement");
 
-			if (tableContext != null)
-				deleteStatement.Table = tableContext.SqlTable;
+			deleteStatement.Table = tableContext.SqlTable;
 
 			static LambdaExpression BuildDefaultOutputExpression(Type outputType)
 			{
@@ -51,10 +50,10 @@ namespace LinqToDB.Linq.Builder
 				return Expression.Lambda(param, param);
 			}
 
-			IBuildContext? outputContext = null;
 			LambdaExpression? outputExpression = null;
+			IBuildContext?    deletedContext   = null;
 
-			if (deleteType != DeleteContext.DeleteType.Delete)
+			if (deleteType != DeleteContext.DeleteTypeEnum.Delete)
 			{
 				outputExpression =
 					(LambdaExpression?)methodCall.GetArgumentByName("outputExpression")?.Unwrap()
@@ -62,61 +61,107 @@ namespace LinqToDB.Linq.Builder
 
 				deleteStatement.Output = new SqlOutputClause();
 
-				var deletedTable = builder.DataContext.SqlProviderFlags.OutputDeleteUseSpecialTable ? SqlTable.Deleted(methodCall.Method.GetGenericArguments()[0]) : deleteStatement.GetDeleteTable();
+				var deletedTable = deleteStatement.Table;
 
-				if (deletedTable == null)
-					throw new InvalidOperationException("Cannot find target table for DELETE statement");
+				// create separate query for output
+				var outputSelectQuery = new SelectQuery();
 
-				outputContext = new TableBuilder.TableContext(builder, new SelectQuery(), deletedTable);
+				deletedContext = new TableBuilder.TableContext(builder, outputSelectQuery, deletedTable);
 
 				if (builder.DataContext.SqlProviderFlags.OutputDeleteUseSpecialTable)
-					deleteStatement.Output.DeletedTable = deletedTable;
+				{
+					deletedContext = new AnchorContext(null,
+						new TableBuilder.TableContext(builder, outputSelectQuery, deletedTable),
+						SqlAnchor.AnchorKindEnum.Deleted);
 
-				if (deleteType == DeleteContext.DeleteType.DeleteOutputInto)
+					deleteStatement.Output.DeletedTable = deletedTable;
+				}
+
+				if (deleteType == DeleteContext.DeleteTypeEnum.DeleteOutputInto)
 				{
 					var outputTable = methodCall.GetArgumentByName("outputTable")!;
-					var destination = builder.BuildSequence(new BuildInfo(buildInfo, outputTable, new SelectQuery()));
 
-					UpdateBuilder.BuildSetter(
-						builder,
-						buildInfo,
-						outputExpression,
-						destination,
-						deleteStatement.Output.OutputItems,
-						outputContext);
+					var destinationSequence = builder.BuildSequence(new BuildInfo(buildInfo, outputTable, new SelectQuery()));
+					var destinationContext = SequenceHelper.GetTableContext(destinationSequence);
+					if (destinationContext == null)
+						throw new InvalidOperationException();
 
-					deleteStatement.Output.OutputTable = ((TableBuilder.TableContext)destination).SqlTable;
+					var destinationRef = new ContextRefExpression(destinationContext.ObjectType, destinationContext);
+
+					var outputBody = SequenceHelper.PrepareBody(outputExpression, deletedContext);
+
+					var outputExpressions = new List<UpdateBuilder.SetExpressionEnvelope>();
+					UpdateBuilder.ParseSetter(builder, destinationRef, outputBody, outputExpressions);
+
+					UpdateBuilder.InitializeSetExpressions(builder, destinationContext, sequence, outputExpressions, deleteStatement.Output.OutputItems, false);
+
+					deleteStatement.Output.OutputTable = destinationContext.SqlTable;
 				}
 			}
 
-			if (deleteType == DeleteContext.DeleteType.DeleteOutput)
-				return new DeleteWithOutputContext(buildInfo.Parent, sequence, outputContext!, outputExpression!);
-
-			return new DeleteContext(buildInfo.Parent, sequence);
+			return new DeleteContext(buildInfo.Parent, sequence, deleteType, outputExpression, deleteStatement, deletedContext);
 		}
 
 		sealed class DeleteContext : SequenceContextBase
 		{
-			public enum DeleteType
+
+			public enum DeleteTypeEnum
 			{
 				Delete,
 				DeleteOutput,
 				DeleteOutputInto,
 			}
 
-			public DeleteContext(IBuildContext? parent, IBuildContext sequence)
+			public IBuildContext QuerySequence { get => Sequences[0]; set => Sequences[0] = value; }
+
+			public DeleteTypeEnum     DeleteType       { get; }
+			public IBuildContext?     DeletedContext   { get; }
+			public LambdaExpression?  OutputExpression { get; }
+			public SqlDeleteStatement DeleteStatement  { get; }
+
+			public DeleteContext(IBuildContext? parent, IBuildContext sequence, DeleteTypeEnum deleteType,
+				LambdaExpression? outputExpression, SqlDeleteStatement deleteStatement, IBuildContext? deletedContext)
 				: base(parent, sequence, null)
 			{
+				DeleteType       = deleteType;
+				OutputExpression = outputExpression;
+				DeleteStatement  = deleteStatement;
+				DeletedContext   = deletedContext;
 			}
 
 			public override IBuildContext Clone(CloningContext context)
 			{
-				return new DeleteContext(null, context.CloneContext(Sequence));
+				return new DeleteContext(null, 
+					context.CloneContext(Sequence), 
+					DeleteType,
+					context.CloneExpression(OutputExpression), 
+					context.CloneElement(DeleteStatement),
+					context.CloneContext(DeletedContext));
 			}
 
 			public override void SetRunQuery<T>(Query<T> query, Expression expr)
 			{
-				QueryRunner.SetNonQueryQuery(query);
+				switch (DeleteType)
+				{
+					case DeleteTypeEnum.Delete:
+					{
+						QueryRunner.SetNonQueryQuery(query);
+						break;
+					}
+					case DeleteTypeEnum.DeleteOutput:
+					{
+						var mapper = Builder.BuildMapper<T>(expr);
+						QueryRunner.SetRunQuery(query, mapper);
+						break;
+					}					
+					case DeleteTypeEnum.DeleteOutputInto:
+					{
+						QueryRunner.SetNonQueryQuery(query);
+						break;
+					}	
+					default:
+						throw new InvalidOperationException($"Unexpected delete type: {DeleteType}");
+				}
 			}
 
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
@@ -128,6 +173,37 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (SequenceHelper.IsSameContext(path, this) && flags.HasFlag(ProjectFlags.Expression))
 				{
+					if (DeleteType == DeleteTypeEnum.DeleteOutput)
+					{
+						if (DeletedContext == null || OutputExpression == null)
+							throw new InvalidOperationException();
+
+						DeleteStatement.Output ??= new SqlOutputClause();
+
+						var outputSelectQuery = new SelectQuery();
+
+						var outputBody = SequenceHelper.PrepareBody(OutputExpression, DeletedContext);
+
+						var selectContext     = new SelectContext(Parent, outputBody, QuerySequence, false);
+						var outputRef         = new ContextRefExpression(path.Type, selectContext);
+						var outputExpressions = new List<UpdateBuilder.SetExpressionEnvelope>();
+
+						var sqlExpr = Builder.ConvertToSqlExpr(selectContext, outputRef);
+						sqlExpr = SequenceHelper.CorrectSelectQuery(sqlExpr, outputSelectQuery);
+
+						if (sqlExpr is SqlPlaceholderExpression)
+							outputExpressions.Add(new UpdateBuilder.SetExpressionEnvelope(sqlExpr, sqlExpr));
+						else
+							UpdateBuilder.ParseSetter(Builder, outputRef, sqlExpr, outputExpressions);
+
+						var setItems = new List<SqlSetExpression>();
+						UpdateBuilder.InitializeSetExpressions(Builder, selectContext, selectContext, outputExpressions, setItems, false);
+
+						DeleteStatement.Output!.OutputColumns = setItems.Select(c => c.Column).ToList();
+
+						return sqlExpr;
+					}
+
 					return Expression.Default(path.Type);
 				}
 
@@ -158,28 +234,12 @@ namespace LinqToDB.Linq.Builder
 			{
 				throw new NotImplementedException();
 			}
-		}
 
-		sealed class DeleteWithOutputContext : SelectContext
-		{
-			public DeleteWithOutputContext(IBuildContext? parent, IBuildContext sequence, IBuildContext outputContext, LambdaExpression outputExpression)
-				: base(parent, outputExpression, false, outputContext)
+			public override SqlStatement GetResultStatement()
 			{
-				Statement = sequence.Statement;
-			}
-
-			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
-			{
-				var expr = BuildExpression(null, 0, false);
-				var mapper = Builder.BuildMapper<T>(expr);
-
-				var deleteStatement = (SqlDeleteStatement)Statement!;
-				var outputQuery = Sequence[0].SelectQuery;
-
-				deleteStatement.Output!.OutputColumns = outputQuery.Select.Columns.Select(c => c.Expression).ToList();
-
-				QueryRunner.SetRunQuery(query, mapper);
+				return DeleteStatement;
 			}
 		}
+
 	}
 }

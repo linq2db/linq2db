@@ -30,6 +30,7 @@
 		<Compile Include="..\Linq\Linq\SubQueryTests.cs" Link="SubQueryTests.cs" />
 		<Compile Include="..\Linq\Linq\WhereTests.cs" Link="WhereTests.cs" />
 		<Compile Include="..\Linq\Update\DeleteTests.cs" Link="DeleteTests.cs" />
+		<Compile Include="..\Linq\Update\DeleteWithOutputTests.cs" Link="DeleteWithOutputTests.cs" />
 		<Compile Include="..\Linq\Update\InsertIntoTests.cs" Link="InsertIntoTests.cs" />
 		<Compile Include="..\Linq\Update\InsertTests.cs" Link="InsertTests.cs" />
 		<Compile Include="..\Linq\Update\InsertWithOutputTests.cs" Link="InsertWithOutputTests.cs" />
