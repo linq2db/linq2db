@@ -1029,13 +1029,9 @@ namespace LinqToDB.SqlQuery
 
 			var elementsToIgnore = new HashSet<IQueryElement> { query };
 
-				if (!_flags.AcceptsOuterExpressionInAggregate &&
-				    column.Expression.ElementType != QueryElementType.Column &&
-				    QueryHelper.HasOuterReferences(sources, column))
-				{
-					// handle case when aggregate expression has outer references. SQL Server will fail.
-					return true;
-				}
+			var depends = QueryHelper.IsDependsOn(parentQuery.GroupBy, column, elementsToIgnore);
+			if (depends)
+				return true;
 
 			if (!_flags.AcceptsOuterExpressionInAggregate                &&
 			    column.Expression.ElementType != QueryElementType.Column &&

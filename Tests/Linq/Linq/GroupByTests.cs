@@ -2464,7 +2464,7 @@ namespace Tests.Linq
 
 			var query2 = db.Person.Select(r => r.ID);
 			var query  = query1.Concat(query2);
-			
+
 			query.ToList();
 
 			var ast = query.GetSelectQuery();
