@@ -835,7 +835,7 @@ namespace LinqToDB.Mapping
 		Expression ReduceDefaultValue(Expression expr)
 		{
 			_reduceDefaultValueTransformer ??= TransformVisitor<MappingSchema>.Create(this, static (ctx, e) => ctx.ReduceDefaultValueTransformer(e));
-			return _reduceDefaultValueTransformer.Transform(expr);
+			return _reduceDefaultValueTransformer.Value.Transform(expr);
 		}
 
 		private Expression ReduceDefaultValueTransformer(Expression e)

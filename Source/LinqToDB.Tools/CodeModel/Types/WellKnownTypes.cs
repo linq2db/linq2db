@@ -482,7 +482,7 @@ namespace LinqToDB.CodeModel
 
 			public static class Configuration
 			{
-				private static readonly IType _dataOptionsT = Parser.Parse(typeof(DataOptions));
+				private static readonly IType _dataOptionsT = Parser.Parse(typeof(DataOptions<>));
 
 				/// <summary>
 				/// <see cref="DataOptions"/> type descriptor.
@@ -490,11 +490,16 @@ namespace LinqToDB.CodeModel
 				public static IType DataOptions { get; } = Parser.Parse<DataOptions>();
 
 				/// <summary>
-				/// Returns <see cref="DataOptions"/> type descriptor.
+				/// <see cref="DataOptions{T}.Options"/> property reference.
+				/// </summary>
+				public static CodeReference DataOptions_Options { get; } = PropertyOrField((DataOptions<DataConnection> o) => o.Options, false);
+
+				/// <summary>
+				/// Returns <see cref="DataOptions{T}"/> type descriptor.
 				/// </summary>
 				/// <param name="contextType">Context type.</param>
 				/// <returns>Type descriptor.</returns>
-				public static IType DataContextOptionsWithType(IType contextType) => _dataOptionsT.WithTypeArguments(contextType);
+				public static IType DataOptionsWithType(IType contextType) => _dataOptionsT.WithTypeArguments(contextType);
 			}
 
 			public static class Mapping

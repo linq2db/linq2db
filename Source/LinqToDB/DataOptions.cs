@@ -8,6 +8,9 @@ namespace LinqToDB
 	using Data;
 	using Data.RetryPolicy;
 
+	/// <summary>
+	/// Immutable context configuration object.
+	/// </summary>
 	public sealed class DataOptions : OptionsContainer<DataOptions>, IConfigurationID, IEquatable<DataOptions>, ICloneable
 	{
 		public DataOptions()

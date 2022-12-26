@@ -6,10 +6,7 @@ namespace LinqToDB.DataProvider.Oracle
 	using Common.Internal;
 	using Data;
 
-	/// <summary>
-	/// This is internal API and is not intended for use by LinqToDB applications.
-	/// It may change or be removed without further notice.
-	/// </summary>	/// <param name="BulkCopyType">
+	/// <param name="BulkCopyType">
 	/// BulkCopyType used by Oracle Provider by default.
 	/// </param>
 	/// <param name="AlternativeBulkCopy">
@@ -38,6 +35,10 @@ namespace LinqToDB.DataProvider.Oracle
 			.Add(AlternativeBulkCopy)
 			.CreateID();
 
+		/// <summary>
+		/// Default oracle options.
+		/// Default value: <c>OracleOptions(BulkCopyType.MultipleRows, AlternativeBulkCopy.InsertAll)</c>
+		/// </summary>
 		public static OracleOptions Default { get; set; } = new();
 
 		#region IEquatable implementation

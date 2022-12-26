@@ -14,14 +14,20 @@ namespace LinqToDB.Data
 	/// <param name="ConnectionString">
 	/// The connection string, or <c>null</c> if a <see cref="DbConnection" /> was used instead of a connection string.
 	/// </param>
+	/// <param name="DataProvider">
+	/// Gets optional <see cref="IDataProvider"/> implementation to use with connection.
+	/// </param>
 	/// <param name="ProviderName">
-	/// Gets provider name to use with <see cref="DataConnection"/> instance.
+	/// Gets optional provider name to use with <see cref="DataConnection"/> instance.
 	/// </param>
 	/// <param name="MappingSchema">
-	/// Gets <see cref="MappingSchema"/> instance to use with <see cref="DataConnection"/> instance.
+	/// Gets optional <see cref="MappingSchema"/> instance to use with <see cref="DataConnection"/> instance.
 	/// </param>
 	/// <param name="DbConnection">
-	/// Gets <see cref="DbConnection"/> instance to use with <see cref="DataConnection"/> instance.
+	/// Gets optional <see cref="DbConnection"/> instance to use with <see cref="DataConnection"/> instance.
+	/// </param>
+	/// <param name="DbTransaction">
+	/// Gets optional <see cref="DbTransaction"/> instance to use with <see cref="DataConnection"/> instance.
 	/// </param>
 	/// <param name="DisposeConnection">
 	/// Gets <see cref="DbConnection"/> ownership status for <see cref="DataConnection"/> instance.
@@ -29,6 +35,9 @@ namespace LinqToDB.Data
 	/// </param>
 	/// <param name="ConnectionFactory">
 	/// Gets connection factory to use with <see cref="DataConnection"/> instance.
+	/// </param>
+	/// <param name="DataProviderFactory">
+	/// Gets <see cref="IDataProvider"/> factory to use with <see cref="DataConnection"/> instance.
 	/// </param>
 	public sealed record ConnectionOptions
 	(
@@ -72,6 +81,8 @@ namespace LinqToDB.Data
 			.Add(MappingSchema)
 			.Add(DbConnection?.ConnectionString)
 			.Add(DbTransaction?.Connection?.ConnectionString)
+			.Add(DisposeConnection)
+			.Add(ConnectionFactory)
 			.Add(DataProviderFactory)
 			.CreateID();
 

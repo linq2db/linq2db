@@ -5,7 +5,6 @@ namespace LinqToDB.DataProvider.ClickHouse
 {
 	using Common;
 	using Data.RetryPolicy;
-	using SqlServer;
 
 	/// <summary>
 	/// Retry policy handles only following exceptions:
@@ -34,7 +33,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		{ }
 
 		/// <summary>
-		///     Creates a new instance of <see cref="SqlServerRetryPolicy" />.
+		///     Creates a new instance of <see cref="ClickHouseRetryPolicy" />.
 		/// </summary>
 		/// <param name="maxRetryCount">The maximum number of retry attempts.</param>
 		/// <param name="maxRetryDelay">The maximum delay in milliseconds between retries.</param>

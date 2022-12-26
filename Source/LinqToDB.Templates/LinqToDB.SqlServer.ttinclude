@@ -60,7 +60,7 @@ void DoGenerateSqlServerFreeText()
 
 LinqToDB.Data.DataConnection GetSqlServerConnection(
 	string connectionString,
-	SqlServerVersion  version  = SqlServerVersion.v2008,
+	SqlServerVersion  version  = SqlServerVersion.AutoDetect,
 	SqlServerProvider provider = SqlServerProvider.SystemDataSqlClient)
 {
 	return LinqToDB.DataProvider.SqlServer.SqlServerTools.CreateDataConnection(connectionString, version, provider);
@@ -69,21 +69,21 @@ LinqToDB.Data.DataConnection GetSqlServerConnection(
 LinqToDB.Data.DataConnection GetSqlServerConnection(
 	string server,
 	string database,
-	SqlServerVersion  version  = SqlServerVersion.v2008,
+	SqlServerVersion  version  = SqlServerVersion.AutoDetect,
 	SqlServerProvider provider = SqlServerProvider.SystemDataSqlClient)
 {
 	return GetSqlServerConnection(string.Format("Data Source={0};Database={1};Integrated Security=SSPI", server, database), version, provider);
 }
 
 LinqToDB.Data.DataConnection GetSqlServerConnection(string server, string database, string user, string password,
-	SqlServerVersion  version  = SqlServerVersion.v2008,
+	SqlServerVersion  version  = SqlServerVersion.AutoDetect,
 	SqlServerProvider provider = SqlServerProvider.SystemDataSqlClient)
 {
 	return GetSqlServerConnection(string.Format("Server={0};Database={1};User Id={2};Password={3};", server, database, user, password), version, provider);
 }
 
 public void LoadSqlServerMetadata(string connectionString,
-	SqlServerVersion  version  = SqlServerVersion.v2008,
+	SqlServerVersion  version  = SqlServerVersion.AutoDetect,
 	SqlServerProvider provider = SqlServerProvider.SystemDataSqlClient)
 {
 	using (var dataConnection = GetSqlServerConnection(connectionString, version, provider))
@@ -91,7 +91,7 @@ public void LoadSqlServerMetadata(string connectionString,
 }
 
 public void LoadSqlServerMetadata(string server, string database,
-	SqlServerVersion  version  = SqlServerVersion.v2008,
+	SqlServerVersion  version  = SqlServerVersion.AutoDetect,
 	SqlServerProvider provider = SqlServerProvider.SystemDataSqlClient)
 {
 	using (var dataConnection = GetSqlServerConnection(server, database, version, provider))
@@ -99,7 +99,7 @@ public void LoadSqlServerMetadata(string server, string database,
 }
 
 public void LoadSqlServerMetadata(string server, string database, string user, string password,
-	SqlServerVersion  version  = SqlServerVersion.v2008,
+	SqlServerVersion  version  = SqlServerVersion.AutoDetect,
 	SqlServerProvider provider = SqlServerProvider.SystemDataSqlClient)
 {
 	using (var dataConnection = GetSqlServerConnection(server, database, user, password, version, provider))

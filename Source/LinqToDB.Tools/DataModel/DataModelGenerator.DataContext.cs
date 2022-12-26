@@ -24,8 +24,8 @@ namespace LinqToDB.DataModel
 			// based on selected constructors set we generate (or not) following constructors:
 			// .ctor() // default constructor
 			// .ctor(string configuration) // constructor with connection configuration name parameter
-			// .ctor(DataContextOptions options) // options constructor
-			// .ctor(DataContextOptions<T> options) // typed options constructor
+			// .ctor(DataOptions options) // options constructor
+			// .ctor(DataOptions<T> options) // typed options constructor
 
 			// first we generate empty constructors and then add body to all of them as they will have same code for body
 
@@ -59,6 +59,21 @@ namespace LinqToDB.DataModel
 						.Parameter(optionsParam)
 						.SetModifiers(Modifiers.Public)
 						.Base(optionsParam.Reference)
+						.Body());
+			}
+
+			if (_dataModel.DataContext.HasTypedOptionsConstructor)
+			{
+				var typedOptionsParam = AST.Parameter(
+					WellKnownTypes.LinqToDB.Configuration.DataOptionsWithType(contextBuilder.Type.Type),
+					AST.Name(CONTEXT_CONSTRUCTOR_OPTIONS_PARAMETER),
+					CodeParameterDirection.In);
+
+				ctors.Add(constructors
+					.New()
+						.Parameter(typedOptionsParam)
+						.SetModifiers(Modifiers.Public)
+						.Base(AST.Member(typedOptionsParam.Reference, WellKnownTypes.LinqToDB.Configuration.DataOptions_Options))
 						.Body());
 			}
 

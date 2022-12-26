@@ -64,7 +64,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		#region Public Members
 
 		public static IDataProvider GetDataProvider(
-			SqlServerVersion  version          = SqlServerVersion.v2008,
+			SqlServerVersion  version          = SqlServerVersion.AutoDetect,
 			SqlServerProvider provider         = SqlServerProvider.SystemDataSqlClient,
 			string?           connectionString = null)
 		{
@@ -109,7 +109,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			SqlServerProvider provider = SqlServerProvider.SystemDataSqlClient)
 		{
 			if (version is SqlServerVersion.AutoDetect)
-				version = ProviderDetector.DetectServerVersion((SqlServerProviderAdapter.SqlConnection)(IDbConnection)connection) ?? SqlServerVersion.v2008;
+				version = ProviderDetector.DetectServerVersion((SqlServerProviderAdapter.SqlConnection)(IDbConnection)connection) ?? ProviderDetector.DefaultVersion;
 
 			return new DataConnection(GetDataProvider(version, provider), connection);
 		}
@@ -121,7 +121,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			if (version is SqlServerVersion.AutoDetect)
 			{
-				version = ProviderDetector.DetectServerVersion((SqlServerProviderAdapter.SqlConnection)(IDbConnection)transaction.Connection!) ?? SqlServerVersion.v2008;
+				version = ProviderDetector.DetectServerVersion((SqlServerProviderAdapter.SqlConnection)(IDbConnection)transaction.Connection!) ?? ProviderDetector.DefaultVersion;
 			}
 
 			return new DataConnection(GetDataProvider(version, provider), transaction);

@@ -6,11 +6,11 @@ namespace LinqToDB.Data
 	using Common;
 	using Common.Internal;
 
-	/// <param name="OnTrace">
-	/// Gets custom trace method to use with <see cref="DataConnection"/> instance.
-	/// </param>
 	/// <param name="TraceLevel">
 	/// Gets custom trace level to use with <see cref="DataConnection"/> instance.
+	/// </param>
+	/// <param name="OnTrace">
+	/// Gets custom trace method to use with <see cref="DataConnection"/> instance.
 	/// </param>
 	/// <param name="WriteTrace">
 	/// Gets custom trace writer to use with <see cref="DataConnection"/> instance.

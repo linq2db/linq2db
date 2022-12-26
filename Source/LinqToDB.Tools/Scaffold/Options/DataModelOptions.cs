@@ -188,7 +188,7 @@ namespace LinqToDB.Scaffold
 		public bool HasUntypedOptionsConstructor { get; set; }
 
 		/// <summary>
-		/// Enables generation of data context constructor with generic <c>(<see cref="DataOptions"/> options)</c> parameter,
+		/// Enables generation of data context constructor with generic <c>(<see cref="DataOptions{T}"/> options)</c> parameter,
 		/// where <c>T</c> is generated data context class.
 		/// <list type="bullet">
 		/// <item>Default: <c>true</c></item>
