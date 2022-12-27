@@ -63,7 +63,7 @@ namespace LinqToDB.Linq.Builder
 
 		public abstract IBuildContext Clone(CloningContext    context);
 
-		public void SetRunQuery<T>(Query<T> query, Expression expr)
+		public virtual void SetRunQuery<T>(Query<T> query, Expression expr)
 		{
 			Context.SetRunQuery(query, expr);
 		}

@@ -26,30 +26,32 @@ namespace LinqToDB.Linq.Builder
 				_methodCall = methodCall;
 			}
 
-			private readonly MethodCallExpression _methodCall;
-
-			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
-			{
-				var expr   = BuildExpression(null, 0, false);
-				var mapper = Builder.BuildMapper<T>(expr);
-
-				QueryRunner.SetRunQuery(query, mapper);
-			}
-
-			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
-			{
-				var expr = base.BuildExpression(expression, level, enforceServerSide);
-				var type = _methodCall.Method.GetGenericArguments()[0];
-
-				if (expr.Type != type)
-					expr = Expression.Convert(expr, type);
-
-				return expr;
-			}
+			readonly MethodCallExpression _methodCall;
 
 			public override IBuildContext Clone(CloningContext context)
 			{
 				return new CastContext(context.CloneContext(Context), _methodCall);
+			}
+
+			public override Expression MakeExpression(Expression path, ProjectFlags flags)
+			{
+				var corrected = base.MakeExpression(path, flags);
+
+				if (flags.IsTable())
+					return corrected;
+
+				var type = _methodCall.Method.GetGenericArguments()[0];
+
+				if (corrected.Type != type)
+					corrected = Expression.Convert(corrected, type);
+
+				return corrected;
+			}
+
+			public override void SetRunQuery<T>(Query<T> query, Expression expr)
+			{
+				var mapper = Builder.BuildMapper<T>(expr);
+				QueryRunner.SetRunQuery(query, mapper);
 			}
 		}
 	}

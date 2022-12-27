@@ -45,5 +45,11 @@ namespace LinqToDB.Linq.Builder
 		{
 			return (flags & ProjectFlags.SQL) != 0;
 		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool IsTable(this ProjectFlags flags)
+		{
+			return (flags & ProjectFlags.Table) != 0;
+		}
 	}
 }
