@@ -104,7 +104,7 @@ namespace LinqToDB.AspNet
 		public static IServiceCollection AddLinqToDBContext<TContext>(
 			this IServiceCollection serviceCollection,
 			Func<IServiceProvider,DataOptions,DataOptions> configure,
-			ServiceLifetime lifetime = ServiceLifetime.Scoped)
+			ServiceLifetime                                lifetime = ServiceLifetime.Scoped)
 			where TContext : IDataContext
 		{
 			return AddLinqToDBContext<TContext,TContext>(serviceCollection, configure, lifetime);

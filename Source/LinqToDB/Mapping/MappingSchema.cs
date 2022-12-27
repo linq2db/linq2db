@@ -78,6 +78,10 @@ namespace LinqToDB.Mapping
 		/// mappings for same type.</remarks>
 		public MappingSchema(string? configuration, params MappingSchema[]? schemas)
 		{
+			// initialize on schema creation to avoid race conditions later
+			// see https://github.com/linq2db/linq2db/issues/3312
+			_reduceDefaultValueTransformer = TransformVisitor<MappingSchema>.Create(this, static (ctx, e) => ctx.ReduceDefaultValueTransformer(e));
+
 			configuration ??= string.Empty;
 
 			var schemaInfo = CreateMappingSchemaInfo(configuration, this);
@@ -137,6 +141,7 @@ namespace LinqToDB.Mapping
 
 		object _syncRoot = new();
 		internal readonly MappingSchemaInfo[] Schemas;
+		readonly TransformVisitor<MappingSchema> _reduceDefaultValueTransformer;
 
 		#endregion
 
@@ -830,12 +835,9 @@ namespace LinqToDB.Mapping
 			return null;
 		}
 
-		TransformVisitor<MappingSchema>? _reduceDefaultValueTransformer;
-
 		Expression ReduceDefaultValue(Expression expr)
 		{
-			_reduceDefaultValueTransformer ??= TransformVisitor<MappingSchema>.Create(this, static (ctx, e) => ctx.ReduceDefaultValueTransformer(e));
-			return _reduceDefaultValueTransformer.Value.Transform(expr);
+			return _reduceDefaultValueTransformer.Transform(expr);
 		}
 
 		private Expression ReduceDefaultValueTransformer(Expression e)

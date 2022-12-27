@@ -534,7 +534,7 @@ namespace LinqToDB.Linq
 				{
 					dataContext.WriteTraceLine(
 						"To generate test code to diagnose the problem set 'LinqToDB.Common.Configuration.Linq.GenerateExpressionTest = true'.\n" +
-						"Or specify LINQ options during 'DataContextOptions' building 'builder.WithOptions(o => o.WithGenerateExpressionTest(true))'",
+						"Or specify LINQ options during 'DataContextOptions' building 'options.UseGenerateExpressionTest(true)'",
 						dataContext.GetTraceSwitch().DisplayName,
 						TraceLevel.Error);
 				}
