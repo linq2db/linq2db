@@ -10,6 +10,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			return flags & FlagsToPreserve;
 		}
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 
 		public static ProjectFlags RootFlag(this ProjectFlags flags)
